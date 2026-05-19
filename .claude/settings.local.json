@@ -21,7 +21,7 @@
       "Bash(curl -s -L -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\" \"https://monday.com/templates/category/marketing\" -o /c/tmp/monday_marketing.html)",
       "Bash(curl -s -o /dev/null -w '%{http_code}' -A Mozilla/5.0 https://monday.com/templates/category/__TRACKED_VAR__)",
       "Bash(grep -oE 'categor[a-zA-Z_]*[:\"][^,}]{0,80}' /c/tmp/monday_marketing.html)",
-      "Bash(agent-browser*)",
+      "Bash(agent-browser*)"
     ]
   }
 }

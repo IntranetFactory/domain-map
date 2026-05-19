@@ -17,10 +17,17 @@
       "Bash(semantius call *)",
       "Bash(node -e 'console.log\\(\"domains:\", JSON.parse\\(require\\(\"fs\"\\).readFileSync\\(\"c:/tmp/domains.json\",\"utf8\"\\)\\).length\\)')",
       "Bash(node c:/dev/domain-map/build_a_templates.mjs)",
-      "Bash(node c:/dev/domain-map/build_a_domains.mjs)"
+      "Bash(node c:/dev/domain-map/build_a_domains.mjs)",
+      "Skill(domain-map-analyst)",
+      "Skill(domain-map-analyst:*)",
+      "Edit(/.claude/skills/domain-map-analyst/**)",
+      "Bash(git -C C:/dev/domain-map ls-files .agents/skills/use-semantius/)",
+      "Bash(git -C C:/dev/semantius-cli status -sb)",
+      "Bash(git -C C:/dev/semantius-cli log -3 --oneline)"
     ],
     "additionalDirectories": [
-      "C:\\tmp"
+      "C:\\tmp",
+      "C:\\dev\\semantius-cli\\skills\\use-semantius\\references"
     ]
   }
 }
