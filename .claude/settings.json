@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e ' *)",
+      "Bash(node c:/dev/domain-map/build_m_templates.mjs)",
+      "Bash(node c:/dev/domain-map/build_m_domains.mjs)",
+      "mcp__claude_ai_tests-ops__postgrestRequest",
+      "Bash(semantius call crud postgrestRequest '{\"method\":\"GET\",\"path\":\"/domains?select=id,domain_code,domain_name,description,parent_domain_id&limit=2000&order=domain_name.asc\"}' > /c/tmp/domains.json 2>&1 *)",
+      "Bash(curl -s -L -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\" \"https://www.airtable.com/templates\" -o /c/tmp/airtable_templates.html)",
+      "Bash(grep -oE 'window\\\\.[A-Za-z_$]+\\\\s*=' /c/tmp/airtable_templates.html)",
+      "Bash(grep -oE 'pageData|appData|exploreData|templates.{0,300}' /c/tmp/airtable_templates.html)",
+      "Bash(curl -s -L -A \"Mozilla/5.0\" \"https://airtable.com/temporary_marketing_proxy/templates\" -o /c/tmp/at2.html)",
+      "Bash(grep -oE '/\\(api|public_api|read|hyperbase|graph\\)[^\"<\\\\s\\\\\\\\]*' /c/tmp/at2.html)",
+      "Bash(agent-browser*)",
+      "Bash(agent-browser *)",
+      "Bash(semantius *)"
+    ],
+    "additionalDirectories": [
+      "C:\\tmp"
+    ]
+  }
+}

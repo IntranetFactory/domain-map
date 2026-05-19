@@ -1,0 +1,304 @@
+# monday.com template catalog
+
+Source: <https://monday.com/templates> · 84 unique templates across 20 categories.
+
+## monday.com for marketing
+
+_Customizable templates for all your marketing needs._
+
+Category URL: <https://monday.com/templates/category/marketing>
+
+| Title | Overview | Description | URL |
+|---|---|---|---|
+| Product marketing launch |  | Plan and execute your product marketing launch from A-Z with your team with the Product Marketing Launch template set. These powerful boards and dashboard lets you visualize each phase and manage your deadlines in a Gantt View, plan campaigns with your content/creative teams and easily monitor campaign performance and your team's workload. Get an overview to ensure you're on track, hitting goals and never miss a beat. | <https://monday.com/templates/template/120519/product-marketing-launch> |
+| Communications & PR | Use these powerful 5 templates and dashboard to get a complete workflow any public relations team can utilize to stay on top of their work. | Use these powerful 5 boards and dashboard to get a complete workflow any public relations team can utilize to stay on top of their work. Whether you want to keep the process exactly the same or adapt it to your current workflow, this template set will equip you with everything you need to get started tracking and measuring your efforts immediately. | <https://monday.com/templates/template/10056499/communications-and-pr> |
+| Internal processes by TodayTix Group | Transform your internal processes with templates by TodayTix Group. | Achieve the same transparency, scalability, and flexibility that TodayTix Group enjoys with their marketing department’s campaign workflow templates. | <https://monday.com/templates/template/10013981/internal-processes-by-todaytix-group> |
+| Marketing Strategy | Plan out your marketing initiatives and strategies throughout the year. | Track all of your marketing strategies and initiatives together with your team. Plan your business goals, budgets, and marketing campaigns from A-Z in one workspace. | <https://monday.com/templates/template/85832/marketing-strategy> |
+| Client campaigns for agencies | Manage clients, campaigns, and initiatives all in one place. | Manage all of your campaigns from incoming leads to the final launch. Keep track of your clients and easily integrate HubSpot, Mailchimp, and Gmail to streamline all your work. | <https://monday.com/templates/template/98312/client-campaigns-for-agencies> |
+| Event Management | Manage all your events visually in one collaborative workspace. | Manage and plan all your events in one organized workspace. Assign tasks, track statuses, and oversee deadlines to ensure smooth collaboration in this event plan template. | <https://monday.com/templates/template/113263/event-management> |
+| Facebook ads Integration | Integrate your Facebook account to manage and monitor ad campaigns. | Manage, track, and monitor all of your Facebook campaigns in one central place. Sync with your Facebook data and use board views to analyze your ads and improve performance. | <https://monday.com/templates/template/72611/facebook-ads-integration> |
+| High-level marketing budget | Plan and track your marketing budget and costs throughout the year. | Use our marketing budget template to instantly understand your budget breakdown by tracking your costs and budget allocation. | <https://monday.com/templates/template/116244/high-level-marketing-budget> |
+| Marketing team planning |  | Managing your entire marketing high-level initiatives and ongoing tasks in one central place, together with your team. This package of templates combines a high-level board divided by quarters and a weekly to-do board for your team’s day-to-day tasks. These templates allow you to assign team members to tasks, track their status, and make sure the entire team is on track to meet their deadlines and goals. | <https://monday.com/templates/template/65367/marketing-team-planning> |
+| A/B testing and planning | Track and analyze A/B test results to achieve your conversion goals. | Plan and track your upcoming A/B tests. Keep everyone on your team aligned with test results to make data-driven decisions and increase conversion rates. | <https://monday.com/templates/template/113512/a-b-testing-and-planning> |
+| Post-event opportunities | Manage feedback, sales leads, and opportunities from events. | Collect feedback and track follow-up opportunities from events. Forecast sales leads and manage all incoming deals. | <https://monday.com/templates/template/113421/post-event-opportunities> |
+| Content calendar | Manage all your content initiatives on our content calendar template. | Run all of your content initiatives on our content calendar template. Easily manage publishing schedules, collaborate on any type of content, and more. | <https://monday.com/templates/template/65396/content-calendar> |
+| Social media planner | Create, schedule, and design all social media content in one place. | Create, schedule, and design all social media content in one visual workspace. Organize your upcoming content by platform, publish date, status, and more. | <https://monday.com/templates/template/113007/social-media-planner> |
+| Powerful campaign planning | Plan all your upcoming campaigns in a visual way. | Plan your campaigns in one organized workspace. Assign tasks, track statuses, and make sure the entire team is on track to meet deadlines. | <https://monday.com/templates/template/35051/powerful-campaign-planning> |
+| Content Planning | Brainstorm, review, and schedule all your upcoming content. | Track every detail of your content planning process to deliver your best work. Brainstorm, review, schedule all your upcoming content in one visual workspace. | <https://monday.com/templates/template/113127/content-planning> |
+
+## monday.com for content production
+
+_Customizable templates for all your content needs._
+
+Category URL: <https://monday.com/templates/category/content_production>
+
+| Title | Overview | Description | URL |
+|---|---|---|---|
+| Internal processes by TodayTix Group | Transform your internal processes with templates by TodayTix Group. | Achieve the same transparency, scalability, and flexibility that TodayTix Group enjoys with their marketing department’s campaign workflow templates. | <https://monday.com/templates/template/10013981/internal-processes-by-todaytix-group> |
+| Digital asset management | Manage, organize, and share digital assets with your team on one platform. | Store all your digital assets on one cloud-based digital asset manager. Easily access the files you need, keep everything organized, and easily share them with your team within seconds. | <https://monday.com/templates/template/71895/digital-asset-management> |
+| Creative Processes |  | Use this customizable Creative Processes template to get up and running with your creative team tasks and projects. Visualize your work with different views such as the Kanban View to update your progress, the Calendar View to manage your deadlines, the Files View to see all your digital assets in one place, and the Creative Request Form to efficiently review any incoming requests. This template also includes a built in date reminder to automatically notify you when a publish date is approaching. | <https://monday.com/templates/template/69567/creative-processes> |
+| Video production management | Manage contacts, pre-post production, and requests with these templates. | Manage your video production workflow from A-Z. Use forms to manage requests, boards to manage contacts, and dashboards for a big picture of how your production is running. | <https://monday.com/templates/template/44239/video-production-management> |
+| Content calendar | Manage all your content initiatives on our content calendar template. | Run all of your content initiatives on our content calendar template. Easily manage publishing schedules, collaborate on any type of content, and more. | <https://monday.com/templates/template/65396/content-calendar> |
+| Social media planner | Create, schedule, and design all social media content in one place. | Create, schedule, and design all social media content in one visual workspace. Organize your upcoming content by platform, publish date, status, and more. | <https://monday.com/templates/template/113007/social-media-planner> |
+| Content Planning | Brainstorm, review, and schedule all your upcoming content. | Track every detail of your content planning process to deliver your best work. Brainstorm, review, schedule all your upcoming content in one visual workspace. | <https://monday.com/templates/template/113127/content-planning> |
+
+## monday.com for project management
+
+_Push projects forward faster with these customizable templates._
+
+Category URL: <https://monday.com/templates/category/project_management>
+
+| Title | Overview | Description | URL |
+|---|---|---|---|
+| Project Requests and Approvals | Streamline requests and approvals to ensure projects are running smoothly. | Manage all incoming project requests and approvals in one place. Receive real-time notifications to keep you informed with project status, unanticipated changes, and more. | <https://monday.com/templates/template/122936/project-requests-and-approvals> |
+| Customer projects | Stay up-to-date with a customer-centric project management template. | Calculate billable hours for clients, get a full overview of customer projects in real-time, and collaborate efficiently with stakeholders across teams. | <https://monday.com/templates/template/82227/customer-projects> |
+| Single Project | Plan any project flow in one workspace and track its progress. | Bring deadlines, stakeholders, budget, and more together in one place. Plan, manage, and track every aspect of your project so nothing slips by. Use the built-in vibe to get a visual, at-a-glance view of your project’s progress and key details. | <https://monday.com/templates/template/122904/single-project> |
+| Project Portfolio Management | Manage simple to complex projects across multiple teams and departments. | Plan, track, and manage complex projects across multiple teams and departments. Streamline project requests and get a high-level view of your entire portfolio. | <https://monday.com/templates/template/122927/project-portfolio-management> |
+
+## AI
+
+Category URL: <https://monday.com/templates/category/ai>
+
+| Title | Overview | Description | URL |
+|---|---|---|---|
+| Social media planner | Create, schedule, and design all social media content in one place. | Create, schedule, and design all social media content in one visual workspace. Organize your upcoming content by platform, publish date, status, and more. | <https://monday.com/templates/template/113007/social-media-planner> |
+
+## monday.com for sales & CRM
+
+_Customizable templates designed exclusively for sales & CRM._
+
+Category URL: <https://monday.com/templates/category/sales_customers>
+
+| Title | Overview | Description | URL |
+|---|---|---|---|
+| Marketing activities | Centralize and manage all marketing operations in one collaborative place. | Visually track all of your marketing campaigns. Collaborate with writers and designers in one place, see progress, and easily automate work to meet your deadlines. | <https://monday.com/templates/template/114890/marketing-activities> |
+| Real estate CRM | Manage all real estate business operations from one central database. | Manage all business operations on our real estate CRM template. Capture potential clients, connect them to properties, store listing details, and manage agent workloads. | <https://monday.com/templates/template/82286/real-estate-crm> |
+| Customer Onboarding | Manage the entire process of your client’s onboarding in one place. | Manage the entire process of your client’s onboarding, from the kick off meeting till the implementation and training on client’s end. Gain visibility into the progress of the onboarding, track how much time was invested, and align everyone internally on where things stand. | <https://monday.com/templates/template/145000/customer-onboarding> |
+| Customer projects | Stay up-to-date with a customer-centric project management template. | Calculate billable hours for clients, get a full overview of customer projects in real-time, and collaborate efficiently with stakeholders across teams. | <https://monday.com/templates/template/82227/customer-projects> |
+| Contacts | Keep track of all contact information in one, secure place. | From company details to your next interaction– manage your contact information in one secure place so you can stay up-to-date with all your deals. | <https://monday.com/templates/template/75754/contacts> |
+| Supporting sales materials | Centralize, manage, and track all sales materials from one organized place. | Create a centralized place for all sales materials: case studies, brochures, decks, and more. Track new content creation and alert sales reps when docs are ready to share. | <https://monday.com/templates/template/116929/supporting-sales-materials> |
+
+## Templates from Elevate 2021
+
+_Reimagine your work with our favorite templates from Elevate Conference by monday.com_
+
+Category URL: <https://monday.com/templates/category/elevate>
+
+| Title | Overview | Description | URL |
+|---|---|---|---|
+| Reclaim the workweek | Optimize your team’s workflows so you’re working as efficiently as possible. | Use this template to track and analyze your team’s use of time so you can optimize your processes for maximum efficiency. | <https://monday.com/templates/template/10013821/reclaim-the-workweek> |
+| Contextualizing sprints | Stay on-track with your team’s product roadmap. | Organize the team's entire product roadmap. See your progress, understand who’s doing what, and receive instant updates– all in one workspace. | <https://monday.com/templates/template/10016068/contextualizing-sprints> |
+| Onboarding plan by Farfetch’s marketing team | Manage processes in visual workspace for a smooth onboarding experience. | Use the same templates as the online luxury fashion retail platform, Farfetch, to manage all your onboarding processes and responsibilities with ease. | <https://monday.com/templates/template/10015408/onboarding-plan-by-farfetch-s-marketing-team> |
+| Winning workflows with automations | Streamline all requests across your organization, seamlessly. | Streamline all requests across your organization to easily stay on-top of what's incoming, in progress, and completed. | <https://monday.com/templates/template/10016059/winning-workflows-with-automations> |
+| Daniel's use case: Hidden tips and tricks you didn't know you needed | Get everything you need to execute PMO processes in one place. | Learn how to build cross-board dependencies, link items across boards, and anything else you might need to execute sophisticated project management workflows. | <https://monday.com/templates/template/10013974/daniel-s-use-case-hidden-tips-and-tricks-you-didn-t-know-you-needed> |
+| Work OS for R&D by Sygnia | Get inspired by some easy-to-start scrum best practices. | An easy way to get started with SCRUM workflows and automations, and to get some ideas on how to best utilize monday.com for software development needs. | <https://monday.com/templates/template/10013978/work-os-for-randd-by-sygnia> |
+| Sophie's use case: hidden tips and tricks you didn't know you needed | Keep campaigns organized and on time with this campaign tracker. | Run any campaign from start to finish using this template. See the stage, owner, and final assets of each campaign at a glance in a single, visual workspace. | <https://monday.com/templates/template/10013942/sophie-s-use-case-hidden-tips-and-tricks-you-didn-t-know-you-needed> |
+| Kelly's use case: hidden tips and tricks you didn't know you needed | Streamline sprint planning in one central workspace to meet your goals. | Plan your sprints in one organized workspace. Created by our CS team, organize and assign tasks by priority, type, status, and more to optimize efficiency. | <https://monday.com/templates/template/10014892/kelly-s-use-case-hidden-tips-and-tricks-you-didn-t-know-you-needed> |
+| Account management by Compass | Keep track of all your account management needs. | Use the same templates as the onboarding & AM agent experience team at Compass to Manage strategic accounts and onboard new clients—all in one place. | <https://monday.com/templates/template/10014890/account-management-by-compass> |
+| Request management by Hulu | Get the request templates teams at Hulu use to collaborate seamlessly. | Use the same templates that Hulu’s Ad Analytics team uses to manage and deliver on all your stakeholder and contractor requests. | <https://monday.com/templates/template/10015280/request-management-by-hulu> |
+| Internal processes by TodayTix Group | Transform your internal processes with templates by TodayTix Group. | Achieve the same transparency, scalability, and flexibility that TodayTix Group enjoys with their marketing department’s campaign workflow templates. | <https://monday.com/templates/template/10013981/internal-processes-by-todaytix-group> |
+| Run your projects more efficiently with any PM Methodology | Plan, track, and manage projects of any size with ease. | From simple to complex projects–build and visualize a custom project management workflow that best fits your team’s needs. | <https://monday.com/templates/template/10013812/run-your-projects-more-efficiently-with-any-pm-methodology> |
+| Shutdown/outage PM by Nissan | Leverage the same PMO templates Nissan engineers use every day. | Run your entire project lifecycle, manage risks and allocate resources with templates designed by Nissan engineers. | <https://monday.com/templates/template/10013827/shutdown-outage-pm-by-nissan> |
+| Account management: winning processes for stronger sales teams | Close deals quickly and collaborate on contracts from one space. | Manage all your accounts and contracts from one organized space. Close deals quickly, collaborate efficiently and keep track of the client details your team needs. | <https://monday.com/templates/template/10014063/account-management-winning-processes-for-stronger-sales-teams> |
+
+## monday.com for freelancers
+
+_Customizable templates to manage any freelance project._
+
+Category URL: <https://monday.com/templates/category/freelancers>
+
+| Title | Overview | Description | URL |
+|---|---|---|---|
+| Customer requests | Tackle customer support requests with an efficient system. | Provide excellent customer service while maintaining an efficient team. Manage all incoming customer support requests in one place and boost your customer satisfaction. | <https://monday.com/templates/template/40547/customer-requests> |
+| Event Management | Manage all your events visually in one collaborative workspace. | Manage and plan all your events in one organized workspace. Assign tasks, track statuses, and oversee deadlines to ensure smooth collaboration in this event plan template. | <https://monday.com/templates/template/113263/event-management> |
+| Work Calendar |  | Have your most productive week yet with this work calendar template for teams. With a shared calendar, you can easily schedule work for your team this week, next week, and even next month. Assign due dates and add timelines so everyone on the team gets work done on time, every time. Have full visibility into who’s doing what and when to see how work is progressing.  The best part? You can also integrate this template with Google calendar and keep track of all your team’s work deadlines in one place. | <https://monday.com/templates/template/97443/work-calendar> |
+| Single Project | Plan any project flow in one workspace and track its progress. | Bring deadlines, stakeholders, budget, and more together in one place. Plan, manage, and track every aspect of your project so nothing slips by. Use the built-in vibe to get a visual, at-a-glance view of your project’s progress and key details. | <https://monday.com/templates/template/122904/single-project> |
+
+## monday.com for design
+
+_Customizable templates tailored for any design team._
+
+Category URL: <https://monday.com/templates/category/design>
+
+| Title | Overview | Description | URL |
+|---|---|---|---|
+| Digital asset management | Manage, organize, and share digital assets with your team on one platform. | Store all your digital assets on one cloud-based digital asset manager. Easily access the files you need, keep everything organized, and easily share them with your team within seconds. | <https://monday.com/templates/template/71895/digital-asset-management> |
+| Client campaigns for agencies | Manage clients, campaigns, and initiatives all in one place. | Manage all of your campaigns from incoming leads to the final launch. Keep track of your clients and easily integrate HubSpot, Mailchimp, and Gmail to streamline all your work. | <https://monday.com/templates/template/98312/client-campaigns-for-agencies> |
+| Creative Processes |  | Use this customizable Creative Processes template to get up and running with your creative team tasks and projects. Visualize your work with different views such as the Kanban View to update your progress, the Calendar View to manage your deadlines, the Files View to see all your digital assets in one place, and the Creative Request Form to efficiently review any incoming requests. This template also includes a built in date reminder to automatically notify you when a publish date is approaching. | <https://monday.com/templates/template/69567/creative-processes> |
+| Social media planner | Create, schedule, and design all social media content in one place. | Create, schedule, and design all social media content in one visual workspace. Organize your upcoming content by platform, publish date, status, and more. | <https://monday.com/templates/template/113007/social-media-planner> |
+| Design weekly tasks | Run your work, collect briefs, and organize files on one powerful board. | Run your design team’s work on one organized board. From filtering through briefs, to organizing files, stay on top of your iterations easily with this powerful board. | <https://monday.com/templates/template/113846/design-weekly-tasks> |
+
+## monday.com for software development
+
+_Customizable templates for all your software development needs._
+
+Category URL: <https://monday.com/templates/category/software_development>
+
+| Title | Overview | Description | URL |
+|---|---|---|---|
+| Features and releases roadmap | Easily plan your features roadmap and product releases. | Easily build your features roadmap and product releases. Plan projects, prioritize major releases, and keep your entire team aligned. | <https://monday.com/templates/template/80451/features-and-releases-roadmap> |
+| Sprint retrospective | Run a sprint retrospective to continuously improve your team’s productivity. | Run a sprint retrospective to inspect your scrum process and continuously improve your productivity. Create a plan and vote on action items to adapt your upcoming sprints. | <https://monday.com/templates/template/80436/sprint-retrospective> |
+| IT service desk | Manage IT requests and incidents with a centralized ticketing system. | Manage IT requests, changes, problems, and incidents using an intuitive ticketing system and ITSM tools to address organizational needs more efficiently. | <https://monday.com/templates/template/40541/it-service-desk> |
+| Product Roadmap | Gain a high-level overview of your upcoming roadmap. Create accountability for team members, manage timelines, and more! | Gain a high-level overview of your upcoming roadmap. Create accountability for team members, manage timelines, and more! | <https://monday.com/templates/template/10032460/product-roadmap> |
+
+## monday.com for product management
+
+_Customizable templates for all your product management needs._
+
+Category URL: <https://monday.com/templates/category/product_management>
+
+| Title | Overview | Description | URL |
+|---|---|---|---|
+| Features and releases roadmap | Easily plan your features roadmap and product releases. | Easily build your features roadmap and product releases. Plan projects, prioritize major releases, and keep your entire team aligned. | <https://monday.com/templates/template/80451/features-and-releases-roadmap> |
+| Product Roadmap | Gain a high-level overview of your upcoming roadmap. Create accountability for team members, manage timelines, and more! | Gain a high-level overview of your upcoming roadmap. Create accountability for team members, manage timelines, and more! | <https://monday.com/templates/template/10032460/product-roadmap> |
+| Single Project | Plan any project flow in one workspace and track its progress. | Bring deadlines, stakeholders, budget, and more together in one place. Plan, manage, and track every aspect of your project so nothing slips by. Use the built-in vibe to get a visual, at-a-glance view of your project’s progress and key details. | <https://monday.com/templates/template/122904/single-project> |
+
+## monday.com for HR
+
+_Customizable templates for every HR process._
+
+Category URL: <https://monday.com/templates/category/hr>
+
+| Title | Overview | Description | URL |
+|---|---|---|---|
+| Employee lifecycle packages | Manage and distribute meaningful packages to employees | This template is a great way to show employees you see them as people beyond the 9-5. | <https://monday.com/templates/template/10046364/employee-lifecycle-packages> |
+| Cross-company event planning | Plan a memorable internal company event from A-Z. | This template will help you plan and manage any internal event at your organization from A to Z. | <https://monday.com/templates/template/10046837/cross-company-event-planning> |
+| Employee well-being survey | Run a survey to improve employee well-being at your organization. | This template will help you measure different aspects of employee wellness across your organization. | <https://monday.com/templates/template/10046850/employee-well-being-survey> |
+| Recruitment and onboarding | Enable HR professionals to easily manage the entire hiring process. | From applying to onboarding, easily manage the entire recruitment and onboarding process– all from one centralized location. | <https://monday.com/templates/template/50352/recruitment-and-onboarding> |
+| Job application form | Manage job applications and store contact information from candidates. | Manage job applications and record contact information from candidates all in one place for a streamlined recruitment process. | <https://monday.com/templates/template/63721/job-application-form> |
+| Employee engagement survey | Send out employee surveys and record answers automatically. | Send employee surveys and record responses from one location. Quickly assess engagement levels, so you can respond effectively to pressing needs. | <https://monday.com/templates/template/63727/employee-engagement-survey> |
+| New employee onboarding | Manage the entire process of onboarding new employees from A-Z. | From the pre-arrival checklist to introductions, seamlessly manage the entire onboarding process for all new company employees on one interactive platform. | <https://monday.com/templates/template/67503/new-employee-onboarding> |
+| HR services | Oversee HR processes and requests in one centralized place. | Oversee all HR processes in one centralized place. Your HR team can now better manage employee onboarding, new open positions, requests, and more. | <https://monday.com/templates/template/67499/hr-services> |
+| Recruitment process | Effortlessly manage the entire recruitment process from end-to-end. | Oversee the recruitment pipeline from start to finish. Track open positions and easily collect potential candidate applications via a form. | <https://monday.com/templates/template/67501/recruitment-process> |
+| HR requests | Manage requests, time off, and organizational changes—in one place. | Effortlessly manage any HR team process in one location. Submit requests for vacation time, a department move, employee termination and more. | <https://monday.com/templates/template/40537/hr-requests> |
+
+## monday.com for manufacturing
+
+_Customizable templates for all your manufacturing needs._
+
+Category URL: <https://monday.com/templates/category/manufacturing>
+
+| Title | Overview | Description | URL |
+|---|---|---|---|
+| Work Calendar |  | Have your most productive week yet with this work calendar template for teams. With a shared calendar, you can easily schedule work for your team this week, next week, and even next month. Assign due dates and add timelines so everyone on the team gets work done on time, every time. Have full visibility into who’s doing what and when to see how work is progressing.  The best part? You can also integrate this template with Google calendar and keep track of all your team’s work deadlines in one place. | <https://monday.com/templates/template/97443/work-calendar> |
+| Single Project | Plan any project flow in one workspace and track its progress. | Bring deadlines, stakeholders, budget, and more together in one place. Plan, manage, and track every aspect of your project so nothing slips by. Use the built-in vibe to get a visual, at-a-glance view of your project’s progress and key details. | <https://monday.com/templates/template/122904/single-project> |
+| Order Form | Organize all your order information in one place. | Streamline all relevant order information using a customizable form. Easily share this form with all stakeholders to track orders from initial request to final delivery. | <https://monday.com/templates/template/63737/order-form> |
+
+## monday.com for office operations
+
+_Customizable templates for all your company logistics._
+
+Category URL: <https://monday.com/templates/category/office_operations>
+
+| Title | Overview | Description | URL |
+|---|---|---|---|
+| Event Management | Manage all your events visually in one collaborative workspace. | Manage and plan all your events in one organized workspace. Assign tasks, track statuses, and oversee deadlines to ensure smooth collaboration in this event plan template. | <https://monday.com/templates/template/113263/event-management> |
+| Post-event opportunities | Manage feedback, sales leads, and opportunities from events. | Collect feedback and track follow-up opportunities from events. Forecast sales leads and manage all incoming deals. | <https://monday.com/templates/template/113421/post-event-opportunities> |
+| IT service desk | Manage IT requests and incidents with a centralized ticketing system. | Manage IT requests, changes, problems, and incidents using an intuitive ticketing system and ITSM tools to address organizational needs more efficiently. | <https://monday.com/templates/template/40541/it-service-desk> |
+| Single Project | Plan any project flow in one workspace and track its progress. | Bring deadlines, stakeholders, budget, and more together in one place. Plan, manage, and track every aspect of your project so nothing slips by. Use the built-in vibe to get a visual, at-a-glance view of your project’s progress and key details. | <https://monday.com/templates/template/122904/single-project> |
+| Order Form | Organize all your order information in one place. | Streamline all relevant order information using a customizable form. Easily share this form with all stakeholders to track orders from initial request to final delivery. | <https://monday.com/templates/template/63737/order-form> |
+| Facilities requests | Accept and manage facilities requests from employees. | Manage all facilities requests in one place. Set up a request form for employees and easily review submitted requests with all the required information. | <https://monday.com/templates/template/40543/facilities-requests> |
+| Finance requests | Manage all your finance requests visually in one collaborative place. | Easily collect your team's finance requests. Keep all employees informed by tracking statuses, updates, and more. | <https://monday.com/templates/template/40627/finance-requests> |
+| IT management | Easily manage all your IT operations in one collaborative workspace. | Manage all your IT operations in one collaborative workspace. Streamline your business processes to ensure smooth and easy collaboration. | <https://monday.com/templates/template/53170/it-management> |
+
+## monday.com for startups
+
+_Customizable templates to help scale your startup._
+
+Category URL: <https://monday.com/templates/category/startup>
+
+| Title | Overview | Description | URL |
+|---|---|---|---|
+| Product marketing launch |  | Plan and execute your product marketing launch from A-Z with your team with the Product Marketing Launch template set. These powerful boards and dashboard lets you visualize each phase and manage your deadlines in a Gantt View, plan campaigns with your content/creative teams and easily monitor campaign performance and your team's workload. Get an overview to ensure you're on track, hitting goals and never miss a beat. | <https://monday.com/templates/template/120519/product-marketing-launch> |
+| Event Management | Manage all your events visually in one collaborative workspace. | Manage and plan all your events in one organized workspace. Assign tasks, track statuses, and oversee deadlines to ensure smooth collaboration in this event plan template. | <https://monday.com/templates/template/113263/event-management> |
+| High-level marketing budget | Plan and track your marketing budget and costs throughout the year. | Use our marketing budget template to instantly understand your budget breakdown by tracking your costs and budget allocation. | <https://monday.com/templates/template/116244/high-level-marketing-budget> |
+| A/B testing and planning | Track and analyze A/B test results to achieve your conversion goals. | Plan and track your upcoming A/B tests. Keep everyone on your team aligned with test results to make data-driven decisions and increase conversion rates. | <https://monday.com/templates/template/113512/a-b-testing-and-planning> |
+| Post-event opportunities | Manage feedback, sales leads, and opportunities from events. | Collect feedback and track follow-up opportunities from events. Forecast sales leads and manage all incoming deals. | <https://monday.com/templates/template/113421/post-event-opportunities> |
+| Single Project | Plan any project flow in one workspace and track its progress. | Bring deadlines, stakeholders, budget, and more together in one place. Plan, manage, and track every aspect of your project so nothing slips by. Use the built-in vibe to get a visual, at-a-glance view of your project’s progress and key details. | <https://monday.com/templates/template/122904/single-project> |
+
+## monday.com for education
+
+_Customizable templates for all your education needs._
+
+Category URL: <https://monday.com/templates/category/education>
+
+| Title | Overview | Description | URL |
+|---|---|---|---|
+| Managing student life | Avoid stress this semester by managing your work efficiently. | From managing assignments to budgeting for school expenses, organize everything using this visual template. So, you can spend more time studying and less time stressing. | <https://monday.com/templates/template/69988/managing-student-life> |
+| Research power tools | Orchestrate your research projects and collaborate more effectively. | Create a high-level overview for upcoming research projects, so you can collaborate better with key stakeholders, including peers, faculty, and research assistants. | <https://monday.com/templates/template/77765/research-power-tools> |
+| Academic requirements tracker | Track and view progress towards your degree requirements in one place. | Track progress on your academic requirements to stay on track with your degree. See exactly what you have accomplished and what still needs to be done— all at a glance. | <https://monday.com/templates/template/96545/academic-requirements-tracker> |
+| Student organization tools | Empower your students to plan campus-wide events with ease. | Empower your student organization to manage complex events and stay up-to-date with both union membership and alumni relations. | <https://monday.com/templates/template/69985/student-organization-tools> |
+| Networking & job applications | Manage every aspect of your job search more effectively in one place. | Easily prepare for each stage of your upcoming job search by managing leads, useful contacts, and informational or official interviews in one organized workspace. | <https://monday.com/templates/template/96193/networking-and-job-applications> |
+| Student organization essentials | Manage all activities for your student organization in one place. | Plan events, track memberships, and manage budgets for your student organization so you can work more efficiently with the executive board and staff advisors. | <https://monday.com/templates/template/69980/student-organization-essentials> |
+| Publication and journals | Easily manage your publication process from submission to approval. | Manage your entire publication process from submission to approval by tracking the status of articles and monitoring the workload of writers. | <https://monday.com/templates/template/96547/publication-and-journals> |
+| Office of student life | Enable the office of student life to stay in sync with campus groups. | Collaborate effectively with students and faculty by storing important data for all relevant organizations in one place. So campus life runs smoothly during the semester. | <https://monday.com/templates/template/69861/office-of-student-life> |
+
+## monday.com for real estate
+
+_Customizable templates for all your real estate needs._
+
+Category URL: <https://monday.com/templates/category/real_estate>
+
+| Title | Overview | Description | URL |
+|---|---|---|---|
+| Real estate agency management | Manage your real estate agency with one easy-to-use system. | Manage your real estate agency with one easy-to-use system. From managing properties to leads to any task in between–optimize your day-to-day operations. | <https://monday.com/templates/template/35014/real-estate-agency-management> |
+| Real estate CRM | Manage all real estate business operations from one central database. | Manage all business operations on our real estate CRM template. Capture potential clients, connect them to properties, store listing details, and manage agent workloads. | <https://monday.com/templates/template/82286/real-estate-crm> |
+
+## monday.com for venture capital
+
+_Customizable boards so you can invest in the things that matter._
+
+Category URL: <https://monday.com/templates/category/venture_capital>
+
+| Title | Overview | Description | URL |
+|---|---|---|---|
+| Customer requests | Tackle customer support requests with an efficient system. | Provide excellent customer service while maintaining an efficient team. Manage all incoming customer support requests in one place and boost your customer satisfaction. | <https://monday.com/templates/template/40547/customer-requests> |
+| High-level marketing budget | Plan and track your marketing budget and costs throughout the year. | Use our marketing budget template to instantly understand your budget breakdown by tracking your costs and budget allocation. | <https://monday.com/templates/template/116244/high-level-marketing-budget> |
+
+## monday.com for construction
+
+_Customizable templates for any construction project._
+
+Category URL: <https://monday.com/templates/category/construction>
+
+| Title | Overview | Description | URL |
+|---|---|---|---|
+| General contractor solution | Centralize files and communication to keep contractors up-to-date. | Stay on top of each deliverable, permit, file, and information you need to keep track of all the tasks each project stage requires. | <https://monday.com/templates/template/70194/general-contractor-solution> |
+| Construction roadmap | Instantly get a high-level view of all your ongoing construction projects. | Manage multiple construction projects simultaneously and instantly view your project data the way that works for you. | <https://monday.com/templates/template/70184/construction-roadmap> |
+| Construction project tracking | Easily track entire construction projects from start to finish. | Manage the progress of your construction projects in a visual way. Track the different stages, deadlines, and know where things stand at all times. | <https://monday.com/templates/template/70192/construction-project-tracking> |
+| Construction management | Streamline all workflows for construction projects on this template. | Monitor the real-time status of ongoing construction projects and streamline communication between the field and office so workflows run smoothly from start to finish. | <https://monday.com/templates/template/51735/construction-management> |
+
+## monday.com for nonprofits
+
+_Customizable templates to maximize your nonprofit impact._
+
+Category URL: <https://monday.com/templates/category/nonprofits>
+
+| Title | Overview | Description | URL |
+|---|---|---|---|
+| Donor Management | Centralize all donor data for easy management and donor engagement. | Maximize donor relationships with a dedicated CRM that seamlessly manages and reports on all donor data, contact and donation details, related activities, and more. | <https://monday.com/templates/template/10028953/donor-management> |
+| Grants Management | Manage your grant pipeline from A-Z and easily generate reports. | Manage your entire grant pipeline from A-Z and track opportunities, streamline applications, assign tasks, and create clear reports to improve your grant workflow efficiency. | <https://monday.com/templates/template/10028955/grants-management> |
+| Volunteer Registration Management | Capture, connect, and manage all volunteer data in one place. | Capture incoming volunteer info using a dedicated form, then connect collected data to a single board for easy consolidation of all volunteer data. | <https://monday.com/templates/template/10028959/volunteer-registration-management> |
+
+## monday.com for the 2022 Big Game
+
+_Customizable templates to plan epic Big Game events._
+
+Category URL: <https://monday.com/templates/category/biggame>
+
+| Title | Overview | Description | URL |
+|---|---|---|---|
+| The Big Game Office Questionnaire | Collect coworkers' game day predictions for an office friendly competition. | This template gives the opportunity for coworkers to make predictions about the game for a chance to win the title of The Big Game Fortune Teller. | <https://monday.com/templates/template/10042848/the-big-game-office-questionnaire> |
+| Big Game Party Planning | Plan your Big Game party so you and your guests can enjoy the game on full stomachs. | Plan your entire Big Game party, so you can enjoy the game on a full stomach. With this template, invitees can RSVP, tell you what they're bringing, and which team they’re rooting for. | <https://monday.com/templates/template/10042851/big-game-party-planning> |
+| Big Game Virtual Party | Plan your virtual watch party so you and your guests can enjoy the game, safely. | Plan your entire virtual Big Game watch party, so you can enjoy the major event with friends and family from the safety and comfort of your own home. | <https://monday.com/templates/template/10044099/big-game-virtual-party> |
+
+## Uncategorized
+
+Category URL: <https://monday.com/templates/category/_uncategorized>
+
+| Title | Overview | Description | URL |
+|---|---|---|---|
+| Sales enablement kit: winning processes for stronger sales teams | Streamline and manage your sales team onboarding and performance. | Manage and guide your sales team's new joiners process with monthly training and onboarding schedules, a scorecard and review, and a document repository. | <https://monday.com/templates/template/10014138/sales-enablement-kit-winning-processes-for-stronger-sales-teams> |
+| Kanban software development | Work more efficiently by visualizing progress and balancing workloads. | Easily track and manage your Kanban workflow, and deliver better products faster. Manage and visualize progress with a Kanban view, prioritized backlog and committed plan. | <https://monday.com/templates/template/10042043/kanban-software-development> |
+| Product Development | Plan your roadmap, track progress, and manage your cross-functional team. | Plan, track and manage your scrum iterations easily, and deliver better products faster. Organize any project your way with roadmap, sprint planning, retrospective and bugs tracking. | <https://monday.com/templates/template/10016422/product-development> |
+| Software development | Plan your roadmap, track progress, and manage your cross-functional team. | Manage all of your team’s software development work together in one place. Plan your roadmap, track progress, and manage your cross-functional team during every iteration. | <https://monday.com/templates/template/38817/software-development> |

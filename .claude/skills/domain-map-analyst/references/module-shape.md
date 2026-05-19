@@ -1,0 +1,281 @@
+# Domain Map — module shape reference
+
+Per-entity field shapes for the `domain_map` module (Semantius slug `domain_map`, id `1001`). Verified against the live schema; auto-generated fields (`id`, `created_at`, `updated_at`, `search_vector`, label columns like `vendor_name`/`solution_name`/`domain_name`) are omitted — never set them on insert, they're managed by the platform.
+
+`record_status` is on every entity, is an enum (`new` / `pending` / `approved` / `rejected`), and **defaults to `"new"`**. Omit it on insert unless explicitly setting a different value the user has signed off on.
+
+If anything here conflicts with the live schema, trust the live schema and update this file:
+
+```bash
+semantius call crud postgrestRequest '{"method":"GET","path":"/fields?table_name=eq.<name>&is_core=eq.false&select=field_name,format,reference_table,enum_values,is_nullable,default_value&order=field_order.asc"}'
+```
+
+---
+
+## Core concepts
+
+### `domains`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `domain_code` | string | yes | Natural key. SHOUTY-KEBAB-CASE (`ITSM`, `VULN-MGMT`, `OP-RES`) |
+| `description` | multiline | yes | Capture sub-features here when they don't justify their own row |
+| `parent_domain_id` | reference → `domains` | no | Use only when both levels have independent vendor competition |
+| `industry_id` | reference → `industries` | no | Set when the domain is specific to one industry (BANK-OPS → Banking, HC-PATIENT → Healthcare Providers). Leave null for horizontal/cross-industry domains. Single-FK on purpose — migrate to a junction if a domain ever needs to span multiple top-level industries |
+| `certification_required` | boolean | yes | Default `false`. TRUE for domains where solutions intrinsically need formal certification or regulator approval to enter or operate in the market (CLIN-DEV → FDA/MDR; BANK-OPS → banking regulator; UTIL-OPS → NERC-CIP). Use as a quick filter for constraint-heavy domains |
+| `record_status` | enum | yes | Default `new` |
+
+Label column: `domain_name` (auto-managed by `create_entity`; set it once at entity creation, not on inserts).
+
+### `vendors`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `description` | multiline | yes | |
+| `vendor_url` | url | yes | Canonical homepage. Empty string acceptable |
+| `headquarters_country` | string | yes | E.g. "USA", "Germany", "Netherlands" |
+| `notes` | multiline | yes | Acquisition history goes here |
+| `record_status` | enum | yes | Default `new` |
+
+Label column: `vendor_name`.
+
+### `solutions`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `description` | multiline | yes | |
+| `solution_url` | url | yes | Empty string acceptable |
+| `vendor_id` | reference → `vendors` | no | Nullable for internal builds / manual processes |
+| `solution_type` | enum | yes | `saas` / `on_prem` / `hybrid` / `open_source` / `internal_build` / `manual_process` |
+| `is_active_in_market` | boolean | yes | `false` for sunset / retired products |
+| `notes` | multiline | yes | |
+| `record_status` | enum | yes | Default `new` |
+
+Label column: `solution_name`.
+
+### `capabilities`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `capability_code` | string | yes | Natural key. SHOUTY-KEBAB-CASE |
+| `description` | multiline | yes | |
+| `parent_capability_id` | reference → `capabilities` | no | |
+| `record_status` | enum | yes | Default `new` |
+
+Label column: `capability_name`.
+
+### `industries`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `description` | multiline | yes | |
+| `naics_code` | string | yes | NAICS classification code. Empty string if unknown |
+| `parent_industry_id` | reference → `industries` | no | E.g. Banking → Retail Banking |
+| `record_status` | enum | yes | Default `new` |
+
+Label column: `industry_name`.
+
+### `jurisdictions`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `jurisdiction_code` | string | yes | ISO code or similar (`DE`, `US-CA`, `EU`) |
+| `jurisdiction_type` | enum | yes | `country` / `region` / `state_or_province` / `supranational` / `international` / `municipal`. Default `country`. Use `international` for global frameworks (ISO, SOC 2, PCI-DSS, IFRS, TCFD) — distinct from `supranational` which is for regional blocs like EU |
+| `description` | multiline | yes | |
+| `parent_jurisdiction_id` | reference → `jurisdictions` | no | EU → Germany → Bavaria |
+| `record_status` | enum | yes | Default `new` |
+
+Label column: `jurisdiction_name`.
+
+### `business_functions`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `description` | multiline | yes | |
+| `parent_business_function_id` | reference → `business_functions` | no | Engineering → Frontend / Backend / Platform |
+| `record_status` | enum | yes | Default `new` |
+
+Label column: `business_function_name`.
+
+### `data_objects`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `display_label` | text | yes | Human-friendly display label. Distinct from `data_object_name` (which acts as the natural key) |
+| `description` | multiline | yes | |
+| `record_status` | enum | yes | Default `new` |
+
+Label column: `data_object_name` (natural key, e.g. `Job Requisition`). `display_label` is the presentation-friendly variant. Other variants (industry/solution synonyms) live in `data_object_aliases`, not here.
+
+### `regulations`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `regulation_code` | string | yes | Short code (`GDPR`, `HIPAA`, `SOX`) |
+| `regulation_type` | enum | yes | `data_privacy` / `financial_reporting` / `security` / `country_localization` / `accounting_standard` / `industry_standard` / `environmental` / `labor_law` / `other`. Default `other` |
+| `jurisdiction_id` | reference → `jurisdictions` | no | **Always set.** For global frameworks, use the `International` jurisdiction row (jurisdiction_code `INTL`); for regional blocs use `European Union` (`EU`). Project rule: never leave this null — implicit nulls are forbidden in favor of explicit jurisdiction rows |
+| `issuing_body` | string | yes | E.g. "European Commission", "US Congress" |
+| `effective_date` | date | no | |
+| `regulation_url` | url | yes | Empty string acceptable |
+| `description` | multiline | yes | |
+| `certification_required` | boolean | yes | Default `false`. TRUE when the regulation acts as a certification gate — a vendor cannot legally sell or operate without obtaining the cert (FedRAMP, StateRAMP, CMMC, FDA 510(k), FDA 21 CFR Part 820, EU MDR, EU AI Act CE marking, EU CRA, eIDAS QTSP, DORA, NERC-CIP, ISO 27001, SOC 2, PCI-DSS, Section 508 VPAT) |
+| `record_status` | enum | yes | Default `new` |
+
+Label column: `regulation_name`.
+
+---
+
+## Junctions
+
+All junction tables use the `parent` FK format on both sides (`reference_delete_mode: cascade`) — deleting a parent deletes the junction row. Insert as `{ "<left>_id": <id>, "<right>_id": <id>, <qualifier>: <value>, "notes": "" }`. `record_status` defaults to `new` — omit it.
+
+### `solution_domains`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `solution_id` | parent → `solutions` | yes | |
+| `domain_id` | parent → `domains` | yes | |
+| `coverage_level` | enum | yes | `primary` / `secondary` / `partial` |
+| `notes` | multiline | yes | |
+| `record_status` | enum | yes | Default `new` |
+
+### `solution_capabilities`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `solution_id` | parent → `solutions` | yes | |
+| `capability_id` | parent → `capabilities` | yes | |
+| `delivery_strength` | enum | yes | `native` / `partial` / `via_extension` / `not_supported` |
+| `notes` | multiline | yes | |
+| `record_status` | enum | yes | Default `new` |
+
+### `solution_data_objects`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `solution_id` | parent → `solutions` | yes | |
+| `data_object_id` | parent → `data_objects` | yes | |
+| `ownership_role` | enum | yes | `system_of_record` / `system_of_reference` / `system_of_engagement` / `derived` |
+| `notes` | multiline | yes | |
+| `record_status` | enum | yes | Default `new` |
+
+The data-silo map: rows here with the same `data_object_id` across multiple `solution_id`s are the silo.
+
+### `domain_data_objects`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `domain_id` | parent → `domains` | yes | |
+| `data_object_id` | parent → `data_objects` | yes | |
+| `role` | enum | yes | `master` / `contributor` / `consumer` / `derived`. Default `master`. Multi-master rows are allowed and expected — different domains often master different *slices* of a shared data object (`job_requisitions` mastered by ATS + Workforce Planning, `customers` by CRM + MDM + Billing). Capture the slice in `notes`. The count of `role='master'` rows per data_object is **Signal 1** of the platform-vs-silos analysis (see [[#cross_domain_handoffs]] for Signal 2) |
+| `notes` | multiline | yes | Free-text: which slice of the data object this domain masters/contributes/consumes |
+| `record_status` | enum | yes | Default `new` |
+
+Migrated from `mastery_role` (values `primary` / `secondary` / `derived`) on 2026-05-18. `primary` mapped to `master`. The old `secondary` value was a junk drawer covering three distinct situations (consumes / contributes / co-masters); the new enum forces an explicit choice.
+
+### `domain_regulations`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `domain_id` | parent → `domains` | yes | |
+| `regulation_id` | parent → `regulations` | yes | |
+| `applicability` | enum | yes | `mandatory` / `recommended` / `conditional` / `optional`. Default `recommended` |
+| `condition_notes` | multiline | yes | Free text for *when* the regulation conditionally applies |
+| `notes` | multiline | yes | |
+| `record_status` | enum | yes | Default `new` |
+
+### `capability_domains`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `capability_id` | parent → `capabilities` | yes | |
+| `domain_id` | parent → `domains` | yes | |
+| `notes` | multiline | yes | |
+| `record_status` | enum | yes | Default `new` |
+
+No qualifier on this junction — the semantic-home relationship is binary.
+
+### `business_function_domains`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `business_function_id` | parent → `business_functions` | yes | |
+| `domain_id` | parent → `domains` | yes | |
+| `responsibility_type` | enum | yes | `owner` / `contributor` / `consumer` (field is `responsibility_type`, not `responsibility`) |
+| `notes` | multiline | yes | |
+| `record_status` | enum | yes | Default `new` |
+
+### `business_function_capabilities`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `business_function_id` | parent → `business_functions` | yes | |
+| `capability_id` | parent → `capabilities` | yes | |
+| `responsibility_type` | enum | yes | `owner` / `contributor` / `consumer` |
+| `notes` | multiline | yes | |
+| `record_status` | enum | yes | Default `new` |
+
+### `industry_business_functions`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `industry_id` | parent → `industries` | yes | |
+| `business_function_id` | parent → `business_functions` | yes | |
+| `notes` | multiline | yes | |
+
+No qualifier and no `record_status` on this junction — it's a pure presence-or-absence relationship.
+
+### `cross_domain_handoffs`
+
+Directional event-driven handoffs between two **distinct** domains, sharing a data object. Each row is an integration today (pipeline / API call / human handoff) that exists because source and target domains live in separate systems. Together with multi-master rows on [[#domain_data_objects]], this is the data the platform-vs-silos score reads.
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `source_domain_id` | parent → `domains` | yes | Domain emitting the trigger event |
+| `target_domain_id` | parent → `domains` | yes | Domain that receives and acts on the event |
+| `data_object_id` | parent → `data_objects` | yes | What flows / is created / mutated |
+| `trigger_event` | text | yes | Dotted-lowercase event name (`offer.accepted`, `incident.resolved`, `requisition.approved`, `case.closed`). Acts as the row's discriminator when a (source, target, data_object) triple has multiple legitimate handoffs |
+| `integration_pattern` | enum | yes | `event_stream` / `api_call` / `batch_sync` / `manual_handoff` / `file_drop`. Default `api_call` |
+| `friction_level` | enum | yes | `low` / `medium` / `high`. Default `medium`. Proxy for today's maintenance cost — high friction = highest integrated-platform value |
+| `description` | multiline | yes | What actually happens at the handoff: payload, downstream consequences, known failure modes |
+| `notes` | multiline | yes | |
+| `record_status` | enum | yes | Default `new` |
+
+Label column (auto-computed): `cross_domain_handoff_label` = `<source_domain> → <target_domain> : <trigger_event>`.
+
+**Hard invariant — `source_domain_id != target_domain_id`.** Enforced by validation rule `cross_domain_only`. Inserts with equal source/target return PostgREST 23514 with the rule's message. Intra-domain events (internal workflow inside one domain) are out of scope by design: they describe a domain's internal complexity, not integration friction, and would dilute the platform-candidacy score. If you later need to catalog intra-domain events for vendor-comparison purposes, add a separate `domain_events` entity rather than relaxing this constraint.
+
+Inserts are **not** loaded yet — entity ships empty. Onboarding Task is the motivating first load (ATS → Onboarding on `offer.accepted`, Onboarding → ITSM on `task.it_provisioning_required`, etc.).
+
+### `data_object_relationships`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `data_object_id` | reference → `data_objects` | no | The "from" side. (Note: `reference` not `parent` — both sides) |
+| `related_data_object_id` | reference → `data_objects` | no | The "to" side |
+| `relationship_type` | enum | yes | `one_to_one` / `one_to_many` / `many_to_many`. Default `one_to_many` |
+| `relationship_kind` | enum | yes | `composition` / `reference` / `association` / `inheritance`. Default `reference` |
+| `relationship_verb` | string | yes | Forward verb phrase (e.g. "owns", "places", "is a") |
+| `inverse_verb` | string | yes | Reverse phrase (e.g. "is owned by", "is placed by", "is supertype of") |
+| `is_required` | boolean | yes | Whether the relationship is mandatory. Default `false` |
+| `notes` | multiline | yes | |
+| `record_status` | enum | yes | Default `new` |
+
+Self-references allowed (`User` directly manages `User`).
+
+### `data_object_aliases`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `data_object_id` | reference → `data_objects` | no | The canonical concept this is an alias for |
+| `alias_type` | enum | yes | `synonym` / `industry_term` / `solution_term` (underscores, not hyphens). Default `synonym` |
+| `industry_id` | reference → `industries` | no | Set when `alias_type = industry_term` |
+| `solution_id` | reference → `solutions` | no | Set when `alias_type = solution_term` |
+| `is_preferred` | boolean | yes | Whether this alias is the preferred display in its context. Default `false` |
+| `notes` | multiline | yes | |
+| `record_status` | enum | yes | Default `new` |
+
+Label column: `alias_name`. Three flavors:
+- **synonym**: pure synonym (`vendor` / `supplier` / `counterparty`), neither `industry_id` nor `solution_id` set.
+- **industry_term**: `Customer` becomes `Patient` in Healthcare — set `industry_id`.
+- **solution_term**: `Customer` becomes `Account` in Salesforce — set `solution_id`.

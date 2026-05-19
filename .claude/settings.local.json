@@ -2,7 +2,26 @@
   "permissions": {
     "allow": [
       "Bash(gh api:*)",
-      "WebFetch(*)"
+      "WebFetch(*)",
+      "Bash(node -e 'const d=JSON.parse\\(require\\(\"fs\"\\).readFileSync\\(\"c:/tmp/solutions.json\",\"utf8\"\\)\\); const dom=JSON.parse\\(require\\(\"fs\"\\).readFileSync\\(\"c:/tmp/domains.json\",\"utf8\"\\)\\); console.log\\(\"solutions:\",d.length,\"domains:\",dom.length\\);')",
+      "Bash(node -e ' *)",
+      "Skill(domain-map-analyst)",
+      "Skill(domain-map-analyst:*)",
+      "Edit(/.claude/skills/domain-map-analyst/**)",
+      "Bash(curl -sL -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36\" \"https://www.airtable.com/templates/project-management-v2\" -o c:/tmp/airtable_pm.html)",
+      "Bash(grep -oE '\"\\(name|slug|title|description|category\\)\":\"[^\"]{1,100}\"' c:/tmp/airtable_pm.html)",
+      "Bash(curl -sL \"https://www.airtable.com/sitemap.xml\" -o c:/tmp/airtable_sitemap.xml)",
+      "Bash(grep -oE '\"[a-z][a-z-]{8,80}\"' c:/tmp/airtable_pm.html)",
+      "Bash(curl -sL -H \"Accept: application/json\" \"https://www.airtable.com/api/templates?category=project-management-v2\")",
+      "Bash(curl -sL -H \"Accept: application/json\" \"https://www.airtable.com/v0/marketplace/templates?category=project-management-v2\")",
+      "Bash(curl -sL -A \"Mozilla/5.0 \\(compatible; Googlebot/2.1; +http://www.google.com/bot.html\\)\" \"https://www.airtable.com/templates/project-management-v2\" -o c:/tmp/airtable_pm_bot.html)",
+      "Bash(curl -sL \"https://static.airtable.com/esbuild/by_sha/1fff6320/gz/client/entrypoints/explore/run_explore.js\" --compressed -o c:/tmp/run_explore.js)",
+      "Bash(curl -s -L -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\" \"https://monday.com/templates\" -o c:\\\\tmp\\\\monday_templates.html)",
+      "Bash(curl -s -L -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\" \"https://monday.com/templates\" -o /c/tmp/monday_templates.html)",
+      "Bash(curl -s -L -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\" \"https://monday.com/templates/category/marketing\" -o /c/tmp/monday_marketing.html)",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' -A Mozilla/5.0 https://monday.com/templates/category/__TRACKED_VAR__)",
+      "Bash(grep -oE 'categor[a-zA-Z_]*[:\"][^,}]{0,80}' /c/tmp/monday_marketing.html)",
+      "Bash(agent-browser*)"
     ]
   }
 }
