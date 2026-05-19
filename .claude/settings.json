@@ -13,7 +13,11 @@
       "Bash(grep -oE '/\\(api|public_api|read|hyperbase|graph\\)[^\"<\\\\s\\\\\\\\]*' /c/tmp/at2.html)",
       "Bash(agent-browser*)",
       "Bash(agent-browser *)",
-      "Bash(semantius *)"
+      "Bash(semantius *)",
+      "Bash(semantius call *)",
+      "Bash(node -e 'console.log\\(\"domains:\", JSON.parse\\(require\\(\"fs\"\\).readFileSync\\(\"c:/tmp/domains.json\",\"utf8\"\\)\\).length\\)')",
+      "Bash(node c:/dev/domain-map/build_a_templates.mjs)",
+      "Bash(node c:/dev/domain-map/build_a_domains.mjs)"
     ],
     "additionalDirectories": [
       "C:\\tmp"
