@@ -105,6 +105,23 @@ Label column: `jurisdiction_name`.
 
 Label column: `business_function_name`.
 
+### `processes`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `process_code` | string | yes | Natural key. PCF rows: literal PCF ID (`6.1.1`, `8.4.2.1`). Custom rows: `CUSTOM-<CLUSTER>-<SHORT-NAME>` (e.g. `CUSTOM-ONBOARD-DAY-1`). Per SKILL.md "Custom-process naming convention" |
+| `description` | multiline | yes | PCF rows: verbatim from PCF Excel. Custom rows: authored description |
+| `parent_process_id` | reference → `processes` | no | Self-ref; `reference_delete_mode: clear`. Null for level-1 categories |
+| `source_framework` | enum | yes | **Discriminator.** `apqc_pcf_cross_industry` / `apqc_pcf_banking` / `apqc_pcf_consumer_products` / `apqc_pcf_electric_utilities` / `apqc_pcf_pharmaceutical` / `apqc_pcf_telecom` / `custom`. **No default — set explicitly so accidents are loud.** Only `apqc_pcf_cross_industry` is loaded today; industry-specific PCFs are placeholder enum values for future loads |
+| `external_id` | string | yes | Framework's own identifier. PCF ID for any `apqc_pcf_*` row. Empty string for `custom` |
+| `external_url` | url | yes | Optional pointer to source documentation. Empty string acceptable |
+| `hierarchy_level` | number (int) | yes | 1–5 for PCF rows; 1–N for custom. Lets queries filter by depth without recursive CTEs |
+| `record_status` | enum | yes | Default `new` |
+
+Label column: `process_name` (human-friendly display, e.g. "Operate Procurement Operations"). The natural key is `process_code`.
+
+License attribution for APQC PCF imports: see repo-level [`LICENSE-APQC-PCF.md`](../../../../LICENSE-APQC-PCF.md). No per-row attribution field needed.
+
 ### `data_objects`
 
 | Field | Format | Required | Notes |
@@ -114,6 +131,21 @@ Label column: `business_function_name`.
 | `record_status` | enum | yes | Default `new` |
 
 Label column: `data_object_name` (natural key, e.g. `Job Requisition`). `display_label` is the presentation-friendly variant. Other variants (industry/solution synonyms) live in `data_object_aliases`, not here.
+
+### `trigger_events`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `data_object_id` | reference → `data_objects` | yes | Which data_object's state changes. `reference_delete_mode: restrict` |
+| `from_state` | string | yes | Originating state before the event. Free-text v1 (e.g. `submitted`, `pending`). Empty string for creation events |
+| `to_state` | string | yes | Resulting state after the event. Free-text v1 (e.g. `accepted`, `closed`, `resolved`) |
+| `description` | multiline | yes | What the event means: payload contents, downstream consequences, known failure modes |
+| `event_category` | enum | yes | `lifecycle` / `state_change` / `threshold` / `signal`. New values appended as clusters surface them |
+| `record_status` | enum | yes | Default `new` |
+
+Label column: `event_name` (natural key AND human label — dotted snake-case, `offer.accepted`, `employee.created`, `incident.resolved`).
+
+**One event, many subscribers** (per SKILL.md Phase D): a single `trigger_events` row is referenced by every `cross_domain_handoffs` row that has the same publisher event. Don't duplicate events per subscriber — it breaks the trigger-event-prefix clustering signal that Phase D depends on.
 
 ### `regulations`
 

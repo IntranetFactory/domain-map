@@ -20,7 +20,7 @@ A "process skill" is an agent skill that orchestrates a coherent cluster of cros
 
 ## Current substrate (snapshot, 2026-05-20)
 
-- `cross_domain_handoffs`: **~11 rows**, almost entirely ITSM-centric (inbound from ITOM, AIOPS, OBS, SAM, CMDB, HRSD, ONBOARDING; outbound to ITAM, CMDB).
+- `cross_domain_handoffs`: **173 rows** as of 2026-05-21 (the original plan estimate of "~11" was outdated — Phase-B handoff loads ran across multiple clusters between the plan draft and the substrate audit). Spans ITSM, ITOM, HCM, ATS, ONBOARDING, PAYROLL, S2P, CRM, SUB-MGMT, FINOPS, DATA-AI, MSP, and more. 163 unique `(event_name, data_object_id)` pairs; 147 distinct `event_names` with 16 across-data_object name-collisions to disambiguate at P1.3 time.
 - `trigger_event` is free-text. Patterns emerge (`offer.accepted`, `employee.created`, `incident.asset_failure`) but no controlled vocabulary, no FK to a registry.
 - No `processes` entity. Handoffs don't know which named business process they belong to.
 - No state-machine modelling on data_objects — the implied state transition behind each trigger event isn't enumerated.
@@ -29,7 +29,7 @@ A "process skill" is an agent skill that orchestrates a coherent cluster of cros
 
 | Extension | What it adds | Effort |
 |---|---|---|
-| **New entity: `processes`** | Hierarchical process reference catalog (APQC PCF + custom). Full schema below. | small (~250-300 rows for PCF cross-industry through level 5) |
+| **New entity: `processes`** | Hierarchical process reference catalog (APQC PCF + custom). Full schema below. | medium (PCF Cross-Industry v8.0 = **2,017 rows** through level 5 — 13 categories × deep hierarchy; initial pre-load estimate of "~250-300" was an order-of-magnitude underestimate, loaded 2026-05-21) |
 | **New entity: `trigger_events`** | Controlled vocabulary. Columns: `event_name` (e.g. `offer.accepted`), `data_object_id` (FK), `from_state` text, `to_state` text, `description`, `event_category` enum (`lifecycle` / `state_change` / `threshold` / `signal`). Replaces the free-text column on handoffs. **`from_state` / `to_state` are free text in v1** — FK to a state-machine table is a future extension if discovery accuracy demands it. | small (~80-150 rows initially) |
 | **Migration: `cross_domain_handoffs.trigger_event`** | Change from string → FK to `trigger_events.id`. Backfill existing rows. | one-time |
 | **Phase B handoff backfill** | Load handoffs for the remaining clusters: HR, Finance, Procurement, Sales, Customer. Same shape as the ITSM handoffs already loaded. | large — ~150-300 handoffs total, ~30 min per cluster |

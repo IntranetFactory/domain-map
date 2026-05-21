@@ -46,30 +46,33 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 ## Wave 1 — Foundations (Plan 1 only; no cross-plan dependencies)
 
 ### P1.1 — Entity design (processes, trigger_events)
-- [ ] Add `processes` entity to `domain_map` module with the schema from [`plan-process-skill-discovery.md` § processes entity](plan-process-skill-discovery.md#processes-entity--concrete-schema)
-- [ ] Add `trigger_events` entity to `domain_map` module
-- [ ] Verify in UI: `https://tests.semantius.app/domain_map/processes` and `/trigger_events` render
-- [ ] Update [`module-shape.md`](.claude/skills/domain-map-analyst/references/module-shape.md) with the two new entities
+- [x] Add `processes` entity to `domain_map` module with the schema from [`plan-process-skill-discovery.md` § processes entity](plan-process-skill-discovery.md#processes-entity--concrete-schema)
+- [x] Add `trigger_events` entity to `domain_map` module
+- [x] Verify in UI: `https://tests.semantius.app/domain_map/processes` and `/trigger_events` render
+- [x] Update [`module-shape.md`](.claude/skills/domain-map-analyst/references/module-shape.md) with the two new entities
 
 ### P1.2 — APQC PCF reference load
-- [ ] Drop `K016808_APQC Process Classification Framework (PCF) - Cross-Industry - Excel Version 8.0.xlsx` into `references/` (absolute path passed to the parser)
-- [ ] Create [`LICENSE-APQC-PCF.md`](LICENSE-APQC-PCF.md) at the repo root with the full APQC attribution text
-- [ ] Write Excel parser (TS loader). Flatten the 5-level hierarchy. Set `source_framework='apqc_pcf_cross_industry'`, `external_id=<PCF ID>`, `hierarchy_level=<1-5>`, `parent_process_id=<resolved at level N-1>`
-- [ ] Run parser. Confirm count is ~250-300; spot-check a level-3 row and a level-5 leaf
-- [ ] Bulk-stamp `record_status='approved'` once review confirms the parse is clean
-- [ ] Audit query: `SELECT hierarchy_level, COUNT(*) FROM processes GROUP BY hierarchy_level ORDER BY hierarchy_level`
+- [x] `K016808_APQC Process Classification Framework (PCF) - Cross-Industry - Excel Version 8.0.xlsx` lives at **repo root** (project convention; not `references/` as the plan originally said). Absolute path passed to the parser.
+- [x] Create [`LICENSE-APQC-PCF.md`](LICENSE-APQC-PCF.md) at the repo root with the full APQC attribution text (verbatim from the workbook's own "Copyright and Attribution" sheet)
+- [x] Write Excel parser ([.tmp_deploy/load_apqc_pcf.ts](.tmp_deploy/load_apqc_pcf.ts)). Flattens the 5-level hierarchy. Sets `source_framework='apqc_pcf_cross_industry'`, `external_id=<PCF ID>`, `hierarchy_level=<1-5>`, `parent_process_id=<resolved level-by-level>`
+- [x] Run parser. **Count: 2017 rows** (plan estimate of ~250-300 was wrong by ~7× — PCF Cross-Industry v8.0 has 13 categories × deep hierarchy). Spot-checked L1/L2/L3/L5; parent FKs resolve through every level.
+- [ ] Bulk-stamp `record_status='approved'` **only once the user has reviewed the load** (per SKILL.md rule #1 — AI loads are never auto-approved). Defer until explicit user signoff.
+- [x] Audit query: `SELECT hierarchy_level, COUNT(*) FROM processes GROUP BY hierarchy_level ORDER BY hierarchy_level` → L1:13, L2:74, L3:362, L4:1353, L5:215, total 2017. Every non-top-level row has `parent_process_id` set.
 
 ### P1.3 — Trigger-events vocabulary
-- [ ] Inventory the `trigger_event` strings on the 11 existing `cross_domain_handoffs` rows
-- [ ] Draft ~80 events covering the existing 11 plus forward-looking events (`employee.*`, `offer.*`, `requisition.*`, `incident.*`, `change.*`, `license.*`, `lead.*`, `opportunity.*`, `contract.*`, `invoice.*`, etc.)
-- [ ] Each draft row: `event_name`, `data_object_id` (FK), `from_state` (text), `to_state` (text), `description`, `event_category`
-- [ ] Surface draft for review before bulk insert
+> Snapshot at start of P1.3 (2026-05-21): **173 handoffs**, 163 unique `(event_name, data_object_id)` pairs, 147 distinct event_names, 16 name-collisions across data_objects (vs the plan's outdated "~11 rows" / "~80 events" estimate). Per user decision, going with **Option 1**: keep `event_name` unique by renaming the 16 collisions (Patterns A/C); collapse Pattern-B duplicates to one event with publisher-side `data_object_id`.
+- [x] Inventory the `trigger_event` strings on existing `cross_domain_handoffs` rows ([.tmp_deploy/analyze_trigger_events.ts](.tmp_deploy/analyze_trigger_events.ts))
+- [x] Draft the controlled vocabulary — **147 canonical events** after disambiguation. Generator: [.tmp_deploy/draft_trigger_events.ts](.tmp_deploy/draft_trigger_events.ts). Draft markdown: `c:/tmp/trigger_events_draft.md` (23KB)
+- [x] Disambiguate the colliders — **9 renames** (Pattern A: `hardware_endpoint.discovered` / `software_endpoint.discovered` / `ci_endpoint.discovered`, `rmm_ticket.escalated` / `msp_ticket.escalated`, `support_session.completed` / `msp_session.completed`; Pattern C: `payroll_period.closed` / `accounting_period.closed`). The other 12 colliders were Pattern B (one event, many subscribers) — collapsed to a single canonical row with publisher-side `data_object_id`
+- [x] Surfaced draft for review; user approved; bulk insert ran. **147 rows in `trigger_events`**, all `record_status='new'`. Spot-checked 5 key events (categories + publisher data_objects correct). UI: https://tests.semantius.app/domain_map/trigger_events
 
 ### P1.4 — Migrate existing handoffs to FK
-- [ ] Add `trigger_event_id` column (FK to `trigger_events`) on `cross_domain_handoffs`
-- [ ] Map each of the 11 existing handoffs to its `trigger_events.id`
-- [ ] Drop the old string `trigger_event` column once all rows are migrated
-- [ ] Verify: `SELECT COUNT(*) FROM cross_domain_handoffs WHERE trigger_event_id IS NULL` returns 0
+> **Important: the old `trigger_event` text column is preserved during P1.4.** It stays as a safety net alongside the new FK until end-of-program review. The drop is a separately-tracked deferred task (see [Deferred — held until end-of-program review](#deferred--held-until-end-of-program-review) below).
+> Snapshot at start of P1.4: handoffs had grown 173 → **178** (5 added between P1.3 and P1.4), trigger_events vocab 147 → 151 (4 new events: `work_item.completed`, `work_item.status_changed`, `okr_objective.created`, `work_project.completed`). All 178 cleanly mapped (`unmapped: 0`).
+- [x] Add `trigger_event_id` column (FK to `trigger_events`, `reference_delete_mode: restrict`) on `cross_domain_handoffs` — done via [.tmp_deploy/migrate_handoffs_to_fk.ts](.tmp_deploy/migrate_handoffs_to_fk.ts)
+- [x] Map each of the **178** existing handoffs to its `trigger_events.id` — Pattern B handoffs all collapse onto one event row even when their `cross_domain_handoffs.data_object_id` differs from the publisher's `trigger_events.data_object_id` (handoff column = per-edge payload, event column = publisher; allowed to differ)
+- [x] Update the `cross_domain_handoff_label` computed field to render the event part via the new FK (`set_record` lookup on `trigger_events`), with a `(no event)` fallback so unset rows degrade gracefully. Verified rendering: e.g. `"Applicant Tracking and Recruiting → Employee Onboarding : offer.accepted"`
+- [x] Verify: 0 rows with NULL `trigger_event_id`; sample labels confirmed rendering through the new FK chain. UI: https://tests.semantius.app/domain_map/cross_domain_handoffs
 
 ---
 
@@ -78,24 +81,26 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 > Wave 2 items run in parallel once Wave 1 is done. **P1.5* and P2.* are mutually independent** — only P2.5B (Wave 4) depends on P1.7 (Wave 3).
 
 ### P1.5a–e — Phase-B handoff backfill (per cluster)
-- [ ] **P1.5a** HR cluster (HCM, ATS, Onboarding, Payroll, BEN-ADMIN, COMP-MGMT, TALENT-MGMT, LMS, PA, SWP, WFM)
-- [ ] **P1.5b** Finance cluster (ERP-FIN, EPM, AP-AUTO, EXPENSE, SUB-MGMT, FINOPS)
-- [ ] **P1.5c** Procurement cluster (S2P, SUP-LIFE, CLM, VMS, ESIGN)
-- [ ] **P1.5d** Sales cluster (CRM, CPQ, SALES-ENG, SALES-PERF, REV-INTEL, GTM-PLAN, ACCT-PLAN, PRM)
-- [ ] **P1.5e** Customer cluster (CSM, CCAAS, CONV-AI, FSM, LOYALTY, SUB-MGMT inbound)
+- [x] **P1.5a** HR cluster — 4 new high-friction handoffs inserted (HCM→IGA `employee.terminated`, HCM→ITSM `employee.terminated`, COMP-MGMT→PAYROLL `merit_cycle.approved`, BEN-ADMIN→PAYROLL `enrollment.changed`). 2 of 6 proposed gaps were already in catalog. Succession/engagement extras deferred to optional follow-up pass.
+- [x] **P1.5b** Finance cluster — 8 new trigger_events (`journal_entry.posted`, `invoice.duplicate_detected`, `payment.exception`, `dunning.escalation`, `subscription.renewal_required`, `subscription.downgraded`, `cloud_spend.threshold_breached`, `variance.threshold_breached`) + 11 new high-friction handoffs (GL audit, payment exceptions fan-out, dunning escalation, subscription downgrades, cloud spend thresholds, forecast→audit).
+- [x] **P1.5c** Procurement cluster — verified live state showed only ESIGN needed scaffolding (SUP-LIFE/VMS already had master data_objects despite the agent report's stale-script-based claim). Added `envelopes` data_object (ESIGN master), 5 new trigger_events (`supplier.onboarded`, `supplier.risk_elevated`, `contract.expired`, `contract.amended`, `envelope.completed`), 5 new handoffs.
+- [x] **P1.5d** Sales cluster — 13 new trigger_events (lead/opportunity lifecycle, leadership-layer signals: `pipeline_health.degraded`, `deal_risk.escalated`, `account_health.declined`, `whitespace.identified`, `co_sell.opportunity_created`, etc.) + 13 new handoffs. Resolved leadership-layer blackout for REV-INTEL, ACCT-PLAN, PRM by routing through existing publisher data_objects (`opportunities`, `customers`, `leads`). SALES-PERF / GTM-PLAN data_object scaffolding deferred to a future P1.5+ pass.
+- [x] **P1.5e** Customer cluster — Phase-1 scaffolding: 10 new data_objects across CCAAS (support_sessions, contact_records, queue_statistics), CONV-AI (conversation_transcripts, intent_detections), FSM (field_visits, dispatch_records), LOYALTY (loyalty_members, loyalty_transactions, loyalty_tiers); all linked via domain_data_objects role=master. Phase-B: 11 new trigger_events + 11 new handoffs covering health-score, call-escalation, sentiment, intent routing, field-service completion/dispatch, loyalty tier/member lifecycle, churn confirmation, expansion signaling.
 - *(each cluster pass also creates missing `trigger_events` rows for events not yet in the vocabulary)*
 
 ### S1.5 — Capture handoff-load patterns in SKILL.md (after each cluster)
-- [ ] After each `P1.5*` cluster: review any **new high-friction shapes** that emerged. SKILL.md documents 5 canonical shapes today; expect 2-3 more from across-cluster discovery (e.g. payroll-bank reconciliation, supplier-onboarding, claims-to-payout). Add to the existing list.
-- [ ] After each cluster: append any **new trigger-event categories** that emerged to the `event_category` enum (currently `lifecycle` / `state_change` / `threshold` / `signal`)
-- [ ] After each cluster: append any **cluster-specific quirks** to anti-patterns (e.g. "in HR cluster, `employee.created` fans to 4+ subscribers — never collapse")
+- [x] **High-friction shapes:** expanded from 5 to 7 canonical shapes. Added **Period/cycle-close coupling** (Finance + HR pay-cycle cascades) and **Alert/escalation without feedback loop** (Finance exception handling, Customer escalations, Procurement risk events). Existing 5 shapes annotated with new examples from across all 5 clusters.
+- [x] **Trigger-event categories:** no new categories needed. All 37 new events fit the existing `lifecycle` / `state_change` / `threshold` / `signal` enum.
+- [x] **Cluster-specific anti-patterns** captured in SKILL.md anti-patterns section: (a) don't conflate handoff `data_object_id` (per-edge payload) with `trigger_events.data_object_id` (publisher's master); (b) don't scaffold synthetic data_objects for leadership-layer / aggregation-tier domains; (c) verify live state, never infer from `.tmp_deploy/*.ts` deploy scripts (a P1.5c discovery).
+- [x] **Added "Task fan-out vs event fan-out" distinction** to data-object research section — one trigger spawns N template-driven downstream tickets but is still one `cross_domain_handoffs` row.
+- [x] **Added "Leadership-layer / aggregation-tier domains often master nothing"** rule to data-object research section — REV-INTEL/SALES-PERF/GTM-PLAN/ACCT-PLAN/PRM/EPM read upstream and publish derived signals; leave them data-object-empty.
 
 ### P2.1 — Tools catalog model design
-- [ ] Use `semantic-model-analyst` skill to produce `tool-catalog-semantic-model.md`
-- [ ] Confirm entities: `tools` (JSON-RPC function signatures, with `operation_kind` + optional `data_object_id`) + `skills` (first-class entity per q1)
-- [ ] Confirm junctions: `tool_solutions` (N:M to `domain_map.solutions`, with `delivery_strength` + `delivery_method` + optional `endpoint_url`); `skill_tools` (with `requirement_level` + notes)
-- [ ] Include in the spec: add `solution_kind` enum column to `domain_map.solutions` (`semantius_native` / `external_connector` / `action` / `compute_service` / `standard_solution`)
-- [ ] All other open questions resolved in [`plan-tools-catalog.md` § Closed questions](plan-tools-catalog.md#closed-questions) — no design decisions outstanding
+- [x] Use `semantic-model-analyst` skill to produce [tool-catalog-semantic-model.md](tool-catalog-semantic-model.md) (analyst v3.6, two-permission baseline per pure-reference module rule)
+- [x] Confirm entities: `tools` (with `operation_kind` enum + optional `data_object_id` FK + paired `data_object_only_when_query_or_mutate` / `data_object_required_when_query_or_mutate` validation rules) + `skills` (first-class entity with `skill_type` enum + optional `domain_id` FK + `domain_required_when_skill_type_is_system` rule)
+- [x] Confirm junctions: `tool_solutions` (N:M to `domain_map.solutions`, with `delivery_strength` + `delivery_method` + optional `endpoint_url`); `skill_tools` (with `requirement_level` + notes). Both junctions use computed-field labels (`tool_solution_label`, `skill_tool_label`) composed via `set_record` to render `<tool> via <solution>` / `<skill> needs <tool>`
+- [x] Include in the spec: §8 step 8 explicitly adds `solution_kind` enum column to `domain_map.solutions` (`semantius_native` / `external_connector` / `action` / `compute_service` / `standard_solution`, default `standard_solution`)
+- [x] All other open questions resolved in [`plan-tools-catalog.md` § Closed questions](plan-tools-catalog.md#closed-questions); the only §7.2 items in the new spec are platform-level forward-looking questions (multi-column uniqueness on the two junctions, future auth/tenancy modeling)
 
 ### P2.2 — Deploy tools catalog model
 - [ ] Use `semantic-model-deployer` against `tool-catalog-semantic-model.md`
@@ -211,6 +216,14 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 - **P2.6 ("100% Semantius") is re-runnable.** P2.6A runs after P2.5A.iii (certified system skills); P2.6B re-runs after P2.5B (adds process skills).
 - **S-items** (SKILL.md maintenance) are interspersed: S1.5 (after each P1.5 cluster), S2.2 (after tool_catalog deploys), S1.6 / S1.7 (after discovery), S2.5A (after system-skill tool requirements), S2.7 (final). They're each small but cumulative — skipping them strands hard-won patterns.
 - **Recommended start order:** Wave 0 (~0.5 session for SKILL.md prep) → Wave 1 (~3 sessions) → Wave 2 in parallel (P1.5* + P2.1-2.5A + interspersed S-items, ~8-9 sessions total) → Wave 3 (~2 sessions) → Wave 4 (~2-3 sessions). **Total: ~16-21 sessions across both plans.**
+
+---
+
+## Deferred — held until end-of-program review
+
+> Destructive or irreversible operations that are explicitly held until the final program review. Each item requires fresh explicit user confirmation when its turn comes; standing approvals do not carry over (per the project rule that any non-default status change / destructive action requires per-load confirmation). Surface this section to the user during end-of-program review.
+
+- [ ] **Drop `cross_domain_handoffs.trigger_event` (text column)** — superseded by the `trigger_event_id` FK added in [P1.4](#p14--migrate-existing-handoffs-to-fk). The text column is kept as a safety net (original strings preserved alongside the FK) until end-of-program review confirms the migration was correct. Drop only after the user explicitly says so.
 
 ---
 
