@@ -147,6 +147,9 @@ Both `info <server> <tool>` and `info <server>/<tool>` work interchangeably.
 **Layer 1 typed tools** manage the semantic data model: `create_entity`, `create_field`, `create_module`, `create_permission`, `create_role`, etc. These operate on Semantius's own schema tables.
 
 **Layer 2 `postgrestRequest`** operates on your actual business data. Any entity you define becomes a PostgreSQL table accessible via PostgREST:
+
+> ⚠️ **Wrong-layer smell.** If you find yourself running `postgrestRequest` and then counting rows, grouping, ordering by an aggregate, or computing a top-N in client code (bash, bun, jq, etc.), you're using the wrong layer. Stop and switch to `cube` (Layer 3) — it does the GROUP BY in SQL in one round-trip, handles joins via declared relationships, and avoids truncation/pagination traps on large junction tables. Hint: any question phrased as "which X has the most Y", "how many Y per X", "rank X by Y", "distribution of X across Y" is a cube question, not a postgrestRequest question.
+
 ```bash
 # Read records from your 'products' entity
 semantius call crud postgrestRequest '{"method":"GET","path":"/products?status=eq.active&order=name.asc"}'

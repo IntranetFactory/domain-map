@@ -28,6 +28,25 @@ For platform mechanics (CLI auth, PostgREST encoding, filter syntax, sqlToRest, 
 
 These rules exist because they have already been broken in this project. They are non-negotiable; explain them to the user if there's pushback, don't quietly bypass them.
 
+### 0. Use the `semantius` CLI for every Semantius call. Never the MCP tools.
+
+The project's API key is configured for the `semantius` CLI (reads `.env` from cwd; see rule #6). The MCP server tools (`mcp__claude_ai_deno__*`, `mcp__claude_ai_tests-ops__*`, and any other MCP-exposed Semantius surface) authenticate against a **different** scope and **will not work** with this project's API key — they fail with JWT-audience errors or silently hit the wrong tenant.
+
+**Always shell out to the CLI:**
+
+```bash
+semantius call crud postgrestRequest '{"method":"GET","path":"/<table>?..."}'
+semantius call crud read_entity     '{"filters":"table_name=eq.<name>"}'
+semantius call crud read_field      '{"filters":"table_name=eq.<name>","order":"field_order.asc"}'
+```
+
+**Never call:**
+- `mcp__claude_ai_deno__*` (read_entity, read_field, postgrestRequest, create_*, update_*, …)
+- `mcp__claude_ai_tests-ops__*` (same surface, different MCP server)
+- Any other `mcp__*` tool that wraps Semantius
+
+This applies to *every* read and write in this project, including ad-hoc schema lookups during a debugging session. If you reach for an MCP tool out of habit, stop and re-invoke the CLI instead.
+
 ### 1. `record_status` on newly-researched records is `"new"`. Never `"approved"`.
 
 `approved` means *a human has looked at this record and decided it's correct*. AI-derived research has not been looked at — it's a draft, even when it looks polished. The canonical state for freshly-loaded research is `new` (or `pending` once it's been formally surfaced for review). The default value on every `record_status` column in this module is already `"new"`, so the cleanest pattern is to **omit the field entirely** when inserting and let the database default kick in.
@@ -109,6 +128,30 @@ https://tests.semantius.app/domain_map/<table_name>
 
 Example: `https://tests.semantius.app/domain_map/solutions`. Without this link reviewers have no clickable starting point.
 
+### 8. `domains` rows need full metadata — never insert with defaults.
+
+The `domains` table has seven business-meaningful columns beyond `domain_code` / `domain_name` / `description` that the API silently accepts as defaults (zeros and empty strings). They are **not** optional metadata — downstream filters and the platform-vs-silos analysis read them. Every new `domains` row must populate:
+
+| Field | What good looks like |
+|---|---|
+| `crud_percentage` | int 0–100. Share of the domain expressible in JsonLogic (CRUD + state-based workflows + computed fields + ABAC). High = forms-and-workflow market (HRSD/CMDB at 95); low = heavy custom computation (CCaaS, RevRec at ~50). |
+| `business_logic` | Text. What goes **beyond** the JsonLogic-declarable slice. May be `""` only when `crud_percentage >= 95`. |
+| `min_org_size` | One of: `10 xs <50`, `20 s <500`, `30 m <2500`, `40 l <10000`, `50 xl 10000+`. Smallest realistic buyer by headcount. |
+| `cost_band` | One of: `$` (<$25k), `$$` ($25k–$100k), `$$$` ($100k–$500k), `$$$$` ($500k–$2M), `$$$$$` (>$2M). **Estimated yearly TCO for a 500-user org — that anchor is fixed across the catalog.** |
+| `certification_required` | Boolean. TRUE when either the *product* needs formal certification (Finanzamt/GoBD, FDA 510(k), banking regulator) or the *vendor / implementation partner* must be certified, i.e. the domain cannot be served OOTB. |
+| `usa_market_size_usd_m` | Int, US TAM in millions USD. Source from Gartner / IDC / Forrester or triangulate from public vendor revenue. |
+| `market_size_source_year` | Int, YYYY. Always paired with `usa_market_size_usd_m`. |
+
+Full definitions and examples live in [references/module-shape.md](references/module-shape.md) under `domains`.
+
+**Three prevention mechanisms — apply all three on every domain load:**
+
+1. **Read the manifest before drafting.** Open the `domains` row in [references/module-shape.md](references/module-shape.md) and the populate-on-insert checklist before writing a single row. Don't trust memory — the table grows over time.
+2. **Loader hard-fail.** Any script that inserts into `domains` must validate the payload against the manifest before the POST. If `crud_percentage === 0 || min_org_size === '' || cost_band === '' || (business_logic === '' && crud_percentage < 95) || usa_market_size_usd_m === 0 || market_size_source_year === 0`, throw — don't write. Convert silent omission into loud failure. See `validateDomainRow()` in [.tmp_deploy/load_research.ts](.tmp_deploy/load_research.ts) for the canonical implementation.
+3. **Post-load audit.** As the last step of Phase A, run `semantius call crud postgrestRequest '{"method":"GET","path":"/domains?select=domain_code,crud_percentage,min_org_size,cost_band,usa_market_size_usd_m&crud_percentage=eq.0&order=id.desc&limit=50"}'` and surface the result. If any row from this load appears, fix before declaring the phase done. The query also catches drift from older loads.
+
+**Why this rule exists:** the original ServiceNow / Salesforce / Workday / SAP / PROD-MGMT / SMM / SWP / ONBOARDING / ATS / ACCT-PLAN / GTM-PLAN / REV-INTEL / SALES-PERF / INTRANET / COLLAB-GOV / WEB-CONTOPS loads all inserted `domains` rows without populating these seven fields. The user discovered this in the UI and pushed back hard. 11 rows were sitting at zeros across the catalog with no signal that they needed backfill. The fields were even missing from [references/module-shape.md](references/module-shape.md) at the time — that gap was the upstream cause, and is closed now.
+
 ---
 
 ## The module at a glance
@@ -157,7 +200,7 @@ Example: `https://tests.semantius.app/domain_map/solutions`. Without this link r
 
 For any task that fits this skill — "research vendors for X", "is Y a domain?", "load this list of competitors", "find capabilities for Z" — work in this order. Don't skip steps; each one prevents a class of mistake.
 
-> **Domain research without the data-object phase is half a load.** Phase A (market shape — domains/capabilities/vendors/solutions) and Phase B (data-object footprint — data_objects + Signal 1 + Signal 2) are both default. If you skip B you've added a market shell but contributed nothing to the platform-vs-silos analysis the catalog exists to support.
+> **Domain research without the data-object phase is half a load. Without the function-axis phase it's two-thirds of a load.** Phase A (market shape — domains/capabilities/vendors/solutions), Phase B (data-object footprint — data_objects + Signal 1 + Signal 2), and Phase C (organisational-function coverage — `business_function_domains` + `business_function_capabilities`) are all default. Skipping B kills the platform-vs-silos analysis (Signals 1 & 2). Skipping C kills the buyer-persona / RACI axis (Signal 3 — *who in the org owns, contributes to, or consumes this market?*).
 
 1. **Read the existing catalog first.** Always query the live module before researching new entries. Duplicates and inconsistent naming hurt the catalog more than gaps do. Pull the relevant subset (domains in this area, vendors already present, solutions covering related markets, capabilities already on the relevant domains) and skim before you research.
 
@@ -186,13 +229,92 @@ For any task that fits this skill — "research vendors for X", "is Y a domain?"
    - `cross_domain_handoffs` from this domain outbound (and inbound where the partner domain is loaded) — apply the high-friction shape recognition in the "Data-object research" section below
    - Reference Phase-B loader: [.tmp_deploy/load_smm_data_objects.ts](.tmp_deploy/load_smm_data_objects.ts). Full procedure: see [Data-object research and cross-domain-handoff discovery](#data-object-research-and-cross-domain-handoff-discovery) below.
 
-   Phase B is **not optional** for genuine domain research. The only legitimate reasons to skip it: (a) the task is narrowly scoped to "find competitors for X" or "is Y a domain?" without an actual load; (b) the user explicitly defers it. In every other case — including any "research the X domain" or "load the X market" ask — both phases are part of the work.
+   Phase B is **not optional** for genuine domain research. The only legitimate reasons to skip it: (a) the task is narrowly scoped to "find competitors for X" or "is Y a domain?" without an actual load; (b) the user explicitly defers it. In every other case — including any "research the X domain" or "load the X market" ask — all three phases are part of the work.
+
+   **Phase C — Organisational-function coverage** (load third, against the same domain):
+   - `business_function_domains` rows linking the domain to the function(s) that **own / contribute-to / consume** it (`responsibility_type` enum). For most domains 2–4 rows: one `owner`, one or two `contributor`s, optionally one `consumer`.
+   - `business_function_capabilities` rows where a capability has a different functional owner than the domain (e.g. capability `COMPLIANCE-TRAIN` under domain `LMS` is owned by `Compliance`, not `L&D`). Only add when the capability-level RACI **diverges** from the domain-level RACI — otherwise the domain row is sufficient.
+   - Reference Phase-C loader: TBD (the function spine and per-domain links were loaded together; see [.tmp_deploy/load_business_functions.ts](.tmp_deploy/load_business_functions.ts) once it exists).
+
+   Phase C answers *"who in the org buys / runs / consumes this market?"* and powers buyer-persona filtering, RACI overlays, and the org-side analogue of the data-object signals. If the function spine is empty (only true at the very start of the catalog), populate it once before adding `business_function_domains` rows — see "Function spine" below for the canonical 20-function shape.
 
 6. **Verify and share.** After each phase, query counts on the affected tables, compare against expected, and link the user to the UI tables that changed.
 
-### Capability backfill gap
+### Backfill gaps to watch for
 
-`solution_capabilities` was empty until the PROD-MGMT load (2026-05-19). Every market loaded **before** that — ServiceNow, Salesforce, Workday, SAP, the ITSM/ITAM/CRM/HCM/GRC clusters, etc. — has solutions and capabilities but **no `delivery_strength` matrix between them**. When working in or adjacent to one of those clusters, expect to backfill the `solution_capabilities` rows for the solutions you touch. Don't ship a new market without the matrix; doing so makes the gap worse.
+The catalog has had three known backfill gaps where a category was scaffolded but not loaded as the workflow grew. Each was discovered after several markets had shipped without it. When working in any market loaded before the listed date, expect to backfill:
+
+| Category | Empty until | What to check on touched markets |
+|---|---|---|
+| `solution_capabilities` (`delivery_strength` matrix) | PROD-MGMT load (2026-05-19) | Every solution × capability for the touched market has a row. Don't ship a new market without the matrix. |
+| `business_function_domains` + `business_function_capabilities` (RACI axis) | Pre–ITSM-review backfill (2026-05-20) | Every domain has at least one `owner` row; every domain has at least one `contributor` or `consumer` row when cross-functional. |
+| `business_functions` spine itself | Pre–2026-05-20 | If the table is empty when starting Phase C, load the 20-function canonical spine first. |
+
+Don't ship a new market without closing all three gaps for it. Doing so makes the historical drift worse.
+
+### Cross-cutting capability convention
+
+`capability_domains` is many-to-many — a single capability *can* belong to multiple domains, and the cube documentation explicitly anticipates this ("Customer 360 spans CRM and Data Platform; Workforce Scheduling spans HR Operations and Field Service"). In practice the catalog has drifted to ~99% single-domain capabilities because every Phase-A loader produces market-scoped capabilities with **domain-prefixed codes** (`PM-ROADMAP`, `CDP-INGEST`, `ITSM-INCIDENT`, `COMM-CART-CHECKOUT`).
+
+The prefix is helpful for readability and prevents accidental collisions, but it locks the capability to one domain by naming — "`CDP-INGEST` also applies to MDM" reads as a contradiction. The catalog therefore systematically under-represents the cross-cutting capabilities that vendors actually compete on across multiple markets (ServiceNow Knowledge spans ITSM/CSM/HRSD; Workday Forecasting spans FP&A/Workforce-Planning; Reltio Identity Resolution spans CDP/MDM/IGA).
+
+**Naming rule:**
+
+- **Domain-prefixed code** (default for new market loads): use when the capability is genuinely market-specific and would not make sense in another domain (`PM-ROADMAP`, `ITSM-INCIDENT`, `CDP-IDENT-RES`).
+- **Domain-neutral code** (no prefix, plural-noun-only): use when the capability genuinely spans **≥3 domains** and vendors market the same shape across those markets. Examples: `KNOWLEDGE-MGMT`, `SLA-MGMT`, `SELF-SERVICE-PORTAL`, `AI-TRIAGE-CLASSIFICATION`, `IDENTITY-RESOLUTION`, `CUSTOMER-360`, `APPROVAL-WORKFLOW`, `WORKFORCE-SCHEDULING`, `TIME-TRACKING`, `COMPLIANCE-TRAINING`.
+
+**Decision test when authoring a capability:**
+
+1. Can I name **three independent vendors that explicitly market this capability across at least three of the candidate domains?** If yes → domain-neutral. If no → domain-prefixed.
+2. If a domain-prefixed capability later turns out to span ≥3 domains, **rename it** (update `capability_code`; capability_id stays stable, so `solution_capabilities` and `capability_domains` rows survive). Then add the missing `capability_domains` rows. See [.tmp_deploy/load_cross_cutting_capabilities.ts](.tmp_deploy/load_cross_cutting_capabilities.ts) for the loader pattern.
+3. When extending an existing cross-cutting capability into new domains, also extend its `solution_capabilities` matrix: vendors flagship-active in the new domain should get a row. Otherwise the matrix under-claims and the comparison view stays incomplete.
+
+**Anti-pattern:** creating parallel domain-prefixed capabilities for the same concept (`ITSM-KNOWLEDGE`, `CSM-KNOWLEDGE`, `HRSD-KNOWLEDGE`) when one cross-cutting capability + three `capability_domains` rows captures the same thing better. If you find yourself drafting `<DOMAIN>-KNOWLEDGE` for the second time, switch to `KNOWLEDGE-MGMT`.
+
+**Capability ↔ domain dual modelling (gray zone).** A concept can legitimately exist as **both** a capability AND a domain when the same noun names two different things:
+- The **domain** captures the *standalone software market* where pure-play vendors sell flagship products (e.g. `KMS` is the Knowledge Management market — Bloomfire, Guru, Tettra, Document360).
+- The **capability** captures the *embedded feature use* inside larger platforms (e.g. `KNOWLEDGE-MGMT` is the KB feature inside ITSM, CSM, HRSD, LSD).
+
+The two surfaces are reconciled via `capability_domains`: the cross-cutting capability links to **both** its standalone-market domain *and* every platform-market domain where it's a feature. So `KNOWLEDGE-MGMT` links to `KMS` (the market) plus `ITSM`, `CSM`, `HRSD`, `LSD` (the platforms where it's bundled).
+
+When you create a cross-cutting capability, always check: **does a same-concept domain already exist?** If yes, add the `capability_domains` row to it — don't quietly omit it. Apply this lens to `TIME-TRACKING` ↔ `WFM`, `IDENTITY-RESOLUTION` ↔ `MDM`/`IGA`, `WORKFORCE-SCHEDULING` ↔ `WFM` — these are existing pairs.
+
+---
+
+## Function spine (canonical shape)
+
+The `business_functions` table represents the **organisational axis** orthogonal to domains and data_objects. It's a hierarchical tree (`parent_business_function_id`) that anchors `business_function_domains` (RACI per market) and `business_function_capabilities` (RACI per capability when it diverges from the parent domain).
+
+The `business_functions` table has **no code column** — the natural key is `business_function_name`. The slugs below are script-side aliases (loader variables, doc references); they are not stored in the DB.
+
+The canonical 20-function top-level spine (loaded 2026-05-20):
+
+| Slug *(script-side)* | `business_function_name` | Notes |
+|---|---|---|
+| `SALES` | Sales | Pipeline, accounts, quota carriers, sales ops |
+| `MARKETING` | Marketing | Demand gen, brand, content, MarComms |
+| `CUSTOMER-SUCCESS` | Customer Success | Post-sale account health, expansion, retention |
+| `CUSTOMER-SERVICE` | Customer Service | Support, contact centre, field service |
+| `PRODUCT-MGMT` | Product Management | Product strategy, roadmap, discovery |
+| `ENGINEERING` | Software Engineering | App dev, platform, SRE, QA |
+| `IT` | IT Operations | Infrastructure, end-user computing, service desk |
+| `SECURITY` | Security | InfoSec, SecOps, IAM, GRC-security |
+| `DATA-ANALYTICS` | Data and Analytics | Data engineering, BI, ML/AI platforms |
+| `HR` | Human Resources | All-people functions (sub-tree: recruiting, payroll, L&D, …) |
+| `FINANCE` | Finance | All-money functions (sub-tree: accounting, FP&A, treasury, tax, AP, AR) |
+| `PROCUREMENT` | Procurement | Sourcing, supplier mgmt, S2P |
+| `SUPPLY-CHAIN` | Supply Chain | Planning, manufacturing, warehouse, logistics |
+| `LEGAL` | Legal | Contracts, litigation, IP, regulatory |
+| `GRC` | Governance, Risk and Compliance | Enterprise risk, audit, compliance ops, privacy |
+| `EXECUTIVE` | Executive | CEO office, corporate strategy, communications, M&A |
+| `FACILITIES` | Facilities and Real Estate | Workplace, real estate, EH&S |
+| `OPERATIONS` | Business Operations | Cross-functional ops, RevOps when not under Sales |
+| `RESEARCH-DEV` | Research and Development | Industry R&D outside software engineering (pharma, chem, materials) |
+| `ESG` | ESG and Sustainability | Sustainability reporting, climate accounting |
+
+Sub-functions (`parent_business_function_id` set to a top-level function) extend the tree. Currently loaded sub-functions include: HR → Recruiting, Payroll, L&D, Benefits, Workforce-Mgmt, Employee-Relations; Finance → Accounting, FP&A, Treasury, Tax, AP, AR, Internal-Audit; Supply Chain → Planning, Manufacturing, Warehouse, Logistics, Field-Service; Sales → Sales-Ops, Channel-Sales; Marketing → Demand-Gen, Brand, MarComms; IT → Service-Desk, Infrastructure, End-User-Computing; Engineering → Platform, SRE, QA; Procurement → Indirect-Procurement, Direct-Procurement; CS → Support, Field-Service-Customer.
+
+**How Phase C uses the spine.** When loading a new market, identify the **primary owner function** (1 row, `responsibility_type: owner`), the **contributor functions** (0–2 rows, `responsibility_type: contributor`), and the **consumer functions** (0–2 rows, `responsibility_type: consumer`). Example for `CRM`: owner = `SALES`, contributor = `MARKETING`, consumer = `CUSTOMER-SUCCESS`. Example for `ITSM`: owner = `IT`, contributor = `SECURITY`, consumer = everyone (don't list every domain as consumer — pick the function that materially *uses* it, not every employee with a laptop).
 
 ---
 
@@ -302,6 +424,9 @@ Beyond the point-solution-market test, these heuristics resolve the ambiguous ca
 - ❌ Writing one-off CLI calls for more than ~5 rows. Extend [.tmp_deploy/load_research.ts](.tmp_deploy/load_research.ts) instead — it's why the script exists.
 - ❌ Loading a new market with `domains` + `vendors` + `solutions` + `solution_domains` and stopping there. Capabilities (+ `capability_domains`) and `solution_capabilities` are part of the Phase-A load shape, not an optional follow-up. See workflow step 5.
 - ❌ Stopping after Phase A (market shape) and not running Phase B (data-object footprint — data_objects, domain_data_objects, cross_domain_handoffs). A market without its mastered/contributed data objects and its outbound handoffs contributes zero to Signal 1 and Signal 2, which is what the catalog exists to support. See workflow step 5.
+- ❌ Stopping after Phase A+B and not running Phase C (business_function_domains, optionally business_function_capabilities). A market without functional ownership contributes zero to the buyer-persona / RACI axis (Signal 3). The function-axis spine is small, but the per-domain links are part of every market load from 2026-05-20 onward.
+- ❌ Loading `domain_data_objects` master rows with empty `notes`. Even when the data_object has a single master today, write a one-sentence slice description in `notes` — it's the column reviewers read first when a second master shows up later. The "empty notes on multi-master rows" anti-pattern is the stricter form; the relaxed form applies to all master rows.
+- ❌ Loading a market with `min_org_size` of `xs`/`s` but only enterprise-tier solutions. If the stated minimum buyer is SMB/mid-market, the solution list must include at least 1–2 vendors that actually sell into that band. A list of pure enterprise solutions under an SMB-minimum domain is internally inconsistent and misleads downstream filters.
 - ❌ Predicting numeric IDs inside a script. Always re-read after insert to build the id map.
 - ❌ Trying to fit a large insert into a single command-line argument on Windows. Use stdin or chunk.
 - ❌ `cd`ing into the skill folder, `.tmp_deploy/`, or any subdirectory before running `semantius` or a loader script. Silently routes to the wrong tenant. See rule #6.
@@ -316,3 +441,11 @@ UI base: `https://tests.semantius.app/domain_map/<table_name>`
 Reference loader: [.tmp_deploy/load_research.ts](.tmp_deploy/load_research.ts)
 
 Module-shape reference: [references/module-shape.md](references/module-shape.md)
+
+**Tool selection for the question you're asking:**
+
+- **Loading rows / writing data** → `semantius call crud postgrestRequest` (Layer 2). Every `.tmp_deploy/load_*.ts` script uses it.
+- **Analytical questions — top-N, distribution, count-by, rank-by, "which domain has the most…", "how many capabilities per…"** → `semantius call cube discover` + `load` (Layer 3). Do **not** stream junction rows back with PostgREST and aggregate them in client code — that's the wrong layer and produces wrong-looking results (truncation, missed joins, manual GROUP BY in Bun).
+- **One-off schema lookup** → `semantius call crud read_entity` / `read_field`.
+
+See [`use-semantius` Decision Guide](../use-semantius/SKILL.md#quick-decision-guide) row 4 for the canonical guidance. The domain-map is heavy on ranking/aggregation questions ("which domains have the most capabilities", "owner-function distribution", "platform-vs-silos signals") — reach for cube by default on those, not PostgREST + post-processing.
