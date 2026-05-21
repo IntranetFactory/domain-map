@@ -19,30 +19,27 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 > The `domain-map-analyst` SKILL.md is the contract a fresh session opens. Today it doesn't know about `processes`, `trigger_events`, Phase D, the trigger-event ownership rule, the custom-process naming convention, the APQC PCF framework, or the future `solution_kind` column. Without these updates, the Wave-1 agent will reproduce avoidable friction. All edits here are to [`.claude/skills/domain-map-analyst/SKILL.md`](.claude/skills/domain-map-analyst/SKILL.md) and its [`references/`](.claude/skills/domain-map-analyst/references/) folder.
 
 ### S0.1 — Add new entities to "Module at a glance"
-- [ ] Add `processes` row to the Core concepts table (hierarchical, source_framework discriminator, APQC PCF backbone)
-- [ ] Add `trigger_events` row to the Core concepts table (controlled vocabulary tied to data_objects, used by `cross_domain_handoffs`)
-- [ ] Update the entity count in the section header (currently "21 entities" → 23)
+- [x] Add `processes` row to the Core concepts table (hierarchical, source_framework discriminator, APQC PCF backbone)
+- [x] Add `trigger_events` row to the Core concepts table (controlled vocabulary tied to data_objects, used by `cross_domain_handoffs`)
+- [x] Update the entity count in the section header (currently "21 entities" → 23)
 
-### S0.2 — Add Phase D to the workflow
-- [ ] Extend the workflow intro: "Phase A (market shape) + Phase B (data-object footprint) + Phase C (organisational-function coverage) + **Phase D (process-skill discovery)** are all default."
-- [ ] Add Phase D as workflow step subsection: covers the discovery procedure that derives ranked process-skill candidates from handoff clusters + APQC PCF mapping. Point at [`plan-process-skill-discovery.md`](../../../plan-process-skill-discovery.md) for the full procedure.
-- [ ] Update the anti-pattern list: add "Stopping after Phase A+B+C and not running Phase D" (where applicable — Phase D requires Phase B to be reasonably complete for a domain cluster).
+### S0.2 — Add Phase D (substrate-level discovery) alongside the per-market phases
+- [x] Extend the workflow intro: distinguish **per-market load phases** (A+B+C, all default for every market load) from **substrate-level analytics** (Phase D — process-skill discovery — run across the catalog once enough markets have shipped Phase B). Phase D is not a fourth per-market step.
+- [x] Add Phase D as a separate top-level section (sibling to "Workflow for any research task", not a fifth bullet under it). Covers the discovery procedure that derives ranked process-skill candidates from handoff clusters + APQC PCF mapping. Point at [`plan-process-skill-discovery.md`](../../../plan-process-skill-discovery.md) for the full procedure. Note that Phase D is **re-runnable across the catalog**, not per-market.
+- [x] Update the anti-pattern list: add "Treating Phase D as a per-market load step" — Phase D runs across the catalog after Phase B is broadly complete; running it after every single market load is wasted work.
 
 ### S0.3 — Codify trigger-event ownership rule + custom-process naming
-- [ ] Add to data-object research section: **"One event, many subscribers"** named pattern. When a single trigger fires from one domain to multiple targets, all subscriber handoff rows reference the SAME `trigger_events.id`. Event semantics live in one place; integration metadata lives on the per-edge handoff row.
-- [ ] Add to classification heuristics: **Custom process naming convention** — `CUSTOM-<CLUSTER>-<SHORT-NAME>` for any `processes` row with `source_framework='custom'`.
+- [x] Add to data-object research section: **"One event, many subscribers"** named pattern. When a single trigger fires from one domain to multiple targets, all subscriber handoff rows reference the SAME `trigger_events.id`. Event semantics live in one place; integration metadata lives on the per-edge handoff row.
+- [x] Add to classification heuristics: **Custom process naming convention** — `CUSTOM-<CLUSTER>-<SHORT-NAME>` for any `processes` row with `source_framework='custom'`.
 
 ### S0.4 — Add APQC PCF reference subsection
-- [ ] New subsection under "Function spine" (or sibling-level): "Process framework — APQC PCF"
-- [ ] Document the `source_framework` enum values (`apqc_pcf_cross_industry`, industry placeholders, `custom`)
-- [ ] Document the `external_id` field (carries the PCF ID for any `apqc_pcf_*` row)
-- [ ] Point at the repo-level `LICENSE-APQC-PCF.md` for attribution handling
-- [ ] Note: the cross-industry PCF v8 is loaded; industry-specific PCFs (Banking, Pharma, Telecom) are placeholder enum values for future loads
+- [x] New subsection under "Function spine" (or sibling-level): "Process framework — APQC PCF"
+- [x] Document the `source_framework` enum values (`apqc_pcf_cross_industry`, industry placeholders, `custom`)
+- [x] Document the `external_id` field (carries the PCF ID for any `apqc_pcf_*` row)
+- [x] Point at the repo-level `LICENSE-APQC-PCF.md` for attribution handling
+- [x] Note: the cross-industry PCF v8 is loaded; industry-specific PCFs (Banking, Pharma, Telecom) are placeholder enum values for future loads
 
-### S0.5 — Flag forthcoming `solution_kind` column
-- [ ] Add to the `solutions` entity description in `references/module-shape.md`: a note that **after Plan 2 P2.2 deploys, `solutions` will gain a `solution_kind` enum** (`semantius_native` / `external_connector` / `action` / `compute_service` / `standard_solution`)
-- [ ] When the column is added, this section transitions from "forthcoming" to documenting the live column
-- [ ] Cross-reference [`plan-tools-catalog.md`](../../../plan-tools-catalog.md) for the full semantics
+*(Documenting the forthcoming `solution_kind` column on `solutions` is deferred to S2.2 — at the moment the column actually lands. Adding "this column will exist later" to the docs in Wave 0 just couples Wave 0 to Wave 2 unnecessarily.)*
 
 ---
 
@@ -107,9 +104,9 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 - [ ] Generate `references/module-shape.md` for the new module
 - [ ] **Bootstrap `tool-catalog-analyst` skill** at `.claude/skills/tool-catalog-analyst/SKILL.md` covering: the module's two entities (`tools` + `skills`) and two junctions (`tool_solutions` + `skill_tools`); the `operation_kind` enum; the `solution_kind` semantics on the sibling `domain_map.solutions`; the "100% Semantius" query and its diagnostic companion; cross-module FK patterns. Mirror the structure of `domain-map-analyst` (Hard rules, Module at a glance, Workflow). Reference [`plan-tools-catalog.md`](plan-tools-catalog.md) for the design rationale.
 
-### S2.2 — Update `domain-map-analyst` SKILL.md for the `solution_kind` addition
-- [ ] Transition the `solution_kind` note from "forthcoming" (S0.5) to documenting the live column
-- [ ] Add per-value semantics + when-to-set guidance
+### S2.2 — Document `solution_kind` in `domain-map-analyst` SKILL.md + references
+- [ ] Add `solution_kind` to the `solutions` entry in `references/module-shape.md` (enum values, default, when each value applies). Column was added in P2.2 with all existing rows backfilled to `standard_solution`.
+- [ ] Add per-value semantics + when-to-set guidance to the SKILL.md classification heuristics
 - [ ] Add cross-module reference: tool requirements live in `tool_catalog`, queryable via cross-module joins (see the new `tool-catalog-analyst` SKILL.md)
 - [ ] Add an anti-pattern: "don't load tool-shaped capability rows in `domain_map.capabilities` — that's `tool_catalog.tools` territory; the catalog stays business-shaped"
 
@@ -129,22 +126,22 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 - [ ] Surface draft for review before bulk insert
 
 ### P2.5A — System-skill `skill_tools` (independent of Plan 1)
-- [ ] For each domain in `domain_map` (~100 domains), draft `skill_tools` rows for the hypothetical system skill
-- [ ] Derive each row from: domain's `data_objects` masters + outbound handoffs + typical workflow patterns
-- [ ] Insert rows with `requirement_level` (`required` / `optional` / `fallback`) and a one-line workflow-context note
-- [ ] **Order suggestion:** 100%-Semantius hypothesis candidates first (GRC, AUDIT, APM, CMDB, SPM, DCG, DQ, MDM, PA, SWP, EPM, ESG) — fastest confirm/refute of the killer hypothesis
-- [ ] Then obvious-non-Semantius (ITSM, HCM, ATS, MA, SMM, CCAAS, ESIGN, PAYROLL, S2P, B2C-COMM, LMS)
-- [ ] Then the remaining mid-confidence domains
+> Process in three tranches so the killer hypothesis ("which domains are 100% Semantius?") is confirmed/refuted fastest, and so the S2.5A pattern-capture happens while each tranche's lessons are fresh.
 
-### P2.6-preview — "100% Semantius" query (system skills only)
+- [ ] **P2.5A.i — 100%-Semantius hypothesis candidates:** GRC, AUDIT, APM, CMDB, SPM, DCG, DQ, MDM, PA, SWP, EPM, ESG. Draft `skill_tools` rows derived from the domain's `data_objects` masters + outbound handoffs + typical workflow patterns. Insert with `requirement_level` (`required` / `optional` / `fallback`) and a one-line workflow-context note.
+- [ ] **P2.5A.ii — Obvious-non-Semantius:** ITSM, HCM, ATS, MA, SMM, CCAAS, ESIGN, PAYROLL, S2P, B2C-COMM, LMS. Same shape; expected to surface `action` and `compute_service` tool requirements.
+- [ ] **P2.5A.iii — Mid-confidence remainder:** every other `domain_map` domain (~75 of the ~100 total). Apply patterns learned in tranches i and ii.
+
+### P2.6A — "100% Semantius" query (system skills only)
 - [ ] Author the saved cube query per [`plan-tools-catalog.md` § "100% Semantius" identification](plan-tools-catalog.md#100-semantius-identification): skills whose every required tool has a `semantius_native` solution delivery
 - [ ] Verify ≥5 system skills certified as 100% Semantius
 - [ ] Also save the diagnostic query (which tools force a skill out of 100% Semantius)
 - [ ] Save both queries to a `references/` folder for reuse
 
-### S2.5A — Codify tool-requirement derivation patterns in `tool-catalog-analyst` SKILL.md
-- [ ] After P2.5A populates ~10+ domains' `skill_tools` rows, document the recurring derivation patterns: "system skills mastering external data_objects → external_connector tools"; "domains with email/calendar handoffs → action tools"; "domains with AI-flavored capabilities → compute_service tools"
-- [ ] Capture the order heuristic (100%-Semantius hypothesis candidates first) and any surprises that emerged
+### S2.5A — Codify tool-requirement derivation patterns in `tool-catalog-analyst` SKILL.md (per tranche)
+- [ ] **After P2.5A.i (100%-Semantius tranche):** document the internal-only derivation patterns ("system skill against own data_objects → `query`/`mutate` only, no side_effects"). Validate or refute the 100%-Semantius hypothesis for each candidate; record which flipped.
+- [ ] **After P2.5A.ii (obvious-non-Semantius tranche):** document the recurring external-tool patterns ("HR/customer-comm domains → email + calendar `action` tools"; "AI-flavored domains → `compute_service` tools"; "domains mastering external data_objects → `external_connector` tools").
+- [ ] **After P2.5A.iii (mid-confidence remainder):** document anything that surprised — domains that flipped from one hypothesis to the other, or that needed unexpected tool kinds.
 
 ---
 
@@ -180,7 +177,7 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 - [ ] Insert `skill_tools` rows for each process skill
 - [ ] Surface the per-process tool-requirement maps for review
 
-### P2.6-full — "100% Semantius" re-run with process skills
+### P2.6B — "100% Semantius" re-run with process skills
 - [ ] Re-run the saved query after P2.5B is populated
 - [ ] Produce the final certified list (system skills + process skills)
 
@@ -208,10 +205,10 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Dependency notes
 
-- **Wave 0 (S0.*) blocks Wave 1.** Without the SKILL.md updates, the agent doing Wave 1 work doesn't know the `processes`/`trigger_events` entities or the new conventions. Run S0.1–S0.5 first.
+- **Wave 0 (S0.*) blocks Wave 1.** Without the SKILL.md updates, the agent doing Wave 1 work doesn't know the `processes`/`trigger_events` entities or the new conventions. Run S0.1–S0.4 first.
 - **P2.* (Wave 2) runs in parallel with P1.5* (Wave 2).** P2.1–P2.4 don't depend on any handoff data. P2.5A derives system-skill tool requirements from existing `domain_map` data (`data_objects` + `cross_domain_handoffs`), so it only needs Wave 1 done.
 - **P2.5B is the only hard cross-plan dependency.** It requires P1.7 (process candidates surfaced) before workflows can be enumerated per process skill.
-- **P2.6 ("100% Semantius") is re-runnable.** A first preview after P2.5A produces the certified list for system skills; the full version comes after P2.5B.
+- **P2.6 ("100% Semantius") is re-runnable.** P2.6A runs after P2.5A.iii (certified system skills); P2.6B re-runs after P2.5B (adds process skills).
 - **S-items** (SKILL.md maintenance) are interspersed: S1.5 (after each P1.5 cluster), S2.2 (after tool_catalog deploys), S1.6 / S1.7 (after discovery), S2.5A (after system-skill tool requirements), S2.7 (final). They're each small but cumulative — skipping them strands hard-won patterns.
 - **Recommended start order:** Wave 0 (~0.5 session for SKILL.md prep) → Wave 1 (~3 sessions) → Wave 2 in parallel (P1.5* + P2.1-2.5A + interspersed S-items, ~8-9 sessions total) → Wave 3 (~2 sessions) → Wave 4 (~2-3 sessions). **Total: ~16-21 sessions across both plans.**
 

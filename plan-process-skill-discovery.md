@@ -103,7 +103,7 @@ These are documented in [`.claude/skills/domain-map-analyst/SKILL.md`](.claude/s
 
 1. A populated `processes` entity (APQC PCF reference)
 2. A controlled `trigger_events` vocabulary, with existing handoffs migrated
-3. A `process_handoffs` junction populated from the clustered analysis
+3. Phase-B handoff backfill across the remaining clusters (HR / Finance / Procurement / Sales / Customer) — i.e. the substrate the discovery query reads
 4. A saved discovery cube query, runnable on demand
 5. The first cut of the ranked candidate list (~15-30 process-skill candidates)
 

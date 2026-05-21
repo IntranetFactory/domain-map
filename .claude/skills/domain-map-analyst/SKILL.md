@@ -156,9 +156,9 @@ Full definitions and examples live in [references/module-shape.md](references/mo
 
 ## The module at a glance
 
-21 entities. Read [references/module-shape.md](references/module-shape.md) for the per-entity field shapes, enums, and FK formats before doing any write that touches a field you haven't used recently.
+23 entities. Read [references/module-shape.md](references/module-shape.md) for the per-entity field shapes, enums, and FK formats before doing any write that touches a field you haven't used recently.
 
-### Core concepts (9 entities)
+### Core concepts (11 entities)
 
 | Table | Holds | Hierarchical? |
 |---|---|---|
@@ -167,7 +167,9 @@ Full definitions and examples live in [references/module-shape.md](references/mo
 | `business_functions` | Functional roles in an org (Sales, HR, Finance, IT) | yes |
 | `domains` | System-type domains (CRM, ITSM, HRIS, MDM) | yes |
 | `capabilities` | What an org *can do* (Lead Mgmt, Vulnerability Scanning) | yes |
+| `processes` | Industry-standard business processes (APQC PCF + `custom` org-specific). Backbone for Phase D process-skill discovery. Discriminated by `source_framework`. | yes |
 | `data_objects` | Canonical data subjects (Customer, Order, Asset, Invoice) | no |
+| `trigger_events` | Controlled vocabulary of state-change events on data_objects (`offer.accepted`, `employee.created`, `incident.resolved`). Referenced by `cross_domain_handoffs.trigger_event_id`. | no |
 | `solutions` | Specific products/platforms (Salesforce, ServiceNow, SAP S/4HANA) | no |
 | `vendors` | Legal vendor entities (Salesforce Inc, SAP SE) | no |
 | `regulations` | Compliance frameworks (HIPAA, GDPR, SOX, PCI-DSS) | no |
@@ -186,7 +188,7 @@ Full definitions and examples live in [references/module-shape.md](references/mo
 | `solution_capabilities` | solutions ↔ capabilities | delivery_strength (native / partial / via_extension / not_supported) |
 | `solution_data_objects` | solutions ↔ data_objects | ownership role |
 | `data_object_relationships` | data_objects ↔ data_objects | cardinality + kind |
-| `cross_domain_handoffs` | domains → domains (via data_object) | trigger_event + integration_pattern + friction_level. Cross-domain only — source ≠ target enforced by validation rule. Signal 2 of platform-vs-silos analysis (Signal 1 is the multi-master count on `domain_data_objects.role`) |
+| `cross_domain_handoffs` | domains → domains (via data_object) | `trigger_event_id` (FK to `trigger_events`) + integration_pattern + friction_level. Cross-domain only — source ≠ target enforced by validation rule. Signal 2 of platform-vs-silos analysis (Signal 1 is the multi-master count on `domain_data_objects.role`) |
 
 ### Aliases (1 entity)
 
@@ -201,6 +203,8 @@ Full definitions and examples live in [references/module-shape.md](references/mo
 For any task that fits this skill — "research vendors for X", "is Y a domain?", "load this list of competitors", "find capabilities for Z" — work in this order. Don't skip steps; each one prevents a class of mistake.
 
 > **Domain research without the data-object phase is half a load. Without the function-axis phase it's two-thirds of a load.** Phase A (market shape — domains/capabilities/vendors/solutions), Phase B (data-object footprint — data_objects + Signal 1 + Signal 2), and Phase C (organisational-function coverage — `business_function_domains` + `business_function_capabilities`) are all default. Skipping B kills the platform-vs-silos analysis (Signals 1 & 2). Skipping C kills the buyer-persona / RACI axis (Signal 3 — *who in the org owns, contributes to, or consumes this market?*).
+>
+> **Phase A+B+C are per-market load defaults.** [Phase D — process-skill discovery](#phase-d--process-skill-discovery-substrate-level) is a **substrate-level analytic**, not a fourth per-market step. It runs across the catalog once Phase B has shipped for enough clusters, and is re-runnable on demand. See the dedicated section below.
 
 1. **Read the existing catalog first.** Always query the live module before researching new entries. Duplicates and inconsistent naming hurt the catalog more than gaps do. Pull the relevant subset (domains in this area, vendors already present, solutions covering related markets, capabilities already on the relevant domains) and skim before you research.
 
@@ -368,6 +372,8 @@ The discovery questions, in order:
 
 **Fan-out is normal — don't collapse it.** One trigger event often hits multiple target domains simultaneously. `employee.created` fires from HCM to Onboarding, Payroll, IGA, and Talent-Mgmt as four separate handoff rows sharing one trigger; `offer.accepted` similarly fans ATS → Onboarding plus implicit feeds to HCM and Payroll. Each fan-out arm is its own row by design — they have different integration patterns, friction levels, and failure modes. Don't try to merge them into a single record.
 
+**Trigger-event ownership: "one event, many subscribers".** All fan-out rows for a single event reference the **same** `trigger_events.id` via `cross_domain_handoffs.trigger_event_id`. Event semantics (publisher, data object, state transition, description) live in one `trigger_events` row; per-edge integration metadata lives on each handoff row. Never duplicate `trigger_events` rows per subscriber — it breaks the trigger-event-prefix clustering signal that Phase D depends on. Full rationale in [Phase D — Process-skill discovery](#phase-d--process-skill-discovery-substrate-level).
+
 **Recognize the high-friction patterns.** After ~80 handoffs the consistent `friction_level: high` cases cluster into five recognisable shapes:
 - **Identity reconciliation across systems** — HCM→IGA, SMP→IGA, CDP→SALES-ENG: same logical person/customer, different identifier spaces, no canonical resolver
 - **Leaver / cancellation recall** — HCM→ITAM asset recall on termination, CSM→SUB-MGMT churn-risk feedback: the "going away" event is harder to catch than the "arriving" event
@@ -396,6 +402,66 @@ Both queries are one-line cube DSL once the data is in — surface them to the u
 
 ---
 
+## Phase D — Process-skill discovery (substrate-level)
+
+Phase D answers *"which clusters of cross-domain handoffs are coherent business processes that an agent skill could orchestrate?"* It is the payoff of Phase B — once enough domains have shipped `cross_domain_handoffs`, the substrate supports a deterministic discovery query that ranks process-skill candidates.
+
+**Phase D is not per-market.** It runs **once across the catalog** when Phase B is broadly complete (or per-cluster once that cluster's handoffs are loaded), and is re-runnable on demand. Don't run it after every market load — that's wasted work.
+
+### Inputs Phase D depends on
+
+| Entity | Why |
+|---|---|
+| `processes` | Reference catalog of named industry-standard processes (APQC PCF) that discovery maps clustered handoffs against. See [Process framework — APQC PCF](#process-framework--apqc-pcf) below. |
+| `trigger_events` | Controlled vocabulary on `cross_domain_handoffs.trigger_event_id`. The trigger-event prefix is the primary clustering signal — `offer.*`, `employee.*`, `incident.*`. |
+| `cross_domain_handoffs` | Phase-B substrate. Discovery operates on the handoff DAG. |
+
+### Discovery procedure
+
+The full procedure (cube DSL, clustering signals, ranking formula) lives in [`plan-process-skill-discovery.md` § Discovery procedure](../../../plan-process-skill-discovery.md#discovery-procedure-the-payoff). Summary of the five clustering signals:
+
+1. **Trigger-event prefix** (`offer.*`, `employee.*`, `incident.*`) — primary signal
+2. **Data-object lifecycle trace** (chain of handoffs an object travels through)
+3. **Domain-graph community detection** (densely connected subgraphs in the handoff DAG)
+4. **High-friction subset** (`friction_level=high` cluster)
+5. **Business-function involvement** (≥3 functions in a handoff cluster ⇒ process candidate)
+
+Each candidate cluster is matched against `processes` (APQC PCF) on name/description similarity. Unmatched clusters become candidates for `source_framework='custom'` process rows using the [custom-process naming convention](#custom-process-naming-convention) below.
+
+### Process framework — APQC PCF
+
+`processes.source_framework` is the discriminator enum:
+
+| Value | What it holds |
+|---|---|
+| `apqc_pcf_cross_industry` | APQC's cross-industry PCF v8 (~250-300 rows, 5-level hierarchy). **The current loaded framework.** |
+| `apqc_pcf_banking`, `apqc_pcf_consumer_products`, `apqc_pcf_electric_utilities`, `apqc_pcf_pharmaceutical`, `apqc_pcf_telecom` | Industry-specific PCFs. **Placeholder enum values** — not yet loaded. |
+| `custom` | Org-specific or discovery-derived processes not in any PCF. |
+
+`processes.external_id` carries the framework's own identifier — the PCF ID (e.g. `6.1.1`, `8.4.2.1`) for any `apqc_pcf_*` row; empty string for `custom`.
+
+`processes.hierarchy_level` is 1–5 matching APQC's level scheme for PCF rows; 1–N for custom.
+
+License: the APQC PCF is licensed perpetually, royalty-free, with attribution. Attribution is handled by a repo-level [`LICENSE-APQC-PCF.md`](../../../LICENSE-APQC-PCF.md) — no per-row attribution field needed.
+
+### Custom-process naming convention
+
+Any `processes` row with `source_framework='custom'` follows the convention:
+
+```
+CUSTOM-<CLUSTER>-<SHORT-NAME>
+```
+
+Examples: `CUSTOM-ONBOARD-DAY-1`, `CUSTOM-ACME-INTRA-LEGAL`, `CUSTOM-HR-OFFBOARDING-EXIT-INTERVIEW`. Keep `<SHORT-NAME>` to a handful of dash-separated tokens. The prefix makes custom rows trivially filterable and distinguishes them from PCF imports.
+
+### Trigger-event ownership — "one event, many subscribers"
+
+When a single trigger fires from one domain to multiple targets (e.g. `employee.created` → Onboarding + Payroll + IGA + Talent-Mgmt), **all four subscriber rows in `cross_domain_handoffs` reference the SAME `trigger_events.id`.** Event semantics (publisher, data object, state transition, description) live in **one** `trigger_events` row. Integration metadata (`friction_level`, `integration_pattern`, `notes`) lives on the **per-edge** handoff row.
+
+This is the standard pub/sub model and the only shape that keeps the trigger-event-prefix clustering signal (signal #1 above) clean for discovery. Never create separate `trigger_events` rows per subscriber.
+
+---
+
 ## Classification heuristics
 
 Beyond the point-solution-market test, these heuristics resolve the ambiguous cases that came up most often:
@@ -412,6 +478,8 @@ Beyond the point-solution-market test, these heuristics resolve the ambiguous ca
 
 - **Capabilities vs sub-domains.** When a concept fails the domain test, decide between modelling it as a sub-domain (rare) or as a capability (common). A capability is something an org *can do* expressed as a noun (Lead Management, Vulnerability Scanning, Automated Invoice Matching). It is independent of which solution delivers it.
 
+- **Custom processes use the `CUSTOM-<CLUSTER>-<SHORT-NAME>` prefix.** Any `processes` row with `source_framework='custom'` (i.e. not an APQC PCF import) must use this convention — `CUSTOM-ONBOARD-DAY-1`, `CUSTOM-HR-OFFBOARDING-EXIT-INTERVIEW`. The prefix keeps custom rows trivially filterable. Full convention in [Phase D — Custom-process naming convention](#custom-process-naming-convention).
+
 ---
 
 ## Anti-patterns
@@ -425,6 +493,8 @@ Beyond the point-solution-market test, these heuristics resolve the ambiguous ca
 - ❌ Loading a new market with `domains` + `vendors` + `solutions` + `solution_domains` and stopping there. Capabilities (+ `capability_domains`) and `solution_capabilities` are part of the Phase-A load shape, not an optional follow-up. See workflow step 5.
 - ❌ Stopping after Phase A (market shape) and not running Phase B (data-object footprint — data_objects, domain_data_objects, cross_domain_handoffs). A market without its mastered/contributed data objects and its outbound handoffs contributes zero to Signal 1 and Signal 2, which is what the catalog exists to support. See workflow step 5.
 - ❌ Stopping after Phase A+B and not running Phase C (business_function_domains, optionally business_function_capabilities). A market without functional ownership contributes zero to the buyer-persona / RACI axis (Signal 3). The function-axis spine is small, but the per-domain links are part of every market load from 2026-05-20 onward.
+- ❌ Treating [Phase D](#phase-d--process-skill-discovery-substrate-level) as a fourth per-market load step. Phase D is a **substrate-level analytic** that runs across the catalog once Phase B is broadly complete. Running it after every single market load is wasted work; skipping it entirely once enough clusters have shipped Phase B is the actual failure mode.
+- ❌ Creating one `trigger_events` row per subscriber when a single event fans out. All subscribers of `employee.created` share **one** `trigger_events.id`; only the handoff rows differ. Duplicating events per subscriber breaks Phase D's primary clustering signal.
 - ❌ Loading `domain_data_objects` master rows with empty `notes`. Even when the data_object has a single master today, write a one-sentence slice description in `notes` — it's the column reviewers read first when a second master shows up later. The "empty notes on multi-master rows" anti-pattern is the stricter form; the relaxed form applies to all master rows.
 - ❌ Loading a market with `min_org_size` of `xs`/`s` but only enterprise-tier solutions. If the stated minimum buyer is SMB/mid-market, the solution list must include at least 1–2 vendors that actually sell into that band. A list of pure enterprise solutions under an SMB-minimum domain is internally inconsistent and misleads downstream filters.
 - ❌ Predicting numeric IDs inside a script. Always re-read after insert to build the id map.
