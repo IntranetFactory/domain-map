@@ -56,7 +56,7 @@ Label column: `vendor_name`.
 | `vendor_id` | reference → `vendors` | no | Nullable for internal builds / manual processes |
 | `solution_type` | enum | yes | `saas` / `on_prem` / `hybrid` / `open_source` / `internal_build` / `manual_process` |
 | `is_active_in_market` | boolean | yes | `false` for sunset / retired products |
-| `solution_kind` | enum | yes | Default `standard_solution`. Drives the Tool Catalog's "100% Semantius" derivation. Values: `semantius_native` (the solution IS Semantius itself), `external_connector` (system of record — SAP, NetSuite, Salesforce CRM), `action` (side-effect service — Microsoft Graph Mail, Twilio, DocuSign), `compute_service` (compute / AI / automation — OpenAI Platform, Anthropic API, Playwright), `standard_solution` (default, for solutions not yet integrated as a tool source). Promote a row out of `standard_solution` only when at least one `tool_catalog.tool_solutions` row references it |
+| `solution_kind` | enum | yes | Default `standard_solution`. Classifies non-Semantius solutions by integration role. Values: `external_connector` (system of record — SAP, NetSuite, Salesforce CRM), `action` (side-effect service — M365, Twilio, DocuSign, Stripe), `compute_service` (compute / AI / web-automation — OpenAI Platform, Anthropic API, Playwright), `standard_solution` (default; not yet integrated as a tool source). **Semantius itself is NOT in this enum** — Semantius coverage is intrinsic to `tools.operation_kind`, not modeled as a solution row. Promote a row out of `standard_solution` only when at least one `tool_solutions` row references it |
 | `notes` | multiline | yes | |
 | `record_status` | enum | yes | Default `new` |
 
@@ -320,3 +320,87 @@ Label column: `alias_name`. Three flavors:
 - **synonym**: pure synonym (`vendor` / `supplier` / `counterparty`), neither `industry_id` nor `solution_id` set.
 - **industry_term**: `Customer` becomes `Patient` in Healthcare — set `industry_id`.
 - **solution_term**: `Customer` becomes `Account` in Salesforce — set `solution_id`.
+
+---
+
+## Agent tooling layer
+
+> Added 2026-05-21 (merged from the rolled-back `tool_catalog` sibling-module experiment). These four entities live in `domain_map` and join through `data_objects`, `domains`, and `solutions`. The 100% Semantius derivation reads through `solutions.solution_kind` (above).
+
+### `tools`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `description` | multiline | yes | |
+| `operation_kind` | enum | yes | Default `query`. Values: `query` (read structured business data), `mutate` (write structured business data), `side_effect` (external action with no business-data return — `send_email`, `create_calendar_event`), `compute` (pure computation / AI / web automation). Drives the 100% Semantius derivation |
+| `data_object_id` | reference → `data_objects` | no | **Required when `operation_kind ∈ {query, mutate}`; must be null when `operation_kind ∈ {side_effect, compute}`.** Enforced by paired validation rules `data_object_only_when_query_or_mutate` and `data_object_required_when_query_or_mutate` |
+| `record_status` | enum | yes | Default `new` |
+
+Label column: `tool_name` (lowercase snake_case verb form — `send_email`, `query_invoices`, `transcribe_audio`).
+
+### `skills`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `description` | multiline | yes | |
+| `skill_type` | enum | yes | Default `system`. Values: `system` (mirrors one domain one-to-one), `process` (orchestrates a cross-domain handoff cluster), `role` (wraps a specific user-role workflow) |
+| `domain_id` | reference → `domains` | no | **Required when `skill_type = 'system'`; null otherwise.** Enforced by `domain_required_when_skill_type_is_system` |
+| `record_status` | enum | yes | Default `new` |
+
+Label column: `skill_name` (lowercase snake_case or kebab-case — `domain-map-analyst`, `onboarding-process`, `lead-to-cash`).
+
+### `tool_solutions` (junction: `tools` ↔ `solutions`)
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `tool_id` | parent → `tools` | yes | Cascade on delete |
+| `solution_id` | parent → `solutions` | yes | Cascade on delete |
+| `delivery_strength` | enum | yes | Default `native`. Values: `native` (first-class capability), `partial` (covers most but not all use cases), `via_extension` (requires add-on / marketplace plugin), `not_supported` (recorded for completeness; excluded from coverage queries) |
+| `delivery_method` | enum | yes | Default `mcp_server`. Values: `mcp_server` (preferred), `rest_api`, `sdk`, `cli` |
+| `endpoint_url` | url | yes | MCP server URL or API base when known. Empty string acceptable |
+| `notes` | multiline | yes | |
+| `record_status` | enum | yes | Default `new` |
+
+Label column: `tool_solution_label` (computed: `<tool_name> via <solution_name>`; auto-disabled in the UI). Intended-unique on `(tool_id, solution_id)` — caller-side dedup, platform's native unique annotation is single-column.
+
+### `skill_tools` (junction: `skills` ↔ `tools`)
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `skill_id` | parent → `skills` | yes | Cascade on delete |
+| `tool_id` | parent → `tools` | yes | Cascade on delete |
+| `requirement_level` | enum | yes | Default `required`. Values: `required` (skill cannot function without), `optional` (improves; degrades gracefully without), `fallback` (invoked only when a preferred tool is unavailable) |
+| `notes` | multiline | yes | Workflow context, e.g. "called per matched invoice to notify the SaaS owner" |
+| `record_status` | enum | yes | Default `new` |
+
+Label column: `skill_tool_label` (computed: `<skill_name> needs <tool_name>`; auto-disabled in the UI). Intended-unique on `(skill_id, tool_id)` — caller-side dedup.
+
+**Semantius coverage rollup (revised 2026-05-21):** Semantius coverage is intrinsic to `tools.operation_kind`. The enum partitions:
+
+- **Semantius-covered (today):** `query`, `mutate` (delivered by CRUD + cube)
+- **Not Semantius-covered (today):** `side_effect`, `compute` (no native email / SMS / AI / web-automation)
+
+As Semantius gains new generic primitives, new `operation_kind` values are added (or existing ones split) and tools are reclassified. **Semantius is NOT a row in `solutions`. There are no pseudo-tools.** The `tool_solutions` matrix records non-Semantius deliveries only.
+
+**Rollup query (per-tool aggregation):**
+
+```
+OOTB Semantius % for domain X =
+  (count of X's required tools whose operation_kind ∈ {query, mutate})
+  / (total required tools)
+```
+
+5 query tools + 1 send_email = 5/6 = 83% (not 50% — operation_kind classifies tools, but the tool is the unit of count).
+
+**Customer Y coverage for skill Z:**
+
+```
+% = (count of Z's required tools where:
+       operation_kind ∈ Semantius-covered set  OR
+       at least one tool_solutions row links the tool to a solution Y has deployed)
+    / (total required tools)
+```
+
+The diagnostic query (which tools force a skill below 100%) is the inverse: list Z's required tools whose `operation_kind` is NOT Semantius-covered AND has no `tool_solutions` row in Y's portfolio.
+
+See [`plan-tools-catalog.md` § Decision record](../../../plan-tools-catalog.md#decision-record--2026-05-21-authoritative-overrides-the-body-below-where-they-conflict) for the full rationale.

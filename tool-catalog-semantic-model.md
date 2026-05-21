@@ -1,10 +1,36 @@
 ---
 artifact: semantic-model
 version: "3.6"
-system_name: Tool Catalog
-system_description: Agent tools and skill requirements
-system_slug: tool_catalog
+system_name: Domain Map
+system_description: Enterprise software market catalog
+system_slug: domain_map
 domain: Agent Tooling
+merged_into: domain_map
+merge_note: |
+  The four entities defined here (tools, skills, tool_solutions, skill_tools) were
+  initially deployed as a sibling module `tool_catalog` (id 1002) per the design in
+  plan-tools-catalog.md. That split was reverted on 2026-05-21 — the FK coupling to
+  domain_map was too tight (every entity carries at least one FK back to data_objects /
+  domains / solutions) to justify a separate module. The entities now live in
+  domain_map (module_id=1001) under domain_map:read / domain_map:manage.
+  This file is preserved as the source spec for the entities themselves; everything
+  said about the module name/slug refers to the rolled-back state. The §2 Permissions
+  summary baseline (tool_catalog:read / tool_catalog:manage) is superseded — these
+  entities now reuse the domain_map baseline.
+semantius_coverage_note: |
+  A second design reversal also landed 2026-05-21 (after substantial discussion). The
+  original spec defined Semantius's coverage via a Semantius row in `solutions` (with
+  `solution_kind='semantius_native'`), three pseudo-tools (`semantius_crud`,
+  `semantius_cube`, `semantius_jsonlogic`), and explicit `tool_solutions` rows linking
+  Semantius to each Semantius-deliverable tool. That whole layer is REMOVED. Semantius
+  coverage is now intrinsic to `tools.operation_kind`: certain enum values are
+  Semantius-covered (today: `query`, `mutate`), others are not (today: `side_effect`,
+  `compute`). As Semantius gains new generic primitives, new `operation_kind` values
+  are added (or existing ones split) and tools are reclassified. There is no Semantius
+  row in `solutions`. There is no `semantius_native` value in `solution_kind`. There
+  are no pseudo-tools. The `tool_solutions` matrix records non-Semantius deliveries
+  only. §8 step 8 (the `solution_kind` enum addition) is updated to reflect this:
+  4 enum values, not 5. §3.1 / §3.2 / §3.3 / §3.4 entity specs still apply.
 naming_mode: agent-optimized
 created_at: 2026-05-21
 entities:
@@ -339,7 +365,7 @@ None.
    - `format`: `enum`
    - `title`: `Solution Kind`
    - `description`: A classification used by the Tool Catalog's 100% Semantius derivation. `semantius_native` means the solution IS Semantius itself; `external_connector` is a system of record (SAP, NetSuite, Salesforce); `action` is a side-effect service (Microsoft Graph Mail, Twilio, DocuSign); `compute_service` is a compute/AI/automation service (OpenAI, Anthropic, Playwright); `standard_solution` is the default for solutions not yet integrated as a tool source.
-   - `enum_values`: `["semantius_native", "external_connector", "action", "compute_service", "standard_solution"]`
+   - `enum_values`: `["external_connector", "action", "compute_service", "standard_solution"]`  *(was 5 values; `semantius_native` removed 2026-05-21 — Semantius coverage is now intrinsic to `tools.operation_kind`, not a row in `solutions`)*
    - `default`: `"standard_solution"`
    - Backfill: after creating the column, update every existing row in `domain_map.solutions` to `solution_kind = 'standard_solution'` (the platform default already does this when the field is added; the explicit backfill is a belt-and-braces safeguard).
 9. Apply per-entity read-side rules. No `Input type rules` or `Select rule` sub-blocks are declared in this model; no `update_field` or `update_entity` calls are needed for those.

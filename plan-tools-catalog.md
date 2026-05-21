@@ -1,6 +1,97 @@
-# Plan — Tools catalog (side-effect tools for agent skills) + "100% Semantius" identification
+# Plan — Tools catalog (side-effect tools for agent skills) + Semantius coverage rollups
 
 > Drafted 2026-05-20. Sibling plan to [`plan-process-skill-discovery.md`](plan-process-skill-discovery.md). Intended to be picked up cold in a fresh session.
+
+---
+
+## Decision record — 2026-05-21 (authoritative; overrides the body below where they conflict)
+
+After deploy + discussion, two design reversals landed. The body of this plan still describes the v1 design as drafted; **read this decision record first** and treat any conflict with the body as superseded.
+
+### Reversal #1: tool_catalog merged into domain_map
+
+The four entities (`tools`, `skills`, `tool_solutions`, `skill_tools`) now live in `domain_map` (module_id=1001), not in a sibling `tool_catalog` module. Three of the four entities carry FKs back to `domain_map.data_objects` / `domains` / `solutions`; that's one logical module, not two. See "Why these entities live in `domain_map`" below.
+
+### Reversal #2: no Semantius row, no pseudo-tools, no `semantius_native` enum value
+
+The v1 design proposed:
+- A Semantius solution row in `domain_map.solutions` with `solution_kind = 'semantius_native'`.
+- Three pseudo-tools (`semantius_crud`, `semantius_cube`, `semantius_jsonlogic`) as catalog entries.
+- Explicit `tool_solutions` rows linking Semantius to every Semantius-deliverable tool.
+
+**All of that is out.** The arguments that killed it:
+
+- Adding Semantius as a row in a *competitive product catalog* is conceptually self-referential. The catalog records products you compare and integrate; Semantius is the platform doing the comparing.
+- Pseudo-tools are an awkward layer that pretends abstract verbs like `send_email` and Semantius primitives like `semantius_crud` are the same kind of thing. They aren't.
+- The whole construction only existed to make the certification query symmetric (`WHERE solution.solution_kind = 'semantius_native'`). That's not worth the model contortion.
+
+**What replaces it.** Semantius coverage is **intrinsic to `tools.operation_kind`**, not modeled in `tool_solutions`:
+
+| `operation_kind` value | Semantius covers? (today) |
+|---|---|
+| `query` | yes (CRUD reads, cube) |
+| `mutate` | yes (CRUD writes) |
+| `side_effect` | no (Semantius doesn't ship email/SMS/notifications) |
+| `compute` | no (Semantius doesn't ship AI/inference/web-automation) |
+
+As Semantius gains new generic primitives (e.g. native email send, native AI compute, native scheduler), new `operation_kind` values get added (or existing ones split — `query` could split into `query_crud` vs `query_cube`). New values are tagged as Semantius-covered or not by the same intrinsic logic. The Semantius-covered set evolves with the platform.
+
+### Rollups (per-tool aggregation, not per-operation_kind)
+
+The unit of measurement is **the tool**, classified by its `operation_kind`. A skill needing 5 `query` tools + 1 `send_email` tool is at **5/6 = 83% Semantius OOTB**, not 50%. The operation_kind is the classifier; the tool is what gets counted.
+
+**OOTB Semantius coverage for domain X:**
+```
+% = (count of X's required tools whose operation_kind is in Semantius-covered set)
+    / (total required tools)
+```
+
+**Customer Y coverage for skill Z:**
+```
+% = (count of Z's required tools where:
+       tool's operation_kind is Semantius-covered  OR
+       at least one tool_solutions row links the tool to a solution Y has deployed)
+    / (total required tools)
+```
+
+Customer score can be **lower** than OOTB Semantius score (if customer hasn't deployed the Semantius modules whose data_objects the query/mutate tools depend on — modeled separately, not in this catalog) or **higher** (if customer has external solutions covering side_effect/compute tools Semantius can't).
+
+### What this means for `tool_solutions`
+
+The matrix is for **non-Semantius solutions only**. M365 → send_email, NetSuite → query_invoices, OpenAI → transcribe_audio, etc. Semantius does not appear in `tool_solutions`. The Semantius-side coverage is computed from `operation_kind` membership in the Semantius-covered set.
+
+### What this means for `domain_map.solutions.solution_kind`
+
+Enum dropped from 5 values to 4. Live state already updated 2026-05-21:
+
+| Value | Meaning |
+|---|---|
+| `external_connector` | System of record providing query/mutate tools (SAP, NetSuite, Salesforce CRM, Workday HCM) |
+| `action` | Side-effect service (M365, Twilio, DocuSign, Stripe) |
+| `compute_service` | Compute / AI / web-automation service (OpenAI, Anthropic, Playwright) |
+| `standard_solution` | Default; not yet integrated as a tool source |
+
+`semantius_native` is **removed**. Semantius isn't in `solutions`. The 629 existing solution rows stay at `standard_solution` until P2.4 promotes the ~30-50 that source tools to their right kind.
+
+### Open question deferred to the next session
+
+How do we track *which `operation_kind` values are Semantius-covered* programmatically? Three options surfaced but not chosen:
+1. **Hardcode the set in the rollup query** (today: `WHERE operation_kind IN ('query', 'mutate')`). Cheapest. Query updated when the set churns.
+2. **A small config table** (`semantius_native_operation_kinds`) listing the values. Heavier but the catalog answers the question.
+3. **A column on a future `operation_kinds` lookup entity** (would require modeling `operation_kind` as a table rather than an enum). Most flexible, most schema work.
+
+Recommended starting point: option 1. Revisit if the set churns more than once a year.
+
+### What stands of the original design (still applies)
+
+- The four entities `tools` / `skills` / `tool_solutions` / `skill_tools` (live in `domain_map`).
+- The `operation_kind` enum on `tools` (the four values, with the Semantius-covered partition above).
+- The `solution_kind` enum on `solutions` (the four values above).
+- The `skill_tools` matrix (per-skill tool requirements).
+- The `tool_solutions` matrix (per-tool vendor coverage, non-Semantius only).
+- The validation rules: `data_object_only_when_query_or_mutate` and `data_object_required_when_query_or_mutate` on `tools`; `domain_required_when_skill_type_is_system` on `skills`.
+
+---
 
 ## Goal
 
@@ -10,13 +101,26 @@ Two outcomes:
 1. Per skill (system or process), a list of required tools and candidate vendors.
 2. A derived "**is this skill 100% Semantius-feasible?**" query — i.e. does the skill need *anything* beyond Semantius core + JsonLogic to do its job? Domains whose skills come out 100% Semantius are the cheapest to ship, the easiest to package, and the highest commercial-leverage candidates.
 
-## Why a separate Semantius module
+## Why these entities live in `domain_map` (revised 2026-05-21)
 
-The `domain_map` answers *"what enterprise software markets exist and what do they deliver?"* — market-research view.
+> **Reversal of the original design.** The first draft of this plan called for a sibling module named `tool_catalog`. That was deployed on 2026-05-21 and immediately rolled back — see the merge note in [`tool-catalog-semantic-model.md`](tool-catalog-semantic-model.md). The four entities (`tools`, `skills`, `tool_solutions`, `skill_tools`) now live in `domain_map` (id 1001). The original rationale is preserved below for reference but does not reflect the deployed state.
 
-The `tool_catalog` answers *"what side-effect operations does an agent skill need to perform, and which concrete tools deliver each one?"* — integration-architecture view.
+The FK coupling is too tight to justify a separate module:
 
-Different audiences (market researcher vs. integration architect), different decision contexts, different update cadences. Should live as a **sibling Semantius module** named `tool_catalog`, not as additions to `domain_map`.
+- `tools.data_object_id → domain_map.data_objects`
+- `skills.domain_id → domain_map.domains`
+- `tool_solutions.solution_id → domain_map.solutions`
+
+Three of the four entities can't be read meaningfully without joining back to `domain_map`. And the "100% Semantius" derivation joins through `domain_map.solutions.solution_kind` — the question itself is cross-module. That's one logical module, not two. Same audience (catalog curator), same cadence, same query surface.
+
+What the additions to `domain_map` actually look like:
+- Four new entities (`tools`, `skills`, `tool_solutions`, `skill_tools`) — same shape as the original design, just hosted in `domain_map` instead of a sibling.
+- One new column on `domain_map.solutions`: `solution_kind` enum.
+- No new permissions, no new roles, no new module — `domain_map:read` / `domain_map:manage` cover the new entities.
+
+### Original rationale (rejected)
+
+The `domain_map` answers *"what enterprise software markets exist and what do they deliver?"* (market-research view). A separate `tool_catalog` was proposed to answer *"what side-effect operations does an agent skill need to perform, and which concrete tools deliver each one?"* (integration-architecture view). The audience / cadence / decision-context distinction sounded clean on paper but didn't survive contact with the FK shape: the integration view is *built from* the market view, not parallel to it.
 
 ## Context — what to read before starting
 

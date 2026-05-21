@@ -99,35 +99,39 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 - [x] Use `semantic-model-analyst` skill to produce [tool-catalog-semantic-model.md](tool-catalog-semantic-model.md) (analyst v3.6, two-permission baseline per pure-reference module rule)
 - [x] Confirm entities: `tools` (with `operation_kind` enum + optional `data_object_id` FK + paired `data_object_only_when_query_or_mutate` / `data_object_required_when_query_or_mutate` validation rules) + `skills` (first-class entity with `skill_type` enum + optional `domain_id` FK + `domain_required_when_skill_type_is_system` rule)
 - [x] Confirm junctions: `tool_solutions` (N:M to `domain_map.solutions`, with `delivery_strength` + `delivery_method` + optional `endpoint_url`); `skill_tools` (with `requirement_level` + notes). Both junctions use computed-field labels (`tool_solution_label`, `skill_tool_label`) composed via `set_record` to render `<tool> via <solution>` / `<skill> needs <tool>`
-- [x] Include in the spec: §8 step 8 explicitly adds `solution_kind` enum column to `domain_map.solutions` (`semantius_native` / `external_connector` / `action` / `compute_service` / `standard_solution`, default `standard_solution`)
+- [x] Include in the spec: §8 step 8 explicitly adds `solution_kind` enum column to `domain_map.solutions`. **Revised 2026-05-21**: 4 values (`external_connector` / `action` / `compute_service` / `standard_solution`); `semantius_native` removed because Semantius is not classified here — its coverage is intrinsic to `tools.operation_kind`. Default `standard_solution`.
 - [x] All other open questions resolved in [`plan-tools-catalog.md` § Closed questions](plan-tools-catalog.md#closed-questions); the only §7.2 items in the new spec are platform-level forward-looking questions (multi-column uniqueness on the two junctions, future auth/tenancy modeling)
 
-### P2.2 — Deploy tools catalog model
-- [x] Deployed via inline Bun script (deployer skill loaded for workflow). Module `tool_catalog` (id 1002, type domain), 2 permissions, 1 hierarchy row, 2 default roles, 4 entities (`tools`, `skills`, `tool_solutions`, `skill_tools`) with all fields + validation_rules + computed_fields per v3.6 spec.
+### P2.2 — Deploy tools catalog entities into `domain_map`
+> **Design reversal 2026-05-21:** Originally deployed as a sibling module `tool_catalog` (id 1002), then merged into `domain_map` (id 1001) the same day. The 4 entities have too tight an FK coupling to `domain_map` to justify being a separate module. See [`plan-tools-catalog.md` § "Why these entities live in `domain_map`"](plan-tools-catalog.md#why-these-entities-live-in-domain_map-revised-2026-05-21) and the merge note in [`tool-catalog-semantic-model.md`](tool-catalog-semantic-model.md).
+- [x] Deployed 4 entities (`tools`, `skills`, `tool_solutions`, `skill_tools`) into `domain_map` (module_id=1001), reusing `domain_map:read` / `domain_map:manage`. No new module / permissions / roles. All fields + validation_rules + computed_fields per v3.6 spec.
 - [x] Added `solution_kind` enum to `domain_map.solutions` (5 values, default `standard_solution`); backfilled all 629 rows.
-- [x] Verified in UI: https://tests.semantius.app/tool_catalog/tools, `/skills`, `/tool_solutions`, `/skill_tools` all render. Cross-module FKs resolved (`tools.data_object_id → domain_map.data_objects`, `skills.domain_id → domain_map.domains`, `tool_solutions.solution_id → domain_map.solutions`).
-- [x] Generated [`.claude/skills/tool-catalog-analyst/references/module-shape.md`](.claude/skills/tool-catalog-analyst/references/module-shape.md). Also updated [`domain-map-analyst/references/module-shape.md`](.claude/skills/domain-map-analyst/references/module-shape.md) with the new `solution_kind` column.
-- [x] Bootstrapped [`.claude/skills/tool-catalog-analyst/SKILL.md`](.claude/skills/tool-catalog-analyst/SKILL.md) — mirrors `domain-map-analyst` structure (Hard rules, Module at a glance, Workflow, Anti-patterns); covers `operation_kind`, `solution_kind` semantics, the 100% Semantius derivation, cross-module FK patterns.
+- [x] Verified in UI: https://tests.semantius.app/domain_map/tools, `/skills`, `/tool_solutions`, `/skill_tools` all render. Cross-table FKs resolved (now intra-module: `tools.data_object_id`, `skills.domain_id`, `tool_solutions.solution_id`).
+- [x] Updated [`domain-map-analyst/references/module-shape.md`](.claude/skills/domain-map-analyst/references/module-shape.md) with the `solution_kind` column and the 4 new entities (folded in from the separate skill that was scrapped).
+- [x] Folded `tool-catalog-analyst` content into `domain-map-analyst` SKILL.md (operation_kind / solution_kind / 100% Semantius derivation sections + anti-patterns). The standalone `tool-catalog-analyst` skill folder was removed — one module, one analyst skill.
 
-### S2.2 — Document `solution_kind` in `domain-map-analyst` SKILL.md + references
+### S2.2 — Document `solution_kind` + new entities in `domain-map-analyst` SKILL.md + references
+> Revised 2026-05-21 after the `tool_catalog` → `domain_map` merge. The cross-module reference item is moot (intra-module now); the rest still applies.
 - [x] Add `solution_kind` to the `solutions` entry in `references/module-shape.md` (done as part of P2.2 — enum values, default, per-value usage)
 - [ ] Add per-value semantics + when-to-set guidance to the `domain-map-analyst` SKILL.md classification heuristics
-- [ ] Add cross-module reference: tool requirements live in `tool_catalog`, queryable via cross-module joins (see the new `tool-catalog-analyst` SKILL.md)
-- [ ] Add an anti-pattern: "don't load tool-shaped capability rows in `domain_map.capabilities` — that's `tool_catalog.tools` territory; the catalog stays business-shaped"
+- [ ] Add an anti-pattern: "don't load tool-shaped capability rows in `domain_map.capabilities` — those are `tools` (in the same module), not `capabilities`; the capabilities table stays business-shaped"
+- [ ] Add the 4 new entities (`tools`, `skills`, `tool_solutions`, `skill_tools`) to `module-shape.md` and SKILL.md's "Module at a glance" section (folded in from the deleted `tool-catalog-analyst` skill)
 
 ### P2.3 — `tools` vocabulary
+> **Revised 2026-05-21:** see [plan-tools-catalog.md § Decision record](plan-tools-catalog.md#decision-record--2026-05-21-authoritative-overrides-the-body-below-where-they-conflict). No pseudo-tools; Semantius coverage is intrinsic to `operation_kind`.
 - [ ] Draft ~40 `tools` (JSON-RPC functions) with `operation_kind` set: `send_email`, `query_invoices`, `create_calendar_event`, `post_chat_message`, `make_phone_call`, `send_sms`, `run_shell_command`, `transcribe_audio`, `search_web`, `read_pdf`, `execute_payment`, `sign_document`, `generate_image`, `store_blob`, `extract_entities`, `web_scrape`, etc.
-- [ ] Set `data_object_id` FK for `query`/`mutate` operations (e.g. `query_invoices` → `invoices` data_object)
-- [ ] Include three Semantius pseudo-tools (`semantius_crud`, `semantius_cube`, `semantius_jsonlogic`) so they participate in the matrix uniformly
+- [ ] Set `data_object_id` FK for `query`/`mutate` operations (e.g. `query_invoices` → `invoices` data_object). Required when `operation_kind ∈ {query, mutate}`; null otherwise — enforced by validation rules.
+- [ ] ~~Include three Semantius pseudo-tools~~ — dropped 2026-05-21. Semantius coverage lives on `operation_kind`, not on individual tool rows.
 - [ ] Surface draft for review before bulk insert
 - [ ] Load idempotently
 - [ ] Stamp `record_status='approved'` once review confirms vocab is clean
 
 ### P2.4 — `tool_solutions` matrix + `solution_kind` promotions
-- [ ] List the ~30 solutions that source tools: Microsoft 365 (`action`), Google Workspace (`action`), Slack (`action`), Twilio (`action`), DocuSign (`action`), Stripe (`action`), OpenAI Platform (`compute_service`), Anthropic API (`compute_service`), Playwright (`compute_service`), SAP S/4HANA (`external_connector`), Oracle NetSuite (`external_connector`), Workday HCM (`external_connector`), Salesforce CRM (`external_connector`), Semantius itself (`semantius_native`), etc.
-- [ ] Add a Semantius solution row to `domain_map.solutions` if not present (vendor: Semantius); promote to `solution_kind='semantius_native'`
+> **Revised 2026-05-21:** no Semantius row in `solutions`; no `semantius_native` value in `solution_kind` enum (4 values now). `tool_solutions` matrix is for non-Semantius solutions only.
+- [ ] List the ~30 solutions that source tools: Microsoft 365 (`action`), Google Workspace (`action`), Slack (`action`), Twilio (`action`), DocuSign (`action`), Stripe (`action`), OpenAI Platform (`compute_service`), Anthropic API (`compute_service`), Playwright (`compute_service`), SAP S/4HANA (`external_connector`), Oracle NetSuite (`external_connector`), Workday HCM (`external_connector`), Salesforce CRM (`external_connector`), etc.
+- [ ] ~~Add a Semantius solution row~~ — dropped 2026-05-21. Semantius isn't in `solutions`.
 - [ ] PATCH existing `domain_map.solutions` rows to their right `solution_kind` (most stay `standard_solution`; the ~30-50 in the list above get promoted to `external_connector` / `action` / `compute_service`); add new solutions for tool sources not yet in the catalog (AWS SES, Playwright, etc.)
-- [ ] For each tool, insert `tool_solutions` rows linking to every solution that delivers it, with `delivery_strength` + `delivery_method` + optional `endpoint_url`
+- [ ] For each tool, insert `tool_solutions` rows linking to every solution that delivers it, with `delivery_strength` + `delivery_method` + optional `endpoint_url`. Do not author Semantius-side rows; Semantius coverage is read from `operation_kind`.
 - [ ] Surface draft for review before bulk insert
 
 ### P2.5A — System-skill `skill_tools` (independent of Plan 1)
@@ -137,13 +141,15 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 - [ ] **P2.5A.ii — Obvious-non-Semantius:** ITSM, HCM, ATS, MA, SMM, CCAAS, ESIGN, PAYROLL, S2P, B2C-COMM, LMS. Same shape; expected to surface `action` and `compute_service` tool requirements.
 - [ ] **P2.5A.iii — Mid-confidence remainder:** every other `domain_map` domain (~75 of the ~100 total). Apply patterns learned in tranches i and ii.
 
-### P2.6A — "100% Semantius" query (system skills only)
-- [ ] Author the saved cube query per [`plan-tools-catalog.md` § "100% Semantius" identification](plan-tools-catalog.md#100-semantius-identification): skills whose every required tool has a `semantius_native` solution delivery
-- [ ] Verify ≥5 system skills certified as 100% Semantius
-- [ ] Also save the diagnostic query (which tools force a skill out of 100% Semantius)
+### P2.6A — Semantius coverage rollup query (system skills only)
+> **Revised 2026-05-21:** rollup is computed from `tools.operation_kind` membership in the Semantius-covered set (today: `{query, mutate}`), not from `tool_solutions` rows pointing at Semantius. See [plan-tools-catalog.md § Decision record](plan-tools-catalog.md#decision-record--2026-05-21-authoritative-overrides-the-body-below-where-they-conflict).
+- [ ] Author the saved cube/SQL query: for each skill, % = (count of required tools whose `operation_kind` ∈ Semantius-covered set) / (total required tools). Per-tool aggregation; not per-operation_kind.
+- [ ] Decide how to source the Semantius-covered set (option 1 hardcode is the recommended starting point; option 2 config table is the upgrade path)
+- [ ] Verify ≥5 system skills land at 100% (every required tool's operation_kind is Semantius-covered)
+- [ ] Also save the diagnostic query: for each skill <100%, list the specific tools whose `operation_kind` is NOT Semantius-covered (the side_effect / compute tools dragging the % down)
 - [ ] Save both queries to a `references/` folder for reuse
 
-### S2.5A — Codify tool-requirement derivation patterns in `tool-catalog-analyst` SKILL.md (per tranche)
+### S2.5A — Codify tool-requirement derivation patterns in `domain-map-analyst` SKILL.md (per tranche)
 - [ ] **After P2.5A.i (100%-Semantius tranche):** document the internal-only derivation patterns ("system skill against own data_objects → `query`/`mutate` only, no side_effects"). Validate or refute the 100%-Semantius hypothesis for each candidate; record which flipped.
 - [ ] **After P2.5A.ii (obvious-non-Semantius tranche):** document the recurring external-tool patterns ("HR/customer-comm domains → email + calendar `action` tools"; "AI-flavored domains → `compute_service` tools"; "domains mastering external data_objects → `external_connector` tools").
 - [ ] **After P2.5A.iii (mid-confidence remainder):** document anything that surprised — domains that flipped from one hypothesis to the other, or that needed unexpected tool kinds.
@@ -191,10 +197,11 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 - [ ] Query: which `tools` have many dependent skills but **few candidate solutions delivering them**? (gaps)
 - [ ] Surface top 5 gaps for next-step tool-integration decision
 
-### S2.7 — Final knowledge capture in both SKILL.md files
-- [ ] In `tool-catalog-analyst` SKILL.md: document the tool-gap heuristics (which tool kinds are usually under-represented; which solutions tend to be missing)
-- [ ] In `domain-map-analyst` SKILL.md: cross-link from any domain-shaped query that benefits from joining to `tool_catalog` (e.g. "show me domains whose system skill is 100% Semantius certified")
-- [ ] Update `module-shape.md` and references on both sides with anything that emerged late in the load
+### S2.7 — Final knowledge capture in `domain-map-analyst` SKILL.md
+> Revised 2026-05-21: there's only one analyst skill after the merge.
+- [ ] Document the tool-gap heuristics (which tool kinds are usually under-represented; which solutions tend to be missing)
+- [ ] Add saved-query snippets for the domain-shaped joins to `tools` / `skills` / `tool_solutions` / `skill_tools` (e.g. "show me domains whose system skill is 100% Semantius certified")
+- [ ] Update `module-shape.md` with anything that emerged late in the load
 
 ---
 
@@ -204,7 +211,6 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 
 - [ ] Update [`SKILL.md`](.claude/skills/domain-map-analyst/SKILL.md) anti-patterns when an unexpected mistake surfaces (don't wait for a scheduled S-item)
 - [ ] Update [`module-shape.md`](.claude/skills/domain-map-analyst/references/module-shape.md) immediately when fields/enums change
-- [ ] Same opportunistic update rule applies to `tool-catalog-analyst` SKILL.md once it exists (P2.2 bootstraps it; S2.2/S2.5A/S2.7 are the scheduled updates)
 
 ---
 
@@ -214,7 +220,7 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 - **P2.* (Wave 2) runs in parallel with P1.5* (Wave 2).** P2.1–P2.4 don't depend on any handoff data. P2.5A derives system-skill tool requirements from existing `domain_map` data (`data_objects` + `cross_domain_handoffs`), so it only needs Wave 1 done.
 - **P2.5B is the only hard cross-plan dependency.** It requires P1.7 (process candidates surfaced) before workflows can be enumerated per process skill.
 - **P2.6 ("100% Semantius") is re-runnable.** P2.6A runs after P2.5A.iii (certified system skills); P2.6B re-runs after P2.5B (adds process skills).
-- **S-items** (SKILL.md maintenance) are interspersed: S1.5 (after each P1.5 cluster), S2.2 (after tool_catalog deploys), S1.6 / S1.7 (after discovery), S2.5A (after system-skill tool requirements), S2.7 (final). They're each small but cumulative — skipping them strands hard-won patterns.
+- **S-items** (SKILL.md maintenance) are interspersed: S1.5 (after each P1.5 cluster), S2.2 (after the tool-catalog entities deploy into `domain_map`), S1.6 / S1.7 (after discovery), S2.5A (after system-skill tool requirements), S2.7 (final). They're each small but cumulative — skipping them strands hard-won patterns.
 - **Recommended start order:** Wave 0 (~0.5 session for SKILL.md prep) → Wave 1 (~3 sessions) → Wave 2 in parallel (P1.5* + P2.1-2.5A + interspersed S-items, ~8-9 sessions total) → Wave 3 (~2 sessions) → Wave 4 (~2-3 sessions). **Total: ~16-21 sessions across both plans.**
 
 ---
@@ -230,4 +236,4 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 ## Source documents
 
 - [`plan-process-skill-discovery.md`](plan-process-skill-discovery.md) — Plan 1 design intent (entities, schema, sequence, success criteria)
-- [`plan-tools-catalog.md`](plan-tools-catalog.md) — Plan 2 design intent (tool_catalog module, schema, sequence, success criteria)
+- [`plan-tools-catalog.md`](plan-tools-catalog.md) — Plan 2 design intent (originally a sibling `tool_catalog` module; 2026-05-21 reversed and folded into `domain_map`. Entity schema, sequence, and success criteria still valid; module structure superseded by the merge.)
