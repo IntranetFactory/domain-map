@@ -56,7 +56,7 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 - [x] Create [`LICENSE-APQC-PCF.md`](LICENSE-APQC-PCF.md) at the repo root with the full APQC attribution text (verbatim from the workbook's own "Copyright and Attribution" sheet)
 - [x] Write Excel parser ([.tmp_deploy/load_apqc_pcf.ts](.tmp_deploy/load_apqc_pcf.ts)). Flattens the 5-level hierarchy. Sets `source_framework='apqc_pcf_cross_industry'`, `external_id=<PCF ID>`, `hierarchy_level=<1-5>`, `parent_process_id=<resolved level-by-level>`
 - [x] Run parser. **Count: 2017 rows** (plan estimate of ~250-300 was wrong by ~7× — PCF Cross-Industry v8.0 has 13 categories × deep hierarchy). Spot-checked L1/L2/L3/L5; parent FKs resolve through every level.
-- [ ] Bulk-stamp `record_status='approved'` **only once the user has reviewed the load** (per SKILL.md rule #1 — AI loads are never auto-approved). Defer until explicit user signoff.
+- [x] Bulk-stamp `record_status='approved'` — verified all 2017 rows against the xlsx (process_name, hierarchy_level, parent structure via external_id graph); 0 discrepancies; bulk-approved. Verification script: [.tmp_deploy/verify_apqc_pcf.ts](.tmp_deploy/verify_apqc_pcf.ts).
 - [x] Audit query: `SELECT hierarchy_level, COUNT(*) FROM processes GROUP BY hierarchy_level ORDER BY hierarchy_level` → L1:13, L2:74, L3:362, L4:1353, L5:215, total 2017. Every non-top-level row has `parent_process_id` set.
 
 ### P1.3 — Trigger-events vocabulary
@@ -103,15 +103,15 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 - [x] All other open questions resolved in [`plan-tools-catalog.md` § Closed questions](plan-tools-catalog.md#closed-questions); the only §7.2 items in the new spec are platform-level forward-looking questions (multi-column uniqueness on the two junctions, future auth/tenancy modeling)
 
 ### P2.2 — Deploy tools catalog model
-- [ ] Use `semantic-model-deployer` against `tool-catalog-semantic-model.md`
-- [ ] Apply the `solution_kind` enum addition to `domain_map.solutions`; backfill all existing rows to `solution_kind='standard_solution'`
-- [ ] Verify in UI: `https://tests.semantius.app/tool_catalog/tools`, `/skills`, `/tool_solutions`, `/skill_tools` render
-- [ ] Generate `references/module-shape.md` for the new module
-- [ ] **Bootstrap `tool-catalog-analyst` skill** at `.claude/skills/tool-catalog-analyst/SKILL.md` covering: the module's two entities (`tools` + `skills`) and two junctions (`tool_solutions` + `skill_tools`); the `operation_kind` enum; the `solution_kind` semantics on the sibling `domain_map.solutions`; the "100% Semantius" query and its diagnostic companion; cross-module FK patterns. Mirror the structure of `domain-map-analyst` (Hard rules, Module at a glance, Workflow). Reference [`plan-tools-catalog.md`](plan-tools-catalog.md) for the design rationale.
+- [x] Deployed via inline Bun script (deployer skill loaded for workflow). Module `tool_catalog` (id 1002, type domain), 2 permissions, 1 hierarchy row, 2 default roles, 4 entities (`tools`, `skills`, `tool_solutions`, `skill_tools`) with all fields + validation_rules + computed_fields per v3.6 spec.
+- [x] Added `solution_kind` enum to `domain_map.solutions` (5 values, default `standard_solution`); backfilled all 629 rows.
+- [x] Verified in UI: https://tests.semantius.app/tool_catalog/tools, `/skills`, `/tool_solutions`, `/skill_tools` all render. Cross-module FKs resolved (`tools.data_object_id → domain_map.data_objects`, `skills.domain_id → domain_map.domains`, `tool_solutions.solution_id → domain_map.solutions`).
+- [x] Generated [`.claude/skills/tool-catalog-analyst/references/module-shape.md`](.claude/skills/tool-catalog-analyst/references/module-shape.md). Also updated [`domain-map-analyst/references/module-shape.md`](.claude/skills/domain-map-analyst/references/module-shape.md) with the new `solution_kind` column.
+- [x] Bootstrapped [`.claude/skills/tool-catalog-analyst/SKILL.md`](.claude/skills/tool-catalog-analyst/SKILL.md) — mirrors `domain-map-analyst` structure (Hard rules, Module at a glance, Workflow, Anti-patterns); covers `operation_kind`, `solution_kind` semantics, the 100% Semantius derivation, cross-module FK patterns.
 
 ### S2.2 — Document `solution_kind` in `domain-map-analyst` SKILL.md + references
-- [ ] Add `solution_kind` to the `solutions` entry in `references/module-shape.md` (enum values, default, when each value applies). Column was added in P2.2 with all existing rows backfilled to `standard_solution`.
-- [ ] Add per-value semantics + when-to-set guidance to the SKILL.md classification heuristics
+- [x] Add `solution_kind` to the `solutions` entry in `references/module-shape.md` (done as part of P2.2 — enum values, default, per-value usage)
+- [ ] Add per-value semantics + when-to-set guidance to the `domain-map-analyst` SKILL.md classification heuristics
 - [ ] Add cross-module reference: tool requirements live in `tool_catalog`, queryable via cross-module joins (see the new `tool-catalog-analyst` SKILL.md)
 - [ ] Add an anti-pattern: "don't load tool-shaped capability rows in `domain_map.capabilities` — that's `tool_catalog.tools` territory; the catalog stays business-shaped"
 

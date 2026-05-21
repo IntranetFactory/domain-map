@@ -56,6 +56,7 @@ Label column: `vendor_name`.
 | `vendor_id` | reference → `vendors` | no | Nullable for internal builds / manual processes |
 | `solution_type` | enum | yes | `saas` / `on_prem` / `hybrid` / `open_source` / `internal_build` / `manual_process` |
 | `is_active_in_market` | boolean | yes | `false` for sunset / retired products |
+| `solution_kind` | enum | yes | Default `standard_solution`. Drives the Tool Catalog's "100% Semantius" derivation. Values: `semantius_native` (the solution IS Semantius itself), `external_connector` (system of record — SAP, NetSuite, Salesforce CRM), `action` (side-effect service — Microsoft Graph Mail, Twilio, DocuSign), `compute_service` (compute / AI / automation — OpenAI Platform, Anthropic API, Playwright), `standard_solution` (default, for solutions not yet integrated as a tool source). Promote a row out of `standard_solution` only when at least one `tool_catalog.tool_solutions` row references it |
 | `notes` | multiline | yes | |
 | `record_status` | enum | yes | Default `new` |
 
