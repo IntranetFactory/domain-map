@@ -14,19 +14,19 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ---
 
-## Live state checkpoint (2026-05-22 end-of-session, after Phase-B Lite batch 1 + EAM boundary resolution)
+## Live state checkpoint (2026-05-22 end-of-session, after Phase-B Lite batches 1+2 + EAM boundary resolution)
 
 > **Read this first if you're starting a fresh session.** Counts may have moved — verify with the queries below before acting on them.
 
 | Entity | Count | Last verification |
 |---|---|---|
-| `domains` | 130 | `semantius call crud postgrestRequest '{"method":"GET","path":"/domains?select=id&limit=10000"}'` |
-| `data_objects` | 465 (+73 batch 1, +3 EAM) | `/data_objects?select=id&limit=10000` |
+| `domains` | 139 (+9 user-added mid-session) | `semantius call crud postgrestRequest '{"method":"GET","path":"/domains?select=id&limit=10000"}'` |
+| `data_objects` | 689 (+89 batch 3) | `/data_objects?select=id&limit=10000` |
 | `tools` | 280 | `/tools?select=id&limit=10000` |
 | `skills` | 23 (all `skill_type='system'`) | `/skills?select=skill_name,domain_id` |
 | `skill_tools` | 317 | `/skill_tools?select=id&limit=10000` |
 | `cross_domain_handoffs` | 330 | `/cross_domain_handoffs?select=id&limit=10000` |
-| `domain_data_objects` | 537 (+73 batch 1, +3 EAM master rows) | `/domain_data_objects?select=id&limit=20000` |
+| `domain_data_objects` (master) | 715 (+89 batch 3) | `/domain_data_objects?role=eq.master&select=id&limit=20000` |
 
 **Next un-blocked task:** [P2.5A.iii — mid-confidence remainder](#p25a--systemskill-skill_tools-independent-of-plan-1). ~55 candidate domains. Read the **Session handoff** subsection inside that task before starting.
 
@@ -38,16 +38,20 @@ The 86-domain Phase-B audit started but only batch 1 (12 domains) completed befo
 |---|---|---|
 | **Loaded with master data_objects (batch 1, Phase-B Lite)** | 11 | PROD-MGMT, KMS, CPQ, OMS, ECM, DI, DXP, KUBE-PLAT, APIM, APP-PAAS, IPAAS. trigger_events + handoffs deferred. |
 | **EAM (loaded 2026-05-22 after boundary resolution)** | 1 | EAM — 3 masters: `industrial_assets`, `eam_work_orders`, `equipment_pm_schedules`. REAL-EST `maintenance_work_orders` renamed to `facility_work_orders` (id 349) + 3 trigger_events renamed to `facility_work_order.*`. Loader: [.tmp_deploy/load_eam_phase_b.ts](.tmp_deploy/load_eam_phase_b.ts). |
-| **Zero-master, audit not yet run** | 24 | RPA, IDP, NPMD, DCIM, UEM, WSC, TEST-MGMT, PROC-MIN, DEM, IWMS, CAFM, MFG-OPS, BANK-OPS, CLIN-DEV, HC-PATIENT, INS-CLAIMS, LSD, PS-LIC, RET-STORE, TELCO-BSS, UTIL-OPS, VIS-MGMT, VSDP, WEB-CONTOPS |
+| **Loaded with master data_objects (batch 2, Phase-B Lite)** | 11 | RPA (7), IDP (8), NPMD (8), DCIM (10), UEM (8), WSC (8), TEST-MGMT (7 new + reuse `automation_scripts`), PROC-MIN (6), DEM (5), IWMS (5), MFG-OPS (7). 80 master ddo rows. trigger_events + handoffs deferred. Loader: [.tmp_deploy/load_batch2_phase_b_lite.ts](.tmp_deploy/load_batch2_phase_b_lite.ts). |
+| **CAFM (researched, concluded data-object-empty)** | 1 | CAFM — subagent analysis concluded CAFM is a tier marker under REAL-EST, not a master-holder. It consumes REAL-EST's masters (`spaces`, `occupancy_records`, `facility_work_orders`, `capital_projects`, `utility_meter_readings`) with a lighter feature set. No legitimate CAFM-unique masters at current catalog state. |
+| **Loaded with master data_objects (batch 3, Phase-B Lite)** | 12 | BANK-OPS (8), CLIN-DEV (7), HC-PATIENT (6), INS-CLAIMS (10), LSD (8), PS-LIC (6), RET-STORE (6), TELCO-BSS (7), UTIL-OPS (8), VIS-MGMT (8), VSDP (8), WEB-CONTOPS (7). 89 new masters + 89 master ddo rows. LSD `legal_matters` collision with LEGAL-PRACT-MGMT (id 391) resolved → `in_house_legal_matters`. HC-PATIENT/PS-LIC/VSDP drafted inline in main thread after parallel subagents failed (Python/MCP rejections); other 9 from `Explore` subagents with explicit no-MCP/no-Python prompt language. Loader: [.tmp_deploy/load_batch3_phase_b_lite.ts](.tmp_deploy/load_batch3_phase_b_lite.ts). trigger_events + handoffs deferred. |
+| **Zero-master, audit not yet run** | 0 | All previously zero-master domains now have Phase-B Lite masters or have been classified as legitimately data-object-empty (CAFM). |
 | **Thin coverage (1-4 masters), audit not yet run** | 33 | BI, DAM, HAM, ACCT-PRACT-MGMT, AP-AUTO, CONV-AI, FLEET-MAINT, FSM, HRSD, IGA, ITAM, KGP, METRICS-LAYER, NCDB, REMOTE-ACCESS, CCAAS, DISCOVERY, LCAP, LOYALTY, RE-CRE, SPEND-MGMT, AIOPS, BPA, CSM, ITOM, LEGAL-PRACT-MGMT, PSA, RE-INVEST, SALES-ENG, SAM, SUP-LIFE, TELEMATICS, WORK-MGMT |
 | **Leadership-tier (no Phase-B needed by design)** | 16 | REV-INTEL, SALES-PERF, GTM-PLAN, ACCT-PLAN, PRM, OP-RES, BCM, SECOPS, SOAR, THREAT-INTEL, TPRM, VULN-MGMT, PRIV-MGMT, FINOPS, INTRANET, COLLAB-GOV — see SKILL.md "Leadership-layer domains have no system skill" |
 | **Single-master legit** | 1 | ESIGN (envelopes IS the whole domain) |
 | **Already have system skills** | 23 | See `skills` table |
 
 **Recommended next-session order:**
-1. Resume the Phase-B Lite audit for the 57 remaining domains (24 zero-master + 33 thin). Pattern: spawn subagents in batches of ≤12 with explicit "produce a structured masters table; trigger_events/handoffs OPTIONAL" prompts (the inconsistency on those two was what stopped batch 1's full load). Then load masters via [.tmp_deploy/load_batch1_phase_b_lite.ts](.tmp_deploy/load_batch1_phase_b_lite.ts) pattern.
-2. ~~Resolve EAM boundary decisions explicitly with user, then load.~~ ✓ Done 2026-05-22 — see live-state row above.
-3. Then proceed to P2.5A.iii — system skills for the 86-23 = 63 candidates (after Phase-B is broadly complete). EAM now in the candidate pool with 3 masters.
+1. ~~Resume the Phase-B Lite audit for the 57 remaining domains.~~ ✓ Done 2026-05-22 — batches 1+2+3 complete. All 130 domains now have either Phase-B masters or a justified data-object-empty classification.
+2. ~~Resolve EAM boundary decisions explicitly with user, then load.~~ ✓ Done 2026-05-22.
+3. ~~Then proceed to P2.5A.iii — system skills for the 86-23 = 63 candidates~~. **Updated scope:** Phase-B Lite is now broadly complete (78 domains with masters → ~94 after batches 1+2+3 with the new domains adding masters too). P2.5A.iii is the natural next track: build the generator that drafts query/mutate tools + heuristic external-tool requirements for the remaining ~70 candidates with masters but no system skill. Procedure in P2.5A.iii section below.
+4. **Thin-coverage (1-4 masters) audit pass.** 33 domains still in "thin" status per the original 2026-05-22 inventory — they have a few masters from initial Phase-A loads but were never given a focused Phase-B audit. Decide per domain whether to expand or accept current scope before locking system skills.
 
 **Re-runnable killer-hypothesis-test query** lives at the bottom of [.tmp_deploy/load_p25a_i.ts](.tmp_deploy/load_p25a_i.ts) and [.tmp_deploy/load_p25a_ii.ts](.tmp_deploy/load_p25a_ii.ts) — copy-paste the rollup block when P2.5A.iii is done to certify the full catalog.
 
@@ -58,6 +62,8 @@ The 86-domain Phase-B audit started but only batch 1 (12 domains) completed befo
 - SKILL.md gained a System-skill tool derivation section + Cross-tranche external-tool patterns section.
 - **Phase-B Lite batch 1 (11 zero-master domains):** PROD-MGMT, KMS, CPQ, OMS, ECM, DI, DXP, KUBE-PLAT, APIM, APP-PAAS, IPAAS. **73 new master `data_objects` + 73 master `domain_data_objects` rows.** All `record_status='new'`. Trigger_events and cross_domain_handoffs **deliberately deferred** — agent outputs were too inconsistent in shape to load programmatically. The masters alone unblock system-skill drafting for these 11 domains in a future P2.5A.iii pass. Loader: [.tmp_deploy/load_batch1_phase_b_lite.ts](.tmp_deploy/load_batch1_phase_b_lite.ts).
 - **EAM Phase-B (boundary resolution + load, 2026-05-22):** 3 boundary decisions made with user — (1) HAM keeps `hardware_assets`, EAM gets new `industrial_assets`; (2) rename id 349 `maintenance_work_orders` → `facility_work_orders` (REAL-EST), add new `eam_work_orders` (EAM); (3) FLEET-MAINT keeps vehicle `preventive_maintenance_schedules`, EAM gets new `equipment_pm_schedules`. Loaded: **3 new EAM master data_objects + 3 master ddo rows + 1 data_object PATCH + 3 trigger_event renames** (`maintenance_work_order.{created,dispatched,completed}` → `facility_work_order.*`). Loader: [.tmp_deploy/load_eam_phase_b.ts](.tmp_deploy/load_eam_phase_b.ts). Trigger_events + handoffs for EAM itself deferred (consistent with batch-1 pattern).
+- **Phase-B Lite batch 2 (12 candidates, 11 loaded):** RPA, IDP, NPMD, DCIM, UEM, WSC, TEST-MGMT, PROC-MIN, DEM, IWMS, MFG-OPS — **79 new master `data_objects` + 80 master `domain_data_objects` rows** (one reuse: `automation_scripts` id 225 linked to TEST-MGMT). 12 parallel `Explore` subagents drove research; the scope-qualification SKILL.md rule (added today after the EAM rename) drove the naming discipline (all DCIM masters prefixed `dc_`, NPMD masters prefixed `network_`, RPA masters prefixed `rpa_`, etc.). **CAFM researched but concluded data-object-empty** — subagent applied the "would a flagship vendor build their schema around X?" test, found CAFM is a tier marker under REAL-EST consuming REAL-EST masters with a lighter UX, not introducing new masters. Loader: [.tmp_deploy/load_batch2_phase_b_lite.ts](.tmp_deploy/load_batch2_phase_b_lite.ts). Trigger_events + handoffs deferred. SKILL.md gained two new rules during this batch: "Generic names invite cross-domain boundary collisions — scope-qualify at creation" (under data_objects naming) and "4b. Loaders are TypeScript on Bun. Never Python."
+- **Phase-B Lite batch 3 (12 industry-vertical + cross-cutting domains):** BANK-OPS, CLIN-DEV, HC-PATIENT, INS-CLAIMS, LSD, PS-LIC, RET-STORE, TELCO-BSS, UTIL-OPS, VIS-MGMT, VSDP, WEB-CONTOPS — **89 new master `data_objects` + 89 master `domain_data_objects` rows.** All previously zero-master domains now have Phase-B Lite masters or are classified data-object-empty (CAFM). Parallel-subagent reliability hit problems this batch: multiple agents silently reached for `mcp__claude_ai_*` Semantius tools despite SKILL.md rule #0, and some reached for Python. After repeated rejections, HC-PATIENT / PS-LIC / VSDP were drafted **inline in the main thread** rather than delegated. Two new SKILL.md rules added: explicit MCP-tool ban for subagent prompts (in "Subagent prompt discipline") and the "4b. TypeScript+Bun only — never Python" rule. LSD `legal_matters` collision with LEGAL-PRACT-MGMT (id 391) resolved by scope-qualifying to `in_house_legal_matters`. Loader: [.tmp_deploy/load_batch3_phase_b_lite.ts](.tmp_deploy/load_batch3_phase_b_lite.ts).
 
 ---
 

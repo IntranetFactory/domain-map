@@ -89,6 +89,17 @@ Always follow this pattern:
 
 This makes re-running a load safe. Numeric IDs are only valid post-insert; never hard-code them into a script.
 
+### 4b. Loaders are TypeScript on Bun. Never Python. Never Bash for anything non-trivial.
+
+Every loader in this project is a `.ts` file run with `bun run <path>`. Stick to that stack:
+
+- **Use TypeScript + Bun** (`Bun.spawn`, `await new Response(...).text()`, top-level `await`). Reference patterns in [.tmp_deploy/load_research.ts](../../../.tmp_deploy/load_research.ts) and the loader index in [references/loader-idiom.md](references/loader-idiom.md).
+- **Do NOT use Python.** Python on Windows in this project fails in messy ways: encoding mismatches on stdin/stdout when piping JSON into `semantius`, venv/path drift between PowerShell and bash invocations, indentation errors that hide for whole runs, `subprocess` plumbing that swallows stderr, brittle `requests`/`httpx` pinning. The user has been burned enough times by this that "use Python" is not an acceptable suggestion regardless of context. If you think Python is the right tool, you're wrong — write the TypeScript instead.
+- **Don't use Bash/PowerShell scripts** for anything beyond one-liner reads. Multi-step orchestration (read → diff → POST → re-read → POST) belongs in a `.ts` loader, not a shell pipeline. Shell is fine for `semantius call crud postgrestRequest '...'` smoke tests; everything else goes in TypeScript.
+- **One-line semantius reads from the agent's tool call are fine** — `semantius call crud postgrestRequest '{"method":"GET","path":"/..."}'` via Bash is the canonical read pattern. The rule is about *loaders* (multi-step write orchestration), not about every CLI invocation.
+
+When a subagent is given a research/load task, instruct it explicitly to produce TypeScript output and to never propose Python. Phase-B Lite batch 1 (2026-05-22) had no Python issues only because the prompts didn't open the door to it; future prompts should slam the door explicitly.
+
 ### 5. Use stdin or chunked inserts on Windows.
 
 `semantius call crud postgrestRequest '...'` with a large JSON body hits the Windows command-line length limit (~32KB). The PostgREST POST in a typical load can easily blow past that. Two fixes:
@@ -182,13 +193,13 @@ Full definitions and examples live in [references/module-shape.md](references/mo
 | `business_function_domains` | business_functions ↔ domains | responsibility |
 | `business_function_capabilities` | business_functions ↔ capabilities | responsibility (owner / contributor / consumer) |
 | `capability_domains` | capabilities ↔ domains | semantic home |
-| `domain_data_objects` | domains ↔ data_objects | role (master / contributor / consumer / derived) |
+| `domain_data_objects` | domains ↔ data_objects | role (master / embedded_master / contributor / consumer / derived) + necessity (required / optional) |
 | `domain_regulations` | domains ↔ regulations | applicability |
 | `solution_domains` | solutions ↔ domains | coverage_level (primary / secondary / partial) |
 | `solution_capabilities` | solutions ↔ capabilities | delivery_strength (native / partial / via_extension / not_supported) |
 | `solution_data_objects` | solutions ↔ data_objects | ownership role |
 | `data_object_relationships` | data_objects ↔ data_objects | cardinality + kind |
-| `cross_domain_handoffs` | domains → domains (via data_object) | `trigger_event_id` (FK to `trigger_events`) + integration_pattern + friction_level. Cross-domain only — source ≠ target enforced by validation rule. Signal 2 of platform-vs-silos analysis (Signal 1 is the multi-master count on `domain_data_objects.role`) |
+| `cross_domain_handoffs` | domains → domains (via data_object) | `trigger_event_id` (FK to `trigger_events`) + integration_pattern + friction_level. Cross-domain only — source ≠ target enforced by validation rule. Signal 2 of platform-vs-silos analysis (Signal 1 is the multi-master count on `domain_data_objects` where `role ∈ {master, embedded_master}` AND `necessity = required`) |
 
 ### Aliases (1 entity)
 
@@ -367,16 +378,42 @@ This is the catalog's most analytically loaded workflow — the combination of `
 6. **Surface descriptions for review.** Always show name + display_label + description in a single table before loading. The description column is where AI research goes wrong silently; reviewers need to see it.
 7. **Load idempotently.** Pattern: read by `data_object_name`, insert missing only, re-read for the id map, insert `domain_data_objects` with `role: master` for the linking domain. Reference loaders covering every variation we've shipped are listed in [references/loader-idiom.md](references/loader-idiom.md).
 
-### Phase 2 — identify multi-master (Signal 1)
+### Phase 2 — identify multi-master + standalone-vs-holistic authority (Signal 1)
 
-For each data object you just loaded, ask: **which other domains in the catalog also legitimately master a slice of this?** Multi-master is normal and is one of the two strongest indicators of integration value.
+For each data object you just loaded, ask **two distinct questions**: (1) which other domains *in a holistic deployment* legitimately master a slice of this (canonical `master` rows)? (2) which point-solution domains *would* master a local copy of this if deployed standalone, but defer to a canonical master when one is present (`embedded_master` rows)? Multi-master plus embedded-master coverage is the structural fingerprint of integration burden — Signal 1.
 
-- The schema allows multiple `role='master'` rows per data_object; this is by design, not an integrity bug.
-- Each domain that co-masters should explain *which slice* it owns in the junction's `notes` column. "Recruiting execution: stages, candidates, interviews, offers" vs "Headcount intent: position approval, budget alignment, plan-to-actual" makes the multi-master row useful instead of ambiguous.
-- **Look for the cluster flagship first.** Every cluster we've loaded has produced a structural multi-master flagship: `employees` (HR cluster), `configuration_items` (IT-ops cluster), `customers` (customer-facing cluster). The flagship is 3-4 masters + contributors + at least one consumer, and it anchors the rest of the load. When you start a new cluster, *expect* this pattern — find the flagship first, then everything else decomposes around it. See [references/canonical-examples.md](references/canonical-examples.md) for the full catalog of landmark rows and their slice decomposition.
-- If a co-master domain isn't in the catalog yet (Workforce Planning was missing when ATS shipped), add the domain via Phase 1 first, then link.
-- Beyond `master`, the same data_object often has `contributor` rows (writes some fields without being authoritative), `consumer` rows (read-only), and `derived` rows (analytics/projections). Add these as they become known — they don't drive Signal 1 but enrich the model.
-- **Boundary-object pattern.** When two adjacent domains have a fuzzy cost / value / state handoff, *invent a data_object that lives at the boundary* and assign single mastery on the upstream side. `workforce_cost_projections` (SWP-mastered, EPM-consumed) is the case study: without it, the SWP↔EPM boundary is "the workforce plan somehow becomes a budget line"; with it, SWP masters the workforce-driven cost build, EPM consumes for the consolidated budget. Look for boundary-object candidates whenever a high-friction handoff exists between two domains that "should" share a concept but don't.
+**The five roles, when to use each:**
+
+- `master` — canonical, holistic-deployment authority. Multiple domains *can* share this role on the same data_object when each owns a genuinely distinct slice (HCM owns identity/employment slice of `employees`; Payroll owns comp slice; IGA owns access-identity slice).
+- `embedded_master` — point-solution local master. The domain holds its own copy when deployed standalone, but the same record is canonically owned by another domain in a holistic deployment. At query time, the holistic demotion to `consumer` is rule-derived (when a `master` exists for the same data_object, `embedded_master` rows for it are treated as consumers in the holistic view). Examples: ATS embedded-masters `positions` (HCM canonical), LMS embedded-masters `employees` (HCM canonical), OMS embedded-masters `customers` (CRM/CDP canonical), CCAAS embedded-masters `customers` (CRM canonical).
+- `contributor` — writes some fields on someone else's master without being authoritative for the whole record.
+- `consumer` — read-only dependency. The domain reads from the canonical master.
+- `derived` — produces computed projections / analytics on top of someone else's master. Distinct from `consumer`: derived domains *republish* signals against the upstream object (REV-INTEL derives on CRM `opportunities`; FINOPS derives on cloud-spend records; PA derives on `employees`).
+
+**The `necessity` column — separate, orthogonal axis:**
+
+- `required` — the domain cannot function in any realistic deployment without this relationship being active. Default for all `master` rows (you don't master something optionally). Also true for most `embedded_master` rows (ATS needs local positions to write a requisition; OMS needs local customers to write an order). Also true for any `consumer` read the workflow can't proceed without.
+- `optional` — the domain tolerates absence. The relationship exists in some deployments / for some workflows but the rest of the domain functions fine without it. Common shape: `embedded_master + optional` for "convenience" fields a point-solution may or may not bother to model (ATS embedded-masters `cost_centers` only when finance integration is absent; many ATS deployments skip cost_centers entirely).
+
+**Decision recipe — when authoring a `domain_data_objects` row:**
+
+1. Is this domain the canonical owner of the record in a holistic enterprise deployment? → `master` + `required`.
+2. Does this domain need its own copy of the record to function as a point solution, but defer to a canonical master when one exists? → `embedded_master`. Then ask: would a real point-solution deployment of this domain *always* model this record (even minimally)? `required`. Or do many real deployments skip it? `optional`.
+3. Does this domain write some fields without being authoritative? → `contributor`. Necessity = required if the contribution is part of the workflow; optional if it only happens in some deployment shapes.
+4. Does this domain read the record but never write? → `consumer`. Required if the workflow fails without the read; optional if it tolerates absence.
+5. Does this domain republish derived signals against the record? → `derived`. Almost always `required` (the derived analytics is the domain's purpose).
+
+**Multi-master vs multi-embedded-master:**
+
+- The schema allows multiple `master` rows per data_object (the original multi-master pattern); this is by design, not an integrity bug.
+- The schema *also* allows multiple `embedded_master` rows per data_object — common for foundational records that almost every point-solution local-masters (`employees`, `positions`, `cost_centers`, `customers`, `products`, `departments`). High embedded-master count alongside a canonical master is itself a strong silos signal: "this object would live in N point solutions if they were deployed standalone, integration debt absorbs it once a canonical master ships."
+- Each domain that co-masters (canonical *or* embedded) should explain *which slice* it owns in the junction's `notes` column. "Recruiting execution: stages, candidates, interviews, offers" vs "Headcount intent: position approval, budget alignment, plan-to-actual" makes the multi-master row useful instead of ambiguous. For embedded_master rows, the notes should also state the demotion path: "ATS local-masters positions when no HCM is deployed; reads from HCM when present."
+
+**Look for the cluster flagship first.** Every cluster we've loaded has produced a structural multi-master flagship: `employees` (HR cluster), `configuration_items` (IT-ops cluster), `customers` (customer-facing cluster). The flagship is 3-4 canonical masters + contributors + at least one consumer + (with embedded_master modelling) several point-solution embedded_masters. The flagship anchors the rest of the load. When you start a new cluster, *expect* this pattern — find the flagship first, then everything else decomposes around it. See [references/canonical-examples.md](references/canonical-examples.md) for the full catalog of landmark rows and their slice decomposition.
+
+If a co-master domain isn't in the catalog yet (Workforce Planning was missing when ATS shipped), add the domain via Phase 1 first, then link.
+
+**Boundary-object pattern.** When two adjacent domains have a fuzzy cost / value / state handoff, *invent a data_object that lives at the boundary* and assign single mastery on the upstream side. `workforce_cost_projections` (SWP-mastered, EPM-consumed) is the case study: without it, the SWP↔EPM boundary is "the workforce plan somehow becomes a budget line"; with it, SWP masters the workforce-driven cost build, EPM consumes for the consolidated budget. Look for boundary-object candidates whenever a high-friction handoff exists between two domains that "should" share a concept but don't.
 
 ### Phase 3 — discover cross-domain handoffs (Signal 2)
 
@@ -413,18 +450,28 @@ When a new handoff matches one of these shapes, default `friction_level` to `hig
 
 After loading any meaningful chunk of `cross_domain_handoffs`, the platform-candidacy view falls out:
 
-- **Per data_object:** `count(role='master') + count(handoffs)` is the integration-burden score. High score = strong candidate for an integrated platform.
-- **Per (domain_a, domain_b) pair:** `count(handoffs WHERE {source,target} = {a,b})` is the bilateral integration weight. High weight = these two domains are effectively one platform's problem already.
+- **Signal 1 — Per data_object (canonical multi-master):** `count(role='master' AND necessity='required')`. High count = same logical record has multiple canonical owners across the catalog; integration platform absorbs the reconciliation. Canonical example: `employees` (HCM + Payroll + IGA all master required slices).
+- **Signal 1b — Per data_object (embedded-master footprint):** `count(role='embedded_master' AND necessity='required')`. High count = many point-solution domains would *also* hold this record locally if deployed standalone. Distinct from Signal 1 — captures silos that *would* exist in a point-solution world, not just the canonical authority split. `cost_centers`, `customers`, `positions`, `products`, `departments` are the prototypes.
+- **Integration-burden score per data_object:** `count(role IN ('master', 'embedded_master') AND necessity='required') + count(handoffs)`. Signal 1 + Signal 1b (the structural half) plus Signal 2 (the operational half — wires already firing between systems).
+- **Signal 3 — Per (domain_a, domain_b) pair:** `count(handoffs WHERE {source,target} = {a,b})` is the bilateral integration weight. High weight = these two domains are effectively one platform's problem already.
 
-Both queries are one-line cube DSL once the data is in — surface them to the user along with the UI links after each load.
+`necessity='optional'` rows are deliberately excluded from the burden score — they represent convenience modelling, not load-bearing ownership. They surface separately as the "extended footprint" view (which point solutions *can* hold this record, even if many don't bother).
+
+All queries are one-line cube DSL once the data is in — surface them to the user along with the UI links after each load.
 
 ### Anti-patterns specific to this workflow
 
 - ❌ Putting `Onboarding Task` (or any other handoff target) under the *trigger* domain's data_objects. It belongs to the *master* domain; the relationship is a `cross_domain_handoffs` row, not a `domain_data_objects` row.
 - ❌ Recording intra-domain events in `cross_domain_handoffs`. The validation rule will reject them; if you bypass it by routing through different ids, you're polluting the integration-burden score with internal workflow.
-- ❌ Filling `domain_data_objects.notes` with nothing on multi-master rows. The whole point of allowing multi-master is to surface *which slice* each domain owns; an empty `notes` hides that.
+- ❌ Filling `domain_data_objects.notes` with nothing on multi-master or embedded_master rows. The whole point of allowing multi-master / embedded_master is to surface *which slice* each domain owns; an empty `notes` hides that. For embedded_master rows the notes should also explicitly state the demotion path ("ATS local-masters positions when no HCM is deployed; reads from HCM when present").
 - ❌ Inventing a co-master domain in the catalog just to make a multi-master row work. Apply the point-solution-market test first; if Workforce Planning genuinely passes (it does), add the domain. If it doesn't, the data_object probably belongs to one master, not two.
 - ❌ Naming `data_object_name` in human form (`Job Requisition`, `Background Check`). That's `display_label`'s job. The natural key is snake_case_plural.
+- ❌ Defaulting every `domain_data_objects` row to `necessity='required'` without thinking. The default is a *fail-safe*, not the right answer. Convenience fields a point-solution may or may not model (cost_centers on ATS, departments on LMS, salary_bands on most non-HR domains) belong on `optional` rows. Required vs optional is the second classification axis, not a checkbox.
+- ❌ Using `master` when the domain only holds a local copy that defers to a canonical owner. ATS does not `master` cost_centers — it `embedded_master`s them. The distinction drives Signal 1 vs Signal 1b separation; conflating them inflates the canonical multi-master count with point-solution noise.
+- ❌ Using `embedded_master` when the domain is genuinely the canonical authority. HCM `master`s `employees` (canonical) even though it is a point solution — because no other catalog domain has a stronger ownership claim. The test: in a fully-integrated reference deployment, who does *every* other domain defer to for this record? That domain is `master`; everyone else who holds it locally is `embedded_master`.
+- ❌ Modelling holistic-deployment-only consumer rows when an embedded_master row already captures the same dependency. ATS↔positions is `embedded_master + required`, not a separate `consumer + required` row — the runtime demotion handles the holistic case from the single embedded_master row. Don't double-count.
+- ❌ Counting `embedded_master + optional` rows toward Signal 1. The Phase-4 formula explicitly excludes them via `necessity='required'`. Optional rows appear in the separate "extended footprint" view.
+- ❌ Creating two rows on the same `(domain_id, data_object_id)` pair to capture two roles (e.g. `embedded_master` + `derived` for the same domain × data_object). The schema doesn't enforce a unique constraint here, but duplicates are consistently misclassification. **Convention: one row per pair.** Pick the dominant role and capture the secondary slice in `notes` (e.g. "IDP embedded_masters documents and additionally derives extracted_fields signals against them"). The 3 existing duplicates on DCG×{data_products, metric_definitions, ontologies} are cleanup targets — they had a contributor row authored before the canonical master row landed on the same pair, and never got reconciled.
 
 ---
 
@@ -532,6 +579,7 @@ When you start a session that involves drafting / loading `skills` or `skill_too
 If you spawn `Explore`-type subagents to research Phase-B for multiple domains in parallel (the pattern P2.5A.0 introduced and the 2026-05-22 Phase-B Lite batch 1 expanded), prompt construction directly determines loader-usability of the output:
 
 - **Demand a structured table** of `data_object_name | display_label | description` and **require** snake_case_plural names. Open-ended "produce a Phase-B draft" prompts produce essays with embedded prose tables that need manual parsing.
+- **Forbid MCP tools explicitly** — include in every subagent prompt: *"Do NOT call any `mcp__claude_ai_deno__*`, `mcp__claude_ai_tests-ops__*`, or other `mcp__*` Semantius tool. Use the `semantius` CLI via Bash only (rule #0)."* Subagents inherit access to MCP servers and reach for them out of habit; rule #0 in this SKILL.md is not enough — it must be restated in the prompt. Discovered 2026-05-22 batch 3: multiple subagents silently used MCP reads despite the prompt citing CLI-only patterns, producing outputs sourced from the wrong tenant or from MCP-cached resources rather than the live `tests` org.
 - **Make trigger_events + cross_domain_handoffs OPTIONAL, not required.** Empirically, agents inconsistently produce them in parseable form (some use plain markdown tables, some YAML frontmatter, some prose). Masters alone are sufficient for Phase-B Lite (data_objects + master `domain_data_objects` only); trigger_events + handoffs can be a separate focused pass.
 - **State boundary alerts explicitly in the prompt** ("don't propose X, it's mastered by Y; use Z naming instead"). Without this, agents re-propose entities that already exist or use colliding names.
 - **Tell agents to defer to the user when boundaries are unresolved.** Better to get a "needs decision" flag than wrong-mastered rows. The EAM batch-1 audit returned blockers instead of bad rows — that's the correct failure mode.
