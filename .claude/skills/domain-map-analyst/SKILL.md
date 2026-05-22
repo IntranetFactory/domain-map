@@ -501,6 +501,28 @@ The full procedure (cube DSL, clustering signals, ranking formula) lives in [`pl
 
 Each candidate cluster is matched against `processes` (APQC PCF) on name/description similarity. Unmatched clusters become candidates for `source_framework='custom'` process rows using the [custom-process naming convention](#custom-process-naming-convention) below.
 
+### Running discovery
+
+Use the saved query. Re-runnable against current substrate any time:
+
+```sh
+bun run .tmp_deploy/discovery_query.ts --top 25       # ranked candidate table
+bun run .tmp_deploy/discovery_query.ts --bucket employee   # drill-down on one bucket
+```
+
+Full doc + interpretation guide: [references/discovery-query.md](references/discovery-query.md). The query implements signal #1 (trigger-event prefix) as the bucketing rule; signals #2-5 are scored as metrics within each bucket but don't subdivide it further in v1.
+
+### How to interpret discovery output
+
+The query prints one row per prefix bucket with `rank_score = friction_score × distinct_function_count`. A high rank means **wide function spread + high integration friction** — the orchestrations where an agent skill removes the most coordination overhead.
+
+Two worked examples from the 2026-05-22 first run:
+
+- **`employee` (rank 437):** 12 handoffs, 12 domains, 19 functions, 3 high-friction. The cross-cutting Joiner-Mover-Leaver orchestration: HCM publishes `employee.created` → Onboarding + Payroll + IGA + Talent-Mgmt all subscribe via one shared `trigger_events.id`. High function spread because HR + IT + Finance + Workplace all touch it. The single largest opportunity in the catalog; the rank confirms the intuition.
+- **`opportunity` (rank 190):** 9 handoffs, 10 domains, 10 functions, 3 high-friction. The lead-to-cash motion — CRM → SALES-ENG → CPQ → CLM → ERP-FIN. Lower domain count than `employee` but comparable friction. Classic revenue process.
+
+The PCF auto-matcher prefers low-`hierarchy_level` substring matches but often lands on weak L4/L5 leaves. **Treat the matched `process_name` as a hint and verify against the actual PCF parents before committing.** Some buckets (modern digital concepts like `data_asset`, `dlp_incident`, `customer_golden_record`) genuinely have no PCF match and should be promoted to `source_framework='custom'`.
+
 ### Process framework — APQC PCF
 
 `processes.source_framework` is the discriminator enum:

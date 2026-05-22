@@ -68,7 +68,7 @@ All additive; no migrations needed. Apply via `semantius` field-creation tooling
 | `has_submit_lock` | boolean (default false) | Pattern flag: this entity follows the submit-then-lock pattern. Drives derived `submit_<entity>` workflow gate and a `<rule>_restricted_to_<actor>` business rule. |
 | `has_single_approver` | boolean (default false) | Pattern flag: this entity requires a single explicit approver. Drives derived approval workflow gate. |
 
-> **Migration cascade for `display_label` → `singular_label`:** every `.tmp_deploy/load_*.ts` script that writes `display_label` must be updated. The rename is a sequenced two-step: (a) add `singular_label` column, copy values from `display_label`; (b) update all loader scripts to write `singular_label`; (c) drop `display_label` column. Run dry-run between (a) and (b) to confirm no loader regresses.
+> **Migration cascade for `display_label` → `singular_label`:** every `.tmp_deploy/load_*.ts` script that writes `display_label` must be updated. The rename is a sequenced three-step: (a) add `singular_label` column, copy values from `display_label`; (b) update all loader scripts to write `singular_label`; (c) drop `display_label` column. Run dry-run between (a) and (b) to confirm no loader regresses. **Step (c) — the column drop — is deferred to a dedicated final step (§9.1 Step 10) after the rest of the program has shipped and stabilized.** Keeping `display_label` alive alongside `singular_label` during the rollout means a loader regression is recoverable from the still-populated old column; dropping it last makes that safety net last as long as possible.
 
 ### 3.2 `data_object_relationships` — three new columns
 
@@ -310,8 +310,9 @@ This repo ships the **fact sheet contract** (§1 sections + the generator's outp
 | 7. First fact sheet emission for ATS (proof-of-concept; commit to `domain-fact-sheets/ATS.md`) | 2, 4, 5, 6 | small |
 | 8. Phase B3 — lifecycle states + pattern flags for top 20 implementation-relevant domains | 5 | large; one-time backfill |
 | 9. Phase B2 for the long tail | 5, ongoing | large; interleaves with normal market loads |
+| 10. Drop `display_label` column (deferred destructive cleanup) | 2 done + 3–9 stable | small; runs last, requires explicit confirmation |
 
-Steps 1–7 form the **MVP path** — once 7 ships, ATS has a complete committed fact sheet and the contract is provable. Steps 8–9 are catalog-wide quality improvements. **Architect-side Stage 0 adoption is out of scope** (Decision 6) and proceeds independently in the `semantius-agent` repo.
+Steps 1–7 form the **MVP path** — once 7 ships, ATS has a complete committed fact sheet and the contract is provable. Steps 8–9 are catalog-wide quality improvements. **Step 10 is the deferred destructive cleanup** of the `display_label` column: kept until last so the duplicated column survives as a recovery safety net through the rest of the program. **Architect-side Stage 0 adoption is out of scope** (Decision 6) and proceeds independently in the `semantius-agent` repo.
 
 ### 9.1 Execution checklist
 
@@ -343,7 +344,7 @@ Steps 1–7 form the **MVP path** — once 7 ships, ATS has a complete committed
 - [ ] Seed the `users` row with `kind='platform_builtin'`
 - [ ] → Update every `.tmp_deploy/load_*.ts` loader that writes `display_label` to write `singular_label` instead
 - [ ] → Verify no loader regresses against a dry run
-- [ ] Drop `display_label` column
+- [ ] *(Dropping `display_label` is deferred — see Step 10. Keep both columns populated through Steps 3–9 as a recovery safety net.)*
 
 **Step 3 — Rename-cascade utility** (small)
 
@@ -389,13 +390,24 @@ Steps 1–7 form the **MVP path** — once 7 ships, ATS has a complete committed
 - [ ] Track remaining domains in `plan-master-tasks.md` lifecycle-states-pending section
 - [ ] Backfill incrementally as market loads proceed; no hard deadline
 
+**Step 10 — Drop `display_label` column** (small; deferred destructive cleanup)
+
+> Run only after Steps 1–9 have shipped and `singular_label` has been the de-facto label column long enough for any latent loader regressions to surface. Until then `display_label` stays populated as a recovery safety net.
+
+- [ ] Confirm zero `.tmp_deploy/load_*.ts` scripts still write `display_label` (`grep -r "display_label" .tmp_deploy/` should return nothing actionable)
+- [ ] Confirm no view / computed field / cube reference still reads `display_label`
+- [ ] Confirm `singular_label` is populated for every `data_objects` row (`/data_objects?singular_label=is.null&select=id` returns empty)
+- [ ] **Explicit user confirmation** that the drop is safe to execute (rule: destructive schema ops never proceed on standing approval)
+- [ ] Drop the `display_label` column
+- [ ] Spot-check the UI on a few `data_objects` rows; confirm the singular label renders via `singular_label`
+
 ---
 
 ## 10. Decisions settled (2026-05-22)
 
 | Decision | Resolution |
 |---|---|
-| `display_label` rename | **Rename + add plural** — rename `display_label` → `singular_label` AND add `plural_label`. Sequenced two-step cascade through every loader script (see §3.1 migration note). |
+| `display_label` rename | **Rename + add plural** — rename `display_label` → `singular_label` AND add `plural_label`. Sequenced three-step cascade through every loader script (see §3.1 migration note): add column + copy values, then update loaders, then drop the old column. **The drop is deferred to §9.1 Step 10** so `display_label` stays alive as a recovery safety net through the rest of the program. |
 | Bare-word rename scope | **Full catalog audit** — audit every bare-word `data_object_name` in Phase B1; rename any without an explicit `is_canonical_bare_word` claim. Eliminates the problem class. |
 | `record_status` on backfill | **`new` (default)** — backfilled rows enter with `record_status='new'`; user bulk-approves per-domain after review. Consistent with SKILL.md Rule #1. |
 | Phase B3 scope | **Top 20 implementation-relevant domains** for the one-time backfill, **plus** Rule #12 (§5.5) requiring every future market load to include lifecycle states + pattern flags contemporaneously OR add to a tracked deferred-backfill list. |
