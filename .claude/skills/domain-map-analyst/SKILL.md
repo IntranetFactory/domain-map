@@ -156,7 +156,7 @@ Full definitions and examples live in [references/module-shape.md](references/mo
 
 ## The module at a glance
 
-23 entities. Read [references/module-shape.md](references/module-shape.md) for the per-entity field shapes, enums, and FK formats before doing any write that touches a field you haven't used recently.
+27 entities (11 core concepts + 11 junctions + 1 alias + 4 agent-tooling). Read [references/module-shape.md](references/module-shape.md) for the per-entity field shapes, enums, and FK formats before doing any write that touches a field you haven't used recently.
 
 ### Core concepts (11 entities)
 
@@ -195,6 +195,19 @@ Full definitions and examples live in [references/module-shape.md](references/mo
 | Table | Purpose |
 |---|---|
 | `data_object_aliases` | Synonym, industry term, or solution-specific name for a data object (e.g. Customer → Patient in Healthcare, Customer → Account in Salesforce) |
+
+### Agent tooling layer (4 entities, added 2026-05-21)
+
+> Folded in from the rolled-back `tool_catalog` sibling-module experiment — see [plan-tools-catalog.md § Why these entities live in domain_map](../../../plan-tools-catalog.md#why-these-entities-live-in-domain_map-revised-2026-05-21). One module, one analyst skill.
+
+| Table | Holds | Qualifier / discriminator |
+|---|---|---|
+| `tools` | JSON-RPC-shaped capability primitives an agent skill can call (`send_email`, `query_invoices`, `transcribe_audio`) | `operation_kind` enum (`query` / `mutate` / `side_effect` / `compute`) — drives the **100% Semantius derivation** (today: `{query, mutate}` are Semantius-covered intrinsically; `side_effect` + `compute` need external solutions). Optional `data_object_id` FK is **required** when `operation_kind ∈ {query, mutate}` and **must be null** otherwise |
+| `skills` | Agent skills (system / process / role). `system` skills mirror one domain 1:1 (`skill_type='system'`, `domain_id` set); `process` skills wrap a cross-domain handoff cluster; `role` wraps a user-role workflow | `skill_type` enum + optional `domain_id` FK (required only for `system`) |
+| `tool_solutions` | N:M between `tools` and `solutions` — which non-Semantius solutions deliver this tool, and how | `delivery_strength` + `delivery_method` (`mcp_server` preferred) + optional `endpoint_url`. Computed label `<tool> via <solution>`. **No Semantius row** — its coverage is intrinsic to `operation_kind` |
+| `skill_tools` | N:M between `skills` and `tools` — which tools a skill needs to function | `requirement_level` (`required` / `optional` / `fallback`) + workflow-context `notes`. Computed label `<skill> needs <tool>` |
+
+These four tables coexist with `domain_map.solutions`, which gained `solution_kind` enum (`external_connector` / `action` / `compute_service` / `standard_solution`) to classify which solutions are tool-delivery sources. The killer hypothesis the layer exists to test: **how many of the loaded domains have a system skill where every required tool is Semantius-covered (i.e. `operation_kind ∈ {query, mutate}` for every required `skill_tools` row)?**
 
 ---
 
@@ -342,6 +355,7 @@ This is the catalog's most analytically loaded workflow — the combination of `
   - `invoices` (S2P, AP-side, supplier-issued) ↔ `customer_invoices` (SUB-MGMT, AR-side, seller-issued)
   - Future candidates: `suppliers` vs `customers` (already distinct), `vendor_contracts` vs `customer_contracts` (avoid — `contracts` is one CLM-mastered object with both flavors as contributors).
 - **Audience filtering, not duplicated-per-audience data_objects.** When modern vendor stacks unify a shape with audience tags at the application layer (`knowledge_articles` serves both internal IT and customer-facing KBs in ServiceNow / Salesforce Knowledge), prefer one `data_object` + multi-domain consumers over a separate `external_knowledge_articles` under CSM. Default rule: if at least one credible vendor unifies the underlying record, the catalog should too.
+- **Generic names invite cross-domain boundary collisions — scope-qualify at creation.** A `data_object_name` like `maintenance_work_orders` reads plausibly as REAL-EST, EAM, FLEET-MAINT, or FSM ownership. When a new master sits in a domain that overlaps several adjacent operational domains, prefix or qualify the name to its scope at insert time: `facility_work_orders` (REAL-EST), `eam_work_orders` (EAM industrial plant), `vehicle_work_orders` (FLEET-MAINT), `tenant_maintenance_requests` (RE-PROP-MGMT). Catalog precedent (2026-05-22): id 349 was loaded as `maintenance_work_orders` and had to be renamed to `facility_work_orders` once EAM Phase-B surfaced its own work-order need; the rename also cascaded into 3 `trigger_events` (event-name prefix had to follow). Apply the same prefix-at-creation rule to: PM schedules (`equipment_pm_schedules` vs `preventive_maintenance_schedules` vehicle-scoped), assets (`industrial_assets` vs `hardware_assets` vs `fixed_assets`), inventory (`spare_parts` vs warehouse `stock_items`). When in doubt, ask which other domain would also plausibly claim this name and prefix accordingly.
 
 ### Phase 1 — propose the domain's data objects
 
@@ -492,6 +506,117 @@ Beyond the point-solution-market test, these heuristics resolve the ambiguous ca
 
 - **Custom processes use the `CUSTOM-<CLUSTER>-<SHORT-NAME>` prefix.** Any `processes` row with `source_framework='custom'` (i.e. not an APQC PCF import) must use this convention — `CUSTOM-ONBOARD-DAY-1`, `CUSTOM-HR-OFFBOARDING-EXIT-INTERVIEW`. The prefix keeps custom rows trivially filterable. Full convention in [Phase D — Custom-process naming convention](#custom-process-naming-convention).
 
+- **`solution_kind` — classify only when a solution actually sources tools.** The enum on `solutions` has four values; the default `standard_solution` is the right answer for the vast majority of rows. Only promote to a non-default value when at least one `tool_solutions` row points at the solution. When-to-set guidance:
+
+  | Value | When to set | Examples |
+  |---|---|---|
+  | `external_connector` | Solution is a **system of record** the agent reads/writes business data against (CRUD reaches the solution's API, the solution owns the row's lifecycle). Pairs with `tools` whose `operation_kind ∈ {query, mutate}` and whose `data_object_id` points at the data_object that solution masters | Salesforce CRM, SAP S/4HANA, Oracle NetSuite, Workday HCM, ServiceNow ITSM, HubSpot |
+  | `action` | Solution provides a **side-effect** (does something in the world; returns ack-not-data). Pairs with `tools` whose `operation_kind='side_effect'` | Microsoft 365 (email/calendar), Google Workspace, Slack, Twilio, DocuSign, Stripe |
+  | `compute_service` | Solution provides **compute / AI / web automation** (pure transformation; no business-state ownership). Pairs with `tools` whose `operation_kind='compute'` | OpenAI Platform, Anthropic API, Playwright, AWS Bedrock, ElevenLabs |
+  | `standard_solution` | **Default.** The solution is in the catalog as a market entrant / vendor offering, but it has not (yet) been wired up as a tool source for any skill | Most of the ~600 solutions in the catalog |
+
+  **Semantius is NOT in the enum.** Semantius's own coverage is read from `tools.operation_kind` directly — never from a `tool_solutions` row pointing at a `semantius_native` solution (that value was deliberately dropped). If you find yourself wanting to model "this tool is also delivered by Semantius", stop: that's already implicit in the tool's `operation_kind` being in the Semantius-covered set (`{query, mutate}` today).
+
+  **Promotion is one-way and driven by usage.** Only promote a `standard_solution` row to a non-default `solution_kind` when you're about to insert at least one `tool_solutions` row referencing it. Don't pre-classify "this looks like an action vendor" speculatively — empty `tool_solutions` rows behind a non-default `solution_kind` create a misleading rollup.
+
+---
+
+## System-skill tool derivation (P2.5A.i + P2.5A.ii patterns, 2026-05-22)
+
+### Session bootstrap — always verify catalog state first
+
+When you start a session that involves drafting / loading `skills` or `skill_tools`, the **first action** is to verify live counts. The catalog is multi-session and **users add domains between sessions** (during one 2026-05-22 session, 7 new domains were loaded by the user while the assistant was processing other work).
+
+### Subagent prompt discipline for Phase-B research
+
+If you spawn `Explore`-type subagents to research Phase-B for multiple domains in parallel (the pattern P2.5A.0 introduced and the 2026-05-22 Phase-B Lite batch 1 expanded), prompt construction directly determines loader-usability of the output:
+
+- **Demand a structured table** of `data_object_name | display_label | description` and **require** snake_case_plural names. Open-ended "produce a Phase-B draft" prompts produce essays with embedded prose tables that need manual parsing.
+- **Make trigger_events + cross_domain_handoffs OPTIONAL, not required.** Empirically, agents inconsistently produce them in parseable form (some use plain markdown tables, some YAML frontmatter, some prose). Masters alone are sufficient for Phase-B Lite (data_objects + master `domain_data_objects` only); trigger_events + handoffs can be a separate focused pass.
+- **State boundary alerts explicitly in the prompt** ("don't propose X, it's mastered by Y; use Z naming instead"). Without this, agents re-propose entities that already exist or use colliding names.
+- **Tell agents to defer to the user when boundaries are unresolved.** Better to get a "needs decision" flag than wrong-mastered rows. The EAM batch-1 audit returned blockers instead of bad rows — that's the correct failure mode.
+- **Cap word count aggressively** (≤1000 words). Verbose drafts hide the load-ready content under analysis.
+
+The batch-1 anti-pattern catalogue (one bad shape each, all from 2026-05-22):
+- ❌ Agent wraps proposal in `---artifact: phase-b-research\nsystem_name: ...` YAML frontmatter — looks like a different tool's output format; not parseable.
+- ❌ Agent restates the entire SKILL.md guidance back at you before its proposal — burns tokens, doesn't add anything.
+- ❌ Agent classifies entities by confidence (High/Medium/Low) instead of committing — useful for review but not load-ready.
+- ❌ Agent refuses to commit and asks for a stakeholder meeting / cross-domain alignment call.
+
+```bash
+semantius call crud postgrestRequest '{"method":"GET","path":"/domains?select=id&limit=10000"}'   # count
+semantius call crud postgrestRequest '{"method":"GET","path":"/skills?select=skill_name,domain_id&order=domain_id.asc"}'  # who already has a system skill
+semantius call crud postgrestRequest '{"method":"GET","path":"/tools?select=tool_name&order=tool_name.asc&limit=10000"}'  # what queries/mutates already exist (dedupe!)
+```
+
+Compare against the "Live state checkpoint" in [plan-master-tasks.md](../../../plan-master-tasks.md). If counts have moved, the candidate set may have changed — recompute "domains with masters but no system skill" before proceeding. P2.5A.i discovered 3 already-existing query tools that would have duplicated; always dedupe.
+
+### Three-source derivation procedure
+
+When authoring a `skills` row with `skill_type='system'` (one-to-one with a domain), the required-tool set is derived from three sources, in order:
+
+1. **The domain's `data_objects` masters** — every master gets at minimum `query_<data_object_name>`, and for any master with an obvious write workflow also a representative mutate tool (verb-driven name like `create_incident`, `update_budget`, `approve_headcount_plan`). Both are `requirement_level='required'`. This alone usually gets you to ~80% of the required-tool set.
+2. **The domain's `contributor` / `consumer` `data_objects`** — query tools for the cross-domain reads the workflow can't function without (e.g. PA `query_employees` reads HCM; EPM `query_journal_entries` reads ERP-FIN). Mark `required` only when the workflow demonstrably needs the read, not for every consumer relationship the catalog records.
+3. **The domain's outbound `cross_domain_handoffs`** — when a handoff says "this domain triggers an event that creates a record in another domain", the system skill needs the mutate tool on the receiving side. Canonical examples: CMDB → ITSM `create_incident` for `ci.unauthorized_change_detected`; SWP → ATS `create_candidate` for `headcount.approved`; AUDIT → GRC `close_follow_up_action` for finding-closure cascades. These are `required`.
+
+### The 100%-Semantius hypothesis test
+
+For each system skill the killer-hypothesis rollup is: `% = (required tools with operation_kind ∈ {query, mutate}) / (total required tools)`. **100% means every workflow primitive the skill needs is delivered by Semantius CRUD + cube — no external connector, no side_effect, no compute tool required.**
+
+Empirical result across 12 candidates (P2.5A.i, 2026-05-22):
+
+| Tranche | 100% Semantius? |
+|---|---|
+| **Pure governance / register / lifecycle** — GRC (16/16), AUDIT (17/17), DCG (15/15), DQ (10/10), MDM (11/11) | ✅ 100% |
+| **Pure planning / portfolio / catalog** — APM (9/9), SPM (17/17), SWP (13/13), EPM (8/8), ESG (15/15) | ✅ 100% |
+| **Pure operational substrate** — CMDB (7/7) | ✅ 100% |
+| **Analytics + comms** — PA (12/14) | ❌ 86% — `generate_text` (compute, attrition narratives) and `send_email` (side_effect, engagement-survey distribution) are non-negotiable for PA's core workflow |
+
+The reliable predictor of *not* being 100% Semantius: the domain's core workflow involves **(a)** generating narrative/explanation text the user reads, **(b)** distributing artefacts to recipients via external channels (email, SMS, mailers), or **(c)** running ML/statistical scoring beyond what computed_fields express. PA hits (a) + (b). When you encounter a system-skill draft that looks like it needs LLM generation or external comms in the *required* set, that's the signal to expect a sub-100% result — and the signal that the domain genuinely benefits from non-Semantius tool delivery.
+
+### Cross-tranche external-tool patterns (P2.5A.ii, 2026-05-22)
+
+After running 22 system-skill drafts across the catalog (12 hypothesis-candidates + 10 obvious-non-Semantius), the external tools that appear in REQUIRED sets cluster into recognisable shapes:
+
+| Pattern | Tool | Where it appears as required | Why |
+|---|---|---|---|
+| **Universal external dependency** | `send_email` | ITSM, HCM, ATS, MA, ESIGN, PAYROLL, S2P, LMS, PA (9 of 22 skills) | Operational systems all need notifications to humans. The most-frequent reason a skill drops below 100% Semantius. |
+| **Talent + contract domains** | `sign_document` | HCM, ATS, ESIGN, S2P (4 of 22) | Contracts, offer letters, supplier agreements all need e-signature. |
+| **Calendar-driven scheduling** | `create_calendar_event` | ATS (interview scheduling) | Anywhere a human appointment is part of the workflow. |
+| **ChatOps for operational systems** | `post_chat_message` | ITSM (major-incident bridge) | Slack/Teams integration for real-time ops coordination. |
+| **Voice / SMS / telephony domains** | `make_phone_call`, `send_sms` | CCAAS | When the channel itself is the workflow. |
+| **Audio + sentiment analytics** | `transcribe_audio`, `detect_sentiment` | CCAAS (call recordings), PA (engagement surveys), SMM (mentions) | "Listen to humans at scale" workflows. |
+| **External payment processors** | `execute_payment` | PAYROLL | Bank transfers / ACH always external. |
+| **External social platforms** | `post_social_message` | SMM | LinkedIn/X/Meta/TikTok/Instagram publish APIs. |
+| **ML scoring beyond computed_fields** | `classify_text`, `generate_text` | MA (lead scoring), PA (attrition narratives) | When the domain's workflow involves AI-driven text classification or generation that exceeds what JsonLogic computed_fields can express. |
+
+The lowest-% skills in the catalog are the ones that combine multiple of these patterns:
+- **CCAAS at 60%** — voice + SMS + transcription + sentiment (4 external requirements)
+- **ESIGN at 67%** — `sign_document` IS the workflow; small required-tool set magnifies the ratio
+- **HCM / ATS / S2P at 83-86%** — email + e-signature combo for talent/supplier comms
+
+The highest non-100% are **LMS and B2C-COMM, both at 91%** — each with only two non-covered tools (LMS: `send_email`; B2C-COMM: `send_email` + `execute_payment`). If Semantius gains a native email primitive (a future `operation_kind` value), LMS flips to 100% with a single reclassification, and B2C-COMM moves to ~95%. These are the "almost-Semantius" canaries — watch for them when scanning for skills near the 100% boundary.
+
+### Leadership-layer domains have no system skill
+
+Domains that the catalog marks as leadership-layer / aggregation-tier (per the SKILL.md "Leadership-layer / aggregation-tier domains often master nothing" rule) do **not** get a system skill. They read upstream and publish derived signals; there's no domain-owned data_object surface for a system skill to operate on.
+
+**Verified leadership-tier (by-design zero masters; do NOT scaffold Phase-B for these):** REV-INTEL, SALES-PERF, GTM-PLAN, ACCT-PLAN, PRM, OP-RES, BCM, SECOPS, SOAR, THREAT-INTEL, TPRM, VULN-MGMT, PRIV-MGMT, FINOPS, INTRANET, COLLAB-GOV — **16 domains**. They read from upstream cluster data_objects (CRM `opportunities`, CMDB `configuration_items`, ESG `emissions_records`, ERP-FIN `journal_entries`, etc.) and publish derived signals via `cross_domain_handoffs` with `data_object_id` pointing at the upstream master.
+
+EPM is a partial exception — it has the leadership-layer character but does master `financial_plans`/`budgets`/`forecasts`/`variance_analyses`/`financial_scenarios`, so EPM does get a system skill.
+
+Quick check before drafting any system skill: `semantius call crud postgrestRequest '{"method":"GET","path":"/domain_data_objects?domain_id=eq.<id>&role=eq.master"}'`. Zero masters = skip. If the domain genuinely is supposed to have masters (and you're not skipping for the leadership-layer reason), that's a Phase-B gap — backfill before drafting the skill (see [P2.5A.0 — Phase-B prerequisite backfill](../../../plan-master-tasks.md) for the precedent).
+
+### Anti-patterns specific to system-skill derivation
+
+- ❌ Marking every `tool_solutions` candidate as `required`. If something is "nice to have but the workflow proceeds without it", it's `optional`. Inflating `required` breaks the hypothesis test by hiding real coverage gaps.
+- ❌ Adding tools for every `consumer` data_object the catalog records. Many consumer relationships are analytical (dashboards roll up) and don't drive the core operational workflow. Only required when the workflow can't proceed without the read.
+- ❌ Creating a generic `mutate_<data_object>` tool for every master. The existing convention is verb-driven (`update_budget`, `create_audit_finding`, `approve_headcount_plan`). Generic `mutate_*` names are not searchable and lose the workflow semantics.
+- ❌ Using `vendors` as a `data_object_id` target for query tools. `vendors` is the catalog's vendor reference table (legal entities); it is **not** a Semantius data_object. Read vendor-shaped records via `query_suppliers` (the `suppliers` data_object).
+- ❌ Re-creating query tools that already exist. Always read `/tools` and dedupe by `tool_name` before drafting. P2.5A.i discovered 3 existing query tools that would have duplicated (`query_employees`, `query_journal_entries`, `query_suppliers`).
+- ❌ Drafting a system skill for a domain with zero masters. The skill would have nothing to query/mutate, which means either (a) the domain is leadership-layer and shouldn't have a skill at all, or (b) Phase-B is incomplete and needs backfilling first. **Don't paper over a Phase-B gap by inventing skill_tools that reference data_objects from other domains** — that produces a skill whose entire required-tool set is consumer-reads, which is not a system skill.
+- ❌ Stamping `record_status='approved'` on freshly-loaded skills/tools/skill_tools without an explicit user review pass. Rule #1 applies to these entities the same as to any other catalog row.
+
 ---
 
 ## Anti-patterns
@@ -516,6 +641,7 @@ Beyond the point-solution-market test, these heuristics resolve the ambiguous ca
 - ❌ Trying to fit a large insert into a single command-line argument on Windows. Use stdin or chunk.
 - ❌ `cd`ing into the skill folder, `.tmp_deploy/`, or any subdirectory before running `semantius` or a loader script. Silently routes to the wrong tenant. See rule #6.
 - ❌ Writing project state, lessons learned, or "remember this for next time" notes to your memory system. Every persistent note about this project lives in committed files (SKILL.md, CLAUDE.md, references/). Memory is off-limits for this repo.
+- ❌ Loading tool-shaped capability rows into `capabilities`. `Send Email`, `Transcribe Audio`, `Sign Document`, `Make Phone Call`, `Run Shell Command` — those are **`tools`** (lowercase snake_case verbs: `send_email`, `transcribe_audio`, `sign_document`), not `capabilities`. The `capabilities` table stays business-shaped: noun-phrase market features an org *can do* (`Lead Management`, `Vulnerability Scanning`, `Roadmap Visualization`, `Automated Invoice Matching`). If the row reads as a JSON-RPC function with an obvious verb-object shape, it belongs in `tools` with the right `operation_kind` and (for `query`/`mutate`) a `data_object_id` pointer. This anti-pattern is easy to fall into when a vendor's marketing page lists capabilities like "AI Voice Synthesis" — that's a *tool* the vendor delivers, not a *capability* of a domain.
 
 ---
 

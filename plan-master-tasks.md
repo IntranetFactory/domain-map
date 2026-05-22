@@ -14,6 +14,53 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ---
 
+## Live state checkpoint (2026-05-22 end-of-session, after Phase-B Lite batch 1 + EAM boundary resolution)
+
+> **Read this first if you're starting a fresh session.** Counts may have moved — verify with the queries below before acting on them.
+
+| Entity | Count | Last verification |
+|---|---|---|
+| `domains` | 130 | `semantius call crud postgrestRequest '{"method":"GET","path":"/domains?select=id&limit=10000"}'` |
+| `data_objects` | 465 (+73 batch 1, +3 EAM) | `/data_objects?select=id&limit=10000` |
+| `tools` | 280 | `/tools?select=id&limit=10000` |
+| `skills` | 23 (all `skill_type='system'`) | `/skills?select=skill_name,domain_id` |
+| `skill_tools` | 317 | `/skill_tools?select=id&limit=10000` |
+| `cross_domain_handoffs` | 330 | `/cross_domain_handoffs?select=id&limit=10000` |
+| `domain_data_objects` | 537 (+73 batch 1, +3 EAM master rows) | `/domain_data_objects?select=id&limit=20000` |
+
+**Next un-blocked task:** [P2.5A.iii — mid-confidence remainder](#p25a--systemskill-skill_tools-independent-of-plan-1). ~55 candidate domains. Read the **Session handoff** subsection inside that task before starting.
+
+**Phase-B Lite audit status — what's loaded vs what's still pending (added 2026-05-22):**
+
+The 86-domain Phase-B audit started but only batch 1 (12 domains) completed before context budget required stopping. State below.
+
+| Group | Count | Status |
+|---|---|---|
+| **Loaded with master data_objects (batch 1, Phase-B Lite)** | 11 | PROD-MGMT, KMS, CPQ, OMS, ECM, DI, DXP, KUBE-PLAT, APIM, APP-PAAS, IPAAS. trigger_events + handoffs deferred. |
+| **EAM (loaded 2026-05-22 after boundary resolution)** | 1 | EAM — 3 masters: `industrial_assets`, `eam_work_orders`, `equipment_pm_schedules`. REAL-EST `maintenance_work_orders` renamed to `facility_work_orders` (id 349) + 3 trigger_events renamed to `facility_work_order.*`. Loader: [.tmp_deploy/load_eam_phase_b.ts](.tmp_deploy/load_eam_phase_b.ts). |
+| **Zero-master, audit not yet run** | 24 | RPA, IDP, NPMD, DCIM, UEM, WSC, TEST-MGMT, PROC-MIN, DEM, IWMS, CAFM, MFG-OPS, BANK-OPS, CLIN-DEV, HC-PATIENT, INS-CLAIMS, LSD, PS-LIC, RET-STORE, TELCO-BSS, UTIL-OPS, VIS-MGMT, VSDP, WEB-CONTOPS |
+| **Thin coverage (1-4 masters), audit not yet run** | 33 | BI, DAM, HAM, ACCT-PRACT-MGMT, AP-AUTO, CONV-AI, FLEET-MAINT, FSM, HRSD, IGA, ITAM, KGP, METRICS-LAYER, NCDB, REMOTE-ACCESS, CCAAS, DISCOVERY, LCAP, LOYALTY, RE-CRE, SPEND-MGMT, AIOPS, BPA, CSM, ITOM, LEGAL-PRACT-MGMT, PSA, RE-INVEST, SALES-ENG, SAM, SUP-LIFE, TELEMATICS, WORK-MGMT |
+| **Leadership-tier (no Phase-B needed by design)** | 16 | REV-INTEL, SALES-PERF, GTM-PLAN, ACCT-PLAN, PRM, OP-RES, BCM, SECOPS, SOAR, THREAT-INTEL, TPRM, VULN-MGMT, PRIV-MGMT, FINOPS, INTRANET, COLLAB-GOV — see SKILL.md "Leadership-layer domains have no system skill" |
+| **Single-master legit** | 1 | ESIGN (envelopes IS the whole domain) |
+| **Already have system skills** | 23 | See `skills` table |
+
+**Recommended next-session order:**
+1. Resume the Phase-B Lite audit for the 57 remaining domains (24 zero-master + 33 thin). Pattern: spawn subagents in batches of ≤12 with explicit "produce a structured masters table; trigger_events/handoffs OPTIONAL" prompts (the inconsistency on those two was what stopped batch 1's full load). Then load masters via [.tmp_deploy/load_batch1_phase_b_lite.ts](.tmp_deploy/load_batch1_phase_b_lite.ts) pattern.
+2. ~~Resolve EAM boundary decisions explicitly with user, then load.~~ ✓ Done 2026-05-22 — see live-state row above.
+3. Then proceed to P2.5A.iii — system skills for the 86-23 = 63 candidates (after Phase-B is broadly complete). EAM now in the candidate pool with 3 masters.
+
+**Re-runnable killer-hypothesis-test query** lives at the bottom of [.tmp_deploy/load_p25a_i.ts](.tmp_deploy/load_p25a_i.ts) and [.tmp_deploy/load_p25a_ii.ts](.tmp_deploy/load_p25a_ii.ts) — copy-paste the rollup block when P2.5A.iii is done to certify the full catalog.
+
+**Recent session activity (2026-05-22):**
+- P2.5A.0 (Phase-B backfill): 4 new domains (DLP, DSPM, REAL-EST, CAFM) + 1 IWMS PATCH + 725 inserts across 8 entity classes; 11 parallel research subagents drove the consolidation.
+- P2.5A.i (12 hypothesis candidates): 12 system skills loaded; **killer hypothesis confirmed: 11/12 = 100% Semantius**, PA = 86% (compute + side_effect required for surveys + attrition narratives).
+- P2.5A.ii (10 obvious-non-Semantius + B2C-COMM): 11 system skills; **all confirmed below 100%** as predicted; LMS and B2C-COMM at 91% (single missing primitive `send_email` / `execute_payment` respectively).
+- SKILL.md gained a System-skill tool derivation section + Cross-tranche external-tool patterns section.
+- **Phase-B Lite batch 1 (11 zero-master domains):** PROD-MGMT, KMS, CPQ, OMS, ECM, DI, DXP, KUBE-PLAT, APIM, APP-PAAS, IPAAS. **73 new master `data_objects` + 73 master `domain_data_objects` rows.** All `record_status='new'`. Trigger_events and cross_domain_handoffs **deliberately deferred** — agent outputs were too inconsistent in shape to load programmatically. The masters alone unblock system-skill drafting for these 11 domains in a future P2.5A.iii pass. Loader: [.tmp_deploy/load_batch1_phase_b_lite.ts](.tmp_deploy/load_batch1_phase_b_lite.ts).
+- **EAM Phase-B (boundary resolution + load, 2026-05-22):** 3 boundary decisions made with user — (1) HAM keeps `hardware_assets`, EAM gets new `industrial_assets`; (2) rename id 349 `maintenance_work_orders` → `facility_work_orders` (REAL-EST), add new `eam_work_orders` (EAM); (3) FLEET-MAINT keeps vehicle `preventive_maintenance_schedules`, EAM gets new `equipment_pm_schedules`. Loaded: **3 new EAM master data_objects + 3 master ddo rows + 1 data_object PATCH + 3 trigger_event renames** (`maintenance_work_order.{created,dispatched,completed}` → `facility_work_order.*`). Loader: [.tmp_deploy/load_eam_phase_b.ts](.tmp_deploy/load_eam_phase_b.ts). Trigger_events + handoffs for EAM itself deferred (consistent with batch-1 pattern).
+
+---
+
 ## Wave 0 — SKILL.md prep (do before Wave 1)
 
 > The `domain-map-analyst` SKILL.md is the contract a fresh session opens. Today it doesn't know about `processes`, `trigger_events`, Phase D, the trigger-event ownership rule, the custom-process naming convention, the APQC PCF framework, or the future `solution_kind` column. Without these updates, the Wave-1 agent will reproduce avoidable friction. All edits here are to [`.claude/skills/domain-map-analyst/SKILL.md`](.claude/skills/domain-map-analyst/SKILL.md) and its [`references/`](.claude/skills/domain-map-analyst/references/) folder.
@@ -113,33 +160,70 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 ### S2.2 — Document `solution_kind` + new entities in `domain-map-analyst` SKILL.md + references
 > Revised 2026-05-21 after the `tool_catalog` → `domain_map` merge. The cross-module reference item is moot (intra-module now); the rest still applies.
 - [x] Add `solution_kind` to the `solutions` entry in `references/module-shape.md` (done as part of P2.2 — enum values, default, per-value usage)
-- [ ] Add per-value semantics + when-to-set guidance to the `domain-map-analyst` SKILL.md classification heuristics
-- [ ] Add an anti-pattern: "don't load tool-shaped capability rows in `domain_map.capabilities` — those are `tools` (in the same module), not `capabilities`; the capabilities table stays business-shaped"
-- [ ] Add the 4 new entities (`tools`, `skills`, `tool_solutions`, `skill_tools`) to `module-shape.md` and SKILL.md's "Module at a glance" section (folded in from the deleted `tool-catalog-analyst` skill)
+- [x] Add per-value semantics + when-to-set guidance to the `domain-map-analyst` SKILL.md classification heuristics
+- [x] Add an anti-pattern: "don't load tool-shaped capability rows in `domain_map.capabilities` — those are `tools` (in the same module), not `capabilities`; the capabilities table stays business-shaped"
+- [x] Add the 4 new entities (`tools`, `skills`, `tool_solutions`, `skill_tools`) to `module-shape.md` and SKILL.md's "Module at a glance" section (folded in from the deleted `tool-catalog-analyst` skill). Entity count updated 23 → 27.
 
 ### P2.3 — `tools` vocabulary
 > **Revised 2026-05-21:** see [plan-tools-catalog.md § Decision record](plan-tools-catalog.md#decision-record--2026-05-21-authoritative-overrides-the-body-below-where-they-conflict). No pseudo-tools; Semantius coverage is intrinsic to `operation_kind`.
-- [ ] Draft ~40 `tools` (JSON-RPC functions) with `operation_kind` set: `send_email`, `query_invoices`, `create_calendar_event`, `post_chat_message`, `make_phone_call`, `send_sms`, `run_shell_command`, `transcribe_audio`, `search_web`, `read_pdf`, `execute_payment`, `sign_document`, `generate_image`, `store_blob`, `extract_entities`, `web_scrape`, etc.
-- [ ] Set `data_object_id` FK for `query`/`mutate` operations (e.g. `query_invoices` → `invoices` data_object). Required when `operation_kind ∈ {query, mutate}`; null otherwise — enforced by validation rules.
-- [ ] ~~Include three Semantius pseudo-tools~~ — dropped 2026-05-21. Semantius coverage lives on `operation_kind`, not on individual tool rows.
-- [ ] Surface draft for review before bulk insert
-- [ ] Load idempotently
+- [x] Drafted **52 `tools`** (23 query + 7 mutate + 10 side_effect + 12 compute) with `operation_kind` set. Loader: [.tmp_deploy/load_tools.ts](.tmp_deploy/load_tools.ts).
+- [x] `data_object_id` FK set for all 30 query/mutate tools (resolved against 23 distinct data_objects); null on all 22 side_effect/compute tools. Both validation rules verified.
+- [x] ~~Include three Semantius pseudo-tools~~ — dropped 2026-05-21. Semantius coverage lives on `operation_kind`, not on individual tool rows.
+- [x] Surfaced draft for review; user approved as-is (2026-05-21). Emails/SMS/calendar stay as `side_effect` (no Semantius-mastered messaging data_objects).
+- [x] Loaded idempotently (52 inserted, 0 existing). RLS issue on the 4 new entities surfaced during the run; user fixed and retry succeeded.
 - [ ] Stamp `record_status='approved'` once review confirms vocab is clean
 
 ### P2.4 — `tool_solutions` matrix + `solution_kind` promotions
 > **Revised 2026-05-21:** no Semantius row in `solutions`; no `semantius_native` value in `solution_kind` enum (4 values now). `tool_solutions` matrix is for non-Semantius solutions only.
-- [ ] List the ~30 solutions that source tools: Microsoft 365 (`action`), Google Workspace (`action`), Slack (`action`), Twilio (`action`), DocuSign (`action`), Stripe (`action`), OpenAI Platform (`compute_service`), Anthropic API (`compute_service`), Playwright (`compute_service`), SAP S/4HANA (`external_connector`), Oracle NetSuite (`external_connector`), Workday HCM (`external_connector`), Salesforce CRM (`external_connector`), etc.
-- [ ] ~~Add a Semantius solution row~~ — dropped 2026-05-21. Semantius isn't in `solutions`.
-- [ ] PATCH existing `domain_map.solutions` rows to their right `solution_kind` (most stay `standard_solution`; the ~30-50 in the list above get promoted to `external_connector` / `action` / `compute_service`); add new solutions for tool sources not yet in the catalog (AWS SES, Playwright, etc.)
-- [ ] For each tool, insert `tool_solutions` rows linking to every solution that delivers it, with `delivery_strength` + `delivery_method` + optional `endpoint_url`. Do not author Semantius-side rows; Semantius coverage is read from `operation_kind`.
-- [ ] Surface draft for review before bulk insert
+- [x] Listed and added the tool-source solutions. **10 new vendors** (OpenAI, Anthropic PBC, Adyen NV, Vonage, Cohere, AssemblyAI, Deepgram, Brave Software, DeepL, Tavily) + **25 new solutions** (15 `action` + 10 `compute_service`).
+- [x] ~~Add a Semantius solution row~~ — dropped 2026-05-21. Semantius isn't in `solutions`.
+- [x] PATCHed **23 existing `domain_map.solutions` rows** to non-default `solution_kind` (20 → `external_connector`, 3 chat → `action`); added 25 new solutions for tool sources not yet in the catalog. Loader: [.tmp_deploy/load_tool_solutions.ts](.tmp_deploy/load_tool_solutions.ts).
+- [x] Inserted **117 `tool_solutions` rows** linking each tool to its delivery solutions, with `delivery_strength` + `delivery_method` + `endpoint_url`. No Semantius-side rows authored — coverage reads from `operation_kind`.
+- [x] Surfaced draft via dry-run; user approved as-is (2026-05-21). RLS issue on `tool_solutions` surfaced on first apply; user fixed and retry succeeded.
+
+*Follow-up gaps (not blockers, captured for future passes):* `query_subscriptions` (SMP buyer-side) and `query_projects` have no `tool_solutions` rows yet — no canonical SMP/PPM connector solutions loaded.
 
 ### P2.5A — System-skill `skill_tools` (independent of Plan 1)
 > Process in three tranches so the killer hypothesis ("which domains are 100% Semantius?") is confirmed/refuted fastest, and so the S2.5A pattern-capture happens while each tranche's lessons are fresh.
 
-- [ ] **P2.5A.i — 100%-Semantius hypothesis candidates:** GRC, AUDIT, APM, CMDB, SPM, DCG, DQ, MDM, PA, SWP, EPM, ESG. Draft `skill_tools` rows derived from the domain's `data_objects` masters + outbound handoffs + typical workflow patterns. Insert with `requirement_level` (`required` / `optional` / `fallback`) and a one-line workflow-context note.
-- [ ] **P2.5A.ii — Obvious-non-Semantius:** ITSM, HCM, ATS, MA, SMM, CCAAS, ESIGN, PAYROLL, S2P, B2C-COMM, LMS. Same shape; expected to surface `action` and `compute_service` tool requirements.
-- [ ] **P2.5A.iii — Mid-confidence remainder:** every other `domain_map` domain (~75 of the ~100 total). Apply patterns learned in tranches i and ii.
+#### P2.5A.0 — Phase-B prerequisite backfill (added 2026-05-21, completed 2026-05-22)
+Discovered while drafting P2.5A.i: only 4 of the 12 candidates (CMDB, EPM, PA, SWP) had credible Phase-B coverage. APM/SPM were thin (1 master each); GRC/AUDIT/DCG/DQ/MDM/ESG had zero masters. DLP/DSPM/REAL-EST were missing entirely.
+
+- [x] 11 parallel `Explore` subagents (8 Phase-B research + 3 full Phase-A+B research for DLP/DSPM/REAL-EST). Drafts consolidated; 23 cross-cutting overlap-resolution decisions applied (golden-record modeling, classification-taxonomy ownership, data_lineage ownership, REAL-EST sub-domain shape, etc.).
+- [x] Loader: [.tmp_deploy/load_phase_b_full.ts](.tmp_deploy/load_phase_b_full.ts). Applied 2026-05-22: 4 new domains (DLP, DSPM, REAL-EST, CAFM) + IWMS PATCH (parent_domain_id → REAL-EST) + 26 vendors + 33 solutions + 47 solution_domains + 22 capabilities + 32 capability_domains + **221 solution_capabilities** + 85 data_objects + 116 domain_data_objects + 78 trigger_events + 61 cross_domain_handoffs. **725 inserts total.** Largest single load to date.
+- [x] All 12 P2.5A.i candidates now have credible Phase-B coverage. Ready to resume tranche work.
+
+- [x] **P2.5A.i — 100%-Semantius hypothesis candidates:** GRC, AUDIT, APM, CMDB, SPM, DCG, DQ, MDM, PA, SWP, EPM, ESG. Loader: [.tmp_deploy/load_p25a_i.ts](.tmp_deploy/load_p25a_i.ts). Added **128 new tools** (101 query + 29 mutate; one query per master / required-consumer data_object; selective mutates per workflow); created **12 `skills` rows** (`skill_type='system'`, one per candidate domain); inserted **165 `skill_tools`** rows with `requirement_level ∈ {required, optional}`.
+- [x] **Killer hypothesis test ran (built into the loader). Result: 11 of 12 domains = 100% Semantius-covered.** APM 9/9, CMDB 7/7, EPM 8/8, SPM 17/17, SWP 13/13, GRC 16/16, AUDIT 17/17, DCG 15/15, DQ 10/10, MDM 11/11, ESG 15/15. **PA = 86% (12/14)** — drops because `generate_text` (compute, for attrition narratives) and `send_email` (side_effect, for engagement-survey distribution) are required tools the workflow legitimately needs. Clean structural separation: pure-CRUD-and-workflow domains are fully Semantius-coverable; analytics+comms domains are not.
+- [x] **P2.5A.ii — Obvious-non-Semantius:** ITSM, HCM, ATS, MA, SMM, CCAAS, ESIGN, PAYROLL, S2P, LMS (10 of 11; B2C-COMM skipped initially pending its Phase-B backfill — Phase-B-incomplete, had no master data_objects). Loader: [.tmp_deploy/load_p25a_ii.ts](.tmp_deploy/load_p25a_ii.ts). Added 81 tools (49 query + 31 mutate + 1 new side_effect `post_social_message`) + 10 system skills + 129 skill_tools. **All 10 confirmed NOT 100% Semantius as predicted.** Distribution: LMS 91% (only `send_email` missing), ITSM 87%, ATS+PAYROLL 86%, S2P 85%, HCM 83%, MA 82%, SMM 80%, ESIGN 67%, CCAAS 60% (voice+SMS+transcription+sentiment all required).
+- [x] **B2C-COMM follow-up** — Phase-B backfilled (1 subagent) + b2c-comm-system skill loaded. Loader: [.tmp_deploy/load_b2ccomm_phase_b_and_skill.ts](.tmp_deploy/load_b2ccomm_phase_b_and_skill.ts). 10 new master data_objects + 16 trigger_events + 10 handoffs + 19 tools + 1 skill + 23 skill_tools. **b2c-comm-system landed at 91% Semantius** (`execute_payment` + `send_email` non-covered), joining LMS as a second "almost-Semantius" candidate.
+- [ ] **P2.5A.iii — Mid-confidence remainder.** Apply patterns learned in tranches i and ii to every other domain that has master `data_objects`. **Live state checkpoint 2026-05-22 end-of-session:** 130 domains, 78 with at least one master, 23 system skills loaded → **~55 candidate domains remaining for this tranche.**
+
+  **Session handoff (read before starting):**
+  - **Verify catalog state first.** Counts may have moved since this note was written: `semantius call crud postgrestRequest '{"method":"GET","path":"/domains?select=id&limit=10000"}'` and same for `/skills`, `/skill_tools`, `/tools`. Users add domains between sessions (this session itself ran while 7 new domains were added — see below).
+  - **7 new domains added by user 2026-05-22 after Phase-A loads** (all have Phase-B masters, all need P2.5A.iii treatment):
+    - **Fleet cluster:** `FLEET-MGMT` (id 147), `FLEET-MAINT` (id 149), `TELEMATICS` (id 148)
+    - **Real-estate cluster:** `RE-BROKERAGE` (id 143), `RE-PROP-MGMT` (id 144), `RE-CRE` (id 145), `RE-INVEST` (id 146)
+  - **Approach for the 55 candidates.** A hand-curated per-domain `skill_tools` matrix at this volume is prohibitive (~1000+ skill_tools rows). The pragmatic path is a **generator** that:
+    1. Pulls each candidate domain's masters from live state.
+    2. Auto-adds `query_<master_name>` for every master without an existing query tool (~150 new query tools across the 55).
+    3. Auto-adds a generic `update_<master_name>` mutate per master where writes are part of the workflow (~80 new mutates).
+    4. Applies a **per-domain category heuristic** for the REQUIRED external tools, drawn from the cross-tranche patterns codified in [SKILL.md § Cross-tranche external-tool patterns](.claude/skills/domain-map-analyst/SKILL.md):
+       - **Pure-Semantius candidates (expect 100%):** BI, DATA-AI-PLAT, METRICS-LAYER, KGP, NCDB, LCAP, DAM, BPA, PSA, WORK-MGMT, DISCOVERY, HAM, SAM, ITAM, IGA → no required external tools beyond query/mutate.
+       - **Operational with email (~85-95%):** CRM, SALES-ENG, CDP, CSM, LOYALTY, SUB-MGMT, HRSD, AP-AUTO, EXPENSE, SPEND-MGMT → require `send_email`.
+       - **Talent / contract domains (~83-86%):** TALENT-MGMT, BEN-ADMIN, COMP-MGMT, EMP-EXP, WFM, ONBOARDING, HCMS, CLM → require `send_email` + `sign_document`.
+       - **IT-ops cluster (~85-90%):** AIOPS, ITOM, OBS, RMM, REMOTE-ACCESS, MSP-PSA → require `send_email` + `post_chat_message` (ChatOps).
+       - **Field service / dispatch (~85%):** FSM → require `send_email` + `send_sms`.
+       - **Finance / payments-heavy (~80-86%):** ERP-FIN → require `send_email` (no `execute_payment` unless treasury workflow).
+       - **Real-estate / fleet (~80-85%):** RE-CRE, RE-BROKERAGE, RE-INVEST, RE-PROP-MGMT, FLEET-MGMT, FLEET-MAINT → require `send_email` + `sign_document` (leases, vehicle contracts).
+       - **Telematics / vehicle data (~95-100%):** TELEMATICS → likely pure-CRUD (events from devices).
+       - **AI-conversational (~70-80%):** CONV-AI → require `transcribe_audio` + `generate_text` + `detect_sentiment`.
+       - **Supplier-facing (~85%):** SUP-LIFE, VMS → require `send_email` + `sign_document`.
+    5. Inserts skills + skill_tools with the same idempotency pattern as [load_p25a_i.ts](.tmp_deploy/load_p25a_i.ts) / [load_p25a_ii.ts](.tmp_deploy/load_p25a_ii.ts).
+    6. Runs the built-in hypothesis-test rollup at the end.
+  - **DO NOT** add system skills for **leadership-layer / aggregation-tier** domains that legitimately master nothing (per the SKILL.md "Leadership-layer / aggregation-tier domains often master nothing" rule): REV-INTEL, SALES-PERF, GTM-PLAN, ACCT-PLAN, PRM, EPM is allowed (has masters). Quick check before drafting: `/domain_data_objects?domain_id=eq.<id>&role=eq.master`; zero masters = skip.
+  - **`vendors` is not a `data_object`.** It's the catalog's vendor reference table. Tools needing "vendor" reads should use `query_suppliers` (P2.5A.i discovered this; codified in SKILL.md anti-patterns).
+  - **Dedupe before insert.** P2.5A.i discovered 3 existing query tools (`query_employees`, `query_journal_entries`, `query_suppliers`) that already shipped in P2.3. Always `refresh` the tool map before generating `query_<name>` candidates.
 
 ### P2.6A — Semantius coverage rollup query (system skills only)
 > **Revised 2026-05-21:** rollup is computed from `tools.operation_kind` membership in the Semantius-covered set (today: `{query, mutate}`), not from `tool_solutions` rows pointing at Semantius. See [plan-tools-catalog.md § Decision record](plan-tools-catalog.md#decision-record--2026-05-21-authoritative-overrides-the-body-below-where-they-conflict).
@@ -150,8 +234,8 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 - [ ] Save both queries to a `references/` folder for reuse
 
 ### S2.5A — Codify tool-requirement derivation patterns in `domain-map-analyst` SKILL.md (per tranche)
-- [ ] **After P2.5A.i (100%-Semantius tranche):** document the internal-only derivation patterns ("system skill against own data_objects → `query`/`mutate` only, no side_effects"). Validate or refute the 100%-Semantius hypothesis for each candidate; record which flipped.
-- [ ] **After P2.5A.ii (obvious-non-Semantius tranche):** document the recurring external-tool patterns ("HR/customer-comm domains → email + calendar `action` tools"; "AI-flavored domains → `compute_service` tools"; "domains mastering external data_objects → `external_connector` tools").
+- [x] **After P2.5A.i (100%-Semantius tranche):** SKILL.md gained a new "System-skill tool derivation" section codifying the 3-source derivation procedure (masters → contributor/consumer reads → handoff-driven mutates), the hypothesis-test rollup, and 5 anti-patterns surfaced during the load. The reliable predictor of *not* being 100% Semantius — narrative generation OR external distribution OR ML scoring beyond computed_fields — is captured explicitly. 11/12 candidates landed at 100%; PA flipped to 86% as predicted.
+- [x] **After P2.5A.ii (obvious-non-Semantius tranche):** SKILL.md gained a "Cross-tranche external-tool patterns" subsection cataloguing the 9 recurring external-tool shapes (universal `send_email`, talent+contract `sign_document`, ChatOps `post_chat_message`, voice/SMS telephony, audio+sentiment analytics, external payments, social-platform actions, ML-scoring beyond computed_fields, calendar scheduling). Lowest-% skills (CCAAS 60%, ESIGN 67%) explained by pattern stacking; highest-non-100% (LMS 91%) flagged as the canonical "almost-Semantius — flips to 100% if Semantius gains native email primitive."
 - [ ] **After P2.5A.iii (mid-confidence remainder):** document anything that surprised — domains that flipped from one hypothesis to the other, or that needed unexpected tool kinds.
 
 ---
