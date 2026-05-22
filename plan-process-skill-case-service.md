@@ -9,7 +9,7 @@
 | Trigger-event prefix bucket | `case.*` |
 | APQC PCF parent | L3 / external_id `10388` — "Manage customer service problems, requests, and inquiries" |
 | Top events | `case.it_assistance_required`, `case.critical_health_drop`, `case.churn_risk_detected` |
-| `processes.source_framework` (when materialised) | `apqc_pcf_cross_industry` — point at the L3 row above |
+| `processes.source_framework` (when materialized) | `apqc_pcf_cross_industry` — point at the L3 row above |
 
 ## Discovery signals
 
@@ -32,7 +32,7 @@ The case-management orchestration spans **two audiences in one bucket** — cust
 
 Three sub-flows:
 
-1. **Case open + route** (`case.created`, `case.it_assistance_required`): CSM / HRSD intake → categorise → route to ITSM if IT-shaped → IGA if access-shaped.
+1. **Case open + route** (`case.created`, `case.it_assistance_required`): CSM / HRSD intake → categorize → route to ITSM if IT-shaped → IGA if access-shaped.
 2. **Health/escalation signals** (`case.critical_health_drop`, `case.churn_risk_detected`): CSM detects pattern via CDP-derived score → SUB-MGMT pauses dunning if retention-active → CRM flags account for retention play.
 3. **Resolution + feedback** (`case.resolved`, `case.csat_returned`): CSM closes → CDP updates segment → CRM updates opportunity-from-service if expansion signal.
 

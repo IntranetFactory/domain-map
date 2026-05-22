@@ -163,6 +163,36 @@ Full definitions and examples live in [references/module-shape.md](references/mo
 
 **Why this rule exists:** the original ServiceNow / Salesforce / Workday / SAP / PROD-MGMT / SMM / SWP / ONBOARDING / ATS / ACCT-PLAN / GTM-PLAN / REV-INTEL / SALES-PERF / INTRANET / COLLAB-GOV / WEB-CONTOPS loads all inserted `domains` rows without populating these seven fields. The user discovered this in the UI and pushed back hard. 11 rows were sitting at zeros across the catalog with no signal that they needed backfill. The fields were even missing from [references/module-shape.md](references/module-shape.md) at the time — that gap was the upstream cause, and is closed now.
 
+### 9. Naming arbitration at insert time.
+
+Every proposed `data_object_name` MUST be checked against existing `data_objects.data_object_name` for collision patterns before any insert. A collision is any of:
+
+- The proposed name is a substring of an existing name (`offers` ⊂ `job_offers`)
+- An existing name is a substring of the proposed name (`applications` ⊃ existing `job_applications`)
+- The proposed name shares its singular form with an existing name (`assessment` ↔ `candidate_assessment`)
+
+On a collision, the loader MUST stop and surface the conflict. The user picks one of:
+
+- **(a) prefix the new name** (the default — `<domain_slug>_<noun>` keeps the bare-word path open for whoever earns the canonical claim)
+- **(b) claim canonical authority** by setting `is_canonical_bare_word=true` with a `naming_authority_rationale` explaining why this domain owns the unprefixed name catalog-wide
+- **(c) abort** and rename the proposal
+
+No silent inserts of collision-prone names. The naming-choice table below (§ "Naming rules for `data_objects`") arbitrates which of the three forms to use up front.
+
+### 10. Built-in edges are first-class.
+
+When a domain's data_objects reference platform built-ins (currently only `users` — as assignee, creator, approver, author, etc.), the relationship MUST be recorded in `data_object_relationships` against the seeded `users` row (`data_objects.kind='platform_builtin'`). Architect agents cannot guess these from naming alone; without explicit edges, the relationship graph the architect renders for a domain is incomplete. The same rule applies if additional `kind='platform_builtin'` rows are seeded in the future. The seed list today is `users` only — see § "The module at a glance" for the kind-discriminator definition.
+
+### 11. Embedded-master integrity.
+
+Every `domain_data_objects` row with `role='embedded_master'` requires that the same `data_object_id` has a `master` row somewhere in `domain_data_objects`, OR the data_object has `kind='platform_builtin'`. The deployer relies on this to find the canonical owner at deploy time; an `embedded_master` row pointing at a data_object that no domain canonically masters is a broken pointer. Loaders MUST validate before inserting any `embedded_master` row — pull the existing `master` rows for that `data_object_id` first; if none exist and the data_object isn't a built-in, fail loudly.
+
+### 12. Lifecycle states and pattern flags are part of Phase B.
+
+Every new domain load MUST include lifecycle states (rows in `data_object_lifecycle_states`) and pattern flags on `data_objects` (`has_personal_content`, `has_submit_lock`, `has_single_approver`) for its `master + required` data_objects — OR the domain code MUST be added to the lifecycle-states-pending tracking section of [plan-done-master-tasks.md](../../../plan-done-master-tasks.md) with an explicit backfill commitment.
+
+Defaulting to "I'll do it later" without the tracking entry is not permitted: undocumented gaps silently degrade the per-domain fact sheets that `semantius-architect` consumes. The Phase B3 initial backfill (top 20 implementation-relevant domains, see [plan-domain-fact-sheets.md § 6.3](../../../plan-domain-fact-sheets.md)) is a one-time catchup; from then on every market load adds these contemporaneously.
+
 ---
 
 ## The module at a glance
@@ -257,11 +287,16 @@ For any task that fits this skill — "research vendors for X", "is Y a domain?"
    - `solution_domains` with `coverage_level` (primary / secondary / partial)
    - `solution_capabilities` with `delivery_strength` (native / partial / via_extension / not_supported) — this is what makes per-vendor comparison possible; **don't skip it**, even if the matrix feels tedious. A reference Phase-A loader is [.tmp_deploy/load_prod_mgmt.ts](.tmp_deploy/load_prod_mgmt.ts); the SMM load also follows this exact shape ([.tmp_deploy/load_smm.ts](.tmp_deploy/load_smm.ts)).
 
-   **Phase B — Data-object footprint** (load second, against the same domain):
-   - `data_objects` that the domain masters (3–8 noun-plural snake_case names; apply the "what would a flagship vendor build their schema around?" test)
-   - `domain_data_objects` rows: `master` for the new objects, plus `contributor` and `consumer` rows where the new domain enriches or reads existing cluster-owned objects (almost always `contacts` / `customers` / `campaigns` / `audience_segments` exist already — link to them rather than re-mastering)
-   - `cross_domain_handoffs` from this domain outbound (and inbound where the partner domain is loaded) — apply the high-friction shape recognition in the "Data-object research" section below
-   - Reference Phase-B loader: [.tmp_deploy/load_smm_data_objects.ts](.tmp_deploy/load_smm_data_objects.ts). Full procedure: see [Data-object research and cross-domain-handoff discovery](#data-object-research-and-cross-domain-handoff-discovery) below.
+   **Phase B — Data-object footprint** (load second, against the same domain). The Phase-B contract now ships six deliverables (expanded 2026-05-22 — see [plan-domain-fact-sheets.md § 5.4](../../../plan-domain-fact-sheets.md)):
+
+   1. **`data_objects`** that the domain masters (3–8 noun-plural snake_case names; apply the "what would a flagship vendor build their schema around?" test). Each row populates `singular_label`, `plural_label`, and — per Rule #12 — the pattern flags `has_personal_content` / `has_submit_lock` / `has_single_approver` where the master entity matches the pattern. Apply Rule #9 (naming arbitration) before insert.
+   2. **`domain_data_objects`** rows: `master` for the new objects, plus `embedded_master`, `contributor`, and `consumer` rows where the new domain enriches or reads existing cluster-owned objects (almost always `contacts` / `customers` / `campaigns` / `audience_segments` exist already — link to them rather than re-mastering). Validate Rule #11 before inserting any `embedded_master` row.
+   3. **`cross_domain_handoffs`** from this domain outbound (and inbound where the partner domain is loaded) — apply the high-friction shape recognition in the "Data-object research" section below.
+   4. **`data_object_relationships`** — intra-domain edges + `users`-edge entries (Rule #10) + cross-domain edges for every `cross_domain_handoffs` row with a clean payload→target mapping (e.g. `candidates →becomes→ employees`). Each row carries `relationship_label` (verb), `cardinality`, `necessity`, and `owner_side`. Drafts MUST surface the relationship graph as a mermaid block in the Phase-B preview before loading.
+   5. **`data_object_aliases`** — ≥1 alias per non-self-explanatory master (industry synonyms, vendor-specific labels). The fact sheet generator embeds these directly.
+   6. **`data_object_lifecycle_states`** — for every `master + required` data_object with a non-trivial workflow. Each row carries `state_name`, `state_order`, `is_initial` / `is_terminal`, and `requires_permission` (true = derive a `<slug>:<verb>_<entity>` workflow gate; override the verb via `permission_verb_override` when the auto-derivation is wrong, e.g. `hired → hire_candidate`). Required by Rule #12, or tracked as a deferred backfill.
+
+   Reference Phase-B loader: [.tmp_deploy/load_smm_data_objects.ts](.tmp_deploy/load_smm_data_objects.ts). Full procedure: see [Data-object research and cross-domain-handoff discovery](#data-object-research-and-cross-domain-handoff-discovery) below.
 
    Phase B is **not optional** for genuine domain research. The only legitimate reasons to skip it: (a) the task is narrowly scoped to "find competitors for X" or "is Y a domain?" without an actual load; (b) the user explicitly defers it. In every other case — including any "research the X domain" or "load the X market" ask — all three phases are part of the work.
 
@@ -358,8 +393,18 @@ This is the catalog's most analytically loaded workflow — the combination of `
 
 ### Naming rules for `data_objects`
 
+**Naming-choice table — pick one of three forms at insert time** (see Rule #9 for arbitration mechanics):
+
+| Naming choice | When to use | Example |
+|---|---|---|
+| **Domain-prefixed** (default) | New market loads, anything not crossing ≥3 domains, anything that collides with an existing name | `job_applications` (ATS), `candidate_assessments` (ATS), `vehicle_work_orders` (FLEET-MAINT) |
+| **Domain-neutral cross-cutting** (no prefix, plural-noun-only) | The data_object spans ≥3 domains AND vendors model the same shape across those markets — needs explicit user confirmation | `attachments`, `comments`, `tags` (if ever loaded as cross-cutting masters) |
+| **Canonical bare-word** (requires `is_canonical_bare_word=true` + `naming_authority_rationale`) | This domain holds the catalog-wide canonical authority for the bare noun — every adjacent domain defers to it | `customers` (CRM), `employees` (HCM), `incidents` (ITSM), `assets` (ITAM) — each authored before the rule existed; new claims need explicit confirmation |
+
+The same three-form choice also informs capability code naming (§ "Cross-cutting capability convention" below) — but only data_objects carry the `is_canonical_bare_word` claim; capabilities arbitrate the analogous concept via `capability_code` prefix only.
+
 - `data_object_name` is the **natural key** and must follow Semantius entity-naming conventions: snake_case, plural (`job_requisitions`, `recruitment_sources`, `background_checks`). Treat it as if you were naming the entity in a new Semantius module — because that's exactly what the catalog claims it represents.
-- `display_label` is the **human-friendly** form (`Job Requisition`, `Recruitment Source`, `Background Check`). It can drift from `data_object_name` (e.g. industry-specific renames) — that's the column's job.
+- `singular_label` (and `plural_label`) is the **human-friendly** form (`Job Requisition` / `Job Requisitions`, `Recruitment Source` / `Recruitment Sources`, `Background Check` / `Background Checks`). The labels can drift from `data_object_name` (e.g. industry-specific renames) — that's the column's job. The legacy `display_label` column is retained transitionally during the [plan-domain-fact-sheets.md § 9.1 Step 10](../../../plan-domain-fact-sheets.md) cleanup, but every new write goes to `singular_label` / `plural_label`.
 - Industry-specific or solution-specific variants (`Patient` for `customers` in Healthcare, `Account` for `customers` in Salesforce) live in `data_object_aliases`, never as new `data_objects` rows.
 - **Buyer-side vs seller-side: distinct data_objects, not multi-master rows.** When two domains see the same kind of artifact from opposite sides of a transaction, model them as separate `data_objects`. They have different lifecycles, owners, and integration paths. Established pairs:
   - `saas_subscriptions` (SMP, buyer-side) ↔ `customer_subscriptions` (SUB-MGMT, seller-side)
@@ -375,7 +420,7 @@ This is the catalog's most analytically loaded workflow — the combination of `
 3. **List candidate data objects.** Apply the "what does THIS domain primarily master?" test. The candidate list is what an ATS-like / CRM-like / ITSM-like vendor would build their schema around — not what the domain *touches*.
 4. **Exclude foreign masters.** If a candidate is mastered by another already-loaded domain (e.g. `positions` is HCM's master, not ATS's), drop it from the primary set. Flag it for later as a *secondary*-style link once both sides are loaded; don't invent it in the wrong domain.
 5. **Exclude handoff targets that belong elsewhere.** Some objects look like they belong to the domain because the domain triggers their creation — but their master lives in another domain. Onboarding Task is the canonical example: ATS triggers it via `offer.accepted`, but Onboarding (or HRSD) masters it. These become `cross_domain_handoffs` rows in Phase 3, not `data_objects` under the source domain.
-6. **Surface descriptions for review.** Always show name + display_label + description in a single table before loading. The description column is where AI research goes wrong silently; reviewers need to see it.
+6. **Surface descriptions for review.** Always show `data_object_name` + `singular_label` (+ `plural_label`) + description in a single table before loading. The description column is where AI research goes wrong silently; reviewers need to see it.
 7. **Load idempotently.** Pattern: read by `data_object_name`, insert missing only, re-read for the id map, insert `domain_data_objects` with `role: master` for the linking domain. Reference loaders covering every variation we've shipped are listed in [references/loader-idiom.md](references/loader-idiom.md).
 
 ### Phase 2 — identify multi-master + standalone-vs-holistic authority (Signal 1)
@@ -465,7 +510,7 @@ All queries are one-line cube DSL once the data is in — surface them to the us
 - ❌ Recording intra-domain events in `cross_domain_handoffs`. The validation rule will reject them; if you bypass it by routing through different ids, you're polluting the integration-burden score with internal workflow.
 - ❌ Filling `domain_data_objects.notes` with nothing on multi-master or embedded_master rows. The whole point of allowing multi-master / embedded_master is to surface *which slice* each domain owns; an empty `notes` hides that. For embedded_master rows the notes should also explicitly state the demotion path ("ATS local-masters positions when no HCM is deployed; reads from HCM when present").
 - ❌ Inventing a co-master domain in the catalog just to make a multi-master row work. Apply the point-solution-market test first; if Workforce Planning genuinely passes (it does), add the domain. If it doesn't, the data_object probably belongs to one master, not two.
-- ❌ Naming `data_object_name` in human form (`Job Requisition`, `Background Check`). That's `display_label`'s job. The natural key is snake_case_plural.
+- ❌ Naming `data_object_name` in human form (`Job Requisition`, `Background Check`). That's `singular_label` (and `plural_label`)'s job. The natural key is snake_case_plural.
 - ❌ Defaulting every `domain_data_objects` row to `necessity='required'` without thinking. The default is a *fail-safe*, not the right answer. Convenience fields a point-solution may or may not model (cost_centers on ATS, departments on LMS, salary_bands on most non-HR domains) belong on `optional` rows. Required vs optional is the second classification axis, not a checkbox.
 - ❌ Using `master` when the domain only holds a local copy that defers to a canonical owner. ATS does not `master` cost_centers — it `embedded_master`s them. The distinction drives Signal 1 vs Signal 1b separation; conflating them inflates the canonical multi-master count with point-solution noise.
 - ❌ Using `embedded_master` when the domain is genuinely the canonical authority. HCM `master`s `employees` (canonical) even though it is a point solution — because no other catalog domain has a stronger ownership claim. The test: in a fully-integrated reference deployment, who does *every* other domain defer to for this record? That domain is `master`; everyone else who holds it locally is `embedded_master`.
@@ -600,12 +645,15 @@ When you start a session that involves drafting / loading `skills` or `skill_too
 
 If you spawn `Explore`-type subagents to research Phase-B for multiple domains in parallel (the pattern P2.5A.0 introduced and the 2026-05-22 Phase-B Lite batch 1 expanded), prompt construction directly determines loader-usability of the output:
 
-- **Demand a structured table** of `data_object_name | display_label | description` and **require** snake_case_plural names. Open-ended "produce a Phase-B draft" prompts produce essays with embedded prose tables that need manual parsing.
+- **Demand a structured table** of `data_object_name | singular_label | plural_label | description` and **require** snake_case_plural names. Open-ended "produce a Phase-B draft" prompts produce essays with embedded prose tables that need manual parsing.
 - **Forbid MCP tools explicitly** — include in every subagent prompt: *"Do NOT call any `mcp__claude_ai_deno__*`, `mcp__claude_ai_tests-ops__*`, or other `mcp__*` Semantius tool. Use the `semantius` CLI via Bash only (rule #0)."* Subagents inherit access to MCP servers and reach for them out of habit; rule #0 in this SKILL.md is not enough — it must be restated in the prompt. Discovered 2026-05-22 batch 3: multiple subagents silently used MCP reads despite the prompt citing CLI-only patterns, producing outputs sourced from the wrong tenant or from MCP-cached resources rather than the live `tests` org.
 - **Make trigger_events + cross_domain_handoffs OPTIONAL, not required.** Empirically, agents inconsistently produce them in parseable form (some use plain markdown tables, some YAML frontmatter, some prose). Masters alone are sufficient for Phase-B Lite (data_objects + master `domain_data_objects` only); trigger_events + handoffs can be a separate focused pass.
 - **State boundary alerts explicitly in the prompt** ("don't propose X, it's mastered by Y; use Z naming instead"). Without this, agents re-propose entities that already exist or use colliding names.
 - **Tell agents to defer to the user when boundaries are unresolved.** Better to get a "needs decision" flag than wrong-mastered rows. The EAM batch-1 audit returned blockers instead of bad rows — that's the correct failure mode.
 - **Cap word count aggressively** (≤1000 words). Verbose drafts hide the load-ready content under analysis.
+- **Use `general-purpose` (not `Explore`) when the subagent must write files.** The `Explore` subagent type lacks the `Write` tool — it can read state and reason, but cannot persist JSON/markdown to disk. The handoff backfill (2026-05-22) lost 8 of 10 first-round outputs when Explore agents "wrote the JSON" only in their reply text, which was discarded. `general-purpose` has the full toolset including Write. Reserve `Explore` for read-only research questions whose result fits in a 250-word reply summary.
+- **Cap cluster size to ~10 domains per agent.** The same backfill's cluster J (17 domains) hung twice and had to be killed; splitting into J1 (8 domains) + J2 (9 domains) completed cleanly. Agents seem to lose plot at roughly the 12-domain mark.
+- **For file outputs, dictate the exact path in the prompt** (`Write the JSON to c:/tmp/<name>.json`). Agents that "remember" the path often emit it in the reply or write to an arbitrary location.
 
 The batch-1 anti-pattern catalogue (one bad shape each, all from 2026-05-22):
 - ❌ Agent wraps proposal in `---artifact: phase-b-research\nsystem_name: ...` YAML frontmatter — looks like a different tool's output format; not parseable.
@@ -686,6 +734,20 @@ Quick check before drafting any system skill: `semantius call crud postgrestRequ
 - ❌ Re-creating query tools that already exist. Always read `/tools` and dedupe by `tool_name` before drafting. P2.5A.i discovered 3 existing query tools that would have duplicated (`query_employees`, `query_journal_entries`, `query_suppliers`).
 - ❌ Drafting a system skill for a domain with zero masters. The skill would have nothing to query/mutate, which means either (a) the domain is leadership-layer and shouldn't have a skill at all, or (b) Phase-B is incomplete and needs backfilling first. **Don't paper over a Phase-B gap by inventing skill_tools that reference data_objects from other domains** — that produces a skill whose entire required-tool set is consumer-reads, which is not a system skill.
 - ❌ Stamping `record_status='approved'` on freshly-loaded skills/tools/skill_tools without an explicit user review pass. Rule #1 applies to these entities the same as to any other catalog row.
+
+---
+
+## Process-skill tool derivation (P2.5B pattern, 2026-05-22)
+
+Process skills (`skill_type='process'`) span multiple domains and orchestrate cross-domain workflows. Tool requirements derive from the candidate's involved domains, not from a single domain's masters:
+
+1. **Identify the cluster's domains** — read from the candidate `plan-process-skill-<name>.md` file (one per candidate, surfaced by the discovery query at [references/discovery-query.md](references/discovery-query.md)). Each candidate plan file lists `query_domains` (read access required) and `mutate_domains` (write access required) sets.
+2. **Auto-derive query tools** — every master `data_object` across `query_domains` contributes its existing `query_<master>` tool as REQUIRED. The catalog already has these from the P2.5A.iii pass; no new query tools needed.
+3. **Auto-derive mutate tools** — for each `mutate_domain`, link any existing `update_<master>` / `create_<master>` / verb-driven mutate tool as REQUIRED. Mutates are sparser than queries — skip the master if no mutate exists yet (don't auto-generate generic ones).
+4. **Add cross-cutting externals** — from the candidate plan file's "Tool requirements" section. Email + sign_document + chat are the recurring shapes (see [Cross-tranche external-tool patterns](#cross-tranche-external-tool-patterns-p25aii-2026-05-22)).
+5. **Apply the coverage rollup** ([references/semantius-coverage-rollup.md](references/semantius-coverage-rollup.md)) — process skills sit at 92-97% by design (every workflow needs at least `send_email`). 100% is rare and usually means the skill is mis-modeled as a process skill when it's actually a system skill.
+
+Reference loader: [.tmp_deploy/load_p25b_process_skills.ts](../../../.tmp_deploy/load_p25b_process_skills.ts). It reads the involved-domain sets from a hard-coded map (one entry per process skill), pulls live master sets, links tools idempotently.
 
 ---
 

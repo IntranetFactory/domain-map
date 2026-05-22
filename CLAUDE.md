@@ -14,6 +14,10 @@ If you discover a gotcha or learn a non-obvious project fact, update the appropr
 
 The same applies to "remembering" anything across conversations: if it's worth remembering, it's worth committing.
 
+## American English only
+
+Write in **American English** for every artifact in this project — prose, code comments, docs, commit messages, plan files. No British spellings. Common ones to remember: `normalize` (not normalise), `analyze` (not analyse), `organize` (not organise), `materialize` (not materialise), `categorize` (not categorise), `behavior` (not behaviour), `color` (not colour), `center` (not centre), `catalog` (not catalogue), `modeled`/`labeled`/`canceled` (single-l), `program` (not programme), `license` (verb and noun, not licence), `defense` (not defence), `optimize` (not optimise), `recognize` (not recognise). When in doubt, check.
+
 ## Semantius CLI cwd
 
 The `semantius` CLI reads `.env` from the **current working directory**. Always invoke it from the project root (`c:/dev/domain-map`). Never `cd` into a subfolder (`.claude/skills/...`, `.tmp_deploy/`, etc.) before running `semantius` or a loader script that spawns it — the CLI silently falls back to a default config pointing at a different tenant. See [.claude/skills/domain-map-analyst/SKILL.md](.claude/skills/domain-map-analyst/SKILL.md) rule #6 for the full symptom list.

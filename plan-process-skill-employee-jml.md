@@ -9,7 +9,7 @@
 | Trigger-event prefix bucket | `employee.*` |
 | APQC PCF parent | L2 / external_id `20599` — "Manage employee onboarding, training, and development" |
 | Top events | `employee.terminated` (×6 subscribers), `employee.created` (×5), `employee.promoted` |
-| `processes.source_framework` (when materialised) | `apqc_pcf_cross_industry` — point at the L2 row above (no `custom` row needed) |
+| `processes.source_framework` (when materialized) | `apqc_pcf_cross_industry` — point at the L2 row above (no `custom` row needed) |
 
 ## Discovery signals
 
@@ -46,7 +46,7 @@ Three sub-flows the skill owns:
 ## Open design decisions (for the skill-build session)
 
 - **Which Mover variants are first-class?** The catalog has `employee.promoted` and `employee.position_changed`. Treat as one flow (re-evaluate-derivatives) or split into two skill workflows? Initial recommendation: one flow with the variant as input.
-- **Cost-centre re-org events.** When entire departments move (not just individuals), is that a separate orchestration or a fan-out over individual `employee.position_changed`? Likely the latter for v1.
+- **Cost-center re-org events.** When entire departments move (not just individuals), is that a separate orchestration or a fan-out over individual `employee.position_changed`? Likely the latter for v1.
 - **Off-cycle pay corrections.** PAYROLL's `pay_cycle.closed` bucket (rank 20 in discovery) is adjacent but distinct. Don't bundle into JML.
 
 ## Tool requirements (deferred to P2.5B)

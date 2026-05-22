@@ -9,7 +9,7 @@
 | Trigger-event prefix bucket | `opportunity.*` |
 | APQC PCF parent | L3 / external_id `10182` — "Manage leads/opportunities" |
 | Top events | `opportunity.closed_won` (×3 subscribers), `opportunity.requires_quote`, `opportunity.stage_changed` |
-| `processes.source_framework` (when materialised) | `apqc_pcf_cross_industry` — point at the L3 row above |
+| `processes.source_framework` (when materialized) | `apqc_pcf_cross_industry` — point at the L3 row above |
 
 ## Discovery signals
 

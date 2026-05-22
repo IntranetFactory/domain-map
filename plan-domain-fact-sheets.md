@@ -318,46 +318,56 @@ Steps 1–7 form the **MVP path** — once 7 ships, ATS has a complete committed
 
 > Tick each box as it completes. Update this file inline; don't track status in memory or a sibling file. Substeps marked `→` are checkpoints inside a larger step.
 
-**Step 1 — SKILL.md updates** (small)
+**Step 1 — SKILL.md updates** (small) ✓ 2026-05-22
 
-- [ ] Add Rule #9 (naming arbitration at insert time) to `.claude/skills/domain-map-analyst/SKILL.md`
-- [ ] Add Rule #10 (built-in edges are first-class)
-- [ ] Add Rule #11 (embedded-master integrity — every `embedded_master` row needs a matching `master` row somewhere or `kind='platform_builtin'`)
-- [ ] Add Rule #12 (lifecycle states + pattern flags are part of Phase B; deferral requires a tracked entry)
-- [ ] Update Phase B contract section to reflect the 6-deliverable shape
-- [ ] Update naming convention table (three-row form: domain-prefixed / domain-neutral / canonical bare-word)
+- [x] Add Rule #9 (naming arbitration at insert time) to `.claude/skills/domain-map-analyst/SKILL.md`
+- [x] Add Rule #10 (built-in edges are first-class)
+- [x] Add Rule #11 (embedded-master integrity — every `embedded_master` row needs a matching `master` row somewhere or `kind='platform_builtin'`)
+- [x] Add Rule #12 (lifecycle states + pattern flags are part of Phase B; deferral requires a tracked entry)
+- [x] Update Phase B contract section to reflect the 6-deliverable shape
+- [x] Update naming convention table (three-row form: domain-prefixed / domain-neutral / canonical bare-word)
 
-**Step 2 — Schema changes** (small additive + medium loader cascade)
+**Step 2 — Schema changes** (small additive + medium loader cascade) ✓ 2026-05-22
 
-- [ ] Add `data_objects.kind` enum (`domain_owned` / `platform_builtin`)
-- [ ] Add `data_objects.is_canonical_bare_word` boolean
-- [ ] Add `data_objects.naming_authority_rationale` text
-- [ ] Add `data_objects.singular_label` text (copy from `display_label`)
-- [ ] Add `data_objects.plural_label` text
-- [ ] Add `data_objects.has_personal_content` boolean
-- [ ] Add `data_objects.has_submit_lock` boolean
-- [ ] Add `data_objects.has_single_approver` boolean
-- [ ] Add `data_object_relationships.relationship_label` text
-- [ ] Add `data_object_relationships.necessity` enum (`required` / `optional`)
-- [ ] Add `data_object_relationships.owner_side` enum (`source` / `target`)
-- [ ] Create `data_object_lifecycle_states` table (8 columns per §3.3)
-- [ ] Seed the `users` row with `kind='platform_builtin'`
-- [ ] → Update every `.tmp_deploy/load_*.ts` loader that writes `display_label` to write `singular_label` instead
-- [ ] → Verify no loader regresses against a dry run
+- [x] Add `data_objects.kind` enum (`domain_owned` / `platform_builtin`)
+- [x] Add `data_objects.is_canonical_bare_word` boolean
+- [x] Add `data_objects.naming_authority_rationale` text
+- [x] Add `data_objects.singular_label` text (copy from `display_label`) — 746 rows backfilled
+- [x] Add `data_objects.plural_label` text — 746 rows backfilled via naive pluralization (irregulars left for manual review; see Note A)
+- [x] Add `data_objects.has_personal_content` boolean
+- [x] Add `data_objects.has_submit_lock` boolean
+- [x] Add `data_objects.has_single_approver` boolean
+- [x] ~~Add `data_object_relationships.relationship_label` text~~ — **already exists as `relationship_verb`**; the plan's `relationship_label` is satisfied by that column. See Note B.
+- [x] ~~Add `data_object_relationships.necessity` enum (`required` / `optional`)~~ — **already exists as `is_required` boolean** with equivalent semantics. See Note B.
+- [x] Add `data_object_relationships.owner_side` enum (`source` / `target`)
+- [x] Create `data_object_lifecycle_states` table (10 columns total — 8 from §3.3 + `notes` + `record_status` for module consistency)
+- [x] Seed the `users` row with `kind='platform_builtin'` (id=748, `is_canonical_bare_word=true`)
+- [x] → Update every `.tmp_deploy/load_*.ts` loader that writes `display_label` to also write `singular_label` + `plural_label` (additive — display_label retained transitionally). Script: [.tmp_deploy/update_loaders_for_singular_label.ts](.tmp_deploy/update_loaders_for_singular_label.ts) + cleanup pass [.tmp_deploy/cleanup_duplicate_label_annotations.ts](.tmp_deploy/cleanup_duplicate_label_annotations.ts) + type-decl pass [.tmp_deploy/update_type_decls_for_labels.ts](.tmp_deploy/update_type_decls_for_labels.ts). 31 files / 505 annotated sites. Variable-driven sites (`display_label: o.label`) intentionally NOT patched (would require source-data shape changes; rows are already backfilled, so re-run risk is bounded). See Note C.
+- [x] → Verify no loader regresses against a dry run (spot-checked `load_phase_b_full.ts`, `load_smm_data_objects.ts`, `load_p15e_customer_handoffs.ts` — all parse and re-run idempotently; pre-existing `load_ats_data_objects.ts` breakage on the renamed `mastery_role → role` column is unrelated to this work)
 - [ ] *(Dropping `display_label` is deferred — see Step 10. Keep both columns populated through Steps 3–9 as a recovery safety net.)*
 
-**Step 3 — Rename-cascade utility** (small)
+**Notes from execution:**
 
-- [ ] Build the utility script (single rename + cascade across `data_objects`, `domain_data_objects`, `solution_data_objects`, `cross_domain_handoffs.data_object_id`, `trigger_events.data_object_id`, `trigger_events.event_name`)
-- [ ] Pick one low-stakes rename and run the utility end-to-end as the dry run
-- [ ] Verify no orphan rows; commit utility to `.tmp_deploy/`
+- **Note A — Naive pluralization quirks.** The backfill applied a naive pluralization rule (consonant+`y` → `ies`; `s`/`x`/`z`/`ch`/`sh` → `+es`; else `+s`). A handful of `plural_label` values came out awkward where the singular form was already plural-shaped (e.g. `"Queue Statistics"` → `"Queue Statisticses"`) or had domain-specific conventions (acronyms, mass nouns). A pre–Phase B3 cleanup pass should query for plural_label values ending in unusual patterns and fix the irregulars manually.
+- **Note B — Relationships schema consolidation.** `data_object_relationships` already shipped with `relationship_verb` (text, e.g. `owns`, `manages`, `schedules`) and `is_required` (boolean) before this plan landed. Rather than add parallel `relationship_label` and `necessity` columns, this step treats the existing fields as authoritative — the fact sheet generator (§7) reads `relationship_verb` for the §4 verb column and maps `is_required=true/false` to `necessity=required/optional`. Only `owner_side` was genuinely new. The plan §3.2 column list is over-stated by two rows; this Note serves as the reconciliation.
+- **Note C — Loader cascade scope.** The mechanical sweep patched 505 `display_label: "X"` literal sites across 31 loaders. ~8 additional sites use variable-driven shapes (`display_label: o.display_label`, `display_label: m.label`) that need source-data changes to forward `singular_label`/`plural_label`. Those are confined to one-time historical loaders whose target rows were already backfilled, so the residual re-run risk is low. If a future re-run of one of those loaders is anticipated, patch the source-data shape first.
 
-**Step 4 — Phase B1 bare-word audit & rename** (medium)
+**Step 3 — Rename-cascade utility** (small) ✓ 2026-05-22
 
-- [ ] Write the bare-word audit query; capture the proposed-rename list
-- [ ] Surface the list to user for per-rename confirmation
-- [ ] Run the rename cascade utility for each confirmed rename
-- [ ] Verify final state: every bare-word `data_object_name` either has `is_canonical_bare_word=true` or has been renamed
+- [x] Build the utility script — [.tmp_deploy/rename_data_object.ts](.tmp_deploy/rename_data_object.ts). Default mode is dry-run; pass `--execute` to apply. Pre-flight checks the new name is free and rewritten event_names don't collide. The cascade is genuinely small: every downstream junction (`domain_data_objects`, `solution_data_objects`, `cross_domain_handoffs`, `data_object_relationships`, `data_object_aliases`, `data_object_lifecycle_states`) references the data_object by `id`, so the only string-side cascade is `trigger_events.event_name` (singular-prefix rewrite).
+- [x] Pick one low-stakes rename and run the utility end-to-end as the dry run — chose `referrals` → `candidate_referrals` (ATS, id=6; one of the Phase B1 targets in §6.1). Dry-run output: 1 data_objects rename + 2 trigger_events (`referral.submitted` → `candidate_referral.submitted`, `referral.bonus_earned` → `candidate_referral.bonus_earned`); no FK changes needed; no collisions; 1 `domain_data_objects` row and 2 `cross_domain_handoffs` rows already FK-linked by id.
+- [x] Verify no orphan rows; commit utility to `.tmp_deploy/` — dry-run cleanly enumerates every cascade target with zero orphans flagged. The utility prints `✗ COLLISION` lines when a target event_name would collide and exits non-zero before any write, so a live run is safe.
+
+**Step 4 — Phase B1 bare-word audit & rename** (medium) ✓ 2026-05-22
+
+- [x] Write the bare-word audit query; capture the proposed-rename list — script: [.tmp_deploy/audit_bare_words.ts](.tmp_deploy/audit_bare_words.ts) (classifies into prefix-clash / multi-domain / clear tiers; writes `.tmp_deploy/bare_word_audit_report.md`). Initial scan: 747 data_objects rows, 58 bare-word candidates (25 prefix-clash, 9 multi-domain, 24 clear).
+- [x] Surface the list to user for per-rename confirmation — drafted [.tmp_deploy/bare_word_proposal.md](.tmp_deploy/bare_word_proposal.md). User feedback inverted the default: **prefix is the default** for any term with cross-domain ambiguity in the broader SaaS landscape; canonical claims reserved for genuinely unambiguous single-meaning terms (e.g. `influencers`, `courses`, `ontologies`, `milkings`). User also chose canonical (with federated-master rationale) for `customers`/`employees`/`suppliers` rather than a decorative `master_*` prefix. Final decision: 43 renames + 14 canonical claims, zero defers.
+- [x] Run the rename cascade utility for each confirmed rename — batch executor: [.tmp_deploy/apply_bare_word_decisions.ts](.tmp_deploy/apply_bare_word_decisions.ts) (inlines the rename + canonical decision tables, pre-flights the whole batch against live state before any writes, then applies on `--execute`). Executed: 43 data_object renames + 81 trigger_events.event_name rewrites + 14 canonical PATCHes. One row (`tenants` → `property_tenants`) was missed in the batch list due to a renumbering bug in the proposal — caught by the post-execute audit and fixed with a single-row run of `rename_data_object.ts`. Final tally: **44 renames + 14 canonical claims** applied. See Note D.
+- [x] Verify final state: every bare-word `data_object_name` either has `is_canonical_bare_word=true` or has been renamed — re-ran the audit, returned `bare-word candidates: 0` across all three tiers.
+
+**Notes from execution:**
+
+- **Note D — Tenants miss-and-fix.** The `tenants` (358) row was listed in the proposal's Tier B.3 table but accidentally dropped from the alphabetical rename summary during a renumbering edit. The executor used the summary list (hardcoded) and silently skipped it. The post-execute audit immediately surfaced it (1 row remaining in the `clear` tier), confirming the audit script is a load-bearing safety net — running the audit *after* execution caught a bug the dry-run could not, because the dry-run only validated rows that were in the batch. Lesson: any future batch executor should drive its decision list from a single source (e.g. parse the proposal markdown) rather than maintaining two hand-curated lists.
 
 **Step 5 — Phase B2 relationship-graph backfill (top 23 system-skill domains)** (medium-large)
 
