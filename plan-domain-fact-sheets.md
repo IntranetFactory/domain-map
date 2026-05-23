@@ -16,23 +16,27 @@ A **per-domain fact sheet** is a single markdown file emitted by a new generator
 
 **Emitted by:** a new `.tmp_deploy/emit_fact_sheet.ts <domain_code>` script that queries the catalog and renders markdown.
 
-### Fact sheet sections
+### Fact sheet shape
 
-| § | Contents | Source |
-|---|---|---|
-| 1 | Domain identity, market positioning, behavioral-pattern summary (derived) | `domains` |
-| 2 | Data object inventory: masters / embedded_masters / contributors / consumers / derived | `data_objects`, `domain_data_objects` |
-| 3 | Aliases & industry synonyms per data_object | `data_object_aliases` |
-| 4 | Intra-domain relationship graph (verb, cardinality, owner side) | `data_object_relationships` (extended) |
-| 5 | Built-in edges (`users` and any future `kind='platform_builtin'` rows referencing this domain's data_objects) | `data_object_relationships` against seeded built-in rows |
-| 6 | Cross-domain context: co-masters, handoffs (inbound/outbound), embedded dependencies, suggested cross-model links | `cross_domain_handoffs` + `domain_data_objects` (non-master) + cross-domain `data_object_relationships` |
-| 7 | Lifecycle states per master data_object (intra-domain transitions) | `data_object_lifecycle_states` (NEW) |
-| 8 | Workflow gates & business rules (derived from lifecycle states + pattern flags) | derived from `data_object_lifecycle_states` + `data_objects` flag columns |
-| 9 | Capabilities (with delivery_strength matrix per solution) | `capabilities`, `capability_domains`, `solution_capabilities` |
-| 10 | Solutions & vendors (with coverage_level + solution_kind) | `solutions`, `vendors`, `solution_domains`, `solution_data_objects` |
-| 11 | Functional ownership (RACI from `business_functions`) | `business_function_domains`, `business_function_capabilities` |
-| 12 | Regulatory & jurisdictional context | `domain_regulations`, `regulations`, `jurisdictions` |
-| 13 | Architect handoff hints: recommended naming_mode, suggested vendor template | derived from §10 |
+Every fact sheet starts with a **YAML frontmatter block** carrying the architect-facing index (artifact tag, version, domain_code/name/slug, generated_at, generator path, source label, the seven `domains` metadata fields, counts, `related_domains` list, and the `entities` list). The frontmatter is the part agents parse without reading the body.
+
+The body is 13 numbered sections:
+
+| § | Title | Contents | Source |
+|---|---|---|---|
+| 1 | Overview | Multi-paragraph composed narrative: description + capabilities surface, logic beyond CRUD, market positioning (cost band + min org size + US TAM + flagship vendors), organizational fit (RACI), footprint and pattern (master count + pattern-flag prose) | `domains`, `capabilities`, `solution_domains`, `business_function_domains`, master pattern flags |
+| 2 | Entity summary | Single quick-overview table (Name = `plural_label`, Description) **plus** a single colored mermaid graph with one classDef per role (master / embedded_master / contributor / consumer / derived / platform_builtin) and intra-domain + `users` edges | `domain_data_objects`, `data_objects`, `data_object_relationships` |
+| 3 | Data object inventory | **One** unified table with columns: # · Name (plural) · Role · Necessity · Canonical? · Pattern flags · Notes/slice. Sorted by role rank, then alphabetical | `domain_data_objects`, `data_objects` |
+| 4 | Aliases and industry synonyms | Aliases for any data_object in scope | `data_object_aliases` |
+| 5 | Relationships | 5.1 intra-domain, 5.2 built-in edges (`users` and future `kind='platform_builtin'` rows), 5.3 cross-domain `data_object_relationships` | `data_object_relationships` |
+| 6 | Cross-domain context | 6.1 co-masters, 6.2 outbound handoffs, 6.3 inbound handoffs, 6.4 embedded/contributing/consuming dependencies with canonical owner domains | `cross_domain_handoffs`, `domain_data_objects` |
+| 7 | Lifecycle states | Per master data_object: state table with `requires_permission` and `permission_verb_override` derivation visible | `data_object_lifecycle_states` |
+| 8 | Permissions and business rules (derived) | 8.1 permissions table (baseline tier + lifecycle gates + pattern-flag gates, with `:admin` inclusion column); 8.2 business rules from pattern flags | derived from `data_objects` flags + `data_object_lifecycle_states` |
+| 9 | Capabilities | Capability list + 9.1 delivery-strength matrix (solution × capability) | `capabilities`, `capability_domains`, `solution_capabilities` |
+| 10 | Solutions and vendors | With `coverage_level` and `solution_kind` | `solutions`, `vendors`, `solution_domains` |
+| 11 | Functional ownership (RACI) | 11.1 domain-level; 11.2 capability-level overrides | `business_function_domains`, `business_function_capabilities` |
+| 12 | Regulatory and jurisdictional context | | `domain_regulations`, `regulations`, `jurisdictions` |
+| 13 | Architect handoff hints | `module_slug_suggestion`, `naming_mode`, `suggested_vendor_template` (with rationale) | derived |
 
 ---
 
@@ -396,27 +400,34 @@ Steps 1–7 form the **MVP path** — once 7 ships, ATS has a complete committed
 
 **Step 6 — Fact sheet generator + CI drift check** (small) ✓ 2026-05-22
 
-- [x] Build [`.tmp_deploy/emit_fact_sheet.ts`](.tmp_deploy/emit_fact_sheet.ts) — single self-contained Bun script, 13 sections, runs against live PostgREST. Tracked via `.gitignore` exception (`!.tmp_deploy/emit_fact_sheet.ts`) because the rest of `.tmp_deploy/` is gitignored. See Note I.
-- [x] Implement §4 derivation rules — baseline tier (`<slug>:read|manage|admin`), lifecycle-derived workflow gates with `permission_verb_override` honored, pattern-flag-derived gates (`view_all_*`, `manage_all_*`, `submit_*`) + business rules (`<entity>_edit_scope`, `submit_restricted_to_*`, `approve_*_requires_approver`), §1 narrative composition (personal-content + submit-lock + single-approver prose chain).
+- [x] Build [`scripts/emit_fact_sheet.ts`](scripts/emit_fact_sheet.ts) — single self-contained Bun script, 13 sections + YAML frontmatter, runs against live PostgREST. Lives in `scripts/` (tracked) rather than `.tmp_deploy/` (gitignored scratch); the generator is contract code, not scratch — see Note I.
+- [x] Implement §4 derivation rules — baseline tier (`<slug>:read|manage|admin`), lifecycle-derived workflow gates with `permission_verb_override` honored, pattern-flag-derived gates (`view_all_*`, `manage_all_*`, `submit_*`) + business rules (`<entity>_edit_scope`, `submit_restricted_to_*`, `approve_*_requires_approver`), §1 multi-paragraph composed narrative (description + capabilities + cost-band + min-org-size + flagship vendors + RACI + master-count + pattern-flag prose).
 - [x] Implement `--all` mode — iterates every domain, writes `domain-fact-sheets/<DOMAIN_CODE>.md`. Combines with `--check` for the drift check.
-- [x] CI / pre-commit drift check — `bun run .tmp_deploy/emit_fact_sheet.ts --all --check` exits non-zero if any fact sheet would change. **No GitHub Actions workflow is wired up** because this repo has no existing CI infrastructure; the drift command is documented here and ready to be invoked by a future workflow or pre-commit hook. Single-domain check works too: `bun run .tmp_deploy/emit_fact_sheet.ts ATS --check`.
+- [x] CI / pre-commit drift check — `bun run scripts/emit_fact_sheet.ts --all --check` exits non-zero if any fact sheet would change. **No GitHub Actions workflow is wired up** because this repo has no existing CI infrastructure; the drift command is documented here and ready to be invoked by a future workflow or pre-commit hook. Single-domain check works too: `bun run scripts/emit_fact_sheet.ts ATS --check`.
 
 **Step 7 — First fact sheet emission for ATS** (small) ✓ 2026-05-22
 
-- [x] Run the generator for ATS — `bun run .tmp_deploy/emit_fact_sheet.ts ATS`
+- [x] Run the generator for ATS — `bun run scripts/emit_fact_sheet.ts ATS`
 - [x] Commit [`domain-fact-sheets/ATS.md`](domain-fact-sheets/ATS.md) — first PR-reviewable fact sheet
 - [ ] *(Architect-blueprint comparison deferred — the `semantius-architect` repo owns Stage 0 adoption per §8. Structural parity will be verified there when adoption ships.)*
 
 **Notes from execution:**
 
-- **Note I — Generator path vs `.gitignore`.** Plan §7 specifies the generator lives at `.tmp_deploy/emit_fact_sheet.ts`, but `.tmp_deploy/` is gitignored as the canonical scratch space (per [SKILL.md:277](.claude/skills/domain-map-analyst/SKILL.md#L277) and Note H). The generator is contract code, not scratch — anyone regenerating fact sheets needs it. Resolution: added a single-line `!.tmp_deploy/emit_fact_sheet.ts` exception to `.gitignore` so the generator is tracked while the rest of `.tmp_deploy/` stays scratch. Path stays aligned with plan §7; tracking aligns with §7's CI-drift-check requirement. Future contract-code additions in `.tmp_deploy/` (e.g. a second per-domain validator) should follow the same exception pattern rather than relocating to a new top-level folder.
-- **Note J — Spot-checks beyond ATS.** Validated generator runs without crashes on (a) `REV-INTEL` (leadership-tier domain with zero data_objects loaded; renders empty-section placeholders correctly), (b) `HCM` (flagship domain with the highest relationship-graph density). All 13 sections render in both extremes. The `--all` mode wasn't bulk-run as part of MVP — only ATS is committed so reviewer diffs stay focused on the contract proof-of-concept. Run `bun run .tmp_deploy/emit_fact_sheet.ts --all` when ready to populate the full snapshot set; expect ~165 files at roughly 1-2 s per domain.
+- **Note I — Generator location: `scripts/`, not `.tmp_deploy/`.** Plan §7 originally proposed `.tmp_deploy/emit_fact_sheet.ts`, but `.tmp_deploy/` is gitignored scratch (per [SKILL.md:277](.claude/skills/domain-map-analyst/SKILL.md#L277) and Note H) — loaders that capture write-time intent and immediately drift. The fact sheet generator is the opposite: contract code that anyone regenerating sheets needs, and that a CI drift check has to invoke. A first attempt tried to keep the literal `.tmp_deploy/` path via a `!.tmp_deploy/emit_fact_sheet.ts` gitignore exception; user pushback (rightly) flagged that as the wrong layout — "scripts to a folder where any reasonable person would expect them". Resolution: the generator lives at [`scripts/emit_fact_sheet.ts`](scripts/emit_fact_sheet.ts), tracked by default, no `.gitignore` gymnastics. The §7 path reference in this plan has been updated to match. Loaders stay in `.tmp_deploy/`.
+- **Note J — Output shape was iterated.** The first emitted ATS sheet was structurally correct (all 13 sections present, derivation rules firing) but visually weak: §2 was just an inventory table, no quick-overview, no mermaid; §3 was four separate role-grouped tables; no YAML frontmatter; §1 was a single sentence from `domains.description`. Comparing against `_DRAFT_ats-domain-fact-sheet.md` (the architect-output gold standard kept locally during this design pass) drove a redesign: YAML frontmatter (`artifact`, `domain_code`/`slug`, `entities`, `related_domains`, counts), §1 Overview composed from description + capabilities + cost-band + min-org-size + flagship vendors + RACI + master inventory + pattern-flag prose, §2 single quick-overview table (Name=plural_label, Description) + one colored mermaid graph with classDef per role, §3 single unified inventory table with a Role column instead of four sub-tables. Lesson: emitting an artifact and reading it cold is faster feedback than reasoning about the rendering rules in the abstract — do that pass on the first domain before declaring a generator done.
 
-**Step 8 — Phase B3 (lifecycle states + pattern flags) for top 20 domains** (large; one-time backfill)
+**Step 8 — Phase B3 (lifecycle states + pattern flags) for top 20 domains** (large; one-time backfill) ✓ 2026-05-22
 
-- [ ] Author lifecycle states for each of: CRM, ITSM, HCM, ATS, ITAM, S2P, OMS, SUB-MGMT, COMP-MGMT, BEN-ADMIN, ONBOARDING, LMS, PAYROLL, FSM, CSM, CMDB, KMS, CPQ, ESIGN, INC-MGMT
-- [ ] Set pattern flags (`has_personal_content`, `has_submit_lock`, `has_single_approver`) on each domain's relevant data_objects
-- [ ] Regenerate fact sheets for the top 20 to verify the §4 derivation rules produce the expected permissions tables
+- [x] Author lifecycle states for each of: CRM, ITSM, HCM, ATS, ITAM, S2P, OMS, SUB-MGMT, COMP-MGMT, BEN-ADMIN, ONBOARDING, LMS, PAYROLL, FSM, CSM, CMDB, KMS, CPQ, ESIGN — 19 of the planned 20 (INC-MGMT does not exist in the catalog; ITSM already masters `service_incidents`, so the missing slot is benign, see Note K). Authored by 7 parallel sub-agents (one per cluster); each consumed a context brief from [.tmp_deploy/build_phase_b3_briefs.ts](.tmp_deploy/build_phase_b3_briefs.ts) and wrote a markdown draft to `.tmp_deploy/p_b3_<cluster>_draft.md`. Total: 117 master+required data_objects covered, 29 marked as static-reference (codes, catalogs, banded data, append-only event streams), 441 lifecycle state rows authored across the remaining 88 entities.
+- [x] Set pattern flags (`has_personal_content`, `has_submit_lock`, `has_single_approver`) on each domain's relevant data_objects — 36 data_objects received at least one flag (PATCHed during the same load run).
+- [x] Regenerate fact sheets for the top 20 to verify the §4 derivation rules produce the expected permissions tables — all 19 in-scope domains regenerated; §8.1 now renders baseline tier + lifecycle-derived gates (with `permission_verb_override` honored cleanly after a generator fix — see Note L) + pattern-flag overrides. ATS as canonical exemplar emits 17 permissions (3 baseline + 11 lifecycle gates + 3 personal_content/submit_lock overrides).
+
+**Notes from execution:**
+
+- **Note K — INC-MGMT slot is benign.** Plan §6.3 listed 20 domains; the catalog has 19 of them. `INC-MGMT` was never loaded as a standalone domain because incident management is masters under `ITSM` (`service_incidents` data_object). No backfill needed — the omission reflects how the catalog actually models the market, not a gap. If incident-management ever ships as a standalone domain (e.g. an IRP-style market), it picks up its own Phase B3 row at that point.
+- **Note L — Generator bug surfaced by step 8 data.** Step 7 emitted ATS against an empty lifecycle states table; the permission-name derivation in [scripts/emit_fact_sheet.ts](scripts/emit_fact_sheet.ts) appended `_<entity_singular>` to the verb even when `permission_verb_override` was set. That produced absurd duplicates like `ats:hire_candidate_candidate` once real overrides started flowing. Fixed at [emit_fact_sheet.ts:579-580](scripts/emit_fact_sheet.ts#L579-L580) and [emit_fact_sheet.ts:830-833](scripts/emit_fact_sheet.ts#L830-L833): when an override is set, it now replaces the entire verb segment (yielding `ats:hire_candidate`, `ats:approve_offer`, `ats:approve_requisition`); when no override is set, the auto-derivation stays `<state_name>_<entity_singular>` (e.g. `ats:completed_consider_background_check`). Lesson: derivation rules need to be tested against realistic data, not an empty table — Step 7's "first emission" should arguably have included at least a couple of hand-authored lifecycle states to flush out cases like this before Step 8 multiplied them.
+- **Note M — One non-blocking collision: `candidates.hired` and `job_applications.hired` both override to `hire_candidate`.** The ATS fact sheet now shows `ats:hire_candidate` twice in §8.1 (one row per source data_object). That's a real data-modeling judgment call: hiring a `candidate` and marking a `job_application` `hired` is conceptually the same gate, so collapsing to a single permission is fine. The generator could dedupe but the duplicate rows still convey "this gate fires from two state transitions" usefully. Worth flagging if the deployer later treats this as two separate permissions — it should treat them as one.
+- **Note N — Sub-agent parser format held up at scale.** All 7 cluster drafts parsed cleanly with the same loader (`load_phase_b3.ts`) on first run after a small NOT-NULL fix on `permission_verb_override` (column requires `""` not `null` when no override is set). 441 inserts went through in seconds via the chunked bulk-insert idiom (Note E lesson applied — no per-row spawns this time).
 
 **Step 9 — Phase B2 long tail** (large; ongoing)
 

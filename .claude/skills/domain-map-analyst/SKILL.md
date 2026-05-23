@@ -97,6 +97,7 @@ Every loader in this project is a `.ts` file run with `bun run <path>`. Stick to
 - **Do NOT use Python.** Python on Windows in this project fails in messy ways: encoding mismatches on stdin/stdout when piping JSON into `semantius`, venv/path drift between PowerShell and bash invocations, indentation errors that hide for whole runs, `subprocess` plumbing that swallows stderr, brittle `requests`/`httpx` pinning. The user has been burned enough times by this that "use Python" is not an acceptable suggestion regardless of context. If you think Python is the right tool, you're wrong — write the TypeScript instead.
 - **Don't use Bash/PowerShell scripts** for anything beyond one-liner reads. Multi-step orchestration (read → diff → POST → re-read → POST) belongs in a `.ts` loader, not a shell pipeline. Shell is fine for `semantius call crud postgrestRequest '...'` smoke tests; everything else goes in TypeScript.
 - **One-line semantius reads from the agent's tool call are fine** — `semantius call crud postgrestRequest '{"method":"GET","path":"/..."}'` via Bash is the canonical read pattern. The rule is about *loaders* (multi-step write orchestration), not about every CLI invocation.
+- **No Python for verification / count summaries either.** "Just piping JSON into `python -c '...'` for a quick count" is exactly the door the rule slams. If a count or per-key tally is worth seeing, do it in TypeScript (`bun run -e '...'` or a `.ts` file), via `jq`, or with PostgREST aggregation params (`Prefer: count=exact`, `select=count(*)`). Never reach for Python "just this once."
 
 When a subagent is given a research/load task, instruct it explicitly to produce TypeScript output and to never propose Python. Phase-B Lite batch 1 (2026-05-22) had no Python issues only because the prompts didn't open the door to it; future prompts should slam the door explicitly.
 
@@ -107,7 +108,7 @@ When a subagent is given a research/load task, instruct it explicitly to produce
 - **Pipe via stdin** to the CLI: `semantius call crud postgrestRequest` reads JSON from stdin when no inline argument is supplied. Use this from Bun's `Bun.spawn` with `stdin: "pipe"`.
 - **Chunk inserts** into batches of ≤50 rows. Simpler when the script is in a hurry.
 
-The reference loader at [.tmp_deploy/load_research.ts](.tmp_deploy/load_research.ts) does both. Start from it.
+The reference loader at [.tmp_deploy/load_research.ts](.tmp_deploy/load_research.ts) does both — and the canonical `insert()` helper lives in [references/loader-idiom.md](references/loader-idiom.md) (around line 110). **Start from one of those for any greenfield bulk insert.** Common failure mode: copying a per-row pattern (e.g. from `rename_data_object.ts`, which has its own pre-flight per row) into a greenfield loader. That turns N inserts into N subprocess spawns at ~300ms each — 1,000 rows = 5+ minutes when it should be sub-second. Per-row patterns are correct only when each row needs its own pre-flight against live state; for plain "insert a list of new rows," always use the chunked array-body POST.
 
 ### 6. NEVER change cwd before invoking `semantius`. Run everything from the project root.
 
@@ -192,6 +193,21 @@ Every `domain_data_objects` row with `role='embedded_master'` requires that the 
 Every new domain load MUST include lifecycle states (rows in `data_object_lifecycle_states`) and pattern flags on `data_objects` (`has_personal_content`, `has_submit_lock`, `has_single_approver`) for its `master + required` data_objects — OR the domain code MUST be added to the lifecycle-states-pending tracking section of [plan-done-master-tasks.md](../../../plan-done-master-tasks.md) with an explicit backfill commitment.
 
 Defaulting to "I'll do it later" without the tracking entry is not permitted: undocumented gaps silently degrade the per-domain fact sheets that `semantius-architect` consumes. The Phase B3 initial backfill (top 20 implementation-relevant domains, see [plan-domain-fact-sheets.md § 6.3](../../../plan-domain-fact-sheets.md)) is a one-time catchup; from then on every market load adds these contemporaneously.
+
+### 13. Catalog enums to know without rediscovering them.
+
+The Semantius platform enforces enum check-constraints on several catalog columns. Guessing values that "sound right" wastes a round-trip and a re-run. The non-obvious ones, sourced from the live `/fields` definitions:
+
+| Table.field | Allowed values | Common wrong guesses |
+|---|---|---|
+| `trigger_events.event_category` | `lifecycle`, `state_change`, `threshold`, `signal` | `state_transition` ❌ |
+| `cross_domain_handoffs.integration_pattern` | `event_stream`, `api_call`, `batch_sync`, `manual_handoff`, `file_drop` | `event_driven` ❌ |
+| `cross_domain_handoffs.friction_level` | `low`, `medium`, `high` | — |
+| `domain_data_objects.role` / `domain_module_data_objects.role` | `master`, `embedded_master`, `contributor`, `consumer`, `derived` | `owned`, `referenced` ❌ |
+| `domain_data_objects.necessity` / `domain_module_data_objects.necessity` | `required`, `optional` | `mandatory` ❌ |
+| `*.record_status` | `new`, `pending`, `approved`, `rejected` | — |
+
+When adding a new column to this catalog with an enum, copy the value vocabulary from an existing analogous column rather than inventing a new one (e.g. `domain_module_data_objects.necessity` deliberately mirrors `domain_data_objects.necessity` — same two values, same default `required`). If a loader fails with `(23514) violates check constraint "<table>_<field>_check"`, re-query `/fields?table_name=eq.<table>&field_name=eq.<field>` to see the allowed values; don't guess again.
 
 ---
 
@@ -307,7 +323,169 @@ For any task that fits this skill — "research vendors for X", "is Y a domain?"
 
    Phase C answers *"who in the org buys / runs / consumes this market?"* and powers buyer-persona filtering, RACI overlays, and the org-side analogue of the data-object signals. If the function spine is empty (only true at the very start of the catalog), populate it once before adding `business_function_domains` rows — see "Function spine" below for the canonical 20-function shape.
 
-6. **Verify and share.** After each phase, query counts on the affected tables, compare against expected, and link the user to the UI tables that changed.
+6. **Verify and share.** After each phase, query counts on the affected tables, compare against expected, and link the user to the UI tables that changed. **For any new market load OR any time the user says "review domain X" / "audit domain X" / "what's missing for X", run the per-domain completeness checklist below** — it is the single source of truth for what "done" means.
+
+---
+
+## Per-domain completeness checklist
+
+The catalog has 14 categories of per-domain content that the [fact sheet generator](../../../scripts/emit_fact_sheet.ts) reads from. A new market load is "done" only when every applicable check passes; a domain review (audit) is the same checklist run against an already-loaded domain. The same gates apply both directions.
+
+**This section exists because gaps repeatedly shipped silently:** Salesforce / Workday loads missed `domains` metadata (Rule #8), the ITSM-area review missed `business_function_domains` (Backfill gap #2), the Step-5 cluster pass loaded clusters A–F but missed ATS's own intra-domain relationships (the very gap that surfaced this checklist). The pattern is the same: every gap looked "obvious in retrospect, easy to skip in flight". The checklist closes that.
+
+> **How to run.** For each check below: run the query, compare against the pass criterion, take the fix action if it fails. The numbered IDs (`A1`, `B6`, etc.) are stable — refer to them in plan files and PR descriptions. **An audit pass produces a gap report listing the failed IDs;** the user reviews the report before any fix loads, per Rule #1.
+
+Substitute `<id>` with the target `domains.id`, `<masters>` with the comma-separated list of `data_object_id`s for which `domain_data_objects.role='master'` in this domain.
+
+### A. Phase A — Market shape
+
+**A1. `domains` row has all 7 business-metadata fields populated.** (Rule #8.)
+- Query: `/domains?id=eq.<id>&select=crud_percentage,business_logic,min_org_size,cost_band,certification_required,usa_market_size_usd_m,market_size_source_year`
+- Pass: `crud_percentage > 0`, `min_org_size != ''`, `cost_band != ''`, `usa_market_size_usd_m > 0`, `market_size_source_year > 0`; `business_logic` non-empty UNLESS `crud_percentage >= 95`.
+- Fix: PATCH the row via `validateDomainRow()` in [.tmp_deploy/load_research.ts](../../../.tmp_deploy/load_research.ts).
+
+**A2. Capabilities linked.**
+- Query: `/capability_domains?domain_id=eq.<id>&select=capabilities(capability_code)`
+- Pass: ≥3 rows (typical: 5–8). For leadership-tier domains, may be lower.
+- Fix: extend Phase A loader for this market; apply Cross-cutting capability convention (§ below) for any capability that spans ≥3 domains.
+
+**A3. Solutions linked with coverage_level.**
+- Query: `/solution_domains?domain_id=eq.<id>&select=coverage_level,solutions(solution_name)`
+- Pass: ≥3 solutions; ≥1 `primary`; coverage_level set on every row (never null).
+- Fix: extend Phase A loader.
+
+**A4. `solution_capabilities` matrix complete.**
+- Query: `/solution_capabilities?capability_id=in.(<capIds>)&select=solution_id,capability_id,delivery_strength`
+- Pass: every (solution × capability) cell has a row (including `not_supported` — absence ≠ not supported; absence = unaudited). For N solutions × M capabilities, expect N×M rows.
+- Fix: see [.tmp_deploy/backfill_crosscut_solcaps.ts](../../../.tmp_deploy/backfill_crosscut_solcaps.ts) for the matrix-fill pattern.
+
+**A5. Vendor records reflect current legal ownership.** *(Opt-in only — not part of the routine audit pass.)*
+- **Skip by default.** Re-evaluating every vendor for current legal owner requires external research (M&A news, vendor sites, recent acquisition press releases) and routinely takes hours per market. The catalog stays good-enough between explicit refresh cycles.
+- **Run only when:** the user asks ("refresh vendors", "re-check ownership for X", "audit acquisitions"), OR you have specific evidence a vendor changed hands (e.g., a press release in the user's prompt), OR the user explicitly approves the scope after you've flagged it as an open question.
+- Query (when running): `/solutions?id=in.(<solIds>)&select=solution_name,vendors(vendor_name)`
+- Pass: every `vendor_name` matches the current legal owner (no LeanIX-as-LeanIX after the SAP acquisition, etc.).
+- Fix: PATCH `vendor_id`; mention predecessor in `solutions.notes` (see Classification heuristics).
+
+### B. Phase B — Data-object footprint
+
+**B1. ≥1 `master` data_object exists.**
+- Query: `/domain_data_objects?domain_id=eq.<id>&role=eq.master&select=data_object_id`
+- Pass: ≥1 row. **EXCEPTION:** leadership-tier domains (REV-INTEL, SALES-PERF, GTM-PLAN, ACCT-PLAN, PRM, OP-RES, BCM, SECOPS, SOAR, THREAT-INTEL, TPRM, VULN-MGMT, PRIV-MGMT, FINOPS, INTRANET, COLLAB-GOV — see § "Leadership-layer domains") are expected to have zero masters; checklist passes by exception.
+- Fix: run Phase 1 of the data-object research workflow (§ below).
+
+**B2. Every master has `singular_label` and `plural_label`.**
+- Query: `/data_objects?id=in.(<masters>)&select=data_object_name,singular_label,plural_label&or=(singular_label.is.null,singular_label.eq.,plural_label.is.null,plural_label.eq.)`
+- Pass: empty result (every master has both labels).
+- Fix: PATCH the missing labels; irregular plurals (see plan §9.1 Note A) are hand-correctable.
+
+**B3. Naming arbitration applied on every master.** (Rule #9.)
+- Query: `/data_objects?id=in.(<masters>)&select=data_object_name,is_canonical_bare_word,naming_authority_rationale`
+- Pass: every bare-word name (no `_` separator, common noun) has `is_canonical_bare_word=true` with a non-empty `naming_authority_rationale`. Prefixed names pass automatically.
+- Fix: rename to `<slug>_<noun>` via [.tmp_deploy/rename_data_object.ts](../../../.tmp_deploy/rename_data_object.ts), OR PATCH the canonical claim with rationale.
+
+**B4. Pattern flags considered on every master.** (Rule #12.)
+- Query: `/data_objects?id=in.(<masters>)&select=data_object_name,has_personal_content,has_submit_lock,has_single_approver`
+- Pass: every master row exists (the flags default to false; `false` is a valid considered answer). What the checklist actually verifies is whether *any* of the three is true OR a notes/audit trail confirms the consideration. **An audit MUST positively re-evaluate** — false-by-default is not the same as false-after-review.
+- Fix: PATCH flags to `true` where applicable; record the audit pass somewhere (this plan's checklist completion, a `notes` annotation, etc.).
+
+**B5. `embedded_master` integrity.** (Rule #11.)
+- Query: pull all `embedded_master` rows for this domain (`/domain_data_objects?domain_id=eq.<id>&role=eq.embedded_master&select=data_object_id`), then for each `data_object_id` verify either (a) ≥1 `master` row exists somewhere in `domain_data_objects`, or (b) `data_objects.kind='platform_builtin'`.
+- Pass: every embedded_master has a canonical owner OR is built-in.
+- Fix: either add the missing canonical `master` row in the owner domain, OR drop the orphan `embedded_master`.
+
+**B6. Intra-domain `data_object_relationships` populated.**
+- Query: `/data_object_relationships?and=(data_object_id.in.(<masters>),related_data_object_id.in.(<masters>))&select=data_object_id,relationship_verb,related_data_object_id`
+- Pass: every master that participates in the domain's primary workflow has ≥1 edge to another in-domain master. For ATS: `candidates ↔ job_applications`, `job_applications → interviews`, `interviews → interview_scorecards`, `job_applications → job_offers`, `candidate_referrals → candidates`, `recruitment_sources → candidates`, `job_requisitions → job_applications` must all exist. An isolated master is allowed only if a `data_object_relationships.notes` entry explicitly justifies it.
+- Fix: draft edges (verb + cardinality + necessity + owner_side) and load via the cluster-drafts loader (see plan §9.1 Step 5 + [.tmp_deploy/load_cluster_drafts.ts](../../../.tmp_deploy/load_cluster_drafts.ts) for the markdown→loader pipeline).
+
+**B7. `users` edges populated.** (Rule #10.)
+- Query: `/data_object_relationships?and=(data_object_id.in.(<masters>),related_data_object_id.eq.<users_id>)&select=data_object_id,relationship_verb` — and the symmetric `users → masters` direction.
+- Pass: every master with a user-typed actor (assignee, creator, approver, panelist, owner, hiring_manager, recruiter, author) has ≥1 edge to `users`. ATS example: `users` should edge to `job_requisitions` (recruiter, hiring_manager), `job_applications` (recruiter), `interviews` (coordinator), `interview_scorecards` (interviewer), `job_offers` (approver), `candidate_referrals` (referring_employee), `application_notes` (author).
+- Fix: load per Rule #10. The `users` row is `kind='platform_builtin'`, always at `data_objects.data_object_name='users'`.
+
+**B8. Cross-domain `data_object_relationships` populated (payload→target) — OUTBOUND only.**
+- **Asymmetry rule.** A cross-domain relationship row mirrors a cross-domain handoff. The **outbound** side (this domain's master → another domain's payload) is this domain's responsibility because it owns the source of the verb. The **inbound** side (another domain's master → this domain's payload) is the other domain's responsibility and gets audited on **its** B8 pass — recording it here would mean this domain authoring relationship edges out of its own jurisdiction.
+- Query: `/data_object_relationships?and=(data_object_id.in.(<masters>),related_data_object_id.not.in.(<masters>))&select=data_object_id,relationship_verb,related_data_object_id,is_required,notes`
+- Pass: every **outbound** `cross_domain_handoffs` row (from B9) with a clean payload→target mapping has a corresponding `data_object_relationships` row in this direction (e.g., outbound handoff `ATS → ONBOARDING` on `job_offer.accepted` with payload `onboarding_journeys` ⇒ relationship `job_offers spawns onboarding_journeys`, source = ATS master, target = ONBOARDING master).
+- Fix: same loader pattern as B6. Do **not** load inbound-direction rows here — they belong to the source domain's B8 pass.
+- Report-only (no fix from this domain): inbound cross-domain edges that would correspond to handoffs from OTHER domains into this one. Surface them in the gap report as "owed by `<source_domain_code>` B8" so the user can decide whether to also kick off that domain's audit.
+
+**B9. Outbound `trigger_events` + `cross_domain_handoffs` complete.**
+- Outbound events query: `/trigger_events?data_object_id=in.(<masters>)&select=id,event_name,description`
+- Outbound handoffs query: `/cross_domain_handoffs?source_domain_id=eq.<id>&select=trigger_event_id,target_domain_id,integration_pattern,friction_level`
+- Pass: every master with an observable state transition (anything that changes the row's `status` or `state` column) has a `trigger_events` row. Every `trigger_events` row for this domain's masters has ≥1 `cross_domain_handoffs` row (intra-domain events are not in scope; cross-domain only by validation rule). Fan-out targets (one event → many subscribers) each get their own handoff row sharing the same `trigger_event_id`. **The pass test for "complete" is: list the master's lifecycle states (B11), and for every state with `requires_permission=true` OR every state name reading like a published verb (`approved`, `signed`, `accepted`, `cancelled`, `closed`, `hired`, `terminated`), there is a matching `trigger_events.event_name` of the shape `<entity>.<state>`.**
+- Fix: draft the missing events + handoffs per § Phase 3 of the data-object research workflow.
+
+**B10. Inbound `cross_domain_handoffs` — REPORT ONLY (the fix lives on the source domain).**
+- **Asymmetry rule.** Inbound handoffs to this domain are outbound handoffs from someone else's perspective. They are **published** by the source domain's `trigger_events` + `cross_domain_handoffs` rows (its own B9 work). When researching or loading this domain, you can only legitimately produce *outbound* handoff rows (events this domain publishes). Authoring inbound handoffs from this domain would mean inventing rows on behalf of a source domain you haven't audited — that's how the catalog accumulates wrong-looking handoffs without provenance.
+- Query (what's already loaded): `/cross_domain_handoffs?target_domain_id=eq.<id>&select=source_domain_id,trigger_event_id,data_object_id`
+- Pass: report the inbound coverage as-is. Missing inbound rows are **not a failure of this domain's audit** — they're a B9 gap on the source domain.
+
+  **Discovering inbound candidates (which other domains owe me coverage).** The catalog deterministically tells you which other domains *should* be publishing into this domain. For every dependency this domain holds (`embedded_master` / `contributor` / `consumer` rows), the canonical master row on the same `data_object_id` names the owner — and that owner's B9 owes outbound handoffs to this domain whenever the shared record transitions state.
+
+  Two-query discovery procedure:
+
+  1. **List this domain's non-master dependencies:**
+     `/domain_data_objects?domain_id=eq.<id>&role=in.(embedded_master,contributor,consumer)&select=data_object_id,role,necessity,data_objects(data_object_name)`
+  2. **For each dependency's `data_object_id`, list the canonical owner(s):**
+     `/domain_data_objects?data_object_id=in.(<deps>)&role=eq.master&select=data_object_id,domain_id,domains(domain_code)`
+
+  Cross-join (in script) on `data_object_id` to produce the candidate list: `(owner_domain_code, data_object_name, my_role, my_necessity)`. Then for each candidate row, check whether `/cross_domain_handoffs?source_domain_id=eq.<owner_id>&target_domain_id=eq.<id>&data_object_id=eq.<dep_id>` already has a row. If it does, the inbound is covered. If it doesn't, the candidate joins the "owed by other domains" report subsection.
+
+- Report shape (during audit):
+  - **Covered inbound** — list the rows that already exist (positive-finding sanity check).
+  - **Owed by other domains** — list each missing inbound as `<owner_code> B9 owes outbound on \`<data_object_name>\` → <this_code> (this domain's <role> + <necessity>)`. User decides whether to also audit those source domains; the missing rows are **not** loaded from this domain's pass.
+  - **Unowned dependencies** — if a dependency has no canonical master anywhere in the catalog AND isn't `kind='platform_builtin'`, surface as a B5 integrity failure (different category, blocks this domain's pass).
+
+- Example: ATS embedded-masters `hcm_positions` (id 32). Discovery query 1 returns `(32, embedded_master, required)`. Discovery query 2 returns `(32, 54, HCM)` — HCM canonically masters positions. Then check `/cross_domain_handoffs?source_domain_id=eq.54&target_domain_id=eq.56&data_object_id=eq.32` — if empty, the report writes "HCM B9 owes outbound on `hcm_positions` → ATS (this domain's embedded_master + required)". The fix happens when HCM is reviewed.
+
+**B11. `data_object_aliases` populated for non-self-explanatory masters.**
+- Query: `/data_object_aliases?data_object_id=in.(<masters>)&select=data_object_id,alias_name,alias_type`
+- Pass: every master that has any cross-vendor / cross-industry synonym has ≥1 alias row. Self-explanatory masters (e.g. `hcm_employees` for "employee", `job_postings` for "job posting") are exempt — record the exemption decision in the load notes if challenged.
+- Fix: draft alias rows; bundle into the cluster-drafts pattern.
+
+**B12. `data_object_lifecycle_states` + pattern flags loaded.** (Rule #12.)
+- Query: `/data_object_lifecycle_states?data_object_id=in.(<masters>)&select=data_object_id,state_name,state_order,is_initial,is_terminal,requires_permission,permission_verb_override`
+- Pass: every `master + necessity=required` data_object with a non-trivial workflow has lifecycle states loaded, OR the domain code appears in the lifecycle-states-pending tracking section of [plan-domain-fact-sheets.md § 9.1 Step 8](../../../plan-domain-fact-sheets.md).
+- Fix: draft state machines (initial state + workflow gates marked `requires_permission=true` + `permission_verb_override` for non-obvious verbs); load via a focused loader.
+
+### C. Phase C — Functional ownership
+
+**C1. ≥1 `business_function_domains` owner row.**
+- Query: `/business_function_domains?domain_id=eq.<id>&select=responsibility_type,business_functions(business_function_name)`
+- Pass: ≥1 row with `responsibility_type='owner'`. Most domains also need 1–2 contributors or consumers.
+- Fix: link to the canonical 20-function spine (§ Function spine).
+
+**C2. `business_function_capabilities` overrides where capability diverges.**
+- Query: `/business_function_capabilities?capability_id=in.(<capIds>)&select=responsibility_type,business_functions(business_function_name),capabilities(capability_code)`
+- Pass: rows exist ONLY when a capability's owning function differs from the domain's owning function (e.g., `COMPLIANCE-TRAIN` under domain LMS owned by Compliance, not L&D). Pure overlap with domain RACI is *not* required to be enumerated.
+- Fix: add the override row for any diverging capability.
+
+### D. Outputs
+
+**D1. Fact sheet emits without unjustified placeholders.**
+- Command: `bun run scripts/emit_fact_sheet.ts <DOMAIN_CODE>`
+- Pass: every `_(no … loaded)_` placeholder in the generated `domain-fact-sheets/<DOMAIN_CODE>.md` is justified by (a) the leadership-tier exception list (B1), (b) the lifecycle-states-pending list (B12), or (c) an explicit "self-explanatory masters" / "isolated master" justification recorded in the catalog notes (B6, B11). Unjustified placeholders = checklist failure.
+- Fix: close the underlying gap, then re-run the generator.
+
+**D2. UI spot-check.**
+- Visit `https://tests.semantius.app/domain_map/<table>` for every table touched.
+- Pass: rows render with the expected labels; row counts match the loader summary; no `record_status='approved'` on freshly-loaded research (Rule #1).
+- Fix: re-PATCH; never bulk-approve.
+
+### Audit recipe (for "review domain X" / "audit X" / "what's missing for X")
+
+1. Resolve `<DOMAIN_CODE>` to `<id>` and `<masters>` once at the start. Cache for reuse across queries.
+2. Run every **in-scope** check above in order. Skip A5 unless the user has explicitly asked for a vendor-ownership refresh.
+3. Classify each result:
+   - **In-jurisdiction failure** — this domain can fix locally (A1–A4, B1–B9, B11–B12, C1–C2, D1–D2). Goes into the **gap report** as actionable.
+   - **Out-of-jurisdiction report** — the symmetric side is owned by another domain (B8 inbound direction, all of B10). Goes into a separate **"owed by other domains"** subsection of the report, naming the source domain + the missing check ID on that side (e.g. "HCM B9 owes outbound on `hcm_positions`"). **Do not author fixes for these from this domain's audit.**
+4. Surface the gap report to the user **before** authoring any fixes. Include the failing query output snippet so the user can sanity-check. Ask whether to also kick off audits on the "owed by" domains.
+5. For each accepted in-jurisdiction gap, author the fix on the side (markdown draft, or directly in a loader); never load AI-generated content without a user review pass (Rule #1).
+6. Load fixes with `record_status='new'`. User bulk-approves per category after review.
+7. Re-run the audit. The acceptance criterion is zero failed **in-jurisdiction** IDs (modulo the documented exceptions in B1, B12). Out-of-jurisdiction items remain visible in the report until the source domains are themselves audited; they are not blockers for this domain's pass.
+
+A well-run audit produces three artifacts: the gap report (with in-jurisdiction and owed-by-others subsections), the fix drafts, and a re-emit of the fact sheet showing the in-jurisdiction placeholders gone.
 
 ### Backfill gaps to watch for
 
@@ -769,6 +947,7 @@ Reference loader: [.tmp_deploy/load_p25b_process_skills.ts](../../../.tmp_deploy
 - ❌ Inferring catalog state from `.tmp_deploy/*.ts` deploy scripts. They drift the moment they ship. Cluster inventories MUST query live `postgrestRequest` endpoints — see workflow step 1.
 - ❌ Loading `domain_data_objects` master rows with empty `notes`. Even when the data_object has a single master today, write a one-sentence slice description in `notes` — it's the column reviewers read first when a second master shows up later. The "empty notes on multi-master rows" anti-pattern is the stricter form; the relaxed form applies to all master rows.
 - ❌ Loading a market with `min_org_size` of `xs`/`s` but only enterprise-tier solutions. If the stated minimum buyer is SMB/mid-market, the solution list must include at least 1–2 vendors that actually sell into that band. A list of pure enterprise solutions under an SMB-minimum domain is internally inconsistent and misleads downstream filters.
+- ❌ Declaring a load or audit "done" without running the Per-domain completeness checklist (§ above). Every silent gap in this catalog's history followed the same pattern — someone shipped a market, the count of new rows looked right, no one ran the full checklist, and a category (`solution_capabilities`, `business_function_domains`, intra-domain `data_object_relationships`, lifecycle states) sat empty for weeks. Running the checklist is the gate; "I think I covered everything" is not a substitute. Specifically: do not declare ATS-shaped loads done until B6 (intra-domain relationships) and B7 (`users` edges) pass — those two were silently empty for ATS through Step-5's cluster pass and only surfaced when the fact sheet's mermaid rendered with disconnected nodes.
 - ❌ Predicting numeric IDs inside a script. Always re-read after insert to build the id map.
 - ❌ Trying to fit a large insert into a single command-line argument on Windows. Use stdin or chunk.
 - ❌ `cd`ing into the skill folder, `.tmp_deploy/`, or any subdirectory before running `semantius` or a loader script. Silently routes to the wrong tenant. See rule #6.

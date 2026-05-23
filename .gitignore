@@ -1,4 +1,2 @@
-/.tmp_deploy/*
-!/.tmp_deploy/emit_fact_sheet.ts
-**/.tmp_deploy/
+.tmp_deploy/
 .env
