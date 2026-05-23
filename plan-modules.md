@@ -243,7 +243,7 @@ The current "12 of 12 candidates at 100% Semantius" result (P2.5A.i) becomes a p
 
 Buyer-facing payoff: "deploy these 6 ATS modules with zero external dependencies; these 2 specific modules need an integration."
 
-**Counting rule:** if a tool serves two modules in the same tenant, count it **once per module** for coverage purposes. Each module's coverage % is independent of what else is installed — the rollup answers "what does this module need standalone?" not "what does this tenant need overall?" Counting once globally would break the "deploy this one module standalone" narrative.
+**Counting rule:** if a tool serves two modules in the same tenant, count it **once per module** for coverage purposes. Each module's coverage % is independent of what else is installed — the score answers "what does this module need standalone?" not "what does this tenant need overall?" Counting once globally would break the "deploy this one module standalone" narrative. Likewise no domain-level aggregation: averaging per-module percentages destroys the per-module signal (a 100%-and-75% mix becomes "86%" which is true of neither module and actionable about neither).
 
 The formula itself is unchanged: `(required tools with operation_kind ∈ {query, mutate}) / (total required tools)`. It just scopes to the per-module tool set.
 
@@ -257,7 +257,7 @@ Additive only. The existing `domain_data_objects` rows stay; module-level rows a
 
 1. **Schema first.** Add the five tables + six columns. Zero impact on existing queries.
 2. **One worked example end-to-end.** Pick ATS. Load `domain_modules` (8 rows), `domain_module_capabilities` (~7 rows — `ATS-BACKGROUND-CHECKS` deliberately has zero pending capability-layer audit), `domain_module_data_objects` (~30 rows reclassifying the existing 22 data_objects per module), `domain_starter_modules` (2 rows), per-module `data_object_lifecycle_states.domain_module_id` annotations on the affected states, `data_objects.minimum_embedded_shape` text for the 3 shared entities (§7.5). Derive 8 per-module `system` skills with `skill_tools` re-linked per module (§5.5). Re-emit the ATS fact sheet with new §s.
-3. **Generator update.** Extend `scripts/emit_fact_sheet.ts` to render per-module sections (data_objects grouped by module, lifecycle states per module, per-module Semantius coverage % with the §5.6 counting rule), the "Getting started" section from `domain_starter_modules`, and a per-module skill rollup. Domain-level §s rendered as rollups. Add the second pass for cross-cutting module fact sheets at `domain-fact-sheets/_cross-cutting/`.
+3. **Generator update.** Extend `scripts/emit_fact_sheet.ts` to render per-module sections (data_objects grouped by module, lifecycle states per module, per-module Semantius coverage % with the §5.6 counting rule), the "Getting started" section from `domain_starter_modules`, and a per-module skill rollup table. Other domain-level §s (vendors, RACI, regulations, market sizing) keep their current rollup shape — they're market-analysis facts that genuinely aggregate. The Semantius coverage section is explicitly *not* one of them: per §5.6, the per-module table IS the coverage view; no domain-level percentage is emitted. Add the second pass for cross-cutting module fact sheets at `domain-fact-sheets/_cross-cutting/`.
 4. **One large worked example.** Repeat for ITSM (the 20→8-module collapse). This validates the cross-cutting-module pattern (Knowledge Mgmt module installable on ITSM/CSM/HRSD/LSD) and the per-cross-cutting-module single skill rule (§5.3).
 5. **Backfill the rest (Phase 2).** Top-20 implementation-relevant domains first (per [plan-domain-fact-sheets.md § 6.3](plan-domain-fact-sheets.md)). The long tail can stay flat until someone needs it modular — every new column is nullable and `domain_modules` rows are not required; a domain without modules renders the same fact sheet as today.
 6. **Cross-module handoff backfill.** For each backfilled domain, populate `cross_domain_handoffs.source_domain_module_id` / `target_domain_module_id` from the existing rows. Per-domain pass, ~30-60 minutes per domain.
@@ -435,17 +435,17 @@ Drops as not-standalone (absorbed into parents or removed):
 - `ITSM-CHARGEBACK` → moved to FINOPS or future ITFM domain.
 - `ITSM-REPORTING` → every domain has reporting, not distinctive.
 
-### 8.4 Cross-cutting modules get their own fact sheet
+### 8.4 Cross-cutting modules in the per-module shape
 
-Cross-cutting modules (`KNOWLEDGE-MGMT`, `SLA-MGMT`, `SELF-SERVICE-PORTAL`, `APPROVAL-WORKFLOW`, `AI-TRIAGE`) live across multiple domains. Treating them as per-domain inclusions buries them — a buyer searching "knowledge base for IT and HR" should land on a single module page, not navigate through five host-domain fact sheets.
+**Revised per §9 (session 3, 2026-05-23):** with per-module fact sheets in `modules/<MODULE-CODE>.md` for every `domain_modules` row, cross-cutting modules are no longer special — they live in the same folder as everyone else. The previous "primary fact sheet at `_cross-cutting/<MODULE-CODE>.md`" path is dropped.
 
-**Pattern:**
+**What is special about cross-cutting modules:** they have `domain_modules.domain_id = NULL` (no obvious home) or they have `domain_modules.domain_id` set plus rows in `domain_module_host_domains` (additional installable hosts). Their fact sheet:
 
-- Cross-cutting modules get a **primary fact sheet** at `domain-fact-sheets/_cross-cutting/<MODULE-CODE>.md`. The fact sheet structure is the same as a domain fact sheet (data objects mastered, lifecycle states, integration handoffs) but the "domain" header section is replaced with a "host domains" section listing every domain the module can be installed on, with per-host notes (e.g., `KNOWLEDGE-MGMT` on ITSM uses `agent-facing` rendering; on CSM it uses `customer-facing` rendering).
-- Each host domain fact sheet's modules table includes the cross-cutting module with a link back to its primary fact sheet (not a duplicate inline section).
-- The emitter does two passes: one for domain fact sheets (including cross-cutting modules as references), one for cross-cutting module fact sheets at the special path.
+- Replaces the "parent domain" section with a "host domains" section listing every domain they're installable on (via the UNION of `domain_modules.domain_id` and `domain_module_host_domains` per §4.5). Per-host notes (e.g., `KNOWLEDGE-MGMT` on ITSM uses `agent-facing` rendering; on CSM it uses `customer-facing`) come from `domain_module_host_domains.notes`.
+- Doesn't appear in any starter-kit fact sheet's "starter modules" section (the starter junction is editorial per-domain on-ramp, not cross-cutting suggestion).
+- Each host-domain starter-kit fact sheet's "Modules installable in this market" section lists the cross-cutting module with a link to its per-module fact sheet.
 
-~88 domain fact sheets + ~10-20 cross-cutting module fact sheets, not ~440 per-module files (the fact-sheet-shape resolution is one of the decisions in §9).
+~440 per-module fact sheets total + ~88 per-starter-kit fact sheets. Cross-cutting count (~10-20) is included in the 440.
 
 ---
 
@@ -453,7 +453,7 @@ Cross-cutting modules (`KNOWLEDGE-MGMT`, `SLA-MGMT`, `SELF-SERVICE-PORTAL`, `APP
 
 Resolved during the architect review pass (2026-05-23):
 
-- **Fact sheet shape** — domain fact sheet (per-domain modules table + per-module sections inline) **plus** standalone fact sheets for cross-cutting modules at `domain-fact-sheets/_cross-cutting/<MODULE-CODE>.md` (see §8.4). Not ~440 per-module files.
+- **Fact sheet shape — REVISED (2026-05-23 session 3):** per-module fact sheets in `domain-fact-sheets/modules/<MODULE-CODE>.md` (one per `domain_modules` row, ~440 catalog-wide when fully rolled out) **plus** per-starter-kit fact sheets in `domain-fact-sheets/starter-kits/<DOMAIN-CODE>.md` (one per domain that has a `domain_starter_modules` junction, ~88 catalog-wide). **No standalone per-domain fact sheet** — the starter-kit page IS the market entry point and carries vendors, RACI, regulations, capabilities, market sizing. Cross-cutting modules live in `modules/` with everyone else (no separate `_cross-cutting/` folder); cross-cutting modules with `domain_id = NULL` simply list their host domains instead of a single parent. The earlier "inline modules in domain fact sheet" decision (§7.6 and original §9 phrasing) is retired because it sub-headed module concepts where §7.6 wanted landing pages — the SEO and architect-handoff use cases both need per-module surfaces.
 - **Lifecycle states straddling modules** — `data_object_lifecycle_states.domain_module_id` column added (see §4.2 + §7.4).
 - **Minimum embedded-shape contract** — `data_objects.minimum_embedded_shape` text column added (see §4.7 + §7.5).
 - **`domain_module_data_objects.necessity`** — added back as 2-value enum on consumer/embedded_master rows (see §4.4).
@@ -486,9 +486,13 @@ All steps below are **additive** and reversible by deleting rows. The destructiv
 1. Get sign-off on this plan.
 2. Apply schema changes (§4) — 5 new tables (`domain_modules`, `domain_module_capabilities`, `domain_module_data_objects`, `domain_module_host_domains`, `domain_starter_modules`) + 7 new columns (`domain_module_id` on lifecycle states; `minimum_embedded_shape` on data_objects; `domain_module_id` + `process_id` on skills; `domain_module_id` on trigger_events; `source_domain_module_id` + `target_domain_module_id` on cross_domain_handoffs). `domain_modules.domain_id` is nullable for cross-cutting modules with no obvious home. Single migration script.
 3. Hand-author the ATS modules + starter junction + minimum-embedded-shape contracts + per-module lifecycle assignment (§7) **plus the 8 per-module system skills with re-linked `skill_tools` and per-skill coverage % (§7.7, derived per §5)** as the first worked example. The 22 existing domain-level system skills stay in place; new per-module skills coexist with them until §12. Load via the existing `.tmp_deploy/load_research.ts` pattern.
-4. Update [`scripts/emit_fact_sheet.ts`](scripts/emit_fact_sheet.ts) to render per-module sections, the "Getting started" section from `domain_starter_modules`, per-module lifecycle pruning, per-module Semantius coverage % (counting rule per §5.6), and a per-module skill rollup table. Add the second pass for cross-cutting module fact sheets at `domain-fact-sheets/_cross-cutting/`.
-5. Re-emit `domain-fact-sheets/ATS.md`. Review.
-6. If the rendered shape is right, repeat for ITSM (validates the cross-cutting-module pattern + module-level fact sheets for `KNOWLEDGE-MGMT` etc.).
+3.5. **Materialize the derived permissions and their hierarchies into the live catalog.** Two schema additions on the existing `permissions` table — `domain_module_id` nullable FK → `domain_modules` (which catalog module this permission belongs to) and `tier` text enum (`baseline-read` / `baseline-manage` / `baseline-admin` / `workflow-gate` / `override`) — let the fact-sheet-derivation logic in `emit_fact_sheet.ts` be lifted into a loader that writes one `permissions` row per derived code. Per-module hierarchies are encoded in the existing `permission_hierarchy` table with `origin='model'`: `<module>:admin` ⊃ `<module>:manage` ⊃ `<module>:read`, plus `<module>:admin` ⊃ every workflow gate and every pattern-flag override in that module. This unblocks [`plan-roles.md`](plan-roles.md) Phase 1A, which depends on `permissions.id` being queryable for `role_permissions.permission_id` and on the hierarchy edges existing for tier-expansion at request time. **Required before any role authoring starts.**
+4. Rewrite [`scripts/emit_fact_sheet.ts`](scripts/emit_fact_sheet.ts) into **two passes** per the §9 (revised) shape:
+   - **Per-module pass** — for every `domain_modules` row, emit `domain-fact-sheets/modules/<MODULE-CODE>.md` covering: parent domain (or host-domains list for cross-cutting), data_objects assigned to this module (role + necessity from `domain_module_data_objects`), lifecycle states on this module's masters (with realizing-module annotation per §7.4), the per-module system skill + skill_tools + Semantius coverage % (§5.6 counting rule), module-scoped permissions and business rules, capabilities realized (`domain_module_capabilities`), outbound and inbound integration handoffs via `cross_domain_handoffs.source_domain_module_id` / `target_domain_module_id`, and architect handoff hints.
+   - **Per-starter-kit pass** — for every domain with a `domain_starter_modules` junction, emit `domain-fact-sheets/starter-kits/<DOMAIN-CODE>.md` covering: market overview (description, business_logic, market sizing), the starter junction table (the editorial on-ramp), all modules installable in this market (primary-home + cross-cutting via `domain_module_host_domains`), combined data_objects across the starter modules, combined lifecycle (which states light up with the starter set vs. need other modules), combined system skills + coverage % (per-module, **no aggregate rollup** per §5.6), combined permissions and business rules, cross-domain integration handoffs from the starter modules, capabilities for the domain, solutions and vendors, functional ownership (RACI), regulatory context, and architect handoff hints.
+   - Delete the old per-domain fact sheet path (`domain-fact-sheets/<DOMAIN-CODE>.md`) and the legacy `_cross-cutting/` folder convention.
+5. Regenerate ATS's per-module fact sheets (`modules/ATS-*.md`, 8 files) and the starter-kit fact sheet (`starter-kits/ATS.md`). Architect-review.
+6. If the rendered shape is right, repeat for ITSM. ITSM is the cross-cutting validator: emit `modules/KNOWLEDGE-MGMT.md` etc. with the host-domains pattern, and verify the ITSM starter-kit page lists cross-cutting modules with links into `modules/`.
 7. From there, decide whether to roll out to the top-20 implementation-relevant domains or pause for further design iteration.
 8. Update [`.claude/skills/domain-map-analyst/SKILL.md`](.claude/skills/domain-map-analyst/SKILL.md) per §6.1 step 7 once 5+ domains have been modularized.
 
@@ -507,7 +511,7 @@ All steps below are **additive** and reversible by deleting rows. The destructiv
 **Validation gate before D1–D3:** all checks below must pass.
 
 - Every modularized domain's fact sheet emits cleanly with per-module sections rendered correctly.
-- Per-module Semantius coverage % computed for every module-level system skill matches expected (sanity-check against the pre-deletion domain-level rollup within ±5%).
+- Per-module Semantius coverage % computed for every module-level system skill is internally consistent (every tool listed lives in `skill_tools`, `operation_kind` set per row, percentage matches the formula). Do **not** sanity-check against the pre-deletion domain-level rollup — that's the average we're explicitly retiring per §5.6.
 - `domain-map-analyst` SKILL.md update (§11 step 8) has landed and per-domain completeness checklist includes module-level checks.
 - Architect (semantic-architect skill) flow change (§10 deferred TODO) tested end-to-end with at least one modularized domain.
 
@@ -516,6 +520,44 @@ All steps below are **additive** and reversible by deleting rows. The destructiv
 ## 13. Progress checklist
 
 Track execution here. Check items off as they land. Items grouped by §11 step + the §12 destructive batch. Per-domain rollout items live in their own subsection so individual domains can be tracked.
+
+### Next concrete action (for a fresh session)
+
+§11 steps 2 (schema), 3 (full ATS foundation pass), 4 (emitter rewrite), and 5 (ATS pages emitted) are done. Run `bun run scripts/emit_fact_sheet.ts --all --check` to verify the pages are still in sync with the live catalog before any further work.
+
+**Next: architect review of the 8 ATS module pages + the ATS starter-kit page (still part of §11 step 5).** Eyeball each page; look specifically for:
+
+- Module data_object lists match expectation (no orphan rows, no missing embedded_masters).
+- Coverage % matches §7.7 (6 of 8 modules at 100%, OFFERS 83%, BACKGROUND-CHECKS 75%).
+- Lifecycle realizing-module annotations are right (`interviewing` → INTERVIEWS, `offer_extended` → OFFERS, `hired` → PRE-EMPLOYEE-RECORD).
+- Permission gates use the realizing module's slug per §4.6 (e.g., `ats-pre-employee-record:hire_candidate`, NOT `ats-recruitment-pipeline:hire_candidate`).
+- Starter-kit §5 "combined lifecycle" clearly marks which states light up with the starter set vs. need installing other modules.
+
+Then **§11 step 6**: ITSM stress test — load ITSM-specific modules (§8.1) + cross-cutting modules (§8.2) with `domain_module_host_domains` rows, emit, and validate the cross-cutting pattern in `modules/`.
+
+### Session 3 — fact sheet shape revisited (2026-05-23)
+
+The §9 "fact sheet shape" decision (inline modules within a per-domain fact sheet) is retired in favor of **two artifact types**:
+
+- **Per-module fact sheets** in `domain-fact-sheets/modules/<MODULE-CODE>.md` — one per `domain_modules` row, ~440 catalog-wide when fully rolled out. The deployable unit's full surface (data_objects, lifecycle, system skill, coverage %, integration handoffs, permissions). Matches the SEO story in §7.6 that the original §9 inline-only decision was undercutting.
+- **Per-starter-kit fact sheets** in `domain-fact-sheets/starter-kits/<DOMAIN-CODE>.md` — one per domain with a `domain_starter_modules` junction, ~88 catalog-wide. The buyer-facing market entry point: market overview, the editorial on-ramp from `domain_starter_modules`, combined view across the starter modules, and the market-analysis content (vendors, RACI, regulations, capabilities, market sizing) that used to live in the per-domain fact sheet.
+- **No standalone per-domain fact sheet.** The starter-kit page is the market overview. Domains without a starter junction (the long tail, cross-cutting-only domains) have no starter-kit page; their modules still appear in `modules/`.
+- Cross-cutting modules go in `modules/` with everyone else. The `_cross-cutting/` folder convention is dropped. Cross-cutting modules are distinguished by their fact sheet's structure (host-domains section instead of parent-domain section), not their path.
+
+Trigger for the change: in implementation it surfaced that §7.6 (per-module SEO landing pages, ~440 catalog-wide) and §9 (88 inline-modules fact sheets) directly contradicted each other. §9's inline-only shape muddled three reader concerns (market overview / per-module deployable unit / starter-kit bundle) into one document and forced module concepts into sub-headings where §7.6 wanted landing pages. Splitting into two artifact types lets each reader concern get its own focused page.
+
+Affects §6.1 step 3, §8.4, §9 (the decision itself), §11 step 4, §11 step 5, §11 step 6, and the §13 progress checklist — all updated in this session.
+
+### Session 2 — design sharpening (2026-05-23)
+
+Notes from the second execution session that aren't just checklist ticks:
+
+- **No domain-level Semantius coverage % rendered or stored.** §5.1, §5.3, §5.5, §5.6, §6.1 step 3, §11 step 4, and §12's validation gate all updated to drop the domain-level rollup. The per-module table IS the coverage view; averaging 100%-and-75% into 86% hides the actionable per-module split. Affects how the §7.7 skills pass is validated (internal consistency per skill, no ±5% sanity check against the retired average) and how the fact sheet emitter renders the coverage section in step 4 (per-module table only, no aggregate percentage).
+- **Schema-loader gotchas surfaced and recorded in [.claude/skills/domain-map-analyst/SKILL.md](.claude/skills/domain-map-analyst/SKILL.md):**
+  - `is_nullable` is a generated column; never pass it to `create_field`. Nullability is derived from omitting `input_type: "required"`.
+  - `reference_delete_mode` for nullable FKs is `"clear"`, not `"set null"` or `"set_null"`.
+  - SKILL.md rule #13 (catalog enums) now lists the values for `trigger_events.event_category` (use `state_change`, not `state_transition`), `cross_domain_handoffs.integration_pattern` (use `event_stream`, not `event_driven`), `cross_domain_handoffs.friction_level`, the role/necessity enums, and `record_status`. Future loaders should re-read SKILL.md rule #13 before authoring a new enum value.
+  - SKILL.md rule #4b strengthened: no Python for *verification / count summaries* either — past gap where I piped JSON into `python -c '...'` for an ad-hoc count is now explicitly named.
 
 ### Sign-off and schema
 
@@ -533,13 +575,15 @@ Track execution here. Check items off as they land. Items grouped by §11 step +
 - [x] §11 step 3 — `domain_starter_modules` loaded (2 rows: `ATS-CANDIDATE-CRM`, `ATS-RECRUITMENT-PIPELINE`)
 - [x] §11 step 3 — `data_object_lifecycle_states.domain_module_id` annotated per §7.4 (`interviewing` → INTERVIEWS, `offer_extended` → OFFERS, `hired` → PRE-EMPLOYEE-RECORD)
 - [x] §11 step 3 — `data_objects.minimum_embedded_shape` curated for `candidates` (1312 chars), `job_applications` (950), `job_offers` (937) per §7.5
-- [ ] §11 step 3 — 8 ATS per-module system skills authored with `skill_tools` re-linked per §7.7
-- [ ] §11 step 3 — Per-module coverage % matches §7.7 expected values (6 at 100%, OFFERS ~83%, BACKGROUND-CHECKS ~75%)
+- [x] §11 step 3 — 8 ATS per-module system skills authored with `skill_tools` re-linked per §7.7 — [.tmp_deploy/load_ats_module_skills.ts](.tmp_deploy/load_ats_module_skills.ts) (skill ids 127–134; 19 new tools + 48 skill_tools rows). Existing `ats-system` (id=16) stays in place until §12 D1.
+- [x] §11 step 3 — Per-module coverage % matches §7.7 expected values (6 at 100%, OFFERS 83%, BACKGROUND-CHECKS 75%) — verified by the loader's internal-consistency check against §5.6 counting rule
 - [x] §11 step 3 — `ATS-PRE-EMPLOYEE-RECORD → HCM-WORKER-RECORD` handoff loaded on `pre_employee.activated` per §6.1 note — handoff id=1037, trigger_event id=1183, `target_domain_module_id` left NULL until HCM is modularized
 - [x] §11 step 3 — `pre_employees` data_object created (id=749) for ATS-PRE-EMPLOYEE-RECORD per §7.1 rename note
-- [ ] §11 step 4 — `emit_fact_sheet.ts` updated (per-module sections, starter, lifecycle pruning, coverage rollup)
-- [ ] §11 step 4 — `domain-fact-sheets/_cross-cutting/` second emitter pass implemented
-- [ ] §11 step 5 — `domain-fact-sheets/ATS.md` re-emitted and architect-reviewed
+- [x] §11 step 3.5 — `permissions.domain_module_id` + `permissions.tier` columns added — [.tmp_deploy/extend_permissions_and_roles_schema.ts](.tmp_deploy/extend_permissions_and_roles_schema.ts)
+- [x] §11 step 3.5 — Derived permissions materialized for the 8 ATS modules (48 rows: baseline tiers + workflow gates + pattern-flag overrides per §4.6 / §5) — [.tmp_deploy/load_ats_module_permissions.ts](.tmp_deploy/load_ats_module_permissions.ts)
+- [x] §11 step 3.5 — Permission hierarchy edges loaded (40 edges, `origin='model'`): `<module>:admin` ⊃ `<module>:manage` ⊃ `<module>:read` + `<module>:admin` ⊃ every workflow gate / pattern-flag override per module
+- [x] §11 step 4 — `emit_fact_sheet.ts` rewritten for two-pass shape (modules/ + starter-kits/, per §9 revised). Old per-domain fact sheet path and `_cross-cutting/` convention removed. Realizing-module permission attribution bug fixed mid-implementation (per §4.6: a lifecycle gate's slug is the realizing module's, not the master module's — affects both module pages and starter-kit pages).
+- [x] §11 step 5 — `domain-fact-sheets/modules/ATS-*.md` (8 files) + `domain-fact-sheets/starter-kits/ATS.md` emitted; old `domain-fact-sheets/ATS.md` deleted. Drift check via `--all --check` confirms idempotency. Architect review still pending.
 
 ### ITSM stress test (§8)
 
@@ -548,7 +592,7 @@ Track execution here. Check items off as they land. Items grouped by §11 step +
 - [ ] §11 step 6 — `domain_module_host_domains` rows for cross-cutting modules' additional hosts loaded
 - [ ] §11 step 6 — `domain_starter_modules` for ITSM loaded (`ITSM-INCIDENT`, `ITSM-REQUEST`)
 - [ ] §11 step 6 — Cross-cutting modules each have ONE system skill per §5.3 (not duplicated per host)
-- [ ] §11 step 6 — `domain-fact-sheets/ITSM.md` re-emitted; cross-cutting fact sheets emitted to `_cross-cutting/`
+- [ ] §11 step 6 — `domain-fact-sheets/modules/ITSM-*.md` + cross-cutting modules' per-module fact sheets (`modules/KNOWLEDGE-MGMT.md` etc.) emitted; `domain-fact-sheets/starter-kits/ITSM.md` emitted with cross-cutting modules listed in the "Modules installable in this market" section
 - [ ] §11 step 6 — Architect review of ITSM fact sheet
 
 ### Top-20 rollout (§11 step 7)

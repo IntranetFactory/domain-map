@@ -27,7 +27,7 @@ For each `skills` row with `skill_type = 'system'`:
     / count(required tools)
 ```
 
-`required` means `skill_tools.requirement_level = 'required'`. `optional` and `fallback` rows are ignored — they don't drag the score down. **Per-tool aggregation, not per-operation_kind**: a skill needing 5 `query` tools + 1 `send_email` tool sits at **5/6 = 83%**, not 50%. See [plan-tools-catalog.md § Decision record](../../../../plan-tools-catalog.md#decision-record--2026-05-21-authoritative-overrides-the-body-below-where-they-conflict).
+`required` means `skill_tools.requirement_level = 'required'`. `optional` and `fallback` rows are ignored — they don't drag the score down. **Per-tool aggregation, not per-operation_kind**: a skill needing 5 `query` tools + 1 `send_email` tool sits at **5/6 = 83%**, not 50%. The tool is the unit of count; `operation_kind` classifies tools.
 
 ## The Semantius-covered set
 
@@ -37,7 +37,7 @@ For each `skills` row with `skill_type = 'system'`:
 SEMANTIUS_COVERED = { "query", "mutate" }
 ```
 
-This is Option 1 from [plan-tools-catalog.md § Open question](../../../../plan-tools-catalog.md). The cheapest representation while the set churns. Promote to a config table (Option 2) if a customer-coverage rollup needs to read it dynamically.
+The cheapest representation while the Semantius-covered set churns. If a customer-coverage rollup later needs to read the set dynamically, promote to a config table (`semantius_native_operation_kinds`) or to a column on a future `operation_kinds` lookup entity. Until then: edit the constant when Semantius gains a new generic primitive.
 
 **Update procedure when the set changes:** When Semantius gains a new generic primitive (e.g. native email send → new `operation_kind` value `notify_email`), edit the constant in [coverage_rollup.ts](../../../../.tmp_deploy/coverage_rollup.ts) and re-run. No DDL needed.
 
@@ -108,7 +108,12 @@ order by r.skill_name, r.tool_name;
 
 ≥5 system skills at 100% Semantius-covered. Current state: **54/122**. Re-verify by running the rollup.
 
+## Why the rollup looks this way
+
+- **Per-tool, not per-operation_kind.** The tool is the unit of work an agent calls — counting at the kind-level would conflate "needs 5 reads" with "needs 1 read" into the same denominator.
+- **`operation_kind` is the partition.** Semantius covers `{query, mutate}` today via CRUD + cube. `side_effect` (email, SMS, signature, calendar) and `compute` (AI, text generation, web automation) are external by definition. Coverage evolves with the platform — new generic primitives get new `operation_kind` values (or split existing ones) and the constant is updated.
+- **Semantius is NOT a row in `solutions`.** Coverage is intrinsic to `operation_kind`. There are no pseudo-tools (`semantius_crud`, etc.) and no `solution_kind='semantius_native'`. `tool_solutions` records non-Semantius deliveries only.
+
 ## Related references
 
-- [plan-tools-catalog.md § Decision record](../../../../plan-tools-catalog.md#decision-record--2026-05-21-authoritative-overrides-the-body-below-where-they-conflict) — why per-tool, why `operation_kind`, why no Semantius row in `solutions`.
 - [.tmp_deploy/load_p25a_i.ts](../../../../.tmp_deploy/load_p25a_i.ts), [load_p25a_ii.ts](../../../../.tmp_deploy/load_p25a_ii.ts), [load_p25a_iii.ts](../../../../.tmp_deploy/load_p25a_iii.ts) — the three loaders that populated the system-skill matrix this rollup measures.

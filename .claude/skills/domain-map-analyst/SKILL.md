@@ -188,11 +188,16 @@ When a domain's data_objects reference platform built-ins (currently only `users
 
 Every `domain_data_objects` row with `role='embedded_master'` requires that the same `data_object_id` has a `master` row somewhere in `domain_data_objects`, OR the data_object has `kind='platform_builtin'`. The deployer relies on this to find the canonical owner at deploy time; an `embedded_master` row pointing at a data_object that no domain canonically masters is a broken pointer. Loaders MUST validate before inserting any `embedded_master` row — pull the existing `master` rows for that `data_object_id` first; if none exist and the data_object isn't a built-in, fail loudly.
 
-### 12. Lifecycle states and pattern flags are part of Phase B.
+### 12. Lifecycle states and pattern flags are part of Phase B. No deferrals.
 
-Every new domain load MUST include lifecycle states (rows in `data_object_lifecycle_states`) and pattern flags on `data_objects` (`has_personal_content`, `has_submit_lock`, `has_single_approver`) for its `master + required` data_objects — OR the domain code MUST be added to the lifecycle-states-pending tracking section of [plan-done-master-tasks.md](../../../plan-done-master-tasks.md) with an explicit backfill commitment.
+Every `master + required` data_object MUST have:
 
-Defaulting to "I'll do it later" without the tracking entry is not permitted: undocumented gaps silently degrade the per-domain fact sheets that `semantius-architect` consumes. The Phase B3 initial backfill (top 20 implementation-relevant domains, see [plan-domain-fact-sheets.md § 6.3](../../../plan-domain-fact-sheets.md)) is a one-time catchup; from then on every market load adds these contemporaneously.
+- Rows in `data_object_lifecycle_states` describing the state machine the entity travels through, AND
+- Pattern flags on `data_objects` (`has_personal_content`, `has_submit_lock`, `has_single_approver`) considered (and `notes` annotation when any flag is non-obvious).
+
+**The only exemption** is a config-shaped master with no workflow (e.g. `service_catalog_items`, `service_slas`, `knowledge_articles` to some extent) — author-once / occasionally-edit records whose `record_status` is the only state worth tracking. Exempt rows MUST carry a one-sentence justification in `data_objects.notes` (e.g. *"Config-shaped; no workflow. Authored once, edited inline; no per-state permissions needed."*). Without that annotation, the master is treated as a B12 failure.
+
+There is **no deferral surface**. There used to be language about adding a domain to a "lifecycle-states-pending tracking section" of some plan file — that surface was always phantom (no plan file ever owned it, and skill files don't store mutable state). The rule is now unconditional: load the states, or annotate the config-shape exemption. Lifecycle states are the source from which workflow-gate permissions are materialized (one row per state with `requires_permission=true` ⇒ one `<module>:<verb>_<entity>` permission via Rule #14's module-permission derivation) — skipping them silently hollows the entire role-bundling layer for that domain.
 
 ### 13. Catalog enums to know without rediscovering them.
 
@@ -209,11 +214,29 @@ The Semantius platform enforces enum check-constraints on several catalog column
 
 When adding a new column to this catalog with an enum, copy the value vocabulary from an existing analogous column rather than inventing a new one (e.g. `domain_module_data_objects.necessity` deliberately mirrors `domain_data_objects.necessity` — same two values, same default `required`). If a loader fails with `(23514) violates check constraint "<table>_<field>_check"`, re-query `/fields?table_name=eq.<table>&field_name=eq.<field>` to see the allowed values; don't guess again.
 
+### 14. Every domain has at least one `domain_modules` row. Domains with ≥3 capabilities need ≥2 modules + a starter junction.
+
+A `domains` row is a market entry — useful for SEO and analysis but **not deployable** on its own. The deployable unit is the **module** (`domain_modules`). Per project decision 2026-05-23:
+
+- **Every `domains` row MUST have ≥1 `domain_modules` row.** No exceptions, including leadership-tier / aggregation-tier domains. If a market warrants a `domains` row at all, it has at least one module — for narrowly-scoped domains that's a single module covering the whole market; for leadership-tier domains it's a "derived-signals" or "landing" module whose `domain_module_data_objects` may be empty but whose existence preserves the deploy-target contract.
+
+- **Domains with ≥3 `capabilities` (per `capability_domains`) MUST have ≥2 `domain_modules` rows AND a populated `domain_starter_modules` junction.** A 3-capability market has enough surface that "starter kit" vs "additional modules" is a meaningful split, and the starter-junction is the SEO/onboarding signal the catalog uses to recommend an entry point. `domain_starter_modules` carries `(domain_id, domain_module_id, position int, notes text)` — one recommended ordered list per domain.
+
+- **Domains with <3 capabilities have exactly 1 `domain_modules` row, no `domain_starter_modules` junction.** The single module IS the whole market; recommending "where to start" is meaningless when there's only one place to start.
+
+**This is a Phase-A obligation, not Phase E.** When loading a new market, `domain_modules` + (optionally) `domain_starter_modules` ship in the same load as `domains` + `capabilities` + `solutions`. Phase E (roles) extends modules but it's a separate concern — see the per-domain checklist Phase M (modules) below.
+
+**Cross-cutting modules.** A module can host on multiple domains (e.g. `KNOWLEDGE-MGMT` lives in ITSM, CSM, HRSD, LSD). The primary host is `domain_modules.domain_id` (nullable for genuinely-no-home cases like `APPROVAL-WORKFLOW`); additional hosts go in `domain_module_host_domains`. Both shapes are valid; see [references/modules.md](references/modules.md) for the full mechanics.
+
+**Permission materialization scope.** Workflow-gate permissions (Rule #12 lifecycle states with `requires_permission=true`) are prefixed with the **realizing module's** `domain_module_code`, not the domain's `domain_code`. Same lifecycle state realized in two modules = two permissions, one per module. `data_object_lifecycle_states.domain_module_id` (nullable) says which module realizes the state; NULL means "always reachable when the master is installed". See [references/modules.md](references/modules.md) for the per-module permission derivation rules.
+
+**Audit blocker.** A `domains` row with zero `domain_modules` rows fails the per-domain completeness checklist outright (check M1). This blocks every downstream concern — fix the M-band first, then audit B / C / E.
+
 ---
 
 ## The module at a glance
 
-27 entities (11 core concepts + 11 junctions + 1 alias + 4 agent-tooling). Read [references/module-shape.md](references/module-shape.md) for the per-entity field shapes, enums, and FK formats before doing any write that touches a field you haven't used recently.
+35 entities (11 core concepts + 1 module concept + 15 junctions + 1 alias + 4 agent-tooling + 3 role layer). Read [references/module-shape.md](references/module-shape.md) for the per-entity field shapes, enums, and FK formats before doing any write that touches a field you haven't used recently. The two long-form rule sets — modules and roles — live in [references/modules.md](references/modules.md) and [references/roles.md](references/roles.md).
 
 ### Core concepts (11 entities)
 
@@ -231,7 +254,13 @@ When adding a new column to this catalog with an enum, copy the value vocabulary
 | `vendors` | Legal vendor entities (Salesforce Inc, SAP SE) | no |
 | `regulations` | Compliance frameworks (HIPAA, GDPR, SOX, PCI-DSS) | no |
 
-### Junctions with qualifiers (11 entities)
+### Module concept (1 entity)
+
+| Table | Holds | Hierarchical? |
+|---|---|---|
+| `domain_modules` | Autonomous deployable units inside a domain (`ATS-CANDIDATE-CRM`, `ITSM-INCIDENT-MGMT`, `KNOWLEDGE-MGMT`). Natural key `domain_module_code`. `domain_id` is the primary host (nullable for genuinely-cross-cutting modules); see `domain_module_host_domains` for additional hosts. | no |
+
+### Junctions with qualifiers (15 entities)
 
 | Table | Connects | Qualifier column |
 |---|---|---|
@@ -246,6 +275,10 @@ When adding a new column to this catalog with an enum, copy the value vocabulary
 | `solution_data_objects` | solutions ↔ data_objects | ownership role |
 | `data_object_relationships` | data_objects ↔ data_objects | cardinality + kind |
 | `cross_domain_handoffs` | domains → domains (via data_object) | `trigger_event_id` (FK to `trigger_events`) + integration_pattern + friction_level. Cross-domain only — source ≠ target enforced by validation rule. Signal 2 of platform-vs-silos analysis (Signal 1 is the multi-master count on `domain_data_objects` where `role ∈ {master, embedded_master}` AND `necessity = required`) |
+| `domain_module_capabilities` | domain_modules ↔ capabilities | which capabilities a module realizes; one capability may realize in multiple modules |
+| `domain_module_data_objects` | domain_modules ↔ data_objects | role (same 5-value enum as `domain_data_objects`) + necessity. Once a domain has modules, `domain_data_objects` is a **derived rollup** from this junction (group by data_object_id, strongest role wins). |
+| `domain_module_host_domains` | domain_modules ↔ domains | additional hosts beyond `domain_modules.domain_id`. Cross-cutting modules use this to declare every domain they install on. |
+| `domain_starter_modules` | domains ↔ domain_modules | editorial recommendation: position int + notes. ≥1 row REQUIRED on every domain with ≥3 capabilities (Rule #14). |
 
 ### Aliases (1 entity)
 
@@ -255,16 +288,46 @@ When adding a new column to this catalog with an enum, copy the value vocabulary
 
 ### Agent tooling layer (4 entities, added 2026-05-21)
 
-> Folded in from the rolled-back `tool_catalog` sibling-module experiment — see [plan-tools-catalog.md § Why these entities live in domain_map](../../../plan-tools-catalog.md#why-these-entities-live-in-domain_map-revised-2026-05-21). One module, one analyst skill.
+> These entities live in `domain_map` because their FKs are too tightly coupled to the catalog to justify a separate module: `tools.data_object_id → data_objects`, `skills.domain_id → domains`, `tool_solutions.solution_id → solutions`. One module, one analyst skill. (An earlier `tool_catalog` sibling-module experiment was rolled back for this reason — decision 2026-05-21.)
 
 | Table | Holds | Qualifier / discriminator |
 |---|---|---|
 | `tools` | JSON-RPC-shaped capability primitives an agent skill can call (`send_email`, `query_invoices`, `transcribe_audio`) | `operation_kind` enum (`query` / `mutate` / `side_effect` / `compute`) — drives the **100% Semantius derivation** (today: `{query, mutate}` are Semantius-covered intrinsically; `side_effect` + `compute` need external solutions). Optional `data_object_id` FK is **required** when `operation_kind ∈ {query, mutate}` and **must be null** otherwise |
-| `skills` | Agent skills (system / process / role). `system` skills mirror one domain 1:1 (`skill_type='system'`, `domain_id` set); `process` skills wrap a cross-domain handoff cluster; `role` wraps a user-role workflow | `skill_type` enum + optional `domain_id` FK (required only for `system`) |
+| `skills` | Agent skills (system / process / role). `system` skills mirror **one module 1:1** (`skill_type='system'`, `domain_module_id` set) — target state per Rule #14. `process` skills wrap a cross-domain handoff cluster; `role` wraps a user-role workflow. **Transitional note:** the catalog still carries domain-level system skills (`domain_id` set, `domain_module_id` null) from the pre-modular era — these are migration targets, not the pattern for new authoring. | `skill_type` enum + `domain_module_id` (required when `system`, per Rule #14) |
 | `tool_solutions` | N:M between `tools` and `solutions` — which non-Semantius solutions deliver this tool, and how | `delivery_strength` + `delivery_method` (`mcp_server` preferred) + optional `endpoint_url`. Computed label `<tool> via <solution>`. **No Semantius row** — its coverage is intrinsic to `operation_kind` |
 | `skill_tools` | N:M between `skills` and `tools` — which tools a skill needs to function | `requirement_level` (`required` / `optional` / `fallback`) + workflow-context `notes`. Computed label `<skill> needs <tool>` |
 
 These four tables coexist with `domain_map.solutions`, which gained `solution_kind` enum (`external_connector` / `action` / `compute_service` / `standard_solution`) to classify which solutions are tool-delivery sources. The killer hypothesis the layer exists to test: **how many of the loaded domains have a system skill where every required tool is Semantius-covered (i.e. `operation_kind ∈ {query, mutate}` for every required `skill_tools` row)?**
+
+### Role layer (1 new entity + 3 extended built-ins, added 2026-05-23)
+
+Roles are the first-class home for **cross-module permission bundling** — what per-module `:admin` / `:manage` / `:read` rollups can't express. A Recruiter touches 6 ATS modules; a Service Desk Agent touches 4+ ITSM modules. The catalog captures both the role and its access bundle. Long-form rules and worked examples live in [references/roles.md](references/roles.md).
+
+| Table | Holds | Built-in vs. catalog | Qualifier |
+|---|---|---|---|
+| `roles` | User persona / job-shaped role whose workflow spans modules. Semantius built-in extended with `role_code`, `business_function_id` (nullable — NULL = cross-functional), `record_status` | Semantius built-in (extended) | `business_function_id` (NULL = cross-functional, e.g. Hiring Manager) |
+| `role_modules` | Junction: which modules each role touches, at what `interaction_level` (`primary` / `secondary`). Carries optional `notes`. | Catalog (NEW) | `interaction_level`. Read-only-ness is captured by the role's bundle holding only `:read`, not a separate axis. |
+| `role_permissions` | Junction: the cross-module permission bundle the deployer provisions. Each role declares its complete bundle directly — no role-level inheritance, no role composition. | Semantius built-in (extended) | Tier-level entries (`:read`/`:manage`/`:admin`) auto-expand via Semantius's existing `permission_hierarchy` at request time |
+| `permissions` (extended) | Catalog-derived permissions following `<domain_module_code>:<verb>`. Gained `domain_module_id` FK and `tier` enum (`baseline-read` / `baseline-manage` / `baseline-admin` / `workflow-gate` / `override`). Materialized from lifecycle states + pattern flags. | Semantius built-in (extended) | Permission prefix is the **realizing module's** code, not the domain's. See [references/modules.md](references/modules.md) on permission materialization. |
+
+**Hard invariants** (loader-enforced):
+
+- **2-module floor.** Every `roles` row MUST have ≥2 `role_modules` entries. A single-module persona is just a permission tier on that module, not a role.
+- **Flat roles.** No `parent_role_id`, no role composition, no DAGs. Inheritance lives at the **permission** layer via Semantius's existing `permission_hierarchy`. Manager-of-IC distinction is expressed by upgrading the permission tier (`:manage` → `:admin`), not by chaining roles.
+- **Function-scoped naming.** `role_code` = `<FUNCTION-CODE>-<ROLE-NAME>` (`RECRUITING-RECRUITER`, `IT-SERVICE-DESK-AGENT`). Cross-functional roles drop the prefix entirely (`HIRING-MANAGER`). Domain prefixes (`ATS-RECRUITER`) are an anti-pattern — roles are function-scoped, not domain-scoped.
+- **`roles.slug` is snake_case.** The built-in `valid_role_slug` check constraint rejects kebab — slugify `role_code` to lowercase + underscores (`RECRUITING-RECRUITER` → `recruiting_recruiter`).
+- **Permission-bundle minimum.** Every role has ≥1 `role_permissions` row (typical: 4–8). Prefer tier-level grants (`<module>:admin`) over enumerating every workflow gate — `permission_hierarchy` auto-includes lifecycle gates at request time. Only list specific gates when an IC-tier role needs them explicitly (e.g. `ats-offers:approve_offer` for Recruiter, who otherwise has `:manage` not `:admin`).
+
+**Two equivalent paths from `roles` to `domains` exist** — they should agree, divergence is a bug:
+
+- Path A: `roles → role_modules → domain_modules.domain_id` (carries `interaction_level`) — **authoritative**.
+- Path B: `roles → role_permissions → permissions.domain_module_id → domain_modules.domain_id` (carries actual granted access) — drift cross-check.
+
+Divergence means either a `role_modules` entry without a matching bundle row on that module, or a bundle row on a module not declared in `role_modules`.
+
+**Cross-functional vs. cross-domain** are different concepts:
+- **Cross-functional** = `roles.business_function_id IS NULL` (explicit, e.g. Hiring Manager).
+- **Cross-domain** = derived from `role_modules` spanning ≥2 `domain_modules.domain_id` values. Not stored; aggregate at query time.
 
 ---
 
@@ -272,9 +335,9 @@ These four tables coexist with `domain_map.solutions`, which gained `solution_ki
 
 For any task that fits this skill — "research vendors for X", "is Y a domain?", "load this list of competitors", "find capabilities for Z" — work in this order. Don't skip steps; each one prevents a class of mistake.
 
-> **Domain research without the data-object phase is half a load. Without the function-axis phase it's two-thirds of a load.** Phase A (market shape — domains/capabilities/vendors/solutions), Phase B (data-object footprint — data_objects + Signal 1 + Signal 2), and Phase C (organisational-function coverage — `business_function_domains` + `business_function_capabilities`) are all default. Skipping B kills the platform-vs-silos analysis (Signals 1 & 2). Skipping C kills the buyer-persona / RACI axis (Signal 3 — *who in the org owns, contributes to, or consumes this market?*).
+> **Domain research without the module + data-object + function phases is incomplete.** Phase A (market shape — domains/capabilities/modules/vendors/solutions), Phase B (data-object footprint — data_objects + Signal 1 + Signal 2), Phase C (organisational-function coverage — `business_function_domains` + `business_function_capabilities`), and Phase E (roles & permission bundling — universal under Rule #14) are all per-market defaults. Skipping B kills the platform-vs-silos analysis (Signals 1 & 2). Skipping C kills the buyer-persona / RACI axis (Signal 3 — *who in the org owns, contributes to, or consumes this market?*). Skipping E leaves modules without deployable user personas.
 >
-> **Phase A+B+C are per-market load defaults.** [Phase D — process-skill discovery](#phase-d--process-skill-discovery-substrate-level) is a **substrate-level analytic**, not a fourth per-market step. It runs across the catalog once Phase B has shipped for enough clusters, and is re-runnable on demand. See the dedicated section below.
+> [Phase D — process-skill discovery](#phase-d--process-skill-discovery-substrate-level) is a **substrate-level analytic**, not a per-market step. It runs across the catalog once Phase B has shipped for enough clusters, and is re-runnable on demand. See the dedicated section below.
 
 1. **Read the existing catalog first — audit by link, not by name.** Always query the live module before researching new entries. Duplicates and inconsistent naming hurt the catalog more than gaps do. Pull the relevant subset (domains in this area, vendors already present, solutions covering related markets, capabilities already on the relevant domains) and skim before you research.
 
@@ -298,19 +361,23 @@ For any task that fits this skill — "research vendors for X", "is Y a domain?"
    - `domains` (the market itself)
    - `capabilities` for that market (5–8 noun-phrase capabilities that define what the market does — e.g. for PROD-MGMT: roadmap visualization, feature prioritization, customer feedback aggregation, release planning, product strategy, opportunity management)
    - `capability_domains` linking each capability to its semantic-home domain
+   - **`domain_modules`** — at least 1 row per Rule #14. For domains with ≥3 capabilities: ≥2 modules + populated `domain_starter_modules` junction. For domains with <3 capabilities: exactly 1 module, no starter junction. Cross-cutting modules use the optional `domain_module_host_domains` to declare additional hosts.
+   - **`domain_module_capabilities`** — link each capability to the module(s) that realize it. A capability with no realizing module is a Phase-A failure (M4 in the checklist).
    - `vendors` (legal entities, reusing existing rows by `vendor_name`)
    - `solutions` (one row per flagship product per market)
    - `solution_domains` with `coverage_level` (primary / secondary / partial)
    - `solution_capabilities` with `delivery_strength` (native / partial / via_extension / not_supported) — this is what makes per-vendor comparison possible; **don't skip it**, even if the matrix feels tedious. A reference Phase-A loader is [.tmp_deploy/load_prod_mgmt.ts](.tmp_deploy/load_prod_mgmt.ts); the SMM load also follows this exact shape ([.tmp_deploy/load_smm.ts](.tmp_deploy/load_smm.ts)).
 
-   **Phase B — Data-object footprint** (load second, against the same domain). The Phase-B contract now ships six deliverables (expanded 2026-05-22 — see [plan-domain-fact-sheets.md § 5.4](../../../plan-domain-fact-sheets.md)):
+   **Phase B — Data-object footprint** (load second, against the same domain). The Phase-B contract ships seven deliverables:
 
    1. **`data_objects`** that the domain masters (3–8 noun-plural snake_case names; apply the "what would a flagship vendor build their schema around?" test). Each row populates `singular_label`, `plural_label`, and — per Rule #12 — the pattern flags `has_personal_content` / `has_submit_lock` / `has_single_approver` where the master entity matches the pattern. Apply Rule #9 (naming arbitration) before insert.
-   2. **`domain_data_objects`** rows: `master` for the new objects, plus `embedded_master`, `contributor`, and `consumer` rows where the new domain enriches or reads existing cluster-owned objects (almost always `contacts` / `customers` / `campaigns` / `audience_segments` exist already — link to them rather than re-mastering). Validate Rule #11 before inserting any `embedded_master` row.
+   2. **`domain_module_data_objects`** rows on the modules from Phase A: `master` for the new objects, plus `embedded_master`, `contributor`, and `consumer` rows where a module enriches or reads existing cluster-owned objects (almost always `contacts` / `customers` / `campaigns` / `audience_segments` exist already — link to them rather than re-mastering). Validate Rule #11 before inserting any `embedded_master` row. **The legacy `domain_data_objects` rollup is derived from this junction** (group by data_object_id, strongest role wins); do not hand-write `domain_data_objects` for modularized domains.
    3. **`cross_domain_handoffs`** from this domain outbound (and inbound where the partner domain is loaded) — apply the high-friction shape recognition in the "Data-object research" section below.
-   4. **`data_object_relationships`** — intra-domain edges + `users`-edge entries (Rule #10) + cross-domain edges for every `cross_domain_handoffs` row with a clean payload→target mapping (e.g. `candidates →becomes→ employees`). Each row carries `relationship_label` (verb), `cardinality`, `necessity`, and `owner_side`. Drafts MUST surface the relationship graph as a mermaid block in the Phase-B preview before loading.
+   4. **`data_object_relationships`** — intra-domain edges + `users`-edge entries (Rule #10) + cross-domain edges for every `cross_domain_handoffs` row with a clean payload→target mapping (e.g. `candidates →becomes→ employees`). Each row carries `relationship_verb`, `inverse_verb`, `relationship_type` (cardinality), `relationship_kind`, `is_required`, and `owner_side`. Drafts MUST surface the relationship graph as a mermaid block in the Phase-B preview before loading.
    5. **`data_object_aliases`** — ≥1 alias per non-self-explanatory master (industry synonyms, vendor-specific labels). The fact sheet generator embeds these directly.
-   6. **`data_object_lifecycle_states`** — for every `master + required` data_object with a non-trivial workflow. Each row carries `state_name`, `state_order`, `is_initial` / `is_terminal`, and `requires_permission` (true = derive a `<slug>:<verb>_<entity>` workflow gate; override the verb via `permission_verb_override` when the auto-derivation is wrong, e.g. `hired → hire_candidate`). Required by Rule #12, or tracked as a deferred backfill.
+   6. **`data_object_lifecycle_states`** — for every `master + required` data_object with a real workflow (Rule #12). Each row carries `state_name`, `state_order`, `is_initial` / `is_terminal`, `requires_permission` (true = derive a `<module>:<verb>_<entity>` workflow gate prefixed with the realizing module's `domain_module_code`), `permission_verb_override` (when auto-derivation is wrong — e.g. `hired → hire_candidate`), and `domain_module_id` (nullable; NULL = state always reachable when the master is installed). Config-shaped masters with no workflow are exempt only when annotated in `data_objects.notes`.
+
+   Field-level constraints on embedded shells (which columns the local copy must include when a module embedded_masters another domain's data_object) are NOT a domain-map concern. The deployer validates embedded shells against the canonical entity's `fields` metadata at deploy time. The catalog does not duplicate that field-level contract.
 
    Reference Phase-B loader: [.tmp_deploy/load_smm_data_objects.ts](.tmp_deploy/load_smm_data_objects.ts). Full procedure: see [Data-object research and cross-domain-handoff discovery](#data-object-research-and-cross-domain-handoff-discovery) below.
 
@@ -329,13 +396,52 @@ For any task that fits this skill — "research vendors for X", "is Y a domain?"
 
 ## Per-domain completeness checklist
 
-The catalog has 14 categories of per-domain content that the [fact sheet generator](../../../scripts/emit_fact_sheet.ts) reads from. A new market load is "done" only when every applicable check passes; a domain review (audit) is the same checklist run against an already-loaded domain. The same gates apply both directions.
+The catalog has 13 categories of per-domain content that determine whether a market is loaded "completely". A new market load is "done" only when every applicable check passes; a domain review (audit) is the same checklist run against an already-loaded domain. The same gates apply both directions.
+
+**Fact-sheet emission is not part of this checklist.** The [fact sheet generator](../../../scripts/emit_fact_sheet.ts) is an explicit, user-triggered step — see § "Fact sheets (explicit step, not part of any sequence)" below. The audit reads live state from PostgREST, not from on-disk fact sheets, so the rendered files can sit stale through any audit pass and that's fine.
 
 **This section exists because gaps repeatedly shipped silently:** Salesforce / Workday loads missed `domains` metadata (Rule #8), the ITSM-area review missed `business_function_domains` (Backfill gap #2), the Step-5 cluster pass loaded clusters A–F but missed ATS's own intra-domain relationships (the very gap that surfaced this checklist). The pattern is the same: every gap looked "obvious in retrospect, easy to skip in flight". The checklist closes that.
 
-> **How to run.** For each check below: run the query, compare against the pass criterion, take the fix action if it fails. The numbered IDs (`A1`, `B6`, etc.) are stable — refer to them in plan files and PR descriptions. **An audit pass produces a gap report listing the failed IDs;** the user reviews the report before any fix loads, per Rule #1.
+> **How to run.** For each check below: run the query, compare against the pass criterion, take the fix action if it fails. The numbered IDs (`A1`, `B6`, etc.) are stable — refer to them in PR descriptions and gap reports. **An audit pass produces a gap report listing the failed IDs;** the user reviews the report before any fix loads, per Rule #1.
 
 Substitute `<id>` with the target `domains.id`, `<masters>` with the comma-separated list of `data_object_id`s for which `domain_data_objects.role='master'` in this domain.
+
+### S. Structural coverage sweep (run first)
+
+The S-band is a single coverage sweep that runs **before** any band-level check. It exists because each downstream band asks about one or two tables in isolation; an empty FK that the band-shape happens not to test slips through. The sweep produces a coverage table the gap report leads with, then routes each failure into the owning band (A / M / B / C / E / F).
+
+**S1. Every direct FK to `domains` has the expected row count.**
+
+- Schema query: `/fields?reference_table=eq.domains&select=table_name,field_name`. As of 2026-05-23 this returns 12 `(table, field)` pairs across 11 tables: `business_function_domains`, `capability_domains`, `cross_domain_handoffs.source_domain_id`, `cross_domain_handoffs.target_domain_id`, `domain_data_objects`, `domain_module_host_domains`, `domain_modules`, `domain_regulations`, `domain_starter_modules`, `domains.parent_domain_id`, `skills`, `solution_domains`.
+- For each pair, count rows for the audited domain via PostgREST. Surface as:
+
+  | Table | FK column | ATS rows | Expected non-zero? |
+  | --- | --- | --- | --- |
+
+- Expected-non-zero call (the schema doesn't carry this; it follows from catalog rules):
+  - Always non-zero: `business_function_domains` (C1), `capability_domains` (A2), `domain_data_objects` (B1 except leadership-tier), `domain_modules` (M1), `solution_domains` (A3), `cross_domain_handoffs.source_domain_id` (B9 for any non-leaf domain), `skills` (≥1 module-level system skill per module).
+  - Non-zero when applicable: `domain_starter_modules` (M3 — only when `capability_count ≥ 3`), `domain_regulations` (most domains have ≥1 regulation in scope), `cross_domain_handoffs.target_domain_id` (most non-leadership domains receive at least one inbound handoff).
+  - Routinely zero: `domain_module_host_domains` (only when cross-cutting modules host on this domain), `domains.parent_domain_id` (only when this domain has sub-domains).
+- Fix: zero-row anomalies on "expected non-zero" rows are blocking. The fix routes back into the owning band — S1 just makes the gap legible at a glance and catches cases the band's own pass test missed.
+
+**S2. Indirect-table per-module coverage.**
+
+For every `domain_modules` row hosted on this domain (primary host + `domain_module_host_domains` entries), count `domain_module_capabilities` and `domain_module_data_objects`. Surface as:
+
+  | Module | data_objects | capabilities |
+  | --- | --- | --- |
+
+- Zero `domain_module_capabilities` on a module routes to M6 (the reverse-orphan check added below). Zero `domain_module_data_objects` is usually a leadership-tier landing module (Rule #14) and acceptable; otherwise routes to the relevant Phase-A or Phase-B band.
+
+**S3. Per-master indirect-table coverage.**
+
+For every `master + required` data_object in this domain, count `data_object_lifecycle_states`, `trigger_events`, and `data_object_aliases`. Surface as:
+
+  | data_object | states | events | aliases |
+  | --- | --- | --- | --- |
+
+- Zero states route to B12 (lifecycle states or config-shape exemption note). Zero `trigger_events` on a master with a published state machine routes to B9. Zero aliases on a non-self-explanatory master routes to B11.
+- Run the per-master sweep even when the band checks all pass — a master where states + events + aliases are *all* zero or near-zero signals a quietly-incomplete load that no single band catches.
 
 ### A. Phase A — Market shape
 
@@ -359,12 +465,58 @@ Substitute `<id>` with the target `domains.id`, `<masters>` with the comma-separ
 - Pass: every (solution × capability) cell has a row (including `not_supported` — absence ≠ not supported; absence = unaudited). For N solutions × M capabilities, expect N×M rows.
 - Fix: see [.tmp_deploy/backfill_crosscut_solcaps.ts](../../../.tmp_deploy/backfill_crosscut_solcaps.ts) for the matrix-fill pattern.
 
+**A6. `solution_data_objects` populated for solutions with primary coverage.**
+- Query: `/solution_data_objects?solution_id=in.(<primaryIds>)&select=id` where `<primaryIds>` is the set of solutions with `coverage_level='primary'` from A3.
+- Pass: every primary-coverage solution has ≥1 row declaring which catalog data_objects it masters.
+- Fix: load `solution_data_objects` rows. **Note (2026-05-23):** this junction is broadly under-populated across the catalog; an A6 failure on a single domain is more likely a project-scope decision than a per-domain backfill task. Surface in the gap report and defer to the user on whether to fix per-domain or as a catalog-wide pass.
+
 **A5. Vendor records reflect current legal ownership.** *(Opt-in only — not part of the routine audit pass.)*
+
+#### Phase M precursor
+
+Phase M (modules) runs immediately after Phase A and gates everything else. The M-band checks live in the section below; resolve any M-band failures before working through B / C / D / E.
+
+
 - **Skip by default.** Re-evaluating every vendor for current legal owner requires external research (M&A news, vendor sites, recent acquisition press releases) and routinely takes hours per market. The catalog stays good-enough between explicit refresh cycles.
 - **Run only when:** the user asks ("refresh vendors", "re-check ownership for X", "audit acquisitions"), OR you have specific evidence a vendor changed hands (e.g., a press release in the user's prompt), OR the user explicitly approves the scope after you've flagged it as an open question.
 - Query (when running): `/solutions?id=in.(<solIds>)&select=solution_name,vendors(vendor_name)`
 - Pass: every `vendor_name` matches the current legal owner (no LeanIX-as-LeanIX after the SAP acquisition, etc.).
 - Fix: PATCH `vendor_id`; mention predecessor in `solutions.notes` (see Classification heuristics).
+
+### M. Phase M — Modules (Rule #14)
+
+A `domains` row is not deployable on its own. Modules are. The M-band is a structural gate — a failure here blocks every downstream concern.
+
+**M1. ≥1 `domain_modules` row exists for this domain.**
+- Query: `/domain_modules?domain_id=eq.<id>&select=id,domain_module_code,domain_module_name` UNION `/domain_module_host_domains?domain_id=eq.<id>&select=domain_module:domain_modules(id,domain_module_code,domain_module_name)` (the second query catches cross-cutting modules hosted on this domain via the host junction).
+- Pass: combined result ≥1.
+- Fix: hand-author the module set. For domains with <3 capabilities the answer is one starter module covering the whole market. For leadership-tier domains with no masters, the module is a "derived-signals" landing surface — it exists for the deploy contract even if its `domain_module_data_objects` set is empty.
+
+**M2. Domains with ≥3 capabilities have ≥2 modules.**
+- Capability count query: `/capability_domains?domain_id=eq.<id>&select=capability_id` (count the rows).
+- Module count query: same as M1 (union of primary + host-junction modules).
+- Pass: `capability_count < 3` (M2 vacuously passes) OR `module_count ≥ 2`.
+- Fix: split the single module into ≥2 meaningful modules. If the capability count is borderline (exactly 3) and only one module makes sense, document why in `domain_modules.description` and revisit when the capability count grows.
+
+**M3. Domains with ≥3 capabilities have a populated `domain_starter_modules` junction.**
+- Query: `/domain_starter_modules?domain_id=eq.<id>&select=domain_module_id,position,notes&order=position.asc`
+- Pass: `capability_count < 3` (M3 vacuously passes) OR ≥1 row.
+- Fix: author 1–3 `domain_starter_modules` rows naming the recommended entry-point modules in order, with editorial notes the fact sheet emits verbatim.
+
+**M4. Every capability of this domain has ≥1 realizing module.**
+- Query: for each `capability_id` in `capability_domains` for this domain, check `/domain_module_capabilities?capability_id=eq.<cap_id>&domain_module_id=in.(<modIds>)` returns ≥1 row.
+- Pass: zero capabilities with no realizing module.
+- Fix: link the orphan capability to whichever module it best belongs to, OR drop the capability if it shouldn't be in the catalog. An orphan capability is a Phase-A gap that propagates into the system-skill derivation.
+
+**M5. Every lifecycle state with `requires_permission=true` has `domain_module_id` set when it belongs to a specific module.**
+- Query: `/data_object_lifecycle_states?requires_permission=eq.true&data_object_id=in.(<masters>)&select=data_object_id,state_name,domain_module_id`
+- Pass: every workflow-gate state either has `domain_module_id` set to the realizing module, OR `domain_module_id` is NULL because the gate is always reachable when the master is installed (single-module domains, cross-cutting states).
+- Fix: PATCH `domain_module_id` per the module shape. The realizing module's `domain_module_code` becomes the permission prefix at materialization time — wrong/missing `domain_module_id` produces wrong-prefixed permissions.
+
+**M6. Every module realizes ≥1 capability.**
+- Query: for each `domain_modules.id` hosted on this domain, check `/domain_module_capabilities?domain_module_id=eq.<mid>&select=id` returns ≥1 row.
+- Pass: zero capability-orphaned modules. M4 enforces the converse direction (every catalog capability ↦ ≥1 realizing module); M6 enforces this direction (every module ↦ ≥1 realized capability) — the two together close the bipartite-coverage loop.
+- Fix: create the missing capability (apply the Cross-cutting capability convention to decide prefixed vs. domain-neutral) plus the `capability_domains` row and the `domain_module_capabilities` link. Orphan modules with no capability are a real gap — load the capability rather than annotating around it.
 
 ### B. Phase B — Data-object footprint
 
@@ -404,7 +556,7 @@ Substitute `<id>` with the target `domains.id`, `<masters>` with the comma-separ
 - Fix: load per Rule #10. The `users` row is `kind='platform_builtin'`, always at `data_objects.data_object_name='users'`.
 
 **B8. Cross-domain `data_object_relationships` populated (payload→target) — OUTBOUND only.**
-- **Asymmetry rule.** A cross-domain relationship row mirrors a cross-domain handoff. The **outbound** side (this domain's master → another domain's payload) is this domain's responsibility because it owns the source of the verb. The **inbound** side (another domain's master → this domain's payload) is the other domain's responsibility and gets audited on **its** B8 pass — recording it here would mean this domain authoring relationship edges out of its own jurisdiction.
+- **Asymmetry rule.** A cross-domain relationship row mirrors a cross-domain handoff. The **outbound** side (this domain's master → another domain's payload) is this domain's responsibility because it owns the source of the verb. The **inbound** side (another domain's master → this domain's payload) is the other domain's responsibility and gets audited on **its** B8 pass — recording it here would mean this domain authoring relationship edges outside its own scope.
 - Query: `/data_object_relationships?and=(data_object_id.in.(<masters>),related_data_object_id.not.in.(<masters>))&select=data_object_id,relationship_verb,related_data_object_id,is_required,notes`
 - Pass: every **outbound** `cross_domain_handoffs` row (from B9) with a clean payload→target mapping has a corresponding `data_object_relationships` row in this direction (e.g., outbound handoff `ATS → ONBOARDING` on `job_offer.accepted` with payload `onboarding_journeys` ⇒ relationship `job_offers spawns onboarding_journeys`, source = ATS master, target = ONBOARDING master).
 - Fix: same loader pattern as B6. Do **not** load inbound-direction rows here — they belong to the source domain's B8 pass.
@@ -430,7 +582,7 @@ Substitute `<id>` with the target `domains.id`, `<masters>` with the comma-separ
   2. **For each dependency's `data_object_id`, list the canonical owner(s):**
      `/domain_data_objects?data_object_id=in.(<deps>)&role=eq.master&select=data_object_id,domain_id,domains(domain_code)`
 
-  Cross-join (in script) on `data_object_id` to produce the candidate list: `(owner_domain_code, data_object_name, my_role, my_necessity)`. Then for each candidate row, check whether `/cross_domain_handoffs?source_domain_id=eq.<owner_id>&target_domain_id=eq.<id>&data_object_id=eq.<dep_id>` already has a row. If it does, the inbound is covered. If it doesn't, the candidate joins the "owed by other domains" report subsection.
+  Cross-join (in script) on `data_object_id` to produce the candidate list: `(owner_domain_code, data_object_name, my_role, my_necessity)`. Then for each candidate row, check whether `/cross_domain_handoffs?source_domain_id=eq.<owner_id>&target_domain_id=eq.<id>&data_object_id=eq.<dep_id>` already has a row. If it does, the inbound is covered. If it doesn't, the candidate joins the **report-only follow-ups** subsection.
 
 - Report shape (during audit):
   - **Covered inbound** — list the rows that already exist (positive-finding sanity check).
@@ -445,9 +597,9 @@ Substitute `<id>` with the target `domains.id`, `<masters>` with the comma-separ
 - Fix: draft alias rows; bundle into the cluster-drafts pattern.
 
 **B12. `data_object_lifecycle_states` + pattern flags loaded.** (Rule #12.)
-- Query: `/data_object_lifecycle_states?data_object_id=in.(<masters>)&select=data_object_id,state_name,state_order,is_initial,is_terminal,requires_permission,permission_verb_override`
-- Pass: every `master + necessity=required` data_object with a non-trivial workflow has lifecycle states loaded, OR the domain code appears in the lifecycle-states-pending tracking section of [plan-domain-fact-sheets.md § 9.1 Step 8](../../../plan-domain-fact-sheets.md).
-- Fix: draft state machines (initial state + workflow gates marked `requires_permission=true` + `permission_verb_override` for non-obvious verbs); load via a focused loader.
+- Query: `/data_object_lifecycle_states?data_object_id=in.(<masters>)&select=data_object_id,state_name,state_order,is_initial,is_terminal,requires_permission,permission_verb_override,domain_module_id`
+- Pass: every `master + necessity=required` data_object with a real workflow has lifecycle states loaded. Config-shaped masters with no workflow are exempt only when `data_objects.notes` carries an explicit justification (e.g. *"Config-shaped; no workflow"*). No catalog-wide tracking surface for deferrals — load it or annotate the exemption.
+- Fix: draft state machines (initial state + workflow gates marked `requires_permission=true` + `permission_verb_override` for non-obvious verbs + `domain_module_id` when the state belongs to a specific module); load via a focused loader.
 
 ### C. Phase C — Functional ownership
 
@@ -461,31 +613,91 @@ Substitute `<id>` with the target `domains.id`, `<masters>` with the comma-separ
 - Pass: rows exist ONLY when a capability's owning function differs from the domain's owning function (e.g., `COMPLIANCE-TRAIN` under domain LMS owned by Compliance, not L&D). Pure overlap with domain RACI is *not* required to be enumerated.
 - Fix: add the override row for any diverging capability.
 
-### D. Outputs
+### D. UI spot-check
 
-**D1. Fact sheet emits without unjustified placeholders.**
-- Command: `bun run scripts/emit_fact_sheet.ts <DOMAIN_CODE>`
-- Pass: every `_(no … loaded)_` placeholder in the generated `domain-fact-sheets/<DOMAIN_CODE>.md` is justified by (a) the leadership-tier exception list (B1), (b) the lifecycle-states-pending list (B12), or (c) an explicit "self-explanatory masters" / "isolated master" justification recorded in the catalog notes (B6, B11). Unjustified placeholders = checklist failure.
-- Fix: close the underlying gap, then re-run the generator.
-
-**D2. UI spot-check.**
+**D1. UI spot-check.**
 - Visit `https://tests.semantius.app/domain_map/<table>` for every table touched.
 - Pass: rows render with the expected labels; row counts match the loader summary; no `record_status='approved'` on freshly-loaded research (Rule #1).
 - Fix: re-PATCH; never bulk-approve.
 
+> Fact-sheet emission used to live here as D1 / D2 of the checklist. It has been pulled out of every sequence (load, audit, fix-loop) and is now an explicit, user-triggered step. See § "Fact sheets (explicit step, not part of any sequence)" below the audit recipe.
+
+### E. Roles & permission bundling (universal under Rule #14)
+
+Roles capture the user personas whose workflows span the domain's modules and bundle their cross-module permissions. Under Rule #14 every domain has ≥1 module — but a single-module domain may not have any natural multi-module personas (the 2-module floor would block authoring them), so E1's threshold is qualified by capability count. Long-form rules in [references/roles.md](references/roles.md).
+
+**E1. Role coverage matches the domain's module shape.**
+- Query: `/roles?business_function_id=eq.<fn_id>&select=id,role_code,role_name` UNION cross-functional roles touching any of the domain's modules: `/role_modules?domain_module_id=in.(<modIds>)&select=role:roles!inner(id,role_code,business_function_id)&role.business_function_id=is.null`
+- Pass: **single-module domains** (capability_count < 3, exactly 1 module) — E1 vacuously passes; no roles needed since the 2-module floor blocks role authoring anyway. **Multi-module domains** (≥2 modules) — ≥3 distinct roles across both queries. Typical: 3–5 for tightly-scoped, 5–7 for broad.
+- Fix: hand-author the roles using the function-scoped naming pattern; load via a focused loader.
+
+**E2. 2-module floor satisfied on every loaded role for this domain.**
+- Query: for each role from E1, count `/role_modules?role_id=eq.<role_id>` rows.
+- Pass: every role has ≥2 entries. Loader pre-flight should already block this; this check catches drift from manual edits.
+- Fix: either add the missing `role_modules` row (if the role legitimately spans more modules) or delete the role (single-module persona = permission tier, not a role).
+
+**E3. Every `role_modules` row has `interaction_level` set.**
+- Query: `/role_modules?role_id=in.(<roleIds>)&select=interaction_level&interaction_level=is.null`
+- Pass: empty result. Only `primary` / `secondary` are valid — no `read_only` (captured implicitly by the role's bundle).
+- Fix: PATCH the missing values.
+
+**E4. Every role has a non-empty `role_permissions` bundle.**
+- Query: for each role from E1, count `/role_permissions?role_id=eq.<role_id>` rows.
+- Pass: every role has ≥1 row (typical: 4–8). Tier-level entries (`:read`/`:manage`/`:admin`) expand via `permission_hierarchy` at request time — bundles stay short by design.
+- Fix: author the bundle; prefer tier-level grants and specific lifecycle gates over enumerating every workflow-gate / override.
+
+**E5. Path A / Path B agree on the role's domain footprint.**
+- Query A: `/role_modules?role_id=eq.<role_id>&select=domain_module:domain_modules(domain_id)`
+- Query B: `/role_permissions?role_id=eq.<role_id>&select=permission:permissions(domain_module:domain_modules(domain_id))`
+- Pass: the set of distinct `domain_id` values reachable via each path agree. Divergence = drift (a `role_modules` entry without a matching bundle row on that module, or a bundle row on a module not declared in `role_modules`).
+- Fix: add the missing junction row on whichever side is incomplete.
+
+**E6. Permission-bundle drift audit.** When a module adds a new `workflow-gate` permission (a new lifecycle state with `requires_permission=true`), every role touching that module potentially needs the gate. Surface drift as a warning, not a load-blocker: "every permission generated by a module is either in at least one role's bundle, OR explicitly marked admin-only via `permission_hierarchy` edges to `<module>:admin`."
+
+### F. Skill-layer integrity
+
+The `skills` table sits next to `roles` but represents agent skills, not user roles. The audit runs one cleanup check here; the rest of the skill / tool layer is covered transitively via S1's `skills.domain_id` row count and the system-skill derivation procedure in the body of the SKILL.md.
+
+**F1. No legacy domain-level system skills remain once module-level skills exist.**
+- Query: `/skills?domain_id=eq.<id>&skill_type=eq.system&domain_module_id=is.null&select=id,skill_name`.
+- Pass: empty result. Acceptable transitional state ONLY when no module-level system skill has been authored for this domain yet — once any `domain_module_id`-anchored system skill exists for the domain, every remaining `domain_id`-only legacy row is obsolete.
+- Fix: retire the legacy row (DELETE). Only convert if a genuine domain-level need is distinct from the per-module skills, which is rare — the per-module skills are the catalog's target state per Rule #14.
+
 ### Audit recipe (for "review domain X" / "audit X" / "what's missing for X")
 
 1. Resolve `<DOMAIN_CODE>` to `<id>` and `<masters>` once at the start. Cache for reuse across queries.
-2. Run every **in-scope** check above in order. Skip A5 unless the user has explicitly asked for a vendor-ownership refresh.
-3. Classify each result:
-   - **In-jurisdiction failure** — this domain can fix locally (A1–A4, B1–B9, B11–B12, C1–C2, D1–D2). Goes into the **gap report** as actionable.
-   - **Out-of-jurisdiction report** — the symmetric side is owned by another domain (B8 inbound direction, all of B10). Goes into a separate **"owed by other domains"** subsection of the report, naming the source domain + the missing check ID on that side (e.g. "HCM B9 owes outbound on `hcm_positions`"). **Do not author fixes for these from this domain's audit.**
-4. Surface the gap report to the user **before** authoring any fixes. Include the failing query output snippet so the user can sanity-check. Ask whether to also kick off audits on the "owed by" domains.
-5. For each accepted in-jurisdiction gap, author the fix on the side (markdown draft, or directly in a loader); never load AI-generated content without a user review pass (Rule #1).
+2. **Run the S-band sweep first** (S1 + S2 + S3). It produces the coverage tables the gap report leads with and surfaces zero-row anomalies the band checks may not specifically test.
+3. Run every **in-scope** band check (A / M / B / C / D / E / F) in order. Skip A5 unless the user has explicitly asked for a vendor-ownership refresh. A6 is in-scope but its fix may be deferred to a catalog-wide pass — surface and ask.
+4. Classify each result:
+   - **Structural gate** — M1–M6 failures block every downstream concern. A domain with no modules (or with capability-orphaned modules) can't be modeled in Phase B/E correctly until the M-band is clean. Resolve M-band first.
+   - **In-scope fix** — this domain can fix locally (S1–S3 zero-row anomalies, A1–A4, A6, M1–M6, B1–B9, B11–B12, C1–C2, D1, E1–E6, F1). Goes into the **gap report** as actionable. Fact-sheet emission is **not** an audit step — see § "Fact sheets" below.
+   - **Report-only follow-up** — the symmetric side is owned by another domain (B8 inbound direction, all of B10). Goes into a separate **"report-only follow-ups"** subsection of the report, naming the source domain + the missing check ID on that side (e.g. "HCM B9 owes outbound on `hcm_positions`"). **Do not author fixes for these from this domain's audit.** These items NEVER block the audited domain's green status; they are observations the user can act on by scheduling audits of the source domains.
+4. Surface the gap report to the user **before** authoring any fixes. Include the failing query output snippet so the user can sanity-check. Ask whether to also kick off audits on the source domains in the report-only section.
+5. For each accepted in-scope fix, author it (markdown draft, or directly in a loader); never load AI-generated content without a user review pass (Rule #1).
 6. Load fixes with `record_status='new'`. User bulk-approves per category after review.
-7. Re-run the audit. The acceptance criterion is zero failed **in-jurisdiction** IDs (modulo the documented exceptions in B1, B12). Out-of-jurisdiction items remain visible in the report until the source domains are themselves audited; they are not blockers for this domain's pass.
+7. Re-run the audit. The acceptance criterion is zero failed **in-scope** IDs (modulo the documented exceptions in B1, B12). Report-only follow-ups remain visible until the source domains are themselves audited; they are not blockers for this domain's pass.
 
-A well-run audit produces three artifacts: the gap report (with in-jurisdiction and owed-by-others subsections), the fix drafts, and a re-emit of the fact sheet showing the in-jurisdiction placeholders gone.
+A well-run audit produces two artifacts: the gap report (with in-scope and report-only subsections) and, if the user agrees to load, the fix drafts. Fact-sheet emission is not part of the audit deliverable; if the user wants refreshed fact sheets after fixes land, that's a separate explicit step (see § "Fact sheets" below).
+
+### Fact sheets (explicit step, not part of any sequence)
+
+Fact-sheet emission is a deliberate, user-triggered action. **Do not run it as part of any load, audit, fix-loop, or "verify and share" step.** The audit reads live state via PostgREST; the on-disk fact sheets can sit stale across many audit passes and that's the intended state.
+
+Emit only when the user explicitly asks. Triggers: "emit the ATS fact sheet", "regenerate the fact sheets", "refresh `<MODULE-CODE>.md`", "run the fact sheet generator". Do not infer the user wants fact sheets from phrases like "audit X" or "load Y was that successful" — confirm first.
+
+The emitter at [scripts/emit_fact_sheet.ts](../../../scripts/emit_fact_sheet.ts) produces two kinds of fact sheet:
+
+- **Per-module fact sheets** → `domain-fact-sheets/modules/<MODULE-CODE>.md`, one per `domain_modules` row. The deployable-unit view: data_objects assigned to this module, lifecycle states on this module's masters, the system skill + tools + Semantius coverage %, module-scoped permissions, capabilities realized, outbound / inbound handoffs, architect handoff hints.
+- **Per-starter-kit fact sheets** → `domain-fact-sheets/starter-kits/<DOMAIN-CODE>.md`, one per domain with a `domain_starter_modules` junction. The buyer-facing market entry point: market overview, the editorial on-ramp, every module installable on this domain, combined view across the starter modules, capabilities, solutions, vendors, RACI, regulations, architect handoff hints.
+
+There is no per-domain fact sheet in the current emitter — the starter-kit page replaces it as the market entry point. Any legacy `domain-fact-sheets/<DOMAIN-CODE>.md` files on disk are no longer regenerated; treat them as historical.
+
+Commands:
+- `bun run scripts/emit_fact_sheet.ts --starter-kit <DOMAIN_CODE>` — regenerates the domain's starter-kit page.
+- `bun run scripts/emit_fact_sheet.ts --module <MODULE_CODE>` — regenerates one module's page.
+- `bun run scripts/emit_fact_sheet.ts --all` — regenerates every module page and every starter-kit page in one pass.
+
+When the user does ask for an emit, the quality check on the output is: every `_(no … loaded)_` placeholder in the generated file is justified by (a) the leadership-tier exception list (B1), (b) a `data_objects.notes` config-shape exemption on a master with no workflow (B12, per Rule #12), or (c) an explicit "self-explanatory masters" / "isolated master" justification recorded in the catalog notes (B6, B11). Unjustified placeholders signal a real gap in live state — fix the gap and re-emit. Never hand-edit the rendered files to silence a placeholder.
 
 ### Backfill gaps to watch for
 
@@ -582,7 +794,7 @@ This is the catalog's most analytically loaded workflow — the combination of `
 The same three-form choice also informs capability code naming (§ "Cross-cutting capability convention" below) — but only data_objects carry the `is_canonical_bare_word` claim; capabilities arbitrate the analogous concept via `capability_code` prefix only.
 
 - `data_object_name` is the **natural key** and must follow Semantius entity-naming conventions: snake_case, plural (`job_requisitions`, `recruitment_sources`, `background_checks`). Treat it as if you were naming the entity in a new Semantius module — because that's exactly what the catalog claims it represents.
-- `singular_label` (and `plural_label`) is the **human-friendly** form (`Job Requisition` / `Job Requisitions`, `Recruitment Source` / `Recruitment Sources`, `Background Check` / `Background Checks`). The labels can drift from `data_object_name` (e.g. industry-specific renames) — that's the column's job. The legacy `display_label` column is retained transitionally during the [plan-domain-fact-sheets.md § 9.1 Step 10](../../../plan-domain-fact-sheets.md) cleanup, but every new write goes to `singular_label` / `plural_label`.
+- `singular_label` (and `plural_label`) is the **human-friendly** form (`Job Requisition` / `Job Requisitions`, `Recruitment Source` / `Recruitment Sources`, `Background Check` / `Background Checks`). The labels can drift from `data_object_name` (e.g. industry-specific renames) — that's the column's job. The legacy `display_label` column is retained transitionally pending an end-of-program destructive cleanup; every new write goes to `singular_label` / `plural_label`.
 - Industry-specific or solution-specific variants (`Patient` for `customers` in Healthcare, `Account` for `customers` in Salesforce) live in `data_object_aliases`, never as new `data_objects` rows.
 - **Buyer-side vs seller-side: distinct data_objects, not multi-master rows.** When two domains see the same kind of artifact from opposite sides of a transaction, model them as separate `data_objects`. They have different lifecycles, owners, and integration paths. Established pairs:
   - `saas_subscriptions` (SMP, buyer-side) ↔ `customer_subscriptions` (SUB-MGMT, seller-side)
@@ -714,15 +926,17 @@ Phase D answers *"which clusters of cross-domain handoffs are coherent business 
 
 ### Discovery procedure
 
-The full procedure (cube DSL, clustering signals, ranking formula) lives in [`plan-process-skill-discovery.md` § Discovery procedure](../../../plan-process-skill-discovery.md#discovery-procedure-the-payoff). Summary of the five clustering signals:
+Five clustering signals drive discovery:
 
-1. **Trigger-event prefix** (`offer.*`, `employee.*`, `incident.*`) — primary signal
-2. **Data-object lifecycle trace** (chain of handoffs an object travels through)
-3. **Domain-graph community detection** (densely connected subgraphs in the handoff DAG)
-4. **High-friction subset** (`friction_level=high` cluster)
-5. **Business-function involvement** (≥3 functions in a handoff cluster ⇒ process candidate)
+1. **Trigger-event prefix** (`offer.*`, `employee.*`, `incident.*`) — **primary signal** (the bucketing rule in v1).
+2. **Data-object lifecycle trace** (chain of handoffs an object travels through) — secondary, scored within bucket.
+3. **Domain-graph community detection** (densely connected subgraphs in the handoff DAG) — secondary.
+4. **High-friction subset** (`friction_level=high` cluster) — secondary.
+5. **Business-function involvement** (≥3 functions in a handoff cluster ⇒ process candidate) — filter.
 
-Each candidate cluster is matched against `processes` (APQC PCF) on name/description similarity. Unmatched clusters become candidates for `source_framework='custom'` process rows using the [custom-process naming convention](#custom-process-naming-convention) below.
+Per-bucket metrics: `handoff_count`, `distinct_domain_count`, `distinct_function_count`, `friction_score` (high=3, medium=2, low=1, summed), `friction_high_count`, top 3 trigger events, and the auto-matched APQC PCF row (a hint, not authority — verify the PCF parent before committing). Ranking formula: `rank_score = friction_score × distinct_function_count`. Quality bar for top candidates: ≥3 domains, ≥3 functions, ≥4 handoffs, ≥1 high-friction. Target volume: ≥10 candidates total.
+
+Each candidate cluster is matched against `processes` (APQC PCF) on name/description substring similarity. Unmatched clusters become candidates for `source_framework='custom'` process rows using the [custom-process naming convention](#custom-process-naming-convention) below.
 
 ### Running discovery
 
@@ -845,7 +1059,7 @@ semantius call crud postgrestRequest '{"method":"GET","path":"/skills?select=ski
 semantius call crud postgrestRequest '{"method":"GET","path":"/tools?select=tool_name&order=tool_name.asc&limit=10000"}'  # what queries/mutates already exist (dedupe!)
 ```
 
-Compare against the "Live state checkpoint" in [plan-master-tasks.md](../../../plan-master-tasks.md). If counts have moved, the candidate set may have changed — recompute "domains with masters but no system skill" before proceeding. P2.5A.i discovered 3 already-existing query tools that would have duplicated; always dedupe.
+Always query live state (counts, existing skills, existing tools) before drafting — the catalog is multi-session and rows are added between sessions. Past discovery: 3 existing query tools would have been duplicated without a dedup pre-check. Always dedupe `tools` by `tool_name` before inserting.
 
 ### Three-source derivation procedure
 
@@ -901,7 +1115,7 @@ Domains that the catalog marks as leadership-layer / aggregation-tier (per the S
 
 EPM is a partial exception — it has the leadership-layer character but does master `financial_plans`/`budgets`/`forecasts`/`variance_analyses`/`financial_scenarios`, so EPM does get a system skill.
 
-Quick check before drafting any system skill: `semantius call crud postgrestRequest '{"method":"GET","path":"/domain_data_objects?domain_id=eq.<id>&role=eq.master"}'`. Zero masters = skip. If the domain genuinely is supposed to have masters (and you're not skipping for the leadership-layer reason), that's a Phase-B gap — backfill before drafting the skill (see [P2.5A.0 — Phase-B prerequisite backfill](../../../plan-master-tasks.md) for the precedent).
+Quick check before drafting any system skill: `semantius call crud postgrestRequest '{"method":"GET","path":"/domain_data_objects?domain_id=eq.<id>&role=eq.master"}'`. Zero masters = skip. If the domain genuinely is supposed to have masters (and you're not skipping for the leadership-layer reason), that's a Phase-B gap — backfill before drafting the skill. Don't paper over a Phase-B gap by inventing skill_tools that reference data_objects from other domains — that produces a skill whose entire required-tool set is consumer-reads, which is not a system skill.
 
 ### Anti-patterns specific to system-skill derivation
 
@@ -919,10 +1133,13 @@ Quick check before drafting any system skill: `semantius call crud postgrestRequ
 
 Process skills (`skill_type='process'`) span multiple domains and orchestrate cross-domain workflows. Tool requirements derive from the candidate's involved domains, not from a single domain's masters:
 
-1. **Identify the cluster's domains** — read from the candidate `plan-process-skill-<name>.md` file (one per candidate, surfaced by the discovery query at [references/discovery-query.md](references/discovery-query.md)). Each candidate plan file lists `query_domains` (read access required) and `mutate_domains` (write access required) sets.
-2. **Auto-derive query tools** — every master `data_object` across `query_domains` contributes its existing `query_<master>` tool as REQUIRED. The catalog already has these from the P2.5A.iii pass; no new query tools needed.
+1. **Identify the cluster's domains** from the Phase D discovery query output ([references/discovery-query.md](references/discovery-query.md)). Each candidate bucket lists its source + target domains (via the underlying `cross_domain_handoffs` rows). Decompose into two sets:
+   - `query_domains` — domains the process reads from (every domain in the bucket, source or target).
+   - `mutate_domains` — domains the process writes to (target domains of write-shaped handoffs; source domains for rollback/correction handoffs).
+   Surface the two sets to the user before drafting tools; they're the editorial input that determines the skill's surface.
+2. **Auto-derive query tools** — every master `data_object` across `query_domains` contributes its existing `query_<master>` tool as REQUIRED. The catalog already has these from the system-skill derivation pass; no new query tools needed. Dedupe by `tool_name`.
 3. **Auto-derive mutate tools** — for each `mutate_domain`, link any existing `update_<master>` / `create_<master>` / verb-driven mutate tool as REQUIRED. Mutates are sparser than queries — skip the master if no mutate exists yet (don't auto-generate generic ones).
-4. **Add cross-cutting externals** — from the candidate plan file's "Tool requirements" section. Email + sign_document + chat are the recurring shapes (see [Cross-tranche external-tool patterns](#cross-tranche-external-tool-patterns-p25aii-2026-05-22)).
+4. **Add cross-cutting externals** — apply the recurring patterns from [§ Cross-tranche external-tool patterns](#cross-tranche-external-tool-patterns-p25aii-2026-05-22). Email + sign_document + chat are the most common; if the process involves customer-facing comms or contract execution, add the relevant external tool as REQUIRED.
 5. **Apply the coverage rollup** ([references/semantius-coverage-rollup.md](references/semantius-coverage-rollup.md)) — process skills sit at 92-97% by design (every workflow needs at least `send_email`). 100% is rare and usually means the skill is mis-modeled as a process skill when it's actually a system skill.
 
 Reference loader: [.tmp_deploy/load_p25b_process_skills.ts](../../../.tmp_deploy/load_p25b_process_skills.ts). It reads the involved-domain sets from a hard-coded map (one entry per process skill), pulls live master sets, links tools idempotently.
@@ -940,12 +1157,17 @@ Reference loader: [.tmp_deploy/load_p25b_process_skills.ts](../../../.tmp_deploy
 - ❌ Loading a new market with `domains` + `vendors` + `solutions` + `solution_domains` and stopping there. Capabilities (+ `capability_domains`) and `solution_capabilities` are part of the Phase-A load shape, not an optional follow-up. See workflow step 5.
 - ❌ Stopping after Phase A (market shape) and not running Phase B (data-object footprint — data_objects, domain_data_objects, cross_domain_handoffs). A market without its mastered/contributed data objects and its outbound handoffs contributes zero to Signal 1 and Signal 2, which is what the catalog exists to support. See workflow step 5.
 - ❌ Stopping after Phase A+B and not running Phase C (business_function_domains, optionally business_function_capabilities). A market without functional ownership contributes zero to the buyer-persona / RACI axis (Signal 3). The function-axis spine is small, but the per-domain links are part of every market load from 2026-05-20 onward.
+- ❌ Skipping Phase M (modules) on a new domain load. Every domain has ≥1 module per Rule #14 — no exceptions. A domain row without modules is non-deployable; it's a market-research stub, not a working catalog entry.
+- ❌ Loading a multi-module domain (≥3 capabilities) without Phase E. A domain with modules but no roles is half-loaded — the deployer can install the modules but can't provision the users. Run E1–E6 before declaring the load done. See the E section of the completeness checklist.
+- ❌ Authoring a role with `role_modules` on only 1 module. Single-module personas are a permission tier on that module, not a role. The 2-module floor (E2) is the structural justification for a row existing in `roles` at all.
+- ❌ Domain-prefixing role codes (`ATS-RECRUITER`, `ITSM-AGENT`). Roles are function-scoped, not domain-scoped — a Recruiter belongs to Recruiting, not to ATS. Use `<FUNCTION-CODE>-<ROLE-NAME>` (`RECRUITING-RECRUITER`) or, for cross-functional roles, drop the prefix entirely (`HIRING-MANAGER`).
+- ❌ Enumerating every workflow gate in a role's `role_permissions` bundle. Use the tier-level grant (`<module>:admin`) and let Semantius's `permission_hierarchy` auto-include the gates — bundles stay short, new gates auto-flow to admin-tier roles. Only list specific gates that an IC-tier role needs explicitly (e.g. `ats-offers:approve_offer` for Recruiter, who otherwise has `:manage` not `:admin`).
 - ❌ Treating [Phase D](#phase-d--process-skill-discovery-substrate-level) as a fourth per-market load step. Phase D is a **substrate-level analytic** that runs across the catalog once Phase B is broadly complete. Running it after every single market load is wasted work; skipping it entirely once enough clusters have shipped Phase B is the actual failure mode.
 - ❌ Creating one `trigger_events` row per subscriber when a single event fans out. All subscribers of `employee.created` share **one** `trigger_events.id`; only the handoff rows differ. Duplicating events per subscriber breaks Phase D's primary clustering signal.
 - ❌ Treating `cross_domain_handoffs.data_object_id` as the publisher's data_object. It's the **per-edge payload** — the artifact in flight on that specific handoff. The publisher's data_object lives on `trigger_events.data_object_id` and is shared across every subscriber of the event. These two columns ARE allowed to differ (HCM publishes `employee.created` on `employees`; the HCM→Onboarding handoff carries `onboarding_journeys` as the payload). Reviewers regularly conflate them when reading a handoff row in isolation.
 - ❌ Scaffolding synthetic `data_objects` for leadership-layer / aggregation-tier domains (REV-INTEL, SALES-PERF, GTM-PLAN, ACCT-PLAN, PRM, EPM) just so they "own something". These domains read upstream and publish derived signals; the handoff's `data_object_id` references the upstream cluster's data_object directly. Forcing ownership via synthetic objects creates dead rows that nothing else references.
 - ❌ Inferring catalog state from `.tmp_deploy/*.ts` deploy scripts. They drift the moment they ship. Cluster inventories MUST query live `postgrestRequest` endpoints — see workflow step 1.
-- ❌ Loading `domain_data_objects` master rows with empty `notes`. Even when the data_object has a single master today, write a one-sentence slice description in `notes` — it's the column reviewers read first when a second master shows up later. The "empty notes on multi-master rows" anti-pattern is the stricter form; the relaxed form applies to all master rows.
+- ❌ Treating `domain_data_objects.notes` as a required field on every master row. `notes` is for research details / decisions worth preserving (slice ownership on multi-master / embedded_master rows per Rule #3 and the anti-pattern above, demotion-path explanations, point-solution-vs-holistic carve-outs, classification rationale that a future reviewer would otherwise have to re-derive). Empty `notes` on a single-master row with no decision worth recording is the right shape, not a gap. The fact-sheet emitter and the per-domain checklist both treat this column as opt-in metadata, not a populate-on-every-row obligation.
 - ❌ Loading a market with `min_org_size` of `xs`/`s` but only enterprise-tier solutions. If the stated minimum buyer is SMB/mid-market, the solution list must include at least 1–2 vendors that actually sell into that band. A list of pure enterprise solutions under an SMB-minimum domain is internally inconsistent and misleads downstream filters.
 - ❌ Declaring a load or audit "done" without running the Per-domain completeness checklist (§ above). Every silent gap in this catalog's history followed the same pattern — someone shipped a market, the count of new rows looked right, no one ran the full checklist, and a category (`solution_capabilities`, `business_function_domains`, intra-domain `data_object_relationships`, lifecycle states) sat empty for weeks. Running the checklist is the gate; "I think I covered everything" is not a substitute. Specifically: do not declare ATS-shaped loads done until B6 (intra-domain relationships) and B7 (`users` edges) pass — those two were silently empty for ATS through Step-5's cluster pass and only surfaced when the fact sheet's mermaid rendered with disconnected nodes.
 - ❌ Predicting numeric IDs inside a script. Always re-read after insert to build the id map.
@@ -963,6 +1185,8 @@ UI base: `https://tests.semantius.app/domain_map/<table_name>`
 Reference loader: [.tmp_deploy/load_research.ts](.tmp_deploy/load_research.ts)
 
 Module-shape reference: [references/module-shape.md](references/module-shape.md)
+
+Fact-sheet emitter (explicit, user-triggered only): [scripts/emit_fact_sheet.ts](../../../scripts/emit_fact_sheet.ts). See § "Fact sheets (explicit step, not part of any sequence)".
 
 **Tool selection for the question you're asking:**
 

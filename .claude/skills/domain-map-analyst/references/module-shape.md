@@ -127,11 +127,19 @@ License attribution for APQC PCF imports: see repo-level [`LICENSE-APQC-PCF.md`]
 
 | Field | Format | Required | Notes |
 |---|---|---|---|
-| `display_label` | text | yes | Human-friendly display label. Distinct from `data_object_name` (which acts as the natural key) |
+| `singular_label` | text | yes | Human-friendly singular form (`Job Requisition`, `Incident`). Distinct from `data_object_name` (snake_case_plural natural key). |
+| `plural_label` | text | yes | Human-friendly plural form (`Job Requisitions`, `Incidents`). Irregular plurals are hand-correctable. |
+| `display_label` | text | yes | Legacy column retained transitionally. Every new write goes to `singular_label`/`plural_label`. |
 | `description` | multiline | yes | |
+| `kind` | enum | yes | Default `domain_owned`. Values: `domain_owned`, `platform_builtin`. Seed today: `users` only as `platform_builtin`. |
+| `is_canonical_bare_word` | boolean | yes | Default `false`. TRUE when this domain holds catalog-wide canonical authority for the bare-noun name (e.g. `customers`, `employees`, `incidents`, `assets`). Requires `naming_authority_rationale`. |
+| `naming_authority_rationale` | text | yes | Empty string unless `is_canonical_bare_word=true`. Explains why this domain owns the unprefixed name catalog-wide. |
+| `has_personal_content` | boolean | yes | Default `false`. TRUE when the data_object contains personal content where only the owner / specific actors see specific rows (e.g. interview scorecards, performance reviews, employee notes). Pattern-flag derivation produces `view_all_*` / `manage_all_*` permissions + edit-scope ABAC. |
+| `has_submit_lock` | boolean | yes | Default `false`. TRUE when a state transition locks the record from further submitter edits (e.g. published knowledge_articles, submitted expense reports). Derivation produces `submit_<entity>` + restriction. |
+| `has_single_approver` | boolean | yes | Default `false`. TRUE when one named approver field gates a workflow state (e.g. change approver, offer approver, request approver). Derivation produces `approve_<entity>_requires_approver` rule. |
 | `record_status` | enum | yes | Default `new` |
 
-Label column: `data_object_name` (natural key, e.g. `Job Requisition`). `display_label` is the presentation-friendly variant. Other variants (industry/solution synonyms) live in `data_object_aliases`, not here.
+Label column: `data_object_name` (natural key, snake_case_plural — `job_requisitions`, `incidents`). Industry/solution synonyms live in `data_object_aliases`, not here.
 
 ### `trigger_events`
 
@@ -204,15 +212,18 @@ The data-silo map: rows here with the same `data_object_id` across multiple `sol
 
 ### `domain_data_objects`
 
+> **Under Rule #14**, once a domain has modules `domain_data_objects` is a **derived rollup** from `domain_module_data_objects` (group by `data_object_id`, strongest role wins). Don't hand-edit `domain_data_objects` for modularized domains; edit the module junction and let the rollup regenerate.
+
 | Field | Format | Required | Notes |
 |---|---|---|---|
 | `domain_id` | parent → `domains` | yes | |
 | `data_object_id` | parent → `data_objects` | yes | |
-| `role` | enum | yes | `master` / `contributor` / `consumer` / `derived`. Default `master`. Multi-master rows are allowed and expected — different domains often master different *slices* of a shared data object (`job_requisitions` mastered by ATS + Workforce Planning, `customers` by CRM + MDM + Billing). Capture the slice in `notes`. The count of `role='master'` rows per data_object is **Signal 1** of the platform-vs-silos analysis (see [[#cross_domain_handoffs]] for Signal 2) |
-| `notes` | multiline | yes | Free-text: which slice of the data object this domain masters/contributes/consumes |
+| `role` | enum | yes | `master` / `embedded_master` / `contributor` / `consumer` / `derived`. Default `master`. Multi-master rows are expected — different domains master different slices of shared objects. Capture the slice in `notes`. Multi-master count = Signal 1; embedded_master count = Signal 1b of the platform-vs-silos analysis. |
+| `necessity` | enum | yes | `required` / `optional`. Default `required`. `master` rows always required. `embedded_master`/`contributor`/`consumer` rows are optional when the workflow tolerates absence in some deployments. |
+| `notes` | multiline | yes | Free-text: which slice of the data object this domain masters/contributes/consumes. For `embedded_master` rows, also state the demotion path ("X local-masters Y when no Z is deployed; reads from Z when present"). |
 | `record_status` | enum | yes | Default `new` |
 
-Migrated from `mastery_role` (values `primary` / `secondary` / `derived`) on 2026-05-18. `primary` mapped to `master`. The old `secondary` value was a junk drawer covering three distinct situations (consumes / contributes / co-masters); the new enum forces an explicit choice.
+Migrated from `mastery_role` (values `primary` / `secondary` / `derived`) on 2026-05-18. `primary` mapped to `master`. The old `secondary` value was a junk drawer; the new enum forces an explicit choice across five roles.
 
 ### `domain_regulations`
 
@@ -274,19 +285,19 @@ Directional event-driven handoffs between two **distinct** domains, sharing a da
 |---|---|---|---|
 | `source_domain_id` | parent → `domains` | yes | Domain emitting the trigger event |
 | `target_domain_id` | parent → `domains` | yes | Domain that receives and acts on the event |
-| `data_object_id` | parent → `data_objects` | yes | What flows / is created / mutated |
-| `trigger_event` | text | yes | Dotted-lowercase event name (`offer.accepted`, `incident.resolved`, `requisition.approved`, `case.closed`). Acts as the row's discriminator when a (source, target, data_object) triple has multiple legitimate handoffs |
+| `data_object_id` | parent → `data_objects` | yes | The **per-edge payload** — the artifact in flight on this specific handoff. Distinct from `trigger_events.data_object_id` (the publisher's data_object). The two columns ARE allowed to differ. |
+| `trigger_event_id` | reference → `trigger_events` | yes | FK to the published event (one event row, many subscribers). Per-edge integration metadata lives on this row; event semantics live on `trigger_events`. |
 | `integration_pattern` | enum | yes | `event_stream` / `api_call` / `batch_sync` / `manual_handoff` / `file_drop`. Default `api_call` |
 | `friction_level` | enum | yes | `low` / `medium` / `high`. Default `medium`. Proxy for today's maintenance cost — high friction = highest integrated-platform value |
 | `description` | multiline | yes | What actually happens at the handoff: payload, downstream consequences, known failure modes |
 | `notes` | multiline | yes | |
 | `record_status` | enum | yes | Default `new` |
 
-Label column (auto-computed): `cross_domain_handoff_label` = `<source_domain> → <target_domain> : <trigger_event>`.
+Label column (auto-computed): `cross_domain_handoff_label` = `<source_domain> → <target_domain> : <event_name>`.
 
 **Hard invariant — `source_domain_id != target_domain_id`.** Enforced by validation rule `cross_domain_only`. Inserts with equal source/target return PostgREST 23514 with the rule's message. Intra-domain events (internal workflow inside one domain) are out of scope by design: they describe a domain's internal complexity, not integration friction, and would dilute the platform-candidacy score. If you later need to catalog intra-domain events for vendor-comparison purposes, add a separate `domain_events` entity rather than relaxing this constraint.
 
-Inserts are **not** loaded yet — entity ships empty. Onboarding Task is the motivating first load (ATS → Onboarding on `offer.accepted`, Onboarding → ITSM on `task.it_provisioning_required`, etc.).
+**Trigger-event ownership.** When a single trigger fires from one domain to multiple targets (e.g. `employee.created` → Onboarding + Payroll + IGA + Talent-Mgmt), **all four subscriber rows reference the SAME `trigger_events.id`** via `trigger_event_id`. Don't duplicate events per subscriber — it breaks the trigger-event-prefix clustering signal Phase D depends on.
 
 ### `data_object_relationships`
 
@@ -403,4 +414,137 @@ OOTB Semantius % for domain X =
 
 The diagnostic query (which tools force a skill below 100%) is the inverse: list Z's required tools whose `operation_kind` is NOT Semantius-covered AND has no `tool_solutions` row in Y's portfolio.
 
-See [`plan-tools-catalog.md` § Decision record](../../../plan-tools-catalog.md#decision-record--2026-05-21-authoritative-overrides-the-body-below-where-they-conflict) for the full rationale.
+See [SKILL.md § Agent tooling layer](../SKILL.md#agent-tooling-layer-4-entities-added-2026-05-21) and [semantius-coverage-rollup.md](semantius-coverage-rollup.md) for the full rationale (per-tool aggregation, why no Semantius row in `solutions`).
+
+---
+
+## Module concept
+
+> See [modules.md](modules.md) for the long-form rules (composability, lifecycle-permission materialization, minimum-shape contract, cross-cutting hosting). Schemas below.
+
+### `domain_modules`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `domain_module_code` | text | yes | Natural key. SHOUTY-KEBAB-CASE, format `<DOMAIN>-<NOUN>` (`ATS-CANDIDATE-CRM`, `ITSM-INCIDENT-MGMT`) or bare-noun for cross-cutting (`KNOWLEDGE-MGMT`, `APPROVAL-WORKFLOW`) |
+| `domain_module_name` | text | yes | Human-friendly label (`Candidate CRM`, `Incident Management`) |
+| `domain_id` | reference → `domains` | no | Primary host. Nullable for genuinely-cross-cutting modules with no obvious home (`APPROVAL-WORKFLOW`). Cross-cutting modules with one obvious home use this column AND list additional hosts in `domain_module_host_domains`. |
+| `description` | multiline | yes | |
+| `record_status` | enum | yes | Default `new` |
+
+### `domain_module_capabilities` (junction: `domain_modules` ↔ `capabilities`)
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `domain_module_id` | parent → `domain_modules` | yes | |
+| `capability_id` | parent → `capabilities` | yes | |
+| `notes` | multiline | yes | |
+| `record_status` | enum | yes | Default `new` |
+
+Same capability can realize in multiple modules; same module can realize multiple capabilities. No qualifier.
+
+### `domain_module_data_objects` (junction: `domain_modules` ↔ `data_objects`)
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `domain_module_id` | parent → `domain_modules` | yes | |
+| `data_object_id` | parent → `data_objects` | yes | |
+| `role` | enum | yes | Same 5-value enum as `domain_data_objects`: `master` / `embedded_master` / `contributor` / `consumer` / `derived`. Default `master`. |
+| `necessity` | enum | yes | `required` / `optional`. Default `required`. Narrower than the domain-layer column — only meaningful on `consumer`/`embedded_master` rows that gracefully degrade. |
+| `notes` | multiline | yes | |
+| `record_status` | enum | yes | Default `new` |
+
+This is now the **authoritative** junction for module-level data_object ownership. `domain_data_objects` is a derived rollup once a domain has modules.
+
+### `domain_module_host_domains` (junction: `domain_modules` ↔ `domains`)
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `domain_module_id` | parent → `domain_modules` | yes | |
+| `domain_id` | parent → `domains` | yes | The additional host (NOT the module's `domain_modules.domain_id`) |
+| `notes` | multiline | yes | |
+| `record_status` | enum | yes | Default `new` |
+
+Records hosts beyond the primary `domain_modules.domain_id`. Convention: never both — if a module has a primary `domain_id`, host_domains rows name only the OTHER hosts.
+
+### `domain_starter_modules` (junction: `domains` ↔ `domain_modules`)
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `domain_id` | parent → `domains` | yes | |
+| `domain_module_id` | parent → `domain_modules` | yes | |
+| `position` | int | yes | 1-based ordering of the recommended-install sequence |
+| `notes` | multiline | yes | Editorial copy emitted verbatim by the fact sheet generator ("Start here. Provides candidates, prospects, sourcing.") |
+| `record_status` | enum | yes | Default `new` |
+
+Editorial recommendation, not a gate, not a billing-package. Required on every domain with ≥3 capabilities per Rule #14. Domains with <3 capabilities have zero rows here.
+
+---
+
+## Lifecycle states
+
+### `data_object_lifecycle_states`
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `data_object_id` | reference → `data_objects` | yes | The master this state belongs to |
+| `state_name` | text | yes | snake_case noun-form (`draft`, `submitted`, `approved`, `closed`). Used by `permission_verb_override` derivation. |
+| `state_order` | int | yes | Ordering for the state machine; not a strict topological constraint, but the fact sheet emits states in this order |
+| `is_initial` | boolean | yes | Default `false`. Exactly one state per data_object should have `is_initial=true`. |
+| `is_terminal` | boolean | yes | Default `false`. Multiple terminal states are allowed (`closed`, `cancelled`, `rejected`). |
+| `requires_permission` | boolean | yes | Default `false`. TRUE = transitioning *into* this state needs an explicit permission; produces a `<module>:<verb>_<entity>` workflow gate during permission materialization. |
+| `permission_verb_override` | text | yes | Empty string unless auto-derivation produces a clumsy verb. Replaces `state_name` in the derived verb. Examples: `hired → hire_candidate`, `approved → approve_change`. |
+| `domain_module_id` | reference → `domain_modules` | no | Nullable. NULL = state always reachable when the master is installed. Non-NULL = state realized only when that specific module is deployed (the deployer prunes unreachable states). The permission prefix at materialization time is the realizing module's `domain_module_code`. |
+| `record_status` | enum | yes | Default `new` |
+
+Permission materialization rule (per Rule #14 + Rule #12): for each row with `requires_permission=true`, the deployer creates `permissions.permission_name = <domain_module_code>:<verb>_<entity_singular>` where `<verb>` = `permission_verb_override` if set, else `state_name`. Override collisions (e.g. `candidates.hired` and `job_applications.hired` both overriding to `hire_candidate`) legitimately collapse to one permission fired by two transitions.
+
+---
+
+## Role layer
+
+> See [roles.md](roles.md) for the long-form rules (hard invariants, two-path equivalence, bundling patterns). Schemas below.
+
+### `roles` (Semantius built-in, extended)
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `role_code` | text | yes | Natural key. `<FUNCTION-CODE>-<ROLE-NAME>` for function-scoped (`RECRUITING-RECRUITER`); bare for cross-functional (`HIRING-MANAGER`). |
+| `role_name` | text | yes | Human-friendly label |
+| `slug` | text | yes | snake_case (`recruiting_recruiter`). Enforced by built-in `valid_role_slug` check constraint. |
+| `business_function_id` | reference → `business_functions` | no | Nullable. NULL = cross-functional. |
+| `description` | multiline | yes | |
+| `notes` | multiline | yes | |
+| `record_status` | enum | yes | Default `new` |
+
+### `role_modules` (junction: `roles` ↔ `domain_modules`, catalog-NEW)
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `role_id` | parent → `roles` | yes | |
+| `domain_module_id` | parent → `domain_modules` | yes | |
+| `interaction_level` | enum | yes | `primary` / `secondary`. No `read_only` — bundle-only-read captures that case implicitly. |
+| `notes` | multiline | yes | |
+| `record_status` | enum | yes | Default `new` |
+
+2-module floor: every role MUST have ≥2 `role_modules` entries. Single-module personas = permission tier, not a role.
+
+### `role_permissions` (Semantius built-in, extended; junction: `roles` ↔ `permissions`)
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `role_id` | parent → `roles` | yes | |
+| `permission_id` | parent → `permissions` | yes | |
+| `notes` | multiline | yes | |
+| `record_status` | enum | yes | Default `new` |
+
+Prefer tier-level grants (`<module>:admin`, `:manage`, `:read`) over enumerating every workflow gate. `permission_hierarchy` (Semantius built-in) auto-expands tier-level grants at request time.
+
+### `permissions` (Semantius built-in, extended)
+
+Catalog adds two columns to the built-in:
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `domain_module_id` | reference → `domain_modules` | no | Nullable. NULL on built-in Semantius permissions. Set on catalog-derived permissions to record the realizing module. |
+| `tier` | enum | yes | `baseline-read` / `baseline-manage` / `baseline-admin` / `workflow-gate` / `override`. Materialized from lifecycle states + pattern flags per the materialization rules in [modules.md](modules.md). |

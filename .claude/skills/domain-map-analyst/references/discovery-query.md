@@ -1,6 +1,6 @@
 # Discovery query — process-skill candidates
 
-Implements the procedure from [plan-process-skill-discovery.md § Discovery procedure](../../../../plan-process-skill-discovery.md). Buckets `cross_domain_handoffs` by trigger-event prefix, computes friction-weighted metrics, and ranks by `friction_score × distinct_function_count`.
+Implements the discovery procedure described in [SKILL.md § Phase D](../SKILL.md#phase-d--process-skill-discovery-substrate-level). Buckets `cross_domain_handoffs` by trigger-event prefix, computes friction-weighted metrics, and ranks by `friction_score × distinct_function_count`.
 
 Implementation: [.tmp_deploy/discovery_query.ts](../../../../.tmp_deploy/discovery_query.ts). Run from project root.
 
@@ -38,7 +38,7 @@ The other clustering signals (data-object lifecycle trace, friction-cluster, dom
 | `apqc_pcf_*` | Auto-matched APQC PCF process (substring match preferring lower hierarchy_level). **Treat as a hint, not an authority** — semantic refinement is recommended for the top ~15 buckets (see "Refining PCF mappings" below). |
 | `meets_success_criteria` | True iff `domain_count ≥ 3 AND function_count ≥ 3 AND handoff_count ≥ 4 AND friction_high_count ≥ 1`. |
 
-## Success criteria (per plan-process-skill-discovery.md § Success criteria)
+## Success criteria
 
 The discovery output must produce:
 - ≥10 candidates
@@ -77,6 +77,6 @@ The query reads live state every run — no materialised junction tables. Re-run
 
 ## Related references
 
-- [plan-process-skill-discovery.md](../../../../plan-process-skill-discovery.md) — design intent and clustering signals
+- [SKILL.md § Phase D](../SKILL.md#phase-d--process-skill-discovery-substrate-level) — clustering signals, ranking formula, and what to do with discovery output.
 - [semantius-coverage-rollup.md](semantius-coverage-rollup.md) — sibling saved query (system-skill Semantius coverage)
 - The 5 clustering signals (only #1 is implemented in v1; #2-5 are diagnostic refinements for ambiguous buckets)

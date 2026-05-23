@@ -1,6 +1,6 @@
 # plan-roles.md — Roles as cross-module permission containers
 
-> **Status:** design intent (draft). **Blocked on [`plan-modules.md`](plan-modules.md) schema landing.** Do not load until `domain_modules`, `domain_module_capabilities`, `domain_module_data_objects`, `domain_module_host_domains`, and `domain_starter_modules` exist in the live catalog with at least the ATS modular load complete.
+> **Status:** Phase 1A authoring landed (2026-05-23). Schema, ATS permission materialization, and the 5 ATS roles + 24 `role_modules` + 29 `role_permissions` are live in the catalog. Transitive-admin test passes (`ats-offers:admin` ⊃ `:approve_offer` + `:rescind_offer` via `permission_hierarchy`). **Remaining Phase 1A work: extend `emit_fact_sheet.ts` (§6.1 step 6) and update the deployer SKILL (§6.1 step 7).**
 >
 > **Naming note (2026-05-23):** the catalog table is `domain_modules` (not `modules`) — `modules` collides with the Semantius platform's own `modules` table. FK columns referencing it are `domain_module_id`. The catalog *concept* is still "a module" in prose; only the table/column identifiers carry the prefix. See [`plan-modules.md` §4.1](plan-modules.md).
 >
@@ -42,27 +42,29 @@ Roles are **function-scoped**, not domain-scoped — a Recruiter belongs to Recr
 
 ## 2. Schema changes
 
-All additive. No existing rows touched.
+All additive. No existing rows touched. **Schema landed 2026-05-23** via [.tmp_deploy/extend_permissions_and_roles_schema.ts](.tmp_deploy/extend_permissions_and_roles_schema.ts). Surprise on apply: Semantius ships **built-in `roles` and `role_permissions` tables** — they already exist as platform tables for runtime RBAC. The migration extended both additively with the catalog columns below rather than creating new tables.
 
-### 2.1 New tables
+### 2.1 Tables (built-in extended + new junction)
 
-| Entity | Holds | Natural key |
-|---|---|---|
-| `roles` | `role_code`, `role_name`, `business_function_id` **nullable** FK (NULL = cross-functional role, e.g., Hiring Manager — see §7 resolved Q2), `description`, `record_status` | `role_code` |
-| `role_modules` | `role_id`, `domain_module_id`, `interaction_level` enum (`primary` / `secondary` — two values, see §7 resolved Q1), `notes` text — which modules does this role touch, and how heavily | composite |
-| `role_permissions` | `role_id`, `permission_id` FK (existing), `notes` text — which permissions does this role need | composite |
+| Entity | Holds | Built-in? | Natural key |
+|---|---|---|---|
+| `roles` | Built-in: `id`, `role_name`, `slug`, `description`, `origin`, `module_id`. **Catalog additions**: `role_code`, `business_function_id` nullable FK (NULL = cross-functional, see §7 Q2), `record_status`. | ✓ Semantius built-in | `role_code` (catalog-side) |
+| `role_modules` | `role_id`, `domain_module_id`, `interaction_level` enum (`primary` / `secondary`, see §7 Q1), `notes` text, `role_module_label` computed. | New (created by the catalog migration) | composite |
+| `role_permissions` | Built-in: `id`, `role_id`, `permission_id`, `granted_at`, `granted_by`. **Catalog additions**: `role_permission_label` computed, `notes`. | ✓ Semantius built-in | composite |
 
-**Validation constraint:** every `roles` row MUST have ≥2 `role_modules` entries (see §7 resolved Q5). Loader enforces; single-module personas don't qualify for the catalog — they're modeled at the module level as permission tiers.
+**Validation constraint:** every catalog `roles` row MUST have ≥2 `role_modules` entries (see §7 Q5). Loader enforces; the DB does not.
 
 ### 2.2 New columns on existing tables
 
 | Table | Column | Type | Why |
 |---|---|---|---|
 | `skills` | `role_id` | nullable FK → `roles` | Required when `skill_type='role'`, NULL otherwise. Links a role skill to the role it wraps. **Role skills themselves are deferred to Phase 2** (see §6.3) — the column lands now so the FK shape is stable; rows referencing it land in Phase 2. |
+| `permissions` | `domain_module_id` | nullable FK → `domain_modules` | Added during the same migration as a prerequisite for `role_permissions` to reference catalog-derived permission rows. Lets queries answer "which permissions belong to module X" without parsing `permission_name`. Built-in Semantius permissions (`user:read`, etc.) leave it NULL. See [`plan-modules.md` §11 step 3.5](plan-modules.md). |
+| `permissions` | `tier` | text enum | `baseline-read` / `baseline-manage` / `baseline-admin` / `workflow-gate` / `override`. Captures which §4.6 derivation rule produced this permission. Built-in permissions leave it NULL. See `plan-modules.md` §11 step 3.5. |
 
 ### 2.3 No new tables — explicit
 
-- **No role-level inheritance (`parent_role_id`, role composition, role DAGs).** Inheritance lives at the **permission** layer, not the role layer — Semantius's existing `permission_hierarchies` table already captures it (`:admin` includes `:manage` includes `:read`, and `:admin` includes all module lifecycle gates per the existing fact-sheet convention). The manager-of-IC distinction is expressed by upgrading the role's tier-level permission on the module (`:manage` → `:admin`), not by chaining roles. Roles stay flat to match Semantius's runtime role model 1:1 — no flattening step in the deployer, no chain walking, no implicit blast radius.
+- **No role-level inheritance (`parent_role_id`, role composition, role DAGs).** Inheritance lives at the **permission** layer, not the role layer — Semantius's existing `permission_hierarchy` table already captures it (`:admin` includes `:manage` includes `:read`, and `:admin` includes all module lifecycle gates per the existing fact-sheet convention). The manager-of-IC distinction is expressed by upgrading the role's tier-level permission on the module (`:manage` → `:admin`), not by chaining roles. Roles stay flat to match Semantius's runtime role model 1:1 — no flattening step in the deployer, no chain walking, no implicit blast radius.
 - **No `role_dependencies`.** Roles don't depend on each other in a deployment sense — a Recruiter doesn't require a Hiring Manager to be provisioned first. Reporting relationships live in HCM, not the catalog.
 - **No `role_capabilities`.** Capabilities are market-analysis nouns; roles touch modules (the deployment unit) and permissions (the access unit). Going through the capability layer would add an indirection that adds no value.
 - **No `role_tiers`.** Same rationale as `plan-modules.md` §1 — no SKU/tier gates. A junior recruiter and a senior recruiter use the same role; access scope differences are captured per-tenant at deploy time, not in the catalog.
@@ -106,7 +108,7 @@ Four roles for the ATS domain. Each maps to multiple modules and bundles cross-m
 | `HIRING-MANAGER` | Hiring Manager | **NULL** (cross-functional) | Owns the requisition, sets job criteria, evaluates candidates, makes final hiring decisions. Every line manager in every function does this role — NULL `business_function_id` per §7 resolved Q2 carries that meaning. |
 | `RECRUITING-COORDINATOR` | Recruiting Coordinator | Recruiting | Owns logistics — interview scheduling, candidate communications, scorecard collection, background-check kickoff. |
 | `RECRUITING-SOURCER` | Sourcer | Recruiting | Owns talent-pool management, proactive candidate outreach, and pipeline seeding ahead of formal req-opening. |
-| `RECRUITING-MANAGER` | Recruiting Manager | Recruiting | Manages a recruiter team. **No role-level inheritance from Recruiter** (per §7 resolved Q3) — instead, Recruiting Manager uses `:admin` permission tier across the modules they oversee, and Semantius's existing `permission_hierarchies` auto-includes the underlying `:manage` / `:read` / lifecycle-gate permissions. When the underlying module adds a new gate, `:admin` picks it up automatically; IC Recruiter gets a deliberate decision via the §8 drift audit. |
+| `RECRUITING-MANAGER` | Recruiting Manager | Recruiting | Manages a recruiter team. **No role-level inheritance from Recruiter** (per §7 resolved Q3) — instead, Recruiting Manager uses `:admin` permission tier across the modules they oversee, and Semantius's existing `permission_hierarchy` auto-includes the underlying `:manage` / `:read` / lifecycle-gate permissions. When the underlying module adds a new gate, `:admin` picks it up automatically; IC Recruiter gets a deliberate decision via the §8 drift audit. |
 
 ### 4.2 `role_modules` (which modules each role touches)
 
@@ -141,7 +143,7 @@ Four roles for the ATS domain. Each maps to multiple modules and bundles cross-m
 
 ### 4.3 `role_permissions` (the cross-module bundle the deployer provisions)
 
-Permission codes follow the `<domain_module_code>:<verb>` convention ratified in [`plan-modules.md` §4.6](plan-modules.md). **Each role declares its complete bundle directly** — no inheritance, no resolution at deploy time. Roles are short (5-10 rows each) because they declare tier-level permissions (`:read`, `:manage`, `:admin`) and Semantius's existing `permission_hierarchies` table auto-expands them at request time (e.g., `:admin` ⊃ `:manage` ⊃ `:read`; `:admin` ⊃ all lifecycle gates per the existing fact-sheet convention).
+Permission codes follow the `<domain_module_code>:<verb>` convention ratified in [`plan-modules.md` §4.6](plan-modules.md). **Each role declares its complete bundle directly** — no inheritance, no resolution at deploy time. Roles are short (5-10 rows each) because they declare tier-level permissions (`:read`, `:manage`, `:admin`) and Semantius's existing `permission_hierarchy` table auto-expands them at request time (e.g., `:admin` ⊃ `:manage` ⊃ `:read`; `:admin` ⊃ all lifecycle gates per the existing fact-sheet convention).
 
 `RECRUITING-RECRUITER` bundle (8 rows):
 
@@ -152,7 +154,7 @@ Permission codes follow the `<domain_module_code>:<verb>` convention ratified in
 | `ats-recruitment-pipeline:approve_requisition` | `ATS-RECRUITMENT-PIPELINE` | specific lifecycle gate (not auto-included in `:manage`) |
 | `ats-interviews:read` | `ATS-INTERVIEWS` | tier — read-only because coordinator drives scheduling |
 | `ats-offers:manage` | `ATS-OFFERS` | tier |
-| `ats-offers:approve` | `ATS-OFFERS` | specific lifecycle gate the IC needs |
+| `ats-offers:approve_offer` | `ATS-OFFERS` | specific lifecycle gate the IC needs (materialized name per the `<state>_<singular>` derivation rule) |
 | `ats-background-checks:read` | `ATS-BACKGROUND-CHECKS` | tier — review only |
 | `ats-referrals:read` | `ATS-REFERRALS` | tier — sees referred candidates entering pipeline |
 
@@ -253,19 +255,19 @@ Additive. Three phases. **Each phase serializes within a domain: modules first, 
 
 ### 6.1 Phase 1A — Schema + ATS (sequential, after ATS modular load completes)
 
-1. Apply schema changes (§2) — 3 new tables + 1 new column. Lands at the same time as the modular schema in [`plan-modules.md` §4](plan-modules.md) (schema is decoupled from authoring; the `roles` table can sit empty until ATS modular load is done).
-2. **Wait for ATS modular load to complete and verify** — all 8 ATS module permission codes are locked (verified via `/permissions?permission_code=like.ats-*`).
-3. Load the 5 ATS roles (`RECRUITING-RECRUITER`, `HIRING-MANAGER`, `RECRUITING-COORDINATOR`, `RECRUITING-SOURCER`, `RECRUITING-MANAGER`). The Hiring Manager row has `business_function_id=NULL` per §7 Q2 resolution. Roles are flat (no `parent_role_id`) per §7 Q3 resolution — Manager/IC differences are expressed via permission tier on the same modules. **Validation:** each role has ≥2 `role_modules` entries per §7 Q5 (the 2-module floor).
+1. ✅ **(Done 2026-05-23.)** Schema migration applied per [.tmp_deploy/extend_permissions_and_roles_schema.ts](.tmp_deploy/extend_permissions_and_roles_schema.ts) — `role_modules` created; `roles` + `role_permissions` extended additively (Semantius ships both as platform built-ins); `skills.role_id` added; `permissions.domain_module_id` + `permissions.tier` added as the materialization prerequisite. See [`plan-modules.md` §11 step 3.5](plan-modules.md).
+2. ✅ **(Done 2026-05-23.)** ATS modular load complete and 48 ATS permission codes materialized in the live catalog via [.tmp_deploy/load_ats_module_permissions.ts](.tmp_deploy/load_ats_module_permissions.ts), along with 40 `permission_hierarchy` edges (`origin='model'`) that encode tier inheritance.
+3. **Next.** Hand-author the 5 ATS roles (`RECRUITING-RECRUITER`, `HIRING-MANAGER`, `RECRUITING-COORDINATOR`, `RECRUITING-SOURCER`, `RECRUITING-MANAGER`). The Hiring Manager row has `business_function_id=NULL` per §7 Q2 resolution. Roles are flat (no `parent_role_id`) per §7 Q3 resolution — Manager/IC differences are expressed via permission tier on the same modules. **Validation:** each role has ≥2 `role_modules` entries per §7 Q5 (the 2-module floor).
 4. Load `role_modules` rows (~26 rows — `RECRUITING-MANAGER` declares its own rows since there's no inheritance) with deliberate per-row `interaction_level` review per §4.2. Only `primary` / `secondary` — no `read_only` (the read-only-ness is captured by the role's permission bundle holding only `:read` for that module).
-5. Load `role_permissions` rows (~26 rows across all 5 roles — each role declares its complete bundle directly; tier-level permissions per §4.3 keep the row count low). **Validation:** every referenced `permission_code` exists in the catalog post-modular-load (the wait gate at step 2 makes this safe).
-6. Update the ATS fact sheet generator to render a "Roles" section per domain.
-7. Update [`semantic-model-deployer` SKILL](../../C:\dev\semantius-cli\skills\use-semantius) to read `role_permissions` at user-provisioning time and provision the user with those permissions directly. No role-side resolution needed — Semantius's existing `permission_hierarchies` table handles tier expansion at request time (`:admin` auto-grants underlying `:manage` / `:read` / lifecycle-gate permissions).
+5. Load `role_permissions` rows (~26 rows across all 5 roles — each role declares its complete bundle directly; tier-level permissions per §4.3 keep the row count low). **Validation:** every referenced permission row exists in the catalog (the materialization in step 2 makes this safe; query `/permissions?permission_name=eq.<code>` per row before inserting).
+6. Extend [`scripts/emit_fact_sheet.ts`](scripts/emit_fact_sheet.ts) to render a "Roles" section on the per-module fact sheet (`modules/<MODULE-CODE>.md`) showing which roles touch this module + at what `interaction_level`, plus a "Roles in this market" section on the starter-kit fact sheet (`starter-kits/<DOMAIN-CODE>.md`) with the role-union on-ramp answer per §5.1.
+7. Update [`semantic-model-deployer` SKILL](../../C:\dev\semantius-cli\skills\use-semantius) to read `role_permissions` at user-provisioning time and provision the user with those permissions directly. No role-side resolution needed — Semantius's existing `permission_hierarchy` table handles tier expansion at request time (`:admin` auto-grants underlying `:manage` / `:read` / lifecycle-gate permissions).
 
 **Role skills are NOT part of Phase 1A.** Deferred to Phase 2 per §4.4.
 
 ### 6.2 Phase 1B — ITSM (sequential with ITSM modular load)
 
-Same modules-first-then-roles pattern. ITSM is the cross-cutting-module stress test for both plans. Author 5-6 ITSM roles (Service Desk Agent, Service Desk Manager, Change Manager, CMDB Analyst, plus 1-2 more) to validate the cross-cutting-module interaction: does an `IT-SERVICE-DESK-AGENT` role need permissions on the `KNOWLEDGE-MGMT` cross-cutting module installed inside ITSM? The answer drives the §5 triangle's edge between roles and cross-cutting modules. Also exercises the permission-tier pattern on a second domain: `IT-SERVICE-DESK-MANAGER` uses `:admin` tier on managed modules and Semantius's `permission_hierarchies` auto-includes the underlying gates.
+Same modules-first-then-roles pattern. ITSM is the cross-cutting-module stress test for both plans. Author 5-6 ITSM roles (Service Desk Agent, Service Desk Manager, Change Manager, CMDB Analyst, plus 1-2 more) to validate the cross-cutting-module interaction: does an `IT-SERVICE-DESK-AGENT` role need permissions on the `KNOWLEDGE-MGMT` cross-cutting module installed inside ITSM? The answer drives the §5 triangle's edge between roles and cross-cutting modules. Also exercises the permission-tier pattern on a second domain: `IT-SERVICE-DESK-MANAGER` uses `:admin` tier on managed modules and Semantius's `permission_hierarchy` auto-includes the underlying gates.
 
 ### 6.3 Phase 2 — Broader rollout + role skills land
 
@@ -289,7 +291,7 @@ Originally five open questions; all but one resolved during the architect review
 
 1. **`role_modules.interaction_level` cardinality** → **two values (`primary` / `secondary`).** `read_only` was structurally redundant — "every permission for this module in the role's bundle is at the `:read` tier" carries the same meaning without a separate axis. The two-value enum keeps the role-union on-ramp clean.
 2. **Cross-functional roles** → **`business_function_id` is nullable; NULL means cross-functional.** Hiring Manager is the canonical case (every line manager in every function does this role) and loads with NULL. No `is_cross_functional` boolean — NULL carries the meaning, no extra column needed.
-3. **Permission inheritance / role composition** → **flat roles; inheritance lives at the permission layer via Semantius's existing `permission_hierarchies`.** Originally landed as single-parent role inheritance (`parent_role_id`) but reversed during second-round review: Semantius's runtime roles are flat, and the existing `permission_hierarchies` table already captures `:admin ⊃ :manage ⊃ :read` and `:admin ⊃ all module lifecycle gates`. Manager-of-IC distinction is expressed by upgrading the permission tier on the role's bundle (`:manage` → `:admin`), not by chaining roles. Why this is materially easier than role inheritance: catalog and runtime stay 1:1 (no flattening step in the deployer), inspection is trivial (a role's permissions are exactly what's stored), new lifecycle gates auto-flow to `:admin`-tier roles with explicit-decision opportunity for IC roles via the §8 drift audit, no chain walking / cycle detection / DAG ambiguity. Multi-parent role inheritance, single-parent role inheritance, and role composition all explicitly out for the same reason: the work is already done at the permission layer.
+3. **Permission inheritance / role composition** → **flat roles; inheritance lives at the permission layer via Semantius's existing `permission_hierarchy`.** Originally landed as single-parent role inheritance (`parent_role_id`) but reversed during second-round review: Semantius's runtime roles are flat, and the existing `permission_hierarchy` table already captures `:admin ⊃ :manage ⊃ :read` and `:admin ⊃ all module lifecycle gates`. Manager-of-IC distinction is expressed by upgrading the permission tier on the role's bundle (`:manage` → `:admin`), not by chaining roles. Why this is materially easier than role inheritance: catalog and runtime stay 1:1 (no flattening step in the deployer), inspection is trivial (a role's permissions are exactly what's stored), new lifecycle gates auto-flow to `:admin`-tier roles with explicit-decision opportunity for IC roles via the §8 drift audit, no chain walking / cycle detection / DAG ambiguity. Multi-parent role inheritance, single-parent role inheritance, and role composition all explicitly out for the same reason: the work is already done at the permission layer.
 4. **Role-skill coverage % vs module coverage %** → **deferred to Phase 2** when role skills land. A role skill aggregates tools from N module skills; coverage % could be computed at the role-skill level OR rolled up to the affected modules' rollup views. Two slightly-different aggregation rules with different SEO implications (one is the role landing-page number, the other is the deployment-readiness number). Decide empirically after the first few role skills land in Phase 2 rather than picking a rule speculatively now.
 5. **Does a role need to touch ≥1 module to qualify?** → **No, ≥2.** A single-module persona is just a permission tier on that module, modeled at the module level. The 2-module floor is the structural justification for roles existing as a separate concept. Loader-enforced; rows that don't meet the floor are rejected at load time.
 
@@ -301,7 +303,7 @@ Originally five open questions; all but one resolved during the architect review
 |---|---|
 | Vendor-specific role mappings (`solution_role_mappings`). | After 5+ domains have roles loaded and a real cross-vendor comparison need surfaces. |
 | Role-based fact sheet pages (`role-fact-sheets/<ROLE-CODE>.md`). | If SEO data shows search intent around role-based queries ("recruiter daily workflows", "service desk agent permissions"). |
-| Permission-inheritance for hierarchical roles (Recruiter ⊂ Recruiting Manager). | **Never** — §7 Q3 resolved against role-level inheritance; the existing `permission_hierarchies` mechanism (tier-level: `:admin` ⊃ `:manage` ⊃ `:read`) does this job at the permission layer. |
+| Permission-inheritance for hierarchical roles (Recruiter ⊂ Recruiting Manager). | **Never** — §7 Q3 resolved against role-level inheritance; the existing `permission_hierarchy` mechanism (tier-level: `:admin` ⊃ `:manage` ⊃ `:read`) does this job at the permission layer. |
 | Tenant-specific role customization mechanism. | Deferred to platform layer, not catalog layer. The catalog ships reference shapes; tenants fork them. |
 | **Permission-bundle drift audit.** When a module adds a new lifecycle gate, every role that touches the module potentially needs the new permission. Per-domain audit check: "every permission generated by a module is either in at least one role's bundle, OR explicitly marked admin-only." Surface drift as a fact-sheet warning, not a load-blocker. | After Phase 1B (ITSM) lands and the first new-permission-on-existing-module case appears. |
 
@@ -311,15 +313,31 @@ Originally five open questions; all but one resolved during the architect review
 
 All steps below are **additive** and reversible by deleting rows. Destructive operations are consolidated into §10 (currently empty — this plan introduces no destructive work).
 
-1. **Wait for [`plan-modules.md`](plan-modules.md) schema landing.** Phase 1A schema lands in parallel with the modules schema per §6.1; Phase 1A ATS role authoring runs alongside the ATS modular load.
-2. Get sign-off on this plan.
-3. Apply schema changes (§2) — 3 new tables + 1 new column. Single migration script, paired with the modules schema migration.
-4. **Wait for ATS modular load to complete** per §6.1 step 2 (serialized — role authoring depends on per-module permission codes being locked).
-5. Hand-author the 5 ATS roles (§4) as flat rows; `RECRUITING-MANAGER` declares its own bundle using `:admin` tier on managed modules per §4.3. **Deliberate per-row review of `interaction_level`** per §6.1 step 4.
-6. Update [`scripts/emit_fact_sheet.ts`](scripts/emit_fact_sheet.ts) to render a "Roles" section per domain.
-7. Update [`semantic-model-deployer` SKILL](../../C:\dev\semantius-cli\skills\use-semantius) to consume `role_permissions` at user-provisioning time and provision the user with those permissions directly. No role-side resolution needed — Semantius's existing `permission_hierarchies` table handles tier expansion at request time.
-8. Phase 1B (ITSM) per §6.2 — same serialized pattern.
-9. Phase 2 — per-domain role rollout + role-skill authoring per §6.3.
+**Status as of 2026-05-23:** schema migration and ATS permission materialization both done (Phase 1A steps 1–2 of §6.1). The next session picks up at §6.1 step 3.
+
+### Next concrete action (for a fresh session)
+
+The schema and ATS permission catalog are in the live tenant. Verify before authoring:
+
+```bash
+semantius whoami    # expect org=adenin, https://adenin.semantius.ai
+semantius call crud postgrestRequest '{"method":"GET","path":"/permissions?permission_name=like.ats-*&select=id,permission_name,tier,domain_module_id&order=permission_name.asc"}' | jq 'length'   # expect 48
+semantius call crud postgrestRequest '{"method":"GET","path":"/permission_hierarchy?origin=eq.model&select=including_permission_id,included_permission_id"}' | jq 'length'   # expect 40
+semantius call crud postgrestRequest '{"method":"GET","path":"/roles?select=id&limit=1"}'     # entity queryable (empty array OK)
+semantius call crud postgrestRequest '{"method":"GET","path":"/role_modules?select=id&limit=1"}'   # entity queryable
+```
+
+Then load the 5 ATS roles. Suggested approach (mirrors the proven pattern from [.tmp_deploy/load_ats_modules.ts](.tmp_deploy/load_ats_modules.ts)):
+
+1. Get sign-off on the role authoring approach (§4 already specifies the 5 roles, their `role_modules` rows, and their `role_permissions` bundles).
+2. Resolve `business_functions.id` for `Recruiting`. Hiring Manager loads with `business_function_id=NULL`.
+3. Write `.tmp_deploy/load_ats_roles.ts` that:
+   - Inserts 5 `roles` rows with `role_code`, `role_name`, `business_function_id`, `description`. Idempotent on `role_code`.
+   - Inserts ~26 `role_modules` rows per §4.2 with `interaction_level` from the table. **Validate the 2-module floor** before any insert.
+   - Inserts ~26 `role_permissions` rows per §4.3 — resolve `permission_id` by looking up `permissions.permission_name` against the codes in §4.3 (already materialized in step 2).
+   - End-to-end sanity: query `role_permissions` joined to `permission_hierarchy` for `RECRUITING-MANAGER` and verify that granting `ats-offers:admin` transitively unlocks `ats-offers:approve_offer` and `ats-offers:rescind_offer`.
+4. Extend `scripts/emit_fact_sheet.ts` to render the "Roles" sections per §6.1 step 6.
+5. Phase 1B (ITSM) and Phase 2 follow per §6.2 / §6.3.
 
 ---
 
@@ -335,25 +353,46 @@ If future scope adds destructive work (e.g., consolidating duplicate role rows a
 
 Track execution here. Check items off as they land. Per-domain rollout items live in their own subsection so individual domains can be tracked.
 
+### Session 2 — ATS role authoring landed (2026-05-23)
+
+Authoring completed via [.tmp_deploy/load_ats_roles.ts](.tmp_deploy/load_ats_roles.ts) — 5 roles, 24 `role_modules`, 29 `role_permissions` inserted. Two notes:
+
+- **`roles.slug` check constraint is snake_case.** The built-in `valid_role_slug` constraint mirrors existing slugs like `domain_map_viewer` — kebab is rejected. Loader slugifies `role_code` to lowercase + underscores (e.g. `RECRUITING-RECRUITER` → `recruiting_recruiter`). `role_code` itself stays UPPER-KEBAB per §1.
+- **`ats-offers:approve` materializes as `ats-offers:approve_offer`.** The §4.6 derivation rule generates `<state>_<singular>` from the `approve_offer` lifecycle state on the `offer` data_object; the plan §4.3 text was abbreviated and has been corrected to the materialized name. Same shape applies to any future state-derived gate.
+
+End-to-end test passes: `permission_hierarchy` shows `ats-offers:admin (id=10037)` ⊃ both `ats-offers:approve_offer (10038)` and `ats-offers:rescind_offer (10039)` with `origin='model'`. Role-union of (Recruiter ∪ Hiring Manager ∪ Coordinator) primary modules returns the expected 5-module set: CANDIDATE-CRM, RECRUITMENT-PIPELINE, OFFERS, INTERVIEWS, BACKGROUND-CHECKS.
+
+Loader is idempotent and safe to re-run.
+
+### Session 1 — schema + materialization landed (2026-05-23)
+
+Three surprises during apply, all resolved in-flight:
+
+- **Semantius ships built-in `roles` AND `role_permissions` tables.** Both already exist as platform RBAC tables: `roles(id, role_name, slug, description, origin, module_id)` and `role_permissions(id, role_id, permission_id, granted_at, granted_by)`. The original §2.1 entry treated both as new. The migration was rewritten to *extend* both additively with catalog columns (`role_code`, `business_function_id`, `record_status`, `notes`, `*_label`) rather than create-then-collide. §2.1 now reflects this. **Implication:** `role_permissions.permission_id` was already an FK to `permissions` — the FK shape plan-roles.md assumed was right; the materialization gap was on the `permissions` side (per `plan-modules.md` §11 step 3.5).
+- **The permission-inheritance table is singular (`permission_hierarchy`), not plural.** Earlier drafts of this plan used `permission_hierarchies` throughout; the actual built-in is `permission_hierarchy(id text, including_permission_id, included_permission_id, origin enum)` and accepts an `origin='model'` value for catalog-derived edges. All in-plan references have been renamed to the singular form. Loaders must use the singular name when calling PostgREST.
+- **Materialization step wasn't captured in either plan.** Discovered during session 3 prep that no step actually wrote catalog-derived permissions into the `permissions` table — the fact-sheet emitter renders them inline but never persists. Now landed as plan-modules.md §11 step 3.5 ("Materialize the derived permissions and their hierarchies"), with `permissions.domain_module_id` + `permissions.tier` columns added, 48 ATS permission rows materialized, and 40 hierarchy edges (`origin='model'`) loaded. This was the actual blocker; resolving it unblocks Phase 1A authoring.
+
+Both loaders ([extend_permissions_and_roles_schema.ts](.tmp_deploy/extend_permissions_and_roles_schema.ts), [load_ats_module_permissions.ts](.tmp_deploy/load_ats_module_permissions.ts)) are idempotent and safe to re-run.
+
 ### Sign-off and schema
 
 - [ ] §9 step 2 — Plan signed off
-- [ ] §9 step 3 — Schema migration applied (3 tables + 1 column); paired with `plan-modules.md` §11 step 2
-- [ ] §9 step 3 — Schema verified via PostgREST: `/roles`, `/role_modules`, `/role_permissions` return empty arrays (not 404); `/skills?select=role_id` shows the column present
+- [x] §9 step 3 — Schema migration applied (`role_modules` created; `roles` + `role_permissions` extended with catalog columns since Semantius ships built-ins for both; `skills.role_id` added; `permissions.domain_module_id` + `permissions.tier` added as the §11 step 3.5 prerequisite) — [.tmp_deploy/extend_permissions_and_roles_schema.ts](.tmp_deploy/extend_permissions_and_roles_schema.ts)
+- [x] §9 step 3 — Schema verified via PostgREST: `/roles`, `/role_modules`, `/role_permissions` queryable; `/permissions` has the new `domain_module_id` + `tier` columns; `skills.role_id` present
 
 ### Phase 1A — ATS (sequential, after ATS modular load completes)
 
-- [ ] §6.1 step 2 — ATS modular load complete; all 8 module permission codes verified in catalog (`/permissions?permission_code=like.ats-*` returns expected set)
-- [ ] §6.1 step 3 — 5 ATS roles loaded (`RECRUITING-RECRUITER`, `HIRING-MANAGER` with `business_function_id=NULL`, `RECRUITING-COORDINATOR`, `RECRUITING-SOURCER`, `RECRUITING-MANAGER` — all flat, no parent_role_id)
-- [ ] §6.1 step 3 — 2-module floor enforced — every role has ≥2 `role_modules` entries
-- [ ] §6.1 step 4 — `role_modules` rows loaded (~26 rows; `RECRUITING-MANAGER` declares its own rows directly, no inheritance) with deliberate per-row `interaction_level` review against §4.2 reference table; only `primary` / `secondary` used
-- [ ] §6.1 step 5 — `role_permissions` rows loaded (~26 rows across all 5 roles; each role declares its complete bundle using tier-level permissions per §4.3)
-- [ ] §6.1 step 5 — Every referenced `permission_code` exists in catalog (validation guard against the per-module permission codes being locked)
+- [x] §6.1 step 2 — ATS modular load complete; all 48 ATS module permission codes materialized in the live catalog (`/permissions?permission_name=like.ats-*` returns 48 rows across the 8 modules) per [`plan-modules.md` §11 step 3.5](plan-modules.md)
+- [x] §6.1 step 3 — 5 ATS roles loaded (`RECRUITING-RECRUITER` id=10006, `HIRING-MANAGER` id=10007 with `business_function_id=NULL`, `RECRUITING-COORDINATOR` id=10008, `RECRUITING-SOURCER` id=10009, `RECRUITING-MANAGER` id=10010 — all flat, no parent_role_id) — [.tmp_deploy/load_ats_roles.ts](.tmp_deploy/load_ats_roles.ts)
+- [x] §6.1 step 3 — 2-module floor enforced (loader pre-flight blocks any role with `<2` `role_modules` entries before any write)
+- [x] §6.1 step 4 — `role_modules` rows loaded (24 rows — final count after deduping the §4.2 reference table; `RECRUITING-MANAGER` declares its own rows directly) with `interaction_level` per row; only `primary` / `secondary` used
+- [x] §6.1 step 5 — `role_permissions` rows loaded (29 rows: Recruiter 8, Hiring Manager 7, Coordinator 4, Sourcer 4, Manager 6; each role declares its complete bundle using tier-level permissions per §4.3)
+- [x] §6.1 step 5 — Every referenced `permission_code` exists in catalog (loader pre-flight resolves all 18 distinct names to ids before any write)
 - [ ] §6.1 step 6 — `emit_fact_sheet.ts` renders "Roles" section per domain
-- [ ] §6.1 step 7 — `semantic-model-deployer` SKILL reads `role_permissions` at provisioning time and provisions directly (no role-side resolution — Semantius's existing `permission_hierarchies` handles tier expansion at request time)
-- [ ] End-to-end test: provision a Recruiting Manager tenant; verify they have effective access to all `ats-offers:approve` / `ats-offers:rescind` lifecycle gates via the `ats-offers:admin` tier in their bundle (without those gates being individually listed in `role_permissions`)
-- [ ] Architect review of ATS roles in re-emitted fact sheet
-- [ ] Sanity check: role-union query for `[RECRUITING-RECRUITER, HIRING-MANAGER, RECRUITING-COORDINATOR]` returns expected minimum module set
+- [ ] §6.1 step 7 — `semantic-model-deployer` SKILL reads `role_permissions` at provisioning time and provisions directly (no role-side resolution — Semantius's existing `permission_hierarchy` handles tier expansion at request time)
+- [x] End-to-end test (schema-level): `permission_hierarchy` shows `ats-offers:admin (id=10037)` transitively includes both `ats-offers:approve_offer (10038)` and `ats-offers:rescind_offer (10039)` with `origin='model'`. The runtime tenant-provision test is gated on the deployer SKILL change (§6.1 step 7) and lands with it.
+- [ ] Architect review of ATS roles in re-emitted fact sheet (gated on §6.1 step 6)
+- [x] Sanity check: role-union query for `[RECRUITING-RECRUITER, HIRING-MANAGER, RECRUITING-COORDINATOR]` returns the expected 5-module minimum set (CANDIDATE-CRM, RECRUITMENT-PIPELINE, OFFERS, INTERVIEWS, BACKGROUND-CHECKS)
 - [ ] **Role skills NOT loaded in Phase 1A** (deferred to Phase 2 per §4.4)
 
 ### Phase 1B — ITSM (sequential, after ITSM modular load completes)
@@ -362,7 +401,7 @@ Track execution here. Check items off as they land. Per-domain rollout items liv
 - [ ] §6.2 — 5-6 ITSM roles loaded (`IT-SERVICE-DESK-AGENT`, `IT-SERVICE-DESK-MANAGER`, `IT-CHANGE-MANAGER`, `IT-CMDB-ANALYST`, + 1-2 more — all flat, Manager/IC distinction via permission tier); 2-module floor enforced
 - [ ] §6.2 — Cross-cutting-module role-permission interaction validated (does `IT-SERVICE-DESK-AGENT` need permissions on `KNOWLEDGE-MGMT`?)
 - [ ] §6.2 — Triangle (§5) verified end-to-end on ITSM
-- [ ] §6.2 — Permission-tier pattern validated on a second domain (`IT-SERVICE-DESK-MANAGER` uses `:admin` on managed modules; verify auto-inclusion of underlying lifecycle gates via Semantius's `permission_hierarchies`)
+- [ ] §6.2 — Permission-tier pattern validated on a second domain (`IT-SERVICE-DESK-MANAGER` uses `:admin` on managed modules; verify auto-inclusion of underlying lifecycle gates via Semantius's `permission_hierarchy`)
 - [ ] Architect review of ITSM roles
 
 ### Phase 2 — Broader rollout (per-domain) + role skills land
