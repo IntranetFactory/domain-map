@@ -248,7 +248,7 @@ A `domains` row is a market entry — useful for SEO and analysis but **not depl
 
 ## The module at a glance
 
-34 entities (11 core concepts + 1 module concept + 14 junctions + 1 alias + 4 agent-tooling + 3 role layer). Read [references/module-shape.md](references/module-shape.md) for the per-entity field shapes, enums, and FK formats before doing any write that touches a field you haven't used recently. The two long-form rule sets — modules and roles — live in [references/modules.md](references/modules.md) and [references/roles.md](references/roles.md).
+33 entities (11 core concepts + 1 module concept + 13 junctions + 1 alias + 4 agent-tooling + 3 role layer). Read [references/module-shape.md](references/module-shape.md) for the per-entity field shapes, enums, and FK formats before doing any write that touches a field you haven't used recently. The two long-form rule sets — modules and roles — live in [references/modules.md](references/modules.md) and [references/roles.md](references/roles.md).
 
 ### Core concepts (11 entities)
 
@@ -283,7 +283,6 @@ A `domains` row is a market entry — useful for SEO and analysis but **not depl
 | `domain_data_objects` | domains ↔ data_objects | role (master / embedded_master / contributor / consumer / derived) + necessity (required / optional) |
 | `domain_regulations` | domains ↔ regulations | applicability |
 | `solution_domains` | solutions ↔ domains | coverage_level (primary / secondary / partial) |
-| `solution_data_objects` | solutions ↔ data_objects | ownership role |
 | `data_object_relationships` | data_objects ↔ data_objects | cardinality + kind |
 | `cross_domain_handoffs` | domains → domains (via data_object) | `trigger_event_id` (FK to `trigger_events`) + integration_pattern + friction_level. Cross-domain only — source ≠ target enforced by validation rule. Signal 2 of platform-vs-silos analysis (Signal 1 is the multi-master count on `domain_data_objects` where `role ∈ {master, embedded_master}` AND `necessity = required`) |
 | `domain_module_capabilities` | domain_modules ↔ capabilities | which capabilities a module realizes; one capability may realize in multiple modules |
@@ -469,11 +468,6 @@ For every `master + required` data_object in this domain, count `data_object_lif
 - Query: `/solution_domains?domain_id=eq.<id>&select=coverage_level,solutions(solution_name)`
 - Pass: ≥3 solutions; ≥1 `primary`; coverage_level set on every row (never null).
 - Fix: extend Phase A loader.
-
-**A6. `solution_data_objects` populated for solutions with primary coverage.**
-- Query: `/solution_data_objects?solution_id=in.(<primaryIds>)&select=id` where `<primaryIds>` is the set of solutions with `coverage_level='primary'` from A3.
-- Pass: every primary-coverage solution has ≥1 row declaring which catalog data_objects it masters.
-- Fix: load `solution_data_objects` rows. **Note (2026-05-23):** this junction is broadly under-populated across the catalog; an A6 failure on a single domain is more likely a project-scope decision than a per-domain backfill task. Surface in the gap report and defer to the user on whether to fix per-domain or as a catalog-wide pass.
 
 **A5. Vendor records reflect current legal ownership.** *(Opt-in only — not part of the routine audit pass.)*
 
@@ -691,10 +685,10 @@ The `skills` table sits next to `roles` but represents agent skills, not user ro
 
 1. Resolve `<DOMAIN_CODE>` to `<id>` and `<masters>` once at the start. Cache for reuse across queries.
 2. **Run the S-band sweep first** (S1 + S2 + S3). It produces the coverage tables the gap report leads with and surfaces zero-row anomalies the band checks may not specifically test.
-3. Run every **in-scope** band check (A / M / B / C / D / E / F) in order. Skip A5 unless the user has explicitly asked for a vendor-ownership refresh. A6 is in-scope but its fix may be deferred to a catalog-wide pass — surface and ask.
+3. Run every **in-scope** band check (A / M / B / C / D / E / F) in order. Skip A5 unless the user has explicitly asked for a vendor-ownership refresh.
 4. Classify each result:
    - **Structural gate** — M1–M6 failures block every downstream concern. A domain with no modules (or with capability-orphaned modules) can't be modeled in Phase B/E correctly until the M-band is clean. Resolve M-band first.
-   - **In-scope fix** — this domain can fix locally (S1–S3 zero-row anomalies, A1–A4, A6, M1–M6, B1–B9, B11–B12, C1–C2, D1, E1–E6, F1). Goes into the **gap report** as actionable. Fact-sheet emission is **not** an audit step — see § "Fact sheets" below.
+   - **In-scope fix** — this domain can fix locally (S1–S3 zero-row anomalies, A1–A4, M1–M6, B1–B9, B11–B12, C1–C2, D1, E1–E6, F1). Goes into the **gap report** as actionable. Fact-sheet emission is **not** an audit step — see § "Fact sheets" below.
    - **Report-only follow-up** — the symmetric side is owned by another domain (B8 inbound direction, all of B10). Goes into a separate **"report-only follow-ups"** subsection of the report, naming the source domain + the missing check ID on that side (e.g. "HCM B9 owes outbound on `hcm_positions`"). **Do not author fixes for these from this domain's audit.** These items NEVER block the audited domain's green status; they are observations the user can act on by scheduling audits of the source domains.
 4. Surface the gap report to the user **before** authoring any fixes. Include the failing query output snippet so the user can sanity-check. Ask whether to also kick off audits on the source domains in the report-only section.
 5. For each accepted in-scope fix, author it (markdown draft, or directly in a loader); never load AI-generated content without a user review pass (Rule #1).

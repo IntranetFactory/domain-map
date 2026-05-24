@@ -188,16 +188,6 @@ All junction tables use the `parent` FK format on both sides (`reference_delete_
 | `notes` | multiline | yes | |
 | `record_status` | enum | yes | Default `new` |
 
-### `solution_data_objects`
-
-| Field | Format | Required | Notes |
-|---|---|---|---|
-| `solution_id` | parent → `solutions` | yes | |
-| `data_object_id` | parent → `data_objects` | yes | |
-| `ownership_role` | enum | yes | `system_of_record` / `system_of_reference` / `system_of_engagement` / `derived` |
-| `notes` | multiline | yes | |
-| `record_status` | enum | yes | Default `new` |
-
 The data-silo map: rows here with the same `data_object_id` across multiple `solution_id`s are the silo.
 
 ### `domain_data_objects`
