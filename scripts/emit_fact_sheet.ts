@@ -640,7 +640,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
       ? Promise.resolve([])
       : pg(
           "GET",
-          `/cross_domain_handoffs?data_object_id=in.(${scopeObjectIds.join(",")})&select=source_domain_id,target_domain_id,source_domain_module_id,target_domain_module_id,data_object_id,integration_pattern,friction_level,description,notes,data_objects(data_object_name),trigger_events(event_name,description)&order=target_domain_id.asc`,
+          `/handoffs?data_object_id=in.(${scopeObjectIds.join(",")})&select=source_domain_id,target_domain_id,source_domain_module_id,target_domain_module_id,data_object_id,integration_pattern,friction_level,description,notes,data_objects(data_object_name),trigger_events(event_name,description)&order=target_domain_id.asc`,
         ),
   ]);
 
@@ -859,7 +859,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   out.push("### 6.2 Outbound handoffs (events this scope publishes)");
   out.push("");
   if (outboundHandoffs.length === 0) {
-    out.push("_(no outbound `cross_domain_handoffs` whose payload is in this scope.)_");
+    out.push("_(no outbound `handoffs` whose payload is in this scope.)_");
   } else {
     out.push(...renderHandoffTable(outboundHandoffs, "outbound"));
   }
@@ -867,7 +867,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   out.push("### 6.3 Inbound handoffs (events this scope reacts to)");
   out.push("");
   if (inboundHandoffs.length === 0) {
-    out.push("_(no inbound `cross_domain_handoffs` whose payload is in this scope.)_");
+    out.push("_(no inbound `handoffs` whose payload is in this scope.)_");
   } else {
     out.push(...renderHandoffTable(inboundHandoffs, "inbound"));
   }

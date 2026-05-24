@@ -31,3 +31,11 @@ Format:
 - cwd at time of call: `c:/dev/domain-map` (project root)
 - .env present: yes
 - diagnosis: same intermittent server-side routing pattern as 2026-05-23 incident. Same wrong-tenant ID. Retry after pause.
+
+## 2026-05-24 (ATS audit session, first call)
+- call: `semantius whoami` (also affected `semantius info crud postgrestRequest`)
+- received audience: `tenant://1VLl6gULTCGtac6NXImwJewYEqEy061J`
+- full error: `Error: This JWT does not have authorization to access this resource: required audience not found, received ["tenant://1VLl6gULTCGtac6NXImwJewYEqEy061J"]`
+- cwd at time of call: `c:/dev/domain-map` (project root); config_source reported by CLI matches
+- .env present: yes (`SEMANTIUS_ORG=adenin`)
+- diagnosis: stale cached JWT minted for the wrong tenant. A bare `--reset-jwt-cache whoami` succeeded immediately (org `adenin`, api_baseurl `https://adenin.semantius.ai`). Distinct from the intermittent-routing variant — single retry without cache-reset returned the same wrong audience deterministically, while the cache reset fixed it on the first attempt. **Mitigation:** when the same wrong-tenant audience repeats across calls, prefer `--reset-jwt-cache` over plain retry.

@@ -244,7 +244,7 @@ For each skill (system, process, or role):
        (action or compute_service kind) — M365 / Gmail / Twilio / OpenAI / etc.
 ```
 
-The workflow-enumeration step is the analyst-judgment part. For **system skills** the workflows are derivable from the module's `data_objects` masters + `cross_domain_handoffs` outbound. For **process skills** they come directly from the handoff cluster surfaced by [`plan-process-skill-discovery.md` step 7](plan-process-skill-discovery.md).
+The workflow-enumeration step is the analyst-judgment part. For **system skills** the workflows are derivable from the module's `data_objects` masters + `handoffs` outbound. For **process skills** they come directly from the handoff cluster surfaced by [`plan-process-skill-discovery.md` step 7](plan-process-skill-discovery.md).
 
 ## "100% Semantius" identification
 

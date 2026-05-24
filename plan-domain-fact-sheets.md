@@ -29,7 +29,7 @@ The body is 13 numbered sections:
 | 3 | Data object inventory | **One** unified table with columns: # · Name (plural) · Role · Necessity · Canonical? · Pattern flags · Notes/slice. Sorted by role rank, then alphabetical | `domain_data_objects`, `data_objects` |
 | 4 | Aliases and industry synonyms | Aliases for any data_object in scope | `data_object_aliases` |
 | 5 | Relationships | 5.1 intra-domain, 5.2 built-in edges (`users` and future `kind='platform_builtin'` rows), 5.3 cross-domain `data_object_relationships` | `data_object_relationships` |
-| 6 | Cross-domain context | 6.1 co-masters, 6.2 outbound handoffs, 6.3 inbound handoffs, 6.4 embedded/contributing/consuming dependencies with canonical owner domains | `cross_domain_handoffs`, `domain_data_objects` |
+| 6 | Cross-domain context | 6.1 co-masters, 6.2 outbound handoffs, 6.3 inbound handoffs, 6.4 embedded/contributing/consuming dependencies with canonical owner domains | `handoffs`, `domain_data_objects` |
 | 7 | Lifecycle states | Per master data_object: state table with `requires_permission` and `permission_verb_override` derivation visible | `data_object_lifecycle_states` |
 | 8 | Permissions and business rules (derived) | 8.1 permissions table (baseline tier + lifecycle gates + pattern-flag gates, with `:admin` inclusion column); 8.2 business rules from pattern flags | derived from `data_objects` flags + `data_object_lifecycle_states` |
 | 9 | Capabilities | Capability list + 9.1 delivery-strength matrix (solution × capability) | `capabilities`, `capability_domains`, `solution_capabilities` |
@@ -199,12 +199,12 @@ Every `domain_data_objects` row with `role='embedded_master'` requires that the 
 
 ### 5.4 MODIFIED Phase B contract
 
-Phase B expands from `{data_objects, domain_data_objects, cross_domain_handoffs}` to:
+Phase B expands from `{data_objects, domain_data_objects, handoffs}` to:
 
 1. `data_objects` (existing)
 2. `domain_data_objects` (existing)
-3. `cross_domain_handoffs` (existing)
-4. **NEW** `data_object_relationships` — intra-domain edges + built-in edges + cross-domain edges where a payload-to-target mapping is clear (every `cross_domain_handoffs` row with a clean payload should also have a corresponding `data_object_relationships` row for architect §6)
+3. `handoffs` (existing)
+4. **NEW** `data_object_relationships` — intra-domain edges + built-in edges + cross-domain edges where a payload-to-target mapping is clear (every `handoffs` row with a clean payload should also have a corresponding `data_object_relationships` row for architect §6)
 5. **NEW** `data_object_aliases` — ≥1 alias for any non-self-explanatory master
 6. **NEW** `data_object_lifecycle_states` + pattern flags on `data_objects` (`has_personal_content`, `has_submit_lock`, `has_single_approver`) — for `master + required` data_objects. **Required on every new domain load going forward.** Loading a market without these is permitted only when explicitly noted in `plan-master-tasks.md` as a deferred backfill, with the domain code added to a tracked lifecycle-states-pending list. See Rule #12.
 
@@ -238,7 +238,7 @@ Known collisions to address:
 
 | Current name | Proposed rename | Cascade impact |
 |---|---|---|
-| `applications` (id 4, ATS) | `job_applications` | `domain_data_objects`, `solution_data_objects`, `cross_domain_handoffs.data_object_id`, `trigger_events.data_object_id`, event names |
+| `applications` (id 4, ATS) | `job_applications` | `domain_data_objects`, `solution_data_objects`, `handoffs.data_object_id`, `trigger_events.data_object_id`, event names |
 | `offers` (id 11, ATS) | `job_offers` | same + `offer.accepted` → `job_offer.accepted` |
 | `assessments` (id 10, ATS) | `candidate_assessments` | same |
 | `referrals` (id 6, ATS) | `candidate_referrals` | same |
@@ -246,13 +246,13 @@ Known collisions to address:
 
 Audit query in the loader catches additional cases. **Run the audit, surface the proposed rename list to the user, get explicit per-rename confirmation, then load.**
 
-**Prerequisite:** before the rename loader runs, build a rename-cascade utility and test it against one low-stakes rename. The cascade across `domain_data_objects` / `solution_data_objects` / `cross_domain_handoffs` / `trigger_events` / event-name strings has multiple failure modes; orphan rows would break Signal 1 and Signal 2 silently.
+**Prerequisite:** before the rename loader runs, build a rename-cascade utility and test it against one low-stakes rename. The cascade across `domain_data_objects` / `solution_data_objects` / `handoffs` / `trigger_events` / event-name strings has multiple failure modes; orphan rows would break Signal 1 and Signal 2 silently.
 
 ### 6.2 Phase B2 — Built-in seed + relationship-graph population
 
 1. Seed the single `users` `data_objects` row with `kind='platform_builtin'`.
 2. For each domain that has Phase-B masters loaded, draft the intra-domain relationship graph + `users` edges in mermaid; surface for user review; load into `data_object_relationships` (with verb + cardinality + necessity + owner_side).
-3. Also load cross-domain `data_object_relationships` for every `cross_domain_handoffs` row with a clean payload→target mapping (e.g. `candidates →becomes→ employees`, `job_offers →spawns→ onboarding_journeys`).
+3. Also load cross-domain `data_object_relationships` for every `handoffs` row with a clean payload→target mapping (e.g. `candidates →becomes→ employees`, `job_offers →spawns→ onboarding_journeys`).
 4. Order: start with the 23 domains that already have system skills (most reviewed), then the ~25 with thick Phase-B masters, then the rest as Phase-B Lite catches up.
 
 ### 6.3 Phase B3 — Lifecycle states + pattern flags
@@ -358,8 +358,8 @@ Steps 1–7 form the **MVP path** — once 7 ships, ATS has a complete committed
 
 **Step 3 — Rename-cascade utility** (small) ✓ 2026-05-22
 
-- [x] Build the utility script — [.tmp_deploy/rename_data_object.ts](.tmp_deploy/rename_data_object.ts). Default mode is dry-run; pass `--execute` to apply. Pre-flight checks the new name is free and rewritten event_names don't collide. The cascade is genuinely small: every downstream junction (`domain_data_objects`, `solution_data_objects`, `cross_domain_handoffs`, `data_object_relationships`, `data_object_aliases`, `data_object_lifecycle_states`) references the data_object by `id`, so the only string-side cascade is `trigger_events.event_name` (singular-prefix rewrite).
-- [x] Pick one low-stakes rename and run the utility end-to-end as the dry run — chose `referrals` → `candidate_referrals` (ATS, id=6; one of the Phase B1 targets in §6.1). Dry-run output: 1 data_objects rename + 2 trigger_events (`referral.submitted` → `candidate_referral.submitted`, `referral.bonus_earned` → `candidate_referral.bonus_earned`); no FK changes needed; no collisions; 1 `domain_data_objects` row and 2 `cross_domain_handoffs` rows already FK-linked by id.
+- [x] Build the utility script — [.tmp_deploy/rename_data_object.ts](.tmp_deploy/rename_data_object.ts). Default mode is dry-run; pass `--execute` to apply. Pre-flight checks the new name is free and rewritten event_names don't collide. The cascade is genuinely small: every downstream junction (`domain_data_objects`, `solution_data_objects`, `handoffs`, `data_object_relationships`, `data_object_aliases`, `data_object_lifecycle_states`) references the data_object by `id`, so the only string-side cascade is `trigger_events.event_name` (singular-prefix rewrite).
+- [x] Pick one low-stakes rename and run the utility end-to-end as the dry run — chose `referrals` → `candidate_referrals` (ATS, id=6; one of the Phase B1 targets in §6.1). Dry-run output: 1 data_objects rename + 2 trigger_events (`referral.submitted` → `candidate_referral.submitted`, `referral.bonus_earned` → `candidate_referral.bonus_earned`); no FK changes needed; no collisions; 1 `domain_data_objects` row and 2 `handoffs` rows already FK-linked by id.
 - [x] Verify no orphan rows; commit utility to `.tmp_deploy/` — dry-run cleanly enumerates every cascade target with zero orphans flagged. The utility prints `✗ COLLISION` lines when a target event_name would collide and exits non-zero before any write, so a live run is safe.
 
 **Step 4 — Phase B1 bare-word audit & rename** (medium) ✓ 2026-05-22
@@ -478,6 +478,6 @@ Steps 1–7 form the **MVP path** — once 7 ships, ATS has a complete committed
 The plan is complete when:
 
 - ATS has a fact sheet at `domain-fact-sheets/ATS.md` that contains every section of §1's contract, with the relationship graph reproduced from `data_object_relationships` and the permissions table derived from the lifecycle states + pattern flags.
-- The full-catalog bare-word audit has completed; every bare-word `data_object_name` either carries an explicit `is_canonical_bare_word=true` claim with rationale, or has been renamed and cascade-fixed across `domain_data_objects`, `solution_data_objects`, `cross_domain_handoffs.data_object_id`, and `trigger_events.data_object_id`.
+- The full-catalog bare-word audit has completed; every bare-word `data_object_name` either carries an explicit `is_canonical_bare_word=true` claim with rationale, or has been renamed and cascade-fixed across `domain_data_objects`, `solution_data_objects`, `handoffs.data_object_id`, and `trigger_events.data_object_id`.
 - SKILL.md has rules #9, #10, #11, #12 so future loads can't reintroduce the gaps that prompted this plan.
 - The fact sheet for ATS is comprehensive enough that a downstream architect skill, consuming only it, can produce a structurally consistent semantic blueprint without re-deriving naming, relationships, permissions, or business rules.

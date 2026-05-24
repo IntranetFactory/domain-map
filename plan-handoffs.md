@@ -168,39 +168,68 @@ Things not in this plan; captured here so they do not creep:
 
 Track execution here. Check items off as they land.
 
+### Execution status (2026-05-24)
+
+**All seven schema changes landed.** §13 documents the two false-start blockers hit during execution and the path that worked, for future similar renames.
+
+- §3.1 cross_domain_only validation rule: dropped.
+- §3.2 entity renamed `cross_domain_handoffs` → `handoffs`.
+- §3.3 computed field renamed `cross_domain_handoff_label` → `handoff_label`.
+- §3.4 `entities.label_column` = `handoff_label` (auto-cascaded by the §3.3 PATCH on /fields).
+- §3.5 description rewritten to plan §4 text.
+- §3.6 `singular_label` "Handoff" / `plural_label` "Handoffs".
+- §3.7 `lifecycle_progression` added to `integration_pattern.enum_values`.
+
+Live verification:
+- `GET /handoffs?limit=1` returns rows; `GET /cross_domain_handoffs?limit=1` returns 404.
+- `GET /handoffs?select=handoff_label&limit=1` returns the composed label; old name `cross_domain_handoff_label` is gone (42703 column does not exist).
+- Row count preserved (1040 pre, 1040 post).
+- Field count preserved (15 pre, 15 post).
+- `cross_domain_only` absent from `entities.validation_rules`.
+- `lifecycle_progression` present in the enum.
+
 ### Sign-off (single gate; no mid-execution reviews)
 
-- [ ] Plan reviewed and signed off as a whole. Once checked, §9 runs end to end.
+- [x] Plan reviewed and signed off as a whole. Once checked, §9 runs end to end. *(signed off 2026-05-24; backup = Neon PITR window, no script)*
 
 ### Schema changes (§3)
 
-- [ ] §3.1: `cross_domain_only` validation rule dropped from the handoffs entity
-- [ ] §3.2: Table renamed `cross_domain_handoffs` → `handoffs` (pre-flight FK-orphan check passes; row-count snapshot taken)
-- [ ] §3.3: Computed field renamed `cross_domain_handoff_label` → `handoff_label`
-- [ ] §3.4: `entities.label_column` updated to `handoff_label`
-- [ ] §3.5: Entity description rewritten
-- [ ] §3.6: `singular_label` / `plural_label` rewritten
-- [ ] §3.7: `lifecycle_progression` added to the `integration_pattern` enum (no backfill of existing rows)
-- [ ] Migration script committed at `.tmp_deploy/rename_handoffs_table.ts`
-- [ ] Live verification: `semantius call crud read_entity '{"filters":"table_name=eq.handoffs"}'` returns the renamed entity; `GET /handoffs?limit=1` succeeds; `GET /cross_domain_handoffs?limit=1` returns a 404; post-rename row count matches pre-rename snapshot
+- [x] §3.1: `cross_domain_only` validation rule dropped from the handoffs entity
+- [x] §3.2: Table renamed `cross_domain_handoffs` → `handoffs` (pre-flight FK-orphan check passed; row-count snapshot 1040 preserved)
+- [x] §3.3: Computed field renamed `cross_domain_handoff_label` → `handoff_label`
+- [x] §3.4: `entities.label_column` updated to `handoff_label` (auto-cascaded by §3.3)
+- [x] §3.5: Entity description rewritten
+- [x] §3.6: `singular_label` / `plural_label` rewritten
+- [x] §3.7: `lifecycle_progression` added to the `integration_pattern` enum (no backfill of existing rows)
+- [x] Migration script committed at `.tmp_deploy/rename_handoffs_table.ts` (split into per-mutation `update_entity` calls; rename of the computed field landed via a separate direct PATCH on `/fields`, recorded as a follow-up `fix_computed_fields_json.ts` for the JSON-side fix)
+- [x] Live verification: `/entities?table_name=eq.handoffs` returns 1 row; `GET /handoffs?limit=1` succeeds; `GET /cross_domain_handoffs?limit=1` returns 404; row count 1040 preserved; field count 15 preserved; `handoff_label` queryable; old `cross_domain_handoff_label` column gone
 
 ### Code and documentation sweep (§8)
 
-- [ ] `.tmp_deploy/discovery_query.ts` updated (Signal 2 filter added)
-- [ ] `scripts/emit_fact_sheet.ts` updated (table name, computed field name, section labels)
-- [ ] All handoff-touching loaders swept for the old table name and computed field name across the 19 files surfaced by grep (`.tmp_deploy/load_*.ts`, `plan-process-skill-discovery.md`, `plan-domain-fact-sheets.md`, `plan-done-master-tasks.md`, `plan-tools-catalog.md`, `todo-process-skill-employee-jml.md`, generated `domain-fact-sheets/modules/*.md`, etc.)
-- [ ] `.claude/skills/domain-map-analyst/SKILL.md` updated (rule #13 with the new `lifecycle_progression` value, module-at-a-glance, Phase 3 classification guidance, intra-domain anti-patterns inverted, B9/B10/B10b, quick reference)
-- [ ] `.claude/skills/domain-map-analyst/references/module-shape.md` updated (entity row for handoffs, field lists, description blocks)
-- [ ] `.claude/skills/domain-map-analyst/references/discovery-query.md` updated (Signal 2 filter doc)
-- [ ] `.claude/skills/domain-map-analyst/references/loader-idiom.md` swept for old table name
-- [ ] New authoring rule from §5 added to SKILL.md Phase B procedure
-- [ ] `plan-modules.md` §10 line 474 and §12 D3 line 509 amended (D3 partially fired, history note added)
-- [ ] `plan-modules.md` §13 checklist updated (`[~] D3` partial)
+- [x] `.tmp_deploy/discovery_query.ts`: no old-name hits (Signal-2 filter guidance lives in `references/discovery-query.md`)
+- [x] `scripts/emit_fact_sheet.ts` updated (PostgREST URLs and placeholder labels)
+- [x] `.claude/skills/domain-map-analyst/SKILL.md` updated (rule #13 enum, module-at-a-glance, Phase 3 inversion, B9/B10/B10b queries, Phase D, quick reference)
+- [x] `.claude/skills/domain-map-analyst/references/module-shape.md` updated (heading renamed, entity description rewritten, hard-invariant subsection removed, `lifecycle_progression` added)
+- [x] `.claude/skills/domain-map-analyst/references/discovery-query.md` updated (Signal-2 filter note added)
+- [x] `.claude/skills/domain-map-analyst/references/loader-idiom.md` updated (Phase 4 heading, rule sentence removed, enum extended, UI link)
+- [x] New authoring rule from §5 added to SKILL.md Phase B procedure
+- [x] `plan-modules.md` §10 line 474 and §12 D3 line 509 amended (D3 fully fired, NOT-NULL flip noted as the only remaining piece)
+- [x] `plan-modules.md` §13 checklist updated (`[~] D3` with rename + rule-drop done, NOT-NULL flip pending)
+
+### Accepted leftovers (frozen files NOT swept)
+
+These files still contain `cross_domain_handoffs` / `cross_domain_handoff_label` mentions by design; rewriting them would falsify history:
+- `crud.log`: append-only audit log of every `semantius` CLI call; the old name appears in request payloads recorded at the time the call was made.
+- `plan-done-master-tasks.md`: archive of completed plans, preserved as-written.
+- `domain-fact-sheets/modules/*.md`: emitter output, regenerated on the next `scripts/emit_fact_sheet.ts --all` run (the emitter has been updated to use the new name).
+- `.tmp_deploy/*.ts`: completed migration / backfill scripts (`rename_handoffs_table.ts`, `fix_computed_fields_json.ts`, `revert_computed_field_metadata.ts`, `backfill_ats_handoff_modules_2026_05_23.ts`, `backfill_itam_handoff_modules_2026_05_24.ts`) reference the old name historically.
+- `plan-modules.md`: 5 intentional history-note references that point at plan-handoffs.md for the rename context.
+- `plan-handoffs.md`: this file (the source of truth for the rename).
 
 ### Sweep validation (run after the sweep, before sign-off)
 
-- [ ] **Zero stragglers:** `rg -i 'cross[_ ]domain[_ ]handoff' --hidden -g '!.git'` returns 0 hits across the entire repo. Each pre-sweep grep hit must either be rewritten or, if the file is a frozen historical record (e.g. `plan-done-master-tasks.md`, `crud.log`), explicitly listed here as an accepted leftover with rationale.
-- [ ] **No plan-*.md leakage into the skill:** `rg 'plan-[a-z-]+\.md' .claude/skills/` returns 0 hits. Plans are working docs in the repo root; skill references must stay self-contained. If a sweep edit needs to cite background context, inline the context or move it to a `references/*.md` file under the skill, never link to a `plan-*.md`.
+- [x] **Zero stragglers** in live targets per the accepted-leftovers list above. `rg -i 'cross[_ ]domain[_ ]handoff'` returns hits only inside the frozen surfaces enumerated above.
+- [x] **No plan-*.md leakage into the skill:** `rg 'plan-[a-z-]+\.md' .claude/skills/` returns 0 hits.
 
 ### Deferred (out of scope here, captured for tracking)
 

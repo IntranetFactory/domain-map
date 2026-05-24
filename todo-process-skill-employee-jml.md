@@ -78,7 +78,7 @@
 
 ## Phase 5 — Productionise (~1 session, blocked on Phase 1-4)
 
-- [ ] **Audit trail.** Every action the skill takes writes a row somewhere queryable. Decide where: a new `process_skill_executions` table or reuse `cross_domain_handoffs` with the skill_id added? Recommendation: new table — handoffs are the static catalog, executions are runtime.
+- [ ] **Audit trail.** Every action the skill takes writes a row somewhere queryable. Decide where: a new `process_skill_executions` table or reuse `handoffs` with the skill_id added? Recommendation: new table — handoffs are the static catalog, executions are runtime.
 - [ ] **Idempotency.** Re-running the skill on an already-offboarded employee must be safe (no double-COBRA notice, no duplicate ITSM ticket reassignments). Add idempotency keys to all mutate calls.
 - [ ] **Manager-approval gate** (configurable). Some orgs require an HRBP to approve the COBRA fan-out before sending. Add a config toggle: `requires_approval: true|false` per org.
 - [ ] **Observability.** Log every step + outcome to a structured log. Wire to the org's existing observability stack (OBS domain).

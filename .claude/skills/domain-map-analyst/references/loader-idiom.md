@@ -35,9 +35,9 @@ A separate list of `(data_object, domain, role, notes)` tuples for the Signal-1 
 
 Roles: `master` / `contributor` / `consumer` / `derived`. Use `master` only for true co-mastership; default to `contributor` when in doubt.
 
-### Phase 4 — `cross_domain_handoffs`
+### Phase 4: `handoffs`
 
-`(source_domain_id, target_domain_id, data_object_id, trigger_event, integration_pattern, friction_level, description, notes: "")`. Idempotent against the `(source, target, data_object, trigger_event)` 4-tuple. The validation rule `cross_domain_only` rejects rows where source == target.
+`(source_domain_id, target_domain_id, data_object_id, trigger_event, integration_pattern, friction_level, description, notes: "")`. Idempotent against the `(source, target, data_object, trigger_event)` 4-tuple. Intra-domain rows (`source_domain_id == target_domain_id`) are now first-class catalog rows; pick `integration_pattern: lifecycle_progression` for in-process state-transition handoffs where no message moves, otherwise pick from the existing five values per the friction the integration involves.
 
 ## Standard tail: leaderboard summary
 
@@ -82,7 +82,7 @@ const handoffKey = (r: Row) =>
   `${r.source_domain_id}|${r.target_domain_id}|${r.data_object_id}|${r.trigger_event}`;
 ```
 
-The 4-tuple `(source, target, data_object, trigger_event)` is the natural key for `cross_domain_handoffs`. Don't try to dedupe by `(source, target, data_object)` only — the same source/target/object can have multiple legitimate trigger events.
+The 4-tuple `(source, target, data_object, trigger_event)` is the natural key for `handoffs`. Don't try to dedupe by `(source, target, data_object)` only, the same source/target/object can have multiple legitimate trigger events.
 
 ### Use stdin or chunk inserts
 
@@ -144,7 +144,7 @@ These have been consistent across 80+ handoffs and 120+ data_objects. Don't drif
 
 ### `integration_pattern`
 
-Pick one: `event_stream` / `api_call` / `batch_sync` / `manual_handoff` / `file_drop`. Default `api_call` when unknown.
+Pick one: `event_stream` / `api_call` / `batch_sync` / `manual_handoff` / `file_drop` / `lifecycle_progression`. Default `api_call` when unknown. `lifecycle_progression` covers in-process state-transition handoffs where the consumer reads producer state directly, no message moves; typical for intra-domain cross-module rows.
 
 ### `friction_level`
 
@@ -159,7 +159,7 @@ After every load, print three UI links at minimum:
 ```
 https://tests.semantius.app/domain_map/data_objects
 https://tests.semantius.app/domain_map/domain_data_objects
-https://tests.semantius.app/domain_map/cross_domain_handoffs
+https://tests.semantius.app/domain_map/handoffs
 ```
 
 Module slug is `domain_map` (lowercase), not `Domain Map`. Common slip — see SKILL.md hard rule #7.

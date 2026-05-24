@@ -4,7 +4,7 @@
 
 ## Goal
 
-Make `cross_domain_handoffs` complete and structured enough that a deterministic cube query produces a **ranked list of process-skill candidates**, each mapped to an industry-standard process name (APQC PCF) and quantified by friction and function-spread.
+Make `handoffs` complete and structured enough that a deterministic cube query produces a **ranked list of process-skill candidates**, each mapped to an industry-standard process name (APQC PCF) and quantified by friction and function-spread.
 
 A "process skill" is an agent skill that orchestrates a coherent cluster of cross-domain handoffs — e.g. an `onboarding` skill that owns `offer.accepted` (ATS→Onboarding), `task.it_provisioning_required` (Onboarding→ITSM), `employee.created` (HCM→Onboarding/Payroll/IGA). The handoff cluster IS the process; the skill is its agent-side orchestrator.
 
@@ -20,7 +20,7 @@ A "process skill" is an agent skill that orchestrates a coherent cluster of cros
 
 ## Current substrate (snapshot, 2026-05-20)
 
-- `cross_domain_handoffs`: **173 rows** as of 2026-05-21 (the original plan estimate of "~11" was outdated — Phase-B handoff loads ran across multiple clusters between the plan draft and the substrate audit). Spans ITSM, ITOM, HCM, ATS, ONBOARDING, PAYROLL, S2P, CRM, SUB-MGMT, FINOPS, DATA-AI, MSP, and more. 163 unique `(event_name, data_object_id)` pairs; 147 distinct `event_names` with 16 across-data_object name-collisions to disambiguate at P1.3 time.
+- `handoffs`: **173 rows** as of 2026-05-21 (the original plan estimate of "~11" was outdated — Phase-B handoff loads ran across multiple clusters between the plan draft and the substrate audit). Spans ITSM, ITOM, HCM, ATS, ONBOARDING, PAYROLL, S2P, CRM, SUB-MGMT, FINOPS, DATA-AI, MSP, and more. 163 unique `(event_name, data_object_id)` pairs; 147 distinct `event_names` with 16 across-data_object name-collisions to disambiguate at P1.3 time.
 - `trigger_event` is free-text. Patterns emerge (`offer.accepted`, `employee.created`, `incident.asset_failure`) but no controlled vocabulary, no FK to a registry.
 - No `processes` entity. Handoffs don't know which named business process they belong to.
 - No state-machine modelling on data_objects — the implied state transition behind each trigger event isn't enumerated.
@@ -31,7 +31,7 @@ A "process skill" is an agent skill that orchestrates a coherent cluster of cros
 |---|---|---|
 | **New entity: `processes`** | Hierarchical process reference catalog (APQC PCF + custom). Full schema below. | medium (PCF Cross-Industry v8.0 = **2,017 rows** through level 5 — 13 categories × deep hierarchy; initial pre-load estimate of "~250-300" was an order-of-magnitude underestimate, loaded 2026-05-21) |
 | **New entity: `trigger_events`** | Controlled vocabulary. Columns: `event_name` (e.g. `offer.accepted`), `data_object_id` (FK), `from_state` text, `to_state` text, `description`, `event_category` enum (`lifecycle` / `state_change` / `threshold` / `signal`). Replaces the free-text column on handoffs. **`from_state` / `to_state` are free text in v1** — FK to a state-machine table is a future extension if discovery accuracy demands it. | small (~80-150 rows initially) |
-| **Migration: `cross_domain_handoffs.trigger_event`** | Change from string → FK to `trigger_events.id`. Backfill existing rows. | one-time |
+| **Migration: `handoffs.trigger_event`** | Change from string → FK to `trigger_events.id`. Backfill existing rows. | one-time |
 | **Phase B handoff backfill** | Load handoffs for the remaining clusters: HR, Finance, Procurement, Sales, Customer. Same shape as the ITSM handoffs already loaded. | large — ~150-300 handoffs total, ~30 min per cluster |
 
 **Note on process membership and process-domain mapping.** No `process_handoffs` or `process_domains` junctions in v1 — process membership is **derived at query time** from the clustering signals (trigger-event prefix, data-object lifecycle trace, domain-graph community, friction subset, function involvement). If discovery accuracy or query latency later demands a materialised junction, it can be added without disturbing existing rows.
@@ -63,7 +63,7 @@ License: the standard APQC clause grants a perpetual, worldwide, royalty-free li
 Once the model is in place, a single saved cube query produces the candidate list. Process membership is derived at query time, not stored:
 
 ```
-1. Pull cross_domain_handoffs joined with: trigger_events, data_objects,
+1. Pull handoffs joined with: trigger_events, data_objects,
    source/target domains, business_function_domains (both ends).
 
 2. Bucket each handoff into one or more candidate processes by applying
@@ -114,7 +114,7 @@ These are documented in [`.claude/skills/domain-map-analyst/SKILL.md`](.claude/s
 | 1 | Design entities: `processes`, `trigger_events`, `process_handoffs`, `process_domains`. Define in `domain_map` module via `semantius` Layer 1 tools. | Schema | ~1 session |
 | 2 | Load APQC PCF Cross-Industry v8.0 from `K016808_APQC Process Classification Framework (PCF) - Cross-Industry - Excel Version 8.0.xlsx`. Parse the Excel, flatten the 5-level hierarchy into `processes` rows with `parent_process_id` self-references, set `source_framework='apqc_pcf_cross_industry'`, preserve PCF ID in `external_id`, populate `hierarchy_level` 1–5. Drop the .xlsx into a `references/` folder in the repo. Save the APQC attribution text in `LICENSE-APQC-PCF.md` at the repo root. | Master reference (~250-300 rows) | ~1 session |
 | 3 | Draft initial `trigger_events` vocabulary (~80 events) covering existing 11 handoffs plus forward-looking template events. Use snake-case dotted naming consistent with what's in the catalog. | Controlled vocab | ~1 session |
-| 4 | Migrate existing 11 `cross_domain_handoffs.trigger_event` strings to FK references. | Cleanup | ~1 hr |
+| 4 | Migrate existing 11 `handoffs.trigger_event` strings to FK references. | Cleanup | ~1 hr |
 | 5 | Phase-B handoff backfill across remaining clusters. Recommended order: HR-cluster (high handoff density), Finance (S2P, AP, AR flows), Procurement (sourcing-to-contract), Customer (CS support flows), Sales (lead-to-cash). | Substrate completion | ~5 sessions (one per cluster) |
 | 6 | Author the discovery cube query as a saved view in the `cube` server. | Discovery view | ~1 hr |
 | 7 | Run discovery. Surface ranked candidates. Pick top 2-3 to materialise as process skills. | Decision input | ~1 hr |
@@ -130,7 +130,7 @@ These are documented in [`.claude/skills/domain-map-analyst/SKILL.md`](.claude/s
 - **`process_handoffs` derivation vs explicit storage** — resolved. **Query-time derivation** for v1. No materialised `process_handoffs` or `process_domains` junctions. Add later only if discovery latency demands it.
 - **State-machine modelling depth** — resolved. **Free-text `from_state` / `to_state`** in `trigger_events` for v1. FK to a future `data_object_states` table is a downstream extension if needed.
 - **Custom process naming convention** — resolved. **`CUSTOM-<CLUSTER>-<SHORT-NAME>`** (e.g. `CUSTOM-ONBOARD-DAY-1`, `CUSTOM-ACME-INTRA-LEGAL`). Used for any `processes` row with `source_framework='custom'`.
-- **Trigger-event ownership: shared vs distinct rows** — resolved to **Option A: one event row, many subscribers**. When a single trigger fires from one domain to multiple targets (`employee.created` → Onboarding + Payroll + IGA + Talent-Mgmt), all subscriber rows in `cross_domain_handoffs` reference the SAME `trigger_events.id`. Event semantics (publisher, data object, state transition) live in one place. Integration metadata (`friction_level`, `integration_pattern`, `notes`) lives on the per-edge handoff row. This is the standard pub/sub model and the only shape that keeps the trigger-event-prefix clustering signal clean for discovery.
+- **Trigger-event ownership: shared vs distinct rows** — resolved to **Option A: one event row, many subscribers**. When a single trigger fires from one domain to multiple targets (`employee.created` → Onboarding + Payroll + IGA + Talent-Mgmt), all subscriber rows in `handoffs` reference the SAME `trigger_events.id`. Event semantics (publisher, data object, state transition) live in one place. Integration metadata (`friction_level`, `integration_pattern`, `notes`) lives on the per-edge handoff row. This is the standard pub/sub model and the only shape that keeps the trigger-event-prefix clustering signal clean for discovery.
 
 ## Success criteria
 

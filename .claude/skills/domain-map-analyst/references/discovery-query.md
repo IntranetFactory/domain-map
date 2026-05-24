@@ -1,6 +1,8 @@
 # Discovery query — process-skill candidates
 
-Implements the discovery procedure described in [SKILL.md § Phase D](../SKILL.md#phase-d--process-skill-discovery-substrate-level). Buckets `cross_domain_handoffs` by trigger-event prefix, computes friction-weighted metrics, and ranks by `friction_score × distinct_function_count`.
+Implements the discovery procedure described in [SKILL.md § Phase D](../SKILL.md#phase-d--process-skill-discovery-substrate-level). Buckets `handoffs` by trigger-event prefix, computes friction-weighted metrics, and ranks by `friction_score × distinct_function_count`.
+
+**Cross-domain candidacy filter.** The discovery query for cross-domain process-skill candidacy must filter `source_domain_id != target_domain_id` (Signal 2). Intra-domain rows (typically `integration_pattern: lifecycle_progression`) are valuable for module-level deployment manifests but should not feed the cross-domain platform-vs-silos signal.
 
 Implementation: [.tmp_deploy/discovery_query.ts](../../../../.tmp_deploy/discovery_query.ts). Run from project root.
 
@@ -28,7 +30,7 @@ The other clustering signals (data-object lifecycle trace, friction-cluster, dom
 
 | Metric | Definition |
 |---|---|
-| `handoff_count` | Count of `cross_domain_handoffs` whose trigger event belongs to this prefix bucket. |
+| `handoff_count` | Count of `handoffs` whose trigger event belongs to this prefix bucket. |
 | `domain_count` | Distinct `(source_domain_id ∪ target_domain_id)` across the bucket's handoffs. |
 | `function_count` | Distinct `business_function_id` reachable via the bucket's domain set through `business_function_domains`. |
 | `friction_score` | Sum over the bucket's handoffs: `high=3 / medium=2 / low=1`. |

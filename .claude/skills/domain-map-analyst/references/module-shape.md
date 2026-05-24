@@ -154,7 +154,7 @@ Label column: `data_object_name` (natural key, snake_case_plural — `job_requis
 
 Label column: `event_name` (natural key AND human label — dotted snake-case, `offer.accepted`, `employee.created`, `incident.resolved`).
 
-**One event, many subscribers** (per SKILL.md Phase D): a single `trigger_events` row is referenced by every `cross_domain_handoffs` row that has the same publisher event. Don't duplicate events per subscriber — it breaks the trigger-event-prefix clustering signal that Phase D depends on.
+**One event, many subscribers** (per SKILL.md Phase D): a single `trigger_events` row is referenced by every `handoffs` row that has the same publisher event. Don't duplicate events per subscriber, it breaks the trigger-event-prefix clustering signal that Phase D depends on.
 
 ### `regulations`
 
@@ -257,27 +257,25 @@ No qualifier on this junction — the semantic-home relationship is binary.
 
 No qualifier and no `record_status` on this junction — it's a pure presence-or-absence relationship.
 
-### `cross_domain_handoffs`
+### `handoffs`
 
-Directional event-driven handoffs between two **distinct** domains, sharing a data object. Each row is an integration today (pipeline / API call / human handoff) that exists because source and target domains live in separate systems. Together with multi-master rows on [[#domain_data_objects]], this is the data the platform-vs-silos score reads.
+Directional event-driven handoffs between two `domain_modules`, sharing a data object. The handoff lives between modules; whether the two modules happen to belong to the same domain or to different ones is a derived property a downstream consumer filters on, not part of the entity's identity. `source_domain_module_id` / `target_domain_module_id` carry the module attribution; `source_domain_id` / `target_domain_id` are the denormalized domain rollup (derivable from the module FKs and kept on the row for backfill-era rows where the module FKs are still NULL). `friction_level` distinguishes expensive async wiring (`medium` / `high`) from cheap in-process lifecycle walks (`low`). Signal 2 of the platform-vs-silos analysis is one such derived filter, applied at the query layer as `source_domain_id != target_domain_id` (see Phase D). Authoring rule: new rows MUST populate both module FK columns unless the counterparty domain has not yet been modularized; legacy rows from pre-modularization carry only the domain FKs and are backfilled per the per-domain audit B10b.
 
 | Field | Format | Required | Notes |
 |---|---|---|---|
 | `source_domain_id` | parent → `domains` | yes | Domain emitting the trigger event |
 | `target_domain_id` | parent → `domains` | yes | Domain that receives and acts on the event |
-| `data_object_id` | parent → `data_objects` | yes | The **per-edge payload** — the artifact in flight on this specific handoff. Distinct from `trigger_events.data_object_id` (the publisher's data_object). The two columns ARE allowed to differ. |
+| `data_object_id` | parent → `data_objects` | yes | The **per-edge payload**, the artifact in flight on this specific handoff. Distinct from `trigger_events.data_object_id` (the publisher's data_object). The two columns ARE allowed to differ. |
 | `trigger_event_id` | reference → `trigger_events` | yes | FK to the published event (one event row, many subscribers). Per-edge integration metadata lives on this row; event semantics live on `trigger_events`. |
-| `integration_pattern` | enum | yes | `event_stream` / `api_call` / `batch_sync` / `manual_handoff` / `file_drop`. Default `api_call` |
-| `friction_level` | enum | yes | `low` / `medium` / `high`. Default `medium`. Proxy for today's maintenance cost — high friction = highest integrated-platform value |
+| `integration_pattern` | enum | yes | `event_stream` / `api_call` / `batch_sync` / `manual_handoff` / `file_drop` / `lifecycle_progression`. Default `api_call`. `lifecycle_progression` covers in-process state-transition handoffs where the consumer reads producer state directly, no message moves. |
+| `friction_level` | enum | yes | `low` / `medium` / `high`. Default `medium`. Proxy for today's maintenance cost; high friction = highest integrated-platform value |
 | `description` | multiline | yes | What actually happens at the handoff: payload, downstream consequences, known failure modes |
 | `notes` | multiline | yes | |
 | `record_status` | enum | yes | Default `new` |
 
-Label column (auto-computed): `cross_domain_handoff_label` = `<source_domain> → <target_domain> : <event_name>`.
+Label column (auto-computed): `handoff_label` = `<source_domain> → <target_domain> : <event_name>`.
 
-**Hard invariant — `source_domain_id != target_domain_id`.** Enforced by validation rule `cross_domain_only`. Inserts with equal source/target return PostgREST 23514 with the rule's message. Intra-domain events (internal workflow inside one domain) are out of scope by design: they describe a domain's internal complexity, not integration friction, and would dilute the platform-candidacy score. If you later need to catalog intra-domain events for vendor-comparison purposes, add a separate `domain_events` entity rather than relaxing this constraint.
-
-**Trigger-event ownership.** When a single trigger fires from one domain to multiple targets (e.g. `employee.created` → Onboarding + Payroll + IGA + Talent-Mgmt), **all four subscriber rows reference the SAME `trigger_events.id`** via `trigger_event_id`. Don't duplicate events per subscriber — it breaks the trigger-event-prefix clustering signal Phase D depends on.
+**Trigger-event ownership.** When a single trigger fires from one domain to multiple targets (e.g. `employee.created` → Onboarding + Payroll + IGA + Talent-Mgmt), **all four subscriber rows reference the SAME `trigger_events.id`** via `trigger_event_id`. Don't duplicate events per subscriber, it breaks the trigger-event-prefix clustering signal Phase D depends on.
 
 ### `data_object_relationships`
 
