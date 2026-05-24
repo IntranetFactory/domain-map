@@ -110,25 +110,37 @@ When a subagent is given a research/load task, instruct it explicitly to produce
 
 The reference loader at [.tmp_deploy/load_research.ts](.tmp_deploy/load_research.ts) does both — and the canonical `insert()` helper lives in [references/loader-idiom.md](references/loader-idiom.md) (around line 110). **Start from one of those for any greenfield bulk insert.** Common failure mode: copying a per-row pattern (e.g. from `rename_data_object.ts`, which has its own pre-flight per row) into a greenfield loader. That turns N inserts into N subprocess spawns at ~300ms each — 1,000 rows = 5+ minutes when it should be sub-second. Per-row patterns are correct only when each row needs its own pre-flight against live state; for plain "insert a list of new rows," always use the chunked array-body POST.
 
-### 6. NEVER change cwd before invoking `semantius`. Run everything from the project root.
+### 6. JWT-audience errors: surface the full response verbatim, including the failing tenant ID. Then diagnose.
 
-The `semantius` CLI reads `SEMANTIUS_API_KEY` / `SEMANTIUS_ORG` from `.env` in the **current working directory**. The project root has the correct `.env`; subfolders like `.claude/skills/domain-map-analyst/` do not. If you `cd` away from the project root before invoking the CLI (or before `bun run`-ing a loader script that spawns it), the CLI silently falls back to a default config pointing at a different tenant. Reads and writes succeed against the wrong org.
+When a `semantius` call fails with `JWT does not have authorization to access this resource: required audience not found, received ["tenant://<id>"]`, the agent's first obligation is to **show the user the complete error string verbatim, including the `tenant://<id>` value the server received.** Do not summarize, paraphrase, or drop the tenant ID. The tenant ID is the only piece of evidence that distinguishes the possible root causes; eliding it forces the user to re-run the call themselves to see it.
 
-The symptoms are:
+**Mandatory capture format** (paste into the response on every JWT-audience failure):
 
-- `PGRST205 Could not find the table 'public.<table>' in the schema cache` on the first request
-- `JWT audience not found, received ["tenant://<id>"]` where the tenant id doesn't match the project's tenant
-- Different audience IDs on consecutive calls (load-balanced across wrong tenants)
-- `getCurrentUser` returns an unexpected `email` / `semantius_org` (e.g. `admin@test.com` instead of the project user)
+```
+JWT-audience failure
+  ts: <ISO timestamp>
+  call: semantius call crud <method> '<args>'
+  received audience: tenant://<id-from-error>
+  full error: <verbatim error string>
+```
+
+Also append the same entry to [references/jwt-routing-incidents.md](references/jwt-routing-incidents.md) (create the file with a brief header if it doesn't exist yet) so the incident history is committed and reviewable. Memory is off-limits per [CLAUDE.md](../../../CLAUDE.md) — committed file or nothing.
+
+**Then** diagnose. The known causes, in order of historical frequency:
+
+1. **Wrong cwd.** The CLI reads `SEMANTIUS_API_KEY` / `SEMANTIUS_ORG` from `.env` in the **current working directory**. The project root has the correct `.env`; subfolders like `.claude/skills/domain-map-analyst/`, `.tmp_deploy/`, etc. do not. If you `cd` into a subfolder before invoking the CLI (or before `bun run`-ing a loader script that spawns it), the CLI falls back to a default config pointing at a different tenant. Confirm by checking `pwd` and `ls .env`.
+2. **Intermittent server-side routing.** The CLI's MCP transport sometimes routes a request to a tenant the project's API key does not authorize, even when cwd is correct and the `.env` is unchanged. Confirmed pattern (2026-05-23): consecutive `getCurrentUser` calls from the project root with a valid `.env` failed against tenant `1VLl6gULTCGtac6NXImwJewYEqEy061J`, while calls minutes earlier and later succeeded against the project tenant. A simple retry after a short pause is the usual fix; if it keeps failing, surface to the user — don't quietly retry in a loop.
+3. **Stale schema cache.** Different audience IDs on consecutive calls (load-balanced across wrong tenants) point at a routing issue rather than cache, but a single `PGRST205 Could not find the table 'public.<table>' in the schema cache` on the first request after a tenant misroute can also surface. Re-running usually clears it.
+4. **API-key rotation.** Rare. If `getCurrentUser` succeeds but returns the wrong `email` / `semantius_org` (e.g. `admin@test.com` instead of the project user), the `.env` has been pointed at a different org — check `.env` contents.
 
 **Rules:**
 
+- **Never silently swallow a JWT error.** The full error string (with the `tenant://<id>` value) goes into the user-visible response on the first occurrence in any session. Repeated occurrences in the same session need at minimum the new tenant ID and timestamp.
 - Never `cd` into `.claude/skills/...` or `.tmp_deploy/` before running anything that calls `semantius`.
 - Invoke loader scripts with an absolute path from the project root: `bun run "<absolute-path-to-loader>"`. Never `cd <skill-folder> && bun run ...`.
-- If a `semantius` call returns the symptoms above, suspect cwd before suspecting auth rotation, transient routing, or a stale schema cache.
-- When in doubt, sanity-check with `semantius call crud getCurrentUser '{}'` and confirm the `email` and `semantius_org` fields match the expected project tenant.
+- Sanity-check ambiguous cases with `semantius call crud getCurrentUser '{}'` and confirm the `email` and `semantius_org` match the expected project tenant.
 
-This rule was added after the Salesforce platform load: changing cwd into the skill folder routed every call to the `tests` org user (`admin@test.com`) instead of the project's tenant. The user pushed back hard. **The skill exists to make sure this doesn't happen again — do not rediscover this gotcha.**
+**History:** rule originally added after the Salesforce platform load, where `cd`-ing into the skill folder routed every call to the `tests` org user (`admin@test.com`). Expanded 2026-05-23 after JWT failures recurred from the correct cwd with a valid `.env`, against tenant `1VLl6gULTCGtac6NXImwJewYEqEy061J` — the original rule's "always cwd" framing was misleading. The agent at the time also failed to surface the tenant ID in its first user-visible report, which is why the capture format is now mandatory.
 
 ### 7. Surface the UI link after any meaningful write.
 
@@ -591,6 +603,25 @@ A `domains` row is not deployable on its own. Modules are. The M-band is a struc
 
 - Example: ATS embedded-masters `hcm_positions` (id 32). Discovery query 1 returns `(32, embedded_master, required)`. Discovery query 2 returns `(32, 54, HCM)` — HCM canonically masters positions. Then check `/cross_domain_handoffs?source_domain_id=eq.54&target_domain_id=eq.56&data_object_id=eq.32` — if empty, the report writes "HCM B9 owes outbound on `hcm_positions` → ATS (this domain's embedded_master + required)". The fix happens when HCM is reviewed.
 
+**B10b. Per-module attribution on `cross_domain_handoffs`.** *(added 2026-05-23 after a catastrophic audit miss)*
+
+The `cross_domain_handoffs` table carries two per-module FK columns that are routinely null because the modularization-era backfill never ran across pre-modular rows. **An audit that fails to check these columns will pass a domain whose handoff rows have zero module attribution**, which then makes every downstream fact sheet over-attribute events to every module in the source / target domain. As of 2026-05-23, 1019 of 1029 catalog handoffs (99%) sat with null `source_domain_module_id` and 1020 with null `target_domain_module_id`; the original ATS audit on 2026-05-23 ticked B9/B10 green and missed all 34 ATS-touching rows. **This check is non-skippable. If it doesn't have its own query result in your audit transcript, the audit is incomplete.**
+
+- Outbound query (sets `source_domain_module_id` for this domain): `/cross_domain_handoffs?source_domain_id=eq.<id>&source_domain_module_id=is.null&select=id,trigger_event_id,data_object_id,target_domain_id,trigger_events(event_name,data_object_id)`
+- Inbound query (sets `target_domain_module_id` for this domain): `/cross_domain_handoffs?target_domain_id=eq.<id>&target_domain_module_id=is.null&select=id,trigger_event_id,data_object_id,source_domain_id,trigger_events(event_name,data_object_id)`
+- Pass: both queries return zero rows. **Null on the opposite side (e.g. `target_domain_module_id` for an outbound row leaving this domain) is the target domain's B10b — report it for that domain's audit but don't block on it here.**
+- Fix: deterministic derivation, then patch. See [.tmp_deploy/backfill_ats_handoff_modules_2026_05_23.ts](../../../.tmp_deploy/backfill_ats_handoff_modules_2026_05_23.ts) as the reference loader.
+  - **source_domain_module_id** = the module in `source_domain_id` that holds `trigger_events.data_object_id` (the event's data_object, NOT the handoff's payload — these can differ when the event fires on a source-mastered object and the payload is the target-mastered object) with the strongest role. Role order: `master` > `embedded_master` > `contributor` > `consumer` > `derived`.
+  - **target_domain_module_id** = the module in `target_domain_id` that holds the handoff's `data_object_id` (the payload) with the strongest role.
+  - **Tie** (multiple modules at the same strongest role): leave NULL, surface as ambiguous in the gap report. Don't pick arbitrarily.
+  - **No candidate** (no module in the relevant domain holds the data_object): this is itself a deeper gap. Two sub-cases:
+    1. *Domain-level legacy row.* The data_object sits in legacy `domain_data_objects` for the domain but no `domain_module_data_objects` row exists. Fix is **upstream**: load the `domain_module_data_objects` row (B-band Phase 2), then re-run the backfill.
+    2. *No-role row.* The handoff names a payload the target domain doesn't model at all (e.g. ATS receives `position_demand_forecast.updated` but no ATS module declares any role on `position_demand_forecasts`). Decide: either load a `consumer` row on the receiving module (preferred — captures the dependency in the catalog), or accept that the handoff is a domain-level signal with no module owner (rare; usually means the handoff itself is mis-modeled).
+- Also surface: any handoff row where `trigger_events.data_object_id` differs from `cross_domain_handoffs.data_object_id` AND neither side resolves to a module. This is the diagnostic for trigger-event data quality bugs (e.g. duplicate / mis-pointed events). The ATS audit found `trigger_event.id=227` (`assessment.completed`) pointing at `risk_assessments` instead of `candidate_assessments`; rows 1180 / 1181 (`candidate_assessment.passed` / `.failed`) are the modern replacements.
+- Why this matters: without per-module attribution, fact sheets attribute outbound events to every module in the source domain and inbound events to every module in the target domain. The Wave-2 ATS fact sheets (2026-05-23, pre-backfill) had `candidate.hired` outbound rows duplicated across all 8 ATS module pages because the attribution fell back to "any module in the source domain". The columns exist precisely so this can't happen.
+
+The legacy B9 / B10 queries deliberately did not include these columns. Future audits MUST run B10b in addition. The structural sweep (S1) covers FKs to `domains`; per-module FKs to `domain_modules` are NOT swept there. **B10b is the home for module-level FK coverage on `cross_domain_handoffs`.**
+
 **B11. `data_object_aliases` populated for non-self-explanatory masters.**
 - Query: `/data_object_aliases?data_object_id=in.(<masters>)&select=data_object_id,alias_name,alias_type`
 - Pass: every master that has any cross-vendor / cross-industry synonym has ≥1 alias row. Self-explanatory masters (e.g. `hcm_employees` for "employee", `job_postings` for "job posting") are exempt — record the exemption decision in the load notes if challenged.
@@ -701,15 +732,16 @@ When the user does ask for an emit, the quality check on the output is: every `_
 
 ### Backfill gaps to watch for
 
-The catalog has had three known backfill gaps where a category was scaffolded but not loaded as the workflow grew. Each was discovered after several markets had shipped without it. When working in any market loaded before the listed date, expect to backfill:
+The catalog has had four known backfill gaps where a category was scaffolded but not loaded as the workflow grew. Each was discovered after several markets had shipped without it. When working in any market loaded before the listed date, expect to backfill:
 
 | Category | Empty until | What to check on touched markets |
 |---|---|---|
 | `solution_capabilities` (`delivery_strength` matrix) | PROD-MGMT load (2026-05-19) | Every solution × capability for the touched market has a row. Don't ship a new market without the matrix. |
 | `business_function_domains` + `business_function_capabilities` (RACI axis) | Pre–ITSM-review backfill (2026-05-20) | Every domain has at least one `owner` row; every domain has at least one `contributor` or `consumer` row when cross-functional. |
 | `business_functions` spine itself | Pre–2026-05-20 | If the table is empty when starting Phase C, load the 20-function canonical spine first. |
+| `cross_domain_handoffs.source_domain_module_id` + `target_domain_module_id` (per-module attribution on handoffs) | Pre-2026-05-23 ATS backfill | Run B10b. 99% of handoff rows still sit at NULL on these columns. Backfill is deterministic by payload→master derivation; ties leave NULL with a manual-review note. |
 
-Don't ship a new market without closing all three gaps for it. Doing so makes the historical drift worse.
+Don't ship a new market without closing all four gaps for it. Doing so makes the historical drift worse.
 
 ### Cross-cutting capability convention
 

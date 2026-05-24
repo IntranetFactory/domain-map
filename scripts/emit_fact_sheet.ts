@@ -644,11 +644,18 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
         ),
   ]);
 
-  // ---- handoff attribution via payload data_object ownership ----
-  // A handoff is outbound when the payload data_object is mastered by a module in scope
-  // OR when source_domain_module_id is in scope OR when source_domain_id is a parent
-  // domain of one of the scope modules (covers the not-yet-backfilled per-module case).
-  // Symmetric rule for inbound.
+  // ---- handoff attribution ----
+  // Outbound rule:
+  //   - source_domain_module_id explicitly in scope, OR
+  //   - source_domain_id is a scope parent AND this scope MASTERS the payload (the publisher
+  //     is implicitly whichever module owns the payload's master role).
+  // Inbound rule:
+  //   - target_domain_module_id explicitly in scope, OR
+  //   - target_domain_id is a scope parent AND this scope holds the payload in a non-master
+  //     role (embedded_master / contributor / consumer / derived).
+  // The previous "srcDomainInScope && !tgtDomainInScope" fallback over-attributed every
+  // domain-level handoff to every module in the source domain. Per SKILL.md B10b, rows that
+  // still sit with NULL module attribution are reported as catalog gaps, not silently spread.
   const outboundHandoffs: any[] = [];
   const inboundHandoffs: any[] = [];
   for (const h of (handoffRows ?? [])) {
@@ -659,13 +666,10 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
     const srcDomainInScope = parentDomainIds.has(h.source_domain_id as number);
     const tgtDomainInScope = parentDomainIds.has(h.target_domain_id as number);
     const payloadMasteredHere = scopeRole === "master";
-    // Outbound: scope publishes this event (we master the payload, or our domain is the source).
-    if (srcModuleInScope || (srcDomainInScope && payloadMasteredHere) || (srcDomainInScope && !tgtDomainInScope)) {
+    const payloadHeldNonMaster = scopeRole !== undefined && scopeRole !== "master";
+    if (srcModuleInScope || (srcDomainInScope && h.source_domain_module_id === null && payloadMasteredHere)) {
       outboundHandoffs.push(h);
-    }
-    // Inbound: scope receives this event (target is our domain/module, or our scope holds a
-    // non-master role on the payload).
-    else if (tgtModuleInScope || tgtDomainInScope) {
+    } else if (tgtModuleInScope || (tgtDomainInScope && h.target_domain_module_id === null && payloadHeldNonMaster)) {
       inboundHandoffs.push(h);
     }
   }
@@ -685,31 +689,51 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   const out: string[] = [];
 
   // Front matter
+  // The fact sheet IS the domain-blueprint artifact: a human-readable + machine-parseable
+  // description of one deployable system (module) or its starter-kit bundle.
+  //   - system_name: the canonical name a deploy tool / agent skill addresses the system by.
+  //     Single module: the module code (`ATS-CANDIDATE-CRM`). Starter-kit / multi-module:
+  //     the parent domain code (`ATS`).
+  //   - system_description: the human-readable label. Module name / domain name from the
+  //     catalog. Not a marketing tagline.
+  //   - system_slug: the lowercase path-safe form of `system_name`. Also used as the file
+  //     basename so the on-disk filename matches the slug 1:1.
+  // domain_modules / related_modules entries are emitted as slugs (lowercase, dashed) so
+  // any downstream tool can `glob *.md` and join entry-by-entry without case-folding.
+  const isStarterKit = modules.length > 1 && parentDomains.length === 1;
+  const systemName = isStarterKit ? parentDomains[0].domain_code : modules[0].domain_module_code;
+  const systemDescription = isStarterKit ? parentDomains[0].domain_name : modules[0].domain_module_name;
+  const systemSlug = moduleSlug(systemName);
+
   out.push("---");
-  out.push("artifact: fact-sheet");
+  out.push("artifact: domain-blueprint");
   out.push(`fact_sheet_version: "${FACT_SHEET_VERSION}"`);
+  out.push(`system_name: ${systemName}`);
+  out.push(`system_description: ${escapeYaml(systemDescription)}`);
+  out.push(`system_slug: ${systemSlug}`);
   out.push("domain_modules:");
-  for (const m of modules) out.push(`  - ${m.domain_module_code}`);
+  for (const m of modules) out.push(`  - ${moduleSlug(m.domain_module_code)}`);
   if (parentDomains.length > 0) {
     out.push(parentDomains.length === 1 ? `domain_code: ${parentDomains[0].domain_code}` : "domain_codes:");
     if (parentDomains.length > 1) for (const d of parentDomains) out.push(`  - ${d.domain_code}`);
   }
   if (relatedModules.length > 0) {
-    out.push(`related_modules: [${relatedModules.map((m) => m.domain_module_code).join(", ")}]`);
+    out.push(`related_modules: [${relatedModules.map((m) => moduleSlug(m.domain_module_code)).join(", ")}]`);
   }
-  out.push(`generated_at: ${TODAY}`);
-  out.push(`generator: scripts/emit_fact_sheet.ts`);
+  out.push(`created_at: ${TODAY}`);
   out.push("---");
   out.push("");
 
-  // Title - single module: the human module name only (no technical code in prose).
-  // Multi-module: parent domain code + kindLabel (e.g. "ATS Starter Kit"). Domain codes
-  // are treated as market acronyms, not internal IDs.
+  // Title - single module: the human module name only.
+  // Multi-module: the parent domain's human-readable name (e.g. "Applicant Tracking and
+  // Recruiting"). The starter-kit is the market entry point; its title is the market, not
+  // a technical "Starter Kit" suffix.
   const title = modules.length === 1
     ? modules[0].domain_module_name
-    : kindLabel && parentDomains.length === 1
-      ? `${parentDomains[0].domain_code} ${kindLabel}`
-      : `${parentDomains.map((d) => d.domain_code).join(" + ")} ${kindLabel ?? "bundle"}`;
+    : parentDomains.length === 1
+      ? parentDomains[0].domain_name
+      : parentDomains.map((d) => d.domain_name).join(" + ");
+  void kindLabel;
   out.push(`# ${title}`);
   out.push("");
 
@@ -751,8 +775,8 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
     out.push("");
   }
 
-  // §3 Data object inventory
-  out.push("## 3. Data object inventory");
+  // §3 Entities catalog
+  out.push("## 3. Entities catalog");
   out.push("");
   const showModulesCol = modules.length > 1;
   if (scopeRows.length === 0) {
@@ -914,8 +938,6 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   if (modules.length === 1) {
     const m = modules[0];
     const slug = moduleSlug(m.domain_module_code);
-    out.push(`Module-scoped: every permission uses \`${slug}:*\` as its prefix.`);
-    out.push("");
     const moduleScopeRows = scopeRows.filter((r) => r.modules.includes(m));
     const moduleLifecycle = (lifecycleRows ?? []).filter((s: any) => {
       const masterHere = moduleScopeRows.some((r) => r.data_object_id === s.data_object_id && r.role === "master");
@@ -937,8 +959,6 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
     }
     out.push("");
   } else {
-    out.push("Per-module derivations. Each module uses its own `<module_slug>:*` prefix.");
-    out.push("");
     modules.forEach((m, idx) => {
       const slug = moduleSlug(m.domain_module_code);
       const moduleScopeRows = scopeRows.filter((r) => r.modules.includes(m));
@@ -1098,7 +1118,7 @@ function deriveWorkflowGatesAndRules(
 
 async function emitOneModuleFactSheet(m: ModuleRow): Promise<{ path: string; changed: boolean }> {
   const md = await emitFactSheet([m]);
-  const outPath = resolve(MODULES_DIR, `${m.domain_module_code}.md`);
+  const outPath = resolve(MODULES_DIR, `${moduleSlug(m.domain_module_code)}.md`);
   let changed = true;
   if (existsSync(outPath)) {
     const existing = readFileSync(outPath, "utf8");
@@ -1116,7 +1136,7 @@ async function emitOneStarterKit(d: Domain): Promise<{ path: string; changed: bo
     "GET",
     `/domain_starter_modules?domain_id=eq.${d.id}&select=domain_module_id,position&order=position.asc`,
   )) ?? [];
-  const outPath = resolve(STARTER_KITS_DIR, `${d.domain_code}.md`);
+  const outPath = resolve(STARTER_KITS_DIR, `${moduleSlug(d.domain_code)}.md`);
   if (starterRows.length === 0) return { path: outPath, changed: false, skipped: true };
   const modules: ModuleRow[] = starterRows
     .map((r) => modulesById.get(r.domain_module_id as number))
