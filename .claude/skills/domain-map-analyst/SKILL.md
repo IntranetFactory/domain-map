@@ -244,6 +244,28 @@ A `domains` row is a market entry — useful for SEO and analysis but **not depl
 
 **Audit blocker.** A `domains` row with zero `domain_modules` rows fails the per-domain completeness checklist outright (check M1). This blocks every downstream concern — fix the M-band first, then audit B / C / E.
 
+### 15. `domain_module_data_objects.notes` is empty by default. Only populate it when the user explicitly tells you to.
+
+The combination of `role` + `necessity` + the rendered "mastered in" column (which the blueprint emitter derives from the `role=master` junction row catalog-wide) already encodes role membership, the canonical master's location, and the graceful-degradation contract on `necessity: optional`. Prose that restates any of those is noise and pollutes §3 of the rendered blueprint.
+
+**Never write a note that re-narrates schema semantics.** These were the patterns the prior loader scripts produced; all of them are forbidden:
+
+- "Reads from X when integrated; standalone deployments keep the embedded shell" → restates `embedded_master` + `mastered in: X`
+- "Without X deployed, this module functions with a local shell / flat reference" → restates `necessity: optional`
+- "X local-masters Y when no Z is present" → restates `embedded_master` against a non-modularized master
+- "Module N holds the binding to Z" → opaque cross-references that go stale on renumber
+
+**Acceptable notes** carry information the schema cannot express, AND only when the user has explicitly asked for the note:
+
+- Storage-shape divergence from the master (composite key, flattened hierarchy, etc.)
+- State-level constraints (e.g. "can only reference `published` rows, not `draft`")
+- Business rules absent from `lifecycle_states` (approval-tier exceptions, countersign requirements)
+- Module-specific history that affects the current shape and isn't recoverable from `created_at` / git
+
+If you find yourself reaching for prose just to fill the column, leave it empty. Empty is the right default.
+
+This rule is scoped to `domain_module_data_objects.notes` (the module-level junction). The domain-level junction `domain_data_objects.notes` follows the older multi-master conventions documented in §"Multi-master vs multi-embedded-master" below; that doctrine is unchanged.
+
 ---
 
 ## The module at a glance
@@ -286,7 +308,7 @@ A `domains` row is a market entry — useful for SEO and analysis but **not depl
 | `data_object_relationships` | data_objects ↔ data_objects | cardinality + kind |
 | `handoffs` | domain_modules → domain_modules (via data_object) | `trigger_event_id` (FK to `trigger_events`) + integration_pattern + friction_level. Covers both cross-domain handoffs (source ≠ target; the Signal 2 substrate for platform-vs-silos analysis, where Signal 1 is the multi-master count on `domain_data_objects` where `role ∈ {master, embedded_master}` AND `necessity = required`) and intra-domain handoffs (source = target, typically `integration_pattern: lifecycle_progression`). The cross-domain filter is applied at query time, not by a validation rule. |
 | `domain_module_capabilities` | domain_modules ↔ capabilities | which capabilities a module realizes; one capability may realize in multiple modules |
-| `domain_module_data_objects` | domain_modules ↔ data_objects | role (same 5-value enum as `domain_data_objects`) + necessity. Once a domain has modules, `domain_data_objects` is a **derived rollup** from this junction (group by data_object_id, strongest role wins). |
+| `domain_module_data_objects` | domain_modules ↔ data_objects | role (same 5-value enum as `domain_data_objects`) + necessity + `notes`. Once a domain has modules, `domain_data_objects` is a **derived rollup** from this junction (group by data_object_id, strongest role wins). The single-master rule applies at this layer: exactly one row per `data_object_id` may have `role=master`; the blueprint emitter throws if it sees more. `notes` is empty by default — see Rule #15. |
 | `domain_module_host_domains` | domain_modules ↔ domains | additional hosts beyond `domain_modules.domain_id`. Cross-cutting modules use this to declare every domain they install on. |
 | `domain_starter_modules` | domains ↔ domain_modules | editorial recommendation: position int + notes. ≥1 row REQUIRED on every domain with ≥3 capabilities (Rule #14). |
 
@@ -717,14 +739,14 @@ A well-run audit produces two artifacts: the gap report (with in-scope and repor
 
 Fact-sheet emission is a deliberate, user-triggered action. **Do not run it as part of any load, audit, fix-loop, or "verify and share" step.** The audit reads live state via PostgREST; the on-disk fact sheets can sit stale across many audit passes and that's the intended state.
 
-Emit only when the user explicitly asks. Triggers: "emit the ATS fact sheet", "regenerate the fact sheets", "refresh `<MODULE-CODE>.md`", "run the fact sheet generator". Do not infer the user wants fact sheets from phrases like "audit X" or "load Y was that successful" — confirm first.
+Emit only when the user explicitly asks. Triggers: "emit the ATS blueprint", "regenerate the blueprints", "refresh `<MODULE-CODE>-semantic-blueprint.md`", "run the blueprint generator". Do not infer the user wants blueprints from phrases like "audit X" or "load Y was that successful" — confirm first.
 
-The emitter at [scripts/emit_fact_sheet.ts](../../../scripts/emit_fact_sheet.ts) produces two kinds of fact sheet:
+The emitter at [scripts/emit_fact_sheet.ts](../../../scripts/emit_fact_sheet.ts) produces two kinds of semantic blueprint:
 
-- **Per-module fact sheets** → `domain-fact-sheets/modules/<MODULE-CODE>.md`, one per `domain_modules` row. The deployable-unit view: data_objects assigned to this module, lifecycle states on this module's masters, the system skill + tools + Semantius coverage %, module-scoped permissions, capabilities realized, outbound / inbound handoffs, architect handoff hints.
-- **Per-starter-kit fact sheets** → `domain-fact-sheets/starter-kits/<DOMAIN-CODE>.md`, one per domain with a `domain_starter_modules` junction. The buyer-facing market entry point: market overview, the editorial on-ramp, every module installable on this domain, combined view across the starter modules, capabilities, solutions, vendors, RACI, regulations, architect handoff hints.
+- **Per-module blueprints** → `blueprints/modules/<module-code>-semantic-blueprint.md`, one per `domain_modules` row. The deployable-unit view: data_objects assigned to this module, lifecycle states on this module's masters, the system skill + tools + Semantius coverage %, module-scoped permissions, capabilities realized, outbound / inbound handoffs, architect handoff hints.
+- **Per-starter-kit blueprints** → `blueprints/starter-kits/<domain-code>-semantic-blueprint.md`, one per domain with a `domain_starter_modules` junction. The buyer-facing market entry point: market overview, the editorial on-ramp, every module installable on this domain, combined view across the starter modules, capabilities, solutions, vendors, RACI, regulations, architect handoff hints.
 
-There is no per-domain fact sheet in the current emitter — the starter-kit page replaces it as the market entry point. Any legacy `domain-fact-sheets/<DOMAIN-CODE>.md` files on disk are no longer regenerated; treat them as historical.
+There is no per-domain blueprint in the current emitter — the starter-kit page replaces it as the market entry point. Any legacy `domain-fact-sheets/` files on disk are no longer regenerated; treat them as historical.
 
 Commands:
 - `bun run scripts/emit_fact_sheet.ts --starter-kit <DOMAIN_CODE>` — regenerates the domain's starter-kit page.
@@ -875,7 +897,8 @@ For each data object you just loaded, ask **two distinct questions**: (1) which 
 
 - The schema allows multiple `master` rows per data_object (the original multi-master pattern); this is by design, not an integrity bug.
 - The schema *also* allows multiple `embedded_master` rows per data_object — common for foundational records that almost every point-solution local-masters (`employees`, `positions`, `cost_centers`, `customers`, `products`, `departments`). High embedded-master count alongside a canonical master is itself a strong silos signal: "this object would live in N point solutions if they were deployed standalone, integration debt absorbs it once a canonical master ships."
-- Each domain that co-masters (canonical *or* embedded) should explain *which slice* it owns in the junction's `notes` column. "Recruiting execution: stages, candidates, interviews, offers" vs "Headcount intent: position approval, budget alignment, plan-to-actual" makes the multi-master row useful instead of ambiguous. For embedded_master rows, the notes should also state the demotion path: "ATS local-masters positions when no HCM is deployed; reads from HCM when present."
+- This guidance applies to the **domain-level junction** (`domain_data_objects.notes`) only. At the module level (`domain_module_data_objects.notes`), the single-master rule applies and notes are empty by default — see Rule #15.
+- Each domain that holds a `master` row alongside other masters should explain *which slice* it owns in the domain-level junction's `notes` column. "Recruiting execution: stages, candidates, interviews, offers" vs "Headcount intent: position approval, budget alignment, plan-to-actual" makes the multi-master row useful instead of ambiguous. **Slice-decomposition notes only.** Do not write demotion-path prose ("X local-masters when Y absent", "reads from Y when integrated") on embedded_master rows: that information is already encoded by `role=embedded_master` + `necessity` + the existence of a canonical master row elsewhere. Notes that restate the schema are noise.
 
 **Look for the cluster flagship first.** Every cluster we've loaded has produced a structural multi-master flagship: `employees` (HR cluster), `configuration_items` (IT-ops cluster), `customers` (customer-facing cluster). The flagship is 3-4 canonical masters + contributors + at least one consumer + (with embedded_master modelling) several point-solution embedded_masters. The flagship anchors the rest of the load. When you start a new cluster, *expect* this pattern — find the flagship first, then everything else decomposes around it. See [references/canonical-examples.md](references/canonical-examples.md) for the full catalog of landmark rows and their slice decomposition.
 
@@ -931,7 +954,7 @@ All queries are one-line cube DSL once the data is in — surface them to the us
 
 - ❌ Putting `Onboarding Task` (or any other handoff target) under the *trigger* domain's data_objects. It belongs to the *master* domain; the relationship is a `handoffs` row, not a `domain_data_objects` row.
 - ✅ Intra-domain events are now first-class catalog rows in `handoffs`. Capture cross-module flows within one domain (typically with `integration_pattern: lifecycle_progression`) so module-level deployment manifests can read them. The cross-domain platform-vs-silos signal (Signal 2) is computed at query time by filtering `source_domain_id != target_domain_id`; intra-domain rows do not pollute that signal because they are excluded by the filter, not by an insert-time rule.
-- ❌ Filling `domain_data_objects.notes` with nothing on multi-master or embedded_master rows. The whole point of allowing multi-master / embedded_master is to surface *which slice* each domain owns; an empty `notes` hides that. For embedded_master rows the notes should also explicitly state the demotion path ("ATS local-masters positions when no HCM is deployed; reads from HCM when present").
+- ❌ Filling `domain_data_objects.notes` with nothing on a multi-master row where the slice each domain owns is non-obvious. The whole point of allowing multi-master is to surface *which slice* each domain owns; an empty `notes` hides that. Slice-decomposition prose only — do **not** write demotion-path prose on embedded_master rows (that information is already encoded by `role=embedded_master` + the existence of a canonical master row elsewhere; notes that restate it are noise). For the module-level junction, see Rule #15: notes are empty by default unless the user explicitly requests one.
 - ❌ Inventing a co-master domain in the catalog just to make a multi-master row work. Apply the point-solution-market test first; if Workforce Planning genuinely passes (it does), add the domain. If it doesn't, the data_object probably belongs to one master, not two.
 - ❌ Naming `data_object_name` in human form (`Job Requisition`, `Background Check`). That's `singular_label` (and `plural_label`)'s job. The natural key is snake_case_plural.
 - ❌ Defaulting every `domain_data_objects` row to `necessity='required'` without thinking. The default is a *fail-safe*, not the right answer. Convenience fields a point-solution may or may not model (cost_centers on ATS, departments on LMS, salary_bands on most non-HR domains) belong on `optional` rows. Required vs optional is the second classification axis, not a checkbox.
@@ -1200,7 +1223,7 @@ Reference loader: [.tmp_deploy/load_p25b_process_skills.ts](../../../.tmp_deploy
 - ❌ Treating `handoffs.data_object_id` as the publisher's data_object. It's the **per-edge payload** — the artifact in flight on that specific handoff. The publisher's data_object lives on `trigger_events.data_object_id` and is shared across every subscriber of the event. These two columns ARE allowed to differ (HCM publishes `employee.created` on `employees`; the HCM→Onboarding handoff carries `onboarding_journeys` as the payload). Reviewers regularly conflate them when reading a handoff row in isolation.
 - ❌ Scaffolding synthetic `data_objects` for leadership-layer / aggregation-tier domains (REV-INTEL, SALES-PERF, GTM-PLAN, ACCT-PLAN, PRM, EPM) just so they "own something". These domains read upstream and publish derived signals; the handoff's `data_object_id` references the upstream cluster's data_object directly. Forcing ownership via synthetic objects creates dead rows that nothing else references.
 - ❌ Inferring catalog state from `.tmp_deploy/*.ts` deploy scripts. They drift the moment they ship. Cluster inventories MUST query live `postgrestRequest` endpoints — see workflow step 1.
-- ❌ Treating `domain_data_objects.notes` as a required field on every master row. `notes` is for research details / decisions worth preserving (slice ownership on multi-master / embedded_master rows per Rule #3 and the anti-pattern above, demotion-path explanations, point-solution-vs-holistic carve-outs, classification rationale that a future reviewer would otherwise have to re-derive). Empty `notes` on a single-master row with no decision worth recording is the right shape, not a gap. The fact-sheet emitter and the per-domain checklist both treat this column as opt-in metadata, not a populate-on-every-row obligation.
+- ❌ Treating `domain_data_objects.notes` as a required field on every master row. `notes` is for research details / decisions worth preserving (slice ownership on multi-master rows per Rule #3 and the anti-pattern above, point-solution-vs-holistic carve-outs, classification rationale a future reviewer would otherwise have to re-derive). Empty `notes` on a single-master row with no decision worth recording is the right shape, not a gap. Do **not** write demotion-path prose on embedded_master rows: `role=embedded_master` + the canonical master's existence already conveys it; notes that restate the schema are noise. The blueprint emitter and the per-domain checklist both treat this column as opt-in metadata, not a populate-on-every-row obligation. For the module-level junction (`domain_module_data_objects.notes`), see Rule #15: empty by default unless the user explicitly asks for a note.
 - ❌ Loading a market with `min_org_size` of `xs`/`s` but only enterprise-tier solutions. If the stated minimum buyer is SMB/mid-market, the solution list must include at least 1–2 vendors that actually sell into that band. A list of pure enterprise solutions under an SMB-minimum domain is internally inconsistent and misleads downstream filters.
 - ❌ Declaring a load or audit "done" without running the Per-domain completeness checklist (§ above). Every silent gap in this catalog's history followed the same pattern — someone shipped a market, the count of new rows looked right, no one ran the full checklist, and a category (`business_function_domains`, intra-domain `data_object_relationships`, lifecycle states) sat empty for weeks. Running the checklist is the gate; "I think I covered everything" is not a substitute. Specifically: do not declare ATS-shaped loads done until B6 (intra-domain relationships) and B7 (`users` edges) pass — those two were silently empty for ATS through Step-5's cluster pass and only surfaced when the fact sheet's mermaid rendered with disconnected nodes.
 - ❌ Predicting numeric IDs inside a script. Always re-read after insert to build the id map.

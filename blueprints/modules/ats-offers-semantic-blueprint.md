@@ -1,5 +1,5 @@
 ---
-artifact: domain-blueprint
+artifact: semantic-blueprint
 fact_sheet_version: "2.0"
 system_name: ATS-OFFERS
 system_description: Offers
@@ -7,8 +7,8 @@ system_slug: ats-offers
 domain_modules:
   - ats-offers
 domain_code: ATS
-related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools]
-created_at: 2026-05-23
+related_modules: [ats-background-checks, ats-candidate-crm, ats-pre-employee-record, ats-recruitment-pipeline, comp-benchmarking]
+created_at: 2026-05-24
 ---
 
 # Offers
@@ -49,12 +49,12 @@ flowchart LR
 
 ## 3. Entities catalog
 
-| # | data_object | role | necessity | canonical? | pattern flags | notes |
+| # | data_object | role | mastered in | necessity | pattern flags | notes |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 1 | `job_offers` (Offers) | master | required | - | personal_content, single_approver | - |
-| 2 | `job_applications` (Applications) | embedded_master | required | - | personal_content | - |
-| 3 | `candidates` (Candidates) | embedded_master | required | ✓ bare-word | personal_content | - |
-| 4 | `salary_bands` (Salary Bands) | embedded_master | optional | - | - | Without COMP-MGMT, offers go out without the salary-band guidance overlay; offer issuance still functions fine. |
+| 1 | `job_offers` (Offers) | master | - | required | personal_content, single_approver | - |
+| 2 | `job_applications` (Applications) | embedded_master | `ats-recruitment-pipeline` | required | personal_content | - |
+| 3 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | required | personal_content | - |
+| 4 | `salary_bands` (Salary Bands) | embedded_master | `comp-benchmarking` | optional | - | Without COMP-MGMT, offers go out without the salary-band guidance overlay; offer issuance still functions fine. |
 
 ## 4. Aliases and industry synonyms
 
@@ -111,7 +111,7 @@ flowchart LR
 
 ## 6. Cross-domain context
 
-### 6.1 Co-masters (other modules / domains with a role on this scope's masters)
+### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
 | data_object | other module / domain | role | necessity | notes |
 | --- | --- | --- | --- | --- |
@@ -129,15 +129,17 @@ flowchart LR
 
 | target module | source domain | source module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-OFFERS | COMP-MGMT | _(domain-level)_ | `salary_band.updated` | `salary_bands` | event_stream | low | Updated bands flow to ATS offer-generation. |
+| ATS-OFFERS | ATS | ATS-BACKGROUND-CHECKS | `background_check.flagged` | `job_offers` | lifecycle_progression | medium | - |
+| ATS-OFFERS | ATS | ATS-RECRUITMENT-PIPELINE | `job_application.advanced` | `job_offers` | lifecycle_progression | low | - |
+| ATS-OFFERS | COMP-MGMT | COMP-BENCHMARKING | `salary_band.updated` | `salary_bands` | event_stream | low | Updated bands flow to ATS offer-generation. |
 
-### 6.4 Embedded / contributing / consuming dependencies
+### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
 | data_object | role here | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `candidates` | embedded_master | required | ATS-CANDIDATE-CRM (ATS) | - |
 | `job_applications` | embedded_master | required | ATS-RECRUITMENT-PIPELINE (ATS) | - |
-| `salary_bands` | embedded_master | optional | COMP-MGMT (Compensation Management) | Without COMP-MGMT, offers go out without the salary-band guidance overlay; offer issuance still functions fine. |
+| `salary_bands` | embedded_master | optional | COMP-BENCHMARKING (COMP-MGMT) | Without COMP-MGMT, offers go out without the salary-band guidance overlay; offer issuance still functions fine. |
 
 ## 7. Lifecycle states (per master)
 

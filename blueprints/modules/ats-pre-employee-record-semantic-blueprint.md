@@ -1,5 +1,5 @@
 ---
-artifact: domain-blueprint
+artifact: semantic-blueprint
 fact_sheet_version: "2.0"
 system_name: ATS-PRE-EMPLOYEE-RECORD
 system_description: Pre-Employee Record
@@ -7,8 +7,8 @@ system_slug: ats-pre-employee-record
 domain_modules:
   - ats-pre-employee-record
 domain_code: ATS
-related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-recruitment-pipeline, ats-referrals, ats-talent-pools]
-created_at: 2026-05-23
+related_modules: [ats-background-checks, ats-candidate-crm, ats-offers]
+created_at: 2026-05-24
 ---
 
 # Pre-Employee Record
@@ -46,11 +46,11 @@ flowchart LR
 
 ## 3. Entities catalog
 
-| # | data_object | role | necessity | canonical? | pattern flags | notes |
+| # | data_object | role | mastered in | necessity | pattern flags | notes |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 1 | `pre_employees` (Pre-Employees) | master | required | - | personal_content | - |
-| 2 | `candidates` (Candidates) | embedded_master | required | ✓ bare-word | personal_content | - |
-| 3 | `job_offers` (Offers) | embedded_master | required | - | personal_content, single_approver | - |
+| 1 | `pre_employees` (Pre-Employees) | master | - | required | personal_content | - |
+| 2 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | required | personal_content | - |
+| 3 | `job_offers` (Offers) | embedded_master | `ats-offers` | required | personal_content, single_approver | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -102,7 +102,7 @@ flowchart LR
 
 ## 6. Cross-domain context
 
-### 6.1 Co-masters (other modules / domains with a role on this scope's masters)
+### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
 
 ### 6.2 Outbound handoffs (events this scope publishes)
@@ -113,9 +113,13 @@ flowchart LR
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
-_(no inbound `cross_domain_handoffs` whose payload is in this scope.)_
+| target module | source domain | source module | trigger_event | payload | integration | friction | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-OFFERS | `job_offer.rescinded` | `pre_employees` | lifecycle_progression | high | - |
+| ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-OFFERS | `job_offer.accepted` | `pre_employees` | lifecycle_progression | low | - |
+| ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-BACKGROUND-CHECKS | `background_check.cleared` | `pre_employees` | lifecycle_progression | low | - |
 
-### 6.4 Embedded / contributing / consuming dependencies
+### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
 | data_object | role here | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |

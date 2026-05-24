@@ -2,13 +2,13 @@
 // scripts/emit_fact_sheet.ts - plan-modules.md §11 step 4 (revised per §9, session 3).
 //
 // Two-pass emitter:
-//   1. Per-module fact sheets → domain-fact-sheets/modules/<MODULE-CODE>.md
+//   1. Per-module fact sheets → blueprints/modules/<MODULE-CODE>-semantic-blueprint.md
 //      One per `domain_modules` row. The deployable unit's surface: data_objects assigned to
 //      this module, lifecycle states on this module's masters, system skill + skill_tools +
 //      Semantius coverage %, module-scoped permissions and business rules, capabilities
 //      realized, outbound/inbound integration handoffs, architect handoff hints.
 //
-//   2. Per-starter-kit fact sheets → domain-fact-sheets/starter-kits/<DOMAIN-CODE>.md
+//   2. Per-starter-kit fact sheets → blueprints/starter-kits/<DOMAIN-CODE>-semantic-blueprint.md
 //      One per domain that has a `domain_starter_modules` junction. The buyer-facing market
 //      entry point: market overview, the editorial on-ramp, every module installable on this
 //      domain (primary-home + cross-cutting hosted via domain_module_host_domains), combined
@@ -51,9 +51,10 @@ if (!ALL && !MODULE_CODE && !STARTER_DOMAIN_CODE) {
 }
 
 const ROOT = "c:/dev/domain-map";
-const FACT_SHEET_DIR = `${ROOT}/domain-fact-sheets`;
+const FACT_SHEET_DIR = `${ROOT}/blueprints`;
 const MODULES_DIR = `${FACT_SHEET_DIR}/modules`;
 const STARTER_KITS_DIR = `${FACT_SHEET_DIR}/starter-kits`;
+const BLUEPRINT_SUFFIX = "-semantic-blueprint.md";
 const TODAY = new Date().toISOString().slice(0, 10);
 const FACT_SHEET_VERSION = "2.0";
 
@@ -196,7 +197,7 @@ const ROLE_RANK: Record<string, number> = Object.fromEntries(ROLE_ORDER.map((r, 
 // Scoped-query helpers - reused by both module and starter-kit emitters.
 // "Scope" = a set of data_object IDs (one module's data_objects, or the union across the
 // starter modules of a domain). All structural sections (mermaid, entity summary, aliases,
-// relationships, co-masters, dependencies) are derived from this scope + the role each
+// relationships, master consumers, master providers) are derived from this scope + the role each
 // data_object plays in this scope.
 // ============================================================
 
@@ -500,6 +501,31 @@ function renderCoMasters(rows: CoMasterRow[]): string[] {
   return out;
 }
 
+// Single-owner lookup for §3. A data_object should have exactly one master across the
+// catalog; if `owners` reports more than one module or more than one fallback-domain for the
+// same data_object, that is a catalog integrity violation (caught here loudly rather than
+// silently rendered).
+function masteredInLabel(r: ScopeRow, owners: Map<number, OwnerInfo>): string {
+  if (r.role === "master" || r.role === "derived") return "-";
+  const info = owners.get(r.data_object_id);
+  if (!info) {
+    return r.data_object.kind === "platform_builtin" ? "_(platform built-in)_" : "-";
+  }
+  if (info.modules.length > 1) {
+    throw new Error(
+      `catalog integrity: data_object ${r.data_object.data_object_name} (id ${r.data_object_id}) has ${info.modules.length} modules with role=master (${info.modules.map((m) => m.domain_module_code).join(", ")}). Expected exactly one.`,
+    );
+  }
+  if (info.modules.length === 1) return `\`${moduleSlug(info.modules[0].domain_module_code)}\``;
+  if (info.domains.length > 1) {
+    throw new Error(
+      `catalog integrity: data_object ${r.data_object.data_object_name} (id ${r.data_object_id}) has ${info.domains.length} domains with role=master (${info.domains.map((d) => d.domain_code).join(", ")}). Expected exactly one.`,
+    );
+  }
+  if (info.domains.length === 1) return `\`${info.domains[0].domain_code}\` _(domain-level, not modularized)_`;
+  return "-";
+}
+
 function renderDependencies(scopeRows: ScopeRow[], owners: Map<number, OwnerInfo>): string[] {
   const out: string[] = [];
   const deps = scopeRows.filter((r) => r.role !== "master");
@@ -674,39 +700,63 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
     }
   }
 
-  // Sibling modules: other modules of the parent domain(s) not already in this scope.
-  // Useful for catalog navigation: "this fact sheet covers X and Y; sibling modules in
-  // the same market are A, B, C, ...". Lives in front matter so catalog UIs can render
-  // cross-links without parsing prose.
-  const relatedModules: ModuleRow[] = [];
-  for (const m of allModules) {
-    if (moduleIdSet.has(m.id)) continue;
-    if (m.domain_id !== null && parentDomainIds.has(m.domain_id)) relatedModules.push(m);
+  // Related modules: the union of four data-coupling sources, deduped, with self removed.
+  //   1. master_providers   - modules that own a master this scope embeds (§6.4)
+  //   2. master_consumers   - modules that embed a master this scope owns (§6.1)
+  //   3. handoff senders    - source module of an inbound handoff (non-null id only)
+  //   4. handoff receivers  - target module of an outbound handoff (non-null id only)
+  // Handoff rows whose source/target module id is NULL are skipped: per the catalog
+  // convention, every handoff will carry per-module attribution at go-live, and any
+  // domain-level-only row is treated as not-yet-attributed rather than promoted to a
+  // domain-level entry here. Lives in front matter so catalog UIs can render cross-links
+  // without parsing prose.
+  const relatedModuleIds = new Set<number>();
+  for (const info of owners.values()) {
+    for (const m of info.modules) {
+      if (!moduleIdSet.has(m.id)) relatedModuleIds.add(m.id);
+    }
   }
+  for (const c of coMasters) {
+    if (c.owner_module && !moduleIdSet.has(c.owner_module.id)) {
+      relatedModuleIds.add(c.owner_module.id);
+    }
+  }
+  for (const h of inboundHandoffs) {
+    const srcId = h.source_domain_module_id as number | null;
+    if (srcId !== null && !moduleIdSet.has(srcId)) relatedModuleIds.add(srcId);
+  }
+  for (const h of outboundHandoffs) {
+    const tgtId = h.target_domain_module_id as number | null;
+    if (tgtId !== null && !moduleIdSet.has(tgtId)) relatedModuleIds.add(tgtId);
+  }
+  const relatedModules: ModuleRow[] = [...relatedModuleIds]
+    .map((id) => modulesById.get(id))
+    .filter((m): m is ModuleRow => Boolean(m));
   relatedModules.sort((a, b) => a.domain_module_code.localeCompare(b.domain_module_code));
 
   // ---- render ----
   const out: string[] = [];
 
   // Front matter
-  // The fact sheet IS the domain-blueprint artifact: a human-readable + machine-parseable
+  // The fact sheet IS the semantic-blueprint artifact: a human-readable + machine-parseable
   // description of one deployable system (module) or its starter-kit bundle.
   //   - system_name: the canonical name a deploy tool / agent skill addresses the system by.
   //     Single module: the module code (`ATS-CANDIDATE-CRM`). Starter-kit / multi-module:
   //     the parent domain code (`ATS`).
   //   - system_description: the human-readable label. Module name / domain name from the
   //     catalog. Not a marketing tagline.
-  //   - system_slug: the lowercase path-safe form of `system_name`. Also used as the file
-  //     basename so the on-disk filename matches the slug 1:1.
+  //   - system_slug: the lowercase path-safe form of `system_name`. Used as the filename
+  //     stem; the on-disk filename is `<system_slug>-semantic-blueprint.md`.
   // domain_modules / related_modules entries are emitted as slugs (lowercase, dashed) so
-  // any downstream tool can `glob *.md` and join entry-by-entry without case-folding.
+  // any downstream tool can `glob *-semantic-blueprint.md` and join entry-by-entry without
+  // case-folding.
   const isStarterKit = modules.length > 1 && parentDomains.length === 1;
   const systemName = isStarterKit ? parentDomains[0].domain_code : modules[0].domain_module_code;
   const systemDescription = isStarterKit ? parentDomains[0].domain_name : modules[0].domain_module_name;
   const systemSlug = moduleSlug(systemName);
 
   out.push("---");
-  out.push("artifact: domain-blueprint");
+  out.push("artifact: semantic-blueprint");
   out.push(`fact_sheet_version: "${FACT_SHEET_VERSION}"`);
   out.push(`system_name: ${systemName}`);
   out.push(`system_description: ${escapeYaml(systemDescription)}`);
@@ -782,7 +832,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   if (scopeRows.length === 0) {
     out.push("_(no data_objects in scope.)_");
   } else {
-    const headers = ["#", "data_object", "role", "necessity", "canonical?", "pattern flags"];
+    const headers = ["#", "data_object", "role", "mastered in", "necessity", "pattern flags"];
     if (showModulesCol) headers.push("modules");
     headers.push("notes");
     out.push(tableHeader(headers, ["right"]));
@@ -804,8 +854,8 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
         i++,
         `\`${o.data_object_name}\` (${o.plural_label})`,
         r.role,
+        masteredInLabel(r, owners),
         r.necessity || "-",
-        o.is_canonical_bare_word ? "✓ bare-word" : "",
         flags.join(", "),
       ];
       if (showModulesCol) cells.push(r.modules.map((m) => m.domain_module_code).sort().join(", "));
@@ -852,7 +902,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   // §6 Cross-domain context
   out.push("## 6. Cross-domain context");
   out.push("");
-  out.push("### 6.1 Co-masters (other modules / domains with a role on this scope's masters)");
+  out.push("### 6.1 Master consumers (other modules / domains that embed this scope's masters)");
   out.push("");
   out.push(...renderCoMasters(coMasters));
   out.push("");
@@ -872,7 +922,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
     out.push(...renderHandoffTable(inboundHandoffs, "inbound"));
   }
   out.push("");
-  out.push("### 6.4 Embedded / contributing / consuming dependencies");
+  out.push("### 6.4 Master providers (modules / domains that own masters this scope embeds)");
   out.push("");
   out.push(...renderDependencies(scopeRows, owners));
   out.push("");
@@ -1118,7 +1168,7 @@ function deriveWorkflowGatesAndRules(
 
 async function emitOneModuleFactSheet(m: ModuleRow): Promise<{ path: string; changed: boolean }> {
   const md = await emitFactSheet([m]);
-  const outPath = resolve(MODULES_DIR, `${moduleSlug(m.domain_module_code)}.md`);
+  const outPath = resolve(MODULES_DIR, `${moduleSlug(m.domain_module_code)}${BLUEPRINT_SUFFIX}`);
   let changed = true;
   if (existsSync(outPath)) {
     const existing = readFileSync(outPath, "utf8");
@@ -1136,7 +1186,7 @@ async function emitOneStarterKit(d: Domain): Promise<{ path: string; changed: bo
     "GET",
     `/domain_starter_modules?domain_id=eq.${d.id}&select=domain_module_id,position&order=position.asc`,
   )) ?? [];
-  const outPath = resolve(STARTER_KITS_DIR, `${moduleSlug(d.domain_code)}.md`);
+  const outPath = resolve(STARTER_KITS_DIR, `${moduleSlug(d.domain_code)}${BLUEPRINT_SUFFIX}`);
   if (starterRows.length === 0) return { path: outPath, changed: false, skipped: true };
   const modules: ModuleRow[] = starterRows
     .map((r) => modulesById.get(r.domain_module_id as number))

@@ -1,5 +1,5 @@
 ---
-artifact: domain-blueprint
+artifact: semantic-blueprint
 fact_sheet_version: "2.0"
 system_name: ATS-INTERVIEWS
 system_description: Interviews
@@ -7,7 +7,7 @@ system_slug: ats-interviews
 domain_modules:
   - ats-interviews
 domain_code: ATS
-related_modules: [ats-background-checks, ats-candidate-crm, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools]
+related_modules: [ats-candidate-crm, ats-recruitment-pipeline, talent-performance-mgmt, talent-succession-career]
 created_at: 2026-05-24
 ---
 
@@ -55,13 +55,13 @@ flowchart LR
 
 ## 3. Entities catalog
 
-| # | data_object | role | necessity | canonical? | pattern flags | notes |
+| # | data_object | role | mastered in | necessity | pattern flags | notes |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 1 | `candidate_assessments` (Assessments) | master | required | - | submit_lock | Structured pre-/during-interview assessments. Distinct from scorecards (per-interview feedback). |
-| 2 | `interview_scorecards` (Interview Scorecards) | master | required | - | personal_content, submit_lock | - |
-| 3 | `interviews` (Interviews) | master | required | ✓ bare-word | - | - |
-| 4 | `job_applications` (Applications) | embedded_master | required | - | personal_content | - |
-| 5 | `candidates` (Candidates) | embedded_master | required | ✓ bare-word | personal_content | - |
+| 1 | `candidate_assessments` (Assessments) | master | - | required | submit_lock | Structured pre-/during-interview assessments. Distinct from scorecards (per-interview feedback). |
+| 2 | `interview_scorecards` (Interview Scorecards) | master | - | required | personal_content, submit_lock | - |
+| 3 | `interviews` (Interviews) | master | - | required | - | - |
+| 4 | `job_applications` (Applications) | embedded_master | `ats-recruitment-pipeline` | required | personal_content | - |
+| 5 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | required | personal_content | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -119,22 +119,30 @@ flowchart LR
 
 ## 6. Cross-domain context
 
-### 6.1 Co-masters (other modules / domains with a role on this scope's masters)
+### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
+| data_object | other module / domain | role | necessity | notes |
+| --- | --- | --- | --- | --- |
+| `candidate_assessments` | TALENT-PERFORMANCE-MGMT (Performance and Goal Management) - TALENT-MGMT | consumer | optional | Candidate-assessment scores seed the talent-management skill profile for hired candidates and a structured talent pool for non-hires. |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
 | source module | target domain | target module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-INTERVIEWS | HCM | _(domain-level)_ | `candidate_assessment.passed` | `candidate_assessments` | event_stream | medium | Passing an assessment advances the candidate; on eventual hire, HCM uses the assessment result as the first data point for the new-hire skill profile. |
 | ATS-INTERVIEWS | HCM | _(domain-level)_ | `candidate_assessment.failed` | `candidate_assessments` | event_stream | low | Failed-assessment outcomes close the candidate's loop in ATS and propagate to HCM only if the candidate is an internal-mobility applicant whose profile should reflect the development gap. |
-| ATS-INTERVIEWS | TALENT-MGMT | _(domain-level)_ | `candidate_assessment.passed` | `candidate_assessments` | api_call | medium | Completed assessment scores seed the talent-management skill profile for hired candidates and a structured talent pool for non-hires. |
+| ATS-INTERVIEWS | HCM | _(domain-level)_ | `candidate_assessment.passed` | `candidate_assessments` | event_stream | medium | Passing an assessment advances the candidate; on eventual hire, HCM uses the assessment result as the first data point for the new-hire skill profile. |
+| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `interview.completed` | `job_applications` | lifecycle_progression | low | - |
+| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `candidate_assessment.passed` | `job_applications` | lifecycle_progression | low | - |
+| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `candidate_assessment.failed` | `job_applications` | lifecycle_progression | low | - |
+| ATS-INTERVIEWS | TALENT-MGMT | TALENT-SUCCESSION-CAREER | `candidate_assessment.passed` | `candidate_assessments` | api_call | medium | Completed assessment scores seed the talent-management skill profile for hired candidates and a structured talent pool for non-hires. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
-_(no inbound `cross_domain_handoffs` whose payload is in this scope.)_
+| target module | source domain | source module | trigger_event | payload | integration | friction | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `job_application.advanced` | `interviews` | lifecycle_progression | low | - |
 
-### 6.4 Embedded / contributing / consuming dependencies
+### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
 | data_object | role here | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |

@@ -221,7 +221,7 @@ Live verification:
 These files still contain `cross_domain_handoffs` / `cross_domain_handoff_label` mentions by design; rewriting them would falsify history:
 - `crud.log`: append-only audit log of every `semantius` CLI call; the old name appears in request payloads recorded at the time the call was made.
 - `plan-done-master-tasks.md`: archive of completed plans, preserved as-written.
-- `domain-fact-sheets/modules/*.md`: emitter output, regenerated on the next `scripts/emit_fact_sheet.ts --all` run (the emitter has been updated to use the new name).
+- `blueprints/modules/*-semantic-blueprint.md`: emitter output, regenerated on the next `scripts/emit_fact_sheet.ts --all` run (the emitter has been updated to use the new name).
 - `.tmp_deploy/*.ts`: completed migration / backfill scripts (`rename_handoffs_table.ts`, `fix_computed_fields_json.ts`, `revert_computed_field_metadata.ts`, `backfill_ats_handoff_modules_2026_05_23.ts`, `backfill_itam_handoff_modules_2026_05_24.ts`) reference the old name historically.
 - `plan-modules.md`: 5 intentional history-note references that point at plan-handoffs.md for the rename context.
 - `plan-handoffs.md`: this file (the source of truth for the rename).

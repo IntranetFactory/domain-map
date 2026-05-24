@@ -1,5 +1,5 @@
 ---
-artifact: domain-blueprint
+artifact: semantic-blueprint
 fact_sheet_version: "2.0"
 system_name: ATS-REFERRALS
 system_description: Employee Referrals
@@ -7,8 +7,8 @@ system_slug: ats-referrals
 domain_modules:
   - ats-referrals
 domain_code: ATS
-related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-talent-pools]
-created_at: 2026-05-23
+related_modules: [ats-candidate-crm]
+created_at: 2026-05-24
 ---
 
 # Employee Referrals
@@ -41,10 +41,10 @@ flowchart LR
 
 ## 3. Entities catalog
 
-| # | data_object | role | necessity | canonical? | pattern flags | notes |
+| # | data_object | role | mastered in | necessity | pattern flags | notes |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 1 | `candidate_referrals` (Referrals) | master | required | - | - | - |
-| 2 | `candidates` (Candidates) | embedded_master | required | ✓ bare-word | personal_content | - |
+| 1 | `candidate_referrals` (Referrals) | master | - | required | - | - |
+| 2 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | required | personal_content | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -85,7 +85,7 @@ flowchart LR
 
 ## 6. Cross-domain context
 
-### 6.1 Co-masters (other modules / domains with a role on this scope's masters)
+### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
 
 ### 6.2 Outbound handoffs (events this scope publishes)
@@ -93,13 +93,13 @@ flowchart LR
 | source module | target domain | target module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | ATS-REFERRALS | PAYROLL | _(domain-level)_ | `candidate_referral.bonus_earned` | `candidate_referrals` | api_call | medium | Referral-bonus eligibility milestone reached; PAYROLL pays bonus via off-cycle or next regular run. |
-| ATS-REFERRALS | EMP-EXP | _(domain-level)_ | `candidate_referral.submitted` | `candidate_referrals` | event_stream | low | Referral submission is an engagement signal; EMP-EXP recognition flows pick up. |
+| ATS-REFERRALS | ATS | ATS-CANDIDATE-CRM | `candidate_referral.submitted` | `candidates` | lifecycle_progression | low | - |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
-_(no inbound `cross_domain_handoffs` whose payload is in this scope.)_
+_(no inbound `handoffs` whose payload is in this scope.)_
 
-### 6.4 Embedded / contributing / consuming dependencies
+### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
 | data_object | role here | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |

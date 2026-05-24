@@ -1,5 +1,5 @@
 ---
-artifact: domain-blueprint
+artifact: semantic-blueprint
 fact_sheet_version: "2.0"
 system_name: ATS-BACKGROUND-CHECKS
 system_description: Background Checks
@@ -7,8 +7,8 @@ system_slug: ats-background-checks
 domain_modules:
   - ats-background-checks
 domain_code: ATS
-related_modules: [ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools]
-created_at: 2026-05-23
+related_modules: [ats-candidate-crm, ats-offers]
+created_at: 2026-05-24
 ---
 
 # Background Checks
@@ -44,11 +44,11 @@ flowchart LR
 
 ## 3. Entities catalog
 
-| # | data_object | role | necessity | canonical? | pattern flags | notes |
+| # | data_object | role | mastered in | necessity | pattern flags | notes |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 1 | `background_checks` (Background Checks) | master | required | - | personal_content, submit_lock | - |
-| 2 | `candidates` (Candidates) | embedded_master | required | ✓ bare-word | personal_content | - |
-| 3 | `job_offers` (Offers) | embedded_master | required | - | personal_content, single_approver | - |
+| 1 | `background_checks` (Background Checks) | master | - | required | personal_content, submit_lock | - |
+| 2 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | required | personal_content | - |
+| 3 | `job_offers` (Offers) | embedded_master | `ats-offers` | required | personal_content, single_approver | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -98,7 +98,7 @@ flowchart LR
 
 ## 6. Cross-domain context
 
-### 6.1 Co-masters (other modules / domains with a role on this scope's masters)
+### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
 
 ### 6.2 Outbound handoffs (events this scope publishes)
@@ -107,12 +107,16 @@ flowchart LR
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | ATS-BACKGROUND-CHECKS | HRSD | _(domain-level)_ | `background_check.flagged` | `background_checks` | manual_handoff | high | Adverse-action workflow requires HR-legal review; manual escalation common. Friction shape: alert/escalation without feedback loop. |
 | ATS-BACKGROUND-CHECKS | PAYROLL | _(domain-level)_ | `background_check.cleared` | `background_checks` | api_call | medium | Cleared background check unblocks final pay setup at start date; PAYROLL setup proceeds. |
+| ATS-BACKGROUND-CHECKS | ATS | ATS-OFFERS | `background_check.flagged` | `job_offers` | lifecycle_progression | medium | - |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
-_(no inbound `cross_domain_handoffs` whose payload is in this scope.)_
+| target module | source domain | source module | trigger_event | payload | integration | friction | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| ATS-BACKGROUND-CHECKS | ATS | ATS-OFFERS | `job_offer.rescinded` | `background_checks` | lifecycle_progression | medium | - |
+| ATS-BACKGROUND-CHECKS | ATS | ATS-OFFERS | `job_offer.accepted` | `background_checks` | lifecycle_progression | low | - |
 
-### 6.4 Embedded / contributing / consuming dependencies
+### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
 | data_object | role here | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |

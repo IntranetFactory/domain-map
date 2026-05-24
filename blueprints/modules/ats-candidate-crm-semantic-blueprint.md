@@ -1,5 +1,5 @@
 ---
-artifact: domain-blueprint
+artifact: semantic-blueprint
 fact_sheet_version: "2.0"
 system_name: ATS-CANDIDATE-CRM
 system_description: Candidate CRM
@@ -7,8 +7,8 @@ system_slug: ats-candidate-crm
 domain_modules:
   - ats-candidate-crm
 domain_code: ATS
-related_modules: [ats-background-checks, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools]
-created_at: 2026-05-23
+related_modules: [ats-background-checks, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, lms-skills, talent-succession-career]
+created_at: 2026-05-24
 ---
 
 # Candidate CRM
@@ -25,38 +25,58 @@ The candidate-relationship backbone of an ATS - masters candidates (including th
 | Recruitment Agencies | Third-party recruiter or staffing firm supplying candidates. Tracks contract terms, contact, performance, and the candidates they have submitted. |
 | Recruitment Events | Career fair, on-campus event, hackathon, or meetup used as a sourcing channel. Tracks attendees, captured leads, and event ROI. |
 | Recruitment Sources | Channel a candidate came from: job board, referral, agency, sourcing campaign, career event, or inbound. Used for source-of-hire analytics and channel ROI. |
+| Skill Profiles | Per-worker collection of skills with self-assessed and validated proficiency levels, derived from completed courses, certifications, performance signals, and inferred peer-comparison. The Workday Skills Cloud central artifact and equivalents (SuccessFactors Skills, Cornerstone Capabilities, Eightfold Talent DNA). |
+| Career Aspirations | Worker-declared career interest: target roles, mobility preferences (geographic, functional), aspired timeline. Drives internal-mobility matching. |
 
 ```mermaid
 flowchart LR
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
+  classDef contributor fill:#cfe8ff,stroke:#1976d2,color:#0d3a66;
+  classDef consumer fill:#e8def8,stroke:#7b1fa2,color:#3a155d;
+  classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
   candidates["Candidates"]
   recruitment_sources["Recruitment Sources"]
   recruitment_agencies["Recruitment Agencies"]
   recruitment_events["Recruitment Events"]
+  skill_profiles["Skill Profiles"]
+  career_aspirations["Career Aspirations"]
+  users["Users"]
+  skill_profiles -->|"feeds (opt)"| candidates
+  skill_profiles -->|"feeds (opt)"| career_aspirations
   recruitment_sources -->|"attributes"| candidates
   recruitment_agencies -->|"sources"| candidates
   recruitment_events -->|"attracts"| candidates
+  users -->|"holds"| skill_profiles
+  users -->|"declares"| career_aspirations
   class candidates master;
   class recruitment_sources master;
   class recruitment_agencies master;
   class recruitment_events master;
+  class skill_profiles contributor;
+  class career_aspirations consumer;
+  class users platform_builtin;
 ```
 
 ## 3. Entities catalog
 
-| # | data_object | role | necessity | canonical? | pattern flags | notes |
+| # | data_object | role | mastered in | necessity | pattern flags | notes |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 1 | `candidates` (Candidates) | master | required | ✓ bare-word | personal_content | - |
-| 2 | `recruitment_agencies` (Recruitment Agencies) | master | required | - | - | - |
-| 3 | `recruitment_events` (Recruitment Events) | master | required | - | - | - |
-| 4 | `recruitment_sources` (Recruitment Sources) | master | required | - | - | - |
+| 1 | `candidates` (Candidates) | master | - | required | personal_content | - |
+| 2 | `recruitment_agencies` (Recruitment Agencies) | master | - | required | - | - |
+| 3 | `recruitment_events` (Recruitment Events) | master | - | required | - | - |
+| 4 | `recruitment_sources` (Recruitment Sources) | master | - | required | - | - |
+| 5 | `skill_profiles` (Skill Profiles) | contributor | `lms-skills` | required | personal_content | Module 1 contributes hire-time skill assessments + interview-derived signals into the TALENT-MGMT-mastered skill_profile. The candidate-CRM is where skill data is first attached to a person. |
+| 6 | `career_aspirations` (Career Aspirations) | consumer | `talent-succession-career` | optional | personal_content | Module 1 reads internal-candidate career_aspirations from TALENT-MGMT to surface them against open requisitions for internal-mobility recommendations. |
 
 ## 4. Aliases and industry synonyms
 
 | data_object | alias | alias_type | preferred? | context | notes |
 | --- | --- | --- | --- | --- | --- |
 | `candidates` | Applicant | synonym | - | - | generic; used by EEOC and OFCCP |
+| `career_aspirations` | Career Interest | synonym | - | - | - |
+| `career_aspirations` | Career Plan | synonym | - | - | - |
 | `recruitment_events` | Hiring Event | synonym | - | - | umbrella for career fairs, open houses, hackathons, virtual hiring days |
+| `career_aspirations` | Individual Development Plan | synonym | - | - | - |
 | `candidates` | Person | synonym | - | - | vendor-specific: Workday Recruiting unified internal/external person record |
 | `candidates` | Prospect | synonym | - | - | sourcing-CRM term before formal application |
 | `recruitment_agencies` | Recruitment Vendor | synonym | - | - | procurement / VMS framing under MSA governance |
@@ -64,6 +84,8 @@ flowchart LR
 | `recruitment_sources` | Source Channel | synonym | - | - | marketing-influenced framing |
 | `recruitment_sources` | Source of Hire | synonym | - | - | standard recruiting-metrics term |
 | `recruitment_agencies` | Staffing Agency | synonym | - | - | US term, particularly contingent/temp placements |
+| `skill_profiles` | competency profile | synonym | - | - | cluster A \| LMS \| TM framing |
+| `skill_profiles` | skills passport | synonym | - | - | cluster A \| LMS \| Skills-Cloud branding |
 
 ## 5. Relationships
 
@@ -71,28 +93,41 @@ flowchart LR
 
 | from | verb | to | cardinality | kind | necessity | owner_side | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| `skill_profiles` | feeds | `candidates` | one_to_many | reference | optional | source | cross \| cluster A \| LMS \| internal-candidate skill data flows to ATS |
+| `skill_profiles` | feeds | `career_aspirations` | one_to_many | reference | optional | source | cross \| cluster A \| LMS \| skill profile drives talent-mobility matching |
 | `recruitment_sources` | attributes | `candidates` | one_to_many | reference | required | target | intra \| ATS \| source-of-hire dimension on candidate |
 | `recruitment_agencies` | sources | `candidates` | one_to_many | reference | required | target | intra \| ATS \| agency is the channel; candidate persists |
 | `recruitment_events` | attracts | `candidates` | one_to_many | reference | required | target | intra \| ATS \| event is the touchpoint; candidate persists |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
-_(no relationships against platform built-ins recorded for this scope.)_
+| from | verb | to | cardinality | necessity | owner_side | notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| `users` | holds | `skill_profiles` | one_to_many | required | source | users \| cluster A \| LMS \| learner identity \| auto-flipped from many_to_one |
+| `users` | declares | `career_aspirations` | one_to_many | required | target | The employee whose aspirations these are. |
 
 ### 5.3 Cross-scope edges
 
 | from | verb | to | cardinality | necessity | notes |
 | --- | --- | --- | --- | --- | --- |
-| `skill_profiles` | feeds | `candidates` | one_to_many | optional | cross \| cluster A \| LMS \| internal-candidate skill data flows to ATS |
+| `employees` | holds | `skill_profiles` | one_to_one | optional | intra \| cluster A \| HCM \| each employee may have a skill profile |
+| `job_profiles` | maps_to | `skill_profiles` | many_to_many | optional | intra \| cluster A \| HCM \| competencies expected by job profile |
+| `employees` | becomes | `career_aspirations` | one_to_one | optional | cross \| cluster A \| HCM \| new employee triggers talent-profile initialization in Talent-Mgmt |
+| `skill_profiles` | updated by | `learner_certifications` | one_to_many | optional | intra \| cluster A \| LMS \| earning a cert refreshes the worker skill profile \| auto-flipped from many_to_one |
+| `skill_profiles` | updated by | `course_enrollments` | one_to_many | optional | intra \| cluster A \| LMS \| completion refreshes skill profile \| auto-flipped from many_to_one |
+| `job_profiles` | expects | `skill_profiles` | many_to_many | optional | intra \| cluster A \| LMS \| competency expectation by profile |
+| `course_enrollments` | updates | `career_aspirations` | one_to_many | optional | cross \| cluster A \| LMS \| completion drives dev-plans / succession |
+| `career_aspirations` | informs | `survey_responses` | one_to_many | optional | cross \| cluster A \| EMP-EXP \| negative sentiment triggers flight-risk review in TM \| auto-flipped from many_to_one |
 | `candidates` | submits | `job_applications` | one_to_many | required | intra \| ATS \| candidate persists across applications |
 | `candidate_referrals` | introduces | `candidates` | one_to_many | required | intra \| ATS \| referral is the introduction event; candidate is durable |
 | `talent_pools` | groups | `candidates` | many_to_many | required | intra \| ATS \| pool is a membership shell; candidate lives outside it |
 | `candidates` | becomes | `employees` | one_to_one | required | cross \| ATS→HCM \| candidate.hired creates employee record; identity handoff |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | Candidate identity continues into the pre-employee record; promoted to employees on activation. |
+| `succession_plans` | considers | `career_aspirations` | one_to_many | optional | Successor selection respects employee-declared aspirations and mobility preferences. |
 
 ## 6. Cross-domain context
 
-### 6.1 Co-masters (other modules / domains with a role on this scope's masters)
+### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
 | data_object | other module / domain | role | necessity | notes |
 | --- | --- | --- | --- | --- |
@@ -115,10 +150,18 @@ _(no relationships against platform built-ins recorded for this scope.)_
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
-_(no inbound `cross_domain_handoffs` whose payload is in this scope.)_
+| target module | source domain | source module | trigger_event | payload | integration | friction | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| ATS-CANDIDATE-CRM | LMS | LMS-SKILLS | `skill_profile.updated` | `skill_profiles` | event_stream | medium | Internal-candidate skill data flows into ATS for internal mobility sourcing. |
+| ATS-CANDIDATE-CRM | TALENT-MGMT | TALENT-SUCCESSION-CAREER | `successor.tagged` | `career_aspirations` | api_call | low | Successors identified in succession_plans surface in ATS as pre-qualified internal candidates for matched requisitions. |
+| ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | `candidates` | lifecycle_progression | low | - |
 
-### 6.4 Embedded / contributing / consuming dependencies
+### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
+| data_object | role here | necessity | canonical owner(s) | slice notes |
+| --- | --- | --- | --- | --- |
+| `skill_profiles` | contributor | required | LMS-SKILLS (LMS) | Module 1 contributes hire-time skill assessments + interview-derived signals into the TALENT-MGMT-mastered skill_profile. The candidate-CRM is where skill data is first attached to a person. |
+| `career_aspirations` | consumer | optional | TALENT-SUCCESSION-CAREER (TALENT-MGMT) | Module 1 reads internal-candidate career_aspirations from TALENT-MGMT to surface them against open requisitions for internal-mobility recommendations. |
 
 ## 7. Lifecycle states (per master)
 

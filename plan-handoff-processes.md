@@ -1,6 +1,6 @@
 # plan-handoff-processes.md: PCF-anchored discovery via handoff_processes junction
 
-> **Status:** design intent (draft). Operational status lives in the progress checklist at the bottom.
+> **Status:** signed off 2026-05-24, executing. Operational status lives in the progress checklist at the bottom.
 >
 > **Scope:** add a many-to-many junction `handoff_processes` between `handoffs` and `processes` (APQC PCF rows + custom processes), and use it to sharpen Phase D discovery's clustering quality. The junction starts empty; discovery proposes rows from substring matches that today are computed and discarded.
 >
@@ -31,8 +31,11 @@ Single junction table created via additive migration:
 | `handoff_id` | FK → `handoffs` | Required |
 | `process_id` | FK → `processes` | Required |
 | `role` | enum | Single starting value `implements` (this handoff IS the activity). Other values added when concrete cases demand them, not preemptively |
-| `notes` | text | Free-form annotation, e.g. matcher provenance |
+| `notes` | text | Empty by default. Populated only when there is something exceptional, custom, or special to call out about the pair (e.g. a hand-curated override that overrides a wrong substring match, or a note explaining why an approver kept a borderline match). The provenance of an auto-matched row is recoverable from `discovery_query.ts` + the bucket's prefix, so storing it on every row is noise. |
 | `record_status` | enum | Standard `new` / `approved` / `rejected` / `superseded` workflow per Rule #1 |
+| `key` | text, computed, unique | Natural-key idempotency column. Mirrors the `handoffs.key` pattern: computed field defined on `entities.computed_fields` via JsonLogic `concat`, materialized into a real column by a BEFORE INSERT/UPDATE trigger, with `unique_value: true` enforcing a partial unique index. JsonLogic body is `{ "concat": [ { "var": "handoff_id" }, ".", { "var": "process_id" } ] }`. The 2-tuple `(handoff_id, process_id)` is the natural key; `role` is metadata about the pair, not part of identity (a single handoff-process pair gets one row, and the `role` may evolve via update if a second pattern emerges per §3). |
+
+**Rerun idempotency contract.** Discovery's persistence step (§5 step 1) MUST treat any row whose `key` already exists as untouchable, regardless of `record_status`. This makes `rejected` rows sticky (they will not be re-proposed) and `approved` rows ground-truth (they survive reruns unchanged). New rows are only inserted for `(handoff_id, process_id)` pairs that have never been proposed before. The unique constraint on `key` is the database-side backstop if the application-layer check is ever bypassed.
 
 Migration is packaged as `.tmp_deploy/create_handoff_processes.ts` following the standard loader idiom.
 
@@ -65,9 +68,12 @@ Today's Phase D bucketing rule (trigger-event prefix) systematically conflates d
 
 The junction is populated by discovery, not by hand:
 
-1. Discovery's existing substring matcher (handoff bucket → PCF process name) already runs and discards its output. This plan persists matches as `handoff_processes` rows with `record_status='new'` instead.
-2. User reviews proposed rows as part of the standard post-rerun acceptance pass (Rule #1). Approval flips `record_status='approved'`.
-3. Subsequent reruns honor approved rows as ground truth and re-propose new ones for unmatched handoffs.
+1. Discovery's existing matcher (`guessPcfMatch(prefix)` in [discovery_query.ts:148](.tmp_deploy/discovery_query.ts#L148)) already resolves each trigger-event-prefix bucket to a PCF row. Today its output is only used in the printed table and then discarded. This plan persists it.
+   - **Fan-out:** for each bucket whose `guessPcfMatch` returns a non-null `id`, insert one `handoff_processes` row per handoff in the bucket with `(handoff_id, process_id, role='implements', record_status='new', notes='')`. A bucket with N handoffs produces N rows, all pointing at the same `process_id`.
+   - **Override vs substring:** persist whatever `guessPcfMatch` returns regardless of how it was derived (`PCF_OVERRIDES`, exact-name lookup, or substring fallback). Hand-curated overrides are the highest-quality matches and absolutely should land in the table. Buckets where `guessPcfMatch` returns `{id: null}` (the four `PCF_OVERRIDES` entries set to `null`, plus any substring miss) produce zero rows: those buckets are correctly untagged for now.
+   - **Idempotency on rerun:** per §2's contract, any `(handoff_id, process_id)` pair whose `key` already exists is skipped on the application side before the POST. The unique index is the backstop.
+2. User reviews proposed rows as part of the standard post-rerun acceptance pass (Rule #1). Approval flips `record_status='approved'`. Rejection flips to `'rejected'` and the row stays put (the sticky-rejection contract in §2 prevents re-proposal).
+3. Subsequent reruns honor approved AND rejected rows as already-decided and propose new ones only for `(handoff_id, process_id)` pairs that have never been seen. When `PCF_OVERRIDES` is updated to reclassify a bucket (e.g. `employee` switches to a different PCF row), the old approved/rejected rows under the previous `process_id` stay (history), and the new `process_id` produces fresh `new` rows for review.
 4. Untagged handoffs never gate discovery; they remain visible via the prefix-only fallback. Modern digital concepts (`data_asset.*`, `dlp_incident.*`, `customer_golden_record.*`) where PCF has no clean match stay untagged forever, and that is the correct shape: those areas are surfaced by other Phase D signals (lifecycle, role, vendor-footprint).
 
 **Marginal cost vs benefit:** discovery rerun cost dominates the substring-match cost; persisting matches that already get computed is the cheapest possible improvement to clustering quality.
@@ -79,9 +85,14 @@ The junction is populated by discovery, not by hand:
 The plan is signed off (§9). Execute end to end without intermediate review gates; any failure aborts the script and the backup (step 1) is the recovery path. The first discovery rerun is a natural follow-on, not part of this plan's execution: it happens on the user's normal discovery cadence and produces `record_status='new'` rows for review per Rule #1 whenever it next runs.
 
 1. **Take a fresh DB backup.** Recovery from any mishap relies on it (§7).
-2. **Create junction table** via `.tmp_deploy/create_handoff_processes.ts`. Pre-flight asserts the `handoffs` table exists (the parent plan's deliverable); abort otherwise. Post-flight verifies `GET /handoff_processes?limit=1` returns `[]`.
-3. **Update discovery query** (`.tmp_deploy/discovery_query.ts`) to persist substring-match output as `handoff_processes` rows with `record_status='new'` and to honor approved rows on subsequent runs.
-4. **Sweep docs** for the new junction: `.claude/skills/domain-map-analyst/SKILL.md` (PCF-anchored Phase D body), `.claude/skills/domain-map-analyst/references/module-shape.md` (entity row + field list), `.claude/skills/domain-map-analyst/references/discovery-query.md` (PCF-anchored mechanism). Run sweep validation: no `plan-*.md` leakage into the skill (`rg 'plan-[a-z-]+\.md' .claude/skills/` returns 0 hits).
+2. **Create junction table** via `.tmp_deploy/create_handoff_processes.ts`. Pre-flight asserts the `handoffs` table exists (the parent plan's deliverable); abort otherwise. Post-flight verifies:
+   - `GET /handoff_processes?limit=1` returns `[]`
+   - `GET /entities?table_name=eq.handoff_processes&select=computed_fields` includes the `key` computed field with the JsonLogic body from §2
+   - `GET /fields?table_name=eq.handoff_processes&field_name=eq.key&select=unique_value` returns `[{ "unique_value": true }]`
+   - **Unique-constraint smoke test:** insert one synthetic row `(handoff_id=<X>, process_id=<Y>)` and confirm a second POST with the same pair fails on the unique index. Roll the synthetic row back before exit.
+3. **Sweep stale endpoint in [discovery_query.ts:30](.tmp_deploy/discovery_query.ts#L30):** the GET path still reads `/cross_domain_handoffs`. The parent plan's §12 checklist marked this file swept but missed line 30; the endpoint 404s today against the renamed table. Replace `/cross_domain_handoffs` with `/handoffs` and rename the local variable accordingly. Pre-flight on rerun: `GET /handoffs?limit=1` returns rows.
+4. **Update discovery query** (`.tmp_deploy/discovery_query.ts`) to persist `guessPcfMatch` output as `handoff_processes` rows per §5: fan out one row per handoff in matched buckets, skip buckets with `{id: null}`, skip pairs whose `key` already exists, leave `notes=''` by default. Honors approved AND rejected rows on subsequent runs by the existence-of-`key` check (no read of `record_status` required).
+5. **Sweep docs** for the new junction: `.claude/skills/domain-map-analyst/SKILL.md` (PCF-anchored Phase D body), `.claude/skills/domain-map-analyst/references/module-shape.md` (entity row + field list), `.claude/skills/domain-map-analyst/references/discovery-query.md` (PCF-anchored mechanism). Run sweep validation: no `plan-*.md` leakage into the skill (`rg 'plan-[a-z-]+\.md' .claude/skills/` returns 0 hits).
 
 ---
 
@@ -103,17 +114,20 @@ No inverse migration script. Recovery from any mishap is via DB backup, taken in
 
 ### Sign-off (single gate; no mid-execution reviews)
 
-- [ ] Plan reviewed and signed off as a whole. Once checked, §6 runs end to end. (Prerequisite [plan-handoffs.md](plan-handoffs.md) is asserted in §6 step 2's pre-flight, not held as a separate review gate.)
+- [x] Plan reviewed and signed off as a whole. Once checked, §6 runs end to end. (Prerequisite [plan-handoffs.md](plan-handoffs.md) is asserted in §6 step 2's pre-flight, not held as a separate review gate.) *(signed off 2026-05-24; backup = Neon PITR window, no script)*
 
 ### Schema
 
 - [ ] Junction table `handoff_processes` created with `role` enum starting at `['implements']`
+- [ ] `key` computed field present in `entities.computed_fields` (JsonLogic concat of `handoff_id` + `.` + `process_id`); materialized column exists with `unique_value: true`
 - [ ] Migration script committed at `.tmp_deploy/create_handoff_processes.ts`
-- [ ] Live verification: `GET /handoff_processes?limit=1` returns `[]`
+- [ ] Live verification: `GET /handoff_processes?limit=1` returns `[]`; `key` computed field present; `unique_value: true` on `fields.key`; synthetic duplicate-pair POST rejected by the unique index
 
 ### Discovery and sweep
 
-- [ ] `.tmp_deploy/discovery_query.ts` persists substring-match output as `handoff_processes` rows with `record_status='new'`; honors approved rows on subsequent runs
+- [ ] `.tmp_deploy/discovery_query.ts` line 30 swept: `/cross_domain_handoffs` → `/handoffs` (parent-plan straggler); `GET /handoffs?limit=1` succeeds on rerun
+- [ ] `.tmp_deploy/discovery_query.ts` persists `guessPcfMatch` output as `handoff_processes` rows with `record_status='new'`, fan-out per handoff, skipping pairs whose `key` exists; `notes=''` by default
+- [ ] First post-deploy discovery rerun produces ≥1 `handoff_processes` row with `record_status='new'` (end-to-end smoke check)
 - [ ] `.claude/skills/domain-map-analyst/SKILL.md` updated (PCF-anchored Phase D mechanism)
 - [ ] `.claude/skills/domain-map-analyst/references/module-shape.md` updated (entity row + field list for `handoff_processes`)
 - [ ] `.claude/skills/domain-map-analyst/references/discovery-query.md` updated (PCF-anchored mechanism)
