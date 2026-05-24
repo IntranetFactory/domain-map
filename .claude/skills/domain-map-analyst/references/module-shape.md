@@ -188,16 +188,6 @@ All junction tables use the `parent` FK format on both sides (`reference_delete_
 | `notes` | multiline | yes | |
 | `record_status` | enum | yes | Default `new` |
 
-### `solution_capabilities`
-
-| Field | Format | Required | Notes |
-|---|---|---|---|
-| `solution_id` | parent → `solutions` | yes | |
-| `capability_id` | parent → `capabilities` | yes | |
-| `delivery_strength` | enum | yes | `native` / `partial` / `via_extension` / `not_supported` |
-| `notes` | multiline | yes | |
-| `record_status` | enum | yes | Default `new` |
-
 ### `solution_data_objects`
 
 | Field | Format | Required | Notes |

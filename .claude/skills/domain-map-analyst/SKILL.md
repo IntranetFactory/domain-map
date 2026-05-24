@@ -65,7 +65,7 @@ The same test applies to ServiceNow's own taxonomy: ServiceNow markets dozens of
 
 ### 3. Junction qualifiers live on the edges, not the cores.
 
-`solution_domains.coverage_level` (`primary` / `secondary` / `partial`), `solution_capabilities.delivery_strength` (`native` / `partial` / `via_extension` / `not_supported`), `domain_regulations.applicability`, `domain_data_objects.role` (`master` / `contributor` / `consumer` / `derived`), `business_function_capabilities.responsibility` — these go on the junction rows, never on the parent entity. A solution covers many domains with different strengths; collapsing that onto the solution table would mean either duplicating the solution row per domain or losing the qualifier altogether. Both are wrong.
+`solution_domains.coverage_level` (`primary` / `secondary` / `partial`), `domain_regulations.applicability`, `domain_data_objects.role` (`master` / `contributor` / `consumer` / `derived`), `business_function_capabilities.responsibility` — these go on the junction rows, never on the parent entity. A solution covers many domains with different strengths; collapsing that onto the solution table would mean either duplicating the solution row per domain or losing the qualifier altogether. Both are wrong.
 
 ### 4. Idempotent loads via natural keys.
 
@@ -248,7 +248,7 @@ A `domains` row is a market entry — useful for SEO and analysis but **not depl
 
 ## The module at a glance
 
-35 entities (11 core concepts + 1 module concept + 15 junctions + 1 alias + 4 agent-tooling + 3 role layer). Read [references/module-shape.md](references/module-shape.md) for the per-entity field shapes, enums, and FK formats before doing any write that touches a field you haven't used recently. The two long-form rule sets — modules and roles — live in [references/modules.md](references/modules.md) and [references/roles.md](references/roles.md).
+34 entities (11 core concepts + 1 module concept + 14 junctions + 1 alias + 4 agent-tooling + 3 role layer). Read [references/module-shape.md](references/module-shape.md) for the per-entity field shapes, enums, and FK formats before doing any write that touches a field you haven't used recently. The two long-form rule sets — modules and roles — live in [references/modules.md](references/modules.md) and [references/roles.md](references/roles.md).
 
 ### Core concepts (11 entities)
 
@@ -283,7 +283,6 @@ A `domains` row is a market entry — useful for SEO and analysis but **not depl
 | `domain_data_objects` | domains ↔ data_objects | role (master / embedded_master / contributor / consumer / derived) + necessity (required / optional) |
 | `domain_regulations` | domains ↔ regulations | applicability |
 | `solution_domains` | solutions ↔ domains | coverage_level (primary / secondary / partial) |
-| `solution_capabilities` | solutions ↔ capabilities | delivery_strength (native / partial / via_extension / not_supported) |
 | `solution_data_objects` | solutions ↔ data_objects | ownership role |
 | `data_object_relationships` | data_objects ↔ data_objects | cardinality + kind |
 | `cross_domain_handoffs` | domains → domains (via data_object) | `trigger_event_id` (FK to `trigger_events`) + integration_pattern + friction_level. Cross-domain only — source ≠ target enforced by validation rule. Signal 2 of platform-vs-silos analysis (Signal 1 is the multi-master count on `domain_data_objects` where `role ∈ {master, embedded_master}` AND `necessity = required`) |
@@ -377,8 +376,7 @@ For any task that fits this skill — "research vendors for X", "is Y a domain?"
    - **`domain_module_capabilities`** — link each capability to the module(s) that realize it. A capability with no realizing module is a Phase-A failure (M4 in the checklist).
    - `vendors` (legal entities, reusing existing rows by `vendor_name`)
    - `solutions` (one row per flagship product per market)
-   - `solution_domains` with `coverage_level` (primary / secondary / partial)
-   - `solution_capabilities` with `delivery_strength` (native / partial / via_extension / not_supported) — this is what makes per-vendor comparison possible; **don't skip it**, even if the matrix feels tedious. A reference Phase-A loader is [.tmp_deploy/load_prod_mgmt.ts](.tmp_deploy/load_prod_mgmt.ts); the SMM load also follows this exact shape ([.tmp_deploy/load_smm.ts](.tmp_deploy/load_smm.ts)).
+   - `solution_domains` with `coverage_level` (primary / secondary / partial). A reference Phase-A loader is [.tmp_deploy/load_prod_mgmt.ts](.tmp_deploy/load_prod_mgmt.ts); the SMM load also follows this exact shape ([.tmp_deploy/load_smm.ts](.tmp_deploy/load_smm.ts)).
 
    **Phase B — Data-object footprint** (load second, against the same domain). The Phase-B contract ships seven deliverables:
 
@@ -471,11 +469,6 @@ For every `master + required` data_object in this domain, count `data_object_lif
 - Query: `/solution_domains?domain_id=eq.<id>&select=coverage_level,solutions(solution_name)`
 - Pass: ≥3 solutions; ≥1 `primary`; coverage_level set on every row (never null).
 - Fix: extend Phase A loader.
-
-**A4. `solution_capabilities` matrix complete.**
-- Query: `/solution_capabilities?capability_id=in.(<capIds>)&select=solution_id,capability_id,delivery_strength`
-- Pass: every (solution × capability) cell has a row (including `not_supported` — absence ≠ not supported; absence = unaudited). For N solutions × M capabilities, expect N×M rows.
-- Fix: see [.tmp_deploy/backfill_crosscut_solcaps.ts](../../../.tmp_deploy/backfill_crosscut_solcaps.ts) for the matrix-fill pattern.
 
 **A6. `solution_data_objects` populated for solutions with primary coverage.**
 - Query: `/solution_data_objects?solution_id=in.(<primaryIds>)&select=id` where `<primaryIds>` is the set of solutions with `coverage_level='primary'` from A3.
@@ -736,7 +729,6 @@ The catalog has had four known backfill gaps where a category was scaffolded but
 
 | Category | Empty until | What to check on touched markets |
 |---|---|---|
-| `solution_capabilities` (`delivery_strength` matrix) | PROD-MGMT load (2026-05-19) | Every solution × capability for the touched market has a row. Don't ship a new market without the matrix. |
 | `business_function_domains` + `business_function_capabilities` (RACI axis) | Pre–ITSM-review backfill (2026-05-20) | Every domain has at least one `owner` row; every domain has at least one `contributor` or `consumer` row when cross-functional. |
 | `business_functions` spine itself | Pre–2026-05-20 | If the table is empty when starting Phase C, load the 20-function canonical spine first. |
 | `cross_domain_handoffs.source_domain_module_id` + `target_domain_module_id` (per-module attribution on handoffs) | Pre-2026-05-23 ATS backfill | Run B10b. 99% of handoff rows still sit at NULL on these columns. Backfill is deterministic by payload→master derivation; ties leave NULL with a manual-review note. |
@@ -757,8 +749,7 @@ The prefix is helpful for readability and prevents accidental collisions, but it
 **Decision test when authoring a capability:**
 
 1. Can I name **three independent vendors that explicitly market this capability across at least three of the candidate domains?** If yes → domain-neutral. If no → domain-prefixed.
-2. If a domain-prefixed capability later turns out to span ≥3 domains, **rename it** (update `capability_code`; capability_id stays stable, so `solution_capabilities` and `capability_domains` rows survive). Then add the missing `capability_domains` rows. See [.tmp_deploy/load_cross_cutting_capabilities.ts](.tmp_deploy/load_cross_cutting_capabilities.ts) for the loader pattern.
-3. When extending an existing cross-cutting capability into new domains, also extend its `solution_capabilities` matrix: vendors flagship-active in the new domain should get a row. Otherwise the matrix under-claims and the comparison view stays incomplete.
+2. If a domain-prefixed capability later turns out to span ≥3 domains, **rename it** (update `capability_code`; capability_id stays stable, so `capability_domains` rows survive). Then add the missing `capability_domains` rows. See [.tmp_deploy/load_cross_cutting_capabilities.ts](.tmp_deploy/load_cross_cutting_capabilities.ts) for the loader pattern.
 
 **Anti-pattern:** creating parallel domain-prefixed capabilities for the same concept (`ITSM-KNOWLEDGE`, `CSM-KNOWLEDGE`, `HRSD-KNOWLEDGE`) when one cross-cutting capability + three `capability_domains` rows captures the same thing better. If you find yourself drafting `<DOMAIN>-KNOWLEDGE` for the second time, switch to `KNOWLEDGE-MGMT`.
 
@@ -1186,7 +1177,7 @@ Reference loader: [.tmp_deploy/load_p25b_process_skills.ts](../../../.tmp_deploy
 - ❌ Loading rows without first reading the existing catalog. Produces duplicates with inconsistent capitalisation that are painful to clean up.
 - ❌ Putting qualifiers (coverage level, ownership, applicability) on the core entity instead of the junction. See rule #3.
 - ❌ Writing one-off CLI calls for more than ~5 rows. Extend [.tmp_deploy/load_research.ts](.tmp_deploy/load_research.ts) instead — it's why the script exists.
-- ❌ Loading a new market with `domains` + `vendors` + `solutions` + `solution_domains` and stopping there. Capabilities (+ `capability_domains`) and `solution_capabilities` are part of the Phase-A load shape, not an optional follow-up. See workflow step 5.
+- ❌ Loading a new market with `domains` + `vendors` + `solutions` + `solution_domains` and stopping there. Capabilities (+ `capability_domains`) are part of the Phase-A load shape, not an optional follow-up. See workflow step 5.
 - ❌ Stopping after Phase A (market shape) and not running Phase B (data-object footprint — data_objects, domain_data_objects, cross_domain_handoffs). A market without its mastered/contributed data objects and its outbound handoffs contributes zero to Signal 1 and Signal 2, which is what the catalog exists to support. See workflow step 5.
 - ❌ Stopping after Phase A+B and not running Phase C (business_function_domains, optionally business_function_capabilities). A market without functional ownership contributes zero to the buyer-persona / RACI axis (Signal 3). The function-axis spine is small, but the per-domain links are part of every market load from 2026-05-20 onward.
 - ❌ Skipping Phase M (modules) on a new domain load. Every domain has ≥1 module per Rule #14 — no exceptions. A domain row without modules is non-deployable; it's a market-research stub, not a working catalog entry.
@@ -1201,7 +1192,7 @@ Reference loader: [.tmp_deploy/load_p25b_process_skills.ts](../../../.tmp_deploy
 - ❌ Inferring catalog state from `.tmp_deploy/*.ts` deploy scripts. They drift the moment they ship. Cluster inventories MUST query live `postgrestRequest` endpoints — see workflow step 1.
 - ❌ Treating `domain_data_objects.notes` as a required field on every master row. `notes` is for research details / decisions worth preserving (slice ownership on multi-master / embedded_master rows per Rule #3 and the anti-pattern above, demotion-path explanations, point-solution-vs-holistic carve-outs, classification rationale that a future reviewer would otherwise have to re-derive). Empty `notes` on a single-master row with no decision worth recording is the right shape, not a gap. The fact-sheet emitter and the per-domain checklist both treat this column as opt-in metadata, not a populate-on-every-row obligation.
 - ❌ Loading a market with `min_org_size` of `xs`/`s` but only enterprise-tier solutions. If the stated minimum buyer is SMB/mid-market, the solution list must include at least 1–2 vendors that actually sell into that band. A list of pure enterprise solutions under an SMB-minimum domain is internally inconsistent and misleads downstream filters.
-- ❌ Declaring a load or audit "done" without running the Per-domain completeness checklist (§ above). Every silent gap in this catalog's history followed the same pattern — someone shipped a market, the count of new rows looked right, no one ran the full checklist, and a category (`solution_capabilities`, `business_function_domains`, intra-domain `data_object_relationships`, lifecycle states) sat empty for weeks. Running the checklist is the gate; "I think I covered everything" is not a substitute. Specifically: do not declare ATS-shaped loads done until B6 (intra-domain relationships) and B7 (`users` edges) pass — those two were silently empty for ATS through Step-5's cluster pass and only surfaced when the fact sheet's mermaid rendered with disconnected nodes.
+- ❌ Declaring a load or audit "done" without running the Per-domain completeness checklist (§ above). Every silent gap in this catalog's history followed the same pattern — someone shipped a market, the count of new rows looked right, no one ran the full checklist, and a category (`business_function_domains`, intra-domain `data_object_relationships`, lifecycle states) sat empty for weeks. Running the checklist is the gate; "I think I covered everything" is not a substitute. Specifically: do not declare ATS-shaped loads done until B6 (intra-domain relationships) and B7 (`users` edges) pass — those two were silently empty for ATS through Step-5's cluster pass and only surfaced when the fact sheet's mermaid rendered with disconnected nodes.
 - ❌ Predicting numeric IDs inside a script. Always re-read after insert to build the id map.
 - ❌ Trying to fit a large insert into a single command-line argument on Windows. Use stdin or chunk.
 - ❌ `cd`ing into the skill folder, `.tmp_deploy/`, or any subdirectory before running `semantius` or a loader script. Silently routes to the wrong tenant. See rule #6.

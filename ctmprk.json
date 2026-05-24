@@ -1,0 +1,2654 @@
+[
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "composition"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "association"
+  },
+  {
+    "relationship_kind": "reference"
+  },
+  {
+    "relationship_kind": "reference"
+  }
+]
