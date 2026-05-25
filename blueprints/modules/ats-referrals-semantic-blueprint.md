@@ -48,13 +48,7 @@ flowchart LR
 
 ## 4. Aliases and industry synonyms
 
-| data_object | alias | alias_type | preferred? | context | notes |
-| --- | --- | --- | --- | --- | --- |
-| `candidates` | Applicant | synonym | - | - | generic; used by EEOC and OFCCP |
-| `candidate_referrals` | Employee Referral | synonym | - | - | most common variant; matches referral-bonus program language |
-| `candidates` | Person | synonym | - | - | vendor-specific: Workday Recruiting unified internal/external person record |
-| `candidates` | Prospect | synonym | - | - | sourcing-CRM term before formal application |
-| `candidate_referrals` | Refer-a-Friend | synonym | - | - | informal; candidate-facing referral landing pages |
+_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
 
 ## 5. Relationships
 

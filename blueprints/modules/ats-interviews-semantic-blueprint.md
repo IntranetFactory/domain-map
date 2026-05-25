@@ -34,9 +34,9 @@ flowchart LR
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
   interviews["Interviews"]
   interview_scorecards["Interview Scorecards"]
-  candidate_assessments["Assessments"]
   candidates["Candidates"]
   job_applications["Applications"]
+  candidate_assessments["Assessments"]
   users["Users"]
   candidates -->|"submits"| job_applications
   job_applications -->|"schedules"| interviews
@@ -47,9 +47,9 @@ flowchart LR
   interview_scorecards -->|"has interviewer as author"| users
   class interviews master;
   class interview_scorecards master;
-  class candidate_assessments master;
   class candidates embedded_master;
   class job_applications embedded_master;
+  class candidate_assessments master;
   class users platform_builtin;
 ```
 
@@ -57,7 +57,7 @@ flowchart LR
 
 | # | data_object | role | mastered in | necessity | pattern flags | notes |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 1 | `candidate_assessments` (Assessments) | master | - | required | submit_lock | Structured pre-/during-interview assessments. Distinct from scorecards (per-interview feedback). |
+| 1 | `candidate_assessments` (Assessments) | master | - | required | submit_lock | - |
 | 2 | `interview_scorecards` (Interview Scorecards) | master | - | required | personal_content, submit_lock | - |
 | 3 | `interviews` (Interviews) | master | - | required | - | - |
 | 4 | `job_applications` (Applications) | embedded_master | `ats-recruitment-pipeline` | required | personal_content | - |
@@ -65,21 +65,7 @@ flowchart LR
 
 ## 4. Aliases and industry synonyms
 
-| data_object | alias | alias_type | preferred? | context | notes |
-| --- | --- | --- | --- | --- | --- |
-| `candidates` | Applicant | synonym | - | - | generic; used by EEOC and OFCCP |
-| `job_applications` | Candidacy | synonym | - | - | practitioner term for the candidate-to-req relationship |
-| `interview_scorecards` | Evaluation Form | synonym | - | - | structured-hiring rubric framing |
-| `interview_scorecards` | Interview Feedback | synonym | - | - | vendor-specific: Lever, SmartRecruiters use 'Feedback' |
-| `interviews` | Interview Schedule | synonym | - | - | emphasizes the session / loop / slot framing |
-| `job_applications` | Job Application | synonym | - | - | long-form; candidate-facing flows and EEOC reporting |
-| `interviews` | Onsite | synonym | - | - | informal; tech-industry shorthand for full-day final loop |
-| `candidates` | Person | synonym | - | - | vendor-specific: Workday Recruiting unified internal/external person record |
-| `candidate_assessments` | Pre-Hire Assessment | synonym | - | - | I-O-psych / assessment-vendor standard term (HireVue, Criteria) |
-| `candidates` | Prospect | synonym | - | - | sourcing-CRM term before formal application |
-| `candidate_assessments` | Selection Procedure | synonym | - | - | regulatory: EEOC UGESP term for any hiring-criterion assessment |
-| `candidate_assessments` | Skills Test | synonym | - | - | informal; common candidate-facing label |
-| `job_applications` | Submission | synonym | - | - | vendor-specific: Bullhorn (staffing-oriented ATS) |
+_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
 
 ## 5. Relationships
 
@@ -123,7 +109,7 @@ flowchart LR
 
 | data_object | other module / domain | role | necessity | notes |
 | --- | --- | --- | --- | --- |
-| `candidate_assessments` | TALENT-PERFORMANCE-MGMT (Performance and Goal Management) - TALENT-MGMT | consumer | optional | Candidate-assessment scores seed the talent-management skill profile for hired candidates and a structured talent pool for non-hires. |
+| `candidate_assessments` | TALENT-PERFORMANCE-MGMT (Performance and Goal Management) - TALENT-MGMT | consumer | optional | - |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 

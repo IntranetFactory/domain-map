@@ -127,6 +127,14 @@ const allDataObjects: DataObject[] = await pg(
   "/data_objects?select=id,data_object_name,singular_label,plural_label,description,kind,is_canonical_bare_word,has_personal_content,has_submit_lock,has_single_approver&limit=10000",
 );
 const dataObjectsById = new Map<number, DataObject>(allDataObjects.map((d) => [d.id, d]));
+
+type IndustryRow = { id: number; industry_name: string };
+const allIndustries: IndustryRow[] = (await pg(
+  "GET",
+  "/industries?select=id,industry_name&limit=10000",
+)) ?? [];
+const industriesById = new Map<number, IndustryRow>(allIndustries.map((i) => [i.id, i]));
+
 const USERS = allDataObjects.find((d) => d.kind === "platform_builtin" && d.data_object_name === "users");
 const USERS_ID = USERS?.id ?? -1;
 
@@ -422,20 +430,30 @@ function renderEntitySummary(scopeRows: ScopeRow[]): string[] {
 
 function renderAliases(aliasRows: any[]): string[] {
   const out: string[] = [];
-  if (aliasRows.length === 0) return out;
-  out.push(tableHeader(["data_object", "alias", "alias_type", "preferred?", "context", "notes"]));
-  for (const a of aliasRows) {
+  // Filter: drop generic synonyms (common-knowledge noise per project decision 2026-05-25)
+  // and drop vendor-scoped rows (no competitor references in blueprints per Rule #17).
+  // Keep: rows with alias_type other than 'synonym' (abbreviation, acronym, alternate_spelling,
+  // ...) OR rows scoped to a specific industry. Both carry signal an LLM cannot derive from
+  // the entity name alone.
+  const filtered = aliasRows.filter((a) =>
+    (a.alias_type !== "synonym" || a.industry_id !== null) && a.solution_id === null,
+  );
+  if (filtered.length === 0) {
+    out.push("_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_");
+    return out;
+  }
+  out.push(tableHeader(["data_object", "alias", "alias_type", "preferred?", "industry", "notes"]));
+  for (const a of filtered) {
     const obj = dataObjectsById.get(a.data_object_id as number);
     if (!obj) continue;
-    let ctx = "";
-    if (a.industry_id) ctx = `industry #${a.industry_id}`;
-    else if (a.solution_id) ctx = `solution #${a.solution_id}`;
+    const industry = a.industry_id ? industriesById.get(a.industry_id as number) : null;
+    const industryLabel = industry ? `${industry.industry_name}` : "-";
     out.push(tableRow([
       `\`${obj.data_object_name}\``,
       a.alias_name,
       a.alias_type,
       a.is_preferred ? "✓" : "",
-      ctx,
+      industryLabel,
       a.notes || "",
     ]));
   }

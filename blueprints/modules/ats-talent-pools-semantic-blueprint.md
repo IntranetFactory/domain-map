@@ -44,14 +44,7 @@ flowchart LR
 
 ## 4. Aliases and industry synonyms
 
-| data_object | alias | alias_type | preferred? | context | notes |
-| --- | --- | --- | --- | --- | --- |
-| `candidates` | Applicant | synonym | - | - | generic; used by EEOC and OFCCP |
-| `talent_pools` | Candidate Pool | synonym | - | - | generic; also OFCCP applicant-pool analyses |
-| `candidates` | Person | synonym | - | - | vendor-specific: Workday Recruiting unified internal/external person record |
-| `candidates` | Prospect | synonym | - | - | sourcing-CRM term before formal application |
-| `talent_pools` | Talent Community | synonym | - | - | vendor-specific: Oracle Taleo, SuccessFactors brand opt-in pools |
-| `talent_pools` | Talent Pipeline | synonym | - | - | sourcing-team term for curated nurture pool |
+_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
 
 ## 5. Relationships
 

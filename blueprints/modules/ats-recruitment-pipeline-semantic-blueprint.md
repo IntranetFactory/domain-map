@@ -80,44 +80,14 @@ flowchart LR
 | 2 | `job_postings` (Job Postings) | master | - | required | - | - |
 | 3 | `job_requisitions` (Job Requisitions) | master | - | required | single_approver | - |
 | 4 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | required | personal_content | - |
-| 5 | `job_profiles` (Job Profiles) | embedded_master | `hcm-org-positions` | required | single_approver | Module 4 holds the requisition template-binding to a job_profile (competencies, level, family). Reads from HCM when integrated; standalone deployments keep the embedded shell. |
-| 6 | `locations` (Locations) | embedded_master | `IWMS` _(domain-level, not modularized)_ | required | - | Job postings are location-scoped (remote / hybrid / on-site at specific offices). ATS local-masters when no IWMS is present. |
-| 7 | `org_units` (Org Units) | embedded_master | `hcm-org-positions` | optional | - | Without HCM org structure, requisitions function with a flat or local org-unit reference. |
-| 8 | `hcm_positions` (Positions) | embedded_master | `hcm-org-positions` | optional | single_approver | Without HCM-WORKER-RECORD deployed, requisitions function with a local position shell. |
+| 5 | `job_profiles` (Job Profiles) | embedded_master | `hcm-org-positions` | required | single_approver | - |
+| 6 | `locations` (Locations) | embedded_master | `IWMS` _(domain-level, not modularized)_ | optional | - | - |
+| 7 | `org_units` (Org Units) | embedded_master | `hcm-org-positions` | optional | - | - |
+| 8 | `hcm_positions` (Positions) | embedded_master | `hcm-org-positions` | optional | single_approver | - |
 
 ## 4. Aliases and industry synonyms
 
-| data_object | alias | alias_type | preferred? | context | notes |
-| --- | --- | --- | --- | --- | --- |
-| `candidates` | Applicant | synonym | - | - | generic; used by EEOC and OFCCP |
-| `job_applications` | Candidacy | synonym | - | - | practitioner term for the candidate-to-req relationship |
-| `job_postings` | Career Site Posting | synonym | - | - | vendor-specific: iCIMS, SmartRecruiters distinguish branded career-site placements |
-| `job_requisitions` | Headcount Request | synonym | - | - | finance / HRBP framing emphasizing budget approval |
-| `job_postings` | Job Ad | synonym | - | - | externally-published version of a requisition |
-| `job_applications` | Job Application | synonym | - | - | long-form; candidate-facing flows and EEOC reporting |
-| `job_postings` | Job Listing | synonym | - | - | standard on aggregator boards (Indeed, LinkedIn) |
-| `job_requisitions` | Job Req | synonym | - | - | universal recruiter shorthand |
-| `job_requisitions` | Open Position | synonym | - | - | industry shorthand for approved-and-funded role |
-| `org_units` | Organization | synonym | - | - | - |
-| `candidates` | Person | synonym | - | - | vendor-specific: Workday Recruiting unified internal/external person record |
-| `candidates` | Prospect | synonym | - | - | sourcing-CRM term before formal application |
-| `job_applications` | Submission | synonym | - | - | vendor-specific: Bullhorn (staffing-oriented ATS) |
-| `locations` | branch | synonym | - | - | - |
-| `locations` | building | synonym | - | - | - |
-| `org_units` | business unit | synonym | - | - | - |
-| `org_units` | cost-bearing unit | synonym | - | - | cluster A \| HCM \| finance-overlay framing |
-| `org_units` | department | synonym | ✓ | - | cluster A \| HCM \| common enterprise label |
-| `org_units` | division | synonym | - | - | - |
-| `locations` | facility | synonym | - | - | - |
-| `hcm_positions` | headcount slot | synonym | - | - | cluster A \| HCM \| finance / SWP framing |
-| `job_profiles` | job catalog entry | synonym | - | - | cluster A \| HCM \| catalog framing |
-| `locations` | office | synonym | - | - | - |
-| `org_units` | organizational unit | synonym | - | - | - |
-| `job_profiles` | role profile | synonym | - | - | cluster A \| HCM \| Workday-style naming |
-| `hcm_positions` | seat | synonym | - | - | cluster A \| HCM \| informal / planning usage |
-| `locations` | site | synonym | - | - | - |
-| `org_units` | team | synonym | - | - | - |
-| `locations` | workplace | synonym | - | - | - |
+_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
 
 ## 5. Relationships
 
@@ -194,7 +164,7 @@ flowchart LR
 | --- | --- | --- | --- | --- |
 | `job_applications` | ATS-INTERVIEWS (Interviews) - ATS | embedded_master | required | - |
 | `job_applications` | ATS-OFFERS (Offers) - ATS | embedded_master | required | - |
-| `job_requisitions` | SWP-DEMAND-FORECAST (Demand Forecast) - SWP | contributor | required | SWP authorizes the requisition slice (approved position, budget, time window); ATS owns execution. |
+| `job_requisitions` | SWP-DEMAND-FORECAST (Demand Forecast) - SWP | contributor | required | - |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
@@ -223,10 +193,10 @@ flowchart LR
 | data_object | role here | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
 | `candidates` | embedded_master | required | ATS-CANDIDATE-CRM (ATS) | - |
-| `hcm_positions` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | Without HCM-WORKER-RECORD deployed, requisitions function with a local position shell. |
-| `job_profiles` | embedded_master | required | HCM-ORG-POSITIONS (HCM) | Module 4 holds the requisition template-binding to a job_profile (competencies, level, family). Reads from HCM when integrated; standalone deployments keep the embedded shell. |
-| `locations` | embedded_master | required | IWMS (Workplace and Space Management) | Job postings are location-scoped (remote / hybrid / on-site at specific offices). ATS local-masters when no IWMS is present. |
-| `org_units` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | Without HCM org structure, requisitions function with a flat or local org-unit reference. |
+| `hcm_positions` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | - |
+| `job_profiles` | embedded_master | required | HCM-ORG-POSITIONS (HCM) | - |
+| `locations` | embedded_master | optional | IWMS (Workplace and Space Management) | - |
+| `org_units` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | - |
 
 ## 7. Lifecycle states (per master)
 

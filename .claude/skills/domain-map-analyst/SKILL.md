@@ -266,6 +266,18 @@ If you find yourself reaching for prose just to fill the column, leave it empty.
 
 This rule is scoped to `domain_module_data_objects.notes` (the module-level junction). The domain-level junction `domain_data_objects.notes` follows the older multi-master conventions documented in §"Multi-master vs multi-embedded-master" below; that doctrine is unchanged.
 
+### 16. Infrastructure masters are always `necessity: optional` on non-master rows.
+
+`locations`, `org_units`, `cost_centers`, and any future reference-data masters (currencies, calendars, fiscal periods, GL accounts, tax codes, job grades, job families) follow this rule. The criterion for `necessity: required` is "the core workflow fails without the master being present." Infrastructure masters fail that test:
+
+- A smaller org with one office, one cost center, or one flat org structure doesn't need the master deployed at all; the data inlines onto the consumer record as a text field, country code, or single-value attribute.
+- A larger org deploying the master unlocks **features** (site-scoped change windows, RBAC by org unit, cost-center-scoped reporting). Features are not workflow-blockers; the embedding module still runs without them.
+- "X local-masters when Y not deployed" is implicit on every embedded_master row by definition. Marking such a row `required` adds nothing except false friction for downstream tooling that treats `required` as "you MUST deploy the master."
+
+**Only flip non-master rows** (`embedded_master`, `contributor`, `consumer`). The mastering module's own row (`role=master`) keeps `necessity: required` — that's the deploying module's contract, not the consumer's dependency. Workflow-bearing masters (`job_offers`, `incidents`, `change_requests`, `assets`, `employees`, `candidates`) follow the original criterion and are typically `required` where embedded.
+
+When loading a new module: if you can plausibly imagine an SMB or single-site deployment functioning without the master row, the necessity is `optional`. If the workflow genuinely halts (incident routing without a `users` row, an asset without an `asset_categories` row), it's `required`.
+
 ---
 
 ## The module at a glance

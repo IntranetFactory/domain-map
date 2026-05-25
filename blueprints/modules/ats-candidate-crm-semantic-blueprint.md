@@ -65,27 +65,12 @@ flowchart LR
 | 2 | `recruitment_agencies` (Recruitment Agencies) | master | - | required | - | - |
 | 3 | `recruitment_events` (Recruitment Events) | master | - | required | - | - |
 | 4 | `recruitment_sources` (Recruitment Sources) | master | - | required | - | - |
-| 5 | `skill_profiles` (Skill Profiles) | contributor | `lms-skills` | required | personal_content | Module 1 contributes hire-time skill assessments + interview-derived signals into the TALENT-MGMT-mastered skill_profile. The candidate-CRM is where skill data is first attached to a person. |
-| 6 | `career_aspirations` (Career Aspirations) | consumer | `talent-succession-career` | optional | personal_content | Module 1 reads internal-candidate career_aspirations from TALENT-MGMT to surface them against open requisitions for internal-mobility recommendations. |
+| 5 | `skill_profiles` (Skill Profiles) | contributor | `lms-skills` | required | personal_content | - |
+| 6 | `career_aspirations` (Career Aspirations) | consumer | `talent-succession-career` | optional | personal_content | - |
 
 ## 4. Aliases and industry synonyms
 
-| data_object | alias | alias_type | preferred? | context | notes |
-| --- | --- | --- | --- | --- | --- |
-| `candidates` | Applicant | synonym | - | - | generic; used by EEOC and OFCCP |
-| `career_aspirations` | Career Interest | synonym | - | - | - |
-| `career_aspirations` | Career Plan | synonym | - | - | - |
-| `recruitment_events` | Hiring Event | synonym | - | - | umbrella for career fairs, open houses, hackathons, virtual hiring days |
-| `career_aspirations` | Individual Development Plan | synonym | - | - | - |
-| `candidates` | Person | synonym | - | - | vendor-specific: Workday Recruiting unified internal/external person record |
-| `candidates` | Prospect | synonym | - | - | sourcing-CRM term before formal application |
-| `recruitment_agencies` | Recruitment Vendor | synonym | - | - | procurement / VMS framing under MSA governance |
-| `recruitment_agencies` | Search Firm | synonym | - | - | executive search / retained recruiting framing |
-| `recruitment_sources` | Source Channel | synonym | - | - | marketing-influenced framing |
-| `recruitment_sources` | Source of Hire | synonym | - | - | standard recruiting-metrics term |
-| `recruitment_agencies` | Staffing Agency | synonym | - | - | US term, particularly contingent/temp placements |
-| `skill_profiles` | competency profile | synonym | - | - | cluster A \| LMS \| TM framing |
-| `skill_profiles` | skills passport | synonym | - | - | cluster A \| LMS \| Skills-Cloud branding |
+_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
 
 ## 5. Relationships
 
@@ -160,8 +145,8 @@ flowchart LR
 
 | data_object | role here | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
-| `skill_profiles` | contributor | required | LMS-SKILLS (LMS) | Module 1 contributes hire-time skill assessments + interview-derived signals into the TALENT-MGMT-mastered skill_profile. The candidate-CRM is where skill data is first attached to a person. |
-| `career_aspirations` | consumer | optional | TALENT-SUCCESSION-CAREER (TALENT-MGMT) | Module 1 reads internal-candidate career_aspirations from TALENT-MGMT to surface them against open requisitions for internal-mobility recommendations. |
+| `skill_profiles` | contributor | required | LMS-SKILLS (LMS) | - |
+| `career_aspirations` | consumer | optional | TALENT-SUCCESSION-CAREER (TALENT-MGMT) | - |
 
 ## 7. Lifecycle states (per master)
 

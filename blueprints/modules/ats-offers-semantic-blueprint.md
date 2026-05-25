@@ -54,20 +54,11 @@ flowchart LR
 | 1 | `job_offers` (Offers) | master | - | required | personal_content, single_approver | - |
 | 2 | `job_applications` (Applications) | embedded_master | `ats-recruitment-pipeline` | required | personal_content | - |
 | 3 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | required | personal_content | - |
-| 4 | `salary_bands` (Salary Bands) | embedded_master | `comp-benchmarking` | optional | - | Without COMP-MGMT, offers go out without the salary-band guidance overlay; offer issuance still functions fine. |
+| 4 | `salary_bands` (Salary Bands) | embedded_master | `comp-benchmarking` | optional | - | - |
 
 ## 4. Aliases and industry synonyms
 
-| data_object | alias | alias_type | preferred? | context | notes |
-| --- | --- | --- | --- | --- | --- |
-| `candidates` | Applicant | synonym | - | - | generic; used by EEOC and OFCCP |
-| `job_applications` | Candidacy | synonym | - | - | practitioner term for the candidate-to-req relationship |
-| `job_applications` | Job Application | synonym | - | - | long-form; candidate-facing flows and EEOC reporting |
-| `job_offers` | Job Offer | synonym | - | - | long-form; legal / comp / candidate communications |
-| `job_offers` | Offer Letter | synonym | - | - | most common candidate-facing term; emphasizes the documentary artifact |
-| `candidates` | Person | synonym | - | - | vendor-specific: Workday Recruiting unified internal/external person record |
-| `candidates` | Prospect | synonym | - | - | sourcing-CRM term before formal application |
-| `job_applications` | Submission | synonym | - | - | vendor-specific: Bullhorn (staffing-oriented ATS) |
+_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
 
 ## 5. Relationships
 
@@ -139,7 +130,7 @@ flowchart LR
 | --- | --- | --- | --- | --- |
 | `candidates` | embedded_master | required | ATS-CANDIDATE-CRM (ATS) | - |
 | `job_applications` | embedded_master | required | ATS-RECRUITMENT-PIPELINE (ATS) | - |
-| `salary_bands` | embedded_master | optional | COMP-BENCHMARKING (COMP-MGMT) | Without COMP-MGMT, offers go out without the salary-band guidance overlay; offer issuance still functions fine. |
+| `salary_bands` | embedded_master | optional | COMP-BENCHMARKING (COMP-MGMT) | - |
 
 ## 7. Lifecycle states (per master)
 

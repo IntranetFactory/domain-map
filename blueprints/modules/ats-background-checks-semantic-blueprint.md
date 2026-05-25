@@ -52,16 +52,7 @@ flowchart LR
 
 ## 4. Aliases and industry synonyms
 
-| data_object | alias | alias_type | preferred? | context | notes |
-| --- | --- | --- | --- | --- | --- |
-| `candidates` | Applicant | synonym | - | - | generic; used by EEOC and OFCCP |
-| `background_checks` | Consumer Report | synonym | - | - | regulatory: FCRA term for reports from a consumer reporting agency |
-| `job_offers` | Job Offer | synonym | - | - | long-form; legal / comp / candidate communications |
-| `job_offers` | Offer Letter | synonym | - | - | most common candidate-facing term; emphasizes the documentary artifact |
-| `candidates` | Person | synonym | - | - | vendor-specific: Workday Recruiting unified internal/external person record |
-| `background_checks` | Pre-Employment Screening | synonym | - | - | umbrella for criminal, credit, employment, education verification |
-| `candidates` | Prospect | synonym | - | - | sourcing-CRM term before formal application |
-| `background_checks` | Vetting | synonym | - | - | informal; UK/EMEA and security-cleared hiring shorthand |
+_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
 
 ## 5. Relationships
 

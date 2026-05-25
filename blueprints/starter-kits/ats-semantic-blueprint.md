@@ -49,8 +49,6 @@ flowchart LR
   recruitment_sources["Recruitment Sources"]
   recruitment_agencies["Recruitment Agencies"]
   recruitment_events["Recruitment Events"]
-  skill_profiles["Skill Profiles"]
-  career_aspirations["Career Aspirations"]
   job_requisitions["Job Requisitions"]
   job_postings["Job Postings"]
   job_applications["Applications"]
@@ -58,6 +56,8 @@ flowchart LR
   org_units["Org Units"]
   locations["Locations"]
   job_profiles["Job Profiles"]
+  skill_profiles["Skill Profiles"]
+  career_aspirations["Career Aspirations"]
   users["Users"]
   org_units -->|"contains"| hcm_positions
   job_profiles -->|"defines"| hcm_positions
@@ -89,8 +89,6 @@ flowchart LR
   class recruitment_sources master;
   class recruitment_agencies master;
   class recruitment_events master;
-  class skill_profiles contributor;
-  class career_aspirations consumer;
   class job_requisitions master;
   class job_postings master;
   class job_applications master;
@@ -98,6 +96,8 @@ flowchart LR
   class org_units embedded_master;
   class locations embedded_master;
   class job_profiles embedded_master;
+  class skill_profiles contributor;
+  class career_aspirations consumer;
   class users platform_builtin;
 ```
 
@@ -112,57 +112,16 @@ flowchart LR
 | 5 | `recruitment_agencies` (Recruitment Agencies) | master | - | required | - | ATS-CANDIDATE-CRM | - |
 | 6 | `recruitment_events` (Recruitment Events) | master | - | required | - | ATS-CANDIDATE-CRM | - |
 | 7 | `recruitment_sources` (Recruitment Sources) | master | - | required | - | ATS-CANDIDATE-CRM | - |
-| 8 | `job_profiles` (Job Profiles) | embedded_master | `hcm-org-positions` | required | single_approver | ATS-RECRUITMENT-PIPELINE | Module 4 holds the requisition template-binding to a job_profile (competencies, level, family). Reads from HCM when integrated; standalone deployments keep the embedded shell. |
-| 9 | `locations` (Locations) | embedded_master | `IWMS` _(domain-level, not modularized)_ | required | - | ATS-RECRUITMENT-PIPELINE | Job postings are location-scoped (remote / hybrid / on-site at specific offices). ATS local-masters when no IWMS is present. |
-| 10 | `org_units` (Org Units) | embedded_master | `hcm-org-positions` | optional | - | ATS-RECRUITMENT-PIPELINE | Without HCM org structure, requisitions function with a flat or local org-unit reference. |
-| 11 | `hcm_positions` (Positions) | embedded_master | `hcm-org-positions` | optional | single_approver | ATS-RECRUITMENT-PIPELINE | Without HCM-WORKER-RECORD deployed, requisitions function with a local position shell. |
-| 12 | `skill_profiles` (Skill Profiles) | contributor | `lms-skills` | required | personal_content | ATS-CANDIDATE-CRM | Module 1 contributes hire-time skill assessments + interview-derived signals into the TALENT-MGMT-mastered skill_profile. The candidate-CRM is where skill data is first attached to a person. |
-| 13 | `career_aspirations` (Career Aspirations) | consumer | `talent-succession-career` | optional | personal_content | ATS-CANDIDATE-CRM | Module 1 reads internal-candidate career_aspirations from TALENT-MGMT to surface them against open requisitions for internal-mobility recommendations. |
+| 8 | `job_profiles` (Job Profiles) | embedded_master | `hcm-org-positions` | required | single_approver | ATS-RECRUITMENT-PIPELINE | - |
+| 9 | `locations` (Locations) | embedded_master | `IWMS` _(domain-level, not modularized)_ | optional | - | ATS-RECRUITMENT-PIPELINE | - |
+| 10 | `org_units` (Org Units) | embedded_master | `hcm-org-positions` | optional | - | ATS-RECRUITMENT-PIPELINE | - |
+| 11 | `hcm_positions` (Positions) | embedded_master | `hcm-org-positions` | optional | single_approver | ATS-RECRUITMENT-PIPELINE | - |
+| 12 | `skill_profiles` (Skill Profiles) | contributor | `lms-skills` | required | personal_content | ATS-CANDIDATE-CRM | - |
+| 13 | `career_aspirations` (Career Aspirations) | consumer | `talent-succession-career` | optional | personal_content | ATS-CANDIDATE-CRM | - |
 
 ## 4. Aliases and industry synonyms
 
-| data_object | alias | alias_type | preferred? | context | notes |
-| --- | --- | --- | --- | --- | --- |
-| `candidates` | Applicant | synonym | - | - | generic; used by EEOC and OFCCP |
-| `job_applications` | Candidacy | synonym | - | - | practitioner term for the candidate-to-req relationship |
-| `career_aspirations` | Career Interest | synonym | - | - | - |
-| `career_aspirations` | Career Plan | synonym | - | - | - |
-| `job_postings` | Career Site Posting | synonym | - | - | vendor-specific: iCIMS, SmartRecruiters distinguish branded career-site placements |
-| `job_requisitions` | Headcount Request | synonym | - | - | finance / HRBP framing emphasizing budget approval |
-| `recruitment_events` | Hiring Event | synonym | - | - | umbrella for career fairs, open houses, hackathons, virtual hiring days |
-| `career_aspirations` | Individual Development Plan | synonym | - | - | - |
-| `job_postings` | Job Ad | synonym | - | - | externally-published version of a requisition |
-| `job_applications` | Job Application | synonym | - | - | long-form; candidate-facing flows and EEOC reporting |
-| `job_postings` | Job Listing | synonym | - | - | standard on aggregator boards (Indeed, LinkedIn) |
-| `job_requisitions` | Job Req | synonym | - | - | universal recruiter shorthand |
-| `job_requisitions` | Open Position | synonym | - | - | industry shorthand for approved-and-funded role |
-| `org_units` | Organization | synonym | - | - | - |
-| `candidates` | Person | synonym | - | - | vendor-specific: Workday Recruiting unified internal/external person record |
-| `candidates` | Prospect | synonym | - | - | sourcing-CRM term before formal application |
-| `recruitment_agencies` | Recruitment Vendor | synonym | - | - | procurement / VMS framing under MSA governance |
-| `recruitment_agencies` | Search Firm | synonym | - | - | executive search / retained recruiting framing |
-| `recruitment_sources` | Source Channel | synonym | - | - | marketing-influenced framing |
-| `recruitment_sources` | Source of Hire | synonym | - | - | standard recruiting-metrics term |
-| `recruitment_agencies` | Staffing Agency | synonym | - | - | US term, particularly contingent/temp placements |
-| `job_applications` | Submission | synonym | - | - | vendor-specific: Bullhorn (staffing-oriented ATS) |
-| `locations` | branch | synonym | - | - | - |
-| `locations` | building | synonym | - | - | - |
-| `org_units` | business unit | synonym | - | - | - |
-| `skill_profiles` | competency profile | synonym | - | - | cluster A \| LMS \| TM framing |
-| `org_units` | cost-bearing unit | synonym | - | - | cluster A \| HCM \| finance-overlay framing |
-| `org_units` | department | synonym | ✓ | - | cluster A \| HCM \| common enterprise label |
-| `org_units` | division | synonym | - | - | - |
-| `locations` | facility | synonym | - | - | - |
-| `hcm_positions` | headcount slot | synonym | - | - | cluster A \| HCM \| finance / SWP framing |
-| `job_profiles` | job catalog entry | synonym | - | - | cluster A \| HCM \| catalog framing |
-| `locations` | office | synonym | - | - | - |
-| `org_units` | organizational unit | synonym | - | - | - |
-| `job_profiles` | role profile | synonym | - | - | cluster A \| HCM \| Workday-style naming |
-| `hcm_positions` | seat | synonym | - | - | cluster A \| HCM \| informal / planning usage |
-| `locations` | site | synonym | - | - | - |
-| `skill_profiles` | skills passport | synonym | - | - | cluster A \| LMS \| Skills-Cloud branding |
-| `org_units` | team | synonym | - | - | - |
-| `locations` | workplace | synonym | - | - | - |
+_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
 
 ## 5. Relationships
 
@@ -255,7 +214,7 @@ flowchart LR
 | `candidates` | ATS-TALENT-POOLS (Talent Pools) - ATS | embedded_master | required | - |
 | `job_applications` | ATS-INTERVIEWS (Interviews) - ATS | embedded_master | required | - |
 | `job_applications` | ATS-OFFERS (Offers) - ATS | embedded_master | required | - |
-| `job_requisitions` | SWP-DEMAND-FORECAST (Demand Forecast) - SWP | contributor | required | SWP authorizes the requisition slice (approved position, budget, time window); ATS owns execution. |
+| `job_requisitions` | SWP-DEMAND-FORECAST (Demand Forecast) - SWP | contributor | required | - |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
@@ -290,12 +249,12 @@ flowchart LR
 
 | data_object | role here | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
-| `hcm_positions` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | Without HCM-WORKER-RECORD deployed, requisitions function with a local position shell. |
-| `job_profiles` | embedded_master | required | HCM-ORG-POSITIONS (HCM) | Module 4 holds the requisition template-binding to a job_profile (competencies, level, family). Reads from HCM when integrated; standalone deployments keep the embedded shell. |
-| `locations` | embedded_master | required | IWMS (Workplace and Space Management) | Job postings are location-scoped (remote / hybrid / on-site at specific offices). ATS local-masters when no IWMS is present. |
-| `org_units` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | Without HCM org structure, requisitions function with a flat or local org-unit reference. |
-| `skill_profiles` | contributor | required | LMS-SKILLS (LMS) | Module 1 contributes hire-time skill assessments + interview-derived signals into the TALENT-MGMT-mastered skill_profile. The candidate-CRM is where skill data is first attached to a person. |
-| `career_aspirations` | consumer | optional | TALENT-SUCCESSION-CAREER (TALENT-MGMT) | Module 1 reads internal-candidate career_aspirations from TALENT-MGMT to surface them against open requisitions for internal-mobility recommendations. |
+| `hcm_positions` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | - |
+| `job_profiles` | embedded_master | required | HCM-ORG-POSITIONS (HCM) | - |
+| `locations` | embedded_master | optional | IWMS (Workplace and Space Management) | - |
+| `org_units` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | - |
+| `skill_profiles` | contributor | required | LMS-SKILLS (LMS) | - |
+| `career_aspirations` | consumer | optional | TALENT-SUCCESSION-CAREER (TALENT-MGMT) | - |
 
 ## 7. Lifecycle states (per master)
 

@@ -54,16 +54,7 @@ flowchart LR
 
 ## 4. Aliases and industry synonyms
 
-| data_object | alias | alias_type | preferred? | context | notes |
-| --- | --- | --- | --- | --- | --- |
-| `candidates` | Applicant | synonym | - | - | generic; used by EEOC and OFCCP |
-| `pre_employees` | Day-Zero Record | synonym | - | - | - |
-| `job_offers` | Job Offer | synonym | - | - | long-form; legal / comp / candidate communications |
-| `pre_employees` | New Hire (Pre-Start) | synonym | - | - | - |
-| `job_offers` | Offer Letter | synonym | - | - | most common candidate-facing term; emphasizes the documentary artifact |
-| `candidates` | Person | synonym | - | - | vendor-specific: Workday Recruiting unified internal/external person record |
-| `pre_employees` | Pre-Hire | synonym | - | - | - |
-| `candidates` | Prospect | synonym | - | - | sourcing-CRM term before formal application |
+_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
 
 ## 5. Relationships
 
