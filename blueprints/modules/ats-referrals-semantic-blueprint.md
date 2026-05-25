@@ -7,8 +7,8 @@ system_slug: ats-referrals
 domain_modules:
   - ats-referrals
 domain_code: ATS
-related_modules: [ats-candidate-crm]
-created_at: 2026-05-24
+related_modules: [ats-candidate-crm, payroll-earnings-deductions]
+created_at: 2026-05-25
 ---
 
 # Employee Referrals
@@ -81,12 +81,15 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
+| data_object | other module / domain | role | necessity | notes |
+| --- | --- | --- | --- | --- |
+| `candidate_referrals` | PAYROLL-EARNINGS-DEDUCTIONS (Earnings, Deductions and Garnishments) - PAYROLL | consumer | required | - |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
 | source module | target domain | target module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-REFERRALS | PAYROLL | _(domain-level)_ | `candidate_referral.bonus_earned` | `candidate_referrals` | api_call | medium | Referral-bonus eligibility milestone reached; PAYROLL pays bonus via off-cycle or next regular run. |
+| ATS-REFERRALS | PAYROLL | PAYROLL-EARNINGS-DEDUCTIONS | `candidate_referral.bonus_earned` | `candidate_referrals` | api_call | medium | Referral-bonus eligibility milestone reached; PAYROLL pays bonus via off-cycle or next regular run. |
 | ATS-REFERRALS | ATS | ATS-CANDIDATE-CRM | `candidate_referral.submitted` | `candidates` | lifecycle_progression | low | - |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)

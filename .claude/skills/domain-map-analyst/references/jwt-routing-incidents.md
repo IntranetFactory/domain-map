@@ -47,3 +47,4 @@ Format:
 - cwd at time of call: `c:\dev\domain-map` (project root); config_source reported by CLI matches
 - .env present: yes (`SEMANTIUS_ORG=adenin`)
 - diagnosis: same wrong-tenant audience as the earlier 2026-05-24 incidents. This time `--reset-jwt-cache` did NOT fix it on the first attempt — same wrong tenant returned. A plain `whoami` ~2 minutes later succeeded (org `adenin`, api_baseurl `https://adenin.semantius.ai`). So this occurrence behaved like the intermittent-routing variant despite having an identical surface to the cache-stale variant. **Updated mitigation:** when `--reset-jwt-cache` doesn't fix the wrong-tenant audience, wait 1–2 minutes and retry plain `whoami`; if that also fails, surface to user.
+

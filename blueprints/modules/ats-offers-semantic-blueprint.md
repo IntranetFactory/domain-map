@@ -7,8 +7,8 @@ system_slug: ats-offers
 domain_modules:
   - ats-offers
 domain_code: ATS
-related_modules: [ats-background-checks, ats-candidate-crm, ats-pre-employee-record, ats-recruitment-pipeline, comp-benchmarking]
-created_at: 2026-05-24
+related_modules: [ats-background-checks, ats-candidate-crm, ats-pre-employee-record, ats-recruitment-pipeline, comp-benchmarking, comp-statements, hcm-lifecycle-workflows]
+created_at: 2026-05-25
 ---
 
 # Offers
@@ -25,15 +25,18 @@ Offer drafting, approval, extension, signature, and acceptance. Realizes OFFER-M
 | Applications | A candidate's submission against a specific requisition. Carries pipeline stage, status (active / rejected / withdrawn / hired), source, and the full evaluation history. |
 | Candidates | Person known to the recruiting org, with or without an active application. Carries contact details, resume, tags, GDPR consent, and source. Distinct from Employee until hired. |
 | Salary Bands | Pay-range structure by grade and geographic zone with minimum, midpoint, maximum, and benchmarking source. Drives offer guidance, merit eligibility, and pay-equity gap analysis. |
+| Compensation Benchmarks | Imported market salary data for a job-level-geography combination, sourced from a survey provider (Radford, Mercer, Willis Towers Watson, Payscale). Drives salary_bands maintenance. |
 
 ```mermaid
 flowchart LR
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
   classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
+  classDef consumer fill:#e8def8,stroke:#7b1fa2,color:#3a155d;
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
   job_offers["Offers"]
   candidates["Candidates"]
   job_applications["Applications"]
+  compensation_benchmarks["Compensation Benchmarks"]
   salary_bands["Salary Bands"]
   users["Users"]
   candidates -->|"submits"| job_applications
@@ -43,6 +46,7 @@ flowchart LR
   class job_offers master;
   class candidates embedded_master;
   class job_applications embedded_master;
+  class compensation_benchmarks consumer;
   class salary_bands embedded_master;
   class users platform_builtin;
 ```
@@ -55,6 +59,7 @@ flowchart LR
 | 2 | `job_applications` (Applications) | embedded_master | `ats-recruitment-pipeline` | required | personal_content | - |
 | 3 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | required | personal_content | - |
 | 4 | `salary_bands` (Salary Bands) | embedded_master | `comp-benchmarking` | optional | - | - |
+| 5 | `compensation_benchmarks` (Compensation Benchmarks) | consumer | `comp-benchmarking` | required | - | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -99,6 +104,7 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `candidates` | becomes | `employees` | one_to_one | required | cross \| ATS→HCM \| candidate.hired creates employee record; identity handoff |
 | `job_offers` | spawns pre-employee record | `pre_employees` | one_to_one | required | Triggered on job_offer.accepted; the pre-employee record is the post-offer paperwork shell. |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | Candidate identity continues into the pre-employee record; promoted to employees on activation. |
+| `labor_market_benchmarks` | calibrates | `salary_bands` | many_to_many | optional | cross \| SWP→COMP-MGMT \| labor_market_benchmark.refreshed calibrates salary_bands. |
 
 ## 6. Cross-domain context
 
@@ -108,20 +114,23 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | --- | --- | --- | --- | --- |
 | `job_offers` | ATS-BACKGROUND-CHECKS (Background Checks) - ATS | embedded_master | required | - |
 | `job_offers` | ATS-PRE-EMPLOYEE-RECORD (Pre-Employee Record) - ATS | embedded_master | required | - |
+| `job_offers` | COMP-STATEMENTS (Total Rewards Statements) - COMP-MGMT | consumer | required | - |
+| `job_offers` | HCM-LIFECYCLE-WORKFLOWS (Employee Lifecycle Workflows) - HCM | consumer | required | - |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
 | source module | target domain | target module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-OFFERS | HCM | _(domain-level)_ | `job_offer.accepted` | `job_offers` | event_stream | medium | Offer acceptance signals firm hiring intent; HCM creates pending-employee record. |
-| ATS-OFFERS | COMP-MGMT | _(domain-level)_ | `job_offer.signed` | `job_offers` | event_stream | low | Signed offer establishes the comp baseline; COMP-MGMT incorporates into cycle history. |
+| ATS-OFFERS | HCM | HCM-LIFECYCLE-WORKFLOWS | `job_offer.accepted` | `job_offers` | event_stream | medium | Offer acceptance signals firm hiring intent; HCM creates pending-employee record. |
+| ATS-OFFERS | COMP-MGMT | COMP-STATEMENTS | `job_offer.signed` | `job_offers` | event_stream | low | Signed offer establishes the comp baseline; COMP-MGMT incorporates into cycle history. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
 | target module | source domain | source module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-OFFERS | ATS | ATS-BACKGROUND-CHECKS | `background_check.flagged` | `job_offers` | lifecycle_progression | medium | - |
+| ATS-OFFERS | COMP-MGMT | COMP-BENCHMARKING | `compensation_benchmark.refreshed` | `compensation_benchmarks` | batch_sync | low | Updated benchmarks inform offer-range guardrails for recruiters and hiring managers. |
 | ATS-OFFERS | ATS | ATS-RECRUITMENT-PIPELINE | `job_application.advanced` | `job_offers` | lifecycle_progression | low | - |
+| ATS-OFFERS | ATS | ATS-BACKGROUND-CHECKS | `background_check.flagged` | `job_offers` | lifecycle_progression | medium | - |
 | ATS-OFFERS | COMP-MGMT | COMP-BENCHMARKING | `salary_band.updated` | `salary_bands` | event_stream | low | Updated bands flow to ATS offer-generation. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
@@ -131,6 +140,7 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `candidates` | embedded_master | required | ATS-CANDIDATE-CRM (ATS) | - |
 | `job_applications` | embedded_master | required | ATS-RECRUITMENT-PIPELINE (ATS) | - |
 | `salary_bands` | embedded_master | optional | COMP-BENCHMARKING (COMP-MGMT) | - |
+| `compensation_benchmarks` | consumer | required | COMP-BENCHMARKING (COMP-MGMT) | - |
 
 ## 7. Lifecycle states (per master)
 

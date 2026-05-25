@@ -8,7 +8,7 @@ domain_modules:
   - ats-talent-pools
 domain_code: ATS
 related_modules: [ats-candidate-crm]
-created_at: 2026-05-24
+created_at: 2026-05-25
 ---
 
 # Talent Pools

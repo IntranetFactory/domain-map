@@ -7,8 +7,8 @@ system_slug: ats-interviews
 domain_modules:
   - ats-interviews
 domain_code: ATS
-related_modules: [ats-candidate-crm, ats-recruitment-pipeline, talent-performance-mgmt, talent-succession-career]
-created_at: 2026-05-24
+related_modules: [ats-candidate-crm, ats-recruitment-pipeline, hcm-lifecycle-workflows, talent-performance-mgmt, talent-succession-career]
+created_at: 2026-05-25
 ---
 
 # Interviews
@@ -109,14 +109,15 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 | data_object | other module / domain | role | necessity | notes |
 | --- | --- | --- | --- | --- |
+| `candidate_assessments` | HCM-LIFECYCLE-WORKFLOWS (Employee Lifecycle Workflows) - HCM | consumer | required | - |
 | `candidate_assessments` | TALENT-PERFORMANCE-MGMT (Performance and Goal Management) - TALENT-MGMT | consumer | optional | - |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
 | source module | target domain | target module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-INTERVIEWS | HCM | _(domain-level)_ | `candidate_assessment.failed` | `candidate_assessments` | event_stream | low | Failed-assessment outcomes close the candidate's loop in ATS and propagate to HCM only if the candidate is an internal-mobility applicant whose profile should reflect the development gap. |
-| ATS-INTERVIEWS | HCM | _(domain-level)_ | `candidate_assessment.passed` | `candidate_assessments` | event_stream | medium | Passing an assessment advances the candidate; on eventual hire, HCM uses the assessment result as the first data point for the new-hire skill profile. |
+| ATS-INTERVIEWS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate_assessment.failed` | `candidate_assessments` | event_stream | low | Failed-assessment outcomes close the candidate's loop in ATS and propagate to HCM only if the candidate is an internal-mobility applicant whose profile should reflect the development gap. |
+| ATS-INTERVIEWS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate_assessment.passed` | `candidate_assessments` | event_stream | medium | Passing an assessment advances the candidate; on eventual hire, HCM uses the assessment result as the first data point for the new-hire skill profile. |
 | ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `interview.completed` | `job_applications` | lifecycle_progression | low | - |
 | ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `candidate_assessment.passed` | `job_applications` | lifecycle_progression | low | - |
 | ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `candidate_assessment.failed` | `job_applications` | lifecycle_progression | low | - |

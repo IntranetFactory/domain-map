@@ -7,8 +7,8 @@ system_slug: ats-candidate-crm
 domain_modules:
   - ats-candidate-crm
 domain_code: ATS
-related_modules: [ats-background-checks, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, lms-skills, talent-succession-career]
-created_at: 2026-05-24
+related_modules: [ats-background-checks, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, hcm-lifecycle-workflows, lms-skills, onb-journey-mgmt, pa-workforce-metrics, talent-succession-career]
+created_at: 2026-05-25
 ---
 
 # Candidate CRM
@@ -123,22 +123,26 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `candidates` | ATS-RECRUITMENT-PIPELINE (Recruitment Pipeline) - ATS | embedded_master | required | - |
 | `candidates` | ATS-REFERRALS (Employee Referrals) - ATS | embedded_master | required | - |
 | `candidates` | ATS-TALENT-POOLS (Talent Pools) - ATS | embedded_master | required | - |
+| `candidates` | BEN-ENROLLMENT (Enrollment and Life Events) - BEN-ADMIN | consumer | required | - |
+| `candidates` | HCM-LIFECYCLE-WORKFLOWS (Employee Lifecycle Workflows) - HCM | consumer | required | - |
+| `candidates` | ONB-JOURNEY-MGMT (Onboarding Journey Management) - ONBOARDING | consumer | required | - |
+| `recruitment_sources` | PA-WORKFORCE-METRICS (Workforce Metrics) - PA | consumer | required | - |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
 | source module | target domain | target module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-CANDIDATE-CRM | HCM | _(domain-level)_ | `candidate.hired` | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
-| ATS-CANDIDATE-CRM | BEN-ADMIN | _(domain-level)_ | `candidate.hired` | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
-| ATS-CANDIDATE-CRM | PA | _(domain-level)_ | `recruitment_source.attributed` | `recruitment_sources` | batch_sync | low | Source attribution feeds people-analytics quality-of-hire and cost-per-hire models. |
-| ATS-CANDIDATE-CRM | ONBOARDING | _(domain-level)_ | `candidate.hired` | `candidates` | event_stream | medium | Hired candidate drives onboarding-plan kickoff with role/location/manager context from ATS payload. |
+| ATS-CANDIDATE-CRM | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
+| ATS-CANDIDATE-CRM | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
+| ATS-CANDIDATE-CRM | PA | PA-WORKFORCE-METRICS | `recruitment_source.attributed` | `recruitment_sources` | batch_sync | low | Source attribution feeds people-analytics quality-of-hire and cost-per-hire models. |
+| ATS-CANDIDATE-CRM | ONBOARDING | ONB-JOURNEY-MGMT | `candidate.hired` | `candidates` | event_stream | medium | Hired candidate drives onboarding-plan kickoff with role/location/manager context from ATS payload. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
 | target module | source domain | source module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-CANDIDATE-CRM | LMS | LMS-SKILLS | `skill_profile.updated` | `skill_profiles` | event_stream | medium | Internal-candidate skill data flows into ATS for internal mobility sourcing. |
 | ATS-CANDIDATE-CRM | TALENT-MGMT | TALENT-SUCCESSION-CAREER | `successor.tagged` | `career_aspirations` | api_call | low | Successors identified in succession_plans surface in ATS as pre-qualified internal candidates for matched requisitions. |
+| ATS-CANDIDATE-CRM | LMS | LMS-SKILLS | `skill_profile.updated` | `skill_profiles` | event_stream | medium | Internal-candidate skill data flows into ATS for internal mobility sourcing. |
 | ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | `candidates` | lifecycle_progression | low | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)

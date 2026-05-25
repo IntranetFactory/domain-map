@@ -7,8 +7,8 @@ system_slug: ats-recruitment-pipeline
 domain_modules:
   - ats-recruitment-pipeline
 domain_code: ATS
-related_modules: [ats-candidate-crm, ats-interviews, ats-offers, ats-talent-pools, hcm-core-worker, hcm-org-positions, swp-demand-forecast]
-created_at: 2026-05-24
+related_modules: [ats-candidate-crm, ats-interviews, ats-offers, ats-talent-pools, hcm-core-worker, hcm-org-positions, iwms-location-master, pa-predictive-models, psa-resource-mgmt, swp-demand-forecast]
+created_at: 2026-05-25
 ---
 
 # Recruitment Pipeline
@@ -29,11 +29,15 @@ Requisitions → postings → applications with pipeline-stage lifecycle. Realiz
 | Locations | - |
 | Org Units | Node in the organizational hierarchy: division, business unit, department, team. Carries manager, cost center alignment, geographic scope, and parent/child relationships. HCM masters the operational hierarchy; EPM contributes the cost-center mapping (which would be Finance-mastered once a Finance/GL domain is loaded). |
 | Positions | Approved slot in the org - a 'chair' with role definition, cost center, reporting line, location, and FTE allocation. Distinct from job_profiles (the catalog definition) and from employees (the person filling the slot). A position can be open, filled, or eliminated. SWP designs future positions via org_designs; HCM operationalizes them once approved. |
+| Position Demand Forecasts | Projected need for specific roles derived from the capacity model: which positions, when, where, at what level. Feeds the requisition pipeline - approved demand becomes an authorised requisition in ATS via the headcount.approved handoff. |
+| Predictive Models | ML / statistical model outputs deployed in PA: flight-risk scores, performance trajectory, internal-mobility likelihood. Carries the model identifier, training window, target metric, and the materialized scores per employee. Consumes employees and employment_events as features. |
+| Project Resource Allocations | Forward-looking resource commitment plan (skill, planned utilisation %, effective period) - distinct from executed assignments. |
 
 ```mermaid
 flowchart LR
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
   classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
+  classDef consumer fill:#e8def8,stroke:#7b1fa2,color:#3a155d;
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
   job_requisitions["Job Requisitions"]
   job_postings["Job Postings"]
@@ -42,6 +46,9 @@ flowchart LR
   hcm_positions["Positions"]
   org_units["Org Units"]
   locations["Locations"]
+  predictive_models["Predictive Models"]
+  position_demand_forecasts["Position Demand Forecasts"]
+  project_resource_allocations["Project Resource Allocations"]
   job_profiles["Job Profiles"]
   users["Users"]
   org_units -->|"contains"| hcm_positions
@@ -52,8 +59,10 @@ flowchart LR
   job_requisitions -->|"receives"| job_applications
   job_postings -->|"is applied to via"| job_applications
   candidates -->|"submits"| job_applications
+  job_requisitions -->|"updates (opt)"| position_demand_forecasts
   org_units -->|"rolls_up_to (opt)"| org_units
   locations -->|"rolls_up_to (opt)"| locations
+  position_demand_forecasts -->|"triggers (opt)"| job_requisitions
   users -->|"manages (opt)"| hcm_positions
   users -->|"leads (opt)"| org_units
   users -->|"owns (opt)"| job_profiles
@@ -61,6 +70,7 @@ flowchart LR
   job_applications -->|"has owning recruiter"| users
   org_units -->|"has members (opt)"| users
   locations -->|"houses (opt)"| users
+  users -->|"prepares (opt)"| position_demand_forecasts
   class job_requisitions master;
   class job_postings master;
   class job_applications master;
@@ -68,6 +78,9 @@ flowchart LR
   class hcm_positions embedded_master;
   class org_units embedded_master;
   class locations embedded_master;
+  class predictive_models consumer;
+  class position_demand_forecasts consumer;
+  class project_resource_allocations consumer;
   class job_profiles embedded_master;
   class users platform_builtin;
 ```
@@ -81,9 +94,12 @@ flowchart LR
 | 3 | `job_requisitions` (Job Requisitions) | master | - | required | single_approver | - |
 | 4 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | required | personal_content | - |
 | 5 | `job_profiles` (Job Profiles) | embedded_master | `hcm-org-positions` | required | single_approver | - |
-| 6 | `locations` (Locations) | embedded_master | `IWMS` _(domain-level, not modularized)_ | optional | - | - |
+| 6 | `locations` (Locations) | embedded_master | `iwms-location-master` | optional | - | - |
 | 7 | `org_units` (Org Units) | embedded_master | `hcm-org-positions` | optional | - | - |
 | 8 | `hcm_positions` (Positions) | embedded_master | `hcm-org-positions` | optional | single_approver | - |
+| 9 | `position_demand_forecasts` (Position Demand Forecasts) | consumer | `swp-demand-forecast` | required | - | - |
+| 10 | `predictive_models` (Predictive Models) | consumer | `pa-predictive-models` | optional | - | - |
+| 11 | `project_resource_allocations` (Project Resource Allocations) | consumer | `psa-resource-mgmt` | optional | - | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -103,8 +119,10 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `job_requisitions` | receives | `job_applications` | one_to_many | reference | required | source | intra \| ATS \| apps target a specific req |
 | `job_postings` | is applied to via | `job_applications` | one_to_many | reference | required | source | intra \| ATS \| app inflow is anchored on a posting |
 | `candidates` | submits | `job_applications` | one_to_many | reference | required | target | intra \| ATS \| candidate persists across applications |
+| `job_requisitions` | updates | `position_demand_forecasts` | many_to_many | reference | optional | target | cross \| ATS→SWP \| requisition.filled feeds the demand-forecast actualization (analytical) |
 | `org_units` | rolls_up_to | `org_units` | one_to_many | reference | optional | source | Hierarchical parent-child between org_units (Team -> Department -> Division -> BU -> Company). |
 | `locations` | rolls_up_to | `locations` | one_to_many | reference | optional | source | Hierarchical parent-child between locations (Office -> City -> Country -> Region). |
+| `position_demand_forecasts` | triggers | `job_requisitions` | one_to_many | reference | optional | source | cross \| SWP→ATS \| position_demand_forecast.updated triggers requisition pipeline alignment. |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
@@ -117,6 +135,7 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `job_applications` | has owning recruiter | `users` | many_to_many | required | source | users \| ATS \| recruiter role on the application |
 | `org_units` | has members | `users` | one_to_many | optional | target | Every user is assigned to one or more org_units (department membership). Drives assignment routing, RBAC scoping, and chargeback. |
 | `locations` | houses | `users` | one_to_many | optional | target | Every user has a primary work location. Drives walk-up support routing, on-site dispatch, and location-based access. |
+| `users` | prepares | `position_demand_forecasts` | one_to_many | optional | source | Workforce planner who prepares the demand forecast. |
 
 ### 5.3 Cross-scope edges
 
@@ -151,10 +170,19 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `job_applications` | requires | `candidate_assessments` | one_to_many | required | intra \| ATS \| assessment invitation belongs to the app's pipeline |
 | `job_applications` | results in | `job_offers` | one_to_many | required | intra \| ATS \| offer is the conversion of the application |
 | `candidates` | becomes | `employees` | one_to_one | required | cross \| ATS→HCM \| candidate.hired creates employee record; identity handoff |
-| `job_requisitions` | updates | `position_demand_forecasts` | many_to_many | optional | cross \| ATS→SWP \| requisition.filled feeds the demand-forecast actualization (analytical) |
 | `job_requisitions` | feeds | `people_kpis` | many_to_many | optional | cross \| ATS→PA \| requisition.filled rolls into time-to-fill / hire-velocity KPIs (analytical) |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | Candidate identity continues into the pre-employee record; promoted to employees on activation. |
 | `employees` | fills | `hcm_positions` | one_to_one | optional | intra \| cluster A \| ONBOARDING \| embedded: incumbent of the position being onboarded |
+| `headcount_plans` | rolls_up_to | `position_demand_forecasts` | many_to_many | required | Headcount plan figures roll up to position-demand forecasts by job-family / location / quarter. |
+| `position_demand_forecasts` | grounds | `skills_gap_analyses` | one_to_many | optional | Position-demand forecasts ground skills-gap analyses (future-state demand). |
+| `headcount_plans` | authorizes | `job_requisitions` | one_to_many | required | cross \| SWP→ATS \| headcount.approved authorizes requisition creation. |
+| `workforce_scenarios` | drives | `hcm_positions` | one_to_many | required | cross \| SWP→HCM \| adopted scenario drives HCM position changes. |
+| `org_designs` | proposes | `hcm_positions` | one_to_many | required | cross \| SWP→HCM \| org_design.published proposes new hcm_positions for creation. |
+| `locations` | hosts_desk_bookings | `desk_bookings` | one_to_many | required | - |
+| `locations` | hosts_room_reservations | `room_reservations` | one_to_many | required | - |
+| `locations` | site_of_service_requests | `workplace_service_requests` | one_to_many | required | - |
+| `locations` | measured_by_reports | `space_utilization_reports` | one_to_many | required | - |
+| `locations` | subject_of_feedback | `workplace_experience_feedback` | one_to_many | optional | - |
 
 ## 6. Cross-domain context
 
@@ -164,14 +192,16 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | --- | --- | --- | --- | --- |
 | `job_applications` | ATS-INTERVIEWS (Interviews) - ATS | embedded_master | required | - |
 | `job_applications` | ATS-OFFERS (Offers) - ATS | embedded_master | required | - |
+| `job_requisitions` | HCM-ORG-POSITIONS (Organisation and Position Management) - HCM | consumer | required | - |
 | `job_requisitions` | SWP-DEMAND-FORECAST (Demand Forecast) - SWP | contributor | required | - |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
 | source module | target domain | target module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-RECRUITMENT-PIPELINE | HCM | _(domain-level)_ | `headcount.approved` | `job_requisitions` | event_stream | low | Headcount approval (often originating from HCM/SWP) confirmed back to HCM; gives ATS green light to source. |
-| ATS-RECRUITMENT-PIPELINE | HCM | _(domain-level)_ | `requisition.filled` | `job_requisitions` | event_stream | low | Requisition fill closes headcount slot; HCM headcount-plan updates. |
+| ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `requisition.filled` | `job_requisitions` | event_stream | low | Requisition fill closes headcount slot; HCM headcount-plan updates. |
+| ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `headcount.approved` | `job_requisitions` | event_stream | low | Headcount approval (often originating from HCM/SWP) confirmed back to HCM; gives ATS green light to source. |
+| ATS-RECRUITMENT-PIPELINE | SWP | SWP-DEMAND-FORECAST | `requisition.filled` | `position_demand_forecasts` | event_stream | medium | Filled requisitions from ATS decrement open demand in SWP's position forecasts and update plan-vs-actual fill metrics (time-to-fill, fill rate by role/geo). Lower friction than headcount.actuals_updated from HCM because the requisition→forecast mapping is more direct. |
 | ATS-RECRUITMENT-PIPELINE | SWP | SWP-DEMAND-FORECAST | `requisition.filled` | `job_requisitions` | event_stream | low | Filled requisition feeds SWP actuals-vs-plan reconciliation. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
@@ -182,11 +212,29 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-CANDIDATE-CRM | `job_application.submitted` | `job_applications` | lifecycle_progression | low | - |
 | ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `hcm_position.approved_for_creation` | `hcm_positions` | event_stream | medium | Approved position flows to ATS as the basis for a requisition. Approval state must be in sync to avoid requisitions opened against unapproved positions. |
 | ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `job_profile.published` | `job_profiles` | event_stream | low | Canonical job profile feeds ATS posting templates and screening criteria. |
-| ATS-RECRUITMENT-PIPELINE | SWP | SWP-DEMAND-FORECAST | `headcount.approved` | `job_requisitions` | api_call | high | Approved headcount in SWP authorises requisition creation in ATS. THIS IS THE CO-MASTER BRIDGE: SWP masters the intent slice (approved position, budget, time window) and ATS masters the execution slice (pipeline, candidates, interviews, offer). High friction because SWP's plan structure (org × geo × level × time) rarely matches ATS's requisition template structure (job code × location × hiring manager × pay range), requiring mapping rules that drift as either side evolves. |
+| ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `job_profile.approved` | `job_profiles` | api_call | low | - |
+| ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `job_profile.activated` | `job_profiles` | api_call | low | - |
+| ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `job_profile.retired` | `job_profiles` | api_call | high | - |
+| ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `org_unit.activated` | `org_units` | api_call | low | - |
+| ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `org_unit.reorganized` | `org_units` | api_call | high | - |
+| ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `org_unit.closed` | `org_units` | api_call | high | - |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_activated` | `job_applications` | lifecycle_progression | low | - |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-INTERVIEWS | `interview.completed` | `job_applications` | lifecycle_progression | low | - |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-INTERVIEWS | `candidate_assessment.passed` | `job_applications` | lifecycle_progression | low | - |
 | ATS-RECRUITMENT-PIPELINE | HCM | HCM-CORE-WORKER | `employee.terminated` | `job_requisitions` | api_call | low | Employee termination in HCM optionally triggers backfill requisition consideration in ATS. Low friction when SWP-driven; some orgs auto-open a backfill req on regrettable losses, others route through SWP for approval first. |
+| ATS-RECRUITMENT-PIPELINE | PA | PA-PREDICTIVE-MODELS | `predictive_model.scored` | `predictive_models` | api_call | medium | Hire-success and quality-of-hire scores inform ATS sourcing prioritization. |
+| ATS-RECRUITMENT-PIPELINE | SWP | SWP-DEMAND-FORECAST | `position_demand_forecast.updated` | `position_demand_forecasts` | event_stream | high | Hiring demand sets ATS requisition-creation expectations. Plan-to-execute gap is a frequent friction source. |
+| ATS-RECRUITMENT-PIPELINE | SWP | SWP-DEMAND-FORECAST | `headcount.approved` | `job_requisitions` | api_call | high | Approved headcount in SWP authorises requisition creation in ATS. THIS IS THE CO-MASTER BRIDGE: SWP masters the intent slice (approved position, budget, time window) and ATS masters the execution slice (pipeline, candidates, interviews, offer). High friction because SWP's plan structure (org × geo × level × time) rarely matches ATS's requisition template structure (job code × location × hiring manager × pay range), requiring mapping rules that drift as either side evolves. |
+| ATS-RECRUITMENT-PIPELINE | PSA | PSA-RESOURCE-MGMT | `project_resource_allocation.demand_unmet` | `project_resource_allocations` | manual_handoff | high | Unmet allocation demand is the seed for a hiring requisition; the manual handoff between resource manager and recruiter is the dominant pattern. |
+| ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `job_profile.updated` | `job_profiles` | api_call | medium | - |
+| ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `org_unit.created` | `org_units` | api_call | medium | - |
+| ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `org_unit.merged` | `org_units` | api_call | high | - |
+| ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `org_unit.disbanded` | `org_units` | api_call | high | - |
+| ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `hcm_position.approved` | `hcm_positions` | api_call | medium | - |
+| ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `hcm_position.opened` | `hcm_positions` | api_call | medium | - |
+| ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `hcm_position.filled` | `hcm_positions` | api_call | medium | - |
+| ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `hcm_position.frozen` | `hcm_positions` | api_call | high | - |
+| ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `hcm_position.eliminated` | `hcm_positions` | api_call | high | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -195,8 +243,11 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `candidates` | embedded_master | required | ATS-CANDIDATE-CRM (ATS) | - |
 | `hcm_positions` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | - |
 | `job_profiles` | embedded_master | required | HCM-ORG-POSITIONS (HCM) | - |
-| `locations` | embedded_master | optional | IWMS (Workplace and Space Management) | - |
+| `locations` | embedded_master | optional | IWMS-LOCATION-MASTER (IWMS) | - |
 | `org_units` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | - |
+| `position_demand_forecasts` | consumer | required | SWP-DEMAND-FORECAST (SWP) | - |
+| `predictive_models` | consumer | optional | PA-PREDICTIVE-MODELS (PA) | - |
+| `project_resource_allocations` | consumer | optional | PSA-RESOURCE-MGMT (PSA) | - |
 
 ## 7. Lifecycle states (per master)
 

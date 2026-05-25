@@ -278,6 +278,20 @@ This rule is scoped to `domain_module_data_objects.notes` (the module-level junc
 
 When loading a new module: if you can plausibly imagine an SMB or single-site deployment functioning without the master row, the necessity is `optional`. If the workflow genuinely halts (incident routing without a `users` row, an asset without an `asset_categories` row), it's `required`.
 
+### 17. Every `domain_modules` row has exactly one `skill_type='system'` skill, and that skill has ≥1 `skill_tools` row.
+
+A `domain_modules` row defines a deployable unit; a `system` skill defines what an agent can do against that unit. The two are 1:1 (mirroring `domain_modules` exactly, per the transitional-note in the at-a-glance table). Without the skill, the module exists in the catalog but has no agent surface, and the Semantius score, the metric the entire tools/skills layer exists to compute, is uncomputable for that module.
+
+- **One `system` skill per `domain_modules` row.** `skills.skill_type='system'` AND `skills.domain_module_id=<module_id>`. Authoring more than one system skill per module is a rule violation: if the module's surface needs two distinct skills, the module itself needs to be split.
+- **That skill has ≥1 `skill_tools` row.** Typical shape is 5–20 tools per module (required + optional). Required tools are the irreducible set the agent needs to perform the module's primary workflow; optional tools cover degraded modes (lower-tier ML, alternate channels).
+- **Tool `operation_kind` invariants** (already enforced by the schema but loader pre-flight should mirror them): `query` and `mutate` REQUIRE `data_object_id`; `side_effect` and `compute` REQUIRE `data_object_id` to be NULL.
+
+**This is a Phase-A obligation, not Phase E**, parallel to Rule #14. When loading a new market, system skills + tools + skill_tools ship in the same load as `domains` + `capabilities` + `domain_modules` + `solutions`. The Phase-S step in the workflow (§ "Workflow for any research task") is the canonical authoring procedure.
+
+**Audit blockers.** A `domain_modules` row with zero or >1 system skills fails F2; a system skill with zero `skill_tools` fails F3; a tool with an invalid `operation_kind` ↔ `data_object_id` pairing fails F4; an uncomputable Semantius score is the F5 rollup. Each blocks the per-domain audit until cured. See F2–F5 in the per-domain completeness checklist.
+
+**Why this rule exists:** as of 2026-05-25, only four domains (ATS, SMP, TALENT-MGMT, EMP-EXP) had any system skills loaded out of 65+ modularized domains. The per-domain audit ticked green on every other domain because the F-band only carried a legacy-cleanup check (F1), not a positive-existence check. The Semantius score, defined right there in the at-a-glance section, was uncomputable for the rest of the catalog and the gap went silent. CRM was the trigger case (5 modules, 0 skills, audit reported green).
+
 ---
 
 ## The module at a glance
@@ -342,6 +356,23 @@ When loading a new module: if you can plausibly imagine an SMB or single-site de
 | `skill_tools` | N:M between `skills` and `tools` — which tools a skill needs to function | `requirement_level` (`required` / `optional` / `fallback`) + workflow-context `notes`. Computed label `<skill> needs <tool>` |
 
 These four tables coexist with `domain_map.solutions`, which gained `solution_kind` enum (`external_connector` / `action` / `compute_service` / `standard_solution`) to classify which solutions are tool-delivery sources. The killer hypothesis the layer exists to test: **how many of the loaded domains have a system skill where every required tool is Semantius-covered (i.e. `operation_kind ∈ {query, mutate}` for every required `skill_tools` row)?**
+
+#### Semantius score
+
+The **Semantius score** of a skill (and therefore of the module realised by that skill) is the fraction of its tools that Semantius covers OOTB. `query` and `mutate` work out of the box on Semantius (CRUD + cube + JsonLogic); `side_effect` and `compute` need an external solution.
+
+```
+semantius_score(skill) =
+   count(skill_tools WHERE tools.operation_kind IN ('query', 'mutate'))
+ / count(skill_tools)
+```
+
+Conventions:
+
+- **Denominator is all `skill_tools` rows**, both `required` and `optional`. The score answers "what share of this skill's needs can Semantius alone serve" — optional tools count because they're still real needs (lower-tier AI matching, optional notifications).
+- For a per-module score, join via `skills.domain_module_id` (one system skill per module under Rule #14). Modules without a system skill row have no score.
+- For a per-domain score, aggregate `skill_tools` across all system skills for modules where `domain_modules.domain_id = X` (i.e. union the numerators and denominators, then divide). Do not average per-module scores — that biases toward small modules.
+- A score below 100% always points at specific tool rows: `SELECT tool_id, operation_kind FROM skill_tools JOIN tools WHERE operation_kind NOT IN ('query', 'mutate')`. Surface those tools by name when reporting the score — the gap is the actionable information, not the percentage.
 
 ### Role layer (1 new entity + 3 extended built-ins, added 2026-05-23)
 
@@ -433,6 +464,15 @@ For any task that fits this skill — "research vendors for X", "is Y a domain?"
 
    Phase C answers *"who in the org buys / runs / consumes this market?"* and powers buyer-persona filtering, RACI overlays, and the org-side analogue of the data-object signals. If the function spine is empty (only true at the very start of the catalog), populate it once before adding `business_function_domains` rows — see "Function spine" below for the canonical 20-function shape.
 
+   **Phase S — System skills + tools** (load fourth, against the same domain). Under Rule #17 every `domain_modules` row needs exactly one `skill_type='system'` skill, and that skill needs ≥1 `skill_tools` rows. Phase S delivers:
+
+   1. **`skills`** — one row per module with `skill_type='system'`, `domain_module_id` set, and a short `skill_name` like `<module_code>_agent` (e.g. `crm_acct_mgt_agent`). The skill encodes what an agent can do against that module's data and lifecycle.
+   2. **`tools`** — JSON-RPC-shaped capability primitives keyed verb-first against the module's masters: `query_<entity>`, `create_<entity>`, `update_<entity>` for CRUD; `send_<message>`, `parse_<artifact>`, `match_<thing>_to_<thing>` for side-effect / compute work. Set `operation_kind` per the invariant in Rule #17 (`query`/`mutate` ⇒ `data_object_id` required; `side_effect`/`compute` ⇒ `data_object_id` null). Reuse existing tool rows where the same primitive already exists (the `tools` table is catalog-wide, not per-module).
+   3. **`skill_tools`** — one row per (skill, tool) pair the skill calls. Carry `requirement_level` (`required` for irreducible workflow tools, `optional` for degraded modes) and a one-line workflow-context `notes` string. The set of `requirement_level='required'` rows is the irreducible surface; `optional` rows raise the ceiling without raising the floor.
+   4. **`tool_solutions`** (where applicable) — for any tool whose `operation_kind ∈ {side_effect, compute}`, link the non-Semantius solutions that deliver it. Semantius coverage of `query` and `mutate` is intrinsic per the at-a-glance section; no `tool_solutions` row is needed for those.
+
+   Phase S is **not optional** per Rule #17. The killer hypothesis of the entire tools/skills layer (*"how many of the loaded domains have a system skill where every required tool is Semantius-covered?"*) is uncomputable without it. Reference Phase-S loader pattern: the original ATS / SMP / TALENT-MGMT / EMP-EXP loads on 2026-05-21 set the shape; mirror them when authoring for other domains.
+
 6. **Verify and share.** After each phase, query counts on the affected tables, compare against expected, and link the user to the UI tables that changed. **For any new market load OR any time the user says "review domain X" / "audit domain X" / "what's missing for X", run the per-domain completeness checklist below** — it is the single source of truth for what "done" means.
 
 ---
@@ -462,7 +502,7 @@ The S-band is a single coverage sweep that runs **before** any band-level check.
   | --- | --- | --- | --- |
 
 - Expected-non-zero call (the schema doesn't carry this; it follows from catalog rules):
-  - Always non-zero: `business_function_domains` (C1), `capability_domains` (A2), `domain_data_objects` (B1 except leadership-tier), `domain_modules` (M1), `solution_domains` (A3), `handoffs.source_domain_id` (B9 for any non-leaf domain), `skills` (≥1 module-level system skill per module).
+  - Always non-zero: `business_function_domains` (C1), `capability_domains` (A2), `domain_data_objects` (B1 except leadership-tier), `domain_modules` (M1), `solution_domains` (A3), `handoffs.source_domain_id` (B9 for any non-leaf domain), `skills` (F2 — exactly one `skill_type='system'` row per `domain_modules` row).
   - Non-zero when applicable: `domain_starter_modules` (M3 — only when `capability_count ≥ 3`), `domain_regulations` (most domains have ≥1 regulation in scope), `handoffs.target_domain_id` (most non-leadership domains receive at least one inbound handoff).
   - Routinely zero: `domain_module_host_domains` (only when cross-cutting modules host on this domain), `domains.parent_domain_id` (only when this domain has sub-domains).
 - Fix: zero-row anomalies on "expected non-zero" rows are blocking. The fix routes back into the owning band — S1 just makes the gap legible at a glance and catches cases the band's own pass test missed.
@@ -724,12 +764,35 @@ Roles capture the user personas whose workflows span the domain's modules and bu
 
 ### F. Skill-layer integrity
 
-The `skills` table sits next to `roles` but represents agent skills, not user roles. The audit runs one cleanup check here; the rest of the skill / tool layer is covered transitively via S1's `skills.domain_id` row count and the system-skill derivation procedure in the body of the SKILL.md.
+The `skills` table sits next to `roles` but represents agent skills, not user roles. The F-band enforces Rule #17's positive-existence requirement (one `system` skill per `domain_modules` row, with ≥1 `skill_tools` row) as well as a legacy-cleanup check (F1).
 
 **F1. No legacy domain-level system skills remain once module-level skills exist.**
 - Query: `/skills?domain_id=eq.<id>&skill_type=eq.system&domain_module_id=is.null&select=id,skill_name`.
 - Pass: empty result. Acceptable transitional state ONLY when no module-level system skill has been authored for this domain yet — once any `domain_module_id`-anchored system skill exists for the domain, every remaining `domain_id`-only legacy row is obsolete.
 - Fix: retire the legacy row (DELETE). Only convert if a genuine domain-level need is distinct from the per-module skills, which is rare — the per-module skills are the catalog's target state per Rule #14.
+
+**F2. Every `domain_modules` row for this domain has exactly one `skill_type='system'` skill.** (Rule #17.)
+- Module set: `/domain_modules?domain_id=eq.<id>&select=id,domain_module_code` UNION `/domain_module_host_domains?domain_id=eq.<id>&select=domain_module:domain_modules(id,domain_module_code)` (covers cross-cutting modules hosted here).
+- Skill set query: `/skills?domain_module_id=in.(<modIds>)&skill_type=eq.system&select=domain_module_id,id,skill_name`.
+- Pass: every module id from the module set appears **exactly once** in the skill set. Zero is a Phase-S gap; >1 is a rule violation (split the module instead of stacking system skills).
+- Fix: author the missing system skill per Phase S in the workflow. Use `skill_name='<module_code_lower>_agent'` (e.g. `crm_acct_mgt_agent`); load alongside the module's tools and `skill_tools` in the same loader.
+
+**F3. Every module-level system skill has ≥1 `skill_tools` row.** (Rule #17.)
+- Query: for the skill ids from F2, `/skill_tools?skill_id=in.(<skillIds>)&select=skill_id,tool_id,requirement_level`.
+- Pass: every skill returns ≥1 row. Typical shape is 5–20 tools (mix of `required` + `optional`).
+- Fix: extend the Phase-S loader to author the missing tools + `skill_tools` rows. A `required` floor of ≥3 tools is the practical minimum: at least one `query`, one `mutate`, one workflow gate.
+
+**F4. Tool `operation_kind` ↔ `data_object_id` invariant holds on every linked tool.** (Rule #17 sub-invariant.)
+- Query: `/skill_tools?skill_id=in.(<skillIds>)&select=tools(id,tool_name,operation_kind,data_object_id)`.
+- Pass: for every tool, `operation_kind ∈ {query, mutate}` implies `data_object_id` set; `operation_kind ∈ {side_effect, compute}` implies `data_object_id` is null. Any row that violates this pairing is a tool-row defect.
+- Fix: PATCH the offending `tools` row (either set / clear `data_object_id`, or correct the `operation_kind`). Re-PATCH the catalog, not the junction.
+
+**F5. Semantius score is computable for every module of this domain.**
+- Derivation: per the formula in § "Semantius score", `semantius_score(skill) = count(skill_tools WHERE tools.operation_kind IN ('query','mutate')) / count(skill_tools)`, joined via `skills.domain_module_id`. Per-domain: union the numerators and denominators across all system skills for modules hosted here, then divide. Do not average per-module scores (see the convention in the at-a-glance section).
+- Pass: every module returns a score (a number in [0, 1], including 0 if every tool is `side_effect` / `compute`). The metric must be computable, not high. A low score is information about the gap, not a failure.
+- Fix: F5 cannot fail independently. F2 + F3 + F4 cure every F5 failure. The check is here as a rollup so the audit gap report leads with the score (or the literal "uncomputable, see F2/F3").
+
+**F6. (Future) The `tools` catalog is deduplicated.** *(reserved — not part of routine audit.)* A tool with the same `tool_name` and `operation_kind` and `data_object_id` linked from multiple skills is the same primitive and should be a single `tools` row. The deduplication pass runs catalog-wide, not per-domain; F6 reserves the ID for when it ships.
 
 ### Audit recipe (for "review domain X" / "audit X" / "what's missing for X")
 
@@ -738,7 +801,7 @@ The `skills` table sits next to `roles` but represents agent skills, not user ro
 3. Run every **in-scope** band check (A / M / B / C / D / E / F) in order. Skip A5 unless the user has explicitly asked for a vendor-ownership refresh.
 4. Classify each result:
    - **Structural gate** — M1–M6 failures block every downstream concern. A domain with no modules (or with capability-orphaned modules) can't be modeled in Phase B/E correctly until the M-band is clean. Resolve M-band first.
-   - **In-scope fix** — this domain can fix locally (S1–S3 zero-row anomalies, A1–A4, M1–M6, B1–B9, B9b, B10b, B11–B12, C1–C2, D1, E1–E6, F1). Goes into the **gap report** as actionable. Fact-sheet emission is **not** an audit step — see § "Fact sheets" below.
+   - **In-scope fix** — this domain can fix locally (S1–S3 zero-row anomalies, A1–A4, M1–M6, B1–B9, B9b, B10b, B11–B12, C1–C2, D1, E1–E6, F1–F5). Goes into the **gap report** as actionable. Fact-sheet emission is **not** an audit step — see § "Fact sheets" below.
    - **Report-only follow-up** — the symmetric side is owned by another domain (B8 inbound direction, all of B10). Goes into a separate **"report-only follow-ups"** subsection of the report, naming the source domain + the missing check ID on that side (e.g. "HCM B9 owes outbound on `hcm_positions`"). **Do not author fixes for these from this domain's audit.** These items NEVER block the audited domain's green status; they are observations the user can act on by scheduling audits of the source domains.
 4. Surface the gap report to the user **before** authoring any fixes. Include the failing query output snippet so the user can sanity-check. Ask whether to also kick off audits on the source domains in the report-only section.
 5. For each accepted in-scope fix, author it (markdown draft, or directly in a loader); never load AI-generated content without a user review pass (Rule #1).
@@ -746,6 +809,48 @@ The `skills` table sits next to `roles` but represents agent skills, not user ro
 7. Re-run the audit. The acceptance criterion is zero failed **in-scope** IDs (modulo the documented exceptions in B1, B12). Report-only follow-ups remain visible until the source domains are themselves audited; they are not blockers for this domain's pass.
 
 A well-run audit produces two artifacts: the gap report (with in-scope and report-only subsections) and, if the user agrees to load, the fix drafts. Fact-sheet emission is not part of the audit deliverable; if the user wants refreshed fact sheets after fixes land, that's a separate explicit step (see § "Fact sheets" below).
+
+### Pairwise handoff reconciliation (focused, on-demand)
+
+The per-domain audit is **necessarily one-sided**: it surfaces what *this* domain owes (in-scope B-band failures) and what *other* domains owe *this* domain (B10 report-only). Closing a cross-domain handoff requires both sides — the producer authors `trigger_events` + `handoffs` rows, the consumer declares `domain_module_data_objects` (DMDO) consumer/contributor coverage. Per-domain audit catches the two halves separately and you converge by intersecting two report-only sections; pairwise reconciliation walks the boundary in one pass and produces a single diff.
+
+**When to invoke** (never as part of routine audit — always targeted):
+
+- Just finished auditing one side and the report-only inbound section flagged the partner. Reconcile before scheduling a second full audit on the partner.
+- About to load a new cross-domain handoff and want to verify both ends are ready before the POST.
+- Cleanup pass on a long-standing high-traffic boundary (HCM↔ATS, ITSM↔CMDB, CRM↔CPQ) where both sides have shipped many independent loads and drift is plausible.
+
+**Inputs.** Two domain codes — `<A>` and `<B>`. Resolve both to ids + master sets at the start; cache them.
+
+**The four legs of every cross-domain handoff A→B** (and symmetrically B→A):
+
+1. **Producer master + lifecycle state.** A has the master `data_object` whose state change fires the event (verify via `domain_module_data_objects.role='master'` for the trigger_event's `data_object_id`). Without this leg, the event is mis-attributed at source.
+2. **Trigger event row.** `trigger_events` carries an `event_name` keyed against A's master, with `data_object_id` pointing at the publishing master. One row per event — never per subscriber (Phase D rule).
+3. **Handoff row with both module FKs resolved.** `handoffs` carries source side `(source_domain_id=A, source_domain_module_id=<A-module-that-masters-the-event-data_object>)` and target side `(target_domain_id=B, target_domain_module_id=<B-module-that-holds-the-payload>)`. Both module FKs are NOT NULL once both sides are modularized.
+4. **Consumer DMDO on the target.** B has a `domain_module_data_objects` row declaring `role IN ('consumer','contributor','embedded_master')` on the handoff's payload `data_object_id`, anchored at the target module. Without this leg, the B10b backfill leaves `target_domain_module_id` NULL (sub-case 2).
+
+**Procedure (run as a TypeScript loader; never Python).**
+
+1. **Pull both sides' shape.**
+   - A's masters with workflow-bearing lifecycle states: `/data_object_lifecycle_states?data_object_id=in.(<A-masters>)&requires_permission=eq.true&select=data_object_id,state_name,domain_module_id` plus all of A's `trigger_events`.
+   - B's DMDO coverage on data_objects A masters: `/domain_module_data_objects?data_object_id=in.(<A-masters>)&domain_module_id=in.(<B-modules>)&select=domain_module_id,data_object_id,role,necessity`.
+   - Existing A→B handoffs: `/handoffs?source_domain_id=eq.<A-id>&target_domain_id=eq.<B-id>&select=id,trigger_event_id,data_object_id,source_domain_module_id,target_domain_module_id,trigger_events(event_name,data_object_id)`.
+2. **Repeat symmetrically for B→A.**
+3. **Diff in four sections** (per direction):
+   - **Section 1 — Existing handoffs, fully wired.** Pass — informational sanity check only.
+   - **Section 2 — Existing handoffs with NULL module FK.** Run the B10b derivation locally; if the row is now resolvable (the other side has DMDO coverage that didn't exist when the handoff was first loaded), surface as a one-row PATCH. If not resolvable, identify which side needs the upstream fix (missing DMDO row on the consumer ⇒ that side's load; missing master row on the publisher ⇒ that side's Phase-B gap).
+   - **Section 3 — Missing handoffs the catalog implies should exist.** For every (publisher master state with `requires_permission=true`) × (consumer DMDO row on that master's data_object on the other side), check that a handoff row exists. Each missing combination is a candidate handoff — surface with proposed `trigger_event`, payload, and the modules it would wire to. User decides which to load.
+   - **Section 4 — Boundary integrity gaps.** Any DMDO row on one side referencing a data_object the other side doesn't master (and isn't `kind='platform_builtin'`) — that's a B5 integrity failure routed back to whichever domain owes the canonical master.
+4. **Produce a single diff file** at `c:\tmp\reconcile_<A>_<B>_<YYYY_MM_DD>.md` with the four sections per direction (so eight sections total) plus a summary count. The user reviews, then accepts which fixes to load.
+5. **Each accepted fix is loaded as a normal Phase-B / Phase-M update on the side that owes it.** Reconciliation never produces fixes for both sides simultaneously in one loader — keep the audit-trail per side clean.
+
+**Output discipline.** Pairwise reconciliation is read-only by construction. The diff goes to a tmp file and the user approves loads one side at a time. Never bulk-patch both sides from a single reconciliation invocation — that erases the "who owes what" provenance the audit trail depends on.
+
+**Anti-patterns.**
+
+- ❌ Running pairwise reconciliation on every (A, B) combo "to be thorough". It's N×N and almost all pairs have zero cross-domain edges. Run only on pairs the per-domain audit explicitly surfaced.
+- ❌ Loading the missing handoffs and the missing DMDO rows from the reconciliation script itself. The procedure produces a diff; loaders live on the side that owes the fix.
+- ❌ Treating reconciliation as a replacement for the per-domain audit. The per-domain audit catches all 28 checks; reconciliation only walks the handoff boundary. Always audit first, then reconcile if the report-only section warrants it.
 
 ### Fact sheets (explicit step, not part of any sequence)
 
@@ -776,6 +881,7 @@ The catalog has had four known backfill gaps where a category was scaffolded but
 | `business_function_domains` + `business_function_capabilities` (RACI axis) | Pre–ITSM-review backfill (2026-05-20) | Every domain has at least one `owner` row; every domain has at least one `contributor` or `consumer` row when cross-functional. |
 | `business_functions` spine itself | Pre–2026-05-20 | If the table is empty when starting Phase C, load the 20-function canonical spine first. |
 | `handoffs.source_domain_module_id` + `target_domain_module_id` (per-module attribution on handoffs) | Pre-2026-05-23 ATS backfill | Run B10b. 99% of handoff rows still sit at NULL on these columns. Backfill is deterministic by payload→master derivation; ties leave NULL with a manual-review note. |
+| `skills` + `tools` + `skill_tools` per module (Rule #17 / F2–F5) | Pre-2026-05-25 catalog-wide | Run F2–F5. Only ATS, SMP, TALENT-MGMT, EMP-EXP have any system skills loaded; every other modularized domain (CRM, ITSM, HCM, HRSD, and ~60 more) needs the full Phase-S load before its Semantius score becomes computable. CRM was the trigger case that surfaced this gap. |
 
 Don't ship a new market without closing all four gaps for it. Doing so makes the historical drift worse.
 

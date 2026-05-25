@@ -7,8 +7,8 @@ system_slug: ats-pre-employee-record
 domain_modules:
   - ats-pre-employee-record
 domain_code: ATS
-related_modules: [ats-background-checks, ats-candidate-crm, ats-offers]
-created_at: 2026-05-24
+related_modules: [ats-background-checks, ats-candidate-crm, ats-offers, hcm-lifecycle-workflows]
+created_at: 2026-05-25
 ---
 
 # Pre-Employee Record
@@ -95,20 +95,23 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
+| data_object | other module / domain | role | necessity | notes |
+| --- | --- | --- | --- | --- |
+| `pre_employees` | HCM-LIFECYCLE-WORKFLOWS (Employee Lifecycle Workflows) - HCM | consumer | required | - |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
 | source module | target domain | target module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-PRE-EMPLOYEE-RECORD | HCM | _(domain-level)_ | `pre_employee.activated` | `pre_employees` | event_stream | medium | Pre-employee activation hands the canonical reconciliation to HCM-mastered `employees`. ATS owns the pre-employee lifecycle stage (paperwork, background check, pre-boarding); at start-date the pre_employee row is reconciled into the HCM employee record. Identifier mapping (pre_employee_id → employee_id) is the canonical reconciliation gap. Replaces / complements the older candidate.hired and job_offer.accepted handoffs by carrying the proper post-acceptance reconciliation milestone. |
+| ATS-PRE-EMPLOYEE-RECORD | HCM | HCM-LIFECYCLE-WORKFLOWS | `pre_employee.activated` | `pre_employees` | event_stream | medium | Pre-employee activation hands the canonical reconciliation to HCM-mastered `employees`. ATS owns the pre-employee lifecycle stage (paperwork, background check, pre-boarding); at start-date the pre_employee row is reconciled into the HCM employee record. Identifier mapping (pre_employee_id → employee_id) is the canonical reconciliation gap. Replaces / complements the older candidate.hired and job_offer.accepted handoffs by carrying the proper post-acceptance reconciliation milestone. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
 | target module | source domain | source module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-OFFERS | `job_offer.rescinded` | `pre_employees` | lifecycle_progression | high | - |
 | ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-OFFERS | `job_offer.accepted` | `pre_employees` | lifecycle_progression | low | - |
 | ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-BACKGROUND-CHECKS | `background_check.cleared` | `pre_employees` | lifecycle_progression | low | - |
+| ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-OFFERS | `job_offer.rescinded` | `pre_employees` | lifecycle_progression | high | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
