@@ -48,6 +48,54 @@ Format:
 - .env present: yes
 - diagnosis: same wrong-tenant audience as the recurring 2026-05-23/24 incidents. Trying `--reset-jwt-cache` per updated mitigation.
 
+## 2026-05-26 (BEN-ADMIN audit session, first call)
+- call: `semantius call crud postgrestRequest '{"method":"GET","path":"/domains?domain_code=eq.BEN-ADMIN&select=..."}'`, also `semantius whoami`
+- received audience: `tenant://1VLl6gULTCGtac6NXImwJewYEqEy061J`
+- full error: `Error: This JWT does not have authorization to access this resource: required audience not found, received ["tenant://1VLl6gULTCGtac6NXImwJewYEqEy061J"]`
+- cwd at time of call: `c:\dev\domain-map` (project root); `config_source C:\dev\domain-map` reported by CLI
+- .env present: yes
+- diagnosis: same wrong-tenant audience as the recurring incidents. Initial failure also masquerading as `TOOL_NOT_FOUND` on `postgrestRequest` (likely an auth fall-through in the tool-resolution path). Trying `--reset-jwt-cache` per mitigation.
+
+## 2026-05-26 (PSA classification query, first call)
+- call: `semantius whoami` (also affected `semantius call crud postgrestRequest` with `TOOL_NOT_FOUND` masquerade)
+- received audience: `tenant://1VLl6gULTCGtac6NXImwJewYEqEy061J`
+- full error: `Error: This JWT does not have authorization to access this resource: required audience not found, received ["tenant://1VLl6gULTCGtac6NXImwJewYEqEy061J"]`
+- cwd at time of call: `c:\dev\domain-map` (project root); `config_source C:\dev\domain-map` reported by CLI
+- .env present: yes
+- diagnosis: same recurring wrong-tenant audience. Trying `--reset-jwt-cache` per mitigation.
+
+## 2026-05-26 (MSP-PSA audit session, first call)
+- call: `semantius whoami` (also affected `semantius call crud postgrestRequest` with `TOOL_NOT_FOUND` masquerade and `--reset-jwt-cache whoami`)
+- received audience: `tenant://1VLl6gULTCGtac6NXImwJewYEqEy061J`
+- full error: `Error: This JWT does not have authorization to access this resource: required audience not found, received ["tenant://1VLl6gULTCGtac6NXImwJewYEqEy061J"]`
+- cwd at time of call: `c:\dev\domain-map` (project root); `config_source C:\dev\domain-map` reported by CLI
+- .env present: yes
+- diagnosis: same recurring wrong-tenant audience. `--reset-jwt-cache` did NOT fix it on first attempt (matches the 2026-05-24 fact-sheet re-emit variant). Plain retry ~5s later also returned same wrong audience. Likely intermittent server-side routing; surfacing to user before further retries per Rule #6 "don't quietly retry in a loop".
+
+## 2026-05-26 (LEGAL-PRACT-MGMT research session, first call)
+- call: `semantius whoami`, `semantius ping -n 3` (all 3 pings failed), `semantius --reset-jwt-cache whoami`
+- received audience: `tenant://1VLl6gULTCGtac6NXImwJewYEqEy061J`
+- full error: `Error: This JWT does not have authorization to access this resource: required audience not found, received ["tenant://1VLl6gULTCGtac6NXImwJewYEqEy061J"]`
+- cwd at time of call: `c:\dev\domain-map` (project root); `config_source C:\dev\domain-map` reported by CLI
+- .env present: yes (`SEMANTIUS_ORG=adenin`, API key unchanged from prior sessions)
+- diagnosis: sustained server-side routing failure (3/3 pings failed against the same wrong tenant). `--reset-jwt-cache` did NOT fix it. Surfacing to user before further retries per Rule #6 "don't quietly retry in a loop".
+
+## 2026-05-26 (ONBOARDING audit fix-load session, first call)
+- call: `semantius call crud postgrestRequest '{"method":"GET","path":"/tools?..."}'` (returned `TOOL_NOT_FOUND` masquerade), `semantius whoami`
+- received audience: `tenant://1VLl6gULTCGtac6NXImwJewYEqEy061J`
+- full error: `Error: This JWT does not have authorization to access this resource: required audience not found, received ["tenant://1VLl6gULTCGtac6NXImwJewYEqEy061J"]`
+- cwd at time of call: `c:\dev\domain-map` (project root); `config_source C:\dev\domain-map` reported by CLI
+- .env present: yes
+- diagnosis: same recurring wrong-tenant audience. Trying `--reset-jwt-cache` then short wait per documented mitigation.
+
+## 2026-05-26 (Oracle EBS coverage gap analysis, first call)
+- call: `semantius whoami` (also affected `semantius call crud getCurrentUser` with `TOOL_NOT_FOUND` masquerade)
+- received audience: `tenant://1VLl6gULTCGtac6NXImwJewYEqEy061J`
+- full error: `Error: This JWT does not have authorization to access this resource: required audience not found, received ["tenant://1VLl6gULTCGtac6NXImwJewYEqEy061J"]`
+- cwd at time of call: `c:\dev\domain-map` (project root); `config_source C:\dev\domain-map` reported by CLI
+- .env present: yes
+- diagnosis: same recurring wrong-tenant audience. Trying `--reset-jwt-cache` per documented mitigation.
+
 ## 2026-05-24 (ATS fact-sheet re-emit, first call)
 - call: `bun run scripts/emit_fact_sheet.ts --starter-kit ATS` (first postgrestRequest), also `semantius whoami`, `semantius --reset-jwt-cache whoami`
 - received audience: `tenant://1VLl6gULTCGtac6NXImwJewYEqEy061J`

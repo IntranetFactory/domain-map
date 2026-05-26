@@ -23,7 +23,26 @@
       "Bash(grep -oE 'categor[a-zA-Z_]*[:\"][^,}]{0,80}' /c/tmp/monday_marketing.html)",
       "Bash(agent-browser*)",
       "Bash(awk -F'\\\\\\\\|' '{print $2, \"|\", $3, \"|\", $4, \"|\", $8}')",
-      "Bash(perl -ne 'print \"L$.: $_\" if /\\\\x{2014}/' .claude/skills/domain-map-analyst/SKILL.md)"
+      "Bash(perl -ne 'print \"L$.: $_\" if /\\\\x{2014}/' .claude/skills/domain-map-analyst/SKILL.md)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f'{len\\(d\\)} rows across {len\\(set\\(r[\\\\\"domain_id\\\\\"] for r in d\\)\\)} domains'\\)\")",
+      "Bash(python -c ' *)",
+      "Bash(kill 7663)",
+      "Bash(tee c:/tmp/fds_load.log)",
+      "Bash(tee c:/tmp/fds_load2.log)",
+      "Bash(tee c:/tmp/fds_load3.log)",
+      "Bash(tee c:/tmp/fds_load4.log)",
+      "Bash(domain_data_objects.necessity)",
+      "Bash(echo \"=== Check `domain_data_objects.necessity` vs Rule #16 for embedded_master rows ===\")",
+      "Bash(users)",
+      "Bash(echo \"=== Wider: does `users` \\(748\\) edge to anything? sample ===\")",
+      "Bash(python -c \"import json,sys;rows=json.load\\(sys.stdin\\);ids=set\\(\\);[ \\(ids.add\\(r['source_domain_id']\\) if r['source_domain_id']!=4 else None, ids.add\\(r['target_domain_id']\\) if r['target_domain_id']!=4 else None\\) for r in rows ];print\\(sorted\\(ids\\)\\)\")",
+      "Bash(timeout 60 bash -c 'sleep 60')",
+      "Bash(cat C:\\\\\\\\Users\\\\\\\\MARTIN~1\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\c--dev-domain-map\\\\\\\\09646105-6c6c-4d7e-938b-62ca09f142e0\\\\\\\\tasks\\\\\\\\b2361ij2d.output)",
+      "Bash(semantius call *)",
+      "Bash(timeout 180 bash -c 'sleep 180')"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
     ]
   }
 }

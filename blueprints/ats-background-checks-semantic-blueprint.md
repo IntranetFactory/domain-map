@@ -8,7 +8,7 @@ domain_modules:
   - ats-background-checks
 domain_code: ATS
 related_modules: [ats-candidate-crm, ats-offers, hrsd-case-mgmt, payroll-run]
-created_at: 2026-05-25
+created_at: 2026-05-26
 ---
 
 # Background Checks

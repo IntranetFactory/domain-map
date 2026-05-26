@@ -1,27 +1,19 @@
 #!/usr/bin/env bun
 // scripts/emit_fact_sheet.ts - plan-modules.md §11 step 4 (revised per §9, session 3).
 //
-// Two-pass emitter:
-//   1. Per-module fact sheets → blueprints/modules/<MODULE-CODE>-semantic-blueprint.md
-//      One per `domain_modules` row. The deployable unit's surface: data_objects assigned to
-//      this module, lifecycle states on this module's masters, system skill + skill_tools +
-//      Semantius coverage %, module-scoped permissions and business rules, capabilities
-//      realized, outbound/inbound integration handoffs, architect handoff hints.
+// Per-module emitter:
+//   Per-module fact sheets → blueprints/<MODULE-CODE>-semantic-blueprint.md
+//   One per `domain_modules` row. The deployable unit's surface: data_objects assigned to
+//   this module, lifecycle states on this module's masters, system skill + skill_tools +
+//   Semantius coverage %, module-scoped permissions and business rules, capabilities
+//   realized, outbound/inbound integration handoffs, architect handoff hints.
 //
-//   2. Per-starter-kit fact sheets → blueprints/starter-kits/<DOMAIN-CODE>-semantic-blueprint.md
-//      One per domain that has a `domain_starter_modules` junction. The buyer-facing market
-//      entry point: market overview, the editorial on-ramp, every module installable on this
-//      domain (primary-home + cross-cutting hosted via domain_module_host_domains), combined
-//      view across the starter modules, capabilities, solutions and vendors, RACI,
-//      regulations, architect handoff hints.
-//
-// No per-domain fact sheet - the starter-kit page replaces it as the market entry point.
-// No _cross-cutting/ folder - cross-cutting modules live in modules/ with everyone else;
-// their fact sheet swaps the parent-domain section for a host-domains section.
+// Starter-kit rendering is gone (multi-module bundles are no longer authored as a separate
+// artifact). Cross-cutting modules live alongside everyone else in blueprints/; their fact
+// sheet swaps the parent-domain section for a host-domains section.
 //
 // Usage:
 //   bun run scripts/emit_fact_sheet.ts --module ATS-CANDIDATE-CRM
-//   bun run scripts/emit_fact_sheet.ts --starter-kit ATS
 //   bun run scripts/emit_fact_sheet.ts --all
 //   bun run scripts/emit_fact_sheet.ts --all --check        # CI drift check
 
@@ -40,20 +32,16 @@ function flagValue(name: string): string | null {
   return i >= 0 && i + 1 < args.length ? args[i + 1] : null;
 }
 const MODULE_CODE = flagValue("--module");
-const STARTER_DOMAIN_CODE = flagValue("--starter-kit");
 
-if (!ALL && !MODULE_CODE && !STARTER_DOMAIN_CODE) {
+if (!ALL && !MODULE_CODE) {
   console.error("usage:");
   console.error("  emit_fact_sheet.ts --module <MODULE_CODE>");
-  console.error("  emit_fact_sheet.ts --starter-kit <DOMAIN_CODE>");
   console.error("  emit_fact_sheet.ts --all [--check]");
   exit(2);
 }
 
 const ROOT = "c:/dev/domain-map";
-const FACT_SHEET_DIR = `${ROOT}/blueprints`;
-const MODULES_DIR = `${FACT_SHEET_DIR}/modules`;
-const STARTER_KITS_DIR = `${FACT_SHEET_DIR}/starter-kits`;
+const BLUEPRINTS_DIR = `${ROOT}/blueprints`;
 const BLUEPRINT_SUFFIX = "-semantic-blueprint.md";
 const TODAY = new Date().toISOString().slice(0, 10);
 const FACT_SHEET_VERSION = "2.0";
@@ -1186,7 +1174,7 @@ function deriveWorkflowGatesAndRules(
 
 async function emitOneModuleFactSheet(m: ModuleRow): Promise<{ path: string; changed: boolean }> {
   const md = await emitFactSheet([m]);
-  const outPath = resolve(MODULES_DIR, `${moduleSlug(m.domain_module_code)}${BLUEPRINT_SUFFIX}`);
+  const outPath = resolve(BLUEPRINTS_DIR, `${moduleSlug(m.domain_module_code)}${BLUEPRINT_SUFFIX}`);
   let changed = true;
   if (existsSync(outPath)) {
     const existing = readFileSync(outPath, "utf8");
@@ -1199,30 +1187,6 @@ async function emitOneModuleFactSheet(m: ModuleRow): Promise<{ path: string; cha
   return { path: outPath, changed };
 }
 
-async function emitOneStarterKit(d: Domain): Promise<{ path: string; changed: boolean; skipped: boolean }> {
-  const starterRows: any[] = (await pg(
-    "GET",
-    `/domain_starter_modules?domain_id=eq.${d.id}&select=domain_module_id,position&order=position.asc`,
-  )) ?? [];
-  const outPath = resolve(STARTER_KITS_DIR, `${moduleSlug(d.domain_code)}${BLUEPRINT_SUFFIX}`);
-  if (starterRows.length === 0) return { path: outPath, changed: false, skipped: true };
-  const modules: ModuleRow[] = starterRows
-    .map((r) => modulesById.get(r.domain_module_id as number))
-    .filter((m): m is ModuleRow => Boolean(m));
-  if (modules.length === 0) return { path: outPath, changed: false, skipped: true };
-  const md = await emitFactSheet(modules, "Starter Kit");
-  let changed = true;
-  if (existsSync(outPath)) {
-    const existing = readFileSync(outPath, "utf8");
-    if (existing === md) changed = false;
-  }
-  if (!CHECK && changed) {
-    mkdirSync(dirname(outPath), { recursive: true });
-    writeFileSync(outPath, md, "utf8");
-  }
-  return { path: outPath, changed, skipped: false };
-}
-
 if (MODULE_CODE) {
   const m = modulesByCode.get(MODULE_CODE);
   if (!m) {
@@ -1232,19 +1196,6 @@ if (MODULE_CODE) {
   const r = await emitOneModuleFactSheet(m);
   console.log(`${r.changed ? (CHECK ? "WOULD-CHANGE" : "wrote") : "unchanged"}  ${MODULE_CODE}  →  ${r.path}`);
   if (CHECK && r.changed) exit(1);
-} else if (STARTER_DOMAIN_CODE) {
-  const d = domainsByCode.get(STARTER_DOMAIN_CODE);
-  if (!d) {
-    console.error(`domain_code ${STARTER_DOMAIN_CODE} not found`);
-    exit(2);
-  }
-  const r = await emitOneStarterKit(d);
-  if (r.skipped) {
-    console.log(`skipped  ${STARTER_DOMAIN_CODE}  (no domain_starter_modules junction)`);
-  } else {
-    console.log(`${r.changed ? (CHECK ? "WOULD-CHANGE" : "wrote") : "unchanged"}  ${STARTER_DOMAIN_CODE}  →  ${r.path}`);
-    if (CHECK && r.changed) exit(1);
-  }
 } else if (ALL) {
   let modulesChanged = 0;
   for (const m of allModules) {
@@ -1257,27 +1208,9 @@ if (MODULE_CODE) {
       throw e;
     }
   }
-  let starterKitsChanged = 0;
-  let starterKitsSkipped = 0;
-  for (const d of allDomains) {
-    try {
-      const r = await emitOneStarterKit(d);
-      if (r.skipped) {
-        starterKitsSkipped++;
-      } else if (r.changed) {
-        starterKitsChanged++;
-        console.log(`${CHECK ? "WOULD-CHANGE" : "wrote"}  starter-kit ${d.domain_code}  →  ${r.path}`);
-      } else {
-        console.log(`unchanged  starter-kit ${d.domain_code}  →  ${r.path}`);
-      }
-    } catch (e) {
-      console.error(`FAILED starter-kit ${d.domain_code}:`, (e as Error).message);
-      throw e;
-    }
-  }
   console.log("");
-  console.log(`summary: modules ${modulesChanged}/${allModules.length} ${CHECK ? "would change" : "changed"}; starter-kits ${starterKitsChanged} changed, ${starterKitsSkipped} skipped (no junction)`);
-  if (CHECK && (modulesChanged + starterKitsChanged) > 0) {
+  console.log(`summary: modules ${modulesChanged}/${allModules.length} ${CHECK ? "would change" : "changed"}`);
+  if (CHECK && modulesChanged > 0) {
     console.error("drift detected - re-run without --check to regenerate, then commit.");
     exit(1);
   }

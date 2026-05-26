@@ -8,7 +8,7 @@ domain_modules:
   - ats-interviews
 domain_code: ATS
 related_modules: [ats-candidate-crm, ats-recruitment-pipeline, hcm-lifecycle-workflows, talent-performance-mgmt, talent-succession-career]
-created_at: 2026-05-25
+created_at: 2026-05-26
 ---
 
 # Interviews

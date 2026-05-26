@@ -266,6 +266,17 @@ If you find yourself reaching for prose just to fill the column, leave it empty.
 
 This rule is scoped to `domain_module_data_objects.notes` (the module-level junction). The domain-level junction `domain_data_objects.notes` follows the older multi-master conventions documented in §"Multi-master vs multi-embedded-master" below; that doctrine is unchanged.
 
+**The same doctrine applies to `data_object_relationships.notes`.** Empty by default, populate only when the user explicitly asks. The rendered relationship row already shows `from`, `verb`, `to`, `cardinality`, `kind`, `necessity`, and `owner_side`. Prose that restates any of those is forbidden. Every loader-prefix pattern is forbidden, including but not limited to:
+
+- `intra | cluster <X> | <DOMAIN> | ...`, `cross | cluster <X> | <DOMAIN> | ...`, `users | cluster <X> | <DOMAIN> | ...` (cluster-drafts loader output)
+- `cross-domain | <MOD-A> → <MOD-B> | ...` (later cluster loaders)
+- `users-edge | actor role: <role>` (recurring users-edge labeler)
+- `auto-flipped from many_to_one` (auto-flip provenance from the symmetrize step)
+- Single-sentence cardinality narration ("A part has many revisions over time", "Hierarchical parent-child between locations") — restates `relationship_type` + `relationship_kind`
+- Single-sentence actor labels on `users`-edge rows ("Cashier-user", "The reviewing manager who authors the rating") — restates the verb + `owner_side`
+
+The 2026-05-26 wipe cleared 995 such rows. Any new write that puts loader-provenance, cluster routing tags, auto-flip notices, or schema restatement into this column is a regression — fail the load, don't ship it. If you're authoring a cluster-drafts loader and find yourself prepending `<scope> | cluster <X> | <DOMAIN> |` to anything, stop: that's metadata for the markdown draft, not for the row. Strip it before the POST.
+
 ### 16. Infrastructure masters are always `necessity: optional` on non-master rows.
 
 `locations`, `org_units`, `cost_centers`, and any future reference-data masters (currencies, calendars, fiscal periods, GL accounts, tax codes, job grades, job families) follow this rule. The criterion for `necessity: required` is "the core workflow fails without the master being present." Infrastructure masters fail that test:
@@ -824,6 +835,12 @@ The `skills` table sits next to `roles` but represents agent skills, not user ro
 
 **F6. (Future) The `tools` catalog is deduplicated.** *(reserved — not part of routine audit.)* A tool with the same `tool_name` and `operation_kind` and `data_object_id` linked from multiple skills is the same primitive and should be a single `tools` row. The deduplication pass runs catalog-wide, not per-domain; F6 reserves the ID for when it ships.
 
+**F7. Channel primitives are only linked when the workflow requires a specific channel; otherwise the skill uses the `notify_person` / `notify_team` abstraction.** (Per the § "Channel vs capability authoring rule".)
+- Query: `/skill_tools?skill_id=in.(<skillIds>)&select=skill_id,notes,tools!inner(tool_name)&tools.tool_name=in.(send_email,send_sms,post_chat_message,make_phone_call,send_push_notification,send_whatsapp_message)`
+- Pass: every returned row carries a workflow-specific justification in `skill_tools.notes` explaining why the channel can't be substituted (e.g. "voice IS the workflow", "envelope-completion webhook is the contract", "EDI message exchange per trading-partner contract"). Rows with empty `notes` OR with generic notification-shaped notes ("enrollment confirmations", "due-date reminders", "completion notifications", "assignee notification") fail. The default for generic notifications is `notify_person`; the default for broadcast is `notify_team`.
+- Fix: PATCH the offending `skill_tools.tool_id` to point at `notify_person` (or `notify_team` for broadcast). Idempotency-safe: if the same skill already links the abstraction, DELETE the channel-primitive row instead of PATCHing. Multi-channel rows mean broadcast (AND), not at-least-one (OR); if the skill genuinely needs to fire on BOTH email and chat, keep both with notes justifying each.
+- Why this is here: the rule was stated in the authoring section but missed at audit time on at least three loads. The abstraction's structural value is that when the platform ships outbound, `notify_person.coverage_tier` flips to `platform` with one UPDATE and every skill using it re-scores; channel-specific links don't ride that flip and have to be hand-patched.
+
 ### Audit recipe (for "review domain X" / "audit X" / "what's missing for X")
 
 1. Resolve `<DOMAIN_CODE>` to `<id>` and `<masters>` once at the start. Cache for reuse across queries.
@@ -831,7 +848,7 @@ The `skills` table sits next to `roles` but represents agent skills, not user ro
 3. Run every **in-scope** band check (A / M / B / C / D / E / F) in order. Skip A5 unless the user has explicitly asked for a vendor-ownership refresh.
 4. Classify each result:
    - **Structural gate** — M1–M6 failures block every downstream concern. A domain with no modules (or with capability-orphaned modules) can't be modeled in Phase B/E correctly until the M-band is clean. Resolve M-band first.
-   - **In-scope fix** — this domain can fix locally (S1–S3 zero-row anomalies, A1–A4, M1–M6, B1–B9, B9b, B10b, B11–B12, C1–C2, D1, E1–E6, F1–F5). Goes into the **gap report** as actionable. Fact-sheet emission is **not** an audit step — see § "Fact sheets" below.
+   - **In-scope fix** — this domain can fix locally (S1–S3 zero-row anomalies, A1–A4, M1–M6, B1–B9, B9b, B10b, B11–B12, C1–C2, D1, E1–E6, F1–F5, F7). Goes into the **gap report** as actionable. Fact-sheet emission is **not** an audit step — see § "Fact sheets" below.
    - **Report-only follow-up** — the symmetric side is owned by another domain (B8 inbound direction, all of B10). Goes into a separate **"report-only follow-ups"** subsection of the report, naming the source domain + the missing check ID on that side (e.g. "HCM B9 owes outbound on `hcm_positions`"). **Do not author fixes for these from this domain's audit.** These items NEVER block the audited domain's green status; they are observations the user can act on by scheduling audits of the source domains.
 4. Surface the gap report to the user **before** authoring any fixes. Include the failing query output snippet so the user can sanity-check. Ask whether to also kick off audits on the source domains in the report-only section.
 5. For each accepted in-scope fix, author it (markdown draft, or directly in a loader); never load AI-generated content without a user review pass (Rule #1).
@@ -1379,6 +1396,7 @@ Reference loader: [.tmp_deploy/load_p25b_process_skills.ts](../../../.tmp_deploy
 - ❌ `cd`ing into the skill folder, `.tmp_deploy/`, or any subdirectory before running `semantius` or a loader script. Silently routes to the wrong tenant. See rule #6.
 - ❌ Writing project state, lessons learned, or "remember this for next time" notes to your memory system. Every persistent note about this project lives in committed files (SKILL.md, CLAUDE.md, references/). Memory is off-limits for this repo.
 - ❌ Loading tool-shaped capability rows into `capabilities`. `Send Email`, `Transcribe Audio`, `Sign Document`, `Make Phone Call`, `Run Shell Command` — those are **`tools`** (lowercase snake_case verbs: `send_email`, `transcribe_audio`, `sign_document`), not `capabilities`. The `capabilities` table stays business-shaped: noun-phrase market features an org *can do* (`Lead Management`, `Vulnerability Scanning`, `Roadmap Visualization`, `Automated Invoice Matching`). If the row reads as a JSON-RPC function with an obvious verb-object shape, it belongs in `tools` with the right `operation_kind` and (for `query`/`mutate`) a `data_object_id` pointer. This anti-pattern is easy to fall into when a vendor's marketing page lists capabilities like "AI Voice Synthesis" — that's a *tool* the vendor delivers, not a *capability* of a domain.
+- ❌ Linking channel primitives (`send_email`, `send_sms`, `post_chat_message`, `make_phone_call`) on a skill without a documented channel-specific workflow justification. The Channel vs capability authoring rule is explicit: **default to the abstraction** (`notify_person` for single recipient, `notify_team` for broadcast). Link the channel directly only when the workflow REQUIRES that specific channel (CCAAS voice agent, ESIGN webhook callback, EDI message exchange) and the reason is captured in `skill_tools.notes`. Easy to miss in two situations: (a) cargo-culting an authoring template from a domain whose workflow legitimately needs the channel (CRM sales-activity skill correctly links `send_email`; LMS course-delivery does not), and (b) extending an existing skill that already has the channel primitive linked from a prior load — audit the inherited rows; don't treat them as authoritative. Cost of the mistake: when the platform ships native outbound, `notify_person` flips to `coverage_tier='platform'` with one UPDATE and every skill using the abstraction re-scores. Channel-specific links don't benefit; each one has to be hand-patched. Recurred at least three times across catalog loads; F7 in the per-domain audit catches it positively.
 
 ---
 

@@ -8,7 +8,7 @@ domain_modules:
   - ats-candidate-crm
 domain_code: ATS
 related_modules: [ats-background-checks, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, hcm-lifecycle-workflows, lms-skills, onb-journey-mgmt, pa-workforce-metrics, talent-succession-career]
-created_at: 2026-05-25
+created_at: 2026-05-26
 ---
 
 # Candidate CRM
