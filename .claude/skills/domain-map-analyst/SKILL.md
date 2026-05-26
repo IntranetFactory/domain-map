@@ -284,7 +284,7 @@ A `domain_modules` row defines a deployable unit; a `system` skill defines what 
 
 - **One `system` skill per `domain_modules` row.** `skills.skill_type='system'` AND `skills.domain_module_id=<module_id>`. Authoring more than one system skill per module is a rule violation: if the module's surface needs two distinct skills, the module itself needs to be split.
 - **That skill has ≥1 `skill_tools` row.** Typical shape is 5–20 tools per module (required + optional). Required tools are the irreducible set the agent needs to perform the module's primary workflow; optional tools cover degraded modes (lower-tier ML, alternate channels).
-- **Tool `operation_kind` invariants** (already enforced by the schema but loader pre-flight should mirror them): `query` and `mutate` REQUIRE `data_object_id`; `side_effect` and `compute` REQUIRE `data_object_id` to be NULL.
+- **Tool `operation_kind` invariants** (already enforced by the schema but loader pre-flight should mirror them): `query` and `mutate` REQUIRE `data_object_id`; `side_effect` and `compute` REQUIRE `data_object_id` to be NULL; `inbound` makes `data_object_id` OPTIONAL (NULL for generic primitives like `receive_webhook`, set when the landing target is fixed at the catalog level).
 
 **This is a Phase-A obligation, not Phase E**, parallel to Rule #14. When loading a new market, system skills + tools + skill_tools ship in the same load as `domains` + `capabilities` + `domain_modules` + `solutions`. The Phase-S step in the workflow (§ "Workflow for any research task") is the canonical authoring procedure.
 
@@ -350,29 +350,37 @@ A `domain_modules` row defines a deployable unit; a `system` skill defines what 
 
 | Table | Holds | Qualifier / discriminator |
 |---|---|---|
-| `tools` | JSON-RPC-shaped capability primitives an agent skill can call (`send_email`, `query_invoices`, `transcribe_audio`) | `operation_kind` enum (`query` / `mutate` / `side_effect` / `compute`) — drives the **100% Semantius derivation** (today: `{query, mutate}` are Semantius-covered intrinsically; `side_effect` + `compute` need external solutions). Optional `data_object_id` FK is **required** when `operation_kind ∈ {query, mutate}` and **must be null** otherwise |
+| `tools` | JSON-RPC-shaped capability primitives an agent skill can call (`send_email`, `query_invoices`, `transcribe_audio`, `receive_webhook`). Includes two abstraction primitives, `notify_person` (single-recipient outbound) and `notify_team` (broadcast), that capture the substitutable-channel pattern; skills link these by default for generic notifications and link concrete channels only when the workflow requires a specific channel | `operation_kind` enum (`query` / `mutate` / `side_effect` / `compute` / `inbound`). `coverage_tier` enum (`platform` / `external` / `integration`) drives the Semantius score; read this column, not `operation_kind`. `data_object_id` FK is **required** when `operation_kind ∈ {query, mutate}`, **must be NULL** for `side_effect` and `compute`, **optional** for `inbound` |
 | `skills` | Agent skills (system / process / role). `system` skills mirror **one module 1:1** (`skill_type='system'`, `domain_module_id` set) — target state per Rule #14. `process` skills wrap a cross-domain handoff cluster; `role` wraps a user-role workflow. **Transitional note:** the catalog still carries domain-level system skills (`domain_id` set, `domain_module_id` null) from the pre-modular era — these are migration targets, not the pattern for new authoring. | `skill_type` enum + `domain_module_id` (required when `system`, per Rule #14) |
-| `tool_solutions` | N:M between `tools` and `solutions` — which non-Semantius solutions deliver this tool, and how | `delivery_strength` + `delivery_method` (`mcp_server` preferred) + optional `endpoint_url`. Computed label `<tool> via <solution>`. **No Semantius row** — its coverage is intrinsic to `operation_kind` |
-| `skill_tools` | N:M between `skills` and `tools` — which tools a skill needs to function | `requirement_level` (`required` / `optional` / `fallback`) + workflow-context `notes`. Computed label `<skill> needs <tool>` |
+| `tool_solutions` | N:M between `tools` and `solutions` — which non-Semantius solutions deliver this tool, and how | `delivery_strength` + `delivery_method` (`mcp_server` preferred) + optional `endpoint_url`. Computed label `<tool> via <solution>`. **No Semantius row** — its coverage is read from `tools.coverage_tier` directly |
+| `skill_tools` | N:M between `skills` and `tools` — which tools a skill needs to function | `requirement_level` (`required` / `optional`) + workflow-context `notes`. Computed label `<skill> needs <tool>` |
 
-These four tables coexist with `domain_map.solutions`, which gained `solution_kind` enum (`external_connector` / `action` / `compute_service` / `standard_solution`) to classify which solutions are tool-delivery sources. The killer hypothesis the layer exists to test: **how many of the loaded domains have a system skill where every required tool is Semantius-covered (i.e. `operation_kind ∈ {query, mutate}` for every required `skill_tools` row)?**
+These four tables coexist with `domain_map.solutions`, which gained `solution_kind` enum (`external_connector` / `action` / `compute_service` / `standard_solution`) to classify which solutions are tool-delivery sources. The killer hypothesis the layer exists to test: **how many of the loaded domains have a system skill where every required tool is Semantius-covered (i.e. `coverage_tier='platform'` for every required `skill_tools` row)?**
 
 #### Semantius score
 
-The **Semantius score** of a skill (and therefore of the module realised by that skill) is the fraction of its tools that Semantius covers OOTB. `query` and `mutate` work out of the box on Semantius (CRUD + cube + JsonLogic); `side_effect` and `compute` need an external solution.
+The **Semantius score** of a skill (and the module realised by that skill) reads from `tools.coverage_tier`, not from `operation_kind`. Two scores are reported together:
 
 ```
-semantius_score(skill) =
-   count(skill_tools WHERE tools.operation_kind IN ('query', 'mutate'))
+strict_score(skill) =
+   count(skill_tools WHERE tools.coverage_tier = 'platform')
+ / count(skill_tools)
+
+operational_score(skill) =
+   count(skill_tools WHERE tools.coverage_tier IN ('platform', 'integration'))
  / count(skill_tools)
 ```
 
+`strict_score` is the share served by the platform alone (what runs on Semantius with no external glue). `operational_score` adds curated OOTB integrations the platform maintains (e.g. an MCP server in the Semantius catalog for a vendor). The gap between the two is the value of the integration catalog.
+
+`tools.coverage_tier` flips from `external` to `platform` only when the capability is shipped on BOTH the `crud` MCP server AND the `semantius` CLI; shipping one without the other does not count. When the platform adds native email (or any other capability), one UPDATE on the relevant `tools` rows re-scores the entire catalog — no formula rewrite needed.
+
 Conventions:
 
-- **Denominator is all `skill_tools` rows**, both `required` and `optional`. The score answers "what share of this skill's needs can Semantius alone serve" — optional tools count because they're still real needs (lower-tier AI matching, optional notifications).
+- **Denominator is all `skill_tools` rows**, both `required` and `optional`. The score answers "what share of this skill's needs can the platform serve" — optional tools count because they're still real needs (lower-tier AI matching, optional notifications).
 - For a per-module score, join via `skills.domain_module_id` (one system skill per module under Rule #14). Modules without a system skill row have no score.
 - For a per-domain score, aggregate `skill_tools` across all system skills for modules where `domain_modules.domain_id = X` (i.e. union the numerators and denominators, then divide). Do not average per-module scores — that biases toward small modules.
-- A score below 100% always points at specific tool rows: `SELECT tool_id, operation_kind FROM skill_tools JOIN tools WHERE operation_kind NOT IN ('query', 'mutate')`. Surface those tools by name when reporting the score — the gap is the actionable information, not the percentage.
+- A score below 100% always points at specific tool rows: `SELECT tool_id, tool_name, coverage_tier FROM skill_tools JOIN tools WHERE coverage_tier != 'platform'`. Surface those tools by name when reporting the score — the gap is the actionable information, not the percentage.
 
 ### Role layer (1 new entity + 3 extended built-ins, added 2026-05-23)
 
@@ -467,13 +475,35 @@ For any task that fits this skill — "research vendors for X", "is Y a domain?"
    **Phase S — System skills + tools** (load fourth, against the same domain). Under Rule #17 every `domain_modules` row needs exactly one `skill_type='system'` skill, and that skill needs ≥1 `skill_tools` rows. Phase S delivers:
 
    1. **`skills`** — one row per module with `skill_type='system'`, `domain_module_id` set, and a short `skill_name` like `<module_code>_agent` (e.g. `crm_acct_mgt_agent`). The skill encodes what an agent can do against that module's data and lifecycle.
-   2. **`tools`** — JSON-RPC-shaped capability primitives keyed verb-first against the module's masters: `query_<entity>`, `create_<entity>`, `update_<entity>` for CRUD; `send_<message>`, `parse_<artifact>`, `match_<thing>_to_<thing>` for side-effect / compute work. Set `operation_kind` per the invariant in Rule #17 (`query`/`mutate` ⇒ `data_object_id` required; `side_effect`/`compute` ⇒ `data_object_id` null). Reuse existing tool rows where the same primitive already exists (the `tools` table is catalog-wide, not per-module).
-   3. **`skill_tools`** — one row per (skill, tool) pair the skill calls. Carry `requirement_level` (`required` for irreducible workflow tools, `optional` for degraded modes) and a one-line workflow-context `notes` string. The set of `requirement_level='required'` rows is the irreducible surface; `optional` rows raise the ceiling without raising the floor.
-   4. **`tool_solutions`** (where applicable) — for any tool whose `operation_kind ∈ {side_effect, compute}`, link the non-Semantius solutions that deliver it. Semantius coverage of `query` and `mutate` is intrinsic per the at-a-glance section; no `tool_solutions` row is needed for those.
+   2. **`tools`** — JSON-RPC-shaped capability primitives keyed verb-first against the module's masters: `query_<entity>`, `create_<entity>`, `update_<entity>` for CRUD; `send_<message>`, `parse_<artifact>`, `match_<thing>_to_<thing>` for side-effect / compute work; `receive_<channel>` / `ingest_<source>` for inbound channels. Set `operation_kind` per the invariant in Rule #17 (`query`/`mutate` ⇒ `data_object_id` required; `side_effect`/`compute` ⇒ `data_object_id` null; `inbound` ⇒ `data_object_id` optional). Reuse existing tool rows where the same primitive already exists (the `tools` table is catalog-wide, not per-module). **Authoring default for notifications**: link the abstraction tools `notify_person` / `notify_team` rather than channel-specific primitives (`send_email`, `send_sms`, `post_chat_message`) — see § "Channel vs capability authoring rule" below.
+   3. **`skill_tools`** — one row per (skill, tool) pair the skill calls. Carry `requirement_level` (`required` for irreducible workflow tools, `optional` for degraded modes; `fallback` was retired 2026-05-26) and a one-line workflow-context `notes` string. The set of `requirement_level='required'` rows is the irreducible surface; `optional` rows raise the ceiling without raising the floor.
+   4. **`tool_solutions`** (where applicable) — for any tool whose `coverage_tier != 'platform'`, link the non-Semantius solutions that deliver it. Platform-covered tools (today: every `query`/`mutate` row plus `receive_webhook`; more once the platform ships natively) don't need `tool_solutions` rows for the platform itself; vendor-alternative rows on those tools remain valid.
 
    Phase S is **not optional** per Rule #17. The killer hypothesis of the entire tools/skills layer (*"how many of the loaded domains have a system skill where every required tool is Semantius-covered?"*) is uncomputable without it. Reference Phase-S loader pattern: the original ATS / SMP / TALENT-MGMT / EMP-EXP loads on 2026-05-21 set the shape; mirror them when authoring for other domains.
 
 6. **Verify and share.** After each phase, query counts on the affected tables, compare against expected, and link the user to the UI tables that changed. **For any new market load OR any time the user says "review domain X" / "audit domain X" / "what's missing for X", run the per-domain completeness checklist below** — it is the single source of truth for what "done" means.
+
+---
+
+## Channel vs capability authoring rule
+
+Decided 2026-05-26. Applies to every Phase-S skill_tools authoring pass.
+
+The catalog distinguishes two kinds of `tools` rows the agent can call:
+
+- **Channel primitives** — concrete JSON-RPC functions: `send_email`, `send_sms`, `post_chat_message`, `make_phone_call`, `receive_webhook`, `receive_email`, etc. Each maps to a specific vendor capability via `tool_solutions`.
+- **Capability abstractions** — intent-shaped rows that route to whichever channel the deployment wires up: `notify_person` (single recipient), `notify_team` (broadcast), `receive_external_event` (any inbound channel, planned).
+
+**Authoring rules:**
+
+1. **Default to the abstraction.** For generic notifications, link `notify_person` or `notify_team` on the skill. The deployment chooses the channel (email, SMS, chat, WhatsApp, push) without rewriting the skill.
+2. **Link the channel directly only when the workflow requires that specific channel.** CCAAS-VOICE-AGENT needs `make_phone_call` (voice IS the workflow); ESIGN needs `receive_webhook` (envelope-completion callback is the contract); EDI partners need `receive_edi_message` / `transmit_edi_message` by trading-partner contract.
+3. **Multi-channel rows mean broadcast (AND), not at-least-one (OR).** A skill that links both `send_email` and `post_chat_message` is asserting that BOTH channels fire on every event (the broadcast pattern — ITSM family). If the workflow tolerates either channel alone, use `notify_person` instead (one row, deployment chooses).
+4. **`requirement_level` stays on workflow-necessity semantics.** `required` = the workflow gates without this tool. `optional` = the workflow degrades gracefully but proceeds. (`fallback` was retired 2026-05-26 — never used in practice, no skill in the catalog needed "B only when A fails".)
+
+**Why the abstraction layer exists.** Empirically, `notify_person` / `notify_team` are the only substitutable-channel patterns in the catalog (validated 2026-05-26: 15 skills used multi-channel notifications, zero used multi-text-generation or multi-extraction tools). Adding a heavyweight capability table for one pattern was over-engineering; two abstraction tool rows with the same shape as everything else solves the problem. Channels stay in `tools` for vendor delivery via `tool_solutions` and for skills that genuinely need a specific channel.
+
+**Score behavior.** When `tools.coverage_tier='platform'` on `notify_person` (i.e., the platform ships an outbound dispatcher), every skill linking `notify_person` is platform-covered on the notification axis with one UPDATE — no per-skill retrofit needed. That's the entire reason this layer exists; if we'd kept channel-specific links everywhere, every platform-ships-email event would have required N skill_tools rewrites.
 
 ---
 
@@ -784,12 +814,12 @@ The `skills` table sits next to `roles` but represents agent skills, not user ro
 
 **F4. Tool `operation_kind` ↔ `data_object_id` invariant holds on every linked tool.** (Rule #17 sub-invariant.)
 - Query: `/skill_tools?skill_id=in.(<skillIds>)&select=tools(id,tool_name,operation_kind,data_object_id)`.
-- Pass: for every tool, `operation_kind ∈ {query, mutate}` implies `data_object_id` set; `operation_kind ∈ {side_effect, compute}` implies `data_object_id` is null. Any row that violates this pairing is a tool-row defect.
+- Pass: for every tool, `operation_kind ∈ {query, mutate}` implies `data_object_id` set; `operation_kind ∈ {side_effect, compute}` implies `data_object_id` is null; `operation_kind = inbound` allows either (NULL or set). Any row that violates this pairing is a tool-row defect.
 - Fix: PATCH the offending `tools` row (either set / clear `data_object_id`, or correct the `operation_kind`). Re-PATCH the catalog, not the junction.
 
 **F5. Semantius score is computable for every module of this domain.**
-- Derivation: per the formula in § "Semantius score", `semantius_score(skill) = count(skill_tools WHERE tools.operation_kind IN ('query','mutate')) / count(skill_tools)`, joined via `skills.domain_module_id`. Per-domain: union the numerators and denominators across all system skills for modules hosted here, then divide. Do not average per-module scores (see the convention in the at-a-glance section).
-- Pass: every module returns a score (a number in [0, 1], including 0 if every tool is `side_effect` / `compute`). The metric must be computable, not high. A low score is information about the gap, not a failure.
+- Derivation: per the formulas in § "Semantius score", `strict_score(skill) = count(skill_tools WHERE tools.coverage_tier='platform') / count(skill_tools)` and `operational_score(skill) = count(WHERE tools.coverage_tier IN ('platform','integration')) / count(skill_tools)`, joined via `skills.domain_module_id`. Per-domain: union the numerators and denominators across all system skills for modules hosted here, then divide. Do not average per-module scores (see the convention in the at-a-glance section).
+- Pass: every module returns both scores (numbers in [0, 1], including 0 if every linked tool is `external`). The metric must be computable, not high. A low score is information about the gap, not a failure.
 - Fix: F5 cannot fail independently. F2 + F3 + F4 cure every F5 failure. The check is here as a rollup so the audit gap report leads with the score (or the literal "uncomputable, see F2/F3").
 
 **F6. (Future) The `tools` catalog is deduplicated.** *(reserved — not part of routine audit.)* A tool with the same `tool_name` and `operation_kind` and `data_object_id` linked from multiple skills is the same primitive and should be a single `tools` row. The deduplication pass runs catalog-wide, not per-domain; F6 reserves the ID for when it ships.
@@ -1195,7 +1225,7 @@ Beyond the point-solution-market test, these heuristics resolve the ambiguous ca
   | `compute_service` | Solution provides **compute / AI / web automation** (pure transformation; no business-state ownership). Pairs with `tools` whose `operation_kind='compute'` | OpenAI Platform, Anthropic API, Playwright, AWS Bedrock, ElevenLabs |
   | `standard_solution` | **Default.** The solution is in the catalog as a market entrant / vendor offering, but it has not (yet) been wired up as a tool source for any skill | Most of the ~600 solutions in the catalog |
 
-  **Semantius is NOT in the enum.** Semantius's own coverage is read from `tools.operation_kind` directly — never from a `tool_solutions` row pointing at a `semantius_native` solution (that value was deliberately dropped). If you find yourself wanting to model "this tool is also delivered by Semantius", stop: that's already implicit in the tool's `operation_kind` being in the Semantius-covered set (`{query, mutate}` today).
+  **Semantius is NOT in the enum.** Semantius's own coverage is read from `tools.coverage_tier` directly — never from a `tool_solutions` row pointing at a `semantius_native` solution (that value was deliberately dropped). If you find yourself wanting to model "this tool is also delivered by Semantius", stop: that's already encoded by `tools.coverage_tier='platform'`.
 
   **Promotion is one-way and driven by usage.** Only promote a `standard_solution` row to a non-default `solution_kind` when you're about to insert at least one `tool_solutions` row referencing it. Don't pre-classify "this looks like an action vendor" speculatively — empty `tool_solutions` rows behind a non-default `solution_kind` create a misleading rollup.
 
@@ -1245,7 +1275,7 @@ When authoring a `skills` row with `skill_type='system'` (one-to-one with a doma
 
 ### The 100%-Semantius hypothesis test
 
-For each system skill the killer-hypothesis rollup is: `% = (required tools with operation_kind ∈ {query, mutate}) / (total required tools)`. **100% means every workflow primitive the skill needs is delivered by Semantius CRUD + cube — no external connector, no side_effect, no compute tool required.**
+For each system skill the killer-hypothesis rollup is: `% = (required tools with coverage_tier='platform') / (total required tools)`. **100% means every workflow primitive the skill needs is delivered by the platform OOTB — no external connector required.** (Pre-2026-05-26 this was expressed as `operation_kind ∈ {query, mutate}`; the new tri-state `coverage_tier` is the data-driven replacement that re-scores the catalog with a single UPDATE when the platform ships a new capability.)
 
 Empirical result across 12 candidates (P2.5A.i, 2026-05-22):
 
@@ -1279,7 +1309,7 @@ The lowest-% skills in the catalog are the ones that combine multiple of these p
 - **ESIGN at 67%** — `sign_document` IS the workflow; small required-tool set magnifies the ratio
 - **HCM / ATS / S2P at 83-86%** — email + e-signature combo for talent/supplier comms
 
-The highest non-100% are **LMS and B2C-COMM, both at 91%** — each with only two non-covered tools (LMS: `send_email`; B2C-COMM: `send_email` + `execute_payment`). If Semantius gains a native email primitive (a future `operation_kind` value), LMS flips to 100% with a single reclassification, and B2C-COMM moves to ~95%. These are the "almost-Semantius" canaries — watch for them when scanning for skills near the 100% boundary.
+The highest non-100% are **LMS and B2C-COMM, both at 91%** — each with only two non-covered tools (LMS: `send_email`; B2C-COMM: `send_email` + `execute_payment`). When Semantius ships native email (= `notify_person` flips to `coverage_tier='platform'` once both the `crud` MCP server AND the `semantius` CLI carry the dispatcher), LMS flips to 100% via a single UPDATE, and B2C-COMM moves to ~95%. These are the "almost-Semantius" canaries — watch for them when scanning for skills near the 100% boundary.
 
 ### Leadership-layer domains have no system skill
 

@@ -40,6 +40,14 @@ Format:
 - .env present: yes (`SEMANTIUS_ORG=adenin`)
 - diagnosis: stale cached JWT minted for the wrong tenant. A bare `--reset-jwt-cache whoami` succeeded immediately (org `adenin`, api_baseurl `https://adenin.semantius.ai`). Distinct from the intermittent-routing variant — single retry without cache-reset returned the same wrong audience deterministically, while the cache reset fixed it on the first attempt. **Mitigation:** when the same wrong-tenant audience repeats across calls, prefer `--reset-jwt-cache` over plain retry.
 
+## 2026-05-26 (ATS tools audit session, first call)
+- call: `semantius whoami`
+- received audience: `tenant://1VLl6gULTCGtac6NXImwJewYEqEy061J`
+- full error: `Error: This JWT does not have authorization to access this resource: required audience not found, received ["tenant://1VLl6gULTCGtac6NXImwJewYEqEy061J"]`
+- cwd at time of call: `c:\dev\domain-map` (project root); `config_source C:\dev\domain-map` reported by CLI
+- .env present: yes
+- diagnosis: same wrong-tenant audience as the recurring 2026-05-23/24 incidents. Trying `--reset-jwt-cache` per updated mitigation.
+
 ## 2026-05-24 (ATS fact-sheet re-emit, first call)
 - call: `bun run scripts/emit_fact_sheet.ts --starter-kit ATS` (first postgrestRequest), also `semantius whoami`, `semantius --reset-jwt-cache whoami`
 - received audience: `tenant://1VLl6gULTCGtac6NXImwJewYEqEy061J`
