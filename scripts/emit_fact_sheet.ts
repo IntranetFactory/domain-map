@@ -656,19 +656,24 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   const masterIds = new Set(scopeRows.filter((r) => r.role === "master").map((r) => r.data_object_id));
 
   // ---- scoped reads in parallel ----
-  const lifecycleFilters: string[] = [];
-  if (masterIds.size > 0) lifecycleFilters.push(`data_object_id.in.(${[...masterIds].join(",")})`);
-  lifecycleFilters.push(`domain_module_id.in.(${moduleIds.join(",")})`);
+  // Lifecycle states belong to the data_object, not to a particular module's
+  // relationship with it. Any module touching the data_object (master,
+  // embedded_master, contributor, consumer) observes the same state machine;
+  // the per-state `domain_module_id` only determines which module's permission
+  // prefix the workflow gate carries. Fetch every state on every data_object
+  // in scope; rendering annotates per-state which module realizes each gate.
 
   const [aliasRows, rels, coMasters, owners, lifecycleRows, handoffRows] = await Promise.all([
     loadAliases(scopeObjectIds),
     loadRelationships(scopeObjectIds),
     loadCoMasters(masterIds, moduleIdSet),
     loadOwners(scopeRows.filter((r) => r.role !== "master").map((r) => r.data_object_id)),
-    pg(
-      "GET",
-      `/data_object_lifecycle_states?or=(${lifecycleFilters.join(",")})&select=data_object_id,state_name,state_order,description,is_initial,is_terminal,requires_permission,permission_verb_override,domain_module_id&order=data_object_id.asc,state_order.asc`,
-    ),
+    scopeObjectIds.length === 0
+      ? Promise.resolve([])
+      : pg(
+          "GET",
+          `/data_object_lifecycle_states?data_object_id=in.(${scopeObjectIds.join(",")})&select=data_object_id,state_name,state_order,description,is_initial,is_terminal,requires_permission,permission_verb_override,domain_module_id&order=data_object_id.asc,state_order.asc`,
+        ),
     scopeObjectIds.length === 0
       ? Promise.resolve([])
       : pg(
@@ -935,10 +940,14 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   out.push("");
 
   // §7 Lifecycle states
-  out.push("## 7. Lifecycle states (per master)");
+  // States belong to the data_object, not the module. Every entity touched by
+  // this scope (any DMDO role) shows its full state machine; per-state
+  // `realizing module` column indicates whose permission prefix the gate uses,
+  // or "(always)" when the gate is universal (domain_module_id is NULL).
+  out.push("## 7. Lifecycle states (per touched entity)");
   out.push("");
   if (lifecycleRows.length === 0) {
-    out.push("_(no lifecycle states loaded for this scope's masters.)_");
+    out.push("_(no lifecycle states loaded for the entities in this scope.)_");
   } else {
     const byObj = new Map<number, any[]>();
     for (const ls of lifecycleRows) {
@@ -952,6 +961,17 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
       const obj = dataObjectsById.get(did);
       if (!obj) continue;
       out.push(`### \`${obj.data_object_name}\` (${obj.singular_label})`);
+      const scopeRow = scopeRows.find((r) => r.data_object_id === did);
+      if (scopeRow && scopeRow.role !== "master") {
+        const ownerInfo = owners.get(did);
+        const ownerLabel = ownerInfo && ownerInfo.modules.length > 0
+          ? ownerInfo.modules.map((m) => `\`${m.domain_module_code}\``).join(", ")
+          : ownerInfo && ownerInfo.domains.length > 0
+            ? ownerInfo.domains.map((d) => `\`${d.domain_code}\` (domain-level)`).join(", ")
+            : "_(no canonical master found)_";
+        out.push("");
+        out.push(`_This scope holds \`${obj.data_object_name}\` as **${scopeRow.role}**; the canonical state machine is owned by ${ownerLabel}._`);
+      }
       out.push("");
       const headers = ["order", "state_name", "initial?", "terminal?"];
       if (showModulesCol) headers.push("realizing module");

@@ -183,29 +183,39 @@ async function validateStarterDataObjectJunction(
   parentKind: "full" | "starter",
 ): Promise<void> {
   if (parentKind !== "starter") return;
-  if (j.role === "master" || j.role === "derived") {
+  if (j.role === "master" || j.role === "derived" || j.role === "contributor") {
     throw new Error(
       `Starter ${j.domain_module_code} junction on ${j.data_object_name}: ` +
-        `role '${j.role}' forbidden. Allowed: embedded_master|consumer|contributor.`,
+        `role '${j.role}' forbidden. Allowed shapes: ` +
+        `embedded_master on a domain-owned data_object, or consumer on a platform_builtin data_object.`,
     );
   }
-  if (j.role === "embedded_master") {
-    const [dobj] = await get(
-      `/data_objects?data_object_name=eq.${encodeURIComponent(j.data_object_name)}` +
-        `&select=id,kind`,
-    );
-    if (!dobj) throw new Error(`Unknown data_object ${j.data_object_name}`);
-    if (dobj.kind === "platform_builtin") return;
-    const masters = await get(
-      `/domain_module_data_objects?data_object_id=eq.${dobj.id}` +
-        `&role=eq.master&select=id&limit=1`,
-    );
-    if (masters.length === 0) {
+  const [dobj] = await get(
+    `/data_objects?data_object_name=eq.${encodeURIComponent(j.data_object_name)}` +
+      `&select=id,kind`,
+  );
+  if (!dobj) throw new Error(`Unknown data_object ${j.data_object_name}`);
+  if (j.role === "consumer") {
+    if (dobj.kind !== "platform_builtin") {
       throw new Error(
-        `Starter ${j.domain_module_code} embedded_master on ${j.data_object_name}: ` +
-          `no canonical master row exists in any full module. Load the master first.`,
+        `Starter ${j.domain_module_code} consumer on ${j.data_object_name}: ` +
+          `consumer is allowed only on platform_builtin data_objects (today only 'users'). ` +
+          `For a domain-owned data_object the starter needs, use embedded_master.`,
       );
     }
+    return;
+  }
+  // j.role === "embedded_master"
+  if (dobj.kind === "platform_builtin") return;
+  const masters = await get(
+    `/domain_module_data_objects?data_object_id=eq.${dobj.id}` +
+      `&role=eq.master&select=id&limit=1`,
+  );
+  if (masters.length === 0) {
+    throw new Error(
+      `Starter ${j.domain_module_code} embedded_master on ${j.data_object_name}: ` +
+        `no canonical master row exists in any full module. Load the master first.`,
+    );
   }
 }
 ```

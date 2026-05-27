@@ -168,3 +168,31 @@ Append one entry per occurrence. Used by SKILL.md Rule #15 — the agent MUST lo
 ### Pattern observed across all 5 violations (per user, not all logged before today)
 
 Each violation followed the same shape: SKILL.md had a positive instruction somewhere to populate `<some-column>.notes`, the agent treated it as a license, and the agent extended that license by analogy to other notes columns. The narrow scope of the prior Rule #15 (DMDO only, then DMDO + relationships) created the false impression that *other* notes columns were not covered. Fix: universal scope, no carve-outs, every contradicting passage rescinded.
+
+---
+
+## 2026-05-27 — Starter junction roles tightened to two patterns
+
+**Context.** Drafting HIRING-STARTER (entry-tier ATS starter; first starter authored against Rule #19). Initial draft included `recruitment_sources` as `consumer + optional` and a `users` consumer row. User asked whether `consumer` in a self-contained starter kit makes any sense.
+
+**Decision.** A `module_kind='starter'` row's `domain_module_data_objects` junctions take exactly two shapes:
+
+- `embedded_master` on a `kind='domain_owned'` data_object (canonical master must exist somewhere in a full module, per Rule #19 invariant 2)
+- `consumer` on a `kind='platform_builtin'` data_object (today only `users`)
+
+Never `master`, never `derived`, never `contributor`, never `consumer + domain_owned`.
+
+**Reasoning.** The starter's structural promise is standalone deployability. `consumer + domain_owned` points at a master that may not be installed in the deployment where the starter is the entry point, the dependency is unsatisfiable. `contributor` has the same defect for writes: a writer with no canonical target has nowhere to write when standalone. The only substrate a standalone starter can safely depend on beyond its own embedded shells is the platform itself. For any domain-owned data_object the starter needs, `embedded_master` is the right role: it ships a local shell and defers to the canonical master via the demotion path when the full module installs alongside.
+
+The prior Rule #19 invariant 1 wording allowed `embedded_master | consumer | contributor` with no kind constraint. Six months from now the looser form would have produced `consumer + domain_owned` rows on a starter (the schema accepts them, the platform-side `starter_no_master` validation_rule only covers `master`/`derived`) and the bug would be invisible until a tenant tried to deploy a standalone starter and the consumer reads returned empty.
+
+**Edits applied.**
+
+- SKILL.md Rule #19 invariant 1 rewritten with the two-pattern restriction, the "why" inline, and a note on enforcement split (platform-side rule covers `master`/`derived`, loader pre-flight covers the rest).
+- SKILL.md anti-patterns block extended with one entry on `consumer + domain_owned` and `contributor` on starters.
+- references/modules.md §6 first bullet rewritten in parallel form.
+- references/loader-idiom.md `validateStarterDataObjectJunction()` tightened: rejects `contributor`, rejects `consumer` when `data_objects.kind != 'platform_builtin'`. The function now does the kind lookup unconditionally (it was previously conditional on `embedded_master`).
+
+**Scope.** Catalog-wide. All future `module_kind='starter'` rows. No existing starter rows in production yet (HIRING-STARTER is the first), so no audit-revert cycle needed.
+
+**Status.** Active. Platform-side enforcement is partial: `starter_no_master` validation_rule covers the `master`/`derived` slice only. Extending the platform rule to also reject `contributor` and `consumer + domain_owned` is a future cleanup, the loader pre-flight is the sole enforcement until then.
