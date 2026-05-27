@@ -2,7 +2,7 @@
 
 Modules are the **autonomous deployment unit** between capabilities (market-analysis layer) and live Semantius semantic models. Schemas live in [module-shape.md § Module concept](module-shape.md#module-concept); the rules and patterns that make modules work live here.
 
-The mandatory existence of `domain_modules` for every domain is Rule #14 in [SKILL.md](../SKILL.md#14-every-domain-has-at-least-one-domain_modules-row-domains-with-3-capabilities-need-2-modules--a-starter-junction). This document covers everything beyond the existence rule.
+The mandatory existence of `domain_modules` for every domain is Rule #14 in [SKILL.md](../SKILL.md). The starter-kit contract (`module_kind='starter'`) is Rule #19. This document covers everything beyond those existence and discriminator rules.
 
 ---
 
@@ -16,12 +16,12 @@ The mandatory existence of `domain_modules` for every domain is Rule #14 in [SKI
 
 Most rows correspond ~1:1 across layers, but the concepts are separable. Some capabilities become modules; some get absorbed into a larger module; cross-cutting capabilities become modules installable across multiple domains.
 
-**Naming:** the catalog tables use `domain_modules`, `domain_module_capabilities`, `domain_module_data_objects`, `domain_module_host_domains`, `domain_starter_modules` — the `domain_` prefix avoids collision with the Semantius platform's own `domain_modules` (the entity-grouping concept every Semantius entity belongs to). FK columns are `domain_module_id`. In prose, the concept is still "a module" — only the table/column identifiers carry the prefix.
+**Naming:** the catalog tables use `domain_modules`, `domain_module_capabilities`, `domain_module_data_objects`, `domain_module_host_domains` — the `domain_` prefix avoids collision with the Semantius platform's own `domain_modules` (the entity-grouping concept every Semantius entity belongs to). FK columns are `domain_module_id`. In prose, the concept is still "a module" — only the table/column identifiers carry the prefix.
 
 **What's explicitly out:**
-- No packages / tiers / SKUs (no "Starter / Pro / Enterprise" gates). Every module is independently deployable and structurally equal.
+- No packages / tiers / SKUs (no "Starter / Pro / Enterprise" gates). Every module is independently deployable and structurally equal regardless of `module_kind`.
 - No dependency tree. Composability is expressed via `domain_module_data_objects.role` and the existing embedded_master demotion.
-- No `is_starter` boolean on modules. A module might be a recommended starting point for one domain but a pure add-on for another — captured per-domain by `domain_starter_modules`.
+- Starter kits are a separate `module_kind='starter'` discriminator on `domain_modules`, see [SKILL.md Rule #19](../SKILL.md). The prior `is_starter` boolean idea and the `domain_starter_modules` editorial junction are both gone; starters are first-class deployable units that master zero data_objects, not editorial recommendations layered on top of full modules.
 
 ---
 
@@ -129,22 +129,17 @@ The catalog (`domain_data_objects`, `domain_module_data_objects`) records *that*
 
 ---
 
-## 6. Starter-kit junction — editorial, not structural
+## 6. Starter kits — first-class deployable units
 
-`domain_starter_modules` (`domain_id`, `domain_module_id`, `position`, `notes`) is editorial recommendation:
+Starter kits are `domain_modules` rows with `module_kind='starter'`. Authoring contract and six invariants live in [SKILL.md Rule #19](../SKILL.md). The relevant points from a module-authoring perspective:
 
-- **One** recommended set per domain. No "SMB starter" / "Enterprise starter" sub-variants — re-introduces tier complexity.
-- Not a gate, not a billing-package — pure recommendation. A buyer can ignore it and pick any subset of the domain's modules.
-- `position` orders the recommended install sequence; `notes` is editorial copy emitted verbatim by the fact sheet generator.
-- Domains with <3 capabilities have **zero** rows (per Rule #14) — recommending "where to start" is meaningless when there's only one module.
-- Domains with ≥3 capabilities MUST have ≥1 row (M3 in the per-domain checklist).
+- Starters never master data_objects. They embed (or consume / contribute) data_objects whose canonical master lives in some full module. The platform-side `starter_no_master` validation_rule on `domain_module_data_objects` rejects `role ∈ {master, derived}` on a starter row; the loader pre-flight `validateStarterDataObjectJunction()` (in [loader-idiom.md](loader-idiom.md)) is the redundant author-time guard.
+- `domain_modules.domain_id` is nullable for starters with no obvious primary host (persona-shaped bundles like `REAL-ESTATE-AGENT` spanning CRM + CLM + light project tracking). Use `domain_module_host_domains` to list every domain whose embedded data_object a starter touches.
+- Starters carry **exactly three baseline permissions** (`<starter_code>:read` / `:manage` / `:admin`). No workflow-gate permissions; those belong to the realizing full module that owns the lifecycle states. Permission materialization runs unchanged for full modules; starters add nothing to it.
+- Starters carry **exactly one `skill_type='system'` skill** (Rule #17 applies identically). Tool floor: one `query_<entity>` per embedded master plus light mutates where the workflow supports them.
+- Upgrade behavior: when the tenant later installs the full module whose data_object the starter embedded, the embedded shell deterministically demotes via the existing `embedded_master`-with-canonical-master rule. No tenant-side data migration. Starter permissions stick around after upgrade (provisional, revisit after first real starter ships); tenant manages skill cleanup.
 
-Worked example — ATS has 2 starter rows:
-
-| `position` | `domain_module_code` | `notes` |
-|---|---|---|
-| 1 | `ATS-CANDIDATE-CRM` | The entity backbone — start here. Provides candidates, prospects, sourcing. |
-| 2 | `ATS-RECRUITMENT-PIPELINE` | Adds requisitions, postings, applications, the pipeline-stage workflow. With these two installed you have a minimum recognizable ATS. |
+The prior editorial `domain_starter_modules` junction (one recommended-install ordered list per domain) is gone, deleted 2026-05-26. It was misshapen: it recommended **full modules** as the entry point, which still meant installing N full modules with all their lifecycle / permission / skill surface, no "lite" path for a small org. First-class starter modules close that gap.
 
 ---
 

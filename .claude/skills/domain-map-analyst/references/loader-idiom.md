@@ -126,6 +126,100 @@ Discovered during the INTRANET / COLLAB-GOV / WEB-CONTOPS load: only `COLLAB-GOV
 
 The MCP transport occasionally times out on the closing summary queries (large `domain_data_objects` reads). Phases 1-4 already wrote successfully; just re-run the script. Idempotency means the inserts are skipped and the summary prints. Don't treat a timeout-on-summary as a load failure.
 
+### Starter module pre-flight
+
+Any loader that inserts a `domain_modules` row with `module_kind='starter'` MUST run two pre-flight validators before any POST. Both throw on violation; both exist alongside the platform-side `starter_no_master` validation_rule on `domain_module_data_objects` as a redundant author-time guard so the failure surfaces in the loader log instead of as a remote PostgREST error mid-batch.
+
+```typescript
+type ModuleSpec = {
+  domain_module_code: string;
+  domain_id: number | null;
+  module_kind: "full" | "starter";
+  lifecycle_states?: unknown[];
+  permissions?: { tier: string }[];
+  system_skills?: unknown[];
+};
+
+function validateStarterModule(m: ModuleSpec): void {
+  if (m.module_kind !== "starter") return;
+  if ((m.lifecycle_states ?? []).length > 0) {
+    throw new Error(
+      `Starter ${m.domain_module_code}: lifecycle_states not allowed. ` +
+        `Inherit from canonical master; emitter renders inherited states.`,
+    );
+  }
+  const perms = m.permissions ?? [];
+  const baseline = perms.filter(p => p.tier?.startsWith("baseline-"));
+  const gates = perms.filter(p => p.tier === "workflow-gate");
+  if (gates.length > 0) {
+    throw new Error(
+      `Starter ${m.domain_module_code}: workflow-gate permissions not allowed ` +
+        `(found ${gates.length}). Starter ships exactly three baseline tiers.`,
+    );
+  }
+  if (baseline.length !== 3) {
+    throw new Error(
+      `Starter ${m.domain_module_code}: must ship exactly 3 baseline permissions ` +
+        `(read/manage/admin), found ${baseline.length}.`,
+    );
+  }
+  const systemSkills = (m.system_skills ?? []).length;
+  if (systemSkills !== 1) {
+    throw new Error(
+      `Starter ${m.domain_module_code}: must ship exactly 1 system skill ` +
+        `(Rule #17), found ${systemSkills}.`,
+    );
+  }
+}
+
+type JunctionSpec = {
+  domain_module_code: string;
+  data_object_name: string;
+  role: "master" | "embedded_master" | "consumer" | "contributor" | "derived";
+};
+
+async function validateStarterDataObjectJunction(
+  j: JunctionSpec,
+  parentKind: "full" | "starter",
+): Promise<void> {
+  if (parentKind !== "starter") return;
+  if (j.role === "master" || j.role === "derived") {
+    throw new Error(
+      `Starter ${j.domain_module_code} junction on ${j.data_object_name}: ` +
+        `role '${j.role}' forbidden. Allowed: embedded_master|consumer|contributor.`,
+    );
+  }
+  if (j.role === "embedded_master") {
+    const [dobj] = await get(
+      `/data_objects?data_object_name=eq.${encodeURIComponent(j.data_object_name)}` +
+        `&select=id,kind`,
+    );
+    if (!dobj) throw new Error(`Unknown data_object ${j.data_object_name}`);
+    if (dobj.kind === "platform_builtin") return;
+    const masters = await get(
+      `/domain_module_data_objects?data_object_id=eq.${dobj.id}` +
+        `&role=eq.master&select=id&limit=1`,
+    );
+    if (masters.length === 0) {
+      throw new Error(
+        `Starter ${j.domain_module_code} embedded_master on ${j.data_object_name}: ` +
+          `no canonical master row exists in any full module. Load the master first.`,
+      );
+    }
+  }
+}
+```
+
+Call both up front, before any insert:
+
+```typescript
+for (const m of starterModules) validateStarterModule(m);
+for (const j of starterJunctions) {
+  const parent = starterModules.find(m => m.domain_module_code === j.domain_module_code);
+  await validateStarterDataObjectJunction(j, parent?.module_kind ?? "full");
+}
+```
+
 ## Naming conventions to enforce
 
 These have been consistent across 80+ handoffs and 120+ data_objects. Don't drift.

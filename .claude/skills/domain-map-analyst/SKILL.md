@@ -226,17 +226,19 @@ The Semantius platform enforces enum check-constraints on several catalog column
 
 When adding a new column to this catalog with an enum, copy the value vocabulary from an existing analogous column rather than inventing a new one (e.g. `domain_module_data_objects.necessity` deliberately mirrors `domain_data_objects.necessity` — same two values, same default `required`). If a loader fails with `(23514) violates check constraint "<table>_<field>_check"`, re-query `/fields?table_name=eq.<table>&field_name=eq.<field>` to see the allowed values; don't guess again.
 
-### 14. Every domain has at least one `domain_modules` row. Domains with ≥3 capabilities need ≥2 modules + a starter junction.
+### 14. Every domain has at least one full `domain_modules` row. Domains with ≥3 capabilities need ≥2 full modules.
 
-A `domains` row is a market entry — useful for SEO and analysis but **not deployable** on its own. The deployable unit is the **module** (`domain_modules`). Per project decision 2026-05-23:
+A `domains` row is a market entry, useful for SEO and analysis but **not deployable** on its own. The deployable unit is the **module** (`domain_modules`). Per project decision 2026-05-23, refined 2026-05-26:
 
-- **Every `domains` row MUST have ≥1 `domain_modules` row.** No exceptions, including leadership-tier / aggregation-tier domains. If a market warrants a `domains` row at all, it has at least one module — for narrowly-scoped domains that's a single module covering the whole market; for leadership-tier domains it's a "derived-signals" or "landing" module whose `domain_module_data_objects` may be empty but whose existence preserves the deploy-target contract.
+- **Every `domains` row MUST have ≥1 `domain_modules` row with `module_kind='full'`.** No exceptions, including leadership-tier / aggregation-tier domains. If a market warrants a `domains` row at all, it has at least one full module: for narrowly-scoped domains that's a single module covering the whole market; for leadership-tier domains it's a "derived-signals" or "landing" module whose `domain_module_data_objects` may be empty but whose existence preserves the deploy-target contract.
 
-- **Domains with ≥3 `capabilities` (per `capability_domains`) MUST have ≥2 `domain_modules` rows AND a populated `domain_starter_modules` junction.** A 3-capability market has enough surface that "starter kit" vs "additional modules" is a meaningful split, and the starter-junction is the SEO/onboarding signal the catalog uses to recommend an entry point. `domain_starter_modules` carries `(domain_id, domain_module_id, position int, notes text)` — one recommended ordered list per domain.
+- **Domains with ≥3 `capabilities` (per `capability_domains`) MUST have ≥2 `module_kind='full'` `domain_modules` rows.** A 3-capability market has enough surface to be a meaningful split.
 
-- **Domains with <3 capabilities have exactly 1 `domain_modules` row, no `domain_starter_modules` junction.** The single module IS the whole market; recommending "where to start" is meaningless when there's only one place to start.
+- **Domains with <3 capabilities have exactly 1 full `domain_modules` row.** The single module IS the whole market.
 
-**This is a Phase-A obligation, not Phase E.** When loading a new market, `domain_modules` + (optionally) `domain_starter_modules` ship in the same load as `domains` + `capabilities` + `solutions`. Phase E (roles) extends modules but it's a separate concern — see the per-domain checklist Phase M (modules) below.
+- **Starter kits (`module_kind='starter'`) are a separate, optional class.** Not subject to the ≥1 floor per domain, not counted toward the ≥2 floor for ≥3-capability domains. Starters never master data_objects (they embed / consume only) and have no host-domain requirement (`domain_id` may be NULL). See Rule #19 for the starter contract.
+
+**This is a Phase-A obligation, not Phase E.** When loading a new market, `domain_modules` ship in the same load as `domains` + `capabilities` + `solutions`. Phase E (roles) extends modules but it's a separate concern, see the per-domain checklist Phase M (modules) below.
 
 **Cross-cutting modules.** A module can host on multiple domains (e.g. `KNOWLEDGE-MGMT` lives in ITSM, CSM, HRSD, LSD). The primary host is `domain_modules.domain_id` (nullable for genuinely-no-home cases like `APPROVAL-WORKFLOW`); additional hosts go in `domain_module_host_domains`. Both shapes are valid; see [references/modules.md](references/modules.md) for the full mechanics.
 
@@ -244,38 +246,58 @@ A `domains` row is a market entry — useful for SEO and analysis but **not depl
 
 **Audit blocker.** A `domains` row with zero `domain_modules` rows fails the per-domain completeness checklist outright (check M1). This blocks every downstream concern — fix the M-band first, then audit B / C / E.
 
-### 15. `domain_module_data_objects.notes` is empty by default. Only populate it when the user explicitly tells you to.
+### 15. **Every `notes` column on every table is empty by default. NEVER populate any `notes` field without first surfacing the specific proposed text to the user and getting explicit per-row approval.**
 
-The combination of `role` + `necessity` + the rendered "mastered in" column (which the blueprint emitter derives from the `role=master` junction row catalog-wide) already encodes role membership, the canonical master's location, and the graceful-degradation contract on `necessity: optional`. Prose that restates any of those is noise and pollutes §3 of the rendered blueprint.
+This rule has been violated **at least five times** across sessions, despite being stated. The 2026-05-26 MSP-PSA load triggered the fifth restatement; the rule was scoped too narrowly (only DMDO + relationships) and dozens of other SKILL.md passages actively told the agent to populate notes elsewhere (handoffs, starter modules, aliases, data_objects, skill_tools, solutions). All of those passages are now subordinate to this rule. **When Rule #15 contradicts any other instruction in this file, Rule #15 wins.**
 
-**Never write a note that re-narrates schema semantics.** These were the patterns the prior loader scripts produced; all of them are forbidden:
+**Universal scope.** Every `notes` (and equivalently-named freeform-prose) column on every table in this catalog. That includes — but is not limited to:
 
-- "Reads from X when integrated; standalone deployments keep the embedded shell" → restates `embedded_master` + `mastered in: X`
-- "Without X deployed, this module functions with a local shell / flat reference" → restates `necessity: optional`
-- "X local-masters Y when no Z is present" → restates `embedded_master` against a non-modularized master
-- "Module N holds the binding to Z" → opaque cross-references that go stale on renumber
+- `handoffs.notes` (NEVER add "until X is modularized" annotations on backfills or on new inserts without user approval; the prior write-time rule that licensed this is RESCINDED)
+- `domain_data_objects.notes`, `domain_module_data_objects.notes`
+- `data_object_relationships.notes`
+- `data_object_aliases.notes`
+- `data_object_lifecycle_states.notes`
+- `data_objects.notes` (including the prior "config-shape exemption" annotation — RESCINDED)
+- `domain_modules.description` is NOT a notes field, but watch the boundary: descriptions describe the row's content; notes are commentary about the row. If in doubt, treat as a notes field.
+- `solutions.notes`, `vendors.notes` (including the prior "acknowledge predecessor after acquisition" carve-out — RESCINDED unless user approves the specific string)
+- `role_modules.notes`, `role_permissions.notes`
+- `skill_tools.notes`, `tool_solutions.notes`
+- `solution_domains.notes`
+- any other `notes` column added to the catalog in the future
 
-**Acceptable notes** carry information the schema cannot express, AND only when the user has explicitly asked for the note:
+If a column is named `notes`, the default is empty string. Period.
 
-- Storage-shape divergence from the master (composite key, flattened hierarchy, etc.)
-- State-level constraints (e.g. "can only reference `published` rows, not `draft`")
-- Business rules absent from `lifecycle_states` (approval-tier exceptions, countersign requirements)
-- Module-specific history that affects the current shape and isn't recoverable from `created_at` / git
+**Why.** Mechanical notes pollute the catalog with restated schema facts (which a reader can already see from the structured columns), invented annotations (whose form drifts session-by-session), and freeform commentary that rots in place because no audit query reads it as actionable state. Real notes need to be discussed: they're load-bearing prose that a future reviewer will read out of context, so the user wants to approve the exact wording, not delegate it.
 
-If you find yourself reaching for prose just to fill the column, leave it empty. Empty is the right default.
+**Forbidden patterns** (every one of these has shipped at least once and is banned):
 
-This rule is scoped to `domain_module_data_objects.notes` (the module-level junction). The domain-level junction `domain_data_objects.notes` follows the older multi-master conventions documented in §"Multi-master vs multi-embedded-master" below; that doctrine is unchanged.
+- "until X is modularized" / "until X consumes Y" / any provenance trailer about why a column is NULL
+- "auto-flipped from many_to_one" / any system-mutation-history annotation
+- "Reads from X when integrated; standalone keeps the embedded shell" / "X local-masters Y when Z absent" / any restatement of `role` + `necessity`
+- "<scope> | <cluster> | <DOMAIN> | ..." prefixes from cluster-drafts work
+- Single-sentence cardinality narration ("A part has many revisions") / actor labels ("Cashier-user") that restate the structured columns
+- Channel-justification prose on skill_tools rows
+- Pattern-flag context ("Submit-lock engages on activation: once active, ...")
+- Vendor terminology context on aliases ("ConnectWise PSA terminology")
 
-**The same doctrine applies to `data_object_relationships.notes`.** Empty by default, populate only when the user explicitly asks. The rendered relationship row already shows `from`, `verb`, `to`, `cardinality`, `kind`, `necessity`, and `owner_side`. Prose that restates any of those is forbidden. Every loader-prefix pattern is forbidden, including but not limited to:
+**The discussion shape** (the only way notes get populated):
 
-- `intra | cluster <X> | <DOMAIN> | ...`, `cross | cluster <X> | <DOMAIN> | ...`, `users | cluster <X> | <DOMAIN> | ...` (cluster-drafts loader output)
-- `cross-domain | <MOD-A> → <MOD-B> | ...` (later cluster loaders)
-- `users-edge | actor role: <role>` (recurring users-edge labeler)
-- `auto-flipped from many_to_one` (auto-flip provenance from the symmetrize step)
-- Single-sentence cardinality narration ("A part has many revisions over time", "Hierarchical parent-child between locations") — restates `relationship_type` + `relationship_kind`
-- Single-sentence actor labels on `users`-edge rows ("Cashier-user", "The reviewing manager who authors the rating") — restates the verb + `owner_side`
+1. Agent identifies a specific row that warrants a note (a non-obvious business rule, a load-bearing constraint the schema can't express, a true editorial line).
+2. Agent surfaces in chat: *"For row X, I'd propose `notes = '...'`. Reason: ..."*
+3. User approves the exact text (or rewrites it).
+4. Agent loads only the approved string. No batch-populating with templated wording.
 
-The 2026-05-26 wipe cleared 995 such rows. Any new write that puts loader-provenance, cluster routing tags, auto-flip notices, or schema restatement into this column is a regression — fail the load, don't ship it. If you're authoring a cluster-drafts loader and find yourself prepending `<scope> | cluster <X> | <DOMAIN> |` to anything, stop: that's metadata for the markdown draft, not for the row. Strip it before the POST.
+**Audit obligation.** When this rule is violated (and it WILL be violated again unless something changes), the first action is to revert the polluting writes and append to the "Note pollution incidents" log at [references/note-pollution-incidents.md](references/note-pollution-incidents.md). Surface what was written, on which rows, and which contradicting passage of SKILL.md (if any) was the rationalization. Then update SKILL.md to remove that passage's license.
+
+**Where the prior carve-outs went** (each used to license writes; all rescinded):
+
+- Lifecycle exemption for config-shape masters used to require `data_objects.notes`; now: surface to user, do NOT auto-populate.
+- handoffs.notes write-time policy ("target NULL until <DOMAIN> is modularized") is gone; surface the NULL counter-party as a gap-report follow-up, never as a notes annotation.
+- multi-master `domain_data_objects.notes` slice-decomposition prose: never auto-write; if the user wants slice context, they'll author the wording.
+- skill_tools workflow-context notes: never auto-write.
+- Predecessor mention in `solutions.notes` after acquisition: only with explicit user approval of the wording.
+
+**If you find yourself reaching for prose to fill ANY column whose name contains `notes`, stop.** That impulse is the bug. The audit query for whether your load polluted notes is: `SELECT table_name, count(*) FROM all_notes_columns WHERE notes != '' AND created_at > '<load_start>'`. If that returns anything you didn't get user approval on, revert.
 
 ### 16. Infrastructure masters are always `necessity: optional` on non-master rows.
 
@@ -303,11 +325,80 @@ A `domain_modules` row defines a deployable unit; a `system` skill defines what 
 
 **Why this rule exists:** as of 2026-05-25, only four domains (ATS, SMP, TALENT-MGMT, EMP-EXP) had any system skills loaded out of 65+ modularized domains. The per-domain audit ticked green on every other domain because the F-band only carried a legacy-cleanup check (F1), not a positive-existence check. The Semantius score, defined right there in the at-a-glance section, was uncomputable for the rest of the catalog and the gap went silent. CRM was the trigger case (5 modules, 0 skills, audit reported green).
 
+### 18. Third-party names and trademarks belong only on commerce-shaped entities.
+
+Vendor names, product names, brand names, and trademarks (Salesforce, ServiceNow, Workday, KnowBe4, OneTrust, MetricStream, etc.) describe **who sells into a market**, not **what the market is**. They belong on the entities that exist to model commerce, and nowhere else.
+
+**✅ Allowed — commerce-shaped entities (vendor/product names are these tables' whole purpose):**
+
+- `vendors` — `vendor_name`, `description`, `notes`. Legal entities by definition.
+- `solutions` — `solution_name`, `description`, `notes`. Products by definition.
+- `data_object_aliases` — `alias_name`, `notes`. Explicitly designed for vendor-specific synonyms (`customers → Account in Salesforce`, `customers → Patient in Healthcare`).
+- `tool_solutions` — `endpoint_url`, `notes`. Vendor MCP endpoints and per-vendor delivery details by construction.
+
+**✅ Allowed — statutory / standards-body names (categorically distinct from commercial trademarks):**
+
+- `regulations` — `regulation_name`, `description`. HIPAA, GDPR, SOX, PCI-DSS, OSHA, etc. are statutory frameworks issued by regulators or standards bodies, not commercial brands. They're fine to name in prose.
+
+**❌ Forbidden everywhere else.** No vendor or product names in any text field on any entity not listed above. Specifically including:
+
+- `domains` — `domain_name`, `description`, `business_logic`. *This is where the rule got violated and triggered the rule write.*
+- `domain_modules` — `domain_module_name`, `description`.
+- `data_objects` — `data_object_name`, `singular_label`, `plural_label`, `description`, `notes`.
+- `handoffs` — `description`, `notes`.
+- `capabilities` — `capability_name`, `description`.
+- `trigger_events` — `event_name`, `description`.
+- `processes` — `process_name`, `description`.
+- `tools` — `tool_name`, `description`.
+- `skills` — `skill_name`, `description`.
+- All junctions — `domain_data_objects.notes`, `domain_module_data_objects.notes`, `data_object_relationships.notes`, `solution_domains.notes`, `role_modules.notes`, `skill_tools.notes`, etc.
+- `roles`, `permissions`, `role_modules`, `role_permissions`.
+- `industries`, `jurisdictions`, `business_functions`.
+
+The single legitimate exception is acknowledging a predecessor inside `solutions.notes` after a re-brand or acquisition (e.g. "formerly LeanIX, acquired by SAP SE 2023"). That's metadata about the same product, not a competitor mention; it stays in the commerce layer.
+
+**Why this matters.** The catalog deliberately separates *what the market is* (the semantic substrate: domains, capabilities, data_objects, handoffs, processes) from *who serves it* (the commerce layer: vendors, solutions, the tool/solution junctions). Putting vendor names in domain descriptions ("Specialised vendor market: KnowBe4, NAVEX, EVERFI, MetricStream, OneTrust, plus all general LMSs") collapses the two: the substrate stops being vendor-neutral and starts reading like a marketing snippet. The vendor list belongs in `solution_domains` rows joining to `solutions`, where it's structured data the UI can render, filter, and update as the market shifts (acquisitions, exits, re-brands). Narrating it in a description column makes it unmaintainable and visually noisy in every downstream render (blueprints, fact sheets, the marketing site).
+
+**Description columns describe the domain itself: capability shape, scope, distinctions from adjacent domains, statutory anchors.** Buyer-side characteristics belong in the structured `min_org_size` / `cost_band` / `certification_required` columns.
+
+**No vendor-landscape prose, in any form.** This forbids both named lists ("Vendors: Salesforce, ServiceNow, Workday") and anonymized variants ("Vendor landscape spans enterprise CRM suites, mid-market sales-cloud bundles, and SMB-focused pipeline tools" / "Served by a dedicated X vendor market, with adjacent coverage from broader Y suites" / "Pure-play vendors compete with suite-aligned modules"). The fix is to **delete the entire sentence**, not rewrite it generically. Who serves the market is structured data on `solutions` × `solution_domains`; it is never narrated in a description.
+
+**Anti-pattern (real, found 2026-05-26 on the LMS-COMPLIANCE-TRAINING blueprint):** "Specialised vendor market: KnowBe4, NAVEX, EVERFI, MetricStream, OneTrust, plus all general LMSs." The vendor list is exactly what `solution_domains → solutions` is for. Strip it from the description; the substrate stays vendor-neutral and the same information lives in the commerce layer where it can be updated structurally.
+
+**Authoring discipline.** Before any insert or PATCH on a forbidden-zone field, scan the proposed text for vendor and product names. The pattern is easy to fall into when paraphrasing a Gartner / Forrester market summary back into the description column — those summaries lead with the leader quadrant by name. Re-write to characterise the market by its capability shape and statutory anchors instead. When auditing existing rows, scan `description` / `notes` / `business_logic` columns for proper-noun company names; flag anything that isn't a regulator or a generic market term.
+
+### 19. Starter kits are a first-class deployable unit that masters zero data_objects.
+
+Decided 2026-05-26. Starter kits used to be an editorial junction (`domain_starter_modules`) recommending an install order over full modules. That shape did not work: installing a starter still meant installing N full modules with everything they carry (data_objects, lifecycle states, workflow-gate permissions, system skills), which is too heavy for a small org and offers no "lite" path. The new shape: starter kits are deployable units themselves, distinguished from full modules by a `module_kind` discriminator on `domain_modules`.
+
+**Definition.** A `domain_modules` row with `module_kind='starter'`. Behaves like any other module for the deployer, the emitter, the loader idiom, and the skill / tool / permission layers, with the six invariants below.
+
+**Use cases.**
+
+- **Lite variants of a full module.** `<DOMAIN>-LITE` for a 10-person org wanting basic HR or basic CRM without the full module's lifecycle states and workflow gates.
+- **Onboarding starter kits.** Bundle the embedded shells from 2–3 adjacent modules into a single deployable for first-time buyers.
+- **Persona / use-case bundles.** Cross-domain personas like `REAL-ESTATE-AGENT` (CRM + CLM + light project tracking) that don't belong to any single market. `domain_modules.domain_id` is NULL for these; `domain_module_host_domains` lists every touched domain.
+
+**Six invariants.** Every loader inserting a `module_kind='starter'` row MUST validate before any POST:
+
+1. **Role restricted.** `domain_module_data_objects.role ∈ ('embedded_master', 'consumer', 'contributor')`. Never `master`, never `derived`. Enforced platform-side by the `starter_no_master` validation_rule on `domain_module_data_objects` (uses `set_record` to read the parent `module_kind`); the loader pre-flight `validateStarterDataObjectJunction()` (see [references/loader-idiom.md](references/loader-idiom.md)) is the redundant author-time guard.
+2. **Canonical master exists.** Every `embedded_master` row points at a data_object that has a `role='master'` row in some full module somewhere in the catalog, OR the data_object is `kind='platform_builtin'`. Rule #11 already covers this for full modules; it applies identically to starters.
+3. **No lifecycle states authored.** No inserts into `data_object_lifecycle_states` from a starter load. Lifecycle is the canonical master's contract; the starter's blueprint cross-references the master's states via the emitter, the catalog rows live on the master only.
+4. **Baseline permissions only, exactly three rows.** The starter ships `<starter_code>:read`, `<starter_code>:manage`, `<starter_code>:admin` with `tier ∈ ('baseline-read', 'baseline-manage', 'baseline-admin')`. No `workflow-gate` permissions from a starter load (Rule #12's permission materialization is the master's responsibility, not the starter's).
+5. **`domain_module_capabilities` allowed.** A starter realizes a subset of capabilities, same shape as full modules. This is the marketing surface that makes a starter discoverable.
+6. **Exactly one `system` skill** (Rule #17 applies identically to starters). The starter's `skills` row has `skill_type='system'`, `domain_module_id` set, and ≥1 `skill_tools` row. Floor: `query_<entity>` for each embedded master plus light mutates where the workflow supports them. No workflow-gate tools (those need lifecycle states the starter does not author).
+
+**Naming convention.** Free-form. Authors pick `<DOMAIN>-LITE`, `<DOMAIN>-STARTER`, `REAL-ESTATE-AGENT`, `SMB-CRM`, etc. The `module_kind` discriminator carries the structural signal; the code is free to be marketing-shaped.
+
+**Upgrade behavior.** When a tenant later installs the full module whose data_objects the starter embedded, the embedded shells deterministically demote via the existing rule for `embedded_master` rows with a canonical master elsewhere. No tenant-side data migration. The starter's three baseline permissions stick around after upgrade (provisional, revisit after first real starter ships). The tenant manages skill cleanup; catalog ships both the starter's system skill and the full module's system skill side-by-side.
+
+**Audit blocker.** A starter row violating any of the six invariants fails the per-domain checklist on F2 / F3 (system skill) or a Rule-#11 / Rule-#12 cross-check depending on which invariant is violated. The platform-side validation_rule throws on the master-role violation independently of the audit.
+
 ---
 
 ## The module at a glance
 
-33 entities (11 core concepts + 1 module concept + 13 junctions + 1 alias + 4 agent-tooling + 3 role layer). Read [references/module-shape.md](references/module-shape.md) for the per-entity field shapes, enums, and FK formats before doing any write that touches a field you haven't used recently. The two long-form rule sets — modules and roles — live in [references/modules.md](references/modules.md) and [references/roles.md](references/roles.md).
+32 entities (11 core concepts + 1 module concept + 12 junctions + 1 alias + 4 agent-tooling + 3 role layer). Read [references/module-shape.md](references/module-shape.md) for the per-entity field shapes, enums, and FK formats before doing any write that touches a field you haven't used recently. The two long-form rule sets — modules and roles — live in [references/modules.md](references/modules.md) and [references/roles.md](references/roles.md).
 
 ### Core concepts (11 entities)
 
@@ -331,7 +422,7 @@ A `domain_modules` row defines a deployable unit; a `system` skill defines what 
 |---|---|---|
 | `domain_modules` | Autonomous deployable units inside a domain (`ATS-CANDIDATE-CRM`, `ITSM-INCIDENT-MGMT`, `KNOWLEDGE-MGMT`). Natural key `domain_module_code`. `domain_id` is the primary host (nullable for genuinely-cross-cutting modules); see `domain_module_host_domains` for additional hosts. | no |
 
-### Junctions with qualifiers (15 entities)
+### Junctions with qualifiers (14 entities)
 
 | Table | Connects | Qualifier column |
 |---|---|---|
@@ -347,7 +438,6 @@ A `domain_modules` row defines a deployable unit; a `system` skill defines what 
 | `domain_module_capabilities` | domain_modules ↔ capabilities | which capabilities a module realizes; one capability may realize in multiple modules |
 | `domain_module_data_objects` | domain_modules ↔ data_objects | role (same 5-value enum as `domain_data_objects`) + necessity + `notes`. Once a domain has modules, `domain_data_objects` is a **derived rollup** from this junction (group by data_object_id, strongest role wins). The single-master rule applies at this layer: exactly one row per `data_object_id` may have `role=master`; the blueprint emitter throws if it sees more. `notes` is empty by default — see Rule #15. |
 | `domain_module_host_domains` | domain_modules ↔ domains | additional hosts beyond `domain_modules.domain_id`. Cross-cutting modules use this to declare every domain they install on. |
-| `domain_starter_modules` | domains ↔ domain_modules | editorial recommendation: position int + notes. ≥1 row REQUIRED on every domain with ≥3 capabilities (Rule #14). |
 
 ### Aliases (1 entity)
 
@@ -455,7 +545,7 @@ For any task that fits this skill — "research vendors for X", "is Y a domain?"
    - `domains` (the market itself)
    - `capabilities` for that market (5–8 noun-phrase capabilities that define what the market does — e.g. for PROD-MGMT: roadmap visualization, feature prioritization, customer feedback aggregation, release planning, product strategy, opportunity management)
    - `capability_domains` linking each capability to its semantic-home domain
-   - **`domain_modules`** — at least 1 row per Rule #14. For domains with ≥3 capabilities: ≥2 modules + populated `domain_starter_modules` junction. For domains with <3 capabilities: exactly 1 module, no starter junction. Cross-cutting modules use the optional `domain_module_host_domains` to declare additional hosts.
+   - **`domain_modules`** — at least 1 row per Rule #14. For domains with ≥3 capabilities: ≥2 full modules (`module_kind='full'`). For domains with <3 capabilities: exactly 1 full module. Cross-cutting modules use the optional `domain_module_host_domains` to declare additional hosts. Starter kits (`module_kind='starter'`, per Rule #19) are optional and not subject to the floor.
    - **`domain_module_capabilities`** — link each capability to the module(s) that realize it. A capability with no realizing module is a Phase-A failure (M4 in the checklist).
    - `vendors` (legal entities, reusing existing rows by `vendor_name`)
    - `solutions` (one row per flagship product per market)
@@ -536,7 +626,7 @@ The S-band is a single coverage sweep that runs **before** any band-level check.
 
 **S1. Every direct FK to `domains` has the expected row count.**
 
-- Schema query: `/fields?reference_table=eq.domains&select=table_name,field_name`. As of 2026-05-23 this returns 12 `(table, field)` pairs across 11 tables: `business_function_domains`, `capability_domains`, `handoffs.source_domain_id`, `handoffs.target_domain_id`, `domain_data_objects`, `domain_module_host_domains`, `domain_modules`, `domain_regulations`, `domain_starter_modules`, `domains.parent_domain_id`, `skills`, `solution_domains`.
+- Schema query: `/fields?reference_table=eq.domains&select=table_name,field_name`. As of 2026-05-26 this returns 11 `(table, field)` pairs across 10 tables: `business_function_domains`, `capability_domains`, `handoffs.source_domain_id`, `handoffs.target_domain_id`, `domain_data_objects`, `domain_module_host_domains`, `domain_modules`, `domain_regulations`, `domains.parent_domain_id`, `skills`, `solution_domains`.
 - For each pair, count rows for the audited domain via PostgREST. Surface as:
 
   | Table | FK column | ATS rows | Expected non-zero? |
@@ -544,7 +634,7 @@ The S-band is a single coverage sweep that runs **before** any band-level check.
 
 - Expected-non-zero call (the schema doesn't carry this; it follows from catalog rules):
   - Always non-zero: `business_function_domains` (C1), `capability_domains` (A2), `domain_data_objects` (B1 except leadership-tier), `domain_modules` (M1), `solution_domains` (A3), `handoffs.source_domain_id` (B9 for any non-leaf domain), `skills` (F2 — exactly one `skill_type='system'` row per `domain_modules` row).
-  - Non-zero when applicable: `domain_starter_modules` (M3 — only when `capability_count ≥ 3`), `domain_regulations` (most domains have ≥1 regulation in scope), `handoffs.target_domain_id` (most non-leadership domains receive at least one inbound handoff).
+  - Non-zero when applicable: `domain_regulations` (most domains have ≥1 regulation in scope), `handoffs.target_domain_id` (most non-leadership domains receive at least one inbound handoff).
   - Routinely zero: `domain_module_host_domains` (only when cross-cutting modules host on this domain), `domains.parent_domain_id` (only when this domain has sub-domains).
 - Fix: zero-row anomalies on "expected non-zero" rows are blocking. The fix routes back into the owning band — S1 just makes the gap legible at a glance and catches cases the band's own pass test missed.
 
@@ -611,11 +701,6 @@ A `domains` row is not deployable on its own. Modules are. The M-band is a struc
 - Module count query: same as M1 (union of primary + host-junction modules).
 - Pass: `capability_count < 3` (M2 vacuously passes) OR `module_count ≥ 2`.
 - Fix: split the single module into ≥2 meaningful modules. If the capability count is borderline (exactly 3) and only one module makes sense, document why in `domain_modules.description` and revisit when the capability count grows.
-
-**M3. Domains with ≥3 capabilities have a populated `domain_starter_modules` junction.**
-- Query: `/domain_starter_modules?domain_id=eq.<id>&select=domain_module_id,position,notes&order=position.asc`
-- Pass: `capability_count < 3` (M3 vacuously passes) OR ≥1 row.
-- Fix: author 1–3 `domain_starter_modules` rows naming the recommended entry-point modules in order, with editorial notes the fact sheet emits verbatim.
 
 **M4. Every capability of this domain has ≥1 realizing module.**
 - Query: for each `capability_id` in `capability_domains` for this domain, check `/domain_module_capabilities?capability_id=eq.<cap_id>&domain_module_id=in.(<modIds>)` returns ≥1 row.
@@ -905,17 +990,16 @@ Fact-sheet emission is a deliberate, user-triggered action. **Do not run it as p
 
 Emit only when the user explicitly asks. Triggers: "emit the ATS blueprint", "regenerate the blueprints", "refresh `<MODULE-CODE>-semantic-blueprint.md`", "run the blueprint generator". Do not infer the user wants blueprints from phrases like "audit X" or "load Y was that successful" — confirm first.
 
-The emitter at [scripts/emit_fact_sheet.ts](../../../scripts/emit_fact_sheet.ts) produces two kinds of semantic blueprint:
+The emitter at [scripts/emit_fact_sheet.ts](../../../scripts/emit_fact_sheet.ts) produces one kind of semantic blueprint:
 
-- **Per-module blueprints** → `blueprints/modules/<module-code>-semantic-blueprint.md`, one per `domain_modules` row. The deployable-unit view: data_objects assigned to this module, lifecycle states on this module's masters, the system skill + tools + Semantius coverage %, module-scoped permissions, capabilities realized, outbound / inbound handoffs, architect handoff hints.
-- **Per-starter-kit blueprints** → `blueprints/starter-kits/<domain-code>-semantic-blueprint.md`, one per domain with a `domain_starter_modules` junction. The buyer-facing market entry point: market overview, the editorial on-ramp, every module installable on this domain, combined view across the starter modules, capabilities, solutions, vendors, RACI, regulations, architect handoff hints.
+- **Per-module blueprints** → `blueprints/<module-code>-semantic-blueprint.md`, one per `domain_modules` row regardless of `module_kind`. Both `module_kind='full'` and `module_kind='starter'` rows are emitted in the same flat directory. The deployable-unit view: data_objects assigned to this module, lifecycle states on this module's masters (starters render *inherited* lifecycle states from their embedded_masters' canonical-master rows, cross-referencing into the master's blueprint), the system skill + tools + Semantius coverage %, module-scoped permissions, capabilities realized, outbound / inbound handoffs, architect handoff hints.
 
-There is no per-domain blueprint in the current emitter — the starter-kit page replaces it as the market entry point. Any legacy `domain-fact-sheets/` files on disk are no longer regenerated; treat them as historical.
+Per-domain "starter kit" blueprints (the prior `blueprints/starter-kits/<DOMAIN-CODE>-...md` shape backed by the now-deleted `domain_starter_modules` junction) are gone (Rule #19 made starter kits first-class deployable units, so they emit as ordinary per-module blueprints). Any legacy `domain-fact-sheets/` or `blueprints/starter-kits/` directories on disk are no longer regenerated; treat them as historical.
 
 Commands:
-- `bun run scripts/emit_fact_sheet.ts --starter-kit <DOMAIN_CODE>` — regenerates the domain's starter-kit page.
-- `bun run scripts/emit_fact_sheet.ts --module <MODULE_CODE>` — regenerates one module's page.
-- `bun run scripts/emit_fact_sheet.ts --all` — regenerates every module page and every starter-kit page in one pass.
+- `bun run scripts/emit_fact_sheet.ts --module <MODULE_CODE>` — regenerates one module's page (works for both `module_kind` values).
+- `bun run scripts/emit_fact_sheet.ts --all` — regenerates every per-module blueprint in one pass.
+- `bun run scripts/emit_fact_sheet.ts --all --check` — CI drift check; exits non-zero if any blueprint would change.
 
 When the user does ask for an emit, the quality check on the output is: every `_(no … loaded)_` placeholder in the generated file is justified by (a) the leadership-tier exception list (B1), (b) a `data_objects.notes` config-shape exemption on a master with no workflow (B12, per Rule #12), or (c) an explicit "self-explanatory masters" / "isolated master" justification recorded in the catalog notes (B6, B11). Unjustified placeholders signal a real gap in live state — fix the gap and re-emit. Never hand-edit the rendered files to silence a placeholder.
 
@@ -1397,6 +1481,9 @@ Reference loader: [.tmp_deploy/load_p25b_process_skills.ts](../../../.tmp_deploy
 - ❌ Writing project state, lessons learned, or "remember this for next time" notes to your memory system. Every persistent note about this project lives in committed files (SKILL.md, CLAUDE.md, references/). Memory is off-limits for this repo.
 - ❌ Loading tool-shaped capability rows into `capabilities`. `Send Email`, `Transcribe Audio`, `Sign Document`, `Make Phone Call`, `Run Shell Command` — those are **`tools`** (lowercase snake_case verbs: `send_email`, `transcribe_audio`, `sign_document`), not `capabilities`. The `capabilities` table stays business-shaped: noun-phrase market features an org *can do* (`Lead Management`, `Vulnerability Scanning`, `Roadmap Visualization`, `Automated Invoice Matching`). If the row reads as a JSON-RPC function with an obvious verb-object shape, it belongs in `tools` with the right `operation_kind` and (for `query`/`mutate`) a `data_object_id` pointer. This anti-pattern is easy to fall into when a vendor's marketing page lists capabilities like "AI Voice Synthesis" — that's a *tool* the vendor delivers, not a *capability* of a domain.
 - ❌ Linking channel primitives (`send_email`, `send_sms`, `post_chat_message`, `make_phone_call`) on a skill without a documented channel-specific workflow justification. The Channel vs capability authoring rule is explicit: **default to the abstraction** (`notify_person` for single recipient, `notify_team` for broadcast). Link the channel directly only when the workflow REQUIRES that specific channel (CCAAS voice agent, ESIGN webhook callback, EDI message exchange) and the reason is captured in `skill_tools.notes`. Easy to miss in two situations: (a) cargo-culting an authoring template from a domain whose workflow legitimately needs the channel (CRM sales-activity skill correctly links `send_email`; LMS course-delivery does not), and (b) extending an existing skill that already has the channel primitive linked from a prior load — audit the inherited rows; don't treat them as authoritative. Cost of the mistake: when the platform ships native outbound, `notify_person` flips to `coverage_tier='platform'` with one UPDATE and every skill using the abstraction re-scores. Channel-specific links don't benefit; each one has to be hand-patched. Recurred at least three times across catalog loads; F7 in the per-domain audit catches it positively.
+- ❌ Authoring a `module_kind='starter'` row with a `role='master'` (or `role='derived'`) `domain_module_data_objects` entry. Starters never master. The platform's `starter_no_master` validation_rule rejects the write; the loader's `validateStarterDataObjectJunction()` rejects it author-side. If the module genuinely needs to master a data_object, it is not a starter, promote to `module_kind='full'`. See Rule #19.
+- ❌ Authoring `data_object_lifecycle_states` rows from a starter load. Lifecycle is the canonical master's contract; the starter's blueprint inherits and renders the master's states via the emitter. Lifecycle rows in the catalog live on the master only.
+- ❌ Authoring `workflow-gate` permissions on a starter. Starters ship exactly three baseline-tier permissions (`<starter_code>:read` / `:manage` / `:admin`) and nothing else. Workflow gates are Rule #12 permission materialization on the master's lifecycle states; they belong to the realizing full module, not to any starter that embeds the same data_object.
 
 ---
 

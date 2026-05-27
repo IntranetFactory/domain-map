@@ -56,26 +56,26 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 | from | verb | to | cardinality | kind | necessity | owner_side | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `candidate_referrals` | introduces | `candidates` | one_to_many | reference | required | target | intra \| ATS \| referral is the introduction event; candidate is durable |
+| `candidate_referrals` | introduces | `candidates` | one_to_many | reference | required | target | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | notes |
 | --- | --- | --- | --- | --- | --- | --- |
-| `candidate_referrals` | has referring employee | `users` | many_to_many | required | source | users \| ATS \| referring_employee role on referral |
+| `candidate_referrals` | has referring employee | `users` | many_to_many | required | source | - |
 
 ### 5.3 Cross-scope edges
 
 | from | verb | to | cardinality | necessity | notes |
 | --- | --- | --- | --- | --- | --- |
-| `skill_profiles` | feeds | `candidates` | one_to_many | optional | cross \| cluster A \| LMS \| internal-candidate skill data flows to ATS |
-| `candidates` | submits | `job_applications` | one_to_many | required | intra \| ATS \| candidate persists across applications |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | required | intra \| ATS \| source-of-hire dimension on candidate |
-| `recruitment_agencies` | sources | `candidates` | one_to_many | required | intra \| ATS \| agency is the channel; candidate persists |
-| `recruitment_events` | attracts | `candidates` | one_to_many | required | intra \| ATS \| event is the touchpoint; candidate persists |
-| `talent_pools` | groups | `candidates` | many_to_many | required | intra \| ATS \| pool is a membership shell; candidate lives outside it |
-| `candidates` | becomes | `employees` | one_to_one | required | cross \| ATS→HCM \| candidate.hired creates employee record; identity handoff |
-| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | Candidate identity continues into the pre-employee record; promoted to employees on activation. |
+| `skill_profiles` | feeds | `candidates` | one_to_many | optional | - |
+| `candidates` | submits | `job_applications` | one_to_many | required | - |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | required | - |
+| `recruitment_agencies` | sources | `candidates` | one_to_many | required | - |
+| `recruitment_events` | attracts | `candidates` | one_to_many | required | - |
+| `talent_pools` | groups | `candidates` | many_to_many | required | - |
+| `candidates` | becomes | `employees` | one_to_one | required | - |
+| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | - |
 
 ## 6. Cross-domain context
 

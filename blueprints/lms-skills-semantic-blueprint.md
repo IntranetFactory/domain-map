@@ -64,14 +64,14 @@ flowchart LR
   employees -->|"learns_via"| course_enrollments
   org_units -->|"rolls_up_to (opt)"| org_units
   skills_gap_analyses -->|"prescribes (opt)"| learning_paths
+  users -->|"curates (opt)"| learning_paths
   employees -->|"is_linked_to (opt)"| users
   users -->|"manages (opt)"| hcm_positions
   users -->|"leads (opt)"| org_units
   users -->|"owns (opt)"| job_profiles
-  users -->|"holds"| learner_certifications
   users -->|"enrolls in"| course_enrollments
   users -->|"assigns (opt)"| course_enrollments
-  users -->|"curates (opt)"| learning_paths
+  users -->|"holds"| learner_certifications
   users -->|"holds"| skill_profiles
   users -->|"owns"| performance_goals
   org_units -->|"has members (opt)"| users
@@ -114,109 +114,109 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 | from | verb | to | cardinality | kind | necessity | owner_side | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `org_units` | groups | `employees` | one_to_many | reference | required | source | intra \| cluster A \| HCM \| every employee rolls up to an org unit |
-| `org_units` | contains | `hcm_positions` | one_to_many | reference | required | source | intra \| cluster A \| HCM \| positions live inside an org unit |
-| `hcm_positions` | is_filled_by | `employees` | one_to_one | reference | optional | target | intra \| cluster A \| HCM \| a position may be vacant or filled by one incumbent |
-| `job_profiles` | defines | `hcm_positions` | one_to_many | reference | required | source | intra \| cluster A \| HCM \| job profile is the template for positions |
-| `employees` | holds | `skill_profiles` | one_to_one | reference | optional | source | intra \| cluster A \| HCM \| each employee may have a skill profile |
-| `job_profiles` | maps_to | `skill_profiles` | many_to_many | association | optional | source | intra \| cluster A \| HCM \| competencies expected by job profile |
-| `employees` | enrolls_in | `course_enrollments` | one_to_many | reference | optional | source | cross \| cluster A \| HCM \| new-hire creation provisions LMS training |
-| `skill_profiles` | updated by | `learner_certifications` | one_to_many | reference | optional | source | intra \| cluster A \| LMS \| earning a cert refreshes the worker skill profile \| auto-flipped from many_to_one |
-| `skill_profiles` | updated by | `course_enrollments` | one_to_many | reference | optional | source | intra \| cluster A \| LMS \| completion refreshes skill profile \| auto-flipped from many_to_one |
-| `job_profiles` | requires | `learning_paths` | many_to_many | association | optional | source | intra \| cluster A \| LMS \| job-profile competency paths |
-| `job_profiles` | expects | `skill_profiles` | many_to_many | association | optional | source | intra \| cluster A \| LMS \| competency expectation by profile |
-| `employees` | fills | `hcm_positions` | one_to_one | reference | optional | source | intra \| cluster A \| ONBOARDING \| embedded: incumbent of the position being onboarded |
-| `employees` | learns_via | `course_enrollments` | one_to_many | reference | required | source | intra \| cluster A \| LMS \| embedded: learner identity |
-| `org_units` | rolls_up_to | `org_units` | one_to_many | reference | optional | source | Hierarchical parent-child between org_units (Team -> Department -> Division -> BU -> Company). |
-| `skills_gap_analyses` | prescribes | `learning_paths` | one_to_many | reference | optional | source | cross \| SWP→LMS \| skills_gap_analysis.completed prescribes learning_paths for capability build. |
+| `org_units` | groups | `employees` | one_to_many | reference | required | source | - |
+| `org_units` | contains | `hcm_positions` | one_to_many | reference | required | source | - |
+| `hcm_positions` | is_filled_by | `employees` | one_to_one | reference | optional | target | - |
+| `job_profiles` | defines | `hcm_positions` | one_to_many | reference | required | source | - |
+| `employees` | holds | `skill_profiles` | one_to_one | reference | optional | source | - |
+| `job_profiles` | maps_to | `skill_profiles` | many_to_many | association | optional | source | - |
+| `employees` | enrolls_in | `course_enrollments` | one_to_many | reference | optional | source | - |
+| `skill_profiles` | updated by | `learner_certifications` | one_to_many | reference | optional | source | - |
+| `skill_profiles` | updated by | `course_enrollments` | one_to_many | reference | optional | source | - |
+| `job_profiles` | requires | `learning_paths` | many_to_many | association | optional | source | - |
+| `job_profiles` | expects | `skill_profiles` | many_to_many | association | optional | source | - |
+| `employees` | fills | `hcm_positions` | one_to_one | reference | optional | source | - |
+| `employees` | learns_via | `course_enrollments` | one_to_many | reference | required | source | - |
+| `org_units` | rolls_up_to | `org_units` | one_to_many | reference | optional | source | - |
+| `skills_gap_analyses` | prescribes | `learning_paths` | one_to_many | reference | optional | source | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | notes |
 | --- | --- | --- | --- | --- | --- | --- |
-| `employees` | is_linked_to | `users` | one_to_one | optional | target | users \| cluster A \| HCM \| every employee maps to an identity user |
-| `users` | manages | `hcm_positions` | one_to_many | optional | source | users \| cluster A \| HCM \| manager-of-position relationship \| auto-flipped from many_to_one |
-| `users` | leads | `org_units` | one_to_many | optional | source | users \| cluster A \| HCM \| org-unit head \| auto-flipped from many_to_one |
-| `users` | owns | `job_profiles` | one_to_many | optional | source | users \| cluster A \| HCM \| catalog owner (HR/COE) \| auto-flipped from many_to_one |
-| `users` | holds | `learner_certifications` | one_to_many | required | source | users \| cluster A \| LMS \| cert holder \| auto-flipped from many_to_one |
-| `users` | enrolls in | `course_enrollments` | one_to_many | required | source | users \| cluster A \| LMS \| learner identity \| auto-flipped from many_to_one |
-| `users` | assigns | `course_enrollments` | one_to_many | optional | source | users \| cluster A \| LMS \| assigning manager \| auto-flipped from many_to_one |
-| `users` | curates | `learning_paths` | one_to_many | optional | source | users \| cluster A \| LMS \| curriculum owner \| auto-flipped from many_to_one |
-| `users` | holds | `skill_profiles` | one_to_many | required | source | users \| cluster A \| LMS \| learner identity \| auto-flipped from many_to_one |
-| `users` | owns | `performance_goals` | one_to_many | required | target | The employee whose goal it is. |
-| `org_units` | has members | `users` | one_to_many | optional | target | Every user is assigned to one or more org_units (department membership). Drives assignment routing, RBAC scoping, and chargeback. |
-| `users` | prepares | `skills_gap_analyses` | one_to_many | optional | source | Analyst who authors the skills-gap analysis. |
+| `users` | curates | `learning_paths` | one_to_many | optional | source | - |
+| `employees` | is_linked_to | `users` | one_to_one | optional | target | - |
+| `users` | manages | `hcm_positions` | one_to_many | optional | source | - |
+| `users` | leads | `org_units` | one_to_many | optional | source | - |
+| `users` | owns | `job_profiles` | one_to_many | optional | source | - |
+| `users` | enrolls in | `course_enrollments` | one_to_many | required | source | - |
+| `users` | assigns | `course_enrollments` | one_to_many | optional | source | - |
+| `users` | holds | `learner_certifications` | one_to_many | required | source | - |
+| `users` | holds | `skill_profiles` | one_to_many | required | source | - |
+| `users` | owns | `performance_goals` | one_to_many | required | target | - |
+| `org_units` | has members | `users` | one_to_many | optional | target | - |
+| `users` | prepares | `skills_gap_analyses` | one_to_many | optional | source | - |
 
 ### 5.3 Cross-scope edges
 
 | from | verb | to | cardinality | necessity | notes |
 | --- | --- | --- | --- | --- | --- |
-| `employees` | signs | `employment_contracts` | one_to_many | required | intra \| cluster A \| HCM \| contracts belong to the employee |
-| `employees` | generates | `employment_events` | one_to_many | required | intra \| cluster A \| HCM \| hire/transfer/leave/term events for an employee |
-| `cost_centers` | funds | `org_units` | one_to_many | required | intra \| cluster A \| HCM \| org-unit labor cost rolls to a cost center \| auto-flipped from many_to_one |
-| `employees` | triggers | `asset_lifecycle_events` | one_to_many | optional | intra \| cluster A \| HCM \| issue/return/recall events tied to the employee |
-| `employees` | requests | `absence_requests` | one_to_many | optional | intra \| cluster A \| HCM \| self-service absence requests originate from employee |
-| `org_units` | engages | `contingent_workers` | one_to_many | optional | intra \| cluster A \| HCM \| contingent workforce attaches to an org unit |
-| `org_units` | is_scored_by | `engagement_drivers` | one_to_many | optional | intra \| cluster A \| HCM \| engagement drivers measured at org-unit level |
-| `org_units` | is_measured_by | `people_kpis` | one_to_many | optional | intra \| cluster A \| HCM \| people KPIs aggregated by org unit |
-| `employees` | triggers | `service_requests` | one_to_many | optional | cross \| cluster A \| HCM \| termination fan-out of offboarding service requests in ITSM |
-| `employees` | feeds | `agency_time_entries` | one_to_many | optional | cross \| cluster A \| HCM \| agency staff termination freezes time entries in AGENCY-MGMT |
-| `employees` | triggers | `iga_provisioning_events` | one_to_many | optional | cross \| cluster A \| HCM \| create/terminate/promote drives IGA account/entitlement actions |
-| `org_units` | triggers | `iga_entitlement_definitions` | one_to_many | optional | cross \| cluster A \| HCM \| new/merged/disbanded org units drive IGA group lifecycle |
-| `employees` | triggers | `pay_runs` | one_to_many | optional | cross \| cluster A \| HCM \| new-hire/termination/promotion drives Payroll comp activation and final pay |
-| `hcm_positions` | spawns | `job_requisitions` | one_to_many | optional | cross \| cluster A \| HCM \| approved position becomes a requisition in ATS |
-| `job_profiles` | feeds | `job_postings` | one_to_many | optional | cross \| cluster A \| HCM \| canonical job profile feeds ATS posting templates |
-| `job_profiles` | maps_to | `courses` | many_to_many | optional | cross \| cluster A \| HCM \| job-profile competencies drive required training |
-| `employees` | becomes | `career_aspirations` | one_to_one | optional | cross \| cluster A \| HCM \| new employee triggers talent-profile initialization in Talent-Mgmt |
-| `employees` | becomes | `work_shifts` | one_to_many | optional | cross \| cluster A \| HCM \| new employee becomes a schedulable resource in WFM |
-| `employees` | becomes | `compensation_statements` | one_to_one | optional | cross \| cluster A \| HCM \| new-hire/promotion drives Comp-Mgmt compensation basis |
-| `salary_bands` | anchors | `hcm_positions` | one_to_many | optional | cross \| cluster A \| HCM \| approved position carries grade/band to Comp-Mgmt \| auto-flipped from many_to_one |
-| `salary_bands` | bands | `job_profiles` | one_to_many | optional | cross \| cluster A \| HCM \| job-profile-to-salary-band mapping is authoritative \| auto-flipped from many_to_one |
-| `employees` | triggers | `benefit_enrollments` | one_to_many | optional | cross \| cluster A \| HCM \| create/terminate/event drives BEN-ADMIN eligibility & COBRA |
-| `org_units` | maps_to | `cost_centers` | one_to_one | optional | cross \| cluster A \| HCM \| new org unit usually maps to ERP-FIN cost center |
-| `employees` | triggers | `corporate_cards` | one_to_many | optional | cross \| cluster A \| HCM \| termination deactivates corporate cards in EXPENSE |
-| `employees` | spawns | `onboarding_journeys` | one_to_one | optional | cross \| cluster A \| HCM \| new-hire creation triggers onboarding plan instantiation |
-| `employees` | spawns | `hr_cases` | one_to_many | optional | cross \| cluster A \| HCM \| termination kicks off offboarding HR case in HRSD |
-| `employees` | feeds | `headcount_plans` | one_to_many | optional | cross \| cluster A \| HCM \| headcount actuals reconcile to SWP plan |
-| `employees` | onboarded by | `onboarding_journeys` | one_to_many | required | intra \| cluster A \| ONBOARDING \| journey is bound to one new-hire employee \| auto-flipped from many_to_one |
-| `employees` | finalized by | `onboarding_document_collections` | one_to_many | optional | cross \| cluster A \| ONBOARDING \| all docs collected → HCM finalizes employee record \| auto-flipped from many_to_one |
-| `onboarding_tasks` | spawns | `course_enrollments` | one_to_many | optional | cross \| cluster A \| ONBOARDING \| compliance-training task triggers LMS enrollment |
-| `courses` | sequenced_into | `learning_paths` | many_to_many | optional | intra \| cluster A \| LMS \| a path is an ordered collection of courses |
-| `courses` | enrolled_via | `course_enrollments` | one_to_many | required | intra \| cluster A \| LMS \| enrollments reference a course |
-| `course_enrollments` | produces | `learning_records` | one_to_many | required | intra \| cluster A \| LMS \| transcript records derive from enrollments |
-| `courses` | grants | `learner_certifications` | one_to_many | optional | intra \| cluster A \| LMS \| certifications earned from courses |
-| `hcm_positions` | requires | `compliance_assignments` | one_to_many | optional | intra \| cluster A \| LMS \| role-based compliance training |
-| `org_units` | sponsors | `compliance_assignments` | one_to_many | optional | intra \| cluster A \| LMS \| org-unit assigns compliance training |
-| `cost_centers` | funds | `course_enrollments` | one_to_many | optional | intra \| cluster A \| LMS \| training cost allocation |
-| `employees` | reflects | `learning_records` | one_to_many | optional | cross \| cluster A \| LMS \| learning transcript visible on HCM employee record \| auto-flipped from many_to_one |
-| `employees` | reflected on | `compliance_assignments` | one_to_many | optional | cross \| cluster A \| LMS \| lapsed mandatory training surfaces on HCM employee record \| auto-flipped from many_to_one |
-| `skill_profiles` | feeds | `candidates` | one_to_many | optional | cross \| cluster A \| LMS \| internal-candidate skill data flows to ATS |
-| `skill_profiles` | feeds | `career_aspirations` | one_to_many | optional | cross \| cluster A \| LMS \| skill profile drives talent-mobility matching |
-| `course_enrollments` | updates | `career_aspirations` | one_to_many | optional | cross \| cluster A \| LMS \| completion drives dev-plans / succession |
-| `employees` | declares | `life_events` | one_to_many | optional | intra \| cluster A \| BEN-ADMIN \| embedded: employee declaring event |
-| `org_units` | sponsors | `benefit_plans` | many_to_many | optional | intra \| cluster A \| BEN-ADMIN \| embedded: org-level offering |
-| `employees` | updated by | `life_events` | one_to_many | optional | cross \| cluster A \| BEN-ADMIN \| approved life event may update dependents / emergency contacts in HCM \| auto-flipped from many_to_one |
-| `survey_campaigns` | targets | `org_units` | many_to_many | optional | intra \| cluster A \| EMP-EXP \| embedded: org-unit scoping |
-| `org_units` | owns | `action_plans` | one_to_many | optional | intra \| cluster A \| EMP-EXP \| org-unit accountable for action plan \| auto-flipped from many_to_one |
-| `employees` | submits | `survey_responses` | one_to_many | optional | intra \| cluster A \| EMP-EXP \| respondent identity at employee level \| auto-flipped from many_to_one |
-| `employees` | flagged on | `engagement_drivers` | one_to_many | optional | cross \| cluster A \| EMP-EXP \| high attrition-risk surfaces on HCM employee dashboard \| auto-flipped from many_to_one |
-| `employees` | reflected on | `engagement_drivers` | one_to_many | optional | cross \| cluster A \| EMP-EXP \| survey-cycle results visible to HRBPs in HCM \| auto-flipped from many_to_one |
-| `employees` | raises | `hr_cases` | one_to_many | required | intra \| cluster A \| HRSD \| requester identity (employee scope) \| auto-flipped from many_to_one |
-| `employees` | updated by | `hr_cases` | one_to_many | optional | cross \| cluster A \| HRSD \| HR cases involving data changes flow back to HCM \| auto-flipped from many_to_one |
-| `case_categories` | drives | `employees` | one_to_many | optional | cross \| cluster A \| HRSD \| taxonomy affects HCM employee-portal self-service routing |
-| `legal_holds` | identifies_custodians_from | `employees` | many_to_many | optional | cross \| cluster C \| LSD \| HCM employee data drives custodian id |
-| `legal_advice_records` | references | `employees` | many_to_many | optional | cross \| cluster C \| LSD \| employee-related advice from HR case |
-| `employees` | is host for | `host_assignments` | one_to_many | required | cross \| cluster C \| VIS-MGMT \| host notifications trigger employee engagement \| auto-flipped from many_to_one |
-| `contingent_workers` | reviewed_against | `employees` | one_to_one | optional | cross \| cluster D \| VMS \| tenure-threshold crossover triggers HCM reclassification/conversion |
-| `candidates` | becomes | `employees` | one_to_one | required | cross \| ATS→HCM \| candidate.hired creates employee record; identity handoff |
-| `pre_employees` | promotes to | `employees` | one_to_one | required | cross \| ATS->HCM \| pre_employee.activated converts the pre-hire record into the canonical HCM employee record |
-| `employees` | enrolls_in | `benefit_enrollments` | one_to_many | required | intra \| cluster A \| BEN-ADMIN \| embedded: enrollee identity |
-| `survey_campaigns` | targets | `employees` | many_to_many | optional | intra \| cluster A \| EMP-EXP \| embedded: invited population |
-| `performance_reviews` | evaluates | `performance_goals` | one_to_many | optional | A review cycle assesses many goals set for the same employee/cycle. Goals exist independently of any single review. |
-| `performance_goals` | aligns_to | `okr_objectives` | many_to_many | optional | Goals and OKRs align bidirectionally when the org runs both. A goal can roll up to an OKR; an OKR can be measured by goals. |
-| `position_demand_forecasts` | grounds | `skills_gap_analyses` | one_to_many | optional | Position-demand forecasts ground skills-gap analyses (future-state demand). |
-| `workforce_scenarios` | drives | `hcm_positions` | one_to_many | required | cross \| SWP→HCM \| adopted scenario drives HCM position changes. |
-| `org_designs` | proposes | `hcm_positions` | one_to_many | required | cross \| SWP→HCM \| org_design.published proposes new hcm_positions for creation. |
+| `employees` | triggers | `iga_provisioning_events` | one_to_many | optional | - |
+| `employees` | finalized by | `onboarding_document_collections` | one_to_many | optional | - |
+| `pre_employees` | promotes to | `employees` | one_to_one | required | - |
+| `legal_holds` | identifies_custodians_from | `employees` | many_to_many | optional | - |
+| `legal_advice_records` | references | `employees` | many_to_many | optional | - |
+| `employees` | is host for | `host_assignments` | one_to_many | required | - |
+| `employees` | signs | `employment_contracts` | one_to_many | required | - |
+| `employees` | generates | `employment_events` | one_to_many | required | - |
+| `cost_centers` | funds | `org_units` | one_to_many | required | - |
+| `employees` | triggers | `asset_lifecycle_events` | one_to_many | optional | - |
+| `employees` | requests | `absence_requests` | one_to_many | optional | - |
+| `org_units` | engages | `contingent_workers` | one_to_many | optional | - |
+| `org_units` | is_scored_by | `engagement_drivers` | one_to_many | optional | - |
+| `org_units` | is_measured_by | `people_kpis` | one_to_many | optional | - |
+| `employees` | triggers | `service_requests` | one_to_many | optional | - |
+| `org_units` | triggers | `iga_entitlement_definitions` | one_to_many | optional | - |
+| `employees` | triggers | `pay_runs` | one_to_many | optional | - |
+| `hcm_positions` | spawns | `job_requisitions` | one_to_many | optional | - |
+| `job_profiles` | feeds | `job_postings` | one_to_many | optional | - |
+| `job_profiles` | maps_to | `courses` | many_to_many | optional | - |
+| `employees` | becomes | `career_aspirations` | one_to_one | optional | - |
+| `employees` | becomes | `work_shifts` | one_to_many | optional | - |
+| `employees` | becomes | `compensation_statements` | one_to_one | optional | - |
+| `salary_bands` | anchors | `hcm_positions` | one_to_many | optional | - |
+| `salary_bands` | bands | `job_profiles` | one_to_many | optional | - |
+| `employees` | triggers | `benefit_enrollments` | one_to_many | optional | - |
+| `org_units` | maps_to | `cost_centers` | one_to_one | optional | - |
+| `employees` | triggers | `corporate_cards` | one_to_many | optional | - |
+| `employees` | spawns | `onboarding_journeys` | one_to_one | optional | - |
+| `employees` | spawns | `hr_cases` | one_to_many | optional | - |
+| `employees` | feeds | `headcount_plans` | one_to_many | optional | - |
+| `employees` | feeds | `agency_time_entries` | one_to_many | optional | - |
+| `employees` | onboarded by | `onboarding_journeys` | one_to_many | required | - |
+| `onboarding_tasks` | spawns | `course_enrollments` | one_to_many | optional | - |
+| `courses` | sequenced_into | `learning_paths` | many_to_many | optional | - |
+| `courses` | enrolled_via | `course_enrollments` | one_to_many | required | - |
+| `course_enrollments` | produces | `learning_records` | one_to_many | required | - |
+| `courses` | grants | `learner_certifications` | one_to_many | optional | - |
+| `hcm_positions` | requires | `compliance_assignments` | one_to_many | optional | - |
+| `org_units` | sponsors | `compliance_assignments` | one_to_many | optional | - |
+| `cost_centers` | funds | `course_enrollments` | one_to_many | optional | - |
+| `employees` | reflects | `learning_records` | one_to_many | optional | - |
+| `employees` | reflected on | `compliance_assignments` | one_to_many | optional | - |
+| `skill_profiles` | feeds | `candidates` | one_to_many | optional | - |
+| `skill_profiles` | feeds | `career_aspirations` | one_to_many | optional | - |
+| `course_enrollments` | updates | `career_aspirations` | one_to_many | optional | - |
+| `employees` | declares | `life_events` | one_to_many | optional | - |
+| `org_units` | sponsors | `benefit_plans` | many_to_many | optional | - |
+| `employees` | updated by | `life_events` | one_to_many | optional | - |
+| `survey_campaigns` | targets | `org_units` | many_to_many | optional | - |
+| `org_units` | owns | `action_plans` | one_to_many | optional | - |
+| `employees` | submits | `survey_responses` | one_to_many | optional | - |
+| `employees` | flagged on | `engagement_drivers` | one_to_many | optional | - |
+| `employees` | reflected on | `engagement_drivers` | one_to_many | optional | - |
+| `employees` | raises | `hr_cases` | one_to_many | required | - |
+| `employees` | updated by | `hr_cases` | one_to_many | optional | - |
+| `case_categories` | drives | `employees` | one_to_many | optional | - |
+| `contingent_workers` | reviewed_against | `employees` | one_to_one | optional | - |
+| `candidates` | becomes | `employees` | one_to_one | required | - |
+| `employees` | enrolls_in | `benefit_enrollments` | one_to_many | required | - |
+| `survey_campaigns` | targets | `employees` | many_to_many | optional | - |
+| `performance_reviews` | evaluates | `performance_goals` | one_to_many | optional | - |
+| `performance_goals` | aligns_to | `okr_objectives` | many_to_many | optional | - |
+| `position_demand_forecasts` | grounds | `skills_gap_analyses` | one_to_many | optional | - |
+| `workforce_scenarios` | drives | `hcm_positions` | one_to_many | required | - |
+| `org_designs` | proposes | `hcm_positions` | one_to_many | required | - |
 
 ## 6. Cross-domain context
 

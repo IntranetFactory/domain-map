@@ -71,40 +71,40 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 | from | verb | to | cardinality | kind | necessity | owner_side | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `candidates` | submits | `job_applications` | one_to_many | reference | required | target | intra \| ATS \| candidate persists across applications |
-| `job_applications` | results in | `job_offers` | one_to_many | reference | required | source | intra \| ATS \| offer is the conversion of the application |
+| `candidates` | submits | `job_applications` | one_to_many | reference | required | target | - |
+| `job_applications` | results in | `job_offers` | one_to_many | reference | required | source | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | notes |
 | --- | --- | --- | --- | --- | --- | --- |
-| `job_applications` | has owning recruiter | `users` | many_to_many | required | source | users \| ATS \| recruiter role on the application |
-| `job_offers` | has approver | `users` | many_to_many | required | source | users \| ATS \| approver role on offer |
+| `job_applications` | has owning recruiter | `users` | many_to_many | required | source | - |
+| `job_offers` | has approver | `users` | many_to_many | required | source | - |
 
 ### 5.3 Cross-scope edges
 
 | from | verb | to | cardinality | necessity | notes |
 | --- | --- | --- | --- | --- | --- |
-| `salary_bands` | anchors | `hcm_positions` | one_to_many | optional | cross \| cluster A \| HCM \| approved position carries grade/band to Comp-Mgmt \| auto-flipped from many_to_one |
-| `salary_bands` | bands | `job_profiles` | one_to_many | optional | cross \| cluster A \| HCM \| job-profile-to-salary-band mapping is authoritative \| auto-flipped from many_to_one |
-| `skill_profiles` | feeds | `candidates` | one_to_many | optional | cross \| cluster A \| LMS \| internal-candidate skill data flows to ATS |
-| `job_requisitions` | receives | `job_applications` | one_to_many | required | intra \| ATS \| apps target a specific req |
-| `job_postings` | is applied to via | `job_applications` | one_to_many | required | intra \| ATS \| app inflow is anchored on a posting |
-| `candidate_referrals` | introduces | `candidates` | one_to_many | required | intra \| ATS \| referral is the introduction event; candidate is durable |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | required | intra \| ATS \| source-of-hire dimension on candidate |
-| `recruitment_agencies` | sources | `candidates` | one_to_many | required | intra \| ATS \| agency is the channel; candidate persists |
-| `recruitment_events` | attracts | `candidates` | one_to_many | required | intra \| ATS \| event is the touchpoint; candidate persists |
-| `talent_pools` | groups | `candidates` | many_to_many | required | intra \| ATS \| pool is a membership shell; candidate lives outside it |
-| `job_applications` | schedules | `interviews` | one_to_many | required | intra \| ATS \| interview belongs to the application's pipeline |
-| `job_applications` | requires | `candidate_assessments` | one_to_many | required | intra \| ATS \| assessment invitation belongs to the app's pipeline |
-| `job_offers` | is contingent on | `background_checks` | one_to_many | required | intra \| ATS \| background check gates offer-to-firm conversion |
-| `job_offers` | spawns | `onboarding_journeys` | one_to_one | required | cross \| ATS→ONBOARDING \| offer.accepted creates onboarding journey (high friction) |
-| `job_offers` | triggers | `benefit_enrollments` | one_to_one | required | cross \| ATS→BEN-ADMIN \| offer.accepted opens benefit enrollment |
-| `job_offers` | seeds | `compensation_statements` | one_to_one | required | cross \| ATS→COMP-MGMT \| offer.signed seeds first compensation statement |
-| `candidates` | becomes | `employees` | one_to_one | required | cross \| ATS→HCM \| candidate.hired creates employee record; identity handoff |
-| `job_offers` | spawns pre-employee record | `pre_employees` | one_to_one | required | Triggered on job_offer.accepted; the pre-employee record is the post-offer paperwork shell. |
-| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | Candidate identity continues into the pre-employee record; promoted to employees on activation. |
-| `labor_market_benchmarks` | calibrates | `salary_bands` | many_to_many | optional | cross \| SWP→COMP-MGMT \| labor_market_benchmark.refreshed calibrates salary_bands. |
+| `salary_bands` | anchors | `hcm_positions` | one_to_many | optional | - |
+| `salary_bands` | bands | `job_profiles` | one_to_many | optional | - |
+| `skill_profiles` | feeds | `candidates` | one_to_many | optional | - |
+| `job_requisitions` | receives | `job_applications` | one_to_many | required | - |
+| `job_postings` | is applied to via | `job_applications` | one_to_many | required | - |
+| `candidate_referrals` | introduces | `candidates` | one_to_many | required | - |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | required | - |
+| `recruitment_agencies` | sources | `candidates` | one_to_many | required | - |
+| `recruitment_events` | attracts | `candidates` | one_to_many | required | - |
+| `talent_pools` | groups | `candidates` | many_to_many | required | - |
+| `job_applications` | schedules | `interviews` | one_to_many | required | - |
+| `job_applications` | requires | `candidate_assessments` | one_to_many | required | - |
+| `job_offers` | is contingent on | `background_checks` | one_to_many | required | - |
+| `job_offers` | spawns | `onboarding_journeys` | one_to_one | required | - |
+| `job_offers` | triggers | `benefit_enrollments` | one_to_one | required | - |
+| `job_offers` | seeds | `compensation_statements` | one_to_one | required | - |
+| `candidates` | becomes | `employees` | one_to_one | required | - |
+| `job_offers` | spawns pre-employee record | `pre_employees` | one_to_one | required | - |
+| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | - |
+| `labor_market_benchmarks` | calibrates | `salary_bands` | many_to_many | optional | - |
 
 ## 6. Cross-domain context
 

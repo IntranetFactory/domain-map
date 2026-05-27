@@ -1,0 +1,31 @@
+IGA full-scope loader starting...
+
+=== Phase 1: A1 domain business_logic em-dash patch ===
+  PATCHed domains.business_logic
+
+=== Phase 2: A2 capabilities + capability_domains ===
+  = /capabilities: 607 present, none missing
+  = /capability_domains: 672 present, none missing
+
+=== Phase 3: A3 vendors + solutions + solution_domains ===
+  = /vendors: 712 present, none missing
+  = /solutions: 878 present, none missing
+  = /solution_domains: 1244 present, none missing
+
+=== Phase 4: M1-M6 modules + capabilities + data_objects + starter ===
+  = /domain_modules: 147 present, none missing
+  = /domain_module_capabilities: 276 present, none missing
+  = /domain_module_data_objects: 750 present, none missing
+52 |     new Response(proc.stdout).text(),
+53 |     new Response(proc.stderr).text(),
+54 |   ]);
+55 |   const exitCode = await proc.exited;
+56 |   if (exitCode !== 0) {
+57 |     throw new Error(`semantius call failed (exit ${exitCode}): ${stderr}\n${json.slice(0, 400)}`);
+                   ^
+error: semantius call failed (exit 4): Error: (PGRST205) Could not find the table 'public.domain_starter_modules' in the schema cache
+
+{"method":"GET","path":"/domain_starter_modules?select=domain_id,domain_module_id&limit=10000"}
+      at call (C:\dev\domain-map\.tmp_deploy\load_iga_full_2026_05_26.ts:57:15)
+
+Bun v1.3.12 (Windows arm64)

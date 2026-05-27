@@ -1,5 +1,7 @@
 # plan-modules.md — Modules as the deployment unit
 
+> **Starter-kit section superseded (2026-05-26).** Section 3 ("Starter junction") and every other passage in this plan that references the `domain_starter_modules` editorial junction is **obsolete**. The junction was retired and the catalog now treats starter kits as first-class deployable units (`module_kind='starter'` discriminator on `domain_modules`). The current contract lives in [plan-starter-kits.md](plan-starter-kits.md) and [SKILL.md Rule #19](.claude/skills/domain-map-analyst/SKILL.md). Read the rest of this plan as historical record of the modular pass; do not load anything against the retired junction.
+
 > **Naming note (2026-05-23):** the catalog table is `domain_modules` (and junctions `domain_module_capabilities`, `domain_module_data_objects`, `domain_module_host_domains`). The bare table name `domain_modules` collides with the Semantius platform's own `domain_modules` table (the entity-grouping concept every Semantius entity belongs to), so the catalog uses the `domain_` prefix — same shape as `domain_data_objects`. FK columns referencing the catalog modules table are `domain_module_id`. The catalog *concept* is still called "a module" in prose; only the table/column identifiers carry the prefix. See §4.1 for the schema shapes.
 
 > **Status:** design intent (draft). Operational status (what's done, what's next) lives in [plan-master-tasks.md](plan-master-tasks.md) once execution starts.

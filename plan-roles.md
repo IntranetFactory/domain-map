@@ -234,7 +234,7 @@ Three queries fall out of the `role_modules` junction. The third is the genuinel
 |---|---|---|
 | **Modules per role** | `role_modules WHERE role_id = X` | "Which modules does the Recruiter touch?" — populates the per-role view in fact sheets, deployer's "what does this role need access to" answer. |
 | **Roles per module** | `role_modules WHERE domain_module_id = X` | "Who needs `ATS-OFFERS` access?" — provisioning audits, "if we deprecate this module, who's affected." |
-| **Minimum module set for a role-set** | `SELECT DISTINCT domain_module_id FROM role_modules WHERE role_id IN (...) AND interaction_level = 'primary'` | "Customer wants Recruiter + Hiring Manager + Coordinator roles → install these N modules." The deployer recommendation that complements the editorial `domain_starter_modules`. |
+| **Minimum module set for a role-set** | `SELECT DISTINCT domain_module_id FROM role_modules WHERE role_id IN (...) AND interaction_level = 'primary'` | "Customer wants Recruiter + Hiring Manager + Coordinator roles → install these N modules." The deployer recommendation that complements the first-class starter-kit modules. |
 
 ### 5.2 Two complementary on-ramps
 
@@ -242,10 +242,10 @@ The role-union query (5.1 row 3) is one of **two complementary on-ramps** into t
 
 | On-ramp | Source | Buyer state | Answer |
 |---|---|---|---|
-| **Editorial starter** | `domain_starter_modules` (per [`plan-modules.md` §3](plan-modules.md)) | "I'm new to ATS, where do I begin?" | Editorial recommendation per domain: install these N modules first. |
+| **Starter-kit module** | `domain_modules WHERE module_kind='starter'` (per [SKILL.md Rule #19](.claude/skills/domain-map-analyst/SKILL.md) and [plan-starter-kits.md](plan-starter-kits.md)) | "I'm new to ATS, where do I begin?" | Install one starter-kit module that embeds the minimum data_objects across the market; upgrade later by installing the relevant full modules. |
 | **Role-driven** | `role_modules` filtered to `interaction_level='primary'` | "I know I need Recruiter + Hiring Manager + Coordinator." | Union of `primary` modules across the named roles → minimum module set that supports them all. |
 
-Both belong in the catalog because they answer different buyer states. A first-time buyer browsing "ATS" lands on the editorial starter. A buyer who arrived with a clear team-shape gets the role-union. They converge for common cases and diverge at the edges — the editorial starter is conservative; the role-union is bounded only by what the named roles actually need.
+Both belong in the catalog because they answer different buyer states. A first-time buyer browsing "ATS" lands on the starter-kit module. A buyer who arrived with a clear team-shape gets the role-union. They converge for common cases and diverge at the edges, the starter kit is the lightest path; the role-union is bounded only by what the named roles actually need.
 
 ---
 

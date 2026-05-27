@@ -101,6 +101,7 @@ type ModuleRow = {
   domain_module_name: string;
   domain_id: number | null;
   description: string;
+  module_kind: "full" | "starter";
 };
 
 const allDomains: Domain[] = await pg(
@@ -128,7 +129,7 @@ const USERS_ID = USERS?.id ?? -1;
 
 const allModules: ModuleRow[] = await pg(
   "GET",
-  "/domain_modules?select=id,domain_module_code,domain_module_name,domain_id,description&order=domain_module_code.asc&limit=10000",
+  "/domain_modules?select=id,domain_module_code,domain_module_name,domain_id,description,module_kind&order=domain_module_code.asc&limit=10000",
 ) ?? [];
 const modulesById = new Map<number, ModuleRow>(allModules.map((m) => [m.id, m]));
 const modulesByCode = new Map<string, ModuleRow>(allModules.map((m) => [m.domain_module_code, m]));

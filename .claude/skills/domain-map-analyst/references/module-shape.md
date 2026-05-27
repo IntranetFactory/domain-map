@@ -404,9 +404,10 @@ See [SKILL.md § Agent tooling layer](../SKILL.md#agent-tooling-layer-4-entities
 
 | Field | Format | Required | Notes |
 |---|---|---|---|
-| `domain_module_code` | text | yes | Natural key. SHOUTY-KEBAB-CASE, format `<DOMAIN>-<NOUN>` (`ATS-CANDIDATE-CRM`, `ITSM-INCIDENT-MGMT`) or bare-noun for cross-cutting (`KNOWLEDGE-MGMT`, `APPROVAL-WORKFLOW`) |
+| `domain_module_code` | text | yes | Natural key. SHOUTY-KEBAB-CASE. For `module_kind='full'`: `<DOMAIN>-<NOUN>` (`ATS-CANDIDATE-CRM`, `ITSM-INCIDENT-MGMT`) or bare-noun for cross-cutting (`KNOWLEDGE-MGMT`, `APPROVAL-WORKFLOW`). For `module_kind='starter'`: free-form per Rule #19 (`CRM-LITE`, `REAL-ESTATE-AGENT`, `SMB-CRM`). |
 | `domain_module_name` | text | yes | Human-friendly label (`Candidate CRM`, `Incident Management`) |
-| `domain_id` | reference → `domains` | no | Primary host. Nullable for genuinely-cross-cutting modules with no obvious home (`APPROVAL-WORKFLOW`). Cross-cutting modules with one obvious home use this column AND list additional hosts in `domain_module_host_domains`. |
+| `domain_id` | reference → `domains` | no | Primary host. Nullable for cross-cutting full modules with no obvious home (`APPROVAL-WORKFLOW`) and for persona-shaped starter kits (`REAL-ESTATE-AGENT`). Cross-cutting modules with one obvious home use this column AND list additional hosts in `domain_module_host_domains`. Validation rule `full_module_requires_domain` rejects NULL when `module_kind='full'`. |
+| `module_kind` | enum | yes | `full` / `starter`. Default `full`. Starters never master data_objects (platform-side rule `starter_no_master` on `domain_module_data_objects` enforces this). See Rule #19. |
 | `description` | multiline | yes | |
 | `record_status` | enum | yes | Default `new` |
 
@@ -444,18 +445,6 @@ This is now the **authoritative** junction for module-level data_object ownershi
 | `record_status` | enum | yes | Default `new` |
 
 Records hosts beyond the primary `domain_modules.domain_id`. Convention: never both — if a module has a primary `domain_id`, host_domains rows name only the OTHER hosts.
-
-### `domain_starter_modules` (junction: `domains` ↔ `domain_modules`)
-
-| Field | Format | Required | Notes |
-|---|---|---|---|
-| `domain_id` | parent → `domains` | yes | |
-| `domain_module_id` | parent → `domain_modules` | yes | |
-| `position` | int | yes | 1-based ordering of the recommended-install sequence |
-| `notes` | multiline | yes | Editorial copy emitted verbatim by the fact sheet generator ("Start here. Provides candidates, prospects, sourcing.") |
-| `record_status` | enum | yes | Default `new` |
-
-Editorial recommendation, not a gate, not a billing-package. Required on every domain with ≥3 capabilities per Rule #14. Domains with <3 capabilities have zero rows here.
 
 ---
 
