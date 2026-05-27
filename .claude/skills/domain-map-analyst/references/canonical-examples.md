@@ -1,6 +1,6 @@
 # Canonical multi-master examples
 
-Landmark rows in `domain_data_objects` that other research should reason about by analogy. Each entry shows the slice each domain masters or contributes — the part that goes in the junction `notes` column when the row is loaded.
+Landmark rows in `domain_data_objects` that other research should reason about by analogy. Each entry shows the slice each domain masters or contributes — used as authoring reference for the *role/necessity decision*, not as content to paste into a notes column (see SKILL.md Rule #15: notes are empty by default).
 
 When you encounter a new data_object that "feels like one of these", lean on the analogous decomposition rather than reinventing.
 

@@ -125,7 +125,7 @@ Field-level shell contracts (which columns each embedded_master rendition includ
 
 The catalog (`domain_data_objects`, `domain_module_data_objects`) records *that* a module embedded_masters a data_object and *what role* it plays — it does not duplicate the field-level shape.
 
-> **History.** Prior to 2026-05-23 the catalog carried a `data_objects.minimum_embedded_shape` markdown column intended to declare embed-time required fields. That column was dropped after the field-level contract was correctly relocated to the deployer; the original authoring notes for the 9 data_objects that had shapes are preserved as archived annotations in `data_objects.notes`.
+> **History.** An earlier `data_objects.minimum_embedded_shape` markdown column intended to declare embed-time required fields was dropped after the field-level contract was correctly relocated to the deployer.
 
 ---
 
@@ -139,7 +139,7 @@ Starter kits are `domain_modules` rows with `module_kind='starter'`. Authoring c
 - Starters carry **exactly one `skill_type='system'` skill** (Rule #17 applies identically). Tool floor: one `query_<entity>` per embedded master plus light mutates where the workflow supports them.
 - Upgrade behavior: when the tenant later installs the full module whose data_object the starter embedded, the embedded shell deterministically demotes via the existing `embedded_master`-with-canonical-master rule. No tenant-side data migration. Starter permissions stick around after upgrade (provisional, revisit after first real starter ships); tenant manages skill cleanup.
 
-The prior editorial `domain_starter_modules` junction (one recommended-install ordered list per domain) is gone, deleted 2026-05-26. It was misshapen: it recommended **full modules** as the entry point, which still meant installing N full modules with all their lifecycle / permission / skill surface, no "lite" path for a small org. First-class starter modules close that gap.
+The prior editorial `domain_starter_modules` junction (one recommended-install ordered list per domain) was retired. It was misshapen: it recommended **full modules** as the entry point, which still meant installing N full modules with all their lifecycle / permission / skill surface, no "lite" path for a small org. First-class starter modules close that gap.
 
 ---
 
@@ -155,7 +155,7 @@ The prior editorial `domain_starter_modules` junction (one recommended-install o
 
 - ❌ Adding a `domain_module_dependencies` table or any DAG-shaped relationship between modules. The data shape (`domain_module_data_objects.role`) IS the dependency.
 - ❌ Hand-editing `domain_data_objects` for a domain that has modules. It's a derived rollup once modules exist — edit `domain_module_data_objects` instead.
-- ❌ Cloning a cross-cutting module per host (e.g. `ITSM-KNOWLEDGE` + `CSM-KNOWLEDGE` + `HRSD-KNOWLEDGE` instead of one `KNOWLEDGE-MGMT` with three `domain_module_host_domains` rows). Per-host variants live on `skill_tools.notes` or `domain_module_host_domains.notes`, never duplicated module rows.
+- ❌ Cloning a cross-cutting module per host (e.g. `ITSM-KNOWLEDGE` + `CSM-KNOWLEDGE` + `HRSD-KNOWLEDGE` instead of one `KNOWLEDGE-MGMT` with three `domain_module_host_domains` rows). One module row, multiple host rows.
 - ❌ Domain-prefixing a permission code on a cross-cutting module (`itsm:publish_article`). The prefix is the **module's** `domain_module_code`, which is `knowledge-mgmt:publish_article` regardless of which host the deploy lives on.
 - ❌ Omitting `domain_module_id` on a workflow-gate lifecycle state. NULL is only correct for states always reachable when the master is installed; module-specific states need the FK set.
 - ❌ Listing every workflow gate in a role's `role_permissions` bundle. Use the tier-level grant + `permission_hierarchy` auto-expansion.

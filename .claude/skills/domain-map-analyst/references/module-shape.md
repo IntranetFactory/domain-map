@@ -42,7 +42,7 @@ Label column: `domain_name` (auto-managed by `create_entity`; set it once at ent
 | `description` | multiline | yes | |
 | `vendor_url` | url | yes | Canonical homepage. Empty string acceptable |
 | `headquarters_country` | string | yes | E.g. "USA", "Germany", "Netherlands" |
-| `notes` | multiline | yes | Acquisition history goes here |
+| `notes` | multiline | yes | Empty by default — see SKILL.md Rule #15. |
 | `record_status` | enum | yes | Default `new` |
 
 Label column: `vendor_name`.
@@ -198,12 +198,12 @@ The data-silo map: rows here with the same `data_object_id` across multiple `sol
 |---|---|---|---|
 | `domain_id` | parent → `domains` | yes | |
 | `data_object_id` | parent → `data_objects` | yes | |
-| `role` | enum | yes | `master` / `embedded_master` / `contributor` / `consumer` / `derived`. Default `master`. Multi-master rows are expected — different domains master different slices of shared objects. Capture the slice in `notes`. Multi-master count = Signal 1; embedded_master count = Signal 1b of the platform-vs-silos analysis. |
+| `role` | enum | yes | `master` / `embedded_master` / `contributor` / `consumer` / `derived`. Default `master`. Multi-master rows are expected — different domains master different slices of shared objects. Multi-master count = Signal 1; embedded_master count = Signal 1b of the platform-vs-silos analysis. |
 | `necessity` | enum | yes | `required` / `optional`. Default `required`. `master` rows always required. `embedded_master`/`contributor`/`consumer` rows are optional when the workflow tolerates absence in some deployments. |
-| `notes` | multiline | yes | Free-text: which slice of the data object this domain masters/contributes/consumes. For `embedded_master` rows, also state the demotion path ("X local-masters Y when no Z is deployed; reads from Z when present"). |
+| `notes` | multiline | yes | Empty by default — see SKILL.md Rule #15. |
 | `record_status` | enum | yes | Default `new` |
 
-Migrated from `mastery_role` (values `primary` / `secondary` / `derived`) on 2026-05-18. `primary` mapped to `master`. The old `secondary` value was a junk drawer; the new enum forces an explicit choice across five roles.
+Migrated from an earlier `mastery_role` enum (`primary` / `secondary` / `derived`). `primary` mapped to `master`; the old `secondary` was a junk drawer. The current five-role enum forces an explicit choice.
 
 ### `domain_regulations`
 
@@ -314,7 +314,7 @@ Label column: `alias_name`. Three flavors:
 
 ## Agent tooling layer
 
-> Added 2026-05-21 (merged from the rolled-back `tool_catalog` sibling-module experiment). These four entities live in `domain_map` and join through `data_objects`, `domains`, and `solutions`. The 100% Semantius derivation reads through `solutions.solution_kind` (above).
+> These four entities live in `domain_map` and join through `data_objects`, `domains`, and `solutions`. The 100% Semantius derivation reads through `solutions.solution_kind` (above).
 
 ### `tools`
 
@@ -358,13 +358,13 @@ Label column: `tool_solution_label` (computed: `<tool_name> via <solution_name>`
 |---|---|---|---|
 | `skill_id` | parent → `skills` | yes | Cascade on delete |
 | `tool_id` | parent → `tools` | yes | Cascade on delete |
-| `requirement_level` | enum | yes | Default `required`. Values: `required` (skill cannot function without), `optional` (improves; degrades gracefully without), `fallback` (invoked only when a preferred tool is unavailable) |
-| `notes` | multiline | yes | Workflow context, e.g. "called per matched invoice to notify the SaaS owner" |
+| `requirement_level` | enum | yes | Default `required`. Values: `required` (skill cannot function without), `optional` (improves; degrades gracefully without). |
+| `notes` | multiline | yes | Empty by default — see SKILL.md Rule #15. |
 | `record_status` | enum | yes | Default `new` |
 
 Label column: `skill_tool_label` (computed: `<skill_name> needs <tool_name>`; auto-disabled in the UI). Intended-unique on `(skill_id, tool_id)` — caller-side dedup.
 
-**Semantius coverage rollup (revised 2026-05-21):** Semantius coverage is intrinsic to `tools.operation_kind`. The enum partitions:
+**Semantius coverage rollup:** Semantius coverage is intrinsic to `tools.operation_kind`. The enum partitions:
 
 - **Semantius-covered (today):** `query`, `mutate` (delivered by CRUD + cube)
 - **Not Semantius-covered (today):** `side_effect`, `compute` (no native email / SMS / AI / web-automation)
@@ -392,7 +392,7 @@ OOTB Semantius % for domain X =
 
 The diagnostic query (which tools force a skill below 100%) is the inverse: list Z's required tools whose `operation_kind` is NOT Semantius-covered AND has no `tool_solutions` row in Y's portfolio.
 
-See [SKILL.md § Agent tooling layer](../SKILL.md#agent-tooling-layer-4-entities-added-2026-05-21) and [semantius-coverage-rollup.md](semantius-coverage-rollup.md) for the full rationale (per-tool aggregation, why no Semantius row in `solutions`).
+See [SKILL.md § Agent tooling layer](../SKILL.md#agent-tooling-layer-4-entities) and [semantius-coverage-rollup.md](semantius-coverage-rollup.md) for the full rationale (per-tool aggregation, why no Semantius row in `solutions`).
 
 ---
 

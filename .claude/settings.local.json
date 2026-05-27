@@ -47,10 +47,13 @@
       "Bash(echo ']}')",
       "Bash(tee c:\\\\tmp\\\\iga_load_2026_05_26.log)",
       "Bash(awk '$6==\"May\" && $7==\"26\"')",
-      "Bash(sort -k8)"
+      "Bash(sort -k8)",
+      "Bash(rm \"c:/dev/domain-map/.claude/skills/domain-map-analyst/references/jwt-routing-incidents.md\")",
+      "Bash(rm \"c:/dev/domain-map/.claude/skills/domain-map-analyst/references/decisions.md\" \"c:/dev/domain-map/.claude/skills/domain-map-analyst/references/note-pollution-incidents.md\")"
     ],
     "additionalDirectories": [
-      "\\tmp"
+      "\\tmp",
+      "c:\\dev\\domain-map\\.claude\\skills\\domain-map-analyst\\references"
     ]
   }
 }

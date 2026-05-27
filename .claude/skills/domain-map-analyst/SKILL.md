@@ -24,6 +24,23 @@ For platform mechanics (CLI auth, PostgREST encoding, filter syntax, sqlToRest, 
 
 ---
 
+## Authoring discipline for this skill
+
+SKILL.md and its `references/` files are loaded on every invocation of this skill (or, for the references, fetched on-demand and read in full). Every word costs context, on every run, forever. When editing the skill, follow these rules; they are why the file is the size it is and not double that.
+
+1. **Rules state what to do. Not when or why we decided.** A rule like "every domain has ≥1 module" stands on its own. "Rule added 2026-05-23 after the ATS audit miss" adds nothing to how the agent applies it. Drop the trailer.
+2. **No dates inline.** No `2026-XX-XX`, no "as of last month", no "recently retired". If a rule changed, the rule's current text is what matters. The *when* and *why-then* belong in [references/skill-changelog.md](references/skill-changelog.md).
+3. **No session jargon.** Project phase codes (`P2.5A`, `Wave 2`, `batch 1`, `first run`), internal sprint names, and "the X load on date Y" are unreadable to a future agent with no session memory. Strip them; restate the abstract finding.
+4. **No empirical snapshots that drift.** "As of <date> this query returns 11 rows" is wrong by the next morning. Tell the agent to run the query; the query is the source of truth.
+5. **Empirical *patterns* are fine.** Tables of recurring shapes (high-friction handoff archetypes, cross-tranche external tools) transfer regardless of when they were observed. Keep the table, drop the date trailer.
+6. **The rationale that earns its place** is the kind that helps edge-case judgment: *"This rule exists because X collapses into Y when Z, so when you hit Z, prefer Y."* Not: *"We had a bad time on date D."*
+7. **When you make a meaningful change to the skill — adding a rule, rescinding a license, splitting a phase — append a Decisions entry to [references/skill-changelog.md](references/skill-changelog.md).** That's the canonical home for war stories, dated context, and "why we decided this and not the alternative". The skill stays lean; the log carries the audit trail.
+8. **Same rules apply to `references/*.md`.** They're loaded in full when consulted; bloat costs context the same way.
+
+If you find yourself writing "rule added because…" or "when X happened on Y…", stop. The rule itself is what the agent runs on. The story goes to the changelog.
+
+---
+
 ## Hard rules (read before any write)
 
 These rules exist because they have already been broken in this project. They are non-negotiable; explain them to the user if there's pushback, don't quietly bypass them.
@@ -99,7 +116,7 @@ Every loader in this project is a `.ts` file run with `bun run <path>`. Stick to
 - **One-line semantius reads from the agent's tool call are fine** — `semantius call crud postgrestRequest '{"method":"GET","path":"/..."}'` via Bash is the canonical read pattern. The rule is about *loaders* (multi-step write orchestration), not about every CLI invocation.
 - **No Python for verification / count summaries either.** "Just piping JSON into `python -c '...'` for a quick count" is exactly the door the rule slams. If a count or per-key tally is worth seeing, do it in TypeScript (`bun run -e '...'` or a `.ts` file), via `jq`, or with PostgREST aggregation params (`Prefer: count=exact`, `select=count(*)`). Never reach for Python "just this once."
 
-When a subagent is given a research/load task, instruct it explicitly to produce TypeScript output and to never propose Python. Phase-B Lite batch 1 (2026-05-22) had no Python issues only because the prompts didn't open the door to it; future prompts should slam the door explicitly.
+When a subagent is given a research/load task, instruct it explicitly to produce TypeScript output and to never propose Python. Slam the door explicitly in the prompt; relying on the subagent to "know" Python is off-limits has failed in the past.
 
 ### 5. Use stdin or chunked inserts on Windows.
 
@@ -110,37 +127,23 @@ When a subagent is given a research/load task, instruct it explicitly to produce
 
 The reference loader at [.tmp_deploy/load_research.ts](.tmp_deploy/load_research.ts) does both — and the canonical `insert()` helper lives in [references/loader-idiom.md](references/loader-idiom.md) (around line 110). **Start from one of those for any greenfield bulk insert.** Common failure mode: copying a per-row pattern (e.g. from `rename_data_object.ts`, which has its own pre-flight per row) into a greenfield loader. That turns N inserts into N subprocess spawns at ~300ms each — 1,000 rows = 5+ minutes when it should be sub-second. Per-row patterns are correct only when each row needs its own pre-flight against live state; for plain "insert a list of new rows," always use the chunked array-body POST.
 
-### 6. JWT-audience errors: surface the full response verbatim, including the failing tenant ID. Then diagnose.
+### 6. JWT-audience errors: STOP, surface the verbatim error, wait for the user.
 
-When a `semantius` call fails with `JWT does not have authorization to access this resource: required audience not found, received ["tenant://<id>"]`, the agent's first obligation is to **show the user the complete error string verbatim, including the `tenant://<id>` value the server received.** Do not summarize, paraphrase, or drop the tenant ID. The tenant ID is the only piece of evidence that distinguishes the possible root causes; eliding it forces the user to re-run the call themselves to see it.
+When a `semantius` call fails with `Error: This JWT does not have authorization to access this resource: required audience not found, received [...]`, this is a known server-side bug. Do not diagnose, do not retry in a loop, do not silently swallow.
 
-**Mandatory capture format** (paste into the response on every JWT-audience failure):
+**Do this, in order:**
 
-```
-JWT-audience failure
-  ts: <ISO timestamp>
-  call: semantius call crud <method> '<args>'
-  received audience: tenant://<id-from-error>
-  full error: <verbatim error string>
-```
+1. **Stop.** Don't proceed with the next step of whatever you were doing.
+2. **Surface the complete error string verbatim** to the user, including the `tenant://<id>` value and the command that triggered it.
+3. **Wait for user confirmation** before continuing. The user decides whether to retry, switch approach, or abort.
 
-Also append the same entry to [references/jwt-routing-incidents.md](references/jwt-routing-incidents.md) (create the file with a brief header if it doesn't exist yet) so the incident history is committed and reviewable. Memory is off-limits per [CLAUDE.md](../../../CLAUDE.md) — committed file or nothing.
+Do not append the error to any file. The incidents are logged server-side.
 
-**Then** diagnose. The known causes, in order of historical frequency:
+**Other rules (still apply):**
 
-1. **Wrong cwd.** The CLI reads `SEMANTIUS_API_KEY` / `SEMANTIUS_ORG` from `.env` in the **current working directory**. The project root has the correct `.env`; subfolders like `.claude/skills/domain-map-analyst/`, `.tmp_deploy/`, etc. do not. If you `cd` into a subfolder before invoking the CLI (or before `bun run`-ing a loader script that spawns it), the CLI falls back to a default config pointing at a different tenant. Confirm by checking `pwd` and `ls .env`.
-2. **Intermittent server-side routing.** The CLI's MCP transport sometimes routes a request to a tenant the project's API key does not authorize, even when cwd is correct and the `.env` is unchanged. Confirmed pattern (2026-05-23): consecutive `getCurrentUser` calls from the project root with a valid `.env` failed against tenant `1VLl6gULTCGtac6NXImwJewYEqEy061J`, while calls minutes earlier and later succeeded against the project tenant. A simple retry after a short pause is the usual fix; if it keeps failing, surface to the user — don't quietly retry in a loop.
-3. **Stale schema cache.** Different audience IDs on consecutive calls (load-balanced across wrong tenants) point at a routing issue rather than cache, but a single `PGRST205 Could not find the table 'public.<table>' in the schema cache` on the first request after a tenant misroute can also surface. Re-running usually clears it.
-4. **API-key rotation.** Rare. If `getCurrentUser` succeeds but returns the wrong `email` / `semantius_org` (e.g. `admin@test.com` instead of the project user), the `.env` has been pointed at a different org — check `.env` contents.
-
-**Rules:**
-
-- **Never silently swallow a JWT error.** The full error string (with the `tenant://<id>` value) goes into the user-visible response on the first occurrence in any session. Repeated occurrences in the same session need at minimum the new tenant ID and timestamp.
-- Never `cd` into `.claude/skills/...` or `.tmp_deploy/` before running anything that calls `semantius`.
-- Invoke loader scripts with an absolute path from the project root: `bun run "<absolute-path-to-loader>"`. Never `cd <skill-folder> && bun run ...`.
-- Sanity-check ambiguous cases with `semantius call crud getCurrentUser '{}'` and confirm the `email` and `semantius_org` match the expected project tenant.
-
-**History:** rule originally added after the Salesforce platform load, where `cd`-ing into the skill folder routed every call to the `tests` org user (`admin@test.com`). Expanded 2026-05-23 after JWT failures recurred from the correct cwd with a valid `.env`, against tenant `1VLl6gULTCGtac6NXImwJewYEqEy061J` — the original rule's "always cwd" framing was misleading. The agent at the time also failed to surface the tenant ID in its first user-visible report, which is why the capture format is now mandatory.
+- Never `cd` into `.claude/skills/...` or `.tmp_deploy/` before running anything that calls `semantius` — the CLI reads `.env` from cwd.
+- Invoke loader scripts with an absolute path from the project root: `bun run "<absolute-path-to-loader>"`.
+- If you ever need to sanity-check the tenant: `semantius call crud getCurrentUser '{}'` and confirm `email` and `semantius_org` match the project.
 
 ### 7. Surface the UI link after any meaningful write.
 
@@ -228,7 +231,7 @@ When adding a new column to this catalog with an enum, copy the value vocabulary
 
 ### 14. Every domain has at least one full `domain_modules` row. Domains with ≥3 capabilities need ≥2 full modules.
 
-A `domains` row is a market entry, useful for SEO and analysis but **not deployable** on its own. The deployable unit is the **module** (`domain_modules`). Per project decision 2026-05-23, refined 2026-05-26:
+A `domains` row is a market entry, useful for SEO and analysis but **not deployable** on its own. The deployable unit is the **module** (`domain_modules`):
 
 - **Every `domains` row MUST have ≥1 `domain_modules` row with `module_kind='full'`.** No exceptions, including leadership-tier / aggregation-tier domains. If a market warrants a `domains` row at all, it has at least one full module: for narrowly-scoped domains that's a single module covering the whole market; for leadership-tier domains it's a "derived-signals" or "landing" module whose `domain_module_data_objects` may be empty but whose existence preserves the deploy-target contract.
 
@@ -248,9 +251,9 @@ A `domains` row is a market entry, useful for SEO and analysis but **not deploya
 
 ### 15. **Every `notes` column on every table is empty by default. NEVER populate any `notes` field without first surfacing the specific proposed text to the user and getting explicit per-row approval.**
 
-This rule has been violated **at least five times** across sessions, despite being stated. The 2026-05-26 MSP-PSA load triggered the fifth restatement; the rule was scoped too narrowly (only DMDO + relationships) and dozens of other SKILL.md passages actively told the agent to populate notes elsewhere (handoffs, starter modules, aliases, data_objects, skill_tools, solutions). All of those passages are now subordinate to this rule. **When Rule #15 contradicts any other instruction in this file, Rule #15 wins.**
+This rule has been violated repeatedly. Earlier versions were scoped too narrowly (only DMDO + relationships) while other SKILL.md passages actively told the agent to populate notes elsewhere (handoffs, starter modules, aliases, data_objects, skill_tools, solutions). All of those passages are now subordinate to this rule. **When Rule #15 contradicts any other instruction in SKILL.md or any `references/*.md` file, Rule #15 wins.**
 
-**Universal scope.** Every `notes` (and equivalently-named freeform-prose) column on every table in this catalog. That includes — but is not limited to:
+**Scope: columns whose name is exactly `notes`.** Not `_notes`-suffix columns like `condition_notes` — those are load-bearing schema content (the column's value IS the data), not commentary. The list below is every catalog column the rule covers today; new columns named `notes` join automatically.
 
 - `handoffs.notes` (NEVER add "until X is modularized" annotations on backfills or on new inserts without user approval; the prior write-time rule that licensed this is RESCINDED)
 - `domain_data_objects.notes`, `domain_module_data_objects.notes`
@@ -287,7 +290,7 @@ If a column is named `notes`, the default is empty string. Period.
 3. User approves the exact text (or rewrites it).
 4. Agent loads only the approved string. No batch-populating with templated wording.
 
-**Audit obligation.** When this rule is violated (and it WILL be violated again unless something changes), the first action is to revert the polluting writes and append to the "Note pollution incidents" log at [references/note-pollution-incidents.md](references/note-pollution-incidents.md). Surface what was written, on which rows, and which contradicting passage of SKILL.md (if any) was the rationalization. Then update SKILL.md to remove that passage's license.
+**Audit obligation.** When this rule is violated (and it WILL be violated again unless something changes), the first action is to revert the polluting writes and append an entry to the Incidents section of [references/skill-changelog.md](references/skill-changelog.md). Surface what was written, on which rows, and which contradicting passage of SKILL.md (if any) was the rationalization. Then update SKILL.md to remove that passage's license.
 
 **Where the prior carve-outs went** (each used to license writes; all rescinded):
 
@@ -297,7 +300,7 @@ If a column is named `notes`, the default is empty string. Period.
 - skill_tools workflow-context notes: never auto-write.
 - Predecessor mention in `solutions.notes` after acquisition: only with explicit user approval of the wording.
 
-**If you find yourself reaching for prose to fill ANY column whose name contains `notes`, stop.** That impulse is the bug. The audit query for whether your load polluted notes is: `SELECT table_name, count(*) FROM all_notes_columns WHERE notes != '' AND created_at > '<load_start>'`. If that returns anything you didn't get user approval on, revert.
+**If you find yourself reaching for prose to fill any column whose name is exactly `notes`, stop.** That impulse is the bug. The audit query for whether your load polluted notes is: `SELECT table_name, count(*) FROM all_notes_columns WHERE notes != '' AND created_at > '<load_start>'`. If that returns anything you didn't get user approval on, revert.
 
 ### 16. Infrastructure masters are always `necessity: optional` on non-master rows.
 
@@ -323,7 +326,7 @@ A `domain_modules` row defines a deployable unit; a `system` skill defines what 
 
 **Audit blockers.** A `domain_modules` row with zero or >1 system skills fails F2; a system skill with zero `skill_tools` fails F3; a tool with an invalid `operation_kind` ↔ `data_object_id` pairing fails F4; an uncomputable Semantius score is the F5 rollup. Each blocks the per-domain audit until cured. See F2–F5 in the per-domain completeness checklist.
 
-**Why this rule exists:** as of 2026-05-25, only four domains (ATS, SMP, TALENT-MGMT, EMP-EXP) had any system skills loaded out of 65+ modularized domains. The per-domain audit ticked green on every other domain because the F-band only carried a legacy-cleanup check (F1), not a positive-existence check. The Semantius score, defined right there in the at-a-glance section, was uncomputable for the rest of the catalog and the gap went silent. CRM was the trigger case (5 modules, 0 skills, audit reported green).
+**Why this rule exists:** before F2-F5 became positive-existence checks, the per-domain audit could tick green on a domain with zero system skills (the F-band only carried a legacy-cleanup check). The Semantius score was then uncomputable but the gap went silent. F2-F5 close that.
 
 ### 18. Third-party names and trademarks belong only on commerce-shaped entities.
 
@@ -363,13 +366,13 @@ The single legitimate exception is acknowledging a predecessor inside `solutions
 
 **No vendor-landscape prose, in any form.** This forbids both named lists ("Vendors: Salesforce, ServiceNow, Workday") and anonymized variants ("Vendor landscape spans enterprise CRM suites, mid-market sales-cloud bundles, and SMB-focused pipeline tools" / "Served by a dedicated X vendor market, with adjacent coverage from broader Y suites" / "Pure-play vendors compete with suite-aligned modules"). The fix is to **delete the entire sentence**, not rewrite it generically. Who serves the market is structured data on `solutions` × `solution_domains`; it is never narrated in a description.
 
-**Anti-pattern (real, found 2026-05-26 on the LMS-COMPLIANCE-TRAINING blueprint):** "Specialised vendor market: KnowBe4, NAVEX, EVERFI, MetricStream, OneTrust, plus all general LMSs." The vendor list is exactly what `solution_domains → solutions` is for. Strip it from the description; the substrate stays vendor-neutral and the same information lives in the commerce layer where it can be updated structurally.
+**Anti-pattern (real):** "Specialised vendor market: KnowBe4, NAVEX, EVERFI, MetricStream, OneTrust, plus all general LMSs." The vendor list is exactly what `solution_domains → solutions` is for. Strip it from the description; the substrate stays vendor-neutral and the same information lives in the commerce layer where it can be updated structurally.
 
 **Authoring discipline.** Before any insert or PATCH on a forbidden-zone field, scan the proposed text for vendor and product names. The pattern is easy to fall into when paraphrasing a Gartner / Forrester market summary back into the description column — those summaries lead with the leader quadrant by name. Re-write to characterise the market by its capability shape and statutory anchors instead. When auditing existing rows, scan `description` / `notes` / `business_logic` columns for proper-noun company names; flag anything that isn't a regulator or a generic market term.
 
 ### 19. Starter kits are a first-class deployable unit that masters zero data_objects.
 
-Decided 2026-05-26. Starter kits used to be an editorial junction (`domain_starter_modules`) recommending an install order over full modules. That shape did not work: installing a starter still meant installing N full modules with everything they carry (data_objects, lifecycle states, workflow-gate permissions, system skills), which is too heavy for a small org and offers no "lite" path. The new shape: starter kits are deployable units themselves, distinguished from full modules by a `module_kind` discriminator on `domain_modules`.
+Starter kits used to be an editorial junction (`domain_starter_modules`) recommending an install order over full modules. That shape did not work: installing a starter still meant installing N full modules with everything they carry (data_objects, lifecycle states, workflow-gate permissions, system skills), which is too heavy for a small org and offers no "lite" path. The new shape: starter kits are deployable units themselves, distinguished from full modules by a `module_kind` discriminator on `domain_modules`.
 
 **Definition.** A `domain_modules` row with `module_kind='starter'`. Behaves like any other module for the deployer, the emitter, the loader idiom, and the skill / tool / permission layers, with the six invariants below.
 
@@ -445,9 +448,9 @@ Decided 2026-05-26. Starter kits used to be an editorial junction (`domain_start
 |---|---|
 | `data_object_aliases` | Synonym, industry term, or solution-specific name for a data object (e.g. Customer → Patient in Healthcare, Customer → Account in Salesforce) |
 
-### Agent tooling layer (4 entities, added 2026-05-21)
+### Agent tooling layer (4 entities)
 
-> These entities live in `domain_map` because their FKs are too tightly coupled to the catalog to justify a separate module: `tools.data_object_id → data_objects`, `skills.domain_id → domains`, `tool_solutions.solution_id → solutions`. One module, one analyst skill. (An earlier `tool_catalog` sibling-module experiment was rolled back for this reason — decision 2026-05-21.)
+> These entities live in `domain_map` because their FKs are too tightly coupled to the catalog to justify a separate module: `tools.data_object_id → data_objects`, `skills.domain_id → domains`, `tool_solutions.solution_id → solutions`. One module, one analyst skill.
 
 | Table | Holds | Qualifier / discriminator |
 |---|---|---|
@@ -483,7 +486,7 @@ Conventions:
 - For a per-domain score, aggregate `skill_tools` across all system skills for modules where `domain_modules.domain_id = X` (i.e. union the numerators and denominators, then divide). Do not average per-module scores — that biases toward small modules.
 - A score below 100% always points at specific tool rows: `SELECT tool_id, tool_name, coverage_tier FROM skill_tools JOIN tools WHERE coverage_tier != 'platform'`. Surface those tools by name when reporting the score — the gap is the actionable information, not the percentage.
 
-### Role layer (1 new entity + 3 extended built-ins, added 2026-05-23)
+### Role layer (1 new entity + 3 extended built-ins)
 
 Roles are the first-class home for **cross-module permission bundling** — what per-module `:admin` / `:manage` / `:read` rollups can't express. A Recruiter touches 6 ATS modules; a Service Desk Agent touches 4+ ITSM modules. The catalog captures both the role and its access bundle. Long-form rules and worked examples live in [references/roles.md](references/roles.md).
 
@@ -527,9 +530,9 @@ For any task that fits this skill — "research vendors for X", "is Y a domain?"
 
    **The audit query that works:** for a domain `X`, query `/solution_domains?domain_id=eq.<X>&select=coverage_level,solutions(solution_name)` and `/capability_domains?domain_id=eq.<X>&select=capabilities(capability_code)`. This returns every solution and capability already linked to that domain, regardless of what they're named.
 
-   **🛑 Verify against live state, NEVER infer from deploy scripts.** The catalog evolves; `.tmp_deploy/*.ts` loader scripts capture a snapshot at write-time and immediately drift. Cluster-inventory work that reads from a deploy script (instead of querying `/domains` + `/domain_data_objects` + `/handoffs` live) will systematically over-report missing entities — a sub-domain may have been loaded after the script was written. The Wave 2 P1.5c Procurement pass surfaced this: an inventory agent reported SUP-LIFE and VMS as having "zero mastered data_objects" by reading `load_itsm_itam_saas_clm_s2p.ts`; live state showed both already had 4–6 master `data_objects`. The rule: **`postgrestRequest` against live tables is the only authoritative inventory source.** Deploy scripts are useful for understanding *intent at write-time* but never for current state.
+   **🛑 Verify against live state, NEVER infer from deploy scripts.** The catalog evolves; `.tmp_deploy/*.ts` loader scripts capture a snapshot at write-time and immediately drift. Cluster-inventory work that reads from a deploy script (instead of querying `/domains` + `/domain_data_objects` + `/handoffs` live) will systematically over-report missing entities — a sub-domain may have been loaded after the script was written. The rule: **`postgrestRequest` against live tables is the only authoritative inventory source.** Deploy scripts are useful for understanding *intent at write-time* but never for current state.
 
-   **The audit query that fails silently:** searching `/solutions?or=(solution_name.ilike.*foo*,solution_name.ilike.*bar*,...)` for vendor names you happen to think of. This only catches names you already had in mind — it will miss every solution whose name doesn't match your pattern list. The LCAP backfill of 2026-05-21 discovered that ServiceNow App Engine and Salesforce Platform were already linked to LCAP but had been missed by the initial name-pattern audit, leaving their capability matrices empty. Always audit by `domain_id`, then cross-reference against Gartner / Forrester leader lists for the market to find any genuine gaps.
+   **The audit query that fails silently:** searching `/solutions?or=(solution_name.ilike.*foo*,solution_name.ilike.*bar*,...)` for vendor names you happen to think of. This only catches names you already had in mind — it will miss every solution whose name doesn't match your pattern list. Always audit by `domain_id`, then cross-reference against Gartner / Forrester leader lists for the market to find any genuine gaps.
 
 2. **Classify before naming.** When the user introduces a new concept, apply the point-solution-market test (rule #2) before deciding which table it belongs in. State your classification reasoning briefly so the user can correct it before you start writing.
 
@@ -577,10 +580,10 @@ For any task that fits this skill — "research vendors for X", "is Y a domain?"
 
    1. **`skills`** — one row per module with `skill_type='system'`, `domain_module_id` set, and a short `skill_name` like `<module_code>_agent` (e.g. `crm_acct_mgt_agent`). The skill encodes what an agent can do against that module's data and lifecycle.
    2. **`tools`** — JSON-RPC-shaped capability primitives keyed verb-first against the module's masters: `query_<entity>`, `create_<entity>`, `update_<entity>` for CRUD; `send_<message>`, `parse_<artifact>`, `match_<thing>_to_<thing>` for side-effect / compute work; `receive_<channel>` / `ingest_<source>` for inbound channels. Set `operation_kind` per the invariant in Rule #17 (`query`/`mutate` ⇒ `data_object_id` required; `side_effect`/`compute` ⇒ `data_object_id` null; `inbound` ⇒ `data_object_id` optional). Reuse existing tool rows where the same primitive already exists (the `tools` table is catalog-wide, not per-module). **Authoring default for notifications**: link the abstraction tools `notify_person` / `notify_team` rather than channel-specific primitives (`send_email`, `send_sms`, `post_chat_message`) — see § "Channel vs capability authoring rule" below.
-   3. **`skill_tools`** — one row per (skill, tool) pair the skill calls. Carry `requirement_level` (`required` for irreducible workflow tools, `optional` for degraded modes; `fallback` was retired 2026-05-26) and a one-line workflow-context `notes` string. The set of `requirement_level='required'` rows is the irreducible surface; `optional` rows raise the ceiling without raising the floor.
+   3. **`skill_tools`** — one row per (skill, tool) pair the skill calls. Carry `requirement_level` (`required` for irreducible workflow tools, `optional` for degraded modes) and a one-line workflow-context `notes` string. The set of `requirement_level='required'` rows is the irreducible surface; `optional` rows raise the ceiling without raising the floor.
    4. **`tool_solutions`** (where applicable) — for any tool whose `coverage_tier != 'platform'`, link the non-Semantius solutions that deliver it. Platform-covered tools (today: every `query`/`mutate` row plus `receive_webhook`; more once the platform ships natively) don't need `tool_solutions` rows for the platform itself; vendor-alternative rows on those tools remain valid.
 
-   Phase S is **not optional** per Rule #17. The killer hypothesis of the entire tools/skills layer (*"how many of the loaded domains have a system skill where every required tool is Semantius-covered?"*) is uncomputable without it. Reference Phase-S loader pattern: the original ATS / SMP / TALENT-MGMT / EMP-EXP loads on 2026-05-21 set the shape; mirror them when authoring for other domains.
+   Phase S is **not optional** per Rule #17. The killer hypothesis of the entire tools/skills layer (*"how many of the loaded domains have a system skill where every required tool is Semantius-covered?"*) is uncomputable without it. Reference Phase-S loader pattern: the ATS / SMP / TALENT-MGMT / EMP-EXP loads set the shape; mirror them when authoring for other domains.
 
 6. **Verify and share.** After each phase, query counts on the affected tables, compare against expected, and link the user to the UI tables that changed. **For any new market load OR any time the user says "review domain X" / "audit domain X" / "what's missing for X", run the per-domain completeness checklist below** — it is the single source of truth for what "done" means.
 
@@ -588,7 +591,7 @@ For any task that fits this skill — "research vendors for X", "is Y a domain?"
 
 ## Channel vs capability authoring rule
 
-Decided 2026-05-26. Applies to every Phase-S skill_tools authoring pass.
+Applies to every Phase-S skill_tools authoring pass.
 
 The catalog distinguishes two kinds of `tools` rows the agent can call:
 
@@ -600,9 +603,9 @@ The catalog distinguishes two kinds of `tools` rows the agent can call:
 1. **Default to the abstraction.** For generic notifications, link `notify_person` or `notify_team` on the skill. The deployment chooses the channel (email, SMS, chat, WhatsApp, push) without rewriting the skill.
 2. **Link the channel directly only when the workflow requires that specific channel.** CCAAS-VOICE-AGENT needs `make_phone_call` (voice IS the workflow); ESIGN needs `receive_webhook` (envelope-completion callback is the contract); EDI partners need `receive_edi_message` / `transmit_edi_message` by trading-partner contract.
 3. **Multi-channel rows mean broadcast (AND), not at-least-one (OR).** A skill that links both `send_email` and `post_chat_message` is asserting that BOTH channels fire on every event (the broadcast pattern — ITSM family). If the workflow tolerates either channel alone, use `notify_person` instead (one row, deployment chooses).
-4. **`requirement_level` stays on workflow-necessity semantics.** `required` = the workflow gates without this tool. `optional` = the workflow degrades gracefully but proceeds. (`fallback` was retired 2026-05-26 — never used in practice, no skill in the catalog needed "B only when A fails".)
+4. **`requirement_level` stays on workflow-necessity semantics.** `required` = the workflow gates without this tool. `optional` = the workflow degrades gracefully but proceeds.
 
-**Why the abstraction layer exists.** Empirically, `notify_person` / `notify_team` are the only substitutable-channel patterns in the catalog (validated 2026-05-26: 15 skills used multi-channel notifications, zero used multi-text-generation or multi-extraction tools). Adding a heavyweight capability table for one pattern was over-engineering; two abstraction tool rows with the same shape as everything else solves the problem. Channels stay in `tools` for vendor delivery via `tool_solutions` and for skills that genuinely need a specific channel.
+**Why the abstraction layer exists.** Empirically, `notify_person` / `notify_team` are the only substitutable-channel patterns in the catalog: skills use multi-channel notifications, but none need multi-text-generation or multi-extraction tools. Adding a heavyweight capability table for one pattern was over-engineering; two abstraction tool rows with the same shape as everything else solves the problem. Channels stay in `tools` for vendor delivery via `tool_solutions` and for skills that genuinely need a specific channel.
 
 **Score behavior.** When `tools.coverage_tier='platform'` on `notify_person` (i.e., the platform ships an outbound dispatcher), every skill linking `notify_person` is platform-covered on the notification axis with one UPDATE — no per-skill retrofit needed. That's the entire reason this layer exists; if we'd kept channel-specific links everywhere, every platform-ships-email event would have required N skill_tools rewrites.
 
@@ -626,7 +629,7 @@ The S-band is a single coverage sweep that runs **before** any band-level check.
 
 **S1. Every direct FK to `domains` has the expected row count.**
 
-- Schema query: `/fields?reference_table=eq.domains&select=table_name,field_name`. As of 2026-05-26 this returns 11 `(table, field)` pairs across 10 tables: `business_function_domains`, `capability_domains`, `handoffs.source_domain_id`, `handoffs.target_domain_id`, `domain_data_objects`, `domain_module_host_domains`, `domain_modules`, `domain_regulations`, `domains.parent_domain_id`, `skills`, `solution_domains`.
+- Schema query: `/fields?reference_table=eq.domains&select=table_name,field_name`. The query is the source of truth — run it to get the current list of `(table, field)` pairs across tables that reference `domains`.
 - For each pair, count rows for the audited domain via PostgREST. Surface as:
 
   | Table | FK column | ATS rows | Expected non-zero? |
@@ -769,9 +772,9 @@ A `domains` row is not deployable on its own. Modules are. The M-band is a struc
 
 **Authoring rule for new `handoffs` rows (write-time policy).** New rows MUST populate both `source_domain_module_id` and `target_domain_module_id`. The only legitimate NULL is when the counterparty domain has not yet been modularized at insert time. In that case the row carries an explicit `notes` annotation in the shape `target NULL until <DOMAIN_CODE> is modularized` (or `source NULL until <DOMAIN_CODE> is modularized`); the canonical reference shape is ATS pre-employee row id=1037, where `target_domain_module_id` is NULL pending HCM modularization. Loader pre-flight in any new handoff-touching loader (`.tmp_deploy/load_*.ts`) MUST validate this before the POST and throw on a NULL module FK whose counterparty domain is already modularized. The deferred `NOT NULL` flip on these columns is tracked separately as a catalog-wide backfill gate; the write-time rule is the interim guarantee that new rows do not add to the backfill backlog.
 
-**B9b. Intra-domain cross-module `handoffs` complete.** *(added 2026-05-24 after the ATS audit miss)*
+**B9b. Intra-domain cross-module `handoffs` complete.**
 
-For any domain with ≥2 `domain_modules`, the catalog requires explicit `handoffs` rows for every cross-module lifecycle progression — these are first-class rows with `source_domain_id = target_domain_id` and (typically) `integration_pattern: lifecycle_progression`. The Signal-2 cross-domain filter excludes them at query time, so they don't pollute the platform-vs-silos analysis, but their absence leaves the deployer / fact-sheet emitter with no way to answer "what fires from `<MODULE-A>` into `<MODULE-B>` within this domain" without re-deriving it from `data_object_relationships`. **B9's pass test mentions intra-domain handoffs in prose but never carved out its own check ID — and that gap is exactly how an audit can tick B9 green while sitting on zero intra-domain rows in a multi-module domain.** The ATS audit on 2026-05-23 had this shape: 8 modules, 22 outbound + 10 inbound cross-domain handoffs, and zero intra-domain rows; B9 passed mechanically because every checked trigger_event had ≥1 handoff somewhere, but the intra-ATS event chain (offer→pre-employee, interview→pipeline, background-check→pre-employee, referral→candidate-crm, etc.) was uncaptured. **This check is non-skippable on any domain with ≥2 modules. If it doesn't have its own query result in your audit transcript, the audit is incomplete.**
+For any domain with ≥2 `domain_modules`, the catalog requires explicit `handoffs` rows for every cross-module lifecycle progression — these are first-class rows with `source_domain_id = target_domain_id` and (typically) `integration_pattern: lifecycle_progression`. The Signal-2 cross-domain filter excludes them at query time, so they don't pollute the platform-vs-silos analysis, but their absence leaves the deployer / fact-sheet emitter with no way to answer "what fires from `<MODULE-A>` into `<MODULE-B>` within this domain" without re-deriving it from `data_object_relationships`. **B9 can tick green on a multi-module domain that has zero intra-domain handoff rows — every checked trigger_event has ≥1 handoff somewhere, but the intra-domain event chain stays uncaptured.** B9b closes that gap. **This check is non-skippable on any domain with ≥2 modules. If it doesn't have its own query result in your audit transcript, the audit is incomplete.**
 
 - Pre-check: skip B9b if `domain_modules` count for this domain is <2 (no cross-module surface to model). Otherwise run the queries below.
 - Intra-domain handoff query (what's loaded): `/handoffs?source_domain_id=eq.<id>&target_domain_id=eq.<id>&select=id,trigger_event_id,source_domain_module_id,target_domain_module_id,data_object_id,integration_pattern,friction_level,notes,trigger_event:trigger_events(event_name,data_object_id)&order=source_domain_module_id.asc,target_domain_module_id.asc`
@@ -806,9 +809,9 @@ For any domain with ≥2 `domain_modules`, the catalog requires explicit `handof
 
 - Example: ATS embedded-masters `hcm_positions` (id 32). Discovery query 1 returns `(32, embedded_master, required)`. Discovery query 2 returns `(32, 54, HCM)` — HCM canonically masters positions. Then check `/handoffs?source_domain_id=eq.54&target_domain_id=eq.56&data_object_id=eq.32` — if empty, the report writes "HCM B9 owes outbound on `hcm_positions` → ATS (this domain's embedded_master + required)". The fix happens when HCM is reviewed.
 
-**B10b. Per-module attribution on `handoffs`.** *(added 2026-05-23 after a catastrophic audit miss)*
+**B10b. Per-module attribution on `handoffs`.**
 
-The `handoffs` table carries two per-module FK columns that are routinely null because the modularization-era backfill never ran across pre-modular rows. **An audit that fails to check these columns will pass a domain whose handoff rows have zero module attribution**, which then makes every downstream fact sheet over-attribute events to every module in the source / target domain. As of 2026-05-23, 1019 of 1029 catalog handoffs (99%) sat with null `source_domain_module_id` and 1020 with null `target_domain_module_id`; the original ATS audit on 2026-05-23 ticked B9/B10 green and missed all 34 ATS-touching rows. **This check is non-skippable. If it doesn't have its own query result in your audit transcript, the audit is incomplete.**
+The `handoffs` table carries two per-module FK columns that are routinely null because the modularization-era backfill never ran across pre-modular rows. **An audit that fails to check these columns will pass a domain whose handoff rows have zero module attribution**, which then makes every downstream fact sheet over-attribute events to every module in the source / target domain. **This check is non-skippable. If it doesn't have its own query result in your audit transcript, the audit is incomplete.**
 
 - Outbound query (sets `source_domain_module_id` for this domain): `/handoffs?source_domain_id=eq.<id>&source_domain_module_id=is.null&select=id,trigger_event_id,data_object_id,target_domain_id,trigger_events(event_name,data_object_id)`
 - Inbound query (sets `target_domain_module_id` for this domain): `/handoffs?target_domain_id=eq.<id>&target_domain_module_id=is.null&select=id,trigger_event_id,data_object_id,source_domain_id,trigger_events(event_name,data_object_id)`
@@ -821,7 +824,7 @@ The `handoffs` table carries two per-module FK columns that are routinely null b
     1. *Domain-level legacy row.* The data_object sits in legacy `domain_data_objects` for the domain but no `domain_module_data_objects` row exists. Fix is **upstream**: load the `domain_module_data_objects` row (B-band Phase 2), then re-run the backfill.
     2. *No-role row.* The handoff names a payload the target domain doesn't model at all (e.g. ATS receives `position_demand_forecast.updated` but no ATS module declares any role on `position_demand_forecasts`). Decide: either load a `consumer` row on the receiving module (preferred — captures the dependency in the catalog), or accept that the handoff is a domain-level signal with no module owner (rare; usually means the handoff itself is mis-modeled).
 - Also surface: any handoff row where `trigger_events.data_object_id` differs from `handoffs.data_object_id` AND neither side resolves to a module. This is the diagnostic for trigger-event data quality bugs (e.g. duplicate / mis-pointed events). The ATS audit found `trigger_event.id=227` (`assessment.completed`) pointing at `risk_assessments` instead of `candidate_assessments`; rows 1180 / 1181 (`candidate_assessment.passed` / `.failed`) are the modern replacements.
-- Why this matters: without per-module attribution, fact sheets attribute outbound events to every module in the source domain and inbound events to every module in the target domain. The Wave-2 ATS fact sheets (2026-05-23, pre-backfill) had `candidate.hired` outbound rows duplicated across all 8 ATS module pages because the attribution fell back to "any module in the source domain". The columns exist precisely so this can't happen.
+- Why this matters: without per-module attribution, fact sheets attribute outbound events to every module in the source domain and inbound events to every module in the target domain — a single outbound event then appears duplicated across every module page in the source domain. The columns exist precisely so this can't happen.
 
 The legacy B9 / B10 queries deliberately did not include these columns. Future audits MUST run B10b in addition. The structural sweep (S1) covers FKs to `domains`; per-module FKs to `domain_modules` are NOT swept there. **B10b is the home for module-level FK coverage on `handoffs`.**
 
@@ -1003,19 +1006,6 @@ Commands:
 
 When the user does ask for an emit, the quality check on the output is: every `_(no … loaded)_` placeholder in the generated file is justified by (a) the leadership-tier exception list (B1), (b) a `data_objects.notes` config-shape exemption on a master with no workflow (B12, per Rule #12), or (c) an explicit "self-explanatory masters" / "isolated master" justification recorded in the catalog notes (B6, B11). Unjustified placeholders signal a real gap in live state — fix the gap and re-emit. Never hand-edit the rendered files to silence a placeholder.
 
-### Backfill gaps to watch for
-
-The catalog has had four known backfill gaps where a category was scaffolded but not loaded as the workflow grew. Each was discovered after several markets had shipped without it. When working in any market loaded before the listed date, expect to backfill:
-
-| Category | Empty until | What to check on touched markets |
-|---|---|---|
-| `business_function_domains` + `business_function_capabilities` (RACI axis) | Pre–ITSM-review backfill (2026-05-20) | Every domain has at least one `owner` row; every domain has at least one `contributor` or `consumer` row when cross-functional. |
-| `business_functions` spine itself | Pre–2026-05-20 | If the table is empty when starting Phase C, load the 20-function canonical spine first. |
-| `handoffs.source_domain_module_id` + `target_domain_module_id` (per-module attribution on handoffs) | Pre-2026-05-23 ATS backfill | Run B10b. 99% of handoff rows still sit at NULL on these columns. Backfill is deterministic by payload→master derivation; ties leave NULL with a manual-review note. |
-| `skills` + `tools` + `skill_tools` per module (Rule #17 / F2–F5) | Pre-2026-05-25 catalog-wide | Run F2–F5. Only ATS, SMP, TALENT-MGMT, EMP-EXP have any system skills loaded; every other modularized domain (CRM, ITSM, HCM, HRSD, and ~60 more) needs the full Phase-S load before its Semantius score becomes computable. CRM was the trigger case that surfaced this gap. |
-
-Don't ship a new market without closing all four gaps for it. Doing so makes the historical drift worse.
-
 ### Cross-cutting capability convention
 
 `capability_domains` is many-to-many — a single capability *can* belong to multiple domains, and the cube documentation explicitly anticipates this ("Customer 360 spans CRM and Data Platform; Workforce Scheduling spans HR Operations and Field Service"). In practice the catalog has drifted to ~99% single-domain capabilities because every Phase-A loader produces market-scoped capabilities with **domain-prefixed codes** (`PM-ROADMAP`, `CDP-INGEST`, `ITSM-INCIDENT`, `COMM-CART-CHECKOUT`).
@@ -1050,7 +1040,7 @@ The `business_functions` table represents the **organisational axis** orthogonal
 
 The `business_functions` table has **no code column** — the natural key is `business_function_name`. The slugs below are script-side aliases (loader variables, doc references); they are not stored in the DB.
 
-The canonical 20-function top-level spine (loaded 2026-05-20):
+The canonical 20-function top-level spine:
 
 | Slug *(script-side)* | `business_function_name` | Notes |
 |---|---|---|
@@ -1105,7 +1095,7 @@ The same three-form choice also informs capability code naming (§ "Cross-cuttin
   - `invoices` (S2P, AP-side, supplier-issued) ↔ `customer_invoices` (SUB-MGMT, AR-side, seller-issued)
   - Future candidates: `suppliers` vs `customers` (already distinct), `vendor_contracts` vs `customer_contracts` (avoid — `contracts` is one CLM-mastered object with both flavors as contributors).
 - **Audience filtering, not duplicated-per-audience data_objects.** When modern vendor stacks unify a shape with audience tags at the application layer (`knowledge_articles` serves both internal IT and customer-facing KBs in ServiceNow / Salesforce Knowledge), prefer one `data_object` + multi-domain consumers over a separate `external_knowledge_articles` under CSM. Default rule: if at least one credible vendor unifies the underlying record, the catalog should too.
-- **Generic names invite cross-domain boundary collisions — scope-qualify at creation.** A `data_object_name` like `maintenance_work_orders` reads plausibly as REAL-EST, EAM, FLEET-MAINT, or FSM ownership. When a new master sits in a domain that overlaps several adjacent operational domains, prefix or qualify the name to its scope at insert time: `facility_work_orders` (REAL-EST), `eam_work_orders` (EAM industrial plant), `vehicle_work_orders` (FLEET-MAINT), `tenant_maintenance_requests` (RE-PROP-MGMT). Catalog precedent (2026-05-22): id 349 was loaded as `maintenance_work_orders` and had to be renamed to `facility_work_orders` once EAM Phase-B surfaced its own work-order need; the rename also cascaded into 3 `trigger_events` (event-name prefix had to follow). Apply the same prefix-at-creation rule to: PM schedules (`equipment_pm_schedules` vs `preventive_maintenance_schedules` vehicle-scoped), assets (`industrial_assets` vs `hardware_assets` vs `fixed_assets`), inventory (`spare_parts` vs warehouse `stock_items`). When in doubt, ask which other domain would also plausibly claim this name and prefix accordingly.
+- **Generic names invite cross-domain boundary collisions — scope-qualify at creation.** A `data_object_name` like `maintenance_work_orders` reads plausibly as REAL-EST, EAM, FLEET-MAINT, or FSM ownership. When a new master sits in a domain that overlaps several adjacent operational domains, prefix or qualify the name to its scope at insert time: `facility_work_orders` (REAL-EST), `eam_work_orders` (EAM industrial plant), `vehicle_work_orders` (FLEET-MAINT), `tenant_maintenance_requests` (RE-PROP-MGMT). Past precedent: a row originally loaded as `maintenance_work_orders` had to be renamed to `facility_work_orders` once an adjacent domain's Phase-B surfaced its own work-order need; the rename cascaded into the matching `trigger_events`. Apply the same prefix-at-creation rule to: PM schedules (`equipment_pm_schedules` vs `preventive_maintenance_schedules` vehicle-scoped), assets (`industrial_assets` vs `hardware_assets` vs `fixed_assets`), inventory (`spare_parts` vs warehouse `stock_items`). When in doubt, ask which other domain would also plausibly claim this name and prefix accordingly.
 
 ### Phase 1 — propose the domain's data objects
 
@@ -1175,14 +1165,14 @@ The discovery questions, in order:
 
 **Trigger-event ownership: "one event, many subscribers".** All fan-out rows for a single event reference the **same** `trigger_events.id` via `handoffs.trigger_event_id`. Event semantics (publisher, data object, state transition, description) live in one `trigger_events` row; per-edge integration metadata lives on each handoff row. Never duplicate `trigger_events` rows per subscriber, it breaks the trigger-event-prefix clustering signal that Phase D depends on. Full rationale in [Phase D — Process-skill discovery](#phase-d--process-skill-discovery-substrate-level).
 
-**Recognize the high-friction patterns.** After ~230 handoffs (Wave 2 P1.5a–e complete) the consistent `friction_level: high` cases cluster into seven recognisable shapes:
+**Recognize the high-friction patterns.** Across the catalog's loaded handoffs, the consistent `friction_level: high` cases cluster into seven recognisable shapes:
 - **Identity reconciliation across systems** — HCM→IGA, SMP→IGA, CDP→SALES-ENG, CCAAS→CRM: same logical person/customer, different identifier spaces, no canonical resolver. Note: identifier reconciliation is also frequent across loyalty/CRM (loyalty_member_id vs customer_id) and across partner/CRM (partner_id vs account_owner_id)
 - **Leaver / cancellation recall** — HCM→ITAM asset recall on termination, CSM→SUB-MGMT churn-risk feedback, FSM→CSM dispatch.failed, LOYALTY tier-rollback-on-churn: the "going away" event is harder to catch than the "arriving" event; the going-away signal often arrives via a different channel than the original arrival
 - **Probabilistic signal becomes deterministic action** — CDP→SALES-ENG intent signal, AIOPS→ITSM correlation, SUP-LIFE→GRC risk-score elevation, CCAAS→CSM sentiment.negative, REV-INTEL→CRM deal_risk.escalated: the upstream is a scored guess, the downstream needs a yes/no. AI/ML scoring is the typical source; false-positive volume is the typical failure mode
 - **Shadow-data emerges from off-channel transactions** — EXPENSE→SMP shadow-IT detection, B2C-COMM→SUB-MGMT direct-purchase: the official catalog finds out from a side channel
 - **Cross-vendor stack with same logical entity** — OBS→ITSM SLO breach when SLO and incident tools are different vendors; COMP-MGMT→PAYROLL merit-cycle propagation when comp planning and payroll execution live in different vendors; SUP-LIFE→ERP-FIN supplier onboarding when supplier-master and AP live in different vendors
-- **Period/cycle-close coupling** *(added 2026-05-21 from Wave 2 cross-cluster patterns)* — ERP-FIN.accounting_period.closed → EPM consolidation; COMP-MGMT.merit_cycle.approved → PAYROLL execution; pay_cycle.closed → multiple subscribers. Tight timing coupling: downstream must complete within a fixed window or the next cycle fails; backdated entries arriving after period close cascade across systems. Distinct from cross-vendor-stack: friction here comes from calendar coordination, not identifier reconciliation
-- **Alert/escalation without feedback loop** *(added 2026-05-21 from Wave 2)* — AP-AUTO→ERP-FIN payment.exception, SUB-MGMT→CSM dunning.escalation, EXPENSE→HR-cases policy violation, FINOPS→S2P cloud_spend.threshold_breached: source publishes the alert expecting the target to act, but no acknowledgment, no retry policy, no completion signal back to source. Silently fails when the alert is missed or misrouted; manual follow-up is the canonical workaround
+- **Period/cycle-close coupling** — ERP-FIN.accounting_period.closed → EPM consolidation; COMP-MGMT.merit_cycle.approved → PAYROLL execution; pay_cycle.closed → multiple subscribers. Tight timing coupling: downstream must complete within a fixed window or the next cycle fails; backdated entries arriving after period close cascade across systems. Distinct from cross-vendor-stack: friction here comes from calendar coordination, not identifier reconciliation
+- **Alert/escalation without feedback loop** — AP-AUTO→ERP-FIN payment.exception, SUB-MGMT→CSM dunning.escalation, EXPENSE→HR-cases policy violation, FINOPS→S2P cloud_spend.threshold_breached: source publishes the alert expecting the target to act, but no acknowledgment, no retry policy, no completion signal back to source. Silently fails when the alert is missed or misrouted; manual follow-up is the canonical workaround
 
 When a new handoff matches one of these shapes, default `friction_level` to `high`. **Multi-shape handoffs** (a single edge that matches 2+ shapes) are reliably the highest-friction integration points in the catalog — the COMP-MGMT→PAYROLL handoff matches both cross-vendor-stack AND period-cycle-close, for example, and is a textbook source of retro-adjustment work.
 
@@ -1258,7 +1248,7 @@ Full doc + interpretation guide: [references/discovery-query.md](references/disc
 
 The query prints one row per prefix bucket with `rank_score = friction_score × distinct_function_count`. A high rank means **wide function spread + high integration friction** — the orchestrations where an agent skill removes the most coordination overhead.
 
-Two worked examples from the 2026-05-22 first run:
+Two worked examples:
 
 - **`employee` (rank 437):** 12 handoffs, 12 domains, 19 functions, 3 high-friction. The cross-cutting Joiner-Mover-Leaver orchestration: HCM publishes `employee.created` → Onboarding + Payroll + IGA + Talent-Mgmt all subscribe via one shared `trigger_events.id`. High function spread because HR + IT + Finance + Workplace all touch it. The single largest opportunity in the catalog; the rank confirms the intuition.
 - **`opportunity` (rank 190):** 9 handoffs, 10 domains, 10 functions, 3 high-friction. The lead-to-cash motion — CRM → SALES-ENG → CPQ → CLM → ERP-FIN. Lower domain count than `employee` but comparable friction. Classic revenue process.
@@ -1332,27 +1322,27 @@ Beyond the point-solution-market test, these heuristics resolve the ambiguous ca
 
 ---
 
-## System-skill tool derivation (P2.5A.i + P2.5A.ii patterns, 2026-05-22)
+## System-skill tool derivation
 
 ### Session bootstrap — always verify catalog state first
 
-When you start a session that involves drafting / loading `skills` or `skill_tools`, the **first action** is to verify live counts. The catalog is multi-session and **users add domains between sessions** (during one 2026-05-22 session, 7 new domains were loaded by the user while the assistant was processing other work).
+When you start a session that involves drafting / loading `skills` or `skill_tools`, the **first action** is to verify live counts. The catalog is multi-session and **users add domains between sessions** — assume the row counts you remembered from a prior conversation are wrong.
 
 ### Subagent prompt discipline for Phase-B research
 
-If you spawn `Explore`-type subagents to research Phase-B for multiple domains in parallel (the pattern P2.5A.0 introduced and the 2026-05-22 Phase-B Lite batch 1 expanded), prompt construction directly determines loader-usability of the output:
+If you spawn `Explore`-type subagents to research Phase-B for multiple domains in parallel, prompt construction directly determines loader-usability of the output:
 
 - **Demand a structured table** of `data_object_name | singular_label | plural_label | description` and **require** snake_case_plural names. Open-ended "produce a Phase-B draft" prompts produce essays with embedded prose tables that need manual parsing.
-- **Forbid MCP tools explicitly** — include in every subagent prompt: *"Do NOT call any `mcp__claude_ai_deno__*`, `mcp__claude_ai_tests-ops__*`, or other `mcp__*` Semantius tool. Use the `semantius` CLI via Bash only (rule #0)."* Subagents inherit access to MCP servers and reach for them out of habit; rule #0 in this SKILL.md is not enough — it must be restated in the prompt. Discovered 2026-05-22 batch 3: multiple subagents silently used MCP reads despite the prompt citing CLI-only patterns, producing outputs sourced from the wrong tenant or from MCP-cached resources rather than the live `tests` org.
+- **Forbid MCP tools explicitly** — include in every subagent prompt: *"Do NOT call any `mcp__claude_ai_deno__*`, `mcp__claude_ai_tests-ops__*`, or other `mcp__*` Semantius tool. Use the `semantius` CLI via Bash only (rule #0)."* Subagents inherit access to MCP servers and reach for them out of habit; rule #0 in this SKILL.md is not enough — it must be restated in the prompt. Subagents have been observed silently using MCP reads despite prompts citing CLI-only patterns, producing outputs sourced from the wrong tenant or from MCP-cached resources rather than the live `tests` org.
 - **Make trigger_events + handoffs OPTIONAL, not required.** Empirically, agents inconsistently produce them in parseable form (some use plain markdown tables, some YAML frontmatter, some prose). Masters alone are sufficient for Phase-B Lite (data_objects + master `domain_data_objects` only); trigger_events + handoffs can be a separate focused pass.
 - **State boundary alerts explicitly in the prompt** ("don't propose X, it's mastered by Y; use Z naming instead"). Without this, agents re-propose entities that already exist or use colliding names.
-- **Tell agents to defer to the user when boundaries are unresolved.** Better to get a "needs decision" flag than wrong-mastered rows. The EAM batch-1 audit returned blockers instead of bad rows — that's the correct failure mode.
+- **Tell agents to defer to the user when boundaries are unresolved.** Better to get a "needs decision" flag than wrong-mastered rows.
 - **Cap word count aggressively** (≤1000 words). Verbose drafts hide the load-ready content under analysis.
-- **Use `general-purpose` (not `Explore`) when the subagent must write files.** The `Explore` subagent type lacks the `Write` tool — it can read state and reason, but cannot persist JSON/markdown to disk. The handoff backfill (2026-05-22) lost 8 of 10 first-round outputs when Explore agents "wrote the JSON" only in their reply text, which was discarded. `general-purpose` has the full toolset including Write. Reserve `Explore` for read-only research questions whose result fits in a 250-word reply summary.
-- **Cap cluster size to ~10 domains per agent.** The same backfill's cluster J (17 domains) hung twice and had to be killed; splitting into J1 (8 domains) + J2 (9 domains) completed cleanly. Agents seem to lose plot at roughly the 12-domain mark.
+- **Use `general-purpose` (not `Explore`) when the subagent must write files.** The `Explore` subagent type lacks the `Write` tool — it can read state and reason, but cannot persist JSON/markdown to disk. Reserve `Explore` for read-only research questions whose result fits in a 250-word reply summary.
+- **Cap cluster size to ~10 domains per agent.** Agents lose the plot at roughly the 12-domain mark — large clusters hang or produce partial output. Split into halves when in doubt.
 - **For file outputs, dictate the exact path in the prompt** (`Write the JSON to c:/tmp/<name>.json`). Agents that "remember" the path often emit it in the reply or write to an arbitrary location.
 
-The batch-1 anti-pattern catalogue (one bad shape each, all from 2026-05-22):
+Observed anti-patterns in subagent output (one bad shape each):
 - ❌ Agent wraps proposal in `---artifact: phase-b-research\nsystem_name: ...` YAML frontmatter — looks like a different tool's output format; not parseable.
 - ❌ Agent restates the entire SKILL.md guidance back at you before its proposal — burns tokens, doesn't add anything.
 - ❌ Agent classifies entities by confidence (High/Medium/Low) instead of committing — useful for review but not load-ready.
@@ -1376,9 +1366,9 @@ When authoring a `skills` row with `skill_type='system'` (one-to-one with a doma
 
 ### The 100%-Semantius hypothesis test
 
-For each system skill the killer-hypothesis rollup is: `% = (required tools with coverage_tier='platform') / (total required tools)`. **100% means every workflow primitive the skill needs is delivered by the platform OOTB — no external connector required.** (Pre-2026-05-26 this was expressed as `operation_kind ∈ {query, mutate}`; the new tri-state `coverage_tier` is the data-driven replacement that re-scores the catalog with a single UPDATE when the platform ships a new capability.)
+For each system skill the killer-hypothesis rollup is: `% = (required tools with coverage_tier='platform') / (total required tools)`. **100% means every workflow primitive the skill needs is delivered by the platform OOTB — no external connector required.**
 
-Empirical result across 12 candidates (P2.5A.i, 2026-05-22):
+Empirical result across 12 candidate domains:
 
 | Tranche | 100% Semantius? |
 |---|---|
@@ -1389,7 +1379,7 @@ Empirical result across 12 candidates (P2.5A.i, 2026-05-22):
 
 The reliable predictor of *not* being 100% Semantius: the domain's core workflow involves **(a)** generating narrative/explanation text the user reads, **(b)** distributing artefacts to recipients via external channels (email, SMS, mailers), or **(c)** running ML/statistical scoring beyond what computed_fields express. PA hits (a) + (b). When you encounter a system-skill draft that looks like it needs LLM generation or external comms in the *required* set, that's the signal to expect a sub-100% result — and the signal that the domain genuinely benefits from non-Semantius tool delivery.
 
-### Cross-tranche external-tool patterns (P2.5A.ii, 2026-05-22)
+### Cross-tranche external-tool patterns
 
 After running 22 system-skill drafts across the catalog (12 hypothesis-candidates + 10 obvious-non-Semantius), the external tools that appear in REQUIRED sets cluster into recognisable shapes:
 
@@ -1428,13 +1418,13 @@ Quick check before drafting any system skill: `semantius call crud postgrestRequ
 - ❌ Adding tools for every `consumer` data_object the catalog records. Many consumer relationships are analytical (dashboards roll up) and don't drive the core operational workflow. Only required when the workflow can't proceed without the read.
 - ❌ Creating a generic `mutate_<data_object>` tool for every master. The existing convention is verb-driven (`update_budget`, `create_audit_finding`, `approve_headcount_plan`). Generic `mutate_*` names are not searchable and lose the workflow semantics.
 - ❌ Using `vendors` as a `data_object_id` target for query tools. `vendors` is the catalog's vendor reference table (legal entities); it is **not** a Semantius data_object. Read vendor-shaped records via `query_suppliers` (the `suppliers` data_object).
-- ❌ Re-creating query tools that already exist. Always read `/tools` and dedupe by `tool_name` before drafting. P2.5A.i discovered 3 existing query tools that would have duplicated (`query_employees`, `query_journal_entries`, `query_suppliers`).
+- ❌ Re-creating query tools that already exist. Always read `/tools` and dedupe by `tool_name` before drafting. Past loads have surfaced multiple duplicates (`query_employees`, `query_journal_entries`, `query_suppliers`) that the dedup pre-check catches.
 - ❌ Drafting a system skill for a domain with zero masters. The skill would have nothing to query/mutate, which means either (a) the domain is leadership-layer and shouldn't have a skill at all, or (b) Phase-B is incomplete and needs backfilling first. **Don't paper over a Phase-B gap by inventing skill_tools that reference data_objects from other domains** — that produces a skill whose entire required-tool set is consumer-reads, which is not a system skill.
 - ❌ Stamping `record_status='approved'` on freshly-loaded skills/tools/skill_tools without an explicit user review pass. Rule #1 applies to these entities the same as to any other catalog row.
 
 ---
 
-## Process-skill tool derivation (P2.5B pattern, 2026-05-22)
+## Process-skill tool derivation
 
 Process skills (`skill_type='process'`) span multiple domains and orchestrate cross-domain workflows. Tool requirements derive from the candidate's involved domains, not from a single domain's masters:
 
@@ -1444,7 +1434,7 @@ Process skills (`skill_type='process'`) span multiple domains and orchestrate cr
    Surface the two sets to the user before drafting tools; they're the editorial input that determines the skill's surface.
 2. **Auto-derive query tools** — every master `data_object` across `query_domains` contributes its existing `query_<master>` tool as REQUIRED. The catalog already has these from the system-skill derivation pass; no new query tools needed. Dedupe by `tool_name`.
 3. **Auto-derive mutate tools** — for each `mutate_domain`, link any existing `update_<master>` / `create_<master>` / verb-driven mutate tool as REQUIRED. Mutates are sparser than queries — skip the master if no mutate exists yet (don't auto-generate generic ones).
-4. **Add cross-cutting externals** — apply the recurring patterns from [§ Cross-tranche external-tool patterns](#cross-tranche-external-tool-patterns-p25aii-2026-05-22). Email + sign_document + chat are the most common; if the process involves customer-facing comms or contract execution, add the relevant external tool as REQUIRED.
+4. **Add cross-cutting externals** — apply the recurring patterns from [§ Cross-tranche external-tool patterns](#cross-tranche-external-tool-patterns). Email + sign_document + chat are the most common; if the process involves customer-facing comms or contract execution, add the relevant external tool as REQUIRED.
 5. **Apply the coverage rollup** ([references/semantius-coverage-rollup.md](references/semantius-coverage-rollup.md)) — process skills sit at 92-97% by design (every workflow needs at least `send_email`). 100% is rare and usually means the skill is mis-modeled as a process skill when it's actually a system skill.
 
 Reference loader: [.tmp_deploy/load_p25b_process_skills.ts](../../../.tmp_deploy/load_p25b_process_skills.ts). It reads the involved-domain sets from a hard-coded map (one entry per process skill), pulls live master sets, links tools idempotently.
@@ -1461,7 +1451,7 @@ Reference loader: [.tmp_deploy/load_p25b_process_skills.ts](../../../.tmp_deploy
 - ❌ Writing one-off CLI calls for more than ~5 rows. Extend [.tmp_deploy/load_research.ts](.tmp_deploy/load_research.ts) instead — it's why the script exists.
 - ❌ Loading a new market with `domains` + `vendors` + `solutions` + `solution_domains` and stopping there. Capabilities (+ `capability_domains`) are part of the Phase-A load shape, not an optional follow-up. See workflow step 5.
 - ❌ Stopping after Phase A (market shape) and not running Phase B (data-object footprint — data_objects, domain_data_objects, handoffs). A market without its mastered/contributed data objects and its outbound handoffs contributes zero to Signal 1 and Signal 2, which is what the catalog exists to support. See workflow step 5.
-- ❌ Stopping after Phase A+B and not running Phase C (business_function_domains, optionally business_function_capabilities). A market without functional ownership contributes zero to the buyer-persona / RACI axis (Signal 3). The function-axis spine is small, but the per-domain links are part of every market load from 2026-05-20 onward.
+- ❌ Stopping after Phase A+B and not running Phase C (business_function_domains, optionally business_function_capabilities). A market without functional ownership contributes zero to the buyer-persona / RACI axis (Signal 3). The function-axis spine is small, but the per-domain links are part of every market load.
 - ❌ Skipping Phase M (modules) on a new domain load. Every domain has ≥1 module per Rule #14 — no exceptions. A domain row without modules is non-deployable; it's a market-research stub, not a working catalog entry.
 - ❌ Loading a multi-module domain (≥3 capabilities) without Phase E. A domain with modules but no roles is half-loaded — the deployer can install the modules but can't provision the users. Run E1–E6 before declaring the load done. See the E section of the completeness checklist.
 - ❌ Authoring a role with `role_modules` on only 1 module. Single-module personas are a permission tier on that module, not a role. The 2-module floor (E2) is the structural justification for a row existing in `roles` at all.

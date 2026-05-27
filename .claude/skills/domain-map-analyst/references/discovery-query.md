@@ -50,7 +50,7 @@ Verify by running the query and checking the trailing "X buckets meet all four s
 
 ## Refining PCF mappings
 
-The substring auto-matcher in v1 picks the lowest-level PCF row whose `process_name` contains the prefix (or vice versa). This often lands on weak L4/L5 leaves where an L2/L3 parent better captures the orchestration shape. Examples from the first run:
+The substring auto-matcher in v1 picks the lowest-level PCF row whose `process_name` contains the prefix (or vice versa). This often lands on weak L4/L5 leaves where an L2/L3 parent better captures the orchestration shape. Example mismatches to watch for:
 
 - `employee` → auto-matched "Recruit, source, and select employees" (L2). Better: "Recruit, source, and select employees" or "Manage employee lifecycle" — the full JML orchestration.
 - `case` → auto-matched "Manage financial fraud/dispute cases" (L3). Better: a generic case-management L3 in the customer-service or HR-services categories.
@@ -62,7 +62,7 @@ The substring auto-matcher in v1 picks the lowest-level PCF row whose `process_n
 
 A high-rank bucket means: **a process orchestration with many cross-function handoffs and high friction** — the kind of work where an agent skill removes the most manual coordination. The top of the list points at where to build process skills first.
 
-Examples from the 2026-05-22 run:
+Worked examples:
 - `employee` (rank 437): the cross-cutting JML orchestration — HCM → IGA → Payroll → Onboarding → ITSM → Talent-Mgmt. The most expensive cross-function workflow in any enterprise; obvious top candidate.
 - `opportunity` (rank 190): lead-to-cash orchestration — CRM → SALES-ENG → CPQ → CLM → ERP-FIN. The classic revenue motion.
 - `task` (rank 180): cross-tool work coordination — WORK-MGMT → ITSM/PSA/CSM/HRSD. Lower handoff count but high function spread (work routes everywhere).
