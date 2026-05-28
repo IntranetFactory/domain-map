@@ -522,7 +522,7 @@ Divergence means either a `role_modules` entry without a matching bundle row on 
 
 For any task that fits this skill — "research vendors for X", "is Y a domain?", "load this list of competitors", "find capabilities for Z" — work in this order. Don't skip steps; each one prevents a class of mistake.
 
-> **Domain research without the module + data-object + function phases is incomplete.** Phase A (market shape — domains/capabilities/modules/vendors/solutions), Phase B (data-object footprint — data_objects + Signal 1 + Signal 2), Phase C (organisational-function coverage — `business_function_domains` + `business_function_capabilities`), and Phase E (roles & permission bundling — universal under Rule #14) are all per-market defaults. Skipping B kills the platform-vs-silos analysis (Signals 1 & 2). Skipping C kills the buyer-persona / RACI axis (Signal 3 — *who in the org owns, contributes to, or consumes this market?*). Skipping E leaves modules without deployable user personas.
+> **Domain research without the module + data-object + function phases is incomplete.** Phase 0 (vendor surface research — flagship vendors + entity surface matrix + compliance entities + modularization hypothesis), Phase A (market shape — domains/capabilities/modules/vendors/solutions), Phase B (data-object footprint — data_objects + Signal 1 + Signal 2), Phase C (organisational-function coverage — `business_function_domains` + `business_function_capabilities`), and Phase E (roles & permission bundling — universal under Rule #14) are all per-market defaults. Skipping Phase 0 ships modules that have the headline master and miss the workflow substrate (engagement, compliance, transitions, approvals). Skipping B kills the platform-vs-silos analysis (Signals 1 & 2). Skipping C kills the buyer-persona / RACI axis (Signal 3 — *who in the org owns, contributes to, or consumes this market?*). Skipping E leaves modules without deployable user personas.
 >
 > [Phase D — process-skill discovery](#phase-d--process-skill-discovery-substrate-level) is a **substrate-level analytic**, not a per-market step. It runs across the catalog once Phase B has shipped for enough clusters, and is re-runnable on demand. See the dedicated section below.
 
@@ -540,9 +540,11 @@ For any task that fits this skill — "research vendors for X", "is Y a domain?"
 
 4. **Use natural keys, never numeric IDs.** Inside the script: build `Map<naturalKey, id>` after each insert by re-reading the table. Don't try to predict IDs.
 
-5. **Load via the script idiom — in two phases, both default.** Even for ~20 rows, prefer extending [.tmp_deploy/load_research.ts](.tmp_deploy/load_research.ts) over one-off CLI calls. The script is idempotent (safe to re-run), chunked (no Windows command-line issues), and produces a row-count summary you can paste back to the user. `.tmp_deploy/` is gitignored, so iteration is free.
+5. **Load via the script idiom — in multiple phases, each surfaced separately.** Even for ~20 rows, prefer extending [.tmp_deploy/load_research.ts](.tmp_deploy/load_research.ts) over one-off CLI calls. The script is idempotent (safe to re-run), chunked (no Windows command-line issues), and produces a row-count summary you can paste back to the user. `.tmp_deploy/` is gitignored, so iteration is free.
 
-   Surface each phase as a **separate draft** before loading — reviewers check Phase A (which vendors/capabilities to include) and Phase B (which records the domain masters vs contributes to, and where the integration pressure points are) with different mental models. Bundling them into one preview means one of the two gets a shallower review.
+   Surface each phase as a **separate draft** before loading — reviewers check Phase 0 (vendor surface enumeration), Phase A (vendors/capabilities/modules), Phase B (data-object footprint), Phase C (functional ownership), and Phase S (system skills + tools) with different mental models. Bundling them into one preview means one of them gets a shallower review.
+
+   **Phase 0 — Vendor surface research** (load zero; no DB writes — produces a research artifact). For any new domain load or module-set extension, enumerate the domain's flagship vendors and their entity surfaces **before** Phase A. Phase 0 produces a markdown report at `c:/tmp/<DOMAIN>-phase0-<date>.md` containing the flagship vendors (3–5 leaders, including ≥1 compliance specialist for regulated markets), the union surface matrix (entities × vendors, classified Core / Common / Specialist / Compliance), required compliance entities for regulated markets (FCRA / HIPAA / GDPR / SOX / FDA Part 11 / PCI / KYC-AML), and a modularization hypothesis (which entity belongs in which module). Phase A and B then work against the matrix as a **subtraction list**: every Core / Common / Compliance entity gets loaded or carries a one-line skip justification. This closes the headline-noun-only failure mode where modules ship with the headline master and miss the workflow substrate (engagement, compliance, transitions, approvals). Skippable only for hot-fix patches, single-entity additions, single-relationship additions, or "is X a domain?" classification. Full procedure + subagent prompt template: [references/vendor-research-protocol.md](references/vendor-research-protocol.md).
 
    **Phase A — Market shape** (load first):
    - `domains` (the market itself)
@@ -945,6 +947,37 @@ The `skills` table sits next to `roles` but represents agent skills, not user ro
 
 A well-run audit produces two artifacts: the gap report (with in-scope and report-only subsections) and, if the user agrees to load, the fix drafts. Fact-sheet emission is not part of the audit deliverable; if the user wants refreshed fact sheets after fixes land, that's a separate explicit step (see § "Fact sheets" below).
 
+### Domain-level market audit (regression test for Phase 0)
+
+The per-domain completeness checklist above verifies **structural** correctness: every domain has ≥1 master, every junction has its qualifier, every module has its system skill, every handoff has both module FKs. A domain can pass A/M/B/C/D/E/F **and still be semantically incomplete** — a module with the right structure but missing half its workflow substrate (engagement, compliance, transitions, approvals) ticks every structural box while shipping a thin point-solution surface. The structural audit doesn't ask *"does this footprint match what a flagship vendor in this market actually masters?"*.
+
+The market audit closes that gap. It is the **regression test for Phase 0**: when a load violated Phase 0 (or pre-dates it, since pre-modular and early-modular loads ran before Phase 0 existed), the next market audit catches the drift. Re-runnable on demand; cheap to invoke per domain.
+
+**Triggers:** "audit domain X against market", "run a market audit on Y", "is domain Z fully loaded", "find missing entities in W", "verify the X domain", "re-check Y modularization", "do a market-vs-catalog check on X".
+
+**What it surfaces** (four findings categories):
+
+- **MISSING entities** — in the market surface, not in the current footprint. Workflow substrate gaps, missing compliance entities, missing junctions / transitions.
+- **WRONG-OWNERSHIP** — entity is in the catalog but in a different module than market practice suggests (e.g. ATS-CANDIDATE-CRM carrying `skill_profiles` when that entity belongs in `skills-mgmt-profile`).
+- **SCOPE-CREEP** — entity is in the current footprint but not in the market surface (e.g. ATS-RECRUITMENT-PIPELINE consuming `predictive_models` mastered in some workforce-planning domain with no handoff between them).
+- **MODULARIZATION ISSUES** — the module split itself doesn't cleanly cover the surface (overlap, gap, misnamed scope). Distinct from wrong-ownership: wrong-ownership means "right entity, wrong module"; modularization issue means "the module set itself needs to be refactored".
+
+**Procedure (high-level; full detail in [references/domain-audit-procedure.md](references/domain-audit-procedure.md)):**
+
+1. Pull current state from live tables — `domains`, `domain_modules`, `domain_module_host_domains`, `domain_module_data_objects`. Never from blueprints, never from deploy scripts (Rule: live state only).
+2. Spawn a `general-purpose` subagent to generate the market surface fresh, with the prompt template in the reference doc. Subagent produces JSON + markdown at `c:/tmp/<DOMAIN>-market-surface-<date>.json` / `.md` containing the vendor surface matrix and a diff against the current footprint.
+3. Surface a one-table summary (MISSING / WRONG-OWNERSHIP / SCOPE-CREEP / MODULARIZATION counts) to the user, then offer to drill into any category.
+4. Write the full gap report to `c:/tmp/<DOMAIN>-audit-<date>.md` after user review.
+5. Schedule fix loads per finding type: MISSING → Phase B insert; WRONG-OWNERSHIP → DELETE + INSERT in right module; SCOPE-CREEP → DELETE + cascade; MODULARIZATION → separate refactor conversation (don't fold into the fix-loop).
+6. Re-run after fixes land. Acceptance criterion: zero MISSING / WRONG-OWNERSHIP / SCOPE-CREEP (modulo user-accepted exceptions).
+
+**Hard rules:**
+- Never auto-load fixes from a market audit (Rule #1). The audit produces a triage list; the user decides.
+- Cap subagent scope to **one domain per invocation**. Market audit is per-domain; cluster-batched audits produce shallow per-domain results.
+- The audit is complementary to, not a replacement for, the structural completeness checklist. Run the structural audit too; both are needed before a domain is "done".
+
+**Output discipline:** market audit is read-only by construction. The output is the gap report; loads happen separately on user approval, using existing loader patterns (e.g. [.tmp_deploy/fix_ats_modules.ts](../../../.tmp_deploy/fix_ats_modules.ts) for the FIX shape).
+
 ### Pairwise handoff reconciliation (focused, on-demand)
 
 The per-domain audit is **necessarily one-sided**: it surfaces what *this* domain owes (in-scope B-band failures) and what *other* domains owe *this* domain (B10 report-only). Closing a cross-domain handoff requires both sides — the producer authors `trigger_events` + `handoffs` rows, the consumer declares `domain_module_data_objects` (DMDO) consumer/contributor coverage. Per-domain audit catches the two halves separately and you converge by intersecting two report-only sections; pairwise reconciliation walks the boundary in one pass and produces a single diff.
@@ -1340,6 +1373,7 @@ If you spawn `Explore`-type subagents to research Phase-B for multiple domains i
 - **Use `general-purpose` (not `Explore`) when the subagent must write files.** The `Explore` subagent type lacks the `Write` tool — it can read state and reason, but cannot persist JSON/markdown to disk. Reserve `Explore` for read-only research questions whose result fits in a 250-word reply summary.
 - **Cap cluster size to ~10 domains per agent.** Agents lose the plot at roughly the 12-domain mark — large clusters hang or produce partial output. Split into halves when in doubt.
 - **For file outputs, dictate the exact path in the prompt** (`Write the JSON to c:/tmp/<name>.json`). Agents that "remember" the path often emit it in the reply or write to an arbitrary location.
+- **Demand Phase 0 vendor surface enumeration before any Phase B drafting.** When delegating Phase B research, the prompt MUST either (a) include the loaded Phase 0 surface matrix from `c:/tmp/<DOMAIN>-phase0-<date>.md`, OR (b) instruct the subagent to run Phase 0 first and produce the matrix before drafting masters. Empirically, subagents asked open-endedly "what does this domain master?" ship the headline noun and miss the workflow substrate; subagents handed (or producing) a vendor surface matrix produce coherent module-shaped loads. Closing the headline-noun-only failure mode is precisely the reason Phase 0 exists. See [references/vendor-research-protocol.md](references/vendor-research-protocol.md).
 
 Observed anti-patterns in subagent output (one bad shape each):
 - ❌ Agent wraps proposal in `---artifact: phase-b-research\nsystem_name: ...` YAML frontmatter — looks like a different tool's output format; not parseable.

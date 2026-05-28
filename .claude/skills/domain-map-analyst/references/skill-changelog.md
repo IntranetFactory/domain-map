@@ -133,6 +133,39 @@ Historical content of the table, preserved here for reference only:
 
 ---
 
+## 2026-05-28 — Add Phase 0 (vendor surface research) and domain-level market audit
+
+**Context.** ATS-CANDIDATE-CRM landed in the catalog with three out-of-domain rows (`skill_profiles` contributor+required, `career_aspirations` consumer+optional, `internal_opportunities` embedded_master+optional) and zero engagement substrate (no `candidate_engagements`, no `nurture_campaigns`, no `event_attendances`, no `recruiter_interactions`, no `candidate_consents`). User questioned each row. Audit of the other 7 ATS modules surfaced the same shape repeatedly:
+
+- `ATS-TALENT-POOLS` had `talent_pools` + `candidates` only — missing memberships, segments, saved searches.
+- `ATS-BACKGROUND-CHECKS` had `background_checks` only — missing the entire FCRA compliance layer (disclosures, components, adjudications, adverse-action notices, disputes).
+- `ATS-REFERRALS` had `candidate_referrals` only — missing the reward economy (rewards, payouts, campaigns).
+- `ATS-RECRUITMENT-PIPELINE` was missing pipeline stages, stage transitions, requisition approvals, posting distributions, screening questions/answers, and EEO responses. Plus scope-creep consumers from workforce-planning.
+- `ATS-INTERVIEWS` was missing interview kits, panels, assessment templates, question banks, availability slots.
+- `ATS-OFFERS` was missing offer versions, approval chains, offer letter documents.
+
+Fix: hand-authored corrections, loaded via `.tmp_deploy/fix_ats_modules.ts`. +32 data_objects, +33 DMDO rows, +91 lifecycle states, +32 relationships across 7 modules.
+
+User pushed back on the root cause: why did this happen catalog-wide?
+
+**Decision.** Add two complementary discipline mechanisms to close the failure mode:
+
+1. **Phase 0 — Vendor surface research** (new load-time phase, ahead of Phase A). For new domain loads and module-set extensions, enumerate flagship vendors and their entity surfaces *before* drafting any rows. The enumeration produces a markdown report (saved to `c:/tmp/<DOMAIN>-phase0-<date>.md`) that Phase A and B then use as a subtraction list — every Core/Common/Compliance entity in the matrix either loads with justification or is explicitly skipped with a one-line reason. Full procedure: `references/vendor-research-protocol.md`. SKILL.md additions: callout in workflow intro; new Phase 0 entry in step 5; new bullet in subagent prompt discipline section requiring Phase 0 surface as input or as subagent first-step.
+
+2. **Domain-level market audit** (new audit recipe, complementary to the per-domain structural completeness checklist). Re-runnable diff of current catalog state against a freshly-generated vendor surface. Surfaces four categories: MISSING (gap), WRONG-OWNERSHIP, SCOPE-CREEP, MODULARIZATION ISSUES. Functions as the regression test for Phase 0 — when a load violated Phase 0 or pre-dates it, the next market audit catches the drift. Full procedure + subagent prompt template: `references/domain-audit-procedure.md`. SKILL.md addition: new "Domain-level market audit" section inserted right after the structural Audit recipe.
+
+**Reasoning.** The catalog's existing audit discipline verified structural correctness (every domain has ≥1 master, every junction has its qualifier, every module has its system skill). It did not verify semantic coverage at the domain level. A module could pass A/M/B/C/D/E/F with the headline noun + a couple of embedded shells and still ship a thin point-solution surface. The hole opened specifically during modularization: pre-modular Phase B drafted against a whole domain's market surface in one pass; post-modular Phase B got split into per-module passes, each scoped narrowly. No single pass owned the "does the union of modules cover the full market" question.
+
+Hand-authoring per-market archetype reference files (originally proposed) would not scale to 100+ domains and would drift the moment a market evolved. AI-generated surface on demand (per audit run) is the load-bearing mechanism; small hand-authored reference (compliance entities per regulated market) covers the narrow exception where regulation demands specific entities regardless of vendor practice.
+
+The two changes are paired, not independent: Phase 0 prevents the failure at load time; the market audit catches drift when load discipline slips or for domains that pre-date the discipline. Audit serves as the regression test for Phase 0.
+
+**Scope.** Catalog-wide. Applies to every new domain load (Phase 0 mandatory unless skip case matches); applies to every "audit X" / "verify X" / "is X fully loaded" trigger (market audit recommended alongside structural audit). Already-loaded domains that pre-date Phase 0 will be triaged via the market audit as the user works through them.
+
+**Status.** active.
+
+---
+
 # Incidents
 
 Append one entry per occurrence. Used by SKILL.md Rule #15 — the agent MUST log here when notes have been written without user approval, AND revert the writes, AND propose a SKILL.md edit that removes whatever passage rationalized the violation.
