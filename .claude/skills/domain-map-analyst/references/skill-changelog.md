@@ -196,3 +196,32 @@ The prior Rule #19 invariant 1 wording allowed `embedded_master | consumer | con
 **Scope.** Catalog-wide. All future `module_kind='starter'` rows. No existing starter rows in production yet (HIRING-STARTER is the first), so no audit-revert cycle needed.
 
 **Status.** Active. Platform-side enforcement is partial: `starter_no_master` validation_rule covers the `master`/`derived` slice only. Extending the platform rule to also reject `contributor` and `consumer + domain_owned` is a future cleanup, the loader pre-flight is the sole enforcement until then.
+
+---
+
+## 2026-05-28 — Skills carved out of LMS into SKILLS-MGMT, plus TLNT-INTEL
+
+**Context.** `LMS-SKILLS` (module 34) historically mastered both `skill_profiles` and `learning_paths`. Vendor evidence (Workday Skills Cloud, SuccessFactors Skills, Cornerstone Capabilities, Eightfold Talent DNA, Gloat, Fuel50) is unambiguous: the skills-cloud surface is its own marketed product, distinct from the LMS learning-paths surface. Holding both inside `LMS-SKILLS` mis-attributed every downstream handoff (ATS-CANDIDATE-CRM, TALENT-PERFORMANCE-MGMT, HCM-LIFECYCLE-WORKFLOWS, HCM-ORG-POSITIONS, SWP-DEMAND-FORECAST, LMS-COURSE-DELIVERY, LMS-COMPLIANCE-TRAINING) and propagated the wrong "canonical state machine owner" into every contributor/consumer blueprint that holds `skill_profiles`.
+
+**Decision.** Two new domains, five new modules, one rename:
+
+- New domain `SKILLS-MGMT` (id 169) with modules `SKILLS-MGMT-TAXONOMY` (id 173) and `SKILLS-MGMT-PROFILE` (id 174). `SKILLS-MGMT-PROFILE` is now the canonical master of `skill_profiles` (id 172).
+- New domain `TLNT-INTEL` (Talent Intelligence, id 170) with modules `TLNT-INTEL-MARKETPLACE` (id 175), `TLNT-INTEL-MOBILITY` (id 176), `TLNT-INTEL-INSIGHTS` (id 177). Adds 7 new masters (`internal_opportunities`, `opportunity_applications`, `mobility_recommendations`, `fit_scores`, `career_path_suggestions`, `mentorship_engagements`, `match_inference_runs`) and 6 new SKILLS-MGMT masters (`skill_taxonomies`, `skills`, `skill_assessments`, `skill_endorsements`, `competency_models`, `skill_inference_runs`).
+- `LMS-SKILLS` (module 34) renamed to `LMS-PATHS` (still under domain `LMS`, id 57). What remains is the sequenced learning-paths surface only.
+- Permissions reprefixed: baseline `lms-skills:{read,manage,admin}` → `lms-paths:*` (module 34 retains them). Workflow-gates split: `lms-skills:*_skill_profile` → `skills-mgmt:*` (module 34 → 174); `lms-skills:*_learning_path` → `lms-paths:*` (module 34 retains them).
+- Handoffs re-targeted: 2 outbound + 5 inbound on `skill_profiles` moved from module 34 → 174. Handoff 1082 (`learning_path.assigned`) stays on the renamed LMS-PATHS.
+- `skill_profiles` lifecycle states 186 (`validated`) and 187 (`inactive`) re-anchored from module 34 → 174.
+
+**Reasoning.** Same precedent as the OKR carve-out logged 2026-05-22: when vendor-marketed surfaces diverge, the catalog should mirror the market rather than impose an LMS-centric grouping. The blueprint emitter renders "canonical state machine owned by X" verbatim from `domain_module_data_objects.role='master'` rows, so leaving `skill_profiles` mis-attributed to `LMS-SKILLS` produced wrong blueprints across every contributor/consumer scope. The split also gives `TLNT-INTEL` its own home for the 7 talent-intelligence masters that have no LMS-side analog.
+
+**Scope.** Catalog-wide. In this session, only the four existing blueprints that previously misattributed `skill_profiles` to `LMS-SKILLS` were regenerated: ATS-CANDIDATE-CRM, LMS-PATHS (rename of LMS-SKILLS), LMS-COURSE-DELIVERY, LMS-COMPLIANCE-TRAINING. Blueprints for the new modules (SKILLS-MGMT-PROFILE, SKILLS-MGMT-TAXONOMY, TLNT-INTEL-MARKETPLACE, TLNT-INTEL-MOBILITY, TLNT-INTEL-INSIGHTS) are *not* authored yet, user wants to review the live data first.
+
+**Status.** Active. Migration applied via [.tmp_deploy/load_skills_tlnt_intel_phase_b.ts](../../../.tmp_deploy/load_skills_tlnt_intel_phase_b.ts) (idempotent). Loader required three corrections during this session: (1) `relationship_kind` enum is `{association, composition, reference}`, not `parent` — replaced; (2) `relationship_type` enum is `{one_to_one, one_to_many, many_to_many}`, no `many_to_one` — rows flipped (source/target and verbs swapped) to express as `one_to_many` with `owner_side="target"`; (3) `alias_type` of `solution_term`/`industry_term` requires `solution_id`/`industry_id` respectively — downgraded the 10 new aliases to `synonym` rather than guess context FKs. The original bash-heredoc call mechanism in the loader yields PGRST102 after a large prior GET response; replaced with `execFileSync` inline-arg + CHUNK=1.
+
+### Process failure that prompted this entry
+
+The earlier session that authored Phase A and Phase B regenerated [ats-candidate-crm-semantic-blueprint.md](../../../blueprints/ats-candidate-crm-semantic-blueprint.md) at 13:10 (commit `93f5ece`) *after* Phase A ran but *before* Phase B ran. The emitter faithfully serialized the live catalog state at 13:10, which still had `skill_profiles` mastered by `LMS-SKILLS`. The committed blueprint therefore contradicted the decision the loader was already authored against. No changelog entry was written, so the next session was blind to both the decision and the in-flight loader, and the user had to forensics-reconstruct the situation from `.tmp_deploy/` filenames.
+
+**Rule for future migrations of this shape:** never regenerate blueprints between Phase A (scaffolding) and Phase B (master migration). Either run both phases before any blueprint emit, or skip blueprint regen until the catalog is in its target shape. Write the changelog entry *with* the loader, not after the next session asks "what happened."
+
+**Second process failure in the same session.** When fixing the misattributed blueprints, the agent also auto-emitted blueprints for the five brand-new modules (`SKILLS-MGMT-*`, `TLNT-INTEL-*`) without user approval. User had not asked for new blueprints and wanted to review the live data first. The five files were deleted on the spot. **Rule:** "regenerate the blueprints affected by X" means only the blueprints that *already exist* and now misrepresent live state. New modules need an explicit "author the blueprint for module Y" from the user, never automatic emission as a side-effect of a fix.

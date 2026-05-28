@@ -7,7 +7,7 @@ system_slug: ats-candidate-crm
 domain_modules:
   - ats-candidate-crm
 domain_code: ATS
-related_modules: [ats-background-checks, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, hcm-lifecycle-workflows, hiring-starter, lms-skills, onb-journey-mgmt, pa-workforce-metrics, talent-succession-career]
+related_modules: [ats-background-checks, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, hcm-lifecycle-workflows, hiring-starter, onb-journey-mgmt, pa-workforce-metrics, skills-mgmt-profile, talent-succession-career, tlnt-intel-marketplace]
 created_at: 2026-05-28
 ---
 
@@ -25,12 +25,14 @@ The candidate-relationship backbone of an ATS, masters candidates (including the
 | Recruitment Agencies | Third-party recruiter or staffing firm supplying candidates. Tracks contract terms, contact, performance, and the candidates they have submitted. |
 | Recruitment Events | Career fair, on-campus event, hackathon, or meetup used as a sourcing channel. Tracks attendees, captured leads, and event ROI. |
 | Recruitment Sources | Channel a candidate came from: job board, referral, agency, sourcing campaign, career event, or inbound. Used for source-of-hire analytics and channel ROI. |
+| Opportunities | Internal postings covering full-time roles, gigs, projects, stretch assignments, and mentorships. |
 | Skill Profiles | Per-worker collection of skills with self-assessed and validated proficiency levels, derived from completed courses, certifications, performance signals, and inferred peer-comparison. The central artifact of HCM-side skills-cloud and talent-intelligence offerings. |
 | Career Aspirations | Worker-declared career interest: target roles, mobility preferences (geographic, functional), aspired timeline. Drives internal-mobility matching. |
 
 ```mermaid
 flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
+  classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
   classDef contributor fill:#cfe8ff,stroke:#1976d2,color:#0d3a66;
   classDef consumer fill:#e8def8,stroke:#7b1fa2,color:#3a155d;
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
@@ -40,12 +42,14 @@ flowchart TD
   recruitment_events["Recruitment Events"]
   skill_profiles["Skill Profiles"]
   career_aspirations["Career Aspirations"]
+  internal_opportunities["Opportunities"]
   users["Users"]
   skill_profiles -->|"feeds (opt)"| candidates
   skill_profiles -->|"feeds (opt)"| career_aspirations
   recruitment_sources -->|"attributes"| candidates
   recruitment_agencies -->|"sources"| candidates
   recruitment_events -->|"attracts"| candidates
+  users -->|"posts"| internal_opportunities
   users -->|"holds"| skill_profiles
   users -->|"declares"| career_aspirations
   class candidates master;
@@ -54,8 +58,10 @@ flowchart TD
   class recruitment_events master;
   class skill_profiles contributor;
   class career_aspirations consumer;
+  class internal_opportunities embedded_master;
   class users platform_builtin;
   style career_aspirations stroke-dasharray:5 5;
+  style internal_opportunities stroke-dasharray:5 5;
 ```
 
 ## 3. Entities catalog
@@ -66,8 +72,9 @@ flowchart TD
 | 2 | `recruitment_agencies` (Recruitment Agencies) | master | - | - | required | - | - |
 | 3 | `recruitment_events` (Recruitment Events) | master | - | - | required | - | - |
 | 4 | `recruitment_sources` (Recruitment Sources) | master | - | - | required | - | - |
-| 5 | `skill_profiles` (Skill Profiles) | contributor | `lms-skills` | Skills and Learning Paths | required | personal_content | - |
-| 6 | `career_aspirations` (Career Aspirations) | consumer | `talent-succession-career` | Succession and Career Planning | optional | personal_content | - |
+| 5 | `internal_opportunities` (Opportunities) | embedded_master | `tlnt-intel-marketplace` | Talent Marketplace | optional | submit_lock, single_approver | - |
+| 6 | `skill_profiles` (Skill Profiles) | contributor | `skills-mgmt-profile` | Worker Skill Profiles and Assessments | required | personal_content | - |
+| 7 | `career_aspirations` (Career Aspirations) | consumer | `talent-succession-career` | Succession and Career Planning | optional | personal_content | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -89,6 +96,7 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 | from | verb | to | cardinality | necessity | owner_side | notes |
 | --- | --- | --- | --- | --- | --- | --- |
+| `users` | posts | `internal_opportunities` | one_to_many | required | source | - |
 | `users` | holds | `skill_profiles` | one_to_many | required | source | - |
 | `users` | declares | `career_aspirations` | one_to_many | required | target | - |
 
@@ -96,6 +104,15 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 | from | verb | to | cardinality | necessity | notes |
 | --- | --- | --- | --- | --- | --- |
+| `skill_profiles` | updated by | `skill_assessments` | one_to_many | optional | - |
+| `skill_profiles` | updated by | `skill_endorsements` | one_to_many | optional | - |
+| `skill_profiles` | updated by | `skill_inference_runs` | one_to_many | optional | - |
+| `skill_profiles` | assessed against | `competency_models` | many_to_many | optional | - |
+| `internal_opportunities` | receives | `opportunity_applications` | one_to_many | optional | - |
+| `internal_opportunities` | ranked by | `fit_scores` | one_to_many | optional | - |
+| `skill_profiles` | compared via | `fit_scores` | one_to_many | required | - |
+| `skill_profiles` | feeds | `mobility_recommendations` | one_to_many | required | - |
+| `career_aspirations` | informs | `career_path_suggestions` | one_to_many | optional | - |
 | `employees` | holds | `skill_profiles` | one_to_one | optional | - |
 | `job_profiles` | maps_to | `skill_profiles` | many_to_many | optional | - |
 | `employees` | becomes | `career_aspirations` | one_to_one | optional | - |
@@ -144,15 +161,16 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 | target module | source domain | source module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | `candidates` | lifecycle_progression | low | - |
-| ATS-CANDIDATE-CRM | LMS | LMS-SKILLS | `skill_profile.updated` | `skill_profiles` | event_stream | medium | Internal-candidate skill data flows into ATS for internal mobility sourcing. |
 | ATS-CANDIDATE-CRM | TALENT-MGMT | TALENT-SUCCESSION-CAREER | `successor.tagged` | `career_aspirations` | api_call | low | Successors identified in succession_plans surface in ATS as pre-qualified internal candidates for matched requisitions. |
+| ATS-CANDIDATE-CRM | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `skill_profile.updated` | `skill_profiles` | event_stream | medium | Internal-candidate skill data flows into ATS for internal mobility sourcing. |
+| ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | `candidates` | lifecycle_progression | low | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
 | data_object | role here | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
-| `skill_profiles` | contributor | required | LMS-SKILLS (LMS) | - |
+| `internal_opportunities` | embedded_master | optional | TLNT-INTEL-MARKETPLACE (TLNT-INTEL) | - |
+| `skill_profiles` | contributor | required | SKILLS-MGMT-PROFILE (SKILLS-MGMT) | - |
 | `career_aspirations` | consumer | optional | TALENT-SUCCESSION-CAREER (TALENT-MGMT) | - |
 
 ## 7. Lifecycle states (per touched entity)
@@ -179,6 +197,18 @@ _This scope holds `career_aspirations` as **consumer**; the canonical state mach
 | 4 | `fulfilled` | - | ✓ | - | - | Aspiration achieved (role move, promotion, lateral). |
 | 5 | `withdrawn` | - | ✓ | - | - | Employee withdraws the aspiration (priorities changed). |
 
+### `internal_opportunities` (Opportunity)
+
+_This scope holds `internal_opportunities` as **embedded_master**; the canonical state machine is owned by `TLNT-INTEL-MARKETPLACE`._
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | - | - | - |
+| 2 | `open` | - | - | ✓ | `tlnt-intel-marketplace:publish_opportunity` | - |
+| 3 | `closed` | - | - | ✓ | `tlnt-intel-marketplace:close_opportunity` | - |
+| 4 | `filled` | - | ✓ | - | - | - |
+| 5 | `cancelled` | - | ✓ | ✓ | `tlnt-intel-marketplace:cancel_opportunity` | - |
+
 ### `recruitment_agencies` (Recruitment Agency)
 
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
@@ -200,14 +230,14 @@ _This scope holds `career_aspirations` as **consumer**; the canonical state mach
 
 ### `skill_profiles` (Skill Profile)
 
-_This scope holds `skill_profiles` as **contributor**; the canonical state machine is owned by `LMS-SKILLS`._
+_This scope holds `skill_profiles` as **contributor**; the canonical state machine is owned by `SKILLS-MGMT-PROFILE`._
 
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `initialized` | ✓ | - | - | - | Profile seeded for the worker from role and prior signals. |
 | 2 | `self_assessed` | - | - | - | - | Worker has captured self-assessed proficiency levels. |
-| 3 | `validated` | - | - | ✓ | `lms-skills:validate` | Manager or skills owner validated proficiency entries. |
-| 4 | `inactive` | - | ✓ | ✓ | `lms-skills:deactivate` | Profile retired (worker exit or role-change reset). |
+| 3 | `validated` | - | - | ✓ | `skills-mgmt-profile:validate` | Manager or skills owner validated proficiency entries. |
+| 4 | `inactive` | - | ✓ | ✓ | `skills-mgmt-profile:deactivate` | Profile retired (worker exit or role-change reset). |
 
 ## 8. Permissions and business rules (derived)
 

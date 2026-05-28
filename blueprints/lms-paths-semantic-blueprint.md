@@ -1,28 +1,27 @@
 ---
 artifact: semantic-blueprint
 fact_sheet_version: "2.0"
-system_name: LMS-SKILLS
-system_description: Skills and Learning Paths
-system_slug: lms-skills
+system_name: LMS-PATHS
+system_description: Learning Paths
+system_slug: lms-paths
 domain_modules:
-  - lms-skills
+  - lms-paths
 domain_code: LMS
-related_modules: [ats-candidate-crm, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, lms-compliance-training, lms-course-delivery, swp-demand-forecast, talent-performance-mgmt]
+related_modules: [hcm-core-worker, hcm-org-positions, lms-compliance-training, lms-course-delivery, skills-mgmt-profile, swp-demand-forecast, talent-performance-mgmt]
 created_at: 2026-05-28
 ---
 
-# Skills and Learning Paths
+# Learning Paths
 
 ## 1. Overview
 
-Skills-cloud surface of an LMS: employee skill profiles, competency tracking, and skills-driven learning-path recommendation. Masters `skill_profiles` and `learning_paths`. Realizes SKILLS-MGMT and LEARNING-PATH. Distinct from LMS-COURSE-DELIVERY because learning paths here are assigned to close skill gaps rather than sequenced as course curricula. Heavy contributors: TALENT-MGMT (talent reviews), ATS (internal mobility), SWP (workforce planning).
+Authors and assigns sequenced learning paths inside the LMS. Masters learning_paths; consumes skill_profiles (mastered by SKILLS-MGMT after migration) to recommend paths against skill gaps.
 
 ## 2. Entity summary
 
 | Name | Description |
 | --- | --- |
 | Learning Paths | Curated sequence of courses targeting a role, skill, or certification. Drives ordered enrolment and progress tracking across multiple courses. |
-| Skill Profiles | Per-worker collection of skills with self-assessed and validated proficiency levels, derived from completed courses, certifications, performance signals, and inferred peer-comparison. The central artifact of HCM-side skills-cloud and talent-intelligence offerings. |
 | Certifications | Issued credential against a worker (internal certification, vendor cert, regulatory cert) with issue date, expiry, issuing body, and renewal rules. Drives recertification campaigns. |
 | Course Enrollments | Per-learner per-course state record: assigned date, due date, attempts, status (not_started, in_progress, completed, expired), score. The operational unit of learning tracking. |
 | Employees | Canonical record of a person currently or formerly employed by the organization. Carries identity (legal name, contact, IDs), employment metadata (start date, end date, employment type, country), and pointers to position, job profile, org unit, manager, and life-event history. The most multi-mastered data object in the catalog: HCM masters the core HR slice, Payroll masters the comp/withholding slice, and IGA masters the identity/access slice. Onboarding, PA, and Talent Management consume or contribute. |
@@ -30,6 +29,7 @@ Skills-cloud surface of an LMS: employee skill profiles, competency tracking, an
 | Org Units | Node in the organizational hierarchy: division, business unit, department, team. Carries manager, cost center alignment, geographic scope, and parent/child relationships. HCM masters the operational hierarchy; EPM contributes the cost-center mapping (which would be Finance-mastered once a Finance/GL domain is loaded). |
 | Positions | Approved slot in the org - a 'chair' with role definition, cost center, reporting line, location, and FTE allocation. Distinct from job_profiles (the catalog definition) and from employees (the person filling the slot). A position can be open, filled, or eliminated. SWP designs future positions via org_designs; HCM operationalizes them once approved. |
 | Performance Goals | Individual goal or OKR with owner, period, metric, weight, status, alignment to organisational objectives. Reviewed within performance_reviews cycles. |
+| Skill Profiles | Per-worker collection of skills with self-assessed and validated proficiency levels, derived from completed courses, certifications, performance signals, and inferred peer-comparison. The central artifact of HCM-side skills-cloud and talent-intelligence offerings. |
 | Skills Gap Analyses | Comparison of current-state skills inventory vs future-state demand by role, level, and geography. Drives build/buy/borrow strategy: which gaps to close via training (LMS), external hires (ATS), or contingent workforce. Outputs feed both SWP scenarios and LMS curriculum decisions. |
 
 ```mermaid
@@ -38,7 +38,6 @@ flowchart TD
   classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
   classDef consumer fill:#e8def8,stroke:#7b1fa2,color:#3a155d;
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
-  skill_profiles["Skill Profiles"]
   learning_paths["Learning Paths"]
   employees["Employees"]
   hcm_positions["Positions"]
@@ -48,6 +47,7 @@ flowchart TD
   job_profiles["Job Profiles"]
   skills_gap_analyses["Skills Gap Analyses"]
   performance_goals["Performance Goals"]
+  skill_profiles["Skill Profiles"]
   users["Users"]
   org_units -->|"groups"| employees
   org_units -->|"contains"| hcm_positions
@@ -76,7 +76,6 @@ flowchart TD
   users -->|"owns"| performance_goals
   org_units -->|"has members (opt)"| users
   users -->|"prepares (opt)"| skills_gap_analyses
-  class skill_profiles master;
   class learning_paths master;
   class employees embedded_master;
   class hcm_positions embedded_master;
@@ -86,10 +85,12 @@ flowchart TD
   class job_profiles embedded_master;
   class skills_gap_analyses consumer;
   class performance_goals consumer;
+  class skill_profiles consumer;
   class users platform_builtin;
   style hcm_positions stroke-dasharray:5 5;
   style org_units stroke-dasharray:5 5;
   style job_profiles stroke-dasharray:5 5;
+  style skill_profiles stroke-dasharray:5 5;
 ```
 
 ## 3. Entities catalog
@@ -97,14 +98,14 @@ flowchart TD
 | # | data_object | role | mastered in | label | necessity | pattern flags | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `learning_paths` (Learning Paths) | master | - | - | required | - | - |
-| 2 | `skill_profiles` (Skill Profiles) | master | - | - | required | personal_content | - |
-| 3 | `learner_certifications` (Certifications) | embedded_master | `lms-compliance-training` | Compliance Training | required | personal_content | - |
-| 4 | `course_enrollments` (Course Enrollments) | embedded_master | `lms-course-delivery` | Course Delivery | required | personal_content | - |
-| 5 | `employees` (Employees) | embedded_master | `hcm-core-worker` | Core Worker Record | required | personal_content | - |
-| 6 | `job_profiles` (Job Profiles) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | single_approver | - |
-| 7 | `org_units` (Org Units) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | - | - |
-| 8 | `hcm_positions` (Positions) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | single_approver | - |
-| 9 | `performance_goals` (Performance Goals) | consumer | `talent-performance-mgmt` | Performance and Goal Management | required | personal_content | - |
+| 2 | `learner_certifications` (Certifications) | embedded_master | `lms-compliance-training` | Compliance Training | required | personal_content | - |
+| 3 | `course_enrollments` (Course Enrollments) | embedded_master | `lms-course-delivery` | Course Delivery | required | personal_content | - |
+| 4 | `employees` (Employees) | embedded_master | `hcm-core-worker` | Core Worker Record | required | personal_content | - |
+| 5 | `job_profiles` (Job Profiles) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | single_approver | - |
+| 6 | `org_units` (Org Units) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | - | - |
+| 7 | `hcm_positions` (Positions) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | single_approver | - |
+| 8 | `performance_goals` (Performance Goals) | consumer | `talent-performance-mgmt` | Performance and Goal Management | required | personal_content | - |
+| 9 | `skill_profiles` (Skill Profiles) | consumer | `skills-mgmt-profile` | Worker Skill Profiles and Assessments | optional | personal_content | - |
 | 10 | `skills_gap_analyses` (Skills Gap Analyses) | consumer | `swp-demand-forecast` | Demand Forecast | required | - | - |
 
 ## 4. Aliases and industry synonyms
@@ -160,6 +161,14 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `legal_holds` | identifies_custodians_from | `employees` | many_to_many | optional | - |
 | `legal_advice_records` | references | `employees` | many_to_many | optional | - |
 | `employees` | is host for | `host_assignments` | one_to_many | required | - |
+| `job_profiles` | expects | `competency_models` | one_to_many | optional | - |
+| `skill_profiles` | updated by | `skill_assessments` | one_to_many | optional | - |
+| `skill_profiles` | updated by | `skill_endorsements` | one_to_many | optional | - |
+| `skill_profiles` | updated by | `skill_inference_runs` | one_to_many | optional | - |
+| `skill_profiles` | assessed against | `competency_models` | many_to_many | optional | - |
+| `competency_models` | compared via | `skills_gap_analyses` | one_to_many | optional | - |
+| `skill_profiles` | compared via | `fit_scores` | one_to_many | required | - |
+| `skill_profiles` | feeds | `mobility_recommendations` | one_to_many | required | - |
 | `employees` | signs | `employment_contracts` | one_to_many | required | - |
 | `employees` | generates | `employment_events` | one_to_many | required | - |
 | `cost_centers` | funds | `org_units` | one_to_many | required | - |
@@ -225,29 +234,16 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
-| data_object | other module / domain | role | necessity | notes |
-| --- | --- | --- | --- | --- |
-| `skill_profiles` | ATS-CANDIDATE-CRM (Candidate CRM) - ATS | contributor | required | - |
-| `skill_profiles` | HCM-LIFECYCLE-WORKFLOWS (Employee Lifecycle Workflows) - HCM | consumer | optional | - |
-| `skill_profiles` | TALENT-PERFORMANCE-MGMT (Performance and Goal Management) - TALENT-MGMT | contributor | required | - |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
 | source module | target domain | target module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LMS-SKILLS | ATS | ATS-CANDIDATE-CRM | `skill_profile.updated` | `skill_profiles` | event_stream | medium | Internal-candidate skill data flows into ATS for internal mobility sourcing. |
-| LMS-SKILLS | LMS | LMS-COURSE-DELIVERY | `learning_path.assigned` | `learning_paths` | lifecycle_progression | low | - |
-| LMS-SKILLS | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `skill_profile.updated` | `skill_profiles` | event_stream | medium | Skill-profile refresh drives internal mobility, succession, and dev-plan suggestions. |
+| LMS-PATHS | LMS | LMS-COURSE-DELIVERY | `learning_path.assigned` | `learning_paths` | lifecycle_progression | low | - |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
-| target module | source domain | source module | trigger_event | payload | integration | friction | description |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| LMS-SKILLS | HCM | HCM-ORG-POSITIONS | `job_profile.published` | `job_profiles` | event_stream | low | Job profile competencies drive LMS skill-profile expectations and required-training assignments. |
-| LMS-SKILLS | LMS | LMS-COMPLIANCE-TRAINING | `learner_certification.earned` | `learner_certifications` | lifecycle_progression | low | - |
-| LMS-SKILLS | LMS | LMS-COURSE-DELIVERY | `course_enrollment.completed` | `course_enrollments` | lifecycle_progression | low | - |
-| LMS-SKILLS | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `performance_goal.set` | `performance_goals` | event_stream | low | Goal setting drives learning-path suggestions for capability gaps. |
-| LMS-SKILLS | SWP | SWP-DEMAND-FORECAST | `skills_gap_analysis.completed` | `skills_gap_analyses` | event_stream | medium | Identified gaps drive LMS curriculum updates and assignment campaigns. |
+_(no inbound `handoffs` whose payload is in this scope.)_
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -260,6 +256,7 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `learner_certifications` | embedded_master | required | LMS-COMPLIANCE-TRAINING (LMS) | - |
 | `org_units` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | - |
 | `performance_goals` | consumer | required | TALENT-PERFORMANCE-MGMT (TALENT-MGMT) | - |
+| `skill_profiles` | consumer | optional | SKILLS-MGMT-PROFILE (SKILLS-MGMT) | - |
 | `skills_gap_analyses` | consumer | required | SWP-DEMAND-FORECAST (SWP) | - |
 
 ## 7. Lifecycle states (per touched entity)
@@ -331,8 +328,8 @@ _This scope holds `learner_certifications` as **embedded_master**; the canonical
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `draft` | ✓ | - | - | - | Path being curated by L&D with course sequencing. |
-| 2 | `published` | - | - | ✓ | `lms-skills:publish` | Path released and assignable to roles, skills, or audiences. |
-| 3 | `retired` | - | ✓ | ✓ | `lms-skills:retire` | Path removed from new assignments and kept for historical reference. |
+| 2 | `published` | - | - | ✓ | `lms-paths:publish` | Path released and assignable to roles, skills, or audiences. |
+| 3 | `retired` | - | ✓ | ✓ | `lms-paths:retire` | Path removed from new assignments and kept for historical reference. |
 
 ### `org_units` (Org Unit)
 
@@ -359,12 +356,14 @@ _This scope holds `performance_goals` as **consumer**; the canonical state machi
 
 ### `skill_profiles` (Skill Profile)
 
+_This scope holds `skill_profiles` as **consumer**; the canonical state machine is owned by `SKILLS-MGMT-PROFILE`._
+
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `initialized` | ✓ | - | - | - | Profile seeded for the worker from role and prior signals. |
 | 2 | `self_assessed` | - | - | - | - | Worker has captured self-assessed proficiency levels. |
-| 3 | `validated` | - | - | ✓ | `lms-skills:validate` | Manager or skills owner validated proficiency entries. |
-| 4 | `inactive` | - | ✓ | ✓ | `lms-skills:deactivate` | Profile retired (worker exit or role-change reset). |
+| 3 | `validated` | - | - | ✓ | `skills-mgmt-profile:validate` | Manager or skills owner validated proficiency entries. |
+| 4 | `inactive` | - | ✓ | ✓ | `skills-mgmt-profile:deactivate` | Profile retired (worker exit or role-change reset). |
 
 ### `skills_gap_analyses` (Skills Gap Analysis)
 
@@ -382,18 +381,12 @@ _This scope holds `skills_gap_analyses` as **consumer**; the canonical state mac
 
 | permission | tier | description | included in `:admin`? |
 | --- | --- | --- | --- |
-| `lms-skills:read` | baseline-read | Read access to every entity in the module | ✓ |
-| `lms-skills:manage` | baseline-manage | Edit operational records | ✓ |
-| `lms-skills:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
-| `lms-skills:publish` | workflow-gate (lifecycle) | Transition `learning_paths` into state `published` | ✓ |
-| `lms-skills:retire` | workflow-gate (lifecycle) | Transition `learning_paths` into state `retired` | ✓ |
-| `lms-skills:validate` | workflow-gate (lifecycle) | Transition `skill_profiles` into state `validated` | ✓ |
-| `lms-skills:deactivate` | workflow-gate (lifecycle) | Transition `skill_profiles` into state `inactive` | ✓ |
-| `lms-skills:view_all_skill_profiles` | override (personal_content) | View all `skill_profiles` rows beyond row-scope | ✓ |
-| `lms-skills:manage_all_skill_profiles` | override (personal_content) | Manage all `skill_profiles` rows beyond row-scope | ✓ |
+| `lms-paths:read` | baseline-read | Read access to every entity in the module | ✓ |
+| `lms-paths:manage` | baseline-manage | Edit operational records | ✓ |
+| `lms-paths:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
+| `lms-paths:publish` | workflow-gate (lifecycle) | Transition `learning_paths` into state `published` | ✓ |
+| `lms-paths:retire` | workflow-gate (lifecycle) | Transition `learning_paths` into state `retired` | ✓ |
 
 ### 8.2 Business rules
 
-| rule_name | data_object | source flag | intent |
-| --- | --- | --- | --- |
-| `skill_profile_edit_scope` | `skill_profiles` | has_personal_content | Row-scope by default; override via `lms-skills:view_all_skill_profiles` / `lms-skills:manage_all_skill_profiles` |
+_(no flag-derived business rules.)_

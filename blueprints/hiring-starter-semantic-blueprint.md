@@ -224,6 +224,15 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `users` | coordinates_ill | `interlibrary_loan_requests` | one_to_many | optional | target | - |
 | `users` | received_item | `library_items` | one_to_many | optional | target | - |
 | `library_patrons` | linked_to_user | `users` | one_to_one | optional | source | - |
+| `users` | rates | `skill_assessments` | one_to_many | required | source | - |
+| `users` | endorses | `skill_endorsements` | one_to_many | required | source | - |
+| `users` | approves | `competency_models` | one_to_many | optional | source | - |
+| `users` | posts | `internal_opportunities` | one_to_many | required | source | - |
+| `users` | submits | `opportunity_applications` | one_to_many | required | source | - |
+| `users` | targeted by | `mobility_recommendations` | one_to_many | required | source | - |
+| `users` | scored as | `fit_scores` | one_to_many | required | source | - |
+| `users` | follows | `career_path_suggestions` | one_to_many | required | source | - |
+| `users` | participates in | `mentorship_engagements` | one_to_many | required | source | - |
 | `users` | owns | `customers` | one_to_many | optional | source | - |
 | `users` | authored | `content_entries` | one_to_many | required | source | - |
 | `users` | manages release | `content_releases` | one_to_many | optional | source | - |

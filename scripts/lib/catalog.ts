@@ -58,6 +58,7 @@ export type Domain = {
   domain_code: string;
   domain_name: string;
   description: string;
+  catalog: boolean;
   crud_percentage: number;
   business_logic: string;
   min_org_size: string;
@@ -75,6 +76,7 @@ export type ModuleRow = {
   domain_module_name: string;
   domain_id: number | null;
   description: string;
+  catalog: boolean;
   module_kind: "full" | "starter";
 };
 
@@ -173,7 +175,7 @@ export async function loadCatalogIndex(): Promise<CatalogIndex> {
   const [domains, dataObjects, industries, modules] = await Promise.all([
     pg(
       "GET",
-      "/domains?select=id,domain_code,domain_name,description,crud_percentage,business_logic,min_org_size,cost_band,certification_required,usa_market_size_usd_m,market_size_source_year&order=domain_code.asc&limit=10000",
+      "/domains?select=id,domain_code,domain_name,description,catalog,crud_percentage,business_logic,min_org_size,cost_band,certification_required,usa_market_size_usd_m,market_size_source_year&order=domain_code.asc&limit=10000",
     ) as Promise<Domain[]>,
     pg(
       "GET",
@@ -182,7 +184,7 @@ export async function loadCatalogIndex(): Promise<CatalogIndex> {
     pg("GET", "/industries?select=id,industry_name&limit=10000") as Promise<IndustryRow[]>,
     pg(
       "GET",
-      "/domain_modules?select=id,domain_module_code,domain_module_name,domain_id,description,module_kind&order=domain_module_code.asc&limit=10000",
+      "/domain_modules?select=id,domain_module_code,domain_module_name,domain_id,description,catalog,module_kind&order=domain_module_code.asc&limit=10000",
     ) as Promise<ModuleRow[]>,
   ]);
 

@@ -122,16 +122,16 @@ _(no outbound `handoffs` whose payload is in this scope.)_
 
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `drafted` | ✓ | - | - | - | - |
 | 1 | `drafted` | ✓ | - | - | - | Objective drafted by the owner. |
+| 1 | `drafted` | ✓ | - | - | - | - |
 | 2 | `committed` | - | - | ✓ | `work-mgmt-goals-okr:commit_okr_objective` | - |
 | 2 | `committed` | - | - | ✓ | `talent-performance-mgmt:commit_okr_objective` | Owner and manager commit to the objective for the cycle. |
 | 3 | `in_progress` | - | - | - | - | - |
 | 3 | `in_progress` | - | - | - | - | Objective is being pursued; key results updated. |
 | 4 | `graded` | - | - | ✓ | `talent-performance-mgmt:grade_okr_objective` | End-of-cycle score (0.0-1.0) recorded. |
 | 4 | `scored` | - | - | ✓ | `work-mgmt-goals-okr:score_okr_objective` | - |
-| 5 | `closed` | - | ✓ | - | - | - |
 | 5 | `closed` | - | ✓ | - | - | Cycle closed; objective archived. |
+| 5 | `closed` | - | ✓ | - | - | - |
 
 ### `work_items` (Work Item)
 

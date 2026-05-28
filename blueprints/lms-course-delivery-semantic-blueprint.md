@@ -7,7 +7,7 @@ system_slug: lms-course-delivery
 domain_modules:
   - lms-course-delivery
 domain_code: LMS
-related_modules: [hcm-core-worker, hcm-org-positions, lms-compliance-training, lms-skills, pa-predictive-models, talent-succession-career]
+related_modules: [hcm-core-worker, hcm-org-positions, lms-compliance-training, lms-paths, pa-predictive-models, skills-mgmt-profile, talent-succession-career]
 created_at: 2026-05-28
 ---
 
@@ -198,8 +198,9 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 | data_object | other module / domain | role | necessity | notes |
 | --- | --- | --- | --- | --- |
-| `course_enrollments` | LMS-SKILLS (Skills and Learning Paths) - LMS | embedded_master | required | - |
+| `course_enrollments` | LMS-PATHS (Learning Paths) - LMS | embedded_master | required | - |
 | `course_enrollments` | PA-PREDICTIVE-MODELS (Predictive Models) - PA | consumer | optional | - |
+| `course_enrollments` | SKILLS-MGMT-PROFILE (Worker Skill Profiles and Assessments) - SKILLS-MGMT | contributor | required | - |
 | `course_enrollments` | TALENT-SUCCESSION-CAREER (Succession and Career Planning) - TALENT-MGMT | consumer | optional | - |
 | `courses` | LMS-COMPLIANCE-TRAINING (Compliance Training) - LMS | embedded_master | required | - |
 | `learning_records` | PA-PREDICTIVE-MODELS (Predictive Models) - PA | derived | required | - |
@@ -210,8 +211,8 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | LMS-COURSE-DELIVERY | HCM | _(domain-level)_ | `learning_record.posted` | `learning_records` | event_stream | low | Authoritative learning transcript visible in HCM employee record. |
 | LMS-COURSE-DELIVERY | LMS | LMS-COMPLIANCE-TRAINING | `course.published` | `courses` | lifecycle_progression | low | - |
-| LMS-COURSE-DELIVERY | LMS | LMS-SKILLS | `course_enrollment.completed` | `course_enrollments` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | TALENT-MGMT | TALENT-SUCCESSION-CAREER | `course_enrollment.completed` | `course_enrollments` | event_stream | low | Course completion updates skill-profile; TALENT-MGMT reflects in dev-plans and succession. |
+| LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course_enrollment.completed` | `course_enrollments` | lifecycle_progression | low | - |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 

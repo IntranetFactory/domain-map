@@ -1,12 +1,14 @@
 #!/usr/bin/env bun
 // scripts/emit_domain_map.ts
 //
-// Emits domain-map.json at the repo root: every domain in the catalog with its modules
-// (per-module catalog payload populated), plus per-domain related_domains derived from
-// the union of each module's relatedModuleIds.
+// Emits domain-map.json at the repo root: every domain with code, name, description,
+// catalog flag, modules (same four fields per module), and related_domains (codes).
+//
+// related_domains = (other domains touching one of this domain's data_objects, any role)
+//                 ∪ (handoff neighbors, either direction), minus self.
 //
 // All catalog reads go through scripts/lib/catalog.ts so this script and the per-module
-// blueprint emitter (emit_fact_sheet.ts) cannot diverge on what a module's catalog says.
+// blueprint emitter (emit_fact_sheet.ts) share one source for the underlying tables.
 //
 // Usage:
 //   bun run scripts/emit_domain_map.ts                 # write domain-map.json
@@ -19,7 +21,6 @@ import { writeFileSync } from "node:fs";
 import { argv } from "node:process";
 import {
   loadCachedCatalog,
-  loadModuleCatalog,
   type AllRelationships,
   type CatalogIndex,
   type ModuleRow,
@@ -33,186 +34,29 @@ function flagValue(name: string): string | null {
 const STDOUT = args.includes("--stdout");
 const OUT_PATH = flagValue("--out") ?? "c:/dev/domain-map/domain-map.json";
 
-// ---------- output shape ----------
-
-type DataObjectOut = {
-  name: string;
-  role: string;
-  necessity: string | null;
-};
-
-type HandoffOut = {
-  trigger_event: string | null;
-  payload: string | null;
-  source_module: string | null;
-  source_domain: string | null;
-  target_module: string | null;
-  target_domain: string | null;
-  integration_pattern: string | null;
-  friction_level: string | null;
-};
-
-type LifecycleStateOut = {
-  state_name: string;
-  state_order: number;
-  is_initial: boolean;
-  is_terminal: boolean;
-  requires_permission: boolean;
-  permission_verb_override: string | null;
-  realizing_module: string | null;
-};
-
-type ModuleCatalogOut = {
-  data_objects: DataObjectOut[];
-  master_providers: { data_object: string; owner_module: string | null; owner_domain: string | null; role: string; necessity: string | null }[];
-  master_consumers: { data_object: string; consumer_module: string; consumer_domain: string | null; role: string; necessity: string | null }[];
-  outbound_handoffs: HandoffOut[];
-  inbound_handoffs: HandoffOut[];
-  lifecycle: { data_object: string; states: LifecycleStateOut[] }[];
-  related_modules: string[];
-};
-
 type ModuleOut = {
   code: string;
   name: string;
   description: string;
-  module_kind: "full" | "starter";
-  catalog: ModuleCatalogOut;
+  catalog: boolean;
 };
 
 type DomainOut = {
   code: string;
   name: string;
   description: string;
+  catalog: boolean;
   modules: ModuleOut[];
   related_domains: string[];
 };
 
-// ---------- helpers ----------
-
-function moduleSlug(code: string): string {
-  return code.toLowerCase().replace(/_/g, "-");
-}
-
-function buildModuleCatalogOut(
-  cat: Awaited<ReturnType<typeof loadModuleCatalog>>,
-  index: CatalogIndex,
-): ModuleCatalogOut {
-  const dataObjects: DataObjectOut[] = cat.scopeRows
-    .slice()
-    .sort((a, b) => a.data_object.data_object_name.localeCompare(b.data_object.data_object_name))
-    .map((r) => ({
-      name: r.data_object.data_object_name,
-      role: r.role,
-      necessity: r.necessity,
-    }));
-
-  const master_providers = cat.scopeRows
-    .filter((r) => r.role !== "master")
-    .map((r) => {
-      const info = cat.owners.get(r.data_object_id);
-      const ownerModule = info?.modules[0];
-      const ownerDomain =
-        ownerModule && ownerModule.domain_id !== null
-          ? index.domainsById.get(ownerModule.domain_id) ?? null
-          : info?.domains[0] ?? null;
-      return {
-        data_object: r.data_object.data_object_name,
-        owner_module: ownerModule ? ownerModule.domain_module_code : null,
-        owner_domain: ownerDomain ? ownerDomain.domain_code : null,
-        role: r.role,
-        necessity: r.necessity,
-      };
-    });
-
-  const master_consumers = cat.coMasters.map((c) => {
-    const obj = index.dataObjectsById.get(c.data_object_id);
-    return {
-      data_object: obj?.data_object_name ?? `#${c.data_object_id}`,
-      consumer_module: c.owner_module?.domain_module_code ?? "",
-      consumer_domain: c.owner_domain?.domain_code ?? null,
-      role: c.role,
-      necessity: c.necessity,
-    };
-  });
-
-  const mapHandoff = (h: any): HandoffOut => {
-    const sm = h.source_domain_module_id !== null ? index.modulesById.get(h.source_domain_module_id) : null;
-    const tm = h.target_domain_module_id !== null ? index.modulesById.get(h.target_domain_module_id) : null;
-    const sd = h.source_domain_id !== null ? index.domainsById.get(h.source_domain_id) : null;
-    const td = h.target_domain_id !== null ? index.domainsById.get(h.target_domain_id) : null;
-    return {
-      trigger_event: h.trigger_events?.event_name ?? null,
-      payload: h.data_objects?.data_object_name ?? null,
-      source_module: sm?.domain_module_code ?? null,
-      source_domain: sd?.domain_code ?? null,
-      target_module: tm?.domain_module_code ?? null,
-      target_domain: td?.domain_code ?? null,
-      integration_pattern: h.integration_pattern ?? null,
-      friction_level: h.friction_level ?? null,
-    };
-  };
-
-  const outbound_handoffs = cat.outboundHandoffs.map(mapHandoff);
-  const inbound_handoffs = cat.inboundHandoffs.map(mapHandoff);
-
-  const lifecycleByObj = new Map<number, LifecycleStateOut[]>();
-  for (const ls of cat.lifecycleRows) {
-    const did = ls.data_object_id as number;
-    if (!lifecycleByObj.has(did)) lifecycleByObj.set(did, []);
-    const realizingId = ls.domain_module_id as number | null;
-    const realizingModule = realizingId !== null ? index.modulesById.get(realizingId) : null;
-    lifecycleByObj.get(did)!.push({
-      state_name: ls.state_name as string,
-      state_order: ls.state_order as number,
-      is_initial: Boolean(ls.is_initial),
-      is_terminal: Boolean(ls.is_terminal),
-      requires_permission: Boolean(ls.requires_permission),
-      permission_verb_override: (ls.permission_verb_override as string | null) ?? null,
-      realizing_module: realizingModule?.domain_module_code ?? null,
-    });
-  }
-  const lifecycle = [...lifecycleByObj.entries()]
-    .map(([did, states]) => {
-      const obj = index.dataObjectsById.get(did);
-      return {
-        data_object: obj?.data_object_name ?? `#${did}`,
-        states: states.slice().sort((a, b) => a.state_order - b.state_order),
-      };
-    })
-    .sort((a, b) => a.data_object.localeCompare(b.data_object));
-
-  const related_modules = [...cat.relatedModuleIds]
-    .map((id) => index.modulesById.get(id))
-    .filter((m): m is ModuleRow => Boolean(m))
-    .map((m) => m.domain_module_code)
-    .sort((a, b) => a.localeCompare(b));
-
-  return {
-    data_objects: dataObjects,
-    master_providers,
-    master_consumers,
-    outbound_handoffs,
-    inbound_handoffs,
-    lifecycle,
-    related_modules,
-  };
-}
-
-// ---------- driver ----------
-
 const t0 = Date.now();
-// This script always reads fresh from the server (it's the "regenerate everything"
-// path, usually run after a load). loadCachedCatalog with forceRefresh writes the
-// cache for us so the next blueprint emit picks up this exact bundle.
 const { index, all }: { index: CatalogIndex; all: AllRelationships } = await loadCachedCatalog({
   forceRefresh: true,
 });
-const tLoaded = Date.now();
-console.error(`bulk-loaded catalog + relationships in ${((tLoaded - t0) / 1000).toFixed(1)}s`);
+console.error(`bulk-loaded catalog + relationships in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 
 // Modules hosted on a domain = primary host (domain_modules.domain_id) ∪ host junction.
-// host junction rows are bulk-loaded as part of AllRelationships.
 const moduleHostsByModule = new Map<number, Set<number>>();
 for (const h of all.hostDomains) {
   const mid = h.domain_module_id as number;
@@ -231,59 +75,78 @@ for (const m of index.modules) {
   }
 }
 
-// Derive each module's catalog payload in memory. Same lib that emit_fact_sheet.ts uses.
-const catByModuleId = new Map<number, ReturnType<typeof loadModuleCatalog>>();
-for (const m of index.modules) {
-  catByModuleId.set(m.id, loadModuleCatalog([m.id], index, all));
+// data_objects touched by a domain = domain_data_objects ∪ (modules hosted on domain → domain_module_data_objects).
+const domainsByModule = new Map<number, Set<number>>();
+for (const [did, mods] of modulesByDomain) {
+  for (const m of mods) {
+    if (!domainsByModule.has(m.id)) domainsByModule.set(m.id, new Set());
+    domainsByModule.get(m.id)!.add(did);
+  }
 }
-const tCatalogs = Date.now();
-console.error(`derived ${catByModuleId.size} module catalogs in ${((tCatalogs - tLoaded) / 1000).toFixed(2)}s`);
+const dataObjectsByDomain = new Map<number, Set<number>>();
+for (const d of index.domains) dataObjectsByDomain.set(d.id, new Set());
+for (const r of all.ddo) {
+  dataObjectsByDomain.get(r.domain_id as number)?.add(r.data_object_id as number);
+}
+for (const r of all.dmdo) {
+  const dids = domainsByModule.get(r.domain_module_id as number);
+  if (!dids) continue;
+  for (const did of dids) dataObjectsByDomain.get(did)?.add(r.data_object_id as number);
+}
 
-// Per-domain related_domains: aggregate each member-module's relatedModuleIds, map
-// related module → its parent domain ids (primary + host junction), drop self.
+// Reverse: data_object → domains touching it.
+const domainsByDataObject = new Map<number, Set<number>>();
+for (const [did, dataObjs] of dataObjectsByDomain) {
+  for (const oid of dataObjs) {
+    if (!domainsByDataObject.has(oid)) domainsByDataObject.set(oid, new Set());
+    domainsByDataObject.get(oid)!.add(did);
+  }
+}
+
+// Handoff neighbors (either direction, self excluded).
+const handoffNeighbors = new Map<number, Set<number>>();
+for (const d of index.domains) handoffNeighbors.set(d.id, new Set());
+for (const h of all.handoffs) {
+  const s = h.source_domain_id as number | null;
+  const t = h.target_domain_id as number | null;
+  if (s === null || t === null || s === t) continue;
+  handoffNeighbors.get(s)?.add(t);
+  handoffNeighbors.get(t)?.add(s);
+}
+
 const out: DomainOut[] = [];
 for (const d of index.domains) {
-  const mods = (modulesByDomain.get(d.id) ?? [])
+  const mods: ModuleOut[] = (modulesByDomain.get(d.id) ?? [])
     .slice()
-    .sort((a, b) => a.domain_module_code.localeCompare(b.domain_module_code));
-
-  const moduleOuts: ModuleOut[] = mods.map((m) => {
-    const cat = catByModuleId.get(m.id);
-    if (!cat) throw new Error(`missing module catalog for ${m.domain_module_code}`);
-    return {
+    .sort((a, b) => a.domain_module_code.localeCompare(b.domain_module_code))
+    .map((m) => ({
       code: m.domain_module_code,
       name: m.domain_module_name,
       description: m.description ?? "",
-      module_kind: m.module_kind,
-      catalog: buildModuleCatalogOut(cat, index),
-    };
-  });
+      catalog: Boolean(m.catalog),
+    }));
 
-  const related = new Set<string>();
-  for (const m of mods) {
-    const cat = catByModuleId.get(m.id);
-    if (!cat) continue;
-    for (const relatedModuleId of cat.relatedModuleIds) {
-      const relatedMod = index.modulesById.get(relatedModuleId);
-      if (!relatedMod) continue;
-      const relatedDomainIds = new Set<number>();
-      if (relatedMod.domain_id !== null) relatedDomainIds.add(relatedMod.domain_id);
-      const junctionHosts = moduleHostsByModule.get(relatedMod.id);
-      if (junctionHosts) for (const did of junctionHosts) relatedDomainIds.add(did);
-      for (const did of relatedDomainIds) {
-        if (did === d.id) continue;
-        const rd = index.domainsById.get(did);
-        if (rd) related.add(rd.domain_code);
-      }
+  const related = new Set<number>();
+  for (const oid of dataObjectsByDomain.get(d.id) ?? []) {
+    for (const other of domainsByDataObject.get(oid) ?? []) {
+      if (other !== d.id) related.add(other);
     }
   }
+  for (const other of handoffNeighbors.get(d.id) ?? []) {
+    if (other !== d.id) related.add(other);
+  }
+  const relatedCodes = [...related]
+    .map((id) => index.domainsById.get(id)?.domain_code)
+    .filter((c): c is string => Boolean(c))
+    .sort((a, b) => a.localeCompare(b));
 
   out.push({
     code: d.domain_code,
     name: d.domain_name,
     description: d.description ?? "",
-    modules: moduleOuts,
-    related_domains: [...related].sort((a, b) => a.localeCompare(b)),
+    catalog: Boolean(d.catalog),
+    modules: mods,
+    related_domains: relatedCodes,
   });
 }
 
