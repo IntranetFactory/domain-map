@@ -1,0 +1,58 @@
+
+=== #1: Retire legacy iga-system skill (id=70) ===
+  - skill_tools to delete: 7
+  - DELETED iga-system (id=70)
+
+=== #2: Add consumer DMDO rows ===
+  - 20 new (of 20 drafts; 0 already present)
+  + IGA-ACCESS-REQUEST consumer of employment_events (optional)
+  + IGA-AUTO-PROVISIONING consumer of employment_contracts (optional)
+  + IGA-ACCESS-REQUEST consumer of onboarding_tasks (optional)
+  + IGA-AUTO-PROVISIONING consumer of compliance_assignments (optional)
+  + IGA-ACCESS-REQUEST consumer of data_access_policies (optional)
+  + IGA-AUTO-PROVISIONING consumer of dlp_incidents (optional)
+  + IGA-SOD-MGMT consumer of dlp_user_activity_logs (optional)
+  + IGA-SOD-MGMT consumer of iam_access_policies (optional)
+  + IGA-ENTITLEMENT-CATALOG consumer of service_catalog_items (optional)
+  + IGA-ENTITLEMENT-CATALOG consumer of saas_applications (optional)
+  + IGA-AUTO-PROVISIONING consumer of enrolled_devices (optional)
+  + IGA-AUTO-PROVISIONING consumer of device_compliance_results (optional)
+  + IGA-AUTO-PROVISIONING consumer of api_consumers (optional)
+  + IGA-ENTITLEMENT-CATALOG consumer of document_folders (optional)
+  + IGA-ACCESS-REQUEST consumer of content_documents (optional)
+  + IGA-ACCESS-REQUEST consumer of external_guest_invitations (optional)
+  + IGA-AUTO-PROVISIONING consumer of channel_members (optional)
+  + IGA-AUTO-PROVISIONING consumer of visitor_registrations (optional)
+  + IGA-AUTO-PROVISIONING consumer of desk_bookings (optional)
+  + IGA-ACCESS-REQUEST consumer of hr_cases (optional)
+
+=== #3: Re-run B10b backfill on IGA inbound handoffs ===
+  PATCH id=119: target_domain_module_id=144
+  PATCH id=263: target_domain_module_id=144
+  PATCH id=281: target_domain_module_id=148
+  PATCH id=286: target_domain_module_id=146
+  PATCH id=289: target_domain_module_id=146
+  PATCH id=378: target_domain_module_id=144
+  PATCH id=407: target_domain_module_id=144
+  PATCH id=435: target_domain_module_id=148
+  PATCH id=5: target_domain_module_id=144
+  PATCH id=639: target_domain_module_id=147
+  PATCH id=640: target_domain_module_id=147
+  PATCH id=656: target_domain_module_id=148
+  PATCH id=658: target_domain_module_id=148
+  PATCH id=659: target_domain_module_id=148
+  PATCH id=661: target_domain_module_id=148
+  PATCH id=751: target_domain_module_id=148
+  PATCH id=823: target_domain_module_id=147
+  PATCH id=831: target_domain_module_id=148
+  PATCH id=839: target_domain_module_id=144
+  PATCH id=845: target_domain_module_id=146
+  PATCH id=871: target_domain_module_id=148
+  PATCH id=1165: target_domain_module_id=148
+  PATCH id=382: target_domain_module_id=148
+  PATCH id=836: target_domain_module_id=144
+  PATCH id=631: target_domain_module_id=147
+  PATCH id=830: target_domain_module_id=144
+  -- patched 26, unresolved 0
+
+Done.

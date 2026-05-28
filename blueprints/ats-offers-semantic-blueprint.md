@@ -7,15 +7,15 @@ system_slug: ats-offers
 domain_modules:
   - ats-offers
 domain_code: ATS
-related_modules: [ats-background-checks, ats-candidate-crm, ats-pre-employee-record, ats-recruitment-pipeline, comp-benchmarking, comp-statements, hcm-lifecycle-workflows]
-created_at: 2026-05-26
+related_modules: [ats-background-checks, ats-candidate-crm, ats-pre-employee-record, ats-recruitment-pipeline, comp-benchmarking, comp-statements, hcm-lifecycle-workflows, hiring-starter]
+created_at: 2026-05-28
 ---
 
 # Offers
 
 ## 1. Overview
 
-Offer drafting, approval, extension, signature, and acceptance. Realizes OFFER-MGMT. Realizes the `offer_extended` state on `job_applications`. Requires an external `sign_document` tool - drops module Semantius coverage to ~83%.
+Offer drafting, approval, extension, signature, and acceptance. Realizes OFFER-MGMT. Realizes the `offer_extended` state on `job_applications`. Requires an external `sign_document` tool, drops module Semantius coverage to ~83%.
 
 ## 2. Entity summary
 
@@ -25,10 +25,10 @@ Offer drafting, approval, extension, signature, and acceptance. Realizes OFFER-M
 | Applications | A candidate's submission against a specific requisition. Carries pipeline stage, status (active / rejected / withdrawn / hired), source, and the full evaluation history. |
 | Candidates | Person known to the recruiting org, with or without an active application. Carries contact details, resume, tags, GDPR consent, and source. Distinct from Employee until hired. |
 | Salary Bands | Pay-range structure by grade and geographic zone with minimum, midpoint, maximum, and benchmarking source. Drives offer guidance, merit eligibility, and pay-equity gap analysis. |
-| Compensation Benchmarks | Imported market salary data for a job-level-geography combination, sourced from a survey provider (Radford, Mercer, Willis Towers Watson, Payscale). Drives salary_bands maintenance. |
+| Compensation Benchmarks | Imported market salary data for a job-level-geography combination, sourced from an external compensation-survey provider. Drives salary_bands maintenance. |
 
 ```mermaid
-flowchart LR
+flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
   classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
   classDef consumer fill:#e8def8,stroke:#7b1fa2,color:#3a155d;
@@ -49,17 +49,18 @@ flowchart LR
   class compensation_benchmarks consumer;
   class salary_bands embedded_master;
   class users platform_builtin;
+  style salary_bands stroke-dasharray:5 5;
 ```
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- |
-| 1 | `job_offers` (Offers) | master | - | required | personal_content, single_approver | - |
-| 2 | `job_applications` (Applications) | embedded_master | `ats-recruitment-pipeline` | required | personal_content | - |
-| 3 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | required | personal_content | - |
-| 4 | `salary_bands` (Salary Bands) | embedded_master | `comp-benchmarking` | optional | - | - |
-| 5 | `compensation_benchmarks` (Compensation Benchmarks) | consumer | `comp-benchmarking` | required | - | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `job_offers` (Offers) | master | - | - | required | personal_content, single_approver | - |
+| 2 | `job_applications` (Applications) | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | personal_content | - |
+| 3 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | - |
+| 4 | `salary_bands` (Salary Bands) | embedded_master | `comp-benchmarking` | Benchmarking and Pay Equity | optional | - | - |
+| 5 | `compensation_benchmarks` (Compensation Benchmarks) | consumer | `comp-benchmarking` | Benchmarking and Pay Equity | required | - | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -116,6 +117,7 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `job_offers` | ATS-PRE-EMPLOYEE-RECORD (Pre-Employee Record) - ATS | embedded_master | required | - |
 | `job_offers` | COMP-STATEMENTS (Total Rewards Statements) - COMP-MGMT | consumer | required | - |
 | `job_offers` | HCM-LIFECYCLE-WORKFLOWS (Employee Lifecycle Workflows) - HCM | consumer | required | - |
+| `job_offers` | HIRING-STARTER (Hiring Starter) - ATS | embedded_master | required | - |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
@@ -128,10 +130,10 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 | target module | source domain | source module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-OFFERS | COMP-MGMT | COMP-BENCHMARKING | `compensation_benchmark.refreshed` | `compensation_benchmarks` | batch_sync | low | Updated benchmarks inform offer-range guardrails for recruiters and hiring managers. |
 | ATS-OFFERS | ATS | ATS-RECRUITMENT-PIPELINE | `job_application.advanced` | `job_offers` | lifecycle_progression | low | - |
-| ATS-OFFERS | ATS | ATS-BACKGROUND-CHECKS | `background_check.flagged` | `job_offers` | lifecycle_progression | medium | - |
 | ATS-OFFERS | COMP-MGMT | COMP-BENCHMARKING | `salary_band.updated` | `salary_bands` | event_stream | low | Updated bands flow to ATS offer-generation. |
+| ATS-OFFERS | COMP-MGMT | COMP-BENCHMARKING | `compensation_benchmark.refreshed` | `compensation_benchmarks` | batch_sync | low | Updated benchmarks inform offer-range guardrails for recruiters and hiring managers. |
+| ATS-OFFERS | ATS | ATS-BACKGROUND-CHECKS | `background_check.flagged` | `job_offers` | lifecycle_progression | medium | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -142,13 +144,33 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `salary_bands` | embedded_master | optional | COMP-BENCHMARKING (COMP-MGMT) | - |
 | `compensation_benchmarks` | consumer | required | COMP-BENCHMARKING (COMP-MGMT) | - |
 
-## 7. Lifecycle states (per master)
+## 7. Lifecycle states (per touched entity)
 
-### `job_applications` (Application)
+### `candidates` (Candidate)
+
+_This scope holds `candidates` as **embedded_master**; the canonical state machine is owned by `ATS-CANDIDATE-CRM`._
 
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `prospect` | ✓ | - | - | - | Person known to the recruiting org with no active application. |
+| 2 | `active` | - | - | - | - | Candidate has at least one open application or is actively engaged. |
+| 3 | `hired` | - | ✓ | ✓ | `ats-candidate-crm:hire_candidate` | Candidate accepted an offer and converted to employee. |
+| 4 | `do_not_hire` | - | ✓ | ✓ | `ats-candidate-crm:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
+| 5 | `archived` | - | ✓ | - | - | Candidate kept in the database but not active in any pipeline. |
+
+### `job_applications` (Application)
+
+_This scope holds `job_applications` as **embedded_master**; the canonical state machine is owned by `ATS-RECRUITMENT-PIPELINE`._
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `applied` | ✓ | - | - | - | Candidate submitted an application against the requisition. |
+| 2 | `screening` | - | - | - | - | Recruiter is reviewing resume and qualifications. |
+| 3 | `interviewing` | - | - | - | - | Candidate is progressing through interview loops. |
 | 4 | `offer_extended` | - | - | - | - | An offer has been generated and is in flight for this application. |
+| 5 | `hired` | - | ✓ | ✓ | `ats-pre-employee-record:hire_candidate` | Candidate accepted the offer and was hired; gated transition. |
+| 6 | `rejected` | - | ✓ | - | - | Application closed without progression by recruiter or hiring manager. |
+| 7 | `withdrawn` | - | ✓ | - | - | Candidate withdrew their application. |
 
 ### `job_offers` (Offer)
 

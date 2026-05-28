@@ -8,7 +8,7 @@ domain_modules:
   - work-mgmt-goals-okr
 domain_code: WORK-MGMT
 related_modules: [sem-execution-tracking, sem-operating-rhythm, sem-strategy-definition, talent-performance-mgmt, work-mgmt-task-exec]
-created_at: 2026-05-27
+created_at: 2026-05-28
 ---
 
 # Team-Execution Goals and OKRs
@@ -25,7 +25,7 @@ Team-execution OKR tracking surface: objectives with key results that link to wo
 | Work Items | Atomic primitive in a work-management platform: task / item / card with owner, due date, status, priority, dependencies, subtasks, attachments, and comments. Same shape regardless of platform-specific terminology (task, item, row, card). |
 
 ```mermaid
-flowchart LR
+flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
   classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
@@ -44,10 +44,10 @@ flowchart LR
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- |
-| 1 | `okr_objectives` (Objective / OKRs) | master | - | required | personal_content | - |
-| 2 | `work_items` (Work Items) | embedded_master | `work-mgmt-task-exec` | required | - | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `okr_objectives` (Objective / OKRs) | master | - | - | required | personal_content | - |
+| 2 | `work_items` (Work Items) | embedded_master | `work-mgmt-task-exec` | Task and Project Execution | required | - | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -116,22 +116,34 @@ _(no outbound `handoffs` whose payload is in this scope.)_
 | --- | --- | --- | --- | --- |
 | `work_items` | embedded_master | required | WORK-MGMT-TASK-EXEC (WORK-MGMT) | - |
 
-## 7. Lifecycle states (per master)
+## 7. Lifecycle states (per touched entity)
 
 ### `okr_objectives` (Objective / OKR)
 
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `drafted` | ✓ | - | - | - | Objective drafted by the owner. |
 | 1 | `drafted` | ✓ | - | - | - | - |
-| 2 | `committed` | - | - | ✓ | `talent-performance-mgmt:commit_okr_objective` | Owner and manager commit to the objective for the cycle. |
+| 1 | `drafted` | ✓ | - | - | - | Objective drafted by the owner. |
 | 2 | `committed` | - | - | ✓ | `work-mgmt-goals-okr:commit_okr_objective` | - |
-| 3 | `in_progress` | - | - | - | - | Objective is being pursued; key results updated. |
+| 2 | `committed` | - | - | ✓ | `talent-performance-mgmt:commit_okr_objective` | Owner and manager commit to the objective for the cycle. |
 | 3 | `in_progress` | - | - | - | - | - |
-| 4 | `scored` | - | - | ✓ | `work-mgmt-goals-okr:score_okr_objective` | - |
+| 3 | `in_progress` | - | - | - | - | Objective is being pursued; key results updated. |
 | 4 | `graded` | - | - | ✓ | `talent-performance-mgmt:grade_okr_objective` | End-of-cycle score (0.0-1.0) recorded. |
-| 5 | `closed` | - | ✓ | - | - | Cycle closed; objective archived. |
+| 4 | `scored` | - | - | ✓ | `work-mgmt-goals-okr:score_okr_objective` | - |
 | 5 | `closed` | - | ✓ | - | - | - |
+| 5 | `closed` | - | ✓ | - | - | Cycle closed; objective archived. |
+
+### `work_items` (Work Item)
+
+_This scope holds `work_items` as **embedded_master**; the canonical state machine is owned by `WORK-MGMT-TASK-EXEC`._
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `open` | ✓ | - | - | - | - |
+| 2 | `in_progress` | - | - | - | - | - |
+| 3 | `blocked` | - | - | - | - | - |
+| 4 | `done` | - | ✓ | - | - | - |
+| 5 | `cancelled` | - | ✓ | - | - | - |
 
 ## 8. Permissions and business rules (derived)
 

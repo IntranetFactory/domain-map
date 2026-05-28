@@ -13,19 +13,80 @@ IGA full-scope loader starting...
   = /solution_domains: 1244 present, none missing
 
 === Phase 4: M1-M6 modules + capabilities + data_objects + starter ===
-  = /domain_modules: 147 present, none missing
-  = /domain_module_capabilities: 276 present, none missing
-  = /domain_module_data_objects: 750 present, none missing
-52 |     new Response(proc.stdout).text(),
-53 |     new Response(proc.stderr).text(),
-54 |   ]);
-55 |   const exitCode = await proc.exited;
-56 |   if (exitCode !== 0) {
-57 |     throw new Error(`semantius call failed (exit ${exitCode}): ${stderr}\n${json.slice(0, 400)}`);
-                   ^
-error: semantius call failed (exit 4): Error: (PGRST205) Could not find the table 'public.domain_starter_modules' in the schema cache
+  = /domain_modules: 152 present, none missing
+  = /domain_module_capabilities: 301 present, none missing
+  = /domain_module_data_objects: 788 present, none missing
+  - domain_starter_modules: skipped (table retired)
 
-{"method":"GET","path":"/domain_starter_modules?select=domain_id,domain_module_id&limit=10000"}
-      at call (C:\dev\domain-map\.tmp_deploy\load_iga_full_2026_05_26.ts:57:15)
+=== Phase 5: B4 pattern flags + entitlement notes ===
+  PATCH iga_access_requests: {"has_submit_lock":true,"has_single_approver":true}
+  PATCH iga_access_certifications: {"has_single_approver":true}
+  PATCH iga_sod_violations: {"has_submit_lock":true}
+  PATCH iga_provisioning_events: {"has_submit_lock":true}
+  PATCH iga_entitlement_definitions: {"notes":"Config-shape master: lightweight draft -> published -> deprecated -> r
 
-Bun v1.3.12 (Windows arm64)
+=== Phase 6: B11 aliases ===
+  = /data_object_aliases: 606 present, none missing
+
+=== Phase 7: B12 lifecycle states ===
+  + 31 new into /data_object_lifecycle_states (967 existed)
+
+=== Phase 8: B6 + B7 relationships ===
+  + 14 new into /data_object_relationships (1094 existed)
+
+=== Phase 9: F2/F3 tools + skills + skill_tools ===
+  + 17 new into /tools (1162 existed)
+  + 5 new into /skills (195 existed)
+  + 48 new into /skill_tools (1879 existed)
+
+=== Phase 10: Permissions (baseline + workflow gates) ===
+  + 27 new into /permissions (553 existed)
+
+=== Phase 11: E1-E6 roles + role_modules + role_permissions ===
+  + 4 new into /roles
+  + 14 new into /role_modules (297 existed)
+  + 22 new into /role_permissions (960 existed)
+
+=== Phase 12: B10b backfill (handoff module FKs for IGA-touching rows) ===
+  PATCH outbound id=467: {"source_domain_module_id":144}
+  PATCH outbound id=462: {"source_domain_module_id":148}
+  PATCH outbound id=461: {"source_domain_module_id":148}
+  PATCH outbound id=463: {"source_domain_module_id":148}
+  PATCH outbound id=464: {"source_domain_module_id":146}
+  PATCH outbound id=465: {"source_domain_module_id":145}
+  PATCH outbound id=466: {"source_domain_module_id":144}
+  PATCH inbound id=43: target_domain_module_id=148
+  - inbound id=119 unresolved (no IGA module declares any role on data_object_id=192)
+  - inbound id=263 unresolved (no IGA module declares any role on data_object_id=307)
+  - inbound id=281 unresolved (no IGA module declares any role on data_object_id=330)
+  - inbound id=286 unresolved (no IGA module declares any role on data_object_id=340)
+  - inbound id=289 unresolved (no IGA module declares any role on data_object_id=340)
+  PATCH inbound id=375: target_domain_module_id=144
+  - inbound id=378 unresolved (no IGA module declares any role on data_object_id=36)
+  PATCH inbound id=389: target_domain_module_id=144
+  PATCH inbound id=391: target_domain_module_id=144
+  PATCH inbound id=392: target_domain_module_id=144
+  - inbound id=407 unresolved (no IGA module declares any role on data_object_id=18)
+  - inbound id=435 unresolved (no IGA module declares any role on data_object_id=173)
+  - inbound id=5 unresolved (no IGA module declares any role on data_object_id=18)
+  - inbound id=639 unresolved (no IGA module declares any role on data_object_id=61)
+  - inbound id=640 unresolved (no IGA module declares any role on data_object_id=61)
+  - inbound id=656 unresolved (no IGA module declares any role on data_object_id=556)
+  - inbound id=658 unresolved (no IGA module declares any role on data_object_id=556)
+  - inbound id=659 unresolved (no IGA module declares any role on data_object_id=563)
+  - inbound id=661 unresolved (no IGA module declares any role on data_object_id=563)
+  - inbound id=751 unresolved (no IGA module declares any role on data_object_id=462)
+  - inbound id=823 unresolved (no IGA module declares any role on data_object_id=431)
+  - inbound id=831 unresolved (no IGA module declares any role on data_object_id=568)
+  - inbound id=839 unresolved (no IGA module declares any role on data_object_id=429)
+  - inbound id=845 unresolved (no IGA module declares any role on data_object_id=335)
+  - inbound id=871 unresolved (no IGA module declares any role on data_object_id=668)
+  - inbound id=1165 unresolved (no IGA module declares any role on data_object_id=590)
+  PATCH inbound id=19: target_domain_module_id=144
+  PATCH inbound id=185: target_domain_module_id=144
+  - inbound id=382 unresolved (no IGA module declares any role on data_object_id=35)
+  - inbound id=836 unresolved (no IGA module declares any role on data_object_id=569)
+  - inbound id=631 unresolved (no IGA module declares any role on data_object_id=52)
+  - inbound id=830 unresolved (no IGA module declares any role on data_object_id=569)
+
+Done.

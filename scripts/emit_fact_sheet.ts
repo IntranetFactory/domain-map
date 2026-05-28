@@ -22,21 +22,47 @@ export {};
 import { writeFileSync, mkdirSync, existsSync, readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { argv, exit } from "node:process";
+import {
+  clearCatalogCache,
+  loadCachedCatalog,
+  loadModuleCatalog,
+  ROLE_ORDER,
+  ROLE_RANK,
+  type AllRelationships,
+  type CatalogIndex,
+  type CoMasterRow,
+  type DataObject,
+  type Domain,
+  type IndustryRow,
+  type ModuleCatalog,
+  type ModuleRow,
+  type OwnerInfo,
+  type ScopeRow,
+} from "./lib/catalog";
 
 // ---------- args ----------
 const args = argv.slice(2);
 const ALL = args.includes("--all");
 const CHECK = args.includes("--check");
+const NO_CACHE = args.includes("--no-cache");
+const CLEAR_CACHE = args.includes("--clear-cache");
 function flagValue(name: string): string | null {
   const i = args.indexOf(name);
   return i >= 0 && i + 1 < args.length ? args[i + 1] : null;
 }
 const MODULE_CODE = flagValue("--module");
 
+if (CLEAR_CACHE) {
+  const cleared = clearCatalogCache();
+  console.error(cleared ? "catalog cache cleared" : "no catalog cache to clear");
+  if (!ALL && !MODULE_CODE) exit(0);
+}
+
 if (!ALL && !MODULE_CODE) {
   console.error("usage:");
-  console.error("  emit_fact_sheet.ts --module <MODULE_CODE>");
-  console.error("  emit_fact_sheet.ts --all [--check]");
+  console.error("  emit_fact_sheet.ts --module <MODULE_CODE> [--no-cache] [--clear-cache]");
+  console.error("  emit_fact_sheet.ts --all [--check] [--no-cache]");
+  console.error("  emit_fact_sheet.ts --clear-cache");
   exit(2);
 }
 
@@ -46,93 +72,19 @@ const BLUEPRINT_SUFFIX = "-semantic-blueprint.md";
 const TODAY = new Date().toISOString().slice(0, 10);
 const FACT_SHEET_VERSION = "2.0";
 
-// ---------- semantius helper ----------
-type Row = Record<string, unknown>;
-
-async function pg(method: string, path: string, body?: unknown): Promise<any> {
-  const payload: Row = { method, path };
-  if (body !== undefined) payload.body = body;
-  const proc = Bun.spawn(["semantius", "call", "crud", "postgrestRequest"], {
-    stdin: new Response(JSON.stringify(payload)),
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  const [stdout, stderr] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-  ]);
-  const code = await proc.exited;
-  if (code !== 0) throw new Error(`postgrestRequest ${method} ${path}: ${stderr || stdout}`);
-  const text = stdout.trim();
-  return text ? JSON.parse(text) : null;
-}
-
-// ---------- catalog index (loaded once) ----------
-type DataObject = {
-  id: number;
-  data_object_name: string;
-  singular_label: string;
-  plural_label: string;
-  description: string;
-  kind: string;
-  is_canonical_bare_word: boolean;
-  has_personal_content: boolean;
-  has_submit_lock: boolean;
-  has_single_approver: boolean;
+// ---------- catalog index (loaded once via lib) ----------
+// Types, pg helper, and scoped query helpers live in ./lib/catalog.ts. Aliasing
+// index.xxx into local consts keeps existing render functions calling the same
+// names (dataObjectsById, modulesById, etc.) without churn.
+const { index, all: allRelationships } = (await loadCachedCatalog({ forceRefresh: NO_CACHE })) as {
+  index: CatalogIndex;
+  all: AllRelationships;
 };
-
-type Domain = {
-  id: number;
-  domain_code: string;
-  domain_name: string;
-  description: string;
-  crud_percentage: number;
-  business_logic: string;
-  min_org_size: string;
-  cost_band: string;
-  certification_required: boolean;
-  usa_market_size_usd_m: number;
-  market_size_source_year: number;
-};
-
-type ModuleRow = {
-  id: number;
-  domain_module_code: string;
-  domain_module_name: string;
-  domain_id: number | null;
-  description: string;
-  module_kind: "full" | "starter";
-};
-
-const allDomains: Domain[] = await pg(
-  "GET",
-  "/domains?select=id,domain_code,domain_name,description,crud_percentage,business_logic,min_org_size,cost_band,certification_required,usa_market_size_usd_m,market_size_source_year&order=domain_code.asc&limit=10000",
-);
-const domainsById = new Map<number, Domain>(allDomains.map((d) => [d.id, d]));
-const domainsByCode = new Map<string, Domain>(allDomains.map((d) => [d.domain_code, d]));
-
-const allDataObjects: DataObject[] = await pg(
-  "GET",
-  "/data_objects?select=id,data_object_name,singular_label,plural_label,description,kind,is_canonical_bare_word,has_personal_content,has_submit_lock,has_single_approver&limit=10000",
-);
-const dataObjectsById = new Map<number, DataObject>(allDataObjects.map((d) => [d.id, d]));
-
-type IndustryRow = { id: number; industry_name: string };
-const allIndustries: IndustryRow[] = (await pg(
-  "GET",
-  "/industries?select=id,industry_name&limit=10000",
-)) ?? [];
-const industriesById = new Map<number, IndustryRow>(allIndustries.map((i) => [i.id, i]));
-
-const USERS = allDataObjects.find((d) => d.kind === "platform_builtin" && d.data_object_name === "users");
-const USERS_ID = USERS?.id ?? -1;
-
-const allModules: ModuleRow[] = await pg(
-  "GET",
-  "/domain_modules?select=id,domain_module_code,domain_module_name,domain_id,description,module_kind&order=domain_module_code.asc&limit=10000",
-) ?? [];
-const modulesById = new Map<number, ModuleRow>(allModules.map((m) => [m.id, m]));
-const modulesByCode = new Map<string, ModuleRow>(allModules.map((m) => [m.domain_module_code, m]));
+const { domainsById, domainsByCode, dataObjectsById, industriesById, modulesById, modulesByCode } = index;
+const allModules = index.modules;
+const USERS_ID = index.usersId;
+void allModules; // referenced by emitOneModuleFactSheet driver below
+void domainsByCode; // exported alias for future callers; harmless if unused here
 
 // ---------- helpers ----------
 
@@ -187,154 +139,10 @@ const ROLE_INFO: Record<string, { classDef: string }> = {
   external: { classDef: "fill:#f5f5f5,stroke:#9e9e9e,color:#616161,stroke-dasharray:3 3" },
 };
 
-const ROLE_ORDER = ["master", "embedded_master", "contributor", "consumer", "derived"] as const;
-const ROLE_RANK: Record<string, number> = Object.fromEntries(ROLE_ORDER.map((r, i) => [r, i]));
-
-// ============================================================
-// Scoped-query helpers - reused by both module and starter-kit emitters.
-// "Scope" = a set of data_object IDs (one module's data_objects, or the union across the
-// starter modules of a domain). All structural sections (mermaid, entity summary, aliases,
-// relationships, master consumers, master providers) are derived from this scope + the role each
-// data_object plays in this scope.
-// ============================================================
-
-type ScopeRow = { data_object_id: number; role: string; necessity: string | null; notes: string | null; data_object: DataObject };
-
-async function loadAliases(objectIds: number[]): Promise<any[]> {
-  if (objectIds.length === 0) return [];
-  return (await pg(
-    "GET",
-    `/data_object_aliases?data_object_id=in.(${objectIds.join(",")})&select=data_object_id,alias_name,alias_type,is_preferred,industry_id,solution_id,notes&order=alias_name.asc`,
-  )) ?? [];
-}
-
-async function loadRelationships(objectIds: number[]): Promise<{ intra: any[]; userRels: any[]; cross: any[]; all: any[] }> {
-  if (objectIds.length === 0) return { intra: [], userRels: [], cross: [], all: [] };
-  const rows: any[] = (await pg(
-    "GET",
-    `/data_object_relationships?or=(data_object_id.in.(${objectIds.join(",")}),related_data_object_id.in.(${objectIds.join(",")}))&select=data_object_id,related_data_object_id,relationship_type,relationship_kind,relationship_verb,inverse_verb,is_required,owner_side,notes&limit=2000`,
-  )) ?? [];
-  const scope = new Set(objectIds);
-  const intra: any[] = [];
-  const userRels: any[] = [];
-  const cross: any[] = [];
-  for (const r of rows) {
-    const a = r.data_object_id as number;
-    const b = r.related_data_object_id as number;
-    const aUser = a === USERS_ID;
-    const bUser = b === USERS_ID;
-    if (aUser || bUser) {
-      userRels.push(r);
-    } else if (scope.has(a) && scope.has(b)) {
-      intra.push(r);
-    } else if (scope.has(a) !== scope.has(b)) {
-      cross.push(r);
-    }
-  }
-  return { intra, userRels, cross, all: rows };
-}
-
-type CoMasterRow = {
-  data_object_id: number;
-  owner_module: ModuleRow | null;
-  owner_domain: Domain | null;
-  role: string;
-  necessity: string | null;
-  notes: string | null;
-};
-
-async function loadCoMasters(masterIds: number[], excludeModuleIds: Set<number>): Promise<CoMasterRow[]> {
-  if (masterIds.size === 0) return [];
-  const list = [...masterIds];
-  // Module-granularity primary path: other modules with any role on these masters.
-  const moduleRows: any[] = (await pg(
-    "GET",
-    `/domain_module_data_objects?data_object_id=in.(${list.join(",")})&select=domain_module_id,data_object_id,role,necessity,notes`,
-  )) ?? [];
-  const out: CoMasterRow[] = [];
-  const seenModule = new Set<string>();
-  for (const r of moduleRows) {
-    const modId = r.domain_module_id as number;
-    if (excludeModuleIds.has(modId)) continue;
-    const m = modulesById.get(modId);
-    if (!m) continue;
-    const key = `${modId}:${r.data_object_id}`;
-    if (seenModule.has(key)) continue;
-    seenModule.add(key);
-    out.push({
-      data_object_id: r.data_object_id as number,
-      owner_module: m,
-      owner_domain: m.domain_id !== null ? domainsById.get(m.domain_id) ?? null : null,
-      role: r.role as string,
-      necessity: (r.necessity as string | null) ?? null,
-      notes: (r.notes as string | null) ?? null,
-    });
-  }
-  // Domain-granularity fallback: domains that have a role on these masters but haven't been
-  // modularized yet (no rows in domain_module_data_objects). Skip domains we've already
-  // surfaced via the module path.
-  const modularizedDomainIds = new Set<number>();
-  for (const r of out) {
-    if (r.owner_domain) modularizedDomainIds.add(r.owner_domain.id);
-  }
-  const domainRows: any[] = (await pg(
-    "GET",
-    `/domain_data_objects?data_object_id=in.(${list.join(",")})&select=domain_id,data_object_id,role,necessity,notes`,
-  )) ?? [];
-  for (const r of domainRows) {
-    const domId = r.domain_id as number;
-    // Skip if this domain has any module in the catalog - its modules are the source of truth.
-    const hasAnyModule = allModules.some((m) => m.domain_id === domId);
-    if (hasAnyModule) continue;
-    const d = domainsById.get(domId);
-    if (!d) continue;
-    out.push({
-      data_object_id: r.data_object_id as number,
-      owner_module: null,
-      owner_domain: d,
-      role: r.role as string,
-      necessity: (r.necessity as string | null) ?? null,
-      notes: (r.notes as string | null) ?? null,
-    });
-  }
-  return out;
-}
-
-type OwnerInfo = { modules: ModuleRow[]; domains: Domain[] };
-async function loadOwners(nonMasterIds: number[]): Promise<Map<number, OwnerInfo>> {
-  const out = new Map<number, OwnerInfo>();
-  if (nonMasterIds.length === 0) return out;
-  // Module-granularity owners.
-  const modOwnerRows: any[] = (await pg(
-    "GET",
-    `/domain_module_data_objects?data_object_id=in.(${nonMasterIds.join(",")})&role=eq.master&select=domain_module_id,data_object_id`,
-  )) ?? [];
-  for (const r of modOwnerRows) {
-    const m = modulesById.get(r.domain_module_id as number);
-    if (!m) continue;
-    const did = r.data_object_id as number;
-    if (!out.has(did)) out.set(did, { modules: [], domains: [] });
-    out.get(did)!.modules.push(m);
-  }
-  // Domain-granularity owners (fallback for not-yet-modularized domains).
-  const domOwnerRows: any[] = (await pg(
-    "GET",
-    `/domain_data_objects?data_object_id=in.(${nonMasterIds.join(",")})&role=eq.master&select=domain_id,data_object_id`,
-  )) ?? [];
-  for (const r of domOwnerRows) {
-    const d = domainsById.get(r.domain_id as number);
-    if (!d) continue;
-    const did = r.data_object_id as number;
-    if (!out.has(did)) out.set(did, { modules: [], domains: [] });
-    // Add the domain if it isn't already the parent domain of one of the recorded modules.
-    const info = out.get(did)!;
-    const alreadyViaModule = info.modules.some((m) => m.domain_id === d.id);
-    if (!alreadyViaModule && !info.domains.some((x) => x.id === d.id)) {
-      info.domains.push(d);
-    }
-  }
-  return out;
-}
+// ROLE_ORDER, ROLE_RANK, ScopeRow, CoMasterRow, OwnerInfo and the four scoped query
+// helpers (loadAliases / loadRelationships / loadCoMasters / loadOwners) now live in
+// ./lib/catalog.ts. Render functions below operate on the ModuleCatalog struct that
+// loadModuleCatalog returns.
 
 // Build mermaid diagram for a scoped data_object set.
 //   scopeRoles  - role per data_object that is "in scope" (rendered with its role color)
@@ -343,10 +151,14 @@ async function loadOwners(nonMasterIds: number[]): Promise<Map<number, OwnerInfo
 // Only in-scope entities + the `users` platform built-in are rendered. External neighbors
 // are deliberately omitted - they make the diagram too noisy. The §5.3 table covers
 // cross-scope edges in textual form.
-function renderMermaid(scopeRoles: Map<number, string>, edges: any[]): string[] {
+function renderMermaid(
+  scopeRoles: Map<number, string>,
+  scopeNecessity: Map<number, string | null>,
+  edges: any[],
+): string[] {
   const lines: string[] = [];
   lines.push("```mermaid");
-  lines.push("flowchart LR");
+  lines.push("flowchart TD");
   const usedRoles = new Set<string>();
   for (const role of scopeRoles.values()) usedRoles.add(role);
   const intraEdges: any[] = [];
@@ -394,6 +206,15 @@ function renderMermaid(scopeRoles: Map<number, string>, edges: any[]): string[] 
     if (!obj) continue;
     const cls = scopeRoles.has(id) ? scopeRoles.get(id)! : "platform_builtin";
     lines.push(`  class ${obj.data_object_name} ${cls};`);
+  }
+  // Per-node optional-necessity overlay: dashed stroke on top of the role classDef.
+  // Mermaid honors per-node `style` directives even when a class is already applied.
+  for (const id of nodeIds) {
+    const obj = dataObjectsById.get(id);
+    if (!obj) continue;
+    if (scopeNecessity.get(id) === "optional") {
+      lines.push(`  style ${obj.data_object_name} stroke-dasharray:5 5;`);
+    }
   }
   lines.push("```");
   return lines;
@@ -511,26 +332,34 @@ function renderCoMasters(rows: CoMasterRow[]): string[] {
 // Single-owner lookup for §3. A data_object should have exactly one master across the
 // catalog; if `owners` reports more than one module or more than one fallback-domain for the
 // same data_object, that is a catalog integrity violation (caught here loudly rather than
-// silently rendered).
-function masteredInLabel(r: ScopeRow, owners: Map<number, OwnerInfo>): string {
-  if (r.role === "master" || r.role === "derived") return "-";
+// silently rendered). Returns both the code-shaped slug ("mastered in" column) and the
+// human-readable name ("label" column).
+function masteredIn(r: ScopeRow, owners: Map<number, OwnerInfo>): { code: string; label: string } {
+  if (r.role === "master" || r.role === "derived") return { code: "-", label: "-" };
   const info = owners.get(r.data_object_id);
   if (!info) {
-    return r.data_object.kind === "platform_builtin" ? "_(platform built-in)_" : "-";
+    const fallback = r.data_object.kind === "platform_builtin" ? "_(platform built-in)_" : "-";
+    return { code: fallback, label: fallback };
   }
   if (info.modules.length > 1) {
     throw new Error(
       `catalog integrity: data_object ${r.data_object.data_object_name} (id ${r.data_object_id}) has ${info.modules.length} modules with role=master (${info.modules.map((m) => m.domain_module_code).join(", ")}). Expected exactly one.`,
     );
   }
-  if (info.modules.length === 1) return `\`${moduleSlug(info.modules[0].domain_module_code)}\``;
+  if (info.modules.length === 1) {
+    const m = info.modules[0];
+    return { code: `\`${moduleSlug(m.domain_module_code)}\``, label: m.domain_module_name };
+  }
   if (info.domains.length > 1) {
     throw new Error(
       `catalog integrity: data_object ${r.data_object.data_object_name} (id ${r.data_object_id}) has ${info.domains.length} domains with role=master (${info.domains.map((d) => d.domain_code).join(", ")}). Expected exactly one.`,
     );
   }
-  if (info.domains.length === 1) return `\`${info.domains[0].domain_code}\` _(domain-level, not modularized)_`;
-  return "-";
+  if (info.domains.length === 1) {
+    const d = info.domains[0];
+    return { code: `\`${d.domain_code}\` _(domain-level, not modularized)_`, label: d.domain_name };
+  }
+  return { code: "-", label: "-" };
 }
 
 function renderDependencies(scopeRows: ScopeRow[], owners: Map<number, OwnerInfo>): string[] {
@@ -600,147 +429,29 @@ function computeCoverage(skillToolRows: any[]): CoverageResult {
 // data_object. Front matter difference is the length of the `domain_modules:` list.
 // ============================================================
 
-type ScopeRowWithModules = ScopeRow & { modules: ModuleRow[] };
-
 async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<string> {
   if (modules.length === 0) throw new Error("emitFactSheet requires at least one module");
 
-  const moduleIds = modules.map((m) => m.id);
-  const moduleIdSet = new Set(moduleIds);
-  const parentDomainIds = new Set(
-    modules.map((m) => m.domain_id).filter((id): id is number => id !== null),
-  );
-  const parentDomains = [...parentDomainIds]
-    .map((id) => domainsById.get(id))
-    .filter((d): d is Domain => Boolean(d));
-
-  // Aggregate scope across modules: strongest role per data_object, plus which modules
-  // contributed and any per-module notes.
-  const moduleDORows: any[] = (await pg(
-    "GET",
-    `/domain_module_data_objects?domain_module_id=in.(${moduleIds.join(",")})&select=domain_module_id,data_object_id,role,necessity,notes`,
-  )) ?? [];
-  const byDOId = new Map<number, { role: string; necessity: string | null; modules: ModuleRow[]; notes: string[] }>();
-  for (const r of moduleDORows) {
-    const m = modulesById.get(r.domain_module_id as number);
-    if (!m) continue;
-    const did = r.data_object_id as number;
-    const existing = byDOId.get(did);
-    if (!existing) {
-      byDOId.set(did, { role: r.role, necessity: (r.necessity as string | null) ?? null, modules: [m], notes: r.notes ? [r.notes] : [] });
-    } else {
-      if ((ROLE_RANK[r.role] ?? 99) < (ROLE_RANK[existing.role] ?? 99)) {
-        existing.role = r.role;
-        existing.necessity = (r.necessity as string | null) ?? existing.necessity;
-      }
-      if (!existing.modules.includes(m)) existing.modules.push(m);
-      if (r.notes) existing.notes.push(r.notes);
-    }
-  }
-  const scopeRows: ScopeRowWithModules[] = [...byDOId.entries()]
-    .map(([did, info]) => {
-      const obj = dataObjectsById.get(did);
-      if (!obj) return null;
-      return {
-        data_object_id: did,
-        role: info.role,
-        necessity: info.necessity,
-        notes: info.notes.join("; ") || null,
-        data_object: obj,
-        modules: info.modules,
-      } satisfies ScopeRowWithModules;
-    })
-    .filter((r): r is ScopeRowWithModules => r !== null);
-  const scopeObjectIds = scopeRows.map((r) => r.data_object_id);
-  const scopeRolesById = new Map<number, string>(scopeRows.map((r) => [r.data_object_id, r.role]));
-  const masterIds = new Set(scopeRows.filter((r) => r.role === "master").map((r) => r.data_object_id));
-
-  // ---- scoped reads in parallel ----
-  // Lifecycle states belong to the data_object, not to a particular module's
-  // relationship with it. Any module touching the data_object (master,
-  // embedded_master, contributor, consumer) observes the same state machine;
-  // the per-state `domain_module_id` only determines which module's permission
-  // prefix the workflow gate carries. Fetch every state on every data_object
-  // in scope; rendering annotates per-state which module realizes each gate.
-
-  const [aliasRows, rels, coMasters, owners, lifecycleRows, handoffRows] = await Promise.all([
-    loadAliases(scopeObjectIds),
-    loadRelationships(scopeObjectIds),
-    loadCoMasters(masterIds, moduleIdSet),
-    loadOwners(scopeRows.filter((r) => r.role !== "master").map((r) => r.data_object_id)),
-    scopeObjectIds.length === 0
-      ? Promise.resolve([])
-      : pg(
-          "GET",
-          `/data_object_lifecycle_states?data_object_id=in.(${scopeObjectIds.join(",")})&select=data_object_id,state_name,state_order,description,is_initial,is_terminal,requires_permission,permission_verb_override,domain_module_id&order=data_object_id.asc,state_order.asc`,
-        ),
-    scopeObjectIds.length === 0
-      ? Promise.resolve([])
-      : pg(
-          "GET",
-          `/handoffs?data_object_id=in.(${scopeObjectIds.join(",")})&select=source_domain_id,target_domain_id,source_domain_module_id,target_domain_module_id,data_object_id,integration_pattern,friction_level,description,notes,data_objects(data_object_name),trigger_events(event_name,description)&order=target_domain_id.asc`,
-        ),
-  ]);
-
-  // ---- handoff attribution ----
-  // Outbound rule:
-  //   - source_domain_module_id explicitly in scope, OR
-  //   - source_domain_id is a scope parent AND this scope MASTERS the payload (the publisher
-  //     is implicitly whichever module owns the payload's master role).
-  // Inbound rule:
-  //   - target_domain_module_id explicitly in scope, OR
-  //   - target_domain_id is a scope parent AND this scope holds the payload in a non-master
-  //     role (embedded_master / contributor / consumer / derived).
-  // The previous "srcDomainInScope && !tgtDomainInScope" fallback over-attributed every
-  // domain-level handoff to every module in the source domain. Per SKILL.md B10b, rows that
-  // still sit with NULL module attribution are reported as catalog gaps, not silently spread.
-  const outboundHandoffs: any[] = [];
-  const inboundHandoffs: any[] = [];
-  for (const h of (handoffRows ?? [])) {
-    const payloadId = h.data_object_id as number;
-    const scopeRole = scopeRolesById.get(payloadId);
-    const srcModuleInScope = h.source_domain_module_id !== null && moduleIdSet.has(h.source_domain_module_id as number);
-    const tgtModuleInScope = h.target_domain_module_id !== null && moduleIdSet.has(h.target_domain_module_id as number);
-    const srcDomainInScope = parentDomainIds.has(h.source_domain_id as number);
-    const tgtDomainInScope = parentDomainIds.has(h.target_domain_id as number);
-    const payloadMasteredHere = scopeRole === "master";
-    const payloadHeldNonMaster = scopeRole !== undefined && scopeRole !== "master";
-    if (srcModuleInScope || (srcDomainInScope && h.source_domain_module_id === null && payloadMasteredHere)) {
-      outboundHandoffs.push(h);
-    } else if (tgtModuleInScope || (tgtDomainInScope && h.target_domain_module_id === null && payloadHeldNonMaster)) {
-      inboundHandoffs.push(h);
-    }
-  }
-
-  // Related modules: the union of four data-coupling sources, deduped, with self removed.
-  //   1. master_providers   - modules that own a master this scope embeds (§6.4)
-  //   2. master_consumers   - modules that embed a master this scope owns (§6.1)
-  //   3. handoff senders    - source module of an inbound handoff (non-null id only)
-  //   4. handoff receivers  - target module of an outbound handoff (non-null id only)
-  // Handoff rows whose source/target module id is NULL are skipped: per the catalog
-  // convention, every handoff will carry per-module attribution at go-live, and any
-  // domain-level-only row is treated as not-yet-attributed rather than promoted to a
-  // domain-level entry here. Lives in front matter so catalog UIs can render cross-links
-  // without parsing prose.
-  const relatedModuleIds = new Set<number>();
-  for (const info of owners.values()) {
-    for (const m of info.modules) {
-      if (!moduleIdSet.has(m.id)) relatedModuleIds.add(m.id);
-    }
-  }
-  for (const c of coMasters) {
-    if (c.owner_module && !moduleIdSet.has(c.owner_module.id)) {
-      relatedModuleIds.add(c.owner_module.id);
-    }
-  }
-  for (const h of inboundHandoffs) {
-    const srcId = h.source_domain_module_id as number | null;
-    if (srcId !== null && !moduleIdSet.has(srcId)) relatedModuleIds.add(srcId);
-  }
-  for (const h of outboundHandoffs) {
-    const tgtId = h.target_domain_module_id as number | null;
-    if (tgtId !== null && !moduleIdSet.has(tgtId)) relatedModuleIds.add(tgtId);
-  }
+  // All scoped queries (DMDO aggregation, aliases, relationships, co-masters, owners,
+  // lifecycle states, handoff attribution, related-module derivation) live in
+  // ./lib/catalog.ts. Same code path that emit_domain_map.ts uses, so the two emitters
+  // can never report different facts for the same module.
+  const cat: ModuleCatalog = loadModuleCatalog(modules.map((m) => m.id), index, allRelationships);
+  const {
+    scopeRows,
+    scopeRolesById,
+    scopeNecessityById,
+    aliasRows,
+    relationships: rels,
+    coMasters,
+    owners,
+    lifecycleRows,
+    outboundHandoffs,
+    inboundHandoffs,
+    relatedModuleIds,
+    parentDomains,
+  } = cat;
+  const moduleIdSet = new Set(modules.map((m) => m.id));
   const relatedModules: ModuleRow[] = [...relatedModuleIds]
     .map((id) => modulesById.get(id))
     .filter((m): m is ModuleRow => Boolean(m));
@@ -832,8 +543,8 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   out.push("");
   out.push(...renderEntitySummary(scopeRows));
   out.push("");
-  if (rels.all.length > 0 || scopeObjectIds.length > 0) {
-    out.push(...renderMermaid(scopeRolesById, rels.all));
+  if (rels.all.length > 0 || scopeRows.length > 0) {
+    out.push(...renderMermaid(scopeRolesById, scopeNecessityById, rels.all));
     out.push("");
   }
 
@@ -844,7 +555,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   if (scopeRows.length === 0) {
     out.push("_(no data_objects in scope.)_");
   } else {
-    const headers = ["#", "data_object", "role", "mastered in", "necessity", "pattern flags"];
+    const headers = ["#", "data_object", "role", "mastered in", "label", "necessity", "pattern flags"];
     if (showModulesCol) headers.push("modules");
     headers.push("notes");
     out.push(tableHeader(headers, ["right"]));
@@ -862,11 +573,13 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
       if (o.has_personal_content) flags.push("personal_content");
       if (o.has_submit_lock) flags.push("submit_lock");
       if (o.has_single_approver) flags.push("single_approver");
+      const owner = masteredIn(r, owners);
       const cells: (string | number)[] = [
         i++,
         `\`${o.data_object_name}\` (${o.plural_label})`,
         r.role,
-        masteredInLabel(r, owners),
+        owner.code,
+        owner.label,
         r.necessity || "-",
         flags.join(", "),
       ];

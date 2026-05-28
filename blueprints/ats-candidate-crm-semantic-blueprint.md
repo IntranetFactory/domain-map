@@ -7,15 +7,15 @@ system_slug: ats-candidate-crm
 domain_modules:
   - ats-candidate-crm
 domain_code: ATS
-related_modules: [ats-background-checks, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, hcm-lifecycle-workflows, lms-skills, onb-journey-mgmt, pa-workforce-metrics, talent-succession-career]
-created_at: 2026-05-26
+related_modules: [ats-background-checks, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, hcm-lifecycle-workflows, hiring-starter, lms-skills, onb-journey-mgmt, pa-workforce-metrics, talent-succession-career]
+created_at: 2026-05-28
 ---
 
 # Candidate CRM
 
 ## 1. Overview
 
-The candidate-relationship backbone of an ATS - masters candidates (including the `prospect` lifecycle state), recruitment sources, agencies, and events. Structurally the same shape as standalone candidate-CRM products (Beamery, Avature CRM). Folds the AI-RECRUIT capability (resume parsing, ML matching, screening assistants) since those tools operate on `candidates` and are tightly bound to candidate workflows.
+The candidate-relationship backbone of an ATS, masters candidates (including the `prospect` lifecycle state), recruitment sources, agencies, and events. Structurally the same shape as standalone candidate-CRM products. Folds the AI-RECRUIT capability (resume parsing, ML matching, screening assistants) since those tools operate on `candidates` and are tightly bound to candidate workflows.
 
 ## 2. Entity summary
 
@@ -25,11 +25,11 @@ The candidate-relationship backbone of an ATS - masters candidates (including th
 | Recruitment Agencies | Third-party recruiter or staffing firm supplying candidates. Tracks contract terms, contact, performance, and the candidates they have submitted. |
 | Recruitment Events | Career fair, on-campus event, hackathon, or meetup used as a sourcing channel. Tracks attendees, captured leads, and event ROI. |
 | Recruitment Sources | Channel a candidate came from: job board, referral, agency, sourcing campaign, career event, or inbound. Used for source-of-hire analytics and channel ROI. |
-| Skill Profiles | Per-worker collection of skills with self-assessed and validated proficiency levels, derived from completed courses, certifications, performance signals, and inferred peer-comparison. The Workday Skills Cloud central artifact and equivalents (SuccessFactors Skills, Cornerstone Capabilities, Eightfold Talent DNA). |
+| Skill Profiles | Per-worker collection of skills with self-assessed and validated proficiency levels, derived from completed courses, certifications, performance signals, and inferred peer-comparison. The central artifact of HCM-side skills-cloud and talent-intelligence offerings. |
 | Career Aspirations | Worker-declared career interest: target roles, mobility preferences (geographic, functional), aspired timeline. Drives internal-mobility matching. |
 
 ```mermaid
-flowchart LR
+flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
   classDef contributor fill:#cfe8ff,stroke:#1976d2,color:#0d3a66;
   classDef consumer fill:#e8def8,stroke:#7b1fa2,color:#3a155d;
@@ -55,18 +55,19 @@ flowchart LR
   class skill_profiles contributor;
   class career_aspirations consumer;
   class users platform_builtin;
+  style career_aspirations stroke-dasharray:5 5;
 ```
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- |
-| 1 | `candidates` (Candidates) | master | - | required | personal_content | - |
-| 2 | `recruitment_agencies` (Recruitment Agencies) | master | - | required | - | - |
-| 3 | `recruitment_events` (Recruitment Events) | master | - | required | - | - |
-| 4 | `recruitment_sources` (Recruitment Sources) | master | - | required | - | - |
-| 5 | `skill_profiles` (Skill Profiles) | contributor | `lms-skills` | required | personal_content | - |
-| 6 | `career_aspirations` (Career Aspirations) | consumer | `talent-succession-career` | optional | personal_content | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `candidates` (Candidates) | master | - | - | required | personal_content | - |
+| 2 | `recruitment_agencies` (Recruitment Agencies) | master | - | - | required | - | - |
+| 3 | `recruitment_events` (Recruitment Events) | master | - | - | required | - | - |
+| 4 | `recruitment_sources` (Recruitment Sources) | master | - | - | required | - | - |
+| 5 | `skill_profiles` (Skill Profiles) | contributor | `lms-skills` | Skills and Learning Paths | required | personal_content | - |
+| 6 | `career_aspirations` (Career Aspirations) | consumer | `talent-succession-career` | Succession and Career Planning | optional | personal_content | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -125,7 +126,9 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `candidates` | ATS-TALENT-POOLS (Talent Pools) - ATS | embedded_master | required | - |
 | `candidates` | BEN-ENROLLMENT (Enrollment and Life Events) - BEN-ADMIN | consumer | required | - |
 | `candidates` | HCM-LIFECYCLE-WORKFLOWS (Employee Lifecycle Workflows) - HCM | consumer | required | - |
+| `candidates` | HIRING-STARTER (Hiring Starter) - ATS | embedded_master | required | - |
 | `candidates` | ONB-JOURNEY-MGMT (Onboarding Journey Management) - ONBOARDING | consumer | required | - |
+| `recruitment_sources` | HIRING-STARTER (Hiring Starter) - ATS | embedded_master | optional | - |
 | `recruitment_sources` | PA-WORKFORCE-METRICS (Workforce Metrics) - PA | consumer | required | - |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
@@ -141,9 +144,9 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 | target module | source domain | source module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-CANDIDATE-CRM | TALENT-MGMT | TALENT-SUCCESSION-CAREER | `successor.tagged` | `career_aspirations` | api_call | low | Successors identified in succession_plans surface in ATS as pre-qualified internal candidates for matched requisitions. |
-| ATS-CANDIDATE-CRM | LMS | LMS-SKILLS | `skill_profile.updated` | `skill_profiles` | event_stream | medium | Internal-candidate skill data flows into ATS for internal mobility sourcing. |
 | ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | `candidates` | lifecycle_progression | low | - |
+| ATS-CANDIDATE-CRM | LMS | LMS-SKILLS | `skill_profile.updated` | `skill_profiles` | event_stream | medium | Internal-candidate skill data flows into ATS for internal mobility sourcing. |
+| ATS-CANDIDATE-CRM | TALENT-MGMT | TALENT-SUCCESSION-CAREER | `successor.tagged` | `career_aspirations` | api_call | low | Successors identified in succession_plans surface in ATS as pre-qualified internal candidates for matched requisitions. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -152,7 +155,7 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `skill_profiles` | contributor | required | LMS-SKILLS (LMS) | - |
 | `career_aspirations` | consumer | optional | TALENT-SUCCESSION-CAREER (TALENT-MGMT) | - |
 
-## 7. Lifecycle states (per master)
+## 7. Lifecycle states (per touched entity)
 
 ### `candidates` (Candidate)
 
@@ -163,6 +166,18 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | 3 | `hired` | - | ✓ | ✓ | `ats-candidate-crm:hire_candidate` | Candidate accepted an offer and converted to employee. |
 | 4 | `do_not_hire` | - | ✓ | ✓ | `ats-candidate-crm:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
 | 5 | `archived` | - | ✓ | - | - | Candidate kept in the database but not active in any pipeline. |
+
+### `career_aspirations` (Career Aspiration)
+
+_This scope holds `career_aspirations` as **consumer**; the canonical state machine is owned by `TALENT-SUCCESSION-CAREER`._
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `declared` | ✓ | - | - | - | Employee records target roles, mobility preferences, time horizon. |
+| 2 | `discussed` | - | - | - | - | Reviewed in a 1-on-1 with the manager. |
+| 3 | `in_pursuit` | - | - | - | - | Active development plan in place. |
+| 4 | `fulfilled` | - | ✓ | - | - | Aspiration achieved (role move, promotion, lateral). |
+| 5 | `withdrawn` | - | ✓ | - | - | Employee withdraws the aspiration (priorities changed). |
 
 ### `recruitment_agencies` (Recruitment Agency)
 
@@ -182,6 +197,17 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | 3 | `held` | - | - | - | - | Event has been executed; attendee lists captured, leads ingested into talent pool. |
 | 4 | `closed` | - | ✓ | - | - | Post-event activities complete; cost accounting and source-attribution finalized. |
 | 5 | `cancelled` | - | ✓ | - | - | Event called off before it happens; sunk costs recognized, attendees notified. |
+
+### `skill_profiles` (Skill Profile)
+
+_This scope holds `skill_profiles` as **contributor**; the canonical state machine is owned by `LMS-SKILLS`._
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `initialized` | ✓ | - | - | - | Profile seeded for the worker from role and prior signals. |
+| 2 | `self_assessed` | - | - | - | - | Worker has captured self-assessed proficiency levels. |
+| 3 | `validated` | - | - | ✓ | `lms-skills:validate` | Manager or skills owner validated proficiency entries. |
+| 4 | `inactive` | - | ✓ | ✓ | `lms-skills:deactivate` | Profile retired (worker exit or role-change reset). |
 
 ## 8. Permissions and business rules (derived)
 

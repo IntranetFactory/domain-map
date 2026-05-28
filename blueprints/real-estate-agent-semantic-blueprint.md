@@ -7,7 +7,7 @@ system_slug: real-estate-agent
 domain_modules:
   - real-estate-agent
 related_modules: [clm-repository, crm-acct-mgt, crm-lead-mgt, re-brok-agent-ops]
-created_at: 2026-05-27
+created_at: 2026-05-28
 ---
 
 # Real Estate Agent (solo / small firm bundle)
@@ -29,7 +29,7 @@ Solo-agent and small-firm persona bundle. Single-install deployable for individu
 | Tour Appointments | Scheduled property showings with lock-box codes, access windows, agent attendance, and follow-up tracking. |
 
 ```mermaid
-flowchart LR
+flowchart TD
   classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
   legal_contracts["Contracts"]
@@ -66,15 +66,15 @@ flowchart LR
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- |
-| 1 | `crm_contacts` (Contacts) | embedded_master | `crm-acct-mgt` | required | personal_content | - |
-| 2 | `legal_contracts` (Contracts) | embedded_master | `clm-repository` | required | submit_lock | - |
-| 3 | `disclosure_documents` (Disclosure Documents) | embedded_master | `re-brok-agent-ops` | required | personal_content, submit_lock, single_approver | - |
-| 4 | `crm_leads` (Leads) | embedded_master | `crm-lead-mgt` | required | personal_content | - |
-| 5 | `real_estate_listings` (Real Estate Listings) | embedded_master | `re-brok-agent-ops` | required | personal_content | - |
-| 6 | `real_estate_transactions` (Real Estate Transactions) | embedded_master | `re-brok-agent-ops` | required | personal_content, submit_lock | - |
-| 7 | `tour_appointments` (Tour Appointments) | embedded_master | `re-brok-agent-ops` | required | personal_content | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `crm_contacts` (Contacts) | embedded_master | `crm-acct-mgt` | Account and Contact Management | required | personal_content | - |
+| 2 | `legal_contracts` (Contracts) | embedded_master | `clm-repository` | Contract Repository | required | submit_lock | - |
+| 3 | `disclosure_documents` (Disclosure Documents) | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock, single_approver | - |
+| 4 | `crm_leads` (Leads) | embedded_master | `crm-lead-mgt` | Lead Capture and Qualification | required | personal_content | - |
+| 5 | `real_estate_listings` (Real Estate Listings) | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content | - |
+| 6 | `real_estate_transactions` (Real Estate Transactions) | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock | - |
+| 7 | `tour_appointments` (Tour Appointments) | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content | - |
 
 ## 4. Aliases and industry synonyms
 

@@ -8,25 +8,25 @@ domain_modules:
   - ats-background-checks
 domain_code: ATS
 related_modules: [ats-candidate-crm, ats-offers, hrsd-case-mgmt, payroll-run]
-created_at: 2026-05-26
+created_at: 2026-05-28
 ---
 
 # Background Checks
 
 ## 1. Overview
 
-Pre-employment background-check orchestration with adverse-action workflow. Coordinates vendor handoffs (Checkr, HireRight, Sterling) and gates offer-to-firm conversion on clearance. Requires an external `send_email` tool for FCRA adverse-action notices.
+Pre-employment background-check orchestration with adverse-action workflow. Coordinates external vendor handoffs and gates offer-to-firm conversion on clearance. Requires an external `send_email` tool for FCRA adverse-action notices.
 
 ## 2. Entity summary
 
 | Name | Description |
 | --- | --- |
-| Background Checks | External verification result for a candidate (criminal, employment history, education, credit, identity). Status and findings typically returned by a provider (Checkr, HireRight, Sterling). |
+| Background Checks | External verification result for a candidate (criminal, employment history, education, credit, identity). Status and findings typically returned by an external screening provider. |
 | Candidates | Person known to the recruiting org, with or without an active application. Carries contact details, resume, tags, GDPR consent, and source. Distinct from Employee until hired. |
 | Offers | Formal employment offer extended to a candidate. Carries compensation components, start date, terms, approval chain, and status (draft / approved / sent / accepted / declined / rescinded). |
 
 ```mermaid
-flowchart LR
+flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
   classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
@@ -44,11 +44,11 @@ flowchart LR
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- |
-| 1 | `background_checks` (Background Checks) | master | - | required | personal_content, submit_lock | - |
-| 2 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | required | personal_content | - |
-| 3 | `job_offers` (Offers) | embedded_master | `ats-offers` | required | personal_content, single_approver | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `background_checks` (Background Checks) | master | - | - | required | personal_content, submit_lock | - |
+| 2 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | - |
+| 3 | `job_offers` (Offers) | embedded_master | `ats-offers` | Offers | required | personal_content, single_approver | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -118,7 +118,7 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `candidates` | embedded_master | required | ATS-CANDIDATE-CRM (ATS) | - |
 | `job_offers` | embedded_master | required | ATS-OFFERS (ATS) | - |
 
-## 7. Lifecycle states (per master)
+## 7. Lifecycle states (per touched entity)
 
 ### `background_checks` (Background Check)
 
@@ -129,6 +129,32 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | 3 | `completed_clear` | - | ✓ | - | - | Provider returned a clear result; no adverse findings. |
 | 4 | `completed_consider` | - | ✓ | ✓ | `ats-background-checks:completed_consider_background_check` | Provider returned adverse findings; gated review required before adjudication. |
 | 5 | `cancelled` | - | ✓ | - | - | Check withdrawn before the provider returned a result. |
+
+### `candidates` (Candidate)
+
+_This scope holds `candidates` as **embedded_master**; the canonical state machine is owned by `ATS-CANDIDATE-CRM`._
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `prospect` | ✓ | - | - | - | Person known to the recruiting org with no active application. |
+| 2 | `active` | - | - | - | - | Candidate has at least one open application or is actively engaged. |
+| 3 | `hired` | - | ✓ | ✓ | `ats-candidate-crm:hire_candidate` | Candidate accepted an offer and converted to employee. |
+| 4 | `do_not_hire` | - | ✓ | ✓ | `ats-candidate-crm:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
+| 5 | `archived` | - | ✓ | - | - | Candidate kept in the database but not active in any pipeline. |
+
+### `job_offers` (Offer)
+
+_This scope holds `job_offers` as **embedded_master**; the canonical state machine is owned by `ATS-OFFERS`._
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | - | - | Recruiter is composing offer terms and compensation components. |
+| 2 | `pending_approval` | - | - | - | - | Offer routed to the designated approver for sign-off. |
+| 3 | `approved` | - | - | ✓ | `ats-offers:approve_offer` | Approver signed off; offer is ready to send. |
+| 4 | `sent` | - | - | - | - | Offer delivered to the candidate. |
+| 5 | `accepted` | - | ✓ | - | - | Candidate accepted the offer. |
+| 6 | `declined` | - | ✓ | - | - | Candidate declined the offer. |
+| 7 | `rescinded` | - | ✓ | ✓ | `ats-offers:rescind_offer` | Offer withdrawn by the employer after being sent; gated action. |
 
 ## 8. Permissions and business rules (derived)
 

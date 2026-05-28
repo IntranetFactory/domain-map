@@ -8,7 +8,7 @@ domain_modules:
   - work-mgmt-task-exec
 domain_code: WORK-MGMT
 related_modules: [crm-pipeline-mgt, emp-exp-action-planning, pm-discovery, pm-roadmap-delivery, psa-project-delivery, psa-resource-mgmt, sem-execution-tracking, work-mgmt-goals-okr]
-created_at: 2026-05-27
+created_at: 2026-05-28
 ---
 
 # Task and Project Execution
@@ -42,7 +42,7 @@ Cross-functional task and project execution surface: work items with owners, due
 | Webhook Subscriptions | Event subscription: source_system, event_type, target_recipe, retry_policy, filter_logic. |
 
 ```mermaid
-flowchart LR
+flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
   classDef consumer fill:#e8def8,stroke:#7b1fa2,color:#3a155d;
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
@@ -107,31 +107,47 @@ flowchart LR
   class product_releases consumer;
   class project_assignments consumer;
   class users platform_builtin;
+  style crm_opportunities stroke-dasharray:5 5;
+  style strategic_initiatives stroke-dasharray:5 5;
+  style strategic_portfolios stroke-dasharray:5 5;
+  style action_plans stroke-dasharray:5 5;
+  style nocode_automations stroke-dasharray:5 5;
+  style business_rules_extracted stroke-dasharray:5 5;
+  style webhook_subscriptions stroke-dasharray:5 5;
+  style pull_requests stroke-dasharray:5 5;
+  style test_defects stroke-dasharray:5 5;
+  style process_simulation_runs stroke-dasharray:5 5;
+  style business_value_assessments stroke-dasharray:5 5;
+  style project_tasks stroke-dasharray:5 5;
+  style product_roadmaps stroke-dasharray:5 5;
+  style feature_requests stroke-dasharray:5 5;
+  style product_releases stroke-dasharray:5 5;
+  style project_assignments stroke-dasharray:5 5;
 ```
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- |
-| 1 | `work_automations` (Work Automations) | master | - | required | - | - |
-| 2 | `work_items` (Work Items) | master | - | required | - | - |
-| 3 | `work_projects` (Work Projects) | master | - | required | - | - |
-| 4 | `business_value_assessments` (Business Value Assessments) | consumer | `SPM` _(domain-level, not modularized)_ | optional | - | - |
-| 5 | `action_plans` (Engagement Action Plans) | consumer | `emp-exp-action-planning` | optional | - | - |
-| 6 | `business_rules_extracted` (Extracted Business Rules) | consumer | `PROC-MIN` _(domain-level, not modularized)_ | optional | - | - |
-| 7 | `feature_requests` (Feature Requests) | consumer | `pm-discovery` | optional | - | - |
-| 8 | `nocode_automations` (No-Code Automations) | consumer | `NCDB` _(domain-level, not modularized)_ | optional | - | - |
-| 9 | `crm_opportunities` (Opportunities) | consumer | `crm-pipeline-mgt` | optional | - | - |
-| 10 | `strategic_portfolios` (Portfolios) | consumer | `SPM` _(domain-level, not modularized)_ | optional | - | - |
-| 11 | `process_simulation_runs` (Process Simulation Runs) | consumer | `BPA` _(domain-level, not modularized)_ | optional | - | - |
-| 12 | `product_releases` (Product Releases) | consumer | `pm-roadmap-delivery` | optional | - | - |
-| 13 | `product_roadmaps` (Product Roadmaps) | consumer | `pm-roadmap-delivery` | optional | - | - |
-| 14 | `project_assignments` (Project Assignments) | consumer | `psa-resource-mgmt` | optional | - | - |
-| 15 | `project_tasks` (Project Tasks) | consumer | `psa-project-delivery` | optional | - | - |
-| 16 | `pull_requests` (Pull / Merge Requests) | consumer | `VSDP` _(domain-level, not modularized)_ | optional | - | - |
-| 17 | `strategic_initiatives` (Strategic Initiatives) | consumer | `sem-execution-tracking` | optional | - | - |
-| 18 | `test_defects` (Test Defects) | consumer | `TEST-MGMT` _(domain-level, not modularized)_ | optional | - | - |
-| 19 | `webhook_subscriptions` (Webhook Subscriptions) | consumer | `IPAAS` _(domain-level, not modularized)_ | optional | - | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `work_automations` (Work Automations) | master | - | - | required | - | - |
+| 2 | `work_items` (Work Items) | master | - | - | required | - | - |
+| 3 | `work_projects` (Work Projects) | master | - | - | required | - | - |
+| 4 | `business_value_assessments` (Business Value Assessments) | consumer | `SPM` _(domain-level, not modularized)_ | Strategic Portfolio Management | optional | - | - |
+| 5 | `action_plans` (Engagement Action Plans) | consumer | `emp-exp-action-planning` | Action Planning | optional | - | - |
+| 6 | `business_rules_extracted` (Extracted Business Rules) | consumer | `PROC-MIN` _(domain-level, not modularized)_ | Process Mining | optional | - | - |
+| 7 | `feature_requests` (Feature Requests) | consumer | `pm-discovery` | Product Discovery and Prioritization | optional | - | - |
+| 8 | `nocode_automations` (No-Code Automations) | consumer | `NCDB` _(domain-level, not modularized)_ | No-Code Database | optional | - | - |
+| 9 | `crm_opportunities` (Opportunities) | consumer | `crm-pipeline-mgt` | Opportunity and Pipeline Management | optional | - | - |
+| 10 | `strategic_portfolios` (Portfolios) | consumer | `SPM` _(domain-level, not modularized)_ | Strategic Portfolio Management | optional | - | - |
+| 11 | `process_simulation_runs` (Process Simulation Runs) | consumer | `BPA` _(domain-level, not modularized)_ | Business Process Architecture | optional | - | - |
+| 12 | `product_releases` (Product Releases) | consumer | `pm-roadmap-delivery` | Roadmap, Release, and Strategy | optional | - | - |
+| 13 | `product_roadmaps` (Product Roadmaps) | consumer | `pm-roadmap-delivery` | Roadmap, Release, and Strategy | optional | - | - |
+| 14 | `project_assignments` (Project Assignments) | consumer | `psa-resource-mgmt` | Resource Management | optional | - | - |
+| 15 | `project_tasks` (Project Tasks) | consumer | `psa-project-delivery` | Project Delivery | optional | - | - |
+| 16 | `pull_requests` (Pull / Merge Requests) | consumer | `VSDP` _(domain-level, not modularized)_ | Value Stream Delivery Platform | optional | - | - |
+| 17 | `strategic_initiatives` (Strategic Initiatives) | consumer | `sem-execution-tracking` | Execution Tracking | optional | - | - |
+| 18 | `test_defects` (Test Defects) | consumer | `TEST-MGMT` _(domain-level, not modularized)_ | Test Management | optional | - | - |
+| 19 | `webhook_subscriptions` (Webhook Subscriptions) | consumer | `IPAAS` _(domain-level, not modularized)_ | Integration Platform as a Service | optional | - | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -221,8 +237,8 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | WORK-MGMT-TASK-EXEC | ITSM | _(domain-level)_ | `work_automation.triggered` | `work_automations` | event_stream | low | Work-item automations linked to IT tickets propagate status changes to ITSM. |
 | WORK-MGMT-TASK-EXEC | ITSM | _(domain-level)_ | `work_item.status_changed` | `work_items` | api_call | high | Cross-functional WORK-MGMT items intersect with IT support requests: a marketing project task ('IT-provision new SaaS') needs to be linked to an ITSM request, with status mirrored both ways. Bidirectional sync is bespoke; off-the-shelf WORK-MGMT-to-ITSM connectors exist but require careful per-team configuration. |
-| WORK-MGMT-TASK-EXEC | SPM | _(domain-level)_ | `work_item.completed` | `work_items` | batch_sync | medium | Work-management platforms publish task-completion data to portfolio dashboards in SPM tools. The portfolio rollup powers strategy-to-execution dashboards and OKR progress (via okr_objectives.key_results linking down to work_items). Nightly sync is the common pattern; richer real-time integrations exist but are vendor-specific. |
 | WORK-MGMT-TASK-EXEC | SPM | _(domain-level)_ | `work_automation.triggered` | `work_automations` | batch_sync | medium | Aggregated work-automation outcomes feed SPM portfolio rollup. |
+| WORK-MGMT-TASK-EXEC | SPM | _(domain-level)_ | `work_item.completed` | `work_items` | batch_sync | medium | Work-management platforms publish task-completion data to portfolio dashboards in SPM tools. The portfolio rollup powers strategy-to-execution dashboards and OKR progress (via okr_objectives.key_results linking down to work_items). Nightly sync is the common pattern; richer real-time integrations exist but are vendor-specific. |
 | WORK-MGMT-TASK-EXEC | PSA | _(domain-level)_ | `work_automation.triggered` | `work_automations` | event_stream | low | Automation-driven task transitions feed PSA for utilization and billable-hour tracking. |
 | WORK-MGMT-TASK-EXEC | PSA | PSA-PROJECT-DELIVERY | `work_project.completed` | `work_projects` | batch_sync | medium | Services orgs running delivery in WORK-MGMT close a project and need utilization, billable hours, and milestone-based revenue recognition to roll up into PSA. Nightly sync of project status + hours is the common pattern; richer real-time integration exists but is uncommon. |
 | WORK-MGMT-TASK-EXEC | WSC | _(domain-level)_ | `work_automation.triggered` | `work_automations` | api_call | low | Automations post status updates and task notifications into workstream collaboration channels. |
@@ -233,27 +249,27 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 | target module | source domain | source module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| WORK-MGMT-TASK-EXEC | IPAAS | _(domain-level)_ | `webhook_subscription.delivery_failed` | `webhook_subscriptions` | api_call | medium | Webhook delivery failures create tasks for integration owners to investigate. |
-| WORK-MGMT-TASK-EXEC | PSA | PSA-PROJECT-DELIVERY | `project_task.completed` | `project_tasks` | event_stream | low | PSA task completion mirrors into the WORK-MGMT board to keep team-level views current. |
-| WORK-MGMT-TASK-EXEC | SPM | _(domain-level)_ | `demand_intake.approved` | `strategic_initiatives` | api_call | high | SPM creates work_projects + kickoff work_items for charter and resourcing. |
-| WORK-MGMT-TASK-EXEC | CRM | CRM-PIPELINE-MGT | `crm_opportunity.closed_won` | `crm_opportunities` | api_call | high | Sales closes a deal in CRM; delivery / Customer Success spin up a kickoff project in their work-management tool. Custom iPaaS automations or hand-built webhooks bridge the two; payload mapping (opportunity products to project tasks, account stakeholders to project members) is bespoke per org. |
-| WORK-MGMT-TASK-EXEC | SPM | _(domain-level)_ | `strategic_portfolio.rebalanced` | `strategic_portfolios` | batch_sync | high | Re-prioritisation cascades to project priority updates; high-touch validation. |
-| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `product_release.rolled_back` | `product_releases` | event_stream | medium | A product release is rolled back in PROD-MGMT (post-ship regression or incident). WORK-MGMT subscribers reopen the work_items that tracked the release and spawn remediation tasks. Failure mode: remediation tasks may not be scoped correctly if the rollback reason isn't propagated. |
-| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `product_release.shipped` | `product_releases` | event_stream | low | A product release ships in PROD-MGMT. WORK-MGMT subscribers close the work_items that tracked release-prep tasks and surface release notes against the project board. |
-| WORK-MGMT-TASK-EXEC | PSA | PSA-RESOURCE-MGMT | `project_assignment.released` | `project_assignments` | event_stream | low | A project assignment is released in PSA (consultant rolls off or capacity is freed). WORK-MGMT subscribers may close or reassign the work_items that were owned by the released assignee. Failure mode: orphaned work_items if the release event is missed and no reassignment happens. |
-| WORK-MGMT-TASK-EXEC | TEST-MGMT | _(domain-level)_ | `test_defect.created` | `test_defects` | event_stream | low | New defects materialize as work items on the engineering team's board for triage and fix. |
-| WORK-MGMT-TASK-EXEC | BPA | _(domain-level)_ | `process_simulation_run.bottleneck_identified` | `process_simulation_runs` | event_stream | medium | Bottleneck findings spawn improvement tasks in WORK-MGMT. |
-| WORK-MGMT-TASK-EXEC | NCDB | _(domain-level)_ | `nocode_automation.triggered` | `nocode_automations` | api_call | low | No-code automation creates a work item in the WORK-MGMT platform when its trigger fires. |
-| WORK-MGMT-TASK-EXEC | SPM | _(domain-level)_ | `business_value_assessment.completed` | `business_value_assessments` | event_stream | medium | Approved initiatives cascade into team-level work items in WORK-MGMT. |
-| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `product_roadmap.published` | `product_roadmaps` | event_stream | low | A new or updated product roadmap is published in PROD-MGMT. WORK-MGMT subscribers create work_projects or sub-projects representing the new roadmap initiatives so cross-functional teams can begin execution tracking. |
-| WORK-MGMT-TASK-EXEC | EMP-EXP | EMP-EXP-ACTION-PLANNING | `action_plan.created` | `action_plans` | api_call | medium | Engagement action plans often tracked as work items in WORK-MGMT for execution visibility. |
 | WORK-MGMT-TASK-EXEC | PSA | PSA-RESOURCE-MGMT | `project_assignment.confirmed` | `project_assignments` | event_stream | low | PSA seeds the WORK-MGMT project board with the newly-assigned resource so day-to-day task tracking can begin. |
+| WORK-MGMT-TASK-EXEC | BPA | _(domain-level)_ | `process_simulation_run.bottleneck_identified` | `process_simulation_runs` | event_stream | medium | Bottleneck findings spawn improvement tasks in WORK-MGMT. |
+| WORK-MGMT-TASK-EXEC | TEST-MGMT | _(domain-level)_ | `test_defect.created` | `test_defects` | event_stream | low | New defects materialize as work items on the engineering team's board for triage and fix. |
 | WORK-MGMT-TASK-EXEC | VSDP | _(domain-level)_ | `pull_request.merged` | `pull_requests` | event_stream | low | PR merges transition the linked work item to a completed state in the team's WORK-MGMT board. |
+| WORK-MGMT-TASK-EXEC | IPAAS | _(domain-level)_ | `webhook_subscription.delivery_failed` | `webhook_subscriptions` | api_call | medium | Webhook delivery failures create tasks for integration owners to investigate. |
+| WORK-MGMT-TASK-EXEC | SPM | _(domain-level)_ | `business_value_assessment.completed` | `business_value_assessments` | event_stream | medium | Approved initiatives cascade into team-level work items in WORK-MGMT. |
+| WORK-MGMT-TASK-EXEC | CRM | CRM-PIPELINE-MGT | `crm_opportunity.closed_won` | `crm_opportunities` | api_call | high | Sales closes a deal in CRM; delivery / Customer Success spin up a kickoff project in their work-management tool. Custom iPaaS automations or hand-built webhooks bridge the two; payload mapping (opportunity products to project tasks, account stakeholders to project members) is bespoke per org. |
+| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `product_roadmap.published` | `product_roadmaps` | event_stream | low | A new or updated product roadmap is published in PROD-MGMT. WORK-MGMT subscribers create work_projects or sub-projects representing the new roadmap initiatives so cross-functional teams can begin execution tracking. |
+| WORK-MGMT-TASK-EXEC | PSA | PSA-PROJECT-DELIVERY | `project_task.completed` | `project_tasks` | event_stream | low | PSA task completion mirrors into the WORK-MGMT board to keep team-level views current. |
+| WORK-MGMT-TASK-EXEC | PSA | PSA-RESOURCE-MGMT | `project_assignment.released` | `project_assignments` | event_stream | low | A project assignment is released in PSA (consultant rolls off or capacity is freed). WORK-MGMT subscribers may close or reassign the work_items that were owned by the released assignee. Failure mode: orphaned work_items if the release event is missed and no reassignment happens. |
 | WORK-MGMT-TASK-EXEC | EMP-EXP | EMP-EXP-ACTION-PLANNING | `action_plan.completed` | `action_plans` | api_call | medium | An engagement action plan transitions to completed in EMP-EXP. Subscribers in WORK-MGMT close the work_items that tracked each action item and roll up completion for reporting. Failure mode: action items may be closed in EMP-EXP without the linked work_items being closed in WORK-MGMT, leaving stale tasks. |
 | WORK-MGMT-TASK-EXEC | PROC-MIN | _(domain-level)_ | `business_rule_extracted.identified` | `business_rules_extracted` | manual_handoff | medium | Extracted business rule routed for analyst validation and possible codification. |
+| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `product_release.shipped` | `product_releases` | event_stream | low | A product release ships in PROD-MGMT. WORK-MGMT subscribers close the work_items that tracked release-prep tasks and surface release notes against the project board. |
+| WORK-MGMT-TASK-EXEC | NCDB | _(domain-level)_ | `nocode_automation.triggered` | `nocode_automations` | api_call | low | No-code automation creates a work item in the WORK-MGMT platform when its trigger fires. |
+| WORK-MGMT-TASK-EXEC | EMP-EXP | EMP-EXP-ACTION-PLANNING | `action_plan.created` | `action_plans` | api_call | medium | Engagement action plans often tracked as work items in WORK-MGMT for execution visibility. |
+| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `product_release.rolled_back` | `product_releases` | event_stream | medium | A product release is rolled back in PROD-MGMT (post-ship regression or incident). WORK-MGMT subscribers reopen the work_items that tracked the release and spawn remediation tasks. Failure mode: remediation tasks may not be scoped correctly if the rollback reason isn't propagated. |
 | WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `product_roadmap.item_promoted` | `product_roadmaps` | event_stream | medium | Promoting a roadmap item to now/next must create the corresponding delivery work in WORK-MGMT; manual handoff here is one of the most-cited PROD↔ENG pain points. |
 | WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-DISCOVERY | `feature_request.upvoted_threshold` | `feature_requests` | event_stream | medium | Once demand-signal crosses the prioritisation threshold, an engineering work item / epic is created in WORK-MGMT. Many teams still do this by hand. |
 | WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `product_release.planned` | `product_releases` | event_stream | low | WORK-MGMT creates the delivery workstream / release train for the planned release, with the scope and target date hydrated from PROD-MGMT. |
+| WORK-MGMT-TASK-EXEC | SPM | _(domain-level)_ | `demand_intake.approved` | `strategic_initiatives` | api_call | high | SPM creates work_projects + kickoff work_items for charter and resourcing. |
+| WORK-MGMT-TASK-EXEC | SPM | _(domain-level)_ | `strategic_portfolio.rebalanced` | `strategic_portfolios` | batch_sync | high | Re-prioritisation cascades to project priority updates; high-touch validation. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -276,7 +292,101 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `test_defects` | consumer | optional | TEST-MGMT (Test Management) | - |
 | `webhook_subscriptions` | consumer | optional | IPAAS (Integration Platform as a Service) | - |
 
-## 7. Lifecycle states (per master)
+## 7. Lifecycle states (per touched entity)
+
+### `action_plans` (Engagement Action Plan)
+
+_This scope holds `action_plans` as **consumer**; the canonical state machine is owned by `EMP-EXP-ACTION-PLANNING`._
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 10 | `open` | ✓ | - | - | - | - |
+| 20 | `in_progress` | - | - | - | - | - |
+| 30 | `completed` | - | ✓ | ✓ | `emp-exp-action-planning:complete_action_plan` | - |
+| 40 | `archived` | - | ✓ | - | - | - |
+
+### `crm_opportunities` (Opportunity)
+
+_This scope holds `crm_opportunities` as **consumer**; the canonical state machine is owned by `CRM-PIPELINE-MGT`._
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `open` | ✓ | - | - | - | Opportunity created and being scoped. |
+| 2 | `qualified` | - | - | - | - | Opportunity has passed qualification and entered active pursuit. |
+| 3 | `proposal` | - | - | - | - | Proposal or quote has been delivered to the prospect. |
+| 4 | `negotiation` | - | - | - | - | Commercial terms are being negotiated with the prospect. |
+| 5 | `won` | - | ✓ | ✓ | `crm-pipeline-mgt:close_won` | Deal closed-won; triggers downstream subscription activation. |
+| 6 | `lost` | - | ✓ | - | - | Deal closed-lost; opportunity terminated without revenue. |
+
+### `feature_requests` (Feature Request)
+
+_This scope holds `feature_requests` as **consumer**; the canonical state machine is owned by `PM-DISCOVERY`._
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `new` | ✓ | - | - | - | Feature request just captured; awaiting triage. |
+| 2 | `triaged` | - | - | - | - | Request has been reviewed and deemed in-scope for the product. |
+| 3 | `prioritized` | - | - | - | - | Request has been ranked relative to other backlog items. |
+| 4 | `accepted` | - | ✓ | ✓ | `pm-discovery:accepted_feature_request` | Request has been accepted; converted to a product_feature row. |
+| 5 | `rejected` | - | ✓ | ✓ | `pm-discovery:rejected_feature_request` | Request will not be built; rationale captured. |
+| 6 | `archived` | - | ✓ | - | - | Old or duplicate request; out of consideration for filtering. |
+
+### `product_releases` (Product Release)
+
+_This scope holds `product_releases` as **consumer**; the canonical state machine is owned by `PM-ROADMAP-DELIVERY`._
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `planned` | ✓ | - | - | - | Release plan exists with target date and feature set. |
+| 2 | `in_progress` | - | - | - | - | Release work in flight; features merging in. |
+| 3 | `shipped` | - | ✓ | ✓ | `pm-roadmap-delivery:shipped_product_release` | Release has gone live to the target audience. |
+| 4 | `rolled_back` | - | ✓ | ✓ | `pm-roadmap-delivery:rolled_back_product_release` | Release was pulled after shipping due to defects or business reasons. |
+| 5 | `cancelled` | - | ✓ | ✓ | `pm-roadmap-delivery:cancelled_product_release` | Release was cancelled before shipping. |
+
+### `product_roadmaps` (Product Roadmap)
+
+_This scope holds `product_roadmaps` as **consumer**; the canonical state machine is owned by `PM-ROADMAP-DELIVERY`._
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | - | - | Roadmap is being authored; not visible to wider audiences. |
+| 2 | `published` | - | - | ✓ | `pm-roadmap-delivery:published_product_roadmap` | Roadmap version is published; visible to the configured audience. |
+| 3 | `archived` | - | ✓ | - | - | Roadmap version is superseded; kept for historical reference. |
+
+### `project_assignments` (Project Assignment)
+
+_This scope holds `project_assignments` as **consumer**; the canonical state machine is owned by `PSA-RESOURCE-MGMT`._
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `proposed` | ✓ | - | - | - | Resource manager has nominated a consultant for a role on the project; awaiting confirmation. |
+| 2 | `confirmed` | - | - | ✓ | `psa-resource-mgmt:confirm_project_assignment` | Resource committed to the project at a stated allocation; HCM capacity decremented; WORK-MGMT seat created. |
+| 3 | `active` | - | - | - | - | Resource is actively delivering on the assignment; hours flowing through time entries. |
+| 4 | `released` | - | ✓ | ✓ | `psa-resource-mgmt:release_project_assignment` | Resource has rolled off (planned end, early release, scope change). Capacity returned to HCM bench. |
+
+### `project_tasks` (Project Task)
+
+_This scope holds `project_tasks` as **consumer**; the canonical state machine is owned by `PSA-PROJECT-DELIVERY`._
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `not_started` | ✓ | - | - | - | Task created on the project plan; not yet picked up. |
+| 2 | `in_progress` | - | - | ✓ | `psa-project-delivery:start_project_task` | Assignee has begun work on the task. |
+| 3 | `blocked` | - | - | ✓ | `psa-project-delivery:block_project_task` | Task cannot proceed: upstream dependency, approval, or external input outstanding. |
+| 4 | `completed` | - | ✓ | ✓ | `psa-project-delivery:complete_project_task` | Task delivered; rolls into milestone progress. |
+| 5 | `cancelled` | - | ✓ | ✓ | `psa-project-delivery:cancel_project_task` | Task abandoned (scope change, descope, redundancy). |
+
+### `strategic_initiatives` (Strategic Initiative)
+
+_This scope holds `strategic_initiatives` as **consumer**; the canonical state machine is owned by `SEM-EXECUTION-TRACKING`._
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `proposed` | ✓ | - | - | - | Initiative is drafted by a strategy-office contributor; not yet funded or scheduled. |
+| 2 | `approved` | - | - | ✓ | `sem-execution-tracking:approve_strategic_initiative` | Initiative cleared by the operating-rhythm review; budget and owner confirmed. Publishes strategic_initiative.approved. |
+| 3 | `in_progress` | - | - | - | - | Execution underway; status, milestones, and benefits realisation updated against the initiative. |
+| 4 | `cancelled` | - | ✓ | ✓ | `sem-execution-tracking:cancel_strategic_initiative` | Initiative withdrawn before completion (deprioritised, blocked, or rolled into another initiative). Publishes strategic_initiative.cancelled. |
+| 4 | `completed` | - | ✓ | ✓ | `sem-execution-tracking:complete_strategic_initiative` | Benefits realised or scope fully delivered. Publishes strategic_initiative.completed. |
 
 ### `work_automations` (Work Automation)
 

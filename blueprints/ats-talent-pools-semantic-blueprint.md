@@ -8,7 +8,7 @@ domain_modules:
   - ats-talent-pools
 domain_code: ATS
 related_modules: [ats-candidate-crm]
-created_at: 2026-05-26
+created_at: 2026-05-28
 ---
 
 # Talent Pools
@@ -25,7 +25,7 @@ Curated candidate groupings for nurture and pipeline-building (`talent_pools`). 
 | Candidates | Person known to the recruiting org, with or without an active application. Carries contact details, resume, tags, GDPR consent, and source. Distinct from Employee until hired. |
 
 ```mermaid
-flowchart LR
+flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
   classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
   talent_pools["Talent Pools"]
@@ -37,10 +37,10 @@ flowchart LR
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- |
-| 1 | `talent_pools` (Talent Pools) | master | - | required | - | - |
-| 2 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | required | personal_content | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `talent_pools` (Talent Pools) | master | - | - | required | - | - |
+| 2 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -90,7 +90,19 @@ _(no inbound `handoffs` whose payload is in this scope.)_
 | --- | --- | --- | --- | --- |
 | `candidates` | embedded_master | required | ATS-CANDIDATE-CRM (ATS) | - |
 
-## 7. Lifecycle states (per master)
+## 7. Lifecycle states (per touched entity)
+
+### `candidates` (Candidate)
+
+_This scope holds `candidates` as **embedded_master**; the canonical state machine is owned by `ATS-CANDIDATE-CRM`._
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `prospect` | ✓ | - | - | - | Person known to the recruiting org with no active application. |
+| 2 | `active` | - | - | - | - | Candidate has at least one open application or is actively engaged. |
+| 3 | `hired` | - | ✓ | ✓ | `ats-candidate-crm:hire_candidate` | Candidate accepted an offer and converted to employee. |
+| 4 | `do_not_hire` | - | ✓ | ✓ | `ats-candidate-crm:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
+| 5 | `archived` | - | ✓ | - | - | Candidate kept in the database but not active in any pipeline. |
 
 ### `talent_pools` (Talent Pool)
 

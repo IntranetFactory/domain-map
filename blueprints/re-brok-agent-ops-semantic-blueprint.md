@@ -8,7 +8,7 @@ domain_modules:
   - re-brok-agent-ops
 domain_code: RE-BROKERAGE
 related_modules: [crm-acct-mgt, crm-lead-mgt, re-brok-brokerage-ops, real-estate-agent]
-created_at: 2026-05-27
+created_at: 2026-05-28
 ---
 
 # Real Estate Agent Operations
@@ -30,7 +30,7 @@ Agent-facing workflow from lead capture through closing. Lead nurture (writes ba
 | Commission Splits | Per-transaction commission distribution across listing-side and buyer-side brokerages, then internal agent splits per franchise rules; referenced by accounting and 1099 processes. |
 
 ```mermaid
-flowchart LR
+flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
   classDef contributor fill:#cfe8ff,stroke:#1976d2,color:#0d3a66;
   classDef consumer fill:#e8def8,stroke:#7b1fa2,color:#3a155d;
@@ -65,19 +65,20 @@ flowchart LR
   class crm_contacts contributor;
   class commission_splits consumer;
   class users platform_builtin;
+  style commission_splits stroke-dasharray:5 5;
 ```
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- |
-| 1 | `disclosure_documents` (Disclosure Documents) | master | - | required | personal_content, submit_lock, single_approver | - |
-| 2 | `real_estate_listings` (Real Estate Listings) | master | - | required | personal_content | - |
-| 3 | `real_estate_transactions` (Real Estate Transactions) | master | - | required | personal_content, submit_lock | - |
-| 4 | `tour_appointments` (Tour Appointments) | master | - | required | personal_content | - |
-| 5 | `crm_contacts` (Contacts) | contributor | `crm-acct-mgt` | required | personal_content | - |
-| 6 | `crm_leads` (Leads) | contributor | `crm-lead-mgt` | required | personal_content | - |
-| 7 | `commission_splits` (Commission Splits) | consumer | `re-brok-brokerage-ops` | optional | submit_lock, single_approver | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `disclosure_documents` (Disclosure Documents) | master | - | - | required | personal_content, submit_lock, single_approver | - |
+| 2 | `real_estate_listings` (Real Estate Listings) | master | - | - | required | personal_content | - |
+| 3 | `real_estate_transactions` (Real Estate Transactions) | master | - | - | required | personal_content, submit_lock | - |
+| 4 | `tour_appointments` (Tour Appointments) | master | - | - | required | personal_content | - |
+| 5 | `crm_contacts` (Contacts) | contributor | `crm-acct-mgt` | Account and Contact Management | required | personal_content | - |
+| 6 | `crm_leads` (Leads) | contributor | `crm-lead-mgt` | Lead Capture and Qualification | required | personal_content | - |
+| 7 | `commission_splits` (Commission Splits) | consumer | `re-brok-brokerage-ops` | Brokerage Oversight and Commission Management | optional | submit_lock, single_approver | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -139,8 +140,8 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | _(domain-level)_ | GRC | _(domain-level)_ | `real_estate_transaction.closed` | `disclosure_documents` | batch_sync | low | Disclosure-document completeness per closed transaction feeds brokerage-compliance audit and state-real-estate-commission requirements. |
 | _(domain-level)_ | RE-PROP-MGMT | _(domain-level)_ | `real_estate_transaction.closed` | `real_estate_transactions` | manual_handoff | high | Closed sale of a rental property results in a new landlord-of-record; the new owner's property-management platform must be configured (often manual handoff via email; the buyer's PM and the seller's brokerage are different vendors). |
-| _(domain-level)_ | RE-CRE | _(domain-level)_ | `listing.sold` | `real_estate_listings` | batch_sync | medium | Closed sale triggers commercial lease setup if multi-tenant. |
 | _(domain-level)_ | RE-CRE | _(domain-level)_ | `real_estate_transaction.closed` | `real_estate_transactions` | manual_handoff | high | Closed sale of a CRE asset transfers operations to the new owner's CRE platform; rent-roll, leases, and CAM history must be carried over (typically manual). |
+| _(domain-level)_ | RE-CRE | _(domain-level)_ | `listing.sold` | `real_estate_listings` | batch_sync | medium | Closed sale triggers commercial lease setup if multi-tenant. |
 | _(domain-level)_ | RE-INVEST | _(domain-level)_ | `listing.sold` | `real_estate_listings` | manual_handoff | high | Sale closing triggers fund NAV and LP-reporting recalculation. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)

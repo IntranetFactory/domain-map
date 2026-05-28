@@ -8,7 +8,7 @@ domain_modules:
   - hiring-starter
 domain_code: ATS
 related_modules: [ats-candidate-crm, ats-interviews, ats-offers, ats-recruitment-pipeline]
-created_at: 2026-05-27
+created_at: 2026-05-28
 ---
 
 # Hiring Starter
@@ -31,7 +31,7 @@ Entry-tier deployable for a basic hiring workflow: post jobs, capture applicatio
 | Users | Semantius platform-owned user table. Referenced from domain `data_objects` via `data_object_relationships` for assignee / author / approver / creator edges. Not surfaced in domain-level analytics (Signal 1/2 ignore `kind='platform_builtin'`). |
 
 ```mermaid
-flowchart LR
+flowchart TD
   classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
   classDef consumer fill:#e8def8,stroke:#7b1fa2,color:#3a155d;
   candidates["Candidates"]
@@ -60,20 +60,22 @@ flowchart LR
   class job_offers embedded_master;
   class recruitment_sources embedded_master;
   class users consumer;
+  style interview_scorecards stroke-dasharray:5 5;
+  style recruitment_sources stroke-dasharray:5 5;
 ```
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- |
-| 1 | `job_applications` (Applications) | embedded_master | `ats-recruitment-pipeline` | required | personal_content | - |
-| 2 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | required | personal_content | - |
-| 3 | `interview_scorecards` (Interview Scorecards) | embedded_master | `ats-interviews` | optional | personal_content, submit_lock | - |
-| 4 | `interviews` (Interviews) | embedded_master | `ats-interviews` | required | - | - |
-| 5 | `job_postings` (Job Postings) | embedded_master | `ats-recruitment-pipeline` | required | - | - |
-| 6 | `job_offers` (Offers) | embedded_master | `ats-offers` | required | personal_content, single_approver | - |
-| 7 | `recruitment_sources` (Recruitment Sources) | embedded_master | `ats-candidate-crm` | optional | - | - |
-| 8 | `users` (Users) | consumer | _(platform built-in)_ | required | - | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `job_applications` (Applications) | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | personal_content | - |
+| 2 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | - |
+| 3 | `interview_scorecards` (Interview Scorecards) | embedded_master | `ats-interviews` | Interviews | optional | personal_content, submit_lock | - |
+| 4 | `interviews` (Interviews) | embedded_master | `ats-interviews` | Interviews | required | - | - |
+| 5 | `job_postings` (Job Postings) | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | - | - |
+| 6 | `job_offers` (Offers) | embedded_master | `ats-offers` | Offers | required | personal_content, single_approver | - |
+| 7 | `recruitment_sources` (Recruitment Sources) | embedded_master | `ats-candidate-crm` | Candidate CRM | optional | - | - |
+| 8 | `users` (Users) | consumer | _(platform built-in)_ | _(platform built-in)_ | required | - | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -127,15 +129,14 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `users` | issued invitations | `external_guest_invitations` | one_to_many | required | source | - |
 | `users` | owns audit plan | `audit_plans` | one_to_many | required | source | - |
 | `users` | leads engagement | `audit_engagements` | one_to_many | required | source | - |
-| `users` | owns | `courses` | one_to_many | optional | source | - |
 | `users` | owns finding | `audit_findings` | one_to_many | optional | source | - |
 | `users` | approves recommendation | `audit_recommendations` | one_to_many | optional | source | - |
 | `users` | signs report | `audit_reports` | one_to_many | required | source | - |
 | `users` | performs control test | `control_tests` | one_to_many | required | source | - |
 | `users` | owns follow-up | `follow_up_actions` | one_to_many | required | source | - |
+| `users` | owns | `courses` | one_to_many | optional | source | - |
 | `users` | authored | `work_papers` | one_to_many | required | source | - |
 | `users` | curates | `learning_paths` | one_to_many | optional | source | - |
-| `users` | owns | `benefit_plans` | one_to_many | optional | source | - |
 | `users` | submitted intake | `legal_intake_requests` | one_to_many | required | source | - |
 | `users` | leads matter | `in_house_legal_matters` | one_to_many | required | source | - |
 | `users` | authored advice | `legal_advice_records` | one_to_many | required | source | - |
@@ -144,6 +145,7 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `users` | runs discovery | `ediscovery_requests` | one_to_many | required | source | - |
 | `users` | approves engagement | `outside_counsel_engagements` | one_to_many | required | source | - |
 | `users` | responds to inquiry | `regulatory_inquiries` | one_to_many | required | source | - |
+| `users` | owns | `benefit_plans` | one_to_many | optional | source | - |
 | `users` | approves | `butcher_orders` | one_to_many | required | target | - |
 | `users` | owns plan | `test_plans` | one_to_many | required | source | - |
 | `users` | authored case | `test_cases` | one_to_many | required | source | - |
@@ -153,12 +155,12 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `users` | owns suite | `test_suites` | one_to_many | optional | source | - |
 | `users` | administers environment | `test_environments` | one_to_many | optional | source | - |
 | `users` | mapped trace | `requirements_to_test_traceability` | one_to_many | optional | source | - |
-| `users` | owns | `hr_cases` | one_to_many | optional | source | - |
 | `users` | hosts visitor | `host_assignments` | one_to_many | required | source | - |
 | `users` | created registration | `visitor_registrations` | one_to_many | optional | source | - |
 | `users` | processed check-in | `visitor_check_ins` | one_to_many | optional | source | - |
 | `users` | reviewed screening | `visitor_watchlist_screenings` | one_to_many | optional | source | - |
 | `users` | owns evacuation roster | `visitor_evacuation_lists` | one_to_many | optional | source | - |
+| `users` | owns | `hr_cases` | one_to_many | optional | source | - |
 | `users` | administers audit log | `visitor_audit_logs` | one_to_many | optional | source | - |
 | `users` | printed badge | `visitor_badges` | one_to_many | optional | source | - |
 | `users` | witnessed nda | `visitor_nda_acknowledgements` | one_to_many | optional | source | - |
@@ -206,6 +208,22 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `users` | owns | `iga_entitlement_definitions` | one_to_many | optional | source | - |
 | `users` | implicated_in | `iga_sod_violations` | one_to_many | required | source | - |
 | `users` | targeted_by | `iga_provisioning_events` | one_to_many | required | target | - |
+| `users` | performs_as_technician | `field_visits` | one_to_many | required | target | - |
+| `users` | assigned_as_technician | `dispatch_records` | one_to_many | required | target | - |
+| `users` | dispatches | `dispatch_records` | one_to_many | required | target | - |
+| `users` | creates_work_order | `service_work_orders` | one_to_many | required | target | - |
+| `users` | manages_as_account_mgr | `service_contracts` | one_to_many | optional | target | - |
+| `users` | installs | `installed_equipment` | one_to_many | optional | target | - |
+| `users` | completes_pm | `service_pm_schedules` | one_to_many | optional | target | - |
+| `users` | processed_loan | `library_loans` | one_to_many | optional | target | - |
+| `users` | processed_hold | `library_holds` | one_to_many | optional | target | - |
+| `users` | assessed_fine | `library_fines` | one_to_many | optional | target | - |
+| `users` | placed_order | `library_acquisition_orders` | one_to_many | required | target | - |
+| `users` | cataloged_record | `bibliographic_records` | one_to_many | optional | target | - |
+| `users` | maintains_authority | `library_authorities` | one_to_many | optional | target | - |
+| `users` | coordinates_ill | `interlibrary_loan_requests` | one_to_many | optional | target | - |
+| `users` | received_item | `library_items` | one_to_many | optional | target | - |
+| `library_patrons` | linked_to_user | `users` | one_to_one | optional | source | - |
 | `users` | owns | `customers` | one_to_many | optional | source | - |
 | `users` | authored | `content_entries` | one_to_many | required | source | - |
 | `users` | manages release | `content_releases` | one_to_many | optional | source | - |
@@ -224,8 +242,8 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `users` | approved | `contract_clauses` | one_to_many | optional | source | - |
 | `users` | reviews | `performance_reviews` | one_to_many | required | target | - |
 | `users` | organizes_room_reservations | `room_reservations` | one_to_many | required | target | - |
-| `users` | designs | `org_designs` | one_to_many | optional | source | - |
 | `users` | books_desks | `desk_bookings` | one_to_many | required | target | - |
+| `users` | designs | `org_designs` | one_to_many | optional | source | - |
 | `users` | requests_workplace_services | `workplace_service_requests` | one_to_many | required | target | - |
 | `users` | assigned_to_workplace_services | `workplace_service_requests` | one_to_many | optional | target | - |
 | `users` | authors_workplace_feedback | `workplace_experience_feedback` | one_to_many | required | target | - |

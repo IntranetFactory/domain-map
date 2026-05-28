@@ -8,7 +8,7 @@ domain_modules:
   - re-brok-brokerage-ops
 domain_code: RE-BROKERAGE
 related_modules: [re-brok-agent-ops]
-created_at: 2026-05-27
+created_at: 2026-05-28
 ---
 
 # Brokerage Oversight and Commission Management
@@ -26,7 +26,7 @@ Broker-level oversight on top of agent operations. Multi-agent commission-split 
 | Real Estate Transactions | Deal pipeline from offer through close: parties, terms, contingencies, escrow timeline, and document compliance. One transaction per accepted offer; survives the listing once the offer is bound. |
 
 ```mermaid
-flowchart LR
+flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
   classDef contributor fill:#cfe8ff,stroke:#1976d2,color:#0d3a66;
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
@@ -49,11 +49,11 @@ flowchart LR
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- |
-| 1 | `commission_splits` (Commission Splits) | master | - | required | submit_lock, single_approver | - |
-| 2 | `disclosure_documents` (Disclosure Documents) | contributor | `re-brok-agent-ops` | required | personal_content, submit_lock, single_approver | - |
-| 3 | `real_estate_transactions` (Real Estate Transactions) | contributor | `re-brok-agent-ops` | required | personal_content, submit_lock | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `commission_splits` (Commission Splits) | master | - | - | required | submit_lock, single_approver | - |
+| 2 | `disclosure_documents` (Disclosure Documents) | contributor | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock, single_approver | - |
+| 3 | `real_estate_transactions` (Real Estate Transactions) | contributor | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock | - |
 
 ## 4. Aliases and industry synonyms
 

@@ -8,7 +8,7 @@ domain_modules:
   - lms-course-delivery
 domain_code: LMS
 related_modules: [hcm-core-worker, hcm-org-positions, lms-compliance-training, lms-skills, pa-predictive-models, talent-succession-career]
-created_at: 2026-05-26
+created_at: 2026-05-28
 ---
 
 # Course Delivery
@@ -30,7 +30,7 @@ The core LMS workflow: course authoring, content delivery, enrollment, completio
 | Positions | Approved slot in the org - a 'chair' with role definition, cost center, reporting line, location, and FTE allocation. Distinct from job_profiles (the catalog definition) and from employees (the person filling the slot). A position can be open, filled, or eliminated. SWP designs future positions via org_designs; HCM operationalizes them once approved. |
 
 ```mermaid
-flowchart LR
+flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
   classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
@@ -73,19 +73,22 @@ flowchart LR
   class hcm_positions embedded_master;
   class cost_centers embedded_master;
   class users platform_builtin;
+  style org_units stroke-dasharray:5 5;
+  style hcm_positions stroke-dasharray:5 5;
+  style cost_centers stroke-dasharray:5 5;
 ```
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- |
-| 1 | `course_enrollments` (Course Enrollments) | master | - | required | personal_content | - |
-| 2 | `courses` (Courses) | master | - | required | - | - |
-| 3 | `learning_records` (Learning Records) | master | - | required | personal_content | - |
-| 4 | `cost_centers` (Cost Centers) | embedded_master | `ERP-FIN` _(domain-level, not modularized)_ | optional | - | - |
-| 5 | `employees` (Employees) | embedded_master | `hcm-core-worker` | required | personal_content | - |
-| 6 | `org_units` (Org Units) | embedded_master | `hcm-org-positions` | optional | - | - |
-| 7 | `hcm_positions` (Positions) | embedded_master | `hcm-org-positions` | optional | single_approver | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `course_enrollments` (Course Enrollments) | master | - | - | required | personal_content | - |
+| 2 | `courses` (Courses) | master | - | - | required | - | - |
+| 3 | `learning_records` (Learning Records) | master | - | - | required | personal_content | - |
+| 4 | `cost_centers` (Cost Centers) | embedded_master | `ERP-FIN` _(domain-level, not modularized)_ | Core ERP Financial Management | optional | - | - |
+| 5 | `employees` (Employees) | embedded_master | `hcm-core-worker` | Core Worker Record | required | personal_content | - |
+| 6 | `org_units` (Org Units) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | - | - |
+| 7 | `hcm_positions` (Positions) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | single_approver | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -206,8 +209,8 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | source module | target domain | target module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | LMS-COURSE-DELIVERY | HCM | _(domain-level)_ | `learning_record.posted` | `learning_records` | event_stream | low | Authoritative learning transcript visible in HCM employee record. |
-| LMS-COURSE-DELIVERY | LMS | LMS-SKILLS | `course_enrollment.completed` | `course_enrollments` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | LMS | LMS-COMPLIANCE-TRAINING | `course.published` | `courses` | lifecycle_progression | low | - |
+| LMS-COURSE-DELIVERY | LMS | LMS-SKILLS | `course_enrollment.completed` | `course_enrollments` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | TALENT-MGMT | TALENT-SUCCESSION-CAREER | `course_enrollment.completed` | `course_enrollments` | event_stream | low | Course completion updates skill-profile; TALENT-MGMT reflects in dev-plans and succession. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
@@ -225,7 +228,7 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `hcm_positions` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | - |
 | `org_units` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | - |
 
-## 7. Lifecycle states (per master)
+## 7. Lifecycle states (per touched entity)
 
 ### `course_enrollments` (Course Enrollment)
 
@@ -247,6 +250,31 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | 3 | `published` | - | - | ✓ | `lms-course-delivery:publish` | Course released to the catalog and available for enrollment. |
 | 4 | `retired` | - | ✓ | ✓ | `lms-course-delivery:retire` | Course removed from the catalog and kept for historical transcripts. |
 
+### `employees` (Employee)
+
+_This scope holds `employees` as **embedded_master**; the canonical state machine is owned by `HCM-CORE-WORKER`._
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | - | - | Pre-hire stub created during requisition or onboarding handoff; not yet a worker of record. |
+| 2 | `active` | - | - | ✓ | `hcm-core-worker:active_employee` | Worker is currently employed and appears in headcount, payroll eligibility, and directory feeds. |
+| 3 | `on_leave` | - | - | ✓ | `hcm-core-worker:on_leave_employee` | Employee is on approved leave (parental, medical, sabbatical); active record but suppressed from some downstream feeds. |
+| 4 | `suspended` | - | - | ✓ | `hcm-core-worker:suspended_employee` | Employment temporarily halted (investigation, disciplinary); pay and access may be paused. |
+| 5 | `terminated` | - | ✓ | ✓ | `hcm-core-worker:terminated_employee` | Employment ended (voluntary or involuntary); final pay processed, access deprovisioned. |
+
+### `hcm_positions` (Position)
+
+_This scope holds `hcm_positions` as **embedded_master**; the canonical state machine is owned by `HCM-ORG-POSITIONS`._
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `proposed` | ✓ | - | - | - | Position has been designed but not yet approved against the headcount plan. |
+| 2 | `approved` | - | - | ✓ | `hcm-org-positions:approved_position` | Cleared by headcount/finance owner; eligible to spawn a requisition. |
+| 3 | `open` | - | - | ✓ | `hcm-org-positions:open_position` | Approved and actively being recruited against; not yet filled. |
+| 4 | `filled` | - | - | ✓ | `hcm-org-positions:filled_position` | An employee occupies the position. |
+| 5 | `frozen` | - | - | ✓ | `hcm-org-positions:frozen_position` | Temporarily not fillable (hiring freeze, budget hold); retains the slot. |
+| 6 | `eliminated` | - | ✓ | ✓ | `hcm-org-positions:eliminated_position` | Removed from the org structure permanently. |
+
 ### `learning_records` (Learning Record)
 
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
@@ -254,6 +282,17 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | 1 | `recorded` | ✓ | - | - | - | Statement captured from the content runtime or external source. |
 | 2 | `validated` | - | ✓ | ✓ | `lms-course-delivery:validate` | Record validated against schema and posted to the learner transcript. |
 | 3 | `voided` | - | ✓ | ✓ | `lms-course-delivery:void` | Record voided due to data error, duplicate, or content reset. |
+
+### `org_units` (Org Unit)
+
+_This scope holds `org_units` as **embedded_master**; the canonical state machine is owned by `HCM-ORG-POSITIONS`._
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | - | - | Org unit defined as part of a future structure; not yet operational. |
+| 2 | `active` | - | - | ✓ | `hcm-org-positions:active_org_unit` | Operational unit; carries headcount, cost-center linkage, and reporting lines. |
+| 3 | `reorganized` | - | ✓ | ✓ | `hcm-org-positions:reorganized_org_unit` | Unit folded into or replaced by a new structure; references remain for history. |
+| 4 | `closed` | - | ✓ | ✓ | `hcm-org-positions:closed_org_unit` | Unit dissolved; no employees or positions reside in it. |
 
 ## 8. Permissions and business rules (derived)
 

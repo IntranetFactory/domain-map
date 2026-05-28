@@ -7,8 +7,8 @@ system_slug: ats-interviews
 domain_modules:
   - ats-interviews
 domain_code: ATS
-related_modules: [ats-candidate-crm, ats-recruitment-pipeline, hcm-lifecycle-workflows, talent-performance-mgmt, talent-succession-career]
-created_at: 2026-05-26
+related_modules: [ats-candidate-crm, ats-recruitment-pipeline, hcm-lifecycle-workflows, hiring-starter, talent-performance-mgmt, talent-succession-career]
+created_at: 2026-05-28
 ---
 
 # Interviews
@@ -21,14 +21,14 @@ Interview scheduling, panel coordination, scorecards, and structured assessments
 
 | Name | Description |
 | --- | --- |
-| Assessments | Skills, cognitive, technical, or personality test result attached to an application. Often sourced from a partner system (HackerRank, Codility, Pymetrics) and referenced here. |
+| Assessments | Skills, cognitive, technical, or personality test result attached to an application. Often sourced from an external assessment provider and referenced here. |
 | Interview Scorecards | Structured interviewer feedback against a defined rubric: per-competency ratings, written notes, and a hire/no-hire recommendation. |
 | Interviews | Scheduled assessment event between a candidate and one or more interviewers. Carries time, location/medium, panel, interview kit, and outcome. |
 | Applications | A candidate's submission against a specific requisition. Carries pipeline stage, status (active / rejected / withdrawn / hired), source, and the full evaluation history. |
 | Candidates | Person known to the recruiting org, with or without an active application. Carries contact details, resume, tags, GDPR consent, and source. Distinct from Employee until hired. |
 
 ```mermaid
-flowchart LR
+flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
   classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
@@ -55,13 +55,13 @@ flowchart LR
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- |
-| 1 | `candidate_assessments` (Assessments) | master | - | required | submit_lock | - |
-| 2 | `interview_scorecards` (Interview Scorecards) | master | - | required | personal_content, submit_lock | - |
-| 3 | `interviews` (Interviews) | master | - | required | - | - |
-| 4 | `job_applications` (Applications) | embedded_master | `ats-recruitment-pipeline` | required | personal_content | - |
-| 5 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | required | personal_content | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `candidate_assessments` (Assessments) | master | - | - | required | submit_lock | - |
+| 2 | `interview_scorecards` (Interview Scorecards) | master | - | - | required | personal_content, submit_lock | - |
+| 3 | `interviews` (Interviews) | master | - | - | required | - | - |
+| 4 | `job_applications` (Applications) | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | personal_content | - |
+| 5 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -111,16 +111,18 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | --- | --- | --- | --- | --- |
 | `candidate_assessments` | HCM-LIFECYCLE-WORKFLOWS (Employee Lifecycle Workflows) - HCM | consumer | required | - |
 | `candidate_assessments` | TALENT-PERFORMANCE-MGMT (Performance and Goal Management) - TALENT-MGMT | consumer | optional | - |
+| `interview_scorecards` | HIRING-STARTER (Hiring Starter) - ATS | embedded_master | optional | - |
+| `interviews` | HIRING-STARTER (Hiring Starter) - ATS | embedded_master | required | - |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
 | source module | target domain | target module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-INTERVIEWS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate_assessment.failed` | `candidate_assessments` | event_stream | low | Failed-assessment outcomes close the candidate's loop in ATS and propagate to HCM only if the candidate is an internal-mobility applicant whose profile should reflect the development gap. |
 | ATS-INTERVIEWS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate_assessment.passed` | `candidate_assessments` | event_stream | medium | Passing an assessment advances the candidate; on eventual hire, HCM uses the assessment result as the first data point for the new-hire skill profile. |
-| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `interview.completed` | `job_applications` | lifecycle_progression | low | - |
-| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `candidate_assessment.passed` | `job_applications` | lifecycle_progression | low | - |
+| ATS-INTERVIEWS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate_assessment.failed` | `candidate_assessments` | event_stream | low | Failed-assessment outcomes close the candidate's loop in ATS and propagate to HCM only if the candidate is an internal-mobility applicant whose profile should reflect the development gap. |
 | ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `candidate_assessment.failed` | `job_applications` | lifecycle_progression | low | - |
+| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `candidate_assessment.passed` | `job_applications` | lifecycle_progression | low | - |
+| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `interview.completed` | `job_applications` | lifecycle_progression | low | - |
 | ATS-INTERVIEWS | TALENT-MGMT | TALENT-SUCCESSION-CAREER | `candidate_assessment.passed` | `candidate_assessments` | api_call | medium | Completed assessment scores seed the talent-management skill profile for hired candidates and a structured talent pool for non-hires. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
@@ -136,7 +138,7 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `candidates` | embedded_master | required | ATS-CANDIDATE-CRM (ATS) | - |
 | `job_applications` | embedded_master | required | ATS-RECRUITMENT-PIPELINE (ATS) | - |
 
-## 7. Lifecycle states (per master)
+## 7. Lifecycle states (per touched entity)
 
 ### `candidate_assessments` (Assessment)
 
@@ -147,6 +149,18 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | 3 | `completed` | - | ✓ | - | - | Candidate finished the assessment and a score/result is recorded. |
 | 4 | `expired` | - | ✓ | - | - | Invitation lapsed before the candidate completed the assessment. |
 | 5 | `cancelled` | - | ✓ | - | - | Assessment withdrawn before completion. |
+
+### `candidates` (Candidate)
+
+_This scope holds `candidates` as **embedded_master**; the canonical state machine is owned by `ATS-CANDIDATE-CRM`._
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `prospect` | ✓ | - | - | - | Person known to the recruiting org with no active application. |
+| 2 | `active` | - | - | - | - | Candidate has at least one open application or is actively engaged. |
+| 3 | `hired` | - | ✓ | ✓ | `ats-candidate-crm:hire_candidate` | Candidate accepted an offer and converted to employee. |
+| 4 | `do_not_hire` | - | ✓ | ✓ | `ats-candidate-crm:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
+| 5 | `archived` | - | ✓ | - | - | Candidate kept in the database but not active in any pipeline. |
 
 ### `interview_scorecards` (Interview Scorecard)
 
@@ -168,9 +182,17 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 ### `job_applications` (Application)
 
+_This scope holds `job_applications` as **embedded_master**; the canonical state machine is owned by `ATS-RECRUITMENT-PIPELINE`._
+
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `applied` | ✓ | - | - | - | Candidate submitted an application against the requisition. |
+| 2 | `screening` | - | - | - | - | Recruiter is reviewing resume and qualifications. |
 | 3 | `interviewing` | - | - | - | - | Candidate is progressing through interview loops. |
+| 4 | `offer_extended` | - | - | - | - | An offer has been generated and is in flight for this application. |
+| 5 | `hired` | - | ✓ | ✓ | `ats-pre-employee-record:hire_candidate` | Candidate accepted the offer and was hired; gated transition. |
+| 6 | `rejected` | - | ✓ | - | - | Application closed without progression by recruiter or hiring manager. |
+| 7 | `withdrawn` | - | ✓ | - | - | Candidate withdrew their application. |
 
 ## 8. Permissions and business rules (derived)
 
