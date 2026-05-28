@@ -133,6 +133,216 @@ Historical content of the table, preserved here for reference only:
 
 ---
 
+## 2026-05-28 — Persist audit history per domain in `audits/<DOMAIN>.md` (git-tracked, append-only)
+
+**Context.** Three-bucket Validate output discipline was in place but the audit output was being written to `c:/tmp/<DOMAIN>-audit-<date>.md` — ephemeral. User asked where audit discussions and results should live: in `domains.notes`, in a new schema column, or somewhere else? Both catalog-side options were rejected: `notes` is forbidden territory for auto-generated prose (Rule #15), and a new schema column for what is fundamentally markdown content would add migration friction for content that doesn't belong as relational rows.
+
+**Decision.** One markdown file per domain at `audits/<DOMAIN_CODE>.md`, append-only, git-tracked. Each Validate run appends a new dated section; prior sections are never edited (corrections come as new audits, not overwrites). Git becomes the audit history layer: `git log audits/<DOMAIN>.md` is the timeline; `git diff` highlights what changed between audits.
+
+Section structure per audit:
+- Summary (counts per bucket + footprint counts + flagship vendors)
+- Vendor surface basis
+- Bucket 1, 2, 3 (the three-bucket gap report from Step 3 of the procedure)
+- Decisions (per-bucket user choices, captured as the user makes them)
+- Fixes applied (loader paths, row counts, timestamps, commit hashes)
+- `domains.notes` pointer (if updated — the exact user-approved wording)
+
+Pairwise reconciliation findings flow into the same per-domain audit files: auto-discovered per-neighbor findings append to the host domain's section; manual bilateral form (user names A and B) appends to BOTH `audits/<A>.md` and `audits/<B>.md` with each getting the direction it owns.
+
+**Domain.notes optional pointer.** After an audit lands, the agent prompts the user whether to update `domains.notes` with a one-line status pointer back to the audit file. Pointer wording is user-supplied per Rule #15. The pointer is optional; the file alone is sufficient persistence.
+
+**Files changed.**
+- [audits/](../../../../audits/) — new directory, committed. Contains `README.md` explaining the convention (per-domain file, append-only, section structure, why files not catalog, why git-tracked).
+- [references/domain-audit-procedure.md](domain-audit-procedure.md) § Step 4: rewrote from "save to `c:/tmp/<DOMAIN>-audit-<date>.md`" to "append a new dated section to `audits/<DOMAIN_CODE>.md`". Drafts and subagent JSON continue to live in `c:/tmp/` (ephemeral). Added the optional `domains.notes` pointer prompt.
+- [SKILL.md](../SKILL.md) § "Domain-level market audit" Step 4: updated to reference `audits/<DOMAIN_CODE>.md` as the persistence target. § "Pairwise handoff reconciliation" Step 4: updated to flow findings into both per-domain audit files for the manual bilateral form; the per-neighbor auto-discovery form's findings land in the host domain's audit section.
+- [README.md](../../../README.md) § Validate "Output": updated to point at `audits/<DOMAIN_CODE>.md` and mention the optional `domains.notes` pointer.
+
+**Reasoning.** Audit history is multi-page markdown with tables, prose, and append-only logs. The fit is markdown files in a directory, not relational rows. Git already provides the versioning, diffing, and timeline layer; reinventing those as DB columns is reinvention without benefit.
+
+`domains.notes` keeps its Rule #15 discipline. The optional one-line pointer is the user-approved short summary that makes audit state visible in the catalog UI without polluting the column with multi-paragraph history.
+
+The trade-off accepted: audit history is not visible in the Semantius UI (which renders the catalog tables). To see audit history you open the markdown file or check git log. The optional `domains.notes` pointer is the bridge — short enough to show in the UI, deep enough to direct readers to the right file.
+
+**Scope.** Catalog-wide. Future Validate runs append to `audits/<DOMAIN>.md`. Future manual bilateral reconciliations append to both involved files. Drafts and subagent JSON working state continue to live in `c:/tmp/` (gitignored). The `c:/tmp/` location is preserved only for ephemeral working artifacts; final audit content lives in `audits/`.
+
+**Status.** active.
+
+---
+
+## 2026-05-28 — Codify three-bucket Validate output + explicit per-bucket prompt discipline
+
+**Context.** User running an ATS Validate looked at the gap report and asked "what should I do now exactly?" The report had three implicit categories — concrete fixable findings, judgment calls, and speculative "Phase 0 pending" candidates — but the user couldn't tell what action to take per category. The phrase *"Semantic (Phase 0 pending)"* in the report was unfamiliar despite being load-bearing.
+
+The deeper observation from the user: *"unclear next steps are probably a main reason of unfinished domain research."* Once the report lands, if the agent dumps the whole thing and waits, the user has to triage ad-hoc, often silently skips whole categories, and the audit stalls without ever being resolved. The fix is procedural: make the next-step direction deterministic per finding category.
+
+**Decision.** Codify a three-bucket output structure for every Validate gap report, with an explicit per-bucket prompt discipline:
+
+- **Bucket 1 — In-scope confirmed gaps** (agent-fixable). Structurally-confirmed findings: MISSING (vetted entities), WRONG-OWNERSHIP, SCOPE-CREEP, STRUCTURAL band failures, BOUNDARY (NULL FK / missing handoff). Agent prompts: *"Fix these now? Reply 'all', 'just 1, 3, 5', or 'skip'."*
+- **Bucket 2 — Surface-for-user (judgment calls)**. Items the agent cannot decide alone: Rule #15 notes wording, policy decisions, architectural-intent questions, legacy reverts. Agent prompts per item: *"What's your call on each? I'll wait for your decision before acting."*
+- **Bucket 3 — Phase 0 pending (speculative)**. Findings the semantic pass produced from vendor knowledge but which lack a formal Phase 0 vendor-surface baseline. Agent prompts: *"Vet via Phase 0 research, or eyeball-mode — name which candidates ring true?"*
+
+Plus a **cross-bucket dependency** rule: when a Bucket 2 question would be informed by Bucket 3 research, the agent calls out the dependency at surface time so the user can sequence appropriately. When buckets are independent, the agent says so explicitly.
+
+**Files changed.**
+- [references/domain-audit-procedure.md](domain-audit-procedure.md) § Step 3: rewrote from "surface a count table" to the three-bucket template with per-bucket decision shapes, the explicit-prompt discipline, the dependency-callout rule, and a Bucket-1 finding-type sub-summary. § Step 4 updated to mirror the bucket structure in the saved gap-report markdown (Bucket 1 / 2 / 3 sections + User decisions log + Fix history log).
+- [README.md](../../../README.md) § Validate "After the gap report — fix loop": prepended the three-bucket table + explicit-prompt rule + dependency-callout rule to the existing finding-type fix-surface table. The two are complementary: bucket structure governs the human dialogue, finding-type table governs the technical fix.
+- [SKILL.md](../SKILL.md) § "Audit recipe": added a paragraph at the end of the section pointing to the three-bucket template, explaining why (unclear next steps stall audits), and noting the dependency-callout rule.
+
+**Reasoning.** The earlier README change made the fix loop visible (what to do per finding type once the user has decided to fix). The missing piece was: how does the user *decide* what to fix, given an audit produces 5+ different shapes of findings (MISSING, WRONG-OWNERSHIP, SCOPE-CREEP, BAND failures, BOUNDARY issues, Phase-0 candidates)?
+
+The three buckets correspond to three different **decision shapes**:
+- Bucket 1: yes/no on a vetted fix → the agent does it
+- Bucket 2: judgment/policy → the user supplies the answer
+- Bucket 3: research vs eyeball → the user picks the vetting path
+
+Bundling them into a single dump-and-wait produces the "I'll figure it out later" failure mode. Separating them with per-bucket prompts forces deterministic next steps.
+
+The explicit prompt wording matters. "What do you want to do?" invites no specific answer. "Fix these now? Reply 'all', 'just 1, 3, 5', or 'skip'." has a clear response shape. The prompt scripts in the procedure file are the floor; agents may adapt the wording but must preserve the per-bucket shape.
+
+The dependency rule prevents the user from spending judgment on a Bucket 2 question that's about to be obsolete because Bucket 3 research will reveal the right answer. When dependencies exist, sequencing matters; when they don't, the user can resolve buckets in any order. Either way, the dependency state is explicit.
+
+**Scope.** Catalog-wide. Future Validate runs produce three-bucket reports with explicit per-bucket prompts. The saved gap-report markdown mirrors the bucket structure plus an append-only decision log and fix history.
+
+**Status.** active.
+
+---
+
+## 2026-05-28 — Add cross-domain relationships to bilateral pass; clarify Research vs Validate scoping
+
+**Context.** Two more questions from user that exposed gaps:
+
+1. *"Reconcile A and B — checks only handoffs or more?"* The four-leg analysis (lifecycle states + trigger events + handoffs + DMDO coverage + boundary integrity) covers the handoff substrate but does NOT check cross-domain `data_object_relationships`. These are the structural mirror of cross-domain handoffs: a handoff says *"event X fires from A to B"*, a relationship row says *"A's master has a verb to B's master"* (e.g. `job_offers spawns onboarding_journeys`). The relationship graph drives the mermaid renderer in blueprints and the navigation hints in the architect view; missing relationships leave both silently incomplete. The bilateral pass needs Section 5.
+
+2. *"Is Research only for new domains? What happens when I research an existing domain?"* The README's Research mode listed "extending an existing domain's module set" as a use case without clarifying that adding *new entities to an existing module* is a Validate-then-fix flow, not Research. That ambiguity let the agent run Research on a loaded domain, which means Phase 0 enumerates the market surface from scratch without seeing existing state, and Phase B's idempotent loader skips-or-inserts based on natural keys without catching wrong-ownership or scope-creep that's already there. Existing problems get papered over.
+
+**Decision.** Two changes:
+
+1. **Bilateral pairwise reconciliation gains Section 5 — Cross-domain `data_object_relationships`.** Query `/data_object_relationships?and=(data_object_id.in.(<A-masters>),related_data_object_id.in.(<B-masters>))` plus the symmetric direction. For every cross-domain handoff with a clean payload→target mapping, the catalog should carry a corresponding relationship row. Surface **MISSING-RELATIONSHIP** (handoff without matching relationship) and **ORPHAN-RELATIONSHIP** (relationship without matching handoff). Fix via per-row authoring of the B6/B8-shape relationship row. The diff file now contains ten sections per direction (was eight).
+
+2. **README Research vs Validate scoping clarified.** Research applies to **NEW SCOPE** only:
+   - New domain (no `domains` row yet)
+   - New module added alongside existing modules in an already-loaded domain
+   - Vendor / competitor scans with no intent to load
+   - "Is X a domain?" classification
+
+   Anything else — adding entities to an existing module, suspected wrong-ownership, scope creep, modularization mistakes — routes through **Validate** first. Validate finds the gaps; the fix loop runs Phase B inserts to close them.
+
+   Research mode gains an explicit **pre-flight against existing state** when the domain already exists: pull `domain_modules` + `domain_data_objects` + `data_objects` for the domain BEFORE Phase 0, feed to the subagent so its vendor-surface enumeration produces a **delta-shaped proposal** (which surface entities belong in the new module vs. which already exist in sibling modules). Avoids naming collisions and scope overlap. Phase B's naming-collision check (Rule #9) applies as usual.
+
+**Files changed.**
+- [SKILL.md](../SKILL.md): added Section 5 to the pairwise reconciliation diff procedure with the query, diff semantics (MISSING-RELATIONSHIP / ORPHAN-RELATIONSHIP), and fix instructions. Updated "four sections per direction (eight total)" to "five sections per direction (ten total)".
+- [README.md](../../../README.md): rewrote Research "Use for" to list the four legitimate new-scope cases and explicitly redirect existing-domain extension to Validate; updated Research's "What it does" to describe the pre-flight against existing state for the new-module-in-existing-domain case and the delta-shaped Phase 0 proposal; rewrote Validate "Use for" to list "extending an existing module's entity coverage" as a Validate→fix-loop concern, not a Research concern.
+
+**Reasoning.** The handoff/relationship pair was a known symmetry — handoffs encode events, relationships encode the verb graph; every payload-mapping handoff should have a relationship mirror. The four-leg analysis was authored before relationships were widely loaded; with the catalog now using relationships extensively for the blueprint mermaid renderer and architect-view navigation, the gap was visible enough to fix.
+
+The Research vs Validate ambiguity was a real source of unreliable behavior. The agent was routing "extend the X domain with more entities" requests through Research, which produced thin Phase B drafts that silently overrode existing entity-level decisions. Forcing the existing-domain extension case through Validate-then-fix preserves the per-finding fix loop (MISSING → Phase B insert via loader) and ensures the existing footprint is examined before new rows are proposed.
+
+**Scope.** Catalog-wide. Future bilateral reconciliation produces ten-section diffs. Future Research invocations on an existing domain pre-flight the existing state and propose a delta; future "extend X with more entities" requests route through Validate.
+
+**Status.** active.
+
+---
+
+## 2026-05-28 — Make Validate's fix loop explicit; add M7 (within-domain ownership uniqueness)
+
+**Context.** Same-day follow-up to the prior consolidation entries. User asked two questions:
+
+1. *"When Validate finds problems, what to do?"* The fix surface per finding type was documented in references but never synthesized into a single "after the gap report" flow in the README. Users (and the agent) had to piece the loop together from multiple sources.
+
+2. *"Does Validate check module scopes — are the data_objects of the domain owned by the right `domain_module`?"* Honest answer: only semantically, via Pass 1 (Market audit's WRONG-OWNERSHIP finding). No structural check existed for within-domain redundancy (same `data_object_id` mastered in one module and embedded_master shell in a sibling module of the same domain, or master + consumer in the same domain). The structural M-band checked things like "every module has ≥1 master" and "every capability has a realizing module" but didn't cross-check the ownership map across modules of the same domain. Catalog-internal inconsistencies that didn't require market knowledge were going undetected.
+
+**Decision.** Two additions:
+
+1. **README Validate mode gains an explicit "After the gap report — fix loop" subsection.** Table mapping each finding type to its fix surface: MISSING → Phase B insert via idempotent loader; WRONG-OWNERSHIP → DELETE wrong DMDO + INSERT right module; SCOPE-CREEP → DELETE + cascade; STRUCTURAL → per-band fix; BOUNDARY (NULL FK / missing handoff) → PATCH or author rows; MODULARIZATION → separate refactor conversation (parking lot, not a loader run). Plus the acceptance criterion for re-running Validate and what "passes" means.
+
+2. **New structural check M7 — within-domain ownership uniqueness.** Pulls every DMDO row across the domain's modules, classifies role combinations on data_objects with >1 row, and surfaces:
+   - **Hard fail**: same data_object has `master` + `master/consumer/contributor` across sibling modules (incoherent)
+   - **Soft fail**: same data_object has `master` + `embedded_master` across sibling modules (redundant; the embedded shell is dead weight when the local master serves the whole domain)
+   - **Pass with note**: same data_object has `consumer` (or `contributor`) in multiple modules of the same domain (allowed, but flag if scope overlap suggests deduplication)
+   - **Pass**: same data_object has `embedded_master` in multiple starter modules (Rule #19 standalone-deploy shape) — legitimate.
+
+   M7 is a catalog-internal structural query. No market knowledge needed; no subagent required. Routes failures into the existing fix loop: DELETE the wrong row, INSERT in the right module, or surface to user when ambiguous.
+
+**Files changed.**
+- [README.md](../../../README.md): added "After the gap report — fix loop" subsection to Validate mode with the finding-to-fix table and the re-run acceptance criterion.
+- [SKILL.md](../SKILL.md): added M7 to the M-band with full query + pass criteria + fix instructions; updated "M1–M6" references to "M1–M7" in the audit recipe and elsewhere.
+
+**Reasoning.** The fix loop was implicit and discoverable in references but the agent kept losing track of "what comes next after a Validate finds things". Putting the loop in the README's Validate section means it's loaded automatically whenever the validation triggers fire. The table makes the fix surface unambiguous per finding type.
+
+M7 was a real gap. The market audit catches semantic wrong-ownership ("this entity belongs in a different module per vendor practice") but couldn't catch catalog-internal redundancy that wasn't tied to market knowledge (two modules of the same domain each holding a master/embedded_master of the same data_object). Those failures are local to the catalog and don't need a subagent — a single PostgREST query plus a script-side classification gives the right answer.
+
+Both changes follow the prior pattern: the data was already there (DMDO rows for M7, finding-to-fix mapping for the loop); the procedure just wasn't using it explicitly.
+
+**Scope.** Catalog-wide. Future Validate invocations include M7 in the structural pass. Future fix loops follow the table in the README.
+
+**Status.** active.
+
+---
+
+## 2026-05-28 — Drop Phase D from mode menu; expand Validate with auto-neighbor-discovery + per-neighbor pairwise
+
+**Context.** Same-day follow-up to the prior "Collapse to 2 modes + 1 analytic" decision. User pushed back on two points:
+
+1. **Phase D as mode (c) was a category error.** Phase D is process-skill discovery for the agent-tooling layer (buckets cross-domain handoffs by trigger-event prefix, ranks candidate process skills for the agent-tooling layer to wrap). It's not domain validation. Listing it as a peer mode of Research and Validate implied it's something users regularly invoke on a domain — it isn't. It's a catalog-wide analytic invoked rarely.
+
+2. **Pairwise handoff reconciliation shouldn't require manual two-domain input.** The catalog already encodes the related-domains graph: `handoffs.source_domain_id` / `handoffs.target_domain_id` name every cross-domain event-exchange edge, and cross-domain `domain_module_data_objects` rows (consumer / contributor / embedded_master pointing at foreign-domain masters) name every cross-domain dependency. For domain X, two queries return its neighbor set. Phase B authoring already populates both surfaces, so any single-domain Research load creates the neighbor edges as a side effect. The bilateral pass should auto-discover neighbors, not wait for user input.
+
+**Decision.** Two changes:
+
+1. **Phase D drops out of the README's primary mode menu.** Stays documented in SKILL.md § "Phase D — Process-skill discovery". Mentioned in README under "Things that look like modes but aren't" so the trigger phrases are still findable. The README header becomes "Two modes" (was "Two modes plus one analytic").
+
+2. **Validate mode expands from 2 passes to 4 passes** (per the single-domain trigger; same 4 passes whether the user names one domain or two):
+   - Pass 1: Market audit (semantic, vs vendor surface)
+   - Pass 2: Structural completeness checklist (A/M/B/C/D/E/F bands)
+   - Pass 3: **Neighbor discovery** — auto-derive related domains from `handoffs` (both directions) + cross-domain DMDO rows; rank by edge weight (number of handoffs + dependency count)
+   - Pass 4: **Per-neighbor pairwise reconciliation** — run the four-leg analysis against every neighbor with edge weight ≥3 by default; lighter neighbors get a one-table summary
+
+   Manual bilateral form (user names two domain codes) becomes a fallback for "I just want to check one boundary".
+
+**Files changed.**
+- [README.md](../../../README.md): dropped Phase D section; rewrote Validate's "what it does" from 2 passes + optional bilateral to 4 mandatory passes; added Phase D to "Things that look like modes but aren't" with triggers preserved; header "Two modes plus one analytic" → "Two modes".
+- [SKILL.md](../SKILL.md): updated three section callouts to say "four passes" instead of "two passes" and to call out neighbor discovery + pairwise as default-on. Specifically: § "Audit recipe — structural pass of the Validate mode" now references all four passes; § "Domain-level market audit — semantic pass of the Validate mode" same; § "Pairwise handoff reconciliation — per-neighbor pass of the Validate mode" (renamed from "bilateral form") now explains auto-discovery via the query pattern, ranks by edge weight, defaults to deep-dive on weight ≥3, and frames the manual two-domain form as a fallback.
+
+**Reasoning.** Phase D and Validate are different shapes of work. Putting them in the same menu implied users would alternate between them, which they don't. Phase D is invoked when the agent-tooling layer needs new process skills; Validate is invoked when a domain needs verification. Separating them in the README cleans up the user's mental model.
+
+The auto-discovery change is more consequential. The previous design required the user to name the two domains for bilateral reconciliation — which meant the boundary was only ever checked when the user explicitly remembered to do it. Most boundaries went unchecked. With auto-discovery, every Validate run automatically reaches every neighbor of the named domain, so the boundary coverage scales with the number of Validate invocations rather than with the user's memory.
+
+The data was always there; the procedure just wasn't using it. Same pattern as Phase 0 (the vendor surface info was always findable from public docs; the procedure just hadn't required the agent to enumerate it).
+
+**Scope.** Catalog-wide. Future Validate invocations should run all four passes by default. Phase D triggers still work but route to the SKILL.md section directly, not via the README mode menu.
+
+**Status.** active.
+
+---
+
+## 2026-05-28 — Collapse invocation surface to 2 modes + 1 analytic
+
+**Context.** Earlier the same day, added Phase 0 (vendor surface research) and a domain-level market audit as new mechanisms (see the entry below). Drafted a README that listed 9 invocation modes — Phase 0 alone, Phase A→S full load, market audit alone, structural completeness checklist alone, pairwise reconciliation, Phase D discovery, vendor research, single-row edits, fact-sheet emission. User pushed back: the proliferation of modes is itself a quality problem. Calling Phase 0 a separately-invocable mode reifies the failure pattern — it implies Phase 0 is optional when the whole point is that it CANNOT be skipped from a domain research workflow. Same for market audit and structural checklist being presented as independent triggers: running just one is exactly how gaps fall through in both directions.
+
+**Decision.** Collapse the invocation surface to two modes plus one analytic. Each mode runs its sub-stages as a mandatory sequence, not as a menu.
+
+1. **Research a domain** — Phase 0 → A → B → C → S as a mandatory sequence with user-review gates between phases. Mode stops at the right phase based on intent (classification questions stop after Phase 0; competitor research stops after Phase A; an actual load runs through Phase S). Stopping early is fine; **skipping Phase 0** is not. Trigger phrases are mode-level (*"research the X market"*, *"is X a domain"*, *"find competitors for Y"*), never phase-level. Covers everything that was previously: Phase 0 alone, Phase A/B/C/S load, vendor/competitor research no-load, classification questions, extending an existing domain.
+
+2. **Validate a domain** — market audit pass + structural completeness checklist pass, **always together**, combined gap report. Bilateral form (two domain codes) adds pairwise handoff reconciliation walking the boundary. Trigger phrases are mode-level (*"validate X"*, *"audit X"*, *"verify X"*, *"is X fully loaded"*), never pass-level. Covers everything that was previously: market audit alone, structural checklist alone, pairwise reconciliation.
+
+3. **Phase D — Process-skill discovery** — catalog-wide analytic, separate because it operates on the catalog rather than a single domain. Different shape entirely.
+
+Things that look like modes but aren't, and shouldn't be reached for as if they were: Phase 0 alone (sub-stage of Research), Phase A alone (same), market audit alone (sub-pass of Validate), structural checklist alone (same), single-row edits (just CLI calls), fact-sheet emission (a build step, `bun run scripts/emit_fact_sheet.ts`).
+
+**Files changed.**
+- [README.md](../../../README.md): rewrote from 9-mode menu to 2 modes + 1 analytic, with mode-level trigger phrases and "Things that look like modes but aren't" section.
+- [SKILL.md](../SKILL.md): tightened the trigger framing in three audit-recipe sections to clarify they're **passes of the Validate mode** (always paired), not standalone modes. Specifically: § "Audit recipe" now says "structural pass of the Validate mode"; § "Domain-level market audit" now says "semantic pass of the Validate mode"; § "Pairwise handoff reconciliation" now says "bilateral form of the Validate mode". Each section's intro callout reinforces "never invoke alone".
+
+**Reasoning.** Modal proliferation is one of the mechanisms producing unreliable research quality. When the agent sees a menu of 9 modes, it picks one and runs that one — which means it runs Phase B when asked for a load, skipping Phase 0; it runs market audit when asked to verify, skipping structural; it treats sub-stages as alternatives rather than as parts of a sequence. Documenting them as separate modes gives the agent permission to skip the others. The README is itself a load-bearing rule surface — what it lists as triggerable shapes how the agent behaves.
+
+The actual operational shape is binary: you're either **adding** to the catalog (Research) or **verifying** the catalog (Validate), with one separate analytic that operates on the substrate rather than on a domain (Phase D). That's the right granularity. Everything finer is sub-stage detail that lives inside the mode procedure, not in the trigger menu.
+
+**Scope.** Catalog-wide. The README is the entry-point reference; SKILL.md retains all the procedural detail but reframes the trigger language. Future invocations should land in one of the three modes; sub-stage triggers are no longer documented as legitimate entry points.
+
+**Status.** active.
+
+---
+
 ## 2026-05-28 — Add Phase 0 (vendor surface research) and domain-level market audit
 
 **Context.** ATS-CANDIDATE-CRM landed in the catalog with three out-of-domain rows (`skill_profiles` contributor+required, `career_aspirations` consumer+optional, `internal_opportunities` embedded_master+optional) and zero engagement substrate (no `candidate_engagements`, no `nurture_campaigns`, no `event_attendances`, no `recruiter_interactions`, no `candidate_consents`). User questioned each row. Audit of the other 7 ATS modules surfaced the same shape repeatedly:
@@ -258,3 +468,40 @@ The earlier session that authored Phase A and Phase B regenerated [ats-candidate
 **Rule for future migrations of this shape:** never regenerate blueprints between Phase A (scaffolding) and Phase B (master migration). Either run both phases before any blueprint emit, or skip blueprint regen until the catalog is in its target shape. Write the changelog entry *with* the loader, not after the next session asks "what happened."
 
 **Second process failure in the same session.** When fixing the misattributed blueprints, the agent also auto-emitted blueprints for the five brand-new modules (`SKILLS-MGMT-*`, `TLNT-INTEL-*`) without user approval. User had not asked for new blueprints and wanted to review the live data first. The five files were deleted on the spot. **Rule:** "regenerate the blueprints affected by X" means only the blueprints that *already exist* and now misrepresent live state. New modules need an explicit "author the blueprint for module Y" from the user, never automatic emission as a side-effect of a fix.
+
+---
+
+## 2026-05-28 — M7 rewritten: scope catalog-wide, drop the bogus master+embedded_master soft-fail
+
+**Context.** Mid-Validate of WORK-MGMT, the agent flagged `work_items` (mastered in module 149, embedded_master in module 150 — both `module_kind='full'`, both in domain 135) as an M7 soft-fail and asked the user how to reconcile it. The user pushed back: each module is supposed to be deployable alone, so the embedded shell is load-bearing, not dead weight. They asked whether the soft-fail text was wrong and whether the real concern (two `role='master'` rows) was being checked.
+
+Inspection confirmed both:
+
+- The at-a-glance section describes `domain_modules` as **"autonomous deployable units inside a domain"**. Under that framing, a full module B that's installable without sibling module A must ship an `embedded_master` row for any data_object A masters, so B has a local shell at the deploy boundary. That's the textbook shape Rule #19 spells out for starters — and the same logic applies to any standalone-deployable full module. The M7 soft-fail text labeled this case "redundant... dead weight" and recommended DELETEing the embedded_master row, which would break standalone deploy of B.
+- The genuine catalog-wide invariant (one `role='master'` row per `data_object_id`, enforced by the blueprint emitter) was scoped in M7 only to *within-domain* via the rule's title ("Within-domain ownership uniqueness"). A query on `okr_objectives` (id 245) surfaced an actual catalog-wide hard fail: module 150 (WORK-MGMT-GOALS-OKR, domain 135) AND module 51 (TALENT-PERFORMANCE-MGMT, domain 58) both carry `role='master'`. M7 as written would not have caught it because the two masters sit in different domains.
+
+The 2026-05-26 "Module-split criterion for shared data_objects" decision was the upstream cause for the okr_objectives multi-master. That decision correctly identified that WORK-MGMT-GOALS-OKR should master `okr_objectives` per vendor evidence (Asana/Monday/ClickUp Goals), but the implementation note said *"the existing okr_objectives lifecycle rows currently anchored to TALENT-PERFORMANCE-MGMT can stay there per the multi-master pattern."* That clause conflated "lifecycle states realized in module 51" (legitimate via `domain_module_data_objects.role='embedded_master'` + `data_object_lifecycle_states.domain_module_id=51`) with "master row in module 51" (illegitimate under the single-master rule). The TALENT-PERFORMANCE-MGMT row was never demoted, so the catalog has carried the multi-master since.
+
+**Decision.** Rewrite M7 to:
+
+1. **Drop the soft-fail clause for master + embedded_master within a domain.** Replaced with an explicit `Pass` outcome: the embedded shell is expected under autonomous-deployable-units. No surface-for-review, no DELETE recommendation.
+2. **Extend the hard-fail scope to catalog-wide.** The new Query 1 pulls every `master` row for the audited domain's mastered data_objects across the whole catalog, counts rows per `data_object_id`, and fails on >1. Query 2 keeps the within-domain role-coherence check (master coexisting with consumer/contributor is incoherent in any scope, but specifically detected within a domain).
+3. **Re-title** from "Within-domain ownership uniqueness" to "Single-master integrity" to match the actual invariant.
+4. **Fix guidance for the catalog-wide hard fail** is "surface to user, demotion is a design decision" — not a mechanical DELETE — because the decision (which side keeps mastery, and whether the demoting side becomes embedded_master or consumer) needs editorial input.
+
+**Reasoning.**
+
+The catalog has two independent invariants on multi-master rows. M7 conflated them:
+
+- *Catalog-wide single-master* is structural. Exactly one row in `domain_module_data_objects` per `data_object_id` has `role='master'`. The deployer / emitter cannot pick a canonical owner otherwise. This needs to be caught at audit time everywhere, not only within a domain.
+- *Within-domain role coherence* is workflow-level. A domain mastering AND consuming the same record is incoherent regardless of which modules sit in the domain.
+
+The master+embedded_master case wasn't one of these invariants at all — it was the *correct shape* under autonomous-deployable-units that M7 mistakenly punished. Removing it makes the rule consistent with Rule #19's reasoning and the at-a-glance "autonomous deployable units" framing.
+
+**Scope.** SKILL.md § M7 only. Per-domain audit recipe references to "M1–M7 failures block downstream concerns" still apply unchanged. Every prior audit transcript that called M7 soft-fail "OK to live with" or "documented exception" remains correct under the new wording — the rule now agrees those cases are passes, not soft-fails.
+
+**Status.** Active. The okr_objectives hard fail surfaced by the WORK-MGMT audit is the first finding the rewritten rule catches; resolution (TALENT-PERFORMANCE-MGMT demotes to `embedded_master`, or the alternatives) is pending user decision in that audit thread.
+
+### Process note
+
+The 2026-05-26 module-split decision's "lifecycle rows can stay there per the multi-master pattern" clause should be read narrowly going forward: lifecycle states can sit on multiple modules (because `data_object_lifecycle_states.domain_module_id` is per-row), but `domain_module_data_objects.role='master'` must collapse to one canonical owner. Future module splits that touch a multi-master data_object need an explicit demotion step on the non-canonical side, loaded in the same migration as the new master row. Skipping it produces silent catalog-wide hard fails of the shape M7 now catches.

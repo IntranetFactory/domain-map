@@ -39,6 +39,7 @@ type ModuleOut = {
   name: string;
   description: string;
   catalog: boolean;
+  related_modules: string[];
 };
 
 type DomainOut = {
@@ -114,17 +115,58 @@ for (const h of all.handoffs) {
   handoffNeighbors.get(t)?.add(s);
 }
 
+// Module-level neighbors: co-touch on data_objects (via dmdo) ∪ module-level handoffs.
+const modulesByDataObject = new Map<number, Set<number>>();
+for (const r of all.dmdo) {
+  const oid = r.data_object_id as number;
+  const mid = r.domain_module_id as number;
+  if (!modulesByDataObject.has(oid)) modulesByDataObject.set(oid, new Set());
+  modulesByDataObject.get(oid)!.add(mid);
+}
+const dataObjectsByModule = new Map<number, Set<number>>();
+for (const r of all.dmdo) {
+  const mid = r.domain_module_id as number;
+  const oid = r.data_object_id as number;
+  if (!dataObjectsByModule.has(mid)) dataObjectsByModule.set(mid, new Set());
+  dataObjectsByModule.get(mid)!.add(oid);
+}
+const moduleHandoffNeighbors = new Map<number, Set<number>>();
+for (const m of index.modules) moduleHandoffNeighbors.set(m.id, new Set());
+for (const h of all.handoffs) {
+  const s = h.source_domain_module_id as number | null;
+  const t = h.target_domain_module_id as number | null;
+  if (s === null || t === null || s === t) continue;
+  moduleHandoffNeighbors.get(s)?.add(t);
+  moduleHandoffNeighbors.get(t)?.add(s);
+}
+
 const out: DomainOut[] = [];
 for (const d of index.domains) {
   const mods: ModuleOut[] = (modulesByDomain.get(d.id) ?? [])
     .slice()
     .sort((a, b) => a.domain_module_code.localeCompare(b.domain_module_code))
-    .map((m) => ({
-      code: m.domain_module_code,
-      name: m.domain_module_name,
-      description: m.description ?? "",
-      catalog: Boolean(m.catalog),
-    }));
+    .map((m) => {
+      const relatedMods = new Set<number>();
+      for (const oid of dataObjectsByModule.get(m.id) ?? []) {
+        for (const other of modulesByDataObject.get(oid) ?? []) {
+          if (other !== m.id) relatedMods.add(other);
+        }
+      }
+      for (const other of moduleHandoffNeighbors.get(m.id) ?? []) {
+        if (other !== m.id) relatedMods.add(other);
+      }
+      const relatedModCodes = [...relatedMods]
+        .map((id) => index.modulesById.get(id)?.domain_module_code)
+        .filter((c): c is string => Boolean(c))
+        .sort((a, b) => a.localeCompare(b));
+      return {
+        code: m.domain_module_code,
+        name: m.domain_module_name,
+        description: m.description ?? "",
+        catalog: Boolean(m.catalog),
+        related_modules: relatedModCodes,
+      };
+    });
 
   const related = new Set<number>();
   for (const oid of dataObjectsByDomain.get(d.id) ?? []) {
@@ -153,7 +195,19 @@ for (const d of index.domains) {
 out.sort((a, b) => a.code.localeCompare(b.code));
 
 const payload = { domains: out };
-const json = JSON.stringify(payload, null, 2) + "\n";
+const rawJson = JSON.stringify(payload, null, 2);
+// Collapse the two string-only array fields to one line for readability.
+const json =
+  rawJson.replace(
+    /"(related_domains|related_modules)": \[([^\]]*)\]/g,
+    (_m, key, inner) => {
+      const items = inner
+        .split(",")
+        .map((s: string) => s.trim())
+        .filter((s: string) => s.length > 0);
+      return `"${key}": [${items.join(", ")}]`;
+    },
+  ) + "\n";
 
 if (STDOUT) {
   process.stdout.write(json);

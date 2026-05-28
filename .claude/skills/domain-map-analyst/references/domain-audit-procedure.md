@@ -46,65 +46,113 @@ Spawn a `general-purpose` subagent (not `Explore` — Explore lacks `Write`, and
 
 The subagent produces `c:/tmp/<DOMAIN>-market-surface-<YYYY-MM-DD>.json` with the vendor surface matrix + the diff against the current footprint.
 
-### Step 3 — Read the subagent output, surface to user
+### Step 3 — Surface the gap report to the user, categorized into three buckets
 
-Load the JSON. Surface a concise summary table to the user with the counts:
+**This is where most domain audits stall.** The audit produces findings; the user gets a wall of text; nothing happens because next steps aren't deterministic. The fix is to **always categorize findings into three buckets and explicitly prompt per bucket** — never dump the report and wait. The buckets correspond to the three different decision shapes the user is being asked to make.
 
-| Category | Count |
+#### The three buckets
+
+| Bucket | What's in it | What the user does |
+|---|---|---|
+| **1. In-scope confirmed gaps** | Structurally-confirmed findings the agent can fix directly: MISSING entities the market audit verified, WRONG-OWNERSHIP rows with a clear target module, SCOPE-CREEP rows with no downstream blockers, structural band failures (S/A/M/B/C/E/F) with documented fixes, BOUNDARY findings with deterministic patches. | Approve all / approve some / decline. Agent applies fixes immediately on approval. |
+| **2. Surface-for-user (judgment calls)** | Items needing user judgment, not vetted vendor research: Rule #15 notes wording, policy decisions (is this regulation correctly scoped?), architectural intent questions (is this `master + embedded_master` pattern the deployability intent or a redundancy bug?), reverts of legacy pollution. | Answer per item. Each answer may unblock a Bucket 1 fix or change a Bucket 2 row's resolution. |
+| **3. Phase 0 pending** | Speculative findings the market-audit pass produced from vendor knowledge but which weren't anchored to a formal Phase 0 vendor-surface document. These are candidate gaps, not vetted gaps. | Choose: (a) **vetted route** — agent runs focused Phase 0 vendor research on this domain, produces a confirmed gap list, survivors become Bucket 1 items in a follow-up pass; (b) **eyeball route** — user names which candidates ring true; named candidates become Bucket 1 items immediately. |
+
+#### Explicit-prompt discipline
+
+After surfacing each bucket, the agent **must** explicitly prompt for action, not wait for the user to remember to ask:
+
+- **After Bucket 1:** *"Fix these now? Reply 'all', 'just 1, 3, 5', or 'skip'."*
+- **After Bucket 2:** *"What's your call on each of these? I'll wait for your decision per item before acting."* (For Rule #15 wording asks, the agent must NOT proceed without the user's exact text.)
+- **After Bucket 3:** *"Vet via Phase 0 research, or eyeball-mode? If eyeball, name which candidates to treat as confirmed."*
+
+The prompt is per-bucket because each bucket's decision shape is different. Bundling them into one "what do you want to do?" prompt invites the user to triage ad-hoc and silently skip whole categories.
+
+#### Bucket dependencies (call them out explicitly)
+
+Buckets 1, 2, and 3 are **usually independent** — the user can resolve them in any order. But sometimes a Bucket 3 finding informs a Bucket 2 question (e.g., vendor research might surface compliance entities that change the answer to "is this regulation correctly scoped?"). When this happens, the agent must **explicitly call out the dependency** at surface time:
+
+> *"Bucket 2 item #3 (is FERPA correctly scoped to ATS?) might be informed by Bucket 3's vendor research — if you choose the vetted route, I'd suggest holding this Bucket 2 item until research lands. If you choose eyeball-mode or skip Bucket 3, this item is independent."*
+
+If no dependencies exist, state that explicitly: *"Buckets 2 and 3 are independent of each other; you can resolve them in any order."*
+
+#### Bucket-1 sub-categorization (for the count summary)
+
+Within Bucket 1, the agent presents the count by underlying finding type so the user knows what kinds of fixes are queued:
+
+| Finding type | Count |
 | --- | --- |
-| MISSING (gap) | k |
+| MISSING (entity gap) | k |
 | WRONG-OWNERSHIP | l |
 | SCOPE-CREEP | m |
-| MODULARIZATION ISSUES | n |
+| STRUCTURAL (S/A/M/B/C/E/F band failures) | s |
+| BOUNDARY (NULL FK or missing handoff) | b |
+| MODULARIZATION ISSUES | n (always 0 in Bucket 1 — these route to Bucket 2 since they're refactor conversations, not direct fixes) |
 
-Then offer to drill into any category the user wants to discuss.
+### Step 4 — Append the audit section to the domain's history file
 
-### Step 4 — Write the gap report
+Audit history is git-tracked. One markdown file per domain at `c:/dev/domain-map/audits/<DOMAIN_CODE>.md`, append-only. Each Validate run appends a new dated section; prior sections are never edited (corrections come as a new audit, not as an overwrite). See [`audits/README.md`](../../../../audits/README.md) for the directory convention.
 
-After user review, save the full gap report (not the raw subagent JSON) to `c:/tmp/<DOMAIN>-audit-<YYYY-MM-DD>.md`. Structure:
+**Procedure:**
+
+1. **Read the existing file** at `audits/<DOMAIN_CODE>.md` if it exists, to ensure the new section appends below prior history. If it doesn't exist, the new section starts a fresh file with a `# <DOMAIN_CODE> — Audit History` header.
+2. **Append a new `## YYYY-MM-DD — Audit` section** at the bottom of the file. Structure mirrors the three buckets from Step 3.
+3. **Drafts and subagent JSON stay in `c:/tmp/`** (gitignored, ephemeral). Only the final per-audit markdown section lands in `audits/`.
+4. **Commit timing is the user's call** — the agent writes the file but does not commit unless the user asks. `git log audits/<DOMAIN_CODE>.md` becomes the audit timeline once commits happen.
+
+**Section template (appended to the file):**
 
 ```markdown
-# <DOMAIN> Market Audit — <date>
+## YYYY-MM-DD — Audit
 
-## Summary
+### Summary
 - Current footprint: N entities across M modules (full + starter)
 - Market surface: X entities suggested by subagent
 - Flagship vendors enumerated: V1, V2, V3, V4, V5
-- MISSING: K entities
-- WRONG-OWNERSHIP: L entities
-- SCOPE-CREEP: M entities
-- MODULARIZATION ISSUES: N
+- Bucket 1 (in-scope, agent fixable): K items
+- Bucket 2 (surface-for-user, judgment): L items
+- Bucket 3 (Phase 0 pending, speculative): M items
 
-## Vendor surface basis
+### Vendor surface basis
 Brief justification of why each vendor was included. Compliance specialists called out.
 
-## MISSING entities (gaps)
-| Entity | Proposed module | Vendor evidence | Compliance? |
-| --- | --- | --- | --- |
+### Bucket 1 — In-scope confirmed gaps
+Tables grouped by finding type (MISSING / WRONG-OWNERSHIP / SCOPE-CREEP / STRUCTURAL / BOUNDARY), each row carrying:
+- Entity / row identifier
+- Current state vs. proposed state
+- Fix surface (loader / surgical CLI / PATCH)
+- Vendor evidence or band reference
 
-## WRONG-OWNERSHIP
-| Entity | Current module | Proposed module | Reason |
-| --- | --- | --- | --- |
+### Bucket 2 — Surface-for-user (judgment calls)
+Numbered list. Each item carries:
+- The question being asked
+- Why the agent can't answer it alone
+- Options the user might pick
+- Whether the answer is independent or has a Bucket 3 dependency
 
-## SCOPE-CREEP
-| Entity | Current module | Surface presence | Recommendation |
-| --- | --- | --- | --- |
+### Bucket 3 — Phase 0 pending (speculative)
+Numbered list. Each item carries:
+- Candidate entity / finding
+- Vendor knowledge basis (which flagship vendor was the source)
+- Recommended verification path (which docs to read in a Phase 0 pass)
 
-## MODULARIZATION ISSUES
-| Issue | Modules involved | Recommendation |
-| --- | --- | --- |
+### Decisions
+Per-bucket user choices, captured as the user makes them. Example:
+> *"Bucket 1: approved 1, 3, 5; declined 2, 4. Bucket 2: FERPA removed, 4 legacy notes reverted, master+embedded_master confirmed as architectural intent (Rule #19 deployability). Bucket 3: eyeball — outreach_sequences and video_interview_recordings ring true; rest defer to formal Phase 0."*
 
-## Recommendations
-Numbered list of proposed actions. Each action references a fix surface:
-- MISSING → Phase B insert via a loader
-- WRONG-OWNERSHIP → DELETE wrong DMDO + INSERT in right module
-- SCOPE-CREEP → DELETE the DMDO + dependent handoffs/relationships
-- MODULARIZATION ISSUES → separate module refactor (rename / merge / split)
+### Fixes applied
+Per-fix log: loader script path (or surgical CLI block), row counts, timestamps. References the commit hash if the loader was committed.
+
+### `domains.notes` pointer (if updated)
+The exact user-approved wording that was written to `domains.notes`, if the user opted to update the pointer. Example:
+> *"Last validated 2026-05-28. M7 soft-fail on talent_pools, Phase 0 pending. See `audits/ATS.md`."*
 ```
+
+**After appending, also offer to update `domains.notes`** with a short pointer back to the audit file. The agent prompts: *"Would you like me to update `<DOMAIN>.notes` with a one-line audit pointer? If so, please supply the exact wording (Rule #15)."* This step is optional; the file alone is sufficient persistence.
 
 ### Step 5 — User review (never auto-load)
 
-Rule #1 applies: AI-derived findings are research, not approved truth. Always surface the gap report to the user **before** any fix loads. The user picks which findings to act on.
+Rule #1 applies: AI-derived findings are research, not approved truth. Always surface the bucketed gap report to the user **before** any fix loads. The user picks which findings to act on per bucket, per the explicit-prompt discipline above. The agent applies fixes only after per-bucket approval; never bulk-applies findings the user hasn't explicitly accepted.
 
 ### Step 6 — Schedule fix loads
 

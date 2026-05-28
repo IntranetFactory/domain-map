@@ -722,6 +722,29 @@ A `domains` row is not deployable on its own. Modules are. The M-band is a struc
 - Pass: zero capability-orphaned modules. M4 enforces the converse direction (every catalog capability ↦ ≥1 realizing module); M6 enforces this direction (every module ↦ ≥1 realized capability) — the two together close the bipartite-coverage loop.
 - Fix: create the missing capability (apply the Cross-cutting capability convention to decide prefixed vs. domain-neutral) plus the `capability_domains` row and the `domain_module_capabilities` link. Orphan modules with no capability are a real gap — load the capability rather than annotating around it.
 
+**M7. Single-master integrity — every data_object has exactly one `role='master'` row across the whole catalog, and within a domain no master coexists with consumer/contributor on the same data_object.**
+
+Catches catalog-internal inconsistencies the market audit can miss. The single-master rule applies catalog-wide: exactly one `role='master'` row per `data_object_id`, regardless of which domain or module holds it. The blueprint emitter throws if it sees more, but multi-master rows can sit in `domain_module_data_objects` undetected until then; M7 surfaces them at audit time.
+
+Modules within a domain are **autonomous deployable units** (per § "The module at a glance"). A full module that's deployable standalone holds `embedded_master` shells of any data_object mastered elsewhere — including data_objects mastered by sibling modules of the same domain. That's the correct shape under autonomous-deployable-units, not a redundancy: when a customer deploys only module B without module A, the embedded shell is the only `work_items` (or whatever) row in the deployment. M7 does NOT flag this case.
+
+- Query 1 (catalog-wide single-master): pull every `master` row for each of this domain's mastered data_objects:
+  `/domain_module_data_objects?data_object_id=in.(<masters>)&role=eq.master&select=data_object_id,domain_module_id,necessity,data_objects(data_object_name),domain_modules(domain_module_code,domain_id,domains(domain_code))`
+  In script: count rows per `data_object_id`. >1 is a hard fail.
+- Query 2 (within-domain role coherence): pull every DMDO row across the domain's modules:
+  `/domain_module_data_objects?domain_module_id=in.(<modIds>)&select=domain_module_id,data_object_id,role,necessity,data_objects(data_object_name),domain_modules(domain_module_code)`
+  In script: for each `data_object_id` with >1 row in the result, classify the role combination.
+- Pass criteria, in order of severity:
+  - **Hard fail (catalog-wide single-master)** — same `data_object_id` has `role='master'` in two or more modules, anywhere in the catalog (same domain or different domains). Surface the conflicting rows by (`data_object_name`, `domain_module_code`, `domain_code`) and stop. The deployer / blueprint emitter cannot pick a canonical owner.
+  - **Hard fail (within-domain incoherence)** — same `data_object_id` has `role='master'` in module A AND `role IN ('consumer', 'contributor')` in module B of this domain. A master coexisting with consumer/contributor in the same domain is incoherent — you don't consume what you also master in the same scope.
+  - **Pass** — same `data_object_id` has `role='master'` in module A AND `role='embedded_master'` in module B of this domain. Expected under autonomous-deployable-units: B ships its own shell to be installable without A; when both are co-deployed the runtime demotion (embedded_master → consumer of A's master) takes over. No action.
+  - **Pass with note** — same `data_object_id` has `role='consumer'` (or `contributor`) in multiple modules of this domain. Allowed (different modules may legitimately consume the same external master), but flag as "consider deduplicating" if the modules share scope.
+  - **Pass** — same `data_object_id` has `role='embedded_master'` in multiple modules of this domain. Standard pattern when several modules of the same domain each need a standalone-deployable shell of an external master.
+- Fix:
+  - Catalog-wide hard fail: surface to user. The decision is which module owns canonical mastery; the other side demotes to `embedded_master` (preserving its standalone-deploy story) or `consumer` (defers entirely). Lifecycle states on the demoting side may need re-anchoring or deletion depending on the demotion target.
+  - Within-domain hard fail: DELETE the `consumer`/`contributor` DMDO row in the sibling module; the master row is authoritative for the whole domain.
+  - Pass with note / consolidation hint: design decision, not a structural fix. Surface in the gap report's recommendations section, not as a blocking finding.
+
 ### B. Phase B — Data-object footprint
 
 **B1. ≥1 `master` data_object exists.**
@@ -931,14 +954,16 @@ The `skills` table sits next to `roles` but represents agent skills, not user ro
 - Fix: PATCH the offending `skill_tools.tool_id` to point at `notify_person` (or `notify_team` for broadcast). Idempotency-safe: if the same skill already links the abstraction, DELETE the channel-primitive row instead of PATCHing. Multi-channel rows mean broadcast (AND), not at-least-one (OR); if the skill genuinely needs to fire on BOTH email and chat, keep both with notes justifying each.
 - Why this is here: the rule was stated in the authoring section but missed at audit time on at least three loads. The abstraction's structural value is that when the platform ships outbound, `notify_person.coverage_tier` flips to `platform` with one UPDATE and every skill using it re-scores; channel-specific links don't ride that flip and have to be hand-patched.
 
-### Audit recipe (for "review domain X" / "audit X" / "what's missing for X")
+### Audit recipe — structural pass of the Validate mode
+
+> **This is one of four passes in the Validate mode** (see [README.md](../../../README.md) § "Validate a domain"). When a user says *"validate / audit / review / verify `<DOMAIN>`"* or *"is `<DOMAIN>` fully loaded"* or *"what's missing for `<DOMAIN>`"*, you run all four passes: market audit (§ below), this structural pass, neighbor discovery (auto-derive related domains from `handoffs` + cross-domain DMDO rows), and pairwise reconciliation against each neighbor (§ "Pairwise handoff reconciliation" further below). Running just one pass is the failure pattern that lets gaps fall through — structural says "every junction has its qualifier" while semantic gaps go undetected, market audit says "you're missing FCRA disclosures" while internal inconsistencies go undetected, and skipping neighbor reconciliation leaves cross-domain edges half-wired. The triggers route to ALL four passes; never to one alone.
 
 1. Resolve `<DOMAIN_CODE>` to `<id>` and `<masters>` once at the start. Cache for reuse across queries.
 2. **Run the S-band sweep first** (S1 + S2 + S3). It produces the coverage tables the gap report leads with and surfaces zero-row anomalies the band checks may not specifically test.
 3. Run every **in-scope** band check (A / M / B / C / D / E / F) in order. Skip A5 unless the user has explicitly asked for a vendor-ownership refresh.
 4. Classify each result:
-   - **Structural gate** — M1–M6 failures block every downstream concern. A domain with no modules (or with capability-orphaned modules) can't be modeled in Phase B/E correctly until the M-band is clean. Resolve M-band first.
-   - **In-scope fix** — this domain can fix locally (S1–S3 zero-row anomalies, A1–A4, M1–M6, B1–B9, B9b, B10b, B11–B12, C1–C2, D1, E1–E6, F1–F5, F7). Goes into the **gap report** as actionable. Fact-sheet emission is **not** an audit step — see § "Fact sheets" below.
+   - **Structural gate** — M1–M7 failures block every downstream concern. A domain with no modules (or with capability-orphaned modules) can't be modeled in Phase B/E correctly until the M-band is clean. Resolve M-band first.
+   - **In-scope fix** — this domain can fix locally (S1–S3 zero-row anomalies, A1–A4, M1–M7, B1–B9, B9b, B10b, B11–B12, C1–C2, D1, E1–E6, F1–F5, F7). Goes into the **gap report** as actionable. Fact-sheet emission is **not** an audit step — see § "Fact sheets" below.
    - **Report-only follow-up** — the symmetric side is owned by another domain (B8 inbound direction, all of B10). Goes into a separate **"report-only follow-ups"** subsection of the report, naming the source domain + the missing check ID on that side (e.g. "HCM B9 owes outbound on `hcm_positions`"). **Do not author fixes for these from this domain's audit.** These items NEVER block the audited domain's green status; they are observations the user can act on by scheduling audits of the source domains.
 4. Surface the gap report to the user **before** authoring any fixes. Include the failing query output snippet so the user can sanity-check. Ask whether to also kick off audits on the source domains in the report-only section.
 5. For each accepted in-scope fix, author it (markdown draft, or directly in a loader); never load AI-generated content without a user review pass (Rule #1).
@@ -947,13 +972,15 @@ The `skills` table sits next to `roles` but represents agent skills, not user ro
 
 A well-run audit produces two artifacts: the gap report (with in-scope and report-only subsections) and, if the user agrees to load, the fix drafts. Fact-sheet emission is not part of the audit deliverable; if the user wants refreshed fact sheets after fixes land, that's a separate explicit step (see § "Fact sheets" below).
 
-### Domain-level market audit (regression test for Phase 0)
+**Output discipline — three-bucket surface with explicit per-bucket prompts.** Every Validate run categorizes findings into three buckets — **Bucket 1: in-scope confirmed gaps** (agent-fixable), **Bucket 2: surface-for-user** (judgment calls), **Bucket 3: Phase 0 pending** (speculative gaps from semantic pass with no vendor-surface baseline). After surfacing each bucket the agent **explicitly prompts** for action ("fix these now?" / "what's your call on each?" / "vet via Phase 0 research or eyeball-mode?") rather than dumping the report and waiting. Unclear next steps are the main reason domain audits stall; the explicit-prompt discipline prevents this. Cross-bucket dependencies (a Bucket 2 question whose answer would shift if Bucket 3 research lands) are called out at surface time. Full template + per-bucket prompt scripts: [references/domain-audit-procedure.md](references/domain-audit-procedure.md) § "Step 3 — Surface the gap report to the user, categorized into three buckets".
+
+### Domain-level market audit — semantic pass of the Validate mode
+
+> **This is one of four passes in the Validate mode** (paired with the structural Audit recipe above and the neighbor-discovery + pairwise passes below). When a user says *"validate / audit / review / verify `<DOMAIN>`"* or any of the trigger phrases listed in [README.md](../../../README.md) § "Validate a domain", you run all four passes and combine. Never invoke the market audit alone — running just the semantic pass leaves structural inconsistency and cross-domain edge drift undetected. The user's trigger is mode-level ("validate X"), not pass-level ("just run market audit on X").
 
 The per-domain completeness checklist above verifies **structural** correctness: every domain has ≥1 master, every junction has its qualifier, every module has its system skill, every handoff has both module FKs. A domain can pass A/M/B/C/D/E/F **and still be semantically incomplete** — a module with the right structure but missing half its workflow substrate (engagement, compliance, transitions, approvals) ticks every structural box while shipping a thin point-solution surface. The structural audit doesn't ask *"does this footprint match what a flagship vendor in this market actually masters?"*.
 
 The market audit closes that gap. It is the **regression test for Phase 0**: when a load violated Phase 0 (or pre-dates it, since pre-modular and early-modular loads ran before Phase 0 existed), the next market audit catches the drift. Re-runnable on demand; cheap to invoke per domain.
-
-**Triggers:** "audit domain X against market", "run a market audit on Y", "is domain Z fully loaded", "find missing entities in W", "verify the X domain", "re-check Y modularization", "do a market-vs-catalog check on X".
 
 **What it surfaces** (four findings categories):
 
@@ -967,7 +994,7 @@ The market audit closes that gap. It is the **regression test for Phase 0**: whe
 1. Pull current state from live tables — `domains`, `domain_modules`, `domain_module_host_domains`, `domain_module_data_objects`. Never from blueprints, never from deploy scripts (Rule: live state only).
 2. Spawn a `general-purpose` subagent to generate the market surface fresh, with the prompt template in the reference doc. Subagent produces JSON + markdown at `c:/tmp/<DOMAIN>-market-surface-<date>.json` / `.md` containing the vendor surface matrix and a diff against the current footprint.
 3. Surface a one-table summary (MISSING / WRONG-OWNERSHIP / SCOPE-CREEP / MODULARIZATION counts) to the user, then offer to drill into any category.
-4. Write the full gap report to `c:/tmp/<DOMAIN>-audit-<date>.md` after user review.
+4. Append the audit section to `audits/<DOMAIN_CODE>.md` (one file per domain, append-only, git-tracked). The raw subagent JSON drafts stay in `c:/tmp/` (ephemeral).
 5. Schedule fix loads per finding type: MISSING → Phase B insert; WRONG-OWNERSHIP → DELETE + INSERT in right module; SCOPE-CREEP → DELETE + cascade; MODULARIZATION → separate refactor conversation (don't fold into the fix-loop).
 6. Re-run after fixes land. Acceptance criterion: zero MISSING / WRONG-OWNERSHIP / SCOPE-CREEP (modulo user-accepted exceptions).
 
@@ -978,7 +1005,9 @@ The market audit closes that gap. It is the **regression test for Phase 0**: whe
 
 **Output discipline:** market audit is read-only by construction. The output is the gap report; loads happen separately on user approval, using existing loader patterns (e.g. [.tmp_deploy/fix_ats_modules.ts](../../../.tmp_deploy/fix_ats_modules.ts) for the FIX shape).
 
-### Pairwise handoff reconciliation (focused, on-demand)
+### Pairwise handoff reconciliation — per-neighbor pass of the Validate mode
+
+> **This is the third and fourth passes of the Validate mode** (see [README.md](../../../README.md) § "Validate a domain", passes 3 + 4). The neighbor set for domain X is **auto-discovered** from the catalog, not user-supplied. Query `handoffs?source_domain_id=eq.<X-id>` UNION `handoffs?target_domain_id=eq.<X-id>` UNION `domain_module_data_objects` rows on X's modules whose `data_object_id` is mastered in another domain. Rank by edge weight (number of handoffs + dependency count). Run the four-leg analysis below against every neighbor with edge weight ≥3 by default; lighter neighbors get a one-table summary unless the user asks for the deep dive on all of them. **Manual bilateral form** (user names two specific domain codes) is a fallback for "I just want to check one boundary": triggers *"validate `<A>` ↔ `<B>` boundary"*, *"reconcile `<A>` and `<B>`"*, *"check the handoff boundary between `<A>` and `<B>`"*, *"is the `<A>` ↔ `<B>` boundary fully wired"*. Either form runs the same four-leg analysis below.
 
 The per-domain audit is **necessarily one-sided**: it surfaces what *this* domain owes (in-scope B-band failures) and what *other* domains owe *this* domain (B10 report-only). Closing a cross-domain handoff requires both sides — the producer authors `trigger_events` + `handoffs` rows, the consumer declares `domain_module_data_objects` (DMDO) consumer/contributor coverage. Per-domain audit catches the two halves separately and you converge by intersecting two report-only sections; pairwise reconciliation walks the boundary in one pass and produces a single diff.
 
@@ -1009,7 +1038,11 @@ The per-domain audit is **necessarily one-sided**: it surfaces what *this* domai
    - **Section 2 — Existing handoffs with NULL module FK.** Run the B10b derivation locally; if the row is now resolvable (the other side has DMDO coverage that didn't exist when the handoff was first loaded), surface as a one-row PATCH. If not resolvable, identify which side needs the upstream fix (missing DMDO row on the consumer ⇒ that side's load; missing master row on the publisher ⇒ that side's Phase-B gap).
    - **Section 3 — Missing handoffs the catalog implies should exist.** For every (publisher master state with `requires_permission=true`) × (consumer DMDO row on that master's data_object on the other side), check that a handoff row exists. Each missing combination is a candidate handoff — surface with proposed `trigger_event`, payload, and the modules it would wire to. User decides which to load.
    - **Section 4 — Boundary integrity gaps.** Any DMDO row on one side referencing a data_object the other side doesn't master (and isn't `kind='platform_builtin'`) — that's a B5 integrity failure routed back to whichever domain owes the canonical master.
-4. **Produce a single diff file** at `c:\tmp\reconcile_<A>_<B>_<YYYY_MM_DD>.md` with the four sections per direction (so eight sections total) plus a summary count. The user reviews, then accepts which fixes to load.
+   - **Section 5 — Cross-domain `data_object_relationships`.** These are the structural mirror of cross-domain handoffs: a handoff says *"event X fires from A to B"*; a relationship row says *"A's master has a verb to B's master"* (e.g. `job_offers spawns onboarding_journeys`). The relationship graph drives the mermaid renderer in blueprints and the navigation hints in the architect view — missing relationships leave both silently incomplete.
+     - Query: `/data_object_relationships?and=(data_object_id.in.(<A-masters>),related_data_object_id.in.(<B-masters>))&select=data_object_id,relationship_verb,related_data_object_id,is_required,owner_side` plus the symmetric B→A direction.
+     - Diff: for every cross-domain handoff with a clean payload→target mapping (handoff's `data_object_id` ≠ trigger_event's `data_object_id` — payload is on B's side, event source on A's), the catalog should carry a corresponding relationship row. If the handoff exists but the relationship row doesn't, surface as **MISSING-RELATIONSHIP**. If a relationship row exists but its mirror handoff doesn't, surface as **ORPHAN-RELATIONSHIP** (relationship without an event-driven realization — possibly intentional for derived/synthetic links, but worth flagging).
+     - Fix: author the missing `data_object_relationships` row per the B6/B8 shape (verb + inverse_verb + relationship_type + relationship_kind + is_required + owner_side). Surgical CLI for ≤5; loader for more.
+4. **Produce the diff**. For the auto-discovery form (per-neighbor pass inside a single-domain Validate), the per-neighbor findings append to the host domain's `audits/<DOMAIN>.md` section under "Bucket 1 — Boundary findings per neighbor". For the manual bilateral form (user names A and B directly), draft the ten-section diff in `c:/tmp/reconcile_<A>_<B>_<YYYY_MM_DD>.md` (working file), then on user approval **append a section to BOTH `audits/<A>.md` AND `audits/<B>.md`** — each file gets the direction it owns (A→B in A's file, B→A in B's file), plus a shared summary count. Keeps the per-domain timeline complete on both sides.
 5. **Each accepted fix is loaded as a normal Phase-B / Phase-M update on the side that owes it.** Reconciliation never produces fixes for both sides simultaneously in one loader — keep the audit-trail per side clean.
 
 **Output discipline.** Pairwise reconciliation is read-only by construction. The diff goes to a tmp file and the user approves loads one side at a time. Never bulk-patch both sides from a single reconciliation invocation — that erases the "who owes what" provenance the audit trail depends on.
