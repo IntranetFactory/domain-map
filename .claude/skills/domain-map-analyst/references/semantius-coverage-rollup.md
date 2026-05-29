@@ -2,20 +2,20 @@
 
 The saved query that certifies "% Semantius OOTB" per system skill. Re-runnable any time the catalog changes.
 
-Implementation: [.tmp_deploy/coverage_rollup.ts](../../../../.tmp_deploy/coverage_rollup.ts). Run from project root (the `semantius` CLI reads `.env` from cwd — see [CLAUDE.md](../../../../CLAUDE.md)).
+Implementation: [scripts/analytics/coverage_rollup.ts](../../../../scripts/analytics/coverage_rollup.ts). Run from project root (the `semantius` CLI reads `.env` from cwd — see [CLAUDE.md](../../../../CLAUDE.md)).
 
 ```sh
 # Full rollup, sorted by skill_name
-bun run .tmp_deploy/coverage_rollup.ts
+bun run scripts/analytics/coverage_rollup.ts
 
 # Only skills <100%, with the specific tools dragging them down
-bun run .tmp_deploy/coverage_rollup.ts --diagnostic
+bun run scripts/analytics/coverage_rollup.ts --diagnostic
 
 # Machine-readable CSV (skill_name,domain_code,pct,covered,required)
-bun run .tmp_deploy/coverage_rollup.ts --csv
+bun run scripts/analytics/coverage_rollup.ts --csv
 
 # Single skill
-bun run .tmp_deploy/coverage_rollup.ts --skill crm-system
+bun run scripts/analytics/coverage_rollup.ts --skill crm-system
 ```
 
 ## The formula
@@ -31,7 +31,7 @@ For each `skills` row with `skill_type = 'system'`:
 
 ## The Semantius-covered set
 
-**Source of truth: hardcoded in [coverage_rollup.ts](../../../../.tmp_deploy/coverage_rollup.ts) at the constant `SEMANTIUS_COVERED`.** Today:
+**Source of truth: hardcoded in [coverage_rollup.ts](../../../../scripts/analytics/coverage_rollup.ts) at the constant `SEMANTIUS_COVERED`.** Today:
 
 ```
 SEMANTIUS_COVERED = { "query", "mutate" }
@@ -39,7 +39,7 @@ SEMANTIUS_COVERED = { "query", "mutate" }
 
 The cheapest representation while the Semantius-covered set churns. If a customer-coverage rollup later needs to read the set dynamically, promote to a config table (`semantius_native_operation_kinds`) or to a column on a future `operation_kinds` lookup entity. Until then: edit the constant when Semantius gains a new generic primitive.
 
-**Update procedure when the set changes:** When Semantius gains a new generic primitive (e.g. native email send → new `operation_kind` value `notify_email`), edit the constant in [coverage_rollup.ts](../../../../.tmp_deploy/coverage_rollup.ts) and re-run. No DDL needed.
+**Update procedure when the set changes:** When Semantius gains a new generic primitive (e.g. native email send → new `operation_kind` value `notify_email`), edit the constant in [coverage_rollup.ts](../../../../scripts/analytics/coverage_rollup.ts) and re-run. No DDL needed.
 
 ## Per-skill diagnostic output
 
@@ -116,4 +116,4 @@ order by r.skill_name, r.tool_name;
 
 ## Related references
 
-- [.tmp_deploy/load_p25a_i.ts](../../../../.tmp_deploy/load_p25a_i.ts), [load_p25a_ii.ts](../../../../.tmp_deploy/load_p25a_ii.ts), [load_p25a_iii.ts](../../../../.tmp_deploy/load_p25a_iii.ts) — the three loaders that populated the system-skill matrix this rollup measures.
+- [scripts/loaders/load_p25a_i.ts](../../../../scripts/loaders/load_p25a_i.ts), [load_p25a_ii.ts](../../../../scripts/loaders/load_p25a_ii.ts), [load_p25a_iii.ts](../../../../scripts/loaders/load_p25a_iii.ts) — the three loaders that populated the system-skill matrix this rollup measures.

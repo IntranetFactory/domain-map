@@ -6,16 +6,16 @@ The 4-phase TypeScript loader pattern used for every data-object + multi-master 
 
 | Loader | Cluster | Notable feature |
 |---|---|---|
-| [.tmp_deploy/load_ats_data_objects.ts](../../../../.tmp_deploy/load_ats_data_objects.ts) | ATS | First clean run; minimal scaffold |
-| [.tmp_deploy/load_onboarding.ts](../../../../.tmp_deploy/load_onboarding.ts) | Onboarding | First combined phase 1+2+3 in one file (domain + vendors + solutions + data_objects + handoffs) |
-| [.tmp_deploy/load_swp.ts](../../../../.tmp_deploy/load_swp.ts) | SWP | First multi-master row added (`job_requisitions`); refines an existing junction's notes |
-| [.tmp_deploy/load_hcm_epm_pa.ts](../../../../.tmp_deploy/load_hcm_epm_pa.ts) | HCM + EPM + PA | Three-domain combined load; signal-row volume increased |
-| [.tmp_deploy/load_itsm_itam_saas_clm_s2p.ts](../../../../.tmp_deploy/load_itsm_itam_saas_clm_s2p.ts) | ITSM + ITAM/HAM/SAM + SMP + CLM + S2P | Largest single load; demonstrates master-at-sub-domain reshape |
-| [.tmp_deploy/load_itops_backbone.ts](../../../../.tmp_deploy/load_itops_backbone.ts) | CMDB + DISCOVERY + ITOM + OBS + AIOPS | Adds the total-degree leaderboard to the summary |
-| [.tmp_deploy/load_customer_cluster.ts](../../../../.tmp_deploy/load_customer_cluster.ts) | CRM + CSM + SUB-MGMT | Customer flagship — the 4-master `customers` row |
-| [.tmp_deploy/load_crm_subdomains.ts](../../../../.tmp_deploy/load_crm_subdomains.ts) | CDP + MA + SALES-ENG | Sub-domain cluster under an already-loaded umbrella |
+| [scripts/loaders/load_ats_data_objects.ts](../../../../scripts/loaders/load_ats_data_objects.ts) | ATS | First clean run; minimal scaffold |
+| [scripts/loaders/load_onboarding.ts](../../../../scripts/loaders/load_onboarding.ts) | Onboarding | First combined phase 1+2+3 in one file (domain + vendors + solutions + data_objects + handoffs) |
+| [scripts/loaders/load_swp.ts](../../../../scripts/loaders/load_swp.ts) | SWP | First multi-master row added (`job_requisitions`); refines an existing junction's notes |
+| [scripts/loaders/load_hcm_epm_pa.ts](../../../../scripts/loaders/load_hcm_epm_pa.ts) | HCM + EPM + PA | Three-domain combined load; signal-row volume increased |
+| [scripts/loaders/load_itsm_itam_saas_clm_s2p.ts](../../../../scripts/loaders/load_itsm_itam_saas_clm_s2p.ts) | ITSM + ITAM/HAM/SAM + SMP + CLM + S2P | Largest single load; demonstrates master-at-sub-domain reshape |
+| [scripts/loaders/load_itops_backbone.ts](../../../../scripts/loaders/load_itops_backbone.ts) | CMDB + DISCOVERY + ITOM + OBS + AIOPS | Adds the total-degree leaderboard to the summary |
+| [scripts/loaders/load_customer_cluster.ts](../../../../scripts/loaders/load_customer_cluster.ts) | CRM + CSM + SUB-MGMT | Customer flagship — the 4-master `customers` row |
+| [scripts/loaders/load_crm_subdomains.ts](../../../../scripts/loaders/load_crm_subdomains.ts) | CDP + MA + SALES-ENG | Sub-domain cluster under an already-loaded umbrella |
 
-For one-off small loads, `.tmp_deploy/load_research.ts` is the simpler template.
+For one-off small loads, `scripts/loaders/load_research.ts` is the simpler template.
 
 ## The 4 phases
 

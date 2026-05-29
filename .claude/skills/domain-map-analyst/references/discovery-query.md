@@ -4,20 +4,20 @@ Implements the discovery procedure described in [SKILL.md § Phase D](../SKILL.m
 
 **Cross-domain candidacy filter.** The discovery query for cross-domain process-skill candidacy must filter `source_domain_id != target_domain_id` (Signal 2). Intra-domain rows (typically `integration_pattern: lifecycle_progression`) are valuable for module-level deployment manifests but should not feed the cross-domain platform-vs-silos signal.
 
-Implementation: [.tmp_deploy/discovery_query.ts](../../../../.tmp_deploy/discovery_query.ts). Run from project root.
+Implementation: [scripts/analytics/discovery_query.ts](../../../../scripts/analytics/discovery_query.ts). Run from project root.
 
 ```sh
 # Top 25 candidates (human table)
-bun run .tmp_deploy/discovery_query.ts --top 25
+bun run scripts/analytics/discovery_query.ts --top 25
 
 # Full ranked list
-bun run .tmp_deploy/discovery_query.ts
+bun run scripts/analytics/discovery_query.ts
 
 # JSON dump (e.g. piping into downstream rank-aware tooling)
-bun run .tmp_deploy/discovery_query.ts --json --top 30
+bun run scripts/analytics/discovery_query.ts --json --top 30
 
 # Detailed drill-down on one bucket
-bun run .tmp_deploy/discovery_query.ts --bucket employee
+bun run scripts/analytics/discovery_query.ts --bucket employee
 ```
 
 ## Bucketing rule (v1)

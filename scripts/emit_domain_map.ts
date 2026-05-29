@@ -104,6 +104,25 @@ for (const [did, dataObjs] of dataObjectsByDomain) {
   }
 }
 
+// Domains that MASTER each data_object (rolled up from dmdo master rows via module host,
+// plus legacy domain_data_objects master rows). Used for the ownership-mediated relatedness
+// rule: D is related to D' iff one of them masters a data_object the other touches.
+const masterDomainsByDataObject = new Map<number, Set<number>>();
+for (const r of all.dmdo) {
+  if (r.role !== "master") continue;
+  const dids = domainsByModule.get(r.domain_module_id as number);
+  if (!dids) continue;
+  const oid = r.data_object_id as number;
+  if (!masterDomainsByDataObject.has(oid)) masterDomainsByDataObject.set(oid, new Set());
+  for (const did of dids) masterDomainsByDataObject.get(oid)!.add(did);
+}
+for (const r of all.ddo) {
+  if (r.role !== "master") continue;
+  const oid = r.data_object_id as number;
+  if (!masterDomainsByDataObject.has(oid)) masterDomainsByDataObject.set(oid, new Set());
+  masterDomainsByDataObject.get(oid)!.add(r.domain_id as number);
+}
+
 // Handoff neighbors (either direction, self excluded).
 const handoffNeighbors = new Map<number, Set<number>>();
 for (const d of index.domains) handoffNeighbors.set(d.id, new Set());
@@ -115,13 +134,21 @@ for (const h of all.handoffs) {
   handoffNeighbors.get(t)?.add(s);
 }
 
-// Module-level neighbors: co-touch on data_objects (via dmdo) ∪ module-level handoffs.
+// Module-level neighbors: ownership-mediated co-touch on data_objects ∪ module-level handoffs.
+// "Ownership-mediated" = M is related to M' iff one of them masters a data_object the other touches.
+// Two non-masters that both embed the same data_object are NOT related (the link, if any, runs through
+// the master, not between them).
 const modulesByDataObject = new Map<number, Set<number>>();
+const masterModulesByDataObject = new Map<number, Set<number>>();
 for (const r of all.dmdo) {
   const oid = r.data_object_id as number;
   const mid = r.domain_module_id as number;
   if (!modulesByDataObject.has(oid)) modulesByDataObject.set(oid, new Set());
   modulesByDataObject.get(oid)!.add(mid);
+  if (r.role === "master") {
+    if (!masterModulesByDataObject.has(oid)) masterModulesByDataObject.set(oid, new Set());
+    masterModulesByDataObject.get(oid)!.add(mid);
+  }
 }
 const dataObjectsByModule = new Map<number, Set<number>>();
 for (const r of all.dmdo) {
@@ -148,8 +175,12 @@ for (const d of index.domains) {
     .map((m) => {
       const relatedMods = new Set<number>();
       for (const oid of dataObjectsByModule.get(m.id) ?? []) {
-        for (const other of modulesByDataObject.get(oid) ?? []) {
-          if (other !== m.id) relatedMods.add(other);
+        const masters = masterModulesByDataObject.get(oid);
+        const touchers = modulesByDataObject.get(oid);
+        if (masters?.has(m.id)) {
+          if (touchers) for (const other of touchers) if (other !== m.id) relatedMods.add(other);
+        } else if (masters) {
+          for (const master of masters) if (master !== m.id) relatedMods.add(master);
         }
       }
       for (const other of moduleHandoffNeighbors.get(m.id) ?? []) {
@@ -170,9 +201,16 @@ for (const d of index.domains) {
 
   const related = new Set<number>();
   for (const oid of dataObjectsByDomain.get(d.id) ?? []) {
-    for (const other of domainsByDataObject.get(oid) ?? []) {
-      if (other !== d.id) related.add(other);
+    const masters = masterDomainsByDataObject.get(oid);
+    const touchers = domainsByDataObject.get(oid);
+    if (masters?.has(d.id)) {
+      // d masters this data_object → include every other domain touching it.
+      if (touchers) for (const other of touchers) if (other !== d.id) related.add(other);
+    } else if (masters) {
+      // d only touches → include only the master(s).
+      for (const m of masters) if (m !== d.id) related.add(m);
     }
+    // If no master exists for this data_object (rare; orphan), no relatedness edge from it.
   }
   for (const other of handoffNeighbors.get(d.id) ?? []) {
     if (other !== d.id) related.add(other);

@@ -23,7 +23,11 @@ Per audit, the section carries:
 - Bucket 1 / 2 / 3 counts
 
 ### Bucket 1 — In-scope confirmed gaps
-Tables grouped by finding type (MISSING / WRONG-OWNERSHIP / SCOPE-CREEP / STRUCTURAL / BOUNDARY).
+Tables grouped by finding type (MISSING / WRONG-OWNERSHIP / SCOPE-CREEP / STRUCTURAL / BOUNDARY / **APQC TAGGING**).
+
+For **APQC TAGGING**, two tables: (1) human-curated proposals — `(handoff_id, source→target, trigger_event, payload, proposed PCF row, PCF id, confidence)`; (2) deferred-to-Discover-Pass-3 — handoffs the analyst couldn't confidently classify, with the deferral reason. The combined count drives the APQC TAGGING line in the summary.
+
+Volume expectation: for N cross-domain handoffs the domain touches (outbound + inbound), expect roughly 0.5N to 0.8N human-curated rows. Audits that ship zero APQC tags despite the analyst building the mental model are a procedural failure — the design assumes the analyst tags while reading.
 
 ### Bucket 2 — Surface-for-user (judgment calls)
 Numbered list, each with the question + options + dependency status.

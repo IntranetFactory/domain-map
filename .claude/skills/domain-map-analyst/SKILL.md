@@ -108,9 +108,15 @@ This makes re-running a load safe. Numeric IDs are only valid post-insert; never
 
 ### 4b. Loaders are TypeScript on Bun. Never Python. Never Bash for anything non-trivial.
 
-Every loader in this project is a `.ts` file run with `bun run <path>`. Stick to that stack:
+Every loader in this project is a `.ts` file run with `bun run <path>`. **Where the file lives:**
 
-- **Use TypeScript + Bun** (`Bun.spawn`, `await new Response(...).text()`, top-level `await`). Reference patterns in [.tmp_deploy/load_research.ts](../../../.tmp_deploy/load_research.ts) and the loader index in [references/loader-idiom.md](references/loader-idiom.md).
+- **Reusable patterns referenced from SKILL.md / `references/`** live in **`scripts/loaders/`** (committed).
+- **Read-only analytics** (and analytics with persistence side effects, like `discovery_query.ts`) live in **`scripts/analytics/`** (committed).
+- **Dated one-off work** (per-domain audit fixes, frozen backfills, drafts in flight) lives in **`.tmp_deploy/`** (gitignored). When a one-off earns repeated reference, promote it to `scripts/loaders/` and update the cite in SKILL.md / `references/`.
+
+Stick to that stack:
+
+- **Use TypeScript + Bun** (`Bun.spawn`, `await new Response(...).text()`, top-level `await`). Reference patterns in [scripts/loaders/load_research.ts](scripts/loaders/load_research.ts) and the loader index in [references/loader-idiom.md](references/loader-idiom.md).
 - **Do NOT use Python.** Python on Windows in this project fails in messy ways: encoding mismatches on stdin/stdout when piping JSON into `semantius`, venv/path drift between PowerShell and bash invocations, indentation errors that hide for whole runs, `subprocess` plumbing that swallows stderr, brittle `requests`/`httpx` pinning. The user has been burned enough times by this that "use Python" is not an acceptable suggestion regardless of context. If you think Python is the right tool, you're wrong — write the TypeScript instead.
 - **Don't use Bash/PowerShell scripts** for anything beyond one-liner reads. Multi-step orchestration (read → diff → POST → re-read → POST) belongs in a `.ts` loader, not a shell pipeline. Shell is fine for `semantius call crud postgrestRequest '...'` smoke tests; everything else goes in TypeScript.
 - **One-line semantius reads from the agent's tool call are fine** — `semantius call crud postgrestRequest '{"method":"GET","path":"/..."}'` via Bash is the canonical read pattern. The rule is about *loaders* (multi-step write orchestration), not about every CLI invocation.
@@ -125,7 +131,7 @@ When a subagent is given a research/load task, instruct it explicitly to produce
 - **Pipe via stdin** to the CLI: `semantius call crud postgrestRequest` reads JSON from stdin when no inline argument is supplied. Use this from Bun's `Bun.spawn` with `stdin: "pipe"`.
 - **Chunk inserts** into batches of ≤50 rows. Simpler when the script is in a hurry.
 
-The reference loader at [.tmp_deploy/load_research.ts](.tmp_deploy/load_research.ts) does both — and the canonical `insert()` helper lives in [references/loader-idiom.md](references/loader-idiom.md) (around line 110). **Start from one of those for any greenfield bulk insert.** Common failure mode: copying a per-row pattern (e.g. from `rename_data_object.ts`, which has its own pre-flight per row) into a greenfield loader. That turns N inserts into N subprocess spawns at ~300ms each — 1,000 rows = 5+ minutes when it should be sub-second. Per-row patterns are correct only when each row needs its own pre-flight against live state; for plain "insert a list of new rows," always use the chunked array-body POST.
+The reference loader at [scripts/loaders/load_research.ts](scripts/loaders/load_research.ts) does both — and the canonical `insert()` helper lives in [references/loader-idiom.md](references/loader-idiom.md) (around line 110). **Start from one of those for any greenfield bulk insert.** Common failure mode: copying a per-row pattern (e.g. from `rename_data_object.ts`, which has its own pre-flight per row) into a greenfield loader. That turns N inserts into N subprocess spawns at ~300ms each — 1,000 rows = 5+ minutes when it should be sub-second. Per-row patterns are correct only when each row needs its own pre-flight against live state; for plain "insert a list of new rows," always use the chunked array-body POST.
 
 ### 6. JWT-audience errors: STOP, surface the verbatim error, wait for the user.
 
@@ -174,7 +180,7 @@ Full definitions and examples live in [references/module-shape.md](references/mo
 **Three prevention mechanisms — apply all three on every domain load:**
 
 1. **Read the manifest before drafting.** Open the `domains` row in [references/module-shape.md](references/module-shape.md) and the populate-on-insert checklist before writing a single row. Don't trust memory — the table grows over time.
-2. **Loader hard-fail.** Any script that inserts into `domains` must validate the payload against the manifest before the POST. If `crud_percentage === 0 || min_org_size === '' || cost_band === '' || (business_logic === '' && crud_percentage < 95) || usa_market_size_usd_m === 0 || market_size_source_year === 0`, throw — don't write. Convert silent omission into loud failure. See `validateDomainRow()` in [.tmp_deploy/load_research.ts](.tmp_deploy/load_research.ts) for the canonical implementation.
+2. **Loader hard-fail.** Any script that inserts into `domains` must validate the payload against the manifest before the POST. If `crud_percentage === 0 || min_org_size === '' || cost_band === '' || (business_logic === '' && crud_percentage < 95) || usa_market_size_usd_m === 0 || market_size_source_year === 0`, throw — don't write. Convert silent omission into loud failure. See `validateDomainRow()` in [scripts/loaders/load_research.ts](scripts/loaders/load_research.ts) for the canonical implementation.
 3. **Post-load audit.** As the last step of Phase A, run `semantius call crud postgrestRequest '{"method":"GET","path":"/domains?select=domain_code,crud_percentage,min_org_size,cost_band,usa_market_size_usd_m&crud_percentage=eq.0&order=id.desc&limit=50"}'` and surface the result. If any row from this load appears, fix before declaring the phase done. The query also catches drift from older loads.
 
 **Why this rule exists:** the original ServiceNow / Salesforce / Workday / SAP / PROD-MGMT / SMM / SWP / ONBOARDING / ATS / ACCT-PLAN / GTM-PLAN / REV-INTEL / SALES-PERF / INTRANET / COLLAB-GOV / WEB-CONTOPS loads all inserted `domains` rows without populating these seven fields. The user discovered this in the UI and pushed back hard. 11 rows were sitting at zeros across the catalog with no signal that they needed backfill. The fields were even missing from [references/module-shape.md](references/module-shape.md) at the time — that gap was the upstream cause, and is closed now.
@@ -540,7 +546,7 @@ For any task that fits this skill — "research vendors for X", "is Y a domain?"
 
 4. **Use natural keys, never numeric IDs.** Inside the script: build `Map<naturalKey, id>` after each insert by re-reading the table. Don't try to predict IDs.
 
-5. **Load via the script idiom — in multiple phases, each surfaced separately.** Even for ~20 rows, prefer extending [.tmp_deploy/load_research.ts](.tmp_deploy/load_research.ts) over one-off CLI calls. The script is idempotent (safe to re-run), chunked (no Windows command-line issues), and produces a row-count summary you can paste back to the user. `.tmp_deploy/` is gitignored, so iteration is free.
+5. **Load via the script idiom — in multiple phases, each surfaced separately.** Even for ~20 rows, prefer extending [scripts/loaders/load_research.ts](scripts/loaders/load_research.ts) over one-off CLI calls. The script is idempotent (safe to re-run), chunked (no Windows command-line issues), and produces a row-count summary you can paste back to the user. Dated drafts in `.tmp_deploy/` are gitignored, so iteration is free; reusable patterns graduate to `scripts/loaders/`.
 
    Surface each phase as a **separate draft** before loading — reviewers check Phase 0 (vendor surface enumeration), Phase A (vendors/capabilities/modules), Phase B (data-object footprint), Phase C (functional ownership), and Phase S (system skills + tools) with different mental models. Bundling them into one preview means one of them gets a shallower review.
 
@@ -554,7 +560,7 @@ For any task that fits this skill — "research vendors for X", "is Y a domain?"
    - **`domain_module_capabilities`** — link each capability to the module(s) that realize it. A capability with no realizing module is a Phase-A failure (M4 in the checklist).
    - `vendors` (legal entities, reusing existing rows by `vendor_name`)
    - `solutions` (one row per flagship product per market)
-   - `solution_domains` with `coverage_level` (primary / secondary / partial). A reference Phase-A loader is [.tmp_deploy/load_prod_mgmt.ts](.tmp_deploy/load_prod_mgmt.ts); the SMM load also follows this exact shape ([.tmp_deploy/load_smm.ts](.tmp_deploy/load_smm.ts)).
+   - `solution_domains` with `coverage_level` (primary / secondary / partial). A reference Phase-A loader is [scripts/loaders/load_prod_mgmt.ts](scripts/loaders/load_prod_mgmt.ts); the SMM load also follows this exact shape ([scripts/loaders/load_smm.ts](scripts/loaders/load_smm.ts)).
 
    **Phase B — Data-object footprint** (load second, against the same domain). The Phase-B contract ships seven deliverables:
 
@@ -564,17 +570,18 @@ For any task that fits this skill — "research vendors for X", "is Y a domain?"
    4. **`data_object_relationships`** — intra-domain edges + `users`-edge entries (Rule #10) + cross-domain edges for every `handoffs` row with a clean payload→target mapping (e.g. `candidates →becomes→ employees`). Each row carries `relationship_verb`, `inverse_verb`, `relationship_type` (cardinality), `relationship_kind`, `is_required`, and `owner_side`. Drafts MUST surface the relationship graph as a mermaid block in the Phase-B preview before loading.
    5. **`data_object_aliases`** — ≥1 alias per non-self-explanatory master (industry synonyms, vendor-specific labels). The fact sheet generator embeds these directly.
    6. **`data_object_lifecycle_states`** — for every `master + required` data_object with a real workflow (Rule #12). Each row carries `state_name`, `state_order`, `is_initial` / `is_terminal`, `requires_permission` (true = derive a `<module>:<verb>_<entity>` workflow gate prefixed with the realizing module's `domain_module_code`), `permission_verb_override` (when auto-derivation is wrong — e.g. `hired → hire_candidate`), and `domain_module_id` (nullable; NULL = state always reachable when the master is installed). Config-shaped masters with no workflow are exempt only when annotated in `data_objects.notes`.
+   7. **`handoff_processes`** — **active deliverable, not opt-in.** For each cross-domain handoff the analyst is authoring, do the PCF lookup and draft a `handoff_processes` row pointing at the matching `processes.id`. The same mental model that lets the analyst pick the right `trigger_event`, payload, source/target modules, and friction level is what's needed to pick the right PCF activity — same context, one extra lookup. All rows ship as `record_status='new'`, `proposal_source='human_curated'` per Rule #1 (the human still reviews; provenance flags confidence, doesn't bypass approval). PCF lookup pattern: `/processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry`. **Untagged-deferred is allowed** only for handoffs with no clean PCF match (`data_asset.*`, `dlp_incident.*`, industry-specific workflows) — these become custom-process candidates in Discover Pass 3. The same rule applies during Validate b1's audit pass (see [references/domain-audit-procedure.md](references/domain-audit-procedure.md) § APQC TAGGING). The motivation: substring inference recovers ~60% of the analyst's intent; capturing at author time is lossless and free (you're already reading the handoff).
 
    Field-level constraints on embedded shells (which columns the local copy must include when a module embedded_masters another domain's data_object) are NOT a domain-map concern. The deployer validates embedded shells against the canonical entity's `fields` metadata at deploy time. The catalog does not duplicate that field-level contract.
 
-   Reference Phase-B loader: [.tmp_deploy/load_smm_data_objects.ts](.tmp_deploy/load_smm_data_objects.ts). Full procedure: see [Data-object research and cross-domain-handoff discovery](#data-object-research-and-cross-domain-handoff-discovery) below.
+   Reference Phase-B loader: [scripts/loaders/load_smm_data_objects.ts](scripts/loaders/load_smm_data_objects.ts). Full procedure: see [Data-object research and cross-domain-handoff discovery](#data-object-research-and-cross-domain-handoff-discovery) below.
 
    Phase B is **not optional** for genuine domain research. The only legitimate reasons to skip it: (a) the task is narrowly scoped to "find competitors for X" or "is Y a domain?" without an actual load; (b) the user explicitly defers it. In every other case — including any "research the X domain" or "load the X market" ask — all three phases are part of the work.
 
    **Phase C — Organisational-function coverage** (load third, against the same domain):
    - `business_function_domains` rows linking the domain to the function(s) that **own / contribute-to / consume** it (`responsibility_type` enum). For most domains 2–4 rows: one `owner`, one or two `contributor`s, optionally one `consumer`.
    - `business_function_capabilities` rows where a capability has a different functional owner than the domain (e.g. capability `COMPLIANCE-TRAIN` under domain `LMS` is owned by `Compliance`, not `L&D`). Only add when the capability-level RACI **diverges** from the domain-level RACI — otherwise the domain row is sufficient.
-   - Reference Phase-C loader: TBD (the function spine and per-domain links were loaded together; see [.tmp_deploy/load_business_functions.ts](.tmp_deploy/load_business_functions.ts) once it exists).
+   - Reference Phase-C loader: TBD (the function spine and per-domain links were loaded together; see [scripts/loaders/load_business_functions.ts](scripts/loaders/load_business_functions.ts) once it exists).
 
    Phase C answers *"who in the org buys / runs / consumes this market?"* and powers buyer-persona filtering, RACI overlays, and the org-side analogue of the data-object signals. If the function spine is empty (only true at the very start of the catalog), populate it once before adding `business_function_domains` rows — see "Function spine" below for the canonical 20-function shape.
 
@@ -667,7 +674,7 @@ For every `master + required` data_object in this domain, count `data_object_lif
 **A1. `domains` row has all 7 business-metadata fields populated.** (Rule #8.)
 - Query: `/domains?id=eq.<id>&select=crud_percentage,business_logic,min_org_size,cost_band,certification_required,usa_market_size_usd_m,market_size_source_year`
 - Pass: `crud_percentage > 0`, `min_org_size != ''`, `cost_band != ''`, `usa_market_size_usd_m > 0`, `market_size_source_year > 0`; `business_logic` non-empty UNLESS `crud_percentage >= 95`.
-- Fix: PATCH the row via `validateDomainRow()` in [.tmp_deploy/load_research.ts](../../../.tmp_deploy/load_research.ts).
+- Fix: PATCH the row via `validateDomainRow()` in [scripts/loaders/load_research.ts](../../../scripts/loaders/load_research.ts).
 
 **A2. Capabilities linked.**
 - Query: `/capability_domains?domain_id=eq.<id>&select=capabilities(capability_code)`
@@ -760,7 +767,7 @@ Modules within a domain are **autonomous deployable units** (per § "The module 
 **B3. Naming arbitration applied on every master.** (Rule #9.)
 - Query: `/data_objects?id=in.(<masters>)&select=data_object_name,is_canonical_bare_word,naming_authority_rationale`
 - Pass: every bare-word name (no `_` separator, common noun) has `is_canonical_bare_word=true` with a non-empty `naming_authority_rationale`. Prefixed names pass automatically.
-- Fix: rename to `<slug>_<noun>` via [.tmp_deploy/rename_data_object.ts](../../../.tmp_deploy/rename_data_object.ts), OR PATCH the canonical claim with rationale.
+- Fix: rename to `<slug>_<noun>` via [scripts/loaders/rename_data_object.ts](../../../scripts/loaders/rename_data_object.ts), OR PATCH the canonical claim with rationale.
 
 **B4. Pattern flags considered on every master.** (Rule #12.)
 - Query: `/data_objects?id=in.(<masters>)&select=data_object_name,has_personal_content,has_submit_lock,has_single_approver`
@@ -775,7 +782,7 @@ Modules within a domain are **autonomous deployable units** (per § "The module 
 **B6. Intra-domain `data_object_relationships` populated.**
 - Query: `/data_object_relationships?and=(data_object_id.in.(<masters>),related_data_object_id.in.(<masters>))&select=data_object_id,relationship_verb,related_data_object_id`
 - Pass: every master that participates in the domain's primary workflow has ≥1 edge to another in-domain master. For ATS: `candidates ↔ job_applications`, `job_applications → interviews`, `interviews → interview_scorecards`, `job_applications → job_offers`, `candidate_referrals → candidates`, `recruitment_sources → candidates`, `job_requisitions → job_applications` must all exist. An isolated master is allowed only if a `data_object_relationships.notes` entry explicitly justifies it.
-- Fix: draft edges (verb + cardinality + necessity + owner_side) and load via the cluster-drafts loader (see plan §9.1 Step 5 + [.tmp_deploy/load_cluster_drafts.ts](../../../.tmp_deploy/load_cluster_drafts.ts) for the markdown→loader pipeline).
+- Fix: draft edges (verb + cardinality + necessity + owner_side) and load via the cluster-drafts loader (see plan §9.1 Step 5 + [scripts/loaders/load_cluster_drafts.ts](../../../scripts/loaders/load_cluster_drafts.ts) for the markdown→loader pipeline).
 
 **B7. `users` edges populated.** (Rule #10.)
 - Query: `/data_object_relationships?and=(data_object_id.in.(<masters>),related_data_object_id.eq.<users_id>)&select=data_object_id,relationship_verb` — and the symmetric `users → masters` direction.
@@ -795,7 +802,7 @@ Modules within a domain are **autonomous deployable units** (per § "The module 
 - Pass: every master with an observable state transition (anything that changes the row's `status` or `state` column) has a `trigger_events` row. Every `trigger_events` row for this domain's masters has ≥1 `handoffs` row. B9 covers cross-domain handoffs (source ≠ target); intra-domain handoffs use the same table with `integration_pattern: lifecycle_progression` and are surfaced by their own module-pair queries (see the new authoring rule below for the write-time policy). Fan-out targets (one event → many subscribers) each get their own handoff row sharing the same `trigger_event_id`. **The pass test for "complete" is: list the master's lifecycle states (B11), and for every state with `requires_permission=true` OR every state name reading like a published verb (`approved`, `signed`, `accepted`, `cancelled`, `closed`, `hired`, `terminated`), there is a matching `trigger_events.event_name` of the shape `<entity>.<state>`.**
 - Fix: draft the missing events + handoffs per § Phase 3 of the data-object research workflow.
 
-**Authoring rule for new `handoffs` rows (write-time policy).** New rows MUST populate both `source_domain_module_id` and `target_domain_module_id`. The only legitimate NULL is when the counterparty domain has not yet been modularized at insert time. **Do NOT annotate the NULL in `notes`** — per Rule #15 (RESCINDED prior license), notes are off-limits without user-approved wording. Surface the NULL counterparty as a gap-report follow-up to the user (named source / target domain + payload + reason) and let them decide how to track it. Loader pre-flight in any new handoff-touching loader (`.tmp_deploy/load_*.ts`) MUST validate this before the POST and throw on a NULL module FK whose counterparty domain is already modularized. The deferred `NOT NULL` flip on these columns is tracked separately as a catalog-wide backfill gate.
+**Authoring rule for new `handoffs` rows (write-time policy).** New rows MUST populate both `source_domain_module_id` and `target_domain_module_id`. The only legitimate NULL is when the counterparty domain has not yet been modularized at insert time. **Do NOT annotate the NULL in `notes`** — per Rule #15 (RESCINDED prior license), notes are off-limits without user-approved wording. Surface the NULL counterparty as a gap-report follow-up to the user (named source / target domain + payload + reason) and let them decide how to track it. Loader pre-flight in any new handoff-touching loader MUST validate this before the POST and throw on a NULL module FK whose counterparty domain is already modularized. The deferred `NOT NULL` flip on these columns is tracked separately as a catalog-wide backfill gate.
 
 **B9b. Intra-domain cross-module `handoffs` complete.**
 
@@ -841,7 +848,7 @@ The `handoffs` table carries two per-module FK columns that are routinely null b
 - Outbound query (sets `source_domain_module_id` for this domain): `/handoffs?source_domain_id=eq.<id>&source_domain_module_id=is.null&select=id,trigger_event_id,data_object_id,target_domain_id,trigger_events(event_name,data_object_id)`
 - Inbound query (sets `target_domain_module_id` for this domain): `/handoffs?target_domain_id=eq.<id>&target_domain_module_id=is.null&select=id,trigger_event_id,data_object_id,source_domain_id,trigger_events(event_name,data_object_id)`
 - Pass: both queries return zero rows. **Null on the opposite side (e.g. `target_domain_module_id` for an outbound row leaving this domain) is the target domain's B10b — report it for that domain's audit but don't block on it here.**
-- Fix: deterministic derivation, then patch. See [.tmp_deploy/backfill_ats_handoff_modules_2026_05_23.ts](../../../.tmp_deploy/backfill_ats_handoff_modules_2026_05_23.ts) as the reference loader.
+- Fix: deterministic derivation, then patch. See [scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts](../../../scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts) as the reference loader.
   - **source_domain_module_id** = the module in `source_domain_id` that holds `trigger_events.data_object_id` (the event's data_object, NOT the handoff's payload — these can differ when the event fires on a source-mastered object and the payload is the target-mastered object) with the strongest role. Role order: `master` > `embedded_master` > `contributor` > `consumer` > `derived`.
   - **target_domain_module_id** = the module in `target_domain_id` that holds the handoff's `data_object_id` (the payload) with the strongest role.
   - **Tie** (multiple modules at the same strongest role): leave NULL, surface as ambiguous in the gap report. Don't pick arbitrarily.
@@ -1003,7 +1010,7 @@ The market audit closes that gap. It is the **regression test for Phase 0**: whe
 - Cap subagent scope to **one domain per invocation**. Market audit is per-domain; cluster-batched audits produce shallow per-domain results.
 - The audit is complementary to, not a replacement for, the structural completeness checklist. Run the structural audit too; both are needed before a domain is "done".
 
-**Output discipline:** market audit is read-only by construction. The output is the gap report; loads happen separately on user approval, using existing loader patterns (e.g. [.tmp_deploy/fix_ats_modules.ts](../../../.tmp_deploy/fix_ats_modules.ts) for the FIX shape).
+**Output discipline:** market audit is read-only by construction. The output is the gap report; loads happen separately on user approval, using existing loader patterns (e.g. [scripts/loaders/fix_ats_modules.ts](../../../scripts/loaders/fix_ats_modules.ts) for the FIX shape).
 
 ### Pairwise handoff reconciliation — per-neighbor pass of the Validate mode
 
@@ -1053,6 +1060,33 @@ The per-domain audit is **necessarily one-sided**: it surfaces what *this* domai
 - ❌ Loading the missing handoffs and the missing DMDO rows from the reconciliation script itself. The procedure produces a diff; loaders live on the side that owes the fix.
 - ❌ Treating reconciliation as a replacement for the per-domain audit. The per-domain audit catches all 28 checks; reconciliation only walks the handoff boundary. Always audit first, then reconcile if the report-only section warrants it.
 
+### Validate cross-domain substrate (mode b2 — catalog-wide)
+
+> **This is mode b2** — the catalog-wide scope of Validate. See [README.md § b2](../../../README.md). Distinct from mode b1 (per-domain Validate, the 4-pass structural / market / neighbor / pairwise audit). b2 is a single read-only pass over the cross-domain slice of `handoffs` (`source_domain_id != target_domain_id`), unfiltered by source/target domain. Discover (mode c) invokes b2 as its Pass 0 pre-flight; the user can also invoke b2 directly without entering Discover.
+
+**Triggers:** *"validate cross-domain"*, *"validate cross-domain substrate"*, *"audit catalog handoffs"*, *"is the handoff DAG clean"*, *"check every cross-domain handoff"*. Also implicit at the start of every mode c invocation (Discover Pass 0 IS b2).
+
+**Five queries**, all read-only, run against live state:
+
+1. **B10b — NULL `source_domain_module_id` on a cross-domain handoff whose source domain has modules.** `/handoffs?source_domain_id=neq.target_domain_id&source_domain_module_id=is.null` filtered against `/domain_modules?domain_id=in.(<source_domain_ids>)` to confirm the source domain *has* modules (so the NULL is a defect, not legitimately-NULL-by-virtue-of-the-domain-being-unmodularized).
+2. **B10b — NULL `target_domain_module_id`** symmetric to #1.
+3. **B9 attribution defect — `trigger_events.data_object_id` is not mastered on the source side.** The publisher of the event is not in fact the publisher; the event is mis-attributed at source.
+4. **B8 reverse-direction consumer DMDO gap — handoff payload `data_object_id` is not declared on the target side** via `domain_module_data_objects` with `role IN ('consumer', 'contributor', 'embedded_master')` on any of the target domain's modules.
+5. **Orphaned `trigger_events`** — a row that no handoff references AND no `data_object_lifecycle_states` row whose `permission_verb_override` matches the event's verb suffix. Possible mis-attribution or stale entry.
+
+**Output discipline.** Read-only by construction. Defects are grouped by the domain that owes the fix; each becomes a per-domain b1 Validate input on that domain. b2 never fixes defects directly — it surfaces them.
+
+**Where the output goes:**
+
+- When invoked as mode b2 directly: append a dated section to [audits/_validate-cross-domain.md](../../../audits/_validate-cross-domain.md).
+- When invoked as Discover Pass 0: append to [audits/_discover.md](../../../audits/_discover.md) under the *"Pass 0 — Substrate sanity"* sub-section of that run's section.
+
+**Anti-patterns.**
+
+- ❌ Running b2 *after* a per-domain b1 Validate to "double-check" the cross-domain edges. b1's Pass 3+4 already audits the same edges for each touched domain; b2 only adds value when run across multiple domains' worth of substrate, NOT after a single-domain pass.
+- ❌ Loading fixes from b2 itself. Each defect routes to per-domain b1 on the owning domain; that's where the fix loads from.
+- ❌ Marking defects "accepted as known" in `audits/_validate-cross-domain.md` without a follow-up. Track them as gap items the user has accepted, not as silently-tolerated drift. If an "accepted" defect sits across 3+ b2 runs, escalate to user: this is no longer "we'll fix soon", it's "we shouldn't be flagging".
+
 ### Fact sheets (explicit step, not part of any sequence)
 
 Fact-sheet emission is a deliberate, user-triggered action. **Do not run it as part of any load, audit, fix-loop, or "verify and share" step.** The audit reads live state via PostgREST; the on-disk fact sheets can sit stale across many audit passes and that's the intended state.
@@ -1086,7 +1120,7 @@ The prefix is helpful for readability and prevents accidental collisions, but it
 **Decision test when authoring a capability:**
 
 1. Can I name **three independent vendors that explicitly market this capability across at least three of the candidate domains?** If yes → domain-neutral. If no → domain-prefixed.
-2. If a domain-prefixed capability later turns out to span ≥3 domains, **rename it** (update `capability_code`; capability_id stays stable, so `capability_domains` rows survive). Then add the missing `capability_domains` rows. See [.tmp_deploy/load_cross_cutting_capabilities.ts](.tmp_deploy/load_cross_cutting_capabilities.ts) for the loader pattern.
+2. If a domain-prefixed capability later turns out to span ≥3 domains, **rename it** (update `capability_code`; capability_id stays stable, so `capability_domains` rows survive). Then add the missing `capability_domains` rows. See [scripts/loaders/load_cross_cutting_capabilities.ts](scripts/loaders/load_cross_cutting_capabilities.ts) for the loader pattern.
 
 **Anti-pattern:** creating parallel domain-prefixed capabilities for the same concept (`ITSM-KNOWLEDGE`, `CSM-KNOWLEDGE`, `HRSD-KNOWLEDGE`) when one cross-cutting capability + three `capability_domains` rows captures the same thing better. If you find yourself drafting `<DOMAIN>-KNOWLEDGE` for the second time, switch to `KNOWLEDGE-MGMT`.
 
@@ -1270,11 +1304,19 @@ All queries are one-line cube DSL once the data is in — surface them to the us
 
 ---
 
-## Phase D — Process-skill discovery (substrate-level)
+## Phase D — Process-skill discovery (Discover mode mechanics)
 
 Phase D answers *"which clusters of cross-domain handoffs are coherent business processes that an agent skill could orchestrate?"* It is the payoff of Phase B — once enough domains have shipped `handoffs`, the substrate supports a deterministic discovery query that ranks process-skill candidates. The discovery query operates on the cross-domain slice of `handoffs` (`source_domain_id != target_domain_id`); intra-domain rows live in the same table but are excluded by the Signal-2 filter at query time.
 
+**Phase D is the engine inside Discover mode** (README mode c). Discover wraps Phase D with four additional passes: a cross-domain handoff substrate sanity pre-flight (Pass 0 = mode b2), a `PCF_OVERRIDES` drift audit (Pass 1), a coverage gap audit comparing authored vs discovered `handoff_processes` (Pass 1.5), the substring discovery persistence pass that fills only the untagged gaps (Pass 2 — narrowed scope from the historical "tag everything" behavior), and a review queue + process-skill authoring (Pass 3). Full mode mechanics: [references/discover-cross-domain-processes.md](references/discover-cross-domain-processes.md).
+
 **Phase D is not per-market.** It runs **once across the catalog** when Phase B is broadly complete (or per-cluster once that cluster's handoffs are loaded), and is re-runnable on demand. Don't run it after every market load — that's wasted work.
+
+**Layered APQC ownership.** Both Research Phase B (handoff load time) AND Validate b1 (audit fix-loop, APQC TAGGING finding type) write `handoff_processes` rows with `proposal_source='human_curated'` when the analyst knows the implementing PCF activity. These are the primary capture surfaces. Discover Pass 2's substring matcher fills the gaps left untagged — it runs ONLY against handoffs with no existing `handoff_processes` row. Human-curated rows are never overwritten. The substring matcher is a backstop, not the primary source. See [references/domain-audit-procedure.md](references/domain-audit-procedure.md) § APQC TAGGING for the b1 procedure and volume expectation (0.5N to 0.8N tags per N cross-domain handoffs).
+
+**Pass 0 dependency on Validate.** Phase D inputs come from cross-domain handoffs that Validate's per-domain Pass 4 (pairwise reconciliation) has verified. Running Phase D against handoffs with NULL module FKs, missing consumer DMDOs, or orphaned trigger_events produces clusters built on broken edges. Discover's Pass 0 catalog-wide sanity gate is the explicit hand-off: pairwise validation runs per-domain in Validate, Phase D rolls up the same checks catalog-wide as the entry gate to the mode.
+
+**Rule #1 has no exceptions across Phase D.** Every `handoff_processes` row the agent writes, whether human-curated at Phase B / Validate-b1 time or substring-inferred by Discover Pass 2, ships as `record_status='new'`. Provenance flags confidence but does not bypass review. Discover Pass 3 reviews both human-curated-pending and discovered-pending rows in the same batch, with provenance surfaced so the user can weight human-curated rows higher.
 
 ### Inputs Phase D depends on
 
@@ -1303,8 +1345,8 @@ Each candidate cluster is matched against `processes` (APQC PCF) on name/descrip
 Use the saved query. Re-runnable against current substrate any time:
 
 ```sh
-bun run .tmp_deploy/discovery_query.ts --top 25       # ranked candidate table
-bun run .tmp_deploy/discovery_query.ts --bucket employee   # drill-down on one bucket
+bun run scripts/analytics/discovery_query.ts --top 25       # ranked candidate table
+bun run scripts/analytics/discovery_query.ts --bucket employee   # drill-down on one bucket
 ```
 
 Full doc + interpretation guide: [references/discovery-query.md](references/discovery-query.md). The query implements signal #1 (trigger-event prefix) as the bucketing rule; signals #2-5 are scored as metrics within each bucket but don't subdivide it further in v1.
@@ -1503,7 +1545,7 @@ Process skills (`skill_type='process'`) span multiple domains and orchestrate cr
 4. **Add cross-cutting externals** — apply the recurring patterns from [§ Cross-tranche external-tool patterns](#cross-tranche-external-tool-patterns). Email + sign_document + chat are the most common; if the process involves customer-facing comms or contract execution, add the relevant external tool as REQUIRED.
 5. **Apply the coverage rollup** ([references/semantius-coverage-rollup.md](references/semantius-coverage-rollup.md)) — process skills sit at 92-97% by design (every workflow needs at least `send_email`). 100% is rare and usually means the skill is mis-modeled as a process skill when it's actually a system skill.
 
-Reference loader: [.tmp_deploy/load_p25b_process_skills.ts](../../../.tmp_deploy/load_p25b_process_skills.ts). It reads the involved-domain sets from a hard-coded map (one entry per process skill), pulls live master sets, links tools idempotently.
+Reference loader: [scripts/loaders/load_p25b_process_skills.ts](../../../scripts/loaders/load_p25b_process_skills.ts). It reads the involved-domain sets from a hard-coded map (one entry per process skill), pulls live master sets, links tools idempotently.
 
 ---
 
@@ -1514,7 +1556,7 @@ Reference loader: [.tmp_deploy/load_p25b_process_skills.ts](../../../.tmp_deploy
 - ❌ Importing ServiceNow's marketing taxonomy verbatim as domains. Run each entry through the point-solution test first.
 - ❌ Loading rows without first reading the existing catalog. Produces duplicates with inconsistent capitalisation that are painful to clean up.
 - ❌ Putting qualifiers (coverage level, ownership, applicability) on the core entity instead of the junction. See rule #3.
-- ❌ Writing one-off CLI calls for more than ~5 rows. Extend [.tmp_deploy/load_research.ts](.tmp_deploy/load_research.ts) instead — it's why the script exists.
+- ❌ Writing one-off CLI calls for more than ~5 rows. Extend [scripts/loaders/load_research.ts](scripts/loaders/load_research.ts) instead — it's why the script exists.
 - ❌ Loading a new market with `domains` + `vendors` + `solutions` + `solution_domains` and stopping there. Capabilities (+ `capability_domains`) are part of the Phase-A load shape, not an optional follow-up. See workflow step 5.
 - ❌ Stopping after Phase A (market shape) and not running Phase B (data-object footprint — data_objects, domain_data_objects, handoffs). A market without its mastered/contributed data objects and its outbound handoffs contributes zero to Signal 1 and Signal 2, which is what the catalog exists to support. See workflow step 5.
 - ❌ Stopping after Phase A+B and not running Phase C (business_function_domains, optionally business_function_capabilities). A market without functional ownership contributes zero to the buyer-persona / RACI axis (Signal 3). The function-axis spine is small, but the per-domain links are part of every market load.
@@ -1527,13 +1569,13 @@ Reference loader: [.tmp_deploy/load_p25b_process_skills.ts](../../../.tmp_deploy
 - ❌ Creating one `trigger_events` row per subscriber when a single event fans out. All subscribers of `employee.created` share **one** `trigger_events.id`; only the handoff rows differ. Duplicating events per subscriber breaks Phase D's primary clustering signal.
 - ❌ Treating `handoffs.data_object_id` as the publisher's data_object. It's the **per-edge payload** — the artifact in flight on that specific handoff. The publisher's data_object lives on `trigger_events.data_object_id` and is shared across every subscriber of the event. These two columns ARE allowed to differ (HCM publishes `employee.created` on `employees`; the HCM→Onboarding handoff carries `onboarding_journeys` as the payload). Reviewers regularly conflate them when reading a handoff row in isolation.
 - ❌ Scaffolding synthetic `data_objects` for leadership-layer / aggregation-tier domains (REV-INTEL, SALES-PERF, GTM-PLAN, ACCT-PLAN, PRM, EPM) just so they "own something". These domains read upstream and publish derived signals; the handoff's `data_object_id` references the upstream cluster's data_object directly. Forcing ownership via synthetic objects creates dead rows that nothing else references.
-- ❌ Inferring catalog state from `.tmp_deploy/*.ts` deploy scripts. They drift the moment they ship. Cluster inventories MUST query live `postgrestRequest` endpoints — see workflow step 1.
+- ❌ Inferring catalog state from any deploy script (`scripts/loaders/*.ts` or `.tmp_deploy/*.ts`). They drift the moment they ship. Cluster inventories MUST query live `postgrestRequest` endpoints — see workflow step 1.
 - ❌ Treating `domain_data_objects.notes` as a required field on every master row. `notes` is for research details / decisions worth preserving (slice ownership on multi-master rows per Rule #3 and the anti-pattern above, point-solution-vs-holistic carve-outs, classification rationale a future reviewer would otherwise have to re-derive). Empty `notes` on a single-master row with no decision worth recording is the right shape, not a gap. Do **not** write demotion-path prose on embedded_master rows: `role=embedded_master` + the canonical master's existence already conveys it; notes that restate the schema are noise. The blueprint emitter and the per-domain checklist both treat this column as opt-in metadata, not a populate-on-every-row obligation. For the module-level junction (`domain_module_data_objects.notes`), see Rule #15: empty by default unless the user explicitly asks for a note.
 - ❌ Loading a market with `min_org_size` of `xs`/`s` but only enterprise-tier solutions. If the stated minimum buyer is SMB/mid-market, the solution list must include at least 1–2 vendors that actually sell into that band. A list of pure enterprise solutions under an SMB-minimum domain is internally inconsistent and misleads downstream filters.
 - ❌ Declaring a load or audit "done" without running the Per-domain completeness checklist (§ above). Every silent gap in this catalog's history followed the same pattern — someone shipped a market, the count of new rows looked right, no one ran the full checklist, and a category (`business_function_domains`, intra-domain `data_object_relationships`, lifecycle states) sat empty for weeks. Running the checklist is the gate; "I think I covered everything" is not a substitute. Specifically: do not declare ATS-shaped loads done until B6 (intra-domain relationships) and B7 (`users` edges) pass — those two were silently empty for ATS through Step-5's cluster pass and only surfaced when the fact sheet's mermaid rendered with disconnected nodes.
 - ❌ Predicting numeric IDs inside a script. Always re-read after insert to build the id map.
 - ❌ Trying to fit a large insert into a single command-line argument on Windows. Use stdin or chunk.
-- ❌ `cd`ing into the skill folder, `.tmp_deploy/`, or any subdirectory before running `semantius` or a loader script. Silently routes to the wrong tenant. See rule #6.
+- ❌ `cd`ing into the skill folder, `.tmp_deploy/`, `scripts/loaders/`, or any subdirectory before running `semantius` or a loader script. Silently routes to the wrong tenant. See rule #6.
 - ❌ Writing project state, lessons learned, or "remember this for next time" notes to your memory system. Every persistent note about this project lives in committed files (SKILL.md, CLAUDE.md, references/). Memory is off-limits for this repo.
 - ❌ Loading tool-shaped capability rows into `capabilities`. `Send Email`, `Transcribe Audio`, `Sign Document`, `Make Phone Call`, `Run Shell Command` — those are **`tools`** (lowercase snake_case verbs: `send_email`, `transcribe_audio`, `sign_document`), not `capabilities`. The `capabilities` table stays business-shaped: noun-phrase market features an org *can do* (`Lead Management`, `Vulnerability Scanning`, `Roadmap Visualization`, `Automated Invoice Matching`). If the row reads as a JSON-RPC function with an obvious verb-object shape, it belongs in `tools` with the right `operation_kind` and (for `query`/`mutate`) a `data_object_id` pointer. This anti-pattern is easy to fall into when a vendor's marketing page lists capabilities like "AI Voice Synthesis" — that's a *tool* the vendor delivers, not a *capability* of a domain.
 - ❌ Linking channel primitives (`send_email`, `send_sms`, `post_chat_message`, `make_phone_call`) on a skill without a documented channel-specific workflow justification. The Channel vs capability authoring rule is explicit: **default to the abstraction** (`notify_person` for single recipient, `notify_team` for broadcast). Link the channel directly only when the workflow REQUIRES that specific channel (CCAAS voice agent, ESIGN webhook callback, EDI message exchange) and the reason is captured in `skill_tools.notes`. Easy to miss in two situations: (a) cargo-culting an authoring template from a domain whose workflow legitimately needs the channel (CRM sales-activity skill correctly links `send_email`; LMS course-delivery does not), and (b) extending an existing skill that already has the channel primitive linked from a prior load — audit the inherited rows; don't treat them as authoritative. Cost of the mistake: when the platform ships native outbound, `notify_person` flips to `coverage_tier='platform'` with one UPDATE and every skill using the abstraction re-scores. Channel-specific links don't benefit; each one has to be hand-patched. Recurred at least three times across catalog loads; F7 in the per-domain audit catches it positively.
@@ -1548,7 +1590,7 @@ Reference loader: [.tmp_deploy/load_p25b_process_skills.ts](../../../.tmp_deploy
 
 UI base: `https://tests.semantius.app/domain_map/<table_name>`
 
-Reference loader: [.tmp_deploy/load_research.ts](.tmp_deploy/load_research.ts)
+Reference loader: [scripts/loaders/load_research.ts](scripts/loaders/load_research.ts)
 
 Module-shape reference: [references/module-shape.md](references/module-shape.md)
 
@@ -1556,7 +1598,7 @@ Fact-sheet emitter (explicit, user-triggered only): [scripts/emit_fact_sheet.ts]
 
 **Tool selection for the question you're asking:**
 
-- **Loading rows / writing data** → `semantius call crud postgrestRequest` (Layer 2). Every `.tmp_deploy/load_*.ts` script uses it.
+- **Loading rows / writing data** → `semantius call crud postgrestRequest` (Layer 2). Every `scripts/loaders/load_*.ts` script uses it.
 - **Analytical questions — top-N, distribution, count-by, rank-by, "which domain has the most…", "how many capabilities per…"** → `semantius call cube discover` + `load` (Layer 3). Do **not** stream junction rows back with PostgREST and aggregate them in client code — that's the wrong layer and produces wrong-looking results (truncation, missed joins, manual GROUP BY in Bun).
 - **One-off schema lookup** → `semantius call crud read_entity` / `read_field`.
 

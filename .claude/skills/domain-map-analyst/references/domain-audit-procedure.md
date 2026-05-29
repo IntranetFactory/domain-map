@@ -38,7 +38,15 @@ For the target domain `<CODE>`:
 4. (Optional) Pull the legacy `domain_data_objects` rollup for cross-check:
    `/domain_data_objects?domain_id=eq.<id>&select=role,necessity,data_objects(data_object_name)`
 
-Cache as the **current footprint**.
+5. **Pull the domain's cross-domain handoffs and their APQC coverage** (for the APQC tagging pass in Step 3):
+   - All cross-domain handoffs the domain publishes:
+     `/handoffs?source_domain_id=eq.<id>&target_domain_id=neq.<id>&select=id,target_domain_id,trigger_event_id,data_object_id,trigger_event:trigger_events(event_name),payload:data_objects!handoffs_data_object_id_fkey(data_object_name)`
+   - All cross-domain handoffs the domain receives:
+     `/handoffs?target_domain_id=eq.<id>&source_domain_id=neq.<id>&select=id,source_domain_id,trigger_event_id,data_object_id,trigger_event:trigger_events(event_name),payload:data_objects!handoffs_data_object_id_fkey(data_object_name)`
+   - Existing APQC tags on those handoffs (combine into one query if you have the handoff id set):
+     `/handoff_processes?handoff_id=in.(<handoff_ids>)&select=handoff_id,process_id,proposal_source,record_status,process:processes(process_name,external_id,hierarchy_level)`
+
+Cache as the **current footprint** + the **APQC coverage map** (handoff_id → list of tagged processes, or "untagged").
 
 ### Step 2 — Generate the market surface (subagent pass)
 
@@ -87,7 +95,27 @@ Within Bucket 1, the agent presents the count by underlying finding type so the 
 | SCOPE-CREEP | m |
 | STRUCTURAL (S/A/M/B/C/E/F band failures) | s |
 | BOUNDARY (NULL FK or missing handoff) | b |
+| **APQC TAGGING** (per-handoff PCF activity classification) | a |
 | MODULARIZATION ISSUES | n (always 0 in Bucket 1 — these route to Bucket 2 since they're refactor conversations, not direct fixes) |
+
+#### APQC TAGGING as a routine pass (not optional)
+
+While reviewing each cross-domain handoff for B-band findings, the agent **also** classifies the implementing APQC PCF activity and proposes a `handoff_processes` row. This is not informational; it's an active fix surface that produces real catalog rows.
+
+**The procedure per handoff:**
+
+1. Look at the trigger event name + payload data_object + source/target domain context. (You already have all of this open from the structural pass — no extra round trip.)
+2. Lookup candidate PCF activities: `/processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry&select=id,process_name,external_id,hierarchy_level`. The trigger event's noun is usually a strong search term.
+3. Pick the best match:
+   - **Confident L2/L3 match** → propose `(handoff_id, process_id, proposal_source='human_curated', record_status='new')`.
+   - **No clean PCF match** (modern digital concept like `data_asset.*`, `dlp_incident.*`, or an industry-specific workflow not in cross-industry PCF) → **defer to Discover Pass 3's custom-process authoring path**. Note in the audit which handoffs were deferred and why.
+   - **Confident only at L4/L5** with an obvious L2/L3 parent → prefer the parent for clustering quality.
+
+**Volume expectation.** For a domain with N cross-domain handoffs, expect to author roughly 0.5N to 0.8N `handoff_processes` rows. The deferred ~20% are the genuinely-no-PCF-match handoffs Discover Pass 3 will route to custom processes.
+
+**Why this is in Bucket 1, not Bucket 3.** Bucket 3 is for findings that need vendor research to verify. APQC tagging doesn't — the analyst already has the handoff's source / target / trigger event / payload in front of them from the structural pass. The PCF lookup is a 1-query operation. The cognitive cost is in the structural pass; the APQC tagging cost is incremental.
+
+**Anti-pattern:** completing the structural pass, surfacing the gap report, then "leaving APQC tagging for Discover later." This is what the prior design said and what the 2026-05-29 ITSM audit did. The analyst's mental model — built from reading 80+ handoffs in detail — does not survive the session. Two weeks later, Discover's substring matcher recovers ~60% of it lossily. The correct behavior is to tag while the model is fresh; ship the human-curated rows in the same audit pass that produced them.
 
 ### Step 4 — Append the audit section to the domain's history file
 
@@ -117,11 +145,20 @@ Audit history is git-tracked. One markdown file per domain at `c:/dev/domain-map
 Brief justification of why each vendor was included. Compliance specialists called out.
 
 ### Bucket 1 — In-scope confirmed gaps
-Tables grouped by finding type (MISSING / WRONG-OWNERSHIP / SCOPE-CREEP / STRUCTURAL / BOUNDARY), each row carrying:
+Tables grouped by finding type (MISSING / WRONG-OWNERSHIP / SCOPE-CREEP / STRUCTURAL / BOUNDARY / **APQC TAGGING**), each row carrying:
 - Entity / row identifier
 - Current state vs. proposed state
 - Fix surface (loader / surgical CLI / PATCH)
 - Vendor evidence or band reference
+
+For **APQC TAGGING** specifically, the table shape is:
+
+| handoff_id | source → target | trigger_event | payload | Proposed PCF row | PCF id | confidence |
+|---|---|---|---|---|---|---|
+| 615 | OBS → ITSM | slo.breached | service_level_objectives | Manage IT operations performance | 20758 | confident L3 |
+| ... | | | | | | |
+
+Deferred-to-Discover items (no clean PCF match) get listed separately under the same finding type with the deferral reason. The combined count (tagged + deferred) is the row count for the APQC TAGGING line in the Step 3 summary table.
 
 ### Bucket 2 — Surface-for-user (judgment calls)
 Numbered list. Each item carries:
@@ -158,9 +195,10 @@ Rule #1 applies: AI-derived findings are research, not approved truth. Always su
 
 For each accepted finding, the fix surface is:
 
-- **MISSING**: Phase B insert. Extend an idempotent loader in `.tmp_deploy/` to add the `data_objects` row + DMDO row + lifecycle states + intra-domain relationships. Pattern from [.tmp_deploy/fix_ats_modules.ts](../../../.tmp_deploy/fix_ats_modules.ts).
+- **MISSING**: Phase B insert. Extend an idempotent loader in `.tmp_deploy/` to add the `data_objects` row + DMDO row + lifecycle states + intra-domain relationships. Pattern from [scripts/loaders/fix_ats_modules.ts](../../../scripts/loaders/fix_ats_modules.ts).
 - **WRONG-OWNERSHIP**: DELETE the wrong DMDO row + INSERT in the right module. Surgical SQL via `semantius call crud postgrestRequest` is fine if the count is small (≤5 rows); otherwise extend a loader.
 - **SCOPE-CREEP**: DELETE the DMDO row + any handoffs that depended on the wrong scope. Cascade carefully — check `/handoffs?target_domain_module_id=eq.<id>&data_object_id=in.(<entityIds>)` before deleting.
+- **APQC TAGGING**: INSERT into `handoff_processes` per the classification table the agent built in Step 3. Each row: `(handoff_id, process_id, proposal_source='human_curated', record_status='new', role='implements')`. Use a chunked POST or a small focused loader; the natural composed key `(handoff_id, process_id)` prevents duplicates if the same pair has been proposed before.
 - **MODULARIZATION ISSUES**: separate refactor. Module rename / merge / split is a bigger change; surface to user as a design conversation. Don't fold it into the audit fix-loop.
 
 ### Step 7 — Re-run the audit
