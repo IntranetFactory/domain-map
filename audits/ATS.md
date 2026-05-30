@@ -1,8 +1,8 @@
 ---
-status: feedback_needed
+status: passed
 last_transition: 2026-05-30
 last_transition_by: agent
-open_questions: 13
+open_questions: 0
 ---
 
 # ATS — Audit History
@@ -176,3 +176,72 @@ Read-only, run via subagent. Full artifacts: [c:/tmp/ATS-pairwise-recon-2026-05-
 ### `domains.notes` pointer (if updated)
 
 _not yet written; will require user-approved wording per Rule #15_
+
+## 2026-05-30 — Continuation: deferred-item decisions
+
+### B9 fan-out (deferred)
+
+The two deferred B9 fan-out events from the 2026-05-28 load are deferred to a later audit pass, recorded here so they surface when CCAAS / video-platform / S2P / CLM are next reviewed:
+
+| Trigger event id | Trigger event | Open question | Defer reason |
+|---|---|---|---|
+| 370 | `interview.scheduled` | Subscriber: CCAAS modules vs out-of-catalog video platforms (HireVue, Spark Hire, Zoom)? | Target-domain ambiguity. The right subscriber depends on whether the video-interview platform is modeled as a sub-module of CCAAS, an external integration solution only, or genuinely out of scope. Decision belongs to the CCAAS audit pass. |
+| 376 | `recruitment_agency.engaged` | Subscriber: S2P (fee-tracking) and / or CLM (contract attach)? | Both target domains exist in the catalog, but the fan-out shape (one or both, with what payload) needs to be drafted against the S2P + CLM module footprints. Decision belongs to whichever of those two domains is next validated. |
+
+No `handoffs` rows added in this pass; both events remain published-with-no-subscriber. Re-surface on the next CCAAS / S2P / CLM Validate run.
+
+### HCM B9 rescind candidate (declined)
+
+The pairwise reconciliation surfaced a candidate handoff `job_offer.rescinded → HCM-LIFECYCLE-WORKFLOWS` on `employment_contracts`, parallel to the existing ONB / BEN / COMP fan-out. User decision: **No, do not author.** HCM only sees the employee on `offer.accepted` proper; the rescind has nothing to roll back from HCM's side. The HCM B9 follow-up entry in the 2026-05-28 pairwise section is now considered resolved (declined, not pending).
+
+### Bucket 3 — Phase 0 vendor research outcome
+
+The 8 candidates were vetted against the five flagship vendor surfaces (Greenhouse, Lever, Ashby, SmartRecruiters, iCIMS). Full report at [c:/tmp/ATS-phase0-2026-05-30.md](c:/tmp/ATS-phase0-2026-05-30.md). Verdict counts: **LOAD x4 + LOAD-with-scope-question x1 + MERGE x2 + DEFER x1 + SKIP x0**. After user decisions on the four scope questions, the load shape resolved to **5 new entities + 2 MERGE actions** (the LOAD-with-scope-question candidate `candidate_email_threads` was downgraded to SKIP).
+
+#### Verdict + user decision per candidate
+
+| # | Candidate | Phase 0 verdict | User decision | Resolution |
+|---|---|---|---|---|
+| 1 | `candidate_documents` | LOAD (5/5 vendors) | LOAD | New master in ATS-CANDIDATE-CRM, `document_type` enum subsumes `candidate_resumes`. |
+| 2 | `candidate_resumes` | MERGE into `candidate_documents` | MERGE | No new entity; resume is one enum value on `candidate_documents.document_type`. |
+| 3 | `candidate_notes` | LOAD (5/5 vendors) | LOAD | New master in ATS-CANDIDATE-CRM, distinct from `candidate_engagements` (touchpoint-level). |
+| 4 | `candidate_tags` | LOAD (5/5 vendors) | LOAD | New master in ATS-TALENT-POOLS, free-form labeling axis distinct from talent pools. |
+| 5 | `candidate_email_threads` | LOAD-with-scope-question | SKIP | User chose to skip the thread entity; conversations stay implicit. Engagements remain the only email-related entity. |
+| 6 | `video_interview_sessions` | DEFER (0/5 first-class) | DEFER | Revisit if HireVue / Spark Hire / Willo enter scope as solutions. |
+| 7 | `offer_letter_templates` | LOAD (4/5 strong, 5/5 broad) | LOAD | New master in ATS-OFFERS; closes the dangling `template_id` FK on `offer_letter_documents`. |
+| 8 | `application_archive_reasons` | MERGE into `application_dispositions` (id 900) | MERGE | No new entity; 3 alias rows on entity 900 (`Archive Reason`, `Rejection Reason`, `Disposition Reason`). |
+
+Plus one structurally-implied addition surfaced during the scope-question pass: **`candidate_tag_assignments`** as a first-class M:N junction (consistent with how `talent_pool_memberships` is modeled). The user picked "First-class data_object" over "inline junction".
+
+#### Other Phase 0 scope decisions
+
+| Q | Decision |
+|---|---|
+| `offer_letter_templates` approval lifecycle | **Single approver** (`has_single_approver=true`). Jurisdiction-specific templates handled via separate versions, not paired approvers. |
+| `candidate_documents` regulated docs (I-9, right-to-work) | **Enum value** on `document_type`, not separate regulated entity. ATS hands off to ONBOARDING / HCM at `offer.accepted`; if ATS later owns I-9 collection, revisit. |
+| Config-shape lifecycle exemption (Rule #12) | 4 of 5 new entities qualify (`candidate_documents`, `candidate_notes`, `candidate_tags`, `candidate_tag_assignments`) as config-shape masters with no workflow. Recorded here per Rule #15 (the prior `data_objects.notes` license is rescinded). |
+
+### Bucket 3 fixes applied
+
+Loader: [.tmp_deploy/fix_ats_bucket3_2026_05_30.ts](../.tmp_deploy/fix_ats_bucket3_2026_05_30.ts).
+
+| Phase | Action | Row counts |
+|---|---|---|
+| 1 | INSERT `data_objects` | 5 (candidate_documents 1000, candidate_notes 1001, candidate_tags 1002, candidate_tag_assignments 1003, offer_letter_templates 1004) |
+| 2 | INSERT `domain_module_data_objects` | 5 master rows (modules 1 / 2 / 6) |
+| 3 | INSERT `data_object_relationships` | 10 (5 entity edges + 5 user edges per Rule #10) |
+| 4 | INSERT `data_object_lifecycle_states` on offer_letter_templates | 6 (draft, in_review, approved, active, superseded, retired) |
+| 5 | INSERT `data_object_aliases` on application_dispositions | 3 (synonym type) |
+
+All inserts ship `record_status='new'` (Rule #1). No `notes` populated (Rule #15). No vendor names in descriptions (Rule #18).
+
+UI spot-checks:
+- https://tests.semantius.app/domain_map/data_objects (5 new rows, ids 1000-1004)
+- https://tests.semantius.app/domain_map/domain_module_data_objects (5 new master rows)
+- https://tests.semantius.app/domain_map/data_object_relationships (10 new rows)
+- https://tests.semantius.app/domain_map/data_object_lifecycle_states (6 new rows on entity 1004)
+- https://tests.semantius.app/domain_map/data_object_aliases (3 new rows on entity 900)
+
+### Status
+
+All open questions resolved (Bucket 1, Bucket 2, Bucket 3, B9 fan-out, HCM rescind). Status flipped to `passed`. Future structural changes (e.g. CCAAS / S2P / CLM coming online to subscribe to deferred B9 events) will be tracked on those domains' audits, not reopened here.

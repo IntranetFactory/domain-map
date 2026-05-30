@@ -67,7 +67,7 @@ if (!ALL && !MODULE_CODE) {
 }
 
 const ROOT = "c:/dev/domain-map";
-const BLUEPRINTS_DIR = `${ROOT}/blueprints`;
+const BLUEPRINTS_DIR = `${ROOT}/catalog/blueprints`;
 const BLUEPRINT_SUFFIX = "-semantic-blueprint.md";
 const TODAY = new Date().toISOString().slice(0, 10);
 const FACT_SHEET_VERSION = "2.0";

@@ -185,8 +185,8 @@ Modes carry user-review gates and Rule #1 discipline (`record_status='new'` on e
 
 | Task | Command | What it does |
 |---|---|---|
-| **Create the domain-map JSON snapshot** | `bun run scripts/emit_domain_map.ts` | Emits [`domain-map.json`](domain-map.json) — a full catalog snapshot for external tooling. Regenerable from live state. Git-tracked. |
-| **Regenerate one module blueprint** | `bun run scripts/emit_fact_sheet.ts --module <CODE>` | Emits [`blueprints/<module-code>-semantic-blueprint.md`](blueprints/) for one module. Run after fix-loop writes that touched the module. |
+| **Create the domain-map JSON snapshot** | `bun run scripts/emit_domain_map.ts` | Emits [`catalog/domain-map.json`](catalog/domain-map.json) — a full catalog snapshot for external tooling. Regenerable from live state. Git-tracked. |
+| **Regenerate one module blueprint** | `bun run scripts/emit_fact_sheet.ts --module <CODE>` | Emits [`catalog/blueprints/<module-code>-semantic-blueprint.md`](catalog/blueprints/) for one module. Run after fix-loop writes that touched the module. |
 | **Regenerate every module blueprint** | `bun run scripts/emit_fact_sheet.ts --all` | Emits every per-module blueprint in one pass. Run after multi-domain changes. |
 | **CI drift check on blueprints** | `bun run scripts/emit_fact_sheet.ts --all --check` | Exits non-zero if any blueprint would change. Use to gate commits. |
 | **Catalog-wide Semantius coverage rollup** | `bun run scripts/analytics/coverage_rollup.ts` | Read-only catalog-wide score (`strict_score` + `operational_score` per system skill, per module, per domain). Surfaces which tools push a skill below 100%. Read-only. |
@@ -217,10 +217,14 @@ The `use-semantius` skill is the canonical home for platform mechanics (CLI auth
 ## Repo layout
 
 - [`.claude/skills/domain-map-analyst/`](.claude/skills/domain-map-analyst/) — skill definition (SKILL.md + references).
-- [`blueprints/`](blueprints/) — per-module semantic blueprints, emitted from live state via [`scripts/emit_fact_sheet.ts`](scripts/emit_fact_sheet.ts).
+- [`catalog/`](catalog/) — everything the catalog publisher consumes to produce the public site and installable skills. Contents:
+  - [`catalog/blueprints/`](catalog/blueprints/) — per-module semantic blueprints, emitted from live state via [`scripts/emit_fact_sheet.ts`](scripts/emit_fact_sheet.ts).
+  - [`catalog/domain-map.json`](catalog/domain-map.json) — emitted snapshot of the catalog (gitted but regenerable via [`scripts/emit_domain_map.ts`](scripts/emit_domain_map.ts)).
+  - [`catalog/skill-specs/`](catalog/skill-specs/) — per-domain facts files (`<DOMAIN>.yaml`) consumed by the per-domain skill at install time. Emitted from live state.
+  - [`catalog/skills/`](catalog/skills/) — per-domain catalog cards (one file per `use-<domain>` skill), consumed by the site generator to render discovery pages.
+  - [`catalog/domain-skill-template/`](catalog/domain-skill-template/) — the single template skill the publisher copies per domain, with placeholders the publisher substitutes from the facts file.
 - [`scripts/`](scripts/) — committed TypeScript utilities (Bun). Includes the fact-sheet emitter (`emit_fact_sheet.ts`), domain-map JSON emitter (`emit_domain_map.ts`), and two subdirectories:
   - [`scripts/loaders/`](scripts/loaders/) — reusable, idempotent load/fix/backfill patterns referenced from SKILL.md and `references/`. Reference loader: [`load_research.ts`](scripts/loaders/load_research.ts).
   - [`scripts/analytics/`](scripts/analytics/) — read-only and analytics-with-persistence patterns. Phase D entry point: [`discovery_query.ts`](scripts/analytics/discovery_query.ts). Coverage rollup: [`coverage_rollup.ts`](scripts/analytics/coverage_rollup.ts).
 - [`.tmp_deploy/`](.tmp_deploy/) — **gitignored** scratch space for dated one-off work (per-domain audit fixes, in-flight drafts). Anything in here will be lost if the working tree is wiped. When a one-off earns repeated reference from SKILL.md or `references/`, promote it to `scripts/loaders/`.
 - [`CLAUDE.md`](CLAUDE.md) — project-wide rules (memory-off-limits, no em-dashes, American English, semantius-CLI-cwd).
-- [`domain-map.json`](domain-map.json) — emitted snapshot of the catalog (gitted but regenerable).

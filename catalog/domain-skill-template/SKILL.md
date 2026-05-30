@@ -2,11 +2,12 @@
 name: use-{{DOMAIN_CODE_LOWER}}
 description: >-
   Use this skill for any task involving the {{DOMAIN_NAME}} domain ({{DOMAIN_CODE}})
-  in this Semantius tenant. Covers entity discovery, lifecycle awareness,
-  cross-domain handoffs, and tenant-specific renames or omissions. Trigger when
-  the user wants to create, read, update, query, or analyze {{DOMAIN_NAME}} data,
-  configure related roles or permissions, or build automations against this domain.
-  Loads tenant-discovered state automatically; runs a discovery pass on first
+  in this Semantius tenant. Trigger phrases: {{ALIASES_COMMA_LIST}}. Covers
+  entity discovery, lifecycle awareness, cross-domain handoffs, APQC process
+  context, and tenant-specific renames or omissions. Trigger when the user wants
+  to create, read, update, query, or analyze {{DOMAIN_NAME}} data, configure
+  related roles or permissions, or build automations against this domain. Loads
+  tenant-discovered state automatically; runs a discovery pass on first
   invocation. Pairs with `use-semantius` for CLI mechanics.
 ---
 
@@ -57,7 +58,8 @@ The HQ-emitted shape of this domain as of `emitted: <date>`. Includes:
 - Modules with their masters, embedded-masters, consumers
 - Per-master pattern flags, aliases, lifecycle states
 - Intra-domain relationships and edges to platform built-ins
-- Outbound cross-domain handoffs (trigger events, payloads, targets, friction)
+- Outbound cross-domain handoffs (trigger events, payloads, targets, friction, APQC process tags)
+- Domain-level APQC process rollup (`apqc_processes_touched`) for cross-domain process queries
 - System skills and tool sets per module
 - Expected role personas with their module footprints
 - Catalog enum vocabularies for any column the skill might write

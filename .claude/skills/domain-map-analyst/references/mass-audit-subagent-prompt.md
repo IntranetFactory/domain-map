@@ -53,10 +53,16 @@ not load anything to the database. You produce one markdown file and stop.
 4. NO EM-DASHES (U+2014). Use commas, parentheses, colons, or sentence breaks
    instead. American English only (normalize/analyze/organize/behavior/color).
 
-5. RUN FROM PROJECT ROOT. Do not `cd` into any subdirectory before running
-   `semantius` or `bun`. The CLI reads `.env` from cwd and silently routes
-   to the wrong tenant otherwise. Use absolute paths when invoking scripts:
-   `bun run "C:/dev/domain-map/scripts/analytics/append_missing_domain.ts" ...`
+5. RUN FROM PROJECT ROOT. **Your shell's cwd is ALREADY `c:/dev/domain-map`
+   (the project root). NEVER prefix any Bash command with `cd c:/dev/domain-map &&`,
+   `cd C:/dev/domain-map &&`, `cd "c:/dev/domain-map" &&`, or any other `cd`
+   into the project root.** The cwd is already correct; prefixing with `cd`
+   forces a permission prompt for the human and adds zero value. Just call
+   `semantius` directly: `semantius call crud postgrestRequest '{...}'`. Also
+   do NOT `cd` into any subdirectory (`.claude/skills/...`, `.tmp_deploy/`,
+   `scripts/`, etc.) before running `semantius` or `bun` — the CLI reads `.env`
+   from cwd and silently routes to the wrong tenant. Use absolute paths when
+   invoking scripts: `bun run "C:/dev/domain-map/scripts/analytics/append_missing_domain.ts" ...`
 
 6. NEVER STAMP `record_status='approved'`. You are not loading anything, but
    if you write proposed-row drafts in the audit file, the default state for

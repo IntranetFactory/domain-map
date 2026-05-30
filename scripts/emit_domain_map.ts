@@ -32,7 +32,7 @@ function flagValue(name: string): string | null {
   return i >= 0 && i + 1 < args.length ? args[i + 1] : null;
 }
 const STDOUT = args.includes("--stdout");
-const OUT_PATH = flagValue("--out") ?? "c:/dev/domain-map/domain-map.json";
+const OUT_PATH = flagValue("--out") ?? "c:/dev/domain-map/catalog/domain-map.json";
 
 type ModuleOut = {
   code: string;

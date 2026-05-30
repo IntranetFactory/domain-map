@@ -19,6 +19,12 @@ const TYPE_FILTER: "system" | "process" | "all" = typeIdx >= 0 ? args[typeIdx + 
 
 // Hardcoded Semantius-covered operation_kinds (Option 1 per plan-tools-catalog.md § Open question).
 // When a new operation_kind value is added (or one splits), update this set and re-run.
+// Excluded by design:
+//   - fetch: external-data reads (vendor APIs, search). Semantius never owns the upstream schema.
+//   - side_effect: external-write side-effects (some flip to platform when Semantius ships native dispatcher; see coverage_tier for the per-tool truth).
+//   - compute: pure transforms; covered if/when Semantius ships native compute.
+//   - inbound: receive-shaped; the inbound listener is platform-ish but the source is external.
+// For per-tool coverage truth, read tools.coverage_tier; this script uses operation_kind as a fast heuristic for "internal-data tools".
 const SEMANTIUS_COVERED = new Set(["query", "mutate"]);
 
 type Skill = { id: number; skill_name: string; skill_type: string; domain_id: number | null };

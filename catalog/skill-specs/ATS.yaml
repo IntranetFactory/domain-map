@@ -24,6 +24,23 @@ domain:
   certification_required: false
   usa_market_size_usd_m: 2400
   market_size_source_year: 2024
+  # Catalog UX fields (`catalog_tagline`, `catalog_description`) are NOT
+  # emitted into the facts file. They live on `domains` in the catalog DB
+  # and feed the site generator via `catalog/skills/<DOMAIN>.json`, not the
+  # tenant-side skill.
+
+# Universal trigger phrases (industry synonyms, common vendor naming).
+# Emitted from the `domain_aliases` table. Feeds runtime triggering
+# (spliced into SKILL.md description) and is the same source the catalog
+# site uses for its search index.
+aliases:
+  - recruiting
+  - hiring
+  - talent acquisition
+  - applicant tracking
+  - candidate management
+  - hiring pipeline
+  - ATS
 
 # Function ownership (Phase C).
 business_functions:
@@ -190,6 +207,8 @@ handoffs:
       integration_pattern: api_call
       friction_level: medium
       source_module: ATS-OFFERS
+      apqc_processes:
+        - { external_id: "6.2.4", name: "Onboard new employees" }
     - trigger_event: candidate.hired
       payload: employees
       target_domain: HCM
@@ -197,6 +216,9 @@ handoffs:
       integration_pattern: event_stream
       friction_level: high                    # identity-reconciliation pattern
       source_module: ATS-OFFERS
+      apqc_processes:
+        - { external_id: "6.2.1", name: "Recruit, source, and select employees" }
+        - { external_id: "6.1.1", name: "Create and maintain employee master data" }
     - trigger_event: background_check.required
       payload: background_checks
       target_domain: BGC
@@ -204,6 +226,15 @@ handoffs:
       integration_pattern: api_call
       friction_level: medium
       source_module: ATS-OFFERS
+      apqc_processes: []                      # no APQC tag yet; gap-tracked
+
+# Deduplicated rollup of every APQC process this domain's handoffs touch.
+# Useful for "which workflows in {{DOMAIN}} are part of process X?" queries.
+# Empty when no handoffs in this domain have apqc_processes populated.
+apqc_processes_touched:
+  - { external_id: "6.1.1", name: "Create and maintain employee master data" }
+  - { external_id: "6.2.1", name: "Recruit, source, and select employees" }
+  - { external_id: "6.2.4", name: "Onboard new employees" }
 
 # System skills (one per module, Rule #17).
 system_skills:

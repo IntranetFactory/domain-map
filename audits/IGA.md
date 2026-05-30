@@ -1,0 +1,243 @@
+---
+status: feedback_needed
+last_transition: 2026-05-30
+last_transition_by: agent
+open_questions: 22
+---
+
+# IGA: Audit History
+
+## 2026-05-30 Validate b1 (full 4-pass)
+
+### Summary
+
+- **Current footprint:** 5 full modules (`IGA-ACCESS-REQUEST` 144, `IGA-ACCESS-CERTIFICATION` 145, `IGA-SOD-MGMT` 146, `IGA-ENTITLEMENT-CATALOG` 147, `IGA-AUTO-PROVISIONING` 148); 6 masters (`iga_access_requests` 704, `iga_access_certifications` 705, `iga_entitlement_definitions` 706, `iga_sod_violations` 707, `iga_provisioning_events` 708, `iga_user_entitlements` 964); 7 capabilities (5 IGA-prefixed + 2 cross-cutting `OFFBOARDING` 82, `IDENTITY-RESOLUTION` 255); 8 solutions (all `primary`: SailPoint, Saviynt, Okta IG, Microsoft Entra ID Governance, One Identity Manager, Oracle Identity Governance, IBM Security Verify Governance, Omada Identity Cloud); 12 trigger_events; 7 outbound + 36 inbound cross-domain handoffs (43 total); 23 aliases; 36 lifecycle states across all 6 masters; 5 system skills + 53 skill_tools rows (strict Semantius score 100%); 4 roles + 14 role_modules + 22 role_permissions.
+- **Bucket 1 (in-scope, agent fixable):** 11 items.
+- **Bucket 2 (surface-for-user, judgment):** 5 items.
+- **Bucket 3 (Phase 0 pending, speculative):** 6 items.
+- **Candidates queued via `append_missing_domain.ts`:** 1 (PAM, see candidate queue).
+- **Status (frontmatter):** `feedback_needed`. Open-question count `22` = 11 (Bucket 1) + 5 (Bucket 2) + 6 (Bucket 3).
+
+**Neighbor discovery** (auto-derived from `handoffs` + cross-domain DMDO + cross-domain `data_object_relationships`, ranked by edge weight):
+
+| Neighbor | Out | In | DMDO on IGA masters | IGA DMDO on theirs | Cross-rels | Weight | Pass shape |
+|---|---:|---:|---:|---:|---:|---:|---|
+| HCM | 0 | 6 | 0 | 4 (employees, employment_events, employment_contracts, org_units) | 4 | 14 | Pairwise (full) |
+| LMS | 0 | 5 | 0 | 1 (compliance_assignments) | 1 | 7 | Pairwise (full) |
+| ITSM | 3 | 1 | 0 | 1 (service_catalog_items) | 1 | 6 | Pairwise (full) |
+| UEM | 0 | 4 | 0 | 2 (enrolled_devices, device_compliance_results) | 0 | 6 | Pairwise (full) |
+| WSC | 0 | 3 | 0 | 2 (channel_members, external_guest_invitations) | 2 | 7 | Pairwise (full) |
+| HRSD | 1 | 1 | 1 (`iga_access_requests` consumer on 75) | 1 (hr_cases) | 1 | 5 | Pairwise (light) |
+| SMP | 0 | 2 | 0 | 1 (saas_applications) | 2 | 5 | Pairwise (light) |
+| ONBOARDING | 0 | 2 | 0 | 1 (onboarding_tasks) | 1 | 4 | Pairwise (light) |
+| DCG | 0 | 1 | 0 | 1 (data_access_policies) | 0 | 2 | Lightweight |
+| DLP | 0 | 2 | 0 | 2 (dlp_incidents, dlp_user_activity_logs) | 0 | 4 | Lightweight |
+| DSPM | 0 | 2 | 0 | 1 (iam_access_policies) | 0 | 3 | Lightweight |
+| GRC | 2 | 0 | 0 | 0 | 0 | 2 | Lightweight |
+| ECM | 0 | 2 | 0 | 2 (content_documents, document_folders) | 1 | 5 | Lightweight |
+| APIM | 0 | 1 | 0 | 1 (api_consumers) | 0 | 2 | Lightweight |
+| IWMS | 0 | 1 | 0 | 2 (desk_bookings, locations) | 0 | 3 | Lightweight |
+| ITAM | 1 | 0 | 0 | 0 | 0 | 1 | Lightweight |
+| VIS-MGMT | 0 | 1 | 0 | 1 (visitor_registrations) | 1 | 3 | Lightweight |
+
+Pairwise findings for the full-pass neighbors (HCM, LMS, ITSM, UEM, WSC) live inline in the **Bucket 1: Boundary findings per neighbor** subsection below; the lightweight neighbors are summarized at the end of that subsection.
+
+**Structural pass bands:**
+- A1, A2, A3 pass. A1 metadata complete (crud=75, business_logic populated, min_org_size `30 m <2500`, cost_band `$$$`, certification_required true, US TAM 3000m/2025).
+- M1, M2, M4, M5, M6 pass. **M7 within-domain hard fail** on 4 masters (704, 706, 707, 708) co-located as master in one IGA module and consumer in others.
+- B1, B2, B3, B5, B11, B12 pass. **B7** clean (every master has user-edges); **B9** has 7 trigger_events with empty `event_category` (Rule #13 enum violation); **B9b hard fail** (zero intra-domain cross-module handoffs despite ~7 implied pairs); **B10b inbound partial fail** (4 LMS-sourced rows with NULL `target_domain_module_id` IGA owes); **B6** has one likely gap (no edge between `iga_user_entitlements` and `iga_sod_violations`).
+- C1, C2 pass (IAM owner + IT Operations contributor; no capability-level RACI overrides needed).
+- E1-E5 pass; **E6** drift hint on `IAM-IDENTITY-ADMIN` (admin bundle covers 5 baseline-admin grants but no explicit workflow-gate inclusion , relies on `permission_hierarchy`).
+- F1, F2, F3, F4, F5, F7 pass. **Strict Semantius score 100%** (every one of 53 `skill_tools` rows links a `coverage_tier='platform'` tool). Operational score also 100%.
+- **H1 hard fail.** 9/43 cross-domain handoffs carry `handoff_processes` rows; only 1 `agent_curated`. Volume target per skill: 0.5×43 to 0.8×43 = 22-34 `agent_curated` proposals. Audit produces 10 high-confidence tag candidates below; the remaining ~12-20 either defer to Discover Pass 3 (modern security primitives without clean PCF home: `dlp_user_activity.flagged`, `iam_access_policy.permission_escalation_detected`, `device_compliance_result.non_compliant`, `enrolled_device.lost_or_stolen`, etc.) or wait for the next fix-pass.
+
+### Vendor surface basis
+
+Flagship vendor enumeration uses the 8 catalog `solution_domains` rows as the primary anchor, expanded by category awareness:
+
+- **Suite leaders (full-featured IGA):** SailPoint Identity Security Cloud, Saviynt Enterprise Identity Cloud, Microsoft Entra ID Governance, Oracle Identity Governance, IBM Security Verify Governance, One Identity Manager, Omada Identity Cloud. These define the union surface for access requests, certifications, SoD, entitlements, provisioning.
+- **Cloud-native challengers:** Okta Identity Governance (lighter than the suites, faster to deploy, less SoD depth).
+- **Compliance / SoD specialists (out-of-catalog):** Pathlock (SAP-anchored SoD with deep ERP entitlement awareness), SecurEnds (lightweight certification campaigns), Zilla Security, ConductorOne (request-time SoD + just-in-time entitlements). These are not loaded as solutions but inform the surface check (`sod_rulesets`, `risk_owners`, `mitigating_controls` are first-class in their schemas).
+- **PAM-adjacent (boundary):** CyberArk Identity, Delinea, BeyondTrust. They overlap on entitlement governance for privileged accounts but center on session management, vault, and just-in-time elevation. The boundary between IGA and PAM is the major Bucket 3 question below.
+
+Statutory anchors (already loaded): GDPR, SOX, ISO 27001, SOC 2, NIS2, CMMC. Missing from the catalog but flagship-relevant: HIPAA (every healthcare IGA deployment carries HIPAA scoping for role mining), FINRA / FFIEC (financial-services IGA), PCI DSS (cardholder-data-environment access governance). These are Bucket 2 questions.
+
+### Bucket 1: In-scope confirmed gaps
+
+#### STRUCTURAL band failures
+
+| ID | Band | Finding | Fix |
+|---|---|---|---|
+| B1-S1 | **M7 (within-domain hard fail)** | 4 IGA masters carry `role='master'` in one IGA module AND `role IN (consumer, contributor)` in 1-4 sibling IGA modules. Specifically: `iga_access_requests` (704) master in 144, consumer in 148. `iga_entitlement_definitions` (706) master in 147, consumer in 144, 145, 146, 148. `iga_sod_violations` (707) master in 146, consumer in 144. `iga_provisioning_events` (708) master in 148, consumer in 144, 145, 146. The M7 within-domain rule rejects master+consumer in sibling modules of the same domain: *"you don't consume what you also master in the same scope"*. Two interpretations: (a) the IGA modules are intended as **autonomous deployable units** (M7's pass-with-promotion case) → PROMOTE every consumer row to `embedded_master`, accepting the runtime demotion when both modules co-deploy. (b) the IGA modules are intended as **co-installed** (M7's within-domain hard-fail case) → DELETE the 8 sibling-consumer rows. Recommendation: (a). IGA modules are reasonably packaged for independent install (a customer could deploy IGA-AUTO-PROVISIONING against an external identity store without IGA-ACCESS-REQUEST), and the per-module fact sheets currently render the entity dependencies correctly only with `embedded_master`. Decision is the user's. | Two options; recommendation (a): PATCH the 8 sibling rows from `role='consumer'` to `role='embedded_master'`. Alternative (b): DELETE all 8 rows. Either way the 4 master rows stay untouched. |
+| B1-S2 | **B9 , empty `event_category`** | 7 of 12 IGA `trigger_events` have empty `event_category` (Rule #13 violation; the enum requires one of `lifecycle / state_change / threshold / signal`). The 7 rows: 455 `iga_access_request.submitted`, 456 `iga_access_request.approved`, 457 `iga_access_certification.completed`, 458 `iga_entitlement_definition.published`, 459 `iga_sod_violation.detected`, 460 `iga_provisioning_event.completed`, 461 `iga_provisioning_event.failed`. The 5 newer events on `iga_user_entitlements` (1377-1381) carry the enum correctly. | PATCH `event_category` per the verb: `submitted` / `published` / `detected` / `completed` / `failed` → `state_change`; `approved` → `state_change`. (All seven of these are state-machine transitions, not lifecycle "row exists" signals.) |
+| B1-S3 | **B9b (hard fail) , zero intra-domain cross-module handoffs** | The catalog has zero `handoffs` rows with `source_domain_id = target_domain_id = 35` despite 5 modules with obvious cross-module event chains. Implied module-pair candidates from `data_object_relationships` and lifecycle states: (1) 144 → 148 on `iga_access_request.approved` (approved request hands off to provisioning), (2) 145 → 148 on `iga_access_certification.completed` (revocations spawn provisioning events), (3) 146 → 148 on `iga_sod_violation.mitigated` (automated entitlement revocation as mitigation), (4) 144 → 146 on `iga_access_request.submitted` (SoD pre-check), (5) 147 → 144 on `iga_entitlement_definition.published` (catalog refresh for requesters), (6) 147 → 146 on `iga_entitlement_definition.published` (SoD ruleset re-evaluation), (7) 148 → 145 on `iga_provisioning_event.completed` (next-certification scheduling). | Author 7 intra-domain handoff rows with `source_domain_id=target_domain_id=35`, `integration_pattern='lifecycle_progression'` as default (use `api_call` for the 146 mitigation→148 path since it crosses ownership), `friction_level='low'` default (bump (3) to `medium` because mitigation flows occasionally fail at the connector and need rollback). |
+| B1-S4 | **B10b inbound , NULL `target_domain_module_id` from LMS** | 4 inbound handoffs from LMS to IGA carry `target_domain_module_id=null` AND no IGA module declares a DMDO row on the payload. Rows: 1303 (`learner_certification.revoked` → `learner_certifications`), 1304 (`learner_certification.expired` → `learner_certifications`), 1305 (`learner_certification.renewed` → `learner_certifications`), 1309 (`compliance_assignment.expired` → `compliance_assignments`). Per B10b's resolution rule, the target module is whichever IGA module holds the strongest role on the payload , but no IGA module holds any role on `learner_certifications` (id 171). For `compliance_assignments` (173), `IGA-AUTO-PROVISIONING` (148) consumes it. Fix is two-part: first add the missing DMDO row (`consumer + optional`) on `IGA-AUTO-PROVISIONING` for `learner_certifications`, then PATCH `target_domain_module_id=148` on rows 1303-1305 and 1309. The receiving module is provisioning because certification-loss events auto-revoke gated access. | (1) INSERT one `domain_module_data_objects` row: `(domain_module_id=148, data_object_id=171, role='consumer', necessity='optional')`. (2) PATCH `target_domain_module_id=148` on handoffs 1303, 1304, 1305, 1309. |
+| B1-S5 | **B6 missing intra-domain relationship** | `iga_user_entitlements` (964) has 0 edges to `iga_sod_violations` (707). The current SoD detection workflow scans entitlement combinations per user; absence of a `iga_user_entitlements ←implicated_in_violation→ iga_sod_violations` (M:N association) edge means the relationship graph cannot render the actual subject of the violation. Verbs: `implicates` / `implicated_in` mirror the existing 707↔706 row. | Author one `data_object_relationships` row: `(data_object_id=964, related_data_object_id=707, relationship_verb='implicated_in_sod_violation', inverse_verb='implicates_entitlement', relationship_type='many_to_many', relationship_kind='association', is_required=false, owner_side='source')`. |
+| B1-S6 | **B10b report-only , NULL `target_domain_module_id` on outbound** | 2 outbound IGA handoffs (464, 465) target `GRC` with `target_domain_module_id=null`. Per B10b's asymmetry rule, the target-side module FK is GRC's B10b responsibility. IGA's own `source_domain_module_id` is populated on every outbound row (146 and 145 respectively). Surfaces in the report-only section below. | Schedule a GRC b1 audit; no action from this audit. |
+| B1-S7 | **Pairwise , undeclared external consumer DMDOs on every IGA-target domain** | M7-style catalog-wide check: of the 5 outbound IGA targets (ITSM ×3, ITAM ×1, GRC ×2, HRSD ×1), only HRSD declares a `consumer` DMDO row on any IGA master (`HRSD-CASE-MGMT` consumer on `iga_access_requests`). ITSM, ITAM, GRC consume IGA events via the handoff payload but don't model the dependency at the module layer. Same shape as the APM B1-S9 finding. | Report-only; each target domain's b1 audit should add the `consumer` DMDO row on whichever IGA master they actually read. |
+| B1-S8 | **APQC TAGGING (H1 hard fail)** | 9/43 cross-domain handoffs tagged; only 1 `agent_curated`. The remaining 7 `discovery_*` rows are weak fits (e.g. handoff 839 `document.classified` → `Document trade` 14095 is a finance-trade-document substring match, not the IGA workflow). High-confidence agent-curated proposals authored at audit time (10 rows): see APQC TAGGING table below. | INSERT 10 `handoff_processes` rows; per catalog convention `proposal_source='agent_curated'`, `record_status='new'`. The composed key `(handoff_id, process_id)` prevents duplicates if a discovery row already exists, though several `discovery_override` and `discovery_substring` rows likely deserve replacement (per Discover Pass 1.5: human-curated / agent-curated override discovery_substring). |
+
+#### Boundary findings per neighbor
+
+The 5 heaviest neighbors (weight ≥ 6) get the 5-section pairwise diff inline. Lighter neighbors are summarized in a single block at the end.
+
+##### HCM (weight 14 , 0 out / 6 in)
+
+- **Section 1 (fully wired):** 6 handoffs from HCM, all with `source_domain_module_id` populated (HCM-CORE-WORKER or HCM-ORG-POSITIONS) and `target_domain_module_id` populated (144 for joiner / mover / org-unit signals, 148 for contract-expiry leaver). 4 IGA-side DMDO rows declare HCM-mastered consumers (`employees` required, `employment_contracts` optional, `employment_events` optional, `org_units` embedded_master). 4 cross-domain `data_object_relationships` rows wire the verbs. Healthy boundary.
+- **Section 2 (NULL FK PATCH candidates):** None on IGA's side. On HCM's side, the 6 inbound handoffs carry "target_domain_module_id NULL until IGA is modularized" notes that pre-date IGA's modularization. These notes are stale; the column is populated now. Per Rule #15 the notes were never approved wording in the first place , they originated from an authoring-time write-policy that's now rescinded. → **B2-S2** below.
+- **Section 3 (missing handoffs implied by the catalog):** HCM-side `employee.demoted`, `employee.transferred`, `employee.role_changed` events would fire IGA access-request creation but only `employee.promoted` (handoff 375) is loaded. Lateral-move / demotion signals are common joiner/mover/leaver triggers in flagship IGA workflows. → Bucket 3 (vet against HCM's published `trigger_events`).
+- **Section 4 , Boundary integrity gaps:** None.
+- **Section 5 , Cross-domain `data_object_relationships`:** Both directions wired (employees↔iga_provisioning_events, employment_contracts↔iga_provisioning_events, employment_events↔iga_provisioning_events, org_units↔iga_entitlement_definitions). No missing-relationship findings.
+
+##### LMS (weight 7 , 0 out / 5 in)
+
+- **Section 1 (fully wired):** 1 handoff (435 `compliance_assignment.overdue` → `IGA-AUTO-PROVISIONING`) is fully wired with both module FKs.
+- **Section 2 (NULL FK PATCH candidates):** 4 inbound handoffs (1303, 1304, 1305, 1309) carry `target_domain_module_id=null`. Cured by B1-S4 above (add DMDO on `learner_certifications`, then PATCH 4 rows).
+- **Section 3 , Missing handoffs implied:** None obvious , the LMS surface for IGA is well-modeled.
+- **Section 4 , Boundary integrity gaps:** `learner_certifications` (171) currently has no DMDO row anywhere in IGA. Resolved by B1-S4 fix.
+- **Section 5 , Cross-domain relationships:** `compliance_assignments ↔ iga_provisioning_events` exists. Missing: `learner_certifications ↔ iga_provisioning_events` (added once the DMDO lands). → Add as part of B1-S4 fix or follow-up.
+
+##### ITSM (weight 6 , 3 out / 1 in)
+
+- **Section 1 (fully wired):** 3 outbound handoffs from IGA to ITSM (461 provisioning completion, 463 provisioning failure → service_incidents, 466 access_request approved → service_incidents) and 1 inbound (631 service_catalog_item.published → IGA-ENTITLEMENT-CATALOG) all carry both module FKs.
+- **Section 2 (NULL FK PATCH candidates):** None.
+- **Section 3 , Missing handoffs implied:** ITSM `change_request.completed` for entitlement changes routed via Service Request is a flagship IGA-ITSM flow (a change of role triggers a service-request → IGA access-request chain in many SailPoint and ServiceNow integrations). Currently absent.
+- **Section 4 , Boundary integrity gaps:** None.
+- **Section 5 , Cross-domain relationships:** `service_catalog_items ↔ iga_entitlement_definitions` (verb `exposes`) is wired. ITSM-side `service_incidents` ↔ `iga_provisioning_events` is not (3 outbound handoffs target `service_incidents` but no relationship row reflects that). → B1-S6-style report-only ("ITSM owes the inbound relationship side per its B8 pass").
+
+##### UEM (weight 6 , 0 out / 4 in)
+
+- **Section 1 (fully wired):** 4 inbound handoffs all carry `target_domain_module_id=148` and IGA DMDO rows declare `enrolled_devices` (consumer + optional) and `device_compliance_results` (consumer + optional). UEM-side `source_domain_module_id` is NULL on all 4 → UEM's B10b.
+- **Section 2 (NULL FK PATCH candidates):** UEM owns its side; report-only.
+- **Section 3 , Missing handoffs implied:** Device compliance state change is a common conditional-access driver. The 4 loaded events are reasonable; no obvious additional candidates.
+- **Section 4 , Boundary integrity gaps:** None (DMDO covered on IGA side).
+- **Section 5 , Cross-domain relationships:** None loaded between UEM masters and IGA masters. → Bucket 3 (whether `enrolled_devices ↔ iga_user_entitlements` should be modeled at the relationship level given conditional-access patterns).
+
+##### WSC (weight 7 , 0 out / 3 in)
+
+- **Section 1 (fully wired):** 3 inbound handoffs (830, 831, 836) all populate both module FKs. IGA DMDO rows on `channel_members` and `external_guest_invitations` are present.
+- **Section 2 (NULL FK PATCH candidates):** None on IGA's side; the legacy notes on handoffs 830/831/836 ("target NULL until IGA is modularized") are stale and unapproved → B2-S2.
+- **Section 3 , Missing handoffs implied:** None obvious.
+- **Section 4 , Boundary integrity gaps:** None.
+- **Section 5 , Cross-domain relationships:** `iga_access_certifications` (705) ↔ `channel_members` (568) exists (verb `reconciles channel membership`). `external_guest_invitations` ↔ both `iga_access_requests` and `iga_provisioning_events` exist. Reasonable coverage.
+
+##### Lightweight neighbors (weight 1-5)
+
+- **HRSD (5):** `iga_access_requests` consumer DMDO declared on HRSD-CASE-MGMT. Inbound 119 (`case.access_required`) fully wired. Outbound 467 (`iga_access_request.submitted` → HRSD-CASE-MGMT) fully wired. Healthy.
+- **SMP (5):** 2 inbound handoffs (639, 640) on `saas_application.discovered/sanctioned`. Cross-rel `saas_applications ↔ iga_user_entitlements` (`entitles_to`) plus `smp_license_seat_assignments ↔ iga_user_entitlements` (`correlates_with`) wire the seat-reclamation flow. Healthy.
+- **ONBOARDING (4):** 2 inbound (5, 407) both fully wired. Cross-rel `onboarding_tasks ↔ iga_access_requests` exists.
+- **DLP (4):** 2 inbound, both `source_domain_module_id=null` (DLP's B10b). IGA-side DMDOs on `dlp_incidents` and `dlp_user_activity_logs` present.
+- **DSPM (3):** 2 inbound with NULL source FK (DSPM's B10b). IGA DMDO on `iam_access_policies` (consumer + optional) present.
+- **ECM (5):** 2 inbound, both with NULL source FK (ECM's B10b). IGA DMDOs on `content_documents` and `document_folders` present. Cross-rel `document_folders ↔ iga_entitlement_definitions` exists.
+- **IWMS (3):** 1 inbound (1165 `desk_booking.checked_in`) with NULL source FK (IWMS's B10b). IGA DMDOs on `desk_bookings` and `locations` present.
+- **DCG (2):** 1 inbound (263) with NULL source FK (DCG's B10b). DMDO on `data_access_policies` present.
+- **APIM (2):** 1 inbound (751) with NULL source FK. DMDO on `api_consumers` present.
+- **GRC (2):** 2 outbound; target side is GRC's B10b. No DMDO on IGA-mastered events from the GRC side. → B1-S6 report-only.
+- **ITAM (1):** 1 outbound (462) fully wired. Marginal pair.
+- **VIS-MGMT (3):** 1 inbound (871) with NULL source. DMDO + cross-rel on `visitor_registrations` present.
+
+#### APQC TAGGING (high-confidence proposals)
+
+Volume: per the H-band guidance for N=43 cross-domain handoffs, target = 22-34 `agent_curated` tags. The 10 below are the high-confidence subset. The remaining gap is deferred to Discover Pass 3 (modern security primitives without clean PCF home: `dlp_user_activity.flagged`, `dlp_incident.escalated`, `iam_access_policy.permission_escalation_detected`, `device_compliance_result.*`, `enrolled_device.*`, `api_consumer.revoked`, `external_guest.*`, `channel_member.added`, `desk_booking.checked_in`, `visitor_registration.submitted`, `data_access_request.approved`, `document_folder.permissions_changed`, `document.classified` , these have no clean L2/L3 match in APQC PCF cross-industry and become custom-process candidates).
+
+| handoff_id | source → target | trigger_event | payload | Proposed PCF row | confidence |
+|---|---|---|---|---|---|
+| 466 | IGA-ACCESS-REQUEST → ITSM | `iga_access_request.approved` | `service_incidents` | Manage IT user identity and authorization (20756 L3) | confident L3 |
+| 461 | IGA-AUTO-PROVISIONING → ITSM | `iga_provisioning_event.completed` | `service_incidents` | Manage IT user identity and authorization (20756 L3) | confident L3 |
+| 463 | IGA-AUTO-PROVISIONING → ITSM | `iga_provisioning_event.failed` | `service_incidents` | Manage IT user identity and authorization (20756 L3) , recovery via incident | confident L3 |
+| 462 | IGA-AUTO-PROVISIONING → ITAM | `iga_provisioning_event.completed` | `iga_provisioning_events` | Manage IT assets (10568 L3) , entitlement-asset reconciliation | confident L3 |
+| 464 | IGA-SOD-MGMT → GRC | `iga_sod_violation.detected` | `iga_sod_violations` | Manage business risks (16439 / 10579 L3) , IT risk subtree | confident L3 |
+| 465 | IGA-ACCESS-CERTIFICATION → GRC | `iga_access_certification.completed` | `iga_access_certifications` | Establish internal controls, policies, and procedures (10708 L3) , audit-evidence subtree | confident L3 |
+| 467 | IGA-ACCESS-REQUEST → HRSD | `iga_access_request.submitted` | `iga_access_requests` | Manage customer service problems, requests, and inquiries (10388 L3) | confident L3 |
+| 5 | ONBOARDING → IGA-ACCESS-REQUEST | `task.access_provisioning_required` | `onboarding_tasks` | Manage employee onboarding (10469 L3) , already discovery_override; promote to `agent_curated` confirms it | confident L3 |
+| 19 | HCM → IGA-ACCESS-REQUEST | `employee.created` | `employees` | Manage employee onboarding, training, and development (20599 L2) , child `Manage employee onboarding` (10469 L3) is the tighter fit | confident L3 |
+| 185 | HCM → IGA-ACCESS-REQUEST | `employee.terminated` | `employees` | Manage employee separation / offboarding (within Reward and retain employees subtree, 10470 / 10473 L3) | confident L3 |
+
+### Bucket 2: Surface-for-user (judgment calls)
+
+| ID | Question | Why agent can't answer | Options |
+|---|---|---|---|
+| B2-S1 | **Rule #15 notes pollution on `iga_entitlement_definitions.notes`.** The master row carries: *"Config-shape master: lightweight draft -> published -> deprecated -> retired lifecycle, no per-record approval workflow. Permission gates apply only on publish and retire."* This is exactly the Rule-#12 config-shape exemption that Rule #15 RESCINDED as an auto-write license. The wording was probably written by a Phase-B loader, not user-approved. Same shape as the APM B2-S2 finding. | Cannot tell from the audit alone whether the user explicitly approved this wording at load time. | (a) Confirm user-approved → leave as is. (b) Confirm auto-write → PATCH the column to empty string and record the config-shape exemption in this audit file's Decisions section instead. |
+| B2-S2 | **Rule #15 notes pollution on `handoffs.notes`.** 12 IGA-touching handoffs carry stale annotations: 462, 830, 831, 836, 1165 say *"target NULL until IGA is modularized"* and 19, 185, 375, 378, 382, 389, 391, 392 say *"target_domain_module_id NULL until IGA is modularized (Phase-M gap on target domain; SKILL.md authoring rule)."* These were all written by the prior write-policy (now rescinded by Rule #15) and IGA *is* modularized , the columns are populated. The notes are obsolete restatements of nothing. Also handoff 467 carries an explicit dated remediation note (`"B10b resolved 2026-05-26: HRSD-CASE-MGMT consumes iga_access_requests as the inbound payload."`) which is the system-mutation-history pattern Rule #15 forbids. | Same , load-time approval status unknown, but pattern matches the rescinded write-policy verbatim. | (a) Confirm any of these were user-approved → leave. (b) Confirm auto-write → PATCH all 13 to empty string. The drift-history information loses nothing: git log carries the same record on this audit file. |
+| B2-S3 | **Rule #15 notes pollution on `domain_module_data_objects.notes`.** 21 DMDO rows on IGA modules carry short restated-from-schema commentary (e.g. row on module 147 / data_object 52: *"ITSM service-catalog publications spawn corresponding entitlement-catalog entries."*; row on 148 / 173: *"Overdue compliance training fires auto-revoke of gated access (e.g. PII data, regulated systems)."*). The notes restate what the role+necessity+target module already structurally communicate. Forbidden pattern per Rule #15. | Same. | (a) Confirm user-approved → leave. (b) Confirm auto-write → PATCH all 21 to empty string. |
+| B2-S4 | **B4 pattern flag positive re-evaluation.** Current flags on the 6 masters: `iga_access_requests` (704) `has_submit_lock=true` + `has_single_approver=true` ✓ (correct: requests freeze on submission and have a single approver). `iga_access_certifications` (705) `has_single_approver=true` ✓ but `has_submit_lock=false` , should this be `true` (a certification campaign freezes on scheduled-→-in_progress)? `iga_entitlement_definitions` (706) all flags `false` ✓ for a config-shape master. `iga_sod_violations` (707) `has_submit_lock=true` ✓ (violations are immutable once detected; mitigations don't rewrite history). `iga_provisioning_events` (708) `has_submit_lock=true` ✓ (event log is append-only). `iga_user_entitlements` (964) `has_personal_content=true` ✓ but `has_submit_lock=false` , should this be `true` once `granted`? Also: `iga_user_entitlements.has_single_approver` is currently `false`; SoD-aware grants are typically single-approver in flagship workflows. | Pattern flags are workflow-shape judgments the user owns; the false-by-default establishes nothing. | (a) Per-flag yes/no decisions from the user. (b) Leave all defaults; this band passes vacuously. |
+| B2-S5 | **E6 permission-bundle drift , `IAM-IDENTITY-ADMIN` and the workflow-gate inheritance.** `IAM-IDENTITY-ADMIN` (10102) holds 5 `:admin` permissions (one per IGA module) but no explicit workflow-gate inclusions, relying on `permission_hierarchy` to auto-include them under `:admin`. The other 3 roles do enumerate the workflow gates they need (e.g. `IAM-ACCESS-CERTIFIER` carries both `:manage` and the 2 specific gates `schedule_certification` + `close_certification`). Consistency check: is the catalog's `permission_hierarchy` actually seeded such that `<module>:admin` → all workflow gates on that module, or do the lower-tier roles enumerate their gates because the hierarchy doesn't carry them? | The audit doesn't introspect `permission_hierarchy` rules , that's a Semantius built-in. | (a) Confirm `:admin` auto-includes all module gates → drop the explicit gate grants on the IC-tier roles as redundant. (b) Confirm `:admin` does NOT auto-include → enumerate the 14 workflow gates on `IAM-IDENTITY-ADMIN` explicitly. (c) Leave as is , IC-tier explicit, admin-tier implicit. |
+
+### Bucket 3: Phase 0 pending (speculative; market surface vs. footprint)
+
+Subagent-style semantic pass against SailPoint Identity Security Cloud, Saviynt Enterprise Identity Cloud, Microsoft Entra ID Governance, Omada Identity Cloud, and (as the SoD specialist) Pathlock. The union surface matrix is sketched here rather than emitted as a separate JSON; if the user wants a formal Phase 0 vendor research artifact, that's the **vetted route** below.
+
+Headline diff: **MISSING 5, WRONG-OWNERSHIP 0, SCOPE-CREEP 0 (every loaded entity has a clean vendor anchor), MODULARIZATION 1.** Notably few WRONG-OWNERSHIP / SCOPE-CREEP findings; the current footprint is well-shaped to the market.
+
+#### MISSING (5) proposed module assignment
+
+| Entity | Proposed module | Vendor evidence |
+|---|---|---|
+| `iga_sod_rulesets` | IGA-SOD-MGMT | SailPoint `Policy`, Saviynt `Risk Object`, Pathlock `SoD Ruleset`. The toxic-combination definition itself is a separate first-class master from the violation. Currently the catalog treats violations as the master and rulesets as implicit configuration. |
+| `iga_entitlement_certifications` (junction state per line-item) | IGA-ACCESS-CERTIFICATION | Every flagship splits `Campaign` (705) from `Campaign Item` / `Certification Decision` (per-entitlement attestation). The line-item layer is currently absent. Without it the relationship `iga_access_certifications ↔ iga_user_entitlements` can't carry per-row decision state. |
+| `iga_role_mining_jobs` | IGA-ENTITLEMENT-CATALOG or new module | SailPoint Role Insights, Saviynt Identity Analytics, Omada Role Modeling. The catalog has no entity capturing the role-discovery / role-modeling computation results , feature-flagship territory for SailPoint and Saviynt. Could be deferred if it's deemed config-tier; could become a new IGA-IDENTITY-ANALYTICS module if treated as substantial. |
+| `iga_provisioning_connectors` | IGA-AUTO-PROVISIONING | The connector catalog itself (SailPoint Connector, Saviynt Application Onboarding) is currently implicit. Each connector is a config-shaped master describing target system, protocol (SCIM / REST / proprietary), credential reference, and last-sync state. Without it the provisioning event log has no master to point at on the connector axis. |
+| `iga_break_glass_accounts` | new IGA-PRIVILEGED-OVERSIGHT or IGA-AUTO-PROVISIONING | Emergency-access accounts with elevated-monitoring rules. Adjacent to PAM but flagship IGA suites carry their own break-glass governance (SailPoint, Saviynt). Could equally belong to a future PAM domain , see candidate-queue entry below. |
+
+#### MODULARIZATION (1)
+
+- **Identity-analytics module.** SailPoint and Saviynt both surface a separate user-facing surface for identity analytics (role mining, peer-group anomaly detection, access-risk scoring). Currently the IDENTITY-RESOLUTION cross-cutting capability sits on `IGA-ENTITLEMENT-CATALOG` (147) but there's no dedicated module. Splitting `IGA-ENTITLEMENT-CATALOG` into `IGA-ENTITLEMENT-CATALOG` + `IGA-IDENTITY-ANALYTICS` would let the analytics surface carry `iga_role_mining_jobs`, `iga_user_risk_scores`, `iga_peer_groups` as masters. Decision: deferred; first decide if `iga_role_mining_jobs` is in scope at all (Bucket 3 #3).
+
+#### Boundary candidate: PAM as a separate domain
+
+PAM (Privileged Access Management , CyberArk Identity, Delinea, BeyondTrust, Saviynt PAM, Senhasegura) is a separate point-solution market with its own flagship vendors. It overlaps IGA on entitlement governance for privileged accounts but masters its own concepts (`pam_sessions`, `pam_credential_vaults`, `pam_just_in_time_grants`, `pam_session_recordings`, `pam_account_rotations`). Currently no `PAM` domain exists in the catalog. A candidate has been queued via `append_missing_domain.ts` (see `audits/_missing-domains.md`).
+
+This is a Bucket 3 "vetted route or eyeball" item: is PAM a separate domain (recommended , passes the point-solution test cleanly), or should the IGA domain absorb PAM-shaped entities into a 6th module (`IGA-PRIVILEGED-OVERSIGHT`)?
+
+### Cross-bucket dependencies
+
+- **B2-S1, B2-S2, B2-S3 (Rule #15 reverts) are INDEPENDENT** of Buckets 1 and 3. The agent can revert with one bulk PATCH per table once the user confirms auto-population.
+- **B1-S4 (LMS B10b) is INDEPENDENT** of Bucket 3.
+- **B1-S1 (M7 PROMOTE vs DELETE) is INDEPENDENT** of Bucket 3 but **structurally precedes B1-S3** (the intra-domain handoff drafts need to know whether the sibling-module relationship is `master → embedded_master` or `master → DELETED`). Resolve B1-S1 before drafting B1-S3 fixes.
+- **B1-S8 (APQC tagging) is INDEPENDENT** of every other item.
+- **Bucket 3 #5 (PAM as a separate domain) might shift Bucket 3 #1 + #2 + #3 + #4 + #5** , if PAM becomes its own domain, `iga_break_glass_accounts` belongs there instead, and `iga_provisioning_connectors` may want a parallel `pam_provisioning_connectors`. Holding the 5 MISSING entries until the PAM decision is the cleanest order.
+
+### Per-bucket prompts
+
+**Bucket 1 , fix these now?** Reply with: `all`, or list (e.g. `S1, S2, S4, S8`), or `skip`.
+
+- **S1 (M7 within-domain hard fail):** decide PROMOTE vs DELETE first. PROMOTE (option a, recommended) keeps the standalone-deployable story; DELETE assumes IGA modules always co-install.
+- **S2 (B9 event_category PATCH):** trivial 7-row PATCH; no dependencies.
+- **S3 (B9b intra-domain handoffs , 7 rows to author):** depends on S1's outcome (shapes the source/target master resolution).
+- **S4 (LMS B10b inbound , 1 DMDO insert + 4 handoff PATCHes):** mechanical.
+- **S5 (B6 missing relationship `iga_user_entitlements ↔ iga_sod_violations`):** trivial 1-row insert.
+- **S6, S7 (B10b + DMDO report-only on target domains):** schedule b1 audits for GRC, ITSM, ITAM (B1-S6 + B1-S7). Not IGA's fix.
+- **S8 (APQC tagging , 10 high-confidence rows above):** load now or next batch?
+
+**Bucket 2 , what's your call on each?** I'll wait for per-item decisions before acting.
+
+- **B2-S1, B2-S2, B2-S3 (Rule #15 notes-pollution):** the audit can revert if you confirm auto-population. If the notes were approved at load time, say so and I leave them.
+- **B2-S4 (pattern flags):** per-flag yes/no decisions on the 5 candidates.
+- **B2-S5 (E6 admin-tier hierarchy):** option a / b / c?
+
+**Bucket 3 , Phase 0 pending , vet via formal Phase 0 vendor research, or eyeball-mode?** If eyeball-mode, name which of the 5 MISSING entries to treat as confirmed. The PAM-as-separate-domain decision sits across all of them and should be resolved first.
+
+### Report-only follow-ups (owed by other domains)
+
+These items are surfaced for the user to decide whether to schedule audits on the named source domains; **none of them block IGA's audit pass**.
+
+| Owed by | Check ID | Owed to | Detail |
+|---|---|---|---|
+| GRC | B10b (target side) | IGA outbound 464, 465 | `target_domain_module_id=null`. GRC needs to declare which GRC module receives `iga_sod_violation.detected` and `iga_access_certification.completed`. |
+| GRC | B8 / DMDO consumer | IGA-SOD-MGMT, IGA-ACCESS-CERTIFICATION | No GRC module declares `consumer` on `iga_sod_violations` (707) or `iga_access_certifications` (705) despite both being inbound to GRC via handoffs. |
+| ITSM | B8 / DMDO consumer | IGA-ACCESS-REQUEST, IGA-AUTO-PROVISIONING | No ITSM module declares `consumer` on IGA masters despite 3 outbound IGA handoffs targeting `service_incidents` in ITSM. The inbound side of `service_incidents ↔ iga_provisioning_events` cross-rels is also missing. |
+| ITAM | B8 / DMDO consumer | IGA-AUTO-PROVISIONING | No ITAM module declares `consumer` on `iga_provisioning_events` (708) despite handoff 462 targeting ITAM. |
+| HCM | B10b (source side) | IGA inbound 19, 185, 375, 378, 389, 391, 392, 382 | These were "until IGA is modularized" rows now resolvable: HCM's outbound side carries `source_domain_module_id` populated (HCM-CORE-WORKER / HCM-ORG-POSITIONS). The drift is in the obsolete notes (B2-S2 above), not in the FK itself. Surfaced here for completeness; the FK is fine. |
+| LMS | B10b (source side) | IGA inbound 1303-1305, 1309 | `source_domain_module_id` is populated (LMS-CERT-MGMT 179, LMS-COMPLIANCE-TRAINING 33). The bug was on IGA's side (B1-S4), now resolvable. |
+| DLP | B10b (source side) | IGA inbound 281, 845 | `source_domain_module_id=null`. DLP needs modularization or attribution. |
+| DSPM | B10b (source side) | IGA inbound 286, 289 | `source_domain_module_id=null`. |
+| UEM | B10b (source side) | IGA inbound 656, 658, 659, 661 | `source_domain_module_id=null`. |
+| APIM | B10b (source side) | IGA inbound 751 | `source_domain_module_id=null`. |
+| ECM | B10b (source side) | IGA inbound 823, 839 | `source_domain_module_id=null`. Also a trigger-event data quality bug worth flagging: handoff 839's `trigger_event.data_object_id` is 432 (`document_classifications`) while the handoff's payload `data_object_id` is 429 (`content_documents`) , could be legitimate (event source vs payload differ by design) or a mis-link. |
+| DCG | B10b (source side) | IGA inbound 263 | `source_domain_module_id=null`. |
+| VIS-MGMT | B10b (source side) | IGA inbound 871 | `source_domain_module_id=null`. |
+| IWMS | B10b (source side) | IGA inbound 1165 | `source_domain_module_id` populated (IWMS-DESK-RESERVATION 99). Resolvable; no action. |
+
+### Candidates queued
+
+- **PAM** (Privileged Access Management) , queued in `audits/_missing-domains.md` via `append_missing_domain.ts`. Mention by this audit cites CyberArk Identity, Delinea, BeyondTrust; adjacency IGA, ITSM, SECOPS.

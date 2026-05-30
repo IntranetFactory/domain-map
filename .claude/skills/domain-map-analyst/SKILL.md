@@ -326,7 +326,7 @@ A `domain_modules` row defines a deployable unit; a `system` skill defines what 
 
 - **One `system` skill per `domain_modules` row.** `skills.skill_type='system'` AND `skills.domain_module_id=<module_id>`. Authoring more than one system skill per module is a rule violation: if the module's surface needs two distinct skills, the module itself needs to be split.
 - **That skill has ≥1 `skill_tools` row.** Typical shape is 5–20 tools per module (required + optional). Required tools are the irreducible set the agent needs to perform the module's primary workflow; optional tools cover degraded modes (lower-tier ML, alternate channels).
-- **Tool `operation_kind` invariants** (already enforced by the schema but loader pre-flight should mirror them): `query` and `mutate` REQUIRE `data_object_id`; `side_effect` and `compute` REQUIRE `data_object_id` to be NULL; `inbound` makes `data_object_id` OPTIONAL (NULL for generic primitives like `receive_webhook`, set when the landing target is fixed at the catalog level).
+- **Tool `operation_kind` invariants** (enforced platform-side via JsonLogic `input_type_rule` on `fields.tools.data_object_id`; loader pre-flight mirrors): `query` and `mutate` REQUIRE `data_object_id`; `fetch`, `side_effect`, and `compute` REQUIRE `data_object_id` to be NULL; `inbound` makes `data_object_id` OPTIONAL. `fetch` is the read-side counterpart of `side_effect`: agent calls an external vendor API and gets data back (hotel offers, currency rates, stock quotes, web search results) where Semantius doesn't own the source schema.
 
 **This is a Phase-A obligation, not Phase E**, parallel to Rule #14. When loading a new market, system skills + tools + skill_tools ship in the same load as `domains` + `capabilities` + `domain_modules` + `solutions`. The Phase-S step in the workflow (§ "Workflow for any research task") is the canonical authoring procedure.
 
@@ -403,6 +403,31 @@ Starter kits used to be an editorial junction (`domain_starter_modules`) recomme
 
 **Audit blocker.** A starter row violating any of the six invariants fails the per-domain checklist on F2 / F3 (system skill) or a Rule-#11 / Rule-#12 cross-check depending on which invariant is violated. The platform-side validation_rule throws on the master-role violation independently of the audit.
 
+### 20. Catalog UX fields are buyer-shaped; never overwrite a non-empty value without explicit user approval.
+
+Two `domains` columns serve the public catalog and the site generator, not the analyst surface:
+
+- `catalog_tagline` — one buyer-facing sentence for catalog list cards. Workflow-shaped, not market-shaped.
+- `catalog_description` — 1-3 buyer-facing paragraphs for the catalog detail page. Describes what the buyer can do; does not enumerate handoffs, parent domains, or position in the catalog taxonomy.
+
+A third surface, `domain_aliases` (separate table), feeds both the catalog's search index and the per-domain skill's runtime trigger phrases. Aliases are universal synonyms (`recruiting`, `hiring`, `talent acquisition`) the agent should match against in either surface.
+
+**Voice rule.** Buyer voice (workflow + value): *"Track candidates from first contact through hire. Manage requisitions, interviews, and offers in one place, with seamless handoff to onboarding."* Analyst voice (what `domains.description` carries): *"Software market for recruiting, sourcing, evaluating, and hiring candidates. Anchors the candidate-to-employee transition handoff to HCM and Onboarding."* The two are not interchangeable; do not paste one into the other column.
+
+**Backfill is allowed (with surface).** On any domain audit where A4 fails (empty `catalog_tagline` or `catalog_description`), draft both fields per the voice rule, surface to the user for review BEFORE writing. The draft → review → write loop matches Rule #1's discipline for fresh research.
+
+**Overwrite is forbidden without explicit per-row user approval.** Once a non-empty value exists in either column, do NOT regenerate, "improve", normalize, or rewrite it, even when the existing value reads like a draft. Marketing routinely fine-tunes the original; an unapproved overwrite destroys their edits. The acceptable forms of human approval:
+
+- *"Rewrite catalog_tagline for ATS to <new wording>"* — specific text + specific domain.
+- *"Refresh all catalog_descriptions"* — explicit batch authorization. Surface the diff per row before each write.
+
+Forbidden patterns:
+- Auto-overwriting on every audit pass because the existing value "doesn't match the current template."
+- Bulk-regenerating during an unrelated load.
+- "Cleaning up" wording during a different fix-loop.
+
+**Why.** Marketing copy is the buyer-facing surface and ages on a different cycle than the analyst-facing catalog. The catalog tables can be re-derived from live state; marketing voice cannot. Treating these two columns with the same overwrite-on-emit habit as analyst columns erases human work that's not visible in the agent's draft.
+
 ---
 
 ## The module at a glance
@@ -460,7 +485,7 @@ Starter kits used to be an editorial junction (`domain_starter_modules`) recomme
 
 | Table | Holds | Qualifier / discriminator |
 |---|---|---|
-| `tools` | JSON-RPC-shaped capability primitives an agent skill can call (`send_email`, `query_invoices`, `transcribe_audio`, `receive_webhook`). Includes two abstraction primitives, `notify_person` (single-recipient outbound) and `notify_team` (broadcast), that capture the substitutable-channel pattern; skills link these by default for generic notifications and link concrete channels only when the workflow requires a specific channel | `operation_kind` enum (`query` / `mutate` / `side_effect` / `compute` / `inbound`). `coverage_tier` enum (`platform` / `external` / `integration`) drives the Semantius score; read this column, not `operation_kind`. `data_object_id` FK is **required** when `operation_kind ∈ {query, mutate}`, **must be NULL** for `side_effect` and `compute`, **optional** for `inbound` |
+| `tools` | JSON-RPC-shaped capability primitives an agent skill can call (`send_email`, `query_invoices`, `search_web`, `transcribe_audio`, `receive_webhook`). Includes two abstraction primitives, `notify_person` (single-recipient outbound) and `notify_team` (broadcast), that capture the substitutable-channel pattern; skills link these by default for generic notifications and link concrete channels only when the workflow requires a specific channel | `operation_kind` enum (`query` / `mutate` / `fetch` / `side_effect` / `compute` / `inbound`). The six values pair as: internal-read = `query`, external-read = `fetch`; internal-write = `mutate`, external-write = `side_effect`; pure-transform = `compute`; event-receive = `inbound`. `coverage_tier` enum (`platform` / `external` / `integration`) drives the Semantius score; read this column, not `operation_kind`. `data_object_id` FK is **required** when `operation_kind ∈ {query, mutate}`, **must be NULL** for `fetch` / `side_effect` / `compute`, **optional** for `inbound`. The pairing is enforced platform-side by a JsonLogic `input_type_rule` on `fields.tools.data_object_id` |
 | `skills` | Agent skills (system / process / role). `system` skills mirror **one module 1:1** (`skill_type='system'`, `domain_module_id` set) — target state per Rule #14. `process` skills wrap a cross-domain handoff cluster; `role` wraps a user-role workflow. **Transitional note:** the catalog still carries domain-level system skills (`domain_id` set, `domain_module_id` null) from the pre-modular era — these are migration targets, not the pattern for new authoring. | `skill_type` enum + `domain_module_id` (required when `system`, per Rule #14) |
 | `tool_solutions` | N:M between `tools` and `solutions` — which non-Semantius solutions deliver this tool, and how | `delivery_strength` + `delivery_method` (`mcp_server` preferred) + optional `endpoint_url`. Computed label `<tool> via <solution>`. **No Semantius row** — its coverage is read from `tools.coverage_tier` directly |
 | `skill_tools` | N:M between `skills` and `tools` — which tools a skill needs to function | `requirement_level` (`required` / `optional`). `notes` exists on the row but is off-limits without user-approved wording per Rule #15. Computed label `<skill> needs <tool>` |
@@ -685,6 +710,11 @@ For every `master + required` data_object in this domain, count `data_object_lif
 - Query: `/solution_domains?domain_id=eq.<id>&select=coverage_level,solutions(solution_name)`
 - Pass: ≥3 solutions; ≥1 `primary`; coverage_level set on every row (never null).
 - Fix: extend Phase A loader.
+
+**A4. Catalog UX fields populated.** (Rule #20.)
+- Query: `/domains?id=eq.<id>&select=catalog_tagline,catalog_description`
+- Pass: `catalog_tagline` is a non-empty single-sentence buyer-facing one-liner; `catalog_description` is a non-empty 1-3 paragraph buyer-facing long-form description. Both are written in buyer voice (workflow + value), NOT analyst voice (market position + handoffs).
+- Fix: draft both fields per Rule #20, surface to the user for review BEFORE writing. Once a non-empty value exists, never overwrite without explicit per-row user approval; marketing may have fine-tuned the original.
 
 **A5. Vendor records reflect current legal ownership.** *(Opt-in only — not part of the routine audit pass.)*
 
@@ -945,7 +975,7 @@ The `skills` table sits next to `roles` but represents agent skills, not user ro
 
 **F4. Tool `operation_kind` ↔ `data_object_id` invariant holds on every linked tool.** (Rule #17 sub-invariant.)
 - Query: `/skill_tools?skill_id=in.(<skillIds>)&select=tools(id,tool_name,operation_kind,data_object_id)`.
-- Pass: for every tool, `operation_kind ∈ {query, mutate}` implies `data_object_id` set; `operation_kind ∈ {side_effect, compute}` implies `data_object_id` is null; `operation_kind = inbound` allows either (NULL or set). Any row that violates this pairing is a tool-row defect.
+- Pass: for every tool, `operation_kind ∈ {query, mutate}` implies `data_object_id` set; `operation_kind ∈ {fetch, side_effect, compute}` implies `data_object_id` is null; `operation_kind = inbound` allows either (NULL or set). Any row that violates this pairing is a tool-row defect. The constraint is enforced platform-side via JsonLogic on `fields.tools.data_object_id`, but the F4 audit verifies on the read path in case a row got in before the rule was installed.
 - Fix: PATCH the offending `tools` row (either set / clear `data_object_id`, or correct the `operation_kind`). Re-PATCH the catalog, not the junction.
 
 **F5. Semantius score is computable for every module of this domain.**
@@ -1121,9 +1151,9 @@ Emit only when the user explicitly asks. Triggers: "emit the ATS blueprint", "re
 
 The emitter at [scripts/emit_fact_sheet.ts](../../../scripts/emit_fact_sheet.ts) produces one kind of semantic blueprint:
 
-- **Per-module blueprints** → `blueprints/<module-code>-semantic-blueprint.md`, one per `domain_modules` row regardless of `module_kind`. Both `module_kind='full'` and `module_kind='starter'` rows are emitted in the same flat directory. The deployable-unit view: data_objects assigned to this module, lifecycle states on this module's masters (starters render *inherited* lifecycle states from their embedded_masters' canonical-master rows, cross-referencing into the master's blueprint), the system skill + tools + Semantius coverage %, module-scoped permissions, capabilities realized, outbound / inbound handoffs, architect handoff hints.
+- **Per-module blueprints** → `catalog/blueprints/<module-code>-semantic-blueprint.md`, one per `domain_modules` row regardless of `module_kind`. Both `module_kind='full'` and `module_kind='starter'` rows are emitted in the same flat directory. The deployable-unit view: data_objects assigned to this module, lifecycle states on this module's masters (starters render *inherited* lifecycle states from their embedded_masters' canonical-master rows, cross-referencing into the master's blueprint), the system skill + tools + Semantius coverage %, module-scoped permissions, capabilities realized, outbound / inbound handoffs, architect handoff hints.
 
-Per-domain "starter kit" blueprints (the prior `blueprints/starter-kits/<DOMAIN-CODE>-...md` shape backed by the now-deleted `domain_starter_modules` junction) are gone (Rule #19 made starter kits first-class deployable units, so they emit as ordinary per-module blueprints). Any legacy `domain-fact-sheets/` or `blueprints/starter-kits/` directories on disk are no longer regenerated; treat them as historical.
+Per-domain "starter kit" blueprints (the prior `catalog/blueprints/starter-kits/<DOMAIN-CODE>-...md` shape backed by the now-deleted `domain_starter_modules` junction) are gone (Rule #19 made starter kits first-class deployable units, so they emit as ordinary per-module blueprints). Any legacy `domain-fact-sheets/` or `catalog/blueprints/starter-kits/` directories on disk are no longer regenerated; treat them as historical.
 
 Commands:
 - `bun run scripts/emit_fact_sheet.ts --module <MODULE_CODE>` — regenerates one module's page (works for both `module_kind` values).
@@ -1444,7 +1474,7 @@ Beyond the point-solution-market test, these heuristics resolve the ambiguous ca
 
   | Value | When to set | Examples |
   |---|---|---|
-  | `external_connector` | Solution is a **system of record** the agent reads/writes business data against (CRUD reaches the solution's API, the solution owns the row's lifecycle). Pairs with `tools` whose `operation_kind ∈ {query, mutate}` and whose `data_object_id` points at the data_object that solution masters | Salesforce CRM, SAP S/4HANA, Oracle NetSuite, Workday HCM, ServiceNow ITSM, HubSpot |
+  | `external_connector` | Solution is a **system of record OR an external data source** the agent reads from / writes to via API. Pairs with `tools` whose `operation_kind ∈ {query, mutate}` (Semantius-mastered, `data_object_id` set) OR `operation_kind = fetch` (external data, no Semantius schema, `data_object_id` NULL — e.g. Booking.com search, Amadeus, market-data feeds) | Salesforce CRM, SAP S/4HANA, Oracle NetSuite, Workday HCM, ServiceNow ITSM, HubSpot, Booking.com Partner API, Amadeus, Plaid |
   | `action` | Solution provides a **side-effect** (does something in the world; returns ack-not-data). Pairs with `tools` whose `operation_kind='side_effect'` | Microsoft 365 (email/calendar), Google Workspace, Slack, Twilio, DocuSign, Stripe |
   | `compute_service` | Solution provides **compute / AI / web automation** (pure transformation; no business-state ownership). Pairs with `tools` whose `operation_kind='compute'` | OpenAI Platform, Anthropic API, Playwright, AWS Bedrock, ElevenLabs |
   | `standard_solution` | **Default.** The solution is in the catalog as a market entrant / vendor offering, but it has not (yet) been wired up as a tool source for any skill | Most of the ~600 solutions in the catalog |

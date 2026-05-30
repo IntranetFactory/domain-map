@@ -71,11 +71,12 @@ the bottom are the resolved history.
 
 ### FEATURE-FLAGGING — Feature Flagging and Experimentation
 
-- **Mention count:** 1
+- **Mention count:** 2
 - **First surfaced:** 2026-05-30 (PROD-MGMT audit 2026-05-30)
-- **Most recent:** 2026-05-30 (PROD-MGMT audit 2026-05-30)
+- **Most recent:** 2026-05-30 (DXP audit 2026-05-30)
 - **Surfaced by:**
   - 2026-05-30 PROD-MGMT audit 2026-05-30
+  - 2026-05-30 DXP audit 2026-05-30
 - **Vendor evidence:** LaunchDarkly, Statsig, Optimizely Web Experimentation, Flagsmith, Split.io, Eppo, GrowthBook, Amplitude Experiment, ConfigCat
 - **Adjacency:** PROD-MGMT, DXP, VSDP, SPM
 - **Candidate capabilities:** feature flag management, experimentation orchestration, A/B test cohort assignment, kill-switch operations, gradual rollout
@@ -99,11 +100,12 @@ the bottom are the resolved history.
 
 ### EMP-LISTENING — Employee Listening Platform
 
-- **Mention count:** 1
+- **Mention count:** 2
 - **First surfaced:** 2026-05-30 (PA audit 2026-05-30)
-- **Most recent:** 2026-05-30 (PA audit 2026-05-30)
+- **Most recent:** 2026-05-30 (EMP-EXP audit 2026-05-30)
 - **Surfaced by:**
   - 2026-05-30 PA audit 2026-05-30
+  - 2026-05-30 EMP-EXP audit 2026-05-30
 - **Vendor evidence:** Culture Amp, Lattice Engagement, Glint, Peakon, Qualtrics EmployeeXM
 - **Adjacency:** PA, EMP-EXP, HCM, TALENT-MGMT
 - **Candidate capabilities:** pulse-survey design, engagement-driver modeling, manager-action planning, employee-NPS
@@ -522,11 +524,12 @@ the bottom are the resolved history.
 
 ### DIGITAL-PERSONALIZATION — Digital Personalization
 
-- **Mention count:** 1
+- **Mention count:** 2
 - **First surfaced:** 2026-05-30 (HCMS audit 2026-05-30)
-- **Most recent:** 2026-05-30 (HCMS audit 2026-05-30)
+- **Most recent:** 2026-05-30 (DXP audit 2026-05-30)
 - **Surfaced by:**
   - 2026-05-30 HCMS audit 2026-05-30
+  - 2026-05-30 DXP audit 2026-05-30
 - **Vendor evidence:** Ninetailed, Uniform, Optimizely Personalization, Dynamic Yield, Adobe Target, Mutiny
 - **Adjacency:** HCMS, DXP, MA, B2C-COMM, CDP
 - **Candidate capabilities:** audience and segment evaluation, content variant authoring, experimentation overlay, rule-based and AI personalization, edge-personalization
@@ -620,11 +623,12 @@ the bottom are the resolved history.
 
 ### MENTORSHIP — Mentorship Program Management
 
-- **Mention count:** 1
+- **Mention count:** 2
 - **First surfaced:** 2026-05-30 (TALENT-MGMT audit 2026-05-30)
-- **Most recent:** 2026-05-30 (TALENT-MGMT audit 2026-05-30)
+- **Most recent:** 2026-05-30 (TLNT-INTEL audit 2026-05-30)
 - **Surfaced by:**
   - 2026-05-30 TALENT-MGMT audit 2026-05-30
+  - 2026-05-30 TLNT-INTEL audit 2026-05-30
 - **Vendor evidence:** MentorcliQ, Together, PushFar, Chronus, Qooper
 - **Adjacency:** TALENT-MGMT, HCM, LMS, EMP-EXP, TLNT-INTEL
 - **Candidate capabilities:** mentor-mentee matching, mentorship program orchestration, session tracking, mentorship outcome measurement, group mentoring
@@ -634,11 +638,12 @@ the bottom are the resolved history.
 
 ### PEER-RECOGNITION — Peer Recognition and Rewards Platform
 
-- **Mention count:** 1
+- **Mention count:** 2
 - **First surfaced:** 2026-05-30 (TALENT-MGMT audit 2026-05-30)
-- **Most recent:** 2026-05-30 (TALENT-MGMT audit 2026-05-30)
+- **Most recent:** 2026-05-30 (EMP-EXP audit 2026-05-30)
 - **Surfaced by:**
   - 2026-05-30 TALENT-MGMT audit 2026-05-30
+  - 2026-05-30 EMP-EXP audit 2026-05-30
 - **Vendor evidence:** Bonusly, Kudos, Nectar, Workhuman, Achievers, Awardco
 - **Adjacency:** TALENT-MGMT, EMP-EXP, HCM, COMP-MGMT
 - **Candidate capabilities:** peer-to-peer recognition, points-based rewards, reward catalog, social recognition feeds, milestone celebrations, recognition analytics
@@ -656,6 +661,497 @@ the bottom are the resolved history.
 - **Vendor evidence:** Shareworks (Morgan Stanley at Work), J.P. Morgan Workplace Solutions, Carta Equity Plans, Pulley Equity Plans
 - **Adjacency:** CAP-TABLE, COMP-MGMT, HCM
 - **Candidate capabilities:** equity grant proposal, grant acceptance, vesting administration, exercise workflow, tax-surface reporting, ESPP enrollment
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### EHS-MGMT — Environmental, Health and Safety Management
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (REAL-EST audit 2026-05-30)
+- **Most recent:** 2026-05-30 (REAL-EST audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 REAL-EST audit 2026-05-30
+- **Vendor evidence:** Cority, Intelex, Sphera, Enablon, VelocityEHS, Gensuite, ETQ Reliance
+- **Adjacency:** REAL-EST, ESG, IWMS, GRC, FSQM
+- **Candidate capabilities:** incident management, hazard analysis, regulatory permit tracking, health surveillance, OSHA/EU-OSHA reporting, contractor safety, audit and inspections
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### BMS-BAS — Building Management and Automation Systems
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (REAL-EST audit 2026-05-30)
+- **Most recent:** 2026-05-30 (REAL-EST audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 REAL-EST audit 2026-05-30
+- **Vendor evidence:** Siemens Desigo CC, Johnson Controls Metasys, Honeywell Niagara, Schneider EcoStruxure, ABB Ability Building Ecosystem
+- **Adjacency:** REAL-EST, IWMS, ESG, OT
+- **Candidate capabilities:** HVAC control, lighting automation, energy submetering, BACnet/Modbus integration, fault detection and diagnostics, occupancy-driven setpoint adjustment
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### LEASE-ACCT — Lease Accounting and Administration
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (REAL-EST audit 2026-05-30)
+- **Most recent:** 2026-05-30 (REAL-EST audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 REAL-EST audit 2026-05-30
+- **Vendor evidence:** LeaseQuery, Visual Lease, CoStar Real Estate Manager, Lucernex, Nakisa Lease Administration
+- **Adjacency:** REAL-EST, FINOPS, ACCT-PLAN, RECRD-MGMT
+- **Candidate capabilities:** ASC 842 compliance, IFRS 16 compliance, lease classification, ROU asset calculation, lease modification accounting, disclosure reporting
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### LIVESTOCK-MGMT — Livestock Management
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (FMIS audit 2026-05-30)
+- **Most recent:** 2026-05-30 (FMIS audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 FMIS audit 2026-05-30
+- **Vendor evidence:** AgriWebb, Herdwatch, Cattle Manager, BeefCentral, Performance Beef, MaiaGrazing
+- **Adjacency:** FMIS, FOOD-TRACE, FSQM
+- **Candidate capabilities:** paddock and mob management, individual-animal records, mob movements, weight gains, pasture allocation, breeding records, treatment records, livestock-traceability identifiers
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### PRECISION-AG-AGRONOMY — Precision Agriculture Agronomy
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (FMIS audit 2026-05-30)
+- **Most recent:** 2026-05-30 (FMIS audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 FMIS audit 2026-05-30
+- **Vendor evidence:** Climate FieldView Nitrogen Advisor, Granular Agronomy, AgWorld agronomy notes, Taranis, Sentera, FarmLogs
+- **Adjacency:** FMIS, FOOD-TRACE, TELEMATICS
+- **Candidate capabilities:** soil test results, soil zones, weather observations, agronomic recommendations, NDVI imagery, scouting reports, planting-window advisors, spray-window advisors, variety selection
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### PAM — Privileged Access Management
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (IGA audit 2026-05-30)
+- **Most recent:** 2026-05-30 (IGA audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 IGA audit 2026-05-30
+- **Vendor evidence:** CyberArk Identity, Delinea, BeyondTrust, Saviynt PAM, Senhasegura
+- **Adjacency:** IGA, ITSM, SECOPS, GRC
+- **Candidate capabilities:** privileged session management, credential vaulting, just-in-time elevation, session recording, account rotation, break-glass governance
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### PORTAL-FRAMEWORK — Enterprise Portal Framework
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (DXP audit 2026-05-30)
+- **Most recent:** 2026-05-30 (DXP audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 DXP audit 2026-05-30
+- **Vendor evidence:** Liferay DXP, Salesforce Experience Cloud, Backbase Engagement Platform, OutSystems, Microsoft Power Pages, IBM HCL Digital Experience
+- **Adjacency:** DXP, CRM, CSM, B2C-COMM, IDP
+- **Candidate capabilities:** authenticated portal pages, portal user provisioning, role-based portal access, portal widgets and gadgets, partner / customer / employee portals, single sign-on integration
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### CCM — Continuous Close Management
+
+- **Mention count:** 2
+- **First surfaced:** 2026-05-30 (EPM audit 2026-05-30)
+- **Most recent:** 2026-05-30 (EPM audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 EPM audit 2026-05-30
+- **Vendor evidence:** BlackLine, FloQast, Trintech Cadency, Numeric, Numeral
+- **Adjacency:** ERP-FIN, EPM, AUDIT
+- **Candidate capabilities:** balance sheet reconciliation, journal entry workflow, close task management, intercompany matching, flux analysis, certifications and attestations
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### TRM — Treasury and Risk Management
+
+- **Mention count:** 2
+- **First surfaced:** 2026-05-30 (EPM audit 2026-05-30)
+- **Most recent:** 2026-05-30 (EPM audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 EPM audit 2026-05-30
+- **Vendor evidence:** Kyriba, GTreasury, FIS Quantum, ION Treasury, Coupa Treasury
+- **Adjacency:** ERP-FIN, EPM, SPEND-MGMT, AP-AUTO
+- **Candidate capabilities:** cash positioning and forecasting, in-house banking, bank account management, payment factory, FX hedging, debt and investment management, intercompany netting
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### TAX-PROVISION — Corporate Tax Provision and Compliance
+
+- **Mention count:** 2
+- **First surfaced:** 2026-05-30 (EPM audit 2026-05-30)
+- **Most recent:** 2026-05-30 (EPM audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 EPM audit 2026-05-30
+- **Vendor evidence:** Thomson Reuters ONESOURCE Tax Provision, Vertex Tax Provision, Wolters Kluwer CCH Tagetik, Longview Tax, Bloomberg Tax Provision
+- **Adjacency:** ERP-FIN, EPM, AUDIT
+- **Candidate capabilities:** ASC 740 income tax provision, deferred tax calculation, effective tax rate analysis, return to provision reconciliation, multi-jurisdictional tax disclosures, transfer pricing documentation
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### FIN-CONSOL — Financial Consolidation and Close
+
+- **Mention count:** 2
+- **First surfaced:** 2026-05-30 (EPM audit 2026-05-30)
+- **Most recent:** 2026-05-30 (EPM audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 EPM audit 2026-05-30
+- **Vendor evidence:** OneStream Financial Close, Oracle FCCS, SAP Group Reporting, Wolters Kluwer CCH Tagetik Consolidation, BlackLine Smart Close
+- **Adjacency:** ERP-FIN, EPM, AUDIT, ESG
+- **Candidate capabilities:** multi-entity consolidation, intercompany elimination, currency translation, minority interest accounting, regulatory consolidated reporting, IFRS and GAAP reporting, segment reporting
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### INFLUENCER-MGMT — Influencer Marketing Management
+
+- **Mention count:** 2
+- **First surfaced:** 2026-05-30 (SMM audit 2026-05-30)
+- **Most recent:** 2026-05-30 (SMM audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 SMM audit 2026-05-30
+- **Vendor evidence:** CreatorIQ, Aspire, Grin, Klear (Meltwater), Upfluence, Mavrck, Traackr
+- **Adjacency:** SMM, MA, CRM, AGENCY-MGMT
+- **Candidate capabilities:** influencer discovery, creator outreach, campaign brief management, deliverables tracking, payment workflow, FTC disclosure compliance, content rights and licensing
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### EMP-ADVOCACY — Employee Advocacy Platform
+
+- **Mention count:** 3
+- **First surfaced:** 2026-05-30 (SMM audit 2026-05-30)
+- **Most recent:** 2026-05-30 (EMP-EXP audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 SMM audit 2026-05-30
+  - 2026-05-30 EMP-EXP audit 2026-05-30
+- **Vendor evidence:** Hootsuite Amplify, Sprinklr Advocacy, Smarp (Sociabble), Bambu, EveryoneSocial, GaggleAMP, Oktopost
+- **Adjacency:** SMM, EMP-EXP, HCM, INTRANET
+- **Candidate capabilities:** curated content broadcast to employees, employee social share tracking, gamification and leaderboards, employee influencer scoring, internal newsletter generation, social-share attribution to revenue
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### SOCIAL-LISTENING — Social Listening and Brand Intelligence
+
+- **Mention count:** 2
+- **First surfaced:** 2026-05-30 (SMM audit 2026-05-30)
+- **Most recent:** 2026-05-30 (SMM audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 SMM audit 2026-05-30
+- **Vendor evidence:** Brandwatch, Talkwalker, Meltwater, NetBase Quid, Sprinklr Insights, Synthesio (Ipsos), Awario
+- **Adjacency:** SMM, CDP, REV-INTEL, GRC
+- **Candidate capabilities:** boolean query authoring across social, news and forums, sentiment classification at scale, share-of-voice tracking, crisis early-warning, image and video brand-logo detection, audience demographics inference
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### SOCIAL-ADS — Paid Social Advertising
+
+- **Mention count:** 2
+- **First surfaced:** 2026-05-30 (SMM audit 2026-05-30)
+- **Most recent:** 2026-05-30 (SMM audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 SMM audit 2026-05-30
+- **Vendor evidence:** Smartly.io, Sprinklr Ads, AdEspresso (Hootsuite), Strike Social, Stackla (Nosto), Madgicx
+- **Adjacency:** SMM, ADV-AD-TECH, MA, REV-INTEL
+- **Candidate capabilities:** cross-channel paid social campaign orchestration, dynamic creative optimization, ad-set auto-budget reallocation, social-ad creative versioning, social attribution and incrementality testing
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### INTENT-DATA — B2B Buyer Intent Data Platform
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (SALES-ENG audit 2026-05-30)
+- **Most recent:** 2026-05-30 (SALES-ENG audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 SALES-ENG audit 2026-05-30
+- **Vendor evidence:** Bombora, 6sense, G2 Buyer Intent, ZoomInfo Intent, Demandbase, Cognism
+- **Adjacency:** SALES-ENG, MA, CDP, ACCT-PLAN, ABM
+- **Candidate capabilities:** intent topic taxonomy, account-level intent scoring, surge signal detection, third-party intent aggregation, first-party intent capture, intent-to-account matching
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### MEETING-SCHEDULER — Meeting Scheduling Platform
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (SALES-ENG audit 2026-05-30)
+- **Most recent:** 2026-05-30 (SALES-ENG audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 SALES-ENG audit 2026-05-30
+- **Vendor evidence:** Chili Piper, Calendly, Outreach Meetings, Salesloft Calendar, HubSpot Meetings, Cal.com
+- **Adjacency:** SALES-ENG, CRM, MA, CSM
+- **Candidate capabilities:** availability window publishing, round-robin routing, lead-to-rep matching, meeting confirmation and reminders, scheduling-link distribution, calendar federation
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### IRM — Insider Risk Management
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (DLP audit 2026-05-30)
+- **Most recent:** 2026-05-30 (DLP audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 DLP audit 2026-05-30
+- **Vendor evidence:** Code42 Incydr, Microsoft Insider Risk Management, DTEX InTERCEPT, Proofpoint Insider Threat Management, Securonix UEBA, Cyberhaven, Forcepoint Risk-Adaptive Protection
+- **Adjacency:** DLP, SECOPS, IGA, HCM, DSPM
+- **Candidate capabilities:** user behavior risk scoring, insider-threat investigation, file lineage tracking, indicator-of-compromise correlation, employee exit risk, anomalous data movement, departing-user monitoring, evidence collection for HR/Legal
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### CASB — Cloud Access Security Broker
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (DLP audit 2026-05-30)
+- **Most recent:** 2026-05-30 (DLP audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 DLP audit 2026-05-30
+- **Vendor evidence:** Netskope CASB, Zscaler ZIA, Microsoft Defender for Cloud Apps, Palo Alto Networks Prisma Access, Skyhigh Security, Lookout CASB, Forcepoint CASB
+- **Adjacency:** DLP, DSPM, SECOPS, IGA, NETSEC
+- **Candidate capabilities:** sanctioned and unsanctioned SaaS discovery, OAuth/API governance for SaaS, inline cloud traffic inspection, SaaS-level DLP, malware scanning for cloud uploads, shadow IT discovery, SaaS user activity monitoring
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### SSE-SASE — Security Service Edge / Secure Access Service Edge
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (DLP audit 2026-05-30)
+- **Most recent:** 2026-05-30 (DLP audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 DLP audit 2026-05-30
+- **Vendor evidence:** Zscaler SSE, Netskope SSE, Palo Alto Prisma Access, Cisco Umbrella, Cloudflare One, Microsoft Entra Internet Access, Forcepoint ONE
+- **Adjacency:** DLP, CASB, SECOPS, ZTNA, NETSEC
+- **Candidate capabilities:** secure web gateway, ZTNA enforcement, inline TLS inspection, edge DLP, FWaaS, SD-WAN integration, unified policy across web/SaaS/private apps
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### CRQ — Cyber Risk Quantification
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (GRC audit 2026-05-30)
+- **Most recent:** 2026-05-30 (GRC audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 GRC audit 2026-05-30
+- **Vendor evidence:** Bitsight, SecurityScorecard, RiskLens, ThreatConnect, Kovrr, X-Analytics, Safe Security
+- **Adjacency:** GRC, SECOPS, TPRM, OP-RES
+- **Candidate capabilities:** quantitative risk scoring, FAIR-based loss modeling, vendor risk scoring, dollarized cyber risk, control-effectiveness scoring, exposure analytics
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### CCWFM — Contact Center Workforce Management
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (WFM audit 2026-05-30)
+- **Most recent:** 2026-05-30 (WFM audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 WFM audit 2026-05-30
+- **Vendor evidence:** Verint Workforce Management, NICE IEX WFM, Calabrio ONE, Genesys Cloud Workforce Management, Aspect Workforce Management, Playvox WFM
+- **Adjacency:** WFM, CCAAS, PA
+- **Candidate capabilities:** contact-center demand forecasting (Erlang-C), intraday adherence, agent shrinkage modeling, multi-channel scheduling, real-time adherence, WEM (workforce engagement management)
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### EDISCOVERY — eDiscovery Platform
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (LEGAL-PRACT-MGMT audit 2026-05-30)
+- **Most recent:** 2026-05-30 (LEGAL-PRACT-MGMT audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 LEGAL-PRACT-MGMT audit 2026-05-30
+- **Vendor evidence:** Relativity, Everlaw, Logikcull, DISCO, Reveal, Nuix, Casepoint
+- **Adjacency:** LEGAL-PRACT-MGMT, LSD, GRC, ECM
+- **Candidate capabilities:** ESI collection, processing, review, predictive coding, production, hosted review, native review, redaction
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### ETHICS-HOTLINE — Ethics, Compliance Hotline and Case Management
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (GRC audit 2026-05-30)
+- **Most recent:** 2026-05-30 (GRC audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 GRC audit 2026-05-30
+- **Vendor evidence:** NAVEX EthicsPoint, OneTrust Ethics, Convercent (OneTrust), Whispli, Speakfully, EQS Integrity Line, Syntrio, Lighthouse Services
+- **Adjacency:** GRC, HRSD, AUDIT, LSD
+- **Candidate capabilities:** anonymous reporting intake, case triage and investigation, retaliation protection workflow, regulatory hotline compliance (EU Whistleblower Directive, SOX 806), case-outcome analytics, hotline-to-investigation handoff
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### FRONTLINE-COMMS — Frontline / Deskless Worker Communication Platform
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (WFM audit 2026-05-30)
+- **Most recent:** 2026-05-30 (WFM audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 WFM audit 2026-05-30
+- **Vendor evidence:** WorkJam, Beekeeper, Crew, Yoobic, Microsoft Teams Frontline, Workvivo
+- **Adjacency:** WFM, INTRANET, EMP-EXP, RET-STORE
+- **Candidate capabilities:** broadcast messaging to deskless workforce, task and checklist push, shift swap conversations, frontline learning, frontline recognition
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### LEGAL-HOLD — Legal Hold and Preservation Management
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (LEGAL-PRACT-MGMT audit 2026-05-30)
+- **Most recent:** 2026-05-30 (LEGAL-PRACT-MGMT audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 LEGAL-PRACT-MGMT audit 2026-05-30
+- **Vendor evidence:** Exterro Legal Hold, Onna, Zapproved, Logikcull Hold, Mitratech HoldsPro
+- **Adjacency:** LEGAL-PRACT-MGMT, LSD, EDISCOVERY, ECM, HCM
+- **Candidate capabilities:** custodian identification, hold notice issuance, custodian acknowledgement, in-place preservation, hold release, audit trail
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### POLICY-MGMT — Policy and Procedure Management
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (GRC audit 2026-05-30)
+- **Most recent:** 2026-05-30 (GRC audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 GRC audit 2026-05-30
+- **Vendor evidence:** NAVEX PolicyTech, OneTrust Policy Management, ConvergePoint Policy Management, MetricStream Policy Management, PowerDMS, Mitratech PolicyHub, MyComplianceOffice
+- **Adjacency:** GRC, HRSD, LSD, LMS
+- **Candidate capabilities:** policy authoring with version control, policy lifecycle workflow (draft, review, approve, publish, retire), policy mapping to regulations and controls, policy attestation campaigns, policy exception management, policy template libraries
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### LEGAL-RES — Legal Research Platform
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (LEGAL-PRACT-MGMT audit 2026-05-30)
+- **Most recent:** 2026-05-30 (LEGAL-PRACT-MGMT audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 LEGAL-PRACT-MGMT audit 2026-05-30
+- **Vendor evidence:** Westlaw, LexisNexis, Bloomberg Law, Fastcase, Casetext, Vincent AI, Harvey
+- **Adjacency:** LEGAL-PRACT-MGMT, LSD, KMS
+- **Candidate capabilities:** case law search, statute lookup, citator analysis, secondary-source mining, AI-assisted brief generation, jurisdictional filtering
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### REG-CHANGE-MGMT — Regulatory Change Management
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (GRC audit 2026-05-30)
+- **Most recent:** 2026-05-30 (GRC audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 GRC audit 2026-05-30
+- **Vendor evidence:** Thomson Reuters Regulatory Intelligence, Wolters Kluwer OneSumX, RegEd, Compliance.ai, Ascent RegTech, ComplyAdvantage, Reuters Compliance Learning
+- **Adjacency:** GRC, LSD, AUDIT, BANK-OPS
+- **Candidate capabilities:** regulatory feed ingestion, regulation-to-obligation mapping, change-alert subscription management, jurisdictional impact analysis, regulator-source curation, obligation library maintenance
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### IP-MGMT — Intellectual Property Management
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (LEGAL-PRACT-MGMT audit 2026-05-30)
+- **Most recent:** 2026-05-30 (LEGAL-PRACT-MGMT audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 LEGAL-PRACT-MGMT audit 2026-05-30
+- **Vendor evidence:** Anaqua, CPA Global Memotech, IPfolio, Clarivate Derwent, Patsnap, FoundationIP
+- **Adjacency:** LEGAL-PRACT-MGMT, LSD, CLM, AUDIT
+- **Candidate capabilities:** patent docketing, trademark portfolio management, IP renewals and annuities, prior-art search, IP licensing, infringement watch, IP valuation
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### UGC-MGMT — User-Generated Content Management
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (SMM audit 2026-05-30)
+- **Most recent:** 2026-05-30 (SMM audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 SMM audit 2026-05-30
+- **Vendor evidence:** Stackla (Nosto), Yotpo Visual UGC, TINT, Bazaarvoice, Pixlee TurnTo, Curalate (Bazaarvoice)
+- **Adjacency:** SMM, B2C-COMM, MA, CDP
+- **Candidate capabilities:** UGC rights management, hashtag and mention collection, UGC moderation queue, UGC galleries for storefront and email embedding, creator outreach for re-use rights, attribution tracking
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### INTERNAL-COMMS — Internal Communications Platform
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (EMP-EXP audit 2026-05-30)
+- **Most recent:** 2026-05-30 (EMP-EXP audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 EMP-EXP audit 2026-05-30
+- **Vendor evidence:** Firstup, Haiilo, Staffbase, Workshop, Poppulo, Microsoft Viva Engage, Workvivo
+- **Adjacency:** EMP-EXP, INTRANET, HCM, COLLAB-GOV
+- **Candidate capabilities:** targeted multi-channel employee messaging, comms campaign orchestration, leader-comms cadence, comms analytics, attestation tracking, frontline reach
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### PCM — Profitability and Cost Management
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (EPM audit 2026-05-30)
+- **Most recent:** 2026-05-30 (EPM audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 EPM audit 2026-05-30
+- **Vendor evidence:** Oracle PCMCS, SAP Profitability and Performance Management, OneStream PCM, Anaplan Profitability, IBM Cognos Cost Allocation
+- **Adjacency:** EPM, ERP-FIN, FINOPS
+- **Candidate capabilities:** activity-based costing, profitability allocation, cost driver modeling, customer and product profitability analysis, transfer pricing allocation, multi-step allocations
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### DISCLOSURE-MGMT — Disclosure Management and Narrative Reporting
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (EPM audit 2026-05-30)
+- **Most recent:** 2026-05-30 (EPM audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 EPM audit 2026-05-30
+- **Vendor evidence:** Workiva, CCH Tagetik Disclosure, Certent CDM, IRIS CARBON, Toppan Merrill DisclosureNet
+- **Adjacency:** EPM, ERP-FIN, AUDIT, ESG
+- **Candidate capabilities:** narrative report authoring, XBRL tagging, statutory filing preparation, ESEF iXBRL submission, board-pack assembly, controlled narrative versioning
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### ITAD — IT Asset Disposition
+
+- **Mention count:** 1
+- **First surfaced:** 2026-05-30 (HAM audit 2026-05-30)
+- **Most recent:** 2026-05-30 (HAM audit 2026-05-30)
+- **Surfaced by:**
+  - 2026-05-30 HAM audit 2026-05-30
+- **Vendor evidence:** Iron Mountain ITAD, Sims Lifecycle Services, Wisetek, ERI Direct, TES (an SK ecoplant company)
+- **Adjacency:** HAM, ITAM, GRC, ESG
+- **Candidate capabilities:** secure data sanitization, chain of custody, e-waste recycling logistics, certificate of destruction generation, fair-market resale, regulatory disposal reporting (RoHS, WEEE, R2v3, e-Stewards)
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_

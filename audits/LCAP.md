@@ -1,0 +1,184 @@
+---
+status: feedback_needed
+last_transition: 2026-05-30
+last_transition_by: agent
+open_questions: 31
+---
+
+# LCAP - Audit History
+
+## 2026-05-30 - Validate b1 (full 4-pass)
+
+### Summary
+
+- **Current footprint:** **0** `domain_modules` rows (M1 / M2 hard-fail catalog-wide); 5 `domain_data_objects` masters (`extend_apps` 220, `extend_business_objects` 221, `extend_workflows` 222, `extend_pages` 715, `extend_data_sources` 716); 7 capabilities (`LCAP-VISUAL-MODELING`, `LCAP-MANAGED-RUNTIME`, `LCAP-INTEGRATION-CONNECTORS`, `LCAP-WORKFLOW-AUTO`, `LCAP-LIFECYCLE-MGMT`, `LCAP-AI-ASSIST`, cross-cutting `OPERATIONAL-DATA-APPS`); 16 solutions (15 primary, 1 secondary); 7 trigger_events on LCAP masters (all `event_category=""`); 4 outbound + 1 inbound cross-domain handoffs; **0** lifecycle states; **0** data_object_aliases; **0** data_object_relationships (intra or cross-domain on LCAP masters); 1 legacy `domain_id`-anchored `system` skill (`lcap-system`, id 79) with 5 `query_*` skill_tools and no module attribution; 0 roles; 0 `domain_module_capabilities` rows for any LCAP capability anywhere in the catalog.
+- **Vendor-surface basis:** flagship LCAP / enterprise low-code vendors enumerated in Pass 2 - OutSystems, Mendix, Microsoft Power Platform, ServiceNow App Engine / Now Platform, Appian, Salesforce Platform, Pega, Oracle APEX, Quickbase, Retool, Zoho Creator, Kissflow, Creatio, Workday Extend. All 14 are already in `solutions` and linked via `solution_domains` (15 primary + 1 secondary).
+- **Bucket 1 (in-scope, agent fixable):** 15 items.
+- **Bucket 2 (surface-for-user, judgment):** 5 items.
+- **Bucket 3 (Phase 0 pending, speculative):** 11 items.
+
+**Neighbor discovery** (auto-derived from handoffs + cross-domain DMDO, ranked by edge weight):
+
+| Neighbor | Out | In | DMDO cross-refs | Cross-rels | Weight | Pass shape |
+|---|---|---|---|---|---|---|
+| APP-PAAS | 1 | 0 | 0 | 0 | 1 | Lightweight |
+| IPAAS | 1 | 0 | 0 | 0 | 1 | Lightweight |
+| DCG | 1 | 0 | 0 | 0 | 1 | Lightweight |
+| ITSM | 1 | 0 | 0 | 0 | 1 | Lightweight |
+| NCDB | 0 | 1 | 0 | 0 | 1 | Lightweight |
+
+No neighbor reaches edge weight >=3, so no pairwise deep-dive runs in this audit. The handoff substrate is too thin to warrant full 5-section reconciliation against any single neighbor; this is itself a finding (see B3-M5).
+
+Structural pass bands: 
+- **S band (sweep)**: zero-row anomalies on `domain_modules` (M1), `capability_domains` to `domain_module_capabilities` (M4), `data_object_lifecycle_states` (B12), `data_object_aliases` (B11), `data_object_relationships` (B6 / B7 / B8), `roles` (E1 vacuously passes only because M1 fails first).
+- **A band**: A1 passes (all 7 domain metadata fields populated; note: `domains.business_logic` carries a pre-existing U+2014 em-dash from a prior load, flagged as a separate report-only cleanup for the catalog-wide em-dash sweep). A2 passes (7 capabilities). A3 passes (16 solutions). A5 skipped (not requested).
+- **M band**: **M1 / M2 / M4 / M6 hard-fail**. Zero modules + 7 capabilities = the entire M-band is broken. Every downstream concern (Phase B per-module attribution, Phase E roles, Phase F skill / tools, Phase H APQC tagging at module granularity) inherits the gap. M5 vacuously passes (no states to attribute).
+- **B band**: B1 passes (5 masters). B2 passes (every master has singular + plural labels). B3 needs decision (5 bare-word masters now prefixed `extend_*`, but the prefix is third-party product terminology, see Bucket 2). B4 hard-fail (every pattern flag is the false default with no positive re-evaluation). B5 vacuously passes (no embedded_masters). **B6 hard-fail** (zero intra-domain relationships). **B7 hard-fail** (zero `users` edges). B8 partial (4 outbound handoffs but zero cross-domain relationships authored, so no payload-target verbs exist). **B9 partial-fail** (7 trigger_events with empty `event_category`, violating Rule #13). **B9b hard-fail** (no intra-domain handoffs, but this is blocked behind M1 / M2). **B10b hard-fail** (3 of 4 outbound handoffs have NULL `target_domain_module_id`; all 4 have NULL `source_domain_module_id` because LCAP has no modules; inbound from NCDB has NULL on both sides). **B11 hard-fail** (zero aliases on any master; LCAP masters carry vendor-specific naming where aliases are essential). **B12 hard-fail** (zero lifecycle states; every master has an obvious state machine: draft / published / deprecated / retired).
+- **C band**: C1 partial (1 owner but on "IT Infrastructure" which is NOT on the canonical 20-function spine: spine names "IT Operations"). C2 vacuous (no capability-level overrides loaded; expected if all capabilities follow the domain's RACI).
+- **D band**: D1 not exercised (no fresh load).
+- **E band**: E1 vacuous (single-module floor fails first; M2 blocks role authoring).
+- **F band**: **F1 hard-fail** (legacy `domain_id`-anchored `system` skill `lcap-system` remains; per Rule #17 every module needs its own system skill, but no modules exist yet so F1 cannot be fully cured until M1 / M2 cure). **F2 hard-fail** (zero `domain_module_id`-anchored system skills, vacuously blocked by M1). F3 passes against the legacy skill (5 `query_*` tools, all `coverage_tier=platform`). F4 passes (all 5 tools are `operation_kind=query` with `data_object_id` set). F5 reads as 100% strict against the legacy skill, but the headline number is meaningless until the per-module system skills exist. F7 vacuous (no channel primitives linked).
+- **H band**: **H1 hard-fail**. 5 cross-domain handoffs (4 out + 1 in); zero `handoff_processes` rows; zero agent_curated tags; zero deferrals recorded. Volume target for the audit: ~2.5 to 4 agent_curated tags proposed (0.5N to 0.8N for N=5). Audit proposes 4 below.
+
+**The headline finding:** LCAP is a marketing-tier row. It carries `domains` metadata, capabilities, solutions, 5 data_objects with descriptions, 7 trigger events, and a domain-level system skill, but the **M / B / E / F / H structural layers are essentially empty**. Without `domain_modules` rows, every downstream layer is uncomputable. The deployable surface is zero. This is exactly the silently-thin Phase-A load pattern the per-domain completeness checklist exists to catch.
+
+### Bucket 1 - In-scope confirmed gaps
+
+#### STRUCTURAL band failures
+
+| ID | Band | Finding | Fix |
+|---|---|---|---|
+| B1-S1 | **M1 / M2 / M4 / M6 hard fail** | **Zero `domain_modules` rows for LCAP, but 7 capabilities exist.** Rule #14 requires >=1 full module per domain, and >=2 modules for domains with >=3 capabilities. Rule #14 also requires every capability to have >=1 realizing module (M4). The LCAP catalog row currently presents as a marketing entry only: no deployable unit. Vendor surface implies a clean 2-module split: **LCAP-VISUAL-COMPOSITION** (visual modeling, page authoring, business object schema, data source binding, pre-built connectors; realizes `LCAP-VISUAL-MODELING`, `LCAP-INTEGRATION-CONNECTORS`, `LCAP-AI-ASSIST`, `OPERATIONAL-DATA-APPS`; masters `extend_apps`, `extend_pages`, `extend_business_objects`, `extend_data_sources`) and **LCAP-RUNTIME-LIFECYCLE** (managed runtime, workflow execution, app lifecycle management; realizes `LCAP-MANAGED-RUNTIME`, `LCAP-WORKFLOW-AUTO`, `LCAP-LIFECYCLE-MGMT`; masters `extend_workflows`). Modularization shape decision goes to Bucket 2 (B2-S1) because the user owns the split call. Once modules exist, every M-band check curates. | Author 2 `domain_modules` rows + 7 `domain_module_capabilities` rows + 5 `domain_module_data_objects` rows (one master DMDO per data_object, attributed to its owning module). See Bucket 2 B2-S1 for the proposed split that needs user sign-off before the loader runs. |
+| B1-S2 | **Rule #18 violation (data_object names)** | **All 5 LCAP master data_objects are named `extend_*`**, which is Workday's product brand (`Workday Extend`). Rule #18 forbids third-party product or brand names on non-commerce entities; `data_objects.data_object_name` / `singular_label` / `plural_label` / `description` are all in the forbidden zone. Singular and plural labels also carry "Low-Code App" etc., which is fine; the entity names themselves are the violation. The vendor-neutral pattern across the LCAP market (OutSystems modules, Mendix apps, Power Apps canvas apps, Appian records, Pega case types, ServiceNow App Engine record producers) is to model these as `lcap_apps`, `lcap_business_objects`, `lcap_workflows`, `lcap_pages`, `lcap_data_sources`. The `lcap_` prefix mirrors the convention used across other domain-prefixed masters in the catalog (e.g. `hcm_employees`, `ats_candidates`). | Rename via [scripts/loaders/rename_data_object.ts](../scripts/loaders/rename_data_object.ts): `extend_apps` -> `lcap_apps`, `extend_business_objects` -> `lcap_business_objects`, `extend_workflows` -> `lcap_workflows`, `extend_pages` -> `lcap_pages`, `extend_data_sources` -> `lcap_data_sources`. Loader updates every junction FK + alias automatically. Approve before running. |
+| B1-S3 | **B3 naming arbitration** | After the B1-S2 rename, every master carries a `<slug>_<noun>` shape so Rule #9 passes by prefix; `is_canonical_bare_word=false` is correct. No further B3 action needed beyond the rename. Surface here for traceability rather than as a separate fix. | No additional fix; covered by B1-S2. |
+| B1-S4 | **B4 pattern flag re-evaluation (Rule #12)** | Every master has all three flags `false` (the default). Audit needs positive consideration. Candidate flips: `lcap_apps.has_submit_lock=true` (Once a published version is live, the version artifact is immutable; new edits create a new version) - but this is workflow-shape dependent on whether versioning is modeled as a state or as a separate object. `lcap_data_sources.has_personal_content=true` (connection metadata often carries auth credentials / API keys, which is personal-content-shaped). `lcap_business_objects.has_submit_lock=true` (schema changes shouldn't be silently reversible once dependent pages are deployed). | Surface the proposed flips as Bucket 2 (B2-S2) because pattern flags are workflow-shape judgments the user owns. |
+| B1-S5 | **B6 hard fail - zero intra-domain `data_object_relationships`** | LCAP has 5 masters that all depend on each other. The minimum coherent edge set is: `lcap_apps` contains_pages `lcap_pages` (1:N, owner_side=lcap_apps), `lcap_apps` contains_workflows `lcap_workflows` (1:N), `lcap_apps` defines `lcap_business_objects` (1:N), `lcap_apps` binds_to `lcap_data_sources` (M:N), `lcap_pages` displays `lcap_business_objects` (M:N), `lcap_workflows` operates_on `lcap_business_objects` (M:N), `lcap_workflows` triggers_from `lcap_pages` (M:N), `lcap_business_objects` sources_from `lcap_data_sources` (M:N). | Author 8 `data_object_relationships` rows via the cluster-drafts pattern in [scripts/loaders/load_cluster_drafts.ts](../scripts/loaders/load_cluster_drafts.ts). Draft block goes through Bucket 1 approval before loading. |
+| B1-S6 | **B7 hard fail - zero `users` edges (Rule #10)** | LCAP masters are author-and-deploy artifacts with obvious user roles, but no edge to the platform built-in `users` (id 748) exists anywhere. The minimum edge set: users `authors` lcap_apps, users `owns` lcap_apps, users `authors` lcap_pages, users `authors` lcap_business_objects, users `authors` lcap_workflows, users `configures` lcap_data_sources. | Insert 6 `data_object_relationships` rows pointing from `data_object_id=748` to each LCAP master, with verb-shape per the catalog convention (e.g. `authors_lcap_app`, `owns_lcap_app`). Bundle with B1-S5 in the same cluster-drafts load. |
+| B1-S7 | **B9 - `event_category` empty on every LCAP trigger_event (Rule #13)** | All 7 trigger_events (ids 731-737) have `event_category=""`. Rule #13 enums require one of `lifecycle` / `state_change` / `threshold` / `signal`. Correct classifications: `extend_app.published` -> `state_change`, `extend_app.deployment_failed` -> `signal`, `extend_business_object.schema_changed` -> `state_change`, `extend_workflow.failed` -> `signal`, `extend_workflow.published` -> `state_change`, `extend_page.published` -> `state_change`, `extend_data_source.connection_failed` -> `signal`. Note: event_name strings still carry the `extend_*` prefix and need a rename pass paired with B1-S2. | PATCH `event_category` on 7 rows + rename `event_name` to `lcap_*` shape (`lcap_app.published`, etc.). One small loader covers both. |
+| B1-S8 | **B11 hard fail - zero `data_object_aliases`** | LCAP masters carry strong vendor-specific synonyms: OutSystems uses "module" / "application" / "entity", Mendix uses "app" / "domain entity" / "microflow", Power Apps uses "canvas app" / "model-driven app" / "table" / "flow", Appian uses "record type" / "process model", Pega uses "case type". Without `data_object_aliases`, the architect agent can't bridge vendor terminology into the catalog's canonical names. Minimum aliases per master: 3-5 vendor synonyms. | Draft alias rows (5 masters x ~4 aliases = ~20 rows) and load via the cluster-drafts pattern. Bundle with B1-S5 / B1-S6. |
+| B1-S9 | **B12 hard fail - zero `data_object_lifecycle_states` (Rule #12)** | Every LCAP master has an obvious state machine: `draft -> validated -> published -> deprecated -> retired` for `lcap_apps`, `lcap_pages`, `lcap_workflows`, `lcap_business_objects`; `configured -> tested -> active -> degraded -> retired` for `lcap_data_sources`. `requires_permission=true` on `published` (publish gate), `deprecated` (deprecation gate), `retired` (retirement gate). No config-shape exemption applies here, every master has workflow. Note: `domain_module_id` on each lifecycle row must point at the realizing module (M5), so this load depends on B1-S1 having authored the modules first. | Draft state machines (5 x ~5 states = ~25 rows) and load via a focused loader. Sequence behind B1-S1. |
+| B1-S10 | **F1 hard fail - legacy domain-level system skill** | `skills` row id 79 (`lcap-system`, `skill_type=system`, `domain_id=37`, `domain_module_id=NULL`) is the legacy shape Rule #17 forbids once any module-level system skill exists. F1 currently passes only because no module-level skill has been authored (vacuous transitional state per F1's threshold). Once B1-S1 lands and module-level system skills are authored, F1 hard-fails until the legacy row is retired. The 5 linked `query_*` `skill_tools` (564, 565, 566, 822, 823) should be re-anchored to the new per-module skills (split: query_lcap_apps + query_lcap_business_objects + query_lcap_pages + query_lcap_data_sources -> LCAP-VISUAL-COMPOSITION skill; query_lcap_workflows -> LCAP-RUNTIME-LIFECYCLE skill). | After B1-S1: author 2 new module-anchored system skills (e.g. `lcap_visual_composition_agent`, `lcap_runtime_lifecycle_agent`), move the 5 `skill_tools` to the new skills, then DELETE the legacy skill 79 (cascade through `skill_tools` cleanup first). Plus add mutate + workflow-gate tools per Rule #17 (typical floor 5-20 per skill; current 5 query-only is below the floor). |
+| B1-S11 | **C1 - business function ownership shape** | LCAP `business_function_domains` rows reference "IT Infrastructure" as owner and "Software Engineering" + "Business Operations" as contributors. The canonical 20-function spine (SKILL.md § Function spine) names the IT row as "IT Operations" not "IT Infrastructure"; "Business Operations" is not on the spine at all. Either the spine has new entries this audit doesn't know about, or these labels are out-of-spine and need re-anchoring. The semantic intent ("IT owns the platform, Engineering builds the apps") is sound; the labels just need to be confirmed against the live `business_functions` table. | PATCH `business_function_domains.business_function_id` to point at the canonical spine rows after verifying their current names via `/business_functions?select=id,business_function_name`. If "IT Infrastructure" and "Business Operations" are genuinely live business_functions rows, no fix is needed; surface as report-only. |
+| B1-S12 | **B10b - NULL `source_domain_module_id` on every outbound handoff (in-scope)** | All 4 outbound LCAP handoffs (ids 704, 705, 706, 707) have `source_domain_module_id=NULL`. The inbound from NCDB (701) also has both module FKs NULL. After B1-S1 lands and `source_domain_module_id` becomes derivable per the B10b backfill rule (resolve via the source module mastering the trigger_event's data_object), these 4 outbound rows backfill cleanly: handoffs 704 (`extend_app.published`) + 706 (`extend_app.deployment_failed`) -> LCAP-VISUAL-COMPOSITION (masters `lcap_apps`); handoffs 705 (`extend_workflow.published`) + 707 (`extend_business_object.schema_changed`) -> LCAP-VISUAL-COMPOSITION for the business-object row, LCAP-RUNTIME-LIFECYCLE for the workflow row. | Single PATCH pass on 4 rows after B1-S1 lands. Reference: [scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts](../scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts). |
+| B1-S13 | **B9b - intra-domain handoffs (blocked by S1)** | Once the 2-module split lands (B1-S1) and the data_object_relationships from B1-S5 are loaded, the cross-module pairs derive directly: workflow definitions edited in LCAP-VISUAL-COMPOSITION execute in LCAP-RUNTIME-LIFECYCLE -> `lcap_workflow.published` fires LCAP-VISUAL-COMPOSITION -> LCAP-RUNTIME-LIFECYCLE; business-object schema authored in LCAP-VISUAL-COMPOSITION drives runtime data layer in LCAP-RUNTIME-LIFECYCLE -> `lcap_business_object.schema_changed` fires VISUAL-COMPOSITION -> RUNTIME-LIFECYCLE; runtime errors should fire back -> LCAP-RUNTIME-LIFECYCLE -> LCAP-VISUAL-COMPOSITION on `lcap_workflow.failed`. | Author 3 intra-domain `handoffs` rows after B1-S1 + B1-S5 + B1-S7 (event_category fix). |
+| B1-S14 | **B8 outbound - missing cross-domain `data_object_relationships`** | 4 outbound LCAP handoffs but zero cross-domain `data_object_relationships` exist where LCAP masters edge to the target domain's masters. Proposed verbs: handoff 704 (`extend_app.published` -> APP-PAAS) maps to `lcap_apps deploys_to <app_paas_master>` (target master TBD when APP-PAAS is audited); handoff 705 (`extend_workflow.published` -> IPAAS) maps to `lcap_workflows registers_with <ipaas_master>`; handoff 706 (`extend_app.deployment_failed` -> ITSM) maps to `lcap_apps opens <service_incidents>`; handoff 707 (`extend_business_object.schema_changed` -> DCG) maps to `lcap_business_objects publishes_to <dcg_catalog_master>`. Target-side masters need confirmation; some relationship rows may need to defer until the target domain's masters are vetted. | Author the 4 outbound `data_object_relationships` rows after B1-S5 lands; the 706 row (ITSM target) is directly resolvable (`service_incidents` is a known master); the other 3 need a one-query check of the target domain's current masters before authoring. |
+| B1-H1 | **APQC TAGGING** | LCAP cross-domain handoffs have zero `handoff_processes` tags. Volume target 0.5N to 0.8N (N=5) is 2.5 to 4 tags. Audit proposes the 4 high-confidence tags below. | INSERT into `handoff_processes` with `proposal_source='agent_curated'`, `record_status='new'`. |
+
+##### B1-H1 detail - proposed APQC tags
+
+| handoff_id | source -> target | trigger_event | payload | Proposed PCF | PCF id | Confidence |
+|---|---|---|---|---|---|---|
+| 704 | LCAP -> APP-PAAS | extend_app.published | extend_apps | Deploy services/solutions (20824 L2) | id=52 | confident L2 |
+| 705 | LCAP -> IPAAS | extend_workflow.published | extend_workflows | Develop service/solution and integration strategy (20785 L3) | id=278 | medium L3 |
+| 706 | LCAP -> ITSM | extend_app.deployment_failed | service_incidents | Manage change deployment control (20840 L3) | id=285 | confident L3 |
+| 707 | LCAP -> DCG | extend_business_object.schema_changed | extend_business_objects | Manage product and service master data (11740 L3) | id=115 | medium L3 |
+| 701 | NCDB -> LCAP | nocode_record_definition.changed | nocode_record_definitions | (defer to NCDB audit) | - | defer |
+
+The inbound from NCDB (handoff 701) is deferred: NCDB's `nocode_record_definitions` (data_object_id 242) has **no canonical master** anywhere in `domain_module_data_objects` (catalog-wide query returned empty). That is a B5 integrity gap on NCDB, not on LCAP; the right APQC classification depends on what NCDB ultimately models. Routed to the NCDB audit (see report-only follow-ups).
+
+#### Bucket 1 count
+
+| Finding type | Count |
+| --- | --- |
+| STRUCTURAL (M1/M2/M4/M6 hard-fails) | 1 |
+| STRUCTURAL (Rule #18 data_object renames) | 1 |
+| STRUCTURAL (B3 covered by S2) | 1 |
+| STRUCTURAL (B4 covered in B2-S2) | 1 |
+| STRUCTURAL (B6 + B7 + B11 + B12 + B9 event_category + B10b + B9b + B8 + F1 + C1) | 10 |
+| APQC TAGGING (high-confidence + defer) | 1 |
+| **Bucket 1 total** | 15 |
+
+### Bucket 2 - Surface-for-user (judgment calls)
+
+| ID | Question | Why agent can't answer | Options |
+|---|---|---|---|
+| B2-S1 | **Module split shape.** Proposed 2-module split: **LCAP-VISUAL-COMPOSITION** (masters `lcap_apps`, `lcap_pages`, `lcap_business_objects`, `lcap_data_sources`; realizes 4 capabilities including AI-assist and operational-data-apps cross-cutting) + **LCAP-RUNTIME-LIFECYCLE** (masters `lcap_workflows`; realizes 3 capabilities). Alternative: 3-module split adding **LCAP-INTEGRATION** (masters `lcap_data_sources`; realizes `LCAP-INTEGRATION-CONNECTORS`) as a starter for IT-driven integration buyers. Alternative: 4-module split breaking visual modeling, runtime, ALM, AI-assist apart. | Modularization is a deploy-shape decision the user owns. The vendor matrix supports several splits; the catalog convention so far on >=3-capability domains is to favor 2-3 functional modules over many narrow ones. | (a) 2-module split as proposed. (b) 3-module split with LCAP-INTEGRATION. (c) 4-module split. (d) different split: user proposes. |
+| B2-S2 | **Pattern flag re-evaluation (B4 / Rule #12).** Per-master proposed flips: (i) `lcap_apps.has_submit_lock=true` once a version is published; (ii) `lcap_business_objects.has_submit_lock=true` once a schema is deployed and dependent pages exist; (iii) `lcap_data_sources.has_personal_content=true` because connection records carry API keys / credentials; (iv) `lcap_workflows.has_submit_lock=true` once active. | Pattern flags are workflow-shape judgments the user owns. The defaults of false don't establish review per Rule #12. Per Rule #15 the consideration cannot be recorded in `notes`; it goes here. | Per-flag yes/no per master from user. |
+| B2-S3 | **Business function spine alignment (B1-S11).** "IT Infrastructure" and "Business Operations" are not on the canonical 20-function spine (the spine names "IT Operations"; there is no "Business Operations" spine row). Either these are valid live rows that exist outside the spine, or the LCAP load drifted away from the spine. Decision shape: re-anchor LCAP's `business_function_domains` to the spine names, or leave the existing references. | The agent can't tell whether the live `business_functions` table has been extended beyond the canonical spine without explicit confirmation. Re-anchoring without that signal could break existing analysis. | (a) Re-anchor to spine: owner -> "IT Operations", contributor -> "Software Engineering" (already on spine), drop "Business Operations" contributor row. (b) Leave as-is: spine is documentation, live data is authoritative. (c) Mixed: re-anchor to spine but ALSO add "Software Engineering" as a second owner, since low-code platforms straddle the IT / engineering boundary. |
+| B2-S4 | **Should `OPERATIONAL-DATA-APPS` cross-cutting capability stay on LCAP?** The capability is genuinely cross-cutting (per § Cross-cutting capability convention, applies when >=3 domains share the same feature shape). Vendors that market operational data apps include LCAP (Power Platform, Mendix, OutSystems), NCDB (Airtable, Smartsheet, Notion DBs), and possibly APP-PAAS depending on definitional scope. Is the current single-domain `capability_domains` row correct, or should it expand to NCDB / APP-PAAS so the capability's cross-domain shape is captured? | Cross-cutting capability scope is a market-test decision the user owns; the vendor surface across LCAP / NCDB / APP-PAAS is borderline. | (a) Keep single-domain on LCAP. (b) Expand to NCDB + LCAP. (c) Expand to NCDB + LCAP + APP-PAAS. |
+| B2-S5 | **`domains.business_logic` carries an em-dash from a prior load.** Quote: `Runtime, compiler, and visual modeller [U+2014] the entire platform is code. The end-user app surface is whatever the customer builds; the LCAP itself is platform.` Per CLAUDE.md no-em-dash rule, this needs to be rewritten on the next domains row PATCH. Suggested rewrite: `Runtime, compiler, and visual modeller. The entire platform is code, the end-user app surface is whatever the customer builds, and the LCAP itself is platform.` | The CLAUDE.md no-em-dash rule explicitly forbids U+2014 in catalog data; the user owns the editorial wording when fixing existing rows. | (a) Apply the suggested rewrite. (b) Provide alternative wording. (c) Defer to a catalog-wide em-dash cleanup pass. |
+
+### Bucket 3 - Phase 0 pending (speculative)
+
+Flagship LCAP vendors (`solutions` already loaded): OutSystems, Mendix, Microsoft Power Platform (Power Apps + Power Automate + Dataverse), ServiceNow App Engine + Now Platform, Appian Platform, Salesforce Platform, Pega Platform, Oracle APEX, Quickbase, Retool, Zoho Creator, Kissflow, Creatio, Workday Extend. The matrix is unusually broad (15 primary solutions, 1 secondary), making the surface union large.
+
+The substrate finding: LCAP currently models 5 application-construct masters (apps, business objects, workflows, pages, data sources) but is missing the **lifecycle artifacts** (versions, deployments, environments), **packaging concepts** (solutions / projects), **runtime telemetry** (executions, audit logs), and **AI-assist substrate** (prompts, generated artifacts). Most flagship vendors model these as first-class entities.
+
+#### MISSING entities (speculative; Phase 0 needed to verify)
+
+| Entity | Proposed module | Vendor evidence (speculative) |
+|---|---|---|
+| `lcap_app_versions` | LCAP-VISUAL-COMPOSITION | Mendix model versions, Power Apps versions, OutSystems modules versions, ServiceNow update sets. Source for the `published` lifecycle. |
+| `lcap_deployments` | LCAP-RUNTIME-LIFECYCLE | OutSystems deployment plan, Power Apps environments, Mendix deployment package, Appian deployment unit. Distinct from `lcap_apps` because one app has many deployments. |
+| `lcap_environments` | LCAP-RUNTIME-LIFECYCLE | dev / test / acceptance / prod environments. Every flagship has explicit environment promotion. |
+| `lcap_app_packages` | LCAP-RUNTIME-LIFECYCLE | ServiceNow update sets + scoped apps, Salesforce unmanaged + managed packages, OutSystems solution. The distribution unit, distinct from the app. |
+| `lcap_role_definitions` | LCAP-VISUAL-COMPOSITION | Per-app roles authored inside the LCAP, distinct from platform-level RBAC. Every flagship has this (Mendix user roles, Power Apps security roles per Dataverse, Appian groups). |
+| `lcap_workflow_executions` | LCAP-RUNTIME-LIFECYCLE | Run-time instance records. Audit / observability source. |
+| `lcap_audit_logs` | LCAP-RUNTIME-LIFECYCLE | Cross-flagship: every LCAP records who-did-what for compliance. Distinct from runtime execution telemetry. |
+| `lcap_integration_endpoints` | LCAP-VISUAL-COMPOSITION | External services exposed by an app (REST endpoints, webhook receivers). Distinct from `lcap_data_sources` which is inbound. |
+| `lcap_ai_prompts` | LCAP-VISUAL-COMPOSITION | Power Apps Copilot, OutSystems AI Mentor, Mendix Maia, ServiceNow Now Assist. The AI-assist capability needs a backing entity. |
+| `lcap_generated_artifacts` | LCAP-VISUAL-COMPOSITION | AI-generated pages / workflows / business objects from prompts; lineage for AI governance. |
+| `lcap_compliance_assertions` | new LCAP-COMPLIANCE-RISK module | EU Cyber Resilience Act compliance assertions, accessibility (WCAG 2.1) compliance attestations per app. EU CRA is already linked at the domain level. |
+
+Note: this set is speculative based on vendor-knowledge of the surface; a formal Phase 0 pass against OutSystems / Mendix / Power Platform / ServiceNow App Engine schema docs would tighten it. Estimated 6-9 of the 11 likely survive Phase 0 vetting; the others may collapse to capabilities or be folded into existing masters (e.g. `lcap_role_definitions` may be a junction rather than a master).
+
+#### MODULARIZATION ISSUE (speculative)
+
+- The 2-module split in B2-S1 covers the application-build vs application-run axis cleanly but does NOT carry the **compliance / risk** surface (EU CRA, accessibility, identity-and-access compliance). Several flagship vendors (ServiceNow App Engine, OutSystems, Mendix) model this as a third concern. If Bucket 3 lands, a **LCAP-COMPLIANCE-RISK** third module owning `lcap_compliance_assertions` (and possibly `lcap_audit_logs` if compliance-focused) may be warranted, mirroring the APM market's recommended `APM-TECH-RISK` split.
+
+#### Bucket 3 prompt
+
+Vet via formal Phase 0 vendor research (a second-pass subagent producing `c:/tmp/LCAP-phase0-<date>.md` with per-entity schema citations from OutSystems / Mendix / Power Platform / ServiceNow docs), or eyeball-mode (user names which of the 11 speculative entities ring true)?
+
+If you only commit to part of the work, the **versions + deployments + environments + audit_logs** cluster is the highest-leverage: it's the runtime substrate every flagship treats as first-class, and missing it leaves LCAP's lifecycle management capability with no backing data.
+
+### Cross-bucket dependencies
+
+- **B1-S1 (M-band cure) gates almost everything downstream.** B1-S9 (lifecycle states, M5 needs module FKs), B1-S12 (B10b backfill needs source modules), B1-S13 (B9b needs modules), B1-S10 (F1 + F2 system skill restructure needs modules), and Bucket 3 module assignment all depend on B1-S1 resolving first.
+- **B2-S1 (module split shape) gates B1-S1.** No `domain_modules` insert can happen until the user picks a, b, c, or d.
+- **B1-S2 (Rule #18 rename) is independent** and can run before, after, or alongside the M-band cure. Recommend running first because every downstream label / event_name / skill_tool name references the master names.
+- **Bucket 3 (Phase 0) is independent of Buckets 1 and 2 in principle**, but B2-S1's module shape decision affects how the new entities slot in. Recommend Bucket 2 -> Bucket 1 -> Bucket 3 ordering for the cleanest fix sequence.
+- **B2-S4 (cross-cutting capability scope)** is independent of the other buckets and can be answered any time.
+
+### Per-bucket prompts
+
+**Bucket 1 - fix these now?** Reply with: `all` (after B2-S1 lands), or list specific items (e.g. `S2, S5, S6, S7, S8, H1`), or `skip`.
+
+- **S1 (M1/M2/M4/M6 cure):** blocked behind B2-S1 (module split decision). Decide B2-S1 first.
+- **S2 (Rule #18 rename):** standalone, run any time, mechanical via `rename_data_object.ts`.
+- **S5 / S6 / S8 (B6 / B7 / B11 - intra-domain rels + users edges + aliases):** can run after B1-S2. Bundle in one cluster-drafts load.
+- **S7 (B9 event_category PATCH + event_name rename):** standalone, bundle with S2 rename.
+- **S9 (B12 lifecycle states):** blocked behind S1 (needs `domain_module_id`).
+- **S10 (F1 / F2 skill restructure):** blocked behind S1.
+- **S11 (C1 function spine):** answer B2-S3 first.
+- **S12 (B10b PATCH 4 outbound handoffs):** blocked behind S1.
+- **S13 (B9b intra-domain handoffs):** blocked behind S1 + S5 + S7.
+- **S14 (B8 cross-domain rels):** can run after S5; some rows may defer pending target-domain audits.
+- **H1 (APQC tagging):** 4 high-confidence rows are loadable now. Load now or in a follow-up batch?
+
+**Bucket 2 - what's your call on each?**
+
+- **B2-S1 (module split):** (a) 2-module, (b) 3-module with LCAP-INTEGRATION, (c) 4-module, (d) user-proposed?
+- **B2-S2 (pattern flags):** per-master yes/no on the four flips.
+- **B2-S3 (business function spine):** (a) re-anchor to spine, (b) leave as-is, (c) mixed?
+- **B2-S4 (`OPERATIONAL-DATA-APPS` scope):** (a) LCAP only, (b) +NCDB, (c) +NCDB+APP-PAAS?
+- **B2-S5 (`domains.business_logic` em-dash rewrite):** apply the suggested rewrite or provide alternative wording?
+
+**Bucket 3 - Phase 0 vetting or eyeball?**
+
+- Vet via formal Phase 0 vendor research, or eyeball-mode (name which of the 11 candidates to treat as confirmed)?
+- If eyeball, the highest-leverage cluster is versions + deployments + environments + audit_logs.
+
+### Report-only follow-ups (owed by other domains)
+
+| Owing domain | Owed | Origin |
+|---|---|---|
+| **NCDB** | B5 integrity gap on `nocode_record_definitions` (data_object_id 242). No `master` row exists anywhere in `domain_module_data_objects` for this data_object, even though NCDB publishes `nocode_record_definition.changed` (trigger_event 726) into LCAP via handoff 701. NCDB owes either a `master` DMDO or, if the data_object is mis-attributed, retiring the trigger_event. | LCAP audit Pass 1 (B5 / B10b inbound) |
+| **NCDB** | B10b backfill for inbound handoff 701 (`nocode_record_definition.changed` -> LCAP). After NCDB's own modularization, `source_domain_module_id` must be set; also `target_domain_module_id` on the LCAP side after B1-S1 lands. | LCAP audit Pass 1 (B10b inbound) |
+| **NCDB** | APQC tagging for handoff 701 (deferred from B1-H1 because the source-domain canonical master is missing). | LCAP audit Pass 1 (H1) |
+| **NCDB** | Whether `nocode_record_definitions` should be a separate `kind='platform_builtin'` data_object or remain `domain_owned` is an NCDB modeling question with downstream impact on LCAP and APP-PAAS embedded_master patterns. | LCAP audit Pass 3 (neighbor discovery) |
+| **APP-PAAS** | B8 inbound consumer-DMDO on `lcap_apps` (LCAP's master, after B1-S2 rename) once APP-PAAS hosts the runtime. The LCAP outbound handoff 704 (`lcap_app.published` -> APP-PAAS) implies APP-PAAS consumes the published-app artifact; declare a `consumer` DMDO on the relevant APP-PAAS module. | LCAP audit Pass 4 (pairwise lite) |
+| **IPAAS** | B8 inbound consumer-DMDO on `lcap_workflows` once IPAAS registers workflow-published triggers. Handoff 705 implies a consumer DMDO. | LCAP audit Pass 4 (pairwise lite) |
+| **ITSM** | B8 inbound consumer-DMDO on `lcap_apps` (deployment_failed payload is `service_incidents`, an ITSM master, but the event source is `lcap_apps`). After B1-S14, the cross-domain relationship `lcap_apps opens service_incidents` reverse-mirrors as ITSM declaring a contributor relationship on `lcap_apps`. ITSM may already cover this generically via the `application.deployment_failed` shape from APM; verify in ITSM's next audit. | LCAP audit Pass 4 (pairwise lite) |
+| **DCG** | B8 inbound consumer-DMDO on `lcap_business_objects` once DCG catalogs LCAP-produced schemas. Handoff 707 implies a `consumer` DMDO. | LCAP audit Pass 4 (pairwise lite) |
+| **(Catalog-wide cleanup)** | Em-dash sweep across `domains.business_logic` and other `description` columns. The LCAP row carries one at the `Runtime, compiler, and visual modeller` clause and there may be others from pre-CLAUDE.md-rule loads. Surface for a catalog-wide cleanup pass, not LCAP's fix. | LCAP audit A-band review |
