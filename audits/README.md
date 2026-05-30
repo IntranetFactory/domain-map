@@ -25,9 +25,16 @@ Per audit, the section carries:
 ### Bucket 1 — In-scope confirmed gaps
 Tables grouped by finding type (MISSING / WRONG-OWNERSHIP / SCOPE-CREEP / STRUCTURAL / BOUNDARY / **APQC TAGGING**).
 
-For **APQC TAGGING**, two tables: (1) human-curated proposals — `(handoff_id, source→target, trigger_event, payload, proposed PCF row, PCF id, confidence)`; (2) deferred-to-Discover-Pass-3 — handoffs the analyst couldn't confidently classify, with the deferral reason. The combined count drives the APQC TAGGING line in the summary.
+For **APQC TAGGING**, two tables: (1) `agent_curated` proposals — `(handoff_id, source→target, trigger_event, payload, proposed PCF row, PCF id, confidence)`; (2) deferred-to-Discover-Pass-3 — handoffs the agent couldn't confidently classify, with the deferral reason. The combined count drives the APQC TAGGING line in the summary.
 
-Volume expectation: for N cross-domain handoffs the domain touches (outbound + inbound), expect roughly 0.5N to 0.8N human-curated rows. Audits that ship zero APQC tags despite the analyst building the mental model are a procedural failure — the design assumes the analyst tags while reading.
+**Report two distinct H-band numbers, don't conflate them:**
+
+- **Catalog quality (the headline)** = how many of the domain's cross-domain handoffs carry a `record_status='approved'` tag. This is the real coverage measure. Independent of how the tag was originally proposed.
+- **Process health (secondary)** = how many existing tags are `proposal_source='agent_curated'`. Tells you whether the layered-ownership process is firing. Useful as a review-triage hint (sort by source) and as a regression test.
+
+A `discovery_substring` row a reviewer approved IS a high-quality row. An `agent_curated` row at `record_status='new'` is high-confidence-pending — not yet high-quality. Lead with approved count; mention `agent_curated` count as a side-bar.
+
+Volume expectation (for the audit's own work): roughly 0.5N to 0.8N NEW `agent_curated` rows proposed during this audit (where N = the domain's cross-domain handoff count). This is a process / throughput target for the audit itself, NOT a catalog quality target. Audits that ship zero APQC tags despite the analyst building the mental model are a procedural failure — the design assumes the agent tags while reading. `proposal_source='human_curated'` is reserved for cases where the user explicitly typed *"add tag X for handoff Y"* in chat; the agent's own audit-time tagging is always `agent_curated`.
 
 ### Bucket 2 — Surface-for-user (judgment calls)
 Numbered list, each with the question + options + dependency status.

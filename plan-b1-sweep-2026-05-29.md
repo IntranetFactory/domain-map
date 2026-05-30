@@ -57,12 +57,14 @@ Within Queue A, ordering is by defect count desc. Within Queue B, ordering is by
 For each Queue A item:
 - Re-run b2 after the fix loads
 - Acceptance: domain's row in [audits/_validate-cross-domain.md](audits/_validate-cross-domain.md) drops to 0 B10b on both sides
-- **APQC TAGGING expected outcome:** for a domain with N cross-domain handoffs touched by the audit, the audit's Bucket 1 APQC TAGGING line should propose roughly 0.5N to 0.8N `handoff_processes` rows with `proposal_source='human_curated'`. Audits that ship zero APQC tags despite the analyst having built the mental model are a procedural failure (the 2026-05-29 ITSM audit was this — 82 cross-domain handoffs reviewed, 0 APQC tags proposed). Going forward, this is checked at audit-acceptance time.
+- **APQC TAGGING expected outcome (two distinct measures, don't conflate):**
+  - **Process target (per audit):** the audit's Bucket 1 APQC TAGGING section should propose roughly 0.5N to 0.8N NEW `handoff_processes` rows with `proposal_source='agent_curated'`, where N = the domain's cross-domain handoff count. Zero new proposals despite the analyst having built the mental model is a procedural failure (the first 2026-05-29 ITSM audit shipped zero APQC tags; the H-band added afterward forces the section into Bucket 1 to prevent recurrence).
+  - **Catalog quality target (post-fix-loop):** after fix-loop approval, `record_status='approved'` count on the domain's cross-domain handoff_processes rows is the trustworthy-coverage number. THIS is the headline quality measure, not the `agent_curated` count. A `discovery_substring` row a reviewer approved is high-quality; an `agent_curated` row at `record_status='new'` is high-confidence-pending. Lead with approved count when reporting catalog quality.
 
 For each Queue B item:
 - Phase B load via Research mode (see [README.md § a) Research a domain](README.md))
 - Acceptance: `domain_module_data_objects` count for the domain ≥ the canonical master count from Phase 0 vendor matrix
-- **APQC TAGGING expected outcome:** Phase B deliverable 7 produces `handoff_processes` rows alongside the new handoffs (`proposal_source='human_curated'`); volume scales with the new cross-domain handoff count.
+- **APQC TAGGING expected outcome:** Phase B deliverable 7 produces `handoff_processes` rows alongside the new handoffs (`proposal_source='agent_curated'`); volume scales with the new cross-domain handoff count.
 
 ## Out of scope
 

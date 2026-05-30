@@ -97,7 +97,7 @@ Two sub-steps that close the chain `tool → skill_tools → skill → process �
 
 For each top-N process, surface:
 - PCF row name + `external_id` + `hierarchy_level`
-- The tagged handoffs as `(trigger_event_name, source_domain_code, target_domain_code, friction_level, provenance)` tuples — provenance = `human_curateded` (if leftover authored-pending) or `discovered_substring`
+- The tagged handoffs as `(trigger_event_name, source_domain_code, target_domain_code, friction_level, provenance)` tuples — provenance = `human_curated` / `agent_curated` (if leftover authored-pending) or `discovery_override` / `discovery_substring`
 - The user's review choice: `approve` / `reject` / `defer`
 
 Apply choices via PATCH `record_status`. Rule #1 applies: the agent never auto-flips to `approved`.

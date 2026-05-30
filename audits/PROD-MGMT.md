@@ -1,0 +1,241 @@
+---
+status: feedback_needed
+last_transition: 2026-05-30
+last_transition_by: agent
+open_questions: 22
+---
+
+# PROD-MGMT, Audit History
+
+## 2026-05-30, Validate b1 (full 4-pass)
+
+### Summary
+
+- **Current footprint:** 2 full modules (`PM-DISCOVERY` 130, `PM-ROADMAP-DELIVERY` 131), 0 starter modules, 0 cross-cutting hosted modules. 8 masters: `feature_requests` (406), `customer_feedback_items` (407) in DISCOVERY; `product_lines` (402), `product_features` (403), `product_releases` (404), `product_roadmaps` (405), `product_metrics` (408), `beta_programs` (409) in ROADMAP-DELIVERY. 6 consumer rows (5 in ROADMAP-DELIVERY, 1 in DISCOVERY) + 1 contributor (`value_streams` 249 in ROADMAP-DELIVERY). 13 capabilities (one cross-cutting: `GOAL-MGMT` 25 shared with WORK-MGMT, SEM, TALENT-MGMT). 9 solutions, all `coverage_level='primary'` (Productboard, Aha! Roadmaps, Jira Product Discovery, Pendo Roadmaps, Airfocus, ProductPlan, Roadmunk, Craft.io, Dragonboat). 25 PROD-MGMT-owned trigger_events. 20 outbound + 11 inbound cross-domain handoffs (31 cross-domain total). 0 intra-domain cross-module handoffs. 0 aliases on any of the 8 masters. 31 lifecycle states across 8 masters (7 masters declare states; `product_metrics` is config-shape per its `data_objects.notes`). 2 system skills (`pm_discovery_agent` 201, `pm_roadmap_delivery_agent` 202) + 21 `skill_tools` rows (6 on DISCOVERY skill, 15 on ROADMAP-DELIVERY skill). 0 PROD-MGMT roles / role_modules rows. 0 regulations attached.
+- **Vendor-surface basis (Pass 2 flagship enumeration):** Productboard, Aha! Roadmaps, ProductPlan, Roadmunk, Craft.io, Airfocus, Pendo Feedback / Roadmaps, LaunchNotes, Canny, Atlassian Jira Product Discovery, Notion as PM tool, Linear (lightweight PM surface), ProdPad, Savio, Dragonboat. Compliance overlay: none material in the core PROD-MGMT surface (GDPR applies for customer-feedback PII handling, see B3 candidates).
+- **Bucket 1 (in-scope, agent fixable):** 8 items.
+- **Bucket 2 (surface-for-user, judgment):** 6 items.
+- **Bucket 3 (Phase 0 pending, speculative):** 8 items.
+
+**Neighbor discovery** (auto-derived from handoffs + cross-domain DMDO + cross-domain relationships, ranked by edge weight):
+
+| Neighbor | Out | In | DMDO | Cross-rels | Weight | Pass shape |
+|---|---|---|---|---|---|---|
+| WORK-MGMT | 5 | 4 | 1 (WORK-MGMT-TASK-EXEC consumer on product_roadmaps, feature_requests, product_releases) | 1 (work_automations mirrors_to product_roadmaps) | 11 | Pairwise (full) |
+| CSM | 5 | 0 | 0 | 4 (customer_cases → feedback / impacted_by features / impacted_by releases / tracked_by metrics / monitored_in beta_programs) | 9 | Pairwise (full) |
+| CRM | 3 | 0 | 1 (CRM-ACCT-MGT consumer on feature_requests, product_features, product_lines) | 0 | 4 | Pairwise (full) |
+| DXP | 3 | 1 | 0 | 0 | 4 | Pairwise (full) |
+| CDP | 2 | 0 | 0 | 0 | 2 | Lightweight |
+| BPA | 0 | 2 | 0 | 0 | 2 | Lightweight |
+| SPM | 0 | 1 | 0 | 1 (SPM roadmap_items consumed by PROD-MGMT) | 2 | Lightweight |
+| VSDP | 0 | 1 | 0 | 0 | 1 | Lightweight |
+| TEST-MGMT | 0 | 1 | 0 | 1 (requirements_to_test_traceability feeds product_features) | 2 | Lightweight |
+| ERP-FIN | 1 | 0 | 0 | 0 | 1 | Lightweight |
+
+**Structural pass bands:** A (domain metadata) PASS, all seven Rule #8 fields populated (crud_percentage=85, business_logic populated, min_org_size, cost_band, certification_required=false, usa_market_size_usd_m=1200, source_year=2024). M1-M7 mostly PASS: every module has ≥1 master, ≥3 capabilities with 2 modules satisfies Rule #14 floor at the structural level (but see B2-S1 below). **B1 (lifecycle states) PASS** for 7 of 8 masters; `product_metrics` declares config-shape exemption via populated `notes` (Rule #15 violation, see B2-S2). **B4 pattern flags:** only `customer_feedback_items.has_personal_content=true`; no `has_submit_lock` on `product_releases` despite published-state semantics (judgment, see B2-S3). **B5 DMDO closure** PARTIAL: handoffs 1322 (work_items 243), 1323/1324 (okr_objectives 245) target PROD-MGMT module 131 but neither 243 nor 245 has a DMDO row in PROD-MGMT (see B1-S6). **B9 (trigger_events.event_category) hard-fail:** 22 of 25 PROD-MGMT-owned trigger_events carry empty `event_category` (Rule #13 enum violation across the board). **B9b (intra-domain cross-module handoffs) hard-fail:** zero intra-domain handoffs across the 2-module domain despite an obvious DISCOVERY → ROADMAP-DELIVERY pipeline (feature_request.accepted → product_feature draft, customer_feedback_item.linked → roadmap update). **B10b report-only:** 14 outbound handoffs carry NULL `target_domain_module_id` (target domains' work); 9 inbound handoffs carry NULL `source_domain_module_id` (source domains' work). **C1-C2 (capability-domain coherence) PARTIAL FAIL:** 6 PMM-flavored capabilities (`LAUNCH-PLANNING` 119, `GTM-LAUNCH-COORDINATION` 120, `MESSAGING-AND-POSITIONING` 121, `SALES-ENABLEMENT-CONTENT` 122, `COMPETITIVE-INTELLIGENCE` 123, `WIN-LOSS-INTERVIEWS` 124) are attached to PROD-MGMT but the PROD-MGMT modules host zero entities, skills, or solutions covering them, the entities belong to a Product Marketing Management market that does not yet exist as a domain (see B3 candidate-domain queue). **D1 (data_object_relationships) PASS** for the 7 rows on PROD-MGMT masters. **E (roles) hard-fail:** zero roles defined for PROD-MGMT, no `role_modules` rows on either module, so no permission bundles, no RBAC layer wired. **F2 (skills 1:1 with modules) PASS** (2 modules, 2 system skills). **F3 (skill_tools floor) PASS** (6 + 15 = 21 tools). **F4 (operation_kind ↔ data_object_id invariants) PASS** (all queries and mutates carry data_object_id, side_effects null). **F5 (Semantius score) approximately 95%** (20 of 21 skill_tools on `coverage_tier='platform'`, the lone external is `notify_team` on the ROADMAP-DELIVERY skill). **H1 (APQC tagging) hard-fail:** 0 of 31 cross-domain handoffs tagged, zero approved, zero agent_curated.
+
+PROD-MGMT Semantius score (strict, PROD-MGMT proper): approximately **95%** (20 / 21 `skill_tools` rows on `coverage_tier='platform'`).
+
+### Bucket 1, In-scope confirmed gaps
+
+#### STRUCTURAL band failures
+
+| ID | Band | Finding | Fix |
+|---|---|---|---|
+| B1-S1 | **B9 hard-fail, missing event_category on 22 trigger_events** | All 22 PROD-MGMT-owned events carry empty `event_category` (Rule #13 enum must be one of `lifecycle / state_change / threshold / signal`). Inventory by category: `lifecycle` (master-state lifecycle progression) covers 1138 `beta_program.launched`, 1145 `feature_request.shipped`, 1146 `product_feature.released`, 1147 `product_feature.deprecated`, 1149 `product_line.launched`, 1153 `product_release.planned`, 1154 `product_release.shipped`, 1156 `product_roadmap.published`. `state_change` (one-shot transitions) covers 1142 `customer_feedback_item.linked_to_feature`, 1155 `product_release.rolled_back`, 1157 `product_roadmap.item_promoted`, plus the proposed new events from B1-S2. `threshold` covers 1144 `feature_request.upvoted_threshold`, 1148 `product_feature.adoption_threshold_reached`, 1151 `product_metric.threshold_breached`. `signal` covers external derived events such as bottleneck identifications. Additional events not in PROD-MGMT-owned list but used by PROD-MGMT consumers (359, 866, 868, 870, 871, 882, 848) are other domains' fix (B10b report-only, see B1-S3 / B1-S4). | PATCH 22 `trigger_events` rows to set `event_category` per the inventory above. |
+| B1-S2 | **B9b hard-fail, zero intra-domain cross-module handoffs** | The DISCOVERY (130) → ROADMAP-DELIVERY (131) pipeline is the single most important workflow in PROD-MGMT (feedback / requests get triaged in DISCOVERY, accepted ones flow into the roadmap and become product_features in ROADMAP-DELIVERY) and the catalog has zero intra-domain handoff rows wiring that pipeline. Expected minimum: (a) DISCOVERY → ROADMAP-DELIVERY on `feature_request.accepted` (state 4 of `feature_requests`, `requires_permission=true`) producing a `product_features` row; (b) DISCOVERY → ROADMAP-DELIVERY on `customer_feedback_item.linked` (state 3) updating the linked feature; (c) ROADMAP-DELIVERY → DISCOVERY on `product_feature.released` (1146) updating the originating `feature_request` (closing the loop). | Author 3 intra-domain handoff rows with `source_domain_id=target_domain_id=101`, `integration_pattern='lifecycle_progression'`, `friction_level='low'`. Requires 1 new `trigger_events` row for `feature_request.accepted` (the accepted lifecycle state has no event row); the other two reuse existing events 1142 and 1146. |
+| B1-S3 | **B5 partial-fail, missing DMDO closure for inbound payloads** | Three inbound handoffs reference data_objects that have no DMDO row in PROD-MGMT: 1322 `work_item.completed` (payload data_object 243 `work_items`, source WORK-MGMT-TASK-EXEC), 1323 `okr_objective.committed` (payload 245 `okr_objectives`, source WORK-MGMT-GOALS-OKR), 1324 `okr_objective.scored` (same). DMDO closure requires the receiving module to declare `consumer + optional` on the inbound payload's data_object. | INSERT 2 `domain_module_data_objects` rows on PM-ROADMAP-DELIVERY (131): (131, 243, consumer, optional), (131, 245, consumer, optional). Both are infrastructure-master-shaped (Rule #16), `optional` is correct. |
+| B1-S4 | **E (RBAC) hard-fail, zero roles defined for PROD-MGMT** | Per the per-domain audit checklist E1-E6 every loaded domain must have at least one role, one role_module binding, and the three baseline permissions per module (`<module>:read`, `:manage`, `:admin`). Currently PROD-MGMT has zero roles and zero role_modules rows. Catalog standard PM role bundle: `PRODUCT-MANAGER` (admin on PM-DISCOVERY, manage on PM-ROADMAP-DELIVERY), `HEAD-OF-PRODUCT` (admin on both), `PRODUCT-OPS-ANALYST` (manage on PM-DISCOVERY, read on PM-ROADMAP-DELIVERY), `ENGINEERING-LEAD` (read on PM-DISCOVERY, manage on PM-ROADMAP-DELIVERY for release windows). Workflow-gate permissions derived from the 19 lifecycle states with `requires_permission=true` (per Rule #14's permission materialization scope) span `accept_feature_request`, `reject_feature_request`, `release_product_feature`, `deprecate_product_feature`, `ship_product_release`, `rollback_product_release`, `cancel_product_release`, `publish_product_roadmap`, `launch_product_line`, `sunset_product_line`, `retire_product_line`, `activate_beta_program`, `close_beta_program`, `cancel_beta_program`. | Phase-E load: 4 roles, 6 role_modules, 6 baseline permissions, 14 workflow-gate permissions, permission_hierarchy edges. Loader pattern from prior CLM Phase-E work. |
+| B1-S5 | **Report-only (outbound NULLs owed by other domains, B10b asymmetry)** | 14 outbound PROD-MGMT handoffs carry NULL `target_domain_module_id`: 996 (CSM, beta_program.launched), 997 (CDP, beta_program.launched), 998 (CSM, customer_feedback_item.linked_to_feature), 1001 (DXP, product_feature.released), 1003 (CSM, product_feature.deprecated), 1004 (CDP, product_feature.adoption_threshold_reached), 1006 (ERP-FIN, product_line.launched), 1007 (CSM, product_metric.threshold_breached), 1009 (DXP, product_release.shipped), 1010 (CSM, product_release.rolled_back), 1011 (DXP, product_roadmap.published). 1000 (CRM), 1002 (CRM), 1005 (CRM) and the WORK-MGMT outbounds are populated. CLM's own side (`source_domain_module_id`) is populated on every outbound row. | Schedule b1 audits for CSM, CDP, DXP, ERP-FIN to derive their `target_domain_module_id` per the standard B10b backfill procedure. |
+| B1-S6 | **Report-only (inbound NULLs owed by source domains, B10b asymmetry)** | 9 inbound PROD-MGMT handoffs carry NULL `source_domain_module_id`: 813 (DXP, ab_test.completed), 184 (BPA, value_stream.bottleneck_identified), 243 (SPM, roadmap_item.released), 775 (VSDP, pull_request.merged), 784 (BPA, process_simulation_run.bottleneck_identified), 781 (TEST-MGMT, requirements_to_test_traceability.linked). WORK-MGMT inbounds (791, 1253, 1322, 1323, 1324) are populated. PROD-MGMT's `target_domain_module_id` is populated on every inbound. | Schedule b1 audits for DXP, BPA, SPM, VSDP, TEST-MGMT to populate their `source_domain_module_id` on the listed handoffs. |
+| B1-S7 | **Pairwise, missing consumer DMDOs on downstream domains** | Several PROD-MGMT-targeted handoffs imply consumer DMDOs on the target side that do not exist: CSM consumes `beta_programs` (996), `customer_feedback_items` (998), `product_features` (1003), `product_metrics` (1007), `product_releases` (1010) but no CSM module declares the dependencies; CDP consumes `beta_programs` (997), `product_features` (1004); DXP consumes `product_features` (1001), `product_releases` (1009), `product_roadmaps` (1011); ERP-FIN consumes `product_lines` (1006); CRM consumes `feature_requests` (1000), `product_features` (1002), `product_lines` (1005), already declared on CRM-ACCT-MGT (46), only the explicit `consumer + optional` rows for the three feature-request / feature / line objects are present, but `feature_requests` is OK. Surface the gaps for the receiving-side audits. | Each target domain's b1 audit adds the relevant `consumer` DMDO rows. Not PROD-MGMT's fix. |
+
+#### APQC TAGGING (Bucket 1, H1 hard-fail closure)
+
+0 of 31 cross-domain handoffs carry `handoff_processes` rows. **0 `discovery_substring`, 0 `agent_curated`, 0 `record_status='approved'`.** Volume expectation per SKILL H1: 0.5N to 0.8N for N=31, that is 16 to 25 `agent_curated` tags. The audit proposes the following candidates from the analyst's structural-pass model:
+
+| handoff_id | source → target | trigger_event | payload | Proposed PCF row | PCF id (lookup needed) | Confidence |
+|---|---|---|---|---|---|---|
+| 996 | PM-ROADMAP-DELIVERY → CSM | `beta_program.launched` | `beta_programs` | Develop products and services (10062) child, "Pilot production and evaluate feasibility of production process" (19992) | needs lookup at fix time | confident L4 |
+| 997 | PM-ROADMAP-DELIVERY → CDP | `beta_program.launched` | `beta_programs` | Manage customer information / Customer insights | needs PCF lookup | medium |
+| 998 | PM-DISCOVERY → CSM | `customer_feedback_item.linked_to_feature` | `customer_feedback_items` | Provide customer feedback to product management on customer service experience (18126 L4) | 956 | confident L4 |
+| 999 | PM-DISCOVERY → WORK-MGMT-TASK-EXEC | `feature_request.upvoted_threshold` | `feature_requests` | Prioritize and manage incoming feedback (20953 L4) | 530 | confident L4 |
+| 1000 | PM-DISCOVERY → CRM-ACCT-MGT | `feature_request.shipped` | `feature_requests` | Provide feedback and insights to appropriate teams (11241 L4) | 964 | confident L4 |
+| 1001 | PM-ROADMAP-DELIVERY → DXP | `product_feature.released` | `product_features` | Manage releases (Develop products and services 10062 L2 child) | needs lookup | medium |
+| 1002 | PM-ROADMAP-DELIVERY → CRM-ACCT-MGT | `product_feature.released` | `product_features` | Develop and manage sales partner / channel relationships (10401 child) | needs lookup | medium |
+| 1003 | PM-ROADMAP-DELIVERY → CSM | `product_feature.deprecated` | `product_features` | Manage customer service requests | needs lookup | medium |
+| 1004 | PM-ROADMAP-DELIVERY → CDP | `product_feature.adoption_threshold_reached` | `product_features` | Develop customer insights | needs lookup | medium |
+| 1005 | PM-ROADMAP-DELIVERY → CRM-ACCT-MGT | `product_line.launched` | `product_lines` | Develop and manage sales account relationships | needs lookup | medium |
+| 1006 | PM-ROADMAP-DELIVERY → ERP-FIN | `product_line.launched` | `product_lines` | Manage chart of accounts / Maintain item master (Process AR / Manage product master) | needs lookup | medium |
+| 1007 | PM-ROADMAP-DELIVERY → CSM | `product_metric.threshold_breached` | `product_metrics` | Manage customer service problems, requests, and inquiries | needs lookup | medium |
+| 1008 | PM-ROADMAP-DELIVERY → WORK-MGMT | `product_release.planned` | `product_releases` | Develop products and services / Plan delivery | needs lookup | confident L3 |
+| 1009 | PM-ROADMAP-DELIVERY → DXP | `product_release.shipped` | `product_releases` | Implement software change/release (20853 L4) | 1262 | confident L4 |
+| 1010 | PM-ROADMAP-DELIVERY → CSM | `product_release.rolled_back` | `product_releases` | Verify change/release implementation success (20856) | 1265 | confident L4 |
+| 1011 | PM-ROADMAP-DELIVERY → DXP | `product_roadmap.published` | `product_roadmaps` | Develop and manage execution roadmap (20005 L4) | 625 | confident L4 |
+| 1012 | PM-ROADMAP-DELIVERY → WORK-MGMT | `product_roadmap.item_promoted` | `product_roadmaps` | Prioritize and manage incoming feedback / Develop product portfolio | 530 | medium |
+| 1250 | PM-ROADMAP-DELIVERY → WORK-MGMT-TASK-EXEC | `product_release.shipped` | `product_releases` | Implement software change/release (20853) | 1262 | confident L4 |
+| 1251 | PM-ROADMAP-DELIVERY → WORK-MGMT-TASK-EXEC | `product_release.rolled_back` | `product_releases` | Verify change/release implementation success (20856) | 1265 | confident L4 |
+| 1252 | PM-ROADMAP-DELIVERY → WORK-MGMT-TASK-EXEC | `product_roadmap.published` | `product_roadmaps` | Develop and manage execution roadmap (20005) | 625 | confident L4 |
+| 184 | BPA → PM-ROADMAP-DELIVERY | `value_stream.bottleneck_identified` | `value_streams` | Manage business process performance (Develop and manage business resilience) | needs lookup | medium |
+| 243 | SPM → PM-ROADMAP-DELIVERY | `roadmap_item.released` | `roadmap_items` | Develop and manage execution roadmap (20005) | 625 | confident L4 |
+| 775 | VSDP → PM-ROADMAP-DELIVERY | `pull_request.merged` | `pull_requests` | Implement software change/release (20853) | 1262 | confident L4 |
+| 781 | TEST-MGMT → PM-ROADMAP-DELIVERY | `requirements_to_test_traceability.linked` | `requirements_to_test_traceability` | Develop product/service design specifications (10085) | 571 | confident L4 |
+| 784 | BPA → PM-ROADMAP-DELIVERY | `process_simulation_run.bottleneck_identified` | `process_simulation_runs` | Analyze business process performance | needs lookup | medium |
+| 791 | WORK-MGMT-TASK-EXEC → PM-ROADMAP-DELIVERY | `work_automation.triggered` | `work_automations` | Manage IT operations / Workflow automation | needs lookup | medium |
+| 813 | DXP → PM-DISCOVERY | `ab_test.completed` | `ab_tests` | Generate new product/service concepts / Confirm alignment with strategy | needs lookup | medium |
+| 1253 | WORK-MGMT-TASK-EXEC → PM-ROADMAP-DELIVERY | `work_automation.disabled` | `work_automations` | Manage IT operations / Workflow automation | needs lookup | medium |
+| 1322 | WORK-MGMT-TASK-EXEC → PM-ROADMAP-DELIVERY | `work_item.completed` | `work_items` | Develop and manage execution roadmap (20005) | 625 | medium |
+| 1323 | WORK-MGMT-GOALS-OKR → PM-ROADMAP-DELIVERY | `okr_objective.committed` | `okr_objectives` | Develop business strategy / Establish strategic direction | needs lookup | medium |
+| 1324 | WORK-MGMT-GOALS-OKR → PM-ROADMAP-DELIVERY | `okr_objective.scored` | `okr_objectives` | Measure and report business performance (17052) | needs lookup | medium |
+
+31 candidate APQC tags, all proposed as `proposal_source='agent_curated'`, `record_status='new'` (one tagging item per Rule #10's counting convention; the 31 candidates roll up under B1-H1). The PCF id column requires `/processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry` lookups at fix time for the rows marked "needs lookup"; the structural pass produced the proposed-row names and confidence ratings.
+
+#### Bucket 1 count summary
+
+| Finding type | Count |
+|---|---|
+| STRUCTURAL (B9 events + B9b + B5 closure) | 3 |
+| STRUCTURAL (E hard-fail RBAC bootstrap) | 1 |
+| BOUNDARY / Pairwise per-neighbor in-scope | 0 |
+| APQC TAGGING (B1-H1, single item per Rule #10) | 1 |
+| Report-only (B10b outbound + inbound + Pairwise) | 3 |
+| **Bucket 1 total** | 8 in-scope items |
+
+#### Boundary findings per neighbor (Pass 4 pairwise reconciliation)
+
+For the heavy neighbors (edge weight ≥3) the 5-section pairwise diff produced the following per-neighbor findings.
+
+**WORK-MGMT ↔ PROD-MGMT (weight 11).** Wired pairs: 9 (5 outbound to WORK-MGMT-TASK-EXEC, 4 inbound from WORK-MGMT). Section 2: all 9 fully populated on both module FKs. Section 3: a likely missing handoff is PM-ROADMAP-DELIVERY → WORK-MGMT on `product_feature.in_delivery` (the feature-state transition where engineering scheduling actually kicks off), and a possible PM-DISCOVERY → WORK-MGMT on `feature_request.accepted` if WORK-MGMT picks up new work from feature acceptance. Section 4: clean. Section 5: cross-relationship `work_automations mirrors_to product_roadmaps` (752) exists; reverse mirror is not loaded but the verb is one-directional so this is fine. **B1 candidate B1-S3 closure depends on adding the work_items and okr_objectives consumer DMDOs.**
+
+**CSM ↔ PROD-MGMT (weight 9).** Wired pairs: 5 outbound (CSM is heavy consumer of customer-facing PM events). Section 2: ALL 5 outbounds carry NULL `target_domain_module_id` (CSM's B10b). Section 3: missing inbound from CSM to PROD-MGMT on `customer_case.themes_aggregated` if CSM aggregates case themes and routes to PM-DISCOVERY as feedback; this is a high-value handoff that would close the discovery loop. Section 4: PROD-MGMT side populated; CSM side empty. Section 5: cross-relationships exist (`customer_cases feedback_routed_from customer_feedback_items` 481, `customer_cases impacted_by product_features` 482, etc.). Healthy substrate.
+
+**CRM ↔ PROD-MGMT (weight 4).** Wired pairs: 3 outbound to CRM-ACCT-MGT (46), all `target_domain_module_id` populated. Section 2: clean. Section 3: missing handoffs CRM → PROD-MGMT, none surfaces from the structural pass; CRM-typical events like `crm_opportunity.feature_requested` would be valuable but the data_object is not loaded. Section 4: CRM-ACCT-MGT (46) declares `consumer + optional` for `product_lines`, `product_features`, `feature_requests`, matches the outbound payloads. Clean. Section 5: zero cross-relationships, which is consistent with CRM only consuming reference data.
+
+**DXP ↔ PROD-MGMT (weight 4).** Wired pairs: 3 outbound + 1 inbound. Section 2: ALL 3 outbounds carry NULL `target_domain_module_id` (DXP's B10b); inbound 813 carries NULL `source_domain_module_id` (DXP's B10b). Section 3: clean structurally. Section 4: DXP-side DMDO presence unknown from PROD-MGMT vantage; likely missing. Section 5: no cross-relationships, expected for a release-publishing relationship.
+
+**Lighter neighbors (1-2 weight, one-line summaries):**
+
+- **CDP ↔ PROD-MGMT (weight 2).** 2 outbounds (996 beta launch, 1004 adoption threshold), both NULL `target_domain_module_id` (CDP's B10b). No cross-relationships.
+- **BPA ↔ PROD-MGMT (weight 2).** 2 inbounds (184, 784) both NULL `source_domain_module_id` (BPA's B10b). No cross-relationships, value_streams DMDO exists in PROD-MGMT as contributor.
+- **SPM ↔ PROD-MGMT (weight 2).** 1 inbound (243 roadmap_item.released) NULL source. `roadmap_items` (275) is consumed by PROD-MGMT but there is no apparent master in any module, see B2-S4.
+- **VSDP ↔ PROD-MGMT (weight 1).** Inbound 775 (pull_request.merged) NULL source. PR data feeds the release pipeline.
+- **TEST-MGMT ↔ PROD-MGMT (weight 2).** Inbound 781 (requirements_to_test_traceability.linked) NULL source. Cross-relationship `requirements_to_test_traceability feeds product_features` (406) exists.
+- **ERP-FIN ↔ PROD-MGMT (weight 1).** 1 outbound (1006 product_line.launched) NULL target. Reasonable, ERP needs to set up item master / product master.
+
+**In-scope mechanical fixes derived from pairwise (Bucket 1):** none. The pairwise pass surfaced report-only NULL-FK work owed by 6 neighbor domains (B1-S5 + B1-S6) and 5 receiving-side DMDO gaps (B1-S7), all routed to those domains' audits.
+
+#### Final Bucket 1 inventory
+
+| ID | Description |
+|---|---|
+| B1-S1 | PATCH 22 PROD-MGMT-owned trigger_events to set `event_category` |
+| B1-S2 | Author 3 intra-domain DISCOVERY ↔ ROADMAP-DELIVERY handoffs + 1 new `feature_request.accepted` trigger_event |
+| B1-S3 | INSERT 2 consumer DMDO rows on PM-ROADMAP-DELIVERY (work_items 243, okr_objectives 245) |
+| B1-S4 | Phase-E bootstrap: 4 PROD-MGMT roles + 6 role_modules + 6 baseline permissions + 14 workflow-gate permissions + permission_hierarchy edges |
+| B1-S5 | Report-only, 14 outbound NULL target_module_id, schedule audits on CSM / CDP / DXP / ERP-FIN |
+| B1-S6 | Report-only, 9 inbound NULL source_module_id, schedule audits on DXP / BPA / SPM / VSDP / TEST-MGMT |
+| B1-S7 | Report-only, 4 downstream domains need consumer DMDOs on PROD-MGMT masters, schedule those audits |
+| B1-H1 | APQC TAGGING, propose 31 `agent_curated` rows on cross-domain handoffs |
+
+### Bucket 2, Surface-for-user (judgment calls)
+
+| ID | Question | Why agent can't answer | Options |
+|---|---|---|---|
+| B2-S1 | **C1-C2 capability scope: do the 6 PMM-flavored capabilities belong on PROD-MGMT?** Capabilities `LAUNCH-PLANNING` (119), `GTM-LAUNCH-COORDINATION` (120), `MESSAGING-AND-POSITIONING` (121), `SALES-ENABLEMENT-CONTENT` (122), `COMPETITIVE-INTELLIGENCE` (123), `WIN-LOSS-INTERVIEWS` (124) are attached to PROD-MGMT (`capability_domains` rows). None of these have masters, skills, or solutions in PROD-MGMT's modules, the flagship vendors (Productboard, Aha!, Jira PD) do not cover this surface; instead Product Marketing Management (PMM) is a distinct market (Highspot, Showpad, Seismic, Klue for CI, Crayon for CI, Aha! Create, Productboard's "Insights" overlay). Per Rule #2 (point-solution market test) PMM passes: Klue, Crayon, Highspot, Showpad, Seismic, Aha! Roadmaps Create, Pendo Adopt are all independent vendors. Recommendation: split PMM into a new domain, move all 6 capability_domains rows to that new domain. See B3 candidate `PMM`. | Capability ownership is editorial / market-boundary judgment, the agent can propose but cannot move. | (a) Approve PMM as a new domain candidate (queue to `_missing-domains.md`, move all 6 capability_domains rows on PMM promotion). (b) Leave the 6 capabilities on PROD-MGMT as the "future PMM surface", load Phase B masters within PROD-MGMT under a new module `PM-MARKETING`. (c) Move some capabilities to existing GTM-PLAN (104) and others to a new PMM, specify per capability. |
+| B2-S2 | **Rule #15 notes-pollution on `product_metrics` (408).** `notes` is populated with: "Config-shaped; no workflow. Time-series measurement records (adoption, usage, quality, business KPIs) linked to features and releases. Status is derivable from threshold breaches via computed_fields; no per-state permissions needed." Per Rule #15 the prior Rule #12 license for config-shape exemption in `data_objects.notes` is RESCINDED. Was this user-approved at load time, or auto-populated? | Cannot tell from audit alone; load-time approval status unknown. | (a) Confirm user-approved at load time, leave in place. (b) Confirm auto-populated, PATCH `notes` to empty string and log the Rule #15 incident per the audit obligation in `references/skill-changelog.md`. |
+| B2-S3 | **B4 pattern-flag positive re-evaluation per Rule #12.** Current flags: only `customer_feedback_items.has_personal_content=true`. Audit proposes: (a) `feature_requests.has_personal_content` could be `true` since requests often carry submitter contact info and verbatim quotes; (b) `product_releases.has_submit_lock` should likely be `true` since a release transitions to `shipped` (state 3, `requires_permission=true`) and after shipping no further mutations should silently occur; (c) `product_roadmaps.has_submit_lock` likely `true` once `published` (state 2, `requires_permission=true`) since published roadmaps are external-facing commitments; (d) `product_lines.has_submit_lock` likely `false` (long-lived strategic asset). | Pattern flags are workflow-shape judgments, the user owns the call. | Per-flag yes/no, capture in Decisions. |
+| B2-S4 | **`roadmap_items` (275) is consumed by PM-ROADMAP-DELIVERY but has no master in any module.** Description says "Drives PROD-MGMT consumption" but the entity is a phantom: zero master DMDO row catalog-wide. SPM trigger_event 218 (`roadmap_item.released`) emits payloads typed against this orphan. Two paths: (a) Promote `roadmap_items` to `master` somewhere (it logically belongs in SPM's portfolio-roadmap layer; SPM is the source-domain on handoff 243); SPM owns this fix, route to SPM b1 audit. (b) DELETE the consumer DMDO row (131, 275, consumer) and recast handoff 243's payload to `product_roadmaps` (405). | Two competing models: SPM owns a portfolio-level roadmap_items master that PROD-MGMT consumes (the cleaner model, both domains have their own roadmap layer), or `roadmap_items` is a redundant alias for `product_roadmaps`. | (a) Schedule SPM audit and let them master `roadmap_items`. (b) DELETE the orphan consumer, recast handoff 243 payload to `product_roadmaps`. |
+| B2-S5 | **F5 Semantius score gap: `notify_team` is `external`.** `notify_team` (ROADMAP-DELIVERY skill 202) has `coverage_tier='external'`, the only non-platform tool on PROD-MGMT. Should it be promoted to platform (a generic platform notification primitive) or migrated to `integration` (typed Slack / email connector)? Compare with CLM's `notify_person` which is platform. Likely a load-time inconsistency: both skills (201 and 202) should use the same primitive, `notify_person` is platform on skill 201, the divergence on skill 202 looks unintentional. | F5 decision: which canonical name and tier. | (a) Replace `notify_team` (external) with `notify_person` (platform) on skill 202, drop the divergent tool. (b) Promote `notify_team` to platform. (c) Leave as-is and accept the 95% Semantius score. |
+| B2-S6 | **D1/Rule #10 platform-builtin edge audit.** All 8 PROD-MGMT masters reference `users` for ownership / assignment / submitter, but zero `data_object_relationships` rows reference data_object 748 (the platform `users` row). Per Rule #10 each domain-owned master with an FK to a built-in must record the relationship on `data_object_relationships`. Default propose: 8 new rows (one per master), `relationship_kind='reference'`, `relationship_verb='owned_by'` / `assigned_to` / `submitted_by` (per master semantics), `record_status='new'`. Surface for user to confirm the verb per row before authoring. | Rule #10 mandates the edge; the specific verb per master is editorial. | (a) Approve the standard set of 8 edges with default verbs (`product_lines.owned_by`, `product_features.assigned_to`, `product_releases.owned_by`, `product_roadmaps.owned_by`, `feature_requests.submitted_by`, `customer_feedback_items.submitted_by`, `product_metrics.recorded_by`, `beta_programs.owned_by`). (b) Specify per-row verb overrides. |
+
+### Bucket 3, Phase 0 pending (speculative)
+
+Market-audit Pass 2 ran semantic enumeration against Productboard, Aha! Roadmaps, ProductPlan, Roadmunk, Craft.io, Airfocus, Pendo Feedback / Roadmaps, LaunchNotes, Canny, Jira Product Discovery, Linear (lightweight), ProdPad, Savio, Dragonboat. The subagent recipe was not spawned (single-pass audit per orchestrator instruction); the candidates below come from the analyst's flagship-vendor knowledge. Each is a candidate market gap for Phase 0 verification, not a vetted finding.
+
+#### MISSING (8) entity candidates surfaced by flagship-vendor knowledge
+
+| Candidate entity | Vendor knowledge basis | Proposed module |
+|---|---|---|
+| `product_opportunities` | Productboard "Opportunities" tab, Aha! "Opportunities" object, Jira PD "Ideas + insights"; opportunity-solution-tree pattern (Teresa Torres) is a first-class object distinct from `feature_requests` (an opportunity is a customer problem framing; feature requests are proposed solutions). Currently the catalog conflates them inside `feature_requests`. | PM-DISCOVERY (master) |
+| `product_themes` / `strategic_initiatives` | Aha! "Initiatives", Productboard "Themes", Roadmunk "Themes", Dragonboat "Strategic objectives"; multi-quarter strategic groupings above features and below product strategy. Distinct from OKRs (which are measurable). Currently no theme entity, the concept lives implicitly in `product_lines`. | PM-ROADMAP-DELIVERY (master) or new PM-STRATEGY module |
+| `prioritization_scores` | Productboard "Scores", Aha! "Custom score columns", Airfocus "Scoring framework", Dragonboat "Strategy alignment score"; RICE / WSJF / value-vs-effort scores as structured records per feature with framework provenance. Currently no scoring entity, the value lives inside `feature_requests.notes` if at all. | PM-DISCOVERY (master) |
+| `release_notes` / `changelog_entries` | LaunchNotes (entire product), Productboard "Portal" changelog, Aha! "Notebooks", Jira PD "Insights publish", Canny "Changelog"; external-facing release notes as managed entities (drafts, approvals, customer-segment targeting, embed surface). Currently no entity, despite being a primary deliverable. | PM-ROADMAP-DELIVERY (master) or a new PM-COMMS module |
+| `feature_flag_records` | Statsig, LaunchDarkly, Flagsmith, Optimizely; feature-flag entities for gradual rollout, A/B test cohort assignment, kill-switch operations. Adjacent to `product_releases` but distinct lifecycle. Productboard / Aha! integrate with these vendors. Possibly belongs in a separate `FEATURE-FLAGGING` domain. | new domain candidate (see below) |
+| `user_research_sessions` | Productboard "Research", Dovetail, UserTesting, Maze; structured interview / usability-session records with transcripts and tags. Currently no entity, customer_feedback_items conflates session output with one-off feedback. | PM-DISCOVERY (master) |
+| `release_milestones` | Aha! "Release Phases", Productboard "Release Plan", Roadmunk "Milestones"; date-driven checkpoints inside a release (code-complete, RC1, GA). Currently `product_releases` carries a single state machine, no milestone granularity. | PM-ROADMAP-DELIVERY (master) |
+| `competitor_intelligence_records` | Klue, Crayon, Kompyte, Aha! "Competitor field"; structured competitor / product-comparison records. Likely belongs in a new PMM domain rather than PROD-MGMT (see B2-S1). | candidate PMM domain |
+
+#### MODULARIZATION (2) candidates
+
+- **Promote PM-STRATEGY as a third module.** If `product_themes`, `prioritization_scores`, and a future OKR-linkage entity get loaded, a third module (`PM-STRATEGY`) makes more sense than overloading PM-ROADMAP-DELIVERY. Would push PROD-MGMT from 2 modules to 3, consistent with the 13-capability count (after PMM split).
+- **Promote PM-COMMS / PM-RELEASE-NOTES as a fourth module.** `release_notes`, `changelog_entries`, `release_milestones` form a coherent comms-and-rollout surface adjacent to but separable from delivery scheduling. LaunchNotes / Canny carve this out as their entire product.
+
+#### Candidate-domain queue
+
+This audit surfaces **2 candidate domains** for `audits/_missing-domains.md`:
+
+1. **PMM (Product Marketing Management)** - Klue, Crayon, Highspot, Showpad, Seismic, Aha! Roadmaps Create, Pendo Adopt, Productboard's "Insights" overlay, Reprise. Adjacency: PROD-MGMT, CRM, GTM-PLAN, REV-INTEL. Capabilities: launch planning, GTM coordination, messaging / positioning, sales enablement content, competitive intelligence, win/loss interviews, product launch readiness checklist, persona management. This passes the point-solution market test: independent vendors compete in this category. Will queue via append_missing_domain.ts.
+
+2. **FEATURE-FLAGGING / EXPERIMENTATION** - LaunchDarkly, Statsig, Optimizely Web Experimentation, Flagsmith, Split.io, Eppo, GrowthBook, Amplitude Experiment, ConfigCat. Adjacency: PROD-MGMT, DXP, VSDP, SPM. Capabilities: feature-flag management, experimentation orchestration, A/B test cohort assignment, kill-switch operations, gradual rollout. Passes the point-solution market test. Will queue via append_missing_domain.ts.
+
+#### Compliance / regulation candidates
+
+- **GDPR / CPRA** applicability for `customer_feedback_items` (carries personal content per the existing flag, but the GDPR linkage is not recorded in `domain_regulations`).
+- **Section 508 / ADA / EAA** for product accessibility checkpoints, may apply to roadmap planning rather than as core PM domain regulation.
+
+**Bucket 3 verification path:** vet via formal Phase 0 vendor research (which produces a Phase 0 markdown at `c:/tmp/PROD-MGMT-phase0-<date>.md` confirming per-entity vendor coverage) or eyeball-mode (user names which of the 8 entity candidates + 2 modularization candidates + 2 domain candidates + 2 regulation candidates to treat as confirmed).
+
+### Cross-bucket dependencies
+
+- **B2-S1 (PMM split) gates B3 item 8 (`competitor_intelligence_records`).** If PMM gets promoted as a new domain, the competitor entity lands there rather than in PROD-MGMT. Recommend resolving B2-S1 before deciding B3 item 8.
+- **B2-S4 (`roadmap_items` orphan) gates SPM audit kickoff.** If user picks option (a), schedule SPM b1 audit so SPM can master the entity. If option (b), the PROD-MGMT-side fix is a DELETE + handoff recast.
+- **B1-S4 (Phase-E RBAC bootstrap) is independent** of all other items; recommended to load early so role_modules can be reused by future module additions (PM-STRATEGY, PM-COMMS).
+- **B1-S2 (intra-domain handoffs) depends on creating the new `feature_request.accepted` trigger_event** (state 4 has no event row), 1 INSERT + 3 handoff INSERTs.
+- **B3 candidate-domain queuing (PMM, FEATURE-FLAGGING) is independent.** Queueing just creates entries in `_missing-domains.md`; the actual promotion / load is downstream.
+- **Buckets 1 and 2 are otherwise independent of Bucket 3.**
+
+### Per-bucket prompts
+
+**Bucket 1, fix these now?** Reply with: `all`, or list (e.g. `S1, S2, S3, H1`), or `skip`.
+
+- **S1 (B9 PATCH 22 events)** is mechanical, low-risk.
+- **S2 (B9b 3 new intra-domain handoffs + 1 new trigger_event)** is mechanical, depends on the new event row.
+- **S3 (2 new consumer DMDOs for work_items / okr_objectives)** is trivial.
+- **S4 (Phase-E RBAC bootstrap)** is bigger: 4 roles + 6 role_modules + 20 permissions + permission_hierarchy edges. Loadable now or split into a follow-up.
+- **S5 / S6 (B10b report-only)** schedules other-domain audits.
+- **S7 (Pairwise consumer DMDOs report-only)** schedules other-domain audits.
+- **H1 (31 APQC tags)** load now or in a follow-up batch?
+
+**Bucket 2, what's your call on each?** I will wait for per-item decisions before acting.
+
+- **B2-S1 (6 PMM-flavored capabilities):** (a) promote PMM, (b) leave on PROD-MGMT, (c) split between PMM and GTM-PLAN.
+- **B2-S2 (Rule #15 product_metrics notes):** revert if auto-populated; confirm if approved.
+- **B2-S3 (pattern-flag re-evaluation):** per-flag yes/no.
+- **B2-S4 (roadmap_items orphan):** (a) SPM masters, (b) DELETE + recast.
+- **B2-S5 (notify_team external):** (a) replace with notify_person platform, (b) promote to platform, (c) leave.
+- **B2-S6 (Rule #10 users edges):** (a) approve default 8 edges, (b) specify per-row verbs.
+
+**Bucket 3, Phase 0 pending, vet via formal Phase 0 vendor research or eyeball-mode?** If eyeball-mode, name which of the 8 entity candidates + 2 modularization candidates + 2 domain candidates + 2 regulation candidates to treat as confirmed. Also confirm whether to queue PMM and FEATURE-FLAGGING to `_missing-domains.md` now (recommended regardless).
+
+### Report-only follow-ups (owed by other domains)
+
+These items are surfaced in this audit but the fix belongs to another domain's b1 audit. Listed by owing domain for routing.
+
+| Owing domain | Owed work |
+|---|---|
+| CSM | B10b: populate `target_domain_module_id` on inbound handoffs 996, 998, 1003, 1007, 1010 (5 NULL targets). Add `consumer + optional` DMDOs on `beta_programs`, `customer_feedback_items`, `product_features`, `product_metrics`, `product_releases` in whichever CSM modules subscribe. Section 3 candidate: missing CSM → PROD-MGMT handoff on `customer_case.themes_aggregated` to close the discovery loop. |
+| CDP | B10b: populate `target_domain_module_id` on 997, 1004. Add `consumer + optional` DMDOs on `beta_programs`, `product_features`. |
+| DXP | B10b: populate `target_domain_module_id` on outbound 1001, 1009, 1011 and `source_domain_module_id` on inbound 813. Add `consumer + optional` DMDOs on `product_features`, `product_releases`, `product_roadmaps`; verify `ab_tests` master is owned by DXP. |
+| ERP-FIN | B10b: populate `target_domain_module_id` on 1006. Add `consumer + optional` DMDO on `product_lines` in whichever ERP-FIN module manages item master / product master. |
+| CRM | Confirm whether the 3 PROD-MGMT-source outbounds (1000, 1002, 1005) should also have a parallel CRM → PROD-MGMT inbound (e.g., `crm_opportunity.feature_requested`). |
+| BPA | B10b: populate `source_domain_module_id` on 184, 784 (`value_stream.bottleneck_identified`, `process_simulation_run.bottleneck_identified`). |
+| SPM | B10b: populate `source_domain_module_id` on 243 (`roadmap_item.released`). Resolve `roadmap_items` (275) orphan per B2-S4 option (a): master in SPM's portfolio-roadmap module. |
+| VSDP | B10b: populate `source_domain_module_id` on 775 (`pull_request.merged`). |
+| TEST-MGMT | B10b: populate `source_domain_module_id` on 781 (`requirements_to_test_traceability.linked`). |
+| WORK-MGMT | Confirm whether outbound `feature_request.upvoted_threshold` and inbound `work_automation.triggered` have matching DMDO declarations on the WORK-MGMT side; the audit found 5 PROD-MGMT-to-WORK-MGMT-TASK-EXEC and 4 inbounds already wired with populated FKs. |
+| (new) PMM | If promoted: receive 6 capability_domains rows (B2-S1) and `competitor_intelligence_records` from B3 item 8. |
+| (new) FEATURE-FLAGGING | If promoted: receive `feature_flag_records` from B3 item 5. |
+
+### Decisions
+
+_(none yet, awaiting user feedback per buckets above)_

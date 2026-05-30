@@ -107,15 +107,24 @@ While reviewing each cross-domain handoff for B-band findings, the agent **also*
 1. Look at the trigger event name + payload data_object + source/target domain context. (You already have all of this open from the structural pass — no extra round trip.)
 2. Lookup candidate PCF activities: `/processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry&select=id,process_name,external_id,hierarchy_level`. The trigger event's noun is usually a strong search term.
 3. Pick the best match:
-   - **Confident L2/L3 match** → propose `(handoff_id, process_id, proposal_source='human_curated', record_status='new')`.
+   - **Confident L2/L3 match** → propose `(handoff_id, process_id, proposal_source='agent_curated', record_status='new')`.
    - **No clean PCF match** (modern digital concept like `data_asset.*`, `dlp_incident.*`, or an industry-specific workflow not in cross-industry PCF) → **defer to Discover Pass 3's custom-process authoring path**. Note in the audit which handoffs were deferred and why.
    - **Confident only at L4/L5** with an obvious L2/L3 parent → prefer the parent for clustering quality.
 
-**Volume expectation.** For a domain with N cross-domain handoffs, expect to author roughly 0.5N to 0.8N `handoff_processes` rows. The deferred ~20% are the genuinely-no-PCF-match handoffs Discover Pass 3 will route to custom processes.
+**Volume expectation (process target — what the audit itself produces).** For a domain with N cross-domain handoffs, expect to author roughly 0.5N to 0.8N `handoff_processes` rows during this audit. The deferred ~20% are the genuinely-no-PCF-match handoffs Discover Pass 3 will route to custom processes. This is a process / throughput target for the audit, NOT a catalog quality target.
+
+**Two distinct H-band measures — don't conflate them in the report.**
+
+| Measure | Column | What it tells you |
+|---|---|---|
+| **Catalog quality (headline)** | `record_status='approved'` count | How much of the domain's APQC mapping is trustworthy — a reviewer signed off. Lead with this. |
+| **Process health (side-bar)** | `proposal_source='agent_curated'` count | Whether the layered-ownership process is firing. Useful as a review-triage hint (fast-track agent_curated rows) and as a regression test. |
+
+A `discovery_substring` row a reviewer approved is high-quality. A `agent_curated` row at `record_status='new'` is high-confidence-pending. The audit's quality headline is the approved count; agent_curated is the process side-bar. Putting "0 agent_curated" as the *quality* finding (rather than "0 approved") was a real mistake in the second 2026-05-29 ITSM audit — surfacing the right number under the right framing is what makes the H-band useful.
 
 **Why this is in Bucket 1, not Bucket 3.** Bucket 3 is for findings that need vendor research to verify. APQC tagging doesn't — the analyst already has the handoff's source / target / trigger event / payload in front of them from the structural pass. The PCF lookup is a 1-query operation. The cognitive cost is in the structural pass; the APQC tagging cost is incremental.
 
-**Anti-pattern:** completing the structural pass, surfacing the gap report, then "leaving APQC tagging for Discover later." This is what the prior design said and what the 2026-05-29 ITSM audit did. The analyst's mental model — built from reading 80+ handoffs in detail — does not survive the session. Two weeks later, Discover's substring matcher recovers ~60% of it lossily. The correct behavior is to tag while the model is fresh; ship the human-curated rows in the same audit pass that produced them.
+**Anti-pattern:** completing the structural pass, surfacing the gap report, then "leaving APQC tagging for Discover later." This is what the prior design said and what the first 2026-05-29 ITSM audit did. The analyst's mental model — built from reading 80+ handoffs in detail — does not survive the session. Two weeks later, Discover's substring matcher recovers ~60% of it lossily. The correct behavior is to tag while the model is fresh; ship the human-curated rows in the same audit pass that produced them.
 
 ### Step 4 — Append the audit section to the domain's history file
 
@@ -198,7 +207,7 @@ For each accepted finding, the fix surface is:
 - **MISSING**: Phase B insert. Extend an idempotent loader in `.tmp_deploy/` to add the `data_objects` row + DMDO row + lifecycle states + intra-domain relationships. Pattern from [scripts/loaders/fix_ats_modules.ts](../../../scripts/loaders/fix_ats_modules.ts).
 - **WRONG-OWNERSHIP**: DELETE the wrong DMDO row + INSERT in the right module. Surgical SQL via `semantius call crud postgrestRequest` is fine if the count is small (≤5 rows); otherwise extend a loader.
 - **SCOPE-CREEP**: DELETE the DMDO row + any handoffs that depended on the wrong scope. Cascade carefully — check `/handoffs?target_domain_module_id=eq.<id>&data_object_id=in.(<entityIds>)` before deleting.
-- **APQC TAGGING**: INSERT into `handoff_processes` per the classification table the agent built in Step 3. Each row: `(handoff_id, process_id, proposal_source='human_curated', record_status='new', role='implements')`. Use a chunked POST or a small focused loader; the natural composed key `(handoff_id, process_id)` prevents duplicates if the same pair has been proposed before.
+- **APQC TAGGING**: INSERT into `handoff_processes` per the classification table the agent built in Step 3. Each row: `(handoff_id, process_id, proposal_source='agent_curated', record_status='new', role='implements')`. Use a chunked POST or a small focused loader; the natural composed key `(handoff_id, process_id)` prevents duplicates if the same pair has been proposed before.
 - **MODULARIZATION ISSUES**: separate refactor. Module rename / merge / split is a bigger change; surface to user as a design conversation. Don't fold it into the audit fix-loop.
 
 ### Step 7 — Re-run the audit

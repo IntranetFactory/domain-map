@@ -1,3 +1,10 @@
+---
+status: feedback_needed
+last_transition: 2026-05-30
+last_transition_by: human
+open_questions: 16
+---
+
 # WORK-MGMT — Audit history
 
 Domain: Work Management (`domain_code='WORK-MGMT'`, id 135). Cross-functional task / project / OKR market. Bought by PMOs, BizOps, marketing, and any team running structured work that isn't engineering-specific. Distinct from SPM (top-down portfolio), PSA (services billing), and software-engineering sprint tooling.

@@ -247,7 +247,10 @@ const categories = {
 };
 
 function bumpCat(source: string, status: string): string {
-  if (source === "human_curated") {
+  // Bucket agent_curated AND human_curated together as "authored" — both are high-context proposals.
+  // The distinction (AI agent vs user-typed) is preserved in the row itself for triage; the category
+  // collapses for the rollup view.
+  if (source === "human_curated" || source === "agent_curated") {
     if (status === "approved") return "authored_approved";
     if (status === "rejected") return "authored_rejected";
     return "authored_pending";
@@ -280,7 +283,7 @@ for (const h of crossHandoffs) {
 
 console.log(`Cross-domain handoffs: ${crossHandoffs.length}`);
 console.log(`\nBy provenance × status:`);
-console.log(`  human_curated        approved/pending/rejected: ${categories.authored_approved} / ${categories.authored_pending} / ${categories.authored_rejected}`);
+console.log(`  authored (human + agent)  approved/pending/rejected: ${categories.authored_approved} / ${categories.authored_pending} / ${categories.authored_rejected}`);
 console.log(`  discovery_override   approved/pending/rejected: ${categories.override_approved} / ${categories.override_pending} / ${categories.override_rejected}`);
 console.log(`  discovery_substring  approved/pending/rejected: ${categories.substring_approved} / ${categories.substring_pending} / ${categories.substring_rejected}`);
 console.log(`\nTotals:`);

@@ -72,11 +72,11 @@ Domains with partial DMDO data (ITSM 29, CSM 14, HCM 24) produce more granular p
 
 | Source × Status | Approved | Pending | Rejected |
 |---|---|---|---|
-| `human_curated` | 0 | 0 | 0 |
+| `agent_curated` | 0 | 0 | 0 |
 | `discovery_override` | 0 | 45 | 0 |
 | `discovery_substring` | 0 | 114 | 0 |
 
-Untagged cross-domain handoffs: **1,005 / 1,164 (86%)**. Zero conflicts. Zero approvals. Phase B authoring step did not exist before today, hence 0 `human_curated` rows.
+Untagged cross-domain handoffs: **1,005 / 1,164 (86%)**. Zero conflicts. Zero approvals. Phase B authoring step did not exist before today, hence 0 `agent_curated` rows.
 
 ### Per-domain ownership rollup (top 12)
 
