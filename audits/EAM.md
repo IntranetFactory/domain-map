@@ -156,3 +156,61 @@ _(none yet - this audit is read-only by construction; loads happen after user re
 ### `domains.notes` pointer (if updated)
 
 _(none - requires user-approved wording per Rule #15)_
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+Residual pass over `audits/EAM.md` Bucket 1 to apply ONLY truly-technical fixes that do not require user judgment or upstream entity authoring. Loader: `.tmp_deploy/fix_eam_b1_technical_2026_05_31.ts`.
+
+### Inputs verified live
+
+- EAM domain id 53 (re-confirmed).
+- All 8 handoff ids cited in the audit (866, 867, 868, 949, 953, 1260, 320, 294) exist with matching `source_domain_id` / `target_domain_id` / payload `data_object_id` / `trigger_event_id`.
+- 5 APQC PCF rows resolve by `external_id`: 19255 -> 1558 (Perform corrective asset maintenance and repairs, L4), 19249 -> 1552 (Update work and asset records, L4), 10947 -> 1556 (Perform preventative asset maintenance, L4), 19256 -> 1559 (Identify unplanned maintenance requirements, L4), 19258 -> 355 (Decommission productive assets, L3).
+- Pre-existing `handoff_processes` rows on the 6 target handoffs: 1 (handoff 1260 already tagged to process 353 "Perform asset maintenance" by an earlier `agent_curated` pass; that row stays; the audit's recommendation of 355 "Decommission productive assets" is additive, more specific to the `installed_equipment.decommissioned` event, and composite-key-distinct).
+- EAM regulations check: only FDA 21 CFR Part 11 (id 22) exists. OSHA-LOTO, OSHA-PSM, ISO 55000 are not in the catalog.
+
+### Applied
+
+| Audit ID | Action | Rows |
+|---|---|---|
+| B1-H1..H6 | INSERT 6 `handoff_processes` rows, `proposal_source='agent_curated'`, `record_status` defaulted to `'new'`. Composite-key idempotency was checked before insert. | 6 |
+
+Per-handoff result (post-state):
+
+| Audit ID | handoff_id | process_id | PCF ext | hierarchy | process_name |
+|---|---|---|---|---|---|
+| B1-H1 | 866  | 1558 | 19255 | L4 | Perform corrective asset maintenance and repairs |
+| B1-H2 | 867  | 1552 | 19249 | L4 | Update work and asset records |
+| B1-H3 | 868  | 1556 | 10947 | L4 | Perform preventative asset maintenance |
+| B1-H4 | 949  | 1559 | 19256 | L4 | Identify unplanned maintenance requirements |
+| B1-H5 | 1260 | 355  | 19258 | L3 | Decommission productive assets (additive; 353 "Perform asset maintenance" already on row) |
+| B1-H6 | 320  | 1552 | 19249 | L4 | Update work and asset records |
+
+All 6 target handoffs now carry at least one `agent_curated` APQC tag. Handoff 1260 carries two tags (353 + 355).
+
+### Deferred (and why)
+
+| Audit ID | Reason for deferral |
+|---|---|
+| B1-S1 | New `domain_modules` rows (`EAM-ASSETS`, `EAM-MAINTENANCE-OPS`). New entities / modules; gated on Bucket 2 #1 (module-split decision) per the audit's own cross-bucket-dependency note. |
+| B1-S2 | New `capabilities` + `capability_domains` + `domain_module_capabilities`. New entities; depends on B1-S1. |
+| B1-S3 | `catalog_tagline` / `catalog_description` — Rule #20 buyer-voice draft requires user review BEFORE write. |
+| B1-S4 | `domain_regulations` to existing rows: only FDA Part 11 exists, and the audit conditions its applicability on pharma/biotech scope (user judgment). OSHA-LOTO, OSHA-PSM, ISO 55000 are new `regulations` rows (deferred as new entities). |
+| B1-S5 | Module-level system skills. Gated on B1-S1 modules existing; DELETE of legacy skill 53 is user-confirmed cleanup, not residual-technical. |
+| B1-S6 | `data_object_lifecycle_states` rows + `permission_verb_override`. The audit does not pre-specify (state_name, verb_override) tuples for any row; the `equipment_pm_schedules` exemption is a user decision per Rule #15. |
+| B1-S7 | 4 new outbound handoffs from `industrial_asset.commissioned` / `industrial_asset.retired` events. New entities. |
+| B1-B1 / B1-B2 | `handoffs.source_domain_module_id` / `target_domain_module_id` PATCHes — no module ids exist to PATCH to; gated on B1-S1. |
+| B1-M1..M5 | 5 new master `data_objects` (`safety_permits_to_work`, `equipment_calibrations`, `meter_readings`, `work_order_tasks`, `asset_components`). New entities. |
+
+### JWT errors
+
+None.
+
+### Loader
+
+`c:/dev/domain-map/.tmp_deploy/fix_eam_b1_technical_2026_05_31.ts`
+
+### UI
+
+`https://tests.semantius.app/domain_map/handoff_processes`
+

@@ -146,3 +146,46 @@ No candidates queued via `append_missing_domain.ts`: the speculative cluster B3-
 | B8 , add `consumer` DMDO on `cad_drawings` (801) | FSM | Receives `cad_drawing.released` payload but does not declare consumer DMDO; also confirm boundary (this may be the wrong target, see B10b note above). |
 
 Each of MFG-OPS, ERP-FIN, S2P, FSM should be added to the audit backlog so their per-domain b1 audits can backfill the missing DMDOs and target_domain_module_ids.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the technically-deterministic Bucket 1 items from the 2026-05-30 entry. Loader: `c:/dev/domain-map/.tmp_deploy/fix_plm_b1_technical_2026_05_31.ts` (idempotent; re-run confirmed clean).
+
+### Applied
+
+| ID | Action | Result |
+|---|---|---|
+| B1-S1 | DELETE DMDO ids 304, 305, 309, 310, 313, 316 (M7 within-domain incoherence) | 6 rows deleted; re-run found 0 live |
+| B1-S2 | INSERT 11 `trigger_events` for workflow-gate states without matching events (audit listed 11 missing despite "10" headline) | 11 rows inserted (`event_category='state_change'`, `domain_module_id` set per the realizing module of each lifecycle state, `to_state` populated). Affected masters: `engineering_parts` (1), `engineering_revisions` (1), `engineering_change_orders` (4), `product_compliance_declarations` (2), `engineering_requirements` (3). |
+| B1-S5 | PATCH 12 `data_objects.notes` (ids 796-807) to `''` per Rule #15 RESCINDED license | 12 rows patched; re-run found 0 with non-empty `notes` |
+| B1-S6 | PATCH 9 `handoffs.notes` (ids 1087-1094, 1241) to `''` per Rule #15 RESCINDED license | 9 rows patched; re-run found 0 with non-empty `notes` |
+| H1 APQC | INSERT 10 `handoff_processes` for the high-confidence cross-domain handoffs audit pre-specified | 10 rows inserted with `proposal_source='agent_curated'`, `record_status='new'`, default `role='implements'`. All 10 PCF process ids resolved live before insert (external ids 20752, 11136, 11742, 10097, 16819, 16463, 11241→deferred, 16818). |
+
+### Deferred (with reason)
+
+| ID | Reason |
+|---|---|
+| B1-S3 (B9b 6 intra-domain handoffs) | Authoring new handoff rows requires editorial `description` + per-row `friction_level` judgment; exceeds the technical-fix scope. Pre-specified by audit, ready to load on user approval. |
+| B1-S4 (F2 5 system skills + tools) | Gated on B2-S3 user pick (default 5-skill shape vs custom scope vs stage separately). |
+| B1-S7 (B10b NULL target FKs) | Symmetric side owned by MFG-OPS / ERP-FIN / S2P / FSM; not PLM's fix. |
+| B1-S8 (B6 legacy rollup) | Audit explicitly says "Surface to user" — user must confirm whether the legacy `domain_data_objects` view is retiring catalog-wide or needs backfill. |
+| B1-S9 (B8 missing-consumer DMDOs) | Report-only; owed by neighbor domains' audits. |
+| B1-S10 (modularization decision) | No fix; decision to keep 5-module split recorded. |
+| APQC handoff 1094 | Audit defer-candidate (medium-confidence L4, no clean PCF for drawing-share-to-service-field; awaits Discover Pass 3 or boundary clarification with FSM/PIM). |
+| B2-S1, B2-S2, B2-S3 | Judgment calls; outside Bucket 1 technical scope. |
+| B3-1 (PLM-PORTFOLIO speculative) | Bucket 3; needs Phase 0 vendor research. |
+
+### Post-state spot-checks (UI links for reviewers)
+
+- DMDO post-DELETE: `https://tests.semantius.app/domain_map/domain_module_data_objects`
+- New `trigger_events` (ids 1467-1477): `https://tests.semantius.app/domain_map/trigger_events`
+- `data_objects` notes clean: `https://tests.semantius.app/domain_map/data_objects`
+- `handoffs` notes clean: `https://tests.semantius.app/domain_map/handoffs`
+- New `handoff_processes` (10 rows, `record_status='new'`, awaiting reviewer approval): `https://tests.semantius.app/domain_map/handoff_processes`
+
+### Open follow-ups after this pass
+
+- M7 cleanly cured; the 5 downstream PLM modules now correctly assume PLM-ENG-CORE co-installation without redundant `consumer` DMDOs.
+- B9 cured for the 11 named states; B9b (intra-domain handoffs) and B10b (target module FKs) remain open per the deferral list.
+- Rule #15 incident-log obligation: 12 + 9 = 21 rescinded-license `notes` writes were reverted. Per Rule #15's audit obligation, an Incidents entry in `references/skill-changelog.md` is owed — surfaced here for the user to handle (per Rule #15 the wording goes to the user, not auto-authored).
+- F2/F3/F4/F5 cascade still failing catalog-wide for PLM until B1-S4 + B2-S3 land.

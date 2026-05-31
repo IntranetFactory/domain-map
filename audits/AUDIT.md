@@ -210,3 +210,56 @@ _(none; audit is report-only per Rule #1)_
 ### `domains.notes` pointer (if updated)
 
 _(not yet written; will require user-approved wording per Rule #15)_
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+Residual-pass loader: [.tmp_deploy/fix_audit_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_audit_b1_technical_2026_05_31.ts).
+
+### Applied
+
+**B1-H1 partial (13 of 15 agent-curated rows).** Inserted 13 `handoff_processes` rows, all `proposal_source='agent_curated'`, `record_status='new'` (DB default per Rule #1). Pre-flight verified all 13 handoffs and all 10 distinct PCF processes exist:
+
+| handoff_id | process_id | PCF activity |
+|---|---|---|
+| 255 | 1496 | Remediate control deficiencies |
+| 257 | 389 | Report audit findings |
+| 592 | 61 | Manage internal controls |
+| 593 | 325 | Operate controls and monitor compliance with internal controls policies and procedures |
+| 594 | 1598 | Manage internal audits |
+| 595 | 1187 | Support external audits and reports |
+| 247 | 326 | Report on internal controls compliance |
+| 539 | 1433 | Audit invoices and key data in AP system |
+| 544 | 1433 | Audit invoices and key data in AP system |
+| 554 | 1433 | Audit invoices and key data in AP system |
+| 550 | 367 | Manage business unit and function risk |
+| 558 | 1433 | Audit invoices and key data in AP system |
+| 920 | 1616 | Respond to audit inquiries |
+
+H1 coverage moves from 10 / 41 (24%) to 23 / 41 (56%). UI: https://tests.semantius.app/domain_map/handoff_processes.
+
+### Deferred (residual-pass rationale)
+
+- **B1-H1 handoffs 914 (regulatory_inquiry.received) and 1029 (in_house_legal_matter.closed)**: both already carry an `agent_curated` `handoff_processes` row pointing at a *different* `process_id` than the audit's proposal (914 -> 369 versus proposed 199; 1029 -> 373 versus proposed 1616). Overwriting an existing agent-curated tag is a judgment call, not a technical fix. Surface to user.
+- **B1-H1 6 deferred-to-Discover-Pass-3 handoffs** (275, 276, 710, 849, 737, 738): no clean PCF anchor; audit explicitly defers to custom-process authoring in Discover Pass 3.
+- **B1-MOD1 (modules), B1-S6 (per-module skills), B1-B1 / B1-B2 (B10b backfill)**: blocked by zero `domain_modules` rows on AUDIT. B10b derivation has nothing to derive from until modules ship.
+- **B1-M1 through B1-M7 (7 new master data_objects)**: new-entity loads are out of scope for a residual technical pass.
+- **B1-S1 (capabilities), B1-S7 (roles), B1-S8 (business_function_capabilities overrides)**: new-entity loads, out of scope.
+- **B1-S2 (catalog_tagline / catalog_description)**: Rule #20 requires user review of buyer-voice drafts before write.
+- **B1-S3 (naming: `work_papers`, `control_tests` canonical-claim versus rename)**: Rule #9 / Bucket 2 judgment; user picks.
+- **B1-S4 (pattern flags on `audit_reports` / `work_papers` / `audit_findings`)**: audit says "Surface to user for sign-off"; not auto-applied.
+- **B1-S5 (DELETE legacy skill 9)**: gated on B1-S6 (per-module skills must exist first).
+- **B1-S9 (PCAOB AS 2201, IIA Standards regulations)**: instructions allow `domain_regulations` INSERTs only against *existing* regulations rows; neither row exists in `regulations` today (verified: `regulation_name ilike *PCAOB* OR *IIA* OR *AS 2201*` returns 0). Creating new `regulations` rows is a new-entity load, deferred.
+- **B1-S10 (self-loop `imports` on `audit_findings`, `data_object_relationships` id=356)**: audit default is DELETE but explicitly says "surface to user"; judgment, not technical.
+- **B1-S11 (trigger 605 `work_paper.completed` zero handoffs)**: audit default classification is "leaf"; "Confirm leaf status" is a judgment, not a technical fix.
+- **B1-S12 (DELETE duplicate trigger 349, re-point handoff 357)**: stale audit reference; verified both row 349 and row 357 no longer exist in live state (`trigger_events?data_object_id=eq.294` returns only id 230 + id 231; `handoffs?trigger_event_id=eq.349` returns empty). Nothing to delete.
+- **Enum backfill candidates (trigger_events 601-606 have empty `event_category`)**: not enumerated as a B1 item by the audit; deferred to a dedicated enum-sweep pass rather than guessed under this scope.
+- **`notes=''` reverts**: audit does not name any specific notes-polluted rows; nothing to revert.
+- **`data_object_relationships` user-edges (Rule #10), `permission_verb_override`**: audit does not pre-specify any tuples; nothing to insert.
+- **Bucket 3 entities (10 candidates)**: Phase 0 vetting, out of scope.
+
+### Counts
+
+- Fixes applied: 13 INSERTs into `handoff_processes`.
+- Deferred B1 items: ~22 (counting MOD1, M1-M7, S1-S12, B1, B2, H1 partial, plus stale S12).
+
+No JWT errors. No `notes` writes. Frontmatter unchanged (still `feedback_needed`).

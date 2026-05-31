@@ -144,3 +144,36 @@ Universal-vendor entities surfaced by the flagship-vendor scan that did NOT make
 ### Candidates queued
 
 - **IPAM-DDI**, IP Address Management and DDI: Infoblox, BlueCat, EfficientIP, ApplianSys, NetBox, Men&Mice; adjacency DCIM, CMDB, NPMD, ITOM. Surfaced by the NetBox / Device42 overlap on the DCIM vendor surface: rack-and-cable mapping overlaps with subnet, VLAN, and DHCP allocation in those vendor schemas. Queued via `scripts/analytics/append_missing_domain.ts`. Total candidates queued from this audit: 1.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the truly-technical subset of Bucket 1 via [.tmp_deploy/fix_dcim_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_dcim_b1_technical_2026_05_31.ts) (run from project root). Everything gated on Bucket 2 #1 (module split) is deferred to the modules load.
+
+### Applied
+
+- **B1-T1** PATCH `trigger_events.event_category` on all 10 DCIM events (688 to 697), values exactly as the 2026-05-30 pass pre-specified (threshold / threshold / state_change / threshold / state_change / state_change / threshold / lifecycle / state_change / lifecycle). B9 now passes for category coverage.
+- **B1-T3** PATCH `data_objects.plural_label` on id 548 to `Power Distribution Units (PDUs)`. B2 partial-fail clears.
+- **B1-T5 (user-edges only)** INSERT 4 `data_object_relationships` rows from `users` (748) per Rule #10: `owns` -> `dc_racks` (546), `authors` -> `dc_capacity_plans` (553), `approves` -> `dc_capacity_plans` (553), `inspects` -> `dc_environmental_readings` (552). Shape: `one_to_many` / `reference` / `owner_side=source` / `is_required=false`. Intra-domain (`dc_racks contains dc_cabinets` etc.) and cross-domain (CMDB, SPM) edges deferred, they belong in the same load as B1-S1 modules so the per-module DMDOs anchor them.
+- **B1-T6** INSERT 7 `data_object_aliases` (rack, cabinet, PDU, UPS, sensor reading, patch port, patch cable). Reinterpreted the audit's `alias_type='industry'` as `alias_type='synonym'`: (a) `industry` is not a valid enum value (live enum: `synonym`, `industry_term`, `solution_term`), (b) the catalog check-constraint requires `industry_id` when `alias_type='industry_term'` and these terms are general data-center vocabulary not tied to one vertical. B11 now non-empty.
+- **B1-H1** INSERT 8 `handoff_processes` rows with `role='implements'`, `proposal_source='agent_curated'`, defaults for `record_status` (Rule #1) and `notes` (Rule #15). PCFs 1299 / 1304 / 291 verified live before insert. Handoff 679 -> PCF 1309 was already present (row id 435) and skipped. All 9 DCIM handoffs are now PCF-tagged; H1 clears.
+
+### Deferred (Bucket 2 #1 module-split gate)
+
+- **B1-S1 .. B1-S6** new entities (modules, capabilities, solutions, system skills, roles) and Rule #20 catalog text. Gated on the module-split decision.
+- **B1-T2** new handoff for `dc_power_circuit.overload` (event 691). Needs `source_domain_module_id` which depends on B1-S1.
+- **B1-T4** pattern-flag re-evaluation. All three flags are already at the audit-recommended `false`, no PATCH is needed; `has_submit_lock` / `has_single_approver` are explicitly deferred to B1-T7 lifecycle authoring per the audit text. Recorded as transcript-only per Rule #15.
+- **B1-T5 (rest)** intra-domain edges (9 edges) and cross-domain edges (CMDB, SPM). Belong in the modules load.
+- **B1-T7** lifecycle states. New `data_object_lifecycle_states` rows need the module FK (B1-S1) and the user picks (a)/(b) on the config-shape exemption for the three sensor masters (Bucket 2 #4).
+- **B1-B1 / B1-B2 / B1-B3** handoff source/target module FKs are derivable only after B1-S1; B1-B2 and B1-B3 are explicitly owned by ITOM / AIOPS / SPM / CMDB per Bucket 1 BOUNDARY.
+
+No domain_regulations, DELETEs, permission_verb_overrides, or `notes=''` reverts were named with row IDs in the 2026-05-30 pass, so none were applied.
+
+### Verification
+
+- 10/10 trigger_events show non-empty `event_category` matching the audit table.
+- 9/9 DCIM-source handoffs now have a `handoff_processes` row (8 new + 1 pre-existing).
+- 4 user-edges present on `data_object_relationships` for `data_object_id=748` against DCIM masters 546 / 552 / 553.
+- 7 alias rows present on the 7 listed masters.
+- `data_objects.id=548 plural_label = 'Power Distribution Units (PDUs)'`.
+
+UI links: `https://tests.semantius.app/domain_map/trigger_events`, `/data_objects`, `/data_object_relationships`, `/data_object_aliases`, `/handoff_processes`.

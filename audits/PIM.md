@@ -203,3 +203,61 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 ### Decisions
 
 _(empty until reviewed)_
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the only purely-technical, ungated B1 item from the 2026-05-30 audit: **B1-H1 APQC tagging**.
+
+### Item classification
+
+| B1 ID | Classification | Reason |
+|---|---|---|
+| B1-S1 | DEFER | Gated on B2-S1 (M7 architectural choice: DELETE vs PROMOTE) |
+| B1-S2 | DEFER | Report-only, fix owed by B2C-COMM + CPQ on their next b1 |
+| B1-S3 | DEFER | Report-only, inbound from PLM is healthy (no-op) |
+| B1-S4 | DEFER | Not PIM's fix (downstream consumer DMDOs on B2C-COMM / CPQ / INV-MGMT) |
+| B1-S5 | DEFER | Gated on B2-S6 (regulation ownership: PIM vs PLM vs both) |
+| B1-S6 | DEFER | Gated on B2-S7 (PIM -> PLM `pim_product.discontinued` handoff is judgment) |
+| B1-H1 | TECHNICAL | Audit pre-specifies `handoff_id` + resolvable PCF id; verified live before insert |
+
+7 B1 items total. 1 fix applied (B1-H1). 6 deferred (all gated on Bucket 2 user judgment or owed by other domains).
+
+### B1-H1 detail
+
+Audit proposed 7 `handoff_processes` rows (one per cross-domain handoff 1234, 1235, 1236, 1237, 1241, 1242, 1243). Pre-flight verification:
+
+- All 7 handoffs exist with the expected source/target/trigger/payload.
+- All 3 proposed PCF process_ids (37, 113, 115) exist as `apqc_pcf_cross_industry` rows.
+- 4 of 7 handoffs already carry `handoff_processes` rows from prior loads, pointing at different process_ids (so the unique key `(handoff_id, process_id)` allows additional tags on the same handoff, not duplicates):
+  - 1235 -> 854 ("Track product availability", L4)
+  - 1241 -> 418 ("Implement change", L3)
+  - 1242 -> 1845 ("Design and manage product data, design, and bill of materials", L5)
+  - 1243 -> 369 ("Manage regulatory compliance", L3)
+
+For handoff 1243, the audit qualified the proposed L2 PCF 37 ("Manage product recalls and regulatory audits") as "medium L2 (a more-specific L3 may exist; surface for fix-time verification)". Live state already carries the more-specific L3 process 369 ("Manage regulatory compliance"). Per the audit's own qualifier, this row is deferred: inserting a less-specific L2 tag would not add information.
+
+Applied: 6 INSERTs on `handoff_processes`.
+
+| handoff_id | process_id | proposal_source | record_status |
+|---|---|---|---|
+| 1234 | 115 (Manage product and service master data, L3) | agent_curated | new (DB default) |
+| 1235 | 115 (Manage product and service master data, L3) | agent_curated | new (DB default) |
+| 1236 | 115 (Manage product and service master data, L3) | agent_curated | new (DB default) |
+| 1237 | 113 (Manage product and service life cycle, L3) | agent_curated | new (DB default) |
+| 1241 | 115 (Manage product and service master data, L3) | agent_curated | new (DB default) |
+| 1242 | 113 (Manage product and service life cycle, L3) | agent_curated | new (DB default) |
+
+Post-state coverage: 7 of 7 PIM cross-domain handoffs now carry at least one `handoff_processes` tag.
+
+Loader: [.tmp_deploy/fix_pim_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_pim_b1_technical_2026_05_31.ts).
+
+UI spot check: https://tests.semantius.app/domain_map/handoff_processes
+
+### Items NOT fixed in this continuation
+
+The 6 deferred B1 items remain open pending user decisions on:
+- B2-S1 (M7 architectural choice) blocks B1-S1.
+- B2-S6 (regulation ownership) blocks B1-S5.
+- B2-S7 (PIM -> PLM discontinued handoff) blocks B1-S6.
+- B1-S2 / B1-S3 / B1-S4 are not PIM's fix (other domains' work).
+

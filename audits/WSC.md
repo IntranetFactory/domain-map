@@ -154,3 +154,36 @@ These items are surfaced by WSC's audit but the fix lives on another domain. Lis
 | CCAAS | B9 inbound DMDO declaration on `chat_threads` | Handoff 833 carries NULL `target_domain_module_id` because CCAAS has no DMDO row on `chat_threads` (id 566). CCAAS's b1 audit's B10b will surface this. |
 | ITSM | B9 inbound DMDO declaration on `service_incidents` from chat (already populated as 38) but possible Phase-B extension to model the `chat_threads → service_incidents` linkage explicitly on its side | Handoff 834 IS populated (target=38). No fix owed; positive finding. Listed for completeness only. |
 | WORK-MGMT | B9 source-side modularization | Inbound handoff 790 has source 149 populated, so this is also a positive finding; listed because WORK-MGMT may want to confirm `work_automations.triggered` fans out to other targets beyond WSC. |
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent fix-loop pass: applied the audit-pre-specified subset of Bucket 1 that the agent prompt classifies as TECHNICAL (PATCH enum backfills with values named in the audit, derivable B10b FK PATCHes, INSERT `handoff_processes` rows where the audit pre-specifies a resolvable PCF, Rule #10 user-edge canonicalization, pairwise consumer DMDOs derivable from existing modules). All other B1 items deferred to human judgment.
+
+Loader: `c:/dev/domain-map/.tmp_deploy/fix_wsc_b1_technical_2026_05_31.ts` (idempotent, can re-run).
+
+### Fixes applied
+
+| Audit ID | Operation | Rows touched | Outcome |
+|---|---|---|---|
+| B1-S1 | PATCH `trigger_events.event_category` per audit mapping on ids 909-920 (mix of `lifecycle` and `state_change`) | 12 | 12/12 populated, 0 still empty |
+| B1-S2 | DELETE 9 noun-phrase user-edges (ids 287-295) + INSERT 9 verb-shape replacements from `users` (748) to each WSC master per audit naming (`owns_channel`, `creates_channel`, `posts_message`, `starts_thread`, `holds_membership`, `starts_huddle`, `uploads_attachment`, `shares_file`, `issues_invitation`) | 9 DELETE + 9 INSERT | 9 verb-shape rows post-load (ids 1953-1961); 0 noun-phrase rows remain |
+| B1-S4 | INSERT `domain_module_data_objects` `(domain_module_id=115, data_object_id=246, role='consumer', necessity='optional')` then PATCH `handoffs.target_domain_module_id=115` on id 790 | 1 INSERT + 1 PATCH | DMDO created; handoff 790 now wired to module 115 |
+| B1-S6 | INSERT 6 `handoff_processes` `agent_curated` rows where audit pre-specifies handoff_id + resolvable PCF and no existing row exists: (830, 273), (831, 273), (832, 1179), (834, 1299), (835, 196), (836, 273). Rows 828, 829, 833 already had `handoff_processes` rows from prior loads; left as-is. | 6 INSERT | 6/6 confirmed `agent_curated` |
+| B1-S9 | INSERT 10 pairwise consumer+optional DMDO rows per audit's anchor mapping: module 115 consumes (429, 431, 246, 705, 47, 330, 256, 233); module 117 consumes (704, 708). Row (115, 246) collapsed with B1-S4. | 9 INSERT (1 deduped) | 10/10 target DMDO rows present post-load |
+
+Totals: 13 PATCHes + 25 INSERTs + 9 DELETEs across `trigger_events`, `data_object_relationships`, `domain_module_data_objects`, `handoffs`, `handoff_processes`. No JWT-audience errors.
+
+### Deferred
+
+| Audit ID | Reason for deferral |
+|---|---|
+| B1-S3 | New `handoffs` row inserts (2 intra-domain handoffs). Agent prompt restricts new handoff INSERTs to `handoff_processes` tagging only where audit pre-specifies handoff_id + PCF; new `handoffs` table rows are outside the TECHNICAL scope. |
+| B1-S5 | Resolved by B1-S3 per audit; defers with it. |
+| B1-S6 row for handoff 790 | Audit explicitly defers (no clean PCF: "WSC-side bot/automation post is a modern digital concept"). |
+| B1-S7 | Report-only; no action. |
+| B1-S8 | Report-only; B10b NULL `target_domain_module_id` on 828, 829, 832, 833 owed by ECM / DLP / CCAAS b1 audits, not WSC's fix. |
+| B2-S1, B2-S2, B2-S3 | Rule #15 notes-pollution reverts require user confirmation per the agent prompt (forbidden to write `notes` and reverts allowed only when audit pre-specifies row IDs; the audit identifies counts but not the exact row IDs being reverted, and these are Bucket 2 by the audit's own classification). |
+| B2-S4 | Pattern-flag flips explicitly out of scope per agent prompt. |
+| B2-S5 | `solution_domains` DELETE (Viva Connections) is a "user picks" Bucket 2 item. |
+| B2-S6 | RBAC bundle change explicitly Bucket 2 user-decision. |
+| All Bucket 3 | Phase 0 vendor research pending, requires new entity / market judgment. |

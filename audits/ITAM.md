@@ -144,3 +144,36 @@ No neighbor reaches edge weight >=3. Per the per-domain audit recipe, lighter ne
 ### `domains.notes` pointer (if updated)
 
 _not yet written; requires user-approved wording per Rule #15_
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the technical subset of the 2026-05-30 Bucket 1 inventory via [.tmp_deploy/fix_itam_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_itam_b1_technical_2026_05_31.ts) (loader run from project root per Rule #6).
+
+### Applied (9 of 10 B1 items)
+
+| ID | Type | Action |
+|---|---|---|
+| B1-S2 | PATCH skill_tools | `id=1370` (skill 149, required) and `id=1383` (skill 150, optional) re-pointed from `send_email` (tool 37) to `notify_person` (tool 913). No pre-existing 913 row on either skill, so no DELETE needed. |
+| B1-S3 | PATCH notes='' | `data_objects.id=54` (`asset_contracts`) and `data_objects.id=55` (`asset_lifecycle_events`) reverted to `''`. Audit named the row ids; Rule #15 permits the revert. Config-shape exemption for `asset_lifecycle_events` and the submit-lock pattern reasoning for `asset_contracts` continue to live in this audit file, not in `data_objects.notes`. |
+| B1-H1 | INSERT handoff_processes | handoff 634 (ITAM-CONTRACTS to GRC, `asset_contract.expired`) tagged process 807 (PCF 10291 `Manage contracts`), `agent_curated`. |
+| B1-H2 | INSERT handoff_processes | handoff 635 (ITAM-CONTRACTS to ERP-FIN, `asset_contract.renewed`) tagged process 807 (PCF 10291), `agent_curated`. |
+| B1-H3 | INSERT handoff_processes | handoff 632 (ITAM-LIFECYCLE to ERP-FIN, `asset_lifecycle_event.recorded`) tagged process 1390 (PCF 10831 `Process and record fixed-asset adjustments, enhancements, revaluations, and transfers`), `agent_curated`. |
+| B1-H4 | INSERT handoff_processes | handoff 633 (ITAM-LIFECYCLE to HAM, `asset.retired_for_disposal`) tagged process 1389 (PCF 10830 `Process and record fixed-asset additions and retires`), `agent_curated`. Coexists with the prior discovery_substring row pointing at process 10 (PCF 19207); user reconciles during review. |
+| B1-H5 | INSERT handoff_processes | handoff 853 (APM to ITAM-NORMALIZATION-CATALOG, `technology_platform.registered`) tagged process 1312 (PCF 20918 `Maintain IT asset records`), `agent_curated`. |
+| B1-H6 | INSERT handoff_processes | handoff 462 (IGA to ITAM-LIFECYCLE, `iga_provisioning_event.completed`) tagged process 1335 (PCF 10781 `Manage asset resource deployment and utilization`), `agent_curated`. |
+| B1-H7 | INSERT handoff_processes | handoff 645 (RMM to ITAM-LIFECYCLE, `automation_script.executed`) tagged process 1552 (PCF 19249 `Update work and asset records`), `agent_curated`. |
+
+### Deferred (3 items)
+
+| ID | Reason |
+|---|---|
+| B1-S1 | `domains.catalog_tagline` and `catalog_description` drafts require user review BEFORE writing per Rule #20. Defer pending the draft + review loop. |
+| B1-H8 | Audit itself defers to Discover Pass 3 (ITSM-side PCF attribution to reconcile first). |
+| B1-H9 | Audit itself defers pending KUBE-PLAT scoping decision. |
+
+### Verification
+
+- 8 handoff_processes rows confirmed present across handoffs 462, 632, 633 (two rows now), 634, 635, 645, 853; all new agent rows carry `record_status='new'`, `proposal_source='agent_curated'`.
+- skill_tools 1370 and 1383 confirmed pointing at tool 913 (`notify_person`).
+- data_objects 54 and 55 `notes` confirmed empty.
+- UI spot-check: https://tests.semantius.app/domain_map/handoff_processes, https://tests.semantius.app/domain_map/skill_tools, https://tests.semantius.app/domain_map/data_objects.

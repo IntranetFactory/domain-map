@@ -251,3 +251,42 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 ### Decisions
 
 _(empty until reviewed; per-bucket decisions captured as the user makes them.)_
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Scope of this continuation
+
+Subagent pass on truly-technical Bucket-1 fixes for EXPENSE. Inventory of 6 B1 items from the 2026-05-30 audit (S1, S2, S3, S4, S5, H1). Only B1-S2 qualified as technical; the other 5 were deferred per the prompt's classification rules.
+
+### Applied
+
+- **B1-S2 PATCH trigger_events.event_category on 9 rows.** Loader: [.tmp_deploy/fix_expense_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_expense_b1_technical_2026_05_31.ts). All 9 rows verified pre-flight at `event_category=''`, all 9 patched successfully and verified post-flight. Mapping per audit:
+  - 568 expense_line.submitted -> `state_change`
+  - 569 expense_line.policy_violation -> `state_change`
+  - 570 expense_line.approved -> `state_change`
+  - 571 expense_line.posted_to_gl -> `lifecycle`
+  - 572 travel_booking.confirmed -> `state_change`
+  - 573 travel_booking.cancelled -> `state_change`
+  - 574 travel_booking.out_of_policy -> `state_change`
+  - 575 corporate_card.issued -> `lifecycle`
+  - 576 corporate_card.suspended -> `state_change`
+
+### Deferred
+
+- **B1-S1 (M1 hard fail, Phase M load).** Creates 2-4 new `domain_modules` rows + DMDO migration; gated on B2-S1 module-split decision (user picks 3 / 2 / 4 / custom). Prompt rules: new modules, "user picks" decisions, and full Phase M loads are deferred.
+- **B1-S3 (6 master state machines).** Creates new `data_object_lifecycle_states` rows; gated on B1-S1 because state rows carry `domain_module_id`. Prompt rules: new entities deferred.
+- **B1-S4 (skill rebind / split).** Gated on B1-S1; the module split shape determines whether one or N system skills.
+- **B1-S5 (6 pattern flag flips on data_objects).** Gated on B2-S4 per-flag user confirmation. Prompt rules: "pattern flag flips" explicitly deferred.
+- **B1-H1 (17 APQC handoff_processes tags).** 13 of the 17 candidates carry "needs PCF lookup" in the audit, no resolvable PCF id pre-specified. The 4 with pre-specified ids (38->317, 130->59, 101->59, 468->41) are REPLACE / CONFIRM operations against existing `discovery_*` rows, not pure INSERTs. Prompt rule allows INSERT `handoff_processes` only when the audit pre-specifies `handoff_id` + a resolvable PCF; REPLACE / PATCH semantics for `handoff_processes` are out of scope for this continuation.
+- **B1-S6, B1-S9 (EXPENSE-side B10b NULL FK backfills).** Audit explicitly marks both as "blocked on B1-S1" because the modules to point at do not exist yet.
+- **B1-S7, B1-S8 (neighbor-owed NULL FK backfills).** Report-only; routed to SPEND-MGMT, ERP-FIN, AP-AUTO, PAYROLL, AUDIT, SMP, HCM audits. Not in scope here.
+
+### Counts
+
+- Technical fixes applied: 1 of 6 B1 items (9 PATCH operations).
+- Deferred: 5 of 6 B1 items.
+- JWT errors: 0.
+
+### Loader
+
+- [.tmp_deploy/fix_expense_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_expense_b1_technical_2026_05_31.ts) (idempotent; safe to re-run).

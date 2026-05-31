@@ -143,3 +143,63 @@ LIB-MGMT publishes zero cross-domain edges today, so almost every report-only it
 | ERP-FIN (65) | B10b inbound DMDO declaration on `library_acquisition_orders` for encumbrance budgeting | Same shape as AP-AUTO above. Surface if ERP-FIN wants the explicit edge. |
 | IGA (id from lookup) | B10b inbound DMDO declaration on `library_patrons` for SSO-backed registration | Once B1-S4 surfaces patron-IDP, IGA owes the canonical identity edge. |
 | CLM (wherever `contracts` is mastered) | B10b inbound DMDO declaration on `library_eresource_licenses` if CLM chooses to model library-license contracts | Pattern: e-resource licenses are contracts in CLM's canonical shape; CLM can choose to embed the library variant or accept it as a generic contract. |
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Scope of this pass: apply only "truly technical" B1 fixes (enum backfills the audit pre-specifies; B10b FK PATCHes derivable from existing modules; `domain_regulations` inserts to existing rows; DELETEs of audit-named stale rows with IDs; naming renames where FKs are unaffected; `data_object_relationships` user-edges that Rule #10 audit pre-specifies; `permission_verb_override` PATCHes the audit names state+verb for; `handoff_processes` INSERTs ONLY when the audit pre-specifies a `handoff_id` plus a resolvable PCF). Defer everything else (new entities/DMDOs/modules, "user picks" wording or options, `catalog_tagline` / `catalog_description` drafts per Rule #20, new `business_function_domains` contributors/consumers, items gated on B2-X).
+
+### Classification of the 10 B1 items
+
+| ID | Type | Disposition | Reason |
+|---|---|---|---|
+| B1-S1 | STRUCTURAL (A4 catalog UX) | DEFER | `catalog_tagline` / `catalog_description` drafts are Rule #20 surface-for-user; explicitly gated on B2-S2 wording approval. |
+| B1-S2 | STRUCTURAL (B12 lifecycle) | DEFER | Per-master config-shape vs workflow decision is owned by the user (B2-S1); `library_holdings` lifecycle shape ("user picks" 3-state vs 5-state vs exempt) is a judgment call. |
+| B1-S3 | BOUNDARY (cross-domain `data_object_relationships`) | DEFER | The 6 proposed edges are NOT Rule #10 user-edges (those are already complete, 8 rows). Cross-domain relationships and the matching counterparty masters live outside the truly-technical scope; require neighbor-domain validation and surface-for-user follow-ups. |
+| B1-S4 | BOUNDARY (cross-domain `handoffs`) | DEFER | Mechanically depends on B1-S3 landing; handoffs themselves are not in the truly-technical INSERT list. |
+| B1-S5 | STRUCTURAL (A4 voice) | DEFER | Folded into B1-S1; same Rule #20 surface-for-user gate. |
+| B1-S6 | STRUCTURAL (B6 trigger_events backfill, `library_acquisition_orders`) | DEFER | `trigger_events` INSERTs are not in the truly-technical scope for this pass. Required `from_state` / `to_state` / `event_category` derivations + module FK selection are judgment-bearing enough that they belong with the broader Phase-B extension. |
+| B1-S7 | STRUCTURAL (B6 trigger_events backfill, `library_eresource_licenses`) | DEFER | Same reason as B1-S6. |
+| B1-S8 | STRUCTURAL (B6 trigger_events backfill, workflow masters) | DEFER | Same reason as B1-S6 / B1-S7; ~12 additional events. |
+| B1-S9 | STRUCTURAL (C1 `business_function_domains`) | DEFER | New contributors / consumers on `business_function_domains` are explicitly excluded from this pass; depends on B2-S3 (function-shape decision). |
+| B1-S10 | APQC TAGGING (`handoff_processes`) | DEFER | No cross-domain `handoff_id` exists today (B1-S4 has not landed); audit does not pre-specify a `handoff_id` + resolvable PCF tuple. Cannot insert until B1-S4 lands first. |
+
+### Live-state verification (pre-classification)
+
+- `trigger_events` on LIB-MGMT data_objects (823, 825, 826, 827, 828, 829, 830, 831, 832, 833, 834, 835, 836, 837, 838, 839): 7 rows confirmed (`bibliographic_record.published`, `interlibrary_loan_request.received`, `library_acquisition_order.received`, `library_fine.assessed`, `library_hold.placed`, `library_hold.ready`, `library_patron.suspended`). Matches audit.
+- `data_object_lifecycle_states` on LIB-MGMT masters: 62 rows across 11 of 17 masters. The 6 zero-state masters (826, 830, 832, 834, 837, 839) confirmed. Matches audit.
+- `data_object_relationships` involving LIB-MGMT masters: 29 rows; 8 of those are Rule #10 user-edges (7 `users` -> LIB master action verbs at ids 1256-1262, plus 1 reverse `library_patrons linked_to_user users` at id 1264). Rule #10 user-edge surface is COMPLETE for LIB-MGMT.
+- `handoffs` touching domain 168: 9 rows, all intra-domain (`source_domain_id = target_domain_id = 168`). Confirms zero cross-domain handoffs; B1-S10 cannot land without B1-S4 first.
+
+### Fixes per type
+
+| Type | Fixes applied | Notes |
+|---|---|---|
+| PATCH enum backfills | 0 | Audit does not pre-specify any enum backfill. |
+| B10b FK PATCHes | 0 | B10b passes vacuous (no inbound cross-domain DMDO declarations). |
+| INSERT `domain_regulations` | 0 | B2-S6 is a "user picks" decision (Rule #20 / "decide"). |
+| DELETE stale rows | 0 | None audit-named. |
+| PATCH naming renames | 0 | None audit-named. |
+| INSERT user-edges Rule #10 | 0 | Already complete (8 rows live, matches audit count). |
+| PATCH `permission_verb_override` | 0 | None audit-named. |
+| INSERT `handoff_processes` (gated) | 0 | No `handoff_id` exists today; B1-S4 not landed. |
+
+**Total fixes applied: 0.** All 10 B1 items defer for reasons listed above.
+
+### Deferred items
+
+10 of 10 B1 items deferred. Categories:
+
+- Rule #20 surface-for-user (catalog UX wording): 2 (B1-S1, B1-S5)
+- User picks / lifecycle judgment: 1 (B1-S2)
+- Cross-domain `data_object_relationships` / `handoffs` extension load (not user-edges, not in this pass's scope): 2 (B1-S3, B1-S4)
+- `trigger_events` backfill (not in truly-technical scope; from_state / to_state / event_category derivation belongs with broader Phase-B): 3 (B1-S6, B1-S7, B1-S8)
+- New `business_function_domains` contributors/consumers (explicitly excluded): 1 (B1-S9)
+- APQC `handoff_processes` gated on cross-domain handoff existence: 1 (B1-S10)
+
+### JWT-audience errors
+
+None encountered.
+
+### Loader
+
+No loader created. Zero technical fixes apply; no `.tmp_deploy/` script was needed.

@@ -206,3 +206,44 @@ These items route to source / target domains as per Rule #11; ONBOARDING does no
 - **HCM b1 audit (already 2026-05-30):** declared the consumer DMDO `onboarding_document_collections` on HCM-CORE-WORKER (DMDO 678 confirmed). The B1-S4 routing item on the HCM audit also captured the upstream HCM→ATS / HCM→ONBOARDING wiring.
 - **ATS b1 audit:** confirm consumer / contributor pattern around `onboarding_journeys` (16) for handoffs 2, 394, 1074. The ATS source-FK populates correctly.
 
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent pass under the technical-only mandate (PATCH enum backfills audit specifies; B10b FK PATCHes derivable from existing modules; INSERT `domain_regulations` to existing rows; DELETE stale rows audit names with IDs; PATCH naming renames; INSERT `data_object_relationships` user-edges per Rule #10; PATCH `permission_verb_override` audit names state+verb; INSERT `handoff_processes` APQC rows ONLY when audit pre-specifies handoff_id + resolvable PCF). Reviewed all 7 B1 items.
+
+### Fixes applied
+
+| Item | Action | Rows |
+|---|---|---|
+| (none) | — | 0 |
+
+No writes performed. Live state unchanged.
+
+### Deferred
+
+| Item | Reason |
+|---|---|
+| B1-S1 (notes pollution on 6 DDO rows) | Rule #15 (never write `notes`). Audit explicitly routes resolution to B2-S1 ("cannot resolve without user input"). User picks revert-to-empty vs leave-in-place. |
+| B1-S2 (notes pollution on 16 `skill_tools` rows) | Same shape as S1. Audit routes to B2-S2. User picks. |
+| B1-S3 | Clean placeholder; no fix needed. |
+| B1-S4 (consumer DMDOs on downstream domains) | Report-only; owed by ITSM / IGA / HRSD / IWMS / LMS / PAYROLL / EMP-EXP b1 audits. Not ONBOARDING's fix. |
+| B1-S5 (~22 workflow-gate permissions + role mappings) | Two blockers: (1) Bucket 1 ↔ Bucket 2 dependency in audit body explicitly defers S5 materialization until B2-S3 (pattern flags) resolves, since B2-S3 may flip additional states to `requires_permission=true`. (2) Role-to-permission mapping ("Onboarding HR Partner → `approve_onboarding_document_collection`", etc.) is editorial judgment, not derivable mechanically from existing state. |
+| B1-S6 (B4 pattern-flag re-evaluation) | Audit explicitly routes to B2-S3. User owns workflow-shape judgments. |
+| B1-S7 (APQC tagging, 17 candidate rows) | Per-row resolvability check against `/processes`: 16 of 17 audit-named PCFs are not present in the live `apqc_pcf_cross_industry` catalog with the proposed name. Only h9 → "Manage employee inquiries" resolves cleanly to process_id 242 (`Manage employee inquiry process`, external_id 10523). The audit treats the 17 rows as a single editorial unit (REPLACE + INSERT mix); applying 1 of 17 splits the H1 fix mid-flight. Surface PCF-name unresolvability to user (audit's external_id hints 10566 / 10550 / 10546 / 10539 / 10543 / 10778 do not exist; closest matches by name: `Process payroll` 58, `Administer Payroll` 236, `Provide workspace and facilities` 345, `Manage IT user identity and authorization` 273, `Develop, conduct, and manage employee training programs` 1039, `Manage employee onboarding` 224, `Conduct employee engagement surveys` 250). |
+
+### JWT errors
+
+None.
+
+### Loader path
+
+No loader written (zero applicable fixes).
+
+### UI links
+
+- https://tests.semantius.app/domain_map/handoff_processes
+- https://tests.semantius.app/domain_map/permissions
+- https://tests.semantius.app/domain_map/role_permissions
+- https://tests.semantius.app/domain_map/domain_data_objects
+- https://tests.semantius.app/domain_map/skill_tools
+- https://tests.semantius.app/domain_map/data_objects
+

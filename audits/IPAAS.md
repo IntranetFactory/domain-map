@@ -178,3 +178,30 @@ _(empty until the user approves Bucket 1 items)_
 ### `domains.notes` pointer (if updated)
 
 _not yet written; will require user-approved wording per Rule #15_
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+Residual B1 pass applied via loader [.tmp_deploy/fix_ipaas_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_ipaas_b1_technical_2026_05_31.ts). Scope: truly-technical residuals only (PATCH enum backfills, Rule #10 user-edges where audit pre-specified, handoff_processes inserts where audit pre-specified handoff_id + resolvable PCF). Loader is idempotent.
+
+### Fixes applied
+
+| Audit ID | Type | Result |
+|---|---|---|
+| B1-S13 | PATCH `trigger_events.event_category` (8 rows: 836-843) | patched=8, skipped=0. Categories: 836/837/843 state_change; 838/839 lifecycle; 840 threshold; 841/842 signal. |
+| B1-S5 | INSERT `data_object_relationships` Rule #10 user-edges (5 rows) | inserted=5, skipped=0. `users` -> `integration_recipes` (authors), `integration_connectors` (owns), `webhook_subscriptions` (subscribes), `integration_runs` (initiates), `integration_data_mappings` (designs). Each: `data_object_id=748` (source), `owner_side=source`, `relationship_type=one_to_many`, `relationship_kind=reference`, `is_required=false`, `record_status` defaulted to `new`. The "publishes" edge proposed in B1-S5 is gated on B2-S3 (single-approver flag) and not applied. |
+| B1-H1 | INSERT `handoff_processes` (5 rows) | inserted=5, skipped=0. Handoff 768 already tagged with process_id=1670 from a prior pass (skipped). Inserts: 766/765 -> 1299 (Triage IT service delivery incidents); 767 -> 273 (Manage IT user identity and authorization); 769 -> 1947 (Manage service/solution operations); 801 -> 1262 (Implement software change/release). Each: `role=implements`, `proposal_source=agent_curated`, `record_status` defaulted to `new`. Deferred per audit: 705 (LCAP -> IPAAS) and 748 (APIM -> IPAAS), both flagged for Discover Pass 3 in B1-H1 detail. |
+
+### Deferred (out of scope for this technical residual pass)
+
+- **B1-S1 / B1-S12** modules + capabilities + DMDOs (new entities; gated on B2-S1 module-split decision).
+- **B1-S2** catalog UX fields (Rule #20; requires user-approved wording).
+- **B1-S3** pattern flag flips (explicit defer; B2-S3 judgment call).
+- **B1-S4** intra-domain `data_object_relationships` (not Rule #10 user-edges; audit cluster-drafts pending review).
+- **B1-S6** aliases (audit suggests vendor terms but does not pre-specify exact (data_object_id, alias_name) tuples).
+- **B1-S7** lifecycle states (depends on B1-S1 module FKs via M5).
+- **B1-S8** legacy skill retire + per-module system skills (new entities; depends on B1-S1).
+- **B1-S9** handoff `source_domain_module_id` PATCH (NOT derivable; IPAAS has zero modules until B1-S1).
+- **B1-S10** outbound cross-domain `data_object_relationships` (depends on B1-S4/B1-S5; 3 of 6 targets unverified).
+- **B1-S11** intra-domain handoffs (depends on B1-S1 + B1-S7).
+- **B1-H1 deferred handoffs** 705 and 748 (no clean cross-industry PCF match per audit).
+- All Bucket 2 / Bucket 3 items (user judgment / Phase 0 vetting).

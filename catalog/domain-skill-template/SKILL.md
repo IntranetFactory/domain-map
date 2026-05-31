@@ -30,7 +30,9 @@ For all Semantius CLI mechanics, PostgREST encoding, and cube DSL, defer to the 
 | `discovered.json` | tenant discovery run (full discovered schema) | this skill |
 | `lessons.md` | tenant runtime | this skill (append-only) |
 | `improvements.md` | tenant runtime | this skill (append-only) |
+| `ready.flag` | written by `scripts/bootstrap.ts` | bootstrap (single producer) |
 | `references/` | generic, no per-domain content | HQ on skill upgrade |
+| `scripts/` | generic Bun/TypeScript bootstrap scripts | HQ on skill upgrade |
 
 The skill **learns** locally through three append-only files: `state.yaml` (deltas vs. spec), `lessons.md` (tactical pitfalls), and `improvements.md` (procedural meta-patterns). All three are read on every invocation and applied to subsequent operations. `SKILL.md` itself stays untouched — the procedure manual is stable; the learning layer grows around it.
 
@@ -42,15 +44,18 @@ The installer preserves `state.yaml` and `lessons.md` across upgrades. Tenants s
 
 Before doing any domain work, the skill follows this sequence:
 
-1. **Read `lessons.md` and `improvements.md`** in full. Lessons are tactical pitfalls (one specific call that failed; the corrected form). Improvements are procedural meta-patterns (a class of operation that needs a different approach). Both apply on every operation: lessons prevent specific mistakes; improvements OVERRIDE the procedure in `references/` when their trigger matches. Format docs: [references/lessons-format.md](references/lessons-format.md), [references/improvements-format.md](references/improvements-format.md).
-2. **Check `state.yaml`.** If present and current, proceed. "Current" means:
-   - `state.discovered_against_major == spec.facts_major` (else: full re-discovery, see [references/discovery.md](references/discovery.md))
-   - `state.discovered_at >= spec.emitted` (else: incremental reconciliation)
-3. **If `state.yaml` is missing or stale,** run the bootstrap checks ([references/bootstrap.md](references/bootstrap.md)) and then the discovery procedure ([references/discovery.md](references/discovery.md)). Both halt with a clear, actionable message on failure (link to install / configure / deploy instructions). Discovery writes BOTH `state.yaml` (deltas + summary) AND `discovered.json` (full discovered schema).
-4. **Once state is current,** answer the user's request using the discovered entity names, relationships, and lifecycle from `state.yaml` (and `discovered.json` for field-level detail when needed). Never assume catalog names hold; the tenant may have renamed `suppliers` to `vendors`, dropped `cost_centers`, or split a master into two entities.
-5. **When a non-obvious pitfall is observed** during the run, append a `lessons.md` entry. **When a recurring procedural pattern is identified** that warrants a different approach than the procedure docs, append an `improvements.md` entry. Both feed back into step 1 on the next invocation.
+1. **Verify `use-semantius` is loaded in the session.** Look at the available-skills list in the system reminder. If `use-semantius` is not present, halt with: *"This skill delegates all Semantius CLI mechanics to `use-semantius`. Install it from the catalog and reload the session: https://semantius.app/catalog/use-semantius"*. This is an agent-level check (no script can see what's loaded in the Claude Code session); the agent performs it on every invocation as the cheapest gate.
+2. **Verify Bun is installed.** Run `bun --version`. If exit code is non-zero, halt with the install link (`https://bun.sh/install`). All scripts in `scripts/` are TypeScript on Bun (no Python, ever — see hard rules). The skill cannot proceed without Bun.
+3. **Read `lessons.md` and `improvements.md`** in full. Lessons are tactical pitfalls (one specific call that failed; the corrected form). Improvements are procedural meta-patterns (a class of operation that needs a different approach). Both apply on every operation: lessons prevent specific mistakes; improvements OVERRIDE the procedure in `references/` when their trigger matches. Format docs: [references/lessons-format.md](references/lessons-format.md), [references/improvements-format.md](references/improvements-format.md).
+4. **Check `ready.flag`.** Single-file check. The skill is ready when:
+   - `ready.flag` exists, AND
+   - `ready.flag.valid_through_emitted == spec.emitted`, AND
+   - `ready.flag.valid_through_major == spec.facts_major`.
+   If any condition fails, run `bun run scripts/bootstrap.ts` from the project root. Bootstrap orchestrates Phase 1 (environment) → Phase 2a (structural discovery, writes `discovered.json`) → ready.flag. If Phase 2a returns ambiguities (unresolved entity renames, custom entities), bootstrap DOES NOT write `ready.flag`; the agent runs Phase 2b ([references/discovery.md](references/discovery.md)) to surface each ambiguity to the user, records resolutions in `state.yaml`, then re-invokes `bootstrap.ts`.
+5. **Once `ready.flag` is current,** answer the user's request using the discovered entity names, relationships, and lifecycle from `state.yaml` (and `discovered.json` for field-level detail when needed). Never assume catalog names hold; the tenant may have renamed `suppliers` to `vendors`, dropped `cost_centers`, or split a master into two entities. Operational failures from semantius calls surface verbatim (Rule #6) — the skill does NOT pre-flight authentication on every invocation; trust the CLI to error when it errors.
+6. **When a non-obvious pitfall is observed** during the run, append a `lessons.md` entry. **When a recurring procedural pattern is identified** that warrants a different approach than the procedure docs, propose the improvement at end-of-session for user approval before appending to `improvements.md` (improvements OVERRIDE procedure docs, so they need human review — see [references/improvements-format.md](references/improvements-format.md)). Both feed back into step 3 on the next invocation.
 
-To force a fresh discovery: delete `state.yaml` AND `discovered.json`. The next invocation will re-run discovery from scratch.
+To force a fresh discovery: delete `ready.flag` (or also `discovered.json` and `.phase1-cache.json` for a fully cold rebuild). The next invocation will re-run bootstrap.
 
 ---
 
@@ -138,6 +143,7 @@ These hold across every Semantius write the skill performs, regardless of what t
 - **Use the `semantius` CLI exclusively.** Never call MCP-exposed Semantius tools; they authenticate against the wrong scope and will fail or hit the wrong tenant.
 - **`semantius` reads `.env` from cwd.** Invoke from the project root; never `cd` into a subfolder before calling it.
 - **JWT-audience errors halt the run.** Surface the verbatim error and wait for user direction.
+- **Never use Python. Use Bun (TypeScript) for every script.** Python on Windows is brittle in this project's deployment surface (encoding mismatches piping JSON into `semantius`, venv/path drift, subprocess plumbing that swallows stderr). The bootstrap scripts ship as `.ts` files run with `bun`. Any script this skill writes (bootstrap, discovery, ad-hoc helpers, loaders) MUST be TypeScript on Bun. "Just this once" with Python is not acceptable. If you think Python is the right tool, you're wrong, write the TypeScript instead.
 
 Full versions of these rules with rationale live in the catalog's [domain-map-analyst SKILL.md](https://github.com/<...>/domain-map/blob/main/.claude/skills/domain-map-analyst/SKILL.md).
 

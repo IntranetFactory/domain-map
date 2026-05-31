@@ -378,3 +378,32 @@ Both fixes are deferred to land after `B1-M1`. No notes additions on these rows 
 - **TCMA as a candidate domain** (mention count 1, newly queued by this audit). If promoted, PRM's through-channel marketing capabilities and proposed `PRM-PARTNER-MARKETING` module relocate. Surfaces in the next TCMA triage decision.
 - **ECOSYSTEM-LED-GROWTH as a candidate domain** (mention count 1, newly queued by this audit). If promoted, PRM's co-sell and account-mapping capabilities and proposed `PRM-PARTNER-CO-SELL` module relocate. Surfaces in the next ECOSYSTEM-LED-GROWTH triage decision. Also rewires the ownership of handoff 211 (the co_sell.opportunity_created event would route from ECOSYSTEM-LED-GROWTH, not PRM).
 - **AFFILIATE-MGMT as a candidate domain** (mention count 1, newly queued by this audit). If promoted, the affiliate entity surface (which is not in PRM today) lands cleanly outside PRM. Independent of the existing PRM gaps.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Re-classified the 12 Bucket 1 items against the strict technical-fix charter (PATCH backfills derivable from existing state, deletes/PATCHes with row IDs named in the audit, inserts the audit pre-specifies in full). **Zero items qualify as technical-now; all 12 remain deferred.** No live writes, no loader authored.
+
+Live re-verification ran before classification:
+
+- `GET /domain_modules?domain_id=eq.96` returned `[]` (zero PRM modules, B1-M1 still open).
+- `GET /handoffs?or=(id.eq.211,id.eq.212)` confirmed both rows still carry `source_domain_module_id=NULL` (B1-H1 / B1-H2 still open on the source side, target side correctly populated at 48 / 47).
+- `GET /domains?id=eq.96` confirmed `business_logic=''`, `catalog_tagline=''`, `catalog_description=''` (B1-A2 and B1-A1 unchanged).
+
+Per-item classification:
+
+| ID | Classification | Reason |
+|---|---|---|
+| B1-A1 | DEFER | `catalog_tagline` and `catalog_description` are Rule #20 fields; never authored without user review of the wording. |
+| B1-A2 | DEFER | `business_logic` is a description-class field whose wording must be user-approved before PATCH; the audit explicitly says "draft authored below ... then PATCH" pending user signoff. |
+| B1-A3 | DEFER | 7-11 new `capabilities` rows; new entities and gated on B2-M1 / B2-S1 / B2-S2 / B2-T1 carve-out decisions. |
+| B1-A4 | DEFER | 6-12 new `solutions` rows; new entities and gated on the same carve-out decisions. |
+| B1-M1 | DEFER | 4-7 new `domain_modules` rows; new modules and gated on B2-M1 shape choice plus the four cross-cutting Bucket 2 calls. |
+| B1-V1 | DEFER | New `data_objects` master (`channel_partners`); gated on B1-M1. |
+| B1-V2 | DEFER | New `data_objects` master (`deal_registrations`); gated on B1-M1. |
+| B1-V3 | DEFER | New `data_objects` masters (`mdf_requests` + `mdf_claims`); gated on B1-M1. |
+| B1-V4 | DEFER | New `data_objects` master (`partner_scorecards`); gated on B1-M1. |
+| B1-H1 | DEFER | PATCH target FK (`PRM-PARTNER-CO-SELL` or equivalent) does not exist in `domain_modules`; cannot resolve without B1-M1 first. |
+| B1-H2 | DEFER | PATCH target FK (`PRM-PARTNER-PORTAL` or equivalent) does not exist in `domain_modules`; cannot resolve without B1-M1 first. |
+| APQC TAGGING | DEFER | The audit marks both proposed `handoff_processes` rows as "surface-for-user, not auto-load" with medium / medium-low confidence; PCF resolution is explicitly unverified ("needs to run at load time") and the charter requires PCF lookup verified against live `/processes` before insert. Judgment call, not a technical fix. |
+
+Net: 0 fixes applied, 12 deferred. No loader file created.

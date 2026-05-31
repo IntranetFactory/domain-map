@@ -132,3 +132,37 @@ Adjacent: `vendor_attestations`, `vendor_contracts` (vs CLM's `contracts`), `ven
 - **ESG B9 candidate handoff.** ESG's `supplier_esg_assessment.score_updated` flow already targets TPRM; the symmetric back-channel `vendor_risk_assessment.completed` from TPRM → ESG (so ESG knows when the vendor's overall risk profile shifted) is a candidate. Surfaces in ESG's audit.
 - **SUP-LIFE B9.** SUP-LIFE already publishes `supplier_risk_assessment.completed` to AUDIT (handoff 550) and `supplier_risk_assessment.elevated` to GRC (handoff 549). If TPRM ends up consuming `supplier_risk_assessments` (Bucket 2 #4 option b), a third fan-out to TPRM is the candidate. Surfaces in SUP-LIFE's audit.
 - **MDM (87) `supplier_golden_record.updated` handoff (273) → SUP-LIFE.** Already wired. No TPRM impact; mentioned for context, since any decision on Bucket 2 #3 to introduce a `counterparties` MDM master would route through this same MDM lane.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent pass to apply the truly-technical Bucket 1 fixes for TPRM (domain id 19) where the audit pre-specified the targets. Judgment items (module scaffold, capability surface, ownership boundaries) remain deferred per the original Bucket 2 prompt.
+
+### Fixes applied
+
+| ID | Type | Action | Result |
+|---|---|---|---|
+| B1-H1 | APQC TAGGING | INSERT `handoff_processes` (handoff_id=258, process_id=366, role=`implements`, proposal_source=`agent_curated`, record_status defaulted to `new`) | id 253. Tags AUDIT→TPRM `finding.remediated` to "Oversee and coordinate enterprise risk management activities" (PCF 11.1.2, cross-industry 16445). Additive to the existing `discovery_substring` tag on PCF 12.3.2 "Report audit findings" (id 120). |
+| B1-H2 | APQC TAGGING | INSERT `handoff_processes` (handoff_id=278, process_id=167, role=`implements`, proposal_source=`agent_curated`, record_status defaulted to `new`) | id 254. Tags ESG→TPRM `supplier_esg_assessment.score_updated` to "Manage suppliers" (PCF 4.2.5, cross-industry 10280). First tag on this handoff. |
+
+Both inserts went via direct `semantius call crud postgrestRequest` POST (≤3 PATCH/INSERT budget; no loader needed). No JWT-audience errors. Total writes: 2 INSERTs into `handoff_processes`.
+
+Verification (post-load read of `/handoff_processes?handoff_id=in.(258,278)`): 3 rows total for the two handoffs (the new 253 + 254 plus the pre-existing 120). All carry `record_status='new'` per Rule #1.
+
+### Deferred
+
+| ID | Type | Reason for defer |
+|---|---|---|
+| B1-S1 | STRUCTURAL (new `domain_modules`) | Gated on Bucket 2 #1 (user picks single module vs split). Not technically derivable from existing rows. |
+| B1-S2 | STRUCTURAL (new `capabilities` + `capability_domains`) | Capability count cascades off B1-S1. User judgment required. |
+| B1-S3 | STRUCTURAL (new system skills + `skill_tools`) | Downstream of B1-S1; no module to attach a skill to. |
+| B1-B1 | BOUNDARY (PATCH handoff 258 `target_domain_module_id`) | FK not derivable: TPRM has zero `domain_modules` (verified live: `/domain_modules?domain_id=eq.19` returned `[]`). Becomes technical after B1-S1 lands. |
+| B1-B2 | BOUNDARY (PATCH handoff 278 `target_domain_module_id`) | Same as B1-B1. No TPRM module to PATCH the FK to. |
+| Modularization shape | MODULARIZATION ISSUES | Listed in Bucket 2 #1; explicitly a refactor conversation, not a direct fix. |
+
+Total deferred: 6 of 8 Bucket 1 items (all gated on Bucket 2 #1 module-shape decision or B1-S1 landing first).
+
+### UI spot-checks
+
+- https://tests.semantius.app/domain_map/handoff_processes (filter handoff_id 258 or 278 to see the new `agent_curated` tags)
+- https://tests.semantius.app/domain_map/handoffs (rows 258, 278 still carry `target_domain_module_id=NULL`, expected until B1-S1)
+- https://tests.semantius.app/domain_map/domain_modules (filter domain_id=19 still empty, as designed; B1-S1 deferred)

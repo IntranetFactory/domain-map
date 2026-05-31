@@ -152,3 +152,26 @@ Per pass-2 market audit findings, two adjacent public-sector markets surfaced as
 | PS-GRANTS-MGMT | Public-Sector Grants Management | Submittable, Fluxx, eCivis (Euna), SmartSimple, GrantHub | PS-LIC, ERP-FIN, GRC | Grant solicitation, application intake, reviewer scoring, award disbursement, recipient compliance reporting, federal grant pass-through. Pure-play vendor market with 5+ specialists, distinct from PS-LIC (grants are funded inflows; licenses are regulatory outflows). |
 
 These are queue entries only; the audit did not load any `domains` rows.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the truly-technical subset of Bucket 1 that does not require user judgment, deferred everything gated on M-band cure or user input.
+
+### Applied (3 writes, loader [.tmp_deploy/fix_ps_lic_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_ps_lic_b1_technical_2026_05_31.ts))
+
+- **B1-S7 (partial):** PATCH `handoffs.target_domain_module_id = 112` (CSM-CASE-MGMT) on handoffs 923 (`permit_inspection.failed` -> CSM) and 924 (`license_renewal.due` -> CSM). Both rows previously NULL; CSM is modularized so target FKs are derivable now. Source FKs and handoffs 921, 922, 925, 926 target FKs remain NULL (block on GRC and ERP-FIN M1, see Report-only follow-ups).
+- **B1-B2:** DELETE `handoff_processes` id 142 (handoff 925, PCF 1290 "Plan and budget IT license usage volumes", `proposal_source='discovery_substring'`). PCF activity was from the IT-software-license domain, not regulatory licensing.
+- **B1-H1:** INSERT 6 `handoff_processes` rows, `proposal_source='agent_curated'`, `record_status='new'`, per the per-handoff classification table in Pass 1: handoff 921 -> PCF 303, 922 -> PCF 369, 923 -> PCF 1354, 924 -> PCF 1351, 925 -> PCF 1353, 926 -> PCF 369. All PCF ids verified against live `/processes` before insert.
+
+### Deferred (7 items, judgment or gated)
+
+- **B1-S1** (modules): Bucket 2 #1 user pick. Blocks every M-band-gated downstream fix.
+- **B1-S2** (capabilities): Bucket 2 #2 user pick.
+- **B1-S3** (skill split): gated on B1-S1.
+- **B1-S4** (catalog_tagline/description): Rule #20 requires user-approved draft before write.
+- **B1-S5** (lifecycle states): gated on B1-S1 (module-prefixed permission derivation needs modules).
+- **B1-S6** (pattern flag flips): Bucket 2 #3 user judgment per master.
+- **B1-S7 (residual):** source FKs on all 6 handoffs and target FKs on handoffs 921, 922, 925, 926 block on PS-LIC M1, GRC M1, ERP-FIN M1.
+- **B1-B1** (3 missing trigger-event handoffs): explicitly deferred in audit until M-band cures so per-module FKs are populatable at write time.
+
+No JWT errors. No `notes` writes (Rule #15: pre-checked PS-LIC handoffs and the 6 masters for pollution, all `notes` already empty, no audit pre-specified row IDs to revert). Frontmatter untouched.

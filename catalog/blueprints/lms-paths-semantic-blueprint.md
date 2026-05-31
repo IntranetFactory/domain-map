@@ -7,13 +7,15 @@ system_slug: lms-paths
 domain_modules:
   - lms-paths
 domain_code: LMS
-related_modules: [hcm-core-worker, hcm-org-positions, lms-compliance-training, lms-course-delivery, skills-mgmt-profile, swp-demand-forecast, talent-performance-mgmt]
-created_at: 2026-05-28
+related_modules: [hcm-core-worker, hcm-org-positions, lms-course-delivery, lms-credentials, skills-mgmt-profile, swp-demand-forecast, talent-performance-mgmt]
+created_at: 2026-05-31
 ---
 
 # Learning Paths
 
 ## 1. Overview
+
+### 1.1 Analyst overview
 
 Authors and assigns sequenced learning paths inside the LMS. Masters learning_paths; consumes skill_profiles (mastered by SKILLS-MGMT after migration) to recommend paths against skill gaps.
 
@@ -21,7 +23,12 @@ Authors and assigns sequenced learning paths inside the LMS. Masters learning_pa
 
 | Name | Description |
 | --- | --- |
+| Curricula | Grouped paths and courses targeting a role, function, or compliance scope. Used by Workday and Cornerstone as the primary noun for role-based learning. |
+| Learning Path Assignments | Path-to-learner assignment row distinct from course_enrollments; tracks overall path progress and completion percentage. |
+| Learning Path Steps | Ordered step inside a learning path: pointer to a course, sub-path, or external resource with sequencing rules. |
 | Learning Paths | Curated sequence of courses targeting a role, skill, or certification. Drives ordered enrolment and progress tracking across multiple courses. |
+| Learning Plans | Personalized plan composed of multiple paths or courses, often manager-curated or AI-recommended against skill gaps. |
+| Prerequisite Rules | Gating logic that controls path progression: required completions, scores, certifications, or competencies. |
 | Certifications | Issued credential against a worker (internal certification, vendor cert, regulatory cert) with issue date, expiry, issuing body, and renewal rules. Drives recertification campaigns. |
 | Course Enrollments | Per-learner per-course state record: assigned date, due date, attempts, status (not_started, in_progress, completed, expired), score. The operational unit of learning tracking. |
 | Employees | Canonical record of a person currently or formerly employed by the organization. Carries identity (legal name, contact, IDs), employment metadata (start date, end date, employment type, country), and pointers to position, job profile, org unit, manager, and life-event history. The most multi-mastered data object in the catalog: HCM masters the core HR slice, Payroll masters the comp/withholding slice, and IGA masters the identity/access slice. Onboarding, PA, and Talent Management consume or contribute. |
@@ -48,7 +55,17 @@ flowchart TD
   skills_gap_analyses["Skills Gap Analyses"]
   performance_goals["Performance Goals"]
   skill_profiles["Skill Profiles"]
+  learning_path_steps["Learning Path Steps"]
+  curricula["Curricula"]
+  learning_path_assignments["Learning Path Assignments"]
+  learning_plans["Learning Plans"]
+  prerequisite_rules["Prerequisite Rules"]
   users["Users"]
+  learning_paths -->|"contains"| learning_path_steps
+  curricula -->|"comprises (opt)"| learning_paths
+  learning_paths -->|"assigned_via (opt)"| learning_path_assignments
+  learning_plans -->|"composes (opt)"| learning_paths
+  learning_path_steps -->|"gated_by (opt)"| prerequisite_rules
   org_units -->|"groups"| employees
   org_units -->|"contains"| hcm_positions
   hcm_positions -->|"is_filled_by (opt)"| employees
@@ -65,6 +82,8 @@ flowchart TD
   org_units -->|"rolls_up_to (opt)"| org_units
   skills_gap_analyses -->|"prescribes (opt)"| learning_paths
   users -->|"curates (opt)"| learning_paths
+  users -->|"assigned_path"| learning_path_assignments
+  users -->|"owns_plan"| learning_plans
   employees -->|"is_linked_to (opt)"| users
   users -->|"manages (opt)"| hcm_positions
   users -->|"leads (opt)"| org_units
@@ -86,6 +105,11 @@ flowchart TD
   class skills_gap_analyses consumer;
   class performance_goals consumer;
   class skill_profiles consumer;
+  class learning_path_steps master;
+  class curricula master;
+  class learning_path_assignments master;
+  class learning_plans master;
+  class prerequisite_rules master;
   class users platform_builtin;
   style hcm_positions stroke-dasharray:5 5;
   style org_units stroke-dasharray:5 5;
@@ -97,16 +121,21 @@ flowchart TD
 
 | # | data_object | role | mastered in | label | necessity | pattern flags | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `learning_paths` (Learning Paths) | master | - | - | required | - | - |
-| 2 | `learner_certifications` (Certifications) | embedded_master | `lms-compliance-training` | Compliance Training | required | personal_content | - |
-| 3 | `course_enrollments` (Course Enrollments) | embedded_master | `lms-course-delivery` | Course Delivery | required | personal_content | - |
-| 4 | `employees` (Employees) | embedded_master | `hcm-core-worker` | Core Worker Record | required | personal_content | - |
-| 5 | `job_profiles` (Job Profiles) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | single_approver | - |
-| 6 | `org_units` (Org Units) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | - | - |
-| 7 | `hcm_positions` (Positions) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | single_approver | - |
-| 8 | `performance_goals` (Performance Goals) | consumer | `talent-performance-mgmt` | Performance and Goal Management | required | personal_content | - |
-| 9 | `skill_profiles` (Skill Profiles) | consumer | `skills-mgmt-profile` | Worker Skill Profiles and Assessments | optional | personal_content | - |
-| 10 | `skills_gap_analyses` (Skills Gap Analyses) | consumer | `swp-demand-forecast` | Demand Forecast | required | - | - |
+| 1 | `curricula` (Curricula) | master | - | - | required | - | - |
+| 2 | `learning_path_assignments` (Learning Path Assignments) | master | - | - | required | personal_content | - |
+| 3 | `learning_path_steps` (Learning Path Steps) | master | - | - | required | - | - |
+| 4 | `learning_paths` (Learning Paths) | master | - | - | required | - | - |
+| 5 | `learning_plans` (Learning Plans) | master | - | - | required | personal_content | - |
+| 6 | `prerequisite_rules` (Prerequisite Rules) | master | - | - | required | - | - |
+| 7 | `learner_certifications` (Certifications) | embedded_master | `lms-credentials` | Credentials, Badges and Continuing Education | required | personal_content, submit_lock | - |
+| 8 | `course_enrollments` (Course Enrollments) | embedded_master | `lms-course-delivery` | Course Delivery | required | personal_content | - |
+| 9 | `employees` (Employees) | embedded_master | `hcm-core-worker` | Core Worker Record | required | personal_content | - |
+| 10 | `job_profiles` (Job Profiles) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | single_approver | - |
+| 11 | `org_units` (Org Units) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | - | - |
+| 12 | `hcm_positions` (Positions) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | single_approver | - |
+| 13 | `performance_goals` (Performance Goals) | consumer | `talent-performance-mgmt` | Performance and Goal Management | required | personal_content | - |
+| 14 | `skill_profiles` (Skill Profiles) | consumer | `skills-mgmt-profile` | Worker Skill Profiles and Assessments | optional | personal_content | - |
+| 15 | `skills_gap_analyses` (Skills Gap Analyses) | consumer | `swp-demand-forecast` | Demand Forecast | required | - | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -118,6 +147,11 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 | from | verb | to | cardinality | kind | necessity | owner_side | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| `learning_paths` | contains | `learning_path_steps` | one_to_many | composition | required | source | - |
+| `curricula` | comprises | `learning_paths` | many_to_many | association | optional | source | - |
+| `learning_paths` | assigned_via | `learning_path_assignments` | one_to_many | reference | optional | target | - |
+| `learning_plans` | composes | `learning_paths` | many_to_many | association | optional | source | - |
+| `learning_path_steps` | gated_by | `prerequisite_rules` | many_to_many | association | optional | source | - |
 | `org_units` | groups | `employees` | one_to_many | reference | required | source | - |
 | `org_units` | contains | `hcm_positions` | one_to_many | reference | required | source | - |
 | `hcm_positions` | is_filled_by | `employees` | one_to_one | reference | optional | target | - |
@@ -139,6 +173,8 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | from | verb | to | cardinality | necessity | owner_side | notes |
 | --- | --- | --- | --- | --- | --- | --- |
 | `users` | curates | `learning_paths` | one_to_many | optional | source | - |
+| `users` | assigned_path | `learning_path_assignments` | one_to_many | required | source | - |
+| `users` | owns_plan | `learning_plans` | one_to_many | required | source | - |
 | `employees` | is_linked_to | `users` | one_to_one | optional | target | - |
 | `users` | manages | `hcm_positions` | one_to_many | optional | source | - |
 | `users` | leads | `org_units` | one_to_many | optional | source | - |
@@ -152,6 +188,22 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `users` | prepares | `skills_gap_analyses` | one_to_many | optional | source | - |
 
 ### 5.3 Cross-scope edges
+
+#### 5.3a Outbound from this scope's masters and contributors
+
+_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
+
+| from | verb | to | cardinality | necessity | notes |
+| --- | --- | --- | --- | --- | --- |
+| `learning_path_steps` | references | `courses` | one_to_many | optional | - |
+| `courses` | sequenced_into | `learning_paths` | many_to_many | optional | - |
+
+#### 5.3b Context edges on embedded shells and consumed entities
+
+_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
+
+<details>
+<summary>77 context edges</summary>
 
 | from | verb | to | cardinality | necessity | notes |
 | --- | --- | --- | --- | --- | --- |
@@ -169,11 +221,15 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `competency_models` | compared via | `skills_gap_analyses` | one_to_many | optional | - |
 | `skill_profiles` | compared via | `fit_scores` | one_to_many | required | - |
 | `skill_profiles` | feeds | `mobility_recommendations` | one_to_many | required | - |
+| `course_enrollments` | yields | `course_completions` | one_to_many | optional | - |
+| `certification_definitions` | instantiated_as | `learner_certifications` | one_to_many | required | - |
+| `certificate_templates` | renders | `learner_certifications` | one_to_many | optional | - |
+| `automated_enrollment_rules` | creates | `course_enrollments` | one_to_many | optional | - |
+| `employees` | requests | `absence_requests` | one_to_many | optional | - |
 | `employees` | signs | `employment_contracts` | one_to_many | required | - |
 | `employees` | generates | `employment_events` | one_to_many | required | - |
 | `cost_centers` | funds | `org_units` | one_to_many | required | - |
 | `employees` | triggers | `asset_lifecycle_events` | one_to_many | optional | - |
-| `employees` | requests | `absence_requests` | one_to_many | optional | - |
 | `org_units` | engages | `contingent_workers` | one_to_many | optional | - |
 | `org_units` | is_scored_by | `engagement_drivers` | one_to_many | optional | - |
 | `org_units` | is_measured_by | `people_kpis` | one_to_many | optional | - |
@@ -197,7 +253,6 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `employees` | feeds | `agency_time_entries` | one_to_many | optional | - |
 | `employees` | onboarded by | `onboarding_journeys` | one_to_many | required | - |
 | `onboarding_tasks` | spawns | `course_enrollments` | one_to_many | optional | - |
-| `courses` | sequenced_into | `learning_paths` | many_to_many | optional | - |
 | `courses` | enrolled_via | `course_enrollments` | one_to_many | required | - |
 | `course_enrollments` | produces | `learning_records` | one_to_many | required | - |
 | `courses` | grants | `learner_certifications` | one_to_many | optional | - |
@@ -230,6 +285,8 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `workforce_scenarios` | drives | `hcm_positions` | one_to_many | required | - |
 | `org_designs` | proposes | `hcm_positions` | one_to_many | required | - |
 
+</details>
+
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
@@ -253,7 +310,7 @@ _(no inbound `handoffs` whose payload is in this scope.)_
 | `employees` | embedded_master | required | HCM-CORE-WORKER (HCM), PAYROLL (Payroll Management), IGA (Identity Governance and Administration), MDM (Master Data Management) | - |
 | `hcm_positions` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | - |
 | `job_profiles` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | - |
-| `learner_certifications` | embedded_master | required | LMS-COMPLIANCE-TRAINING (LMS) | - |
+| `learner_certifications` | embedded_master | required | LMS-CREDENTIALS (LMS) | - |
 | `org_units` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | - |
 | `performance_goals` | consumer | required | TALENT-PERFORMANCE-MGMT (TALENT-MGMT) | - |
 | `skill_profiles` | consumer | optional | SKILLS-MGMT-PROFILE (SKILLS-MGMT) | - |
@@ -273,6 +330,14 @@ _This scope holds `course_enrollments` as **embedded_master**; the canonical sta
 | 4 | `failed` | - | ✓ | ✓ | `lms-course-delivery:fail` | Learner did not meet the passing criteria within allowed attempts. |
 | 5 | `expired` | - | ✓ | ✓ | `lms-course-delivery:expire` | Enrollment closed unmet at the due date or content expiry. |
 | 6 | `withdrawn` | - | ✓ | ✓ | `lms-course-delivery:withdraw` | Learner withdrew or was unenrolled before completion. |
+
+### `curricula` (Curriculum)
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | - | - | - |
+| 2 | `published` | - | - | ✓ | `lms-paths:publish` | - |
+| 3 | `retired` | - | ✓ | ✓ | `lms-paths:retire` | - |
 
 ### `employees` (Employee)
 
@@ -312,7 +377,7 @@ _This scope holds `job_profiles` as **embedded_master**; the canonical state mac
 
 ### `learner_certifications` (Certification)
 
-_This scope holds `learner_certifications` as **embedded_master**; the canonical state machine is owned by `LMS-COMPLIANCE-TRAINING`._
+_This scope holds `learner_certifications` as **embedded_master**; the canonical state machine is owned by `LMS-CREDENTIALS`._
 
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -323,6 +388,15 @@ _This scope holds `learner_certifications` as **embedded_master**; the canonical
 | 5 | `expired` | - | ✓ | - | - | Credential past its expiry date and no longer valid. |
 | 6 | `revoked` | - | ✓ | ✓ | `lms-compliance-training:revoke` | Credential withdrawn by the issuing body or L&D for cause. |
 
+### `learning_path_assignments` (Learning Path Assignment)
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `assigned` | ✓ | - | - | - | - |
+| 2 | `in_progress` | - | - | - | - | - |
+| 3 | `completed` | - | ✓ | ✓ | `lms-paths:complete` | - |
+| 4 | `expired` | - | ✓ | - | - | - |
+
 ### `learning_paths` (Learning Path)
 
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
@@ -330,6 +404,15 @@ _This scope holds `learner_certifications` as **embedded_master**; the canonical
 | 1 | `draft` | ✓ | - | - | - | Path being curated by L&D with course sequencing. |
 | 2 | `published` | - | - | ✓ | `lms-paths:publish` | Path released and assignable to roles, skills, or audiences. |
 | 3 | `retired` | - | ✓ | ✓ | `lms-paths:retire` | Path removed from new assignments and kept for historical reference. |
+
+### `learning_plans` (Learning Plan)
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | - | - | - |
+| 2 | `active` | - | - | ✓ | `lms-paths:activate` | - |
+| 3 | `completed` | - | ✓ | ✓ | `lms-paths:complete` | - |
+| 4 | `archived` | - | ✓ | ✓ | `lms-paths:archive` | - |
 
 ### `org_units` (Org Unit)
 
@@ -386,7 +469,20 @@ _This scope holds `skills_gap_analyses` as **consumer**; the canonical state mac
 | `lms-paths:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
 | `lms-paths:publish` | workflow-gate (lifecycle) | Transition `learning_paths` into state `published` | ✓ |
 | `lms-paths:retire` | workflow-gate (lifecycle) | Transition `learning_paths` into state `retired` | ✓ |
+| `lms-paths:publish` | workflow-gate (lifecycle) | Transition `curricula` into state `published` | ✓ |
+| `lms-paths:retire` | workflow-gate (lifecycle) | Transition `curricula` into state `retired` | ✓ |
+| `lms-paths:complete` | workflow-gate (lifecycle) | Transition `learning_path_assignments` into state `completed` | ✓ |
+| `lms-paths:activate` | workflow-gate (lifecycle) | Transition `learning_plans` into state `active` | ✓ |
+| `lms-paths:complete` | workflow-gate (lifecycle) | Transition `learning_plans` into state `completed` | ✓ |
+| `lms-paths:archive` | workflow-gate (lifecycle) | Transition `learning_plans` into state `archived` | ✓ |
+| `lms-paths:view_all_learning_path_assignments` | override (personal_content) | View all `learning_path_assignments` rows beyond row-scope | ✓ |
+| `lms-paths:manage_all_learning_path_assignments` | override (personal_content) | Manage all `learning_path_assignments` rows beyond row-scope | ✓ |
+| `lms-paths:view_all_learning_plans` | override (personal_content) | View all `learning_plans` rows beyond row-scope | ✓ |
+| `lms-paths:manage_all_learning_plans` | override (personal_content) | Manage all `learning_plans` rows beyond row-scope | ✓ |
 
 ### 8.2 Business rules
 
-_(no flag-derived business rules.)_
+| rule_name | data_object | source flag | intent |
+| --- | --- | --- | --- |
+| `learning_path_assignment_edit_scope` | `learning_path_assignments` | has_personal_content | Row-scope by default; override via `lms-paths:view_all_learning_path_assignments` / `lms-paths:manage_all_learning_path_assignments` |
+| `learning_plan_edit_scope` | `learning_plans` | has_personal_content | Row-scope by default; override via `lms-paths:view_all_learning_plans` / `lms-paths:manage_all_learning_plans` |

@@ -181,3 +181,38 @@ These items the audit identified but other domains own; they route to those doma
 | R4 | ITSM | B-band (declare `service_incidents` consumer scope) | Handoff 943 (`utility_asset.failed` -> ITSM service_incidents) carries `target_domain_module_id=38` (ITSM-INCIDENT-MGMT). ITSM-INCIDENT-MGMT has no declared scope around utility-OT assets vs. IT assets; ITSM's audit should declare whether OT asset failure is in scope or should route elsewhere. See Bucket 2 #4. |
 | R5 | CRM (TBD: which CRM domain) | B9 inbound to UTIL-OPS | UTIL-OPS receives zero inbound `handoffs` despite a `consumer + contributor` relationship plausibly existing on customer onboarding (`customer.qualified -> utility_customer_account.created`). If a customer-master domain (CRM or CIS-UTIL after promotion) lives upstream, that domain owes B9 outbound to UTIL-OPS. |
 | R6 | (multiple) | Missing-domain queue triage | The 6 candidates added to `audits/_missing-domains.md` (CIS-UTIL, UTIL-AMI-MDMS, UTIL-OMS, UTIL-WAM, UTIL-DERMS, UTIL-GIS) need point-solution-market-test review per the queue rules. Resolution drives Bucket 2 #5 and Bucket 3. |
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Loader: `.tmp_deploy/fix_util_ops_b1_technical_2026_05_31.ts` (run from project root).
+
+Applied two truly-technical B1 items that needed no user judgment and are not gated on the deferred modularization decision (Bucket 2 #5 / B1-S1).
+
+### Items applied
+
+| Audit ID | Band | Action | Rows touched |
+|---|---|---|---|
+| B1-S18 | Trigger event categorization | PATCH `trigger_events.event_category` from `''` to the audit-specified enum value | 10 rows: ids 1077 (`utility_customer_account.opened` -> `lifecycle`), 1078 (`utility_meter.installed` -> `lifecycle`), 1079 (`meter_read.captured` -> `signal`), 1080 (`meter_read.anomalous` -> `threshold`), 1081 (`service_connection.activated` -> `lifecycle`), 1082 (`utility_asset.failed` -> `state_change`), 1083 (`outage_event.declared` -> `state_change`), 1084 (`outage_event.restored` -> `state_change`), 1085 (`utility_service_order.dispatched` -> `state_change`), 1086 (`utility_bill.issued` -> `lifecycle`) |
+| B1-S16 (partial) | H1 APQC tagging | INSERT `handoff_processes` rows tying cross-domain handoffs to existing APQC PCF activities; `proposal_source='agent_curated'`, `record_status` defaulted to `'new'` per Rule #1 | 4 rows: B1-A1 (handoff 939 -> process 1351 `Generate customer billing data`, new id 769), B1-A2 (handoff 940 -> process 1898 `Schedule field service`, new id 770), B1-A4 (handoff 942 -> process 196 `Manage customer service problems, requests, and inquiries`, new id 783), B1-A5 (handoff 943 -> process 1299 `Triage IT service delivery incidents`, new id 784). |
+
+### Live-state notes discovered during apply
+
+- B1-A3 (handoff 941 -> proposed process 352 `Manage asset maintenance`) was **skipped**, NOT applied. A `handoff_processes` row already exists for handoff 941 (id 370, process 828 `Report maintenance issues`, `proposal_source=agent_curated`, `record_status=new`). The original audit narrative described this handoff's tag slot as empty; it is not. Per Rule #1 idempotency on natural keys we did not duplicate-tag. The user can decide whether to: (a) keep the existing tag at 828, (b) repoint id 370 to process 352, or (c) add 352 alongside 828 (both rows would coexist; natural key is `(handoff_id, process_id)`). Surface as a follow-up decision.
+- Pre-existing handoff target-FK state: the original audit said only handoff 943 carried a non-NULL `target_domain_module_id`; live state shows handoffs **940** and **941** also carry `target_domain_module_id=161` (FSM-DISPATCH-OPS). Only 939 + 942 are NULL on target side today. Does not change any B1 fix in this loop (all source-side B10b PATCHes remain deferred until UTIL-OPS modularizes per B1-S1), but worth noting for the next audit pass.
+
+### Items deferred this loop (17 of 19 B1)
+
+All require either the modularization decision (B1-S1) or per-row user judgment beyond the technical-fix license:
+
+- **Gated on B1-S1 (modules do not yet exist):** B1-S1 itself (new modules), B1-S5 (intra-domain `data_object_relationships` baseline rows; audit pre-specified B1-R1..R8 are not module-gated but were grouped under "after B1-S1 lands" by the audit text and the user has not yet okayed the rel author), B1-S6 + B1-U1..U5 (users edges; audit pre-specifies tuples, but Rule #10 author is grouped with the post-modularization load by the audit's sequencing prompt), B1-S7 + B1-X1..X4 (outbound cross-domain rels; audit lists targets as "needs FSM master confirmation" / "needs ERP-FIN entity confirmation" so not pre-resolved), B1-S8 (intra-domain handoffs derivable only from module pairs), B1-S9 (B10b source-side FK PATCHes), B1-S11 (lifecycle states; need `domain_module_id` attribution), B1-S13 / B1-S14 (module-scoped skills), B1-S15 (F7 channel-primitive PATCH; depends on new module skills existing), B1-S19 (folds into S10 + S11).
+- **New entities / DMDOs / capabilities (out of license):** B1-S2 (capabilities), B1-S10 (data_object_aliases; audit lists vendor terms but defers exact tuples to a cluster-drafts loader).
+- **User judgment required (Rule #20 / Rule #15 / surface-to-user):** B1-S3 (catalog_tagline + catalog_description; Rule #20 buyer-voice copy needs user review), B1-S4 (pattern flag flips; audit explicitly says "after user confirmation", Bucket 2 #1), B1-S12 (new `business_function_domains` contributors / consumers; out of license per the technical-fix prompt and "subject to function-spine existence; verify before authoring"), B1-S17 (outage relationship payload mismatch; Bucket 2 #2 surface).
+- **APQC tags deferred by audit:** B1-A6 (handoff 944 raw meter reads to ERP-FIN; "no clean APQC PCF cross-industry match"), B1-A7 (handoff 945 anomalous-read triage to FSM; "closest cross-industry process over-generalizes").
+
+### Counts
+
+- B1 total: 19.
+- Applied this loop: 2 items (B1-S18 fully, B1-S16 partially: 4 of 5 proposed APQC tags inserted, 1 skipped due to live-state collision, 2 audit-deferred).
+- Rows written this loop: 14 (10 PATCH on `trigger_events`, 4 INSERT on `handoff_processes`).
+- Deferred this loop: 17 items (gated on modularization, new-entity scope, or user-judgment surfaces).
+- JWT errors encountered: 0.

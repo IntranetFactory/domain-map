@@ -166,3 +166,29 @@ Two market candidates surfaced by Pass 2 were queued to `audits/_missing-domains
 | SPREADSHEET-PLATFORM | Online Spreadsheet Platform | 1 (new) | Google Sheets, Excel Online, Quip, Equals, Causal compete as a distinct market from NCDB; the boundary is "cell-grid first" vs "record-table first". Several catalog rows position themselves on the boundary (Rows, Stackby, Smartsheet). |
 
 Neither candidate is loaded as a `domains` row; the queue file is the canonical record. The user triages per the rules in `audits/_missing-domains.md` (promote-as-domain / fold-into-existing / reject).
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the residual-technical subset of Bucket 1 from the 2026-05-30 audit. Loader: [.tmp_deploy/fix_ncdb_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_ncdb_b1_technical_2026_05_31.ts).
+
+### Applied (4 of 14 B1 items, 17 row writes total)
+
+- **B1-S12** (B9 event_category PATCH) - PATCHed 6 of 7 NCDB trigger_events with the firm enum value the audit names: 724 nocode_base.created -> `lifecycle`; 725 nocode_base.exported -> `signal`; 726 nocode_record_definition.changed -> `state_change`; 728 nocode_view.shared_externally -> `state_change`; 729 nocode_automation.failed -> `signal`; 730 nocode_automation.triggered -> `signal`. Deferred 727 nocode_form.submitted because the audit explicitly hedges between `signal` and `state_change`.
+- **B1-S4** (B7 Rule #10 user-edges) - INSERTed 6 `data_object_relationships` rows pointing from `users` (748) to each NCDB master, exactly as the audit pre-specifies. Verb conventions copied from existing user-edge rows (`owned bases`, `authored record definitions / views / forms / automations`, `submitted forms`). All `one_to_many`, `reference`, `owner_side='source'`. The `submitted forms` second edge for `nocode_forms` covers the responder pattern the audit calls out.
+- **B1-S3** (B6 intra-domain DOR) - INSERTed 4 of the 5 audit-proposed intra-domain edges. Loaded: bases `contains record definitions` (composition, 1:N, owner=source, required); record_definitions `presented by views` (1:N reference); record_definitions `written to by forms` (1:N reference); record_definitions `triggers automations` (M:N association). Deferred the fifth edge (views `source_of` forms) because the audit text qualifies it with "optional, some platforms" which is a judgment call.
+- **B1-H1** (APQC tagging) - INSERTed 1 of the 4 proposed `handoff_processes` rows: handoff 703 (NCDB -> ITSM `nocode_automation.failed`) -> process 285 (`Manage change deployment control`, PCF 8.6.3, `proposal_source='agent_curated'`). Audit names both the handoff id and the process id with confident reuse from the LCAP 2026-05-30 audit. Deferred 700 (PCF candidate set unresolved, audit says "surface candidate PCF rows for user pick"), 701 (LCAP `target_domain_module_id` NULL, defer to LCAP M1 cure), 702 (audit defers entirely to DLP audit).
+
+### Deferred (10 of 14 B1 items)
+
+- **B1-S1** (M1/M2/M4/M6 - 3 modules + 8 DMC + 5 DMDO rows) - new modules; gated on B2-S1 user pick (3 / 2 / 4-module split).
+- **B1-S2** (B4 pattern flag flips) - audit routes to Bucket 2 (B2-S2); flag flips are workflow-shape judgment per Rule #12.
+- **B1-S5** (B11 ~22 aliases) - bulk alias inserts without audit pre-specifying exact tuples per row, plus B2-S5 (FORM-BUILDER boundary) gates the form-side aliases.
+- **B1-S6** (B12 ~20 lifecycle states) - depends on B1-S1 modules first (`domain_module_id` required per M5).
+- **B1-S7** (F1 legacy skill retirement, 3 new module-anchored skills) - new skills + DELETE of skill 86; needs B1-S1 modules first.
+- **B1-S8** (A4 catalog_tagline / catalog_description) - Rule #20 buyer-facing prose, surface to user first.
+- **B1-S9** (B10b PATCH source FKs on 4 outbound handoffs) - depends on B1-S1 modules.
+- **B1-S10** (B10b PATCH target FKs on handoffs 701, 702) - LCAP and DLP defers, no resolvable target modules.
+- **B1-S11** (B8 cross-domain DOR) - audit hedges target masters ("TBD: most likely `work_items` or `tasks`"); not user-edges per Rule #10.
+- **B1-S13** (B9b intra-domain handoffs) - blocked by B1-S1 modules.
+
+No JWT errors. No `notes` writes. No `record_status` writes (all rows take DB default `new`). No vendor names in any text. Frontmatter unchanged.

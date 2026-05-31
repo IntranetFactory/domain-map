@@ -8,12 +8,14 @@ domain_modules:
   - re-brok-brokerage-ops
 domain_code: RE-BROKERAGE
 related_modules: [re-brok-agent-ops]
-created_at: 2026-05-28
+created_at: 2026-05-31
 ---
 
 # Brokerage Oversight and Commission Management
 
 ## 1. Overview
+
+### 1.1 Analyst overview
 
 Broker-level oversight on top of agent operations. Multi-agent commission-split engine with franchise overrides and per-agent caps, broker compliance review of transactions and disclosures, trust-account / escrow oversight, broker-level MLS conformance review. Only deployed when the brokerage has grown past informal-broker-supervision scale (typically 10+ agents).
 
@@ -28,11 +30,11 @@ Broker-level oversight on top of agent operations. Multi-agent commission-split 
 ```mermaid
 flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
-  classDef contributor fill:#cfe8ff,stroke:#1976d2,color:#0d3a66;
+  classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
   commission_splits["Commission Splits"]
-  real_estate_transactions["Real Estate Transactions"]
   disclosure_documents["Disclosure Documents"]
+  real_estate_transactions["Real Estate Transactions"]
   users["Users"]
   real_estate_transactions -->|"requires disclosures"| disclosure_documents
   real_estate_transactions -->|"produces commission splits"| commission_splits
@@ -42,8 +44,8 @@ flowchart TD
   commission_splits -->|"has recipient agent"| users
   commission_splits -->|"has approving broker"| users
   class commission_splits master;
-  class real_estate_transactions contributor;
-  class disclosure_documents contributor;
+  class disclosure_documents embedded_master;
+  class real_estate_transactions embedded_master;
   class users platform_builtin;
 ```
 
@@ -52,12 +54,18 @@ flowchart TD
 | # | data_object | role | mastered in | label | necessity | pattern flags | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `commission_splits` (Commission Splits) | master | - | - | required | submit_lock, single_approver | - |
-| 2 | `disclosure_documents` (Disclosure Documents) | contributor | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock, single_approver | - |
-| 3 | `real_estate_transactions` (Real Estate Transactions) | contributor | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock | - |
+| 2 | `disclosure_documents` (Disclosure Documents) | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock, single_approver | - |
+| 3 | `real_estate_transactions` (Real Estate Transactions) | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock | - |
 
 ## 4. Aliases and industry synonyms
 
-_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
+| data_object | alias | alias_type | preferred? | industry | notes |
+| --- | --- | --- | --- | --- | --- |
+| `real_estate_transactions` | Closing | industry_term | - | Real Estate | - |
+| `commission_splits` | Co-Op Commission | industry_term | - | Real Estate | - |
+| `real_estate_transactions` | Escrow | industry_term | - | Real Estate | - |
+| `disclosure_documents` | Seller Disclosures | industry_term | - | Real Estate | - |
+| `disclosure_documents` | TDS | industry_term | - | Real Estate | - |
 
 ## 5. Relationships
 
@@ -80,9 +88,24 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 ### 5.3 Cross-scope edges
 
+#### 5.3a Outbound from this scope's masters and contributors
+
+_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
+
+_(no outbound cross-scope edges from this scope's masters or contributors.)_
+
+#### 5.3b Context edges on embedded shells and consumed entities
+
+_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
+
+<details>
+<summary>1 context edges</summary>
+
 | from | verb | to | cardinality | necessity | notes |
 | --- | --- | --- | --- | --- | --- |
 | `real_estate_listings` | generates | `real_estate_transactions` | one_to_many | required | - |
+
+</details>
 
 ## 6. Cross-domain context
 
@@ -90,22 +113,27 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 | data_object | other module / domain | role | necessity | notes |
 | --- | --- | --- | --- | --- |
-| `commission_splits` | RE-BROK-AGENT-OPS (Real Estate Agent Operations) - RE-BROKERAGE | consumer | optional | - |
+| `commission_splits` | RE-BROK-AGENT-OPS (Real Estate Agent Operations) - RE-BROKERAGE | embedded_master | optional | - |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
-_(no outbound `handoffs` whose payload is in this scope.)_
+| source module | target domain | target module | trigger_event | payload | integration | friction | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| RE-BROK-BROKERAGE-OPS | RE-BROKERAGE | RE-BROK-AGENT-OPS | `commission_split.paid` | `commission_splits` | lifecycle_progression | low | Broker disbursed commission; agent-side surfaces the paid status for the recipient agent. |
+| RE-BROK-BROKERAGE-OPS | RE-BROKERAGE | RE-BROK-AGENT-OPS | `real_estate_transaction.cleared_to_close` | `real_estate_transactions` | lifecycle_progression | low | Broker compliance review approved; transaction returns to agent-side for closing coordination. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
-_(no inbound `handoffs` whose payload is in this scope.)_
+| target module | source domain | source module | trigger_event | payload | integration | friction | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| RE-BROK-BROKERAGE-OPS | RE-BROKERAGE | RE-BROK-AGENT-OPS | `real_estate_transaction.contingencies_cleared` | `real_estate_transactions` | lifecycle_progression | low | Agent-side has cleared inspection, financing, and appraisal contingencies; broker oversight takes the transaction into compliance review before authorizing closing. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
 | data_object | role here | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
-| `disclosure_documents` | contributor | required | RE-BROK-AGENT-OPS (RE-BROKERAGE) | - |
-| `real_estate_transactions` | contributor | required | RE-BROK-AGENT-OPS (RE-BROKERAGE) | - |
+| `disclosure_documents` | embedded_master | required | RE-BROK-AGENT-OPS (RE-BROKERAGE) | - |
+| `real_estate_transactions` | embedded_master | required | RE-BROK-AGENT-OPS (RE-BROKERAGE) | - |
 
 ## 7. Lifecycle states (per touched entity)
 
@@ -121,7 +149,7 @@ _(no inbound `handoffs` whose payload is in this scope.)_
 
 ### `disclosure_documents` (Disclosure Document)
 
-_This scope holds `disclosure_documents` as **contributor**; the canonical state machine is owned by `RE-BROK-AGENT-OPS`._
+_This scope holds `disclosure_documents` as **embedded_master**; the canonical state machine is owned by `RE-BROK-AGENT-OPS`._
 
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -132,7 +160,7 @@ _This scope holds `disclosure_documents` as **contributor**; the canonical state
 
 ### `real_estate_transactions` (Real Estate Transaction)
 
-_This scope holds `real_estate_transactions` as **contributor**; the canonical state machine is owned by `RE-BROK-AGENT-OPS`._
+_This scope holds `real_estate_transactions` as **embedded_master**; the canonical state machine is owned by `RE-BROK-AGENT-OPS`._
 
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |

@@ -330,3 +330,46 @@ These are observations the user can act on by scheduling audits of the owning do
 | EPM | B9 | EPM owes outbound on `financial_plan.updated` to ESG (depending on Bucket 2 #2 resolution). |
 | SUP-LIFE / MDM | M7 | Catalog-wide hard fail: `suppliers` (data_object_id 206) is mastered in BOTH SUP-LIFE and MDM via `domain_data_objects.role=master`. The deployer cannot pick a canonical owner. Decision belongs to SUP-LIFE / MDM owners (preference: MDM masters, SUP-LIFE embedded_master), not to ESG. |
 | AUDIT | B8 | Inbound (AUDIT -> ESG) relationship row 293 exists (`reviews esg_disclosures`); the inverse (ESG `submitted_to` AUDIT) is missing on AUDIT's B8. |
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Scope
+
+Subagent run under domain-map-analyst applied truly-technical, judgment-free B1 items from the 2026-05-30 audit. All deferrals (new entities, modules, capabilities, lifecycle states, relationships, aliases, pattern flags, catalog UX text) are held for the human turn.
+
+### Applied
+
+- **B1-S1** (em-dash scrub). PATCH `domains.id=21.business_logic`. Em-dash (U+2014) replaced with a comma. Verified post-write. Loader scope: 1 row.
+- **B1-S9** (trigger_events enum backfill). PATCH `trigger_events.event_category` for the three ESG rows with empty enum values. Audit pre-specified targets: `933 emission_factor.updated -> state_change`, `934 activity_data.recorded -> lifecycle`, `935 esg_initiative.launched -> lifecycle`. Verified post-write. Loader scope: 3 rows.
+- **B1-S14** (APQC handoff_processes tagging). INSERT 7 of the 9 audit-pre-specified `(handoff_id, process_id)` tuples. Pre-flight verified no key collisions. `proposal_source=agent_curated`; `record_status` omitted per Rule #1 (defaults to `new`); `notes` omitted per Rule #15. New row IDs: 702 (275->2016), 703 (276->1802), 704 (277->815), 705 (278->815), 706 (279->2016), 707 (850->232), 708 (852->1802). Note 278 also retains the prior `278->167` tag (row id 254) as a complementary classification.
+
+Loader: [.tmp_deploy/fix_esg_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_esg_b1_technical_2026_05_31.ts). Run from project root.
+
+### Deferred (held for human turn)
+
+| ID | Reason for deferral |
+| --- | --- |
+| B1-M1..M5 | New entities (assurance_engagements, double_materiality_assessments, esg_disclosure_taxonomies, regulatory_change_records, esg_audit_evidence). |
+| B1-U1..U4 | New entities (scope3_categories, emission_calculation_runs, carbon_credit_purchases, renewable_energy_certificates). |
+| B1-S2 | New capabilities + new `capability_domains` rows; judgment + Bucket 2 #1 interaction. |
+| B1-S3 | Catalog UX text (`catalog_tagline`, `catalog_description`); Rule #20 routing, user must approve wording. |
+| B1-S4 | New modules (blocking gate; modularization shape is Bucket 2 #4). |
+| B1-S5 | Pattern flag flips; explicitly deferred per subagent scope. |
+| B1-S6 | New intra-domain `data_object_relationships`; audit lists candidate verbs but not pre-specified tuples with row ids. |
+| B1-S7 | New users-edges `data_object_relationships`; audit names candidate roles but does not pre-specify tuples per Rule #10. |
+| B1-S8 | New cross-domain `data_object_relationships`; audit lists candidate edges but not pre-specified tuples. |
+| B1-S10 | B10b FK PATCHes blocked: ESG source side requires modules to exist (gated on B1-S4); target sides are owned by other domains' B10b audits. |
+| B1-S11 | New `data_object_aliases`; audit lists candidate aliases descriptively, no pre-specified tuples. |
+| B1-S12 | New `data_object_lifecycle_states`; new rows beyond the technical scope. Also interacts with Bucket 2 #6. |
+| B1-S13 | Audit explicitly states: leave legacy `esg-system` (skill id 13) until module-anchored skills land under B1-S4. Not currently stale. |
+| B1-B1 | Handoff 851 target re-routing; explicitly Bucket 2 #5 (surface to user). |
+
+Bucket 2 (6) and Bucket 3 (6) remain untouched, awaiting user judgment.
+
+### Handoff 851 and 293 PCF tags
+
+Both already had `handoff_processes` rows applied prior (id 674 for `851->1802`, id 397 for `293->1783`). The 2026-05-30 audit marked 851 as "defer" and 293 as "report-only" (REAL-EST H1 owes). No further action this turn; the pre-existing rows are left in place.
+
+### JWT errors
+
+None.

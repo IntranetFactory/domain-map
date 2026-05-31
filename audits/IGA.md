@@ -241,3 +241,42 @@ These items are surfaced for the user to decide whether to schedule audits on th
 ### Candidates queued
 
 - **PAM** (Privileged Access Management) , queued in `audits/_missing-domains.md` via `append_missing_domain.ts`. Mention by this audit cites CyberArk Identity, Delinea, BeyondTrust; adjacency IGA, ITSM, SECOPS.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent fix-loop pass: applied the audit-pre-specified subset of Bucket 1 that the agent prompt classifies as TECHNICAL (PATCH enum backfills with values named in the audit, derivable FK PATCHes, INSERT `handoff_processes` rows where the audit pre-specifies a resolvable PCF). All other B1 items deferred to human judgment.
+
+Loader: `c:/dev/domain-map/.tmp_deploy/fix_iga_b1_technical_2026_05_31.ts` (idempotent, can re-run).
+
+### Fixes applied
+
+| Audit ID | Operation | Rows touched | Outcome |
+|---|---|---|---|
+| B1-S2 | PATCH `trigger_events.event_category` to `state_change` on ids 455, 456, 457, 458, 459, 460, 461 | 7 | 7/7 now `state_change`, 0 still empty |
+| B1-S4 | INSERT `domain_module_data_objects` `(domain_module_id=148, data_object_id=171, role='consumer', necessity='optional')` then PATCH `handoffs.target_domain_module_id=148` on ids 1303, 1304, 1305, 1309 | 1 INSERT + 4 PATCH | DMDO id 1121 created; all 4 handoffs now wired to module 148 |
+| B1-S8 | INSERT 4 `handoff_processes` `agent_curated` rows: (466, 273), (464, 365), (467, 196), (19, 224); PATCH `handoff_processes` id 20 (handoff 5, process 224) `proposal_source: discovery_override → agent_curated` | 4 INSERT + 1 PATCH | 5/5 target rows confirmed `agent_curated` |
+
+Totals: 12 PATCHes + 5 INSERTs across `trigger_events`, `domain_module_data_objects`, `handoffs`, `handoff_processes`. No JWT-audience errors.
+
+### Deferred
+
+| Audit ID | Reason for deferral |
+|---|---|
+| B1-S1 | M7 PROMOTE-vs-DELETE is an explicit "decide" / "user picks" item per the audit; agent prompt forbids judgment calls. 8 sibling-consumer rows untouched pending user choice. |
+| B1-S3 | 7 intra-domain handoff inserts gated on B1-S1's PROMOTE-vs-DELETE outcome (source / target master shape depends on whether siblings are `embedded_master` or removed). New entity inserts also outside the agent prompt's TECHNICAL scope. |
+| B1-S5 | `data_object_relationships` insert is between two domain-owned masters (`iga_user_entitlements` ↔ `iga_sod_violations`), not a Rule #10 `users` built-in user-edge. Agent prompt restricts new relationship inserts to Rule #10 user-edges only. |
+| B1-S6 | Report-only; owed by GRC b1 audit, not IGA's fix. |
+| B1-S7 | Report-only; owed by ITSM / ITAM / GRC b1 audits, not IGA's fix. |
+| B1-S8 rows 2, 3, 4 (handoffs 461, 463, 462 → PCF 10568 "Manage IT assets") | PCF `external_id=10568` not present in catalog (`/processes` returns 0 rows for it). Per the agent prompt, `handoff_processes` rows insert ONLY when PCF resolves. |
+| B1-S8 row 6 (handoff 465 → PCF 10708 "Establish internal controls, policies, and procedures") | PCF `external_id=10708` not present in catalog. |
+| B1-S8 row 10 (handoff 185 → PCF 10470 / 10473) | Audit names two PCFs (`Manage employee performance` and `Develop and train employees`) without picking one, and neither row text matches the proposed "Manage employee separation / offboarding" PCF anchor. Pre-specification is ambiguous; deferring to user. |
+| All Bucket 2 items (B2-S1..B2-S5) | Rule #15 notes-revert, pattern-flag flips, and `permission_hierarchy` interpretation are explicit Bucket 2 judgment calls in the audit. |
+| All Bucket 3 items | Phase 0 speculative; depends on PAM-domain decision and new entity additions, both outside the TECHNICAL scope. |
+
+### UI spot-check links
+
+- `https://tests.semantius.app/domain_map/trigger_events`
+- `https://tests.semantius.app/domain_map/handoffs`
+- `https://tests.semantius.app/domain_map/domain_module_data_objects`
+- `https://tests.semantius.app/domain_map/handoff_processes`
+

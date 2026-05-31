@@ -175,3 +175,44 @@ These items the audit identifies but other domains own. They do NOT block OBS' g
 | RO-7 | ITSM (rels) | The 2 ITSM-published cross-domain relationships into OBS masters (rels 194 `service_incidents correlates_to error_groups`, 195 `service_slas aligns_with service_level_objectives`) are well-shaped. ITSM's B8 owns the outbound side; OBS does not duplicate them. | ITSM b1 audit (informational). |
 
 Candidates queued in `audits/_missing-domains.md` this run: **LOG-MGMT**, **IRM** (bumped from 1 → 2), **RUM**. Total: 3 entries touched.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied truly-technical Bucket-1 items where the audit pre-specified everything needed; deferred judgment calls and dependency-gated items.
+
+### Applied
+
+- **B1-S4 (B9 event_category enum backfill).** PATCHed `event_category` on all 9 OBS `trigger_events` (ids 636 to 644) per the explicit mapping in the prior audit and Rule #13 enum. Live verification confirms all 9 rows now carry the intended values (`threshold` x2, `signal` x6, `state_change` x1). Loader: [`.tmp_deploy/fix_obs_b1_technical_2026_05_31.ts`](../.tmp_deploy/fix_obs_b1_technical_2026_05_31.ts).
+- **B1-H1 subset (APQC tagging, confident L4 only).** INSERTed 2 new `handoff_processes` rows for handoffs 611 and 618, both pointing at PCF 20903 "Triage IT service delivery incidents" (process_id 1299, single resolvable match). Both were pre-specified in the prior audit as `confident L4` with an explicit PCF external_id. Inserted with `role='implements'` (column default), `proposal_source='agent_curated'`, `record_status='new'` (Rule #1). New row ids: 561, 562. The 19 other candidate rows in the H1 bundle are NOT inserted, see "Deferred" below.
+
+### Deferred
+
+| Item | Reason |
+|---|---|
+| B1-S1 (module set) | New entities + modules; needs B2-S1 user decision on module-split shape. |
+| B1-S2 (capabilities) | New entities, gated on B2-S1 (each capability attaches to its realizing module). |
+| B1-S3 (catalog UX fields) | Rule #20 draft-then-surface flow; needs user review of buyer-voice text before write. |
+| B1-S5 (event 6, 7 attribution defects) | Gated on B2-S2 user decision: delete handoffs vs re-master entities locally vs tolerate. |
+| B1-S6 (event 115 attribution) | Same gating as B1-S5; the audit explicitly says "decision needed (Bucket 2 B2-S2)". |
+| B1-S7 (handoff 611 payload-vs-source) | Audit says "Confirm the pattern is intentional, or PATCH"; user confirmation required. |
+| B1-S8 (intra-domain `data_object_relationships`) | Audit names 6 candidate verbs but not the full edge tuples (`inverse_verb`, `relationship_type`, `relationship_kind`, `is_required`, `owner_side`); also gated on the B1-S1 module set for downstream context. |
+| B1-S9 (`users` edges, Rule #10) | Audit lists 5 candidate verbs but not the full edge tuples; prompt requires user-edges Rule #10 to be pre-specified. |
+| B1-S10 (cross-domain rels) | Partly gated on Bucket 3 (LOG-MGMT / IRM / RUM promotions) and on AIOPS / VSDP master-ownership confirmation. |
+| B1-S11 (data_object_aliases) | Bulk vendor-alias inserts not pre-specified as exact tuples; the audit lists vendor synonyms but not the full row shape per alias. Prompt defer rule applies. |
+| B1-S12 (lifecycle states) | Depends on B1-S1 modules (states need `domain_module_id`); per-master config-shape exemption is a user-surface decision per Rule #12. |
+| B1-S13 (pattern flags) | B2-S3 is explicit-user-decision territory; the audit hands the flag flips to the user. |
+| B1-S14 (legacy skill 88 migration) | Depends on B1-S1 modules existing first. |
+| B1-S15 (F7 channel primitives) | User picks `notify_person` vs `notify_team` per row; audit lists both options. |
+| B1-S16 (B10b backfill) | Vacuous until B1-S1 modules land. |
+| B1-H1 remainder (19 of 21 candidate rows) | Either `medium` confidence in the audit (rows 54, 56, 606, 651, 666, 749, 756, 760, 766, 773), or the named PCF does not resolve to a single existing `processes` row by name (`Manage IT events and incidents`, `Manage IT infrastructure operations`, `Manage service levels and resolve operational issues`, `Manage software releases`, `Manage software development and deployment` all return zero matches when queried by exact name). Only the two `confident L4 + PCF 20903` rows met the prompt's "pre-specified `handoff_id` + resolvable PCF" bar. |
+
+### Verification
+
+- `GET /trigger_events?id=in.(636..644)`: 9 rows, all `event_category` now populated with the mapped enum values.
+- `GET /handoff_processes?handoff_id=in.(611,618)`: 2 new rows (ids 561, 562), `process_id=1299`, `role='implements'`, `proposal_source='agent_curated'`, `record_status='new'`.
+
+No JWT errors during the run.
+
+UI spot-check:
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/handoff_processes

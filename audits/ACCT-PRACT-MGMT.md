@@ -326,3 +326,38 @@ Vendor-knowledge-based candidates from Pass 2 MISSING entities, not yet anchored
 - **S2P B9** owes outbound on `supplier_invoice.approved` / `.paid` to ACCT-PRACT-MGMT (firm's own AP for vendor invoices; conditional on Bucket 2.6 resolving the contributor row scope).
 - **CRM B9** owes outbound on `crm_contact.upserted` / `.merged` to ACCT-PRACT-MGMT (client contact master upserts feed practice management).
 - **Partner-domain module sparsity (informational):** spot-checks of GRC (id=15), AP-AUTO (id=29), WFM (id=59), S2P (id=27) returned zero `domain_modules` for each. M-band hard fail on all four partners; auditing them would be a high-leverage follow-up given ACCT-PRACT-MGMT depends on three of them (LEGAL, WFM, S2P, CRM) for inbound master contributions. CLM and CRM and LEGAL-PRACT-MGMT are the modularized neighbors.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent pass applied the technical-only slice of B1, deferring every item gated on Bucket 2 decisions or on M1 module authoring. Loader: `.tmp_deploy/fix_acct_pract_mgmt_b1_technical_2026_05_31.ts`. All writes succeeded; zero JWT errors.
+
+### Applied (3 of 13 B1 items)
+
+- **B1-B2 (B10b target side, CLM).** PATCHed `handoffs.id=339` `target_domain_module_id` from NULL to `127` (CLM-REPOSITORY). FK derivable from existing CLM modules; no judgment needed.
+- **B1-S4 (B7 user-edges, Rule #10).** INSERTED 5 rows in `data_object_relationships` to `data_objects.users` (id=748, `kind=platform_builtin`). New row ids: 1662 (`tax_returns is prepared by users`), 1663 (`tax_returns is reviewed by users`), 1664 (`client_engagements is led by engagement partner users`), 1665 (`client_engagements is managed by engagement manager users`), 1666 (`client_engagements is staffed by users`, `many_to_many`). All `record_status` default `new`; first four `is_required=true`, fifth `false`.
+- **B1-H1 (APQC tagging).** INSERTED 3 `handoff_processes` rows with `proposal_source='agent_curated'`, supplementing existing rows per the audit's "supplementing the existing rows" recommendation. New ids: 465 (handoff 338 -> process 328 `Process taxes`), 466 (handoff 339 -> process 807 `Manage contracts`), 467 (handoff 340 -> process 315 `Process accounts payable (AP)`). The wrong-fit existing row id=206 (`handoff 339 -> process 300`) was NOT deleted or PATCHed: the audit lists DELETE-and-replace vs. PATCH as a user-pick.
+
+### Deferred (10 of 13 B1 items)
+
+- **B1-S1 (M1 modules).** Gated on Bucket 2.1 (4-vs-5-vs-6-vs-7 module split is a user pick).
+- **B1-S2 (A4 catalog UX).** Rule #20 requires user-approved buyer-voice wording before write.
+- **B1-S3 (B6 intra-domain edge).** Audit pre-specifies one edge (`client_engagements scopes tax_returns`) but the technical filter authorizes only `users` user-edges via Rule #10, not intra-domain edges.
+- **B1-S5 (B9 missing handoff or terminal-state).** Audit poses an (a)/(b) decision.
+- **B1-S6 (B9 missing trigger_events).** Five new entity inserts; deferred under the new-entities filter.
+- **B1-S7 (B11 aliases).** Audit lists candidate aliases but does not pre-specify exact `(data_object_id, alias_name, alias_type)` tuples per row (vendor-shape annotations such as "Karbon / Canopy / TaxDome standard" require `alias_type` and optional `solution_id` judgment).
+- **B1-S8 (B12 lifecycle states).** New entity inserts gated on Bucket 2.5 confirmation and module ownership.
+- **B1-S9 (F1+F3+F7 skill retire / extend).** Gated on modules.
+- **B1-B1 (B10b source-side).** Gated on ACCT-PRACT-MGMT modules existing.
+- **B1-B3 + B1-B4 (B8 cross-domain mirrors).** Audit notes B1-B3 depends on Bucket 2.5 (engagement_letters master ownership) and B1-B4 is deferred-pending-GRC-modularization.
+
+### Verification
+
+- `handoffs.id=339`: `target_domain_module_id=127`.
+- `data_object_relationships` between `(400|401)` and `748`: 5 rows (ids 1662-1666).
+- `handoff_processes` for handoffs 338/339/340: 6 rows total (3 prior + 3 new `agent_curated`, ids 465-467).
+
+UI:
+- https://tests.semantius.app/domain_map/handoffs
+- https://tests.semantius.app/domain_map/data_object_relationships
+- https://tests.semantius.app/domain_map/handoff_processes
+

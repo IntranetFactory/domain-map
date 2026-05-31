@@ -185,3 +185,41 @@ None of these are blockers for THREAT-INTEL's pass once the M1/B-band foundation
 - **XDR** (Extended Detection and Response) - Palo Alto Cortex XDR, CrowdStrike Falcon Insight XDR, Microsoft Defender XDR, SentinelOne Singularity XDR, Trellix XDR, Trend Micro Vision One. Same producer/consumer relationship with TI as SIEM but with cross-surface telemetry correlation as the marquee capability.
 - **DRP** (Digital Risk Protection) - ZeroFox, Digital Shadows (ReliaQuest), Recorded Future Brand Intelligence, Mandiant Digital Threat Monitoring, IntSights (Rapid7), CybelAngel. Distinct from THREAT-INTEL: external-attack-surface focus (brand impersonation, dark-web credential leaks, executive protection), where THREAT-INTEL focuses on the adversary/IOC/TTP substrate.
 - **CAASM** (Cyber Asset Attack Surface Management) - Axonius, JupiterOne, Sevco, Noetic Cyber, runZero, Lansweeper Security. Already had 1 prior mention; this audit bumps to 2.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Summary
+
+Subagent pass under leadership-tier technical-only license. Of 13 Bucket 1 findings, only **1 qualified for technical application** (B1-T4 em-dash sanitization on a named single row with pre-specified replacement text); the remaining 12 were deferred because they fall under the explicit "DEFER" categories in the technical-fix license (new entities/DMDOs/modules, catalog_tagline/description per Rule #20, new business_function_domains contributors/consumers, new domain_aliases, gated on user-pick options, gated on prerequisite loads).
+
+### Fixes applied
+
+| ID | Type | Action |
+|---|---|---|
+| B1-T4 | PATCH naming rename (single row, pre-specified text) | PATCH `/domains?id=eq.14` setting `business_logic` to remove the U+2014 em-dash. New value: `"Indicator correlation, enrichment pipelines, and adversary attribution: analytic substrate beneath a curation workflow."`. Single CLI call, no loader required. |
+
+### Deferred (12) with reasons
+
+| ID | Defer reason |
+|---|---|
+| B1-T1 | New `domain_modules` rows (DEFER: new modules). Also gated on B2-T1 user pick. |
+| B1-T2 | New `capabilities` + `capability_domains` rows (DEFER: new entities). Also gated on B2-T4 user pick. |
+| B1-T3 | `catalog_tagline` / `catalog_description` writes (DEFER: Rule #20). Gated on B2-T2 user-approved wording. |
+| B1-T5 | New `business_function_domains` contributor rows (DEFER: explicit "new business_function_domains contributors/consumers" carve-out). |
+| B1-T6 | New `data_objects` masters + `domain_module_data_objects` rows (DEFER: new entities/DMDOs). Gated on B2-T3, B2-T5 user picks. |
+| B1-T7 | New `data_object_lifecycle_states` rows (DEFER: gated on T6 and B2-T3). |
+| B1-T8 | New intra-domain `data_object_relationships` rows (DEFER: gated on T6; not audit-pre-specified user-edges under Rule #10). |
+| B1-T9 | New `users`-edge `data_object_relationships` rows (DEFER: gated on T6; audit does not pre-specify the tuples in Rule #10 land-now shape). |
+| B1-T10 | New `data_object_aliases` rows (DEFER: not pre-specified exact tuples; gated on T6 masters). |
+| B1-T11 | New `skills` + `tools` + `skill_tools` rows (DEFER: gated on T1 modules; new entities). |
+| B1-T12 | New `roles` + `role_modules` + `role_permissions` rows (DEFER: gated on T1; new entities). |
+| B1-T13 | New `domain_aliases` rows (DEFER: explicit "new `domain_aliases`" carve-out). |
+
+### JWT errors
+
+None.
+
+### Notes
+
+- Description column on `domains.id=14` retains `"operationalisation"` (British spelling, against CLAUDE.md American-English rule). Not in this audit's pre-specified PATCH scope; surfaced here for the next pass to consider.
+- No loader script was created (the single PATCH was inline via the CLI).

@@ -266,3 +266,42 @@ Deferred to Discover Pass 3: handoffs 649 (NPMD network flow anomaly, security o
 - **OBS / ITOM / ITSM B8** owe inbound cross-domain `data_object_relationships` mirroring AIOPS's outbound publishes. Will be audited on each of those domains' next B8 passes; AIOPS does not author them.
 - **CMDB**: trigger 628 (`service_map.updated`) already has `source_domain_module_id=109` resolved on the CMDB side, no follow-up.
 - **Catalog-wide**: the existing 3 `discovery_substring` rows on handoffs 53, 58, 603 are review candidates for promotion to `record_status='approved'` once the user agrees they map correctly. None of those are AIOPS-side fixes, they are reviewer decisions.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Loader: [.tmp_deploy/fix_aiops_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_aiops_b1_technical_2026_05_31.ts), run from project root `c:/dev/domain-map` per Rule #6. No JWT errors.
+
+### Applied (5 of 16 B1 items)
+
+| Item | Action | Rows |
+| --- | --- | --- |
+| B1-S1 | PATCH `domains.id=6` `business_logic`, removed the U+2014 em-dash, replaced ` — ` with `: ` per CLAUDE.md. New text: `Event correlation, deduplication, anomaly detection, and root-cause analysis: ML and statistical algorithms across high-volume telemetry.` | 1 |
+| B1-B9 (partial: trigger 39 naming PATCH only) | PATCH `trigger_events.id=39` `description`, rewrote `Fired when a Incident is identified...` to `Fired when an Event Correlation is identified...`. Trigger 143 re-attribution remains a Bucket 2 judgment, untouched. New trigger inserts deferred (new entities). | 1 |
+| B1-B7 | INSERT `data_object_relationships` per Rule #10 user-edges (audit pre-specified the four edges). All four use `data_object_id=748` (users platform_builtin), `owner_side=target`, `relationship_kind=reference`, `relationship_type=one_to_many`. New row ids 1741-1744: `authored root cause analyses` -> 95, `reviewed suppression rules` -> 722, `created training records` -> 723, `acknowledged predictions` -> 724. | 4 |
+| B1-B11 | INSERT `data_object_aliases` for the 5 non-self-explanatory masters (exact tuples in the audit). All `alias_type=synonym`, `is_preferred=false`, `notes=''`. New row ids 975-984. Covers event_correlations, anomaly_detections, root_cause_analyses, predictive_signals, incident_predictions, two aliases each. | 10 |
+| B1-H1 | INSERT `handoff_processes` for the 15 confident-L4 pairs the audit pre-specifies, skipping any handoff_id already tagged (57, 58, 53, 603, 628, 154 are all left as-is; 154's existing process_id=272 differs from the audit proposal 1302 and is left for user judgment). All inserts: `role=implements`, `proposal_source=agent_curated`, `record_status=new`, `notes=''`. New tags on handoffs 56, 59, 141, 604, 605, 606, 607, 608, 609, 610, 612, 613, 619, 665, 667. | 15 |
+
+Total writes: 31 rows across 5 tables (2 PATCH, 29 INSERT).
+
+### Deferred (11 of 16 B1 items)
+
+| Item | Reason |
+| --- | --- |
+| B1-A2 | Speculative new `capabilities` entities (audit phrases as "Proposed codes:"). Out of scope per "new entities/DMDOs/modules". |
+| B1-A4 | `catalog_tagline` / `catalog_description` are Rule #20 buyer-voice content; explicitly deferred per the run prompt. |
+| B1-M1 | New `domain_modules` rows. Out of scope per "new entities/DMDOs/modules" and gated on Bucket 2 item #1 user pick of the module split (a / b / c). |
+| B1-B4 | Pattern flag flips on the 7 masters. Explicitly deferred per the run prompt; also a Bucket 2 confirm. |
+| B1-B6 | Intra-domain `data_object_relationships` between AIOPS domain-owned masters. The run prompt limits relationship inserts to Rule #10 user-edges only. |
+| B1-B8 | Outbound cross-domain `data_object_relationships` (mirrors of the 8 outbound handoffs). Same scope restriction as B6. |
+| B1-B9 (rest) | New `trigger_events` inserts (`event_correlation.published`, `event_correlation.resolved`, etc.) are new entities, deferred. Trigger 143 `topology.published` re-attribution is a Bucket 2 judgment ("Awaiting user call"), untouched. |
+| B1-B10b | Per-module FKs on outbound (8) and inbound (16) handoffs. Audit explicitly notes these are blocked by M1 (no AIOPS modules exist); FKs are not derivable from existing modules on the AIOPS side. |
+| B1-B12 | Lifecycle states need `domain_module_id` from M1; blocked. |
+| B1-F1 | Retiring legacy `aiops-system` skill is contingent on per-module system skills shipping (Rule #17), gated on M1. |
+| B1-F7 | Channel-vs-abstraction swap is Bucket 2 item #5 ("Are these workflow-specific or generic? If generic, the fix is a swap."), explicit user-judgment surface. |
+
+### Notes
+
+- Rule #15 honored: no `notes` columns written; every insert above passes `notes=''` implicitly via field default.
+- Rule #1 honored: every insert leaves `record_status` at the `'new'` default by omitting the field.
+- Rule #18 honored: no vendor or product names introduced in any text field. Aliases use generic SRE / AIOps terminology.
+- The 5 applied items account for all B1 work that fits the run prompt's "TECHNICAL (apply)" allowlist. The remaining 11 items either need new entities, are gated on M1, or sit on the Bucket 2 user-judgment surface and must be confirmed before any write.

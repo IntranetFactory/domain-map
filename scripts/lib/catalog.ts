@@ -59,6 +59,8 @@ export type Domain = {
   domain_name: string;
   description: string;
   catalog: boolean;
+  catalog_tagline: string;
+  catalog_description: string;
   crud_percentage: number;
   business_logic: string;
   min_org_size: string;
@@ -76,6 +78,8 @@ export type ModuleRow = {
   domain_module_name: string;
   domain_id: number | null;
   description: string;
+  catalog_tagline: string;
+  catalog_description: string;
   catalog: boolean;
   module_kind: "full" | "starter";
 };
@@ -120,6 +124,8 @@ export type RelationshipBuckets = {
   intra: any[];
   userRels: any[];
   cross: any[];
+  crossOutbound: any[];
+  crossContext: any[];
   all: any[];
 };
 
@@ -175,7 +181,7 @@ export async function loadCatalogIndex(): Promise<CatalogIndex> {
   const [domains, dataObjects, industries, modules] = await Promise.all([
     pg(
       "GET",
-      "/domains?select=id,domain_code,domain_name,description,catalog,crud_percentage,business_logic,min_org_size,cost_band,certification_required,usa_market_size_usd_m,market_size_source_year&order=domain_code.asc&limit=10000",
+      "/domains?select=id,domain_code,domain_name,description,catalog,catalog_tagline,catalog_description,crud_percentage,business_logic,min_org_size,cost_band,certification_required,usa_market_size_usd_m,market_size_source_year&order=domain_code.asc&limit=10000",
     ) as Promise<Domain[]>,
     pg(
       "GET",
@@ -184,7 +190,7 @@ export async function loadCatalogIndex(): Promise<CatalogIndex> {
     pg("GET", "/industries?select=id,industry_name&limit=10000") as Promise<IndustryRow[]>,
     pg(
       "GET",
-      "/domain_modules?select=id,domain_module_code,domain_module_name,domain_id,description,catalog,module_kind&order=domain_module_code.asc&limit=10000",
+      "/domain_modules?select=id,domain_module_code,domain_module_name,domain_id,description,catalog_tagline,catalog_description,catalog,module_kind&order=domain_module_code.asc&limit=10000",
     ) as Promise<ModuleRow[]>,
   ]);
 
@@ -508,22 +514,45 @@ export function loadModuleCatalog(
   const relIntra: any[] = [];
   const relUsers: any[] = [];
   const relCross: any[] = [];
+  const relCrossOutbound: any[] = [];
+  const relCrossContext: any[] = [];
+  const DRIVING_ROLES = new Set(["master", "contributor"]);
   for (const r of all.relationships) {
     const a = r.data_object_id as number;
     const b = r.related_data_object_id as number;
     if (!scopeObjectIdSet.has(a) && !scopeObjectIdSet.has(b)) continue;
-    relAll.push(r);
     const aUser = a === index.usersId;
     const bUser = b === index.usersId;
     if (aUser || bUser) {
+      const otherId = aUser ? b : a;
+      if (otherId === index.usersId) continue;
+      if (!scopeObjectIdSet.has(otherId)) continue;
+      relAll.push(r);
       relUsers.push(r);
-    } else if (scopeObjectIdSet.has(a) && scopeObjectIdSet.has(b)) {
-      relIntra.push(r);
-    } else if (scopeObjectIdSet.has(a) !== scopeObjectIdSet.has(b)) {
-      relCross.push(r);
+    } else {
+      relAll.push(r);
+      if (scopeObjectIdSet.has(a) && scopeObjectIdSet.has(b)) {
+        relIntra.push(r);
+      } else if (scopeObjectIdSet.has(a) !== scopeObjectIdSet.has(b)) {
+        relCross.push(r);
+        const inScopeId = scopeObjectIdSet.has(a) ? a : b;
+        const inScopeRole = scopeRolesById.get(inScopeId) || "";
+        if (DRIVING_ROLES.has(inScopeRole)) {
+          relCrossOutbound.push(r);
+        } else {
+          relCrossContext.push(r);
+        }
+      }
     }
   }
-  const relationships: RelationshipBuckets = { intra: relIntra, userRels: relUsers, cross: relCross, all: relAll };
+  const relationships: RelationshipBuckets = {
+    intra: relIntra,
+    userRels: relUsers,
+    cross: relCross,
+    crossOutbound: relCrossOutbound,
+    crossContext: relCrossContext,
+    all: relAll,
+  };
 
   // ---- coMasters: other modules / domains with any role on this scope's masters ----
   // Walk bulk arrays in insertion order. Dedup on (module_id, data_object_id) for the

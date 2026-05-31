@@ -183,3 +183,49 @@ _pending user review_
 ### Fixes applied
 
 _none yet; awaiting Bucket 1 / 2 / 3 decisions_
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+Subagent pass under domain-map-analyst applying truly-technical B1 fixes only (no new entities, no Phase 0 work, no user-judgment surfaces). Loader: `c:/dev/domain-map/.tmp_deploy/fix_cmdb_b1_technical_2026_05_31.ts`.
+
+### Pre-flight correction
+
+The audit header for the 2026-05-30 pass implies `domain_regulations` was empty for CMDB. Verified: CMDB is `domains.id=4` (code CMDB, "Configuration Management Database"); `domain_regulations` filtered by `domain_id=4` returned zero rows pre-fix. The five reg rows returned on a `domain_id=eq.61` probe in passing belonged to BEN-ADMIN (HIPAA, ACA, ERISA, COBRA, GINA), not CMDB. No CMDB regulation drift.
+
+### Applied
+
+| Fix ID | Type | Action | Result |
+|---|---|---|---|
+| B1-B1 | FK PATCH | `handoffs.id=51 set data_object_id=47 -> 76` (configuration_items) | PATCHed; mirrors existing relationship row 247 (configuration_items triggers service_incidents) |
+| B1-M5 | INSERT to existing rows | `domain_regulations` link CMDB(4) -> SOX(5), applicability=mandatory | INSERTed as id 255 |
+| B1-M6 | INSERT to existing rows | `domain_regulations` link CMDB(4) -> PCI-DSS(16), applicability=mandatory; PCI-DSS row is the closest existing catalog anchor for the audit's nominal PCI-DSS-11.5 target | INSERTed as id 256 |
+| B1-H1 (partial) | INSERT handoff_processes | 13 fresh `handoff_processes` rows (handoffs 146, 621, 625, 627, 628, 629, 654, 679, 854, 1199, 1200, 1211, 1212) | INSERTed as ids 428-440, all `proposal_source=agent_curated`, `role=implements`; PCF process_ids 1190 / 1299 / 1309 / 1312 all pre-verified against `external_id` 20752 / 20903 / 20915 / 20918 |
+
+### Deferred (12 items)
+
+| Item | Reason for deferral |
+|---|---|
+| B1-M1 `ci_reconciliation_rules` | New entity creation out of technical-residual scope. |
+| B1-M2 `ci_attestations` | New entity creation out of scope. |
+| B1-M3 `discovery_credentials` | New entity creation out of scope. |
+| B1-M4 `ci_audit_log` | New entity creation out of scope. |
+| B1-M7 ISO-19770-1 link | No matching regulation row exists (only SOX and PCI-DSS were already in the catalog); creating a new `regulations` row is out of scope per the residual-fix license. |
+| B1-S1 catalog_tagline / catalog_description | Rule #20 territory; explicit DEFER per task constraints. |
+| B1-S2 lifecycle states for `ci_relationships` / `service_maps` / `ci_baselines` / `ci_classes` | Audit cross-bucket dependency: gated on Bucket 2 #1 (config-shape exemption decision for `ci_classes`) which is a user-judgment item. |
+| B1-S3 workflow-gate permissions for cmdb-core states 272/274/275 | Audit's stated fix is INSERT 3 new `permissions` rows (and downstream `permission_hierarchy` edges), which is not in the residual-INSERT license. The state+verb pairs themselves (`registered/register_ci`, `retired/retire_ci`, `archived/archive_ci`) were verified already correct on `data_object_lifecycle_states`, so no `permission_verb_override` PATCH was needed. |
+| B1-S4 fan-out of `ci.unauthorized_change_detected` to GRC / SECOPS | Listed in audit Bucket 2 #6 as a judgment call (which subscribers to add); user-judgment surface. Also depends on GRC and SECOPS module IDs that are not pre-specified. |
+| B1-S4 NULL-FK B10b items on handoffs 48, 49, 146, 621, 625, 628, 654, 679, 1199 | Cannot derive missing source / target `domain_module_id` from existing modules: DISCOVERY (5), AIOPS (6), RMM (130), NPMD (82), DCIM (84) all carry zero `domain_modules`. Surfaced as report-only follow-ups on those domains' audits in the 2026-05-30 pass; remains report-only here. |
+| B1-H1 REPLACES for handoffs 48, 49, 51, 236, 237 | Existing `discovery_substring` rows (handoff_processes ids 51, 53, 52, 7, 9) would need DELETE+REPLACE. The audit does NOT name those `handoff_processes` row IDs in the "DELETE stale rows" sense (it names the handoffs, not the junction rows), so under the residual rule "DELETE stale rows audit names with IDs" they are out of scope. Recommend a follow-up pass that names the five junction row IDs explicitly. |
+| B1-Pair-ITSM-1 `service_changes -> ci_baselines` relationship | Not a Rule #10 user-edge (both sides are domain-owned data_objects, neither is `kind=platform_builtin`); residual INSERT license for `data_object_relationships` covers only built-in / user-edges per Rule #10. |
+
+### JWT errors
+
+None.
+
+### Verification
+
+- `GET /handoffs?id=eq.51` -> `data_object_id=76` (confirmed).
+- `GET /domain_regulations?domain_id=eq.4` -> 2 rows (regs 5, 16, both applicability `mandatory`).
+- `GET /handoff_processes?handoff_id=in.(146,621,625,627,628,629,654,679,854,1199,1200,1211,1212)` -> 13 rows present with `proposal_source=agent_curated`.
+
+UI: https://tests.semantius.app/domain_map/handoff_processes

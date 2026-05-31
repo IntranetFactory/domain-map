@@ -219,3 +219,36 @@ Helper: `bun run "C:/dev/domain-map/scripts/analytics/append_missing_domain.ts" 
 ### `domains.notes` pointer
 
 _not yet written; will require user-approved wording per Rule #15_
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent pass applying truly-technical B1 items only; judgment items deferred. Loader: [.tmp_deploy/fix_skills_mgmt_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_skills_mgmt_b1_technical_2026_05_31.ts), run from project root.
+
+### Applied (14 writes, all `record_status='new'`)
+
+| Fix | Type | Count | Detail |
+|---|---|---|---|
+| B1-S5 | INSERT data_object_relationships (user-edges per Rule #10) | 3 | ids 1556 (users -> skill_taxonomies, `curates`), 1557 (users -> skills, `authors`), 1558 (users -> skill_inference_runs, `initiates`); all `is_required=false`, `owner_side=source`, `relationship_kind=reference` |
+| B1-B2 | PATCH domain_module_data_objects.necessity (Rule #16) | 2 | DMDO 917 (learner_certifications) and 918 (course_enrollments): `required` -> `optional` on SKILLS-MGMT-PROFILE (module 174). DMDO 919 (performance_goals) was already `optional`, no PATCH |
+| B1-H1 | INSERT handoff_processes (agent_curated, audit pre-specified) | 9 | handoff ids 388, 432, 440, 456, 1079, 1080, 1106, 1288, 1295 mapped to PCF process ids 1036, 1033, 226, 1038, 1033, 1873, 1038, 1033, 1873; `proposal_source='agent_curated'`, `record_status='new'`. Resulting handoff_processes ids 331-339 |
+
+### Deferred (8 items)
+
+| ID | Reason |
+|---|---|
+| B1-S1 | Catalog UX wording (Rule #20): requires explicit user-approved text before any PATCH. Audit already carries draft for user review |
+| B1-S2 | New trigger_events entities; pre-specified set of 7 but creating new event rows + their downstream chain is judgment-shaped authoring, not a derivable PATCH |
+| B1-S3 | Gated on B1-S2 (intra-domain handoffs depend on the 7 new events existing first) |
+| B1-S4 | New data_object_lifecycle_states + workflow-gate permissions; non-trivial state-machine authoring (requested/issued/revoked, queued/running/completed/failed). Defer to user |
+| B1-S6 | New roles authoring (3 function-scoped roles + role_modules + role_permissions); user-judgment territory |
+| B1-B1 | Handoff 1307 disposition surfaced as Bucket 2 item 3 ("user picks (a) DELETE vs (b) PATCH-and-keep") |
+| Bucket 2 item 2 | Permission prefix rename (`skills-mgmt:validate_skill_profile` etc.) is in Bucket 2 surface-for-user (audit recommends but does not pre-resolve options (a) vs (b)) |
+| Bucket 2 item 6 | Alias gap surfaced as user-judgment ("user picks which (if any) to alias") |
+
+### JWT errors
+
+None during this pass.
+
+### Re-audit recommendation
+
+H1 now passes for 9 of 12 cross-domain handoffs (75% coverage); the 3 unresolved are handoff 1307 (Bucket 2 item 3 DELETE/PATCH decision) and the 2 LMS content-publication events (1287, 1315) flagged for Discover Pass 3 custom-process authoring. B7 closes for SKILLS-MGMT (`skill_taxonomies`, `skills`, `skill_inference_runs` now carry the missing Rule #10 user-edges). B2/B12 unchanged.

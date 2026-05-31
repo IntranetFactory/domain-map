@@ -195,3 +195,37 @@ Five adjacent healthcare markets surfaced during the market-audit pass that have
 - **HC-PHARM-MGMT**, Pharmacy Practice and Medication Management. Anchors `dispensed_prescriptions`, `medication_reconciliations`, `drug_utilization_reviews`, `controlled_substance_ledger`. Vendors: McKesson EnterpriseRx, Cardinal Health Cube Rx, Omnicell, BD Pyxis, Surescripts.
 
 All five were appended via `scripts/analytics/append_missing_domain.ts` with `--surfaced-by "HC-PATIENT audit 2026-05-30"`. The orchestrator's triage queue is the canonical record.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Scope
+
+Loader: `.tmp_deploy/fix_hc_patient_b1_technical_2026_05_31.ts`, run from project root (`c:/dev/domain-map`). Applied only the B1 items whose target values are pre-specified by the 2026-05-30 audit; deferred every judgment call, every flag-flip, and every item gated on B1-S1 module creation.
+
+### Applied (2 items)
+
+- **B1-S9 (enum backfill, 7 rows).** PATCHed `trigger_events.event_category` for ids 1022..1028 with the exact values the audit named: 1022=`lifecycle`, 1023=`state_change`, 1024=`state_change`, 1025=`lifecycle`, 1026=`lifecycle`, 1027=`state_change`, 1028=`state_change`. All 7 moved from empty string to the target enum value.
+- **B1-S5 (intra-domain edges, 6 INSERTs).** Loaded 6 `data_object_relationships` rows (ids 1857..1862) among the 6 HC-PATIENT masters, exactly the audit's pre-specified shape: `patient_appointments produces clinical_encounters`, `clinical_encounters produces clinical_orders`, `clinical_encounters produces clinical_notes`, `patient_referrals triggers clinical_encounters`, `care_plans guides clinical_encounters`, `clinical_orders informs clinical_notes`. All carry `record_status=new` (per Rule #1 the field was omitted on insert and defaulted), `notes=''` (per Rule #15). The 3 `produces` edges are modeled as `composition` (encounter is the parent of the artifact); the other 3 as `reference`.
+
+### Deferred (14 items, with reasons)
+
+| Item | Reason for defer |
+|---|---|
+| B1-S1 | New `domain_modules` (judgment call, gated on B2-1 split decision). |
+| B1-S2 | New `capabilities` (new entity drafts). |
+| B1-S3 | `catalog_tagline` / `catalog_description` need user-approved wording per Rule #20. |
+| B1-S4 | Pattern flag flips (out of scope for the technical pass). |
+| B1-S6 | User-edges per Rule #10: audit lists actor roles per master but not concrete verb / inverse_verb tuples. Same defer pattern as CLIN-DEV. Surface to user before insert. |
+| B1-S7 | Cross-domain payload rels: handoffs 899 / 902 already covered by existing rows 466 (`patient_appointments opens customer_cases`) and 467 (`patient_referrals opens customer_cases`); 900 / 903 target ERP-FIN with no `invoices` data_object and no pre-specified target; 901 (ITSM) is routed to Bucket 2 (B2-3) as semantically suspect. |
+| B1-S8 | New outbound handoff for event 1022: audit candidates blocked on Phase 0 (TELEHEALTH). |
+| B1-S10, B1-S11 | B10b FK PATCHes require modules to exist first (gated on B1-S1). |
+| B1-S12 | Bulk `data_object_aliases`: audit does not pre-specify exact tuples; calls for "Author 2-3 aliases per master". |
+| B1-S13 | Lifecycle states are new entity drafts. |
+| B1-S14 | New module-level system skills (gated on B1-S1 modules). |
+| B1-S15 | New `skill_tools` rows (gated on B1-S14). |
+| B1-S16 | DELETE legacy skill 66 (gated on B1-S14). |
+| B1-H1.1..1.7 | `handoff_processes` tagging: audit explicitly says "candidate; verify against `/processes` lookup at fix-load time", which is a judgment call. PCF row IDs are not pre-specified. |
+
+### Verification
+
+Re-read confirmed: all 7 trigger_events now carry the target enum value; all 6 inserted data_object_relationships rows are live with the expected source/target/verb/inverse/cardinality/kind/owner_side fields. No JWT-audience errors during the run.

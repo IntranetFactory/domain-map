@@ -136,3 +136,31 @@ Highest-leverage cluster if you only pick part of the work: **B3-1, B3-2, B3-3 (
 - **B10b backfill on inbound side**, source domain BPA. Handoffs 180 and 783 inbound to PROC-MIN carry NULL `source_domain_module_id` and `target_domain_module_id`. Source-side fix lives on BPA's b1 audit once BPA modules exist; target-side fix lives on PROC-MIN's b1 audit once PROC-MIN modules exist.
 - **B8 inbound `data_object_relationships`**, owed by BPA (`business_process_models` -> PROC-MIN masters direction) and by BPA for `process_simulation_runs` -> PROC-MIN comparison flow. Source domain BPA's B8 owes these; PROC-MIN does not author them.
 - **Possible TASK-MINING domain promotion**, owed by orchestrator triage of the queue file. Not PROC-MIN's responsibility to load, but PROC-MIN's modularization shape depends on whether task mining ends up inside PROC-MIN (as `PROC-MIN-TASK-MINING` module) or hived off as a separate domain.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Loader: [.tmp_deploy/fix_proc_min_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_proc_min_b1_technical_2026_05_31.ts). Run from project root `c:/dev/domain-map`.
+
+### Applied
+
+- **B1-S1, event_category PATCHes (6 rows).** All 6 PROC-MIN `trigger_events` rows were sitting at `event_category=""`. PATCHed per the audit's pre-specified enum mapping (Rule #13): id 358 (`conformance.deviation_detected`) -> `signal`; id 797 (`event_log.ingested`) -> `lifecycle`; id 798 (`discovered_process_model.published`) -> `state_change`; id 799 (`process_variant.identified`) -> `signal`; id 800 (`process_bottleneck_finding.created`) -> `signal`; id 801 (`business_rule_extracted.identified`) -> `signal`. Verified live post-run.
+- **B1-S3, user-edge `data_object_relationships` (6 rows, Rule #10).** Inserted one row per PROC-MIN master against `users` (data_object_id 748) on the standard verb-shape pattern observed in the catalog (`many_to_many` / `reference` / `is_required=false` / `owner_side='source'`, verb `<action> by`, inverse `<action>s`). New ids and labels: 1947 `event_logs uploaded by users`; 1948 `discovered_process_models published by users`; 1949 `process_conformance_results analyzed by users`; 1950 `process_variants analyzed by users`; 1951 `process_bottleneck_findings assigned to users`; 1952 `business_rules_extracted reviewed by users`. Primary verb selected when the audit named two actors (`uploaded_by/ingested_by`, `assigned_to/owner`); compound-actor splits can be added later if the user wants both surfaced as separate edges. `record_status` and `notes` omitted to take database defaults (Rules #1, #15).
+
+### Confirmed already done (no work)
+
+- **B1-H1, APQC `handoff_processes` tagging.** Pre-check showed the 4 proposed `agent_curated` rows already exist: handoff 180 -> process 78 (`Manage business processes`), 740 -> 78, 741 -> 78, 783 -> 78. Handoff 183 still carries the existing `discovery_substring` tag (process 414, `Manage non-conformance`). Handoff 742 remains untagged per the audit's "defer to Discover Pass 3" recommendation (no clean APQC L3 match for business-rule extraction). No further inserts needed.
+
+### Not applied (deferred, with reason)
+
+- **B1-S2 (A4 catalog_tagline / catalog_description).** Rule #20: buyer-voice prose requires user sign-off on wording before any PATCH; agent does not author user-facing description fields unilaterally.
+- **B1-S4 (B6 intra-domain `data_object_relationships`).** Audit names 6 candidate edges but explicitly flags that `relationship_verb`, `inverse_verb`, `relationship_type` (cardinality), `relationship_kind`, `is_required`, `owner_side` are still to be drafted per row. Cluster-drafts review required, not a mechanical apply.
+- **B1-S5 (B11 `data_object_aliases`).** Audit names alias themes (vendor-flavored synonyms per master) but does not pre-specify the exact `(alias_name, locale, vendor_solution_id)` tuples needed for a deterministic insert.
+- **B1-S6 (B12 `data_object_lifecycle_states`).** Blocked on B2-1 (modularization shape) and B2-5 (`process_variants` config-shape exemption). `domain_module_id` cannot be set without modules in place.
+- **B1-S7 (B10b backfill on outbound side).** Blocked on B2-1 (PROC-MIN has zero `domain_modules`, source-side derivation is undefined).
+- **B1-S8 (F1 legacy system skill cleanup).** Blocked on B2-1 (per-module system skills cannot be authored before modules exist; removing the legacy skill prematurely would leave PROC-MIN with zero system skills).
+- **B2-3 (`business_rules_extracted` rename).** Bucket 2 judgment call; user picks (a/b/c).
+- **B2-6 (em-dash cleanup in description cells).** Bucket 2; Rule #20 / Rule #15 forbid agent-authored description rewrites.
+
+### Audit blockers still open
+
+PROC-MIN remains pre-modular: M1 / M2 / M4 hard-fail, A2 / A3 / A4 fail, E1 to E6 fail, F1 fail. The whole Phase-A modularization (B2-1) and Phase-0 vendor research (Bucket 3) are still owed; B1 technical fixes do not move the needle on those.

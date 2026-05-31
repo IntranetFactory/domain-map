@@ -7,13 +7,15 @@ system_slug: ats-offers
 domain_modules:
   - ats-offers
 domain_code: ATS
-related_modules: [ats-background-checks, ats-candidate-crm, ats-pre-employee-record, ats-recruitment-pipeline, comp-benchmarking, comp-statements, hcm-lifecycle-workflows, hiring-starter]
-created_at: 2026-05-28
+related_modules: [ats-background-checks, ats-candidate-crm, ats-pre-employee-record, ats-recruitment-pipeline, comp-statements, hcm-lifecycle-workflows, hiring-starter]
+created_at: 2026-05-31
 ---
 
 # Offers
 
 ## 1. Overview
+
+### 1.1 Analyst overview
 
 Offer drafting, approval, extension, signature, and acceptance. Realizes OFFER-MGMT. Realizes the `offer_extended` state on `job_applications`. Requires an external `sign_document` tool, drops module Semantius coverage to ~83%.
 
@@ -21,46 +23,59 @@ Offer drafting, approval, extension, signature, and acceptance. Realizes OFFER-M
 
 | Name | Description |
 | --- | --- |
+| Offer Approvals | Approval step in the offer-approval chain (HRBP -> Comp -> Finance -> Exec). Triggered when an offer exceeds band, includes non-standard equity, or matches other escalation rules. |
+| Offer Letter Documents | Generated PDF artifact of the offer terms, distinct from the structured offer record. Versioned in lockstep with offer_versions. Carries template_id, render timestamp, e-sign envelope link. |
+| Offer Letter Templates | Reusable letter template with merge tokens (candidate name, role, base salary, start date, equity, bonus terms). Versioned. Renders offer_letter_documents at offer time. Carries template name, body, token schema, jurisdiction, language, active flag, and version. |
+| Offer Versions | Versioned snapshot of a job_offer during negotiation (initial -> counter -> revised -> accepted). Each version carries the structured terms (base, bonus, equity, start_date) and the author of the change. |
 | Offers | Formal employment offer extended to a candidate. Carries compensation components, start date, terms, approval chain, and status (draft / approved / sent / accepted / declined / rescinded). |
 | Applications | A candidate's submission against a specific requisition. Carries pipeline stage, status (active / rejected / withdrawn / hired), source, and the full evaluation history. |
 | Candidates | Person known to the recruiting org, with or without an active application. Carries contact details, resume, tags, GDPR consent, and source. Distinct from Employee until hired. |
-| Salary Bands | Pay-range structure by grade and geographic zone with minimum, midpoint, maximum, and benchmarking source. Drives offer guidance, merit eligibility, and pay-equity gap analysis. |
-| Compensation Benchmarks | Imported market salary data for a job-level-geography combination, sourced from an external compensation-survey provider. Drives salary_bands maintenance. |
 
 ```mermaid
 flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
   classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
-  classDef consumer fill:#e8def8,stroke:#7b1fa2,color:#3a155d;
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
   job_offers["Offers"]
   candidates["Candidates"]
   job_applications["Applications"]
-  compensation_benchmarks["Compensation Benchmarks"]
-  salary_bands["Salary Bands"]
+  offer_versions["Offer Versions"]
+  offer_approvals["Offer Approvals"]
+  offer_letter_documents["Offer Letter Documents"]
+  offer_letter_templates["Offer Letter Templates"]
   users["Users"]
+  job_offers -->|"evolves_through"| offer_versions
+  job_offers -->|"gated_by (opt)"| offer_approvals
+  offer_versions -->|"renders_as"| offer_letter_documents
+  offer_letter_templates -->|"rendered_as (opt)"| offer_letter_documents
   candidates -->|"submits"| job_applications
   job_applications -->|"results in"| job_offers
+  candidates -->|"has owning recruiter (opt)"| users
+  users -->|"authored templates (opt)"| offer_letter_templates
+  users -->|"approved templates (opt)"| offer_letter_templates
   job_applications -->|"has owning recruiter"| users
   job_offers -->|"has approver"| users
   class job_offers master;
   class candidates embedded_master;
   class job_applications embedded_master;
-  class compensation_benchmarks consumer;
-  class salary_bands embedded_master;
+  class offer_versions master;
+  class offer_approvals master;
+  class offer_letter_documents master;
+  class offer_letter_templates master;
   class users platform_builtin;
-  style salary_bands stroke-dasharray:5 5;
 ```
 
 ## 3. Entities catalog
 
 | # | data_object | role | mastered in | label | necessity | pattern flags | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `job_offers` (Offers) | master | - | - | required | personal_content, single_approver | - |
-| 2 | `job_applications` (Applications) | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | personal_content | - |
-| 3 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | - |
-| 4 | `salary_bands` (Salary Bands) | embedded_master | `comp-benchmarking` | Benchmarking and Pay Equity | optional | - | - |
-| 5 | `compensation_benchmarks` (Compensation Benchmarks) | consumer | `comp-benchmarking` | Benchmarking and Pay Equity | required | - | - |
+| 1 | `offer_approvals` (Offer Approvals) | master | - | - | required | single_approver | - |
+| 2 | `offer_letter_documents` (Offer Letter Documents) | master | - | - | required | personal_content | - |
+| 3 | `offer_letter_templates` (Offer Letter Templates) | master | - | - | required | submit_lock, single_approver | - |
+| 4 | `offer_versions` (Offer Versions) | master | - | - | required | personal_content | - |
+| 5 | `job_offers` (Offers) | master | - | - | required | personal_content, single_approver | - |
+| 6 | `job_applications` (Applications) | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | personal_content | - |
+| 7 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -72,6 +87,10 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 | from | verb | to | cardinality | kind | necessity | owner_side | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| `job_offers` | evolves_through | `offer_versions` | one_to_many | composition | required | source | - |
+| `job_offers` | gated_by | `offer_approvals` | one_to_many | composition | optional | source | - |
+| `offer_versions` | renders_as | `offer_letter_documents` | one_to_one | composition | required | source | - |
+| `offer_letter_templates` | rendered_as | `offer_letter_documents` | one_to_many | reference | optional | source | - |
 | `candidates` | submits | `job_applications` | one_to_many | reference | required | target | - |
 | `job_applications` | results in | `job_offers` | one_to_many | reference | required | source | - |
 
@@ -79,15 +98,53 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 | from | verb | to | cardinality | necessity | owner_side | notes |
 | --- | --- | --- | --- | --- | --- | --- |
+| `candidates` | has owning recruiter | `users` | many_to_many | optional | source | - |
+| `users` | authored templates | `offer_letter_templates` | one_to_many | optional | source | - |
+| `users` | approved templates | `offer_letter_templates` | one_to_many | optional | source | - |
 | `job_applications` | has owning recruiter | `users` | many_to_many | required | source | - |
 | `job_offers` | has approver | `users` | many_to_many | required | source | - |
 
 ### 5.3 Cross-scope edges
 
+#### 5.3a Outbound from this scope's masters and contributors
+
+_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
+
 | from | verb | to | cardinality | necessity | notes |
 | --- | --- | --- | --- | --- | --- |
-| `salary_bands` | anchors | `hcm_positions` | one_to_many | optional | - |
-| `salary_bands` | bands | `job_profiles` | one_to_many | optional | - |
+| `offer_versions` | proposes | `equity_grants` | one_to_many | optional | - |
+| `job_offers` | is contingent on | `background_checks` | one_to_many | required | - |
+| `job_offers` | spawns | `onboarding_journeys` | one_to_one | required | - |
+| `job_offers` | triggers | `benefit_enrollments` | one_to_one | required | - |
+| `job_offers` | seeds | `compensation_statements` | one_to_one | required | - |
+| `job_offers` | spawns pre-employee record | `pre_employees` | one_to_one | required | - |
+
+#### 5.3b Context edges on embedded shells and consumed entities
+
+_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
+
+<details>
+<summary>29 context edges</summary>
+
+| from | verb | to | cardinality | necessity | notes |
+| --- | --- | --- | --- | --- | --- |
+| `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | - |
+| `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | required | - |
+| `candidates` | noted_via | `recruiter_interactions` | one_to_many | optional | - |
+| `candidates` | consents_via | `candidate_consents` | one_to_many | required | - |
+| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | required | - |
+| `candidates` | discloses_via | `fcra_disclosures` | one_to_many | required | - |
+| `job_applications` | transitions_via | `application_stage_transitions` | one_to_many | required | - |
+| `job_applications` | answers_via | `application_screening_answers` | one_to_many | optional | - |
+| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | optional | - |
+| `candidates` | submits_via | `data_subject_requests` | one_to_many | optional | - |
+| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | optional | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | - |
+| `job_applications` | disposed_via | `application_dispositions` | one_to_many | optional | - |
+| `job_applications` | logged_via | `applicant_flow_records` | one_to_one | required | - |
+| `candidates` | documented_via | `candidate_documents` | one_to_many | optional | - |
+| `candidates` | annotated_via | `candidate_notes` | one_to_many | optional | - |
+| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | - |
 | `skill_profiles` | feeds | `candidates` | one_to_many | optional | - |
 | `job_requisitions` | receives | `job_applications` | one_to_many | required | - |
 | `job_postings` | is applied to via | `job_applications` | one_to_many | required | - |
@@ -98,14 +155,10 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `talent_pools` | groups | `candidates` | many_to_many | required | - |
 | `job_applications` | schedules | `interviews` | one_to_many | required | - |
 | `job_applications` | requires | `candidate_assessments` | one_to_many | required | - |
-| `job_offers` | is contingent on | `background_checks` | one_to_many | required | - |
-| `job_offers` | spawns | `onboarding_journeys` | one_to_one | required | - |
-| `job_offers` | triggers | `benefit_enrollments` | one_to_one | required | - |
-| `job_offers` | seeds | `compensation_statements` | one_to_one | required | - |
 | `candidates` | becomes | `employees` | one_to_one | required | - |
-| `job_offers` | spawns pre-employee record | `pre_employees` | one_to_one | required | - |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | - |
-| `labor_market_benchmarks` | calibrates | `salary_bands` | many_to_many | optional | - |
+
+</details>
 
 ## 6. Cross-domain context
 
@@ -130,8 +183,6 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 | target module | source domain | source module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-OFFERS | COMP-MGMT | COMP-BENCHMARKING | `salary_band.updated` | `salary_bands` | event_stream | low | Updated bands flow to ATS offer-generation. |
-| ATS-OFFERS | COMP-MGMT | COMP-BENCHMARKING | `compensation_benchmark.refreshed` | `compensation_benchmarks` | batch_sync | low | Updated benchmarks inform offer-range guardrails for recruiters and hiring managers. |
 | ATS-OFFERS | ATS | ATS-RECRUITMENT-PIPELINE | `job_application.advanced` | `job_offers` | lifecycle_progression | low | - |
 | ATS-OFFERS | ATS | ATS-BACKGROUND-CHECKS | `background_check.flagged` | `job_offers` | lifecycle_progression | medium | - |
 
@@ -141,8 +192,6 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | --- | --- | --- | --- | --- |
 | `candidates` | embedded_master | required | ATS-CANDIDATE-CRM (ATS) | - |
 | `job_applications` | embedded_master | required | ATS-RECRUITMENT-PIPELINE (ATS) | - |
-| `salary_bands` | embedded_master | optional | COMP-BENCHMARKING (COMP-MGMT) | - |
-| `compensation_benchmarks` | consumer | required | COMP-BENCHMARKING (COMP-MGMT) | - |
 
 ## 7. Lifecycle states (per touched entity)
 
@@ -184,6 +233,45 @@ _This scope holds `job_applications` as **embedded_master**; the canonical state
 | 6 | `declined` | - | ✓ | - | - | Candidate declined the offer. |
 | 7 | `rescinded` | - | ✓ | ✓ | `ats-offers:rescind_offer` | Offer withdrawn by the employer after being sent; gated action. |
 
+### `offer_approvals` (Offer Approval)
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `pending` | ✓ | - | - | - | Approval step awaiting decision. |
+| 2 | `approved` | - | ✓ | ✓ | `ats-offers:approved_offer_approval` | Step approved; offer can advance. |
+| 3 | `rejected` | - | ✓ | ✓ | `ats-offers:rejected_offer_approval` | Step rejected; offer blocked or requires revision. |
+| 4 | `escalated` | - | - | - | - | Step escalated to a higher approver. |
+
+### `offer_letter_documents` (Offer Letter Document)
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `drafted` | ✓ | - | - | - | Letter rendered from template; not yet sent. |
+| 2 | `sent` | - | - | - | - | Letter delivered to candidate via e-sign provider. |
+| 3 | `signed` | - | ✓ | - | - | Candidate signed; offer accepted. |
+| 4 | `voided` | - | ✓ | - | - | Letter voided before signature. |
+
+### `offer_letter_templates` (Offer Letter Template)
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 10 | `draft` | ✓ | - | - | - | Template is being authored; not visible for offer generation. |
+| 20 | `in_review` | - | - | ✓ | `ats-offers:submit_offer_letter_template_for_review` | Author has submitted the template for legal or HR-Comp review. |
+| 30 | `approved` | - | - | ✓ | `ats-offers:approve_offer_letter_template` | Single approver (legal or HR-Comp) has signed off; ready for activation. |
+| 40 | `active` | - | - | ✓ | `ats-offers:activate_offer_letter_template` | Template is live and available for new offers to render against. |
+| 50 | `superseded` | - | - | - | - | A newer version of this template has been activated; this row is retained for historical offers. |
+| 60 | `retired` | - | ✓ | ✓ | `ats-offers:retire_offer_letter_template` | Template withdrawn from use; no new offers may render against it. |
+
+### `offer_versions` (Offer Version)
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | - | - | Version being authored; not yet presented. |
+| 2 | `presented` | - | - | - | - | Version sent to candidate. |
+| 3 | `countered` | - | - | - | - | Candidate countered; this version superseded by a newer one. |
+| 4 | `accepted` | - | ✓ | - | - | Version accepted by candidate. |
+| 5 | `withdrawn` | - | ✓ | - | - | Version pulled before acceptance. |
+
 ## 8. Permissions and business rules (derived)
 
 ### 8.1 Permissions
@@ -195,8 +283,19 @@ _This scope holds `job_applications` as **embedded_master**; the canonical state
 | `ats-offers:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
 | `ats-offers:approve_offer` | workflow-gate (lifecycle) | Transition `job_offers` into state `approved` | ✓ |
 | `ats-offers:rescind_offer` | workflow-gate (lifecycle) | Transition `job_offers` into state `rescinded` | ✓ |
+| `ats-offers:approved_offer_approval` | workflow-gate (lifecycle) | Transition `offer_approvals` into state `approved` | ✓ |
+| `ats-offers:rejected_offer_approval` | workflow-gate (lifecycle) | Transition `offer_approvals` into state `rejected` | ✓ |
+| `ats-offers:submit_offer_letter_template_for_review` | workflow-gate (lifecycle) | Transition `offer_letter_templates` into state `in_review` | ✓ |
+| `ats-offers:approve_offer_letter_template` | workflow-gate (lifecycle) | Transition `offer_letter_templates` into state `approved` | ✓ |
+| `ats-offers:activate_offer_letter_template` | workflow-gate (lifecycle) | Transition `offer_letter_templates` into state `active` | ✓ |
+| `ats-offers:retire_offer_letter_template` | workflow-gate (lifecycle) | Transition `offer_letter_templates` into state `retired` | ✓ |
 | `ats-offers:view_all_offers` | override (personal_content) | View all `job_offers` rows beyond row-scope | ✓ |
 | `ats-offers:manage_all_offers` | override (personal_content) | Manage all `job_offers` rows beyond row-scope | ✓ |
+| `ats-offers:view_all_offer_versions` | override (personal_content) | View all `offer_versions` rows beyond row-scope | ✓ |
+| `ats-offers:manage_all_offer_versions` | override (personal_content) | Manage all `offer_versions` rows beyond row-scope | ✓ |
+| `ats-offers:view_all_offer_letter_documents` | override (personal_content) | View all `offer_letter_documents` rows beyond row-scope | ✓ |
+| `ats-offers:manage_all_offer_letter_documents` | override (personal_content) | Manage all `offer_letter_documents` rows beyond row-scope | ✓ |
+| `ats-offers:submit_offer_letter_template` | override (submit_lock) | Submit and lock a `offer_letter_templates` row (post-submit edits gated) | ✓ |
 
 ### 8.2 Business rules
 
@@ -204,3 +303,8 @@ _This scope holds `job_applications` as **embedded_master**; the canonical state
 | --- | --- | --- | --- |
 | `offer_edit_scope` | `job_offers` | has_personal_content | Row-scope by default; override via `ats-offers:view_all_offers` / `ats-offers:manage_all_offers` |
 | `approve_offer_requires_approver` | `job_offers` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`ats-offers:approve_offer` if surfaced as a lifecycle workflow gate). |
+| `offer_version_edit_scope` | `offer_versions` | has_personal_content | Row-scope by default; override via `ats-offers:view_all_offer_versions` / `ats-offers:manage_all_offer_versions` |
+| `approve_offer_approval_requires_approver` | `offer_approvals` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`ats-offers:approve_offer_approval` if surfaced as a lifecycle workflow gate). |
+| `offer_letter_document_edit_scope` | `offer_letter_documents` | has_personal_content | Row-scope by default; override via `ats-offers:view_all_offer_letter_documents` / `ats-offers:manage_all_offer_letter_documents` |
+| `submit_restricted_to_offer_letter_template_owner` | `offer_letter_templates` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `ats-offers:manage_all_offer_letter_templates` |
+| `approve_offer_letter_template_requires_approver` | `offer_letter_templates` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`ats-offers:approve_offer_letter_template` if surfaced as a lifecycle workflow gate). |

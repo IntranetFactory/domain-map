@@ -406,3 +406,50 @@ UI:
 - <https://tests.semantius.app/domain_map/skills>
 
 **Next: queued IGA validate run** (per Bucket 2 #4 decision). To be initiated as a separate Validate invocation.
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+No loader run; this pass is a no-op verification.
+
+### Procedure followed
+
+Re-scanned the SMP footprint against the apply rubric (enum backfills, B10b FK PATCHes, `domain_regulations` inserts, stale-row DELETEs, naming renames, user-edge `data_object_relationships`, `permission_verb_override` PATCHes, `handoff_processes` inserts, `notes=''` reverts). Cross-checked each candidate against the audit's already-applied fix log (2026-05-28 split, 2026-05-28 Bucket 1, 2026-05-28 Bucket 2, 2026-05-29 4-module restructure).
+
+### Live-state verification (each rubric category)
+
+| Category | Live state | Decision |
+|---|---|---|
+| Enum backfills (`event_category`, `integration_pattern`, `friction_level`, DMDO `role`/`necessity`) | All SMP-anchored `trigger_events` and `handoffs` carry valid enum values; no NULL or out-of-vocabulary rows | No fix needed |
+| B10b FK PATCHes (handoff `source_domain_module_id` / `target_domain_module_id` derivable from SMP-mastered payload) | All 13 SMP-side handoffs have their SMP-side module FK populated (verified via `/handoffs?or=(source_domain_id.eq.85,target_domain_id.eq.85)`). Partner-side NULLs on handoffs 38/39/42/45/47/641/643/174 are report-only on the non-SMP side (S2P/EXPENSE/DISCOVERY/FINOPS/SPEND-MGMT have not modularized) | No fix needed; report-only follow-ups already documented |
+| `domain_regulations` inserts | GDPR (id=1, conditional) + SOC 2 (id=15, recommended) present per 2026-05-28 Bucket 2 fix | No fix needed |
+| Stale-row DELETEs (audit names IDs) | TE 8 + handoff 43 + DMDO 747 already deleted per 2026-05-28 split. TE 127 still mis-pointed but explicitly deferred (gated on DISCOVERY publishing `sso_logins`) | No new deletes |
+| Naming renames (PATCH) | Modules / permissions / skills / tools / TE prefixes all renamed in the 2026-05-29 restructure. `role_modules.role_module_label` carries stale `SMP-DISCOVERY-OPT` / `SMP-RENEWAL` substrings on 4 rows (ids 356, 357, 358, 360, 361) but the field is not exposed in the `/fields` catalog, indicating trigger-computed display label; not safe to PATCH from the loader surface | No fix |
+| User-edge `data_object_relationships` (Rule #10) | 5 edges exist for the 5 original SMP masters (rels 906-910, all via users id=748). 3 of the 16 new entities (984/992/999) have user-edges; the other 13 do not. Audit does not pre-specify tuples for the missing edges | DEFER (audit does not pre-specify per-row verbs/cardinalities) |
+| `permission_verb_override` PATCHes | All 47 SMP-master lifecycle states have `permission_verb_override` set where `requires_permission=true` (verified via `/data_object_lifecycle_states?data_object_id=in.(...)`) | No fix needed |
+| `handoff_processes` inserts | Audit does not pre-specify any `handoff_id` + PCF tuples for SMP | No fix; gated on Discover Phase D pass for SMP |
+| `notes=''` reverts | All 8 audit-named rows already empty-string per 2026-05-28 Bucket 2 fix. New entities 984-999 + their 30 aliases + their 5 SMP-module DMDO rows all carry `notes=''` | No fix needed |
+
+### Deferred (per task rules)
+
+- Capability ↔ module realizations (M4): 7 `domain_module_capabilities` rows still anchor on module 30 only; redistributing across modules 184/185 is a judgment call about which cap is realized where (e.g. `SMP-USAGE-ANALYTICS` could plausibly stay on DISCOVERY for raw collection, OR move to OPTIMIZATION for analysis). User picks.
+- `smp_license_seat_assignment.provisioned → IGA` new handoff candidate (B1-B1): gated on IGA validate run direction.
+- SMP↔IGA new handoffs from `smp_app_requests.it_approved` and `smp_reclamation_actions.reclaimed`: cross-domain, gated on IGA validate.
+- SMP↔ITSM `smp_alert.raised → incident_creation` handoff: not pre-specified.
+- TE 127 `sso_login.unsanctioned_app` data_object_id re-point: gated on DISCOVERY domain authoring `sso_logins`.
+- Skill 135 description references "Discovery and Optimization" combined post-restructure: editorial rewrite (Rule #20 class), user picks wording.
+- `catalog_tagline` / `catalog_description` on SMP (currently empty strings): Rule #20, defer.
+- Pattern-flag flips on new entities (`smp_reclamation_actions.has_personal_content` per audit text but `false` in DB): not in apply list.
+- User-edges (Rule #10) for entities 985/986/987/988/989/990/991/993/994/995/996/997/998: audit does not pre-specify verb/cardinality tuples per row.
+- Procurement role_modules row for SMP-AUTOMATION (185) absent: judgment call on persona scope, not derivable.
+
+### JWT errors
+
+None. CLI calls completed cleanly throughout the scan.
+
+### Loader path
+
+None. No `.tmp_deploy/fix_smp_b1_technical_2026_05_31.ts` was created because no rubric-eligible residual was found that the audit pre-specifies.
+
+### Result
+
+Zero PATCH/INSERT/DELETE operations applied. The SMP B1 residual surface is fully consumed by previously-applied fixes; remaining open items are all deferred per the task rubric.

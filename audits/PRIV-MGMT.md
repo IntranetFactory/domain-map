@@ -134,3 +134,26 @@ These items are routed to other domains' audits; not loaded from PRIV-MGMT's pas
 - **DLP B10b on handoff 283.** The source side's `source_domain_module_id` is also NULL, but that's a DLP-side B10b finding (DLP also has zero modules, per DLP's audit). Routes to DLP.
 - **CPRA / additional privacy regulations are catalog-wide, not PRIV-MGMT-specific.** The CPRA row exists; the unlinked-to-PRIV-MGMT case is fixable here (B1-S6). PIPEDA / LGPD / PIPL / HIPAA require new `regulations` rows; routes to a catalog-wide regulation-load conversation.
 - **CMP (Consent Management Platform) candidate.** Queued via `append_missing_domain.ts`; routes to the missing-domain triage queue, not this audit.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the truly-technical (audit pre-specified, no judgment) subset of the 2026-05-30 Bucket 1. Loader: `.tmp_deploy/fix_priv_mgmt_b1_technical_2026_05_31.ts`, run from project root.
+
+**Applied:**
+
+- **B1-S6 (domain_regulations CPRA link).** INSERT `domain_regulations(domain_id=20, regulation_id=3, applicability='mandatory')`. Audit pre-specified the exact tuple; CPRA row (id 3) verified pre-flight. New row id 257.
+- **B1-S13 (APQC tag for handoff 283).** INSERT `handoff_processes(handoff_id=283, process_id=270, proposal_source='agent_curated', role='implements')`. Verified PCF 20735 ("Develop and manage IT security, privacy, and data protection") resolves to `processes.id=270`, `hierarchy_level=3`. New row id 492, `record_status='new'` per Rule #1. Handoff 288 deferred (B2-5 explicitly flags it as a user judgment call pending DSPM B9 attribution fix).
+
+**Deferred (with reasons):**
+
+- **B1-S1 (modules), B1-S8, B1-S9, B1-S10, B1-S11, B1-S12.** All gated on B2-1 re-homing decision; the agent cannot choose which masters re-home to PRIV-MGMT without user direction.
+- **B1-S2 (capabilities).** Gated on B2-1 (which masters land drives which capabilities are realized) and on cross-cutting capability judgment (PRIV-CONSENT-LEDGER / PRIV-CONSENT-PROOF span requires Phase 0 vendor evidence the agent cannot run unilaterally).
+- **B1-S3 (catalog_tagline / catalog_description).** Rule #20 forbids agent auto-writes; user must supply or approve exact text.
+- **B1-S4 (DataGrail / Transcend solutions).** Vendor name additions outside the technical-fix policy; requires Phase 0 vetting per Rule #18 boundary.
+- **B1-S5.** No action required by the original audit.
+- **B1-S7 (B10b PATCH on handoffs 283, 288).** Gated on B1-S1: no PRIV-MGMT modules exist to PATCH `target_domain_module_id` onto; cannot derive from existing modules because none exist for this domain.
+- **B1-S13 row 2 (handoff 288).** Deferred per B2-5 (user judgment on whether to load before DSPM-side B9 attribution fix).
+
+**Deferred count:** 11 of 13 Bucket 1 items deferred; 2 applied.
+
+**JWT errors:** none.

@@ -236,3 +236,58 @@ _(empty until reviewed)_
 ### Fixes applied
 
 _(empty until reviewed)_
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+### Scope
+
+Residual-pass focused on truly-technical B1 items only. The Fixes-applied table on the original audit run was empty (`_(empty until reviewed)_`), so every Bucket 1 item is residual by definition. Classification below per the orchestrator's TECHNICAL vs DEFER matrix.
+
+### Live-state verification before fixes
+
+- `trigger_events` 749 / 750 / 751 / 752 / 753: confirmed `event_category=''` on all five (Rule #13 enum gap).
+- `domains` row 87 `business_logic`: confirmed em-dash (U+2014) still present.
+- `domains` row 87 `description`: confirmed em-dash NOT present (audit's re-scan note holds).
+
+### Fixes applied (technical)
+
+| Audit ID | Action | Rows touched | Mechanism |
+|---|---|---|---|
+| B1-S3 | PATCH `trigger_events.event_category` per audit-pre-specified mapping (749 / 750 → `state_change`; 751 → `lifecycle`; 752 → `state_change`; 753 → `lifecycle`). | 5 | Loader `c:/dev/domain-map/.tmp_deploy/fix_mdm_b1_technical_2026_05_31.ts`. Post-flight verified all 5 rows now carry the expected category. |
+
+Loader behavior: idempotent (skips already-populated rows), fails loudly on id-vs-name mismatch or unexpected pre-existing value, runs from project-root cwd per Rule #6.
+
+### Deferred (per orchestrator residual-pass rules)
+
+| Audit ID | Reason for deferral |
+|---|---|
+| B1-S1 | New `domain_modules` rows; explicitly gated on B2-S2 user split choice ("user picks"). DEFER per orchestrator "new entities/DMDOs/modules" + "gated on B2-X". |
+| B1-S2 | M7 multi-master reconciliation; explicitly gated on B2-S1 architectural path choice (a/b/c). DEFER per "user picks" + "decide". |
+| B1-S4 | B10b own outbound `source_domain_module_id` PATCH; transitively gated on B1-S1 (no MDM module exists to attribute the 11 outbound handoffs to). Not derivable from existing modules. DEFER per "gated on B2-X" via B1-S1 → B2-S2. |
+| B1-S5 | B10b report-only inbound, owed by DATA-AI-PLAT and CDP audits. Out-of-scope (other domain). |
+| B1-S6 | B10b report-only outbound target_module, owed by KGP / SUP-LIFE / CSM / CDP / HCM / DCG / SUB-MGMT audits. Out-of-scope (other domain). |
+| B1-S7 | `data_object_relationships` user-edges (Rule #10). Audit estimates "~12 to 18 missing relationships" but does NOT pre-specify exact (data_object_id, related_id, relationship_type) tuples; the steward/approver/author role model is gated on B2-S6. DEFER per orchestrator "Rule #10 audit pre-specifies" criterion (not met) + B2-S6 gating. |
+| B1-S8 | INSERT 9 new `trigger_events` for missing workflow-gate states; gated on B1-S1 (modules) and B2-S5 (lifecycle state names). DEFER per "new entities" + "gated on B2-X". |
+| B1-S9 | PATCH `domains.business_logic` em-dash. Audit's wording proposal is explicitly gated on B2-S3 user approval ("Rule #15 wording boundary; user owns the exact text"). DEFER per "user picks" / "surface to user". (Note: catalog_tagline / description column writes are also Rule #20 deferred per orchestrator.) |
+| B1-S10 | F-band system skill + skill_tools; gated on B1-S1. DEFER. |
+| B1-S11 | E-band roles + role_modules + permissions; gated on B1-S1 and B2-S6. DEFER. |
+| B1-H1 | `handoff_processes` APQC tagging. Per orchestrator: "INSERT `handoff_processes` ONLY when audit pre-specifies `handoff_id` + resolvable PCF (verify before insert)." The audit explicitly states "PCF ids require lookup at fix time per the standard procedure" and gives only candidate PCF names with confidence labels, not resolved PCF row ids. Of 13 candidates, 9 are confident/medium but unresolved, 4 are explicitly "defer to Discover Pass 3". DEFER all 13 per orchestrator criterion (resolvable PCF row ids not pre-specified). |
+
+Deferred count: **11 of 11 residual B1 items**. Only B1-S3 was both technical and self-contained.
+
+### Other categories per orchestrator checklist (none applied)
+
+- **DELETE stale rows:** none. Audit does not name row IDs flagged for deletion (the legacy `domain_data_objects` deletes under B1-S2 are gated on B2-S1).
+- **PATCH naming renames:** none specified in audit.
+- **PATCH `permission_verb_override`:** none specified.
+- **PATCH `notes=''` reverts:** none specified (audit-history scan surfaced no `notes`-pollution row IDs to revert).
+- **INSERT `domain_regulations`:** B2-S7 surfaces GDPR / CCPA / KYC-AML / DCAM as candidates but gates on user approval ("approve set, subset, or defer"). DEFER per "user picks".
+
+### JWT errors
+
+None encountered.
+
+### Loader
+
+`c:/dev/domain-map/.tmp_deploy/fix_mdm_b1_technical_2026_05_31.ts`
+

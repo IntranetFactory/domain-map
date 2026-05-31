@@ -310,3 +310,52 @@ _(Pending user review.)_
 ### Fixes applied
 
 _(None yet; this is the audit pass only.)_
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+### Scope
+
+Residual-pass continuation. Applies only the truly-technical residual B1 items from the 2026-05-30 audit that do not require user judgment, do not depend on the deferred modularization decision (Bucket 2 #1), and were pre-specified in the audit. Loader: [.tmp_deploy/fix_ins_claims_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_ins_claims_b1_technical_2026_05_31.ts). Idempotent (verified by re-run).
+
+### Fixes applied
+
+| ID | Band | Action | Result |
+|---|---|---|---|
+| B1-A1 | A1 | PATCH `/domains?id=eq.44` `business_logic`: strip U+2014 em-dash, replace with colon per the audit's proposed text. | 1 row updated. New text: `"Adjudication rules engine, fraud detection, and reserve calculations: the irreducible insurance kernel; FNOL and case workflow are declarative."` |
+| B1-B6 | B6 | INSERT 9 intra-domain `data_object_relationships` rows per Pass 1.B6 list. | Inserted row ids 1706 to 1714: `624 covered_by 625`, `624 subject_of 626`, `626 reported_as 623`, `623 assigned_to 627`, `623 resolved_by 628`, `628 disbursed_via 629`, `623 investigated_by 632`, `623 pursues 631`, `623 recovers_via 630`. `notes=''` per Rule #15, `record_status` omitted per Rule #1 (defaults to `new`). |
+| B1-B7 | B7 (Rule #10) | INSERT 9 user-edge `data_object_relationships` rows per Pass 1.B7 list. | Inserted row ids 1715 to 1723: `748 owns_claims 623`, `748 services_policies 624`, `748 reports_loss_incidents 626`, `748 handles_adjuster_assignments 627`, `748 approves_settlements 628`, `748 issues_claim_payments 629`, `748 manages_salvage_recoveries 630`, `748 manages_subrogation_cases 631`, `748 investigates_siu_cases 632`. For `insurance_claims` (id 623) the audit named "claim_owner / submitter"; took the first (`claim_owner`) as the loaded verb. |
+| B1-B8 | B8 | INSERT 2 outbound cross-domain `notifies customer_cases` mirrors per Pass 1.B8 list. | Inserted row ids 1724 (`623 notifies 103`) and 1725 (`624 notifies 103`). `target_data_object_id=103` is the CSM `customer_cases` master (mastered by CSM-CASE-MGMT, id 112). |
+
+### Deferred (this pass)
+
+| ID | Band | Defer reason |
+|---|---|---|
+| B1-A2 | A2 | New entities (8 capabilities + 8 capability_domains). Defer per residual-pass rule "new entities". |
+| B1-A3 | A3 | New entities (4 solutions + 4 solution_domains). Defer per residual-pass rule "new entities". |
+| B1-A4 | A4 | `catalog_tagline` and `catalog_description` are Rule #20 user-decided copy. Defer. |
+| B1-M1 | M1 | New modules (4 to 5 `domain_modules`). Gated on Bucket 2 #1 (4-vs-5 module split, user picks). Defer per residual-pass rule "new modules" and "user picks". |
+| B1-B4 | B4 | Pattern flag flips. Defer per residual-pass rule "pattern flag flips" (also cross-cut by Bucket 2 #6 lifecycle exemption decision). |
+| B1-B10 | B10 | New `domain_module_data_objects` row, gated on B1-M1. Defer. |
+| B1-B10b | B10b | Source-side PATCH gated on B1-M1; target-side ERP-FIN / GRC / TELEMATICS gated on those domains modularizing. No FKs derivable from existing modules (CSM target side blocked on CSM declaring consumer DMDOs, per the report-only follow-up). Defer. |
+| B1-B11 | B11 | Bulk `data_object_aliases` inserts (about 30 rows). Audit pre-specifies categories per master but does not pre-specify exact `(data_object_id, alias_name)` tuples with the granularity the residual-pass rule requires. Defer. |
+| B1-B12 | B12 | Lifecycle states. Gated on B1-M1 (every lifecycle row needs a `domain_module_id` for permission materialization per Rule #14) plus Bucket 2 #6 (which 4 masters are config-shaped vs workflow-bearing). Defer. |
+| B1-F1 | F1 | Module-level system skill authoring, gated on B1-M1. Defer. |
+| B1-F7 | F7 | The audit explicitly allows folding the `send_email` -> `notify_person` rewire into the F1 retirement load. Defer with F1. |
+| H1 (6 rows) | H1 | `handoff_processes` agent-curated inserts. Audit pre-specifies handoff_id + PCF process_id tuples, but Bucket 2 #5 explicitly gates the entire APQC strategy on user choice (a/b/c). Defer per residual-pass rule "user picks". |
+| H1 (2 rows) | H1 | Discover-Pass-3 deferred rows. No PCF match. Defer. |
+
+### Residual state
+
+- 4 of 14 Bucket 1 STRUCTURAL items applied this pass (A1, B6, B7, B8). 10 remain deferred, all gated on Bucket 2 decisions or new-entity defer rules.
+- The two existing `customer_cases` opens-edges (ids 464, 465) remain unchanged; the new `notifies` edges (1724, 1725) sit alongside them.
+- No relationships were authored cross-domain into ERP-FIN, GRC, or TELEMATICS targets. Those remain blocked on the respective domain modularization (tracked under the "Report-only follow-ups" section above).
+- Frontmatter (`status: feedback_needed`, `open_questions: 34`) intentionally unchanged: the residual pass closes only technical low-judgment fixes, not the open Bucket 2 decisions.
+
+### Idempotency
+
+Loader re-run is no-op: read-then-insert pattern keyed on `(data_object_id, related_data_object_id, relationship_verb)` for relationships and on em-dash presence for A1. Safe to re-invoke.
+
+### JWT errors
+
+None.
+

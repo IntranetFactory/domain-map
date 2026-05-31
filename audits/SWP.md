@@ -263,3 +263,50 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 | ATS | Confirm `source_domain_module_id` set on 12, 400 (4 on both) , populated. Clean. |
 | COMP-MGMT | Confirm `source_domain_module_id` set on 1138 (80) , populated. Clean. |
 | SKILLS-MGMT | Confirm consumer DMDO declared on `skills_gap_analyses` 26 in SKILLS-MGMT module 174 (target of handoff 456). Not visible from SWP's pass. |
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Loader: `.tmp_deploy/fix_swp_b1_technical_2026_05_31.ts` (run from project root).
+
+### Applied (technical-only subset of Bucket 1)
+
+- **B1-S1 (partial):** PATCHed `event_category='state_change'` on 4 of 5 trigger_events: 384 `position_demand_forecast.updated`, 385 `skills_gap_analysis.completed`, 386 `workforce_scenario.approved`, 387 `org_design.published`. Row 388 `labor_market_benchmark.refreshed` DEFERRED (gated on B2-S2 state_change vs threshold convention).
+- **B1-S5 (Rule #15 notes-pollution revert):** PATCHed `notes=''` on 30 rows the audit pre-specifies with row IDs:
+  - `domain_data_objects` 31, 53, 57, 59, 906, 907, 908, 909, 910, 911, 912 (11 rows).
+  - `data_objects` 25, 29 (2 rows; Rule #12 config-shape license is RESCINDED so these are categorical reverts).
+  - `data_object_aliases` 513, 514, 515, 516, 517, 518 (6 rows on masters 25/26/29/30).
+  - `handoffs` 13, 452 (2 rows).
+  - `solution_domains` 515, 516, 517, 518, 519, 520, 521, 522, 523 (9 rows).
+  - Live verification reduced the audit's 34-row target to 30: `skill_tools` id 15 not present in the catalog; ids 33, 57, 142 had already-empty notes. F7 surface is therefore clean today; the audit pollution count for skill_tools should be recorded as 0, not 4.
+- **B1-S7 (partial):** PATCHed `proposal_source='agent_curated'` on 3 existing `handoff_processes` rows where the live PCF link already matches the audit's recommendation:
+  - id 48: handoff 12, process 219 (Manage employee requisitions).
+  - id 49: handoff 400, process 219 (same).
+  - id 115: handoff 27, process 1324 (Prepare periodic financial forecasts).
+
+### Deferred (not in the technical-fix scope)
+
+- **B1-S1 row 388** (gated on B2-S2 convention question).
+- **B1-S2 (F1 + F2 fix):** new skills, skill_tools relocations, and a legacy-skill DELETE are out-of-scope for a technical-only pass; gated on user (introduces new entities).
+- **B1-S3, B1-S4:** report-only NULLs owed by EPM, WFM, SPM, and downstream consumer DMDOs owed by EPM and SKILLS-MGMT. Not SWP's fix.
+- **B1-S6 pattern-flag flips** on `workforce_scenarios`, `org_designs`, `workforce_cost_projections`, `skills_gap_analyses` (gated on B2-S3).
+- **B1-S7 remaining 21 H1 rows** (18 INSERT + 2 REPLACE-CORRECTION on handoffs 13 and 242 + 1 REPLACE-CONFIRMATION on handoff 241). Reason: the audit's pre-specified APQC external_ids do not resolve to the named processes in the live `/processes` catalog. Verified resolutions:
+  - 10532 -> "Deliver employee communications" (NOT "Manage workforce planning"). Live catalog has `Perform strategic workforce planning` at external 21693 (id 980, L4) and `Develop and implement workforce planning, policies, and strategies` at external 17045 (id 216, L3); audit names neither.
+  - 10519, 10539, 10545, 10544 -> not found in catalog.
+  - 10742 -> "Process customer credit" (NOT a workforce / management-accounting PCF).
+  - 10511 -> "Review compensation plan" L4 (NOT L3 "Develop and manage rewards").
+  - 10018 -> "Survey market and determine customer needs and wants" (NOT "Develop and review business strategy").
+  - 10773 -> L4 "Prepare periodic financial forecasts" (already linked to handoff 27, used in the S-7 confirmation).
+  Per the technical-fix rule "INSERT/PATCH handoff_processes only when audit pre-specifies handoff_id + resolvable PCF (verify before insert)", all 21 are deferred. Re-tagging requires either a fresh PCF lookup pass per handoff or user re-specification with correct external_ids.
+- **B1-S8 Signal-1 attribution** on event 62 (gated on B2-S4).
+
+### Verification (post-run)
+
+- `/trigger_events?id=in.(384,385,386,387)&event_category=eq.state_change` returns 4 rows; 388 still `event_category=''`.
+- Per-table `notes=neq.` queries on the 5 revert blocks return 0 rows.
+- `/handoff_processes?id=in.(48,49,115)&proposal_source=eq.agent_curated` returns 3 rows.
+
+UI spot-check entry points:
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/handoff_processes
+- https://tests.semantius.app/domain_map/domain_data_objects
+- https://tests.semantius.app/domain_map/solution_domains

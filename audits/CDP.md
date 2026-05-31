@@ -247,3 +247,54 @@ bun run "C:/dev/domain-map/scripts/analytics/append_missing_domain.ts" \
 ### Decisions
 
 (awaiting user input per the Per-bucket prompts)
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent run scoped to truly-technical B1 items only (per orchestrator). Loader at [.tmp_deploy/fix_cdp_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_cdp_b1_technical_2026_05_31.ts).
+
+### Fixes applied
+
+| ID | Action | Table | Rows | Detail |
+|---|---|---|---|---|
+| B1-S2 | PATCH | `trigger_events` | 3 | 470 `identity_graph.updated` `'' -> 'state_change'`; 472 `customer_journey.stage_entered` `'' -> 'state_change'`; 473 `customer_journey.exited` `'' -> 'lifecycle'`. B9 trigger_event gap cleared. |
+
+### No-ops on pre-flight (drift vs original audit)
+
+| ID | Item | Live state | Action |
+|---|---|---|---|
+| B1-S2 / 471 | `customer_attributes.refreshed.event_category` | `'signal'` (NOT empty as the 2026-05-30 audit reported) | Skipped; audit drift. The live `'signal'` value is plausible (computed-attribute refresh is observational rather than a state machine transition); not patched without user direction. |
+| B1-S6 | CDP `domain_regulations` | 4 rows already present: GDPR (id=1), CCPA/CPRA (id=3), EU-AI-ACT (id=33), COPPA (id=55) | Verified read-only; no inserts. Original audit reported "zero rows loaded" which was stale. |
+
+### Deferred (NOT applied), with reason
+
+| ID | Reason category | Why deferred |
+|---|---|---|
+| B1-S1 | Judgment (huge multi-phase load) | 6-module Phase A/M/B/E/F/S re-do is gated on B2-S1 (modularization shape) and B2-S5 (`customers` master ownership). Not in truly-technical scope. |
+| B1-S3 | Blocked on B1-S1 | All 22 CDP-side B10b FKs require modules to point at. |
+| B1-S4 | Owed by other domains | MA, B2C-COMM, CSM, SMM, MDM, DXP audits own these `source_domain_module_id` backfills. |
+| B1-S5 | Judgment + blocked on B1-S1 | Lifecycle state authoring on 5 masters depends on B2-S3 split decision and on modules existing for `domain_module_id` attribution. |
+| B1-S6 (LGPD, IAB TCF v2, Quebec Law 25, POPIA) | Judgment (new `regulations` rows) | All 4 missing from the `regulations` table. Creating new master-regulation rows is its own judgment call, deferred. |
+| B1-S7 | Routed to B2-S2 | Pattern flag flips on `customer_events`, `identity_graphs`, `customer_journeys` are Rule #15 boundary on data_objects metadata; user owns. |
+| B1-S8 | Judgment (DELETE+INSERT or medium-confidence) | The 3 REPLACE rows require DELETE+INSERT against rows the analyst flagged as "wrong" (judgment per orchestrator). The 19 INSERT rows mix `confident L3` and `medium`; without per-row PCF id resolution and confidence acceptance, treating any as truly-technical would smuggle judgment past the screen. |
+
+### Verification
+
+```
+GET /trigger_events?id=in.(470,471,472,473)&select=id,event_name,event_category
+```
+
+| id | event_name | event_category |
+|---|---|---|
+| 470 | identity_graph.updated | state_change |
+| 471 | customer_attributes.refreshed | signal |
+| 472 | customer_journey.stage_entered | state_change |
+| 473 | customer_journey.exited | lifecycle |
+
+All four trigger_events now carry a non-empty enum value; B9 partial-fail is cleared.
+
+CDP domain_regulations re-read confirms 4 existing rows (regulation_ids 1, 3, 33, 55).
+
+### UI spot-check links
+
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/domain_regulations

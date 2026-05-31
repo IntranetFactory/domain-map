@@ -161,3 +161,49 @@ The following candidate markets were surfaced during the semantic pass and queue
 - **DATA-OBSERVABILITY** (bumped from mention_count 1 to 2): Monte Carlo, Bigeye, Sifflet, Acceldata, Lightup, Metaplane, Anomalo. Data observability monitors freshness / volume / schema / anomaly on the underlying data; the metrics layer is its primary consumer (anomalies on a metric trigger consumer warnings). Distinct from APQC OBS (which is APM-style application observability). Adjacent but distinct market.
 
 Candidates queued: **2**.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied via [.tmp_deploy/fix_metrics_layer_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_metrics_layer_b1_technical_2026_05_31.ts). Scope limited to TECHNICAL-clause items (enum backfills, Rule #10 user-edge inserts).
+
+### Applied (14 writes)
+
+**B1-S7 (6 PATCHes on `trigger_events.event_category`):**
+
+| id | event_name | event_category (new) |
+| --- | --- | --- |
+| 714 | dimensional_model.published | state_change |
+| 715 | dimensional_model.deprecated | state_change |
+| 716 | metric_materialization.refreshed | state_change |
+| 717 | metric_materialization.refresh_failed | signal |
+| 718 | query_lineage.captured | signal |
+| 719 | metric_access_policy.changed | state_change |
+
+**B1-S4 (8 INSERTs into `data_object_relationships`, Rule #10 shape: many_to_many / reference / is_required=false / owner_side=target, source=users id 748):**
+
+| new id | edge |
+| --- | --- |
+| 1587 | users authors metric_definitions (252) |
+| 1588 | users certifies metric_definitions (252) |
+| 1589 | users authors dimensional_models (253) |
+| 1590 | users owns metric_materializations (709) |
+| 1591 | users authors metric_materializations (709) |
+| 1592 | users authors metric_access_policies (711) |
+| 1593 | users approves metric_access_policies (711) |
+| 1594 | users initiated query_lineage_records (710) |
+
+### Deferred
+
+- **B1-S1, B1-S2, B1-S10**: new modules / lifecycle states / module-anchored skills + tools. New entities; gated on B2-1 (module split decision).
+- **B1-S3**: pattern flag flips (explicit defer per task rules).
+- **B1-S5**: intra-domain `data_object_relationships` (6 edges). TECHNICAL clause licenses only user-edge inserts.
+- **B1-S6**: aliases. Audit specifies a range (18 to 25 rows) and per-master vendor terminology lists, not exact tuples; bulk insert deferred.
+- **B1-S8**: cross-domain `data_object_relationships`. Audit defers ("surface to user"); target masters in neighbor domains may not be loaded.
+- **B1-S9**: B10b handoff module FK backfill on the 8 handoffs. Cannot be derived because METRICS-LAYER has zero `domain_modules`; gated on B1-S1.
+- **B1-S11**: A4 `catalog_tagline` / `catalog_description` (Rule #20 user-approval-of-wording defer).
+- **B1-H1**: APQC `handoff_processes` tagging. Audit pre-specifies only a single L2 family for most handoffs ("defer to Discover Pass 3" for L3/L4) and the handoff-220 `discovery_substring` reject is blocked by Rule #1.
+- **All Bucket 2 and Bucket 3 items**: judgment / Phase 0.
+
+### Audit status unchanged
+
+Frontmatter remains `status: feedback_needed`. The hard fails on M-band, B6, B7 (now partially cured by B1-S4), B8, B11, B12, B4, F1-F3, A4 are still open pending B2-1 (module split decision).

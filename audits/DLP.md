@@ -207,3 +207,36 @@ The vendor surface walked above is from my own knowledge of the market, not a fo
 - **IRM** (Insider Risk Management) - Code42 Incydr, Microsoft Insider Risk Management, DTEX InTERCEPT, Proofpoint Insider Threat, Securonix UEBA, Cyberhaven, Forcepoint Risk-Adaptive Protection. Distinct from DLP: user-behavior-modeling primary, content-scanning secondary.
 - **CASB** (Cloud Access Security Broker) - Netskope, Zscaler, Microsoft Defender for Cloud Apps, Skyhigh Security, Forcepoint CASB. Distinct from DLP: SaaS-app-aware inline + API governance; DLP is one feature.
 - **SSE-SASE** (Security Service Edge / SASE) - Zscaler, Netskope, Palo Alto Prisma Access, Cloudflare One, Microsoft Entra Internet Access. Cloud-delivered security stack subsuming CASB + SWG + ZTNA + FWaaS + edge DLP.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the truly-technical subset of Bucket 1 (no judgment, audit pre-specified). Loader: `.tmp_deploy/fix_dlp_b1_technical_2026_05_31.ts` (run from project root).
+
+### Applied (6 writes total)
+
+- **B1-S3 (3 PATCHes):** `trigger_events.event_category` backfills per audit map.
+  - id=927 `dlp_policy.updated` -> `state_change`
+  - id=928 `dlp_quarantine_item.released` -> `state_change`
+  - id=929 `dlp_user_activity.flagged` -> `signal`
+- **B1-S5 (3 INSERTs, partial cure):** Rule #10 user-edges on `data_object_relationships` for the 3 audit-pre-specified verb names. Shape mirrors project user-edge convention: `data_object_id=748` (users), single-verb, `owner_side=source`, `relationship_type=one_to_many`, `relationship_kind=reference`, `is_required=false`.
+  - id=1786 users `reviews` `dlp_incidents` (do 330)
+  - id=1787 users `authors` `dlp_policies` (do 331)
+  - id=1788 users `approves` `dlp_exceptions` (do 334)
+
+### Deferred (require user judgment, gated, or out-of-scope for technical pass)
+
+- **B1-S1 (M-band modules):** new modules/entities, deferred (Phase A scope; also gated on B2-S1 module-split topology).
+- **B1-S2 (C1 business_function_domains):** gated on B2-S4 ownership decision (single owner vs. split vs. IS + Privacy + Legal).
+- **B1-S4 (B6 intra-domain rels among DLP masters, 5 verbs):** scope of technical pass is Rule #10 user-edges only; intra-domain master rels deferred.
+- **B1-S5 remaining 3 masters:** `dlp_quarantine_items`, `dlp_user_activity_logs`, `data_exfiltration_attempts` have actor-role enumerations (reviewer/release_approver, user-under-monitor, actor) but no audit-pre-specified verb. User picks which actor archetype maps to which verb for the rel row(s).
+- **B1-S6 (B12 lifecycle states):** gated on B1-S1 (module FKs) and B2-S3 (config-shape exemptions for `data_exfiltration_attempts` and `dlp_user_activity_logs`).
+- **B1-S7 (B11 aliases):** audit gives volume range ("8-15 rows total") but no exact tuples; deferred.
+- **B1-S8 (B4 pattern flags):** gated on B2-S2 (per-flag yes/no from user across 4 flag candidates).
+- **B1-S9, S10, S11, S12, S13, S14 (F-band + B10b + B9/B9b + E-band):** all gated on B1-S1 modules.
+- **B1-S15 (B8 outbound cross-domain rels, 4 verbs):** scope of technical pass is Rule #10 user-edges only; cross-domain rels deferred.
+- **B1-S16 (APQC tagging, 17 INSERTs + 1 REPLACE + 1 upgrade):** gated on B2-S5 user bulk-approval.
+- **Regulation candidates (Bucket 3, GDPR/HIPAA/PCI-DSS):** audit pre-specifies `applicability='direct'`, but the live enum is `mandatory / recommended / conditional / optional` (per Rule #13 re-query: `domain_regulations.applicability` enum_values). Value not valid; user picks the substitute (likely `mandatory`).
+
+### JWT errors
+
+None encountered during this run.

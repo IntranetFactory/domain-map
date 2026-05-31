@@ -256,6 +256,53 @@ _pending user review per Bucket 1 / Bucket 2 / Bucket 3 prompts above_
 
 _none — Validate b1 is read-only_
 
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+Loader: `c:/dev/domain-map/.tmp_deploy/fix_ecm_b1_technical_2026_05_31.ts`.
+
+Applied only the technical, no-judgment subset of Bucket 1 (audit's "Fixes applied" was empty; all of Bucket 1 was residual). Idempotent loader, re-reads each target before writing.
+
+### Applied
+
+| Item | Type | Outcome |
+| --- | --- | --- |
+| B1-S5 | INSERT 6 `domain_regulations` | linked ECM (91) to SOX (mandatory), GDPR (mandatory), HIPAA (conditional), GLBA (conditional), FDA 21 CFR Part 11 (id 22, conditional), eIDAS (id 34, conditional). Mapped audit's "industry" applicability to enum `conditional` per Rule #13 (`industry` is not a valid value; the description on `conditional` ("applies under specific circumstances") matches the audit's intent). |
+| B1-S8a | PATCH enum backfill | `trigger_events.event_category` on event 900 set from `''` to `state_change`. |
+| B1-S8b | PATCH naming rename | `trigger_events.event_name` on event 900 renamed `legal_hold.placed` -> `content_document.legal_hold_applied`. `data_object_id` stays 429 (`content_documents`); handoff 824 keeps its trigger_event_id FK. Disambiguates from LSD-published `legal_hold.issued` (event 1042). |
+| B1-APQC DELETE | DELETE 5 stale rows | `handoff_processes` ids 161, 162, 163, 164, 165 deleted (all `discovery_substring` -> PCF 339 `Document trade`, which the audit identified as wrong attributions to international-trade documents rather than ECM content). |
+| B1-APQC INSERT | INSERT 13 `handoff_processes` (`agent_curated`) | handoffs 821 (->PCF 83), 822 (->428), 823 (->430), 824 (->430), 825 (->1440), 826 (->429), 827 (->430), 839 (->428), 732 (->428), 735 (->428), 919 (->429), 828 (->428), 829 (->1440). All process_ids verified live in APQC PCF cross-industry (8.4 content cluster + L4 retain-records 1440). |
+
+### Skipped (within Bucket 1, deliberately)
+
+- **handoff_processes for handoffs 911, 912, 915, 1028, 1031.** Audit pre-specifies process_id 430/430/430/430/429 for these LSD->ECM rows; live state already carries `agent_curated` rows from the LSD loader pointing at different PCFs (373, 396, 373, 373, 397). Per Rule #1 prior agent-curated decisions are not silently overwritten; left intact pending user reconciliation.
+
+### Deferred (out of scope for this pass, count 13)
+
+Each entry is gated on user judgment, a separate audit pass, or rules excluded by the residual-fix scope:
+
+1. **B1-S1** module split (4 candidate ECM modules) — gated on Bucket 2 #2 "user picks shape" (new entities, new modules).
+2. **B1-S2** `domain_module_capabilities` links — gated on B1-S1.
+3. **B1-S3** trivial consequence of M1 — gated on B1-S1.
+4. **B1-S4** add 5+ solutions (OpenText, Hyland, M-Files, Box, Laserfiche, FileNet, SharePoint Online) — new entities, deferred.
+5. **B1-S6** `catalog_tagline` + `catalog_description` — Rule #20 forbids without per-row user approval of exact wording.
+6. **B1-S7** `content_documents` rename — Bucket 2 #3 "user picks" (3 options surfaced).
+7. **B1-B1** PATCH `source_domain_module_id` on 8 outbound handoffs — gated on B1-S1 (no ECM modules to FK to).
+8. **B1-B2** REPORT-ONLY (target-side PATCHes owed by DLP/LSD/AUDIT/KMS/GRC audits) — not ECM's pass.
+9. **B1-B3** PATCH `target_domain_module_id` on 10 inbound handoffs — gated on B1-S1.
+10. **B1-B4** REPORT-ONLY (source-side PATCHes owed by IDP/LSD audits) — not ECM's pass.
+11. **B1-B5** 4 intra-domain handoff INSERTs — gated on B1-S1.
+12. **B1-B6** DELETE `data_object_relationships` 300/301 — Bucket 2 #4 owner review.
+13. **B1-L1..L5** lifecycle states for 5 masters — need `domain_module_id` per M5, gated on B1-S1.
+
+### JWT errors
+
+None encountered during this pass.
+
+### `domains.notes` pointer
+
+Not written (Rule #15 unchanged; the audit already says "requires user-approved wording").
+
+
 ### Candidates queued
 
 - `EFSS` (Enterprise File Sync and Share) — queued via `append_missing_domain.ts`. Vendor evidence: Box, Dropbox Business, Citrix ShareFile, Egnyte, Microsoft OneDrive for Business. Adjacent to ECM, WSC, DXP, DLP.

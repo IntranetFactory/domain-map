@@ -151,3 +151,46 @@ _(empty until user reviews; agent flips status to feedback_needed below)_
 ### Fixes applied
 
 _(none in this pass; read-only audit only)_
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+### Scope
+
+Residual B1 pass over `audits/EM-FUND-PLATFORM.md` (Validate b1, 2026-05-30). Applied only the subset of Bucket 1 findings that are truly technical: PATCHes derivable from existing modules and INSERTs to existing rows where the audit pre-specifies exact tuples. No new entities, no DMDOs, no module reshuffle, no judgment items.
+
+Loader: [.tmp_deploy/fix_em_fund_platform_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_em_fund_platform_b1_technical_2026_05_31.ts) (8 writes, all idempotency-checked, all verified post-load).
+
+### Fixes applied
+
+| Audit ID | Fix type | Target | Result |
+|---|---|---|---|
+| B1-S4 | PATCH `data_object_lifecycle_states.domain_module_id` | rows 482 / 483 / 484 (`fund_formations` drafted / filed / operational) -> module 26 (EM-FUND-FORMATION); rows 479 / 480 / 481 (`spvs` forming / active / wound_down) -> module 27 (EM-FUND-SPV) | 6/6 PATCHed (all previously NULL) |
+| B1-M1 (partial) | INSERT `domain_regulations` | (163, 49, mandatory) Bank Secrecy Act; (163, 50, mandatory) Foreign Account Tax Compliance Act | 2/2 inserted (new domain_regulations rows id=259, 260; `record_status='new'` per Rule #1) |
+
+### Deferred (NOT in this technical pass)
+
+| Audit ID | Reason |
+|---|---|
+| B1-M1 (remaining 4 of 6 candidates) | SEC Investment Advisers Act / Reg D 506(b)/506(c) / CRS / state blue-sky filings: regulation rows do not exist in `/regulations`. New `regulations` entities are out of B1-technical scope. |
+| B1-W1..W5 | New substrate `data_objects` (`entity_filings`, `banking_onboardings`, `lp_kyc_records`, `spv_kyc_records`, `templated_documents`). "New entities" deferral. |
+| B1-S1 (A4) | `catalog_tagline` / `catalog_description`: Rule #20 forbids load without surface-to-user. |
+| B1-S2 | Pattern-flag PATCHes (`has_submit_lock`, `has_single_approver`): "pattern flag flips" deferral. |
+| B1-S3 | `users -> spv_subscriptions` / `users -> fund_formations` reviewer edges: audit uses "verb: subscribes_via or invests_through" and "reviewer/approver" (user picks); not exact-tuple pre-specified. Tranche 2 (`users -> banking_onboardings`, `users -> spv_kyc_records`) gated on B1-W2/W4 entity creation. |
+| B1-S5 | `data_object_aliases`: audit lists candidate forms (e.g. "fund vehicle setup", "syndicate subscriptions") but not exact (alias_name, alias_type) tuples for `fund_formations` / `spv_subscriptions`. "No bulk data_object_aliases unless audit pre-specifies exact tuples." |
+| B1-S6 | System skills (`em_fund_formation_agent` etc.): full Phase-S load; gated on Bucket 2 #3 starter-kit conversion decision. |
+| B1-L1..L3 | New `trigger_events` (`fund_formation.filed/.drafted`, `spv.forming/.active/.wound_down`, `spv_subscription.signed/.funded`) and new `data_object_lifecycle_states` on `spv_subscriptions`: new entities + audit notes "after states load" sequencing. |
+| B1-B6 | Intra-domain `data_object_relationships` (`fund_formations spawns spvs / cap_tables / funds`): master-to-master edges, not user-edges. Out of "user-edges Rule #10" scope. |
+| B1-B9b | Intra-domain `handoffs` (EM-FUND-FORMATION -> EM-FUND-OPS-LITE / -CAPTABLE-LITE / -SPV; EM-FUND-SPV -> EM-FUND-OPS-LITE): new `handoffs` rows, not PATCHes on existing rows. No pre-existing `handoff_id`. |
+| B1-H1a | Defer-to-Discover-Pass-3 proposal on handoff 1046; not a load. |
+
+Total: 8 writes applied across 2 finding types. 10 finding categories deferred per scope (new entities, judgment items, user-pick verb choices, pattern-flag flips, catalog UX, gating on Bucket 2 decisions).
+
+### Verification
+
+Post-load read-back confirms:
+- `data_object_lifecycle_states` rows 479..484 each carry the expected `domain_module_id` (26 or 27 per master).
+- `domain_regulations` rows 259, 260 link EM-FUND-PLATFORM to BSA + FATCA with `applicability='mandatory'` and `record_status='new'`.
+
+UI: https://tests.semantius.app/domain_map/data_object_lifecycle_states
+UI: https://tests.semantius.app/domain_map/domain_regulations
+

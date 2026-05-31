@@ -207,3 +207,69 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 | S2P | B10b: populate `source_domain_module_id` on handoff 347; populate `target_domain_module_id` is AGENCY-MGMT's M1 cascade. Phase B: declare consumer DMDO on `insertion_orders` once S2P's Phase B lands. |
 | DAM | B10b: populate `target_domain_module_id` on inbound handoff 344. Phase B: declare consumer DMDO on `creative_deliverables` once DAM's Phase B lands. |
 | PSA | B10b: populate `target_domain_module_id` on inbound handoffs 513 (already 88) and 515 (NULL). 88 should be verified. PSA-side cross-relationship: B2-S6 raises whether AGENCY-MGMT `agency_time_entries` should consume PSA `project_time_entries` instead. |
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Scope
+
+Applied the truly-technical subset of Bucket 1 that does not depend on user input or on Phase M / B2 decisions. Loader: [.tmp_deploy/fix_agency_mgmt_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_agency_mgmt_b1_technical_2026_05_31.ts).
+
+### Classification of the 8 B1 items
+
+| B1 item | Decision | Reason |
+|---|---|---|
+| B1-S1 Phase M module split | DEFER | Gated on B2-S1; user picks 2 vs 3 vs 4 modules. |
+| B1-S2 event_category PATCH (6 rows) | TECHNICAL | Audit pre-specifies each enum value; pure backfill. |
+| B1-S3 F2 detached system skill | DEFER | Gated on B1-S1 + B2-S2 (module count + skill split). |
+| B1-S4 F3 zero skill_tools | DEFER | Gated on B1-S3 (no skill anchor yet). |
+| B1-S5 lifecycle states (8 masters) | DEFER | Gated on B1-S1 (states pin to modules) and B2-S5 (config-shape exemption choice). |
+| B1-S6 pattern flag PATCH (6 masters) | DEFER | Audit explicitly gates on B2-S3 per-flag user approval. |
+| B1-S7 handoff B10b/B8 cascade (12 rows) | DEFER | Gated on B1-S1 (no module FKs to pin to yet). |
+| B1-H1 APQC tagging (10 ops) | PARTIAL | 4 INSERTs technical (single confident PCF); 6 ops deferred (multi-option, REPLACE, or "needs lookup"). |
+
+### Fixes applied
+
+**B1-S2: 6 PATCHes on `trigger_events`.event_category** (independent of M1)
+
+| id | event_name | new event_category |
+|---|---|---|
+| 525 | `agency_time_entry.submitted` | `state_change` |
+| 526 | `agency_retainer.threshold_reached` | `threshold` |
+| 527 | `agency_retainer.depleted` | `threshold` |
+| 528 | `media_plan.approved` | `state_change` |
+| 529 | `media_plan.executed` | `state_change` |
+| 530 | `creative_brief.approved` | `state_change` |
+
+Verified post-load: all 6 events carry a non-empty `event_category`.
+
+**B1-H1: 4 `handoff_processes` INSERTs** (`proposal_source='agent_curated'`, `record_status` omitted so it defaults to `new`, `notes` empty per Rule #15, `role` defaults to `implements`)
+
+| handoff_id | process_id | PCF row | New hp.id |
+|---|---|---|---|
+| 344 (AGENCY-MGMT → DAM, `deliverable.approved`) | 141 | "Manage product marketing material" (L3) | 255 |
+| 345 (AGENCY-MGMT → ERP-FIN, `agency_invoice.issued`) | 302 | "Invoice customer" (L3) | 256 |
+| 347 (S2P → AGENCY-MGMT, `vendor_invoice.received`) | 1433 | "Audit invoices and key data in AP system" (L4) | 257 |
+| 515 (AGENCY-MGMT → PSA, `creative_brief.approved`) | 1661 | "Develop project plans" (L4) | 258 |
+
+Verified post-load: 4 new rows, all `proposal_source='agent_curated'`, `record_status='new'`.
+
+### B1-H1 deferred operations (6 ops still pending user input)
+
+| handoff_id | Reason for deferral |
+|---|---|
+| 513 (AGENCY-MGMT → PSA, `agency_time_entry.submitted`) | Two PCF options listed: 312 (L3 "Report time") OR 1414 (L4 "Collect and record employee time worked"). User picks granularity. |
+| 516 (AGENCY-MGMT → ERP-FIN, `media_plan.executed`) | Two PCF options listed: 134 (L3 "Establish marketing budgets") OR 647 (L4 "Create marketing budget"). User picks. |
+| 514 (AGENCY-MGMT → CRM, `agency_retainer.depleted`) | Audit says "needs lookup"; no single confident PCF id. |
+| 341 (CRM → AGENCY-MGMT, `crm_opportunity.won`) | Audit confidence "medium" with alternative listed (669 vs parent); user picks. |
+| 346 (AGENCY-MGMT → ERP-FIN, `media_costs.posted`) | Two PCF options (1433 L4 child or parent "Process accounts payable"); audit confidence "medium". User picks. |
+| 348 (HCM → AGENCY-MGMT, `employee.terminated`) | Audit recommends REPLACE on the existing `discovery_override` row (process 41 "Manage employee onboarding…" looks wrong) but says "needs lookup"; replacement target not pinned. User decides. |
+
+### Count
+
+- Technical operations applied: **10** (6 PATCH + 4 INSERT).
+- B1 items fully addressed: 1 (B1-S2). B1 items partially addressed: 1 (B1-H1, 4 of 10 sub-ops). B1 items deferred: 6.
+
+### Cross-domain follow-ups owed (unchanged from 2026-05-30 audit)
+
+See "Report-only follow-ups (owed by other domains)" table in the 2026-05-30 audit body; this continuation did not introduce or retire any cross-domain owed work.
+

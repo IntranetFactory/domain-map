@@ -179,3 +179,30 @@ These items surfaced in this audit but the fix belongs to another domain's b1 au
 | DAM | M1: 0 modules loaded today. B10b: populate `target_domain_module_id` on 806 (HCMS → DAM `content_entry.created`) AND `source_domain_module_id` on 98 (DAM → HCMS `digital_asset.published`). Add `consumer` DMDO on `content_entries` if DAM subscribes. |
 | LSD | M1: 0 modules loaded today. B10b: populate `target_domain_module_id` on 807. Add `consumer` DMDO on `editorial_workflows` if LSD subscribes. |
 | WEB-CONTOPS | M1: 0 modules loaded today. B10b: populate `target_domain_module_id` on 837 (HCMS → WEB-CONTOPS `content_locale.added`) AND `source_domain_module_id` on 816, 817 (WEB-CONTOPS → HCMS `brand_violation.detected` / `broken_link.detected`). Add `consumer` DMDO on `content_locales`. Pairwise also surfaces missing handoff candidate: WEB-CONTOPS likely needs a `web_pages` payload handoff from HCMS on `content_entry.published` (per relationship 613 `content_entries feeds web_pages`); confirm at fix time. |
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent continuation pass: apply only truly-technical B1 fixes the orchestrator pre-specified; defer everything that requires judgment, a module to exist, or another domain's M1 to close. Total B1 items in the 2026-05-30 audit: 8 (S1, S2, S3, S4, S5, S6, S7, H1).
+
+### Fixes applied
+
+| ID | Action | Result | UI |
+|---|---|---|---|
+| B1-S2 | PATCH `trigger_events.event_category` on 9 HCMS rows (886–894) per the audit's pre-specified state+verb table. Loader pre-flighted each row (confirmed `event_category=''` live before overwrite, enum-validated the proposed value against `lifecycle / state_change / threshold / signal`), PATCHed, and re-read; zero rows still empty after. | 9 PATCHes applied: 886 `content_entry.created`→`lifecycle`, 887 `content_entry.scheduled`→`lifecycle`, 888 `content_entry.unpublished`→`state_change`, 889 `content_entry.translated`→`state_change`, 890 `content_release.failed`→`state_change`, 891 `editorial_workflow.review_required`→`signal`, 892 `content_locale.added`→`lifecycle`, 893 `content_environment.promoted`→`state_change`, 894 `content_type.deprecated`→`state_change`. B9 closes for HCMS. | https://tests.semantius.app/domain_map/trigger_events |
+
+### Deferred
+
+| ID | Why deferred |
+|---|---|
+| B1-S1 | New `domain_modules` rows are gated on B2-S4 (module-split granularity is a user judgment call: 1 / 2 / 3 / 4 modules with naming). Orchestrator forbids new modules without pre-specified shape. |
+| B1-S3 | Skill 67 reparent / split depends on B1-S1 and B2-S3 (single vs per-module skill count). No module exists yet to attach to. |
+| B1-S4 | ~8 mutate `tools` + `skill_tools` additions depend on B1-S1 + B1-S3 (tools attach via the system skill which needs a module). |
+| B1-S5 | B10b report-only: 12 outbound handoffs (92, 93, 94, 95, 96, 97, 803, 804, 805, 806, 807, 837) carry NULL `target_domain_module_id` because 6 neighbor domains (DXP, B2C-COMM, MA, DAM, LSD, WEB-CONTOPS) each fail M1. Owed by neighbors after their own b1 audits. |
+| B1-S6 | B10b report-only: 3 inbound handoffs (98, 816, 817) carry NULL `source_domain_module_id` because DAM and WEB-CONTOPS fail M1. Owed by neighbors. |
+| B1-S7 | 3 candidate handoffs (HCMS→DXP on `content_release.failed`; HCMS→DXP on `content_entry.unpublished` with `cdn_cache_invalidations`; HCMS→WEB-CONTOPS on `content_entry.published` with `web_pages`) gated on B1-S1 (source `domain_module_id` FK has nowhere to point). |
+| B1-H1 | APQC `handoff_processes` tagging: audit explicitly defers PCF id lookup to fix-time substring search ("PCF id lookup at fix time", "PCF external_id lookups deferred to fix-time substring search"). Live PCF rows under `source_framework='apqc_pcf_cross_industry'` carry the content branch at 13.6.x ("Manage Content" 83 / "Develop and manage content" 428 / "Deliver approved content" 429), not the audit's speculative "10.5.x family". Choosing among 13.6.5 (`Develop and manage content`), 13.6.6 (`Deliver approved content`), 13.6.7 (`Control delivered content`), 13.6.5.13 / .14 / .15, 13.6.1.x for content strategy, etc., per handoff requires judgment the orchestrator did not pre-specify. Surface for user pick or schedule a dedicated APQC tagging pass. |
+
+### Loader
+
+[.tmp_deploy/fix_hcms_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_hcms_b1_technical_2026_05_31.ts) (run from project root `c:/dev/domain-map`).
+

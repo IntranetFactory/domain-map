@@ -8,12 +8,14 @@ domain_modules:
   - ats-pre-employee-record
 domain_code: ATS
 related_modules: [ats-background-checks, ats-candidate-crm, ats-offers, hcm-lifecycle-workflows]
-created_at: 2026-05-28
+created_at: 2026-05-31
 ---
 
 # Pre-Employee Record
 
 ## 1. Overview
+
+### 1.1 Analyst overview
 
 The bridge between offer-accepted and start-date: ATS owns the pre-employee lifecycle stage (paperwork in flight, pre-boarding tasks open, background check pending). Realizes the `hired` state on `job_applications`. Publishes the `pre_employee.activated` event that hands the canonical reconciliation to HCM-mastered `employees`. Formerly NEW-HIRE-HANDOFF, renamed per §7.1 because HCM canonically masters `employees`.
 
@@ -36,6 +38,7 @@ flowchart TD
   users["Users"]
   job_offers -->|"spawns pre-employee record"| pre_employees
   candidates -->|"becomes pre-employee"| pre_employees
+  candidates -->|"has owning recruiter (opt)"| users
   job_offers -->|"has approver"| users
   pre_employees -->|"has owning hr_coordinator"| users
   class pre_employees master;
@@ -69,14 +72,44 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 | from | verb | to | cardinality | necessity | owner_side | notes |
 | --- | --- | --- | --- | --- | --- | --- |
+| `candidates` | has owning recruiter | `users` | many_to_many | optional | source | - |
 | `job_offers` | has approver | `users` | many_to_many | required | source | - |
 | `pre_employees` | has owning hr_coordinator | `users` | one_to_many | required | source | - |
 
 ### 5.3 Cross-scope edges
 
+#### 5.3a Outbound from this scope's masters and contributors
+
+_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
+
 | from | verb | to | cardinality | necessity | notes |
 | --- | --- | --- | --- | --- | --- |
 | `pre_employees` | promotes to | `employees` | one_to_one | required | - |
+
+#### 5.3b Context edges on embedded shells and consumed entities
+
+_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
+
+<details>
+<summary>28 context edges</summary>
+
+| from | verb | to | cardinality | necessity | notes |
+| --- | --- | --- | --- | --- | --- |
+| `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | - |
+| `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | required | - |
+| `candidates` | noted_via | `recruiter_interactions` | one_to_many | optional | - |
+| `candidates` | consents_via | `candidate_consents` | one_to_many | required | - |
+| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | required | - |
+| `candidates` | discloses_via | `fcra_disclosures` | one_to_many | required | - |
+| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | optional | - |
+| `job_offers` | evolves_through | `offer_versions` | one_to_many | required | - |
+| `job_offers` | gated_by | `offer_approvals` | one_to_many | optional | - |
+| `candidates` | submits_via | `data_subject_requests` | one_to_many | optional | - |
+| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | optional | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | - |
+| `candidates` | documented_via | `candidate_documents` | one_to_many | optional | - |
+| `candidates` | annotated_via | `candidate_notes` | one_to_many | optional | - |
+| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | - |
 | `skill_profiles` | feeds | `candidates` | one_to_many | optional | - |
 | `candidates` | submits | `job_applications` | one_to_many | required | - |
 | `candidate_referrals` | introduces | `candidates` | one_to_many | required | - |
@@ -90,6 +123,8 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `job_offers` | triggers | `benefit_enrollments` | one_to_one | required | - |
 | `job_offers` | seeds | `compensation_statements` | one_to_one | required | - |
 | `candidates` | becomes | `employees` | one_to_one | required | - |
+
+</details>
 
 ## 6. Cross-domain context
 
@@ -109,9 +144,9 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 | target module | source domain | source module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-OFFERS | `job_offer.rescinded` | `pre_employees` | lifecycle_progression | high | - |
 | ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-OFFERS | `job_offer.accepted` | `pre_employees` | lifecycle_progression | low | - |
 | ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-BACKGROUND-CHECKS | `background_check.cleared` | `pre_employees` | lifecycle_progression | low | - |
+| ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-OFFERS | `job_offer.rescinded` | `pre_employees` | lifecycle_progression | high | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 

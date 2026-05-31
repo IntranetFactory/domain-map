@@ -223,3 +223,49 @@ Candidates from market-surface knowledge that lack a vetted Phase 0 baseline. Re
 - **INV-CRM B8 / B6.** `vc_deals` (750) relationship to RE-INVEST `capital_calls` (rel 874) is an INV-CRM-owned cross-domain edge; INV-CRM should carry an outbound handoff if the relationship is event-driven.
 - **CAP-TABLE B8.** `exit_scenarios` (777) relationship to RE-INVEST `fund_distributions` (rel 875) is a CAP-TABLE-owned cross-domain edge; same pattern.
 - **PORT-MONIT structural.** PORT-MONIT embeds `funds` (755). If Bucket 2 #1 lands on FUND-ADMIN-owns, PORT-MONIT's existing embedded_master shape is correct; no action. If the resolution is to keep `investment_funds` (727) separate, PORT-MONIT may also need a shell for the RE subclass.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the narrow technical slice of the 2026-05-30 audit that does not require user judgment or new modules.
+
+### Applied (10 writes)
+
+- **B1-B7, four user-edges into `data_object_relationships`** (Rule #10 explicit platform-builtin edges; audit pre-specified all four verbs and targets):
+  - id 1888: `users manages investment_funds` (748 -> 727)
+  - id 1889: `users acquires investment_properties` (748 -> 366)
+  - id 1890: `users values property_valuations` (748 -> 369)
+  - id 1891: `users owns limited_partners` (748 -> 728)
+  - All `owner_side=target`, `relationship_type=one_to_many`, `relationship_kind=reference`, `record_status=new` (default), `notes=''` (default).
+- **B1-H1, six new `handoff_processes` agent_curated rows** (audit pre-specified each `handoff_id` + APQC PCF `external_id`; verified PCFs are live before insert):
+  - id 755: handoff 305 (`property_valuation.refreshed` -> FINOPS) -> PCF 1390 (external 10831).
+  - id 756: handoff 306 (`fund_distribution.declared` -> ERP-FIN) -> PCF 1422 (external 10862).
+  - id 757: handoff 307 (`capital_call.issued` -> ERP-FIN) -> PCF 1461 (external 10893).
+  - id 758: handoff 863 (`asset_fee.charged` -> ERP-FIN) -> PCF 1359 (external 10803).
+  - id 759: handoff 301 (`rent_payment.received` from RE-PROP-MGMT) -> PCF 1356 (external 10800).
+  - id 760: handoff 857 (`property.updated` from REAL-EST) -> PCF 1511 (external 10955). Existing row 169 (`discovery_substring` -> PCF 343) is left in place; user can resolve which tag survives at review.
+  - B1-H1-e (handoff 303 -> PCF 1511) skipped: already present as id 454 (`agent_curated`).
+  - B1-H1-h (handoff 862) skipped: already tagged id 192 (`agent_curated`).
+  - B1-H1-i (handoff 859) deferred per audit (no clean APQC PCF match).
+- Loader: `c:/dev/domain-map/.tmp_deploy/fix_re_invest_b1_technical_2026_05_31.ts`.
+
+### Deferred (judgment, or gated on a prior fix)
+
+- **B1-M1, B1-M2, B1-M4 (new `domain_modules` + `domain_module_capabilities`):** new entities, gated on Bucket 2 #1 (M7 demotion direction). Defer until user picks owner.
+- **B1-M7a, B1-M7b (dual-master `capital_calls`, `fund_distributions`):** user picks demotion direction (Bucket 2 #1).
+- **B1-B3 (naming arbitration on `investment_funds` vs `funds`):** flows from Bucket 2 #2; user picks merge / rename / keep.
+- **B1-B4 (pattern flag flips on six masters):** per Rule #12 + Rule #15, each TRUE flag needs explicit per-row user approval (Bucket 2 #5).
+- **B1-B6 (intra-domain master-master `data_object_relationships`):** audit lists seven candidate edges but only as prose, not exact `(verb, inverse_verb, cardinality, necessity, owner_side)` tuples. Defer until audit pre-specifies the tuple set.
+- **B1-B11 (aliases on every master):** audit names example aliases (`LP`, `NAV`, `IRR`, `AUM`, `REIT`, `K-1`) as prose; no exact `data_object_aliases` tuples specified. Per agent contract, bulk aliases inserts require pre-specified tuples.
+- **B1-B12 (lifecycle states on 6 masters):** per audit, "load after modules exist so `domain_module_id` is populated", gated on B1-M1. Plus Bucket 2 #7 user-decides the config-shape exemptions for `property_valuations` and `asset_management_fees`.
+- **B1-A4 (`catalog_tagline` / `catalog_description`):** Rule #20 requires user approval of drafted text before write (Bucket 2 #6).
+- **B1-F1 (DELETE legacy `re-invest-system` skill id 97), B1-F7 (replace `send_email` on the legacy skill):** both gated on the module-level system skills landing first, which requires B1-M1.
+- **B1-PR-EF-1, B1-PR-RC-1 (handoff source/target module FK backfills):** require B1-M1 (RE-INVEST has zero modules; source FKs cannot resolve), and the target side depends on neighboring-domain B10b.
+- **B1-PR-FA-1 (zero handoffs to FUND-ADMIN despite shared masters):** gated on Bucket 2 #1.
+
+### Notes on rule compliance
+
+- No `notes` columns written on any inserted row (Rule #15).
+- No `record_status` set explicitly; all rows fall back to the `new` default (Rule #1).
+- No vendor names written into any non-commerce text (Rule #18).
+- Loader run from project root, `semantius` CLI invoked directly (Rule #0, Rule #6).
+- No JWT errors during the run.

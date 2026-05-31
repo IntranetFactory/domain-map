@@ -184,3 +184,30 @@ After the gap report is surfaced, the orchestrator should prompt the user with t
 - **INS-CLAIMS (44) M1 owes:** 1 inbound from TELEMATICS shows NULL target module pending INS-CLAIMS modularization. The friction-level=high / manual_handoff pattern also suggests this boundary is genuinely under-integrated and may deserve its own bilateral pass.
 - **FMIS (154) cross-domain mis-routing:** inbound handoffs 966 + 968 may be mis-routed (see Bucket 2 #6 / Bucket 3 #1). The fix may live on the FMIS side (re-pointing the subscriber to AG-TELEMATICS once that domain exists) or on TELEMATICS (accepting the consumer dependency).
 - **FLEET-MGMT B8 owes (inbound mirror):** once relationship B1-X1 / X2 / X3 are loaded outbound from TELEMATICS, the symmetric inbound rows live on FLEET-MGMT's B8 (not authored from this audit per Rule #11 / B8 asymmetry).
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent continuation under domain-map-analyst. Applied only the truly-technical B1 fixes from the 2026-05-30 audit. All judgment items remain open for the user.
+
+Loader: `.tmp_deploy/fix_telematics_b1_technical_2026_05_31.ts` (run from project root).
+
+### Applied (16 writes across 3 fix types)
+
+- **B1-S9 (5 PATCH):** `trigger_events.event_category` backfilled to the audit-recommended values: 994 `gps_waypoint.recorded` -> `lifecycle`, 995 `idle_event.detected` -> `threshold`, 996 `geofence.crossed` -> `threshold`, 997 `safety_scorecard.updated` -> `state_change`, 998 `fleet_vehicle.mileage_milestone_reached` -> `threshold`. All five were live-verified empty before write.
+- **B1-U1..U4 (4 INSERT):** `data_object_relationships` user-edges per Rule #10, all four pre-specified tuples in the audit. New IDs 1920 (`dashcam_events reviewed by users`), 1921 (`driver_behavior_events attributed to users`), 1922 (`driver_safety_scorecards attributed to users`), 1923 (`eld_logs attributed to users`). Pattern (`many_to_many` / `reference` / `owner_side=source` / `is_required=false`) matches the catalog convention from existing user-edges (ids 1854..1856, etc.). `record_status` and `notes` omitted, falling back to defaults `'new'` and `''`.
+- **B1-A1, A3, A4, A6, A7, A8, A11 (7 INSERT):** `handoff_processes` for the seven "confident L4" tuples with pre-specified `handoff_id` and a resolvable PCF `process_id`. New IDs 785..791. All seven handoffs + processes (862, 1543, 1607) verified live before insert. `proposal_source=agent_curated`, `record_status` and `notes` defaulted.
+
+### Deferred (everything else)
+
+- **B1-S1, S2, S6, S7, S8, S10, S11, M1..M5, R1..R10, X1..X3, B1..B5:** out of scope per task constraints (new entities / modules / DMDOs; B10b FK PATCHes gated on B1-S1; aliases without exact tuples; lifecycle states require user judgment on the four config-shape exemptions; skill rename gated on modules; intra-domain and cross-domain `data_object_relationships` are not user-edges).
+- **B1-S3 (pattern flag flips):** task constraints exclude pattern-flag flips; also intersects Bucket 2 #2 (scope question on the position-telemetry masters).
+- **B1-A2, A9, A10, A5:** A2 / A9 / A10 are marked "defer" in the audit (no resolvable PCF); A5 is an upgrade decision on the existing `discovery_substring` tag and depends on Bucket 2 #7 (handoff 312 retire / re-point), which is a judgment call.
+
+### Live verification
+
+- Pre-flight reads confirmed: tenant `ma@adenin.com`, module 1001 `domain_map`, all five trigger_events had `event_category=""`, all four source data_objects (376/377/378/734) exist, `users` platform_builtin id 748 present, no pre-existing user-edges on the four masters, no pre-existing `handoff_processes` rows for the seven candidate handoffs, PCFs 862 / 1543 / 1607 all live.
+- No JWT errors. No `notes` writes. No `record_status` overrides.
+
+### What still gates the rest of the audit
+
+Bucket 2 #1 (module split shape) blocks every remaining B / E / F item. Until the user resolves the 2-module vs alternative split, B1-S6 handoff FKs, B1-S10/S11 skill rename, B1-S8 lifecycle states, B1-B1..B5 boundary fixes, B1-M1..M5 new entity inserts, B1-R*/X* relationship edges, and B1-A5 retire decision all stay open.

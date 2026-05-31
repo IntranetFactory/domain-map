@@ -227,3 +227,26 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 | LMS | B10b: confirm 1306 (`learner_badge.earned`) target module is 52 (TALENT-SUCCESSION-CAREER); B1-S6 patches it from this side as the in-scope mechanical PATCH, but LMS's audit may want to confirm the routing. |
 | WORK-MGMT | B10b: confirm outbound from TALENT-MGMT to WORK-MGMT is intentionally absent (`performance_goal.completed` 444 does not signal back to WORK-MGMT when the goal aligns with an okr_objective). Surface as Phase 0 follow-up. |
 | COMP-MGMT | No B10b owed; coverage is complete on the handoff side. Soft B8 gap on the absence of a direct cross-domain relationship row between `performance_reviews` and a COMP master (the merit-cycle flow runs implicitly). |
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the truly-technical subset of Bucket-1 via `.tmp_deploy/fix_talent_mgmt_b1_technical_2026_05_31.ts`, run from project root. Loader is idempotent (pre-flight on each row).
+
+**Applied (11 rows):**
+
+- **B1-S2 (6 PATCHes)** trigger_events `event_category` backfill: 443 → `lifecycle`, 444 → `state_change`, 445 → `state_change`, 446 → `state_change`, 447 → `state_change`, 448 → `lifecycle`. All 6 rows previously empty-string; Rule #13 enum now satisfied.
+- **B1-S6 (4 PATCHes)** inbound handoff `target_domain_module_id` backfill (TALENT-MGMT-owed side of the B10b asymmetry): 1108 → 53 (CONTINUOUS-FEEDBACK), 1110 → 52 (SUCCESSION-CAREER), 1113 → 52 (SUCCESSION-CAREER), 1306 → 52 (SUCCESSION-CAREER). All four rows previously NULL on target FK.
+- **B1-S7 (1 PATCH)** handoff 441 `source_domain_module_id` NULL → 52 (TALENT-SUCCESSION-CAREER). Target FK on 441 remains NULL (HCM-owed per B1-S5 report-only).
+
+**Deferred (8 items):**
+
+- **B1-S1** (M7 sibling consumer DMDO rows): gated on B2-S1 architectural choice (DELETE vs PROMOTE), user judgment.
+- **B1-S3** (5 new intra-domain handoffs): new-entity inserts, also depends on B1-S4's new trigger_events.
+- **B1-S4** (11 new `trigger_events` rows): new-entity inserts beyond enum backfill; defer list bars new entities.
+- **B1-S5 / S10 / S11** (report-only, owed by HCM / PA / TLNT-INTEL / other domains): not TALENT-MGMT's fix.
+- **B1-S8** (F7 channel-primitive justification on `sign_document`): routed to B2-S3 (Rule #15 vs F7 judgment).
+- **B1-S9 / H1** (23 APQC `handoff_processes` tags + 4 REPLACEs): audit gives PCF prose names only, no resolved `process_id` tuples; several candidate rows are flagged `medium` confidence pending parent-vs-child anchoring judgment (e.g. 437 / 22 / 376 reroute decisions, 793 portfolio-value framing). Defer rule "INSERT handoff_processes ONLY when audit pre-specifies handoff_id + resolvable PCF (verify before insert)" not satisfied for any of the 23 candidates.
+
+**No JWT errors.**
+
+**Loader:** `c:/dev/domain-map/.tmp_deploy/fix_talent_mgmt_b1_technical_2026_05_31.ts`

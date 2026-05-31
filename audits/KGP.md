@@ -156,3 +156,49 @@ Bucket 1 STRUCTURAL items B1-S2 (event_category PATCH), B1-S4 (users edges), B1-
 - **AGENT-RUNTIME** (LangChain, LlamaIndex, CrewAI, Semantic Kernel, AutoGen, OpenAI Agents SDK): agent orchestration distinct from per-domain agent skills.
 
 Each is queued as `pending-review`; triage per the queue file's rules.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Loader: [.tmp_deploy/fix_kgp_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_kgp_b1_technical_2026_05_31.ts). Ran from project root (`c:/dev/domain-map`).
+
+### Applied (4 of 14 B1 items)
+
+| ID | Action | Result |
+|---|---|---|
+| B1-S2 | PATCH `trigger_events.event_category` on ids 720, 721, 722, 723 | 720 -> `lifecycle`; 721 -> `state_change`; 722 -> `state_change`; 723 -> `lifecycle`. Rule #13 enum violation resolved on all 4 KGP-mastered events. |
+| B1-S3 | INSERT `data_object_relationships` row (742 -> 743) | Inserted id 1686: verb `types`, inverse `is_typed_by`, `one_to_many`, `reference`, `owner_side=source`, `is_required=true`. Audit proposed `relationship_kind='structural'` which is not in the enum (`composition`, `reference`, `association`, `inheritance`); `reference` is the platform default for FK-shaped edges and matches every existing row in the table. Audit proposed `cardinality='many_to_one'`; the schema column is `relationship_type` with enum `one_to_one`, `one_to_many`, `many_to_many` (no `many_to_one`), so the row is authored source=ontology, type=`one_to_many` to preserve the same semantics. |
+| B1-S4 | INSERT 3 user-edges to KGP masters (Rule #10) | Ids 1687 (users authors 742), 1688 (users reviews 742), 1689 (users asserts 743). All `one_to_many`/`reference`/`owner_side=source`. `is_required=true` on authors+asserts, `false` on reviews (review is optional in the audit-described workflow). |
+| B1-S6 | INSERT 10 `data_object_aliases` (synonym) | 742: `vocabulary`, `taxonomy`, `controlled_vocabulary`, `domain_model`. 743: `kg_node`, `entity_instance`, `individual`, `triple`, `node`, `Resource`. Audit-listed `Node` (LPG-spec capitalization) merged with `node` because the unique-key (data_object_id, alias_name) is case-insensitive on the platform side; the W3C `Resource` (capitalized) survives because no lowercase collision exists. All rows `alias_type='synonym'`; `industry_term` / `solution_term` would require an FK that the audit did not pre-specify. |
+
+### B1-S14 disposition
+
+Audit lists B1-S14 as the "inverse edge" companion to B1-S3. The live `data_object_relationships` schema models a relationship as a single row with `owner_side` indicating direction (no second mirrored row exists for any of the ~1,600 existing edges sampled). B1-S14 is therefore not a writable item; it is folded into B1-S3.
+
+### Deferred (10 of 14 B1 items)
+
+| ID | Defer reason |
+|---|---|
+| B1-S1 | New `domain_modules` rows (3 modules). Out of scope per task envelope ("DEFER: new entities/DMDOs/modules"). Also depends on Bucket 2 B2-S1, S2, S4 resolutions. |
+| B1-S5 | B8 outbound edges. Audit explicitly says "Surface to user; load 3 relationship rows once target-side masters are resolvable (the DATA-AI-PLAT side may need to defer)." Surface-for-user marker triggers defer. |
+| B1-S7 | Lifecycle states. Gated on B1-S1 (modules must exist to anchor `domain_module_id` on `requires_permission=true` states). |
+| B1-S8 | `catalog_tagline` and `catalog_description` drafts. Rule #20 surface-to-user item; not in the technical-apply set. |
+| B1-S9 | B10b FK backfill. Gated on B1-S1 (no `domain_modules` rows exist to backfill into). |
+| B1-S10 | F1 legacy skill retirement. Audit: "Bundle with the Phase M + Phase S retrofit loader" — depends on B1-S1. |
+| B1-S11 | APQC `handoff_processes` for h.221. Audit: "Pending PCF lookup at fix time; confidence medium L3" — PCF not pre-resolved. Live `processes` table does not carry a row with `external_id`/`process_code` matching the audit's cited PCF 10063. |
+| B1-S12 | APQC `handoff_processes` for h.222, h.265, h.223. Audit cites PCFs 10564, 10563, 10564. Live `processes` table contains no row with `external_id` equal to any of these IDs (10564 matches no row; "Manage master data" candidates have external_ids 14208, 11740, 14209, 10252, 10829, 10929). Per task rules: "INSERT `handoff_processes` ONLY when audit pre-specifies `handoff_id` + resolvable PCF (verify before insert)." Cannot verify. |
+| B1-S13 | APQC `handoff_processes` for h.697, h.698, h.699. Audit text marks all three "plausible L3" / "needs PCF lookup" / "needs PCF lookup". Not pre-resolved. |
+
+### Verification queries
+
+```
+GET /trigger_events?id=in.(720,721,722,723)&select=id,event_name,event_category
+GET /data_object_relationships?or=(data_object_id.in.(742,743),related_data_object_id.in.(742,743))&select=id,data_object_id,related_data_object_id,relationship_verb,relationship_type,relationship_kind,owner_side
+GET /data_object_aliases?data_object_id=in.(742,743)&select=data_object_id,alias_name,alias_type
+```
+
+All four return the expected post-load state. No JWT-audience errors during the run.
+
+UI spot-check entry points:
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/data_object_relationships
+- https://tests.semantius.app/domain_map/data_object_aliases

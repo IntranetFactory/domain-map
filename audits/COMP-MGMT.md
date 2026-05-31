@@ -205,3 +205,31 @@ Market-audit Pass 2 ran semantic enumeration against Workday Compensation, SAP S
 - **B5 integrity (consumer DMDOs declared by COMP-MGMT against masters in other domains).** All COMP-MGMT consumer / contributor / embedded_master rows pointing at HCM, ATS, ERP-FIN, TALENT-MGMT, PAYROLL masters check clean. No B5 failures owed by COMP-MGMT to other domains.
 - **Bucket 2 B2-S3 SCOPE-CREEP on Sequoia One.** If the user removes the row, no follow-up on other domains. If the user moves the primary placement to BEN-ADMIN / HRIS, that decision interacts with those domains' b1 audits.
 - **Cross-domain inbound `pay_equity.gap_detected` from PA (handoff 1105).** Currently target_domain_module_id is NULL. Routes to PA's b1 audit to populate target FK (target = COMP-BENCHMARKING module 80 once the inbound DMDO is declared) and to COMP-BENCHMARKING's own consumer-DMDO authoring on `workforce_segments` if PA owns that master. Surface for PA's owner.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the truly-technical subset of the 9 B1 items via loader `c:/dev/domain-map/.tmp_deploy/fix_comp_mgmt_b1_technical_2026_05_31.ts`.
+
+### Applied (3 of 9 B1 items)
+
+- **B1-S6 (B9 event_category backfill):** PATCHed `trigger_events.event_category='state_change'` on rows 423, 424, 425, 426, 427, 428 per the audit's pre-specified verb anchors (`*.published`, `*.updated`, `*.issued`, `*.granted`, `*.vested`, `*.refreshed` are all state transitions on the publishing master). Verified all 6 rows now read `state_change`.
+- **B1-S4 (B7 user-edges per Rule #10):** INSERTed 11 `data_object_relationships` rows from `users` (748) to each of the 7 COMP-MGMT masters with the verb / cardinality / actor the audit pre-specified. New row ids 1539-1549. Pattern: `users <verb> <plural_label>`, `owner_side='source'`, `record_status` omitted (Rule #1 default `new`), `notes` omitted (Rule #15).
+- **B1-S5 (B6 intra-domain edges):** INSERTed 6 `data_object_relationships` rows among COMP-MGMT masters per the audit's pre-specified verb / kind / cardinality. New row ids 1550-1555 covering `merit_cycles contains merit_recommendations` (composition), `compensation_plans seeds merit_cycles` (reference), `compensation_statements composes merit_recommendations` (composition), `compensation_statements composes equity_grants` (composition), `salary_bands references compensation_benchmarks` (many_to_many reference), `compensation_plans includes salary_bands` (many_to_many reference). `notes` omitted (Rule #15).
+
+### Deferred (6 of 9 B1 items)
+
+- **B1-S1 (M7 equity_grants single-master conflict):** Defer; gated on B2-S1 user-call on which market canonically masters `equity_grants` (CAP-TABLE-GRANTS vs COMP-INCENTIVES). New decisions/options outside the technical scope.
+- **B1-S2 (F1-F5 module-level system skills + 9 skill_tools migration):** Defer; new entities (4 `skills` rows + skill_tools rows + legacy skill 38 retirement) and gated on B1-S1's master-of-equity_grants decision. Out of technical-only scope.
+- **B1-S3 (E1-E6 permissions + roles):** Defer; new entities (12 baseline + 18 workflow-gate permissions, 3-4 new roles, role_modules + role_permissions junctions) and gated on B1-S1. Out of technical-only scope.
+- **B1-S7 (B10b outbound `target_domain_module_id` PATCHes):** Defer. Verified live that the target side has not declared consumer DMDOs for the relevant payloads on the target modules the audit named, or has multiple consumer modules with no canonical pick: handoff 105 (PAYROLL on `merit_recommendations` 156) has no PAYROLL consumer DMDO at all; 422 (HCM on `merit_recommendations`) has no HCM consumer DMDO; 423/424 (PAYROLL/ERP-FIN on `equity_grants`) and 1141 (ERP-FIN on `earning_codes`) have no target consumer DMDOs (ERP-FIN has zero modules in the catalog); 1125/1126 (HCM/PAYROLL on `compensation_plans`) have no target consumer DMDOs. Without a declared consumer DMDO on the target module, the patch is not "derivable from existing modules" per the technical-fix rule. All route to B1-S8.
+- **B1-S8 (NULL `target_domain_module_id`, owed by other domains):** Defer; report-only, not COMP-MGMT's fix to make. The expanded list now subsumes 105, 107, 422, 423, 424, 1125, 1126, 1141.
+- **B1-S9 (H1 APQC `handoff_processes`, ~26 candidate rows):** Defer entire batch. Pre-flight against `/processes?source_framework=eq.apqc_pcf_cross_industry&external_id=in.(10511,10539,10544,10532,10547,10742,10549,10545,10550)` shows the audit's PCF id assertions do not resolve to the named processes: `external_id` 10511 resolves to "Review compensation plan" (L4), not the L3 "Develop and manage rewards"; 10532 resolves to "Deliver employee communications" (L3); 10742 resolves to "Process customer credit" (L3); 10539, 10544, 10547, 10549, 10545, 10550 do not exist as `external_id` values. Per the technical-fix rule ("verify the PCF id resolves in live `/processes` BEFORE insert"), every proposed `handoff_processes` row is blocked until the audit re-derives the correct PCF ids. Defer to a follow-up audit pass that maps APQC processes by name and re-asserts.
+
+### Loader
+
+`c:/dev/domain-map/.tmp_deploy/fix_comp_mgmt_b1_technical_2026_05_31.ts` (run from project root via `bun run`).
+
+### Spot-check links
+
+- https://tests.semantius.app/domain_map/data_object_relationships
+- https://tests.semantius.app/domain_map/trigger_events

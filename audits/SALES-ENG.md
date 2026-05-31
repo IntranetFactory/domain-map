@@ -149,3 +149,40 @@ Candidates B3-S7 and B3-S8 are likely new domains in their own right (point-solu
 - **B8 inbound (other side's responsibility).** Per the asymmetry rule, the 5 inbound handoffs (79, 81, 200, 210, 510) imply that CDP, CRM (×2 for 81 + 200), ACCT-PLAN, and MA each owe an outbound cross-domain relationship row from their masters into SALES-ENG. None of those rows exist today; each is a B8 outbound gap on the source domain's b1 audit.
 - **B10 inbound discovery (consumer DMDOs the catalog implies SE should hold).** Currently SE holds one cross-domain dependency (a `contributor` row on `crm_contacts` id 98, CRM-mastered). No `embedded_master` rows. Per B10's discovery procedure, SE should also declare `consumer` on `crm_leads` (consumed via handoff 200), `customers` (consumed via handoff 210), `lead_scores` (consumed via handoff 510), `crm_opportunities` (consumed via handoffs 81 / 477). After B1-S1's modules land, the cadence module SHOULD have explicit `consumer` DMDO rows on each. Today this surfaces as a SE-side gap, NOT a foreign-domain owed item, so it gets folded into **B1-S1's loader once the modules exist** (mark as a sub-item, not a separate Bucket 1 line). Listed here for cross-domain visibility.
 - **Pairwise reconciliation findings, CRM neighbor.** The Section-1 / Section-2 / Section-3 / Section-4 / Section-5 diff for the SE ↔ CRM boundary will be ill-formed until B1-S1 creates SE's modules. Defer the pairwise pass to the post-B1-S1 audit; once SE has modules, the diff is meaningful.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Continuation subagent run, technical-only allowlist (PATCH enum backfills, B10b FK PATCHes derivable from existing modules, INSERT `domain_regulations`, DELETE stale rows when audit names IDs, PATCH naming renames, INSERT `data_object_relationships` user-edges where Rule #10 pre-specifies tuples, PATCH `permission_verb_override` when audit names state+verb, INSERT `handoff_processes` only when audit pre-specifies `handoff_id` + resolvable PCF, PATCH `notes=''` reverts when audit names row IDs).
+
+### Applied (technical)
+
+| ID | Fix | Outcome |
+|---|---|---|
+| B1-S2 | PATCH `event_category` on 7 `trigger_events` rows (463, 464, 465, 466, 467, 468, 469) per the Rule #13 enum. All values from {`state_change`, `signal`}; mapping exactly as audit table proposes. | 7 patched, 0 skipped. Verified by re-read. |
+| B1-S7 | INSERT 4 user-edge `data_object_relationships` rows per Rule #10: `users (748) → sales_cadences (121)` verb=`owns_cadence`; `users → call_recordings (122)` verb=`dialled_call`; `users → sales_emails (123)` verb=`sent_email`; `users → conversation_intelligence_records (124)` verb=`analyzed_for_user`. All `owner_side=source`, `relationship_type=one_to_many`, `relationship_kind=reference`, `record_status='new'`, `notes=''`. | 4 inserted (ids 1693, 1694, 1695, 1696). |
+
+The audit's B1-S7 narrative spoke of 8 rows (4 users→masters + 4 masters→users), but the verb-shape list given (`owns_cadence`, `dialled_call`, `sent_email`, `analyzed_for_user`) is user-side phrasing for the users→masters direction. Each `data_object_relationships` row already carries `relationship_verb` (parent voice) and `inverse_verb` (reverse phrasing), so the canonical Rule #10 shape is one row per actor relationship, not two. 4 rows inserted; the reverse direction is captured by the `inverse_verb` column on each row.
+
+### Deferred (12 of 14 B1 items)
+
+| ID | Reason for defer |
+|---|---|
+| B1-S1 | Creates new `domain_modules` (deferred: new entities/modules out of allowlist). Also gated on B2-S1 (user picks module-split shape). |
+| B1-S3 | Authors 2 new `trigger_events` rows + retargets handoffs (deferred: new entities out of allowlist; not an enum backfill, not a naming rename). |
+| B1-S4 | B10b FK PATCH on 8 outbound handoffs (deferred: every derivation depends on the SE modules created by B1-S1, which do not exist yet, so no existing modules to derive from). |
+| B1-S5 | B10b FK PATCH on 5 inbound handoffs (deferred: same reason as B1-S4, target module is SALES-ENG-CADENCE which does not exist yet). |
+| B1-S6 | 3 intra-domain `data_object_relationships` rows among the 4 SE masters (deferred: prompt restricts `data_object_relationships` writes to user-edges per Rule #10; these are master-to-master edges, not user-edges). |
+| B1-S8 | Cross-domain outbound `data_object_relationships` (deferred: not user-edges per Rule #10; also depends on B1-S1 module ids for some target resolutions). |
+| B1-S9 | ~10 `data_object_aliases` rows (deferred per prompt: no bulk `data_object_aliases` inserts unless audit pre-specifies exact tuples; the audit lists alias names and vendor context but does not pre-specify the full column tuples a loader needs). |
+| B1-S10 | ~17 lifecycle-state rows (deferred: depends on B1-S1 modules for `domain_module_id` assignment; also not on the technical allowlist). |
+| B1-S11 | 5 pattern-flag PATCHes (deferred per prompt explicitly: pattern-flag flips are deferred). |
+| B1-S12 | DELETE legacy skill 104 + 2 new system-skill loads (deferred: depends on B1-S1 modules; new skills/tools out of allowlist). |
+| B1-S13 | F7 channel-link justification (no write needed; surface-only, depends on B2-S5 user wording). |
+| B1-S14 | APQC tagging: 10 proposed `handoff_processes` inserts. Verified `processes.external_id`: the audit's PCF numbers (10009, 10010, 12878, 20110) do not resolve in the live `processes` table (`/processes?external_id=eq.10010` returns `[]`). Per prompt: "INSERT `handoff_processes` ONLY when audit pre-specifies `handoff_id` + resolvable PCF (verify before insert)". No proposal resolves; all 10 deferred. Existing `handoff_processes` rows (handoff 82 → 37 substring; 206 → 1618 substring; 476 → 686 curated; 477 → 712 curated) left untouched. |
+
+### Notes
+
+- No JWT-audience errors encountered during the run.
+- No `notes` writes (every inserted row left `notes=''` per Rule #15; no notes reverts needed because the prior audit run did not pollute any `notes` columns).
+- Loader: [`.tmp_deploy/fix_sales_eng_b1_technical_2026_05_31.ts`](../.tmp_deploy/fix_sales_eng_b1_technical_2026_05_31.ts). Idempotent (skips already-populated enums and existing user-edge triples on re-run). Invoked from project root `c:/dev/domain-map` per Rule #6.
+- UI spot-check: https://tests.semantius.app/domain_map/trigger_events and https://tests.semantius.app/domain_map/data_object_relationships.

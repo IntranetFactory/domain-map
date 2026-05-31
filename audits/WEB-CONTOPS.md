@@ -189,3 +189,31 @@ Candidates queued in `audits/_missing-domains.md` from this audit: **CMP** (new 
 | HCMS | B10b (`source_domain_module_id`) | 1 inbound HCMS->WEB-CONTOPS handoff (837 `content_locale.added`) has NULL `source_domain_module_id`. HCMS owes the fix once HCMS modules are confirmed and the source module is identified. |
 | HCMS | B10b (`target_domain_module_id` on HCMS receiver side) | 2 outbound WEB-CONTOPS->HCMS handoffs (816 `brand_violation.detected`, 817 `broken_link.detected`) have NULL `target_domain_module_id`. HCMS owes the receive-side fix as part of its own B10b. |
 | KMS | B10b + DMDO + B8 inbound mirror | 2 outbound WEB-CONTOPS->KMS handoffs (818 `content_lifecycle.review_due`, 819 `content_inventory.refreshed`) have NULL `target_domain_module_id`. KMS has no consumer DMDO row on `content_lifecycle_plans` or `web_content_inventory_records` either. KMS owes the full receive-side wiring as part of its own audit. KMS also owes the B8 mirror rows (inbound relationship rows on the KMS side referencing the WEB-CONTOPS payloads). |
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the in-scope, pre-specified B1 fixes via [.tmp_deploy/fix_web_contops_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_web_contops_b1_technical_2026_05_31.ts).
+
+### Applied (2 of 11 B1 items)
+
+- **B1-S7 (B9 enum backfill, 7 PATCHes).** PATCHed `trigger_events.event_category` on ids 902-908 to the audit-specified values: 902 `content_audit.completed` -> `lifecycle`; 903 `accessibility_finding.detected` -> `signal`; 904 `broken_link.detected` -> `signal`; 905 `seo_finding.created` -> `signal`; 906 `brand_violation.detected` -> `signal`; 907 `content_lifecycle.review_due` -> `threshold`; 908 `content_inventory.refreshed` -> `lifecycle`. All 7 rows previously empty (Rule #13 violation cleared). 0 skipped.
+- **B1-S4 (B7 users edges, 11 INSERTs).** Inserted the 11 user-edge `data_object_relationships` rows the audit pre-specifies (Rule #10). New row ids 1576-1586, all with `data_object_id=748` (users), `relationship_type='many_to_many'`, `relationship_kind='reference'`, `is_required=false`, `owner_side='target'`, `record_status='new'` (default), `notes=''` (default). Verbs taken verbatim from the audit text (`owns`, `reviews`, `assignees`, `approves`); inverse verbs follow the standard passive pattern (`is_owned_by`, `is_reviewed_by`, `is_assigned_to`, `is_approved_by`). B7 hard-fail cleared on user-edge count.
+
+### Deferred (9 of 11 B1 items)
+
+- **B1-S1 (M-band, modules).** Gated on B2-1 (user must pick the 2/3/4-module split shape). New entities and DMDOs not auto-authored.
+- **B1-S2 (lifecycle states).** Depends on S1 (requires `domain_module_id` on each `data_object_lifecycle_states` row).
+- **B1-S3 (pattern flags).** Gated on B2-2 (user must answer 7 per-flag yes/no questions). Per Rule #15 no `notes` writes regardless.
+- **B1-S5 (intra-domain `data_object_relationships`).** Depends on S1+S2 per the audit's cross-bucket dependencies.
+- **B1-S6 (data_object aliases).** Depends on S1; audit gives candidate vendor terminology but does not pre-specify exact alias tuples per row.
+- **B1-S8 (workflow-gate `trigger_events`).** Depends on S2 (states must exist before published-verb events can be authored).
+- **B1-S9 (outbound cross-domain `data_object_relationships`).** Per task scope these are entity-to-entity cross-domain INSERTs (not user-edges per Rule #10); the audit itself says "Surface to user" for the load decision. Deferred.
+- **B1-S10 (module-anchored system skills + tools).** Depends on S1; new skills/tools/skill_tools rows are new-entity authoring.
+- **B1-S11 (H1 APQC tagging, handoff_processes).** Every PCF mapping in the B1-S11 table is flagged "needs PCF lookup at fix time", "possibly defer", or "confident L3 (after lookup)" - none are pre-resolved with a concrete `process_id`. Deferred per task rule (insert only when `handoff_id` + resolvable PCF pre-specified and verified).
+
+### Post-load spot-check
+
+- `https://tests.semantius.app/domain_map/trigger_events`
+- `https://tests.semantius.app/domain_map/data_object_relationships`
+
+No JWT-audience errors encountered.

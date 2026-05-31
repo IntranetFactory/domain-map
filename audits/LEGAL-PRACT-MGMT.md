@@ -152,3 +152,39 @@ The following items surfaced during the audit but are not LEGAL-PRACT-MGMT's to 
 - **CLM b1** owes: a `consumer` or `embedded_master` DMDO on `engagement_letters` in CLM-CONTRACT-AUTHORING (or whichever CLM module receives the e-signed engagement letter to start the contract lifecycle). Handoff 332 is the only fully-wired outbound row; the consumer-side DMDO is the missing piece on the receiving side.
 - **Catalog-wide gap (no specific owner yet):** `time_entries` (id 162) has `kind='domain_owned'` but **no `domain_module_data_objects.role='master'` row exists anywhere in the catalog**. It carries 3 `consumer` rows (PSA-TIME-EXPENSE, PAYROLL-RUN, PA-WORKFORCE-METRICS) and 2 `contributor` rows (LEGAL-MATTER-MGMT, LEGAL-TIME-BILLING) but the canonical master is missing. This violates Rule #11 (every `embedded_master` / consumer / contributor needs a canonical master OR `kind='platform_builtin'`). The natural canonical owner is PSA-TIME-EXPENSE (90 — already a consumer rather than a master; would need promotion). Surface to the user as a catalog-cleanup item; whichever PSA or HCM audit takes this on owes the master row promotion.
 - **Adjacent-market candidates** queued in `audits/_missing-domains.md`: EDISCOVERY, LEGAL-HOLD, LEGAL-RES, IP-MGMT. Decision shape is triage on the queue file, not a per-domain audit obligation.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the truly-technical subset of Bucket 1. Five operations total (4 PATCHes + 1 INSERT). Direct CLI calls; no loader script needed at ≤3 PATCH threshold + 2 single-row ops.
+
+### Fixes applied
+
+| ID | Type | Op | Detail |
+|---|---|---|---|
+| B1-S3 | PATCH | `trigger_events.event_category` | id 1048 `court_filing.submitted` → `state_change` |
+| B1-S3 | PATCH | `trigger_events.event_category` | id 1049 `court_filing.served` → `state_change` |
+| B1-S3 | PATCH | `trigger_events.event_category` | id 1050 `client_invoice.issued` → `lifecycle` |
+| B1-S3 | PATCH | `trigger_events.event_category` | id 1051 `client_invoice.paid` → `lifecycle` |
+| H1 (1 of 5) | INSERT | `handoff_processes` | handoff 917 → process 302 ("Invoice customer" 10743 L3), role `implements`, proposal_source `agent_curated`, record_status default `new`. New row id 247, key `917.302`. |
+
+Counts verified post-write: 4 of 4 `trigger_events` rows now carry valid enum values; `/handoff_processes?handoff_id=eq.917` returns the new row 247.
+
+### Deferred B1 items
+
+| ID | Reason for deferral |
+|---|---|
+| B1-S1 | M7 hard fail. Cross-bucket dep on B2-S3 architectural intent (user picks `embedded_master` vs DELETE). Not technical. |
+| B1-S2 | Same as B1-S1: gated on B2-S3. |
+| B1-S4 | B9b 7 intra-domain handoffs gated on B2-S3 outcome (embedded_master shapes change the required set). Also requires authoring a new `conflict_check.cleared` trigger_event before row (a) can ship; new event creation requires judgment on shape and is out of the truly-technical envelope. |
+| B1-S5 | 4 cross-domain `data_object_relationships`. Audit specifies proposed verb shapes but target masters are unconfirmed: ERP-FIN side "likely has a `general_ledger_entries` master", KMS side "likely has a `knowledge_articles` master", GRC side "defer until target's B-band is checked". Requires target-domain master lookup + verb-shape judgment. |
+| B1-S6 | B10b NULL `target_domain_module_id` on 6 handoffs explicitly "not LEGAL-PRACT-MGMT's fix" per audit (asymmetry rule: target's B10b). |
+| B1-S7 | Pairwise consumer DMDOs explicitly "Not LEGAL's fix to make" per audit. Owed by GRC, KMS, ERP-FIN, ECM, AUDIT b1 audits. |
+| H1 rows 333, 334, 918, 919, 920 | Audit lists `OR` between PCFs at different levels (L2 vs L3 vs L4) and notes "needs PCF lookup at fix time for a tighter L3" (334) / "medium L4" confidence (920). Not pre-specified single-target; requires judgment. |
+| H1 refinement on handoff 332 | "Surface for fix-time refinement; not a defect." Judgment call, deferred. |
+
+### UI spot-checks
+
+- https://tests.semantius.app/domain_map/trigger_events (filter id in 1048,1049,1050,1051)
+- https://tests.semantius.app/domain_map/handoff_processes (filter handoff_id=917, new row id 247)
+
+No JWT-audience errors during this run.

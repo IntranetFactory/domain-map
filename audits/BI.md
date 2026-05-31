@@ -163,3 +163,47 @@ No candidate domain (separate market) was surfaced — every Bucket 3 item is a 
 - **Missing consumer DMDOs (B1-N3 elaborated):** ITSM, SUB-MGMT, DCG, DLP, FINOPS should each declare `consumer` (or contributor / embedded_master) DMDO rows on the relevant BI masters they receive payloads from. Specifically: ITSM-INCIDENT-MGMT consumes `bi_reports`; SUB-MGMT consumes `bi_subscriptions`; DCG consumes `bi_reports` (and likely `bi_dashboards` if B1-S3 lands); DLP consumes `bi_dashboards`; FINOPS consumes `bi_queries`. Each is a 1-row insert on the respective target domain's audit.
 
 Schedule b1 audits for METRICS-LAYER, DCG, DATA-AI-PLAT, ITSM, SUB-MGMT, DLP, FINOPS to pick up these report-only follow-ups.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied audit-pre-specified, technical-only B1 fixes via [.tmp_deploy/fix_bi_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_bi_b1_technical_2026_05_31.ts). No user judgment invoked.
+
+### Fixes applied
+
+| Finding | Action | Count |
+|---|---|---|
+| B1-S2 (trigger_events enum) | PATCH `event_category` on 8 events: 706 lifecycle, 707 state_change, 708 lifecycle, 709 state_change, 710 threshold, 711 threshold, 712 state_change, 713 lifecycle | 8 |
+| B1-S3 (missing handoff `bi_dashboard.published` -> DCG) | INSERT 1 row (handoff id 1341): source BI (74), target DCG (88), trigger 708, payload `bi_dashboards` (692), `integration_pattern=api_call`, `friction_level=low`. `source_domain_module_id` left NULL (blocked on B1-S1) | 1 |
+| B1-S5 (Rule #10 user-edges) | INSERT 5 `data_object_relationships` rows from `users` (748) to each BI master with `owner_side=target`, `relationship_type=one_to_many`, `relationship_kind=reference`, `is_required=true`. Verbs: `authors` (bi_queries 693, bi_reports 691, bi_dashboards 692), `owns` (bi_subscriptions 694), `stewards` (semantic_metrics 230). New ids 1526-1530 | 5 |
+| B1-S10 (APQC tags) | DELETE stale `discovery_substring` row id 124 (handoff 218 -> process 505). INSERT 8 `agent_curated` `handoff_processes` rows on the audit-pre-specified pairs (handoff -> process external_id): 687->20765, 688->20779, 689->20903, 151->20770, 218->20779 (replacement), 692->20770, 696->20903, 711->20779. New ids 280-287 | 9 ops (1 delete + 8 inserts) |
+
+### Deferred (out of technical scope or blocked)
+
+| Finding | Reason for defer |
+|---|---|
+| B1-S1 (M1 + A2: capabilities + modules + DMDO migration) | Gated on B2-S1 (user picks 2-module vs 3-module cut) |
+| B1-S4 (6 intra-domain B6 edges) | Not user-edges (B7); intra-domain `data_object_relationships` are not in the technical-fix list for this continuation |
+| B1-S6 (4 cross-domain B8 relationships) | Audit says "target masters need identification at fix time", verbs not pre-specified per row |
+| B1-S7 (B10b backfill on 5 outbound) | Blocked on B1-S1 (needs BI per-module DMDOs) |
+| B1-S8 (12-18 alias rows) | New alias inserts, not naming renames; not in the technical-PATCH list for this continuation |
+| B1-S9 (lifecycle states) | Blocked on B1-S1 (states need `domain_module_id` per Rule #14) |
+| B1-S10 deferred subset (handoffs 690, 691, 695) | Audit explicitly defers to Discover Pass 3 (no clean PCF) |
+| B1-N1, B1-N2 (METRICS-LAYER + DCG target-side B10b) | Blocked on B1-S1 |
+| B1-N3 (consumer DMDOs on 5 BI-target domains) | Not BI's fix; owed by other domains' audits |
+| All of Bucket 2 (B2-S1 - B2-S4) | User-judgment calls |
+| All of Bucket 3 (B3-1 - B3-7) | Speculative; requires formal Phase 0 vendor-surface pass |
+
+### Loader
+
+[.tmp_deploy/fix_bi_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_bi_b1_technical_2026_05_31.ts)
+
+### Verification spot-checks
+
+- `/trigger_events?id=in.(706,707,708,709,710,711,712,713)&select=id,event_category` — all 8 carry non-empty enum values matching the audit specification.
+- `/handoffs?and=(source_domain_id.eq.74,target_domain_id.eq.88,trigger_event_id.eq.708)` returns 1 row (id 1341).
+- `/data_object_relationships?data_object_id=eq.748&related_data_object_id=in.(230,691,692,693,694)` returns 5 rows.
+- `/handoff_processes?handoff_id=in.(687,688,689,151,218,692,696,711)&select=handoff_id,process_id,proposal_source` returns 8 `agent_curated` rows; the prior id-124 `discovery_substring` row on 218 is gone.
+
+### JWT errors
+
+None encountered during the fix loop.

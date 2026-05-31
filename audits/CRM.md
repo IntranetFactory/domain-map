@@ -347,3 +347,30 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 | ERP-FIN | B10b: populate `target_domain_module_id` on 472. Phase B may still be pending per the 2026-05-29 b2 baseline audit (no DMDO data). |
 | WORK-MGMT | B10b clean on 175. |
 | RET-STORE | B10b: populate `source_domain_module_id` on 936. |
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent pass applying the deterministic, no-judgment subset of Bucket 1 per the standing technical-only filter (PATCH enum backfills, deterministic FK PATCHes, audit-named DELETEs, Rule #15 notes reverts on audit-named rows). Loader: `c:/dev/domain-map/.tmp_deploy/fix_crm_b1_technical_2026_05_31.ts` (executed from project root).
+
+### Applied (5 of 9 B1 items)
+
+| ID | Action | Result |
+|---|---|---|
+| B1-S2 | PATCH `trigger_events` id=462 set `event_category='signal'` | done; before `''`, after `'signal'` |
+| B1-S4 | PATCH `data_objects` id=102 (sales_activities) `notes=''` (Rule #15 revert; audit named the row id and flagged the note as contradictory) | done; before 217 chars, after empty |
+| B1-S7 | DELETE 5 duplicate `role_modules` rows (ids 388, 389, 390, 391, 393), keeping the primary or first secondary per pair | done; 5 rows deleted, the 5 keep-rows (287, 288, 291, 290, 297) remain |
+| B1-S8 | DELETE legacy domain-level `crm-system` skill (id 41) plus its 7 dependent `skill_tools` rows (423-429) | done; 7 skill_tools + 1 skill removed; no orphan rows |
+| B1-S10 | PATCH `handoffs` ids 1261, 1262 set `target_domain_module_id=46` (FSM publishes both events with payload `customers` (97), mastered in CRM-ACCT-MGT) | done; both rows now point at module 46 |
+
+### Deferred (4 of 9 B1 items)
+
+| ID | Reason for deferral |
+|---|---|
+| B1-S1 | Gated on B2-S1: user must choose DELETE vs PROMOTE for the 6 CRM-AI-COPILOT contributor DMDO rows. Architectural call, not technical. |
+| B1-S3 | Audit pre-specifies 5 intra-domain handoff rows but row (b) carries an "or" choice (`crm_lead.qualified` 70 vs `crm_lead.scored_above_threshold` 160). Event-pick is judgment; the whole batch surfaces for user disambiguation. |
+| B1-S9 | Gated on B2-S3: user must choose between supplying approved `skill_tools.notes` wording for `send_email` + `create_calendar_event` on CRM-ACTIVITY, or PATCHing both tool_ids to `notify_person`. |
+| B1-H1 | 75 APQC tagging candidates; none of the proposed rows pre-specify a resolvable PCF id. Picking among multiple PCF L3/L4 candidates per handoff requires lookup + judgment. Deferred to a dedicated APQC tagging pass. |
+
+B1-S5 and B1-S6 are report-only routing entries (B10b owed by other domains); no CRM-side fix exists for them. They remain in the Report-only follow-ups table above.
+
+No JWT errors during the run. Tenant verified as `ma@adenin.com` / module 1001 before any write.

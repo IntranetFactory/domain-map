@@ -152,3 +152,51 @@ Re-verification queries:
 ### `domains.notes` pointer (Rule #15)
 
 _Per Rule #15, no `domains.notes` write happens without user-approved wording. Offer at the end of the audit if the user wants a back-pointer to this file._
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+### Scope
+
+Reviewed the original Bucket 1 against the prior Fixes-applied table. Identified items that were either deferred or left unaddressed by the 2026-05-29 pass, then classified each residual as TECHNICAL (mechanical, audit pre-specifies the write fully) or DEFER (requires judgment, new authoring, or per-row decisions).
+
+### Residual B1 inventory
+
+| Original ID | Status after 2026-05-29 | Classification | Reason |
+|---|---|---|---|
+| B1-S1 (E1 roles) | Applied (4 roles, 19 role_modules, 23 role_permissions) | n/a | closed |
+| B1-S2 (B10b inbound NULL target) | Applied (55 rows retargeted to module 38) | n/a | closed |
+| B1-S3 (handoffs 148, 149 scope creep) | Applied (DELETED) | n/a | closed |
+| B1-S4 (handoff 630 NULL target) | Self-resolved (KMS unmodularized) | n/a | closed |
+| B1-S5 (B9b intra-domain cross-module handoffs) | Deferred | DEFER | Audit explicitly flags this as a creative pass requiring new `trigger_events` to be authored (event_name, event_category, payload semantics). The 8 candidate relationships are named but no event row is pre-specified; each event needs editorial choice. Not mechanical. |
+| B1-S6 (trigger_event 39 re-point) | Applied | n/a | closed |
+| B1-S7 (event 65 asset_failure) | Deferred to ITAM audit (user decision) | DEFER | User-owned cross-domain question. |
+| H1 top 10 high-confidence APQC tags | Applied (9 new + 1 dedup-skipped) | n/a | closed |
+| H1 queue (~45 remaining inbound APQC tags) | Deferred | DEFER | Audit estimates "most will collapse to PCF 20903" but does NOT enumerate a per-handoff PCF mapping. The audit also flags an unspecified "handful" as Pass-3 deferrals (`dlp_incident.blocked`, `dq_sla_definition.breached`, `ml_model.drift_detected`). Per the technical-fix rule, INSERT `handoff_processes` only when audit pre-specifies `handoff_id` + resolvable PCF; the queue fails that test. |
+
+### Fixes applied
+
+| Step | Surface | Volume | Notes |
+|---|---|---|---|
+| (none) | n/a | 0 rows | All truly-technical B1 items had already been resolved in the 2026-05-29 pass. No residual item met the technical-fix criteria. |
+
+### Deferred B1 items (residual)
+
+| ID | Reason for deferral |
+|---|---|
+| B1-S5 | Needs new `trigger_events` per intra-domain edge (incident→problem, problem→change, change→CI, request→incident, sla→incident, sla→request, incident→knowledge, problem→knowledge). event_name, event_category, payload data_object_id, and condition each require editorial choice. Surface to user for a focused creative pass. |
+| B1-S7 | Cross-domain attribution call; belongs to ITAM audit. |
+| H1 queue | ~45 inbound handoffs (target_module 38 after S2 backfill) lack per-handoff PCF pre-specification. Bulk-assigning PCF 20903 would mass-pollute the catalog; a per-handoff trigger_event review is required to separate the "Triage IT service delivery incidents" bulk from the Pass-3 misfits. Surface as a follow-up tagging pass. |
+
+### UI spot-checks
+
+- `https://tests.semantius.app/domain_map/handoffs` (filter target_domain_id=1, target_domain_module_id=is.null → expect 0 rows)
+- `https://tests.semantius.app/domain_map/role_modules` (filter role.role_code in IT-SERVICE-DESK-AGENT, IT-SERVICE-DESK-MANAGER, IT-CHANGE-MANAGER, IT-KNOWLEDGE-AUTHOR → expect 19 rows)
+- `https://tests.semantius.app/domain_map/handoff_processes` (filter handoff_id in 28, 30, 55, 57, 142, 143, 162, 186, 630, 631 → expect 10 rows, 9 agent_curated + 1 discovery_override on 186)
+
+### Re-verification queries (run 2026-05-31)
+
+- `/handoffs?target_domain_id=eq.1&target_domain_module_id=is.null` returns `[]`. PASS (B10b inbound).
+- `/handoffs?source_domain_id=eq.1&source_domain_module_id=is.null` returns `[]`. PASS (B10b outbound).
+- `/role_modules?roles.role_code=in.(...)` returns 19 rows. PASS (E1).
+- `/handoff_processes?handoff_id=in.(28,30,55,57,142,143,162,186,630,631)` returns 10 rows. PASS (H1 top batch).
+- `/processes?external_id=eq.20903` returns id=1299, name "Triage IT service delivery incidents". Confirms the audit's anchor PCF exists for the deferred bulk-tag pass.

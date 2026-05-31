@@ -142,3 +142,47 @@ Universal-or-near-universal vendor entities surfaced from agent enumeration of t
 ### Candidate domain queued
 
 - **CAASM (Cyber Asset Attack Surface Management).** Surfaced during this audit. Flagship vendors: Axonius, JupiterOne, runZero, Sevco Security, Lansweeper Cloud. Adjacent to DISCOVERY, CMDB, ITAM, SECOPS, VULN-MGMT. Candidate capabilities: cross-source asset aggregation, security control coverage gap detection, unmanaged-device discovery, security tool coverage analysis. Queued via `append_missing_domain.ts` to `audits/_missing-domains.md` for triage.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied only the truly-technical, no-judgment Bucket 1 fixes; everything gated on Bucket 2 #1 (modularization) or otherwise requiring user judgment is deferred and remains open. Loader: `.tmp_deploy/fix_discovery_b1_technical_2026_05_31.ts` (run from project root with `bun run`).
+
+### Fixes applied (5 items)
+
+- **B1-S1**: PATCHed `domains.business_logic` on DISCOVERY (id 5), replacing the U+2014 em-dash with parenthesized phrasing per project CLAUDE.md.
+- **B1-B1**: DELETEd 2 stale `handoff_processes` rows (ids 51, 53) tagging handoffs 48 and 49 with PCF processes 9 ("Manage Financial Resources") and 12 ("Manage External Relationships"). Both were `discovery_substring` false-positives on the verb "manage".
+- **B1-B2**: DELETEd legacy `domain_data_objects` row (id 145) for DISCOVERY x `service_maps` (data_object 79). Live role was `contributor` (audit notes had said `master`); either way the row is stale because CMDB-SERVICE-MAPPING canonically masters `service_maps` in the live DMDO layer.
+- **B1-S10**: INSERTed 3 `data_object_relationships` rows per Rule #10, pointing each DISCOVERY master at the platform_builtin `users` row (id 748): `discovery_scans -[initiated by]-> users`, `discovered_devices -[reviewed by]-> users`, `discovery_sources -[owned by]-> users`. All `relationship_type=many_to_many`, `relationship_kind=reference`, `owner_side=source`, `is_required=false` (catalog convention for actor edges).
+- **B1-H1**: INSERTed 9 new `agent_curated` `handoff_processes` rows for DISCOVERY-related handoffs that had no prior agent-curated tag:
+  - 32 -> 1312 (Maintain IT asset records)
+  - 47 -> 294 (Manage infrastructure resource administration)
+  - 48 -> 1309 (Manage infrastructure configuration)
+  - 49 -> 1309 (Manage infrastructure configuration)
+  - 147 -> 1309 (Manage infrastructure configuration)
+  - 622 -> 1312 (Maintain IT asset records)
+  - 623 -> 1312 (Maintain IT asset records)
+  - 624 -> 1301 (Operate and monitor online systems)
+  - 626 -> 1301 (Operate and monitor online systems)
+
+  5 audit-proposed rows were intentionally NOT touched:
+  - handoff 33: existing `discovery_substring` row at the correct PCF 1258 (audit said keep); re-stamping `proposal_source` to `agent_curated` is not in the technical PATCH allow-list for this pass.
+  - handoff 50: prior `agent_curated` row at PCF 1301; audit proposed 1297. Per Rule #1, prior curated decisions not silently overwritten.
+  - handoff 621: prior `agent_curated` at PCF 1309; audit proposed 1288. Skipped same reason.
+  - handoff 625: prior `agent_curated` at PCF 1309; audit proposed 1311. Skipped same reason.
+  - handoff 1199: prior `agent_curated` at PCF 1309; audit also proposes 1309. No-op.
+
+### Deferred (17 Bucket-1 items)
+
+- **B1-S2** (5-7 capabilities + `capability_domains` links): new entities; deferred.
+- **B1-S3** (2-4 additional `solutions` + `solution_domains`): new entities; deferred.
+- **B1-S4** (catalog_tagline / catalog_description): Rule #20 surface-to-user; never auto-write.
+- **B1-S5** (4 `domain_modules`): new entities; gated on Bucket 2 #1 modularization hypothesis.
+- **B1-S6 / B1-S7** (`domain_module_capabilities`): gated on B1-S5.
+- **B1-S8** (DMDO re-anchoring of the 3 masters): gated on B1-S5.
+- **B1-S9** (intra-domain `data_object_relationships`): not Rule #10 user-edges; outside this pass's technical scope (proposed edges include `discovered_devices -> configuration_items` and `-> hardware_assets` which involve judgment about cross-domain shape).
+- **B1-S11** (`data_object_aliases`): audit flags as "B2 borderline" with vendor-terminology context; outside the "exact tuples" pre-specification requirement, and Rule #18 risks vendor names landing in the alias notes.
+- **B1-S12** (`data_object_lifecycle_states` for the 3 masters): gated on B1-S5 (workflow-gate permission prefix needs realizing-module `domain_module_code`).
+- **B1-S13 / B1-S14** (system-skill rename + per-module anchoring): gated on B1-S5.
+- **B1-T1..T5** (trigger-event coverage review): all 5 frame as options ("Add ITAM rollup once DISCOVERY->ITAM scoping is decided", "Acceptable", "May want a sibling outbound"); judgment, not technical.
+
+No JWT errors encountered. The 4-pass audit's headline gap (DISCOVERY not modularized, M1 hard fail) remains unresolved; resolving it requires the Bucket 2 #1 user decision.

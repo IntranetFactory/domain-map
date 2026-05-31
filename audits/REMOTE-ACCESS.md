@@ -268,3 +268,52 @@ The strongest signal in the diff: the loaded footprint covers the session + reco
 | Missing consumer DMDOs on REMOTE-ACCESS masters | ITSM, MSP-PSA, GRC | ITSM and GRC do not declare `consumer / contributor / embedded_master` on `remote_sessions` or `session_recordings` at the module-DMDO layer (legacy ITSM rollup of `service_incidents` notwithstanding). MSP-PSA-SVC-DESK already declares `remote_sessions` consumer (optional) — the only domain that does. Each target domain's b1 audit should add the relevant consumer DMDO on the receiving module once REMOTE-ACCESS modularizes. |
 | RMM cross-domain handoff visibility | RMM | RMM does not publish a `rmm_agent.installed` or `rmm_agent.unreachable` event into REMOTE-ACCESS even though REMOTE-ACCESS's consumer DMDO on `rmm_agents` suggests it expects awareness of agent state. RMM b1 audit should evaluate whether a cross-domain handoff is warranted. |
 | Subagent-driven Phase 0 vendor-surface research not run | this audit | The Pass-2 surface was synthesized from the audit's own vendor knowledge rather than from a formal Phase 0 subagent + vendor-research-protocol pass. Re-run formally before any Bucket 3 entity loads. |
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied truly-technical B1 fixes per the continuation prompt's scope (enum backfills, Rule #10 user-edges with audit pre-specified roles, handoff_processes inserts with verified PCF IDs). Judgment-bearing items left for the user.
+
+Loader: `.tmp_deploy/fix_remote_access_b1_technical_2026_05_31.ts` (run from project root, idempotent, all three steps passed post-flight).
+
+### Applied (13 writes)
+
+**B1-S6, PATCH 3 `trigger_events.event_category`** (Rule #13 enum backfill):
+
+- 653 `remote_session.started` -> `state_change`
+- 654 `remote_session.ended` -> `state_change`
+- 655 `remote_session.unauthorized_access_attempt` -> `signal`
+
+**B1-S4 / B7, INSERT 4 `data_object_relationships`** (Rule #10 user-edges, audit pre-specifies the 4 roles). `data_object_id=748` (users) source, `owner_side='target'`, `one_to_many`, `reference`, `is_required=false` (matches recent loader convention):
+
+- id 1613: users -> remote_sessions (238), verb `initiates`
+- id 1614: users -> remote_sessions (238), verb `participates_in`
+- id 1615: users -> session_recordings (239), verb `authors`
+- id 1616: users -> session_recordings (239), verb `approves`
+
+**B1-H1, INSERT 6 `handoff_processes`** (PCF tags; audit pre-specifies handoff_id + PCF external_id; processes 295 / 268 verified live). `proposal_source='agent_curated'`, `record_status` omitted (DB default `new`, Rule #1):
+
+- id 403: handoff 163 -> process 295 (`Operate IT user support`)
+- id 404: handoff 164 -> process 268 (`Control IT risk, compliance, and security`)
+- id 405: handoff 646 -> process 295 (`Operate IT user support`)
+- id 406: handoff 647 -> process 295 (`Operate IT user support`)
+- id 407: handoff 648 -> process 268 (`Control IT risk, compliance, and security`)
+- id 408: handoff 160 -> process 295 (`Operate IT user support`)
+
+### Deferred (still open)
+
+| ID | Reason |
+|---|---|
+| B1-S1 (M1: 3 new `domain_modules`) | New modules; gated on B2-S1 (master split) + B2-S5 (naming). |
+| B1-S2 (M4: 6 `domain_module_capabilities`) | Depends on B1-S1. |
+| B1-S3 (B6 intra-domain `produces` relationship) | Audit says "cardinality TBD with user". |
+| B1-S5 (B8 cross-domain relationships) | Out of technical scope (continuation rule restricts `data_object_relationships` to Rule #10 user-edges). GRC-targeted edges additionally blocked on Bucket 3 target masters. |
+| B1-S7 (B10b own-side module FK backfill on 7 handoffs) | Blocked on B1-S1 (REMOTE-ACCESS has zero modules to derive FKs against). |
+| B1-S8 (F1 legacy skill 100 retire) | Depends on B1-S1 + per-module Phase-S re-author. |
+| B1-S9 (F7 channel-primitive replacement) | Rolls into the Phase-S re-author (B1-S8); not a standalone fix. |
+| B1-S10 (B11: 6-8 `data_object_aliases`) | Audit lists slash-separated synonym options, not exact tuples; bulk aliases deferred per scope. |
+| B1-S11 (3 `domain_regulations` rows for HIPAA / PCI / SOX) | Blocked on B2-S4 (regulation-scoping user pick). |
+| B1-S12 (B12 lifecycle states on both masters) | Blocked on B1-S1 (realizing-module prefix is required for workflow-gate permission prefixes per Rule #14) + B2-S2 (state-list + per-gate user picks). |
+
+### Verification
+
+Loader post-flight confirmed: 3 events now carry the new `event_category` values; 4 user-edges live on `remote_sessions` / `session_recordings`; 7 `handoff_processes` rows now cover the 7 REMOTE-ACCESS handoffs (the pre-existing tag on 162 plus 6 new). No JWT errors during the run.

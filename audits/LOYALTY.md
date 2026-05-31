@@ -153,3 +153,48 @@ Two candidates queued via `scripts/analytics/append_missing_domain.ts`:
 2. **REFERRAL-MKT - Referral Marketing** (Friendbuy, ReferralCandy, Yotpo Referrals, Mention Me, Talkable, Extole). Often bundled into LOYALTY suites (Yotpo Loyalty & Referrals, LoyaltyLion Refer-a-Friend) but multiple pure-play vendors exist. Triage decision: promote-as-domain, fold-into-LOYALTY, or reject.
 
 Both entries appended to `audits/_missing-domains.md` for human triage per the queue's promotion / fold / reject workflow.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Scope
+
+Applied truly-technical B1 fixes only (audit-pre-specified tuples that do not require user judgment). Module-split-gated and judgment items deferred.
+
+### Applied (2 inserts via `.tmp_deploy/fix_loyalty_b1_technical_2026_05_31.ts`)
+
+| Action | Row | Status |
+|---|---|---|
+| INSERT `handoff_processes` | handoff 231 (LOYALTY tier.upgraded -> CRM) -> process 642 (PCF 18926, "Build engagement and relationship with members"), proposal_source=agent_curated | new (hp.id=563) |
+| INSERT `handoff_processes` | handoff 497 (LOYALTY loyalty_transaction.posted -> ERP-FIN) -> process 643 (PCF 16633, "Monitor customer loyalty program benefits ...") | new (hp.id=564) |
+
+### Deferred (16 items)
+
+| Audit ID | Reason for defer |
+|---|---|
+| B1-S1 (4-module split) | Gated on Bucket 2 item 1 user pick; new entities (modules). |
+| B1-S2 (module-level system skills) | Gated on B1-S1 (needs module IDs); new entities (skills + skill_tools). |
+| B1-S3 (DELETE legacy skill 81 + 6 skill_tools) | Strict ordering per audit: must follow B1-S2 cure; defer until module-level skills exist. |
+| B1-S4 (lifecycle states across 5 masters) | Gated on B1-S1 (needs `domain_module_id` per state); Bucket 2 item 3 user pick for `loyalty_tiers` exemption. |
+| B1-S5 (data_object_aliases, 5 masters) | Audit gives candidate forms ("2-3 alias rows per master") but does not pre-specify exact tuples (Rule per prompt: bulk aliases require pre-specified tuples). |
+| B1-S6 (intra-domain `data_object_relationships`, 6 edges) | Out of B1-technical scope (only `users` edges in scope); also no full tuples (no verb / inverse_verb / cardinality / owner_side specified). |
+| B1-S7 (`users` edges, 5 actor labels) | Actor labels named (account_manager, config_author, catalog_owner, adjustment_author, fulfillment_owner) but no verb / inverse_verb / cardinality / owner_side tuples. Not pre-specified per Rule #10. |
+| B1-S8 (cross-domain relationships, 4 edges) | Audit explicitly states "Final verbs reviewed by user during loader draft"; also gated on B1-S1. |
+| B1-S9 (B10b source FK backfill) | Audit explicitly states "Resolves automatically AFTER B1-S1 cures". |
+| B1-S10 (catalog_tagline / catalog_description) | Rule #20: surface to user before write (Bucket 2 item 2 wording already drafted, awaiting approval). |
+| B1-S11 (`business_function_capabilities` for LOY-MEMBER-PORTAL, LOY-POINTS-LEDGER) | Audit explicitly states "User reviews proposed function assignments"; new contributors / consumers excluded per prompt. |
+| B1-M1 .. B1-M5 (5 missing entities: gdpr_consent_records, data_subject_requests, unclaimed_property_records, promotion_campaigns, member_communications_preferences) | New entities (DMDOs / data_objects) excluded per prompt; also gated on B1-S1 module split. |
+| APQC tag for handoff 324 (LOYALTY <- B2C-COMM commerce_order.placed -> PCF 641) | Existing handoff_processes row (hp.id=442) already points at PCF 132 / 18924 parent cluster. Replacement / coexistence is judgment, not mechanical. |
+| APQC tag for handoff 498 (LOYALTY redemption_transaction.completed -> B2C-COMM -> PCF 644) | Existing handoff_processes row (hp.id=443) already points at PCF 132 / 18924 parent cluster. Same reason. |
+| APQC `record_status` flips on handoffs 232, 478, 505 (discovery_substring -> approved or re-tag) | Rule #1: never flip record_status without explicit per-load user approval. |
+
+### Audit accuracy note
+
+Audit Coverage rollup states "0 `agent_curated` exist today" for LOYALTY's 7 cross-domain handoffs. Live state at fix-pass time shows 2 pre-existing `agent_curated` rows (hp.id=442, hp.id=443 on handoffs 324, 498, pointing at PCF 132 / 18924). After this pass: 4 `agent_curated` rows on 4 distinct handoffs (231, 324, 497, 498), 0 `approved`. Catalog quality headline remains 0%.
+
+### Loader
+
+`c:/dev/domain-map/.tmp_deploy/fix_loyalty_b1_technical_2026_05_31.ts`
+
+### UI
+
+- https://tests.semantius.app/domain_map/handoff_processes

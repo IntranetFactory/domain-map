@@ -215,3 +215,27 @@ _(empty until reviewed)_
 ### Fixes applied
 
 _(empty until reviewed)_
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+### Fixes applied
+
+Loader: [.tmp_deploy/fix_data_ai_plat_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_data_ai_plat_b1_technical_2026_05_31.ts)
+
+| B1 ID | Action | Row counts |
+|---|---|---|
+| B1-S1 | PATCH `trigger_events.event_category` on 8 rows per audit-pre-mapped values (698→`lifecycle`, 699→`signal`, 700→`signal`, 701→`state_change`, 702→`lifecycle`, 703→`lifecycle`, 704→`state_change`, 705→`threshold`). | 8 PATCH |
+| B1-H1 (subset) | INSERT `handoff_processes` for the 5 audit-confident PCF pairs only: 154→272, 682→272, 686→272, 158→273, 725→272. `proposal_source='agent_curated'`, `record_status` defaulted to `new` (Rule #1), `role` defaulted to `implements`, `notes` omitted (Rule #15). | 5 INSERT |
+
+### Deferred B1 items
+
+| B1 ID | Reason |
+|---|---|
+| B1-S2 | Outbound `source_domain_module_id` backfill on DATA-AI-PLAT's 11 outbound handoffs is gated on the B2-S1 module split (no `domain_modules` rows exist for this domain). `target_domain_module_id` is owed by the 7 receiving domains' own b1 audits (BI, DCG, CONV-AI, AIOPS, MDM, DQ, ITSM). |
+| B1-S3 | `source_domain_module_id` on the 9 inbound handoffs is owed by source domains' b1 audits (DI, DCG, METRICS-LAYER, KGP, DQ). DATA-AI-PLAT's own-side `target_domain_module_id` is gated on B2-S1. |
+| B1-S4 | Consumer DMDOs on downstream domains (DCG, DQ, BI, MDM, CONV-AI, AIOPS, ITSM) are each receiving domain's authoring task, not DATA-AI-PLAT's. |
+| B1-H1 (remainder) | 9 audit candidates flagged "needs lookup", "candidate", or "medium" confidence on the PCF anchor (handoffs 151, 152, 153, 155, 156, 219 REPLACE, 221, 683, 684, 685, 693, 697, 731). Resolving each requires picking among multiple plausible L3/L4 PCF rows, judgment call surfaced to user. Plus ~5 modern-AI events the audit pre-deferred to Discover Pass 3 (custom processes for `ml_model.deployed`, `feature_set.staleness_breached`, `ai_agent.deployed`, `data_product.published` etc. that lack a clean cross-industry PCF analog). |
+
+UI spot-checks:
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/handoff_processes

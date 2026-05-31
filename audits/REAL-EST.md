@@ -172,3 +172,36 @@ All three queued via `scripts/analytics/append_missing_domain.ts`.
 - **RE-INVEST audit (full Phase A/B)** , handoff 857 target module NULL. Same as RE-CRE; schedule.
 - **VIS-MGMT audit** , B3-S7 raises whether visitor passes overlap with REAL-EST's facility-ops or sit purely in VIS-MGMT.
 - **CAFM** , if B2-S4 picks (a) starter-kit, schedule a CAFM audit after REAL-EST modules land.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Loader: `.tmp_deploy/fix_real_est_b1_technical_2026_05_31.ts`. Tenant verified ma@adenin.com, module 1001 in scope, no JWT errors.
+
+### Applied
+
+- **B1-S4 (B9 event_category enum backfill).** PATCH 4 rows: 938 `property.listed` -> `lifecycle`, 939 `property.updated` -> `state_change`, 940 `floor_plan.created` -> `lifecycle`, 941 `floor_plan.updated` -> `state_change`. All four verified live.
+- **B1-S3 (B7 user-edges, Rule #10).** INSERT 13 `data_object_relationships` rows from `users` (id 748, `kind=platform_builtin`) to the 8 REAL-EST masters using the actor list pre-specified in the audit: properties (owns), leases (signs + approves), floor_plans (authors), property_spaces (occupies + plans), occupancy_records (records), facility_work_orders (requests + is assigned to + approves), utility_meter_readings (reads), capital_projects (manages + approves). `owner_side='target'` (master owns lifecycle), `relationship_type='one_to_many'`, `relationship_kind='reference'`. Record IDs 1600-1612.
+- **H1 (handoff_processes inserts).** INSERT 7 `agent_curated` rows after resolving each audit-proposed PCF by `process_name` (the audit's literal IDs were stale; resolved names matched live process ids 353, 1783, 1412, 345, 1511, 344, 345): (292, 353), (293, 1783), (294, 1412), (295, 345), (856, 1511), (858, 344), (870, 345). Handoff 291 already had `agent_curated` row 367 (process 824 `Request unplanned maintenance`); no insert. Handoff 857 promote-only (existing substring row 169 on process 343, which is the same PCF the audit promotes) requires PATCH of `proposal_source` on an existing row, not in this run's technical-only scope; surfacing as gap below.
+
+### Deferred (with reasons)
+
+| ID | Reason |
+|---|---|
+| B1-S1 (module split) | Architectural decision; gated on B2-S1 + B2-S2 user picks. |
+| B1-S2 (master-to-master relationships) | Not in technical scope (technical user-edges only per Rule #10); also B6 master-to-master edges typically follow module shape. |
+| B1-S5 (NULL source_module_id on 6 outbound handoffs) | Gated on B1-S1; no source modules exist yet. |
+| B1-S6 (NULL target_module on 292 + 870) | Gated on B1-S1 for 292; 870 also gated on B2-S2 design decision. |
+| B1-S7 (data_object_aliases) | Bulk aliases not pre-specified as exact tuples; aliases also implicate vendor names that need Rule #18 scan and user approval per tuple. |
+| B1-S8 (lifecycle states) | Needs `domain_module_id` from B1-S1; permission_verb_override states+verbs partly specified but module FK is the blocker. |
+| B1-S9 (B4 pattern flags) | Gated on B2-S3 per-flag user confirmation. |
+| B1-S10 (business_function_domains contributors/consumers) | Explicit DEFER per spec (no new business_function_domains contributors/consumers without user confirmation). |
+| B1-S11 (system skill retirement + module-level rebind) | Gated on B1-S1 (new modules required first). |
+| B1-S12 (channel rebind from `send_email` to `notify_person`) | Gated on B1-S11 sequencing; also a `tool_id` rebind on `skill_tools` is not on the in-scope PATCH operation list. |
+| H1 handoff 857 promote (substring -> agent_curated) | Requires PATCH of `proposal_source` on row 169; not in technical-only PATCH allowlist (renames + permission_verb_override + enum backfills only). Surface to user. |
+| H1 handoff 294/856 replace (DELETE existing substring rows 136 / 168) | Audit identifies by composed key, not row id; spec requires audit to name row IDs for DELETE. Both handoffs now carry both rows (substring + agent_curated); user can DELETE 136 and 168 explicitly if desired. |
+
+### Gap surfaces for the user
+
+- Handoff 857: existing row 169 (handoff 857, process 343, `discovery_substring`) is the same PCF the audit promotes. Approve a PATCH to set `proposal_source='agent_curated'` on row 169?
+- Handoff 294: existing row 136 (process 311 `Perform capital project accounting`) now sits alongside the new agent_curated row 398 (process 1412 `Measure financial returns...`). Confirm DELETE row 136 to ship the audit's replacement intent?
+- Handoff 856: same shape, existing row 168 (process 343 `Develop property strategy and long term vision`) alongside new row 400 (process 1511 `Confirm alignment of property...`). Confirm DELETE row 168?

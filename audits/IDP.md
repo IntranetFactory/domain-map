@@ -125,6 +125,41 @@ IDP has two neighbors via handoffs (target side): ECM (weight 2) and AP-AUTO (we
 
 Both at weight 2, below the per-domain checklist's deep-dive threshold of 3. Light-touch verdict only; deep pairwise reconciliation deferred unless user explicitly requests on either side.
 
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Scope
+
+Technical-only B1 fixes applied per skill rule #6 procedure. Loader: [.tmp_deploy/fix_idp_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_idp_b1_technical_2026_05_31.ts). Run from project root `c:/dev/domain-map`.
+
+### Applied (2 items)
+
+- **B1-S5 (B9 enum backfill).** PATCHed 11 `trigger_events` rows (ids 776-786) to set `event_category` per the audit's pre-specified mapping (lifecycle / state_change / threshold / signal). All IDP trigger_events now satisfy the enum check constraint. Verified post-load: 0 rows with empty `event_category`.
+- **B1-S7 (B7 user-edges).** INSERTed 7 `data_object_relationships` rows linking IDP masters to `users` (id 748), one per master per Rule #10. Verbs: `capture_batches has submitter`, `extracted_records has validator`, `idp_validation_results has reviewer`, `idp_extraction_models has model owner`, `idp_extraction_templates has template author`, `training_datasets has curator`, `document_classification_results has triager`. All `many_to_many / reference / owner_side=source`. Verified post-load: 7 IDP-to-users edges present.
+
+### Deferred (12 items, plus 4 H1)
+
+- **B1-S1 (M1, new modules).** New entity creation; gated on Bucket 2 #1 module-split decision (user picks (a) 2-modules / (b) 3-modules / (c) 1-module).
+- **B1-S2 (A4, catalog_tagline / catalog_description).** Rule #20 buyer-shaped fields require user-approved wording before write.
+- **B1-S3 (A2, capabilities).** New entity creation; deferred until module-split decision lands so capability authoring can be aligned with the module set.
+- **B1-S4 (B1 DMDOs).** Cannot insert: zero `domain_modules` rows exist for IDP. Gated on B1-S1.
+- **B1-S6 (B10b FK backfill).** Cannot derive: ECM and AP-AUTO each have **zero** `domain_modules` rows (verified live). Source IDP modules also absent. Both ends of every FK are un-resolvable until the respective domains land modules.
+- **B1-S8 (B6 intra-domain relationships).** Audit names 7 edge pairs but does not pre-specify `verb` / `inverse_verb` / `cardinality` / `owner_side` / `is_required` per edge. Verb authoring is judgment; deferred for user authoring.
+- **B1-S9 (B11 aliases).** Skill rule #18 forbids bulk alias inserts without pre-specified exact tuples. Audit lists vendor synonyms in narrative form (6 masters with multiple vendor names each), not as exact `(data_object_id, alias_name, vendor)` tuples. Deferred.
+- **B1-S10 (F1/F2 system skills).** New entity creation; gated on B1-S1.
+- **B1-S11 (F3 mutate / workflow-gate tools).** New entity creation; gated on B1-S10.
+- **B1-S12 (B12 lifecycle states).** New entity creation plus pattern-flag decisions; per Rule #12 the config-shape exemption for `idp_extraction_templates` is a user-surface decision (Rule #15 forbids the prior auto-notes shortcut). Deferred.
+- **B1-S13 (E1 roles).** New entity creation; gated on B1-S1 (the multi-module shape that drives the 3-role floor only exists once modules land).
+- **B1-S14 (B6 cross-domain verbs, rows 585 / 586).** Verb decisions deferred to user per Bucket 2 #6.
+- **B1-H1.1-1.4 (H1 APQC tags).** Audit's proposed PCF `external_id` values verified against `/processes`: 11058 resolves to "Receive strategy/budget" (NOT "Manage content"), 10918 resolves to "Monitor control effectiveness" (NOT invoice capture), 10920 is absent. None of the proposed PCF anchors are correct; per skill rule, `handoff_processes` inserts are gated on **resolvable** PCF. Deferred pending re-research of correct PCF leaf IDs (likely under 4.2 "Procure materials and services" for AP-AUTO and 11.x for ECM records management).
+
+### JWT errors
+
+None encountered during this run.
+
+### Loader
+
+[.tmp_deploy/fix_idp_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_idp_b1_technical_2026_05_31.ts)
+
 ### Pass 4, Pairwise reconciliation (none triggered)
 
 No neighbor reached the weight-3 deep-dive threshold. ECM and AP-AUTO each get a one-line summary:

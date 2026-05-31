@@ -231,3 +231,52 @@ Eyeball recommendation: all 3 ring true on the regulated-VMS market shape; user 
 - No `record_status='approved'` writes (Rule #1 / constraint #6); no `notes` writes anywhere (Rule #15 / constraint #7).
 - No candidates queued in `audits/_missing-domains.md` for this audit: VMS is itself the market and the candidates surfaced are entities within VMS, not adjacent markets.
 - The em-dash review was performed in-memory against the draft text before writing; no U+2014 characters appear in this file.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Loader
+
+`c:/dev/domain-map/.tmp_deploy/fix_vms_b1_technical_2026_05_31.ts` (run from project root). Single-step apply; idempotent; safe to re-run.
+
+### Applied (1 of 17 B1 items)
+
+- **B1-H1 (6 of 7 rows): INSERT 6 `handoff_processes`** with `proposal_source='agent_curated'`, `role='implements'`, `record_status` defaulted to `'new'`, `notes` empty.
+  - id=656 handoff_id=118 -> process_id=222 ("Manage new hire/re-hire", PCF 10443)
+  - id=657 handoff_id=587 -> process_id=923 ("Track workforce utilization", PCF 10392)
+  - id=658 handoff_id=588 -> process_id=315 ("Process accounts payable (AP)", PCF 10756)
+  - id=659 handoff_id=589 -> process_id=315 ("Process accounts payable (AP)", PCF 10756)
+  - id=660 handoff_id=590 -> process_id=1418 ("Enter employee time worked into payroll system", PCF 10858)
+  - id=661 handoff_id=591 -> process_id=167 ("Manage suppliers", PCF 10280)
+  - Pre-flight verified each handoff touches VMS (source_domain_id=64) and each PCF external_id matches the audit. No duplicates and no competing rows existed.
+  - Handoff 117 (VMS -> S2P) skipped: the audit's own confidence note qualifies the tag as "assuming entity 187 resolves to SOW; if PM, the verb belongs to EAM and the handoff itself is mis-modeled". That conditional gates on Bucket 2 #B2-1, so the row is judgment, not pre-specified.
+
+### Deferred (16 of 17 B1 items)
+
+| Item | Band | Reason deferred |
+|---|---|---|
+| B1-S1 | M1 | New `domain_modules` rows (new entities); module naming and entity 187 identity are Bucket 2 #B2-1 / #B2-4 user picks. |
+| B1-S2 | M5 | Lifecycle state module attribution; cascades from B1-S1. |
+| B1-S3 | M7 | Single-master invariant post-modularization; cascades from B1-S1. |
+| B1-S4 | F1 | Retire legacy skill 118 and author 2 new system skills; new entities, cascades from B1-S1. |
+| B1-S5 | A4 | `catalog_tagline` / `catalog_description`; Rule #20 buyer-voice draft, surface to user BEFORE writing. |
+| B1-S6 | B2 | Recorded pass; no action. |
+| B1-S7 | B3 | Rule #9 naming arbitration on `rate_cards`; user picks canonical-bare-word vs prefix vs abort. |
+| B1-S8 | B4 | Pattern flag flips on 5 masters; explicit "user confirms" surface (Bucket 2 #B2-3). |
+| B1-S9 | B6 | Semantically-suspect relationship rows on entity 187; gated on Bucket 2 #B2-1. |
+| B1-S10 | B7 | Recorded pass; no action. |
+| B1-S11 | B9 | INSERT 2 new `handoffs` rows for `rate_card.published`; new entities, not in technical-scope. |
+| B1-S12 | B9b | Intra-domain handoffs; gated on B1-S1. |
+| B1-S13 | B10b | PATCH `handoffs.source_domain_module_id` for 7 rows; NOT derivable from existing modules (VMS has zero modules); cascades from B1-S1. |
+| B1-S14 | B11 | Recorded pass; no action. |
+| B1-S15 | B12 | Lifecycle states and workflow-gate permissions; new entities, gated on B1-S1. |
+| B1-S16 | E1 | Roles, role_modules, role_permissions; new entities, gated on B1-S1. |
+| B1-B1 | boundary | Cross-domain DOR mirrors; gated on Bucket 2 #B2-1. |
+| B1-B2 | boundary | INSERT `data_object_relationships` `contingent_workers converts_to employees`; target=employees (id=31), NOT a Rule #10 user-edge (Rule #10 covers edges to `kind='platform_builtin'` rows only); verb selection is judgment. |
+
+### Result
+
+JWT errors: none. Loader exit 0. UI: https://tests.semantius.app/domain_map/handoff_processes
+
+The 16 deferred items remain on the audit; none are silently absorbed. Headline counts:
+- Applied: 1 item (6 rows in `handoff_processes`).
+- Deferred to user: 16 items (gated on Bucket 2 / Rule #20 / new entities / cascades from B1-S1).

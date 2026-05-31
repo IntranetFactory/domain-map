@@ -272,3 +272,33 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 | WORK-MGMT | B10b: populate `target_domain_module_id` on outbound 1024 (`project_task.completed` -> WORK-MGMT side). |
 | SUB-MGMT | If B2-S3 lands as option (a) PATCH PSA lifecycle states to a SUB-MGMT module, confirm whether SUB-MGMT-SUBSCRIPTIONS (167) or a new SUB-MGMT-REVREC sibling module owns the `revenue_recognition_records` workflow. |
 | CLM | If B2-S5 lands as option (b), confirm whether `legal_contract.amended` event should publish to PSA-PROJECT-DELIVERY for SOW changes. |
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent application of Bucket 1 items that are truly technical (no judgment, no Bucket 2 gates, no Rule #15 / Rule #18 ambiguity). Loader: [`.tmp_deploy/fix_psa_b1_technical_2026_05_31.ts`](../.tmp_deploy/fix_psa_b1_technical_2026_05_31.ts).
+
+### Applied
+
+- **B1-S2 (5 intra-PSA cross-module handoffs):** Inserted handoff rows 1336-1340, all `lifecycle_progression` / `friction_level=low` / `record_status=new`. Reuses existing trigger_events 1170, 1167, 1166, 1162, 1229 (verified live before insert). Tuples (source_module -> target_module / trigger_event):
+  - 1336: DELIVERY (86) -> FINANCIALS (89) / `project_task.completed` (1170)
+  - 1337: RESOURCE (87) -> FINANCIALS (89) / `project_resource_allocation.committed` (1167)
+  - 1338: FINANCIALS (89) -> DELIVERY (86) / `project_billing_milestone.slipped` (1166)
+  - 1339: RESOURCE (87) -> DELIVERY (86) / `project_assignment.released` (1162)
+  - 1340: DELIVERY (86) -> RESOURCE (87) / `service_project.completed` (1229)
+- **B1-S4 (data_object_aliases on PSA masters):** Inserted 21 alias rows 944-964 across all 6 PSA masters. `alias_type='solution_term'` with `solution_id` resolved per vendor (the `data_object_aliases.alias_type` enum has no `vendor_specific` value; flagship-vendor terminology is solution-specific by construction and Rule #18 explicitly licenses vendor names on `data_object_aliases`). Coverage: `service_projects` 5, `project_tasks` 3, `project_assignments` 4, `project_billing_milestones` 3, `resource_skill_inventories` 3, `project_resource_allocations` 3. All `record_status=new`. The audit's `Replicon Polaris PSA` candidate resolved to `Replicon` (id 254) which is the only matching catalog row.
+
+### Deferred (with reasons)
+
+- **B1-S1 / B1-S8** (`revenue_recognition_records` lifecycle ownership + tool 1035 boundary): gated on B2-S3 architectural choice (PSA contributor + PATCH lifecycle vs. PSA co-master with slice decomposition vs. leave-as-is). User decision required.
+- **B1-S3** (2 inbound NULL `target_domain_module_id`, handoffs 787 / 515): gated on B2-S4 (per-row read of legitimate consumption vs. mis-modeled handoff). User decision required.
+- **B1-S7** (Rule #15 notes-pollution sweep, approximately 20 rows): gated on B2-S1 (whether existing notes were user-approved at load time or auto-populated). User decision required before any PATCH-to-empty.
+- **B1-H1** (31 APQC tagging candidates): the audit pre-specifies PCF rows by description only ("Process payroll OR Manage project finances", "Manage employee deployment OR Manage workforce", etc.), not by resolvable `process_id`. Per task constraint, `handoff_processes` rows insert only when audit pre-specifies `handoff_id` + resolvable PCF. Per-handoff PCF lookup + best-match selection is judgment work, deferred.
+- **B1-S5 / B1-S6** (report-only): owed by ERP-FIN, PA, HCM, S2P, EPM, WFM, EXPENSE, VMS, AGENCY-MGMT, WORK-MGMT. Not PSA's load.
+
+### JWT errors
+
+None encountered.
+
+### Frontmatter
+
+Status remains `feedback_needed`. Bucket 2 (5 items: S1-S5) and Bucket 3 (12 entity + 3 regulation + 2 modularization candidates) still owe the user. Bucket 1 outstanding: S1, S3, S5, S6, S7, S8, H1.

@@ -239,3 +239,37 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 ### Decisions
 
 (none yet, awaiting user)
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Classification
+
+| ID | Decision | Reason |
+|---|---|---|
+| B1-S1 | DEFER | New `domain_modules` rows; gated on B2-S1 (user picks the module split). |
+| B1-S2 | APPLY (no-op) | Enum backfill, audit names IDs 651 and 652 with target `state_change`. Live state already has both rows at `event_category='state_change'`; no PATCH required. |
+| B1-S3 | DEFER | New `trigger_events`; depends on B1-S1 modules + B1-S4 lifecycle states. |
+| B1-S4 | DEFER | New `data_object_lifecycle_states`; depends on B1-S1 (modules to FK to) and B2-S6 (config-shape exemption decision). |
+| B1-S5 | DEFER | PATCH derivable from existing modules per Rule #10, but the source modules do not exist yet (M1 hard-fail). Depends on B1-S1. |
+| B1-S6 | DEFER | Same shape as S5: target module does not exist yet. Depends on B1-S1. |
+| B1-S7 | DEFER | Report-only; not RMM's fix. |
+| B1-S8 | DEFER | Report-only; not RMM's fix. |
+| B1-S9 | DEFER | New intra-domain handoffs; depends on B1-S1 + B1-S3. |
+| B1-H1 | DEFER | Every proposed APQC tag row carries `PCF id: needs PCF lookup`; no pre-specified `handoff_id` + resolvable PCF tuple is in the audit. |
+
+### Applied
+
+- **B1-S2:** Verified via GET `/trigger_events?id=in.(651,652)` that both rows already have `event_category='state_change'`. The audit-reported B9 gap is closed; no write needed. Surfacing here so a re-audit does not re-open the same item.
+
+### Not applied
+
+- **B2-S2 (notes pollution on 12 DMDO rows):** Reverts to `notes=''` would be a pre-specified row-IDs revert, but the audit explicitly classifies this as a Bucket 2 judgment call (option (a) retain vs (b) revert), so the user owns the decision per scope rules. Not applied.
+- All other items deferred per the table above.
+
+### Loader path
+
+No loader written this continuation. The single in-scope item (B1-S2) was already cured live; no batch warranted creating `.tmp_deploy/fix_rmm_b1_technical_2026_05_31.ts`.
+
+### JWT errors
+
+None.

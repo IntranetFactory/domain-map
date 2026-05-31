@@ -198,3 +198,50 @@ _(empty until reviewed)_
 ### Fixes applied
 
 _(empty; this is a read-only audit pass; no writes were made to the catalog)_
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+### Residual B1 classification
+
+The 2026-05-30 pass left **all 8 Bucket 1 items** unfixed (the prior Fixes-applied section was empty). Classifying each residual against the truly-technical criteria:
+
+| ID | Classification | Reason |
+|---|---|---|
+| B1-S1 | DEFER | New `domain_modules`; explicitly gated on B2-S1 module-split judgment. |
+| B1-S2 | TECHNICAL | Enum backfill on 3 `trigger_events`; audit fully specifies the target `event_category` value per row. |
+| B1-S3 | DEFER | ~30 new `data_object_lifecycle_states`; gated on B1-S1 (modules) and B2-S2 / B2-S5. |
+| B1-S4 | DEFER | New `business_function_domains`; gated on B2-S6 (user picks owner). |
+| B1-S5 | DEFER | DELETE of handoff 285 explicitly routed to B2-S3 as an editorial choice. |
+| B1-S6 | DEFER | PATCH of handoff 288 offers two paths; gated on B2-S4. |
+| B1-S7 | DEFER | B10b FKs derivable only after DSPM modules exist; gated on B1-S1. |
+| B1-H1 | DEFER | APQC `handoff_processes`; audit names candidate PCF rows by description only, no resolved `process_id`s; instructions require pre-specified resolvable PCF. |
+
+### Fixes applied (technical, this pass)
+
+| ID | Action | Result |
+|---|---|---|
+| B1-S2 | PATCH `trigger_events` id=930 (`cloud_database.discovered`) set `event_category='lifecycle'` | applied |
+| B1-S2 | PATCH `trigger_events` id=931 (`data_warehouse.classified`) set `event_category='state_change'` | applied |
+| B1-S2 | PATCH `trigger_events` id=932 (`saas_app_instance.detected`) set `event_category='lifecycle'` | applied |
+
+3 PATCHes applied via direct CLI (≤3, no loader needed per Rule #6). No JWT-audience errors. No loader path used.
+
+### Deferred (7 of 8 residual B1 items)
+
+| ID | Deferred because |
+|---|---|
+| B1-S1 | Gated on B2-S1 (user must confirm 4-module split). |
+| B1-S3 | Gated on B1-S1 + B2-S2 + B2-S5. |
+| B1-S4 | Gated on B2-S6 (user picks business function). |
+| B1-S5 | Gated on B2-S3 (DELETE vs new event is editorial). |
+| B1-S6 | Gated on B2-S4 (PATCH path is editorial). |
+| B1-S7 | Gated on B1-S1 (no DSPM modules exist yet). |
+| B1-H1 | PCF `process_id`s not pre-resolved in the audit; lookups deferred to fix time. |
+
+### UI spot-checks
+
+- https://tests.semantius.app/domain_map/trigger_events (filter id in 930, 931, 932; confirm `event_category` populated per Rule #13)
+
+### Verification
+
+`GET /trigger_events?id=in.(930,931,932)` returned the 3 rows with their new `event_category` values; all match the audit's prescribed assignments. No other catalog rows touched this pass.

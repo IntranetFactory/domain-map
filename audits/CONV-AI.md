@@ -169,3 +169,28 @@ Queued via `scripts/analytics/append_missing_domain.ts` (do NOT load as `domains
 3. **AI-AGENT-OPS** - AI Agent Operations and Observability. LangSmith, Arize AI, Langfuse, Helicone, Galileo, W&B Weave. LLM agent observability + eval + trace replay; would also serve LLMOps and DATA-AI-PLAT.
 
 Voice biometrics (Pindrop, Nuance Gatekeeper, LumenVox) is plausibly a separate candidate; left as Bucket 3 #7 pending Phase 0 vetting before queueing.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Loader: [`.tmp_deploy/fix_conv_ai_b1_technical_2026_05_31.ts`](../.tmp_deploy/fix_conv_ai_b1_technical_2026_05_31.ts).
+
+### Applied (technical-only, no judgment)
+
+- **B1-S6 partial.** PATCH `data_objects.id=259 (conversation_transcripts).has_personal_content=true`. Publish-lock flags on `bot_definitions`, `intent_definitions`, `conversation_flows` were left for user confirmation per audit wording.
+- **B1-S9.** PATCH 6 `trigger_events.event_category` backfills per Rule #13 enum: `802 bot_definition.published → state_change`, `803 bot_definition.disabled → state_change`, `804 intent_definition.published → state_change`, `805 intent_definition.low_confidence_burst → threshold`, `806 conversation_flow.published → state_change`, `807 conversation_flow.fallback_triggered → signal`. All 6 were `''` pre-load; idempotent guard refuses to overwrite any non-empty value.
+- **B1-S7.** INSERT 4 intra-domain `data_object_relationships` edges named in audit: `699 bot_definitions composes 701 conversation_flows` (composition, one_to_many), `701 conversation_flows references 700 intent_definitions` (reference, many_to_many), `260 intent_detections occurs_in 259 conversation_transcripts` (reference, many_to_many), `701 conversation_flows produces 259 conversation_transcripts` (reference, one_to_many). Pre-existing edge 478 (`intent_definitions informs knowledge_articles`) preserved.
+- **B1-S8 partial.** INSERT 3 user→author edges per Rule #10: `748 users authored bot_definitions/intent_definitions/conversation_flows` (reference, one_to_many, owner=source). The "may have" `reviewing_agent` edges on `conversation_transcripts` / `intent_detections` were deferred (audit hedge implies judgment).
+- **B1-H1.1, H1.3, H1.4, H1.6, H1.7.** INSERT 5 `handoff_processes` rows for handoffs that had no prior tagging and where the audit named a confident PCF: `227→196`, `743→927`, `744→926`, `746→52`, `153→52`. All `proposal_source='agent_curated'`, `role='implements'`. Handoffs 723, 724, 745, 228 already carried `handoff_processes` rows (with different PCFs than the audit recommended); not overridden, since changing prior assignments is a judgment call.
+
+### Deferred (per task spec — judgment / new entities / blocked / report-only)
+
+- **B1-S1, S2, S4, S10, S12, S13, S14, M1, M2, M3, U1, U2, U3, U4** — all involve new entities, new modules, new capabilities, new roles, or are gated on the modularization decision (Bucket 2 #1). Per task spec: new entities / DMDOs / modules are deferred.
+- **B1-S3** — `catalog_tagline` / `catalog_description` per Rule #20: drafts require user review before write.
+- **B1-S5** — positive finding, no action required.
+- **B1-S6 (publish-lock part)** — audit explicitly says "Surface to user; both are common but the catalog convention is to confirm before flipping."
+- **B1-S11** — audit lists alias candidates but does not pre-specify exact tuples; per task spec, no bulk alias inserts without exact-tuple pre-specification.
+- **B1-B1..B6** — boundary findings owed by other domains (CCAAS / KMS / CSM / CRM / DATA-AI-PLAT). Not in scope for this load.
+- **B1-H1.2** — handoff 228, PCF 1318 flagged borderline by audit (`Defer?`); existing row points at PCF 928 (Respond to customer problems…), left untouched.
+- **B1-H1.5, H1.8, H1.9** — handoffs 745, 723, 724 already had `handoff_processes` rows pre-load (different PCFs than audit recommends); overriding prior assignments is judgment, not technical.
+
+No JWT errors during this pass. Audit frontmatter left unchanged.

@@ -320,3 +320,50 @@ Counts: **11 agent_curated `handoff_processes` proposals + 3 deferred = 14 total
 - **RE-PROP-MGMT**: handoff 300 ownership review (suspicious inbound to LSD). The decision on whether the handoff is real or misrouted is partly RE-PROP-MGMT's call.
 - **HCMS**: handoff 807 ownership review (suspicious inbound to LSD). Same shape question as RE-PROP-MGMT.
 - **LEGAL-PRACT-MGMT scope boundary**: the 5 existing legal roles (LEGAL-COUNSEL, LEGAL-ATTORNEY, LEGAL-PARALEGAL, LEGAL-CONFLICTS-PARTNER, LEGAL-OFFICE-MGR) are all bound to LEGAL-PRACT-MGMT / CLM modules. Whether any of them also bundle LSD modules (once LSD modules exist) is a LEGAL-PRACT-MGMT-side decision. Specifically: an in-house Legal Counsel role might legitimately span both LEGAL-PRACT-MGMT (if also doing outside-firm practice tasks) and LSD, but the default reading is that the 5 LEGAL-PRACT-MGMT roles stay outside-firm-shaped, and LSD will need its own in-house persona set.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent pass applying truly-technical B1 items from the 2026-05-30 audit. Judgment-bearing items deferred per the brief.
+
+Loader: [.tmp_deploy/fix_lsd_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_lsd_b1_technical_2026_05_31.ts).
+Tenant confirmed: `ma@adenin.com` (domain_map id 1001) via `getCurrentUser`.
+
+### Fixes applied
+
+| ID | Type | Action | Result |
+|---|---|---|---|
+| B1-S2 | PATCH `trigger_events.event_category` enum backfill | 12 LSD trigger_events classified per audit rubric (lifecycle for master-lifecycle transitions: `.submitted`, `.opened`, `.closed`, `.released`, `.issued`, `.created`, `.engaged`, `.received`; state_change for qualifier transitions: `legal_case_docket.updated`, `in_house_legal_matter.regulatory_disclosure_required`, `legal_advice_record.employee_related`). Cross-checked against catalog precedent (`case.created`, `asset.retired`, `demand_intake.submitted`, `legal_contract.signed` all `lifecycle`; `access_policy.updated` `state_change`). | 12 patched, 0 already correct. Final shape: 9 `lifecycle` + 3 `state_change`. |
+| B1-H1 | INSERT 11 `handoff_processes` rows pre-specified by audit Bucket-1 table | All 4 referenced PCF rows verified live before insert (process_id 369 / 11.2.2 Manage regulatory compliance; 373 / 11.3.4 Investigate legal aspects; 396 / 12.4.7 Resolve disputes and litigations; 397 / 12.4.8 Provide legal advice/counseling; all `apqc_pcf_cross_industry` L3). 11 handoffs (911, 912, 913, 914, 915, 916, 1028, 1029, 1030, 1031, 1032) confirmed extant with `source_domain_id=25`. `proposal_source='agent_curated'`, `record_status='new'` (default, Rule #1), `role='implements'` (default), `notes=''` (default, Rule #15). | 11 inserted, 0 pre-existing duplicates. H1 catalog quality now 11 of 14 cross-domain handoffs carry an `agent_curated` proposal (78.6% against the 50–80% target). |
+
+### Deferred (with reason)
+
+| ID | Reason |
+|---|---|
+| B1-M1 | New `domain_modules` rows: requires Bucket 2 #1 module-shape decision (4 / 5 / 6 modules); explicit "user picks" gate. |
+| B1-M2 | New capability shape: gated on Bucket 2 #1 module shape (which dictates capability set). |
+| B1-S1 (B12) | Lifecycle states for 8 masters: requires `domain_module_id` per state per Rule #14 once M1 lands; gated on B1-M1. |
+| B1-S3 (A4) | `domains.catalog_tagline` and `catalog_description` authoring: blocked by Rule #20 (drafts surface to user before write). |
+| B1-S4 (B4) | Pattern-flag flips on 3 masters (`legal_advice_records.has_personal_content`, `legal_holds.has_submit_lock`, `outside_counsel_engagements.has_single_approver`): explicit "surface to user" in Bucket 2 #4. |
+| B1-S5 (F1) | Legacy `lsd-system` skill retirement and per-module skill authoring: gated on B1-M1. |
+| B1-B1 (B10b) | Handoff `source_domain_module_id` / `target_domain_module_id` backfill on 14 cross-domain handoffs: cascades from B1-M1 (no LSD modules to point at yet). |
+| B1-B2 | `outside_counsel.engaged` fan-out: audit calls for user to pick targets (SPEND-MGMT / CLM / GRC). |
+| H1-deferred (handoffs 300, 807, 824) | 3 inbound handoffs (RE-PROP-MGMT, HCMS, ECM): the audit explicitly defers these to Discover Pass 3 / routing-decision in Bucket 2 #5; not in technical scope. |
+
+### Verification queries (re-run to confirm)
+
+```bash
+semantius call crud postgrestRequest '{"method":"GET","path":"/trigger_events?data_object_id=in.(633,634,635,636,637,638,639,640)&select=id,event_name,event_category&event_category=eq.&order=id.asc"}'
+# expect: [] (no LSD trigger_events with empty category)
+
+semantius call crud postgrestRequest '{"method":"GET","path":"/handoff_processes?handoff_id=in.(911,912,913,914,915,916,1028,1029,1030,1031,1032)&select=handoff_id,process_id,proposal_source,record_status&order=handoff_id.asc"}'
+# expect: 11 rows, all proposal_source=agent_curated, record_status=new
+```
+
+### UI links
+
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/handoff_processes
+
+### What still blocks the audit close
+
+Bucket 2 #1 (module shape) remains the single gating decision: every remaining Bucket-1 STRUCTURAL fix (lifecycle states, handoff module FK backfill, skill migration) is cascaded from it. The two technical wins above are the only B1 work that could ship without that decision.

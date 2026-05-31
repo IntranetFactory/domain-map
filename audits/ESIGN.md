@@ -199,3 +199,47 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 | SUB-MGMT | B9 outbound: cross-domain handoff SUB-MGMT to ESIGN on `customer_subscription.contract_drafted`. B8 outbound: relevant relationship row. |
 
 The decision to schedule these other-domain audits is at the user's discretion. Each is a B8 / B9 outbound miss on the source domain, not an ESIGN load.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Loader: [.tmp_deploy/fix_esign_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_esign_b1_technical_2026_05_31.ts). Run from project root `c:/dev/domain-map`. All four writes succeeded on a clean live state (no prior partial application).
+
+### Applied
+
+- **B1-S4 (B7 user-edges).** Inserted 2 `data_object_relationships` rows from `users` (748) to `envelopes` (251) per Rule #10:
+  - `sends envelopes` (relationship_verb), inverse `is_sent_by`, one_to_many, reference, owner_side=source.
+  - `signs envelopes` (relationship_verb), inverse `is_signed_by`, one_to_many, reference, owner_side=source.
+  - Scope is the audit-default sender + signer pair. Witness / cc_viewer / verifier remain deferred to B2-S5.
+- **B1-S7 (B12 voided gate).** PATCHed lifecycle state id 441 (`envelopes.voided`) to `requires_permission=true` and `permission_verb_override='void_envelope'`. The M5 portion (PATCH `domain_module_id` on every state, including `sent` and `voided`) remains deferred until B1-S1 authors the module.
+- **B1-S9 (domain regulations).** Inserted 2 `domain_regulations` rows on ESIGN (94): eIDAS (34) and FDA 21 CFR Part 11 (22), both with `applicability='conditional'`. Both are scope-bound: eIDAS binds for EU-context envelopes, FDA 21 CFR Part 11 binds for FDA-regulated electronic records. `mandatory` would over-state coverage for a generic ESIGN deployment.
+- **B1-S10 (APQC REPLACE).** PATCHed `handoff_processes` id 204 `process_id` from 1135 (`Manage IT projects and services interdependencies`, L4) to 398 (`Negotiate and document agreements/contracts`, L3, external_id 11052). Computed `key` field recomputed by the BEFORE INSERT/UPDATE trigger to `217.398`. `proposal_source='agent_curated'` and `record_status='new'` preserved.
+
+### Deferred (and why)
+
+- **B1-S1, S2, S5, S8, S13, S14 (module + capabilities + downstream FK / closure fixes).** All gated on B2-S2 (single vs two-module split). Creating the `ESIGN-SIGNATURE-OPS` module, 4 capabilities, source-module FK PATCH on handoff 217, skill 20 re-anchor, M4 / M5 / M6 closures all require user decision first. Module authoring is also out of B1-technical scope (new entities / DMDOs / modules).
+- **B1-S3 (solutions ≥5 + coverage_level).** Multiple candidates require vendor judgment (Dropbox Sign, PandaDoc, SignNow, OneSpan Sign to load as new solutions; coverage_level value per row). Audit lists vendor names but does not pre-specify exact tuples for the missing ones, and Rule #18 forbids vendor names in non-commerce text decisions. Deferred to a user-vetted load.
+- **B1-S6 (3 envelopes aliases).** Audit says "alias_type follows the catalog enum; sniff `/fields?...alias_type` at fix time for the allowed set" — exact tuples not pre-specified, so deferred per the bulk-aliases rule.
+- **B1-S7 M5 portion (PATCH every state's domain_module_id).** Depends on B1-S1 (module does not yet exist). The workflow-gate flip on `voided` itself is applied above.
+- **B2-S1 (catalog_tagline / catalog_description).** Rule #20: editorial copy, user-approved wording only.
+- **B2-S3 (skill_tools notes revert).** Per Rule #15 only allowed when audit pre-specifies the row IDs to revert; audit names the tools by code (`sign_document`, `send_email`) but does not pre-specify the `skill_tools.id` values, and the choice between (a) keep / (b) revert / (c) supply wording is user judgment.
+- **B2-S4, B2-S5, B2-S6.** All explicitly user-decision Bucket 2 questions.
+- **B3 (all 6 candidates).** Phase 0 vetting required (new entities / capability / regulations / inbound handoffs that other domains own).
+- **Report-only follow-ups.** Owned by CLM / CRM / ATS / LEGAL-PRACT-MGMT / ACCT-PRACT-MGMT / S2P / HCM / RE-CRE / SUB-MGMT audits.
+
+### Live state after run
+
+- `data_object_relationships` count from `users` to `envelopes`: 2 (new this run, both record_status='new').
+- `data_object_lifecycle_states` for `envelopes` with `requires_permission=true`: 2 (`sent` send_envelope, `voided` void_envelope). `domain_module_id` still null on all 8 states (M5 deferred).
+- `domain_regulations` for domain 94: 2 (eIDAS conditional, FDA 21 CFR Part 11 conditional). Both record_status='new'.
+- `handoff_processes` row 204 now points at process 398 (`Negotiate and document agreements/contracts`, L3); `key='217.398'`.
+
+### Errors
+
+None. All four steps completed without retry. No JWT-audience errors.
+
+### Spot-check URLs
+
+- https://tests.semantius.app/domain_map/data_object_relationships
+- https://tests.semantius.app/domain_map/data_object_lifecycle_states
+- https://tests.semantius.app/domain_map/domain_regulations
+- https://tests.semantius.app/domain_map/handoff_processes

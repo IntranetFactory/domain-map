@@ -281,3 +281,34 @@ _(empty until reviewed)_
 ### Fixes applied
 
 _(none yet; this audit is feedback_needed)_
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+Loader: [.tmp_deploy/fix_dcg_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_dcg_b1_technical_2026_05_31.ts).
+
+Applied only the technical, agent-fixable B1 items from the 2026-05-30 audit (above) that do not depend on B2-S* judgment calls or on the B2-S1 module-split decision. All four blocks verified in-loader.
+
+### Fixes applied
+
+| ID | Fix type | Detail | Verified |
+|---|---|---|---|
+| B1-S3 | PATCH enum backfill | 7 DCG-owned trigger_events.event_category populated per audit assignments: 738 -> `lifecycle`, 739 -> `state_change`, 740 -> `lifecycle`, 741 -> `signal`, 742 -> `state_change`, 743 -> `state_change`, 744 -> `signal`. | Zero rows in (738,739,740,741,742,743,744) with empty event_category. |
+| B1-S5 | DELETE stale rows | 3 duplicate domain-rollup rows in `domain_data_objects` deleted (audit pre-specified IDs): 395 (88, 232, contributor), 456 (88, 252, contributor), 458 (88, 254, consumer). Master sibling rows 517 / 518 / 519 retained. | Only master rollup rows remain for data_object_ids 232 / 252 / 254 under domain_id=88. |
+| B1-S8 | PATCH em-dash cleanup | `domains.business_logic` on id=88 rewritten to replace " — " with ", " per CLAUDE.md em-dash ban. New value: "Lineage extraction, automated tagging, and profiling, the metadata harvesting layer beneath the catalog UI." | business_logic free of U+2014. |
+| B1-H1 | INSERT handoff_processes | 14 `handoff_processes` rows inserted with `proposal_source='agent_curated'`, one per audit-pre-specified handoff where no existing handoff_processes row existed: handoff_ids 152, 223, 260, 261, 262, 265, 285, 694, 708, 709, 710, 712, 719, 846 (new row IDs 616-629). `record_status` omitted (defaults to `new` per Rule #1); `notes` omitted per Rule #15. | Each inserted (handoff_id, process_id) pair present with proposal_source=agent_curated. |
+
+### Deferred (out of scope for this technical pass)
+
+| ID | Why deferred |
+|---|---|
+| B1-S1 | New `domain_modules` (6 candidates) gated on B2-S1 architectural choice; not a technical fix. |
+| B1-S2 | New `capabilities` (10 candidates) gated on B2-S2 capability-list user picks. |
+| B1-S4 | Lifecycle states across 9 masters: gated on B1-S1 (modules must exist first) AND B2-S4 (per-master config-shape exemption user picks). |
+| B1-S6 | 29 handoff source/target_domain_module_id PATCHes are gated on B1-S1 (no DCG modules exist to derive FKs from). |
+| B1-S7 | Handoff description rewording (handoffs 158, 223, 265) gated on B2-S3 wording approval; Rule #15 / #18 cousin. |
+| B1-S9 | Report-only; the work is owed by 9 neighbor domains' own b1 audits (DI, KGP, DLP, DSPM, BI, AUDIT, MDM, METRICS-LAYER, DATA-AI-PLAT). No DCG-side action. |
+| H1 partial | Skipped from the 25-row H1 proposal: 4 Discover Pass 3 deferrals (683, 685, 698, 699) per audit's own "may stay discovery_substring until then" note; 3 REPLACE candidates (220, 263, 264) per "decide" judgment defer; 4 handoffs (158, 259, 268, 707, 711, 713, 688, 726) with existing handoff_processes rows where adding a second PCF is a "decide" call. |
+| B2-S1 through B2-S6 | All user-judgment items (module split, capability list, Rule #18 wording, lifecycle exemption, pattern-flag flips, regulation scoping). Out of scope for residual technical pass. |
+| B3 entries | Speculative entity / domain / modularization candidates; need Phase 0 vetting. |
+
+JWT errors: none encountered.

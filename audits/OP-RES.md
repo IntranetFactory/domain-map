@@ -166,3 +166,57 @@ These are candidate masters surfaced by the vendor-surface enumeration above. Th
 ### Candidates queued
 
 None. Every market the OP-RES audit surfaced (OP-RES itself, plus DORA-compliance and important-business-services as cross-cutting concerns) is either already represented in the catalog (OP-RES as the current domain) or is a sub-feature of OP-RES / BCM / TPRM / SECOPS rather than a candidate domain in its own right. If the user resolves B2-3 to "promote DORA-COMPLIANCE as a separate cross-cutting domain", the helper will be run in the follow-up pass after that decision lands.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Scope check
+
+Continuation subagent run under the "truly-technical B1 fixes" mandate. OP-RES is a leadership-tier domain: zero modules, zero capabilities, zero masters, zero DMDOs, zero skills. Live state re-verified against the 2026-05-30 audit and matches exactly: `domain_modules` for `domain_id=18` returns `[]`, `capability_domains` for `domain_id=18` returns `[]`, handoff 252 still carries `trigger_event_id=227` with both module FKs NULL and `data_object_id=291`, the OP-RES `domains` row still has empty `catalog_tagline` and `catalog_description`.
+
+### Fixes applied
+
+None. Every B1 item in the 2026-05-30 audit fails at least one technical-eligibility gate per the subagent prompt. Summary table below.
+
+| ID | Type | Classification | Reason |
+| --- | --- | --- | --- |
+| B1-S1 | M1 landing module | DEFER | Authors a new `domain_modules` row. New modules are explicitly excluded from the technical list. |
+| B1-S2 | A2 capabilities | DEFER | Authors new `capabilities` + `capability_domains` rows requiring naming judgment, overlap arbitration with BCM and TPRM, and the cross-cutting capability convention; not a derivable enum/FK backfill. |
+| B1-S3 | A4 catalog UX wording | DEFER | `catalog_tagline` / `catalog_description` are Rule #20 user-approval columns, called out as not-technical in the subagent prompt. |
+| B1-S4 | F2 system skill | DEFER | Audit explicitly says "Defer this until B2-1 resolves" (gated on the leadership-vs-promote judgment). |
+| B1-S5 | B-band handoff repoint | DEFER | Requires picking a non-defective trigger event (user judgment) and depends on B1-S1 (target module FK) and on a GRC-side trigger that may not exist (report-only to GRC). Not a derivable FK. |
+| B1-S6 | B10b consumer DMDOs | DEFER | Depends on B1-S1 (no module to attach DMDOs to) and on B1-S5 resolving which payload data_object the consumer DMDO should reference. |
+| B1-A1 | APQC handoff_processes | DEFER | Audit explicitly marks it "Blocked on B1-S5". Per subagent prompt, `handoff_processes` inserts are only technical when audit pre-specifies both the handoff_id and a resolvable PCF AND the row is not blocked on upstream items; this row is blocked. |
+
+### Truly-technical categories considered and discarded
+
+The subagent prompt enumerates eight categories of truly-technical work. Each was checked against the OP-RES surface:
+
+- **Enum backfills (`event_category`, `integration_pattern`):** Audit does not flag any OP-RES-owned enum gaps. The defective trigger 227 is GRC-owned.
+- **B10b FK derivations from existing modules:** OP-RES has zero modules and zero DMDOs, so no FK is currently derivable. Handoff 252's `target_domain_module_id` cannot be set without B1-S1 first creating the landing module.
+- **`domain_regulations` inserts linking to existing regulations:** 5 regulation links already exist (audit Pass 1 line 14: "5 regulations (mandatory)"); audit does not flag any missing regulation linkage as a B1 gap.
+- **Stale-row deletions with named IDs:** None named in the audit.
+- **Naming-convention renames (FKs unaffected):** None named in the audit.
+- **`data_object_relationships` user-edges per Rule #10:** OP-RES has zero data_objects of its own, so no Rule #10 edges apply.
+- **`permission_verb_override` state+verb fixes:** None named in the audit (no masters, so no workflow-gate permissions exist).
+- **`handoff_processes` APQC inserts:** Only B1-A1, which is explicitly blocked (see table above).
+
+### JWT errors
+
+None encountered. The four verification reads (`/domain_modules`, `/capability_domains`, `/handoffs?id=eq.252`, `/domains?id=eq.18`) all succeeded.
+
+### Loader path
+
+None created. The continuation produced zero writes, so no `.tmp_deploy/` loader was authored.
+
+### UI spot-checks
+
+No writes to spot-check. Reviewers reaching this section can confirm the unchanged state at:
+
+- https://tests.semantius.app/domain_map/domains (filter `domain_code = OP-RES`, expect empty `catalog_tagline` and `catalog_description`)
+- https://tests.semantius.app/domain_map/domain_modules (filter `domain_id = 18`, expect zero rows)
+- https://tests.semantius.app/domain_map/capability_domains (filter `domain_id = 18`, expect zero rows)
+- https://tests.semantius.app/domain_map/handoffs (filter `id = 252`, expect `trigger_event_id = 227`, both module FKs NULL)
+
+### Status
+
+The audit's existing `status: feedback_needed` and `open_questions: 23` count remain accurate. Per instructions, frontmatter was not touched. Every B1 item remains owed; B2-1 resolution (leadership-tier vs promote) is the lever that unblocks the structural band.

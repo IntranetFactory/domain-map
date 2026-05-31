@@ -192,3 +192,43 @@ These items the audit identified, but the fix lives on another domain's side. Th
 | SWP | Rule #15 notes on DDO row (domain_id=100, data_object_id=37): "Workforce cost contribution, workforce_cost_projections feed the people-cost line of the financial plan via the cost_projection.approved handoff." (also contains an em-dash). Surface in SWP's next audit. | same query as above |
 
 Schedule b1 audits on ERP-FIN, SWP, SPM, AUDIT, SEM, HCM, PSA to derive their `source_domain_module_id` / `target_domain_module_id` per the standard B10b backfill, and to clean up the Rule #15 notes pollution on the DDO rows pointing at EPM masters. None of these are EPM's fix to make.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Scope of this pass: apply only truly-technical Bucket 1 fixes that do not require user judgment. All judgment-bearing fixes (module-set shape per B2-S1, lifecycle states, aliases without pre-specified tuples, user-edges Rule #10 without exhaustive verb-shape pre-spec, intra-domain edges without full (verb, inverse_verb, kind, type, is_required, owner_side) pre-spec, pattern flags, role authoring, catalog UX) remain deferred to the prior buckets and to user response on B2-S1..S4 and B3-S1..S3.
+
+### Applied
+
+| ID | Action | Result |
+|---|---|---|
+| B1-S7 | PATCH `trigger_events.event_category` on the 4 EPM events with empty category, all to `state_change` per the audit and Rule #13 enum vocabulary. Rows: 583 `financial_plan.published`, 584 `financial_plan.approved`, 585 `financial_scenario.modeled`, 586 `variance_analysis.completed`. | 4 of 4 patched (each had `event_category=''` pre-write). |
+| B1-S11 (1) | PATCH `domains.business_logic` id=66, replace ` — ` (em-dash with surrounding spaces) with `; ` per CLAUDE.md no-em-dash rule. | After: `...allocation, currency translation, eliminations); the calc kernel is the product.` |
+| B1-S11 (2) | PATCH `domain_data_objects.notes` row id=334 (domain_id=66, data_object_id=196, role=contributor on `cost_centers`), set `notes=''` per Rule #15. Audit pre-specified the row by id + composite key. The reverted text restated the structured `role`/`necessity` columns and additionally carried an em-dash. | Row 334 notes set to empty string. |
+| B1-H1 | INSERT 12 `handoff_processes` rows with `proposal_source='agent_curated'` and `record_status` omitted (DB default `'new'` per Rule #1). Each (handoff_id, process_id) pair pre-specified by the audit's "confident" H1 mappings AND with no pre-existing handoff_processes row on that pair. Inserted (handoff_id -> process_id): 10 -> 1322, 561 -> 1323, 562 -> 297, 601 -> 1322, 1104 -> 247, 124 -> 1379, 133 -> 1381, 172 -> 1323, 246 -> 297, 458 -> 980, 532 -> 1381, 535 -> 54. | 12 of 12 inserted; pre-flight verified all 12 handoffs exist, all 8 distinct PCFs resolve and carry `source_framework='apqc_pcf_cross_industry'`, no pre-existing (handoff_id, process_id) collisions. |
+
+Loader: [.tmp_deploy/fix_epm_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_epm_b1_technical_2026_05_31.ts). Run from project root only.
+
+H-band coverage after this pass: agent_curated `handoff_processes` rises from 0 of 27 cross-domain handoffs to 12 of 27 (44%). Still below the H1 target floor (0.5N = 14, 0.8N = 22); the remaining 4 confident proposals already carry a `discovery_substring` row on the same PCF (handoffs 199, 27, 540, 563, 564, 245), so reaching the floor requires either PATCHing those rows' `proposal_source` to `agent_curated` (a flip the technical pass does not authorize) or surfacing them for explicit user approval.
+
+### Deferred (and why)
+
+| ID | Reason for deferral |
+|---|---|
+| B1-S1 | M1 module split. New `domain_modules` rows; the shape itself is the B2-S1 user-pick (4 options a/b/c/d). Out of scope: new entities and gated on user judgment. |
+| B1-S2 | M2/M4/M6 cascade. Resolved as a side-effect of B1-S1; nothing to do until the module set lands. |
+| B1-S3 | B12 lifecycle states for 5 masters. Authoring new state-machine rows is gated on B1-S1 (state.domain_module_id needs a realizing module) and on B2-S3 pattern-flag judgments. Out of scope for technical pass. |
+| B1-S4 | B11 aliases. Audit lists vendor terminology in prose but does not pre-specify exact `(alias_name, alias_type)` tuples per master; the technical pass does not bulk-insert aliases without exact pre-spec. |
+| B1-S5 | B7 user-edges (Rule #10). Audit gives partial verb shapes ("owns_plan", "approves_budget", "models_scenario", ..., "etc.") for 5-10 edges per master but does not pre-specify the exact (relationship_verb, inverse_verb) per row exhaustively. Defer until edges are enumerated. |
+| B1-S6 | B6 intra-domain edges between the 5 EPM masters. Audit names composition patterns ("financial_plans composes financial_budgets") but does not pre-specify the full `(relationship_verb, inverse_verb, relationship_kind, relationship_type, is_required, owner_side)` tuple per row. Defer until tuples are written out. |
+| B1-S8 | F1 legacy `epm-system` skill retirement. Requires per-module system skills to exist first (per Rule #17), which requires the B1-S1 modules to land. Cascading deferral. |
+| B1-S9 | B10b `source_domain_module_id` backfill on 8 outbound EPM handoffs. The prompt allows this PATCH "derivable from existing modules"; EPM currently has zero modules, so no source_module_id can be derived. Cascading deferral on B1-S1. |
+| B1-S10 | B9b intra-domain handoffs between EPM modules. New `handoffs` rows that require the modules to exist first. Cascading deferral on B1-S1. |
+| B1-H1 (medium-confidence, 4 of 22) | H1-13 (handoff 256, AUDIT recommendation.accepted): audit flags the existing `discovery_substring` row points at the wrong PCF (16817 warranty-recommendations); replacing it is a judgment call. H1-18 (handoff 534, ERP-FIN gl_account.mapping_changed): audit flags alternative L3 candidate 10728; flag for user. H1-21 (handoff 777, VSDP threshold_breached): audit suggests VSDP-side custom process may be preferable. H1-22 (handoffs 792, 795, SPM benefits_tracking_record.realized / at_risk): audit flags possible SPM-side specific process; defer to Discover. All four are explicitly judgment in the audit. |
+| B1-H1 (confident-overlapping, 6 of 22) | H1-01 (199), H1-02 (27), H1-06 (563), H1-07 (564), H1-14 (245), H1-20 (540) each already carry a `discovery_substring` row pointing at the audit's proposed PCF. The audit asks to flip `proposal_source` to `agent_curated`; the technical pass authorizes INSERTs only, not source-flip PATCHes. Surface for user approval. |
+
+### Not applicable to this pass
+
+The TECHNICAL surface in the prompt also covers `domain_regulations` inserts (none named in this audit), stale-row DELETEs with named IDs (none named), naming renames (none named), `permission_verb_override` PATCHes (no lifecycle states exist), and additional `notes=''` reverts (only row id=334 is pre-specified for revert; rows id=54 and id=335 in B2-S4 are the user-judgment branch on whether the original notes were approved at load time).
+
+Status frontmatter left as-is; the audit is still in `feedback_needed` pending Buckets 2 and 3 decisions on the dominant B1-S1 module-split blocker and on the cascading items above.
+

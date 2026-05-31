@@ -309,3 +309,55 @@ Deferred-to-Discover items (no clean PCF match): none. All 13 land on the IT-ops
 - **RMM M7 demotion** (depends on `B2-S1`): once the canonical owner is set to ITOM, RMM owes a PATCH on its legacy `domain_data_objects` rows for `monitoring_alerts` and `monitoring_policies` to demote them to `embedded_master` or `consumer` per the decision.
 - **ITSM B10b** receives the source-side fix `B1-S9` on ITOM, but `target_domain_module_id=38` is already set for handoff 28, so no ITSM action required.
 - **SPM B10b** owes `target_domain_module_id` on handoff 620 once SPM has the relevant module.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the deterministic B1 items from the 2026-05-30 audit that do not require modules, vendor research, lifecycle authoring, or judgment-call rewordings. Loader: `.tmp_deploy/fix_itom_b1_technical_2026_05_31.ts` (idempotent, TS + Bun, run from project root).
+
+### Applied
+
+- **B1-S1** PATCH `domains.business_logic` on ITOM (id=2): replaced the U+2014 em-dash with a comma (CLAUDE.md violation). Manual follow-up PATCH removed the double-space artifact from the em-dash's surrounding spaces. Final value: `Event management, capacity calculations, and topology-aware impact analysis, engine-led; service-mapping master data is the smaller part.`
+- **B1-S6** INSERT 4 `data_object_relationships` user-edges (Rule #10) from `users` (id 748) to ITOM masters:
+  - `users` -[authored_monitoring_policies]-> `monitoring_policies` (86)
+  - `users` -[approved_monitoring_policies]-> `monitoring_policies` (86)
+  - `users` -[assigned_monitoring_alerts]-> `monitoring_alerts` (85)
+  - `users` -[collected_capacity_records]-> `capacity_records` (87)
+  All `owner_side='source'`, `relationship_type='one_to_many'`, `relationship_kind='reference'`, `is_required=false`, matching the live convention sampled from existing user-edges.
+- **B1-S8** PATCH 6 `trigger_events` rows:
+  - 6 `monitoring_alert.threshold_breached`: description rewritten (templated default replaced).
+  - 45: RENAME `device.requires_monitoring` -> `monitoring_policy.coverage_requested`; description rewritten.
+  - 53 `events.burst_detected`: description rewritten.
+  - 78: RENAME `noise.suppression_applied` -> `monitoring_event.suppression_applied`; description rewritten. **Deferred**: re-anchoring `data_object_id` to an AIOPS master per Pass 4 AIOPS Section 3 (requires picking the AIOPS-owned suppression entity).
+  - 634 `capacity_record.threshold_breached`: `event_category='' -> 'threshold'`.
+  - 635 `capacity_record.forecast_exhaustion`: `event_category='' -> 'signal'`.
+- **B1-S10** INSERT 16 `data_object_aliases` rows across the 4 ITOM masters per the B11 list (4 for monitoring_events, 4 for monitoring_alerts, 5 for monitoring_policies, 3 for capacity_records), all `alias_type='synonym'`. The "monitor" alias on `monitoring_policies` was authored without the Datadog parenthetical (the audit text used the parenthetical as provenance commentary, not as the alias name itself).
+- **B1-S16** INSERT 3 `handoff_processes` tags (the 3 of 13 ITOM-touching cross-domain handoffs that lacked any tag at audit time):
+  - handoff 50 (DISCOVERY -> ITOM, `monitoring_policy.coverage_requested`) -> process 1301 (`Operate and monitor online systems`, PCF 20906).
+  - handoff 54 (OBS -> ITOM, `monitoring_alert.threshold_breached`) -> process 1301.
+  - handoff 620 (ITOM -> SPM, `capacity_record.forecast_exhaustion`) -> process 1285 (`Plan operational activities for IT service delivery`, PCF 20881).
+  All three written with `proposal_source='agent_curated'`, `record_status` defaulted to `'new'` per Rule #1.
+
+### Deferred (and why)
+
+- **B1-S2** (additional vendor `solution_domains`): requires vendor research and new `solutions`/`vendors` rows, not in technical-apply scope.
+- **B1-S3** (catalog_tagline / catalog_description): Rule #20 explicitly requires draft + user review before write.
+- **B1-S4** (author >=3 `domain_modules`): new modules deferred; structural authoring outside technical scope.
+- **B1-S5** (5 intra-domain master-master relationships): audit lists pairs and verbs informally but does not pre-specify the full `(relationship_verb, inverse_verb, relationship_type, relationship_kind, is_required, owner_side)` tuples needed for an unambiguous insert.
+- **B1-S7** (3 outbound cross-domain mirror relationships): same gap as B1-S5; verb / cardinality / owner_side not pre-specified.
+- **B1-S9** (per-module FK backfill on 13 handoffs): blocked behind B1-S4 (no ITOM modules exist to assign).
+- **B1-S11** (lifecycle states across 4 masters): full Phase-B authoring with state machines + `requires_permission` + `permission_verb_override`; not pre-specified at the field level.
+- **B1-S12** (NOC / SRE / Capacity Planner roles): blocked behind B1-S4.
+- **B1-S13** (DELETE legacy `itom-system` skill id 74): per F1, only retire after per-module system skills exist; blocked behind B1-S4 + Phase S.
+- **B1-S14** (re-anchor `send_email` / `post_chat_message` on `notify_person` / `notify_team`): blocked behind per-module Phase-S authoring.
+- **B1-S15** (state-change trigger_events for policy / alert / capacity lifecycle): subsumed under B1-S11 (lifecycle states); each event needs paired `event_category` plus `data_object_id` derivation, not deterministic without the lifecycle authoring.
+- **B1-S17** (MISSING entities: `metric_collectors`, `alert_routing_rules`, `capacity_forecasts`, `infra_health_scores`, `infra_topology_nodes`): new `data_objects` deferred.
+- **B1-S18** (consumer DMDO rows for inbound payloads): blocked behind B1-S4.
+- **Trigger 78 `data_object_id` re-anchor** to an AIOPS master (Pass 4 AIOPS Section 3): user picks the AIOPS-owned suppression entity; deferred.
+
+### JWT errors
+
+None.
+
+### Loader
+
+`c:/dev/domain-map/.tmp_deploy/fix_itom_b1_technical_2026_05_31.ts`

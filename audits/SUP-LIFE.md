@@ -218,3 +218,38 @@ These are findings the SUP-LIFE audit surfaced but which sit on other domains; r
 | GRC (15) | B8 outbound | GRC's canonical `grc_issues` / risk-finding data_object should carry a relationship row joining back from SUP-LIFE's `supplier_risk_assessments` / `supplier_scorecards` |
 | PIM (110) | B9 candidate | possible missing PIM → SUP-LIFE handoff on `pim_product.source_supplier_changed` (see B2-S6) |
 | All neighbors with NULL FKs | DMDO consumer | once SUP-LIFE has modules, each neighbor should declare `consumer + optional` on the SUP-LIFE master they receive in handoff payloads (S2P on `suppliers`, AP-AUTO on `suppliers`, etc.) |
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the strictly-technical, audit-pre-specified slice of Bucket 1 that does not require new entities, modules, capabilities, lifecycle states, pattern-flag flips, catalog text, or user judgment. Loader: `.tmp_deploy/fix_sup_life_b1_technical_2026_05_31.ts`.
+
+### Applied (3 of 12)
+
+- **B1-S3 done.** PATCHed `domains.business_logic` on SUP-LIFE (id 28) to replace the U+2014 em-dash with a comma. After: "Supplier scorecard math (KPI roll-ups, weighted ratings), a calc layer over CRUD records." CLAUDE.md no-em-dash rule satisfied.
+- **B1-S5 done.** PATCHed `event_category` on 6 trigger_events: 562 `supplier_qualification.initiated` → `lifecycle`, 563 `supplier_qualification.approved` → `state_change`, 564 `supplier_qualification.rejected` → `state_change`, 565 `supplier_qualification.expired` → `threshold`, 566 `supplier_risk_assessment.completed` → `lifecycle`, 567 `supplier_risk_assessment.elevated` → `threshold`. Rule #13 enum violations cured.
+- **B1-H1 partial (10 of 14 proposed) done.** INSERTed 10 `handoff_processes` rows (`proposal_source='agent_curated'`, `record_status='new'`) for the 10 cross-domain handoffs that today carried zero APQC coverage: 546→805, 547→805, 548→815, 549→816, 596→815, 273→815, 543→816, 565→804, 586→816, 336→815. New row ids 738–747. The 4 PCF-167-tagged handoffs (127, 128, 213, 214) and the 4 already-`agent_curated` handoffs (277, 362, 550, 591) were skipped: those decisions (keep parent PCF + add L4 child vs replace; modifying an existing curated tag) are user judgment.
+
+### Deferred (9 of 12) and why
+
+| ID | Reason for deferral |
+|---|---|
+| B1-S1 | New `domain_modules` + DMDO rows (4 modules + masters); prompt defers new entities/modules. Gated on B2-S1 (module-count choice). |
+| B1-S2 | New `capabilities` + `capability_domains` + `domain_module_capabilities` (7 to 8 rows); prompt defers new entities. |
+| B1-S4 | `catalog_tagline` + `catalog_description` backfill; Rule #20 defers catalog text. |
+| B1-S6 | New `data_object_lifecycle_states` rows (~30 to 36); prompt defers new entities and B1-S6 is gated on B1-S1 (no modules to anchor to). |
+| B1-S7 | Pattern flag flips on 6 masters; prompt explicitly defers pattern flag flips. |
+| B1-S8 | B10b FK PATCH on 18 handoffs; SUP-LIFE has zero `domain_modules`, so the SUP-LIFE-side FK is not derivable from existing modules. Gated on B1-S1. |
+| B1-S9 | DELETE legacy skill 109 + 8 `skill_tools`; gated on Phase A/S re-author of per-module system skills. |
+| B1-S10 | INSERT 3 cross-domain `data_object_relationships`; targets `grc_issues` and `fsqm_supplier_risk_events` do not exist in `data_objects` (pre-flight returned zero rows). Cannot resolve target FK. |
+| B1-S11 | Capability-level RACI overrides; gated on B1-S2. |
+| B1-S12 | Phase E roles + role_modules + permissions; full Phase E load, prompt defers. Gated on B1-S1, B1-S2, B1-S6. |
+
+### Verification
+
+- `/domains?domain_code=eq.SUP-LIFE` → `business_logic` em-dash-free.
+- `/trigger_events?id=in.(562,563,564,565,566,567)` → all 6 carry an allowed `event_category` value.
+- `/handoff_processes?handoff_id=in.(273,336,543,546,547,548,549,565,586,596)` → 10 new agent_curated rows present, ids 738 to 747.
+
+### JWT errors
+
+None.

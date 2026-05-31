@@ -290,3 +290,41 @@ Surfaced by NPMD audit 2026-05-30 (helper writes to `audits/_missing-domains.md`
 - `SDWAN-ORCH` (SD-WAN Orchestration and Observability): Cisco Catalyst SD-WAN (Viptela), VMware VeloCloud, Fortinet, Versa, Aruba EdgeConnect, Cato Networks. Adjacent to NPMD / SECOPS / OBS.
 - `IPAM-DDI` (IP Address Management and DDI; pre-existing, mention_count bumped to 2): Infoblox, BlueCat, EfficientIP, ApplianSys, NetBox, Men&Mice. Adjacent to DCIM / CMDB / NPMD.
 - `NETSEC-VIS` (NDR / Network Detection and Response): Darktrace, ExtraHop Reveal(x), Vectra AI, Corelight, Arista NDR (Awake), Cisco Stealthwatch. Adjacent to NPMD / SECOPS / SIEM / AIOPS.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Loader: [.tmp_deploy/fix_npmd_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_npmd_b1_technical_2026_05_31.ts).
+
+### Applied (3 fixes, all pre-flight and post-flight verified)
+
+- **B1-S8 (B7 user-edges, Rule #10).** Inserted 3 `data_object_relationships` rows pointing the named owner-side users edges off the three NPMD masters that need one. All use `relationship_type=one_to_one`, `relationship_kind=reference`, `owner_side=target`, `is_required=false`, `record_status=new` (default), `notes=''` (default).
+  - id 1732: `network_performance_alerts` (541) `is_acknowledged_by` / `acknowledges` `users` (748)
+  - id 1733: `network_baseline_thresholds` (545) `is_owned_by` / `owns` `users` (748)
+  - id 1734: `saas_application_performance` (543) `is_owned_by` / `owns` `users` (748)
+- **APQC H1 tags (5 of 6 confident L4 PCFs).** Inserted 5 `handoff_processes` rows on the audit-pre-specified `handoff_id` + `process_id` pairs; sixth (654 -> Discover/topology, audit-flagged "weak L4 / alt defer") was already covered live by an existing row (process 1309, `Manage infrastructure configuration` 8.7.7.1, agent_curated), so nothing was inserted there. All 5 new rows use `role=implements`, `proposal_source=agent_curated`, `record_status=new` (default), `notes=''` (default). Post-state: all 6 NPMD outbound handoffs now carry exactly one PCF tag; H1 PASSES.
+  - 649 (NPMD->AIOPS, `network_flow_record.anomalous_pattern`) -> APQC 20909 (`processes` id 1304, `Manage infrastructure performance and capacity`, 8.7.6.4)
+  - 650 (NPMD->ITSM, `network_performance_alert.raised`) -> APQC 20903 (id 1299, `Triage IT service delivery incidents`, 8.7.5.9)
+  - 651 (NPMD->OBS, `network_performance_metric.threshold_breached`) -> APQC 20909 (id 1304)
+  - 652 (NPMD->ITSM, `network_interface.down`) -> APQC 20903 (id 1299)
+  - 653 (NPMD->DEM, `saas_application_performance.degraded`) -> APQC 20909 (id 1304)
+- **Rule #15 notes revert.** PATCHed `handoffs.notes=''` on row 654 (was `"source NULL until NPMD is modularized"`, an exact instance of the Rule #15 forbidden "until X is modularized" provenance-trailer pattern). Audit-named row id; revert path explicitly licensed. Post-state: 0 NPMD-source handoffs carry non-empty notes.
+
+### Deferred (15 items, by category)
+
+- **New entities / modules / capabilities / solutions / vendors (B1-S1, B1-S2, B1-S3, B1-S15).** All gated either on Bucket 2 #1 (4-module-vs-2-module pick) or on Phase 0 / user-confirmed vendor research. New `domain_modules`, new `capabilities` + `capability_domains` + `business_function_capabilities`, new `vendors` + `solutions` + `solution_domains`, per-module `skills` + `skill_tools` all sit behind the M1 modularization decision the user owns.
+- **Catalog voice (B1-S4).** `catalog_tagline` and `catalog_description` are Rule #20 buyer-voice writes; agent drafts, user approves verbatim before write. Drafts exist in Bucket 2 #6 but no approval yet.
+- **Pattern flag review (B1-S6).** Even confirming flags as `false` is a positive-review write the user must approve; surfaced but not applied.
+- **Naming arbitration (B1-S5).** `is_canonical_bare_word` / `naming_authority_rationale` stamps are Rule #9 user-gated decisions; audit explicitly says "Surface to user before any rename."
+- **Intra-domain relationships (B1-S7).** Six audit-pre-specified intra-domain edges (not Rule #10 user-edges) sit outside the technical filter, which licenses only Rule #10 user-edges for inserts.
+- **Cross-domain relationships (B1-S9).** Audit says "gate the load on existence and route missing targets" plus Bucket 2 #2 (NPMD vs DEM scope) gates the SaaS-degradation edge.
+- **Missing handoffs (B1-S10).** New `handoffs` rows are outside the technical filter (only `handoff_processes` inserts are technical).
+- **B10b module-attribution backfill (B1-S11).** No NPMD modules exist, so no `source_domain_module_id` is derivable from existing modules. Target-side NULLs (AIOPS/OBS/DEM) are owed by those domains' own M1 work.
+- **Aliases (B1-S12).** Bucket 2 #5 says alias_name is freeform and the user wants to refine; no audit-pre-specified exact tuples.
+- **Lifecycle states (B1-S13).** Config-shape exemption call on 7 of 8 masters is a Bucket 2 #4 user decision; only `network_performance_alerts` has a real workflow, and the audit doesn't pre-specify enough granularity to load lifecycle states + workflow-gate permissions safely without judgment.
+- **F1 legacy skill 87 DELETE (B1-S14).** Audit names the row but the audit also makes the DELETE conditional on per-module skills existing first; without B1-S1 there is nowhere to migrate the 8 `skill_tools` rows. Deferred until modules ship.
+
+### Verification queries
+
+- `GET /data_object_relationships?related_data_object_id=eq.748&data_object_id=in.(541,543,545)&select=id,data_object_id,relationship_verb,owner_side` returns 3 rows.
+- `GET /handoff_processes?handoff_id=in.(649,650,651,652,653,654)&select=handoff_id,process_id,role` returns 6 rows.
+- `GET /handoffs?source_domain_id=eq.82&notes=neq.&select=id,notes` returns `[]`.

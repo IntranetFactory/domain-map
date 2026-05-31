@@ -203,3 +203,45 @@ _(none yet, pending user review)_
 
 _(none yet, pending user review)_
 
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+### Scope
+
+Residual B1 technical pass. Applied agent-fixable items where the original audit pre-specified row IDs and the fix mechanics are deterministic (no judgment call). Loader: `c:/dev/domain-map/.tmp_deploy/fix_farmer_direct_sales_b1_technical_2026_05_31.ts`. Idempotent (pre-flights every write).
+
+### Fixes applied
+
+| ID | Type | Action | Rows |
+|---|---|---|---|
+| B1-S3 | Rule #15 notes revert | PATCH `data_objects.notes` to `''` on IDs 514, 516, 517, 520, 521. Audit named IDs; Rule #15 default is revert when the prior carve-out for pattern-flag context is RESCINDED. | 5 PATCHes |
+| B1-H1 | APQC handoff_processes (high-confidence subset) | INSERT `handoff_processes` rows with `proposal_source='agent_curated'`, `record_status='new'` (default), `role='implements'` (default). PCF IDs resolved via live `/processes` lookups. | 9 INSERTs |
+
+H1 PCF mapping applied (process_id ← external_id):
+- 363 csa_membership.activated → 148 (10183 Manage customers and accounts)
+- 364 csa_subscription.charged → 1356 (10800 Receive/Deposit customer payments)
+- 960 farmers_market_sale.recorded → 55 (10729 Perform revenue accounting)
+- 961 wholesale_order.confirmed → 302 (10743 Invoice customer)
+- 1213 customer.churn_confirmed → 718 (11174 Manage customer relationships)
+- 1214 customer.signed_up → 148 (10183 Manage customers and accounts)
+- 1215 account.tier_changed → 148 (10183 Manage customers and accounts)
+- 1216 account_health.declined → 718 (11174 Manage customer relationships)
+- 1217 health_score.declined → 718 (11174 Manage customer relationships)
+
+### Deferred
+
+- **B1-S1, B1-S2, B1-S6** (B10b NULL FK backfills): owed by ERP-FIN, FOOD-TRACE, FMIS audits; not derivable from FDS-side modules.
+- **B1-S4** (Rule #15 skill_tools.notes revert): audit gives "approx 12-15 rows" with no exact IDs pre-specified; per prompt criterion, notes reverts apply only when audit pre-specifies row IDs.
+- **B1-S5** (missing CRM purchase-intent handoff): gated on B2-S4 user judgment.
+- **B1-H1 partial**: 365, 962, 964 deferred (gated on B2-S5 CRM target-module judgment); 963 deferred (audit-suggested PCF family 16448 resolves to unrelated risk-management process, no clean alternative without further analyst judgment); 350 already tagged (process 171, pre-existing).
+- **All Bucket 2 items** (B2-S1 through B2-S7): user-judgment surface.
+- **All Bucket 3 items**: speculative entities, regulations, and modularization candidates pending Phase 0 verification.
+
+### Verification
+
+Post-load summary (from loader):
+- `data_objects` IDs 514, 516, 517, 520, 521: `notes=''` confirmed.
+- `handoff_processes` 9 new rows present with `proposal_source=agent_curated`, `record_status=new` for handoffs 363, 364, 960, 961, 1213, 1214, 1215, 1216, 1217.
+
+UI: https://tests.semantius.app/domain_map/handoff_processes and https://tests.semantius.app/domain_map/data_objects
+
+

@@ -279,3 +279,34 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 ### Decisions
 
 _(awaiting user feedback per the explicit-prompt discipline above)_
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent applied the truly-mechanical subset of B1 items per the technical-fix scope (PATCH enum backfills, B10b FK PATCHes derivable from existing modules, INSERT user-edge `data_object_relationships` Rule #10). All other B1 items deferred to user judgment for the reasons below.
+
+Loader: [`.tmp_deploy/fix_payroll_b1_technical_2026_05_31.ts`](../.tmp_deploy/fix_payroll_b1_technical_2026_05_31.ts).
+
+### Applied (29 writes total)
+
+- **B1-S1** PATCH `domains.id=55` `business_logic`: em-dash replaced with colon. New value: `Tax tables, gross-to-net calculation, garnishment logic, statutory filings, and country-specific compliance kernels: irreducible and continuously updated.`
+- **B1-S3** PATCH 11 `trigger_events.event_category` (ids 402..412), per the audit's pre-specified per-row enum (`lifecycle` for 402/406/411, `state_change` for the other 8).
+- **B1-S5** INSERT 7 user-edge `data_object_relationships` from users (748) to PAYROLL masters: pay_runs / tax_filings / garnishment_orders / payroll_journal_entries / pay_slips / earning_codes / deduction_codes. Owner_side=source, type=one_to_many, kind=reference, is_required=false. `record_status` omitted (DB default `new`). Inserted row ids 1879..1885. The audit's hedged `pay_runs -> users (approved_by, optional inverse)` was held.
+- **B1-S6** PATCH 10 inbound handoffs `target_domain_module_id` (ids 105, 108, 110, 417, 423, 426, 590, 599, 1118, 1126). Routes to module 90 (PAYROLL-RUN) for ops events and module 92 (PAYROLL-EARNINGS-DEDUCTIONS) for comp / benefit / equity events per the audit's per-row mapping. Handoff 414 (`payment_run.executed` outbound `source_domain_module_id`) held: audit text reads "Confirm or surface as Bucket 2".
+
+### Deferred
+
+- **B1-S2 (M7 DELETEs)**: Per-bucket prompt gates entire S2 on B2-S1 architectural choice. Even the 5 PAYROLL-RUN-side rows the cross-bucket-dependencies block calls "immediately executable" were held since the per-bucket prompt explicitly says "resolve B2-S1 first".
+- **B1-S4 (8 intra-domain `data_object_relationships`)**: Not user-edges. The technical-fix scope only licenses Rule #10 user-edges; intra-domain master-to-master relationships are outside scope.
+- **B1-S6 row 414**: audit hedge ("Confirm or surface as Bucket 2"), see Applied above.
+- **B1-S7 / S8**: report-only, owed by other domains.
+- **B1-S9 (E-band roles + permissions)**: full Phase E load; audit explicitly says "non-trivial load, stage through the standard Phase E loader, not a one-shot CLI block".
+- **B1-S10 (F-band per-module system skills + skill_tools)**: full Phase S load; explicitly deferred.
+- **B1-S11 (24+ aliases)**: bulk `data_object_aliases` inserts without per-row (`alias_name`, `data_object_id`, `solution_id`) tuples are deferred. Vendor-tagged aliases would also require `solution_id` resolution that the audit does not pre-specify.
+- **B1-S12 (`business_function_domains` HR contributor + IT consumer)**: explicitly deferred per the technical-scope rules ("no new business_function_domains contributors/consumers").
+- **B1-H1 (41 APQC tags)**: NOT cleanly resolvable. The audit's `external_id` references resolve to different `process_name` values in the live `processes` table than the audit's textual labels: 10522 -> `Manage reporting processes` (audit said "Pay employees"), 10510 -> `Review engagement and retention indicators` (audit said "Develop and manage compensation"), 10511 -> `Review compensation plan` (audit said "Manage employee compensation"), 10728 -> `Perform planning and management accounting` (audit said "Process general accounting"), 10464 -> `Negotiate offer` (audit said "Recruit, source, and select employees"), 10520 -> `Manage expatriates` (audit said "Manage employee inquiries"), 16437 -> `Manage Enterprise Risk, Compliance, Remediation, and Resiliency` (audit said "Manage business unit ethics and compliance"). The PCF specifications fail the "resolvable PCF (verify before insert)" technical gate. Also: 5 handoffs (103, 426, 590, 1118, 416) already carry `agent_curated` `handoff_processes` rows loaded since the audit was written, so the proposed FLIP/INSERT counts are stale. User judgment required.
+
+### Verification
+
+Post-apply GETs confirmed all 29 writes landed: domain 55 business_logic clean (no em-dash), 11 trigger_events carry the new `event_category` values, 7 user-edge `data_object_relationships` exist with `record_status='new'` (ids 1879..1885), 10 handoffs now have `target_domain_module_id` populated (5 to module 90, 5 to module 92).
+
+No JWT-audience errors during the run.

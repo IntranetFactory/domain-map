@@ -198,3 +198,34 @@ These items are NOT in PORT-MONIT's scope; they route to the named source domain
 - **CAP-TABLE H1 owes** an `agent_curated` proposal for handoff 1045 from its side (PCF id 354 or 491).
 - **INV-CRM H1 owes** an `agent_curated` proposal for handoff 1039 from its side (PCF id 491).
 - **ESG (21) latency:** no `handoffs` or DMDO edges exist between PORT-MONIT and ESG, despite `portco_esg_records` (765) being semantically ESG-scoped. Not a defect on either side, but worth a note when ESG is next validated: should the cross-domain edge exist?
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the strict technical subset of Bucket 1 via loader `.tmp_deploy/fix_port_monit_b1_technical_2026_05_31.ts`. All 19 B1 items reviewed; 3 applied, 16 deferred.
+
+### Applied (3)
+
+- **B1-S5 (B7 user-edges):** inserted 5 `data_object_relationships` rows per Rule #10. `data_object_id=748` (users) → master, `owner_side='target'`, `relationship_kind='reference'`, `relationship_type='one_to_many'`, mirroring the existing PORT-MONIT pattern on rels 885 + 886. New ids 1831–1835 covering `portco_kpi_periods` (submits), `portco_esg_records` (submits), `fund_position_returns` (computes), `fund_performance_periods` (owns), `lp_quarterly_reports` (authors). Verbs are short action prose consistent with the catalog's user-edge convention; user may PATCH if a different verb is preferred (treated as part of the open Bucket 2 #2 verb-correctness discussion).
+- **B1-S10 (M5 lifecycle states):** PATCHed `domain_module_id=16` (PORT-MONIT-PORTCO-DATA) on states 476 (`active`), 477 (`exited`), 478 (`written_off`). Workflow-gate permission prefixing will now resolve to the canonical module.
+- **B1-H1 (APQC PCF tagging):** inserted 3 of 4 audit-proposed `handoff_processes` rows. New ids 633 (handoff 1043 → process 1390), 634 (handoff 1042 → process 1401), 635 (handoff 1045 → process 354). Handoff 1039 was **NOT** loaded: it already carries `handoff_processes` row 572 with `process_id=409` (a PCF different from the audit's proposed 491). Whether to replace 409 with 491, keep 409, or add 491 as a second tag is a judgment call; surfacing for user decision rather than silently double-tagging.
+
+### Deferred (16) and why
+
+- **B1-S1 (A4 catalog_tagline / catalog_description):** Rule #20 prose — author-then-confirm with the user.
+- **B1-S2 (F2/F3/F4/F5 system skills + tools):** new entities; skill/tool authoring is judgment-heavy (which tools, how many, naming, `operation_kind`).
+- **B1-S3 (E1–E6 roles):** new entities; role bundling spans modules and needs user input on scope.
+- **B1-S4 (regulations) and B1-M3/M4/M5 (compliance entities):** audit itself gates these on Bucket 2 #1 (regulation-scoping choice).
+- **B1-S6 (B11 aliases):** audit lists option-bundles (`portco_metrics, kpi_packets`, etc.) rather than exact pre-specified tuples; rule against bulk alias inserts without exact tuples.
+- **B1-S7 (B12 lifecycle states):** state-machine authoring requires per-master judgment on state names and which states get `requires_permission=true`.
+- **B1-S8 (B9 trigger_events):** new entity rows; depends on S7's state names.
+- **B1-S9 (B9b intra-domain handoffs):** new entity rows; depends on S8.
+- **B1-M1, B1-M2, B1-M6, B1-M7, B1-M8 (5 universal-vendor entities):** new data_objects + DMDOs.
+
+### Open follow-ups for user
+
+1. Handoff 1039 PCF tag (409 vs 491 vs both) — see B1-H1 above.
+2. Verb correctness on rels 1831–1835 (and existing 885 + 886, already in Bucket 2 #2).
+3. All other Bucket 1 items above marked Deferred remain queued for the user-judgment pass.
+
+No JWT errors during the run. UI: https://tests.semantius.app/domain_map/data_object_relationships and https://tests.semantius.app/domain_map/handoff_processes for spot-check.
+

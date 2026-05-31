@@ -159,3 +159,30 @@ The semantic pass against flagship vendors surfaced four kinds of substrate gap 
 | LMS | B10b target backfill | Handoff 249 has `target_domain_module_id=33` set. OK. |
 | HRSD | B10b target backfill | Handoff 250 has `target_domain_module_id=75` set. OK. |
 
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent pass to apply the truly-technical subset of the B1 bucket from the 2026-05-30 audit. Loader: [.tmp_deploy/fix_grc_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_grc_b1_technical_2026_05_31.ts). Run from project root (`c:/dev/domain-map`) so `semantius` reads the correct `.env`. All writes idempotent.
+
+### Applied
+
+- **B1-S6 (trigger_events.event_category enum backfill)**: 6 PATCHes against ids 921-926. Mapping per audit: 921 `compliance_control.passed` -> `state_change`; 922 `policy_attestation.required` -> `threshold`; 923 `policy_attestation.completed` -> `state_change`; 924 `compliance_evidence.submitted` -> `lifecycle`; 925 `remediation_plan.created` -> `lifecycle`; 926 `remediation_plan.overdue` -> `threshold`. **B9 enum violation cleared on the 6 named rows.**
+- **B1-S4 (Rule #10 users edges)**: 20 INSERTs on `data_object_relationships` (10 GRC masters x 2 directions). New ids 1622-1641. Audit pre-specified the verb shapes per master; inserts mirror the catalog convention (user-as-source row with `one_to_many` + `reference` + `is_required=false`; master-as-source row with `many_to_many` + `reference` + `is_required=true`, `owner_side='source'` in both cases, matching existing user-edges). **B7 hard-fail cleared.**
+
+### Deferred (out of scope for this technical pass, 11 items)
+
+- **B1-S1** (modularization): new `domain_modules` entities; also gated on B2-5 (COMPLIANCE-TRAIN ownership) and B3-2 (user picks 2 vs 3 vs 4 modules).
+- **B1-S2** (M4 capability link): gated on B2-5.
+- **B1-S3** (B12 lifecycle states): depends on B1-S1 modules.
+- **B1-S5** (B11 aliases): bulk `data_object_aliases` not pre-specified as exact tuples; needs user-approved per-row strings per Rule #15 boundary.
+- **B1-S7** (F1 retire legacy skill): explicitly sequenced after B1-S1 and B1-S12.
+- **B1-S8** (B10b outbound FK): not derivable from existing modules (GRC has zero modules).
+- **B1-S9** (B8 outbound rels): targets not user-edges in the Rule #10 sense; several targets unresolvable until neighbor domains modularize.
+- **B1-S10** (B2 plural label `Compliance Evidences`): "default recommendation" requires user pick between leave-as-is and rename.
+- **B1-S11** (F7 send_email PATCH): audit says preempted by F1 retirement (deferred B1-S7).
+- **B1-S12** (F2-F5 module skills): depends on B1-S1.
+- **B1-S13** (E1-E6 roles): depends on B1-S1 and B1-S12.
+
+Bucket 1 status after this pass: **2 of 13 fixes applied (B1-S6, B1-S4)**, 11 deferred pending user decisions, modularization, or other entity creation. Bucket 2 and Bucket 3 unchanged.
+
+No JWT errors. No Rule #15 writes (no `notes` columns touched). No vendor names introduced (the new relationship rows carry only generic role nouns).
+

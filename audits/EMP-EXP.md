@@ -166,3 +166,30 @@ Also: 4 candidate domains were queued to `audits/_missing-domains.md`: EMP-LISTE
 - **WORK-MGMT b1** has consumer DMDO on `action_plans` on module 149 already; no work owed.
 - **ONBOARDING b1** owes confirmation that handoffs 409, 1231 source_domain_module_id=35 is the correct ONBOARDING module — already set, this is informational.
 - **Cross-domain `data_object_relationships` mirror check** (B8 inbound direction): rows 161 (`engagement_drivers feeds people_kpis`) and 162 (`survey_responses feeds people_kpis`) are owned by EMP-EXP (source side) and target PA's `people_kpis` (id 43). PA's B8 should mirror-validate these on its own audit pass.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Loader: [.tmp_deploy/fix_emp_exp_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_emp_exp_b1_technical_2026_05_31.ts), run from project root.
+
+### Applied (truly-technical B1 only)
+
+- **B1-S5** — DELETE `skill_tools` row id 514 (`skill_id=55, tool_id=42`, `sign_document` wrong primitive on emp-exp listening skill). Verified empty post-run.
+- **B1-S11** — PATCH `handoffs.id=1077 notes=''` (Rule #15 revert of "target NULL until PA is modularized" provenance trailer). Note: live re-check showed `handoffs.id=444` and `handoffs.id=115` already carried `target_domain_module_id=82` from a prior backfill, so no FK PATCH was needed on those rows.
+- **B1-S13** — APQC TAGGING:
+  - DELETE 3 wrong `discovery_substring` rows (handoff_processes ids 150 [handoff 409 → `Create customer journey maps`], 173 [handoff 442 → `Survey market…`], 174 [handoff 115 → `Survey market…`]).
+  - INSERT 11 new `agent_curated` rows (handoff_processes ids 468–478) per the audit's pre-specified handoff_id + PCF external_id table, all `record_status='new'` (DB default per Rule #1). Covers handoffs 442, 443, 444, 445, 1077, 1078, 1248, 115, 1136, 409, 1231. Skipped handoff 116 (gated on B2-S4) and handoff 1107 (kept existing correct `discovery_substring` row id 86 per audit). EMP-EXP cross-domain handoff APQC coverage is now 12 of 13 rows.
+
+### Deferred B1 items (require user judgment or are gated)
+
+- **B1-S1** — zero roles for the domain; persona authoring requires user direction.
+- **B1-S2** — F2 module 65 needs a new `system` skill plus rename / split of skill 55; gated on B2-S6 disposition.
+- **B1-S3** — F3 thin `skill_tools`; new mutation + abstraction tools require authoring decisions.
+- **B1-S4** — F7 `send_email` repoint to `notify_team`; `skill_tools.tool_id` swap not on the technical allowlist (essentially row replacement, not a naming PATCH).
+- **B1-S6** — INSERT `survey_campaign.closed` `trigger_events` row; new entity authoring deferred.
+- **B1-S7** — re-point handoffs 442 / 115 to the new event and DELETE / repurpose event 134; gated on B1-S6.
+- **B1-S8** — reclassification of handoff 116 / trigger_event 10 (`attrition_risk.high`); audit explicitly surfaces to user (option (a) / (b) / (c) under B2-S4).
+- **B1-S9** — INSERT 2 intra-domain `handoffs` rows; new handoff authoring deferred (also depends on B1-S6).
+- **B1-S10** — duplicate user-edges (`data_object_relationships` rows 151 / 152); audit lists options (a) / (b) / (c) under B2-S5.
+- **B1-S12** — B10b inbound NULL on handoffs 1107 / 1136 to EMP-EXP; audit pre-specifies "surface to user" plus new DMDO authoring not on technical allowlist.
+
+No JWT-audience errors during this pass.

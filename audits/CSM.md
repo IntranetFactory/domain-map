@@ -175,3 +175,48 @@ Verdict: 1 B5 boundary gap (handoff 470), 1 missing-handoff candidate, plus the 
 ### `domains.notes` pointer (if updated)
 
 _not yet written; will require user-approved wording per Rule #15_
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the technical-only slice of Bucket 1 (8 PATCH operations across 2 fixes). Judgment-bearing items (catalog UX, pattern flag re-evaluation, vendor aliases, contributor/consumer business_function_domains, trigger_event re-anchoring, APQC tagging scope) deferred for user review.
+
+### Fixes
+
+| ID | Type | Action | Result | UI |
+|---|---|---|---|---|
+| B1-S4 | permission_verb_override | PATCH `data_object_lifecycle_states` id=312 (`customer_cases.resolved`) `permission_verb_override='resolve_customer_case'` | applied (2 ops, direct CLI) | https://tests.semantius.app/domain_map/data_object_lifecycle_states |
+| B1-S4 | permission_verb_override | PATCH `data_object_lifecycle_states` id=313 (`customer_cases.closed`) `permission_verb_override='close_customer_case'` | applied (2 ops, direct CLI) | https://tests.semantius.app/domain_map/data_object_lifecycle_states |
+| B1-B2 | B10b source_domain_module_id | PATCH `handoffs.source_domain_module_id` for outbound rows where the trigger_event's `data_object_id` has a single strongest-role CSM module | 3 rows: 77→CSM-CASE-MGMT (contributor on 111), 487→CSM-CASE-MGMT (contributor on 111), 489→CSM-ENTITLEMENTS (master on 104) | https://tests.semantius.app/domain_map/handoffs |
+| B1-B3 | B10b target_domain_module_id | PATCH `handoffs.target_domain_module_id` for inbound rows where the payload `data_object_id` has a single strongest-role CSM module | 3 rows: 65→CSM-ENTITLEMENTS (master on 104), 71→CSM-ENTITLEMENTS (master on 104), 72→CSM-CASE-MGMT (master on 103) | https://tests.semantius.app/domain_map/handoffs |
+
+Loader: [.tmp_deploy/fix_csm_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_csm_b1_technical_2026_05_31.ts). Post-fix audit confirms 6 settable PATCHes applied; 57 CSM-side NULL module FKs remain (all matching the spec-defined "tie" or "no candidate in CSM" cases, surfaced below).
+
+### Deferred (B10b NULLs requiring user judgment)
+
+The B10b deterministic rule leaves a NULL whenever the candidate set is empty or ties on strongest role. These are NOT defects in the backfill; they are real ambiguities that require user input. Two classes:
+
+**Class A: tie on `customers` (DO 97) consumer-vs-consumer.** Six rows whose source or target derivation lands on payload 97, which CSM consumes in both CSM-CASE-MGMT and CSM-ENTITLEMENTS. Identical surface to Bucket 2 #1.
+
+| Handoff IDs | Side | Reason |
+|---|---|---|
+| 70, 224, 233, 234, 486, 488 | source_module_id (outbound) | trigger_event keyed on customers; CSM consumes in 2 modules, tie breaks NULL |
+| 209, 270 | target_module_id (inbound) | payload=customers; CSM consumes in 2 modules, tie breaks NULL |
+| 195, 494 | target_module_id (inbound) | payload=customer_subscriptions (DO 106); CSM consumes in 2 modules (CSM-CASE-MGMT optional, CSM-ENTITLEMENTS required), tie on role rank |
+
+**Class B: no CSM DMDO for the payload (B5 boundary, Bucket 2 #2).** 47 inbound rows whose payload is the source's own master (e.g. `social_messages`, `insurance_claims`, `service_work_orders`), which CSM has no consumer DMDO for. Resolution requires either authoring a consumer DMDO on the relevant CSM module (option (a) on each row) or re-keying the handoff to a CSM-mastered payload (option (b)). Affected rows: 86, 87, 193, 194, 225, 226, 229, 230, 330, 337, 470, 479, 493, 496, 511, 520, 523, 525, 720, 744, 865, 883, 890, 891, 899, 902, 904, 908, 910, 923, 924, 930, 931, 942, 947, 985, 987, 992, 996, 998, 1003, 1007, 1010, 1055, 1056, 1058, plus 73 (outbound, event keyed on dunning_events which CSM does not consume).
+
+### Deferred (other B1 items, non-technical)
+
+| ID | Audit finding | Reason for deferral |
+|---|---|---|
+| B1-S1 | A4 catalog_tagline + catalog_description empty | Rule #20: surface to user before writing |
+| B1-S2 | B4 pattern flag re-evaluation on 104/105/111 | Audit lists multiple "likely" outcomes (Bucket 2 #6); pattern flag flips need user confirmation |
+| B1-S3 | B11 aliases for customer_subscriptions, customer_events | Audit cites vendor-specific synonyms; new alias rows not in technical slice |
+| B1-S5 | C1 new contributor/consumer business_function_domains | New cross-functional rows explicitly outside the technical slice |
+| B1-B1 | trigger_event 94 (`payment.failed`) mis-attribution | Audit offers two paths "(a) or (b)"; user picks |
+| B1-H1 | APQC tagging on cross-domain handoffs | Audit "Subject to Bucket 2 #4 scoping decision" (28 vs 48 vs defer) |
+
+### UI links
+
+- handoffs (verify B10b PATCHes): https://tests.semantius.app/domain_map/handoffs
+- data_object_lifecycle_states (verify permission_verb_override): https://tests.semantius.app/domain_map/data_object_lifecycle_states

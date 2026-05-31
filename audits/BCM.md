@@ -168,3 +168,31 @@ These are candidate masters surfaced by the vendor-surface enumeration above. Th
 ### Candidates queued
 
 None. Every market the BCM audit surfaced (BCM itself, DRP) is already represented in the catalog (BCM as the current domain; DRP as a Bucket 2 question, not yet a separate candidate). DORA and NIS2 surface needs are sub-features of BCM / OP-RES / TPRM rather than candidate domains. If the user resolves B2-2 to "queue DRP as a separate candidate", the helper will be run in the follow-up pass after that decision lands.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Fixes applied
+
+None. Every Bucket 1 item is gated on judgment calls (chiefly B2-1 leadership-tier vs promote) or requires authoring entities the subagent prompt classifies as DEFER (new `domain_modules`, new capabilities, catalog UX prose, system skills, DMDO masters). Verified pre-state via reads: BCM (domain 17) still has zero `domain_modules`, zero `capability_domains`, empty `catalog_tagline` / `catalog_description`; handoff 253 still carries `trigger_event_id=227` with both module FK columns NULL.
+
+| B1 ID | Action | Row counts |
+|---|---|---|
+| (none) | (none) | (n/a) |
+
+### Deferred B1 items
+
+| B1 ID | Reason |
+|---|---|
+| B1-S1 | Creating a new `domain_modules` row (`BCM-LANDING`) is in the prompt's DEFER list. Requires user sign-off on the code, description, and `module_kind='full'` posture for a leadership-tier landing surface. Also gated on B2-1 (if BCM promotes, the modules become `BCM-PLANNING` + `BCM-EXERCISE-AND-CRISIS` instead). |
+| B1-S2 | Authoring 3-5 new capabilities plus `capability_domains` links is a judgment task: capability code / name / description drafting, and the candidate list (`business-impact-analysis`, `continuity-planning`, `exercise-execution`, `crisis-management`, `dependency-mapping`) needs user vetting. Not in the prompt's technical-fix set. |
+| B1-S3 | `catalog_tagline` and `catalog_description` drafts are explicitly in the prompt DEFER list (Rule #20 requires per-string user approval before write). |
+| B1-S4 | Audit text itself defers this until B2-1 resolves (the host module differs between leadership-tier and promote scenarios). Also gated on B1-S1 landing first. System-skill authoring (Rule #17) is not in the technical-fix set. |
+| B1-S5 | Two-part fix is not technical: (a) repointing `trigger_event_id` requires either an existing non-defective trigger keyed against `compliance_risks` (audit notes none is known to exist, becomes a GRC B9 follow-up) or authoring a new trigger event with judgment on naming / category. (b) Setting `source_domain_module_id` and `target_domain_module_id` is blocked because GRC has zero modules (GRC B10b) and BCM-LANDING does not yet exist (B1-S1). Audit derives no concrete FK IDs to backfill. |
+| B1-S6 | Adding consumer DMDOs on `BCM-LANDING` is blocked on B1-S1 (target module does not exist). Also requires deciding the full consumer set under B2-1 (minimal under leadership-tier, broader under promote). New `domain_module_data_objects` rows are in the DEFER list. |
+| B1-A1 | Audit explicitly marks "Blocked on B1-S5". The proposed `agent_curated` PCF tag (process 269) should not be written while the underlying handoff still mis-expresses the relationship via defective trigger 227. |
+
+UI spot-checks:
+- https://tests.semantius.app/domain_map/domain_modules?domain_id=17
+- https://tests.semantius.app/domain_map/capability_domains?domain_id=17
+- https://tests.semantius.app/domain_map/handoffs?id=253
+- https://tests.semantius.app/domain_map/domains?id=17

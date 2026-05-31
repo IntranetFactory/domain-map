@@ -221,3 +221,37 @@ Light-touch summary of the deferred pairs:
 | PA ↔ ATS | 1 outbound from PA fully wired (1112 to SWP, scratch , actually 453 to ATS fully wired); 3 inbound from ATS (23, 403, 1281), 2 of 3 carry NULL target_domain_module_id (handled in B1-B1) | reconcile after B1-B1 lands | schedule ATS b1 already exists at audits/ATS.md |
 | PA ↔ COMP-MGMT | 1 outbound from PA (1105) NULL target FK owed by COMP-MGMT; 2 inbound (107, 422 wait 422 not in this audit) , 107 NULL target FK on PA side handled in B1-B1 | reconcile after B1-B1 lands | schedule COMP-MGMT b1 |
 | PA ↔ PAYROLL | 0 outbound; 3 inbound all NULL target FK (25, 102, 1155 all in B1-B1) | reconcile after B1-B1 lands | schedule PAYROLL b1 already exists at audits/PAYROLL.md |
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied truly-technical Bucket-1 items only; all judgment items deferred to user.
+
+### Applied (18 rows changed)
+
+- **B1-S2** (5 PATCHes on `trigger_events.event_category`, Rule #13 enum backfill): 397 `attrition_forecast.published` -> `state_change`, 398 `engagement_survey.launched` -> `lifecycle`, 399 `engagement_survey.closed` -> `state_change`, 400 `predictive_model.deployed` -> `state_change`, 401 `predictive_model.scored` -> `signal`. Audit pre-specified the per-id mapping.
+- **B1-S6** (5 INSERTs on `data_object_relationships`, Rule #10 user-edges): inserted edges users(748) -> engagement_surveys(45) `launches`, -> attrition_forecasts(42) `publishes`, -> predictive_models(46) `authors`, -> people_kpis(43) `publishes`, -> workforce_segments(44) `authors`. Shape `many_to_many` / `reference` / `owner_side='target'` / `is_required=false`. New row IDs 1595-1599.
+- **B1-B1** (8 PATCHes on `handoffs.target_domain_module_id`, B10b derivable from existing PA modules): 25 -> 81, 102 -> 81, 107 -> 81, 115 -> 82, 444 -> 82, 1077 -> 82, 1130 -> 81, 1155 -> 81. The 9th audit-listed row 1281 was already wired to 81 in live state; no-op.
+
+### Deferred (with reason per parent-task defer rules)
+
+- **B1-S1** (lifecycle states on all 5 PA masters): new entity inserts; per-row state machines need user authoring decisions, not pre-specified per row. Blocks B1-S3 / B1-S4 / B1-S5 cascade.
+- **B1-S3** (4 module-level system skills + skill_tools rows): new entities; explicit defer rule.
+- **B1-S4** (3-5 PA-scoped roles + role_modules + role_permissions): new entities; explicit defer rule.
+- **B1-S5** (12+ baseline permissions + workflow-gate permissions): new entities; gated on B1-S1.
+- **B1-S7** (4-5 intra-PA `data_object_relationships`): not Rule #10 user-edges; TECHNICAL clause only licenses user-edge inserts pre-specified by the audit. Verb prose only; defer.
+- **B1-S8** (aliases): proposal text "draft 2-4 per master" with example alias names but no exact pre-specified tuples (alias_type unspecified, no per-row authoritative list). Bulk inserts not in TECHNICAL scope unless audit pre-specifies exact tuples.
+- **B1-S9** (trigger_events 10 + 11 attribution defect): audit explicitly routes to B2-S2 with two user-judgment options; cross-bucket dependency.
+- **B1-S10** (pattern flag flips on 3 masters): explicit "pattern flag flips" defer rule; routes to B2-S3.
+- **B1-H1** (~30 `handoff_processes` INSERT/REPLACE candidates): TECHNICAL clause requires resolvable PCF. Verified live `processes` table: audit-proposed external_ids 10544, 10545, 10547, 10548, 10550, 10539 do NOT resolve. The 8 that do resolve (10532, 10018, 10175, 16944, 21698, 10773, 10511, 16437) have semantic mismatches with audit prose (e.g. 10532 = "Deliver employee communications" in live catalog, but audit labels it "Manage workforce planning"; 10547/10544 referenced as "Manage talent" / "Manage workforce metrics" but neither external_id exists). All H1 inserts and REPLACEs deferred for user PCF re-resolution.
+
+### Loader
+
+- `c:/dev/domain-map/.tmp_deploy/fix_pa_b1_technical_2026_05_31.ts`
+- Run from project root: `bun run "c:/dev/domain-map/.tmp_deploy/fix_pa_b1_technical_2026_05_31.ts"`
+- Exit code 0; 18 rows changed, 0 skipped, 0 errors.
+
+### Outcome counts
+
+- TECHNICAL applied: 3 fix types, 18 rows (5 + 5 + 8).
+- Deferred: 9 Bucket-1 items (S1, S3, S4, S5, S7, S8, S9, S10, H1) + all Bucket 2 (7) and Bucket 3 (9).
+- JWT errors: none.

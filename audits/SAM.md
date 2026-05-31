@@ -253,3 +253,51 @@ This audit passes when:
 - 0 em-dashes anywhere in SAM-touching rows.
 
 Reports-only follow-ups remain open until the source/target domains are independently audited.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Scope
+
+Applied the truly-technical B1 fixes the original audit pre-specified with concrete IDs and values. Judgment items, gated items, and Bucket-2 items remain DEFERRED to the user.
+
+Loader: `c:/dev/domain-map/.tmp_deploy/fix_sam_b1_technical_2026_05_31.ts` (TypeScript, Bun, invoked from project root).
+
+### Applied (3 of 11 Bucket-1 items)
+
+| ID | Action | Rows touched |
+|---|---|---|
+| B1-S2 | PATCH `trigger_events.event_category`: 617 -> `lifecycle`, 618 -> `lifecycle`, 619 -> `threshold`, 620 -> `threshold`. ids 121, 122, 123 already carry `signal` (audit re-verified; live drift since audit was written). | 4 PATCHes |
+| B1-S10 | PATCH em-dash + British-spelling cleanup. `domains.id=52 business_logic`: em-dash replaced with colon, "licence" -> "license". `skills.id=105 description`: em-dash replaced with colon. | 2 PATCHes |
+| B1-S8 | INSERT 3 Rule #10 user-edges on SAM masters (the audit pre-specified tuples). All three follow the established `data_object_id=748 (users)`, `relationship_type=one_to_many`, `relationship_kind=reference`, `owner_side=source`, `is_required=false` convention. Verbs: `assigned audits` -> `license_audits` (60), `owned licenses` -> `software_licenses` (58), `owned catalog titles` -> `software_titles` (57). The 4th audit-marked optional edge (`software_installations` -> `users` as `assigned_to`) NOT inserted; that is the only audit edge marked optional, deferred to user judgment. | 3 INSERTs (ids 1690-1692) |
+
+Total live writes this pass: **4 PATCHes + 3 INSERTs**.
+
+### Deferred (8 of 11 Bucket-1 items + H1)
+
+| ID | Reason for deferral |
+|---|---|
+| B1-S1 | Module re-author. Phase A, gated on B2-S1 (4 vs 6 module shape) and Bucket-3 38-master load. Judgment + scope. |
+| B1-S3 | Trigger-event re-pointing / dedup. Repointing `data_object_id` from SAM masters to source-domain masters (RMM `discovered_devices`, DISCOVERY `discovery_scans` 81) plus renaming 122. Judgment on the source-side master target and the new event names. |
+| B1-S4 | 10 new lifecycle trigger_events. Gated on B1-S5 lifecycle states landing first. |
+| B1-S5 | Lifecycle states. Gated on B1-S1 (modules carry the `domain_module_id` on each state row) and B2-S3 (config-shape exemption for `software_titles` / `software_installations`). |
+| B1-S6 | Aliases. The audit lists 8-12 candidates as descriptive synonyms ("Software Entitlement", "ELP Record", "Publisher Audit Case") but does not pre-specify exact `(data_object_id, alias_name)` tuples; subagent prompt rule blocks bulk alias inserts without pre-specified exact tuples. |
+| B1-S7 | Intra-domain `data_object_relationships`. These are non-user-edge relationships. Rule #10 license covers only `users` edges; the 6 intra-SAM edges (cardinality choices, audit_titles junction question, `is_required` defaults) are judgment. |
+| B1-S9 | B10b backfill (11 handoffs). Gated on B1-S1 modules existing; no `source_domain_module_id` / `target_domain_module_id` exists to PATCH to yet. |
+| B1-S11 | 4 intra-domain handoffs. Gated on B1-S1 + B1-S4 events. |
+| B1-S12 | 4-5 new DMDO consumer rows. New DMDO rows (`enterprise_applications`, `discovery_scans`, `device_app_assignments`, `paas_addons`, `legal_contracts`) with `necessity` decision per Rule #16; the `paas_addons` decision is itself blocked on B2-S6. |
+| B1-S13 | CLM -> SAM `contract.activated` handoff. Gated on CLM modularization for the source-module FK. |
+| H1 | APQC tagging (9 candidate `handoff_processes` INSERTs). The audit pre-specifies `handoff_id` + a descriptive PCF search term ("Discover IT assets (under 20838 area)") but does NOT pre-specify a resolved `process_id`. Subagent prompt requires resolvable PCF pre-specified before insert; the audit's own instruction is to do `/processes?process_name=ilike.*<term>*` lookups at fix time, which is a judgment-bearing fuzzy-match step. Deferred. The 1 REPLACE evaluation on existing row 1290 is also deferred. |
+
+### Post-fix verification snapshot
+
+- All 7 SAM-relevant `trigger_events` (121, 122, 123, 617, 618, 619, 620) carry non-empty `event_category` from `(lifecycle, state_change, threshold, signal)`. B9 partial closure: the 4 newly-backfilled ones pass; the 3 dedup-pending ones (121, 122, 123 on `software_installations`) carry `signal` correctly but the publisher-attribution defect remains open under B1-S3.
+- `domains.id=52` and `skills.id=105` carry zero em-dashes. CLAUDE.md em-dash audit on SAM-touching rows: PASS.
+- `data_object_relationships` for SAM masters as `related_data_object_id` from `users`: 3 rows (1690 license_audits, 1691 software_licenses, 1692 software_titles). B7 partial closure (3 of 4 expected edges; the optional installations edge deferred).
+- `data_objects.notes` writes this pass: **0** (Rule #15 compliant).
+- `record_status` overrides this pass: **0** (Rule #1 compliant; all new rows take default `new`).
+- Vendor names introduced into non-commerce text fields this pass: **0** (Rule #18 compliant).
+- JWT-audience errors this pass: **0**.
+
+### Open Bucket-1 follow-ups (8)
+
+B1-S1, B1-S3, B1-S4, B1-S5, B1-S6, B1-S7, B1-S9, B1-S11, B1-S12, B1-S13 plus H1. Audit acceptance criterion remains gated on B1-S1 (modules) cascade-clearing the rest.

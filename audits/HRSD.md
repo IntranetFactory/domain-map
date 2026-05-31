@@ -320,3 +320,27 @@ Per-neighbor 5-section diff for the 7 full-pass neighbors. Short form below; dee
 | ITSM | B8 inbound-relationship | HRSD's outbound to ITSM (handoff 29) implies an inverse `service_requests inherits_context_from hr_cases` relationship; today only the forward `hr_cases spawns service_requests` (192→48) is loaded. ITSM-side B8 audit would pick this up. |
 | HCM | B8 inbound-relationship | The HCM `employee.terminated` inbound (369) implies a cross-domain relationship; today HRSD has `employees raises hr_cases` (31→192) which covers the inverse. Adequate, no action. |
 | All targets with NULL target_module | Rule #15 audit | The `notes` annotations on handoffs 446, 448, 1118, 1119 + the 10 DMDO notes on module 75 + the `data_objects.notes` on hr_cases (192) and `case_categories` (193) all match the RESCINDED-license templates from prior loads. They are HRSD-internal rows so HRSD's own audit owns the revert decision (B2-1 above); no other-domain follow-up needed. |
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Fixes applied
+
+Loader: [.tmp_deploy/fix_hrsd_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_hrsd_b1_technical_2026_05_31.ts)
+
+| B1 ID | Action | Row counts |
+|---|---|---|
+| B1-S1 | PATCH `trigger_events.id=454` set `event_category='state_change'` (was empty string, enum-constraint violation per Rule #13) | 1 row patched |
+| B1-H1 (NEW agent_curated subset) | INSERT 15 `handoff_processes` rows with `proposal_source='agent_curated'`, `record_status` omitted (DB default `'new'` per Rule #1). Covers all 15 audit-prescribed NEW rows: outbound 447, 448, 1118, 1119, 1120, 1121 and inbound 250, 721, 467, 416, 402, 1048, 429, 1137, 420. New `handoff_processes.id` values: 216–230 | 15 rows inserted |
+
+### Deferred B1 items
+
+| B1 ID | Reason |
+|---|---|
+| B1-A4 | `catalog_tagline` + `catalog_description` drafts: Rule #20 requires user approval per row before any write. Draft wording must be surfaced to the user first. |
+| B1-H1 (REPLACE rows for handoffs 119, 446) | Audit prescribes replacing the existing `discovery_override` rows (process_id 196, PCF 10388 `Manage customer service problems, requests, and inquiries`) with `agent_curated` rows pointing at different PCFs (10523 / 17056). Overwriting a pre-existing tag is a judgment call about whether the prior auto-classification was wrong; surface to user for confirmation before any DELETE + INSERT. |
+| B1-H1 (KEEP-or-decide for handoffs 369, 1109) | Audit explicitly lists these as user decisions ("KEEP or upgrade to agent_curated 10523 L3 (user decision)" and "KEEP or REPLACE"). |
+| B1-H1 (KEEP rows for handoffs 29, 9) | Audit marks existing `discovery_override` rows as semantically correct; no action needed. |
+
+UI spot-checks:
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/handoff_processes

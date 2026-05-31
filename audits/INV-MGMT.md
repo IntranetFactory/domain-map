@@ -255,3 +255,34 @@ _(no decisions yet, status: feedback_needed)_
 ### Fixes applied
 
 _(none yet)_
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+Subagent pass restricted to truly-technical, audit-pre-specified residual B1 items.
+Loader: `.tmp_deploy/fix_inv_mgmt_b1_technical_2026_05_31.ts`.
+
+### Applied (TECHNICAL)
+
+| Item | Action | Result |
+|---|---|---|
+| B1-S2 | INSERT 6 `trigger_events` for workflow-gate states pre-specified in the audit (publishing master + from_state/to_state derived from `data_object_lifecycle_states`). `event_category` set per audit (5 `state_change`, 1 `lifecycle` for `variance_review`). `record_status` omitted (DB default `new` per Rule #1). | New ids 1478-1483: `inv_stock_movement.posted` (1478), `inv_stock_movement.reversed` (1479), `inv_stock_transfer.approved` (1480), `inv_stock_transfer.reconciled` (1481), `inv_cycle_count.variance_review` (1482), `inv_serialized_unit.scrapped` (1483). |
+| B1-H1 (single-PCF subset) | INSERT 5 `handoff_processes` rows for handoffs where the audit specifies a single confident PCF: (1053, 1326), (1056, 204), (1057, 208), (1059, 854), (1235, 854). `role='implements'`, `proposal_source='agent_curated'`, `record_status` omitted. PCF ids verified `source_framework='apqc_pcf_cross_industry'` pre-flight. | 5 new rows inserted. Combined with the 2 pre-existing (1051, 1052 -> 854), 7 of 11 cross-domain handoffs now carry APQC tags. |
+
+### Deferred
+
+| Item | Reason |
+|---|---|
+| B1-S1 (M7 + B5) | M7 half gated on B2-S6 user pick (DELETE vs PROMOTE the 4 sibling consumer rows on `inv_stock_items` 785 and `inv_stock_balances` 787). B5 half is owed by B2C-COMM (commerce_products 384 master) and OMS (inventory_locations 425 master), report-only from INV-MGMT. |
+| B1-S3 (4-5 intra-domain handoffs) | New handoff rows are not in the technical allow-list for residual passes (would create new business connections + requires the not-yet-loaded `inv_kit.assembled` trigger_event). Surface as user-confirm batch. |
+| B1-S4 (B10b report-only) | Owed by S2P / OMS / ERP-FIN / CSM / GRC / B2C-COMM audits per the B10b asymmetry rule; no INV-MGMT write. |
+| B1-S5 (F2/F3/F5: 3 system skills + skill_tools) | Full Phase-S authoring load (3 skills + 30-60 `skill_tools` rows); not a single-PATCH technical fix. |
+| B1-H1 multi-PCF rows (4 handoffs) | Audit lists two PCF candidates per row; user picks. Pending: 1050 (PCF 826 or 852, REPLENISHMENT -> S2P), 1054 (PCF 859 or 1326, INV -> ERP-FIN on transfer.received), 1055 (PCF 206 or 37, medium confidence, INV -> CSM on expiry_warning), 1058 (PCF 201 or 122, INV -> CSM on warranty_activated). |
+
+### JWT errors
+
+None.
+
+### Open items unchanged
+
+All Bucket 2 items (B2-S1 through B2-S6) and Bucket 3 candidates remain `feedback_needed`. Frontmatter unchanged.
+

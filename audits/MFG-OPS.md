@@ -174,3 +174,62 @@ Deep pairwise reconciliation (Pass 4) runs only against edge weight >= 3. That i
 ### Candidates queued (`audits/_missing-domains.md`)
 
 - **EQMS (Enterprise Quality Management)** — surfaced from the regulated-manufacturing vendor scan (Sparta TrackWise, MasterControl, Veeva Vault QMS, ETQ Reliance, IQS, Intelex). Adjacency: MFG-OPS, PLM, GRC, FSQM. Capabilities: nonconformance management, CAPA, document control, supplier quality, audit management, change control, complaint management. Helper run, `mention_count` bumped from 1 to 2.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the technically-deterministic subset of Bucket 1 via
+[.tmp_deploy/fix_mfg_ops_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_mfg_ops_b1_technical_2026_05_31.ts).
+Loader is idempotent; safe to re-run.
+
+### Fixes applied
+
+- **B1-S6 (B9 enum gap).** PATCHed `event_category` on 8 MFG-OPS `trigger_events`
+  per the audit's exact event -> category mapping. trigger_event ids 1091, 1092,
+  1094, 1095, 1098 -> `lifecycle`; ids 1093, 1097 -> `state_change`; id 1096 ->
+  `signal`. 0 already correct, 8 patched.
+- **B1-W1 (SCOPE-CREEP).** DELETEd 3 `solution_domains` rows linking PLM products
+  (Siemens Teamcenter 842, PTC Windchill 843, Dassault 3DEXPERIENCE ENOVIA 845)
+  to domain 47 at `coverage_level=secondary`. The PLM -> MFG-OPS dependency
+  remains correctly modeled in handoffs 1087 / 1091 / 1092. Row ids deleted:
+  1197, 1200, 1203.
+- **B1-H1 (APQC tagging).** INSERTed 9 new `handoff_processes` rows
+  (`proposal_source=agent_curated`, `record_status=new` per Rule #1).
+  Handoff 954 -> PCF 171 already existed (id 652), skipped by natural-key
+  dedup. The new tags coexist with PLM-side prior tags on handoffs 1087 / 1091
+  / 1092 (additive on `(handoff_id, process_id)`). APQC catalog-quality
+  headline remains 0%; flipping to `approved` requires user review per Rule #1.
+
+### Deferred (gated on judgment)
+
+- **B1-S1** (zero `domain_modules`). Blocked by Bucket 2 #1 module-split
+  architectural decision. Until resolved, every downstream band stays open.
+- **B1-S2** (3+ `capabilities`). New entity authoring; user must approve scope
+  and pick the 5-7 capabilities. Also coupled to Bucket 2 #2 (WORKFORCE-
+  SCHEDULING re-scope question).
+- **B1-S3** (`catalog_tagline` / `catalog_description`). Rule #20 buyer-voice
+  draft, needs user-approved wording.
+- **B1-S4** (`data_object_aliases`). Audit suggests synonyms but does not
+  pre-specify exact `(data_object_id, alias_name)` tuples; bulk insert blocked
+  on tuple-level approval.
+- **B1-S5** (`data_object_lifecycle_states`). Blocked by B1-S1 (states FK to
+  `domain_module_id`).
+- **B1-S7** (`roles` / `role_modules` / `role_permissions`). Blocked by B1-S1.
+- **B1-S8** (system skill `domain_module_id`). Blocked by B1-S1; skill-split
+  shape follows the module-split shape.
+- **B1-S9** (skill kebab -> snake rename). Falls out of B1-S8 once modules
+  exist.
+- **Bucket 2 #1 - #9** and **Bucket 3** are unchanged from the 2026-05-30 pass.
+
+### Verification
+
+```
+GET /trigger_events?event_name=in.("production_order.released",..)
+  -> all 8 carry the expected event_category
+GET /solution_domains?solution_id=in.(842,843,845)&domain_id=eq.47
+  -> [] (confirmed delete)
+GET /handoff_processes?handoff_id=in.(949,951,952,954,1087,1091,1092,867,975,979)
+  -> 17 rows total: 9 new MFG-OPS-curated tags + 8 prior (PLM / FSQM / FOOD-
+     TRACE / a concurrent EAM-side tag on handoff 867)
+```
+
+No JWT-audience errors. Loader run from project root, single execution.

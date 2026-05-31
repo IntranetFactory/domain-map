@@ -163,3 +163,56 @@ _(empty until the user approves Bucket 1 items)_
 ### `domains.notes` pointer (if updated)
 
 _not yet written; will require user-approved wording per Rule #15_
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+### Scope
+
+Residual-pass over Bucket 1 of the 2026-05-30 audit, applying ONLY items
+that are truly technical (deterministic from audit-pre-specified tuples,
+no judgment calls, no schema additions). Loader:
+[.tmp_deploy/fix_app_paas_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_app_paas_b1_technical_2026_05_31.ts).
+
+### Applied
+
+| ID | Fix | Rows | IDs |
+|---|---|---|---|
+| B1-S5 | INSERT user-edges (Rule #10) from `users` (748) to APP-PAAS masters | 5 | data_object_relationships 1617 (users owns paas_applications), 1618 (users deploys paas_deployments), 1619 (users triggers paas_build_records), 1620 (users configures paas_addons), 1621 (users manages paas_environments) |
+| B1-H1 | INSERT agent_curated APQC tags on cross-domain handoffs | 7 | handoff_processes 412 (754->1262), 413 (755->1304), 414 (756->1265), 415 (757->1299), 416 (758->1939), 417 (798->1313), 418 (704->52) |
+
+Handoff 753 was skipped: an existing `handoff_processes` row (id 295,
+process 1311 `Install/configure/upgrade infrastructure components`)
+already tags it. The audit's proposed PCF 52 would create a different
+tag on the same handoff; user judgment is required to decide whether
+to keep, replace, or co-tag, so this stays in the residual queue.
+
+All inserts used `proposal_source='agent_curated'`. `record_status`
+defaulted to `new` per Rule #1. No `notes` written (Rule #15).
+
+### Deferred
+
+| ID | Reason |
+|---|---|
+| B1-S1, B1-S12 | New `domain_modules` + `capabilities` rows. Out of scope per parent prompt's defer list (new entities/modules); also depends on Bucket 2 B2-S1 module-split decision. |
+| B1-S2 | Rule #20 catalog_tagline / catalog_description deferred per parent prompt. |
+| B1-S3 | Pattern flag flips deferred per parent prompt; Bucket 2 judgment call (B2-S3). |
+| B1-S4 | Intra-domain `data_object_relationships` are not user-edges (Rule #10); 7 rows of business-graph relationships need cluster-drafts authoring, not in technical scope. |
+| B1-S6 | `data_object_aliases` (~20 rows) not pre-specified as exact tuples in the audit; per parent prompt, no bulk alias inserts without pre-specified tuples. |
+| B1-S7 | Lifecycle states blocked behind B1-S1 (need `domain_module_id`) and B2-S4 (config-shape vs workflow decision for `paas_runtime_instances`). |
+| B1-S8 | Legacy skill retirement requires new module-anchored system skills first (blocked behind B1-S1). |
+| B1-S9 | B10b handoff FK backfill: NO source `domain_modules` exist for APP-PAAS, so `source_domain_module_id` is not derivable from existing modules. Handoff 757 already has `target_domain_module_id=38` set; remaining target backfills also depend on B1-S1. |
+| B1-S10 | Cross-domain `data_object_relationships`: out-of-scope (not user-edges); also some target masters unresolved without one-query check per audit. |
+| B1-S11 | Intra-domain handoffs blocked behind B1-S1 + B1-S4 + B1-S7. |
+
+### Verification
+
+- Live read confirmed zero pre-existing user-edges across APP-PAAS masters before insert; 5 inserted, idempotency safe on re-run via preflight skip set.
+- Live read confirmed zero pre-existing `handoff_processes` rows for handoffs 704, 754, 755, 756, 757, 758, 798 before insert; pre-existing row 295 on handoff 753 caused that single row to be skipped.
+- All 7 PCF process IDs verified to exist in `processes` before insert (52, 1262, 1265, 1299, 1304, 1313, 1939).
+- All 6 APP-PAAS master IDs verified live (463-468); `users` builtin verified at id 748.
+
+### UI spot-checks
+
+- https://tests.semantius.app/domain_map/data_object_relationships (filter `data_object_id=eq.748`)
+- https://tests.semantius.app/domain_map/handoff_processes (filter `proposal_source=eq.agent_curated`)
+

@@ -162,3 +162,42 @@ The following 4 candidates surfaced from the vendor sample, all queued via `scri
 3. **CLOUD-COMMIT-OPTIM — Cloud Commitment Optimization** (ProsperOps specialist, ZestyCloud, Spot by NetApp, Archera). Specialist pure-plays focused on Reserved Instance / Savings Plan management as an algorithmic service. Likely fold-into-existing FINOPS as a capability (`FINOPS-COMMITMENT-OPTIM`) per Bucket 1 B1-S2; raised as a candidate so the human triage can confirm.
 4. **FINOPS-UNIT-ECON — Unit Economics Platform** (CloudZero specialist, plus Vantage / Finout coverage). Pure-play unit-economics SaaS that overlaps with FINOPS but markets a distinct "cost per business unit" surface. Likely fold-into-existing FINOPS as a capability (`FINOPS-UNIT-ECONOMICS`); raised as a candidate so the human triage can confirm whether it is its own domain.
 
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent continuation pass that applied only the truly-technical B1 items the orchestrator pre-classified as agent-runnable without user judgment. All judgment-bearing fixes (new modules, new capabilities, new DMDOs, new system skill + tools, C1 spine arbitration, A4 catalog copy, B9 trigger-event re-pointing, FK backfills gated on those, optional new solutions) remain deferred per the original Bucket 1 cascade.
+
+**Loader:** [.tmp_deploy/fix_finops_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_finops_b1_technical_2026_05_31.ts) (run from project root via `bun run`).
+
+### Applied
+
+| B1 ID | Op | Detail |
+|---|---|---|
+| B1-S10 | PATCH | `domains` id=41: `description` and `business_logic` rewritten to remove the em-dash (U+2014) and three British-spelling `optimisation` instances. Final text matches the audit's recommended rewrite (period-space + re-capitalization between `commitment optimization` and `Algorithm-led`). 2 columns patched. |
+| B1-H1-01 | INSERT | `handoff_processes` handoff_id=198 (FINOPS -> S2P `cloud_spend.threshold_breached`) -> process_id=1132 (Monitor and analyze IT financial performance, PCF 8.2.5.4 L4), `agent_curated`. id=668. |
+| B1-H1-02 | INSERT | handoff_id=173 (SPEND-MGMT -> FINOPS `card_transaction.posted`) -> process_id=1132 (PCF 8.2.5.4 L4), `agent_curated`. id=669. |
+| B1-H1-03 | INSERT | handoff_id=637 (SAM -> FINOPS `software_license.under_consumed`) -> process_id=1134 (Optimize IT resource allocation, PCF 8.2.5.6 L4), `agent_curated`. id=670. |
+| B1-H1-04 | INSERT | handoff_id=641 (SMP -> FINOPS `saas_application.sanctioned`) -> process_id=260 (Manage IT portfolio strategy, PCF 8.2.2 L3), `agent_curated`. id=671. |
+| B1-H1-05 | INSERT | handoff_id=643 (SMP -> FINOPS `saas_usage_metric.idle_threshold`) -> process_id=1134 (PCF 8.2.5.6 L4), `agent_curated`. id=672. |
+| B1-H1-06 | INSERT | handoff_id=691 (BI -> FINOPS `bi_query.cost_threshold_breached`) -> process_id=1132 (PCF 8.2.5.4 L4), `agent_curated`. id=673. |
+| B1-H1-07 | INSERT | handoff_id=851 (ESG -> FINOPS `activity_data.recorded`) -> process_id=1802 (Perform sustainability reporting, PCF 13.10.2.3 L4), `agent_curated`. id=674. |
+| B1-H1-08 | INSERT | handoff_id=1196 (APM -> FINOPS `application_cost.updated`) -> process_id=1132 (PCF 8.2.5.4 L4), `agent_curated`. id=675. |
+
+Totals: 1 PATCH op (2 columns) on `domains`, 8 INSERTs on `handoff_processes`. H1 volume now 8 of 9 cross-domain handoffs tagged (the 9th, handoff 305 RE-INVEST -> FINOPS, is DEFER-TO-DISCOVER pending Bucket 2 item 5).
+
+### Deferred (carried forward unchanged)
+
+- **B1-S1** (M1 zero modules): new entity creation, not technical.
+- **B1-S2** (A2 zero capabilities): new entity creation; capability name borderline cross-cutting per audit.
+- **B1-S3** (C1 spine arbitration): Bucket 2 item 1, user-picks.
+- **B1-S4** (A4 catalog_tagline + catalog_description): Rule #20 once-only authoring, user judgment.
+- **B1-S5** (B-band DMDO rebuild): new DMDOs, gated on B1-S1.
+- **B1-S6** (B9 trigger_event 158 attribution): gated on Bucket 2 item 3 decision.
+- **B1-S7** (F-band system skill + tools): new entities, gated on B1-S1.
+- **B1-S8** (B10b outbound NULL FK on handoff 198 source-module): cross-blocked on B1-S6 + B1-S1.
+- **B1-S9** (B10b inbound NULL FK on 8 handoffs target-module): gated on B1-S5 + B1-S1.
+- **B1-S11** (A3 optional new solutions): new entities, user judgment.
+- **B1-H1-09** (handoff 305 PCF tag): DEFER-TO-DISCOVER per audit Bucket 2 item 5.
+- All of Bucket 2 (5 items) and Bucket 3 (6 items): judgment / Phase 0 vendor research, untouched.
+
+No JWT errors encountered. No `notes` columns written. No new entities, modules, capabilities, skills, or DMDOs created.
+

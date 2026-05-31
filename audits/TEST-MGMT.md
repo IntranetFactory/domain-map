@@ -149,3 +149,36 @@ These items the audit identifies but another domain owns the fix, never load fro
 - **RMM B-band on `automation_scripts`**: regardless of which side renames in B2-2, the other side's `domain_data_objects` row needs DELETE / re-insert. If RMM keeps the bare `automation_scripts` name, no RMM action; if RMM renames, RMM's b1 audit owns the rename and the alias-row migration.
 
 These items do NOT block TEST-MGMT's green status; they are observations the user can act on by scheduling audits of the source domains.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent pass applying the truly-technical, pre-specified subset of Bucket 1. Loader: `.tmp_deploy/fix_test_mgmt_b1_technical_2026_05_31.ts`, run from project root.
+
+### Applied (2 of 11 B1 items)
+
+- **B1-S6 (12 PATCHes on `trigger_events.event_category`)**: backfilled all 12 TEST-MGMT-master trigger events from empty to the enum vocabulary per Rule #13. Classification follows the audit's "*.created is lifecycle; most fall into state_change" guidance and the established catalog precedent (`digital_asset.published`, `content_locale.added`, `pay_run.cancelled` are all `lifecycle`):
+  - `lifecycle` (4): `test_case.created` (857), `test_suite.published` (859), `test_defect.created` (863), `test_environment.provisioned` (865).
+  - `state_change` (8): `test_case.updated` (858), `test_plan.approved` (860), `test_run.completed` (861), `test_run.failed` (862), `test_defect.closed` (864), `requirements_to_test_traceability.linked` (866), `automation_script.executed` (651), `automation_script.failed` (652).
+- **B1-H1 (9 INSERTs into `handoff_processes`)**: APQC PCF tagging on all 9 TEST-MGMT cross-domain handoffs. Each row carries `role='implements'`, `proposal_source='agent_curated'`, `record_status` omitted (defaults `new`), `notes` omitted (empty per Rule #15). The audit's 5-digit PCF codes (10369, 10089, 16469, 17482, 17483) are reference labels, not table IDs; resolved to live `processes.id` values 170 / 579 / 1605 / 413 / 1670 by activity name. Inserted pairs (handoff_id → process_id, PCF name): 782→170 (Perform quality testing), 778→170, 780→579 (Eliminate quality and reliability problems), 802→1605 (Monitor and test regulatory compliance position and existing controls), 779→579, 781→413 (Evaluate performance to requirements), 752→1670 (Test against quality plan), 768→1670, 771→170.
+
+### Deferred (9 of 11 B1 items)
+
+Out of scope for a technical-only continuation; each requires judgment, new entity authoring, or sits behind an unresolved gate:
+
+- **B1-S1 (A2 capabilities)**: requires authoring 5–7 new `capabilities` rows; user-judgment-shaped (Cross-cutting convention check, capability naming).
+- **B1-S2 (catalog UX fields)**: explicitly subject to Rule #20's surface-before-write discipline; draft never persisted without per-row user approval.
+- **B1-S3 (pattern flags consideration)**: audit says "re-evaluate"; no pre-specified PATCH list.
+- **B1-S4 (lifecycle states)**: new entity inserts spanning 8 masters; requires per-master state machine design and the `test_environments` config-shape exemption decision.
+- **B1-S5 (F1 retirement / re-anchor skill 113)**: gated on B1-M1 (modules must ship first).
+- **B1-M1 (`domain_modules` rows)**: blocked on B2-1 (split shape is a user decision: 1-module starter vs. 2-module authoring/execution vs. 4-module split).
+- **B1-M2 (B10b handoff module FK backfill)**: derives from B1-M1; even for the 3 partner-modular handoffs (target FKs 149 / 38 / 131), the source-side FK requires TEST-MGMT's own modules to exist.
+- **B1-M3 (legacy `domain_data_objects` to `domain_module_data_objects` migration)**: gated on B1-M1.
+- **B1-M4 (catalog-wide M7 conflict on `automation_scripts` id 225)**: explicit Bucket 2 #2 user decision (rename TEST-MGMT side, rename RMM side, or `embedded_master` demotion).
+
+### Verification
+
+- 12/12 event_category patches applied (no rows skipped, no pre-existing non-empty values to refuse).
+- 9/9 handoff_processes inserts succeeded (no idempotency hits — table was empty for these handoff_ids).
+- All 5 cited PCF activity names verified against live `processes` rows by name before insert; loader fails loudly on mismatch.
+
+No JWT errors. No writes to any `notes` column. No `record_status` overrides. No vendor names in any text field.

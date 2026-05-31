@@ -216,3 +216,46 @@ _(empty, pending user review)_
 ### Fixes applied
 
 _(none yet; user has not approved any fixes)_
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+Residual-pass loader applied only the strictly-technical Bucket 1 items from the 2026-05-30 audit. Classification was per the residual rubric (PATCH enum backfills, B10b FK PATCHes derivable from existing modules, PATCH naming/sanitization, PATCH `notes=''` reverts when audit names the row id, INSERT `handoff_processes` only when audit pre-specifies `handoff_id` + resolvable PCF). Loader: `c:/dev/domain-map/.tmp_deploy/fix_fsm_b1_technical_2026_05_31.ts`. No JWT errors. 16 writes ok, 0 fail.
+
+### Technical fixes applied (16)
+
+| ID | Action | Rows |
+|---|---|---|
+| B1-S2 | PATCH `trigger_events.event_category` enum backfill | 999=lifecycle, 1000/1001/1002=state_change, 1003=lifecycle |
+| B1-S4 | PATCH `handoffs.target_domain_module_id` (FSM-side, inbound landing on FSM master) | 1094 -> 162 (FSM-INSTALLED-BASE) |
+| B1-S5 | PATCH `handoffs.source_domain_module_id` (FSM-side, outbound) | 292 -> 161, 318 -> 161 |
+| B1-S6 | PATCH `handoffs.target_domain_module_id` (FSM-DISPATCH-OPS 161) | 291, 299, 304, 940, 941, 945 |
+| B1-S7 | PATCH `handoffs.notes=''` (Rule #15 revert, audit named row id 1094) | 1094 |
+| B1-S11 | PATCH `domains.id=31 business_logic` em-dash sanitization + American-English ("optimisation" -> "optimization") | 1 |
+| H1 | INSERT `handoff_processes` (agent_curated, confidence=confident only) | 12 rows: 229-196, 883-196, 884-862, 885-302, 1260-353, 1262-736, 318-862, 291-824, 299-824, 304-824, 941-828, 1094-552 |
+
+### Deferred from B1 (not in residual-technical scope)
+
+| ID | Reason |
+|---|---|
+| B1-S1 | Gated on B2-S1 (user picks DELETE vs PROMOTE for 4 sibling consumer DMDOs). |
+| B1-S3 | INSERT 3 `domain_data_objects` rollup rows. New domain-level junctions not in residual-technical allow-list; needs user confirmation. |
+| B1-S8 | Already clean at original audit time; no action required. |
+| B1-S9 | Report-only (CSM audit). |
+| B1-S10 | INSERT 3 `domain_module_data_objects` consumer rows on FSM-DISPATCH-OPS for UTIL-OPS payloads. Same reason as S3. |
+| H1 row on handoff 230 | REPLACE of an existing `discovery_substring` row. Destructive change deferred for user judgment. |
+| H1 rows on 292, 1261, 940, 945 | Audit-tagged "medium" confidence; deferred per residual-technical rubric ("decide"). |
+
+### Verification
+
+- 12 `handoff_processes` rows confirmed live with `proposal_source='agent_curated'`, `record_status='new'`.
+- `domains.id=31 business_logic` reads: "Routing and dispatch optimization under technician skill, parts, SLA, and travel constraints, operations-research solver at the core." (no U+2014).
+- `handoffs.id=1094 notes=''` confirmed; legacy "target NULL until FSM is modularized" string removed.
+- All five `trigger_events` (999-1003) now carry valid enum `event_category` values.
+
+### Spot-check links
+
+- https://tests.semantius.app/domain_map/handoff_processes?handoff_id=in.(229,291,299,304,318,883,884,885,941,1094,1260,1262)
+- https://tests.semantius.app/domain_map/handoffs?id=in.(291,292,299,304,318,940,941,945,1094)
+- https://tests.semantius.app/domain_map/trigger_events?id=in.(999,1000,1001,1002,1003)
+- https://tests.semantius.app/domain_map/domains?id=eq.31
+

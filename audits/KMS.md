@@ -289,3 +289,40 @@ Routed to `audits/_missing-domains.md` via `scripts/analytics/append_missing_dom
 | AGENT-ASSIST | New entry (Cresta, ASAPP, Forethought, Espressive, Aisera, ServiceNow Now Assist, Salesforce Einstein Service Replies) | 1 |
 
 The ENTERPRISE-SEARCH candidate is the most consequential for KMS - if promoted, `knowledge_search_queries` and `search_synonyms` plausibly move there, and KMS's vendor surface (currently weighted at ServiceNow KM + Notion + Coda) gains a Glean / Coveo flank that the catalog is missing today. The AGENT-ASSIST candidate is a clear cross-domain market (CSM + CCAAS + HRSD + ITSM all have agent-assist needs, none host the entity canonically).
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Fixes applied
+
+Loader: [.tmp_deploy/fix_kms_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_kms_b1_technical_2026_05_31.ts)
+
+| B1 ID | Action | Row counts |
+|---|---|---|
+| B1-S3 | PATCH `data_objects.id=413` `plural_label` "Article Feedbacks" -> "Article Feedback" | 1 PATCH |
+| B1-S4 (intra-KMS) | INSERT 5 intra-KMS `data_object_relationships`: kb_articles -> classified_under -> kb_categories; kb_articles -> has_revisions -> article_revisions; kb_articles -> receives -> article_feedback; kb_articles -> appears_in -> knowledge_collections; knowledge_search_queries -> resolved_by -> kb_articles | 5 INSERTs |
+| B1-S4 (cross-domain outbound) | INSERT 4 outbound cross-domain `data_object_relationships`: kb_articles -> resolves -> hr_cases; kb_articles -> resolves -> customer_cases; kb_articles -> trains -> conversation_flows; knowledge_search_queries -> reveals_gap_in -> conversation_flows. (CCAAS `contact_center_agents` row deferred, master not enumerated in catalog.) | 4 INSERTs |
+| B1-S5 | INSERT 6 `users` edges (Rule #10): users authors / owns kb_articles; users edits / approves article_revisions; users submits article_feedback; users curates knowledge_collections | 6 INSERTs |
+| B1-H1 | INSERT 11 `handoff_processes` agent_curated rows (handoffs 720, 721, 722, 723, 724, 1120, 334, 745, 818, 819, 447 -> PCF processes 1293, 429, 919, 430, 427, 1744 as drafted in Pass-1 Bucket 1 APQC TAGGING table) | 11 INSERTs |
+
+All inserts use `record_status` omitted (column default `'new'` per Rule #1). No `notes` populated (Rule #15).
+
+### Deferred B1 items
+
+| B1 ID | Reason |
+|---|---|
+| B1-S1 (module shape) | Gated on Bucket 2 item 1 (canonical-vs-derived ownership of `knowledge_articles`). Cannot author the M1 module set without user decision on routing. |
+| B1-S2 (catalog UX text) | Rule #20 requires explicit per-row user approval of `catalog_tagline` and `catalog_description` wording; also depends on Bucket 2 item 1 routing (buyer voice differs between "system of record" and "analytics layer"). |
+| B1-S4 (CCAAS row only) | `contact_center_agents` data_object not present in catalog (audit flagged as "speculative pending CCAAS master enumeration"). Other 4 cross-domain edges loaded. |
+| MISSING entity drafts (B3-1..B3-4) | Bucket 3 (Phase 0 pending), gated on vendor-research vetting and Bucket 2 item 1. |
+| WRONG-OWNERSHIP (id 51 vs 410) | Bucket 2 item 1, user judgment. |
+| SCOPE-CREEP (knowledge_search_queries to ENTERPRISE-SEARCH) | Bucket 3, gated on ENTERPRISE-SEARCH candidate triage. |
+| Capability expansion (item 3) | Bucket 2, user picks 5-8 of 8 codes. |
+| Regulations scope (item 4) | Bucket 2, user decides set. |
+| APQC override on h-826 (item 5) | Bucket 2, user owns the substring-tag retirement call. |
+| Pattern flag on knowledge_search_queries (item 6) | Rule #15: surface to user, never auto-flip. |
+| Lifecycle states on 4 masters (item 7) | Bucket 2, judgment call per master (workflow vs config-shape exemption). |
+
+UI spot-checks:
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/data_object_relationships
+- https://tests.semantius.app/domain_map/handoff_processes

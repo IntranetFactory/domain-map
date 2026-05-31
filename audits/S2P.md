@@ -201,3 +201,42 @@ Neighbors at weight >= 3: SUP-LIFE (5), AP-AUTO (4), CLM (4), SMP (3).
 ### Candidate domains queued
 
 - `TAIL-SPEND-MGMT` (Tail Spend Management), queued via `scripts/analytics/append_missing_domain.ts`. Specialist market separate from broad S2P (Fairmarkit, Globality, ORO Labs, Una, Vroozi). Adjacencies: S2P, SPEND-MGMT, SUP-LIFE.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Loader: [`.tmp_deploy/fix_s2p_b1_technical_2026_05_31.ts`](../.tmp_deploy/fix_s2p_b1_technical_2026_05_31.ts).
+
+### Applied (25 writes)
+
+- **B1-S13 (B7), 6 INSERTs into `data_object_relationships`** (Rule #10 user-edges). All six audit-pre-specified actor roles authored, including the two distinct actors on `purchase_orders` (approver + buyer, mirroring the hardware_assets precedent at rows 256 + 257):
+  - users `requests purchase requisitions` -> 72
+  - users `approves purchase orders` -> 73
+  - users `places purchase orders` -> 73
+  - users `posts goods receipts` -> 74
+  - users `processes supplier invoices` -> 75
+  - users `manages sourcing events` -> 71
+- **B1-S18 (B12), 1 PATCH** on `data_object_lifecycle_states` id 427 (`sourcing_events.awarded`): `permission_verb_override` `award_event` -> `award_sourcing_event`.
+- **B1-B2, 1 PATCH** on `data_object_relationships` id 715 (`supplier_invoices` -> `expense_reports`): `relationship_verb` `reimbursed via invoice` -> `reimburses_via`.
+- **B1-H1, 17 INSERTs into `handoff_processes`** (`proposal_source='agent_curated'`, `role='implements'`). All 17 audit-pre-specified (handoff_id, process_id) pairs with PCFs verified live (315, 165, 167, 793, 805, 808, 809, 811, 1437). New rows ids 792-808.
+
+### Skipped during apply (idempotency / verification)
+
+- B1-H1 audit candidates already present, exact-pair match: handoff 583 -> process 811 (row 159, `discovery_substring`); handoff 546 -> process 805 (row 738, `agent_curated`). Both left untouched.
+- B1-H1 audit explicit DEFER: handoff 1089 (`engineering_change_order.released`, no clean L4 PCF). Not in this load.
+
+### Deferred from B1 (out of technical scope)
+
+Gated on M1 module-split (Bucket 2 #1), or judgment, or out-of-scope categories per the technical-fix procedure:
+
+- **Module / structural (gated on Bucket 2 #1):** B1-S1, B1-S2, B1-M1, B1-M2, B1-M4, B1-M5, B1-M6, B1-M7, B1-S3, B1-S15 (B9b), B1-S16 (B10b), B1-S4 (E1), B1-S5 (F1), B1-S6 (F2), B1-S8 (F7), B1-N1..B1-N4. All require new `domain_modules` rows before any FK PATCH or per-module skill / role authoring can proceed.
+- **New capabilities (gated on Bucket 2 #1):** B1-A2 (5..8 new `capabilities` + `capability_domains` rows).
+- **User-pick judgment:** B1-A3 (Jaggaer duplicate DELETE: user picks survivor id 129 vs 518, Bucket 2 #2).
+- **Catalog UX text (Rule #20 backfill, defer per prompt):** B1-A4 (`catalog_tagline` + `catalog_description`).
+- **Pattern flag flips (defer per prompt):** B1-S11 (B4) on `purchase_orders` + `sourcing_events` `has_submit_lock`.
+- **Cross-master relationship (surface for user per audit text):** B1-S12 (B6) `purchase_requisitions` `becomes` `purchase_order` edge. Not a Rule #10 user-edge.
+- **Bulk aliases without exact tuples (defer per prompt):** B1-S17 (B11) ~15 `data_object_aliases`. Audit gives counts + vendor examples; not exact (alias_name, data_object_id) tuples.
+- **PASS / informational (no fix needed):** B1-A1, B1-S7 (F4), B1-S9 (B2), B1-S10 (B3), B1-S14 (B9), B1-B1.
+
+### JWT-audience errors
+
+None. Tenant `ma@adenin.com` throughout.

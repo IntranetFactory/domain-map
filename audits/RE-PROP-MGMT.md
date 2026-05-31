@@ -203,3 +203,47 @@ Two missing-domain candidates surfaced and queued via `scripts/analytics/append_
 - **STR-MGMT** (Short-Term Rental Management): Guesty, Hostaway, Lodgify, Hospitable, Hostfully, OwnerRez. Adjacency RE-PROP-MGMT, HOSP-PMS, RE-INVEST. Surface includes channel-manager syndication, dynamic pricing, guest messaging, cleaning-team scheduling, occupancy-tax remittance, OTA payout reconciliation.
 
 Both queued; triage at the next missing-domains review.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Loader: [.tmp_deploy/fix_re_prop_mgmt_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_re_prop_mgmt_b1_technical_2026_05_31.ts) (run from project root).
+
+### Applied (technically deterministic, audit pre-specified)
+
+| Fix | Detail | Rows |
+|---|---|---|
+| B1-S8 (B9 enum backfill) | PATCH `trigger_events.event_category` on ids 957/958/959/960/961 per audit-pre-specified mapping (lifecycle/state_change). | 5 |
+| B1-S7 (B7 users edges, Rule #10) | INSERT `data_object_relationships` from `users` (id 748) to RE-PROP-MGMT masters: manages rental_units (357), assigned maintenance requests (361), reviewed applications (359), approved applications (359), recorded rent payments (360). `owner_side=target`, `one_to_many`, `reference`. | 5 |
+| B1-M7 (FCRA link) | INSERT `domain_regulations` row (`domain_id=144`, `regulation_id=84`, `applicability=mandatory`). | 1 |
+| B1-S11 (B11 aliases) | INSERT `data_object_aliases`: rental_units (Apartment, Unit, Door), property_tenants (Resident, Renter, Lessee), rental_applications (Application, Lease App), rental_leases (Lease, Rental Agreement). | 10 |
+| APQC TAGGING | INSERT `handoff_processes` for confident/medium L3/L4 pairs the audit pre-specifies and that lacked the exact (handoff_id, process_id) pair: 298→303, 864→1353, 300→1627, 301→1351. All `proposal_source=agent_curated`, `record_status=new`. Handoff 296→1860 and 299→824 were already tagged; 310 and 865 deferred per audit. | 4 |
+
+Total: 25 rows touched (5 PATCH + 20 INSERT). All inserts ship `record_status='new'` per Rule #1; all `notes` columns left empty per Rule #15.
+
+### Deferred (per run-prompt deferral list)
+
+- **M-band (B1-S1, B1-S2, B1-S3, B1-S4)**: new `domain_modules` + Rule #20 catalog UX backfill. Gated on Bucket 2 #1 (module split decision) and #2 (catalog UX wording).
+- **B1-S5**: no action (prefixed names pass automatically).
+- **B1-S6 (intra-domain relationships)**: audit lists 7 edges in prose, but does not pre-specify the per-edge `owner_side`, `relationship_kind`, `is_required` tuples; judgment per edge needed.
+- **B1-S9 (missing handoffs for delinquent/listed/executed/renewed/occupied)**: new handoffs without pre-specified handoff_id, also gated on missing target modules.
+- **B1-S10 (B10b FK PATCHes)**: `source_domain_module_id` blocked by zero RE-PROP-MGMT modules; `target_domain_module_id` not derivable. Confirmed live: target domains AP-AUTO (29), LSD (25), RE-INVEST (146), GRC (15), ERP-FIN (65) have zero `domain_modules`; CSM modules (112-114) and FSM modules (161-163) do not hold any RE-PROP-MGMT payload data_object via `domain_module_data_objects` (handoff 299's `target_domain_module_id=161` was already set pre-audit and is left as-is).
+- **B1-S12 (lifecycle states)**: per-state `domain_module_id` required by Rule #14 and M5; blocked by M-band.
+- **B1-S13 (F1 legacy skill 98)**: gated on Phase S authoring per-module replacements first.
+- **B1-M1, B1-M2, B1-M3, B1-M4, B1-M5**: new entities, deferred (new modules also needed).
+- **B1-M6 (Fair Housing Act regulation)**: new `regulations` entity, plus applicability decision is Bucket 2 #3 (mandatory vs mandatory-with-exemptions).
+- **B1-U1 ... B1-U7**: new entities.
+- **B1-WO1 (supplier_invoices contributor → consumer reclassification)**: audit says "Likely scope-creep"; judgment.
+- **B1-B1, B1-B2 (boundary)**: gated on M-band.
+- **APQC 310, 865**: audit explicitly defers to Discover Pass 3 (no clean PCF cross-industry match).
+- **`notes` reverts**: audit does not pre-specify row IDs to revert; Rule #15 carve-out requires named rows.
+
+### Verification
+
+Spot queries confirm: 5 trigger_events now carry valid `event_category` enum values; 5 new `data_object_relationships` rows on `users` to RE-PROP-MGMT masters (ids 1907-1911); 1 new `domain_regulations` row (id 272) linking FCRA at `mandatory`; 10 new `data_object_aliases`; 4 new `handoff_processes` (totaling 7 tags across 5 distinct handoffs including the pre-existing 296, 299, 301 rows).
+
+UI:
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/data_object_relationships
+- https://tests.semantius.app/domain_map/domain_regulations
+- https://tests.semantius.app/domain_map/data_object_aliases
+- https://tests.semantius.app/domain_map/handoff_processes

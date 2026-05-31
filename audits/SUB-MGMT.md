@@ -223,3 +223,30 @@ _(empty, pending Bucket 1 approval)_
 ### `domains.notes` pointer
 
 _(empty, pending user-supplied wording per Rule #15)_
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+Technical-only residual pass per the residual-pass instruction set. Loader: `c:/dev/domain-map/.tmp_deploy/fix_sub_mgmt_b1_technical_2026_05_31.ts` (run from project root).
+
+### Applied
+
+| Fix ID | Type | Count | Detail |
+|---|---|---|---|
+| B1-S1 | B10b FK PATCH (source_domain_module_id) | 13 deterministic + 1 audit-named | handoffs 64, 65, 195, 196, 197, 490, 494, 495, 496 → 167; handoffs 194, 491, 492, 493 → 168 deterministic via event-DO → strongest SUB-MGMT master role. Handoff 72 (`payment.failed`, payload `customer_cases` DO 103) is not derivable from a SUB-MGMT-owned event DO; applied 72→168 per audit pre-specification (BILLING is the conceptual emitter; `customer_cases` is the CSM-side payload). |
+| B1-S1b | B10b FK PATCH (target_domain_module_id) | 1 | handoff 63 (CLM-REPOSITORY → SUB-MGMT, payload `customer_subscriptions` DO 106) → 167 deterministic via payload-DO → master. |
+| B1-S2 | enum backfill on `trigger_events.event_category` | 7 | 492/493/494 → `state_change`; 495 → `lifecycle`; 496 → `threshold`; 541/542 → `state_change`. Per Rule #13 enum vocabulary. |
+
+Post-fix audit: all 14 outbound handoffs carry `source_domain_module_id`; handoff 63 carries `target_domain_module_id=167`; zero empty `event_category` on the 7 targeted trigger_events.
+
+### Deferred (out of TECHNICAL scope for this residual pass)
+
+| Fix ID | Why deferred |
+|---|---|
+| B1-S3 | gated on B2-S1 (user owns lifecycle-vs-config-shape decision for `usage_records`). |
+| B1-S4 | new `handoffs` row inserts are not in the residual-pass TECHNICAL apply scope. |
+| B1-S5 | full Phase E permissions/roles/role_modules/permission_hierarchy load; also gated on B2-S5. |
+| B1-S6 | full Phase F system skills + skill_tools load; also depends on S5. |
+| B1-H1 | 29 APQC `handoff_processes` candidates have no pre-specified PCF IDs; PCF resolution requires fix-time `/processes` lookups and several REPLACE/CONFIRM judgments the technical pass cannot make. |
+| B1-S1b (handoff 519) | payload `legal_contracts` DO 66 not mastered in any SUB-MGMT module; audit's 519→167 is editorial pre-specification (downstream subscription-creation context), not derivable from existing SUB-MGMT modules. |
+
+JWT errors: none.

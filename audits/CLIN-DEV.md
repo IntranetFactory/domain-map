@@ -154,3 +154,62 @@ Speculative gaps from market knowledge of pure-play clinical-engineering vendors
 - **Candidate market `HC-CMMS` queued.** Healthcare CMMS pure-play vendors (Nuvolo, AIMS, EQ2 HEMS, Connectiv, Phoenix Data Systems Mediq RAM) compete in a market that may overlap CLIN-DEV at the workflow layer but addresses a distinct buyer (Clinical Engineering manager) and a distinct extended scope (parts inventory, vendor service contracts, multi-site dispatch). Triage at next backlog grooming pass.
 - **Candidate market `IOMT-SEC` queued.** Medical Device Cybersecurity pure-play vendors (Cynerio, Claroty Medigate, Asimily, MedCrypt, Ordr) compete in a market adjacent to CLIN-DEV (passive device discovery on the hospital network, vulnerability management on the device itself). High likelihood of becoming a sibling domain rather than folding into CLIN-DEV. Triage at next backlog grooming pass.
 - **Candidate market `MED-DEVICE-QMS` queued.** Medical Device Quality Management System pure-play vendors (Greenlight Guru, MasterControl, Sparta Systems TrackWise, Veeva Vault QMS, Qualio) compete in the manufacturer-side market (design controls per 21 CFR 820.30, CAPA, complaint handling, eMDR submissions). Relates to B2-S5 (manufacturer-vs-hospital scope). Triage at next backlog grooming pass.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent pass to apply only the truly-technical Bucket-1 items from the 2026-05-30 audit, defer everything else.
+
+### Classification of the 11 enumerated B1 items (S1..S11)
+
+| ID | Verdict | Reason |
+|---|---|---|
+| B1-S1 | DEFER | Gated on B2-S2 (module split decision); not pre-specified by audit. |
+| B1-S2 | DEFER | Depends on S1 module rows. |
+| B1-S3 | DEFER | New vendor / solution research (Phase A bulk load), not in scope for technical pass. |
+| B1-S4 | DEFER | Rule #20 buyer-facing copy, requires user review. |
+| B1-S5 | PARTIAL | Verb-rename PATCHes applied (8 rows, IDs pre-specified). Inverse master-to-users edges deferred: audit says "where the master carries a user FK" but does not enumerate concrete (data_object, verb) tuples. |
+| B1-S6 | APPLIED | 8 `trigger_events.event_category` backfills; audit pre-specified value per ID. |
+| B1-S7 | DEFER | Audit explicitly conditions on B1-S1 ("once the realizing module exists"). |
+| B1-S8 | DEFER | Depends on B1-S1 (`source_domain_module_id` derivation needs module rows). |
+| B1-S9 | DEFER | Depends on B1-S1 (`domain_module_id` per state row). |
+| B1-S10 | DEFER | Depends on B1-S1 (per-module skill replacement before retiring legacy). |
+| B1-S11 | PARTIAL | 3 `handoff_processes` inserts applied (893→353, 898→1556, 895→199). Handoff 894 deferred: audit offers "37 or 204" as a user pick. 896 / 897 explicitly deferred by the audit (no clean PCF). |
+
+Bucket 2 (B2-S1..B2-S6) and Bucket 3 not touched per scope.
+
+### Applied (19 mutations total)
+
+- **B1-S6 (8 PATCHes):** `trigger_events.id` ∈ {1014..1021}, `event_category` set from `''` to the audit-pre-specified enum value (`lifecycle`, `signal`, `threshold`, `state_change`).
+- **B1-S5 verb rename (8 PATCHes):** `data_object_relationships.id` ∈ {653..660}, `relationship_verb` rewritten from noun-phrase (e.g. `owns device`) to snake_case (`owns_device`). All target verbs taken verbatim from the audit-rendered snake_case forms.
+- **B1-S11 (3 INSERTs):** `handoff_processes` rows with `proposal_source='agent_curated'`, `role='implements'` (default), `record_status` omitted (defaults to `new`), `notes` omitted (Rule #15). New row IDs: 340 (893→353 "Perform asset maintenance" L3 19253), 341 (898→1556 "Perform preventative asset maintenance" L4 10947), 342 (895→199 "Report incidents and risks to regulatory bodies" L3 12840).
+
+### Deferred (count: 8 of the 11 B1 items, plus the master-to-users inverse-edge portion of S5 and the 3 APQC items of S11)
+
+| Item | Reason |
+|---|---|
+| S1, S2, S8, S9, S10 | Gated on B1-S1 module creation (B2-S2 user decision required first). |
+| S3 | Phase A vendor research, not technical. |
+| S4 | Rule #20 buyer-facing copy. |
+| S5 master-to-users inserts | No concrete (data_object, verb) tuples pre-specified by the audit. |
+| S7 | Audit conditions on B1-S1. |
+| S11 handoff 894 | Audit offers two PCFs (37 or 204): user pick. |
+| S11 handoffs 896 / 897 | Audit defers both ("no clean PCF, defer to Discover"). |
+| All Bucket 2, all Bucket 3 | Out of scope for technical pass (judgment / Phase 0). |
+
+### Live state after pass
+
+- All 8 CLIN-DEV `trigger_events` rows now carry a valid `event_category` (Rule #13 enum violation cured for this domain's events).
+- All 8 users-to-master `data_object_relationships` rows (ids 653..660) now use snake_case `relationship_verb` values.
+- 3 of 6 CLIN-DEV outbound `handoffs` now have `handoff_processes` APQC tags (893, 895, 898). Outstanding: 894 (user pick), 896 / 897 (deferred to Discover by audit).
+
+### Not touched
+
+- `domains.id=50` `business_logic` em-dash (B2-S1) left as-is; judgment call.
+- All `notes` columns left at their existing values (Rule #15).
+- Frontmatter not modified.
+
+### Loader path
+
+[`c:/dev/domain-map/.tmp_deploy/fix_clin_dev_b1_technical_2026_05_31.ts`](../.tmp_deploy/fix_clin_dev_b1_technical_2026_05_31.ts)
+
+No JWT-audience errors during the run.

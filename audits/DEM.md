@@ -211,3 +211,32 @@ Deferred to Discover Pass 3: none of the above. Handoff 667 (RUM real-user sessi
 - **OBS B10b** owes per-module attribution on inbound handoff 666 (`target_domain_module_id` currently null on the OBS side). Also owes inbound cross-domain `data_object_relationships` row mirroring DEM's publish (OBS-side B8).
 - **ITSM B8** owes inbound cross-domain `data_object_relationships` row mirroring DEM's publish on handoff 664 (`endpoint_experience_scores triggers service_incidents`). ITSM's target_domain_module_id is already wired (38 = ITSM-INCIDENT-MGMT), no B10b fix is owed there.
 - **NPMD B10b / AIOPS B10b / OBS B10b are blocked on the same M1 gating that DEM faces:** each side cannot complete its `domain_module_id` attribution until its own M-band has at least one module. Where the other side already has modules (AIOPS does not yet; OBS / NPMD status unknown without running their own audits), this is a one-PATCH fix.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the in-scope, agent-fixable B1 items whose entire shape was pre-specified by the 2026-05-30 audit (no judgment calls, no new entities, no module-gated work). Loader: `.tmp_deploy/fix_dem_b1_technical_2026_05_31.ts`, run from project root. All inserts default `record_status='new'` per Rule #1.
+
+Applied:
+
+- **B1-S1 (DONE).** PATCH `domains.id=83 business_logic` to strip the U+2014 em-dash. New text: `"Endpoint-agent runtime, synthetic transaction generation, and correlation across user / device / app / network signals: code-dominant data plane."` (em-dash replaced with colon).
+- **B1-B7 (DONE).** INSERT 3 user-edges in `data_object_relationships` per Rule #10 (users data_object_id=748 source side):
+  - users observes endpoint_experience_scores (585), one_to_many, association, owner_side=target → id 1789
+  - users generates real_user_sessions (587), one_to_many, association, owner_side=target → id 1790
+  - users experiences digital_friction_events (588), one_to_many, association, owner_side=target → id 1791
+- **B1-B11 (DONE).** INSERT 12 `data_object_aliases` rows (alias_type=`synonym`, is_preferred=false), ids 1017 to 1028, distributed across the 5 DEM masters per the audit's pre-specified strings.
+- **B1-H1 (DONE).** INSERT 5 `handoff_processes` rows with `proposal_source='agent_curated'`, ids 587 to 591: (664,1299), (665,295), (666,1137), (667,295), (653,1137). All 3 PCF process ids verified to exist live before insert (295 'Operate IT user support', 1137 'Select, deploy, and operate IT performance analytics tools', 1299 'Triage IT service delivery incidents').
+
+Note on H1: a separate prior write had already loaded 3 unrelated `handoff_processes` rows on handoffs 653, 665, 667 with different process_ids (1304, 1128) ahead of this run. Those rows pre-date this continuation and are not part of the DEM B1-H1 set; left in place.
+
+Deferred (intentionally not touched in this pass; reasons listed):
+
+- **B1-A2, B1-A3, B1-A4.** New entities (capabilities, solutions / vendors) and Rule #20 catalog text. Out of scope for technical apply: requires new-entity authoring + buyer-voice drafting.
+- **B1-M1.** Module split is Bucket 2 #1 ((a) / (b) / (c) user picks); blocks B1-B10b, B1-B12, B1-F1, B1-F2 downstream.
+- **B1-B4.** Pattern flag flips left to user judgment per skill scope (no auto-flips of pattern flags).
+- **B1-B6, B1-B8.** Master-to-master and cross-domain `data_object_relationships`; technical scope per Rule #10 covers user-edges only.
+- **B1-B9.** Event 680 orphan is "DELETE or author handoff" (user picks). New state-transition events are new entities.
+- **B1-B10b.** Gated on B1-M1.
+- **B1-B12.** Gated on B1-M1 (`domain_module_id` required on lifecycle states).
+- **B1-F1, B1-F2.** Gated on B1-M1 (per-module system skills).
+
+No JWT errors during the run. Bucket 2 / Bucket 3 items remain open as listed above; status of the audit is unchanged (still `feedback_needed`).

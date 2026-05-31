@@ -8,12 +8,14 @@ domain_modules:
   - ats-referrals
 domain_code: ATS
 related_modules: [ats-candidate-crm, payroll-earnings-deductions]
-created_at: 2026-05-28
+created_at: 2026-05-31
 ---
 
 # Employee Referrals
 
 ## 1. Overview
+
+### 1.1 Analyst overview
 
 Employee-driven candidate sourcing with referral-bonus tracking (`candidate_referrals`). Embedded-masters `candidates`. Cross-domain handoffs to PAYROLL (bonus payout) and EMP-EXP (engagement signal).
 
@@ -21,6 +23,9 @@ Employee-driven candidate sourcing with referral-bonus tracking (`candidate_refe
 
 | Name | Description |
 | --- | --- |
+| Referral Campaigns | Time-bounded promotion offering bonus referral rewards (e.g. 'double bonus for engineering Q3 2026', 'spot-bonus for hard-to-fill roles'). Scopes a referral_rewards override. |
+| Referral Payouts | Individual payout instance triggered when a referred candidate is hired and meets tenure conditions. Lifecycle: pending -> approved -> paid (-> clawed_back). |
+| Referral Rewards | Bounty rule defining the payout amount and conditions for a successful referral (e.g. $5000 paid 90 days after hire start, scaled by role level). |
 | Referrals | Employee-submitted candidate suggestion linked to a requisition. Tracks the referring employee, candidate, status, and any payable bonus. |
 | Candidates | Person known to the recruiting org, with or without an active application. Carries contact details, resume, tags, GDPR consent, and source. Distinct from Employee until hired. |
 
@@ -31,20 +36,34 @@ flowchart TD
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
   candidate_referrals["Referrals"]
   candidates["Candidates"]
+  referral_rewards["Referral Rewards"]
+  referral_payouts["Referral Payouts"]
+  referral_campaigns["Referral Campaigns"]
   users["Users"]
+  candidate_referrals -->|"earns (opt)"| referral_payouts
+  referral_rewards -->|"governs"| referral_payouts
+  referral_campaigns -->|"overrides (opt)"| referral_rewards
   candidate_referrals -->|"introduces"| candidates
+  candidates -->|"has owning recruiter (opt)"| users
   candidate_referrals -->|"has referring employee"| users
   class candidate_referrals master;
   class candidates embedded_master;
+  class referral_rewards master;
+  class referral_payouts master;
+  class referral_campaigns master;
   class users platform_builtin;
+  style referral_campaigns stroke-dasharray:5 5;
 ```
 
 ## 3. Entities catalog
 
 | # | data_object | role | mastered in | label | necessity | pattern flags | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `candidate_referrals` (Referrals) | master | - | - | required | - | - |
-| 2 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | - |
+| 1 | `referral_campaigns` (Referral Campaigns) | master | - | - | optional | - | - |
+| 2 | `referral_payouts` (Referral Payouts) | master | - | - | required | - | - |
+| 3 | `referral_rewards` (Referral Rewards) | master | - | - | required | - | - |
+| 4 | `candidate_referrals` (Referrals) | master | - | - | required | - | - |
+| 5 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -56,18 +75,48 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 | from | verb | to | cardinality | kind | necessity | owner_side | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| `candidate_referrals` | earns | `referral_payouts` | one_to_one | reference | optional | source | - |
+| `referral_rewards` | governs | `referral_payouts` | one_to_many | reference | required | source | - |
+| `referral_campaigns` | overrides | `referral_rewards` | one_to_many | reference | optional | source | - |
 | `candidate_referrals` | introduces | `candidates` | one_to_many | reference | required | target | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | notes |
 | --- | --- | --- | --- | --- | --- | --- |
+| `candidates` | has owning recruiter | `users` | many_to_many | optional | source | - |
 | `candidate_referrals` | has referring employee | `users` | many_to_many | required | source | - |
 
 ### 5.3 Cross-scope edges
 
+#### 5.3a Outbound from this scope's masters and contributors
+
+_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
+
+_(no outbound cross-scope edges from this scope's masters or contributors.)_
+
+#### 5.3b Context edges on embedded shells and consumed entities
+
+_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
+
+<details>
+<summary>21 context edges</summary>
+
 | from | verb | to | cardinality | necessity | notes |
 | --- | --- | --- | --- | --- | --- |
+| `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | - |
+| `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | required | - |
+| `candidates` | noted_via | `recruiter_interactions` | one_to_many | optional | - |
+| `candidates` | consents_via | `candidate_consents` | one_to_many | required | - |
+| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | required | - |
+| `candidates` | discloses_via | `fcra_disclosures` | one_to_many | required | - |
+| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | optional | - |
+| `candidates` | submits_via | `data_subject_requests` | one_to_many | optional | - |
+| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | optional | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | - |
+| `candidates` | documented_via | `candidate_documents` | one_to_many | optional | - |
+| `candidates` | annotated_via | `candidate_notes` | one_to_many | optional | - |
+| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | - |
 | `skill_profiles` | feeds | `candidates` | one_to_many | optional | - |
 | `candidates` | submits | `job_applications` | one_to_many | required | - |
 | `recruitment_sources` | attributes | `candidates` | one_to_many | required | - |
@@ -76,6 +125,8 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `talent_pools` | groups | `candidates` | many_to_many | required | - |
 | `candidates` | becomes | `employees` | one_to_one | required | - |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | - |
+
+</details>
 
 ## 6. Cross-domain context
 
@@ -127,6 +178,24 @@ _This scope holds `candidates` as **embedded_master**; the canonical state machi
 | 4 | `do_not_hire` | - | ✓ | ✓ | `ats-candidate-crm:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
 | 5 | `archived` | - | ✓ | - | - | Candidate kept in the database but not active in any pipeline. |
 
+### `referral_campaigns` (Referral Campaign)
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | - | - | Campaign being scoped. |
+| 2 | `active` | - | - | ✓ | `ats-referrals:active_referral_campaign` | Campaign live; referrals submitted during window qualify for override reward. |
+| 3 | `ended` | - | ✓ | - | - | Campaign window closed. |
+
+### `referral_payouts` (Referral Payout)
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `pending` | ✓ | - | - | - | Referral hire confirmed; tenure clock running. |
+| 2 | `approved` | - | - | ✓ | `ats-referrals:approved_referral_payout` | Tenure condition met; payout approved by HR/Finance. |
+| 3 | `paid` | - | ✓ | ✓ | `ats-referrals:paid_referral_payout` | Payout disbursed to referrer. |
+| 4 | `clawed_back` | - | ✓ | ✓ | `ats-referrals:clawed_back_referral_payout` | Referred employee left before tenure clause expired; payout reversed. |
+| 5 | `forfeited` | - | ✓ | - | - | Conditions never met (referred candidate not hired, did not start, voided). |
+
 ## 8. Permissions and business rules (derived)
 
 ### 8.1 Permissions
@@ -137,6 +206,10 @@ _This scope holds `candidates` as **embedded_master**; the canonical state machi
 | `ats-referrals:manage` | baseline-manage | Edit operational records | ✓ |
 | `ats-referrals:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
 | `ats-referrals:pay_referral_bonus` | workflow-gate (lifecycle) | Transition `candidate_referrals` into state `bonus_payable` | ✓ |
+| `ats-referrals:approved_referral_payout` | workflow-gate (lifecycle) | Transition `referral_payouts` into state `approved` | ✓ |
+| `ats-referrals:paid_referral_payout` | workflow-gate (lifecycle) | Transition `referral_payouts` into state `paid` | ✓ |
+| `ats-referrals:clawed_back_referral_payout` | workflow-gate (lifecycle) | Transition `referral_payouts` into state `clawed_back` | ✓ |
+| `ats-referrals:active_referral_campaign` | workflow-gate (lifecycle) | Transition `referral_campaigns` into state `active` | ✓ |
 
 ### 8.2 Business rules
 

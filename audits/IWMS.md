@@ -255,3 +255,38 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 | VIS-MGMT | Boundary gap surfaced from market audit: VIS-MGMT presumably masters `visitors` / `visitor_registrations`; missing outbound handoffs to IWMS-ROOM-RESERVATION on `visitor.checked_in` and inbound handoffs from IWMS-ROOM-RESERVATION on `room_reservation.confirmed`. Add VIS-MGMT master DMDO row on `visitor_registrations` (currently only `domain_data_objects` legacy entry exists). |
 | EAM | Boundary gap: workplace asset escalations not wired today. Schedule EAM b1 to add inbound handoff from IWMS-WSD on `workplace_service_request.escalated_asset_repair`. |
 | ESG | Boundary gap: `space_utilization.measured` outbound should also fan out to ESG for emissions. Schedule ESG b1 to add inbound handoff. |
+
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied via loader `c:/dev/domain-map/.tmp_deploy/fix_iwms_b1_technical_2026_05_31.ts` (run from project root). All writes verified live post-load.
+
+### Applied
+
+- **B1-S3 (partial, 7 of 9 events).** PATCHed `event_category` on the 7 IWMS-owned trigger_events per audit pre-spec: 968 desk_booking.created -> `lifecycle`, 969 desk_booking.cancelled -> `state_change`, 970 room_reservation.created -> `lifecycle`, 971 workplace_service_request.submitted -> `lifecycle`, 972 workplace_service_request.completed -> `state_change`, 973 space_utilization.measured -> `signal`, 974 workplace_feedback.submitted -> `lifecycle`. Floor-plan events 940 / 941 skipped: both already carried non-empty values (`lifecycle` / `state_change` respectively, matching the audit prescription), and B2-S5 defers ownership to REAL-EST.
+- **B2-S2 (Rule #15 notes= revert).** Audit pre-specified row IDs and named the prior license RESCINDED. PATCHed `notes=""` on the 6 `domain_data_objects` rows (857, 858, 859, 860, 861, 1122) and the 3 `data_objects` rows (593 space_utilization_reports, 594 workplace_experience_feedback, 795 locations). Per orchestrator rule: notes reverts allowed when audit names row IDs. The Rule #15 incident is already documented in this audit (B2-S2); no separate skill-changelog entry produced from this continuation.
+- **B1-H1 (partial, 5 of 7 candidate tags).** INSERTed 5 `handoff_processes` rows as `proposal_source=agent_curated`, `record_status=new` (default), `role=implements`, empty `notes`. PCFs resolved live via `/processes?source_framework=eq.apqc_pcf_cross_industry` lookup before any insert (loader pre-flight aborts if any process_id missing): (869, 250) Conduct employee engagement surveys (7.8.2) for IWMS-DESK->HCM workplace_feedback.submitted; (1165, 1196) Manage IT user authorization (8.3.8.3) for IWMS-DESK->IGA desk_booking.checked_in; (1166, 1371) Prepare chargeback invoices (9.2.5.5) for IWMS-WSD->ERP-FIN workplace_service_request.resolved; (1167, 346) Manage facilities operations (10.1.4) for IWMS-ROOM->IWMS-ANALYTICS room_reservation.no_show; (1168, 346) Manage facilities operations (10.1.4) for IWMS-DESK->IWMS-ANALYTICS desk_booking.checked_in. Handoffs 858 (process_id=344 Plan facility) and 870 (process_id=345 Provide workspace and facilities) already carried `agent_curated` tags; left as-is.
+
+### Deferred (gated on user judgment or out-of-scope for technical pass)
+
+- **B1-S1** (INSERT `domain_module_capabilities` for IWMS-ROOM-RESERVATION). Gated on B2-S1: user picks between (a) REAL-SPACE-OPTIM 374 (default), (b) new REAL-MEETING-MGMT capability, (c) mixed.
+- **B1-S2** (5 system skills + ~40 skill_tools rows). New-entity authoring + gated on B2-S4 module split decision.
+- **B1-S3 (2 of 9)** floor-plan events 940 / 941. Gated on B2-S5: defer ownership to REAL-EST audit.
+- **B1-S4** (up to 7 new intra-domain handoffs + up to 3 new trigger_events `location.created` / `desk_booking.completed` / `room_reservation.completed`). New entities; gated on B2-S4 module split.
+- **B1-S5 / S6 / S7** report-only items owed by HCM, REAL-EST, ERP-FIN, IGA audits.
+- **B1-S8** (4 outbound cross-domain `data_object_relationships` rows). Audit explicitly notes "target master FK needs a small lookup at fix time"; not pre-specified. Defer until target-side IDs resolved.
+- **Bucket 2** items B2-S1 / B2-S3 / B2-S4 / B2-S5: all judgment / user-picks. Untouched.
+- **Bucket 3** Phase 0 candidates (move_orders, parking_reservations, wayfinding_signals, occupancy_sensor_readings, 4 regulations, 2 modularization candidates, BMS domain). Speculative; require Phase 0 vendor research.
+
+### Counts
+
+| Type | Applied | Deferred |
+| --- | --- | --- |
+| trigger_events PATCH (B1-S3) | 7 | 2 (floor-plan, B2-S5) |
+| Rule #15 notes revert (B2-S2) | 9 (6 DDO + 3 DO) | 0 |
+| handoff_processes INSERT (B1-H1) | 5 | 2 (858, 870 already tagged) |
+| Other B1 items | 0 | 5 (B1-S1, S2, S4, S7-cluster items, S8) |
+
+### JWT errors
+
+None.

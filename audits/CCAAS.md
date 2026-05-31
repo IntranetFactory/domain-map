@@ -196,3 +196,58 @@ The Pass 2 market sweep surfaced 2 candidate domains queued in [audits/_missing-
 ### `domains.notes` pointer
 
 _not yet written; will require user-approved wording per Rule #15_
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Scope
+
+Subagent pass applying only the truly-technical, non-judgmental B1 fixes from the 2026-05-30 audit. Loader: [.tmp_deploy/fix_ccaas_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_ccaas_b1_technical_2026_05_31.ts), executed from project root.
+
+### Applied (7 fixes across 2 fix-classes)
+
+**B1-H APQC tagging (handoff_processes):**
+- B1-H1: DELETE handoff_processes id=85 (handoff 225 wrong tag, process 37 / PCF 20110 "product recalls"). INSERT replacement (handoff 225, process 928 / PCF 10396 "Respond to customer problems"), proposal_source `agent_curated`. New id 748.
+- B1-H2: DELETE handoff_processes id=127 (handoff 226 wrong tag, process 610 / PCF 19640 "brand-level sentiment"). INSERT replacement (handoff 226, process 934 / PCF 10400 "Respond to customer complaints"). New id 749.
+- B1-H3: INSERT handoff 501 → process 928 (PCF 10396). New id 750.
+- B1-H4: INSERT handoff 530 → process 138 (PCF 16613 "Analyze and respond to customer insight"). New id 751. NB: B1-B1 boundary question (whether handoff 530 should be re-sourced to CONV-AI) is unresolved; tag added on current state of the handoff.
+- B1-H7: INSERT handoff 228 → process 928 (PCF 10396). New id 752.
+- B1-H8: INSERT handoff 722 → process 1293 (PCF 20898 "Maintain service support knowledge repository"). New id 753. Pre-existing agent_curated tag id 238 (handoff 722 → process 429) was not flagged by the audit; both tags now coexist on handoff 722, leaving the resolution to a future judgment pass.
+- B1-H9: INSERT handoff 833 → process 928 (PCF 10396). New id 754.
+- B1-H5 (499 → 922) and B1-H6 (500 → 195) were already present from a prior load; skipped idempotently.
+
+**B1-B3 user-edges (data_object_relationships, Rule #10):**
+- INSERT 5 explicit edges from `users` (id 748, kind=`platform_builtin`) to the CCAAS masters the audit pre-specified.
+  - id 1892: `users handles contact_records` (related 257)
+  - id 1893: `users handles support_sessions` (related 256)
+  - id 1894: `users has agent_states` (related 736)
+  - id 1895: `users evaluates ccaas_call_recordings` (related 735)
+  - id 1896: `users applies disposition_codes` (related 737)
+- All rows: `owner_side=source`, `relationship_type=one_to_many`, `relationship_kind=reference`, `is_required=false`, `record_status` omitted (default `new`), `notes` omitted (Rule #15).
+
+### Deferred (16 items)
+
+- **B1-S1 modules (M1)** - new entities; gates almost every other fix. User must pick module split (Bucket 2 #1).
+- **B1-S2 capabilities (A2)** - new entities, gated on B1-S1.
+- **B1-S3 solutions (A3)** - new entities; involves vendor-named records (the only domain where vendor names are licensed per Rule #18), still treated as deferred new-entity work.
+- **B1-S4 regulations (domain_regulations)** - the underlying `regulations` rows for TCPA / PCI-DSS / HIPAA / GDPR / CCPA do not exist in the catalog. Audit specifies INSERT junctions, but the parent rows must be created first as new entities. Both halves deferred to a non-technical pass.
+- **B1-S5 catalog UX** - Rule #20 explicitly requires user review before write.
+- **B1-S6 legacy skill cleanup (F1/F2)** - gated on B1-S1 (modules to re-anchor or delete against).
+- **B1-S7 naming arbitration (B3)** - audit says "user picks", three-way decision per Rule #9.
+- **B1-M1..M4 compliance entities** (`recording_consent_records`, `dnc_lists`, `tcpa_consent_records`, `pci_redaction_events`) - new entities, gated on modules.
+- **B1-U1..U5 universal vendor entities** (`routing_strategies`, `ivr_flows`, `agent_skills`, `quality_evaluations`, `coaching_sessions`) - new entities, gated on modules.
+- **B1-B1 trigger_event mis-attribution (handoff 530)** - audit gives two options (a)/(b), explicit user choice.
+- **B1-B2 intra-domain data_object_relationships** - 5 to 7 candidate edges, but they are CCAAS↔CCAAS pairs not covered by Rule #10's "user-edges audit pre-specifies" license. Authoring them requires per-edge verb/inverse decisions, deferred.
+- **B1-T1..T3 orphan trigger events** - audit notes "need a handoff row" but does not pre-specify `handoff_id` (the handoff itself does not exist yet) or resolvable PCF anchors, so `handoff_processes` insert path is not unlocked. Deferring per orchestrator prompt's "INSERT handoff_processes ONLY when audit pre-specifies handoff_id" guard.
+
+Also deferred from the cross-bucket frame:
+- **B10b FK PATCHes for inbound handoffs 228 / 743 / 746** - `source_domain_module_id` is owed by CONV-AI's side. `target_domain_module_id` would need a CCAAS module to point at, and CCAAS has zero modules (verified live). Both halves unreachable in a CCAAS-only technical pass.
+- **Notes reverts** - no audit-named row IDs with notes pollution surfaced for this domain; nothing to revert.
+- **Enum backfills, permission_verb_override, handoff_processes from pre-specified `handoff_id`+PCF beyond the 7 above** - none derivable from the audit's pre-specified rows.
+
+### JWT errors
+
+None encountered during this pass.
+
+### Frontmatter
+
+Left unchanged (`status: feedback_needed`, `last_transition: 2026-05-30`, `open_questions: 31`). All deferred items remain open for the next user-led pass.

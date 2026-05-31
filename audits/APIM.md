@@ -174,3 +174,64 @@ These items the audit identifies but other domains own. They do NOT block APIM's
 | RO-8 | IGA | Outbound handoff 751 (`api_consumer.revoked` to IGA) has `target_domain_module_id=148` (IGA-AUTO-PROVISIONING) correctly wired; this is a positive sanity check, no follow-up owed. | IGA b1 audit (informational only). |
 
 Candidates queued in `audits/_missing-domains.md` this run: **API-SEC** (new), **EVENT-BROKER** (bumped 1 to 2), **SERVICE-MESH** (bumped 1 to 2). Total: 3 entries touched.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent under domain-map-analyst applied the truly-technical subset of the 2026-05-30 Bucket 1 list per the project's defer-judgment rules. All work landed via [.tmp_deploy/fix_apim_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_apim_b1_technical_2026_05_31.ts), one Bun loader, idempotent, run from project root.
+
+### Applied (22 writes total)
+
+- **B1-S5** (10 PATCHes). `trigger_events` ids 808 to 817 backfilled `event_category` per the audit's pre-specified Rule #13 mapping. All 10 rows were `event_category=''` pre-run.
+  - 808 `api_version.published` -> `lifecycle`
+  - 809 `api_version.deprecated` -> `lifecycle`
+  - 810 `api_specification.updated` -> `state_change`
+  - 811 `api_deployment.published` -> `lifecycle`
+  - 812 `api_deployment.rolled_back` -> `state_change`
+  - 813 `api_policy.updated` -> `state_change`
+  - 814 `api_usage.quota_breached` -> `threshold`
+  - 815 `api_consumer.onboarded` -> `lifecycle`
+  - 816 `api_consumer.revoked` -> `state_change`
+  - 817 `api_gateway.health_degraded` -> `signal`
+- **B1-S7** (5 INSERTs into `data_object_relationships`). Rule #10 user-edges from `users` (748) to the 5 workflow-bearing APIM masters. Pre-run query confirmed zero existing user-edges to any APIM master. Each row: `relationship_type='one_to_many'`, `relationship_kind='reference'`, `owner_side='source'`, `is_required=false`.
+  - `users owns api specifications` -> 457 (inverse `is_owned_by`)
+  - `users approves api deployments` -> 458 (inverse `is_approved_by`)
+  - `users authors api policies` -> 459 (inverse `is_authored_by`)
+  - `users operates api gateways` -> 461 (inverse `is_operated_by`)
+  - `users onboards api consumers` -> 462 (inverse `is_onboarded_by`)
+- **B1-S15 (partial)**, 1 PATCH. `business_function_domains` id 92 (IT Operations on APIM) `responsibility_type` flipped `contributor` -> `consumer` per the audit's operate-the-runtime RACI. The Information Security INSERT half of B1-S15 was NOT applied (new BFD contributor row is a deferred class per the prompt's defer list).
+- **B1-H1** (6 INSERTs into `handoff_processes`). Audit pre-specified handoff_id + PCF for all 8 handoffs; pre-run query found 2 already tagged (id 349: 752 -> process 1670, id 481: 767 -> process 273). The remaining 6 were inserted with `role='implements'`, `proposal_source='agent_curated'`, `record_status` defaulted to `new`. All 6 PCFs verified live by id before insert.
+  - 747 -> process 52 "Deploy services/solutions" (key 747.52, new id 498)
+  - 748 -> process 283 "Develop and manage service/solution deployment strategy" (key 748.283, new id 499)
+  - 749 -> process 1307 "Monitor IT infrastructure security" (key 749.1307, new id 500)
+  - 750 -> process 523 "Monitor performance against baselines" (key 750.523, new id 501)
+  - 751 -> process 1196 "Manage IT user authorization" (key 751.1196, new id 502)
+  - 797 -> process 391 "Manage corporate governance policies" (key 797.391, new id 503)
+
+### Deferred (11 items, plus the BFD-INSERT half of S15)
+
+| ID | Reason for defer |
+|---|---|
+| B1-S1 (module set) | Gated on B2-S1 user decision on module split shape (2/3/4 modules). |
+| B1-S2 (capabilities) | Gated on B2-S1 (each capability attaches to its realizing module). |
+| B1-S3 (solutions linkage) | New entities (solutions + solution_domains) outside the prompt's apply list; reads best after S1 anyway. |
+| B1-S4 (catalog_tagline / catalog_description) | Rule #20: buyer-voice draft requires surface-to-user before write. |
+| B1-S6 (intra-domain rel edges) | Edges not pre-specified by audit as Rule-#10-style user edges; require draft + verb/cardinality decisions. |
+| B1-S8 (cross-domain rel edges) | Partly gated on Bucket 3 vendor research (TEST-MGMT, OBS, SUB-MGMT target masters may change); not pre-specified mechanical inserts. |
+| B1-S9 (data_object_aliases) | Audit does not pre-specify the exact 8 to 12 tuples (alias_name, vendor context), and the prompt's defer list explicitly excludes bulk alias inserts. |
+| B1-S10 (lifecycle states) | Gated on B1-S1: `data_object_lifecycle_states.domain_module_id` cannot be set until modules exist. |
+| B1-S11 (pattern flag flips) | Defer per the prompt's "pattern flag flips" defer; the 4 proposed positive flips are queued in B2-S2 for user decision. |
+| B1-S12 (F1 legacy skill migration) | Depends on B1-S1; new skills are new entities. |
+| B1-S13 (F3 tools floor) | Depends on B1-S1 + B1-S12. |
+| B1-S14 (B10b backfill) | Vacuous until B1-S1; no module FKs to backfill against. |
+| B1-S15 (Information Security INSERT) | New BFD contributor row is in the prompt's defer list; only the IT Operations PATCH half applied. |
+| B2-S1, B2-S2, B2-S3 | Judgment items, surface-to-user. |
+| B3-S1 | Phase 0 substrate; new entities. |
+
+### JWT errors
+
+None. All 22 writes succeeded on first attempt against tenant `ma@adenin.com`.
+
+### Loader
+
+[.tmp_deploy/fix_apim_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_apim_b1_technical_2026_05_31.ts)
+

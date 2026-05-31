@@ -7,12 +7,14 @@ system_slug: real-estate-agent
 domain_modules:
   - real-estate-agent
 related_modules: [clm-repository, crm-acct-mgt, crm-lead-mgt, re-brok-agent-ops]
-created_at: 2026-05-28
+created_at: 2026-05-31
 ---
 
 # Real Estate Agent (solo / small firm bundle)
 
 ## 1. Overview
+
+### 1.1 Analyst overview
 
 Solo-agent and small-firm persona bundle. Single-install deployable for individual real estate agents covering lead capture and contact relationships (CRM-LEAD-MGT, CRM-ACCT-MGT), listing creation and MLS syndication, tour scheduling, transaction execution, disclosure handling (RE-BROK-AGENT-OPS), and contract reference (CLM-REPOSITORY). One module to install; larger brokerages deploy the underlying full modules and skip the starter.
 
@@ -27,11 +29,12 @@ Solo-agent and small-firm persona bundle. Single-install deployable for individu
 | Real Estate Listings | Property offered for sale or rent on an MLS or brokerage marketplace; carries pricing, photos, descriptive text, agent representation, and listing-status lifecycle (active/contingent/pending/sold/withdrawn). |
 | Real Estate Transactions | Deal pipeline from offer through close: parties, terms, contingencies, escrow timeline, and document compliance. One transaction per accepted offer; survives the listing once the offer is bound. |
 | Tour Appointments | Scheduled property showings with lock-box codes, access windows, agent attendance, and follow-up tracking. |
+| Users | Semantius platform-owned user table. Referenced from domain `data_objects` via `data_object_relationships` for assignee / author / approver / creator edges. Not surfaced in domain-level analytics (Signal 1/2 ignore `kind='platform_builtin'`). |
 
 ```mermaid
 flowchart TD
   classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
-  classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
+  classDef consumer fill:#e8def8,stroke:#7b1fa2,color:#3a155d;
   legal_contracts["Contracts"]
   crm_leads["Leads"]
   crm_contacts["Contacts"]
@@ -43,7 +46,6 @@ flowchart TD
   real_estate_listings -->|"generates"| real_estate_transactions
   real_estate_listings -->|"has tours"| tour_appointments
   real_estate_transactions -->|"requires disclosures"| disclosure_documents
-  crm_contacts -->|"converted_from_lead (opt)"| crm_leads
   real_estate_listings -->|"has listing agent"| users
   tour_appointments -->|"has showing agent"| users
   real_estate_transactions -->|"has listing-side agent"| users
@@ -52,6 +54,7 @@ flowchart TD
   users -->|"owns (opt)"| legal_contracts
   users -->|"approved (opt)"| legal_contracts
   users -->|"drafted (opt)"| legal_contracts
+  crm_contacts -->|"converted_from_lead (opt)"| crm_leads
   users -->|"owns"| crm_leads
   users -->|"owns (opt)"| crm_contacts
   class legal_contracts embedded_master;
@@ -61,7 +64,7 @@ flowchart TD
   class tour_appointments embedded_master;
   class real_estate_transactions embedded_master;
   class disclosure_documents embedded_master;
-  class users platform_builtin;
+  class users consumer;
 ```
 
 ## 3. Entities catalog
@@ -75,10 +78,19 @@ flowchart TD
 | 5 | `real_estate_listings` (Real Estate Listings) | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content | - |
 | 6 | `real_estate_transactions` (Real Estate Transactions) | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock | - |
 | 7 | `tour_appointments` (Tour Appointments) | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content | - |
+| 8 | `users` (Users) | consumer | _(platform built-in)_ | _(platform built-in)_ | required | - | - |
 
 ## 4. Aliases and industry synonyms
 
-_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
+| data_object | alias | alias_type | preferred? | industry | notes |
+| --- | --- | --- | --- | --- | --- |
+| `real_estate_transactions` | Closing | industry_term | - | Real Estate | - |
+| `real_estate_transactions` | Escrow | industry_term | - | Real Estate | - |
+| `real_estate_listings` | MLS Listing | industry_term | - | Real Estate | - |
+| `tour_appointments` | Open House Appointment | industry_term | - | Real Estate | - |
+| `disclosure_documents` | Seller Disclosures | industry_term | - | Real Estate | - |
+| `tour_appointments` | Showing | industry_term | - | Real Estate | - |
+| `disclosure_documents` | TDS | industry_term | - | Real Estate | - |
 
 ## 5. Relationships
 
@@ -107,6 +119,19 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `users` | owns | `crm_contacts` | one_to_many | optional | source | - |
 
 ### 5.3 Cross-scope edges
+
+#### 5.3a Outbound from this scope's masters and contributors
+
+_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
+
+_(no outbound cross-scope edges from this scope's masters or contributors.)_
+
+#### 5.3b Context edges on embedded shells and consumed entities
+
+_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
+
+<details>
+<summary>32 context edges</summary>
 
 | from | verb | to | cardinality | necessity | notes |
 | --- | --- | --- | --- | --- | --- |
@@ -143,6 +168,8 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `crm_contacts` | has_activities | `sales_activities` | one_to_many | optional | - |
 | `crm_leads` | has_activities | `sales_activities` | one_to_many | optional | - |
 
+</details>
+
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
@@ -167,6 +194,7 @@ _(no inbound `handoffs` whose payload is in this scope.)_
 | `real_estate_listings` | embedded_master | required | RE-BROK-AGENT-OPS (RE-BROKERAGE) | - |
 | `real_estate_transactions` | embedded_master | required | RE-BROK-AGENT-OPS (RE-BROKERAGE) | - |
 | `tour_appointments` | embedded_master | required | RE-BROK-AGENT-OPS (RE-BROKERAGE) | - |
+| `users` | consumer | required | _(platform built-in)_ | - |
 
 ## 7. Lifecycle states (per touched entity)
 

@@ -8,12 +8,14 @@ domain_modules:
   - ats-background-checks
 domain_code: ATS
 related_modules: [ats-candidate-crm, ats-offers, hrsd-case-mgmt, payroll-run]
-created_at: 2026-05-28
+created_at: 2026-05-31
 ---
 
 # Background Checks
 
 ## 1. Overview
+
+### 1.1 Analyst overview
 
 Pre-employment background-check orchestration with adverse-action workflow. Coordinates external vendor handoffs and gates offer-to-firm conversion on clearance. Requires an external `send_email` tool for FCRA adverse-action notices.
 
@@ -21,7 +23,15 @@ Pre-employment background-check orchestration with adverse-action workflow. Coor
 
 | Name | Description |
 | --- | --- |
+| Adverse Action Notices | FCRA-mandated notice issued when a background_check result is used to decline a candidate. Two-step process: pre-adverse notice + waiting period + post-adverse final notice. Carries notice type, sent timestamp, copy_of_report enclosure, dispute window expiry. |
+| Background Check Adjudications | Human review decision on a completed background_check (Clear / Engaged / Decisional / Declined). Carries adjudicator, decision rationale, individualized assessment notes per EEOC guidance. |
+| Background Check Components | Individual sub-check result inside a background_checks order (e.g. county_criminal, ssn_trace, employment_verification, drug_screen). Each component has its own status, result, and provider source. |
+| Background Check Disputes | Candidate-initiated dispute of a background_check component result under FCRA rights. Carries disputed component, candidate statement, provider re-investigation result, resolution. |
+| Background Check Packages | Configured bundle of check types (county criminal + national + MVR + drug screen + employment verification + education verification) that can be ordered as one unit. Catalog-shaped: defines what a 'standard package' looks like for a role tier. |
 | Background Checks | External verification result for a candidate (criminal, employment history, education, credit, identity). Status and findings typically returned by an external screening provider. |
+| FCRA Disclosures | Pre-check legally required disclosure form presented to the candidate before any consumer report is requested. Carries the disclosure text version, candidate acknowledgement signature, timestamp, and jurisdiction-specific addenda (CA, NY, etc.). |
+| FCRA Summary of Rights Acknowledgements | Candidate acknowledgement of receipt of the FCRA Summary of Consumer Rights at consent time, prior to a background check. Required by 15 U.S.C. §1681g(c). Captured separately from the consent itself so the disclosure copy and acknowledgement timestamp persist for audit. |
+| Pre-Adverse Action Notices | FCRA-mandated notice sent to a candidate before a final adverse-action decision based on a consumer report. Carries a copy of the report and Summary of Rights, and opens a waiting period (typically 5 business days) during which the candidate may dispute findings before the final adverse-action notice issues. |
 | Candidates | Person known to the recruiting org, with or without an active application. Carries contact details, resume, tags, GDPR consent, and source. Distinct from Employee until hired. |
 | Offers | Formal employment offer extended to a candidate. Carries compensation components, start date, terms, approval chain, and status (draft / approved / sent / accepted / declined / rescinded). |
 
@@ -33,12 +43,39 @@ flowchart TD
   background_checks["Background Checks"]
   candidates["Candidates"]
   job_offers["Offers"]
+  background_check_packages["Background Check Packages"]
+  background_check_components["Background Check Components"]
+  fcra_disclosures["FCRA Disclosures"]
+  background_check_adjudications["Background Check Adjudications"]
+  adverse_action_notices["Adverse Action Notices"]
+  background_check_disputes["Background Check Disputes"]
+  pre_adverse_action_notices["Pre-Adverse Action Notices"]
+  fcra_summary_of_rights_acknowledgements["FCRA Summary of Rights Acknowledgements"]
   users["Users"]
+  background_checks -->|"contains"| background_check_components
+  background_check_packages -->|"shapes"| background_checks
+  candidates -->|"discloses_via"| fcra_disclosures
+  background_checks -->|"adjudicated_via"| background_check_adjudications
+  background_check_adjudications -->|"triggers (opt)"| adverse_action_notices
+  background_check_components -->|"disputed_via (opt)"| background_check_disputes
+  candidates -->|"acknowledges_via (opt)"| fcra_summary_of_rights_acknowledgements
+  background_checks -->|"triggers_pre_notice (opt)"| pre_adverse_action_notices
+  background_checks -->|"gated_by"| fcra_summary_of_rights_acknowledgements
   job_offers -->|"is contingent on"| background_checks
+  candidates -->|"has owning recruiter (opt)"| users
+  background_checks -->|"has requester"| users
   job_offers -->|"has approver"| users
   class background_checks master;
   class candidates embedded_master;
   class job_offers embedded_master;
+  class background_check_packages master;
+  class background_check_components master;
+  class fcra_disclosures master;
+  class background_check_adjudications master;
+  class adverse_action_notices master;
+  class background_check_disputes master;
+  class pre_adverse_action_notices master;
+  class fcra_summary_of_rights_acknowledgements master;
   class users platform_builtin;
 ```
 
@@ -46,9 +83,17 @@ flowchart TD
 
 | # | data_object | role | mastered in | label | necessity | pattern flags | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `background_checks` (Background Checks) | master | - | - | required | personal_content, submit_lock | - |
-| 2 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | - |
-| 3 | `job_offers` (Offers) | embedded_master | `ats-offers` | Offers | required | personal_content, single_approver | - |
+| 1 | `adverse_action_notices` (Adverse Action Notices) | master | - | - | required | personal_content | - |
+| 2 | `background_check_adjudications` (Background Check Adjudications) | master | - | - | required | personal_content, single_approver | - |
+| 3 | `background_check_components` (Background Check Components) | master | - | - | required | personal_content | - |
+| 4 | `background_check_disputes` (Background Check Disputes) | master | - | - | required | personal_content | - |
+| 5 | `background_check_packages` (Background Check Packages) | master | - | - | required | - | - |
+| 6 | `background_checks` (Background Checks) | master | - | - | required | personal_content, submit_lock | - |
+| 7 | `fcra_disclosures` (FCRA Disclosures) | master | - | - | required | personal_content | - |
+| 8 | `fcra_summary_of_rights_acknowledgements` (FCRA Summary of Rights Acknowledgements) | master | - | - | required | personal_content, submit_lock | - |
+| 9 | `pre_adverse_action_notices` (Pre-Adverse Action Notices) | master | - | - | required | personal_content, submit_lock | - |
+| 10 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | - |
+| 11 | `job_offers` (Offers) | embedded_master | `ats-offers` | Offers | required | personal_content, single_approver | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -60,18 +105,55 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 | from | verb | to | cardinality | kind | necessity | owner_side | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| `background_checks` | contains | `background_check_components` | one_to_many | composition | required | source | - |
+| `background_check_packages` | shapes | `background_checks` | one_to_many | reference | required | source | - |
+| `candidates` | discloses_via | `fcra_disclosures` | one_to_many | composition | required | source | - |
+| `background_checks` | adjudicated_via | `background_check_adjudications` | one_to_one | reference | required | source | - |
+| `background_check_adjudications` | triggers | `adverse_action_notices` | one_to_one | reference | optional | source | - |
+| `background_check_components` | disputed_via | `background_check_disputes` | one_to_many | reference | optional | target | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | composition | optional | source | - |
+| `background_checks` | triggers_pre_notice | `pre_adverse_action_notices` | one_to_many | composition | optional | source | - |
+| `background_checks` | gated_by | `fcra_summary_of_rights_acknowledgements` | one_to_one | reference | required | source | - |
 | `job_offers` | is contingent on | `background_checks` | one_to_many | reference | required | source | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | notes |
 | --- | --- | --- | --- | --- | --- | --- |
+| `candidates` | has owning recruiter | `users` | many_to_many | optional | source | - |
+| `background_checks` | has requester | `users` | many_to_many | required | source | - |
 | `job_offers` | has approver | `users` | many_to_many | required | source | - |
 
 ### 5.3 Cross-scope edges
 
+#### 5.3a Outbound from this scope's masters and contributors
+
+_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
+
+_(no outbound cross-scope edges from this scope's masters or contributors.)_
+
+#### 5.3b Context edges on embedded shells and consumed entities
+
+_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
+
+<details>
+<summary>27 context edges</summary>
+
 | from | verb | to | cardinality | necessity | notes |
 | --- | --- | --- | --- | --- | --- |
+| `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | - |
+| `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | required | - |
+| `candidates` | noted_via | `recruiter_interactions` | one_to_many | optional | - |
+| `candidates` | consents_via | `candidate_consents` | one_to_many | required | - |
+| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | required | - |
+| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | optional | - |
+| `job_offers` | evolves_through | `offer_versions` | one_to_many | required | - |
+| `job_offers` | gated_by | `offer_approvals` | one_to_many | optional | - |
+| `candidates` | submits_via | `data_subject_requests` | one_to_many | optional | - |
+| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | optional | - |
+| `candidates` | documented_via | `candidate_documents` | one_to_many | optional | - |
+| `candidates` | annotated_via | `candidate_notes` | one_to_many | optional | - |
+| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | - |
 | `skill_profiles` | feeds | `candidates` | one_to_many | optional | - |
 | `candidates` | submits | `job_applications` | one_to_many | required | - |
 | `candidate_referrals` | introduces | `candidates` | one_to_many | required | - |
@@ -86,6 +168,8 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `candidates` | becomes | `employees` | one_to_one | required | - |
 | `job_offers` | spawns pre-employee record | `pre_employees` | one_to_one | required | - |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | - |
+
+</details>
 
 ## 6. Cross-domain context
 
@@ -120,6 +204,44 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 ## 7. Lifecycle states (per touched entity)
 
+### `adverse_action_notices` (Adverse Action Notice)
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `pre_adverse_sent` | ✓ | - | - | - | Pre-adverse notice sent; candidate has dispute window to respond. |
+| 2 | `dispute_filed` | - | - | - | - | Candidate filed a dispute within the waiting window. |
+| 3 | `waiting_period_elapsed` | - | - | - | - | Dispute window passed without action. |
+| 4 | `post_adverse_sent` | - | ✓ | ✓ | `ats-background-checks:post_adverse_sent_adverse_action_notice` | Final adverse action notice issued; hiring decision final. |
+| 5 | `rescinded` | - | ✓ | - | - | Adverse action process abandoned (dispute upheld, hire reinstated). |
+
+### `background_check_adjudications` (Background Check Adjudication)
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `pending` | ✓ | - | - | - | Awaiting adjudicator review. |
+| 2 | `clear` | - | ✓ | ✓ | `ats-background-checks:clear_background_check_adjudication` | Decision: clear to hire. |
+| 3 | `engaged` | - | - | ✓ | `ats-background-checks:engaged_background_check_adjudication` | Decision: requires individualized assessment / candidate dialogue per EEOC. |
+| 4 | `declined` | - | ✓ | ✓ | `ats-background-checks:declined_background_check_adjudication` | Decision: hire declined based on results; triggers adverse action process. |
+
+### `background_check_components` (Background Check Component)
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `ordered` | ✓ | - | - | - | Component requested from provider. |
+| 2 | `in_progress` | - | - | - | - | Provider actively researching. |
+| 3 | `completed_clear` | - | ✓ | - | - | Component returned clear (no findings). |
+| 4 | `completed_flagged` | - | ✓ | - | - | Component returned with findings requiring adjudication. |
+| 5 | `unable_to_verify` | - | ✓ | - | - | Provider could not verify; component closed without result. |
+
+### `background_check_disputes` (Background Check Dispute)
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `filed` | ✓ | - | - | - | Candidate filed dispute. |
+| 2 | `under_review` | - | - | - | - | Provider re-investigating disputed component. |
+| 3 | `upheld` | - | ✓ | - | - | Dispute upheld; component result corrected. |
+| 4 | `denied` | - | ✓ | - | - | Dispute denied; original result stands. |
+
 ### `background_checks` (Background Check)
 
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
@@ -127,7 +249,7 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | 1 | `requested` | ✓ | - | - | - | Check ordered from the provider for a candidate. |
 | 2 | `in_progress` | - | - | - | - | Provider is running verification (criminal, employment, education, identity). |
 | 3 | `completed_clear` | - | ✓ | - | - | Provider returned a clear result; no adverse findings. |
-| 4 | `completed_consider` | - | ✓ | ✓ | `ats-background-checks:completed_consider_background_check` | Provider returned adverse findings; gated review required before adjudication. |
+| 4 | `completed_consider` | - | ✓ | ✓ | `ats-background-checks:adjudicate_background_check` | Provider returned adverse findings; gated review required before adjudication. |
 | 5 | `cancelled` | - | ✓ | - | - | Check withdrawn before the provider returned a result. |
 
 ### `candidates` (Candidate)
@@ -141,6 +263,15 @@ _This scope holds `candidates` as **embedded_master**; the canonical state machi
 | 3 | `hired` | - | ✓ | ✓ | `ats-candidate-crm:hire_candidate` | Candidate accepted an offer and converted to employee. |
 | 4 | `do_not_hire` | - | ✓ | ✓ | `ats-candidate-crm:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
 | 5 | `archived` | - | ✓ | - | - | Candidate kept in the database but not active in any pipeline. |
+
+### `fcra_disclosures` (FCRA Disclosure)
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `presented` | ✓ | - | - | - | Disclosure shown to candidate; awaiting acknowledgement. |
+| 2 | `acknowledged` | - | - | - | - | Candidate signed acknowledgement; check may proceed. |
+| 3 | `refused` | - | ✓ | - | - | Candidate declined to sign; cannot run check. |
+| 4 | `expired` | - | ✓ | - | - | Authorization aged out of validity window. |
 
 ### `job_offers` (Offer)
 
@@ -165,10 +296,30 @@ _This scope holds `job_offers` as **embedded_master**; the canonical state machi
 | `ats-background-checks:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `ats-background-checks:manage` | baseline-manage | Edit operational records | ✓ |
 | `ats-background-checks:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
-| `ats-background-checks:completed_consider_background_check` | workflow-gate (lifecycle) | Transition `background_checks` into state `completed_consider` | ✓ |
+| `ats-background-checks:adjudicate_background_check` | workflow-gate (lifecycle) | Transition `background_checks` into state `completed_consider` | ✓ |
+| `ats-background-checks:clear_background_check_adjudication` | workflow-gate (lifecycle) | Transition `background_check_adjudications` into state `clear` | ✓ |
+| `ats-background-checks:engaged_background_check_adjudication` | workflow-gate (lifecycle) | Transition `background_check_adjudications` into state `engaged` | ✓ |
+| `ats-background-checks:declined_background_check_adjudication` | workflow-gate (lifecycle) | Transition `background_check_adjudications` into state `declined` | ✓ |
+| `ats-background-checks:post_adverse_sent_adverse_action_notice` | workflow-gate (lifecycle) | Transition `adverse_action_notices` into state `post_adverse_sent` | ✓ |
 | `ats-background-checks:view_all_background_checks` | override (personal_content) | View all `background_checks` rows beyond row-scope | ✓ |
 | `ats-background-checks:manage_all_background_checks` | override (personal_content) | Manage all `background_checks` rows beyond row-scope | ✓ |
 | `ats-background-checks:submit_background_check` | override (submit_lock) | Submit and lock a `background_checks` row (post-submit edits gated) | ✓ |
+| `ats-background-checks:view_all_background_check_components` | override (personal_content) | View all `background_check_components` rows beyond row-scope | ✓ |
+| `ats-background-checks:manage_all_background_check_components` | override (personal_content) | Manage all `background_check_components` rows beyond row-scope | ✓ |
+| `ats-background-checks:view_all_fcra_disclosures` | override (personal_content) | View all `fcra_disclosures` rows beyond row-scope | ✓ |
+| `ats-background-checks:manage_all_fcra_disclosures` | override (personal_content) | Manage all `fcra_disclosures` rows beyond row-scope | ✓ |
+| `ats-background-checks:view_all_background_check_adjudications` | override (personal_content) | View all `background_check_adjudications` rows beyond row-scope | ✓ |
+| `ats-background-checks:manage_all_background_check_adjudications` | override (personal_content) | Manage all `background_check_adjudications` rows beyond row-scope | ✓ |
+| `ats-background-checks:view_all_adverse_action_notices` | override (personal_content) | View all `adverse_action_notices` rows beyond row-scope | ✓ |
+| `ats-background-checks:manage_all_adverse_action_notices` | override (personal_content) | Manage all `adverse_action_notices` rows beyond row-scope | ✓ |
+| `ats-background-checks:view_all_background_check_disputes` | override (personal_content) | View all `background_check_disputes` rows beyond row-scope | ✓ |
+| `ats-background-checks:manage_all_background_check_disputes` | override (personal_content) | Manage all `background_check_disputes` rows beyond row-scope | ✓ |
+| `ats-background-checks:view_all_pre-adverse_action_notices` | override (personal_content) | View all `pre_adverse_action_notices` rows beyond row-scope | ✓ |
+| `ats-background-checks:manage_all_pre-adverse_action_notices` | override (personal_content) | Manage all `pre_adverse_action_notices` rows beyond row-scope | ✓ |
+| `ats-background-checks:submit_pre-adverse_action_notice` | override (submit_lock) | Submit and lock a `pre_adverse_action_notices` row (post-submit edits gated) | ✓ |
+| `ats-background-checks:view_all_fcra_summary_of_rights_acknowledgements` | override (personal_content) | View all `fcra_summary_of_rights_acknowledgements` rows beyond row-scope | ✓ |
+| `ats-background-checks:manage_all_fcra_summary_of_rights_acknowledgements` | override (personal_content) | Manage all `fcra_summary_of_rights_acknowledgements` rows beyond row-scope | ✓ |
+| `ats-background-checks:submit_fcra_summary_of_rights_acknowledgement` | override (submit_lock) | Submit and lock a `fcra_summary_of_rights_acknowledgements` row (post-submit edits gated) | ✓ |
 
 ### 8.2 Business rules
 
@@ -176,3 +327,13 @@ _This scope holds `job_offers` as **embedded_master**; the canonical state machi
 | --- | --- | --- | --- |
 | `background_check_edit_scope` | `background_checks` | has_personal_content | Row-scope by default; override via `ats-background-checks:view_all_background_checks` / `ats-background-checks:manage_all_background_checks` |
 | `submit_restricted_to_background_check_owner` | `background_checks` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `ats-background-checks:manage_all_background_checks` |
+| `background_check_component_edit_scope` | `background_check_components` | has_personal_content | Row-scope by default; override via `ats-background-checks:view_all_background_check_components` / `ats-background-checks:manage_all_background_check_components` |
+| `fcra_disclosure_edit_scope` | `fcra_disclosures` | has_personal_content | Row-scope by default; override via `ats-background-checks:view_all_fcra_disclosures` / `ats-background-checks:manage_all_fcra_disclosures` |
+| `background_check_adjudication_edit_scope` | `background_check_adjudications` | has_personal_content | Row-scope by default; override via `ats-background-checks:view_all_background_check_adjudications` / `ats-background-checks:manage_all_background_check_adjudications` |
+| `approve_background_check_adjudication_requires_approver` | `background_check_adjudications` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`ats-background-checks:approve_background_check_adjudication` if surfaced as a lifecycle workflow gate). |
+| `adverse_action_notice_edit_scope` | `adverse_action_notices` | has_personal_content | Row-scope by default; override via `ats-background-checks:view_all_adverse_action_notices` / `ats-background-checks:manage_all_adverse_action_notices` |
+| `background_check_dispute_edit_scope` | `background_check_disputes` | has_personal_content | Row-scope by default; override via `ats-background-checks:view_all_background_check_disputes` / `ats-background-checks:manage_all_background_check_disputes` |
+| `pre-adverse_action_notice_edit_scope` | `pre_adverse_action_notices` | has_personal_content | Row-scope by default; override via `ats-background-checks:view_all_pre-adverse_action_notices` / `ats-background-checks:manage_all_pre-adverse_action_notices` |
+| `submit_restricted_to_pre-adverse_action_notice_owner` | `pre_adverse_action_notices` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `ats-background-checks:manage_all_pre-adverse_action_notices` |
+| `fcra_summary_of_rights_acknowledgement_edit_scope` | `fcra_summary_of_rights_acknowledgements` | has_personal_content | Row-scope by default; override via `ats-background-checks:view_all_fcra_summary_of_rights_acknowledgements` / `ats-background-checks:manage_all_fcra_summary_of_rights_acknowledgements` |
+| `submit_restricted_to_fcra_summary_of_rights_acknowledgement_owner` | `fcra_summary_of_rights_acknowledgements` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `ats-background-checks:manage_all_fcra_summary_of_rights_acknowledgements` |

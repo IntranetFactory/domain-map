@@ -306,3 +306,49 @@ These are NOT in-scope for KUBE-PLAT's fix-load. They are observations the user 
 - 6 candidate domains queued to `audits/_missing-domains.md` via `append_missing_domain.ts`: SERVICE-MESH (new), GITOPS-PLAT (new), SECRETS-MGMT (bumped mention count 1 → 2), CONT-REG (new), POLICY-AS-CODE (new), IDP-INT-DEV-PLAT (new).
 - APQC PCF mapping at L4 across all 8 cross-domain handoffs; ratio 8 / 8 = 1.0N proposed (above the 0.5N to 0.8N target band; this domain's handoffs all align cleanly with IT-infrastructure-flavor APQC processes, no industry-specific or modern-digital-only handoffs to defer).
 - Open-questions count = 17 (Bucket 1) + 9 (Bucket 2) + 10 (Bucket 3) = 36.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Summary
+
+Applied the truly-technical subset of Bucket 1 from the 2026-05-30 audit. Two phases ran via loader `.tmp_deploy/fix_kube_plat_b1_technical_2026_05_31.ts`:
+
+- **Phase R, Rule #10 user-edges (B1-S5).** Inserted 8 `data_object_relationships` rows linking `users` (id 748, `kind=platform_builtin`) to each KUBE-PLAT master with the audit-specified actor verb. All rows: `relationship_type=one_to_many`, `relationship_kind=reference`, `owner_side=source`, `is_required=false`, `record_status=new`. New row ids 1531 to 1538.
+  - 1531: users → kubernetes_clusters (administered clusters / is_administered_by)
+  - 1532: users → cluster_node_pools (owned node pools / is_owned_by)
+  - 1533: users → container_workloads (owned workloads / is_owned_by)
+  - 1534: users → helm_releases (deployed releases / is_deployed_by)
+  - 1535: users → service_meshes (administered meshes / is_administered_by)
+  - 1536: users → operator_installations (owned operator installations / is_owned_by)
+  - 1537: users → platform_pipelines (owned pipelines / is_owned_by)
+  - 1538: users → container_registries (administered registries / is_administered_by)
+
+- **Phase H1, APQC tagging (Bucket 1 APQC TAGGING).** Inserted 8 `handoff_processes` rows for the 7 outbound and 1 inbound cross-domain handoffs, all with `role=implements`, `proposal_source=agent_curated`, `record_status=new`. New row ids 288 to 295 (one per handoff: 753, 759, 760, 761, 762, 763, 764, 799 mapped to PCF processes 1311, 1305, 1304, 1304, 1262, 1299, 1307, 1312 respectively).
+
+### Deferred (not applied)
+
+Per the subagent prompt's defer rules:
+
+- **B1-S1** (modules, capabilities, solutions): new entities, gated on Bucket 2 #2 modularization decision.
+- **B1-S2** (catalog UX wording): Rule #20 author-then-confirm.
+- **B1-S3** (pattern flag positive review): chat-surface only, no DB write needed (defaults are correct).
+- **B1-S4** (intra-domain `data_object_relationships`): not Rule #10 user-edges; intra-master edges are out of the technical-only fix scope.
+- **B1-S6** (outbound cross-domain `data_object_relationships`): not user-edges; same reason as B1-S4.
+- **B1-S7** (B10b FK PATCHes for `source_domain_module_id`): not derivable; KUBE-PLAT still has zero `domain_modules` rows. Becomes fixable post B1-S1.
+- **B1-S8** (aliases): audit does not pre-specify exact `alias_name` tuples (only approximate string lists). Defer per "bulk data_object_aliases inserts unless audit pre-specifies exact tuples".
+- **B1-S9** (lifecycle states): new entities, also gated on M1 for `data_object_lifecycle_states.domain_module_id`.
+- **B1-S10** (F1 legacy skill id 78 `kube-plat-system`): explicit user-judgment item (Bucket 2 #8: leave / rename / DELETE).
+
+10 deferred, all surfaced for user judgment in the original Bucket 2 / cross-bucket-dependencies sections of this audit.
+
+### Writes verified
+
+- `data_object_relationships?data_object_id=eq.748&related_data_object_id=in.(448,449,450,451,452,453,454,455)` returns 8 rows.
+- `handoff_processes?handoff_id=in.(799,760,761,763,759,762,764,753)` returns 8 rows, all `proposal_source=agent_curated`, `record_status=new`.
+
+No JWT errors. No `notes` writes (Rule #15). No vendor names in any text field (Rule #18).
+
+### UI links
+
+- https://tests.semantius.app/domain_map/data_object_relationships
+- https://tests.semantius.app/domain_map/handoff_processes

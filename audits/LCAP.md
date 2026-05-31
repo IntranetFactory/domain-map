@@ -182,3 +182,37 @@ If you only commit to part of the work, the **versions + deployments + environme
 | **ITSM** | B8 inbound consumer-DMDO on `lcap_apps` (deployment_failed payload is `service_incidents`, an ITSM master, but the event source is `lcap_apps`). After B1-S14, the cross-domain relationship `lcap_apps opens service_incidents` reverse-mirrors as ITSM declaring a contributor relationship on `lcap_apps`. ITSM may already cover this generically via the `application.deployment_failed` shape from APM; verify in ITSM's next audit. | LCAP audit Pass 4 (pairwise lite) |
 | **DCG** | B8 inbound consumer-DMDO on `lcap_business_objects` once DCG catalogs LCAP-produced schemas. Handoff 707 implies a `consumer` DMDO. | LCAP audit Pass 4 (pairwise lite) |
 | **(Catalog-wide cleanup)** | Em-dash sweep across `domains.business_logic` and other `description` columns. The LCAP row carries one at the `Runtime, compiler, and visual modeller` clause and there may be others from pre-CLAUDE.md-rule loads. Surface for a catalog-wide cleanup pass, not LCAP's fix. | LCAP audit A-band review |
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Loader: [.tmp_deploy/fix_lcap_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_lcap_b1_technical_2026_05_31.ts) (run from project root c:/dev/domain-map).
+
+### Applied
+
+- **B1-S2 (Rule #18 rename)**: PATCHed 5 data_objects `extend_* -> lcap_*` (ids 220, 221, 222, 715, 716). Cascade rewrote 7 trigger_event names `extend_<sing>.X -> lcap_<sing>.X` on ids 731-737. FKs unchanged (all FK by id).
+- **B1-S3**: covered by B1-S2 (no separate fix).
+- **B1-S7 (B9 event_category enum backfill)**: PATCHed event_category on 7 trigger_events: 731/733/735/736 `state_change`, 732/734/737 `signal`. All categories per audit's pre-specified classification, all values legal per Rule #13.
+- **B1-S6 (B7 Rule #10 users edges)**: INSERTed 6 `data_object_relationships` from users (748) to LCAP masters, verbs per audit pre-specification: `authors_lcap_app` (id 1735), `owns_lcap_app` (1736), `authors_lcap_page` (1737), `authors_lcap_business_object` (1738), `authors_lcap_workflow` (1739), `configures_lcap_data_source` (1740). Pattern mirrors existing user edges: owner_side=source, one_to_many, reference, is_required=false, notes='' (Rule #15), record_status default 'new' (Rule #1).
+- **B1-H1 (APQC handoff_processes)**: 4 high-confidence pre-specified rows reduced to 3 inserts after verifying handoff 704 -> PCF 52 already existed (id 418). INSERTed 705 -> 278 (id 509), 706 -> 285 (id 510), 707 -> 115 (id 511). All 4 process_ids verified resolvable in `/processes` pre-flight. proposal_source=`agent_curated`, role=`implements`, record_status default 'new'. Handoff 701 deferred per audit (NCDB owns canonical-master gap).
+
+### Deferred (and why)
+
+- **B1-S1 (M1/M2/M4/M6 module creation)**: new entities; gated on B2-S1 user split decision.
+- **B1-S4 (B4 pattern flag flips)**: pattern flag flips not licensed by the technical directive; rolled up into B2-S2 for user.
+- **B1-S5 (intra-domain `data_object_relationships`, 8 rows)**: directive licenses only `users` edges from Rule #10; intra-domain rels remain for a later authoring pass.
+- **B1-S8 (B11 aliases)**: audit does not pre-specify exact alias tuples; directive forbids bulk alias inserts without exact tuples.
+- **B1-S9 (B12 lifecycle states)**: gated on B1-S1 (each lifecycle state row needs `domain_module_id`).
+- **B1-S10 (F1 retire + F2 module-anchored skills)**: gated on B1-S1; new entities (system skills + skill_tools).
+- **B1-S11 (C1 business function spine)**: gated on B2-S3 user judgment.
+- **B1-S12 (B10b PATCH `source_domain_module_id`)**: not derivable from existing modules (LCAP has zero `domain_modules` rows); gated on B1-S1.
+- **B1-S13 (B9b intra-domain handoffs)**: new handoffs gated on B1-S1; only allowed when audit pre-specifies handoff_id + resolvable PCF (these are new handoffs entirely).
+- **B1-S14 (B8 cross-domain `data_object_relationships`)**: not on the technical apply list; some rows would require target-domain audits before resolving the target master.
+
+### Verification post-load
+
+- `/data_objects?id=in.(220,221,222,715,716)` returns all five with `lcap_*` names.
+- `/trigger_events?id=in.(731-737)` returns all seven with `lcap_*.X` event_names and the pre-specified `event_category` values.
+- `/data_object_relationships?data_object_id=eq.748&related_data_object_id=in.(220,221,222,715,716)` returns 6 rows (ids 1735-1740).
+- `/handoff_processes?handoff_id=in.(704,705,706,707)` returns 4 rows: 418 (pre-existing 704->52), 509 (705->278), 510 (706->285), 511 (707->115).
+
+UI link: https://tests.semantius.app/domain_map/data_objects, https://tests.semantius.app/domain_map/trigger_events, https://tests.semantius.app/domain_map/data_object_relationships, https://tests.semantius.app/domain_map/handoff_processes.

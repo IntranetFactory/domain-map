@@ -405,28 +405,30 @@ Starter kits used to be an editorial junction (`domain_starter_modules`) recomme
 
 ### 20. Catalog UX fields are buyer-shaped; never overwrite a non-empty value without explicit user approval.
 
-Two `domains` columns serve the public catalog and the site generator, not the analyst surface:
+Two columns each on **both** `domains` and `domain_modules` serve the public catalog and the site generator, not the analyst surface:
 
-- `catalog_tagline` — one buyer-facing sentence for catalog list cards. Workflow-shaped, not market-shaped.
-- `catalog_description` — 1-3 buyer-facing paragraphs for the catalog detail page. Describes what the buyer can do; does not enumerate handoffs, parent domains, or position in the catalog taxonomy.
+- `catalog_tagline` (string): one buyer-facing sentence for catalog list cards. Workflow-shaped, not market-shaped.
+- `catalog_description` (text): 1-3 buyer-facing paragraphs for the catalog detail page. Describes what the buyer can do; does not enumerate handoffs, parent domains, or position in the catalog taxonomy.
+
+`domains` carries the market-grain copy (whole-domain landing pages). `domain_modules` carries the module-grain copy (per-module cards and detail pages). Buyers select modules in a deployment, not whole domains, so the module-grain copy is the surface a deploy chooser renders. Both grains follow the same rules.
 
 A third surface, `domain_aliases` (separate table), feeds both the catalog's search index and the per-domain skill's runtime trigger phrases. Aliases are universal synonyms (`recruiting`, `hiring`, `talent acquisition`) the agent should match against in either surface.
 
-**Voice rule.** Buyer voice (workflow + value): *"Track candidates from first contact through hire. Manage requisitions, interviews, and offers in one place, with seamless handoff to onboarding."* Analyst voice (what `domains.description` carries): *"Software market for recruiting, sourcing, evaluating, and hiring candidates. Anchors the candidate-to-employee transition handoff to HCM and Onboarding."* The two are not interchangeable; do not paste one into the other column.
+**Voice rule.** Buyer voice (workflow + value): *"Track candidates from first contact through hire. Manage requisitions, interviews, and offers in one place, with seamless handoff to onboarding."* Analyst voice (what `domains.description` and `domain_modules.description` carry): *"Software market for recruiting, sourcing, evaluating, and hiring candidates. Anchors the candidate-to-employee transition handoff to HCM and Onboarding."* The two are not interchangeable; do not paste one into the other column.
 
-**Backfill is allowed (with surface).** On any domain audit where A4 fails (empty `catalog_tagline` or `catalog_description`), draft both fields per the voice rule, surface to the user for review BEFORE writing. The draft → review → write loop matches Rule #1's discipline for fresh research.
+**Backfill is allowed (with surface).** On any domain audit where A4 fails (empty `domains.catalog_tagline` / `domains.catalog_description`) or M8 fails (empty `domain_modules.catalog_tagline` / `domain_modules.catalog_description`), draft both fields per the voice rule, surface to the user for review BEFORE writing. The draft, review, write loop matches Rule #1's discipline for fresh research.
 
-**Overwrite is forbidden without explicit per-row user approval.** Once a non-empty value exists in either column, do NOT regenerate, "improve", normalize, or rewrite it, even when the existing value reads like a draft. Marketing routinely fine-tunes the original; an unapproved overwrite destroys their edits. The acceptable forms of human approval:
+**Overwrite is forbidden without explicit per-row user approval.** Once a non-empty value exists in either column on either table, do NOT regenerate, "improve", normalize, or rewrite it, even when the existing value reads like a draft. Marketing routinely fine-tunes the original; an unapproved overwrite destroys their edits. The acceptable forms of human approval:
 
-- *"Rewrite catalog_tagline for ATS to <new wording>"* — specific text + specific domain.
-- *"Refresh all catalog_descriptions"* — explicit batch authorization. Surface the diff per row before each write.
+- *"Rewrite catalog_tagline for ATS to <new wording>"*: specific text + specific row (domain or module).
+- *"Refresh all catalog_descriptions on ATS modules"*: explicit batch authorization. Surface the diff per row before each write.
 
 Forbidden patterns:
 - Auto-overwriting on every audit pass because the existing value "doesn't match the current template."
 - Bulk-regenerating during an unrelated load.
 - "Cleaning up" wording during a different fix-loop.
 
-**Why.** Marketing copy is the buyer-facing surface and ages on a different cycle than the analyst-facing catalog. The catalog tables can be re-derived from live state; marketing voice cannot. Treating these two columns with the same overwrite-on-emit habit as analyst columns erases human work that's not visible in the agent's draft.
+**Why.** Marketing copy is the buyer-facing surface and ages on a different cycle than the analyst-facing catalog. The catalog tables can be re-derived from live state; marketing voice cannot. Treating these four columns (two each on `domains` and `domain_modules`) with the same overwrite-on-emit habit as analyst columns erases human work that's not visible in the agent's draft.
 
 ---
 
@@ -782,6 +784,11 @@ Modules within a domain are **autonomous deployable units** (per § "The module 
   - Within-domain hard fail: DELETE the `consumer`/`contributor` DMDO row in the sibling module; the master row is authoritative for the whole domain.
   - Pass with note / consolidation hint: design decision, not a structural fix. Surface in the gap report's recommendations section, not as a blocking finding.
 
+**M8. Module-level catalog UX fields populated on every `domain_modules` row hosted on this domain.** (Rule #20.)
+- Module set query: `/domain_modules?domain_id=eq.<id>&select=id,domain_module_code,catalog_tagline,catalog_description` UNION `/domain_module_host_domains?domain_id=eq.<id>&select=domain_module:domain_modules(id,domain_module_code,catalog_tagline,catalog_description)` (covers cross-cutting modules hosted here).
+- Pass: every module's `catalog_tagline` is a non-empty single-sentence buyer-facing one-liner; every module's `catalog_description` is a non-empty 1-3 paragraph buyer-facing long-form description. Both are written in buyer voice (workflow + value), NOT analyst voice. A4 is the equivalent check at the domain grain; M8 is the per-module rollup.
+- Fix: draft both fields per Rule #20, surface to the user for review BEFORE writing. Once a non-empty value exists, never overwrite without explicit per-row user approval; marketing may have fine-tuned the original.
+
 ### B. Phase B — Data-object footprint
 
 **B1. ≥1 `master` data_object exists.**
@@ -1025,8 +1032,8 @@ A `discovery_substring` row that the reviewer approves IS high-quality (column 1
 2. **Run the S-band sweep first** (S1 + S2 + S3). It produces the coverage tables the gap report leads with and surfaces zero-row anomalies the band checks may not specifically test.
 3. Run every **in-scope** band check (A / M / B / C / D / E / F / **H**) in order. Skip A5 unless the user has explicitly asked for a vendor-ownership refresh. **H1 is NOT optional** — audits that skip the H-band are incomplete; do not surface the gap report until H1 has been worked.
 4. Classify each result:
-   - **Structural gate** — M1–M7 failures block every downstream concern. A domain with no modules (or with capability-orphaned modules) can't be modeled in Phase B/E correctly until the M-band is clean. Resolve M-band first.
-   - **In-scope fix** — this domain can fix locally (S1–S3 zero-row anomalies, A1–A4, M1–M7, B1–B9, B9b, B10b, B11–B12, C1–C2, D1, E1–E6, F1–F5, F7, **H1**). Goes into the **gap report** as actionable. Fact-sheet emission is **not** an audit step — see § "Fact sheets" below.
+   - **Structural gate** — M1–M7 failures block every downstream concern. A domain with no modules (or with capability-orphaned modules) can't be modeled in Phase B/E correctly until the M-band is clean. Resolve M-band first. (M8 is a content-quality check, not a structural gate.)
+   - **In-scope fix** — this domain can fix locally (S1–S3 zero-row anomalies, A1–A4, M1–M8, B1–B9, B9b, B10b, B11–B12, C1–C2, D1, E1–E6, F1–F5, F7, **H1**). Goes into the **gap report** as actionable. Fact-sheet emission is **not** an audit step — see § "Fact sheets" below.
    - **Report-only follow-up** — the symmetric side is owned by another domain (B8 inbound direction, all of B10). Goes into a separate **"report-only follow-ups"** subsection of the report, naming the source domain + the missing check ID on that side (e.g. "HCM B9 owes outbound on `hcm_positions`"). **Do not author fixes for these from this domain's audit.** These items NEVER block the audited domain's green status; they are observations the user can act on by scheduling audits of the source domains.
 4. Surface the gap report to the user **before** authoring any fixes. Include the failing query output snippet so the user can sanity-check. Ask whether to also kick off audits on the source domains in the report-only section.
 5. For each accepted in-scope fix, author it (markdown draft, or directly in a loader); never load AI-generated content without a user review pass (Rule #1).

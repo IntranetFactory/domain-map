@@ -298,3 +298,27 @@ Skipped (Pass 4 pairwise is blocked on `B1-M1`).
 - **CRM B9 candidate (the symmetric `data_object_relationships` row for handoff 202):** when SALES-PERF masters `quotas` and `quota_assignments`, CRM should carry a relationship `crm_opportunities credits quotas` (or the inverse). Surfaces when CRM is next validated. Today: cannot author because SALES-PERF has no master to point at.
 - **COMP-MGMT M-band cross-check (informational):** if `B2-C1` resolves to (c) (Finance / Total-Rewards as co-owner of INCENTIVE-COMP-MGMT), the COMP-MGMT side will need a matching `business_function_capabilities` row on its own audit pass. Routine, not a blocker.
 
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent pass to apply truly-technical Bucket 1 fixes only. Catalog UX (Rule #20), new modules, new master entities, and B10b backfill (gated on B1-M1) all remained deferred.
+
+### Applied
+
+- **B1-H1, INSERT 3 `handoff_processes` rows.** Pre-flighted handoff existence and process 713 ("Determine sales resource allocation"), then inserted:
+  - id 409: `(handoff_id=202, process_id=713, proposal_source='agent_curated', record_status='new', role='implements')`
+  - id 410: `(handoff_id=203, process_id=713, proposal_source='agent_curated', record_status='new', role='implements')`
+  - id 411: `(handoff_id=208, process_id=713, proposal_source='agent_curated', record_status='new', role='implements')`
+  - `notes` left empty per Rule #15. `record_status` and `role` taken from column defaults.
+  - Coverage on inbound handoffs to SALES-PERF rises from 1/3 (handoff 203 carries the prior `discovery_substring` row 106 pointing at process 54) to 3/3 with `agent_curated` rows pointing at the correct PCF.
+  - The supersede vs. coexist decision on row 106 remains a Bucket 2 item (`B2-H1`); left untouched.
+  - Loader: `.tmp_deploy/fix_sales_perf_b1_technical_2026_05_31.ts`.
+
+### Deferred (per brief)
+
+- **B1-A1** (catalog_tagline / catalog_description drafts), Rule #20 keeps these in the user-approval path.
+- **B1-M1** (8 new `domain_modules` rows), new modules are out of scope for technical-only B1 application.
+- **B1-S1** (B10b `target_domain_module_id` backfill on handoffs 202 / 203 / 208), gated on B1-M1.
+- **B1-V1 through B1-V7** (7 new master entities for the SALES-PERF surface), all new `data_objects` / DMDOs / lifecycle, deferred.
+
+No JWT errors. No `notes` writes. No record_status overrides.
+

@@ -290,3 +290,38 @@ Skipped (Pass 4 pairwise is blocked on `B1-M1` and on the peer-leadership-tier n
 - **PMM as a candidate domain** (mention count 2 after this audit's bump). If promoted, GTM-PLAN's LAUNCH-ORCHESTRATION capability and the proposed `GTM-PLAN-LAUNCH-ORCH` module relocate. Surfaces in the next PMM triage decision.
 - **ABM-PLATFORM as a candidate domain** (mention count 1, newly queued by this audit). If promoted, GTM-PLAN's MARKET-SEGMENTATION and ACCOUNT-SCORING capabilities and the proposed `GTM-PLAN-ICP-SEGMENT` plus `GTM-PLAN-ACCOUNT-TARGETING` modules relocate. Surfaces in the next ABM-PLATFORM triage decision.
 - **SALES-PLANNING-PLATFORM as a candidate domain** (mention count 2 after this audit's bump). If promoted, GTM-PLAN's TERRITORY-CARVING-PLAN, GTM-CAPACITY-PLANNING, and GTM-SCENARIO-MODELING capabilities and the proposed `GTM-PLAN-TERRITORY`, `GTM-PLAN-CAPACITY`, `GTM-PLAN-SCENARIO` modules relocate. The largest blast radius of any candidate; surfaces in the next SALES-PLANNING-PLATFORM triage decision.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Triage
+
+The B1 surface in the 2026-05-30 audit lists 6 in-scope items (`B1-A1`, `B1-M1`, `B1-V1`, `B1-V2`, `B1-V3`, `B1-V4`). Classified against the truly-technical vs deferred criteria for this continuation pass, every item is deferred. The domain has 0 masters, 0 modules, 0 handoffs in either direction, 0 trigger_events, 0 lifecycle_states, 0 system skills, 0 roles, 0 `domain_regulations`, 0 `domain_aliases`. Live state was re-verified (`/domain_modules?domain_id=eq.104`, `/handoffs?or=(source_domain_id.eq.104,target_domain_id.eq.104)`, `/domain_data_objects?domain_id=eq.104`, `/domain_regulations?domain_id=eq.104` all return `[]`). With no masters and no modules, none of the technical fix categories (enum backfills, B10b FK backfills on existing handoff rows, naming-convention renames, `data_object_relationships` user-edges, `permission_verb_override`, `handoff_processes` APQC tagging) has any source rows to act on, and the audit pre-specifies none of them anyway.
+
+### Fixes applied
+
+| B1 ID | Action | Row counts |
+|---|---|---|
+| (none) | No technical fixes applied. | 0 inserts / 0 PATCHes / 0 deletes |
+
+### Deferred B1 items
+
+| B1 ID | Why deferred |
+|---|---|
+| B1-A1 | `catalog_tagline` and `catalog_description` writes are explicitly excluded from technical-fix scope (Rule #20: drafts require user approval before PATCH). |
+| B1-M1 | New `domain_modules` rows are explicitly excluded from technical-fix scope. Also gated on `B2-M1` (which of 8 / 5 / 3-module shape), `B2-S1` (PMM promotion), `B2-S2` (ABM-PLATFORM promotion), and Bucket 3 candidates 1, 2, 3 (any of which would shrink the module set). |
+| B1-V1 | `gtm_plans` master: new `data_objects` / `domain_module_data_objects` masters are excluded from technical-fix scope and gated on `B1-M1`. |
+| B1-V2 | `ideal_customer_profiles` master: same as B1-V1; additionally gated on `B2-S2` / Bucket 3 candidate 2 (ABM-PLATFORM may take the ICP surface). |
+| B1-V3 | `target_account_lists` master: same as B1-V1; additionally gated on `B2-S2` / Bucket 3 candidate 2 (ABM-PLATFORM may take this surface). |
+| B1-V4 | `capacity_models` master: same as B1-V1; additionally gated on Bucket 3 candidate 3 (SALES-PLANNING-PLATFORM may take the planning-core surface). |
+
+### UI spot-checks
+
+No writes were applied, so no spot-check links are warranted. For reference, the canonical paths once `B1-M1` lands will be:
+
+- https://tests.semantius.app/domain_map/domain_modules
+- https://tests.semantius.app/domain_map/domain_data_objects
+- https://tests.semantius.app/domain_map/domains
+
+### Loader
+
+No loader written. The pass intentionally ended at the triage step because the B1 surface contains no technical action items for this domain.

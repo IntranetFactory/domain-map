@@ -158,3 +158,31 @@ These items are flagged for the named domain's own b1 audit. They are NOT in TLN
   - **SWP B9 owes outbound** on `skills_gap_analysis.published` -> TLNT-INTEL-INSIGHTS (consumer on skills_gap_analyses).
 
 These are not blockers for TLNT-INTEL's own pass, they are observations the user can act on by scheduling b1 audits on the source domains. Surfacing here keeps the boundary state legible.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Classified all 13 Bucket 1 items against the truly-technical apply list (enum backfills audit pre-specifies, B10b FK PATCHes derivable from existing modules, INSERT `domain_regulations` to existing rows, DELETE stale rows audit names with IDs, naming renames, Rule #10 user-edge `data_object_relationships` audit pre-specifies, `permission_verb_override` audit names state+verb, `handoff_processes` ONLY when audit pre-specifies `handoff_id` + resolvable PCF).
+
+**Result: 0 technical fixes applied. All 13 B1 items deferred.**
+
+| Item | Defer reason |
+|---|---|
+| B1-S1 | New `trigger_events` inserts (not in technical apply list, new entity creation). |
+| B1-S2 | New `handoffs` inserts (not in technical apply list); also depends on S1 and on B2-T3 `integration_pattern` user decision. |
+| B1-S3 | New intra-domain `handoffs` inserts; depends on S1. |
+| B1-S4 | Audit explicitly says "Surface to user. Default recommendation: leave as-is". Not pre-specified Rule #10 edge. |
+| B1-S5 | New cross-domain `data_object_relationships`; depends on S2 (B2-T2 type questions), and audit says targets need verification, not pre-specified. |
+| B1-S6 | New `data_object_aliases` inserts (not in technical apply list); also has open 863-vs-861 placement question. |
+| B1-S7 | New lifecycle states; depends on B2-T1 per-master config-shape exemption user decision. |
+| B1-S8 | APQC `handoff_processes` cannot be applied: no `handoff_id` exists yet (S2 deferred); explicitly defer until S1+S2 land. |
+| B1-S9 | New `role_modules` / `role_permissions` rows; depends on B2-T2 `MARKETPLACE-OPS` role user decision. |
+| B1-S10 | Placeholder for symmetry; vacuous until B1-S1 lands. |
+| B1-S11 | "Pattern flag flips" explicitly DEFER per prompt; also depends on B1-S7. |
+| B1-S12 | Same as B1-S8 (APQC tagging follow-up batch). |
+| B1-S13 | Report-only follow-up owed by other domains (ATS / HCM / TALENT-MGMT / SWP), not actionable on TLNT-INTEL. |
+
+No PATCH enum backfills, B10b FK PATCHes, `domain_regulations` inserts, stale-row DELETEs, naming renames, pre-specified Rule #10 user-edges, `permission_verb_override` PATCHes, or applicable `handoff_processes` rows were named in the audit. No loader was authored (would have been empty).
+
+No JWT errors encountered (no Semantius writes attempted).
+
+Audit remains in `status: feedback_needed`; all 13 B1 items still require user input per the bucket prompts above before any work can proceed.

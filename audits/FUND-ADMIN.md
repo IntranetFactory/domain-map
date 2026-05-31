@@ -167,3 +167,43 @@ _(empty until user reviews; agent flips status to feedback_needed below)_
 ### Fixes applied
 
 _(none in this pass; read-only audit only)_
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+### Scope
+
+Residual B1 items from the 2026-05-30 audit that were strictly technical (no user judgment required) and pre-specified enough to load: PATCH enum backfills, INSERT to existing rows, INSERT user-edges that the audit named row-by-row, INSERT `handoff_processes` for the proposals where both `handoff_id` and a resolvable PCF `process_id` were named.
+
+Loader: [.tmp_deploy/fix_fund_admin_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_fund_admin_b1_technical_2026_05_31.ts). Idempotent.
+
+### Fixes applied
+
+| ID | Action | Rows | Detail |
+|---|---|---|---|
+| B1-S4 | PATCH `data_object_lifecycle_states.domain_module_id` | 13 | `funds` (5: ids 449-453) -> module 12 (FUND-LEDGER); `lp_commitments` (4: ids 454-457) -> module 13 (LP-COMMITMENTS); `fund_distributions` (4: ids 458-461) -> module 15 (DISTRIBUTIONS). The two `requires_permission=true` states (`funds.final_close` id 450, `fund_distributions.declared` id 459) now materialize against the right `<domain_module_code>:` prefix. |
+| B1-M2 | INSERT `domain_regulations` | 2 | AIFMD (regulation_id 41) + FATCA (50) -> FUND-ADMIN (160), both `applicability='mandatory'`. SEC Marketing Rule, ILPA Reporting Standards, CRS, and the Cayman Mutual Funds Law are deferred because the underlying `regulations` rows do not yet exist (B1-M1 new-entity work). |
+| B1-S3 | INSERT `data_object_relationships` user-edges (Rule #10) | 10 | `related_data_object_id=748` (`users`), `relationship_type=many_to_many`, `relationship_kind=reference`, `owner_side=source`, `is_required=false`. Per-actor edges: `fund_ledger_entries` (posted by); `fund_close_periods` (closed by, approved by); `lp_subscriptions` (onboarded by, reviewed by); `pcap_statements` (prepared by, approved by); `capital_call_responses` (booked by); `waterfall_calculations` (calculated by, approved by). |
+| B1-H1 | INSERT `handoff_processes` (agent_curated, additive) | 4 | H1b: handoff 1041 -> process 1480 (PCF 10911, "Process and oversee debt and investment transactions"). H1c: handoff 1042 -> process 1422 (PCF 10862, "Process and distribute payments"). H1d: handoff 1043 -> process 56 (PCF 10730, "Perform general accounting and reporting"). H1f: handoff 1038 -> process 310 (PCF 10751, "Perform capital planning and project approval"). All `proposal_source='agent_curated'`, `record_status='new'` by default. Additive to any pre-existing tags on the same handoffs. |
+
+### Deferred this pass
+
+- **B1-M1** (new `regulations` rows for SEC-MKT-RULE, ILPA, CRS, Cayman): new-entity work, deferred.
+- **B1-W1..W4** (`subscription_documents`, `lp_kyc_records`, `distribution_notices`, `capital_call_notices`): new data_objects, deferred.
+- **B1-S1** (`catalog_tagline` / `catalog_description`): Rule #20 requires explicit user approval of the wording before write.
+- **B1-S2** (pattern flag flips on `capital_call_notices`, `distribution_notices`, `waterfall_calculations`): the audit phrases these as "re-evaluate" / "needs", which is a user-judgment flip, not a pre-specified PATCH; also depends on B1-W3/W4 for the notice entities.
+- **B1-S5** (`capital_calls` / `fund_distributions` legacy `master` rows on RE-INVEST domain 146, ids 597 + 598): the audit explicitly classifies this as report-only on the FUND-ADMIN side and owed by the RE-INVEST audit. Not deleted here.
+- **B1-L1..L7** (new lifecycle states + trigger events on `lp_subscriptions`, `pcap_statements`, `capital_calls`, `fund_close_periods`, `capital_call_responses`, `waterfall_calculations`, `fund_ledger_entries`): new entities, deferred. The `fund_ledger_entries` config-shape exemption (L7) requires user surfacing, not auto-write.
+- **B1-B9b** (5 proposed intra-domain handoffs): the audit names module pairs and trigger events but several events are "or a new one" (not pre-specified). Defer until the trigger_event_ids are resolved or new ones are loaded as part of B1-L1..L6.
+- **B1-H1a** (handoff 1040): audit confidence "medium" with explicit "recommend... deferring to Pass 3 review"; superseding the existing `discovery_substring` tag is a user decision.
+- **B1-H1e** (handoff 1044): audit annotates the PCF as "verify external_id; may be 10911 + 10913", so the PCF is not pre-resolved.
+- **B1-H1g** (handoff 1046): audit confidence "low" with "better candidate would be a Phase 0 search"; not technical.
+- **Bucket 2** (6 judgment items) and **Bucket 3** (6 Phase 0 candidates): out of scope for a technical pass.
+
+### Verification
+
+- `/data_object_lifecycle_states?data_object_id=in.(755,759,368)&select=data_object_id,state_name,domain_module_id`: all 13 rows now carry the expected `domain_module_id`.
+- `/domain_regulations?domain_id=eq.160`: 2 rows (AIFMD id 270, FATCA id 271).
+- `/data_object_relationships?related_data_object_id=eq.748&data_object_id=in.(756,757,758,760,761,762)`: 10 user-edges present (ids 1897-1906).
+- `/handoff_processes?handoff_id=in.(1038,1041,1042,1043)`: the 4 new rows are present (ids 761-764) alongside any pre-existing tags.
+
+UI link: https://tests.semantius.app/domain_map/data_object_lifecycle_states

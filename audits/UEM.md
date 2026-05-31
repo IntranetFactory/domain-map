@@ -200,3 +200,38 @@ These are NOT in-scope for the UEM fix-load. The user can schedule audits on the
 | IGA B10b | IGA | Inbound to UEM via `IGA-AUTO-PROVISIONING` already has `target_domain_module_id=148` populated on the UEM-side rows, no IGA-side gap today. Recorded as PASS for completeness. |
 | ITSM B10b | ITSM | Inbound from UEM to `ITSM-INCIDENT-MGMT` rows (655, 660, 663) carry `target_domain_module_id=38` already. PASS. |
 | IGA B8 mirror | IGA | The 4 cross-domain relationship rows mirroring UEM to IGA handoffs (e.g. `enrolled_devices triggers access_decisions`) are inbound from IGA's perspective. UEM should author the outbound side (B1-S11); IGA authors the inverse pairing on its own B8 pass. |
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Strict technical-only pass per the parent prompt's license. New entities, module set, pattern flag flips, lifecycle states, catalog UX, vendor inserts, and gated-on-B1-S1 items all deferred.
+
+### Applied
+
+- **B1-B2 (PATCH enum backfill).** All 12 UEM `trigger_events` (665-676) had `event_category=""`. Patched per audit's pre-specification: 665, 666, 667, 668, 669, 671, 672, 674, 676 to `state_change`; 670, 673, 675 to `lifecycle`. Verified post-write. Cures Rule #13 enum violation across the entire UEM event set.
+- **B1-S9 (Rule #10 user-edges).** Inserted 6 `data_object_relationships` rows from UEM masters to platform built-in `users` (id 748, kind=`platform_builtin`, verified). Label convention `<plural_master> has <role> users`, all `many_to_many` / `owner_side=source` / `relationship_kind=reference`. Roles per audit pre-spec: `enrolled_devices has assigned users`, `enrolled_devices has last seen users`, `enrollment_tokens has issued to users`, `device_configuration_profiles has created by users`, `device_compliance_policies has owned by users`, `mobile_app_packages has uploaded by users`. (Audit's count of "5 rows" was a miscount; 5 distinct masters but 6 distinct role-tuples were listed. All 6 loaded.)
+- **APQC TAGGING (handoff_processes).** Inserted 8 `handoff_processes` rows for the 8 audit-pre-specified (handoff_id, process_id) pairs. All 8 handoffs and all 6 PCF processes (1299, 273, 355, 1196, 271, 1197) pre-flight verified. Pairs loaded: 655 to 1299, 656 to 273, 657 to 355, 658 to 1196, 659 to 271, 660 to 1299, 661 to 1197, 663 to 1299. `role='implements'`, `proposal_source='agent_curated'`. Handoff 662 (UEM to SAM, deferred per audit) NOT loaded.
+
+### Deferred (carried forward for the user)
+
+| ID | Reason |
+|---|---|
+| B1-S1 (modules) | New entity / module authoring; also Bucket 2 #1 requires user to pick module-split shape (4-module proposed vs 3-/5-module alternatives). |
+| B1-S2 (capability to module link) | Gated on B1-S1. |
+| B1-S3 (lifecycle state `domain_module_id`) | Gated on B1-S1. |
+| B1-S4 (catalog_tagline / catalog_description) | Rule #20 forbids agent-authored buyer-voice prose without user approval. |
+| B1-S5 (pure-play UEM vendors and solutions) | New entities; also requires user judgment on coverage_level rebalancing for the existing 5 RMM rows (Bucket 2 #6). |
+| B1-S6 (data_object_aliases) | Beyond exact-tuple license; audit lists "1-3 each" loose ranges, not pre-specified exact alias_name + vendor + master triples. |
+| B1-S7 (lifecycle states) | New entity authoring (Rule #12 / B12); audit's listed states are draft proposals. |
+| B1-S8 (pattern flags) | Audit explicitly says "after the user confirms each". |
+| B1-S10 (intra-domain data_object_relationships) | Not Rule #10 user-edges; audit lists shapes but not the precise verb / cardinality / necessity / owner_side tuples required for non-user edges. |
+| B1-S11 (cross-domain mirror relationships) | New INSERTs to other-domain masters; targets like `access_grants`, `access_decisions`, `software_entitlements` not verified to exist; cross-domain authoring better surfaced as a Bucket-2 decision. |
+| B1-B1 (handoff source_domain_module_id backfill) | Gated on B1-S1. |
+| B1-B3 (delete legacy skill 114) | Gated on B1-S1 (the 4 per-module system skills must exist before the 8 query tools redistribute off skill 114). |
+| B1-M1 through B1-M7 (7 new masters) | New `data_objects` and DMDOs. |
+
+### Notes
+
+- No JWT errors during the run.
+- All operations idempotent: re-running the loader is safe (will skip the now-present rows).
+- Loader path: [c:/dev/domain-map/.tmp_deploy/fix_uem_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_uem_b1_technical_2026_05_31.ts).
+- UI: https://tests.semantius.app/domain_map/trigger_events , https://tests.semantius.app/domain_map/data_object_relationships , https://tests.semantius.app/domain_map/handoff_processes .

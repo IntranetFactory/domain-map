@@ -202,3 +202,48 @@ _none; this audit is read-only per the mass-audit subagent prompt_
 ### `domains.notes` pointer (if updated)
 
 _not yet written; will require user-approved wording per Rule #15_
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+### Scope
+
+Residual B1 pass: applied the strictly-technical subset of the 2026-05-30 audit, items whose tuples were fully pre-specified and required no judgment or new-entity authoring. Loader at [.tmp_deploy/fix_vsdp_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_vsdp_b1_technical_2026_05_31.ts).
+
+### Fixes applied
+
+| Audit ID | Action | Detail |
+|---|---|---|
+| B1-S6 | PATCH 13 `trigger_events.event_category` | ids 844-856 backfilled with `lifecycle` / `state_change` / `signal` / `threshold` per audit's Rule #13 mapping. Verified post-write: 0 rows still empty. |
+| B1-SC1 | DELETE `solution_domains` row 527 | Pre-check confirmed `solution_id=400` (Jira Product Discovery), `domain_id=80`. Row removed; VSDP solution_domains now empty pending Bucket 2 #2. |
+| APQC outbound | INSERT 9 `handoff_processes` rows | One row per outbound handoff (770, 771, 772, 773, 774, 775, 776, 777, 800) with audit's proposed PCF anchors (1262, 1939, 85, 1262, 1265, 281, 281, 85, 1262), `role='implements'`, `proposal_source='agent_curated'`, `record_status` defaulted to `new`. PCF rows verified present pre-insert. None of the (handoff_id, process_id) tuples existed prior; pre-existing rows on handoffs 771 (process 170) and 775 (process 1262) stand alongside as additional `implements` rows. |
+
+### Deferred items (still open in original audit)
+
+Not actioned this pass because they require new-entity creation, user judgment, or are gated on B2-X decisions:
+
+- **B1-S1** (modules): new entities, gated on Bucket 2 #1 module-shape decision.
+- **B1-S2** (capabilities): new entities, options 3-5, user picks.
+- **B1-S3** (entity edges + user edges): audit names entity pairs and actor types but does NOT pre-specify exact (data_object_id, related_data_object_id, relationship_verb, owner_side, relationship_label) tuples; verb choices need authoring discipline.
+- **B1-S4** (roles): new entities, Phase E.
+- **B1-S5** (skill rewire): gated on B1-S1 modules.
+- **B1-S7** (lifecycle states): gated on B1-S1 modules; plus config-shape exemption decision for `value_stream_metrics` owed to user.
+- **B1-B1** (NULL FK backfill on 19 handoffs): mechanically gated on B1-S1 modules existing.
+- **Inbound APQC tags** (10 handoffs: 616, 617, 747, 754, 758, 762, 778, 782, 794, 801): owed by source-domain audits per report-only routing rule, listed in original audit's "Report-only follow-ups".
+- **Bucket 2** (all 6 items): user judgment.
+- **Bucket 3** (15 candidates): Phase 0 vetting required.
+
+Deferred count: 8 audit items + Bucket 2 (6) + Bucket 3 (15) = 29 items still open.
+
+### Verification
+
+```
+GET /trigger_events?id=in.(844..856)&select=id,event_category   # all populated
+GET /solution_domains?domain_id=eq.80                            # empty
+GET /handoff_processes?handoff_id=in.(770..777,800)&proposal_source=eq.agent_curated
+```
+
+UI spot-check links:
+
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/solution_domains
+- https://tests.semantius.app/domain_map/handoff_processes

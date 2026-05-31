@@ -166,3 +166,31 @@ The asymmetry rule (B8 inbound, B10b counterparty side) routes the following ite
 - **APQC TAGGING — inbound side** (13 inbound handoffs) belongs to the source domain's audit per the asymmetry rule. Each of WORK-MGMT, EPM, SEM, APM, ITOM, HAM, DCIM, VSDP, BPA owes inbound-direction APQC classification for the row landing in SPM.
 
 None of these block SPM's audit completion. The user may schedule audits on those domains to clear the cross-domain backlog.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Applied
+
+- **B1-S2 (B9 `event_category` enum backfill, 4 SPM-owned events).** Per Rule #13's allowed values (`lifecycle / state_change / threshold / signal`), PATCHed the 4 `trigger_events` rows the audit pre-specified:
+  - 872 `business_value_assessment.completed` -> `lifecycle`
+  - 873 `dependency_chain.identified` -> `signal`
+  - 874 `benefits_tracking_record.realized` -> `lifecycle`
+  - 875 `benefits_tracking_record.at_risk` -> `threshold`
+
+  Loader: `.tmp_deploy/fix_spm_b1_technical_2026_05_31.ts` (preflight read, PATCH per row, postflight verify, all four match intended values).
+
+### Deferred (still gated, no live state change)
+
+- **B1-S1 (M1 modules cascade).** Gated on B2-S1 (SPM vs. SEM duplication decision). User-owned editorial call.
+- **B1-S3 (B7 `users` edges).** Audit lists target masters and actor roles in prose but explicitly blocks until B1-S1 lands so the verbs settle against the chosen module shape. Not pre-specified as exact `data_object_relationships` tuples per Rule #10.
+- **B1-S4 (B11 aliases).** No exact `(data_object_id, alias_name)` tuples pre-specified in the audit, only vendor categories. Deferred per the "no bulk `data_object_aliases` without exact tuples" rule.
+- **B1-S5 (F1 legacy `spm-system` skill).** Gated on B1-S1 / B2-S1; the re-anchor-or-delete choice depends on the chosen module shape.
+- **B1-S6 (B12 lifecycle states).** Gated on B1-S1 and B2-S3 (`dependency_chains` config-shape exemption).
+- **B1-S7 (B4 pattern flags).** Surfaced to Bucket 2 B2-S2 for per-flag user decision.
+- **B1-S8 (B10b `source_domain_module_id` backfill).** Gated on B1-S1, no SPM modules exist yet.
+- **B1-S9 (B9b intra-domain handoffs).** Gated on B1-S1, "≥2 modules" precondition currently false.
+- **APQC tagging rolled-up table.** Per the audit, "All 12 confident rows ship together via `handoff_processes` INSERT after B1-S1 unblocks." Deferred until module shape lands.
+
+### Frontmatter
+
+Left untouched per the subagent contract; the open-questions count and status reflect Bucket 2 / Bucket 3 backlog, which is unchanged by this technical pass.

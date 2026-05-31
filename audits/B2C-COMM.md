@@ -198,3 +198,46 @@ _(awaiting user input per bucket)_
 ### Fixes applied
 
 _(none yet, audit only)_
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+### Summary
+
+Applied truly-technical, audit-pre-specified items via `.tmp_deploy/fix_b2c_comm_b1_technical_2026_05_31.ts`. Per the residual-pass scope, only fixes matching the technical-apply list ran. Judgment-shaped items (modules, lifecycle states, full users-edge / alias inserts, channel-vs-capability flips, parent-domain rethink) remain deferred to the next round.
+
+### Fixes applied
+
+| Audit ID | Type | Action | Rows |
+|---|---|---|---|
+| B1-S1 | PATCH | `domains.id=71` `business_logic`: replace U+2014 between "service" and "the runtime" with a colon. | 1 |
+| B1-S5 | PATCH (enum backfill) | `trigger_events` ids 506-514: set `event_category` per audit mapping (506 / 508 / 509 / 511 / 512 / 514 = `state_change`; 507 / 510 / 513 = `lifecycle`). | 9 |
+| B1-S12 | PATCH (Rule #15 revert) | `skill_tools` ids 314 / 315 / 316 / 317 (skill_id=24, tools `execute_payment` / `send_email` / `query_customers` / `query_customer_subscriptions`): `notes` reverted to `''`. Pre-revert text matched the forbidden "channel-justification prose" / restated-cardinality patterns. | 4 |
+| B1-H1 | INSERT | `handoff_processes`: 3 pairs where the audit pre-specifies a confident PCF AND the PCF resolves uniquely in the live `processes` table. 323 -> 150 ("Manage sales orders"); 324 -> 132 ("Design and manage customer loyalty program"); 498 -> 132 (same; LOYALTY -> B2C-COMM redemption). `role='implements'`, `proposal_source='agent_curated'`, `record_status` omitted (default `'new'`). | 3 |
+
+### Deferred (out of scope for this technical pass)
+
+| Audit ID | Reason |
+|---|---|
+| B1-S2 | New `domain_modules` (3 or 4 rows) + DMDOs + capability links. New entities; gated on user B2-S5 / B2-S6 module-shape decision. |
+| B1-S3 | Intra-domain master-to-master `data_object_relationships`. Audit names the chain but not the (verb, inverse_verb, cardinality, kind, owner_side, is_required) tuples. |
+| B1-S4 | `users` edges per Rule #10. Audit names actor mapping per master but not exact (verb, inverse_verb, cardinality, owner_side) tuples; "user picks". |
+| B1-S6 | `data_object_aliases` bulk. Audit lists candidate alias names but not per-row (alias_type, is_preferred); bulk insert is opt-in per the technical scope rule and requires per-row arbitration. |
+| B1-S7 | Lifecycle states. Judgment ("decide" shape; per-state verb + permission flags + module realizer). |
+| B1-S8, B1-S9 | B10b handoff `source/target_domain_module_id` backfill. Gated on B1-S2. |
+| B1-S10 | Legacy skill 24 retirement + 3-way `skill_tools` redistribution. Sequenced after B1-S2. |
+| B1-S11 | `send_email` -> `notify_person` (channel-vs-capability). Sequenced after B1-S2 / B1-S10. |
+| B1-H1 (other) | 17 of 20 candidate (handoff_id, PCF) pairs deferred: PCF activities named in audit not present as named rows in live `/processes` (Process customer credits, Manage marketing content, Manage product master data, Develop and manage marketing campaigns, Issue customer credit, Process customer orders, Manage customer service requests). Refinements of existing 80 / 329 / 505 also deferred (DELETE+INSERT is judgment). |
+| B2-S1..S6 | Bucket 2 judgment (PII flag flips, parent_domain reshape, B2B ownership override, module-split choice). |
+| B3-S1..S4 | Phase 0 speculative (new master clusters). |
+
+### Loader
+
+`c:/dev/domain-map/.tmp_deploy/fix_b2c_comm_b1_technical_2026_05_31.ts`. Idempotent; existence-of-key skip on handoff_processes; PATCHes skip when current value already matches target.
+
+### UI spot-check links
+
+- https://tests.semantius.app/domain_map/domains
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/skill_tools
+- https://tests.semantius.app/domain_map/handoff_processes
+

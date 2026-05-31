@@ -166,3 +166,36 @@ These items are owed by other domains' next audits; the fix does NOT live in VIS
   - **VIS-MGMT <-> IGA:** 1 outbound handoff + 1 inbound DMDO consumer. Clean structurally (handoff has target module FK; DMDO is loaded). No B-band gaps from VIS-MGMT's side. PACS candidate (queued) may change the IGA target for badge-handoff rows when loaded.
   - **VIS-MGMT <-> GRC:** 1 outbound handoff with `target_domain_module_id=NULL` - GRC owes the backfill. Compliance-evidence relationship is loaded.
   - **VIS-MGMT <-> HCM:** 1 outbound handoff with `target_domain_module_id=NULL` - HCM owes the backfill. `host_assignments` -> `employees` relationship is loaded.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the truly-technical subset of the B1 backlog via [.tmp_deploy/fix_vis_mgmt_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_vis_mgmt_b1_technical_2026_05_31.ts). Total B1 items in the prior audit: 17 (S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, M1, M2, M3, M4, M5, M6, M7) plus B1 (trigger-event subscriber sweep, with sub-items T1-T6) plus APQC TAGGING (3 cross-domain handoffs).
+
+### Applied
+
+- **APQC TAGGING (H1):** inserted 3 `handoff_processes` rows for the currently-loaded outbound handoffs. Audit pre-specified `handoff_id` + PCF `process_id` for each; all three PCFs verified live before insert (`processes` 1523 / 1540 / 1570 are confirmed `apqc_pcf_cross_industry` rows at hierarchy_level 4); `handoff_processes` rows for these `handoff_id`s confirmed absent before insert.
+  - handoff 871 (VIS-MGMT -> IGA, `visitor_registration.submitted`) -> process 1523 'Provide facility access and security' (PCF external_id 21690).
+  - handoff 872 (VIS-MGMT -> GRC, `visitor_audit_log.sealed`) -> process 1570 'Manage compliance audits' (PCF external_id 12183).
+  - handoff 873 (VIS-MGMT -> HCM, `host_notification.sent`) -> process 1540 'Manage safety, security, and access to sites' (PCF external_id 19228).
+  - All loaded with `proposal_source='agent_curated'`; `record_status` omitted so the `new` default applies (Rule #1).
+
+### Deferred (16 items + sub-items)
+
+- **B1-S1 (modules), B1-S2 (capabilities), B1-M1..M7 (new entities), B1-T1..T6 (new outbound handoffs):** all create new entities; outside the truly-technical screen.
+- **B1-S3 (`catalog_tagline` + `catalog_description`):** Rule #20 requires buyer-voice draft + user review BEFORE writing.
+- **B1-S4 (`business_logic`):** audit explicitly says 'surface to user'.
+- **B1-S5 (DELETE legacy skill 117) + B1-S6 (channel-primitive replacement):** gated on B1-S1 modules existing; cannot retire the domain-level skill before per-module skills are authored.
+- **B1-S7 (B10b `source_domain_module_id` backfill on handoffs 871/872/873):** the source modules do not yet exist (VIS-MGMT has zero `domain_modules` rows), so the per-master resolution rule has nothing to resolve to. Becomes derivable once B1-S1 lands.
+- **B1-S8 (`relationship_verb` rename of `logged_in`):** audit explicitly says 'surface to user for the exact wording'.
+- **B1-S9 (lifecycle states across 8 masters):** gated on B1-S1 modules (states need `domain_module_id` set per Rule M5).
+- **B1-S10 (pattern flag flips `has_personal_content` / `has_submit_lock`):** per the orchestrator's truly-technical screen, pattern flag flips are deferred; live state confirmed all 8 masters at `false` for all three flags.
+- **Bucket 2 #3 / #4 (GDPR / CCPA / OSHA regulation linkage):** audit surfaces as 'options:' multi-choice; user picks. Also the regulations themselves are not currently in the catalog (separate research load).
+- **Bucket 3 (Phase 0 candidates):** speculative, requires vendor-research pass.
+
+### Audit blockers still open
+
+The structural rebuild is unchanged: M1 fails (0 modules), A2 fails (0 capabilities), A4 fails (empty catalog UX fields), B-band gaps on lifecycle states + pattern flags + intra-domain handoffs + (after B1-S1) B10b backfill. The single technical pass closes H1 for the three currently-loaded handoffs; everything else needs the user decisions in Bucket 2 #1 (2-module vs 3-module split) before fixes can proceed.
+
+### UI spot-check
+
+- https://tests.semantius.app/domain_map/handoff_processes

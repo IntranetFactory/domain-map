@@ -206,3 +206,32 @@ After the gap report is surfaced, the orchestrator should prompt the user with t
 - **FLEET-MGMT B8 owes (inbound mirror):** the 2 inbound from FLEET-MGMT (875 `fleet_vehicle.acquired`, 313 `vehicle_inspection.failed`) each imply a FLEET-MGMT-side outbound `data_object_relationships` row that lives on FLEET-MGMT's B8 pass (the FLEET-MGMT 2026-05-30 audit already enumerates B1-X1 + B1-X2 covering these in spirit).
 - **TELEMATICS B8 owes (inbound mirror):** the 2 inbound from TELEMATICS (312, 881) imply TELEMATICS-side outbound relationship rows. Lives on TELEMATICS' B8 once that domain is audited.
 - **EAM B8 owes (existing inbound, already partially loaded):** the EAM-side row `eam_work_orders aggregates vehicle_work_orders` is the inbound mirror of B1-X3; EAM may add a `is_required` or `owner_side` PATCH but the row exists.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Applied
+
+- **B1-S4 (intra-domain `data_object_relationships`):** 4 of 5 audit-pre-specified rows inserted via [.tmp_deploy/fix_fleet_maint_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_fleet_maint_b1_technical_2026_05_31.ts). Row ids `1912` (R1: `preventive_maintenance_schedules generates vehicle_work_orders`), `1913` (R2: `maintenance_defects routes_to vehicle_work_orders`, owner_side=target), `1914` (R3: `vehicle_work_orders consumes vehicle_parts_inventory`, many_to_many association), `1915` (R4: `preventive_maintenance_schedules requires vehicle_parts_inventory`, many_to_many association). All `record_status=new`, `notes=''`.
+- **B1-S5 (Rule #10 users edges):** 4 audit-pre-specified rows inserted in the same loader. Row ids `1916` (U1: `vehicle_work_orders assigned_to users`, many_to_many, owner=source), `1917` (U2: `maintenance_defects reported_by users`, owner=target), `1918` (U3: `vehicle_parts_inventory adjusted_by users`, owner=target), `1919` (U4: `preventive_maintenance_schedules authored_by users`, owner=target). All `record_status=new`, `notes=''`.
+
+### Deferred
+
+- **B1-S4 R5** (`maintenance_defects triggers_revision preventive_maintenance_schedules`, audit-specified `many_to_one`): the `data_object_relationships.relationship_type` enum is `one_to_one | one_to_many | many_to_many`, no `many_to_one`. Re-encoding by swapping source/target would drift from the audit's literal tuple shape. Surface for the user to either (a) approve swapped encoding (source=PM_schedules, related=defects, one_to_many, owner=target, verb=revised_via / inverse=triggers_revision), or (b) approve a different cardinality (e.g. one_to_many keeping audit verb direction).
+- **B1-S1** (module split, 3 full modules): Bucket 2 #1 user pick.
+- **B1-S2** (catalog_tagline / catalog_description): Rule #20, surface to user before write.
+- **B1-S3** (pattern flags `has_submit_lock` on `vehicle_work_orders`, `has_personal_content` on `maintenance_defects`): audit says "after user confirmation" + Bucket 2 #2.
+- **B1-S6** (B8 outbound cross-domain rels X1-X3): X1 (`ap_invoices`) and X2 (`gl_inventory_postings`) target data_objects do not exist in the catalog (`/data_objects?or=(data_object_name.eq.ap_invoices,data_object_name.eq.gl_inventory_postings)` returned `[]`). X3 (`vehicle_work_orders -> eam_work_orders`) is the inverse of the pre-existing row 640 (`eam aggregates vehicle_work_orders`, owner_side=target), already covered from EAM's side per the audit's report-only note.
+- **B1-S7** (intra-domain handoffs after modules land), **B1-S9** (B10b FK PATCHes), **B1-S12** + **B1-S13** (module-scoped skills redistribute, legacy skill 59 DELETE), **B1-S14** (`send_email -> notify_person` PATCH or DELETE): all gated on B1-S1 (module split).
+- **B1-S8** (handoff 312 event-attribution defect): Bucket 2 #4 user pick.
+- **B1-S10** (`data_object_aliases`, 12-16 rows): rule "no bulk `data_object_aliases` inserts unless audit pre-specifies exact tuples" — audit gives vendor lexicon hints not exact tuples.
+- **B1-S11** (lifecycle states + `permission_verb_override`): no lifecycle states authored yet; `permission_verb_override` PATCH would only apply once states exist. State machines themselves need user authoring per audit shape.
+- **B1-S15** (`sign_document` rationale): Bucket 2 #6 user pick.
+- **B1-S16** (`domain_regulations` floor set, 4-6 rows): the underlying `regulations` rows (FMCSA Part 396, FMCSA Part 393, NHTSA 49 CFR 573, EPA emissions, OSHA 29 CFR 1910) do not exist in the catalog (filters by `regulation_name ilike` and `regulation_code ilike` against `*FMCSA*`, `*NHTSA*`, `*EPA*`, `*OSHA*`, `*Magnuson*`, `*RCRA*`, `*396*`, `*393*`, `*573*`, `*1910*` all returned `[]`). Per audit: "if any regulation rows are missing from `regulations`, that is an upstream load gap (separate fix)."
+
+### JWT errors
+
+None.
+
+### Loader
+
+[`.tmp_deploy/fix_fleet_maint_b1_technical_2026_05_31.ts`](../.tmp_deploy/fix_fleet_maint_b1_technical_2026_05_31.ts), 8 inserts, 0 skips on first run.

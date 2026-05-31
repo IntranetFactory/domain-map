@@ -205,3 +205,29 @@ These items are NOT in-scope for OMS's fix-load but are surfaced so the user can
 - **CSM B10b:** target_module_id NULL on 3 OMS-outbound rows (985, 987, 992). Schedule CSM b1.
 - **CRM B10b:** 2 outbound rows already have target_module_id=46 (CRM-ACCT-MGT) but source_module_id NULL (own work). CRM has no additional B10b owed by OMS.
 - **INV-MGMT B5:** 2 broken-pointer DMDO rows (INV-CORE-STOCK 61 `embedded_master + required` on `inventory_locations` 425 with no master row catalog-wide; INV-REPLENISHMENT 62 `consumer + required` on `order_allocations` 424 with no master row). Resolved by OMS B1-S1 landing the master rows; no audit work owed on the INV side beyond a re-run of INV-MGMT's B5 to confirm.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent pass per the truly-technical B1 allow-list (enum backfills the audit pre-specifies, FK PATCHes derivable from existing modules, INSERT of `domain_regulations` to existing rows, DELETE of stale rows the audit pre-specifies, naming renames, user-edges Rule #10, `permission_verb_override` PATCHes the audit names, and APQC `handoff_processes` inserts where `handoff_id` + resolvable PCF are pre-specified).
+
+Loader: [.tmp_deploy/fix_oms_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_oms_b1_technical_2026_05_31.ts).
+
+### Applied
+
+- **B1-S7 — `trigger_events.event_category` backfill, 13 rows PATCHed.** Rows 1125, 1127, 1128, 1129, 1130, 1131, 1132, 1133, 1134, 1135, 1136, 1137 -> `state_change`; row 1126 (`inventory_location.capacity_threshold_breached`) -> `threshold`. All 13 OMS-published events now carry a non-empty `event_category` matching the catalog enum.
+- **B1-H1 — APQC `handoff_processes`, 19 rows INSERTed.** All 19 cross-domain handoffs in the audit's APQC TAGGING table are now tagged. Pre-flight verified every referenced `handoff_id` and every referenced `process_id` resolve and that all 11 distinct PCF processes carry `source_framework='apqc_pcf_cross_industry'`. Rows landed with `role='implements'`, `proposal_source='agent_curated'`, and `record_status` omitted (defaults to `new` per Rule #1). The two `medium`-confidence rows in the audit (991 -> 855 picking; 995 -> 850 returns-flow) landed at the primary candidate; the alternative remains open for user re-routing at approval time.
+
+### Deferred (count: 9)
+
+- **B1-S1 (modules), B1-S2 (capabilities)** — out of scope; require new entities/modules, which the subagent pass does not author.
+- **B1-S3 (`catalog_tagline` / `catalog_description`)** — Rule #20 buyer-voice copy; surface-to-user only.
+- **B1-S4 (intra-domain + cross-domain `data_object_relationships`)** — audit names verbs and inverse_verbs for ~9 candidate edges but does not pre-specify the full per-row tuple (`relationship_type`, `relationship_kind`, `owner_side`, `is_required`) required for insert. Defer until audit pre-specifies the structural fields or user confirms defaults.
+- **B1-S5 (Rule #10 `users` edges)** — audit lists role candidates (allocator/operator, approver, intake clerk, operator override, picker, customer-service contact) but does not pre-specify exact verb/inverse_verb tuples per master. Defer until tuples are pre-specified.
+- **B1-S6 (`data_object_aliases`)** — bulk; audit lists alias strings but does not pre-specify per-row `alias_type`. Defer per "no bulk data_object_aliases inserts unless audit pre-specifies exact tuples".
+- **B1-S8 (`data_object_lifecycle_states.domain_module_id` PATCH on row 347)** — gated on B1-S1 module landing; no OMS module exists yet to attribute the row to.
+- **B1-S9 (F7 `send_email` -> `notify_person`)** — channel-vs-capability refactor that touches `tools` and `skill_tools`; not in the technical allow-list.
+- **B1-S10 (B10b on other domains)** — owed by B2C-COMM, ERP-FIN, CSM. Report-only from OMS's perspective; nothing derivable from existing OMS modules (OMS has none).
+
+No DELETE of stale rows triggered: audit does not pre-specify any stale row + id to remove. No naming renames triggered: none pre-specified. No `permission_verb_override` PATCHes triggered beyond the already-set state 347 (`approve_return`). No `domain_regulations` inserts triggered: Bucket 3 candidates (GDPR, CCPA, Section 321, EU Omnibus, DAC7) are explicitly speculative and not B1.
+
+No JWT-audience errors occurred during this pass.

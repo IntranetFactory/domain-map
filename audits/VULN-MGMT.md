@@ -193,3 +193,37 @@ _(empty until reviewed)_
 ### Fixes applied
 
 _(empty; this is a read-only audit pass; no writes were made to the catalog)_
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+### Residual B1 classification (no prior Fixes-applied table; all 7 B1 items residual)
+
+| ID | Class | One-line reason |
+|---|---|---|
+| B1-V1 | DEFER | Inserts 4 new modules + 7 new capabilities; explicitly "Gated on B2-V1 and B2-V2", new entities prohibited. |
+| B1-V2 | DEFER | Targets `catalog_tagline` / `catalog_description`; Rule #20 deferred per prompt. |
+| B1-V3 | TECHNICAL | Mechanical PATCH replacing em-dash byte in `domains.business_logic` (naming-style fix; FKs unaffected). |
+| B1-V4 | TECHNICAL | Mechanical PATCH British -> American spelling in `domains.description` (naming-style fix; FKs unaffected). |
+| B1-V5 | DEFER | B10b target FK requires a VULN-MGMT module that does not exist (gated on B1-V1). |
+| B1-V6 | DEFER | APQC `handoff_processes` row requires resolvable PCF; audit gives only "around 10891 / 10912 family", no pre-specified `process_id`. |
+| B1-V7 | DEFER | New `domain_aliases` rows are explicitly deferred per prompt rules; also gated on B2-V6. |
+
+### Fixes applied
+
+| ID | Action | Result |
+|---|---|---|
+| B1-V3 | PATCH `/domains?id=eq.13` `business_logic` to replace U+2014 em-dash with colon: "...risk scoring: the algorithmic surface is the product." | Applied; verified via read-back. |
+| B1-V4 | PATCH `/domains?id=eq.13` `description` "prioritisation" -> "prioritization". | Applied; verified via read-back. |
+
+### Deferred
+
+5 residual B1 items deferred: B1-V1 (new modules + capabilities), B1-V2 (catalog UX fields, Rule #20), B1-V5 (gated on B1-V1), B1-V6 (PCF not pre-specified), B1-V7 (new domain_aliases).
+
+### JWT errors
+
+None encountered.
+
+### Loader
+
+Not used: 2 PATCHes applied directly via CLI per Rule #4 (<= 3 PATCH threshold).
+

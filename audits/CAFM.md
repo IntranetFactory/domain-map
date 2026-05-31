@@ -120,3 +120,49 @@ None directly: CAFM has zero handoffs to mirror. However, the **REAL-EST parent 
 ### Candidates queued to `audits/_missing-domains.md`
 
 - **ENERGY-MGMT (Energy and Utility Cost Management).** Surfaced via Bucket 2 #6: CAFM description explicitly excludes utility tracking, but no separate energy-mgmt domain exists in the catalog. Vendors: ENGIE Impact, Schneider Resource Advisor, Accruent Lucernex Utility, Eptura Sustainability, Watershed (overlapping with carbon accounting). Adjacency: CAFM, REAL-EST, IWMS, EAM, EHS-MGMT (already queued), UTIL-OPS (utility provider operations, distinct buyer-side).
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Scope
+
+Truly-technical B1 pass over the 9 Bucket 1 findings (B1-S1..S8 + B1-M1). Whitelist applied: PATCH enum backfills, B10b FK PATCHes derivable from existing modules, INSERT `domain_regulations` to existing rows, DELETE stale rows audit names with IDs, PATCH naming renames, INSERT `data_object_relationships` user-edges (Rule #10) audit pre-specifies, PATCH `permission_verb_override`, INSERT `handoff_processes` APQC rows ONLY when audit pre-specifies `handoff_id` + resolvable PCF.
+
+Live state re-verified before classification: CAFM (id 142) has 0 `domain_modules`, 0 `domain_data_objects`, 0 `business_function_domains`, 0 `domain_regulations`, 0 handoffs, 0 skills. The audit footprint is accurate; no drift since 2026-05-30.
+
+### Fixes applied
+
+| ID | Action | Result |
+|---|---|---|
+| (none) | (no technical B1 fixes are in scope for this domain) | n/a |
+
+CAFM has zero load-bearing structure (zero modules, zero masters, zero handoffs, zero skills, zero BFDs). Every whitelisted technical operation either requires existing rows to target (B10b FK PATCH, user-edge inserts, permission_verb_override, APQC handoff_process inserts) or requires the audit to pre-specify concrete identifiers (enum backfills, deletes, renames, regulation FKs). Neither precondition holds for any B1 item.
+
+### Deferred
+
+All 9 Bucket 1 items deferred. Counts: structural-band 8 (S1..S8), missing-entity 1 (M1). Reasons:
+
+| ID | Audit fix shape | Defer reason |
+|---|---|---|
+| B1-S1 | Author at least one `domain_modules` row (full module) | New module insert: forbidden by "DEFER: new entities/DMDOs/modules". Also user-judgment branch (1 module vs 2; folds into Bucket 2 #1). |
+| B1-S2 | Draft `catalog_tagline` + `catalog_description` | Explicit Rule #20 / catalog_tagline+description deferral. Also conditional on Bucket 2 #1. |
+| B1-S3 | Insert `business_function_domains` rows: FACILITIES owner, IT/HR contributors | Contributors explicitly forbidden ("DEFER: new business_function_domains contributors/consumers"); the owner insert is not on the technical whitelist either (the whitelist names `domain_regulations` inserts, not `business_function_domains`). |
+| B1-S4 | Research and load `domain_data_objects` rows | "DEFER: new entities/DMDOs/modules" (DMDOs explicitly). Also conditional on Bucket 2 #1 and B1-S1. |
+| B1-S5 | Author system skills per module | "DEFER: full Phase A/M/B/E/F/S loads"; conditional on B1-S1. |
+| B1-S6 | Author roles | "DEFER: full Phase A/M/B/E/F/S loads" (Phase E); conditional on B1-S1. |
+| B1-S7 | Populate `domain_module_capabilities` | Requires modules to exist (gated on B1-S1); capability renames are Bucket 2 #2 (user judgment). |
+| B1-S8 | APQC tagging on handoffs | Audit explicitly states "Not applicable" (zero handoffs to tag); whitelist requires audit-pre-specified `handoff_id`. |
+| B1-M1 | Insert new `facility_service_requests` entity | "DEFER: new entities/DMDOs/modules" (new entity); conditional on Bucket 2 #1. |
+
+### JWT errors
+
+None encountered during the verification reads.
+
+### UI links
+
+- Domain row: [`https://tests.semantius.app/domain_map/domains`](https://tests.semantius.app/domain_map/domains) (CAFM is id 142)
+- Modules (empty): [`https://tests.semantius.app/domain_map/domain_modules`](https://tests.semantius.app/domain_map/domain_modules)
+- Business function ownership (empty): [`https://tests.semantius.app/domain_map/business_function_domains`](https://tests.semantius.app/domain_map/business_function_domains)
+
+### Loader path
+
+No loader created. No writes were applied; only read-only verification calls ran against PostgREST.

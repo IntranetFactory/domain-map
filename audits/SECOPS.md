@@ -249,3 +249,31 @@ Mention-count bumps (already queued from prior audits):
 - `XDR` (bumped from 1 to 2)
 
 Additional already-queued candidates that this audit confirms as adjacent but did not bump (since they sit closer to data-security or vulnerability-management than SECOPS umbrella proper): CSPM, CNAPP, CIEM, EASM, ASPM (Application Security Orchestration / ASOC), CTEM, DRP, PTAAS. The user may choose to bump any of these as part of the SECOPS sibling-modeling decision under B2-2.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Scope: applied truly-technical B1 fixes only (Rule definitions per skill). Total B1 items in 2026-05-30 audit: 7 (B1-S1 through B1-S6 plus B1-A1).
+
+### Fixes applied
+
+| ID | Type | Action | Result |
+| --- | --- | --- | --- |
+| B1-A1 | INSERT `handoff_processes` APQC rows (audit pre-specified handoff_id + resolvable PCF) | Inserted 5 rows linking handoffs 280, 282, 284, 287, 290 to APQC PCF processes 1164 (L4 Analyze IT security threat impact) and 268 (L3 Control IT risk, compliance, and security), all `role='implements'`, `proposal_source='agent_curated'`, `record_status='new'` (omitted on insert per Rule #1). | 5 new rows (ids 248-252). Verified via `/handoff_processes?handoff_id=in.(280,282,284,287,290)`: 5 of 5 SECOPS inbound handoffs now have APQC tagging coverage (0/5 -> 5/5). |
+
+Direct CLI route used (single POST with 5 rows), no loader required. No JWT-audience errors encountered.
+
+### Deferred
+
+| ID | Reason |
+| --- | --- |
+| B1-S1 (M1, 0 modules) | Creates new `domain_modules`; gated on judgment item B2-1 (leadership-tier vs umbrella vs hybrid). DEFER per "New `data_objects`/DMDOs/modules" and "gated on B2-X" rules. |
+| B1-S2 (A2, 0 capabilities) | Drafts new capabilities; shape depends on B2-1 (umbrella vs umbrella-plus-sub-modules). DEFER per "gated on B2-X". |
+| B1-S3 (A3, only 2 secondary solutions) | New solutions research (Splunk Enterprise Security, Microsoft Sentinel, CrowdStrike Falcon, Cortex XSIAM, QRadar) is judgment-shaped market analysis with vendor-pick implications, not a deterministic backfill. DEFER per "decide / options:". |
+| B1-S4 (A4, empty `catalog_tagline` / `catalog_description`) | Rule #20 forbids auto-populating these fields. DEFER per "`catalog_tagline`/`catalog_description` (Rule #20)". |
+| B1-S5 (F2, 0 skills) | Explicitly blocked on B1-S1 (skill anchors on `domain_module_id`). DEFER. |
+| B1-S6 (boundary: 0 consumer DMDOs on DLP/DSPM payloads) | Explicitly blocked on B1-S1; also introduces new DMDOs. DEFER per "New `data_objects`/DMDOs/modules". |
+
+### UI spot-checks
+
+- handoff_processes: <https://tests.semantius.app/domain_map/handoff_processes> (filter `handoff_id` in {280,282,284,287,290} to see the new 5 rows ids 248-252)
+- handoffs: <https://tests.semantius.app/domain_map/handoffs> (rows 280, 282, 284, 287, 290; module FKs remain NULL pending B1-S1 / DLP B10b / DSPM B10b)

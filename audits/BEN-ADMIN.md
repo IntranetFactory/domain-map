@@ -239,3 +239,42 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 ### Decisions
 
 _(awaiting user feedback per the explicit-prompt discipline above)_
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied truly-technical B1 items via [.tmp_deploy/fix_ben_admin_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_ben_admin_b1_technical_2026_05_31.ts). Loader is idempotent (re-reads before each write); ran from project root `c:/dev/domain-map`.
+
+### Applied
+
+- **B1-S1** (British spelling, 2 PATCHes): `domains.id=61.description` "enrolment" -> "enrollment"; `capabilities.id=40.capability_name` "Annual Benefits Enrolment" -> "Annual Benefits Enrollment". `capability_code` unchanged.
+- **B1-S2** (event_category backfill, 10 PATCHes): trigger_events 413/414/418/419/420/421/422 -> `state_change`; 415/417 -> `lifecycle`; 416 -> `threshold`. Mapping taken verbatim from the audit's pre-specified table.
+- **B1-S3** (SCOPE-CREEP DELETEs, 2 rows): `domain_module_data_objects.id=518` (candidates consumer on BEN-ENROLLMENT) and `skill_tools.id=1638` (skill 178 -> tool 14 query_candidates).
+- **B1-S5** (outbound user-edges, 16 INSERTs): authored one row per actor verb per master into `data_object_relationships` (master -> users 748). Shape: `many_to_many` / `reference` / `owner_side=source`, verbs taken from the audit's per-master parenthetical list. Per Rule #10 the actor surface is now bidirectional on every BEN-ADMIN master.
+- **B1-S8** (APQC tagging, 14 of 19 audit rows): 4 FLIPs (handoffs 108, 109, 188, 371; existing `discovery_*` rows retagged `agent_curated` with the same process_id), 2 REPLACEs (handoffs 122 -> process 1052, 395 -> process 41; existing rows pointed at the wrong PCF), 8 INSERTs (handoffs 110, 417, 419, 100, 120, 379, 1075, 1156). All rows ship with `proposal_source='agent_curated'` and `record_status='new'` per Rule #1.
+
+### Holdbacks under B1-S8 (deferred to user)
+
+- **handoff 418** (BEN-ENROLLMENT -> HCM `life_event.approved`): audit cites "APQC L3 child of 10510" with no specific external_id. Unresolvable.
+- **handoff 367** (HCM -> BEN-ENROLLMENT `employee.terminated` / `employees`): audit cites "APQC L3 child of 10517". Unresolvable.
+- **handoff 420** (BEN-CARRIER-INTEG -> HRSD `carrier_feed.reconciled`): audit cites "APQC L4 under 10520" (unresolvable; also live external_id 10520 resolves to "Manage expatriates", not the audit's "Manage employee inquiries"). Row 230 already carries an `agent_curated` tag pointing at process_id 1051 (10504 "Deliver employee benefits program") from a prior pass; left in place.
+- **handoff 1119** (HRSD -> BEN-ENROLLMENT `hr_case.escalated_to_benefits`): same unresolvable placeholder. Row 219 already `agent_curated` -> 1051; left in place.
+- **handoff 413** (PAYROLL -> BEN-ACA-COMPLIANCE `pay_cycle.closed` / `pay_slips`): audit cites external_id 10510 with process_name "Develop and manage compensation, rewards, and benefits"; live 10510 resolves to "Review engagement and retention indicators". The external_id resolves but the intent does not, so the audit's cite is wrong. Defer until user confirms the intended PCF node.
+
+### Deferred (out of technical-only scope, per task)
+
+- **B1-S4** (downgrade/DELETE `hr_cases` DMDO 598): gated on B2-S1 (architectural judgment).
+- **B1-S6** (`legal_entities` 197 missing module-layer master): report-only; ERP-FIN owes.
+- **B1-S7** (6 outbound NULL `target_domain_module_id` rows): report-only; PAYROLL (108, 110, 417), ERP-FIN (109, 419), HCM (418) own per the B10b asymmetry rule. Not patched here.
+- **B1-S9** (workflow-gate role bundling on BENEFITS-ENROLLMENT-SPECIALIST + BENEFITS-PLAN-MANAGER): gated on B2-S5.
+- **B1-S10** (new `aca_filings` + `affordability_snapshots` masters on BEN-ACA-COMPLIANCE): new entities + lifecycle + permissions; gated on B2-S4 and out of technical-only scope.
+- **B1-S11** (HR contributor + Payroll contributor + Finance consumer `business_function_domains`): new contributor/consumer rows are out of technical-only scope per the continuation task spec; defer to user.
+
+No `notes` writes anywhere (Rule #15). No `record_status` other than the default `new` (Rule #1). No vendor names in any text payload (Rule #18). No `permission_verb_override` PATCHes (audit pre-specifies none). DMDO 598 (`hr_cases`) carries a notes annotation in violation of Rule #15 but the audit does not pre-specify a row-ID revert, so it is left for the B1-S4 / B2-S1 follow-up.
+
+### Verification queries (post-load)
+
+- `trigger_events?id=in.(413..422)&select=event_category` -> all populated per the table above.
+- `data_object_relationships?and=(data_object_id.in.(146,147,148,149,150,151,152),related_data_object_id.eq.748)` -> 16 outbound rows present (IDs 1863-1878).
+- `handoff_processes?handoff_id=in.(108,109,110,188,417,419,100,120,122,371,379,395,1075,1156)&select=handoff_id,process_id,proposal_source` -> 14 rows all `agent_curated` with the expected `process_id`.
+
+UI spot-check: https://tests.semantius.app/domain_map/trigger_events (and the matching tables for `domain_module_data_objects`, `skill_tools`, `data_object_relationships`, `handoff_processes`, `domains`, `capabilities`).

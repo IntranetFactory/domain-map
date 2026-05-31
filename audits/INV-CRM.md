@@ -163,3 +163,32 @@ One-line summary: outbound handoff 1039 wired, mirror rel 873 (`vc_deals becomes
 ### Candidates queued via `append_missing_domain.ts`
 
 - **DEAL-FLOW-SIGNAL** (Deal Flow Signal Aggregation), vendor evidence Harmonic / Specter / Tracxn / BoxGroup Signal / Crunchbase Pro / PitchBook signals tier; adjacency INV-CRM, PROD-MGMT; capabilities company signal monitoring, growth-stage detection, founder change tracking, hiring-velocity alerts, fundraising news ingestion. Surfaced by INV-CRM audit 2026-05-30. Queue updated via the helper.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Loader: [.tmp_deploy/fix_inv_crm_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_inv_crm_b1_technical_2026_05_31.ts). Run from project root, idempotent (every write preceded by a pre-flight read against the natural / composed key).
+
+### Applied (4 of 17 Bucket 1 items)
+
+| ID | Action | Rows |
+|---|---|---|
+| B1-S5 | PATCH `data_object_lifecycle_states.domain_module_id = 9` on rows 445 (ic_review), 446 (term_sheet), 447 (closed). Pre-flight verified `state_name` and `data_object_id=750`. | 3 PATCH |
+| B1-S2 | INSERT `data_object_relationships` user-edges per Rule #10: investor_contacts (753) gets `owns relationship with` (relationship_owner) and `introduced` (source_introducer); lp_prospects (754) gets `leads relations with` (lp_relations_lead). Source `data_object_id=748` (users), `owner_side=target`, `relationship_type=one_to_many`, `relationship_kind=reference`, `is_required=false`. `notes` and `record_status` omitted (defaults). | 3 INSERT |
+| B1-S8 (partial) | INSERT `domain_regulations` link for CAN-SPAM Act (regulation_id=59, already in catalog) to INV-CRM (domain_id=159); `applicability='conditional'`. GDPR / CCPA / SEC Investment Advisers Act deferred (not in `/regulations` and Bucket 2 #3 scope question is open). | 1 INSERT |
+| B1-H1 | INSERT `handoff_processes` for the two outbound INV-CRM handoffs the audit pre-specified with resolvable PCF: (1038, 321) "Manage debt and investment" PCF 10761, (1039, 409) "Manage portfolio" PCF 16401. `role='implements'`, `proposal_source='agent_curated'`. Pre-flight verified both handoffs and both processes exist. | 2 INSERT |
+
+### Deferred (13 of 17 Bucket 1 items)
+
+- **B1-M1..M6** (6 items): new data_object inserts (`data_subject_requests`, `meeting_records`, `introduction_requests`, `deal_team_assignments`, `pipeline_stages`, `co_investor_firms`). Per the scoping rule for this continuation, new entities / DMDOs / modules are out of scope.
+- **B1-S1**: catalog_tagline / catalog_description authoring requires user approval before write (Rule #20). Surfaced in Bucket 2 #1 with proposed wording, not yet approved.
+- **B1-S3**: new trigger events. Audit lists 7 candidate events by name but does not provide an exact tuple with `event_category` (Rule #13 enum). Not a deterministic patch list.
+- **B1-S4**: lifecycle states for `investment_memos` and `lp_prospects`, plus config-shape exemption decisions for `relationship_records` and `investor_contacts`. The exemption decision is explicitly "surface to user" per Bucket 2 #2; the state machines are new authoring not pre-specified as tuple lists.
+- **B1-S6**: roles. Gated on Bucket 2 #4 naming approval; "Bundle into focused loader" is a full Phase-E surface.
+- **B1-S7**: system skills + tools + skill_tools across all 3 modules. Full Phase-S load, not in this continuation's scope.
+- **B1-S8 (remainder)**: GDPR / CCPA / SEC Investment Advisers Act `domain_regulations`. The regulation rows do not yet exist in `/regulations`, and Bucket 2 #3 scope confirmation is open.
+- **B1-S9**: `data_object_aliases` for 3 masters. Audit lists vendor-language synonyms ("relationship strength", "LPs", "limited partners") but does not pre-specify exact `alias_name` tuples / kinds. Bulk alias inserts without exact tuples are out of scope.
+- **B1-B1**: 4 intra-domain handoffs. Sequenced after B1-S3 trigger events per the audit's own cross-bucket dependency table; cannot land until those events exist.
+
+### Errors
+
+None. All writes verified live afterwards via the loader's own pre-flight reads; no JWT-audience or schema errors.

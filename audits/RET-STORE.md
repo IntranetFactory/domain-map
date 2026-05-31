@@ -164,3 +164,67 @@ _(empty; awaiting user response per per-bucket prompts)_
 ### Fixes applied
 
 _(empty; this audit is report-only)_
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+### Scope
+
+Residual-pass over `audits/RET-STORE.md` Bucket 1 looking for items the
+technical rule allows (enum backfills, FK PATCHes derivable from existing
+modules, INSERTs to existing rows where the audit pre-specifies content,
+DELETEs the audit names by row ID, mechanical renames the audit pre-specifies,
+`handoff_processes` INSERTs where the audit pre-specifies `handoff_id` plus
+a resolvable PCF). Items requiring NEW entities / modules / DMDOs, user
+judgment, or pre-deferred content are left for the gated passes.
+
+### Fixes applied
+
+| ID | Band | Action | Result |
+|---|---|---|---|
+| B1-S4  | B9  | PATCH `trigger_events.event_category` on ids 1069-1076 to the audit-pre-specified enum values (lifecycle / state_change / threshold / signal). | 8 rows patched. |
+| B1-S12 | H1  | INSERT 5 `handoff_processes` rows with `proposal_source='agent_curated'`, `record_status` omitted (DB default `new`), `notes` omitted (Rule #15). Each row uses the audit-pre-specified `(handoff_id, PCF external_id)` pair; all 5 PCFs resolved against `processes.external_id` before insert. | 5 rows inserted. |
+
+Per-row B1-S12 inserts (handoff_id, process_id, PCF external_id, PCF name):
+
+- 934, 1886, 21623, Create resourcing plan and schedule (L5)
+- 935, 1784, 11187, Conduct health and safety and environmental audits (L4)
+- 936, 954,  11687, Solicit customer feedback on customer service experience (L4)
+- 937, 246,  10527, Develop and manage time and attendance systems (L3)
+- 938, 1414, 10854, Collect and record employee time worked (L4)
+
+### Residual B1 items deferred (and why)
+
+| ID | Why deferred |
+|---|---|
+| B1-S1  | M1 fix-load creates NEW `domain_modules` rows; new entities/modules deferred per the technical-fix rule. Gates B1-S5 / S6 / S7 / S11. |
+| B1-S2  | A4 catalog_tagline + catalog_description fall under Rule #20; the fields are off-limits to autonomous writes (per-row user approval required). |
+| B1-S3  | Creates 5-6 NEW `capabilities` + `capability_domains` rows; new entities deferred. |
+| B1-S5  | B12 lifecycle states gated on B1-S1 (need realizing `domain_module_id`) and B2-S2 (`requires_permission` flags per state need user input). |
+| B1-S6  | Post-S5; the user picks which proposed events become first-class subscribers. |
+| B1-S7  | `handoffs.source_domain_module_id` PATCH is FK-derivable only when modules exist; RET-STORE has zero modules, so the PATCH has no candidate to point at. |
+| B1-S8  | Report-only on rows 934 / 937 / 938 (WFM owes) and 935 (HCM owes); not RET-STORE's fix. |
+| B1-S9  | Pattern flag flips are explicitly deferred by the technical-fix rule. |
+| B1-S10 | The audit pre-specifies only 2 of the 7 target verb names ("`assigned_to_user`, `created_by_user`, etc."); the other 5 require judgment on the verb form, deferred. |
+| B1-S11 | F1 retire-vs-rehome of legacy skill id 101 is gated on B2-S4. |
+
+### Loader
+
+`c:/dev/domain-map/.tmp_deploy/fix_ret_store_b1_technical_2026_05_31.ts`
+
+Invoked from project root via `bun run` per Rule #6. Idempotent: pre-reads
+event_category and existing `handoff_processes` rows before each write.
+
+### Verification
+
+- `/trigger_events?id=in.(1069,1070,1071,1072,1073,1074,1075,1076)&select=id,event_name,event_category` returns the 8 expected rows with their newly-set enums (no remaining `event_category=''`).
+- `/handoff_processes?handoff_id=in.(934,935,936,937,938)&select=handoff_id,process_id,proposal_source,record_status` returns 5 rows, all `proposal_source='agent_curated'`, `record_status='new'`.
+
+UI spot-checks:
+
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/handoff_processes
+
+### JWT errors
+
+None.
+

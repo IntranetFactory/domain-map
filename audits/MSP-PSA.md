@@ -1,6 +1,6 @@
 ---
 status: feedback_needed
-last_transition: 2026-05-30
+last_transition: 2026-05-31
 last_transition_by: agent
 open_questions: 23
 ---
@@ -196,3 +196,44 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 | ERP-FIN | B10b: populate `target_domain_module_id` on handoffs 524, 526. Add `consumer` DMDO on `msp_invoices` (236) and `msp_contracts` (234). Consider authoring reverse `customer_payment.received` handoff. |
 | HAM | B10b: populate `target_domain_module_id` on handoff 161. Consider authoring reverse `hardware_asset.warranty_expired` handoff. |
 | WSC | B11 / Rule #15: review `chat_messages` (565) `data_objects.notes` for auto-populated pattern-flag prose; revert if not user-approved (per B2-S3). |
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied truly-technical Bucket 1 fixes only; everything requiring user judgment or unverifiable inputs was deferred unchanged for the original Bucket 2 / Bucket 3 prompts.
+
+### Applied (1 of 9 Bucket 1 items)
+
+- **B1-S2** — PATCHed `handoffs.id=835` set `notes=""` (was `target NULL until MSP-PSA is modularized`). Pre-flight confirmed `target_domain_module_id=137`, so the provenance prose was stale per Rule #15. PATCH returned the row with `notes=""` populated; all other columns unchanged.
+
+### Deferred (8 of 9 Bucket 1 items)
+
+| ID | Reason for deferral |
+|---|---|
+| B1-S1 | Gated on B2-S1 (user picks DELETE vs PROMOTE for the 3 `msp_clients` sibling consumer DMDOs). |
+| B1-S3 | Report-only; B10b NULL target FKs are owed by HAM (1), CSM (2), ERP-FIN (2) audits. Not MSP-PSA's fix. |
+| B1-S4 | Report-only; B10b NULL source FKs are owed by RMM (1) and REMOTE-ACCESS (2) audits. Not MSP-PSA's fix. |
+| B1-S5 | Report-only; pairwise consumer DMDOs belong to CSM / ERP-FIN / HAM audits. Not MSP-PSA's fix. |
+| B1-S6 | Gated on B2-S5 (5-role list confirmation). New roles authoring is not derivable from audit alone. |
+| B1-S7 | Depends on B1-S6 (role list) and on B2-S5; 12 baseline + 16 workflow-gate permissions cannot be wired without the role layer. |
+| B1-S8 | Gated on B2-S4 (retire vs repurpose skill 85). New module-bound system skills are net-new entities. |
+| B1-S9 | Gated on B1-S8 / B2-S4. |
+| B1-H1 | **All 10 APQC tag candidates deferred.** Per the technical-fixes mandate, `handoff_processes` rows can only be inserted when the audit pre-specifies a resolvable `handoff_id` + PCF id. Of the 10 candidates, 9 say `needs PCF lookup at fix time` (judgment work). The 10th (handoff 523) pre-specifies PCF id `10388`, but `GET /processes?id=eq.10388` returned an empty result, the id is unresolvable. The closest live PCF match (`Manage customer service problems, requests, and inquiries`) is id `196`, not `10388`; reclassifying is judgment work, not a technical fix. |
+
+### Verification
+
+- `GET /handoffs?id=eq.835` post-PATCH returned `notes=""` and all other columns unchanged (`target_domain_module_id=137`, `source_domain_module_id=115`, `trigger_event_id=920`, `data_object_id=565`, `record_status="new"`).
+- `GET /processes?id=eq.10388` returned `[]` (PCF id from audit is unresolvable).
+- No JWT-audience errors encountered.
+
+### Loader
+
+`c:/dev/domain-map/.tmp_deploy/fix_msp_psa_b1_technical_2026_05_31.ts`
+
+### UI link
+
+https://tests.semantius.app/domain_map/handoffs
+
+### Outstanding
+
+All Bucket 2 prompts (B2-S1 through B2-S6) and Bucket 3 Phase-0 vetting remain unanswered; the original `### Per-bucket prompts` section above is still the action surface for the user.
+

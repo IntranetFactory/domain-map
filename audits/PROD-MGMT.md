@@ -239,3 +239,23 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 ### Decisions
 
 _(none yet, awaiting user feedback per buckets above)_
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the truly-mechanical subset of Bucket 1 per the orchestrator's technical-fix rules. Loader: `.tmp_deploy/fix_prod_mgmt_b1_technical_2026_05_31.ts`.
+
+### Applied (3 of 8 B1 items, partial in two cases)
+
+- **B1-S1 (partial):** PATCHed `trigger_events.event_category` on the 14 PROD-MGMT-owned events the audit pre-specifies a category for (8 `lifecycle`: 1138, 1145, 1146, 1147, 1149, 1153, 1154, 1156; 3 `state_change`: 1142, 1155, 1157; 3 `threshold`: 1144, 1148, 1151). The remaining 6 PROD-MGMT-owned events with empty `event_category` (1139 `beta_program.feedback_collected`, 1140 `beta_program.closed`, 1141 `customer_feedback_item.received`, 1143 `feature_request.submitted`, 1150 `product_line.retired`, 1152 `product_metric.refreshed`) were NOT covered by the audit's inventory and are left at empty until a follow-up audit pre-specifies their categories.
+- **B1-S3:** INSERTed 2 consumer DMDO rows on PM-ROADMAP-DELIVERY (131): `(131, 243, consumer, optional)` for `work_items` and `(131, 245, consumer, optional)` for `okr_objectives`. Closes the B5 DMDO gap for inbound handoffs 1322, 1323, 1324.
+- **B1-H1 (partial):** INSERTed 12 `handoff_processes` rows for the audit-pre-specified pairings whose PCF `process_id` was already resolved in the audit table: 998 -> 956, 999 -> 530, 1000 -> 964, 1009 -> 1262, 1010 -> 1265, 1011 -> 625, 1250 -> 1262, 1251 -> 1265, 1252 -> 625, 243 -> 625, 775 -> 1262, 1322 -> 625. All inserted as `role='implements'`, `proposal_source='agent_curated'`, `record_status` defaulted to `new` (Rule #1). Skipped handoff 781 (pre-specified PCF 571 contradicts an already-loaded row at 781 -> 413). The remaining 18 H1 candidates marked "needs PCF lookup" in the audit table were not pre-specified with a resolvable PCF id and are deferred.
+
+### Deferred (5 of 8 B1 items, plus the 6 + 18 partial deferrals above)
+
+- **B1-S2:** Authoring 3 intra-domain handoffs + 1 new `feature_request.accepted` trigger_event is new-entity creation; not in the technical scope.
+- **B1-S4:** Full Phase-E RBAC bootstrap (4 roles + 6 role_modules + 20 permissions + permission_hierarchy edges) is a full Phase-E load; deferred to a Phase-E pass.
+- **B1-S5, B1-S6, B1-S7:** Report-only items owed by CSM, CDP, DXP, ERP-FIN, BPA, SPM, VSDP, TEST-MGMT, CRM. Not PROD-MGMT's fix; routed to those domains' b1 audits.
+
+### Bucket 2 / Bucket 3
+
+Untouched. All judgment-bearing items remain open for user decision per the per-bucket prompts above.

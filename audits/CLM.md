@@ -302,3 +302,28 @@ All 26 of 26 cross-domain handoffs now tagged `agent_curated`, `record_status='n
 - **B1-H1**: closed by D7 + follow-up.
 - Bucket 2 remaining: B2-S2, B2-S3, B2-S4, B2-S5, B2-S6 (5 items).
 - Bucket 3: 15 candidates (entities + modularization + regulations).
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Status
+
+All 11 Bucket 1 items in scope for CLM are already resolved. No new technical writes required. Live verification confirmed each prior decision against the database:
+
+- **B1-S1 (M7 hard fail, D5):** verified. `domain_module_data_objects` for `data_object_id IN (66, 68, 69)` across CLM modules (125, 126, 127, 128, 129) returns exactly 3 rows, each `role='master'` (legal_contracts on 127, contract_templates on 125, contract_clauses on 125). All 8 sibling consumer rows deleted as intended.
+- **B1-S2 (event_category PATCH, D1):** verified. Events 531=`lifecycle`, 532/533/534/535=`state_change`.
+- **B1-S3 (intra-domain handoffs, D6):** verified. 7 intra-CLM handoffs present (1209, 1210, 1331-1335), all `source_domain_id=target_domain_id=26`.
+- **B1-S4 (9 trigger_events, D4):** verified. Rows 1456-1464 present, all `event_category='state_change'`.
+- **B1-S7 (duplicate role_modules, D2):** verified. Single row id=294 for role_id=10100 x domain_module_id=127 remains.
+- **B1-S9 (handoff 1020 target, D3):** verified. `target_domain_module_id=128`.
+- **B1-H1 (APQC tagging, D7 + follow-up):** verified. All 26 CLM-touching handoffs carry `handoff_processes` rows with `proposal_source='agent_curated'` and `record_status='new'`.
+- **B1-S5, B1-S6, B1-S8:** report-only by B10b asymmetry rule; scheduled via D8 for downstream domain audits (SUB-MGMT, AGENCY-MGMT, CPQ, ERP-FIN, CSM, GRC, S2P, AP-AUTO, ESIGN, RE-CRE, ACCT-PRACT-MGMT).
+
+### Deferred (out of technical scope)
+
+- **B2-S2 (data_objects.notes revert on rows 66, 67, 68, 69, 70):** audit pre-specifies the row IDs, but the revert is conditioned on user confirming the notes were auto-populated rather than user-approved at load time. The audit explicitly asks the user to choose (a) leave / (b) revert. No technical license to act without that confirmation; this is a judgment call, not a technical fix. Defer to Bucket 2 resolution.
+- **B2-S1, B2-S3, B2-S4, B2-S5, B2-S6:** all Bucket 2, judgment-required (architectural, editorial, workflow-shape choices). Not in this continuation's technical scope.
+- **Bucket 3 (15 entity / modularization / regulation candidates):** Phase 0 vendor-verification gated. Not in technical scope.
+
+### Result
+
+Zero new writes applied this run. No loader produced (nothing to load). CLM's B1 band is fully closed pending the downstream-domain B10b waves that D8 scheduled.

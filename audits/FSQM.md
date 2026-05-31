@@ -278,3 +278,34 @@ Queued via `scripts/analytics/append_missing_domain.ts`:
 | FMIS B10b | `source_domain_module_id` NULL on the 1 outbound row FMIS -> FSQM (`field_application.recorded`). Cascade. |
 
 These items NEVER block FSQM's audit closure; they surface so the user can decide whether to also schedule audits on the source domains.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Loader: [.tmp_deploy/fix_fsqm_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_fsqm_b1_technical_2026_05_31.ts). Ran from project root. Idempotent.
+
+### Applied
+
+- **B1-S8** DELETE stale `trigger_event` 349 (`audit_finding.created`) which mis-attributed an AUDIT-mastered payload to FSQM emission. Cascade order: `handoff_processes` id=143 -> `handoffs` id=357 -> `trigger_events` id=349.
+- **B1-S5** INSERT 10 `data_object_relationships` user-edges (Rule #10) covering PCQI authoring, plant manager approval, CCP monitoring, operator-recorded measurements, incident reporting + QA ownership, allergen program ownership, EMP sample collection, sanitor performance + supervisor verification. All `<master> -> users (748)`, `many_to_many`, `reference`, `owner_side=source`. New ids 1805..1814.
+- **B1-S4** INSERT 5 intra-domain `data_object_relationships` (verbs `defines`, `is monitored by`, `is verified by`, `governs`, `triggers`). New ids 1815..1819.
+- **B1-S6** INSERT 4 cross-domain `data_object_relationships` (`food_safety_incidents spawns recall_events` to FOOD-TRACE, `haccp_plans is subject to audit_findings` to AUDIT with `owner_side=target`, `food_safety_incidents triggers compliance_obligations` to GRC, `haccp_plans is subject to compliance_obligations` to GRC with `owner_side=target`). New ids 1820..1823.
+- **B1-H1** INSERT 10 `handoff_processes` rows (`agent_curated`) for handoffs 356, 358, 361, 971, 975, 976, 977, 978, 979, 980 against the audit's pre-specified PCF external_ids (20111, 10369, 10089, 20110, 11047, 20115, 19248, 10368, 10289, 10302). Pre-flight verified every (handoff_id, process_id) pair. New ids 606..615.
+
+### Deferred (not applied by this loader)
+
+- **B1-S1** A4 `catalog_tagline` / `catalog_description` (Rule #20: surface drafts to user first).
+- **B1-S2** M1 module split: new entities; gated on Bucket 2 #1 module-shape decision (3-module starter vs 4-module default vs 6-module split).
+- **B1-S3** B4 pattern-flag flips: per instructions, pattern flag flips deferred.
+- **B1-S7** B9 missing trigger_events (`haccp_plan.due_for_review`, `food_safety_incident.opened`, `food_safety_incident.closed`, `environmental_monitoring_sample.adverse_trend`): new entities.
+- **B1-S9** B11 aliases: audit lists candidates but does NOT pre-specify the `alias_type` / `solution_id` resolution required for vendor synonyms; vendor-specific terms need `solution_term` + `solution_id` arbitration before insert.
+- **B1-S10** B12 lifecycle states: new entities, also cascade-blocked by M1 (per-state `domain_module_id` not resolvable until modules land).
+- **B1-S11** F1/F7 legacy skill cleanup: sequenced after M1 (must not delete legacy skill 64 before module-level system skills exist).
+- **B1-S12** C2 capability function-divergence override for `FSQM-AUDIT-PREP`: judgment.
+- **B1-M1..M4** MISSING masters (`corrective_action_records`, `verification_records`, `mock_recalls`, `environmental_monitoring_programs`): new entities.
+- **Regulations gap (S1)**: 0 `domain_regulations` rows but the food-safety regulations themselves (FSMA Preventive Controls, FDA Food Traceability, Codex HACCP, USDA FSIS HACCP, SQF, BRC GS, FSSC 22000, IFS Food) are not yet in the `regulations` table; can only link existing rows, and new regulation inserts are out of scope.
+- **APQC tags for handoffs 352, 354, 355**: each already has an `agent_curated` `handoff_processes` row from a prior run with different `process_id` than this audit proposes (352 has 171 vs proposed 1570; 354 has 170 which matches proposed; 355 has 70 vs proposed 393). For 354 the proposed pair is identical to the existing row (skipped as already present); for 352 and 355 the divergent proposals would compete with the prior agent_curated rows and need user judgment.
+- **Bucket 2** (4 judgment items) and **Bucket 3** (3 Phase-0 candidates) untouched per scope.
+
+### JWT errors
+
+None.

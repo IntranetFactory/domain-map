@@ -307,3 +307,40 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 | TPRM | Populate `source_domain_module_id` on inbound 635. |
 | ITAM | Populate `source_domain_module_id` on inbound 632; already 59. Clean. |
 | CRM / CPQ / CSM | Populate `source_domain_module_id` on inbounds 503 (CRM-OMS-CPQ chain) where present. |
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Scoped subagent pass against the 2026-05-30 Validate b1 findings. Applied only items that fit the orchestrator's "purely technical, no judgement" allow-list (enum backfills, audit-pre-specified user-edges, derivable FK PATCHes, naming renames with FK preservation, INSERT-only handoff_processes with resolvable PCF). Everything else deferred to the user.
+
+Loader: [.tmp_deploy/fix_erp_fin_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_erp_fin_b1_technical_2026_05_31.ts). Invoked from project root.
+
+### Fixes applied
+
+| Bucket-1 ID | Action | Count | Verification |
+|---|---|---|---|
+| B1-S2 | PATCH `trigger_events.event_category` on the 16 ERP-FIN rows the audit named with resolved enum values (`lifecycle` / `state_change` / `signal` per the per-row table in B1-S2). All 16 went from `''` to the audit-specified value. | 16 PATCH | Post-load query `/trigger_events?id=in.(543..558)&event_category=eq.` returns 0 rows. |
+| B1-S5 (user-edges only) | INSERT 6 `data_object_relationships` rows from `users` (id 748, `kind='platform_builtin'`) to the ERP-FIN masters the audit pre-specified per Rule #10. Edges: `users creates journal_entries`, `users approves journal_entries`, `users closes accounting_periods`, `users owns legal_entities`, `users approves fixed_assets`, `users reconciles intercompany_transactions`. Pre-existing edge `users owns cost_centers` (id 24) left untouched. All new rows: `relationship_type=one_to_many`, `relationship_kind=reference`, `owner_side=target`, `record_status` omitted so the DB default `new` applies (Rule #1), `notes` omitted so the DB default empty applies (Rule #15). | 6 INSERT | Post-load query returns 6 rows from `users` to the audited masters. |
+
+UI spot-check links:
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/data_object_relationships
+
+### Deferred
+
+| Bucket-1 ID | Why deferred |
+|---|---|
+| B1-S1 (M1 hard-fail, author module set) | Design conversation gated on **B2-S4** (user picks 6 / 4 / 2-module split). Orchestrator's "no new entities/modules" rule. |
+| B1-S3 (4 new `business_function_domains` contributor/consumer rows) | Orchestrator forbids "new business_function_domains contributors/consumers" — user picks the function-spine target rows. |
+| B1-S4 (~25 `data_object_aliases` rows) | Not in orchestrator's TECHNICAL allow-list. Several audit-proposed aliases embed vendor-specific terminology (`Company Code` / `Journal Voucher` / `Performance Obligation Records`); per Rule #18, vendor-specific aliases belong on `data_object_aliases` only when authored as `alias_type='solution_term'` with a resolved `solution_id` — a per-alias author decision the user should make. |
+| B1-S5 master-to-master intra-domain edges (~9–10 rows) | Orchestrator only licensed user-edges per Rule #10. Master-to-master edges (`journal_entries posted_against accounting_periods` etc.) require verb / cardinality / `owner_side` authoring discretion. |
+| B1-S6 (skill 56 re-anchor + add workflow-bearing tools) | Gated on B1-S1 (modules must exist before per-module skills can be authored). Cascades from the deferred module set. |
+| B1-S7 (H1 APQC tagging, ~60 candidates) | Audit pre-specifies handoff IDs but only ~5 candidates carry a resolvable `process_id` already in the catalog (320 / 1052 / 1352 / 1382 / 1392). Those existing `handoff_processes` rows sit at `proposal_source='discovery_substring'`; the audit's plan is a "REPLACE with `agent_curated`" upgrade (PATCH the provenance) or DELETE+INSERT a tighter PCF row, neither of which fits the orchestrator's INSERT-only allow-list. The remaining ~55 candidates need PCF lookups (`process_name=ilike.*<term>*`) and confidence calls that aren't pre-resolved in the audit. |
+| B2-S1 through B2-S6 | Bucket 2 by construction — user judgment calls. No action this pass. |
+| B2-S6 in particular (em-dash on `domains.description` and `business_logic`) | Even though CLAUDE.md forbids em-dashes, both fields are catalog-prose Rule #20 territory and the audit pre-specifies replacement wording that needs user approval before write. Surface this as a follow-up: the two `domains` rows still carry U+2014 characters. |
+| Bucket 3 (8 entity candidates + 3 regulation candidates) | Phase-0 vendor research not in scope. |
+
+### Notes for the next pass
+
+- B1-S2 closes B9 enum compliance on every ERP-FIN-owned trigger_event. B9 itself remains partially blocked until B1-S1 is resolved (handoffs still carry NULL module FKs, cf. B10b).
+- The 6 new user-edges close B7 (Rule #10 user-edges) on the 6 masters they touch. `cost_centers` had its `users owns cost_centers` edge pre-loaded (id 24); `general_ledger_accounts`, `bank_accounts`, `cash_transactions`, `asset_depreciation_schedules`, and `revenue_recognition_records` were not in the audit's Rule #10 list and remain without user-edges (analyst call: their workflows don't have a single human-actor relationship distinct from the parent master's actor, e.g. depreciation_schedules inherit fixed_assets' approver).
+- The loader is idempotent: re-running it skips both PATCHes (event_category already matches) and INSERTs (dedup against the existing edge keys).

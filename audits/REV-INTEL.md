@@ -342,3 +342,43 @@ Skipped (Pass 4 pairwise gated on `B1-M1` for the CRM neighbor; SALES-ENG and SA
 - **CRM, SALES-ENG, SALES-PERF cross-domain `data_object_relationships` mirrors.** Once REV-INTEL masters `deal_risk_scores`, `revenue_forecasts`, and `captured_activities`, each of those neighbors should carry mirror edges (`crm_opportunities scored_by deal_risk_scores`, `crm_opportunities forecast_by revenue_forecasts`, `customers engaged_via captured_activities`). Surfaces when each neighbor is next validated. Today: cannot author because REV-INTEL has no master to point at.
 - **SALES-ENG B2-O1 mirror.** If `B2-O1` resolves to option (b) or (c) (REV-INTEL masters `conversation_intelligence_records` or both), SALES-ENG's own audit will need a parallel DMDO refactor on its side. Routine, blocked on B2-O1 decision.
 - **PMM domain candidate.** If Bucket 3 candidate #5 lands and MARKET-SIGNAL-EXTRACTION folds into PMM, the candidate-queue entry `PMM` (already pending review from the PROD-MGMT audit 2026-05-30) updates with REV-INTEL as an adjacency.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied truly-technical B1 fixes only; all judgment items deferred per the continuation prompt.
+
+### Applied (1 fix surface, 6 INSERTs)
+
+- **B1-H1: 6 `handoff_processes` rows inserted** (loader `.tmp_deploy/fix_rev_intel_b1_technical_2026_05_31.ts`). Each tuple was pre-specified by the 2026-05-30 audit table; pre-flight verified all 6 handoff ids exist and touch REV-INTEL, and both PCF rows (686, 712) exist as `apqc_pcf_cross_industry` L4. `proposal_source='agent_curated'` on each; `record_status` omitted (DB default `new` per Rule #1). All 6 insertions succeeded:
+
+  | handoff_id | direction | trigger_event | process_id | inserted id |
+  |---|---|---|---|---|
+  | 207 | REV-INTEL → CRM | deal_risk.escalated | 712 (Manage opportunity pipeline) | 385 |
+  | 208 | REV-INTEL → SALES-PERF | pipeline_health.degraded | 712 (Manage opportunity pipeline) | 386 |
+  | 201 | CRM → REV-INTEL | crm_opportunity.closed_lost | 686 (Analyze sales trends and patterns) | 387 |
+  | 473 | CRM → REV-INTEL | crm_opportunity.stage_changed | 712 (Manage opportunity pipeline) | 388 |
+  | 476 | SALES-ENG → REV-INTEL | conversation_intelligence.insight_published | 686 (Analyze sales trends and patterns) | 389 |
+  | 477 | SALES-ENG → REV-INTEL | high_intent_signal.detected | 712 (Manage opportunity pipeline) | 395 |
+
+  Coverage: 6 of 7 cross-domain handoffs now carry an APQC tag. The remaining handoff (528) is deferred as the 2026-05-30 audit instructed.
+
+### Deferred (no writes; reasons recorded)
+
+- **B1-A1, catalog_tagline + catalog_description.** Rule #20 catalog UX text. The 2026-05-30 audit drafted both; surfacing-to-user is required before any write. Continuation prompt explicitly forbids `catalog_tagline` / `catalog_description` writes from a technical pass.
+- **B1-M1, 6 `domain_modules` rows.** New modules are out of scope for the technical pass (continuation prompt: "no new entities/DMDOs/modules"). Also gated on user judgment B2-M1 (6 vs 4 vs collapsed module shape, plus the related B2-O1 / B2-T1 ownership questions).
+- **B1-S1, B10b `handoffs.source_domain_module_id` / `target_domain_module_id` backfill.** B10b derivation requires REV-INTEL modules to exist; with `domain_modules` deferred, there is nothing to attribute to. Becomes derivable once B1-M1 lands.
+- **B1-V1 through B1-V7, top 7 missing masters** (`deal_risk_scores`, `revenue_forecasts`, `forecast_submissions`, `captured_activities`, `conversation_topics`, `coaching_sessions`, `deal_warnings`). New entities; gated on B1-M1 and B2-M1.
+- **B1-H1, handoff 528 tag.** Deferred by the 2026-05-30 audit itself (suspected duplicate-direction defect; do not author a tag until B2-D1 resolves).
+- **B1-H1 source-side tags on inbound handoffs (201, 473, 476, 477).** Owed by neighbor domains (CRM and SALES-ENG); recorded as report-only follow-ups in the 2026-05-30 audit's "Report-only follow-ups" section. Not in scope for this audit's continuation.
+
+### Bucket 2 and Bucket 3 (all deferred, judgment)
+
+- **B2-M1, B2-O1, B2-T1, B2-D1, B2-C1.** All 5 are judgment calls per the continuation prompt's deferral rules ("user picks", "options:", "decide", "surface to user"). No action.
+- **Bucket 3 candidates #1 to #6.** All Phase 0 speculative; no Phase 0 in this continuation.
+
+### Idempotency and verification
+
+The loader is per-row idempotent (checks `(handoff_id, process_id)` existence before each insert). Post-flight verified 6 expected rows present. Re-running is safe and a no-op.
+
+- Loader: `.tmp_deploy/fix_rev_intel_b1_technical_2026_05_31.ts`
+- UI spot-check: https://tests.semantius.app/domain_map/handoff_processes

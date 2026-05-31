@@ -207,3 +207,36 @@ Candidates queued in `audits/_missing-domains.md` from this audit: **DIGITAL-PER
 | PROD-MGMT | B10b (`target_domain_module_id`) | PROD-MGMT-side cure already present (PM-DISCOVERY 130 declares `ab_tests` consumer DMDO) and target_domain_module_id=130 is set on handoff 813. No action. |
 
 User decides whether to schedule b1 audits for HCMS, WEB-CONTOPS, MA, CDP, B2C-COMM, PROD-MGMT.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the deterministic subset of Bucket 1 that does not require user judgment.
+Loader: [.tmp_deploy/fix_dxp_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_dxp_b1_technical_2026_05_31.ts).
+
+### Applied
+
+- **B1-S7 (B9 enum backfill, 10 PATCHes).** `trigger_events.event_category` populated on ids 876, 877, 878, 879, 880, 881, 882, 883 -> `state_change` and 884, 885 -> `signal`, per the audit's pre-specified mapping. All 10 rows now satisfy Rule #13.
+- **B1-S4 (B7 users edges, 8 INSERTs).** Authored the 8 user-actor `data_object_relationships` rows the audit enumerated verbatim under Rule #10: `users authors web_pages` (id 1559), `users approves web_pages` (1560), `users owns ab_tests` (1561), `users authors personalization_rules` (1562), `users authors segments_dxp` (1563), `users designs journey_steps` (1564), `users authors digital_experiences` (1565), `users authors content_components` (1566). Shape per audit B1-S4: `relationship_type=many_to_many`, `relationship_kind=reference`, `is_required=false`, `owner_side=target`, `record_status=new`. `data_object_id=748` (users, `kind=platform_builtin`). `notes` left empty per Rule #15.
+
+### Deferred
+
+- **B1-S1 (M-band modules):** gated on B2-1 user decision (which module split).
+- **B1-S2 (B12 lifecycle states):** depends on S1 (states need `domain_module_id`).
+- **B1-S3 (B4 pattern flags):** gated on B2-2 user picks (per-flag yes / no).
+- **B1-S5 (B6 intra-domain relationships):** depends on S1 + S2.
+- **B1-S6 (B11 aliases):** depends on S1.
+- **B1-S8 (B9 workflow events):** depends on S2.
+- **B1-S9 (B8 outbound cross-domain relationships):** audit explicitly says "Surface to user"; target-side masters partially unloaded.
+- **B1-S10 (F2 module-anchored system skill):** depends on S1.
+- **B1-S11 (H1 APQC tagging):** every proposed PCF row in the audit table is flagged "needs PCF lookup at fix time", "confident L3 (after lookup)", or "possibly defer" / "defer to Discover Pass 3". No row pre-specifies a verified `handoff_id + resolvable PCF` tuple, so all 19 candidates are deferred per the technical-fix-only contract.
+
+### Net effect on bands
+
+- **B9 (Rule #13 enum):** partial-fail -> pass for the 10 existing events. Coverage gap on missing workflow-gate events (B1-S8) is unaffected.
+- **B7 (users edges):** hard-fail -> pass (8 edges authored covering all 7 masters, with web_pages double-edged for author + approver).
+
+All other Bucket 1 bands remain in their pre-continuation state. Bucket 2 / 3 unchanged.
+
+UI:
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/data_object_relationships

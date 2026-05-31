@@ -164,3 +164,43 @@ No deferred-to-Discover items: every DAM cross-domain handoff has a clean PCF L3
 - **CREATIVE-PROOFING** (bumped, mention_count 1 to 2): annotated-review specialist market (Ziflow, Filestage, GoVisually, Approval Studio, ProofHub, Aproove). Adjacency: DAM, AGENCY-MGMT, MRM, HCMS.
 - **MRM** (bumped, mention_count 1 to 2): Marketing Resource Management (Aprimo, Workfront for Marketing, Hive9, Allocadia, Plannuh). Adjacency: DAM, AGENCY-MGMT, PMM, ADV-AD-TECH.
 - **BRAND-PORTAL** (new candidate): Brand Portal and Brand Management (Frontify, Bynder Brand Guidelines, Brandfolder Brand Guidelines, Lingo, Brandworkz, Templafy). Adjacency: DAM, MRM, AGENCY-MGMT, HCMS.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Scope
+
+Apply only truly-technical B1 fixes from the 2026-05-30 audit. Defer everything gated on the Bucket 2 item 1 modularization choice or that requires new entities / lifecycle states / modules / capabilities / solutions / catalog copy / pattern-flag judgment.
+
+### Applied (3 of 12 B1 items)
+
+| ID | Type | Action | Result |
+|---|---|---|---|
+| B1-H1 | APQC tag | INSERT `handoff_processes` (handoff 98 -> process 1763, "Publish approved content") | id 709, key `98.1763`, `proposal_source='agent_curated'`, `record_status='new'` |
+| B1-H2 | APQC tag | INSERT `handoff_processes` (handoff 344 -> process 1762, "Assess and approve content"); existing (344, 141) untouched | id 710, key `344.1762`, `proposal_source='agent_curated'`, `record_status='new'` |
+| B1-H3 | APQC tag | INSERT `handoff_processes` (handoff 806 -> process 428, "Develop and manage content") | id 711, key `806.428`, `proposal_source='agent_curated'`, `record_status='new'` |
+
+Pre-flight confirmed all three pairs were absent before insert (the `key` unique-value constraint on `handoff_processes` would have rejected a duplicate anyway). All three rows omit `record_status` (DB default `new` per Rule #1), omit `notes` (default `''` per Rule #15), and omit `role` (default `implements`).
+
+### Deferred (9 of 12 B1 items)
+
+| ID(s) | Type | Defer reason |
+|---|---|---|
+| B1-M1 .. B1-M8 | New `data_objects` (8 rows) | Per brief: "new entities/DMDOs/modules" deferred; targeted modules (`DAM-ASSET-LIB`, `DAM-DISTRIBUTION`) are not yet decided. Gated on Bucket 2 item 1. |
+| B1-S1 | New `domain_modules` rows | Bucket 2 item 1 (modularization choice: 2/3/4-module split) is a user decision per brief. |
+| B1-S2, B1-S3 | Solved-by-S1 | Same gate as B1-S1. |
+| B1-S4 | `catalog_tagline` / `catalog_description` | Per brief: Rule #20 buyer-voice copy is deferred (surface to user before writing). |
+| B1-S5 | New `capabilities` + `capability_domains` | New entities; also implicates cross-cutting decisions in Bucket 2 item 5. |
+| B1-S6 | New `solutions` + `solution_domains` | New entities; vendor surface needs user pick on `primary`/`secondary` split. |
+| B1-S7 | Outbound `digital_assets ... users` edges | Audit asks for 3 rows "symmetric to the existing inbound" but does not pre-specify exact `relationship_verb` / `data_object_relationship_label` / `inverse_verb` / cardinality / `owner_side` tuples. Per brief, Rule #10 user-edges only applied when the audit pre-specifies the exact tuple. |
+| B1-S8 | `data_object_lifecycle_states` for `digital_assets` | Lifecycle states need `domain_module_id` (M5), which depends on B1-S1 modules existing. |
+| B1-S9 | Pattern flags on `digital_assets` (`has_personal_content`, `has_submit_lock`, `has_single_approver`) | Audit text: "surface for explicit consideration; PATCH where the pattern matches." Per brief: pattern flag flips are deferred (judgment). |
+| B1-S10, B1-S11 | Retire legacy `dam-system` skill / author module-anchored system skills + `skill_tools` | New `skills` + `skill_tools` rows; gated on Bucket 2 item 1 modules. |
+| B1-B1, B1-B2, B1-B3 | Handoff module-FK PATCHes (`source_domain_module_id` / `target_domain_module_id` on handoffs 98, 344, 806) | Audit explicitly says "fix once DAM modules ship": no DAM module exists today, so the FK has no resolvable target. Not derivable from existing modules per brief. |
+
+### Loader
+
+`c:/dev/domain-map/.tmp_deploy/fix_dam_b1_technical_2026_05_31.ts`. Idempotent: pre-flight refuses to proceed if any of the three (handoff, process) keys already exist.
+
+### UI link
+
+https://tests.semantius.app/domain_map/handoff_processes

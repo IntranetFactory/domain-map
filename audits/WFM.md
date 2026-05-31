@@ -179,3 +179,48 @@ _(empty; awaiting user response per per-bucket prompts)_
 ### Fixes applied
 
 _(empty; this audit is report-only)_
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+Loader: [.tmp_deploy/fix_wfm_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_wfm_b1_technical_2026_05_31.ts).
+
+### Applied
+
+| ID | Type | Action | Rows |
+|---|---|---|---|
+| B1-S4 | PATCH enum backfill (Rule #13) | `trigger_events.event_category` set on 6 rows: 429 `work_schedule.published` -> `state_change`; 430 `work_shift.swapped` -> `state_change`; 431 `work_shift.no_show` -> `signal`; 432 `absence_balance.recalculated` -> `signal`; 433 `time_off_policy.changed` -> `state_change`; 434 `meal_break_record.violated` -> `signal`. | 6 |
+| B1-S8a | INSERT `data_object_relationships` user-edges (Rule #10) | 4 missing `users` (id 748) edges inserted on WFM masters with no prior user-edge: id 1672 users -> work_schedules (160) `published_by_scheduler` / `scheduled_by`; id 1673 users -> absence_balances (164) `tracks_balance_for` / `balance_tracked_for`; id 1674 users -> time_off_policies (165) `owns_time_off_policy` / `owned_by`; id 1675 users -> meal_break_records (166) `worker_logs_meal_break` / `logged_by`. All `record_status` omitted (DB default `new`); `notes` omitted (Rule #15). | 4 |
+| B1-S8b | PATCH naming rename | Row id 9 (`employees(31) -> absence_requests(163)`): `inverse_verb` `requested by` -> `is_requested_by` (noun-phrase -> snake_case verb-shape). `relationship_verb='requests'` was already verb-shape; only the inverse needed correction. Row 9 is NOT the `users` user-edge (that's id 20); the rename is independent of B7 user-edge coverage. | 1 |
+| B1-S11 | INSERT `handoff_processes` (agent_curated) | 8 of the 13 audit-proposed tags landed where no `handoff_processes` row pre-existed: id 484 handoff 103 -> process 1418 (10858); id 485 handoff 104 -> 1414 (10854); id 486 handoff 136 -> 923 (10392); id 487 handoff 426 -> 1416 (10856); id 488 handoff 427 -> 1415 (10855); id 489 handoff 428 -> 951 (10321); id 490 handoff 499 -> 922 (10391); id 491 handoff 500 -> 195 (10387). All `proposal_source='agent_curated'`, `record_status` omitted (DB default `new`), `role` omitted (DB default `implements`), `notes` omitted (Rule #15). | 8 |
+
+**Total applied:** 19 catalog writes (6 PATCH + 4 INSERT + 1 PATCH + 8 INSERT).
+
+### Deferred (residual, recorded for next pass)
+
+| ID | Reason for deferral |
+|---|---|
+| B1-S1 (M1 module split) | New `domain_modules` rows; gated on B2-S1 user decision (2-module vs 3-module shape). |
+| B1-S2 (B11 aliases) | Gated on B2-S4 user pruning; alias inserts mechanically without user review pollute the catalog. |
+| B1-S3 (B12 lifecycle states) | New entities; gated on B2-S2 + B2-S3 + module shape from B2-S1. |
+| B1-S5 (B9 missing trigger_events) | New entities; gated on B1-S3 (lifecycle states first). |
+| B1-S6 (B10b source FK PATCH x 8 outbound) | Gated on B1-S1 (modules don't exist yet, no `source_domain_module_id` to populate). |
+| B1-S7 (B10b target NULL on 2 outbound rows) | Owed by other domains (PAYROLL, HCM); already named as report-only follow-ups. |
+| B1-S9 (F1 legacy `wfm-system` skill retire) | Gated on B1-S1 + B2-S5 (rehome vs retire route). |
+| B1-S10 (B8 missing outbound payload->target relationships) | Audit explicitly says "defer until target masters confirmed via pairwise pass". |
+| B1-S11 handoff 134 (REPLACES discovery_override -> process 41) | Delete-and-replace requires user judgment; existing row 29 stays. |
+| B1-S11 handoff 135 (REPLACES discovery_substring -> process 1058, same target) | Delete-and-replace requires user judgment; existing row 144 stays. |
+| B1-S11 handoff 429 (existing agent_curated row 228 -> process 42; audit proposed 246) | Existing agent_curated row points at a different process; delete-replace requires user judgment. |
+| B1-S11 handoff 934 (existing agent_curated row 390 -> process 1886; audit proposed 246) | Same as above; existing agent_curated row points at a different process. |
+| B1-S11 handoff 937 (RET-STORE `store_associate_checklist.overdue` -> WFM) | No clean PCF match per audit; explicitly deferred to Discover Pass 3. |
+| B1-S11 handoff 938 (existing agent_curated row 394 -> process 1414; audit proposal matched) | Existing row already carries the audit's exact proposal; no action needed. |
+| B1-S12 (B10b inbound target NULL on 5 rows) | Gated on B1-S1 (no WFM modules to assign as `target_domain_module_id`). |
+| B1-S13 (B10b inbound row 134 target NULL) | Same gating as B1-S12. |
+| B2-S1..B2-S5 | All user judgment questions; untouched. |
+| B3-S1..B3-S8 | Bucket 3 speculative; untouched. |
+
+**Total deferred:** 18 items.
+
+### JWT errors
+
+None observed during the run.
+

@@ -273,3 +273,31 @@ Universal-or-near-universal vendor entities surfaced by the analyst-side market 
 - **ERP-FIN B10b owes** target-module attribution on the 2 BANK-OPS -> ERP-FIN handoffs (889, 892). Likely ERP-FIN-AP-AR or ERP-FIN-LEDGER.
 - **Inbound publishers BANK-OPS may be owed once modularized:** CRM (`customer.created` -> kicks `banking_kyc_reviews`), MDM (party master refresh -> KYC re-screen), HCM (`employee.terminated` -> close internal accounts), SECOPS (`incident.escalated` -> open banking_case for account compromise). Speculative until BANK-OPS is modularized.
 - **All 7 outbound `handoffs` rows carry NULL `source_domain_module_id`.** This is correctly NULL until M1 is cured, but the catalog-wide B10b sweep (mode b2) will flag them. After Phase M ships on BANK-OPS, re-run the backfill loader to resolve source-side module attribution.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent applied the truly-technical subset of Bucket 1 via `.tmp_deploy/fix_bank_ops_b1_technical_2026_05_31.ts`. Total B1 = 17 items; 4 applied, 13 deferred.
+
+### Applied (4 items, 47 writes)
+
+- **B1-B4 (10 PATCH).** `trigger_events.event_category` enum backfill on ids 1004-1013: 8 `state_change` + 2 `signal` per Rule #13 vocabulary.
+- **B1-B2 (14 INSERT).** `data_object_relationships` user-edges (Rule #10) for all 8 BANK-OPS masters; multi-actor masters (loan_applications, account_applications, account_openings, banking_kyc_reviews, banking_cases, wire_transfers) got 2 rows each; loan_disbursements + banking_transactions got 1 each. owner_side=source, relationship_type=one_to_many, relationship_kind=reference, is_required=false.
+- **B1-B5 (16 INSERT).** `data_object_aliases` on the 4 audit-named masters: banking_kyc_reviews (5), banking_cases (4), wire_transfers (4: SWIFT/MT103/Fedwire/RTGS, all interbank-standards bodies, permitted under Rule #18 statutory exception), banking_transactions (3). All `alias_type='synonym'`.
+- **B1-H1 (7 INSERT).** `handoff_processes` for all 7 outbound BANK-OPS handoffs (886-892). All 5 distinct PCFs (70, 196, 323, 945, 1438) verified resolvable in `apqc_pcf_cross_industry` before insert. `proposal_source='agent_curated'`, `role='implements'`. Handoff 890 (account_opening.completed -> CSM, PCF 196) accepted per audit's pre-specified tuple despite "medium L3" confidence note; flagged here so user can downgrade or re-target later if desired.
+
+### Deferred (13 items)
+
+- **B1-S1, B1-S2, B1-S3, B1-M1, B1-M2, B1-M3, B1-M4, B1-B6.** Each creates new entities (modules / capabilities / data_objects / lifecycle states / catalog_tagline / catalog_description). Outside technical scope; B1-S1 + B1-S2 + B1-S3 also gated on B2 #1 (module-split decision) and Rule #20 (user-review for tagline/description). B1-B6 also gated on B1-S1 (lifecycle states need realizing `domain_module_id`).
+- **B1-S4.** Skill rename gated on M1 (per-module skills do not exist yet); send_email -> notify_person channel swap is user judgment (B2 #4).
+- **B1-B1.** Intra-domain `data_object_relationships` (7 rows) pre-specified by audit but outside the task scope, which only licenses user-edges per Rule #10.
+- **B1-B3.** Cross-domain mirror relationships (5 rows): requires lookup of GRC's compliance-alert master and judgment on which ERP-FIN entity to mirror against; defer to user.
+- **B1-B7.** Pattern flag flips (`has_personal_content`, `has_submit_lock`, `has_single_approver`) explicitly deferred in task scope.
+- **B1-B8.** New `domain_aliases` for BANK-OPS explicitly deferred in task scope.
+
+### Errors
+
+None. No JWT-audience errors.
+
+### Loader
+
+`c:/dev/domain-map/.tmp_deploy/fix_bank_ops_b1_technical_2026_05_31.ts` (run from project root). Idempotent on re-run (skips by natural keys).

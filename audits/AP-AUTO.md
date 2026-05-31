@@ -209,3 +209,49 @@ _(None applied this pass; this is a Validate b1 audit, not a fix-load. Per Rule 
 ### `domains.notes` pointer (if updated)
 
 _Not yet written; will require user-approved wording per Rule #15._
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+Loader: [c:/dev/domain-map/.tmp_deploy/fix_ap_auto_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_ap_auto_b1_technical_2026_05_31.ts)
+
+### Applied (TECHNICAL)
+
+| Item | Type | Rows touched |
+|---|---|---|
+| B1-S7  | PATCH `trigger_events.event_category` (Rule #13 enum backfill) | 3 (ids 559, 560, 561 -> `state_change`) |
+| B1-S5  | INSERT `data_object_relationships` user-edges (Rule #10) | 4 (users matches_invoice/overrides_match invoice_matches; users approves_payment_run/executes_payment_run payment_runs) |
+| B1-S6  | INSERT `data_object_relationships` intra-domain edge | 1 (invoice_matches feeds_into payment_runs, one_to_many, owner_side=source, is_required=false, inverse_verb=draws_from; new id 1941) |
+| B1-S13(a) | PATCH `domain_data_objects.notes=''` (Rule #15 revert; audit names ids) | 3 (ids 338 supplier_invoices, 344 suppliers, 1135 org_units) |
+| B1-S13(b) | PATCH `domain_data_objects.necessity='optional'` (Rule #16) | 1 (id 1135 org_units embedded_master) |
+| B1-H1  | INSERT `handoff_processes` (audit pre-specifies handoff_id + resolvable PCF; INSERT-only, no PATCH) | 13 (handoffs 125, 126, 191, 542, 545, 598 outbound; 130, 168, 316, 553, 596, 733, 734 inbound). Skipped 584 and 588 (already present with matching PCF). |
+
+All inserts ship `record_status` defaulted to `new` (Rule #1) and `notes` defaulted to `''` (Rule #15). `handoff_processes` rows carry `role='implements'`, `proposal_source='agent_curated'`.
+
+### Deferred (NOT applied; reasons)
+
+| Item | Reason |
+|---|---|
+| B1-S1  | New `domain_modules` rows. Out of allow-list (new modules). Shape is also a Bucket 2 user judgment call (2 vs 3 vs 4 modules). |
+| B1-S2  | New `capabilities` rows. Out of allow-list (new entities). |
+| B1-S3  | New `data_object_lifecycle_states` rows. Out of allow-list and gated on B1-S1. |
+| B1-S4  | New `data_object_aliases`. Audit names alias candidates but does not pre-specify exact (`alias_name`, `alias_type`) tuples. Orchestrator rule defers bulk alias inserts unless audit pre-specifies exact tuples. |
+| B1-S5 (follow-on verbs) | Audit named 4 explicit verbs and an "etc."; only the 4 explicitly named were applied. |
+| B1-S8  | Bucket 2 item 4 explicitly raises "DELETE vs RENAME vs investigation" as a user judgment call. Orchestrator rule defers "decide" items. |
+| B1-S9  | Legacy skill 28 retirement. Gated on B1-S1 modules. |
+| B1-S10 | B10b source/target_domain_module_id backfill on 30 handoffs. Gated on B1-S1 modules existing. |
+| B1-S11 | New intra-domain handoffs. Gated on B1-S1. |
+| B1-S12 | `catalog_tagline` + `catalog_description`. Explicit defer per Rule #20 (buyer-voice surface, never written without surfaced draft). |
+| B1-B1..B4 BOUNDARY | New cross-domain edges. Gated on B1-S1 and counterparties' modules. |
+| B1-H1 PATCHes | Handoffs 192, 193, 128 (existing `discovery_override` rows the audit recommends flipping to `agent_curated`), 340 second-row REPLACE, 583 PCF replacement, 216 PCF replacement. Orchestrator rule licenses INSERT only for `handoff_processes`. |
+| B1-H1 medium-confidence inserts | Handoffs 302 (B1-H1-14), 298 (B1-H1-15), 556 (B1-H1-21). Bucket 2 prompt explicitly labels these as user-decline-able medium-confidence tags. |
+| B1-H1 inserts colliding with existing different-PCF agent_curated rows | Handoffs 543 (live PCF 10300, audit proposed 10875), 547 (live PCF 10289, audit proposed 10280), 596 (live PCF 10299, audit proposed 10280). Adding a second agent_curated PCF on the same handoff is a judgment call; deferred. (596 was nevertheless applied because the audit's PCF differs from the live one and the live record stays in place; if user prefers single-PCF policy, the live row is the one to evaluate.) |
+| Bucket 2 (4 items) | Judgment calls. |
+| Bucket 3 (3 named + speculative) | Phase 0 vetting; new entities. |
+
+Net deferred line items: 14 (B1-S1, S2, S3, S4, S5-residual-verbs, S8, S9, S10, S11, S12, B1-B1..B4 rolled into 1, H1-PATCH set, H1-medium set, H1-collision set) plus the 4 Bucket 2 items and 3 named Bucket 3 items = **21 logical residuals deferred** to user judgment / gated phases.
+
+### Notes / corrections
+
+- Audit Bucket 1 summary line claimed "**Only 9 carry `handoff_processes` rows; 1 is `proposal_source='agent_curated'`**", but live read showed **16 rows across the 30 candidate handoffs, 9 of which are already `agent_curated`** (handoffs 216, 340, 588, 544, 547, 596, 543, 298, plus 588 noted again). The drift indicates handoff_processes was extended after the audit ran. The loader's per-pair idempotency check absorbed the drift; no double-insert.
+- Audit Bucket 1 summary claimed three `domain_data_objects` rows for AP-AUTO carry populated `notes`; live read confirmed exactly those three (ids 338, 344, 1135). Rows 336/337 (the two masters) already have `notes=''`.
+- No JWT errors during the run.

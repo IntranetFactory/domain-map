@@ -314,3 +314,40 @@ Candidates queued to `audits/_missing-domains.md`:
 - **HCM B10** owes inbound (`employee.terminated` ⇒ TELCO-BSS subscription cancel for employee lines). Currently absent.
 - **CRM B10** owes inbound (`account.created` ⇒ TELCO-BSS subscriber-record-create) for B2C / B2B account-creation flow. Currently absent.
 - **GRC / DLP B10** owes inbound for CPNI / GDPR data-subject-request workflows feeding into TELCO-BSS subscription / billing records. Surfaces only if user adds CPNI to Bucket 2 item B2-3.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Loader: [.tmp_deploy/fix_telco_bss_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_telco_bss_b1_technical_2026_05_31.ts). Run from project root. Idempotent.
+
+### Applied (technical only)
+
+- **B1-S11(b)**: PATCHed `trigger_events.event_category` from `""` to `state_change` on all 9 TELCO-BSS trigger_events (ids 1060-1068). Allowed enum values: `lifecycle`, `state_change`, `threshold`, `signal`. Every one of the 9 events names a state transition; `state_change` is the uniform technical fit per audit guidance ("Most should be `state_change`"). Empty-event_category count for the 7 masters is now 0.
+- **B1-H1**: INSERTed 7 `handoff_processes` rows (ids 458-464) per the audit's pre-specified `handoff_id` -> `process_id` table. All 6 distinct PCF process ids (196, 302, 740, 1299, 1312, 1351) verified to exist in `/processes` before insert. `proposal_source='agent_curated'`; `record_status` omitted (DB default `new` per Rule #1). One-to-one coverage on handoffs 927-933 confirmed in post-flight.
+
+Total writes: 9 PATCHes + 7 INSERTs = 16 rows touched.
+
+### Deferred (out of technical scope or gated)
+
+- **B1-S1** (capabilities): new entities; defer.
+- **B1-S2** (modules, M1 hard fail): new modules; defer (Bucket 2 item B2-2 picks the shape).
+- **B1-S3** (per-module system skills, Rule #17): gated on B1-S2.
+- **B1-S4** (retire legacy skill 111): gated on B1-S3; deleting the only system skill before per-module skills exist would hollow the domain's agent surface (F2 hard fail).
+- **B1-S5** (catalog UX A4): Rule #20 (`catalog_tagline` / `catalog_description`), surface to user; never auto-write.
+- **B1-S6** (lifecycle states, B12): gated on B1-S2 (`data_object_lifecycle_states.domain_module_id` FK is required per state).
+- **B1-S7** (intra-domain DOR edges, B6): not user-edges; the technical-fix scope for DOR is "user-edges Rule #10 audit pre-specifies" only.
+- **B1-S8** (users DOR edges, Rule #10): audit names the actor labels (order agent, billing specialist, network engineer, care agent, provisioning specialist, catalog manager, network inventory custodian) but does not pre-specify the exact `(relationship_verb, inverse_verb, relationship_type, relationship_kind, owner_side, is_required)` tuples per master. Defer per the precedent set by other 2026-05-31 B1 fix loaders.
+- **B1-S9** (data_object_aliases bulk, B11): Bucket 2 wording approval (B2-6); the rule forbids bulk `data_object_aliases` inserts unless the audit pre-specifies exact tuples.
+- **B1-S10** (B10b backfill `source_domain_module_id`): gated on B1-S2 (no source module exists to attribute to; not derivable today).
+- **B1-S11(a)** (2 missing handoffs on events 1060 / 1068): authoring NEW handoffs is surface-for-user judgment (audit asks whether to treat as leaf or add new handoff rows).
+- **B1-S12** (`domain_aliases`): per the DEFER list ("new `domain_aliases`").
+- **B2-1** (em-dashes in `domains.description` / `domains.business_logic`): wording approval (Bucket 2); even though the project rule forbids em-dashes, the replacement text needs user approval per the audit framing. Defer.
+- **B2-2 / B2-3 / B2-4 / B2-5 / B2-6**: Bucket 2 judgment.
+- **B3-1 through B3-13**: Phase 0 speculative; need vendor-schema vetting.
+- Report-only follow-ups owed by **CSM / ERP-FIN / ITSM / HCM / CRM / GRC**: not TELCO-BSS authoring scope.
+
+### Deferred count
+
+22 of 22 non-applied audit items deferred (B1-S1, B1-S2, B1-S3, B1-S4, B1-S5, B1-S6, B1-S7, B1-S8, B1-S9, B1-S10, B1-S11a, B1-S12; B2-1 through B2-6; B3 omnibus; 7 report-only owed by other domains). The two applied items (B1-S11b enum backfill, B1-H1 PCF tagging) are the only B1 entries that meet the technical-only criteria of the continuation prompt.
+
+### No JWT errors observed.
+

@@ -264,3 +264,48 @@ Two domain candidates surfaced or bumped during this audit (both via the helper)
 
 1. **EA (Enterprise Architecture)** - new candidate. First mention. Vendor evidence: LeanIX (SAP), Ardoq, Software AG Alfabet, BiZZdesign Horizzon, MEGA HOPEX, Avolution ABACUS, Sparx EA. Adjacency: BPA, APM, SPM, ITSM, CMDB. Strong overlap signal: 4 of 9 BPA solutions are EA leaders. Promotion would force the Bucket 2 #3 solution split and potentially the Bucket 2 #2 capability-map owner.
 2. **IBPMS (Intelligent Business Process Management Suite)** - existing candidate, mention count bumped to 2 (previously 1). Vendor evidence: Camunda Platform, Pega Platform, IBM Business Automation Workflow, Appian, Bonita. Adjacency: BPA, RPA, LCAP, WORK-MGMT. iBPMS is the execution-side counterpart to BPA's authoring-side; whether DMN belongs in BPA or iBPMS (Bucket 3 #4) depends on this candidate's status.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the truly-technical subset of Bucket 1 against the live catalog via loader `c:/dev/domain-map/.tmp_deploy/fix_bpa_b1_technical_2026_05_31.ts`. All judgment-bearing Bucket 1 items (module shape, capability_map canonical owner, catalog UX, pattern-flag flips, new lifecycle states, new domain_aliases, all M-band gated work, all B10b backfills) were deferred to the user. Audit row counts above are pre-fix; the live counts below reflect post-fix state.
+
+### Fixes applied
+
+| ID | Action | Result |
+|---|---|---|
+| B1-B1 | INSERT 3 users -> master `data_object_relationships` edges (Rule #10) | ids 1766 (247 owns_business_process_model), 1767 (249 owns_value_stream), 1768 (250 requests_process_simulation_run). Pattern: `data_object_id=748` source, snake_case verbs mirroring canonical row 1044 |
+| B1-B2 | DELETE legacy near-duplicate row 226 | No-op: row 226 was already absent in live state. Only canonical row 1044 (users -> business_capability_maps, `owns_business_capability_map`) remains. Audit row count for row 226 was stale |
+| B1-B3 | INSERT 3 intra-BPA master `data_object_relationships` | ids 1769 (249 maps_to_business_process_model 247), 1770 (248 groups_business_process_model 247), 1771 (250 simulates_business_process_model 247). All `one_to_many`, `reference`-kind. Audit's optional 4th edge (value_streams supports business_capability_maps) deferred |
+| B1-B5 | INSERT 6 `data_object_aliases` (synonym) on 247/249/250 | ids 1003 (247 "BPMN diagram"), 1004 (247 "process map"), 1005 (249 "VSM"), 1006 (249 "lean value stream map"), 1007 (250 "Monte Carlo simulation run"), 1008 (250 "what-if scenario") |
+| B1-H1 | INSERT 10 `handoff_processes` agent_curated tags | ids 551-560 across handoffs 180, 181, 182, 184, 740, 741, 783, 784, 785, 786. PCF resolution: external_id 16378 -> process 78 (Manage business processes) x7, 10013 -> process 13 (Develop and Manage Business Capabilities) x1, 11161 -> process 1708 (Reengineer business processes and systems) x3. Handoff 181 used the audit's primary recommendation (PCF 13); alt PCF 261 (Define and maintain enterprise architecture) deferred to user |
+
+All inserts omitted `record_status` (DB default `new` per Rule #1) and `notes` (default `''` per Rule #15).
+
+### Deferred items (12 of 17 Bucket 1)
+
+| ID | Reason for deferral |
+|---|---|
+| B1-M1 | New `domain_modules` rows. Module split shape is Bucket 2 #1 user decision (3 vs 4 vs 2 modules) |
+| B1-M2 | DMDO master rows on new BPA modules. Gated on B1-M1 |
+| B1-M3 | `business_capability_maps` canonical owner is Bucket 2 #2 user decision (BPA vs APM vs EA) |
+| B1-M4 | PATCH lifecycle states 673/674/675 `domain_module_id` to new BPA module. Gated on B1-M1 / B1-M3 |
+| B1-M5 | New `domain_module_capabilities` rows. Gated on B1-M1 |
+| B1-S1 | `catalog_tagline` / `catalog_description` drafts. Rule #20 surface-to-user before any write |
+| B1-S2 | DELETE legacy `bpa-system` skill (id 34). Gated on per-module system skills landing first, which requires B1-M1 |
+| B1-S3 | PATCH `source_domain_module_id` on 8 outbound handoffs. Gated on B1-M1 (new modules are the source masters' holders) |
+| B1-S4 | PATCH `target_domain_module_id` on 3 inbound + 3 outbound handoffs. Inbound gated on B1-M1; outbound to PROC-MIN / SPM gated on those domains' B10b (Report-only follow-ups) |
+| B1-S5 | New intra-BPA `handoffs` rows. Gated on B1-M1 |
+| B1-S6 | New `domain_aliases` rows for BPA. Out of scope for the technical pass per the continuation prompt |
+| B1-B4 | New `data_object_lifecycle_states` (on 247/249/250) + pattern-flag PATCHes on `data_objects`. New entities + flag flips, both deferred per prompt; Bucket 2 #4 still owes user confirmation on the three positive evaluations |
+
+Bucket 2 #6 (promote-or-keep handoff 183 substring tag) was untouched; the existing discovery_substring row (id 102) remains.
+
+### Live state after fix
+
+- `data_object_relationships` touching BPA masters: 9 rows (was 3). Breakdown: 4 users->master edges (247/248/249/250 each have one canonical user edge), 3 intra-BPA edges (audit B6 satisfied for the 3 named tuples), 1 enterprise_applications->business_capability_maps edge (id 217, pre-existing, owned by APM substrate), 1 legacy is now redundant only on 248 (already absorbed).
+- `data_object_aliases` on BPA masters: 8 rows (was 2). Coverage: 247 has 2, 248 has 2, 249 has 2, 250 has 2.
+- `handoff_processes` on BPA-touching handoffs: 11 rows (was 1). Catalog quality count remains 0 `record_status='approved'`; all new rows are `agent_curated` per Rule #1.
+
+### Loader
+
+`c:/dev/domain-map/.tmp_deploy/fix_bpa_b1_technical_2026_05_31.ts`. Run from `c:/dev/domain-map` with `bun run`. Idempotent (each step re-checks live state before acting). JWT errors: none.

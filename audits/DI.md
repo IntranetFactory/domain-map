@@ -210,3 +210,30 @@ The vendor surface walked above is from my own knowledge of the market, not a fo
 - **REVERSE-ETL** (Reverse-ETL / Warehouse-Activation) - Hightouch, Census, RudderStack Reverse-ETL, Polytomic, Grouparoo. Re-surfaced (already in queue, mention bumped). Distinct from DI: warehouse-out direction (warehouse to SaaS), CDP-adjacent activation use case; DI's sink_connectors overlap but the audience-targeting + identity-resolution semantics are different.
 - **DATA-OBSERVABILITY** (Data Observability) - Monte Carlo, Acceldata, Bigeye, Anomalo, Soda, Sifflet, Metaplane, Datafold. Re-surfaced. Distinct from DI: monitoring + lineage-based RCA surface that sits above DI / DCG / DQ rather than running pipelines itself. DI emits the freshness / volume / lag signals; observability platforms aggregate and route them.
 - **DATA-CONTRACTS** (Data Contracts Management) - Gable.ai, Datacontract.com, PayPal data-contract-cli, Confluent Schema Registry, Buf Schema Registry. Re-surfaced. Distinct from DI's `schema_registries`: a contract is a producer-consumer agreement (schema + SLA + ownership + tests + breaking-change policy), not just a schema document; Gable.ai is the clearest pure-play.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Applied (3 of 17 B1 items)
+
+- **S4 (B-band trigger_events.event_category enum backfill).** PATCHed 14 rows (ids 762-775) with the categories the audit pre-specifies: `state_change` x7 (762, 764, 767, 768, 770, 773), `threshold` x3 (763, 772, 775), `lifecycle` x4 (765, 766, 769, 774), `signal` x1 (771). Post-load: all 14 carry non-empty `event_category`.
+- **S6 (B7 hard fail - users-edge data_object_relationships, Rule #10).** INSERTed 13 rows linking `users` (id=748, `kind='platform_builtin'`) to the 7 DI masters with verbs the audit pre-specifies (operator / configurer / owner / author / approver / steward / reviewer / error_reviewer / breaking_change_reviewer). Mapping: `pipeline_runs` (434) operates + reviews_errors_on; `source_connectors` (435) configures + owns; `sink_connectors` (436) configures + owns; `transformation_jobs` (437) authors + approves; `schema_registries` (438) stewards + reviews_breaking_changes_on; `change_data_capture_streams` (439) operates; `integration_flows` (440) authors + operates. All rows `owner_side='target'`, `relationship_type='one_to_many'`, `relationship_kind='reference'`, `is_required=false`, `record_status` defaulted to `new` per Rule #1, `notes=''` per Rule #15.
+- **S17 (H1 hard fail - APQC tagging, agent_curated).** INSERTed 9 `handoff_processes` rows (proposal_source=`agent_curated`, role=`implements`, record_status defaulted to `new`, notes=`''`) on the 9 cross-domain outbound handoffs: 157 -> PCF 20779 (id 277); 725 -> PCF 20779 (id 277, joins existing 725-272 row, not a duplicate since key is the 2-tuple); 731 -> PCF 20775 (id 1209); 259 -> PCF 20779; 726 -> PCF 20779; 728 -> PCF 20779; 729 -> PCF 20735 (id 270); 730 -> PCF 20735; 727 -> PCF 20903 (id 1299). All four PCF processes verified live before insert. Post-load: 10 rows for the 9 handoffs (handoff 725 has 2 process links by design).
+
+### Deferred (14 of 17 B1 items)
+
+- **S1, S2, S8, S9, S10, S12, S14, S15, S16:** all gated on B2-S1 (module split topology user judgment) and on creating new `domain_modules` / `capabilities` / lifecycle states / system skills / roles. Task scope excludes new-entity creation; cannot proceed until user picks the split and authorizes the entity loads.
+- **S3:** A3 primary-solution fix and `coverage_level` re-evaluation on the existing 10 rows are judgment calls (which suite drops to `partial`, which flagships earn `primary`). Also requires creating missing pure-play `solutions` rows. Defer per task scope (new entities + user judgment).
+- **S5 (B6 intra-DI relationships):** audit specifies pairs and verb candidates but uses "Draft 7-8" language and cluster-drafts review path; not pre-specified as exact tuples with `is_required` / `owner_side`. Task scope restricts user-edges to Rule #10 (built-ins); intra-DI relationships are deferred for cluster-drafts review.
+- **S7 (B8 outbound cross-domain relationships):** audit uses "verb candidate" language and "Draft 7-8" cluster-drafts path. Not pre-specified as exact tuples; defer per task rules on cluster-drafts and the absence of pre-specified `is_required` / `owner_side` per row.
+- **S11 (B11 data_object_aliases):** audit asks for 12-18 aliases "once B1-S1 lands"; not pre-specified as exact tuples, and task rules explicitly defer bulk data_object_aliases inserts unless audit pre-specifies exact tuples.
+- **S13 (B4 pattern flags):** explicitly gated on B2-S2 user-judgment (per-flag yes/no).
+
+### Notes
+
+- No JWT errors during the load.
+- No `notes` writes; no vendor-name writes; no `record_status` overrides; no new domains / modules / capabilities / entities created.
+- B1-S10 (handoff source_domain_module_id backfill) remains blocked because DI still has 0 `domain_modules` rows; the backfill becomes derivable only after B1-S1 lands.
+
+### Loader
+
+- `c:/dev/domain-map/.tmp_deploy/fix_di_b1_technical_2026_05_31.ts`

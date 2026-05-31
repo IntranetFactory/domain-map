@@ -138,3 +138,45 @@ These items the audit identified but another domain owns the fix. Listed here fo
 | VULN-MGMT B9: handoff(s) from VULN-MGMT to SOAR on high-criticality-vulnerability events (SOAR auto-orchestrates patching / containment workflows). | VULN-MGMT (id 13) | Surfaces when VULN-MGMT is next validated; not in scope for SOAR's audit. |
 | Once SIEM / XDR / EDR are promoted from `_missing-domains.md`: B9 handoffs from each into SOAR (every SOAR vendor's primary inbound is SIEM alert ingestion). | SIEM / XDR / EDR (queued, not yet domains) | Tracked on the queue file's promotion path; not in scope today. |
 
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent continuation pass on the 2026-05-30 audit, scoped to truly-technical B1 fixes only (enum backfills, FK PATCHes derivable from existing rows, INSERTs to pre-specified existing rows, naming renames pre-specified by ID, user-edges Rule #10 pre-specified, permission_verb_override pre-specified by state+verb, handoff_processes only when the audit pre-specifies a resolvable handoff_id + PCF, notes='' reverts only when audit names row IDs). All judgment-bearing, gated, or speculative work deferred to the user.
+
+### Live re-verification
+
+Re-ran the gap reads against the live tenant before any action:
+
+- `/domain_modules?domain_id=eq.12`: `[]` (0 rows)
+- `/capability_domains?domain_id=eq.12`: `[]` (0 rows)
+- `/domain_aliases?domain_id=eq.12`: `[]` (0 rows)
+- `/domain_regulations?domain_id=eq.12`: `[]` (0 rows)
+- `/domain_data_objects?domain_id=eq.12`: `[]` (0 rows)
+
+The 2026-05-30 footprint table is current. SOAR remains a placeholder domain: no modules, no capabilities, no DMDO, no aliases, no regulations, no handoffs, no events, no skills.
+
+### Per-finding classification
+
+| ID | Class | Reason |
+|---|---|---|
+| B1-S1 | DEFER | New `capabilities`, `capability_domains`, `domain_modules`, `domain_module_data_objects`, and `data_objects` rows. Explicitly outside the technical-only mandate (no new entities / DMDOs / modules). Also gated on B2-S3 (Phase 0 vendor research vs eyeball-mode), a user judgment call. |
+| B1-S2 | DEFER | `catalog_tagline` / `catalog_description` are Rule #20 buyer-voice copy requiring user review before any PATCH. Outside the technical-only mandate. |
+| B1-S3 | DEFER | New `domain_aliases` rows. Explicitly outside the technical-only mandate (no new aliases). |
+| B1-S4 | DEFER (cascaded) | `trigger_events` cannot be authored before the underlying `data_objects` rows exist; gated on B1-S1. |
+| B1-S5 | DEFER (cascaded + ownership) | The cloned fan-out handoffs are owed by the DLP and Data-Security publisher domains (per the asymmetry rule the audit calls out), not by SOAR. Additionally cascaded on B1-S1 (target SOAR modules do not exist yet). |
+| B1-S6 | DEFER (cascaded) | New `skills`, `tools`, `skill_tools` rows; gated on B1-S1 (no modules to attach a system skill to). |
+| B1-S7 | DEFER (cascaded) | `data_object_lifecycle_states` + `permission_verb_override` rows; gated on B1-S1 + B1-S6. The audit pre-specifies the verb overrides (`contained` -> `contain_security_incident`, `eradicated` -> `eradicate_security_incident`, `closed` -> `close_security_case`), but no underlying `data_object_lifecycle_states` rows exist to PATCH. The override is a property of the state row, so it cannot be applied before the state exists. |
+| B1-S8 | DEFER (vacuous) | `handoff_processes` requires resolvable `handoff_id`; SOAR has zero handoffs (verified by the 2026-05-30 footprint and unchanged today). The audit pre-specifies PCF anchor candidates (processes 1182, 1164, 1170, 1299, 199) for a future re-audit, but with no handoff rows to anchor against, every INSERT would fail the FK resolution pre-flight. |
+| B1-S9 | NO ACTION | Mechanical meta-reminder about `record_status='new'` discipline on downstream loaders. No rows to inspect (no recent loads). |
+
+### Action taken
+
+None. The entire B1 set is either explicitly deferred per the technical-only mandate (S1, S2, S3) or cascade-gated on B1-S1 with no intermediate technical surface to apply (S4-S8). No enum backfills, FK PATCHes, INSERTs to existing rows, DELETEs, naming renames, user-edges, permission_verb_overrides, handoff_processes inserts, or notes='' reverts had a non-vacuous target on the live tenant.
+
+No loader script was authored: there was nothing to load.
+
+### Recommended next step
+
+The full B1 cascade unblocks once the user decides B2-S3 (Phase 0 vendor research vs eyeball-mode for the SOAR module shape) and B1-S1 lands. After that, S4 / S6 / S7 become individually-applicable technical fixes (and S5 routes to the publisher-side DLP / Data-Security audits).
+
+Frontmatter left as-is (`status: feedback_needed`, `open_questions: 16`) since no question was answered and no gap was closed.
+

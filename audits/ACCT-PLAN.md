@@ -339,3 +339,38 @@ These are observations the audit identified but another domain owns the fix. The
 - **SALES-ENG B10 / inbound DMDO:** handoff 210 (`whitespace.identified` → SALES-ENG) implies SALES-ENG should declare a `consumer + optional` DMDO row on `customers` on whichever SALES-ENG module ingests the cross-sell prospect. SALES-ENG's next B10 pass surfaces this.
 - **FARMER-DIRECT-SALES B9 receipt:** FARMER-DIRECT-SALES receives event 169 from CRM (handoff 1216) and event 197 (handoff 1217); the receiving domain owes B10 / B10b coverage on those rows. If B2-D1 consolidates events 169 and 197, handoff 1217 needs re-pointing. Surfaces on the next FARMER-DIRECT-SALES audit.
 - **SKILL.md change request (cross-cutting, no domain owner):** B2-L1's resolution may also include editing the SKILL.md B1 leadership-tier list to remove ACCT-PLAN. This is a documentation change, not a catalog change; surfaces here so the orchestrator can route the SKILL.md edit alongside whatever loader handles B1-M1.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Scope of this pass: apply only truly-technical Bucket 1 fixes that do not require user judgment. All judgment-bearing fixes (catalog UX drafts per Rule #20, new modules, new entities, contributors, role authoring, alias decisions, modularization shape, trigger-event attribution, etc.) remain deferred to the prior buckets.
+
+### Applied
+
+| ID | Action | Result |
+|---|---|---|
+| B1-H1 (handoff 210) | INSERT `handoff_processes` row (handoff_id=210, process_id=929, proposal_source='agent_curated', record_status default 'new'). Maps the ACCT-PLAN -> SALES-ENG `whitespace.identified` handoff to APQC PCF L4 "Identify and capture upsell/cross-sell opportunities" (external_id 16928). | Inserted as id 377, key=`210.929`. |
+
+Loader: [.tmp_deploy/fix_acct_plan_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_acct_plan_b1_technical_2026_05_31.ts). Run from project root.
+
+Pre-flight verifications (all passed before the insert):
+- handoff 210 exists, source_domain_id=105 (ACCT-PLAN), target_domain_id=95 (SALES-ENG).
+- process 929 exists, source_framework=`apqc_pcf_cross_industry`, hierarchy_level 4.
+- no existing `handoff_processes` row for handoff_id=210.
+
+H-band coverage after this pass: handoff 209 still untagged (deferred, see below); handoff 210 tagged. Coverage of cross-domain handoffs rises from 0 of 2 to 1 of 2.
+
+### Deferred (and why)
+
+| ID | Reason for deferral |
+|---|---|
+| B1-H1 (handoff 209) | Gated on B2-T1 (trigger-event publisher attribution). Per the cross-bucket dependency note, if B2-T1 resolves toward option (b) the agent_curated row should NOT be authored on the ACCT-PLAN side — the canonical publisher is CRM and the tag would belong on CRM's outbound handoff instead. Waiting for the B2-T1 decision before touching this. |
+| B1-A1 | Catalog UX fields. Rule #20 forbids auto-write of `catalog_tagline` / `catalog_description`. Drafts are already in the 2026-05-30 audit awaiting user approval. |
+| B1-M1 | New `domain_modules` rows. Out of scope for technical fixes (new entities); also gated on B2-L1 (leadership-tier reclassification) and B2-M1 (6 / 4 / 3 module shape). |
+| B1-S1 | B10b backfill. Gated on B1-M1 (no modules exist yet to attribute the existing two outbound handoffs to). |
+| B1-V1 .. B1-V7 | New master `data_objects` and supporting rows. Out of scope (new entities), gated on B1-M1 and B2-L1. |
+
+### Not applicable to this pass
+
+The TECHNICAL surface in the prompt also covers: enum backfills (no enum gaps named in the audit), B10b FK PATCHes derivable from existing modules (none — ACCT-PLAN has zero modules), inserts to `domain_regulations` (none — ACCT-PLAN has no regulation directly bearing per the audit), stale-row DELETEs with named IDs (none named), naming renames (none named), `data_object_relationships` user-edges (no ACCT-PLAN masters yet, so no Rule #10 user-edges to author), `permission_verb_override` PATCHes (no lifecycle states exist), `notes=''` reverts (no specific row IDs flagged for revert in the audit), and bulk `data_object_aliases` inserts (B2-A1 is a judgment call, no pre-specified tuples).
+
+Status frontmatter left as-is; the audit is still in `feedback_needed` pending Buckets 2 and 3 decisions.

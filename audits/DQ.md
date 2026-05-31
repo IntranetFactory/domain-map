@@ -186,3 +186,39 @@ One-line summary: 1 inbound (DI:pipeline_run.sla_breached on pipeline_runs). DQ 
 ### `domains.notes` pointer (if updated)
 
 _not yet written; will require user-approved wording per Rule #15._
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Truly-technical B1 fixes applied via loader `.tmp_deploy/fix_dq_b1_technical_2026_05_31.ts` (run from project root). 16 Bucket-1 items in the 2026-05-30 audit; 4 of them were in technical scope, 12 deferred. Loader is idempotent.
+
+### Applied
+
+- **B1-S5 (A1):** PATCHed `domains` row 90. Replaced U+2014 em-dash in `business_logic` with comma+space; replaced British "standardisation" with American "standardization" in `description`. Verified post-patch.
+- **B1-S9 (B7):** INSERTed 7 user-edges per Rule #10 against `users` (id 748), one per actor the audit pre-specifies. Verbs / inverses authored per existing `users` edge pattern: `users authored rules quality_rules` (309, `is_created_by`), `users assigned incidents quality_incidents` (310, `is_assigned_to`), `users raised incidents quality_incidents` (310, `is_created_by`), `users owned profile results profile_results` (311, `is_owned_by`), `users owned SLA definitions dq_sla_definitions` (314, `is_owned_by`), `users owned scorecards dq_scorecards` (313, `is_owned_by`), `users acknowledged anomalies anomaly_detections` (94, `is_acknowledged_by`). All rows `relationship_type=one_to_many`, `relationship_kind=reference`, `owner_side=source`, `is_required=false`. The audit lists 6 edges but pre-specifies 2 actors for `quality_incidents` (assignee + raiser), so 7 rows authored.
+- **B1-S10 (B11):** INSERTed 1 of the 8 alias tuples the audit pre-specifies, the only one with `alias_type='synonym'` (`anomaly` on `anomaly_detections`). The other 7 are vendor-specific (`expectation` / `check` / `monitor` / `profiling output` / `profile` / `incident` / `issue`), which the platform requires under `alias_type='solution_term'` with `solution_id` set; the corresponding vendor solutions (Great Expectations, Soda, Monte Carlo, Ataccama ONE, Informatica IDQ, Bigeye) are not loaded yet (gated on B1-S4 / Bucket 2 #4). Loader attempted to insert as `solution_term` with NULL `solution_id` and hit the platform check-constraint `(23514) Solution context must be set when alias type is 'solution_term' and null otherwise.` Removed those 7 from this run; they re-queue under B1-S4.
+- **H1 APQC tagging:** INSERTed 5 `handoff_processes` rows for the 5 outbound handoffs the audit pre-specifies with confidence high or medium and a verified PCF row. All `proposal_source='agent_curated'`, `record_status` default `new`. Process IDs were resolved at runtime by `external_id` on `processes` (all 4 PCF rows verified pre-insert): handoff 266 to PCF 20903 (Triage IT service delivery incidents, process_id 1299); handoff 267 to PCF 20927 (Resolve IT issues/requests, 1319); handoff 268 to PCF 10252 (Maintain master data, 771); handoff 713 to PCF 10252 (771); handoff 714 to PCF 20650 (Triage SLA compliance issues, 1103). H1 coverage moves from 0 of 11 to 5 of 11 tagged; the remaining 6 are inbound (5) or no clean PCF home (1), all defer-to-Discover per the original audit.
+
+### Deferred (12 of 16)
+
+- **B1-S1 (M1) modules**, **B1-S2 (M7) anomaly_detections canonical owner**, **B1-S3 (A2) capabilities**, **B1-S4 (A3) primary-coverage solutions**, **B1-S6 (A4) catalog UX**, **B1-S7 (F1) legacy skill retire**: each either requires user judgment (module split shape, canonical owner, solution coverage, catalog tagline wording per Rule #20) or is gated downstream on the module-split decision. Bucket-2 prompt #2 still owns the split.
+- **B1-S8 (B6) intra-domain master edges**: 6 edges named in the audit prose, but the verbs and cardinalities are not pre-specified row-by-row; cluster-draft authoring needed first.
+- **B1-S11 (B12) lifecycle states**: state machines described in prose but no per-state rows (state_order, is_initial, is_terminal, requires_permission, permission_verb_override) pre-specified; also gated on B1-S1 modules for the `domain_module_id` anchor.
+- **B1-S12 (B8) cross-domain edges**: 4 edges named but verbs / cardinalities / owner_side not pre-specified per row.
+- **B1-S13 (B10b) per-module attribution**: deterministic but blocked on B1-S1 modules existing.
+- **B1-M1 / B1-M2 / B1-M3**: new data_objects (`data_quality_checks`, `data_quality_remediation_actions`, `column_profiles`), explicit Phase 0 / B2 decisions.
+- **The 7 vendor-specific aliases** rolled into B1-S4 (need solution rows first).
+
+### JWT errors
+
+None.
+
+### Verification queries (post-load)
+
+- `GET /domains?id=eq.90&select=description,business_logic`: description now `Profiling, cleansing, standardization, matching, and ongoing monitoring of data fitness for purpose.`; business_logic now `Profiling, matching, anomaly detection, and data observability, the algorithmic plane the workflow sits on top of.`. No em-dash, no "standardisation".
+- `GET /data_object_relationships?data_object_id=eq.748&related_data_object_id=in.(94,309,310,311,313,314)`: 7 rows.
+- `GET /data_object_aliases?data_object_id=in.(94,309,310,311,312,313,314)`: 1 row (`anomaly`).
+- `GET /handoff_processes?handoff_id=in.(266,267,268,713,714)`: 5 rows, all `agent_curated`, all `new`.
+
+### Loader
+
+`.tmp_deploy/fix_dq_b1_technical_2026_05_31.ts` (gitignored; idempotent).

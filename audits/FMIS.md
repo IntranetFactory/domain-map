@@ -153,3 +153,33 @@ These items the FMIS audit surfaced but cannot fix from this side. Each names th
 | FARMER-DIRECT-SALES | Has modules and 1 fully-wired consumer row (`FDS-HARVEST-PLANNING` consumes `harvest_records`). No outstanding report-only item from FMIS's side for this neighbor. | FDS-HARVEST-PLANNING side is clean; the corresponding cross-domain relationship row (`harvest_records spawns harvest_forecasts` or similar) is FMIS's B8 to author, not FDS's. |
 
 The boundary integrity gap (FMIS publishes handoffs that the four unmodularized neighbors implicitly consume but cannot declare) is the single largest cross-domain finding from this audit. It is **not** an FMIS bug, it is a cluster-wide modularization debt on the food / production cluster.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Applied
+
+Loader: [.tmp_deploy/fix_fmis_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_fmis_b1_technical_2026_05_31.ts). Applied the three B1 items the agent is licensed to land on its own (enum backfills, Rule #10 user-edges with pre-specified shape, APQC tags with pre-specified `handoff_id` + verified PCF `process_id`).
+
+- **B1-S6 (B9 enum backfill).** PATCHed `trigger_events.event_category` on 6 rows: 1111 / 1112 / 1113 / 1115 → `state_change`; 1114 → `threshold`; 1116 → `signal`. All 6 previously empty; 0 skipped. B9 partial-fail is now clean for FMIS.
+- **B1-S8 (B7 / Rule #10 user-edges).** INSERTed 9 `data_object_relationships` rows from `users` (data_object 748, `kind='platform_builtin'`) to each FMIS master, following the existing user-edge convention (`owner_side='source'`, `relationship_type='one_to_many'`, `relationship_kind='reference'`, `is_required=false`, empty `notes`). `field_applications` carries two verbs (applied + supervised) per the audit. B7 hard-fail is cured.
+- **B1-S11 (H1 APQC tags).** INSERTed 8 `handoff_processes` rows for the high/medium-confidence handoffs (350, 349, 965, 969, 351, 352 → PCF id 171 "Maintain production records"; 970 → PCF id 157 "Create materials plan"; 967 → PCF id 166 "Order materials and services"). `proposal_source='agent_curated'`, `record_status` omitted so the DB default `new` kicks in. Handoffs 966 and 968 remain unloaded per the audit's defer-to-Discover decision.
+
+### Deferred
+
+- **B1-S1 / B1-S2 / B1-S3 (M1/M2 module split + M4/M6 capabilities + F1 retire `fmis-system`).** New modules. The 2-vs-3 module split is a user pick (Bucket 3 B3-S1).
+- **B1-S4 (B11 aliases).** Audit lists alternative synonyms per master (2-3 candidates each), not exact tuples; bulk alias inserts deferred per skill rules.
+- **B1-S5 (B12 lifecycle states).** Needs `domain_module_id` from B1-S1; also requires per-entity `requires_permission` decisions and the config-shape exemption call (Bucket 2 B2-S4).
+- **B1-S7 (B6 intra-domain relationships).** 11 edges among the 8 FMIS masters. Not Rule #10 user-edges, so outside the technical-only license this run carried.
+- **B1-S9 (B8 cross-domain relationships).** Target-side masters on FOOD-TRACE / FSQM / TELEMATICS / ERP-FIN are unverified (those domains have zero modules); rows would point at nothing.
+- **B1-S10 (B10b source-side backfill).** Gated on B1-S1 (no FMIS modules to point at).
+
+### Bucket 2 / Bucket 3
+
+All untouched. The Rule #15 notes-pollution audit (B2-S1 / B2-S2), the Rule #18 vendor-prose audit (B2-S3), the pattern-flag re-evaluation (B2-S4), and all three Phase 0 candidates (B3-S1 / B3-S2 / B3-S3) still need user input.
+
+### Post-load state
+
+- Bucket 1 remaining: 13 items (3 of 16 cleared).
+- Bucket 2: 4 open.
+- Bucket 3: 3 open.
+- M1 hard-fail unchanged (0 `domain_modules`), so F2-F5, M2-M7, E1-E6, B10b source-side all stay unevaluable until the module split lands.

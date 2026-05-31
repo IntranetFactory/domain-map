@@ -140,3 +140,36 @@ Four candidate adjacent markets were queued in `audits/_missing-domains.md` duri
 - **TASK-MIN** — Task Mining (UiPath Task Mining, Power Automate Process Advisor, Soroco Scout, Kryon, ABBYY Timeline).
 - **PROCESS-ORCH** — Process Orchestration and Workflow Engine (Camunda, Bizagi, Pega, IBM BAW, Workato, Tray.ai, Appian, Power Automate Cloud Flows).
 - **SECRETS-MGMT** — Secrets Management (HashiCorp Vault, CyberArk Conjur, AWS Secrets Manager, Doppler, 1Password Secrets Automation, Akeyless).
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the three technical Bucket 1 items that do not depend on Phase A modularization or user judgment. Loader: `c:/dev/domain-map/.tmp_deploy/fix_rpa_b1_technical_2026_05_31.ts`. All writes verified post-load.
+
+### Applied (3 of 13 Bucket 1 items)
+
+- **B1-S3** (`event_category` backfill). PATCHed all 10 `trigger_events` rows for RPA (ids 787-796) per the audit-proposed mapping: `lifecycle` (3 rows: `rpa_bot.deployed`, `rpa_activity.added`, `rpa_deployment_package.released`); `state_change` (4 rows: `rpa_bot.disabled`, `rpa_execution.completed`, `rpa_execution.failed`, `rpa_schedule.activated`); `threshold` (2 rows: `rpa_execution.long_running`, `rpa_bot_credentials.expiring`); `signal` (1 row: `rpa_activity_log.exception_captured`). All values inside the Rule #13 allowed set.
+
+- **B1-S6** (B7 `users` first-class edges, Rule #10). Inserted 7 `data_object_relationships` rows from `users` (id 748) to each RPA master. Tuples: `authored bots` → `rpa_bots` (523), `scheduled runs` → `rpa_schedules` (525), `approved deployments` → `rpa_deployment_packages` (529), `rotated credentials` → `rpa_bot_credentials` (528), `triaged activity logs` → `rpa_activity_logs` (527), `supervised executions` → `rpa_executions` (524), `curated activities` → `rpa_activities` (526). All `one_to_many`, `reference`, `owner_side='source'`, `is_required=false`. Inverse verbs follow the `is_<verb>_by` snake pattern used by the existing user-edge corpus.
+
+- **B1-S13** (APQC TAGGING / H1). Inserted 4 `handoff_processes` rows with `proposal_source='agent_curated'`, `role='implements'`, `record_status='new'` (default): handoff 736 + 739 → process 1299 (`Triage IT service delivery incidents`, APQC L4 ext_id 20903); handoff 737 + 738 → process 1184 (`Conduct IT compliance control auditing of internal and external services`, APQC L4 ext_id 20745).
+
+### Deferred (10 of 13 Bucket 1 items)
+
+- **B1-S1** (Phase A modules + capabilities + `domain_module_data_objects` migration). Deferred: introduces new modules / capabilities / DMDOs; module-shape arbitration (2 vs 3 modules) is open as B2-S1.
+- **B1-S2** (`catalog_tagline` + `catalog_description`). Deferred per Rule #20: drafts must be surfaced to user before any PATCH.
+- **B1-S4** (missing `handoffs` rows for 3 published events). Deferred: dispatcher pre-condition for `handoffs` insert requires audit-pre-specified `handoff_id` + resolvable PCF; this item proposes new handoff rows whose target domains are themselves an open question.
+- **B1-S5** (B6 intra-domain `data_object_relationships`). Deferred: the audit calls for "draft 6-8 rows" but does not enumerate exact verb/cardinality tuples; this is a draft-and-review item, not a pre-specified insert.
+- **B1-S7** (B10b `source_domain_module_id` backfill). Deferred: gated on B1-S1 (no RPA `domain_modules` rows exist to derive from).
+- **B1-S8** (B11 aliases). Deferred: gated on B2-S2 (alias-collision with AUDIT's `audit_findings` is unresolved), and the alias set is not enumerated as exact pre-specified tuples per the dispatcher exclusion list.
+- **B1-S9** (B12 lifecycle states + workflow gates). Deferred: gated on B1-S1 (`domain_module_id` must point at the realizing module per M5).
+- **B1-S10** (F1 legacy `rpa-system` skill migration + retirement). Deferred: gated on B1-S1.
+- **B1-S11** (F3 floor: per-module `mutate` / `side_effect` tools). Deferred: gated on B1-S1 + B1-S9.
+- **B1-S12** (B4 pattern-flag positive re-evaluation). Deferred: per-flag yes/no is a judgment call (Bucket 2 B2-S3); Rule #15 forbids the legacy `notes` rationale carve-out anyway.
+
+### Verification
+
+- `trigger_events.event_category` for ids 787-796: 10/10 populated with audit-mapped values, zero remaining empty strings on RPA events.
+- `data_object_relationships` from `users` (748) to RPA master ids 523-529: 7/7 rows present, all `owner_side='source'`.
+- `handoff_processes` for handoffs 736-739: 4/4 rows present, all `proposal_source='agent_curated'`, `record_status='new'`, `role='implements'`.
+
+No JWT-audience errors during the load. No `notes` columns written. `record_status` omitted on every insert (defaulted to `'new'`).

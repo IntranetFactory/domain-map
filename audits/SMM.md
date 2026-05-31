@@ -168,3 +168,35 @@ Market-audit semantic pass not yet run (this audit covers the structural 4-pass 
 | SOCIAL-LISTENING | previously queued | bumped mention_count |
 | SOCIAL-ADS | previously queued | bumped mention_count |
 | UGC-MGMT | new | added |
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied only the truly-technical Bucket 1 items via [.tmp_deploy/fix_smm_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_smm_b1_technical_2026_05_31.ts). All other B1 items remain open pending user judgment.
+
+### Applied
+
+- **B1-S6** PATCH `trigger_events.event_category` on 3 rows whose category the audit pre-specifies:
+  - id 522 `social_account.connected`: `''` -> `lifecycle`
+  - id 523 `social_listening_topic.alert`: `''` -> `signal`
+  - id 524 `influencer.engagement_recorded`: `''` -> `signal`
+- **B1-S12 (partial, 6 of 8)** INSERT `handoff_processes` rows for the handoffs whose audit-proposed PCF resolves cleanly. All inserts use `proposal_source='agent_curated'`, `role='implements'`, `record_status='new'`, `notes=''`:
+  - handoff 86 -> process 674 (PCF 16627 L4 "Monitor and respond to social media activity")
+  - handoff 87 -> process 674 (PCF 16627 L4)
+  - handoff 88 -> process 708 (PCF 10189 L4 "Identify/receive leads/opportunities")
+  - handoff 89 -> process 138 (PCF 16613 L3 "Analyze and respond to customer insight")
+  - handoff 511 -> process 674 (PCF 16627 L4)
+  - handoff 512 -> process 138 (PCF 16613 L3)
+
+### Deferred (still open in Bucket 1)
+
+- **B1-S1, B1-S2, B1-S3, B1-S4, B1-S5, B1-S7, B1-S8, B1-S9, B1-S10, B1-S11**: each requires new entities, new modules, exact-tuple specification, dependent sequencing, or user judgment that the agent's technical mandate explicitly excludes.
+- **B1-S12 (handoffs 90, 91)**: the audit itself flags "needs PCF re-lookup at fix time" for `influencer_campaign.completed` -> MA and `social_post.published` -> MA. Re-search and final PCF assignment for these two left open.
+- **B1-S13** pass, no action required.
+- **B1-S14** notes-pollution sweep folds into B2-S1 / B2-S2 (user judgment).
+- **B1-S15** `domain_regulations` empty: audit asks "which set" (FTC / GDPR / CCPA / COPPA / DSA), so picking the loadable subset is a user call.
+- **B1-S16** report-only, owed by CRM / CSM / CDP / MA b1 audits.
+
+Spot-check URLs:
+
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/handoff_processes

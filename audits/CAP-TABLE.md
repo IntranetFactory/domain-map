@@ -259,3 +259,36 @@ Helper invoked to queue 1 candidate domain:
 - `EQUITY-COMP-PLATFORM` (Equity Compensation Platform). Vendor evidence: Shareworks (Morgan Stanley at Work), J.P. Morgan Workplace Solutions, Carta Equity Plans, Pulley Equity Plans, Shareworks subscription. Adjacency: CAP-TABLE, COMP-MGMT, HCM, ESPP. Capabilities: equity-grant proposal, acceptance, vesting, exercise, tax surface, ESPP enrollment.
 
 Second optional candidate (lower confidence) is queued at user discretion: `PRIVATE-COMPANY-TRANSFER-AGENT`. Not queued automatically pending the user's call.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the truly-technical subset of the 12 B1 items via loader `c:/dev/domain-map/.tmp_deploy/fix_cap_table_b1_technical_2026_05_31.ts`.
+
+### Applied (4 of 12 B1 items)
+
+- **B1-S1 (B9 event_category backfill):** PATCHed `trigger_events.event_category='lifecycle'` on row 427 (`equity_grant.vested`) per the audit's mapping (vesting is a recurring time-driven checkpoint). Row 426 (`equity_grant.granted`) was already `state_change` in live (audit asserted empty); no PATCH needed there.
+- **B1-S5 (lifecycle states realization module PATCH):** PATCHed `data_object_lifecycle_states.domain_module_id` from NULL to the realizing CAP-TABLE module on 14 rows. Mapping verified against `domain_module_data_objects` master-role lookups (B10b derivability): valuations_409a states 462-465 -> module 22 (VALUATIONS); cap_tables states 466-468 -> module 20 (LEDGER); exit_scenarios states 469-471 -> module 23 (EXIT-MODELING); secondary_transactions states 472-475 -> module 25 (SECONDARY).
+- **B1-S9 partial (regulations attach):** INSERTed 1 `domain_regulations` row attaching the existing SOX regulation (id 5) to CAP-TABLE (162) with `applicability='conditional'`. `record_status` omitted (Rule #1 default `new`), `notes` and `condition_notes` omitted (Rule #15 + no audit-approved wording). Remaining 6 regulations from the audit (409A, ASC 718, SEC Rule 701, Reg D / Form D, Form 3921, Form 3922) deferred because the underlying `regulations` rows do not exist yet and creating new regulations entities is out of technical-only scope.
+- **B1-H1 (APQC tagging):** INSERTed 2 `handoff_processes` rows for handoff 1044 (CAP-TABLE-EXIT-MODELING -> FUND-ADMIN, `exit_scenario.executed -> fund_distributions`): process 354 (L3 "Develop exit strategy") and process 491 (L4 "Develop merger/demerger/acquisition/exit strategy"). Both PCF ids verified resolvable in `/processes`. `proposal_source='agent_curated'`, `role='implements'`, `record_status` omitted (Rule #1), `notes` omitted (Rule #15). Handoff 1045 already carried a `handoff_processes` row (635) for process 354, so no insert was needed there.
+
+### Deferred (8 of 12 B1 items)
+
+- **B1-S2 (10 new intra-domain cross-module handoff rows):** Defer; new `handoffs` entities, plus 3 of 10 depend on B1-S3's new trigger_events. Out of technical-only scope (no rule licenses bulk new handoff inserts here).
+- **B1-S3 (6 new trigger_events):** Defer; new entities, out of technical-only scope.
+- **B1-S4 (equity_grants lifecycle realization PATCH or DUPLICATE):** Defer; gated on B2-S1 user choice between (a) PATCH to module 21, (b) DUPLICATE for both modules, (c) keep as-is.
+- **B1-S6 (lifecycle states for 4 workflow-bearing masters):** Defer; new lifecycle state entities, and the 3 config-shape exemption candidates (security_classes, vesting_schedules, asc718_expense_periods) are gated on B2-S6 user call.
+- **B1-S7 (Phase E roles + permissions + role_modules bundles):** Defer; full Phase E load (6 new roles, 36 role_modules rows, baseline + workflow-gate permissions) outside the technical-only scope, and sequenced after B1-S4 + B1-S5.
+- **B1-S8 (Phase F system skills + skill_tools):** Defer; full Phase F load (6 new `skills` rows + ~30 `skill_tools` rows) outside the technical-only scope.
+- **B1-S10 (2 inter-domain COMP handoffs):** Defer; new `handoffs` entities, plus 1 of 2 (COMP-INCENTIVES -> CAP-TABLE-GRANTS event source) gated on B2-S2.
+- **B1-S11 (12 DDO notes='' revert):** Defer; gated on B2-S3 user confirmation that the 12 `domain_data_objects.notes` were auto-populated vs user-approved. The technical-fix rule licenses `notes=''` reverts when the audit pre-specifies row IDs and the user has authorized the revert; B2-S3 is the explicit user-decision gate, so this fires only after that call.
+
+### Loader
+
+`c:/dev/domain-map/.tmp_deploy/fix_cap_table_b1_technical_2026_05_31.ts` (run from project root via `bun run`).
+
+### Spot-check links
+
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/data_object_lifecycle_states
+- https://tests.semantius.app/domain_map/domain_regulations
+- https://tests.semantius.app/domain_map/handoff_processes

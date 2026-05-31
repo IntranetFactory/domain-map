@@ -183,3 +183,28 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 ### Decisions
 
 (empty until reviewed)
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Loader: [.tmp_deploy/fix_ma_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_ma_b1_technical_2026_05_31.ts).
+
+### Fixes applied
+
+| B1 item | Type | Detail | Result |
+|---|---|---|---|
+| B1-S2 | PATCH `trigger_events.event_category` (Rule #13 enum backfill, audit fully specified) | 8 rows: 471 `customer_attributes.refreshed` -> `signal`; 515 `marketing_email.delivered` -> `lifecycle`; 516 `marketing_email.opened` -> `signal`; 517 `marketing_email.clicked` -> `signal`; 518 `marketing_email.unsubscribed` -> `lifecycle`; 519 `lead_score.recomputed` -> `signal`; 520 `nurture_journey.completed` -> `lifecycle`; 521 `marketing_form.submitted` -> `lifecycle`. | 8 patched, 0 already-correct, 0 mismatch. Post-write verification: 0 empty, 0 invalid-enum on the 8 ids. |
+
+### Deferred B1 items
+
+| B1 item | Reason |
+|---|---|
+| B1-S1 (M1 Phase M load) | Architectural choice: gated on B2-S1 (module split) and B2-S6 (execution path). Requires user-owned decisions. |
+| B1-S3 (B10b outbound `source_domain_module_id` backfill, 8 handoffs) | Gated on B1-S1: no MA `domain_modules` rows exist yet, so no FK target to point at. |
+| B1-S4 (B10b inbound `target_domain_module_id` backfill, 11 handoffs) | Gated on B1-S1: same reason. |
+| B1-S5 (APQC `handoff_processes` tagging, 17 INSERT + 2 REPLACE) | Audit only names PCF family terms ("Manage sales opportunities", "Manage customer information", ...) and explicitly defers PCF id lookups "to fix time". No resolvable `process_id` per row pre-specified. Per the technical scope, INSERT `handoff_processes` is permitted only when audit pre-specified both `handoff_id` and resolvable PCF id; not met here. |
+| B1-S6 (cross-relationship 613 integrity check) | Audit says "None; observation only." No fix to apply. |
+| B1-S7 (alias gap on 5 MA masters) | Routed to B2-S2 for user-approved wording per Rule #15 + Rule #18 (vendor names forbidden outside commerce entities; aliases on `data_object_aliases.alias_name` are commerce-allowed, but per-row text still needs explicit approval). |
+
+### UI spot-checks
+
+- https://tests.semantius.app/domain_map/trigger_events (filter id in 471,515-521 to confirm `event_category` populated per Rule #13)

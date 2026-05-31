@@ -317,3 +317,34 @@ Vendor-knowledge-based candidates from Pass 2 MISSING entities, not yet anchored
 - **ERP-FIN B10b owes target-side module FK** on handoff 946 (`pet_owner.registered`). ERP-FIN has 0 modules per spot-check.
 - **ERP-FIN B8** owes inbound `data_object_relationships` for the AR-profile-create payload (likely `customers` or `ar_accounts`).
 - **Partner-domain module sparsity (informational):** spot-checks of GRC, SUP-LIFE, S2P, ERP-FIN returned zero `domain_modules` for each. M-band hard fail on all four partners; auditing them would be a high-leverage follow-up given VET-PRACT-MGMT depends on all four for outbound handoff target-module FKs. CSM is the only modularized neighbor.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied only the truly-technical, audit-pre-specified slice of Bucket 1. Deferred all judgment-bearing items per task spec.
+
+### Applied
+
+- **B1-S5 (trigger_event enum backfill):** PATCHed `event_category` on 4 events: `pet_owner.registered` (id=1087) -> `lifecycle`; `veterinary_vaccination.administered` (id=1088) -> `lifecycle`; `veterinary_vaccination.due` (id=1089) -> `threshold`; `veterinary_lab_result.critical` (id=1090) -> `signal`. All 6 events on this domain's masters now carry a non-empty `event_category`.
+- **B1-S3 (intra-domain `data_object_relationships`):** INSERTed 4 of the 5 audit-listed edges (record_status defaults to `new`):
+  - id=1697: `pet_owners` (396) `owns` `animal_patients` (395), one_to_many, composition, source-owned, required.
+  - id=1698: `animal_patients` (395) `receives` `veterinary_vaccinations` (397), one_to_many, composition, source-owned.
+  - id=1699: `animal_patients` (395) `undergoes` `veterinary_lab_results` (398), one_to_many, composition, source-owned.
+  - id=1700: `animal_patients` (395) `administered` `controlled_substance_ledger_entries` (399), one_to_many, reference, source-owned.
+  - **Deferred:** `veterinary_vaccinations drew_from controlled_substance_ledger_entries` (conditional "only for controlled anesthetic doses" qualifier; not a deterministic structural edge for every vaccination row, so it is a judgment call).
+- **B1-S4 (users edges, Rule #10):** INSERTed 5 user-actor edges, all targeting the platform built-in `users` (id=748), target-owned, reference, one_to_many: id=1701 `animal_patients.primary_veterinarian`; id=1702 `veterinary_vaccinations.administered_by`; id=1703 `veterinary_lab_results.ordered_by`; id=1704 `controlled_substance_ledger_entries.dispensed_by`; id=1705 `pet_owners.account_owner`.
+- **B1-H1 (APQC tagging):** INSERTed 4 `handoff_processes` rows with `proposal_source='agent_curated'`, `role='implements'`, record_status defaulting to `new`. PCF external_id -> process_id resolution: 12840 -> 199 ("Report incidents and risks to regulatory bodies"); 11793 -> 734 ("Manage notification outcome"). Pairs: id=494 (handoff=335, process=199); id=495 (handoff=337, process=734); id=496 (handoff=947, process=734); id=497 (handoff=948, process=199). 2 handoffs (336 SUP-LIFE reorder, 946 ERP-FIN AR-profile-create) remain deferred to Discover Pass 3 per the original audit.
+
+### Deferred
+
+- **B1-S1 (module authoring):** new modules deferred (judgment, gated on Bucket 2.1).
+- **B1-S2 (catalog_tagline / catalog_description):** Rule #20 user-approval required.
+- **B1-S6 (new handoff INSERTs for `veterinary_vaccination.administered`):** audit names targets (CSM, GRC) but doesn't pre-specify `integration_pattern`, `friction_level`, or target_domain_module_id; not a deterministic technical insert.
+- **B1-S7 (aliases bulk):** deferred. Audit text says "Draft ~8 alias rows" rather than pre-specifying exact tuples to insert; Rule #9 collision arbitration warrants user sign-off on at least the "Client" canonical-claim posture.
+- **B1-S8 (lifecycle states for 5 masters):** deferred. Bucket 2 item 5 still wants explicit user confirmation that no master qualifies for the config-shape exemption (Rule #12), and the state-machine drafts in B12 are draft-shaped not insert-shaped.
+- **B1-S9 (retire legacy skill + new tools):** gated on module authoring (B1-S1).
+- **B1-B1 (source_domain_module_id backfill on 6 outbound handoffs):** gated on B1-S1 (no VET-PRACT-MGMT modules exist yet).
+- **B1-B2 / B1-B3 / B1-B4 (cross-domain `data_object_relationships` mirrors to GRC / SUP-LIFE / ERP-FIN payloads):** gated on partner-domain module + master authoring (each has 0 modules per the original audit's neighbor pass).
+
+### Loader
+
+`c:/dev/domain-map/.tmp_deploy/fix_vet_pract_mgmt_b1_technical_2026_05_31.ts`. Invoked from project root via `bun run "<absolute path>"`. Idempotent: each section reads live state before writing and skips rows that already exist. No JWT errors. No `notes` writes. record_status omitted on all inserts (defaults to `new`).

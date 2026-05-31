@@ -326,3 +326,34 @@ Vendor-knowledge-based candidates from Pass 2 MISSING entities, not yet anchored
 - **Catalog-wide M7 hard fail (suppliers, id=206):** `suppliers` has `role='master'` in BOTH SUP-LIFE (id=28) AND MDM (id=87). One owner must demote to `embedded_master` (preserving standalone-deploy story) or `consumer`. Decision is which domain canonically masters suppliers; both partners would consume DAIRY-MGMT's `suppliers` linkage. Owed by SUP-LIFE / MDM audit.
 - **Partner-domain module sparsity (informational):** spot-checks of FOOD-TRACE, FSQM, ERP-FIN, GRC returned zero `domain_modules` for each. M-band hard fail on all four partners; auditing them would be a high-leverage follow-up given DAIRY-MGMT depends on all four for outbound handoff target-module FKs.
 
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the truly-technical subset of Bucket 1 via loader `c:/dev/domain-map/.tmp_deploy/fix_dairy_mgmt_b1_technical_2026_05_31.ts`. No new entities, no judgment calls, no notes writes. Idempotent.
+
+### Applied (18 writes total)
+
+- **B1-S5 (PATCH event_category, 5 rows).** trigger_events ids 1099, 1100, 1101, 1102, 1103 each backfilled from `""` to `"lifecycle"`. The fifth (`feed_ration.changed`) could plausibly be `state_change` per the audit's parenthetical; pick the conservative `lifecycle` and surface the alternative for user revision if needed.
+- **B1-S4 (INSERT 7 user-edges, Rule #10).** All seven masters now carry a many_to_many `reference` edge to `users` (id=748). New `data_object_relationships` ids 1775-1781. `record_status` defaults to `new`; `notes` left empty per Rule #15.
+- **B1-H1 (INSERT 6 handoff_processes, agent_curated).** Pre-flight verified each `(handoff_id, process_id)` pair: source_domain_id = 156, process external_id matches audit cell. New `handoff_processes` ids 573-578. `record_status` defaults to `new`; `proposal_source = 'agent_curated'`. The two deferred rows (handoff_id 956 and 958, lactation_record.opened + feed_ration.changed -> ERP-FIN) were NOT inserted per the audit's deferral.
+
+### Deferred (still owed)
+
+- **B1-S1, S6, S8, S9, S10, B1.** All gated on M1 module authoring (Bucket 2 item 1, user picks the 4 vs 5 vs 6 module shape).
+- **B1-S2.** A4 catalog_tagline / catalog_description gated on Rule #20 user wording.
+- **B1-S3.** B6 intra-domain `data_object_relationships`. Audit lists candidate edges informally but they are NOT user-edges, and the truly-technical scope is limited to Rule #10 built-ins per this continuation's instructions.
+- **B1-S7.** B11 aliases. Audit gives suggestive synonym lists; no exact insertable tuples pre-specified.
+- **B1-B2..B5.** B8 cross-domain relationship mirrors. Gated on each neighbor's payload masters being identified.
+- **B1-H1 (2 of 8).** handoff_processes for handoff_id 956, 958 explicitly deferred to Discover Pass 3 by the audit.
+
+### Live state after this continuation
+
+- `event_category` on all 8 DAIRY-MGMT trigger_events is now a valid enum value (3 pre-existing + 5 backfilled today).
+- `data_object_relationships` for the 8 DAIRY-MGMT masters: 7 user-edges (was 0). Intra-domain and cross-domain mirrors still at 0.
+- `handoff_processes` coverage on the 8 outbound handoffs: 6 of 8 tagged (was 0 of 8 = 0%); now 6 of 8 = 75%, all `agent_curated`, `record_status='new'`.
+- No `notes` columns were written.
+
+### Updated bucket counts
+
+- Bucket 1: was 17 items. 4 items fully cleared (B1-S5, S4, partial H1 = the 6 non-deferred rows), B1-H1's 2 deferred rows reclassified to Bucket 3 (Discover Pass 3). Remaining: ~12 items, all gated on Bucket 2 item 1 (module shape) or Rule #20 (catalog UX wording) or neighbor-side audits.
+- Bucket 2 and Bucket 3 unchanged.
+

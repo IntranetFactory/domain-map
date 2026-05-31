@@ -322,3 +322,56 @@ Queued via `scripts/analytics/append_missing_domain.ts`:
 | FARMER-DIRECT-SALES B10b | `target_domain_module_id` NULL on the 1 inbound row from FDS-BUTCHER module 123 (`butcher_order.ready`). Partial attribution: source side attributed, target side awaiting FOOD-TRACE M1. |
 
 These items NEVER block FOOD-TRACE's audit closure; they surface so the user can decide whether to also schedule audits on the source domains.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Loader: `.tmp_deploy/fix_food_trace_b1_technical_2026_05_31.ts`. Run from project root. Idempotent.
+
+### Applied (17 writes)
+
+- **ENUM BACKFILL (3 PATCHes)**: `trigger_events.event_category` from `""` to `"lifecycle"` for ids 1117 (`traceability_lot.created`), 1118 (`critical_tracking_event.recorded`), 1119 (`key_data_element.captured`). Names unambiguously describe lifecycle verbs.
+- **B1-S6 user-edges (7 INSERTs)**: `data_object_relationships` from FOOD-TRACE masters to `users` (id 748), `many_to_many reference`, `owner_side=source`, per Rule #10 and the dairy-mgmt precedent. New row ids 1840-1846:
+  - 1840 `traceability_lots` is created by users (required)
+  - 1841 `critical_tracking_events` is recorded by users (required)
+  - 1842 `critical_tracking_events` is verified by users (optional)
+  - 1843 `key_data_elements` is captured by users (required)
+  - 1844 `recall_events` is initiated by users (required)
+  - 1845 `recall_events` is approved by users (required)
+  - 1846 `recall_events` is communicated by users (optional)
+- **B1-H1 handoff_processes (7 INSERTs)**: `proposal_source=agent_curated`. New row ids 649-655:
+  - 649 handoff 359 -> 204 (Initiate recall)
+  - 650 handoff 360 -> 37 (Manage product recalls and regulatory audits)
+  - 651 handoff 362 -> 815 (Monitor/Manage supplier information)
+  - 652 handoff 954 -> 171 (Maintain production records and manage lot traceability)
+  - 653 handoff 972 -> 556 (Manage traceability data)
+  - 654 handoff 973 -> 1830 (Maintain records for regulatory agencies)
+  - 655 handoff 974 -> 1570 (Manage compliance audits)
+
+### Audit-table H1 rows NOT loaded (existing or competing rows already present)
+
+- 351 (171), 353 (171), 356 (204), 361 (805), 955 (171), 976 (37): matching `handoff_processes` row already loaded; skipped as duplicate.
+- 971: audit asks process 171, but row 615 already binds 971 -> 818. Rubric does not license PATCH or competing append; skipped.
+- 978: audit asks process 37, but row 611 already binds 978 -> 208. Same skip.
+
+### Deferred (NOT applied)
+
+- B1-S1 catalog_tagline / catalog_description (Rule #20).
+- B1-S2 M1 zero modules (new entities; gated on Bucket 2 #1).
+- B1-S3 regulations: zero matching `regulations` rows exist in catalog (FSMA, EU 1169/2011, SFCR, COOL, Bioterrorism Act, Reportable Food all absent); cannot INSERT `domain_regulations` without first creating new `regulations` rows, which is judgment work.
+- B1-S4 pattern flag flips (deferred per rubric).
+- B1-S5 B6 intra-domain `data_object_relationships` (not Rule #10 user-edges; verb selection is judgment).
+- B1-S7 B8 outbound cross-domain DOR mirrors (judgment per neighbor, gated on payload owner identification).
+- B1-S8 B9 missing events (new entities).
+- B1-S9 B11 aliases (audit pre-specifies alias strings but not `alias_type` or industry_id / solution_id binding; bulk aliases without exact tuples deferred per rubric).
+- B1-S10 B12 lifecycle states (gated on M1 modules for workflow-gate realizing-module attribution).
+- B1-S11 F1 legacy skill 62 cleanup (sequenced after M1 module skills).
+- B1-S12 C2 capability function-divergence (Bucket 2).
+- B1-M1..M6 new master data_objects (new entities, gated on Bucket 2 #1).
+- B10b FK PATCHes: cascade from M1 (no FOOD-TRACE modules exist to derive `source_domain_module_id` / `target_domain_module_id` from).
+- Handoff 349 cleanup (Bucket 2 #5).
+
+### Notes
+
+- Status frontmatter left unchanged. Open questions (22) untouched; the deferred items remain on the Bucket 1 / Bucket 2 / Bucket 3 surfaces above.
+- Per Rule #15, no `notes` columns populated on any of the 17 writes.
+- Per Rule #1, `record_status` omitted on every insert; defaults to `new`.

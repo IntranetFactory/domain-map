@@ -172,3 +172,30 @@ All three queued via `scripts/analytics/append_missing_domain.ts`.
 - **CLM audit (already in catalog)** , handoff 309 target side. CLM has modules; derive `target_domain_module_id` on its end.
 - **AUDIT audit** , handoff 860 target side. AUDIT has modules; derive `target_domain_module_id`.
 - **FSM audit** , handoff 304 contingent on B1-S4.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Loader: [.tmp_deploy/fix_re_cre_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_re_cre_b1_technical_2026_05_31.ts).
+
+Applied (truly-technical screen):
+
+- **B1-S5 (5 PATCH)** , `trigger_events.event_category` backfill on 942, 943, 944, 945, 946 (all `'' -> 'lifecycle'`, audit pre-specified values).
+- **B1-S3 (13 INSERT)** , user-edge `data_object_relationships` per Rule #10. `commercial_leases` x4 (signs as landlord / signs as tenant / approves / originated as broker), `cam_charges` x2 (prepares reconciliation / approves reconciliation), `stacking_plans` x1 (authors), `tenant_credit_records` x1 (analyzes credit), `sublease_transactions` x3 (consents as landlord / sublets as sublessor / takes as sublessee), `building_certifications` x2 (issues as certifying authority / owns internally). Shape: `owner_side='target'`, `relationship_type='many_to_many'`, `relationship_kind='reference'`, `is_required=false`, mirroring the METRICS-LAYER B1-S4 idiom. New row ids 1649-1661.
+- **H1 (4 INSERT + 1 PATCH)** , `handoff_processes` inserts on 303 -> 1511 (`10.1.1.1 Confirm alignment of property requirements`), 859 -> 1345 (`9.2.1.3 Analyze credit scoring history`), 860 -> 1783 (`13.9.1.1 Evaluate environmental impact`), 297 -> 398 (`12.4.9 Negotiate and document agreements/contracts`) ; new row ids 454-457, `proposal_source='agent_curated'`, `record_status='new'`. PATCH id=205 (handoff 309): `process_id 1332 -> 398` per audit `REPLACE` instruction. All PCF ids verified live before insert. Handoff 304 NOT tagged (contingent on B1-S4).
+
+Deferred per orchestrator's truly-technical screen:
+
+- **B1-S1** , 3-4 new `domain_modules` + 6 master DMDOs + 6 capability junctions (new entities/DMDOs/modules rule; also gated on B2-S1 module-split user pick).
+- **B1-S2** , 6 intra-domain master-to-master `data_object_relationships` (TECHNICAL clause licenses user-edge inserts only, not intra-domain master rels).
+- **B1-S4** , handoff 304 disposition (B2-S3 user pick required: delete vs author CRE-scoped entity vs contributor DMDO vs re-target).
+- **B1-S6** , NULL `source_domain_module_id` PATCH on 6 outbound handoffs (B10b FK derivable only after B1-S1 lands the modules).
+- **B1-S7** , NULL `target_domain_module_id` PATCH on 3 inbound handoffs (same gating + needs consumer DMDOs).
+- **B1-S8** , `data_object_aliases` (no exact tuples pre-specified, only vendor-context ranges).
+- **B1-S9** , `data_object_lifecycle_states` for 6 masters (gated on B1-S1: requires `domain_module_id`; new state-machine rows are new entities, not PATCHes).
+- **B1-S10** , pattern-flag flips (explicit defer rule; B2-S5 per-flag user confirmation).
+- **B1-S11** , `catalog_tagline` / `catalog_description` (Rule #20).
+- **B1-S12** , 3-4 module-level system skills + tools + legacy skill 96 retirement (gated on B1-S1).
+- **B1-S13** , 5 cross-domain `data_object_relationships` (target masters TBD; B2-S2 surface-to-user).
+- **D1 / B2-S7** , `domain_regulations` (Bucket 2 explicit "Confirm which to load"; ADA verified to exist as id=61 but applicability is user-judgment).
+
+No JWT-audience errors. Loader idempotency: PATCHes guarded against drift / non-empty live values; inserts guarded by natural-key pre-flight (`handoff_id+process_id` pair for handoff_processes; `data_object_id+related_data_object_id+relationship_verb` triple for user-edges). Safe to re-run.

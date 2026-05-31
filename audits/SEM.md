@@ -214,3 +214,45 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 ### Fixes applied
 
 (none yet, audit is read-only by construction)
+
+## 2026-05-31, Continuation: B1 technical fixes (residual)
+
+### Scope
+
+Truly-technical residual B1 pass. Applied items pre-specified by the 2026-05-30 audit that need no user judgment and meet the orchestrator's technical gates: PCF row resolvable, handoff_id named, no new entities created. All judgment-gated items remain pending.
+
+### Fixes applied
+
+**B1-H1, APQC tagging of cross-domain handoffs.** Inserted 4 `handoff_processes` rows tagging each SEM outbound cross-domain handoff to its pre-specified APQC PCF activity. All rows ship `proposal_source='agent_curated'`, `role='implements'`, `record_status='new'` (DB default per Rule #1), `notes=''` (Rule #15).
+
+| handoff_processes.id | handoff_id | source -> target | trigger_event | PCF process_id | PCF external_id | PCF name |
+|---|---|---|---|---|---|---|
+| 832 | 1205 | SEM-EXECUTION-TRACKING (106) -> SPM | `strategic_initiative.approved` (1265) | 104 | 10059 | Select strategic initiatives |
+| 833 | 1206 | SEM-EXECUTION-TRACKING (106) -> SPM | `strategic_initiative.cancelled` (1267) | 108 | 21423 | Refine strategic initiatives and project plans as needed |
+| 834 | 1207 | SEM-EXECUTION-TRACKING (106) -> EPM | `strategic_initiative.approved` (1265) | 1652 | 16402 | Establish portfolio strategy |
+| 835 | 1208 | SEM-STRATEGY-DEFINITION (105) -> EPM | `strategic_objective.cascaded` (1264) | 98 | 10042 | Develop and set organizational objectives |
+
+Volume: 4 / 4 cross-domain handoffs tagged (100%, above the 0.5N to 0.8N H1 target). Loader: [.tmp_deploy/fix_sem_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_sem_b1_technical_2026_05_31.ts).
+
+UI for review: https://tests.semantius.app/domain_map/handoff_processes
+
+### Deferred (not applied in this pass)
+
+All deferred per the orchestrator's technical gates. Re-evaluate after the listed gates clear.
+
+| ID | Reason deferred |
+|---|---|
+| B1-S1 | New handoff inserts; gated on B2-S2 (authoring scope) and B2-S4 (integrated vs write-mostly SEM intent). |
+| B1-S2 | New intra-domain handoff inserts; gated on B2-S4. |
+| B1-S3 | New `trigger_events` inserts; gated on B2-S4 (only used by B1-S1 coordination set per audit's cross-bucket note). |
+| B1-S4 | B10b FK PATCH on outbound `target_domain_module_id` is not derivable: SPM (9) and EPM (66) have zero `domain_modules` rows. Re-queue once Phase B lands on both targets. |
+| B1-S5 | Report-only; no SEM-side write owed. Routes to WORK-MGMT and SPM b1 audits. |
+| B1-S6 | Report-only; no SEM-side write owed. Routes to SPM / EPM / ERP-FIN / HCM b1 audits. |
+| B1-S7 | `notes=''` reverts on `data_objects` 808 and 27 `skill_tools` rows; gated on B2-S1 user confirm. |
+| B1-S8 | Optional `trigger_events.event_category` PATCH on 1264 from `lifecycle` to `state_change`; gated on user confirm. |
+
+Deferred count: 8 of 9 Bucket 1 items. Applied: 1 of 9 (B1-H1).
+
+### JWT errors
+
+None.

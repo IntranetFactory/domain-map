@@ -195,3 +195,45 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 ### Decisions
 
 _(none yet)_
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the orchestrator's technical-allow-list slice of the 2026-05-30 audit. Loader: [.tmp_deploy/fix_cpq_b1_technical_2026_05_31.ts](../.tmp_deploy/fix_cpq_b1_technical_2026_05_31.ts). Run from project root.
+
+### Fixes applied
+
+| Audit ID | Type | Volume | Result |
+|---|---|---|---|
+| B1-S1 | PATCH `trigger_events.event_category` enum backfill on 16 CPQ events (Rule #13) | 16 PATCHes | patched=16, verified: every CPQ-published trigger_event now carries a valid `lifecycle / state_change / threshold / signal` value |
+| B1-S6 | PATCH `handoffs.source_domain_module_id` own-side B10b backfill (publishing master's owning module) on 9 outbound handoffs | 9 PATCHes | patched=9, verified: 62/204/483/484/485/1013/1014/1015 -> 165 (CPQ-QUOTE-BUILDER), 482 -> 166 (CPQ-APPROVALS-CONTRACTS) |
+| B1-S7 | PATCH `handoffs.target_domain_module_id` own-side B10b backfill (receiving master's owning module) on 4 inbound handoffs | 4 PATCHes | patched=4, verified: 61 -> 165, 517 -> 166, 527 -> 164, 1236 -> 164 |
+| B1-H1 | INSERT `handoff_processes` APQC tags (`proposal_source='agent_curated'`, `record_status='new'`) for 6 untagged handoffs the audit confidently maps to PCF 149 ("Develop and manage sales proposals, bids, and quotes") | 6 INSERTs | inserted 6: handoffs 61, 483, 484, 485, 1013, 1015 all -> process 149 |
+
+Total writes: 29 PATCH + 6 INSERT = 35.
+
+### Deferred (out of orchestrator's technical allow-list)
+
+| Audit ID | Reason for deferral |
+|---|---|
+| B1-S2 (F2/F3/F5 system skills, 3 modules, ~15-45 tools) | New entities; not in apply list. Also gated on B2-S1 (Phase E + Phase F sequencing). |
+| B1-S3 (E2/E3 RBAC: 9 baseline + 4 workflow-gate permissions, 3-5 roles, role_modules/role_permissions) | New permissions/roles; not in apply list. Gated on B2-S1. |
+| B1-S4 (B11 aliases, ~12-15 rows on 8 CPQ masters) | New `data_object_aliases` rows; not in the orchestrator's technical apply list. |
+| B1-S5 (C1 lifecycle states on `product_configurations`, `quote_lines`) | New `data_object_lifecycle_states` authoring; not in apply list. Partially gated on B2-S5 (config-shape exemption for `pricing_rules` / `product_bundles`). |
+| B1-S8 | No work owed for CPQ. |
+| B1-S9 (4 NULL target_module on outbounds to ERP-FIN / SUB-MGMT / CLM) | Report-only; owed by target-domain audits, not CPQ. |
+| B1-H1 H-04 (517 REPLACE) | Medium-confidence PCF re-target; defer to user. |
+| B1-H1 H-05 (204 confirm `discovery_substring` -> `agent_curated`) | Orchestrator licenses INSERT only on `handoff_processes`; PATCH/REPLACE on existing row is out of scope. |
+| B1-H1 H-06 (527 REPLACE) | Medium-confidence PCF re-target; defer to user. |
+| B1-H1 H-13 (1236 INSERT) | Audit PCF proposal "10283 or 10410.x" is not uniquely resolvable to a single `processes.id`. |
+| All B2-* (judgment calls) | User decision required. |
+| All B3-* (Phase 0 speculative) | Phase 0 pending. |
+
+### JWT errors
+
+None.
+
+### UI spot-check links
+
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/handoffs
+- https://tests.semantius.app/domain_map/handoff_processes

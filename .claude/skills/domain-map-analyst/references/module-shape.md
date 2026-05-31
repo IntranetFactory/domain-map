@@ -408,7 +408,9 @@ See [SKILL.md § Agent tooling layer](../SKILL.md#agent-tooling-layer-4-entities
 | `domain_module_name` | text | yes | Human-friendly label (`Candidate CRM`, `Incident Management`) |
 | `domain_id` | reference → `domains` | no | Primary host. Nullable for cross-cutting full modules with no obvious home (`APPROVAL-WORKFLOW`) and for persona-shaped starter kits (`REAL-ESTATE-AGENT`). Cross-cutting modules with one obvious home use this column AND list additional hosts in `domain_module_host_domains`. Validation rule `full_module_requires_domain` rejects NULL when `module_kind='full'`. |
 | `module_kind` | enum | yes | `full` / `starter`. Default `full`. Starters never master data_objects (platform-side rule `starter_no_master` on `domain_module_data_objects` enforces this). See Rule #19. |
-| `description` | multiline | yes | |
+| `description` | multiline | yes | Analyst voice. What this module does, what it masters, when it's used standalone vs alongside others. Read by the blueprint emitter, audit tooling, deployer. NOT marketing copy. |
+| `catalog_tagline` | string | yes | Buyer voice. One sentence for module-grain catalog list cards. Workflow + value framing. Default empty; backfill per Rule #20 with user review BEFORE writing. |
+| `catalog_description` | text | yes | Buyer voice. 1-3 paragraphs for the module catalog detail page. Default empty; backfill per Rule #20 with user review BEFORE writing. Never overwrite a non-empty value without explicit per-row approval. |
 | `record_status` | enum | yes | Default `new` |
 
 ### `domain_module_capabilities` (junction: `domain_modules` ↔ `capabilities`)

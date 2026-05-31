@@ -205,3 +205,45 @@ After the gap report is surfaced, the orchestrator should prompt the user with t
 - **TELEMATICS B8 owes (inbound mirror):** the 3 inbound from TELEMATICS to FLEET-MGMT each imply a TELEMATICS-side outbound `data_object_relationships` row that lives on TELEMATICS' own B8 pass (the TELEMATICS 2026-05-30 audit already enumerates B1-X1..X3 covering these).
 - **FLEET-MAINT B8 owes (inbound mirror):** the 1 inbound from FLEET-MAINT (`maintenance_defect.reported`) implies a FLEET-MAINT-side relationship row from `maintenance_defects` to the FLEET-MGMT-mastered subject. Lives on FLEET-MAINT's own B8 once that domain is audited.
 - **FSM B8 owes (inbound mirror):** the 2 inbound from FSM (`vehicle.dispatched`, `service_work_order.assigned`) imply FSM-side outbound relationship rows. Lives on FSM's B8.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Applied the truly-technical B1 slice of the 2026-05-30 audit via `.tmp_deploy/fix_fleet_mgmt_b1_technical_2026_05_31.ts`. 10 rows inserted, 0 skipped.
+
+### Applied
+
+- **B1-A1..A11** - APQC tagging via `handoff_processes`. 11 handoffs total; 6 already carried PCF 862 ("Manage transportation fleet") from the TELEMATICS / FSM audits (A5, A6, A7, A8, A10, A11). 5 net-new inserts:
+  - A1: handoff 875 (`fleet_vehicle.acquired` -> FLEET-MAINT) -> PCF 1389 ("Process and record fixed-asset additions and retires"), new row id 827.
+  - A2: handoff 313 (`vehicle_inspection.failed` -> FLEET-MAINT) -> PCF 352 ("Manage asset maintenance"), new row id 828.
+  - A3: handoff 317 (`fuel_transaction.posted` -> ERP-FIN) -> PCF 315 ("Process accounts payable (AP)"), new row id 829.
+  - A4: handoff 876 (`fleet_vehicle.retired` -> ERP-FIN) -> PCF 1389, new row id 830.
+  - A9: handoff 877 (`maintenance_defect.reported` FLEET-MAINT -> FLEET-MGMT) -> PCF 352, new row id 831.
+  - All 5 written with `proposal_source='agent_curated'`, `record_status='new'` (default), `role='implements'` (default). H1 coverage gate now ticks for the 11 cross-domain handoffs touching FLEET-MGMT.
+
+- **B1-U1..U5** - users-edges per Rule #10 via `data_object_relationships`. All 5 audit-pre-specified rows inserted (none existed):
+  - U1: `fleet_drivers` (371) represents `users` (748). `one_to_one`, `reference`, `owner_side=source`, `is_required=false`, new row id 1942.
+  - U2: `vehicle_inspections` (374) performed by `users`. `many_to_many`, `reference`, `is_required=true`, new row id 1943.
+  - U3: `fleet_assignments` (373) dispatched by `users`. `many_to_many`, `reference`, `is_required=true`, new row id 1944.
+  - U4: `fuel_transactions` (372) fueled by `users`. `many_to_many`, `reference`, `is_required=false`, new row id 1945.
+  - U5: `fleet_vehicles` (370) primary operator `users`. `many_to_many`, `reference`, `is_required=false`, new row id 1946.
+  - Verbs normalized to the active / passive space-separated convention seen on existing `users`-edges in the catalog ("owned by" / "owns", "created by" / "creates").
+
+### Deferred (still owed by future passes)
+
+- **B1-S1** - 3-module split (`FLEET-VEHICLE-LIFECYCLE`, `FLEET-DRIVER-OPS`, `FLEET-FUEL-COMPLIANCE`). Bucket 2 #1 judgment call; gates B1-S7, S8, S11, S12 + all BOUNDARY findings.
+- **B1-S2** - `catalog_tagline` + `catalog_description`. Rule #20 buyer-voice authoring; surface for user wording.
+- **B1-S3** - pattern flag flips on `fleet_drivers` / `vehicle_inspections` / `fleet_assignments`. Pattern-flag flips deferred per task scope; Bucket 2 #2 scope (vehicles + fuel as personal-by-association) is judgment.
+- **B1-S4** - intra-domain `data_object_relationships` R1-R8. Task scope limits B7 fixes to users-edges only; R-edges left for a future pass paired with the cluster-drafts loader.
+- **B1-S6** - cross-domain outbound rels X1-X3. Same scope limit; mirrors handoffs that themselves still have NULL module FKs.
+- **B1-S7, B1-S8, B1-B1..B5** - intra-domain handoffs + B10b module-FK PATCHes. All gated on B1-S1; no FLEET-MGMT module exists to PATCH against.
+- **B1-S9** - `data_object_aliases`. Audit enumerates vendor lexicon options ("Asset / Unit / Truck / Power Unit / Tractor", etc.) but not as exact `(data_object_id, alias_name)` tuples; bulk alias loads need user picks per option.
+- **B1-S10** - `data_object_lifecycle_states` + `permission_verb_override` for `active`/`separated` on `fleet_drivers`. The audit names the override target states, but the underlying lifecycle-state rows don't exist yet, can't PATCH an override on a non-existent state row. Author the states first (Phase B work, deferred).
+- **B1-S11..S14** - skill restructure (3 module-scoped system skills, redistribute 7 existing tools, retire legacy skill 60), `send_email` -> `notify_person` channel substitution, `sign_document` rationale. All gated on B1-S1 (need the new modules to attach skills to) or on Bucket 2 judgment.
+- **B1-S15** - `domain_regulations` floor set (FMCSA Part 391/395/396, IFTA, IRP, FMCSA Drug-and-Alcohol Clearinghouse). VERIFIED LIVE: zero of the 5 base regulations checked (`FMCSA Part 391`, `FMCSA Part 395`, `FMCSA Part 396`, `IFTA`, `IRP`) exist in the `regulations` table. Cannot author junction rows pointing at non-existent regulations; this is an upstream load gap (separate fix, owed by a transportation-regulations seed). Surface to user.
+- **B1-M1..M9** - missing entities (`driver_qualification_files`, `vehicle_registrations`, `ifta_quarterly_returns`, `vehicle_insurance_policies`, `fuel_cards`, `vehicle_telematics_devices`, `driver_clearinghouse_queries`, `motor_pool_reservations`, `parking_violations` / `toll_assignments`). New-entity authoring deferred per task scope; some are also gated on Bucket 2 #3 (drivers-vs-employees pattern) and Bucket 2 #8 (motor-pool as module-or-feature).
+
+### Net B1 progress
+
+- 56 B1 items in the original audit (15 S + 5 B + 11 A + 9 M + 8 R + 5 U + 3 X).
+- 10 applied this pass (5 A + 5 U).
+- 46 deferred to module-split-resolution, user-judgment, upstream load gaps, or future Phase-B work. None of the deferrals are silent: each is enumerated above with the reason it cannot land in a technical-only pass.

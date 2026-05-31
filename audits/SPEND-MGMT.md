@@ -221,3 +221,32 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 ### Decisions
 
 _(empty until reviewed)_
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+### Applied
+
+| ID | Action | Result |
+|---|---|---|
+| B1-S2 | PATCH 6 trigger_events to set `event_category` (rows 577 / 578 / 579 / 580 / 581 / 582). | 6 patched, 0 skipped. Values: 577 `state_change`, 578 `threshold`, 579 `state_change`, 580 `state_change`, 581 `state_change`, 582 `threshold`. Verified post-patch. |
+
+### Deferred (with reasons)
+
+| ID | Reason |
+|---|---|
+| B1-S1 | Creates 4 full modules + 1 starter + DMDOs. Gated on B2-S1 (SPEND-REIMBURSEMENT vs EXPENSE boundary, judgment call) and creates new entities / modules (outside technical scope). |
+| B1-S3 | Lifecycle states need `data_object_lifecycle_states.domain_module_id` pointing at a realizing module. Gated on B1-S1. |
+| B1-S4 | All 14 outbound handoff `source_domain_module_id` PATCHes point at modules that do not yet exist. Gated on B1-S1. |
+| B1-S5 | All 5 inbound handoff `target_domain_module_id` PATCHes point at modules that do not yet exist. Gated on B1-S1. |
+| B1-S8 | Authors 5 system skills + tools + skill_tools. Gated on B1-S1 and creates new entities (outside technical scope). |
+| B1-H1 | 19 APQC `handoff_processes` proposals. Each row's PCF is described in prose ("Process accounts payable (10744 or child)") and tagged "needs PCF lookup". Per the technical-fix procedure (INSERT only when the audit pre-specifies `handoff_id` + resolvable PCF, verify before insert), verification was attempted against `processes` where `source_framework=apqc_pcf_cross_industry` and `external_id` in the cited IDs. Result: every cited external_id resolves to a process whose `process_name` disagrees with the audit's prose label. Examples: external_id `10744` -> "Process accounts receivable (AR)" (audit said "Process accounts payable"); `10222` -> "Manage demand for products" (audit said "Manage suppliers"); `16439` -> "Establish the enterprise risk framework and policies" (audit said "Develop, deploy, and maintain policies and procedures" / "Manage policies and procedures"); `16466` -> "Monitor the regulatory environment for changing or emerging regulations" (audit said "Manage IT financial performance"); `10770` -> "Report results" (audit said "Manage financial budgeting and forecasting"); `10864` -> "Process period-end adjustments" (audit said "Process expense reports"); `10746` -> "Manage and process adjustments/deductions" (audit said "Manage treasury operations"). External_id `16438` returned no row in the cross-industry framework. Choosing which side (label vs id) is correct is a judgment call, defer to user. |
+| B1-S6 | Other-domain owed (Report-only): S2P / EXPENSE / AP-AUTO each owe `source_domain_module_id` PATCHes on their published handoffs. |
+| B1-S7 | Other-domain owed (Report-only): EXPENSE / ERP-FIN / AP-AUTO / EPM / FINOPS / SMP / AUDIT / S2P each owe `target_domain_module_id` PATCHes on inbound handoffs they receive. |
+
+### Loader
+
+`c:/dev/domain-map/.tmp_deploy/fix_spend_mgmt_b1_technical_2026_05_31.ts`
+
+### JWT errors
+
+None.

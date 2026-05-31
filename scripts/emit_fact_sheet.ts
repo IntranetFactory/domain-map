@@ -478,11 +478,20 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   const systemDescription = isStarterKit ? parentDomains[0].domain_name : modules[0].domain_module_name;
   const systemSlug = moduleSlug(systemName);
 
+  // catalog_tagline: buyer-voice one-liner from the source row (per Rule #20). Single
+  // module: pull from that module. Multi-module starter kit or domain-bundle: pull from
+  // the parent domain. Empty when the catalog UX field hasn't been backfilled yet; the
+  // M8 / A4 audits catch the gap.
+  const catalogTagline = isStarterKit
+    ? parentDomains[0].catalog_tagline || ""
+    : modules[0].catalog_tagline || "";
+
   out.push("---");
   out.push("artifact: semantic-blueprint");
   out.push(`fact_sheet_version: "${FACT_SHEET_VERSION}"`);
   out.push(`system_name: ${systemName}`);
   out.push(`system_description: ${escapeYaml(systemDescription)}`);
+  if (catalogTagline) out.push(`catalog_tagline: ${escapeYaml(catalogTagline)}`);
   out.push(`system_slug: ${systemSlug}`);
   out.push("domain_modules:");
   for (const m of modules) out.push(`  - ${moduleSlug(m.domain_module_code)}`);
@@ -511,31 +520,50 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   out.push("");
 
   // §1 Overview
-  // Single-module: the module's own description (2-3 sentences stored on `domain_modules`).
-  // Multi-module: the parent domain's market-overview description from `domains.description`
-  // (+ `business_logic` paragraph if recorded). No module list - the reader doesn't need
-  // to know the bundle's constituents in the Overview; the front matter has that.
-  // §1 Overview — content-only. If the description is missing the review must catch it
-  // upstream (A1 / per-module description); the emitter never emits a placeholder.
-  const overviewLines: string[] = [];
+  // Two voices, two sub-sections (per Rule #20):
+  //   1.1 Analyst overview - the row's `description` (single-module: domain_modules.description;
+  //       multi-module: domains.description + business_logic). Internal-facing; describes
+  //       market position, mastership, handoffs.
+  //   1.2 Buyer overview - the row's `catalog_description` (single-module:
+  //       domain_modules.catalog_description; multi-module: domains.catalog_description).
+  //       Marketing-facing; describes what the buyer can do. Rendered only when present.
+  // If `description` is missing the review must catch it upstream (A1 / per-module
+  // description); the emitter never emits a placeholder. Same for catalog_description
+  // (M8 / A4 catch the gap).
+  const analystOverviewLines: string[] = [];
+  let buyerOverview = "";
   if (modules.length === 1) {
-    if (modules[0].description) overviewLines.push(modules[0].description);
+    if (modules[0].description) analystOverviewLines.push(modules[0].description);
+    buyerOverview = modules[0].catalog_description || "";
   } else if (parentDomains.length === 1) {
     const d = parentDomains[0];
-    if (d.description) overviewLines.push(d.description);
+    if (d.description) analystOverviewLines.push(d.description);
     if (d.business_logic) {
-      if (overviewLines.length > 0) overviewLines.push("");
-      overviewLines.push(d.business_logic);
+      if (analystOverviewLines.length > 0) analystOverviewLines.push("");
+      analystOverviewLines.push(d.business_logic);
     }
+    buyerOverview = d.catalog_description || "";
   } else {
     const joined = parentDomains.map((d) => d.description).filter(Boolean).join(" ");
-    if (joined) overviewLines.push(joined);
+    if (joined) analystOverviewLines.push(joined);
   }
-  if (overviewLines.length > 0) {
+  if (analystOverviewLines.length > 0 || buyerOverview) {
     out.push("## 1. Overview");
     out.push("");
-    out.push(...overviewLines);
-    out.push("");
+    if (analystOverviewLines.length > 0) {
+      out.push("### 1.1 Analyst overview");
+      out.push("");
+      out.push(...analystOverviewLines);
+      out.push("");
+    }
+    if (buyerOverview) {
+      out.push("### 1.2 Buyer overview");
+      out.push("");
+      out.push("_Buyer-voice marketing copy from `catalog_description` (Rule #20)._");
+      out.push("");
+      out.push(buyerOverview);
+      out.push("");
+    }
   }
 
   // §2 Entity summary - table + mermaid in the same section
@@ -617,10 +645,29 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   out.push("");
   out.push("### 5.3 Cross-scope edges");
   out.push("");
-  if (rels.cross.length === 0) {
-    out.push("_(no `data_object_relationships` between scope's data_objects and entities outside.)_");
+  out.push("#### 5.3a Outbound from this scope's masters and contributors");
+  out.push("");
+  out.push("_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._");
+  out.push("");
+  if (rels.crossOutbound.length === 0) {
+    out.push("_(no outbound cross-scope edges from this scope's masters or contributors.)_");
   } else {
-    out.push(...renderRelationshipTable(rels.cross, { includeOwnerSide: false, includeKind: false }));
+    out.push(...renderRelationshipTable(rels.crossOutbound, { includeOwnerSide: false, includeKind: false }));
+  }
+  out.push("");
+  out.push("#### 5.3b Context edges on embedded shells and consumed entities");
+  out.push("");
+  out.push("_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._");
+  out.push("");
+  if (rels.crossContext.length === 0) {
+    out.push("_(no context cross-scope edges on this scope's embedded shells or consumed entities.)_");
+  } else {
+    out.push("<details>");
+    out.push("<summary>" + rels.crossContext.length + " context edges</summary>");
+    out.push("");
+    out.push(...renderRelationshipTable(rels.crossContext, { includeOwnerSide: false, includeKind: false }));
+    out.push("");
+    out.push("</details>");
   }
   out.push("");
 

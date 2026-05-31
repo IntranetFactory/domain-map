@@ -403,3 +403,34 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 | ATS | Confirm `source_domain_module_id` on 17, 393, 1037, 1033, 1035 (mostly populated). |
 | SWP | Clean. |
 | WFM | (counted above) |
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent pass: applied truly-technical B1 fixes, deferred all judgment.
+
+### Applied
+
+**B1-S1 (partial, 7 of 8): PATCH trigger_events.event_category = 'state_change'**
+- 389 job_profile.published, 390 job_profile.updated, 392 org_unit.merged, 393 org_unit.disbanded, 394 employment_contract.executed, 395 employment_contract.amended, 396 employment_contract.expired.
+- Event 391 (org_unit.created) held: B2-S1 surfaces the `lifecycle` vs `state_change` choice as a judgment call.
+
+**B1-S5 (9 rows): PATCH notes='' reverts**
+- DDO ids 58, 97, 291, 309, 317, 333, 371, 1124. DMDO id 678.
+- Per SKILL Rule #15 the default for any `notes` column is empty; per-row user approval is required to populate. None of the audit-named rows match the discussion-shape (no per-row approval recorded), so the safe-by-default revert applies. The audit text itself names "Default on auto-populated: PATCH all 9 rows' notes to empty string". B2-S2 remains open only as a confirm-or-rollback signal for the user.
+
+### Deferred
+
+- **B1-S1 (1 of 8): event 391 `org_unit.created`.** Held by B2-S1 (lifecycle vs state_change).
+- **B1-S2 (28 rows): inbound handoff target_domain_module_id PATCHes.** NOT derivable from existing modules. 27 of 28 foreign payload data_objects (legal_holds, hr_cases, store_audits, host_assignments, life_events, etc.) have neither an HCM `domain_data_objects` rollup nor an HCM `domain_module_data_objects` row, so the 54-vs-56 choice is judgment. The audit itself reads "target = 56 or 54 depending on consumer-DMDO assignment". Resolve after HCM-side consumer DMDOs are decided (intersects B1-S7 / B2-S5).
+- **B1-S3:** report-only, owed by source domains.
+- **B1-S4:** report-only, owed by downstream domains.
+- **B1-S6 (~68 handoff_processes rows): APQC tagging.** Audit's external_id hints fail to resolve against the live `processes` table for most rows (e.g. 10543 / 10519 / 10566 not present; 10773 resolves to "Prepare periodic financial forecasts" not "Manage project resources"; 10532 resolves to "Deliver employee communications" not "Manage workforce planning"). Resolving by name returns multiple PCF candidates per row. Each row needs per-row judgment, not mechanical insertion.
+- **B1-S7 (3 DMDO INSERTs):** DMDO inserts are outside the technical-only scope.
+
+### Loader
+
+[.tmp_deploy/fix_hcm_b1_technical_2026_05_31.ts](.tmp_deploy/fix_hcm_b1_technical_2026_05_31.ts) (gitignored).
+
+### JWT errors
+
+None.

@@ -163,3 +163,43 @@ The strongest signal in the diff is the technology-layer collapse (`technology_p
 - **B2-S4 (EA permission bundle drift):** which option (a/b/c)?
 
 **Bucket 3 — Phase 0 pending — vet via formal Phase 0 vendor research or eyeball-mode?** Will surface candidates when the subagent returns.
+
+## 2026-05-31, Continuation: B1 technical fixes
+
+Subagent pass applied truly-technical B1 fixes that the original audit pre-specified with concrete IDs, values, or operations. Judgment items (user picks, gated, surface-for-user) deferred for the main thread.
+
+### Fixes applied
+
+| ID | Type | Operation | Rows touched |
+|---|---|---|---|
+| B1-S3 | PATCH enum backfill | `trigger_events.event_category` set to audit-specified values | 3 (ids 357 → `state_change`, 936 → `lifecycle`, 937 → `state_change`) |
+| B1-S4 | DELETE stale rows + PATCH naming rename | DELETE 6 noun-phrase duplicate user-edges; PATCH 1 lone user-edge's `relationship_verb` to verb-shape | 7 (DELETE ids 223, 224, 225, 226, 227, 228; PATCH id 229 `relationship_verb` to `records_application_cost`) |
+
+UI spot-check:
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/data_object_relationships
+
+### Deferred
+
+| ID | Reason |
+|---|---|
+| B1-S1 (M7 hard fail) | Audit offers two options (DELETE vs. promote to `embedded_master`) with explicit "decide" prompt; user picks. |
+| B1-S2 (B9 missing events) | INSERT new `trigger_events` rows. Creating new lifecycle / state-change event rows is a new-entity authoring step, not one of the truly-technical apply types in this pass. Also depends on the publishing-master state machine being authored coherently. |
+| B1-S5 (B9b intra-domain handoffs) | INSERT 4 new `handoffs` rows. New entity authoring; explicitly "depends on S1" outcome. |
+| B1-S6 (B8 cross-domain relationships) | Audit text says "Surface to user; load the 4 missing relationship rows once target-side masters are identified." Gated on Bucket 3 target-side master existence. |
+| B1-S7 (B10b SAM/GRC/FINOPS/EPM/SPM) | Report-only per audit; "not APM's to fix" — belongs in those domains' own B1 audits. |
+| B1-S8 (B10b BPA) | Report-only per audit; BPA owns the fix in its own b1 audit. |
+| B1-S9 (Pairwise missing consumer DMDOs) | Report-only per audit; "Not APM's fix to make" — each of 8 target domains owns its own DMDO addition. |
+| APQC tagging (10-11 rows) | Audit pre-specifies external_ids (10006, 10566, 10567, 10568, 10570) that do NOT resolve in our live `processes` table; only 10031 / 10737 / 10741 exist and none match the audit's intended PCFs by name. Per the technical rule "INSERT `handoff_processes` ONLY when audit pre-specifies `handoff_id` + resolvable PCF," no rows qualify. Re-querying APQC by name to pick a substitute PCF crosses into judgment territory (the same shape as the existing `discovery_substring` rows the audit wants replaced with confident tags), so the entire APQC block defers to the main thread for PCF reconciliation or a Discover-pass refresh of the `processes` table. |
+
+### Counts
+
+- Total B1 items in original audit: 9 structural (S1–S9) + 10–11 APQC = 19–20.
+- Technical fixes applied: 2 IDs (B1-S3, B1-S4), 10 row writes (3 PATCH + 6 DELETE + 1 PATCH).
+- Deferred: 7 structural IDs + 10–11 APQC = 17–18 items.
+
+### Loader
+
+No loader needed; all writes fit in ≤3 ops per fix. Direct `semantius call crud postgrestRequest` invocations from project root (`c:/dev/domain-map`). If the deferred items get unlocked in the main thread, a loader at `c:/dev/domain-map/.tmp_deploy/fix_apm_b1_phase2_2026_05_31.ts` would be the staging slot.
+
+### No JWT errors during this pass.
