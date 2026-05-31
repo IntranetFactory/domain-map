@@ -79,11 +79,14 @@ not load anything to the database. You produce one markdown file and stop.
    Stop the audit, write a one-line note in the audit file's Summary section
    saying which call failed, and exit. The orchestrator will see it.
 
-9. EM-DASH SCAN BEFORE WRITING. Right before you write the audit file, scan
-   your draft for U+2014 (the em-dash character `—`). If you find any,
-   replace them with comma / colon / parenthesis / sentence break per the
-   no-em-dash rule. Do this as an explicit pre-write step, not as a
-   while-drafting habit — habits slip.
+9. EM-DASH SCAN BEFORE WRITING. Right before you call the Write tool, do an
+   IN-MEMORY review of your own draft text for U+2014 (the em-dash character).
+   Replace any occurrence with comma / colon / parenthesis / sentence break
+   per the no-em-dash rule. DO NOT run `grep`, `rg`, `Select-String`, or any
+   other shell command to scan for the em-dash byte sequence: those commands
+   are not allowlisted in this project and produce a permission prompt every
+   time. The scan is a self-review of the text you are about to write, NOT a
+   filesystem grep after the fact.
 
 10. COUNT CONVENTIONS. The Summary's Bucket counts are the count of
     distinct `B1-S*` / `B2-S*` / `B3-S*` line items in the file body, NOT

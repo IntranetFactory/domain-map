@@ -47,20 +47,20 @@ This skill delegates all CLI mechanics to `use-semantius`. Without it, the disco
 
 ## Check 4: target domain module is deployed in this tenant
 
-**How to check:** query the tenant's `modules` table for the module slug recorded in the facts file's `domain.code`:
+**How to check:** query the tenant's `modules` table for the module slug recorded in `spec.json`'s `domain.code`:
 
 ```bash
 semantius call crud postgrestRequest '{"method":"GET","path":"/modules?module_slug=eq.<slug>&select=id,module_slug,module_name"}'
 ```
 
-The slug is derived from the domain code, lowercased and underscored (e.g. `ATS` -> `ats`, `WORK-MGMT` -> `work_mgmt`). The facts file's `domain.code` field is the canonical source.
+The slug is derived from the domain code, lowercased and underscored (e.g. `ATS` -> `ats`, `WORK-MGMT` -> `work_mgmt`). Read `spec.domain.code` from `spec.json` as the canonical source.
 
 - If the query returns one row, record `module_id` and `module_slug` in `state.yaml` under `deployment` and proceed.
-- If the query returns zero rows, halt with:
+- If the query returns zero rows, halt with the error template below, substituting the configured domain at runtime:
 
-> The `{{DOMAIN_NAME}}` domain is not deployed in this tenant. Deploy the domain blueprint first:
+> The `<spec.domain.name>` domain is not deployed in this tenant. Deploy the domain blueprint first:
 >
-> 1. Pull the blueprint: https://semantius.app/catalog/{{DOMAIN_CODE_LOWER}}/blueprint
+> 1. Pull the blueprint: `https://semantius.app/catalog/<spec.domain.code lowercase>/blueprint`
 > 2. Run the semantic-model-deployer skill against the blueprint
 > 3. Verify with: `semantius call crud postgrestRequest '{"method":"GET","path":"/modules?module_slug=eq.<slug>"}'`
 >

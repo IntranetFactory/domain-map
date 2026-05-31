@@ -1,0 +1,168 @@
+---
+status: feedback_needed
+last_transition: 2026-05-30
+last_transition_by: agent
+open_questions: 27
+---
+
+# VIS-MGMT - Audit History
+
+## 2026-05-30 - Validate b1 (full 4-pass)
+
+### Summary
+
+- **Current footprint:** 8 master data_objects in the legacy `domain_data_objects` table (`visitor_registrations`, `visitor_check_ins`, `visitor_badges`, `host_assignments`, `visitor_evacuation_lists`, `visitor_nda_acknowledgements`, `visitor_watchlist_screenings`, `visitor_audit_logs`). **0 `domain_modules` rows** (M1 hard fail). **0 capabilities** (A2 fail). **0 regulations** (B-band gap). 10 trigger_events on the masters, 3 outbound handoffs (to IGA, GRC, HCM), 0 inbound handoffs. 1 legacy domain-level system skill (`vis-mgmt-system`, skill id 117, `domain_module_id=null`) with 10 `skill_tools` rows (8 master query tools + `send_email` + `send_sms`). 4 solutions linked (Envoy Workplace, Proxyclick, SwipedOn primary; ServiceNow Workplace Service Delivery secondary). 2 `business_function_domains` rows (Facilities and Real Estate as owner, Security as contributor).
+- **Vendor-surface basis:** Envoy Workplace, Proxyclick (Eptura), SwipedOn, iLobby, Sign In Solutions / Traction Guest, Greetly. Specialist focus: Envoy and Proxyclick anchor the enterprise tier; SwipedOn and iLobby cover SMB and regulated single-site; Sign In Solutions covers government / high-security; Greetly handles SMB visitor self-service.
+- **Bucket 1 (in-scope, agent fixable):** 13 items.
+- **Bucket 2 (surface-for-user, judgment):** 7 items.
+- **Bucket 3 (Phase 0 pending, speculative):** 7 items.
+
+Structural pass: **M1 fails catastrophically** (no modules exist). Because the Phase M precursor is unsatisfied, every downstream band that requires `domain_modules` rows (M2-M7, B12 lifecycle states, E1-E6 roles, F2-F5 module skills, S2 per-module sweep) cannot be evaluated. The 8 masters exist only in the legacy `domain_data_objects` rollup; no `domain_module_data_objects` rows on this domain's own modules. F1 fails (the legacy domain-level system skill has not been retired). A2 fails (no capabilities linked). A4 fails (`catalog_tagline` and `catalog_description` empty). B-band has multiple gaps. B10b fails on all 3 outbound handoffs (every row has `source_domain_module_id=null` because no modules exist).
+
+This domain is functionally an unmodularized stub. The Bucket 1 list is dominated by the structural rebuild required to bring it into the modular shape Rule #14 mandates. The market audit (Pass 2) overlays MISSING entities on top of that rebuild.
+
+### Vendor surface basis
+
+Pure-play visitor-management specialists chosen over the broader IWMS / Workplace suites: Envoy Workplace (the de-facto enterprise reference for visitor flow + workplace experience), Proxyclick (Eptura, enterprise + EU compliance focus), SwipedOn (SMB iPad-first, ANZ origin), iLobby (regulated / FDA / ITAR sites), Sign In Solutions / Traction Guest (Canadian-origin, government / high-security), Greetly (SMB self-service). All six are pure-plays. Envoy and Proxyclick anchor the GDPR-aware enterprise schema; iLobby and Sign In Solutions anchor regulated / ITAR / NDA-heavy workflows; SwipedOn and Greetly cover the SMB iPad-only deployments. ServiceNow Workplace Service Delivery is listed in the current `solution_domains` rollup as secondary coverage; it is not used as a primary reference here because its visitor surface is a thin wrapper over Workplace Service Delivery's broader employee-services scope.
+
+### Pass 3 - Neighbor discovery
+
+Auto-discovered neighbors (handoffs + DMDO cross-references):
+
+| Neighbor | Outbound | Inbound | DMDO consumers | Edge weight | Deep dive? |
+|---|---|---|---|---|---|
+| IGA | 1 (`visitor_registration.submitted`) | 0 | 1 (IGA-AUTO-PROVISIONING consumes `visitor_registrations`) | 2 | No (light) |
+| GRC | 1 (`visitor_audit_log.sealed`) | 0 | 0 | 1 | No (light) |
+| HCM | 1 (`host_notification.sent`) | 0 | 0 (but `host_assignments` references `employees` id 31 via `data_object_relationships`) | 1 | No (light) |
+
+No neighbor crosses the edge-weight >=3 threshold. All three get one-line summaries in Pass 4 below.
+
+### Bucket 1 - In-scope confirmed gaps
+
+#### STRUCTURAL band failures (M-band + A-band + F-band)
+
+| ID | Band | Finding | Fix |
+|---|---|---|---|
+| B1-S1 | M1 | Zero `domain_modules` rows for VIS-MGMT. Domain has 8 master data_objects but no modules to host them. Rule #14 mandates >=1 full module. | Author the module set. Recommended split (see Bucket 2 #1 for confirmation): `VIS-MGMT-REGISTRATION` (pre-registration + check-in + badge + host notification), `VIS-MGMT-COMPLIANCE` (NDA + watchlist + audit log + evacuation list). 8 masters split roughly 4-4 across the two modules. |
+| B1-S2 | A2 | Zero `capability_domains` rows. Domain has no capabilities linked. | Author >=3 capabilities. Recommended: `VISITOR-PREREG` (pre-registration and host notification), `VISITOR-CHECKIN` (arrival, badge issuance, ID verification), `VISITOR-COMPLIANCE` (NDA, watchlist screening, audit logs), `EMERGENCY-ROSTER` (evacuation list, mustering), `HOST-MANAGEMENT` (host assignment, host responsibility). |
+| B1-S3 | A4 | `catalog_tagline` and `catalog_description` both empty. Rule #20 requires both populated in buyer voice. | Draft both fields per Rule #20 and surface to the user for review before writing. Buyer voice (workflow + value), not analyst voice. |
+| B1-S4 | A1 | `business_logic` empty. Allowed under Rule #8 only when `crud_percentage >= 95`. Currently `crud_percentage=95`, so the empty string is technically allowed but borderline. Watchlist screening + NDA acknowledgement + audit-log sealing have rule-driven branches that suggest the band could push above pure CRUD. | Either keep `business_logic=''` (95 stays) or draft non-empty text describing the watchlist / NDA / audit-log compliance branches and consider lowering `crud_percentage` to 90. Surface to user. |
+| B1-S5 | F1 | Legacy domain-level system skill `vis-mgmt-system` (skill id 117, `domain_id=24`, `domain_module_id=null`). No module-level skills exist yet (because no modules exist). Once B1-S1 lands modules, this skill must be retired and one `<module>_agent` skill authored per module (Rule #17). | DELETE skill 117 after the module set lands and per-module skills are authored. Until then, the legacy row is the transitional state but the F1 audit flag remains until cured. The 10 `skill_tools` rows (8 query tools + `send_email` + `send_sms`) must be migrated: the per-master `query_*` tools split between the two modules along their master assignments; `send_email` and `send_sms` are channel-primitive rows that fail F7 (see B1-S6). |
+| B1-S6 | F7 | `vis-mgmt-system` links `send_email` (`coverage_tier=platform`) and `send_sms` (`coverage_tier=external`) as required tools, both with empty `notes`. Per Rule (F7), generic notification motions should use `notify_person` / `notify_team`; `send_email` / `send_sms` are only justified when the channel IS the workflow contract. Host notification on visitor arrival is exactly the substitutable / notify-person shape. | DELETE the `send_email` and `send_sms` `skill_tools` rows; replace with `notify_person` (for host notification) and `notify_team` (for evacuation-list broadcast). Apply during the per-module-skill authoring of B1-S5. |
+
+#### STRUCTURAL band failures (B-band)
+
+| ID | Band | Finding | Fix |
+|---|---|---|---|
+| B1-S7 | B10b | All 3 outbound handoffs (rows 871, 872, 873) have `source_domain_module_id=NULL`. Per the authoring rule, the column was permitted to be NULL only when the source domain was unmodularized at insert time, which IS the case here, but the audit MUST flag it for backfill once modules exist. Inbound side: row 871 has `target_domain_module_id=148` (IGA-AUTO-PROVISIONING) - covered. Rows 872 (target=GRC) and 873 (target=HCM) have `target_domain_module_id=NULL` - those are the target domain's B10b (report-only, listed below). | Backfill all 3 outbound `source_domain_module_id` after B1-S1 lands modules. Row 871 (`visitor_registration.submitted`, master is `visitor_registrations`) -> `VIS-MGMT-REGISTRATION`. Row 872 (`visitor_audit_log.sealed`, master is `visitor_audit_logs`) -> `VIS-MGMT-COMPLIANCE`. Row 873 (`host_notification.sent`, master is `host_assignments`) -> `VIS-MGMT-REGISTRATION`. Use the per-master resolution rule from B10b. |
+| B1-S8 | B6 | Two `data_object_relationships` rows use a verb `logged_in` (row joining `visitor_check_ins` -> `visitor_audit_logs` and `visitor_registrations` -> `visitor_audit_logs`). The verb is sentence-incomplete and not the audit-log idiom (the catalog elsewhere uses verbs like `audits`, `logs`, `records`, `appears_in`). | PATCH the `relationship_verb` on both rows to a clearer verb (recommended: `audited_in` / `records_event_in`). Surface to user for the exact wording. |
+| B1-S9 | B12 | Zero `data_object_lifecycle_states` rows on any of the 8 masters. Most VIS-MGMT masters have non-trivial state machines: `visitor_registrations` (draft -> submitted -> approved -> arrived -> checked_out / no_show / cancelled), `visitor_check_ins` (pending -> verified -> badged / denied / escalated), `visitor_badges` (issued -> active -> returned / lost), `host_assignments` (assigned -> confirmed -> closed), `visitor_nda_acknowledgements` (sent -> signed / declined), `visitor_watchlist_screenings` (queued -> cleared / flagged / blocked), `visitor_evacuation_lists` (open -> closed_drill / closed_event), `visitor_audit_logs` (open -> sealed). | Author lifecycle states per master, with `requires_permission=true` flags on every gated transition (approve, escalate, seal, block) and `domain_module_id` set to the realizing module from B1-S1. Lifecycle states are the source from which workflow-gate permissions are materialized; loading the masters without them silently hollows the entire role-bundling layer. |
+| B1-S10 | B4 | Six masters carry visitor PII (name, ID, photo, signature). Pattern flag `has_personal_content` is `false` on every master. Likely candidates: `visitor_registrations`, `visitor_check_ins`, `visitor_badges`, `visitor_nda_acknowledgements`, `visitor_watchlist_screenings`, `visitor_audit_logs`. | PATCH `has_personal_content=true` on the six PII-bearing masters. `host_assignments` and `visitor_evacuation_lists` reference visitor identifiers indirectly; user decides whether to flip those too (see Bucket 2 #2). `has_submit_lock` likely belongs on `visitor_audit_logs` (sealing the log is a one-way submit lock) - surface for confirmation. |
+
+#### MISSING entities (market audit - vendor-confirmed gaps)
+
+| ID | Entity | Proposed module | Vendor evidence | Notes |
+|---|---|---|---|---|
+| B1-M1 | `visitor_invitation_links` | VIS-MGMT-REGISTRATION | Envoy, Proxyclick, iLobby, Sign In Solutions | Magic-link or QR pre-registration token sent to the visitor before arrival. Distinct from `visitor_registrations` (the registration record) - this is the credential the visitor uses to identify themselves to the kiosk. Used by every enterprise vendor as a separate entity from the registration row itself. |
+| B1-M2 | `visitor_health_screenings` | VIS-MGMT-REGISTRATION | Envoy, Proxyclick, SwipedOn, iLobby | Health attestation / vaccination / symptom screening recorded at registration or arrival. Post-COVID hygiene entity; still in active use for healthcare, food production, regulated sites. Distinct from `visitor_watchlist_screenings` (security screening). |
+| B1-M3 | `visitor_id_verifications` | VIS-MGMT-REGISTRATION | Envoy, iLobby, Sign In Solutions, Proxyclick | Government-ID scan / photo capture / passport scan at check-in. Required for ITAR / FDA / regulated sites and increasingly common in enterprise deployments. Currently no entity captures the ID-verification artifact (photo, document number, expiration). |
+| B1-M4 | `visitor_pre_arrival_documents` | VIS-MGMT-COMPLIANCE | iLobby, Proxyclick, Sign In Solutions | Documents the visitor must read or sign before arrival (safety briefing, site policies, ITAR forms) distinct from the NDA itself. Currently the NDA is the only pre-arrival document modeled. |
+| B1-M5 | `visitor_groups` | VIS-MGMT-REGISTRATION | Envoy, Proxyclick, iLobby, SwipedOn | Multi-visitor delegation / contractor crew / tour group bundled under one registration. Universal across enterprise vendors; supports event-driven and contractor-heavy sites. |
+| B1-M6 | `visitor_types` | VIS-MGMT-REGISTRATION | All 6 vendors | Configuration master that defines per-type visitor flow (contractor, interview candidate, delivery, tour, VIP, child) with per-type NDA / screening / badge-template requirements. Today the catalog has no place to encode this configurable taxonomy. |
+| B1-M7 | `delivery_check_ins` | VIS-MGMT-REGISTRATION (or its own module) | Envoy Deliveries, Proxyclick, SwipedOn | Couriers and deliveries are a distinct visitor sub-flow handled by every enterprise vendor (no NDA, no badge issuance, no host assignment - usually just a host-notification and mailroom routing). Surfacing as a sibling entity to `visitor_check_ins` rather than overloading it. |
+
+#### BOUNDARY findings (intra-domain handoffs B9b skipped because no modules exist yet)
+
+| ID | Finding | Fix |
+|---|---|---|
+| B1-B1 | B9 trigger-event subscriber coverage: 10 trigger_events exist on VIS-MGMT masters; only 3 have outbound `handoffs` rows. The 7 unsubscribed events: `visitor_check_in.completed` (976), `visitor_badge.issued` (977), `visitor_badge.returned` (978), `host_assignment.created` (979), `evacuation_list.updated` (981), `visitor_nda.acknowledged` (982), `visitor_watchlist.screened` (983). Several of these likely have legitimate subscribers (IGA on badge issuance / return; GRC on watchlist flag; EHS-MGMT or REAL-EST on evacuation list updates). | Per-event subscriber draft - listed below in B1-T table. Some events may be leaves (e.g. `host_assignment.created` is plausibly an internal event). |
+
+| B1-T sub-id | Trigger event | Proposed subscriber direction |
+|---|---|---|
+| B1-T1 | `visitor_check_in.completed` (976) | IGA (badge-issuance trigger), HCM (host notification fan-out parallel to 873). |
+| B1-T2 | `visitor_badge.issued` (977) | IGA (PACS provisioning on badge id, when PACS lands). |
+| B1-T3 | `visitor_badge.returned` (978) | IGA (de-provision PACS access on return). |
+| B1-T4 | `evacuation_list.updated` (981) | EHS-MGMT (emergency-response when EHS-MGMT lands), REAL-EST / IWMS (occupancy reporting). |
+| B1-T5 | `visitor_nda.acknowledged` (982) | GRC (compliance evidence), CLM (NDA attach when CLM is the canonical NDA store - judgment call). |
+| B1-T6 | `visitor_watchlist.screened` (983) | GRC (block-event compliance evidence) on `flagged` or `blocked` outcome only. |
+
+`host_assignment.created` (979) is plausibly an internal event; flag as leaf-candidate for user confirmation.
+
+#### APQC TAGGING (H1)
+
+For the 3 currently-loaded outbound cross-domain handoffs, proposed PCF activity classification. All three are L4 confident matches against the cross-industry framework (no industry-specific or modern-digital deferrals).
+
+| handoff_id | source -> target | trigger_event | payload | Proposed PCF row | PCF id | external_id | confidence |
+|---|---|---|---|---|---|---|---|
+| 871 | VIS-MGMT -> IGA | visitor_registration.submitted | visitor_registrations | Provide facility access and security | 1523 | 21690 | confident L4 |
+| 872 | VIS-MGMT -> GRC | visitor_audit_log.sealed | visitor_audit_logs | Manage compliance audits | 1570 | 12183 | confident L4 |
+| 873 | VIS-MGMT -> HCM | host_notification.sent | host_assignments | Manage safety, security, and access to sites | 1540 | 19228 | confident L4 |
+
+Deferred: none. All three handoffs have clean L4 matches in the cross-industry PCF. Existing `handoff_processes` rows for these handoffs: zero (queried `/handoff_processes?handoff_id=in.(871,872,873)` returned empty). So 3 NEW `agent_curated` proposals at `record_status=new`. This satisfies the H1 volume expectation (N=3 cross-domain handoffs, 0.5N-0.8N expected = 1.5-2.4 proposals; produced 3, all confident).
+
+Once B1-B1 adds new outbound handoffs (T1-T6 above), each new row will need its own APQC tag in the same pass that loads the handoff. The expected PCF for T1-T3 (badge / check-in events to IGA) is the same `Provide facility access and security` (1523); T4 (evacuation list to EHS-MGMT or IWMS) is `Implement emergency response program` (1791, ext 11196); T5 (NDA to GRC) and T6 (watchlist flag to GRC) are `Manage compliance audits` (1570) or `Conduct IT compliance control auditing` (1184).
+
+### Bucket 2 - Surface-for-user (judgment calls)
+
+1. **Module split for VIS-MGMT.** Recommended: 2 modules - `VIS-MGMT-REGISTRATION` (registration + check-in + badge + host) and `VIS-MGMT-COMPLIANCE` (NDA + watchlist + audit log + evacuation list). Alternative: 3 modules adding `VIS-MGMT-EMERGENCY` (evacuation list + mustering only). The 3-way split better matches Envoy's product structure (separate Workplace Safety surface) and lines up with EHS-MGMT if/when it lands. **Decide:** 2-module or 3-module split? Affects every downstream M-band, B-band, E-band fix. Independent of Bucket 3.
+
+2. **Pattern flag `has_personal_content` scope.** B1-S10 confidently flips 6 masters to `has_personal_content=true`. `host_assignments` and `visitor_evacuation_lists` reference visitor identifiers indirectly. Decide: flip those too (treats them as PII-containing for data-retention / DSAR purposes) or leave at `false` (they reference visitor records but don't carry the personal data directly). Also: should any master carry `has_submit_lock=true`? Strong candidate is `visitor_audit_logs` (sealing is a one-way lock); user confirms.
+
+3. **GDPR / CCPA regulation linkage.** VIS-MGMT carries visitor PII (name, ID, photo, signature). `regulations` does not currently include GDPR or CCPA (queried). Should the audit propose adding both regulations + linking via `domain_regulations`? GDPR applicability: EU sites or any visitor processing of EU residents. CCPA: California-resident visitors. **Options:** (a) load both GDPR + CCPA into `regulations` and link to VIS-MGMT (and broadly to other domains touching personal data); (b) defer to a catalog-wide regulation backfill pass (none currently scheduled); (c) load only GDPR (the broader scope) and defer CCPA. Independent of Bucket 1.
+
+4. **OSHA / emergency-response regulation.** `visitor_evacuation_lists` is mandated by OSHA 29 CFR 1910.38 (emergency action plans). Should `OSHA` be added as a regulation and linked to VIS-MGMT? Same options as #3.
+
+5. **NDA storage canonical owner.** `visitor_nda_acknowledgements` is currently mastered in VIS-MGMT. CLM (Contract Lifecycle Management) could plausibly own the NDA artifact (it owns corporate-NDA storage). The catalog's split is non-obvious: per-visit NDA acknowledgements are distinct from negotiated corporate NDAs, so the VIS-MGMT mastery is defensible. **Decide:** keep VIS-MGMT mastery (recommended; per-visit ack is operationally distinct) or promote a slimmer entity to CLM. Affects B1-T5 routing.
+
+6. **B1-T6 watchlist subscriber routing.** `visitor_watchlist.screened` fires on every screening. Subscribing GRC on every event is noisy. Should the handoff fire only on `flagged` or `blocked` outcomes (filter at trigger event vs handoff)? **Options:** (a) one handoff with filter applied semantically (preferred); (b) split into `visitor_watchlist.flagged` and `visitor_watchlist.blocked` distinct trigger events.
+
+7. **`is_canonical_bare_word` arbitration.** None of the 8 masters use bare-word names; all are `visitor_*` / `host_*` prefixed - Rule #9 passes for VIS-MGMT. But `host_assignments` is a borderline bare word (the `host_` prefix is not the domain slug `vis_mgmt_`). Decide: rename to `visitor_host_assignments` for the cluster, or keep `host_assignments` with `is_canonical_bare_word=true` rationale (current row has `is_canonical_bare_word=false`). Surface for user wording.
+
+### Bucket 3 - Phase 0 pending (speculative)
+
+Universal-or-near-universal vendor entities surfaced by the market analyst that warrant formal Phase 0 vendor-research verification before loading:
+
+| Candidate | Proposed module | Vendor evidence basis | Recommended verification |
+|---|---|---|---|
+| `visitor_kiosk_devices` | VIS-MGMT-REGISTRATION | Envoy, SwipedOn, Proxyclick - kiosk fleet is first-class on every vendor's admin surface | Phase 0 read of vendor admin / device-management docs to confirm whether kiosk fleet management belongs in VIS-MGMT or in a separate UEM / device-management layer. |
+| `visitor_camera_captures` | VIS-MGMT-REGISTRATION | Envoy, iLobby, Sign In Solutions | Photo capture at check-in. May overlap with `visitor_id_verifications` (B1-M3) - Phase 0 confirms whether these are one entity or two. |
+| `visitor_packages` | VIS-MGMT-REGISTRATION | Envoy Deliveries, Greetly | Mailroom / package-arrival sub-flow. May fold into `delivery_check_ins` (B1-M7) or be a sibling. |
+| `visitor_blocklist_entries` | VIS-MGMT-COMPLIANCE | iLobby, Proxyclick, Sign In Solutions | Internal banned-visitor list, distinct from external watchlist screening. Vendor terminology varies (blocklist / banned list / persona-non-grata list). |
+| `visitor_emergency_contacts` | VIS-MGMT-COMPLIANCE | Sign In Solutions, iLobby | Visitor-supplied emergency-contact for the visit. Required at regulated sites; optional elsewhere. Phase 0 confirms universality across vendors. |
+| `visitor_meeting_rooms` | VIS-MGMT-REGISTRATION | Envoy + Robin/Eptura integration surface | Room-booking attached to the visit (overlaps with WORKPLACE-EXP candidate). Phase 0 confirms whether VIS-MGMT should master the visit-room link or just consume from a workspace-booking domain. |
+| `visitor_qr_check_in_methods` | VIS-MGMT-REGISTRATION | Envoy, SwipedOn, Proxyclick | QR / NFC / mobile-app check-in method as a configurable per-type flag. May fold into `visitor_types` (B1-M6) configuration rather than its own entity. |
+
+### Candidates queued to `audits/_missing-domains.md`
+
+The Pass 2 market audit surfaced two distinct VIS-MGMT-adjacent markets that have no row in `domains`:
+
+- **PACS** (Physical Access Control Systems) - HID Global, Genetec, Lenel S2, Brivo, Honeywell Pro-Watch, Johnson Controls C-CURE 9000. Distinct from VIS-MGMT (which handles the visitor lifecycle) and from IGA (logical identity). Queued for triage.
+- **WORKPLACE-EXP** (Workplace Experience and Workspace Booking) - Envoy Workplace (already a VIS-MGMT solution), Robin, Eptura, OfficeSpace, Condeco, Kadence, Tactic. Desk / room / hybrid-attendance booking. Adjacent to VIS-MGMT (Envoy bundles both); plausibly a distinct domain or a fold-into IWMS / REAL-EST depending on the point-solution-market test. Queued for triage.
+
+### Cross-bucket dependencies
+
+- **Bucket 2 #1 (module split) gates every Bucket 1 M-band / B-band / F-band fix.** Until the module shape is decided, B1-S1, B1-S5, B1-S6, B1-S7, B1-S9, and every B1-M entity proposal cannot be wired to a specific module. Resolve Bucket 2 #1 first.
+- **Bucket 2 #3 / #4 (GDPR / CCPA / OSHA regulation linkage) is independent of the rest** but unlocks a B-band regulations check that otherwise stays empty.
+- **Bucket 3 entities are independent of Bucket 1 structural items** but a few overlap (Bucket 3 `visitor_camera_captures` may collapse into B1-M3 `visitor_id_verifications`; Bucket 3 `visitor_packages` may collapse into B1-M7 `delivery_check_ins`). If Bucket 3 vetting changes the entity count, Bucket 1 module assignments may need rebalancing.
+- **PACS candidate (queued) interacts with B1-T2 / B1-T3** (badge issued / returned handoffs). If PACS is promoted, those handoffs route to PACS modules rather than IGA-AUTO-PROVISIONING. If PACS folds into IGA, the current IGA target stands. Independent of Bucket 1's other items but affects T2 / T3 destination.
+
+### Per-bucket prompts
+
+- **Bucket 1:** *Fix these now? This is a structural rebuild; Bucket 2 #1 (module split) MUST be decided first because every B1-S* and B1-M* item carries a module assignment. Reply with the chosen split (2 modules or 3 modules) and "fix all" / "fix items 1, 3, 5" / "skip".*
+- **Bucket 2:** *What's your call on each? Items 3, 4, 5, 6, 7 are independent of each other. Item 1 gates all Bucket 1 fixes. Item 2 is a per-row PATCH that can run alongside the rest of Bucket 1.*
+- **Bucket 3:** *Vet via Phase 0 vendor research (formal pass against the 6 flagship vendors) or eyeball-mode? If eyeball, name which of the 7 candidates ring true.*
+
+### Report-only follow-ups (owed by other domains)
+
+These items are owed by other domains' next audits; the fix does NOT live in VIS-MGMT's queue.
+
+- **IGA B10b (inbound) owes `target_domain_module_id` backfill on handoff rows where VIS-MGMT is the source.** Row 871 already has `target_domain_module_id=148` (IGA-AUTO-PROVISIONING) so this is covered for the currently-loaded row, but the B1-T1 / B1-T2 / B1-T3 candidates (when loaded) will land NULL on the IGA side until IGA's B10b passes them. Surface in IGA's next audit.
+- **GRC B10b (inbound) owes `target_domain_module_id` backfill on row 872** (`visitor_audit_log.sealed`). Currently NULL because no module-level resolution decided; the audit notes the gap for GRC's next pass.
+- **HCM B10b (inbound) owes `target_domain_module_id` backfill on row 873** (`host_notification.sent`). Same shape as above.
+- **GRC B8 owes inbound `data_object_relationships` row** mirroring handoff 872 (e.g. `visitor_audit_logs` -> `compliance_evidence` (id 288) via verb `feeds` or `evidences`). One such relationship is already loaded (`visitor_audit_logs feeds compliance_evidence (288)`), so this report-only follow-up is satisfied from VIS-MGMT's side; GRC's audit confirms.
+- **HCM B8 owes inbound `data_object_relationships` row** mirroring handoff 873. Row `host_assignments` -> `employees` (id 31) already exists with verb `is host for`, so this is also satisfied from VIS-MGMT's side.
+- **IGA B8 owes inbound `data_object_relationships` row** mirroring handoff 871. Row `visitor_registrations provisions iga_provisioning_events (708)` already exists; satisfied from VIS-MGMT's side.
+- **Light pairwise summary (Pass 4):**
+  - **VIS-MGMT <-> IGA:** 1 outbound handoff + 1 inbound DMDO consumer. Clean structurally (handoff has target module FK; DMDO is loaded). No B-band gaps from VIS-MGMT's side. PACS candidate (queued) may change the IGA target for badge-handoff rows when loaded.
+  - **VIS-MGMT <-> GRC:** 1 outbound handoff with `target_domain_module_id=NULL` - GRC owes the backfill. Compliance-evidence relationship is loaded.
+  - **VIS-MGMT <-> HCM:** 1 outbound handoff with `target_domain_module_id=NULL` - HCM owes the backfill. `host_assignments` -> `employees` relationship is loaded.

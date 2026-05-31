@@ -1,0 +1,176 @@
+---
+status: feedback_needed
+last_transition: 2026-05-30
+last_transition_by: agent
+open_questions: 19
+---
+
+# APIM, Audit History
+
+## 2026-05-30, Validate b1 (full 4-pass)
+
+### Summary
+
+- **Current footprint:** 0 `domain_modules`, 0 capabilities, 0 regulations, 7 masters in legacy `domain_data_objects` rollup (`api_versions` 456, `api_specifications` 457, `api_deployments` 458, `api_policies` 459, `api_usage_metrics` 460, `api_gateways` 461, `api_consumers` 462). 0 solutions linked. 7 outbound cross-domain handoffs (targets: VSDP, IPAAS, OBS, SUB-MGMT, TEST-MGMT, GRC, IGA) and 1 inbound (IPAAS). 1 legacy domain-level system skill (`apim-system`, id 29) with 7 `skill_tools` rows, all `query` tools at `coverage_tier='platform'`; strict Semantius score 7/7 = 100% but the skill is `domain_id`-only (`domain_module_id` NULL), so F1 carries it as a transitional row. 2 `business_function_domains` rows (Platform Engineering owner, IT Operations contributor). 1 cross-domain `data_object_relationships` row touching APIM masters (`test_cases is_triggered_by api_specifications`, inbound from TEST-MGMT). Zero intra-APIM edges. Zero `users` edges. Zero `data_object_lifecycle_states`. Zero `data_object_aliases`. 10 `trigger_events` on APIM masters (ids 808 to 817), all with `event_category=''` (Rule #13 violation). 1 cross-module DMDO consumer row (`IGA-AUTO-PROVISIONING` module 148, role consumer, necessity optional, on `api_consumers`). 0 `handoff_processes` tags across all 8 cross-domain handoffs.
+- **Vendor-surface basis:** Apigee (Google), Kong (Kong Konnect), MuleSoft Anypiece (Salesforce), Azure API Management, AWS API Gateway, IBM API Connect, Tyk, WSO2 API Manager, Postman API Platform. No regulated-market compliance specialist anchor (APIM is not a regulation-mandated market the way ATS is for FCRA), but API Security adjacency (Salt, Noname, Traceable, Wallarm, 42Crunch) sits next to it and may warrant a separate domain (queued).
+- **Bucket 1 (in-scope, agent fixable):** 15 items.
+- **Bucket 2 (surface-for-user, judgment):** 3 items.
+- **Bucket 3 (Phase 0 pending, speculative):** 1 item.
+
+**Neighbor discovery** (auto-derived from handoffs, cross-domain DMDOs, and `data_object_relationships`, ranked by edge weight):
+
+| Neighbor | Out | In | Cross-DMDO touching APIM masters | Cross-rels | Weight | Pass shape |
+|---|---|---|---|---|---|---|
+| IPAAS | 1 | 1 | 0 | 0 | 2 | Lightweight |
+| IGA | 1 | 0 | 1 (`IGA-AUTO-PROVISIONING` consumer on `api_consumers`) | 0 | 2 | Lightweight |
+| TEST-MGMT | 1 | 0 | 0 | 1 (`test_cases is_triggered_by api_specifications`) | 2 | Lightweight |
+| VSDP | 1 | 0 | 0 | 0 | 1 | Lightweight |
+| OBS | 1 | 0 | 0 | 0 | 1 | Lightweight |
+| SUB-MGMT | 1 | 0 | 0 | 0 | 1 | Lightweight |
+| GRC | 1 | 0 | 0 | 0 | 1 | Lightweight |
+
+No neighbor reaches edge weight 3, so every neighbor gets a one-line lightweight summary in the per-neighbor section below; no full 5-section pairwise diff is dispatched in this run.
+
+The structural M-band is a complete blocker: APIM has zero `domain_modules`, so M1 hard-fails, which collapses M2 / M4 / M5 / M6, F2 / F3 / F5, E1 to E6, B9b, and B10b-source-side into vacuous-pass-pending-M1. Every Phase A / Phase M / Phase E deliverable for this domain is missing or pending the module set landing first. The legacy `domain_data_objects` rollup carries the 7 masters but no module owns them, so the IGA consumer DMDO (`IGA-AUTO-PROVISIONING` on `api_consumers`) is the only `domain_module_data_objects` row that references APIM masters at all, and that row is from the consumer side, not from APIM.
+
+H1 fails hard: 0 of 8 cross-domain handoffs (0%) carry any `handoff_processes` row, far below the 50% to 80% volume target. The volume target for this audit is 4 to 6 new `agent_curated` rows.
+
+B9 event_category is empty on every APIM trigger event (Rule #13 violation, the enum requires one of `lifecycle / state_change / threshold / signal`). B10b NULL `source_domain_module_id` is the rule on every outbound, vacuous until M1 lands. The single non-NULL `target_domain_module_id` on the catalog is handoff 751 (`api_consumer.revoked` to IGA), where the IGA side already wired up `IGA-AUTO-PROVISIONING` (148); every other handoff has NULL on both module FKs.
+
+### Bucket 1, In-scope confirmed gaps
+
+#### STRUCTURAL band failures
+
+| ID | Band | Finding | Fix |
+|---|---|---|---|
+| B1-S1 | **M1 (hard fail, blocker)** | APIM has **zero `domain_modules` rows** (neither as `domain_id=79` primary host nor via `domain_module_host_domains`). Rule #14 makes this an audit blocker. Every downstream M / F / E check is vacuously pending; the legacy `domain_data_objects` rollup carries 7 masters but no module owns them. `IGA-AUTO-PROVISIONING` (module 148) already declares `api_consumers` as a consumer DMDO, proving the deploy contract surface is being used downstream even though the source domain has no modular split. | Author the APIM module set. Recommended shape (subject to B2-S1 user decision): four full modules covering design and lifecycle (`APIM-DESIGN-LIFECYCLE` housing `api_versions`, `api_specifications`), gateway runtime (`APIM-GATEWAY-RUNTIME` housing `api_gateways`, `api_deployments`, `api_policies`), monetization and consumer access (`APIM-CONSUMER-MGMT` housing `api_consumers`, `api_usage_metrics`), and developer portal (`APIM-DEVELOPER-PORTAL`, a thinner module covering portal artifacts surfaced as Phase 0 candidates in B3-S1). Capabilities (B1-S2) get attached to whichever module realizes them. Once modules exist, S6 to S14 below become loadable. |
+| B1-S2 | **A2 zero capabilities** | `capability_domains` for APIM returns 0 rows. Phase A expectation is 5 to 8 capabilities per market. | Draft 6 to 8 capabilities (suggestions: `APIM-DESIGN-FIRST-AUTHORING`, `APIM-API-VERSIONING`, `APIM-GATEWAY-POLICY-ENFORCEMENT`, `APIM-RATE-LIMITING-AND-QUOTAS`, `APIM-DEVELOPER-PORTAL-PUBLISHING`, `APIM-CONSUMER-ONBOARDING`, `APIM-API-MONETIZATION`, `APIM-API-USAGE-ANALYTICS`) and link via `capability_domains` plus `domain_module_capabilities` once modules land. |
+| B1-S3 | **A3 zero solutions linked** | `solution_domains?domain_id=eq.79` returns 0 rows. The market has well-known flagship vendors but none are linked. | Add `solutions` rows where missing and `solution_domains` rows with `coverage_level` (`primary` for Apigee, Kong, MuleSoft Anypiece, Azure API Management, AWS API Gateway, IBM API Connect, Tyk, WSO2 API Manager, Postman API Platform). Reuse existing `vendors` rows by `vendor_name` per Rule #4. |
+| B1-S4 | **A4 catalog UX fields empty** | `catalog_tagline` and `catalog_description` are both empty strings. Rule #20 requires a buyer-voice draft, surfaced to user before write. | Draft tagline plus 1 to 3 paragraph description in buyer voice (workflow plus value: design, publish, secure, and monetize APIs from one place; route traffic through gateways with policy enforcement, rate limits, and consumer-level analytics). Surface BEFORE writing. |
+| B1-S5 | **B9 event_category invalid on 10 trigger events** | All 10 APIM `trigger_events` (ids 808 to 817) have `event_category=''`. Per Rule #13 the enum must be one of `lifecycle / state_change / threshold / signal`. Proposed mapping: 808 `api_version.published` to `lifecycle`, 809 `api_version.deprecated` to `lifecycle`, 810 `api_specification.updated` to `state_change`, 811 `api_deployment.published` to `lifecycle`, 812 `api_deployment.rolled_back` to `state_change`, 813 `api_policy.updated` to `state_change`, 814 `api_usage.quota_breached` to `threshold`, 815 `api_consumer.onboarded` to `lifecycle`, 816 `api_consumer.revoked` to `state_change`, 817 `api_gateway.health_degraded` to `signal`. | PATCH 10 rows with the categorization above. |
+| B1-S6 | **B6 zero intra-domain `data_object_relationships`** | No edges between any two APIM masters. Expected: `api_versions belongs_to api_specifications`, `api_deployments runs api_versions`, `api_deployments targets api_gateways`, `api_policies applies_to api_deployments` (or `api_gateways`), `api_usage_metrics measures api_deployments`, `api_consumers consumes api_deployments` (via subscription), `api_consumers attributed_to api_usage_metrics`. Without these, the APIM subgraph in fact sheets and architect views is hollow. | Draft 6 to 8 intra-domain edges (verb plus inverse_verb plus relationship_type plus relationship_kind plus is_required plus owner_side) and load. |
+| B1-S7 | **B7 zero `users` edges (Rule #10)** | No `data_object_relationships` rows between the 7 APIM masters and `users` (748). Every workflow-bearing APIM master has a user actor: API product owner on `api_specifications`, deployment approver on `api_deployments`, policy author on `api_policies`, gateway operator on `api_gateways`, consumer-onboarding reviewer on `api_consumers`. | Draft 5 to 7 user edges (`users owns api_specifications`, `users approves api_deployments`, `users authors api_policies`, `users operates api_gateways`, `users onboards api_consumers`). |
+| B1-S8 | **B8 missing cross-domain relationships** | 7 outbound plus 1 inbound cross-domain handoffs; only 1 cross-domain `data_object_relationships` row touches APIM masters (`test_cases is_triggered_by api_specifications`, inbound from TEST-MGMT). Missing payload-target edges that mirror the published handoffs: `api_specifications informs contract_tests` (IPAAS / TEST-MGMT target on 748, 752), `api_deployments triggers releases` (VSDP target on 747), `api_gateways feeds telemetry_streams` (OBS target on 749), `api_usage_metrics feeds subscription_meters` (SUB-MGMT target on 750), `api_consumers governs identity_grants` (IGA target on 751), `api_policies aligns_with control_policies` (GRC target on 797). | Draft 6 outbound cross-domain edges per the B6/B8 shape. Some rows may defer pending neighbor master ownership confirmation (especially TEST-MGMT-side `contract_tests` master and OBS-side `telemetry_streams` master). |
+| B1-S9 | **B11 zero `data_object_aliases`** | None of the 7 APIM masters carry alias rows. Vendor synonyms exist: `api_specifications` to Apigee "API Proxy", Kong "Service plus Route", MuleSoft "API Asset", Azure APIM "API"; `api_consumers` to Apigee "App and Developer", Kong "Consumer", Azure APIM "Subscription Owner"; `api_deployments` to Apigee "Revision and Environment", Kong "Workspace", Azure APIM "API Version Set deployment"; `api_gateways` to Kong "Gateway", AWS "API Gateway", Apigee "Runtime"; `api_policies` to Apigee "Policy", Kong "Plugin", Azure APIM "Policy". | Draft 8 to 12 alias rows; load via cluster-drafts pattern. |
+| B1-S10 | **B12 zero `data_object_lifecycle_states` (Rule #12)** | None of the 7 masters carry lifecycle states. `api_versions` (`draft` to `published` to `deprecated` to `retired`), `api_deployments` (`pending` to `published` to `rolled_back`), `api_specifications` (`draft` to `reviewed` to `approved` to `published`), `api_consumers` (`pending` to `onboarded` to `revoked`), `api_policies` (`draft` to `active` to `superseded`) are workflow-bearing. `api_usage_metrics` and `api_gateways` are config or telemetry shape (exemption candidates per Rule #12; surface in audit, do NOT auto-populate `data_objects.notes`). | For the 5 workflow-bearing masters, author state machines with `requires_permission` flags plus `domain_module_id` on the realizing module (depends on B1-S1 module set). For `api_usage_metrics` and `api_gateways`, surface the config-shape exemption in this audit per Rule #15. |
+| B1-S11 | **B4 pattern flags positive re-evaluation per Rule #12** | All 7 masters have `has_personal_content=false`, `has_submit_lock=false`, `has_single_approver=false`. Re-evaluate explicitly: `api_specifications.has_submit_lock=true` (published specs should freeze so contract tests pin against an immutable revision), `api_specifications.has_single_approver=true` (one API product owner per spec), `api_policies.has_single_approver=true` (one platform-engineering approver per policy), `api_consumers.has_personal_content=true` (developer contact details are personal data subject to GDPR access and erasure). | Decisions captured in Bucket 2 B2-S2; positive flags get a PATCH. |
+| B1-S12 | **F1 legacy domain-level system skill (Rule #17)** | Skill 29 (`apim-system`) carries `domain_id=79, domain_module_id=NULL`. Per F1 the legacy domain-level shape is a transitional state; per Rule #17 every `domain_modules` row needs exactly one `skill_type='system'` skill with `domain_module_id` set, and per Phase-S naming the skill_name should be `<module_code_lower>_agent` (snake plus `_agent`), not `<code>-system` (kebab plus `-system`). Once B1-S1 modules land, this skill needs to be retired or migrated to one of the new modules, with new per-module skills authored for each module. | After B1-S1 modules land: re-author one `skills` row per `domain_modules` row with `skill_name='<module_code_lower>_agent'`, link the 7 existing `skill_tools` query rows to the appropriate per-module skill (`query_api_versions` and `query_api_specifications` to APIM-DESIGN-LIFECYCLE, `query_api_deployments` plus `query_api_policies` plus `query_api_gateways` to APIM-GATEWAY-RUNTIME, `query_api_consumers` plus `query_api_usage_metrics` to APIM-CONSUMER-MGMT), then DELETE the legacy skill 29. |
+| B1-S13 | **F3 missing mutate, fetch, side_effect, compute, and gate tools** | Skill 29 links 7 tools, all `operation_kind='query'`. No `mutate_*` (create / update lifecycles), no `side_effect` (e.g., `publish_api_deployment`, `apply_api_policy`, `revoke_api_consumer`), no notification primitives (`notify_person` for breaking-change alerts to subscribers, `notify_team` for gateway-degradation broadcasts). The required floor per Rule #17 is at least one query plus one mutate plus one workflow gate. | After modules land (B1-S1): author per-module mutate tools (`create_api_version`, `publish_api_deployment`, `update_api_policy`, `onboard_api_consumer`, `revoke_api_consumer`) plus the `notify_person` and `notify_team` abstraction rows for breaking-change and quota-breach communication. Link with `requirement_level='required'` for the workflow-gate tools and `optional` for the notifications. |
+| B1-S14 | **B10b NULL `source_domain_module_id` on every outbound (vacuous until M1)** | All 7 outbound APIM handoffs (747, 748, 749, 750, 751, 752, 797) carry `source_domain_module_id=NULL`. The 1 inbound row (767) also carries `target_domain_module_id=NULL`. Until B1-S1 modules land, this is vacuous; once they do, run the backfill loader per [scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts](../scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts). | Backfill via the standard pattern after B1-S1. Handoff 751 already has `target_domain_module_id=148` (IGA-AUTO-PROVISIONING) on the IGA side; the others stay NULL on the target until each target domain ships its own modules (already done for IGA and ITSM but not for VSDP / OBS / SUB-MGMT / TEST-MGMT / GRC at the per-handoff level here). |
+| B1-S15 | **C1 contributor not consumer for IT Operations** | C1 passes structurally (1 owner row, Platform Engineering), but the secondary row tags IT Operations as `contributor`. For a gateway-runtime-heavy market the better RACI is IT Operations as `consumer` of dashboards plus alerts and Security as `contributor` on the policy / consumer-revocation slice. Currently no Security row exists. | Add `business_function_domains` row for Information Security as `contributor` (policy authoring, consumer access governance), and PATCH IT Operations from `contributor` to `consumer` (matches the operate-the-runtime RACI, not the build-the-runtime RACI which belongs to Platform Engineering). |
+
+#### APQC TAGGING
+
+8 cross-domain handoffs total (7 outbound, 1 inbound), 0 tagged. Coverage: 0/8 = 0%. Volume target for this audit: 4 to 6 new `agent_curated` rows. Headline catalog quality (`record_status='approved'`): 0/8.
+
+Routine high-confidence tags to author at fix time:
+
+| handoff_id | source to target | trigger_event | payload data_object | Proposed PCF (process_name / external_id) | PCF id | Confidence |
+|---|---|---|---|---|---|---|
+| 747 | APIM to VSDP | `api_deployment.published` | `api_deployments` | Deploy services/solutions (20824 L2) | 52 | confident L2 |
+| 748 | APIM to IPAAS | `api_specification.updated` | `api_specifications` | Develop and manage service/solution deployment strategy (20825 L3) | 283 | medium L3 |
+| 749 | APIM to OBS | `api_gateway.health_degraded` | `api_gateways` | Monitor IT infrastructure security (20912 L4) | 1307 | medium L4 (better candidate may be "Manage IT events and incidents" once authored upstream) |
+| 750 | APIM to SUB-MGMT | `api_usage.quota_breached` | `api_usage_metrics` | Monitor performance against baselines (19984 L4) | 523 | medium L4 |
+| 751 | APIM to IGA | `api_consumer.revoked` | `api_consumers` | Manage IT user authorization (20759 L4) | 1196 | confident L4 |
+| 752 | APIM to TEST-MGMT | `api_specification.updated` | `api_specifications` | Build and test IT service/solution components (20812 L5) | 1939 | medium L5 (defer-to-parent L4 candidate preferred if "Manage IT service/solution development" lands) |
+| 767 | IPAAS to APIM (inbound) | `integration_connector.credential_expired` | `integration_connectors` | Manage IT user identity and authorization (20756 L3) | 273 | medium L3 |
+| 797 | APIM to GRC | `api_policy.updated` | `api_policies` | Manage corporate governance policies (11045 L3) | 391 | confident L3 |
+
+Per the constraint #10 counting convention this is **one** Bucket 1 item (`B1-H1`); the table proposes 8 candidate rows (no deferrals this run, all 8 have at least a medium-confidence PCF match).
+
+#### Bucket 1 finding-type counts
+
+| Finding type | Count |
+|---|---|
+| STRUCTURAL (S1 to S4, S15) | 5 |
+| BOUNDARY (S5 to S10, S14) | 7 |
+| Phase-S authoring (S11 to S13 cover pattern flags plus skill migration plus tools floor) | 2 |
+| APQC TAGGING bundle (B1-H1; 8 candidate rows inside) | 1 |
+| **Bucket 1 total line items** | **15** |
+
+### Bucket 2, Surface-for-user (judgment calls)
+
+| ID | Question | Why agent can't answer | Options |
+|---|---|---|---|
+| B2-S1 | **Module split shape for APIM** | The catalog has no module set today (B1-S1). Three plausible shapes: (a) **4 modules**: `APIM-DESIGN-LIFECYCLE` (api_versions, api_specifications, design-first artifacts), `APIM-GATEWAY-RUNTIME` (api_gateways, api_deployments, api_policies), `APIM-CONSUMER-MGMT` (api_consumers, api_usage_metrics, api_subscriptions if loaded), `APIM-DEVELOPER-PORTAL` (developer_portals, api_documentation, api_products if loaded as Phase 0 candidates). (b) **3 modules**: collapse design plus portal into `APIM-DESIGN-AND-PORTAL`, keep gateway-runtime and consumer-mgmt distinct. (c) **2 modules**: `APIM-CONTROL-PLANE` (everything design-portal-policy) plus `APIM-DATA-PLANE` (gateways plus deployments plus runtime telemetry). With 6 to 8 capabilities expected (B1-S2) the M2 rule requires at least 2 full modules under any shape; (a) mirrors how Apigee, Kong Konnect, and Azure APIM market their product surfaces (design vs runtime vs consumer/monetization vs portal), (c) collapses to the control / data plane abstraction common in gateway-only vendors (Kong OSS, Tyk). | Editorial / product-shape decision. (a) 4 modules recommended (mirrors flagship Apigee / Kong Konnect / Azure APIM); (b) 3 modules; (c) 2 modules. |
+| B2-S2 | **B4 pattern flag positive re-evaluation per Rule #12** | The agent can propose but the workflow-shape decision is the user's. Specific proposals: `api_specifications.has_submit_lock=true` (published specs should freeze so contract tests pin to an immutable revision), `api_specifications.has_single_approver=true` (one API product owner approves the breaking-change checklist), `api_policies.has_single_approver=true` (one platform-engineering reviewer per policy), `api_consumers.has_personal_content=true` (developer contact details are personal data subject to GDPR). `api_versions`, `api_deployments`, `api_usage_metrics`, `api_gateways` proposed to stay false. | Pattern flags are workflow-shape judgments owned by the user; per Rule #15 recording the consideration in `notes` is forbidden. Per-flag yes/no from user; decisions are captured in this audit file (the approved persistence surface per Rule #15). |
+| B2-S3 | **Regulations applicable to APIM (A2 / domain_regulations gap)** | `domain_regulations` returns 0 rows for APIM. APIM as a category is not a regulation-anchored market the way ATS is for FCRA, but consumer-facing APIs and developer-portal personal data fall under GDPR (Articles 15 to 22), and policy / audit logs on gateways are SOX / PCI-DSS load-bearing for regulated industries. Universal vendor surface confirms `api_audit_logs` plus consumer-data-access workflows. | Decide which regulations to attach: (a) GDPR plus SOX plus PCI-DSS (broad); (b) GDPR only (developer-personal-data anchor); (c) leave empty (regulation-light market). Recommendation: (a) so the developer-portal personal-data workflows have a `domain_regulations` row to hang on. |
+
+### Bucket 3, Phase 0 pending (speculative)
+
+The market-audit subagent was NOT spawned for this run (per the validate b1 prompt the analyst does flagship vendor research themselves; this section reflects the analyst's own pattern-matching against Apigee, Kong Konnect, MuleSoft Anypiece, Azure API Management, AWS API Gateway, IBM API Connect, Tyk, WSO2 API Manager, Postman API Platform).
+
+| ID | Candidate | Vendor knowledge basis | Recommended verification |
+|---|---|---|---|
+| B3-S1 | **Missing APIM substrate entities (vendor-surface candidates).** Likely missing masters that flagship API management vendors model: `api_products` (Apigee API Product, Kong Service-bundle, Azure APIM Product, IBM Product, MuleSoft API Group, the developer-facing SKU bundling 1+ specs under one consumption contract), `api_subscriptions` and `api_plans` (Apigee API Plan, Azure APIM Subscription, IBM Plan, MuleSoft Contract; pairs consumer to product with rate plan), `api_keys` (universal; distinct from broader `oauth_clients`), `oauth_clients` (Apigee Developer App, Kong OAuth2 Plugin app, Azure APIM AAD-app), `developer_portals` (configured developer portal instance, distinct per environment), `api_documentation` (rendered docs and SDKs; some vendors store as separate artifact from spec), `api_audit_logs` (gateway access plus admin events, regulation-load-bearing), `api_rate_limits` (separable config from broader `api_policies`), `api_quotas` (separable from rate limits; quotas are per-period plus per-consumer), `backends` or `upstream_services` (origin services the gateway routes to; Kong "Service", Apigee "Target Server", Azure APIM "Backend"), `api_categories` or `api_taxonomies` (portal-side discoverability), `api_change_proposals` (governed change-management around breaking changes; Apigee Hub, Postman API Network), `contract_tests` (could route to TEST-MGMT instead; some vendors keep these in APIM as schema-conformance probes). The 7 currently-loaded masters (api_versions, api_specifications, api_deployments, api_policies, api_usage_metrics, api_gateways, api_consumers) are the **headline-noun set**; the workflow-substrate (products, subscriptions, keys, oauth_clients, portals, docs, audit_logs, separated rate-limits / quotas, backends, change_proposals) is largely absent. | Spawn a Phase 0 vendor-research subagent against Apigee, Kong Konnect, MuleSoft Anypiece, Azure APIM, AWS API Gateway, IBM API Connect, output to `c:/tmp/APIM-phase0-2026-05-30.md`. Cross-check against the API-SEC and EVENT-BROKER candidates queued in `_missing-domains.md` this run: if API-SEC promotes, `api_audit_logs` plus `api_threat_signals` may route to API-SEC instead. If EVENT-BROKER promotes, async-API artifacts (`event_streams`, `subscriptions` of streaming-topic flavor) route there rather than into APIM. |
+
+### Cross-bucket dependencies
+
+- B1-S1 (M1 module set) blocks B1-S12 (F1 system skill migration), B1-S13 (Phase-S tools floor), B1-S10 (lifecycle states need `domain_module_id`), B1-S14 (B10b backfill), and the M2 / M4 / M5 / M6 cascade. Resolve B1-S1 first; the remaining structural items either gate on it or are mechanical PATCHes that can ship in parallel.
+- B1-S2 (capabilities) depends on B2-S1 (module shape) because each capability gets attached to its realizing module via `domain_module_capabilities`.
+- B3-S1 (Phase 0 missing entities) cascades into B1-S1 (module shape) and B1-S6 (intra-domain relationships). If the user wants to defer the substrate-expansion until Phase 0 vendor research lands, B1-S1 should choose a conservative shape (3 modules, easier to refactor later) over (a) which prematurely commits to a separate developer-portal module before its data_objects are loaded.
+- B2-S3 (regulations) cascades into B1-S6 / B1-S11 (regulations adjusts which masters need `has_personal_content=true` and where compliance entities sit). GDPR confirmation makes `api_consumers.has_personal_content=true` (B2-S2) more clearly correct.
+
+### Per-bucket prompts
+
+**Bucket 1, fix these now?** Reply with `all`, list (e.g. `S1, S2, S5, H1`), or `skip`.
+
+- **S1 (M1 module set):** the structural blocker. Decide B2-S1 module shape first; S1 is the load step.
+- **S2 (capabilities):** ships alongside S1.
+- **S3 (solutions):** mechanical; can ship any time but reads best after S1 because `solution_domains.coverage_level` is per-domain not per-module.
+- **S4 (catalog UX fields):** Rule #20 draft-then-surface flow; can ship after the module set.
+- **S5 (event_category PATCH on 10 trigger_events):** trivial; mechanical PATCHes.
+- **S6 (intra-domain relationships):** ships after S1 / S2.
+- **S7 (`users` edges):** mechanical; ships any time.
+- **S8 (cross-domain relationships):** partly gated on Bucket 3 (Phase 0 vendor research may reshape the target masters in TEST-MGMT, OBS, SUB-MGMT).
+- **S9 (aliases):** mechanical; ships any time.
+- **S10 (lifecycle states):** ships after S1.
+- **S11 (pattern flags):** decided in B2-S2; PATCH after.
+- **S12 (F1 legacy skill migration):** depends on S1.
+- **S13 (Phase-S tools floor):** depends on S1 plus S12.
+- **S14 (B10b backfill):** runs after S1 lands.
+- **S15 (C1 RACI adjust):** mechanical; ships any time. No dependency on S1.
+- **H1 (APQC tagging, 8 candidate rows):** load all-at-once.
+
+**Bucket 2, what's your call on each?** I will wait for per-item decisions before acting.
+
+- **B2-S1 (module split shape):** (a) 4 modules, (b) 3 modules, or (c) 2 modules?
+- **B2-S2 (pattern flags):** per-flag yes / no (5 proposed positive flags).
+- **B2-S3 (regulations):** (a) GDPR plus SOX plus PCI-DSS, (b) GDPR only, or (c) leave empty?
+
+**Bucket 3, Phase 0 pending, vet via formal Phase 0 vendor research or eyeball-mode?** If eyeball, name which candidate entities to treat as confirmed; if vetted, the subagent runs against Apigee / Kong Konnect / MuleSoft / Azure APIM / AWS API Gateway / IBM API Connect.
+
+### Pass 3, Neighbor discovery (auto-derived)
+
+Already surfaced in the Summary table. Seven neighbors total, all at edge weight at most 2; every neighbor gets the lightweight one-line summary below rather than the full 5-section pairwise diff.
+
+| Neighbor | Lightweight summary |
+|---|---|
+| IPAAS (weight 2) | 1 outbound (`api_specification.updated` to IPAAS) plus 1 inbound (`integration_connector.credential_expired` from IPAAS). Both NULL on every module FK column except IGA-side handoff 751. The inbound's payload (`integration_connectors`, IPAAS-mastered) has no APIM-side DMDO declaring `consumer` / `contributor`; report-only against IPAAS for the source-side B10b. |
+| IGA (weight 2) | 1 outbound (`api_consumer.revoked` to IGA, handoff 751, `target_domain_module_id=148`). 1 cross-module DMDO consumer (`IGA-AUTO-PROVISIONING` on `api_consumers`). The DMDO row is wired correctly from IGA's side; APIM owes no symmetric row. The relationship mirror `api_consumers governs identity_grants` (B1-S8) is the outstanding cross-rel edge. |
+| TEST-MGMT (weight 2) | 1 outbound (`api_specification.updated` to TEST-MGMT, handoff 752). 1 inbound cross-domain relationship (`test_cases is_triggered_by api_specifications`, id 408). The relationship is structurally well-formed. Handoff 752 carries NULL on both module FK columns; report-only TEST-MGMT side once a TEST-MGMT module masters `test_cases`. |
+| VSDP (weight 1) | 1 outbound (`api_deployment.published` to VSDP). No DMDO and no cross-rel. The expected mirror `api_deployments triggers releases` is in B1-S8. |
+| OBS (weight 1) | 1 outbound (`api_gateway.health_degraded` to OBS, handoff 749). OBS module FKs are NULL; report-only against OBS (the OBS audit RO-5 already lists this handoff). |
+| SUB-MGMT (weight 1) | 1 outbound (`api_usage.quota_breached` to SUB-MGMT). Both module FKs NULL; report-only against SUB-MGMT. |
+| GRC (weight 1) | 1 outbound (`api_policy.updated` to GRC, handoff 797). Both module FKs NULL; report-only against GRC. |
+
+### Pass 4, Pairwise reconciliation per neighbor
+
+No neighbor at weight at least 3 in this run; the lightweight summaries above replace the full 5-section diff. If the user upgrades any to a full pairwise pass after Phase 0 reshapes the cross-rel substrate, IPAAS and IGA are the strongest candidates (both already at weight 2 with module-FK gaps to chase).
+
+### Report-only follow-ups (owed by other domains)
+
+These items the audit identifies but other domains own. They do NOT block APIM's green status; the user can choose to schedule audits on the named domains.
+
+| ID | Owing domain | Finding | Routed to |
+|---|---|---|---|
+| RO-1 | IPAAS | Inbound handoff 767 (`integration_connector.credential_expired`) carries NULL `source_domain_module_id`. Source side is IPAAS's B10b. Once both APIM and IPAAS ship modules, the row needs the backfill on each side. | IPAAS b1 audit, B10b source side. |
+| RO-2 | IPAAS | Outbound handoff 748 (`api_specification.updated` to IPAAS) carries NULL `target_domain_module_id`; IPAAS's modules already exist (IPAAS-AGENT-DESIGNER, IPAAS-PIPELINE-RUNTIME, etc., per the IPAAS audit) so this is a determinate backfill on the IPAAS side once the audit is run there. | IPAAS b1 audit, B10b target side. |
+| RO-3 | TEST-MGMT | Outbound handoff 752 (`api_specification.updated` to TEST-MGMT) carries NULL `target_domain_module_id`. If TEST-MGMT has shipped a module that masters `test_cases` (e.g., TEST-MGMT-TEST-AUTHORING), backfill is determinate; otherwise the NULL persists until TEST-MGMT is modularized. | TEST-MGMT b1 audit, B10b target side plus M1. |
+| RO-4 | OBS | Outbound handoff 749 (`api_gateway.health_degraded` to OBS) carries NULL `target_domain_module_id`. Per the OBS audit, OBS has no modules yet (OBS B1-S1); both APIM-side and OBS-side stay NULL until both audits ship their fix. | OBS b1 audit, B10b target side plus M1 (already known). |
+| RO-5 | SUB-MGMT | Outbound handoff 750 (`api_usage.quota_breached` to SUB-MGMT) carries NULL `target_domain_module_id`. Depends on SUB-MGMT module shape; report-only there. | SUB-MGMT b1 audit, B10b target side. |
+| RO-6 | GRC | Outbound handoff 797 (`api_policy.updated` to GRC) carries NULL `target_domain_module_id`. | GRC b1 audit, B10b target side. |
+| RO-7 | VSDP | Outbound handoff 747 (`api_deployment.published` to VSDP) carries NULL `target_domain_module_id`. | VSDP b1 audit, B10b target side. |
+| RO-8 | IGA | Outbound handoff 751 (`api_consumer.revoked` to IGA) has `target_domain_module_id=148` (IGA-AUTO-PROVISIONING) correctly wired; this is a positive sanity check, no follow-up owed. | IGA b1 audit (informational only). |
+
+Candidates queued in `audits/_missing-domains.md` this run: **API-SEC** (new), **EVENT-BROKER** (bumped 1 to 2), **SERVICE-MESH** (bumped 1 to 2). Total: 3 entries touched.

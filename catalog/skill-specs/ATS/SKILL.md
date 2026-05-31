@@ -1,20 +1,24 @@
 ---
-name: use-{{DOMAIN_CODE_LOWER}}
+name: use-ats
 description: >-
-  Use this skill for any task involving the {{DOMAIN_NAME}} domain ({{DOMAIN_CODE}})
-  in this Semantius tenant. Trigger phrases: {{ALIASES_COMMA_LIST}}.
-  Entities covered: {{ENTITY_NOUNS_COMMA_LIST}}.
-  Workflows covered: {{CAPABILITY_NAMES_COMMA_LIST}}.
-  Adjacent skills (use them instead for their own scope): {{ADJACENT_DOMAIN_SKILLS}}.
+  Use this skill for any task involving the Applicant Tracking System domain (ATS)
+  in this Semantius tenant. Trigger phrases: recruiting, hiring, talent acquisition,
+  applicant tracking, candidate management, hiring pipeline, ATS.
+  Entities covered: Candidates, Job Applications, Job Offers, Candidate Referrals,
+  Recruitment Sources, Job Requisitions, Job Postings, Application Notes,
+  Interviews, Interview Scorecards, Background Checks.
+  Workflows covered: Requisition Management, Candidate Sourcing, Interview Scoring,
+  Offer Management.
+  Adjacent skills (use them instead for their own scope): use-onboarding, use-hcm, use-bgc.
   Covers entity discovery, lifecycle awareness, cross-domain handoffs, APQC
   process context, and tenant-specific renames or omissions. Loads tenant-discovered
   state automatically; runs a discovery pass on first invocation. Pairs with
   `use-semantius` for CLI mechanics.
 ---
 
-# use-{{DOMAIN_CODE_LOWER}} skill
+# use-ats skill
 
-This skill knows the **{{DOMAIN_NAME}}** domain as shipped from the catalog at HQ and as discovered in this tenant's deployment. It avoids re-discovering the domain shape on every conversation by persisting tenant-specific findings to local state.
+This skill knows the **Applicant Tracking System** domain as shipped from the catalog at HQ and as discovered in this tenant's deployment. It avoids re-discovering the domain shape on every conversation by persisting tenant-specific findings to local state.
 
 For all Semantius CLI mechanics, PostgREST encoding, and cube DSL, defer to the `use-semantius` skill, which is expected to load alongside.
 
@@ -88,7 +92,7 @@ deployment:
   module_id: <id>
   tenant_org: <from getCurrentUser>
 
-modules:                          # which facts-listed modules are live
+modules:                          # which spec-listed modules are live
   ATS-CANDIDATE-CRM: { present: true,  entity_renames: {} }
   ATS-REQUISITION-PIPELINE: { present: true, entity_renames: { application_notes: candidate_notes } }
   ATS-INTERVIEW-MGMT: { present: false, reason: "not deployed in this tenant" }
@@ -98,11 +102,11 @@ entity_renames:                   # global renames the tenant applied
   job_applications: applications  # tenant prefers the bare-word form
   recruitment_sources: sources
 
-omitted_entities:                 # facts-listed entities the tenant chose not to deploy
+omitted_entities:                 # spec-listed entities the tenant chose not to deploy
   - cost_centers                  # tenant has no finance integration
   - background_checks             # handled in a separate vendor system
 
-custom_entities: []               # tenant-added entities not in facts
+custom_entities: []               # tenant-added entities not in spec
 
 field_renames: {}                 # within an entity (rare)
 field_omissions: {}
@@ -145,7 +149,7 @@ Full versions of these rules with rationale live in the catalog's [domain-map-an
 
 ## Quick reference
 
-UI base: `https://<tenant>.semantius.app/{{MODULE_SLUG}}/<table>`
+UI base: `https://<tenant>.semantius.app/ats/<table>`
 
 Spec file: [`spec.json`](./spec.json)
 

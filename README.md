@@ -220,9 +220,11 @@ The `use-semantius` skill is the canonical home for platform mechanics (CLI auth
 - [`catalog/`](catalog/) — everything the catalog publisher consumes to produce the public site and installable skills. Contents:
   - [`catalog/blueprints/`](catalog/blueprints/) — per-module semantic blueprints, emitted from live state via [`scripts/emit_fact_sheet.ts`](scripts/emit_fact_sheet.ts).
   - [`catalog/domain-map.json`](catalog/domain-map.json) — emitted snapshot of the catalog (gitted but regenerable via [`scripts/emit_domain_map.ts`](scripts/emit_domain_map.ts)).
-  - [`catalog/skill-specs/`](catalog/skill-specs/) — per-domain facts files (`<DOMAIN>.yaml`) consumed by the per-domain skill at install time. Emitted from live state.
-  - [`catalog/skills/`](catalog/skills/) — per-domain catalog cards (one file per `use-<domain>` skill), consumed by the site generator to render discovery pages.
-  - [`catalog/domain-skill-template/`](catalog/domain-skill-template/) — the single template skill the publisher copies per domain, with placeholders the publisher substitutes from the facts file.
+  - [`catalog/skill-specs/<DOMAIN>/`](catalog/skill-specs/) — one folder per domain containing everything the catalog publisher needs to ship that domain's skill:
+    - `spec.json` — structured per-domain data (modules, data_objects, handoffs, capabilities, aliases, enums, system_skills, roles). Loaded on demand by the skill at runtime. Emitted from live state.
+    - `catalog.yaml` — buyer-facing catalog UX content (tagline, description, category). Consumed by the site generator only; Rule #20 governs writes.
+    - `SKILL.md` — pre-rendered template with placeholders substituted from `spec.json` and `catalog.yaml`. Shipped verbatim into the installable skill.
+  - [`catalog/domain-skill-template/`](catalog/domain-skill-template/) — the single source-of-truth template (`SKILL.md` with `{{...}}` placeholders + generic `references/`). The emitter reads this and writes per-domain rendered `SKILL.md` files into `skill-specs/<DOMAIN>/`. The web site generator does pure file copy: template's `references/` + per-domain folder.
 - [`scripts/`](scripts/) — committed TypeScript utilities (Bun). Includes the fact-sheet emitter (`emit_fact_sheet.ts`), domain-map JSON emitter (`emit_domain_map.ts`), and two subdirectories:
   - [`scripts/loaders/`](scripts/loaders/) — reusable, idempotent load/fix/backfill patterns referenced from SKILL.md and `references/`. Reference loader: [`load_research.ts`](scripts/loaders/load_research.ts).
   - [`scripts/analytics/`](scripts/analytics/) — read-only and analytics-with-persistence patterns. Phase D entry point: [`discovery_query.ts`](scripts/analytics/discovery_query.ts). Coverage rollup: [`coverage_rollup.ts`](scripts/analytics/coverage_rollup.ts).
