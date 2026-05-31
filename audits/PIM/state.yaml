@@ -1,0 +1,253 @@
+schema_version: 2
+domain: PIM
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a: []
+
+b1b:
+  - id: B1B-M7-DELETE-SIBLINGS
+    summary: M7 within-domain hard fail, 4 sibling consumer DMDOs (709, 712, 713, 714) coexist with master rows; fix is DELETE or PROMOTE per row
+    finding: |
+      Within-domain M7 incoherence persists: pim_products (811, master in PIM-PRODUCT-CONTENT 141) is consumer + required in PIM-DIGITAL-ASSETS 142 (DMDO 709) and consumer + required in PIM-SYNDICATION 143 (DMDO 712). pim_translations (815, master in 141) is consumer + required in PIM-SYNDICATION 143 (DMDO 713). pim_digital_assets (816, master in PIM-DIGITAL-ASSETS 142) is consumer + optional in PIM-SYNDICATION 143 (DMDO 714). M7 hard-fails master + consumer in sibling modules of the same domain.
+    action: |
+      On B2-S1 user decision: DELETE the 4 DMDO rows (default), or PROMOTE each sibling consumer row to embedded_master (per row). Loader pre-flight must validate; surgical DELETEs via /domain_module_data_objects?id=in.(709,712,713,714) acceptable since count is small.
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    affected_entities:
+      - pim_products
+      - pim_translations
+      - pim_digital_assets
+    affected_modules: [141, 142, 143]
+    extra_dmdo_ids: [709, 712, 713, 714]
+
+  - id: B1B-B11-REGULATIONS
+    summary: PIM has 0 domain_regulations rows; regulation set + ownership pending B2-S6
+    finding: |
+      PIM declares zero rows in domain_regulations for domain_id 167. PIM-PRODUCT-COMPLIANCE capability (601) exists but the regulations themselves are not loaded. PIM is a regulated merchandising domain per vendor practice (REACH, RoHS, Prop 65, GS1 GDSN, EU GPSR, FDA Cosmetic Labeling, EU DPP). Ownership question is whether the linkage belongs to PIM, PLM-COMPLIANCE (module 69), or both.
+    action: |
+      Conditional on B2-S6 outcome: if PIM owns or splits, insert missing regulations rows (REACH, RoHS, Prop 65, GS1 GDSN, EU GPSR, FDA Cosmetic Labeling, EU DPP) where absent, then link via domain_regulations (167 ↔ each) with applicability per-regulation. If PLM owns end-to-end, this item resolves to no-op for PIM.
+    blocked_by:
+      - {type: user_decision, ref: B2-S6}
+    affected_entities:
+      - REACH
+      - RoHS
+      - Prop 65
+      - GS1 GDSN
+      - EU GPSR
+      - FDA Cosmetic Labeling
+      - EU DPP
+
+  - id: B1B-PLM-DISCONTINUED-HANDOFF
+    summary: Candidate PIM-PRODUCT-CONTENT to PLM handoff on pim_product.discontinued; pending B2-S7
+    finding: |
+      Pairwise PLM ↔ PIM Section 3 surfaced a likely missing handoff PIM → PLM on pim_product.discontinued so engineering can clear active-merchandising flags. trigger_event 1276 already exists; the handoff row does not. Judgment call whether PLM consumes the signal in practice.
+    action: |
+      On B2-S7 = add: insert handoffs row (source_domain_id=167, target_domain_id=165, source_domain_module_id=141, target_domain_module_id=66 or 69 per PLM-side modularization, trigger_event_id=1276, data_object_id=<PLM master target>, integration_pattern=api_call, friction_level=medium). On B2-S7 = skip: no-op.
+    blocked_by:
+      - {type: user_decision, ref: B2-S7}
+    affected_handoffs:
+      - {handoff_id: null, direction: outbound, source_domain: PIM, target_domain: PLM, trigger_event: "pim_product.discontinued", payload: "<PLM master target>", null_field: "row not yet created"}
+
+  - id: B1B-B10B-TARGET-NULLS-B2C
+    summary: 2 outbound NULL target_domain_module_id (1234, 1237) owed by B2C-COMM b1 audit
+    finding: |
+      PIM outbound handoffs 1234 (pim_product.published, payload commerce_products) and 1237 (pim_product.discontinued, payload commerce_products) target B2C-COMM (71) with target_domain_module_id = null. Handoff 1236 to CPQ now has target_domain_module_id 164 populated; B10b for CPQ pairwise has cured. The 2 remaining NULLs require a B2C-COMM DMDO on commerce_products (consumer + required) in the receiving module, which only B2C-COMM can decide.
+    action: |
+      Schedule b1 audit for B2C-COMM; that audit will derive its target_domain_module_id per the standard B10b backfill procedure and add the consumer DMDO. No PIM-side fix.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: B2C-COMM, milestone: B10b-backfill-and-consumer-DMDO}
+    affected_handoffs:
+      - {handoff_id: 1234, direction: outbound, source_domain: PIM, target_domain: B2C-COMM, trigger_event: "pim_product.published", payload: "commerce_products", null_field: "target_domain_module_id"}
+      - {handoff_id: 1237, direction: outbound, source_domain: PIM, target_domain: B2C-COMM, trigger_event: "pim_product.discontinued", payload: "commerce_products", null_field: "target_domain_module_id"}
+
+  - id: B1B-B10B-CONSUMER-DMDOS-DOWNSTREAM
+    summary: 3 downstream domains need consumer DMDOs on pim_products (B2C-COMM, CPQ, INV-MGMT verify)
+    finding: |
+      Outbound handoffs imply consumer DMDOs on the target side that may not exist: B2C-COMM consumes commerce_products against PIM pim_products (1234, 1237); CPQ consumes product_configurations against PIM pim_products (1236); INV-MGMT consumes inv_stock_items against PIM pim_products (1235; target module 61 populated). For 1234 and 1237 the downstream module is unknown until B2C-COMM modularization is finalized.
+    action: |
+      Not PIM's fix. Surface for B2C-COMM, CPQ, and INV-MGMT audits to ensure each declares consumer DMDOs as appropriate.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: B2C-COMM, milestone: consumer-DMDO-on-pim_products}
+      - {type: domain_audit, blocking_domain: CPQ, milestone: consumer-DMDO-on-pim_products}
+      - {type: domain_audit, blocking_domain: INV-MGMT, milestone: verify-consumer-DMDO-on-pim_products}
+    affected_handoffs:
+      - {handoff_id: 1234, direction: outbound, source_domain: PIM, target_domain: B2C-COMM, trigger_event: "pim_product.published", payload: "commerce_products", null_field: "consumer DMDO on receiving side"}
+      - {handoff_id: 1235, direction: outbound, source_domain: PIM, target_domain: INV-MGMT, trigger_event: "pim_product.published", payload: "inv_stock_items", null_field: "verify consumer DMDO on INV-CORE-STOCK 61"}
+      - {handoff_id: 1236, direction: outbound, source_domain: PIM, target_domain: CPQ, trigger_event: "pim_product.published", payload: "product_configurations", null_field: "consumer DMDO on CPQ-PRODUCT-CATALOG 164"}
+      - {handoff_id: 1237, direction: outbound, source_domain: PIM, target_domain: B2C-COMM, trigger_event: "pim_product.discontinued", payload: "commerce_products", null_field: "consumer DMDO on receiving side"}
+
+b2:
+  - id: B2-S1
+    summary: M7 architectural choice for PIM module deployability
+    question: |
+      Resolve M7 within-domain incoherence on 4 sibling consumer DMDO rows (709, 712, 713, 714). Default is DELETE all 4 (sibling modules read pim_products / pim_translations / pim_digital_assets via canonical master). Alternative is PROMOTE each to embedded_master (each sibling module ships a standalone-deployable shell so the module is installable without its master sibling). Standalone PIM-SYNDICATION without PIM-PRODUCT-CONTENT has no products to syndicate; standalone PIM-DIGITAL-ASSETS without PIM-PRODUCT-CONTENT has no products to depict.
+    options:
+      - "DELETE all 4 sibling consumer DMDOs"
+      - "PROMOTE all 4 to embedded_master"
+      - "Mixed (specify per-row)"
+    why: |
+      M7 hard-fails this within-domain pattern. The deployability strategy (standalone-deployable per module vs canonical-only) is an architectural call the user owns.
+
+  - id: B2-S2
+    summary: DAM domain overlap with PIM-DIGITAL-ASSETS module
+    question: |
+      DAM (id 92) is a loaded domain with zero domain_modules. PIM-DIGITAL-ASSETS module 142 hosts pim_digital_assets as master and overlaps the dedicated DAM market (Adobe Experience Manager Assets, Bynder, Brandfolder, Cloudinary, Frontify, Aprimo DAM).
+    options:
+      - "(a) Keep PIM-DIGITAL-ASSETS; DAM stays placeholder"
+      - "(b) Move pim_digital_assets to DAM; retire PIM-DIGITAL-ASSETS"
+      - "(c) Both coexist; clarify split in domains.description"
+
+  - id: B2-S3
+    summary: F7 channel-primitive justification on syndication tools
+    question: |
+      The 4 syndicate_to_* rows (Amazon 1938 / 1120, Google Merchant 1939 / 1121, Shopify 1940 / 1122, retailer feed 1943 / 1123), validate_against_gdsn (1941 / 1124), and 3 notify_person rows are vendor-named or workflow-channel primitives. Per Rule #15 the agent does not auto-populate skill_tools.notes; F7 requires the channel-primitive justification to be recorded.
+    options:
+      - "(a) Confirm existing skill_tools.notes wording was user-approved at load time"
+      - "(b) Revert the 8 rows' notes to empty string and log Rule #15 incident"
+
+  - id: B2-S4
+    summary: B3 pattern flag positive re-evaluation for pim_digital_assets
+    question: |
+      pim_digital_assets currently has has_personal_content=false and has_single_approver=false. (a) Should has_personal_content flip to true if assets include people / model releases (rights metadata)? (b) Should has_single_approver flip to true for rights-cleared assets where a single brand-rights owner closes the approval?
+    options:
+      - "Per-flag yes/no decision"
+
+  - id: B2-S5
+    summary: F5 Semantius score basis schema mismatch
+    question: |
+      The F5 strict-score recipe relies on tools.coverage_tier; the live skill_tools schema instead has requirement_level (required / optional). Either the F5 procedure is out of date or the column was renamed.
+    options:
+      - "(a) Treat requirement_level as canonical; re-derive the score"
+      - "(b) Add coverage_tier to the schema and reload"
+      - "(c) Drop the strict-score calculation; surface only operational score"
+    why: |
+      Score basis decision impacts every audited domain, not just PIM.
+
+  - id: B2-S6
+    summary: Regulation ownership for PIM vs PLM-COMPLIANCE
+    question: |
+      Which domain holds the domain_regulations linkage for REACH, RoHS, Prop 65, GS1 GDSN, EU GPSR, FDA Cosmetic Labeling, EU DPP? PLM-COMPLIANCE (69) already owns product_compliance_declarations (805) and feeds PIM via inbound 1243.
+    options:
+      - "(a) PLM owns; PIM consumes via handoff 1243"
+      - "(b) PIM links the same regulation rows via domain_regulations (overlap acceptable)"
+      - "(c) Split: REACH / RoHS / Prop 65 to PLM (engineering); GS1 GDSN / EU GPSR / EU DPP to PIM (merchandising channel)"
+
+  - id: B2-S7
+    summary: PIM to PLM handoff on pim_product.discontinued
+    question: |
+      Should PIM-PRODUCT-CONTENT publish pim_product.discontinued back to PLM so engineering can clear active-merchandising flags on its parts?
+    options:
+      - "(a) Add the handoff"
+      - "(b) Skip (PLM does not need the signal in practice)"
+
+  - id: B2-S8
+    summary: A4 / M8 catalog UX fields are empty
+    question: |
+      The PIM domains row carries empty catalog_tagline and catalog_description. All 3 PIM modules (141, 142, 143) also carry empty catalog_tagline and catalog_description. Per Rule #20 the agent does not author these without user approval.
+    options:
+      - "(a) Provide buyer-voice catalog_tagline and catalog_description per row (domain + 3 modules)"
+      - "(b) Approve agent to draft against the existing description and module names; user reviews before write"
+      - "(c) Defer to dedicated copy pass"
+    why: |
+      A4 and M8 are content-quality checks, not structural gates; they block buyer-facing catalog rendering for PIM.
+
+  - id: B2-S9
+    summary: C2 capability ownership override for PIM-PRODUCT-COMPLIANCE
+    question: |
+      No business_function_capabilities overrides exist for PIM. The PIM-PRODUCT-COMPLIANCE capability (601) is the plausible diverger from Marketing ownership; in many orgs the compliance capability rolls up to Quality / Compliance rather than Marketing.
+    options:
+      - "(a) Add override row mapping PIM-PRODUCT-COMPLIANCE to Quality / Compliance business function"
+      - "(b) Leave under Marketing"
+      - "(c) Add override to Product Management (already a domain contributor)"
+
+b3:
+  - id: B3-PIM-PUBLISH-RECORDS
+    candidate: pim_publish_records
+    rationale: |
+      Akeneo, Salsify, Syndigo, inRiver all distinguish "publish" (state on the product / variant) from the actual feed-publication record (per-channel + per-target audit row with success / error payload). Current pim_syndication_jobs covers the job level; a per-(product, channel, run) record is what powers the rejected-listing remediation queue.
+    vendor_evidence:
+      - Akeneo PIM
+      - Salsify PXM
+      - Syndigo CXH
+      - inRiver PIM
+    proposed_module: PIM-SYNDICATION
+
+  - id: B3-PIM-ATTRIBUTE-GROUPS
+    candidate: pim_attribute_groups
+    rationale: |
+      Akeneo "Families and Attribute Groups", Stibo "Object Type Attributes", Salsify "Property Groups". Current pim_attributes is flat-list; vendor practice groups attributes per category subtree for UI rendering and validation. Relationship row 1122 (pim_attributes scoped_to pim_categories) implies this junction but no master.
+    vendor_evidence:
+      - Akeneo PIM
+      - Stibo Systems STEP
+      - Salsify PXM
+    proposed_module: PIM-PRODUCT-CONTENT
+
+  - id: B3-PIM-SUPPLIER-IMPORTS
+    candidate: pim_supplier_imports
+    rationale: |
+      Salsify "Supplier Onboarding", Syndigo "Vendor Portal", Akeneo "Onboarder for Suppliers". Current suppliers is a contributor; the import batch / data-sheet event record is missing. Capability PIM-SUPPLIER-ONBOARDING (600) exists with no backing master.
+    vendor_evidence:
+      - Salsify PXM
+      - Syndigo CXH
+      - Akeneo PIM
+    proposed_module: PIM-PRODUCT-CONTENT
+
+  - id: B3-PIM-TRANSLATION-MEMORY
+    candidate: pim_translation_memory
+    rationale: |
+      Most enterprise PIMs (inRiver, Stibo, Contentserv, Akeneo Enterprise) maintain a translation-memory store distinct from the per-row translation overrides; machine-translation suggestions and post-edit corrections flow through it.
+    vendor_evidence:
+      - inRiver PIM
+      - Stibo Systems STEP
+      - Contentserv PIM
+      - Akeneo PIM
+    proposed_module: PIM-PRODUCT-CONTENT
+
+  - id: B3-REGULATION-REACH
+    candidate: REACH
+    rationale: EU chemical-substance compliance, RIA filings. Regulated merchandising market anchor pending B2-S6 ownership decision.
+    vendor_evidence: []
+
+  - id: B3-REGULATION-ROHS
+    candidate: RoHS
+    rationale: EU hazardous-substance restrictions; electronics. Regulated merchandising market anchor pending B2-S6 ownership decision.
+    vendor_evidence: []
+
+  - id: B3-REGULATION-PROP65
+    candidate: California Prop 65
+    rationale: US warning labels. Regulated merchandising market anchor pending B2-S6 ownership decision.
+    vendor_evidence: []
+
+  - id: B3-REGULATION-GS1-GDSN
+    candidate: GS1 GDSN
+    rationale: Datapool data quality / sync standards for B2B retail. Merchandising channel anchor.
+    vendor_evidence:
+      - Syndigo CXH
+
+  - id: B3-REGULATION-EU-GPSR
+    candidate: EU GPSR
+    rationale: General Product Safety Regulation, in force 2024 with PSR file requirements. Merchandising channel anchor.
+    vendor_evidence: []
+
+  - id: B3-REGULATION-FDA-COSMETIC
+    candidate: FDA Cosmetic Labeling Act
+    rationale: US, MoCRA 2023 reform. Regulated merchandising market anchor pending B2-S6 ownership decision.
+    vendor_evidence: []
+
+  - id: B3-REGULATION-EU-DPP
+    candidate: EU Digital Product Passport
+    rationale: In-force phased from 2027 for selected categories. Merchandising channel anchor.
+    vendor_evidence: []
+
+  - id: B3-CANDIDATE-DOMAIN-MARKETPLACE-OPS
+    candidate: MARKETPLACE-OPS
+    rationale: |
+      Marketplace Operations and Channel Listing Platform candidate domain. Already queued in audits/_missing-domains.md. Adjacency: PIM, B2C-COMM, OMS, B2B-COMMERCE.
+    vendor_evidence:
+      - ChannelEngine
+      - Rithum
+      - Mirakl Connect
+      - Productsup
+      - Feedonomics

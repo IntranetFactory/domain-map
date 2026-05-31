@@ -1,0 +1,304 @@
+schema_version: 2
+domain: AUDIT
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-H1
+    summary: "4 untagged inbound ERP-FIN handoffs: insert 4 handoff_processes rows."
+    finding: |
+      4 inbound handoffs from ERP-FIN remain untagged after the 2026-05-31 residual pass.
+      Coverage is 36/40 (90%) cross-domain. Inserting these 4 takes AUDIT to 40/40 (100%).
+      All 4 have clean APQC PCF anchors; proposals listed in affected_handoffs[].
+      Per Rule #1 all rows insert with proposal_source='agent_curated', record_status='new'.
+    action: |
+      INSERT 4 rows into handoff_processes via semantius CLI or a focused loader.
+      Proposed pairings per row in affected_handoffs[]. Surface the 4-row draft table
+      to the user before insert per Rule #1; user confirms PCF choice per handoff.
+    affected_handoffs:
+      - {handoff_id: 189, direction: inbound, source_domain: ERP-FIN, target_domain: AUDIT, trigger_event: journal_entry.posted, payload: journal_entries, null_field: null}
+      - {handoff_id: 531, direction: inbound, source_domain: ERP-FIN, target_domain: AUDIT, trigger_event: accounting_period.closed, payload: accounting_periods, null_field: null}
+      - {handoff_id: 536, direction: inbound, source_domain: ERP-FIN, target_domain: AUDIT, trigger_event: legal_entity.created, payload: legal_entities, null_field: null}
+      - {handoff_id: 538, direction: inbound, source_domain: ERP-FIN, target_domain: AUDIT, trigger_event: cash_transaction.unmatched, payload: cash_transactions, null_field: null}
+    extra_proposed_pcf:
+      - {handoff_id: 189, process_id: 1433, process_name: "Audit invoices and key data in AP system", confidence: likely_L4}
+      - {handoff_id: 531, process_id: 1187, process_name: "Support external audits and reports", confidence: confident_L4}
+      - {handoff_id: 536, process_id: 326, process_name: "Report on internal controls compliance", confidence: likely_L3}
+      - {handoff_id: 538, process_id: 1433, process_name: "Audit invoices and key data in AP system", confidence: likely_L4}
+
+  - id: B1A-B9
+    summary: "5 AUDIT trigger events have zero handoffs: 228, 232, 602, 603, 605."
+    finding: |
+      Trigger events without handoffs: 228 (audit_engagement.created), 232 (audit_report.issued),
+      602 (audit_plan.updated), 603 (control_test.executed), 605 (work_paper.completed).
+      232 publishing to GRC, ERP-FIN, EPM (audit-report distribution) is the most obvious miss.
+      228 and 602 likely publish to GRC; 603 to GRC. 605 is plausibly leaf (engagement-internal).
+      All 5 also have empty event_category (lifecycle vs state_change vs threshold vs signal)
+      and would need that filled at insert time.
+    action: |
+      Draft handoff rows or confirm leaf status per event. Default proposal: 228 -> GRC,
+      232 -> GRC + ERP-FIN + EPM (3 rows fan-out), 602 -> GRC, 603 -> GRC, 605 keep leaf.
+      Surface drafts to user per Rule #1 before insert. Also patch event_category on
+      601-606 to 'lifecycle' (audit_plan/work_paper) or 'state_change' (control_test).
+    affected_events:
+      - {id: 228, event_name: audit_engagement.created, current_category: lifecycle, proposed_category: lifecycle}
+      - {id: 232, event_name: audit_report.issued, current_category: lifecycle, proposed_category: lifecycle}
+      - {id: 602, event_name: audit_plan.updated, current_category: "", proposed_category: lifecycle}
+      - {id: 603, event_name: control_test.executed, current_category: "", proposed_category: state_change}
+      - {id: 605, event_name: work_paper.completed, current_category: "", proposed_category: lifecycle}
+
+b1b:
+  - id: B1B-MOD1
+    summary: "M1 hard fail: zero domain_modules rows. Blocks A2, M2/4/5/6/8, B10b, B12, all E and F bands."
+    finding: |
+      M1 hard fail. Vacuously fails M2, M4, M5, M6, M8 (no module copy fields to populate),
+      blocks E1-E6 (no role authoring possible), blocks F2-F5 + F7 (no per-module system skill
+      anchor), blocks B10b backfill on 40 cross-domain handoffs, blocks B12 lifecycle-state
+      domain_module_id population, blocks per-module fact-sheet emission.
+      Prior-audit recommendation: 2-module split AUDIT-PLAN-ENGAGE + AUDIT-FINDINGS-REPORTING.
+      Bucket 2 item B2-MOD-SHAPE upstream and pending user input.
+    blocked_by:
+      - {type: user_decision, ref: B2-MOD-SHAPE}
+
+  - id: B1B-A2
+    summary: "Zero capability_domains. Capabilities must link to realizing modules per M4."
+    finding: |
+      A2 fails. 0 capability_domains rows. Domain has 8 masters and a vendor-confirmed
+      multi-pillar surface (AuditBoard, TeamMate+, Workiva). Expected 5-8 capabilities.
+      Proposed: AUDIT-UNIVERSE-MGMT, AUDIT-PLAN-RISK-ASSESS, AUDIT-FIELDWORK-EXEC,
+      AUDIT-EVIDENCE-MGMT, AUDIT-CONTROLS-TESTING, AUDIT-FINDINGS-MGMT,
+      AUDIT-RECOMMENDATIONS-FOLLOWUP, AUDIT-REPORTING-COMMITTEE.
+    blocked_by:
+      - {type: depends_on, ref: B1B-MOD1, reason: "M4 requires every capability to link to >=1 realizing module"}
+
+  - id: B1B-B12
+    summary: "Zero data_object_lifecycle_states across 8 masters. Workflow-bearing; not config-shape."
+    finding: |
+      Every AUDIT master has a real workflow (plan -> engage -> work paper -> control test ->
+      finding -> recommendation -> report -> follow-up). None are config-shaped, so the
+      Rule #12 exemption does not apply. Without lifecycle states the workflow-gate
+      permission derivation has nothing to generate.
+      State rows need domain_module_id per the realizing module (Rule #14 module-prefix
+      permission materialization); blocked on B1B-MOD1.
+    blocked_by:
+      - {type: depends_on, ref: B1B-MOD1, reason: "data_object_lifecycle_states.domain_module_id needs the module set"}
+    affected_masters:
+      - {data_object_id: 292, name: audit_plans, target_module_id: tbd, workflow: "draft -> approved -> in_execution -> closed"}
+      - {data_object_id: 293, name: audit_engagements, target_module_id: tbd, workflow: "planned -> in_fieldwork -> findings_drafted -> completed -> closed"}
+      - {data_object_id: 294, name: audit_findings, target_module_id: tbd, workflow: "draft -> issued -> management_responded -> remediated -> closed"}
+      - {data_object_id: 295, name: work_papers, target_module_id: tbd, workflow: "draft -> reviewed -> signed_off -> archived"}
+      - {data_object_id: 296, name: control_tests, target_module_id: tbd, workflow: "planned -> executed -> evaluated -> closed (with deficient branch)"}
+      - {data_object_id: 297, name: audit_recommendations, target_module_id: tbd, workflow: "drafted -> accepted -> in_progress -> implemented"}
+      - {data_object_id: 298, name: audit_reports, target_module_id: tbd, workflow: "draft -> reviewed -> signed_off -> issued -> archived"}
+      - {data_object_id: 299, name: follow_up_actions, target_module_id: tbd, workflow: "open -> in_progress -> evidence_submitted -> closed"}
+
+  - id: B1B-B10b-OUT
+    summary: "9 outbound handoffs missing source_domain_module_id. Backfill after MOD1."
+    finding: |
+      9 outbound handoffs have NULL source_domain_module_id. Once AUDIT has modules,
+      derive each from the module that holds trigger_events.data_object_id with role=master.
+      Handoff 257 has target_domain_module_id=38 (ITSM) already populated.
+      Reference loader: scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts.
+    blocked_by:
+      - {type: depends_on, ref: B1B-MOD1, reason: "source FK is the AUDIT module that masters the trigger_event"}
+    affected_handoffs:
+      - {handoff_id: 254, direction: outbound, source_domain: AUDIT, target_domain: GRC, trigger_event: finding.created, payload: audit_findings, null_field: source_domain_module_id}
+      - {handoff_id: 255, direction: outbound, source_domain: AUDIT, target_domain: GRC, trigger_event: follow_up_action.closed, payload: follow_up_actions, null_field: source_domain_module_id}
+      - {handoff_id: 256, direction: outbound, source_domain: AUDIT, target_domain: EPM, trigger_event: recommendation.accepted, payload: audit_recommendations, null_field: source_domain_module_id}
+      - {handoff_id: 257, direction: outbound, source_domain: AUDIT, target_domain: ITSM, trigger_event: audit_engagement.completed, payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 258, direction: outbound, source_domain: AUDIT, target_domain: TPRM, trigger_event: finding.remediated, payload: audit_findings, null_field: source_domain_module_id}
+      - {handoff_id: 592, direction: outbound, source_domain: AUDIT, target_domain: GRC, trigger_event: control_test.deficient, payload: control_tests, null_field: source_domain_module_id}
+      - {handoff_id: 593, direction: outbound, source_domain: AUDIT, target_domain: ERP-FIN, trigger_event: control_test.deficient, payload: control_tests, null_field: source_domain_module_id}
+      - {handoff_id: 594, direction: outbound, source_domain: AUDIT, target_domain: GRC, trigger_event: audit_plan.approved, payload: audit_plans, null_field: source_domain_module_id}
+      - {handoff_id: 595, direction: outbound, source_domain: AUDIT, target_domain: ERP-FIN, trigger_event: work_paper.signed_off, payload: work_papers, null_field: source_domain_module_id}
+
+  - id: B1B-B10b-IN
+    summary: "31 inbound handoffs missing target_domain_module_id. Backfill after MOD1."
+    finding: |
+      31 inbound handoffs have NULL target_domain_module_id. Derive from the AUDIT module
+      that holds the payload data_object_id with the strongest role. For 13 payloads AUDIT
+      does not currently model as DMDO, B2-NOROLE-PAYLOADS decides per-row whether to
+      load a consumer DMDO or accept as domain-level signal.
+      Source-side counter-fixes owed by other domains are tracked under their respective
+      audits (see prior-audit Report-only follow-ups in this file).
+    blocked_by:
+      - {type: depends_on, ref: B1B-MOD1, reason: "target FK is the AUDIT module holding the payload"}
+      - {type: user_decision, ref: B2-NOROLE-PAYLOADS, reason: "13 of 31 payloads have no AUDIT DMDO row yet"}
+    affected_handoffs:
+      - {count: 31, scope_note: "All inbound handoffs to AUDIT with NULL target_domain_module_id; full id list in 2026-05-30 audit B1-B2 plus handoff 920 added since", enumeration_status: source_count_only}
+
+  - id: B1B-F1
+    summary: "Legacy domain-level system skill audit-system (id 9) blocks F1 once per-module skills land."
+    finding: |
+      F1 currently passes vacuously: legacy skill id 9 (audit-system, domain_module_id NULL)
+      is acceptable while no module-level system skill exists. The moment B1B-MOD1 lands
+      and per-module skills are authored, F1 demands DELETE of skill 9. The 18 existing
+      skill_tools rows on skill 9 partition cleanly between the proposed 2 modules.
+    blocked_by:
+      - {type: depends_on, ref: B1B-MOD1, reason: "per-module skills must exist before legacy skill is obsolete"}
+
+b2:
+  - id: B2-MOD-SHAPE
+    summary: "2-module versus 3-module split for AUDIT."
+    question: "AUDIT-PLAN-ENGAGE + AUDIT-FINDINGS-REPORTING (default), or AUDIT-UNIVERSE-RISK + AUDIT-FIELDWORK + AUDIT-ISSUES-REPORTING (cleaner role separation, more cross-module handoffs)?"
+    options: ["2-module (recommended, lighter)", "3-module (cleaner role separation, ~8 B9b handoffs)"]
+    why: "Upstream of every B1B-* item; shapes each MISSING entity host and capability realization."
+
+  - id: B2-AUDIT-VS-GRC
+    summary: "Scope of audit versus GRC for management_responses, audit_committee_meetings, risk_assessments (audit-scoped)."
+    question: "Do these three entities belong in AUDIT or GRC?"
+    options: ["AUDIT (vendor surface puts them in audit-focused products)", "GRC (enterprise-scale buyers often have GRC master them)", "Mixed per entity"]
+    why: "Upstream of prior-audit B1-M2, B1-M6, B1-M7 placement and Bucket 3 items 7-8."
+
+  - id: B2-NOROLE-PAYLOADS
+    summary: "13 inbound handoffs carry payloads AUDIT does not currently model as DMDO rows."
+    question: "Per row, load consumer DMDO on the receiving module (preferred, captures dependency) or accept as domain-level signal?"
+    options: ["Load 13 consumer DMDOs (default)", "Accept all 13 as domain-level signals", "Mixed per row"]
+    why: "Decides per-row resolution path for B1B-B10b-IN backfill."
+    affected_entities: [building_certifications, card_authorizations, data_lineage_relationships, rpa_executions, rpa_activity_logs, cloud_databases, external_court_filings, emissions_records, esg_disclosures, key_data_elements, critical_tracking_events, haccp_plans, supplier_risk_assessments]
+
+  - id: B2-CATALOG-UX
+    summary: "Draft catalog_tagline + catalog_description for AUDIT (A4) per Rule #20 buyer voice."
+    question: "Approve drafts for the two A4 fields? Rule #20 requires user review of buyer-voice copy before write."
+    options: ["Approve drafts", "Rewrite to user-supplied text", "Defer"]
+    why: "A4 hard fails; both fields empty. Buyer voice (workflow + value) versus analyst voice (market position)."
+
+  - id: B2-B3-NAMING
+    summary: "work_papers and control_tests bare-word naming-authority claim or rename."
+    question: "Claim canonical bare-word (is_canonical_bare_word=true + rationale) or rename to audit_work_papers / audit_control_tests?"
+    options: ["Claim canonical (AUDIT owns both terms)", "Rename to prefixed forms", "Mixed"]
+    why: "Rule #9 wants the claim recorded. control_tests overlaps GRC's control-test concept; work_papers is largely AUDIT-only."
+
+  - id: B2-PATTERN-FLAGS
+    summary: "Pattern flags positive consideration on 8 masters (Rule #12)."
+    question: "PATCH has_single_approver=true on audit_reports, has_submit_lock=true on work_papers + audit_findings, plus has_submit_lock on audit_engagements (split AuditBoard vs TeamMate+)?"
+    options: ["Apply default proposal", "Apply subset (per row)", "Defer all"]
+    why: "Rule #12 requires positive consideration during audit; false-by-default not equivalent to false-after-review."
+
+  - id: B2-BAD-TAGS
+    summary: "Discovery-substring tags on handoffs 256 and 825 look semantically wrong."
+    question: "DELETE the 2 bad tags and surface to Discover Pass 3 re-tagging, or leave for human reviewer at approval time?"
+    options: ["DELETE (default)", "Leave for human reviewer"]
+    why: "Handoff 256 tagged 'Provide warranty-related recommendations'; handoff 825 tagged 'Document trade'."
+
+  - id: B2-SELF-LOOP
+    summary: "data_object_relationships id=356 self-loop on audit_findings with verb 'imports'."
+    question: "DELETE (default) or PATCH verb to a documented concept like carries_forward_from?"
+    options: ["DELETE", "PATCH verb"]
+    why: "Verb non-obvious, row invisible to downstream tooling."
+
+  - id: B2-PAIRWISE
+    summary: "Defer pairwise reconciliation for 5 heavy neighbors (GRC, ERP-FIN, EPM, ESG, LSD) or run inline?"
+    question: "Run full 5-section diff for all 5 heavy neighbors now, defer to follow-up, or only GRC + ERP-FIN?"
+    options: ["Run all 5 inline now", "Defer all (default; blocked by MOD1)", "Only GRC + ERP-FIN inline"]
+    why: "Without modules, cross-module attribution can't run; the diff is mostly null-FK noise."
+
+  - id: B2-DOMAIN-PEER
+    summary: "Confirm AUDIT remains as peer domain or fold into GRC."
+    question: "Peer domain (default; pure-plays AuditBoard / TeamMate+ / Workiva keep it first-class) or fold into GRC?"
+    options: ["Peer domain (recommended, Rule #2 satisfied)", "Fold into GRC"]
+    why: "Archer and ServiceNow IRM treat audit as a GRC sub-module; pure-plays disagree."
+
+b3:
+  - id: B3-AUDIT-UNIVERSE-ENTITIES
+    candidate: audit_universe_entities
+    rationale: "Universal vendor entity; the auditable units master from which annual planning samples. Today AUDIT has no risk-rated population to plan from."
+    vendor_evidence: [AuditBoard, TeamMate+, Workiva, Archer]
+    proposed_module: AUDIT-PLAN-ENGAGE
+
+  - id: B3-RISK-ASSESSMENTS-AUDIT
+    candidate: risk_assessments
+    rationale: "Audit-side risk scoring per universe entity. Distinct from GRC's enterprise risk register. data_object_id 291 already exists; confirm no other module masters it."
+    vendor_evidence: [AuditBoard RiskOversight, TeamMate+ Risk, Workiva Risk]
+    proposed_module: AUDIT-PLAN-ENGAGE
+
+  - id: B3-AUDIT-EVIDENCE
+    candidate: audit_evidence
+    rationale: "Files, screenshots, attestations attached to work papers and control tests; distinct from the analytical work paper."
+    vendor_evidence: [AuditBoard, TeamMate+, Workiva]
+    proposed_module: AUDIT-PLAN-ENGAGE
+
+  - id: B3-AUDIT-PROGRAMS
+    candidate: audit_programs
+    rationale: "Reusable templates of audit steps and procedures applied per engagement."
+    vendor_evidence: [AuditBoard, TeamMate+]
+    proposed_module: AUDIT-PLAN-ENGAGE
+
+  - id: B3-AUDIT-SAMPLES
+    candidate: audit_samples
+    rationale: "Sample selections per control test or finding. Critical for testing reproducibility."
+    vendor_evidence: [AuditBoard, TeamMate+, Workiva]
+    proposed_module: AUDIT-PLAN-ENGAGE
+
+  - id: B3-MANAGEMENT-RESPONSES
+    candidate: management_responses
+    rationale: "Auditee's response to each finding. Today audit_recommendations collapses recommendation + response."
+    vendor_evidence: [AuditBoard, TeamMate+, Workiva]
+    proposed_module: AUDIT-FINDINGS-REPORTING
+
+  - id: B3-AUDIT-COMMITTEE-MEETINGS
+    candidate: audit_committee_meetings
+    rationale: "Board-level reporting cadence. audit_reports.issued lands here."
+    vendor_evidence: [Diligent, AuditBoard]
+    proposed_module: AUDIT-FINDINGS-REPORTING
+
+  - id: B3-AUDIT-QUESTIONNAIRES
+    candidate: audit_questionnaires
+    rationale: "Interview prep templates."
+    vendor_evidence: [AuditBoard, TeamMate+]
+    proposed_module: AUDIT-PLAN-ENGAGE
+
+  - id: B3-AUDIT-WALKTHROUGHS
+    candidate: audit_walkthroughs
+    rationale: "Process narratives plus flowcharts captured for control testing."
+    vendor_evidence: [TeamMate+, Workiva]
+    proposed_module: AUDIT-PLAN-ENGAGE
+
+  - id: B3-INTERNAL-CONTROL-NARRATIVES
+    candidate: internal_control_narratives
+    rationale: "SOX-strong narrative documentation."
+    vendor_evidence: [Workiva, TeamMate+]
+    proposed_module: AUDIT-PLAN-ENGAGE
+
+  - id: B3-AUDIT-ASSERTIONS
+    candidate: audit_assertions
+    rationale: "Financial assertions (existence, completeness, accuracy, cutoff, valuation)."
+    vendor_evidence: [Workiva, TeamMate+]
+    proposed_module: AUDIT-PLAN-ENGAGE
+
+  - id: B3-AUDIT-SAMPLING-METHODS
+    candidate: audit_sampling_methods
+    rationale: "Statistical sampling config table per audit standard. Intersects B3-AUDIT-SAMPLES (becomes its methodology reference)."
+    vendor_evidence: [TeamMate+]
+    proposed_module: AUDIT-PLAN-ENGAGE
+
+  - id: B3-AUDIT-TIME-ENTRIES
+    candidate: audit_time_entries
+    rationale: "Audit hours per engagement; chargeback model."
+    vendor_evidence: [AuditBoard, TeamMate+]
+    proposed_module: AUDIT-PLAN-ENGAGE
+
+  - id: B3-QAR-ASSESSMENTS
+    candidate: qar_assessments
+    rationale: "Quality Assurance and Improvement Program (IIA Standard 1300)."
+    vendor_evidence: [AuditBoard, TeamMate+]
+    proposed_module: AUDIT-FINDINGS-REPORTING
+
+  - id: B3-AUDIT-METRICS
+    candidate: audit_metrics
+    rationale: "Committee-pack KPIs: cycle time, finding aging, plan completion rate."
+    vendor_evidence: [AuditBoard, Workiva]
+    proposed_module: AUDIT-FINDINGS-REPORTING
+
+  - id: B3-ENGAGEMENT-WORKFLOWS
+    candidate: engagement_workflows
+    rationale: "Configurable per audit-type (operational / financial / IT / compliance)."
+    vendor_evidence: [AuditBoard, TeamMate+, Workiva, Diligent]
+    proposed_module: AUDIT-PLAN-ENGAGE
+
+  - id: B3-AUDITEE-CONTACTS
+    candidate: auditee_contacts
+    rationale: "Audit-specific contact directory distinct from HCM employees."
+    vendor_evidence: [AuditBoard, TeamMate+]
+    proposed_module: AUDIT-PLAN-ENGAGE

@@ -1,0 +1,295 @@
+schema_version: 2
+domain: ATS
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-EVT-CATEGORIES
+    summary: "18 ATS-owned trigger_events have empty event_category"
+    finding: >
+      Per Rule #13 the allowed values are lifecycle, state_change, threshold, signal.
+      ATS-owned trigger_events (those whose data_object_id is in the ATS-owned set
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 749, 866-905, 1000-1004) include
+      18 rows with event_category="" today: 360 (job_posting.published), 361
+      (job_posting.closed), 362 (job_application.submitted), 363
+      (job_application.advanced), 364 (job_application.rejected), 365
+      (recruitment_source.attributed), 366 (candidate_referral.submitted), 367
+      (candidate_referral.bonus_earned), 368 (talent_pool.candidate_added), 369
+      (talent_pool.candidate_activated), 370 (interview.scheduled), 371
+      (interview.completed), 372 (interview_scorecard.submitted), 373
+      (background_check.initiated), 374 (background_check.cleared), 375
+      (background_check.flagged), 376 (recruitment_agency.engaged), 377
+      (recruitment_event.held), 1180 (candidate_assessment.passed), 1181
+      (candidate_assessment.failed). Lifecycle-progression events along the
+      requisition to posting to application to interview to offer chain split between
+      state_change (terminal/gating transitions) and lifecycle (creation/completion
+      events). Background-check and assessment outcomes map to lifecycle.
+    action: >
+      PATCH trigger_events.event_category per the mapping below.
+      Proposed mapping: 360 state_change, 361 state_change, 362 lifecycle, 363
+      state_change, 364 state_change, 365 lifecycle, 366 lifecycle, 367 state_change,
+      368 lifecycle, 369 state_change, 370 lifecycle, 371 lifecycle, 372 lifecycle,
+      373 lifecycle, 374 lifecycle, 375 lifecycle, 376 lifecycle, 377 lifecycle, 1180
+      lifecycle, 1181 lifecycle. Verify the mapping with user before PATCH; the values
+      are deterministic from Rule #13 vocabulary but the lifecycle/state_change split
+      involves a judgment call.
+    affected_events:
+      - {id: 360, event_name: "job_posting.published", current_category: "", proposed_category: "state_change"}
+      - {id: 361, event_name: "job_posting.closed", current_category: "", proposed_category: "state_change"}
+      - {id: 362, event_name: "job_application.submitted", current_category: "", proposed_category: "lifecycle"}
+      - {id: 363, event_name: "job_application.advanced", current_category: "", proposed_category: "state_change"}
+      - {id: 364, event_name: "job_application.rejected", current_category: "", proposed_category: "state_change"}
+      - {id: 365, event_name: "recruitment_source.attributed", current_category: "", proposed_category: "lifecycle"}
+      - {id: 366, event_name: "candidate_referral.submitted", current_category: "", proposed_category: "lifecycle"}
+      - {id: 367, event_name: "candidate_referral.bonus_earned", current_category: "", proposed_category: "state_change"}
+      - {id: 368, event_name: "talent_pool.candidate_added", current_category: "", proposed_category: "lifecycle"}
+      - {id: 369, event_name: "talent_pool.candidate_activated", current_category: "", proposed_category: "state_change"}
+      - {id: 370, event_name: "interview.scheduled", current_category: "", proposed_category: "lifecycle"}
+      - {id: 371, event_name: "interview.completed", current_category: "", proposed_category: "lifecycle"}
+      - {id: 372, event_name: "interview_scorecard.submitted", current_category: "", proposed_category: "lifecycle"}
+      - {id: 373, event_name: "background_check.initiated", current_category: "", proposed_category: "lifecycle"}
+      - {id: 374, event_name: "background_check.cleared", current_category: "", proposed_category: "lifecycle"}
+      - {id: 375, event_name: "background_check.flagged", current_category: "", proposed_category: "lifecycle"}
+      - {id: 376, event_name: "recruitment_agency.engaged", current_category: "", proposed_category: "lifecycle"}
+      - {id: 377, event_name: "recruitment_event.held", current_category: "", proposed_category: "lifecycle"}
+      - {id: 1180, event_name: "candidate_assessment.passed", current_category: "", proposed_category: "lifecycle"}
+      - {id: 1181, event_name: "candidate_assessment.failed", current_category: "", proposed_category: "lifecycle"}
+
+  - id: B1A-B12-PERM-RESIDUE
+    summary: "2 workflow-gate permissions derived from state_name not permission_verb_override"
+    finding: >
+      The 2026-05-28 audit updated permission_verb_override on lifecycle states 210
+      (interview_scorecards.submitted, verb=submit_scorecard) and 191
+      (background_checks.completed_consider, verb=adjudicate_background_check) but
+      the materialized workflow-gate permissions were not regenerated. Two permission
+      rows still carry the state-name-derived form: id 10030 named
+      ats-interviews:submitted_interview_scorecard (workflow-gate) and id 10045 named
+      ats-background-checks:completed_consider_background_check (workflow-gate). The
+      intended-verb permission names (ats-interviews:submit_scorecard,
+      ats-background-checks:adjudicate_background_check) do not exist in the
+      permissions table.
+    action: >
+      PATCH /permissions PATCH permission_name on row 10030 to
+      ats-interviews:submit_scorecard. PATCH permission_name on row 10045 to
+      ats-background-checks:adjudicate_background_check. role_permissions FKs and
+      role_modules unaffected (FK is via permission_id). Override-tier rows 10033
+      (ats-interviews:submit_interview_scorecard) and 10048
+      (ats-background-checks:submit_background_check) are unrelated bypass-overrides;
+      leave as-is.
+
+  - id: B1A-B7-USER-EDGES-NEWER
+    summary: "39 later-added ATS masters lack user edges; only hiring_team_assignments has one"
+    finding: >
+      The 2026-05-28 audit authored 7 Rule #10 edges to data_object_id=748 (users
+      built-in) for the original ATS entity set (candidates, job_postings,
+      talent_pools, candidate_assessments, background_checks, recruitment_agencies,
+      recruitment_events). The 39 masters added since (ids 866-905, 1000-1004) only
+      carry one such edge (hiring_team_assignments, row 1339). Many carry user-typed
+      columns that should produce Rule #10 edges: recruiter_interactions.recruiter,
+      candidate_consents.granted_by, recruiter_saved_searches.owner,
+      requisition_approvals.approver, offer_approvals.approver,
+      background_check_adjudications.adjudicator, data_subject_requests
+      requested_by/handled_by, applicant_flow_records.disposition_actor,
+      ofccp_audit_trails.actor, candidate_notes.author, candidate_documents
+      uploaded_by, candidate_engagements.author, recruiter_interactions.actor.
+    action: >
+      Subagent-driven enumeration pass per entity to identify user-typed columns,
+      then batch INSERT into data_object_relationships with related_data_object_id=748,
+      owner_side='source', relationship_verb='has &lt;role&gt;', is_required by column
+      nullability, record_status='new'. Estimated 25-35 new edges.
+    affected_entities:
+      - candidate_engagements
+      - candidate_nurture_campaigns
+      - recruiting_event_attendances
+      - recruiter_interactions
+      - candidate_consents
+      - recruiter_saved_searches
+      - referral_rewards
+      - referral_payouts
+      - referral_campaigns
+      - background_check_packages
+      - background_check_components
+      - fcra_disclosures
+      - background_check_adjudications
+      - adverse_action_notices
+      - background_check_disputes
+      - requisition_approvals
+      - job_posting_distributions
+      - application_screening_questions
+      - application_screening_answers
+      - eeo_responses
+      - interview_kits
+      - interview_panels
+      - candidate_assessment_templates
+      - interview_questions
+      - interviewer_availability_slots
+      - offer_versions
+      - offer_approvals
+      - offer_letter_documents
+      - pre_adverse_action_notices
+      - applicant_flow_records
+      - application_dispositions
+      - data_subject_requests
+      - fcra_summary_of_rights_acknowledgements
+      - voluntary_self_identifications
+      - ofccp_audit_trails
+      - candidate_documents
+      - candidate_notes
+      - candidate_tags
+      - offer_letter_templates
+
+  - id: B1A-H-APQC-COVERAGE
+    summary: "~36 ATS cross-domain handoffs lack handoff_processes APQC tags"
+    finding: >
+      ATS has ~48 cross-domain handoffs (26 outbound to HCM/COMP-MGMT/ONBOARDING
+      /BEN-ADMIN/PAYROLL/SWP/PA/TALENT-MGMT/HRSD/PSA, 22 inbound from HCM/SWP/PA/PSA
+      /COMP-MGMT). Only 12 have handoff_processes rows; 0 are record_status='approved'.
+      The tagged 12 are handoff_ids 12, 17, 20, 23, 120, 393, 394, 395, 399, 400, 402,
+      1075. Per H-band procedure each cross-domain handoff should be classified to an
+      APQC PCF cross-industry activity at audit time.
+    action: >
+      Per-handoff PCF classification pass against /processes?source_framework=eq.
+      apqc_pcf_cross_industry. Expected targets: Manage employee requisitions (21698)
+      for requisition events, Recruit/Source candidates (10440) for sourcing,
+      Manage employee onboarding training and development (20599) for hired-to-onboard
+      events, Administer benefit enrollment (10505) for BEN handoffs, Manage workforce
+      strategic planning for SWP forecasting. Target ~24 new agent_curated rows
+      (~0.5N coverage). Untagged subjects include job_offer.rescinded fan-out (4
+      subscribers), job_offer.accepted fan-out (3 subscribers), job_offer.signed to
+      COMP, requisition.filled fan-out (PA + SWP), candidate.hired to BEN-ADMIN,
+      background_check.cleared to ONBOARDING, background_check.flagged to COMPLIANCE,
+      candidate_assessment.passed/failed to HCM and TALENT-MGMT,
+      interview_scorecard.submitted to PA, recruitment_source.attributed to PA,
+      candidate_referral.bonus_earned to PAYROLL, pre_employee.activated to HCM,
+      and 15 HCM-mod-55 to ATS-RECRUITMENT-PIPELINE feeds covering hcm_position
+      lifecycle, job_profile lifecycle, org_unit lifecycle.
+    affected_handoffs:
+      - {count: 36, scope_note: "~48 cross-domain handoffs total, 12 already tagged (ids 12, 17, 20, 23, 120, 393, 394, 395, 399, 400, 402, 1075); remaining ~36 untagged span all 10 neighbor domains", enumeration_status: source_count_only}
+
+  - id: B1A-M-CONSUMER-NECESSITY
+    summary: "DMDO row 950: talent_pools is consumer + required in ATS-CANDIDATE-CRM"
+    finding: >
+      domain_module_data_objects row 950 marks talent_pools (id 7) as
+      consumer + required in ATS-CANDIDATE-CRM (module 1). talent_pools is mastered
+      in ATS-TALENT-POOLS (module 2). consumer + required means CANDIDATE-CRM cannot
+      deploy without TALENT-POOLS being installed, which contradicts the modular split
+      since CANDIDATE-CRM is intended as a standalone module. Rule #16 spirit also
+      applies: non-master rows referencing a master in another module should default
+      to optional unless the workflow halts without it.
+    action: >
+      PATCH /domain_module_data_objects?id=eq.950 {necessity: "optional"}.
+
+  - id: B1A-LFC-OLT-TEMPLATES-AUTO-VERB
+    summary: "offer_letter_templates lifecycle states reference workflow-gate verbs that have no permissions"
+    finding: >
+      Lifecycle states 1496 (in_review), 1497 (approved), 1498 (active), 1500
+      (retired) on offer_letter_templates (data_object_id 1004) have
+      requires_permission=true and explicit permission_verb_override values
+      (submit_offer_letter_template_for_review, approve_offer_letter_template,
+      activate_offer_letter_template, retire_offer_letter_template). No matching
+      workflow-gate permissions exist in ATS-OFFERS (module 6). The state machine
+      points at permissions that the materialization pass never produced.
+    action: >
+      Conditional on Bucket 2 item 2 (user judgment whether to keep 4 verbs vs collapse).
+      If keep: INSERT 4 workflow-gate permissions in module 6
+      (ats-offers:submit_offer_letter_template_for_review, ...) and 4 role_permissions
+      to role_id=2. If collapse: PATCH the 4 lifecycle states to requires_permission=false.
+    blocked_by:
+      - {type: user_decision, ref: B2-OLT-VERBS}
+
+b1b:
+  - id: B1B-REG-CODES-EMPTY
+    summary: "regulations rows 84 (FCRA) and 85 (OFCCP) carry empty regulation_code"
+    finding: >
+      The 2026-05-28 audit INSERTED regulations rows id=84 (Fair Credit Reporting Act)
+      and id=85 (Federal Contract Compliance Programs Regulations) with
+      regulation_code="" while other regulations in the catalog use short codes
+      (GDPR, CCPA, ADA, TITLE-VII, ADEA, EEO-1, EU-PAY-TRANS, EU-AI-ACT). The natural
+      codes would be FCRA and OFCCP. The regulations table is a catalog-wide shared
+      master; PATCH affects every consuming domain.
+    action: >
+      Defer to the regulations master / cross-domain governance Validate.
+      Once cleared, PATCH /regulations?id=eq.84 {regulation_code: "FCRA"} and
+      /regulations?id=eq.85 {regulation_code: "OFCCP"}.
+    blocked_by:
+      - {type: catalog_addition, scope: domains, trigger: "regulations master Validate to confirm code namespace ownership"}
+
+b2:
+  - id: B2-LFC-MASTERS-WITH-NO-STATES
+    summary: "17 ATS masters lack lifecycle states; user must classify config-shape exempt vs workflow"
+    question: >
+      For each of the following 17 masters, decide config-shape exempt (Rule #12
+      exemption: author-once / occasionally-edit, record_status is the only relevant
+      state) versus workflow-bearing (needs lifecycle states authored):
+      recruiter_interactions, recruiter_saved_searches, referral_rewards,
+      background_check_packages, application_stages, application_stage_transitions,
+      application_screening_questions, application_screening_answers,
+      interview_questions, pre_adverse_action_notices, applicant_flow_records,
+      application_dispositions, data_subject_requests,
+      fcra_summary_of_rights_acknowledgements, voluntary_self_identifications,
+      ofccp_audit_trails, hiring_team_assignments.
+    options:
+      - "(a) Per-entity classification: user names which are config-exempt and which need lifecycle authoring."
+      - "(b) Blanket-defer compliance entities to a focused FCRA/OFCCP lifecycle workshop; classify the rest now."
+      - "(c) Leave as-is, accept Rule #12 audit gap on these 17 masters."
+    why: >
+      The 2026-05-30 Phase 0 close-out exempted 4 entities (candidate_documents,
+      candidate_notes, candidate_tags, candidate_tag_assignments) as config-shape but
+      did not pass judgment on the remaining 17. Several (data_subject_requests,
+      pre_adverse_action_notices, applicant_flow_records,
+      fcra_summary_of_rights_acknowledgements, voluntary_self_identifications,
+      ofccp_audit_trails) likely carry regulator-required state machines (GDPR
+      Articles 15-22 timelines, FCRA waiting periods, OFCCP audit lifecycle).
+
+  - id: B2-OLT-VERBS
+    summary: "offer_letter_templates has 4 workflow-gate verbs but no materialized permissions"
+    question: >
+      Keep the 4 workflow-gate verbs on offer_letter_templates lifecycle states (then
+      materialize 4 permissions), OR collapse the gating (single approver was the
+      Phase 0 decision, so 4 separate verbs may be over-shaped)?
+    options:
+      - "(a) Materialize 4 ats-offers:&lt;verb&gt; permissions for submit/approve/activate/retire and assign to role_id=2."
+      - "(b) Collapse: PATCH the 4 lifecycle states to requires_permission=false (config-shape exemption); only record_status drives the template lifecycle."
+      - "(c) Materialize 2 permissions (approve + retire) and flip the other 2 to requires_permission=false."
+    why: >
+      The Phase 0 decision recorded has_single_approver=true for templates; 4 separate
+      gated states contradicts the single-approver shape. Either the lifecycle is
+      over-shaped or the single-approver flag is wrong.
+
+  - id: B2-LFC-EMPTY-VERB-OVERRIDES
+    summary: "14 lifecycle states on 9 newer masters have requires_permission=true but empty permission_verb_override"
+    question: >
+      For each of the 14 states (candidate_nurture_campaigns 1152 active;
+      candidate_consents 1160 withdrawn; referral_payouts 1170/1171/1172
+      approved/paid/clawed_back; referral_campaigns 1175 active;
+      background_check_adjudications 1187/1188/1189 clear/engaged/declined;
+      adverse_action_notices 1193 post_adverse_sent; requisition_approvals 1200/1201
+      approved/rejected; offer_approvals 1230/1231 approved/rejected), either author
+      the permission_verb_override explicitly or flip requires_permission to false.
+      Auto-deriving from state_name reproduces the B12 stale-permission bug.
+    options:
+      - "(a) Author all 14 verb_overrides explicitly; user proposes verbs per state."
+      - "(b) Flip all 14 requires_permission to false; rely on baseline-manage / baseline-admin tiers for the actions."
+      - "(c) Mixed: human-gated approvals (approvals, withdrawals, adjudications) get explicit verbs; auto-progressed states (campaign active, payout paid) flip to false."
+    why: >
+      Same root cause as the 2026-05-28 B12 finding (state-name-derived permissions).
+      Authoring deterministic verbs requires per-state intent that the agent should
+      not invent.
+
+  - id: B2-ROLE-2-MASS-ASSIGNMENT
+    summary: "role_id=2 (system / empty role_code) carries all 49 ATS permissions"
+    question: >
+      Is role_id=2 the platform-internal system bot (in which case the
+      mass-assignment is correct) or a tenant-installed superuser (in which case it
+      inflates the admin surface materially)?
+    options:
+      - "(a) Confirm system bot; keep as-is."
+      - "(b) Confirm superuser; trim to baseline-admin tier per module only."
+      - "(c) Inspect /users for memberships before deciding."
+    why: >
+      The pattern is consistent across all 49 ATS permissions; same shape may exist
+      for other domains. Surfaces here because the structural Validate counted
+      role_permissions and noticed the uniform assignment.
+
+b3: []

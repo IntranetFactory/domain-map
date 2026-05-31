@@ -1,0 +1,308 @@
+schema_version: 2
+domain: S2P
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-PATTERN-FLAGS
+    summary: "PATCH has_submit_lock=true on purchase_orders (id 73) and sourcing_events (id 71) per B4 re-evaluation."
+    finding: >-
+      Pattern flags on the 5 S2P masters: purchase_requisitions (id 72) has has_submit_lock=true + has_single_approver=true;
+      supplier_invoices (id 75) has has_single_approver=true; the other three masters carry the default-false values.
+      Audit re-evaluation: purchase_orders should be has_submit_lock=true once issued (a buyer cannot edit an issued PO
+      without a change order), and sourcing_events should be has_submit_lock=true once published. has_personal_content
+      is correctly false for all 5 (B2B invoices, B2B sourcing). All other flag combinations are accepted by the audit.
+    action: >-
+      Surface proposed flips to user; on approval issue two PATCH /data_objects calls: id=73 set has_submit_lock=true;
+      id=71 set has_submit_lock=true. No notes write (Rule #15).
+    affected_masters:
+      - {data_object_id: 71, name: sourcing_events, target_module_id: null, workflow: published_to_awarded}
+      - {data_object_id: 73, name: purchase_orders, target_module_id: null, workflow: issued_to_received}
+  - id: B1A-PR-PO-RELATION
+    summary: "INSERT direct purchase_requisitions becomes purchase_orders intra-domain relationship row."
+    finding: >-
+      Today the link between purchase_requisitions (id 72) and purchase_orders (id 73) is only mediated through
+      legal_contracts (id 66) via rows 502 (legal_contracts triggers_creation_of purchase_orders) + 503
+      (legal_contracts triggers_review_in purchase_requisitions). The direct
+      purchase_requisitions to purchase_orders edge is missing. Verified live via
+      /data_object_relationships?and=(data_object_id.eq.72,related_data_object_id.eq.73) returning empty.
+    action: >-
+      Surface to user for verb confirmation; on approval INSERT data_object_relationships row
+      (data_object_id=72, related_data_object_id=73, relationship_verb='becomes',
+      inverse_verb='originates_from', relationship_type='one_to_many', owner_side='source',
+      is_required=false).
+    affected_masters:
+      - {data_object_id: 72, name: purchase_requisitions, target_module_id: null, workflow: pr_to_po}
+      - {data_object_id: 73, name: purchase_orders, target_module_id: null, workflow: pr_to_po}
+  - id: B1A-GR-INV-RELATION
+    summary: "INSERT direct goods_receipts confirms supplier_invoices three-way-match relationship row."
+    finding: >-
+      Pairwise reconciliation Section 5 (cross-domain data_object_relationships): the direct
+      goods_receipts confirms supplier_invoices three-way-match relationship is missing. Today the
+      link is implicit through contingent_invoices flows_into supplier_invoices (row 536) plus the
+      goods_receipts signals row 571. The architect view and blueprint renderer need the direct edge.
+      Same finding as 2026-05-30 B1-N2 Section 5; not addressed by the 2026-05-31 technical fix load.
+    action: >-
+      Surface to user; on approval INSERT data_object_relationships row (data_object_id=74,
+      related_data_object_id=75, relationship_verb='confirms', inverse_verb='confirmed_by',
+      relationship_type='one_to_many', owner_side='source', is_required=false).
+    affected_masters:
+      - {data_object_id: 74, name: goods_receipts, target_module_id: null, workflow: three_way_match}
+      - {data_object_id: 75, name: supplier_invoices, target_module_id: null, workflow: three_way_match}
+  - id: B1A-ALIASES
+    summary: "Author roughly 15 data_object_aliases rows across the 5 S2P masters (B11)."
+    finding: >-
+      Zero data_object_aliases rows on any of the 5 S2P masters. Vendor coverage gap. Carried forward from
+      2026-05-30 B1-S17. Counts per master: sourcing_events (Ariba: RFP / RFI / Reverse Auction; Coupa: Sourcing Event);
+      purchase_requisitions (Coupa: Request; Ariba: PR; SAP: Bestellanforderung); purchase_orders (Ariba: PO; Workday:
+      Purchase Order; SAP: Bestellung); goods_receipts (Ariba: GR; SAP: Warenbewegung); supplier_invoices
+      (Coupa: Invoice; SAP: Lieferantenrechnung; Basware: Supplier Invoice). Roughly 15 rows total expected.
+    action: >-
+      Draft the alias tuples per master via cluster-drafts; surface for user approval; load via the standard aliases
+      loader pattern (chunked POST). Each row: data_object_id + alias_name + alias_type. notes column stays empty
+      per Rule #15.
+    affected_masters:
+      - {data_object_id: 71, name: sourcing_events, target_module_id: null, workflow: alias_authoring}
+      - {data_object_id: 72, name: purchase_requisitions, target_module_id: null, workflow: alias_authoring}
+      - {data_object_id: 73, name: purchase_orders, target_module_id: null, workflow: alias_authoring}
+      - {data_object_id: 74, name: goods_receipts, target_module_id: null, workflow: alias_authoring}
+      - {data_object_id: 75, name: supplier_invoices, target_module_id: null, workflow: alias_authoring}
+    vendor_evidence:
+      - SAP Ariba
+      - Coupa Business Spend Management
+      - SAP S/4HANA
+      - Workday Spend Management
+      - Basware AP Automation
+  - id: B1A-PR-EVENTS
+    summary: "Author missing purchase_requisitions trigger_events for state transitions (B9)."
+    finding: >-
+      purchase_requisitions (id 72) has 7 lifecycle states (draft, submitted, approved, po_created, closed, rejected,
+      cancelled) and zero trigger_events rows. Verified live via /trigger_events?data_object_id=eq.72 returning empty.
+      State approved carries requires_permission=true; submitted is the state that fires the approval workflow;
+      po_created is the cross-module lifecycle progression. At minimum purchase_requisition.submitted and
+      purchase_requisition.approved are owed; purchase_requisition.po_created and .rejected likely too. Without these
+      the B9 + B9b cross-module chain into S2P-REQ-TO-PO + the supplier-side handoff are uncaptured.
+    action: >-
+      Draft trigger_events rows (event_name='purchase_requisition.<state>', data_object_id=72, event_category=
+      'state_change' for submitted / approved / po_created / rejected; 'lifecycle' for closed). Surface for user
+      approval; load. Pair with handoffs authoring once modules exist (b1b gates the handoff side).
+    affected_events:
+      - {id: null, event_name: "purchase_requisition.submitted", current_category: null, proposed_category: state_change}
+      - {id: null, event_name: "purchase_requisition.approved", current_category: null, proposed_category: state_change}
+      - {id: null, event_name: "purchase_requisition.po_created", current_category: null, proposed_category: state_change}
+      - {id: null, event_name: "purchase_requisition.rejected", current_category: null, proposed_category: state_change}
+    affected_masters:
+      - {data_object_id: 72, name: purchase_requisitions, target_module_id: null, workflow: pr_lifecycle}
+
+b1b:
+  - id: B1B-S2P-MODULE-SPLIT
+    summary: "All M / E / F structural fixes for S2P gated on the 5-module split decision in b2 B2-MODULE-SPLIT."
+    finding: >-
+      S2P has zero domain_modules rows. Audit re-confirms M1 fail. Until the user picks the module shape
+      (proposed 5-module split: S2P-SOURCING / S2P-REQ-TO-PO / S2P-RECEIVING / S2P-INVOICE-MATCHING /
+      S2P-CATALOG-MGMT, or an alternative), the catalog cannot author domain_modules, cannot anchor
+      domain_module_data_objects, cannot resolve lifecycle_states domain_module_id (M5), cannot link
+      capabilities to modules (M4 / M6), cannot author per-module system skills (F2 / F3), cannot
+      derive workflow-gate permissions (F1 legacy retirement), cannot PATCH the 12 outbound +
+      14 inbound handoffs that carry NULL source / target domain_module_id (B10b), and cannot
+      author roles or role_modules / role_permissions (E1 to E5). The 3 catalog Procurement-function
+      roles (PROCUREMENT-NEGOTIATOR / PROCUREMENT-PIM-SUPPLIER-LIAISON / PROCUREMENT-SAAS-RENEWAL-OWNER)
+      touch CLM, MDM, SMP modules; none touch S2P because no S2P modules exist.
+    blocked_by:
+      - {type: user_decision, ref: B2-MODULE-SPLIT}
+    affected_modules: []
+    affected_masters:
+      - {data_object_id: 71, name: sourcing_events, target_module_id: null, workflow: state_machine_anchoring}
+      - {data_object_id: 72, name: purchase_requisitions, target_module_id: null, workflow: state_machine_anchoring}
+      - {data_object_id: 73, name: purchase_orders, target_module_id: null, workflow: state_machine_anchoring}
+      - {data_object_id: 74, name: goods_receipts, target_module_id: null, workflow: state_machine_anchoring}
+      - {data_object_id: 75, name: supplier_invoices, target_module_id: null, workflow: state_machine_anchoring}
+    affected_handoffs:
+      - {handoff_id: 170, direction: outbound, source_domain: S2P, target_domain: SPEND-MGMT, trigger_event: "supplier.deactivated", payload: suppliers, null_field: source_domain_module_id}
+      - {handoff_id: 347, direction: outbound, source_domain: S2P, target_domain: AGENCY-MGMT, trigger_event: "vendor_invoice.received", payload: contingent_invoices, null_field: source_domain_module_id}
+      - {handoff_id: 565, direction: outbound, source_domain: S2P, target_domain: SUP-LIFE, trigger_event: "sourcing_event.awarded", payload: sourcing_events, null_field: source_domain_module_id}
+      - {handoff_id: 581, direction: outbound, source_domain: S2P, target_domain: AP-AUTO, trigger_event: "purchase_order.issued", payload: purchase_orders, null_field: source_domain_module_id}
+      - {handoff_id: 582, direction: outbound, source_domain: S2P, target_domain: ERP-FIN, trigger_event: "purchase_order.issued", payload: purchase_orders, null_field: source_domain_module_id}
+      - {handoff_id: 583, direction: outbound, source_domain: S2P, target_domain: AP-AUTO, trigger_event: "purchase_order.changed", payload: purchase_orders, null_field: source_domain_module_id}
+      - {handoff_id: 584, direction: outbound, source_domain: S2P, target_domain: AP-AUTO, trigger_event: "goods_receipt.posted", payload: goods_receipts, null_field: source_domain_module_id}
+      - {handoff_id: 585, direction: outbound, source_domain: S2P, target_domain: ERP-FIN, trigger_event: "goods_receipt.posted", payload: goods_receipts, null_field: source_domain_module_id}
+      - {handoff_id: 586, direction: outbound, source_domain: S2P, target_domain: SUP-LIFE, trigger_event: "goods_receipt.quantity_variance", payload: goods_receipts, null_field: source_domain_module_id}
+      - {handoff_id: 602, direction: outbound, source_domain: S2P, target_domain: CLM, trigger_event: "sourcing_event.awarded", payload: sourcing_events, null_field: source_domain_module_id}
+      - {handoff_id: 40, direction: outbound, source_domain: S2P, target_domain: CLM, trigger_event: "legal_contract.purchase_creation", payload: legal_contracts, null_field: source_domain_module_id}
+      - {handoff_id: 42, direction: outbound, source_domain: S2P, target_domain: SMP, trigger_event: "po.saas_subscription_created", payload: saas_subscriptions, null_field: source_domain_module_id}
+      - {handoff_id: 1050, direction: inbound, source_domain: INV-MGMT, target_domain: S2P, trigger_event: "inv_stock_item.below_reorder_point", payload: purchase_orders, null_field: target_domain_module_id}
+      - {handoff_id: 45, direction: inbound, source_domain: SMP, target_domain: S2P, trigger_event: "seat_demand.exceeded", payload: purchase_requisitions, null_field: target_domain_module_id}
+      - {handoff_id: 117, direction: inbound, source_domain: MWO, target_domain: S2P, trigger_event: "pm_work_order.invoiced", payload: contingent_invoices, null_field: target_domain_module_id}
+      - {handoff_id: 127, direction: inbound, source_domain: SUP-LIFE, target_domain: S2P, trigger_event: "supplier.onboarded", payload: suppliers, null_field: target_domain_module_id}
+      - {handoff_id: 132, direction: inbound, source_domain: PSA, target_domain: S2P, trigger_event: "service_project.staffing_required", payload: purchase_requisitions, null_field: target_domain_module_id}
+      - {handoff_id: 198, direction: inbound, source_domain: FINOPS, target_domain: S2P, trigger_event: "cloud_spend.threshold_breached", payload: supplier_invoices, null_field: target_domain_module_id}
+      - {handoff_id: 545, direction: inbound, source_domain: AP-AUTO, target_domain: S2P, trigger_event: "invoice_match.exception_raised", payload: ap_invoice_records, null_field: target_domain_module_id}
+      - {handoff_id: 546, direction: inbound, source_domain: SUP-LIFE, target_domain: S2P, trigger_event: "supplier_qualification.approved", payload: supplier_qualifications, null_field: target_domain_module_id}
+      - {handoff_id: 548, direction: inbound, source_domain: SUP-LIFE, target_domain: S2P, trigger_event: "supplier_qualification.expired", payload: supplier_qualifications, null_field: target_domain_module_id}
+      - {handoff_id: 560, direction: inbound, source_domain: SPEND-MGMT, target_domain: S2P, trigger_event: "spend_policy.updated", payload: spend_policies, null_field: target_domain_module_id}
+      - {handoff_id: 636, direction: inbound, source_domain: SAM, target_domain: S2P, trigger_event: "software_license.over_consumed", payload: software_licenses, null_field: target_domain_module_id}
+      - {handoff_id: 668, direction: inbound, source_domain: HAM, target_domain: S2P, trigger_event: "spare_parts_inventory.low_threshold", payload: spare_parts_inventory, null_field: target_domain_module_id}
+      - {handoff_id: 669, direction: inbound, source_domain: HAM, target_domain: S2P, trigger_event: "hardware_warranty.expiring", payload: hardware_warranties, null_field: target_domain_module_id}
+      - {handoff_id: 215, direction: inbound, source_domain: CLM, target_domain: S2P, trigger_event: "sourcing.contract_drafted", payload: legal_contracts, null_field: target_domain_module_id}
+      - {handoff_id: 41, direction: inbound, source_domain: CLM, target_domain: S2P, trigger_event: "legal_contract.signed", payload: purchase_orders, null_field: target_domain_module_id}
+      - {handoff_id: 39, direction: inbound, source_domain: SMP, target_domain: S2P, trigger_event: "shadow_app.requires_sanctioning", payload: purchase_requisitions, null_field: target_domain_module_id}
+      - {handoff_id: 1089, direction: inbound, source_domain: PLM, target_domain: S2P, trigger_event: "engineering_change_order.released", payload: engineering_change_orders, null_field: target_domain_module_id}
+    extra_lifecycle_states_pending_anchor:
+      - {state_id: 427, data_object_id: 71, state_name: "awarded", verb_override: "award_sourcing_event"}
+      - {state_id: 418, data_object_id: 72, state_name: "approved", verb_override: "approve_requisition"}
+      - {state_id: 410, data_object_id: 73, state_name: "issued", verb_override: "issue_po"}
+      - {state_id: 431, data_object_id: 75, state_name: "approved", verb_override: "approve_invoice"}
+    extra_legacy_skill_to_retire:
+      - {skill_id: 22, skill_name: "s2p-system", skill_tools_count: 14}
+  - id: B1B-A2-CAPABILITIES
+    summary: "Authoring 5 to 8 market-specific S2P capabilities (B1-A2) gated on module-shape decision."
+    finding: >-
+      capability_domains has 1 row (APPROVAL-WORKFLOW, cross-cutting). Rule #14 expects 5 to 8 market-specific
+      capabilities. Proposed set (mirrors the proposed module split): S2P-SOURCING, S2P-REQ-TO-PO, S2P-RECEIVING,
+      S2P-INVOICE-MATCHING, S2P-CATALOG-MGMT, S2P-SAVINGS-TRACKING. Each capability needs a realizing module under
+      M4 / M6; until modules exist the link cannot be authored coherently.
+    blocked_by:
+      - {type: user_decision, ref: B2-MODULE-SPLIT}
+    affected_entities:
+      - S2P-SOURCING
+      - S2P-REQ-TO-PO
+      - S2P-RECEIVING
+      - S2P-INVOICE-MATCHING
+      - S2P-CATALOG-MGMT
+      - S2P-SAVINGS-TRACKING
+  - id: B1B-JAGGAER-DEDUP
+    summary: "DELETE duplicate Jaggaer ONE solution row blocked on user-pick survivor (b2 B2-JAGGAER)."
+    finding: >-
+      Two solutions rows differ only in casing: id 129 'Jaggaer ONE' (older, mixed-case) and id 518 'JAGGAER ONE'
+      (newer, ALL-CAPS matching the vendor's marketing). Both currently linked at coverage_level='primary' on
+      solution_domains.domain_id=27. The catalog needs one row; the survivor decision is the user's.
+    blocked_by:
+      - {type: user_decision, ref: B2-JAGGAER}
+    affected_entities:
+      - "solutions.id=129"
+      - "solutions.id=518"
+  - id: B1B-CATALOG-UX
+    summary: "domains.catalog_tagline + catalog_description backfill (B1-A4 / Rule #20) blocked on b2 B2-CATALOG-UX."
+    finding: >-
+      domains.catalog_tagline='' and domains.catalog_description='' on the S2P row. Rule #20 forbids any write
+      without explicit per-row user approval of the exact wording. The 2026-05-30 audit proposed drafts (tagline +
+      two paragraphs); they remain available for review.
+    blocked_by:
+      - {type: user_decision, ref: B2-CATALOG-UX}
+    affected_entities:
+      - "domains.id=27 (catalog_tagline)"
+      - "domains.id=27 (catalog_description)"
+
+b2:
+  - id: B2-MODULE-SPLIT
+    summary: "Approve proposed 5-module S2P split, propose alternative, or defer."
+    question: >-
+      The audit recommends splitting S2P into 5 modules: S2P-SOURCING (masters sourcing_events),
+      S2P-REQ-TO-PO (masters purchase_requisitions + purchase_orders), S2P-RECEIVING (masters
+      goods_receipts), S2P-INVOICE-MATCHING (masters supplier_invoices; boundary question with
+      AP-AUTO on invoice-matching ownership), S2P-CATALOG-MGMT (would master procurement_catalogs
+      + catalog_items, Bucket 3 pending). Approve the 5-module split, propose an alternative shape
+      (e.g. 4 modules collapsing receiving into invoice-matching; 3 modules collapsing sourcing into
+      req-to-po), or defer the Phase A re-load entirely.
+    options:
+      - "approve 5-module split as proposed"
+      - "approve with AP-AUTO boundary resolved (S2P stops at GR, AP-AUTO absorbs matching)"
+      - "approve with AP-AUTO boundary resolved (S2P owns matching, hands off invoice.approved)"
+      - "propose alternative 3-module or 4-module shape"
+      - "defer module decision; keep S2P pre-modular for now"
+    why: >-
+      Most of the structural Bucket 1 fixes (M1 / M2 / M4 / M5 / M6 / B9b / B10b / E1 to E5 / F2 / F3 / F5)
+      and B1-A2 capability authoring are gated on this decision. The catalog cannot proceed until
+      the module shape is settled.
+  - id: B2-JAGGAER
+    summary: "Pick survivor for duplicate Jaggaer solutions rows (id 129 vs id 518)."
+    question: >-
+      Two solutions rows differ only in casing: id 129 'Jaggaer ONE' and id 518 'JAGGAER ONE'.
+      The vendor's current marketing form is ALL-CAPS 'JAGGAER ONE'. Keep id 129 (older row,
+      preserves history), keep id 518 (matches vendor brand), or merge under a hand-picked form
+      and DELETE the loser, re-pointing its solution_domains row.
+    options:
+      - "keep id 129 'Jaggaer ONE'; DELETE id 518"
+      - "keep id 518 'JAGGAER ONE'; DELETE id 129"
+      - "merge under a different form (specify)"
+  - id: B2-CATALOG-UX
+    summary: "Approve catalog_tagline + catalog_description drafts for domain S2P (Rule #20 backfill)."
+    question: >-
+      Both fields are empty. Rule #20 forbids any write without explicit per-row user approval.
+      The 2026-05-30 audit proposed: tagline 'Run procurement end to end: source suppliers, raise
+      requisitions, issue POs, receive goods, and match invoices in one workflow.' Plus a 2-paragraph
+      catalog_description (see 2026-05-30 history.md Bucket 2 #3 for the full text). Approve as-is,
+      request edits, or defer.
+    options:
+      - "approve tagline + both paragraphs as proposed"
+      - "approve with edits (provide exact text)"
+      - "defer; leave both fields empty until next audit"
+  - id: B2-SEND-EMAIL
+    summary: "Channel-vs-capability decision for S2P's re-authored per-module skills (F7)."
+    question: >-
+      The legacy skill 22 links send_email (tool 37, side_effect, coverage_tier=platform) without a
+      workflow-specific justification. When per-module skills are authored after the module split,
+      the default replacement is notify_person. But S2P-REQ-TO-PO has a candidate workflow-specific
+      justification (supplier-facing PO dispatch email IS the contract in many B2B flows); similar
+      candidate on S2P-INVOICE-MATCHING (invoice-received confirmations). Keep send_email with
+      per-module workflow justification, or move every skill to notify_person and let the
+      deployment pick the channel.
+    options:
+      - "keep send_email on S2P-REQ-TO-PO (PO dispatch); keep on S2P-INVOICE-MATCHING (receipt confirmation); notify_person everywhere else"
+      - "keep send_email on S2P-REQ-TO-PO only; notify_person on all other modules"
+      - "notify_person across all S2P modules; no channel-specific links"
+    why: >-
+      Gated on B2-MODULE-SPLIT because per-module skill targets must exist before the decision binds.
+  - id: B2-EINVOICE-PII
+    summary: "Treat supplier tax-personal data the same as employee-personal data for has_personal_content?"
+    question: >-
+      supplier_invoices.has_personal_content=false is correct for B2B invoices in most jurisdictions.
+      But in jurisdictions with mandatory e-invoicing (Italy SdI, France Chorus, Mexico CFDI), the
+      invoice carries the supplier's tax id + legal address, which is regulated personal data.
+      Does the catalog's has_personal_content flag cover tax-personal data, or only employee-personal data?
+    options:
+      - "yes, has_personal_content covers tax-personal data; PATCH supplier_invoices.has_personal_content=true"
+      - "no, has_personal_content covers only employee-personal data; leave as false"
+      - "introduce a separate flag (out of scope for this audit)"
+  - id: B2-PAIRWISE-TIMING
+    summary: "Schedule pairwise reconciliation against SUP-LIFE / AP-AUTO / CLM / SMP inline after M1 or as separate runs?"
+    question: >-
+      The four neighbors with edge weight >= 3 (SUP-LIFE 5, AP-AUTO 4, CLM 4, SMP 3) all have
+      structural reconciliation work blocked on M1. After the module-split fix lands, run pairwise
+      reconciliation inline as the next audit step, or schedule four separate Validate runs against
+      each neighbor in turn.
+    options:
+      - "inline pairwise after M1 fix lands"
+      - "four separate Validate runs (SUP-LIFE first, then AP-AUTO, CLM, SMP)"
+      - "defer pairwise until all four neighbors are themselves audited"
+  - id: B2-H1-APPROVAL
+    summary: "Sweep-approve the 17 agent_curated handoff_processes rows, leave for normal review, or surgically approve."
+    question: >-
+      29 of 29 S2P cross-domain handoffs have at least one handoff_processes row (H1 coverage gate
+      satisfied). Headline catalog-quality measure is the approved count: 0 / 29. 23 rows are
+      agent_curated (17 from the 2026-05-31 technical-fix load + 6 pre-existing); 6 are discovery_*.
+      Sweep-approve the 17 fresh agent_curated rows, leave them for normal review per Rule #1, or
+      surgically approve a subset.
+    options:
+      - "sweep-approve all 17 agent_curated rows from the 2026-05-31 load"
+      - "sweep-approve all 23 agent_curated rows (including pre-existing)"
+      - "leave at record_status='new' for normal reviewer flow"
+      - "name specific rows to approve"
+
+b3:
+  - id: B3-CATALOGS
+    candidate: procurement_catalogs + catalog_items
+    rationale: >-
+      Proposed home: a possible S2P-CATALOG-MGMT module (Bucket 2 #1 dependency). SAP Ariba Catalog,
+      Coupa Catalog, and Jaggaer Catalog all master both entities; punch-out catalogs and hosted
+      catalogs are standard surfaces. Verification path: Ariba CatalogMaster API + Coupa catalog
+      API endpoints + Jaggaer catalog documentation. Likely 5 to 8 entities total once decomposed
+      (catalog_versions, catalog_items, item_attributes, supplier_content, buyer_content,
+      punch_out_sessions, item_master_sync).
+    vendor_evidence:
+      - SAP Ariba Catalog
+      - Coupa Catalog
+      - Jaggaer Catalog
+    proposed_module: S2P-CATALOG-MGMT
+    extra_blocked_by: B2-MODULE-SPLIT

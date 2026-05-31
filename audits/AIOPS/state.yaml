@@ -1,0 +1,209 @@
+schema_version: 2
+domain: AIOPS
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-B9-CATEGORY
+    summary: Backfill event_category on 6 AIOPS trigger_events currently set to empty string.
+    finding: Triggers 645 (root_cause_analysis.published), 646 (predictive_signal.elevated), 647 (alert_suppression_rule.activated), 648 (ml_model_training_record.completed), 649 (ml_model_training_record.drift_detected), 650 (incident_prediction.high_confidence) all carry event_category="" against the enum (lifecycle, state_change, threshold, signal) per Rule #13.
+    action: PATCH each row to the appropriate category. Proposed mapping, awaiting agent execution next pass; 645 state_change, 646 threshold, 647 state_change, 648 lifecycle, 649 signal, 650 signal.
+    affected_events:
+      - {id: 645, event_name: root_cause_analysis.published, current_category: "", proposed_category: state_change}
+      - {id: 646, event_name: predictive_signal.elevated, current_category: "", proposed_category: threshold}
+      - {id: 647, event_name: alert_suppression_rule.activated, current_category: "", proposed_category: state_change}
+      - {id: 648, event_name: ml_model_training_record.completed, current_category: "", proposed_category: lifecycle}
+      - {id: 649, event_name: ml_model_training_record.drift_detected, current_category: "", proposed_category: signal}
+      - {id: 650, event_name: incident_prediction.high_confidence, current_category: "", proposed_category: signal}
+
+b1b:
+  - id: B1B-M1
+    summary: AIOPS has 0 domain_modules; M1 blocks every module-anchored band.
+    finding: Zero rows in domain_modules where domain_id=6. Per Rule #14 every domains row needs at least one full domain_modules row; once capabilities >= 3, at least two. Until at least one module exists, role_modules, lifecycle states with module owner, per-module skills, source_domain_module_id and target_domain_module_id backfills, and Rule #17 system skill all stay degraded.
+    blocked_by:
+      - {type: user_decision, ref: B2-MODULE-SPLIT}
+    affected_modules: []
+    affected_entities: [event_correlations, anomaly_detections, root_cause_analyses, predictive_signals, alert_suppression_rules, ml_model_training_records, incident_predictions]
+
+  - id: B1B-A2
+    summary: Author 5 to 7 capabilities and link via capability_domains.
+    finding: Zero rows in capability_domains where domain_id=6. Proposed codes from the 2026-05-30 audit, AIOPS-EVENT-CORRELATION, AIOPS-ANOMALY-DETECTION, AIOPS-ROOT-CAUSE-ANALYSIS, AIOPS-PREDICTIVE-INSIGHTS, AIOPS-ALERT-NOISE-REDUCTION, AIOPS-ML-MODEL-OPS, AIOPS-SERVICE-HEALTH-SCORING. The actual count and naming depend on the module-split choice (Bucket 2 item #1) because the module floor in Rule #14 keys off the capability count.
+    blocked_by:
+      - {type: user_decision, ref: B2-MODULE-SPLIT}
+
+  - id: B1B-A4
+    summary: Draft catalog_tagline and catalog_description for AIOPS.
+    finding: Both fields on domains row id 6 are empty string. Rule #20 requires user approval of buyer-voice content before writing.
+    blocked_by:
+      - {type: user_decision, ref: B2-TAGLINE-APPROVAL}
+
+  - id: B1B-B4
+    summary: Flip pattern flags on AIOPS masters per proposed audit findings.
+    finding: All 7 masters carry has_personal_content=false, has_submit_lock=false, has_single_approver=false. Audit proposes has_submit_lock=true on ml_model_training_records (training run commits immutable), root_cause_analyses (published RCAs immutable), alert_suppression_rules (activation locks the rule). Rule #15 forbids notes population, so the flag-rationale stays out of the catalog and surfaces here for confirm.
+    blocked_by:
+      - {type: user_decision, ref: B2-PATTERN-FLAGS}
+    affected_entities: [ml_model_training_records, root_cause_analyses, alert_suppression_rules, event_correlations, anomaly_detections, predictive_signals, incident_predictions]
+
+  - id: B1B-B6
+    summary: Author ~7 intra-domain data_object_relationships among AIOPS masters.
+    finding: Zero data_object_relationships rows where both ends are AIOPS-owned data_objects (93/94/95/96/722/723/724). Implied edges include event_correlations contains anomaly_detections, event_correlations spawns root_cause_analyses, root_cause_analyses references event_correlations, incident_predictions references predictive_signals, ml_model_training_records calibrates anomaly_detections, alert_suppression_rules suppresses event_correlations.
+    blocked_by:
+      - {type: depends_on, ref: B1B-M1, reason: edges should land alongside module attribution and lifecycle authoring}
+    affected_entities: [event_correlations, anomaly_detections, root_cause_analyses, predictive_signals, alert_suppression_rules, ml_model_training_records, incident_predictions]
+
+  - id: B1B-B8
+    summary: Author 8 outbound cross-domain data_object_relationships mirroring AIOPS-published handoffs.
+    finding: Zero outbound cross-domain relationship rows. Shapes include event_correlations triggers service_incidents (handoff 57), root_cause_analyses informs service_problems (58), monitoring_events suppression (59), root_cause_analyses informs service_incidents (603), incident_predictions forecasts service_incidents (604), predictive_signals warns capacity_records or distributed_traces (605), alert_suppression_rules suppresses metric_series or monitoring_events (606, 607).
+    blocked_by:
+      - {type: depends_on, ref: B1B-M1, reason: relationship inserts pair with per-module FK backfill of the handoffs}
+    affected_handoffs:
+      - {handoff_id: 57, direction: outbound, source_domain: AIOPS, target_domain: ITSM, trigger_event: correlation.identified, payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 58, direction: outbound, source_domain: AIOPS, target_domain: ITSM, trigger_event: root_cause.identified, payload: service_problems, null_field: source_domain_module_id}
+      - {handoff_id: 59, direction: outbound, source_domain: AIOPS, target_domain: ITOM, trigger_event: monitoring_event.suppression_applied, payload: monitoring_events, null_field: source_domain_module_id}
+      - {handoff_id: 603, direction: outbound, source_domain: AIOPS, target_domain: ITSM, trigger_event: root_cause_analysis.published, payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 604, direction: outbound, source_domain: AIOPS, target_domain: ITSM, trigger_event: incident_prediction.high_confidence, payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 605, direction: outbound, source_domain: AIOPS, target_domain: ITOM, trigger_event: predictive_signal.elevated, payload: predictive_signals, null_field: source_domain_module_id}
+      - {handoff_id: 606, direction: outbound, source_domain: AIOPS, target_domain: OBS, trigger_event: alert_suppression_rule.activated, payload: alert_suppression_rules, null_field: source_domain_module_id}
+      - {handoff_id: 607, direction: outbound, source_domain: AIOPS, target_domain: ITOM, trigger_event: alert_suppression_rule.activated, payload: alert_suppression_rules, null_field: source_domain_module_id}
+
+  - id: B1B-B9-NEW-EVENTS
+    summary: Add lifecycle-cover trigger_events not yet in catalog.
+    finding: Per-master lifecycle states currently lack supporting trigger_events for event_correlation.resolved, anomaly_detection.confirmed, anomaly_detection.dismissed, root_cause_analysis.reviewed, predictive_signal.expired, incident_prediction.realized, incident_prediction.dismissed. New entities, deferred per the technical-fix scope and the module-split dependency (states own the canonical lifecycle, gating which events belong on which module).
+    blocked_by:
+      - {type: depends_on, ref: B1B-M1, reason: events land alongside lifecycle states with module ownership}
+    affected_entities: [event_correlations, anomaly_detections, root_cause_analyses, predictive_signals, incident_predictions]
+
+  - id: B1B-B10b
+    summary: Per-module FK backfill on AIOPS handoffs once modules exist.
+    finding: 8 outbound handoffs (57, 58, 59, 603, 604, 605, 606, 607) all have source_domain_module_id=null. 14 of 15 inbound handoffs (53, 56, 141, 154, 608, 609, 610, 612, 613, 619, 649, 665, 667, 676) have target_domain_module_id=null; handoff 628 already carries source_domain_module_id=109 on the CMDB side. Derivation per scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts.
+    blocked_by:
+      - {type: depends_on, ref: B1B-M1}
+    affected_handoffs:
+      - {handoff_id: 57, direction: outbound, source_domain: AIOPS, target_domain: ITSM, trigger_event: correlation.identified, payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 58, direction: outbound, source_domain: AIOPS, target_domain: ITSM, trigger_event: root_cause.identified, payload: service_problems, null_field: source_domain_module_id}
+      - {handoff_id: 59, direction: outbound, source_domain: AIOPS, target_domain: ITOM, trigger_event: monitoring_event.suppression_applied, payload: monitoring_events, null_field: source_domain_module_id}
+      - {handoff_id: 603, direction: outbound, source_domain: AIOPS, target_domain: ITSM, trigger_event: root_cause_analysis.published, payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 604, direction: outbound, source_domain: AIOPS, target_domain: ITSM, trigger_event: incident_prediction.high_confidence, payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 605, direction: outbound, source_domain: AIOPS, target_domain: ITOM, trigger_event: predictive_signal.elevated, payload: predictive_signals, null_field: source_domain_module_id}
+      - {handoff_id: 606, direction: outbound, source_domain: AIOPS, target_domain: OBS, trigger_event: alert_suppression_rule.activated, payload: alert_suppression_rules, null_field: source_domain_module_id}
+      - {handoff_id: 607, direction: outbound, source_domain: AIOPS, target_domain: ITOM, trigger_event: alert_suppression_rule.activated, payload: alert_suppression_rules, null_field: source_domain_module_id}
+      - {handoff_id: 53, direction: inbound, source_domain: ITOM, target_domain: AIOPS, trigger_event: events.burst_detected, payload: event_correlations, null_field: target_domain_module_id}
+      - {handoff_id: 56, direction: inbound, source_domain: OBS, target_domain: AIOPS, trigger_event: anomaly_candidate.detected, payload: anomaly_detections, null_field: target_domain_module_id}
+      - {handoff_id: 141, direction: inbound, source_domain: RMM, target_domain: AIOPS, trigger_event: monitoring_alert.threshold_breached, payload: monitoring_alerts, null_field: target_domain_module_id}
+      - {handoff_id: 154, direction: inbound, source_domain: DATA-AI-PLAT, target_domain: AIOPS, trigger_event: pipeline_run.failed, payload: data_pipelines, null_field: target_domain_module_id}
+      - {handoff_id: 608, direction: inbound, source_domain: OBS, target_domain: AIOPS, trigger_event: metric_series.threshold_breached, payload: metric_series, null_field: target_domain_module_id}
+      - {handoff_id: 609, direction: inbound, source_domain: OBS, target_domain: AIOPS, trigger_event: metric_series.anomaly_detected, payload: metric_series, null_field: target_domain_module_id}
+      - {handoff_id: 610, direction: inbound, source_domain: OBS, target_domain: AIOPS, trigger_event: log_entry.error_pattern_matched, payload: log_entries, null_field: target_domain_module_id}
+      - {handoff_id: 612, direction: inbound, source_domain: OBS, target_domain: AIOPS, trigger_event: distributed_trace.slow_path_detected, payload: distributed_traces, null_field: target_domain_module_id}
+      - {handoff_id: 613, direction: inbound, source_domain: OBS, target_domain: AIOPS, trigger_event: distributed_trace.error_spike, payload: distributed_traces, null_field: target_domain_module_id}
+      - {handoff_id: 619, direction: inbound, source_domain: ITOM, target_domain: AIOPS, trigger_event: capacity_record.threshold_breached, payload: capacity_records, null_field: target_domain_module_id}
+      - {handoff_id: 649, direction: inbound, source_domain: NPMD, target_domain: AIOPS, trigger_event: network_flow_record.anomalous_pattern, payload: network_flow_records, null_field: target_domain_module_id}
+      - {handoff_id: 665, direction: inbound, source_domain: DEM, target_domain: AIOPS, trigger_event: endpoint_anomaly_finding.published, payload: endpoint_anomaly_findings, null_field: target_domain_module_id}
+      - {handoff_id: 667, direction: inbound, source_domain: DEM, target_domain: AIOPS, trigger_event: real_user_session.poor_experience, payload: real_user_sessions, null_field: target_domain_module_id}
+      - {handoff_id: 676, direction: inbound, source_domain: DCIM, target_domain: AIOPS, trigger_event: dc_power_distribution_unit.failure, payload: dc_power_distribution_units, null_field: target_domain_module_id}
+      - {handoff_id: 628, direction: inbound, source_domain: CMDB, target_domain: AIOPS, trigger_event: service_map.updated, payload: service_maps, null_field: target_domain_module_id}
+
+  - id: B1B-B12
+    summary: Author ~24 data_object_lifecycle_states rows with module ownership.
+    finding: Zero lifecycle states across the 7 masters. Proposed lattice from the prior audit; needs domain_module_id from M1 to determine which module realizes which state and which states gate workflow-permission materialization per Rule #14.
+    blocked_by:
+      - {type: depends_on, ref: B1B-M1}
+    affected_entities: [event_correlations, anomaly_detections, root_cause_analyses, predictive_signals, alert_suppression_rules, ml_model_training_records, incident_predictions]
+
+  - id: B1B-F1
+    summary: Retire legacy aiops-system skill (id 27, domain_module_id=null) once per-module system skills ship.
+    finding: skills row id 27, skill_type=system, domain_module_id=null. Rule #17 requires the system skill to be anchored to a domain_modules row; legacy domain-level skill must retire after M1.
+    blocked_by:
+      - {type: depends_on, ref: B1B-M1}
+
+  - id: B1B-F7
+    summary: Re-anchor send_email (tool 37) and post_chat_message (tool 40) skill_tools to notify_person or notify_team unless a specific workflow justifies them.
+    finding: Both channel primitives currently appear as required tools on aiops-system (skill_tools ids 335 and 336). Per the channel-vs-abstraction rule, generic notifications use notify_person or notify_team; channel-specific links require a workflow justification surfaced to the user.
+    blocked_by:
+      - {type: user_decision, ref: B2-CHANNEL-SWAP}
+      - {type: depends_on, ref: B1B-M1, reason: re-anchoring lands on whichever per-module skill replaces aiops-system}
+
+  - id: B1B-H1b
+    summary: Promote 3 discovery_substring handoff_processes rows and reconcile handoff 154 PCF.
+    finding: Handoffs 53 (Monitor and report events influencing factors, process 629), 58 (Perform root cause analysis, process 837), 603 (Perform root cause analysis, process 837) carry discovery_substring tags currently at record_status=new and should be reviewed for promotion to approved. Handoff 154 carries a pre-existing agent_curated tag with process_id=272 (L3 "Develop and execute IT resilience and continuity operations") versus the prior audit's L4 proposal 1302 (Run and monitor batch job schedule); user picks which is correct. All other 19 cross-domain handoffs already carry agent_curated rows at record_status=new awaiting review.
+    blocked_by:
+      - {type: user_decision, ref: B2-H1B-PROMOTION-OR-RECONCILE}
+    affected_handoffs:
+      - {handoff_id: 53, direction: inbound, source_domain: ITOM, target_domain: AIOPS, trigger_event: events.burst_detected, payload: event_correlations, null_field: record_status_promotion}
+      - {handoff_id: 58, direction: outbound, source_domain: AIOPS, target_domain: ITSM, trigger_event: root_cause.identified, payload: service_problems, null_field: record_status_promotion}
+      - {handoff_id: 603, direction: outbound, source_domain: AIOPS, target_domain: ITSM, trigger_event: root_cause_analysis.published, payload: service_incidents, null_field: record_status_promotion}
+      - {handoff_id: 154, direction: inbound, source_domain: DATA-AI-PLAT, target_domain: AIOPS, trigger_event: pipeline_run.failed, payload: data_pipelines, null_field: pcf_mapping_choice}
+
+b2:
+  - id: B2-MODULE-SPLIT
+    summary: Pick the AIOPS module split.
+    question: Which split, (a) 2-module (AIOPS-EVENT-CORRELATION + AIOPS-PREDICTIVE-INTELLIGENCE), (b) 3-module adding AIOPS-SERVICE-HEALTH once Bucket 3 service-health entities are confirmed, or (c) 4-module isolating AIOPS-ML-MODEL-OPS from AIOPS-PREDICTIVE-INTELLIGENCE?
+    options: [a-2-module, b-3-module, c-4-module]
+    why: M1 is the blocking failure and every per-module FK, lifecycle owner, system skill, role bundle waits on this. Choice (c) interacts with the MLOPS demarcation (B2-MLOPS) and Bucket 3 #1 candidates (model_drift_alerts, feedback_labels).
+
+  - id: B2-TRIGGER-143
+    summary: Re-attribute trigger 143 (topology.published).
+    question: Currently anchored on event_correlations (93) with event_category=lifecycle. Description points at service topology, which CMDB masters via service_maps (id 79). Options, (i) DELETE (no handoff uses it); (ii) PATCH data_object_id=79 to move to CMDB ownership; (iii) keep on event_correlations and PATCH description if AIOPS exposes its own topology view.
+    options: [delete, patch-to-service-maps, keep-and-rewrite-description]
+    why: Naming and description mismatch the host master; only the user knows whether AIOPS genuinely publishes a topology view.
+
+  - id: B2-MLOPS
+    summary: MLOPS demarcation versus AIOPS for ml_model_training_records and related ML masters.
+    question: Keep ml_model_training_records as AIOPS master with MLOPS embedded_master once MLOPS lands, or move canonical master to MLOPS and demote AIOPS to consumer or embedded_master?
+    options: [keep-aiops-master, move-to-mlops]
+    why: Queued MLOPS candidate is at mention_count 2 in audits/_missing-domains.md. Choice gates the AIOPS-ML-MODEL-OPS module under split option (c).
+
+  - id: B2-PATTERN-FLAGS
+    summary: Confirm pattern flag flips on AIOPS masters.
+    question: Set has_submit_lock=true on ml_model_training_records (training run commits immutable), root_cause_analyses (published RCAs immutable), alert_suppression_rules (once activated, change requires a new rule)? Any other flags on event_correlations, anomaly_detections, predictive_signals, incident_predictions?
+    options: [confirm-proposed, modify, decline]
+    why: B4 audit defaults are all false; the proposed flips are inferred from vendor behavior but Rule #15 forbids notes-based justification, so user confirmation is the only authoritative signal.
+
+  - id: B2-CHANNEL-SWAP
+    summary: send_email and post_chat_message on aiops-system skill.
+    question: Are these channel primitives backing a specific workflow (name it), or generic notifications that should swap to notify_person / notify_team?
+    options: [keep-channel-specific-with-workflow, swap-to-notify-abstraction]
+    why: F7 audit; channel-specific links need a workflow justification. Rule #15 forbids notes-justification, so the decision surfaces here.
+
+  - id: B2-TAGLINE-APPROVAL
+    summary: Approve catalog_tagline and catalog_description wording.
+    question: Rule #20 requires user-approved buyer-voice text before any write. User to supply or approve the exact wording.
+    options: [supply-text, draft-and-confirm, defer]
+
+  - id: B2-H1B-PROMOTION-OR-RECONCILE
+    summary: Approve promotion of 3 discovery_substring handoff_processes rows and reconcile handoff 154 PCF choice.
+    question: (a) Promote rows on handoffs 53, 58, 603 from record_status=new to approved? (b) For handoff 154, keep the existing agent_curated tag with process 272 (L3 IT resilience) or replace with process 1302 (L4 batch monitor)?
+    options: [promote-all, promote-some, reject-all-pending-review, reconcile-154-as-272, reconcile-154-as-1302]
+
+b3:
+  - id: B3-MARKET-SURFACE
+    summary: 9 candidate market-surface entities pending Phase 0 verification.
+    candidate: correlation_rules, enrichment_pipelines, service_health_scores, alert_storms, feedback_labels, change_correlations, model_drift_alerts, escalation_policies, golden_signal_definitions
+    rationale: Common across the flagship AIOps vendor surface but absent from the AIOPS footprint. Phase 0 has not been formally run; speculative until vetted via vendor docs.
+    vendor_evidence:
+      - BigPanda AIOps
+      - Moogsoft (Dell AIOps)
+      - ServiceNow ITOM Event Management
+      - Splunk IT Service Intelligence
+      - IBM Cloud Pak for AIOps
+      - Dynatrace Davis AI
+      - PagerDuty AIOps
+    proposed_module: AIOPS-EVENT-CORRELATION (correlation_rules, alert_storms, enrichment_pipelines, change_correlations), AIOPS-PREDICTIVE-INTELLIGENCE (feedback_labels, model_drift_alerts), AIOPS-SERVICE-HEALTH (service_health_scores, golden_signal_definitions, escalation_policies)
+
+  - id: B3-AIOPS-TO-OBS-FEEDBACK
+    summary: Symmetric AIOPS to OBS feedback handoff (back-pressure or threshold tuning).
+    candidate: AIOPS publishes a recommendation to OBS to raise a noisy alert threshold or adjust an SLO band, mirroring the 6 inbound OBS to AIOPS handoffs.
+    rationale: The 6 inbound OBS to AIOPS handoffs heavily model the forward direction; the reverse closed-loop tuning signal is not modeled.
+    vendor_evidence:
+      - Dynatrace Davis (auto-baseline tuning)
+      - BigPanda (correlation feedback loop)
+
+  - id: B3-AIOPS-TO-SOAR-OR-ITPA
+    summary: AIOPS to SOAR or AIOPS to ITPA runbook execution handoff.
+    candidate: When AIOPS root cause is high-confidence and a runbook exists, AIOPS triggers auto-remediation via SOAR or an IT process automation domain.
+    rationale: Catalog has SOAR (id 12, security-focused). Generic IT runbook execution may warrant a separate ITPA candidate or fold into SOAR via a wider mandate.
+    vendor_evidence:
+      - PagerDuty AIOps (Rundeck integration)
+      - ServiceNow ITOM Health (workflow integration)
+      - Moogsoft (closed-loop remediation)

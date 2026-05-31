@@ -1,0 +1,458 @@
+schema_version: 2
+domain: INS-CLAIMS
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-A3-MISSING-SOLUTIONS
+    summary: "4 flagship solutions missing from solution_domains (Insurity, Snapsheet, Shift Technology, Origami Risk)"
+    finding: >
+      INS-CLAIMS (domain_id=44) has 5 solution_domains rows today: Guidewire ClaimCenter (primary, sol 154),
+      Duck Creek Claims (primary, sol 155), Sapiens IDIT (primary, sol 156), Salesforce FSC (secondary, sol 306),
+      ServiceNow FSO (secondary, sol 33). Flagship enumeration adds Insurity Claims, Snapsheet (digital-FNOL specialist),
+      Shift Technology (fraud-detection specialist, anchors AMLD6 and NAIC Model #880 leg), and Origami Risk
+      (claims and risk management for self-insureds / TPA market). All four are independent point-solution vendors
+      whose flagship product is claims-shaped. No conflict with the no-vendor-names-in-domain-text rule, these
+      writes land on commerce-shaped entities.
+    action: >
+      Per Rule #4 idempotency, look up or insert 4 vendors then 4 solutions (solution_kind=standard_solution),
+      then insert 4 solution_domains rows. Coverage: Insurity primary, Snapsheet primary,
+      Shift Technology partial (fraud-detection scope, not full FNOL-to-recovery), Origami Risk secondary.
+      Use a chunked POST loader; record_status omitted per Rule #1.
+    affected_entities:
+      - Insurity Claims
+      - Snapsheet
+      - Shift Technology
+      - Origami Risk
+
+  - id: B1A-A4-CATALOG-COPY
+    summary: "catalog_tagline and catalog_description are empty strings"
+    finding: >
+      domains row 44 has catalog_tagline="" and catalog_description="". Per Rule #20 the agent must surface proposed
+      copy for explicit user approval BEFORE writing. The 2026-05-30 audit drafted candidate text but never produced
+      a user-approved final string.
+    action: >
+      Re-surface the draft copy from 2026-05-30 (tagline: "Take a claim from first notice of loss through settlement,
+      payment, and recovery in one place, with built-in fraud screening and audit trails"; description: 2-paragraph
+      buyer voice covering FNOL intake, adjuster work-list, coverage and reserve management, settlement adjudication,
+      payment disbursement, recovery and subrogation) for user approval, then PATCH /domains?id=eq.44.
+    blocked_by:
+      - {type: user_decision, ref: B2-A4-COPY}
+
+b1b:
+  - id: B1B-A2-CAPABILITIES
+    summary: "Zero capability_domains rows; needs the module split decided first"
+    finding: >
+      INS-CLAIMS has 0 capability_domains rows. The 2026-05-30 audit proposed 8 capabilities (INS-CLAIMS-FNOL,
+      INS-CLAIMS-COVERAGE-VERIFICATION, INS-CLAIMS-ADJUSTER-WORKLIST, INS-CLAIMS-RESERVING, INS-CLAIMS-ADJUDICATION,
+      INS-CLAIMS-DISBURSEMENT, INS-CLAIMS-RECOVERY-SUBROGATION, INS-CLAIMS-FRAUD-DETECTION). Each capability
+      must map to a realizing module per Rule #14, so the capability set cannot be loaded until the module split
+      (Bucket 2 #1) is decided.
+    action: >
+      Once B2-MOD-SPLIT resolves, insert 8 capabilities rows + 8 capability_domains rows + the appropriate
+      domain_module_capabilities junctions to the selected modules.
+    blocked_by:
+      - {type: user_decision, ref: B2-MOD-SPLIT}
+    affected_entities:
+      - INS-CLAIMS-FNOL
+      - INS-CLAIMS-COVERAGE-VERIFICATION
+      - INS-CLAIMS-ADJUSTER-WORKLIST
+      - INS-CLAIMS-RESERVING
+      - INS-CLAIMS-ADJUDICATION
+      - INS-CLAIMS-DISBURSEMENT
+      - INS-CLAIMS-RECOVERY-SUBROGATION
+      - INS-CLAIMS-FRAUD-DETECTION
+
+  - id: B1B-M1-MODULES
+    summary: "Zero domain_modules rows; hard fail cascades to most other gaps"
+    finding: >
+      INS-CLAIMS has 0 domain_modules rows. Rule #14 requires every domain to carry at least 1 module_kind=full row;
+      a domain with >=3 capabilities requires >=2. The 2026-05-30 audit proposed a 5-module split
+      (INS-CLAIMS-INTAKE, INS-CLAIMS-ADJUDICATION, INS-CLAIMS-PAYMENTS, INS-CLAIMS-RECOVERY, INS-CLAIMS-FRAUD-SIU)
+      with a variant lifting Compliance/Reporting into its own module. The decision is owed by Bucket 2 #1
+      and cascades into A2, B4, B10, B10b, B12, F1, F7 and every B3 candidate.
+    action: >
+      Once B2-MOD-SPLIT resolves, author the chosen module set in a Phase A/M loader. Each module needs a
+      domain_module_code, domain_module_name, module_kind=full, description, and an associated system skill
+      authored in the same load per Rule #17.
+    blocked_by:
+      - {type: user_decision, ref: B2-MOD-SPLIT}
+
+  - id: B1B-B4-PATTERN-FLAGS
+    summary: "Pattern flags not re-evaluated on any master"
+    finding: >
+      All 10 master data_objects (623 to 632) carry has_personal_content=false, has_submit_lock=false,
+      has_single_approver=false. The 2026-05-30 audit proposes: siu_cases.has_personal_content=true
+      (privacy-sensitive investigative records), claim_settlements.has_single_approver=true,
+      claim_payments.has_submit_lock=true, coverage_decisions.has_single_approver=true (once entity exists).
+      Cross-cut by Bucket 2 #6 (config-shape exemption decisions per master) since the flag set depends on
+      whether each master is workflow-bearing.
+    action: >
+      Once B2-LFC-EXEMPT resolves per-master shape, PATCH data_objects with the agreed flag values. Do not
+      auto-populate notes per Rule #15; surface the reasoning to the user separately.
+    blocked_by:
+      - {type: user_decision, ref: B2-LFC-EXEMPT}
+    affected_entities:
+      - siu_cases
+      - claim_settlements
+      - claim_payments
+
+  - id: B1B-B10-DASHCAM-CONSUMER
+    summary: "INS-CLAIMS missing consumer DMDO on dashcam_events (378)"
+    finding: >
+      Inbound handoff 315 (TELEMATICS -> INS-CLAIMS, trigger event 302 dashcam_event.collision, payload
+      data_object 378 dashcam_events) lands on INS-CLAIMS but no DMDO row declares the dependency. The payload
+      is a TELEMATICS-owned data_object (kind=domain_owned). INS-CLAIMS needs a consumer + optional DMDO row
+      on the realizing module (probable INS-CLAIMS-INTAKE).
+    action: >
+      Once B1B-M1-MODULES lands and INS-CLAIMS-INTAKE exists, INSERT one domain_module_data_objects row
+      (domain_module_id=INS-CLAIMS-INTAKE, data_object_id=378, role=consumer, necessity=optional).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
+
+  - id: B1B-B10b-HANDOFF-MODULE-FKS
+    summary: "All 8 cross-domain handoffs have NULL source / target module FKs"
+    finding: >
+      Handoffs 315, 904, 905, 906, 907, 908, 909, 910 all carry source_domain_module_id=NULL and
+      target_domain_module_id=NULL. Outbound source side cannot be attributed until INS-CLAIMS modularizes.
+      Target side cannot be attributed until each counterpart domain modularizes plus declares the consumer DMDO.
+    action: >
+      Once B1B-M1-MODULES lands, PATCH source_domain_module_id on all 7 outbound rows. For the 3 CSM-targeted
+      handoffs (904, 908, 910), PATCH target_domain_module_id=112 (CSM-CASE-MGMT) once CSM declares the consumer
+      DMDOs (separate report-only against CSM). For ERP-FIN (905, 906, 909), GRC (907), TELEMATICS (315):
+      target/source side remains NULL until each modularizes.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
+      - {type: domain_audit, blocking_domain: CSM, milestone: declare-consumer-dmdos-on-623-624}
+      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: first-modularization}
+      - {type: domain_audit, blocking_domain: GRC, milestone: first-modularization}
+      - {type: domain_audit, blocking_domain: TELEMATICS, milestone: first-modularization}
+    affected_handoffs:
+      - {handoff_id: 315, direction: inbound, source_domain: TELEMATICS, target_domain: INS-CLAIMS, trigger_event: "dashcam_event.collision", payload: "dashcam_events", null_field: both}
+      - {handoff_id: 904, direction: outbound, source_domain: INS-CLAIMS, target_domain: CSM, trigger_event: "insurance_claim.fnol_received", payload: "insurance_claims", null_field: both}
+      - {handoff_id: 905, direction: outbound, source_domain: INS-CLAIMS, target_domain: ERP-FIN, trigger_event: "claim_payment.issued", payload: "claim_payments", null_field: both}
+      - {handoff_id: 906, direction: outbound, source_domain: INS-CLAIMS, target_domain: ERP-FIN, trigger_event: "claim_settlement.approved", payload: "claim_settlements", null_field: both}
+      - {handoff_id: 907, direction: outbound, source_domain: INS-CLAIMS, target_domain: GRC, trigger_event: "siu_case.opened", payload: "siu_cases", null_field: both}
+      - {handoff_id: 908, direction: outbound, source_domain: INS-CLAIMS, target_domain: CSM, trigger_event: "insurance_claim.closed", payload: "insurance_claims", null_field: both}
+      - {handoff_id: 909, direction: outbound, source_domain: INS-CLAIMS, target_domain: ERP-FIN, trigger_event: "salvage_recovery.posted", payload: "salvage_recovery_records", null_field: both}
+      - {handoff_id: 910, direction: outbound, source_domain: INS-CLAIMS, target_domain: CSM, trigger_event: "insurance_policy.cancelled", payload: "insurance_policies", null_field: both}
+
+  - id: B1B-B11-ALIASES
+    summary: "Zero data_object_aliases on every master; per-master alias tuples not pre-specified"
+    finding: >
+      All 10 INS-CLAIMS masters (623 to 632) have zero rows in data_object_aliases. The 2026-05-30 audit
+      named industry/vendor synonyms per master in prose (Claim/Loss/Notice of Loss for insurance_claims,
+      Policy/Contract of Insurance for insurance_policies, etc.) but did not enumerate explicit
+      (data_object_id, alias_name) tuples to load idempotently. About 30 alias rows total expected.
+    action: >
+      Author the explicit alias tuple list per master, surface for user review, then INSERT idempotently
+      keyed on (data_object_id, alias_name). Rule #18 still permits these because data_object_aliases
+      is a commerce-shaped entity. Rule #15 forbids auto-populating notes on the alias rows.
+    blocked_by:
+      - {type: user_decision, ref: B2-B11-TUPLES}
+    affected_masters:
+      - {data_object_id: 623, name: insurance_claims, target_module_id: null, workflow: pending-modularization}
+      - {data_object_id: 624, name: insurance_policies, target_module_id: null, workflow: pending-modularization}
+      - {data_object_id: 625, name: policy_coverages, target_module_id: null, workflow: pending-modularization}
+      - {data_object_id: 626, name: loss_incidents, target_module_id: null, workflow: pending-modularization}
+      - {data_object_id: 627, name: claim_adjuster_assignments, target_module_id: null, workflow: pending-modularization}
+      - {data_object_id: 628, name: claim_settlements, target_module_id: null, workflow: pending-modularization}
+      - {data_object_id: 629, name: claim_payments, target_module_id: null, workflow: pending-modularization}
+      - {data_object_id: 630, name: salvage_recovery_records, target_module_id: null, workflow: pending-modularization}
+      - {data_object_id: 631, name: subrogation_cases, target_module_id: null, workflow: pending-modularization}
+      - {data_object_id: 632, name: siu_cases, target_module_id: null, workflow: pending-modularization}
+
+  - id: B1B-B12-LIFECYCLE
+    summary: "Zero data_object_lifecycle_states on all 10 masters"
+    finding: >
+      All 10 masters (623 to 632) have zero lifecycle states. The 2026-05-30 audit pre-specifies state machines
+      for the workflow-bearing masters (insurance_claims, insurance_policies, claim_settlements, claim_payments,
+      siu_cases, subrogation_cases) and proposes a config-shape exemption for the rest (policy_coverages,
+      loss_incidents, claim_adjuster_assignments, salvage_recovery_records). About 30 to 40 lifecycle rows expected.
+      Per Rule #14 every lifecycle row needs a domain_module_id for permission materialization; gated on B1B-M1.
+      Per Rule #15 the agent must NOT auto-populate data_objects.notes for the config-shape exemption, surface to user.
+    action: >
+      Once B1B-M1-MODULES lands and Bucket 2 #6 confirms which masters are config-shape vs workflow-bearing, author
+      the lifecycle rows in a Phase B loader. Workflow-gate permissions materialize in the prefixing module per Rule #14.
+      Pair with B2-B12-VERBS for the verb_override decisions.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
+      - {type: user_decision, ref: B2-LFC-EXEMPT}
+      - {type: user_decision, ref: B2-B12-VERBS}
+    affected_masters:
+      - {data_object_id: 623, name: insurance_claims, target_module_id: null, workflow: "Reported, FNOL Received, Assigned, Under Investigation, Settled, Closed, Denied, Withdrawn"}
+      - {data_object_id: 624, name: insurance_policies, target_module_id: null, workflow: "Quoted, Bound, In Force, Lapsed, Cancelled, Reinstated, Expired"}
+      - {data_object_id: 628, name: claim_settlements, target_module_id: null, workflow: "Drafted, Pending Approval, Approved, Rejected, Issued"}
+      - {data_object_id: 629, name: claim_payments, target_module_id: null, workflow: "Pending, Issued, Voided, Reissued"}
+      - {data_object_id: 631, name: subrogation_cases, target_module_id: null, workflow: "Open, In Recovery, Recovered, Closed Unrecovered"}
+      - {data_object_id: 632, name: siu_cases, target_module_id: null, workflow: "Open, Investigating, Substantiated, Unsubstantiated, Referred to Law Enforcement, Closed"}
+
+  - id: B1B-F1-F7-SKILL-RETIRE
+    summary: "Legacy domain-level skill 71 still standalone; send_email still wired"
+    finding: >
+      skills row 71 (ins-claims-system, skill_type=system, domain_id=44, domain_module_id=null) is the only
+      system skill for INS-CLAIMS. It carries 12 skill_tools rows: 10 query_* tools (platform), send_email
+      (id 37, platform side_effect) wired directly as required (F7 fail per Rule #18, claims communication is
+      multi-channel), and execute_payment (id 43, external side_effect). Once modules exist, F2 requires each
+      module to have exactly one system skill (no domain-level system skills). The send_email link should be
+      rewired to notify_person (abstraction) on each new module-level skill.
+    action: >
+      Once B1B-M1-MODULES lands, author one <module_code_lower>_agent system skill per new module per Rule #17.
+      Redistribute the 10 query_* tools and execute_payment to the right module-level skills.
+      Replace send_email with notify_person on each module-level skill. DELETE skill id 71 last.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
+
+  - id: B1B-H1-APQC-TAGS
+    summary: "Zero handoff_processes across all 8 cross-domain handoffs; APQC strategy pending"
+    finding: >
+      All 8 cross-domain handoffs (315, 904, 905, 906, 907, 908, 909, 910) lack handoff_processes rows.
+      The 2026-05-30 audit pre-specified 6 agent_curated proposals (handoffs 904, 905, 906, 907, 908, 909 mapped to
+      PCF cross-industry processes 931, 1359, 1359, 969, 197, 1359 respectively) and deferred 2 to Discover Pass 3
+      (handoffs 910 and 315). Bucket 2 #5 gates the entire APQC strategy: tag with weak cross-industry matches (a),
+      defer to PCF Insurance vertical (b), or author custom processes (c).
+    action: >
+      Once B2-APQC-STRATEGY resolves: if (a), INSERT the 6 pre-specified agent_curated rows
+      (proposal_source=agent_curated, record_status=new, role=implements) and queue the 2 deferred rows for Discover.
+      If (b), defer all tagging until PCF Insurance is loaded into processes. If (c), author custom-process rows
+      first then tag against those.
+    blocked_by:
+      - {type: user_decision, ref: B2-APQC-STRATEGY}
+    affected_handoffs:
+      - {handoff_id: 904, direction: outbound, source_domain: INS-CLAIMS, target_domain: CSM, trigger_event: "insurance_claim.fnol_received", payload: "insurance_claims", null_field: handoff_processes}
+      - {handoff_id: 905, direction: outbound, source_domain: INS-CLAIMS, target_domain: ERP-FIN, trigger_event: "claim_payment.issued", payload: "claim_payments", null_field: handoff_processes}
+      - {handoff_id: 906, direction: outbound, source_domain: INS-CLAIMS, target_domain: ERP-FIN, trigger_event: "claim_settlement.approved", payload: "claim_settlements", null_field: handoff_processes}
+      - {handoff_id: 907, direction: outbound, source_domain: INS-CLAIMS, target_domain: GRC, trigger_event: "siu_case.opened", payload: "siu_cases", null_field: handoff_processes}
+      - {handoff_id: 908, direction: outbound, source_domain: INS-CLAIMS, target_domain: CSM, trigger_event: "insurance_claim.closed", payload: "insurance_claims", null_field: handoff_processes}
+      - {handoff_id: 909, direction: outbound, source_domain: INS-CLAIMS, target_domain: ERP-FIN, trigger_event: "salvage_recovery.posted", payload: "salvage_recovery_records", null_field: handoff_processes}
+      - {handoff_id: 910, direction: outbound, source_domain: INS-CLAIMS, target_domain: CSM, trigger_event: "insurance_policy.cancelled", payload: "insurance_policies", null_field: handoff_processes}
+      - {handoff_id: 315, direction: inbound, source_domain: TELEMATICS, target_domain: INS-CLAIMS, trigger_event: "dashcam_event.collision", payload: "dashcam_events", null_field: handoff_processes}
+
+b2:
+  - id: B2-MOD-SPLIT
+    summary: "INS-CLAIMS module split: 4 vs 5 vs 5-with-compliance"
+    question: >
+      Pick the module shape for INS-CLAIMS. The decision gates B1B-A2, B1B-M1, B1B-B10, B1B-B10b (source side),
+      B1B-B12, B1B-F1-F7 and every B3 candidate.
+    options:
+      - "(a) 4-module: INS-CLAIMS-INTAKE, INS-CLAIMS-ADJUDICATION (folds reserves, exposures, work-list, coverage decisions), INS-CLAIMS-PAYMENTS, INS-CLAIMS-COMPLIANCE-AND-FRAUD."
+      - "(b) 5-module: INS-CLAIMS-INTAKE, INS-CLAIMS-ADJUDICATION, INS-CLAIMS-PAYMENTS, INS-CLAIMS-RECOVERY (subrogation, salvage, recovery disbursements), INS-CLAIMS-FRAUD-SIU."
+      - "(c) 5-module variant: as (b) but lift Compliance/Reporting into a separate INS-CLAIMS-COMPLIANCE module (regulatory_claim_reports, denial_letters audit trail, NAIC and state-DOI artifacts)."
+    why: >
+      Flagship vendors (Guidewire, Duck Creek, Sapiens) all carry a 4-to-5 module split internally. Option (c) is
+      most defensible under DORA / IFRS 17 / NAIC Model #900 scrutiny but adds one more deployable unit.
+
+  - id: B2-POLICY-ADMIN-SCOPE
+    summary: "insurance_policies and policy_coverages currently on INS-CLAIMS, but flagship vendors split them out"
+    question: >
+      insurance_policies (624) and policy_coverages (625) are mastered on INS-CLAIMS today. Flagship vendors
+      (Guidewire PolicyCenter, Duck Creek Policy, Sapiens IDIT Policy) carry these on a separate Policy Administration
+      domain. INS-POLICY-ADMIN is queued. What is the interim ownership?
+    options:
+      - "(a) Keep on INS-CLAIMS until INS-POLICY-ADMIN ships, then move masters at promotion time."
+      - "(b) Move now to a stub INS-POLICY-ADMIN that carries only those 2 masters until the rest is loaded."
+      - "(c) Embed in claims as embedded_master (canonical owner is INS-POLICY-ADMIN, ship a local shell)."
+
+  - id: B2-FUNC-RACI
+    summary: "Functional ownership review for claims"
+    question: >
+      Current owner = Business Operations (id 34), contributor = Finance (id 4). Industry RACI for claims typically
+      reads owner = Claims Operations (not yet a function spine row), contributor = Finance + Risk and Compliance,
+      consumer = Customer Service. Decompose the function spine, or extend the existing rows?
+    options:
+      - "(a) Keep current (Business Operations + Finance)."
+      - "(b) Add Risk and Compliance as contributor, Customer Service as consumer."
+      - "(c) Decompose Business Operations to add Claims Operations sub-function, then re-model."
+
+  - id: B2-REG-SCOPE
+    summary: "Regulation set: 11 rows today, NAIC Model #900 missing, possible firm-level rows to prune"
+    question: >
+      Current 11 regulations include GDPR, AMLD6, Solvency II, IFRS 17, DORA, SFDR, eIDAS, IDD, GLBA, BSA, FATCA.
+      NAIC Unfair Claims Settlement Practices Model #900 (the U.S. state-by-state model regulation for claims handling)
+      is the single most important claims-specific U.S. regulation and is missing. SFDR, eIDAS, FATCA are firm-level,
+      not claims-handling-specific.
+    options:
+      - "(a) Add NAIC Model #900 and keep the 11 existing rows."
+      - "(b) Add NAIC Model #900 and prune SFDR, eIDAS, FATCA."
+
+  - id: B2-APQC-STRATEGY
+    summary: "PCF cross-industry has weak insurance-claims coverage"
+    question: >
+      PCF cross-industry only has direct hits for `Investigate fraudulent claims` (969) and weak proxies for
+      FNOL and GL postings. How should INS-CLAIMS handoffs be tagged?
+    options:
+      - "(a) Tag with closest cross-industry PCF (the 6 agent_curated rows the 2026-05-30 audit specified); accept low-confidence tags on the 4 GL-posting handoffs."
+      - "(b) Defer all tagging until APQC PCF Insurance is loaded into the processes table."
+      - "(c) Author custom-process rows in processes (insurance.process_fnol, insurance.adjudicate_coverage, insurance.set_reserve) and tag against those."
+
+  - id: B2-LFC-EXEMPT
+    summary: "Which masters are config-shape exempt from Rule #12 lifecycle authoring"
+    question: >
+      Per Rule #12 the agent must positively decide config-shape exemption for each master. The 2026-05-30 audit
+      proposed exemptions for policy_coverages, loss_incidents, claim_adjuster_assignments, salvage_recovery_records.
+      Confirm or revise; Rule #15 forbids auto-populating data_objects.notes.
+    options:
+      - "(a) Confirm all four as config-shape exempt."
+      - "(b) Workflow on loss_incidents (reported, investigated, closed) and claim_adjuster_assignments (assigned, accepted, reassigned, completed); keep the other two exempt."
+      - "(c) Other; user names the per-master shape."
+
+  - id: B2-B12-VERBS
+    summary: "B12 permission_verb_override decisions for the workflow-bearing masters"
+    question: >
+      Pre-author verb overrides so the workflow-gate permission names are clean. Per Rule #14 each lifecycle
+      state with requires_permission=true materializes one <module_code>:<verb>_<entity> permission.
+    options:
+      - "insurance_claims.closed: (a) close_insurance_claim or (b) close_claim. Vote (b) tentative."
+      - "claim_settlements.approved: (a) approve_claim_settlement or (b) approve_settlement. Vote (b) tentative."
+      - "claim_payments.issued: (a) issue_claim_payment or (b) issue_payment. Vote (b) tentative."
+      - "siu_cases.substantiated: (a) substantiate_siu_case or (b) substantiate_fraud_case. Surface both."
+
+  - id: B2-A4-COPY
+    summary: "catalog_tagline and catalog_description for INS-CLAIMS"
+    question: >
+      Per Rule #20, agent must surface proposed catalog UX copy and get explicit user approval before writing.
+      Draft from 2026-05-30 audit: tagline "Take a claim from first notice of loss through settlement, payment,
+      and recovery in one place, with built-in fraud screening and audit trails."; description = 2-paragraph
+      buyer voice covering FNOL intake, adjuster work-list, coverage and reserve management, settlement adjudication,
+      payment disbursement, recovery and subrogation. Approve, rewrite, or skip?
+    options:
+      - "(a) Approve the draft verbatim."
+      - "(b) Rewrite (user supplies final wording)."
+      - "(c) Skip; leave both columns empty until later."
+
+  - id: B2-B11-TUPLES
+    summary: "Explicit data_object_aliases tuples per master, audit needs review before bulk INSERT"
+    question: >
+      The 2026-05-30 audit named alias categories per master in prose (e.g. Claim, Loss, Notice of Loss for
+      insurance_claims). About 30 explicit (data_object_id, alias_name) tuples need user review before idempotent
+      INSERT. Approve agent to author the full tuple list and surface for one-pass approval, or batch per-master?
+    options:
+      - "(a) Agent authors the full ~30-tuple list, user approves in one pass."
+      - "(b) Per-master review: agent surfaces 3 to 5 tuples per master, user approves master-by-master."
+
+b3:
+  - id: B3-CLAIM-RESERVES
+    candidate: claim_reserves
+    rationale: >
+      Tracks case reserves by exposure with reserve change history. Core actuarial trigger. Reserve change history
+      is required for IFRS 17 disclosure and the NAIC P&C Annual Statement Schedule P aging triangles.
+    vendor_evidence:
+      - {vendor: Guidewire ClaimCenter, evidence: 1st_class}
+      - {vendor: Duck Creek Claims, evidence: 1st_class}
+      - {vendor: Sapiens IDIT, evidence: 1st_class}
+      - {vendor: Insurity Claims, evidence: 1st_class}
+      - {vendor: Snapsheet, evidence: 1st_class}
+    proposed_module: INS-CLAIMS-ADJUDICATION
+
+  - id: B3-CLAIM-EXPOSURES
+    candidate: claim_exposures
+    rationale: >
+      One claim spans multiple exposures (coverage line, vehicle, claimant); reserve and payment hang off the exposure,
+      not the claim. Universal in P&C vendor data models.
+    vendor_evidence:
+      - {vendor: Guidewire ClaimCenter, evidence: 1st_class}
+      - {vendor: Duck Creek Claims, evidence: 1st_class}
+      - {vendor: Sapiens IDIT, evidence: 1st_class}
+      - {vendor: Insurity Claims, evidence: 1st_class}
+    proposed_module: INS-CLAIMS-ADJUDICATION
+
+  - id: B3-CLAIM-ACTIVITIES
+    candidate: claim_activities
+    rationale: >
+      Adjuster work-list rows. Universal recorder pattern.
+    vendor_evidence:
+      - {vendor: Guidewire ClaimCenter, evidence: 1st_class}
+      - {vendor: Duck Creek Claims, evidence: 1st_class}
+      - {vendor: Sapiens IDIT, evidence: 1st_class}
+    proposed_module: INS-CLAIMS-ADJUDICATION
+
+  - id: B3-COVERAGE-DECISIONS
+    candidate: coverage_decisions
+    rationale: >
+      Typed acceptance/denial-of-coverage decisions distinct from settlements; gates the rest of the adjudication
+      workflow.
+    vendor_evidence:
+      - {vendor: Guidewire ClaimCenter, evidence: 1st_class}
+      - {vendor: Duck Creek Claims, evidence: 1st_class}
+    proposed_module: INS-CLAIMS-ADJUDICATION
+
+  - id: B3-DENIAL-LETTERS
+    candidate: denial_letters
+    rationale: >
+      Compliance-shaped. NAIC Unfair Claims Settlement Practices Model #900 and state DOI claim-handling regulations
+      require typed denial documentation with timing and content prescribed by regulation.
+    vendor_evidence:
+      - {vendor: Guidewire ClaimCenter, evidence: 1st_class}
+      - {vendor: Duck Creek Claims, evidence: 1st_class}
+    proposed_module: INS-CLAIMS-COMPLIANCE
+
+  - id: B3-CLAIM-NOTES
+    candidate: claim_notes
+    rationale: >
+      Universal recorder pattern. Adjuster free-text per claim. Discoverable in litigation.
+    vendor_evidence:
+      - {vendor: Guidewire ClaimCenter, evidence: 1st_class}
+      - {vendor: Duck Creek Claims, evidence: 1st_class}
+      - {vendor: Sapiens IDIT, evidence: 1st_class}
+    proposed_module: INS-CLAIMS-INTAKE
+
+  - id: B3-LOSS-ESTIMATES
+    candidate: loss_estimates
+    rationale: >
+      Physical-damage estimation distinct from settlement. Anchors auto + property lines.
+    vendor_evidence:
+      - {vendor: Guidewire ClaimCenter, evidence: 1st_class}
+      - {vendor: Mitchell, evidence: 1st_class}
+      - {vendor: CCC ONE, evidence: 1st_class}
+    proposed_module: INS-CLAIMS-ADJUDICATION
+
+  - id: B3-CLAIM-DOCUMENTS
+    candidate: claim_documents
+    rationale: >
+      Universal; claim file is document-heavy. FNOL package, police reports, medical records, photos.
+    vendor_evidence:
+      - {vendor: Guidewire ClaimCenter, evidence: 1st_class}
+      - {vendor: Duck Creek Claims, evidence: 1st_class}
+      - {vendor: Sapiens IDIT, evidence: 1st_class}
+      - {vendor: Snapsheet, evidence: 1st_class}
+    proposed_module: INS-CLAIMS-INTAKE
+
+  - id: B3-CLAIM-PARTIES
+    candidate: claim_parties
+    rationale: >
+      Claimants, witnesses, third-parties, attorneys, providers. Universal.
+    vendor_evidence:
+      - {vendor: Guidewire ClaimCenter, evidence: 1st_class}
+      - {vendor: Duck Creek Claims, evidence: 1st_class}
+      - {vendor: Sapiens IDIT, evidence: 1st_class}
+    proposed_module: INS-CLAIMS-INTAKE
+
+  - id: B3-REGULATORY-CLAIM-REPORTS
+    candidate: regulatory_claim_reports
+    rationale: >
+      Compliance-shaped. NAIC P&C Annual Statement, state DOI claim-handling reports, OFAC sanctions screening.
+    vendor_evidence:
+      - {vendor: Guidewire ClaimCenter, evidence: 1st_class}
+      - {vendor: Duck Creek Claims, evidence: 1st_class}
+      - {vendor: Shift Technology, evidence: secondary}
+    proposed_module: INS-CLAIMS-COMPLIANCE
+
+  - id: B3-LITIGATION-FILES
+    candidate: litigation_files
+    rationale: >
+      When a claim escalates to lawsuit. Tied to defense panel and reserves.
+    vendor_evidence:
+      - {vendor: Guidewire ClaimCenter, evidence: 1st_class}
+      - {vendor: Duck Creek Claims, evidence: 1st_class}
+    proposed_module: INS-CLAIMS-ADJUDICATION
+
+  - id: B3-RECOVERY-DISBURSEMENTS
+    candidate: recovery_disbursements
+    rationale: >
+      Recovery proceeds disbursed back to reinsurers, salvage buyers, third-party recoverors. Distinct from
+      claim_payments (which fan to claimant) and from salvage_recovery_records (which is the recovery ledger).
+    vendor_evidence:
+      - {vendor: Guidewire ClaimCenter, evidence: 1st_class}
+      - {vendor: Sapiens IDIT, evidence: 1st_class}
+    proposed_module: INS-CLAIMS-PAYMENTS

@@ -1,0 +1,373 @@
+schema_version: 2
+domain: THREAT-INTEL
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-T14
+    summary: Replace British "operationalisation" with American "operationalization" in domains.id=14.description.
+    finding: |
+      domains.id=14.description reads "Collection, curation, and operationalisation of indicators
+      and adversary intelligence." The token "operationalisation" violates CLAUDE.md American-English
+      rule. Carried from prior audit's Notes; not in any pre-specified PATCH scope until this audit.
+      Single-row PATCH on domains.id=14.description.
+    action: |
+      PATCH /domains?id=eq.14 setting description to
+      "Collection, curation, and operationalization of indicators and adversary intelligence."
+      Single CLI call. No loader required. Requires user approval per the leadership-tier
+      technical-fix license's "user-named single-row PATCH with pre-specified text" pattern.
+    affected_entities: [domains.id=14]
+    extra_replacement_text: "operationalisation -> operationalization"
+
+b1b:
+  - id: B1B-T1
+    summary: Author 2 domain_modules rows (CURATION + OPERATIONALIZATION) to clear M1 hard fail.
+    finding: |
+      /domain_modules?domain_id=eq.14 returns zero rows. Rule #14 mandates >=1 module_kind='full'
+      row per domains row; M2 will require >=2 once A2 lands >=3 capabilities. Proposed split per
+      B2-T1 recommendation: THREAT-INTEL-CURATION (analytic substrate: indicators, actors,
+      campaigns, malware, techniques, reports, requirements) + THREAT-INTEL-OPERATIONALIZATION
+      (sightings, blocklists, feeds, subscriptions, consumers). Mirrors Recorded Future,
+      ThreatConnect, Mandiant Advantage product navigation.
+    blocked_by:
+      - {type: user_decision, ref: B2-T1}
+    affected_modules: []
+    extra_proposed_modules:
+      - THREAT-INTEL-CURATION
+      - THREAT-INTEL-OPERATIONALIZATION
+    extra_loader_group: phase_a_threat_intel
+
+  - id: B1B-T2
+    summary: Author 7-9 capabilities + capability_domains junctions to clear A2 hard fail.
+    finding: |
+      /capability_domains?domain_id=eq.14 returns zero rows. Vendor surface supports
+      TI-INDICATOR-LIFECYCLE, TI-ADVERSARY-TRACKING, TI-CAMPAIGN-ANALYTICS, TI-FEED-MGMT,
+      TI-FINISHED-INTELLIGENCE, TI-INTEL-REQUIREMENTS, TI-ENRICHMENT, TI-OPERATIONALIZATION,
+      TI-COLLABORATION-SHARING. TI-ENRICHMENT and TI-COLLABORATION-SHARING are cross-cutting
+      candidates touching SOAR, DLP, VULN-MGMT, DSPM.
+    blocked_by:
+      - {type: user_decision, ref: B2-T4}
+    affected_entities:
+      - TI-INDICATOR-LIFECYCLE
+      - TI-ADVERSARY-TRACKING
+      - TI-CAMPAIGN-ANALYTICS
+      - TI-FEED-MGMT
+      - TI-FINISHED-INTELLIGENCE
+      - TI-INTEL-REQUIREMENTS
+      - TI-ENRICHMENT
+      - TI-OPERATIONALIZATION
+      - TI-COLLABORATION-SHARING
+    extra_loader_group: phase_a_threat_intel
+
+  - id: B1B-T3
+    summary: PATCH catalog_tagline and catalog_description on domains.id=14 to clear A4 hard fail.
+    finding: |
+      domains.id=14.catalog_tagline and catalog_description are both empty. Per Rule #20 these
+      are buyer-shaped fields drafted in buyer voice and surfaced for user approval before write.
+      Draft tagline: "Aggregate threat indicators and adversary intelligence from open and
+      commercial feeds, then push curated signals into your detection stack." Draft description
+      covers indicator pulling / normalization / scoring / actor + campaign + malware tracking
+      with MITRE ATT&CK mapping / finished-intelligence authoring (para 1); SIEM / EDR / firewall
+      / DNS-sinkhole push, sightings, PIR management, TLP-aware community sharing (para 2).
+    blocked_by:
+      - {type: user_decision, ref: B2-T2}
+    affected_entities: [domains.id=14.catalog_tagline, domains.id=14.catalog_description]
+    extra_voice_rule: "buyer voice (workflow + value), NOT analyst voice"
+
+  - id: B1B-T5
+    summary: Load 2-3 contributor / consumer business_function_domains rows to clear C1 soft fail.
+    finding: |
+      /business_function_domains?domain_id=eq.14 returns 1 owner (Security Operations Center).
+      Zero contributors / consumers. TI is consumed by SOC analysts (already covered), vulnerability
+      managers, incident responders, threat hunters, fraud teams (FSI orgs), executive leadership.
+      Proposed contributor / consumer rows: Information Security (contributor for indicator-blocking
+      ops), Risk and Compliance (consumer for finished-intelligence and risk-register feed).
+    blocked_by:
+      - {type: user_decision, ref: B2-T1, reason: "agent-DEFER carve-out for new business_function_domains contributors/consumers; needs user approval per row"}
+    affected_entities:
+      - Information Security (contributor)
+      - Risk and Compliance (consumer)
+
+  - id: B1B-T6
+    summary: Author 7 master data_objects + DMDOs (Rule #9 naming arbitration) to clear the B-band foundation.
+    finding: |
+      Despite leadership-tier B1 exemption, the vendor surface unambiguously identifies 5-7
+      entities every flagship masters. Proposed masters: threat_indicators (pattern flags all
+      false), threat_actors, threat_campaigns, malware_families, attack_techniques (config-shape
+      reference master; tied to B2-T5 architecture choice), intelligence_reports (has_submit_lock
+      true at published), intel_requirements. Apply Rule #9 naming arbitration: bare "indicators"
+      and "campaigns" collide with existing patterns -> use prefixed forms threat_indicators /
+      threat_campaigns.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-T1}
+      - {type: prerequisite_entity, ref: B1B-T2}
+      - {type: user_decision, ref: B2-T1}
+      - {type: user_decision, ref: B2-T3}
+      - {type: user_decision, ref: B2-T5}
+    affected_masters:
+      - {data_object_id: null, name: threat_indicators, target_module_id: null, workflow: "ingested -> deduplicated -> enriched -> scored -> active -> (expired|retracted)"}
+      - {data_object_id: null, name: threat_actors, target_module_id: null, workflow: "config-shape candidate (B2-T3); else draft -> peer_reviewed -> published -> archived"}
+      - {data_object_id: null, name: threat_campaigns, target_module_id: null, workflow: "config-shape candidate (B2-T3)"}
+      - {data_object_id: null, name: malware_families, target_module_id: null, workflow: "config-shape candidate (B2-T3)"}
+      - {data_object_id: null, name: attack_techniques, target_module_id: null, workflow: "config-shape; tied to B2-T5"}
+      - {data_object_id: null, name: intelligence_reports, target_module_id: null, workflow: "draft -> in_review -> approved -> published -> archived (submit_lock at published)"}
+      - {data_object_id: null, name: intel_requirements, target_module_id: null, workflow: "proposed -> approved -> active -> retired (single-approver)"}
+
+  - id: B1B-T7
+    summary: Author data_object_lifecycle_states for workflow-bearing masters once T6 lands.
+    finding: |
+      Zero data_object_lifecycle_states. Expected once T6 lands: threat_indicators
+      (ingested -> deduplicated -> enriched -> scored -> active -> expired|retracted) with gates
+      at active and retracted; intelligence_reports (draft -> in_review -> approved -> published
+      -> archived) with submit_lock at published; intel_requirements (proposed -> approved
+      -> active -> retired) with single-approver. threat_actors, threat_campaigns,
+      malware_families, attack_techniques are config-shape candidates (decided by B2-T3).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-T6}
+      - {type: user_decision, ref: B2-T3}
+
+  - id: B1B-T8
+    summary: Author 9-12 intra-domain data_object_relationships once T6 lands (B6).
+    finding: |
+      Zero data_object_relationships. Once T6 lands, expected edges: threat_indicators
+      attributed_to threat_actors; threat_indicators part_of threat_campaigns; threat_actors uses
+      attack_techniques; threat_actors uses malware_families; threat_campaigns staged_by
+      threat_actors; malware_families implements attack_techniques; intelligence_reports analyzes
+      threat_actors; intelligence_reports cites threat_indicators; intel_requirements scopes
+      threat_actors.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-T6}
+
+  - id: B1B-T9
+    summary: Author 4-5 users-edge data_object_relationships once T6 lands (B7, Rule #10).
+    finding: |
+      Zero users-edge rows. Once T6 lands, expected: users authors intelligence_reports; users
+      reviews intelligence_reports; users approves intel_requirements; users curates
+      threat_indicators; users attributes threat_actors. Per Rule #10 the users row is
+      kind='platform_builtin'.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-T6}
+
+  - id: B1B-T10
+    summary: Author 12-18 data_object_aliases once T6 lands (B11).
+    finding: |
+      Zero data_object_aliases. Heavy vendor terminology drift: threat_indicators <-> IOCs
+      <-> observables (STIX 2.x) <-> sightings (when matched); threat_actors <-> adversaries
+      <-> intrusion sets (STIX) <-> APTs; threat_campaigns <-> operations <-> intrusion campaigns;
+      attack_techniques <-> TTPs <-> MITRE ATT&CK techniques; intelligence_reports <-> finished
+      intelligence <-> intel briefings <-> STIX reports.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-T6}
+
+  - id: B1B-T11
+    summary: Author per-module system skills + tools + skill_tools once modules land (F2/F3/F4/F7).
+    finding: |
+      Zero skills / tools / skill_tools. Per Rule #17 each module gets exactly one
+      skill_type='system' skill with >=1 skill_tools row. Once 2 modules exist:
+      threat_intel_curation_agent (CURATION) with query_threat_indicators, query_threat_actors,
+      create_intelligence_report, update_intelligence_report_status, enrich_indicator
+      (side_effect), notify_person (analyst peer-review). threat_intel_operationalization_agent
+      (OPERATIONALIZATION) with query_indicator_sightings, query_indicator_blocklists,
+      push_indicator_to_blocklist (side_effect to SIEM/firewall/EDR),
+      receive_sighting_telemetry (inbound), notify_team (broadcast on high-confidence match).
+      F4 invariant: query/mutate set data_object_id; side_effect/compute NULL; inbound optional.
+      F7: default to notify_person / notify_team over channel primitives.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-T1}
+      - {type: prerequisite_entity, ref: B1B-T6}
+
+  - id: B1B-T12
+    summary: Author 3-4 roles + role_modules + role_permissions once modules land (E1/E2/E3/E4).
+    finding: |
+      Zero roles. Once 2 modules exist E1 mandates >=3 distinct roles. Expected:
+      INFORMATION-SECURITY-THREAT-INTEL-ANALYST (primary CURATION, secondary OPERATIONALIZATION);
+      INFORMATION-SECURITY-THREAT-HUNTER (primary OPERATIONALIZATION, secondary CURATION);
+      INFORMATION-SECURITY-CTI-MANAGER (manager-tier cross-functional, primary on both); optionally
+      SECURITY-OPERATIONS-INCIDENT-RESPONDER as cross-domain consumer with
+      interaction_level='secondary' on OPERATIONALIZATION.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-T1}
+
+  - id: B1B-T13
+    summary: Load 5-6 domain_aliases rows for catalog discoverability (Rule #20).
+    finding: |
+      Zero domain_aliases. Per Rule #20 aliases feed both catalog search and per-domain skill
+      trigger phrases. Expected: CTI, TIP, threat intel, cyber threat intelligence, IOC
+      management, indicator management. No dependencies on T1/T6 but agent-DEFER carve-out
+      for new domain_aliases requires explicit user approval per row.
+    blocked_by:
+      - {type: user_decision, ref: B2-T1, reason: "agent-DEFER carve-out for new domain_aliases rows; needs user approval per row"}
+    affected_entities: [CTI, TIP, threat intel, cyber threat intelligence, IOC management, indicator management]
+
+b2:
+  - id: B2-T1
+    summary: Module split topology gating B1-T1 and the whole downstream cascade.
+    question: Which module split for THREAT-INTEL?
+    options:
+      - "(a) CURATION + OPERATIONALIZATION (recommended; mirrors Recorded Future + ThreatConnect + Mandiant product nav)"
+      - "(b) Four lifecycle-stage modules (collection, processing, analysis, dissemination; analyst-textbook canonical)"
+      - "(c) Single THREAT-INTEL-PLATFORM + a THREAT-INTEL-LITE starter (Rule #19)"
+    why: |
+      Modularization design choice with downstream effects on capability-to-module attribution,
+      master attribution, role bundles, Phase-S shape. Gates B1-T1 + B1-T6 + B1-T11 + B1-T12.
+
+  - id: B2-T2
+    summary: Catalog UX wording draft approval (Rule #20) gating B1-T3.
+    question: Approve drafts for catalog_tagline + catalog_description on domains.id=14?
+    options:
+      - "(a) Approve drafts as-is"
+      - "(b) Edit and approve"
+      - "(c) Defer A4 to separate marketing-voice review pass"
+    why: |
+      Per Rule #20 the agent does NOT auto-write catalog UX fields. Drafts are in audit body
+      under Bucket 2 B2-T2. Marketing voice and buyer-vs-analyst calibration are user-owned.
+
+  - id: B2-T3
+    summary: Lifecycle-state exemptions for config-shape candidate masters.
+    question: |
+      Workflow-bearing vs config-shape for threat_actors, threat_campaigns, malware_families,
+      attack_techniques?
+    options:
+      - "(a) Exempt all four as config-shape"
+      - "(b) Workflow on threat_actors only (draft -> peer_reviewed -> published -> archived); config-shape the rest"
+      - "(c) Workflow on threat_actors + intelligence_reports (already in B1-T7); config-shape the rest"
+    why: |
+      Workflow-bearing vs config-shape is a substantive call. Anomali workflow-shapes actors;
+      Recorded Future registry-shapes them. Per Rule #15 the exemption decision lives in this
+      audit, not in data_objects.notes. Gates B1-T7 shape for those four masters.
+
+  - id: B2-T4
+    summary: Cross-cutting capability promotion for TI-ENRICHMENT / TI-COLLABORATION-SHARING.
+    question: Promote TI-ENRICHMENT and / or TI-COLLABORATION-SHARING to domain-neutral capabilities?
+    options:
+      - "(a) Author both as domain-prefixed (lowest authoring cost)"
+      - "(b) Promote TI-ENRICHMENT to domain-neutral THREAT-ENRICHMENT linking THREAT-INTEL + SOAR + DLP + VULN-MGMT; keep TI-COLLABORATION-SHARING domain-prefixed"
+      - "(c) Promote both"
+    why: |
+      Recorded Future, VirusTotal Premium, Anomali Lens, Mandiant Advantage all sell enrichment
+      APIs hit from SOAR / DLP / VULN-MGMT contexts. ISAC sharing is a workflow surface, less
+      clearly a vendor market. Decision shapes Phase-A loader and how many capability_domains
+      rows ship in this load. Gates B1-T2.
+
+  - id: B2-T5
+    summary: MITRE-ATTACK reference master architecture for attack_techniques.
+    question: Where does the attack_techniques master live in the catalog?
+    options:
+      - "(a) THREAT-INTEL masters attack_techniques; cross-domain consumers via consumer + embedded_master"
+      - "(b) Promote a SECURITY-FRAMEWORKS (or MITRE-FRAMEWORKS) master domain (queues a missing-domain candidate); THREAT-INTEL consumes"
+      - "(c) attack_techniques becomes kind='platform_builtin' (heaviest precedent; extends seed-list semantics)"
+    why: |
+      Cross-domain master architecture with deploy-time effects on master demotion behavior,
+      embedded_master shells, and the deployer contract. Gates B1-T6 for attack_techniques
+      specifically.
+
+b3:
+  - id: B3-T1
+    candidate: indicator_sightings
+    rationale: |
+      First-class telemetry-hit record (one row per match of a known indicator against tenant
+      telemetry). Recorded Future Sightings, ThreatConnect Observations, Anomali Sightings,
+      Mandiant Indicator Matches all model this; vendor-knowledge-only basis, no Phase 0 vetting.
+      Strongest-signal candidate from prior pass.
+    vendor_evidence: [Recorded Future, ThreatConnect, Anomali, Mandiant Advantage]
+    proposed_module: THREAT-INTEL-OPERATIONALIZATION
+
+  - id: B3-T2
+    candidate: tip_feeds
+    rationale: |
+      Config-shape feed registry (one row per commercial feed, open feed, ISAC, MISP community).
+      Anomali Feeds, ThreatConnect Sources, Recorded Future Source Catalog. Strongest-signal
+      candidate from prior pass.
+    vendor_evidence: [Anomali, ThreatConnect, Recorded Future]
+    proposed_module: THREAT-INTEL-OPERATIONALIZATION
+
+  - id: B3-T3
+    candidate: feed_subscriptions
+    rationale: |
+      Per-tenant subscription state per feed (active, paused, throttled, errored). Distinct from
+      the feed master. Strongest-signal candidate from prior pass.
+    vendor_evidence: [Anomali, ThreatConnect, Recorded Future]
+    proposed_module: THREAT-INTEL-OPERATIONALIZATION
+
+  - id: B3-T4
+    candidate: indicator_blocklists
+    rationale: |
+      Push-side artifact (indicators currently provisioned to a downstream control: SIEM allow/deny,
+      firewall blocklist, EDR custom IOC list). Tracks expiration, false-positive retraction, push
+      targets. Strongest-signal candidate from prior pass.
+    vendor_evidence: [ThreatConnect, Anomali, Palo Alto Cortex XSOAR]
+    proposed_module: THREAT-INTEL-OPERATIONALIZATION
+
+  - id: B3-T5
+    candidate: enrichment_records
+    rationale: |
+      Per-indicator enrichment outputs (passive DNS, WHOIS, geolocation, sandbox detonation). One
+      per (indicator x enrichment source). ThreatConnect Enrichments, Recorded Future Intelligence
+      Cards. Strongest-signal candidate from prior pass.
+    vendor_evidence: [ThreatConnect, Recorded Future, Mandiant Advantage]
+    proposed_module: THREAT-INTEL-CURATION
+
+  - id: B3-T6
+    candidate: intel_consumers
+    rationale: |
+      First-class downstream consumer record (SOC team, IR team, fraud team, executive briefing
+      audience). Drives dissemination workflows and report routing. Softer signal in prior pass.
+    vendor_evidence: [ThreatConnect, Mandiant Advantage]
+    proposed_module: THREAT-INTEL-OPERATIONALIZATION
+
+  - id: B3-T7
+    candidate: intel_collection_plans
+    rationale: |
+      Collection plans tied to PIRs: which sources to query, what coverage gaps to address.
+      Group-IB and Mandiant Advantage model this explicitly; pure-plays carry it implicitly.
+      Softer signal.
+    vendor_evidence: [Group-IB, Mandiant Advantage]
+    proposed_module: THREAT-INTEL-CURATION
+
+  - id: B3-T8
+    candidate: tlp_classifications
+    rationale: |
+      Traffic-Light-Protocol classification registry (TLP:RED / AMBER / GREEN / CLEAR). Config-shape
+      reference master; drives sharing-controls behavior. Softer signal in prior pass.
+    vendor_evidence: [Anomali, ThreatConnect, Mandiant Advantage]
+    proposed_module: THREAT-INTEL-CURATION
+
+  - id: B3-T9
+    candidate: modularization_2_module_split
+    rationale: |
+      2-module split (THREAT-INTEL-CURATION + THREAT-INTEL-OPERATIONALIZATION) is the recommended
+      baseline per B2-T1, mirroring Recorded Future + ThreatConnect + Mandiant product nav.
+      With 7-9 capabilities (B1-T2) Rule #14 2-module floor is met with headroom. Lifecycle-stage
+      4-module split and single-module + starter are alternatives.
+    vendor_evidence: [Recorded Future, ThreatConnect, Mandiant Advantage]
+    proposed_module: null
+
+  - id: B3-T10
+    candidate: regulation_PCI-DSS_partial
+    rationale: |
+      PCI-DSS Req 11.4 (intrusion detection / IPS) and Req 12.10 (incident response) consume
+      threat-intel feeds. PCI is not the primary buyer of TI but TI is the substrate satisfying
+      these reqs. PCI-DSS row almost certainly already exists in regulations.
+    vendor_evidence: [PCI-DSS Council]
+    proposed_module: null
+
+  - id: B3-T11
+    candidate: regulation_GDPR_partial
+    rationale: |
+      GDPR Article 32 security-of-processing requires appropriate technical measures; threat-intel-
+      based blocking qualifies. CTI processes external-actor data (IPs, domains), mostly not personal
+      data under GDPR; adversary attribution touches on it. GDPR row almost certainly already
+      exists in regulations.
+    vendor_evidence: [EU Commission]
+    proposed_module: null
+
+  - id: B3-T12
+    candidate: regulation_CISA-AIS_direct
+    rationale: |
+      Cybersecurity Information Sharing Act (2015) and CISA Automated Indicator Sharing program
+      govern US public / private CTI sharing. TI programs at US critical-infra orgs operate under
+      these rules; sector ISACs (FS-ISAC, H-ISAC, E-ISAC) implement at sector level. CISA-AIS
+      likely needs a new regulations row before linking.
+    vendor_evidence: [CISA]
+    proposed_module: null

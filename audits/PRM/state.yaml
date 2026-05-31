@@ -1,0 +1,276 @@
+schema_version: 2
+domain: PRM
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+# Structural Validate b1 audit ran 2026-05-31. M-band fails catastrophically
+# (zero modules on a non-leadership-tier sub-domain of CRM), which gates B / E / F.
+# All 12 prior Bucket 1 items are blocked on either user-approved wording
+# (Rule #20 / Rule #8) or on the four Bucket 2 carve-out decisions. b1a is empty.
+# See history.md sections 2026-05-30, 2026-05-31 Continuation, 2026-05-31 Audit.
+
+b1a: []
+
+b1b:
+  - id: B1B-A1
+    summary: "PATCH domains.id=96 catalog_tagline and catalog_description with user-approved buyer-voice wording."
+    finding: "A4 FAIL. /domains?id=eq.96 returns catalog_tagline='' and catalog_description=''. Rule #20 forbids writing these fields without user-approved wording per row; the audit drafted buyer-voice candidates but they are surface-for-user, not auto-load."
+    action: "Surface the two drafts from history.md 2026-05-30 B1-A1 section to the user, capture approved or rewritten text, then PATCH /domains?id=eq.96 with both fields. Never auto-write."
+    blocked_by:
+      - {type: user_decision, ref: B1-A1-wording, reason: "Rule #20 requires user-approved wording per row"}
+    affected_entities:
+      - domains
+    extra_band: A4
+
+  - id: B1B-A2
+    summary: "PATCH domains.id=96 business_logic with user-approved wording covering deal-protection conflict resolution and partner-scorecard composite scoring."
+    finding: "A1 FAIL on Rule #8. crud_percentage=92 (< 95 threshold) and business_logic=''. The non-JsonLogic-expressible slice is real: deal-protection tie-break logic combining first-to-register / partner tier / CAM judgment, partner-scorecard composite weighting of revenue / growth / MDF utilization / certification compliance against tier-specific thresholds."
+    action: "Surface the draft from history.md 2026-05-30 B1-A2 section to the user, capture approved or rewritten text, then PATCH /domains?id=eq.96 with the business_logic value. Per Rule #15, no implicit annotation; the wording is the user's call."
+    blocked_by:
+      - {type: user_decision, ref: B1-A2-wording, reason: "Rule #8 description-class field; user-approved wording per Rule #15 discipline"}
+    affected_entities:
+      - domains
+    extra_band: A1
+
+  - id: B1B-A3
+    summary: "Author 7 to 11 capabilities + capability_domains rows for PRM, shape conditional on Bucket 2 carve-out decisions."
+    finding: "A2 FAIL. /capability_domains?domain_id=eq.96 returns []. The realistic capability set is 7 to 11 depending on whether TCMA / ECOSYSTEM-LED-GROWTH / partner-training stay in PRM or relocate. Classic-PRM core (assuming all three carve-outs): PARTNER-ONBOARDING, PARTNER-PROGRAM-MGMT, PARTNER-PORTAL-RBAC, DEAL-REGISTRATION, DEAL-PROTECTION, MDF-MGMT, CO-OP-FUND-MGMT, PARTNER-TRAINING-ENROLLMENT (or LMS-consumed), PARTNER-CERTIFICATION-TRACKING, PARTNER-SCORECARDING, PARTNER-QBR, PARTNER-ANALYTICS."
+    action: "After user resolves B2-M1 + B2-S1 + B2-S2 + B2-T1: INSERT 7 to 11 capabilities rows with PRM-prefixed codes plus matching capability_domains rows on domain_id=96."
+    blocked_by:
+      - {type: user_decision, ref: B2-M1}
+      - {type: user_decision, ref: B2-S1}
+      - {type: user_decision, ref: B2-S2}
+      - {type: user_decision, ref: B2-T1}
+    affected_entities:
+      - capabilities
+      - capability_domains
+    extra_band: A2
+
+  - id: B1B-A4
+    summary: "Author 6 to 12 solutions + solution_domains rows for PRM, shape conditional on Bucket 2 carve-outs."
+    finding: "A3 FAIL. /solution_domains?domain_id=eq.96 returns []. Realistic flagship set: classic-PRM primaries Impartner PRM, Zift Solutions, ZINFI Unified Channel Management, Salesforce Partner Cloud, Oracle Partner Relationship Management, Channeltivity; suite-aligned secondaries HubSpot Partner Hub, Allbound, Magentrix Partner Portal, PartnerStack (overlap with affiliate). If TCMA / ECOSYSTEM-LED-GROWTH / AFFILIATE-MGMT promote, the TCMA pure-plays (Sproutloud, Mindmatrix, Structured Web), ecosystem platforms (Crossbeam, Reveal, PartnerTap), and affiliate networks (Impact.com, Everflow, Refersion, CJ Affiliate, Awin, Rakuten Advertising) relocate to those domains, not PRM."
+    action: "After user resolves B2-S1 + B2-S2 + B3 candidate #3 (AFFILIATE-MGMT promotion): de-duplicate against existing solutions.solution_name per Rule #4, INSERT new solutions rows where missing, INSERT solution_domains rows with coverage_level on domain_id=96."
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+      - {type: user_decision, ref: B2-S2}
+      - {type: depends_on, ref: B3-1, reason: "TCMA promotion relocates Sproutloud / Mindmatrix"}
+      - {type: depends_on, ref: B3-2, reason: "ECOSYSTEM-LED-GROWTH promotion relocates Crossbeam / Reveal / PartnerTap"}
+      - {type: depends_on, ref: B3-3, reason: "AFFILIATE-MGMT promotion relocates Impact.com and re-classifies PartnerStack"}
+    affected_entities:
+      - solutions
+      - solution_domains
+    extra_band: A3
+
+  - id: B1B-M1
+    summary: "Author 4 to 7 domain_modules rows for PRM, shape conditional on Bucket 2 carve-out decisions. Load-bearing prerequisite for everything else."
+    finding: "M1 FAIL. /domain_modules?domain_id=eq.96 returns []. PRM is a sub-domain of CRM (parent_domain_id 69), not leadership-tier, so Rule #14 requires at least 1 full module. Modularization hypothesis depends on B2-M1 shape choice: 4 classic-PRM modules (PRM-PARTNER-PORTAL, PRM-DEAL-REGISTRATION, PRM-MDF-COOP, PRM-PARTNER-ANALYTICS), or 5 with PRM-PARTNER-TRAINING if B2-T1 = PRM-owned, or 6 with PRM-PARTNER-MARKETING if TCMA stays per B2-S1, or 7 with PRM-PARTNER-CO-SELL if ecosystem-led stays per B2-S2. Each module_kind='full'. Blocks B-band, E-band, F-band entirely; also gates the B10b source-side fix on handoffs 211 / 212 (B1B-H1 / B1B-H2)."
+    action: "After user resolves B2-M1 + B2-T1 + B2-S1 + B2-S2: INSERT 4 to 7 domain_modules rows with module_kind='full'. Each row needs catalog_tagline + catalog_description per Rule #20 (also user-approved wording). Bundle with capabilities (B1B-A3) and domain_module_capabilities rows; then unblock B1B-V1 through V4 plus B1B-H1 / H2."
+    blocked_by:
+      - {type: user_decision, ref: B2-M1}
+      - {type: user_decision, ref: B2-T1}
+      - {type: user_decision, ref: B2-S1}
+      - {type: user_decision, ref: B2-S2}
+    affected_entities:
+      - domain_modules
+      - domain_module_capabilities
+    extra_band: M1
+
+  - id: B1B-V1
+    summary: "Author channel_partners master (data_objects + DMDO master + required on PRM-PARTNER-PORTAL or equivalent + lifecycle states + aliases + relationships)."
+    finding: "B1 FAIL. PRM masters zero data_objects. channel_partners is the headline master across 6 of 6 flagship PRM vendors (Impartner, Zift, ZINFI, Salesforce Partner Cloud, Oracle PRM, Channeltivity). Apply Rule #9 naming arbitration (channel_partners vs partners): prefixed channel_partners is the safer choice because partners would collide with any future generic master."
+    action: "After B1B-M1 lands: INSERT data_objects row (channel_partners, plural_label='Channel Partners', singular_label='Channel Partner'), DMDO row (role=master, necessity=required) on the PRM-PARTNER-PORTAL module (or whichever module from B2-M1 owns partner orgs), lifecycle states (recruited, in_onboarding, active, suspended, terminated), data_object_aliases (resellers, distributors, alliance_partners, channel_partners_b2b), data_object_relationships (channel_partners has_many partner_users, channel_partners enrolled_in partner_programs, plus a users edge per Rule #10)."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+    affected_entities:
+      - data_objects
+      - domain_module_data_objects
+      - data_object_lifecycle_states
+      - data_object_aliases
+      - data_object_relationships
+    vendor_evidence:
+      - {vendor: Impartner PRM, evidence: 1st_class}
+      - {vendor: Zift Solutions, evidence: 1st_class}
+      - {vendor: ZINFI Unified Channel Management, evidence: 1st_class}
+      - {vendor: Salesforce Partner Cloud, evidence: 1st_class}
+      - {vendor: Oracle Partner Relationship Management, evidence: 1st_class}
+      - {vendor: Channeltivity, evidence: 1st_class}
+    extra_band: B1
+
+  - id: B1B-V2
+    summary: "Author deal_registrations master (data_objects + DMDO + lifecycle + relationships + workflow-gate permissions)."
+    finding: "B1 FAIL. deal_registrations is the operationally-load-bearing workflow across 6 of 6 flagship PRM vendors. Anchors the PRM-DEAL-REGISTRATION module."
+    action: "After B1B-M1 lands: INSERT data_objects row (deal_registrations), DMDO master + required on PRM-DEAL-REGISTRATION, lifecycle states (submitted, in_review, approved, rejected, expired, converted), trigger_events (deal_registration.submitted, deal_registration.approved, deal_registration.rejected, deal_registration.expired), workflow-gate permissions (submit_deal_registration, approve_deal_registration, reject_deal_registration), data_object_relationships (deal_registrations submitted_by channel_partners, deal_registrations spawns crm_opportunities as cross-domain edge to CRM)."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+    affected_entities:
+      - data_objects
+      - domain_module_data_objects
+      - data_object_lifecycle_states
+      - trigger_events
+      - permissions
+      - data_object_relationships
+    vendor_evidence:
+      - {vendor: Impartner PRM, evidence: 1st_class}
+      - {vendor: Zift Solutions, evidence: 1st_class}
+      - {vendor: ZINFI Unified Channel Management, evidence: 1st_class}
+      - {vendor: Salesforce Partner Cloud, evidence: 1st_class}
+      - {vendor: Oracle Partner Relationship Management, evidence: 1st_class}
+      - {vendor: Channeltivity, evidence: 1st_class}
+    extra_band: B1
+
+  - id: B1B-V3
+    summary: "Author mdf_requests + mdf_claims masters (paired financial-control surface)."
+    finding: "B1 FAIL. The MDF (Market Development Fund) request-and-claim pair is in 5 of 6 flagship PRM vendors. Two related masters; mdf_claims has FK to mdf_requests."
+    action: "After B1B-M1 lands: INSERT both data_objects rows, DMDO master + required on PRM-MDF-COOP module, lifecycle states for each (mdf_requests: submitted, in_review, approved, partial_approval, rejected, expired; mdf_claims: drafted, submitted, in_review, approved, paid, rejected), trigger_events (mdf_request.submitted / .approved / .rejected, mdf_claim.submitted / .approved / .paid), workflow-gate permissions (approve_mdf_request, approve_mdf_claim, disburse_mdf_payment), data_object_relationships (mdf_requests submitted_by channel_partners, mdf_claims settles_against mdf_requests, mdf_claims paid_to channel_partners)."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+    affected_entities:
+      - data_objects
+      - domain_module_data_objects
+      - data_object_lifecycle_states
+      - trigger_events
+      - permissions
+      - data_object_relationships
+    vendor_evidence:
+      - {vendor: Impartner PRM, evidence: 1st_class}
+      - {vendor: Zift Solutions, evidence: 1st_class}
+      - {vendor: ZINFI Unified Channel Management, evidence: 1st_class}
+      - {vendor: Salesforce Partner Cloud, evidence: 1st_class}
+      - {vendor: Oracle Partner Relationship Management, evidence: 1st_class}
+    extra_band: B1
+
+  - id: B1B-V4
+    summary: "Author partner_scorecards master (analytical anchor for PRM-PARTNER-ANALYTICS)."
+    finding: "B1 FAIL. partner_scorecards is the analytical anchor across 4 of 6 flagship PRM vendors (Impartner, Zift, ZINFI, Salesforce Partner Cloud surface scorecards prominently; Oracle PRM and Channeltivity bundle into broader analytics). Master + required on PRM-PARTNER-ANALYTICS module."
+    action: "After B1B-M1 lands: INSERT data_objects row (partner_scorecards), DMDO master + required on PRM-PARTNER-ANALYTICS, lifecycle states (draft, computed, published, archived), trigger_events (partner_scorecard.published, partner_scorecard.archived), data_object_relationships (partner_scorecards rolls_up_for channel_partners, partner_scorecards covers_period partner_scorecard_periods if periods is also modeled)."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+    affected_entities:
+      - data_objects
+      - domain_module_data_objects
+      - data_object_lifecycle_states
+      - trigger_events
+      - data_object_relationships
+    vendor_evidence:
+      - {vendor: Impartner PRM, evidence: 1st_class}
+      - {vendor: Zift Solutions, evidence: 1st_class}
+      - {vendor: ZINFI Unified Channel Management, evidence: 1st_class}
+      - {vendor: Salesforce Partner Cloud, evidence: 1st_class}
+    extra_band: B1
+
+  - id: B1B-H1
+    summary: "PATCH handoffs.id=211 source_domain_module_id to the PRM module that owns co-sell signal authoring."
+    finding: "B10b source-side FAIL on handoff 211 (co_sell.opportunity_created from PRM to CRM-PIPELINE-MGT, target_domain_module_id=48 correctly populated). source_domain_module_id is NULL because PRM has no modules. The owning module is either PRM-PARTNER-CO-SELL (if B2-S2 keeps ecosystem-led inside PRM) or the equivalent in whichever module set B2-M1 chooses; if B2-S2 promotes ECOSYSTEM-LED-GROWTH out, the handoff itself relocates to source_domain_id=ECOSYSTEM-LED-GROWTH and 211 may need deletion and re-author rather than PATCH."
+    action: "After B1B-M1 lands and B2-M1 / B2-S2 are resolved: PATCH /handoffs?id=eq.211 with body {\"source_domain_module_id\": <resolved-module-id>}. No annotation per Rule #15."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+      - {type: user_decision, ref: B2-M1}
+      - {type: user_decision, ref: B2-S2}
+    affected_handoffs:
+      - {handoff_id: 211, direction: outbound, source_domain: PRM, target_domain: CRM, trigger_event: "co_sell.opportunity_created", payload: crm_opportunities, null_field: source_domain_module_id}
+    extra_band: B10b
+
+  - id: B1B-H2
+    summary: "PATCH handoffs.id=212 source_domain_module_id to the PRM module that owns partner-referral submission."
+    finding: "B10b source-side FAIL on handoff 212 (partner_referral.qualified from PRM to CRM-LEAD-MGT, target_domain_module_id=47 correctly populated). source_domain_module_id is NULL because PRM has no modules. The owning module is PRM-PARTNER-PORTAL (or whichever module from B2-M1 owns partner-user-side referral submission)."
+    action: "After B1B-M1 lands and B2-M1 is resolved: PATCH /handoffs?id=eq.212 with body {\"source_domain_module_id\": <resolved-module-id>}. No annotation per Rule #15."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+      - {type: user_decision, ref: B2-M1}
+    affected_handoffs:
+      - {handoff_id: 212, direction: outbound, source_domain: PRM, target_domain: CRM, trigger_event: "partner_referral.qualified", payload: crm_leads, null_field: source_domain_module_id}
+    extra_band: B10b
+
+  - id: B1B-APQC-211-212
+    summary: "Author 2 handoff_processes rows tagging handoffs 211 and 212 against APQC PCF cross-industry processes, after user approves the PCF cite."
+    finding: "H1 partial. 2 cross-domain handoffs (211, 212), 0 tagged. Catalog quality 0 of 2 approved (0%), 0 agent_curated rows exist. Live APQC lookup returns L3 candidates: process 147 (Manage leads/opportunities, ext 10182), process 151 (Manage sales partners and alliances, ext 10187), process 143 (Develop sales partner/alliance relationships, ext 10130), L4 712 (Manage opportunity pipeline, ext 20011). Best L3 fit for 211: 147 (parent of opportunity pipeline) with 151 secondary (partner-anchored framing). Best L3 fit for 212: 147 (lead intake) with 151 secondary. Confidence medium for both; the partner-anchored fork is real but the cross-industry PCF aggregates everything into 147."
+    action: "Surface the proposed (handoff_id, process_id, proposal_source='agent_curated', record_status='new') pairs to the user for the PCF cite call: (211, 147), (212, 147) as the L3-parent default, or (211, 151) and (212, 151) for the partner-anchored framing. After user approval, INSERT 2 handoff_processes rows. Per Rule #1, never write proposal_source='human_curated' here; the agent authored these, not the user verbatim."
+    blocked_by:
+      - {type: user_decision, ref: APQC-PCF-cite-resolution-for-211-212}
+    affected_handoffs:
+      - {handoff_id: 211, direction: outbound, source_domain: PRM, target_domain: CRM, trigger_event: "co_sell.opportunity_created", payload: crm_opportunities, null_field: handoff_processes}
+      - {handoff_id: 212, direction: outbound, source_domain: PRM, target_domain: CRM, trigger_event: "partner_referral.qualified", payload: crm_leads, null_field: handoff_processes}
+    extra_band: H1
+
+b2:
+  - id: B2-M1
+    summary: "Modularization shape (4 to 7 modules), conditional on the four other Bucket 2 carve-out calls."
+    question: "Choose the PRM module set shape. Options span 4 modules (classic-PRM only, all carve-outs promoted) up through 7 modules (PRM keeps TCMA + ecosystem-led + partner-training)."
+    options:
+      - "(a) 4 modules: PRM-PARTNER-PORTAL, PRM-DEAL-REGISTRATION, PRM-MDF-COOP, PRM-PARTNER-ANALYTICS. Cleanest; matches the four-workflow-pillar shape that flagship PRM vendors converge on. Requires B2-T1=LMS-mastered, B2-S1=TCMA promoted, B2-S2=ECOSYSTEM-LED-GROWTH promoted."
+      - "(b) 5 modules: 4 above plus PRM-PARTNER-TRAINING (requires B2-T1=PRM-owned or hybrid)."
+      - "(c) 6 modules: 4 above plus PRM-PARTNER-MARKETING (requires B2-S1=TCMA stays in PRM)."
+      - "(d) 7 modules: 4 above plus PRM-PARTNER-TRAINING + PRM-PARTNER-MARKETING + PRM-PARTNER-CO-SELL (requires B2-T1=PRM-owned, B2-S1=TCMA stays, B2-S2=ecosystem-led stays)."
+    why: "Load-bearing. Gates B1B-M1, which in turn gates everything below it. Mutually informed by B2-T1, B2-T2, B2-S1, B2-S2 and Bucket 3 candidates 1, 2, 3."
+
+  - id: B2-R1
+    summary: "Regulation coverage scope for PRM (GDPR, CCPA, FCPA, SOX as a baseline 4; UK Bribery Act; ITAR / EAR / HIPAA as industry-scoped extras)."
+    question: "Which regulations should attach to PRM via domain_regulations?"
+    options:
+      - "(a) Baseline 4: GDPR, CCPA / CPRA, FCPA, SOX."
+      - "(b) Baseline 4 plus UK Bribery Act."
+      - "(c) Extended: baseline plus ITAR / EAR plus HIPAA, flagged as industry-scoped."
+      - "(d) None, defer to industry-specific overlays."
+    why: "Catalog regulatory breadth and geographic scope; partner data + channel financials sit across multiple regimes."
+
+  - id: B2-T1
+    summary: "Partner training and certification ownership: PRM-mastered vs LMS-mastered with PRM-consumed."
+    question: "Where do partner_training_enrollments and partner_certifications get mastered?"
+    options:
+      - "(a) LMS-mastered with PRM-consumed (architecturally cleanest; LMS already owns enrollments and courses; partner training is LMS with an external-user audience)."
+      - "(b) PRM-mastered with own PRM-PARTNER-TRAINING module (matches Impartner / Zift / ZINFI vendor reality but duplicates LMS surface)."
+      - "(c) Hybrid: PRM masters partner_certifications, LMS masters partner_training_enrollments / course completions."
+    why: "Architectural intent; shrinks or grows the PRM module count. LMS needs an external-learner mode for option (a) to work cleanly."
+
+  - id: B2-T2
+    summary: "Commission and incentive ownership for partner-channel: PRM vs SALES-PERF vs split."
+    question: "Where do commission_tiers and partner-channel commission accrual / payout records get mastered?"
+    options:
+      - "(a) PRM-owned (Impartner / ZINFI feature set; treats commissions as a partner-program control)."
+      - "(b) SALES-PERF-owned with PRM-consumed (cleaner; commission ICP / accrual / payout sits in one place across direct and partner sales)."
+      - "(c) Split: program-level rules and rebate accrual in PRM, individual payout settlement in SALES-PERF."
+    why: "Cross-cuts B2-M1 module count (PRM-PARTNER-COMMISSION emerges in option a). Also affects which side owes which handoffs (see report-only follow-ups on SALES-PERF B9)."
+
+  - id: B2-S1
+    summary: "Promote TCMA as its own domain and relocate the through-channel marketing capabilities."
+    question: "Should TCMA (Through-Channel Marketing Automation) become its own domain, absorbing PARTNER-CAMPAIGN-TEMPLATES / PARTNER-LEAD-DISTRIBUTION / CO-BRANDED-ASSETS?"
+    options:
+      - "(a) Promote TCMA as new domain, relocate the entity surface (Sproutloud, Mindmatrix, Structured Web as solutions on the new domain)."
+      - "(b) Keep TCMA inside PRM as PRM-PARTNER-MARKETING (matches buyer reality at orgs that haven't separated channel-marketing from channel-ops)."
+      - "(c) Defer until TCMA mention count grows."
+    why: "TCMA is a distinct Gartner market since 2017 with a different buyer (Channel Marketing Manager, not Channel Chief). Currently queued in audits/_missing-domains.md at mention count 1."
+
+  - id: B2-S2
+    summary: "Promote ECOSYSTEM-LED-GROWTH as its own domain and relocate the co-sell / account-mapping capabilities."
+    question: "Should ECOSYSTEM-LED-GROWTH (Crossbeam, Reveal, PartnerTap, Partnered) become its own domain, absorbing PARTNER-ACCOUNT-MAPPING / PARTNER-CO-SELL-ORCHESTRATION?"
+    options:
+      - "(a) Promote and relocate (matches buyer-distinct test; Crossbeam and Reveal do not compete with Impartner)."
+      - "(b) Keep in PRM as PRM-PARTNER-CO-SELL (the Salesforce Partner Cloud / Oracle PRM model that bundles co-sell with classic PRM)."
+      - "(c) Defer until mention count grows."
+    why: "Rewires ownership of handoff 211 (co_sell.opportunity_created) if (a). Currently queued in audits/_missing-domains.md at mention count 1."
+
+b3:
+  - id: B3-1
+    candidate: "TCMA as its own domain"
+    rationale: "Through-Channel Marketing Automation. Distinct Gartner market since 2017 with buyer = Channel Marketing Manager. Absorbs PRM's through-channel marketing capabilities and the proposed PRM-PARTNER-MARKETING module. Queued in audits/_missing-domains.md at mention count 1."
+    vendor_evidence: [Sproutloud, Mindmatrix, Structured Web, Impartner TCMA, Zift TCMA]
+    proposed_module: TCMA (new domain)
+
+  - id: B3-2
+    candidate: "ECOSYSTEM-LED-GROWTH as its own domain"
+    rationale: "Partner Ecosystem Platform / Co-Sell category emerging 2020 to 2024. Distinct buyer = VP Partnerships / Head of Ecosystem, different from Channel Chief. Absorbs PRM's co-sell / account-mapping capabilities and the proposed PRM-PARTNER-CO-SELL module. Queued in audits/_missing-domains.md at mention count 1."
+    vendor_evidence: [Crossbeam, Reveal, PartnerTap, Partnered]
+    proposed_module: ECOSYSTEM-LED-GROWTH (new domain)
+
+  - id: B3-3
+    candidate: "AFFILIATE-MGMT as its own domain"
+    rationale: "Distinct DTC-marketing buyer (Performance Marketing Manager / Affiliate Manager). The affiliate entity surface (affiliate_accounts, affiliate_tracking_links, affiliate_conversions, affiliate_payouts) does not belong in PRM under any scenario. PartnerStack is the awkward middle case (SaaS-affiliate crossover). Queued in audits/_missing-domains.md at mention count 1."
+    vendor_evidence: [Impact.com, PartnerStack, Everflow, Refersion, CJ Affiliate, Awin, Rakuten Advertising]
+    proposed_module: AFFILIATE-MGMT (new domain)
+
+  - id: B3-4
+    candidate: "Partner-marketplace operations (Tackle.io / AppDirect / Mirakl B2B) as a candidate sub-domain or capability"
+    rationale: "Co-sell-through-marketplace (AWS / Azure / GCP marketplaces) is a fast-growing workflow distinct from both classic PRM and ecosystem-led co-sell. Less urgent than candidates 1 to 3. Mention count 0 today."
+    vendor_evidence: [Tackle.io, AppDirect, Mirakl B2B]
+    proposed_module: "candidate fifth PRM module, ECOSYSTEM-LED-GROWTH module, or new domain"

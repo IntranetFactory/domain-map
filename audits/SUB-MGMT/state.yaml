@@ -1,0 +1,286 @@
+schema_version: 2
+domain: SUB-MGMT
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S3
+    summary: "INSERT 6 intra-domain cross-module handoff rows between SUB-MGMT-SUBSCRIPTIONS (167) and SUB-MGMT-BILLING (168)."
+    finding: "B9b hard-fail: 0 rows where source_domain_id=target_domain_id=97 across a 2-module domain that demonstrably exchanges 6 cross-module events. Catalog query /handoffs?source_domain_id=eq.97&target_domain_id=eq.97 returns []. The 6 expected pairs (carry-forward from 2026-05-30): (a) customer_invoice.past_due (event 494) BILLING->SUBSCRIPTIONS drives customer_subscriptions.active->past_due (state 388); (b) customer_invoice.paid (event 493) BILLING->SUBSCRIPTIONS drives past_due->active; (c) subscription.activated (event 129) SUBSCRIPTIONS->BILLING triggers first invoice; (d) subscription.renewal_required (event 156) SUBSCRIPTIONS->BILLING triggers recurring invoice run; (e) dunning.escalation (event 155) BILLING->SUBSCRIPTIONS feeds suspended state 389; (f) usage_record.overage_detected (event 496) SUBSCRIPTIONS->BILLING triggers overage line."
+    action: "INSERT 6 handoffs rows with source_domain_id=target_domain_id=97, integration_pattern='lifecycle_progression', friction_level='low', source_domain_module_id and target_domain_module_id populated per routing. No new trigger_events required (all 6 reuse existing event ids 129, 155, 156, 493, 494, 496)."
+    affected_events:
+      - {id: 129, event_name: "subscription.activated", current_category: "lifecycle", proposed_category: "lifecycle"}
+      - {id: 155, event_name: "dunning.escalation", current_category: "state_change", proposed_category: "state_change"}
+      - {id: 156, event_name: "subscription.renewal_required", current_category: "threshold", proposed_category: "threshold"}
+      - {id: 493, event_name: "customer_invoice.paid", current_category: "state_change", proposed_category: "state_change"}
+      - {id: 494, event_name: "customer_invoice.past_due", current_category: "state_change", proposed_category: "state_change"}
+      - {id: 496, event_name: "usage_record.overage_detected", current_category: "threshold", proposed_category: "threshold"}
+    affected_modules: [167, 168]
+    extra_routing:
+      a: "BILLING(168) -> SUBSCRIPTIONS(167) on event 494, payload customer_subscriptions (106)"
+      b: "BILLING(168) -> SUBSCRIPTIONS(167) on event 493, payload customer_subscriptions (106)"
+      c: "SUBSCRIPTIONS(167) -> BILLING(168) on event 129, payload customer_invoices (107)"
+      d: "SUBSCRIPTIONS(167) -> BILLING(168) on event 156, payload customer_invoices (107)"
+      e: "BILLING(168) -> SUBSCRIPTIONS(167) on event 155, payload customer_subscriptions (106)"
+      f: "SUBSCRIPTIONS(167) -> BILLING(168) on event 496, payload usage_records (108)"
+
+  - id: B1A-S8
+    summary: "PATCH data_object_lifecycle_states id 381 to set domain_module_id=168."
+    finding: "M5 partial-fail: state 381 (customer_invoices.issued, requires_permission=true, permission_verb_override='issue_invoice') carries domain_module_id=NULL. Module 168 (SUB-MGMT-BILLING) is the canonical master of customer_invoices (DMDO row 882: master + required) and the realizing module for this workflow gate. Without M5 the materialized permission lands without a module prefix at deploy time. Other workflow-gate state in this domain (id 403, revenue_recognition_records.recognized) already carries domain_module_id=89 PSA-PROJECT-FINANCIALS, confirming PATCH is the established shape."
+    action: "PATCH /data_object_lifecycle_states?id=eq.381 {\"domain_module_id\": 168}. One row, mechanical."
+    affected_masters:
+      - {data_object_id: 107, name: "customer_invoices", target_module_id: 168, workflow: "issued workflow gate"}
+    affected_modules: [168]
+
+  - id: B1A-S7-PRIME
+    summary: "Draft + write catalog_tagline and catalog_description for domain 97 and modules 167 and 168 (Rule #20 surface-before-write)."
+    finding: "A4 + M8 both fail. domains.id=97 catalog_tagline='' and catalog_description=''. domain_modules.id=167 (SUB-MGMT-SUBSCRIPTIONS) and id=168 (SUB-MGMT-BILLING) both have empty catalog_tagline and catalog_description. Six fields total need buyer-voice copy. Per Rule #20 the empty-state author path is allowed but the agent MUST draft and surface to the user BEFORE writing; once a non-empty value exists, overwrite is forbidden without explicit per-row approval, so the surface-for-confirm step is critical here."
+    action: "Draft 3 catalog_tagline + catalog_description pairs (one for the domain, one for each full module). Surface to user for review. Write only after user approval, with per-row diff."
+    affected_modules: [167, 168]
+    affected_entities: ["domains/97", "domain_modules/167", "domain_modules/168"]
+    extra_rule_reference: "Rule #20"
+
+  - id: B1A-S9
+    summary: "PATCH domains.business_logic on id=97 to remove em-dash (U+2014). User must approve replacement wording."
+    finding: "domains.id=97 business_logic value contains the em-dash character U+2014 in the trailing clause. CLAUDE.md 'No em-dashes' rule forbids the character everywhere in the project, including catalog data written via semantius. The fact-sheet emitter sanitizes em-dashes at render time as a safety net but source data must stay clean. A1 currently passes on this field, so the rewrite is a voluntary cleanup not a structural blocker."
+    action: "Draft replacement wording for the trailing clause (using comma, parenthesis, colon, or sentence break instead of em-dash) and surface to user. After user approves the exact string, PATCH /domains?id=eq.97 {\"business_logic\": \"<approved string>\"}."
+    affected_entities: ["domains/97"]
+    extra_rule_reference: "CLAUDE.md No em-dashes"
+
+b1b:
+  - id: B1B-S4
+    summary: "INSERT 4 lifecycle states on usage_records (108) OR declare config-shape exemption."
+    finding: "B12 partial-fail: usage_records (108) carries 0 data_object_lifecycle_states rows. Rule #12 requires every master+required data_object to either have lifecycle states or surface the config-shape exemption. The other 4 SUB-MGMT masters have states (106 has 7, 107 has 6, 109 has 3, 110 has 4); 108 is the only gap."
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    action: "If B2-S1 resolves to option (a), INSERT 4 lifecycle states on data_object_id=108: posted (state_order 1, is_initial=true, no permission), rated (state_order 2, requires_permission=true on module 167, permission_verb_override='rate_usage'), billed (state_order 3), reversed (state_order 4, is_terminal=true). If option (b), no states authored, the config-shape decision is surfaced for the user to track outside catalog notes (Rule #15 forbids auto-populating data_objects.notes)."
+    affected_masters:
+      - {data_object_id: 108, name: "usage_records", target_module_id: 167, workflow: "posted->rated->billed (reversed terminal)"}
+
+  - id: B1B-S5
+    summary: "INSERT ~15 data_object_aliases rows after user surface-for-confirm on the candidate alias set."
+    finding: "B11 fail: 0 rows in data_object_aliases for the 5 SUB-MGMT masters (106, 107, 108, 109, 110). Subscription billing and SaaS-metering markets carry well-known vendor-shape synonyms that must be loaded for cross-vendor searchability."
+    blocked_by:
+      - {type: user_decision, ref: "agent surface-for-confirm on the candidate alias names"}
+    action: "Surface the candidate alias set to user. After user approves the per-row alias list, INSERT via chunked POST. Candidate set: customer_subscriptions -> subscriptions, recurring_charges, subscription_records; customer_invoices -> invoices, bills, customer_bills; usage_records -> usage_events, metered_events, meter_readings; revenue_recognition_records -> revrec_records, deferred_revenue_schedules, performance_obligation_records; dunning_events -> dunning_notices, collections_events, payment_recovery_events."
+    affected_masters:
+      - {data_object_id: 106, name: "customer_subscriptions", target_module_id: 167, workflow: "n/a"}
+      - {data_object_id: 107, name: "customer_invoices", target_module_id: 168, workflow: "n/a"}
+      - {data_object_id: 108, name: "usage_records", target_module_id: 167, workflow: "n/a"}
+      - {data_object_id: 109, name: "revenue_recognition_records", target_module_id: 167, workflow: "n/a"}
+      - {data_object_id: 110, name: "dunning_events", target_module_id: 168, workflow: "n/a"}
+
+  - id: B1B-S6
+    summary: "Phase E load: 7 permissions + 4 roles + role_modules + role_permissions + permission_hierarchy on modules 167 and 168."
+    finding: "E1-E5 fail. 0 permissions, 0 roles, 0 role_modules on SUB-MGMT modules 167/168. Phase E never ran on this domain. Per Rule #14 each full module needs 3 baseline permissions plus workflow-gate permissions derived from lifecycle states with requires_permission=true. Currently only one such state exists on SUB-MGMT modules (state 381, customer_invoices.issued, gated on B1A-S8 setting its domain_module_id=168). Role candidate set from flagship vendor surface: BILLING-OPS-MANAGER, SUBSCRIPTION-OPERATOR, REVENUE-RECOGNITION-ANALYST, DUNNING-COLLECTIONS-SPECIALIST."
+    blocked_by:
+      - {type: user_decision, ref: B2-S5}
+      - {type: prerequisite_entity, ref: B1A-S8}
+    action: "Phase E loader. Author 6 baseline permissions (sub-mgmt-subscriptions:read|manage|admin and sub-mgmt-billing:read|manage|admin), 1 workflow-gate permission (sub-mgmt-billing:issue_invoice for state 381 once B1A-S8 lands), 4 roles, role_modules bindings (2-module floor satisfied by binding each role to both 167 and 168 or to 167 + a partner module on relevant cross-domain workflows), role_permissions bundles, permission_hierarchy edges (:admin -> :manage -> :read per module). Significant load."
+    affected_modules: [167, 168]
+
+  - id: B1B-S7
+    summary: "Phase F load: 2 module-level system skills + ~13 skill_tools rows + DELETE legacy domain-level skill 108 plus its 7 skill_tools rows."
+    finding: "F1 + F2 fail. F1: legacy skill 108 sub-mgmt-system (skill_type=system, domain_id=97, domain_module_id=null) exists with 7 skill_tools rows. F2: 0 module-level system skills on 167/168. F3/F4/F5 blocked. SUB-MGMT Semantius score uncomputable until module-level skills land. Legacy 108's tool roster (query_customer_subscriptions on 106, query_customer_invoices on 107, query_usage_records on 108, query_revenue_recognition_records on 109, query_dunning_events on 110, query_customers on 97, send_email) transfers mostly verbatim to the two new module skills."
+    blocked_by:
+      - {type: depends_on, ref: B1B-S6, reason: "workflow-gate permissions in S6 inform tool roster"}
+    action: "Phase F loader. Author 2 skills (sub_mgmt_subscriptions_agent linked to 167, sub_mgmt_billing_agent linked to 168). Module 167 tool set: query_customer_subscriptions, query_usage_records, query_revenue_recognition_records, mutate_customer_subscription_state, compute_mrr_arr, notify_person (per channel-abstraction rule). Module 168 tool set: query_customer_invoices, query_dunning_events, mutate_customer_invoice_state (workflow gate issue_invoice once state 381 has domain_module_id=168 per B1A-S8), notify_person, compute_collections_aging, inbound_payment_webhook. Apply Rule #17 operation_kind invariants on every tool. After both skills + skill_tools land, DELETE legacy skill 108 + its 7 skill_tools rows (F1 cleanup)."
+    affected_modules: [167, 168]
+
+  - id: B1B-H1
+    summary: "APQC TAGGING: INSERT 18 agent_curated rows, REPLACE 4 weak existing tags, CONFIRM 4 existing agent_curated tags."
+    finding: "H1 fail: 10 of 28 cross-domain handoffs carry handoff_processes rows. 0 record_status='approved'. Process-target floor of 0.5*28 = 14 agent_curated rows not met. 18 handoffs are untagged. 4 existing rows are REPLACE candidates per the 2026-05-30 audit (handoffs 72, 73, 233, 519: existing tag is a weak match to the actual workflow). 4 existing rows are CONFIRM candidates (handoffs 63, 67, 197, 485 already agent_curated or agent-vetted; pending record_status flip to approved is the user's call, not the agent's per Rule #1)."
+    blocked_by:
+      - {type: catalog_addition, scope: "PCF id lookups for each candidate", trigger: "fix-time /processes lookup per row"}
+    action: "INSERT 18 + REPLACE 4 + CONFIRM 4 handoff_processes rows. Use proposal_source='agent_curated', record_status='new', role='implements'. PCF id resolution happens at fix time via /processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry. Candidate mapping carries over from 2026-05-30 audit (full table in history.md)."
+    affected_handoffs:
+      - {handoff_id: 64, direction: outbound, source_domain: SUB-MGMT, target_domain: CRM, trigger_event: "subscription.activated", payload: "customers", null_field: "untagged"}
+      - {handoff_id: 65, direction: outbound, source_domain: SUB-MGMT, target_domain: CSM, trigger_event: "subscription.activated", payload: "customer_entitlements", null_field: "untagged"}
+      - {handoff_id: 72, direction: outbound, source_domain: SUB-MGMT, target_domain: CSM, trigger_event: "payment.failed", payload: "customer_cases", null_field: "weak_existing_tag_1422"}
+      - {handoff_id: 194, direction: outbound, source_domain: SUB-MGMT, target_domain: CSM, trigger_event: "dunning.escalation", payload: "dunning_events", null_field: "untagged"}
+      - {handoff_id: 195, direction: outbound, source_domain: SUB-MGMT, target_domain: CSM, trigger_event: "subscription.renewal_required", payload: "customer_subscriptions", null_field: "untagged"}
+      - {handoff_id: 196, direction: outbound, source_domain: SUB-MGMT, target_domain: CRM, trigger_event: "subscription.downgraded", payload: "customer_subscriptions", null_field: "untagged"}
+      - {handoff_id: 197, direction: outbound, source_domain: SUB-MGMT, target_domain: ERP-FIN, trigger_event: "revenue.recognised", payload: "revenue_recognition_records", null_field: "confirm_existing_tag_55"}
+      - {handoff_id: 490, direction: outbound, source_domain: SUB-MGMT, target_domain: CRM, trigger_event: "subscription.upgraded", payload: "customer_subscriptions", null_field: "untagged"}
+      - {handoff_id: 491, direction: outbound, source_domain: SUB-MGMT, target_domain: ERP-FIN, trigger_event: "customer_invoice.issued", payload: "customer_invoices", null_field: "untagged"}
+      - {handoff_id: 492, direction: outbound, source_domain: SUB-MGMT, target_domain: B2C-COMM, trigger_event: "customer_invoice.issued", payload: "customer_invoices", null_field: "untagged"}
+      - {handoff_id: 493, direction: outbound, source_domain: SUB-MGMT, target_domain: CSM, trigger_event: "customer_invoice.past_due", payload: "customer_invoices", null_field: "untagged"}
+      - {handoff_id: 494, direction: outbound, source_domain: SUB-MGMT, target_domain: CSM, trigger_event: "subscription.cancelled", payload: "customer_subscriptions", null_field: "untagged"}
+      - {handoff_id: 495, direction: outbound, source_domain: SUB-MGMT, target_domain: ERP-FIN, trigger_event: "usage_record.overage_detected", payload: "usage_records", null_field: "untagged"}
+      - {handoff_id: 496, direction: outbound, source_domain: SUB-MGMT, target_domain: CSM, trigger_event: "usage_record.overage_detected", payload: "usage_records", null_field: "untagged"}
+      - {handoff_id: 63, direction: inbound, source_domain: CLM, target_domain: SUB-MGMT, trigger_event: "legal_contract.signed", payload: "customer_subscriptions", null_field: "confirm_existing_tag_148"}
+      - {handoff_id: 67, direction: inbound, source_domain: B2C-COMM, target_domain: SUB-MGMT, trigger_event: "order.subscription_purchase", payload: "customer_subscriptions", null_field: "confirm_existing_tag_150"}
+      - {handoff_id: 73, direction: inbound, source_domain: CSM, target_domain: SUB-MGMT, trigger_event: "case.churn_risk_detected", payload: "dunning_events", null_field: "weak_existing_tag_196"}
+      - {handoff_id: 224, direction: inbound, source_domain: CSM, target_domain: SUB-MGMT, trigger_event: "health_score.declined", payload: "customers", null_field: "untagged"}
+      - {handoff_id: 233, direction: inbound, source_domain: CSM, target_domain: SUB-MGMT, trigger_event: "customer.churn_confirmed", payload: "customers", null_field: "weak_existing_tag_6"}
+      - {handoff_id: 234, direction: inbound, source_domain: CSM, target_domain: SUB-MGMT, trigger_event: "subscription.expansion_requested", payload: "customers", null_field: "untagged"}
+      - {handoff_id: 271, direction: inbound, source_domain: MDM, target_domain: SUB-MGMT, trigger_event: "customer_golden_record.created", payload: "customers", null_field: "untagged"}
+      - {handoff_id: 331, direction: inbound, source_domain: B2C-COMM, target_domain: SUB-MGMT, trigger_event: "commerce_order.placed", payload: "commerce_orders", null_field: "untagged"}
+      - {handoff_id: 471, direction: inbound, source_domain: CRM, target_domain: SUB-MGMT, trigger_event: "crm_opportunity.closed_won", payload: "crm_opportunities", null_field: "untagged"}
+      - {handoff_id: 485, direction: inbound, source_domain: CPQ, target_domain: SUB-MGMT, trigger_event: "sales_quote.accepted_by_buyer", payload: "sales_quotes", null_field: "confirm_existing_tag_149"}
+      - {handoff_id: 489, direction: inbound, source_domain: CSM, target_domain: SUB-MGMT, trigger_event: "customer_entitlement.depleted", payload: "customer_entitlements", null_field: "untagged"}
+      - {handoff_id: 519, direction: inbound, source_domain: CLM, target_domain: SUB-MGMT, trigger_event: "legal_contract.signed", payload: "legal_contracts", null_field: "weak_existing_tag_166"}
+      - {handoff_id: 687, direction: inbound, source_domain: BI, target_domain: SUB-MGMT, trigger_event: "bi_subscription.delivery_failed", payload: "bi_subscriptions", null_field: "untagged"}
+      - {handoff_id: 750, direction: inbound, source_domain: APIM, target_domain: SUB-MGMT, trigger_event: "api_usage.quota_breached", payload: "api_usage_metrics", null_field: "untagged"}
+
+b2:
+  - id: B2-S1
+    summary: "usage_records lifecycle vs config-shape exemption (M3/B12)."
+    question: "Author the 4 lifecycle states on usage_records (posted, rated, billed, reversed), or declare config-shape per Rule #12 exemption (immutable append-only event log; rating + billing lifecycle then lives on a new master like rated_usage_charges)?"
+    options:
+      - "(a) Author the 4 lifecycle states on usage_records. Agent default."
+      - "(b) Declare config-shape exemption, queue rated_usage_charges as a new master under Bucket 3."
+    why: "Architectural intent question with downstream blast radius. Modern usage-metering vendors (Metronome, Orb, Lago) model usage events as immutable; the lifecycle lives on aggregated rated_usage_charges or usage_summaries. The B1B-S4 fix shape depends on this decision."
+
+  - id: B2-S2
+    summary: "Pattern flag re-evaluation across 5 SUB-MGMT masters (B4)."
+    question: "Per-flag yes/no on 5 candidate flag flips: (1) customer_invoices.has_submit_lock=true (issued invoices immutable, re-issue means void+new draft), (2) customer_invoices.has_personal_content=true (bill-to address, payment method last-4), (3) customer_subscriptions.has_personal_content=true (billing contact, possibly address), (4) revenue_recognition_records.has_submit_lock=true (immutable post-recognition per ASC 606 audit trail), (5) dunning_events.has_personal_content=true (collection notices carry payer contact)."
+    options:
+      - "Per-flag yes/no for each of the 5 candidates."
+    why: "Pattern flags are workflow-shape judgments; agent re-evaluates and proposes, user decides per Rule #12. Rule #15 forbids auto-populating notes to explain flag reasoning."
+
+  - id: B2-S3
+    summary: "certification_required=false on a SOX / ASC 606 domain."
+    question: "Keep certification_required=false (definition: product needs formal certification like Finanzamt/GoBD or FDA 510(k); SOX audit is buyer-side), flip to true (public-company sales reality), or add a new column at catalog level for 'auditor-attestable' separate from 'certified'?"
+    options:
+      - "(a) Keep false."
+      - "(b) Flip to true."
+      - "(c) Add a new auditor-attestable column at catalog level (separate change, multi-domain impact)."
+    why: "Definitional boundary between 'implementation needs auditor sign-off' and 'product needs formal certification'. Vendors like Maxio SaaSOptics, Sage Intacct ARC, RightRev market on SOX-compliance grounds."
+
+  - id: B2-S4
+    summary: "Zero domain_regulations rows on a heavily-regulated domain."
+    question: "Author domain_regulations joins for ASC 606, IFRS 15, SOX, PCI-DSS, GDPR (any subset), or skip pending formal Phase 0?"
+    options:
+      - "(a) Add 5 joins on existing regulations rows if present."
+      - "(b) Skip pending Phase 0."
+      - "(c) Specify a subset."
+    why: "Flagship vendors universally call out ASC 606 (FASB), IFRS 15 (IASB), SOX (PCAOB), PCI-DSS (PCI SSC indirect via payment processors), GDPR (EU subscriber PII), and US state sales-tax nexus (Wayfair). Currently 0 domain_regulations rows on SUB-MGMT."
+
+  - id: B2-S5
+    summary: "Capability split intent (SUB-LIFECYCLE vs SUB-USAGE-METER vs SUB-REV-REC vs SUB-CHURN-ANALYTICS)."
+    question: "Keep SUB-MGMT as 2 modules, split into 3-5 modules under SUB-MGMT, or spin out USAGE-METERING and REV-REC as separate domains per the queued candidates in _missing-domains.md?"
+    options:
+      - "(a) Keep 2 modules; metering + rev-rec live as capabilities only."
+      - "(b) Split into 3-5 modules under SUB-MGMT; capability rebinding required."
+      - "(c) Spin out USAGE-METERING and REV-REC as separate domains per Bucket 3 candidates."
+    why: "SUB-MGMT-SUBSCRIPTIONS currently hosts 5 capabilities. SUB-USAGE-METER, SUB-REV-REC, SUB-CHURN-ANALYTICS each have independent point-solution markets (Metronome / Orb / Lago for metering; Maxio SaaSOptics / RightRev for rev-rec; ChartMogul / SaaSGrid for analytics). Compression hides the modularization. Gates B1B-S6 shape partially."
+
+  - id: B2-S6
+    summary: "HVAC-SVC-MGMT starter hosting on SUB-MGMT via host-junction."
+    question: "Is the HVAC starter (id 171) hosting on SUB-MGMT intentional (HVAC ships with SUB-MGMT billing embedded), mis-attribution (remove the host_domain row), or a refactor candidate (starter should consume SUB-MGMT-BILLING via a domain dependency rather than embed customer_invoices directly)?"
+    options:
+      - "(a) Intentional, retain as-is."
+      - "(b) Mis-attribution, remove the SUB-MGMT host_domain row."
+      - "(c) Refactor: starter consumes SUB-MGMT-BILLING module rather than embedding customer_invoices."
+    why: "Starter 171 embeds 10 data_objects of which only customer_invoices (107) is a SUB-MGMT master. The host-junction row was created during HVAC starter load; SUB-MGMT and FSM overlap only on this one master."
+
+b3:
+  - id: B3-E-SUBSCRIPTION-PLANS
+    candidate: "subscription_plans"
+    rationale: "Every flagship vendor masters a plan catalog distinct from the subscription instance (Stripe Products+Prices, Zuora Product Catalog, Chargebee Plans+Addons, Recurly Plans). SUB-MGMT currently treats plan info implicitly on customer_subscriptions, no plan-catalog master."
+    vendor_evidence: ["Stripe Billing", "Zuora Billing", "Chargebee", "Recurly"]
+    proposed_module: "SUB-MGMT-SUBSCRIPTIONS"
+
+  - id: B3-E-PAYMENT-METHODS
+    candidate: "payment_methods"
+    rationale: "Stripe, Zuora, Chargebee, Recurly all master customer-level payment methods (card / ACH / SEPA / wallet) with PCI-grade tokenization. Currently 0 payment_methods entity in SUB-MGMT. Could alternatively live in a PAYMENT-PROCESSING candidate domain."
+    vendor_evidence: ["Stripe", "Zuora", "Chargebee", "Recurly"]
+    proposed_module: "SUB-MGMT-BILLING or new PAYMENT-PROCESSING domain"
+
+  - id: B3-E-RATED-USAGE-CHARGES
+    candidate: "rated_usage_charges"
+    rationale: "If B2-S1 selects option (b) (usage_records as config-shape), an aggregated rated_usage_charges master is needed to carry the rated->billed->reconciled lifecycle. Modern usage-metering platforms (Metronome, Orb, Lago) build the entire product on this 2-entity split (immutable events + lifecycle-bearing aggregates)."
+    vendor_evidence: ["Metronome", "Orb", "Lago"]
+    proposed_module: "SUB-MGMT-SUBSCRIPTIONS or new USAGE-METERING domain"
+
+  - id: B3-E-TAX-CALCULATIONS
+    candidate: "tax_calculations"
+    rationale: "Every billing platform persists tax-determination outcomes per invoice line (rate, jurisdiction, sourcing rule). Tax currently inlines onto customer_invoices. Avalara, Vertex, Sovos, TaxJar, Anrok, Stripe Tax all master tax calculation outcomes."
+    vendor_evidence: ["Avalara", "Vertex", "Stripe Tax", "Anrok"]
+    proposed_module: "SUB-MGMT-BILLING or new SALES-TAX domain"
+
+  - id: B3-E-PRORATION-CREDITS
+    candidate: "proration_credits"
+    rationale: "Mid-cycle upgrades / downgrades generate proration credit records distinct from invoice line items. Stripe and Chargebee model these explicitly (Chargebee 'Credit Notes' with proration kind). No equivalent entity in SUB-MGMT."
+    vendor_evidence: ["Stripe Billing", "Chargebee"]
+    proposed_module: "SUB-MGMT-BILLING"
+
+  - id: B3-M-SPLIT-LIFECYCLE-USAGE
+    candidate: "Split SUB-MGMT-SUBSCRIPTIONS into SUB-MGMT-LIFECYCLE and SUB-MGMT-USAGE-METERING."
+    rationale: "SUB-LIFECYCLE and SUB-USAGE-METER are two different point-solution markets with different lifecycle entities (subscription state machine vs usage event log). Combining them in one module conflates two distinct deployable surfaces. Depends on B2-S5."
+    vendor_evidence: ["Zuora Billing (lifecycle pure-play side)", "Metronome", "Orb", "Lago"]
+    proposed_module: "SUB-MGMT (modularization split)"
+
+  - id: B3-M-SPLIT-LIFECYCLE-REVREC
+    candidate: "Split SUB-MGMT-SUBSCRIPTIONS into SUB-MGMT-LIFECYCLE and SUB-MGMT-REV-REC."
+    rationale: "Revenue recognition has its own lifecycle (pending->recognized->reversed), its own master (revenue_recognition_records), and its own vendor surface (RightRev, Maxio SaaSOptics, Sage Intacct ARC). Combining with subscription lifecycle hides that. Depends on B2-S5."
+    vendor_evidence: ["RightRev", "Maxio SaaSOptics", "Sage Intacct ARC"]
+    proposed_module: "SUB-MGMT (modularization split)"
+
+  - id: B3-M-ANALYTICS-MODULE
+    candidate: "Promote SUB-CHURN-ANALYTICS into a sibling SUB-MGMT-ANALYTICS module."
+    rationale: "Subscription analytics (ChartMogul, SaaSGrid, Baremetrics) is a recognized point-solution market and would need its own master (subscription_metric_snapshots) plus a derived-tier system skill set. Currently embedded as a capability without an entity backing it."
+    vendor_evidence: ["ChartMogul", "SaaSGrid", "Baremetrics"]
+    proposed_module: "SUB-MGMT-ANALYTICS (new)"
+
+  - id: B3-D-USAGE-METERING
+    candidate: "USAGE-METERING (new domain)"
+    rationale: "Metronome, Orb, Lago, Amberflo, m3ter form a pure-play event ingestion + real-time aggregation + rating-engine market distinct from SaaS billing. Adjacent to SUB-MGMT, FINOPS, APIM, CPQ. Queued via audits/_missing-domains.md from 2026-05-30 audit."
+    vendor_evidence: ["Metronome", "Orb", "Lago", "Amberflo", "m3ter"]
+    proposed_module: "n/a (new domain)"
+
+  - id: B3-D-SALES-TAX
+    candidate: "SALES-TAX (new domain)"
+    rationale: "Avalara, Vertex, Sovos, TaxJar, Anrok, Stripe Tax form a real-time tax determination + nexus tracking + filing market. Adjacent to SUB-MGMT, ERP-FIN, B2C-COMM, CPQ. Queued via audits/_missing-domains.md."
+    vendor_evidence: ["Avalara", "Vertex", "Sovos", "TaxJar", "Anrok", "Stripe Tax"]
+    proposed_module: "n/a (new domain)"
+
+  - id: B3-D-PAYMENT-PROCESSING
+    candidate: "PAYMENT-PROCESSING (new domain)"
+    rationale: "Stripe Payments, Adyen, Braintree, Worldpay, Spreedly, Primer form a card vaulting + payment orchestration + chargeback management market distinct from billing. Adjacent to SUB-MGMT, B2C-COMM, ERP-FIN, AP-AUTO. Queued via audits/_missing-domains.md."
+    vendor_evidence: ["Stripe Payments", "Adyen", "Braintree", "Worldpay", "Spreedly", "Primer"]
+    proposed_module: "n/a (new domain)"
+
+  - id: B3-D-REV-REC
+    candidate: "REV-REC (new domain)"
+    rationale: "Maxio SaaSOptics, Sage Intacct ARC, Zuora RevPro (Leeyo), RightRev, Trullion form an ASC 606 performance-obligation modeling + deferred revenue waterfall + RevRec audit-trail market. Adjacent to SUB-MGMT, ERP-FIN, CPQ, AUDIT. Queued via audits/_missing-domains.md."
+    vendor_evidence: ["Maxio SaaSOptics", "Sage Intacct ARC", "Zuora RevPro", "RightRev", "Trullion"]
+    proposed_module: "n/a (new domain)"
+
+  - id: B3-R-ASC-606
+    candidate: "ASC 606 regulation join on SUB-MGMT."
+    rationale: "FASB revenue recognition standard universally cited by flagship vendors as the core compliance driver. Currently 0 domain_regulations rows on SUB-MGMT. Verification: confirm regulations row exists or author it."
+    vendor_evidence: ["all flagship rev-rec vendors"]
+    proposed_module: "n/a (regulation join)"
+
+  - id: B3-R-IFRS-15
+    candidate: "IFRS 15 regulation join on SUB-MGMT."
+    rationale: "IASB international counterpart to ASC 606. Required for non-US public companies."
+    vendor_evidence: ["all flagship rev-rec vendors with EU presence"]
+    proposed_module: "n/a (regulation join)"
+
+  - id: B3-R-SOX
+    candidate: "SOX regulation join on SUB-MGMT."
+    rationale: "PCAOB Section 404 controls for public-company subscription revenue (significant-contract attestation, audit trail). Drives the audit-trail requirements baked into RightRev / Maxio / Sage Intacct ARC."
+    vendor_evidence: ["Maxio SaaSOptics", "Sage Intacct ARC", "RightRev"]
+    proposed_module: "n/a (regulation join)"
+
+  - id: B3-R-PCI-DSS
+    candidate: "PCI-DSS regulation join on SUB-MGMT."
+    rationale: "PCI SSC card-data handling. Indirect on SUB-MGMT (payment processor holds card data) but still in scope for any platform persisting payment method tokens or last-4 references."
+    vendor_evidence: ["all flagship billing vendors"]
+    proposed_module: "n/a (regulation join)"
+
+  - id: B3-R-GDPR
+    candidate: "GDPR regulation join on SUB-MGMT."
+    rationale: "EU GDPR for subscriber personal data on billing records. Applies to any SUB-MGMT instance holding EU customer billing data."
+    vendor_evidence: ["all flagship billing vendors with EU operations"]
+    proposed_module: "n/a (regulation join)"
+
+  - id: B3-R-EU-VAT-MOSS
+    candidate: "EU VAT MOSS regulation join on SUB-MGMT."
+    rationale: "EU Mini One Stop Shop for cross-border digital services taxation. Applies to any SUB-MGMT instance billing EU consumers."
+    vendor_evidence: ["Stripe Tax", "Avalara", "Vertex"]
+    proposed_module: "n/a (regulation join)"

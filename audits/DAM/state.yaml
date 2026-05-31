@@ -1,0 +1,459 @@
+schema_version: 2
+domain: DAM
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S12
+    summary: "Sanitize em-dash from domains row 92 business_logic per project em-dash policy."
+    finding: |
+      domains row id=92 (DAM): `business_logic` contains a U+2014 em-dash character between "watermark)" and "irreducible".
+      Current text: "Image and video transforms (resize, format conversion, watermark) [U+2014] irreducible but commodified by cloud media services."
+      `description` was checked and is clean.
+      The project em-dash policy (CLAUDE.md) bans U+2014 from all catalog text. Use commas, parentheses, colons, or sentence breaks instead. No vendor names appear in the column, so Rule #18 is not implicated.
+    action: |
+      PATCH /domains?id=eq.92 with `business_logic` rewritten to replace the em-dash with a comma. Suggested wording: "Image and video transforms (resize, format conversion, watermark), irreducible but commodified by cloud media services." Re-pull and verify the column is em-dash-free. No record_status touch.
+    affected_entities:
+      - domains.92
+b1b:
+  - id: B1B-M1
+    summary: "Add asset_renditions data_object + DMDO row to whichever DAM module ends up mastering the asset library."
+    finding: |
+      `asset_renditions` is universal across Bynder, Brandfolder, Frontify, Adobe AEM Assets, Cloudinary, Widen. Represents per-format derivative outputs (thumbnails, web-res, print-res, video bitrates) of a master `digital_assets` row.
+      DAM currently has zero `domain_modules` and zero `domain_module_data_objects` rows for this entity. No row exists in `data_objects` for `asset_renditions`.
+    action: |
+      Phase B insert: create `data_objects` row `asset_renditions` (kind=domain_owned), then INSERT a `domain_module_data_objects` row at role=master, necessity=required against the chosen module from Bucket 2 item 1 (target range: DAM-ASSET-LIB).
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+    vendor_evidence:
+      - Bynder
+      - Brandfolder
+      - Frontify
+      - Adobe Experience Manager Assets
+      - Cloudinary
+      - Widen Collective
+    extra_proposed_module_range: [DAM-ASSET-LIB]
+
+  - id: B1B-M2
+    summary: "Add asset_versions data_object + DMDO row in DAM-ASSET-LIB."
+    finding: |
+      `asset_versions` represents the version history of a single `digital_assets` row (re-edits, revisions, supersedes). Universal across Bynder, Brandfolder, Frontify, AEM, Widen. Distinct from `asset_renditions`.
+      Not present in catalog today; no DMDO row.
+    action: |
+      Phase B insert: `data_objects` row + DMDO row at role=master, necessity=required against the asset-library module from B2-1.
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+    vendor_evidence:
+      - Bynder
+      - Brandfolder
+      - Frontify
+      - Adobe Experience Manager Assets
+      - Widen Collective
+    extra_proposed_module_range: [DAM-ASSET-LIB]
+
+  - id: B1B-M3
+    summary: "Add asset_collections data_object + DMDO row in DAM-ASSET-LIB."
+    finding: |
+      `asset_collections` are user-curated groupings (Bynder collections, Brandfolder collections, Frontify libraries, AEM collections, Widen collections), distinct from `asset_categories` taxonomy.
+      Not present in catalog today.
+    action: |
+      Phase B insert: `data_objects` row + DMDO row at role=master, necessity=required against the asset-library module from B2-1.
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+    vendor_evidence:
+      - Bynder
+      - Brandfolder
+      - Frontify
+      - Adobe Experience Manager Assets
+      - Widen Collective
+    extra_proposed_module_range: [DAM-ASSET-LIB]
+
+  - id: B1B-M4
+    summary: "Add asset_categories data_object (hierarchical taxonomy) + DMDO row in DAM-ASSET-LIB."
+    finding: |
+      `asset_categories` is the hierarchical taxonomy / folder tree on assets. Universal across every flagship DAM. Distinct from `asset_collections` (user-curated, flat) and from `asset_rights` (rights metadata).
+      Not present in catalog today.
+    action: |
+      Phase B insert: `data_objects` row + DMDO row at role=master, necessity=required against the asset-library module from B2-1.
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+    vendor_evidence:
+      - Bynder
+      - Brandfolder
+      - Frontify
+      - Adobe Experience Manager Assets
+      - Cloudinary
+      - Widen Collective
+    extra_proposed_module_range: [DAM-ASSET-LIB]
+
+  - id: B1B-M5
+    summary: "Add asset_rights data_object + DMDO row; module depends on 2/3/4-module split."
+    finding: |
+      `asset_rights` holds license terms, usage rights, territory, expiry. Drives downstream policy gates (Bynder, Brandfolder, Frontify, AEM rights, Widen).
+      Not present in catalog today. In a 4-module split it masters to DAM-RIGHTS-MGMT; in 2-module / 3-module splits it lives in DAM-ASSET-LIB.
+    action: |
+      Phase B insert: `data_objects` row + DMDO row at role=master, necessity=required against either DAM-ASSET-LIB or DAM-RIGHTS-MGMT per B2-1.
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+    vendor_evidence:
+      - Bynder
+      - Brandfolder
+      - Frontify
+      - Adobe Experience Manager Assets
+      - Widen Collective
+    extra_proposed_module_range: [DAM-ASSET-LIB, DAM-RIGHTS-MGMT]
+
+  - id: B1B-M6
+    summary: "Add model_releases data_object + DMDO row; module depends on 2/3/4-module split."
+    finding: |
+      `model_releases` are signed release forms (talent, property, location) attached to a `digital_assets` row. Bynder, AEM, Widen ship this as a first-class master.
+      Not present in catalog today.
+    action: |
+      Phase B insert: `data_objects` row + DMDO row at role=master, necessity=required against either DAM-ASSET-LIB or DAM-RIGHTS-MGMT per B2-1.
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+    vendor_evidence:
+      - Bynder
+      - Adobe Experience Manager Assets
+      - Widen Collective
+    extra_proposed_module_range: [DAM-ASSET-LIB, DAM-RIGHTS-MGMT]
+
+  - id: B1B-M7
+    summary: "Add share_links data_object + DMDO row in DAM-DISTRIBUTION."
+    finding: |
+      `share_links` are external-share URLs with expiry, watermark, password, view-count tracking. Dominant DAM distribution primitive (all flagship DAMs).
+      Not present in catalog today.
+    action: |
+      Phase B insert: `data_objects` row + DMDO row at role=master, necessity=required against DAM-DISTRIBUTION from B2-1.
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+    vendor_evidence:
+      - Bynder
+      - Brandfolder
+      - Frontify
+      - Adobe Experience Manager Assets
+      - Cloudinary
+      - Widen Collective
+    extra_proposed_module_range: [DAM-DISTRIBUTION]
+
+  - id: B1B-M8
+    summary: "Add asset_publications data_object + DMDO row in DAM-DISTRIBUTION; backs the digital_asset.published trigger."
+    finding: |
+      `asset_publications` is the state-machine entity behind the `digital_asset.published` trigger event (id 46). Outbound delivery to channels (web, social, partner CDN, PIM). AEM publishing, Bynder channel publishing, Widen, Brandfolder.
+      Not present in catalog today; the trigger event currently fires off the bare `digital_assets` row.
+    action: |
+      Phase B insert: `data_objects` row + DMDO row at role=master, necessity=required against DAM-DISTRIBUTION from B2-1. Re-target trigger_event 46 if appropriate (judgment call: keep on digital_assets vs move to asset_publications).
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+    vendor_evidence:
+      - Adobe Experience Manager Assets
+      - Bynder
+      - Brandfolder
+      - Widen Collective
+    extra_proposed_module_range: [DAM-DISTRIBUTION]
+
+  - id: B1B-S1
+    summary: "Author the DAM module set per the chosen split; gates B/E/F."
+    finding: |
+      DAM has zero `domain_modules` rows. Rule #14 requires every `domains` row to have at least 1 module with `module_kind='full'`. With at least 3 capabilities (after B1B-S5 lands) the floor becomes 2 full modules. M-band fails outright, gating B-band, C-band, D-band module-FK shapes, E-band roles, and F-band module-scoped skills.
+    action: |
+      Phase M load: create the chosen module set (2/3/4 modules per B2-1). For each module: domain_modules row with module_kind=full, domain_module_capabilities row binding CREATIVE-REVIEW (446) plus the new capabilities from B1B-S5, domain_module_data_objects rows (one master row per new data_object from B1B-M1..M8, plus embedded_master / consumer rows for users (748), content_entries (132), creative_deliverables (484)). One system skill per module (B1B-S10).
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+    affected_modules: []
+    extra_gates: [B1B-S2, B1B-S3, B1B-S7, B1B-S8, B1B-S10, B1B-S11, B1B-B1, B1B-B2, B1B-B3, B1B-M1, B1B-M2, B1B-M3, B1B-M4, B1B-M5, B1B-M6, B1B-M7, B1B-M8]
+
+  - id: B1B-S2
+    summary: "M2 floor binds to at-least-2 full modules once A2 lands."
+    finding: |
+      M2: domains with at least 3 capabilities require at least 2 full modules. Currently 1 capability so M2 passes vacuously; once B1B-S5 raises the capability count, M2 will require at least 2 full modules.
+    action: |
+      Solved by B1B-S1 when the chosen module set has at least 2 full modules.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: prerequisite_entity, ref: B1B-S5}
+
+  - id: B1B-S3
+    summary: "Link CREATIVE-REVIEW (capability 446) to a realizing DAM module via domain_module_capabilities."
+    finding: |
+      Capability 446 (CREATIVE-REVIEW) is bound to DAM via capability_domains but has zero domain_module_capabilities rows because no DAM module exists. M4 fails.
+    action: |
+      Insert domain_module_capabilities for capability_id=446 against the DAM module that hosts review workflow (likely DAM-DISTRIBUTION in 2-module split, or DAM-CREATIVE-REVIEW in 3/4-module splits) per B2-1.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+
+  - id: B1B-S7
+    summary: "Author symmetric outbound digital_assets to users edges; exact verbs require user pre-specification."
+    finding: |
+      data_object_relationships rows on digital_assets (137): 3 inbound from users (641 uploaded, 642 owns, 643 approves) but 0 outbound. Rule #10 says built-in edges should be symmetric on both sides. The 2026-05-30 audit asked for 3 outbound rows symmetric to the existing inbound but did not pre-specify the exact relationship_verb / inverse_verb / owner_side / data_object_relationship_label tuples.
+    action: |
+      Surface to user the proposed exact tuple per outbound row before inserting. The action remains deferred until tuples are confirmed (audit-procedure rule: do not load relationship rows the audit does not pre-specify).
+    blocked_by:
+      - {type: user_decision, ref: B2-7}
+
+  - id: B1B-S8
+    summary: "Author data_object_lifecycle_states for digital_assets; requires domain_module_id (depends on B1B-S1)."
+    finding: |
+      digital_assets (137) is a workflow-bearing master (trigger event digital_asset.published exists, lifecycle category) but has zero data_object_lifecycle_states rows. Rule #12 requires lifecycle states on every master + required data_object that has a workflow.
+      Each lifecycle state row needs a domain_module_id (M5), which requires DAM modules to exist first.
+    action: |
+      Phase B load after B1B-S1: author states (e.g. uploaded / submitted_for_review / approved / published / archived) with requires_permission=true for the gated transitions and domain_module_id set to the module realizing each state (DAM-ASSET-LIB for uploaded/draft, DAM-DISTRIBUTION for published, etc.).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+
+  - id: B1B-S10
+    summary: "Retire legacy dam-system skill; author module-anchored system skills + skill_tools per Rule #17."
+    finding: |
+      skills row 44 (dam-system) is the legacy domain-level system skill (domain_id=92, domain_module_id=null). Rule #17 requires exactly one system skill per domain_modules row, with that skill's domain_module_id set. F1 / F2 fail.
+    action: |
+      After B1B-S1, author one system skill per DAM module (skill_type=system, domain_module_id=<module_id>, skill_name=<module_code_lower>_agent). Migrate or delete the legacy dam-system row and its skill_tools row (443 -> tool 380 query_digital_assets). Author skill_tools rows on the new skills (floor 3-5 required, 5-20 total per Rule #17).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+
+  - id: B1B-S11
+    summary: "Phase S skill_tools floor: at least 3 required tools per system skill (5-20 total)."
+    finding: |
+      Legacy skill dam-system has only 1 skill_tools row (query_digital_assets). F3 fails. Solved when the new module-anchored skills land.
+    action: |
+      Solved by B1B-S10 (author skill_tools per the new system skill).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S10}
+
+  - id: B1B-B1
+    summary: "Set source_domain_module_id on handoff 98 (DAM -> HCMS digital_asset.published) once DAM modules ship."
+    finding: |
+      handoff 98 (digital_asset.published, DAM -> HCMS, payload digital_assets): source_domain_module_id NULL because DAM has zero modules. Target_domain_module_id is also NULL but that is HCMS-side responsibility (report-only).
+    action: |
+      PATCH /handoffs?id=eq.98 set source_domain_module_id = id of the DAM module that masters digital_assets (e.g. DAM-ASSET-LIB or DAM-DISTRIBUTION depending on split).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_handoffs:
+      - {handoff_id: 98, direction: outbound, source_domain: DAM, target_domain: HCMS, trigger_event: "digital_asset.published", payload: "digital_assets", null_field: source_domain_module_id}
+
+  - id: B1B-B2
+    summary: "Set target_domain_module_id on handoff 344 (AGENCY-MGMT -> DAM deliverable.approved) once DAM modules ship."
+    finding: |
+      handoff 344 (deliverable.approved, AGENCY-MGMT -> DAM, payload creative_deliverables): target_domain_module_id NULL. Source-side NULL is AGENCY-MGMT-side responsibility.
+    action: |
+      PATCH /handoffs?id=eq.344 set target_domain_module_id to the DAM module consuming creative_deliverables (likely DAM-ASSET-LIB or DAM-CREATIVE-REVIEW per B2-1).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_handoffs:
+      - {handoff_id: 344, direction: inbound, source_domain: AGENCY-MGMT, target_domain: DAM, trigger_event: "deliverable.approved", payload: "creative_deliverables", null_field: target_domain_module_id}
+
+  - id: B1B-B3
+    summary: "Set target_domain_module_id on handoff 806 (HCMS -> DAM content_entry.created) once DAM modules ship."
+    finding: |
+      handoff 806 (content_entry.created, HCMS -> DAM, payload content_entries): target_domain_module_id NULL. Source-side NULL is HCMS-side responsibility.
+    action: |
+      PATCH /handoffs?id=eq.806 set target_domain_module_id to the DAM module that consumes content_entries (likely DAM-ASSET-LIB).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_handoffs:
+      - {handoff_id: 806, direction: inbound, source_domain: HCMS, target_domain: DAM, trigger_event: "content_entry.created", payload: "content_entries", null_field: target_domain_module_id}
+
+b2:
+  - id: B2-1
+    summary: "Decide the DAM module split (2 / 3 / 4 modules) and name the modules."
+    question: |
+      Which module split for DAM? Options:
+        (a) 2-module: DAM-ASSET-LIB + DAM-DISTRIBUTION
+        (b) 3-module: DAM-ASSET-LIB + DAM-DISTRIBUTION + DAM-CREATIVE-REVIEW
+        (c) 4-module: DAM-ASSET-LIB + DAM-DISTRIBUTION + DAM-CREATIVE-REVIEW + DAM-RIGHTS-MGMT
+    options:
+      - 2-module: DAM-ASSET-LIB, DAM-DISTRIBUTION
+      - 3-module: DAM-ASSET-LIB, DAM-DISTRIBUTION, DAM-CREATIVE-REVIEW
+      - 4-module: DAM-ASSET-LIB, DAM-DISTRIBUTION, DAM-CREATIVE-REVIEW, DAM-RIGHTS-MGMT
+    why: |
+      The chosen split is the prerequisite for B1B-S1 (modules), B1B-S2/S3 (capability binding), B1B-S7 (relationship symmetry sits on data_objects but the audit asked for it after modules land), B1B-S8 (lifecycle state domain_module_id), B1B-S10/S11 (module-anchored skills), B1B-B1/B2/B3 (handoff per-module FKs), and B1B-M1..M8 routing.
+
+  - id: B2-2
+    summary: "Decide the pim_digital_assets (816) vs digital_assets (137) seam."
+    question: |
+      PIM masters pim_digital_assets in PIM-DIGITAL-ASSETS (module 142, domain 167); DAM masters digital_assets (137). The two are parallel masters for the same concept.
+      Options: (a) keep parallel masters (deliberate v1 seam); (b) demote pim_digital_assets to embedded_master consuming the DAM master; (c) merge the two data_objects (heavy refactor).
+    options:
+      - keep-parallel
+      - demote-pim-to-embedded-master
+      - merge-data-objects
+    why: |
+      Independent of Bucket 3. Affects PIM-side (demote requires PIM-side DMDO and relationship migration). Tracked as a report-only owed item against PIM.
+
+  - id: B2-3
+    summary: "Decide creative_briefs (483) and creative_deliverables (484) placement in DAM modules."
+    question: |
+      Once DAM modules exist, are creative_briefs (483) and creative_deliverables (484) recorded as `consumer` (referenced read-only, master in AGENCY-MGMT) or `embedded_master` (DAM ships a local shell so it deploys standalone without AGENCY-MGMT)?
+    options:
+      - consumer
+      - embedded_master
+    why: |
+      AGENCY-MGMT is the canonical master. Most brand-led DAMs ship without an agency tier (argues for embedded_master), but AGENCY-MGMT users would expect DAM to read through to their master (argues for consumer + DMDO consumer row).
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B2-4
+    summary: "Decide which regulations to attach to DAM now versus defer."
+    question: |
+      DAM has zero domain_regulations rows. Which to load now?
+    options:
+      - GDPR (personal content in assets, model releases)
+      - CCPA (CA equivalent)
+      - Copyright / DMCA (third-party-licensed assets)
+      - HIPAA (healthcare-vertical-only)
+      - Trademark / FTC advertising guidelines (situational)
+      - defer all to a later compliance audit
+    why: |
+      Compliance entities (`asset_rights`, `model_releases`) tie back to these regulations; loading the regulation rows now lets the embedding entities reference them.
+
+  - id: B2-5
+    summary: "Decide cross-cutting capability scope for the candidate DAM capabilities."
+    question: |
+      Of the candidate capabilities (asset-library, asset-taxonomy, rights-mgmt, brand-portal, asset-distribution, dynamic-delivery-transformation, and the cross-cutting BRAND-MGMT / DIGITAL-RIGHTS-MGMT), which to author as cross-cutting and which to keep domain-prefixed?
+    options:
+      - cross-cutting: BRAND-MGMT, DIGITAL-RIGHTS-MGMT
+      - domain-prefixed: DAM-ASSET-LIB, DAM-ASSET-TAXONOMY, DAM-BRAND-PORTAL, DAM-ASSET-DISTRIBUTION, DAM-DYNAMIC-DELIVERY
+      - other (user names)
+    why: |
+      Cross-cutting capabilities link to multiple domains; domain-prefixed are DAM-only. The decision affects which capabilities can be reused by HCMS, PIM, MRM, AGENCY-MGMT.
+
+  - id: B2-6
+    summary: "Decide Brand and Creative roles authoring now versus defer until modules ship."
+    question: |
+      Author the Brand and Creative function (id 55) roles (BRAND-CREATIVE-BRAND-MANAGER, BRAND-CREATIVE-CREATIVE-OPS, BRAND-CREATIVE-PHOTOGRAPHER / CONTENT-CREATOR) now, or defer until after modules ship?
+    options:
+      - author-now
+      - defer-until-modules
+    why: |
+      Roles depend on modules (E-band role_modules junction). Authoring now without modules creates orphans; deferring is the cleaner sequence.
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B2-7
+    summary: "Pre-specify exact tuples for the 3 outbound digital_assets -> users relationship rows."
+    question: |
+      Rule #10 wants symmetric edges. For each of the 3 inbound user-edges (641 uploaded, 642 owns, 643 approves), supply the exact tuple for the outbound row: (relationship_verb, inverse_verb, owner_side, data_object_relationship_label, cardinality if applicable).
+    options:
+      - "Mirror the inbound: e.g. (was_uploaded_by, uploaded, target, was_uploaded_by)"
+      - "Provide explicit alternatives"
+      - "Skip and let the inbound rows alone satisfy Rule #10"
+    why: |
+      The 2026-05-30 audit asked for the rows but did not pre-specify the tuples; without them the agent cannot load.
+
+  - id: B2-S4
+    summary: "Approve Rule #20 catalog_tagline / catalog_description wording for DAM."
+    question: |
+      Both catalog_tagline and catalog_description on domain 92 (DAM) are empty strings. Per Rule #20 the agent must surface proposed wording for user approval BEFORE writing.
+    options:
+      - User dictates exact wording
+      - Agent drafts, user approves verbatim
+      - Defer
+    why: |
+      Rule #20 explicitly forbids the agent populating these without user approval.
+
+  - id: B2-S9
+    summary: "Positively re-evaluate pattern flags on digital_assets (137)."
+    question: |
+      All three pattern flags are false on digital_assets. Audit recommends positive re-evaluation:
+        - has_personal_content: plausible (model releases, employee photography, GDPR).
+        - has_submit_lock: plausible on approved -> published transition.
+        - has_single_approver: plausible on certain workflows.
+      Which flips to apply?
+    options:
+      - has_personal_content=true
+      - has_submit_lock=true
+      - has_single_approver=true
+      - any combination
+      - none (keep defaults)
+    why: |
+      Pattern flags drive downstream behavior (UI hints, validation gates). The agent will not flip pattern flags without explicit user approval per the 2026-05-30 audit text.
+
+  - id: B2-H1
+    summary: "Review the 4 handoff_processes rows on DAM handoffs and decide which to promote to record_status=approved (Rule #1)."
+    question: |
+      Four handoff_processes rows currently sit at record_status=new for DAM-touching handoffs:
+        - 98 -> 1763 (Publish approved content, L4 21681), agent_curated.
+        - 344 -> 141 (Manage product marketing material, L3 16629), pre-existing.
+        - 344 -> 1762 (Assess and approve content, L4 21680), agent_curated.
+        - 806 -> 428 (Develop and manage content, L3 21670), agent_curated.
+      Per Rule #1 the agent will not flip record_status without user-explicit per-row approval. Which to mark approved / pending / rejected?
+    options:
+      - Approve all 4
+      - Approve a subset (name which)
+      - Reject some (name which)
+      - Leave all at new
+    why: |
+      Headline catalog-quality metric for the H-band is approved-row count. Currently zero approved.
+
+b3:
+  - id: B3-1
+    candidate: "review_rounds + review_comments"
+    rationale: |
+      Annotated review threads (pinned comments) on a creative are the primary surface of Frontify, Bynder Studio, and AEM Workfront-tie. Also the heart of the CREATIVE-PROOFING candidate domain.
+    vendor_evidence:
+      - Frontify
+      - Bynder Studio
+      - Adobe AEM Workfront
+    proposed_module: "DAM-CREATIVE-REVIEW (3-module split) or DAM-DISTRIBUTION"
+
+  - id: B3-2
+    candidate: "brand_guidelines"
+    rationale: |
+      Downloadable brand book entries (logo lockups, color tokens, typography specs). Flagship of Frontify; first-class on Bynder and Brandfolder. Could justify a separate BRAND-PORTAL candidate domain.
+    vendor_evidence:
+      - Bynder
+      - Frontify (flagship)
+      - Brandfolder
+    proposed_module: "DAM-DISTRIBUTION (brand-portal slice) or new DAM-BRAND-PORTAL"
+
+  - id: B3-3
+    candidate: "asset_transformations"
+    rationale: |
+      Image-on-the-fly resize, crop, format-convert, watermark. Cloudinary flagship; Imgix specialist; AEM dynamic media equivalent. Could justify a separate DYNAMIC-MEDIA domain.
+    vendor_evidence:
+      - Cloudinary (flagship)
+      - Imgix
+      - Adobe AEM dynamic media
+    proposed_module: "DAM-DISTRIBUTION"
+
+  - id: B3-4
+    candidate: "asset_usage_events"
+    rationale: |
+      Where an asset is embedded, when downloaded, by whom. Universal at upper tier (Bynder, Brandfolder analytics, AEM Insights).
+    vendor_evidence:
+      - Bynder
+      - Brandfolder
+      - Adobe AEM Insights
+    proposed_module: "DAM-DISTRIBUTION (analytics slice)"
+
+  - id: B3-5
+    candidate: "upload_sessions"
+    rationale: |
+      Bulk-upload session with progress, error handling. All flagship DAMs surface this; sometimes modeled as a state on digital_assets rather than a separate master.
+    vendor_evidence:
+      - Bynder
+      - Brandfolder
+      - Frontify
+      - Adobe Experience Manager Assets
+      - Widen Collective
+    proposed_module: "DAM-ASSET-LIB"
+
+  - id: B3-6
+    candidate: "creative_workspaces or creative_projects"
+    rationale: |
+      Project-level grouping of creative work (deadlines, contributors). AEM Workfront, Frontify Workspaces, Brandfolder Workspaces. Overlaps with MRM candidate domain.
+    vendor_evidence:
+      - Adobe AEM Workfront
+      - Frontify Workspaces
+      - Brandfolder Workspaces
+    proposed_module: "DAM-CREATIVE-REVIEW"
+
+  - id: B3-7
+    candidate: "license_agreements"
+    rationale: |
+      Third-party stock-photo and music-licensing contracts attached to an asset. Bynder enterprise, AEM Assets, Widen. Overlaps with asset_rights (B1B-M5); decide one entity vs two.
+    vendor_evidence:
+      - Bynder
+      - Adobe Experience Manager Assets
+      - Widen Collective
+    proposed_module: "DAM-RIGHTS-MGMT (4-module) or DAM-ASSET-LIB"

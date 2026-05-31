@@ -1,0 +1,241 @@
+schema_version: 2
+domain: METRICS-LAYER
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-A4
+    summary: domains.catalog_tagline and catalog_description empty on the METRICS-LAYER row; A4 hard fail under Rule #20
+    finding: domains.id=137 has empty catalog_tagline and empty catalog_description. A4 requires a single buyer-facing tagline plus a 1-3 paragraph buyer-facing description. Rule #20 forbids agent writes without explicit per-row wording approval.
+    action: Draft both fields in buyer voice (workflow + value, not analyst voice); surface drafts for user approval before writing.
+    affected_entities: [domains:METRICS-LAYER]
+    extra_independent_of: [B1A-M1]
+    extra_gated_by: [B2-CATALOG-UX]
+
+  - id: B1A-B6
+    summary: zero intra-domain master-to-master data_object_relationships; six expected edges absent
+    finding: Query /data_object_relationships?and=(data_object_id.in.(252,253,709,710,711),related_data_object_id.in.(252,253,709,710,711)) returns empty. Flagship vendor schemas (Cube, dbt MetricFlow, AtScale) carry these edges as first-class relationships.
+    action: Author 6 intra-domain relationship rows with relationship_verb / inverse_verb / relationship_type / relationship_kind / is_required / owner_side. Module-independent so ships before B1A-M1.
+    affected_entities:
+      - "metric_definitions belongs_to dimensional_models"
+      - "metric_materializations precomputes metric_definitions"
+      - "query_lineage_records traces metric_definitions"
+      - "query_lineage_records traces dimensional_models"
+      - "metric_access_policies governs metric_definitions"
+      - "metric_access_policies governs dimensional_models"
+    affected_masters:
+      - {data_object_id: 252, name: metric_definitions, target_module_id: null, workflow: definition}
+      - {data_object_id: 253, name: dimensional_models, target_module_id: null, workflow: model-publication}
+      - {data_object_id: 709, name: metric_materializations, target_module_id: null, workflow: materialization-refresh}
+      - {data_object_id: 710, name: query_lineage_records, target_module_id: null, workflow: lineage-capture}
+      - {data_object_id: 711, name: metric_access_policies, target_module_id: null, workflow: policy-lifecycle}
+
+  - id: B1A-B11
+    summary: zero data_object_aliases across all 5 METRICS-LAYER masters
+    finding: Query /data_object_aliases?data_object_id=in.(252,253,709,710,711) returns empty. Flagship vendors use sharply different terminology that the architect view cannot render. metric_definitions vendor terms (Measure / Metric / KPI / Calculation), dimensional_models (Cube / Semantic Model / Logical Data Model / Universe / Explore), metric_materializations (Pre-Aggregation / Aggregate / Materialized View / Cache), query_lineage_records (Query Log / Audit Record / Query History), metric_access_policies (Row-Level Security Policy / Cell-Level Policy / Access Grant / Data Permission).
+    action: Author 18 to 25 alias rows; alias_type per the catalog enum. Module-independent so ships before B1A-M1.
+    affected_masters:
+      - {data_object_id: 252, name: metric_definitions, target_module_id: null, workflow: definition}
+      - {data_object_id: 253, name: dimensional_models, target_module_id: null, workflow: model-publication}
+      - {data_object_id: 709, name: metric_materializations, target_module_id: null, workflow: materialization-refresh}
+      - {data_object_id: 710, name: query_lineage_records, target_module_id: null, workflow: lineage-capture}
+      - {data_object_id: 711, name: metric_access_policies, target_module_id: null, workflow: policy-lifecycle}
+    vendor_evidence: [Cube Cloud, AtScale, dbt Semantic Layer, Lightdash, GoodData.CN, Honeydew, Looker]
+
+  - id: B1A-H1
+    summary: 4 of 8 cross-domain handoffs lack agent_curated APQC tags; 2 carry false-positive discovery_substring on process 505
+    finding: Handoffs 218, 692, 694, 696 carry agent_curated handoff_processes rows. Handoffs 219 and 220 carry discovery_substring rows pointing at process 505 Establish baseline metrics (false positive on the word "metric"). Handoffs 693 and 695 carry zero tags. Volume target is 0.5N to 0.8N agent_curated tags + ~0.2N deferrals against this 8-handoff cross-domain set.
+    action: For 219, author agent_curated row matching handoff 218's process 277 Manage business information (same trigger event, similar BI vs DATA-AI-PLAT consumer pair). For 220, surface as B2-DCG-INBOUND-TAG (Rule #1 forbids record_status flip without explicit user instruction). For 693 metric_materialization.refreshed and 695 metric_access_policy.changed, both are Discover Pass 3 candidates (no clean PCF for cache refresh signal or policy change broadcast).
+    affected_handoffs:
+      - {handoff_id: 218, direction: outbound, source_domain: METRICS-LAYER, target_domain: BI, trigger_event: metric.certified, payload: metric_definitions, null_field: none}
+      - {handoff_id: 219, direction: outbound, source_domain: METRICS-LAYER, target_domain: DATA-AI-PLAT, trigger_event: metric.certified, payload: metric_definitions, null_field: agent_curated_tag}
+      - {handoff_id: 220, direction: inbound, source_domain: DCG, target_domain: METRICS-LAYER, trigger_event: metric.deprecated, payload: metric_definitions, null_field: agent_curated_tag}
+      - {handoff_id: 692, direction: outbound, source_domain: METRICS-LAYER, target_domain: BI, trigger_event: dimensional_model.published, payload: dimensional_models, null_field: none}
+      - {handoff_id: 693, direction: outbound, source_domain: METRICS-LAYER, target_domain: DATA-AI-PLAT, trigger_event: metric_materialization.refreshed, payload: metric_materializations, null_field: agent_curated_tag}
+      - {handoff_id: 694, direction: outbound, source_domain: METRICS-LAYER, target_domain: DCG, trigger_event: query_lineage.captured, payload: query_lineage_records, null_field: none}
+      - {handoff_id: 695, direction: outbound, source_domain: METRICS-LAYER, target_domain: BI, trigger_event: metric_access_policy.changed, payload: metric_access_policies, null_field: agent_curated_tag}
+      - {handoff_id: 696, direction: outbound, source_domain: METRICS-LAYER, target_domain: BI, trigger_event: metric_materialization.refresh_failed, payload: metric_materializations, null_field: none}
+
+b1b:
+  - id: B1B-M1
+    summary: zero domain_modules rows for METRICS-LAYER; cascades through M-band, B10b, B12, F2, M8, E-band
+    finding: Query /domain_modules?domain_id=eq.137 returns empty; /domain_module_host_domains?domain_id=eq.137 also empty. 8 capabilities linked via capability_domains so the M2 floor of >=2 full modules applies. No DMDO rows exist catalog-wide for any of the 5 masters (252, 253, 709, 710, 711). M1 / M2 / M4 / M6 / M8 all hard fail; B10b cannot derive module FKs on the 8 handoffs; B12 cannot attribute lifecycle states; F2 has no module to anchor a system skill on. Recommended 3-module split (from 2026-05-30 B1-S1) is METRICS-LAYER-DEFINITIONS (masters 252, 253; capabilities 345 / 346 / 197 / 347), METRICS-LAYER-COMPUTE (masters 709, 710; capabilities 348, 349), METRICS-LAYER-DELIVERY (master 711; capabilities 350, 351). All module_kind=full. Cross-module embedded shells per the 2026-05-30 spec.
+    blocked_by:
+      - {type: user_decision, ref: B2-MODULE-SPLIT}
+    affected_modules: []
+    affected_masters:
+      - {data_object_id: 252, name: metric_definitions, target_module_id: null, workflow: definition}
+      - {data_object_id: 253, name: dimensional_models, target_module_id: null, workflow: model-publication}
+      - {data_object_id: 709, name: metric_materializations, target_module_id: null, workflow: materialization-refresh}
+      - {data_object_id: 710, name: query_lineage_records, target_module_id: null, workflow: lineage-capture}
+      - {data_object_id: 711, name: metric_access_policies, target_module_id: null, workflow: policy-lifecycle}
+
+  - id: B1B-B10b
+    summary: all 8 cross-domain handoffs have NULL source_domain_module_id and target_domain_module_id on the METRICS-LAYER side
+    finding: B10b derivation rule maps each handoff to the METRICS-LAYER module that masters the trigger event's data_object (source side) or the payload data_object (target side). No METRICS-LAYER modules exist so neither derivation can run. After B1B-M1 lands, the 7 outbound handoffs get source_domain_module_id per the master attribution (252 / 253 -> DEFINITIONS, 709 / 710 -> COMPUTE, 711 -> DELIVERY) and the 1 inbound handoff (220) gets target_domain_module_id=DEFINITIONS module (master of 252).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+    affected_handoffs:
+      - {handoff_id: 218, direction: outbound, source_domain: METRICS-LAYER, target_domain: BI, trigger_event: metric.certified, payload: metric_definitions, null_field: source_domain_module_id}
+      - {handoff_id: 219, direction: outbound, source_domain: METRICS-LAYER, target_domain: DATA-AI-PLAT, trigger_event: metric.certified, payload: metric_definitions, null_field: source_domain_module_id}
+      - {handoff_id: 220, direction: inbound, source_domain: DCG, target_domain: METRICS-LAYER, trigger_event: metric.deprecated, payload: metric_definitions, null_field: target_domain_module_id}
+      - {handoff_id: 692, direction: outbound, source_domain: METRICS-LAYER, target_domain: BI, trigger_event: dimensional_model.published, payload: dimensional_models, null_field: source_domain_module_id}
+      - {handoff_id: 693, direction: outbound, source_domain: METRICS-LAYER, target_domain: DATA-AI-PLAT, trigger_event: metric_materialization.refreshed, payload: metric_materializations, null_field: source_domain_module_id}
+      - {handoff_id: 694, direction: outbound, source_domain: METRICS-LAYER, target_domain: DCG, trigger_event: query_lineage.captured, payload: query_lineage_records, null_field: source_domain_module_id}
+      - {handoff_id: 695, direction: outbound, source_domain: METRICS-LAYER, target_domain: BI, trigger_event: metric_access_policy.changed, payload: metric_access_policies, null_field: source_domain_module_id}
+      - {handoff_id: 696, direction: outbound, source_domain: METRICS-LAYER, target_domain: BI, trigger_event: metric_materialization.refresh_failed, payload: metric_materializations, null_field: source_domain_module_id}
+
+  - id: B1B-B12
+    summary: zero data_object_lifecycle_states across all 5 METRICS-LAYER masters; module attribution gated on modules existing
+    finding: Each master carries a workflow shape from flagship vendor docs. metric_definitions draft / in_review / certified / deprecated / retired (Cube, dbt, AtScale share the ladder). dimensional_models draft / published / deprecated / retired. metric_materializations scheduled / refreshing / refreshed / stale / failed. query_lineage_records captured / processed / archived (borderline config-shape). metric_access_policies draft / active / superseded / retired. requires_permission flips on certification / deprecation / retirement / activate / supersede transitions; domain_module_id attribution needs the modules to exist first.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+    affected_masters:
+      - {data_object_id: 252, name: metric_definitions, target_module_id: null, workflow: draft-in_review-certified-deprecated-retired}
+      - {data_object_id: 253, name: dimensional_models, target_module_id: null, workflow: draft-published-deprecated-retired}
+      - {data_object_id: 709, name: metric_materializations, target_module_id: null, workflow: scheduled-refreshing-refreshed-stale-failed}
+      - {data_object_id: 710, name: query_lineage_records, target_module_id: null, workflow: captured-processed-archived}
+      - {data_object_id: 711, name: metric_access_policies, target_module_id: null, workflow: draft-active-superseded-retired}
+
+  - id: B1B-B8
+    summary: zero outbound cross-domain data_object_relationships mirroring the 7 outbound handoffs; target masters may not be loaded
+    finding: Query /data_object_relationships?and=(data_object_id.in.(252,253,709,710,711),related_data_object_id.not.in.(252,253,709,710,711),related_data_object_id.neq.748) returns empty. Each outbound handoff with a clean payload-to-target mapping implies a corresponding relationship row. Target candidates per the 2026-05-30 audit are BI bi_dashboards (consumer of metric_definitions), DATA-AI-PLAT feature_store_features (consumer of metric_definitions), DCG lineage_assets (consumer of query_lineage_records). Target master IDs need verification against the live catalog before authoring; some may not yet exist.
+    blocked_by:
+      - {type: catalog_addition, scope: domains, trigger: target masters in BI / DATA-AI-PLAT / DCG must be loaded before relationship rows can reference them}
+    affected_handoffs:
+      - {handoff_id: 218, direction: outbound, source_domain: METRICS-LAYER, target_domain: BI, trigger_event: metric.certified, payload: metric_definitions, null_field: cross_domain_relationship}
+      - {handoff_id: 219, direction: outbound, source_domain: METRICS-LAYER, target_domain: DATA-AI-PLAT, trigger_event: metric.certified, payload: metric_definitions, null_field: cross_domain_relationship}
+      - {handoff_id: 692, direction: outbound, source_domain: METRICS-LAYER, target_domain: BI, trigger_event: dimensional_model.published, payload: dimensional_models, null_field: cross_domain_relationship}
+      - {handoff_id: 693, direction: outbound, source_domain: METRICS-LAYER, target_domain: DATA-AI-PLAT, trigger_event: metric_materialization.refreshed, payload: metric_materializations, null_field: cross_domain_relationship}
+      - {handoff_id: 694, direction: outbound, source_domain: METRICS-LAYER, target_domain: DCG, trigger_event: query_lineage.captured, payload: query_lineage_records, null_field: cross_domain_relationship}
+      - {handoff_id: 695, direction: outbound, source_domain: METRICS-LAYER, target_domain: BI, trigger_event: metric_access_policy.changed, payload: metric_access_policies, null_field: cross_domain_relationship}
+      - {handoff_id: 696, direction: outbound, source_domain: METRICS-LAYER, target_domain: BI, trigger_event: metric_materialization.refresh_failed, payload: metric_materializations, null_field: cross_domain_relationship}
+
+  - id: B1B-F1
+    summary: legacy domain-level skill metrics-layer-system id 83 must be deleted once module-anchored skills land
+    finding: skills.id=83, skill_name=metrics-layer-system, skill_type=system, domain_id=137, domain_module_id=NULL. Holds 5 query tools at coverage_tier=platform. F1 requires DELETE once any module-anchored system skill exists for the domain.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-F2}
+    affected_entities: [skills:metrics-layer-system]
+
+  - id: B1B-F2
+    summary: zero module-anchored system skills for METRICS-LAYER; cascade of M1
+    finding: Rule #17 requires exactly one skill_type=system skill per domain_modules row with domain_module_id set and >=1 skill_tools row. Zero modules so zero module-anchored skills. Authoring floors per the 2026-05-30 audit B1-S10 are metrics_layer_definitions_agent (query / mutate / certify / deprecate / publish / validate-compile / translate-question-to-metric), metrics_layer_compute_agent (query / mutate / schedule-refresh / refresh-now side_effect / capture-lineage / analyze-cost compute), metrics_layer_delivery_agent (query / mutate / activate-policy / deliver-query compute / serve-via-sql side_effect / serve-via-rest side_effect).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+    affected_masters:
+      - {data_object_id: 252, name: metric_definitions, target_module_id: null, workflow: definition}
+      - {data_object_id: 253, name: dimensional_models, target_module_id: null, workflow: model-publication}
+      - {data_object_id: 709, name: metric_materializations, target_module_id: null, workflow: materialization-refresh}
+      - {data_object_id: 710, name: query_lineage_records, target_module_id: null, workflow: lineage-capture}
+      - {data_object_id: 711, name: metric_access_policies, target_module_id: null, workflow: policy-lifecycle}
+
+b2:
+  - id: B2-MODULE-SPLIT
+    summary: module split shape for METRICS-LAYER (carry from 2026-05-30 B2-1); gates the structural cascade
+    question: Adopt the recommended 3-module split (METRICS-LAYER-DEFINITIONS + METRICS-LAYER-COMPUTE + METRICS-LAYER-DELIVERY), or a 2-module split (CORE + DELIVERY), or a 4-module split (split GOVERNANCE off as its own module)?
+    options:
+      - 3-module split (recommended) balances vendor-shape vs. enterprise-buyer-shape; each module's capability set non-trivial
+      - 2-module split (CORE + DELIVERY) mirrors Cube and dbt packaging the semantic layer as one unit and delivery as a sidecar
+      - 4-module split (DEFINITIONS + COMPUTE + GOVERNANCE + DELIVERY) cleanest match to enterprise-buyer org charts (separate data-governance team)
+    why: Gates B1B-M1 (modules), B1B-B10b (handoff module FK backfill), B1B-B12 (lifecycle states module attribution), B1B-F1 (legacy skill retire), B1B-F2 (module-anchored skills).
+    affected_modules: []
+    affected_masters:
+      - {data_object_id: 252, name: metric_definitions, target_module_id: null, workflow: definition}
+      - {data_object_id: 253, name: dimensional_models, target_module_id: null, workflow: model-publication}
+      - {data_object_id: 709, name: metric_materializations, target_module_id: null, workflow: materialization-refresh}
+      - {data_object_id: 710, name: query_lineage_records, target_module_id: null, workflow: lineage-capture}
+      - {data_object_id: 711, name: metric_access_policies, target_module_id: null, workflow: policy-lifecycle}
+
+  - id: B2-PATTERN-FLAGS
+    summary: pattern flag positive re-evaluation per Rule #12 / B4 across 4 candidate flips on 3 masters
+    question: Apply the following pattern flag flips? metric_definitions.has_submit_lock=true (certified metric immutable until re-drafted in Cube and dbt). metric_definitions.has_single_approver=true (certification typically gated on a single data-product owner). metric_access_policies.has_single_approver=true (policy activation typically single approval). dimensional_models.has_submit_lock=true (published model immutable while live consumers point at it).
+    options:
+      - Approve all four flips
+      - Approve a subset (specify per flag)
+      - Decline all (flags stay false)
+    why: Pattern flags are workflow-shape judgments the user owns; defaults-to-false do not establish review. No notes write either way (Rule #15).
+    affected_masters:
+      - {data_object_id: 252, name: metric_definitions, target_module_id: null, workflow: definition}
+      - {data_object_id: 253, name: dimensional_models, target_module_id: null, workflow: model-publication}
+      - {data_object_id: 711, name: metric_access_policies, target_module_id: null, workflow: policy-lifecycle}
+
+  - id: B2-CATALOG-UX
+    summary: A4 catalog_tagline and catalog_description wording for the METRICS-LAYER domain row (Rule #20)
+    question: Approve wording for the two A4 fields on domains.id=137? Recommended tagline (carry from 2026-05-30 B2-3) is "Define your business metrics once and serve them to every dashboard, agent, and app." Recommended description is 3 paragraphs (problem of metric drift, the metrics-layer surface, buyer value).
+    options:
+      - Approve the recommended draft as is
+      - Approve with edits (user supplies revised wording)
+      - Defer indefinitely (A4 stays failing)
+    why: Rule #20 forbids the agent writing catalog_tagline or catalog_description without explicit per-row user approval; once a value exists, never overwrite without per-row approval.
+    affected_entities: [domains:METRICS-LAYER]
+
+  - id: B2-NAMING-ARBITRATION
+    summary: naming arbitration on the 5 prefixed masters under Rule #9
+    question: Keep the 5 masters as is (metric_definitions, dimensional_models, metric_materializations, query_lineage_records, metric_access_policies) with is_canonical_bare_word=false, OR rename metric_definitions to bare metrics with the canonical claim, OR rename to semantic_metric_definitions?
+    options:
+      - Keep as is (recommended; preserves bare metrics for any future BI-owned aggregated-table master)
+      - Rename metric_definitions to metrics with is_canonical_bare_word=true and naming_authority_rationale
+      - Rename to semantic_metric_definitions (lengthens for no gain)
+    why: All five names are prefixed-style with no live collision today. The bare word metrics may matter to BI / DATA-AI-PLAT for a future aggregated-tables master.
+    affected_masters:
+      - {data_object_id: 252, name: metric_definitions, target_module_id: null, workflow: definition}
+
+  - id: B2-LOOKER-RECLASSIFICATION
+    summary: Looker coverage_level on METRICS-LAYER (currently secondary)
+    question: Keep Looker (solution id 352) at coverage_level=secondary on METRICS-LAYER, OR promote to primary because LookML is the metrics-layer surface and Looker bundles the BI surface on top?
+    options:
+      - Keep secondary (recommended; Looker is sold and bought primarily as a BI tool)
+      - Promote to primary (LookML IS the metrics-layer surface)
+    why: Decision affects how the catalog ranks Looker against the dedicated headless-BI vendors (Cube, dbt, AtScale, etc.) in BI / METRICS-LAYER cross-references.
+    affected_entities: [solutions:Looker]
+    vendor_evidence: [Looker]
+
+  - id: B2-DCG-INBOUND-TAG
+    summary: handoff 220 (DCG to METRICS-LAYER on metric.deprecated) carries false-positive discovery_substring tag on process 505
+    question: How to handle the false-positive discovery_substring row on handoff 220 pointing at process 505 Establish baseline metrics? Rule #1 forbids the agent flipping record_status to rejected without explicit user instruction.
+    options:
+      - Leave at record_status=new for the reviewer to mark rejected later (default per Rule #1)
+      - Explicitly approve PATCH to record_status=rejected and authorize agent to insert a new agent_curated tag in its place
+      - Authorize agent to insert a new agent_curated tag alongside (both rows coexist; reviewer picks)
+    why: Rule #1 requires explicit instruction for any record_status flip other than new; the agent cannot self-resolve.
+    affected_handoffs:
+      - {handoff_id: 220, direction: inbound, source_domain: DCG, target_domain: METRICS-LAYER, trigger_event: metric.deprecated, payload: metric_definitions, null_field: agent_curated_tag}
+
+b3:
+  - id: B3-METRIC-VIEWS
+    candidate: metric_views
+    rationale: Cube and dbt MetricFlow both ship a "metric view" or "saved query" concept (named pre-bundled metric plus dimension plus filter combo a consumer asks for by name). Distinct from metric_definitions (formula) and metric_materializations (precomputed grain).
+    vendor_evidence: [Cube Cloud, dbt Semantic Layer]
+    proposed_module: METRICS-LAYER-DELIVERY
+
+  - id: B3-METRIC-CONSUMERS
+    candidate: metric_consumers
+    rationale: AtScale and Cube both track registered downstream consumers (BI dashboards, agents, embed clients) so the metrics layer can fan out cache invalidations and emit consumer-specific access logs. Vendor verification needed to confirm distinction from an OAuth-client list.
+    vendor_evidence: [AtScale, Cube Cloud]
+    proposed_module: METRICS-LAYER-DELIVERY
+
+  - id: B3-METRIC-ASSERTION-RULES
+    candidate: metric_assertion_rules
+    rationale: dbt MetricFlow and Cube both support assertion rules (accepted_values, freshness, relative_change) attached to metrics. Scope distinction needed against a future DATA-OBSERVABILITY domain.
+    vendor_evidence: [dbt Semantic Layer, Cube Cloud]
+    proposed_module: METRICS-LAYER-DEFINITIONS
+
+  - id: B3-METRIC-CHANGE-PROPOSALS
+    candidate: metric_change_proposals
+    rationale: dbt Semantic Layer and Cube Cloud both surface a metric-change-as-PR workflow (a metric edit goes through code review before merging to certified state). May already be implicit in B1B-B12's metric_definitions in_review state; vendor verification needed.
+    vendor_evidence: [dbt Semantic Layer, Cube Cloud]
+    proposed_module: METRICS-LAYER-DEFINITIONS
+
+  - id: B3-DELIVERY-SPLIT
+    candidate: METRICS-LAYER-DELIVERY split into BI-DELIVERY and AI-DELIVERY
+    rationale: The delivery module bundles three protocol families (BI-native SQL / JDBC / MDX, web-native REST / GraphQL, AI-native MCP / tool-use). Future audit may grow the surface enough to warrant a split.
+    vendor_evidence: [Cube Cloud, dbt Semantic Layer, AtScale, Honeydew]
+    proposed_module: null
+
+  - id: B3-REGULATION-TAGGING
+    candidate: domain_regulations rows for SOX, GDPR, CCPA, HIPAA against METRICS-LAYER
+    rationale: Zero domain_regulations rows today. Candidate regulations are SOX (metric definitions backing financial reporting are SOX-controlled), GDPR / CCPA (access policies must enforce data-subject restrictions on metric outputs), HIPAA (when metrics aggregate over PHI). Verification needed whether to tag at metrics-layer or BI layer.
+    vendor_evidence: [AtScale]
+    proposed_module: null

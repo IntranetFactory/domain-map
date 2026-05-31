@@ -1,0 +1,246 @@
+schema_version: 2
+domain: CMDB
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-M1
+    summary: "Add missing master `ci_reconciliation_rules` to CMDB-CORE."
+    finding: "MISSING - `ci_reconciliation_rules` not in catalog. Universal across ServiceNow IRE, BMC Helix reconciliation_rules, Device42 dedupe_rules. Reconciliation logic is the load-bearing differentiator across all flagships and is unmodeled in the current footprint."
+    action: "Phase B insert: new `data_objects` row (singular `CI Reconciliation Rule`, plural `CI Reconciliation Rules`, kind=domain_owned), DMDO row role=master+necessity=required under CMDB-CORE (108), lifecycle states (proposed: `draft`, `active`, `superseded`, `retired`), intra-domain relationships to configuration_items (76) and ci_relationships (77)."
+    affected_modules: [108]
+    vendor_evidence: ["ServiceNow CMDB Identification and Reconciliation Engine", "BMC Helix Discovery", "Device42"]
+  - id: B1A-M2
+    summary: "Add missing master `ci_attestations` to CMDB-CORE."
+    finding: "MISSING - `ci_attestations` not in catalog. ServiceNow CMDB Data Foundations attestation tasks, BMC Helix data-steward review cycles, Device42 verification queue. CI owner periodic attestation is a primary data-quality control."
+    action: "Phase B insert: new `data_objects` row (`CI Attestation`/`CI Attestations`), DMDO master under CMDB-CORE, lifecycle states (proposed: `requested`, `responded`, `accepted`, `expired`), users edge for attester."
+    affected_modules: [108]
+    vendor_evidence: ["ServiceNow CMDB Data Foundations", "BMC Helix Discovery", "Device42"]
+  - id: B1A-M4
+    summary: "Add missing master `ci_audit_log` to CMDB-CORE."
+    finding: "MISSING - `ci_audit_log` not in catalog. Universal: every flagship exposes a CI history audit table separate from generic record-history. SOX-ITGC evidence depends on it."
+    action: "Phase B insert: new `data_objects` row (`CI Audit Log Entry`/`CI Audit Log`, kind=domain_owned), DMDO master under CMDB-CORE, append-only lifecycle (no workflow), users edge for actor."
+    affected_modules: [108]
+    vendor_evidence: ["ServiceNow CMDB CI history", "BMC Helix Discovery", "Device42"]
+  - id: B1A-M7
+    summary: "Add ISO-19770-1 to regulations master + link to CMDB."
+    finding: "MISSING - `regulations` master row for ISO-19770-1 absent; cannot link to CMDB until the row exists. ISO/IEC 19770-1 IT asset management process framework touches CMDB as the CI substrate ITAM/SAM build on."
+    action: "INSERT `regulations` row (regulation_name `ISO/IEC 19770-1`, framework body ISO), then INSERT `domain_regulations` row linking CMDB (domain_id=4) -> the new regulation with applicability=mandatory."
+    affected_modules: []
+    vendor_evidence: ["ISO/IEC 19770-1 process framework"]
+  - id: B1A-S3
+    summary: "Materialize 3 workflow-gate permissions on CMDB-CORE for configuration_items state machine."
+    finding: "STRUCTURAL (Rule #12) - Lifecycle states 272 (registered, override register_ci), 274 (retired, override retire_ci), 275 (archived, override archive_ci) carry requires_permission=true on domain_module_id=108, but the corresponding workflow-gate `permissions` rows do not exist. Only 3 baseline tiers exist on cmdb-core."
+    action: "INSERT 3 `permissions` rows: cmdb-core:register_ci, cmdb-core:retire_ci, cmdb-core:archive_ci, all tier=workflow-gate, domain_module_id=108. Then INSERT `permission_hierarchy` edges so the 3 new permissions are children of cmdb-core:manage and cmdb-core:admin."
+    affected_modules: [108]
+    vendor_evidence: []
+  - id: B1A-H1
+    summary: "Replace 3 stale discovery_substring APQC tags on handoffs 51, 236, 237."
+    finding: "APQC TAGGING - `handoff_processes` rows id 7 (handoff 236, process 1180 `Review and monitor application security controls`), id 9 (handoff 237, process 1180), id 52 (handoff 51, process 9 `Manage Financial Resources`) carry discovery_substring proposals with incorrect process matches. APM-to-CMDB application onboard is asset-record-maintenance, not security-review; ITSM-unauthorized-change-detection is incident-triage, not financial-resource management."
+    action: "DELETE handoff_processes id IN (7, 9, 52); INSERT replacements with proposal_source=agent_curated, record_status=new: (handoff 236, process 1312 `Maintain IT asset records` 20918), (handoff 237, process 1312), (handoff 51, process 1299 `Triage IT service delivery incidents` 20903)."
+    affected_handoffs:
+      - {handoff_id: 51, direction: outbound, source_domain: CMDB, target_domain: ITSM, trigger_event: "ci.unauthorized_change_detected", payload: configuration_items, null_field: ""}
+      - {handoff_id: 236, direction: inbound, source_domain: APM, target_domain: CMDB, trigger_event: "application.onboarded", payload: enterprise_applications, null_field: ""}
+      - {handoff_id: 237, direction: inbound, source_domain: APM, target_domain: CMDB, trigger_event: "application.lifecycle_state_changed", payload: enterprise_applications, null_field: ""}
+    vendor_evidence: []
+  - id: B1A-Pair-ITSM-1
+    summary: "Add `service_changes -> references -> ci_baselines` relationship to mirror handoff 1200."
+    finding: "BOUNDARY - handoff 1200 (CMDB-BASELINES-DRIFT -> ITSM module 41, `ci_baseline.captured` payload ci_baselines) implies change-control reads baselines as a precondition, but `data_object_relationships` has no edge between `service_changes` (50) and `ci_baselines` (80)."
+    action: "INSERT `data_object_relationships` row: data_object_id=50, related_data_object_id=80, relationship_verb=references, inverse_verb=referenced_by_change, relationship_type=many_to_many, relationship_kind=reference, is_required=false, owner_side=target."
+    affected_entities: [service_changes, ci_baselines]
+    vendor_evidence: []
+
+b1b:
+  - id: B1B-M3
+    summary: "Add `discovery_credentials` as consumer in CMDB-CORE (canonical master deferred until DISCOVERY modularizes)."
+    finding: "MISSING - `discovery_credentials` not in catalog. All 5 flagships ship credential vaults for discovery scans (vCenter / cloud-tenant / AD / SSH). Even if the canonical master lives in DISCOVERY when modularized, CMDB needs the consumer link."
+    blocked_by:
+      - {type: domain_audit, blocking_domain: DISCOVERY, milestone: M1-modularization}
+    affected_modules: [108]
+    vendor_evidence: ["ServiceNow CMDB", "BMC Helix Discovery", "Device42", "Ivanti Neurons Discovery", "Flexera One IT Asset Management"]
+  - id: B1B-B10b-DISCOVERY
+    summary: "5 CMDB handoffs carry NULL on counter-party FK because neighbor DISCOVERY is unmodularized."
+    finding: "B10b PARTIAL - handoffs 48 (DISCOVERY->CMDB-CORE `ci.discovered`), 49 (DISCOVERY->CMDB-CORE `relationship.discovered`), 621 (DISCOVERY->CMDB-CORE `discovery_scan.completed`), 625 (DISCOVERY->CMDB-CORE `discovery_source.connected`) all carry source_domain_module_id=NULL. Handoff 1199 (CMDB-CORE->DISCOVERY `ci_class.published`) carries target_domain_module_id=NULL. Root cause: DISCOVERY (domain 5) has zero domain_modules rows. The CMDB side is correct; the NULL routes to DISCOVERY's M1 modularization."
+    blocked_by:
+      - {type: domain_audit, blocking_domain: DISCOVERY, milestone: M1-modularization}
+    affected_handoffs:
+      - {handoff_id: 48, direction: inbound, source_domain: DISCOVERY, target_domain: CMDB, trigger_event: "ci.discovered", payload: configuration_items, null_field: source_domain_module_id}
+      - {handoff_id: 49, direction: inbound, source_domain: DISCOVERY, target_domain: CMDB, trigger_event: "relationship.discovered", payload: ci_relationships, null_field: source_domain_module_id}
+      - {handoff_id: 621, direction: inbound, source_domain: DISCOVERY, target_domain: CMDB, trigger_event: "discovery_scan.completed", payload: discovery_scans, null_field: source_domain_module_id}
+      - {handoff_id: 625, direction: inbound, source_domain: DISCOVERY, target_domain: CMDB, trigger_event: "discovery_source.connected", payload: discovery_sources, null_field: source_domain_module_id}
+      - {handoff_id: 1199, direction: outbound, source_domain: CMDB, target_domain: DISCOVERY, trigger_event: "ci_class.published", payload: ci_classes, null_field: target_domain_module_id}
+  - id: B1B-B10b-AIOPS
+    summary: "1 CMDB outbound handoff carries NULL target FK because AIOPS is unmodularized."
+    finding: "B10b PARTIAL - handoff 628 (CMDB-SERVICE-MAPPING->AIOPS `service_map.updated`) carries target_domain_module_id=NULL. AIOPS (domain 6) has zero domain_modules rows."
+    blocked_by:
+      - {type: domain_audit, blocking_domain: AIOPS, milestone: M1-modularization}
+    affected_handoffs:
+      - {handoff_id: 628, direction: outbound, source_domain: CMDB, target_domain: AIOPS, trigger_event: "service_map.updated", payload: service_maps, null_field: target_domain_module_id}
+  - id: B1B-B10b-RMM
+    summary: "1 CMDB inbound handoff carries NULL source FK because RMM is unmodularized."
+    finding: "B10b PARTIAL - handoff 146 (RMM->CMDB-CORE `ci_endpoint.discovered`) carries source_domain_module_id=NULL. RMM (domain 130) has zero domain_modules rows."
+    blocked_by:
+      - {type: domain_audit, blocking_domain: RMM, milestone: M1-modularization}
+    affected_handoffs:
+      - {handoff_id: 146, direction: inbound, source_domain: RMM, target_domain: CMDB, trigger_event: "ci_endpoint.discovered", payload: configuration_items, null_field: source_domain_module_id}
+  - id: B1B-B10b-NPMD
+    summary: "1 CMDB inbound handoff carries NULL source FK because NPMD is unmodularized."
+    finding: "B10b PARTIAL - handoff 654 (NPMD->CMDB-SERVICE-MAPPING `network_topology_snapshot.updated`) carries source_domain_module_id=NULL. NPMD (domain 82) has zero domain_modules rows."
+    blocked_by:
+      - {type: domain_audit, blocking_domain: NPMD, milestone: M1-modularization}
+    affected_handoffs:
+      - {handoff_id: 654, direction: inbound, source_domain: NPMD, target_domain: CMDB, trigger_event: "network_topology_snapshot.updated", payload: network_topology_snapshots, null_field: source_domain_module_id}
+  - id: B1B-B10b-DCIM
+    summary: "1 CMDB inbound handoff carries NULL source FK because DCIM is unmodularized."
+    finding: "B10b PARTIAL - handoff 679 (DCIM->CMDB-CORE `dc_port_connection.changed`) carries source_domain_module_id=NULL. DCIM (domain 84) has zero domain_modules rows."
+    blocked_by:
+      - {type: domain_audit, blocking_domain: DCIM, milestone: M1-modularization}
+    affected_handoffs:
+      - {handoff_id: 679, direction: inbound, source_domain: DCIM, target_domain: CMDB, trigger_event: "dc_port_connection.changed", payload: dc_port_connections, null_field: source_domain_module_id}
+  - id: B1B-S2-lifecycles
+    summary: "Lifecycle states pending for 3 masters (ci_relationships, service_maps, ci_baselines) plus exemption decision for ci_classes."
+    finding: "B12 FAIL - 4 of 5 CMDB masters carry zero `data_object_lifecycle_states`. Proposed states: ci_relationships (`discovered`, `confirmed`, `obsolete`); service_maps (`draft`, `published`, `stale`, `archived`); ci_baselines (`captured`, `validated`, `superseded`, `retired`). ci_classes is plausibly config-shape and qualifies for Rule #12 exemption."
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+    affected_masters:
+      - {data_object_id: 77, name: ci_relationships, target_module_id: 108, workflow: "discovered->confirmed->obsolete"}
+      - {data_object_id: 78, name: ci_classes, target_module_id: 108, workflow: "config-shape, exemption candidate"}
+      - {data_object_id: 79, name: service_maps, target_module_id: 109, workflow: "draft->published->stale->archived"}
+      - {data_object_id: 80, name: ci_baselines, target_module_id: 110, workflow: "captured->validated->superseded->retired"}
+  - id: B1B-S4-fanout
+    summary: "Additional B9 subscribers for `ci.unauthorized_change_detected` blocked on user fan-out decision."
+    finding: "Event 30 currently has 1 subscriber (handoff 51, ITSM module 41). Adding GRC (SOX evidence stream) and SECOPS (potential intrusion signal) requires user judgment, plus target module IDs in those domains."
+    blocked_by:
+      - {type: user_decision, ref: B2-6}
+
+b2:
+  - id: B2-1
+    summary: "B12 config-shape exemption decision for `ci_classes`."
+    question: "Treat ci_classes (78) as config-shape (Rule #12 exemption, no lifecycle states required) OR author a minimal `defined/active/deprecated` lifecycle?"
+    options:
+      - "(a) Accept exemption as a tracked decision here only (per Rule #15, do NOT populate data_objects.notes)."
+      - "(b) Approve a specific notes wording the user supplies."
+      - "(c) Author the minimal lifecycle."
+    why: "ci_classes is class taxonomy authored once and edited rarely. Rule #15 forbids auto-populating notes; decision must be surfaced to user. Gates B1B-S2-lifecycles."
+  - id: B2-2
+    summary: "Pattern flags across all 5 CMDB masters."
+    question: "Flip `configuration_items.has_submit_lock=true` to reflect the registered->in_use lock pattern, or leave all flags false?"
+    options:
+      - "(a) Flip configuration_items.has_submit_lock=true."
+      - "(b) Leave as-is, surface a tracked note in the audit only."
+      - "(c) Author the flag plus user-approved notes wording."
+    why: "configuration_items.registered (state 272, requires_permission=true) implies once registered with reconciliation rules applied, the canonical record is locked against unscoped edits. False-by-default is not the same as false-after-review (Rule #12 / B4)."
+  - id: B2-3
+    summary: "Service map ownership boundary with DISCOVERY."
+    question: "When DISCOVERY modularizes, should `service_maps` (79) move to a DISCOVERY-SERVICE-MAP module with CMDB-SERVICE-MAPPING becoming a consumer, or stay mastered in CMDB?"
+    options:
+      - "(a) Keep CMDB as master (current)."
+      - "(b) Move master to DISCOVERY."
+      - "(c) Split (CMDB masters business-service projection, DISCOVERY masters raw topology)."
+    why: "ServiceNow ships Service Mapping as a Discovery add-on. Architectural ownership question; dependent on Bucket 3 D4 DISCOVERY modularization."
+    blocked_by:
+      - {type: depends_on, ref: B3-D4, reason: "DISCOVERY modularization shape determines available targets"}
+  - id: B2-4
+    summary: "Relationship row 220 vs 232 duplication on `enterprise_applications -> configuration_items`."
+    question: "Keep both rows (different verbs: mapped_to vs onboards_into), collapse to row 220, or drop row 232 only?"
+    options:
+      - "(a) Keep both (encode distinct edges)."
+      - "(b) Collapse to 220 (mapping is persistent; onboarding is a one-time transition captured by trigger event 208 already)."
+      - "(c) Drop 232 only."
+    why: "Same FK pair triggers ambiguity in label rendering. Independent."
+  - id: B2-5
+    summary: "CMDB roles naming - keep `IT-INFRA-CMDB-` infix or simplify to `IT-INFRA-`?"
+    question: "Rename roles 10052/10053/10054 from `IT-INFRA-CMDB-ADMIN/...` to drop the CMDB infix, keep as-is, or demote to per-module tier permissions?"
+    options:
+      - "(a) Keep current names (CMDB-specific personas, easier to find in UI)."
+      - "(b) Rename to drop the CMDB infix (cleaner function-scoping)."
+      - "(c) Demote to per-module tier permissions and delete the cross-module roles."
+    why: "Hard-invariant requires `<FUNCTION-CODE>-<ROLE-NAME>` format; current codes have an additional `CMDB-` infix."
+  - id: B2-6
+    summary: "B9 fan-out target for `ci.unauthorized_change_detected`."
+    question: "Beyond ITSM (current sole subscriber), should the event also fan out to GRC (SOX-ITGC evidence) and SECOPS (potential indicator of compromise)?"
+    options:
+      - "(a) Add both GRC + SECOPS."
+      - "(b) GRC only."
+      - "(c) SECOPS only."
+      - "(d) Keep ITSM-only."
+    why: "Decision shape depends on whether SECOPS is wired to receive infrastructure-anomaly signals or only authentication-anomaly. Gates B1B-S4-fanout."
+  - id: B2-7
+    summary: "Pairwise reconciliation scope for CMDB neighbors."
+    question: "Run the inline 4-leg pairwise diff for ITSM only (concrete gap), all 3 weighted neighbors (ITSM, DISCOVERY, APM) with blocked-on-neighbor annotations, or defer to follow-up Validate runs?"
+    options:
+      - "(a) ITSM only inline."
+      - "(b) All 3 with blocked-on-neighbor annotations."
+      - "(c) Defer all to follow-up runs once neighbors land."
+    why: "DISCOVERY and APM gap traffic all originates from null-FK source modules (neighbor-side modularization gap)."
+  - id: B2-8
+    summary: "Catalog UX backfill - tagline and description for CMDB domain row and all 3 modules (A4 + M8 fail)."
+    question: "Approve a draft for `domains.catalog_tagline` + `catalog_description` (Rule #20 A4) AND `domain_modules.catalog_tagline` + `catalog_description` for CMDB-CORE / CMDB-SERVICE-MAPPING / CMDB-BASELINES-DRIFT (Rule #20 M8)?"
+    options:
+      - "(a) Author all 8 drafts now, surface per-row for approval, then INSERT only the approved strings."
+      - "(b) Defer to a marketing pass."
+    why: "Rule #20 requires user approval BEFORE writing. Drafts must be in buyer voice (workflow + value), not analyst voice."
+
+b3:
+  - id: B3-E1
+    candidate: "ci_views"
+    rationale: "ServiceNow CMDB Performance Analytics views, Device42 saved searches. Curated subsets of the CI graph; not a full master but heavy enough to warrant Phase 0 vetting."
+    vendor_evidence: ["ServiceNow CMDB", "Device42"]
+    proposed_module: CMDB-CORE
+  - id: B3-E2
+    candidate: "service_health_indicators"
+    rationale: "Universal in service-mapping flagships (ServiceNow Service Operations Workspace, BMC Helix Service Resolution). Could equally live in AIOPS or OBS once those are modularized."
+    vendor_evidence: ["ServiceNow Service Operations Workspace", "BMC Helix Service Resolution"]
+    proposed_module: CMDB-SERVICE-MAPPING
+  - id: B3-E3
+    candidate: "change_blackout_windows"
+    rationale: "ServiceNow CMDB freeze windows, BMC Helix change calendars. Could live in ITSM-CHANGE-MGMT instead; modularization-issue candidate."
+    vendor_evidence: ["ServiceNow CMDB", "BMC Helix"]
+    proposed_module: CMDB-BASELINES-DRIFT
+  - id: B3-E4
+    candidate: "software_install_records"
+    rationale: "Universal in discovery vendors. Almost certainly belongs in SAM proper, not CMDB; surfaces here because flagships ship it inside CMDB UIs."
+    vendor_evidence: ["Device42", "Ivanti Neurons Discovery"]
+    proposed_module: CMDB-CORE
+  - id: B3-E5
+    candidate: "ci_health_scores"
+    rationale: "ServiceNow CMDB Health Dashboard scores (completeness, correctness, compliance). The substrate for the data-quality governance capability."
+    vendor_evidence: ["ServiceNow CMDB Health Dashboard"]
+    proposed_module: CMDB-CORE
+  - id: B3-E6
+    candidate: "ci_decommission_requests"
+    rationale: "Universal: every flagship has a decommission workflow that flips the CI lifecycle from retired to archived. Maps to existing archive_ci workflow gate but the request entity itself is missing."
+    vendor_evidence: ["ServiceNow CMDB", "BMC Helix Discovery", "Device42"]
+    proposed_module: CMDB-CORE
+  - id: B3-E7
+    candidate: "regulations FedRAMP CM-2 and CM-8"
+    rationale: "NIST 800-53 Configuration Management family; for federal-government CMDB deployments. Lower confidence than SOX/PCI/ISO."
+    vendor_evidence: ["NIST 800-53 CM family"]
+    proposed_module: ""
+  - id: B3-E8
+    candidate: "ci_certification_evidence"
+    rationale: "SOX-ITGC, FedRAMP, and PCI audits all hit CMDB asking for evidence packets. Specialist entity; not universal."
+    vendor_evidence: ["SOX-ITGC audit", "FedRAMP audit", "PCI audit"]
+    proposed_module: CMDB-CORE
+  - id: B3-D1
+    candidate: "CLOUD-ASSET-INVENTORY domain"
+    rationale: "JupiterOne, Steampipe, Faros AI, Wiz inventory side, Orca inventory side, AWS Config, Azure Resource Graph. Distinct from CMDB (cloud-native, real-time, identity-centric), distinct from CSPM/DSPM. Possible new domain or CMDB sub-domain."
+    vendor_evidence: ["JupiterOne", "Steampipe", "Faros AI", "Wiz", "Orca Security", "AWS Config", "Azure Resource Graph"]
+    proposed_module: ""
+  - id: B3-D2
+    candidate: "CONFIG-COMPLIANCE domain"
+    rationale: "Tanium, Qualys CSAM, Red Hat Insights Compliance. Continuous configuration-against-baseline compliance scoring; overlaps CMDB-BASELINES-DRIFT and GRC."
+    vendor_evidence: ["Tanium", "Qualys CSAM", "Red Hat Insights Compliance"]
+    proposed_module: ""
+  - id: B3-D3
+    candidate: "CMDB-FEDERATION domain"
+    rationale: "ServiceNow CMDB IRE extended to multi-CMDB federations, BMC TrueSight Reconciliation. Probably folds back into CMDB as a capability."
+    vendor_evidence: ["ServiceNow CMDB IRE", "BMC TrueSight Reconciliation"]
+    proposed_module: ""
+  - id: B3-D4
+    candidate: "DISCOVERY modularization decision (existing domain 5)"
+    rationale: "DISCOVERY has zero domain_modules; this is not a new domain candidate but a modularization decision queued for DISCOVERY's next audit. Determines B2-3 service-map ownership outcome."
+    vendor_evidence: []
+    proposed_module: ""
+    extra_decision_target: "DISCOVERY M1"

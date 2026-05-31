@@ -1,0 +1,191 @@
+schema_version: 2
+domain: DCIM
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-T2
+    summary: Author missing handoff for dc_power_circuit.overload (event 691) into ITSM-INCIDENT-MGMT and PCF-tag in the same load.
+    finding: trigger_event 691 (dc_power_circuit.overload) currently has zero handoff rows. It is the only DCIM event with no downstream subscriber. ITSM-INCIDENT-MGMT (domain_module_id 38) is the natural consumer with payload service_incidents (data_object_id 47), matching the pattern of handoffs 674, 675, 677, 678 (all DCIM to ITSM, payload 47, integration_pattern event_stream).
+    action: INSERT handoff(source_domain_id=84, source_domain_module_id=<DCIM-POWER-COOLING id>, target_domain_id=1, target_domain_module_id=38, trigger_event_id=691, data_object_id=47, integration_pattern='event_stream', friction_level='high'). Then INSERT handoff_processes(handoff_id=<new>, process_id=1299, proposal_source='agent_curated', role='implements'). Single small loader.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1A-S1}
+      - {type: user_decision, ref: B2-MODULE-SPLIT}
+  - id: B1A-T5b
+    summary: Author 9 intra-domain data_object_relationships edges plus cross-domain edges to CMDB and SPM.
+    finding: Only 4 user-edges exist on data_object_relationships against DCIM masters (rows 1782 to 1785, user owns dc_racks / authors dc_capacity_plans / approves dc_capacity_plans / inspects dc_environmental_readings). The 9 intra-domain edges named in the 2026-05-30 pass are still missing, plus the two cross-domain edges.
+    action: INSERT 9 intra-domain rows (dc_racks contains dc_cabinets, dc_cabinets contains dc_power_distribution_units, dc_power_distribution_units feeds dc_power_circuits, dc_power_circuits powers dc_cabinets, dc_uninterruptible_power_supplies backs dc_power_distribution_units, dc_cooling_units serves dc_cabinets, dc_environmental_readings sampled_at dc_cabinets, dc_capacity_plans plans dc_racks, dc_port_connections connects dc_cable_connections). Plus 2 cross-domain rows (dc_port_connections updates configuration_items, dc_capacity_plans informs financial_plans or equivalent). Bundle into the modules load to minimize round trips.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1A-S1}
+      - {type: user_decision, ref: B2-MODULE-SPLIT}
+    affected_entities:
+      - dc_racks
+      - dc_cabinets
+      - dc_power_distribution_units
+      - dc_power_circuits
+      - dc_uninterruptible_power_supplies
+      - dc_cooling_units
+      - dc_environmental_readings
+      - dc_capacity_plans
+      - dc_port_connections
+      - dc_cable_connections
+      - configuration_items
+      - financial_plans
+  - id: B1A-B1
+    summary: PATCH source_domain_module_id on all 9 DCIM outbound handoffs once modules exist.
+    finding: Every DCIM outbound handoff (ids 673, 674, 675, 676, 677, 678, 679, 680, 681) has NULL source_domain_module_id. B10b is the only outstanding boundary failure on DCIM's side once modules land.
+    action: For each of the 9 handoffs, PATCH source_domain_module_id to the strongest-role module holding the source data_object (per Rule #14 derivation). Deterministic mapping the moment B1A-S1 lands.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1A-S1}
+      - {type: user_decision, ref: B2-MODULE-SPLIT}
+    affected_handoffs:
+      - {handoff_id: 673, direction: outbound, source_domain: DCIM, target_domain: ITOM, trigger_event: dc_environmental_reading.threshold_breached, payload: dc_environmental_readings, null_field: source_domain_module_id}
+      - {handoff_id: 674, direction: outbound, source_domain: DCIM, target_domain: ITSM, trigger_event: dc_cabinet.environmental_alert, payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 675, direction: outbound, source_domain: DCIM, target_domain: ITSM, trigger_event: dc_power_distribution_unit.failure, payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 676, direction: outbound, source_domain: DCIM, target_domain: AIOPS, trigger_event: dc_power_distribution_unit.failure, payload: dc_power_distribution_units, null_field: source_domain_module_id}
+      - {handoff_id: 677, direction: outbound, source_domain: DCIM, target_domain: ITSM, trigger_event: dc_uninterruptible_power_supply.failover, payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 678, direction: outbound, source_domain: DCIM, target_domain: ITSM, trigger_event: dc_cooling_unit.failure, payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 679, direction: outbound, source_domain: DCIM, target_domain: CMDB, trigger_event: dc_port_connection.changed, payload: dc_port_connections, null_field: source_domain_module_id}
+      - {handoff_id: 680, direction: outbound, source_domain: DCIM, target_domain: SPM, trigger_event: dc_capacity_plan.refreshed, payload: dc_capacity_plans, null_field: source_domain_module_id}
+      - {handoff_id: 681, direction: outbound, source_domain: DCIM, target_domain: ITOM, trigger_event: dc_rack.capacity_threshold_breached, payload: dc_racks, null_field: source_domain_module_id}
+
+b1b:
+  - id: B1B-S1
+    summary: Author DCIM domain_modules rows (Phase A obligation per Rule #14).
+    finding: DCIM has 10 masters and zero domain_modules rows. M1 / M2 / M4 / M5 / M6 fail outright. The deployable unit is the module; without modules, B10b cannot resolve, lifecycle states (B12) cannot be authored (need module FK), system skills (F2 to F5) cannot exist, roles (E1 to E5) have nothing to scope. Audit blocker.
+    blocked_by:
+      - {type: user_decision, ref: B2-MODULE-SPLIT}
+    affected_entities:
+      - dc_racks
+      - dc_cabinets
+      - dc_power_distribution_units
+      - dc_power_circuits
+      - dc_uninterruptible_power_supplies
+      - dc_cooling_units
+      - dc_environmental_readings
+      - dc_capacity_plans
+      - dc_port_connections
+      - dc_cable_connections
+    extra_options:
+      - "(a) 3-module split: DCIM-ASSET-CAPACITY (racks, cabinets, port_connections, cable_connections, capacity_plans), DCIM-POWER-COOLING (PDUs, power_circuits, UPSes, cooling_units, environmental_readings), optional DCIM-FLOORPLAN-SITE"
+      - "(b) 2-module split: DCIM-PHYSICAL + DCIM-POWER-COOLING"
+      - "(c) 1 full + 1 starter: DCIM-CORE + DCIM-LITE"
+  - id: B1B-S2
+    summary: Author DCIM capabilities and capability_domains (>=3 floor, target 5-8).
+    finding: Zero capability_domains rows for DCIM. M4 fails; >=2 module floor (Rule #14) requires >=3 capabilities to apply.
+    blocked_by:
+      - {type: user_decision, ref: B2-CAPABILITY-SET}
+      - {type: depends_on, ref: B1B-S1, reason: capabilities wire to modules via domain_module_capabilities}
+    extra_proposed_codes:
+      - DCIM-ASSET-REGISTER
+      - DCIM-CAPACITY-PLAN
+      - DCIM-POWER-MGMT
+      - DCIM-COOLING-MGMT
+      - DCIM-CONNECTIVITY-MAP
+      - DCIM-ENV-MONITORING
+      - DCIM-FLOOR-PLAN
+  - id: B1B-S3
+    summary: Author DCIM solutions and solution_domains (>=3 with >=1 primary).
+    finding: Zero solution_domains rows for DCIM. A3 fails. Device42 (solutions.id 46) already exists in catalog but has no solution_domains link to DCIM.
+    blocked_by:
+      - {type: catalog_addition, scope: solutions, trigger: vendor catalog rows for Nlyte / Sunbird dcTrack / Schneider EcoStruxure IT / Vertiv Environet / NetBox}
+    vendor_evidence:
+      - {vendor: Nlyte, evidence: 1st_class}
+      - {vendor: Sunbird dcTrack, evidence: 1st_class}
+      - {vendor: Schneider EcoStruxure IT, evidence: 1st_class}
+      - {vendor: Vertiv Environet, evidence: 1st_class}
+      - {vendor: Device42, evidence: secondary}
+      - {vendor: NetBox, evidence: secondary}
+  - id: B1B-S4
+    summary: Populate domain catalog_tagline and catalog_description (Rule #20 user approval first).
+    finding: catalog_tagline and catalog_description are both empty strings on domains.id=84. A4 fails.
+    blocked_by:
+      - {type: user_decision, ref: B2-CATALOG-COPY}
+  - id: B1B-S5
+    summary: Author 1 system skill per DCIM domain_modules row and retire legacy dcim-system (skill_id 46, 10 skill_tools rows).
+    finding: Legacy domain-level system skill dcim-system (id 46, domain_module_id NULL) exists with 10 skill_tools rows. F1 is transitional-pass while no module-level skill exists, but Rule #17 requires exactly 1 system skill per domain_modules row. Once B1B-S1 lands, F1 hard-fails until id 46 is retired.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: per-module system skill needs domain_module_id}
+  - id: B1B-S6
+    summary: Author DCIM roles, role_modules, role_permissions (E1 to E5).
+    finding: "Zero DCIM-prefixed roles. Proposed: IT-INFRA-DC-OPERATOR (primary on power, cooling, asset modules), IT-INFRA-CAPACITY-PLANNER (primary on capacity, secondary on asset), FACILITIES-DC-FACILITIES-LEAD (primary on cooling and floor-plan, secondary on others)."
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: role_modules requires module FKs}
+      - {type: user_decision, ref: B2-MODULE-SPLIT, reason: module count determines role-to-module wiring}
+  - id: B1B-T7
+    summary: Author DCIM lifecycle states; surface config-shape exemption for sensor masters.
+    finding: Zero data_object_lifecycle_states rows for any DCIM master. B12 fails. Workflow-bearing masters (dc_capacity_plans, dc_power_circuits, dc_racks) need full state machines; sensor-shape masters (dc_environmental_readings, dc_port_connections, dc_cable_connections) are config-shape exemption candidates per Rule #12.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: data_object_lifecycle_states.domain_module_id required}
+      - {type: user_decision, ref: B2-LIFECYCLE-EXEMPTION}
+    affected_masters:
+      - {data_object_id: 553, name: dc_capacity_plans, target_module_id: null, workflow: draft -> in_review -> approved -> archived}
+      - {data_object_id: 549, name: dc_power_circuits, target_module_id: null, workflow: provisioned -> energised -> deenergised -> decommissioned}
+      - {data_object_id: 546, name: dc_racks, target_module_id: null, workflow: planned -> installed -> active -> retired}
+
+b2:
+  - id: B2-MODULE-SPLIT
+    summary: Pick DCIM module split (gates every remaining b1 item).
+    question: "Which DCIM module split should we apply? Options below."
+    options:
+      - "(a) 3-module split: DCIM-ASSET-CAPACITY + DCIM-POWER-COOLING + optional DCIM-FLOORPLAN-SITE starter"
+      - "(b) 2-module split: DCIM-PHYSICAL + DCIM-POWER-COOLING"
+      - "(c) 1 full + 1 starter: DCIM-CORE + DCIM-LITE"
+      - "(d) different split, please specify"
+    why: "Bucket 1 cannot fix any structural item without knowing how many modules to create and which masters land where. The 3-module split aligns with the Bucket 3 dc_floor_plans / dc_sites vetting outcome; the 2-module split is the safe fallback if Bucket 3 stays speculative."
+  - id: B2-CAPABILITY-SET
+    summary: Approve DCIM capability codes and decide on cross-cutting fold-ins.
+    question: "Which of the 7 proposed capability codes should land, and does DCIM-CAPACITY-PLAN fold into the existing cross-cutting ITOM-CAPACITY (id 227) via a capability_domains link rather than a new code?"
+    options:
+      - "all 7 new"
+      - "6 new + capacity folds to ITOM-CAPACITY 227"
+      - "fewer (specify which)"
+    why: "Phase A M4 floor is 3 capabilities; >=3 capabilities triggers Rule #14 >=2 modules floor. Cross-cutting fold-ins reduce churn but require explicit confirmation per skill convention."
+  - id: B2-ENV-READING-FAN-OUT
+    summary: Should dc_environmental_reading.threshold_breached publish to ITSM as well as ITOM?
+    question: "Currently event 694 publishes only to ITOM (handoff 673). Add a second outbound to ITSM-INCIDENT-MGMT (module 38, payload service_incidents 47) for major-incident triggering, or leave it to ITOM to correlate and re-publish?"
+    options:
+      - "(a) fan out from DCIM, add new ITSM handoff"
+      - "(b) leave to ITOM correlation"
+      - "(c) defer"
+    why: "An environmental threshold breach is a plausible major-incident trigger. Adding the handoff at DCIM is cheaper than waiting on an ITOM correlator that may not exist; leaving it to ITOM preserves single-source-of-event semantics."
+  - id: B2-LIFECYCLE-EXEMPTION
+    summary: Sensor-shape masters config-shape exemption recording.
+    question: "For dc_environmental_readings, dc_port_connections, dc_cable_connections (sensor-shape masters), record the lifecycle exemption silently in this audit only, or supply exact notes wording for data_objects.notes per master?"
+    options:
+      - "(a) silent exemption tracked only in history"
+      - "(b) supply exact per-master notes wording (Rule #15 explicit approval)"
+    why: "Rule #15 forbids auto-populating data_objects.notes. The 2026-05-30 pass licensed the agent to surface this decision instead of writing prose."
+
+b3:
+  - id: B3-FLOOR-PLANS
+    candidate: dc_floor_plans
+    rationale: Universal across flagship vendors; visual rack/cabinet layout is core DCIM UX. If vetted in, redrawing the module split to include DCIM-FLOORPLAN-SITE becomes the natural fit.
+    vendor_evidence: [Nlyte, Sunbird, Schneider, NetBox]
+    proposed_module: DCIM-FLOORPLAN-SITE
+  - id: B3-SITES
+    candidate: dc_sites
+    rationale: Site / data-hall master sits above racks in every flagship vendor schema. Currently DCIM has no rack-parent entity in the catalog; sites is the canonical fix.
+    vendor_evidence: [Nlyte, Sunbird, Schneider, Device42]
+    proposed_module: DCIM-ASSET-CAPACITY
+  - id: B3-CHANGE-REQUESTS
+    candidate: dc_change_requests
+    rationale: Rack-move and power-change workflows in Nlyte and Sunbird dcTrack carry a domain-specific change-request entity. May instead demote to a consumer link on ITSM change_requests if the Phase 0 pass shows the workflow is ITSM-shaped.
+    vendor_evidence: [Nlyte, Sunbird]
+    proposed_module: DCIM-POWER-COOLING
+  - id: B3-POWER-RESERVATIONS
+    candidate: dc_power_reservations
+    rationale: Reserved power-budget allocations sit between dc_capacity_plans and dc_power_circuits in Sunbird, Schneider, and Nlyte; missing from the current schema.
+    vendor_evidence: [Sunbird, Schneider, Nlyte]
+    proposed_module: DCIM-POWER-COOLING
+  - id: B3-AUDIT-TRAILS
+    candidate: dc_audit_trails
+    rationale: Regulatory-shaped (SOC 2 evidence). May resolve to a cross-cutting platform audit log rather than a DCIM-local master; Phase 0 pass needs to decide.
+    vendor_evidence: [Nlyte, Sunbird]
+    proposed_module: cross-cutting
+  - id: B3-DISCOVERY-SCANS
+    candidate: dc_discovery_scans
+    rationale: Device42-skewed but appears in Nlyte and Sunbird too. Vet whether non-Device42 buyers carry the entity natively or rely on integrations.
+    vendor_evidence: [Device42, Nlyte, Sunbird]
+    proposed_module: DCIM-ASSET-CAPACITY

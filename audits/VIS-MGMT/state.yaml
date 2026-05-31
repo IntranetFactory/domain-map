@@ -1,0 +1,228 @@
+schema_version: 2
+domain: VIS-MGMT
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S3
+    summary: "Draft catalog_tagline + catalog_description for domains.id=24 in buyer voice (Rule #20)."
+    finding: "VIS-MGMT domain row (id 24) has empty catalog_tagline and empty catalog_description. Rule #20 requires both fields populated in buyer voice (workflow + value), not analyst voice. A4 fails."
+    action: "Draft both fields per Rule #20 voice rule, surface to user for review BEFORE writing (Rule #1 + Rule #20). On user approval, PATCH /domains?id=eq.24 with both fields. Independent of module split decision (Bucket 2 #1)."
+    affected_entities: ["domains.id=24"]
+
+  - id: B1A-S5
+    summary: "PATCH event_category on all 10 VIS-MGMT trigger_events (currently empty string)."
+    finding: "All 10 trigger_events on VIS-MGMT masters (ids 975..984) have event_category=''. Per Rule #13 allowed values are lifecycle, state_change, threshold, signal. Empty string is not a valid enum entry; rows fail B9 schema expectations."
+    action: "PATCH event_category per row. Proposed values: 975 visitor_registration.submitted lifecycle; 976 visitor_check_in.completed lifecycle; 977 visitor_badge.issued lifecycle; 978 visitor_badge.returned lifecycle; 979 host_assignment.created lifecycle; 980 host_notification.sent signal; 981 evacuation_list.updated state_change; 982 visitor_nda.acknowledged lifecycle; 983 visitor_watchlist.screened state_change; 984 visitor_audit_log.sealed lifecycle."
+    affected_events:
+      - {id: 975, event_name: "visitor_registration.submitted", current_category: "", proposed_category: "lifecycle"}
+      - {id: 976, event_name: "visitor_check_in.completed", current_category: "", proposed_category: "lifecycle"}
+      - {id: 977, event_name: "visitor_badge.issued", current_category: "", proposed_category: "lifecycle"}
+      - {id: 978, event_name: "visitor_badge.returned", current_category: "", proposed_category: "lifecycle"}
+      - {id: 979, event_name: "host_assignment.created", current_category: "", proposed_category: "lifecycle"}
+      - {id: 980, event_name: "host_notification.sent", current_category: "", proposed_category: "signal"}
+      - {id: 981, event_name: "evacuation_list.updated", current_category: "", proposed_category: "state_change"}
+      - {id: 982, event_name: "visitor_nda.acknowledged", current_category: "", proposed_category: "lifecycle"}
+      - {id: 983, event_name: "visitor_watchlist.screened", current_category: "", proposed_category: "state_change"}
+      - {id: 984, event_name: "visitor_audit_log.sealed", current_category: "", proposed_category: "lifecycle"}
+
+b1b:
+  - id: B1A-S1
+    summary: "Author domain_modules (2-module or 3-module split) plus capabilities + domain_module_capabilities for VIS-MGMT."
+    finding: "Zero domain_modules rows for domain 24. Domain holds 8 master data_objects (668..675) in legacy domain_data_objects but no module hosts them. Rule #14 mandates >=1 module. Module set authoritatively decides downstream module attribution for B12 lifecycle states (M5), F2 system skills, B10b backfill, B9b intra-domain handoffs, and E-band roles."
+    blocked_by:
+      - {type: user_decision, ref: B2-MODULE-SPLIT}
+    affected_modules: []
+    affected_masters:
+      - {data_object_id: 668, name: "visitor_registrations", target_module_id: null, workflow: "draft->submitted->approved->arrived->checked_out/no_show/cancelled"}
+      - {data_object_id: 669, name: "visitor_check_ins", target_module_id: null, workflow: "pending->verified->badged/denied/escalated"}
+      - {data_object_id: 670, name: "visitor_badges", target_module_id: null, workflow: "issued->active->returned/lost"}
+      - {data_object_id: 671, name: "host_assignments", target_module_id: null, workflow: "assigned->confirmed->closed"}
+      - {data_object_id: 672, name: "visitor_evacuation_lists", target_module_id: null, workflow: "open->closed_drill/closed_event"}
+      - {data_object_id: 673, name: "visitor_nda_acknowledgements", target_module_id: null, workflow: "sent->signed/declined"}
+      - {data_object_id: 674, name: "visitor_watchlist_screenings", target_module_id: null, workflow: "queued->cleared/flagged/blocked"}
+      - {data_object_id: 675, name: "visitor_audit_logs", target_module_id: null, workflow: "open->sealed"}
+
+  - id: B1A-S2
+    summary: "Author capability_domains + domain_module_capabilities (>=3 capabilities, mapped to modules from B1A-S1)."
+    finding: "Zero capability_domains rows for domain 24. A2 fails. M4 + M6 cannot be evaluated until both capabilities and modules exist."
+    action: "Author >=3 capabilities (recommended: VISITOR-PREREG, VISITOR-CHECKIN, VISITOR-COMPLIANCE, EMERGENCY-ROSTER, HOST-MANAGEMENT). Link via capability_domains, then domain_module_capabilities once module set is decided."
+    blocked_by:
+      - {type: depends_on, ref: B1A-S1, reason: "domain_module_capabilities needs module ids"}
+      - {type: user_decision, ref: B2-MODULE-SPLIT}
+
+  - id: B1A-S4
+    summary: "PATCH has_personal_content + has_submit_lock on PII-bearing and lock-bearing masters."
+    finding: "All 8 masters have has_personal_content=false, has_submit_lock=false, has_single_approver=false. Six masters carry direct visitor PII (name, ID, photo, signature): visitor_registrations 668, visitor_check_ins 669, visitor_badges 670, visitor_nda_acknowledgements 673, visitor_watchlist_screenings 674, visitor_audit_logs 675. visitor_audit_logs 675 has a one-way sealing transition (has_submit_lock candidate). host_assignments 671 + visitor_evacuation_lists 672 are surfaced to user (Bucket 2 #2)."
+    action: "PATCH has_personal_content=true on 668, 669, 670, 673, 674, 675. PATCH has_submit_lock=true on 675. Defer 671 + 672 to user judgment per B2-PII-INDIRECT."
+    blocked_by:
+      - {type: user_decision, ref: B2-PII-INDIRECT}
+    affected_entities: ["visitor_registrations", "visitor_check_ins", "visitor_badges", "visitor_nda_acknowledgements", "visitor_watchlist_screenings", "visitor_audit_logs", "host_assignments", "visitor_evacuation_lists"]
+
+  - id: B1A-S6
+    summary: "Author data_object_lifecycle_states across all 8 masters with domain_module_id set."
+    finding: "Zero data_object_lifecycle_states rows on any VIS-MGMT master. B12 fails. M5 cannot be evaluated. Workflow-gate permission materialization (Rule #12) is uncomputable. Workflows per master enumerated under affected_masters of B1A-S1."
+    blocked_by:
+      - {type: depends_on, ref: B1A-S1, reason: "lifecycle states need domain_module_id per Rule #12 + M5"}
+      - {type: user_decision, ref: B2-MODULE-SPLIT}
+
+  - id: B1A-S7
+    summary: "DELETE legacy domain-level system skill (id 117) after per-module skills land."
+    finding: "F1 fails. skills.id=117 (vis-mgmt-system, skill_type=system, domain_id=24, domain_module_id=null) is the legacy pre-modular row. Rule #17 + F2 require one skill_type=system per domain_modules row, never a domain-level rollup."
+    action: "After B1A-S1 lands modules and Phase S per-module skills are authored, DELETE skill 117. Migrate its 10 skill_tools rows: 8 query_* tools split across the new modules along their masters' module assignment; send_email + send_sms routed to B1A-S8."
+    blocked_by:
+      - {type: depends_on, ref: B1A-S1, reason: "per-module skills authored first"}
+      - {type: prerequisite_entity, ref: B1A-S1}
+
+  - id: B1A-S8
+    summary: "Replace skill 117 send_email + send_sms skill_tools with notify_person + notify_team abstractions."
+    finding: "F7 fails. skill 117 links send_email (tool 37, side_effect, platform) and send_sms (tool 38, side_effect, external) as required with empty notes. Host notification + evacuation broadcast are exactly the substitutable-channel shape (notify_person for single-recipient host alert, notify_team for evacuation broadcast)."
+    action: "After per-module skills land (B1A-S7), DELETE the send_email + send_sms rows; INSERT skill_tools linking notify_person on the registration-module skill and notify_team on the compliance-module (or emergency-module) skill."
+    blocked_by:
+      - {type: depends_on, ref: B1A-S7, reason: "per-module skills must exist before channel-primitive replacement"}
+
+  - id: B1A-B1
+    summary: "Backfill source_domain_module_id on outbound handoffs 871, 872, 873 once modules land."
+    finding: "B10b. All 3 outbound cross-domain handoffs have source_domain_module_id=NULL because no modules exist (legit by Rule B10b at insert time). Per-master deterministic backfill possible once B1A-S1 lands. target_domain_module_id NULL on 872 + 873 is owed by GRC + HCM respectively, surfaced as report-only."
+    action: "After B1A-S1, derive source_domain_module_id per Rule B10b (strongest role per master): handoff 871 (payload visitor_registrations 668) to VIS-MGMT-REGISTRATION; handoff 872 (payload visitor_audit_logs 675) to VIS-MGMT-COMPLIANCE; handoff 873 (payload host_assignments 671) to VIS-MGMT-REGISTRATION."
+    blocked_by:
+      - {type: depends_on, ref: B1A-S1, reason: "module ids required for backfill"}
+      - {type: user_decision, ref: B2-MODULE-SPLIT}
+    affected_handoffs:
+      - {handoff_id: 871, direction: outbound, source_domain: VIS-MGMT, target_domain: IGA, trigger_event: "visitor_registration.submitted", payload: "visitor_registrations", null_field: "source_domain_module_id"}
+      - {handoff_id: 872, direction: outbound, source_domain: VIS-MGMT, target_domain: GRC, trigger_event: "visitor_audit_log.sealed", payload: "visitor_audit_logs", null_field: "source_domain_module_id"}
+      - {handoff_id: 873, direction: outbound, source_domain: VIS-MGMT, target_domain: HCM, trigger_event: "host_notification.sent", payload: "host_assignments", null_field: "source_domain_module_id"}
+
+b2:
+  - id: B2-MODULE-SPLIT
+    summary: "Decide 2-module vs 3-module split for VIS-MGMT."
+    question: "How should the 8 VIS-MGMT masters be partitioned across domain_modules?"
+    options:
+      - "2-module: VIS-MGMT-REGISTRATION (visitor_registrations 668, visitor_check_ins 669, visitor_badges 670, host_assignments 671) + VIS-MGMT-COMPLIANCE (visitor_nda_acknowledgements 673, visitor_watchlist_screenings 674, visitor_audit_logs 675, visitor_evacuation_lists 672)."
+      - "3-module: VIS-MGMT-REGISTRATION (668, 669, 670, 671) + VIS-MGMT-COMPLIANCE (673, 674, 675) + VIS-MGMT-EMERGENCY (672). Matches Envoy's product split and aligns with future EHS-MGMT landing."
+    why: "Gates every Bucket 1 fix that carries module attribution (B1A-S1, S2, S6, S7, S8, B1-B1). Affects all 5 flagships (Envoy, Proxyclick, SwipedOn, iLobby, Sign In Solutions) which all separate emergency-roster surface; 3-module split is more faithful to vendor practice."
+
+  - id: B2-PII-INDIRECT
+    summary: "Set has_personal_content on host_assignments 671 and visitor_evacuation_lists 672?"
+    question: "Both reference visitor PII indirectly (FK to host employee, list of present-visitor names). Treat as PII-containing for DSAR / retention?"
+    options:
+      - "Flip has_personal_content=true on both (DSAR + retention scoped uniformly)."
+      - "Leave false on both (PII lives one hop away)."
+      - "Flip only on visitor_evacuation_lists 672 (carries visitor names at print time) and leave host_assignments 671 false (employee-pointer only)."
+
+  - id: B2-GDPR-CCPA
+    summary: "Load GDPR + CCPA into regulations and link to VIS-MGMT?"
+    question: "VIS-MGMT carries direct visitor PII. domain_regulations for domain 24 is empty. Decide regulation linkage scope."
+    options:
+      - "Load GDPR + CCPA, link to VIS-MGMT (and propose broader linkage in a follow-up sweep)."
+      - "Defer to a catalog-wide regulation backfill pass (not currently scheduled)."
+      - "Load only GDPR (broader scope) and defer CCPA."
+
+  - id: B2-OSHA
+    summary: "Add OSHA regulation and link to VIS-MGMT for evacuation list compliance?"
+    question: "visitor_evacuation_lists is mandated by OSHA 29 CFR 1910.38 (emergency action plans). Should OSHA be added as a regulations row and linked?"
+    options:
+      - "Load OSHA, link to VIS-MGMT (and propose broader linkage in a follow-up sweep)."
+      - "Defer to catalog-wide regulation backfill."
+
+  - id: B2-NDA-OWNERSHIP
+    summary: "Keep visitor_nda_acknowledgements mastered in VIS-MGMT or promote to CLM?"
+    question: "Per-visit NDA acknowledgements vs corporate NDA artifacts (CLM domain). Catalog split is non-obvious."
+    options:
+      - "Keep VIS-MGMT mastery (recommended; per-visit ack is operationally distinct)."
+      - "Promote a slimmer entity to CLM and consume here."
+
+  - id: B2-WATCHLIST-ROUTING
+    summary: "Route visitor_watchlist.screened to GRC only on flagged / blocked outcomes?"
+    question: "Subscribing GRC on every screening is noisy. Decide handoff filtering shape."
+    options:
+      - "One handoff with semantic filter applied at write time (preferred)."
+      - "Split into visitor_watchlist.flagged + visitor_watchlist.blocked distinct trigger_events."
+
+  - id: B2-LOGGED-IN-VERB
+    summary: "Rewrite relationship_verb on rows 416 + 417 (currently logged_in)."
+    question: "Both rows use verb logged_in which is sentence-incomplete and not the catalog audit-log idiom (catalog elsewhere uses audits / logs / records / appears_in). User picks exact verb wording."
+    options:
+      - "audited_in (inverse: audits)"
+      - "records_event_in (inverse: records)"
+      - "appears_in (inverse: includes)"
+      - "User supplies custom verb."
+
+b3:
+  - id: B3-INVITATION-LINKS
+    candidate: "visitor_invitation_links"
+    rationale: "Magic-link or QR pre-registration token sent to visitor before arrival. Distinct from visitor_registrations (the registration record). Universal across enterprise vendors."
+    vendor_evidence:
+      - {vendor: "Envoy Workplace", evidence: "1st_class"}
+      - {vendor: "Proxyclick", evidence: "1st_class"}
+      - {vendor: "iLobby", evidence: "1st_class"}
+      - {vendor: "Sign In Solutions", evidence: "1st_class"}
+    proposed_module: "VIS-MGMT-REGISTRATION"
+
+  - id: B3-HEALTH-SCREENINGS
+    candidate: "visitor_health_screenings"
+    rationale: "Health attestation / vaccination / symptom screening at registration or arrival. Distinct from visitor_watchlist_screenings (security)."
+    vendor_evidence:
+      - {vendor: "Envoy Workplace", evidence: "1st_class"}
+      - {vendor: "Proxyclick", evidence: "1st_class"}
+      - {vendor: "SwipedOn", evidence: "1st_class"}
+      - {vendor: "iLobby", evidence: "1st_class"}
+    proposed_module: "VIS-MGMT-REGISTRATION"
+
+  - id: B3-ID-VERIFICATIONS
+    candidate: "visitor_id_verifications"
+    rationale: "Government-ID scan / photo / passport capture at check-in. Required for ITAR / FDA / regulated sites."
+    vendor_evidence:
+      - {vendor: "Envoy Workplace", evidence: "1st_class"}
+      - {vendor: "iLobby", evidence: "1st_class"}
+      - {vendor: "Sign In Solutions", evidence: "1st_class"}
+      - {vendor: "Proxyclick", evidence: "1st_class"}
+    proposed_module: "VIS-MGMT-REGISTRATION"
+
+  - id: B3-PRE-ARRIVAL-DOCS
+    candidate: "visitor_pre_arrival_documents"
+    rationale: "Safety briefings / site policies / ITAR forms the visitor must read or sign before arrival. Distinct from NDA."
+    vendor_evidence:
+      - {vendor: "iLobby", evidence: "1st_class"}
+      - {vendor: "Proxyclick", evidence: "1st_class"}
+      - {vendor: "Sign In Solutions", evidence: "1st_class"}
+    proposed_module: "VIS-MGMT-COMPLIANCE"
+
+  - id: B3-GROUPS
+    candidate: "visitor_groups"
+    rationale: "Multi-visitor delegation / contractor crew / tour group bundled under one registration."
+    vendor_evidence:
+      - {vendor: "Envoy Workplace", evidence: "1st_class"}
+      - {vendor: "Proxyclick", evidence: "1st_class"}
+      - {vendor: "iLobby", evidence: "1st_class"}
+      - {vendor: "SwipedOn", evidence: "1st_class"}
+    proposed_module: "VIS-MGMT-REGISTRATION"
+
+  - id: B3-TYPES
+    candidate: "visitor_types"
+    rationale: "Configuration master defining per-type visitor flow (contractor / interview candidate / delivery / tour / VIP / child) with per-type NDA / screening / badge-template requirements."
+    vendor_evidence:
+      - {vendor: "Envoy Workplace", evidence: "1st_class"}
+      - {vendor: "Proxyclick", evidence: "1st_class"}
+      - {vendor: "SwipedOn", evidence: "1st_class"}
+      - {vendor: "iLobby", evidence: "1st_class"}
+      - {vendor: "Sign In Solutions", evidence: "1st_class"}
+      - {vendor: "Greetly", evidence: "1st_class"}
+    proposed_module: "VIS-MGMT-REGISTRATION"
+
+  - id: B3-DELIVERY-CHECK-INS
+    candidate: "delivery_check_ins"
+    rationale: "Couriers / deliveries as a distinct visitor sub-flow handled by enterprise vendors. No NDA, no badge issuance, host notification + mailroom routing."
+    vendor_evidence:
+      - {vendor: "Envoy Workplace", evidence: "1st_class"}
+      - {vendor: "Proxyclick", evidence: "1st_class"}
+      - {vendor: "SwipedOn", evidence: "1st_class"}
+    proposed_module: "VIS-MGMT-REGISTRATION"
+
+extra_jwt_audience_errors: []
+extra_h1_provenance:
+  approved_count: 0
+  agent_curated_count: 3
+  deferred_count: 0
+  cross_domain_handoff_total: 3

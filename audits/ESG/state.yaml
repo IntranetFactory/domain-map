@@ -1,0 +1,344 @@
+schema_version: 2
+domain: ESG
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-M1
+    summary: "MISSING compliance entity assurance_engagements (CSRD Art. 14 / SEC Climate Rule)"
+    finding: "Catalog has no `assurance_engagements` data_object. CSRD Article 14 and the SEC Climate Disclosure Rule mandate third-party assurance of sustainability statements; the engagement record (scope, period, assurance level limited/reasonable, assurance provider, sign-off) is universal across Persefoni, Sphera, Envizi, NZC, Workiva, Diligent. Compliance-mandated; non-optional regardless of vendor coverage."
+    action: "Load `assurance_engagements` data_object (kind=domain_owned, singular/plural labels) plus DMDO master row in ESG-DISCLOSURE-REPORTING module once B1A-S4 lands. Pending B1A-S4 (modules), insert into legacy domain_data_objects with role=master + necessity=required, then migrate on M1 cure."
+    proposed_module: "ESG-DISCLOSURE-REPORTING"
+    vendor_evidence:
+      - {vendor: Persefoni, evidence: 1st_class}
+      - {vendor: Sphera, evidence: 1st_class}
+      - {vendor: Envizi, evidence: 1st_class}
+      - {vendor: Workiva, evidence: 1st_class}
+      - {vendor: Diligent, evidence: 1st_class}
+
+  - id: B1A-M2
+    summary: "MISSING compliance entity double_materiality_assessments (CSRD ESRS 1)"
+    finding: "Catalog has no `double_materiality_assessments` data_object. CSRD ESRS 1 makes the two-axis (impact + financial materiality) assessment an entry-condition for reporting; sub-records per topic, stakeholder input, materiality threshold. Workiva, Diligent, Persefoni, Envizi all master this."
+    action: "Load `double_materiality_assessments` data_object + DMDO master row in ESG-DISCLOSURE-REPORTING. Same routing as B1A-M1."
+    proposed_module: "ESG-DISCLOSURE-REPORTING"
+    vendor_evidence:
+      - {vendor: Workiva, evidence: 1st_class}
+      - {vendor: Diligent, evidence: 1st_class}
+      - {vendor: Persefoni, evidence: 1st_class}
+      - {vendor: Envizi, evidence: 1st_class}
+
+  - id: B1A-M3
+    summary: "MISSING compliance entity esg_disclosure_taxonomies (CSRD ESRS / ISSB / GRI / SASB)"
+    finding: "Catalog has no `esg_disclosure_taxonomies` data_object. Tag library for XBRL / ESRS / GRI / SASB mappings; one row per taxonomy + version + concept; required for multi-framework reporting (Workiva, Persefoni, Envizi)."
+    action: "Load `esg_disclosure_taxonomies` data_object + DMDO master row in ESG-DISCLOSURE-REPORTING."
+    proposed_module: "ESG-DISCLOSURE-REPORTING"
+    vendor_evidence:
+      - {vendor: Workiva, evidence: 1st_class}
+      - {vendor: Persefoni, evidence: 1st_class}
+      - {vendor: Envizi, evidence: 1st_class}
+
+  - id: B1A-M4
+    summary: "MISSING compliance entity regulatory_change_records (CSRD / SEC Climate / CBAM tracking)"
+    finding: "Catalog has no `regulatory_change_records` data_object. Tracking of statutory updates that change disclosure or measurement requirements is mastered by Sphera, Diligent, Workiva."
+    action: "Load `regulatory_change_records` data_object + DMDO master row in ESG-DISCLOSURE-REPORTING."
+    proposed_module: "ESG-DISCLOSURE-REPORTING"
+    vendor_evidence:
+      - {vendor: Sphera, evidence: 1st_class}
+      - {vendor: Diligent, evidence: 1st_class}
+      - {vendor: Workiva, evidence: 1st_class}
+
+  - id: B1A-M5
+    summary: "MISSING compliance entity esg_audit_evidence (CSRD assurance, SOX-adjacent)"
+    finding: "Catalog has no `esg_audit_evidence` data_object. Audit-trail evidence rows linked to disclosure assertions; assurance providers require these for engagement walkthroughs."
+    action: "Load `esg_audit_evidence` data_object + DMDO master row in ESG-DISCLOSURE-REPORTING."
+    proposed_module: "ESG-DISCLOSURE-REPORTING"
+    vendor_evidence:
+      - {vendor: Workiva, evidence: 1st_class}
+      - {vendor: Diligent, evidence: 1st_class}
+      - {vendor: Sphera, evidence: 1st_class}
+
+  - id: B1A-U1
+    summary: "MISSING universal entity scope3_categories (GHG Protocol Scope 3, 15 categories)"
+    finding: "Catalog has no `scope3_categories` data_object. GHG Protocol Scope 3 lists 15 categories; emissions_records and supplier surveys roll up by category. Universal across all 7 flagships."
+    action: "Load `scope3_categories` data_object + DMDO master row in ESG-CARBON-ACCOUNTING."
+    proposed_module: "ESG-CARBON-ACCOUNTING"
+    vendor_evidence:
+      - {vendor: Persefoni, evidence: 1st_class}
+      - {vendor: Sphera, evidence: 1st_class}
+      - {vendor: Envizi, evidence: 1st_class}
+      - {vendor: Watershed, evidence: 1st_class}
+
+  - id: B1A-U2
+    summary: "MISSING universal entity emission_calculation_runs"
+    finding: "Catalog has no `emission_calculation_runs` data_object. Each calculation pass against an emission_factor + activity_data set produces a versioned run; required for recalculation history (Persefoni, Watershed, Envizi)."
+    action: "Load `emission_calculation_runs` data_object + DMDO master row in ESG-CARBON-ACCOUNTING."
+    proposed_module: "ESG-CARBON-ACCOUNTING"
+    vendor_evidence:
+      - {vendor: Persefoni, evidence: 1st_class}
+      - {vendor: Watershed, evidence: 1st_class}
+      - {vendor: Envizi, evidence: 1st_class}
+
+  - id: B1A-U3
+    summary: "MISSING universal entity carbon_credit_purchases"
+    finding: "Catalog has no `carbon_credit_purchases` data_object. Offset/removal credit purchases linked to emissions_records required for net disclosures; mastered by Persefoni, Watershed, NZC, Sphera."
+    action: "Load `carbon_credit_purchases` data_object + DMDO master row in ESG-CARBON-ACCOUNTING."
+    proposed_module: "ESG-CARBON-ACCOUNTING"
+    vendor_evidence:
+      - {vendor: Persefoni, evidence: 1st_class}
+      - {vendor: Watershed, evidence: 1st_class}
+      - {vendor: Sphera, evidence: 1st_class}
+
+  - id: B1A-U4
+    summary: "MISSING universal entity renewable_energy_certificates"
+    finding: "Catalog has no `renewable_energy_certificates` data_object. RECs / GOs / I-RECs linked to facility_emissions for Scope 2 market-based reporting. Universal across flagships."
+    action: "Load `renewable_energy_certificates` data_object + DMDO master row in ESG-CARBON-ACCOUNTING."
+    proposed_module: "ESG-CARBON-ACCOUNTING"
+    vendor_evidence:
+      - {vendor: Persefoni, evidence: 1st_class}
+      - {vendor: Sphera, evidence: 1st_class}
+      - {vendor: Envizi, evidence: 1st_class}
+      - {vendor: Watershed, evidence: 1st_class}
+
+  - id: B1A-S6
+    summary: "STRUCTURAL B6: 0 intra-domain data_object_relationships across 9 ESG masters"
+    finding: "Zero intra-domain `data_object_relationships` rows where both endpoints sit on ESG masters. Required edges (verb / inverse / cardinality / kind / is_required / owner_side): emission_factors applies_to emissions_records; activity_data_records sources emissions_records; facility_emissions rolls_up emissions_records; esg_targets governs esg_metrics; esg_metrics summarizes emissions_records; esg_disclosures reports esg_metrics; esg_disclosures reports facility_emissions; esg_initiatives drives esg_targets."
+    action: "Author 8-10 edges per the cluster-drafts pattern; bundle as a focused loader (TypeScript on Bun, scripts/loaders/ or .tmp_deploy/)."
+    affected_masters:
+      - {data_object_id: 321, name: emissions_records}
+      - {data_object_id: 322, name: emission_factors}
+      - {data_object_id: 323, name: activity_data_records}
+      - {data_object_id: 324, name: esg_targets}
+      - {data_object_id: 325, name: esg_metrics}
+      - {data_object_id: 326, name: esg_disclosures}
+      - {data_object_id: 328, name: facility_emissions}
+      - {data_object_id: 329, name: esg_initiatives}
+
+  - id: B1A-S7
+    summary: "STRUCTURAL B7 / Rule 10: 0 users edges across 9 ESG masters"
+    finding: "Zero `data_object_relationships` rows linking ESG masters to the `users` platform_builtin. Required edges per Rule #10: esg_disclosures preparer + approver; esg_targets owner + approver; esg_initiatives sponsor; emission_factors steward; facility_emissions reporter; supplier_esg_assessments assessor; once B1A-M1 lands, assurance_engagements lead_auditor."
+    action: "Author 7-9 user-edges as platform_builtin references; bundle in the same loader as B1A-S6."
+    affected_masters:
+      - {data_object_id: 326, name: esg_disclosures}
+      - {data_object_id: 324, name: esg_targets}
+      - {data_object_id: 329, name: esg_initiatives}
+      - {data_object_id: 322, name: emission_factors}
+      - {data_object_id: 328, name: facility_emissions}
+      - {data_object_id: 327, name: supplier_esg_assessments}
+
+  - id: B1A-S8
+    summary: "STRUCTURAL B8: 1/8 outbound cross-domain handoffs have a mirroring data_object_relationships row"
+    finding: "Only 1 cross-domain relationship row exists (id 559, supplier_esg_assessments updates supplier_qualifications, ESG->SUP-LIFE). The other 7 outbound handoffs lack a mirroring relationship: emissions_records evidences audit_engagements (AUDIT); esg_disclosures filed_under audit_engagements (AUDIT); esg_initiatives reviewed_in audit_engagements (AUDIT); esg_targets surfaces_to risk_registers (GRC); emission_factors derived_from regulatory_policies (GRC); supplier_esg_assessments feeds tprm_supplier_risk_records (TPRM); activity_data_records feeds (EPM or FINOPS, depends on B2-5)."
+    action: "Author missing cross-domain edges per the verbs above; deferred dependency on B2-5 for handoff 851's edge target."
+    affected_handoffs:
+      - {handoff_id: 275, direction: outbound, source_domain: ESG, target_domain: AUDIT, trigger_event: emissions_record.ingested, payload: emissions_records, null_field: data_object_relationship}
+      - {handoff_id: 276, direction: outbound, source_domain: ESG, target_domain: AUDIT, trigger_event: esg_disclosure.submitted_for_assurance, payload: esg_disclosures, null_field: data_object_relationship}
+      - {handoff_id: 852, direction: outbound, source_domain: ESG, target_domain: AUDIT, trigger_event: esg_initiative.launched, payload: esg_initiatives, null_field: data_object_relationship}
+      - {handoff_id: 279, direction: outbound, source_domain: ESG, target_domain: GRC, trigger_event: emission_target.breached, payload: esg_targets, null_field: data_object_relationship}
+      - {handoff_id: 850, direction: outbound, source_domain: ESG, target_domain: GRC, trigger_event: emission_factor.updated, payload: emission_factors, null_field: data_object_relationship}
+      - {handoff_id: 278, direction: outbound, source_domain: ESG, target_domain: TPRM, trigger_event: supplier_esg_assessment.score_updated, payload: supplier_esg_assessments, null_field: data_object_relationship}
+      - {handoff_id: 851, direction: outbound, source_domain: ESG, target_domain: FINOPS, trigger_event: activity_data.recorded, payload: activity_data_records, null_field: data_object_relationship}
+
+  - id: B1A-S11
+    summary: "STRUCTURAL B11: 0 data_object_aliases across 9 ESG masters"
+    finding: "No aliases authored for any of the 9 ESG masters despite a clear vendor-synonym surface (emissions_records as 'GHG records / scope 1+2+3 records'; esg_disclosures as 'sustainability reports / CSRD reports / 10-K climate disclosures'; esg_metrics as 'KPIs / disclosure indicators'; etc.)."
+    action: "Draft alias rows (alias_name + alias_type) per master; bundle into a focused aliases loader. Rule #15 forbids notes-column annotations; record vendor-context outside the alias rows."
+    affected_masters:
+      - {data_object_id: 321, name: emissions_records}
+      - {data_object_id: 322, name: emission_factors}
+      - {data_object_id: 323, name: activity_data_records}
+      - {data_object_id: 324, name: esg_targets}
+      - {data_object_id: 325, name: esg_metrics}
+      - {data_object_id: 326, name: esg_disclosures}
+      - {data_object_id: 327, name: supplier_esg_assessments}
+      - {data_object_id: 328, name: facility_emissions}
+      - {data_object_id: 329, name: esg_initiatives}
+
+b1b:
+  - id: B1B-S2
+    summary: "BLOCKED: 0 capabilities + capability_domains for ESG"
+    finding: "ESG has zero `capabilities` and zero `capability_domains` rows. Market clearly fields 5+ capabilities (carbon accounting, sustainability target management, disclosure preparation, supplier sustainability, regulatory change tracking, climate scenario analysis). Capability scoping interacts with the B2-1 user judgment (carbon accounting vs. disclosure reporting as one capability or two)."
+    action: "Author 5-7 capabilities + capability_domains rows. Apply cross-cutting convention where applicable (e.g. SUPPLIER-SUSTAINABILITY-SCORING)."
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B1B-S3
+    summary: "BLOCKED: catalog_tagline / catalog_description empty (Rule 20)"
+    finding: "`domains.catalog_tagline` and `domains.catalog_description` are both empty strings. Rule #20 prohibits populating without explicit user approval of the exact wording."
+    action: "Draft buyer-voice text (workflow + value); surface proposed wording to user for explicit approval before any write."
+    blocked_by:
+      - {type: user_decision, ref: catalog_ux_wording_approval}
+
+  - id: B1B-S4
+    summary: "BLOCKED (blocking gate): 0 domain_modules rows for ESG"
+    finding: "Zero `domain_modules` rows for ESG. M1 hard-fail cascades into M2-M7 vacuous, B-band DMDO vacuous, B9b vacuous, E1-E5 vacuous, F2-F5 uncomputable, B1A-S10 (B10b source-side) blocked, B1A-S13 (legacy skill cleanup) blocked. Proposed shape: ESG-CARBON-ACCOUNTING + ESG-DISCLOSURE-REPORTING + ESG-PERFORMANCE-MGMT + ESG-SUPPLIER-SUSTAINABILITY. Final shape pivots on B2-4 (modularization acceptance) and B3-5 / B3-6 (whether SUSTAIN-PROC / PROD-CARBON-FOOTPRINT promote out of the candidate queue)."
+    action: "Author the 4-module set per Rule #14 once B2-4 resolves; load `domain_modules` + `domain_module_data_objects` + module-level `skills` (one system skill per module per Rule #17) + `skill_tools` in the same load."
+    blocked_by:
+      - {type: user_decision, ref: B2-4}
+      - {type: depends_on, ref: B3-5, reason: SUSTAIN-PROC promotion changes ESG-SUPPLIER-SUSTAINABILITY scope}
+      - {type: depends_on, ref: B3-6, reason: PROD-CARBON-FOOTPRINT promotion may carve product_carbon_footprints out of ESG}
+
+  - id: B1B-S5
+    summary: "BLOCKED: B4 pattern flag positive review owed on 4 masters"
+    finding: "All 9 ESG masters carry pattern flags at default-false. Candidates flagged for positive review: esg_disclosures (has_submit_lock=true post submitted_for_assurance), esg_targets (has_single_approver=true for executive sign-off), facility_emissions (has_submit_lock=true on period close), assurance_engagements (has_single_approver=true for lead auditor; depends on B1A-M1 landing first)."
+    action: "PATCH the 4 masters per user decision in B2-3."
+    blocked_by:
+      - {type: user_decision, ref: B2-3}
+      - {type: prerequisite_entity, ref: B1A-M1, reason: assurance_engagements flag presupposes the entity exists}
+    affected_masters:
+      - {data_object_id: 326, name: esg_disclosures}
+      - {data_object_id: 324, name: esg_targets}
+      - {data_object_id: 328, name: facility_emissions}
+
+  - id: B1B-S10
+    summary: "BLOCKED: B10b source-side PATCH on 9 handoffs (NULL source_domain_module_id)"
+    finding: "All 9 ESG-touching handoffs (8 outbound + 1 inbound) carry NULL `source_domain_module_id`. ESG source side requires modules to exist; target sides are owned by other domains' B10b audits and remain report-only."
+    action: "PATCH after B1B-S4 lands; deterministic derivation per B10b procedure."
+    blocked_by:
+      - {type: depends_on, ref: B1B-S4, reason: modules must exist before source-side FK can be set}
+    affected_handoffs:
+      - {handoff_id: 275, direction: outbound, source_domain: ESG, target_domain: AUDIT, trigger_event: emissions_record.ingested, payload: emissions_records, null_field: source_domain_module_id}
+      - {handoff_id: 276, direction: outbound, source_domain: ESG, target_domain: AUDIT, trigger_event: esg_disclosure.submitted_for_assurance, payload: esg_disclosures, null_field: source_domain_module_id}
+      - {handoff_id: 277, direction: outbound, source_domain: ESG, target_domain: SUP-LIFE, trigger_event: supplier_esg_assessment.score_updated, payload: supplier_esg_assessments, null_field: source_domain_module_id}
+      - {handoff_id: 278, direction: outbound, source_domain: ESG, target_domain: TPRM, trigger_event: supplier_esg_assessment.score_updated, payload: supplier_esg_assessments, null_field: source_domain_module_id}
+      - {handoff_id: 279, direction: outbound, source_domain: ESG, target_domain: GRC, trigger_event: emission_target.breached, payload: esg_targets, null_field: source_domain_module_id}
+      - {handoff_id: 293, direction: inbound, source_domain: REAL-EST, target_domain: ESG, trigger_event: utility_meter_reading.published, payload: utility_meter_readings, null_field: target_domain_module_id}
+      - {handoff_id: 850, direction: outbound, source_domain: ESG, target_domain: GRC, trigger_event: emission_factor.updated, payload: emission_factors, null_field: source_domain_module_id}
+      - {handoff_id: 851, direction: outbound, source_domain: ESG, target_domain: FINOPS, trigger_event: activity_data.recorded, payload: activity_data_records, null_field: source_domain_module_id}
+      - {handoff_id: 852, direction: outbound, source_domain: ESG, target_domain: AUDIT, trigger_event: esg_initiative.launched, payload: esg_initiatives, null_field: source_domain_module_id}
+
+  - id: B1B-S12
+    summary: "BLOCKED: B12 / Rule 12 lifecycle states for 6 workflow-bearing masters"
+    finding: "Zero `data_object_lifecycle_states` rows across the 9 masters. Proposed state machines: esg_disclosures (draft / submitted_for_assurance / assured / filed), esg_targets (proposed / approved / active / achieved / missed), facility_emissions (open / locked / filed), supplier_esg_assessments (requested / in_progress / scored / recertified), emission_factors (active / superseded; routes via config-shape exemption per B2-6), esg_initiatives (planned / launched / in_progress / completed)."
+    action: "Author states for 6 masters via a focused loader; flag config-shape exemption per B2-6."
+    blocked_by:
+      - {type: user_decision, ref: B2-6, reason: emission_factors config-shape exemption decision}
+    affected_masters:
+      - {data_object_id: 326, name: esg_disclosures, workflow: "draft / submitted_for_assurance / assured / filed"}
+      - {data_object_id: 324, name: esg_targets, workflow: "proposed / approved / active / achieved / missed"}
+      - {data_object_id: 328, name: facility_emissions, workflow: "open / locked / filed"}
+      - {data_object_id: 327, name: supplier_esg_assessments, workflow: "requested / in_progress / scored / recertified"}
+      - {data_object_id: 322, name: emission_factors, workflow: "active / superseded"}
+      - {data_object_id: 329, name: esg_initiatives, workflow: "planned / launched / in_progress / completed"}
+
+  - id: B1B-S13
+    summary: "BLOCKED: F1 legacy esg-system (skill id 13) DELETE deferred"
+    finding: "Legacy `esg-system` skill (id 13) carries domain_id=21, domain_module_id=null with 16 skill_tools rows. Becomes an F1 / Rule #17 violation once module-anchored skills ship. Audit explicitly defers DELETE until B1B-S4 lands."
+    action: "DELETE skill id 13 and its 16 skill_tools rows after the 4 module-anchored system skills land under B1B-S4."
+    blocked_by:
+      - {type: depends_on, ref: B1B-S4, reason: module-anchored skills must exist before legacy is retired}
+
+  - id: B1B-B1
+    summary: "BLOCKED: handoff 851 target re-routing"
+    finding: "Handoff 851 (activity_data.recorded -> FINOPS 41) looks like target mis-routing. FINOPS in this catalog is Cloud Financial Operations; activity_data is more naturally consumed by EPM (financial planning) or stays internal. Existing handoff_processes row 674 tags 851 -> 1802 (Perform sustainability reporting); resolution may move or delete that row."
+    action: "Route per user decision in B2-5; re-tag handoff_processes 674 if target changes."
+    blocked_by:
+      - {type: user_decision, ref: B2-5}
+    affected_handoffs:
+      - {handoff_id: 851, direction: outbound, source_domain: ESG, target_domain: FINOPS, trigger_event: activity_data.recorded, payload: activity_data_records, null_field: target_routing}
+
+b2:
+  - id: B2-1
+    summary: "Capability-domain split for carbon accounting vs. ESG disclosure reporting"
+    question: "Should carbon accounting and ESG disclosure reporting be one capability or two? Vendors split (Watershed = accounting-first; Workiva = disclosure-first; Persefoni = both)."
+    options:
+      - "Two capabilities (recommended; matches vendor split)"
+      - "One capability (carbon accounting subsumes disclosure)"
+      - "One capability (disclosure subsumes accounting)"
+    why: "Capability count gates B1A-S2 authoring and downstream module shape."
+
+  - id: B2-2
+    summary: "financial_plans consumer link justification"
+    question: "ESG consumes `financial_plans` (EPM-mastered) as consumer+required with no handoff in either direction. Keep, downgrade, or remove?"
+    options:
+      - "Keep + request EPM B9 to publish financial_plan.updated outbound to ESG"
+      - "Downgrade to necessity=optional and document as forward-looking"
+      - "Remove as scope-creep"
+    why: "Necessity choice affects ESG deployability story for SMB tenants."
+
+  - id: B2-3
+    summary: "Pattern flag positive review on 4 masters"
+    question: "Confirm or veto each pattern flag: esg_disclosures (has_submit_lock), esg_targets (has_single_approver), facility_emissions (has_submit_lock), assurance_engagements (has_single_approver; depends on B1A-M1)."
+    options: ["confirm all", "confirm subset (specify)", "veto all"]
+    why: "Pattern flags shape platform-side workflow UI behavior; default-false silently understates the masters."
+
+  - id: B2-4
+    summary: "Modularization acceptance (4 / 3 / 5 modules)"
+    question: "Module shape for ESG: 4-module (ESG-CARBON-ACCOUNTING + ESG-DISCLOSURE-REPORTING + ESG-PERFORMANCE-MGMT + ESG-SUPPLIER-SUSTAINABILITY) vs. 3-module collapse vs. 5-module split with ESG-PRODUCT-FOOTPRINT?"
+    options:
+      - "4 modules (recommended)"
+      - "3 modules (collapse PERFORMANCE-MGMT into DISCLOSURE-REPORTING)"
+      - "5 modules (split out ESG-PRODUCT-FOOTPRINT if PROD-CARBON-FOOTPRINT does not promote)"
+    why: "Gates B1B-S4 and cascades through B1B-S5 / B1B-S10 / B1B-S12 / B1B-S13."
+
+  - id: B2-5
+    summary: "Handoff 851 target re-routing"
+    question: "Handoff 851 (activity_data.recorded -> FINOPS) looks mis-targeted. FINOPS in this catalog = Cloud Financial Operations."
+    options:
+      - "Re-target to EPM (financial planning)"
+      - "Remove the handoff (workflow stays internal to ESG)"
+      - "Keep (catalog FINOPS scope was extended)"
+    why: "Resolves B1B-B1 and adjusts B1A-S8 edge target."
+
+  - id: B2-6
+    summary: "Config-shape exemption for emission_factors lifecycle"
+    question: "Treat `emission_factors` as config-shape (author-once / occasionally-edit from EPA / DEFRA / IPCC) or author a 2-state active/superseded lifecycle?"
+    options:
+      - "Config-shape exemption (skip lifecycle states; surface decision outside notes per Rule 15)"
+      - "Author 2-state active/superseded lifecycle"
+    why: "Shapes B1B-S12 scope on emission_factors."
+
+b3:
+  - id: B3-1
+    candidate: "biodiversity_records"
+    rationale: "Biodiversity records as an ESG master (or in EHS-MGMT). Sphera carries 1st-class; Persefoni / Workiva / Diligent partial. TNFD-aligned vendor surface emerging."
+    vendor_evidence:
+      - {vendor: Sphera, evidence: 1st_class}
+      - {vendor: Persefoni, evidence: secondary}
+      - {vendor: Workiva, evidence: secondary}
+      - {vendor: Diligent, evidence: secondary}
+    proposed_module: "ESG-DISCLOSURE-REPORTING (or EHS-MGMT if that candidate promotes)"
+
+  - id: B3-2
+    candidate: "water_usage_records"
+    rationale: "Water tracking is 1st-class in Persefoni / Sphera / Envizi for sustainability reporting; could fold to EHS-MGMT if that domain promotes from the candidate queue."
+    vendor_evidence:
+      - {vendor: Persefoni, evidence: 1st_class}
+      - {vendor: Sphera, evidence: 1st_class}
+      - {vendor: Envizi, evidence: 1st_class}
+    proposed_module: "ESG-PERFORMANCE-MGMT (or EHS-MGMT)"
+
+  - id: B3-3
+    candidate: "waste_records"
+    rationale: "Waste tracking parallel to water; 1st-class in Persefoni / Sphera / Envizi. EHS-MGMT routing same as B3-2."
+    vendor_evidence:
+      - {vendor: Persefoni, evidence: 1st_class}
+      - {vendor: Sphera, evidence: 1st_class}
+      - {vendor: Envizi, evidence: 1st_class}
+    proposed_module: "ESG-PERFORMANCE-MGMT (or EHS-MGMT)"
+
+  - id: B3-4
+    candidate: "stakeholder_engagement_records"
+    rationale: "CSRD requires stakeholder evidence for double materiality; 1st-class in Sphera / Workiva / Diligent."
+    vendor_evidence:
+      - {vendor: Sphera, evidence: 1st_class}
+      - {vendor: Workiva, evidence: 1st_class}
+      - {vendor: Diligent, evidence: 1st_class}
+    proposed_module: "ESG-DISCLOSURE-REPORTING"
+
+  - id: B3-5
+    candidate: "scope3_supplier_surveys"
+    rationale: "Supplier survey instrument for Scope 3 inventory; 1st-class in Sphera + Watershed. Overlaps SUSTAIN-PROC candidate domain; if SUSTAIN-PROC promotes, this folds there."
+    vendor_evidence:
+      - {vendor: Sphera, evidence: 1st_class}
+      - {vendor: Watershed, evidence: 1st_class}
+    proposed_module: "ESG-SUPPLIER-SUSTAINABILITY (or SUSTAIN-PROC if promoted)"
+
+  - id: B3-6
+    candidate: "product_carbon_footprints"
+    rationale: "Product-level carbon footprint records. 1st-class in Watershed / Sphera / Persefoni. Overlaps PROD-CARBON-FOOTPRINT candidate domain queued in _missing-domains.md."
+    vendor_evidence:
+      - {vendor: Watershed, evidence: 1st_class}
+      - {vendor: Sphera, evidence: 1st_class}
+      - {vendor: Persefoni, evidence: 1st_class}
+    proposed_module: "ESG-CARBON-ACCOUNTING (or PROD-CARBON-FOOTPRINT if promoted)"

@@ -1,0 +1,187 @@
+schema_version: 2
+domain: COLLAB-GOV
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a: []
+
+b1b:
+  - id: B1B-S1
+    summary: "Catalog UX text drafts (catalog_tagline + catalog_description) drafted; Rule #20 requires explicit user approval before write."
+    finding: "domains row id 127 has catalog_tagline='' and catalog_description='' (A4 fail). Drafts proposed 2026-05-30 in history.md B1-S1: catalog_tagline = 'Inventory every workspace, enforce sharing policies, and clean up sprawl across your collaboration tenant.' catalog_description = 'Discover every team site, channel, file-sync drive, and group container in your collaboration tenant. Run permission audits and external-share reviews on a schedule, archive workspaces that have gone stale, and automate provisioning so new workspaces ship with the right ownership and retention policy from day one. Catch oversharing before it becomes a data incident, surface broken or duplicated permission inheritance, and give business owners a path to attest to access without an IT ticket.' If Bucket 2 item 1 picks leadership-tier (route a), the buyer voice should pivot from 'M365 governance product' to 'collaboration-governance signal layer' and the drafts need to be rewritten before write."
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+      - {type: user_decision, ref: B2-2}
+
+  - id: B1B-M1
+    summary: "M1 fix shape (landing module vs full module split) is gated on the leadership-tier vs real-market classification."
+    finding: "domains row id 127 has zero domain_modules rows. Rule #14 says every domains row MUST have >=1 domain_modules row with module_kind='full'. SKILL.md line 797 lists COLLAB-GOV in the leadership-tier exception set (B1 expected zero masters). The two readings (line 243 vs line 797) diverge: line 243 says one landing module is the floor for leadership-tier; line 797 implies the whole module / master / skill stack can be absent. With 7 capability_domains rows, the real-market route would also require >=2 modules per Rule #14 M2. Resolving B2-1 picks one of three fix shapes: (a) 1 landing module (leadership-tier), (b) >=4 full modules per the COLLAB-GOV-INVENTORY / -LIFECYCLE / -PERMS / -STALE split (real-market route), (c) 1 landing module + 1 starter (hybrid)."
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+    affected_modules: []
+    extra_capability_count: 7
+
+  - id: B1B-B-BAND
+    summary: "B-band (B1 through B12) entirely gated on leadership-tier vs real-market classification."
+    finding: "domains row id 127 has zero domain_data_objects rows. On the leadership-tier route, B1 passes by exception (per SKILL.md line 797). On the real-market route, the 8 candidate master groups from Bucket 3 (history.md B3-1 through B3-8) need Phase 0 vendor research, then Phase B loads. B5 / B7 / B11 / B12 are downstream of the master loads. B9 / B9b / B10b depend on the module split landing first."
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+      - {type: depends_on, ref: B1B-M1, reason: "needs modules to host masters and trigger_events"}
+      - {type: catalog_addition, scope: domains, trigger: "SAAS-BACKUP and TENANT-MIGRATION promotion decisions affect B3-6 and B3-7"}
+
+  - id: B1B-E-BAND
+    summary: "Role bundling (E1-E5) gated on M-band landing."
+    finding: "domains row id 127 has zero modules; no role_modules surface to build. On leadership-tier route, E1-E5 vacuously pass. On real-market route, E-band is a Phase E load after M-band lands."
+    blocked_by:
+      - {type: depends_on, ref: B1B-M1, reason: "needs >=1 module to bundle roles against"}
+
+  - id: B1B-F-BAND
+    summary: "Skill layer (F1-F5) gated on M-band landing."
+    finding: "zero skills rows. F2 (one skill_type='system' per domain_modules row) is mechanically uncomputable without modules. On leadership-tier route SKILL.md line 1583 waives system-skill creation entirely. On real-market route, every loaded module needs exactly one system skill with >=1 skill_tools row, per Rule #17."
+    blocked_by:
+      - {type: depends_on, ref: B1B-M1, reason: "needs modules to host system skills"}
+      - {type: user_decision, ref: B2-1}
+
+b2:
+  - id: B2-1
+    summary: "Classify COLLAB-GOV: leadership-tier (current SKILL.md state) vs real point-solution market (vendor surface evidence)."
+    question: "SKILL.md line 797 lists COLLAB-GOV in the leadership-tier exception set (expected zero masters, no system skill). The 11 linked solutions (AvePoint Confidence Platform, ShareGate, Syskit Point, Rencore Governance, Quest On Demand for Microsoft 365, CoreView, ENow Application Insights, Orchestry, ProvisionPoint 365, Microsoft Syntex, Microsoft Purview Information Protection) are pure-play M365 / Google Workspace governance specialists with their own commerce, which is a real point-solution market signature. Which classification holds?"
+    options:
+      - "(a) confirm leadership-tier: add 1 landing module to satisfy Rule #14 M1, B / E / F / H pass by exception, drop all 8 Bucket 3 items."
+      - "(b) flip to real point-solution market: run Phase 0 vendor research from Bucket 3 candidates, then load Phase A / M / B / C / E / F / H for the proposed 4-module split (COLLAB-GOV-INVENTORY, COLLAB-GOV-LIFECYCLE, COLLAB-GOV-PERMS, COLLAB-GOV-STALE) plus optionally COLLAB-GOV-BACKUP / COLLAB-GOV-MIGRATE depending on items 6 and 7."
+      - "(c) hybrid: 1 leadership-tier landing module + 1 starter (module_kind='starter') covering the inventory + permissions-audit minimum surface."
+    why: "Gates Bucket 3 entirely, gates Bucket 2 item 5 (modularization), and shapes the B1B-M1 / B1B-B-BAND / B1B-E-BAND / B1B-F-BAND fixes. Independent of items 2, 3, 4, 6, 7, 8."
+    extra_skill_md_line_ref: 797
+    extra_sibling_with_same_question: INTRANET
+
+  - id: B2-2
+    summary: "Approve / edit / reject catalog_tagline + catalog_description drafts from history.md B1-S1."
+    question: "Rule #20 requires explicit per-row approval of catalog UX text before any write. The drafts proposed 2026-05-30 are still pending."
+    options:
+      - "approve as drafted"
+      - "rewrite (supply exact text)"
+      - "wait until B2-1 settles (voice depends on classification per B1B-S1 finding)"
+    why: "Independent of B2-1 unless leadership-tier is picked, in which case the drafts need to be rewritten in 'signal layer' voice rather than 'product' voice."
+
+  - id: B2-3
+    summary: "Business-function ownership: End-User Computing as owner vs Security as owner."
+    question: "business_function_domains has 1 owner (End-User Computing, id 59) and 1 contributor (Security, id 28). Three of the seven capabilities (COLLAB-GOV-PERMS, COLLAB-GOV-EXTSHARE, and arguably COLLAB-GOV-STALE) are typically Security-owned in regulated orgs."
+    options:
+      - "(a) flip Security to owner, End-User Computing to contributor"
+      - "(b) keep End-User Computing as owner, add business_function_capabilities overrides for the three Security-leaning capabilities"
+      - "(c) leave as is"
+    why: "Independent of B2-1, but interacts with B2-5 modularization (which BF anchors module-level roles)."
+    affected_entities: [COLLAB-GOV-PERMS, COLLAB-GOV-EXTSHARE, COLLAB-GOV-STALE]
+
+  - id: B2-4
+    summary: "Regulations scope: domain_regulations is empty; which (GDPR, CCPA, SOX, HIPAA, eDiscovery / FRCP) to attach?"
+    question: "domain_regulations has zero rows. None of the candidates trip certification_required (which stays false), so the question is which to attach at applicability='mandatory' vs 'recommended' vs not at all."
+    options:
+      - "GDPR (Articles 5 / 30 / 32 data-protection accountability)"
+      - "CCPA (consumer data inventory and access controls)"
+      - "SOX (records retention on financial libraries)"
+      - "HIPAA (sensitive-content controls in healthcare orgs)"
+      - "eDiscovery / FRCP (Microsoft Purview eDiscovery integration)"
+      - "none (no regulations in scope)"
+    why: "Independent of B2-1."
+
+  - id: B2-5
+    summary: "Modularization shape (only loadable on B2-1 real-market or hybrid route)."
+    question: "If B2-1 picks (b) or (c), what module split applies? Default proposal: 4-module split COLLAB-GOV-INVENTORY (inventory + ownership inference), COLLAB-GOV-LIFECYCLE (provisioning + archive + retention policy), COLLAB-GOV-PERMS (permission audit + access reviews + external-sharing controls), COLLAB-GOV-STALE (stale content detection + remediation). COLLAB-GOV-BACKUP and COLLAB-GOV-MIGRATE either fold into LIFECYCLE or get promoted out per items 6 and 7."
+    options:
+      - "approve the 4-module default split"
+      - "use 7-module split mirroring capabilities one-for-one"
+      - "use 5-module split (split EXTSHARE out of PERMS)"
+      - "alternative split (specify)"
+    why: "Direct dependency on B2-1 and on B2-6 / B2-7."
+    extra_default_modules: [COLLAB-GOV-INVENTORY, COLLAB-GOV-LIFECYCLE, COLLAB-GOV-PERMS, COLLAB-GOV-STALE]
+
+  - id: B2-6
+    summary: "COLLAB-GOV-BACKUP capability vs SAAS-BACKUP candidate domain (queued mention_count=1)."
+    question: "SAAS-BACKUP candidate domain has 7+ pure-play backup specialists (Veeam Backup for Microsoft 365, AvePoint Cloud Backup, Druva for Microsoft 365, Spanning, Keepit, HYCU, Barracuda Cloud-to-Cloud Backup) with no collaboration-governance offering of their own. If SAAS-BACKUP promotes, COLLAB-GOV-BACKUP capability likely demotes or moves under SAAS-BACKUP."
+    options:
+      - "promote SAAS-BACKUP to a domain, move COLLAB-GOV-BACKUP capability to it"
+      - "keep COLLAB-GOV-BACKUP under COLLAB-GOV"
+      - "promote SAAS-BACKUP but keep COLLAB-GOV-BACKUP as a partial-overlap link"
+    why: "Depends on B2-1 (real-market route) and the SAAS-BACKUP triage in _missing-domains.md."
+    extra_candidate_domain: SAAS-BACKUP
+    extra_candidate_mention_count: 1
+
+  - id: B2-7
+    summary: "COLLAB-GOV-MIGRATE capability vs TENANT-MIGRATION candidate domain (queued mention_count=1)."
+    question: "TENANT-MIGRATION candidate has 5+ pure-play migration specialists (ShareGate Migrate, AvePoint Fly, Quest On Demand Migration, BitTitan MigrationWiz, CloudM Migrate). Many M&A-shaped migrations are bought separately from the governance suite."
+    options:
+      - "promote TENANT-MIGRATION to a domain, move COLLAB-GOV-MIGRATE capability to it"
+      - "keep COLLAB-GOV-MIGRATE under COLLAB-GOV"
+      - "promote TENANT-MIGRATION but keep COLLAB-GOV-MIGRATE as a partial-overlap link"
+    why: "Depends on B2-1 and the TENANT-MIGRATION triage in _missing-domains.md."
+    extra_candidate_domain: TENANT-MIGRATION
+    extra_candidate_mention_count: 1
+
+  - id: B2-8
+    summary: "domain_aliases empty; load any of 7 alias candidates?"
+    question: "domain_aliases has zero rows. Candidates: microsoft 365 governance, m365 management, sharepoint governance, teams governance, tenant administration, workspace governance, collaboration sprawl management. Aliases feed catalog search and per-domain skill runtime trigger phrases."
+    options:
+      - "approve all 7"
+      - "approve a subset (specify)"
+      - "skip"
+    why: "Independent of B2-1."
+    extra_candidates: ["microsoft 365 governance", "m365 management", "sharepoint governance", "teams governance", "tenant administration", "workspace governance", "collaboration sprawl management"]
+
+b3:
+  - id: B3-1
+    candidate: "collaboration_workspaces (or tenant_workspaces) + workspace_owners + workspace_membership"
+    rationale: "Universal across the flagship governance products. The inventory entity unifies SharePoint sites + Teams workspaces + Microsoft 365 Groups + Yammer communities under one polymorphic record (or split by container type per vendor)."
+    vendor_evidence: [AvePoint Confidence Platform, ShareGate, Syskit Point, CoreView, Orchestry]
+    proposed_module: COLLAB-GOV-INVENTORY
+    extra_phase_0_verification: "Pull /sites (AvePoint API), /inventory (Syskit Point), /teams (CoreView) and confirm whether the inventory entity is polymorphic or split by container type."
+
+  - id: B3-2
+    candidate: "workspace_lifecycle_policies + provisioning_templates + workspace_archive_actions"
+    rationale: "Universal. Orchestry, ProvisionPoint 365, AvePoint Maestro all model provisioning templates plus lifecycle stages (active, under_review, archived, purged)."
+    vendor_evidence: [Orchestry, ProvisionPoint 365, AvePoint Confidence Platform]
+    proposed_module: COLLAB-GOV-LIFECYCLE
+    extra_phase_0_verification: "Vendor doc walk: Orchestry templates, ProvisionPoint 365 site-design library, AvePoint MyHub lifecycle stages."
+
+  - id: B3-3
+    candidate: "permissions_audits + permission_findings + access_reviews + attestation_responses"
+    rationale: "Universal. AvePoint Policies, ShareGate Protect, Syskit Point access-review module all model scheduled scans + finding tickets + attestation workflows. Distinct from IGA's user / role attestations (IGA owns the identity-side cycle; COLLAB-GOV owns the workspace-side cycle)."
+    vendor_evidence: [AvePoint Confidence Platform, ShareGate, Syskit Point]
+    proposed_module: COLLAB-GOV-PERMS
+    extra_dual_master_tension: "IGA on access_reviews. Resolution at Phase 0: COLLAB-GOV's reviews are scoped to workspace-access, IGA's are scoped to role-access (same shape, different scope, two separate masters)."
+
+  - id: B3-4
+    candidate: "external_sharing_policies + external_share_links + guest_users"
+    rationale: "Common (AvePoint Cloud Governance, ShareGate Protect, Syskit, Rencore). Microsoft Purview labels overlap with external_sharing_policies at the classification axis. Lifecycle gates: pending_review, approved, expired, revoked."
+    vendor_evidence: [AvePoint Confidence Platform, ShareGate, Syskit Point, Rencore Governance]
+    proposed_module: COLLAB-GOV-EXTSHARE
+    extra_dual_master_tension: "DLP on external_sharing_policies. DLP owns the data-classification incident side; COLLAB-GOV owns the share-link lifecycle side."
+
+  - id: B3-5
+    candidate: "stale_content_signals + archive_recommendations + remediation_actions"
+    rationale: "Universal but thinly modeled across vendors: usually a derived view rather than a primary table. AvePoint policies, Orchestry archive automation, Syskit stale-content reports. Possibly a derived data_object rather than a master."
+    vendor_evidence: [AvePoint Confidence Platform, Orchestry, Syskit Point]
+    proposed_module: COLLAB-GOV-STALE
+    extra_phase_0_verification: "Decide whether stale_content_signals is a real master or a query view on top of collaboration_workspaces last-access timestamps."
+
+  - id: B3-6
+    candidate: "m365_backup_jobs + backup_recovery_points + restore_operations"
+    rationale: "Backup-and-restore master set for M365 workloads. Hard dependency on the SAAS-BACKUP triage outcome (queued mention_count=1). If SAAS-BACKUP promotes, this triplet moves there and COLLAB-GOV-BACKUP capability + module demote."
+    vendor_evidence: [AvePoint Confidence Platform, Veeam Backup for Microsoft 365, Druva, Spanning, Keepit, HYCU, Barracuda]
+    proposed_module: "COLLAB-GOV-BACKUP (only if SAAS-BACKUP candidate does not promote)"
+    extra_depends_on: B2-6
+
+  - id: B3-7
+    candidate: "migration_projects + migration_jobs + content_mappings + migration_validations"
+    rationale: "Tenant migration masters. Hard dependency on the TENANT-MIGRATION triage outcome (queued mention_count=1). If TENANT-MIGRATION promotes, this set moves there."
+    vendor_evidence: [ShareGate, AvePoint Confidence Platform, Quest On Demand for Microsoft 365, BitTitan MigrationWiz, CloudM Migrate]
+    proposed_module: "COLLAB-GOV-MIGRATE (only if TENANT-MIGRATION candidate does not promote)"
+    extra_depends_on: B2-7
+
+  - id: B3-8
+    candidate: "delegated_admin_assignments + tenant_health_indicators + license_usage_snapshots"
+    rationale: "Cross-cutting tenant-administration masters. Hard dependency on the M365-MGMT triage outcome (queued mention_count=1). If M365-MGMT promotes, the delegated-admin axis moves there; COLLAB-GOV keeps only the lifecycle / sharing / permissions axes."
+    vendor_evidence: [CoreView, ENow Application Insights, Quest On Demand for Microsoft 365]
+    proposed_module: "cross-cutting; possibly M365-MGMT if that candidate promotes"
+    extra_candidate_domain: M365-MGMT

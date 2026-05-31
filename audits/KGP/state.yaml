@@ -1,0 +1,174 @@
+schema_version: 2
+domain: KGP
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-APQC-H221
+    summary: Tag handoff 221 (KGP to DATA-AI-PLAT, ontology.published, payload ontologies 254) with an APQC PCF process row.
+    finding: Handoff 221 publishes payload data_object 254 (ontologies) from KGP (138) to DATA-AI-PLAT (129) on trigger event ontology.published, and is missing from handoff_processes despite being identical in shape to handoff 223 which the 2026-05-31 fix pass tagged to process 275 ("Define and maintain business information architecture", external_id 20770). H1 catalog-quality headline is 0 approved out of 7 handoffs touching KGP; only h.223 and h.265 carry an agent_curated tag.
+    action: Insert one handoff_processes row (handoff_id=221, process_id=275, proposal_source=agent_curated, record_status=new, role=implements) following the same pattern as the h.223 row.
+    affected_handoffs:
+      - handoff_id: 221
+        direction: outbound
+        source_domain: KGP
+        target_domain: DATA-AI-PLAT
+        trigger_event: ontology.published
+        payload: ontologies
+        null_field: handoff_processes
+    extra_pcf_target: "process_id=275 external_id=20770 Define and maintain business information architecture"
+
+  - id: B1A-APQC-H265-NOTE
+    summary: h.265 already tagged but record_status remains new; flag for reviewer approval bundle.
+    finding: Handoff 265 (DCG glossary_term.published into KGP, payload glossary_terms 302) already has a handoff_processes row pointing at process 275 with proposal_source=agent_curated and record_status=new. The 2026-05-30 audit proposed PCF 10563 (Manage business taxonomies and ontologies) which the 2026-05-31 fix pass rejected as not present in the catalog; the chosen substitute 275 (Define and maintain business information architecture) is reasonable but unreviewed. H1 headline quality remains 0 approved.
+    action: No write action this cycle; bundle h.265 + h.223 for human review when the user batches APQC approvals (record_status flip to approved is Rule #1-governed).
+    affected_handoffs:
+      - handoff_id: 265
+        direction: inbound
+        source_domain: DCG
+        target_domain: KGP
+        trigger_event: glossary_term.published
+        payload: glossary_terms
+        null_field: record_status
+
+b1b:
+  - id: B1B-M1-MODULES
+    summary: Author 3 (or 2 / 4 per B2-S4) `domain_modules` rows for KGP; blocks every B-band beyond B6/B7/B11 and all E-band checks.
+    finding: KGP has zero `domain_modules` rows (`domain_modules?domain_id=eq.138` and `domain_module_host_domains?domain_id=eq.138` both empty). Phase A loaded domain + capabilities + solutions + a domain-level system skill but skipped the modular layer. Rule #14 (>=1 full module per domain; >=2 full modules for >=3-capability domains, KGP has 8) is violated. The proposed 3-module split is KGP-ONTOLOGY-ENGINE (KG-ONTOLOGY-AUTHORING + KG-REASONING-INFERENCE + KG-NATIVE-STORAGE, masters kgp_ontologies), KGP-QUERY-FEDERATION (KG-SPARQL-FEDERATION + KG-VIRTUAL-GRAPHS, embedded_master kgp_ontologies + kgp_knowledge_graph_entities), KGP-AGENT-INTEGRATION (KG-AI-AGENT-INTEGRATION + SEMANTIC-MODELING + OPERATIONAL-DATA-APPS, consumer-shaped). Alternative 2-module or 4-module splits are defensible (see B2-S4).
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+      - {type: user_decision, ref: B2-S2}
+      - {type: user_decision, ref: B2-S4}
+    affected_modules: []
+    extra_proposed_split: ["KGP-ONTOLOGY-ENGINE", "KGP-QUERY-FEDERATION", "KGP-AGENT-INTEGRATION"]
+
+  - id: B1B-B5-EMBEDDED-MASTERS
+    summary: Once modules exist, author `domain_module_data_objects` rows including the embedded_master shells in the consumer-shaped modules.
+    finding: KGP has zero `domain_module_data_objects` rows because zero modules. Each module from B1B-M1-MODULES needs its master + embedded_master + consumer mix authored. The QUERY-FEDERATION and AGENT-INTEGRATION modules embed kgp_ontologies and kgp_knowledge_graph_entities; the ENGINE module masters both (under the KGP-canonical resolution path of B2-S1 / B2-S2).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
+    affected_masters:
+      - {data_object_id: 742, name: kgp_ontologies, target_module_id: null, workflow: ontology_authoring}
+      - {data_object_id: 743, name: kgp_knowledge_graph_entities, target_module_id: null, workflow: kg_entity_assertion}
+
+  - id: B1B-B8-OUTBOUND-EDGES
+    summary: Mirror `data_object_relationships` edges from KGP payload masters to the receiving masters in DATA-AI-PLAT and DCG.
+    finding: "Handoff 697 (KGP to DATA-AI-PLAT, kgp_ontology.imported, payload kgp_ontologies), 698 (KGP to DCG, kgp_knowledge_graph_entity.merged, payload kgp_knowledge_graph_entities), 699 (KGP to DCG, kgp_knowledge_graph_entity.created, payload kgp_knowledge_graph_entities) all lack mirror data_object_relationships to receiving masters. Proposed verbs, 742 feeds DATA-AI-PLAT semantic_models; 743 reconciles_with DCG data_assets (256); 743 lineage_to DCG data_assets (256). The DATA-AI-PLAT-side target master is currently semantic_models candidate but DATA-AI-PLAT is itself pre-modular so the FK is not stable."
+    blocked_by:
+      - {type: domain_audit, blocking_domain: DATA-AI-PLAT, milestone: post-M1-master-resolution}
+      - {type: domain_audit, blocking_domain: DCG, milestone: post-M1-master-resolution}
+      - {type: user_decision, ref: B2-S1}
+    affected_handoffs:
+      - {handoff_id: 697, direction: outbound, source_domain: KGP, target_domain: DATA-AI-PLAT, trigger_event: kgp_ontology.imported, payload: kgp_ontologies, null_field: mirror_data_object_relationship}
+      - {handoff_id: 698, direction: outbound, source_domain: KGP, target_domain: DCG, trigger_event: kgp_knowledge_graph_entity.merged, payload: kgp_knowledge_graph_entities, null_field: mirror_data_object_relationship}
+      - {handoff_id: 699, direction: outbound, source_domain: KGP, target_domain: DCG, trigger_event: kgp_knowledge_graph_entity.created, payload: kgp_knowledge_graph_entities, null_field: mirror_data_object_relationship}
+
+  - id: B1B-B12-LIFECYCLE
+    summary: Author 10 `data_object_lifecycle_states` rows once modules exist to anchor `requires_permission=true` states.
+    finding: "B12 is FAIL. Both masters have real workflow. kgp_ontologies passes through drafting (initial) -> validating -> published (requires_permission) -> superseded -> retired (terminal); kgp_knowledge_graph_entities passes through asserted (initial) -> validated -> reasoned -> merged (requires_permission, override merge_kg_entity) -> retired (terminal). Each requires_permission=true row needs domain_module_id per Rule #14 / M5."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
+    affected_masters:
+      - {data_object_id: 742, name: kgp_ontologies, target_module_id: null, workflow: ontology_authoring}
+      - {data_object_id: 743, name: kgp_knowledge_graph_entities, target_module_id: null, workflow: kg_entity_assertion}
+
+  - id: B1B-B10B-FK-BACKFILL
+    summary: Backfill `source_domain_module_id` on KGP-outbound handoffs once modules exist.
+    finding: All 7 KGP-touching handoffs (221, 222, 223, 265, 697, 698, 699) carry NULL on both `source_domain_module_id` and `target_domain_module_id`. KGP-side backfill (h.221, h.697, h.698, h.699) is in-scope once B1B-M1-MODULES lands. Cross-side (h.222 source, h.223 source, h.265 source, h.221 target, h.697 target, h.698 target, h.699 target) is owed by DCG / DATA-AI-PLAT / MDM audits.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
+    affected_handoffs:
+      - {handoff_id: 221, direction: outbound, source_domain: KGP, target_domain: DATA-AI-PLAT, trigger_event: ontology.published, payload: ontologies, null_field: source_domain_module_id}
+      - {handoff_id: 697, direction: outbound, source_domain: KGP, target_domain: DATA-AI-PLAT, trigger_event: kgp_ontology.imported, payload: kgp_ontologies, null_field: source_domain_module_id}
+      - {handoff_id: 698, direction: outbound, source_domain: KGP, target_domain: DCG, trigger_event: kgp_knowledge_graph_entity.merged, payload: kgp_knowledge_graph_entities, null_field: source_domain_module_id}
+      - {handoff_id: 699, direction: outbound, source_domain: KGP, target_domain: DCG, trigger_event: kgp_knowledge_graph_entity.created, payload: kgp_knowledge_graph_entities, null_field: source_domain_module_id}
+
+  - id: B1B-F1-LEGACY-SKILL
+    summary: Retire legacy domain-level system skill 76 once per-module system skills exist; repoint or DELETE its 4 skill_tools rows.
+    finding: Skill 76 (`kgp-system`, `skill_type='system'`, `domain_id=138`, `domain_module_id=NULL`) is the only system skill. Rule #17 requires exactly one `system` skill per `domain_module` row. Once B1B-M1-MODULES lands and per-module system skills are authored (Phase S retrofit), the 4 `skill_tools` rows (query_ontologies 111, query_knowledge_graph_entities 386, query_kgp_ontologies 820, query_kgp_knowledge_graph_entities 821) repoint to the new module-level skills and skill 76 is DELETEd.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
+    affected_entities: [kgp-system skill (id 76), query_ontologies tool (id 111), query_knowledge_graph_entities tool (id 386), query_kgp_ontologies tool (id 820), query_kgp_knowledge_graph_entities tool (id 821)]
+
+  - id: B1B-APQC-H222-H697-H698-H699
+    summary: Tag 4 remaining KGP-touching handoffs with APQC PCF processes once a confirmed PCF is identified.
+    finding: "H1 partial. Of 7 KGP handoffs, only h.223 (DCG -> KGP, ontology.published) and h.265 (DCG -> KGP, glossary_term.published) are tagged (both pointing at process 275 'Define and maintain business information architecture', external_id 20770, agent_curated/new). The other 5 handoffs (221 outbound to DATA-AI-PLAT same trigger as h.223, see B1A-APQC-H221 for the easy half), 222 (MDM -> KGP, kg_entity.linked, payload knowledge_graph_entities), 697 (kgp_ontology.imported), 698 (kgp_knowledge_graph_entity.merged), 699 (kgp_knowledge_graph_entity.created) lack tags. The 2026-05-30 audit proposed PCF candidates 10563 / 10564 / 10571 family / 10568 family; the 2026-05-31 fix pass found no rows with those external_ids in the catalog. Resolution, a focused PCF lookup pass on processes filtered by source_framework=apqc_pcf_cross_industry and process_name ilike master data or related searches to identify the right L3 anchors before insert."
+    blocked_by:
+      - {type: depends_on, ref: pcf_lookup_pass, reason: "audit-cited PCF external_ids 10563/10564/10571/10568 not present in catalog; need re-discovery against live processes"}
+    affected_handoffs:
+      - {handoff_id: 222, direction: inbound, source_domain: MDM, target_domain: KGP, trigger_event: kg_entity.linked, payload: knowledge_graph_entities, null_field: handoff_processes}
+      - {handoff_id: 697, direction: outbound, source_domain: KGP, target_domain: DATA-AI-PLAT, trigger_event: kgp_ontology.imported, payload: kgp_ontologies, null_field: handoff_processes}
+      - {handoff_id: 698, direction: outbound, source_domain: KGP, target_domain: DCG, trigger_event: kgp_knowledge_graph_entity.merged, payload: kgp_knowledge_graph_entities, null_field: handoff_processes}
+      - {handoff_id: 699, direction: outbound, source_domain: KGP, target_domain: DCG, trigger_event: kgp_knowledge_graph_entity.created, payload: kgp_knowledge_graph_entities, null_field: handoff_processes}
+
+  - id: B1B-A4-CATALOG-TAGLINE
+    summary: Author `catalog_tagline` and `catalog_description` on the KGP domain row.
+    finding: A4 FAIL. `domains.catalog_tagline=''` and `domains.catalog_description=''` on domain 138. Rule #20 forbids writing these without explicit user approval of the wording. Audit-proposed tagline (2026-05-30): "Build the unified semantic substrate that powers your AI agents, operational apps, and complex analytical queries on top of your enterprise data." The proposal itself needs user approval before any PATCH; this is not an agent-solvable write.
+    blocked_by:
+      - {type: user_decision, ref: B2-S5-tagline-approval}
+
+b2:
+  - id: B2-S1
+    summary: Canonical ontology owner across KGP / DCG / DATA-AI-PLAT (M7 catalog-wide hard fail on data_object 254).
+    question: Data_object 254 `ontologies` has `role='master'` rows on BOTH DCG (88) and DATA-AI-PLAT (129) at the legacy `domain_data_objects` rollup, plus MDM (87) carries a `contributor` row. KGP separately introduced `kgp_ontologies` (742) which duplicates the same concept. Pick the canonical owner; the loser-side domain DELETEs its master row and the duplicate (254 vs 742) merges in whichever direction the owner picks.
+    options:
+      - "(a) KGP-canonical: DELETE DCG master + DATA-AI-PLAT master on 254, merge 254 into 742 (DELETE 254, repoint), other domains demote to consumer/embedded_master. Point-solution-market test favors this."
+      - "(b) DCG-canonical: keep 254 in DCG as canonical master, DELETE DATA-AI-PLAT master row, DELETE 742, repoint, KGP demotes to consumer/embedded_master."
+      - "(c) DATA-AI-PLAT-canonical: keep 254 in DATA-AI-PLAT as canonical master, DELETE DCG master row, DELETE 742, repoint, KGP demotes to consumer/embedded_master."
+    why: Decision is editorial (which domain canonically masters ontologies in your taxonomy) and architectural (whether ontology-as-data-product belongs in the data platform, the data catalog, or the dedicated graph platform).
+
+  - id: B2-S2
+    summary: Canonical KG-entity owner (DATA-AI-PLAT 255 vs KGP 743 duplication).
+    question: Data_object 255 `knowledge_graph_entities` is master-claimed by DATA-AI-PLAT (129) with MDM (87) as consumer; id 743 `kgp_knowledge_graph_entities` was added later under KGP. By parallel logic to B2-S1, if KGP wins ontology canonicality it should also own 255 -> 743 consolidation.
+    options:
+      - "(a) Collapse 255 into 743 under KGP (parallel with B2-S1 (a))."
+      - "(b) Keep 255 in DATA-AI-PLAT as canonical, retire 743."
+    why: Architectural decision; coupled to B2-S1 in most outcomes.
+
+  - id: B2-S3
+    summary: Prefix vs bare-word naming for the canonical KGP masters (only triggers if B2-S1 picks the merge path).
+    question: If B2-S1 picks "KGP-canonical, merge 254 into 742", should 742 be renamed from `kgp_ontologies` to the bare-word `ontologies`? Same for 743 vs `knowledge_graph_entities`. Rule #9 default is prefix; promotion to bare-word requires `is_canonical_bare_word=true` with `naming_authority_rationale`.
+    options:
+      - "(a) Keep prefix, leave 254 as the canonical bare-word elsewhere (only valid under B2-S1 (b) or (c))."
+      - "(b) Promote 742 to `ontologies` (rename plus DELETE old 254; only valid under B2-S1 (a))."
+      - "(c) Rename 254 to `dcg_ontologies` or `dataaiplat_ontologies` per the loser of B2-S1 and keep 742 as canonical (only valid under B2-S1 (a) with parallel rename)."
+    why: Determines whether B1B-M1-MODULES master assignments reference 742/743 or 254/255.
+
+  - id: B2-S4
+    summary: Module split shape (2 / 3 / 4 modules).
+    question: "B1B-M1-MODULES proposes 3 modules (ONTOLOGY-ENGINE, QUERY-FEDERATION, AGENT-INTEGRATION). Alternatives, 2 modules (ENGINE + QUERY/AGENT combined) cuts audit surface but loses agent-integration RBAC distinctness; 4 modules (split ENGINE into AUTHORING + REASONING) matches Stardog / Anzo product carve but doubles permission surface."
+    options:
+      - "(a) 3 modules as proposed (recommended)."
+      - "(b) 2 modules."
+      - "(c) 4 modules."
+      - "(d) Different split entirely (specify)."
+    why: Drives every downstream Phase B / S / E load shape.
+
+  - id: B2-S5
+    summary: Approve catalog tagline + description wording for KGP A4 PATCH.
+    question: Author `catalog_tagline` and `catalog_description` on domain 138. Rule #20 forbids agent-authored writes; user supplies the exact text or rewrites the audit draft.
+    options:
+      - "(a) Approve 2026-05-30 audit draft tagline: 'Build the unified semantic substrate that powers your AI agents, operational apps, and complex analytical queries on top of your enterprise data.' plus a 3-paragraph description covering ontology authoring, federated reasoning, LLM grounding."
+      - "(b) Rewrite (supply exact text)."
+      - "(c) Skip A4 (leave both fields empty)."
+    why: Rule #20 hard rule.
+
+b3:
+  - id: B3-S1
+    candidate: kgp_inference_rules
+    rationale: Stardog, GraphDB, AllegroGraph all expose a "rules" surface (SWRL, custom rule languages) distinct from the ontology itself. The rule corpus is authored, versioned, and executed separately from the ontology. Could plausibly live in KGP-ONTOLOGY-ENGINE or warrant its own KGP-INFERENCE-RULES sub-module.
+    vendor_evidence:
+      - {vendor: Stardog, evidence: 1st_class}
+      - {vendor: GraphDB, evidence: 1st_class}
+      - {vendor: AllegroGraph, evidence: 1st_class}
+    proposed_module: KGP-ONTOLOGY-ENGINE
+
+  - id: B3-S2
+    candidate: kgp_named_graphs
+    rationale: Named graphs are the unit of access control and data partitioning in every RDF triple-store flagship. Today the catalog has no named-graph entity, which means the natural Phase E permission grain (per-graph RBAC) cannot be materialized. May be embedded master in KGP-ONTOLOGY-ENGINE or a separate entity.
+    vendor_evidence:
+      - {vendor: Stardog, evidence: 1st_class}
+      - {vendor: GraphDB, evidence: 1st_class}
+      - {vendor: AllegroGraph, evidence: 1st_class}
+    proposed_module: KGP-ONTOLOGY-ENGINE

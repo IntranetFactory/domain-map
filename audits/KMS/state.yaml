@@ -1,0 +1,269 @@
+schema_version: 2
+domain: KMS
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S6
+    summary: domains.description and business_logic on row 33 contain U+2014 em-dashes, violating project no-em-dash rule
+    finding: >-
+      The KMS domains row (id 33) carries an em-dash in the trailing clause of
+      description ("internal and external audiences") and in business_logic
+      ("Search and RAG retrieval over the knowledge corpus  vector embeddings,
+      ranking, and relevance models"). Project rule forbids U+2014 anywhere in
+      catalog text.
+    action: >-
+      PATCH /domains?id=eq.33 to replace the em-dash with a comma in both
+      description and business_logic. Surgical PATCH, no Rule #20 user wording
+      approval needed (typography fix, not new buyer copy).
+    affected_entities:
+      - domains.id=33
+  - id: B1A-S7
+    summary: 8 KMS-master-source trigger_events rows have empty event_category
+    finding: >-
+      Trigger events 754, 755, 756, 757, 758, 759, 760, 761 (sourced from
+      data_objects 410-415) all have event_category=''. Enum requires one of
+      lifecycle | state_change | threshold | signal.
+    action: >-
+      PATCH events 754, 755, 756, 757, 758, 761 to event_category='lifecycle'
+      (lifecycle transitions on the master). PATCH events 759
+      (article_feedback.negative) and 760 (knowledge_search_query.no_result) to
+      event_category='signal' (quality/gap signals from the master). Surgical
+      PATCH per row.
+    affected_events:
+      - {id: 754, event_name: knowledge_base_article.published, current_category: "", proposed_category: lifecycle}
+      - {id: 755, event_name: knowledge_base_article.deprecated, current_category: "", proposed_category: lifecycle}
+      - {id: 756, event_name: knowledge_base_article.updated, current_category: "", proposed_category: lifecycle}
+      - {id: 757, event_name: knowledge_category.restructured, current_category: "", proposed_category: lifecycle}
+      - {id: 758, event_name: article_revision.approved, current_category: "", proposed_category: lifecycle}
+      - {id: 759, event_name: article_feedback.negative, current_category: "", proposed_category: signal}
+      - {id: 760, event_name: knowledge_search_query.no_result, current_category: "", proposed_category: signal}
+      - {id: 761, event_name: knowledge_collection.published, current_category: "", proposed_category: lifecycle}
+
+b1b:
+  - id: B1B-S1
+    summary: KMS has zero domain_modules rows; M1/M4/M5/F1/F2/F5/B10b all fail downstream of this single defect
+    finding: >-
+      domains row 33 (KMS) has 0 domain_modules rows and 0
+      domain_module_host_domains rows targeting KMS. Rule #14 requires at least
+      1 full module per domain. Every M-band failure, F1 (skill 77
+      domain_module_id=NULL), F2 (no module-level system skill), F5
+      (uncomputable Semantius score), M5 (state 286 published has
+      domain_module_id=NULL), and all 13 KMS-side handoff B10b NULL FKs roll up
+      to this single fix.
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+    affected_modules: []
+    affected_handoffs:
+      - {handoff_id: 720, direction: outbound, source_domain: KMS, target_domain: CSM, trigger_event: knowledge_base_article.published, payload: knowledge_base_articles, null_field: source_domain_module_id}
+      - {handoff_id: 721, direction: outbound, source_domain: KMS, target_domain: HRSD, trigger_event: knowledge_base_article.published, payload: knowledge_base_articles, null_field: source_domain_module_id}
+      - {handoff_id: 722, direction: outbound, source_domain: KMS, target_domain: CCAAS, trigger_event: knowledge_base_article.updated, payload: knowledge_base_articles, null_field: source_domain_module_id}
+      - {handoff_id: 723, direction: outbound, source_domain: KMS, target_domain: CONV-AI, trigger_event: knowledge_base_article.published, payload: knowledge_base_articles, null_field: source_domain_module_id}
+      - {handoff_id: 724, direction: outbound, source_domain: KMS, target_domain: CONV-AI, trigger_event: knowledge_search_query.no_result, payload: knowledge_search_queries, null_field: source_domain_module_id}
+      - {handoff_id: 1120, direction: inbound, source_domain: HRSD, target_domain: KMS, trigger_event: hr_case.resolved, payload: hr_cases, null_field: target_domain_module_id}
+      - {handoff_id: 447, direction: inbound, source_domain: HRSD, target_domain: KMS, trigger_event: case_category.updated, payload: case_categories, null_field: target_domain_module_id}
+      - {handoff_id: 334, direction: inbound, source_domain: LEGAL-PRACT-MGMT, target_domain: KMS, trigger_event: legal_matter.closed, payload: legal_matters, null_field: target_domain_module_id}
+      - {handoff_id: 630, direction: inbound, source_domain: ITSM, target_domain: KMS, trigger_event: knowledge_article.published, payload: knowledge_articles, null_field: target_domain_module_id}
+      - {handoff_id: 745, direction: inbound, source_domain: CONV-AI, target_domain: KMS, trigger_event: conversation_flow.fallback_triggered, payload: conversation_flows, null_field: target_domain_module_id}
+      - {handoff_id: 818, direction: inbound, source_domain: WEB-CONTOPS, target_domain: KMS, trigger_event: content_lifecycle.review_due, payload: content_lifecycle_plans, null_field: target_domain_module_id}
+      - {handoff_id: 819, direction: inbound, source_domain: WEB-CONTOPS, target_domain: KMS, trigger_event: content_inventory.refreshed, payload: web_content_inventory_records, null_field: target_domain_module_id}
+      - {handoff_id: 826, direction: inbound, source_domain: ECM, target_domain: KMS, trigger_event: document.version_published, payload: document_versions, null_field: target_domain_module_id}
+    affected_masters:
+      - {data_object_id: 410, name: knowledge_base_articles, target_module_id: null, workflow: authoring_review_publish_retire}
+      - {data_object_id: 411, name: knowledge_categories, target_module_id: null, workflow: taxonomy_config}
+      - {data_object_id: 412, name: article_revisions, target_module_id: null, workflow: draft_review_approve_publish}
+      - {data_object_id: 413, name: article_feedback, target_module_id: null, workflow: submit_triage_close}
+      - {data_object_id: 414, name: knowledge_search_queries, target_module_id: null, workflow: event_stream}
+      - {data_object_id: 415, name: knowledge_collections, target_module_id: null, workflow: draft_publish_archive}
+  - id: B1B-S2
+    summary: catalog_tagline and catalog_description empty on domains row 33, Rule #20 user-wording approval required
+    finding: >-
+      domains.id=33 catalog_tagline='' and catalog_description=''. Rule #20
+      forbids the agent from writing without explicit per-row user approval of
+      wording. Drafts surfaced in 2026-05-30 history (Bucket 1 B1-S2). Buyer
+      voice also depends on Bucket 2 item 1 routing decision: option (a) KMS
+      canonical reads "system of record", option (b) derived layer reads
+      "analytics on top of existing wikis".
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+      - {type: user_decision, ref: B2-2}
+  - id: B1B-S4-CCAAS
+    summary: One outbound cross-domain relationship deferred (knowledge_base_articles -> assists -> contact_center_agents) because CCAAS contact_center_agents master not yet enumerated in catalog
+    finding: >-
+      The B8 outbound edge knowledge_base_articles (410) -> assists ->
+      contact_center_agents was deferred in the 2026-05-31 continuation block.
+      CCAAS has no contact_center_agents row in data_objects yet, so the FK
+      target does not exist. Loads when CCAAS publishes the master.
+    blocked_by:
+      - {type: prerequisite_entity, ref: data_objects.contact_center_agents, reason: CCAAS master not enumerated}
+      - {type: domain_audit, blocking_domain: CCAAS, milestone: master_enumeration}
+  - id: B1B-M7-DUAL
+    summary: knowledge_articles (id 51, ITSM-KNOWLEDGE-mastered) and knowledge_base_articles (id 410, KMS-mastered) are dual canonical masters of the same business concept
+    finding: >-
+      Rule #9 substring collision: knowledge_articles is a substring of
+      knowledge_base_articles. Both are canonically mastered (id 51 by
+      ITSM-KNOWLEDGE via domain_module_data_objects, id 410 by KMS via the
+      legacy domain_data_objects). Two cross-domain data_object_relationships
+      rows (208 publishes_to, 477 sources) paper over the duplication.
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+    affected_masters:
+      - {data_object_id: 51, name: knowledge_articles, target_module_id: 43, workflow: ITSM-KNOWLEDGE-mastered}
+      - {data_object_id: 410, name: knowledge_base_articles, target_module_id: null, workflow: KMS-mastered-via-legacy-table}
+  - id: B1B-B11
+    summary: 0 data_object_aliases on any of the 6 KMS masters
+    finding: >-
+      Industry synonyms missing on all 6 masters. Minimum 1 alias per master
+      (some merit 2-3). Examples surfaced in 2026-05-30 audit: kb_articles ->
+      kb article / support article / help center article / wiki page;
+      knowledge_categories -> kb taxonomy / category / topic; article_revisions
+      -> article version / draft / edit history; knowledge_search_queries -> kb
+      search; knowledge_collections -> kb space / playbook.
+    blocked_by:
+      - {type: user_decision, ref: B2-1, reason: alias vocabulary depends on whether KMS or per-domain modules canonically master the article concept}
+    affected_masters:
+      - {data_object_id: 410, name: knowledge_base_articles, target_module_id: null, workflow: alias_set_5}
+      - {data_object_id: 411, name: knowledge_categories, target_module_id: null, workflow: alias_set_3}
+      - {data_object_id: 412, name: article_revisions, target_module_id: null, workflow: alias_set_3}
+      - {data_object_id: 413, name: article_feedback, target_module_id: null, workflow: alias_set_2}
+      - {data_object_id: 414, name: knowledge_search_queries, target_module_id: null, workflow: alias_set_3}
+      - {data_object_id: 415, name: knowledge_collections, target_module_id: null, workflow: alias_set_3}
+  - id: B1B-H1-APPROVE
+    summary: 17 handoff_processes rows on KMS-touching handoffs all sit at record_status=new; quality headline (approved count) is 0
+    finding: >-
+      The H1 process side-bar (agent_curated count) is fully populated, but the
+      H1 quality headline (approved count) is 0. All 17 rows on handoffs 720,
+      721, 722, 723, 724, 1120, 334, 745, 818, 819, 447, 630, 826 await
+      reviewer approval. Rule #1 forbids the agent from flipping record_status
+      without explicit per-load user confirmation.
+    blocked_by:
+      - {type: user_decision, ref: review_approval, reason: "Rule #1 requires explicit per-row user approval to flip record_status to approved"}
+
+b2:
+  - id: B2-1
+    summary: Canonical ownership of knowledge_articles, KMS vs ITSM-KNOWLEDGE vs hybrid two-tier
+    question: >-
+      Should KMS canonically master a single knowledge-article entity that
+      ITSM-KNOWLEDGE / HRSD-KNOWLEDGE / CSM-KNOWLEDGE embed (option a), should
+      KMS retreat to a derived analytics layer that consumes the per-domain
+      service-management knowledge masters (option b), or should a hybrid
+      two-tier shape distinguish enterprise_knowledge_articles (KMS-mastered)
+      from domain-specific articles like itsm_knowledge_articles (option c)?
+    options: [a_kms_canonical, b_per_domain_canonical, c_hybrid_two_tier]
+    why: >-
+      Gates the B1B-S1 module-shape decision (which modules KMS gets, what each
+      one masters/consumes), the B1B-S2 buyer voice, the Bucket 2 item 3
+      capability subset, and Bucket 3 items 1-3. Flagship vendors (ServiceNow,
+      Glean, Confluence, Notion) treat the knowledge corpus as a single
+      substrate that service-management embeds (favoring a), but the current
+      catalog has been built the other way (favoring b for migration cost).
+  - id: B2-2
+    summary: Catalog UX text approval per Rule #20
+    question: >-
+      Approve, edit, or reject the proposed catalog_tagline and
+      catalog_description drafts surfaced in 2026-05-30 history B1-S2. Wording
+      depends on Bucket 2 item 1 routing.
+    options: [approve_as_drafted, edit_wording, reject_redraft]
+    why: Rule #20 forbids the agent from writing tagline or description without explicit per-row user-approved text.
+  - id: B2-3
+    summary: Capability expansion, pick 5-8 of 8 codes
+    question: >-
+      Which of KM-AUTHORING, KM-TAXONOMY, KM-PUBLICATION-WORKFLOW,
+      KM-VERIFICATION-CYCLES, KM-FEEDBACK-LOOP, KM-ANALYTICS, KM-GOVERNANCE,
+      KM-AI-ASSIST to add as capability_domains rows?
+    options: [authoring, taxonomy, publication_workflow, verification_cycles, feedback_loop, analytics, governance, ai_assist]
+    why: A2 fails on 1 capability. Subset depends on Bucket 2 item 1 routing.
+  - id: B2-4
+    summary: Regulations scope expansion
+    question: >-
+      Beyond ISO/IEC 27001, attach ISO 30401 Knowledge Management Systems
+      (recommended), GDPR, HIPAA, SEC 17a-4, FERPA, or any combination?
+    options: [iso_30401, gdpr, hipaa, sec_17a_4, ferpa]
+    why: Independent of Bucket 2 item 1.
+  - id: B2-5
+    summary: APQC tag override on handoff 826
+    question: >-
+      Handoff 826 (ECM document.version_published -> KMS) carries a legacy
+      discovery_substring tag pointing at PCF 14095 "Document trade" (likely
+      false positive on the noun "trade"). The 2026-05-31 continuation block
+      already added an agent_curated row pointing at PCF 21679 "Deliver
+      approved content". Retire the substring row (mark rejected) or leave both
+      and let the reviewer pick at approval time?
+    options: [retire_substring_row, leave_both_pending_review]
+    why: Independent of Bucket 2 item 1.
+  - id: B2-6
+    summary: Pattern flag knowledge_search_queries.has_personal_content
+    question: >-
+      Search query strings can carry PII typed by the user (e.g., "how do I
+      update Jane Doe's home address"). Flagship vendors treat this as personal
+      data subject to retention controls. Flip
+      knowledge_search_queries.has_personal_content from false to true?
+    options: [true_flip, false_keep]
+    why: Rule #15 forbids auto-flipping pattern flags; surface for user decision.
+  - id: B2-7
+    summary: Lifecycle states on 4 unstated KMS masters
+    question: >-
+      article_revisions, knowledge_collections, knowledge_categories,
+      knowledge_search_queries currently have 0 lifecycle states. Proposed,
+      article_revisions, draft -> in_review -> approved
+      (requires_permission, verb approve_revision) -> published -> superseded;
+      knowledge_collections, draft -> published -> archived; knowledge_categories,
+      config-shape exemption (no states); knowledge_search_queries,
+      config-shape event-stream exemption (no states). Approve, edit, or
+      reject per master.
+    options: [approve_all, edit_per_master, reject_all]
+    why: Per Rule #12 lifecycle states are Phase-B obligations, but config-shape exemption can apply on the two configuration-like masters; user owns the call.
+
+b3:
+  - id: B3-1
+    candidate: knowledge_owners
+    rationale: >-
+      Per-article steward / SME assignment. Universal pattern across flagship
+      KM vendors. Drives verification cycles and feedback escalation. On
+      Bucket 2 item 1 option (a) or (c), candidate KMS master; on option (b),
+      candidate on the per-domain modules.
+    vendor_evidence:
+      - {vendor: ServiceNow Knowledge Management, evidence: 1st_class}
+      - {vendor: Document360, evidence: 1st_class}
+      - {vendor: Bloomfire, evidence: 1st_class}
+      - {vendor: Guru, evidence: 1st_class}
+      - {vendor: Notion, evidence: 1st_class}
+    proposed_module: KMS-AUTHORING-or-KMS-GOVERNANCE
+  - id: B3-2
+    candidate: knowledge_subscriptions
+    rationale: >-
+      Per-user follows on articles or categories. Universal across modern
+      wikis. May belong on a future INTRANET / NOTIFICATION layer rather than
+      KMS itself.
+    vendor_evidence:
+      - {vendor: Notion, evidence: 1st_class}
+      - {vendor: Confluence, evidence: 1st_class}
+      - {vendor: Guru, evidence: 1st_class}
+    proposed_module: KMS-DELIVERY
+  - id: B3-3
+    candidate: article_verification_cycles
+    rationale: >-
+      Mandatory cadence-based accuracy review on knowledge articles. Specialist
+      pattern; borderline single-vendor (Guru) feature. Verify universality
+      across 3+ vendors before loading.
+    vendor_evidence:
+      - {vendor: Guru, evidence: 1st_class}
+      - {vendor: Document360, evidence: 1st_class}
+      - {vendor: Bloomfire, evidence: 1st_class}
+      - {vendor: ServiceNow Knowledge Management, evidence: secondary}
+    proposed_module: KMS-GOVERNANCE
+  - id: B3-4
+    candidate: search_synonyms / search_dictionaries
+    rationale: >-
+      Controlled vocabulary on the search layer. Likely belongs on a candidate
+      ENTERPRISE-SEARCH domain (queued to audits/_missing-domains.md), not
+      KMS, on the modern enterprise-search architecture. If ENTERPRISE-SEARCH
+      gets promoted, this set moves there; if KMS absorbs enterprise search,
+      lives here.
+    vendor_evidence:
+      - {vendor: Glean, evidence: 1st_class}
+      - {vendor: Coveo, evidence: 1st_class}
+      - {vendor: Algolia, evidence: 1st_class}
+      - {vendor: Lucidworks Fusion, evidence: 1st_class}
+    proposed_module: ENTERPRISE-SEARCH-or-KMS-SEARCH-ANALYTICS

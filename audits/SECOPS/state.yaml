@@ -1,0 +1,282 @@
+schema_version: 2
+domain: SECOPS
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-D1
+    summary: "PATCH domains.business_logic on SECOPS id 11 to replace the em-dash before 'the SIEM/EDR core' with a comma per CLAUDE.md project-wide em-dash ban."
+    finding: "domains.business_logic for SECOPS id 11 currently contains a literal U+2014 em-dash character between '...high-volume log analytics' and 'the SIEM/EDR core.' This violates the project-wide em-dash ban in CLAUDE.md (forbidden in all prose, code comments, docs, plan files, commit messages, and all catalog data including descriptions and business_logic fields). The fact sheet emitter sanitizes em-dashes at render time as a safety net, but source data must stay clean."
+    action: "PATCH /domains?id=eq.11 with business_logic='Detection rules, correlation, ML-based anomaly detection, and high-volume log analytics, the SIEM/EDR core.' via direct semantius CLI postgrestRequest. No loader required. Independent of every other open item."
+    affected_entities:
+      - "domains.id=11"
+    extra_field: "business_logic"
+
+b1b:
+  - id: B1B-S1
+    summary: "Author at minimum 1 landing or umbrella domain_modules row for SECOPS (M1 fail, 0 modules)."
+    finding: "M1 FAIL: SECOPS has 0 domain_modules rows. Even leadership-tier domains require >=1 module_kind='full' row per Rule #14 (a 'derived-signals' or 'landing' module preserving the deploy-target contract). Cascades into F2 (one system skill per module), B1-S6 (consumer DMDOs on landing module), and B10b SECOPS-side fix."
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+    affected_modules: []
+    extra_module_count_current: 0
+    extra_module_count_required_min: 1
+
+  - id: B1B-S2
+    summary: "Draft 3 to 5 capabilities and capability_domains rows for SECOPS (A2 fail, 0 capabilities)."
+    finding: "A2 FAIL: 0 capability_domains rows. Candidate capability codes from the 2026-05-30 audit: security-incident-mgmt, threat-detection-orchestration, security-case-mgmt, response-coordination, breach-notification-mgmt. Shape depends on B2-1 (umbrella vs umbrella-plus-sub-modules)."
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B1B-S3
+    summary: "Add solutions for SECOPS umbrella flagship vendors and set at least 1 to coverage_level='primary' (A3 fail, only 2 secondary solutions)."
+    finding: "A3 FAIL: only 2 solutions linked (ServiceNow Security Incident Response id 13, ServiceNow Vulnerability Response id 14, both coverage_level='secondary'). A3 requires >=3 solutions with >=1 primary. Pure-play SECOPS-umbrella flagship vendors are not yet in solutions: Splunk Enterprise Security, Microsoft Sentinel, CrowdStrike Falcon Complete, Palo Alto Cortex XSIAM, IBM QRadar. The choice of which vendor is the primary depends on the modularization shape (B2-1) since the umbrella vs leadership-tier shape changes which products map cleanly to the SECOPS domain row vs sibling detection-vertical domains."
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B1B-S4
+    summary: "Draft and load buyer-voice catalog_tagline and catalog_description on the SECOPS domains row (A4 fail; Rule #20 requires user approval)."
+    finding: "A4 FAIL: catalog_tagline and catalog_description on SECOPS id 11 are both empty strings. Rule #20 forbids overwriting these fields without explicit user approval; the buyer-voice draft / review flow itself has not yet been confirmed by the user (B2-4)."
+    blocked_by:
+      - {type: user_decision, ref: B2-4}
+    affected_entities:
+      - "domains.id=11"
+
+  - id: B1B-S5
+    summary: "Author exactly 1 skill_type='system' skill per new SECOPS domain_modules row with >=1 skill_tools (F2 fail, 0 skills)."
+    finding: "F2 FAIL: 0 skills exist on SECOPS at any level (domain_id=11 returns nothing, no domain_module_id-anchored rows). After B1B-S1 lands, each new module needs exactly one skill_type='system' skill per Rule #17. Count of skills equals count of modules created by B1B-S1."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+
+  - id: B1B-S6
+    summary: "After B1B-S1 lands, add consumer or embedded_master DMDOs on the SECOPS landing or case-mgmt module for the 3 inbound payloads (dlp_incidents, data_exfiltration_attempts, sensitive_data_incidents)."
+    finding: "Boundary: SECOPS declares no DMDO consumer or embedded_master role on the 4 inbound payloads (dlp_incidents id 330, data_exfiltration_attempts id 332, sensitive_data_incidents id 341). The 5 inbound handoffs therefore have no resolvable target_domain_module_id even after B1B-S1 lands. Necessity per Rule #16 is likely 'optional' since SECOPS can correlate without each individual DLP or DSPM source."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_handoffs:
+      - {handoff_id: 280, direction: inbound, source_domain: DLP, target_domain: SECOPS, trigger_event: "dlp_incident.violation_detected", payload: "dlp_incidents", null_field: target_domain_module_id}
+      - {handoff_id: 282, direction: inbound, source_domain: DLP, target_domain: SECOPS, trigger_event: "dlp_incident.escalated", payload: "dlp_incidents", null_field: target_domain_module_id}
+      - {handoff_id: 284, direction: inbound, source_domain: DLP, target_domain: SECOPS, trigger_event: "data_exfiltration_attempt.initiated", payload: "data_exfiltration_attempts", null_field: target_domain_module_id}
+      - {handoff_id: 287, direction: inbound, source_domain: DSPM, target_domain: SECOPS, trigger_event: "sensitive_data_incident.detected", payload: "sensitive_data_incidents", null_field: target_domain_module_id}
+      - {handoff_id: 290, direction: inbound, source_domain: DSPM, target_domain: SECOPS, trigger_event: "sensitive_data_incident.resolved", payload: "sensitive_data_incidents", null_field: target_domain_module_id}
+
+  - id: B1B-B10B-TARGET
+    summary: "PATCH target_domain_module_id on the 5 inbound handoffs to point at the SECOPS module that consumes each payload."
+    finding: "B10b FAIL on the SECOPS side: handoffs 280, 282, 284, 287, 290 all carry target_domain_module_id=NULL. Deterministic derivation rule: the module in target_domain_id (SECOPS id 11) that holds the handoff data_object_id with the strongest role (master > embedded_master > contributor > consumer > derived). Cannot run until B1B-S1 lands (no SECOPS modules exist) and B1B-S6 lands (no SECOPS DMDO on these payloads). The matching source_domain_module_id NULLs are report-only owed by DLP and DSPM."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S6}
+    affected_handoffs:
+      - {handoff_id: 280, direction: inbound, source_domain: DLP, target_domain: SECOPS, trigger_event: "dlp_incident.violation_detected", payload: "dlp_incidents", null_field: target_domain_module_id}
+      - {handoff_id: 282, direction: inbound, source_domain: DLP, target_domain: SECOPS, trigger_event: "dlp_incident.escalated", payload: "dlp_incidents", null_field: target_domain_module_id}
+      - {handoff_id: 284, direction: inbound, source_domain: DLP, target_domain: SECOPS, trigger_event: "data_exfiltration_attempt.initiated", payload: "data_exfiltration_attempts", null_field: target_domain_module_id}
+      - {handoff_id: 287, direction: inbound, source_domain: DSPM, target_domain: SECOPS, trigger_event: "sensitive_data_incident.detected", payload: "sensitive_data_incidents", null_field: target_domain_module_id}
+      - {handoff_id: 290, direction: inbound, source_domain: DSPM, target_domain: SECOPS, trigger_event: "sensitive_data_incident.resolved", payload: "sensitive_data_incidents", null_field: target_domain_module_id}
+
+b2:
+  - id: B2-1
+    summary: "Decide SECOPS classification: leadership-tier landing surface, master-bearing umbrella with sub-modules, or hybrid."
+    question: "Is SECOPS correctly classified as leadership-tier (per the SKILL.md B1 exception list, alongside SOAR, THREAT-INTEL, VULN-MGMT), or should it be promoted to an umbrella with sub-modules that masters the security-incident case shape?"
+    options:
+      - "(a) keep leadership-tier label, author SECOPS-LANDING only (single module, no masters, declares consumer DMDOs on ITSM service_incidents, ITOM monitoring_events, DLP dlp_incidents, DSPM sensitive_data_incidents)."
+      - "(b) promote SECOPS to a master-bearing umbrella, author SECOPS-CASE-MGMT, SECOPS-DETECTION-ENG, SECOPS-RESPONSE-OPS, SECOPS-IR-COMPLIANCE modules, master the 14 candidate masters in Bucket 3."
+      - "(c) hybrid: author SECOPS-LANDING and SECOPS-CASE-MGMT now (masters security_incidents plus 2 to 3 related), defer detection-engineering and response-ops modules until the SIEM and EDR sibling domains land and the boundary is clearer."
+    why: "The B1 exception list classifies SECOPS as leadership-tier and the literal catalog state matches (0 masters, 0 modules), but flagship SECOPS vendors all master first-class case, alert, detection, and rule schemas, which is the Rule #2 point-solution-market test. The domains.business_logic field already acknowledges algorithmic substance (detection rules, correlation, ML-based anomaly detection). Cross-bucket dependency: gates all 14 B3 candidates and B1B-S1, B1B-S2, B1B-S3, B1B-S5, B1B-S6."
+
+  - id: B2-2
+    summary: "Decide modeling for detection-vertical siblings (SIEM, EDR, XDR, MDR, NDR, UEBA, DFIR, BAS, SOC-AAS) under SECOPS."
+    question: "Should the detection verticals load as flat top-level domains or as parent_domain_id=11 children under SECOPS?"
+    options:
+      - "(a) flat top-level domains, no parent-child link, let SECOPS umbrella keep its leadership-tier label and consume from each."
+      - "(b) load as parent_domain_id=11 children, expose the umbrella relationship at query time."
+      - "(c) defer until the user picks 2 to 3 highest-priority detection verticals (SIEM, EDR, XDR feels like the minimum coherent set) and load them in a focused wave."
+    why: "Catalog precedent (ITAM umbrella with HAM, SAM, SMP, FINOPS siblings) suggests parent-child. SOAR, VULN-MGMT, and THREAT-INTEL are already parent_domain_id=11 children of SECOPS, see B2-5. Cross-bucket dependency with B2-1 and B2-5."
+
+  - id: B2-3
+    summary: "Decide SOAR vs SECOPS-RESPONSE-OPS module scope overlap."
+    question: "Where do playbook_executions and containment_actions canonically master?"
+    options:
+      - "(a) SOAR masters playbook_executions and containment_actions, SECOPS embedded_master or consumer."
+      - "(b) SECOPS masters case-correlated execution, SOAR masters the orchestration engine itself (rule library, connector catalog, workflow templates)."
+      - "(c) consolidate SOAR into SECOPS as a module (would require deprecating the SOAR domain row, destructive)."
+    why: "SOAR is already a separate domain (id 12, parent_domain_id=11). The proposed SECOPS-RESPONSE-OPS module under option (b) of B2-1 would overlap materially with what SOAR masters. Independent of B2-1 mechanically, but the answer reshapes the scope of SECOPS-RESPONSE-OPS."
+
+  - id: B2-4
+    summary: "Approve buyer-voice drafting and review flow for SECOPS catalog_tagline and catalog_description."
+    question: "Confirm that the buyer-voice drafting and per-row review is the preferred flow vs the user supplying the wording directly per Rule #20."
+    options:
+      - "(a) Agent drafts buyer-voice tagline and description in workflow-plus-value voice (detect, investigate, contain, recover, notify), user reviews exact wording before PATCH."
+      - "(b) User supplies the exact wording for both columns."
+      - "(c) Defer until B2-1 resolves, since the wording differs between leadership-tier landing and master-bearing umbrella."
+    why: "Rule #20 requires user approval on the exact text before any write. The agent must not auto-populate these fields. Gates B1B-S4."
+
+  - id: B2-5
+    summary: "Reconcile existing domains.parent_domain_id wiring on SOAR, VULN-MGMT, THREAT-INTEL with the B2-1 and B2-2 framing."
+    question: "Does the existing parent_domain_id wiring (SOAR id 12, VULN-MGMT id 13, THREAT-INTEL id 14 all parent_domain_id=11) change the answer to B2-1 or B2-2?"
+    options:
+      - "(a) the existing umbrella-to-children evidence pushes toward leadership-tier (option a of B2-1), since the catalog already says SECOPS is a parent rather than a peer."
+      - "(b) argue for promoting more detection verticals (SIEM, EDR, XDR, UEBA, MDR, NDR, DFIR, BAS, SOC-AAS) as parent_domain_id=11 children before answering B2-1."
+      - "(c) the wiring informs B2-3 specifically, since SOAR is already declared a SECOPS child and SECOPS-RESPONSE-OPS would duplicate that scope."
+    why: "The 2026-05-30 audit framed the umbrella vs sibling question (B2-2) as if no parent-child wiring existed, but the umbrella to children link is already partially in the catalog (3 of an eventual ~12 detection verticals). Cross-bucket dependency with B2-1, B2-2, B2-3. Independent of B1A-D1."
+
+b3:
+  - id: B3-SECURITY-INCIDENTS
+    candidate: security_incidents
+    rationale: "Canonical SECOPS case shape, distinct from ITSM service_incidents since lifecycle states, evidence chain, legal hold, and regulator-notification surface diverge sharply. Mastered by every flagship SECOPS vendor's case product. Gated on B2-1 = promote or hybrid."
+    vendor_evidence:
+      - Splunk Enterprise Security
+      - Microsoft Sentinel
+      - Palo Alto Cortex XSIAM
+      - IBM QRadar
+      - Chronicle Google SecOps
+      - ServiceNow Security Incident Response
+    proposed_module: SECOPS-CASE-MGMT
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B3-SECURITY-CASES
+    candidate: security_cases
+    rationale: "Long-running investigations spanning multiple incidents, typically what DFIR teams open; sub-cases roll up under one case. Distinct from security_incidents."
+    vendor_evidence:
+      - Splunk ES Investigations
+      - Microsoft Sentinel Cases via M365 Defender
+      - Palo Alto XSIAM
+      - Chronicle
+    proposed_module: SECOPS-CASE-MGMT
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B3-SECURITY-ALERTS
+    candidate: security_alerts
+    rationale: "Source-agnostic alert layer that closes into incidents. Universal across all SIEM and XDR vendors."
+    vendor_evidence:
+      - Splunk Enterprise Security
+      - Microsoft Sentinel
+      - CrowdStrike Falcon
+      - Chronicle
+      - IBM QRadar
+    proposed_module: SECOPS-CASE-MGMT
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B3-DETECTIONS
+    candidate: detections
+    rationale: "Rule-derived or model-derived detections; the substrate that publishes alerts. Strong overlap with the SIEM sibling-domain candidate."
+    vendor_evidence:
+      - "Splunk ES (Notables)"
+      - "Sentinel (Analytics Rules outputs)"
+      - "CrowdStrike (Detections)"
+      - "Chronicle (Detections)"
+    proposed_module: SECOPS-DETECTION-ENG
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+      - {type: user_decision, ref: B2-2}
+
+  - id: B3-DETECTION-RULES
+    candidate: detection_rules
+    rationale: "Authored rules with versioning, suppression windows, tuning history. Distinct from the runtime detection record. Strong overlap with the SIEM sibling-domain candidate."
+    vendor_evidence:
+      - "all SIEM vendors"
+    proposed_module: SECOPS-DETECTION-ENG
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+      - {type: user_decision, ref: B2-2}
+
+  - id: B3-PLAYBOOK-EXECUTIONS
+    candidate: playbook_executions
+    rationale: "Instantiated SOAR playbook runs against incidents, lives at SECOPS-SOAR boundary; SOAR domain may master if promoted (see B2-3)."
+    vendor_evidence:
+      - Splunk SOAR
+      - Palo Alto XSOAR
+      - Microsoft Sentinel Automation
+      - ServiceNow SOAR
+    proposed_module: SECOPS-RESPONSE-OPS
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+      - {type: user_decision, ref: B2-3}
+
+  - id: B3-CONTAINMENT-ACTIONS
+    candidate: containment_actions
+    rationale: "Per-asset response actions (host isolation, account disable, network block) with approval state and reversion path."
+    vendor_evidence:
+      - "CrowdStrike (Host Isolation)"
+      - "Microsoft Defender (Live Response)"
+      - "SentinelOne"
+    proposed_module: SECOPS-RESPONSE-OPS
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+      - {type: user_decision, ref: B2-3}
+
+  - id: B3-MITRE-ATTACK-TAGS
+    candidate: mitre_attack_tags
+    rationale: "Junction tagging detections, incidents, and rules to MITRE ATT&CK techniques. Universal tagging substrate across all SIEM, XDR, EDR, MDR; not a master but a load-bearing junction."
+    vendor_evidence:
+      - "Universal cross-vendor"
+    proposed_module: SECOPS-DETECTION-ENG
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B3-INVESTIGATION-TIMELINES
+    candidate: investigation_timelines
+    rationale: "Per-incident reconstructed timeline of events, often DFIR-driven."
+    vendor_evidence:
+      - "Microsoft Sentinel (Investigation graph)"
+      - "CrowdStrike (Investigate)"
+      - "Palo Alto XSIAM (Incident Timeline)"
+      - "DFIR tooling broadly"
+    proposed_module: SECOPS-CASE-MGMT
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B3-EVIDENCE-ARTIFACTS
+    candidate: evidence_artifacts
+    rationale: "Forensic acquisitions, memory dumps, disk images; DFIR canonical master. Strong overlap with the DFIR sibling-domain candidate."
+    vendor_evidence:
+      - Magnet AXIOM
+      - Velociraptor
+      - EnCase
+      - Cellebrite
+    proposed_module: SECOPS-CASE-MGMT
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+      - {type: user_decision, ref: B2-2}
+
+  - id: B3-REGULATOR-NOTIFICATIONS
+    candidate: regulator_notifications
+    rationale: "GDPR Article 33, HIPAA Breach Notification, SEC Form 8-K, NIS2, DORA legal-hold and breach-clock entities."
+    vendor_evidence:
+      - OneTrust Breach Response
+      - "RadarFirst (Privacy plus Security incident notification)"
+      - "built-in playbooks in Microsoft Sentinel and Splunk SOAR"
+    proposed_module: SECOPS-IR-COMPLIANCE
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B3-BREACH-CLOCK-ENTRIES
+    candidate: breach_clock_entries
+    rationale: "Per-jurisdiction regulator-clock entity (72-hour GDPR, 60-day HIPAA, 4-business-day SEC 8-K, 24h NIS2 early warning)."
+    vendor_evidence:
+      - OneTrust
+      - RadarFirst
+      - BreachRX
+    proposed_module: SECOPS-IR-COMPLIANCE
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B3-NIS2-INCIDENT-REPORTS
+    candidate: nis2_significant_incident_reports
+    rationale: "NIS2-mandated structure for the EU significant-incident reporting workflow. Current vendor coverage is shallow but reporting is mandated."
+    vendor_evidence:
+      - "regulator-template-aligned, emerging vendor support"
+    proposed_module: SECOPS-IR-COMPLIANCE
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B3-DORA-INCIDENT-REPORTS
+    candidate: dora_major_incident_reports
+    rationale: "DORA-mandated for EU financial sector; vendor support nascent."
+    vendor_evidence:
+      - "regulator-template-aligned, emerging vendor support"
+    proposed_module: SECOPS-IR-COMPLIANCE
+    blocked_by:
+      - {type: user_decision, ref: B2-1}

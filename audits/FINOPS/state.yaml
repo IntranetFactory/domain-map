@@ -1,0 +1,183 @@
+schema_version: 2
+domain: FINOPS
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-M1
+    summary: "FINOPS has zero domain_modules rows (Rule #14 hard fail, dominant blocker)."
+    finding: "Live query /domain_modules?domain_id=eq.41 returns 0 rows. Rule #14 requires every domains row to host at least one module_kind='full' module. Leadership-tier domains still need at least one landing module to preserve the deploy-target contract. With 0 capabilities (B1A-A2) the M2 single-module-acceptable case applies, but the flagship vendor split between visibility/allocation and optimization/commitment suggests two modules are the right shape once B1A-A2 lands capabilities."
+    action: "Author either 1 full module FINOPS-COST-MGMT (catch-all) or 2 full modules FINOPS-COST-ANALYTICS + FINOPS-OPTIM. Pre-flight per Rule #14 (every module has at least one master OR is a leadership-tier landing) and Rule #17 (system skill + skill_tools ship in the same load). Cascades unblock B1A-B-DMDO, B1A-F-SKILL, B1A-B10B-OUTBOUND, B1A-B10B-INBOUND."
+    affected_modules: []
+    affected_entities: []
+    vendor_evidence: [Apptio Cloudability, CloudHealth, Vantage, CloudZero, Finout]
+    extra_cascade_targets: [B1A-B-DMDO, B1A-F-SKILL, B1A-B10B-OUTBOUND, B1A-B10B-INBOUND]
+
+  - id: B1A-A2
+    summary: "FINOPS has zero capability_domains rows (A2 hard fail)."
+    finding: "Live query /capability_domains?domain_id=eq.41 returns 0 rows. Without capabilities the M4/M6 bipartite-coverage loop is unenforceable and the system-skill anchor surface is missing."
+    action: "Draft 6 to 8 capability rows + capability_domains links: FINOPS-COST-VISIBILITY, FINOPS-COST-ALLOCATION, FINOPS-ANOMALY-DETECTION, FINOPS-COMMITMENT-OPTIM, FINOPS-RIGHTSIZING, FINOPS-FORECASTING, FINOPS-UNIT-ECONOMICS, FINOPS-KUBE-COST-ALLOC. Decide cross-cutting status per the domain-neutral convention (FINOPS-COST-ALLOCATION is borderline; defer cross-cutting decision until a second domain claims it)."
+    vendor_evidence: [Apptio Cloudability, CloudHealth, Vantage, CloudZero, Finout, Kubecost, ProsperOps]
+
+  - id: B1A-A4
+    summary: "domains.catalog_tagline and catalog_description are both empty strings on FINOPS id=41."
+    finding: "Live read of /domains?domain_code=eq.FINOPS shows catalog_tagline='' and catalog_description=''. Rule #20 requires once-only authoring and explicit user approval before any write; FINOPS has 5 solutions in solution_domains so is in scope for A4."
+    action: "Surface the 2026-05-30 Bucket 2 item 2 draft tagline ('See, allocate, and optimize cloud spend before it surprises you at month-end.') and 2-paragraph description to the user for verbatim approval or edit, then PATCH domains id=41. Per Rule #20 do NOT write without explicit per-row approval."
+    blocked_by:
+      - {type: user_decision, ref: B2-A4-COPY}
+
+  - id: B1A-B-DMDO
+    summary: "FINOPS has no domain_module_data_objects rows; 8 inbound consumer DMDOs need to land once modules ship."
+    finding: "Live query /domain_module_data_objects on FINOPS modules returns 0 rows (no modules to query). Per the leadership-tier pattern the consumer floor is 8 inbound consumer DMDOs across the 8 inbound handoff payloads: supplier_invoices (S2P-mastered, today's legacy domain_data_objects consumer), software_licenses (SAM), saas_applications (SMP), saas_usage_metrics (SMP), card_transactions (SPEND-MGMT), bi_queries (BI), activity_data_records (ESG), application_costs (APM). Each gets necessity per the inbound handoff's friction_level (required for high friction, optional otherwise)."
+    action: "Author 8 domain_module_data_objects rows distributed between B1A-M1's module(s); migrate the legacy domain_data_objects row on supplier_invoices to the module-level table once the canonical-owner lookup is verified to still work via the S2P master row."
+    affected_entities: [supplier_invoices, software_licenses, saas_applications, saas_usage_metrics, card_transactions, bi_queries, activity_data_records, application_costs]
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1A-M1}
+
+  - id: B1A-F-SKILL
+    summary: "FINOPS has zero system skills and zero skill_tools rows (F2/F3/F4/F5 cascading hard fail)."
+    finding: "Live query /skills?domain_id=eq.41 returns 0 rows. Rule #17 requires exactly one skill_type='system' skill per domain_modules row with at least one skill_tools row. With 0 modules the count is vacuously 0, but in the same load that ships B1A-M1 the system skill becomes obligatory. Phase-S floor: query_<entity> for each consumed data_object plus FinOps-specific compute primitives (detect_cost_anomaly, recommend_rightsizing, recommend_commitment_purchase) plus fetch_cloud_provider_billing_data and notify_person."
+    action: "Author 1 or 2 system skills (mirroring B1A-M1's module count) + 10 to 14 skill_tools rows. Per Rule #17 sub-invariant on operation_kind: query and mutate require data_object_id; fetch, side_effect, compute require data_object_id NULL; inbound is optional."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1A-M1}
+
+  - id: B1A-B10B-OUTBOUND
+    summary: "Handoff 198 (FINOPS -> S2P cloud_spend.threshold_breached) has source_domain_module_id=null."
+    finding: "Live /handoffs?id=eq.198 confirms source_domain_module_id=null. Per B10b the FINOPS-source side owns the fix. Cross-blocked on B1A-B9-ATTRIB because the source-module derivation requires trigger_event 158's data_object to be FINOPS-anchored."
+    action: "After B1A-B9-ATTRIB re-points trigger_event 158 (or the handoff is deprecated per Bucket 2 item 3 option c), PATCH handoff 198 source_domain_module_id to the FINOPS module that masters the trigger event's data_object."
+    affected_handoffs:
+      - {handoff_id: 198, direction: outbound, source_domain: FINOPS, target_domain: S2P, trigger_event: cloud_spend.threshold_breached, payload: supplier_invoices, null_field: source_domain_module_id}
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1A-M1}
+      - {type: depends_on, ref: B1A-B9-ATTRIB}
+
+  - id: B1A-B10B-INBOUND
+    summary: "8 inbound handoffs to FINOPS have target_domain_module_id=null."
+    finding: "Live /handoffs?target_domain_id=eq.41 confirms target_domain_module_id=null on 173, 637, 641, 643, 691, 851, 1196, 305. Per B10b the FINOPS-target side owns the fix once modules exist. Derivation per the strongest-role rule: each payload's consumer DMDO row's domain_module_id becomes the handoff's target_domain_module_id."
+    action: "After B1A-B-DMDO ships the consumer DMDOs, backfill target_domain_module_id on the 7 confirmed inbound handoffs from B1A-B-DMDO's row assignments. Handoff 305 (RE-INVEST property_valuation.refreshed) secondary-gated on Bucket 2 item 5 legitimacy decision; if delete, also drop the existing handoff_processes row (handoff 305 -> process 1390)."
+    affected_handoffs:
+      - {handoff_id: 173, direction: inbound, source_domain: SPEND-MGMT, target_domain: FINOPS, trigger_event: card_transaction.posted, payload: card_transactions, null_field: target_domain_module_id}
+      - {handoff_id: 637, direction: inbound, source_domain: SAM, target_domain: FINOPS, trigger_event: software_license.under_consumed, payload: software_licenses, null_field: target_domain_module_id}
+      - {handoff_id: 641, direction: inbound, source_domain: SMP, target_domain: FINOPS, trigger_event: saas_application.sanctioned, payload: saas_applications, null_field: target_domain_module_id}
+      - {handoff_id: 643, direction: inbound, source_domain: SMP, target_domain: FINOPS, trigger_event: saas_usage_metric.idle_threshold, payload: saas_usage_metrics, null_field: target_domain_module_id}
+      - {handoff_id: 691, direction: inbound, source_domain: BI, target_domain: FINOPS, trigger_event: bi_query.cost_threshold_breached, payload: bi_queries, null_field: target_domain_module_id}
+      - {handoff_id: 851, direction: inbound, source_domain: ESG, target_domain: FINOPS, trigger_event: activity_data.recorded, payload: activity_data_records, null_field: target_domain_module_id}
+      - {handoff_id: 1196, direction: inbound, source_domain: APM, target_domain: FINOPS, trigger_event: application_cost.updated, payload: application_costs, null_field: target_domain_module_id}
+      - {handoff_id: 305, direction: inbound, source_domain: RE-INVEST, target_domain: FINOPS, trigger_event: property_valuation.refreshed, payload: property_valuations, null_field: target_domain_module_id}
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1A-M1}
+      - {type: prerequisite_entity, ref: B1A-B-DMDO}
+      - {type: user_decision, ref: B2-HANDOFF-305}
+
+  - id: B1A-B9-ATTRIB
+    summary: "Trigger event 158 (cloud_spend.threshold_breached) is published against supplier_invoices (S2P-mastered), wrong attribution."
+    finding: "Live /trigger_events?id=eq.158 confirms data_object_id=75 (supplier_invoices). The event description is FinOps-native (cloud-provider spend threshold breach), but supplier_invoices is an AP-side master. The correct data_object (cloud_cost_records or cloud_spend_records) does not yet exist."
+    action: "Three-way decision routed via Bucket 2 item 3 and Bucket 3 item 1. If (a) FINOPS masters cloud_cost_records, author the master and re-point trigger_event 158. If (b) leave mis-attributed, no action. If (c) deprecate trigger_event 158 + handoff 198 as mis-modeled."
+    affected_events:
+      - {id: 158, event_name: cloud_spend.threshold_breached, current_category: threshold, proposed_category: threshold}
+    blocked_by:
+      - {type: user_decision, ref: B2-CLOUD-COST-MASTER}
+      - {type: depends_on, ref: B3-CLOUD-COST-RECORDS}
+
+b1b:
+  - id: B1B-A3-SOLUTIONS
+    summary: "Optional A3 widening: add Vantage, CloudZero, Kubecost, AWS Cost Explorer, Azure Cost Management, GCP Billing as solutions."
+    finding: "A3 already passes (5 solutions, 4 primary + 1 secondary). Widening is optional and noted for completeness; verify Kubecost vendor ownership (IBM acquired Apptio + Kubecost in late 2024) before insert."
+    blocked_by:
+      - {type: user_decision, ref: B2-A3-WIDEN}
+    vendor_evidence: [Vantage, CloudZero, Kubecost, AWS Cost Explorer, Azure Cost Management, GCP Billing]
+
+b2:
+  - id: B2-C1-OWNER
+    summary: "C1 owner business_function arbitration on FINOPS (corrected from prior audit)."
+    question: "business_function_domains has owner=Cloud Financial Operations (id 83), already sub-parented under Finance (id 4) per live state. The prior audit mis-read id 4 as Software Engineering. Accept the Finance-anchored sub-function as-is, or add a second spine-anchored owner row directly on Finance or IT Operations?"
+    options:
+      - "(a) Accept as-is. The owner row sits on a sub-function of Finance, which is spine-aligned. Close C1."
+      - "(b) Add a second owner row on Finance (id 4) for explicit spine alignment."
+      - "(c) Add a second owner row on IT Operations for the CIO-reporting org pattern."
+    why: "C1 is partial-pass per the spine-alignment rule; the choice is org-pattern specific."
+
+  - id: B2-A4-COPY
+    summary: "A4 buyer-facing copy approval (catalog_tagline + catalog_description)."
+    question: "Approve the 2026-05-30 draft tagline and 2-paragraph description verbatim, edit, or supply your own? Rule #20 requires once-only authoring and per-row user approval."
+    options:
+      - "Approve verbatim."
+      - "Edit (provide exact text)."
+      - "Skip; defer A4 until later."
+    why: "Rule #20 forbids the agent authoring buyer-facing copy without explicit user approval of the exact wording."
+
+  - id: B2-CLOUD-COST-MASTER
+    summary: "Does FINOPS master cloud_cost_records, breaking the leadership-tier convention?"
+    question: "Trigger event 158 is wrong-attributed. The clean fix authors a FINOPS-mastered cloud_cost_records (FOCUS-normalized) and re-points. But FINOPS is on the SKILL.md leadership-tier list (masters nothing of its own)."
+    options:
+      - "(a) Author cloud_cost_records as a FINOPS master; structural exception that proves the leadership-tier rule."
+      - "(b) Leave event mis-attributed; accept the catalog inconsistency."
+      - "(c) Deprecate trigger_event 158 + handoff 198 as mis-modeled; replace with a supplier_invoice.cloud_provider event published from S2P or AP-AUTO with FINOPS as target."
+    why: "Leadership-tier-pure vs empirically-correct trade-off; the FOCUS spec formalizes the row shape."
+    blocked_by:
+      - {type: depends_on, ref: B3-CLOUD-COST-RECORDS}
+
+  - id: B2-FOCUS-REG
+    summary: "Add FOCUS spec as a regulations row (industry_standard)?"
+    question: "Live /regulations?regulation_name=ilike.*FOCUS* returns 0 rows. Should FOCUS (FinOps Foundation, Linux Foundation, v1.0 2024) be added as a regulations row with applicability=industry_standard and linked via domain_regulations to FINOPS?"
+    options:
+      - "(a) Add FOCUS as industry_standard regulation; consistent with PCI-DSS / FedRAMP precedent."
+      - "(b) Skip; keep regulations strictly statutory + standards-body."
+    why: "The catalog already mixes statutory and industry-standard frameworks in regulations; (a) is consistent."
+
+  - id: B2-HANDOFF-305
+    summary: "Inbound handoff 305 (RE-INVEST -> FINOPS on property_valuation.refreshed) legitimacy."
+    question: "A property-valuation refresh flowing into a cloud-FinOps domain has no plausible workflow tie. Live: handoff 305 now carries a handoff_processes row pointing at PCF 10831 (fixed-asset adjustments) despite the 2026-05-30 audit flagging defer-to-Discover. Delete, keep, or re-route?"
+    options:
+      - "(a) Delete handoff 305 and its handoff_processes row (process_id=1390). Likely scope-creep from a cluster-load."
+      - "(b) Keep handoff 305; add a FINOPS consumer DMDO on property_valuations once B1A-M1 ships."
+      - "(c) Re-route handoff 305 to IWMS or RE-CRE if intended for a building-asset-cost surface."
+    why: "The inbound contradicts the FINOPS domains.description scope; the auto-loaded PCF row needs cleanup if the handoff is removed."
+    affected_handoffs:
+      - {handoff_id: 305, direction: inbound, source_domain: RE-INVEST, target_domain: FINOPS, trigger_event: property_valuation.refreshed, payload: property_valuations, null_field: target_domain_module_id}
+
+  - id: B2-A3-WIDEN
+    summary: "Optional A3 widening: load 3 to 6 additional solutions (Vantage, CloudZero, Kubecost, AWS Cost Explorer, Azure Cost Management, GCP Billing)?"
+    question: "A3 already passes at 5 solutions. Widen the surface or skip?"
+    options:
+      - "(a) Widen; load 3 to 6 additional solutions."
+      - "(b) Skip; A3 floor already met."
+    why: "Optional; non-blocking. Verify Kubecost vendor ownership before insert."
+
+b3:
+  - id: B3-CLOUD-COST-RECORDS
+    candidate: cloud_cost_records (or cloud_spend_records) as FINOPS master, FOCUS v1.0 normalized
+    rationale: "Universal in the vendor sample: every flagship product is built around this normalized shape. The FinOps Foundation FOCUS specification (v1.0, 2024) formalizes the columns (BilledCost, EffectiveCost, ChargeCategory, ServiceName, ResourceId, Tags, etc.). Decides B2-CLOUD-COST-MASTER and B1A-B9-ATTRIB."
+    vendor_evidence: [Apptio Cloudability, CloudHealth, Vantage, CloudZero, Finout]
+    proposed_module: FINOPS-COST-ANALYTICS
+
+  - id: B3-COMMITMENT-RECS
+    candidate: commitment_recommendations as FINOPS master
+    rationale: "Universal in sample: Cloudability, CloudHealth, Vantage, ProsperOps-specialist, native AWS Cost Explorer recommendations. Workflow: agent generates -> finance reviews -> commits, lifecycle tracks acceptance and realized savings. Distinct from the transient recommend_commitment_purchase tool output."
+    vendor_evidence: [Apptio Cloudability, CloudHealth, Vantage, ProsperOps]
+    proposed_module: FINOPS-OPTIM
+
+  - id: B3-COST-ANOMALIES
+    candidate: cost_anomalies as FINOPS master
+    rationale: "5 of 5 sample vendors. Lifecycle: detected -> triaged -> routed -> resolved or suppressed. Workflow-bearing; needs lifecycle states. Similar shape to dlp_incidents (DLP) or siem_alerts (SIEM)."
+    vendor_evidence: [Apptio Cloudability, CloudHealth, Vantage, CloudZero, Finout]
+    proposed_module: FINOPS-COST-ANALYTICS
+
+  - id: B3-CLOUD-COST-BUDGETS
+    candidate: cloud_cost_budgets as FINOPS master (prefixed to avoid Rule #9 collision with EPM financial_budgets)
+    rationale: "5 of 5 sample vendors. Per-team, per-product, per-tag rolling cost budgets that drive the threshold-breach event. Naming risk: substring collision with EPM financial_budgets requires the cloud_ prefix."
+    vendor_evidence: [Apptio Cloudability, CloudHealth, Vantage, CloudZero, Finout]
+    proposed_module: FINOPS-COST-ANALYTICS
+
+  - id: B3-UNIT-COST-DEFS
+    candidate: unit_cost_definitions as FINOPS master
+    rationale: "Specialist signal: CloudZero, Vantage, Finout (strong). Definitions like 'cost per customer', 'cost per ride', 'cost per transaction' that aggregate raw cost records into business-meaningful KPIs. 2024 State of FinOps marks unit-economics as fastest-growing FinOps practice."
+    vendor_evidence: [CloudZero, Vantage, Finout]
+    proposed_module: FINOPS-COST-ANALYTICS
+
+  - id: B3-KUBE-COST-ALLOC
+    candidate: kubernetes_cost_allocations as FINOPS master (or fold into B3-CLOUD-COST-RECORDS with a resource_kind discriminator)
+    rationale: "Kubecost flagship, plus extensions in CloudHealth and Cloudability. Workload-level cost allocation inside a shared Kubernetes cluster. Could collapse into cloud_cost_records with a resource_kind='kubernetes_workload' discriminator instead of a separate master."
+    vendor_evidence: [Kubecost, CloudHealth, Apptio Cloudability]
+    proposed_module: FINOPS-OPTIM

@@ -1,0 +1,258 @@
+schema_version: 2
+domain: SWP
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-M7-DDO31-ROLLUP
+    summary: PATCH DDO 31 role from master to contributor to resolve M7 single-master conflict with ATS on job_requisitions
+    finding: |
+      domain_data_objects id=31 (SWP, data_object_id=1 job_requisitions) carries role='master' + necessity='required' at the
+      domain-rollup layer. ATS DDO 1 also carries role='master' + necessity='required' on the same data_object. Module-level
+      DMDO 422 (SWP-DEMAND-FORECAST) correctly shows role='contributor', and ATS DMDO 9 (ATS-RECRUITMENT-PIPELINE) correctly
+      shows role='master'. The rollup row is the defect: only one domain may carry role='master' for a given data_object_id
+      catalog-wide. Signal-1 co-mastering is expressed at the module level (SWP contributor, ATS master), not by duplicating
+      master at the rollup.
+    action: |
+      PATCH /domain_data_objects?id=eq.31 { "role": "contributor" }. Keep necessity='required'. One row, surgical CLI.
+    affected_masters:
+      - {data_object_id: 1, name: job_requisitions, target_module_id: 4, workflow: ats_recruitment_pipeline}
+
+  - id: B1A-RULE15-SKILL-TOOLS-NOTES
+    summary: Revert Rule #15 pollution on 4 skill_tools rows under legacy swp-system skill
+    finding: |
+      Live state shows 4 skill_tools rows carrying populated notes under skill_id=7 (swp-system, domain_module_id=NULL):
+      row 70 query_job_requisitions notes='Co-master with ATS'; row 73 create_candidate notes='Fires on headcount.approved
+      -> ATS handoff'; row 74 query_people_kpis notes='Consumer from PA, attrition / fill-rate inputs'; row 75 web_scrape
+      notes='Labor-market data ingestion fallback when no external_connector exists'. All 4 are provenance / context
+      narration that Rule #15 forbids without explicit user approval at load time. No prior user approval is on record.
+    action: |
+      PATCH /skill_tools?id=in.(70,73,74,75) { "notes": "" }. Append a Rule #15 incident entry to
+      .claude/skills/domain-map-analyst/references/skill-changelog.md documenting which rows were polluted and the
+      cleanup. Surgical CLI; no loader.
+    extra_table: skill_tools
+    extra_row_ids: [70, 73, 74, 75]
+
+  - id: B1A-H1-APQC-TAGGING
+    summary: INSERT agent_curated handoff_processes for 18 untagged SWP cross-domain handoffs and REPLACE-CORRECT 3 mis-tagged discovery_substring rows
+    finding: |
+      10 of 28 SWP cross-domain handoffs carry handoff_processes rows; 0 are record_status='approved'. 7 agent_curated
+      rows already exist (48 on handoff 12, 49 on 400, 115 on 27, 334 on 456, 486 on 136, 771 on 10, 780 on 458). 3
+      discovery_substring rows are mis-tagged: 101 (handoff 13 PA->SWP attrition.forecast_updated -> 10175 "Analyze
+      customer attrition" is wrong context); 130 (handoff 241 SPM->SWP initiative.kickoff -> 10016 "Develop and measure
+      strategic initiatives" is L2 over-coarse); 132 (handoff 242 SPM->SWP resource_allocation.committed -> 10209
+      "Determine sales resource allocation" is wrong context). 18 cross-domain handoffs remain untagged: 11, 13 (after
+      replace), 14, 15, 16, 241 (after replace), 242 (after replace), 452, 454, 455, 457, 459, 460, 1018, 1027, 1112,
+      1138, 62-context (intra-domain rows 1146-1149 excluded by convention).
+    action: |
+      Per-handoff PCF lookup via /processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry.
+      Author rows (handoff_id, process_id, proposal_source='agent_curated', record_status='new', role='implements')
+      for the 18 untagged. REPLACE the 3 discovery_substring rows (delete + re-insert with agent_curated source and
+      correct process_id, or PATCH process_id + proposal_source). Volume target per H1: 14-22 agent_curated rows
+      for N=28; this audit owns 18 INSERT + 3 REPLACE-CORRECT. Per the 2026-05-31 continuation, audit-pre-specified
+      external_ids did not resolve cleanly in live /processes; require per-handoff lookup at fix time.
+    affected_handoffs:
+      - {handoff_id: 11, direction: in, source_domain: HCM, target_domain: SWP, trigger_event: headcount.actuals_updated, payload: headcount_plans, null_field: ""}
+      - {handoff_id: 13, direction: in, source_domain: PA, target_domain: SWP, trigger_event: attrition.forecast_updated, payload: workforce_plans, null_field: ""}
+      - {handoff_id: 14, direction: out, source_domain: SWP, target_domain: ATS, trigger_event: headcount.approved, payload: job_requisitions, null_field: ""}
+      - {handoff_id: 15, direction: out, source_domain: SWP, target_domain: HCM, trigger_event: hcm_position.approved_for_creation, payload: org_designs, null_field: ""}
+      - {handoff_id: 16, direction: out, source_domain: SWP, target_domain: EPM, trigger_event: cost_projection.approved, payload: workforce_cost_projections, null_field: target_domain_module_id}
+      - {handoff_id: 241, direction: in, source_domain: SPM, target_domain: SWP, trigger_event: initiative.kickoff, payload: strategic_initiatives, null_field: source_domain_module_id}
+      - {handoff_id: 242, direction: in, source_domain: SPM, target_domain: SWP, trigger_event: resource_allocation.committed, payload: resource_allocations, null_field: source_domain_module_id}
+      - {handoff_id: 452, direction: in, source_domain: PA, target_domain: SWP, trigger_event: attrition_forecast.published, payload: attrition_forecasts, null_field: ""}
+      - {handoff_id: 454, direction: out, source_domain: SWP, target_domain: HCM, trigger_event: position_demand_forecast.updated, payload: position_demand_forecasts, null_field: ""}
+      - {handoff_id: 455, direction: out, source_domain: SWP, target_domain: ATS, trigger_event: position_demand_forecast.updated, payload: position_demand_forecasts, null_field: ""}
+      - {handoff_id: 457, direction: out, source_domain: SWP, target_domain: HCM, trigger_event: workforce_scenario.approved, payload: workforce_scenarios, null_field: ""}
+      - {handoff_id: 459, direction: out, source_domain: SWP, target_domain: HCM, trigger_event: org_design.published, payload: org_designs, null_field: ""}
+      - {handoff_id: 460, direction: out, source_domain: SWP, target_domain: COMP-MGMT, trigger_event: labor_market_benchmark.refreshed, payload: labor_market_benchmarks, null_field: ""}
+      - {handoff_id: 1018, direction: in, source_domain: PSA, target_domain: SWP, trigger_event: project_assignment.released, payload: project_assignments, null_field: ""}
+      - {handoff_id: 1027, direction: in, source_domain: PSA, target_domain: SWP, trigger_event: resource_skill_inventory.gap_identified, payload: resource_skill_inventories, null_field: ""}
+      - {handoff_id: 1112, direction: in, source_domain: PA, target_domain: SWP, trigger_event: workforce_segment.composition_changed, payload: workforce_segments, null_field: ""}
+      - {handoff_id: 1138, direction: in, source_domain: COMP-MGMT, target_domain: SWP, trigger_event: compensation_benchmark.refreshed, payload: compensation_benchmarks, null_field: ""}
+    extra_replace_targets:
+      - {existing_handoff_processes_id: 101, handoff_id: 13, current_process_external_id: "10175", current_process_name: "Analyze customer attrition and retention rates", reason: wrong_context_customer_vs_workforce}
+      - {existing_handoff_processes_id: 130, handoff_id: 241, current_process_external_id: "10016", current_process_name: "Develop and measure strategic initiatives", reason: L2_too_coarse}
+      - {existing_handoff_processes_id: 132, handoff_id: 242, current_process_external_id: "10209", current_process_name: "Determine sales resource allocation", reason: wrong_context_sales_vs_workforce}
+
+b1b:
+  - id: B1B-F1-F2-MODULE-SKILLS
+    summary: Author 4 module-level system skills + relocate 14 skill_tools + DELETE legacy swp-system skill 7
+    finding: |
+      Legacy skill `swp-system` id=7 sits at domain_module_id=NULL with 14 skill_tools rows. Per Rule #17 every
+      domain_modules row needs exactly one skill_type='system' skill. SWP's 4 modules (94 SWP-DEMAND-FORECAST,
+      95 SWP-SUPPLY-PLANNING, 96 SWP-SCENARIO-MODELING, 97 SWP-COST-PROJECTIONS) have 0 module-level system skills.
+      F2 fails on every module; F1 will fail once module skills exist alongside the legacy. F5 (Semantius score) is
+      uncomputable per-module. The 14 skill_tools rows split naturally by master each tool reads / writes: workforce_plans
+      (23), workforce_scenarios (27), org_designs (28), labor_market_benchmarks (29) -> module 96; headcount_plans (24),
+      position_demand_forecasts (25), skills_gap_analyses (26), job_requisitions (1), people_kpis (43), create_candidate
+      mutate -> module 94; supply-side queries -> module 95; workforce_cost_projections (30) + web_scrape compute -> module 97.
+    blocked_by:
+      - {type: user_decision, ref: B2-S2}
+      - {type: user_decision, ref: B2-S4}
+    affected_modules: [94, 95, 96, 97]
+    affected_entities: [swp-system, swp_demand_forecast_agent, swp_supply_planning_agent, swp_scenario_modeling_agent, swp_cost_projections_agent]
+    extra_loader_group: f1_f2_skills_refactor
+    extra_existing_skill_tools_ids: [62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75]
+
+  - id: B1B-C1-BFC-ANCHORING
+    summary: INSERT business_function_capabilities rows for SWP's 8 capabilities
+    finding: |
+      /business_function_capabilities?capability_id=in.(554,555,556,557,558,559,560,561) returns 0 rows. SWP capabilities
+      are not anchored to any business function. The prior 2026-05-30 audit logged C1 / C2 as pass with Workforce Planning
+      as owner and FP&A / Finance as contributors; those rows are not present in live state. Either the prior audit
+      mis-reported, or the rows were dropped.
+    blocked_by:
+      - {type: user_decision, ref: B2-S5}
+      - {type: catalog_addition, scope: business_functions, trigger: confirm_owner_workforce_planning_exists}
+    affected_entities:
+      - SWP-DEMAND-PLANNING
+      - SWP-SUPPLY-MODELING
+      - SWP-SCENARIO-MODELING
+      - SWP-SKILLS-GAP-ANALYSIS
+      - SWP-LABOR-MARKET-INTELLIGENCE
+      - SWP-ORG-DESIGN
+      - SWP-WORKFORCE-COSTING
+      - SWP-PLAN-RECONCILIATION
+
+  - id: B1B-B9-EVENT388-CATEGORY
+    summary: PATCH trigger_event 388 labor_market_benchmark.refreshed event_category once convention picked
+    finding: |
+      trigger_event id=388 still has empty event_category (deferred from 2026-05-31 continuation). Default proposal
+      state_change (mirrors 384-387, 40, 62, 11, 61, 106 SWP-published events); alternative threshold (treating refresh
+      as external-signal arrival).
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    affected_events:
+      - {id: 388, event_name: labor_market_benchmark.refreshed, current_category: "", proposed_category: state_change}
+
+  - id: B1B-OTHER-DOMAIN-NULLS
+    summary: NULL source / target module FKs on 7 SWP-adjacent handoffs owed by EPM, WFM, SPM modularizations
+    finding: |
+      Inbound rows 10 (EPM), 27 (EPM), 136 (WFM), 241 (SPM), 242 (SPM) carry NULL source_domain_module_id. Outbound
+      rows 16 (EPM-target), 458 (EPM-target) carry NULL target_domain_module_id. EPM is unmodularized today; WFM and
+      SPM may have unloaded source modules. SWP cannot resolve these unilaterally.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: EPM, milestone: modularize_and_populate_source_target_fks}
+      - {type: domain_audit, blocking_domain: WFM, milestone: populate_source_module_on_actuals_posted}
+      - {type: domain_audit, blocking_domain: SPM, milestone: populate_source_module_on_initiative_kickoff_and_resource_allocation_committed}
+    affected_handoffs:
+      - {handoff_id: 10, direction: in, source_domain: EPM, target_domain: SWP, trigger_event: financial_budget.cycle_started, payload: workforce_plans, null_field: source_domain_module_id}
+      - {handoff_id: 27, direction: in, source_domain: EPM, target_domain: SWP, trigger_event: financial_forecast.refreshed, payload: workforce_plans, null_field: source_domain_module_id}
+      - {handoff_id: 136, direction: in, source_domain: WFM, target_domain: SWP, trigger_event: actuals.posted, payload: time_entries, null_field: source_domain_module_id}
+      - {handoff_id: 241, direction: in, source_domain: SPM, target_domain: SWP, trigger_event: initiative.kickoff, payload: strategic_initiatives, null_field: source_domain_module_id}
+      - {handoff_id: 242, direction: in, source_domain: SPM, target_domain: SWP, trigger_event: resource_allocation.committed, payload: resource_allocations, null_field: source_domain_module_id}
+      - {handoff_id: 16, direction: out, source_domain: SWP, target_domain: EPM, trigger_event: cost_projection.approved, payload: workforce_cost_projections, null_field: target_domain_module_id}
+      - {handoff_id: 458, direction: out, source_domain: SWP, target_domain: EPM, trigger_event: workforce_scenario.approved, payload: workforce_scenarios, null_field: target_domain_module_id}
+
+b2:
+  - id: B2-S1
+    summary: event_category convention for trigger_event 388 labor_market_benchmark.refreshed
+    question: |
+      Should event_category on 388 be state_change (consistent with 384-387 + 40 + 62 + 11 + 61 + 106, treating refresh
+      as a transition on labor_market_benchmarks) or threshold (treating refresh as external-signal arrival)?
+    options:
+      - state_change
+      - threshold
+    why: |
+      Convention coherence with COMP-MGMT and EPM consumers; affects downstream tagging and event-driven choreography.
+      Unblocks B1B-B9-EVENT388-CATEGORY.
+
+  - id: B2-S2
+    summary: Pattern-flag re-evaluation per Rule #12 on 4 SWP masters
+    question: |
+      Should has_personal_content flip to true on workforce_scenarios (27), org_designs (28), workforce_cost_projections
+      (30), and skills_gap_analyses (26)? RIF / restructure scenarios identify reduction candidates by name;
+      pre-publication org redesigns identify named position changes; per-role projections can be reverse-engineered to
+      named comp; skill-by-skill gap analyses often list named-employee gaps. Currently all four are false.
+    options:
+      - flip all 4 to true
+      - flip 27, 28, 30 only (skip 26)
+      - keep all false (workflow shape does not warrant PII flag)
+      - per-flag yes/no
+    why: |
+      Pattern flags govern PII access control. Rule #12 requires positive re-evaluation, not false-by-default. Unblocks
+      a downstream PATCH; informs B1B-F1-F2-MODULE-SKILLS tool slate choice for masters carrying PII.
+
+  - id: B2-S3
+    summary: Signal-1 attribution on event 62 headcount.approved
+    question: |
+      Handoff 14 (SWP-DEMAND-FORECAST -> ATS) and 1149 (SWP-DEMAND-FORECAST -> SWP-COST-PROJECTIONS) both carry
+      source_domain_module_id=94 (SWP) on trigger_event 62 whose payload data_object_id=1 (job_requisitions) is
+      ATS-mastered. Strict B10b derivation says source should be the master's module (ATS-RECRUITMENT-PIPELINE).
+      Signal-1 co-mastering arguably licenses SWP to publish requisition-creation events from its planning side.
+    options:
+      - keep as-is, formalize Signal-1 exception in audit notes
+      - re-anchor source_domain_module_id on handoffs 14 + 1149 to ATS-RECRUITMENT-PIPELINE (id=4)
+    why: |
+      Architectural intent on the Signal-1 contract; user owns the call. Mechanical PATCH either way.
+
+  - id: B2-S4
+    summary: Role count drift, fifth role ORG-DESIGN-PRACTITIONER absent
+    question: |
+      Prior audit listed 5 SWP-scoped roles including ORG-DESIGN-PRACTITIONER. Live state shows 4 (Workforce Planner,
+      Workforce Planning Lead, FP&A Workforce Partner, Workforce Leadership Sponsor). Was the role intentionally dropped,
+      or did it never deploy?
+    options:
+      - confirm 4-role posture is intentional (close drift)
+      - re-author ORG-DESIGN-PRACTITIONER per prior design (with role_modules on 95 + 96 primary, 97 secondary)
+    why: |
+      Editorial scope question on role coverage; org-design-specific permissions on SWP-SCENARIO-MODELING (10227 approve_org_design,
+      10228 publish_org_design) plausibly want a dedicated role.
+
+  - id: B2-S5
+    summary: C1 business function anchoring choice
+    question: |
+      Which business_functions should anchor each of the 8 SWP capabilities? Prior audit named Workforce Planning as
+      owner with FP&A / Finance as contributors. business_function_capabilities is empty in live state. Confirm the
+      owner / contributor split per capability.
+    options:
+      - Workforce Planning (owner) for all 8; FP&A (contributor) for SWP-WORKFORCE-COSTING + SWP-PLAN-RECONCILIATION; Finance (contributor) for SWP-WORKFORCE-COSTING
+      - Workforce Planning owner only; no contributors
+      - user-specified mapping
+    why: |
+      C1 / C2 derivation depends on user-confirmed BF assignments. Unblocks B1B-C1-BFC-ANCHORING.
+
+b3:
+  - id: B3-S1
+    candidate: workforce_segments
+    rationale: |
+      eQ8, Visier Plan, Workday Adaptive Workforce model workforce segments (job family / location / tenure / persona)
+      as scenario-pivot records. PA already masters at data_object_id=44 (handoff 1112 PA->SWP-SUPPLY-PLANNING fires on
+      workforce_segment.composition_changed). SWP-SUPPLY-PLANNING likely needs a consumer DMDO.
+    vendor_evidence:
+      - eQ8
+      - Visier Plan
+      - Workday Adaptive Planning
+    proposed_module: SWP-SUPPLY-PLANNING
+
+  - id: B3-S2
+    candidate: succession_plans
+    rationale: |
+      Workday Talent and SAP SuccessFactors Succession & Development hold succession plans. SWP-SUPPLY-PLANNING reads
+      B-grade headcount + ready-now successor counts as supply-side talent-pipeline signals. No SWP-side edge to
+      TALENT-MGMT exists today.
+    vendor_evidence:
+      - Workday Talent Management
+      - SAP SuccessFactors Succession and Development
+    proposed_module: SWP-SUPPLY-PLANNING
+
+  - id: B3-S3
+    candidate: internal_mobility_intents
+    rationale: |
+      Eightfold AI Talent Intelligence, Workday Skills Cloud surface employee-flagged internal-mobility intent as a
+      planning input (supply side beyond current-role headcount). No SWP-adjacent master holds this concept today.
+    vendor_evidence:
+      - Eightfold AI Talent Intelligence
+      - Workday Skills Cloud
+    proposed_module: SWP-SUPPLY-PLANNING
+
+  - id: B3-S4
+    candidate: domain_regulations linkages
+    rationale: |
+      SWP has 0 regulations linked. Candidates: EU Pay Transparency Directive (ties to SWP-COST-PROJECTIONS via pay-equity
+      analyses), WARN Act (mass-layoff scenarios in workforce_scenarios trigger notification obligations at 100+ headcount
+      cuts), CA SB 1162 + NYC AI bias audits (skills-gap and cost-projection AI-decision surface).
+    vendor_evidence:
+      - regulation_specialist
+    proposed_module: null

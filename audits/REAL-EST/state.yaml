@@ -1,0 +1,342 @@
+schema_version: 2
+domain: REAL-EST
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S3
+    summary: "Author 8 intra-domain master-to-master `data_object_relationships` rows (B6 fix)."
+    finding: >-
+      0 intra-domain `data_object_relationships` between REAL-EST's 8 masters
+      (real_estate_properties 344, property_leases 345, floor_plans 346,
+      property_spaces 347, occupancy_records 348, facility_work_orders 349,
+      utility_meter_readings 350, capital_projects 351). Only 1 cross-domain
+      relationship exists (351 commissions industrial_assets 475).
+    action: >-
+      Author 8 rows: (a) real_estate_properties has_many floor_plans; (b)
+      floor_plans has_many property_spaces; (c) property_spaces has_many
+      occupancy_records; (d) real_estate_properties has_many property_leases;
+      (e) real_estate_properties has_many utility_meter_readings;
+      (f) real_estate_properties has_many facility_work_orders;
+      (g) real_estate_properties has_many capital_projects;
+      (h) property_spaces has_many facility_work_orders.
+      Each row carries verb / inverse_verb / relationship_type=one_to_many /
+      relationship_kind=reference / is_required / owner_side='source'.
+      Not gated on modules; can load next pass.
+    affected_masters:
+      - {data_object_id: 344, name: real_estate_properties}
+      - {data_object_id: 345, name: property_leases}
+      - {data_object_id: 346, name: floor_plans}
+      - {data_object_id: 347, name: property_spaces}
+      - {data_object_id: 348, name: occupancy_records}
+      - {data_object_id: 349, name: facility_work_orders}
+      - {data_object_id: 350, name: utility_meter_readings}
+      - {data_object_id: 351, name: capital_projects}
+
+b1b:
+  - id: B1B-S1
+    summary: >-
+      Author 4 REAL-EST `domain_modules` rows + 8 master DMDO rows + 7
+      `domain_module_capabilities` rows (M1+M2+M4+M7 hard fail).
+    finding: >-
+      REAL-EST (id 141) still has 0 `domain_modules`; 7 capabilities
+      (REAL-PROPERTY-MGMT, REAL-SPACE-OPTIM, REAL-LEASE-MGMT, REAL-MAINTENANCE,
+      REAL-OCCUPANCY-ANALYTICS, REAL-UTILITY-TRACKING, REAL-CAPITAL-PROJECTS)
+      are unrealized in REAL-EST; 8 domain-owned masters carry 0 catalog-wide
+      `role=master` DMDO rows. Prior audit proposed 4 modules
+      (REAL-EST-PORTFOLIO, REAL-EST-SPACE-OPS, REAL-EST-FACILITY-OPS,
+      REAL-EST-CAPITAL-PROJECTS). All 7 capabilities currently realize through
+      sub-domain IWMS modules instead.
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+      - {type: user_decision, ref: B2-S2}
+    affected_masters:
+      - {data_object_id: 344, name: real_estate_properties}
+      - {data_object_id: 345, name: property_leases}
+      - {data_object_id: 346, name: floor_plans}
+      - {data_object_id: 347, name: property_spaces}
+      - {data_object_id: 348, name: occupancy_records}
+      - {data_object_id: 349, name: facility_work_orders}
+      - {data_object_id: 350, name: utility_meter_readings}
+      - {data_object_id: 351, name: capital_projects}
+    affected_entities:
+      - REAL-PROPERTY-MGMT
+      - REAL-SPACE-OPTIM
+      - REAL-LEASE-MGMT
+      - REAL-MAINTENANCE
+      - REAL-OCCUPANCY-ANALYTICS
+      - REAL-UTILITY-TRACKING
+      - REAL-CAPITAL-PROJECTS
+
+  - id: B1B-S2
+    summary: "Draft `catalog_tagline` + `catalog_description` for REAL-EST (A4 fail, Rule #20)."
+    finding: >-
+      `domains.catalog_tagline` and `domains.catalog_description` are empty on
+      REAL-EST (id 141). Per Rule #20 these are buyer-voice copy (workflow +
+      value), not analyst voice; once non-empty the value is never overwritten
+      without explicit per-row approval.
+    blocked_by:
+      - {type: user_decision, ref: "drafting + approval per Rule #20"}
+
+  - id: B1B-S4
+    summary: >-
+      PATCH NULL module FKs on 7 outbound + 3 inbound REAL-EST handoffs (B10b
+      partial).
+    finding: >-
+      NULL `source_domain_module_id` on outbound handoffs 291, 293, 294, 295,
+      856, 857, 858. NULL `target_domain_module_id` on 292, 293, 294, 295, 856,
+      857, 870. Only 291 (target=161 FSM) and 858 (target=102 IWMS) carry a
+      counter-party module.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: user_decision, ref: B2-S2}
+    affected_handoffs:
+      - {handoff_id: 291, direction: outbound, source_domain: REAL-EST, target_domain: FSM, trigger_event: facility_work_order.created, payload: facility_work_orders, null_field: source_domain_module_id}
+      - {handoff_id: 292, direction: inbound, source_domain: FSM, target_domain: REAL-EST, trigger_event: facility_work_order.completed, payload: facility_work_orders, null_field: target_domain_module_id}
+      - {handoff_id: 293, direction: outbound, source_domain: REAL-EST, target_domain: ESG, trigger_event: utility_meter_reading.published, payload: utility_meter_readings, null_field: both}
+      - {handoff_id: 294, direction: outbound, source_domain: REAL-EST, target_domain: EAM, trigger_event: capital_project.completed, payload: capital_projects, null_field: both}
+      - {handoff_id: 295, direction: outbound, source_domain: REAL-EST, target_domain: HCM, trigger_event: property_space.allocated, payload: property_spaces, null_field: both}
+      - {handoff_id: 856, direction: outbound, source_domain: REAL-EST, target_domain: RE-CRE, trigger_event: property.listed, payload: real_estate_properties, null_field: both}
+      - {handoff_id: 857, direction: outbound, source_domain: REAL-EST, target_domain: RE-INVEST, trigger_event: property.updated, payload: real_estate_properties, null_field: both}
+      - {handoff_id: 858, direction: outbound, source_domain: REAL-EST, target_domain: IWMS, trigger_event: floor_plan.updated, payload: floor_plans, null_field: source_domain_module_id}
+      - {handoff_id: 870, direction: inbound, source_domain: IWMS, target_domain: REAL-EST, trigger_event: space_utilization.measured, payload: space_utilization_reports, null_field: target_domain_module_id}
+
+  - id: B1B-S5
+    summary: "Author `data_object_aliases` for the 8 REAL-EST masters (B11 fail)."
+    finding: >-
+      0 `data_object_aliases` on any of the 8 REAL-EST masters despite well-known
+      cross-vendor synonyms (industry terms + vendor labels, allowed in
+      `data_object_aliases` per Rule #18).
+    blocked_by:
+      - {type: user_decision, ref: per-tuple wording approval before insert}
+    affected_masters:
+      - {data_object_id: 344, name: real_estate_properties}
+      - {data_object_id: 345, name: property_leases}
+      - {data_object_id: 346, name: floor_plans}
+      - {data_object_id: 347, name: property_spaces}
+      - {data_object_id: 348, name: occupancy_records}
+      - {data_object_id: 349, name: facility_work_orders}
+      - {data_object_id: 350, name: utility_meter_readings}
+      - {data_object_id: 351, name: capital_projects}
+
+  - id: B1B-S6
+    summary: "Author `data_object_lifecycle_states` for 7 of 8 REAL-EST masters (B12 hard fail)."
+    finding: >-
+      0 `data_object_lifecycle_states` on any of the 8 masters. Required state
+      machines: property_leases (draft, active, renewal_pending, renewed,
+      expired, terminated); facility_work_orders (created, assigned, dispatched,
+      in_progress, completed, closed); capital_projects (planning, approved,
+      in_progress, completed, cancelled); property_spaces (available, allocated,
+      released); real_estate_properties (in_portfolio, active, divested);
+      utility_meter_readings (recorded, validated, published); floor_plans
+      (draft, published, superseded). occupancy_records likely config-shape
+      exempt (surface decision to user).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1, reason: domain_module_id required for workflow-gate prefix}
+    affected_masters:
+      - {data_object_id: 344, name: real_estate_properties, workflow: in_portfolio -> active -> divested}
+      - {data_object_id: 345, name: property_leases, workflow: draft -> active -> renewal_pending -> renewed/expired/terminated}
+      - {data_object_id: 346, name: floor_plans, workflow: draft -> published -> superseded}
+      - {data_object_id: 347, name: property_spaces, workflow: available -> allocated -> released}
+      - {data_object_id: 348, name: occupancy_records, workflow: config-shape exemption candidate}
+      - {data_object_id: 349, name: facility_work_orders, workflow: created -> assigned -> dispatched -> in_progress -> completed -> closed}
+      - {data_object_id: 350, name: utility_meter_readings, workflow: recorded -> validated -> published}
+      - {data_object_id: 351, name: capital_projects, workflow: planning -> approved -> in_progress -> completed/cancelled}
+
+  - id: B1B-S7
+    summary: "Positive review and PATCH the 6 likely-true pattern flags across 4 masters (B4 re-eval)."
+    finding: >-
+      All 8 masters carry the three pattern flags
+      (has_personal_content / has_submit_lock / has_single_approver)
+      false-by-default. Rule #12 positive review still owed on:
+      property_leases.has_single_approver=true,
+      property_leases.has_submit_lock=true,
+      capital_projects.has_single_approver=true,
+      capital_projects.has_submit_lock=true,
+      facility_work_orders.has_personal_content=true,
+      occupancy_records.has_personal_content=true.
+    blocked_by:
+      - {type: user_decision, ref: B2-S3}
+    affected_masters:
+      - {data_object_id: 345, name: property_leases}
+      - {data_object_id: 351, name: capital_projects}
+      - {data_object_id: 349, name: facility_work_orders}
+      - {data_object_id: 348, name: occupancy_records}
+
+  - id: B1B-S8
+    summary: "Author 4 `business_function_domains` rows for REAL-EST (C1 hard fail)."
+    finding: >-
+      0 `business_function_domains` rows for REAL-EST (id 141). Baseline shape:
+      owner=Facilities and Real Estate, contributor=Finance (lease accounting,
+      capital budgeting), consumer=Human Resources (workplace allocation),
+      consumer=ESG and Sustainability (utility data). Owner row is uncontested;
+      the 3 contributor/consumer rows need explicit user yes per prior B2
+      deferral.
+    blocked_by:
+      - {type: user_decision, ref: confirm 3 contributor/consumer rows alongside the owner row}
+
+  - id: B1B-S9
+    summary: "DELETE 2 substring handoff_processes rows + PATCH 1 to agent_curated (H1 cleanup)."
+    finding: >-
+      3 `discovery_substring` rows still coexist with the higher-confidence
+      `agent_curated` rows shipped in the prior continuation. Audit-of-record
+      intent: DELETE row 136 (handoff 294, process 311
+      'Perform capital project accounting'); DELETE row 168 (handoff 856,
+      process 343 'Develop property strategy and long term vision'); PATCH row
+      169 (handoff 857, process 343) to `proposal_source='agent_curated'`.
+    blocked_by:
+      - {type: user_decision, ref: B2-S7}
+    extra_handoff_processes_rows:
+      - {id: 136, handoff_id: 294, process_id: 311, current_source: discovery_substring, intended: DELETE}
+      - {id: 168, handoff_id: 856, process_id: 343, current_source: discovery_substring, intended: DELETE}
+      - {id: 169, handoff_id: 857, process_id: 343, current_source: discovery_substring, intended: PATCH_to_agent_curated}
+
+b2:
+  - id: B2-S1
+    summary: "Module split shape for REAL-EST (open since 2026-05-30)."
+    question: >-
+      Which module split should REAL-EST adopt? Prior proposal: 4 modules
+      (REAL-EST-PORTFOLIO, REAL-EST-SPACE-OPS, REAL-EST-FACILITY-OPS,
+      REAL-EST-CAPITAL-PROJECTS). Alternatives: 2-module collapse
+      (Portfolio + Operations), 3-module collapse (Space-Ops folded into
+      Portfolio), 5-module split (adding REAL-EST-LEASE-MGMT for ASC 842
+      compliance scope).
+    options: ["a: 2 modules", "b: 3 modules", "c: 4 modules (proposed)", "d: 5 modules"]
+    why: >-
+      Architectural decision; drives lifecycle states, permissions, roles,
+      handoff attribution, and Rule #14 capability realization.
+
+  - id: B2-S2
+    summary: "REAL-EST vs IWMS relationship (open since 2026-05-30)."
+    question: >-
+      How should REAL-EST and sub-domain IWMS reconcile? IWMS today realizes all
+      7 REAL-EST capabilities via `domain_module_capabilities` despite REAL-EST
+      having the 8 masters and IWMS having 6 of its own. Either REAL-EST is
+      leadership-tier (a), peer market with separate modules (b), or the two
+      merge (c).
+    options:
+      - "a: leadership-tier collapse, reassign 8 REAL-EST masters into IWMS modules; REAL-EST keeps 1 derived-signals module"
+      - "b: peer-market split, REAL-EST masters 8 entities in 4 new modules + IWMS keeps its 6"
+      - "c: merge REAL-EST and IWMS into a single domain (rejects parent_domain_id hierarchy)"
+
+  - id: B2-S3
+    summary: "B4 pattern-flag positive review on 6 likely-true flags."
+    question: >-
+      Confirm or reject each likely-true flag per master:
+      property_leases.has_single_approver,
+      property_leases.has_submit_lock,
+      capital_projects.has_single_approver,
+      capital_projects.has_submit_lock,
+      facility_work_orders.has_personal_content,
+      occupancy_records.has_personal_content.
+    options: ["per-flag yes/no"]
+    why: >-
+      Pattern flags are workflow-shape judgments the user owns. Rule #15
+      forbids notes commentary on the decision; the audit conversation captures
+      the considered-false outcomes.
+
+  - id: B2-S4
+    summary: "CAFM disposition (sub-domain 142, confirmed empty: 0 modules)."
+    question: >-
+      What is CAFM's intent? (a) starter-kit / lite variant of REAL-EST per
+      Rule #19; (b) leave dormant (domain row for SEO, no modules); (c) merge
+      into REAL-EST and DELETE the sub-domain entry.
+    options: ["a: starter-kit", "b: dormant", "c: merge into REAL-EST"]
+
+  - id: B2-S5
+    summary: "real_estate_properties (344) vs locations (795) collision."
+    question: >-
+      Are REAL-EST `real_estate_properties` and IWMS `locations` the same
+      concept at two granularities, or distinct masters? Per Rule #16
+      infrastructure-masters are typically the canonical layer that consumer
+      entities `embedded_master`.
+    options:
+      - "a: distinct masters"
+      - "b: IWMS `locations` canonical, REAL-EST `real_estate_properties` becomes embedded_master"
+      - "c: reverse (REAL-EST canonical, IWMS embedded_master)"
+
+  - id: B2-S6
+    summary: "Cross-domain target masters for 5 handoff payloads."
+    question: >-
+      What target masters exist on the partner domains for handoffs 291 (FSM
+      `facility_work_orders`), 293 (ESG `utility_meter_readings`), 295 (HCM
+      `property_spaces`), 856 (RE-CRE `real_estate_properties`), 857 (RE-INVEST
+      `real_estate_properties`)? Only EAM is wired today (351 commissions 475).
+    options: ["surface target master IDs per neighbor; audit then authors the cross-domain relationship rows"]
+    why: >-
+      Each target master must exist on the partner domain before the
+      relationship row writes. RE-CRE (145) and RE-INVEST (146) have no
+      masters today.
+
+  - id: B2-S7
+    summary: "H1 cleanup intent confirmation (substring rows 136, 168, 169)."
+    question: >-
+      Approve DELETE row 136 + DELETE row 168 + PATCH row 169
+      (proposal_source -> agent_curated)? Substring rows coexist alongside the
+      curated rows the prior continuation inserted; cleanup unblocks B1A.
+    options: ["all", "selective", "skip"]
+
+b3:
+  - id: B3-S1
+    candidate: building_systems
+    rationale: >-
+      IWMS leaders (TRIRIGA, Planon, Honeywell Forge) ship building-system
+      inventory (HVAC, lighting, fire panels per building) distinct from
+      `industrial_assets` (EAM). Phase 0 vendor research required; collision
+      check vs `industrial_assets` mandatory.
+    vendor_evidence: [IBM TRIRIGA, Planon Workplace, Honeywell Forge Building Operations]
+    proposed_module: REAL-EST-FACILITY-OPS
+
+  - id: B3-S2
+    candidate: preventive_maintenance_schedules
+    rationale: >-
+      Every CMMS (Nuvolo, Accruent, TRIRIGA) ships scheduled PM as a
+      first-class master, distinct from `facility_work_orders` (instance).
+      Phase 0 vendor docs on PM scheduling required.
+    vendor_evidence: [Nuvolo CMMS, Accruent Resolute, IBM TRIRIGA]
+    proposed_module: REAL-EST-FACILITY-OPS
+
+  - id: B3-S3
+    candidate: space_classifications
+    rationale: >-
+      Archibus Space Catalog, Eptura Workspace, Planon ship a space-type /
+      category taxonomy (office, meeting, support, retail). Vendor schema docs
+      on room categories required.
+    vendor_evidence: [Archibus, Eptura Workplace, Planon Workplace]
+    proposed_module: REAL-EST-SPACE-OPS
+
+  - id: B3-S4
+    candidate: move_requests
+    rationale: >-
+      TRIRIGA Move Manager, Archibus Move Mgmt ship a formal employee/team
+      relocation workflow distinct from `property_space.allocated`. Phase 0
+      vendor docs required; collision check vs IWMS `desk_bookings` mandatory.
+    vendor_evidence: [IBM TRIRIGA, Archibus]
+    proposed_module: REAL-EST-SPACE-OPS
+
+  - id: B3-S5
+    candidate: chargebacks
+    rationale: >-
+      TRIRIGA Charge Back, Planon Cost Management ship internal cost allocation
+      of leased / owned space to business units. Phase 0 vendor docs required.
+    vendor_evidence: [IBM TRIRIGA, Planon Workplace]
+    proposed_module: REAL-EST-PORTFOLIO
+
+  - id: B3-S6
+    candidate: emission_factors_or_emission_records
+    rationale: >-
+      ESG-domain target-side master for handoff 293. REAL-EST
+      `utility_meter_readings` feeds an ESG emissions record that likely does
+      not exist yet. Surface for ESG audit; queue as ESG candidate.
+    vendor_evidence: [ESG-domain TBD]
+    proposed_module: cross-domain, ESG owns
+
+  - id: B3-S7
+    candidate: visitor_passes_overlap_with_VIS_MGMT
+    rationale: >-
+      Decide whether visitor management is in scope for REAL-EST modules at all
+      or strictly delegated to VIS-MGMT via consumer DMDO. Phase 0 review of
+      TRIRIGA / Eptura visitor capabilities required.
+    vendor_evidence: [IBM TRIRIGA, Eptura Workplace]
+    proposed_module: cross-domain, VIS-MGMT owns

@@ -1,0 +1,353 @@
+schema_version: 2
+domain: AGENCY-MGMT
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-H1-APQC-REMAINDER
+    summary: "5 of 12 cross-domain handoffs still untagged; agent can propose single-confident PCF rows after a focused lookup."
+    finding: >-
+      Handoffs 341 (CRM->AGENCY, crm_opportunity.won -> agency_jobs),
+      346 (AGENCY->ERP-FIN, media_costs.posted -> insertion_orders),
+      513 (AGENCY->PSA, agency_time_entry.submitted -> agency_time_entries),
+      514 (AGENCY->CRM, agency_retainer.depleted -> agency_retainers),
+      516 (AGENCY->ERP-FIN, media_plan.executed -> media_plans)
+      carry zero handoff_processes rows. Prior continuation (2026-05-31) deferred them pending
+      user PCF granularity picks; with PCF candidate lookups in hand the agent can propose
+      single confident agent_curated rows.
+    action: >-
+      INSERT 5 handoff_processes rows after running
+      /processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry
+      per handoff term. proposal_source='agent_curated', record_status omitted (defaults new),
+      role defaults to 'implements'.
+    affected_handoffs:
+      - {handoff_id: 341, direction: inbound, source_domain: CRM, target_domain: AGENCY-MGMT, trigger_event: crm_opportunity.won, payload: agency_jobs, null_field: handoff_processes}
+      - {handoff_id: 346, direction: outbound, source_domain: AGENCY-MGMT, target_domain: ERP-FIN, trigger_event: media_costs.posted, payload: insertion_orders, null_field: handoff_processes}
+      - {handoff_id: 513, direction: outbound, source_domain: AGENCY-MGMT, target_domain: PSA, trigger_event: agency_time_entry.submitted, payload: agency_time_entries, null_field: handoff_processes}
+      - {handoff_id: 514, direction: outbound, source_domain: AGENCY-MGMT, target_domain: CRM, trigger_event: agency_retainer.depleted, payload: agency_retainers, null_field: handoff_processes}
+      - {handoff_id: 516, direction: outbound, source_domain: AGENCY-MGMT, target_domain: ERP-FIN, trigger_event: media_plan.executed, payload: media_plans, null_field: handoff_processes}
+
+  - id: B1A-H1-REPLACE-348
+    summary: "Handoff 348 carries a wrong discovery_override APQC tag (onboarding instead of exit); propose REPLACE with the correct exit-processing PCF activity."
+    finding: >-
+      Handoff 348 (HCM->AGENCY-MGMT, employee.terminated -> agency_time_entries) has a
+      handoff_processes row pointing at process 41 'Manage employee onboarding, training,
+      and development' (L2) with proposal_source='discovery_override'. The handoff is about
+      terminating an employee's time entries on separation, not onboarding. The override
+      target is mismatched.
+    action: >-
+      Run /processes?process_name=ilike.*exit*&source_framework=eq.apqc_pcf_cross_industry
+      (and 'separation', 'Manage employee information' cluster). Choose the highest-confidence
+      L3 match; DELETE the discovery_override row; INSERT a new agent_curated row at
+      record_status='new'.
+    affected_handoffs:
+      - {handoff_id: 348, direction: inbound, source_domain: HCM, target_domain: AGENCY-MGMT, trigger_event: employee.terminated, payload: agency_time_entries, null_field: handoff_processes_correct_pcf}
+
+  - id: B1A-AS2-REG-ASC606
+    summary: "Link ASC 606 (regulation id 57) to AGENCY-MGMT via domain_regulations; the domain.business_logic already cites ASC 606."
+    finding: >-
+      domains.business_logic on AGENCY-MGMT (id 153) cites ASC 606
+      ('project-based revenue recognition under ASC 606'). regulations.id=57
+      'ASC 606 Revenue Recognition' exists in the catalog. No domain_regulations row
+      links the two; A4 regulation linkage band fails.
+    action: >-
+      INSERT one domain_regulations row {domain_id: 153, regulation_id: 57,
+      applicability: 'mandatory'}. Confirm applicability enum value via
+      /fields?table_name=eq.domain_regulations&field_name=eq.applicability before insert.
+      Independent of M1.
+
+  - id: B1A-AS1-EVENT-MODULE-FK
+    summary: "All 11 AGENCY-MGMT trigger_events have NULL domain_module_id (M1 cascade); single deterministic backfill once modules exist."
+    finding: >-
+      11 trigger_events (ids 338 estimate.approved, 339 deliverable.approved,
+      340 agency_invoice.issued, 341 media_costs.posted, 342 vendor_invoice.received,
+      525 agency_time_entry.submitted, 526 agency_retainer.threshold_reached,
+      527 agency_retainer.depleted, 528 media_plan.approved, 529 media_plan.executed,
+      530 creative_brief.approved) all carry domain_module_id IS NULL.
+      Mapping by publishing master: agency_jobs/agency_time_entries/agency_estimates/agency_retainers -> JOB-TRAFFIC;
+      media_plans/insertion_orders -> MEDIA-BUY;
+      creative_briefs/creative_deliverables -> CREATIVE-OPS.
+    action: >-
+      After B1B-AS1-MODULES lands, PATCH each event's domain_module_id per the
+      master->module map. Mechanical backfill.
+    affected_events:
+      - {id: 338, event_name: estimate.approved, current_category: lifecycle, proposed_category: lifecycle}
+      - {id: 339, event_name: deliverable.approved, current_category: lifecycle, proposed_category: lifecycle}
+      - {id: 340, event_name: agency_invoice.issued, current_category: state_change, proposed_category: state_change}
+      - {id: 341, event_name: media_costs.posted, current_category: state_change, proposed_category: state_change}
+      - {id: 342, event_name: vendor_invoice.received, current_category: state_change, proposed_category: state_change}
+      - {id: 525, event_name: agency_time_entry.submitted, current_category: state_change, proposed_category: state_change}
+      - {id: 526, event_name: agency_retainer.threshold_reached, current_category: threshold, proposed_category: threshold}
+      - {id: 527, event_name: agency_retainer.depleted, current_category: threshold, proposed_category: threshold}
+      - {id: 528, event_name: media_plan.approved, current_category: state_change, proposed_category: state_change}
+      - {id: 529, event_name: media_plan.executed, current_category: state_change, proposed_category: state_change}
+      - {id: 530, event_name: creative_brief.approved, current_category: state_change, proposed_category: state_change}
+    extra_gate_dependency: "B1B-AS1-MODULES (categories already cured; only module FK backfill remains)."
+
+  - id: B1A-AS3-SKILL26-RENAME
+    summary: "Skill 26 'agency-mgmt-system' has 9 tools but NULL domain_module_id; rename/split to module-scoped skills once modules land."
+    finding: >-
+      skills.id=26 (skill_name='agency-mgmt-system', skill_type='system') carries
+      domain_module_id IS NULL. 9 skill_tools rows attached (8 query_<entity> covering all
+      8 masters + 1 send_email side_effect). Per Rule #17 every domain_modules row carries
+      exactly one system skill; with 0 modules the skill is detached scaffolding.
+    action: >-
+      Gated on B1B-AS1-MODULES + B2-S2. Once the module split is approved:
+      either split skill 26 into 3 module-scoped skills (agency-jobs-system,
+      agency-media-buy-system, agency-creative-ops-system) and re-allocate the 9 tools
+      by entity, OR rename skill 26 to one new module's system skill and author 2
+      siblings + tool sets.
+    extra_partial_cure: "F3 was a hard-fail in 2026-05-30; skill 26 now has 9 skill_tools rows (8 query + 1 side_effect). Baseline F3 cured; still gated on the module split."
+
+b1b:
+  - id: B1B-AS1-MODULES
+    summary: "M1 catastrophic. Zero domain_modules rows on AGENCY-MGMT (id 153); Rule #14 requires >=2 full modules for an 11-capability, 8-master domain."
+    finding: >-
+      AGENCY-MGMT (id 153) has 0 domain_modules rows. With 11 capabilities and
+      8 master data_objects, Rule #14 mandates >=2 module_kind='full' rows. The cascade
+      blocks M2-M7, B-band module FKs (events + handoffs), C-band lifecycle states,
+      E-band roles/permissions (no domain_module_id anchor), and F-band system skill
+      attachment. F3 is partially cured because skill 26 has 9 tools attached even while
+      detached. Proposed split (recommended): 3 full modules JOB-TRAFFIC (agency_jobs,
+      agency_time_entries, agency_estimates, agency_retainers), MEDIA-BUY (media_plans,
+      insertion_orders), CREATIVE-OPS (creative_briefs, creative_deliverables).
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    affected_modules: []
+    affected_entities: [agency_jobs, agency_time_entries, agency_estimates, agency_retainers, media_plans, insertion_orders, creative_briefs, creative_deliverables]
+
+  - id: B1B-AS2-LIFECYCLE
+    summary: "Zero data_object_lifecycle_states across 8 masters (Rule #12 universal violation, cascade from M1)."
+    finding: >-
+      No rows in data_object_lifecycle_states reference any of the 8 AGENCY-MGMT masters
+      (478 agency_jobs, 479 agency_time_entries, 480 agency_retainers, 481 media_plans,
+      482 insertion_orders, 483 creative_briefs, 484 creative_deliverables, 485 agency_estimates).
+      Rule #12 requires lifecycle states on every master+required data_object unless
+      config-shape exempt; none plausibly config-shape. Expected ~35 lifecycle states + 8
+      workflow-gate permission rows after Phase M materialization.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-AS1-MODULES}
+      - {type: user_decision, ref: B2-S5}
+    affected_masters:
+      - {data_object_id: 478, name: agency_jobs, target_module_id: null, workflow: "draft->estimated->active->delivered->invoiced->closed/cancelled"}
+      - {data_object_id: 479, name: agency_time_entries, target_module_id: null, workflow: "draft->submitted->approved->billed/rejected"}
+      - {data_object_id: 480, name: agency_retainers, target_module_id: null, workflow: "active->threshold_warned->depleted->replenished->closed"}
+      - {data_object_id: 481, name: media_plans, target_module_id: null, workflow: "draft->approved->executed->reconciled->closed"}
+      - {data_object_id: 482, name: insertion_orders, target_module_id: null, workflow: "draft->issued->placed->reconciled->voided"}
+      - {data_object_id: 483, name: creative_briefs, target_module_id: null, workflow: "draft->in_review->approved->archived"}
+      - {data_object_id: 484, name: creative_deliverables, target_module_id: null, workflow: "drafted->in_review->revisions_requested->approved->delivered->archived"}
+      - {data_object_id: 485, name: agency_estimates, target_module_id: null, workflow: "draft->submitted->approved/declined->superseded"}
+
+  - id: B1B-AS3-HANDOFF-CASCADE
+    summary: "All 12 cross-domain handoffs carry NULL on the AGENCY-MGMT-side module FK (B10b universal cascade from M1)."
+    finding: >-
+      8 outbound handoffs (344, 345, 346, 343, 514, 515, 516, 513) carry NULL
+      source_domain_module_id; 4 inbound handoffs (342, 347, 341, 348) carry NULL
+      target_domain_module_id, all because AGENCY-MGMT has no module surface to point at.
+      Mechanical PATCH per handoff once modules exist; payload->module mapping
+      same as B1A-AS1-EVENT-MODULE-FK.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-AS1-MODULES}
+    affected_handoffs:
+      - {handoff_id: 344, direction: outbound, source_domain: AGENCY-MGMT, target_domain: DAM, trigger_event: deliverable.approved, payload: creative_deliverables, null_field: source_domain_module_id}
+      - {handoff_id: 345, direction: outbound, source_domain: AGENCY-MGMT, target_domain: ERP-FIN, trigger_event: agency_invoice.issued, payload: agency_jobs, null_field: source_domain_module_id}
+      - {handoff_id: 346, direction: outbound, source_domain: AGENCY-MGMT, target_domain: ERP-FIN, trigger_event: media_costs.posted, payload: insertion_orders, null_field: source_domain_module_id}
+      - {handoff_id: 343, direction: outbound, source_domain: AGENCY-MGMT, target_domain: CLM, trigger_event: estimate.approved, payload: legal_contracts, null_field: source_domain_module_id}
+      - {handoff_id: 514, direction: outbound, source_domain: AGENCY-MGMT, target_domain: CRM, trigger_event: agency_retainer.depleted, payload: agency_retainers, null_field: source_domain_module_id}
+      - {handoff_id: 515, direction: outbound, source_domain: AGENCY-MGMT, target_domain: PSA, trigger_event: creative_brief.approved, payload: creative_briefs, null_field: source_domain_module_id}
+      - {handoff_id: 516, direction: outbound, source_domain: AGENCY-MGMT, target_domain: ERP-FIN, trigger_event: media_plan.executed, payload: media_plans, null_field: source_domain_module_id}
+      - {handoff_id: 513, direction: outbound, source_domain: AGENCY-MGMT, target_domain: PSA, trigger_event: agency_time_entry.submitted, payload: agency_time_entries, null_field: source_domain_module_id}
+      - {handoff_id: 342, direction: inbound, source_domain: CLM, target_domain: AGENCY-MGMT, trigger_event: legal_contract.signed, payload: agency_jobs, null_field: target_domain_module_id}
+      - {handoff_id: 347, direction: inbound, source_domain: S2P, target_domain: AGENCY-MGMT, trigger_event: vendor_invoice.received, payload: insertion_orders, null_field: target_domain_module_id}
+      - {handoff_id: 341, direction: inbound, source_domain: CRM, target_domain: AGENCY-MGMT, trigger_event: crm_opportunity.won, payload: agency_jobs, null_field: target_domain_module_id}
+      - {handoff_id: 348, direction: inbound, source_domain: HCM, target_domain: AGENCY-MGMT, trigger_event: employee.terminated, payload: agency_time_entries, null_field: target_domain_module_id}
+
+  - id: B1B-AS4-PATTERN-FLAGS
+    summary: "All 8 masters carry every pattern flag at false; proposed has_submit_lock on 6 masters and has_single_approver on 2."
+    finding: >-
+      data_objects rows 478-485 all carry has_personal_content=false,
+      has_submit_lock=false, has_single_approver=false. Audit proposes
+      has_submit_lock=true on agency_estimates (485), insertion_orders (482),
+      agency_time_entries (479), media_plans (481), creative_briefs (483),
+      creative_deliverables (484); has_single_approver=true on agency_estimates (485)
+      and insertion_orders (482). has_personal_content=false correct across the board
+      (commercial work product, not employee personal data).
+    blocked_by:
+      - {type: user_decision, ref: B2-S3}
+    affected_entities: [agency_estimates, insertion_orders, agency_time_entries, media_plans, creative_briefs, creative_deliverables]
+
+  - id: B1B-AS5-SKILL-SPLIT
+    summary: "Skill 26 split per Rule #17 once module count is known; re-allocate 9 existing skill_tools by entity to per-module system skills."
+    finding: >-
+      Skill 26 has 9 skill_tools covering all 8 master entities (8 query_<entity>) plus
+      send_email. On the recommended 3-module split, the tools redistribute as:
+      JOB-TRAFFIC system skill (query_agency_jobs, query_agency_time_entries,
+      query_retainers, query_agency_estimates, send_email);
+      MEDIA-BUY system skill (query_media_plans, query_insertion_orders, send_email);
+      CREATIVE-OPS system skill (query_creative_briefs, query_creative_deliverables,
+      send_email). send_email may be duplicated across skills or factored as a
+      cross-module utility, B2-S2 decides.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-AS1-MODULES}
+      - {type: user_decision, ref: B2-S2}
+
+  - id: B1B-AS6-TOOL-FLOOR
+    summary: "Once module skills exist, each needs the full operational tool floor (mutates + side_effects), not just queries."
+    finding: >-
+      Current 9 tools are 8 query + 1 generic send_email. Module skills need mutate
+      tools per master (create/update/transition_state), side_effect tools for media
+      publisher posts and proofing review requests, and compute tools for profitability
+      rollups. Recommended floors: JOB-TRAFFIC 8-12 tools (4 entities x query+mutate +
+      compute_profitability), MEDIA-BUY 6-8 tools (2 entities x query+mutate +
+      side_effect_publisher_post), CREATIVE-OPS 6-8 tools (2 entities x query+mutate +
+      side_effect_request_review + side_effect_record_approval).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-AS5-SKILL-SPLIT}
+
+b2:
+  - id: B2-S1
+    summary: "AGENCY-MGMT module split for Phase M."
+    question: >-
+      How many modules should AGENCY-MGMT carry, and where do the boundaries fall?
+      Recommended default: 3 full modules JOB-TRAFFIC (agency_jobs, agency_time_entries,
+      agency_estimates, agency_retainers), MEDIA-BUY (media_plans, insertion_orders),
+      CREATIVE-OPS (creative_briefs, creative_deliverables).
+    options:
+      - "(a) 2 modules: JOB-AND-MEDIA + CREATIVE-OPS (Workamajig/Function Point shape)"
+      - "(b) 3 modules: JOB-TRAFFIC + MEDIA-BUY + CREATIVE-OPS (Deltek WorkBook shape, recommended)"
+      - "(c) 4 modules: JOBS + TIME-TRACKING-AGENCY + MEDIA-BUY + CREATIVE-OPS (Advantage/Synergist shape)"
+      - "(d) Other (specify)"
+    why: "Architectural decision driving Phase M, B-band cascade, E-band roles, F-band skills, and 35+ lifecycle rows. Agent cannot pick the boundary unilaterally."
+
+  - id: B2-S2
+    summary: "System skill split per Rule #17 once module count is known."
+    question: >-
+      How should skill 26 'agency-mgmt-system' (9 skill_tools attached) reconcile with
+      the per-module system-skill Rule #17?
+    options:
+      - "(a) Delete skill 26, create 3 fresh module-scoped skills, redistribute the 9 tools"
+      - "(b) Rename skill 26 to one new module's system skill, author 2 siblings from scratch"
+      - "(c) Other"
+    why: "Naming/authoring decision; affects skill_id continuity for any downstream agent references."
+
+  - id: B2-S3
+    summary: "Per-master per-flag approval for B1B-AS4 pattern-flag PATCHes."
+    question: >-
+      Per-master yes/no on the proposed has_submit_lock and has_single_approver flips.
+      Proposed: has_submit_lock=true on agency_estimates, insertion_orders,
+      agency_time_entries, media_plans, creative_briefs, creative_deliverables;
+      has_single_approver=true on agency_estimates and insertion_orders.
+    options:
+      - "Per-master yes/no for each proposed flag (capture in Decisions section)"
+    why: "Pattern flags drive emitter behavior (submit-lock state machines, single-approver permission shape); user owns the workflow shape."
+
+  - id: B2-S4
+    summary: "Detached skill 26 disposition; live state (9 tools attached) leans toward (a) attach."
+    question: >-
+      Treat skill 26 as scaffolding to attach, or as residue to delete? With 9 skill_tools
+      now bound, (a) attach is the cleaner default.
+    options:
+      - "(a) Treat as scaffolding, attach to a module on Phase M (recommended given tool attachment)"
+      - "(b) Treat as residue, DELETE and re-author 3 fresh skills per B2-S2"
+    why: "Load-time history unknown; the audit cannot distinguish scaffold from residue without user intent."
+
+  - id: B2-S5
+    summary: "Lifecycle states config-shape exemption test for the 8 masters."
+    question: >-
+      Audit asserts none of the 8 masters qualifies for the Rule #12 config-shape
+      exemption; all 8 carry real workflows. Confirm, or exempt agency_estimates and
+      creative_briefs (closest to author-once / occasionally-edit)?
+    options:
+      - "(a) Model all 8 with full lifecycles (~35 state rows + 8 workflow-gate permissions)"
+      - "(b) Exempt agency_estimates + creative_briefs, model 6"
+      - "(c) Other (specify additional exemptions)"
+    why: "Editorial/workflow-intent decision; the audit can describe the lifecycles but cannot decide whether the workflow is structural or merely conventional."
+
+  - id: B2-S6
+    summary: "agency_time_entries overlap with PSA project_time_entries."
+    question: >-
+      Should agency_time_entries remain a distinct master (Workamajig/Function Point
+      shape) or be refactored to consume PSA project_time_entries via contributor DMDO
+      rows for the agency-specific rate-card and retainer-burn columns (Deltek shape)?
+    options:
+      - "(a) Keep distinct (audit default)"
+      - "(b) Refactor to consume PSA + contribute agency-specific columns"
+    why: "Modeling philosophy decision; both shapes are defensible and the choice affects how PSA's audit treats project_time_entries downstream."
+
+b3:
+  - id: B3-AGENCY-RATE-CARDS
+    candidate: agency_rate_cards
+    rationale: >-
+      Workamajig, Deltek WorkBook, and Function Point all model rate cards as first-class
+      records distinct from rate-overrides on time entries (per-client rate sheets,
+      role-and-seniority-indexed bill rates, effective-date versioning). Currently
+      RATE-MGMT is a shared capability link but no AGENCY-MGMT master records the rate
+      card itself.
+    vendor_evidence: [Workamajig Platinum, Deltek WorkBook, Function Point]
+    proposed_module: JOB-TRAFFIC
+
+  - id: B3-AGENCY-INVOICES
+    candidate: agency_invoices
+    rationale: >-
+      Every flagship vendor ships an invoice master distinct from underlying line items
+      (time + media + materials). Currently the catalog implies invoicing via the
+      agency_invoice.issued trigger event (id 340) but has no agency_invoices master.
+    vendor_evidence: [Workamajig Platinum, Deltek WorkBook, Advantage, Function Point]
+    proposed_module: JOB-TRAFFIC
+
+  - id: B3-AGENCY-CHANGE-ORDERS
+    candidate: agency_change_orders
+    rationale: >-
+      Workamajig 'change orders', Deltek 'estimate revisions', Function Point 'change
+      requests' all model scope-change records distinct from the original estimate
+      (amount delta, narrative, client approval). Currently agency_estimates carries no
+      amendment/change record.
+    vendor_evidence: [Workamajig Platinum, Deltek WorkBook, Function Point]
+    proposed_module: JOB-TRAFFIC
+
+  - id: B3-MEDIA-BUYS
+    candidate: media_buys
+    rationale: >-
+      Distinct from media_plans (intent) and insertion_orders (commitment). Post-buy
+      actuals come back from publishers as different from the plan; reconciliation
+      produces the media_costs.posted event. Currently no media_buys master; actuals
+      are implicitly tracked on insertion_orders.
+    vendor_evidence: [Mediaocean Spectra/Prisma]
+    proposed_module: MEDIA-BUY
+
+  - id: B3-PROOFING-ROUNDS
+    candidate: creative_proofing_rounds
+    rationale: >-
+      Ziflow, Filestage, Approval Studio, GoVisually model proofing rounds as distinct
+      records carrying annotated review threads, version comparisons, per-round approval.
+      Currently creative_deliverables rolls all rounds onto one record.
+    vendor_evidence: [Ziflow, Filestage, Approval Studio, GoVisually]
+    proposed_module: CREATIVE-OPS
+
+  - id: B3-DOMAIN-MEDIA-BUY-PLATFORM
+    candidate: MEDIA-BUY-PLATFORM (new domain)
+    rationale: >-
+      Mediaocean Spectra/Prisma, Smartly.io, Basis Technologies are pure-play with no
+      agency-software overlap. Distinct point-solution market spanning media plan
+      authoring, IO management, vendor reconciliation, commission accounting. Currently
+      folded into AGENCY-MGMT capability AGENCY-MGMT-MEDIA-BUY.
+    vendor_evidence: [Mediaocean Spectra/Prisma, Smartly.io, Basis Technologies]
+
+  - id: B3-DOMAIN-CREATIVE-PROOFING
+    candidate: CREATIVE-PROOFING (new domain)
+    rationale: >-
+      Ziflow, Filestage, Approval Studio, GoVisually, ProofHub, Aproove are pure-play
+      vendors competing independently of agency-management software. Distinct
+      point-solution market for annotated review workflows. Currently folded into
+      AGENCY-MGMT capability CREATIVE-REVIEW.
+    vendor_evidence: [Ziflow, Filestage, Approval Studio, GoVisually, ProofHub, Aproove]
+
+  - id: B3-DOMAIN-MRM
+    candidate: MRM (Marketing Resource Management, new domain)
+    rationale: >-
+      Aprimo, Workfront for Marketing, Hive9, Allocadia, Plannuh; distinguished from
+      agency-mgmt by buyer (in-house marketing department vs external agency) and scope
+      (marketing-operations orchestration vs agency-client delivery). The Aprimo row
+      already linked to AGENCY-MGMT as secondary is suggestive of the boundary blur.
+    vendor_evidence: [Aprimo Marketing Productivity, Workfront for Marketing, Hive9, Allocadia, Plannuh]

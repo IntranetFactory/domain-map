@@ -1,0 +1,188 @@
+schema_version: 2
+domain: CPQ
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S2
+    summary: "F2/F3/F5 hard fail; 0 system skills across CPQ-PRODUCT-CATALOG (164), CPQ-QUOTE-BUILDER (165), CPQ-APPROVALS-CONTRACTS (166); Semantius score uncomputable"
+    finding: "Live query /skills?domain_module_id=in.(164,165,166) returns []. Rule #17 requires exactly 1 skill_type='system' skill per full module with >=1 skill_tools row. The starter HVAC-SVC-MGMT (171) carries skill 236 but does not satisfy F2 for the host domain's full modules."
+    action: "Phase F load: author product_catalog_agent (164), quote_builder_agent (165), approvals_contracts_agent (166); each with 5-20 skill_tools rows. Floor per module: query_<entity> per master plus lifecycle-mutate tools for the 4 requires_permission=true states (sales_quote.submitted_for_approval, sales_quote.approved, quote_discount.approved, discount_approval.approved)."
+    affected_modules: [164, 165, 166]
+    affected_masters:
+      - {data_object_id: 416, name: sales_quotes, target_module_id: 165, workflow: lifecycle_workflow}
+      - {data_object_id: 417, name: quote_lines, target_module_id: 165, workflow: child_of_sales_quotes}
+      - {data_object_id: 418, name: product_configurations, target_module_id: 164, workflow: configuration_validation}
+      - {data_object_id: 419, name: pricing_rules, target_module_id: 164, workflow: config_shape}
+      - {data_object_id: 420, name: quote_discounts, target_module_id: 165, workflow: approval_workflow}
+      - {data_object_id: 421, name: discount_approvals, target_module_id: 166, workflow: approval_workflow}
+      - {data_object_id: 422, name: product_bundles, target_module_id: 164, workflow: config_shape}
+      - {data_object_id: 423, name: contract_drafts, target_module_id: 166, workflow: contract_lifecycle}
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    extra_sequencing: "B2-S1 picks single-batch vs Phase-E-first vs Phase-F-first"
+
+  - id: B1A-S3
+    summary: "E2/E3/E4/E5 hard fail; 0 permissions, 0 role_modules, 0 CPQ-named roles on full modules"
+    finding: "Live queries return []: /permissions?domain_module_id=in.(164,165,166), /role_modules?domain_module_id=in.(164,165,166). Baseline of 3 permissions per full module (Rule #14 module-permission derivation) requires 9 baseline rows minimum plus 4 workflow-gate permissions from lifecycle states with requires_permission=true."
+    action: "Phase E load: insert 9 baseline permissions (cpq-product-catalog:read/manage/admin, cpq-quote-builder:read/manage/admin, cpq-approvals-contracts:read/manage/admin) + 4 workflow-gate permissions + 3-5 CPQ roles (e.g. SALES-REP, DEAL-DESK-ANALYST, PRICING-MANAGER, CPQ-ADMIN) + role_modules and role_permissions junctions."
+    affected_modules: [164, 165, 166]
+    blocked_by:
+      - {type: depends_on, ref: B1A-S2, reason: "skill_tools rows bind to module permissions; deployer skill prefers atomic load"}
+      - {type: user_decision, ref: B2-S1}
+
+  - id: B1A-S4
+    summary: "B11 hard fail; 0 data_object_aliases rows on any of the 8 CPQ masters"
+    finding: "Live query /data_object_aliases?data_object_id=in.(416,417,418,419,420,421,422,423) returns []. Market terminology unmodelled across flagship vendors (Salesforce CPQ, Conga, Oracle CPQ, SAP CPQ, DealHub, HubSpot Quotes)."
+    action: "Phase B alias load: approximately 12-15 alias rows. proposals/bids for sales_quotes (416); quote_items/line_items for quote_lines (417); discount_schedules/price_books for pricing_rules (419); bundle_offers for product_bundles (422); configured_products for product_configurations (418); approval_steps for discount_approvals (421); quote_contracts for contract_drafts (423); discount_lines for quote_discounts (420)."
+    affected_masters:
+      - {data_object_id: 416, name: sales_quotes, target_module_id: 165, workflow: alias_only}
+      - {data_object_id: 417, name: quote_lines, target_module_id: 165, workflow: alias_only}
+      - {data_object_id: 418, name: product_configurations, target_module_id: 164, workflow: alias_only}
+      - {data_object_id: 419, name: pricing_rules, target_module_id: 164, workflow: alias_only}
+      - {data_object_id: 420, name: quote_discounts, target_module_id: 165, workflow: alias_only}
+      - {data_object_id: 421, name: discount_approvals, target_module_id: 166, workflow: alias_only}
+      - {data_object_id: 422, name: product_bundles, target_module_id: 164, workflow: alias_only}
+      - {data_object_id: 423, name: contract_drafts, target_module_id: 166, workflow: alias_only}
+
+  - id: B1A-S5
+    summary: "C1 partial; missing lifecycle states on product_configurations (418) and quote_lines (417); pricing_rules (419) and product_bundles (422) candidate for config-shape exemption"
+    finding: "Live query /data_object_lifecycle_states?data_object_id=in.(417,418,419,422) returns []. The other 4 CPQ masters (416, 420, 421, 423) carry valid state machines."
+    action: "Phase B lifecycle load: author state machines for product_configurations (draft -> validating -> valid -> invalid) and quote_lines (draft -> locked -> cancelled). Defer 419 and 422 to B2-S5 outcome (config-shape exemption vs author draft -> published -> deprecated)."
+    affected_masters:
+      - {data_object_id: 417, name: quote_lines, target_module_id: 165, workflow: child_of_sales_quotes}
+      - {data_object_id: 418, name: product_configurations, target_module_id: 164, workflow: configuration_validation}
+      - {data_object_id: 419, name: pricing_rules, target_module_id: 164, workflow: config_shape_pending_b2}
+      - {data_object_id: 422, name: product_bundles, target_module_id: 164, workflow: config_shape_pending_b2}
+    blocked_by:
+      - {type: user_decision, ref: B2-S5}
+
+  - id: B1A-H1r-204
+    summary: "APQC residue: handoff 204 carries record from discovery_substring; promote to agent_curated at same PCF row 149"
+    finding: "Live query confirms handoff_processes row {handoff_id: 204, process_id: 149, proposal_source: discovery_substring, record_status: new}. PCF 149 (Develop and manage sales proposals, bids, and quotes) is the correct target; only the proposal_source needs to flip to agent_curated to reflect the audit's confident endorsement."
+    action: "PATCH /handoff_processes?handoff_id=eq.204&process_id=eq.149 with body {proposal_source: 'agent_curated'}. Single mechanical row."
+    affected_handoffs:
+      - {handoff_id: 204, direction: outbound, source_domain: CPQ, target_domain: CRM, trigger_event: "quote.expired", payload: crm_opportunities, null_field: none}
+
+b1b:
+  - id: B1B-S9
+    summary: "B10b report-only; 4 outbound rows still carry NULL target_domain_module_id pending target-domain audits"
+    finding: "Outbound handoffs 484 (ERP-FIN), 485 (SUB-MGMT), 1014 (CLM), 1015 (ERP-FIN) carry NULL target_domain_module_id. Target-side modules are owed by the target domains' b1 audits."
+    blocked_by:
+      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: "phase-B-DMDOs-on-sales_quotes-and-quote_discounts"}
+      - {type: domain_audit, blocking_domain: SUB-MGMT, milestone: "module-receiving-sales_quote.accepted_by_buyer"}
+      - {type: domain_audit, blocking_domain: CLM, milestone: "re-resolve-1014-target-against-CLM-REPOSITORY-vs-CLM-AUTHORING"}
+    affected_handoffs:
+      - {handoff_id: 484, direction: outbound, source_domain: CPQ, target_domain: ERP-FIN, trigger_event: "sales_quote.approved", payload: sales_quotes, null_field: target_domain_module_id}
+      - {handoff_id: 485, direction: outbound, source_domain: CPQ, target_domain: SUB-MGMT, trigger_event: "sales_quote.accepted_by_buyer", payload: sales_quotes, null_field: target_domain_module_id}
+      - {handoff_id: 1014, direction: outbound, source_domain: CPQ, target_domain: CLM, trigger_event: "quote_discount.approved", payload: quote_discounts, null_field: target_domain_module_id}
+      - {handoff_id: 1015, direction: outbound, source_domain: CPQ, target_domain: ERP-FIN, trigger_event: "quote_discount.threshold_exceeded", payload: quote_discounts, null_field: target_domain_module_id}
+
+b2:
+  - id: B2-S1
+    summary: "Phase E + Phase F sequencing for CPQ catch-up load"
+    question: "B1A-S2 (3 system skills with 15-45 tools) and B1A-S3 (9 baseline + 4 workflow-gate permissions, 3-5 roles, role_modules + role_permissions junctions) combine to a roughly 80-120 row load. Which sequencing do you want?"
+    options:
+      - "a: Phase E first (roles + permissions), audit, then Phase F (skills + tools)"
+      - "b: Phase F first (skill_tools imply most workflow-gate permission needs), then E"
+      - "c: Single combined load (deployer preference for fewer round-trips)"
+    why: "Both staging shapes work; the deployer skill prefers c. The user owns sequencing because it affects review cadence."
+
+  - id: B2-S2
+    summary: "Missing handoff CPQ-APPROVALS-CONTRACTS -> CLM on discount_approval.granted (484)"
+    question: "Current catalog uses contract_draft.generated (486) as the CLM trigger which fires regardless of approval state. Add a second handoff post-approval-gating to CLM-AUTHORING, treat contract_draft.generated as post-approval signal by definition, or rename event to be explicit?"
+    options:
+      - "a: Add second handoff discount_approval.granted -> CLM-AUTHORING"
+      - "b: Confirm contract_draft.generated is the post-approval signal, no second handoff"
+      - "c: Rename contract_draft.generated to contract_draft.approved_for_clm and treat as post-gate event"
+    why: "Workflow-gate semantics; the answer depends on whether contract_draft.generated is the post-approval signal or the upstream draft-creation event."
+
+  - id: B2-S3
+    summary: "Missing CRM telemetry handoffs on sales_quote.sent (477) and sales_quote.rejected (479)"
+    question: "Should CPQ publish stage-progression telemetry to CRM-PIPELINE-MGT for sales_quote.sent and/or sales_quote.rejected? Some shops keep all telemetry inside CPQ; others mirror to CRM for pipeline scoring."
+    options:
+      - "a: Add both handoffs"
+      - "b: Add only sales_quote.rejected (more decision-relevant)"
+      - "c: Skip; CRM observes outcomes via opportunity stage updates"
+    why: "Editorial workflow-coverage call."
+
+  - id: B2-S4
+    summary: "Pattern flag review on quote_discounts, contract_drafts, sales_quotes"
+    question: "Per-flag yes/no: (a) quote_discounts.has_submit_lock to true (state machine includes lock-once-submitted shape pending_approval), (b) contract_drafts.has_submit_lock to true (signed -> executed lock), (c) sales_quotes.has_personal_content to true (quotes carry buyer contact info, billing addresses, signatory names)."
+    options:
+      - "a: yes/no on quote_discounts.has_submit_lock"
+      - "b: yes/no on contract_drafts.has_submit_lock"
+      - "c: yes/no on sales_quotes.has_personal_content"
+    why: "Pattern flags drive downstream lockout and encryption behavior; user owns the call."
+
+  - id: B2-S5
+    summary: "C1 config-shape exemption claim for pricing_rules (419) and product_bundles (422)"
+    question: "Per Rule #12 every master+required data_object needs lifecycle states unless explicitly exempted as config-shape. pricing_rules and product_bundles plausibly qualify (publish or deprecate is the only workflow). Confirm exemption, author states, or mixed."
+    options:
+      - "a: Confirm exemption for both pricing_rules and product_bundles"
+      - "b: Author lifecycle states (draft -> published -> deprecated) for both"
+      - "c: Mixed (specify per master)"
+    why: "Rule #12 exemption requires user confirmation per data_object; silently exempting hollows the workflow-gate layer."
+
+  - id: B2-S6
+    summary: "HVAC-SVC-MGMT (171) starter host junction on CPQ (73)"
+    question: "Starter HVAC-SVC-MGMT (module_kind=starter, domain_id=NULL) is cross-hosted on CPQ via domain_module_host_domains. Only 1 of 11 embedded masters touches CPQ (sales_quotes 416). Keep, remove, or relocate?"
+    options:
+      - "a: Keep cross-host on CPQ"
+      - "b: Remove and rely on starter's eventual primary host (FSM or AGENCY-MGMT)"
+      - "c: Add a second cross-host on the more appropriate domain (FSM) instead"
+    why: "Editorial product-discovery decision; the audit cannot tell whether the cross-host is intentional or stale."
+
+  - id: B2-H1r-517
+    summary: "APQC residue: handoff 517 currently agent_curated at process 927 (Resolve customer problems, requests, and inquiries L4); audit proposed retarget to 149 or sales-strategy alternative"
+    question: "517 (CLM-AUTHORING -> CPQ-APPROVALS-CONTRACTS on contract_template.published carrying contract_templates) is currently tagged at PCF 927 which reads weak. Replace with PCF 149 (Develop and manage sales proposals, bids, and quotes), with a sales-strategy alternative, or keep as-is?"
+    options:
+      - "a: Retarget to PCF 149"
+      - "b: Retarget to a sales-strategy PCF (specify id)"
+      - "c: Keep 927"
+    why: "Medium-confidence audit call; user owns the PCF retarget decision."
+
+  - id: B2-H1r-527
+    summary: "APQC residue: handoff 527 currently discovery_substring at process 54 (Perform planning and management accounting L2); audit flags as wrong-domain"
+    question: "527 (CRM-ACCT-MGT -> CPQ on account.tier_changed carrying customers) is tagged at PCF 54 which is wrong-domain (accounting). Audit proposes Manage sales partners and alliances (10402 L3) or Manage sales orders (10399 L3 child). Pick a PCF row."
+    options:
+      - "a: Retarget to PCF 10402 (Manage sales partners and alliances)"
+      - "b: Retarget to PCF 10399 (Manage sales orders)"
+      - "c: Other (specify id)"
+      - "d: Keep 54"
+    why: "Existing PCF target is wrong-domain; user owns the retarget call."
+
+  - id: B2-H1r-1236
+    summary: "APQC residue: handoff 1236 inserted at process 115 (fallback PCF); audit-proposed 10283 or 10410.x not uniquely resolved"
+    question: "1236 (PIM -> CPQ-PRODUCT-CATALOG on pim_product.published carrying product_configurations) was inserted at PCF 115 as a fallback because the audit-proposed 10283 (Manage product master data L3) and 10410.x (Manage marketing assets) were not uniquely resolvable. Confirm 115, retarget to 10283, or pick a specific 10410.x id."
+    options:
+      - "a: Keep 115"
+      - "b: Retarget to PCF 10283 (Manage product master data, look up exact id)"
+      - "c: Retarget to a 10410.x id (specify)"
+    why: "Insertion was a fallback; user owns the retarget call."
+
+b3:
+  - id: B3-E1
+    candidate: guided_selling_questionnaires
+    rationale: "Salesforce CPQ Guided Selling, DealHub Guided Selling, Tacton Configurator question-flow are first-class persisted entities (saved scripts that route the seller through configuration). Currently capability CPQ-GUIDED-SELL (272) exists but no master entity captures the questionnaire."
+    vendor_evidence: [Salesforce CPQ, DealHub, Tacton]
+    proposed_module: CPQ-QUOTE-BUILDER (or new CPQ-GUIDED-SELLING module)
+
+  - id: B3-E2
+    candidate: proposal_templates
+    rationale: "Conga Composer, DealHub Document Generation, Salesforce CPQ Advanced Quote Templates model template entities distinct from contract_drafts and from CLM contract_templates. The sell-side proposal narrative + cover page + collateral is not currently captured."
+    vendor_evidence: [Conga Composer, DealHub, Salesforce CPQ]
+    proposed_module: CPQ-QUOTE-BUILDER
+
+  - id: B3-E3
+    candidate: price_books
+    rationale: "Salesforce CPQ Price Books, Oracle CPQ Price Lists, SAP CPQ Price Lists model price-book entities distinct from per-rule pricing logic. A price book is an environment grouping (geo, segment, channel) that wraps a set of pricing rules. Currently pricing_rules masters everything; the book or list grouping is folded in."
+    vendor_evidence: [Salesforce CPQ, Oracle CPQ, SAP CPQ]
+    proposed_module: CPQ-PRODUCT-CATALOG
+
+  - id: B3-E4
+    candidate: deal_scoring_records
+    rationale: "DealHub DealRoom, Salesforce CPQ Deal Hub, Vendavo Deal Guidance model per-quote AI scoring (margin health, win probability, comparable deals). Currently capability CPQ-PRICE-OPTIM (276) exists but no master records the scoring output."
+    vendor_evidence: [DealHub DealRoom, Salesforce CPQ Deal Hub, Vendavo Deal Guidance]
+    proposed_module: CPQ-QUOTE-BUILDER (or new CPQ-DEAL-INTELLIGENCE module)

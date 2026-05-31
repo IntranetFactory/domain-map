@@ -1,0 +1,317 @@
+schema_version: 2
+domain: HC-PATIENT
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-A4-CATALOG-UX
+    summary: Draft buyer-voice catalog_tagline + catalog_description for HC-PATIENT domain row, surface to user for approval before write.
+    finding: A4 fails. `domains.catalog_tagline` and `domains.catalog_description` are both empty on the HC-PATIENT row (id 45). Per Rule #20 these are buyer-facing fields, drafting is allowed but writing requires explicit user-approved wording.
+    action: Draft both fields per Rule #20 voice rule (workflow + value, NOT analyst voice). Surface in chat for user approval BEFORE PATCH. Do not auto-write.
+    extra_rule_reference: Rule #20
+
+  - id: B1A-B4-PATTERN-FLAGS
+    summary: PATCH `has_personal_content=true` on all 6 masters; `has_submit_lock=true` on clinical_notes + clinical_orders; `has_single_approver=true` on clinical_notes.
+    finding: B4 fails. All 6 masters (617 patient_appointments, 618 clinical_encounters, 619 care_plans, 620 patient_referrals, 621 clinical_orders, 622 clinical_notes) carry `has_personal_content=false` / `has_submit_lock=false` / `has_single_approver=false`. Every master holds PHI (HIPAA domain). Signed clinical notes are immutable; placed clinical orders cannot be retroactively edited (submit-lock). Clinical notes have a single signing provider.
+    action: PATCH 6 rows with `has_personal_content=true`. PATCH `has_submit_lock=true` on 621 (clinical_orders) and 622 (clinical_notes). PATCH `has_single_approver=true` on 622 (clinical_notes). No notes annotation per Rule #15; record the audit in the gap report.
+    affected_masters:
+      - {data_object_id: 617, name: patient_appointments, target_module_id: null, workflow: has_personal_content}
+      - {data_object_id: 618, name: clinical_encounters, target_module_id: null, workflow: has_personal_content}
+      - {data_object_id: 619, name: care_plans, target_module_id: null, workflow: has_personal_content}
+      - {data_object_id: 620, name: patient_referrals, target_module_id: null, workflow: has_personal_content}
+      - {data_object_id: 621, name: clinical_orders, target_module_id: null, workflow: has_personal_content+has_submit_lock}
+      - {data_object_id: 622, name: clinical_notes, target_module_id: null, workflow: has_personal_content+has_submit_lock+has_single_approver}
+
+  - id: B1A-B7-USER-EDGES
+    summary: Author 6 `data_object_relationships` rows from each master to `users` (id 748) per Rule #10. Surface verb / inverse_verb tuples to user before insert.
+    finding: B7 fails. Zero edges between any HC-PATIENT master and the platform built-in `users` (id 748). Each master has a user-typed actor (scheduler, encountering provider, ordering clinician, signing provider, care coordinator, referring provider).
+    action: Draft 6 edges with concrete verb + inverse_verb + cardinality + owner_side per master. Surface for user review BEFORE insert (the audit lists actor roles but not concrete verb tuples). Load via `data_object_relationships` insert.
+    affected_masters:
+      - {data_object_id: 617, name: patient_appointments, target_module_id: null, workflow: scheduler_or_scheduling_user}
+      - {data_object_id: 618, name: clinical_encounters, target_module_id: null, workflow: encountering_provider}
+      - {data_object_id: 619, name: care_plans, target_module_id: null, workflow: care_coordinator}
+      - {data_object_id: 620, name: patient_referrals, target_module_id: null, workflow: referring_provider}
+      - {data_object_id: 621, name: clinical_orders, target_module_id: null, workflow: ordering_clinician}
+      - {data_object_id: 622, name: clinical_notes, target_module_id: null, workflow: signing_provider}
+    extra_rule_reference: Rule #10
+
+  - id: B1A-B8-CROSS-DOMAIN-RELS
+    summary: Author 3 outbound cross-domain payload-target `data_object_relationships` rows for handoffs 900, 903 (and 901 if B2-3 keeps it). Handoffs 899 / 902 already covered by rows 466, 467.
+    finding: B8 partial fail. Outbound handoffs to ERP-FIN (900 clinical_encounter.completed -> encounters as payload; 903 clinical_note.signed -> clinical_notes as payload) have no corresponding payload-target relationship row, and ERP-FIN does not master `invoices` per the prior audit. Handoff 901 (clinical_order.placed -> ITSM service_incidents) is semantically suspect (see B2-3); routed to Bucket 2.
+    action: Draft rows for handoffs 900, 903 once the ERP-FIN target master is named (see Bucket 3 vetting on HC-RCM). Defer 901 until B2-3 resolves. Existing rows 466 (`patient_appointments opens customer_cases`) and 467 (`patient_referrals opens customer_cases`) cover 899 and 902.
+    affected_handoffs:
+      - {handoff_id: 900, direction: outbound, source_domain: HC-PATIENT, target_domain: ERP-FIN, trigger_event: clinical_encounter.completed, payload: clinical_encounters, null_field: relationship}
+      - {handoff_id: 903, direction: outbound, source_domain: HC-PATIENT, target_domain: ERP-FIN, trigger_event: clinical_note.signed, payload: clinical_notes, null_field: relationship}
+    blocked_by:
+      - {type: depends_on, ref: B2-3, reason: handoff 901 semantic correctness blocks one of three rows}
+
+  - id: B1A-B9-ORPHAN-EVENT
+    summary: Trigger event 1022 (`patient_appointment.scheduled`) has zero `handoffs` rows; the publish leg is orphaned.
+    finding: B9 partial fail. Event 1022 is the canonical signal for downstream patient-communication, calendar holds, payer eligibility checks, and care-team notifications. Audit candidates (HC-PATIENT-SCHED -> CSM for prep, HC-PATIENT-SCHED -> TELEHEALTH for virtual-visit setup) are blocked on Phase 0 candidates.
+    action: Either author at least 1 outbound handoff for event 1022 (target TBD pending Phase 0 vetting of TELEHEALTH + EHR), or DELETE the event row. A stub with no target is not acceptable.
+    affected_events:
+      - {id: 1022, event_name: patient_appointment.scheduled, current_category: lifecycle, proposed_category: lifecycle}
+    blocked_by:
+      - {type: catalog_addition, scope: domains, trigger: TELEHEALTH or EHR Phase 0 vetting}
+
+  - id: B1A-B11-ALIASES
+    summary: Author 2-3 `data_object_aliases` per master (12-18 total) for cross-vendor / cross-industry healthcare synonyms.
+    finding: B11 fails. Zero `data_object_aliases` for any of the 6 masters. Healthcare has rich vendor-specific terminology (Epic "visit", Cerner "episode", HL7 v2 OBR "order", SOAP / progress / encounter note variants).
+    action: Draft 12-18 aliases per the audit prior recommendation (patient_appointment -> visit / appointment slot; clinical_encounter -> visit / episode / event; care_plan -> treatment plan / plan of care; patient_referral -> consult / order; clinical_orders -> CPOE order / order; clinical_notes -> chart note / progress note / SOAP note / encounter note). Chunked insert against `/data_object_aliases`.
+    affected_masters:
+      - {data_object_id: 617, name: patient_appointments, target_module_id: null, workflow: aliases}
+      - {data_object_id: 618, name: clinical_encounters, target_module_id: null, workflow: aliases}
+      - {data_object_id: 619, name: care_plans, target_module_id: null, workflow: aliases}
+      - {data_object_id: 620, name: patient_referrals, target_module_id: null, workflow: aliases}
+      - {data_object_id: 621, name: clinical_orders, target_module_id: null, workflow: aliases}
+      - {data_object_id: 622, name: clinical_notes, target_module_id: null, workflow: aliases}
+
+  - id: B1A-B12-LIFECYCLE-STATES
+    summary: Author `data_object_lifecycle_states` for all 6 masters per Rule #12. Audit pre-specifies state shapes.
+    finding: B12 fails. Zero lifecycle state rows. Every master has a real workflow with distinct states; none are config-shape exempt.
+    action: Load lifecycle states per the 2026-05-30 audit's pre-specified shapes. patient_appointments (scheduled, checked_in, in_progress, completed, no_show, cancelled); clinical_encounters (open, in_progress, completed, signed, locked); care_plans (draft, active, on_hold, completed, withdrawn); patient_referrals (created, sent, accepted, declined, completed, expired); clinical_orders (placed, in_progress, resulted, completed, cancelled, discontinued); clinical_notes (draft, signed, addended, amended). Set `requires_permission=true` on workflow gates (signed, locked, cancelled, discontinued, addended, amended). `domain_module_id` NULL until B1-S1 ships modules; PATCH after.
+    affected_masters:
+      - {data_object_id: 617, name: patient_appointments, target_module_id: null, workflow: scheduled->checked_in->in_progress->completed/no_show/cancelled}
+      - {data_object_id: 618, name: clinical_encounters, target_module_id: null, workflow: open->in_progress->completed->signed->locked}
+      - {data_object_id: 619, name: care_plans, target_module_id: null, workflow: draft->active->on_hold/completed/withdrawn}
+      - {data_object_id: 620, name: patient_referrals, target_module_id: null, workflow: created->sent->accepted/declined->completed/expired}
+      - {data_object_id: 621, name: clinical_orders, target_module_id: null, workflow: placed->in_progress->resulted->completed/cancelled/discontinued}
+      - {data_object_id: 622, name: clinical_notes, target_module_id: null, workflow: draft->signed->addended/amended}
+    extra_rule_reference: Rule #12
+
+  - id: B1A-F7-CHANNEL-ABSTRACTION
+    summary: Replace legacy skill 66's `send_sms` link (tool id 38, coverage_tier external) with `notify_person` per Channel vs capability authoring rule.
+    finding: F7 fails. Skill 66 (`hc-patient-system`) links `send_sms` as `required` without workflow-specific justification. SMS is not the workflow contract for any specific patient-operations event; this is generic notification. Default per the abstraction rule is `notify_person`.
+    action: Either PATCH skill_tools row tool_id from 38 to `notify_person`, or DELETE the row (and let the skill rely on `send_email` + future `notify_person` link). This is independent of B1-S14 / B1-S16 (which retire skill 66 in favor of module-level skills) but if those land first, F7 cures via the new skill's authoring.
+
+  - id: B1A-S1-MODULES
+    summary: Author HC-PATIENT modules + Phase-A package (capabilities, capability_domains, domain_module_capabilities, domain_module_data_objects, system skills, skill_tools).
+    finding: M1 hard-fails (0 modules). M2 vacuously fails. M4 / M6 vacuous. The 2026-05-30 audit's default proposal is 2 full modules (HC-PATIENT-SCHED covering patient_appointments + patient_referrals; HC-PATIENT-CLINICAL covering clinical_encounters + care_plans + clinical_orders + clinical_notes). A 4-module alternative (SCHED + ORDERS + CLINICAL-DOC + CARE-COORD) is queued in B3-M1. Cannot author until B2-1 resolves the split decision.
+    action: "Once B2-1 resolves, load a single Phase-A package: domain_modules (kind=full), capabilities (5-8 per audit proposal), capability_domains, domain_module_capabilities, domain_module_data_objects (master role per audit assignment, necessity=required), per-module system skills (skill_type=system, naming `<module_code_lower>_agent`), tools + skill_tools. After landing, retire legacy skill 66 (B1A-F1-LEGACY-SKILL) and re-link the 8 existing skill_tools rows to the new module-level skills."
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B1A-B10b-SOURCE-MODULES
+    summary: PATCH `source_domain_module_id` on outbound handoffs 899, 900, 901, 902, 903 once HC-PATIENT modularizes.
+    finding: "B10b fails. All 5 outbound handoffs carry `source_domain_module_id=null`. Expected wiring per the 2026-05-30 audit: 899/1023 -> SCHED (patient_appointments); 900/1024 -> CLINICAL (clinical_encounters); 901/1025 -> CLINICAL (clinical_orders); 902/1026 -> SCHED (patient_referrals); 903/1027 -> CLINICAL (clinical_notes). Derivation rule from `backfill_ats_handoff_modules_2026_05_23.ts`."
+    action: After B1A-S1-MODULES lands, run the standard backfill PATCH for the 5 outbound handoffs per the wiring above.
+    affected_handoffs:
+      - {handoff_id: 899, direction: outbound, source_domain: HC-PATIENT, target_domain: CSM, trigger_event: patient_appointment.no_show, payload: patient_appointments, null_field: source_domain_module_id}
+      - {handoff_id: 900, direction: outbound, source_domain: HC-PATIENT, target_domain: ERP-FIN, trigger_event: clinical_encounter.completed, payload: clinical_encounters, null_field: source_domain_module_id}
+      - {handoff_id: 901, direction: outbound, source_domain: HC-PATIENT, target_domain: ITSM, trigger_event: clinical_order.placed, payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 902, direction: outbound, source_domain: HC-PATIENT, target_domain: CSM, trigger_event: patient_referral.created, payload: patient_referrals, null_field: source_domain_module_id}
+      - {handoff_id: 903, direction: outbound, source_domain: HC-PATIENT, target_domain: ERP-FIN, trigger_event: clinical_note.signed, payload: clinical_notes, null_field: source_domain_module_id}
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1A-S1-MODULES}
+
+  - id: B1A-B10b-TARGET-MODULES
+    summary: PATCH `target_domain_module_id` on inbound handoffs 896, 897 from CLIN-DEV once HC-PATIENT modularizes; also requires consumer DMDO rows for device_recalls (612) and sterilization_cycles (616).
+    finding: B10b fails for inbound. Handoffs 896 (device_recall.issued) and 897 (sterilization_cycle.failed) have target_domain_module_id=null. The 2026-05-30 audit pre-specifies both target the HC-PATIENT-CLINICAL module. The source NULL on these rows is CLIN-DEV's responsibility.
+    action: After B1A-S1-MODULES lands AND consumer DMDO rows for 612 + 616 are loaded on HC-PATIENT-CLINICAL, PATCH target_domain_module_id on handoffs 896 and 897.
+    affected_handoffs:
+      - {handoff_id: 896, direction: inbound, source_domain: CLIN-DEV, target_domain: HC-PATIENT, trigger_event: device_recall.issued, payload: device_recalls, null_field: target_domain_module_id}
+      - {handoff_id: 897, direction: inbound, source_domain: CLIN-DEV, target_domain: HC-PATIENT, trigger_event: sterilization_cycle.failed, payload: sterilization_cycles, null_field: target_domain_module_id}
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1A-S1-MODULES}
+
+  - id: B1A-F1-LEGACY-SKILL
+    summary: DELETE legacy skill id 66 (`hc-patient-system`) after module-level system skills land per Rule #17 + F1.
+    finding: F1 fails. Skill 66 carries `domain_id=45`, `domain_module_id=null`. Once any module-level system skill exists for HC-PATIENT, F1 requires the legacy row to retire. The 8 existing skill_tools rows (500-505 query primitives, 37 send_email, 38 send_sms) re-link to the new module-level skills rather than duplicating.
+    action: Part of the same load as B1A-S1-MODULES. Re-link skill_tools rows to the new module-level system skills BEFORE deleting skill 66.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1A-S1-MODULES}
+
+  - id: B1A-H1-APQC-TAGGING
+    summary: Author 5 `handoff_processes` rows (agent_curated, record_status=new) for handoffs 899, 900, 902, 903, 896 with confident PCF matches; defer 901 (suspect) and 897 (no clean PCF) to Discover Pass 3.
+    finding: H1 fails. 7 cross-domain handoffs (5 outbound, 2 inbound) carry zero `handoff_processes` rows. The 2026-05-30 audit identified 5 candidate L2/L3 PCF matches plus 2 DEFER rows. APQC tagging is parallelizable, does not depend on B1A-S1-MODULES.
+    action: For each candidate, run `/processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry` to confirm the PCF id, INSERT `(handoff_id, process_id, proposal_source=agent_curated, record_status=new, role=implements)`. Defer 901 until B2-3 resolves; defer 897 to Discover Pass 3 for custom-process authoring.
+    affected_handoffs:
+      - {handoff_id: 899, direction: outbound, source_domain: HC-PATIENT, target_domain: CSM, trigger_event: patient_appointment.no_show, payload: patient_appointments, null_field: handoff_processes}
+      - {handoff_id: 900, direction: outbound, source_domain: HC-PATIENT, target_domain: ERP-FIN, trigger_event: clinical_encounter.completed, payload: clinical_encounters, null_field: handoff_processes}
+      - {handoff_id: 902, direction: outbound, source_domain: HC-PATIENT, target_domain: CSM, trigger_event: patient_referral.created, payload: patient_referrals, null_field: handoff_processes}
+      - {handoff_id: 903, direction: outbound, source_domain: HC-PATIENT, target_domain: ERP-FIN, trigger_event: clinical_note.signed, payload: clinical_notes, null_field: handoff_processes}
+      - {handoff_id: 896, direction: inbound, source_domain: CLIN-DEV, target_domain: HC-PATIENT, trigger_event: device_recall.issued, payload: device_recalls, null_field: handoff_processes}
+
+b1b: []
+
+b2:
+  - id: B2-1-MODULE-SPLIT
+    summary: Choose between 2-module (SCHED + CLINICAL) or 4-module (SCHED + ORDERS + CLINICAL-DOC + CARE-COORD) split for HC-PATIENT.
+    question: Which module split shape do you want for HC-PATIENT?
+    options:
+      - "2-module: HC-PATIENT-SCHED (patient_appointments, patient_referrals) + HC-PATIENT-CLINICAL (clinical_encounters, care_plans, clinical_orders, clinical_notes)"
+      - "4-module: SCHED + ORDERS + CLINICAL-DOC + CARE-COORD for finer-grained deployability for SMB ambulatory"
+      - "Other (specify)"
+    why: Blocks B1A-S1-MODULES and every downstream B1 item that touches modules (B1A-B10b-SOURCE-MODULES, B1A-B10b-TARGET-MODULES, B1A-F1-LEGACY-SKILL).
+
+  - id: B2-2-OWNER-FUNCTION
+    summary: HC-PATIENT currently lists Business Operations as owner; clinical operations would be more accurate but the 20-function spine has no Clinical Operations row.
+    question: Which business function should own HC-PATIENT?
+    options:
+      - "Keep Business Operations as a generic placeholder"
+      - "Add a new top-level Clinical Operations business_function (sets precedent for industry-specific functions on the 20-function spine)"
+      - "Re-attribute to Customer Service (unusual framing, providers as service)"
+    why: Healthcare delivery is owned by clinical operations (providers, nurses, care coordinators). The current attribution to Business Operations is dubious for a clinical-workflow domain. Independent of Bucket 3.
+
+  - id: B2-3-HANDOFF-901
+    summary: Handoff 901 (`clinical_order.placed` -> ITSM `service_incidents`) is semantically suspect; clinical orders route to lab / imaging / pharmacy fulfillment, not IT incidents.
+    question: How to handle handoff 901?
+    options:
+      - "(a) Keep as a degraded interim model until EHR / HC-PHARM-MGMT / HC-LAB ship as real domains"
+      - "(b) DELETE and rely on B1A-B10b-SOURCE-MODULES backfill to reconstruct"
+      - "(c) Re-author to target a TBD healthcare fulfillment domain"
+    why: "Has Bucket 3 dependency: rewrite path depends on EHR / HC-PHARM-MGMT landing as real domains. If eyeball-mode, resolve immediately by DELETE + queue for re-author."
+
+  - id: B2-4-COST-BAND
+    summary: Current `cost_band=$$$$` ($500k-$2M yearly TCO for 500-user org); patient-operations as scoped (no full EHR, no RCM, no payer side) is plausibly $$$.
+    question: Adjust HC-PATIENT cost_band?
+    options:
+      - "Keep $$$$"
+      - "Drop to $$$"
+      - "Split when modules ship (lite SMB ambulatory module at $$ vs full-suite at $$$$)"
+    why: Sanity check. Independent of Bucket 3.
+
+  - id: B2-5-PATIENTS-MASTER
+    summary: HC-PATIENT does not currently master a `patients` data_object; the 6 existing masters reference patients implicitly.
+    question: Should HC-PATIENT master `patients`?
+    options:
+      - "(a) HC-PATIENT masters patients now (preempts EHR domain)"
+      - "(b) Wait until EHR is loaded and HC-PATIENT becomes a consumer + embedded_master of patients"
+      - "(c) Load patients now as a placeholder + flag for re-attribution when EHR ships"
+    why: Has Bucket 3 dependency. Blocks Bucket 3 entity candidates B3-E1 through B3-E8, B3-E10, B3-E12 through B3-E14 (each FK-references patients).
+
+  - id: B2-6-CUSTOMER-CASES-PAYLOAD
+    summary: Handoffs 899 (no_show) and 902 (referral.created) target CSM with payload `customer_cases` (CSM-mastered). Healthcare patient-ops typically flows into EHR task queue or dedicated patient-engagement system, not CRM.
+    question: How to handle CSM as patient-engagement layer?
+    options:
+      - "(a) Keep current CSM routing (acceptable when CSM/CRM is the patient-engagement layer, e.g. Salesforce Health Cloud deployments)"
+      - "(b) Re-target to a new HC-PATIENT-INTAKE module's own patient_inquiries master"
+      - "(c) Defer to EHR + TELEHEALTH domains landing"
+    why: Independent of Bucket 3 if Salesforce Health Cloud is treated as the canonical patient-engagement layer.
+
+  - id: B2-7-DMDO-MIGRATION
+    summary: All current HC-PATIENT data_object rows live in legacy `domain_data_objects`; zero rows in `domain_module_data_objects`.
+    question: Single-load or two-load migration when modules ship?
+    options:
+      - "Author DMDO rows for all 6 masters at B1A-S1-MODULES load time (default)"
+      - "Stage in two loads (modules first, DMDO second)"
+    why: Per SKILL.md the rollup is derived from DMDO once modules ship. Independent of Bucket 3.
+
+b3:
+  - id: B3-E1
+    candidate: patients
+    rationale: Central demographic record. EHR vendors universally master a patient record. Boundary with EHR (Phase 0 candidate).
+    vendor_evidence: [Epic, Cerner, Athenahealth, eClinicalWorks, Salesforce Health Cloud, Innovaccer]
+    proposed_module: HC-PATIENT-CLINICAL or shared between both modules as master
+
+  - id: B3-E2
+    candidate: medical_problems
+    rationale: Chronic conditions per patient; tied to ICD-10. Likely EHR-mastered once EHR domain loads.
+    vendor_evidence: [Epic, Cerner, eClinicalWorks]
+    proposed_module: HC-PATIENT-CLINICAL
+
+  - id: B3-E3
+    candidate: patient_allergies
+    rationale: Drug-allergy decision support input; safety-critical.
+    vendor_evidence: [Epic, Cerner]
+    proposed_module: HC-PATIENT-CLINICAL
+
+  - id: B3-E4
+    candidate: patient_medications
+    rationale: Active med list, reconciliation source. Boundary with HC-PHARM-MGMT.
+    vendor_evidence: [Epic, Cerner, Athenahealth, eClinicalWorks]
+    proposed_module: HC-PATIENT-CLINICAL
+
+  - id: B3-E5
+    candidate: immunization_records
+    rationale: Vaccination history; jurisdictional registry reporting.
+    vendor_evidence: [Epic, Cerner, public-health registries]
+    proposed_module: HC-PATIENT-CLINICAL
+
+  - id: B3-E6
+    candidate: vital_signs_readings
+    rationale: Per-encounter vitals.
+    vendor_evidence: [Epic, Cerner, Athenahealth, eClinicalWorks]
+    proposed_module: HC-PATIENT-CLINICAL
+
+  - id: B3-E7
+    candidate: clinical_diagnoses
+    rationale: ICD-10 coded diagnoses per encounter; billing input.
+    vendor_evidence: [Epic, Cerner, eClinicalWorks]
+    proposed_module: HC-PATIENT-CLINICAL
+
+  - id: B3-E8
+    candidate: clinical_procedures
+    rationale: CPT coded procedures per encounter; billing input.
+    vendor_evidence: [Epic, Cerner]
+    proposed_module: HC-PATIENT-CLINICAL
+
+  - id: B3-E9
+    candidate: patient_consents
+    rationale: HIPAA authorization, informed consent, treatment consent. HIPAA-mandated.
+    vendor_evidence: [Epic, Cerner, Athenahealth, eClinicalWorks]
+    proposed_module: HC-PATIENT-SCHED or HC-PATIENT-INTAKE
+
+  - id: B3-E10
+    candidate: care_team_assignments
+    rationale: Per-patient care team membership (primary, specialists, coordinators).
+    vendor_evidence: [Innovaccer, Salesforce Health Cloud, Epic]
+    proposed_module: HC-PATIENT-CLINICAL
+
+  - id: B3-E11
+    candidate: patient_communications
+    rationale: Secure portal messages, appointment reminders.
+    vendor_evidence: [Epic MyChart, Cerner HealtheLife, Athenahealth Communicator, Salesforce Health Cloud]
+    proposed_module: HC-PATIENT-SCHED or HC-PATIENT-PORTAL
+
+  - id: B3-E12
+    candidate: clinical_results
+    rationale: Lab + imaging result delivery, abnormal flags. Boundary with future HC-LAB / HC-IMAGING domains.
+    vendor_evidence: [Epic, Cerner, Athenahealth, eClinicalWorks]
+    proposed_module: HC-PATIENT-CLINICAL
+
+  - id: B3-E13
+    candidate: prior_authorizations
+    rationale: Payer-required pre-approval. Boundary with HC-PAYER (Phase 0 candidate).
+    vendor_evidence: [Epic, Cerner, payer integrations]
+    proposed_module: HC-PATIENT-CLINICAL
+
+  - id: B3-E14
+    candidate: charge_captures
+    rationale: Billing seed (superbills). Boundary with HC-RCM (Phase 0 candidate).
+    vendor_evidence: [Epic, Cerner, Athenahealth, eClinicalWorks]
+    proposed_module: HC-PATIENT-CLINICAL
+
+  - id: B3-E15
+    candidate: appointment_slot_templates
+    rationale: Provider availability blocks. Configuration shape, may be config-shaped exempt.
+    vendor_evidence: [Epic Cadence, Athenahealth]
+    proposed_module: HC-PATIENT-SCHED
+
+  - id: B3-M1
+    candidate: 4-module-split-SCHED-ORDERS-CLINICAL-DOC-CARE-COORD
+    rationale: Finer-grained deployability for SMB ambulatory practices. Decision dependency on B2-1.
+    vendor_evidence: [Epic Cadence as SCHED model, Epic Orders as ORDERS model]
+    proposed_module: n/a
+
+  - id: B3-M2
+    candidate: HC-PATIENT-PORTAL starter module
+    rationale: Patient self-service (appointment booking, secure messaging, results viewing). Per Rule #19 a starter, never masters, always embedded_master + consumer.
+    vendor_evidence: [Epic MyChart, Cerner HealtheLife, Athenahealth Patient Portal, Salesforce Health Cloud]
+    proposed_module: HC-PATIENT-PORTAL (starter)
+
+  - id: B3-R1
+    candidate: 42 CFR Part 2
+    rationale: Confidentiality of substance use disorder treatment records. US federal regulation. Mandatory for any HC-PATIENT deployment touching SUD records.
+    vendor_evidence: [US federal statute]
+
+  - id: B3-R2
+    candidate: 21st Century Cures Act ONC information blocking rule
+    rationale: US federal interoperability mandate. Information-blocking penalties on EHR vendors and providers.
+    vendor_evidence: [US federal statute]
+
+  - id: B3-R3
+    candidate: CMS Interoperability and Patient Access Final Rule
+    rationale: US federal payer-provider data exchange (FHIR APIs). Mandatory for CMS-payable providers.
+    vendor_evidence: [US federal statute]

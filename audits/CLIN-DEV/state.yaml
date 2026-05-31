@@ -1,0 +1,204 @@
+schema_version: 2
+domain: CLIN-DEV
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S3
+    summary: "A3 partial fail: only 2 solutions linked, both ServiceNow, 1 primary. Phase A floor is 3+ solutions, 1+ primary, 2+ vendors."
+    finding: "solution_domains has 2 rows for domain_id=50: ServiceNow Clinical Device Management (id 38, primary) and ServiceNow Healthcare and Life Sciences (id 34, secondary), both vendor_id=1 (ServiceNow Inc). Phase A floor requires 3+ solutions, 1+ primary, 2+ vendors. Pure-play coverage missing."
+    action: "Insert 3 to 5 additional solutions + vendors + solution_domains rows. Candidates: Nuvolo Connected Workplace for Healthcare (primary, ServiceNow-native specialist); AIMS by Phoenix Data Systems (primary, pure-play CMMS for healthcare); EQ2 HEMS (primary); Connectiv (secondary); GE HealthCare Mark VR Service (secondary)."
+    vendor_evidence:
+      - Nuvolo Connected Workplace for Healthcare
+      - AIMS by Phoenix Data Systems
+      - EQ2 HEMS
+      - Connectiv Software
+      - GE HealthCare Mark VR Service
+
+  - id: B1A-S4
+    summary: "A4 fail (Rule #20): domains.catalog_tagline and catalog_description empty."
+    finding: "domains.id=50: catalog_tagline='' and catalog_description=''. Rule #20 requires both buyer-facing fields populated. Draft per Rule #20 voice rule, surface to user for review before write."
+    action: "Draft buyer-voice single-sentence catalog_tagline (workflow + value) and 1 to 3 paragraph catalog_description. Surface to user for explicit per-row approval before PATCH. Do NOT auto-write per Rule #20."
+
+  - id: B1A-S5b
+    summary: "B7 partial fail: zero master-to-users relationship edges in symmetric direction."
+    finding: "8 users-to-master data_object_relationships rows (ids 653 to 660) now use snake_case verbs after the 2026-05-31 continuation pass. The symmetric master-to-users direction (master records carrying assignee / owner / technician / reporter user FKs) has zero rows."
+    action: "Identify per-master concrete (data_object, role_verb) tuples for user FKs on the master side: clinical_engineering_work_orders (assignee, opener), device_maintenance_logs (technician), device_calibration_records (technician), device_incident_reports (reporter), device_recalls (coordinator), sterilization_cycles (operator), medical_devices (owner). Surface concrete tuples to user before INSERT (no enumeration was pre-spec'd by prior audit)."
+    affected_masters:
+      - {data_object_id: 610, name: medical_devices, target_module_id: null, workflow: owner}
+      - {data_object_id: 611, name: device_maintenance_logs, target_module_id: null, workflow: technician}
+      - {data_object_id: 612, name: device_recalls, target_module_id: null, workflow: coordinator}
+      - {data_object_id: 613, name: clinical_engineering_work_orders, target_module_id: null, workflow: assignee_opener}
+      - {data_object_id: 614, name: device_calibration_records, target_module_id: null, workflow: technician}
+      - {data_object_id: 615, name: device_incident_reports, target_module_id: null, workflow: reporter}
+      - {data_object_id: 616, name: sterilization_cycles, target_module_id: null, workflow: operator}
+
+  - id: B1A-S11c
+    summary: "H1 partial: handoffs 896 and 897 (CLIN-DEV to HC-PATIENT) untagged. Audit explicitly deferred these to Discover."
+    finding: "handoff_processes has 3 rows for the 6 CLIN-DEV cross-domain handoffs (893, 895, 898 tagged via 2026-05-31 continuation). Handoffs 896 (device_recall.issued to HC-PATIENT, payload device_recalls) and 897 (sterilization_cycle.failed to HC-PATIENT, payload sterilization_cycles) were deferred by the 2026-05-30 audit as no clean cross-industry PCF anchor. Leave untagged for Discover Pass 3 custom-process surface, or revisit with user."
+    action: "Leave untagged for Discover Pass 3 custom-process authoring path. No agent_curated insert this pass. Track in audit narrative only."
+    affected_handoffs:
+      - {handoff_id: 896, direction: outbound, source_domain: CLIN-DEV, target_domain: HC-PATIENT, trigger_event: device_recall.issued, payload: device_recalls, null_field: process_tag}
+      - {handoff_id: 897, direction: outbound, source_domain: CLIN-DEV, target_domain: HC-PATIENT, trigger_event: sterilization_cycle.failed, payload: sterilization_cycles, null_field: process_tag}
+
+b1b:
+  - id: B1B-S1
+    summary: "M1 hard fail: zero domain_modules rows for domain_id=50. Root structural blocker for 6 other items."
+    finding: "domain_modules query for domain_id=50 returns empty; domain_module_host_domains for domain_id=50 also empty. The 7 masters sit only in legacy domain_data_objects. Rule #14 mandates 1+ full domain_modules row per domains row. Without modules, no DMDOs, no module-level skills, no module-prefix permission materialization, no source_domain_module_id derivation on outbound handoffs, no domain_module_id on lifecycle state rows."
+    blocked_by:
+      - {type: user_decision, ref: B2-S2}
+    affected_modules: []
+
+  - id: B1B-S2
+    summary: "A2 fail: zero capability_domains rows. Capabilities need realizing modules per M4."
+    finding: "capability_domains query for domain_id=50 returns 0 rows. Expected 5 to 7 capabilities for a tightly-scoped clinical-engineering market: clinical-device-inventory, preventive-maintenance-scheduling, device-calibration-management, recall-tracking-and-response, device-incident-reporting, sterilization-cycle-validation, clinical-engineering-work-order-execution."
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: capabilities need realizing modules per M4}
+
+  - id: B1B-S7
+    summary: "B9 missing events: 5 likely-missing state-transition trigger_events."
+    finding: "Likely-missing events given 7 masters and regulatory surface: medical_device.sunsetted (terminal lifecycle), medical_device.decommissioned (asset retirement), device_recall.closed (closes loop with 1015), device_incident.reported_to_regulator (FDA eMDR), device_calibration.failed (out-of-tolerance signal). Each needs pairing with downstream handoffs row once realizing module exists."
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: downstream handoffs need realizing module}
+
+  - id: B1B-S8
+    summary: "B10b hard fail: 6 outbound handoffs with NULL source_domain_module_id."
+    finding: "All 6 CLIN-DEV outbound handoffs (893, 894, 895, 896, 897, 898) have source_domain_module_id=NULL. Backfill mechanical once modules ship per deterministic derivation. Proposed mapping: 893 (work_order.opened to ITSM) and 898 (calibration.due to ITSM) point at proposed CLIN-DEV-INVENTORY; 894 (recall.issued to GRC), 895 (device_incident.reported to GRC), 896 (recall.issued to HC-PATIENT) point at proposed CLIN-DEV-SAFETY-VIGILANCE; 897 (sterilization_cycle.failed to HC-PATIENT) points at CLIN-DEV-INVENTORY."
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: source_domain_module_id derivation needs module rows}
+    affected_handoffs:
+      - {handoff_id: 893, direction: outbound, source_domain: CLIN-DEV, target_domain: ITSM, trigger_event: clinical_engineering_work_order.opened, payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 894, direction: outbound, source_domain: CLIN-DEV, target_domain: GRC, trigger_event: device_recall.issued, payload: device_recalls, null_field: source_domain_module_id}
+      - {handoff_id: 895, direction: outbound, source_domain: CLIN-DEV, target_domain: GRC, trigger_event: device_incident.reported, payload: device_incident_reports, null_field: source_domain_module_id}
+      - {handoff_id: 896, direction: outbound, source_domain: CLIN-DEV, target_domain: HC-PATIENT, trigger_event: device_recall.issued, payload: device_recalls, null_field: source_domain_module_id}
+      - {handoff_id: 897, direction: outbound, source_domain: CLIN-DEV, target_domain: HC-PATIENT, trigger_event: sterilization_cycle.failed, payload: sterilization_cycles, null_field: source_domain_module_id}
+      - {handoff_id: 898, direction: outbound, source_domain: CLIN-DEV, target_domain: ITSM, trigger_event: device_calibration.due, payload: service_incidents, null_field: source_domain_module_id}
+
+  - id: B1B-S9
+    summary: "B12 hard fail: zero data_object_lifecycle_states across all 7 masters."
+    finding: "data_object_lifecycle_states for data_object_id in (610, 611, 612, 613, 614, 615, 616) returns 0 rows. Every master is master+required and at least one published state-transition trigger_event references it, so none qualifies for the config-shape exemption. Proposed minimum machines: medical_devices (received, commissioned, in_service, out_of_service_calibration, sunsetting, decommissioned); device_recalls (issued, assessing, isolating, remediating, closed); device_incident_reports (drafted, reported_internal, reported_to_regulator, investigating, resolved); clinical_engineering_work_orders (open, dispatched, in_progress, completed, closed); device_calibration_records (scheduled, performed, passed, failed, filed); sterilization_cycles (queued, running, completed, validated, failed, released); device_maintenance_logs (logged, optional state machine)."
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: lifecycle state rows need domain_module_id per M5}
+    affected_masters:
+      - {data_object_id: 610, name: medical_devices, target_module_id: null, workflow: commissioned_sunsetting_gates}
+      - {data_object_id: 611, name: device_maintenance_logs, target_module_id: null, workflow: ledger_or_scheduled_performed}
+      - {data_object_id: 612, name: device_recalls, target_module_id: null, workflow: issued_isolating_closed_gates}
+      - {data_object_id: 613, name: clinical_engineering_work_orders, target_module_id: null, workflow: dispatched_closed_gates}
+      - {data_object_id: 614, name: device_calibration_records, target_module_id: null, workflow: performed_filed_gates}
+      - {data_object_id: 615, name: device_incident_reports, target_module_id: null, workflow: reported_internal_to_regulator_gates}
+      - {data_object_id: 616, name: sterilization_cycles, target_module_id: null, workflow: validated_released_gates}
+
+  - id: B1B-S10
+    summary: "F1 hard fail: legacy domain-level skill clin-dev-system (id 36) with domain_module_id=NULL."
+    finding: "skills.id=36 (skill_name=clin-dev-system, skill_type=system, domain_id=50, domain_module_id=NULL) carries 8 skill_tools rows: 7 query_<entity> tools (ids 340 to 346, coverage_tier=platform) plus 1 send_email (tool id 37, side_effect, coverage_tier=platform). Per Rule #14, the legacy skill is obsolete the moment any module-level system skill ships. The send_email row also fails F7 (channel primitive without workflow-specific justification per § channel-vs-capability)."
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: per-module system skill replacement must ship first}
+
+  - id: B1B-M8
+    summary: "M8 vacuously skipped: no domain_modules rows means no module-level catalog UX fields to check."
+    finding: "Rule #20 module-grain copy (catalog_tagline + catalog_description per domain_modules row) cannot be checked or drafted until modules exist."
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: module rows must exist first}
+
+b2:
+  - id: B2-S1
+    summary: "Em-dash pollution on domains.business_logic for domain_id=50."
+    question: "Should the audit revert the U+2014 character in domains.business_logic (between 'devices' and 'mostly') to a comma, colon, or sentence break? The CLAUDE.md project rule forbids em-dashes everywhere."
+    options:
+      - "PATCH business_logic, replace em-dash with comma"
+      - "Leave as-is, backfill later as catalog-wide em-dash sweep"
+      - "User supplies exact replacement wording"
+    why: "Original wording predates the em-dash ban; PATCH is a content edit on a domains core field, surface for explicit per-row approval."
+
+  - id: B2-S2
+    summary: "CLIN-DEV module split decision (Phase M precursor)."
+    question: "How should the CLIN-DEV market be modularized into domain_modules rows? This decision gates B1B-S1 and 5 other b1b items."
+    options:
+      - "Two-module: CLIN-DEV-INVENTORY (medical_devices, device_maintenance_logs, device_calibration_records, sterilization_cycles, clinical_engineering_work_orders) + CLIN-DEV-SAFETY-VIGILANCE (device_recalls, device_incident_reports)"
+      - "Single CLIN-DEV-CORE module covering all 7 masters"
+      - "Three-module: CLIN-DEV-INVENTORY + CLIN-DEV-SAFETY-VIGILANCE + CLIN-DEV-STERILE-PROCESSING (pulls sterilization_cycles into a dedicated module)"
+    why: "Right split depends on buyer persona: hospital Clinical Engineering only, or also Sterile Processing Department as a separate budget owner."
+
+  - id: B2-S3
+    summary: "Business-function owner for CLIN-DEV."
+    question: "The current business_function_domains row points to Research and Development as owner. Clinical Device Management in hospitals is typically owned by Information Technology (CE under IT), Operations (CE under Facilities), or Compliance (recall and adverse-event surface). R&D reads like a category miss carried over from medical-device manufacturer mental model."
+    options:
+      - "Repoint owner to Information Technology"
+      - "Repoint owner to Operations"
+      - "Add Compliance as additional owner or contributor for recall/adverse-event surface"
+      - "Leave R&D, re-scope catalog row to medical-device manufacturers"
+    why: "Buyer persona ambiguous between hospital CE operations and medical-device-manufacturer R&D."
+
+  - id: B2-S4
+    summary: "Pattern-flag positive re-evaluation per Rule #12."
+    question: "All 7 masters carry has_personal_content=false, has_submit_lock=false, has_single_approver=false. Likely positives need yes/no per flag."
+    options:
+      - "device_incident_reports.has_personal_content=true (patient identifier in adverse-event report)"
+      - "device_incident_reports.has_submit_lock=true (immutable after regulator filing)"
+      - "device_calibration_records.has_submit_lock=true (21 CFR Part 11 audit-trail integrity)"
+      - "device_recalls.has_single_approver=true (recall coordinator approves issuance)"
+    why: "Pattern flags are workflow-shape judgments. Rule #15 forbids parking reasoning in notes."
+
+  - id: B2-S5
+    summary: "Manufacturer-vs-hospital scope: should manufacturer-only regulations move to queued MED-DEVICE-QMS candidate?"
+    question: "Current footprint mixes hospital clinical engineering (PM scheduling, recall response, incident reporting) and medical-device-manufacturer post-market surveillance (FDA eMDR, 510(k), 21 CFR 820). Masters fit hospital-side; regulations lean manufacturer-side."
+    options:
+      - "Leave CLIN-DEV as hospital-side, remove manufacturer-only regulations (510(k), QSR 820) from domain_regulations"
+      - "Keep all 7 regulations, clarify scope in catalog_description"
+      - "Wait for MED-DEVICE-QMS Phase 0 promotion, then re-scope"
+    why: "Regulatory list ambiguous; underlying masters look hospital-side only."
+
+  - id: B2-S6
+    summary: "ITSM payload mismatch on handoffs 893 and 898."
+    question: "Handoffs 893 (work_order.opened to ITSM) and 898 (calibration.due to ITSM) carry payload service_incidents (data_object id 47, target_domain_module_id=38 ITSM-INCIDENT-MGMT). Cross-domain relationships 661 (clinical_engineering_work_orders surfaces_in service_requests, id 48) and 662 (device_calibration_records schedules_in service_requests) point at service_requests instead. Either the handoff payload or the relationship target is wrong."
+    options:
+      - "Re-target the 2 handoff rows to service_requests + target_domain_module_id=39"
+      - "Re-target the 2 relationship rows to service_incidents"
+      - "Split: register-event handoff to service_requests, calibration-overdue handoff to service_incidents (the time-critical bit)"
+    why: "Workflow-shape decision: clinical-engineering work arriving in ITSM as service request the desk picks up, or as on-call incident."
+
+  - id: B2-S11b
+    summary: "APQC tag for handoff 894 (CLIN-DEV to GRC, device_recall.issued)."
+    question: "2026-05-30 audit proposed PCF 37 (Manage product recalls and regulatory audits L2) or PCF 204 (Initiate recall L3). User pick."
+    options:
+      - "Tag with PCF 37, L2"
+      - "Tag with PCF 204, L3"
+      - "Tag both"
+      - "Defer"
+    why: "Audit offered two candidates without picking."
+
+b3:
+  - id: B3-DEVICE-MODELS
+    candidate: device_models
+    rationale: "Flagship clinical-engineering products distinguish the model (manufacturer + model number, the recallable unit) from the unit/asset record (a specific instance). Today medical_devices collapses the two. A model master enables recall isolation at the model layer and parts compatibility at the unit layer."
+    vendor_evidence:
+      - {vendor: AIMS by Phoenix Data Systems, evidence: 1st_class}
+      - {vendor: Nuvolo Connected Workplace for Healthcare, evidence: 1st_class}
+      - {vendor: EQ2 HEMS, evidence: 1st_class}
+    proposed_module: CLIN-DEV-INVENTORY
+
+  - id: B3-DEVICE-LOCATIONS
+    candidate: device_locations
+    rationale: "Hospital clinical-engineering tracks the room / OR / department a device sits in for PM dispatch, recall isolation, and incident-scene reconstruction. May be embedded_master on a platform locations master if one exists in the catalog."
+    vendor_evidence:
+      - {vendor: AIMS by Phoenix Data Systems, evidence: 1st_class}
+      - {vendor: Nuvolo Connected Workplace for Healthcare, evidence: 1st_class}
+    proposed_module: CLIN-DEV-INVENTORY
+    extra_dependency: "Interacts with B2-S2 (module split); if locations is platform-wide and SAFETY-VIGILANCE recalls need to isolate by location, dependency informs which module embeds the shell."
+
+  - id: B3-DEVICE-SERVICE-CONTRACTS
+    candidate: device_service_contracts
+    rationale: "Vendor service contracts (warranty, response-SLA, T&M boundary) dominate Clinical Engineering budget conversations. Distinct from a generic contracts master because of device + warranty + response-SLA shape."
+    vendor_evidence:
+      - {vendor: AIMS by Phoenix Data Systems, evidence: 1st_class}
+      - {vendor: Nuvolo Connected Workplace for Healthcare, evidence: 1st_class}
+    proposed_module: CLIN-DEV-INVENTORY
+
+  - id: B3-RECALL-EFFECTIVENESS
+    candidate: recall_effectiveness_reviews
+    rationale: "Beyond device_recalls.closed, flagships track recall-effectiveness metrics (units accounted for, time-to-isolation, retraining-confirmed counts). Aligns with PCF 20115 (Monitor and audit recall effectiveness, id 208) and PCF 20121 (Evaluate recall performance, id 214)."
+    vendor_evidence:
+      - {vendor: Nuvolo Connected Workplace for Healthcare, evidence: 1st_class}
+      - {vendor: AIMS by Phoenix Data Systems, evidence: secondary}
+    proposed_module: CLIN-DEV-SAFETY-VIGILANCE

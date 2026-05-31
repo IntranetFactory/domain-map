@@ -1,0 +1,447 @@
+schema_version: 2
+domain: WFM
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S8-A
+    summary: "Insert missing users -> work_shifts edge in data_object_relationships (B7 residual from 2026-05-31 Continuation)."
+    finding: >-
+      The 7 WFM masters are work_schedules (160), work_shifts (161), time_entries (162),
+      absence_requests (163), absence_balances (164), time_off_policies (165),
+      meal_break_records (166). Six of the seven now carry a users (data_object 748) edge
+      in data_object_relationships (rows 1672 work_schedules, 1673 absence_balances,
+      1674 time_off_policies, 1675 meal_break_records, 20 absence_requests, 1183
+      time_entries via logs_as_timekeeper). Only work_shifts (161) is still missing a
+      users edge. The 2026-05-31 Continuation's B1-S8a inserted four user edges but
+      omitted work_shifts.
+    action: >-
+      INSERT one data_object_relationships row: data_object_id=748 (users),
+      related_data_object_id=161 (work_shifts), owner_side='source',
+      relationship_type='one_to_many', relationship_kind='reference',
+      relationship_verb='assigned_to_shift', inverse_verb='shift_assignee',
+      is_required=true. Omit record_status (Rule #1 default 'new') and notes (Rule #15).
+    affected_masters:
+      - {data_object_id: 161, name: work_shifts, target_module_id: null, workflow: shift_assignment_users_edge}
+
+b1b:
+  - id: B1B-S1
+    summary: "Phase-A fix-load: insert 2 or 3 WFM domain_modules rows and remap the 7 legacy domain_data_objects to domain_module_data_objects (M1 hard-fail, structural gate)."
+    finding: >-
+      WFM domain (id 59) has ZERO domain_modules rows. With 6 capabilities (TIME-TRACKING,
+      SCHEDULING, ABSENCE-MGMT, LABOR-FORECAST, LABOR-COMPLIANCE, WORKFORCE-SCHEDULING),
+      Rule #14 demands at least 2 module_kind='full' rows. Proposed 3-module split:
+      WFM-TIME-ATTENDANCE (time_entries, meal_break_records), WFM-SCHEDULING
+      (work_schedules, work_shifts), WFM-ABSENCE (absence_requests, absence_balances,
+      time_off_policies). Proposed 2-module split: WFM-LABOR-OPS (scheduling + time +
+      breaks) + WFM-ABSENCE. Choice of shape is B2-S1.
+    action: >-
+      After B2-S1 decision, run a tightly scoped fix-loader in .tmp_deploy/ that inserts
+      the chosen domain_modules rows, inserts domain_module_capabilities rows, and remaps
+      the 7 legacy domain_data_objects entries (and the 5 embedded_master entries) to
+      domain_module_data_objects with the right roles and necessities.
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    affected_masters:
+      - {data_object_id: 160, name: work_schedules, target_module_id: null, workflow: shift_scheduling}
+      - {data_object_id: 161, name: work_shifts, target_module_id: null, workflow: shift_scheduling}
+      - {data_object_id: 162, name: time_entries, target_module_id: null, workflow: time_and_attendance}
+      - {data_object_id: 163, name: absence_requests, target_module_id: null, workflow: absence_request_lifecycle}
+      - {data_object_id: 164, name: absence_balances, target_module_id: null, workflow: balance_accrual_ledger}
+      - {data_object_id: 165, name: time_off_policies, target_module_id: null, workflow: policy_config}
+      - {data_object_id: 166, name: meal_break_records, target_module_id: null, workflow: break_compliance}
+    extra_capability_ids: [30, 31, 32, 33, 34, 312]
+    extra_proposed_3_modules: ["WFM-TIME-ATTENDANCE", "WFM-SCHEDULING", "WFM-ABSENCE"]
+    extra_proposed_2_modules: ["WFM-LABOR-OPS", "WFM-ABSENCE"]
+
+  - id: B1B-S2
+    summary: "Insert 20-30 data_object_aliases rows for the 7 WFM masters once user prunes the inventory (B11 hard-fail)."
+    finding: >-
+      Zero data_object_aliases rows for any of the 7 WFM masters. meal_break_records,
+      absence_balances, absence_requests, time_off_policies are exactly the
+      synonym-heavy masters B11 targets. Common aliases vendors use: absence_requests
+      -> Leave Request / Vacation Request / PTO Request / Time Off Request;
+      absence_balances -> Leave Balance / PTO Balance / Vacation Balance / Time Off
+      Balance; time_off_policies -> Leave Policy / PTO Plan / Accrual Plan / Holiday
+      Policy; meal_break_records -> Meal Break / Rest Break / Compliance Break / Break
+      Attestation; work_schedules -> Roster / Shift Schedule / Workforce Schedule /
+      Roster Plan; work_shifts -> Shift / Rostered Shift / Scheduled Shift / Workblock;
+      time_entries -> Time Punch / Clock Event / Time Card Line / Punch Record.
+    action: >-
+      After B2-S4 (alias inventory pruning), insert the approved aliases. Loader
+      pattern: idempotent INSERT keyed on (data_object_id, alias_name); omit
+      record_status and notes per Rule #1 / Rule #15.
+    blocked_by:
+      - {type: user_decision, ref: B2-S4}
+    affected_masters:
+      - {data_object_id: 160, name: work_schedules, target_module_id: null, workflow: alias_inventory}
+      - {data_object_id: 161, name: work_shifts, target_module_id: null, workflow: alias_inventory}
+      - {data_object_id: 162, name: time_entries, target_module_id: null, workflow: alias_inventory}
+      - {data_object_id: 163, name: absence_requests, target_module_id: null, workflow: alias_inventory}
+      - {data_object_id: 164, name: absence_balances, target_module_id: null, workflow: alias_inventory}
+      - {data_object_id: 165, name: time_off_policies, target_module_id: null, workflow: alias_inventory}
+      - {data_object_id: 166, name: meal_break_records, target_module_id: null, workflow: alias_inventory}
+
+  - id: B1B-S3
+    summary: "Insert data_object_lifecycle_states across the 7 WFM masters (B12 hard-fail). Each state scoped to its realizing module."
+    finding: >-
+      Zero data_object_lifecycle_states rows. Obvious state machines from descriptions
+      and trigger_events: absence_requests (draft / submitted / approved / rejected /
+      taken / canceled / closed); time_entries (open / submitted / approved / exported /
+      locked); work_schedules (draft / published / in_progress / closed); work_shifts
+      (assigned / accepted / swapped / dropped / no_show / completed / paid);
+      meal_break_records (recorded / waived / violated); time_off_policies (draft /
+      active / superseded); absence_balances (config-shape exemption candidate per
+      B2-S2). Each requires_permission=true state materializes one workflow-gate
+      permission scoped to the realizing module per Rule #14's module-permission
+      derivation.
+    action: >-
+      After B1B-S1 (modules) + B2-S1 (module shape) + B2-S2 (absence_balances
+      exemption) + B2-S3 (pattern flags), insert lifecycle states with domain_module_id
+      pointing at the realizing module. Surface each requires_permission flag for
+      review before insert. Do NOT auto-populate state-level notes (Rule #15).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: user_decision, ref: B2-S2}
+      - {type: user_decision, ref: B2-S3}
+    affected_masters:
+      - {data_object_id: 163, name: absence_requests, target_module_id: null, workflow: request_lifecycle}
+      - {data_object_id: 162, name: time_entries, target_module_id: null, workflow: timecard_lifecycle}
+      - {data_object_id: 160, name: work_schedules, target_module_id: null, workflow: schedule_publication}
+      - {data_object_id: 161, name: work_shifts, target_module_id: null, workflow: shift_assignment}
+      - {data_object_id: 166, name: meal_break_records, target_module_id: null, workflow: break_compliance}
+      - {data_object_id: 165, name: time_off_policies, target_module_id: null, workflow: policy_revision}
+      - {data_object_id: 164, name: absence_balances, target_module_id: null, workflow: ledger_recalc}
+
+  - id: B1B-S5
+    summary: "Insert ~10-17 trigger_events rows once lifecycle states are defined (B9 backfill)."
+    finding: >-
+      Lifecycle-state transitions proposed in B1B-S3 imply trigger_events that do not
+      yet exist: absence_request.submitted / rejected / canceled / closed,
+      time_entry.submitted / exported / locked, work_schedule.draft_saved / closed,
+      work_shift.assigned / accepted / dropped / completed / paid,
+      meal_break_record.waived, time_off_policy.activated / superseded.
+    action: >-
+      After B1B-S3 (lifecycle states) lands, insert the high-priority subset of these
+      events (user picks which carry cross-domain subscribers). event_category =
+      'state_change' for transition shapes; 'signal' for value-change shapes.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S3}
+
+  - id: B1B-S6
+    summary: "PATCH source_domain_module_id on 8 outbound WFM handoffs once modules exist (B10b)."
+    finding: >-
+      All 8 outbound handoffs currently carry source_domain_module_id NULL because WFM
+      has no domain_modules. After B1B-S1 lands the modules, each row needs its
+      realizing module assigned per the master mapping.
+    action: >-
+      Eight PATCH calls. Mapping (assuming 3-module shape): handoffs 103, 104, 426
+      -> WFM-TIME-ATTENDANCE (time_entries, meal_break_records); handoffs 428, 429 ->
+      WFM-SCHEDULING (work_schedules, work_shifts); handoffs 135, 136, 427 ->
+      WFM-ABSENCE (absence_requests, absence_balances). Re-map for the 2-module shape
+      if B2-S1 lands that way.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_handoffs:
+      - {handoff_id: 103, direction: outbound, source_domain: WFM, target_domain: PAYROLL, trigger_event: pay_period.closed, payload: time_entries, null_field: source_domain_module_id}
+      - {handoff_id: 104, direction: outbound, source_domain: WFM, target_domain: PSA, trigger_event: time_entry.approved, payload: time_entries, null_field: source_domain_module_id}
+      - {handoff_id: 426, direction: outbound, source_domain: WFM, target_domain: PAYROLL, trigger_event: meal_break_record.violated, payload: meal_break_records, null_field: source_domain_module_id}
+      - {handoff_id: 428, direction: outbound, source_domain: WFM, target_domain: PSA, trigger_event: work_schedule.published, payload: work_schedules, null_field: source_domain_module_id}
+      - {handoff_id: 429, direction: outbound, source_domain: WFM, target_domain: HRSD, trigger_event: work_shift.no_show, payload: work_shifts, null_field: source_domain_module_id}
+      - {handoff_id: 135, direction: outbound, source_domain: WFM, target_domain: HCM, trigger_event: absence.approved, payload: absence_requests, null_field: source_domain_module_id}
+      - {handoff_id: 136, direction: outbound, source_domain: WFM, target_domain: SWP, trigger_event: actuals.posted, payload: time_entries, null_field: source_domain_module_id}
+      - {handoff_id: 427, direction: outbound, source_domain: WFM, target_domain: HCM, trigger_event: absence_balance.recalculated, payload: absence_balances, null_field: source_domain_module_id}
+
+  - id: B1B-S7
+    summary: "Two outbound WFM handoffs carry target_domain_module_id NULL; the target-side FK is owed by PAYROLL and HCM."
+    finding: >-
+      Outbound row 426 (meal_break_record.violated -> PAYROLL) and row 427
+      (absence_balance.recalculated -> HCM) carry target_domain_module_id NULL because
+      neither PAYROLL nor HCM masters or consumes the payload data_object on the target
+      side. The fix is on the target domains' own b1 audits.
+    action: >-
+      Schedule PAYROLL b1 audit and HCM b1 audit. Each owes a target-side B10b PATCH.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: PAYROLL, milestone: target_module_for_meal_break_records}
+      - {type: domain_audit, blocking_domain: HCM, milestone: target_module_for_absence_balances}
+    affected_handoffs:
+      - {handoff_id: 426, direction: outbound, source_domain: WFM, target_domain: PAYROLL, trigger_event: meal_break_record.violated, payload: meal_break_records, null_field: target_domain_module_id}
+      - {handoff_id: 427, direction: outbound, source_domain: WFM, target_domain: HCM, trigger_event: absence_balance.recalculated, payload: absence_balances, null_field: target_domain_module_id}
+
+  - id: B1B-S9
+    summary: "Retire or rehome legacy wfm-system skill (id 121); insert one skill_type='system' skill per WFM module per Rule #17 (F1)."
+    finding: >-
+      Legacy domain-level wfm-system skill (id 121, domain_module_id NULL) is exactly
+      the Rule #17 anti-pattern. The 9 skill_tools rows attached to it split cleanly
+      across the proposed 3-module shape: query_work_schedules + query_shifts ->
+      WFM-SCHEDULING skill; query_time_entries + query_meal_break_records ->
+      WFM-TIME-ATTENDANCE skill; query_absence_requests + query_absence_balances +
+      query_time_off_policies -> WFM-ABSENCE skill. The two side_effect rows
+      (send_email, sign_document) duplicate to all three skills (cross-cutting
+      primitives).
+    action: >-
+      After B1B-S1 (modules), per B2-S5 route: (a) DELETE skill 121 after re-anchoring
+      tools to 3 new module-level skills; or (b) repurpose skill 121 as one of the 3
+      module skills (rename + set domain_module_id) and add the other 2.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: user_decision, ref: B2-S5}
+
+  - id: B1B-S10
+    summary: "Insert 3-5 outbound payload-to-target data_object_relationships rows on handoffs 103, 136, 428 (B8 boundary)."
+    finding: >-
+      Outbound handoffs 103 (pay_period.closed -> PAYROLL, payload time_entries), 136
+      (actuals.posted -> SWP, payload time_entries), and 428 (work_schedule.published
+      -> PSA, payload work_schedules) carry no data_object_relationships rows from the
+      payload master to a target-side master. Defer until target masters confirmed via
+      pairwise pass.
+    action: >-
+      Pairwise pass with PAYROLL, SWP, PSA to confirm canonical target masters; then
+      insert 3-5 outbound payload-to-target relationship rows.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: PAYROLL, milestone: target_master_for_time_entries}
+      - {type: domain_audit, blocking_domain: SWP, milestone: target_master_for_time_entries}
+      - {type: domain_audit, blocking_domain: PSA, milestone: target_master_for_work_schedules}
+    affected_handoffs:
+      - {handoff_id: 103, direction: outbound, source_domain: WFM, target_domain: PAYROLL, trigger_event: pay_period.closed, payload: time_entries, null_field: data_object_relationships}
+      - {handoff_id: 136, direction: outbound, source_domain: WFM, target_domain: SWP, trigger_event: actuals.posted, payload: time_entries, null_field: data_object_relationships}
+      - {handoff_id: 428, direction: outbound, source_domain: WFM, target_domain: PSA, trigger_event: work_schedule.published, payload: work_schedules, null_field: data_object_relationships}
+
+  - id: B1B-S12
+    summary: "PATCH target_domain_module_id on 5 inbound WFM handoffs once modules exist (B10b)."
+    finding: >-
+      Inbound handoffs 499 (CCAAS -> WFM, agent_state.changed), 500 (CCAAS -> WFM,
+      queue_statistics.threshold_breached), 934 (RET-STORE -> WFM,
+      retail_labour_schedule.published), 937 (RET-STORE -> WFM,
+      store_associate_checklist.overdue), 938 (RET-STORE -> WFM, store_task.completed)
+      carry target_domain_module_id NULL on WFM's side because WFM has no modules.
+    action: >-
+      Five PATCH calls after B1B-S1. Likely target mapping: 499 + 500 ->
+      WFM-SCHEDULING (intraday adherence + threshold response feed scheduling); 934 ->
+      WFM-SCHEDULING (retail schedule materialized into shifts); 937 + 938 ->
+      WFM-TIME-ATTENDANCE (checklist + task completion feed time tracking).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_handoffs:
+      - {handoff_id: 499, direction: inbound, source_domain: CCAAS, target_domain: WFM, trigger_event: agent_state.changed, payload: agent_states, null_field: target_domain_module_id}
+      - {handoff_id: 500, direction: inbound, source_domain: CCAAS, target_domain: WFM, trigger_event: queue_statistics.threshold_breached, payload: queue_statistics, null_field: target_domain_module_id}
+      - {handoff_id: 934, direction: inbound, source_domain: RET-STORE, target_domain: WFM, trigger_event: retail_labour_schedule.published, payload: retail_labour_schedules, null_field: target_domain_module_id}
+      - {handoff_id: 937, direction: inbound, source_domain: RET-STORE, target_domain: WFM, trigger_event: store_associate_checklist.overdue, payload: store_associate_checklists, null_field: target_domain_module_id}
+      - {handoff_id: 938, direction: inbound, source_domain: RET-STORE, target_domain: WFM, trigger_event: store_task.completed, payload: store_tasks, null_field: target_domain_module_id}
+
+  - id: B1B-S13
+    summary: "PATCH target_domain_module_id on inbound handoff 134 (HCM -> WFM) once modules exist (B10b)."
+    finding: >-
+      Inbound handoff 134 (HCM -> WFM, employee.created) has source_domain_module_id=54
+      (HCM-LIFECYCLE-WORKFLOWS) already set; only target_domain_module_id is NULL on
+      WFM's side. Same M1 gate as B1B-S12.
+    action: >-
+      One PATCH after B1B-S1. Likely target: WFM-SCHEDULING (or whichever module owns
+      the schedulable-resource pool of employees in the chosen shape).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_handoffs:
+      - {handoff_id: 134, direction: inbound, source_domain: HCM, target_domain: WFM, trigger_event: employee.created, payload: employees, null_field: target_domain_module_id}
+
+b2:
+  - id: B2-S1
+    summary: "Module-split shape: 2 modules vs 3 modules vs alternate."
+    question: >-
+      Should WFM be split into 3 modules (WFM-TIME-ATTENDANCE + WFM-SCHEDULING +
+      WFM-ABSENCE), 2 modules (WFM-LABOR-OPS + WFM-ABSENCE), or an alternate shape?
+    options:
+      - "3 modules: WFM-TIME-ATTENDANCE, WFM-SCHEDULING, WFM-ABSENCE (mirrors UKG, Workday, Replicon taxonomies)"
+      - "2 modules: WFM-LABOR-OPS (scheduling + time + breaks) + WFM-ABSENCE (mirrors Quinyx, Deputy product shape)"
+      - "Alternate shape the user names"
+    why: >-
+      6 capabilities and 7 masters easily justify a 3-module split per Rule #14, but
+      operational coherence (Quinyx, Deputy collapse scheduling + time-attendance) is
+      defensible at 2.
+
+  - id: B2-S2
+    summary: "absence_balances lifecycle config-shape exemption per Rule #12?"
+    question: >-
+      Should absence_balances be treated as the config-shape exemption (continuously
+      recalculated single-state master, no lifecycle states authored)?
+    options:
+      - "Confirm exempt: absence_balances skipped from B1B-S3 lifecycle authoring"
+      - "Author full lifecycle states (e.g., current / frozen / closed_period)"
+    why: >-
+      Rule #12 names the exemption explicitly. Persistence is the audit conversation
+      per Rule #15 (no notes write).
+
+  - id: B2-S3
+    summary: "Pattern-flag review per Rule #12 across 7 WFM masters."
+    question: >-
+      Should these pattern flags flip from false to true? absence_requests
+      has_personal_content (FMLA medical reasons / parental leave reasons),
+      absence_requests has_single_approver (manager-approval canonical workflow),
+      time_entries has_submit_lock (immutable after pay-period close),
+      meal_break_records has_personal_content (waiver attestation with worker signature)?
+    options:
+      - "Per-flag yes/no; agent applies PATCHes after each answer"
+    why: >-
+      The all-false default does not confirm review. Per Rule #15 the rationale stays
+      out of notes columns; decision is captured in the audit Decisions section.
+
+  - id: B2-S4
+    summary: "Alias inventory pruning for B11 backfill."
+    question: >-
+      Should B1B-S2 load the full vendor-terminology candidate list (~20-30 aliases
+      across 7 masters), a tight pruned set (3-5 per master), or skip B11 entirely?
+    options:
+      - "Full list"
+      - "Pruned 3-5 per master (user names which)"
+      - "Skip B11 (data_object_aliases deliberately empty)"
+    why: >-
+      Rule #18 permits vendor terms on data_object_aliases.alias_name, but
+      unconstrained insertion risks marketing-tier sprawl.
+
+  - id: B2-S5
+    summary: "Legacy wfm-system skill (id 121): retire or rehome?"
+    question: >-
+      After module-level system skills exist (B1B-S9 + B1B-S1), should the legacy
+      wfm-system skill be retired (DELETE after re-anchoring its 9 skill_tools) or
+      rehomed as one of the 3 module-level skills (minimises catalog churn)?
+    options:
+      - "Retire: DELETE skill 121 after tools re-anchored; insert 3 new module-level skills"
+      - "Rehome: rename skill 121 + set its domain_module_id; insert 2 new module-level skills"
+    why: >-
+      Editorial; agent cannot prefer (a) over (b) without architectural intent input.
+
+  - id: B2-S6
+    summary: "A1 hygiene on the WFM domains row: em-dash + British spellings + dated notes."
+    question: >-
+      The WFM domains row (id 59) carries (i) an em-dash in business_logic
+      (CLAUDE.md ban), (ii) British spellings 'Labour' / 'optimisation' in description
+      and business_logic (CLAUDE.md American-English rule), (iii) dated 2026-05-20
+      reanalysis prose in notes (Rule #15 territory). Approve cleanup PATCH?
+    options:
+      - "Approve clearing notes and rewriting description + business_logic in American English with no em-dash; agent supplies replacement text for approval per Rule #15"
+      - "Skip; keep as-is"
+      - "User supplies exact replacement wording"
+    why: >-
+      The em-dash and American-English rules are deterministic, but Rule #15 forbids
+      notes writes (including blanking) without user-approved text.
+
+  - id: B2-S7
+    summary: "APQC delete-and-replace on handoffs 134, 429, 934."
+    question: >-
+      Each of the three handoffs has an existing handoff_processes row that the
+      2026-05-30 audit proposed replacing with a different PCF target. Approve any of
+      the replacements?
+    options:
+      - "134 employee.created (HCM -> WFM): replace existing row 29 (process 41 L2 Manage employee onboarding, training, and development) with process 246 (L3 Develop and manage time and attendance systems)"
+      - "429 work_shift.no_show (WFM -> HRSD): replace existing row 228 (process 42 L2 Manage employee relations) with process 246 (L3 Develop and manage time and attendance systems)"
+      - "934 retail_labour_schedule.published (RET-STORE -> WFM): replace existing row 390 (process 1886) with process 246 (L3 Develop and manage time and attendance systems)"
+      - "Subset / decline / all"
+    why: >-
+      Each replacement is a delete-and-replace; the existing row may already be the
+      right call per a future reviewer.
+
+b3:
+  - id: B3-S1
+    candidate: time_clocks
+    rationale: >-
+      Physical or virtual device records (badge readers, mobile geofence punches)
+      mastered separately from time_entries by every flagship time vendor. Underpins
+      device-bound integrity checks (no-buddy-punching, geofence enforcement) that
+      time_entries cannot represent on its own.
+    vendor_evidence:
+      - UKG Dimensions InTouch DX
+      - Workday Clock-In
+      - Deputy mobile
+      - Quinyx Punch
+    proposed_module: WFM-TIME-ATTENDANCE
+
+  - id: B3-S2
+    candidate: clock_punch_corrections
+    rationale: >-
+      Manager-edited or worker-edited punch corrections with audit trail required by
+      FLSA recordkeeping. Distinct entity from time_entries because the audit chain on
+      a correction is its own object lifecycle (proposed -> approved -> applied).
+    vendor_evidence:
+      - UKG
+      - Workday
+      - Replicon
+      - Dayforce
+    proposed_module: WFM-TIME-ATTENDANCE
+
+  - id: B3-S3
+    candidate: labor_demand_forecasts
+    rationale: >-
+      Forecasted required labour hours per day-part / department; the input to
+      scheduling optimisation solvers. Mastered separately from work_schedules in
+      every demand-driven WFM platform.
+    vendor_evidence:
+      - Legion
+      - UKG
+      - Quinyx
+      - WorkJam
+      - Verint
+    proposed_module: WFM-SCHEDULING
+
+  - id: B3-S4
+    candidate: shift_swap_offers_or_requests
+    rationale: >-
+      Worker-initiated swap marketplace; distinct from work_shifts because the swap
+      itself is a transient object with its own approval workflow (manager / peer /
+      open-marketplace).
+    vendor_evidence:
+      - Deputy
+      - When I Work
+      - WorkJam
+      - Quinyx
+    proposed_module: WFM-SCHEDULING
+
+  - id: B3-S5
+    candidate: availability_preferences
+    rationale: >-
+      Worker-declared availability windows per day-of-week. Required input to
+      Fair-Workweek-compliant scheduling and worker-experience scheduling features.
+    vendor_evidence:
+      - UKG
+      - Workday
+      - Deputy
+      - When I Work
+      - Quinyx
+    proposed_module: WFM-SCHEDULING
+
+  - id: B3-S6
+    candidate: predictive_schedule_advance_notices_and_change_notices
+    rationale: >-
+      Statutory written-notice records under Fair Workweek / Predictive Scheduling
+      laws (NYC, Seattle, SF, Chicago, Oregon). Each notice is its own audit-bearing
+      object with effective dates and acknowledgment trail.
+    vendor_evidence:
+      - UKG Dimensions
+      - Legion
+      - Dayforce
+    proposed_module: WFM-SCHEDULING
+
+  - id: B3-S7
+    candidate: accrual_grant_events_and_carryover_events
+    rationale: >-
+      The underlying ledger that drives absence_balances. Treating the balance as a
+      running sum of explicit grant + consumption + carryover ledger events is how
+      every flagship absence engine models it.
+    vendor_evidence:
+      - Workday Absence
+      - UKG
+      - Dayforce
+    proposed_module: WFM-ABSENCE
+
+  - id: B3-S8
+    candidate: labor_law_jurisdiction_rules
+    rationale: >-
+      Per-state / per-country break-meal-overtime rules driving compliance enforcement
+      at scheduling and time-entry time. UKG Pay Rule Library, Dayforce Compliance, and
+      Replicon Labor Law Compliance all master a configurable rule library separately
+      from the engine that applies the rules.
+    vendor_evidence:
+      - UKG Pay Rule Library
+      - Dayforce Compliance
+      - Replicon Labor Law Compliance
+    proposed_module: WFM-SCHEDULING
+    extra_alternate_module: WFM-LABOR-COMPLIANCE

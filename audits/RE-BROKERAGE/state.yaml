@@ -1,0 +1,158 @@
+schema_version: 2
+domain: RE-BROKERAGE
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a: []
+
+b1b:
+  - id: B1B-CRM-INBOUND
+    summary: CRM owes inbound handoffs to RE-BROKERAGE on contact and lead state-change events.
+    finding: >-
+      RE-BROKERAGE is contributor + required on crm_contacts (98) and crm_leads
+      (99), both mastered by CRM (domain 69). Zero inbound handoffs from CRM
+      exist (queried /handoffs?source_domain_id=eq.69&target_domain_id=eq.143
+      and got no rows). CRM B9 is expected to publish at minimum
+      crm_contact.synced, crm_lead.scored_above_threshold, and
+      crm_lead.converted into RE-BROKERAGE, but those rows have not been
+      authored yet.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: CRM, milestone: B9_outbound_to_RE-BROKERAGE}
+    affected_entities: [crm_contacts, crm_leads]
+    affected_modules: [151, 153]
+  - id: B1B-RE-PROP-MGMT-B10B
+    summary: RE-PROP-MGMT owes target_domain_module_id PATCH on inbound handoff 296.
+    finding: >-
+      Outbound handoff 296 (RE-BROKERAGE -> RE-PROP-MGMT, trigger event
+      real_estate_transaction.closed, payload real_estate_transactions, source
+      module 151) carries NULL target_domain_module_id. Resolution lives on
+      RE-PROP-MGMT's B10b sweep (pick the RE-PROP-MGMT module that holds
+      real_estate_transactions with the strongest role).
+    blocked_by:
+      - {type: domain_audit, blocking_domain: RE-PROP-MGMT, milestone: B10b_target_module_resolution}
+    affected_handoffs:
+      - {handoff_id: 296, direction: outbound, source_domain: RE-BROKERAGE, target_domain: RE-PROP-MGMT, trigger_event: real_estate_transaction.closed, payload: real_estate_transactions, null_field: target_domain_module_id}
+  - id: B1B-RE-CRE-B10B
+    summary: RE-CRE owes target_domain_module_id PATCH on inbound handoffs 297 and 861.
+    finding: >-
+      Two outbound handoffs to RE-CRE (145) carry NULL target_domain_module_id:
+      297 (trigger event real_estate_transaction.closed, payload
+      real_estate_transactions, source module 151) and 861 (trigger event
+      listing.sold, payload real_estate_listings, source module 151). RE-CRE's
+      B10b sweep is the owner of the fix.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: RE-CRE, milestone: B10b_target_module_resolution}
+    affected_handoffs:
+      - {handoff_id: 297, direction: outbound, source_domain: RE-BROKERAGE, target_domain: RE-CRE, trigger_event: real_estate_transaction.closed, payload: real_estate_transactions, null_field: target_domain_module_id}
+      - {handoff_id: 861, direction: outbound, source_domain: RE-BROKERAGE, target_domain: RE-CRE, trigger_event: listing.sold, payload: real_estate_listings, null_field: target_domain_module_id}
+  - id: B1B-GRC-B10B
+    summary: GRC owes target_domain_module_id PATCH on inbound handoff 311.
+    finding: >-
+      Outbound handoff 311 (RE-BROKERAGE -> GRC, trigger event
+      real_estate_transaction.closed, payload disclosure_documents, source
+      module 151) carries NULL target_domain_module_id. GRC's B10b sweep is the
+      owner of the fix.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: GRC, milestone: B10b_target_module_resolution}
+    affected_handoffs:
+      - {handoff_id: 311, direction: outbound, source_domain: RE-BROKERAGE, target_domain: GRC, trigger_event: real_estate_transaction.closed, payload: disclosure_documents, null_field: target_domain_module_id}
+  - id: B1B-RE-INVEST-B10B
+    summary: RE-INVEST owes target_domain_module_id PATCH on inbound handoff 862.
+    finding: >-
+      Outbound handoff 862 (RE-BROKERAGE -> RE-INVEST, trigger event
+      listing.sold, payload real_estate_listings, source module 151) carries
+      NULL target_domain_module_id. RE-INVEST's B10b sweep is the owner of the
+      fix.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: RE-INVEST, milestone: B10b_target_module_resolution}
+    affected_handoffs:
+      - {handoff_id: 862, direction: outbound, source_domain: RE-BROKERAGE, target_domain: RE-INVEST, trigger_event: listing.sold, payload: real_estate_listings, null_field: target_domain_module_id}
+
+b2:
+  - id: B2-CATALOG-UX
+    summary: Catalog UX fields empty on RE-BROKERAGE domain and all 3 modules.
+    question: >-
+      Should the agent draft catalog_tagline and catalog_description in buyer
+      voice for the RE-BROKERAGE domain (143) and each of its three modules
+      (151 RE-BROK-AGENT-OPS, 152 RE-BROK-BROKERAGE-OPS, 153 REAL-ESTATE-AGENT)
+      for review? Rule #20 forbids loader-side authoring without explicit
+      approval, and once a value is non-empty it cannot be overwritten without
+      per-row approval, so the draft pass must precede any write.
+    options:
+      - agent_drafts_all_four_rows_in_buyer_voice_for_review
+      - user_authors_manually
+      - defer_until_catalog_ux_rollout
+    why: >-
+      Both A4 (domain row) and M8 (module rows) fail. The columns serve the
+      public catalog and the site generator. Drafts must be surfaced before any
+      PATCH per Rule #20.
+    affected_entities: [domains.143, domain_modules.151, domain_modules.152, domain_modules.153]
+  - id: B2-H1-APPROVAL
+    summary: 7 handoff_processes rows loaded 2026-05-29 still sit at record_status='new'.
+    question: >-
+      Should the user approve the 7 agent_curated APQC tags on the 6
+      cross-domain handoffs published by RE-BROKERAGE? Rule #1 forbids the
+      agent from auto-stamping record_status='approved'.
+    options:
+      - approve_all_7
+      - approve_subset_after_spot_check
+      - defer_review
+    why: >-
+      The H1 coverage check passes (every cross-domain handoff has at least
+      one tag) but the catalog-quality headline (approved count) is still 0
+      of 7 because Rule #1 requires explicit user sign-off on each tag.
+    extra_pcf_assignments:
+      - {handoff_id: 296, pcf_external_id: "10192", pcf_name: "Close the sale"}
+      - {handoff_id: 297, pcf_external_id: "10192", pcf_name: "Close the sale"}
+      - {handoff_id: 297, pcf_external_id: "11052", pcf_name: "Negotiate and document agreements/contracts"}
+      - {handoff_id: 308, pcf_external_id: "18115", pcf_name: "Validate and qualify leads/opportunities"}
+      - {handoff_id: 311, pcf_external_id: "20114", pcf_name: "Submit regulatory reports"}
+      - {handoff_id: 861, pcf_external_id: "10192", pcf_name: "Close the sale"}
+      - {handoff_id: 862, pcf_external_id: "10192", pcf_name: "Close the sale"}
+
+b3:
+  - id: B3-PHASE0-MARKET-GAPS
+    candidate: >-
+      9 data_objects flagged MISSING in the 2026-05-29 semantic pass remain
+      unloaded: buyer_representation_agreements, listing_agreements,
+      compliance_checklists, escrow_accounts, escrow_deposits,
+      referral_agreements, open_houses, mls_syndication_logs, mls_feeds,
+      agent_pipelines.
+    rationale: >-
+      Five compliance-cluster entities (listing_agreements,
+      buyer_representation_agreements, compliance_checklists,
+      referral_agreements, escrow_accounts plus escrow_deposits) are carried
+      by the back-office vendors (Lone Wolf Foundation, Dotloop, SkySlope)
+      and absent from the catalog. Without compliance_checklists, the
+      RE-BROK-BROKERAGE-OPS module is structurally a commission calculator
+      without the differentiator the transaction-management category exists
+      for. buyer_representation_agreements is the highest-urgency candidate:
+      legally mandatory in most US states post-NAR-settlement (August 2024).
+      CRM-vendor cluster entities (open_houses, agent_pipelines,
+      mls_syndication_logs, mls_feeds) are carried by kvCORE, Follow Up Boss,
+      BoomTown and back the RE-BROK-MLS-SYNDICATION capability that
+      currently has no backing entity.
+    vendor_evidence:
+      - {vendor: "Lone Wolf Foundation", evidence: 1st_class}
+      - {vendor: "Dotloop", evidence: 1st_class}
+      - {vendor: "SkySlope", evidence: 1st_class}
+      - {vendor: "kvCORE", evidence: 1st_class}
+      - {vendor: "Follow Up Boss", evidence: 1st_class}
+      - {vendor: "BoomTown", evidence: 1st_class}
+    proposed_module: >-
+      compliance cluster -> RE-BROK-BROKERAGE-OPS (152) primarily, with
+      embedded shells on RE-BROK-AGENT-OPS (151) where the agent originates
+      the document; MLS cluster -> RE-BROK-AGENT-OPS (151); open_houses ->
+      RE-BROK-AGENT-OPS (151) distinct from tour_appointments.
+    extra_priority_order:
+      - buyer_representation_agreements
+      - listing_agreements
+      - compliance_checklists
+      - escrow_accounts
+      - escrow_deposits
+      - referral_agreements
+      - open_houses
+      - mls_syndication_logs
+      - mls_feeds
+      - agent_pipelines

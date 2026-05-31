@@ -1,0 +1,236 @@
+schema_version: 2
+domain: HCMS
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-H1
+    summary: "Insert 11 remaining APQC handoff_processes tags on HCMS cross-domain handoffs (2 of 13 candidates landed 2026-05-31 on handoffs 98 and 806; 2 deferred for no-PCF-match remain deferred)."
+    finding: "0 of 13 candidate APQC tags now reduced to 11 pending after the 2026-05-31 continuation pass landed 2 rows (handoff 98 to PCF process 1763; handoff 806 to PCF process 428). Per SKILL H1 the audit produces 0.5N to 0.8N agent_curated tags for N=15 cross-domain handoffs (target 8-12). Current coverage 2/15 = 13.3%; need 6-10 more tags to reach floor, 11 outstanding plus 2 explicitly deferred (handoffs 816 brand_violation.detected, 817 broken_link.detected; both no-PCF-match, custom-process candidates queued for Discover Pass 3). Independent of B1-S1; can apply now."
+    action: "INSERT 11 handoff_processes rows for handoffs 92 (HCMS->DXP content_entry.published), 93 (HCMS->B2C-COMM content_entry.published), 94 (HCMS->MA content_entry.published), 95 (HCMS->DXP content_release.scheduled), 96 (HCMS->B2C-COMM content_release.published), 97 (HCMS->DXP content_type.changed), 803 (HCMS->DXP content_release.published), 804 (HCMS->DXP content_entry.scheduled), 805 (HCMS->DXP content_entry.unpublished), 807 (HCMS->LSD editorial_workflow.review_required), 837 (HCMS->WEB-CONTOPS content_locale.added). Each row: proposal_source='agent_curated', record_status='new', role='implements'. PCF picks live in the 13.6.x branch (Manage Content 83 / Develop and manage content 428 / Deliver approved content 429 / Control delivered content 429-children) plus 11013 family for handoff 807 (legal review). Per-handoff PCF id pick requires substring search at fix time; orchestrator did not pre-specify each pick. Deferral note rows for 816 and 817 stay in the audit narrative, not in handoff_processes."
+    affected_handoffs:
+      - {handoff_id: 92, direction: outbound, source_domain: HCMS, target_domain: DXP, trigger_event: "content_entry.published", payload: content_entries, null_field: target_domain_module_id}
+      - {handoff_id: 93, direction: outbound, source_domain: HCMS, target_domain: B2C-COMM, trigger_event: "content_entry.published", payload: content_entries, null_field: target_domain_module_id}
+      - {handoff_id: 94, direction: outbound, source_domain: HCMS, target_domain: MA, trigger_event: "content_entry.published", payload: content_entries, null_field: target_domain_module_id}
+      - {handoff_id: 95, direction: outbound, source_domain: HCMS, target_domain: DXP, trigger_event: "content_release.scheduled", payload: content_releases, null_field: target_domain_module_id}
+      - {handoff_id: 96, direction: outbound, source_domain: HCMS, target_domain: B2C-COMM, trigger_event: "content_release.published", payload: content_releases, null_field: target_domain_module_id}
+      - {handoff_id: 97, direction: outbound, source_domain: HCMS, target_domain: DXP, trigger_event: "content_type.changed", payload: content_types, null_field: target_domain_module_id}
+      - {handoff_id: 803, direction: outbound, source_domain: HCMS, target_domain: DXP, trigger_event: "content_release.published", payload: content_releases, null_field: target_domain_module_id}
+      - {handoff_id: 804, direction: outbound, source_domain: HCMS, target_domain: DXP, trigger_event: "content_entry.scheduled", payload: content_entries, null_field: target_domain_module_id}
+      - {handoff_id: 805, direction: outbound, source_domain: HCMS, target_domain: DXP, trigger_event: "content_entry.unpublished", payload: content_entries, null_field: target_domain_module_id}
+      - {handoff_id: 807, direction: outbound, source_domain: HCMS, target_domain: LSD, trigger_event: "editorial_workflow.review_required", payload: editorial_workflows, null_field: target_domain_module_id}
+      - {handoff_id: 837, direction: outbound, source_domain: HCMS, target_domain: WEB-CONTOPS, trigger_event: "content_locale.added", payload: content_locales, null_field: target_domain_module_id}
+    extra_deferred_no_pcf_match:
+      - {handoff_id: 816, source_domain: WEB-CONTOPS, target_domain: HCMS, trigger_event: "brand_violation.detected", payload: brand_voice_violations, reason: "No clean PCF cross-industry parent for brand-governance workflow. Custom-process candidate."}
+      - {handoff_id: 817, source_domain: WEB-CONTOPS, target_domain: HCMS, trigger_event: "broken_link.detected", payload: broken_link_findings, reason: "No clean PCF cross-industry parent for web-content QA workflow. Custom-process candidate."}
+
+b1b:
+  - id: B1B-S1
+    summary: "M1 hard-fail: author HCMS domain_modules rows once B2-S4 module-split granularity is decided."
+    finding: "HCMS row 93 carries 8 capabilities (HCMS-MODEL, HCMS-DELIVERY, HCMS-AUTHORING, HCMS-I18N, HCMS-DAM, HCMS-VERSIONING, HCMS-WEBHOOKS, HCMS-VISUAL) and 6 masters via legacy domain_data_objects only (content_types 131, content_entries 132, content_releases 133, editorial_workflows 134, content_locales 135, content_environments 136) plus 1 contributor (digital_assets 137). Per Rule #14 the domain needs at least 2 full domain_modules rows (capabilities count >=3). Live count: 0 modules. Every downstream M / B / C / D / E / F band that depends on a domain_modules row remains unauditable until this closes."
+    action: "Once user picks B2-S4 module split (3-module MODELING/AUTHORING/DELIVERY, 2-module PLATFORM/DELIVERY, 4-module incl. HCMS-LOCALIZATION, or other), author the chosen domain_modules rows; migrate the 6 domain_data_objects masters to per-module domain_module_data_objects with master/embedded_master per Rule #11; attach standard scaffold (3 permissions, 3 roles, 6 FK columns) per Rule #14."
+    blocked_by:
+      - {type: user_decision, ref: B2-S4}
+    affected_modules: []
+    affected_masters:
+      - {data_object_id: 131, name: content_types, target_module_id: null, workflow: config_shape}
+      - {data_object_id: 132, name: content_entries, target_module_id: null, workflow: authoring_lifecycle}
+      - {data_object_id: 133, name: content_releases, target_module_id: null, workflow: release_lifecycle}
+      - {data_object_id: 134, name: editorial_workflows, target_module_id: null, workflow: config_shape}
+      - {data_object_id: 135, name: content_locales, target_module_id: null, workflow: config_shape}
+      - {data_object_id: 136, name: content_environments, target_module_id: null, workflow: config_shape}
+
+  - id: B1B-S3
+    summary: "F2 hard-fail: reparent or split orphan system skill 67 (hcms-system) once modules exist."
+    finding: "Live: skills.id=67 has skill_type='system', domain_module_id=NULL, with 6 skill_tools rows (query_content_types 506, query_content_entries 507, query_content_releases 508, query_editorial_workflows 509, query_content_locales 510, query_content_environments 511, all operation_kind='query', all requirement_level='required'). Rule #17 requires exactly one system skill per domain_modules row. Today there are zero modules so the skill is orphaned, breaking F2."
+    action: "If B2-S3 picks single-skill: PATCH skills.id=67 set domain_module_id=<new id>. If multi-skill (e.g. 3 system skills for 3-module split): DELETE 67 + INSERT N skills + repartition the 6 skill_tools across them per the module that masters each entity."
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: "Cannot attach skill without a module to attach to."}
+      - {type: user_decision, ref: B2-S3}
+    affected_entities: [hcms-system]
+
+  - id: B1B-S4
+    summary: "F3 / F5 gap: add ~8 mutate tools to the HCMS system skill once it has a module home."
+    finding: "Current 6 skill_tools on skill 67 are all query primitives. Module deployability requires mutate primitives matching the lifecycle transitions implied by the existing events: create_content_entry, publish_content_entry, schedule_content_entry, create_content_release, add_locale, promote_environment, deprecate_content_type, request_review. Rule #17 requires data_object_id populated on operation_kind='mutate'. F5 Semantius score uncomputable until module + mutates land."
+    action: "INSERT ~8 tools rows + ~8 skill_tools rows under the (reparented or split) system skill. Final count depends on the module split (3-module split repartitions tools per module's mastered entities)."
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1}
+      - {type: depends_on, ref: B1B-S3}
+
+  - id: B1B-S5
+    summary: "B10b report-only: 12 outbound HCMS handoffs carry NULL target_domain_module_id; owed by 6 neighbor M1 fixes."
+    finding: "Live verified: all 12 outbound handoffs (92, 93, 94, 95, 96, 97, 803, 804, 805, 806, 807, 837) carry NULL target_domain_module_id because every target domain has zero modules. Split: DXP 77 (6: 92, 95, 97, 803, 804, 805), B2C-COMM 71 (2: 93, 96), MA 70 (1: 94), DAM 92 (1: 806), LSD 25 (1: 807), WEB-CONTOPS 128 (1: 837)."
+    action: "Schedule b1 audits on DXP, B2C-COMM, MA, DAM, LSD, WEB-CONTOPS. Each neighbor's M1 closure unblocks its slice of the target_domain_module_id population PATCH on its handoffs."
+    blocked_by:
+      - {type: domain_audit, blocking_domain: DXP, milestone: M1}
+      - {type: domain_audit, blocking_domain: B2C-COMM, milestone: M1}
+      - {type: domain_audit, blocking_domain: MA, milestone: M1}
+      - {type: domain_audit, blocking_domain: DAM, milestone: M1}
+      - {type: domain_audit, blocking_domain: LSD, milestone: M1}
+      - {type: domain_audit, blocking_domain: WEB-CONTOPS, milestone: M1}
+    affected_handoffs:
+      - {handoff_id: 92, direction: outbound, source_domain: HCMS, target_domain: DXP, trigger_event: "content_entry.published", payload: content_entries, null_field: target_domain_module_id}
+      - {handoff_id: 93, direction: outbound, source_domain: HCMS, target_domain: B2C-COMM, trigger_event: "content_entry.published", payload: content_entries, null_field: target_domain_module_id}
+      - {handoff_id: 94, direction: outbound, source_domain: HCMS, target_domain: MA, trigger_event: "content_entry.published", payload: content_entries, null_field: target_domain_module_id}
+      - {handoff_id: 95, direction: outbound, source_domain: HCMS, target_domain: DXP, trigger_event: "content_release.scheduled", payload: content_releases, null_field: target_domain_module_id}
+      - {handoff_id: 96, direction: outbound, source_domain: HCMS, target_domain: B2C-COMM, trigger_event: "content_release.published", payload: content_releases, null_field: target_domain_module_id}
+      - {handoff_id: 97, direction: outbound, source_domain: HCMS, target_domain: DXP, trigger_event: "content_type.changed", payload: content_types, null_field: target_domain_module_id}
+      - {handoff_id: 803, direction: outbound, source_domain: HCMS, target_domain: DXP, trigger_event: "content_release.published", payload: content_releases, null_field: target_domain_module_id}
+      - {handoff_id: 804, direction: outbound, source_domain: HCMS, target_domain: DXP, trigger_event: "content_entry.scheduled", payload: content_entries, null_field: target_domain_module_id}
+      - {handoff_id: 805, direction: outbound, source_domain: HCMS, target_domain: DXP, trigger_event: "content_entry.unpublished", payload: content_entries, null_field: target_domain_module_id}
+      - {handoff_id: 806, direction: outbound, source_domain: HCMS, target_domain: DAM, trigger_event: "content_entry.created", payload: content_entries, null_field: target_domain_module_id}
+      - {handoff_id: 807, direction: outbound, source_domain: HCMS, target_domain: LSD, trigger_event: "editorial_workflow.review_required", payload: editorial_workflows, null_field: target_domain_module_id}
+      - {handoff_id: 837, direction: outbound, source_domain: HCMS, target_domain: WEB-CONTOPS, trigger_event: "content_locale.added", payload: content_locales, null_field: target_domain_module_id}
+
+  - id: B1B-S6
+    summary: "B10b report-only: 3 inbound HCMS handoffs carry NULL source_domain_module_id; owed by DAM and WEB-CONTOPS M1 fixes."
+    finding: "Live verified: handoffs 98 (DAM->HCMS digital_asset.published), 816 (WEB-CONTOPS->HCMS brand_violation.detected), 817 (WEB-CONTOPS->HCMS broken_link.detected) all carry NULL source_domain_module_id because DAM and WEB-CONTOPS each have zero modules."
+    action: "Schedule b1 audits on DAM and WEB-CONTOPS. Each domain's M1 closure unblocks the source_domain_module_id PATCH on its outbound HCMS handoffs."
+    blocked_by:
+      - {type: domain_audit, blocking_domain: DAM, milestone: M1}
+      - {type: domain_audit, blocking_domain: WEB-CONTOPS, milestone: M1}
+    affected_handoffs:
+      - {handoff_id: 98, direction: inbound, source_domain: DAM, target_domain: HCMS, trigger_event: "digital_asset.published", payload: digital_assets, null_field: source_domain_module_id}
+      - {handoff_id: 816, direction: inbound, source_domain: WEB-CONTOPS, target_domain: HCMS, trigger_event: "brand_violation.detected", payload: brand_voice_violations, null_field: source_domain_module_id}
+      - {handoff_id: 817, direction: inbound, source_domain: WEB-CONTOPS, target_domain: HCMS, trigger_event: "broken_link.detected", payload: broken_link_findings, null_field: source_domain_module_id}
+
+  - id: B1B-S7
+    summary: "Pairwise gap: 3 candidate cross-domain handoffs implied by the relationship graph, gated on B1-S1."
+    finding: "The data_object_relationships graph carries cross-domain edges with no matching handoffs row: (a) content_entries 132 re_renders/embargoes/purges cdn_cache_invalidations 441 and content_releases 133 triggers_build_of/invalidates_cache_of 441, no handoff with cdn_cache_invalidations payload exists; (b) content_entries feeds web_pages 116 and refreshes customer_journeys 385, no handoff on content_entry.published with web_pages payload; (c) content_release.failed event 890 has no handoff anywhere. Audit-proposed inserts (3): HCMS->DXP on content_release.failed with content_releases payload; HCMS->DXP on content_entry.unpublished with cdn_cache_invalidations payload (judgment may instead route to a DXP-derived event); HCMS->WEB-CONTOPS on content_entry.published with web_pages payload."
+    action: "Once B1B-S1 closes and source_domain_module_id can point somewhere, INSERT 3 handoffs rows with the proposed source/target/trigger/payload combos. Last shape re-check at fix time against the chosen module split."
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: "source_domain_module_id FK has nowhere to point until HCMS modules exist."}
+    affected_handoffs:
+      - {handoff_id: null, direction: outbound, source_domain: HCMS, target_domain: DXP, trigger_event: "content_release.failed", payload: content_releases, null_field: source_domain_module_id, enumeration_status: candidate_insert}
+      - {handoff_id: null, direction: outbound, source_domain: HCMS, target_domain: DXP, trigger_event: "content_entry.unpublished", payload: cdn_cache_invalidations, null_field: source_domain_module_id, enumeration_status: candidate_insert}
+      - {handoff_id: null, direction: outbound, source_domain: HCMS, target_domain: WEB-CONTOPS, trigger_event: "content_entry.published", payload: web_pages, null_field: source_domain_module_id, enumeration_status: candidate_insert}
+
+b2:
+  - id: B2-S1
+    summary: "Lifecycle states authoring on HCMS masters: which to author, which to invoke config-shape exemption."
+    question: "Per Rule #12 every master + required data_object needs data_object_lifecycle_states rows unless the config-shape exemption applies. HCMS masters split: content_entries 132 (clearly workflow: draft->in_review->approved->scheduled->published->unpublished->archived) and content_releases 133 (release lifecycle) are workflow-bearing; content_types 131, content_environments 136, content_locales 135 are config-shape (author-once); editorial_workflows 134 is itself a workflow-definition record (config-shape). Decide which to author lifecycle states for."
+    options:
+      - "(a) Author lifecycle states for content_entries and content_releases only; invoke config-shape exemption for the other 4 (surface only, no data_objects.notes annotation per Rule #15)."
+      - "(b) Author lifecycle states for all 6 masters."
+      - "(c) Defer until B1B-S1 closes (realizing module needs to exist for state.domain_module_id)."
+    why: "Lifecycle states are the source of workflow-gate permissions per Rule #12; the choice determines how many <module>:<verb>_<entity> permissions get materialized at deploy. Rule #15 forbids silent notes population to explain the choice."
+
+  - id: B2-S2
+    summary: "Pattern flag positive re-evaluation per Rule #12 on HCMS masters."
+    question: "All 6 HCMS masters carry every pattern flag as false. Audit re-evaluation proposes: content_entries.has_submit_lock=true (entries immutable once published; editing requires unpublish or version), content_releases.has_submit_lock=true (published release is a snapshot), content_entries.has_personal_content=true (worth considering if entries can carry author bylines, form data, comments; vendor surface: Contentful + Storyblok personalization brings audience attributes into entry payload), editorial_workflows.has_single_approver=false (workflows are config; per-entry review can be single or multi). Decide each."
+    options:
+      - "Per-flag yes/no on content_entries.has_submit_lock, content_releases.has_submit_lock, content_entries.has_personal_content, editorial_workflows.has_single_approver."
+    why: "Pattern flags drive UI / deploy invariants. Rule #15 forbids silent notes population to justify flag values. Rule #12 requires considered evaluation, not defaults."
+
+  - id: B2-S3
+    summary: "Single system skill vs per-module split (Rule #17)."
+    question: "Rule #17 requires exactly one system skill per domain_modules row. The orphan hcms-system skill 67 has 6 query primitives (one per master). If HCMS deploys as 1 module: attach 67 as-is with mutates added. If N modules: split 67 into N system skills, repartition the 6 query tools per module's mastered entities."
+    options:
+      - "(a) Single-module HCMS, attach skill 67 to it."
+      - "(b) Multi-module split, one system skill per module (count follows B2-S4)."
+      - "(c) Other count, specify."
+    why: "Gated on B2-S4 module-split decision. Order matters: B2-S4 then B2-S3."
+
+  - id: B2-S4
+    summary: "Module split granularity for B1-S1 module authoring."
+    question: "With 8 capabilities and 6 masters, Rule #14 requires >=2 full modules. Audit-proposed splits: (a) 3-module MODELING (content_types, content_environments) + AUTHORING (content_entries, editorial_workflows, content_locales) + DELIVERY (content_releases); (b) 2-module HCMS-PLATFORM (MODELING+AUTHORING combined) + HCMS-DELIVERY; (c) 4-module split AUTHORING into HCMS-AUTHORING + HCMS-LOCALIZATION (Smartling/Lokalise integration anchor); (d) 1-module Rule #14 waiver (not recommended)."
+    options:
+      - "(a) 3-module split MODELING / AUTHORING / DELIVERY."
+      - "(b) 2-module split PLATFORM / DELIVERY."
+      - "(c) 4-module split MODELING / AUTHORING / LOCALIZATION / DELIVERY."
+      - "(d) Other, specify."
+    why: "Architectural / deployability call only the user can make. Unblocks B1B-S1 (modules), B1B-S3 (skill split), B1B-S4 (tool partition), B1B-S7 (handoff source FK), and the lifecycle-states / pattern-flag downstream decisions."
+
+b3:
+  - id: B3-E1
+    candidate: content_revisions
+    rationale: "Contentful Versions, Storyblok Story versions, Sanity history, Kontent.ai Versions all carry first-class revision rows distinct from content_entries. Today version history is implicit on entries."
+    vendor_evidence: [Contentful, Storyblok, Sanity, Kontent.ai]
+    proposed_module: HCMS-AUTHORING
+
+  - id: B3-E2
+    candidate: content_components
+    rationale: "Storyblok Blocks, Contentstack Global Fields, Hygraph Components, Sanity Portable Text components, Builder.io Symbols all expose reusable sub-entry content as a first-class entity. Distinct from content_types (a content_type references many content_components)."
+    vendor_evidence: [Storyblok, Contentstack, Hygraph, Sanity, Builder.io]
+    proposed_module: HCMS-MODELING
+
+  - id: B3-E3
+    candidate: webhook_subscriptions_and_deliveries
+    rationale: "Capability HCMS-WEBHOOKS exists but no entity; every flagship exposes webhook subscriptions plus per-event delivery logs as administrable records (webhook_subscriptions master + webhook_deliveries master)."
+    vendor_evidence: [Contentful, Sanity, Storyblok, Contentstack, Hygraph]
+    proposed_module: HCMS-DELIVERY
+
+  - id: B3-E4
+    candidate: api_tokens
+    rationale: "Contentful API keys, Sanity tokens, Storyblok access tokens are first-class entities; API-first means token management is platform-level, not implicit. Includes delivery keys vs management tokens distinction."
+    vendor_evidence: [Contentful, Sanity, Storyblok]
+    proposed_module: HCMS-DELIVERY
+
+  - id: B3-E5
+    candidate: preview_environments
+    rationale: "Visual editing (HCMS-VISUAL) needs preview URLs / signed preview tokens. content_environments only covers production environments; preview is a distinct workflow record (Contentful Preview API, Storyblok Visual Editor, Contentstack Live Preview)."
+    vendor_evidence: [Contentful, Storyblok, Contentstack, Sanity]
+    proposed_module: HCMS-AUTHORING
+
+  - id: B3-E6
+    candidate: translation_jobs
+    rationale: "HCMS-I18N capability exists; Contentstack Smartling, Contentful Crowdin, Storyblok Lokalise integrations make translation jobs first-class workflow records. May land in HCMS-AUTHORING or a new HCMS-LOCALIZATION module (B2-S4 option c)."
+    vendor_evidence: [Contentstack, Contentful, Storyblok, Smartling, Lokalise, Phrase]
+    proposed_module: HCMS-AUTHORING
+
+  - id: B3-E7
+    candidate: taxonomies
+    rationale: "Contentstack Taxonomy, Sanity references, Contentful Tags, Hygraph references all model taxonomy as a first-class entity distinct from content_types. Pairs with content_tags as a master."
+    vendor_evidence: [Contentstack, Sanity, Contentful, Hygraph]
+    proposed_module: HCMS-MODELING
+
+  - id: B3-E8
+    candidate: audit_log_entries
+    rationale: "Contentstack Audit Logs, Contentful Activity Log, Sanity History all expose audit logs as queryable entities. May fold into platform-wide audit or land HCMS-scoped."
+    vendor_evidence: [Contentstack, Contentful, Sanity]
+    proposed_module: HCMS-DELIVERY
+
+  - id: B3-E9
+    candidate: space_memberships
+    rationale: "Multi-tenant access control on space / project (Contentful Spaces, Sanity Projects, Storyblok Spaces) is first-class. May fold into platform users + roles with a junction."
+    vendor_evidence: [Contentful, Sanity, Storyblok]
+    proposed_module: HCMS-DELIVERY
+
+  - id: B3-E10
+    candidate: personalization_audiences
+    rationale: "Contentstack Personalize, Contentful Studio Personalization, Storyblok Personalization. May warrant its own market (DIGITAL-PERSONALIZATION candidate-domain, queued in _missing-domains.md). Pairs with personalization_rules."
+    vendor_evidence: [Contentstack, Contentful, Storyblok, Ninetailed, Uniform]
+    proposed_module: HCMS-DELIVERY
+
+  - id: B3-M1
+    candidate: "HCMS-LOCALIZATION as own module"
+    rationale: "Modularization candidate (option c in B2-S4). If translation_jobs (B3-E6) lands and TMS vendors (Smartling, Lokalise, Phrase) become integration anchors, the locale + translation workflow is a clean module split candidate. Would push HCMS to 4 full modules."
+    vendor_evidence: [Smartling, Lokalise, Phrase, Crowdin]
+    proposed_module: HCMS-LOCALIZATION
+
+  - id: B3-M2
+    candidate: "HCMS-VISUAL as own module"
+    rationale: "Modularization candidate. Builder.io, Storyblok Visual Editor, Contentful Studio are first-class visual-editing surfaces. If preview_environments (B3-E5) plus visual_editor_pages land as masters, this could be a fifth module instead of folding into AUTHORING."
+    vendor_evidence: [Builder.io, Storyblok, Contentful]
+    proposed_module: HCMS-VISUAL
+
+  - id: B3-R1
+    candidate: "GDPR regulation row"
+    rationale: "Mandatory for EU data subjects; entries can carry personal data via author bylines, comments, contact-form-style entry types. Currently zero domain_regulations rows for HCMS."
+    vendor_evidence: [absent]
+
+  - id: B3-R2
+    candidate: "WCAG 2.x accessibility regulation row"
+    rationale: "Mandatory in delivery / preview layer per WCAG 2.1 AA baseline for EU EAA 2025 and US ADA Title III public-sector. Currently zero domain_regulations rows for HCMS."
+    vendor_evidence: [absent]
+
+  - id: B3-D1
+    candidate: "TMS, Translation Management System (candidate domain)"
+    rationale: "Queued in audits/_missing-domains.md. Adjacency to HCMS via translation_jobs (B3-E6) workflow. Flagship vendors: Smartling, Lokalise, Phrase, Crowdin, memoQ, Transifex."
+    vendor_evidence: [Smartling, Lokalise, Phrase, Crowdin, memoQ, Transifex]
+
+  - id: B3-D2
+    candidate: "DIGITAL-PERSONALIZATION (candidate domain)"
+    rationale: "Queued in audits/_missing-domains.md. Adjacency to HCMS via personalization-audience / variant authoring inside content entries. Flagship vendors: Ninetailed, Uniform, Optimizely Personalization, Dynamic Yield, Adobe Target, Mutiny."
+    vendor_evidence: [Ninetailed, Uniform, "Optimizely Personalization", "Dynamic Yield", "Adobe Target", Mutiny]

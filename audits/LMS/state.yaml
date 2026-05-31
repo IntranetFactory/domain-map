@@ -1,0 +1,315 @@
+schema_version: 2
+domain: LMS
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-B7-USER-EDGES
+    summary: "Zero user edges loaded between LMS masters and platform users; Rule #10 violated for the whole domain."
+    finding: >-
+      `data_object_relationships` returns zero rows in either direction between LMS-owned masters
+      (64 entities) and the platform `users` data_object (id 41). Per Rule #10 every master with a
+      user-typed actor (instructor, learner, assigner, approver, author, reviewer, signer, subject)
+      must carry a `data_object_relationships` edge to `users`. This is the deepest BOUNDARY gap in
+      LMS today.
+    action: >-
+      Author the missing `data_object_relationships` rows per Rule #10. Loader follows the
+      cluster-drafts pattern: each row carries (data_object_id, relationship_verb, inverse_verb,
+      related_data_object_id=41, relationship_type, relationship_kind, is_required, owner_side).
+      record_status default 'new'. Pre-flight verifies `users` is `kind='platform_builtin'`. Draft
+      surface to user before insert per Rule #1.
+    affected_masters:
+      - {data_object_id: 925, name: instructors, target_module_id: 178, workflow: "instructor user identity"}
+      - {data_object_id: 169, name: course_enrollments, target_module_id: 32, workflow: "learner identity"}
+      - {data_object_id: 915, name: assessment_attempts, target_module_id: 32, workflow: "learner identity"}
+      - {data_object_id: 171, name: learner_certifications, target_module_id: 179, workflow: "learner + issuer"}
+      - {data_object_id: 173, name: compliance_assignments, target_module_id: 33, workflow: "learner + assigner"}
+      - {data_object_id: 955, name: learning_path_assignments, target_module_id: 34, workflow: "learner + assigner"}
+      - {data_object_id: 906, name: course_versions, target_module_id: 32, workflow: "author + publisher"}
+      - {data_object_id: 913, name: course_assessments, target_module_id: 32, workflow: "author + publisher"}
+      - {data_object_id: 931, name: certification_definitions, target_module_id: 179, workflow: "author + publisher"}
+      - {data_object_id: 921, name: course_reviews, target_module_id: 32, workflow: "review author"}
+      - {data_object_id: 920, name: course_discussions, target_module_id: 32, workflow: "discussion author"}
+      - {data_object_id: 939, name: compliance_audit_records, target_module_id: 33, workflow: "signer / validator"}
+      - {data_object_id: 940, name: training_evidence_records, target_module_id: 33, workflow: "signer / submitter"}
+      - {data_object_id: 943, name: regulator_filing_exports, target_module_id: 33, workflow: "filer / submitter"}
+      - {data_object_id: 934, name: learner_badges, target_module_id: 179, workflow: "learner identity"}
+      - {data_object_id: 950, name: gdpr_consent_records, target_module_id: 180, workflow: "subject + fulfiller"}
+      - {data_object_id: 951, name: subject_access_requests, target_module_id: 180, workflow: "subject + fulfiller"}
+      - {data_object_id: 952, name: data_deletion_requests, target_module_id: 180, workflow: "subject + fulfiller"}
+      - {data_object_id: 962, name: manager_nudges, target_module_id: 181, workflow: "manager + learner"}
+      - {data_object_id: 167, name: courses, target_module_id: 32, workflow: "author + publisher"}
+
+  - id: B1A-APQC-15-NEW
+    summary: "15 new agent_curated APQC tags to insert across LMS cross-domain handoffs (carried from 2026-05-29; 6 of 21 already landed)."
+    finding: >-
+      Of 28 cross-domain LMS handoffs only 8 carry a `handoff_processes` row (29% coverage, 0
+      approved). 6 are agent_curated and 2 are discovery_override. The 2026-05-29 audit proposed 21
+      `agent_curated` tags; 6 landed already. The remaining 15 still need insertion. Volume math:
+      28 × (0.5 to 0.8) = 14 to 22 expected; current 6 + proposed 15 = 21 (in range).
+    action: >-
+      Chunked POST to `/handoff_processes` with `(handoff_id, process_id,
+      proposal_source='agent_curated', record_status='new', role='implements')`. Composed natural
+      key prevents duplicates. PCF lookup table embedded in the table below.
+    affected_handoffs:
+      - {handoff_id: 111, direction: outbound, source_domain: LMS, target_domain: TALENT-MGMT, trigger_event: learner_certification.earned, payload: skill_profiles, null_field: null, extra_pcf_external_id: "20020", extra_pcf_id: 1873}
+      - {handoff_id: 430, direction: outbound, source_domain: LMS, target_domain: TALENT-MGMT, trigger_event: course_enrollment.completed, payload: course_enrollments, null_field: null, extra_pcf_external_id: "10493", extra_pcf_id: 1039}
+      - {handoff_id: 431, direction: outbound, source_domain: LMS, target_domain: HCM, trigger_event: learning_record.posted, payload: learning_records, null_field: null, extra_pcf_external_id: "21436", extra_pcf_id: 1041}
+      - {handoff_id: 434, direction: outbound, source_domain: LMS, target_domain: GRC, trigger_event: compliance_assignment.overdue, payload: compliance_assignments, null_field: null, extra_pcf_external_id: "16463", extra_pcf_id: 369}
+      - {handoff_id: 435, direction: outbound, source_domain: LMS, target_domain: IGA, trigger_event: compliance_assignment.overdue, payload: compliance_assignments, null_field: null, extra_pcf_external_id: "16463", extra_pcf_id: 369}
+      - {handoff_id: 1047, direction: outbound, source_domain: LMS, target_domain: HCM, trigger_event: compliance_assignment.due, payload: compliance_assignments, null_field: null, extra_pcf_external_id: "16463", extra_pcf_id: 369}
+      - {handoff_id: 1049, direction: outbound, source_domain: LMS, target_domain: GRC, trigger_event: compliance_assignment.due, payload: compliance_assignments, null_field: null, extra_pcf_external_id: "16463", extra_pcf_id: 369}
+      - {handoff_id: 1303, direction: outbound, source_domain: LMS, target_domain: IGA, trigger_event: learner_certification.revoked, payload: learner_certifications, null_field: null, extra_pcf_external_id: "20020", extra_pcf_id: 1873}
+      - {handoff_id: 1304, direction: outbound, source_domain: LMS, target_domain: IGA, trigger_event: learner_certification.expired, payload: learner_certifications, null_field: null, extra_pcf_external_id: "20020", extra_pcf_id: 1873}
+      - {handoff_id: 1305, direction: outbound, source_domain: LMS, target_domain: IGA, trigger_event: learner_certification.renewed, payload: learner_certifications, null_field: null, extra_pcf_external_id: "20020", extra_pcf_id: 1873}
+      - {handoff_id: 1306, direction: outbound, source_domain: LMS, target_domain: TALENT-MGMT, trigger_event: learner_badge.earned, payload: learner_badges, null_field: null, extra_pcf_external_id: "10491", extra_pcf_id: 1037}
+      - {handoff_id: 1308, direction: outbound, source_domain: LMS, target_domain: GRC, trigger_event: compliance_assignment.completed, payload: compliance_assignments, null_field: null, extra_pcf_external_id: "16463", extra_pcf_id: 369}
+      - {handoff_id: 1309, direction: outbound, source_domain: LMS, target_domain: IGA, trigger_event: compliance_assignment.expired, payload: compliance_assignments, null_field: null, extra_pcf_external_id: "16463", extra_pcf_id: 369}
+      - {handoff_id: 1310, direction: outbound, source_domain: LMS, target_domain: GRC, trigger_event: compliance_assignment.expired, payload: compliance_assignments, null_field: null, extra_pcf_external_id: "16463", extra_pcf_id: 369}
+      - {handoff_id: 1311, direction: outbound, source_domain: LMS, target_domain: HCM, trigger_event: course_completion.recorded, payload: course_completions, null_field: null, extra_pcf_external_id: "10493", extra_pcf_id: 1039}
+      - {handoff_id: 1312, direction: outbound, source_domain: LMS, target_domain: GRC, trigger_event: training_evidence_record.submitted, payload: training_evidence_records, null_field: null, extra_pcf_external_id: "21574", extra_pcf_id: 325}
+      - {handoff_id: 1313, direction: outbound, source_domain: LMS, target_domain: HCM, trigger_event: gdpr_consent_record.withdrawn, payload: gdpr_consent_records, null_field: null, extra_pcf_external_id: "16463", extra_pcf_id: 369}
+      - {handoff_id: 1314, direction: outbound, source_domain: LMS, target_domain: HCM, trigger_event: data_deletion_request.fulfilled, payload: data_deletion_requests, null_field: null, extra_pcf_external_id: "16463", extra_pcf_id: 369}
+
+  - id: B1A-APQC-REPLACE-DISCOVERY-OVERRIDE
+    summary: "Replace 2 discovery_override tags with higher-confidence L4 agent_curated rows on handoffs 8 and 373."
+    finding: >-
+      Handoff 8 (ONBOARDING → LMS, task.compliance_training_required) currently maps to PCF 10469
+      "Manage employee onboarding" at L3 via discovery_override. The L4 child PCF 17050 "Implement
+      employee onboarding program" is the better cluster match. Handoff 373 (HCM → LMS,
+      employee.created) maps to PCF 20599 "Manage employee onboarding, training, and development"
+      at L2; the L4 PCF 10493 "Develop, conduct, and manage employee training programs" is a
+      tighter match.
+    action: >-
+      DELETE the two existing `handoff_processes` rows (handoff_id IN (8, 373) AND
+      proposal_source='discovery_override'), INSERT replacements with proposal_source='agent_curated',
+      record_status='new'. User approval per row before delete.
+    affected_handoffs:
+      - {handoff_id: 8, direction: inbound, source_domain: ONBOARDING, target_domain: LMS, trigger_event: task.compliance_training_required, payload: onboarding_tasks, null_field: null, extra_old_pcf_id: 224, extra_new_pcf_external_id: "17050", extra_new_pcf_id: 1025}
+      - {handoff_id: 373, direction: inbound, source_domain: HCM, target_domain: LMS, trigger_event: employee.created, payload: employees, null_field: null, extra_old_pcf_id: 41, extra_new_pcf_external_id: "10493", extra_new_pcf_id: 1039}
+
+  - id: B1A-APQC-DEFER-5
+    summary: "5 cross-domain handoffs with no clean PCF cross-industry match; mark as Discover Pass 3 candidates."
+    finding: >-
+      Five untagged cross-domain handoffs have no clean cross-industry PCF activity. Recommended
+      routing: Discover Pass 3 (custom-process authoring).
+    action: >-
+      Record the deferral list in `audits/_discover.md` (catalog-wide artifact) under a Pass 3
+      candidates section, so the LMS-side audit considers them closed. No catalog rows written from
+      LMS pass.
+    affected_handoffs:
+      - {handoff_id: 249, direction: inbound, source_domain: GRC, target_domain: LMS, trigger_event: compliance_policy.updated, payload: policy_attestations, null_field: null, extra_deferral_reason: "policy-driven attestation cascade has no clean PCF activity"}
+      - {handoff_id: 1233, direction: inbound, source_domain: ONBOARDING, target_domain: LMS, trigger_event: onboarding_cohort.activated, payload: onboarding_cohorts, null_field: null, extra_deferral_reason: "cohort-level training pre-assignment; PCF onboarding rows are individual-scoped"}
+      - {handoff_id: 1287, direction: outbound, source_domain: LMS, target_domain: SKILLS-MGMT, trigger_event: course_version.published, payload: course_versions, null_field: null, extra_deferral_reason: "skill-graph feed pattern; PCF 20051 close at L4 but signal mismatched"}
+      - {handoff_id: 1307, direction: outbound, source_domain: LMS, target_domain: SKILLS-MGMT, trigger_event: learner_badge.earned, payload: learner_badges, null_field: null, extra_deferral_reason: "skill-graph feed pattern"}
+      - {handoff_id: 1315, direction: outbound, source_domain: LMS, target_domain: SKILLS-MGMT, trigger_event: course.published, payload: courses, null_field: null, extra_deferral_reason: "skill-graph feed pattern"}
+
+  - id: B1A-DRAFT-CATALOG-COPY
+    summary: "Draft buyer-voice catalog_tagline + catalog_description for LMS domain + 8 modules (A4 + M8)."
+    finding: >-
+      The LMS domain row (id 57) and all 8 modules (LMS-COURSE-DELIVERY, LMS-COMPLIANCE-TRAINING,
+      LMS-PATHS, LMS-ILT-DELIVERY, LMS-CREDENTIALS, LMS-CT-GDPR, LMS-AUTOMATION,
+      TRAINING-RECORDS-STARTER) have empty `catalog_tagline` and `catalog_description`. Rule #20
+      requires backfill with draft-surface-review-write loop; the agent can DRAFT but cannot write
+      without user approval per row.
+    action: >-
+      Generate 9 buyer-voice tagline + description drafts (1 domain + 8 modules) in chat as a
+      single review pass. Wait for per-row approval. Then PATCH live rows. Pure b1a deliverable
+      is the drafting + surfacing; the writes are conditionally gated and listed under B1B-A4-M8.
+    affected_modules: [57, 32, 33, 34, 178, 179, 180, 181, 182]
+
+  - id: B1A-FOLLOWUP-B10b
+    summary: "Surface 11 LMS-outbound + 1 LMS-inbound handoff rows with NULL counterparty module FK to the relevant peer-domain audits."
+    finding: >-
+      10 LMS-outbound handoffs have `target_domain_module_id=null` and the target domain is
+      modularized: handoffs 431 (HCM), 434 (GRC), 1307 (SKILLS-MGMT), 1308 (GRC), 1310 (GRC), 1311
+      (HCM), 1312 (GRC), 1313 (HCM), 1314 (HCM), 1047 (HCM), 1049 (GRC). 1 LMS-inbound handoff has
+      `source_domain_module_id=null`: 249 (GRC source). All are gaps owed back by HCM, GRC,
+      SKILLS-MGMT audits. Per B10b asymmetry rule LMS does not author the fix here; it surfaces
+      the missing rows for the relevant audits.
+    action: >-
+      Append a `## 2026-05-31 — LMS audit outbound NULL report` entry to `audits/_validate-cross-domain.md`
+      (or per-domain follow-up notes) naming the 12 rows and the owning domain. Do NOT write to
+      handoffs.notes (Rule #15).
+    affected_handoffs:
+      - {handoff_id: 431, direction: outbound, source_domain: LMS, target_domain: HCM, trigger_event: learning_record.posted, payload: learning_records, null_field: target_domain_module_id}
+      - {handoff_id: 434, direction: outbound, source_domain: LMS, target_domain: GRC, trigger_event: compliance_assignment.overdue, payload: compliance_assignments, null_field: target_domain_module_id}
+      - {handoff_id: 1047, direction: outbound, source_domain: LMS, target_domain: HCM, trigger_event: compliance_assignment.due, payload: compliance_assignments, null_field: target_domain_module_id}
+      - {handoff_id: 1049, direction: outbound, source_domain: LMS, target_domain: GRC, trigger_event: compliance_assignment.due, payload: compliance_assignments, null_field: target_domain_module_id}
+      - {handoff_id: 1307, direction: outbound, source_domain: LMS, target_domain: SKILLS-MGMT, trigger_event: learner_badge.earned, payload: learner_badges, null_field: target_domain_module_id}
+      - {handoff_id: 1308, direction: outbound, source_domain: LMS, target_domain: GRC, trigger_event: compliance_assignment.completed, payload: compliance_assignments, null_field: target_domain_module_id}
+      - {handoff_id: 1310, direction: outbound, source_domain: LMS, target_domain: GRC, trigger_event: compliance_assignment.expired, payload: compliance_assignments, null_field: target_domain_module_id}
+      - {handoff_id: 1311, direction: outbound, source_domain: LMS, target_domain: HCM, trigger_event: course_completion.recorded, payload: course_completions, null_field: target_domain_module_id}
+      - {handoff_id: 1312, direction: outbound, source_domain: LMS, target_domain: GRC, trigger_event: training_evidence_record.submitted, payload: training_evidence_records, null_field: target_domain_module_id}
+      - {handoff_id: 1313, direction: outbound, source_domain: LMS, target_domain: HCM, trigger_event: gdpr_consent_record.withdrawn, payload: gdpr_consent_records, null_field: target_domain_module_id}
+      - {handoff_id: 1314, direction: outbound, source_domain: LMS, target_domain: HCM, trigger_event: data_deletion_request.fulfilled, payload: data_deletion_requests, null_field: target_domain_module_id}
+      - {handoff_id: 249, direction: inbound, source_domain: GRC, target_domain: LMS, trigger_event: compliance_policy.updated, payload: policy_attestations, null_field: source_domain_module_id}
+
+b1b:
+  - id: B1B-A4-M8-WRITES
+    summary: "Write 9 catalog UX rows (1 domain + 8 modules) AFTER user approves per-row drafts produced by B1A-DRAFT-CATALOG-COPY."
+    finding: >-
+      Rule #20 forbids writing `catalog_tagline` / `catalog_description` to non-empty values
+      without explicit per-row user approval, even on first-time backfill. The PATCH is purely
+      mechanical once approval lands.
+    blocked_by:
+      - {type: depends_on, ref: B1A-DRAFT-CATALOG-COPY, reason: "agent must draft + surface 9 rows before user can approve"}
+      - {type: user_decision, ref: B2-CATALOG-COPY}
+    affected_modules: [57, 32, 33, 34, 178, 179, 180, 181, 182]
+
+  - id: B1B-M4-SKILLS-MGMT
+    summary: "Resolve LMS × SKILLS-MGMT capability orphan (capability id 20): drop the LMS link, or add LMS-PATHS as realizing module after skill_targets ships."
+    finding: >-
+      `capability_domains` carries an LMS × SKILLS-MGMT (capability id 20) link but no LMS module
+      realizes it; the realizing module sits in the SKILLS-MGMT domain (`SKILLS-MGMT-TAXONOMY`).
+      M4 fails for capability id 20. Two options: (a) DELETE the `capability_domains` row for LMS
+      (cleaner: SKILLS-MGMT-TAXONOMY is the canonical owner; LMS uses `course_tags` as the skill
+      tag surface, which is downstream consumption); or (b) add `LMS-PATHS` (module 34) as the
+      realizing module via `domain_module_capabilities` AFTER the MISSING entity `skill_targets`
+      ships.
+    blocked_by:
+      - {type: user_decision, ref: B2-SKILLS-MGMT-ATTRIBUTION}
+
+  - id: B1B-MISSING-19
+    summary: "19 vendor-surface MISSING entities from 2026-05-29 still undeployed across 7 loader groups."
+    finding: >-
+      The 2026-05-29 market audit identified 19 missing entities anchored to Cornerstone /
+      Docebo / 360Learning / Absorb / KnowBe4 plus PCI / GDPR / FDA Part 11 / OSHA regulations.
+      None loaded yet. Each requires Phase B insert (data_objects + DMDO + lifecycle states +
+      relationships + aliases) per the loader-idiom pattern.
+    blocked_by:
+      - {type: user_decision, ref: B2-MISSING-ROUTING}
+    affected_entities:
+      - question_banks
+      - cmi5_assignable_units
+      - lrs_statement_endpoints
+      - observation_checklists
+      - observation_checklist_results
+      - training_room_bookings
+      - session_rosters
+      - session_cancellations
+      - skill_targets
+      - learning_recommendations
+      - credential_verifications
+      - certification_renewals
+      - gxp_training_signoffs
+      - phishing_simulations
+      - phishing_simulation_results
+      - dpo_training_acknowledgements
+      - pci_dss_awareness_records
+      - data_retention_policies
+      - reminder_schedules
+
+  - id: B1B-B12-LIFECYCLE-17
+    summary: "Load lifecycle states for the workflow-bearing subset of 17 stateless LMS masters once user picks per-master classification."
+    finding: >-
+      17 LMS-owned masters have zero `data_object_lifecycle_states` rows. Likely config-shape
+      (no workflow): course_tags, course_categories, course_catalogs, audiences,
+      notification_templates, certificate_templates, prerequisite_rules, course_resources,
+      recertification_schedules, learning_path_steps, continuing_education_credits. Likely
+      workflow-bearing: assessment_questions (draft / published / retired), quiz_responses
+      (submitted / graded), course_modules, lessons, xapi_statements (recorded / validated).
+      Per Rule #15 the `data_objects.notes` config-shape exemption is rescinded; the audit cannot
+      annotate config-shape masters.
+    blocked_by:
+      - {type: user_decision, ref: B2-B12-CLASSIFICATION}
+    affected_entities:
+      - assessment_questions
+      - quiz_responses
+      - course_modules
+      - lessons
+      - xapi_statements
+      - course_ratings
+      - course_catalogs
+      - course_tags
+      - course_categories
+      - recertification_schedules
+      - learning_path_steps
+      - prerequisite_rules
+      - course_resources
+      - continuing_education_credits
+      - certificate_templates
+      - notification_templates
+      - audiences
+
+  - id: B1B-E1-STARTER-ROLES
+    summary: "Author `role_modules` entries for TRAINING-RECORDS-STARTER (module 182) once user names the role set."
+    finding: >-
+      Module 182 (`TRAINING-RECORDS-STARTER`, module_kind='starter') has zero `role_modules`
+      entries. Every other LMS module has 2-4. Per Rule #19 starters are first-class deployable
+      units; the convention says they need a role surface. Likely candidates:
+      `L-AND-D-LEARNING-ADMIN` (primary), `GRC-COMPLIANCE-TRAINING-MANAGER` (secondary),
+      `MANAGER-AS-LEARNER-MANAGER` (secondary).
+    blocked_by:
+      - {type: user_decision, ref: B2-STARTER-ROLES}
+    affected_modules: [182]
+
+  - id: B1B-B10b-INBOUND-1121
+    summary: "PATCH `target_domain_module_id` on inbound handoff 1121 (HRSD → LMS) once user picks the receiving module."
+    finding: >-
+      Handoff 1121 (HRSD → LMS, `case_category.updated` carrying `case_categories`) has
+      `target_domain_module_id=null`. The LMS endpoint is ambiguous: could be
+      LMS-COMPLIANCE-TRAINING (compliance-tag inheritance from HR case categories) or LMS-PATHS
+      (learning-path assignment by case category). LMS owns this B10b on the target side.
+    blocked_by:
+      - {type: user_decision, ref: B2-1121-ROUTING}
+    affected_handoffs:
+      - {handoff_id: 1121, direction: inbound, source_domain: HRSD, target_domain: LMS, trigger_event: case_category.updated, payload: case_categories, null_field: target_domain_module_id}
+
+b2:
+  - id: B2-SKILLS-MGMT-ATTRIBUTION
+    summary: "M4: how to resolve LMS × SKILLS-MGMT capability orphan."
+    question: "Drop the `capability_domains` row for LMS × capability id 20, or add LMS-PATHS as realizing module after MISSING entity `skill_targets` ships?"
+    options:
+      - "(a) DELETE the `capability_domains` row (clean: SKILLS-MGMT-TAXONOMY owns it; LMS uses course_tags as downstream consumer)"
+      - "(b) Add `domain_module_capabilities` row linking LMS-PATHS (id 34) to capability id 20 AFTER `skill_targets` ships from MISSING #9"
+    why: "Carried from 2026-05-29; recommendation was (a), no user decision recorded yet. Independent of all other Bucket 2 items."
+
+  - id: B2-MISSING-ROUTING
+    summary: "Approve loader groupings + per-loader scope for 19 MISSING vendor-surface entities."
+    question: "Which of the 7 proposed loader groups should ship and in what order?"
+    options:
+      - "All 7 groups (course-delivery, ILT, paths, credentials, compliance, GDPR, automation)"
+      - "Subset: pick by group"
+      - "Defer indefinitely"
+    why: "Loader-idiom pattern requires per-loader scope to avoid Phase-B over-shipping. Recommendation: ship compliance + GDPR first (regulatory exposure), then course-delivery (deepest vendor surface), then ILT / paths / credentials / automation."
+
+  - id: B2-CATALOG-COPY
+    summary: "A4 + M8: approve buyer-voice draft tagline + description for 9 rows."
+    question: "Should I draft buyer-voice copy for 1 domain row + 8 module rows now, surface for per-row review, and write only on approval?"
+    options:
+      - "Yes, draft all 9 in one pass and surface to chat for review"
+      - "Yes for some (name which modules)"
+      - "Draft a single example first; I'll evaluate the voice"
+      - "Skip; this round is structural only"
+    why: "Rule #20 mandates the draft-surface-review-write loop. Backfill is permitted on empty rows; the agent cannot overwrite without explicit per-row approval (currently all rows are empty, so backfill is OK once drafts are approved)."
+
+  - id: B2-B12-CLASSIFICATION
+    summary: "B12: classify 17 stateless LMS masters as config-shape vs workflow-bearing."
+    question: "Approve the agent's split, or call them row by row?"
+    options:
+      - "(a) Approve recommended split: ship lifecycle states for assessment_questions, quiz_responses, course_modules, lessons, xapi_statements; treat the other 12 as config-shape (no annotation since Rule #15 forbids notes exemption)"
+      - "(b) Row by row review"
+      - "(c) Ship states for everything that plausibly has a workflow (broader scope, includes course_ratings + recertification_schedules)"
+    why: "Rule #15 rescinded the prior `data_objects.notes` config-shape exemption. Without notes, the audit can only either load the states or accept silent config-shape; the choice is yours."
+
+  - id: B2-STARTER-ROLES
+    summary: "E1 soft: name the role set for TRAINING-RECORDS-STARTER (module 182)."
+    question: "Which roles should the starter inherit?"
+    options:
+      - "L-AND-D-LEARNING-ADMIN (primary), GRC-COMPLIANCE-TRAINING-MANAGER (secondary), MANAGER-AS-LEARNER-MANAGER (secondary)"
+      - "Subset of the above"
+      - "Add a starter-specific persona (name it)"
+    why: "Per Rule #19 starters are first-class deployable units and benefit from a role surface. The 2026-05-29 audit suggested the first option; no user decision recorded yet."
+
+  - id: B2-1121-ROUTING
+    summary: "B10b: pick the LMS-side target module for handoff 1121 (HRSD → LMS, case_category.updated)."
+    question: "Which LMS module receives the case-category propagation?"
+    options:
+      - "LMS-COMPLIANCE-TRAINING (id 33): compliance-tag inheritance from HR case categories"
+      - "LMS-PATHS (id 34): learning-path assignment by case category"
+      - "Both (fan-out: keep the existing row pointing at one, add a second handoff with the same trigger event for the other)"
+    why: "B10b derivation rule says PATCH to the strongest-role module on the target side; both modules consume case_categories with weak signals. Architectural choice."
+
+b3: []

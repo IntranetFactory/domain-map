@@ -1,0 +1,302 @@
+schema_version: 2
+domain: NPMD
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+# Pending items only. Resolved items live in history.md.
+# next_action_by derives: agent (b1a non-empty) > user (b2) > research (b3) > blocked (only b1b) > done.
+# b1a non-empty (5 items: A2, A3, EVT, B6, B9) so next_action_by=agent. Status remains
+# feedback_needed because 10 b1b items and 9 b2 items still require user input before
+# the larger structural backbone (M1, catalog voice, lifecycle exemption, etc.) can land.
+
+b1a:
+  - id: B1A-A2
+    summary: Author 5-8 NPMD capabilities and link via capability_domains + domain_module_capabilities.
+    finding: capability_domains has 0 rows for NPMD (domain_id 82). A2 fail. Proposed capability codes (drafted, agent-authorable on user approval) cover flow-analysis, path-tracing, bgp-route-monitoring, metric-collection, dynamic-baseline, performance-alerting, synthetic-monitoring, saas-performance.
+    action: Insert capabilities + capability_domains rows; add domain_module_capabilities once B1A-M1 lands. Independent of Bucket 2 / 3 for the capability authoring step itself.
+    affected_entities:
+      - flow-analysis
+      - path-tracing
+      - bgp-route-monitoring
+      - metric-collection
+      - dynamic-baseline
+      - performance-alerting
+      - synthetic-monitoring
+      - saas-performance
+  - id: B1A-A3
+    summary: Add NPM vendors + solutions + solution_domains rows.
+    finding: solution_domains has 0 rows for NPMD; no NPM-shaped solutions exist in catalog. A3 fail. Six flagship vendors / solutions enumerated in audit history (Cisco ThousandEyes, Kentik, Catchpoint, NETSCOUT nGeniusONE, Broadcom DX NetOps, LiveAction LiveNX).
+    action: Insert vendors (reuse existing rows by vendor_name where present); insert solutions with solution_kind; insert solution_domains with coverage_level (primary / secondary / partial).
+    vendor_evidence:
+      - Cisco ThousandEyes
+      - Kentik
+      - Catchpoint
+      - NETSCOUT nGeniusONE
+      - Broadcom DX NetOps
+      - LiveAction LiveNX
+  - id: B1A-EVT
+    summary: PATCH event_category on 9 NPMD trigger_events (currently all empty).
+    finding: All 9 trigger_events rows on NPMD masters carry event_category=''. Rule #13 vocabulary lifecycle|state_change|threshold|signal. Default empty accepted by DB but is a quiet vocabulary gap.
+    action: PATCH per event semantics; anomaly / threshold-breach events use threshold; published-state events (raised, down, flapping, updated, recalculated, degraded) use state_change or lifecycle per the event verb.
+    affected_events:
+      - {id: 656, event_name: "network_flow_record.anomalous_pattern", current_category: "", proposed_category: "signal"}
+      - {id: 657, event_name: "network_path.degraded", current_category: "", proposed_category: "state_change"}
+      - {id: 658, event_name: "network_performance_metric.threshold_breached", current_category: "", proposed_category: "threshold"}
+      - {id: 659, event_name: "network_performance_alert.raised", current_category: "", proposed_category: "lifecycle"}
+      - {id: 660, event_name: "network_interface.down", current_category: "", proposed_category: "state_change"}
+      - {id: 661, event_name: "network_interface.flapping", current_category: "", proposed_category: "state_change"}
+      - {id: 662, event_name: "saas_application_performance.degraded", current_category: "", proposed_category: "state_change"}
+      - {id: 663, event_name: "network_topology_snapshot.updated", current_category: "", proposed_category: "state_change"}
+      - {id: 664, event_name: "network_baseline_threshold.recalculated", current_category: "", proposed_category: "state_change"}
+  - id: B1A-B6
+    summary: Author 6 intra-domain data_object_relationships rows between NPMD masters.
+    finding: data_object_relationships has 3 user-edges for NPMD (loaded 2026-05-31) but 0 master-to-master intra-domain rows. B6 fail. Six audit-pre-specified edges remain owed.
+    action: Author 6 rows with relationship_verb, inverse_verb, relationship_type (cardinality), relationship_kind, is_required, owner_side per Phase B contract.
+    affected_entities:
+      - "network_paths traverses network_interfaces"
+      - "network_performance_alerts raised_from network_performance_metrics"
+      - "network_performance_metrics derived_from network_flow_records"
+      - "network_baseline_thresholds applies_to network_performance_metrics"
+      - "network_topology_snapshots contains network_interfaces"
+      - "saas_application_performance correlated_with network_paths"
+  - id: B1A-B9
+    summary: Author 2 missing handoff rows for trigger events 657 and 661.
+    finding: B9 partial. 657 network_path.degraded carries 0 handoffs; 661 network_interface.flapping carries 0 handoffs. 664 acceptable as leaf.
+    action: Author handoff row for 657 -> AIOPS + ITSM (event_stream + api_call) and 661 -> ITSM (api_call). source_domain_module_id remains NULL until B1-M1 lands (counterparty unmodularized on this side).
+    affected_handoffs:
+      - {handoff_id: null, direction: outbound, source_domain: NPMD, target_domain: AIOPS, trigger_event: "network_path.degraded", payload: network_paths, null_field: source_domain_module_id}
+      - {handoff_id: null, direction: outbound, source_domain: NPMD, target_domain: ITSM, trigger_event: "network_path.degraded", payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: null, direction: outbound, source_domain: NPMD, target_domain: ITSM, trigger_event: "network_interface.flapping", payload: service_incidents, null_field: source_domain_module_id}
+
+b1b:
+  - id: B1B-M1
+    summary: Author NPMD domain_modules (4-module default) and load module-realizing capabilities.
+    finding: domain_modules has 0 rows for NPMD (M1 hard fail). M2-M8 vacuously fail. The default 4-module proposal (NPMD-FLOW-ANALYSIS, NPMD-PATH-TRACING, NPMD-METRICS-ALERTS, NPMD-SAAS-INTERNET-PERF) covers 8 masters and 8 proposed capabilities.
+    blocked_by:
+      - {type: user_decision, ref: B2-MOD-SPLIT}
+    affected_modules: []
+    extra_default_split: 4-module
+  - id: B1B-A4
+    summary: Draft catalog_tagline and catalog_description for NPMD (Rule #20 buyer voice).
+    finding: A4 fail. Both fields empty. Rule #20 requires user-approved verbatim before write. Draft proposal exists in audit history (Bucket 2 #6).
+    blocked_by:
+      - {type: user_decision, ref: B2-CATALOG-VOICE}
+  - id: B1B-B3
+    summary: Stamp is_canonical_bare_word and naming_authority_rationale on 8 NPMD masters.
+    finding: B3 fail. is_canonical_bare_word=false and naming_authority_rationale='' across all 8 masters. network_interfaces collides on bare-word interfaces; saas_application_performance overlaps APM domain headline.
+    blocked_by:
+      - {type: user_decision, ref: B2-NAMING-ARBIT}
+    affected_masters:
+      - {data_object_id: 538, name: "network_flow_records", target_module_id: null, workflow: "naming_arbitration"}
+      - {data_object_id: 539, name: "network_paths", target_module_id: null, workflow: "naming_arbitration"}
+      - {data_object_id: 540, name: "network_performance_metrics", target_module_id: null, workflow: "naming_arbitration"}
+      - {data_object_id: 541, name: "network_performance_alerts", target_module_id: null, workflow: "naming_arbitration"}
+      - {data_object_id: 542, name: "network_interfaces", target_module_id: null, workflow: "naming_arbitration"}
+      - {data_object_id: 543, name: "saas_application_performance", target_module_id: null, workflow: "naming_arbitration"}
+      - {data_object_id: 544, name: "network_topology_snapshots", target_module_id: null, workflow: "naming_arbitration"}
+      - {data_object_id: 545, name: "network_baseline_thresholds", target_module_id: null, workflow: "naming_arbitration"}
+  - id: B1B-B4
+    summary: Positively review and stamp pattern flags on 8 NPMD masters.
+    finding: B4 fail. has_personal_content, has_submit_lock, has_single_approver all false-by-default with no positive review recorded. Expected post-review state is false across all three on all 8 (signal-stream masters); the review must happen.
+    blocked_by:
+      - {type: user_decision, ref: B2-PATTERN-FLAGS}
+    affected_masters:
+      - {data_object_id: 538, name: "network_flow_records", target_module_id: null, workflow: "pattern_flag_review"}
+      - {data_object_id: 539, name: "network_paths", target_module_id: null, workflow: "pattern_flag_review"}
+      - {data_object_id: 540, name: "network_performance_metrics", target_module_id: null, workflow: "pattern_flag_review"}
+      - {data_object_id: 541, name: "network_performance_alerts", target_module_id: null, workflow: "pattern_flag_review"}
+      - {data_object_id: 542, name: "network_interfaces", target_module_id: null, workflow: "pattern_flag_review"}
+      - {data_object_id: 543, name: "saas_application_performance", target_module_id: null, workflow: "pattern_flag_review"}
+      - {data_object_id: 544, name: "network_topology_snapshots", target_module_id: null, workflow: "pattern_flag_review"}
+      - {data_object_id: 545, name: "network_baseline_thresholds", target_module_id: null, workflow: "pattern_flag_review"}
+  - id: B1B-B8
+    summary: Author up to 6 cross-domain outbound data_object_relationships mirroring the 6 outbound handoffs.
+    finding: B8 fail (outbound). 0 cross-domain outbound relationship rows. Some target masters (aiops_signals, telemetry_streams, digital_experience_sessions) may not exist; load must be existence-gated.
+    blocked_by:
+      - {type: user_decision, ref: B2-SAAS-VS-DEM}
+      - {type: catalog_addition, scope: data_objects, trigger: "target masters for AIOPS / OBS / DEM may need to be authored first"}
+    affected_handoffs:
+      - {handoff_id: 649, direction: outbound, source_domain: NPMD, target_domain: AIOPS, trigger_event: "network_flow_record.anomalous_pattern", payload: network_flow_records, null_field: null}
+      - {handoff_id: 651, direction: outbound, source_domain: NPMD, target_domain: OBS, trigger_event: "network_performance_metric.threshold_breached", payload: network_performance_metrics, null_field: null}
+      - {handoff_id: 653, direction: outbound, source_domain: NPMD, target_domain: DEM, trigger_event: "saas_application_performance.degraded", payload: saas_application_performance, null_field: null}
+      - {handoff_id: 654, direction: outbound, source_domain: NPMD, target_domain: CMDB, trigger_event: "network_topology_snapshot.updated", payload: network_topology_snapshots, null_field: null}
+      - {handoff_id: 650, direction: outbound, source_domain: NPMD, target_domain: ITSM, trigger_event: "network_performance_alert.raised", payload: service_incidents, null_field: null}
+      - {handoff_id: 652, direction: outbound, source_domain: NPMD, target_domain: ITSM, trigger_event: "network_interface.down", payload: service_incidents, null_field: null}
+  - id: B1B-B10B
+    summary: Backfill source_domain_module_id on 6 NPMD outbound handoffs after B1B-M1 lands.
+    finding: B10b fail. All 6 outbound handoffs carry source_domain_module_id IS NULL because NPMD has no modules. Target-side NULLs on 649 (AIOPS), 651 (OBS), 653 (DEM) are report-only on those domains.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+    affected_handoffs:
+      - {handoff_id: 649, direction: outbound, source_domain: NPMD, target_domain: AIOPS, trigger_event: "network_flow_record.anomalous_pattern", payload: network_flow_records, null_field: source_domain_module_id}
+      - {handoff_id: 650, direction: outbound, source_domain: NPMD, target_domain: ITSM, trigger_event: "network_performance_alert.raised", payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 651, direction: outbound, source_domain: NPMD, target_domain: OBS, trigger_event: "network_performance_metric.threshold_breached", payload: network_performance_metrics, null_field: source_domain_module_id}
+      - {handoff_id: 652, direction: outbound, source_domain: NPMD, target_domain: ITSM, trigger_event: "network_interface.down", payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 653, direction: outbound, source_domain: NPMD, target_domain: DEM, trigger_event: "saas_application_performance.degraded", payload: saas_application_performance, null_field: source_domain_module_id}
+      - {handoff_id: 654, direction: outbound, source_domain: NPMD, target_domain: CMDB, trigger_event: "network_topology_snapshot.updated", payload: network_topology_snapshots, null_field: source_domain_module_id}
+  - id: B1B-B11
+    summary: Author 12+ data_object_aliases rows on 6 non-self-explanatory NPMD masters.
+    finding: B11 fail. 0 alias rows. Alias targets drafted across network_flow_records, network_paths, network_performance_metrics, saas_application_performance, network_topology_snapshots, network_baseline_thresholds.
+    blocked_by:
+      - {type: user_decision, ref: B2-ALIASES}
+    affected_masters:
+      - {data_object_id: 538, name: "network_flow_records", target_module_id: null, workflow: "alias_authoring"}
+      - {data_object_id: 539, name: "network_paths", target_module_id: null, workflow: "alias_authoring"}
+      - {data_object_id: 540, name: "network_performance_metrics", target_module_id: null, workflow: "alias_authoring"}
+      - {data_object_id: 543, name: "saas_application_performance", target_module_id: null, workflow: "alias_authoring"}
+      - {data_object_id: 544, name: "network_topology_snapshots", target_module_id: null, workflow: "alias_authoring"}
+      - {data_object_id: 545, name: "network_baseline_thresholds", target_module_id: null, workflow: "alias_authoring"}
+  - id: B1B-B12
+    summary: Load lifecycle states for network_performance_alerts (4 states with 2 workflow-gate permissions) and surface config-shape exemption for the other 7 masters.
+    finding: B12 fail. Only network_performance_alerts (541) has a real workflow (open -> acknowledged -> resolved -> closed). Other 7 masters are signal-stream / config-shape and need a user-approved exemption decision (not auto-written per Rule #15).
+    blocked_by:
+      - {type: user_decision, ref: B2-LIFECYCLE-EXEMPT}
+    affected_masters:
+      - {data_object_id: 541, name: "network_performance_alerts", target_module_id: null, workflow: "open -> acknowledged -> resolved -> closed; requires_permission on acknowledge and resolve"}
+      - {data_object_id: 538, name: "network_flow_records", target_module_id: null, workflow: "config_shape_exemption_decision"}
+      - {data_object_id: 539, name: "network_paths", target_module_id: null, workflow: "config_shape_exemption_decision"}
+      - {data_object_id: 540, name: "network_performance_metrics", target_module_id: null, workflow: "config_shape_exemption_decision"}
+      - {data_object_id: 542, name: "network_interfaces", target_module_id: null, workflow: "config_shape_exemption_decision"}
+      - {data_object_id: 543, name: "saas_application_performance", target_module_id: null, workflow: "config_shape_exemption_decision"}
+      - {data_object_id: 544, name: "network_topology_snapshots", target_module_id: null, workflow: "config_shape_exemption_decision"}
+      - {data_object_id: 545, name: "network_baseline_thresholds", target_module_id: null, workflow: "config_shape_exemption_decision"}
+  - id: B1B-F1
+    summary: DELETE legacy npmd-system skill (id 87) after per-module skills are authored.
+    finding: F1 fail. Legacy domain-level system skill persists with domain_module_id IS NULL. The 8 existing skill_tools (all query_<entity>, all platform-covered) need migration to per-module skills before DELETE.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-F2}
+    extra_legacy_skill_id: 87
+  - id: B1B-F2
+    summary: Author per-module skill_type=system skills and skill_tools rows for each NPMD module (Rule #17).
+    finding: "F2 / F3 vacuously fail downstream of M1. Once modules ship, each needs exactly 1 system skill with >=1 skill_tools. Proposed: npmd_flow_analysis_agent, npmd_path_tracing_agent, npmd_metrics_alerts_agent, npmd_saas_internet_perf_agent. Floor: query_<entity> tools per module plus acknowledge_network_performance_alert and resolve_network_performance_alert workflow-gate tools on npmd_metrics_alerts_agent."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+      - {type: prerequisite_entity, ref: B1B-B12}
+    affected_entities:
+      - npmd_flow_analysis_agent
+      - npmd_path_tracing_agent
+      - npmd_metrics_alerts_agent
+      - npmd_saas_internet_perf_agent
+
+b2:
+  - id: B2-MOD-SPLIT
+    summary: 4-module split (NPMD-FLOW-ANALYSIS / NPMD-PATH-TRACING / NPMD-METRICS-ALERTS / NPMD-SAAS-INTERNET-PERF) vs 2-module merge (NPMD-CORE + NPMD-SAAS-INTERNET-PERF).
+    question: Pick the modularization split for NPMD before B1B-M1 can load.
+    options:
+      - "4-module split (default): NPMD-FLOW-ANALYSIS (538, 542), NPMD-PATH-TRACING (539, 544), NPMD-METRICS-ALERTS (540, 541, 545), NPMD-SAAS-INTERNET-PERF (543). Better reflects vendor surface but adds 4 system skills, 4 capability junctions."
+      - "2-module merge: NPMD-CORE (538, 539, 540, 541, 542, 544, 545) + NPMD-SAAS-INTERNET-PERF (543). Simpler scaffold; collapses flow / path / metrics into one module."
+    why: Independent of Bucket 3. Affects which capabilities realize on which module and how many per-module system skills are needed.
+  - id: B2-SAAS-VS-DEM
+    summary: saas_application_performance scope (NPMD vs DEM vs split).
+    question: Where does saas_application_performance master? Keep in NPMD (network-path view), move to DEM (endpoint-experience view), or split into two entities?
+    options:
+      - "(a) keep in NPMD; DEM authors parallel digital_experience_sessions"
+      - "(b) move to DEM; NPMD becomes contributor"
+      - "(c) split into network_path_to_saas_performance (NPMD) and saas_user_experience_sessions (DEM)"
+    why: Affects B1A-B6 / B1B-B8 (which target master the SaaS-degradation edge points at) and depends on Bucket 3 vendor research.
+  - id: B2-NETWORK-DEVICES
+    summary: Master for network_devices (NPMD master / NPMD embedded_master / consume CMDB configuration_items).
+    question: How does NPMD model network devices (router, switch, firewall, SD-WAN edge, packet broker)?
+    options:
+      - "(a) NPMD masters network_devices outright"
+      - "(b) NPMD embedded_master, with CMDB potentially mastering later"
+      - "(c) NPMD consumes CMDB configuration_items via filter"
+    why: Decision affects future synthetic-test and path-tracing references; tied to Bucket 3 candidate entities.
+  - id: B2-LIFECYCLE-EXEMPT
+    summary: Confirm config-shape exemption decision for 7 of 8 NPMD masters.
+    question: Confirm that network_flow_records, network_paths, network_performance_metrics, network_interfaces, saas_application_performance, network_topology_snapshots, network_baseline_thresholds are signal-stream / config-shape with no workflow, exempt from lifecycle-state authoring.
+    options:
+      - "(a) confirm exemption for all 7; only network_performance_alerts gets lifecycle states"
+      - "(b) author lifecycle states for a subset (specify which)"
+    why: Audit surfaces the decision per Rule #12 / Rule #15; agent does not auto-annotate notes.
+  - id: B2-ALIASES
+    summary: Approve exact alias_name strings for 12+ proposed data_object_aliases rows.
+    question: Approve the proposed alias strings (e.g. network_flow_records aliases flow records / NetFlow records / IPFIX records / sFlow samples). User may refine.
+    options: []
+    why: alias_name is freeform; Rule #15-adjacent (user supplies exact text before write).
+  - id: B2-CATALOG-VOICE
+    summary: Approve catalog_tagline and catalog_description verbatim text for NPMD (Rule #20).
+    question: Approve tagline + 3-paragraph description in buyer voice. Draft proposal exists in audit history (workflow + SaaS leg + handoffs paragraphs).
+    options: []
+    why: Rule #20 forbids overwrite without explicit per-row user approval; agent drafts, user approves verbatim.
+  - id: B2-REGULATIONS
+    summary: Intentional zero domain_regulations or add PCI-DSS scope-of-monitoring.
+    question: Should NPMD record PCI-DSS (or FedRAMP) scope-of-monitoring as an applicable regulation? Currently 0 rows.
+    options:
+      - "(a) leave at zero (NPM is regulation-adjacent, not regulation-driven)"
+      - "(b) add PCI-DSS as applicability=scope_of_monitoring"
+      - "(c) add FedRAMP for federal-cloud deployments"
+    why: Independent of other buckets.
+  - id: B2-LEGACY-SKILL
+    summary: Migrate-then-DELETE legacy skill id 87 vs keep as transitional.
+    question: After per-module skills ship, DELETE the legacy npmd-system row (id 87) and migrate its 8 skill_tools? Or keep as transitional?
+    options:
+      - "(a) DELETE and migrate (Bucket 1 default in B1B-F1)"
+      - "(b) keep as transitional domain-level skill while modules ship gradually"
+    why: Bucket 1 default is (a); user confirms before delete.
+  - id: B2-FUNCTIONAL-RACI
+    summary: Add IT Operations / NOC contributor and Security consumer rows under business_function_domains.
+    question: Add (a) IT Operations / NOC as contributor and (b) Security as consumer (NDR / threat-hunting on NetFlow)?
+    options:
+      - "(a) add both"
+      - "(b) add NOC only"
+      - "(c) add neither (keep IT Infrastructure as sole owner)"
+    why: Functional spine already has both functions; question is whether to record the link.
+
+b3:
+  - id: B3-SYNTHETIC-TESTS
+    candidate: synthetic_tests
+    rationale: Universal across all 4 flagship synthetic-monitoring vendors (Cisco ThousandEyes, Catchpoint, NETSCOUT, Kentik). Each masters scheduled probe definitions distinct from probe runs. Phase 0 vetting would confirm the entity-vs-feature classification across the vendor surface.
+    vendor_evidence:
+      - Cisco ThousandEyes
+      - Catchpoint
+      - NETSCOUT
+      - Kentik
+    proposed_module: NPMD-SAAS-INTERNET-PERF
+  - id: B3-SYNTHETIC-TEST-RUNS
+    candidate: synthetic_test_runs
+    rationale: Per-run result records, partner of synthetic_tests. Universal across the same 4 flagship vendors.
+    vendor_evidence:
+      - Cisco ThousandEyes
+      - Catchpoint
+      - NETSCOUT
+      - Kentik
+    proposed_module: NPMD-SAAS-INTERNET-PERF
+  - id: B3-BGP-ROUTE-OBSERVATIONS
+    candidate: bgp_route_observations
+    rationale: Cisco ThousandEyes Internet Insights signature surface; Kentik peering observability. Distinguishes path-aware NPM from device-only.
+    vendor_evidence:
+      - Cisco ThousandEyes (Internet Insights)
+      - Kentik
+    proposed_module: NPMD-PATH-TRACING
+  - id: B3-PACKET-CAPTURES
+    candidate: packet_captures
+    rationale: NETSCOUT / LiveAction differentiator; conditional capture artifacts. Distinguishes packet-broker NPM from flow-only.
+    vendor_evidence:
+      - NETSCOUT
+      - LiveAction
+      - Riverbed
+    proposed_module: NPMD-FLOW-ANALYSIS
+  - id: B3-NETWORK-PROBES
+    candidate: network_probes
+    rationale: Synthetic agents themselves (cloud-PoP, on-prem appliance, endpoint). Configuration entity for synthetic_tests.
+    vendor_evidence:
+      - "Cisco ThousandEyes (Enterprise / Cloud / Endpoint agents)"
+      - "Catchpoint (node fleet)"
+    proposed_module: NPMD-SAAS-INTERNET-PERF
+  - id: B3-TRAFFIC-CLASSIFICATIONS
+    candidate: traffic_classifications
+    rationale: Application identification and QoS classes. DPI / NBAR-based; cluster-defining for flow-analysis modules.
+    vendor_evidence:
+      - LiveAction
+      - NETSCOUT
+      - Cisco
+    proposed_module: NPMD-FLOW-ANALYSIS
+  - id: B3-NETWORK-KPI-DEFINITIONS
+    candidate: network_kpi_definitions
+    rationale: Named KPI definitions distinct from raw metric series. Broadcom DX NetOps / NETSCOUT carry first-class KPI entities.
+    vendor_evidence:
+      - Broadcom DX NetOps
+      - NETSCOUT
+    proposed_module: NPMD-METRICS-ALERTS

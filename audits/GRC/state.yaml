@@ -1,0 +1,243 @@
+schema_version: 2
+domain: GRC
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S5
+    summary: "Author data_object_aliases rows for the 10 GRC masters (B11 hard fail)."
+    finding: "Zero data_object_aliases rows exist for the 10 GRC masters (compliance_risks 282, compliance_controls 283, control_assessments 284, compliance_policies 285, policy_attestations 286, compliance_obligations 287, compliance_evidence 288, audit_issues 289, remediation_plans 290, risk_assessments 291). Cross-vendor terminology layer is empty; B11 hard-fails."
+    action: "Author data_object_aliases rows with per-row user-approved alias_name strings (Finding/Observation/Deficiency for audit_issues; Acknowledgement/Sign-off for policy_attestations; Requirement/Regulatory Citation for compliance_obligations; etc.). alias_type per statutory/vendor/industry. Surface exact strings for approval before insert."
+    affected_masters:
+      - {data_object_id: 282, name: compliance_risks, target_module_id: null, workflow: cross_vendor_synonyms}
+      - {data_object_id: 283, name: compliance_controls, target_module_id: null, workflow: cross_vendor_synonyms}
+      - {data_object_id: 284, name: control_assessments, target_module_id: null, workflow: cross_vendor_synonyms}
+      - {data_object_id: 285, name: compliance_policies, target_module_id: null, workflow: cross_vendor_synonyms}
+      - {data_object_id: 286, name: policy_attestations, target_module_id: null, workflow: cross_vendor_synonyms}
+      - {data_object_id: 287, name: compliance_obligations, target_module_id: null, workflow: cross_vendor_synonyms}
+      - {data_object_id: 288, name: compliance_evidence, target_module_id: null, workflow: cross_vendor_synonyms}
+      - {data_object_id: 289, name: audit_issues, target_module_id: null, workflow: cross_vendor_synonyms}
+      - {data_object_id: 290, name: remediation_plans, target_module_id: null, workflow: cross_vendor_synonyms}
+      - {data_object_id: 291, name: risk_assessments, target_module_id: null, workflow: cross_vendor_synonyms}
+
+  - id: B1A-APQC
+    summary: "Author 2 outstanding handoff_processes tags (handoffs 249, 842) and promote 8 existing new-state tags to approved."
+    finding: "8 of 10 GRC outbound handoffs carry a handoff_processes row, all at record_status='new'. Handoffs 249 (GRC -> LMS, payload policy_attestations) and 842 (GRC -> HCM, payload policy_attestations) have no APQC tag. H1 quality headline is 0 approved."
+    action: "(1) INSERT handoff_processes rows for handoffs 249 and 842 (agent_curated). For 842, defer to Discover custom-process if no clean PCF cross-industry L3/L4 match exists. (2) PATCH the 8 existing tags' record_status from 'new' to 'approved' on user confirmation."
+    affected_handoffs:
+      - {handoff_id: 249, direction: outbound, source_domain: GRC, target_domain: LMS, trigger_event: "compliance_policy.updated", payload: policy_attestations, null_field: handoff_processes}
+      - {handoff_id: 842, direction: outbound, source_domain: GRC, target_domain: HCM, trigger_event: "policy_attestation.required", payload: policy_attestations, null_field: handoff_processes}
+      - {handoff_id: 247, direction: outbound, source_domain: GRC, target_domain: AUDIT, trigger_event: "audit_issue.created", payload: audit_issues, null_field: record_status_approval}
+      - {handoff_id: 248, direction: outbound, source_domain: GRC, target_domain: ITSM, trigger_event: "control.failed", payload: service_incidents, null_field: record_status_approval}
+      - {handoff_id: 250, direction: outbound, source_domain: GRC, target_domain: HRSD, trigger_event: "compliance_policy.updated", payload: policy_attestations, null_field: record_status_approval}
+      - {handoff_id: 251, direction: outbound, source_domain: GRC, target_domain: AUDIT, trigger_event: "obligation.overdue", payload: compliance_obligations, null_field: record_status_approval}
+      - {handoff_id: 252, direction: outbound, source_domain: GRC, target_domain: OP-RES, trigger_event: "assessment.completed", payload: risk_assessments, null_field: record_status_approval}
+      - {handoff_id: 253, direction: outbound, source_domain: GRC, target_domain: BCM, trigger_event: "assessment.completed", payload: compliance_risks, null_field: record_status_approval}
+      - {handoff_id: 840, direction: outbound, source_domain: GRC, target_domain: AUDIT, trigger_event: "control.failed", payload: compliance_controls, null_field: record_status_approval}
+      - {handoff_id: 841, direction: outbound, source_domain: GRC, target_domain: ITSM, trigger_event: "remediation_plan.created", payload: service_incidents, null_field: record_status_approval}
+
+  - id: B1A-S10
+    summary: "Decision on compliance_evidence plural_label `Compliance Evidences` (B2 borderline)."
+    finding: "data_objects.id=288 carries plural_label='Compliance Evidences'. The 2026-05-30 audit's default recommendation is leave-as-is; B2 borderline pass."
+    action: "If user picks rename, PATCH data_objects.id=288 plural_label per the chosen string (e.g. `Compliance Evidence Items`). Default: leave as-is and drop this item."
+    extra_default_recommendation: "leave_as_is"
+
+b1b:
+  - id: B1B-S1
+    summary: "Modularize GRC (3 full domain_modules rows + 10 domain_module_data_objects). Blocks the F-band, E-band, B10b backfill, B12 lifecycle."
+    finding: "GRC has zero domain_modules rows. M1 hard-fails. The proposed 3-module split is GRC-RISK-MGMT (compliance_risks 282, risk_assessments 291), GRC-COMPLIANCE-MGMT (compliance_controls 283, control_assessments 284, compliance_obligations 287, compliance_evidence 288, audit_issues 289, remediation_plans 290), GRC-POLICY-ATTESTATION (compliance_policies 285, policy_attestations 286). Cascades to M2/M4/M5/M6/M7 vacuous, F1 transitional, F2-F5 not assessable, E1-E6 fail, B10b hard-fail, B12 hard-fail."
+    blocked_by:
+      - {type: user_decision, ref: B2-5}
+      - {type: user_decision, ref: B3-2}
+    affected_masters:
+      - {data_object_id: 282, name: compliance_risks, target_module_id: GRC-RISK-MGMT, workflow: identified_assessed_treated}
+      - {data_object_id: 291, name: risk_assessments, target_module_id: GRC-RISK-MGMT, workflow: scheduled_in_progress_completed}
+      - {data_object_id: 283, name: compliance_controls, target_module_id: GRC-COMPLIANCE-MGMT, workflow: defined_tested_certified}
+      - {data_object_id: 284, name: control_assessments, target_module_id: GRC-COMPLIANCE-MGMT, workflow: scheduled_tested_findings_closed}
+      - {data_object_id: 287, name: compliance_obligations, target_module_id: GRC-COMPLIANCE-MGMT, workflow: identified_in_scope_attested_evidenced_closed}
+      - {data_object_id: 288, name: compliance_evidence, target_module_id: GRC-COMPLIANCE-MGMT, workflow: submitted_validated_accepted_rejected}
+      - {data_object_id: 289, name: audit_issues, target_module_id: GRC-COMPLIANCE-MGMT, workflow: opened_in_progress_closed}
+      - {data_object_id: 290, name: remediation_plans, target_module_id: GRC-COMPLIANCE-MGMT, workflow: created_in_progress_completed_overdue}
+      - {data_object_id: 285, name: compliance_policies, target_module_id: GRC-POLICY-ATTESTATION, workflow: drafted_reviewed_approved_published_retired}
+      - {data_object_id: 286, name: policy_attestations, target_module_id: GRC-POLICY-ATTESTATION, workflow: required_completed_waived_expired}
+    extra_proposed_module_count: 3
+
+  - id: B1B-S2
+    summary: "M4 capability-realization for COMPLIANCE-TRAIN (21) blocked on B2-5."
+    finding: "capability_domains row (domain_id=15, capability_id=21) has no realizing module on GRC side (zero domain_modules); M4 cannot pass until either a module realizes the capability or the link is removed."
+    blocked_by:
+      - {type: user_decision, ref: B2-5}
+      - {type: prerequisite_entity, ref: B1B-S1}
+
+  - id: B1B-S3
+    summary: "B12 lifecycle states for the 10 GRC masters, blocked on B1B-S1."
+    finding: "Zero data_object_lifecycle_states rows for any of the 10 GRC masters. Per Rule #12 each is workflow-bearing. domain_module_id on lifecycle_states must point at the realizing GRC module, which does not exist yet."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_masters:
+      - {data_object_id: 282, name: compliance_risks, target_module_id: GRC-RISK-MGMT, workflow: identified_assessed_treated_accepted_mitigated_closed}
+      - {data_object_id: 283, name: compliance_controls, target_module_id: GRC-COMPLIANCE-MGMT, workflow: defined_tested_certified}
+      - {data_object_id: 284, name: control_assessments, target_module_id: GRC-COMPLIANCE-MGMT, workflow: scheduled_tested_findings_closed}
+      - {data_object_id: 285, name: compliance_policies, target_module_id: GRC-POLICY-ATTESTATION, workflow: drafted_reviewed_approved_published_retired}
+      - {data_object_id: 286, name: policy_attestations, target_module_id: GRC-POLICY-ATTESTATION, workflow: required_completed_waived_expired}
+      - {data_object_id: 287, name: compliance_obligations, target_module_id: GRC-COMPLIANCE-MGMT, workflow: identified_in_scope_attested_evidenced_closed}
+      - {data_object_id: 288, name: compliance_evidence, target_module_id: GRC-COMPLIANCE-MGMT, workflow: submitted_validated_accepted_rejected}
+      - {data_object_id: 289, name: audit_issues, target_module_id: GRC-COMPLIANCE-MGMT, workflow: opened_in_progress_closed}
+      - {data_object_id: 290, name: remediation_plans, target_module_id: GRC-COMPLIANCE-MGMT, workflow: created_in_progress_completed_overdue}
+      - {data_object_id: 291, name: risk_assessments, target_module_id: GRC-RISK-MGMT, workflow: scheduled_in_progress_completed}
+
+  - id: B1B-S7
+    summary: "Retire legacy domain-level skill grc-system (id 8) + 17 skill_tools rows. Blocked on B1B-S1 + B1B-S12."
+    finding: "skills.id=8 (grc-system) has domain_module_id=null and skill_type=system. F1 requires retirement once any module-level skill exists. Today no module-level skills exist (since no modules exist), so F1 is in a transitional accept-state."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: prerequisite_entity, ref: B1B-S12}
+
+  - id: B1B-S8
+    summary: "Backfill source_domain_module_id on all 10 GRC outbound handoffs (B10b)."
+    finding: "10 of 10 outbound handoffs have source_domain_module_id=null. Backfill requires modules to exist; deterministic candidate per row resolves from the payload data_object's mastering module under the B1B-S1 split."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_handoffs:
+      - {handoff_id: 247, direction: outbound, source_domain: GRC, target_domain: AUDIT, trigger_event: "audit_issue.created", payload: audit_issues, null_field: source_domain_module_id}
+      - {handoff_id: 248, direction: outbound, source_domain: GRC, target_domain: ITSM, trigger_event: "control.failed", payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 249, direction: outbound, source_domain: GRC, target_domain: LMS, trigger_event: "compliance_policy.updated", payload: policy_attestations, null_field: source_domain_module_id}
+      - {handoff_id: 250, direction: outbound, source_domain: GRC, target_domain: HRSD, trigger_event: "compliance_policy.updated", payload: policy_attestations, null_field: source_domain_module_id}
+      - {handoff_id: 251, direction: outbound, source_domain: GRC, target_domain: AUDIT, trigger_event: "obligation.overdue", payload: compliance_obligations, null_field: source_domain_module_id}
+      - {handoff_id: 252, direction: outbound, source_domain: GRC, target_domain: OP-RES, trigger_event: "assessment.completed", payload: risk_assessments, null_field: source_domain_module_id}
+      - {handoff_id: 253, direction: outbound, source_domain: GRC, target_domain: BCM, trigger_event: "assessment.completed", payload: compliance_risks, null_field: source_domain_module_id}
+      - {handoff_id: 840, direction: outbound, source_domain: GRC, target_domain: AUDIT, trigger_event: "control.failed", payload: compliance_controls, null_field: source_domain_module_id}
+      - {handoff_id: 841, direction: outbound, source_domain: GRC, target_domain: ITSM, trigger_event: "remediation_plan.created", payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 842, direction: outbound, source_domain: GRC, target_domain: HCM, trigger_event: "policy_attestation.required", payload: policy_attestations, null_field: source_domain_module_id}
+
+  - id: B1B-S9
+    summary: "Author outbound cross-domain data_object_relationships rows (B8). Several targets unresolvable until neighbor modularization."
+    finding: "22 inbound-direction cross-domain relationship rows touch GRC masters, but outbound-direction rows from GRC masters to neighbor masters are sparse. Outbound handoffs imply outbound relationships: compliance_controls -> service_incidents (handoff 248), audit_issues -> AUDIT findings (247), remediation_plans -> service_incidents (existing on 1640 / handoff 841 axis), risk_assessments -> OP-RES / BCM (252, 253), policy_attestations -> employees (842)."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: domain_audit, blocking_domain: AUDIT, milestone: modules_landed}
+      - {type: domain_audit, blocking_domain: OP-RES, milestone: modules_landed}
+      - {type: domain_audit, blocking_domain: BCM, milestone: modules_landed}
+
+  - id: B1B-S11
+    summary: "F7 send_email anti-pattern on legacy skill_tools row 92. Preempted by B1B-S7 retirement; module skills (B1B-S12) MUST use notify_person."
+    finding: "skill_tools.id=92 (skill 8 -> tool 37 send_email) is the generic-notification F7 anti-pattern. Deletion happens via B1B-S7 retirement; the substantive constraint is that B1B-S12 module skills do not reintroduce send_email for policy-attestation notifications."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S7}
+      - {type: prerequisite_entity, ref: B1B-S12}
+
+  - id: B1B-S12
+    summary: "Author 3 module-level skill_type='system' skills + tools + skill_tools (F2-F5). Blocked on B1B-S1."
+    finding: "Each B1B-S1 module needs exactly one system skill (Rule #17) with at least 5 skill_tools rows. Tool operation_kind invariants per F4 must hold (query/mutate require data_object_id; side_effect/compute require NULL; notify_person preferred over send_email per B1B-S11)."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+
+  - id: B1B-S13
+    summary: "Author ~5 GRC-module persona roles (RISK-MANAGER, COMPLIANCE-OFFICER, POLICY-OWNER, CONTROL-OWNER, ATTESTATION-CAMPAIGN-MGR) plus role_modules + role_permissions (E1-E6). Blocked on B1B-S1 + B1B-S12."
+    finding: "The 2 business_function_id=31 roles (10035 GRC-REGULATORY-AFFAIRS on PLM-Compliance, 10038 GRC-COMPLIANCE-TRAINING-MANAGER on LMS-Compliance-Training) do not touch any GRC module since no GRC modules exist. E2's 2-module floor is unmet, E1-E6 fail until module persona roles are authored."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: prerequisite_entity, ref: B1B-S12}
+
+b2:
+  - id: B2-1
+    summary: "Rule #15 notes pollution on the 11 GRC domain_data_objects rows. Auto-populated or user-approved?"
+    question: "All 11 domain_data_objects rows for GRC carry populated notes restating role / necessity / co-mastering intent (e.g. 'Enterprise risk register (single-master v1; multi-master with OP-RES/TPRM/SECOPS/PRIV-MGMT deferred to follow-up)'). Were these user-approved at load time or auto-populated?"
+    options:
+      - "(a) Confirm user-approved, leave in place."
+      - "(b) Confirm auto-populated, PATCH all 11 rows to empty string and log the Rule-#15 incident in references/skill-changelog.md."
+    why: "Per Rule #15 these are the kind of mechanical / restated-schema annotations the rule rescinds. The agent cannot tell from audit alone whether the user approved exact wording at load time."
+
+  - id: B2-2
+    summary: "Rule #15 notes pollution on 4 legacy skill_tools rows (ids 89, 90, 91, 92)."
+    question: "Were the populated notes on legacy skill_tools rows 89-92 (Consumer from CLM / For policy-attestation targeting / Fires on control.failed handoff / Policy-update re-attestation notifications) user-approved at load time?"
+    options:
+      - "(a) Auto-population confirmed, PATCH to empty string and log the incident, then proceed with B1B-S7 retirement."
+      - "(b) Leave them; B1B-S7 retirement DELETEs the rows anyway."
+
+  - id: B2-3
+    summary: "Rule #15 notes pollution on inbound handoffs (target NULL trailers + workflow-shape context)."
+    question: "Strictly report-only and deferred to source-domain audits, or surgical PATCH now of the 2 'target NULL until GRC is modularized' trailers (handoffs 634 from ITAM, 1195 from APM)?"
+    options:
+      - "(a) Report-only; defer to source domain audits (default)."
+      - "(b) Surgical PATCH the 2 explicit trailers now; defer the rest."
+    why: "Source domain (ITAM, APM, etc.) owns the row's authoring; cross-domain notes revert is owed by source-domain audits per Rule #15 scope, but the 2 explicit 'target NULL until modularized' trailers will become factually wrong once B1B-S1 lands."
+
+  - id: B2-4
+    summary: "B4 pattern flag re-evaluation per master."
+    question: "Per-flag yes/no answers for the 12 candidate flag positions: compliance_policies.has_submit_lock; policy_attestations.has_single_approver; policy_attestations.has_submit_lock; compliance_evidence.has_submit_lock; compliance_evidence.has_personal_content; risk_assessments.has_submit_lock; control_assessments.has_submit_lock; audit_issues.has_single_approver; remediation_plans.has_single_approver; compliance_risks.has_personal_content; compliance_controls.has_personal_content; compliance_obligations.has_personal_content."
+    options:
+      - "Per-flag yes/no (or 'all yes' / 'all no')."
+
+  - id: B2-5
+    summary: "COMPLIANCE-TRAIN capability ownership on GRC."
+    question: "Should GRC retain the capability_domains link to COMPLIANCE-TRAIN (21), or should it be removed in favor of LMS as exclusive owner?"
+    options:
+      - "(a) Keep, link to GRC-POLICY-ATTESTATION as the realizing module."
+      - "(b) DELETE the capability_domains row (15, 21); GRC ends up with the capabilities it actually masters (RISK-MGMT, POLICY-MGMT, CONTROL-MGMT, etc., authored in Bucket 3). Default recommendation."
+
+  - id: B2-6
+    summary: "Multi-master deferral on compliance_risks."
+    question: "Architectural intent for compliance_risks: stay single-master (a), split into per-domain risk slices (b), or promote to a master cluster with adjacent-domain slice masters (c)? Affects OP-RES, TPRM, SECOPS, PRIV-MGMT pairings."
+    options:
+      - "(a) Keep single-master; GRC stays canonical (default until 4 neighbor audits land)."
+      - "(b) Per-adjacent-domain risk slices via separate data_objects (cyber_risks, supplier_risks, operational_risks, privacy_risks)."
+      - "(c) Master cluster: GRC compliance_risks masters the package; OP-RES, TPRM, SECOPS, PRIV-MGMT hold master rows of slice data_objects."
+
+  - id: B2-7
+    summary: "GRC-domain role authoring + tagging of cross-functional roles."
+    question: "Should the 2 business_function_id=31 roles (10035 GRC-REGULATORY-AFFAIRS, 10038 GRC-COMPLIANCE-TRAINING-MANAGER) stay tagged with GRC business function despite targeting PLM-Compliance / LMS-Compliance-Training modules, and should the proposed 5 new GRC-module roles in B1B-S13 land?"
+    options:
+      - "(a) Leave the 2 roles tagged GRC + author 5 new GRC-module roles (default)."
+      - "(b) Re-tag the 2 roles to LMS / PLM business functions; GRC role inventory restarts from zero per B1B-S13."
+
+b3:
+  - id: B3-1
+    candidate: "Vendor-substrate missing masters across the 10 flagship GRC vendors"
+    rationale: "Flagship vendors (ServiceNow IRM, Archer, MetricStream, OneTrust GRC, LogicGate, AuditBoard, Workiva, Riskonnect, MEGA HOPEX, Diligent) carry several masters not in GRC's current footprint. Candidates: risk_treatments (separate from compliance_risks), control_libraries / risk_libraries (template reference data), kri_metrics (key risk indicators), control_tests (exercise-time, distinct from continuous control_assessments), gap_assessments (framework-coverage gap analysis), audit_findings vs audit_issues distinction, disclosure_filings (Workiva's flagship surface), risk_appetite_statements, regulatory_change_events (overlaps with queued REG-CHANGE-MGMT domain candidate), policy_exceptions (NAVEX / OneTrust / MetricStream)."
+    vendor_evidence:
+      - {vendor: "ServiceNow Integrated Risk Management", evidence: 1st_class}
+      - {vendor: "Archer Suite", evidence: 1st_class}
+      - {vendor: "MetricStream Connected GRC", evidence: 1st_class}
+      - {vendor: "OneTrust GRC", evidence: 1st_class}
+      - {vendor: "LogicGate Risk Cloud", evidence: 1st_class}
+      - {vendor: "AuditBoard", evidence: 1st_class}
+      - {vendor: "Workiva Platform", evidence: 1st_class}
+      - {vendor: "Riskonnect Platform", evidence: 1st_class}
+      - {vendor: "MEGA HOPEX", evidence: secondary}
+      - {vendor: "Diligent One Platform", evidence: secondary}
+    proposed_module: "Distributed across the 3 proposed modules (GRC-RISK-MGMT for risk_treatments / kri_metrics / risk_appetite_statements / risk_libraries; GRC-COMPLIANCE-MGMT for control_libraries / control_tests / gap_assessments / audit_findings / disclosure_filings / regulatory_change_events; GRC-POLICY-ATTESTATION for policy_exceptions)."
+
+  - id: B3-2
+    candidate: "GRC modularization split shape (feeds B1B-S1)"
+    rationale: "Three candidate splits: (a) 3-module GRC-RISK-MGMT / GRC-COMPLIANCE-MGMT / GRC-POLICY-ATTESTATION (mirrors ServiceNow IRM / MetricStream / OneTrust GRC); (b) 2-module RISK / COMPLIANCE-AND-POLICY; (c) 4-module RISK / COMPLIANCE / POLICY / EVIDENCE-AND-AUDIT. Each alternative drives entity-to-module assignment for the 10 masters and downstream Phase E permission scope."
+    vendor_evidence:
+      - {vendor: "ServiceNow Integrated Risk Management", evidence: 1st_class}
+      - {vendor: "MetricStream Connected GRC", evidence: 1st_class}
+      - {vendor: "OneTrust GRC", evidence: 1st_class}
+      - {vendor: "Riskonnect Platform", evidence: 1st_class}
+    proposed_module: "Default candidate 3-module (a). Vet via Phase 0 vendor research."
+
+  - id: B3-3
+    candidate: "audit_issues mastery: GRC vs AUDIT"
+    rationale: "Some flagship stacks (ServiceNow) merge findings + issues; others (Workiva, AuditBoard) split AUDIT.findings from GRC.issues. The current single-master shape under GRC may or may not be correct; resolution may yield a slice-split where AUDIT masters audit_findings and GRC masters audit_issues (the corrective-action register) with an edge between them."
+    vendor_evidence:
+      - {vendor: "AuditBoard", evidence: 1st_class}
+      - {vendor: "Workiva Platform", evidence: 1st_class}
+      - {vendor: "Diligent One Platform", evidence: 1st_class}
+      - {vendor: "MEGA HOPEX", evidence: secondary}
+      - {vendor: "ServiceNow Integrated Risk Management", evidence: secondary}
+    proposed_module: "If split: AUDIT masters audit_findings; GRC-COMPLIANCE-MGMT masters audit_issues. Cross-domain edge via data_object_relationships."
+
+  - id: B3-4
+    candidate: "4 domain candidates queued in _missing-domains.md: CRQ, ETHICS-HOTLINE, POLICY-MGMT, REG-CHANGE-MGMT."
+    rationale: "Each passes the point-solution-market test on enumeration: CRQ (Bitsight / SecurityScorecard / RiskLens / Kovrr / Safe Security / X-Analytics); ETHICS-HOTLINE (NAVEX EthicsPoint / OneTrust Ethics / Convercent / Whispli / Speakfully / EQS Integrity Line); POLICY-MGMT (NAVEX PolicyTech / OneTrust Policy / ConvergePoint / MetricStream Policy / PowerDMS / Mitratech PolicyHub); REG-CHANGE-MGMT (Thomson Reuters Reg Intelligence / Wolters Kluwer OneSumX / RegEd / Compliance.ai / Ascent RegTech). Final triage is human via _missing-domains.md."
+    vendor_evidence:
+      - {vendor: "NAVEX", evidence: 1st_class}
+      - {vendor: "OneTrust", evidence: 1st_class}
+      - {vendor: "Bitsight", evidence: 1st_class}
+      - {vendor: "SecurityScorecard", evidence: 1st_class}
+      - {vendor: "Thomson Reuters Reg Intelligence", evidence: 1st_class}
+      - {vendor: "Wolters Kluwer OneSumX", evidence: 1st_class}
+    proposed_module: "Each is a candidate domain, not a GRC sub-module."

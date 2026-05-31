@@ -1,0 +1,232 @@
+schema_version: 2
+domain: BEN-ADMIN
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S11
+    summary: "Author 3 business_function_domains rows for BEN-ADMIN (HR contributor, Payroll contributor, Finance consumer)."
+    finding: "C1 narrow. Only 1 business_function_domains row (id 8, business_function 39 Benefits Administration, responsibility_type=owner). The HR contributor, Payroll contributor, Finance consumer slots from 2026-05-30 B1-S11 are still unauthored; the 2026-05-31 continuation explicitly deferred the inserts. Flagship benefits-administration vendors all model HR as contributor (employee maintenance), Payroll as contributor (deduction maintenance), Finance / Accounting as consumer (GL impact and ACA penalty exposure)."
+    action: "INSERT 3 business_function_domains rows on domain_id=61, responsibility_type values contributor / contributor / consumer for the resolved business_function ids matching Human Resources, Payroll, Finance. Resolve target ids by looking up /business_functions?business_function_name=in.(...) first; do not hard-code numeric ids."
+    affected_entities:
+      - business_function_domains
+    extra_band: C1
+
+  - id: B1A-RULE15-598
+    summary: "Revert Rule #15 notes pollution on DMDO 598 (hr_cases consumer on BEN-ENROLLMENT)."
+    finding: "domain_module_data_objects.id=598 (hr_cases 192, consumer + required on BEN-ENROLLMENT 72) carries an unapproved notes value ('BEN-ENROLLMENT consumes hr_cases when HRSD escalates a benefits question (escalated_to_benefits). Receiving side of handoff 1119.'). The 2026-05-31 continuation flagged this as a Rule #15 violation but did not revert. Independent of the row-level B1B-S4 question on dependency strength."
+    action: "PATCH /domain_module_data_objects?id=eq.598 with body {\"notes\": \"\"}. No other changes."
+    affected_entities:
+      - domain_module_data_objects
+    extra_rule: "rule_15"
+
+b1b:
+  - id: B1B-S4
+    summary: "Apply B2-S1 decision on DMDO 598 (hr_cases consumer on BEN-ENROLLMENT): downgrade to optional, DELETE, or keep required."
+    finding: "DMDO 598 (hr_cases 192, consumer + required on BEN-ENROLLMENT 72) carries zero spine data_object_relationships into any BEN-ADMIN master. Inbound handoff 1119 (HRSD hr_case.escalated_to_benefits) plus existing 'carrier_feeds spawns hr_cases' (relationship 135) already capture the dependency. The continuation script did not patch this row pending the architectural call."
+    action: "After user resolves B2-S1: (a) PATCH necessity=optional, (b) DELETE DMDO 598, or (c) leave as-is and document the in-flow read use case (no PATCH)."
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    affected_entities:
+      - domain_module_data_objects
+
+  - id: B1B-S9
+    summary: "Apply B2-S5 decision on workflow-gate role bundling for BENEFITS-ENROLLMENT-SPECIALIST 10067 and BENEFITS-PLAN-MANAGER 10066."
+    finding: "10067 (Enrollment Specialist) bundles only 10324 ben-enrollment:manage, 10329 :verify_benefit_dependent, 10332 :approve_life_event, 10315 ben-plan-design:read. 7 enrollment workflow gates unbundled: 10326 elect_benefit_enrollment, 10327 activate_benefit_enrollment, 10328 terminate_benefit_enrollment, 10330 deactivate_benefit_dependent, 10331 submit_life_event, 10333 process_life_event, 10334 reject_life_event. 10066 (Plan Manager) bundles only 10317 ben-plan-design:admin, 10336 ben-carrier-integ:manage, 10338 :contract_benefit_carrier, 10339 :activate_benefit_carrier. 5 plan-design workflow gates unbundled: 10318 activate_benefit_plan, 10319 deactivate_benefit_plan, 10320 open_benefit_open_enrollment, 10321 close_benefit_open_enrollment, 10322 process_benefit_open_enrollment. Specialists rely on admin escalation today."
+    action: "After user resolves B2-S5: (a) INSERT 7 role_permissions on 10067 + 5 on 10066, (b) targeted subset (user names which gates), or (c) leave current bundle (admin escalation pattern)."
+    blocked_by:
+      - {type: user_decision, ref: B2-S5}
+    affected_entities:
+      - role_permissions
+    extra_band: E6
+
+  - id: B1B-S10
+    summary: "Apply B2-S4 decision on BEN-ACA-COMPLIANCE master surface: author aca_filings + affordability_snapshots, or treat as derived-signals only, or defer to Phase 0."
+    finding: "BEN-ACA-COMPLIANCE 74 masters zero entities. The module consumes employees (31), legal_entities (197), pay_slips (139), receives benefit_enrollments (intra-domain handoff 1100), and produces compute / side_effect artifacts (generate_1094c_form, generate_1095c_form, file_aca_returns). Flagship ACA specialists (Health-e(fx), Trusaic, ADP Health Compliance, Workday ACA, bswift ACA) uniformly master aca_filings (1094-C / 1095-C transmittal with lifecycle draft / validated / submitted / accepted / rejected / corrected) and affordability_snapshots (monthly per-employee with lifecycle draft / finalized / superseded) as first-class records."
+    action: "After user resolves B2-S4: (a) author both masters with lifecycle states, trigger_events (aca_filing.submitted / .accepted / .rejected / .corrected, affordability_snapshot.finalized / .superseded), 3 workflow-gate permissions (validate_aca_filing, submit_aca_filing, correct_aca_filing), and role bundles; (b) document derived-signals designation in module description; (c) defer to formal Phase 0 vendor verification."
+    blocked_by:
+      - {type: user_decision, ref: B2-S4}
+    affected_modules: [74]
+    affected_entities:
+      - data_objects
+      - domain_module_data_objects
+      - data_object_lifecycle_states
+      - trigger_events
+      - permissions
+      - role_permissions
+    extra_band: F2
+
+  - id: B1B-RPT-ERPFIN-MASTER
+    summary: "Report-only. ERP-FIN owes a module-layer role=master DMDO row on legal_entities (197)."
+    finding: "BEN-PLAN-DESIGN (71) and BEN-ACA-COMPLIANCE (74) both consume legal_entities (197) as consumer + required. Catalog-wide query /domain_module_data_objects?data_object_id=eq.197&role=eq.master returns []. The blueprint emitter cannot resolve the canonical owning module at deploy time. BEN-ADMIN's own consumer rows are correctly authored; the missing master row is an ERP-FIN obligation."
+    action: "Schedule b1 audit on ERP-FIN; ERP-FIN audit authors the master row on the relevant ERP-FIN module. No action by BEN-ADMIN."
+    blocked_by:
+      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: legal_entities_master_row}
+    affected_entities:
+      - domain_module_data_objects
+    extra_band: B5
+
+  - id: B1B-RPT-B10B-NULL
+    summary: "Report-only. Three outbound cross-domain handoffs still carry NULL target_domain_module_id, owed by target domains."
+    finding: "BEN-ADMIN outbound handoffs 109 (BEN-ENROLLMENT to ERP-FIN, enrollment.changed / payroll_journal_entries), 418 (BEN-ENROLLMENT to HCM, life_event.approved / life_events), 419 (BEN-CARRIER-INTEG to ERP-FIN, carrier_feed.transmitted / carrier_feeds) carry NULL target_domain_module_id. Per the B10b asymmetry rule, target-domain attribution is the receiving side's responsibility. PAYROLL has already taken its 4 owings (108, 110, 188, 417 now populate target_module 90 or 92)."
+    action: "Schedule b1 audits on ERP-FIN (owes 109, 419) and HCM (owes 418). Each target domain patches its receiving end. No action by BEN-ADMIN."
+    affected_handoffs:
+      - {handoff_id: 109, direction: outbound, source_domain: BEN-ADMIN, target_domain: ERP-FIN, trigger_event: "enrollment.changed", payload: payroll_journal_entries, null_field: target_domain_module_id}
+      - {handoff_id: 418, direction: outbound, source_domain: BEN-ADMIN, target_domain: HCM, trigger_event: "life_event.approved", payload: life_events, null_field: target_domain_module_id}
+      - {handoff_id: 419, direction: outbound, source_domain: BEN-ADMIN, target_domain: ERP-FIN, trigger_event: "carrier_feed.transmitted", payload: carrier_feeds, null_field: target_domain_module_id}
+    blocked_by:
+      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: b10b_target_module_backfill}
+      - {type: domain_audit, blocking_domain: HCM, milestone: b10b_target_module_backfill}
+    extra_band: B10b
+
+  - id: B1B-RPT-APQC-HOLDBACK
+    summary: "Report-only. Two cross-domain handoffs (413, 418) lack handoff_processes rows pending resolved APQC external_id citations."
+    finding: "Handoff 413 (PAYROLL to BEN-ACA-COMPLIANCE, pay_cycle.closed / pay_slips) and handoff 418 (BEN-ENROLLMENT to HCM, life_event.approved / life_events) carry zero handoff_processes rows. 2026-05-30 B1-S8 proposed citations did not resolve cleanly against live processes (413 cited external_id 10510 but the live 10510 process_name is 'Review engagement and retention indicators', not 'Develop and manage compensation, rewards, and benefits'; 418 cited 'APQC L3 child of 10510' without a specific external_id)."
+    action: "Resolve the intended PCF nodes (likely needs a /processes?process_name=ilike. search in the cross-industry PCF subtree) and surface the candidates to the user before INSERTing handoff_processes rows."
+    affected_handoffs:
+      - {handoff_id: 413, direction: inbound, source_domain: PAYROLL, target_domain: BEN-ADMIN, trigger_event: "pay_cycle.closed", payload: pay_slips, null_field: handoff_processes}
+      - {handoff_id: 418, direction: outbound, source_domain: BEN-ADMIN, target_domain: HCM, trigger_event: "life_event.approved", payload: life_events, null_field: handoff_processes}
+    blocked_by:
+      - {type: user_decision, ref: APQC-PCF-cite-resolution}
+    extra_band: H1
+
+b2:
+  - id: B2-S1
+    summary: "hr_cases dependency strength on BEN-ENROLLMENT: downgrade to optional, DELETE, or keep required."
+    question: "DMDO 598 (hr_cases consumer on BEN-ENROLLMENT 72) carries no spine relationship into any BEN-ADMIN master. The HRSD escalation handoff 1119 plus the existing 'carrier_feeds spawns hr_cases' cross-relationship 135 already capture the dependency. Should the DMDO row be downgraded to consumer + optional, DELETED outright, or kept as consumer + required?"
+    options:
+      - "(a) PATCH necessity=optional. Reflects in-flow read of HR cases during enrollment troubleshooting without forcing HRSD deployment for the BEN-ENROLLMENT module to function."
+      - "(b) DELETE the DMDO row. Defers to the inbound handoff + cross-relationship to express the dependency; minimum-deploy-surface principle."
+      - "(c) Keep consumer + required. Document the in-flow read use case (HRSD-escalated benefits questions land in the enrollment specialist's queue and must be readable)."
+    why: "Architectural intent + deployability strategy."
+
+  - id: B2-S2
+    summary: "Pattern flag re-evaluation on benefit_enrollments.has_single_approver and benefit_dependents.has_submit_lock."
+    question: "(a) benefit_enrollments.has_single_approver currently false. Flagship QLE-triggered enrollment changes route to a single benefits-admin approver. Set to true? (b) benefit_dependents.has_submit_lock currently false. Vendor behavior locks the dependent record once verified. Set to true?"
+    options:
+      - "(a) benefit_enrollments.has_single_approver = true"
+      - "(a) benefit_enrollments.has_single_approver = false (keep)"
+      - "(b) benefit_dependents.has_submit_lock = true"
+      - "(b) benefit_dependents.has_submit_lock = false (keep)"
+    why: "Workflow-shape judgment per master; not derivable from schema alone."
+
+  - id: B2-S3
+    summary: "Regulation coverage scope (Section 125, Form 5500, FMLA, USERRA, state paid-leave)."
+    question: "Current regulations: ACA, ERISA, HIPAA, COBRA, GINA. Add Section 125 (cafeteria plans), Form 5500 (annual ERISA filing), ADA, FMLA, USERRA, and state paid-leave laws (CA PFL, NY PFL, NJ TDB, WA PFML, CO FAMLI) now, or defer to Bucket 3 for vendor verification, or federal core only?"
+    options:
+      - "(a) Add Section 125 + Form 5500 + ADA + FMLA + USERRA + state paid-leave now as Bucket 1 fixes."
+      - "(b) Defer all candidates to Bucket 3 Phase 0 verification."
+      - "(c) Federal core only (Section 125, Form 5500, FMLA, USERRA); defer state and international to later geo-expansion."
+    why: "Catalog policy on regulatory breadth and geographic scope."
+
+  - id: B2-S4
+    summary: "BEN-ACA-COMPLIANCE master surface: author aca_filings + affordability_snapshots, treat as derived-signals only, or defer to Phase 0."
+    question: "Module 74 masters zero entities. Flagship ACA specialists model aca_filings (1094-C / 1095-C with draft / validated / submitted / accepted / rejected / corrected lifecycle) and affordability_snapshots (monthly per-employee with draft / finalized / superseded lifecycle) as first-class records. Author both, or treat 74 as derived-signals only, or defer to Phase 0?"
+    options:
+      - "(a) Author aca_filings + affordability_snapshots masters with lifecycle states, trigger_events, workflow-gate permissions, role bundles."
+      - "(b) No, redesignate BEN-ACA-COMPLIANCE as derived-signals only; document divergence from flagship-vendor practice in module description."
+      - "(c) Defer to Bucket 3 / formal Phase 0 vendor research."
+    why: "Modularization judgment; drives whether new entities, lifecycle states, and permissions are authored."
+
+  - id: B2-S5
+    summary: "Workflow-gate permission bundling on enrollment specialist + plan manager."
+    question: "7 BEN-ENROLLMENT workflow gates (10326-10334 excluding 10329 / 10332) and 5 BEN-PLAN-DESIGN workflow gates (10318-10322) are unbundled. Specialists rely on admin escalation today. Add the gates to specialist bundles, partial subset, or keep the admin-escalation pattern?"
+    options:
+      - "(a) Add all 7 enrollment gates to 10067 + all 5 plan-design gates to 10066."
+      - "(b) Targeted subset (user names which permission_ids to bundle)."
+      - "(c) Keep current bundles; rely on BENEFITS-BENEFITS-ADMIN 10065 admin tier expansion."
+    why: "Persona design judgment. Flagship benefits-administration vendors typically grant the enrollment specialist all enrollment-lifecycle gates and the plan manager all plan-design and carrier-relationship gates."
+
+  - id: B2-S6
+    summary: "domains.notes pointer for BEN-ADMIN."
+    question: "BEN-ADMIN domains.notes currently empty. Update with a one-line audit pointer per audits/README.md? Rule #15 requires user-approved wording before any write."
+    options:
+      - "(a) Supply user-approved wording for the pointer."
+      - "(b) Skip the pointer for now."
+    why: "Optional persistence step; wording must come from the user."
+
+b3:
+  - id: B3-COBRA-EVENTS
+    candidate: cobra_events
+    rationale: "WEX Health, BCC, P&A Group, Businessolver Benefitsolver, Empyrean all master COBRA qualifying-event records as first-class catalog rows with their own lifecycle (notice generated, election period open, elected / waived / expired) distinct from life_events. The BEN-ADMIN catalog has no entity capturing the COBRA notice / continuation-coverage workflow."
+    vendor_evidence: [WEX Health, BCC, P&A Group, Businessolver Benefitsolver, Empyrean]
+    proposed_module: "BEN-ENROLLMENT or new BEN-COBRA module"
+
+  - id: B3-ACA-FILINGS
+    candidate: aca_filings
+    rationale: "Flagship ACA specialists uniformly master the 1094-C / 1095-C transmittal record as a catalog entity with lifecycle draft / validated / submitted / accepted / rejected / corrected. Currently absent. Doubles as the B2-S4 / B1B-S10 in-scope candidate if user picks defer-to-Phase-0."
+    vendor_evidence: [Health-e(fx), Trusaic, ADP Health Compliance, Workday ACA, bswift ACA]
+    proposed_module: BEN-ACA-COMPLIANCE
+
+  - id: B3-AFFORDABILITY-SNAPSHOTS
+    candidate: affordability_snapshots
+    rationale: "Monthly per-employee affordability calculation record, mastered by flagship ACA specialists as a first-class row with lifecycle draft / finalized / superseded. Currently absent. Doubles as the B2-S4 / B1B-S10 in-scope candidate."
+    vendor_evidence: [Health-e(fx), Trusaic, ADP Health Compliance, Workday ACA, bswift ACA]
+    proposed_module: BEN-ACA-COMPLIANCE
+
+  - id: B3-DEP-ELIG-VERIF
+    candidate: dependent_eligibility_verifications
+    rationale: "Empyrean, Benefitfocus, Businessolver, bswift, Forma run dependent-eligibility audits as a distinct workflow (employee submits documentation, vendor reviews, dependent verified or de-enrolled) tracked as its own audit-record entity with lifecycle. Currently flattened into benefit_dependents.state=verified."
+    vendor_evidence: [Empyrean, Benefitfocus, Businessolver, bswift, Forma]
+    proposed_module: BEN-ENROLLMENT
+
+  - id: B3-EOI-REQUESTS
+    candidate: eoi_requests
+    rationale: "Workday Benefits, Empyrean, bswift, Lincoln Financial, Unum, Sun Life Maxwell Health model evidence-of-insurability requests for life / disability / voluntary benefits as a distinct entity (carrier responds approved / declined / pending) that gates benefit_enrollments finalization. Currently absent."
+    vendor_evidence: [Workday Benefits, Empyrean, bswift, Lincoln Financial, Unum, Sun Life Maxwell Health]
+    proposed_module: "BEN-ENROLLMENT or BEN-CARRIER-INTEG"
+
+  - id: B3-SPENDING-CLAIMS
+    candidate: fsa_hsa_commuter_claims
+    rationale: "Alegeus, WEX Health, HealthEquity, Discovery Benefits, P&A Group master claims against FSA / HSA / commuter benefit accounts as a distinct ledger entity (claim submitted, adjudicated, paid or rejected). The PAYROLL deduction_codes connection captures the contribution side; the claim / disbursement side has no entity."
+    vendor_evidence: [Alegeus, WEX Health, HealthEquity, Discovery Benefits, P&A Group]
+    proposed_module: "new BEN-SPENDING-ACCOUNTS module or BEN-ENROLLMENT"
+
+  - id: B3-VOLUNTARY-ELECTIONS
+    candidate: voluntary_benefit_elections
+    rationale: "Aflac, Unum, Colonial Life broker-portal style voluntary / supplemental benefit elections (accident, critical-illness, hospital indemnity, legal, identity-protection) are typically modeled as a distinct election entity with its own carrier-by-carrier enrollment path. Could fold into benefit_enrollments via a type discriminator or be promoted to its own master."
+    vendor_evidence: [Aflac, Unum, Colonial Life]
+    proposed_module: "extension of benefit_enrollments or new master"
+
+  - id: B3-QDIA-DESIGNATIONS
+    candidate: qdia_designations
+    rationale: "401(k) record-keepers (Fidelity, Empower, Vanguard, T. Rowe Price, Principal) model Qualified Default Investment Alternative designations as a first-class catalog entity tied to the 401(k) plan; PEP / MEP arrangements add complexity. Currently absent."
+    vendor_evidence: [Fidelity, Empower, Vanguard, T. Rowe Price, Principal]
+    proposed_module: "extension of benefit_plans or new entity"
+
+  - id: B3-MODULE-COBRA
+    candidate: "BEN-COBRA module"
+    rationale: "If cobra_events is loaded, it warrants its own module: distinct lifecycle, distinct statutory windows (60-day election, 18 / 29 / 36-month continuation), distinct disbursement, distinct vendor (typically a third-party administrator). Would push BEN-ADMIN from 4 to 5 modules."
+    vendor_evidence: [WEX Health, BCC, P&A Group]
+
+  - id: B3-MODULE-SPENDING-ACCT
+    candidate: "BEN-SPENDING-ACCOUNTS module"
+    rationale: "If FSA / HSA / commuter claims are loaded, the spending-account surface could be a separate module owning the claims ledger and embedding benefit_enrollments. The Alegeus / WEX Health / HealthEquity vendor cluster operates as a distinct point-solution market."
+    vendor_evidence: [Alegeus, WEX Health, HealthEquity]
+
+  - id: B3-MODULE-RENAME-COMPLIANCE
+    candidate: "Rename BEN-ACA-COMPLIANCE to BEN-COMPLIANCE"
+    rationale: "If Section 125 / Form 5500 / ADA accommodation tracking lands (B2-S3 option a or c), the module could widen from ACA-only to a broader compliance scope, mastering aca_filings, form_5500_filings, cafeteria_plan_documents, summary_plan_descriptions."
+
+  - id: B3-REG-SECTION-125
+    candidate: "Regulation: Section 125 (Cafeteria Plans, IRC)"
+    rationale: "Mandatory for pretax benefits elections. Currently absent from BEN-ADMIN regulations."
+    vendor_evidence: [Workday Benefits, ADP Benefits, Empyrean, Benefitfocus]
+
+  - id: B3-REG-FORM-5500
+    candidate: "Regulation: Form 5500 (Annual ERISA filing)"
+    rationale: "Mandatory for plans subject to ERISA. Currently absent."
+    vendor_evidence: [Workday Benefits, ADP Benefits, Empyrean]
+
+  - id: B3-REG-FMLA
+    candidate: "Regulation: FMLA"
+    rationale: "Family and Medical Leave Act; mandatory leave-of-absence anchor. Currently absent."
+
+  - id: B3-REG-USERRA
+    candidate: "Regulation: USERRA"
+    rationale: "Uniformed Services Employment and Reemployment Rights Act; mandatory. Currently absent."
+
+  - id: B3-REG-STATE-PFL
+    candidate: "Regulations: state paid-leave laws (CA PFL, NY PFL, NJ TDB, WA PFML, CO FAMLI, MA PFML)"
+    rationale: "Mandatory by jurisdiction; if loaded, joins jurisdictions x regulations. Geo-expansion candidate."

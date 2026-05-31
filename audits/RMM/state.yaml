@@ -1,0 +1,417 @@
+schema_version: 2
+domain: RMM
+status: feedback_needed
+next_action_by: agent
+last_audit: 2026-05-31
+
+b1a:
+  - id: B1A-H1
+    summary: APQC tag 5 untagged cross-domain handoffs (140, 144, 145, 159, 644) plus REPLACE catch-all on 150
+    finding: |
+      H1 hard-fail persists. 7 of 12 cross-domain handoffs now carry handoff_processes rows
+      (up from 3 at 2026-05-30 audit), 6 agent_curated + 1 discovery_substring, zero
+      record_status='approved'. Volume floor for N=12 is 6 agent_curated; current 6 sits at
+      the floor. Remaining 5 untagged: 140 (RMM->ITSM monitoring_alert.threshold_breached
+      payload service_incidents), 144 (RMM->HAM hardware_endpoint.discovered payload
+      hardware_assets), 145 (RMM->SAM software_endpoint.discovered payload
+      software_installations), 159 (RMM->MSP-PSA monitoring_alert.threshold_breached
+      payload msp_tickets), 644 (RMM->ITSM automation_script.failed payload
+      service_incidents). Handoff 150 carries L1 catch-all 19207 "Acquire, Construct, and
+      Manage Assets" and is a REPLACE candidate to a tighter L3 (Retire IT assets or
+      equivalent).
+    action: |
+      For each untagged handoff, query
+      /processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry
+      and INSERT (handoff_id, process_id, proposal_source='agent_curated', record_status='new').
+      For handoff 150, DELETE the existing handoff_processes row pointing at 19207 then
+      INSERT the tighter L3 match (record_status='new', proposal_source='agent_curated').
+    affected_handoffs:
+      - {handoff_id: 140, direction: outbound, source_domain: RMM, target_domain: ITSM, trigger_event: monitoring_alert.threshold_breached, payload: service_incidents, null_field: handoff_processes}
+      - {handoff_id: 144, direction: outbound, source_domain: RMM, target_domain: HAM, trigger_event: hardware_endpoint.discovered, payload: hardware_assets, null_field: handoff_processes}
+      - {handoff_id: 145, direction: outbound, source_domain: RMM, target_domain: SAM, trigger_event: software_endpoint.discovered, payload: software_installations, null_field: handoff_processes}
+      - {handoff_id: 159, direction: outbound, source_domain: RMM, target_domain: MSP-PSA, trigger_event: monitoring_alert.threshold_breached, payload: msp_tickets, null_field: handoff_processes}
+      - {handoff_id: 644, direction: outbound, source_domain: RMM, target_domain: ITSM, trigger_event: automation_script.failed, payload: service_incidents, null_field: handoff_processes}
+      - {handoff_id: 150, direction: inbound, source_domain: HAM, target_domain: RMM, trigger_event: asset.retired, payload: rmm_agents, null_field: replace_l1_catchall}
+
+b1b:
+  - id: B1B-S1
+    summary: M1 hard-fail, author 4 full domain_modules per proposed split
+    finding: |
+      0 domain_modules rows for RMM. Per Rule #14 every domains row needs >=1
+      module_kind='full' and a domain with >=3 capabilities needs >=2 full modules; RMM has
+      8 capabilities. Proposed shape: 4 full modules - RMM-MONITORING (masters
+      monitoring_policies + monitoring_alerts; realizes RMM-EPM, RMM-ALERT, RMM-AI),
+      RMM-PATCH-MGMT (masters patch_jobs; realizes RMM-PATCH), RMM-AUTOMATION (masters
+      automation_scripts; realizes RMM-SCRIPT), RMM-AGENT-MGMT (masters rmm_agents;
+      realizes RMM-EPM, RMM-MT, RMM-DISC, RMM-INV).
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    affected_modules: []
+    affected_entities: [rmm_agents, patch_jobs, automation_scripts, monitoring_policies, monitoring_alerts]
+    vendor_evidence: [NinjaOne, ConnectWise RMM, Datto RMM, Kaseya VSA, N-able N-central, Atera, Syncro, Pulseway, Action1, SuperOps, ManageEngine Endpoint Central]
+
+  - id: B1B-S3
+    summary: Insert 12 lifecycle-derived trigger_events post-M1 / post-B12
+    finding: |
+      12 lifecycle-derived events not in catalog (rmm_agent.installed, rmm_agent.offline,
+      rmm_agent.uninstalled, monitoring_policy.published, monitoring_policy.deprecated,
+      monitoring_alert.acknowledged, monitoring_alert.resolved, monitoring_alert.suppressed,
+      patch_job.failed, patch_job.rolled_back, automation_script.approved,
+      automation_script.deprecated).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: prerequisite_entity, ref: B1B-S4}
+    affected_events:
+      - {id: null, event_name: rmm_agent.installed, current_category: missing, proposed_category: lifecycle}
+      - {id: null, event_name: rmm_agent.offline, current_category: missing, proposed_category: state_change}
+      - {id: null, event_name: rmm_agent.uninstalled, current_category: missing, proposed_category: lifecycle}
+      - {id: null, event_name: monitoring_policy.published, current_category: missing, proposed_category: lifecycle}
+      - {id: null, event_name: monitoring_policy.deprecated, current_category: missing, proposed_category: lifecycle}
+      - {id: null, event_name: monitoring_alert.acknowledged, current_category: missing, proposed_category: state_change}
+      - {id: null, event_name: monitoring_alert.resolved, current_category: missing, proposed_category: state_change}
+      - {id: null, event_name: monitoring_alert.suppressed, current_category: missing, proposed_category: state_change}
+      - {id: null, event_name: patch_job.failed, current_category: missing, proposed_category: state_change}
+      - {id: null, event_name: patch_job.rolled_back, current_category: missing, proposed_category: state_change}
+      - {id: null, event_name: automation_script.approved, current_category: missing, proposed_category: lifecycle}
+      - {id: null, event_name: automation_script.deprecated, current_category: missing, proposed_category: lifecycle}
+
+  - id: B1B-S4
+    summary: Author data_object_lifecycle_states on 3 workflow masters; 2 candidates pending exemption
+    finding: |
+      Zero data_object_lifecycle_states rows on the 5 RMM masters. Rule #12 mandates rows
+      on every master + required data_object unless config-shape-exempted. Likely state
+      machines: rmm_agents (pending, installed, online, offline, uninstalled),
+      monitoring_alerts (open, acknowledged, resolved, suppressed, closed), patch_jobs
+      (scheduled, running, succeeded, failed, rolled_back). monitoring_policies and
+      automation_scripts arguably fit the config-shape exemption (B2-S6).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: user_decision, ref: B2-S6}
+    affected_masters:
+      - {data_object_id: 223, name: rmm_agents, target_module_id: null, workflow: agent_lifecycle}
+      - {data_object_id: 85, name: monitoring_alerts, target_module_id: null, workflow: alert_lifecycle}
+      - {data_object_id: 224, name: patch_jobs, target_module_id: null, workflow: patch_job_lifecycle}
+      - {data_object_id: 86, name: monitoring_policies, target_module_id: null, workflow: config_or_versioned_lifecycle}
+      - {data_object_id: 225, name: automation_scripts, target_module_id: null, workflow: config_or_versioned_lifecycle}
+
+  - id: B1B-S5
+    summary: PATCH source_domain_module_id on 11 outbound handoffs post-M1
+    finding: |
+      11 outbound cross-domain handoffs carry NULL source_domain_module_id on the RMM
+      side because RMM has no modules. RMM's fix once B1B-S1 lands.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_handoffs:
+      - {handoff_id: 140, direction: outbound, source_domain: RMM, target_domain: ITSM, trigger_event: monitoring_alert.threshold_breached, payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 141, direction: outbound, source_domain: RMM, target_domain: AIOPS, trigger_event: monitoring_alert.threshold_breached, payload: monitoring_alerts, null_field: source_domain_module_id}
+      - {handoff_id: 142, direction: outbound, source_domain: RMM, target_domain: ITSM, trigger_event: patch_job.scheduled, payload: service_changes, null_field: source_domain_module_id}
+      - {handoff_id: 143, direction: outbound, source_domain: RMM, target_domain: ITSM, trigger_event: patch_job.completed, payload: service_changes, null_field: source_domain_module_id}
+      - {handoff_id: 144, direction: outbound, source_domain: RMM, target_domain: HAM, trigger_event: hardware_endpoint.discovered, payload: hardware_assets, null_field: source_domain_module_id}
+      - {handoff_id: 145, direction: outbound, source_domain: RMM, target_domain: SAM, trigger_event: software_endpoint.discovered, payload: software_installations, null_field: source_domain_module_id}
+      - {handoff_id: 146, direction: outbound, source_domain: RMM, target_domain: CMDB, trigger_event: ci_endpoint.discovered, payload: configuration_items, null_field: source_domain_module_id}
+      - {handoff_id: 147, direction: outbound, source_domain: RMM, target_domain: DISCOVERY, trigger_event: network_device.discovered, payload: discovered_devices, null_field: source_domain_module_id}
+      - {handoff_id: 159, direction: outbound, source_domain: RMM, target_domain: MSP-PSA, trigger_event: monitoring_alert.threshold_breached, payload: msp_tickets, null_field: source_domain_module_id}
+      - {handoff_id: 644, direction: outbound, source_domain: RMM, target_domain: ITSM, trigger_event: automation_script.failed, payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 645, direction: outbound, source_domain: RMM, target_domain: ITAM, trigger_event: automation_script.executed, payload: automation_scripts, null_field: source_domain_module_id}
+
+  - id: B1B-S6
+    summary: PATCH target_domain_module_id on inbound handoff 150 post-M1
+    finding: |
+      Inbound handoff 150 (HAM asset.retired -> RMM rmm_agents) carries NULL
+      target_domain_module_id on the RMM side. RMM's fix once RMM-AGENT-MGMT lands.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_handoffs:
+      - {handoff_id: 150, direction: inbound, source_domain: HAM, target_domain: RMM, trigger_event: asset.retired, payload: rmm_agents, null_field: target_domain_module_id}
+
+  - id: B1B-S7
+    summary: 4 outbound handoffs have NULL target_domain_module_id owed by counter-parties
+    finding: |
+      Handoffs 141 (AIOPS), 144 (HAM), 145 (SAM), 147 (DISCOVERY) all have NULL
+      target_domain_module_id; the counter-party owns the backfill.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: AIOPS, milestone: b1-handoff-141}
+      - {type: domain_audit, blocking_domain: HAM, milestone: b1-handoff-144}
+      - {type: domain_audit, blocking_domain: SAM, milestone: b1-handoff-145}
+      - {type: domain_audit, blocking_domain: DISCOVERY, milestone: b1-handoff-147}
+    affected_handoffs:
+      - {handoff_id: 141, direction: outbound, source_domain: RMM, target_domain: AIOPS, trigger_event: monitoring_alert.threshold_breached, payload: monitoring_alerts, null_field: target_domain_module_id}
+      - {handoff_id: 144, direction: outbound, source_domain: RMM, target_domain: HAM, trigger_event: hardware_endpoint.discovered, payload: hardware_assets, null_field: target_domain_module_id}
+      - {handoff_id: 145, direction: outbound, source_domain: RMM, target_domain: SAM, trigger_event: software_endpoint.discovered, payload: software_installations, null_field: target_domain_module_id}
+      - {handoff_id: 147, direction: outbound, source_domain: RMM, target_domain: DISCOVERY, trigger_event: network_device.discovered, payload: discovered_devices, null_field: target_domain_module_id}
+
+  - id: B1B-S8
+    summary: Inbound handoff 150 has NULL source_domain_module_id owed by HAM
+    finding: |
+      Handoff 150 (HAM asset.retired -> RMM rmm_agents) carries NULL
+      source_domain_module_id; HAM owns the backfill.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: HAM, milestone: b1-handoff-150-source}
+    affected_handoffs:
+      - {handoff_id: 150, direction: inbound, source_domain: HAM, target_domain: RMM, trigger_event: asset.retired, payload: rmm_agents, null_field: source_domain_module_id}
+
+  - id: B1B-S9
+    summary: Insert 5 intra-domain cross-module handoffs post-M1 + post-B1B-S3
+    finding: |
+      0 intra-domain handoff rows across the proposed 4-module shape. Candidates:
+      RMM-MONITORING -> RMM-PATCH-MGMT on auto-patch policy; RMM-MONITORING ->
+      RMM-AUTOMATION on remediation script trigger; RMM-AGENT-MGMT -> RMM-MONITORING on
+      agent install -> policy enrollment; RMM-AGENT-MGMT -> RMM-PATCH-MGMT on agent
+      install -> patch scope enrollment; RMM-PATCH-MGMT -> RMM-AUTOMATION on patch
+      failure -> remediation.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: prerequisite_entity, ref: B1B-S3}
+    affected_handoffs:
+      - {count: 5, scope_note: "5 intra-domain handoff candidates derived from master relationship graph + capability boundaries; canonical list once modules + lifecycle events land", enumeration_status: source_count_only}
+
+b2:
+  - id: B2-S1
+    summary: M1 architectural module split, 4 vs alternatives
+    question: |
+      Which module split for RMM: (a) 2-module collapse RMM-AGENT-OPS +
+      RMM-WORKFLOW-AUTOMATION, (b) 5-module split that separates RMM-DISCOVERY from
+      RMM-AGENT-MGMT, (c) the proposed 4 RMM-MONITORING + RMM-PATCH-MGMT + RMM-AUTOMATION
+      + RMM-AGENT-MGMT, (d) alternative shape (e.g. include RMM-COMPLIANCE or
+      RMM-REPORTING)?
+    options: [a-2-module-collapse, b-5-module-split, c-proposed-4, d-alternative]
+    why: |
+      Architectural intent and product positioning. Drives every downstream Bucket 1 item
+      (S3-S9) plus role design (B2-S7) and skill scope (B2-S9). B3 candidates
+      (script_runs, patch_approval_policies, compliance_baselines) may inform whether
+      option (d) is preferable.
+
+  - id: B2-S2
+    summary: Rule #15 notes-pollution on every domain_data_objects row (12 of 12)
+    question: |
+      Every one of the 12 RMM domain_data_objects rows carries populated narrative notes
+      like "Co-master with ITOM, which owns ...", "HAM remains master of the financial /
+      lifecycle record; RMM feeds the live operational view", "Contributes agent-collected
+      hardware specs ...". Were these user-typed at load time (retain), or auto-populated
+      (revert to empty + log Rule #15 incident per references/skill-changelog.md)?
+    options: [a-user-typed-retain, b-auto-populated-revert]
+    why: |
+      Rule #15 forbids auto-populated notes. Provenance is not knowable from live state
+      alone. If revert, downstream action is PATCH all 12 to empty string + changelog
+      entry. Independent of other Bucket 2 items.
+
+  - id: B2-S3
+    summary: Multi-master collision on monitoring_alerts (85) and monitoring_policies (86) between RMM and ITOM
+    question: |
+      Both RMM (domain 130) and ITOM (domain 2) have role='master' on monitoring_alerts
+      and monitoring_policies. RMM's positioning is agent-emitted endpoint telemetry; ITOM
+      covers broader APM / log / event sources. Options: (a) split into endpoint-specific
+      data_objects (endpoint_alerts, endpoint_monitoring_policies) for RMM, keep
+      monitoring_alerts / monitoring_policies as ITOM's broader masters; (b) RMM
+      downgrades to contributor; (c) keep shared, formalize as multi-master with a slice
+      discriminator (requires catalog enhancement, no master_scope column today); (d)
+      defer to architecture pass.
+    options: [a-split-endpoint-specific, b-rmm-contributor, c-formalize-multi-master, d-defer]
+    why: |
+      Architectural intent. Blast radius spans ITOM, AIOPS, MSP-PSA, ITSM-EVENT-MGMT.
+      Should ideally be coordinated with ITOM b1.
+
+  - id: B2-S4
+    summary: Multi-master collision on automation_scripts (225) between RMM and TEST-MGMT
+    question: |
+      Both RMM (domain 130) and TEST-MGMT (domain 8) have role='master' on
+      automation_scripts. TEST-MGMT masters test-automation scripts (Selenium / Playwright
+      / JUnit); RMM masters endpoint-automation scripts (PowerShell / Bash / Python). The
+      two existing aliases (automated test, test automation) bias toward TEST-MGMT.
+      Options: (a) split: test_automation_scripts for TEST-MGMT, keep automation_scripts
+      for RMM; (b) split the other way: keep automation_scripts for TEST-MGMT, rename RMM
+      master to endpoint_automation_scripts; (c) keep shared; (d) defer.
+    options: [a-split-test-prefix, b-split-endpoint-prefix, c-keep-shared, d-defer]
+    why: |
+      Naming arbitration per Rule #9 plus architectural intent. Blast radius on
+      TEST-MGMT; coordinate with TEST-MGMT b1.
+
+  - id: B2-S5
+    summary: B4 pattern-flag positive re-evaluation on 5 masters
+    question: |
+      All 5 RMM masters currently have has_personal_content=false, has_submit_lock=false,
+      has_single_approver=false. Candidates per Rule #12: (a)
+      rmm_agents.has_personal_content=true (agent telemetry includes hostname, logged-in
+      username, network info); (b) monitoring_alerts.has_personal_content=true (alert
+      payload includes event-log entries with usernames, file paths, process names); (c)
+      patch_jobs.has_submit_lock=true (once in_flight or completed, schedule should not be
+      re-editable); (d) automation_scripts.has_submit_lock=true once published; (e)
+      monitoring_policies.has_submit_lock=true once active (version-locked). Per-flag yes
+      / no required.
+    options: [per-flag-yes-no]
+    why: |
+      Pattern flags are workflow-shape judgments the user owns. Notes wording for the
+      reasoning is forbidden per Rule #15 unless user-approved verbatim.
+
+  - id: B2-S6
+    summary: Rule #12 config-shape exemption for monitoring_policies and / or automation_scripts
+    question: |
+      monitoring_policies and automation_scripts arguably fit the config-shape exemption
+      (author-once / occasionally-edit / record_status is the only state worth tracking).
+      Options: (a) both exempted (no lifecycle states); (b) only monitoring_policies
+      exempted; (c) only automation_scripts exempted; (d) neither (full lifecycle for all
+      5 masters).
+    options: [a-both, b-only-policies, c-only-scripts, d-neither]
+    why: |
+      Workflow judgment. Unblocks B1B-S4 for the non-exempted masters.
+
+  - id: B2-S7
+    summary: RBAC role names and bundle shape
+    question: |
+      Once B1-S1 + B1-S4 land, workflow-gate permissions need bundling onto roles. Proposed
+      roles: RMM-OPERATOR (front-line monitoring; ack / resolve / suppress alerts),
+      RMM-PATCH-MANAGER (approve / rollback patch jobs), RMM-AUTOMATION-AUTHOR (approve /
+      deprecate scripts), RMM-ADMIN (install / uninstall agents, deprecate policies).
+      Confirm names + bundle shape.
+    options: [confirm-proposed, propose-alternative]
+    why: |
+      RBAC design is user's call. Permissions cannot be materialized until module +
+      lifecycle states land.
+
+  - id: B2-S8
+    summary: Cross-cutting modules via domain_module_host_domains
+    question: |
+      Should any RMM module be hosted via domain_module_host_domains on other domains?
+      Options: (a) primary-host-only; (b) host RMM-MONITORING on ITOM; (c) host
+      RMM-AGENT-MGMT on UEM.
+    options: [a-primary-only, b-host-monitoring-on-itom, c-host-agent-mgmt-on-uem]
+    why: |
+      Editorial / product intent. Affects installation coupling.
+
+  - id: B2-S9
+    summary: System-skill scope per module per Rule #17
+    question: |
+      Once B1-S1 lands, each module needs exactly one skill_type='system' skill with >=1
+      skill_tools rows. Proposed tool counts: RMM-MONITORING 10-15 (query / mutate alerts,
+      ack / resolve / suppress, threshold evaluation primitives, send_notification
+      external, anomaly_score external); RMM-PATCH-MGMT 8-12 (list_available_patches
+      external CVE feed, schedule_patch_job, execute_patch external, rollback_patch
+      external, query / mutate jobs); RMM-AUTOMATION 6-10 (query scripts, mutate scripts,
+      execute_script_on_endpoint external, approve_script gate); RMM-AGENT-MGMT 8-12
+      (install_agent external, uninstall_agent external, list_endpoints query, mutate
+      config). Confirm scope.
+    options: [a-match, b-larger, c-smaller, d-defer]
+    why: |
+      Skill / tool design is product-shape call. Affects Phase A authoring throughput.
+
+b3:
+  - id: B3-AGENT-GROUPS
+    candidate: agent_groups
+    rationale: |
+      NinjaOne, Datto RMM, ConnectWise RMM all model endpoint groups (device_groups,
+      client_groups) as a first-class master distinct from agents. Used for bulk policy
+      assignment and reporting.
+    vendor_evidence: [NinjaOne, Datto RMM, ConnectWise RMM]
+    proposed_module: RMM-AGENT-MGMT
+
+  - id: B3-MONITORING-THRESHOLDS
+    candidate: monitoring_thresholds
+    rationale: |
+      Distinct from monitoring_policies in NinjaOne, ManageEngine (a policy bundles many
+      thresholds; threshold is per-metric). Catalog currently folds thresholds into
+      policies.
+    vendor_evidence: [NinjaOne, ManageEngine Endpoint Central]
+    proposed_module: RMM-MONITORING
+
+  - id: B3-PATCH-APPROVAL-POLICIES
+    candidate: patch_approval_policies
+    rationale: |
+      Kaseya, Datto, ManageEngine model patch-approval policies as first-class records
+      (which CVE classes auto-approve, which need manual approval per customer tier).
+    vendor_evidence: [Kaseya VSA, Datto RMM, ManageEngine Endpoint Central]
+    proposed_module: RMM-PATCH-MGMT
+
+  - id: B3-MAINTENANCE-WINDOWS
+    candidate: maintenance_windows
+    rationale: |
+      NinjaOne, ConnectWise, N-able model maintenance windows distinct from
+      monitoring_policies. Patch jobs and scripts honor maintenance windows.
+    vendor_evidence: [NinjaOne, ConnectWise RMM, N-able N-central]
+    proposed_module: RMM-PATCH-MGMT
+
+  - id: B3-REMOTE-SESSIONS
+    candidate: remote_sessions
+    rationale: |
+      NinjaOne, Datto, ConnectWise embed remote-control session records distinct from RMM
+      agents (TeamViewer, Splashtop, native). REMOTE-ACCESS domain may own this; possible
+      overlap with rmm_agents.
+    vendor_evidence: [NinjaOne, Datto RMM, ConnectWise RMM]
+    proposed_module: RMM-AGENT-MGMT
+
+  - id: B3-SCRIPT-RUNS
+    candidate: script_runs
+    rationale: |
+      Distinct from automation_scripts in NinjaOne, Atera, Action1. Script = definition;
+      script_run = execution event. Currently events 651 / 652 are the only record of
+      execution.
+    vendor_evidence: [NinjaOne, Atera, Action1]
+    proposed_module: RMM-AUTOMATION
+
+  - id: B3-COMPLIANCE-BASELINES
+    candidate: compliance_baselines
+    rationale: |
+      Action1, ManageEngine, N-able model security baselines (CIS, NIST) distinct from
+      monitoring_policies. Drift detection runs against the baseline.
+    vendor_evidence: [Action1, ManageEngine Endpoint Central, N-able N-central]
+    proposed_module: RMM-MONITORING
+
+  - id: B3-CUSTOMER-TENANTS
+    candidate: customer_tenants
+    rationale: |
+      All MSP-RMM vendors model the customer tenant (the MSP client organization) as a
+      first-class master separate from organizations. Multi-tenant data isolation depends
+      on this. Likely MSP-PSA territory.
+    vendor_evidence: [NinjaOne, Kaseya VSA, Datto RMM, ConnectWise RMM, N-able N-central]
+    proposed_module: MSP-PSA
+
+  - id: B3-AGENT-INSTALL-PACKAGES
+    candidate: agent_install_packages
+    rationale: |
+      NinjaOne, Action1, Atera ship installer-package records (per-OS, per-architecture,
+      signed binaries). Distinct from automation_scripts and rmm_agents.
+    vendor_evidence: [NinjaOne, Action1, Atera]
+    proposed_module: RMM-AGENT-MGMT
+
+  - id: B3-MOD-RMM-COMPLIANCE
+    candidate: RMM-COMPLIANCE module
+    rationale: |
+      If compliance_baselines + patch_approval_policies + drift-detection records get
+      loaded, a fifth module makes more sense than overloading RMM-MONITORING.
+    vendor_evidence: [Action1, ManageEngine Endpoint Central, N-able N-central]
+    proposed_module: new-module
+
+  - id: B3-MOD-RMM-REPORTING
+    candidate: RMM-REPORTING module (customer-facing dashboards / scheduled reports)
+    rationale: |
+      MSP-RMM vendors all ship customer-facing dashboard + scheduled report surfaces
+      (NinjaOne client portal, ConnectWise client portal). If RMM models the
+      customer-facing surface, a separate module fits cleanly.
+    vendor_evidence: [NinjaOne, ConnectWise RMM]
+    proposed_module: new-module
+
+  - id: B3-REG-SOC2
+    candidate: SOC 2 attestation regulation applicability
+    rationale: |
+      MSPs serve regulated customers and inherit SOC 2 obligations on access logging and
+      change tracking; entity model unclear (regulations row only, or also a
+      compliance_attestations entity).
+    vendor_evidence: [absent (regulatory-body authority, not vendor-product evidence)]
+
+  - id: B3-REG-HIPAA-PASSTHROUGH
+    candidate: HIPAA pass-through applicability
+    rationale: |
+      MSPs serving healthcare customers inherit HIPAA Business Associate Agreement
+      obligations.
+    vendor_evidence: [absent (regulatory-body authority)]
+
+  - id: B3-REG-CMMC
+    candidate: CMMC applicability
+    rationale: |
+      MSPs serving US DoD contractors are subject to CMMC Level 2 or Level 3 mandates.
+    vendor_evidence: [absent (regulatory-body authority)]
+
+  - id: B3-REG-NIS2
+    candidate: NIS2 applicability
+    rationale: |
+      EU MSPs as critical-infrastructure suppliers are in NIS2 scope.
+    vendor_evidence: [absent (regulatory-body authority)]

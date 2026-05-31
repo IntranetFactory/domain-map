@@ -1,0 +1,257 @@
+schema_version: 2
+domain: IPAAS
+status: feedback_needed
+next_action_by: blocked
+last_audit: "2026-05-31"
+
+b1a: []
+
+b1b:
+  - id: B1B-S1
+    summary: "Author IPAAS modules (default split: IPAAS-RECIPE-DESIGN + IPAAS-RUNTIME) + 5-7 capabilities + DMDO master rows; cures M1/M2/M4/M6 + A2."
+    finding: "Zero `domain_modules`, zero `capabilities` on domain_id=36. Rule #14 requires >=1 full module per domain; vendor surface implies 2 modules. Proposed: IPAAS-RECIPE-DESIGN (masters integration_recipes 469, integration_connectors 471, webhook_subscriptions 472, integration_triggers 473, integration_data_mappings 474) and IPAAS-RUNTIME (masters integration_runs 470). Proposed capability set: IPAAS-RECIPE-AUTHORING, IPAAS-CONNECTOR-LIBRARY (cross-cutting candidate per B2-S6), IPAAS-DATA-MAPPING, IPAAS-WEBHOOK-SUBSCRIPTION-MGMT, IPAAS-RECIPE-EXECUTION, IPAAS-ERROR-HANDLING-AND-RETRY."
+    action: "Author 2 `domain_modules` rows + 5-7 `capabilities` rows + `capability_domains` links + `domain_module_capabilities` links + 6 `domain_module_data_objects` master rows."
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+      - {type: user_decision, ref: B2-S6}
+    affected_masters:
+      - {data_object_id: 469, name: integration_recipes, target_module_id: null, workflow: published}
+      - {data_object_id: 470, name: integration_runs, target_module_id: null, workflow: lifecycle}
+      - {data_object_id: 471, name: integration_connectors, target_module_id: null, workflow: credential_lifecycle}
+      - {data_object_id: 472, name: webhook_subscriptions, target_module_id: null, workflow: subscription_lifecycle}
+      - {data_object_id: 473, name: integration_triggers, target_module_id: null, workflow: config_or_thin}
+      - {data_object_id: 474, name: integration_data_mappings, target_module_id: null, workflow: published}
+
+  - id: B1B-S2
+    summary: "Populate A4 `catalog_tagline` + `catalog_description` on domains row id=36 with user-approved wording per Rule #20."
+    finding: "`domains.catalog_tagline=''` and `domains.catalog_description=''` on id=36 (IPAAS). Rule #20 requires both populated in buyer voice for any domain with a vendor surface."
+    action: "Surface drafts; user supplies exact text; PATCH /domains?id=eq.36."
+    blocked_by:
+      - {type: user_decision, ref: B2-S2}
+
+  - id: B1B-S3
+    summary: "B4 pattern flag flips on 5 IPAAS masters + decide credential-storage (connector vs connection)."
+    finding: "All pattern flags (has_personal_content, has_submit_lock, has_single_approver) on data_objects 469-474 are still default false. Audit proposes: integration_recipes.has_submit_lock=true + has_single_approver=true; integration_runs.has_submit_lock=true; integration_connectors.has_personal_content=true (or move to integration_connections per B3-S1); integration_data_mappings.has_submit_lock=true."
+    action: "User confirms each flag; PATCH rows. If connection/connector split adopted (B3-S1), personal_content flag relocates to the new master."
+    blocked_by:
+      - {type: user_decision, ref: B2-S3}
+      - {type: depends_on, ref: B3-S1, reason: "connection vs connector split shifts where has_personal_content lands"}
+    affected_masters:
+      - {data_object_id: 469, name: integration_recipes, target_module_id: null, workflow: has_submit_lock+has_single_approver}
+      - {data_object_id: 470, name: integration_runs, target_module_id: null, workflow: has_submit_lock}
+      - {data_object_id: 471, name: integration_connectors, target_module_id: null, workflow: has_personal_content}
+      - {data_object_id: 474, name: integration_data_mappings, target_module_id: null, workflow: has_submit_lock}
+
+  - id: B1B-S4
+    summary: "B6 hard-fail: author 6-7 intra-domain `data_object_relationships` covering recipe contains triggers, recipe references connectors, recipe defines mappings, trigger produces runs, run uses connectors, webhook is_subtype_of trigger (or sibling), run applies mappings."
+    finding: "Zero intra-domain `data_object_relationships` among IPAAS masters 469-474. The 5 user-edges from data_object 748 (Rule #10) were authored 2026-05-31 but cover only the platform-builtin direction, not the master-to-master direction."
+    action: "Draft cluster-drafts block; surface for user approval; load via load_cluster_drafts.ts pattern."
+    blocked_by:
+      - {type: user_decision, ref: B2-S4, reason: "webhook-as-subtype vs sibling decision shifts row count by one"}
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_entities:
+      - integration_recipes
+      - integration_triggers
+      - integration_connectors
+      - integration_data_mappings
+      - integration_runs
+      - webhook_subscriptions
+
+  - id: B1B-S6
+    summary: "B11 hard-fail: author ~24-32 `data_object_aliases` rows covering Boomi, Workato, MuleSoft, ServiceNow IH, Zapier, Make.com, Tray.io, SnapLogic vendor terminology across 6 IPAAS masters."
+    finding: "Zero `data_object_aliases` rows on any of the 6 IPAAS masters (469-474). Without aliases the architect agent cannot bridge vendor terminology to the canonical names."
+    action: "Draft alias rows (6 masters x ~4-6 aliases) and load via cluster-drafts pattern. Vendor terms enumerated in the 2026-05-30 audit B1-S6 row."
+    blocked_by:
+      - {type: depends_on, ref: B2-S8, reason: "if additional vendor solutions land (Zapier/Make.com/Tray.io/SnapLogic), additional alias terms join the draft set"}
+    vendor_evidence:
+      - Boomi
+      - Workato
+      - MuleSoft
+      - ServiceNow Integration Hub
+      - Zapier
+      - Make.com
+      - Tray.io
+      - SnapLogic
+    affected_entities:
+      - integration_recipes
+      - integration_runs
+      - integration_connectors
+      - webhook_subscriptions
+      - integration_triggers
+      - integration_data_mappings
+
+  - id: B1B-S7
+    summary: "B12 hard-fail: author ~22-28 `data_object_lifecycle_states` rows across 5 of 6 IPAAS masters (triggers config-shape per B2-S4 decision)."
+    finding: "Zero `data_object_lifecycle_states` on any IPAAS master. State machines: integration_recipes (draft -> tested -> published -> deprecated), integration_runs (queued -> running -> retrying -> succeeded/failed -> archived), integration_connectors (configured -> authenticated -> active -> credential_expired -> rotated -> revoked), webhook_subscriptions (configured -> active -> degraded -> disabled), integration_data_mappings (draft -> validated -> published). integration_triggers shape pending B2-S4."
+    action: "Author lifecycle states with domain_module_id pointing at the realizing module (M5 constraint)."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1, reason: "M5 requires domain_module_id on each lifecycle row"}
+      - {type: user_decision, ref: B2-S4, reason: "integration_triggers config-shape vs thin-lifecycle decision"}
+    affected_masters:
+      - {data_object_id: 469, name: integration_recipes, target_module_id: null, workflow: draft_to_deprecated}
+      - {data_object_id: 470, name: integration_runs, target_module_id: null, workflow: queued_to_archived}
+      - {data_object_id: 471, name: integration_connectors, target_module_id: null, workflow: configured_to_revoked}
+      - {data_object_id: 472, name: webhook_subscriptions, target_module_id: null, workflow: configured_to_disabled}
+      - {data_object_id: 474, name: integration_data_mappings, target_module_id: null, workflow: draft_to_published}
+
+  - id: B1B-S8
+    summary: "F1/F2 hard-fail: retire legacy domain-level skill 72 (`ipaas-system`), author 2 per-module system skills, move 6 skill_tools to new skills, add mutate + side_effect + fetch tools."
+    finding: "Legacy `skills` row id=72 (`ipaas-system`, skill_type=system, domain_id=36, domain_module_id=NULL). Rule #17 requires exactly one system skill per `domain_modules` row. Current 6 query-only `skill_tools` (533-538) are below the 5-20 typical floor and have zero mutate/side_effect/compute/fetch coverage."
+    action: "After B1B-S1 lands: author 2 module-anchored system skills (`ipaas_recipe_design_agent`, `ipaas_runtime_agent`); move 6 existing skill_tools to the new skills (query_integration_runs -> RUNTIME, the other 5 -> RECIPE-DESIGN); add mutate + side_effect + fetch tools per audit B1-S8 proposal; DELETE skill 72."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+
+  - id: B1B-S9
+    summary: "B10b hard-fail: PATCH `source_domain_module_id` on all 6 outbound IPAAS handoffs (765,766,767,768,769,801) + `target_domain_module_id` on 2 inbound (705, 748) after modules exist."
+    finding: "All 6 outbound IPAAS handoffs have NULL `source_domain_module_id`. Mapping derives once B1B-S1 lands: 765/766 -> IPAAS-RUNTIME (integration_runs is the source master); 767 -> IPAAS-RECIPE-DESIGN; 768 -> IPAAS-RECIPE-DESIGN; 769 -> IPAAS-RECIPE-DESIGN; 801 -> IPAAS-RECIPE-DESIGN. Inbound 705 and 748 have NULL `target_domain_module_id`; both attribute to IPAAS-RECIPE-DESIGN as consumer of vendor-published workflow / API spec changes (depends on B2-S5)."
+    action: "PATCH pass on 8 handoff rows after B1B-S1."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: user_decision, ref: B2-S5, reason: "inbound consumer-DMDO design choice determines target_domain_module_id on 705/748"}
+    affected_handoffs:
+      - {handoff_id: 765, direction: outbound, source_domain: IPAAS, target_domain: ITSM, trigger_event: integration_run.failed, payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 766, direction: outbound, source_domain: IPAAS, target_domain: OBS, trigger_event: integration_run.failed, payload: integration_runs, null_field: source_domain_module_id}
+      - {handoff_id: 767, direction: outbound, source_domain: IPAAS, target_domain: APIM, trigger_event: integration_connector.credential_expired, payload: integration_connectors, null_field: source_domain_module_id}
+      - {handoff_id: 768, direction: outbound, source_domain: IPAAS, target_domain: TEST-MGMT, trigger_event: integration_data_mapping.updated, payload: integration_data_mappings, null_field: source_domain_module_id}
+      - {handoff_id: 769, direction: outbound, source_domain: IPAAS, target_domain: WORK-MGMT, trigger_event: webhook_subscription.delivery_failed, payload: webhook_subscriptions, null_field: source_domain_module_id}
+      - {handoff_id: 801, direction: outbound, source_domain: IPAAS, target_domain: VSDP, trigger_event: integration_recipe.published, payload: integration_recipes, null_field: source_domain_module_id}
+      - {handoff_id: 705, direction: inbound, source_domain: LCAP, target_domain: IPAAS, trigger_event: extend_workflow.published, payload: extend_workflows, null_field: target_domain_module_id}
+      - {handoff_id: 748, direction: inbound, source_domain: APIM, target_domain: IPAAS, trigger_event: api_specification.updated, payload: api_specifications, null_field: target_domain_module_id}
+
+  - id: B1B-S10
+    summary: "B8 hard-fail: author 6 outbound cross-domain `data_object_relationships` from IPAAS masters to target-domain masters mirroring the 6 outbound handoffs."
+    finding: "Zero outbound cross-domain `data_object_relationships` from IPAAS masters. Proposed mirrors: 765 -> integration_runs opens service_incidents (target id 47 confirmed); 766 -> integration_runs reports_to OBS master (target TBD); 767 -> integration_connectors federates_with api_specifications (target id 457 confirmed); 768 -> integration_data_mappings exposes_to test_cases (target id 572 confirmed); 769 -> webhook_subscriptions opens work_tasks (target master TBD); 801 -> integration_recipes records_in VSDP master (target TBD)."
+    action: "Author 6 outbound `data_object_relationships` rows; 3 of 6 need one-query verification of the target domain's current master before authoring."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S4}
+      - {type: catalog_addition, scope: domains, trigger: "OBS/WORK-MGMT/VSDP target masters must be confirmed"}
+
+  - id: B1B-S11
+    summary: "B9b: author 3 intra-domain handoffs (RECIPE-DESIGN -> RUNTIME) once modules + lifecycle states exist."
+    finding: "Zero intra-domain handoffs. After B1B-S1 + B1B-S7 land, cross-module pairs derive: integration_recipe.published (RECIPE-DESIGN) -> RUNTIME; integration_trigger.fired (RECIPE-DESIGN) spawns integration_runs (RUNTIME); webhook_subscription.delivery_failed (RECIPE-DESIGN) -> RUNTIME retry."
+    action: "Author 3 intra-domain `handoffs` rows with source_domain_id = target_domain_id = 36, integration_pattern=lifecycle_progression, friction_level=low."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: prerequisite_entity, ref: B1B-S7}
+
+b2:
+  - id: B2-S1
+    summary: "Approve 2-module split (IPAAS-RECIPE-DESIGN + IPAAS-RUNTIME) + capability set, or propose alternative."
+    question: "Approve the 2-module split with RECIPE-DESIGN (masters 469, 471, 472, 473, 474) and RUNTIME (masters 470), with capabilities IPAAS-RECIPE-AUTHORING, IPAAS-CONNECTOR-LIBRARY (cross-cutting candidate, see B2-S6), IPAAS-DATA-MAPPING, IPAAS-WEBHOOK-SUBSCRIPTION-MGMT, IPAAS-RECIPE-EXECUTION, IPAAS-ERROR-HANDLING-AND-RETRY? Or alternative (3-module split splitting connectors as IPAAS-CONNECTOR-MGMT or splitting RUNTIME into RUNTIME + OBSERVABILITY; single-module; other)?"
+    options:
+      - "approve 2-module split as proposed"
+      - "3-module split (connectors out)"
+      - "3-module split (observability out)"
+      - "single-module"
+      - "other (specify)"
+    why: "Module split decision drives every other b1 item that requires module FKs (B1B-S4, B1B-S7, B1B-S8, B1B-S9, B1B-S10, B1B-S11)."
+
+  - id: B2-S2
+    summary: "Supply exact `catalog_tagline` + `catalog_description` text for domains row 36 per Rule #20."
+    question: "Per Rule #20 the agent cannot author marketing voice. Sample tagline: 'Connect any SaaS app to any other without writing integration code.' Sample description omitted here. Please supply your exact text for both columns, or approve / rewrite the agent's samples."
+    options:
+      - "supply exact text"
+      - "approve samples"
+      - "defer"
+    why: "Rule #20 forbids overwriting buyer-voice columns without explicit user approval and forbids the agent from auto-writing marketing copy."
+
+  - id: B2-S3
+    summary: "Confirm B4 pattern flag flips on data_objects 469, 470, 471, 474 + decide whether to split connection vault from connector template."
+    question: "Per-row, confirm or rewrite: (a) integration_recipes.has_submit_lock=true + has_single_approver=true? (b) integration_runs.has_submit_lock=true? (c) integration_connectors.has_personal_content=true OR queue integration_connections as a separate master per B3-S1 and move the flag there? (d) integration_data_mappings.has_submit_lock=true?"
+    options:
+      - "approve all"
+      - "approve subset (specify)"
+      - "split connection vault (relocate has_personal_content to integration_connections)"
+      - "defer pending B3-S1 research"
+    why: "Pattern flags are workflow-shape judgments the user owns; the connection-vault decision interacts with B3-S1."
+
+  - id: B2-S4
+    summary: "Decide integration_triggers lifecycle shape + webhook_subscriptions relationship to triggers."
+    question: "(a) `integration_triggers` shape: config-shape with no workflow (Rule #12 exemption), or thin lifecycle (`configured -> active -> disabled`)? (b) Relationship between `integration_triggers` and `webhook_subscriptions`: webhook is_subtype_of trigger (Workato shape), or sibling concepts (Boomi shape)?"
+    options:
+      - "config-shape + sibling"
+      - "config-shape + subtype"
+      - "thin-lifecycle + sibling"
+      - "thin-lifecycle + subtype"
+    why: "Decision shifts B1B-S4 relationship row count by one and determines whether B1B-S7 authors a lifecycle for integration_triggers."
+
+  - id: B2-S5
+    summary: "Declare inbound payload consumer-DMDOs (LCAP extend_workflows 222, APIM api_specifications 457) on IPAAS-RECIPE-DESIGN, embedded_master shells, or domain-level only."
+    question: "How should IPAAS catalog its consumption of LCAP's `extend_workflows` (222) and APIM's `api_specifications` (457) that drive recipe / connector updates? Three options: (a) `consumer + optional` DMDO rows on IPAAS-RECIPE-DESIGN; (b) `embedded_master + optional` (preserves standalone-deploy story); (c) accept these as domain-level dependencies only (no DMDO row)."
+    options:
+      - "consumer + optional"
+      - "embedded_master + optional"
+      - "domain-level only"
+    why: "Determines target_domain_module_id backfill on inbound handoffs 705 and 748 (B1B-S9)."
+
+  - id: B2-S6
+    summary: "Decide cross-cutting capability rename: `LCAP-INTEGRATION-CONNECTORS` (id 334) -> `INTEGRATION-CONNECTORS`, or parallel, or wait for third domain."
+    question: "Existing capability id 334 was authored under LCAP. iPaaS connectors are the same surface. (a) Rename to `INTEGRATION-CONNECTORS` and link to BOTH LCAP and IPAAS via `capability_domains`; (b) leave the LCAP-prefixed capability and author parallel `IPAAS-CONNECTOR-LIBRARY` (double-counts); (c) wait until a third domain (DI / IDP / DXP) confirms the shape."
+    options:
+      - "rename + link both"
+      - "parallel capability"
+      - "wait for third domain"
+    why: "Per Rule #18 cross-cutting promotion threshold is >=3 domains; today only LCAP + IPAAS but DI is likely the third."
+
+  - id: B2-S7
+    summary: "Decide canonical business function for IPAAS owner: extend `IT Infrastructure` (id 58) under `IT Operations` (id 27), or re-link IPAAS to id 27."
+    question: "`business_function_domains` row carries `IT Infrastructure` (id 58) as owner but the canonical 20-function spine specifies `IT Operations` (id 27). (a) Is id 58 a legitimate sub-function under IT Operations (add parent_business_function_id link)? (b) Or is id 58 a parallel-tier alternative that should be re-linked to id 27?"
+    options:
+      - "extend (id 58 sub of id 27)"
+      - "re-link IPAAS owner to id 27"
+    why: "Catalog-wide spine hygiene; the agent cannot decide whether id 58 was an intentional sub-function or an accidental parallel."
+
+  - id: B2-S8
+    summary: "List which of Zapier, Make.com, Tray.io, Celigo, SnapLogic, IBM App Connect, Microsoft Power Automate, Jitterbit to add as IPAAS solutions and with which coverage_level."
+    question: "A3 passes count-wise (4 primary solutions: ServiceNow Integration Hub, MuleSoft Anypoint Platform, Boomi Platform, Workato) but the surface is materially incomplete. Pick which vendors to add with which `coverage_level` per row. Zapier / Make.com may belong primarily in a separate CITIZEN-AUTO market (queued in _missing-domains.md per prior audit)."
+    options:
+      - "add all 8 as primary"
+      - "add subset (specify per row)"
+      - "defer pending CITIZEN-AUTO market decision"
+
+b3:
+  - id: B3-S1
+    candidate: integration_connections
+    rationale: "Vendor evidence shows iPaaS vendors model a separate `connection` entity (configured credentials bound to a recipe) distinct from the reusable `connector` template. Workato 'Connection' vs 'Connector', Boomi 'Account' vs 'Connector', MuleSoft 'Connector configuration', Tray.io 'Authentication'. If confirmed, has_personal_content flag (B2-S3) moves here."
+    vendor_evidence: [Workato, Boomi, MuleSoft, Tray.io]
+    proposed_module: IPAAS-RECIPE-DESIGN
+
+  - id: B3-S2
+    candidate: integration_run_logs
+    rationale: "Universal sub-resource of integration_runs that vendors expose as first-class queryable entity for audit + debugging. Workato per-step job log, Boomi process log, MuleSoft flow log, Zapier task history step."
+    vendor_evidence: [Workato, Boomi, MuleSoft, Zapier]
+    proposed_module: IPAAS-RUNTIME
+
+  - id: B3-S3
+    candidate: integration_environments
+    rationale: "Promotion across dev / test / prod is a core iPaaS workflow. Workato workspace + environment, Boomi atom + molecule + environment, MuleSoft environment, SnapLogic project space. May overlap with cross-cutting <DOMAIN>-ENV-MGMT concept that APP-PAAS / LCAP also have."
+    vendor_evidence: [Workato, Boomi, MuleSoft, SnapLogic]
+    proposed_module: IPAAS-RECIPE-DESIGN
+
+  - id: B3-S4
+    candidate: integration_error_records
+    rationale: "Distinct from a failed run row: a single run may produce multiple error records and errors persist after the run is archived. Workato error monitor, Boomi process errors, MuleSoft DLQ."
+    vendor_evidence: [Workato, Boomi, MuleSoft]
+    proposed_module: IPAAS-RUNTIME
+
+  - id: B3-S5
+    candidate: integration_schedule_policies
+    rationale: "Scheduling surface (cron, throttling, queue priority) may be config-shape on `integration_triggers` (per B2-S4) or a separate master if rich enough. Workato scheduled triggers, Boomi process schedule, Zapier scheduled Zaps."
+    vendor_evidence: [Workato, Boomi, Zapier]
+    proposed_module: IPAAS-RECIPE-DESIGN
+
+extra_report_only_other_domains:
+  - "OBS B10b owes target_domain_module_id on handoff 766 once OBS modules exist."
+  - "APIM B10b owes target_domain_module_id on handoff 767 + source_domain_module_id on 748 once APIM modules exist."
+  - "TEST-MGMT B10b owes target_domain_module_id on handoff 768 once TEST-MGMT modules exist."
+  - "VSDP B10b owes target_domain_module_id on handoff 801 once VSDP modules exist."
+  - "LCAP B10b owes source_domain_module_id on inbound handoff 705 once LCAP modules exist."
+  - "LCAP B8 owes outbound `extend_workflows feeds_into <ipaas_master>` relationship row."
+  - "APIM B8 owes outbound `api_specifications drives_refresh_of integration_connectors` relationship row."
+  - "OBS B8 owes outbound `integration_runs reports_to <obs_master>` relationship row once OBS masters exist."
+  - "VSDP B8 owes outbound relationship row mirroring handoff 801."
+  - "Pre-existing U+2014 em-dash in `domains.business_logic` on row id=36 between 'delivery at scale' and 'code-dominant by definition'; routes to catalog-wide em-dash cleanup sweep."
+
+extra_candidates_queued_to_missing_domains_md:
+  - "EVENT-BROKER-PAAS (Solace PubSub+, Confluent Cloud, AWS EventBridge, Ably, Pusher, Kafka-as-a-Service)"
+  - "CITIZEN-AUTO (Zapier, Make.com, IFTTT, Pipedream, n8n cloud, Pabbly Connect)"

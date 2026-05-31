@@ -1,0 +1,374 @@
+schema_version: 2
+domain: APP-PAAS
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S13-EVT-CATEGORIES
+    summary: "7 APP-PAAS-owned trigger_events have empty event_category"
+    finding: >
+      Per Rule #13 the allowed values are lifecycle, state_change, threshold, signal.
+      All 7 trigger_events on APP-PAAS masters (818-824) currently carry
+      event_category="". Proposed mapping derived from event-name semantics: 818
+      (paas_application.created) lifecycle (creation event); 819
+      (paas_deployment.succeeded) state_change (terminal transition); 820
+      (paas_deployment.failed) state_change (terminal transition); 821
+      (paas_environment.promoted) state_change (gating transition); 822
+      (paas_runtime.scaled) state_change (autoscaler-driven transition); 823
+      (paas_addon.provisioned) lifecycle (creation event); 824 (paas_build.failed)
+      state_change (terminal transition). The lifecycle / state_change split mirrors
+      the ATS analogue: lifecycle for creation and completion, state_change for
+      terminal and gating transitions.
+    action: >
+      PATCH trigger_events.event_category per the mapping below. Verify with user
+      before PATCH; the values are deterministic from Rule #13 vocabulary but the
+      lifecycle / state_change split involves the same judgment call ATS surfaced.
+    affected_events:
+      - {id: 818, event_name: "paas_application.created", current_category: "", proposed_category: "lifecycle"}
+      - {id: 819, event_name: "paas_deployment.succeeded", current_category: "", proposed_category: "state_change"}
+      - {id: 820, event_name: "paas_deployment.failed", current_category: "", proposed_category: "state_change"}
+      - {id: 821, event_name: "paas_environment.promoted", current_category: "", proposed_category: "state_change"}
+      - {id: 822, event_name: "paas_runtime.scaled", current_category: "", proposed_category: "state_change"}
+      - {id: 823, event_name: "paas_addon.provisioned", current_category: "", proposed_category: "lifecycle"}
+      - {id: 824, event_name: "paas_build.failed", current_category: "", proposed_category: "state_change"}
+
+b1b:
+  - id: B1B-S1-MODULES-CAPABILITIES
+    summary: "Zero domain_modules + zero capabilities; M1/M2/M4/M6 + A2 hard-fail"
+    finding: >
+      Rule #14 requires at least 1 full module per domain. APP-PAAS has zero
+      domain_modules rows (M1 hard-fail), zero capability_domains rows (A2 hard-fail),
+      zero domain_module_capabilities (M6 vacuous), zero domain_module_data_objects
+      (B-band module grain vacuous). Proposed 2-module split: APP-PAAS-RUNTIME
+      (masters paas_applications 463, paas_environments 465, paas_runtime_instances
+      466, paas_addons 467) and APP-PAAS-DELIVERY (masters paas_deployments 464,
+      paas_build_records 468). Proposed capability set under B2-S1: managed runtime
+      (link to existing LCAP-MANAGED-RUNTIME id 333 or author parallel),
+      autoscaling, environment management, addon marketplace on RUNTIME; build
+      pipeline, deploy/release on DELIVERY.
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    action: >
+      After B2-S1 lands: author 2 domain_modules rows + 5-7 capabilities rows +
+      capability_domains links + domain_module_capabilities links + 6
+      domain_module_data_objects master rows in a focused loader.
+    affected_modules: []
+    affected_masters:
+      - {data_object_id: 463, name: "paas_applications", target_module_id: null, workflow: "provisioned -> active -> archived"}
+      - {data_object_id: 464, name: "paas_deployments", target_module_id: null, workflow: "queued -> building -> deploying -> succeeded/failed -> rolled_back"}
+      - {data_object_id: 465, name: "paas_environments", target_module_id: null, workflow: "configured -> active -> promoted -> archived"}
+      - {data_object_id: 466, name: "paas_runtime_instances", target_module_id: null, workflow: "starting -> running -> scaling -> draining -> stopped (B2-S4 decides workflow vs config-shape)"}
+      - {data_object_id: 467, name: "paas_addons", target_module_id: null, workflow: "provisioning -> active -> degraded -> deprovisioned"}
+      - {data_object_id: 468, name: "paas_build_records", target_module_id: null, workflow: "queued -> building -> tested -> ready/failed"}
+
+  - id: B1B-S2-CATALOG-UX
+    summary: "A4 hard-fail; catalog_tagline and catalog_description both empty"
+    finding: >
+      Rule #20 requires both fields populated in buyer voice (workflow + value, not
+      analyst voice). APP-PAAS is a buyer-facing market with 10 primary-coverage
+      solutions in solution_domains.
+    blocked_by:
+      - {type: user_decision, ref: B2-S2}
+    action: >
+      Draft both per Rule #20 voice rule; surface to user; await exact wording per
+      B2-S2 before write. Never overwrite a non-empty value without explicit per-row
+      user approval.
+
+  - id: B1B-S3-PATTERN-FLAGS
+    summary: "B4 pattern flag re-evaluation; 3 candidate flips identified"
+    finding: >
+      All 6 masters carry has_personal_content=false, has_submit_lock=false,
+      has_single_approver=false (default values; positive re-evaluation pending).
+      Candidate flips: paas_deployments.has_submit_lock=true (succeeded deployments
+      are immutable; rollback creates a new deployment); paas_build_records.has_submit_lock=true
+      (build artifact immutable once complete); paas_addons.has_personal_content=true
+      (database / cache addons carry connection strings or credentials at provisioning).
+      Other 3 masters: no flag flips proposed.
+    blocked_by:
+      - {type: user_decision, ref: B2-S3}
+    action: >
+      PATCH the 3 flags per user confirmation; surface decision in chat, do NOT write
+      to data_objects.notes per Rule #15.
+    affected_masters:
+      - {data_object_id: 464, name: "paas_deployments", target_module_id: null, workflow: "has_submit_lock=true (immutable post-success)"}
+      - {data_object_id: 468, name: "paas_build_records", target_module_id: null, workflow: "has_submit_lock=true (artifact immutable post-build)"}
+      - {data_object_id: 467, name: "paas_addons", target_module_id: null, workflow: "has_personal_content=true (credentials at provisioning)"}
+
+  - id: B1B-S4-INTRA-DOMAIN-RELS
+    summary: "B6 hard-fail; zero master-master intra-domain data_object_relationships"
+    finding: >
+      Only the 5 users-edges (1617-1621) loaded by the 2026-05-31 continuation exist
+      on APP-PAAS masters. Zero master-master edges. Minimum coherent edge set of 7
+      rows: (a) paas_applications has_environments paas_environments 1:N; (b)
+      paas_applications has_deployments paas_deployments 1:N; (c) paas_applications
+      has_addons paas_addons 1:N; (d) paas_deployments produces paas_runtime_instances
+      1:N; (e) paas_deployments consumes paas_build_records N:1 (owner_side =
+      paas_build_records); (f) paas_environments hosts paas_runtime_instances 1:N;
+      (g) paas_environments scopes paas_deployments 1:N.
+    blocked_by:
+      - {type: depends_on, ref: B1-S1, reason: "module attribution informs is_required + owner_side annotations on some edges"}
+    action: >
+      Author 7 data_object_relationships rows via the cluster-drafts loader pattern.
+      Draft block (verb + inverse + cardinality + is_required + owner_side) goes
+      through Bucket 1 approval before loading.
+    affected_entities: ["paas_applications", "paas_deployments", "paas_environments", "paas_runtime_instances", "paas_addons", "paas_build_records"]
+
+  - id: B1B-S6-ALIASES
+    summary: "B11 hard-fail; zero data_object_aliases on any APP-PAAS master"
+    finding: >
+      6 masters with strong vendor-specific synonyms across all 10 solutions. Sample
+      synonyms (Rule #18 commerce-shaped alias_name allowed): paas_applications
+      (Heroku "app", Vercel "project", Render "service", Netlify "site", AWS
+      Beanstalk "application"); paas_deployments (Heroku "release", Vercel
+      "deployment", Render "deploy", Fly.io "release", Netlify "deploy", Azure App
+      Service "deployment slot", App Engine "version"); paas_environments (Heroku
+      "pipeline stage", Vercel "environment", Render "service environment", Azure
+      App Service "deployment slot"); paas_runtime_instances (Heroku "dyno", Fly.io
+      "machine", App Engine "instance"); paas_addons (Heroku "addon", Vercel
+      "integration", Render "managed service", Railway "plugin"); paas_build_records
+      (Heroku "build", Vercel "build", Render "build", Netlify "build").
+    blocked_by:
+      - {type: user_decision, ref: B2-ALIASES, reason: "loader-prompt scope requires pre-specified tuples for bulk alias inserts; user approves exact tuples"}
+    action: >
+      Draft ~20 alias rows (6 masters x ~3-5 aliases); load via cluster-drafts
+      pattern once user pre-specifies the exact tuples.
+    affected_entities: ["paas_applications", "paas_deployments", "paas_environments", "paas_runtime_instances", "paas_addons", "paas_build_records"]
+    vendor_evidence: ["Heroku", "Vercel", "Render", "Fly.io", "Railway", "Netlify", "AWS Elastic Beanstalk", "Azure App Service", "Google App Engine", "DigitalOcean App Platform"]
+
+  - id: B1B-S7-LIFECYCLE-STATES
+    summary: "B12 hard-fail; zero data_object_lifecycle_states on any APP-PAAS master"
+    finding: >
+      Every master has an obvious workflow except paas_runtime_instances (B2-S4
+      decides workflow vs config-shape). Proposed states (5 masters with workflow):
+      paas_applications (provisioned -> active -> archived; archived
+      requires_permission=true); paas_deployments (queued -> building -> deploying ->
+      succeeded/failed -> rolled_back; deploying/succeeded/failed/rolled_back
+      requires_permission=true); paas_environments (configured -> active -> promoted ->
+      archived; promoted requires_permission=true); paas_addons (provisioning ->
+      active -> degraded -> deprovisioned; deprovisioned requires_permission=true);
+      paas_build_records (queued -> building -> tested -> ready/failed; ready/failed
+      requires_permission=true). domain_module_id on each row depends on B1-S1.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1-MODULES-CAPABILITIES}
+      - {type: user_decision, ref: B2-S4}
+    action: >
+      After B1-S1 + B2-S4 land: draft state machines (~22-30 rows) and load via a
+      focused loader. Each lifecycle row carries domain_module_id pointing at the
+      realizing module per M5.
+    affected_masters:
+      - {data_object_id: 463, name: "paas_applications", target_module_id: null, workflow: "provisioned -> active -> archived"}
+      - {data_object_id: 464, name: "paas_deployments", target_module_id: null, workflow: "queued -> building -> deploying -> succeeded/failed -> rolled_back"}
+      - {data_object_id: 465, name: "paas_environments", target_module_id: null, workflow: "configured -> active -> promoted -> archived"}
+      - {data_object_id: 466, name: "paas_runtime_instances", target_module_id: null, workflow: "B2-S4 decides"}
+      - {data_object_id: 467, name: "paas_addons", target_module_id: null, workflow: "provisioning -> active -> degraded -> deprovisioned"}
+      - {data_object_id: 468, name: "paas_build_records", target_module_id: null, workflow: "queued -> building -> tested -> ready/failed"}
+
+  - id: B1B-S8-LEGACY-SKILL-RETIREMENT
+    summary: "F1 hard-fail-pending; legacy domain-level system skill app-paas-system (id 30) remains"
+    finding: >
+      skills row id 30 (app-paas-system, skill_type=system, domain_id=76,
+      domain_module_id=NULL) is the legacy shape Rule #17 forbids once any
+      module-level system skill exists. F1 currently sits in vacuous transitional
+      state. Once B1-S1 lands and module-level system skills are authored, F1
+      hardens. The 6 linked query_* skill_tools (310-315) re-anchor to the new
+      per-module skills: query_paas_applications + query_paas_environments +
+      query_paas_runtime_instances + query_paas_addons -> APP-PAAS-RUNTIME skill;
+      query_paas_deployments + query_paas_build_records -> APP-PAAS-DELIVERY skill.
+      Skill_name also uses kebab against the snake <module_code_lower>_agent
+      convention.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1-MODULES-CAPABILITIES}
+    action: >
+      After B1-S1: author 2 module-anchored system skills (app_paas_runtime_agent,
+      app_paas_delivery_agent); PATCH the 6 skill_tools rows to point at the new
+      skills; DELETE legacy skill 30. Also add mutate + workflow-gate tools per Rule
+      #17 floor (5-20 per skill; current 6 query-only is below floor).
+
+  - id: B1B-S9-HANDOFF-MODULE-FK
+    summary: "B10b hard-fail; 9 of 10 handoffs lack module FKs; 6 of 7 outbound NULL on both, all 3 inbound NULL on both, handoff 757 has target_module_id=38 only"
+    finding: >
+      Outbound: 753 / 754 / 755 / 756 / 757 / 758 / 798 all NULL source_domain_module_id;
+      753 / 754 / 755 / 756 / 758 / 798 also NULL target_domain_module_id (target
+      domains KUBE-PLAT / VSDP / ITOM / OBS / SAM also have M1 gaps per the
+      neighbor-discovery sweep). Inbound: 704 (LCAP -> APP-PAAS, payload lcap_apps
+      220), 759 (KUBE-PLAT -> APP-PAAS, payload container_workloads 450), 770 (VSDP
+      -> APP-PAAS, payload software_deployments 682) all NULL on both. Source-side
+      derivation blocked behind B1-S1. Handoff 757 already carries
+      target_domain_module_id=38 (ITSM-INCIDENT-MGMT confirmed). Anomaly note: 757's
+      trigger_event.data_object_id=464 (paas_deployments) but
+      handoffs.data_object_id=47 (service_incidents) - split-payload shape consistent
+      with paas-deployment-fails opens an ITSM incident.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1-MODULES-CAPABILITIES}
+    action: >
+      After B1-S1: single PATCH pass on 7 outbound rows (source_module_id =
+      APP-PAAS-DELIVERY for 753/754/756/757/758, APP-PAAS-RUNTIME for 755/798); +
+      target_module backfill on 3 inbound rows (point at the receiving APP-PAAS
+      module per the consumer DMDO from B2-S5). Source-side NULL on inbound rows
+      stays report-only (LCAP / KUBE-PLAT / VSDP own that backfill).
+    affected_handoffs:
+      - {handoff_id: 753, direction: outbound, source_domain: "APP-PAAS", target_domain: "KUBE-PLAT", trigger_event: "paas_deployment.succeeded", payload: "paas_deployments", null_field: "source_domain_module_id and target_domain_module_id"}
+      - {handoff_id: 754, direction: outbound, source_domain: "APP-PAAS", target_domain: "VSDP", trigger_event: "paas_deployment.succeeded", payload: "paas_deployments", null_field: "source_domain_module_id and target_domain_module_id"}
+      - {handoff_id: 755, direction: outbound, source_domain: "APP-PAAS", target_domain: "ITOM", trigger_event: "paas_runtime.scaled", payload: "paas_runtime_instances", null_field: "source_domain_module_id and target_domain_module_id"}
+      - {handoff_id: 756, direction: outbound, source_domain: "APP-PAAS", target_domain: "OBS", trigger_event: "paas_deployment.succeeded", payload: "paas_deployments", null_field: "source_domain_module_id and target_domain_module_id"}
+      - {handoff_id: 757, direction: outbound, source_domain: "APP-PAAS", target_domain: "ITSM", trigger_event: "paas_deployment.failed", payload: "service_incidents", null_field: "source_domain_module_id only (target_module_id=38 set)"}
+      - {handoff_id: 758, direction: outbound, source_domain: "APP-PAAS", target_domain: "VSDP", trigger_event: "paas_build.failed", payload: "paas_build_records", null_field: "source_domain_module_id and target_domain_module_id"}
+      - {handoff_id: 798, direction: outbound, source_domain: "APP-PAAS", target_domain: "SAM", trigger_event: "paas_addon.provisioned", payload: "paas_addons", null_field: "source_domain_module_id and target_domain_module_id"}
+      - {handoff_id: 704, direction: inbound, source_domain: "LCAP", target_domain: "APP-PAAS", trigger_event: "lcap_app.published", payload: "lcap_apps", null_field: "source_domain_module_id and target_domain_module_id"}
+      - {handoff_id: 759, direction: inbound, source_domain: "KUBE-PLAT", target_domain: "APP-PAAS", trigger_event: "container_workload.degraded", payload: "container_workloads", null_field: "source_domain_module_id and target_domain_module_id"}
+      - {handoff_id: 770, direction: inbound, source_domain: "VSDP", target_domain: "APP-PAAS", trigger_event: "software_deployment.completed", payload: "software_deployments", null_field: "source_domain_module_id and target_domain_module_id"}
+
+  - id: B1B-S10-CROSS-DOMAIN-RELS
+    summary: "B8 hard-fail; zero cross-domain data_object_relationships from APP-PAAS masters"
+    finding: >
+      7 outbound handoffs but zero cross-domain data_object_relationships from
+      APP-PAAS masters to target-domain masters. 3 rows directly resolvable now:
+      handoff 753 (paas_deployments runs_on container_workloads 450); handoff 754
+      (paas_deployments records_in software_deployments 682); handoff 757
+      (paas_deployments opens service_incidents 47). 4 rows defer pending one-query
+      check of target masters: handoff 755 (paas_runtime_instances -> ITOM master
+      TBD); handoff 756 (paas_deployments -> OBS master TBD); handoff 758
+      (paas_build_records -> VSDP master TBD); handoff 798 (paas_addons -> SAM
+      master TBD).
+    blocked_by:
+      - {type: depends_on, ref: B1-S4, reason: "intra-domain edges should land first to anchor the relationship cluster"}
+    action: >
+      After B1-S4: author the 3 fully-resolved cross-domain rows; defer the 4
+      pending rows to a one-query target-master verification pass against ITOM /
+      OBS / VSDP / SAM masters.
+    affected_handoffs:
+      - {handoff_id: 753, direction: outbound, source_domain: "APP-PAAS", target_domain: "KUBE-PLAT", trigger_event: "paas_deployment.succeeded", payload: "paas_deployments", null_field: "cross-domain relationship missing (target master container_workloads 450)"}
+      - {handoff_id: 754, direction: outbound, source_domain: "APP-PAAS", target_domain: "VSDP", trigger_event: "paas_deployment.succeeded", payload: "paas_deployments", null_field: "cross-domain relationship missing (target master software_deployments 682)"}
+      - {handoff_id: 757, direction: outbound, source_domain: "APP-PAAS", target_domain: "ITSM", trigger_event: "paas_deployment.failed", payload: "service_incidents", null_field: "cross-domain relationship missing (target master service_incidents 47)"}
+      - {handoff_id: 755, direction: outbound, source_domain: "APP-PAAS", target_domain: "ITOM", trigger_event: "paas_runtime.scaled", payload: "paas_runtime_instances", null_field: "target master pending one-query check"}
+      - {handoff_id: 756, direction: outbound, source_domain: "APP-PAAS", target_domain: "OBS", trigger_event: "paas_deployment.succeeded", payload: "paas_deployments", null_field: "target master pending one-query check"}
+      - {handoff_id: 758, direction: outbound, source_domain: "APP-PAAS", target_domain: "VSDP", trigger_event: "paas_build.failed", payload: "paas_build_records", null_field: "target master pending one-query check"}
+      - {handoff_id: 798, direction: outbound, source_domain: "APP-PAAS", target_domain: "SAM", trigger_event: "paas_addon.provisioned", payload: "paas_addons", null_field: "target master pending one-query check"}
+
+  - id: B1B-S11-INTRA-DOMAIN-HANDOFFS
+    summary: "B9b vacuous; intra-domain cross-module handoffs blocked behind M1"
+    finding: >
+      After B1-S1 lands and the modules + lifecycle states are authored, the
+      cross-module pairs derive: paas_deployment.succeeded (DELIVERY) ->
+      paas_runtime_instances (RUNTIME) inter-module; paas_environment.promoted
+      (RUNTIME) -> paas_deployments (DELIVERY) inter-module. Net 2 intra-domain
+      handoff rows expected. The paas_build.ready -> paas_deployment.queued pair
+      stays within APP-PAAS-DELIVERY (intra-module, no handoff row needed);
+      paas_addon.provisioned -> paas_environments stays within APP-PAAS-RUNTIME.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1-MODULES-CAPABILITIES}
+      - {type: prerequisite_entity, ref: B1B-S4-INTRA-DOMAIN-RELS}
+      - {type: prerequisite_entity, ref: B1B-S7-LIFECYCLE-STATES}
+    action: >
+      Author 2 intra-domain handoffs rows after B1-S1 + B1-S4 + B1-S7.
+      source_domain_id = target_domain_id = 76; integration_pattern:
+      lifecycle_progression; friction_level: low.
+
+b2:
+  - id: B2-S1
+    summary: "Module split + capability shape decision"
+    question: >
+      (a) Approve the proposed 2-module split APP-PAAS-RUNTIME (masters 463/465/466/467)
+      + APP-PAAS-DELIVERY (masters 464/468), or propose alternative? (b) Link to
+      existing cross-cutting LCAP-MANAGED-RUNTIME (id 333) or author parallel
+      APP-PAAS-MANAGED-RUNTIME? Rule #18 cross-cutting-capability convention says
+      >=3-domain shared capability earns the neutral name; today only LCAP links to
+      333 and APP-PAAS would make it 2, holding at 2 vs renaming to MANAGED-RUNTIME
+      is a Rule #18 call. (c) Is APP-PAAS-ADDON-MARKETPLACE worth a top-level
+      capability, or fold into APP-PAAS-ENV-MGMT since addons attach to environments?
+    options: ["approve 2-module split + link 333", "approve 2-module split + author APP-PAAS-MANAGED-RUNTIME", "rename 333 to MANAGED-RUNTIME (link both)", "alternative split", "fold ADDON-MARKETPLACE into ENV-MGMT"]
+    why: >
+      Cross-cutting decision is a Rule #18 call; module split shapes downstream Phase
+      B / E / F authoring on every subsequent state.yaml item.
+
+  - id: B2-S2
+    summary: "Catalog UX field wording (Rule #20)"
+    question: >
+      User must supply exact text for both domains.catalog_tagline and
+      domains.catalog_description in buyer voice (workflow + value, not analyst voice).
+    options: ["supply exact text", "approve agent draft after review", "skip until later marketing pass"]
+    why: >
+      Rule #20 forbids overwriting non-empty values without explicit per-row user
+      approval; once written, the value sticks.
+
+  - id: B2-S3
+    summary: "Pattern flag flips (Rule #12)"
+    question: >
+      Confirm or rewrite each proposed flip: paas_deployments.has_submit_lock=true,
+      paas_build_records.has_submit_lock=true, paas_addons.has_personal_content=true.
+    options: ["confirm all 3", "confirm subset", "rewrite", "decline"]
+
+  - id: B2-S4
+    summary: "paas_runtime_instances lifecycle shape (workflow vs config-shape)"
+    question: >
+      Treat as (a) a 5-state workflow machine (starting -> running -> scaling ->
+      draining -> stopped) all requires_permission=false since transitions fire from
+      the autoscaler not the user, or (b) config-shape on a state column per Rule
+      #12 exemption; surface decision in chat, do NOT write to data_objects.notes
+      per Rule #15.
+    options: ["a (5-state workflow)", "b (config-shape exemption)"]
+    why: >
+      Other 5 masters have obvious workflow state machines; runtime instances are
+      autoscaler-reconciled. Config-shape exemption avoids polluting the workflow
+      surface with reconciliation states.
+
+  - id: B2-S5
+    summary: "Consumer DMDO declarations for 3 inbound payload entities"
+    question: >
+      For each of LCAP lcap_apps (220, handoff 704), KUBE-PLAT container_workloads
+      (450, handoff 759), VSDP software_deployments (682, handoff 770): declare as
+      consumer + optional on the receiving APP-PAAS module (preferred, captures the
+      dependency in the catalog), or accept as domain-level only (no DMDO row)?
+    options: ["all 3 consumer + optional", "subset", "all domain-level only"]
+    why: >
+      Depends on B2-S1 module shape; the receiving module is APP-PAAS-RUNTIME for
+      lcap_apps + container_workloads and APP-PAAS-DELIVERY for software_deployments.
+
+  - id: B2-H1
+    summary: "APQC tag duplication on handoff 753"
+    question: >
+      Handoff 753 (paas_deployment.succeeded -> KUBE-PLAT) currently carries 1311
+      (Install/configure/upgrade infrastructure components L4) loaded as
+      agent_curated. The 2026-05-30 audit also proposed 52 (Deploy services/solutions
+      L2). Keep 1311 only, replace with 52, or co-tag both?
+    options: ["keep 1311", "replace with 52", "co-tag both"]
+
+b3:
+  - id: B3-RELEASE-VERSIONS
+    candidate: paas_release_versions
+    rationale: >
+      Distinct from a deployment in that a release names the immutable version;
+      some vendors collapse this into paas_deployments, others split. If split,
+      the master belongs on APP-PAAS-DELIVERY and would back the rollback workflow
+      more cleanly than paas_deployments alone.
+    vendor_evidence: ["Heroku release", "Vercel deployment version", "Render deploy version", "Azure App Service deployment slot version"]
+    proposed_module: APP-PAAS-DELIVERY
+
+  - id: B3-SECRETS
+    candidate: paas_secrets / paas_config_vars
+    rationale: >
+      Universal across modern PaaS. Likely an embedded_master if a separate
+      secrets-mgmt domain is later authored; today no such canonical owner exists
+      so APP-PAAS would master it directly.
+    vendor_evidence: ["Heroku config vars", "Vercel environment variables", "Render environment groups", "Fly.io secrets"]
+    proposed_module: APP-PAAS-RUNTIME
+
+  - id: B3-LOG-STREAMS
+    candidate: paas_log_streams
+    rationale: >
+      Either an APP-PAAS-mastered entity or consumer-only against OBS masters
+      depending on the boundary call. Vercel and Render expose log surfaces
+      directly through the PaaS API; Heroku's "log drains" is a canonical
+      APP-PAAS concept.
+    vendor_evidence: ["Heroku log drains", "Vercel logs", "Render logs"]
+    proposed_module: APP-PAAS-RUNTIME
+
+  - id: B3-CUSTOM-DOMAINS
+    candidate: paas_custom_domains
+    rationale: >
+      Universal: domain attachment + TLS cert lifecycle. Distinct workflow surface
+      from paas_environments since a single environment can attach multiple custom
+      domains.
+    vendor_evidence: ["Heroku custom domains", "Vercel domains", "Render custom domains", "Netlify domains", "Fly.io certificates"]
+    proposed_module: APP-PAAS-RUNTIME

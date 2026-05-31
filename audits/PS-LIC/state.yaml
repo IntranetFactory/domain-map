@@ -1,0 +1,277 @@
+schema_version: 2
+domain: PS-LIC
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a: []
+
+b1b:
+  - id: B1B-M1
+    summary: "PS-LIC has zero domain_modules; all M-band checks (M1, M2, M4, M5, M6, M8) and every downstream B/E/F surface gate on this."
+    finding: >-
+      `/domain_modules?domain_id=eq.46` returns empty and `/domain_module_host_domains?domain_id=eq.46` returns empty.
+      Rule #14 mandates every domain has >=1 `module_kind='full'` row; with three or more capabilities (recommended 8) the floor is >=2.
+      Until M1 cures, M2, M4, M5, M6, M8 cascade vacuous-fail, the F2 module-level system-skill requirement cannot land, the B10b
+      `source_domain_module_id` PATCH cannot be derived, B12 module-anchored lifecycle permissions cannot be authored, and the
+      B9 missing-handoff drafts (events 1052, 1053, 1056) cannot populate per-module FKs at write time.
+    action: >-
+      Wait on Bucket 2 #1 (module-shape pick) and Bucket 2 #2 (capability-set pick). Once both land, ship a single Phase A loader
+      adding `domain_modules` + `capabilities` + `capability_domains` + `domain_module_capabilities` + `domain_module_data_objects`
+      + re-anchored module-level system skills with `skill_tools`, then a Phase B loader for lifecycle states, pattern-flag
+      PATCHes, B10b source/target PATCHes, and the three missing-handoff drafts.
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+      - {type: user_decision, ref: B2-2}
+    affected_modules: []
+    affected_masters:
+      - {data_object_id: 641, name: permit_applications, target_module_id: null, workflow: application_intake}
+      - {data_object_id: 642, name: license_records, target_module_id: null, workflow: issuance_and_renewal}
+      - {data_object_id: 643, name: permit_inspections, target_module_id: null, workflow: inspection_and_enforcement}
+      - {data_object_id: 644, name: license_renewals, target_module_id: null, workflow: issuance_and_renewal}
+      - {data_object_id: 645, name: code_violations, target_module_id: null, workflow: inspection_and_enforcement}
+      - {data_object_id: 646, name: regulatory_fees, target_module_id: null, workflow: fees}
+    extra_recommended_module_codes:
+      - PS-LIC-APPLICATION-INTAKE
+      - PS-LIC-ISSUANCE-AND-RENEWAL
+      - PS-LIC-INSPECTION-AND-ENFORCEMENT
+      - PS-LIC-FEES
+
+  - id: B1B-B12
+    summary: "Zero data_object_lifecycle_states across all 6 PS-LIC masters; the workflow-gate permission layer is empty."
+    finding: >-
+      `/data_object_lifecycle_states?data_object_id=in.(641,642,643,644,645,646)` returns empty. Every published-verb trigger
+      event (`permit_application.approved`, `license.issued`, `license_renewal.due`, `permit_inspection.failed`,
+      `code_violation.issued`, `regulatory_fee.assessed`) implies a workflow gate the catalog is not yet expressing, so no
+      module-prefixed `<module>:<verb>_<entity>` permissions can be derived. Rule #12 is unsatisfied for all 6 `master +
+      required` data_objects.
+    action: >-
+      Once B1B-M1 cures, author lifecycle states per master. Suggested initial-and-published-state pairs:
+      permit_applications (`submitted` initial, `approved` / `denied` / `withdrawn` terminal); license_records (`issued`
+      initial, `active` / `suspended` / `revoked` / `expired`); permit_inspections (`scheduled` initial, `passed` / `failed`
+      terminal); license_renewals (`due` initial, `applied` / `renewed` / `lapsed` terminal); code_violations (`issued`
+      initial, `contested` / `paid` / `dismissed` terminal); regulatory_fees (`assessed` initial, `invoiced` / `paid` /
+      `waived` / `written_off` terminal). Set `requires_permission=true` on every state that gates a workflow transition;
+      set `domain_module_id` per the realizing module from the M1 cure.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+    affected_masters:
+      - {data_object_id: 641, name: permit_applications, target_module_id: null, workflow: application_intake}
+      - {data_object_id: 642, name: license_records, target_module_id: null, workflow: issuance_and_renewal}
+      - {data_object_id: 643, name: permit_inspections, target_module_id: null, workflow: inspection_and_enforcement}
+      - {data_object_id: 644, name: license_renewals, target_module_id: null, workflow: issuance_and_renewal}
+      - {data_object_id: 645, name: code_violations, target_module_id: null, workflow: inspection_and_enforcement}
+      - {data_object_id: 646, name: regulatory_fees, target_module_id: null, workflow: fees}
+
+  - id: B1B-B10b-RESIDUAL
+    summary: "All 6 PS-LIC outbound handoffs still have NULL source_domain_module_id; 4 also have NULL target_domain_module_id."
+    finding: >-
+      Source FKs: handoffs 921, 922, 923, 924, 925, 926 all have `source_domain_module_id IS NULL` because PS-LIC has zero
+      modules. Target FKs: handoffs 921 (ERP-FIN), 922 (GRC), 925 (ERP-FIN), 926 (GRC) all have `target_domain_module_id IS
+      NULL` because GRC and ERP-FIN have zero modules. Handoffs 923 and 924 already have `target_domain_module_id=112`
+      (CSM-CASE-MGMT) per the 2026-05-31 Continuation.
+    action: >-
+      Source FK PATCH for all 6 rows: derive `source_domain_module_id` from the module that masters each event's
+      `trigger_events.data_object_id` (handoff 921 -> PS-LIC-FEES, 922 -> PS-LIC-INSPECTION-AND-ENFORCEMENT, 923 ->
+      PS-LIC-INSPECTION-AND-ENFORCEMENT, 924 -> PS-LIC-ISSUANCE-AND-RENEWAL, 925 -> PS-LIC-ISSUANCE-AND-RENEWAL, 926 ->
+      PS-LIC-INSPECTION-AND-ENFORCEMENT under the recommended module shape). Target FK PATCH for handoffs 921, 925 once
+      ERP-FIN modularizes; for handoffs 922, 926 once GRC modularizes.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: M1}
+      - {type: domain_audit, blocking_domain: GRC, milestone: M1}
+    affected_handoffs:
+      - {handoff_id: 921, direction: outbound, source_domain: PS-LIC, target_domain: ERP-FIN, trigger_event: regulatory_fee.assessed, payload: regulatory_fees, null_field: both}
+      - {handoff_id: 922, direction: outbound, source_domain: PS-LIC, target_domain: GRC, trigger_event: code_violation.issued, payload: code_violations, null_field: both}
+      - {handoff_id: 923, direction: outbound, source_domain: PS-LIC, target_domain: CSM, trigger_event: permit_inspection.failed, payload: permit_inspections, null_field: source_only}
+      - {handoff_id: 924, direction: outbound, source_domain: PS-LIC, target_domain: CSM, trigger_event: license_renewal.due, payload: license_renewals, null_field: source_only}
+      - {handoff_id: 925, direction: outbound, source_domain: PS-LIC, target_domain: ERP-FIN, trigger_event: license.issued, payload: license_records, null_field: both}
+      - {handoff_id: 926, direction: outbound, source_domain: PS-LIC, target_domain: GRC, trigger_event: permit_inspection.failed, payload: permit_inspections, null_field: both}
+
+  - id: B1B-B9-MISSING
+    summary: "Three PS-LIC trigger events have zero handoff rows; subscriber drafts gate on per-module FK derivation."
+    finding: >-
+      `/trigger_events?data_object_id=in.(641,642,643,644,645,646)` returns 8 events; `/handoffs?source_domain_id=eq.46`
+      returns 6 outbound rows. Events `permit_application.submitted` (id 1052), `permit_application.approved` (id 1053), and
+      `permit_inspection.scheduled` (id 1056) each have zero subscribers. All three are valid published verbs that should
+      have at least one cross-domain subscriber (CSM constituent acknowledgement, ERP-FIN fee intake, dispatch via FSM or
+      CCAAS).
+    action: >-
+      Once B1B-M1 cures, draft handoff rows per the Authoring rule. Minimal proposed set: `permit_application.submitted` to
+      CSM (acknowledgement case) and ERP-FIN (fee intake); `permit_application.approved` to CSM (approval notification);
+      `permit_inspection.scheduled` to FSM (inspector dispatch, if modeled; otherwise CSM scheduling case). Populate both
+      `source_domain_module_id` (from PS-LIC's M1 cure) and `target_domain_module_id` (subject to target M1 cures).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+    affected_events:
+      - {id: 1052, event_name: permit_application.submitted, current_category: null, proposed_category: null}
+      - {id: 1053, event_name: permit_application.approved, current_category: null, proposed_category: null}
+      - {id: 1056, event_name: permit_inspection.scheduled, current_category: null, proposed_category: null}
+
+  - id: B1B-F2
+    summary: "Module-level system skills cannot be authored until M1 cures; legacy domain-level ps-lic-system (id 93) is the only skill."
+    finding: >-
+      `/skills?domain_id=eq.46&skill_type=eq.system` returns 1 row (`ps-lic-system`, id 93, `domain_module_id=null`). Rule
+      #17 requires exactly one `skill_type='system'` skill per `domain_modules` row anchored via `domain_module_id`. With
+      zero modules, F2 is vacuously failed and F1 stays in transitional-pass mode (legacy row remains acceptable only while
+      no module-level system skills exist).
+    action: >-
+      Once B1B-M1 cures, split the existing 8-tool legacy skill into N per-module skills (one per module from the M1 cure).
+      Recommended naming `<module_code_lower>_agent` (e.g. `ps_lic_application_intake_agent`). Re-attach `skill_tools` rows
+      per module. DELETE the legacy row (id 93) only once every module has its own system skill. Validate F4 invariant on
+      every linked tool post-write.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+    extra_legacy_skill_id: 93
+    extra_legacy_skill_tool_count: 8
+
+b2:
+  - id: B2-1
+    summary: "Modularization shape for PS-LIC; pick before any M-band cure or downstream b1b unblock."
+    question: "How should PS-LIC modularize? Recommended baseline is a 4-module split aligned to lifecycle phases."
+    options:
+      - "(a) 4-module split: PS-LIC-APPLICATION-INTAKE (permit_applications), PS-LIC-ISSUANCE-AND-RENEWAL (license_records + license_renewals), PS-LIC-INSPECTION-AND-ENFORCEMENT (permit_inspections + code_violations), PS-LIC-FEES (regulatory_fees)"
+      - "(b) 2-module collapse: PS-LIC-APPLICATIONS-AND-LICENSING (applications + licenses + renewals), PS-LIC-FIELD-OPS (inspections + violations + fees)"
+      - "(c) 3-module split: PS-LIC-INTAKE, PS-LIC-COMPLIANCE, PS-LIC-BILLING"
+      - "(d) single full module PS-LIC-CORE plus a module_kind='starter' lite variant for SMB / county-tier deployments"
+    why: "Rule #14 requires >=1 full module; once A2 lands >=3 capabilities, >=2 modules required. The pick determines every downstream b1b cure (B12 lifecycle anchoring, B10b source FK derivation, B9 missing-handoff drafts, F2 module-level system skills)."
+
+  - id: B2-2
+    summary: "Capability set for PS-LIC; pick alongside B2-1 to satisfy A2 and M4 / M6 bipartite coverage."
+    question: "Which capability set should PS-LIC ship?"
+    options:
+      - "(a) 8-capability recommended: application intake, license issuance, inspection scheduling and dispatch, code-enforcement workflow, license renewal lifecycle, regulatory fee assessment, constituent-facing portal access, accessibility-and-OFCCP compliance reporting"
+      - "(b) 5-capability narrow: intake, issuance, inspection, renewal, fees"
+      - "(c) 10-capability broad: add hearings / appeals, public-records access, GIS-parcel integration"
+    why: "A2 fails with zero capabilities; M2 needs >=3 capabilities to require >=2 modules; M4 / M6 close the bipartite loop only with at least one realization per capability per module."
+
+  - id: B2-3
+    summary: "Pattern flag judgment per master (B4) on the 6 PS-LIC masters."
+    question: "Which pattern flag PATCHes should land on the 6 masters?"
+    options:
+      - "Recommended PATCHes: permit_applications.has_personal_content=true + has_submit_lock=true; license_records.has_personal_content=true; license_renewals.has_personal_content=true; code_violations.has_personal_content=true; code_violations.has_single_approver = jurisdiction-dependent (single hearing officer vs panel); all other flags stay false."
+      - "(alt) keep all flags false; record consideration outside notes (Rule #15)"
+      - "(alt) other per-flag judgment supplied by user"
+    why: "B4 needs positive re-evaluation, not false-by-default. Several masters carry constituent PII (applicant, licensee, cited-party) that argues for `has_personal_content=true`. Independent of B2-1 and B3."
+
+  - id: B2-4
+    summary: "Regulation scoping on the 4 currently-mandatory regulations (FedRAMP, CMMC, StateRAMP, Section 508)."
+    question: "Is the mandatory-for-all-PS-LIC scoping intentional, or should some demote to optional? Are additional regulations missing?"
+    options:
+      - "(a) keep all four mandatory (cloud-hosted public-sector tenants are the realistic deployment shape)"
+      - "(b) demote FedRAMP and CMMC to optional (federal contractor jurisdictions only)"
+      - "(c) add ADA Title II as missing mandatory"
+      - "(d) consider NIST SP 800-53, IRS Pub 1075 (revenue-touching license types), HIPAA (regulated occupations)"
+    why: "Currently every PS-LIC tenant inherits 4 federal-cloud regulations; if a small county deploys PS-LIC for occupational licensing they may not carry FedRAMP / CMMC obligations. The scoping pick may also surface additional Bucket 3 entities (NIST control assessments, IRS Pub 1075 attestations)."
+
+  - id: B2-5
+    summary: "Catalog UX wording for A4 (Rule #20)."
+    question: "Both `domains.catalog_tagline` and `domains.catalog_description` are empty. Rule #20 requires user-approved buyer-voice copy before any write."
+    options:
+      - "(a) supply tagline + description text now"
+      - "(b) approve an agent-drafted tagline and description, surfaced in chat before write"
+      - "(c) defer A4 until module-level taglines (M8) are also being drafted"
+    why: "Buyer-facing catalog has no copy for the PS-LIC card or detail page. Rule #20 is non-negotiable; the agent cannot self-author. Independent of B2-1, B2-2, B3."
+
+  - id: B2-6
+    summary: "Cost band and market-size refresh."
+    question: "`cost_band='$$$'` (annual TCO $100k to $500k for 500-user org) and `usa_market_size_usd_m=1000` ($1B TAM) anchored to 2025. Confirm scope and refresh source."
+    options:
+      - "(a) confirm current values (pure-play permitting platforms scoping)"
+      - "(b) widen scope to all civic permitting + licensing software; refresh TAM upward"
+      - "(c) cite a specific Gartner / IDC / Forrester source year"
+    why: "Public-sector permitting TAM is volatile post-ARPA. $1B reads low if the comparator is the broad civic-tech market; reasonable if scoped to pure-play permitting. Independent of every other bucket."
+
+b3:
+  - id: B3-1
+    candidate: permit_types
+    rationale: "Universal config catalog of allowable permit types with per-type fees, required documents, routing rules. Permit applications are typed; the typed-config is the master that drives intake-form generation, fee calculation, and inspection requirements."
+    vendor_evidence:
+      - Accela Civic Platform
+      - OpenGov Permitting and Licensing
+      - Tyler Enterprise ERP
+      - ServiceNow Public Sector Digital Services
+    proposed_module: PS-LIC-APPLICATION-INTAKE
+
+  - id: B3-2
+    candidate: license_types
+    rationale: "Universal licensing taxonomy (occupational, business, professional, vehicle, environmental) with per-type renewal cadence and CE requirements. Issued license records are typed; license type drives renewal schedule and reciprocity rules."
+    vendor_evidence:
+      - Accela Civic Platform
+      - OpenGov Permitting and Licensing
+      - Tyler Enterprise ERP
+      - ServiceNow Public Sector Digital Services
+    proposed_module: PS-LIC-ISSUANCE-AND-RENEWAL
+
+  - id: B3-3
+    candidate: inspection_checklists
+    rationale: "Universal checklist templates per permit type or code section. Inspections execute against a typed checklist; pass / fail is per checklist item, not a single inspection-level boolean."
+    vendor_evidence:
+      - Accela Civic Platform
+      - Tyler Enterprise ERP
+      - OpenGov Permitting and Licensing
+    proposed_module: PS-LIC-INSPECTION-AND-ENFORCEMENT
+
+  - id: B3-4
+    candidate: regulatory_codes
+    rationale: "Common codified municipal / state code references that violations cite. Code violations cite a specific code section; the codified rules are the master that the violation references."
+    vendor_evidence:
+      - Accela Civic Platform
+      - Tyler Enterprise ERP
+    proposed_module: PS-LIC-INSPECTION-AND-ENFORCEMENT
+
+  - id: B3-5
+    candidate: payment_records
+    rationale: "Payment transactions against assessed fees. Currently `regulatory_fees` captures only the assessed liability, not the payment event; without `payment_records` the AR loop is incomplete (no first-class partial-payment, refund, write-off events)."
+    vendor_evidence:
+      - Accela Civic Platform
+      - OpenGov Permitting and Licensing
+      - Tyler Enterprise ERP
+    proposed_module: PS-LIC-FEES
+
+  - id: B3-6
+    candidate: appeals
+    rationale: "Common formal appeal workflow against denied permits, contested violations, license revocations. Due-process requirement for any regulatory enforcement action; ADA Title II often gates on appeal access."
+    vendor_evidence:
+      - Accela Civic Platform
+      - Tyler Enterprise ERP
+    proposed_module: PS-LIC-INSPECTION-AND-ENFORCEMENT
+
+  - id: B3-7
+    candidate: permit_extensions
+    rationale: "Common time extensions on permits (construction delays, weather) with audit trail. Permits have effective windows; extension is a typed amendment to the original permit, not a renewal."
+    vendor_evidence:
+      - Accela Civic Platform
+      - OpenGov Permitting and Licensing
+      - Tyler Enterprise ERP
+    proposed_module: PS-LIC-ISSUANCE-AND-RENEWAL
+
+  - id: B3-8
+    candidate: attached_documents
+    rationale: "Universal: plans, surveys, insurance certificates, business filings, identification copies attached to applications. Document attachment is the workflow gate for most permit types."
+    vendor_evidence:
+      - Accela Civic Platform
+      - OpenGov Permitting and Licensing
+      - Tyler Enterprise ERP
+      - ServiceNow Public Sector Digital Services
+    proposed_module: PS-LIC-APPLICATION-INTAKE
+
+  - id: B3-9
+    candidate: business_addresses_or_parcels
+    rationale: "Universal: every permit and license is anchored to a property parcel or business address. Cross-domain dependency on a parcel / address master that does not yet exist in the catalog (no PS-GIS domain present). Could resolve via the broader `locations` master if extended, or surface a new domain."
+    vendor_evidence:
+      - Accela Civic Platform
+      - OpenGov Permitting and Licensing
+      - Tyler Enterprise ERP
+    proposed_module: PS-LIC-APPLICATION-INTAKE
+    extra_cross_domain_dependency: locations_master_or_new_PS-GIS_domain
+
+  - id: B3-10
+    candidate: vendor_surface_modularization_candidates
+    rationale: "Phase 0 vendor surface pass deferred until B1B-M1 cures. The B3-1 through B3-9 entity list is preliminary; flagship-vendor schemas would refine the surface. Run Phase 0 against this domain (no formal Phase 0 has been done) once the user picks the modularization shape from Bucket 2 #1."
+    vendor_evidence:
+      - Accela Civic Platform
+      - OpenGov Permitting and Licensing
+      - Tyler Enterprise ERP
+      - ServiceNow Public Sector Digital Services
+    proposed_module: null

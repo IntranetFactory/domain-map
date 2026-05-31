@@ -1,0 +1,198 @@
+schema_version: 2
+domain: ERP-FIN
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S3
+    summary: "C1 sparse: only Accounting (owner) loaded; missing Finance / FP&A / Tax / Treasury business_function_domains rows."
+    finding: "business_function_domains for domain 65 has 1 row (Accounting, owner). Per 2026-05-30 audit narrative, ERP-FIN warrants additional rows: Finance (contributor for treasury / banking / fixed-assets), FP&A (consumer for EPM bridge), Tax (consumer for legal-entity / multi-jurisdiction), Treasury (contributor for bank_accounts / cash_transactions). 2026-05-31 Continuation deferred per orchestrator's no-new-business_function_domains-contributors / consumers rule."
+    action: "After user names the 4 business_functions rows to point at, INSERT 4 business_function_domains rows: Finance (contributor), FP&A (consumer), Tax (consumer), Treasury (contributor). If the function spine lacks Tax / Treasury as first-class functions, fall back to Finance (contributor) and surface the gap."
+    blocked_by:
+      - {type: user_decision, ref: B1A-S3, reason: "business_function name targets to resolve"}
+
+  - id: B1A-S4
+    summary: "B11 fail: 0 data_object_aliases on any of the 11 ERP-FIN masters."
+    finding: "0 rows in data_object_aliases for data_object_id in (109, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203). 2026-05-30 audit proposed approx 25 aliases (Chart of Accounts, G / L Account, Journal Voucher, JE, Fiscal Period, Company Code, Entity, Cost Object, Cost Pool, Capital Assets, Asset Master Record, IC Postings, Cross-Entity Postings, RevRec Records, Performance Obligation Records, Cash Account, Bank Transaction, Cash Line, Depreciation Run, Depreciation Method)."
+    action: "INSERT approx 25 alias rows. Vendor-specific terms (Company Code, Journal Voucher, Performance Obligation Records) require alias_type='solution_term' with resolved solution_id (Rule #18); generic ones (Chart of Accounts, JE, Fiscal Period, Cost Pool) use alias_type='industry_term' or similar non-vendor type."
+    affected_masters:
+      - {data_object_id: 109, name: revenue_recognition_records}
+      - {data_object_id: 194, name: journal_entries}
+      - {data_object_id: 195, name: general_ledger_accounts}
+      - {data_object_id: 196, name: cost_centers}
+      - {data_object_id: 197, name: legal_entities}
+      - {data_object_id: 198, name: accounting_periods}
+      - {data_object_id: 199, name: bank_accounts}
+      - {data_object_id: 200, name: cash_transactions}
+      - {data_object_id: 201, name: fixed_assets}
+      - {data_object_id: 202, name: asset_depreciation_schedules}
+      - {data_object_id: 203, name: intercompany_transactions}
+    blocked_by:
+      - {type: user_decision, ref: B1A-S4, reason: "alias_type and solution_id arbitration for vendor-specific terms (Rule #18)"}
+
+  - id: B1A-S7
+    summary: "H1 partial: 47 of 113 cross-domain handoffs untagged; 0 of 66 tagged rows record_status='approved'."
+    finding: "Of 113 ERP-FIN cross-domain handoffs (16 outbound + 97 inbound), 66 carry handoff_processes tags (48 agent_curated, 15 discovery_substring, 3 discovery_override). 47 untagged. Catalog quality headline = 0 approved. Process health side-bar = 48 agent_curated against the H1 band 0.5N to 0.8N (57 to 90 for N=113); below the target floor."
+    action: "Pass (a): INSERT additional agent_curated handoff_processes rows on the 47 untagged handoffs via PCF lookup (process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry). Likely defer approx 10 to Discover Pass 3 (no clean cross-industry PCF match, esp. ESG financial-impact, CBAM). Pass (b): user-only record_status flip to approved on reviewed tagged rows (Rule #1)."
+    extra_target_band: "57-90 agent_curated; currently 48 (-9 to -42 below floor)"
+
+b1b:
+  - id: B1B-S1
+    summary: "M1 hard-fail: 0 domain_modules rows. Gates B10b, F1, F4, E1-E5, and B1-S5b / B1-S6."
+    finding: "domain_modules where domain_id=65 returns 0 rows. domain_module_host_domains where domain_id=65 returns 0 rows. Per Rule #14, every domains row needs >=1 module_kind='full'; for a 7-capability market, >=2 full modules. ERP-FIN has neither. Cascades downstream: 16 outbound + 97 inbound handoffs all carry NULL target_domain_module_id; skill 56 carries domain_module_id=NULL violating Rule #17; 0 ERP-FIN-prefixed permissions exist; workflow-bearing tools cannot be authored without a module-scope to attach them to."
+    action: "Author the module set after B2-S4 resolves. Default 6-module proposal: ERP-FIN-GL-CLOSE (masters 194, 195, 198, 197), ERP-FIN-AR-BILLING, ERP-FIN-AP-DISBURSE, ERP-FIN-FIXED-ASSETS (201, 202), ERP-FIN-CASH-BANKING (199, 200), ERP-FIN-REVREC-CONSOL (109, 203). Each module also needs >=1 domain_module_capabilities row, 3 baseline permissions, 1 system skill per Rule #17."
+    blocked_by:
+      - {type: user_decision, ref: B2-S4, reason: "module-set choice (6 / 4 / 2 / user-supplied) before author"}
+    affected_handoffs:
+      - {count: 16, scope_note: "ERP-FIN outbound handoffs, all carry NULL source_domain_module_id", enumeration_status: source_count_only}
+      - {count: 97, scope_note: "ERP-FIN inbound handoffs, all carry NULL target_domain_module_id", enumeration_status: source_count_only}
+    affected_masters:
+      - {data_object_id: 109, name: revenue_recognition_records, target_module_id: null, workflow: "revrec + consol"}
+      - {data_object_id: 194, name: journal_entries, target_module_id: null, workflow: "GL-CLOSE"}
+      - {data_object_id: 195, name: general_ledger_accounts, target_module_id: null, workflow: "GL-CLOSE"}
+      - {data_object_id: 196, name: cost_centers, target_module_id: null, workflow: "GL-CLOSE"}
+      - {data_object_id: 197, name: legal_entities, target_module_id: null, workflow: "GL-CLOSE"}
+      - {data_object_id: 198, name: accounting_periods, target_module_id: null, workflow: "GL-CLOSE"}
+      - {data_object_id: 199, name: bank_accounts, target_module_id: null, workflow: "CASH-BANKING"}
+      - {data_object_id: 200, name: cash_transactions, target_module_id: null, workflow: "CASH-BANKING"}
+      - {data_object_id: 201, name: fixed_assets, target_module_id: null, workflow: "FIXED-ASSETS"}
+      - {data_object_id: 202, name: asset_depreciation_schedules, target_module_id: null, workflow: "FIXED-ASSETS"}
+      - {data_object_id: 203, name: intercompany_transactions, target_module_id: null, workflow: "REVREC-CONSOL"}
+
+  - id: B1B-S5b
+    summary: "B6 / B8 master-to-master edges deferred from 2026-05-31 continuation (verb / cardinality discretion)."
+    finding: "Approx 9-10 intra and cross-domain master-to-master data_object_relationships rows missing: journal_entries posted_against accounting_periods, journal_entries posted_against general_ledger_accounts, journal_entries posted_against cost_centers, journal_entries scoped_by legal_entities, cash_transactions reconciled_against bank_accounts, fixed_assets owned_by legal_entities, fixed_assets governed_by asset_depreciation_schedules, intercompany_transactions between legal_entities, revenue_recognition_records produces journal_entries, accounting_periods scoped_by legal_entities. The 2026-05-31 Continuation explicitly licensed only user-edges (Rule #10), not master-to-master."
+    action: "INSERT 9-10 data_object_relationships rows after per-edge verb / cardinality / owner_side authoring. Use one_to_many for most postings (parent on the targeted master). intercompany_transactions between legal_entities = many_to_many self-join-via-legal_entities."
+    blocked_by:
+      - {type: user_decision, ref: B1B-S5b, reason: "verb and owner_side authoring per edge"}
+
+  - id: B1B-S6
+    summary: "F1 / F4 skill re-anchor + workflow-bearing primitives, gated on B1-S1."
+    finding: "Skill 56 (erp-fin-system, skill_type='system') carries domain_module_id=NULL, violating Rule #17. 12 skill_tools rows (11 query_* + 1 send_email) all coverage_tier='platform'. No workflow-bearing tools exist: no post_journal_entry, close_accounting_period, capitalize_fixed_asset, recognize_revenue, match_intercompany_transactions, reconcile_bank_statement, run_depreciation, reverse_journal_entry, reopen_accounting_period, dispose_fixed_asset."
+    action: "After B1B-S1 (modules) lands: author 1 system skill per module (6 new skills), migrate the 12 skill_tools rows to the new skills per the per-module mapping in 2026-05-30 B1-S6, add approx 10 workflow-bearing tools (likely coverage_tier='external' or 'integration' once an ERP MCP exists), DELETE skill 56."
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: "module set must exist before per-module skills can be authored"}
+
+  - id: B1B-S10b
+    summary: "B10b: 16 outbound + 97 inbound cross-domain handoffs all carry NULL target_domain_module_id (gated on B1-S1)."
+    finding: "Every ERP-FIN-targeted handoff has target_domain_module_id=NULL because there are no ERP-FIN modules to point at. 65 of 97 inbound also carry NULL source_domain_module_id (owed by source domains; report-only and tracked in those domains' state.yaml files)."
+    action: "After B1B-S1 lands, PATCH target_domain_module_id on each handoff to the correct ERP-FIN module (mapping driven by the handoff's data_object_id -> module mastership). 16 outbound + 97 inbound = 113 PATCHes."
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: "needs domain_modules to point at"}
+
+b2:
+  - id: B2-S1
+    summary: "Rule #15 notes-pollution on 6 domain_data_objects rows."
+    question: "Were the notes on DDOs 250 (payroll_journal_entries consumer), 261 (benefit_enrollments consumer), 324 (cost_centers master), 329 (fixed_assets master), 351 (expense_reports consumer), 358 (service_projects consumer) user-approved at load time, or auto-populated by a loader?"
+    options:
+      - "approved: leave in place"
+      - "auto-populated: PATCH all 6 notes to empty string and log Rule #15 incident in references/skill-changelog.md"
+    why: "Audit cannot tell from live state alone; commit history would say if loader added them without user approval."
+
+  - id: B2-S2
+    summary: "B4 pattern-flag positive re-evaluation on 5 masters."
+    question: "Which pattern flags should flip from false to true?"
+    options:
+      - "194 journal_entries: has_submit_lock=true (posting is one-way)?"
+      - "194 journal_entries: has_single_approver=true (controllership approval)?"
+      - "198 accounting_periods: has_submit_lock=true (close is one-way)?"
+      - "198 accounting_periods: has_single_approver=true (controllership)?"
+      - "203 intercompany_transactions: has_single_approver=true?"
+      - "201 fixed_assets: has_single_approver=true (capitalization / disposal)?"
+      - "109 revenue_recognition_records: has_submit_lock=true (recognition is one-way)?"
+      - "109 revenue_recognition_records: has_single_approver=true?"
+    why: "Pattern flags are workflow-shape judgments the user owns. Rule #12 requires consideration but flags must not be inferred without sign-off."
+
+  - id: B2-S3
+    summary: "B12 config-shape vs state-machine for 195 general_ledger_accounts and 196 cost_centers."
+    question: "Are these two masters config-shape (skip B12) or do they warrant a 4-state machine?"
+    options:
+      - "config-shape exempt: skip lifecycle states authoring; track exemption outside notes (Rule #15)"
+      - "author 4-state machines (proposed / active / deactivated / archived) on both"
+    why: "Both masters are reference-data shape with no obvious workflow gate; Rule #12's config-shape exemption applies but requires explicit user sign-off."
+
+  - id: B2-S4
+    summary: "Module-set authoring choice for B1B-S1."
+    question: "Which module split should the loader implement?"
+    options:
+      - "(a) 6 modules: ERP-FIN-GL-CLOSE, ERP-FIN-AR-BILLING, ERP-FIN-AP-DISBURSE, ERP-FIN-FIXED-ASSETS, ERP-FIN-CASH-BANKING, ERP-FIN-REVREC-CONSOL"
+      - "(b) 4 modules: drop AR-BILLING (OMS / SUB-MGMT own customer billing) and AP-DISBURSE (AP-AUTO owns supplier-invoice processing)"
+      - "(c) 2-module minimum (Rule #14 floor): ERP-FIN-GL-CLOSE + ERP-FIN-REVREC-CONSOL"
+      - "(d) user-supplied split"
+    why: "Module design conversation; the choice determines master-to-module mapping and downstream permission / skill / handoff PATCH plans."
+
+  - id: B2-S6
+    summary: "domains.business_logic em-dash fix."
+    question: "Approve the proposed em-dash replacement?"
+    options:
+      - "Use proposed wording: 'Consolidation, allocation, multi-GAAP translation, and period-close orchestration: the regulated calc kernel inside an otherwise transactional ledger.' (em-dash -> colon)"
+      - "Supply different wording"
+    why: "CLAUDE.md forbids em-dash; Rule #15 / Rule #20 require user-approved wording for catalog prose changes. domains.description is already clean."
+
+b3:
+  - id: B3-CHART-OF-ACCOUNTS-SEGMENTS
+    candidate: chart_of_accounts_segments
+    rationale: "Flagship ERPs (S/4HANA, Oracle Fusion, NetSuite, Workday, D365 Finance) model the chart-of-accounts as a multi-segment structure (Company-Account-Department-Project-IntercompanyPartner) where each segment is a first-class master. ERP-FIN currently has monolithic general_ledger_accounts; segment layer is missing."
+    vendor_evidence: ["SAP S/4HANA", "Oracle Fusion Cloud ERP", "Oracle NetSuite", "Workday Financial Management", "Microsoft Dynamics 365 Finance"]
+    proposed_module: "ERP-FIN-GL-CLOSE or separate ERP-FIN-COA-SEGMENTS"
+
+  - id: B3-TAX-CODES
+    candidate: tax_codes / tax_jurisdictions
+    rationale: "SAP Tax Code, Oracle Tax Code / Jurisdiction, D365 Finance Tax Group. Absent from ERP-FIN. May overlap with a future TAX-MGMT domain promotion."
+    vendor_evidence: ["SAP S/4HANA", "Oracle Fusion Cloud ERP", "Microsoft Dynamics 365 Finance"]
+    proposed_module: "ERP-FIN-GL-CLOSE (master, with embedded_master if TAX-MGMT emerges later)"
+
+  - id: B3-CURRENCIES
+    candidate: currencies / exchange_rates
+    rationale: "Multi-currency consolidation depends on these masters. Workday Currency Conversion Rate, SAP Exchange Rate Type. Currencies plausibly cross-domain (catalog-wide master layer)."
+    vendor_evidence: ["SAP S/4HANA", "Workday Financial Management", "Oracle Fusion Cloud ERP"]
+    proposed_module: "catalog-wide master module, or ERP-FIN-REVREC-CONSOL (master role)"
+
+  - id: B3-JOURNAL-ENTRY-LINES
+    candidate: journal_entry_lines
+    rationale: "Flagship ERPs model journal-entry-headers and journal-entry-lines as separate entities. ERP-FIN journal_entries is single-row; line resolution valuable for IFRS 16 / ASC 842 lease accounting and intercompany line matching."
+    vendor_evidence: ["SAP S/4HANA", "Oracle Fusion Cloud ERP", "Oracle NetSuite", "Workday Financial Management"]
+    proposed_module: "ERP-FIN-GL-CLOSE (master, child of journal_entries)"
+
+  - id: B3-ALLOCATIONS
+    candidate: allocations / allocation_rules
+    rationale: "SAP Cost Allocation Cycle, Oracle Allocation Rules, NetSuite Allocation Schedule. Allocate corporate cost across cost centers / departments / projects. Absent from ERP-FIN."
+    vendor_evidence: ["SAP S/4HANA", "Oracle Fusion Cloud ERP", "Oracle NetSuite"]
+    proposed_module: "ERP-FIN-GL-CLOSE or separate ERP-FIN-COST-ALLOCATION"
+
+  - id: B3-REVALUATION-RUNS
+    candidate: revaluation_runs
+    rationale: "FX revaluation runs are first-class in S/4HANA and Oracle Fusion. ERP-FIN has cash_transactions but no FX-revaluation orchestration."
+    vendor_evidence: ["SAP S/4HANA", "Oracle Fusion Cloud ERP"]
+    proposed_module: "ERP-FIN-CASH-BANKING (master)"
+
+  - id: B3-CONSOLIDATION-UNITS
+    candidate: consolidation_units / elimination_entries
+    rationale: "Multi-entity consolidation is first-class in S/4HANA, Oracle Fusion, OneStream. intercompany_transactions covers part but the consolidation orchestration layer is missing."
+    vendor_evidence: ["SAP S/4HANA", "Oracle Fusion Cloud ERP", "OneStream Platform"]
+    proposed_module: "ERP-FIN-REVREC-CONSOL (master)"
+
+  - id: B3-REVENUE-CONTRACTS
+    candidate: revenue_contracts / performance_obligations
+    rationale: "ASC 606 / IFRS 15 require revenue contracts and performance obligations as first-class entities. revenue_recognition_records is currently flat-shaped without contract / PO decomposition."
+    vendor_evidence: ["SAP S/4HANA", "Oracle Fusion Cloud ERP", "Workday Financial Management"]
+    proposed_module: "ERP-FIN-REVREC-CONSOL (master, child of revenue_recognition_records)"
+
+  - id: B3-CSRD
+    candidate: "Corporate Sustainability Reporting Directive (regulation)"
+    rationale: "EU mandatory disclosure for large companies, 2026 / 2027 phase-in. Currently only ESG domain holds CSRD; ERP-FIN should also surface it as it shapes financial-impact disclosures."
+    vendor_evidence: []
+    proposed_module: "(regulations row; n / a module)"
+
+  - id: B3-PILLAR-TWO
+    candidate: "OECD Pillar Two / Global Minimum Tax (regulation)"
+    rationale: "OECD 15% minimum effective tax rate for multinationals, 2024+. Touches ERP-FIN multi-entity consolidation and tax reporting."
+    vendor_evidence: []
+    proposed_module: "(regulations row; n / a module)"
+
+  - id: B3-LEASE-ACCOUNTING
+    candidate: "ASC 842 / IFRS 16 explicit regulation rows"
+    rationale: "Currently covered statutorily via US GAAP / IFRS at the framework level; explicit rows would clarify lease-accounting touchpoint."
+    vendor_evidence: []
+    proposed_module: "(regulations row; n / a module)"

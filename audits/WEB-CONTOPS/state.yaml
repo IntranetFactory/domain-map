@@ -1,0 +1,467 @@
+schema_version: 2
+domain: WEB-CONTOPS
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S9
+    summary: "Load 4 outbound cross-domain data_object_relationships rows from WEB-CONTOPS masters to confirmed DXP / HCMS targets."
+    finding: |
+      B8 hard fail. Zero outbound cross-domain data_object_relationships rows from the 7 WEB-CONTOPS masters
+      (684 content_audits, 685 web_content_inventory_records, 686 accessibility_scan_findings,
+      687 broken_link_findings, 688 technical_seo_findings, 689 brand_voice_violations,
+      690 content_lifecycle_plans). The 6 outbound cross-domain handoffs (815, 816, 817, 818, 819, 820)
+      imply payload-target relationship rows, 4 of which have confirmed target masters in the catalog
+      today (DXP web_pages id 441; HCMS content_entries id 132). 2 rows remain blocked on KMS-side
+      target identification (handoffs 818 and 819 point at KMS but the KMS target masters for
+      content_lifecycle_plans and web_content_inventory_records have not been identified during
+      a KMS audit yet).
+    action: |
+      Author 4 data_object_relationships rows: (686 accessibility_scan_findings -> 441 web_pages,
+      verb 'flags'); (688 technical_seo_findings -> 441 web_pages, verb 'flags');
+      (689 brand_voice_violations -> 132 content_entries, verb 'flags');
+      (687 broken_link_findings -> 132 content_entries, verb 'flags'). All rows
+      relationship_kind='reference', relationship_type='many_to_many', is_required=false,
+      owner_side='source', notes='' per Rule #15.
+    affected_handoffs:
+      - {handoff_id: 815, direction: outbound, source_domain: WEB-CONTOPS, target_domain: DXP, trigger_event: accessibility_finding.detected, payload: accessibility_scan_findings, null_field: both_module_fks}
+      - {handoff_id: 820, direction: outbound, source_domain: WEB-CONTOPS, target_domain: DXP, trigger_event: seo_finding.created, payload: technical_seo_findings, null_field: both_module_fks}
+      - {handoff_id: 816, direction: outbound, source_domain: WEB-CONTOPS, target_domain: HCMS, trigger_event: brand_violation.detected, payload: brand_voice_violations, null_field: both_module_fks}
+      - {handoff_id: 817, direction: outbound, source_domain: WEB-CONTOPS, target_domain: HCMS, trigger_event: broken_link.detected, payload: broken_link_findings, null_field: both_module_fks}
+    affected_masters:
+      - {data_object_id: 686, name: accessibility_scan_findings, target_module_id: null, workflow: cross-domain flags edge to DXP web_pages}
+      - {data_object_id: 688, name: technical_seo_findings, target_module_id: null, workflow: cross-domain flags edge to DXP web_pages}
+      - {data_object_id: 689, name: brand_voice_violations, target_module_id: null, workflow: cross-domain flags edge to HCMS content_entries}
+      - {data_object_id: 687, name: broken_link_findings, target_module_id: null, workflow: cross-domain flags edge to HCMS content_entries}
+    vendor_evidence:
+      - Siteimprove
+      - Acquia Optimize
+      - Conductor
+      - Acrolinx
+
+  - id: B1A-S11
+    summary: "APQC tag 7 remaining cross-domain handoffs in handoff_processes via PCF lookup at fix time."
+    finding: |
+      H1 partial. 2 of 9 cross-domain handoffs are now tagged in handoff_processes
+      (handoff 818 -> process 430 'Control delivered content' L3 agent_curated new;
+      handoff 819 -> process 427 'Manage content infrastructure' L3 agent_curated new).
+      7 handoffs remain untagged: 814 (DXP -> WEB-CONTOPS web_page.published),
+      815 (WEB-CONTOPS -> DXP accessibility_finding.detected),
+      816 (WEB-CONTOPS -> HCMS brand_violation.detected),
+      817 (WEB-CONTOPS -> HCMS broken_link.detected),
+      820 (WEB-CONTOPS -> DXP seo_finding.created),
+      837 (HCMS -> WEB-CONTOPS content_locale.added),
+      838 (DXP -> WEB-CONTOPS web_page.unpublished). The 2026-05-30 B1-S11 table flagged
+      every one of these as 'needs PCF lookup at fix time' or 'possibly defer' (no clean
+      cross-industry PCF for accessibility-specialist, technical SEO governance, or
+      multilingual-content leaves). Quality headline: 0 of 9 approved; process side-bar:
+      2 agent_curated rows.
+    action: |
+      For each of the 7 untagged handoffs, run /processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry
+      lookups using the trigger event noun + payload data_object as search terms. INSERT into
+      handoff_processes as (handoff_id, process_id, proposal_source='agent_curated',
+      record_status='new', role='implements') for each confident L2 / L3 match. Defer handoffs
+      with no clean PCF match (likely 815, 820, 837 per the 2026-05-30 analysis) to Discover
+      Pass 3 custom-process authoring; surface the deferred set with reason at completion.
+      Volume target: 4-to-5 confident tags + 2-to-3 deferred.
+    affected_handoffs:
+      - {handoff_id: 814, direction: inbound, source_domain: DXP, target_domain: WEB-CONTOPS, trigger_event: web_page.published, payload: web_pages, null_field: handoff_processes_row}
+      - {handoff_id: 815, direction: outbound, source_domain: WEB-CONTOPS, target_domain: DXP, trigger_event: accessibility_finding.detected, payload: accessibility_scan_findings, null_field: handoff_processes_row}
+      - {handoff_id: 816, direction: outbound, source_domain: WEB-CONTOPS, target_domain: HCMS, trigger_event: brand_violation.detected, payload: brand_voice_violations, null_field: handoff_processes_row}
+      - {handoff_id: 817, direction: outbound, source_domain: WEB-CONTOPS, target_domain: HCMS, trigger_event: broken_link.detected, payload: broken_link_findings, null_field: handoff_processes_row}
+      - {handoff_id: 820, direction: outbound, source_domain: WEB-CONTOPS, target_domain: DXP, trigger_event: seo_finding.created, payload: technical_seo_findings, null_field: handoff_processes_row}
+      - {handoff_id: 837, direction: inbound, source_domain: HCMS, target_domain: WEB-CONTOPS, trigger_event: content_locale.added, payload: content_locales, null_field: handoff_processes_row}
+      - {handoff_id: 838, direction: inbound, source_domain: DXP, target_domain: WEB-CONTOPS, trigger_event: web_page.unpublished, payload: web_pages, null_field: handoff_processes_row}
+    extra_pcf_lookup_required: true
+    extra_volume_target: "4-5 confident tags + 2-3 deferred to Discover Pass 3"
+
+b1b:
+  - id: B1B-S1
+    summary: "Author the 2 / 3 / 4 module set for WEB-CONTOPS once B2-1 picks the split shape. Blocks 6 downstream B1 items."
+    finding: |
+      M1 / M2 / M4 / M5 / M6 / M8 hard fail. Zero domain_modules rows for domain 128;
+      0 cross-cutting host junctions. 8 capabilities (155 WCO-AUDIT, 156 WCO-EDITORIAL,
+      157 WCO-QUALITY, 158 WCO-ACCESS, 159 WCO-SEO-GOV, 160 WCO-LINKS, 161 WCO-CALENDAR,
+      162 WCO-BRAND-VOICE) all orphaned of any realizing module. Cascade: every
+      domain_module_data_objects row for the 7 masters is missing (B5); every cross-domain
+      handoff has NULL source_domain_module_id / target_domain_module_id on this side (B10b);
+      no module-anchored system skill possible (F2). The 2026-05-30 audit proposed a 3-module
+      split (WCO-AUDIT-COMPLIANCE mastering content_audits + accessibility_scan_findings +
+      brand_voice_violations; WCO-SEO-LINKS mastering technical_seo_findings +
+      broken_link_findings + web_content_inventory_records; WCO-EDITORIAL-PLANNING mastering
+      content_lifecycle_plans), with web_content_inventory_records as cross-module joiner
+      (master on WCO-SEO-LINKS, embedded_master on the other two).
+    action: |
+      After B2-1 lands, author the chosen module set via loader: domain_modules rows with
+      module_kind='full' and catalog_tagline + catalog_description authored under Rule #20;
+      domain_module_capabilities linking each of the 8 capabilities to its realizing module;
+      domain_module_data_objects rows per the split (master on the canonical owner,
+      embedded_master for cross-module joiners). Validate Rule #11 (embedded_master integrity)
+      before each insert. Surface UI link to /domain_map/domain_modules after the load.
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+    affected_entities:
+      - content_audits
+      - web_content_inventory_records
+      - accessibility_scan_findings
+      - broken_link_findings
+      - technical_seo_findings
+      - brand_voice_violations
+      - content_lifecycle_plans
+    affected_modules: []
+    extra_proposed_module_set:
+      - WCO-AUDIT-COMPLIANCE
+      - WCO-SEO-LINKS
+      - WCO-EDITORIAL-PLANNING
+
+  - id: B1B-S2
+    summary: "Author data_object_lifecycle_states rows for the 7 masters once modules exist."
+    finding: |
+      B12 hard fail. Zero data_object_lifecycle_states rows for any of the 7 masters
+      (684 content_audits, 685 web_content_inventory_records, 686 accessibility_scan_findings,
+      687 broken_link_findings, 688 technical_seo_findings, 689 brand_voice_violations,
+      690 content_lifecycle_plans). None qualify for the config-shape exemption per Rule #12.
+      State machines pre-specified in the 2026-05-30 audit:
+      content_audits (scheduled -> running -> completed -> archived);
+      web_content_inventory_records (discovered -> classified -> in_review -> retained -> retired);
+      accessibility_scan_findings (detected -> triaged -> in_remediation -> resolved -> wont_fix -> verified);
+      broken_link_findings (detected -> in_remediation -> resolved -> ignored);
+      technical_seo_findings (detected -> triaged -> in_remediation -> resolved -> wont_fix);
+      brand_voice_violations (detected -> in_review -> accepted -> dismissed);
+      content_lifecycle_plans (draft -> active -> review_due -> revised -> retired).
+    action: |
+      After B1B-S1 lands, insert data_object_lifecycle_states rows with state_order,
+      is_initial / is_terminal, requires_permission=true on transition states (resolve, retain,
+      retire, dismiss, verify, ignore), and domain_module_id set to the realizing module from
+      the B2-1 shape. notes='' per Rule #15.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_masters:
+      - {data_object_id: 684, name: content_audits, target_module_id: null, workflow: "scheduled -> running -> completed -> archived"}
+      - {data_object_id: 685, name: web_content_inventory_records, target_module_id: null, workflow: "discovered -> classified -> in_review -> retained -> retired"}
+      - {data_object_id: 686, name: accessibility_scan_findings, target_module_id: null, workflow: "detected -> triaged -> in_remediation -> resolved -> wont_fix -> verified"}
+      - {data_object_id: 687, name: broken_link_findings, target_module_id: null, workflow: "detected -> in_remediation -> resolved -> ignored"}
+      - {data_object_id: 688, name: technical_seo_findings, target_module_id: null, workflow: "detected -> triaged -> in_remediation -> resolved -> wont_fix"}
+      - {data_object_id: 689, name: brand_voice_violations, target_module_id: null, workflow: "detected -> in_review -> accepted -> dismissed"}
+      - {data_object_id: 690, name: content_lifecycle_plans, target_module_id: null, workflow: "draft -> active -> review_due -> revised -> retired"}
+
+  - id: B1B-S3
+    summary: "PATCH pattern flags on the 7 masters once B2-2 supplies per-flag yes / no answers."
+    finding: |
+      B4 hard fail. All 7 masters carry has_personal_content=false, has_submit_lock=false,
+      has_single_approver=false with no positive re-evaluation recorded. 7 candidate flips
+      identified in 2026-05-30 audit: content_audits.has_submit_lock (immutable signed report
+      after completion); accessibility_scan_findings.has_personal_content (findings may quote
+      scanned page content with visitor PII); accessibility_scan_findings.has_single_approver
+      (accessibility lead signs wont_fix / verified); technical_seo_findings.has_single_approver
+      (SEO lead signs wont_fix); brand_voice_violations.has_personal_content (violations may
+      quote PII-adjacent copy); content_lifecycle_plans.has_single_approver (content owner is
+      retire / archive sign-off); web_content_inventory_records.has_personal_content (URL paths
+      may embed user IDs or PII tokens).
+    action: |
+      After B2-2 supplies per-flag yes / no answers, PATCH each affected master to flip the
+      approved flags. Per Rule #15: do NOT auto-populate data_objects.notes to explain the
+      flags; the rationale stays in this audit's history.md.
+    blocked_by:
+      - {type: user_decision, ref: B2-2}
+    affected_masters:
+      - {data_object_id: 684, name: content_audits, target_module_id: null, workflow: candidate has_submit_lock true (immutable report)}
+      - {data_object_id: 685, name: web_content_inventory_records, target_module_id: null, workflow: candidate has_personal_content true (URL paths may carry PII)}
+      - {data_object_id: 686, name: accessibility_scan_findings, target_module_id: null, workflow: candidates has_personal_content true + has_single_approver true (accessibility lead)}
+      - {data_object_id: 688, name: technical_seo_findings, target_module_id: null, workflow: candidate has_single_approver true (SEO lead)}
+      - {data_object_id: 689, name: brand_voice_violations, target_module_id: null, workflow: candidate has_personal_content true}
+      - {data_object_id: 690, name: content_lifecycle_plans, target_module_id: null, workflow: candidate has_single_approver true (content owner)}
+
+  - id: B1B-S5
+    summary: "Author 9-to-12 intra-domain data_object_relationships between the 7 masters once modules + lifecycle states exist."
+    finding: |
+      B6 hard fail. Zero intra-domain data_object_relationships between the 7 WEB-CONTOPS masters.
+      Edges pre-specified in 2026-05-30: content_audits scans web_content_inventory_records;
+      web_content_inventory_records anchors accessibility_scan_findings, broken_link_findings,
+      technical_seo_findings, brand_voice_violations; content_audits produces accessibility_scan_findings,
+      broken_link_findings, technical_seo_findings, brand_voice_violations; content_lifecycle_plans
+      governs web_content_inventory_records.
+    action: |
+      After B1B-S2 lands (so is_required reflects lifecycle-state shape), author 9-to-12 intra-domain
+      relationship rows with relationship_kind='reference', relationship_type='one_to_many',
+      owner_side='source', notes='' per Rule #15.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: prerequisite_entity, ref: B1B-S2}
+    affected_entities:
+      - content_audits
+      - web_content_inventory_records
+      - accessibility_scan_findings
+      - broken_link_findings
+      - technical_seo_findings
+      - brand_voice_violations
+      - content_lifecycle_plans
+
+  - id: B1B-S6
+    summary: "Author 14-to-21 data_object_aliases for the 7 masters once module-scoping is established."
+    finding: |
+      B11 hard fail. Zero data_object_aliases across all 7 masters. Vendor terminology candidates
+      from 2026-05-30: content_audits -> Site Audit (Siteimprove), Crawl (Lumar / Conductor),
+      Optimization Job (Acquia Optimize); accessibility_scan_findings -> Issue (Siteimprove),
+      Violation (axe-core / Acquia Optimize), Defect (AudioEye); broken_link_findings -> Broken Link
+      Issue (Siteimprove), 404 (Lumar), Dead Link (Conductor); technical_seo_findings -> SEO Issue
+      (Conductor / Lumar), Recommendation (Acquia Optimize SEO), Audit Issue (Siteimprove SEO);
+      brand_voice_violations -> Flag (Acrolinx), Issue (Writer), Style Violation (Acquia Optimize);
+      web_content_inventory_records -> Asset (Siteimprove Inventory), Page (Conductor / Lumar),
+      URL Item (Acquia Optimize); content_lifecycle_plans -> Editorial Plan (GatherContent),
+      Content Plan (Optimizely CMP), Lifecycle Plan (Acquia Optimize).
+    action: |
+      After B1B-S1 lands, insert 14-to-21 data_object_aliases rows with notes='' per Rule #15.
+      Vendor / product names are allowed on data_object_aliases per Rule #18 (commerce-shaped
+      entity).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_masters:
+      - {data_object_id: 684, name: content_audits, target_module_id: null, workflow: 3 vendor synonyms}
+      - {data_object_id: 685, name: web_content_inventory_records, target_module_id: null, workflow: 3 vendor synonyms}
+      - {data_object_id: 686, name: accessibility_scan_findings, target_module_id: null, workflow: 3 vendor synonyms}
+      - {data_object_id: 687, name: broken_link_findings, target_module_id: null, workflow: 3 vendor synonyms}
+      - {data_object_id: 688, name: technical_seo_findings, target_module_id: null, workflow: 3 vendor synonyms}
+      - {data_object_id: 689, name: brand_voice_violations, target_module_id: null, workflow: 3 vendor synonyms}
+      - {data_object_id: 690, name: content_lifecycle_plans, target_module_id: null, workflow: 3 vendor synonyms}
+    vendor_evidence:
+      - Siteimprove
+      - Lumar
+      - Conductor
+      - Acquia Optimize
+      - AudioEye
+      - axe-core
+      - Acrolinx
+      - Writer
+      - GatherContent
+      - Optimizely Content Marketing Platform
+
+  - id: B1B-S8
+    summary: "Author 6-to-9 workflow-gate trigger_events once lifecycle states exist."
+    finding: |
+      B9 missing-events. Once B1B-S2 lands, lifecycle states like accessibility_finding.resolved,
+      accessibility_finding.wont_fix, broken_link.resolved, technical_seo_finding.resolved,
+      brand_violation.dismissed, web_content_inventory.retired, content_lifecycle_plan.retired,
+      content_lifecycle_plan.revised, content_audit.archived will be flagged requires_permission=true
+      but have no matching trigger_events rows. The 7 existing events (902-908) cover the entry-side
+      signals (detected / created / completed / refreshed / review_due); the exit-side state_change
+      events are missing.
+    action: |
+      Insert 6-to-9 trigger_events rows after B1B-S2 lands; each event_category='state_change',
+      data_object_id pointing at the publishing master, event_name following the
+      <data_object>.<verb_past_tense> pattern.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S2}
+    affected_events:
+      - {id: null, event_name: "accessibility_finding.resolved", current_category: null, proposed_category: state_change}
+      - {id: null, event_name: "accessibility_finding.wont_fix", current_category: null, proposed_category: state_change}
+      - {id: null, event_name: "broken_link.resolved", current_category: null, proposed_category: state_change}
+      - {id: null, event_name: "technical_seo_finding.resolved", current_category: null, proposed_category: state_change}
+      - {id: null, event_name: "brand_violation.dismissed", current_category: null, proposed_category: state_change}
+      - {id: null, event_name: "web_content_inventory.retired", current_category: null, proposed_category: state_change}
+      - {id: null, event_name: "content_lifecycle_plan.retired", current_category: null, proposed_category: state_change}
+      - {id: null, event_name: "content_lifecycle_plan.revised", current_category: null, proposed_category: state_change}
+      - {id: null, event_name: "content_audit.archived", current_category: null, proposed_category: state_change}
+
+  - id: B1B-S10
+    summary: "Author module-anchored system skills + tools once modules exist; DELETE legacy domain-level skill 120."
+    finding: |
+      F1 / F2 / F3 hard fail. Legacy domain-level system skill web-contops-system (id 120,
+      skill_type='system', domain_id=128, domain_module_id=NULL) carries 7 query_* tools
+      (ids 771-777, all coverage_tier='platform', operation_kind='query', data_object_id linked).
+      Per Rule #17, every domain_modules row needs exactly one skill_type='system' skill with
+      domain_module_id set and >=1 skill_tools row; legacy row 120 is the migration target.
+      Mutate / workflow-gate / side_effect / fetch / inbound tools all missing.
+    action: |
+      After B1B-S1 lands, author one skill_type='system' skill per new module with domain_module_id
+      set and 4-to-8 mixed tools per module covering query, mutate (create_content_audit,
+      resolve_accessibility_finding, dismiss_brand_violation, retire_inventory_record),
+      side_effect (trigger_external_a11y_rescan, submit_redirect_request), fetch (fetch_wcag_rules,
+      fetch_seo_serp_data), and inbound (receive_scanner_callback, receive_crawler_completion).
+      Reuse existing query_* tools (771-777) where the same primitive applies to the new module's
+      masters. Once module-anchored skills ship, DELETE the legacy skills row 120 (F1 cleanup).
+      Apply the channel-vs-capability authoring rule from SKILL.md for notification tools.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_modules: []
+    extra_legacy_skill_id: 120
+    extra_legacy_tool_ids: [771, 772, 773, 774, 775, 776, 777]
+
+b2:
+  - id: B2-1
+    summary: "Pick the WEB-CONTOPS module split shape (2 / 3 / 4 modules or defer)."
+    question: |
+      Which module split shape should WEB-CONTOPS take? The 2026-05-30 audit recommended
+      a 3-module split (WCO-AUDIT-COMPLIANCE + WCO-SEO-LINKS + WCO-EDITORIAL-PLANNING) matching
+      the three-pole vendor surface (compliance-and-audit, technical SEO, editorial). Alternatives:
+      a 2-module split aligned to scanner-output-vs-editorial-process, a 4-module split that
+      separates accessibility specialist (AudioEye-shaped buyer), or deferral until Phase 0 (B3-6)
+      ratifies the vendor surface.
+    options:
+      - "(a) 3-module split: WCO-AUDIT-COMPLIANCE + WCO-SEO-LINKS + WCO-EDITORIAL-PLANNING"
+      - "(b) 2-module split: WCO-FINDINGS + WCO-EDITORIAL"
+      - "(c) 4-module split: separate WCO-ACCESS from WCO-AUDIT-QUALITY"
+      - "(d) defer until Phase 0 (B3-6) lands"
+    why: |
+      Module split is a design call the user owns and gates B1B-S1 (and through it B1B-S2,
+      B1B-S5, B1B-S6, B1B-S8, B1B-S10). Committing before Phase 0 ratifies the surface risks
+      a re-do; eyeball-mode commit is fine if the user is confident in the 3-pole shape.
+
+  - id: B2-2
+    summary: "Per-flag yes / no answers for 7 pattern-flag candidates across the 7 masters."
+    question: |
+      Which of the following pattern-flag candidates should flip to true? Each affects derived
+      permissions and the workflow-gate surface. (1) content_audits.has_submit_lock - a completed
+      audit is an immutable signed report. (2) accessibility_scan_findings.has_personal_content -
+      findings may quote scanned page content with visitor PII. (3) accessibility_scan_findings.has_single_approver -
+      accessibility lead signs wont_fix and verified transitions. (4) technical_seo_findings.has_single_approver -
+      SEO lead signs wont_fix. (5) brand_voice_violations.has_personal_content - violations may
+      quote PII-adjacent copy. (6) content_lifecycle_plans.has_single_approver - content owner is
+      the retire / archive sign-off. (7) web_content_inventory_records.has_personal_content -
+      URL paths may embed user IDs or PII tokens.
+    options:
+      - "yes / no per flag (7 answers)"
+    why: |
+      Pattern-flag judgments are workflow-shape decisions the user owns; the false-by-default
+      doesn't constitute review. Per Rule #15 no data_objects.notes annotation will explain the
+      choice; the audit's history.md is the only record. Gates B1B-S3.
+
+  - id: B2-3
+    summary: "Approve / supply wording for WEB-CONTOPS catalog_tagline and catalog_description (A4)."
+    question: |
+      The domain's catalog_tagline and catalog_description are both empty (A4 fail). Rule #20
+      requires both to be drafted in buyer voice (workflow + value) and surfaced for user approval
+      BEFORE any PATCH. M8 (module-level equivalent) has no targets today since zero modules exist;
+      M8 will need its own pass after B1B-S1 lands.
+    options:
+      - "(a) approve agent-drafted wording (will surface in chat before writing)"
+      - "(b) user supplies exact wording"
+      - "(c) defer until B1B-S1 lands so module-level UX is authored in parallel"
+    why: |
+      Marketing-voice copy needs explicit approval per Rule #20; once a non-empty value exists,
+      overwrites are forbidden without per-row user approval.
+
+  - id: B2-4
+    summary: "Pick the WEB-CONTOPS regulation linkage shape (ADA + Section 508 + optional EAA / GDPR cookie-consent)."
+    question: |
+      Zero domain_regulations rows for WEB-CONTOPS. ADA (id 61) and Section 508 (id 62) exist in
+      the regulations catalog. EAA (European Accessibility Act) is absent from regulations and
+      would need a new row before linking. GDPR cookie-consent / cookie-banner content scanning
+      is a secondary edge (OneTrust / Cookiebot territory) - out-of-scope for WEB-CONTOPS proper
+      or in-scope?
+    options:
+      - "(a) link ADA + Section 508 only with applicability='required', defer EAA"
+      - "(b) queue EAA via a new regulations insert and link all three"
+      - "(c) include the GDPR cookie-consent edge as applicability='conditional'"
+      - "(d) defer entirely until B1B-S1 lands so the linkage is module-scoped"
+    why: |
+      Regulation-mapping calls fall on the user; the audit can identify the gap but not
+      unilaterally write domain_regulations rows with applicability qualifiers.
+
+b3:
+  - id: B3-1
+    candidate: "editorial_tasks / editorial_briefs"
+    rationale: |
+      Production-workflow substrate. GatherContent and Optimizely CMP both master 'content brief'
+      (the editorial assignment definition) and 'task' (the per-stage step) as first-class.
+      WEB-CONTOPS today carries content_lifecycle_plans (the calendar) but no production substrate.
+      Without these, WCO-EDITORIAL-PLANNING is a planning-only module with no orchestration shape.
+    vendor_evidence:
+      - GatherContent
+      - Optimizely Content Marketing Platform
+      - Welcome Software
+      - Skyword
+    proposed_module: WCO-EDITORIAL-PLANNING
+
+  - id: B3-2
+    candidate: "content_calendar_entries"
+    rationale: |
+      Canonical calendar row distinct from content_lifecycle_plans. GatherContent + Optimizely CMP
+      + Trello-for-content tools all model calendar entries as separate from lifecycle plans
+      (a calendar entry is one publish event; a lifecycle plan governs many calendar entries
+      over time).
+    vendor_evidence:
+      - GatherContent
+      - Optimizely Content Marketing Platform
+      - ContentCal
+    proposed_module: WCO-EDITORIAL-PLANNING
+
+  - id: B3-3
+    candidate: "scanner_runs / scan_jobs"
+    rationale: |
+      Orchestration substrate for the four scanner-output masters (accessibility, broken-link,
+      technical-SEO, brand-voice). Every flagship vendor models the scan job (the crawl run
+      that produces findings) as a first-class master separate from the findings it emits.
+      content_audits partly covers this (the run boundary) but conflates the audit report with
+      the underlying scan execution. May land as a relabel + field-set extension of content_audits
+      rather than a new master.
+    vendor_evidence:
+      - Siteimprove
+      - Acquia Optimize
+      - AudioEye
+      - Conductor
+      - Lumar
+    proposed_module: WCO-AUDIT-COMPLIANCE
+
+  - id: B3-4
+    candidate: "a11y_rules / seo_rules / brand_rules (or single scan_rules with rule_kind discriminator)"
+    rationale: |
+      Rule-catalog substrate the scanners use. WCAG 2.1 has roughly 78 success criteria; Acrolinx
+      ships hundreds of brand rules; Conductor / Lumar carry SEO best-practice rules. Each finding
+      row points at the violating rule. Without rule catalogs, findings can't be deduplicated or
+      scored by severity. May land as a single scan_rules master with a rule_kind discriminator
+      or as three separate masters per scan type.
+    vendor_evidence:
+      - Siteimprove
+      - Acrolinx
+      - Acquia Optimize
+      - axe-core
+    proposed_module: WCO-AUDIT-COMPLIANCE
+
+  - id: B3-5
+    candidate: "content_redirects / redirect_rules"
+    rationale: |
+      URL-redirect master. Siteimprove + Acquia Optimize + Lumar all surface redirect management
+      as part of the link-and-inventory governance surface (the answer to 'when an inventory record
+      retires, where does its URL redirect?'). Without redirects, web_content_inventory_records
+      retirement workflow has no terminal-state target. Ownership uncertain: WEB-CONTOPS vs DXP / HCMS
+      as a sibling of web_pages / content_entries.
+    vendor_evidence:
+      - Siteimprove
+      - Acquia Optimize
+      - Lumar
+    proposed_module: WCO-SEO-LINKS
+
+  - id: B3-6
+    candidate: "MODULARIZATION ratification (2 / 3 / 4-module shape)"
+    rationale: |
+      The proposed 3-module split (B2-1) needs Phase 0 ratification. If CMP promotes (B3-7),
+      WCO-EDITORIAL-PLANNING shrinks or disappears. If accessibility splits as a specialist
+      sub-domain, WCO-AUDIT-COMPLIANCE may split into WCO-ACCESS + WCO-AUDIT-QUALITY. Net plausible
+      end states: 2 modules (findings + planning), 3 modules (as proposed), or 4 modules (split
+      accessibility specialist out).
+    vendor_evidence:
+      - Siteimprove
+      - AudioEye
+      - Optimizely Content Marketing Platform
+      - GatherContent
+    proposed_module: null
+
+  - id: B3-7
+    candidate: "Content Marketing Platform (CMP) as a new domain candidate"
+    rationale: |
+      content_lifecycle_plans and the proposed B3-1 / B3-2 editorial substrate may belong to a
+      separate CMP domain. Optimizely CMP / Welcome Software / Skyword position the editorial +
+      production workflow as a distinct point-solution market from accessibility / SEO governance.
+      If CMP promotes, WCO-EDITORIAL-PLANNING either disappears (editorial moves out) or becomes
+      a consumer of CMP masters. CMP candidate queued in audits/_missing-domains.md from the
+      2026-05-30 audit.
+    vendor_evidence:
+      - Optimizely Content Marketing Platform
+      - Welcome Software
+      - Skyword
+      - ContentCal
+      - NewsCred
+      - Contently
+    proposed_module: null

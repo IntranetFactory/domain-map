@@ -1,0 +1,332 @@
+schema_version: 2
+domain: RET-STORE
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a: []
+
+b1b:
+  - id: B1B-M1
+    summary: "Phase A fix-load: 3 domain_modules + remap 6 DMDOs + 5-6 capabilities + per-module system skills"
+    finding: >-
+      RET-STORE has zero domain_modules rows. Rule #14 requires >=1 module_kind='full'.
+      Proposed 3-module split: RET-STORE-TASK-EXEC (masters store_tasks 647, store_associate_checklists 652),
+      RET-STORE-LABOR-SCHED (masters retail_labour_schedules 648), RET-STORE-AUDIT-EXEC (masters store_audits 649,
+      mystery_shopper_records 650, planogram_compliance_records 651). Each module gets one skill_type='system' skill
+      per Rule #17. Embedded_master shells per Rule #16. Final shape pending B2-1.
+    action: >-
+      After B2-1 lands the module-shape decision: INSERT 3 domain_modules rows, remap the 6 legacy domain_data_objects
+      rows into domain_module_data_objects on the right module, INSERT 5-6 capabilities + capability_domains rows
+      (gated on B1B-CAPS), INSERT domain_module_capabilities per module-capability pair, INSERT per-module
+      skill_type='system' skills + skill_tools migration (B1B-SKILLS), then unblock B1B-B10B-SOURCE / B1B-LIFECYCLE / B1B-EMBED.
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+    affected_masters:
+      - {data_object_id: 647, name: "store_tasks", target_module_id: null, workflow: "task_management"}
+      - {data_object_id: 648, name: "retail_labour_schedules", target_module_id: null, workflow: "labour_scheduling"}
+      - {data_object_id: 649, name: "store_audits", target_module_id: null, workflow: "store_audit_ops"}
+      - {data_object_id: 650, name: "mystery_shopper_records", target_module_id: null, workflow: "mystery_shop"}
+      - {data_object_id: 651, name: "planogram_compliance_records", target_module_id: null, workflow: "planogram_exec"}
+      - {data_object_id: 652, name: "store_associate_checklists", target_module_id: null, workflow: "frontline_checklist"}
+    vendor_evidence:
+      - {vendor: "ServiceNow Retail Operations", evidence: "1st_class"}
+      - {vendor: "Reflexis ONE", evidence: "1st_class"}
+      - {vendor: "NewStore Omnichannel Platform", evidence: "1st_class"}
+      - {vendor: "WorkJam", evidence: "secondary"}
+      - {vendor: "Salesforce Consumer Goods Cloud", evidence: "secondary"}
+
+  - id: B1B-CAPS
+    summary: "INSERT 5-6 capabilities + capability_domains (RETAIL-TASK-EXEC, STORE-AUDIT-OPS, PLANOGRAM-EXEC, MYSTERY-SHOP, FRONTLINE-CHECKLIST, RETAIL-LABOR-COMPLIANCE)"
+    finding: >-
+      Only 1 capability (WORKFORCE-SCHEDULING id 312, cross-domain shared with WFM) is linked. A2 threshold of 3 not met.
+      The 6 masters and 5 vendor surfaces span 4-6 distinct capabilities. FRONTLINE-CHECKLIST may also apply to FSM and
+      FOOD-TRACE; apply the cross-cutting capability convention if it spans >=3 domains.
+    action: >-
+      INSERT 5-6 capabilities rows + matching capability_domains rows for RET-STORE. Coupled with B1B-M1; ship in the
+      same loader. After B1B-M1 lands, also INSERT domain_module_capabilities per module-capability pair.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+    affected_entities:
+      - "RETAIL-TASK-EXEC"
+      - "STORE-AUDIT-OPS"
+      - "PLANOGRAM-EXEC"
+      - "MYSTERY-SHOP"
+      - "FRONTLINE-CHECKLIST"
+      - "RETAIL-LABOR-COMPLIANCE"
+    vendor_evidence:
+      - "ServiceNow Retail Operations"
+      - "Reflexis ONE"
+      - "NewStore Omnichannel Platform"
+      - "WorkJam"
+      - "YOOBIC"
+      - "Foko Retail"
+
+  - id: B1B-B10B-SOURCE
+    summary: "PATCH 5 outbound handoffs source_domain_module_id to realizing modules"
+    finding: >-
+      All 5 outbound handoffs (934 retail_labour_schedule.published, 935 store_audit.failed,
+      936 mystery_shopper_record.submitted, 937 store_associate_checklist.overdue, 938 store_task.completed) carry
+      source_domain_module_id=NULL because RET-STORE has zero modules.
+    action: >-
+      After B1B-M1: PATCH 934 -> RET-STORE-LABOR-SCHED, 935 -> RET-STORE-AUDIT-EXEC, 936 -> RET-STORE-AUDIT-EXEC,
+      937 -> RET-STORE-TASK-EXEC (contingent on B2-1 checklist placement), 938 -> RET-STORE-TASK-EXEC. 5 mechanical PATCHes.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+    affected_handoffs:
+      - {handoff_id: 934, direction: outbound, source_domain: "RET-STORE", target_domain: "WFM", trigger_event: "retail_labour_schedule.published", payload: "retail_labour_schedules", null_field: "source_domain_module_id"}
+      - {handoff_id: 935, direction: outbound, source_domain: "RET-STORE", target_domain: "HCM", trigger_event: "store_audit.failed", payload: "store_audits", null_field: "source_domain_module_id"}
+      - {handoff_id: 936, direction: outbound, source_domain: "RET-STORE", target_domain: "CRM", trigger_event: "mystery_shopper_record.submitted", payload: "mystery_shopper_records", null_field: "source_domain_module_id"}
+      - {handoff_id: 937, direction: outbound, source_domain: "RET-STORE", target_domain: "WFM", trigger_event: "store_associate_checklist.overdue", payload: "store_associate_checklists", null_field: "source_domain_module_id"}
+      - {handoff_id: 938, direction: outbound, source_domain: "RET-STORE", target_domain: "WFM", trigger_event: "store_task.completed", payload: "store_tasks", null_field: "source_domain_module_id"}
+
+  - id: B1B-LIFECYCLE
+    summary: "INSERT ~25 data_object_lifecycle_states rows across 6 masters with realizing domain_module_id"
+    finding: >-
+      Zero data_object_lifecycle_states on any of the 6 RET-STORE masters. Per Rule #12 lifecycle states are
+      non-deferrable and must be loaded with domain_module_id set per Rule #14. Proposed state machines:
+      store_tasks (assigned -> acknowledged -> in_progress -> completed/cancelled/overdue);
+      retail_labour_schedules (draft -> published -> in_progress -> closed);
+      store_audits (scheduled -> in_progress -> conducted -> failed/passed -> remediated -> closed);
+      mystery_shopper_records (scheduled -> submitted -> reviewed -> closed);
+      planogram_compliance_records (scheduled -> photographed -> scored -> remediated -> closed);
+      store_associate_checklists (assigned -> in_progress -> completed/overdue).
+    action: >-
+      After B1B-M1 AND B2-2 (per-state requires_permission decisions): INSERT ~25 lifecycle-state rows with
+      domain_module_id pointing at the realizing module. Do NOT auto-populate state-level notes (Rule #15).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+      - {type: user_decision, ref: B2-2}
+    affected_masters:
+      - {data_object_id: 647, name: "store_tasks", target_module_id: null, workflow: "assigned -> acknowledged -> in_progress -> completed/cancelled/overdue"}
+      - {data_object_id: 648, name: "retail_labour_schedules", target_module_id: null, workflow: "draft -> published -> in_progress -> closed"}
+      - {data_object_id: 649, name: "store_audits", target_module_id: null, workflow: "scheduled -> in_progress -> conducted -> failed/passed -> remediated -> closed"}
+      - {data_object_id: 650, name: "mystery_shopper_records", target_module_id: null, workflow: "scheduled -> submitted -> reviewed -> closed"}
+      - {data_object_id: 651, name: "planogram_compliance_records", target_module_id: null, workflow: "scheduled -> photographed -> scored -> remediated -> closed"}
+      - {data_object_id: 652, name: "store_associate_checklists", target_module_id: null, workflow: "assigned -> in_progress -> completed/overdue"}
+
+  - id: B1B-SKILLS
+    summary: "Retire / rehome legacy domain-level system skill 101 in favor of 3 module-level system skills"
+    finding: >-
+      Legacy ret-store-system skill (id 101, domain_module_id=NULL, 6 skill_tools rows) is the F1 anti-pattern.
+      Rule #17 requires one skill_type='system' skill per domain_modules row + >=1 skill_tools row each. Tool partition:
+      query_store_tasks (674) + query_store_associate_checklists (679) -> RET-STORE-TASK-EXEC;
+      query_retail_labour_schedules (675) -> RET-STORE-LABOR-SCHED;
+      query_store_audits (676) + query_mystery_shopper_records (677) + query_planogram_compliance_records (678) ->
+      RET-STORE-AUDIT-EXEC. Each module-level skill also needs >=1 mutate and >=1 side_effect to clear F3's practical floor.
+    action: >-
+      After B1B-M1 AND B2-4 (retire-vs-rehome): INSERT 3 module-level skills rows; re-anchor or migrate the 6
+      skill_tools rows; DELETE or rehome skill id 101.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+      - {type: user_decision, ref: B2-4}
+    affected_modules: []
+    extra_skill_tools:
+      - {tool_id: 674, tool_name: "query_store_tasks", target_module: "RET-STORE-TASK-EXEC"}
+      - {tool_id: 675, tool_name: "query_retail_labour_schedules", target_module: "RET-STORE-LABOR-SCHED"}
+      - {tool_id: 676, tool_name: "query_store_audits", target_module: "RET-STORE-AUDIT-EXEC"}
+      - {tool_id: 677, tool_name: "query_mystery_shopper_records", target_module: "RET-STORE-AUDIT-EXEC"}
+      - {tool_id: 678, tool_name: "query_planogram_compliance_records", target_module: "RET-STORE-AUDIT-EXEC"}
+      - {tool_id: 679, tool_name: "query_store_associate_checklists", target_module: "RET-STORE-TASK-EXEC"}
+
+  - id: B1B-EMBED
+    summary: "INSERT embedded_master / consumer DMDO rows for users + WFM/CSM/HCM masters per module"
+    finding: >-
+      Post-M1, every consumed entity needs an embedded_master or consumer DMDO row anchored on the consuming module.
+      Per Rule #16 infrastructure masters are necessity=optional on non-master rows. Default proposal: users on all 3
+      modules (embedded_master + required, platform_builtin); work_shifts + time_entries on RET-STORE-TASK-EXEC +
+      RET-STORE-LABOR-SCHED (consumer + optional, mastered by WFM); customer_cases on RET-STORE-AUDIT-EXEC
+      (consumer + optional, mastered by CSM); employment_events on RET-STORE-AUDIT-EXEC (consumer + optional,
+      mastered by HCM). locations and employees deferred to B2-5.
+    action: >-
+      After B1B-M1 AND B2-5: INSERT the embedded_master / consumer DMDO rows per the approved inventory.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+      - {type: user_decision, ref: B2-5}
+    affected_entities:
+      - "users"
+      - "work_shifts"
+      - "time_entries"
+      - "customer_cases"
+      - "employment_events"
+
+  - id: B1B-PATTERN-FLAGS
+    summary: "PATCH 4 candidate pattern flags after B2-2 confirmation"
+    finding: >-
+      All 6 masters carry the false-by-default trio. Per Rule #12 positive re-evaluation required. Candidates:
+      mystery_shopper_records.has_personal_content=true (shopper PII / named-employee scoring);
+      store_audits.has_single_approver=true (district manager signature);
+      store_audits.has_submit_lock=true (immutable after close);
+      planogram_compliance_records.has_personal_content=true (photos may capture employees / shoppers).
+    action: PATCH the user-confirmed subset of the 4 candidate flags to true. Do NOT use notes (Rule #15).
+    blocked_by:
+      - {type: user_decision, ref: B2-2}
+    affected_masters:
+      - {data_object_id: 650, name: "mystery_shopper_records", target_module_id: null, workflow: "has_personal_content candidate"}
+      - {data_object_id: 649, name: "store_audits", target_module_id: null, workflow: "has_single_approver + has_submit_lock candidate"}
+      - {data_object_id: 651, name: "planogram_compliance_records", target_module_id: null, workflow: "has_personal_content candidate"}
+
+  - id: B1B-CATALOG-UX
+    summary: "WRITE domains.catalog_tagline + catalog_description after B2-3 supplies wording"
+    finding: >-
+      Both catalog_tagline and catalog_description are empty strings on the RET-STORE domains row. Rule #20 demands
+      buyer-shaped one-liner + 1-3 paragraph description. Rule #20 forbids autonomous writes to these columns even
+      from empty; the user supplies the wording.
+    action: "After B2-3: write the user-approved tagline and description verbatim. Single PATCH on the domains row."
+    blocked_by:
+      - {type: user_decision, ref: B2-3}
+
+  - id: B1B-VERB-RENAME
+    summary: "Rename 7 user-edge data_object_relationships to snake_case verb-shape"
+    finding: >-
+      Relationships 694-700 use noun-phrase verbs (assigned tasks, created tasks, assigned checklists,
+      publishes schedules, conducted audits, verified planogram, submitted mystery shop) instead of snake_case
+      verb-shape. Legacy WFM / ATS anti-pattern. The 2 task-assignment edges can default to assigned_to_user /
+      created_by_user; the other 5 publisher-side verbs need user input on the exact verb form.
+    action: >-
+      Bundle the 2 trivial renames (694, 695) with B1B-LIFECYCLE work; surface the other 5 (696-700) for per-row
+      verb-form approval in the next pass.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+    extra_relationships:
+      - {id: 694, current: "assigned tasks", proposed: "assigned_to_user"}
+      - {id: 695, current: "created tasks", proposed: "created_by_user"}
+      - {id: 696, current: "assigned checklists", proposed: "needs_verb_form_decision"}
+      - {id: 697, current: "publishes schedules", proposed: "needs_verb_form_decision"}
+      - {id: 698, current: "conducted audits", proposed: "needs_verb_form_decision"}
+      - {id: 699, current: "verified planogram", proposed: "needs_verb_form_decision"}
+      - {id: 700, current: "submitted mystery shop", proposed: "needs_verb_form_decision"}
+
+b2:
+  - id: B2-1
+    summary: "Module split shape: 3 modules vs 2; placement of store_associate_checklists"
+    question: >-
+      Should the RET-STORE module split be (a) 3 modules per the proposal (RET-STORE-TASK-EXEC, RET-STORE-LABOR-SCHED,
+      RET-STORE-AUDIT-EXEC), (b) 2 modules collapsing audit-exec into one (RET-STORE-EXEC + RET-STORE-LABOR-SCHED),
+      or (c) some alternate shape? Sub-question: does store_associate_checklists belong with store_tasks
+      (RET-STORE-TASK-EXEC, workflow-overlap) or with retail_labour_schedules (RET-STORE-LABOR-SCHED, per-shift attestation)?
+    options:
+      - "(a) 3 modules per the proposal"
+      - "(b) 2 modules collapsing audit-exec"
+      - "(c) alternate shape the user names"
+      - "store_associate_checklists -> RET-STORE-TASK-EXEC"
+      - "store_associate_checklists -> RET-STORE-LABOR-SCHED"
+    why: >-
+      Editorial decision trading semantic clarity against operational coherence. 3 modules is the default once B1B-CAPS
+      capabilities land (>=3-capability threshold strictly enforces the 2-module floor). The vendor split is mixed:
+      ServiceNow / Reflexis / NewStore taxonomies vote 3 modules; YOOBIC / Foko collapse the audit + mystery + planogram
+      surface; Reflexis collapses task + labor.
+
+  - id: B2-2
+    summary: "Pattern flag re-evaluation (4 candidates) + per-state requires_permission decisions"
+    question: >-
+      Which of the 4 pattern-flag candidates should flip to true (mystery_shopper_records.has_personal_content;
+      store_audits.has_single_approver; store_audits.has_submit_lock;
+      planogram_compliance_records.has_personal_content)? Also for B1B-LIFECYCLE: which state transitions are
+      workflow-gates (requires_permission=true)? Obvious candidates: store_tasks.completed, retail_labour_schedules.published,
+      store_audits.passed, planogram_compliance_records.scored.
+    options:
+      - "Per-flag yes/no on the 4 candidates"
+      - "Per-state requires_permission yes/no on the proposed state machines"
+    why: >-
+      Pattern flags and workflow-gate decisions are workflow-shape judgments the user owns. The false-by-default does
+      not confirm review. Per Rule #15 the rationale must NOT land in notes.
+
+  - id: B2-3
+    summary: "Catalog UX wording: tagline + description per Rule #20"
+    question: >-
+      What buyer-shaped tagline (one-liner) and long-form description (1-3 paragraphs) should land on the RET-STORE
+      domains row? Rule #20 requires the user to supply or approve the exact wording before any write.
+    options:
+      - "User supplies tagline + description text"
+      - "User defers; A4 stays open"
+    why: >-
+      Marketing voice and product framing are owned by the user; Rule #20 forbids autonomous writes to catalog_tagline /
+      catalog_description even when the current value is empty.
+
+  - id: B2-4
+    summary: "Legacy ret-store-system skill (id 101): retire after migration vs. rehome as one of the 3 module skills"
+    question: >-
+      For B1B-SKILLS, should the agent (a) DELETE the legacy ret-store-system skill (id 101) after re-anchoring its 6
+      skill_tools rows to 3 new module-level skills, or (b) repurpose the legacy as one of the 3 module skills (rename
+      and re-target domain_module_id) and only INSERT 2 new module-level skills?
+    options:
+      - "(a) Retire legacy after migration"
+      - "(b) Rehome legacy as one of the 3 module skills"
+    why: >-
+      Editorial; the agent cannot prefer (a) over (b) without architectural intent. Route (a) is cleaner against F1 but
+      higher churn; route (b) minimizes churn.
+
+  - id: B2-5
+    summary: "Embedded master inventory: locations / employees in addition to users + WFM/CSM/HCM masters"
+    question: >-
+      For B1B-EMBED, beyond the default proposal (users on all 3 modules; work_shifts + time_entries on
+      RET-STORE-TASK-EXEC + RET-STORE-LABOR-SCHED; customer_cases on RET-STORE-AUDIT-EXEC; employment_events on
+      RET-STORE-AUDIT-EXEC), should locations and employees also be embedded shells (Rule #16 necessity=optional) or
+      deferred until a deployer asks?
+    options:
+      - "(a) Embed users + WFM masters + employees + locations on all 3 modules"
+      - "(b) Embed only users + WFM masters; defer employees / locations"
+      - "(c) Per-module itemized list the user supplies"
+    why: >-
+      Rule #16 says infrastructure masters are always necessity=optional on non-master rows; the deployability story
+      varies per module. Several plausible shapes.
+
+b3:
+  - id: B3-1
+    candidate: "store_visit_logs"
+    rationale: "District / regional manager store visit scorecards with action items; vendors master this distinct from store_audits."
+    vendor_evidence:
+      - "ServiceNow Retail Operations"
+      - "YOOBIC"
+      - "Foko Retail"
+      - "Reflexis Visit Manager"
+    proposed_module: "RET-STORE-AUDIT-EXEC"
+
+  - id: B3-2
+    candidate: "safety_incidents"
+    rationale: "Slip-and-fall, shoplifting, workplace injury, customer incident logs at the store level; OSHA recordkeeping anchor."
+    vendor_evidence:
+      - "NewStore Safety"
+      - "Reflexis Risk"
+      - "ServiceNow Retail Risk"
+      - "Foko Safety"
+    proposed_module: "RET-STORE-AUDIT-EXEC or new RET-STORE-SAFETY if heavy"
+
+  - id: B3-3
+    candidate: "store_huddle_logs"
+    rationale: "Daily / shift-start huddle content + associate acknowledgements; may route to a queued FRONTLINE-COMMS domain instead."
+    vendor_evidence:
+      - "Zipline"
+      - "NewStore Huddles"
+      - "Reflexis Briefing"
+      - "WorkJam Communications"
+    proposed_module: "RET-STORE-TASK-EXEC or FRONTLINE-COMMS"
+
+  - id: B3-4
+    candidate: "loss_prevention_alerts"
+    rationale: "Anomaly events feeding the loss-prevention workflow; LP often a sibling domain but small footprint may stay folded."
+    vendor_evidence:
+      - "Reflexis LP"
+      - "NewStore Loss Prevention"
+      - "Zebra Workcloud"
+    proposed_module: "RET-STORE-AUDIT-EXEC or new RET-STORE-LOSS-PREV"
+
+  - id: B3-5
+    candidate: "store_promotions_execution_records"
+    rationale: "Per-store rollout of HQ promotions with confirmation photos; boundary to any PROMO domain needs verification."
+    vendor_evidence:
+      - "Reflexis"
+      - "YOOBIC"
+      - "Wiser Retail"
+      - "Foko Retail"
+    proposed_module: "RET-STORE-TASK-EXEC"
+
+  - id: B3-6
+    candidate: "shift_handover_logs"
+    rationale: "End-of-shift handover notes between associates."
+    vendor_evidence:
+      - "NewStore Shift Notes"
+      - "Reflexis Shift Pass"
+      - "WorkJam"
+    proposed_module: "RET-STORE-LABOR-SCHED"

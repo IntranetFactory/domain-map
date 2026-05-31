@@ -1,0 +1,294 @@
+schema_version: 2
+domain: PA
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-LIFECYCLE-STATES
+    summary: Zero data_object_lifecycle_states on any of the 5 PA masters (attrition_forecasts 42, people_kpis 43, workforce_segments 44, engagement_surveys 45, predictive_models 46); B12 hard fail.
+    finding: |
+      All 5 PA masters have a real workflow but zero rows in data_object_lifecycle_states. Existing trigger_events imply the state machines:
+      engagement_surveys 45 (events 398 launched lifecycle, 399 closed state_change): draft -> launched -> closing -> closed -> results_published -> archived;
+      attrition_forecasts 42 (event 397 published state_change, 1221 attrition_risk.elevated threshold): draft -> published -> superseded;
+      predictive_models 46 (events 400 deployed state_change, 401 scored signal): training -> validated -> deployed -> retired;
+      people_kpis 43 (event 1219 snapshot_published lifecycle): draft -> snapshot_published -> archived;
+      workforce_segments 44 (events 64 high_potential.identified signal, 1220 composition_changed state_change, 1223 pay_equity.gap_detected threshold, 1224 skill_gap.identified signal): draft -> composition_baseline -> composition_changed -> archived.
+    action: |
+      Draft state rows per the implied state machines above. Mark requires_permission=true on gated transitions (engagement_survey.launched, predictive_model.deployed, attrition_forecast.published). Set domain_module_id to the master's home module (engagement_surveys -> 82, predictive_models -> 83, attrition_forecasts -> 83, people_kpis -> 81, workforce_segments -> 81). New entity inserts: per-row authoring needs user approval before load.
+    affected_masters:
+      - {data_object_id: 42, name: attrition_forecasts, target_module_id: 83, workflow: "draft -> published -> superseded"}
+      - {data_object_id: 43, name: people_kpis, target_module_id: 81, workflow: "draft -> snapshot_published -> archived"}
+      - {data_object_id: 44, name: workforce_segments, target_module_id: 81, workflow: "draft -> composition_baseline -> composition_changed -> archived"}
+      - {data_object_id: 45, name: engagement_surveys, target_module_id: 82, workflow: "draft -> launched -> closing -> closed -> results_published -> archived"}
+      - {data_object_id: 46, name: predictive_models, target_module_id: 83, workflow: "training -> validated -> deployed -> retired"}
+
+  - id: B1A-SYSTEM-SKILLS
+    summary: Zero module-level skill_type=system skills on any of the 4 PA modules; legacy pa-system (id 5, domain_module_id NULL) still present. F2 / F3 / F5 hard fail, F1 transitional.
+    finding: |
+      Rule #17 requires exactly one system skill per domain_modules row with >=1 skill_tools row each. PA has 4 full modules (81 PA-WORKFORCE-METRICS, 82 PA-ENGAGEMENT-SURVEYS, 83 PA-PREDICTIVE-MODELS, 84 PA-DEI-ANALYTICS), expected 4 module-level system skills, observed 0. Legacy skill id=5 'pa-system' carries domain_module_id=NULL and 0 skill_tools rows. Semantius score F5 is uncomputable until module-level skills land.
+    action: |
+      Author 4 module-level system skills (one per module): pa_workforce_metrics_agent (81), pa_engagement_surveys_agent (82), pa_predictive_models_agent (83), pa_dei_analytics_agent (84). Each gets >=5 skill_tools rows per Phase-S authoring procedure (query_<master>, mutate_<master> per gated transition, notify_person, compute_* primitives). After F2 lands, DELETE legacy skill id=5 per F1 transitional cleanup.
+    affected_modules: [81, 82, 83, 84]
+    blocked_by:
+      - {type: depends_on, ref: B1A-LIFECYCLE-STATES, reason: "workflow-gate mutate tools per skill_tools derive from lifecycle states' requires_permission=true transitions"}
+
+  - id: B1A-ROLES
+    summary: Zero PA-scoped roles, zero role_modules rows touching PA modules. E1 hard fail (4-module domain needs >=3 roles).
+    finding: |
+      /role_modules?domain_module_id=in.(81,82,83,84) returns empty. No PA-scoped role_codes present. PA has 4 full modules requiring at least 3 roles per E1 with the 2-module floor per E2.
+    action: |
+      Author 3-5 PA-scoped roles bundled under People Analytics business function: proposed PA-ANALYST (multi-module read + dashboard authoring), PA-LEAD (model deployment approver, DEI sign-off), PA-DATA-SCIENTIST (predictive model author, DEI cohort analysis). Each role gets >=2 role_modules rows with interaction_level populated and a role_permissions bundle. New entity inserts: per-role bundle authoring needs user approval.
+    affected_modules: [81, 82, 83, 84]
+    blocked_by:
+      - {type: depends_on, ref: B1A-PERMISSIONS, reason: "role_permissions cannot be authored before permission rows exist"}
+
+  - id: B1A-PERMISSIONS
+    summary: Zero permissions rows with domain_module_id in (81,82,83,84). Rule #14 baseline derivation hard fail.
+    finding: |
+      /permissions?domain_module_id=in.(81,82,83,84) returns empty. Rule #14 implies >=12 baseline rows expected (3 per module: <module_code>:read, <module_code>:manage, <module_code>:admin) plus workflow-gate rows from lifecycle states with requires_permission=true.
+    action: |
+      Author 12 baseline permissions across the 4 modules (3 each, tiers baseline-read / baseline-manage / baseline-admin). Workflow-gate permissions are derived from B1A-LIFECYCLE-STATES (1 per gated state). Baseline slice is unblocked; workflow-gate slice depends on B1A-LIFECYCLE-STATES.
+    affected_modules: [81, 82, 83, 84]
+    extra_baseline_slice_unblocked: true
+    blocked_by:
+      - {type: depends_on, ref: B1A-LIFECYCLE-STATES, reason: "workflow-gate permissions per Rule #12 derive from lifecycle states (baseline 12 rows are unblocked)"}
+
+  - id: B1A-INTRA-PA-RELATIONSHIPS
+    summary: Intra-PA master-to-master data_object_relationships missing. B6 partial fail.
+    finding: |
+      Among the 5 PA masters (42, 43, 44, 45, 46), no direct master-to-master relationships exist. Observed rows: 5 user-edges (1595-1599, Rule #10) plus derivation feeds (rows 13 org_units measures people_kpis, 46 employment_events feeds people_kpis, 113 learning_records feeds people_kpis, 161 engagement_drivers feeds people_kpis, 162 survey_responses feeds people_kpis, 832 customers feeds people_kpis). Missing master-to-master edges: predictive_models scores attrition_forecasts (46 -> 42), predictive_models scores workforce_segments (46 -> 44), attrition_forecasts segments workforce_segments (42 -> 44).
+    action: |
+      Draft 3-4 intra-PA data_object_relationships rows. Each row needs relationship_verb + inverse_verb + relationship_type + relationship_kind + is_required + owner_side. Verb proposals not pre-specified by audit; user authoring required.
+    affected_masters:
+      - {data_object_id: 42, name: attrition_forecasts, target_module_id: 83, workflow: pair_with_46_44}
+      - {data_object_id: 44, name: workforce_segments, target_module_id: 81, workflow: pair_with_46_42}
+      - {data_object_id: 46, name: predictive_models, target_module_id: 83, workflow: pair_with_42_44}
+
+  - id: B1A-ALIASES
+    summary: Zero data_object_aliases on any of the 5 PA masters. B11 hard fail.
+    finding: |
+      /data_object_aliases?data_object_id=in.(42,43,44,45,46) returns empty. PA is a strong-vendor-terminology market (industry terms like Headcount, FTE, Span of Control, Pulse Survey, Flight Risk Score; vendor terms differ per platform).
+    action: |
+      Draft 2-4 aliases per master with alias_type populated (industry / vendor / regulatory). Exact alias names and types not pre-specified by audit; user authoring required.
+    affected_masters:
+      - {data_object_id: 42, name: attrition_forecasts, target_module_id: 83, workflow: alias_proposals_needed}
+      - {data_object_id: 43, name: people_kpis, target_module_id: 81, workflow: alias_proposals_needed}
+      - {data_object_id: 44, name: workforce_segments, target_module_id: 81, workflow: alias_proposals_needed}
+      - {data_object_id: 45, name: engagement_surveys, target_module_id: 82, workflow: alias_proposals_needed}
+      - {data_object_id: 46, name: predictive_models, target_module_id: 83, workflow: alias_proposals_needed}
+
+  - id: B1A-APQC-TAGGING
+    summary: 8 existing handoff_processes rows all discovery_substring / record_status=new, 0 agent_curated, 0 approved. 30+ candidate tags identified, blocked by unresolved PCF external_ids.
+    finding: |
+      PA cross-domain handoffs (18 outbound + 12 inbound + 4 intra-PA) cluster into APQC PCF families for workforce metrics, employee engagement, talent intelligence, DEI/pay-equity. The 2026-05-30 audit proposed ~30 agent_curated rows, but the 2026-05-31 Continuation verified that audit-proposed external_ids (10544, 10545, 10547, 10548, 10550, 10539) do NOT resolve in the live processes table. The 8 already-resolved external_ids (10532, 10018, 10175, 16944, 21698, 10773, 10511, 16437) carry semantic mismatches with the audit prose for several rows.
+    action: |
+      Re-resolve PCF candidate activities against live /processes?source_framework=eq.apqc_pcf_cross_industry before any INSERT. Group lookups by family: workforce-metrics, employee-engagement, talent-intelligence, DEI-ethics. Once verified IDs land, draft handoff_processes inserts: (handoff_id, process_id, proposal_source='agent_curated', record_status='new'). Includes REPLACE for handoffs 451, 13, 115 where existing tags are in the wrong PCF family.
+    affected_handoffs:
+      - {handoff_id: 26, direction: outbound, source_domain: PA, target_domain: TALENT-MGMT, trigger_event: high_potential.identified, payload: workforce_segments, null_field: process_id_unresolved}
+      - {handoff_id: 1104, direction: outbound, source_domain: PA, target_domain: EPM, trigger_event: people_kpi.snapshot_published, payload: people_kpis, null_field: process_id_unresolved}
+      - {handoff_id: 1105, direction: outbound, source_domain: PA, target_domain: COMP-MGMT, trigger_event: pay_equity.gap_detected, payload: workforce_segments, null_field: process_id_unresolved}
+      - {handoff_id: 1107, direction: outbound, source_domain: PA, target_domain: EMP-EXP, trigger_event: engagement.declining, payload: engagement_surveys, null_field: process_id_unresolved}
+      - {handoff_id: 1106, direction: outbound, source_domain: PA, target_domain: SKILLS-MGMT, trigger_event: skill_gap.identified, payload: workforce_segments, null_field: process_id_unresolved}
+      - {handoff_id: 1108, direction: outbound, source_domain: PA, target_domain: TALENT-MGMT, trigger_event: engagement.declining, payload: engagement_surveys, null_field: process_id_unresolved}
+      - {handoff_id: 1109, direction: outbound, source_domain: PA, target_domain: HRSD, trigger_event: engagement.declining, payload: engagement_surveys, null_field: process_id_unresolved}
+      - {handoff_id: 1110, direction: outbound, source_domain: PA, target_domain: TALENT-MGMT, trigger_event: attrition_risk.elevated, payload: attrition_forecasts, null_field: process_id_unresolved}
+      - {handoff_id: 1111, direction: outbound, source_domain: PA, target_domain: HCM, trigger_event: attrition_risk.elevated, payload: attrition_forecasts, null_field: process_id_unresolved}
+      - {handoff_id: 1112, direction: outbound, source_domain: PA, target_domain: SWP, trigger_event: workforce_segment.composition_changed, payload: workforce_segments, null_field: process_id_unresolved}
+      - {handoff_id: 1113, direction: outbound, source_domain: PA, target_domain: TALENT-MGMT, trigger_event: predictive_model.deployed, payload: predictive_models, null_field: process_id_unresolved}
+      - {handoff_id: 451, direction: outbound, source_domain: PA, target_domain: HCM, trigger_event: attrition.forecast_updated, payload: workforce_plans, null_field: replace_existing_10175}
+      - {handoff_id: 13, direction: outbound, source_domain: PA, target_domain: SWP, trigger_event: attrition.forecast_updated, payload: workforce_plans, null_field: replace_existing_10175}
+      - {handoff_id: 449, direction: outbound, source_domain: PA, target_domain: HCM, trigger_event: attrition_risk.high, payload: employees, null_field: process_id_unresolved}
+      - {handoff_id: 450, direction: outbound, source_domain: PA, target_domain: TALENT-MGMT, trigger_event: attrition_risk.high, payload: employees, null_field: process_id_unresolved}
+      - {handoff_id: 452, direction: outbound, source_domain: PA, target_domain: SWP, trigger_event: attrition_forecast.published, payload: attrition_forecasts, null_field: process_id_unresolved}
+      - {handoff_id: 453, direction: outbound, source_domain: PA, target_domain: ATS, trigger_event: predictive_model.scored, payload: predictive_models, null_field: process_id_unresolved}
+      - {handoff_id: 1103, direction: outbound, source_domain: PA, target_domain: HCM, trigger_event: people_kpi.snapshot_published, payload: people_kpis, null_field: process_id_unresolved}
+      - {handoff_id: 25, direction: inbound, source_domain: PAYROLL, target_domain: PA, trigger_event: pay_cycle.closed, payload: people_kpis, null_field: process_id_unresolved}
+      - {handoff_id: 23, direction: inbound, source_domain: ATS, target_domain: PA, trigger_event: requisition.filled, payload: people_kpis, null_field: confirm_or_replace_21698}
+      - {handoff_id: 21, direction: inbound, source_domain: HCM, target_domain: PA, trigger_event: employment_event.recorded, payload: employment_events, null_field: process_id_unresolved}
+      - {handoff_id: 102, direction: inbound, source_domain: PAYROLL, target_domain: PA, trigger_event: pay_cycle.closed, payload: pay_slips, null_field: process_id_unresolved}
+      - {handoff_id: 1077, direction: inbound, source_domain: EMP-EXP, target_domain: PA, trigger_event: action_plan.completed, payload: action_plans, null_field: process_id_unresolved}
+      - {handoff_id: 1130, direction: inbound, source_domain: PSA, target_domain: PA, trigger_event: project_assignment.utilization_low, payload: project_assignments, null_field: process_id_unresolved}
+      - {handoff_id: 403, direction: inbound, source_domain: ATS, target_domain: PA, trigger_event: recruitment_source.attributed, payload: recruitment_sources, null_field: process_id_unresolved}
+      - {handoff_id: 444, direction: inbound, source_domain: EMP-EXP, target_domain: PA, trigger_event: survey_response.received, payload: survey_responses, null_field: process_id_unresolved}
+      - {handoff_id: 1155, direction: inbound, source_domain: PAYROLL, target_domain: PA, trigger_event: pay_run.disbursed, payload: pay_runs, null_field: process_id_unresolved}
+      - {handoff_id: 107, direction: inbound, source_domain: COMP-MGMT, target_domain: PA, trigger_event: merit_cycle.closed, payload: compensation_statements, null_field: process_id_unresolved}
+      - {handoff_id: 115, direction: inbound, source_domain: EMP-EXP, target_domain: PA, trigger_event: survey.cycle_closed, payload: engagement_drivers, null_field: replace_existing_10018}
+      - {handoff_id: 1281, direction: inbound, source_domain: ATS, target_domain: PA, trigger_event: interview_scorecard.submitted, payload: interview_scorecards, null_field: process_id_unresolved}
+
+b1b: []
+
+b2:
+  - id: B2-MODULE-84-MASTER
+    summary: Module 84 (PA-DEI-ANALYTICS) masters zero data_objects; intentional derived-only design or missing master?
+    question: |
+      PA-DEI-ANALYTICS module 84 carries only consumer + derived DMDO rows (hcm_positions, org_units, compensation_plans, merit_recommendations as consumers; employees as derived) and 1 capability (DEI-ANALYTICS). Vendor analogs (Trusaic / Syndio / Visier Pay Equity / Diversio) master pay-equity analyses or DEI cohorts as first-class entities with their own lifecycle. Was this intentional?
+    options:
+      - "(a) ADD pay_equity_analyses master to module 84"
+      - "(b) ADD dei_cohorts master to module 84"
+      - "(c) confirm derived-only intentional design"
+    why: |
+      Vendor-research findings (B3-PAY-EQUITY-ANALYSES / B3-DEI-COHORTS) could inform which entity to master. If user picks (c), Bucket 3 work on B3-PAY-EQUITY-ANALYSES / B3-DEI-COHORTS may be moot.
+
+  - id: B2-EVENT-ATTRIBUTION-DEFECT
+    summary: Trigger_events 10 (attrition_risk.high, data_object_id=31 employees) and 11 (attrition.forecast_updated, data_object_id=23 workforce_plans) are non-PA-mastered but used by PA-published handoffs 449/450/13/451.
+    question: |
+      Both events publish on data_objects PA does not master (employees -> HCM, workforce_plans -> SWP). PA-mastered surrogates exist: 1221 attrition_risk.elevated (data_object_id=42 attrition_forecasts) for event 10's role, and 397 attrition_forecast.published (data_object_id=42) for event 11's role. How to resolve?
+    options:
+      - "(a) REPLACE handoff rows 449/450 to use event 1221 and 13/451 to use event 397, retire events 10 + 11 if they have no other publisher"
+      - "(b) PATCH events 10 + 11 data_object_id to PA-mastered rows (42)"
+      - "(c) accept the cross-domain attribution as legitimate (events fire on the affected data_object, not the publisher's master)"
+    why: |
+      Choice affects rows beyond PA (HCM-owned event 10 has its own publishers; SWP-owned event 11 likewise). Cross-domain coordination needed. Option (a) is the cleanest semantic fix; option (b) breaks the publisher-master link.
+    affected_events:
+      - {id: 10, event_name: "attrition_risk.high", current_category: "state_change", proposed_category: "threshold_or_retire"}
+      - {id: 11, event_name: "attrition.forecast_updated", current_category: "state_change", proposed_category: "retire_or_repoint"}
+
+  - id: B2-PATTERN-FLAGS
+    summary: 2026-05-30 audit proposed pattern-flag flips on 3 PA masters; B4 re-evaluation pending user confirm.
+    question: |
+      Proposed flips: engagement_surveys.has_personal_content=true (GDPR Art. 9 special categories likely), engagement_surveys.has_submit_lock=true (closed cycle locks response window); predictive_models.has_single_approver=true (EU AI Act Art. 14 single accountable human), predictive_models.has_personal_content=true (per-employee scoring is personal data); attrition_forecasts.has_personal_content=true (individual-level scores are personal data per GDPR + EU AI Act profiling). Confirm or modify per row?
+    options:
+      - "(a) apply all 5 flips as proposed"
+      - "(b) apply some (specify which)"
+      - "(c) decline all"
+    why: |
+      Flags drive downstream materializer behavior (RBAC, audit-trail emission). Independent decision.
+    affected_masters:
+      - {data_object_id: 42, name: attrition_forecasts, target_module_id: 83, workflow: "has_personal_content -> true"}
+      - {data_object_id: 45, name: engagement_surveys, target_module_id: 82, workflow: "has_personal_content -> true; has_submit_lock -> true"}
+      - {data_object_id: 46, name: predictive_models, target_module_id: 83, workflow: "has_personal_content -> true; has_single_approver -> true"}
+
+  - id: B2-ENGAGEMENT-SCOPE-SPLIT
+    summary: PA-ENGAGEMENT-SURVEYS (module 82) vs EMP-EXP scope ambiguity; duplicate or distinct?
+    question: |
+      EMP-EXP masters survey_responses (182) and engagement_drivers (183) and publishes survey.cycle_closed / survey_response.received / action_plan.completed INTO PA. PA-ENGAGEMENT-SURVEYS module 82 also masters engagement_surveys (45) and publishes engagement_survey.closed / launched / engagement.declining. Pure-play vendors (Culture Amp / Lattice / Peakon) typically classify under EMP-EXP. Resolve?
+    options:
+      - "(a) keep both, clarify boundary (EMP-EXP runs surveys, PA scores/aggregates)"
+      - "(b) MOVE engagement_surveys to EMP-EXP, demote module 82 to derived/consumer only"
+      - "(c) MERGE modules 82 and EMP-EXP equivalent"
+    why: |
+      Couples with B2-PA-NAMING and B3-EMP-LISTENING-DOMAIN. If B3-EMP-LISTENING-DOMAIN vetted, may promote People Listening as a distinct domain.
+
+  - id: B2-CROSS-DOMAIN-CONSUMERS
+    summary: PA modules 81 / 84 consume cross-domain data_objects without inbound handoffs (re-verify scope).
+    question: |
+      Module 81 carries customers fed into people_kpis via data_object_relationships row 832 (CRM-mastered). No incoming handoff. Module 84 consumes hcm_positions / compensation_plans / merit_recommendations from HCM and COMP-MGMT. Justifiable as compute-time joins for KPI calculation? Or scope creep from a prior multi-source ingest design?
+    options:
+      - "(a) keep as analytics compute-time joins (no handoff needed)"
+      - "(b) require inbound handoffs for each consumer DMDO"
+      - "(c) drop specific consumer DMDO rows as scope creep"
+    why: |
+      Without inbound handoffs, the analytics surface looks data-rich but cycle-untraceable. User judgment on whether compute-time joins are first-class catalog inputs.
+
+  - id: B2-CUSTOMERS-FEEDS-KPI
+    summary: data_object_relationships row 832 (customers feeds people_kpis, owner_side=target). Intentional?
+    question: |
+      CRM customers as input to people_kpis is defensible for revenue-per-employee or customer-per-headcount KPIs but unusual in classic HR analytics. Confirm intent or remove?
+    options:
+      - "(a) keep, intentional revenue-per-employee KPI feed"
+      - "(b) drop the row"
+    why: |
+      Standalone decision. No cross-domain coordination needed.
+
+  - id: B2-PA-NAMING
+    summary: PA domain naming / market split. People Analytics unified vs split into Workforce Analytics + People Listening.
+    question: |
+      Visier / OneModel position as broad people-analytics platforms. Culture Amp / Glint / Peakon / Lattice position as employee-listening platforms. Two distinct buyer profiles (HRBP / People Ops vs People Analytics teams). Resolve?
+    options:
+      - "(a) keep PA unified (current state)"
+      - "(b) PROMOTE People Listening to separate domain (queued as B3-EMP-LISTENING-DOMAIN in _missing-domains.md)"
+    why: |
+      Couples with B2-ENGAGEMENT-SCOPE-SPLIT and B3-EMP-LISTENING-DOMAIN.
+
+b3:
+  - id: B3-PAY-EQUITY-ANALYSES
+    candidate: pay_equity_analyses
+    rationale: |
+      Pay-equity analysis as a first-class entity with its own lifecycle (drafted, computed, reviewed, remediated). EU Pay Transparency Directive Article 9 mandates pay-equity gap reporting for orgs >=100. Resolves B2-MODULE-84-MASTER option (a).
+    vendor_evidence:
+      - {vendor: Trusaic, evidence: 1st_class}
+      - {vendor: Syndio, evidence: 1st_class}
+      - {vendor: Visier Pay Equity, evidence: 1st_class}
+      - {vendor: Aequitas, evidence: secondary}
+    proposed_module: 84
+
+  - id: B3-DEI-COHORTS
+    candidate: dei_cohorts
+    rationale: |
+      Representation-by-demographics first-class entity for EU AI Act Annex III + EEO-1 reporting. Possibly a slice of workforce_segments rather than a distinct master; Phase 0 reconciles. Resolves B2-MODULE-84-MASTER option (b).
+    vendor_evidence:
+      - {vendor: Diversio, evidence: 1st_class}
+      - {vendor: Visier DEI, evidence: 1st_class}
+      - {vendor: ChartHop, evidence: secondary}
+    proposed_module: 84
+
+  - id: B3-ATTRITION-RISK-ASSESSMENTS
+    candidate: attrition_risk_assessments
+    rationale: |
+      Per-employee attrition risk score, distinct from segment-level attrition_forecasts. Fixes the B2-EVENT-ATTRIBUTION-DEFECT by giving event 10 (attrition_risk.high) a PA-mastered publisher.
+    vendor_evidence:
+      - {vendor: Visier Flight Risk, evidence: 1st_class}
+      - {vendor: Workday People Analytics flight risk, evidence: 1st_class}
+      - {vendor: Eightfold retention, evidence: 1st_class}
+    proposed_module: 83
+
+  - id: B3-DASHBOARDS
+    candidate: dashboards
+    rationale: |
+      Visualization-layer entity (widgets, filters, owners, audience) with draft / published / archived lifecycle. Core to every flagship PA platform; currently absent from PA modules.
+    vendor_evidence:
+      - {vendor: Visier, evidence: 1st_class}
+      - {vendor: ChartHop, evidence: 1st_class}
+      - {vendor: OneModel, evidence: 1st_class}
+      - {vendor: Workday Discovery, evidence: 1st_class}
+    proposed_module: 81
+
+  - id: B3-DATA-QUALITY-AUDITS
+    candidate: data_quality_audits
+    rationale: |
+      Core PA workflow: data quality monitoring, gap analysis, source reconciliation between HRIS / payroll / talent systems. Distinct lifecycle from operational masters.
+    vendor_evidence:
+      - {vendor: Visier Data Hub, evidence: 1st_class}
+      - {vendor: OneModel pipelines, evidence: 1st_class}
+    proposed_module: 81
+
+  - id: B3-BENCHMARK-DATASETS
+    candidate: benchmark_datasets
+    rationale: |
+      Industry-benchmark comparators layered alongside internal KPIs. Vendor-curated or industry-syndicated content.
+    vendor_evidence:
+      - {vendor: Visier Benchmarks, evidence: 1st_class}
+      - {vendor: Mercer comparators, evidence: secondary}
+    proposed_module: 81
+
+  - id: B3-EMPLOYEE-LISTENING-CYCLES
+    candidate: employee_listening_cycles
+    rationale: |
+      Cycle-level container above survey_responses + survey + action plans. Routes to PA-ENGAGEMENT-SURVEYS module 82 OR to a new People-Listening domain if B3-EMP-LISTENING-DOMAIN promotes.
+    vendor_evidence:
+      - {vendor: Culture Amp Cycle, evidence: 1st_class}
+      - {vendor: Lattice Engagement Cycle, evidence: 1st_class}
+    proposed_module: 82
+
+  - id: B3-TALENT-INTEL-DOMAIN
+    candidate: TALENT-INTEL-PLATFORM (candidate domain, already queued in audits/_missing-domains.md)
+    rationale: |
+      Talent Intelligence Platform as separate domain vs fold into ATS / SKILLS-MGMT / TALENT-MGMT. Distinct buyer profile (talent acquisition + internal mobility + skills graph).
+    vendor_evidence:
+      - {vendor: Eightfold AI, evidence: 1st_class}
+      - {vendor: Phenom, evidence: 1st_class}
+      - {vendor: Beamery, evidence: 1st_class}
+      - {vendor: SeekOut, evidence: 1st_class}
+      - {vendor: Plum, evidence: secondary}
+
+  - id: B3-EMP-LISTENING-DOMAIN
+    candidate: EMP-LISTENING (candidate domain, already queued in audits/_missing-domains.md)
+    rationale: |
+      Employee Listening Platform as separate domain. Surveys + drivers + action plans + manager nudges. Couples with B2-ENGAGEMENT-SCOPE-SPLIT and B2-PA-NAMING.
+    vendor_evidence:
+      - {vendor: Culture Amp, evidence: 1st_class}
+      - {vendor: Lattice Engagement, evidence: 1st_class}
+      - {vendor: Glint, evidence: 1st_class}
+      - {vendor: Peakon, evidence: 1st_class}
+      - {vendor: Qualtrics EmployeeXM, evidence: 1st_class}

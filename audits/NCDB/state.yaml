@@ -1,0 +1,244 @@
+schema_version: 2
+domain: NCDB
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S12-RES
+    summary: PATCH trigger_event 727 `nocode_form.submitted` event_category from "" to `signal` or `state_change`.
+    finding: The 2026-05-31 continuation cleared 6 of 7 NCDB trigger_events' event_category enum values per Rule #13. Event 727 was deferred because the 2026-05-30 audit hedged between `signal` (downstream observers see a submission notification) and `state_change` (the form submission materializes a new row in the linked record definition, the record-side master advances state). Both readings are defensible; the catalog needs a single firm value.
+    action: Run `semantius call crud postgrestRequest '{"method":"PATCH","path":"/trigger_events?id=eq.727","body":{"event_category":"state_change"}}'` (or `signal`, per the directional pick). Recommended pick is `state_change` because it mirrors how `record_definition.changed` (also `state_change`) reads on the same data substrate.
+    affected_events:
+      - {id: 727, event_name: "nocode_form.submitted", current_category: "", proposed_category: "state_change"}
+  - id: B1A-S3-RES
+    summary: INSERT the 5th audit-proposed intra-domain `data_object_relationships` row (`nocode_views source_of nocode_forms`) or explicit defer.
+    finding: The 2026-05-31 continuation loaded 4 of 5 audit-proposed intra-domain edges. The 5th edge (`nocode_views` source_of `nocode_forms`, M:N, optional) was deferred because the audit qualified it with "optional, some platforms let forms inherit a view's filter context." Catalog-neutrality argues for inserting at `is_required=false` so the substrate reflects the cross-vendor pattern without committing to a specific flagship's binding strength.
+    action: |
+      INSERT one `data_object_relationships` row: `data_object_id=713`, `related_data_object_id=712`, `relationship_verb=source of forms`, `inverse_verb=sourced from view`, `relationship_type=many_to_many`, `relationship_kind=association`, `is_required=false`, `owner_side=source`. Or explicit defer with documented rationale.
+    extra_alt_action: Accept the omission as the catalog's substrate neutrality and close the residual without INSERT.
+  - id: B1A-H1-RES
+    summary: Resolve PCF candidate ambiguity for handoff 700 and INSERT one `handoff_processes` row.
+    finding: The 2026-05-30 audit calls out that handoff 700 (NCDB -> WORK-MGMT, `nocode_automation.triggered`, payload `nocode_automations`) has a candidate-PCF ambiguity between `Manage business processes` (PCF 20827 family) and `Operate business processes`. The 2026-05-31 continuation deferred this single tag awaiting the lookup pick. The mental model from the structural pass is fresh enough that one PCF query plus a confidence-call resolves it.
+    action: Run `/processes?process_name=ilike.*operate%20business%20process*&source_framework=eq.apqc_pcf_cross_industry&select=id,process_name,external_id,hierarchy_level` plus `/processes?process_name=ilike.*manage%20business%20process*&source_framework=eq.apqc_pcf_cross_industry&select=id,process_name,external_id,hierarchy_level`. Pick best L3, INSERT one `handoff_processes` row `(handoff_id=700, process_id=<pick>, proposal_source='agent_curated')`. Record `record_status` takes DB default `new`.
+    affected_handoffs:
+      - {handoff_id: 700, direction: outbound, source_domain: NCDB, target_domain: WORK-MGMT, trigger_event: "nocode_automation.triggered", payload: nocode_automations, null_field: handoff_processes}
+
+b1b:
+  - id: B1B-S1
+    summary: Author 3 (or 2 / 4) `domain_modules` + 8 `domain_module_capabilities` + 5 `domain_module_data_objects` rows after B2-S1 module-split decision.
+    finding: M1 / M2 / M4 / M6 hard-fail. Zero `domain_modules` rows for NCDB despite 8 capabilities. Rule #14 requires >=1 full module per domain and >=2 modules for domains with >=3 capabilities. Audit-proposed 3-module split (NCDB-SCHEMA-BUILDER mastering `nocode_bases` + `nocode_record_definitions` and realizing 4 capabilities; NCDB-VIEWS-FORMS mastering `nocode_views` + `nocode_forms` and realizing 3 capabilities; NCDB-AUTOMATION-SYNC mastering `nocode_automations` and realizing 1 capability) is the audit recommendation but B2-S1 lists 4 user-facing options.
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    affected_masters:
+      - {data_object_id: 241, name: nocode_bases, target_module_id: null, workflow: "schema authoring"}
+      - {data_object_id: 242, name: nocode_record_definitions, target_module_id: null, workflow: "table authoring"}
+      - {data_object_id: 712, name: nocode_forms, target_module_id: null, workflow: "intake capture"}
+      - {data_object_id: 713, name: nocode_views, target_module_id: null, workflow: "presentation"}
+      - {data_object_id: 714, name: nocode_automations, target_module_id: null, workflow: "trigger-action automation"}
+    affected_entities: [NCDB-FLEX-SCHEMA, NCDB-LINKED-RECORDS, NCDB-VIEWS, NCDB-FORMULAS, NCDB-FORM-CAPTURE, NCDB-SYNC-EXTERNAL, OPERATIONAL-DATA-APPS, SEMANTIC-MODELING]
+  - id: B1B-S2
+    summary: PATCH master pattern flags per B2-S2 user picks.
+    finding: B4 hard-fail. Every master has all 3 pattern flags at false default; Rule #12 requires positive re-evaluation. Audit-proposed flips: `nocode_forms.has_personal_content=true` (forms are a standard PII intake surface), `nocode_record_definitions.has_submit_lock=true` (live-data schema change needs a controlled migration path).
+    blocked_by:
+      - {type: user_decision, ref: B2-S2}
+    affected_masters:
+      - {data_object_id: 712, name: nocode_forms, target_module_id: null, workflow: "has_personal_content flip candidate"}
+      - {data_object_id: 242, name: nocode_record_definitions, target_module_id: null, workflow: "has_submit_lock flip candidate"}
+  - id: B1B-S5
+    summary: Draft ~22 `data_object_aliases` rows across 5 masters after B2-S5 FORM-BUILDER boundary resolves.
+    finding: B11 hard-fail. Zero `data_object_aliases` on any NCDB master. The no-code-database market carries strong vendor-specific synonyms (4-5 aliases per master, ~22 rows total). Form-side aliases (~4 rows on `nocode_forms`) shift with FORM-BUILDER boundary decision.
+    blocked_by:
+      - {type: user_decision, ref: B2-S5}
+    affected_masters:
+      - {data_object_id: 241, name: nocode_bases, target_module_id: null, workflow: "5 candidate aliases"}
+      - {data_object_id: 242, name: nocode_record_definitions, target_module_id: null, workflow: "4 candidate aliases"}
+      - {data_object_id: 712, name: nocode_forms, target_module_id: null, workflow: "form-side aliases gated on B2-S5"}
+      - {data_object_id: 713, name: nocode_views, target_module_id: null, workflow: "4 candidate aliases"}
+      - {data_object_id: 714, name: nocode_automations, target_module_id: null, workflow: "5 candidate aliases"}
+  - id: B1B-S6
+    summary: Author ~20 `data_object_lifecycle_states` rows after B1B-S1 modules land.
+    finding: B12 hard-fail. Zero lifecycle states; every master has an obvious state machine. M5 requires `domain_module_id` per state with `requires_permission=true`, so this load is blocked behind B1B-S1.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_masters:
+      - {data_object_id: 241, name: nocode_bases, target_module_id: null, workflow: "draft -> active -> archived"}
+      - {data_object_id: 242, name: nocode_record_definitions, target_module_id: null, workflow: "draft -> published -> locked -> archived"}
+      - {data_object_id: 712, name: nocode_forms, target_module_id: null, workflow: "draft -> published -> closed -> archived"}
+      - {data_object_id: 713, name: nocode_views, target_module_id: null, workflow: "draft -> shared -> archived"}
+      - {data_object_id: 714, name: nocode_automations, target_module_id: null, workflow: "draft -> active -> disabled -> archived"}
+  - id: B1B-S7
+    summary: Author 3 module-anchored system skills, migrate 5 `skill_tools` rows, add `mutate_*` + `side_effect` tools, DELETE legacy skill 86.
+    finding: F1 partial-pass-by-transitional-license. Legacy `domain_id`-anchored skill 86 (`ncdb-system`) remains; F1 hard-fails once any module-level system skill exists. Rule #17 requires exactly one system skill per `domain_modules` row with >=1 `skill_tools` row (typical floor 5-20). Current 5 query-only is below floor.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_modules: []
+    extra_skill_id_to_retire: 86
+    extra_tool_ids_to_migrate: [595, 596, 831, 832, 833]
+  - id: B1B-S8
+    summary: Draft `domains.catalog_tagline` and `domains.catalog_description` per Rule #20 buyer voice; surface for user approval; PATCH only after approval.
+    finding: A4 hard-fail. `catalog_tagline=""` and `catalog_description=""`. Rule #20 requires both in buyer voice (workflow + value), not analyst voice. Rule #20 also requires user review BEFORE writing; the prior 2026-05-30 audit drafted candidate wording but never surfaced for approval.
+    blocked_by:
+      - {type: user_decision, ref: rule_20_approval}
+    extra_proposed_tagline: "Build a database without code. Model your data, capture it through forms, view it your way, and automate the rest."
+    extra_description_paragraph_count: 3
+  - id: B1B-S9
+    summary: PATCH `source_domain_module_id` on 4 outbound handoffs after B1B-S1 modules land.
+    finding: |
+      B10b hard-fail (source side). All 4 outbound NCDB handoffs carry NULL `source_domain_module_id`. Derivation: handoff 700 (event 730 on data_object 714) -> NCDB-AUTOMATION-SYNC; 701 (event 726 on 242) -> NCDB-SCHEMA-BUILDER; 702 (event 728 on 713) -> NCDB-VIEWS-FORMS; 703 (event 729 on 714) -> NCDB-AUTOMATION-SYNC.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_handoffs:
+      - {handoff_id: 700, direction: outbound, source_domain: NCDB, target_domain: WORK-MGMT, trigger_event: "nocode_automation.triggered", payload: nocode_automations, null_field: source_domain_module_id}
+      - {handoff_id: 701, direction: outbound, source_domain: NCDB, target_domain: LCAP, trigger_event: "nocode_record_definition.changed", payload: nocode_record_definitions, null_field: source_domain_module_id}
+      - {handoff_id: 702, direction: outbound, source_domain: NCDB, target_domain: DLP, trigger_event: "nocode_view.shared_externally", payload: nocode_views, null_field: source_domain_module_id}
+      - {handoff_id: 703, direction: outbound, source_domain: NCDB, target_domain: ITSM, trigger_event: "nocode_automation.failed", payload: service_incidents, null_field: source_domain_module_id}
+  - id: B1B-S10
+    summary: PATCH `target_domain_module_id` on handoffs 701 (LCAP) and 702 (DLP) once their M-bands cure.
+    finding: B10b hard-fail (target side, in-scope subset). Handoff 701 target LCAP (37) has zero modules per LCAP audit, unresolvable until LCAP M1 cures. Handoff 702 target DLP (139) module attribution is the responsibility of the DLP audit.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: LCAP, milestone: M1-modularization}
+      - {type: domain_audit, blocking_domain: DLP, milestone: M-band-modularization}
+    affected_handoffs:
+      - {handoff_id: 701, direction: outbound, source_domain: NCDB, target_domain: LCAP, trigger_event: "nocode_record_definition.changed", payload: nocode_record_definitions, null_field: target_domain_module_id}
+      - {handoff_id: 702, direction: outbound, source_domain: NCDB, target_domain: DLP, trigger_event: "nocode_view.shared_externally", payload: nocode_views, null_field: target_domain_module_id}
+  - id: B1B-S11
+    summary: Author 2 resolvable cross-domain `data_object_relationships` rows for handoffs 700 + 703; defer 701 + 702 as report-only.
+    finding: B8 hard-fail. 4 outbound handoffs, zero cross-domain DOR rows. Audit hedges target master for handoff 700 between `work_items` and `tasks`. Handoff 703 maps cleanly to `nocode_automations opens service_incidents` (target master id 47 confirmed). Handoffs 701 and 702 defer to LCAP / DLP modeling.
+    blocked_by:
+      - {type: user_decision, ref: handoff_700_target_master}
+      - {type: domain_audit, blocking_domain: LCAP, milestone: business_objects-or-equivalent-master}
+      - {type: domain_audit, blocking_domain: DLP, milestone: data_loss_incidents-master-confirmation}
+    affected_handoffs:
+      - {handoff_id: 700, direction: outbound, source_domain: NCDB, target_domain: WORK-MGMT, trigger_event: "nocode_automation.triggered", payload: nocode_automations, null_field: cross_domain_relationship}
+      - {handoff_id: 701, direction: outbound, source_domain: NCDB, target_domain: LCAP, trigger_event: "nocode_record_definition.changed", payload: nocode_record_definitions, null_field: cross_domain_relationship}
+      - {handoff_id: 702, direction: outbound, source_domain: NCDB, target_domain: DLP, trigger_event: "nocode_view.shared_externally", payload: nocode_views, null_field: cross_domain_relationship}
+      - {handoff_id: 703, direction: outbound, source_domain: NCDB, target_domain: ITSM, trigger_event: "nocode_automation.failed", payload: service_incidents, null_field: cross_domain_relationship}
+  - id: B1B-S13
+    summary: Author 3 intra-domain `handoffs` rows after B1B-S1 modules + B1B-S6 lifecycle states land.
+    finding: |
+      B9b hard-fail. Zero intra-domain handoffs. Once B1B-S1 lands modules and B1B-S6 lands lifecycle states, derive 3 cross-module pairs from the audit-proposed 3-module split. Each row: `source_domain_id = target_domain_id = 134`, `integration_pattern: lifecycle_progression`, `friction_level: low`.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: prerequisite_entity, ref: B1B-S6}
+    affected_handoffs:
+      - {handoff_id: null, direction: intra, source_domain: NCDB, target_domain: NCDB, trigger_event: "nocode_form.submitted", payload: nocode_record_definitions, null_field: row_does_not_exist}
+      - {handoff_id: null, direction: intra, source_domain: NCDB, target_domain: NCDB, trigger_event: "nocode_record_definition.changed", payload: nocode_automations, null_field: row_does_not_exist}
+      - {handoff_id: null, direction: intra, source_domain: NCDB, target_domain: NCDB, trigger_event: "nocode_automation.failed", payload: nocode_automations, null_field: row_does_not_exist}
+
+b2:
+  - id: B2-S1
+    summary: Pick NCDB module split shape (3 / 2 / 4 modules or user-proposed).
+    question: Audit-proposed 3-module split is NCDB-SCHEMA-BUILDER (masters `nocode_bases`, `nocode_record_definitions`; realizes NCDB-FLEX-SCHEMA, NCDB-LINKED-RECORDS, NCDB-FORMULAS, SEMANTIC-MODELING), NCDB-VIEWS-FORMS (masters `nocode_views`, `nocode_forms`; realizes NCDB-VIEWS, NCDB-FORM-CAPTURE, OPERATIONAL-DATA-APPS), NCDB-AUTOMATION-SYNC (masters `nocode_automations`; realizes NCDB-SYNC-EXTERNAL). Alternatives include a 2-module split folding views/forms into schema-builder and a 4-module split breaking forms out as a distinct product surface.
+    options:
+      - "a: 3-module split as proposed"
+      - "b: 2-module split"
+      - "c: 4-module split"
+      - "d: user-proposed split"
+    why: Modularization is a deploy-shape decision the user owns. Vendor surface supports any of the three options.
+  - id: B2-S2
+    summary: Per-master pattern flag decisions for B4 re-evaluation.
+    question: Audit-proposed flips are `nocode_forms.has_personal_content=true` (forms are a standard PII intake surface across every flagship) and `nocode_record_definitions.has_submit_lock=true` (live-data schema change needs a controlled migration path). Other proposed flags stay false.
+    options:
+      - "yes-to-all"
+      - "yes to nocode_forms.has_personal_content only"
+      - "yes to nocode_record_definitions.has_submit_lock only"
+      - "no flips, accept false defaults catalog-wide"
+      - "user proposes alternative flips"
+    why: Pattern flags are workflow-shape judgments the user owns. False-by-default is not the same as false-after-review.
+  - id: B2-S3
+    summary: Regulation coverage scope on NCDB.
+    question: Zero `domain_regulations` rows. NCDB is a known target of GDPR (personal data captured via forms, processed via automations, sometimes shared externally), HIPAA (when used for health intake), CCPA, and SOC 2 (the platform's own certification posture).
+    options:
+      - "a: GDPR + CCPA mandatory"
+      - "b: GDPR + CCPA + HIPAA mandatory"
+      - "c: none, leave compliance as cross-cutting via embedded master patterns"
+      - "d: user proposes set"
+    why: Regulation linkage is a market-scoping decision the user owns; the no-code-database market straddles many regulated industries without being itself a regulated category.
+  - id: B2-S4
+    summary: Cross-cutting capability scope for OPERATIONAL-DATA-APPS and SEMANTIC-MODELING.
+    question: Both capabilities are cross-cutting. OPERATIONAL-DATA-APPS is also surfaced as B2-S4 in the LCAP 2026-05-30 audit which proposes expanding to NCDB + LCAP + APP-PAAS. SEMANTIC-MODELING overlaps with DI / DCG / MDM.
+    options:
+      - "a: keep both unchanged on NCDB"
+      - "b: drop SEMANTIC-MODELING, keep OPERATIONAL-DATA-APPS"
+      - "c: keep both and expand each to its full domain set"
+    why: Cross-cutting capability scope is a market-test decision the user owns. Co-dependent with LCAP audit.
+    extra_linked_audit: LCAP-2026-05-30 B2-S4
+  - id: B2-S5
+    summary: FORM-BUILDER boundary on `nocode_forms` mastery.
+    question: NCDB currently masters `nocode_forms` (id 712), but the form-builder market is a distinct point-solution market with its own buyers, pricing, and feature shape. Candidate domain FORM-BUILDER is queued in `audits/_missing-domains.md`. Decide whether NCDB keeps mastery and FORM-BUILDER embeds when promoted, or FORM-BUILDER masters and NCDB demotes.
+    options:
+      - "a: NCDB keeps mastery; FORM-BUILDER embeds when promoted (rename ncdb_forms to forms only if FORM-BUILDER earns canonical bare-word)"
+      - "b: FORM-BUILDER masters; NCDB demotes to embedded_master"
+      - "c: defer until FORM-BUILDER triage"
+    why: Naming arbitration plus market-boundary judgment the user owns.
+  - id: B2-S6
+    summary: Inbound-handoff gap scoping.
+    question: NCDB ships zero inbound handoffs despite being a natural target of iPaaS pushes (Zapier, Make), CRM / sales ops pushing into operational tables, DCG cataloging the schemas, DLP scanning the bases, BI reading them as a source.
+    options:
+      - "a: author inbound handoffs from IPAAS / DCG / DLP / BI as a Phase B extension to NCDB"
+      - "b: treat as report-only; each source domain owes the outbound on its own next audit"
+      - "c: mixed - confirm IPAAS / DCG, defer the others"
+    why: Inbound-handoff scoping is a market-modeling decision the user owns.
+
+b3:
+  - id: B3-NCDB-SYNC-CONNECTIONS
+    candidate: nocode_sync_connections
+    rationale: Distinct from `nocode_automations` because connections are reusable across automations (auth credentials, endpoint config, schedule). Airtable Sync, NocoDB connections, SmartSuite sync, Grist Outgoing webhooks all model this as a first-class entity.
+    vendor_evidence:
+      - "Airtable: Sync source/destination configs"
+      - "NocoDB: external DB connection"
+      - "SmartSuite: sync engine"
+      - "Grist: Outgoing webhooks"
+    proposed_module: NCDB-AUTOMATION-SYNC
+  - id: B3-NCDB-SHARE-LINKS
+    candidate: nocode_share_links
+    rationale: The public-link record on a view or form is the DLP-relevant artifact for handoff 702. Distinct from the view/form itself because the share link carries auth scope, expiry, and audit trail. Universal pattern across flagships.
+    vendor_evidence:
+      - "Airtable share view"
+      - "Notion public page"
+      - "Coda share link"
+      - "NocoDB share view"
+    proposed_module: NCDB-VIEWS-FORMS
+  - id: B3-NCDB-RECORD-COMMENTS
+    candidate: nocode_record_comments
+    rationale: Universal collaboration substrate; threads on a specific record. Distinct from `notes` because comments thread.
+    vendor_evidence:
+      - Airtable
+      - Notion
+      - Coda
+      - SmartSuite
+    proposed_module: NCDB-SCHEMA-BUILDER
+  - id: B3-NCDB-TEMPLATES
+    candidate: nocode_templates
+    rationale: Marketplace / template substrate; the packaging surface for shareable base shapes.
+    vendor_evidence:
+      - "Airtable Universe"
+      - "Coda Doc Gallery"
+      - "Notion Templates"
+      - "SmartSuite App Library"
+    proposed_module: NCDB-SCHEMA-BUILDER
+  - id: B3-NCDB-AI-FIELD-OUTPUTS
+    candidate: nocode_ai_field_outputs
+    rationale: Distinct from `nocode_formulas` (which are deterministic) because outputs are LLM-generated. Compliance-relevant.
+    vendor_evidence:
+      - "Airtable AI fields"
+      - "Notion AI"
+      - "Coda AI"
+      - "SmartSuite AI"
+    proposed_module: NCDB-SCHEMA-BUILDER
+  - id: B3-NCDB-REVISION-HISTORY
+    candidate: nocode_revision_history
+    rationale: Record-level revision history; compliance-relevant (immutable trail of edits).
+    vendor_evidence:
+      - "Airtable record history"
+      - "Notion version history"
+    proposed_module: NCDB-SCHEMA-BUILDER
+  - id: B3-NCDB-WORKSPACE-MEMBERS
+    candidate: nocode_workspace_members
+    rationale: Per-base membership / role / share scope distinct from platform-level `users` because workspace scope is the granted-access record.
+    vendor_evidence:
+      - "Airtable workspace members"
+      - "Notion teamspace members"
+      - "SmartSuite solution members"
+    proposed_module: NCDB-SCHEMA-BUILDER

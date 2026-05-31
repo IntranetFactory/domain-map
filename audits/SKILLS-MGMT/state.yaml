@@ -1,0 +1,251 @@
+schema_version: 2
+domain: SKILLS-MGMT
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-M1
+    summary: Add skill_proficiency_levels master to SKILLS-MGMT-TAXONOMY (proficiency-scale vocabulary).
+    finding: |
+      Vendor-confirmed across all 5 pure-plays (Lightcast Open Skills, TechWolf Skills Engine, SkyHive Quantum Labor Market, Reejig Workforce Intelligence, 365Talents Skills Platform). Today skill_assessments carries a numeric rating with no row table to anchor the scale or per-taxonomy override. Universal pure-play entity. Carried forward from 2026-05-30 audit; no Phase 0 confirmation since.
+    action: |
+      Phase-B insert: new data_objects row (singular_label=Skill Proficiency Level, plural_label=Skill Proficiency Levels, kind=domain_owned), domain_module_data_objects row on module 173 (role=master, necessity=required), trigger_events / lifecycle states only if a workflow exists (likely config-shaped). Apply Rule #9 naming check before insert.
+    blocked_by:
+      - {type: user_decision, ref: B2-5}
+    vendor_evidence:
+      - Lightcast Open Skills
+      - TechWolf Skills Engine
+      - SkyHive Quantum Labor Market
+      - Reejig Workforce Intelligence
+      - 365Talents Skills Platform
+    affected_modules: [173]
+
+  - id: B1A-M2
+    summary: Add skill_relationships master to SKILLS-MGMT-TAXONOMY (ontology edge table).
+    finding: |
+      Edge table on the skills ontology (parent / child / related / equivalent / merged-into). Today data_object_relationships carries intra-row schema-layer edges between skills / skill_assessments / skill_endorsements but no per-row taxonomy edges. Vendor-confirmed across all 5 pure-plays. Universal pure-play entity; the ontology cannot be navigated without it.
+    action: |
+      Phase-B insert: new data_objects row (skill_relationships, kind=domain_owned), domain_module_data_objects row on module 173 (role=master, necessity=required). Likely config-shaped; consider exempting from lifecycle states.
+    blocked_by:
+      - {type: user_decision, ref: B2-5}
+    vendor_evidence:
+      - Lightcast Open Skills
+      - TechWolf Skills Engine
+      - SkyHive Quantum Labor Market
+      - Reejig Workforce Intelligence
+      - 365Talents Skills Platform
+    affected_modules: [173]
+
+  - id: B1A-S2
+    summary: Load 7 missing trigger_events for SKILLS-MGMT lifecycle states (B9 / B12).
+    finding: |
+      Six published / workflow-bearing lifecycle states have NO matching trigger_events row. State ids and event names to author: state 1144 skill_taxonomies.active -> skill_taxonomy.activated; state 1145 skill_taxonomies.deprecated -> skill_taxonomy.deprecated; state 1141 competency_models.published -> competency_model.published; state 1142 competency_models.archived -> competency_model.archived; state 186 skill_profiles.validated -> skill_profile.validated; state 187 skill_profiles.inactive -> skill_profile.deactivated; state 1138 skill_assessments.completed -> skill_assessment.completed (terminal, needs publishing event for downstream consumers). Today only skill_profile.updated (id 440) exists for the whole domain.
+    action: |
+      Insert 7 trigger_events rows, all event_category=state_change (per Rule #13's enum). data_object_id per the master that publishes each event. record_status default new.
+    affected_events:
+      - {id: null, event_name: "skill_taxonomy.activated", current_category: null, proposed_category: "state_change"}
+      - {id: null, event_name: "skill_taxonomy.deprecated", current_category: null, proposed_category: "state_change"}
+      - {id: null, event_name: "competency_model.published", current_category: null, proposed_category: "state_change"}
+      - {id: null, event_name: "competency_model.archived", current_category: null, proposed_category: "state_change"}
+      - {id: null, event_name: "skill_profile.validated", current_category: null, proposed_category: "state_change"}
+      - {id: null, event_name: "skill_profile.deactivated", current_category: null, proposed_category: "state_change"}
+      - {id: null, event_name: "skill_assessment.completed", current_category: null, proposed_category: "state_change"}
+    affected_masters:
+      - {data_object_id: 852, name: "skill_taxonomies", target_module_id: 173, workflow: "draft -> active -> deprecated"}
+      - {data_object_id: 857, name: "competency_models", target_module_id: 173, workflow: "draft -> published -> archived"}
+      - {data_object_id: 172, name: "skill_profiles", target_module_id: 174, workflow: "initialized -> self_assessed -> validated -> inactive"}
+      - {data_object_id: 855, name: "skill_assessments", target_module_id: 174, workflow: "pending -> completed / cancelled"}
+
+  - id: B1A-S4
+    summary: Author lifecycle states + workflow-gate permissions for skill_endorsements + skill_inference_runs (B12).
+    finding: |
+      Two master + required data_objects still have ZERO lifecycle states: skill_endorsements (data_object_id 856, master on SKILLS-MGMT-PROFILE) and skill_inference_runs (data_object_id 858, master on SKILLS-MGMT-PROFILE). Endorsements have a real workflow (requested -> issued -> revoked); inference runs have a job-execution workflow (queued -> running -> completed / failed). Neither is config-shaped.
+    action: |
+      Insert states: skill_endorsements -> requested (initial) / issued (workflow-gate endorse_skill) / revoked (workflow-gate revoke_endorsement, terminal). skill_inference_runs -> queued (initial) / running / completed (terminal) / failed (terminal). All states carry domain_module_id=174. Materialize workflow-gate permissions skills-mgmt-profile:endorse_skill, skills-mgmt-profile:revoke_endorsement per Rule #14 prefix.
+    blocked_by:
+      - {type: user_decision, ref: B2-2}
+    affected_masters:
+      - {data_object_id: 856, name: "skill_endorsements", target_module_id: 174, workflow: "requested -> issued -> revoked"}
+      - {data_object_id: 858, name: "skill_inference_runs", target_module_id: 174, workflow: "queued -> running -> completed / failed"}
+
+  - id: B1A-S5
+    summary: Author 3 catalog roles touching SKILLS-MGMT modules (E1-E5).
+    finding: |
+      Zero domain-specific catalog roles. The only role_permissions rows on the 12 SKILLS-MGMT permissions (ids 10201, 10202, 10626-10631, 10648-10651) are platform Administrator (role_id 2) bundles. Rule #14's >= 3-role threshold under E1 applies (2 modules + 8 capabilities).
+    action: |
+      Author 3 function-scoped roles: TALENT-DEV-SKILL-ARCHITECT (touches 173 primary + 174 secondary, owns ontology), TALENT-DEV-SKILL-ANALYST (touches 174 primary, consumes inference + gap), MANAGER cross-functional extension (touches 174 secondary for validate gate). Each role: >= 2 role_modules entries with interaction_level set (E2 / E3); role_permissions bundle authored covering baseline tiers + targeted gates (E4); Path A == Path B (E5).
+    blocked_by:
+      - {type: depends_on, ref: B1A-S4, reason: "role bundles reference workflow-gate permissions materialized from B1A-S4 lifecycle states"}
+      - {type: user_decision, ref: B2-2, reason: "permission prefix rename cascades into role bundles"}
+    affected_modules: [173, 174]
+
+b1b:
+  - id: B1B-S3
+    summary: Load 4 intra-domain handoffs between modules 173 and 174 (B9b).
+    finding: |
+      Zero intra-domain handoffs rows between SKILLS-MGMT-TAXONOMY (173) and SKILLS-MGMT-PROFILE (174), despite the cross-module relationship row 1275 (skill_profiles assessed against competency_models) and the PROFILE module's consumer rows on skill_taxonomies, skills, competency_models. When TAXONOMY publishes a new active taxonomy or competency-model version, PROFILE has no event signaling re-inference / revalidation.
+    action: |
+      Insert 4 handoffs: trigger_event skill_taxonomy.activated (173 -> 174), trigger_event skill_taxonomy.deprecated (173 -> 174), trigger_event competency_model.published (173 -> 174), trigger_event competency_model.archived (173 -> 174). All integration_pattern=lifecycle_progression, friction_level=low, source_domain_id=target_domain_id=169.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1A-S2, reason: "intra-domain handoffs reference the 4 missing taxonomy / competency events"}
+    affected_handoffs:
+      - {handoff_id: null, direction: "intra-domain", source_domain: "SKILLS-MGMT", target_domain: "SKILLS-MGMT", trigger_event: "skill_taxonomy.activated", payload: "skill_taxonomies", null_field: null}
+      - {handoff_id: null, direction: "intra-domain", source_domain: "SKILLS-MGMT", target_domain: "SKILLS-MGMT", trigger_event: "skill_taxonomy.deprecated", payload: "skill_taxonomies", null_field: null}
+      - {handoff_id: null, direction: "intra-domain", source_domain: "SKILLS-MGMT", target_domain: "SKILLS-MGMT", trigger_event: "competency_model.published", payload: "competency_models", null_field: null}
+      - {handoff_id: null, direction: "intra-domain", source_domain: "SKILLS-MGMT", target_domain: "SKILLS-MGMT", trigger_event: "competency_model.archived", payload: "competency_models", null_field: null}
+
+  - id: B1B-TLNTINTEL-FANOUT
+    summary: Add outbound handoffs from SKILLS-MGMT to TLNT-INTEL-MOBILITY on taxonomy / competency-model events.
+    finding: |
+      Zero handoffs SKILLS-MGMT -> TLNT-INTEL despite TLNT-INTEL holding three consumer + required DMDOs on skill_profiles / competency_models / skill_taxonomies. Missing outbound chain: skill_profile.validated -> TLNT-INTEL-MOBILITY (stronger fit-score signal); competency_model.published -> TLNT-INTEL-MOBILITY / -INSIGHTS (recompute fit_scores against the new role profile); skill_taxonomy.activated -> TLNT-INTEL-MOBILITY (re-key inferences against the new taxonomy). Captured in 2026-05-30 Pass-4 as a follow-up but not separately loaded; folds into B1A-S2 + B1A-S3 outbound fan-out.
+    action: |
+      Once B1A-S2 trigger_events ship, insert 3-4 outbound handoffs to TLNT-INTEL: skill_profile.validated 174 -> TLNT-INTEL-MOBILITY; competency_model.published 173 -> TLNT-INTEL-MOBILITY; skill_taxonomy.activated 173 -> TLNT-INTEL-MOBILITY. integration_pattern=event_stream, friction_level=low.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1A-S2, reason: "outbound handoffs reference the 4 missing TAXONOMY events"}
+
+b2:
+  - id: B2-1
+    summary: Approve A4 / M8 catalog UX wording for domain 169 + modules 173 + 174.
+    question: |
+      Per Rule #20, the catalog_tagline and catalog_description columns are buyer-shaped and need explicit user-approved text before write. catalog_tagline + catalog_description are EMPTY on the domain row AND on both modules. Please provide exact buyer-voice wording, OR direct the agent to draft and surface for approval before write.
+    options:
+      - "Provide exact text for all 6 values (domain tagline + description, module 173 tagline + description, module 174 tagline + description)"
+      - "Direct agent to draft per Rule #20 buyer-voice template and surface drafts for per-row approval before PATCH"
+      - "Defer (leave empty until marketing authors)"
+    why: |
+      Rule #20 forbids agent-authored writes to these columns without explicit per-row user approval. Three rows are empty (A4 + M8 fail for the same root cause).
+
+  - id: B2-2
+    summary: Rename permissions on module 174 to skills-mgmt-profile:* prefix or accept the asymmetry?
+    question: |
+      Module 174 (SKILLS-MGMT-PROFILE) has six permissions using the domain code skills-mgmt:* as prefix instead of the module code skills-mgmt-profile:* per Rule #14. Module 173 correctly uses skills-mgmt-taxonomy:*. Affected permissions on 174 ids 10201 / 10202 (workflow-gate validate_skill_profile, deactivate_skill_profile) and 10629 / 10630 / 10631 (baseline read / manage / admin).
+    options:
+      - "Rename all 5 permissions on 174 to skills-mgmt-profile:* and update Administrator role bundle"
+      - "Rename only the workflow-gate permissions (10201, 10202); leave baseline tier as-is"
+      - "Accept the asymmetry; document the legacy prefix"
+    why: |
+      Rule #14 says workflow-gate permission prefix is the realizing module's domain_module_code. Downstream role-bundle authoring (B1A-S5) will be confused by the prefix divergence.
+
+  - id: B2-3
+    summary: Handoff 1307 disposition (DELETE vs PATCH-and-keep)?
+    question: |
+      Handoff 1307 (LMS -> SKILLS-MGMT on learner_badge.earned, payload learner_badges 934) has target_domain_module_id=NULL. Row 1295 carries the same source / payload / trigger event 1334 with target_domain_module_id=174; the only differences are integration_pattern (1307 event_stream vs 1295 lifecycle_progression) and the NULL target_module. Strong evidence of duplicate from pre-modularization era.
+    options:
+      - "(a) DELETE 1307 as duplicate of 1295"
+      - "(b) Load a consumer DMDO on learner_badges for module 174, then PATCH 1307.target_domain_module_id=174 and resolve integration_pattern disagreement"
+    why: |
+      Either action closes the H1 1307 row and B10b inbound-NULL anomaly. Recommend (a).
+
+  - id: B2-4
+    summary: Approve the 9 agent_curated handoff_processes rows (H1 catalog quality).
+    question: |
+      9 handoff_processes proposals were loaded 2026-05-31 with proposal_source=agent_curated, record_status=new (handoff_processes ids 331-339, covering handoffs 388 / 432 / 440 / 456 / 1079 / 1080 / 1106 / 1288 / 1295 mapped to PCF process ids 1036 / 1033 / 226 / 1038 / 1033 / 1873 / 1038 / 1033 / 1873). Catalog quality headline is 0 approved. Review and decide which to flip to record_status=approved per Rule #1.
+    options:
+      - "Approve all 9"
+      - "Approve specific handoff_process ids (name them)"
+      - "Decline all (return to research)"
+    why: |
+      The H1 catalog quality headline depends on the approved count. Rule #1 prohibits the agent flipping new -> approved without explicit per-load user confirmation.
+
+  - id: B2-5
+    summary: MISSING entities + sub-module split decision.
+    question: |
+      Two confirmed MISSING entities (B1A-M1 skill_proficiency_levels + B1A-M2 skill_relationships) belong in SKILLS-MGMT-TAXONOMY. If Bucket 3 vetting also surfaces 4+ additional masters (B3-1, B3-7, B3-8), TAXONOMY could end up holding 6-8 masters and warrant a 3rd sub-module (e.g. SKILLS-MGMT-ONTOLOGY-VERSIONING). Decide now or after Bucket 3 vetting.
+    options:
+      - "Approve B1A-M1 + B1A-M2 now; defer sub-module split decision until Bucket 3 vets"
+      - "Approve B1A-M1 + B1A-M2 + pre-commit to a third module SKILLS-MGMT-ONTOLOGY-VERSIONING shape"
+      - "Hold all of B1A-M1 / B1A-M2 / split decision until Bucket 3 is vetted"
+    why: |
+      The split decision is informed by which speculative entities land. Has a Bucket 3 dependency.
+
+  - id: B2-6
+    summary: Alias gap on bare-ontology masters.
+    question: |
+      Five masters carry no data_object_aliases rows: skill_taxonomies, skills, skill_assessments, skill_endorsements, skill_inference_runs. The bare-noun ones (skills) and assessment-shaped ones are reasonably self-explanatory; skill_taxonomies has industry synonyms (skills ontology, competency framework).
+    options:
+      - "Add skill_taxonomies -> 'skills ontology' (alias_type synonym); leave the other 4 un-aliased"
+      - "Add aliases for all 5 (provide list)"
+      - "Leave all 5 un-aliased (recorded exemption)"
+    why: |
+      B11 audits aliases as a non-self-explanatory check; the user decides which masters need them.
+
+b3:
+  - id: B3-1
+    candidate: skill_taxonomy_versions
+    rationale: |
+      Vendor surface indicates pure-plays expose version-pinned APIs. Verify whether each is a first-class business entity or an audit-log artifact. If first-class on >= 3 of 5 pure-plays, promote.
+    vendor_evidence:
+      - Lightcast Open Skills (versioned API)
+      - TechWolf Skills Engine (taxonomy snapshots)
+      - 365Talents Skills Platform (release-pinned profiles)
+    proposed_module: SKILLS-MGMT-TAXONOMY
+
+  - id: B3-2
+    candidate: skill_demand_signals
+    rationale: |
+      Sits at boundary with queued LABOR-MARKET-INTEL candidate. If LABOR-MARKET-INTEL is approved as a domain, demand signals master there and SKILLS-MGMT consumes; otherwise master here. Defer until LABOR-MARKET-INTEL triage.
+    vendor_evidence:
+      - Lightcast Open Skills (job-posting demand)
+      - SkyHive Quantum Labor Market
+      - Reejig Workforce Intelligence (external supply / demand)
+    proposed_module: SKILLS-MGMT-PROFILE or LABOR-MARKET-INTEL
+
+  - id: B3-3
+    candidate: skill_supply_metrics
+    rationale: |
+      Rolled-up derived metric (count of profiles holding each skill at each proficiency). May fit better as a derived DMDO rather than a master.
+    vendor_evidence:
+      - Reejig Workforce Intelligence (workforce inventory)
+      - Gloat Workforce Agility Platform (internal supply)
+      - 365Talents Skills Platform (skill heatmap)
+    proposed_module: SKILLS-MGMT-PROFILE
+
+  - id: B3-4
+    candidate: skill_extraction_sources
+    rationale: |
+      Tracks which document or event fed each inferred skill on a profile. Important for ethics / auditability. Verify whether vendors model this as a first-class entity or as a join-table on skill_inference_runs.
+    vendor_evidence:
+      - TechWolf Skills Engine (source provenance)
+      - Reejig Workforce Intelligence (audit trail of source documents)
+    proposed_module: SKILLS-MGMT-PROFILE
+
+  - id: B3-5
+    candidate: skill_gap_recommendations
+    rationale: |
+      Boundary check vs TLNT-INTEL's existing mobility_recommendations master. If TLNT-INTEL covers learning recommendations too, this is scope creep; otherwise it is a real SKILLS-MGMT gap.
+    vendor_evidence:
+      - Reejig Workforce Intelligence (action recommendations)
+      - Fuel50 FuelSkills (learning suggestions)
+      - 365Talents Skills Platform (gap closure suggestions)
+    proposed_module: SKILLS-MGMT-PROFILE
+
+  - id: B3-6
+    candidate: peer_validation_requests
+    rationale: |
+      Today skill_endorsements is master but no request-level entity exists. 365Talents and Workday ship a request-level row capturing requested -> validated flow.
+    vendor_evidence:
+      - 365Talents Skills Platform (request -> validation flow)
+      - Workday Skills Cloud (validation request workflow)
+      - SAP SuccessFactors Talent Intelligence Hub (talent calibration request)
+    proposed_module: SKILLS-MGMT-PROFILE
+
+  - id: B3-7
+    candidate: skill_inference_models
+    rationale: |
+      Config / governance entity for ML models used by inference runs. Important for EU AI Act / explainability story for 2026+ deployments.
+    vendor_evidence:
+      - TechWolf Skills Engine (model versioning)
+      - Reejig Workforce Intelligence (model audit trail)
+      - SkyHive Quantum Labor Market (model governance)
+    proposed_module: SKILLS-MGMT-PROFILE
+
+  - id: B3-8
+    candidate: skill_governance_policies
+    rationale: |
+      Captures who can add / merge / deprecate skills and competency models, as governance config. Today implicit via permissions. Promote if vendors ship as a first-class entity.
+    vendor_evidence:
+      - Reejig Workforce Intelligence (ethical-AI policies)
+      - 365Talents Skills Platform (taxonomy curation policies)
+      - Lightcast Open Skills (open-data governance)
+    proposed_module: SKILLS-MGMT-TAXONOMY

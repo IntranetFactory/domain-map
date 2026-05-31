@@ -1,0 +1,260 @@
+schema_version: 2
+domain: MFG-OPS
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S10
+    summary: "Author ≥5 intra-domain data_object_relationships edges across the 7 MFG-OPS masters (B6)."
+    finding: "Only 3 intra-domain data_object_relationships rows exist across 7 MFG-OPS masters (599↔476, 597→477, 476→599, all EAM-touching). Pure intra-MFG-OPS master↔master edges are missing: production_orders→work_instructions (executes), production_orders→produced_units (produces), production_orders→production_schedules (scheduled_in), production_quality_inspections→produced_units (inspects), shop_floor_cases→production_orders (raised_against). Independent of the Bucket 2 #1 module-split decision because the rows reference data_object ids, not domain_module_id."
+    action: "Author 5 intra-domain data_object_relationships rows with relationship_verb + inverse_verb + relationship_type (cardinality) + relationship_kind + is_required + owner_side. Use the cluster-drafts loader pattern."
+    affected_masters:
+      - {data_object_id: 595, name: production_orders, target_module_id: null, workflow: "Outbound verbs to work_instructions, produced_units, production_schedules"}
+      - {data_object_id: 596, name: work_instructions, target_module_id: null, workflow: "Inbound from production_orders"}
+      - {data_object_id: 597, name: production_schedules, target_module_id: null, workflow: "Inbound from production_orders"}
+      - {data_object_id: 598, name: produced_units, target_module_id: null, workflow: "Inbound from production_orders and production_quality_inspections"}
+      - {data_object_id: 600, name: production_quality_inspections, target_module_id: null, workflow: "Outbound to produced_units"}
+      - {data_object_id: 601, name: shop_floor_cases, target_module_id: null, workflow: "Outbound to production_orders"}
+    extra_band: B6
+    extra_independent_of_module_split: true
+
+  - id: B1A-S11
+    summary: "Author 7-10 users edges across MFG-OPS masters per Rule #10 (B7)."
+    finding: "Zero data_object_relationships rows connect any of the 7 MFG-OPS masters to the users platform_builtin (id 748). Rule #10 requires every master with a user-typed actor to edge to users. Every MFG-OPS master has a user-typed actor: production_orders (released_by), work_instructions (author, approver), production_schedules (planner, publisher), produced_units (operator), production_downtime_events (recorder, acknowledger), production_quality_inspections (inspector), shop_floor_cases (opener, assignee, supervisor). Independent of module split."
+    action: "Author 7-10 users edges (one or two per master) with verb + inverse + cardinality, owner_side=source on the master row direction. users data_object id is 748 (verified)."
+    affected_masters:
+      - {data_object_id: 595, name: production_orders, target_module_id: null, workflow: "released_by edge"}
+      - {data_object_id: 596, name: work_instructions, target_module_id: null, workflow: "authored_by, approved_by edges"}
+      - {data_object_id: 597, name: production_schedules, target_module_id: null, workflow: "planned_by, published_by edges"}
+      - {data_object_id: 598, name: produced_units, target_module_id: null, workflow: "operated_by edge"}
+      - {data_object_id: 599, name: production_downtime_events, target_module_id: null, workflow: "recorded_by, acknowledged_by edges"}
+      - {data_object_id: 600, name: production_quality_inspections, target_module_id: null, workflow: "inspected_by edge"}
+      - {data_object_id: 601, name: shop_floor_cases, target_module_id: null, workflow: "opened_by, assigned_to, supervised_by edges"}
+    extra_band: B7
+    extra_users_data_object_id: 748
+    extra_independent_of_module_split: true
+
+  - id: B1A-S12
+    summary: "Author ≥4 outbound cross-domain data_object_relationships mirroring MFG-OPS outbound handoffs (B8)."
+    finding: "6 outbound cross-domain handoffs from MFG-OPS, but only the EAM-axis rows (599↔476 and 597↔477 on production_downtime_events / production_schedules) have corresponding cross-domain data_object_relationships. Missing on the MFG-OPS source side: production_orders → ERP-FIN payload (handoff 950 on production_order.completed), production_quality_inspections → GRC nonconformance payload (951), shop_floor_cases → ITSM service_incidents (952, payload 47), produced_units → FOOD-TRACE payload (954). Add now (source-side rows reference MFG-OPS master ids; independent of module split). Skip the handoff-952 mirror if Bucket 2 #7 lands 'reroute' or 'drop'."
+    action: "Author 4 cross-domain data_object_relationships edges per the standard B8 outbound pattern (verb + inverse + cardinality + relationship_kind + is_required + owner_side=source on MFG-OPS master). Defer the shop_floor_cases→service_incidents row pending the Bucket 2 #7 decision."
+    affected_handoffs:
+      - {handoff_id: 950, direction: outbound, source_domain: MFG-OPS, target_domain: ERP-FIN, trigger_event: production_order.completed, payload: production_orders, null_field: null}
+      - {handoff_id: 951, direction: outbound, source_domain: MFG-OPS, target_domain: GRC, trigger_event: production_quality_inspection.failed, payload: production_quality_inspections, null_field: null}
+      - {handoff_id: 952, direction: outbound, source_domain: MFG-OPS, target_domain: ITSM, trigger_event: shop_floor_case.opened, payload: service_incidents, null_field: null}
+      - {handoff_id: 954, direction: outbound, source_domain: MFG-OPS, target_domain: FOOD-TRACE, trigger_event: produced_unit.completed, payload: produced_units, null_field: null}
+    extra_band: B8_outbound
+    extra_conditional_skip:
+      handoff_id: 952
+      condition: "Bucket 2 #7 lands as 'reroute intra-domain' or 'drop entirely'"
+    extra_independent_of_module_split: true
+
+  - id: B1A-S13
+    summary: "Surface pattern-flag PATCH proposals to user: production_orders.has_single_approver=true and work_instructions.has_submit_lock=true (B4)."
+    finding: "All 7 MFG-OPS masters carry the three pattern flags (has_personal_content / has_submit_lock / has_single_approver) at false. Rule #12 requires positive re-evaluation, not silent acceptance of defaults. Vendor evidence (Plex, Opcenter, Apriso) supports has_single_approver=true on production_orders (supervisor-gated release in regulated industries) and has_submit_lock=true on work_instructions (locked once released; revisions require re-approval). The other 5 masters stay false on review. Per Rule #15 the audit consideration is recorded here, not in data_objects.notes."
+    action: "Surface to user: confirm PATCH on production_orders.has_single_approver=true (id 595) and work_instructions.has_submit_lock=true (id 596). On approval, two surgical PATCHes. Independent of module split."
+    affected_masters:
+      - {data_object_id: 595, name: production_orders, target_module_id: null, workflow: "has_single_approver=true proposed"}
+      - {data_object_id: 596, name: work_instructions, target_module_id: null, workflow: "has_submit_lock=true proposed"}
+    extra_band: B4
+    extra_independent_of_module_split: true
+
+b1b:
+  - id: B1B-S1
+    summary: "Zero domain_modules rows for MFG-OPS (M1) — gates every module-anchored downstream band."
+    finding: "Zero domain_modules rows for MFG-OPS (id 47). Rule #14 requires ≥1 full domain_modules row per domains row. Cure is the architectural decision in B2-MODULE-SPLIT (proposed 5-module set: MFG-OPS-SHOPFLOOR-EXECUTION, MFG-OPS-OEE-DOWNTIME, MFG-OPS-IN-LINE-QUALITY, MFG-OPS-FLOOR-CASE-MGMT, MFG-OPS-LOT-TRACEABILITY)."
+    blocked_by:
+      - {type: user_decision, ref: B2-MODULE-SPLIT}
+
+  - id: B1B-S2
+    summary: "Capability count below 3 (only WORKFORCE-SCHEDULING linked; A2 fails)."
+    finding: "Only 1 capability_domains row (WORKFORCE-SCHEDULING, id 312). Pass criterion ≥3, typical 5-8. The capability is realized by FSM-DISPATCH-OPS (module 161 in FSM domain 31), not by any MFG-OPS module. Cure is to author 5-7 MFG-OPS capabilities (work-instruction delivery, production-order release / dispatch, OEE and downtime tracking, in-line quality inspection, shop-floor case handling, lot traceability and genealogy, statistical process control) and either keep or re-scope the WORKFORCE-SCHEDULING link (Bucket 2 #2)."
+    blocked_by:
+      - {type: user_decision, ref: B2-MODULE-SPLIT}
+      - {type: user_decision, ref: B2-WORKFORCE-SCHEDULING}
+
+  - id: B1B-S3
+    summary: "catalog_tagline and catalog_description empty on domain row (A4); module-level M8 also pending."
+    finding: "domains row 47 has both catalog_tagline and catalog_description empty. Rule #20 buyer-voice backfill: draft, surface to user, write only on per-row approval. M8 (per-module catalog UX fields) is uncomputable until B1B-S1 lands."
+    blocked_by:
+      - {type: user_decision, ref: B2-CATALOG-UX-WORDING}
+
+  - id: B1B-S4
+    summary: "Zero data_object_aliases across all 7 MFG-OPS masters (B11)."
+    finding: "Zero data_object_aliases rows for data_object_ids 595..601. Industry synonyms exist for every master: production_orders (work order, manufacturing order, MO, WO), work_instructions (SOP, build instruction, routing step), produced_units (build record, as-built, serial record), production_downtime_events (downtime log, line stoppage, OEE downtime), production_quality_inspections (in-process inspection, IPI, source inspection), shop_floor_cases (andon event, escalation ticket, floor escalation), production_schedules (line schedule, dispatch list, sequence). Bulk insert blocked on tuple-level approval per Rule #1."
+    blocked_by:
+      - {type: user_decision, ref: B2-ALIAS-TUPLES}
+    affected_masters:
+      - {data_object_id: 595, name: production_orders, target_module_id: null, workflow: ""}
+      - {data_object_id: 596, name: work_instructions, target_module_id: null, workflow: ""}
+      - {data_object_id: 597, name: production_schedules, target_module_id: null, workflow: ""}
+      - {data_object_id: 598, name: produced_units, target_module_id: null, workflow: ""}
+      - {data_object_id: 599, name: production_downtime_events, target_module_id: null, workflow: ""}
+      - {data_object_id: 600, name: production_quality_inspections, target_module_id: null, workflow: ""}
+      - {data_object_id: 601, name: shop_floor_cases, target_module_id: null, workflow: ""}
+
+  - id: B1B-S5
+    summary: "Zero data_object_lifecycle_states across all 7 masters (B12)."
+    finding: "Zero data_object_lifecycle_states rows for the 7 MFG-OPS masters. Every master has a real workflow that drives workflow-gate permission materialization. data_object_lifecycle_states.domain_module_id references the realizing module, so authoring states without modules would either NULL the FK (loses workflow-gate prefix derivation) or block on the module decision."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+
+  - id: B1B-S7
+    summary: "Zero roles / role_modules / role_permissions anchored on MFG-OPS (E1-E5)."
+    finding: "Zero MFG-OPS-anchored roles. The single nearby role RESEARCH-DEV-MFG-ENGINEER (id 10033) is anchored on PLM modules 66 / 68, not on MFG-OPS. After module ship, author 4-5 manufacturing-operations roles (Plant Manager, Shift Supervisor, Production Operator, Quality Inspector, Maintenance Lead) under business function Manufacturing Operations with the 2-module floor and role_permissions bundles."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+
+  - id: B1B-S8
+    summary: "System skill 84 (mfg-ops-system) still domain_module_id=NULL (F2)."
+    finding: "skills row 84 (skill_name=mfg-ops-system, skill_type=system) has domain_module_id=NULL. Rule #14 + Rule #17 require one system skill per domain_modules row with domain_module_id set. The 7 skill_tools rows on skill 84 will need to be split / reassigned across the per-module system skills once modules ship. Mirror the ATS skill-rename pattern."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+
+  - id: B1B-S9
+    summary: "System skill name uses kebab convention (mfg-ops-system) not snake; rename gated on the module-driven re-authoring."
+    finding: "skills row 84 uses kebab skill_name=mfg-ops-system. Phase-S convention is snake <module_code_lower>_agent (e.g. mfg_ops_shopfloor_execution_agent). Rename falls out of B1B-S8 once modules exist (because each new per-module skill is authored under the snake convention)."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S8}
+
+  - id: B1B-INV-MGMT-HANDOFF
+    summary: "Surface INV-MGMT-side inbound discovery: INV-KITTING module 63 consumer-DMDOs production_orders with no handoff row."
+    finding: "INV-MGMT-side query returned one domain_module_data_objects row: domain_module_id=63 (INV-KITTING in INV-MGMT domain 164), data_object_id=595 (production_orders), role=consumer, necessity=optional. No handoff row publishes production_order events into INV-KITTING. Candidate handoff is production_order.released (event 1091) or production_order.completed (event 1092) → INV-KITTING. Whether MFG-OPS should publish into INV-KITTING is a B10 inbound-discovery owed by INV-MGMT's next Validate (the candidate is on INV-MGMT's owed-by-other-domains list, not MFG-OPS's responsibility)."
+    blocked_by:
+      - {type: domain_audit, blocking_domain: INV-MGMT, milestone: B10-inbound-discovery}
+    extra_dmdo_rows:
+      - {domain_module_id: 63, domain_module_code: INV-KITTING, host_domain: INV-MGMT, data_object_id: 595, role: consumer, necessity: optional}
+
+b2:
+  - id: B2-MODULE-SPLIT
+    summary: "Module split, load-bearing architectural decision (gates 6 b1b items)."
+    question: "What domain_modules row(s) should MFG-OPS ship with? Proposed 5-module split (MFG-OPS-SHOPFLOOR-EXECUTION mastering production_orders + work_instructions + production_schedules; MFG-OPS-OEE-DOWNTIME mastering produced_units + production_downtime_events; MFG-OPS-IN-LINE-QUALITY mastering production_quality_inspections; MFG-OPS-FLOOR-CASE-MGMT mastering shop_floor_cases; MFG-OPS-LOT-TRACEABILITY embedding produced_units) vs alternatives."
+    options:
+      - "(a) Accept the 5-module split (lots-traceability embeds produced_units from OEE module)"
+      - "(b) Collapse to a 3-module split (execution + OEE-and-quality + floor-case)"
+      - "(c) Start with a single MFG-OPS-CORE full module and split later"
+      - "(d) Propose an alternative shape"
+    why: "Choice cascades into B1B-S5 (lifecycle states reference modules), B1B-S7 (role bundles), B1B-S8 (system-skill split). Coupled with Bucket 3 vetting because module assignments for Bucket 3 candidates depend on the split shape."
+
+  - id: B2-WORKFORCE-SCHEDULING
+    summary: "WORKFORCE-SCHEDULING capability on MFG-OPS, scope-correct?"
+    question: "The only existing capability_domains row links WORKFORCE-SCHEDULING (id 312) to MFG-OPS. WORKFORCE-SCHEDULING is realized in FSM-DISPATCH-OPS (module 161 in FSM domain 31), not in any MFG-OPS module. MFG-OPS owns production_schedules (line / cell sequencing), which is a different concept. Keep the link or replace?"
+    options:
+      - "(a) Keep, capability spans MFG-OPS and FSM/WFM by intent (cross-cutting under Rule cross-cutting-capability convention)"
+      - "(b) Remove and author PRODUCTION-SCHEDULING (new capability) on MFG-OPS"
+    why: "Live state shows zero MFG-OPS modules realize 312; once any MFG-OPS module ships under B1B-S1, keeping the row fails M4 unless the capability is also realized inside a MFG-OPS module."
+
+  - id: B2-SALESFORCE-MFG-CLOUD
+    summary: "Salesforce Manufacturing Cloud (id 307), MFG-OPS or CRM scope?"
+    question: "Currently linked at coverage_level=secondary on MFG-OPS. Salesforce Manufacturing Cloud is account-based demand forecasting / sales-agreement management, not shop-floor execution. Where does the row belong?"
+    options:
+      - "(a) Keep secondary on MFG-OPS (some run-rate-vs-commit context overlaps MFG-OPS reporting)"
+      - "(b) Move to CRM only (primary semantic home)"
+      - "(c) Move to a new MFG-DEMAND-COLLAB candidate domain"
+    why: "Independent of module split; can be answered now."
+
+  - id: B2-HONEYWELL-FORGE-VARIANT
+    summary: "Honeywell Forge Industrial / Connected Plant variant missing from solutions."
+    question: "Catalog has Honeywell Forge Building Operations (id 687) but not the Industrial / Connected Plant variant, which is the MES product. Add or defer?"
+    options:
+      - "(a) Add Honeywell Forge Industrial / Connected Plant as a new solutions row and link primary on MFG-OPS"
+      - "(b) Leave as a noted gap"
+    why: "Independent of module split."
+
+  - id: B2-ADJACENT-MES-VENDORS
+    summary: "Adjacent MES vendors entirely missing from solutions (Siemens Opcenter, GE Proficy, Aveva MES, Rockwell FactoryTalk Production Centre, Dassault Apriso, iBase-t Solumina)."
+    question: "Six pure-play MES leaders are not in solutions at all. Load all, some, or defer?"
+    options:
+      - "(a) Load all 6"
+      - "(b) Load Siemens Opcenter and GE Proficy (top-2 by revenue)"
+      - "(c) Defer to a dedicated vendor-refresh pass"
+    why: "Independent of module split."
+
+  - id: B2-PRODUCED-UNITS-MASTER
+    summary: "Module-shape question, embedded vs master on produced_units."
+    question: "Under the 5-module split, produced_units could master in MFG-OPS-OEE-DOWNTIME and embedded_master in MFG-OPS-LOT-TRACEABILITY, or master in lot-traceability and embedded in OEE. Vendor evidence is split: Plex masters in produce/release; Apriso masters in genealogy. Where does it master?"
+    options:
+      - "(a) Master in MFG-OPS-OEE-DOWNTIME, embedded_master in MFG-OPS-LOT-TRACEABILITY"
+      - "(b) Master in MFG-OPS-LOT-TRACEABILITY, embedded_master in MFG-OPS-OEE-DOWNTIME"
+      - "(c) Keep produced_units in a single module (collapses one of the proposed module rows)"
+    why: "Sub-decision of B2-MODULE-SPLIT; resolution may collapse the 5-module shape to 4 modules."
+
+  - id: B2-SHOP-FLOOR-CASES-ITSM
+    summary: "shop_floor_cases -> ITSM handoff target (handoff 952), is the ITSM target correct?"
+    question: "Current target ITSM module 38 (service_incidents master). Shop-floor cases are operational, not IT incidents. ServiceNow models shop-floor cases inside service_incidents because everything in ServiceNow is a Case or Incident table, but other MES vendors treat them as distinct. Keep or change?"
+    options:
+      - "(a) Keep the ITSM target (consistent with ServiceNow product taxonomy)"
+      - "(b) Reroute the handoff to an intra-domain MFG-OPS module after the module split lands"
+      - "(c) Drop the handoff entirely (shop-floor cases stay in MFG-OPS, do not fan out)"
+    why: "Outcome affects whether B1A-S12 includes the shop_floor_cases → service_incidents relationship row; independent of the rest of Bucket 2."
+
+  - id: B2-REGULATIONS-RESCOPE
+    summary: "MFG-OPS regulations set is product-marketing-shaped, not shop-floor-shaped."
+    question: "Current 4 regulations (EU Cyber Resilience Act, EU Data Act, Eco-design for Sustainable Products Regulation, EU Battery Regulation) describe the regulated-product layer, which is PLM-shaped. Missing for MFG-OPS audit-trail: ISO 9001, ISO 14001, IATF 16949, AS9100, ISO 13485, FDA 21 CFR Part 11, OSHA process safety. Load, move, or keep?"
+    options:
+      - "(a) Load 3-5 of the missing standards as new regulations rows + domain_regulations links"
+      - "(b) Move the 4 existing rows to PLM (they describe the regulated-product layer)"
+      - "(c) Keep as-is — MFG-OPS audit-trail uses these regulations because the shop floor produces the regulated artifact"
+    why: "Independent of Bucket 3 (regulation list is vendor-knowledge-based, not Phase-0-derived)."
+
+  - id: B2-CATALOG-UX-WORDING
+    summary: "Catalog UX wording — A4 (domain) + M8 (per-module after split lands)."
+    question: "domains row 47 has catalog_tagline and catalog_description empty. Rule #20 buyer-voice backfill: draft, surface, then write only on per-row approval. Will the user supply or approve drafted wording, or defer?"
+    options:
+      - "(a) Approve agent-drafted wording (one round of draft, then approve)"
+      - "(b) Supply exact wording"
+      - "(c) Defer until after module split lands so domain + module UX wording can ship together"
+    why: "Once a non-empty value exists in either column, Rule #20 forbids overwrite without explicit per-row approval — confirm timing before any draft is surfaced."
+
+  - id: B2-ALIAS-TUPLES
+    summary: "data_object_aliases tuples for the 7 MFG-OPS masters."
+    question: "Audit suggested industry synonyms per master (production_orders -> [work_order, manufacturing_order, MO, WO], etc.). Bulk insert requires user approval of the exact (data_object_id, alias_name, alias_type) tuples."
+    options:
+      - "(a) Approve all suggested aliases as drafted"
+      - "(b) Approve a subset (user names which)"
+      - "(c) Defer and revisit after module split"
+    why: "Rule #1 requires per-tuple approval before write; 7 masters x ~3 synonyms each is ~20 tuples to confirm."
+
+b3:
+  - id: B3-WORK-CENTERS
+    candidate: work_centers
+    rationale: "Universal across Plex, Opcenter, Apriso, Tulip station model, Proficy. Plant floor topology spine. Likely master in MFG-OPS-SHOPFLOOR-EXECUTION."
+    vendor_evidence: [Plex, Siemens Opcenter, Dassault Apriso, Tulip Frontline Operations, GE Proficy]
+    proposed_module: MFG-OPS-SHOPFLOOR-EXECUTION
+
+  - id: B3-PRODUCTION-MATERIAL-CONSUMPTION
+    candidate: production_material_consumption
+    rationale: "Universal; backflushed against production_orders against BOM. Records material draw per produced_unit or per production_order."
+    vendor_evidence: [Plex, Siemens Opcenter, Dassault Apriso, Tulip Frontline Operations]
+    proposed_module: MFG-OPS-SHOPFLOOR-EXECUTION
+
+  - id: B3-PRODUCTION-OEE-RECORDS
+    candidate: production_oee_records
+    rationale: "Universal (Plex, Proficy, Aveva). Rolled-up shift / line / workcenter OEE summary. May fold into existing production_downtime_events rollup or remain as a distinct denormalized analytics master."
+    vendor_evidence: [Plex, GE Proficy, Aveva MES]
+    proposed_module: MFG-OPS-OEE-DOWNTIME
+
+  - id: B3-PRODUCTION-GENEALOGY
+    candidate: production_genealogy
+    rationale: "Universal in regulated manufacturing (life sciences, automotive, aerospace). Parent-child unit relationships. Distinct from produced_units (the unit) vs the chain."
+    vendor_evidence: [Sparta TrackWise, Dassault Apriso, iBase-t Solumina, Veeva Vault QMS]
+    proposed_module: MFG-OPS-LOT-TRACEABILITY
+
+  - id: B3-PRODUCTION-SCRAP-RECORDS
+    candidate: production_scrap_records
+    rationale: "Common (4 of 5 vendors). Materials lost or reworked, distinct from production_quality_inspections (the inspection) and produced_units (the unit)."
+    vendor_evidence: [Plex, Siemens Opcenter, Dassault Apriso, GE Proficy]
+    proposed_module: MFG-OPS-IN-LINE-QUALITY
+
+  - id: B3-PRODUCTION-HOLDS
+    candidate: production_holds
+    rationale: "Common; lot / order quarantine state on quality finding. May be a lifecycle state on produced_units or production_orders rather than its own master — Phase 0 to decide."
+    vendor_evidence: [Plex, Sparta TrackWise, Dassault Apriso]
+    proposed_module: MFG-OPS-IN-LINE-QUALITY
+
+  - id: B3-PRODUCTION-ANDON-SIGNALS
+    candidate: production_andon_signals
+    rationale: "Common (Tulip, Plex). Andon-pull events that may or may not produce a shop_floor_case. May fold into shop_floor_cases as a state rather than its own master."
+    vendor_evidence: [Tulip Frontline Operations, Plex]
+    proposed_module: MFG-OPS-FLOOR-CASE-MGMT

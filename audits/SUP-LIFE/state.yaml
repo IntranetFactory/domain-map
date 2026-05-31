@@ -1,0 +1,213 @@
+schema_version: 2
+domain: SUP-LIFE
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a: []
+
+b1b:
+  - id: B1B-M1
+    summary: "Phase A bootstrap: author N domain_modules + DMDO master rows on the 6 existing masters (suppliers, supplier_onboardings, supplier_qualifications, supplier_scorecards, supplier_certifications, supplier_risk_assessments)"
+    finding: "M1 hard fail; SUP-LIFE (domain_id=28) has 0 domain_modules rows; per Rule #14 every domains row MUST have at least 1 full module; blocks B-band module-anchored checks (B5/B9b/B10b), E (RBAC), F2/F5 (per-module system skills)"
+    action: "Author 3, 4, or 5 domain_modules per B2-S1 decision, then DMDO master rows on the 6 existing masters plus embedded_master/consumer rows where applicable; Phase A loader"
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    affected_masters:
+      - {data_object_id: 206, name: suppliers, target_module_id: null, workflow: master_record}
+      - {data_object_id: 207, name: supplier_onboardings, target_module_id: null, workflow: onboarding}
+      - {data_object_id: 208, name: supplier_qualifications, target_module_id: null, workflow: qualification}
+      - {data_object_id: 209, name: supplier_scorecards, target_module_id: null, workflow: performance}
+      - {data_object_id: 498, name: supplier_certifications, target_module_id: null, workflow: certification_tracking}
+      - {data_object_id: 730, name: supplier_risk_assessments, target_module_id: null, workflow: risk_overlay}
+    vendor_evidence:
+      - HICX Supplier Experience Platform
+      - SAP Ariba SLP
+      - Coupa Supplier Information Management
+      - Ivalua Supplier Management
+      - Jaggaer Supplier Management
+      - Workday Supplier Hub
+    extra_proposed_module_options:
+      a_4_module: [SUP-LIFE-MASTER, SUP-LIFE-ONBOARDING-QUAL, SUP-LIFE-PERFORMANCE, SUP-LIFE-RISK]
+      b_3_module: [SUP-LIFE-MASTER, SUP-LIFE-ONBOARDING-QUAL, SUP-LIFE-PERFORMANCE]
+      c_5_module: [SUP-LIFE-MASTER, SUP-LIFE-ONBOARDING-QUAL, SUP-LIFE-CERTIFICATION-TRACKING, SUP-LIFE-PERFORMANCE, SUP-LIFE-RISK]
+
+  - id: B1B-A2
+    summary: "Phase A capabilities: 7 to 8 capabilities + capability_domains + domain_module_capabilities"
+    finding: "A2 hard fail; capability_domains?domain_id=eq.28 returns 0 rows; pass criterion at least 3 (typical 5 to 8)"
+    action: "Load 7 to 8 capabilities (SUP-LIFE-MASTER, SUP-LIFE-ONBOARDING, SUP-LIFE-QUALIFICATION, SUP-LIFE-CERTIFICATION-TRACKING, SUP-LIFE-PERFORMANCE, SUP-LIFE-RISK-OVERLAY, SUP-LIFE-COMMS, plus cross-cut KNOWLEDGE-MGMT) plus capability_domains rows plus domain_module_capabilities tying each capability to its realizing module"
+    blocked_by:
+      - {type: depends_on, ref: B1B-M1, reason: "domain_module_capabilities needs domain_modules from B1B-M1"}
+    affected_entities: [SUP-LIFE-MASTER, SUP-LIFE-ONBOARDING, SUP-LIFE-QUALIFICATION, SUP-LIFE-CERTIFICATION-TRACKING, SUP-LIFE-PERFORMANCE, SUP-LIFE-RISK-OVERLAY, SUP-LIFE-COMMS, KNOWLEDGE-MGMT]
+
+  - id: B1B-A4
+    summary: "PATCH domains.catalog_tagline and catalog_description after user approves drafted text"
+    finding: "A4 hard fail; both columns empty (confirmed live); Rule #20 allows backfill on empty values but only with surfaced wording approved by user"
+    action: "PATCH domains.id=28 with user-approved tagline + description per B2-S3; drafts on record in 2026-05-30 audit"
+    blocked_by:
+      - {type: user_decision, ref: B2-S3}
+
+  - id: B1B-B12
+    summary: "Phase B lifecycle states: ~30 to 36 data_object_lifecycle_states rows across all 6 SUP-LIFE masters"
+    finding: "B12 hard fail; /data_object_lifecycle_states?data_object_id=in.(206,207,208,209,498,730) returns 0 rows; every master ships a real workflow per its trigger_events"
+    action: "Author state machines: suppliers (prospect, qualified, approved, suspended, blocked, archived); supplier_onboardings (initiated, in_review, approved, rejected, abandoned); supplier_qualifications (draft, submitted, approved, rejected, expired, revoked); supplier_certifications (valid, expiring_soon, expired, revoked); supplier_risk_assessments (scheduled, in_progress, completed, elevated, mitigated, accepted); supplier_scorecards (draft, in_period, finalized, disputed); each anchored to a domain_module_id from B1B-M1"
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+    affected_masters:
+      - {data_object_id: 206, name: suppliers, target_module_id: null, workflow: 6_states}
+      - {data_object_id: 207, name: supplier_onboardings, target_module_id: null, workflow: 5_states}
+      - {data_object_id: 208, name: supplier_qualifications, target_module_id: null, workflow: 6_states}
+      - {data_object_id: 209, name: supplier_scorecards, target_module_id: null, workflow: 4_states}
+      - {data_object_id: 498, name: supplier_certifications, target_module_id: null, workflow: 4_states}
+      - {data_object_id: 730, name: supplier_risk_assessments, target_module_id: null, workflow: 6_states}
+
+  - id: B1B-B4
+    summary: "PATCH 6 data_objects rows to set proposed pattern flags after per-flag user confirmation"
+    finding: "B4 hard fail; all 6 SUP-LIFE masters carry has_personal_content=false, has_submit_lock=false, has_single_approver=false (confirmed live); per Rule #12 positive re-evaluation required"
+    action: "Proposed flips: suppliers.has_personal_content=true; supplier_qualifications.has_submit_lock=true + has_single_approver=true; supplier_certifications.has_submit_lock=true; supplier_risk_assessments.has_single_approver=true; PATCH only after B2-S2 per-flag yes/no"
+    blocked_by:
+      - {type: user_decision, ref: B2-S2}
+    affected_masters:
+      - {data_object_id: 206, name: suppliers, target_module_id: null, workflow: has_personal_content}
+      - {data_object_id: 208, name: supplier_qualifications, target_module_id: null, workflow: has_submit_lock_and_has_single_approver}
+      - {data_object_id: 498, name: supplier_certifications, target_module_id: null, workflow: has_submit_lock}
+      - {data_object_id: 730, name: supplier_risk_assessments, target_module_id: null, workflow: has_single_approver}
+
+  - id: B1B-B10b
+    summary: "Backfill source_domain_module_id (10 outbound) and target_domain_module_id (8 inbound) on the 18 cross-domain handoffs touching SUP-LIFE"
+    finding: "B10b hard fail; ALL 18 cross-domain handoffs have NULL on both source_domain_module_id and target_domain_module_id; SUP-LIFE side becomes derivable once B1B-M1 lands modules"
+    action: "After B1B-M1 lands, run a backfill loader analogous to scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts to PATCH the SUP-LIFE-side module FK on each row"
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+    affected_handoffs:
+      - {handoff_id: 127, direction: outbound, source_domain: SUP-LIFE, target_domain: S2P, trigger_event: supplier.approved, payload: suppliers, null_field: source_domain_module_id}
+      - {handoff_id: 128, direction: outbound, source_domain: SUP-LIFE, target_domain: AP-AUTO, trigger_event: supplier.bank_changed, payload: suppliers, null_field: source_domain_module_id}
+      - {handoff_id: 213, direction: outbound, source_domain: SUP-LIFE, target_domain: ERP-FIN, trigger_event: supplier.onboarded, payload: supplier_onboardings, null_field: source_domain_module_id}
+      - {handoff_id: 214, direction: outbound, source_domain: SUP-LIFE, target_domain: GRC, trigger_event: supplier.risk_elevated, payload: supplier_scorecards, null_field: source_domain_module_id}
+      - {handoff_id: 546, direction: outbound, source_domain: SUP-LIFE, target_domain: S2P, trigger_event: supplier_qualification.approved, payload: supplier_qualifications, null_field: source_domain_module_id}
+      - {handoff_id: 547, direction: outbound, source_domain: SUP-LIFE, target_domain: AP-AUTO, trigger_event: supplier_qualification.approved, payload: supplier_qualifications, null_field: source_domain_module_id}
+      - {handoff_id: 548, direction: outbound, source_domain: SUP-LIFE, target_domain: S2P, trigger_event: supplier_qualification.expired, payload: supplier_qualifications, null_field: source_domain_module_id}
+      - {handoff_id: 549, direction: outbound, source_domain: SUP-LIFE, target_domain: GRC, trigger_event: supplier_risk_assessment.elevated, payload: supplier_risk_assessments, null_field: source_domain_module_id}
+      - {handoff_id: 550, direction: outbound, source_domain: SUP-LIFE, target_domain: AUDIT, trigger_event: supplier_risk_assessment.completed, payload: supplier_risk_assessments, null_field: source_domain_module_id}
+      - {handoff_id: 596, direction: outbound, source_domain: SUP-LIFE, target_domain: AP-AUTO, trigger_event: supplier_qualification.expired, payload: supplier_qualifications, null_field: source_domain_module_id}
+      - {handoff_id: 273, direction: inbound, source_domain: MDM, target_domain: SUP-LIFE, trigger_event: supplier_golden_record.updated, payload: suppliers, null_field: target_domain_module_id}
+      - {handoff_id: 277, direction: inbound, source_domain: ESG, target_domain: SUP-LIFE, trigger_event: supplier_esg_assessment.score_updated, payload: supplier_esg_assessments, null_field: target_domain_module_id}
+      - {handoff_id: 336, direction: inbound, source_domain: VET-PRACT-MGMT, target_domain: SUP-LIFE, trigger_event: controlled_substance.dispensed, payload: controlled_substance_ledger_entries, null_field: target_domain_module_id}
+      - {handoff_id: 362, direction: inbound, source_domain: FOOD-TRACE, target_domain: SUP-LIFE, trigger_event: supplier_certification.expired, payload: supplier_certifications, null_field: target_domain_module_id}
+      - {handoff_id: 543, direction: inbound, source_domain: AP-AUTO, target_domain: SUP-LIFE, trigger_event: invoice_match.exception_raised, payload: invoice_matches, null_field: target_domain_module_id}
+      - {handoff_id: 565, direction: inbound, source_domain: S2P, target_domain: SUP-LIFE, trigger_event: sourcing_event.awarded, payload: sourcing_events, null_field: target_domain_module_id}
+      - {handoff_id: 586, direction: inbound, source_domain: S2P, target_domain: SUP-LIFE, trigger_event: goods_receipt.quantity_variance, payload: goods_receipts, null_field: target_domain_module_id}
+      - {handoff_id: 591, direction: inbound, source_domain: VMS, target_domain: SUP-LIFE, trigger_event: staffing_supplier.activated, payload: staffing_suppliers, null_field: target_domain_module_id}
+
+  - id: B1B-F1
+    summary: "DELETE legacy domain-level system skill 109 plus its 8 skill_tools rows; re-author per-module system skills under Phase S"
+    finding: "F1 hard fail; skills.id=109 (sup-life-system) has domain_module_id=null which is the F1 anti-pattern; Rule #17 requires one system skill per domain_modules row"
+    action: "After B1B-M1 lands and Phase S authors module-anchored system skills, DELETE skill 109 plus 8 skill_tools rows (ids 840, 841, 842, 843, 844, 845, 1008, 1009); migrate the underlying tool linkage to per-module skills"
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+      - {type: user_decision, ref: B2-S5}
+    extra_legacy_skill_tools: [840, 841, 842, 843, 844, 845, 1008, 1009]
+
+  - id: B1B-E
+    summary: "Phase E RBAC: ~5 roles + ~10 role_modules + ~12 baseline + ~18 workflow-gate permissions + permission_hierarchy edges"
+    finding: "E-band hard fail; /roles?role_code=ilike.*SUP-LIFE* returns 0 rows; only PROCUREMENT-PIM-SUPPLIER-LIAISON (id 10092, with 3 role_permissions) exists; per E1 to E6 each multi-module domain needs at least 3 distinct roles with at least 2 role_modules and at least 1 role_permissions bundle row"
+    action: "Author PROCUREMENT-SUPPLIER-RM (primary SUP-LIFE-MASTER + PERFORMANCE), PROCUREMENT-SUPPLIER-ONBOARDING-SPEC (primary SUP-LIFE-ONBOARDING-QUAL), GRC-SUPPLIER-RISK-ANALYST (primary SUP-LIFE-RISK + secondary SUP-LIFE-PERFORMANCE), COMPLIANCE-SUPPLIER-DUE-DILIGENCE (primary SUP-LIFE-ONBOARDING-QUAL + secondary SUP-LIFE-RISK); plus role_modules row tying existing PROCUREMENT-PIM-SUPPLIER-LIAISON (10092) to SUP-LIFE-MASTER; workflow-gate permissions derive from B1B-B12 lifecycle states with requires_permission=true"
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+      - {type: prerequisite_entity, ref: B1B-A2}
+      - {type: prerequisite_entity, ref: B1B-B12}
+
+b2:
+  - id: B2-S1
+    summary: "Module split granularity for SUP-LIFE: 3, 4, or 5 modules"
+    question: "How many SUP-LIFE modules and where do the boundaries fall? Rule #14 floor is at least 2 modules at 3 or more capabilities; SUP-LIFE has 6 masters with distinct workflows."
+    options:
+      - "a: 4-module split (SUP-LIFE-MASTER mastering suppliers; SUP-LIFE-ONBOARDING-QUAL mastering supplier_onboardings + supplier_qualifications + supplier_certifications; SUP-LIFE-PERFORMANCE mastering supplier_scorecards; SUP-LIFE-RISK mastering supplier_risk_assessments)"
+      - "b: 3-module fold (RISK into PERFORMANCE; same first two modules)"
+      - "c: 5-module split (promote SUP-LIFE-CERTIFICATION-TRACKING out of ONBOARDING-QUAL)"
+      - "d: custom boundary specified by user"
+    why: "Module boundary is editorial/deployability judgment; agent has no opinion stronger than the structural floor"
+
+  - id: B2-S2
+    summary: "Per-flag confirmation on the 5 proposed B4 pattern-flag flips"
+    question: "For each proposed flip, yes or no? Per Rule #12 every master MUST be positively re-evaluated."
+    options:
+      - "suppliers.has_personal_content = true (supplier contacts include named people)"
+      - "supplier_qualifications.has_submit_lock = true (post-approval immutability)"
+      - "supplier_qualifications.has_single_approver = true (one Procurement/Compliance approver)"
+      - "supplier_certifications.has_submit_lock = true (uploaded cert document immutable)"
+      - "supplier_risk_assessments.has_single_approver = true (designated GRC reviewer approves the score)"
+    why: "Pattern flags are workflow-shape judgments owned by the user; Rule #15 forbids the agent auto-populating accompanying notes"
+
+  - id: B2-S3
+    summary: "catalog_tagline and catalog_description final wording (Rule #20)"
+    question: "Approve, rewrite, or skip the drafted SUP-LIFE catalog UX text from the 2026-05-30 audit?"
+    options:
+      - "a: approve drafts verbatim"
+      - "b: rewrite with user-supplied text"
+      - "c: skip backfill (acceptable per Rule #20 since current empty state is preserved)"
+    why: "Both fields are currently empty (confirmed live); Rule #20 allows backfill on empty values but only with surfaced wording"
+
+  - id: B2-S4
+    summary: "SCRM (Supply Chain Risk Management) as a separate domain"
+    question: "Promote, fold, or reject the SCRM candidate (Resilinc, Interos, Sphera/riskmethods, Prewave, Everstream Analytics, Sayari)?"
+    options:
+      - "a: promote SCRM as new domain"
+      - "b: fold into SUP-LIFE-RISK as a sub-feature"
+      - "c: fold into TPRM"
+      - "d: reject (existing SUP-LIFE-RISK + TPRM cover it)"
+    why: "Domain promotion is market-boundary judgment; the helper queued the candidate during the 2026-05-30 audit"
+
+  - id: B2-S5
+    summary: "F7 channel-vs-capability for the per-module SUP-LIFE system skills"
+    question: "Should the per-module system skills link send_email (channel primitive) or notify_person (channel-neutral abstraction)?"
+    options:
+      - "a: notify_person (default abstraction)"
+      - "b: send_email (with Rule #15-approved skill_tools.notes justification)"
+      - "c: both with broadcast semantics (email + SMS for urgent expiry alerts)"
+    why: "Channel decision is workflow-specific; supplier-portal communications industry practice (HICX, Ariba) is email-heavy"
+
+  - id: B2-H1
+    summary: "Reconciliation of existing APQC tags on 8 handoffs (4 discovery_override on PCF 167 L3 parent + 4 already-agent_curated)"
+    question: "For each pre-existing tag, keep, replace with L4 child, or augment with L4 child?"
+    options:
+      - "Handoff 127 (PCF 167, discovery_override): keep / replace with PCF 805 'Certify and validate suppliers' (L4) / augment with PCF 805"
+      - "Handoff 128 (PCF 167, discovery_override): keep / replace with PCF 815 'Monitor/Manage supplier information' (L4) / augment with PCF 815"
+      - "Handoff 213 (PCF 167, discovery_override): keep / replace with PCF 815 / augment with PCF 815"
+      - "Handoff 214 (PCF 167, discovery_override): keep / replace with PCF 816 'Prepare/Analyze procurement and supplier performance' (L4) / augment with PCF 816"
+      - "Handoff 277 (PCF 815, agent_curated): keep as-is (already L4); replacement to PCF 816 'ESG flavor' considered medium confidence"
+      - "Handoff 336 (PCF 815, agent_curated): keep as-is (industry-specific match, medium confidence)"
+      - "Handoff 362 (PCF 815, agent_curated): keep as-is (confident L4)"
+      - "Handoff 591 (PCF 167, agent_curated): replace with PCF 815 'Monitor/Manage supplier information' for L4 specificity"
+    why: "Parent-vs-child PCF retention is a curation decision; agent can replace, augment, or leave; gates final H1 closure (currently 0 approved across all 18 cross-domain handoffs)"
+
+b3:
+  - id: B3-1
+    candidate: supplier_contacts
+    rationale: "HICX Supplier Experience Platform, Ariba SLP, Coupa SIM all model per-supplier contact rosters (procurement contact, AP contact, legal contact, certification contact) as a structured collection separate from the supplier record; currently the catalog has no supplier_contacts master and contact info lives implicitly in suppliers"
+    vendor_evidence: [HICX Supplier Experience Platform, SAP Ariba SLP, Coupa Supplier Information Management]
+    proposed_module: SUP-LIFE-MASTER
+
+  - id: B3-2
+    candidate: supplier_questionnaires
+    rationale: "HICX Surveys, Ariba SLP Qualifications Questionnaires, Coupa SIM RFI Forms, Ivalua Questionnaire library all model the questionnaire-instance as a first-class object separate from the qualification; a qualification may carry N questionnaires across categories (insurance, security, ESG, financial); currently supplier_qualifications conflates the workflow with its survey content"
+    vendor_evidence: [HICX Surveys, SAP Ariba SLP, Coupa Supplier Information Management, Ivalua Platform]
+    proposed_module: SUP-LIFE-ONBOARDING-QUAL
+
+  - id: B3-3
+    candidate: supplier_sanctions_screenings
+    rationale: "LSEG World-Check, Refinitiv, Dow Jones Risk Center, Exiger as KYC/AML vendors model per-supplier sanctions screening events as time-stamped records (PEP screen, OFAC, EU consolidated, UK HM Treasury); 6AMLD (regulation id 11) and Bank Secrecy Act (regulation id 49), both already in domain_regulations for SUP-LIFE, mandate periodic re-screening with audit trails"
+    vendor_evidence: [LSEG World-Check, Refinitiv, Dow Jones Risk Center, Exiger]
+    proposed_module: SUP-LIFE-ONBOARDING-QUAL
+
+  - id: B3-4
+    candidate: supplier_diversity_classifications
+    rationale: "SupplierGATEWAY, Tealbook, Coupa Diversity, ConnXus model supplier diversity (MBE, WBE, VBE, 8(a), HUBZone, LGBTBE) as structured classifications with cert expiry; Tier-1/Tier-2 spend reporting in US public-procurement contexts depends on this; currently no entity, the concept lives implicitly in supplier_certifications"
+    vendor_evidence: [SupplierGATEWAY, Tealbook, Coupa Diversity, ConnXus]
+    proposed_module: SUP-LIFE-MASTER
+
+  - id: B3-5
+    candidate: supplier_audits
+    rationale: "HICX, Ariba SLP, Coupa SIM model supplier-side audits (a procurement audit performed against the supplier, distinct from the AUDIT domain's internal audit engagements); findings drive corrective-action plans (CAPAs); currently no entity; the AUDIT domain's audit_engagements and audit_findings are the wrong-shape semantic neighbor"
+    vendor_evidence: [HICX Supplier Experience Platform, SAP Ariba SLP, Coupa Supplier Information Management]
+    proposed_module: SUP-LIFE-PERFORMANCE

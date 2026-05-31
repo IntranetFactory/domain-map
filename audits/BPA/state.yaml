@@ -1,0 +1,459 @@
+schema_version: 2
+domain: BPA
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a: []
+
+b1b:
+  - id: B1B-M1
+    summary: "Author the BPA module set (>=2 full modules per Rule #14). M1 hard fail, every downstream M / B / E / F band blocked."
+    finding: "BPA has zero domain_modules rows. Capability count is 7 (>=3) so target shape is >=2 full modules. Default proposal from 2026-05-30 audit is 3 modules: BPA-PROCESS-REPO mastering business_process_models 247; BPA-CAPABILITY-MAP mastering business_capability_maps 248 and realizing REFERENCE-FRAME-LIBRARY 344; BPA-VALUE-STREAM mastering value_streams 249 and process_simulation_runs 250. Alternatives are 4 modules (split BPA-SIMULATION) or 2 modules (collapse)."
+    blocked_by:
+      - type: user_decision
+        ref: B2-MODULE-SHAPE
+    affected_modules: []
+    affected_masters:
+      - data_object_id: 247
+        name: business_process_models
+        target_module_id: null
+        workflow: "BPMN authoring plus governance plus publish"
+      - data_object_id: 248
+        name: business_capability_maps
+        target_module_id: null
+        workflow: "capability mapping plus reference frameworks"
+      - data_object_id: 249
+        name: value_streams
+        target_module_id: null
+        workflow: "value stream modelling"
+      - data_object_id: 250
+        name: process_simulation_runs
+        target_module_id: null
+        workflow: "Monte Carlo and discrete-event simulation"
+
+  - id: B1B-M2
+    summary: "Author DMDO master rows on new BPA modules for 247, 249, 250."
+    finding: "business_process_models (247), value_streams (249), process_simulation_runs (250) have zero role='master' rows anywhere in domain_module_data_objects. M7 fails on master orphan count. Once B1B-M1 lands, INSERT three DMDO master rows mapping 247 to BPA-PROCESS-REPO, 249 to BPA-VALUE-STREAM, 250 to BPA-VALUE-STREAM (or BPA-SIMULATION per the module shape decision)."
+    blocked_by:
+      - type: prerequisite_entity
+        ref: B1B-M1
+      - type: user_decision
+        ref: B2-MODULE-SHAPE
+    affected_masters:
+      - data_object_id: 247
+        name: business_process_models
+        target_module_id: null
+        workflow: "BPMN authoring"
+      - data_object_id: 249
+        name: value_streams
+        target_module_id: null
+        workflow: "value stream modelling"
+      - data_object_id: 250
+        name: process_simulation_runs
+        target_module_id: null
+        workflow: "simulation execution"
+
+  - id: B1B-M3
+    summary: "Resolve business_capability_maps (248) canonical owner; relocate DMDO master row or accept APM as canonical."
+    finding: "business_capability_maps (248) has its single DMDO role='master' row on APM-PORTFOLIO-REGISTRY (module 103, APM domain), while BPA's legacy domain_data_objects rollup also claims it as master. Either DELETE the APM master row and INSERT under BPA-CAPABILITY-MAP (with APM demoting to embedded_master or consumer), or accept APM as canonical owner and DELETE BPA's domain_data_objects master claim (leaving BPA with three masters)."
+    blocked_by:
+      - type: user_decision
+        ref: B2-CAPMAP-OWNER
+    affected_masters:
+      - data_object_id: 248
+        name: business_capability_maps
+        target_module_id: 103
+        workflow: "capability mapping"
+
+  - id: B1B-M4
+    summary: "PATCH lifecycle states 673/674/675 domain_module_id to the new BPA capability-map module after B1B-M3 resolves."
+    finding: "3 lifecycle states on business_capability_maps (673 draft, 674 published, 675 superseded) carry domain_module_id=103 (APM). Workflow-gate permission apm-portfolio-registry:publish_business_capability_map is materialized under APM as a result. If Bucket 2 capmap-owner resolves BPA as owner, PATCH state.domain_module_id to the new BPA-CAPABILITY-MAP id and re-derive the BPA-prefixed permission."
+    blocked_by:
+      - type: depends_on
+        ref: B1B-M3
+        reason: "Lifecycle states follow the master's realizing module."
+    affected_masters:
+      - data_object_id: 248
+        name: business_capability_maps
+        target_module_id: 103
+        workflow: "publish gate"
+
+  - id: B1B-M5
+    summary: "Author domain_module_capabilities rows linking all 7 BPA capabilities to the new BPA modules."
+    finding: "Capabilities BUSINESS-CAPABILITY-MAP (343) and REFERENCE-FRAME-LIBRARY (344) are currently realized through APM module 103. Capabilities BPA-BPMN-MODEL (338), BPA-PROCESS-REPO (339), BPA-SIMULATION (340), BPA-VALUE-STREAM (341), BPA-PUBLISH (342) have zero realizing modules. Once BPA modularizes, link all 7 capabilities to the appropriate new BPA modules; remove the APM realizations for 343 and 344 after the BPA rows land."
+    blocked_by:
+      - type: prerequisite_entity
+        ref: B1B-M1
+      - type: user_decision
+        ref: B2-CAPMAP-OWNER
+    affected_entities:
+      - BPA-BPMN-MODEL
+      - BPA-PROCESS-REPO
+      - BPA-SIMULATION
+      - BPA-VALUE-STREAM
+      - BPA-PUBLISH
+      - BUSINESS-CAPABILITY-MAP
+      - REFERENCE-FRAME-LIBRARY
+
+  - id: B1B-S1
+    summary: "Draft and surface catalog_tagline plus catalog_description on the BPA domain row (Rule 20 user surfacing)."
+    finding: "A4 fails. domains.catalog_tagline='' and domains.catalog_description='' on row id 136. Per Rule 20 the agent drafts buyer-shaped copy (workflow plus value, not analyst voice) and surfaces both fields to the user before any write. Once a non-empty value exists it is never overwritten without explicit user approval."
+    blocked_by:
+      - type: user_decision
+        ref: B2-CATALOG-UX
+        reason: "Rule 20 prohibits writing buyer-shaped UX copy without explicit per-row approval."
+
+  - id: B1B-S2
+    summary: "DELETE legacy bpa-system skill (id 34) and its 4 skill_tools rows once per-module system skills exist."
+    finding: "F1 fails. Legacy skill bpa-system (id 34, domain_module_id=null, skill_type='system') with 4 skill_tools (332/65/333/334, all query-tier, platform coverage) still present. Per Rule 17 the target shape is one system skill per domain_modules row, anchored by domain_module_id. Cannot DELETE until per-module system skills land in Phase S, which requires B1B-M1."
+    blocked_by:
+      - type: prerequisite_entity
+        ref: B1B-M1
+    extra_legacy_skill_id: 34
+    extra_legacy_skill_tools_ids: [332, 65, 333, 334]
+
+  - id: B1B-S3
+    summary: "PATCH source_domain_module_id on 8 outbound BPA handoffs after BPA modularizes."
+    finding: "B10b fails on outbound. All 8 outbound handoffs (180, 181, 182, 184, 783, 784, 785, 786) have source_domain_module_id=null. Derivation rule B10b is the module in source_domain_id holding trigger_events.data_object_id with the strongest role. The new BPA modules become those holders post B1B-M2."
+    blocked_by:
+      - type: prerequisite_entity
+        ref: B1B-M2
+    affected_handoffs:
+      - handoff_id: 180
+        direction: outbound
+        source_domain: BPA
+        target_domain: PROC-MIN
+        trigger_event: process_model.published
+        payload: business_process_models
+        null_field: source_domain_module_id
+      - handoff_id: 181
+        direction: outbound
+        source_domain: BPA
+        target_domain: APM
+        trigger_event: capability_map.updated
+        payload: business_capability_maps
+        null_field: source_domain_module_id
+      - handoff_id: 182
+        direction: outbound
+        source_domain: BPA
+        target_domain: APM
+        trigger_event: process_model.published
+        payload: business_process_models
+        null_field: source_domain_module_id
+      - handoff_id: 184
+        direction: outbound
+        source_domain: BPA
+        target_domain: PROD-MGMT
+        trigger_event: value_stream.bottleneck_identified
+        payload: value_streams
+        null_field: source_domain_module_id
+      - handoff_id: 783
+        direction: outbound
+        source_domain: BPA
+        target_domain: PROC-MIN
+        trigger_event: process_simulation_run.completed
+        payload: process_simulation_runs
+        null_field: source_domain_module_id
+      - handoff_id: 784
+        direction: outbound
+        source_domain: BPA
+        target_domain: PROD-MGMT
+        trigger_event: process_simulation_run.bottleneck_identified
+        payload: process_simulation_runs
+        null_field: source_domain_module_id
+      - handoff_id: 785
+        direction: outbound
+        source_domain: BPA
+        target_domain: SPM
+        trigger_event: process_simulation_run.completed
+        payload: process_simulation_runs
+        null_field: source_domain_module_id
+      - handoff_id: 786
+        direction: outbound
+        source_domain: BPA
+        target_domain: WORK-MGMT
+        trigger_event: process_simulation_run.bottleneck_identified
+        payload: process_simulation_runs
+        null_field: source_domain_module_id
+
+  - id: B1B-S4
+    summary: "PATCH target_domain_module_id on 3 inbound plus 3 outbound BPA handoffs after BPA modularizes and other domains' B10b backfills."
+    finding: "B10b fails on 6 rows where the BPA-side target FK is null. Inbound rows (BPA is target) 183, 740, 741 all have target_domain_module_id=null on the BPA side; resolved once BPA's consumer or contributor DMDO rows on 247, 580, 582 land. Outbound rows (BPA is source) 180 to PROC-MIN, 783 to PROC-MIN, 785 to SPM still carry target_domain_module_id=null; resolution lives on PROC-MIN B10b and SPM B10b respectively."
+    blocked_by:
+      - type: prerequisite_entity
+        ref: B1B-M1
+      - type: domain_audit
+        blocking_domain: PROC-MIN
+        milestone: B10b-target-fk-backfill
+      - type: domain_audit
+        blocking_domain: SPM
+        milestone: B10b-target-fk-backfill
+    affected_handoffs:
+      - handoff_id: 183
+        direction: inbound
+        source_domain: PROC-MIN
+        target_domain: BPA
+        trigger_event: conformance.deviation_detected
+        payload: business_process_models
+        null_field: target_domain_module_id
+      - handoff_id: 740
+        direction: inbound
+        source_domain: PROC-MIN
+        target_domain: BPA
+        trigger_event: discovered_process_model.published
+        payload: discovered_process_models
+        null_field: target_domain_module_id
+      - handoff_id: 741
+        direction: inbound
+        source_domain: PROC-MIN
+        target_domain: BPA
+        trigger_event: process_variant.identified
+        payload: process_variants
+        null_field: target_domain_module_id
+      - handoff_id: 180
+        direction: outbound
+        source_domain: BPA
+        target_domain: PROC-MIN
+        trigger_event: process_model.published
+        payload: business_process_models
+        null_field: target_domain_module_id
+      - handoff_id: 783
+        direction: outbound
+        source_domain: BPA
+        target_domain: PROC-MIN
+        trigger_event: process_simulation_run.completed
+        payload: process_simulation_runs
+        null_field: target_domain_module_id
+      - handoff_id: 785
+        direction: outbound
+        source_domain: BPA
+        target_domain: SPM
+        trigger_event: process_simulation_run.completed
+        payload: process_simulation_runs
+        null_field: target_domain_module_id
+
+  - id: B1B-S5
+    summary: "Author 2-4 intra-domain handoffs rows on BPA after modularization (B9b coverage)."
+    finding: "B9b will require intra-domain handoff coverage once BPA splits into >=2 modules. Expected pairs from 2026-05-30 analysis are BPA-CAPABILITY-MAP to BPA-PROCESS-REPO on capability_map.updated; BPA-VALUE-STREAM to BPA-PROCESS-REPO on value_stream.bottleneck_identified; BPA-VALUE-STREAM to BPA-CAPABILITY-MAP on simulation feedback. Use integration_pattern='lifecycle_progression' default and friction_level='low' default."
+    blocked_by:
+      - type: prerequisite_entity
+        ref: B1B-M1
+
+  - id: B1B-S6
+    summary: "Author 6 domain_aliases rows for BPA discoverability."
+    finding: "BPA has zero domain_aliases rows. Catalog search and per-domain skill triggers miss obvious synonyms. Proposed aliases are 'business process management', 'BPM', 'process modeling', 'process architecture', 'BPMN authoring', 'process design'. Note: domain_aliases column names differ from data_object_aliases; verify schema before drafting loader."
+    blocked_by:
+      - type: user_decision
+        ref: B2-DOMAIN-ALIASES
+        reason: "2026-05-30 continuation excluded this from the technical pass; needs user re-prioritization."
+
+  - id: B1B-B4
+    summary: "Author lifecycle states on 247, 249, 250 and re-evaluate pattern flags on all 4 BPA masters."
+    finding: "B12 fails on 3 of 4 masters (only 248 has states, anchored to APM). Proposed states from 2026-05-30 audit. 247 business_process_models flows draft to in_review to published to retired. 249 value_streams flows in_discovery to baselined to archived. 250 process_simulation_runs flows queued to running to completed or failed. Anchor state.domain_module_id to the new BPA module per state once B1B-M1 and B1B-M2 land. Pattern-flag re-evaluation under Bucket 2 pattern-flags item needs user confirmation before PATCH."
+    blocked_by:
+      - type: prerequisite_entity
+        ref: B1B-M2
+      - type: user_decision
+        ref: B2-PATTERN-FLAGS
+    affected_masters:
+      - data_object_id: 247
+        name: business_process_models
+        target_module_id: null
+        workflow: "draft to published to retired"
+      - data_object_id: 249
+        name: value_streams
+        target_module_id: null
+        workflow: "in_discovery to baselined to archived"
+      - data_object_id: 250
+        name: process_simulation_runs
+        target_module_id: null
+        workflow: "queued to running to completed or failed"
+
+b2:
+  - id: B2-MODULE-SHAPE
+    summary: "Pick the BPA module split shape (2 vs 3 vs 4 modules)."
+    question: "How should the BPA domain be modularized?"
+    options:
+      - "3 modules: BPA-PROCESS-REPO (masters business_process_models, BPMN authoring plus governance plus publish), BPA-CAPABILITY-MAP (masters business_capability_maps plus realizes REFERENCE-FRAME-LIBRARY), BPA-VALUE-STREAM (masters value_streams plus process_simulation_runs). Default proposal."
+      - "4 modules: split BPA-SIMULATION out of BPA-VALUE-STREAM (masters process_simulation_runs alone) reflecting Trisotech and ARIS Aware as distinct simulation surface."
+      - "2 modules: collapse to BPA-PROCESS-ARCH (process_models plus value_streams plus simulation) and BPA-CAPABILITY-MAP. Leaner footprint."
+    why: "Module shape cascades into every M-band fix (B1B-M1, M2, M3, M4, M5), every B10b backfill, every E-band role authoring, every F-band system skill authoring. Cannot resolve M-band without this decision. Depends on Bucket 3 reference framework libraries entity decision and Bucket 3 DMN module decision outcomes."
+
+  - id: B2-CAPMAP-OWNER
+    summary: "Pick the canonical owner of business_capability_maps (248)."
+    question: "Which module canonically masters business_capability_maps?"
+    options:
+      - "BPA owns canonically: relocate DMDO master row to new BPA-CAPABILITY-MAP module, APM-PORTFOLIO-REGISTRY demotes to embedded_master; relocate lifecycle states 673/674/675 and re-derive BPA-prefixed publish permission."
+      - "APM owns canonically: leave DMDO master on APM-PORTFOLIO-REGISTRY (module 103), DELETE BPA's domain_data_objects master claim; BPA's new BPA-CAPABILITY-MAP module holds embedded_master."
+      - "EA (queued candidate) owns canonically: defer entirely until EA domain promotes; revisit then."
+    why: "Gates B1B-M3, B1B-M4, B1B-M5 sequencing. The DMDO master row, the 3 lifecycle states, the workflow-gate permission, and the 2 realized capabilities (343, 344) all follow the canonical owner."
+
+  - id: B2-EA-SOLUTION-SPLIT
+    summary: "Decide solution coverage split with the queued EA candidate."
+    question: "How should the 4 BPA-and-EA solutions be coverage-split if EA promotes?"
+    options:
+      - "Keep all 4 (MEGA HOPEX, BiZZdesign Horizzon, Software AG ARIS, SAP Signavio) on BPA as primary; re-link to EA when it lands."
+      - "Downgrade those 4 to coverage_level=secondary on BPA, create primary rows on EA at promotion time."
+      - "Per-solution split (e.g. Signavio as BPA primary, ARIS as EA primary)."
+    why: "Gated entirely on EA candidate's promotion decision (Bucket 3 EA promotion). If EA stays queued, this item is moot."
+
+  - id: B2-PATTERN-FLAGS
+    summary: "Confirm pattern-flag re-evaluations per Rule 12 on the 4 BPA masters."
+    question: "Apply these proposed pattern-flag flips?"
+    options:
+      - "247 business_process_models: has_submit_lock=true (published models lock); others stay false."
+      - "248 business_capability_maps: has_single_approver=true (capability-map publication routes to one architect lead); others stay false."
+      - "250 process_simulation_runs: has_submit_lock=true (queued runs lock at start); others stay false."
+      - "All 12 cells stay false (decline the audit's positive evaluation)."
+    why: "Rule 12 requires positive re-evaluation; defaults are all false but defaults-after-review is not the same as defaults-without-review. PATCHes must wait for confirmation."
+
+  - id: B2-PROC-MIN-RECONCILE
+    summary: "Author a candidate PROC-MIN to BPA handoff on discovered_process_model.reconciled?"
+    question: "Author this candidate handoff identified in 2026-05-30 Pass 4?"
+    options:
+      - "Author now (after B1B-M1 lands; payload data_object discovered_process_models or business_process_models depending on intent)."
+      - "Defer to a PROC-MIN audit."
+      - "Skip as overspecification."
+    why: "Discovered during pairwise BPA and PROC-MIN reconciliation. Not blocking; speculative additional cross-domain edge."
+
+  - id: B2-CATALOG-UX
+    summary: "Draft and approve catalog_tagline plus catalog_description copy for the BPA domain row."
+    question: "Approve agent-drafted buyer-shaped copy for domains.catalog_tagline and domains.catalog_description on row 136?"
+    options:
+      - "Approve agent draft (agent surfaces the exact strings before writing)."
+      - "Provide your own copy."
+      - "Skip, leave both fields empty."
+    why: "Rule 20 prohibits any write of these fields without explicit per-row user approval. A4 cannot pass otherwise."
+
+  - id: B2-DOMAIN-ALIASES
+    summary: "Approve drafting 6 domain_aliases rows for BPA."
+    question: "Author the 6 proposed BPA domain_aliases (business process management, BPM, process modeling, process architecture, BPMN authoring, process design)?"
+    options:
+      - "Approve all 6."
+      - "Approve a subset (name which)."
+      - "Decline."
+    why: "2026-05-31 continuation excluded this from the technical Bucket 1 pass; needs user re-prioritization (the prior 2026-05-30 Bucket 1 listed it as in-scope but the continuation deferred). Verify the domain_aliases table column shape before drafting the loader (data_object_aliases uses alias_name; domain_aliases may differ)."
+
+b3:
+  - id: B3-PROCESS-DOC-PAGES
+    candidate: process_documentation_pages
+    rationale: "Vendor publishing surfaces (Trisotech Process Publisher, Bizagi Process Documenter, Signavio Process Manager Publishing) treat published process documentation as first-class artifacts with their own URL, audience-targeting, and version trail. Phase 0 verification needed."
+    vendor_evidence:
+      - vendor: Trisotech
+        evidence: 1st_class
+      - vendor: Bizagi
+        evidence: 1st_class
+      - vendor: SAP Signavio
+        evidence: 1st_class
+    proposed_module: BPA-PROCESS-REPO
+
+  - id: B3-PROCESS-KPIS
+    candidate: process_kpis and process_metric_definitions
+    rationale: "Signavio Process Intelligence and ARIS Performance Manager carry process-level KPI definitions and measurements as first-class entities. Adjacent to PROC-MIN; verify ownership boundary in Phase 0."
+    vendor_evidence:
+      - vendor: SAP Signavio
+        evidence: 1st_class
+      - vendor: Software AG ARIS
+        evidence: 1st_class
+    proposed_module: BPA-PROCESS-REPO or BPA-VALUE-STREAM
+
+  - id: B3-REF-FRAMEWORK-LIB
+    candidate: reference_framework_libraries
+    rationale: "APQC PCF imports, eTOM, SCOR, ITIL 4 capability libraries currently exist as a capability (344). Promotion to entity needed if vendors model imported framework versions as records."
+    vendor_evidence:
+      - vendor: MEGA HOPEX
+        evidence: 1st_class
+      - vendor: BiZZdesign Horizzon
+        evidence: 1st_class
+    proposed_module: BPA-CAPABILITY-MAP
+
+  - id: B3-DECISION-MODELS
+    candidate: decision_models
+    rationale: "DMN modelers in Trisotech, Signavio Decision Manager, Camunda DMN. DMN sometimes lives in iBPMS (queued candidate) instead of BPA."
+    vendor_evidence:
+      - vendor: Trisotech
+        evidence: 1st_class
+      - vendor: SAP Signavio
+        evidence: 1st_class
+      - vendor: Camunda
+        evidence: 1st_class
+    proposed_module: new BPA-DMN-MODEL or fold into BPA-PROCESS-REPO
+
+  - id: B3-PROCESS-REVIEW-CYCLES
+    candidate: process_review_cycles and process_governance_workflows
+    rationale: "Signavio Governance and ARIS Designer governance workflows model the review, approval, publication cycle as first-class records."
+    vendor_evidence:
+      - vendor: SAP Signavio
+        evidence: 1st_class
+      - vendor: Software AG ARIS
+        evidence: 1st_class
+    proposed_module: BPA-PROCESS-REPO
+
+  - id: B3-MODEL-REVISION-DIFFS
+    candidate: model_revision_diffs
+    rationale: "Every vendor's version-graph diff and merge surface (mentioned in domains.business_logic). Promotion depends on whether tenants need a per-revision audit table."
+    vendor_evidence:
+      - vendor: SAP Signavio
+        evidence: 1st_class
+      - vendor: Software AG ARIS
+        evidence: 1st_class
+      - vendor: Trisotech
+        evidence: 1st_class
+      - vendor: BiZZdesign Horizzon
+        evidence: 1st_class
+    proposed_module: BPA-PROCESS-REPO
+
+  - id: B3-PROCESS-CHANGE-REQS
+    candidate: process_change_requests
+    rationale: "ARIS Connect and Signavio Collaboration Hub surface stakeholder change requests as catalog entities. Adjacent to ITSM Change but scope is BPA-internal."
+    vendor_evidence:
+      - vendor: Software AG ARIS
+        evidence: 1st_class
+      - vendor: SAP Signavio
+        evidence: 1st_class
+    proposed_module: BPA-PROCESS-REPO
+
+  - id: B3-ARCHIMATE-MODELS
+    candidate: archimate_models and togaf_artifacts
+    rationale: "BiZZdesign Horizzon and ARIS ArchiMate carry these as first-class artifacts. Likely belong on a queued EA domain rather than BPA."
+    vendor_evidence:
+      - vendor: BiZZdesign Horizzon
+        evidence: 1st_class
+      - vendor: Software AG ARIS
+        evidence: 1st_class
+    proposed_module: EA candidate (queued)
+
+  - id: B3-EA-PROMOTION
+    candidate: "EA (Enterprise Architecture) as new domain"
+    rationale: "4 of 9 BPA solutions are also EA leaders. Adjacency BPA, APM, SPM, ITSM, CMDB. Promotion would cascade into B2-CAPMAP-OWNER and B2-EA-SOLUTION-SPLIT."
+    vendor_evidence:
+      - vendor: LeanIX
+        evidence: 1st_class
+      - vendor: Ardoq
+        evidence: 1st_class
+      - vendor: Software AG Alfabet
+        evidence: 1st_class
+      - vendor: BiZZdesign Horizzon
+        evidence: 1st_class
+      - vendor: MEGA HOPEX
+        evidence: 1st_class
+      - vendor: Avolution ABACUS
+        evidence: 1st_class
+      - vendor: Sparx EA
+        evidence: 1st_class
+
+  - id: B3-IBPMS-PROMOTION
+    candidate: "IBPMS (Intelligent Business Process Management Suite) as new domain"
+    rationale: "Execution-side counterpart to BPA's authoring side. Whether DMN belongs in BPA or iBPMS (B3-DECISION-MODELS) depends on this candidate. Mention count 2 (previously 1)."
+    vendor_evidence:
+      - vendor: Camunda
+        evidence: 1st_class
+      - vendor: Pega
+        evidence: 1st_class
+      - vendor: IBM Business Automation Workflow
+        evidence: 1st_class
+      - vendor: Appian
+        evidence: 1st_class
+      - vendor: Bonita
+        evidence: 1st_class

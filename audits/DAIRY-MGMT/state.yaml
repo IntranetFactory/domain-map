@@ -1,0 +1,376 @@
+schema_version: 2
+domain: DAIRY-MGMT
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S7
+    summary: Zero `data_object_aliases` rows across 8 DAIRY-MGMT masters
+    finding: >-
+      The 8 DAIRY-MGMT masters (dairy_cows, lactation_records, milkings,
+      milk_quality_tests, breeding_events, cow_health_events, feed_rations,
+      bulk_milk_shipments) have zero `data_object_aliases` rows. B11 fails.
+      Cross-vendor synonyms are well-defined in the dairy market (DHIA, parlor
+      session, lactation cycle, tanker load, insemination).
+    action: >-
+      Draft ~10-15 alias rows (executable now; not gated on module shape). Surface
+      proposed tuples to user before insert. Examples: dairy_cows alias `cow`,
+      dairy_cows alias `animal`, milkings alias `parlor session`,
+      milkings alias `milk event`, lactation_records alias `lactation cycle`,
+      lactation_records alias `DIM record`, milk_quality_tests alias `DHIA test`,
+      bulk_milk_shipments alias `milk pickup`, bulk_milk_shipments alias `tanker load`,
+      breeding_events alias `insemination`.
+    affected_masters:
+      - {data_object_id: 499, name: dairy_cows, target_module_id: null, workflow: alias_load}
+      - {data_object_id: 500, name: lactation_records, target_module_id: null, workflow: alias_load}
+      - {data_object_id: 501, name: milkings, target_module_id: null, workflow: alias_load}
+      - {data_object_id: 502, name: milk_quality_tests, target_module_id: null, workflow: alias_load}
+      - {data_object_id: 503, name: breeding_events, target_module_id: null, workflow: alias_load}
+      - {data_object_id: 504, name: cow_health_events, target_module_id: null, workflow: alias_load}
+      - {data_object_id: 505, name: feed_rations, target_module_id: null, workflow: alias_load}
+      - {data_object_id: 506, name: bulk_milk_shipments, target_module_id: null, workflow: alias_load}
+
+  - id: B1A-S11
+    summary: lactation_records (id=500) lacks `users` many_to_many edge that the other 7 DAIRY-MGMT masters carry
+    finding: >-
+      The 2026-05-31 continuation backfilled `data_object_relationships` rows
+      1775-1781 linking 7 of 8 DAIRY-MGMT masters to `users` (id=748) as
+      many_to_many `reference`. lactation_records was skipped. No clean
+      single-actor verb exists for it (lactation cycle opens via cow state, not
+      a discrete operator). Decision is whether to author a
+      `lactation_recorded_by` edge or accept absence as system-opened.
+    action: >-
+      Surface proposed verb (e.g. `is recorded by` parallel to milkings, or `is
+      opened by` if system-attribution preferred). If user approves, INSERT one
+      `data_object_relationships` row (data_object_id=500, related_data_object_id=748,
+      relationship_type=many_to_many, relationship_kind=reference). If user
+      declines, document the deliberate omission in this state.yaml as resolved.
+    affected_masters:
+      - {data_object_id: 500, name: lactation_records, target_module_id: null, workflow: user_edge}
+
+b1b:
+  - id: B1B-S1
+    summary: M1 hard fail, zero `domain_modules` rows for DAIRY-MGMT
+    finding: >-
+      No `domain_modules` rows exist for domain_id=156. Rule #14 requires >=2
+      full modules for a 6-capability domain. Pass-2 proposes a 4-module split
+      (HERD + PARLOR + MILK-QUALITY + FEED). Module-set is the dominant
+      structural gate for the entire E / F band and most of the B band.
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B1B-S2
+    summary: A4 catalog_tagline and catalog_description both empty
+    finding: >-
+      Rule #20 requires user-approved buyer-voice wording before write. Agent
+      cannot auto-draft and load these columns.
+    blocked_by:
+      - {type: user_decision, ref: B2-2}
+
+  - id: B1B-S3
+    summary: B6 zero intra-domain `data_object_relationships`
+    finding: >-
+      Eight master entities have zero structural edges between each other.
+      Candidate edges include dairy_cows->lactation_records,
+      lactation_records->milkings, milkings->bulk_milk_shipments,
+      milkings->milk_quality_tests, dairy_cows->breeding_events,
+      dairy_cows->cow_health_events, feed_rations->dairy_cows (via group),
+      breeding_events->lactation_records.
+    blocked_by:
+      - {type: user_decision, ref: B2-1, reason: module_shape_drives_target_module_routing}
+
+  - id: B1B-S6
+    summary: dairy_cow.lifecycle_changed (trigger_event id=1099) has zero `handoffs` rows
+    finding: >-
+      ERP-FIN fixed-asset valuation depends on cow lifecycle transitions per
+      the event's own description. Missing handoff row from DAIRY-MGMT to
+      ERP-FIN.
+    blocked_by:
+      - {type: user_decision, ref: B2-1, reason: source_module_FK_required_on_insert}
+    affected_events:
+      - {id: 1099, event_name: dairy_cow.lifecycle_changed, current_category: lifecycle, proposed_category: lifecycle}
+
+  - id: B1B-S8
+    summary: B12 zero `data_object_lifecycle_states` across all 8 DAIRY-MGMT masters
+    finding: >-
+      Seven of eight masters have observable state machines (dairy_cows,
+      lactation_records, milkings, milk_quality_tests, breeding_events,
+      cow_health_events, bulk_milk_shipments). feed_rations may qualify for
+      the Rule #12 config-shape exemption (formulated / active / superseded).
+    blocked_by:
+      - {type: user_decision, ref: B2-5, reason: feed_rations_config_shape_exemption}
+    affected_masters:
+      - {data_object_id: 499, name: dairy_cows, target_module_id: null, workflow: lifecycle_state_load}
+      - {data_object_id: 500, name: lactation_records, target_module_id: null, workflow: lifecycle_state_load}
+      - {data_object_id: 501, name: milkings, target_module_id: null, workflow: lifecycle_state_load}
+      - {data_object_id: 502, name: milk_quality_tests, target_module_id: null, workflow: lifecycle_state_load}
+      - {data_object_id: 503, name: breeding_events, target_module_id: null, workflow: lifecycle_state_load}
+      - {data_object_id: 504, name: cow_health_events, target_module_id: null, workflow: lifecycle_state_load}
+      - {data_object_id: 506, name: bulk_milk_shipments, target_module_id: null, workflow: lifecycle_state_load}
+
+  - id: B1B-S9
+    summary: F1 legacy `dairy-mgmt-system` skill (id=43, domain_module_id=null) retire
+    finding: >-
+      The legacy skill is acceptable transitional only because M1 still fails.
+      Once modules are authored under Phase S, the legacy row must be DELETEd
+      or split into per-module skills (one `<module_code_lower>_agent` per
+      module).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1, reason: replacement_module_skills_must_exist_first}
+
+  - id: B1B-S10
+    summary: F3 DAIRY-MGMT tool set is `query`-only; no mutate / workflow-gate / fetch tools
+    finding: >-
+      The 8 `skill_tools` rows on the legacy skill are all `operation_kind=query`.
+      Phase-S authoring needs to extend with module-scoped mutate (cull,
+      close_lactation, complete_milking), side_effect (dispatch_bulk_milk_shipment),
+      and fetch (dhia_test_result) tools.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+
+  - id: B1B-B1
+    summary: B10b all 8 outbound handoffs have source_domain_module_id NULL
+    finding: >-
+      Source-side module FK is owed by DAIRY-MGMT once modules exist. Each
+      event routes to its master's module (parlor events -> DAIRY-MGMT-PARLOR;
+      milk-quality events -> DAIRY-MGMT-MILK-QUALITY; cow / lactation /
+      breeding / cow-health events -> DAIRY-MGMT-HERD; feed-ration events ->
+      DAIRY-MGMT-FEED, per the proposed 4-module split).
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+    affected_handoffs:
+      - {handoff_id: 353, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FOOD-TRACE, trigger_event: bulk_milk_shipment.dispatched, payload: bulk_milk_shipments, null_field: source_domain_module_id}
+      - {handoff_id: 354, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FSQM, trigger_event: milk_quality_test.failed, payload: milk_quality_tests, null_field: source_domain_module_id}
+      - {handoff_id: 355, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FSQM, trigger_event: cow_health_event.treatment_administered, payload: cow_health_events, null_field: source_domain_module_id}
+      - {handoff_id: 955, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FOOD-TRACE, trigger_event: milking.completed, payload: milkings, null_field: source_domain_module_id}
+      - {handoff_id: 956, direction: outbound, source_domain: DAIRY-MGMT, target_domain: ERP-FIN, trigger_event: lactation_record.opened, payload: lactation_records, null_field: source_domain_module_id}
+      - {handoff_id: 957, direction: outbound, source_domain: DAIRY-MGMT, target_domain: GRC, trigger_event: breeding_event.recorded, payload: breeding_events, null_field: source_domain_module_id}
+      - {handoff_id: 958, direction: outbound, source_domain: DAIRY-MGMT, target_domain: ERP-FIN, trigger_event: feed_ration.changed, payload: feed_rations, null_field: source_domain_module_id}
+      - {handoff_id: 959, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FOOD-TRACE, trigger_event: feed_ration.changed, payload: feed_rations, null_field: source_domain_module_id}
+
+  - id: B1B-B2
+    summary: B8 FOOD-TRACE outbound `data_object_relationships` mirror rows
+    finding: >-
+      Three outbound handoffs target FOOD-TRACE (353, 955, 959). No
+      corresponding cross-domain `data_object_relationships` rows mirror them
+      (milkings -> food_trace_lots, bulk_milk_shipments -> food_trace_lots,
+      feed_rations -> ingredient_lots once that master exists).
+    blocked_by:
+      - {type: domain_audit, blocking_domain: FOOD-TRACE, milestone: payload_masters_identified}
+    affected_handoffs:
+      - {handoff_id: 353, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FOOD-TRACE, trigger_event: bulk_milk_shipment.dispatched, payload: bulk_milk_shipments, null_field: cross_domain_relationship_mirror}
+      - {handoff_id: 955, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FOOD-TRACE, trigger_event: milking.completed, payload: milkings, null_field: cross_domain_relationship_mirror}
+      - {handoff_id: 959, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FOOD-TRACE, trigger_event: feed_ration.changed, payload: feed_rations, null_field: cross_domain_relationship_mirror}
+
+  - id: B1B-B3
+    summary: B8 FSQM outbound `data_object_relationships` mirror rows
+    finding: >-
+      Two outbound handoffs target FSQM (354, 355). FSQM payload masters
+      (food_safety_incidents, withdrawal_holds or analogous) need
+      identification on FSQM's own audit before mirrors can be authored.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: FSQM, milestone: payload_masters_identified}
+    affected_handoffs:
+      - {handoff_id: 354, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FSQM, trigger_event: milk_quality_test.failed, payload: milk_quality_tests, null_field: cross_domain_relationship_mirror}
+      - {handoff_id: 355, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FSQM, trigger_event: cow_health_event.treatment_administered, payload: cow_health_events, null_field: cross_domain_relationship_mirror}
+
+  - id: B1B-B4
+    summary: B8 ERP-FIN outbound `data_object_relationships` mirror rows
+    finding: >-
+      Two outbound handoffs target ERP-FIN (956, 958). ERP-FIN-side payload
+      masters (fixed_assets for dairy_cows as productive assets,
+      cost_centers or similar) need identification on ERP-FIN's own audit.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: payload_masters_identified}
+    affected_handoffs:
+      - {handoff_id: 956, direction: outbound, source_domain: DAIRY-MGMT, target_domain: ERP-FIN, trigger_event: lactation_record.opened, payload: lactation_records, null_field: cross_domain_relationship_mirror}
+      - {handoff_id: 958, direction: outbound, source_domain: DAIRY-MGMT, target_domain: ERP-FIN, trigger_event: feed_ration.changed, payload: feed_rations, null_field: cross_domain_relationship_mirror}
+
+  - id: B1B-B5
+    summary: B8 GRC outbound `data_object_relationships` mirror row
+    finding: >-
+      One outbound handoff targets GRC (957, breeding_event.recorded). GRC
+      payload master needs identification on GRC's own audit.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: GRC, milestone: payload_master_identified}
+    affected_handoffs:
+      - {handoff_id: 957, direction: outbound, source_domain: DAIRY-MGMT, target_domain: GRC, trigger_event: breeding_event.recorded, payload: breeding_events, null_field: cross_domain_relationship_mirror}
+
+  - id: B1B-H2
+    summary: 6 existing `handoff_processes` rows are all `record_status=new`; catalog-quality headline is 0% approved
+    finding: >-
+      handoff_processes ids 573-578 (loaded 2026-05-31, all
+      proposal_source=agent_curated) cover handoffs 353, 354, 355, 955, 957,
+      959. None have been reviewed and approved. Catalog-quality headline is
+      0 of 8 approved (0%); process-health side-bar is 6 of 8 agent_curated
+      (75%). Path from 0% quality to 75% quality is reviewer approval, which
+      is a user judgment per Rule #1.
+    blocked_by:
+      - {type: user_decision, ref: B2-8}
+    affected_handoffs:
+      - {handoff_id: 353, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FOOD-TRACE, trigger_event: bulk_milk_shipment.dispatched, payload: bulk_milk_shipments, null_field: handoff_process_record_status_approved}
+      - {handoff_id: 354, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FSQM, trigger_event: milk_quality_test.failed, payload: milk_quality_tests, null_field: handoff_process_record_status_approved}
+      - {handoff_id: 355, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FSQM, trigger_event: cow_health_event.treatment_administered, payload: cow_health_events, null_field: handoff_process_record_status_approved}
+      - {handoff_id: 955, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FOOD-TRACE, trigger_event: milking.completed, payload: milkings, null_field: handoff_process_record_status_approved}
+      - {handoff_id: 957, direction: outbound, source_domain: DAIRY-MGMT, target_domain: GRC, trigger_event: breeding_event.recorded, payload: breeding_events, null_field: handoff_process_record_status_approved}
+      - {handoff_id: 959, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FOOD-TRACE, trigger_event: feed_ration.changed, payload: feed_rations, null_field: handoff_process_record_status_approved}
+
+b2:
+  - id: B2-1
+    summary: DAIRY-MGMT module shape, 4 vs 5 vs 6 modules
+    question: >-
+      Which module shape to author? (a) 4-module split: HERD (cow_lifecycle +
+      reproduction + herd_health), PARLOR (parlor_integration), MILK-QUALITY,
+      FEED. (b) 5-module split: keep REPRODUCTION separate (sensor-driven heat
+      detection / pregnancy check workflows). (c) 6-module split: one module
+      per capability (matches the 6 current capabilities 1:1).
+    options: [4_module_split, 5_module_split, 6_module_split]
+    why: >-
+      Gates B1B-S1, B1B-S3, B1B-S6, B1B-S9, B1B-S10, B1B-B1 (every STRUCTURAL
+      fix that references modules). The 4-module proposal merges 3
+      capabilities into HERD; alternatives keep REPRODUCTION or all six
+      separate.
+
+  - id: B2-2
+    summary: A4 catalog_tagline and catalog_description buyer-voice wording
+    question: >-
+      Provide exact tagline and description text. Rule #20 requires user
+      authorship or explicit approval before write. Agent can propose drafts
+      but cannot load without your wording.
+    options: [user_authors, agent_drafts_user_approves, defer]
+
+  - id: B2-3
+    summary: milkings canonical-bare-word rationale
+    question: >-
+      `milkings.is_canonical_bare_word=true` is set. The
+      `naming_authority_rationale` value was not pulled in this audit; if
+      empty, what rationale should be written? (Or claim canonical authority
+      for DAIRY-MGMT.)
+    options: [user_authors_rationale, defer]
+
+  - id: B2-4
+    summary: cow_health_events pattern flags
+    question: >-
+      cow_health_events includes drug-withdrawal-period data potentially
+      regulated under FDA AMDUCA / state veterinary practice acts. Should
+      `has_personal_content=true` be set? Strictly cows are not persons but
+      the data is veterinary-PII-adjacent.
+    options: [keep_false, set_true]
+
+  - id: B2-5
+    summary: feed_rations Rule #12 lifecycle config-shape exemption
+    question: >-
+      feed_rations may be author-once-and-supersede records (formulated /
+      active / superseded). Per Rule #15 the agent cannot auto-populate
+      `notes` to document the exemption. Decision: (a) load lifecycle states
+      anyway, or (b) record the config-shape exemption out-of-band (gap
+      report). Gates B1B-S8 for that one master only.
+    options: [load_states, exempt_config_shape]
+
+  - id: B2-6
+    summary: DAIRY-MGMT-MILK-QUALITY business-function override
+    question: >-
+      C2 plausible override: Quality / Compliance owns milk-quality capability
+      instead of Business Operations. Decision: load override
+      `business_function_capabilities` row, or accept Operations as canonical
+      for the capability.
+    options: [load_override, keep_operations]
+
+  - id: B2-7
+    summary: Load FDA Grade A PMO / FARM / DHIA / state dairy regulations
+    question: >-
+      Zero `domain_regulations` rows for DAIRY-MGMT. FDA Grade A Pasteurized
+      Milk Ordinance, FARM Animal Care program, DHIA testing standards, and
+      state Dept of Agriculture dairy inspection rules are all in-scope.
+      Decision: (a) load new `regulations` rows + `domain_regulations` links,
+      or (b) defer until a specific capability needs them. Informed by B3-3
+      (bulk_tanks) and B3-5 (somatic_cell_counts) if those candidates land.
+    options: [load_now, defer]
+
+  - id: B2-8
+    summary: Reviewer approval of 6 `agent_curated` `handoff_processes` rows
+    question: >-
+      handoff_processes ids 573-578 are all `record_status=new`,
+      `proposal_source=agent_curated`. Per Rule #1, only the user can flip
+      `record_status` to `approved`. Decision: approve all six, approve a
+      subset, or decline. The 6 PCF mappings are: 354 -> Perform quality
+      testing (PCF 10369), 355 -> Manage compliance (PCF 17467), 353 + 955
+      -> Maintain production records and manage lot traceability (PCF
+      10370), 957 + 959 -> Manage traceability data (PCF 11749).
+    options: [approve_all, approve_subset, decline]
+    why: >-
+      Gates B1B-H2. Catalog-quality headline on H1 is the `approved` count,
+      not the `agent_curated` count.
+
+b3:
+  - id: B3-1
+    candidate: cow_groups
+    rationale: >-
+      Vendor-near-universal first-class entity for pen / group management.
+      Phase 0 verification: confirm cow_group is a first-class entity vs an
+      attribute on dairy_cows.
+    vendor_evidence: [DairyComp 305, AfiMilk AfiFarm, Lely Horizon]
+    proposed_module: DAIRY-MGMT-HERD
+
+  - id: B3-2
+    candidate: heat_detections_and_pregnancy_checks
+    rationale: >-
+      Sensor-driven reproduction signals could be their own master / junction
+      rows on breeding_events. Vendor surface treats both as separate
+      entities.
+    vendor_evidence: [CowManager, Allflex Livestock Intelligence, AfiMilk AfiFarm, DairyComp 305]
+    proposed_module: DAIRY-MGMT-HERD
+
+  - id: B3-3
+    candidate: bulk_tanks_and_milk_meter_readings
+    rationale: >-
+      Parlor-physical-asset entities; bulk_tanks is FDA Grade A regulated
+      (temperature logs). Informs Bucket 2.7 (regulations).
+    vendor_evidence: [DeLaval DelPro, Lely Horizon, AfiMilk AfiFarm]
+    proposed_module: DAIRY-MGMT-PARLOR
+
+  - id: B3-4
+    candidate: feed_ingredients_and_tmr_batches
+    rationale: >-
+      Feed ingredient library underpins ration formulation; TMR mix records
+      ingest from feed-kitchen equipment.
+    vendor_evidence: [DairyComp 305, Lely Horizon]
+    proposed_module: DAIRY-MGMT-FEED
+
+  - id: B3-5
+    candidate: somatic_cell_counts_and_withdrawal_period_holds
+    rationale: >-
+      SCC is the dominant milk-quality KPI; withdrawal holds gate milk
+      shipment under FDA AMDUCA. Informs Bucket 2.7 (regulations).
+    vendor_evidence: [DairyComp 305, Allflex Livestock Intelligence]
+    proposed_module: DAIRY-MGMT-MILK-QUALITY
+
+  - id: B3-6
+    candidate: dry_off_events_and_calvings_and_culling_decisions
+    rationale: >-
+      Cow-lifecycle transitions; could be junction rows on dairy_cows or
+      first-class events.
+    vendor_evidence: [DairyComp 305, BoviSync]
+    proposed_module: DAIRY-MGMT-HERD
+
+  - id: B3-7
+    candidate: lactation_record_opened_to_erp_fin_apqc_custom_process
+    rationale: >-
+      handoff_id=956 (lactation_record.opened -> ERP-FIN) has no clean
+      cross-industry PCF match; closest is "Manage fixed-asset master data
+      files" (PCF id=1388) but operational not master-data. Industry-specific
+      dairy KPI rollup; needs custom-process authoring in Discover Pass 3.
+    vendor_evidence:
+      - {vendor: DairyComp 305, evidence: 1st_class}
+      - {vendor: BoviSync, evidence: 1st_class}
+
+  - id: B3-8
+    candidate: feed_ration_changed_to_erp_fin_apqc_custom_process
+    rationale: >-
+      handoff_id=958 (feed_ration.changed -> ERP-FIN) has no clean
+      cross-industry PCF match. Feed-cost-per-litre is a dairy-specific KPI;
+      custom-process authoring in Discover Pass 3.
+    vendor_evidence:
+      - {vendor: DairyComp 305, evidence: 1st_class}
+      - {vendor: AfiMilk AfiFarm, evidence: secondary}

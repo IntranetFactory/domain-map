@@ -1,0 +1,207 @@
+schema_version: 2
+domain: HCM
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S7
+    summary: "INSERT 3 consumer + optional DMDO rows on HCM-CORE-WORKER (54) for PSA-mastered data_objects (project_assignments 218, project_resource_allocations 726, resource_skill_inventories 725)."
+    finding: "Handoffs 1016 (project_assignment.confirmed), 1022 (project_resource_allocation.committed), 1026 (resource_skill_inventory.updated) land on HCM with no domain_module_data_objects row declaring the consumer dependency. Pairwise-pass Section 4 finding from the 2026-05-30 audit; still open at 2026-05-31."
+    action: "Loader: insert 3 domain_module_data_objects rows (domain_module_id=54, data_object_id in (218,726,725), role='consumer', necessity='optional')."
+    affected_modules: [54]
+    affected_entities: ["project_assignments", "project_resource_allocations", "resource_skill_inventories"]
+    affected_handoffs:
+      - {handoff_id: 1016, direction: inbound, source_domain: PSA, target_domain: HCM, trigger_event: "project_assignment.confirmed", payload: "project_assignments", null_field: target_domain_module_id}
+      - {handoff_id: 1022, direction: inbound, source_domain: PSA, target_domain: HCM, trigger_event: "project_resource_allocation.committed", payload: "project_resource_allocations", null_field: target_domain_module_id}
+      - {handoff_id: 1026, direction: inbound, source_domain: PSA, target_domain: HCM, trigger_event: "resource_skill_inventory.updated", payload: "resource_skill_inventories", null_field: target_domain_module_id}
+
+  - id: B1A-S6
+    summary: "Author ~78 agent_curated handoff_processes rows to close the H1 hard-fail volume gap on HCM (target 62 to 98 per Rule from procedure file; currently 17 of 78-98)."
+    finding: "Of 123 cross-and-intra-domain handoffs touching HCM, 45 carry handoff_processes rows; only 17 are proposal_source='agent_curated' record_status='new' (5 outbound: 19 122 371 379 388; 12 inbound: 118 295 427 442 448 601 869 873 913 935 1032 1078). Zero rows at record_status='approved' (catalog quality headline). The 2026-05-30 audit listed ~68 candidate rows; ~78 remain to author. The Continuation note warns the audit's external_id hints fail to resolve in live state; each row needs per-row PCF name lookup at write time."
+    action: "Loader: per-row PCF lookup via /processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry; insert (handoff_id, process_id, proposal_source='agent_curated', record_status='new', role='implements'). Candidate handoff IDs from the 2026-05-30 H1 sub-table (outbound 3, 17, 18, 20, 21, 22, 34, 122, 123, 134, 185, 186, 348, 366, 367, 369, 372, 373, 374, 375, 376, 377, 378, 380, 381, 382, 383, 385, 386, 387, 388, 389, 390, 391, 392, 393, 396, 468, 1176-1190, 1218-1226; inbound 17, 393, 1037, 396, 399, 406, 1033, 1035, 410, 412, 1154, 106, 422, 1125, 418, 135, 431, 1047, 1311, 1313, 1314, 437, 438, 441, 116, 449, 451, 1111, 1103, 446, 448, 454, 457, 459, 15, 274, 718, 1016, 1022, 1026, 842)."
+    vendor_evidence: []
+
+b1b:
+  - id: B1B-S1
+    summary: "PATCH trigger_event 391 org_unit.created event_category. 7 of 8 events from the prior B1-S1 batch were fixed to 'state_change' at the 2026-05-31 Continuation; this one held for the lifecycle vs state_change convention call."
+    finding: "Event 391 org_unit.created carries event_category='' in live state. The convention used for employee.created is 'lifecycle' and for org_unit.merged / disbanded is 'state_change'. The cut on org_unit.created is the open convention question (B2-S1r)."
+    blocked_by:
+      - {type: user_decision, ref: B2-S1r}
+    affected_events:
+      - {id: 391, event_name: "org_unit.created", current_category: "", proposed_category: "lifecycle_or_state_change"}
+
+  - id: B1B-S2
+    summary: "PATCH 31 inbound handoffs' target_domain_module_id (B10b in-scope). Not mechanically derivable: 27 of 31 payloads have no HCM DDO or DMDO so the 54-vs-56 choice is judgment."
+    finding: "31 inbound cross-domain handoffs into HCM carry NULL target_domain_module_id. The 2026-05-31 Continuation deferred this because foreign payloads (legal_holds, hr_cases, store_audits, host_assignments, life_events, etc.) lack HCM-side rollup or module-level DMDO rows so the target-module choice cannot be derived from existing rollup tables alone."
+    blocked_by:
+      - {type: depends_on, ref: B1A-S7, reason: "HCM-side consumer DMDO decisions resolve the target-module mapping for some inbound payloads."}
+      - {type: user_decision, ref: B2-S5r}
+    affected_handoffs:
+      - {handoff_id: 1111, direction: inbound, source_domain: PA, target_domain: HCM, trigger_event: "attrition_risk.elevated", payload: "people_kpis", null_field: target_domain_module_id}
+      - {handoff_id: 1125, direction: inbound, source_domain: COMP-MGMT, target_domain: HCM, trigger_event: "compensation_plan.published", payload: "compensation_plans", null_field: target_domain_module_id}
+      - {handoff_id: 274, direction: inbound, source_domain: MDM, target_domain: HCM, trigger_event: "employee_golden_record.created", payload: "employee_golden_records", null_field: target_domain_module_id}
+      - {handoff_id: 295, direction: inbound, source_domain: REAL-EST, target_domain: HCM, trigger_event: "property_space.allocated", payload: "property_spaces", null_field: target_domain_module_id}
+      - {handoff_id: 1016, direction: inbound, source_domain: PSA, target_domain: HCM, trigger_event: "project_assignment.confirmed", payload: "project_assignments", null_field: target_domain_module_id}
+      - {handoff_id: 427, direction: inbound, source_domain: WFM, target_domain: HCM, trigger_event: "absence_balance.recalculated", payload: "absence_balances", null_field: target_domain_module_id}
+      - {handoff_id: 431, direction: inbound, source_domain: LMS, target_domain: HCM, trigger_event: "learning_record.posted", payload: "learning_records", null_field: target_domain_module_id}
+      - {handoff_id: 437, direction: inbound, source_domain: TALENT-MGMT, target_domain: HCM, trigger_event: "succession_plan.published", payload: "succession_plans", null_field: target_domain_module_id}
+      - {handoff_id: 438, direction: inbound, source_domain: TALENT-MGMT, target_domain: HCM, trigger_event: "performance_goal.completed", payload: "performance_goals", null_field: target_domain_module_id}
+      - {handoff_id: 441, direction: inbound, source_domain: TALENT-MGMT, target_domain: HCM, trigger_event: "high_potential.identified", payload: "high_potentials", null_field: target_domain_module_id}
+      - {handoff_id: 446, direction: inbound, source_domain: HRSD, target_domain: HCM, trigger_event: "case.access_required", payload: "hr_cases", null_field: target_domain_module_id}
+      - {handoff_id: 448, direction: inbound, source_domain: HRSD, target_domain: HCM, trigger_event: "case_category.updated", payload: "case_categories", null_field: target_domain_module_id}
+      - {handoff_id: 1154, direction: inbound, source_domain: PAYROLL, target_domain: HCM, trigger_event: "pay_slip.published", payload: "pay_slips", null_field: target_domain_module_id}
+      - {handoff_id: 601, direction: inbound, source_domain: EPM, target_domain: HCM, trigger_event: "financial_plan.approved", payload: "financial_plans", null_field: target_domain_module_id}
+      - {handoff_id: 718, direction: inbound, source_domain: MDM, target_domain: HCM, trigger_event: "source_record.merged_to_golden", payload: "source_records", null_field: target_domain_module_id}
+      - {handoff_id: 422, direction: inbound, source_domain: COMP-MGMT, target_domain: HCM, trigger_event: "merit_cycle.approved", payload: "merit_recommendations", null_field: target_domain_module_id}
+      - {handoff_id: 842, direction: inbound, source_domain: GRC, target_domain: HCM, trigger_event: "policy_attestation.required", payload: "policy_attestations", null_field: target_domain_module_id}
+      - {handoff_id: 873, direction: inbound, source_domain: VIS-MGMT, target_domain: HCM, trigger_event: "host_notification.sent", payload: "host_notifications", null_field: target_domain_module_id}
+      - {handoff_id: 913, direction: inbound, source_domain: LSD, target_domain: HCM, trigger_event: "legal_hold.issued", payload: "legal_holds", null_field: target_domain_module_id}
+      - {handoff_id: 935, direction: inbound, source_domain: RET-STORE, target_domain: HCM, trigger_event: "store_audit.failed", payload: "store_audits", null_field: target_domain_module_id}
+      - {handoff_id: 1022, direction: inbound, source_domain: PSA, target_domain: HCM, trigger_event: "project_resource_allocation.committed", payload: "project_resource_allocations", null_field: target_domain_module_id}
+      - {handoff_id: 869, direction: inbound, source_domain: IWMS, target_domain: HCM, trigger_event: "workplace_feedback.submitted", payload: "workplace_feedback", null_field: target_domain_module_id}
+      - {handoff_id: 1311, direction: inbound, source_domain: LMS, target_domain: HCM, trigger_event: "course_completion.recorded", payload: "course_completions", null_field: target_domain_module_id}
+      - {handoff_id: 1313, direction: inbound, source_domain: LMS, target_domain: HCM, trigger_event: "gdpr_consent_record.withdrawn", payload: "gdpr_consent_records", null_field: target_domain_module_id}
+      - {handoff_id: 1314, direction: inbound, source_domain: LMS, target_domain: HCM, trigger_event: "data_deletion_request.fulfilled", payload: "data_deletion_requests", null_field: target_domain_module_id}
+      - {handoff_id: 418, direction: inbound, source_domain: BEN-ADMIN, target_domain: HCM, trigger_event: "life_event.approved", payload: "life_events", null_field: target_domain_module_id}
+      - {handoff_id: 1026, direction: inbound, source_domain: PSA, target_domain: HCM, trigger_event: "resource_skill_inventory.updated", payload: "resource_skill_inventories", null_field: target_domain_module_id}
+      - {handoff_id: 1032, direction: inbound, source_domain: LSD, target_domain: HCM, trigger_event: "legal_advice_record.employee_related", payload: "legal_advice_records", null_field: target_domain_module_id}
+      - {handoff_id: 1047, direction: inbound, source_domain: LMS, target_domain: HCM, trigger_event: "compliance_assignment.due", payload: "compliance_assignments", null_field: target_domain_module_id}
+      - {handoff_id: 1111, direction: inbound, source_domain: PA, target_domain: HCM, trigger_event: "attrition_risk.elevated", payload: "people_kpis", null_field: target_domain_module_id}
+      - {handoff_id: 1125, direction: inbound, source_domain: COMP-MGMT, target_domain: HCM, trigger_event: "compensation_plan.published", payload: "compensation_plans", null_field: target_domain_module_id}
+
+  - id: B1B-N1
+    summary: "Revert (or per-row approve) 25 HCM skill_tools.notes populated against Rule #15. Scope expanded vs prior B2-S3 (2 rows) to the full HCM system-skill surface."
+    finding: "All 25 rows on skills 169 hcm_core_worker_agent (7), 170 hcm_org_positions_agent (7), 171 hcm_lifecycle_workflows_agent (11) carry restated-purpose prose in notes. Per Rule #15 the default is empty; no per-row approval is recorded for the wording. Examples: 1535 'Read the core worker record.'; 1547 'Cross-domain read into ATS to correlate open positions with active requisitions (consumer + required on DMDO).'; 1540 'E-signature is the workflow for employment_contracts.signed.'; 1559 'Broadcast joiner / leaver announcements to the receiving team channel.'."
+    blocked_by:
+      - {type: user_decision, ref: B2-S3r}
+    affected_modules: [54, 55, 56]
+    extra_skill_tool_ids: [1535, 1536, 1537, 1538, 1539, 1540, 1541, 1542, 1543, 1544, 1545, 1546, 1547, 1548, 1549, 1550, 1551, 1552, 1553, 1554, 1555, 1556, 1557, 1558, 1559]
+
+b2:
+  - id: B2-S1r
+    summary: "Choose event_category convention for trigger_event 391 org_unit.created (B1B-S1 gating)."
+    question: "Should trigger_event 391 org_unit.created carry event_category='lifecycle' (treating org-unit instantiation as a lifecycle event, parallel to employee.created) or event_category='state_change' (treating draft to active as a state-machine transition, parallel to org_unit.merged / org_unit.disbanded which were just set to state_change)?"
+    options: ["lifecycle", "state_change"]
+    why: "The Rule #13 enum requires one of lifecycle / state_change / threshold / signal. Both candidates fit; the choice picks the convention used across HCM org-unit lifecycle events."
+
+  - id: B2-S2r
+    summary: "Ratify the 2026-05-31 Continuation revert of 9 polluted notes rows (8 DDO ids 58 97 291 309 317 333 371 1124; 1 DMDO id 678)."
+    question: "Confirm the revert applied at the 2026-05-31 Continuation (PATCH notes='') is acceptable as the safe-by-default Rule #15 default, or specify per-row wording to restore?"
+    options: ["confirm_revert", "restore_specific_wording"]
+
+  - id: B2-S3r
+    summary: "Decide how to handle 25 populated HCM skill_tools.notes (Rule #15 default vs F7 justification overlap; gates B1B-N1)."
+    question: "All 25 HCM skill_tools rows carry populated notes (restated-purpose prose, plus the two F7 candidates sign_document and notify_team). Per Rule #15 the catalog default is empty notes with per-row user approval required to populate. Options: (a) confirm user-approved at load time and leave all 25 in place; (b) PATCH notes='' on all 25 and log a Rule #15 incident in references/skill-changelog.md; (c) approve per-row wording for a subset (the discussion-shape) and revert the rest."
+    options: ["confirm_user_approved_all", "revert_all_and_log_incident", "per_row_approval"]
+
+  - id: B2-S4r
+    summary: "Pattern-flag re-evaluation on employment_contracts.has_personal_content and employment_events.has_personal_content."
+    question: "Current flags: employment_contracts.has_personal_content=false (contracts carry compensation, signatory names, jurisdiction); employment_events.has_personal_content=false (transfers / leaves may carry FMLA or health data). Should each flip to true?"
+    options: ["both_true", "contracts_true_only", "events_true_only", "leave_both_false"]
+
+  - id: B2-S5r
+    summary: "HCM-LIFECYCLE-WORKFLOWS (56) baseline-only permission shape (gates B1B-S2 for some inbound handoffs)."
+    question: "Module 56 carries baseline-only permissions (read / manage / admin) with zero workflow-gate permissions, because all lifecycle states sit on HCM-CORE-WORKER / HCM-ORG-POSITIONS masters. Is this the intentional architecture, or should specific self-service workflow gates be added (for example submit_absence_request, complete_offboarding_task)?"
+    options: ["baseline_only_intentional", "add_workflow_gates_specify_which"]
+
+  - id: B2-S6r
+    summary: "Author missing internal-mobility handoff HCM-CORE-WORKER -> ATS on employee.transferred -> candidates?"
+    question: "Workday HCM and SAP SuccessFactors auto-create a candidate record from an existing employee when the employee applies for an internal posting. No handoff today on employee.transferred to candidates; the existing query_candidates tool on skill 171 may already cover the cross-domain read. Author the handoff or skip?"
+    options: ["skip", "author_handoff_requires_new_trigger_event"]
+
+  - id: B2-S7r
+    summary: "WFM absence_requests DMDO mirror on HCM-LIFECYCLE-WORKFLOWS (56)."
+    question: "DDO 371 declares HCM consumer + optional on absence_requests at the domain-level rollup; handoff 135 (WFM -> HCM absence.approved) targets module 56. Confirm DMDO row 228 covers the module-level dependency, or add a mirror?"
+    options: ["confirm_dmdo_228_covers", "add_mirror_dmdo_row"]
+
+b3:
+  - id: B3-EMP-DEPENDENTS
+    candidate: "employee_dependents"
+    rationale: "Every flagship HCM models dependents as first-class records (spouse, children, beneficiary contacts) distinct from employees, with their own privacy and eligibility implications for BEN-ADMIN. Currently absent from HCM."
+    vendor_evidence: ["Workday HCM", "SAP SuccessFactors", "Oracle Cloud HCM", "UKG Pro", "ADP Workforce Now"]
+    proposed_module: "HCM-CORE-WORKER"
+
+  - id: B3-EMERGENCY-CONTACTS
+    candidate: "emergency_contacts"
+    rationale: "Modeled as first-class records in Workday Emergency Contact, SuccessFactors Emergency Contact, BambooHR Emergency Contact. Personal-content gap; currently absent."
+    vendor_evidence: ["Workday HCM", "SAP SuccessFactors", "BambooHR"]
+    proposed_module: "HCM-CORE-WORKER"
+
+  - id: B3-WORK-ELIG-DOCS
+    candidate: "work_eligibility_documents"
+    rationale: "Workday Work Authorization, SuccessFactors Work Permit, ADP and Deel global EOR platforms model work-eligibility documents (visa, work permit, I-9, Right-to-Work). ONBOARDING owns onboarding_document_collections (the wrapper, not per-document records); the per-document record is absent."
+    vendor_evidence: ["Workday HCM", "SAP SuccessFactors", "ADP Workforce Now", "Deel"]
+    proposed_module: "HCM-CORE-WORKER"
+
+  - id: B3-NATIONAL-IDS
+    candidate: "national_ids"
+    rationale: "SuccessFactors National ID, Workday National ID, Personio Personal ID model SSN / NINO / AHV separately from employees with stricter access controls. Currently absent."
+    vendor_evidence: ["SAP SuccessFactors", "Workday HCM", "Personio"]
+    proposed_module: "HCM-CORE-WORKER"
+
+  - id: B3-WORKER-ADDRESSES
+    candidate: "worker_addresses"
+    rationale: "Multi-jurisdiction tracking of home, work, and mailing addresses with effective dating. Workday, SuccessFactors, Oracle, Dayforce all model addresses as separate first-class records. Currently inlined on employees, fine for SMB but limits larger orgs."
+    vendor_evidence: ["Workday HCM", "SAP SuccessFactors", "Oracle Cloud HCM", "Dayforce"]
+    proposed_module: "HCM-CORE-WORKER"
+
+  - id: B3-WORKER-BANK-ACCOUNTS
+    candidate: "worker_bank_accounts"
+    rationale: "Direct-deposit bank accounts modeled as separate first-class records in Workday, SuccessFactors, Oracle, ADP, Dayforce. May belong on PAYROLL instead."
+    vendor_evidence: ["Workday HCM", "SAP SuccessFactors", "Oracle Cloud HCM", "ADP Workforce Now", "Dayforce"]
+    proposed_module: "HCM-CORE-WORKER_or_PAYROLL"
+
+  - id: B3-MEDICAL-CERTS
+    candidate: "medical_certifications"
+    rationale: "FMLA-style medical certifications, accommodation requests, return-to-work clearances. Workday Health and Safety Incidents, SuccessFactors Medical Certificate model these as first-class. Currently absent."
+    vendor_evidence: ["Workday HCM", "SAP SuccessFactors"]
+    proposed_module: "HCM-LIFECYCLE-WORKFLOWS_or_HEALTH-SAFETY"
+
+  - id: B3-I9-RECORDS
+    candidate: "i9_records"
+    rationale: "US-specific. Workday I-9, Rippling I-9, Gusto I-9, BambooHR I-9 model the I-9 form as a separate first-class record with its own retention rules. Currently rolled into onboarding_document_collections on ONBOARDING."
+    vendor_evidence: ["Workday HCM", "Rippling", "Gusto", "BambooHR"]
+    proposed_module: "HCM-CORE-WORKER_or_ONBOARDING"
+
+  - id: B3-PAY-EQUITY
+    candidate: "pay_equity_assessments"
+    rationale: "EU Pay Transparency Directive (2026 enforcement) and US state pay-transparency laws (CA, CO, NY, WA) require structured pay-equity assessments. Workday Pay Equity Audit, Trusaic Pay Equity Reports are vendor specialists. Currently absent."
+    vendor_evidence: ["Workday HCM", "Trusaic", "syndio"]
+    proposed_module: "HCM-CORE-WORKER_or_new_HCM-PAY-EQUITY"
+
+  - id: B3-REG-FMLA
+    candidate: "regulation_FMLA_FFCRA"
+    rationale: "US family / medical leave statutes, mandatory for US employers with 50+ employees. May sit on WFM or BEN-ADMIN rather than HCM."
+    vendor_evidence: []
+    proposed_module: "HCM_or_WFM_or_BEN-ADMIN"
+
+  - id: B3-REG-I9-EVERIFY
+    candidate: "regulation_I9_E-Verify"
+    rationale: "US work-eligibility statutes, mandatory for all US employers."
+    vendor_evidence: []
+    proposed_module: "HCM_or_ONBOARDING"
+
+  - id: B3-REG-HIPAA-BAA
+    candidate: "regulation_HIPAA_BAA"
+    rationale: "Mandatory when employer self-insures or processes employee health data directly."
+    vendor_evidence: []
+    proposed_module: "HCM"
+
+  - id: B3-REG-STATE-PAY-TRANSPARENCY
+    candidate: "regulation_state_pay_transparency_laws"
+    rationale: "CA, CO, NY, WA, IL each enacted distinctly; EU Pay Transparency Directive does not cover US state-level requirements."
+    vendor_evidence: []
+    proposed_module: "HCM"
+
+  - id: B3-MOD-HCM-COMPLIANCE
+    candidate: "modularization_HCM-COMPLIANCE"
+    rationale: "If pay_equity_assessments, i9_records, national_ids, work_eligibility_documents, medical_certifications get loaded, a 4th full HCM module isolates the data-protection-class entities."
+    vendor_evidence: []
+    proposed_module: "new_module_HCM-COMPLIANCE"
+
+  - id: B3-MOD-LIFECYCLE-SPLIT
+    candidate: "modularization_HCM-LIFECYCLE-WORKFLOWS_split"
+    rationale: "Current single module mixes onboarding intake from ATS, lifecycle change requests, leave / absence visibility, and offboarding handoffs to ITSM / IGA / PAYROLL. Possible split: HCM-ONBOARDING-INTAKE (pre_employee reconciliation) and HCM-OFFBOARDING-COORDINATION (separation flow)."
+    vendor_evidence: []
+    proposed_module: "split_56_into_two"

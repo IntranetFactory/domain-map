@@ -1,0 +1,300 @@
+schema_version: 2
+domain: TALENT-MGMT
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S2
+    summary: "Draft + surface buyer-voice catalog_tagline and catalog_description for domain row 58 (A4 backfill); load only after user review per Rule #20."
+    finding: "A4 fails: domains.id=58 (TALENT-MGMT) has empty catalog_tagline and empty catalog_description. Rule #20 allows backfill of empty values but requires draft + surface to user BEFORE write."
+    action: "Draft a single-sentence buyer-voice tagline + 1-3 paragraph workflow-value description for the TALENT-MGMT market, surface to user, on per-row approval PATCH /domains?id=eq.58 with the approved text."
+    affected_entities:
+      - "domains/58 (TALENT-MGMT)"
+
+  - id: B1A-S3
+    summary: "Draft + surface buyer-voice catalog_tagline and catalog_description for all 3 TALENT-MGMT modules (M8 backfill); load only after per-row user approval."
+    finding: "M8 fails: domain_modules 51 (TALENT-PERFORMANCE-MGMT), 52 (TALENT-SUCCESSION-CAREER), 53 (TALENT-CONTINUOUS-FEEDBACK) all have empty catalog_tagline and catalog_description. Rule #20 applies at module grain too."
+    action: "Draft per-module buyer-voice tagline + 1-3 paragraph description for each of the 3 modules; surface as a per-row table; PATCH each domain_modules row only on explicit per-row approval."
+    affected_modules: [51, 52, 53]
+
+  - id: B1A-S5
+    summary: "INSERT 11 missing trigger_events for workflow-gate lifecycle states across 5 masters; seeds B1A-S4 intra-domain handoffs."
+    finding: "B9 secondary check: 11 lifecycle states with requires_permission=true on TALENT-MGMT masters lack matching trigger_events rows. States: 525 (174.self_assessment), 526 (174.manager_assessment), 527 (174.submitted), 528 (174.calibrated), 529 (174.published), 533 (175.approved), 536 (175.cancelled), 544 (177.ratings_locked), 545 (177.published), 547 (176.reviewed), 549 (176.archived), 552 (178.confirmed), 559 (180.shared). State 535 (175.completed) already maps to event 444; state 548 (176.published) maps to 445. Net 11 new events."
+    action: "INSERT 11 trigger_events rows. event_category='state_change' for the terminal/gate states; 'lifecycle' for entry-shaped states. data_object_id on the publishing master. Three of these (performance_review.published on 174, feedback_record.shared on 180, nine_box_placement.confirmed on 178) are referenced by B1A-S4 handoffs."
+    affected_masters:
+      - {data_object_id: 174, name: performance_reviews, target_module_id: 51, workflow: "review cycle"}
+      - {data_object_id: 175, name: performance_goals, target_module_id: 51, workflow: "goal lifecycle"}
+      - {data_object_id: 176, name: succession_plans, target_module_id: 52, workflow: "succession plan publishing"}
+      - {data_object_id: 177, name: talent_calibrations, target_module_id: 51, workflow: "calibration session"}
+      - {data_object_id: 178, name: nine_box_placements, target_module_id: 52, workflow: "9-box confirmation"}
+      - {data_object_id: 180, name: feedback_records, target_module_id: 53, workflow: "feedback sharing"}
+
+  - id: B1A-S7
+    summary: "Author 16 NEW + REPLACE 4 weak handoff_processes rows on TALENT-MGMT cross-domain handoffs; H1 floor still unmet."
+    finding: "H1 fails: 7 of 23 cross-domain handoffs carry handoff_processes rows (3 agent_curated on 432, 440, 443; 2 discovery_substring on 1108, 437; 2 discovery_override on 22, 376). Zero record_status='approved'. H1 floor 0.5N for N=23 is 12 agent_curated rows; current 3. 16 cross-domain handoffs still untagged: 113, 438, 439, 441, 793, 26, 1110, 1113, 430, 450, 111, 1306, 421, 1320, 1321, 1034. 4 weak rows warrant agent_curated upgrade."
+    action: "Run /processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry per handoff using the candidate matrix preserved in 2026-05-30 history.md Bucket-1 APQC table. INSERT 16 + REPLACE 4 = 20 rows with proposal_source='agent_curated', record_status='new'. Defer Discover-pass-3-only candidates (no clean PCF match) with explicit reason; do NOT bulk-tag without per-handoff resolution."
+    affected_handoffs:
+      - {handoff_id: 113, direction: outbound, source_domain: TALENT-MGMT, target_domain: COMP-MGMT, trigger_event: "calibration.complete", payload: performance_reviews, null_field: null}
+      - {handoff_id: 438, direction: outbound, source_domain: TALENT-MGMT, target_domain: HCM, trigger_event: "performance_goal.completed", payload: performance_goals, null_field: null}
+      - {handoff_id: 439, direction: outbound, source_domain: TALENT-MGMT, target_domain: COMP-MGMT, trigger_event: "nine_box_placement.updated", payload: nine_box_placements, null_field: null}
+      - {handoff_id: 441, direction: outbound, source_domain: TALENT-MGMT, target_domain: HCM, trigger_event: "high_potential.identified", payload: workforce_segments, null_field: target_domain_module_id}
+      - {handoff_id: 793, direction: inbound, source_domain: SPM, target_domain: TALENT-MGMT, trigger_event: "business_value_assessment.completed", payload: business_value_assessments, null_field: source_domain_module_id}
+      - {handoff_id: 26, direction: inbound, source_domain: PA, target_domain: TALENT-MGMT, trigger_event: "high_potential.identified", payload: workforce_segments, null_field: null}
+      - {handoff_id: 1110, direction: inbound, source_domain: PA, target_domain: TALENT-MGMT, trigger_event: "attrition_risk.elevated", payload: attrition_forecasts, null_field: null}
+      - {handoff_id: 1113, direction: inbound, source_domain: PA, target_domain: TALENT-MGMT, trigger_event: "predictive_model.deployed", payload: predictive_models, null_field: null}
+      - {handoff_id: 430, direction: inbound, source_domain: LMS, target_domain: TALENT-MGMT, trigger_event: "course_enrollment.completed", payload: course_enrollments, null_field: null}
+      - {handoff_id: 450, direction: inbound, source_domain: PA, target_domain: TALENT-MGMT, trigger_event: "attrition_risk.high", payload: employees, null_field: target_domain_module_id}
+      - {handoff_id: 111, direction: inbound, source_domain: LMS, target_domain: TALENT-MGMT, trigger_event: "learner_certification.earned", payload: skill_profiles, null_field: null}
+      - {handoff_id: 1306, direction: inbound, source_domain: LMS, target_domain: TALENT-MGMT, trigger_event: "learner_badge.earned", payload: learner_badges, null_field: null}
+      - {handoff_id: 421, direction: inbound, source_domain: COMP-MGMT, target_domain: TALENT-MGMT, trigger_event: "merit_cycle.closed", payload: merit_cycles, null_field: null}
+      - {handoff_id: 1320, direction: inbound, source_domain: WORK-MGMT, target_domain: TALENT-MGMT, trigger_event: "okr_objective.committed", payload: okr_objectives, null_field: null}
+      - {handoff_id: 1321, direction: inbound, source_domain: WORK-MGMT, target_domain: TALENT-MGMT, trigger_event: "okr_objective.scored", payload: okr_objectives, null_field: null}
+      - {handoff_id: 1034, direction: inbound, source_domain: ATS, target_domain: TALENT-MGMT, trigger_event: "candidate_assessment.passed", payload: candidate_assessments, null_field: null}
+      - {handoff_id: 1108, direction: inbound, source_domain: PA, target_domain: TALENT-MGMT, trigger_event: "engagement.declining", payload: engagement_surveys, null_field: null}
+      - {handoff_id: 437, direction: outbound, source_domain: TALENT-MGMT, target_domain: HCM, trigger_event: "succession_plan.published", payload: succession_plans, null_field: target_domain_module_id}
+      - {handoff_id: 22, direction: inbound, source_domain: HCM, target_domain: TALENT-MGMT, trigger_event: "employee.created", payload: employees, null_field: null}
+      - {handoff_id: 376, direction: inbound, source_domain: HCM, target_domain: TALENT-MGMT, trigger_event: "employee.promoted", payload: employees, null_field: null}
+
+b1b:
+  - id: B1B-S1
+    summary: "DELETE 3 sibling consumer DMDOs (52,174), (53,174), (52,177) OR PROMOTE each to embedded_master; M7 hard-fail persists."
+    finding: "M7 within-domain incoherence: performance_reviews (174) is role='master' in module 51 AND role='consumer' in modules 52 (required) and 53 (optional). talent_calibrations (177) is role='master' in 51 AND role='consumer' in 52 (required). M7 rejects master + consumer in sibling modules of the same domain."
+    action: "On user decision (B2-S1): DELETE the 3 consumer DMDO rows via /domain_module_data_objects DELETE; OR PROMOTE each to role='embedded_master' with appropriate necessity. The DELETE route makes 52/53 read 174/177 through the canonical master on 51; the PROMOTE route ships standalone-deployable shells per module."
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    affected_entities:
+      - "domain_module_data_objects/(52,174,consumer)"
+      - "domain_module_data_objects/(53,174,consumer)"
+      - "domain_module_data_objects/(52,177,consumer)"
+
+  - id: B1B-S4
+    summary: "Author 5 intra-domain handoffs covering 51↔52, 51↔52, 53→51, 51→52, 52→52; B9b hard-fail persists."
+    finding: "B9b hard fail: 0 intra-domain handoff rows on a 3-module domain whose state machines clearly fan out across modules. Expected pairs from relationship graph + multi-module workflow-gate states: 51→52 on talent_calibration.completed (446); 51→52 on performance_review.published (new from B1A-S5); 53→51 on feedback_record.shared (new); 51→52 on performance_goal.completed (444); 52→52 on nine_box_placement.confirmed (new)."
+    action: "Author 5 handoffs rows with source_domain_id=target_domain_id=58, integration_pattern='lifecycle_progression', friction_level='low'. trigger_event_id wiring requires B1A-S5 events to exist."
+    blocked_by:
+      - {type: depends_on, ref: B1A-S5, reason: "3 of the 5 handoffs reference new trigger_events authored in B1A-S5 (performance_review.published, feedback_record.shared, nine_box_placement.confirmed)"}
+    affected_handoffs:
+      - {handoff_id: null, direction: intra, source_domain: TALENT-MGMT, target_domain: TALENT-MGMT, trigger_event: "talent_calibration.completed", payload: performance_reviews, null_field: null, scope_note: "51 → 52, calibrated review feeds 9-box derivation"}
+      - {handoff_id: null, direction: intra, source_domain: TALENT-MGMT, target_domain: TALENT-MGMT, trigger_event: "performance_review.published", payload: performance_reviews, null_field: null, scope_note: "51 → 52, published review unlocks successor-readiness reassessment"}
+      - {handoff_id: null, direction: intra, source_domain: TALENT-MGMT, target_domain: TALENT-MGMT, trigger_event: "feedback_record.shared", payload: feedback_records, null_field: null, scope_note: "53 → 51, shared feedback feeds the next review cycle"}
+      - {handoff_id: null, direction: intra, source_domain: TALENT-MGMT, target_domain: TALENT-MGMT, trigger_event: "performance_goal.completed", payload: performance_goals, null_field: null, scope_note: "51 → 52, completed goal signals career-development progress"}
+      - {handoff_id: null, direction: intra, source_domain: TALENT-MGMT, target_domain: TALENT-MGMT, trigger_event: "nine_box_placement.confirmed", payload: nine_box_placements, null_field: null, scope_note: "52 → 52, confirmed placement triggers succession_plan revision"}
+
+  - id: B1B-S6
+    summary: "PATCH handoff 450 target_domain_module_id; gated on B2-S5 tie resolution (employees embedded_master in all 3 TALENT modules)."
+    finding: "B10b in-scope: handoff 450 (PA → TALENT-MGMT, attrition_risk.high, payload employees) has NULL target_domain_module_id. DMDO master-rule yields a tie (employees=31 is embedded_master in 51, 52, 53 at equal strongest role); B10b prescribes NULL until disambiguation."
+    action: "On user choice (B2-S5): PATCH handoffs.id=450 set target_domain_module_id=<chosen module>. Plausible target is 52 (SUCCESSION-CAREER) since attrition risk drives successor-readiness reassessment."
+    blocked_by:
+      - {type: user_decision, ref: B2-S5}
+    affected_handoffs:
+      - {handoff_id: 450, direction: inbound, source_domain: PA, target_domain: TALENT-MGMT, trigger_event: "attrition_risk.high", payload: employees, null_field: target_domain_module_id}
+
+b2:
+  - id: B2-S1
+    summary: "M7 architectural choice for TALENT-MGMT sibling-module dependency on performance_reviews (174) and talent_calibrations (177)."
+    question: "Should the 3 sibling consumer DMDO rows be DELETEd (siblings read the canonical master on 51), PROMOTEd to embedded_master (each sibling ships its own shell for standalone deploy), or mixed per row?"
+    options:
+      - "(a) DELETE all 3 (52,174), (53,174), (52,177)"
+      - "(b) PROMOTE all 3 to embedded_master"
+      - "(c) Mixed (specify per row)"
+    why: "Standalone SUCCESSION-CAREER without PERFORMANCE-MGMT has no calibrated review to derive a 9-box from; standalone CONTINUOUS-FEEDBACK without PERFORMANCE-MGMT has no review cycle to feed. The embedded path looks weak; DELETE is the cleaner architectural fit but locks the modules together at deploy time."
+
+  - id: B2-S2
+    summary: "Rule #15 notes-pollution status on 14 skill_tools rows under skills 137/138/139; revert or confirm user-approved."
+    question: "Were the populated notes on skill_tools rows 1305-1318 user-approved at load time, or auto-populated by the loader?"
+    options:
+      - "(a) User-approved at load time; leave in place"
+      - "(b) Auto-populated; PATCH all 14 to empty string and log Rule #15 incident in references/skill-changelog.md"
+    why: "Per Rule #15 the default is empty notes. The notes column is forbidden unless the exact wording was surfaced and approved per row. Audit alone cannot tell which path produced these strings."
+
+  - id: B2-S3
+    summary: "F7 channel-primitive justification on sign_document (skill_tool 1310); coupled to B2-S2 outcome."
+    question: "Is sign_document on TALENT-PERFORMANCE-MGMT system skill (137) the actual workflow for regulated industries, or should the row be cleaned or removed?"
+    options:
+      - "(a) Supply user-approved notes wording explaining the regulated-signing workflow"
+      - "(b) Treat F7 as satisfied via audit transcript; clean notes to empty string"
+      - "(c) DELETE the skill_tools row if sign_document is not actually needed in the workflow"
+    why: "Rule #15 vs F7 boundary; resolution depends on B2-S2 outcome (if all skill_tools notes get reverted under B2-S2 option b, B2-S3 collapses to option b/c)."
+
+  - id: B2-S4
+    summary: "B4 pattern-flag re-evaluation; 5 candidate flips across 4 masters."
+    question: "Per-flag yes/no on the following candidate pattern-flag flips on TALENT-MGMT masters."
+    options:
+      - "(a) nine_box_placements (178).has_submit_lock = true"
+      - "(b) career_aspirations (179).has_submit_lock = true"
+      - "(c) feedback_records (180).has_submit_lock = true"
+      - "(d) succession_plans (176).has_single_approver = true"
+      - "(e) talent_calibrations (177).has_single_approver remains false (multi-approver pattern; confirm)"
+    why: "Pattern flags are workflow-shape judgments not derivable from structural state."
+
+  - id: B2-S5
+    summary: "Handoff 450 target module assignment; DMDO tie on employees across 51/52/53."
+    question: "Which TALENT-MGMT module is the right target for inbound handoff 450 (PA → TALENT, attrition_risk.high, payload employees)?"
+    options:
+      - "(a) 52 TALENT-SUCCESSION-CAREER (attrition risk drives successor readiness)"
+      - "(b) 51 TALENT-PERFORMANCE-MGMT"
+      - "(c) 53 TALENT-CONTINUOUS-FEEDBACK"
+      - "(d) Leave NULL pending PA-side re-modeling"
+    why: "B10b master-rule produces a tie because employees (31) is embedded_master at equal strongest role in all 3 TALENT modules."
+
+  - id: B2-S6
+    summary: "E6 permission-bundle drift; HR-BUSINESS-PARTNER read-only on CONTINUOUS-FEEDBACK plus implicit-grant pattern for workflow gates."
+    question: "Is the HR-BUSINESS-PARTNER role intentionally read-only on TALENT-CONTINUOUS-FEEDBACK (module 53), and is the implicit-grant pattern (no explicit workflow-gate permission enumeration in any TALENT bundle, relying on permission_hierarchy to expand :manage/:admin) the intended shape?"
+    options:
+      - "(a) Confirm hierarchy expands gates; leave bundles as-is and leave HRBP read-only on 53"
+      - "(b) Add explicit gate grants where IC-tier gap is real (e.g. calibrate_performance_review on HRBP)"
+      - "(c) Upgrade HRBP from :read to :manage on module 53"
+    why: "Workflow-intent decision the analyst cannot make from structural state alone."
+
+b3:
+  - id: B3-COMPETENCIES
+    candidate: competencies
+    rationale: "Workday, SAP SuccessFactors, Cornerstone, Lattice, Leapsome model competency frameworks as first-class records distinct from skill_profiles (a competency is a definition; a skill_profile is an individual's holdings). Required for evaluative review templates. Not in current TALENT-MGMT or SKILLS-MGMT footprint."
+    vendor_evidence:
+      - {vendor: Workday Talent Optimization, evidence: 1st_class}
+      - {vendor: SAP SuccessFactors Performance and Goals, evidence: 1st_class}
+      - {vendor: Cornerstone Performance, evidence: 1st_class}
+      - {vendor: Lattice, evidence: 1st_class}
+      - {vendor: Leapsome, evidence: 1st_class}
+    proposed_module: "TALENT-PERFORMANCE-MGMT (master) OR SKILLS-MGMT extension"
+
+  - id: B3-PEER-REVIEW-INVITATIONS
+    candidate: peer_review_invitations
+    rationale: "Lattice, Leapsome, Workday, 15Five model multi-rater orchestration as distinct from the review record (invitations have their own lifecycle: sent → received → completed → expired). Current catalog folds peer review under feedback_records."
+    vendor_evidence:
+      - {vendor: Lattice, evidence: 1st_class}
+      - {vendor: Leapsome, evidence: 1st_class}
+      - {vendor: Workday Talent Optimization, evidence: 1st_class}
+      - {vendor: 15Five, evidence: 1st_class}
+    proposed_module: "TALENT-PERFORMANCE-MGMT (master)"
+
+  - id: B3-DEVELOPMENT-PLANS
+    candidate: development_plans
+    rationale: "Workday, SAP, Cornerstone, Lattice ship IDPs as first-class records distinct from career_aspirations (an IDP is an action plan with steps, deadlines, accountability; an aspiration is a stated preference). career_aspirations aliases include 'Individual Development Plan' but the entity may warrant its own master."
+    vendor_evidence:
+      - {vendor: Workday Talent Optimization, evidence: 1st_class}
+      - {vendor: SAP SuccessFactors Performance and Goals, evidence: 1st_class}
+      - {vendor: Cornerstone Performance, evidence: 1st_class}
+      - {vendor: Lattice, evidence: 1st_class}
+    proposed_module: "TALENT-SUCCESSION-CAREER (master)"
+
+  - id: B3-SUCCESSION-CANDIDATES
+    candidate: succession_candidates
+    rationale: "Workday, SAP, Cornerstone model succession_candidates as a junction with payload (one succession_plan has many candidates with readiness rating, time-to-ready, risk score). Currently succession_plans has no junction; candidate list lives implicitly via the users is_successor_in succession_plans relationship (945), which loses per-candidate payload."
+    vendor_evidence:
+      - {vendor: Workday Talent Optimization, evidence: 1st_class}
+      - {vendor: SAP SuccessFactors Performance and Goals, evidence: 1st_class}
+      - {vendor: Cornerstone Performance, evidence: 1st_class}
+    proposed_module: "TALENT-SUCCESSION-CAREER (master or junction)"
+
+  - id: B3-RECOGNITION-BADGES
+    candidate: recognition_badges
+    rationale: "Bonusly, Kudos, Workhuman, Achievers run peer recognition as a distinct flow with points / badges / a reward catalog. Lattice 'Praise' and 15Five 'High Fives' share the surface but are simpler. Current catalog folds these into feedback_records (alias includes 'Praise' and 'Kudos') but the redemption / points-balance / catalog dimension is missing."
+    vendor_evidence:
+      - {vendor: Bonusly, evidence: 1st_class}
+      - {vendor: Kudos, evidence: 1st_class}
+      - {vendor: Workhuman, evidence: 1st_class}
+      - {vendor: Achievers, evidence: 1st_class}
+    proposed_module: "new PEER-RECOGNITION domain (queued in _missing-domains.md)"
+
+  - id: B3-MENTORSHIP-PAIRINGS
+    candidate: mentorship_pairings
+    rationale: "MentorcliQ, Chronus, Together, PushFar, Qooper specialize in mentorship orchestration; SAP, Cornerstone, Workday have mentorship modules. Current TALENT-MGMT has no mentorship entity."
+    vendor_evidence:
+      - {vendor: MentorcliQ, evidence: 1st_class}
+      - {vendor: Chronus, evidence: 1st_class}
+      - {vendor: Together, evidence: 1st_class}
+      - {vendor: PushFar, evidence: 1st_class}
+      - {vendor: Qooper, evidence: 1st_class}
+    proposed_module: "new MENTORSHIP domain (queued in _missing-domains.md)"
+
+  - id: B3-PIPS
+    candidate: performance_improvement_plans
+    rationale: "Workday, SAP, Cornerstone, Lattice, Leapsome model PIPs as a formal HR process distinct from the review cycle (PIP has its own goals, check-ins, milestones, escalation gates). Currently no PIP entity."
+    vendor_evidence:
+      - {vendor: Workday Talent Optimization, evidence: 1st_class}
+      - {vendor: SAP SuccessFactors Performance and Goals, evidence: 1st_class}
+      - {vendor: Cornerstone Performance, evidence: 1st_class}
+      - {vendor: Lattice, evidence: 1st_class}
+      - {vendor: Leapsome, evidence: 1st_class}
+    proposed_module: "TALENT-PERFORMANCE-MGMT (master)"
+
+  - id: B3-GOAL-CHECK-INS
+    candidate: goal_check_ins
+    rationale: "Betterworks weekly check-ins, 15Five Pulses, Lattice Updates model recurring goal-progress signals as a first-class log distinct from the goal itself. Currently performance_goals has no check-in master; progress is implicit on the goal record."
+    vendor_evidence:
+      - {vendor: Betterworks, evidence: 1st_class}
+      - {vendor: 15Five, evidence: 1st_class}
+      - {vendor: Lattice, evidence: 1st_class}
+    proposed_module: "TALENT-PERFORMANCE-MGMT (master)"
+
+  - id: B3-1ON1-MEETINGS
+    candidate: 1on1_meetings
+    rationale: "Lattice 1:1s, 15Five 1-on-1s, Leapsome 1:1s structure recurring manager-employee meeting records (agenda, talking points, action items, history). Currently no 1:1 entity; feedback_records aliases include '1-on-1 Note' but the meeting-scaffold itself is missing."
+    vendor_evidence:
+      - {vendor: Lattice, evidence: 1st_class}
+      - {vendor: 15Five, evidence: 1st_class}
+      - {vendor: Leapsome, evidence: 1st_class}
+    proposed_module: "TALENT-CONTINUOUS-FEEDBACK (master)"
+
+  - id: B3-CALIBRATION-COMMITTEES
+    candidate: calibration_committees
+    rationale: "Workday, SAP, Cornerstone separate the standing committee (members, charter, frequency) from individual sessions (scheduled date, participants, outcomes). Currently talent_calibrations conflates the two; 'Calibration Session' is an alias but the parent committee is missing."
+    vendor_evidence:
+      - {vendor: Workday Talent Optimization, evidence: 1st_class}
+      - {vendor: SAP SuccessFactors Performance and Goals, evidence: 1st_class}
+      - {vendor: Cornerstone Performance, evidence: 1st_class}
+    proposed_module: "TALENT-PERFORMANCE-MGMT (potential split of 177)"
+
+  - id: B3-REG-EEOC
+    candidate: "US EEOC adverse-impact testing (regulation)"
+    rationale: "Mandatory for US hiring + promotion + comp decisions. Promotion decisions sourced from succession + 9-box may trigger 4/5ths rule scrutiny. Currently only EU AI Act is loaded under domain_regulations for TALENT-MGMT."
+    vendor_evidence: []
+    proposed_module: null
+
+  - id: B3-REG-NYC-LL144
+    candidate: "NYC Local Law 144 AEDT (regulation)"
+    rationale: "Mandatory for AI-assisted employment decisions including AI-overlaid talent calibration / succession scoring sold by Eightfold and the AI-overlay tier of Workday / SAP / SuccessFactors."
+    vendor_evidence: []
+    proposed_module: null
+
+  - id: B3-REG-IL-HB3773
+    candidate: "Illinois HB 3773 AI disclosure (regulation)"
+    rationale: "AI-assisted employment decisions disclosure obligations."
+    vendor_evidence: []
+    proposed_module: null
+
+  - id: B3-REG-GDPR
+    candidate: "GDPR (regulation)"
+    rationale: "Mandatory for EU-employee performance / succession / personal-content data with cross-border transfer. has_personal_content=true on every master is the structural anchor but no regulation row records the legal applicability."
+    vendor_evidence: []
+    proposed_module: null
+
+  - id: B3-REG-HIPAA-BAA
+    candidate: "HIPAA BAA (regulation)"
+    rationale: "Situationally applicable when 360 feedback surfaces health-related content. Soft / situational anchor."
+    vendor_evidence: []
+    proposed_module: null
+
+  - id: B3-MOD-PEER-RECOGNITION
+    candidate: "PEER-RECOGNITION (candidate domain)"
+    rationale: "Bonusly + Kudos + Workhuman + Achievers + Nectar are independent point-solution vendors competing in peer recognition + reward catalog. Engagedly and Lattice ship lightweight versions; Workday and SAP bundle it. Passes the point-solution-market test; queued in _missing-domains.md."
+    vendor_evidence:
+      - {vendor: Bonusly, evidence: 1st_class}
+      - {vendor: Kudos, evidence: 1st_class}
+      - {vendor: Workhuman, evidence: 1st_class}
+      - {vendor: Achievers, evidence: 1st_class}
+      - {vendor: Nectar, evidence: 1st_class}
+    proposed_module: null
+
+  - id: B3-MOD-MENTORSHIP
+    candidate: "MENTORSHIP (candidate domain)"
+    rationale: "MentorcliQ + Together + Chronus + PushFar + Qooper are independent point-solution vendors. SAP, Workday, Cornerstone have built-in modules but the standalone market is substantial."
+    vendor_evidence:
+      - {vendor: MentorcliQ, evidence: 1st_class}
+      - {vendor: Together, evidence: 1st_class}
+      - {vendor: Chronus, evidence: 1st_class}
+      - {vendor: PushFar, evidence: 1st_class}
+      - {vendor: Qooper, evidence: 1st_class}
+    proposed_module: null

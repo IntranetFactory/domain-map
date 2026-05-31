@@ -1,0 +1,289 @@
+schema_version: 2
+domain: CONV-AI
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a: []
+
+b1b:
+  - id: B1B-S1
+    summary: "Author CONV-AI modules; zero domain_modules rows currently exist."
+    finding: "Live query /domain_modules?domain_id=eq.34 returns 0 rows. Domain 34 (CONV-AI) is not deployable. Blocks M2..M8, F2..F5, B10b, B12 per-module FKs, E1..E5."
+    action: "Author the module split, recommended 2 modules CONV-AI-BOT-DESIGN (masters bot_definitions, intent_definitions, conversation_flows) plus CONV-AI-RUNTIME (masters conversation_transcripts, intent_detections). Confirm shape via B2-MOD before loading."
+    blocked_by:
+      - {type: user_decision, ref: B2-MOD}
+    affected_modules: []
+    affected_masters:
+      - {data_object_id: 699, name: bot_definitions, target_module_id: null, workflow: design-time}
+      - {data_object_id: 700, name: intent_definitions, target_module_id: null, workflow: design-time}
+      - {data_object_id: 701, name: conversation_flows, target_module_id: null, workflow: design-time}
+      - {data_object_id: 259, name: conversation_transcripts, target_module_id: null, workflow: runtime}
+      - {data_object_id: 260, name: intent_detections, target_module_id: null, workflow: runtime}
+
+  - id: B1B-S2
+    summary: "Author capabilities for CONV-AI; zero capability_domains rows exist."
+    finding: "Live query /capability_domains?domain_id=eq.34 returns 0 rows. A2 fails."
+    action: "Load 6 capabilities per the recommended floor (bot_authoring, nlu_training, dialog_management, channel_orchestration, conversation_analytics, human_handoff_orchestration), each with a capability_domains link plus a domain_module_capabilities link per Bucket 2 #1 modularization."
+    blocked_by:
+      - {type: user_decision, ref: B2-CAP}
+      - {type: depends_on, ref: B1B-S1, reason: "modules must exist before domain_module_capabilities can be loaded"}
+
+  - id: B1B-S3
+    summary: "Draft and load CONV-AI catalog_tagline and catalog_description (A4)."
+    finding: "Both catalog_tagline and catalog_description are empty strings on domains row id 34. Rule #20 buyer-voice copy."
+    action: "Draft both fields per Rule #20 buyer voice, surface drafts to user for review before writing. Never overwrite once non-empty without per-row explicit approval."
+    blocked_by:
+      - {type: user_decision, ref: B2-CAT-COPY}
+
+  - id: B1B-S4
+    summary: "Retire legacy domain-level system skill conv-ai-system (skill id 39)."
+    finding: "Skill 39 sits at skill_type=system, domain_id=34, domain_module_id IS NULL with kebab name conv-ai-system. Has 7 skill_tools (query_conversation_transcripts, query_intent_detections, transcribe_audio, generate_text, detect_sentiment, query_bot_definitions, query_intent_definitions). F1 fails."
+    action: "After Phase-S authors per-module system skills (one per CONV-AI module per Rule #17, named conv_ai_bot_design_agent and conv_ai_runtime_agent), re-link the 7 tools to the new skills then DELETE skill 39."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+
+  - id: B1B-S6
+    summary: "Confirm publish-lock pattern flag on bot_definitions, intent_definitions, conversation_flows."
+    finding: "All three masters carry has_submit_lock=false. Publish-then-version-lock is the dominant authoring pattern across Kore.ai, Cognigy, Ada, Yellow.ai, Boost.ai."
+    action: "On user confirmation per master, PATCH has_submit_lock=true on data_objects ids 699, 700, 701."
+    blocked_by:
+      - {type: user_decision, ref: B2-FLAGS}
+    affected_masters:
+      - {data_object_id: 699, name: bot_definitions, target_module_id: null, workflow: publish_lock}
+      - {data_object_id: 700, name: intent_definitions, target_module_id: null, workflow: publish_lock}
+      - {data_object_id: 701, name: conversation_flows, target_module_id: null, workflow: publish_lock}
+
+  - id: B1B-S10
+    summary: "Backfill handoff per-module FKs once CONV-AI is modularized."
+    finding: "6 outbound handoffs (ids 227, 228, 743, 744, 745, 746) carry source_domain_module_id=NULL because CONV-AI has no modules. 3 inbound handoffs (ids 153, 723, 724) carry target_domain_module_id=NULL for the same reason. Handoff 227 already has target_domain_module_id=47 (CRM-LEAD-MGT) resolved on the CRM side."
+    action: "After B1B-S1 modules land, run the standard B10b backfill loader: source FK resolves to the CONV-AI module mastering each event's data_object (strongest-role rule)."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_handoffs:
+      - {handoff_id: 227, direction: outbound, source_domain: CONV-AI, target_domain: CRM, trigger_event: intent.identified, payload: intent_detections, null_field: source_domain_module_id}
+      - {handoff_id: 228, direction: outbound, source_domain: CONV-AI, target_domain: CCAAS, trigger_event: conversation.escalated_to_human, payload: conversation_transcripts, null_field: source_domain_module_id}
+      - {handoff_id: 743, direction: outbound, source_domain: CONV-AI, target_domain: CCAAS, trigger_event: conversation_flow.fallback_triggered, payload: conversation_flows, null_field: source_domain_module_id}
+      - {handoff_id: 744, direction: outbound, source_domain: CONV-AI, target_domain: CSM, trigger_event: intent_definition.low_confidence_burst, payload: intent_definitions, null_field: source_domain_module_id}
+      - {handoff_id: 745, direction: outbound, source_domain: CONV-AI, target_domain: KMS, trigger_event: conversation_flow.fallback_triggered, payload: conversation_flows, null_field: source_domain_module_id}
+      - {handoff_id: 746, direction: outbound, source_domain: CONV-AI, target_domain: CCAAS, trigger_event: bot_definition.published, payload: bot_definitions, null_field: source_domain_module_id}
+      - {handoff_id: 153, direction: inbound, source_domain: DATA-AI-PLAT, target_domain: CONV-AI, trigger_event: ai_agent.deployed, payload: ai_agents, null_field: target_domain_module_id}
+      - {handoff_id: 723, direction: inbound, source_domain: KMS, target_domain: CONV-AI, trigger_event: knowledge_base_article.published, payload: knowledge_base_articles, null_field: target_domain_module_id}
+      - {handoff_id: 724, direction: inbound, source_domain: KMS, target_domain: CONV-AI, trigger_event: knowledge_search_query.no_result, payload: knowledge_search_queries, null_field: target_domain_module_id}
+
+  - id: B1B-S11
+    summary: "Author data_object_aliases for 4 non-self-explanatory CONV-AI masters."
+    finding: "Zero alias rows for any of the 5 CONV-AI masters. Vendor-specific synonyms are universal in this market: bot_definitions aka assistants (Lex, Dialogflow CX) / agents (Cognigy) / virtual agents (ServiceNow); intent_definitions aka topics (Microsoft Copilot Studio) / flows (Yellow.ai); conversation_flows aka dialog scripts (Kore.ai); conversation_transcripts aka conversation logs (most vendors)."
+    action: "Surface exact per-row alias tuples to user, get explicit approval per row, then INSERT. Aliases are commerce-shaped per Rule #18 so vendor names are allowed in alias_name."
+    blocked_by:
+      - {type: user_decision, ref: B2-ALIAS-WORDING}
+    affected_masters:
+      - {data_object_id: 699, name: bot_definitions, target_module_id: null, workflow: aliases}
+      - {data_object_id: 700, name: intent_definitions, target_module_id: null, workflow: aliases}
+      - {data_object_id: 701, name: conversation_flows, target_module_id: null, workflow: aliases}
+      - {data_object_id: 259, name: conversation_transcripts, target_module_id: null, workflow: aliases}
+
+  - id: B1B-S12
+    summary: "Author lifecycle states for the 5 CONV-AI masters."
+    finding: "Zero data_object_lifecycle_states rows for any master. Bot authoring masters carry a draft -> reviewing -> published -> disabled -> archived lifecycle (every flagship vendor exposes publish + disable as separate states). conversation_transcripts is recording -> completed -> redacted -> archived. intent_detections is event-shaped, candidate for the Rule #12 config-shape exemption."
+    action: "After B1B-S1 modules land (state.domain_module_id requires the module FK), author per-master state machines with requires_permission=true on published and disabled gates. For intent_detections, await Bucket 2 #4 to decide between config-shape exemption (Rule #12) or authoring detected -> routed -> consumed states."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: user_decision, ref: B2-DETECT-LIFECYCLE}
+
+  - id: B1B-S13
+    summary: "Add business_function_capabilities override rows where CONV-AI capability ownership diverges from domain-level RACI."
+    finding: "Zero business_function_capabilities rows because A2 returns zero capabilities. C2 fails by construction."
+    action: "After B1B-S2 capabilities exist, evaluate each capability against domain RACI (owner Contact Center Operations, contributor Software Engineering). Author divergence rows only where the capability's owning function differs from the domain owner (e.g. bot_authoring may be Software Engineering rather than Contact Center Operations)."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S2}
+
+  - id: B1B-S14
+    summary: "Author CONV-AI cross-module roles (E1 floor 3 distinct roles)."
+    finding: "Zero roles for business_function_id=70 (Contact Center Operations) anchored on CONV-AI modules. Zero cross-functional role_modules touching CONV-AI."
+    action: "After B1B-S1 + B1B-S2 land, author at minimum CONV-AI-BOT-DESIGNER, CONV-AI-ANALYTICS-VIEWER, CONV-AI-AGENT-OPS, each with role_modules spanning >=2 CONV-AI modules and a role_permissions bundle."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: prerequisite_entity, ref: B1B-S2}
+
+  - id: B1B-MISSING
+    summary: "Load 7 MISSING entities once modules and per-row drafts land."
+    finding: "Three compliance entities (consent_records under GDPR/TCPA/E911, ai_act_risk_classifications under EU AI Act, data_subject_requests under GDPR Articles 15-22) and four universal-vendor entities (entity_definitions, nlu_training_examples, fallback_handlers, channel_integrations) are absent from CONV-AI. All 7 are first-class masters in 4 of 5 flagship vendors."
+    action: "Phase B inserts after modules land: author data_objects + DMDO master rows on the appropriate CONV-AI module (compliance entities on RUNTIME, authoring substrate on BOT-DESIGN), draft per-row, get user approval, then load."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: user_decision, ref: B2-MOD}
+    affected_entities:
+      - consent_records
+      - ai_act_risk_classifications
+      - data_subject_requests
+      - entity_definitions
+      - nlu_training_examples
+      - fallback_handlers
+      - channel_integrations
+    vendor_evidence:
+      - {vendor: Ada, evidence: 1st_class}
+      - {vendor: Cognigy, evidence: 1st_class}
+      - {vendor: Boost.ai, evidence: 1st_class}
+      - {vendor: Kore.ai, evidence: 1st_class}
+      - {vendor: Cresta, evidence: 1st_class}
+
+  - id: B1B-H2
+    summary: "Reclassify APQC tag on handoff 228 (CONV-AI -> CCAAS escalation)."
+    finding: "Handoff 228 (conversation.escalated_to_human -> CCAAS, payload conversation_transcripts) currently carries handoff_processes row pointing at PCF 928 (Respond to customer problems, requests, and inquiries, external_id 10396, L4). 2026-05-30 audit flagged PCF 1318 as candidate (IT-flavored escalate) but borderline. Options on table: keep 928, change to 1318, change to L2 196 parent, or defer to Discover custom process."
+    action: "On user choice, PATCH handoff_processes for handoff_id=228 to the chosen process_id, or DELETE to defer."
+    blocked_by:
+      - {type: user_decision, ref: B2-PCF-228}
+    affected_handoffs:
+      - {handoff_id: 228, direction: outbound, source_domain: CONV-AI, target_domain: CCAAS, trigger_event: conversation.escalated_to_human, payload: conversation_transcripts, null_field: none}
+
+b2:
+  - id: B2-MOD
+    summary: "Confirm CONV-AI modularization plan."
+    question: "Which module split for CONV-AI? Recommended 2-module shape CONV-AI-BOT-DESIGN (design-time: bot_definitions, intent_definitions, conversation_flows) + CONV-AI-RUNTIME (runtime: conversation_transcripts, intent_detections, channel_integrations)."
+    options:
+      - "Confirm 2 modules CONV-AI-BOT-DESIGN + CONV-AI-RUNTIME"
+      - "3 modules CONV-AI-AUTHORING + CONV-AI-RUNTIME + CONV-AI-ANALYTICS"
+      - "3 modules including CONV-AI-LLM-AGENTS (depends on Bucket 3 #1, #3)"
+      - "Other shape, please specify codes"
+    why: "Drives B1B-S1, F-band rebuild, every handoff per-module FK, all 7 MISSING entity placements, and the E-band role authoring."
+
+  - id: B2-CAP
+    summary: "Confirm CONV-AI capability set."
+    question: "Recommended 6 capabilities: bot_authoring, nlu_training, dialog_management, channel_orchestration, conversation_analytics, human_handoff_orchestration. Confirm, revise, or add."
+    options:
+      - "Confirm the 6 recommended"
+      - "Add or remove specific capabilities (please list)"
+    why: "Drives B1B-S2 and downstream B1B-S13 / B1B-S14."
+
+  - id: B2-CAT-COPY
+    summary: "Approve Rule #20 buyer-voice copy for CONV-AI domain catalog_tagline and catalog_description."
+    question: "Authorize the agent to draft a buyer-voice tagline (one sentence) and catalog_description (1 to 3 paragraphs) for review. Once drafted, please approve exact wording before write."
+    options:
+      - "Authorize draft, then approve wording per row"
+      - "Defer until modules land (then both grains can be drafted in one pass)"
+      - "Skip backfill for now"
+    why: "Rule #20 forbids overwriting non-empty catalog UX fields without explicit per-row approval; the column is empty so first write is allowed but the wording itself needs approval."
+
+  - id: B2-FLAGS
+    summary: "Confirm publish-lock pattern flag on 3 authoring masters."
+    question: "Set has_submit_lock=true on bot_definitions (id 699), intent_definitions (id 700), conversation_flows (id 701)? All 5 flagship vendors (Kore.ai, Cognigy, Ada, Yellow.ai, Boost.ai) implement publish-then-version-lock semantics on these three entities."
+    options:
+      - "Flip all 3"
+      - "Flip a subset (please name)"
+      - "Skip (false stays as the audit-of-record default)"
+    why: "Pattern flag changes downstream behavior: publish becomes a workflow-gate permission rather than a free mutate, which affects Phase-S tool authoring."
+
+  - id: B2-DETECT-LIFECYCLE
+    summary: "intent_detections lifecycle scope."
+    question: "intent_detections is event-shaped (one row per detected intent at runtime). Apply the Rule #12 config-shape exemption, or author detected -> routed -> consumed states?"
+    options:
+      - "Config-shape exemption, surfaced here per Rule #15 (no notes write)"
+      - "Author detected -> routed -> consumed states"
+    why: "Per Rule #15 the exemption is not written to data_objects.notes; it lives only here in the audit state."
+
+  - id: B2-AI-AGENTS-MODULE
+    summary: "Which CONV-AI module consumes ai_agents (DATA-AI-PLAT master)?"
+    question: "Currently consumer + required on the domain. After modularization, which module holds the consumer DMDO row?"
+    options:
+      - "CONV-AI-RUNTIME (recommended)"
+      - "CONV-AI-BOT-DESIGN"
+      - "Both"
+    why: "Decision can only be made after B2-MOD lands."
+
+  - id: B2-PCF-228
+    summary: "APQC handoff 228 PCF choice."
+    question: "Handoff 228 (CONV-AI -> CCAAS conversation.escalated_to_human) carries PCF 928 (Respond to customer problems...). 2026-05-30 audit recommended PCF 1318 (IT-flavored escalate) or L2 196. Pick one."
+    options:
+      - "Keep PCF 928 (current)"
+      - "Change to PCF 1318 (Escalate IT requests; IT-domain label on a CCAAS row)"
+      - "Change to L2 PCF 196 (parent class, vendor-neutral)"
+      - "Defer to Discover Pass 3 custom process"
+    why: "L2 196 keeps the catalog quality honest without forcing an IT-domain label. Direct fix when chosen."
+
+  - id: B2-E911-SCOPE
+    summary: "E911 regulation applicability on CONV-AI."
+    question: "E911 currently mandatory. It applies only when CONV-AI routes voice traffic that may trigger emergency-services dispatch. Chat-only deployments (Ada chat, Intercom Fin) do not trigger E911. Keep mandatory or scope down?"
+    options:
+      - "Keep mandatory (presumes voice-bot inclusion)"
+      - "Scope down to applicable_when_voice"
+    why: "If scoped, applicability column needs a PATCH on the domain_regulations row."
+
+  - id: B2-ALIAS-WORDING
+    summary: "Approve per-row alias tuples for B1B-S11."
+    question: "Approve the exact (alias_name, alias_type) tuples per master before insert. Candidate aliases identified in 2026-05-30 audit: bot_definitions aka assistants / agents / virtual agents; intent_definitions aka topics / flows; conversation_flows aka dialog scripts."
+    options:
+      - "Authorize agent to draft full alias tuples, then approve per row"
+      - "Specify alias_name and alias_type directly"
+      - "Skip aliases"
+    why: "Aliases are commerce-shaped entities where vendor names are allowed (Rule #18), but the wording is non-obvious and worth user approval per Rule #15 spirit."
+
+b3:
+  - id: B3-PROMPT-TEMPLATES
+    candidate: prompt_templates
+    rationale: "LLM-era authoring entity surfaced by Cognigy, Kore.ai, and Yellow.ai after their LLM-backed-agent shift. Distinct from intent_definitions (NLU) and bot_definitions (top-level config)."
+    vendor_evidence:
+      - Cognigy
+      - Kore.ai
+      - Yellow.ai
+    proposed_module: CONV-AI-BOT-DESIGN
+    extra_phase0_path: "Cognigy LLM integration docs plus Kore.ai XO 11 release notes."
+
+  - id: B3-AGENT-PERSONAS
+    candidate: agent_personas
+    rationale: "Persona / tone profiles distinct from bot_definitions; Boost.ai and Yellow.ai expose this as a separate masterable concept."
+    vendor_evidence:
+      - Boost.ai
+      - Yellow.ai
+    proposed_module: CONV-AI-BOT-DESIGN
+    extra_phase0_path: "Boost.ai admin guide, Yellow.ai docs."
+
+  - id: B3-FUNCTION-TOOLS
+    candidate: function_tools
+    rationale: "LLM agents bind backend tools the bot can invoke. Cognigy, Salesforce Agentforce, ServiceNow Now Assist all master this separately from intents."
+    vendor_evidence:
+      - Cognigy
+      - Salesforce Agentforce
+      - ServiceNow Now Assist
+    proposed_module: CONV-AI-BOT-DESIGN
+    extra_phase0_path: "Agentforce schema, Cognigy.AI tool registry."
+
+  - id: B3-EVALUATION-RUNS
+    candidate: evaluation_runs
+    rationale: "Bot-evaluation harness; Cresta, Cognigy, and Voiceflow ship this. Ties to AI Act conformance assessments (B1B-MISSING B1-M2 ai_act_risk_classifications)."
+    vendor_evidence:
+      - Cresta
+      - Cognigy
+      - Voiceflow
+    proposed_module: CONV-AI-BOT-DESIGN
+    extra_phase0_path: "Cresta product docs."
+
+  - id: B3-REDACTION-POLICIES
+    candidate: redaction_policies
+    rationale: "PII redaction rules on transcripts; universal under GDPR / TCPA but modeled as a distinct master only on Cresta, Cognigy Insights, Boost.ai."
+    vendor_evidence:
+      - Cresta
+      - Cognigy Insights
+      - Boost.ai
+    proposed_module: CONV-AI-RUNTIME
+    extra_phase0_path: "Vendor security whitepapers."
+
+  - id: B3-CONVERSATION-TOPICS
+    candidate: conversation_topics
+    rationale: "Topic clusters over completed transcripts (analytics layer); Cognigy Insights, Kore.ai SmartAssist, Salesforce Service Cloud Voice."
+    vendor_evidence:
+      - Cognigy Insights
+      - Kore.ai SmartAssist
+      - Salesforce Service Cloud Voice
+    proposed_module: CONV-AI-RUNTIME
+    extra_phase0_path: "Cognigy Insights schema."
+
+  - id: B3-VOICE-BIOMETRIC-PROFILES
+    candidate: voice_biometric_profiles
+    rationale: "Voiceprint enrollment + match. Pindrop, Nuance Gatekeeper, LumenVox are pure-plays; plausibly a separate candidate domain rather than a CONV-AI entity."
+    vendor_evidence:
+      - Pindrop
+      - Nuance Gatekeeper
+      - LumenVox
+    proposed_module: null
+    extra_phase0_path: "Pindrop product docs. Decision: promote to candidate domain or model as CONV-AI master."

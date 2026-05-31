@@ -1,66 +1,108 @@
-# Domain audit history
+# Domain audit history + state
 
-One markdown file per domain (`<DOMAIN_CODE>.md`), append-only. Each Validate run appends a new dated section. The whole timeline of a domain's audits, decisions, and applied fixes lives in one place per domain, git-tracked, diffable.
+Each domain has its own directory:
 
-## Why files, not the catalog
-
-Rule #15 forbids auto-populated prose in `notes` columns. Audit history is exactly that — multi-paragraph findings, vendor-evidence rationales, decision logs. Files in this directory carry the long-form record; the catalog's `domains.notes` (optionally, with user-approved wording) carries a one-line status pointer back to the file.
-
-Git is the audit history layer: every audit produces a commit; `git log audits/<DOMAIN>.md` shows the timeline; `git diff` between audits highlights what changed.
-
-## File structure
-
-One file per domain. Sections delimited by `## YYYY-MM-DD — Audit` headers. Newest section appended at the bottom. Never overwrite, never delete — the whole history stays visible.
-
-Per audit, the section carries:
-
-```markdown
-## YYYY-MM-DD — Audit
-
-### Summary
-- Current footprint counts
-- Vendor-surface basis (flagship vendors enumerated)
-- Bucket 1 / 2 / 3 counts
-
-### Bucket 1 — In-scope confirmed gaps
-Tables grouped by finding type (MISSING / WRONG-OWNERSHIP / SCOPE-CREEP / STRUCTURAL / BOUNDARY / **APQC TAGGING**).
-
-For **APQC TAGGING**, two tables: (1) `agent_curated` proposals — `(handoff_id, source→target, trigger_event, payload, proposed PCF row, PCF id, confidence)`; (2) deferred-to-Discover-Pass-3 — handoffs the agent couldn't confidently classify, with the deferral reason. The combined count drives the APQC TAGGING line in the summary.
-
-**Report two distinct H-band numbers, don't conflate them:**
-
-- **Catalog quality (the headline)** = how many of the domain's cross-domain handoffs carry a `record_status='approved'` tag. This is the real coverage measure. Independent of how the tag was originally proposed.
-- **Process health (secondary)** = how many existing tags are `proposal_source='agent_curated'`. Tells you whether the layered-ownership process is firing. Useful as a review-triage hint (sort by source) and as a regression test.
-
-A `discovery_substring` row a reviewer approved IS a high-quality row. An `agent_curated` row at `record_status='new'` is high-confidence-pending — not yet high-quality. Lead with approved count; mention `agent_curated` count as a side-bar.
-
-Volume expectation (for the audit's own work): roughly 0.5N to 0.8N NEW `agent_curated` rows proposed during this audit (where N = the domain's cross-domain handoff count). This is a process / throughput target for the audit itself, NOT a catalog quality target. Audits that ship zero APQC tags despite the analyst building the mental model are a procedural failure — the design assumes the agent tags while reading. `proposal_source='human_curated'` is reserved for cases where the user explicitly typed *"add tag X for handoff Y"* in chat; the agent's own audit-time tagging is always `agent_curated`.
-
-### Bucket 2 — Surface-for-user (judgment calls)
-Numbered list, each with the question + options + dependency status.
-
-### Bucket 3 — Phase 0 pending (speculative)
-Numbered list, each with the candidate + vendor knowledge basis + recommended verification.
-
-### Decisions
-Per-bucket user choices. Timestamped. *"Bucket 1: approved 1, 3, 5; declined 2, 4. Bucket 2: FERPA removed, notes reverted, master+embedded_master confirmed as architectural intent. Bucket 3: eyeball — outreach_sequences and video_interview_recordings ring true; rest defer to formal Phase 0."*
-
-### Fixes applied
-Per-fix log. Loader script path, row counts, timestamps. References the commit if the loader was committed.
+```
+audits/<DOMAIN_CODE>/
+  history.md      append-only audit narrative (dated sections, verbatim)
+  state.yaml      current open items, schema_version: 2
 ```
 
-## When a new audit runs
+Catalog-wide artifacts stay flat at the audits/ root: `README.md`, `_apqc-in-use.md`, `_discover.md`, `_missing-domains.md`, `_validate-cross-domain.md`.
 
-The agent reads the existing file (if any), generates the new audit section, appends, surfaces to user. Prior sections are never edited — corrections come as new audits, not overwrites.
+## state.yaml schema (v2)
 
-## When `domains.notes` carries a pointer
+```yaml
+schema_version: 2
+domain: <DOMAIN_CODE>
+status: audit_stale | feedback_needed | passed
+next_action_by: agent | user | research | blocked | done
+last_audit: <YYYY-MM-DD or null>
 
-After an audit lands, the agent asks the user whether to update `domains.notes` with a one-line status pointer:
+b1a:   # agent-solvable: pending technical action the agent can execute next pass
+  - id: B1A-<TAG>
+    summary: <self-contained one-line>
+    finding: <full text, back-references resolved>
+    action: <full text>
+    # optional standard fields (see below)
+    # extras prefixed extra_
 
-> *"Last validated 2026-05-28. M7 soft-fail on talent_pools, Phase 0 pending. See `audits/ATS.md`."*
+b1b:   # blocked: parked, waiting on another domain audit, neighbor catch-up, or external trigger
+  - id: B1B-<TAG>
+    summary: ...
+    finding: ...
+    blocked_by:
+      - {type: domain_audit, blocking_domain: <DOMAIN_CODE>, milestone: <short-tag>}
+      # or: {type: depends_on, ref: <B-X>, reason: <short>}
+      # or: {type: user_decision, ref: <B2-X>}
+      # or: {type: catalog_addition, scope: solutions|domains|modules, trigger: <short>}
+      # or: {type: prerequisite_entity, ref: <B1A-MX>}
 
-User supplies the exact wording per Rule #15. The pointer is optional but recommended — it makes the audit state visible in the catalog UI without forcing reviewers to open the audit file.
+b2:    # user judgment required
+  - id: B2-<TAG>
+    summary: ...
+    question: ...
+    options: [...]
+    why: ...                       # optional
 
-## Not gitignored
+b3:    # vendor research pending (Phase 0)
+  - id: B3-<TAG>
+    candidate: <entity name>
+    rationale: <full text>
+    vendor_evidence: [...]
+    proposed_module: ...           # optional
+```
 
-This directory is committed. Audit history is part of the project record, not ephemeral working state. Drafts and subagent JSON output continue to live in `c:/tmp/` and get gitignored; only the final per-audit markdown lands here.
+`next_action_by` derives by priority: agent (b1a non-empty) > user (b2) > research (b3) > blocked (only b1b) > done.
+
+### Standard optional fields (use these exact names; no invented variants)
+
+- `affected_handoffs[]`: `{handoff_id, direction, source_domain, target_domain, trigger_event, payload, null_field}`. When source gives only a count: `{count, scope_note, enumeration_status: source_count_only}`.
+- `affected_events[]`: `{id, event_name, current_category, proposed_category}`.
+- `affected_masters[]`: `{data_object_id, name, target_module_id, workflow}`.
+- `affected_modules[]`: flat list of module IDs.
+- `affected_entities[]`: flat list of entity names.
+- `vendor_evidence[]`: flat list of vendor names or `{vendor, evidence: 1st_class|secondary|absent}`.
+
+Audit-specific extras must be prefixed `extra_` (e.g. `extra_loader_group:`, `extra_sequencing:`).
+
+### Self-containment rules
+
+- **Resolve back-references inline.** Phrases like "5 flagships", "the 3 starters" → name them in parentheses: "All 5 flagships (Cornerstone, Docebo, ...)".
+- **Enumerate counts as structured lists.** "6 handoffs" → `affected_handoffs[]` with 6 entries (or one `enumeration_status: source_count_only` entry if the source didn't list them individually).
+- **Distinguish `blocked_by[]` (gating) from `affected_*[]` (touched).** "8 handoffs blocked on SPM modularization" is 1 blocker + 8 affected, NOT 8 blockers.
+
+## Querying across domains
+
+```sh
+# Domains awaiting user judgment
+yq -r 'select(.next_action_by == "user") | .domain' audits/*/state.yaml
+
+# Which partner audits block the most items
+grep -hE "blocking_domain:" audits/*/state.yaml | sed 's/.*blocking_domain: //; s/,.*//' | sort | uniq -c | sort -rn
+
+# Stale audits (never run under schema v2)
+yq -r 'select(.status == "audit_stale") | .domain' audits/*/state.yaml | wc -l
+
+# Items blocked on a specific domain
+grep -lE "blocking_domain: PROD-MGMT" audits/*/state.yaml
+```
+
+## How an audit run works
+
+Each Validate audit run by the domain-map-analyst skill produces TWO outputs in the domain directory:
+
+1. **Append to `history.md`**: a new dated `## YYYY-MM-DD — Audit` section with the full audit narrative (Summary, Bucket 1/2/3 findings, Decisions, Fixes applied, Pairwise reconciliation).
+2. **Rewrite `state.yaml` in place**: the current open items per the v2 schema. Resolved items live ONLY in history.md.
+
+The split keeps state queryable while history remains the canonical record.
+
+## Migrated from v1
+
+`audits/<DOMAIN>.md` files were the prior format. Migrated on 2026-05-31 via [scripts/loaders/migrate_audits_to_split_v2.ts](../scripts/loaders/migrate_audits_to_split_v2.ts). The migration:
+
+- Copied each `audits/<DOMAIN>.md` to `audits/<DOMAIN>/history.md` verbatim.
+- Wrote a stub `state.yaml` with `status: audit_stale`.
+- The first fresh audit under schema v2 populates state.yaml properly.
+
+The legacy `audits/<DOMAIN>.md` files were removed; restore with `git checkout` if needed.

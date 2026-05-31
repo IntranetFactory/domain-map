@@ -1,0 +1,218 @@
+schema_version: 2
+domain: EMP-EXP
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S6
+    summary: Insert trigger_events row survey_campaign.closed (state_change on survey_campaigns id 181); prerequisite for B1A-S7 and B1A-S9.
+    finding: Lifecycle state 585 (survey_campaigns id 181 'closed') has requires_permission=true and permission_verb_override='close_survey_campaign', but no matching trigger_events row exists with event_name='survey_campaign.closed'. trigger_events id 449 covers 'survey_campaign.launched' only; id 134 'survey.cycle_closed' is wrong-attribution (keyed at engagement_drivers id 183). Downstream consumers cannot subscribe to the close signal.
+    action: Insert trigger_events row with event_name='survey_campaign.closed', event_category='state_change', data_object_id=181. Capture the new id for B1A-S7 and B1A-S9.
+    affected_events:
+      - {id: null, event_name: survey_campaign.closed, current_category: missing, proposed_category: state_change}
+    affected_masters:
+      - {data_object_id: 181, name: survey_campaigns, target_module_id: 64, workflow: campaign_lifecycle}
+
+  - id: B1A-S7
+    summary: Re-point handoffs 442 and 115 from wrong-attribution trigger_event 134 to the new survey_campaign.closed event; DELETE or rename event 134.
+    finding: trigger_events id 134 'survey.cycle_closed' is keyed at engagement_drivers (id 183) but the event semantic is about the survey campaign closing, not a state on a config-shaped driver. Handoffs 442 (EMP-EXP-CONTINUOUS-LISTEN -> HCM) and 115 (EMP-EXP-CONTINUOUS-LISTEN -> PA) both ride this mis-attributed event.
+    action: After B1A-S6 lands, PATCH handoffs 442 and 115 trigger_event_id to the new survey_campaign.closed event id. Then DELETE trigger_events id 134, or rename it to engagement_driver.cycle_closed if cycle-close at driver level is a real concept (unlikely).
+    blocked_by:
+      - {type: depends_on, ref: B1A-S6, reason: new event must exist before handoff re-point}
+    affected_handoffs:
+      - {handoff_id: 442, direction: outbound, source_domain: EMP-EXP, target_domain: HCM, trigger_event: survey.cycle_closed, payload: engagement_drivers, null_field: trigger_event_id_misattributed}
+      - {handoff_id: 115, direction: outbound, source_domain: EMP-EXP, target_domain: PA, trigger_event: survey.cycle_closed, payload: engagement_drivers, null_field: trigger_event_id_misattributed}
+    affected_events:
+      - {id: 134, event_name: survey.cycle_closed, current_category: state_change, proposed_category: deleted_or_renamed}
+
+  - id: B1A-S9
+    summary: Author 2 intra-domain handoffs between EMP-EXP-CONTINUOUS-LISTEN (64) and EMP-EXP-ACTION-PLANNING (65) to close B9b hard-fail.
+    finding: Zero intra-domain handoffs rows exist for EMP-EXP despite 2 modules and a clear cross-module flow. data_object_relationships row 146 (engagement_drivers triggers action_plans) names exactly this cross-module event chain; today the catalog has no handoff row backing it. On a multi-module domain B9b requires at least one intra-domain handoff.
+    action: Insert 2 handoffs (source_domain_id=target_domain_id=62, source_domain_module_id=64, target_domain_module_id=65, integration_pattern=lifecycle_progression, friction_level=low). First on the new survey_campaign.closed event so Action Planning picks up driver scores; second on a new engagement_driver.flagged threshold event so driver-level signals spawn action plans.
+    blocked_by:
+      - {type: depends_on, ref: B1A-S6, reason: survey_campaign.closed event must exist first}
+    affected_modules: [64, 65]
+    affected_masters:
+      - {data_object_id: 183, name: engagement_drivers, target_module_id: 65, workflow: spawn_action_plan_on_flagged}
+      - {data_object_id: 184, name: action_plans, target_module_id: 65, workflow: action_plan_open_on_close}
+
+  - id: B1A-S13-RES
+    summary: 11 agent_curated APQC handoff_processes rows remain at record_status='new'; H1 catalog quality stays 0% until reviewer sign-off. Handoff 116 still untagged (gated on B2-S4).
+    finding: After the 2026-05-31 Continuation, 12 of 13 cross-domain EMP-EXP handoffs carry handoff_processes rows. 11 of those (ids 468-478) are proposal_source='agent_curated' record_status='new'; row 86 (handoff 1107) is proposal_source='discovery_substring' kept per audit. Zero handoff_processes rows on the EMP-EXP surface are record_status='approved', so the catalog-quality headline is 0%. Handoff 116 (attrition_risk.high -> HCM) is the 13th row and remains untagged because the underlying B2-S4 reclassification gates the choice of PCF L3/L4.
+    action: Surface to reviewer for record_status='approved' promotion (Rule #1 forbids the agent from promoting unilaterally). Tag handoff 116 after B2-S4 disposition lands (likely 21439 'Manage employee assistance and retention' L3 if the publisher attribution is accepted).
+    blocked_by:
+      - {type: user_decision, ref: B2-S4}
+    affected_handoffs:
+      - {handoff_id: 442, direction: outbound, source_domain: EMP-EXP, target_domain: HCM, trigger_event: survey.cycle_closed, payload: engagement_drivers, null_field: record_status_new}
+      - {handoff_id: 443, direction: outbound, source_domain: EMP-EXP, target_domain: TALENT-MGMT, trigger_event: survey_response.received, payload: survey_responses, null_field: record_status_new}
+      - {handoff_id: 444, direction: outbound, source_domain: EMP-EXP, target_domain: PA, trigger_event: survey_response.received, payload: survey_responses, null_field: record_status_new}
+      - {handoff_id: 445, direction: outbound, source_domain: EMP-EXP, target_domain: WORK-MGMT, trigger_event: action_plan.created, payload: action_plans, null_field: record_status_new}
+      - {handoff_id: 1077, direction: outbound, source_domain: EMP-EXP, target_domain: PA, trigger_event: action_plan.completed, payload: action_plans, null_field: record_status_new}
+      - {handoff_id: 1078, direction: outbound, source_domain: EMP-EXP, target_domain: HCM, trigger_event: action_plan.completed, payload: action_plans, null_field: record_status_new}
+      - {handoff_id: 1248, direction: outbound, source_domain: EMP-EXP, target_domain: WORK-MGMT, trigger_event: action_plan.completed, payload: action_plans, null_field: record_status_new}
+      - {handoff_id: 115, direction: outbound, source_domain: EMP-EXP, target_domain: PA, trigger_event: survey.cycle_closed, payload: engagement_drivers, null_field: record_status_new}
+      - {handoff_id: 1136, direction: inbound, source_domain: COMP-MGMT, target_domain: EMP-EXP, trigger_event: compensation_statement.issued, payload: compensation_statements, null_field: record_status_new}
+      - {handoff_id: 409, direction: inbound, source_domain: ONBOARDING, target_domain: EMP-EXP, trigger_event: journey.day_one_reached, payload: onboarding_journeys, null_field: record_status_new}
+      - {handoff_id: 1231, direction: inbound, source_domain: ONBOARDING, target_domain: EMP-EXP, trigger_event: onboarding_stage.completed, payload: onboarding_journeys, null_field: record_status_new}
+      - {handoff_id: 116, direction: outbound, source_domain: EMP-EXP, target_domain: HCM, trigger_event: attrition_risk.high, payload: employees, null_field: untagged_pending_B2_S4}
+
+  - id: B1A-C
+    summary: Wire all 5 EMP-EXP capabilities to the Employee Experience business function (id 79) via business_function_capabilities to close the C-band hard-fail.
+    finding: business_function_capabilities?capability_id=in.(45,46,47,48,49) returns 0 rows. The Employee Experience business function (id 79) exists, as do Employee Relations (41) and Employee Onboarding (82), but no owner / consumer attribution is recorded for the EMP-EXP capabilities. The C-band requires at least one owner business_function per domain.
+    action: Insert 5 business_function_capabilities rows (one per capability_id 45-49) with business_function_id=79 and responsibility_type='owner'. Optionally add secondary consumer rows tying ACTION-PLAN (49) and LIFECYCLE-LISTEN (48) to Employee Onboarding (82) for cross-function consumer attribution.
+    affected_entities: [ENG-SURVEY, PULSE-SURVEY, 360-FEEDBACK, LIFECYCLE-LISTEN, ACTION-PLAN]
+
+b1b:
+  - id: B1B-S1
+    summary: Author 3 roles for EMP-EXP plus role_modules and role_permissions to close E1-E5 hard-fail; blocked on user role-design direction.
+    finding: role_modules?domain_module_id=in.(64,65) returns 0. Domain has 2 modules and 5 capabilities (multi-module is true), so E1 requires >=3 roles with the 2-module floor. The 2026-05-30 audit proposed EMPLOYEE-EXPERIENCE-PROGRAM-MANAGER (owner of listening cycles + action planning), HR-BUSINESS-PARTNER (cross-functional, consumes engagement_drivers and runs action planning for their org_unit), PEOPLE-MANAGER (cross-functional, owns action_plans for their team).
+    blocked_by:
+      - {type: user_decision, ref: B2-S6, reason: skill rename / split shapes which workflow-gate permissions exist and therefore which role_permissions rows are needed}
+    affected_modules: [64, 65]
+
+  - id: B1B-S2
+    summary: Insert system skill for module 65 plus rename / split of skill 55; blocked on B2-S6 disposition.
+    finding: Skill 55 (emp-exp-system) is anchored only to module 64; module 65 has no skill_type='system' skill. Rule #17 requires exactly one system skill per domain_modules row. The new skill needs >=3 skill_tools rows; query_action_plans (tool 444) should move from skill 55 to the new module 65 skill.
+    blocked_by:
+      - {type: user_decision, ref: B2-S6}
+    affected_modules: [65]
+
+  - id: B1B-S3
+    summary: Extend Phase-S toolset with workflow-gate mutates and notify abstractions; bundled with B1B-S2.
+    finding: Skill 55 carries 6 skill_tools rows (5 query reads + send_email). Floor for the listening surface is query + the workflow-gate mutates (create_survey_campaign, launch_survey_campaign, close_survey_campaign, submit_survey_response) plus notify_person / notify_team. New module-65 skill needs query_action_plans, create_action_plan, complete_action_plan plus notify_person.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S2, reason: per-module skill identity drives where each tool attaches}
+    affected_modules: [64, 65]
+
+  - id: B1B-S4
+    summary: PATCH skill_tools row 513 to repoint send_email (37) at notify_team (914) for broadcast survey invitations; optionally add notify_person (913) row for single-recipient nudges. Sequenced after B1B-S3 to keep the F-band update atomic.
+    finding: skill_tools row 513 links send_email (tool 37, channel-specific side_effect) on skill 55 with empty notes. Per F7 the default for generic survey-invite notifications is notify_team for broadcast or notify_person for single-recipient. Tools notify_person (id 913) and notify_team (id 914) both exist as side_effect tools.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S3, reason: F-band fix should land as a single coherent toolset extension}
+    affected_modules: [64]
+
+  - id: B1B-S11-RES
+    summary: Outbound handoff 1077 target_domain_module_id NULL; owed by PA audit declaring a consumer DMDO on action_plans (id 184).
+    finding: Handoff 1077 (EMP-EXP-ACTION-PLANNING action_plan.completed -> PA) carries target_domain_module_id=82 in catalog but the audit notes PA holds no DMDO row on action_plans, so the target module derivation is genuinely ambiguous. The 2026-05-30 audit flagged this as PA-owed; today's re-check confirms PA has no consumer DMDO on data_object_id=184 in any PA module. EMP-EXP cannot fix unilaterally without writing into PA's surface.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: PA, milestone: declare_consumer_dmdo_on_action_plans}
+    affected_handoffs:
+      - {handoff_id: 1077, direction: outbound, source_domain: EMP-EXP, target_domain: PA, trigger_event: action_plan.completed, payload: action_plans, null_field: target_domain_module_id_indeterminate}
+
+b2:
+  - id: B2-S1
+    summary: Pattern-flag positive re-evaluation per Rule #12 (5 candidates across 4 masters).
+    question: Should engagement_drivers.has_submit_lock=true (driver definitions freeze once published), pulse_questions.has_submit_lock=true (published questions immutable), survey_responses.has_submit_lock=true (submitted response immutable for audit trail), action_plans.has_personal_content=true (manager-employee conversation context), action_plans.has_single_approver=true (manager approval gating)?
+    options: [per-flag yes, per-flag no, defer-to-next-pass]
+    why: Pattern flags are workflow-shape judgments the user owns; default false does not establish review. Rule #15 forbids capturing the consideration in notes.
+
+  - id: B2-S2
+    summary: Rule #15 notes pollution on data_objects 183 and 185.
+    question: |
+      engagement_drivers (id 183) carries "Config-shaped framework definitions; no workflow. Edited by program admin; record_status is the only state worth tracking." and pulse_questions (id 185) carries "Config-shaped library entries; published vs draft is the only state worth tracking and is captured by record_status." Were these notes user-approved at load time or were they auto-populated by the loader? Rule #15 rescinded the prior Rule #12 license to write this exemption to data_objects.notes.
+    options: [user-approved-leave-in-place, auto-written-PATCH-to-empty-and-log-incident]
+    why: Audit alone cannot distinguish; the notes wording is exactly the templated pattern the rule flags as forbidden but the user may have approved the wording at load time.
+
+  - id: B2-S3
+    summary: Rule #15 notes pollution on handoffs 116 and 1231.
+    question: |
+      Handoff 116 carries "B10b tie resolution: trigger_events.data_object_id=employees is embedded_master on both EMP-EXP modules. attrition_risk.high is derived from survey_responses + engagement_drivers analysis, so CONTINUOUS-LISTEN is the signal publisher." Handoff 1231 carries "Stage completion (pre-board, day-one, week-one, 30-day) fires onboarding milestone surveys via EMP-EXP continuous-listen." Were these user-approved? Handoff 1077's notes were cleared in the 2026-05-31 Continuation.
+    options: [user-approved-leave-in-place, auto-written-PATCH-to-empty-and-record-context-in-audit-or-chat-instead]
+    why: Both wording shapes match the auto-written pattern; load-time approval status unknown.
+
+  - id: B2-S4
+    summary: Reclassify handoff 116 (attrition_risk.high publisher) so the event is keyed against an EMP-EXP-mastered entity rather than HCM-mastered employees.
+    question: Handoff 116 publishes on trigger_event 10 (attrition_risk.high) which is keyed at employees (id 31, embedded_master here, canonical master in HCM). EMP-EXP cannot publish a state-change on an entity it does not master. Three options to make it well-formed.
+    options: [a-new-derived-EMP-EXP-entity-engagement_signals-and-rekey-event, b-keep-employees-payload-add-derived-relationship-and-treat-as-downstream-flag-signal, c-reclassify-as-compute-workflow-output-not-a-handoff]
+    why: Architectural intent question. Disposition gates B1A-S13-RES tagging of handoff 116 and may inform B3-S5 / B3-S9 vendor research.
+
+  - id: B2-S5
+    summary: Duplicate user-edges (data_object_relationships rows 151 and 152) on (users, survey_campaigns).
+    question: Row 151 (users owns survey_campaigns) and row 152 (users creates survey_campaigns) both target the same pair. Is owner/creator semantically distinct enough to keep as two rows or is one redundant?
+    options: [a-DELETE-152-owner-subsumes-creator, b-rename-152-verb-to-authors-distinct-lifecycle-role, c-leave-both-duplication-intentional]
+    why: Editorial decision; catalog convention elsewhere preferred a single actor-role row.
+
+  - id: B2-S6
+    summary: Skill 55 rename and per-module split (gates B1B-S2 / B1B-S3 / B1B-S4 and indirectly B1B-S1 role_permissions wiring).
+    question: Skill 55 is named emp-exp-system (hyphenated, domain-spanning) but anchored only to module 64. Rule #17 prefers per-module naming. Renaming has UI side-effects on any user-side references to the old skill code.
+    options: [a-rename-skill-55-to-emp_exp_continuous_listen_agent-create-new-emp_exp_action_planning_agent-for-module-65, b-leave-skill-55-as-is-create-only-new-module-65-skill-accept-naming-drift, c-delete-and-recreate-both]
+    why: UI / RBAC discovery surface depends on how skill codes are referenced today.
+
+b3:
+  - id: B3-S1
+    candidate: survey_templates
+    rationale: Every flagship distinguishes the question bank (pulse_questions) from the reusable campaign template (theme, cadence, target population shape). Today EMP-EXP has no template entity.
+    vendor_evidence:
+      - {vendor: Culture Amp, evidence: 1st_class}
+      - {vendor: Workday Peakon Employee Voice, evidence: 1st_class}
+      - {vendor: Glint, evidence: 1st_class}
+    proposed_module: EMP-EXP-CONTINUOUS-LISTEN
+
+  - id: B3-S2
+    candidate: engagement_themes
+    rationale: Themes (Belonging, Wellbeing, Manager Effectiveness, Recognition) group drivers and are the unit of cross-time-period reporting. Distinct from drivers (themes are higher-level taxonomy, drivers are individual signals).
+    vendor_evidence:
+      - {vendor: Culture Amp, evidence: 1st_class}
+      - {vendor: Workday Peakon Employee Voice, evidence: 1st_class}
+    proposed_module: EMP-EXP-CONTINUOUS-LISTEN
+
+  - id: B3-S3
+    candidate: survey_invitations
+    rationale: Audience-side row, one invitation per (campaign, employee), captures delivery / open / completion timestamps. Distinct from survey_responses (invitation exists before any response). Strongest gap signal in this bucket.
+    vendor_evidence:
+      - {vendor: Workday Peakon Employee Voice, evidence: 1st_class}
+      - {vendor: Glint, evidence: 1st_class}
+    proposed_module: EMP-EXP-CONTINUOUS-LISTEN
+
+  - id: B3-S4
+    candidate: sentiment_topics
+    rationale: NLP-derived topics from free-text comments. Culture Amp Topic Clustering and Peakon Comment Themes are flagship surfaces.
+    vendor_evidence:
+      - {vendor: Culture Amp, evidence: 1st_class}
+      - {vendor: Workday Peakon Employee Voice, evidence: 1st_class}
+    proposed_module: EMP-EXP-CONTINUOUS-LISTEN
+
+  - id: B3-S5
+    candidate: manager_action_recommendations
+    rationale: Agent-generated suggestion row preceding a human-approved action_plans row. 15Five Predictive Impact and Peakon Manager Recommended Actions treat these as first-class with accept / reject / customize lifecycle. Resolution may unlock B2-S4 option (a).
+    vendor_evidence:
+      - {vendor: 15Five, evidence: 1st_class}
+      - {vendor: Workday Peakon Employee Voice, evidence: 1st_class}
+      - {vendor: Lattice, evidence: secondary}
+    proposed_module: EMP-EXP-ACTION-PLANNING
+
+  - id: B3-S6
+    candidate: 360_review_cycles
+    rationale: Capability 360-FEEDBACK exists but no master entity carries the cycle config (rater pool, anonymity rules, review window).
+    vendor_evidence:
+      - {vendor: Lattice, evidence: 1st_class}
+      - {vendor: Culture Amp, evidence: 1st_class}
+      - {vendor: Leapsome, evidence: 1st_class}
+    proposed_module: EMP-EXP-CONTINUOUS-LISTEN
+
+  - id: B3-S7
+    candidate: recognition_events
+    rationale: Peer-to-peer recognition entries (Bonusly / Kudos / Workhuman model). Adjacent to engagement but distinct workflow; pure-play vendor evidence argues for PEER-RECOGNITION promotion rather than EMP-EXP inclusion.
+    vendor_evidence:
+      - {vendor: Bonusly, evidence: 1st_class}
+      - {vendor: Workhuman, evidence: 1st_class}
+      - {vendor: Achievers, evidence: 1st_class}
+    proposed_module: EMP-EXP-CONTINUOUS-LISTEN
+    extra_blocked_by_decision: PEER-RECOGNITION promote-vs-fold in audits/_missing-domains.md
+
+  - id: B3-S8
+    candidate: pulse_cohorts
+    rationale: Sampling-cohort entity used to vary pulse frequency by team-rotation (rotate which fraction of company gets surveyed each week). Distinct from org_units because cohorts can be ad-hoc.
+    vendor_evidence:
+      - {vendor: Workday Peakon Employee Voice, evidence: 1st_class}
+      - {vendor: Glint, evidence: 1st_class}
+    proposed_module: EMP-EXP-CONTINUOUS-LISTEN
+
+  - id: B3-S9
+    candidate: engagement_score_snapshots
+    rationale: Time-series score record (per period x org_unit x driver). engagement_drivers is config-shaped; actual computed scores have no home today. Strongest gap signal in this bucket alongside B3-S3.
+    vendor_evidence:
+      - {vendor: Glint, evidence: 1st_class}
+      - {vendor: Workday Peakon Employee Voice, evidence: 1st_class}
+    proposed_module: EMP-EXP-CONTINUOUS-LISTEN

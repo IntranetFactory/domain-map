@@ -1,0 +1,233 @@
+schema_version: 2
+domain: RE-CRE
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-B6
+    summary: "Author 6 intra-domain master-to-master data_object_relationships on the 6 RE-CRE masters (B6 hard fail)."
+    finding: "Zero intra-domain master-to-master data_object_relationships across commercial_leases (363), stacking_plans (364), cam_charges (365), tenant_credit_records (719), sublease_transactions (720), building_certifications (721). Pre-existing edges are user-edges (15 rows on data_object 748) and 2 cross-domain (352, 519); no intra-domain edges exist."
+    action: "Insert 6 rows: commercial_leases has_many cam_charges (1:N); commercial_leases has_one tenant_credit_record (1:1); commercial_leases has_many sublease_transactions (1:N); stacking_plans has_many commercial_leases (1:N); stacking_plans references_one building_certification (N:1); cam_charges referenced_by commercial_leases (inverse pair of the first edge if not already covered). relationship_kind=reference, owner_side=source, is_required per workflow."
+    affected_masters:
+      - {data_object_id: 363, name: commercial_leases, target_module_id: null, workflow: leasing}
+      - {data_object_id: 364, name: stacking_plans, target_module_id: null, workflow: space_inventory}
+      - {data_object_id: 365, name: cam_charges, target_module_id: null, workflow: cam_ops}
+      - {data_object_id: 719, name: tenant_credit_records, target_module_id: null, workflow: leasing_underwriting}
+      - {data_object_id: 720, name: sublease_transactions, target_module_id: null, workflow: leasing}
+      - {data_object_id: 721, name: building_certifications, target_module_id: null, workflow: space_inventory}
+
+  - id: B1A-B11
+    summary: "Author >=1 data_object_aliases row per of 6 RE-CRE masters (B11 fail)."
+    finding: "Zero data_object_aliases on any of 6 masters despite vendor-specific synonyms documented in prior audit (Yardi, MRI, VTS, CoStar, Lucernex naming variants)."
+    action: "Insert alias rows: commercial_leases -> Office Leases / Retail Leases / Net Leases / Lease Abstracts; cam_charges -> CAM Reconciliations / Operating Expense Pass-throughs; stacking_plans -> Building Stack / Vacancy Stack / Floor Plates; tenant_credit_records -> Tenant Credit Reviews / Lease Underwriting; sublease_transactions -> Sublet Agreements / Subordination Agreements; building_certifications -> Green Certifications / Energy Ratings / LEED / Energy Star / BREEAM / WELL. Rule #15: alias.notes empty by default."
+    affected_entities: [commercial_leases, stacking_plans, cam_charges, tenant_credit_records, sublease_transactions, building_certifications]
+    vendor_evidence:
+      - {vendor: Yardi Voyager, evidence: 1st_class}
+      - {vendor: MRI Commercial, evidence: 1st_class}
+      - {vendor: VTS Platform, evidence: 1st_class}
+      - {vendor: CoStar Suite, evidence: 1st_class}
+      - {vendor: Lucernex, evidence: 1st_class}
+
+  - id: B1A-H1
+    summary: "Deduplicate 2 handoff_processes rows on handoffs 297 and 856 per L2/L3-parent preference (H1)."
+    finding: "Handoff 297 carries duplicate tags 188 (process 1860 L5 Close the sale) and 457 (process 398 L3 Negotiate and document agreements/contracts). Handoff 856 carries 168 (process 343 L3 Develop property strategy discovery_substring) and 400 (process 1511 L4 Confirm alignment of property requirements agent_curated). Per audit procedure preference for L2/L3 parent on 297, AND analyst-chosen agent_curated over substring on 856, keep parent/analyst rows and DELETE descendants/substring."
+    action: "DELETE handoff_processes id=188 (handoff 297 L5 row); DELETE handoff_processes id=168 (handoff 856 substring row). Keep id=457 on 297 (L3 398) and id=400 on 856 (L4 1511)."
+    affected_handoffs:
+      - {handoff_id: 297, direction: inbound, source_domain: RE-BROKERAGE, target_domain: RE-CRE, trigger_event: real_estate_transaction.closed, payload: real_estate_transactions, null_field: target_domain_module_id}
+      - {handoff_id: 856, direction: inbound, source_domain: REAL-EST, target_domain: RE-CRE, trigger_event: property.listed, payload: real_estate_properties, null_field: source_and_target_domain_module_id}
+
+b1b:
+  - id: B1B-M1
+    summary: "Author 3-4 domain_modules + 6 master DMDOs + 6 capability junctions; resolves M1 / M2 / M4 / M7 hard fails."
+    finding: "RE-CRE has 0 domain_modules. Rule #14 requires >=1 full module per domain and >=2 for >=3 capabilities (RE-CRE has 6). M7 catalog-wide: zero modules anywhere master any of the 6 RE-CRE masters. Proposed 4-module shape (RE-CRE-LEASING, RE-CRE-CAM-OPS, RE-CRE-SPACE-INVENTORY, RE-CRE-MARKET-INTEL); alternatives are 2 / 3 / 5 modules."
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    affected_modules: []
+    affected_entities: [commercial_leases, stacking_plans, cam_charges, tenant_credit_records, sublease_transactions, building_certifications]
+
+  - id: B1B-B10b
+    summary: "PATCH NULL source_domain_module_id on 8 of 9 RE-CRE-side handoffs (B10b hard fail)."
+    finding: "8 handoffs have NULL source_domain_module_id on the RE-CRE side: outbound 302, 303, 304, 309, 859, 860; inbound target NULL on 297, 861 (sources wired at 151 RE-BROKERAGE); 856 NULL both ends. Mapping derivable from trigger event payload after B1B-M1 lands modules."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+      - {type: user_decision, ref: B2-S3}
+    affected_handoffs:
+      - {handoff_id: 302, direction: outbound, source_domain: RE-CRE, target_domain: AP-AUTO, trigger_event: cam_charge.reconciled, payload: cam_charges, null_field: source_domain_module_id}
+      - {handoff_id: 303, direction: outbound, source_domain: RE-CRE, target_domain: RE-INVEST, trigger_event: commercial_lease.executed, payload: commercial_leases, null_field: source_and_target_domain_module_id}
+      - {handoff_id: 304, direction: outbound, source_domain: RE-CRE, target_domain: FSM, trigger_event: tenant_maintenance_request.created, payload: tenant_maintenance_requests, null_field: source_domain_module_id}
+      - {handoff_id: 309, direction: outbound, source_domain: RE-CRE, target_domain: CLM, trigger_event: commercial_lease.executed, payload: commercial_leases, null_field: source_and_target_domain_module_id}
+      - {handoff_id: 859, direction: outbound, source_domain: RE-CRE, target_domain: RE-INVEST, trigger_event: tenant_credit.assessed, payload: tenant_credit_records, null_field: source_and_target_domain_module_id}
+      - {handoff_id: 860, direction: outbound, source_domain: RE-CRE, target_domain: AUDIT, trigger_event: building_certification.earned, payload: building_certifications, null_field: source_and_target_domain_module_id}
+      - {handoff_id: 297, direction: inbound, source_domain: RE-BROKERAGE, target_domain: RE-CRE, trigger_event: real_estate_transaction.closed, payload: real_estate_transactions, null_field: target_domain_module_id}
+      - {handoff_id: 861, direction: inbound, source_domain: RE-BROKERAGE, target_domain: RE-CRE, trigger_event: listing.sold, payload: real_estate_listings, null_field: target_domain_module_id}
+      - {handoff_id: 856, direction: inbound, source_domain: REAL-EST, target_domain: RE-CRE, trigger_event: property.listed, payload: real_estate_properties, null_field: source_and_target_domain_module_id}
+
+  - id: B1B-B12
+    summary: "Author data_object_lifecycle_states for 6 masters (B12 hard fail); each state machine carries 4-7 states with workflow gates."
+    finding: "Zero data_object_lifecycle_states on any of 6 masters. State machines drafted in prior audit and carried forward: commercial_leases (loi_signed to under_negotiation to executed to active to expiring to renewed/expired/terminated; gates on executed and terminated); cam_charges (estimated to accrued to reconciled to billed to paid/disputed; gates on reconciled and billed); stacking_plans (draft to published to superseded; gate on published); tenant_credit_records (requested to under_review to approved/conditional/rejected; gates on three terminals); sublease_transactions (proposed to landlord_consent_pending to executed to active to terminated; gates on executed and terminated); building_certifications (applied to under_assessment to earned to current to expired/revoked; gates on earned and expired)."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1, reason: requires domain_module_id on workflow-gate states}
+    affected_masters:
+      - {data_object_id: 363, name: commercial_leases, target_module_id: null, workflow: leasing}
+      - {data_object_id: 364, name: stacking_plans, target_module_id: null, workflow: space_inventory}
+      - {data_object_id: 365, name: cam_charges, target_module_id: null, workflow: cam_ops}
+      - {data_object_id: 719, name: tenant_credit_records, target_module_id: null, workflow: leasing_underwriting}
+      - {data_object_id: 720, name: sublease_transactions, target_module_id: null, workflow: leasing}
+      - {data_object_id: 721, name: building_certifications, target_module_id: null, workflow: space_inventory}
+
+  - id: B1B-F1
+    summary: "Author 3-4 module-level system skills + tools, rebind 8 legacy skill_tools rows, retire legacy skill 96 (F1 / F2 / F3 fail)."
+    finding: "Legacy domain-level skill 96 (re-cre-system, domain_id=145, domain_module_id=null) is the only RE-CRE skill row. 0 module-level skill_type=system rows. F7 channel-vs-capability: legacy skill links send_email instead of notify_person."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+    action: "After modules land: author module-level system skills (e.g. re_cre_leasing_agent, re_cre_cam_ops_agent, re_cre_space_inventory_agent, optional re_cre_market_intel_agent); split / rebind 8 legacy skill_tools rows per master ownership; switch send_email to notify_person abstraction; DELETE legacy skill 96."
+    affected_modules: []
+
+  - id: B1B-B5
+    summary: "Handoff 304 (RE-CRE to FSM) payload tenant_maintenance_requests mastered by RE-PROP-MGMT, not RE-CRE (B5 fail + SCOPE-CREEP)."
+    finding: "Handoff 304 source_domain_id=145 (RE-CRE) but payload data_object_id=361 (tenant_maintenance_requests) is mastered by RE-PROP-MGMT (id 144). target_domain_module_id=161 set; source_domain_module_id=null."
+    blocked_by:
+      - {type: user_decision, ref: B2-S3}
+    affected_handoffs:
+      - {handoff_id: 304, direction: outbound, source_domain: RE-CRE, target_domain: FSM, trigger_event: tenant_maintenance_request.created, payload: tenant_maintenance_requests, null_field: source_domain_module_id}
+
+  - id: B1B-B8
+    summary: "Author 5 cross-domain data_object_relationships for handoff payloads (B8)."
+    finding: "5 cross-domain payload-to-target-master edges unauthored: commercial_leases flows_into investment_property_holdings (303 to RE-INVEST); tenant_credit_records informs investment_underwriting (859 to RE-INVEST); cam_charges reconciles_into payable_invoices (302 to AP-AUTO); real_estate_properties listed_in stacking_plans (856 inbound); real_estate_transactions becomes commercial_leases (297 and 861 inbound)."
+    blocked_by:
+      - {type: user_decision, ref: B2-S2, reason: target master ids on RE-INVEST and AP-AUTO TBD}
+      - {type: domain_audit, blocking_domain: RE-INVEST, milestone: phase_b_masters_published}
+      - {type: domain_audit, blocking_domain: AP-AUTO, milestone: payable_invoices_master_id}
+    affected_handoffs:
+      - {handoff_id: 302, direction: outbound, source_domain: RE-CRE, target_domain: AP-AUTO, trigger_event: cam_charge.reconciled, payload: cam_charges, null_field: cross_domain_relationship}
+      - {handoff_id: 303, direction: outbound, source_domain: RE-CRE, target_domain: RE-INVEST, trigger_event: commercial_lease.executed, payload: commercial_leases, null_field: cross_domain_relationship}
+      - {handoff_id: 859, direction: outbound, source_domain: RE-CRE, target_domain: RE-INVEST, trigger_event: tenant_credit.assessed, payload: tenant_credit_records, null_field: cross_domain_relationship}
+      - {handoff_id: 856, direction: inbound, source_domain: REAL-EST, target_domain: RE-CRE, trigger_event: property.listed, payload: real_estate_properties, null_field: cross_domain_relationship}
+      - {handoff_id: 861, direction: inbound, source_domain: RE-BROKERAGE, target_domain: RE-CRE, trigger_event: listing.sold, payload: real_estate_listings, null_field: cross_domain_relationship}
+
+  - id: B1B-B4
+    summary: "PATCH likely-true pattern flags on 6 RE-CRE masters (B4 fail)."
+    finding: "All 6 masters have has_personal_content=false, has_submit_lock=false, has_single_approver=false by default. Likely true: commercial_leases.has_submit_lock + .has_single_approver; tenant_credit_records.has_personal_content (PII: SSN, financial statements) + .has_single_approver; sublease_transactions.has_submit_lock + .has_single_approver; building_certifications.has_submit_lock; cam_charges.has_submit_lock."
+    blocked_by:
+      - {type: user_decision, ref: B2-S5}
+    affected_entities: [commercial_leases, tenant_credit_records, sublease_transactions, building_certifications, cam_charges]
+
+  - id: B1B-A4
+    summary: "PATCH catalog_tagline + catalog_description on domains row 145 (A4 fail)."
+    finding: "domains.catalog_tagline and catalog_description both empty. Rule #20 draft+review+write loop. Working tagline draft: Manage commercial leases, CAM reconciliations, and stacking plans for office, retail, and industrial portfolios. Working description: 3-paragraph buyer-voice covering leasing pipeline, CAM reconciliation, stacking plans + comps."
+    blocked_by:
+      - {type: user_decision, ref: B2-S6}
+
+  - id: B1B-D1
+    summary: "INSERT domain_regulations rows for in-scope CRE regulations (D1 fail)."
+    finding: "RE-CRE has 0 domain_regulations. Likely in-scope: ASC 842 (US GAAP lease accounting), IFRS 16 (international lease accounting), ADA (id=61 verified live), Fair Housing Act (mixed-use), OSHA (building safety). First three universal; latter two situational."
+    blocked_by:
+      - {type: user_decision, ref: B2-S7}
+      - {type: catalog_addition, scope: regulations, trigger: ASC 842 and IFRS 16 may need fresh regulations rows}
+
+b2:
+  - id: B2-S1
+    summary: "Pick RE-CRE module split shape."
+    question: "How many modules should RE-CRE be split into and what masters does each own?"
+    options:
+      - "(a) 2 modules: RE-CRE-LEASING (commercial_leases + sublease_transactions + tenant_credit_records) + RE-CRE-OPERATIONS (cam_charges + stacking_plans + building_certifications)"
+      - "(b) 3 modules: RE-CRE-LEASING + RE-CRE-CAM-OPS + RE-CRE-SPACE-INVENTORY (folding market intel in)"
+      - "(c) 4 modules (proposed): RE-CRE-LEASING + RE-CRE-CAM-OPS + RE-CRE-SPACE-INVENTORY + RE-CRE-MARKET-INTEL"
+      - "(d) 5 modules: split RE-CRE-SUBLEASE out of leasing"
+    why: "Architectural decision driving module FKs on handoffs, lifecycle-state realizing modules, permission prefixes, and role bundles. Cannot be auto-derived from market shape alone."
+
+  - id: B2-S2
+    summary: "Confirm target master ids on RE-INVEST and AP-AUTO for B1B-B8 cross-domain relationships."
+    question: "What are the target master ids for the 5 missing cross-domain edges, and are those masters present in the catalog?"
+    options:
+      - "Supply ids for: investment_property_holdings (RE-INVEST), investment_underwriting (RE-INVEST), payable_invoices (AP-AUTO), real_estate_properties (REAL-EST id 344 exists), real_estate_transactions (RE-BROKERAGE id 353 exists)"
+      - "Defer RE-INVEST edges pending RE-INVEST audit"
+    why: "RE-INVEST has not been audited under schema_version 2; target masters may not yet exist or may carry different names."
+
+  - id: B2-S3
+    summary: "Handoff 304 disposition (RE-CRE to FSM on tenant_maintenance_requests payload owned by RE-PROP-MGMT)."
+    question: "How should the B5 boundary violation on handoff 304 be resolved?"
+    options:
+      - "(a) DELETE handoff 304 (also delete handoff_processes id=369); RE-PROP-MGMT owns the residential FSM handoff"
+      - "(b) Author CRE-scoped cre_tenant_maintenance_requests data_object on RE-CRE; re-target handoff 304 payload"
+      - "(c) Accept tenant_maintenance_requests as a contributor DMDO on RE-CRE; keep handoff"
+      - "(d) Re-source handoff from RE-PROP-MGMT (change source_domain_id 145 to 144)"
+    why: "Whether RE-CRE scope includes CRE-side facility maintenance vs. delegates entirely to FSM via RE-PROP-MGMT is a scope-boundary call."
+
+  - id: B2-S4
+    summary: "investment_properties (id 366) attribution on RE-CRE."
+    question: "Should investment_properties remain a contributor + required DMDO on RE-CRE, or change?"
+    options:
+      - "(a) Keep as contributor + required"
+      - "(b) Demote to embedded_master + optional per Rule #16 (infrastructure master pattern)"
+      - "(c) Rename data_object to cre_investment_holdings to disambiguate from RE-INVEST naming"
+    why: "Cross-domain master attribution requires confirming where canonical master lives; RE-INVEST audit context required."
+
+  - id: B2-S5
+    summary: "B4 pattern-flag positive review on 6 RE-CRE masters."
+    question: "Confirm per flag per master (yes/no): commercial_leases.has_submit_lock; commercial_leases.has_single_approver; tenant_credit_records.has_personal_content; tenant_credit_records.has_single_approver; sublease_transactions.has_submit_lock; sublease_transactions.has_single_approver; building_certifications.has_submit_lock; cam_charges.has_submit_lock."
+    options:
+      - "Per-flag yes/no across 8 candidates"
+    why: "Workflow-shape judgments owned by user; Rule #15 forbids notes commentary on the decisions."
+
+  - id: B2-S6
+    summary: "Catalog UX wording on RE-CRE (Rule #20)."
+    question: "Approve / rewrite / replace the draft catalog_tagline and 3-paragraph catalog_description for RE-CRE."
+    options:
+      - "Approve drafts as-is"
+      - "Request rewrites (specify direction)"
+      - "Supply replacement text"
+    why: "Marketing-voice copy is user owned; once set, Rule #20 forbids unapproved overwrites."
+
+  - id: B2-S7
+    summary: "D1: confirm in-scope domain_regulations for RE-CRE."
+    question: "Which of ASC 842, IFRS 16, ADA, Fair Housing Act, OSHA to load as domain_regulations on RE-CRE?"
+    options:
+      - "All five"
+      - "Universal three only (ASC 842, IFRS 16, ADA)"
+      - "User-selected subset"
+    why: "Regulation applicability is jurisdiction and buyer-side judgment, not purely structural."
+
+b3:
+  - id: B3-S1
+    candidate: rent_rolls
+    rationale: "Every CRE platform ships rent roll as a first-class artifact (Yardi Rent Roll, MRI Rent Roll, VTS Rent Roll). Point-in-time summary across all leases on a property; distinct from commercial_leases."
+    vendor_evidence: [Yardi Voyager, MRI Commercial, VTS Platform]
+    proposed_module: RE-CRE-LEASING
+
+  - id: B3-S2
+    candidate: tenant_improvement_allowances
+    rationale: "Yardi TI Tracker, MRI TI Management, VTS TI Module; budgeted allowance landlord grants for buildout with amortization schedule."
+    vendor_evidence: [Yardi Voyager, MRI Commercial, VTS Platform]
+    proposed_module: RE-CRE-LEASING
+
+  - id: B3-S3
+    candidate: percentage_rent_calculations
+    rationale: "Retail CRE periodic tenant sales reporting for percentage rent calc (percent of sales above breakpoint)."
+    vendor_evidence: [Yardi Retail, MRI Retail, Argus Enterprise]
+    proposed_module: RE-CRE-LEASING
+
+  - id: B3-S4
+    candidate: lease_abstracts
+    rationale: "Lucernex flagship deliverable, CoStar Real Estate Manager, Visual Lease; structured digest of lease terms extracted from executed legal document. Distinct from commercial_leases (legal instrument vs data view)."
+    vendor_evidence: [Lucernex, CoStar Suite, Visual Lease]
+    proposed_module: RE-CRE-LEASING
+
+  - id: B3-S5
+    candidate: market_comparables
+    rationale: "CoStar canonical product; transaction comp data for office / retail / industrial markets (lease comps + sale comps)."
+    vendor_evidence: [CoStar Suite, Reonomy, MRI Commercial, VTS Platform]
+    proposed_module: RE-CRE-MARKET-INTEL
+
+  - id: B3-S6
+    candidate: letters_of_intent
+    rationale: "VTS Lease, Yardi Deal Manager, MRI Deal Manager; pre-lease pipeline from LOI through execution. The RE-CRE description anchors LOI-to-executed-lease explicitly."
+    vendor_evidence: [VTS Platform, Yardi Voyager, MRI Commercial]
+    proposed_module: RE-CRE-LEASING
+
+extra_carried_from_prior_audit: true
+extra_resolved_this_cycle:
+  - {ref: B1-S5, summary: "trigger_events.event_category backfilled (5 PATCH); all 7 events now lifecycle"}
+  - {ref: B1-S3, summary: "13 user-edge data_object_relationships authored per Rule #10 (ids 1649-1661); 15 user-edges total counting pre-existing id 1889"}
+  - {ref: H1_initial_5_tags, summary: "4 INSERT + 1 PATCH on handoff_processes for handoffs 303, 859, 860, 297, 309; 2 duplicates surfaced as B1A-H1 dedup item"}

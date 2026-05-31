@@ -1,0 +1,428 @@
+schema_version: 2
+domain: LOYALTY
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S12
+    summary: PATCH event_category='lifecycle' on three trigger_events whose category is empty string.
+    finding: >-
+      Trigger events 497 (loyalty_transaction.posted, data_object_id=264),
+      498 (redemption_reward.published, data_object_id=717), 499
+      (redemption_transaction.completed, data_object_id=718) all carry
+      event_category=''. Rule #13 enum check (allowed values: lifecycle,
+      state_change, threshold, signal). All three describe lifecycle
+      transitions and should be lifecycle.
+    action: >-
+      PATCH trigger_events set event_category='lifecycle' where id in
+      (497, 498, 499). Surgical CLI is sufficient (three rows).
+    affected_events:
+      - {id: 497, event_name: "loyalty_transaction.posted", current_category: "", proposed_category: "lifecycle"}
+      - {id: 498, event_name: "redemption_reward.published", current_category: "", proposed_category: "lifecycle"}
+      - {id: 499, event_name: "redemption_transaction.completed", current_category: "", proposed_category: "lifecycle"}
+
+b1b:
+  - id: B1B-S1
+    summary: Author 4-module shape for LOYALTY (B1-S1, gates almost everything else).
+    finding: >-
+      LOYALTY has 8 capabilities and zero domain_modules rows. Rule #14 hard
+      fail (M1, M2, M4, M6). Every B / C / D / E / F downstream band cascades
+      until at least one full module exists. Proposed split (Bucket 2 item 1
+      pending user pick): LOY-PROGRAM-MGT (capabilities LOY-PROGRAM-MGT,
+      LOY-TIER-MGT, masters loyalty_tiers), LOY-MEMBER-MGT (LOY-MEMBER-MGT,
+      LOY-MEMBER-PORTAL, masters loyalty_members), LOY-LEDGER-REWARDS
+      (LOY-POINTS-LEDGER, LOY-REWARDS-CAT, masters loyalty_transactions,
+      redemption_rewards, redemption_transactions), LOY-PARTNER-PROMO
+      (LOY-PARTNER-ECO, LOY-PROMOTION-ENG, masters promotion_campaigns per
+      B1-M4).
+    blocked_by:
+      - {type: user_decision, ref: B2-MODULE-SPLIT}
+    affected_modules: []
+    affected_entities: [loyalty_members, loyalty_transactions, loyalty_tiers, redemption_rewards, redemption_transactions]
+    extra_capability_count: 8
+
+  - id: B1B-S2
+    summary: Author one module-level system skill per new LOYALTY module (F2).
+    finding: >-
+      Once modules exist, Rule #17 requires exactly one skill_type='system'
+      skill per domain_modules row with >=1 skill_tools row. Today LOYALTY
+      has only legacy skill 81 (loyalty-system, domain_module_id=NULL,
+      domain_id=78) with 6 skill_tools rows.
+    action: >-
+      Phase-S loader: author one <module_code_lower>_agent skill per new
+      module; migrate the existing 6 tool links from skill 81 to the matching
+      module skills (query_loyalty_members -> loy_member_mgt_agent;
+      query_loyalty_transactions + query_loyalty_tiers -> loy_ledger_rewards_agent
+      or loy_program_mgt_agent depending on Bucket 2 item 1 final shape;
+      query_redemption_rewards + query_redemption_transactions ->
+      loy_ledger_rewards_agent).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    extra_legacy_skill_id: 81
+    extra_legacy_tool_count: 6
+
+  - id: B1B-S3
+    summary: DELETE legacy skill 81 + its 6 skill_tools rows once module-level skills exist (F1).
+    finding: >-
+      Skill 81 (loyalty-system, skill_type=system, domain_id=78,
+      domain_module_id=NULL) is the only system skill today. F1 currently
+      passes as transitional, but once any module-level system skill lands
+      for LOYALTY it becomes obsolete and must be retired.
+    action: >-
+      DELETE skill_tools where skill_id=81 (6 rows), then DELETE skills
+      where id=81. Strict ordering: must follow B1B-S2.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S2}
+    extra_legacy_skill_id: 81
+    extra_legacy_tool_ids: [571, 572, 573, 37, 826, 827]
+
+  - id: B1B-S4
+    summary: Author data_object_lifecycle_states across LOYALTY masters (B12, Rule #12).
+    finding: >-
+      Zero data_object_lifecycle_states rows on any of the 5 masters.
+      Proposed state machines (final names per user review):
+      loyalty_members (active, lapsed, opted_out, closed),
+      loyalty_transactions (pending, posted, reversed, expired),
+      redemption_rewards (draft, published, paused, discontinued),
+      redemption_transactions (initiated, fulfilled, delivered, cancelled,
+      refunded). loyalty_tiers is the config-shape exemption candidate
+      (B2-LIFECYCLE-EXEMPT).
+    action: >-
+      Phase-B loader authoring states + requires_permission flags on
+      workflow gates + domain_module_id per realizing module (M5 needs the
+      module map).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: user_decision, ref: B2-LIFECYCLE-EXEMPT}
+    affected_masters:
+      - {data_object_id: 263, name: loyalty_members, target_module_id: null, workflow: lifecycle}
+      - {data_object_id: 264, name: loyalty_transactions, target_module_id: null, workflow: lifecycle}
+      - {data_object_id: 265, name: loyalty_tiers, target_module_id: null, workflow: config_shape}
+      - {data_object_id: 717, name: redemption_rewards, target_module_id: null, workflow: lifecycle}
+      - {data_object_id: 718, name: redemption_transactions, target_module_id: null, workflow: lifecycle}
+
+  - id: B1B-S5
+    summary: Author 2-3 data_object_aliases per LOYALTY master (B11).
+    finding: >-
+      Zero data_object_aliases rows on any master. Candidate synonym
+      clusters: loyalty_members <-> program_members / loyalty_program_subscribers;
+      loyalty_transactions <-> point_transactions / accrual_events;
+      loyalty_tiers <-> member_tiers / program_levels;
+      redemption_rewards <-> reward_catalog_items / redeemables;
+      redemption_transactions <-> reward_redemptions / burns.
+    action: >-
+      Phase-B cluster-drafts pattern: 2-3 alias rows per master with
+      alias_type (vendor / industry / abbreviation). Exact tuples pending
+      user-side cluster draft.
+    blocked_by:
+      - {type: user_decision, ref: B2-CLUSTER-DRAFTS}
+    affected_masters:
+      - {data_object_id: 263, name: loyalty_members, target_module_id: null, workflow: alias_cluster}
+      - {data_object_id: 264, name: loyalty_transactions, target_module_id: null, workflow: alias_cluster}
+      - {data_object_id: 265, name: loyalty_tiers, target_module_id: null, workflow: alias_cluster}
+      - {data_object_id: 717, name: redemption_rewards, target_module_id: null, workflow: alias_cluster}
+      - {data_object_id: 718, name: redemption_transactions, target_module_id: null, workflow: alias_cluster}
+
+  - id: B1B-S6
+    summary: Author intra-domain data_object_relationships (B6).
+    finding: >-
+      Zero relationship rows touching LOYALTY masters. Expected edges:
+      loyalty_members has loyalty_transactions, loyalty_members belongs_to
+      loyalty_tiers, redemption_transactions consumes loyalty_transactions,
+      redemption_transactions redeems redemption_rewards,
+      redemption_transactions issued_to loyalty_members.
+    action: >-
+      Phase-B loader, cluster-drafts pattern. Verb + inverse_verb +
+      relationship_type / relationship_kind + owner_side + is_required per
+      Rule #10. Exact tuples pending user cluster draft.
+    blocked_by:
+      - {type: user_decision, ref: B2-CLUSTER-DRAFTS}
+    extra_expected_edges:
+      - {verb: has, source: loyalty_members, target: loyalty_transactions}
+      - {verb: belongs_to, source: loyalty_members, target: loyalty_tiers}
+      - {verb: consumes, source: redemption_transactions, target: loyalty_transactions}
+      - {verb: redeems, source: redemption_transactions, target: redemption_rewards}
+      - {verb: issued_to, source: redemption_transactions, target: loyalty_members}
+
+  - id: B1B-S7
+    summary: Author users edges on LOYALTY masters (B7, Rule #10).
+    finding: >-
+      Zero data_object_relationships rows linking LOYALTY masters to the
+      platform-built-in users data_object. Expected actor labels:
+      loyalty_members (account_manager when B2B2C), loyalty_tiers
+      (config_author), redemption_rewards (catalog_owner),
+      loyalty_transactions (adjustment_author), redemption_transactions
+      (fulfillment_owner).
+    action: >-
+      Phase-B loader: author 5 relationship rows against users
+      (kind=platform_builtin). Tuples pending user cluster draft.
+    blocked_by:
+      - {type: user_decision, ref: B2-CLUSTER-DRAFTS}
+    extra_expected_actors:
+      - {master: loyalty_members, actor: account_manager}
+      - {master: loyalty_tiers, actor: config_author}
+      - {master: redemption_rewards, actor: catalog_owner}
+      - {master: loyalty_transactions, actor: adjustment_author}
+      - {master: redemption_transactions, actor: fulfillment_owner}
+
+  - id: B1B-S8
+    summary: Author cross-domain outbound data_object_relationships (B8).
+    finding: >-
+      Zero outbound relationship rows mirroring the 4 outbound handoffs.
+      Edges to author: loyalty_tiers <verb> CRM payload (handoff 231);
+      loyalty_members <verb> MA payload (handoff 232); loyalty_transactions
+      <verb> ERP-FIN payload (handoff 497); redemption_transactions <verb>
+      B2C-COMM payload (handoff 498). Final verbs reviewed by user.
+    action: Phase-B loader, 4 edges, same shape as B1B-S6.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: user_decision, ref: B2-CLUSTER-DRAFTS}
+    affected_handoffs:
+      - {handoff_id: 231, direction: outbound, source_domain: LOYALTY, target_domain: CRM, trigger_event: "tier.upgraded", payload: loyalty_tiers, null_field: null}
+      - {handoff_id: 232, direction: outbound, source_domain: LOYALTY, target_domain: MA, trigger_event: "member.lapsed", payload: loyalty_members, null_field: null}
+      - {handoff_id: 497, direction: outbound, source_domain: LOYALTY, target_domain: ERP-FIN, trigger_event: "loyalty_transaction.posted", payload: loyalty_transactions, null_field: null}
+      - {handoff_id: 498, direction: outbound, source_domain: LOYALTY, target_domain: B2C-COMM, trigger_event: "redemption_transaction.completed", payload: redemption_transactions, null_field: null}
+
+  - id: B1B-S9
+    summary: Backfill source_domain_module_id on all 4 outbound handoffs (B10b).
+    finding: >-
+      Handoffs 231, 232, 497, 498 all have source_domain_module_id=NULL.
+      Resolves automatically once LOYALTY has modules and the
+      domain_module_data_objects master row exists for each event's
+      data_object.
+    action: >-
+      Run backfill_handoff_modules loader after B1B-S1 lands. Derivation:
+      source_domain_module_id = LOYALTY module that holds the trigger event's
+      data_object_id with role='master'.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_handoffs:
+      - {handoff_id: 231, direction: outbound, source_domain: LOYALTY, target_domain: CRM, trigger_event: "tier.upgraded", payload: loyalty_tiers, null_field: source_domain_module_id}
+      - {handoff_id: 232, direction: outbound, source_domain: LOYALTY, target_domain: MA, trigger_event: "member.lapsed", payload: loyalty_members, null_field: source_domain_module_id}
+      - {handoff_id: 497, direction: outbound, source_domain: LOYALTY, target_domain: ERP-FIN, trigger_event: "loyalty_transaction.posted", payload: loyalty_transactions, null_field: source_domain_module_id}
+      - {handoff_id: 498, direction: outbound, source_domain: LOYALTY, target_domain: B2C-COMM, trigger_event: "redemption_transaction.completed", payload: redemption_transactions, null_field: source_domain_module_id}
+
+  - id: B1B-S10
+    summary: Populate catalog_tagline + catalog_description (A4, Rule #20).
+    finding: >-
+      domains.catalog_tagline and catalog_description for LOYALTY are both
+      empty strings. Rule #20 requires both populated in buyer voice
+      (workflow + value). 2026-05-30 audit drafted candidate wording
+      (Bucket 2 item 2); not yet approved.
+    action: Surface drafted wording to user; write only after explicit per-row approval (Rule #20).
+    blocked_by:
+      - {type: user_decision, ref: B2-CATALOG-UX}
+
+  - id: B1B-S11
+    summary: Author 2 business_function_capabilities overrides (C2).
+    finding: >-
+      Zero business_function_capabilities rows. Two capabilities likely
+      diverge from domain RACI (Marketing owner): LOY-MEMBER-PORTAL leans
+      Customer Success; LOY-POINTS-LEDGER leans Finance (accrual liability
+      accounting).
+    action: Add 2 business_function_capabilities rows once user confirms ownership.
+    blocked_by:
+      - {type: user_decision, ref: B2-CAP-OWNERSHIP}
+    extra_capabilities:
+      - {capability_id: 288, capability_code: LOY-POINTS-LEDGER, proposed_function: Finance}
+      - {capability_id: 293, capability_code: LOY-MEMBER-PORTAL, proposed_function: Customer Success}
+
+  - id: B1B-S13
+    summary: Resolve F7 violation on send_email link to legacy skill 81.
+    finding: >-
+      skill_tools row links tool 37 (send_email, side_effect, NULL
+      data_object_id) to skill 81 with empty skill_tools.notes. Generic
+      notification shape; F7 default is notify_person. May dissolve if skill
+      81 is deleted via B1B-S3.
+    action: >-
+      If skill 81 is DELETEd via B1B-S3, no separate fix needed. Otherwise
+      either PATCH tool link to notify_person, DELETE the row if duplicate,
+      or surface workflow-specific note for user approval.
+    blocked_by:
+      - {type: user_decision, ref: B2-SEND-EMAIL}
+      - {type: prerequisite_entity, ref: B1B-S3}
+    extra_legacy_skill_id: 81
+    extra_legacy_tool_id: 37
+
+  - id: B1B-M1
+    summary: Add gdpr_consent_records master to LOY-MEMBER-MGT (compliance gap).
+    finding: >-
+      GDPR Art. 7 + CPRA require structured consent capture on member
+      profiles. No entity exists in the LOYALTY footprint. Vendor coverage:
+      Antavo, LoyaltyLion, Salesforce Loyalty Management.
+    action: Phase-B insert (data_objects + DMDO + lifecycle states + relationships).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    vendor_evidence: [Antavo, LoyaltyLion, Salesforce Loyalty Management]
+
+  - id: B1B-M2
+    summary: Add data_subject_requests master to LOY-MEMBER-MGT (compliance gap).
+    finding: >-
+      GDPR Art. 15-22 + CPRA require erasure / access / rectification
+      request tracking. Universal across all flagship vendors.
+    action: Phase-B insert.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    vendor_evidence: [Antavo, LoyaltyLion, Yotpo, Salesforce Loyalty Management, SAP Emarsys Loyalty]
+
+  - id: B1B-M3
+    summary: Add unclaimed_property_records master to LOY-LEDGER-REWARDS.
+    finding: >-
+      US state escheatment may apply to unredeemed balances if the program
+      qualifies as stored value. Material for sizeable programs. Surfaces in
+      Antavo and SAP Emarsys documentation.
+    action: Phase-B insert.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    vendor_evidence: [Antavo, SAP Emarsys Loyalty]
+
+  - id: B1B-M4
+    summary: Add promotion_campaigns master to LOY-PARTNER-PROMO.
+    finding: >-
+      Capability LOY-PROMOTION-ENG (id 291) has no entity backing it.
+      Vendors ship a promotions / campaigns master for bonus points
+      campaigns, tier acceleration windows, reward boost periods.
+    action: Phase-B insert.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    vendor_evidence: [Annex Cloud, Marigold, Salesforce Loyalty Management, SAP Emarsys Loyalty]
+
+  - id: B1B-M5
+    summary: Add member_communications_preferences master to LOY-MEMBER-MGT (compliance gap).
+    finding: >-
+      CAN-SPAM + GDPR + CPRA require channel-level opt-in / opt-out at the
+      program level. Consent withdrawal must propagate. Salesforce Marketing
+      Cloud Engagement (the partial-coverage solution already in the catalog)
+      signals this gap.
+    action: Phase-B insert.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    vendor_evidence: [Antavo, LoyaltyLion, Salesforce Loyalty Management, Salesforce Marketing Cloud Engagement]
+
+b2:
+  - id: B2-MODULE-SPLIT
+    summary: Pick LOYALTY module split shape (gates almost everything in b1b).
+    question: >-
+      LOYALTY has 8 capabilities and zero modules. Proposed 4-module split:
+      LOY-PROGRAM-MGT (LOY-PROGRAM-MGT + LOY-TIER-MGT, masters loyalty_tiers),
+      LOY-MEMBER-MGT (LOY-MEMBER-MGT + LOY-MEMBER-PORTAL, masters
+      loyalty_members), LOY-LEDGER-REWARDS (LOY-POINTS-LEDGER + LOY-REWARDS-CAT,
+      masters loyalty_transactions, redemption_rewards, redemption_transactions),
+      LOY-PARTNER-PROMO (LOY-PARTNER-ECO + LOY-PROMOTION-ENG, masters
+      promotion_campaigns per B1B-M4). Approve 4 modules, prefer 3-module
+      fold, prefer 2-module minimum, or propose other split?
+    options:
+      - approve 4-module shape
+      - 3 modules (fold PARTNER+PROMO into LEDGER)
+      - 2 modules (LOY-CORE + LOY-ENGAGEMENT minimum floor)
+      - other split (specify)
+    why: Rule #14 M2 (>=2 modules required for >=3-capability domains).
+
+  - id: B2-CATALOG-UX
+    summary: Approve catalog_tagline / catalog_description for LOYALTY (Rule #20).
+    question: >-
+      Drafted wording for review. Tagline (single sentence, buyer voice):
+      "Reward repeat customers with points, tiers, and personalized perks
+      that grow customer lifetime value." Description (3 short paragraphs):
+      enrollment + tier progression + member profiles; accrual rules +
+      rewards catalog + redemption workflows + partner coalitions; program
+      analytics + member portal + integration with commerce / CRM / marketing
+      automation. Approve as-drafted, rewrite, or delegate.
+    options:
+      - approve as-drafted
+      - rewrite (user supplies exact text)
+      - delegate to marketing
+
+  - id: B2-LIFECYCLE-EXEMPT
+    summary: loyalty_tiers config-shape lifecycle exemption (B12 / Rule #12).
+    question: >-
+      loyalty_tiers is a config table (program designer authors tiers once,
+      occasionally edits thresholds; no per-row workflow). Per Rule #12,
+      config-shape masters can be exempt; per Rule #15 the prior
+      data_objects.notes annotation license is rescinded. Decide.
+    options:
+      - accept exemption (no lifecycle states authored, no notes written)
+      - load minimal states (draft, active, retired) for audit traceability
+      - defer
+
+  - id: B2-CAP-OWNERSHIP
+    summary: Confirm business_function_capabilities overrides for two LOYALTY capabilities (C2).
+    question: >-
+      LOYALTY business function ownership is Marketing (owner) + Customer
+      Success (contributor). Two capabilities likely diverge:
+      LOY-MEMBER-PORTAL toward Customer Success, LOY-POINTS-LEDGER toward
+      Finance. Confirm both, confirm one, propose alternative split.
+    options:
+      - confirm both (LOY-MEMBER-PORTAL -> Customer Success, LOY-POINTS-LEDGER -> Finance)
+      - confirm LOY-MEMBER-PORTAL only
+      - confirm LOY-POINTS-LEDGER only
+      - propose alternative
+
+  - id: B2-SEND-EMAIL
+    summary: Disposition of send_email (tool 37) on legacy skill 81 (F7).
+    question: >-
+      skill_tools links tool 37 (send_email, side_effect) to skill 81 with
+      empty skill_tools.notes. F7 default is notify_person unless workflow
+      requires the channel. Skill 81 is slated for DELETE via B1B-S3 once
+      module-level skills land; this violation may dissolve naturally.
+    options:
+      - wait (skill 81 will be deleted; no separate fix needed)
+      - PATCH now to notify_person
+      - keep send_email and supply workflow-specific skill_tools.notes wording (Rule #15)
+
+  - id: B2-CLUSTER-DRAFTS
+    summary: Provide cluster-drafts authoring for aliases (B1B-S5), intra-domain relationships (B1B-S6), users edges (B1B-S7), cross-domain edges (B1B-S8).
+    question: >-
+      Four cluster-drafts items require user-side authoring of exact tuples
+      (alias_name + alias_type per master; verb + inverse_verb +
+      relationship_type / relationship_kind + owner_side + is_required per
+      relationship). Will user author the cluster-drafts markdown, or
+      delegate to a Phase-B draft pass?
+    options:
+      - user authors cluster-drafts markdown
+      - delegate to agent Phase-B draft (returns for review before load)
+
+b3:
+  - id: B3-MEMBER-REFERRALS
+    candidate: member_referrals
+    rationale: >-
+      Referral tracking on member profiles. May fold into LOYALTY or promote
+      to a REFERRAL-MKT domain (already queued in _missing-domains.md).
+      Decision shape depends on Bucket 2 item 1 module map.
+    vendor_evidence: [LoyaltyLion, Yotpo, Antavo]
+    proposed_module: LOY-MEMBER-MGT
+
+  - id: B3-PARTNER-PROGRAMS
+    candidate: partner_programs
+    rationale: >-
+      LOY-PARTNER-ECO capability points at this gap. Partner / coalition
+      modules ship in multiple flagship vendors.
+    vendor_evidence: [Annex Cloud, Marigold, Salesforce Loyalty Management]
+    proposed_module: LOY-PARTNER-PROMO
+
+  - id: B3-TIER-QUAL-PERIODS
+    candidate: tier_qualification_periods
+    rationale: >-
+      Tier earn / maintain windows (12-month rolling, calendar year, lifetime).
+      Salesforce Loyalty + Antavo ship this as a separate config master;
+      shape varies.
+    vendor_evidence: [Salesforce Loyalty Management, Antavo]
+    proposed_module: LOY-PROGRAM-MGT
+
+  - id: B3-GAMIFICATION-BADGES
+    candidate: gamification_badges
+    rationale: >-
+      Badges, missions, achievements. Specialist surface (Antavo); not
+      universal across the loyalty market.
+    vendor_evidence: [Antavo]
+    proposed_module: LOY-MEMBER-MGT
+
+  - id: B3-POINT-EXPIRATION-POLICIES
+    candidate: point_expiration_policies
+    rationale: >-
+      Universal across vendors but unclear whether shipped as a separate
+      config master or fields on loyalty_tiers. Phase 0 vendor research
+      should resolve the shape decision.
+    vendor_evidence: [Annex Cloud, LoyaltyLion, Antavo, SAP Emarsys Loyalty]
+    proposed_module: LOY-LEDGER-REWARDS

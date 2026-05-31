@@ -1,0 +1,341 @@
+schema_version: 2
+domain: MSP-PSA
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+# Audit run 2026-05-31. Bucket 1 H1 has agent-actionable PCF tag candidates
+# ready to load on user approval (next_action_by: agent). All other Bucket 1
+# items are blocked on Bucket 2 prompts or report-only to neighbor audits.
+
+b1a:
+  - id: B1A-H1-TAGS
+    summary: Approve and load 10 APQC handoff_processes rows on the untagged MSP-PSA handoffs
+    finding: >-
+      Of 14 MSP-PSA handoffs (10 cross-domain + 4 intra-domain), 4 carry handoff_processes
+      tags (160, 163, 647 to Operate IT user support 20921; 835 to Manage customer service
+      problems, requests, and inquiries 10388). 10 remain untagged. The PCF candidate id
+      for each is pre-specified in the audit table; loader can run on user approval.
+    action: >-
+      INSERT 10 handoff_processes rows (proposal_source=agent_curated, role=implements,
+      record_status omitted to default to new):
+      (159, 295), (161, 1312), (523, 196), (524, 302), (525, 196), (526, 1094),
+      (1244, 295), (1245, 312), (1246, 1094), (1247, 1094).
+    affected_handoffs:
+      - {handoff_id: 159, direction: inbound, source_domain: RMM, target_domain: MSP-PSA, trigger_event: monitoring_alert.threshold_breached, payload: msp_tickets, null_field: null}
+      - {handoff_id: 161, direction: outbound, source_domain: MSP-PSA, target_domain: HAM, trigger_event: ticket.created, payload: hardware_assets, null_field: null}
+      - {handoff_id: 523, direction: outbound, source_domain: MSP-PSA, target_domain: CSM, trigger_event: msp_ticket.escalated, payload: msp_tickets, null_field: null}
+      - {handoff_id: 524, direction: outbound, source_domain: MSP-PSA, target_domain: ERP-FIN, trigger_event: msp_invoice.issued, payload: msp_invoices, null_field: null}
+      - {handoff_id: 525, direction: outbound, source_domain: MSP-PSA, target_domain: CSM, trigger_event: msp_contract.renewal_due, payload: msp_contracts, null_field: null}
+      - {handoff_id: 526, direction: outbound, source_domain: MSP-PSA, target_domain: ERP-FIN, trigger_event: msp_contract.activated, payload: msp_contracts, null_field: null}
+      - {handoff_id: 1244, direction: intra, source_domain: MSP-PSA, target_domain: MSP-PSA, trigger_event: msp_ticket.created, payload: msp_tickets, null_field: null}
+      - {handoff_id: 1245, direction: intra, source_domain: MSP-PSA, target_domain: MSP-PSA, trigger_event: msp_time_entry.approved, payload: msp_time_entries, null_field: null}
+      - {handoff_id: 1246, direction: intra, source_domain: MSP-PSA, target_domain: MSP-PSA, trigger_event: msp_contract.activated, payload: msp_contracts, null_field: null}
+      - {handoff_id: 1247, direction: intra, source_domain: MSP-PSA, target_domain: MSP-PSA, trigger_event: msp_contract.suspended, payload: msp_contracts, null_field: null}
+    extra_pcf_pairs:
+      - {handoff_id: 159, process_id: 295, process_name: "Operate IT user support", external_id: "20921", confidence: confident_L3}
+      - {handoff_id: 161, process_id: 1312, process_name: "Maintain IT asset records", external_id: "20918", confidence: confident_L4}
+      - {handoff_id: 523, process_id: 196, process_name: "Manage customer service problems, requests, and inquiries", external_id: "10388", confidence: confident_L3}
+      - {handoff_id: 524, process_id: 302, process_name: "Invoice customer", external_id: "10743", confidence: confident_L3}
+      - {handoff_id: 525, process_id: 196, process_name: "Manage customer service problems, requests, and inquiries", external_id: "10388", confidence: medium_L3}
+      - {handoff_id: 526, process_id: 1094, process_name: "Maintain IT customer contracts", external_id: "20637", confidence: confident_L4}
+      - {handoff_id: 1244, process_id: 295, process_name: "Operate IT user support", external_id: "20921", confidence: confident_L3}
+      - {handoff_id: 1245, process_id: 312, process_name: "Report time", external_id: "10753", confidence: confident_L3}
+      - {handoff_id: 1246, process_id: 1094, process_name: "Maintain IT customer contracts", external_id: "20637", confidence: confident_L4}
+      - {handoff_id: 1247, process_id: 1094, process_name: "Maintain IT customer contracts", external_id: "20637", confidence: confident_L4}
+
+b1b:
+  - id: B1B-S1
+    summary: M7 sibling consumer DMDOs on msp_clients (3 rows) await architectural decision
+    finding: >-
+      msp_clients (data_object 237, master in CONTRACTS 138) carries consumer DMDOs on
+      SVC-DESK 137 (id 683), TIME-BILLING 139 (id 694), DISPATCH 140 (id 697). Default M7
+      remediation is DELETE. Alternative is PROMOTE to embedded_master for standalone-
+      deployable use cases.
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    affected_modules: [137, 139, 140]
+    affected_entities: [msp_clients]
+
+  - id: B1B-S3
+    summary: B10b outbound NULL target_domain_module_id on 5 handoffs (HAM, CSM x2, ERP-FIN x2)
+    finding: >-
+      Handoffs 161 (HAM), 523 (CSM), 524 (ERP-FIN), 525 (CSM), 526 (ERP-FIN) carry NULL
+      target_domain_module_id. Per B10b asymmetry, target-side FK population is the
+      target-domain's audit work. MSP-PSA source side is populated on every outbound row.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: HAM, milestone: b10b_target_fk}
+      - {type: domain_audit, blocking_domain: CSM, milestone: b10b_target_fk}
+      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: b10b_target_fk}
+    affected_handoffs:
+      - {handoff_id: 161, direction: outbound, source_domain: MSP-PSA, target_domain: HAM, trigger_event: ticket.created, payload: hardware_assets, null_field: target_domain_module_id}
+      - {handoff_id: 523, direction: outbound, source_domain: MSP-PSA, target_domain: CSM, trigger_event: msp_ticket.escalated, payload: msp_tickets, null_field: target_domain_module_id}
+      - {handoff_id: 524, direction: outbound, source_domain: MSP-PSA, target_domain: ERP-FIN, trigger_event: msp_invoice.issued, payload: msp_invoices, null_field: target_domain_module_id}
+      - {handoff_id: 525, direction: outbound, source_domain: MSP-PSA, target_domain: CSM, trigger_event: msp_contract.renewal_due, payload: msp_contracts, null_field: target_domain_module_id}
+      - {handoff_id: 526, direction: outbound, source_domain: MSP-PSA, target_domain: ERP-FIN, trigger_event: msp_contract.activated, payload: msp_contracts, null_field: target_domain_module_id}
+
+  - id: B1B-S4
+    summary: B10b inbound NULL source_domain_module_id on 4 handoffs (RMM, REMOTE-ACCESS x2, + 160 target NULL owed by REMOTE-ACCESS)
+    finding: >-
+      Handoffs 159 (RMM source), 163 (REMOTE-ACCESS source), 647 (REMOTE-ACCESS source)
+      carry NULL source_domain_module_id. Handoff 160 (MSP-PSA -> REMOTE-ACCESS) also
+      carries NULL target_domain_module_id, owed by REMOTE-ACCESS.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: RMM, milestone: b10b_source_fk}
+      - {type: domain_audit, blocking_domain: REMOTE-ACCESS, milestone: b10b_source_and_target_fk}
+    affected_handoffs:
+      - {handoff_id: 159, direction: inbound, source_domain: RMM, target_domain: MSP-PSA, trigger_event: monitoring_alert.threshold_breached, payload: msp_tickets, null_field: source_domain_module_id}
+      - {handoff_id: 163, direction: inbound, source_domain: REMOTE-ACCESS, target_domain: MSP-PSA, trigger_event: msp_session.completed, payload: msp_time_entries, null_field: source_domain_module_id}
+      - {handoff_id: 647, direction: inbound, source_domain: REMOTE-ACCESS, target_domain: MSP-PSA, trigger_event: remote_session.ended, payload: remote_sessions, null_field: source_domain_module_id}
+      - {handoff_id: 160, direction: outbound, source_domain: MSP-PSA, target_domain: REMOTE-ACCESS, trigger_event: msp_ticket.escalated, payload: msp_tickets, null_field: target_domain_module_id}
+
+  - id: B1B-S5
+    summary: Pairwise consumer DMDOs missing on CSM, ERP-FIN, HAM target modules
+    finding: >-
+      Several MSP-PSA-targeted outbound handoffs imply consumer DMDOs on the target side
+      that do not exist: CSM consumes msp_tickets (233) via 523 and msp_contracts (234)
+      via 525; ERP-FIN consumes msp_invoices (236) via 524 and msp_contracts (234) via
+      526; HAM target side is mastering, not MSP-PSA's owe. Not MSP-PSA's fix.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: CSM, milestone: consumer_dmdo_on_msp_psa_masters}
+      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: consumer_dmdo_on_msp_psa_masters}
+    affected_masters:
+      - {data_object_id: 233, name: msp_tickets, target_module_id: null, workflow: ticket_escalation_to_csm}
+      - {data_object_id: 234, name: msp_contracts, target_module_id: null, workflow: contract_renewal_to_csm_and_activation_to_erp_fin}
+      - {data_object_id: 236, name: msp_invoices, target_module_id: null, workflow: invoice_to_erp_fin_ar}
+
+  - id: B1B-S6
+    summary: Phase E roles missing (5 role authoring blocked on user role-list confirmation)
+    finding: >-
+      The 4 MSP-PSA modules carry zero role_modules rows. No MSP-prefixed roles exist.
+      Proposed 5 roles per 2026-05-30 audit: MSP-TECHNICIAN, MSP-DISPATCHER,
+      MSP-ACCOUNT-MANAGER, MSP-BILLING-ADMIN, MSP-CSAT-ANALYST. Authoring is judgment work.
+    blocked_by:
+      - {type: user_decision, ref: B2-S5}
+    affected_modules: [137, 138, 139, 140]
+    extra_proposed_roles:
+      - {role: MSP-TECHNICIAN, primary_modules: [137, 139, 140]}
+      - {role: MSP-DISPATCHER, primary_modules: [140], secondary_modules: [137]}
+      - {role: MSP-ACCOUNT-MANAGER, primary_modules: [138], secondary_modules: [137, 139]}
+      - {role: MSP-BILLING-ADMIN, primary_modules: [139, 138]}
+      - {role: MSP-CSAT-ANALYST, primary_modules: [137]}
+
+  - id: B1B-S7
+    summary: Phase E permissions missing (12 baseline + 16 workflow-gate)
+    finding: >-
+      The 4 modules have zero permissions rows. Rule #14 scaffold requires 12 baseline
+      (3 per module x 4) plus 16 workflow-gate permissions derived from the lifecycle
+      states with requires_permission=true.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S6, reason: cannot wire role_permissions before roles exist}
+      - {type: user_decision, ref: B2-S5}
+    affected_modules: [137, 138, 139, 140]
+    extra_baseline_count: 12
+    extra_workflow_gate_count: 16
+
+  - id: B1B-S8
+    summary: F2 hard-fail (4 module-bound system skills missing); blocked on retire-vs-repurpose of skill 85
+    finding: >-
+      Rule #17: each domain_modules row needs exactly one skill_type=system skill with
+      domain_module_id set. Catalog state is 1 skill (msp-psa-system, id 85) bound to
+      domain_id=131 only. Each of SVC-DESK 137, CONTRACTS 138, TIME-BILLING 139,
+      DISPATCH 140 needs its own module-bound system skill.
+    blocked_by:
+      - {type: user_decision, ref: B2-S4}
+    affected_modules: [137, 138, 139, 140]
+    extra_skill_to_resolve: 85
+
+  - id: B1B-S9
+    summary: F3 (reassign skill 85's 6 skill_tools to the 4 new module skills)
+    finding: >-
+      Existing skill_tools on skill 85 (query_msp_tickets 689, query_msp_contracts 690,
+      query_msp_time_entries 691, query_msp_invoices 692, query_msp_clients 693,
+      notify_person 694) need to be repointed onto the 4 module-bound skills authored by
+      B1B-S8.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S8, reason: module skills must exist before tool reassignment}
+      - {type: user_decision, ref: B2-S4}
+    extra_skill_tools: [689, 690, 691, 692, 693, 694]
+    extra_proposed_mapping:
+      - {tool: query_msp_tickets, target_module_skill: msp-psa-svc-desk-system}
+      - {tool: query_msp_contracts, target_module_skill: msp-psa-contracts-system}
+      - {tool: query_msp_clients, target_module_skill: msp-psa-contracts-system}
+      - {tool: query_msp_time_entries, target_module_skill: msp-psa-time-billing-system}
+      - {tool: query_msp_invoices, target_module_skill: msp-psa-time-billing-system}
+      - {tool: notify_person, target_module_skill: msp-psa-svc-desk-system, also: msp-psa-dispatch-system}
+
+  - id: B1B-S10
+    summary: M1 SOFT-FAIL on DISPATCH 140 (hosts zero role=master DMDOs); blocked on B2-S7
+    finding: >-
+      DISPATCH 140 contributes to msp_tickets (DMDO 695) and msp_time_entries (DMDO 696)
+      but masters nothing. Rule #14 requires every full module to host at least one
+      master. Cure options are PROMOTE a msp_dispatch_schedules / msp_dispatch_assignments
+      master, DEMOTE DISPATCH 140 to module_kind=starter with embedded shells, or ACCEPT
+      DISPATCH 140 as contributor-only and waive M1.
+    blocked_by:
+      - {type: user_decision, ref: B2-S7}
+    affected_modules: [140]
+
+b2:
+  - id: B2-S1
+    summary: M7 architectural choice on 3 msp_clients sibling consumer DMDO rows
+    question: >-
+      DELETE all 3 sibling consumer rows (default M7 remediation), PROMOTE all 3 to
+      embedded_master for standalone-deployable use cases, or mixed per row?
+    options: ["delete_all_3", "promote_all_3_to_embedded_master", "mixed_specify"]
+    why: Architectural intent + deployability strategy for the SVC-DESK/TIME-BILLING/DISPATCH-without-CONTRACTS scenario.
+
+  - id: B2-S2
+    summary: B4 pattern-flag re-evaluation across the 5 masters
+    question: >-
+      Per-flag yes/no on (i) msp_tickets.has_personal_content (reporter PII), (ii)
+      msp_clients.has_personal_content (primary contact PII), (iii) msp_contracts.has_personal_content
+      (signatory PII), (iv) msp_invoices.has_personal_content (remit-to PII), (v)
+      msp_time_entries.has_submit_lock (after approve), (vi) msp_tickets.has_submit_lock
+      (after close), (vii) msp_time_entries.has_single_approver (technician's lead).
+    options: ["per_flag_yes_no"]
+    why: Pattern flags encode workflow-shape judgments the user owns; the catalog values are all the conservative default and likely wrong for 4 of the 5 masters.
+
+  - id: B2-S3
+    summary: chat_messages (565) data_objects.notes Rule #15 pollution (WSC's call)
+    question: >-
+      data_objects.notes on chat_messages currently reads "Config-shaped conversational
+      record. Edit/delete are direct mutations, not workflow gates; retention is a
+      domain-wide policy, not a per-message state machine." Per Rule #15 this is
+      auto-populated. Approve in place, revert, or defer to the WSC b1 audit?
+    options: ["approve_in_place", "revert", "defer_to_wsc_audit"]
+    why: Cross-domain ownership; chat_messages is WSC-mastered. MSP-PSA does not write the row but surfaces the pollution as part of its handoff 835 audit.
+
+  - id: B2-S4
+    summary: F2 cure strategy for skill 85
+    question: RETIRE skill 85 and port its tools to 4 new module skills, or REPURPOSE skill 85 as a cross-module role/process skill and author 4 fresh module skills with new tools?
+    options: ["retire_skill_85", "repurpose_skill_85"]
+    why: Editorial decision about whether skill 85 has a second-life shape after the F2 fix.
+
+  - id: B2-S5
+    summary: Phase E role list confirmation
+    question: >-
+      Approve the proposed 5-role list (MSP-TECHNICIAN, MSP-DISPATCHER, MSP-ACCOUNT-MANAGER,
+      MSP-BILLING-ADMIN, MSP-CSAT-ANALYST), substitute/add (e.g. MSP-OPERATIONS-MANAGER as
+      cross-module admin, MSP-CLIENT-LEAD as per-client lead), or defer Phase E authoring
+      to a separate pass?
+    options: ["approve_5_roles", "substitute_or_add", "defer_phase_e"]
+    why: Org-shape authoring intent is the user's call.
+
+  - id: B2-S6
+    summary: MSP-PSA -> ITSM boundary
+    question: >-
+      ITSM, PSA, FSM all show zero handoffs to/from MSP-PSA, consistent with the domain's
+      "distinct buyer, distinct competitive set" description. Should an MSP serving its own
+      in-house IT trip an MSP-PSA -> ITSM handoff (in-house escalation)?
+    options: ["keep_boundary_clean", "add_in_house_it_escalation_handoff"]
+    why: Editorial scope question.
+
+  - id: B2-S7
+    summary: DISPATCH 140 M1 cure (promote a master vs. demote to starter vs. waive)
+    question: >-
+      DISPATCH 140 hosts zero role=master DMDOs. Cure options are (a) PROMOTE
+      msp_dispatch_schedules (or msp_dispatch_assignments) as a new master in DISPATCH 140,
+      (b) DEMOTE DISPATCH 140 to module_kind=starter with embedded shells of msp_tickets +
+      msp_time_entries, (c) ACCEPT DISPATCH 140 as a contributor-only module and waive M1.
+    options: ["promote_msp_dispatch_schedules_master", "demote_dispatch_to_starter", "waive_m1"]
+    why: Architectural intent + Phase 0 verification choice. Flagship vendor evidence (ConnectWise Dispatch, Autotask LiveLinks, Halo Dispatch) supports (a) but the user owns the call.
+
+b3:
+  - id: B3-BLOCK-HOURS
+    candidate: block_hour_pools
+    rationale: >-
+      Flagship MSP-PSA vendors model the per-client per-contract block-hour pool as a
+      first-class master with a consumption ledger. Currently the block-hour decrement
+      is implicit in msp_contracts.business_logic; no explicit master records remaining
+      balance.
+    vendor_evidence: ["ConnectWise PSA", "Halo PSA", "Autotask PSA"]
+    proposed_module: CONTRACTS_or_TIME_BILLING
+
+  - id: B3-SLA-DEFS
+    candidate: sla_definitions
+    rationale: >-
+      Flagship MSP-PSA vendors carry per-tier SLA-template entities distinct from
+      per-contract SLA terms. Currently SLA shape lives implicitly inside msp_contracts;
+      the pause/resume mechanic on msp_tickets.on_hold reads from no master.
+    vendor_evidence: ["ConnectWise PSA", "Halo PSA", "Autotask PSA", "SuperOps"]
+    proposed_module: CONTRACTS
+
+  - id: B3-RECURRING-BILLING
+    candidate: recurring_billing_schedules
+    rationale: >-
+      Flagship MSP-PSA vendors model the recurring invoice schedule as a first-class
+      entity distinct from msp_invoices (the rendered invoice). Currently implicit
+      in msp_contracts.
+    vendor_evidence: ["Autotask PSA", "ConnectWise PSA", "Halo PSA"]
+    proposed_module: TIME_BILLING
+
+  - id: B3-ESTATE-INVENTORY
+    candidate: customer_estate_inventory
+    rationale: >-
+      Central canonical of every managed endpoint per client. Broader than RMM's
+      rmm_agents (printers, network gear, lapsed agents). HAM's hardware_assets is
+      enterprise-IT-owned, not MSP-multi-tenant.
+    vendor_evidence: ["ConnectWise PSA", "Autotask PSA", "Halo PSA", "SuperOps"]
+    proposed_module: new_module_MSP_PSA_ESTATE_or_extend_CONTRACTS
+
+  - id: B3-QUOTES
+    candidate: quote_for_new_work
+    rationale: >-
+      Flagship MSP-PSA vendors model project-quote records distinct from contract
+      amendments (project-shaped work for an existing client). Adjacency to CPQ;
+      specifically MSP-flavored CPQ (low-touch, project-sized).
+    vendor_evidence: ["Halo PSA", "SuperOps", "ConnectWise PSA"]
+    proposed_module: new_module_or_fold_into_sister_MSP_CPQ_domain
+
+  - id: B3-CHANGE-REQUESTS
+    candidate: change_requests_msp_scoped
+    rationale: >-
+      Flagship MSP-PSA vendors carry MSP-scoped change-management records distinct from
+      ITIL change-management. ITSM's change_requests is enterprise-scoped, not
+      multi-tenant.
+    vendor_evidence: ["ConnectWise PSA", "Halo PSA"]
+    proposed_module: new_module_or_extend_SVC_DESK
+
+  - id: B3-MODULARIZATION-CONTRACTS-SPLIT
+    candidate: split_CONTRACTS_into_CLIENTS_and_CONTRACTS
+    rationale: >-
+      CONTRACTS module is overloaded (carries both msp_clients and msp_contracts
+      masters). Natural split is MSP-PSA-CLIENTS (client roster + onboarding lifecycle
+      on msp_clients) vs MSP-PSA-CONTRACTS (contracts + SLAs + billing pool +
+      amendments). Phase 0 vendor-evidence question: do flagship vendors split them?
+    vendor_evidence: ["ConnectWise PSA", "Autotask PSA", "Halo PSA"]
+    proposed_module: refactor_138_into_two_modules
+
+  - id: B3-PCI-DSS
+    candidate: regulation_PCI_DSS_per_client
+    rationale: >-
+      PCI DSS applies per-client when MSP techs handle PAN data for client estates.
+      Adjacency rather than core; needs Phase 0 confirmation of how vendors model
+      cardholder-scoped per-client compliance posture.
+    vendor_evidence: ["ConnectWise PSA"]
+    proposed_module: regulations_table
+
+  - id: B3-SOC2-MSP
+    candidate: regulation_SOC2_msp_side
+    rationale: >-
+      SOC 2 compliance posture for the MSP organization. Less a regulation row binding
+      to MSP-PSA and more a MSP-org-level posture.
+    vendor_evidence: ["ConnectWise PSA", "Halo PSA"]
+    proposed_module: regulations_table
+
+  - id: B3-HIPAA-BAA
+    candidate: regulation_HIPAA_BAA_per_healthcare_client
+    rationale: >-
+      HIPAA BAA scope applies per-healthcare-client; needs Phase 0 confirmation of how
+      vendors model per-client compliance overlays.
+    vendor_evidence: ["ConnectWise PSA", "Halo PSA"]
+    proposed_module: regulations_table
+
+  - id: B3-DATA-BREACH-STATUTES
+    candidate: regulation_us_state_data_breach_notification
+    rationale: >-
+      US state data-breach notification statutes engage when a tech accesses customer
+      PHI/PII during a session. Adjacency to REMOTE-ACCESS as much as MSP-PSA.
+    vendor_evidence: ["ConnectWise PSA"]
+    proposed_module: regulations_table

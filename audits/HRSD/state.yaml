@@ -1,0 +1,156 @@
+schema_version: 2
+domain: HRSD
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-A4
+    summary: "Draft catalog_tagline + catalog_description for HRSD domains row (id 22); both empty."
+    finding: "domains.id=22 (HRSD) has catalog_tagline='' and catalog_description=''. Per Rule #20 these are buyer-shaped fields needed by the public catalog and site generator. A4 fails on missing buyer-voice copy."
+    action: "Draft both fields in buyer voice (workflow + value, not analyst voice). Surface drafts to user for review BEFORE writing per Rule #20. Once approved, PATCH /domains?id=eq.22. Never overwrite a non-empty value without explicit per-row approval."
+    affected_entities:
+      - domains.id=22
+    extra_field_grain: domain
+  - id: B1A-M8
+    summary: "Draft catalog_tagline + catalog_description for all 3 HRSD modules (75, 76, 77); all empty."
+    finding: "domain_modules ids 75 (HRSD-CASE-MGMT), 76 (HRSD-EMPLOYEE-PORTAL), 77 (HRSD-KNOWLEDGE) each have catalog_tagline='' and catalog_description=''. M8 fails per-module on missing buyer-voice copy."
+    action: "Draft 3 sets of per-module buyer-voice copy (one tagline + 1-3 paragraph description per module). Surface to user per Rule #20 BEFORE writing. PATCH /domain_modules?id=eq.<mid> per row."
+    affected_modules: [75, 76, 77]
+    extra_field_grain: module
+
+b1b:
+  - id: B1B-APQC-REPLACE
+    summary: "REPLACE 2 discovery_override handoff_processes rows with agent_curated rows on handoffs 119 and 446."
+    finding: "Handoffs 119 (HRSD-CASE-MGMT -> IGA, case.access_required) and 446 (HRSD-CASE-MGMT -> HCM, case.access_required) still carry stale discovery_override rows pointing at PCF process id 196 (external_id 10388 'Manage customer service problems, requests, and inquiries'). The 2026-05-30 audit prescribed agent_curated replacements (PCF external_id 10523 'Manage employee inquiry process' L3 for 119; PCF external_id 17056 'Manage employee information and analytics' L2 for 446). Overwriting a pre-existing tag is a judgment call about whether the prior auto-classification was wrong."
+    blocked_by:
+      - {type: user_decision, ref: B1B-APQC-REPLACE}
+    action: "User approves the swap, then for each handoff DELETE the existing discovery_override row and INSERT the agent_curated row pointing at the prescribed PCF."
+    affected_handoffs:
+      - {handoff_id: 119, direction: outbound, source_domain: HRSD, target_domain: IGA, trigger_event: "case.access_required", payload: "hr_cases"}
+      - {handoff_id: 446, direction: outbound, source_domain: HRSD, target_domain: HCM, trigger_event: "case.access_required", payload: "hr_cases"}
+    extra_proposed_pcf:
+      - {handoff_id: 119, current_pcf_external_id: "10388", proposed_pcf_external_id: "10523", proposed_level: 3}
+      - {handoff_id: 446, current_pcf_external_id: "10388", proposed_pcf_external_id: "17056", proposed_level: 2}
+  - id: B1B-APQC-KEEP-OR-UPGRADE
+    summary: "Per-row KEEP-or-upgrade decision on 2 handoff_processes rows on handoffs 369 and 1109."
+    finding: "Handoff 369 (HCM -> HRSD, employee.terminated) carries discovery_override pointing at PCF external_id 20599 'Manage employee onboarding, training, and development' L2; audit suggested upgrade to PCF external_id 10523 'Manage employee inquiry process' L3. Handoff 1109 (PA -> HRSD, engagement.declining) carries discovery_substring pointing at PCF external_id 16944 'Conduct employee engagement surveys' L3; audit suggested replace with PCF external_id 21439 'Manage employee assistance and retention' L3."
+    blocked_by:
+      - {type: user_decision, ref: B1B-APQC-KEEP-OR-UPGRADE}
+    action: "User picks per row: leave existing row, or DELETE the discovery row and INSERT agent_curated at the prescribed PCF."
+    affected_handoffs:
+      - {handoff_id: 369, direction: inbound, source_domain: HCM, target_domain: HRSD, trigger_event: "employee.terminated", payload: "employees"}
+      - {handoff_id: 1109, direction: inbound, source_domain: PA, target_domain: HRSD, trigger_event: "engagement.declining", payload: "engagement_surveys"}
+    extra_proposed_pcf:
+      - {handoff_id: 369, current_pcf_external_id: "20599", proposed_pcf_external_id: "10523", proposed_level: 3}
+      - {handoff_id: 1109, current_pcf_external_id: "16944", proposed_pcf_external_id: "21439", proposed_level: 3}
+
+b2:
+  - id: B2-1
+    summary: "Notes pollution review on 27 HRSD rows that match RESCINDED Rule #15 templates."
+    question: "Were the templated notes on 15 handoff rows, 10 DMDO rows on module 75, and 2 data_objects.notes rows user-approved at load time, or auto-written under the rescinded license?"
+    options:
+      - "Confirm user-approved, leave in place (do-not-overwrite rule applies)"
+      - "Confirm auto-written, PATCH all 27 to empty + append incident to references/skill-changelog.md"
+      - "Per-row review: substantive ones (e.g. case_categories config-shape exemption) stay; templated B10b backfill notes get cleared"
+    why: "Wording is templated (B10b resolved 2026-05-26 ... / Domain-level FYI ... / Consumed by HRSD-CASE-MGMT when an inbound handoff escalates ...) and shape-matches the rescinded Rule #15 license. The agent cannot distinguish approval from auto-write without user memory."
+    affected_handoffs:
+      - {handoff_id: 9, null_field: notes}
+      - {handoff_id: 250, null_field: notes}
+      - {handoff_id: 402, null_field: notes}
+      - {handoff_id: 416, null_field: notes}
+      - {handoff_id: 420, null_field: notes}
+      - {handoff_id: 429, null_field: notes}
+      - {handoff_id: 446, null_field: notes}
+      - {handoff_id: 448, null_field: notes}
+      - {handoff_id: 467, null_field: notes}
+      - {handoff_id: 721, null_field: notes}
+      - {handoff_id: 1048, null_field: notes}
+      - {handoff_id: 1109, null_field: notes}
+      - {handoff_id: 1118, null_field: notes}
+      - {handoff_id: 1119, null_field: notes}
+      - {handoff_id: 1137, null_field: notes}
+    extra_affected_dmdo:
+      - {domain_module_id: 75, data_object_id: 18}
+      - {domain_module_id: 75, data_object_id: 45}
+      - {domain_module_id: 75, data_object_id: 144}
+      - {domain_module_id: 75, data_object_id: 152}
+      - {domain_module_id: 75, data_object_id: 157}
+      - {domain_module_id: 75, data_object_id: 161}
+      - {domain_module_id: 75, data_object_id: 173}
+      - {domain_module_id: 75, data_object_id: 286}
+      - {domain_module_id: 75, data_object_id: 410}
+      - {domain_module_id: 75, data_object_id: 704}
+    extra_affected_data_objects:
+      - {data_object_id: 192, name: hr_cases}
+      - {data_object_id: 193, name: case_categories}
+  - id: B2-2
+    summary: "Pattern-flag positive re-evaluation on hr_cases (192) for has_submit_lock and has_single_approver."
+    question: "Should has_submit_lock=true (does case closure freeze fields)? Should has_single_approver=true (does pending_approval route to a single approver)?"
+    options:
+      - "has_submit_lock: yes (PATCH true) or no (leave false)"
+      - "has_single_approver: yes (PATCH true) or no (leave false)"
+    why: "Rule #12 / B4 requires positive re-evaluation; default-false is not the same as false-after-review. Decision recorded in chat / PR, NEVER in notes per Rule #15."
+    affected_masters:
+      - {data_object_id: 192, name: hr_cases, target_module_id: 75, workflow: "8-state machine intake -> closed with reopen"}
+  - id: B2-3
+    summary: "Trigger event 21 case.access_required keyed on hr_cases (192) reads as derived condition rather than lifecycle state."
+    question: "Is event 21 a lifecycle state on hr_cases or a derived signal that should live on a separate hr_case_signals entity?"
+    options:
+      - "Leave as conditional flag on hr_cases (current shape)"
+      - "Rename event to hr_case.access_required for naming-convention alignment with the rest of the master event set"
+      - "Introduce derived hr_case_signals entity and re-key the event there"
+    why: "Two handoffs (119 to IGA, 446 to HCM) ride this event. The verb access_required reads as a derived condition, not a lifecycle state. Decision shapes whether the event remains on the master or migrates to a derived-signal entity."
+    affected_events:
+      - {id: 21, event_name: "case.access_required", current_category: state_change, proposed_category: state_change}
+    affected_handoffs:
+      - {handoff_id: 119, direction: outbound, source_domain: HRSD, target_domain: IGA, trigger_event: "case.access_required", payload: "hr_cases"}
+      - {handoff_id: 446, direction: outbound, source_domain: HRSD, target_domain: HCM, trigger_event: "case.access_required", payload: "hr_cases"}
+  - id: B2-4
+    summary: "Role naming convention: HRSD- prefix on 3 roles (10069, 10070, 10071) on function 76. Function-scoped or accidental domain-prefix?"
+    question: "Is HRSD the intended short code for the HR Service Delivery function (role-naming rule allows function-scoped) or an accidental domain prefix (anti-pattern per role-naming rule)?"
+    options:
+      - "Confirm HRSD is the intended function code, leave as-is"
+      - "Rename to HR-AGENT, HR-MANAGER, HR-KB-MGR (or similar). Role IDs and bundle rows survive on rename"
+    why: "The function HR Service Delivery does not have an enforced short code. Loaders may have used the domain code as a stand-in. Role-naming rule warns that domain prefixes are an anti-pattern, but the function name initials are also HRSD."
+    affected_entities:
+      - "roles.id=10069 (HRSD-AGENT)"
+      - "roles.id=10070 (HRSD-MANAGER)"
+      - "roles.id=10071 (HRSD-KNOWLEDGE-MANAGER)"
+  - id: B2-5
+    summary: "Per-row record_status approval for 24 handoff_processes rows across the 21 HRSD cross-domain handoffs."
+    question: "Which of the 24 handoff_processes rows on HRSD cross-domain handoffs should be promoted to record_status='approved'?"
+    options:
+      - "Approve all (single bulk PATCH after user signs off)"
+      - "Per-row review with explicit per-row approval (user calls approved or rejected per row)"
+      - "Defer until the REPLACE / KEEP-or-upgrade decisions in B1B-APQC-* land, then approve in a consolidated batch"
+    why: "Rule #1 forbids the agent from stamping record_status='approved' without explicit per-row user approval. The catalog-quality H1 headline is the count of approved rows; until any are approved, the headline reads 0 despite 18 agent_curated high-confidence-pending rows."
+    extra_affected_table: handoff_processes
+    extra_handoff_set: [9, 29, 119, 250, 369, 402, 416, 420, 429, 446, 447, 448, 467, 721, 1048, 1109, 1118, 1119, 1120, 1121, 1137]
+
+b3:
+  - id: B3-1
+    candidate: employee_journeys (master) + HRSD-JOURNEY-MGMT (module)
+    rationale: "Non-onboarding employee journeys (return-from-leave, role change, location change, exit) have no HRSD master today. Vendor surface shows journey-orchestration as a substantive packaged offering; HRSD-mastered version would be a journey class for general-purpose employee moments."
+    vendor_evidence:
+      - {vendor: "Workday Journeys", evidence: "1st_class"}
+      - {vendor: "Enboarder", evidence: "1st_class"}
+      - {vendor: "Applaud", evidence: "1st_class"}
+      - {vendor: "ServiceNow HRSD (Employee Journey Management)", evidence: "1st_class"}
+    proposed_module: HRSD-JOURNEY-MGMT
+  - id: B3-2
+    candidate: hr_documents consumer footprint on HRSD-CASE-MGMT and HRSD-EMPLOYEE-PORTAL
+    rationale: "HR document management (offer letters, contract amendments, exit letters, leave letters, signed acknowledgments) is a substantive cross-cutting surface. Every flagship HRSD platform has a documents tab on the employee record. HRSD-CASE-MGMT should consumer-link case attachments; HRSD-EMPLOYEE-PORTAL should consumer-link employee self-service file access."
+    vendor_evidence:
+      - {vendor: "Workday Documents", evidence: "1st_class"}
+      - {vendor: "Applaud", evidence: "secondary"}
+      - {vendor: "Enboarder", evidence: "secondary"}
+    proposed_module: "HRSD-CASE-MGMT (consumer) + HRSD-EMPLOYEE-PORTAL (consumer)"
+  - id: B3-3
+    candidate: whistleblower / ER specialty case subtype or ETHICS-INTAKE candidate domain
+    rationale: "EU Whistleblower Protection Directive is already linked as a regulation. NAVEX EthicsPoint, OneTrust EthicsHub, AllVoices, People Intouch are pure-play specialists. HRSD-CASE-MGMT today carries no specialty handling shape (no whistleblower_cases data_object, no anonymization flag, no special-routing capability). Question is whether to add a case_subtype discriminator or queue ETHICS-INTAKE as a missing domain."
+    vendor_evidence:
+      - {vendor: "NAVEX EthicsPoint", evidence: "1st_class"}
+      - {vendor: "OneTrust EthicsHub", evidence: "1st_class"}
+      - {vendor: "AllVoices", evidence: "1st_class"}
+      - {vendor: "People Intouch", evidence: "1st_class"}

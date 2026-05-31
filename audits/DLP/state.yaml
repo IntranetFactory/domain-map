@@ -1,0 +1,350 @@
+schema_version: 2
+domain: DLP
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S3-EVENTS-CURED
+    summary: B1-S3 trigger_events.event_category PATCHes verified live; this row is a no-op marker for the changelog and should drop next pass.
+    finding: All 3 previously empty event_category values are now valid (927 state_change, 928 state_change, 929 signal). Verified via live PostgREST read.
+    action: No further action; drop from state.yaml on next audit if no regression.
+
+  - id: B1A-S17-A4-CATALOG-UX
+    summary: domains.catalog_tagline and domains.catalog_description are both empty on DLP, A4 fails per Rule #20.
+    finding: GET /domains?id=eq.139 returns catalog_tagline='' and catalog_description=''. Rule #20 requires non-empty buyer-voice copy on both columns; missing copy is an A4 soft fail.
+    action: Draft both fields per Rule #20 voice rule (buyer voice, workflow + value, NOT analyst voice), surface drafts to user for review BEFORE writing. Once a non-empty value exists, never overwrite without explicit per-row user approval.
+
+  - id: B1A-S16-APQC-MISSING-7
+    summary: 7 of 18 cross-domain handoffs touching DLP still carry no handoff_processes tag.
+    finding: 11 of 18 handoffs are tagged (10 agent_curated + 1 discovery_substring on h264). 7 untagged handoffs need agent_curated APQC tags per the 2026-05-30 audit sub-table. Catalog-quality headline 0 approved on any DLP-touching tag (process side-bar 10 agent_curated rows produced by prior continuation).
+    action: Author 7 INSERTs into handoff_processes (record_status='new', proposal_source='agent_curated'). Use chunked POST or focused loader; natural composed key (handoff_id, process_id) prevents duplicates.
+    affected_handoffs:
+      - {handoff_id: 281, direction: out, source_domain: DLP, target_domain: IGA, trigger_event: dlp_incident.escalated, payload: dlp_incidents}
+      - {handoff_id: 843, direction: out, source_domain: DLP, target_domain: ITSM, trigger_event: dlp_incident.blocked, payload: service_incidents}
+      - {handoff_id: 844, direction: out, source_domain: DLP, target_domain: GRC, trigger_event: dlp_incident.blocked, payload: dlp_incidents}
+      - {handoff_id: 845, direction: out, source_domain: DLP, target_domain: IGA, trigger_event: dlp_user_activity.flagged, payload: dlp_user_activity_logs}
+      - {handoff_id: 690, direction: in, source_domain: BI, target_domain: DLP, trigger_event: bi_dashboard.shared_externally, payload: bi_dashboards}
+      - {handoff_id: 702, direction: in, source_domain: NCDB, target_domain: DLP, trigger_event: nocode_view.shared_externally, payload: nocode_views}
+      - {handoff_id: 847, direction: in, source_domain: DSPM, target_domain: DLP, trigger_event: data_warehouse.classified, payload: data_warehouses}
+    blocked_by:
+      - {type: user_decision, ref: B2-S5}
+
+  - id: B1A-S4-B6-INTRA-MASTER-RELS
+    summary: B6 hard fail; 0 intra-domain data_object_relationships among the 6 DLP masters.
+    finding: "Live query of /data_object_relationships filtered to DLP master ids returns only cross-domain rows (ECM is_scanned_by/recomputes inbound and the 3 user-edges + WSC chat_messages streamed_to dlp_incidents already authored). No intra-domain master-to-master edges. Workflow demands: data_exfiltration_attempt -> dlp_incident (detection becomes incident), dlp_policy -> dlp_incident (policy fires incident), dlp_incident -> dlp_quarantine_item (incident produces quarantined artifact), dlp_exception -> dlp_policy (exception modifies policy at evaluation), dlp_incident -> dlp_user_activity_log (activity log accumulates incident refs)."
+    action: Draft 5-6 data_object_relationships rows with verb + inverse_verb + relationship_type + relationship_kind + is_required + owner_side; load via cluster-drafts pattern. Surface mermaid block before insert per Phase B contract.
+    affected_masters:
+      - {data_object_id: 330, name: dlp_incidents, target_module_id: null, workflow: "produces dlp_quarantine_items; recorded in dlp_user_activity_logs; triggered by dlp_policies and data_exfiltration_attempts"}
+      - {data_object_id: 331, name: dlp_policies, target_module_id: null, workflow: "evaluates_against dlp_incidents; overridden by dlp_exceptions"}
+      - {data_object_id: 332, name: data_exfiltration_attempts, target_module_id: null, workflow: "triggers dlp_incident"}
+      - {data_object_id: 333, name: dlp_quarantine_items, target_module_id: null, workflow: "produced by dlp_incident"}
+      - {data_object_id: 334, name: dlp_exceptions, target_module_id: null, workflow: "overrides dlp_policies"}
+      - {data_object_id: 335, name: dlp_user_activity_logs, target_module_id: null, workflow: "records dlp_incidents"}
+
+  - id: B1A-S15-B8-OUTBOUND-CROSS-RELS
+    summary: B8 hard fail on outbound side; 8 outbound handoffs but 0 data_object_relationships with data_object_id IN (DLP masters) and related_data_object_id IN (other-domain masters).
+    finding: Outbound handoffs imply edges DLP-master -> partner-master (e.g. dlp_incidents -> service_incidents for SECOPS/ITSM, dlp_incidents -> data_subject_requests for PRIV-MGMT, dlp_incidents -> IGA-side entity, dlp_user_activity_logs -> SoD review). None exist today.
+    action: Draft 4-5 cross-domain data_object_relationships rows with verb (e.g. informs_security_incident, triggers_privacy_review, escalates_to_iga_review, feeds_sod_review).
+
+b1b:
+  - id: B1B-S1-M-BAND-MODULES
+    summary: M1 (hard fail, BLOCKING) - DLP has 0 domain_modules rows; gated on user choice of module split topology.
+    finding: /domain_modules?domain_id=eq.139 returns []. Every M2-M8 / B9b / B10b / B12 / E1-E4 / F1-F5 check downstream of M1 vacuously stuck. Capability count 8 (above the 3-cap threshold for M2's 2-module floor). Proposed Policy-vs-Runtime split (B2-S1 option a) maps caps {DLP-POLICY-ENGINE, DLP-CLASSIFY, DLP-FINGERPRINT} -> DLP-POLICY-CONTROL and {DLP-EMAIL-EGRESS, DLP-ENDPOINT-AGENT, DLP-NETWORK-INLINE, DLP-CLOUD-API, DLP-INCIDENT-MGMT} -> DLP-ENFORCEMENT-RUNTIME.
+    action: After B2-S1 lands, Phase A load creating 2 domain_modules (module_kind='full') + domain_module_capabilities + DMDO migration of the 6 masters + 1 contributor + 1 consumer. Lifecycle states, workflow-gate permissions, and per-module system skills follow in same load.
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    affected_modules: []
+    affected_entities: [dlp_incidents, dlp_policies, data_exfiltration_attempts, dlp_quarantine_items, dlp_exceptions, dlp_user_activity_logs, data_classifications, employees]
+
+  - id: B1B-S2-C1-BFD
+    summary: C1 hard fail; 0 business_function_domains rows for DLP.
+    finding: /business_function_domains?domain_id=eq.139 returns []. The 20-function spine has no owner declaration for DLP.
+    action: Insert >=1 owner row plus 1-2 contributor/consumer rows once B2-S4 ownership decision lands.
+    blocked_by:
+      - {type: user_decision, ref: B2-S4}
+
+  - id: B1B-S5B-B7-3-MASTERS
+    summary: B7 partial; 3 of 6 DLP masters still lack user-edge data_object_relationships (Rule #10).
+    finding: 3 user-edges loaded by 2026-05-31 Continuation (users reviews dlp_incidents id 1786, users authors dlp_policies id 1787, users approves dlp_exceptions id 1788). Missing for dlp_quarantine_items (reviewer / release_approver), dlp_user_activity_logs (user under monitor), data_exfiltration_attempts (actor).
+    action: Load 1-3 user-edge rows per master with verb chosen by user (B2-S6).
+    blocked_by:
+      - {type: user_decision, ref: B2-S6}
+    affected_masters:
+      - {data_object_id: 333, name: dlp_quarantine_items, target_module_id: null, workflow: "reviewer + release_approver actor archetypes"}
+      - {data_object_id: 335, name: dlp_user_activity_logs, target_module_id: null, workflow: "user under monitor actor archetype"}
+      - {data_object_id: 332, name: data_exfiltration_attempts, target_module_id: null, workflow: "actor archetype"}
+
+  - id: B1B-S6-B12-LIFECYCLE-STATES
+    summary: B12 hard fail; 0 data_object_lifecycle_states for any DLP master.
+    finding: Per Rule #12 every workflow-bearing master needs a state machine; workflow-gate permissions materialize from those. Expected machines for dlp_incidents (detected -> triaged -> investigated -> remediated -> closed), dlp_policies (draft -> in_review -> approved -> active -> retired), dlp_quarantine_items (held -> reviewed -> released | destroyed), dlp_exceptions (requested -> approved | denied -> active -> expired). data_exfiltration_attempts and dlp_user_activity_logs may qualify for the config-shape exemption (B2-S3).
+    action: Draft state machines per master once B1B-S1 lands (module ids needed for the optional domain_module_id realization column on each gated state). Workflow-gate permissions then materialize per the per-module derivation rule.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: "domain_module_id realization column needs module ids"}
+      - {type: user_decision, ref: B2-S3}
+    affected_masters:
+      - {data_object_id: 330, name: dlp_incidents, target_module_id: null, workflow: "detected -> triaged -> investigated -> remediated -> closed"}
+      - {data_object_id: 331, name: dlp_policies, target_module_id: null, workflow: "draft -> in_review -> approved -> active -> retired"}
+      - {data_object_id: 333, name: dlp_quarantine_items, target_module_id: null, workflow: "held -> reviewed -> released | destroyed"}
+      - {data_object_id: 334, name: dlp_exceptions, target_module_id: null, workflow: "requested -> approved | denied -> active -> expired"}
+      - {data_object_id: 332, name: data_exfiltration_attempts, target_module_id: null, workflow: "transient event, possible config-shape exemption"}
+      - {data_object_id: 335, name: dlp_user_activity_logs, target_module_id: null, workflow: "append-only audit, possible config-shape exemption"}
+
+  - id: B1B-S7-B11-ALIASES
+    summary: B11 soft fail; 0 data_object_aliases for any DLP master.
+    finding: Vendor terminology highly fragmented (Purview Activity Explorer, Sensitivity Labels; Forcepoint DLP Policies, Incident Risk Ranking; Code42 File Events; Netskope Real-time Protection Policies). Cross-industry equivalents dlp_incidents <-> data_loss_event, dlp_policies <-> sensitive_data_policy.
+    action: Draft 8-15 alias rows (2-3 per master) once B1B-S1 lands so aliases anchor at the module grain too.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: "anchor aliases at module grain after split"}
+
+  - id: B1B-S8-B4-PATTERN-FLAGS
+    summary: B4 soft fail; pattern flags on all 6 masters are false by default.
+    finding: Live read confirms has_personal_content / has_submit_lock / has_single_approver are all false on every DLP master. Candidates per audit; dlp_incidents.has_personal_content=true, dlp_user_activity_logs.has_personal_content=true, dlp_policies.has_submit_lock=true, dlp_exceptions.has_single_approver=true. Per Rule #15 the consideration cannot be recorded in notes.
+    action: PATCH per-flag after B2-S2 yes/no decisions.
+    blocked_by:
+      - {type: user_decision, ref: B2-S2}
+
+  - id: B1B-S9-F1-LEGACY-SKILL
+    summary: F1 hard fail; skill 50 (dlp-system) is legacy domain-level system skill (domain_module_id=NULL).
+    finding: Once B1B-S1 lands, Rule #17 mandates one system skill per module. The legacy skill's 6 query tools (412-417) stay in tools catalog; skill_tools junctions migrate to per-module skills.
+    action: After B1B-S1, author dlp_policy_control_agent and dlp_enforcement_runtime_agent system skills with domain_module_id set; split 6 query tools by data_object_id; DELETE skill 50 and its 6 skill_tools rows.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: "module ids required for per-module system skills"}
+
+  - id: B1B-S10-F3-F4-F7
+    summary: F3/F4/F7 gated on F2; once 2 module-level system skills exist, each needs >=1 skill_tools with required + optional mix.
+    finding: "Today's surface is 100% query. Phase-S floor needs >=1 mutate per master (update_dlp_incident_status, approve_dlp_exception, release_dlp_quarantine_item), >=1 side_effect per module (prefer notify_person / notify_team per Rule #17), >=1 inbound (receive_dlp_alert_webhook). F4 invariant: query/mutate sets data_object_id required; side_effect/compute requires data_object_id null; inbound makes data_object_id optional."
+    action: Phase-S load alongside B1B-S9.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S9, reason: "skills must exist before skill_tools"}
+
+  - id: B1B-S11-B10B-HANDOFF-MODULE-FKS
+    summary: B10b; handoff module FKs vacuously NULL until B1B-S1 lands.
+    finding: 8 outbound handoffs all have source_domain_module_id=NULL (since DLP has 0 modules); 5 of 8 also have target_domain_module_id=NULL. 10 inbound handoffs all have target_domain_module_id=NULL; 9 of 10 also have source_domain_module_id=NULL (the only populated source-module is h832 from WSC-CHANNELS-CONVERSATIONS).
+    action: "After B1B-S1, run deterministic backfill, source_domain_module_id (outbound) equals the module that masters trigger_events.data_object_id; target_domain_module_id (inbound) equals the module holding handoff payload with strongest role (master > embedded_master > contributor > consumer > derived)."
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: "module ids required for FK backfill"}
+    affected_handoffs:
+      - {handoff_id: 280, direction: out, source_domain: DLP, target_domain: SECOPS, trigger_event: dlp_incident.violation_detected, payload: dlp_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 281, direction: out, source_domain: DLP, target_domain: IGA, trigger_event: dlp_incident.escalated, payload: dlp_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 282, direction: out, source_domain: DLP, target_domain: SECOPS, trigger_event: dlp_incident.escalated, payload: dlp_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 283, direction: out, source_domain: DLP, target_domain: PRIV-MGMT, trigger_event: dlp_incident.blocked, payload: dlp_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 284, direction: out, source_domain: DLP, target_domain: SECOPS, trigger_event: data_exfiltration_attempt.initiated, payload: data_exfiltration_attempts, null_field: source_domain_module_id}
+      - {handoff_id: 843, direction: out, source_domain: DLP, target_domain: ITSM, trigger_event: dlp_incident.blocked, payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 844, direction: out, source_domain: DLP, target_domain: GRC, trigger_event: dlp_incident.blocked, payload: dlp_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 845, direction: out, source_domain: DLP, target_domain: IGA, trigger_event: dlp_user_activity.flagged, payload: dlp_user_activity_logs, null_field: source_domain_module_id}
+      - {handoff_id: 260, direction: in, source_domain: DCG, target_domain: DLP, trigger_event: data_asset.classified, payload: data_assets, null_field: target_domain_module_id}
+      - {handoff_id: 264, direction: in, source_domain: DCG, target_domain: DLP, trigger_event: data_access_request.approved, payload: data_access_policies, null_field: target_domain_module_id}
+      - {handoff_id: 690, direction: in, source_domain: BI, target_domain: DLP, trigger_event: bi_dashboard.shared_externally, payload: bi_dashboards, null_field: target_domain_module_id}
+      - {handoff_id: 702, direction: in, source_domain: NCDB, target_domain: DLP, trigger_event: nocode_view.shared_externally, payload: nocode_views, null_field: target_domain_module_id}
+      - {handoff_id: 709, direction: in, source_domain: DCG, target_domain: DLP, trigger_event: data_domain.created, payload: data_domains, null_field: target_domain_module_id}
+      - {handoff_id: 730, direction: in, source_domain: DI, target_domain: DLP, trigger_event: sink_connector.added, payload: sink_connectors, null_field: target_domain_module_id}
+      - {handoff_id: 821, direction: in, source_domain: ECM, target_domain: DLP, trigger_event: content_document.uploaded, payload: content_documents, null_field: target_domain_module_id}
+      - {handoff_id: 822, direction: in, source_domain: ECM, target_domain: DLP, trigger_event: document.classified, payload: document_classifications, null_field: target_domain_module_id}
+      - {handoff_id: 832, direction: in, source_domain: WSC, target_domain: DLP, trigger_event: chat_message.posted, payload: chat_messages, null_field: target_domain_module_id}
+      - {handoff_id: 847, direction: in, source_domain: DSPM, target_domain: DLP, trigger_event: data_warehouse.classified, payload: data_warehouses, null_field: target_domain_module_id}
+
+  - id: B1B-S12-B9-MISSING-HANDOFFS
+    summary: B9 partial; 6 trigger_events without cross-domain handoffs.
+    finding: trigger_events 261 dlp_incident.quarantined, 262 dlp_incident.remediated, 265 dlp_exception.requested, 266 dlp_exception.approved, 927 dlp_policy.updated, 928 dlp_quarantine_item.released have no handoffs row. Likely fan-outs - 261 -> PRIV-MGMT/SECOPS/ITSM, 262 -> SECOPS/ITSM, 265 -> GRC, 266 -> IGA/SECOPS, 927 -> DCG + every consumer module, 928 -> ECM/WSC.
+    action: After B1B-S1, draft missing handoff rows with both module FKs populated; load via standard handoffs loader.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: "both module FKs needed on insert"}
+    affected_events:
+      - {id: 261, event_name: dlp_incident.quarantined, current_category: state_change, proposed_category: state_change}
+      - {id: 262, event_name: dlp_incident.remediated, current_category: state_change, proposed_category: state_change}
+      - {id: 265, event_name: dlp_exception.requested, current_category: lifecycle, proposed_category: lifecycle}
+      - {id: 266, event_name: dlp_exception.approved, current_category: state_change, proposed_category: state_change}
+      - {id: 927, event_name: dlp_policy.updated, current_category: state_change, proposed_category: state_change}
+      - {id: 928, event_name: dlp_quarantine_item.released, current_category: state_change, proposed_category: state_change}
+
+  - id: B1B-S13-B9B-INTRA-DOMAIN-HANDOFFS
+    summary: B9b vacuously passes today; real check after B1B-S1.
+    finding: With 0 modules, no intra-domain cross-module handoffs are modellable. Expect 3+ after split, dlp_policy.activated (POLICY-CONTROL -> ENFORCEMENT-RUNTIME), dlp_incident.detected (ENFORCEMENT-RUNTIME -> POLICY-CONTROL tuning loop), dlp_exception.approved (POLICY-CONTROL -> ENFORCEMENT-RUNTIME runtime reconfiguration).
+    action: Draft once modules exist; integration_pattern='lifecycle_progression', friction_level='low'.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: "no intra-domain handoffs without modules"}
+
+  - id: B1B-S14-E-BAND-ROLES
+    summary: E1/E2/E4 hard fail; 0 roles touching DLP-affiliated business functions; 0 role_modules; 0 role_permissions.
+    finding: /role_modules joined to /domain_modules?domain_id=eq.139 returns []. Once 2 modules exist (M2 satisfied), E1 mandates >=3 distinct roles touching both modules. Likely DLP-ADMIN (policy authoring + approval, spans both), DLP-INCIDENT-RESPONDER (incident triage + remediation, runtime primary, policy-control secondary), SECURITY-ANALYST (cross-cutting investigator, secondary on both).
+    action: Author roles + role_modules + role_permissions after B1B-S1; use function-scoped naming (FUNCTION-CODE-ROLE-NAME); explicit interaction_level per E3.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: "module ids required for role_modules"}
+
+b2:
+  - id: B2-S1
+    summary: DLP module split topology (B1B-S1 prerequisite).
+    question: "Which split? Policy-vs-Runtime, per-channel, or hybrid?"
+    options:
+      - "a) Policy-vs-Runtime split (DLP-POLICY-CONTROL + DLP-ENFORCEMENT-RUNTIME), recommended for vendor neutrality"
+      - "b) Per-channel split (DLP-EMAIL-MSG + DLP-ENDPOINT + DLP-NETWORK-WEB + DLP-CLOUD-API), 4 modules matching Forcepoint/Broadcom legacy product lines"
+      - "c) Hybrid: 2 full modules + 1 starter (DLP-LITE for cloud-only / SMB tier)"
+    why: "Modularization design choice with downstream effects on capability assignment, role bundles, Phase-B and Phase-S load shape. Some flagships split orthogonally (Microsoft Purview unified channel; Forcepoint historically per-channel; Broadcom per-channel; Netskope cloud-first; Code42 endpoint-only)."
+
+  - id: B2-S2
+    summary: DLP pattern-flag positive re-evaluation across 4 candidate flags.
+    question: "For each of the 4 flag candidates, is the positive value correct?"
+    options:
+      - "dlp_incidents.has_personal_content = true | false"
+      - "dlp_user_activity_logs.has_personal_content = true | false"
+      - "dlp_policies.has_submit_lock = true | false"
+      - "dlp_exceptions.has_single_approver = true | false"
+    why: "Pattern flags are workflow-shape judgments the user owns; false-by-default is not a positive answer. Per Rule #15 the consideration cannot be recorded in notes."
+
+  - id: B2-S3
+    summary: Lifecycle-state exemptions for data_exfiltration_attempts and dlp_user_activity_logs.
+    question: "Which of the two transient/append-only masters qualify for the Rule #12 config-shape exemption?"
+    options:
+      - "a) Exempt both as config-shape (skip lifecycle states for these two)"
+      - "b) Author lifecycle states for dlp_user_activity_logs only (open -> reviewed -> archived)"
+      - "c) Author lifecycle states for both"
+    why: "Cyberhaven treats activity logs as a first-class investigable surface with its own state machine; Microsoft Purview treats them as append-only audit. The user owns this product-shape call."
+
+  - id: B2-S4
+    summary: DLP business-function ownership for B1B-S2 C1 fix.
+    question: "Single owner or split with Privacy Office?"
+    options:
+      - "a) Single owner Information Security"
+      - "b) Owner split: Information Security owns ENFORCEMENT-RUNTIME, Privacy Office owns POLICY-CONTROL"
+      - "c) Information Security owner + Privacy Office contributor + Legal/RM contributor"
+    why: "DLP straddles security + privacy + records management; org-design choice with implications for permission-bundle drift (E6) and cross-functional role authoring."
+
+  - id: B2-S5
+    summary: APQC bulk approval for the 7 remaining handoff_processes proposals (B1A-S16).
+    question: "Approve the 7 agent_curated rows as proposed, drop to L4 children where they exist, or pre-vet via Discover Pass 3?"
+    options:
+      - "a) Approve as proposed"
+      - "b) Drop to L4 children where they exist"
+      - "c) Pre-vet via Discover Pass 3"
+    why: "Reviewer preference + L3 parent vs. L4 child anchor choice varies across audits. The repeated 20735 L3 anchor on inbound rows is defensible because every inbound row triggers DLP policy authoring/refinement, the substantive job."
+
+  - id: B2-S6
+    summary: User-edge verb choice for 3 remaining DLP masters (B1B-S5B).
+    question: "Which canonical actor + verb maps to each of the 3 masters?"
+    options:
+      - "dlp_quarantine_items: reviewer (e.g. reviews) and/or release_approver (e.g. releases / approves_release)"
+      - "dlp_user_activity_logs: user-under-monitor (e.g. is_monitored_by or generates) - direction is inverse from typical user-edge"
+      - "data_exfiltration_attempts: actor (e.g. initiates or attempts)"
+    why: "Multiple plausible verbs per actor; the dominant project convention is the verb-on-source-side pattern (e.g. users reviews dlp_incidents), but dlp_user_activity_logs reverses the typical direction since the activity log RECORDS user behavior."
+
+b3:
+  - id: B3-MISSING-ENTITY-1
+    candidate: dlp_sensitive_data_types
+    rationale: "First-class pattern catalog (regex + dictionary + ML). Purview Sensitive Information Types, Forcepoint Data Classifiers, Broadcom Identity Definitions."
+    vendor_evidence:
+      - {vendor: Microsoft Purview DLP, evidence: 1st_class}
+      - {vendor: Forcepoint DLP, evidence: 1st_class}
+      - {vendor: Broadcom Data Protection DLP, evidence: 1st_class}
+    proposed_module: DLP-POLICY-CONTROL
+
+  - id: B3-MISSING-ENTITY-2
+    candidate: dlp_content_fingerprints
+    rationale: "Exact-data-match registry. Purview EDM, Forcepoint Fingerprinting, Broadcom EDM, Trellix EDM."
+    vendor_evidence:
+      - {vendor: Microsoft Purview DLP, evidence: 1st_class}
+      - {vendor: Forcepoint DLP, evidence: 1st_class}
+      - {vendor: Broadcom Data Protection DLP, evidence: 1st_class}
+      - {vendor: Trellix Data Loss Prevention, evidence: 1st_class}
+    proposed_module: DLP-POLICY-CONTROL
+
+  - id: B3-MISSING-ENTITY-3
+    candidate: dlp_sensitivity_labels
+    rationale: "User/system-applied artifacts persisted on content, distinct from classifications (policy-side definitions). Purview Sensitivity Labels, MIP Labels, Forcepoint Classification Labels."
+    vendor_evidence:
+      - {vendor: Microsoft Purview DLP, evidence: 1st_class}
+      - {vendor: Forcepoint DLP, evidence: 1st_class}
+    proposed_module: DLP-POLICY-CONTROL
+
+  - id: B3-MISSING-ENTITY-4
+    candidate: dlp_policy_violations
+    rationale: "Per-event violation, raw policy hit; incident aggregates violations. Distinct from dlp_incidents which is the case record. Code42 File Events, Cyberhaven Data Flow Events."
+    vendor_evidence:
+      - {vendor: Code42 Incydr, evidence: 1st_class}
+      - {vendor: Cyberhaven, evidence: 1st_class}
+    proposed_module: DLP-ENFORCEMENT-RUNTIME
+
+  - id: B3-MISSING-ENTITY-5
+    candidate: dlp_enforcement_actions
+    rationale: "Action taken per violation (block, quarantine, redact, mask, watermark, alert). All flagships log per-action audit."
+    vendor_evidence:
+      - {vendor: Microsoft Purview DLP, evidence: 1st_class}
+      - {vendor: Forcepoint DLP, evidence: 1st_class}
+      - {vendor: Broadcom Data Protection DLP, evidence: 1st_class}
+    proposed_module: DLP-ENFORCEMENT-RUNTIME
+
+  - id: B3-MISSING-ENTITY-6
+    candidate: dlp_forensic_evidence
+    rationale: "Snapshot of artifact at violation time (file hash, sample bytes, screenshot). Code42 Incydr strongest signal; Purview Insider Risk also models this."
+    vendor_evidence:
+      - {vendor: Code42 Incydr, evidence: 1st_class}
+      - {vendor: Microsoft Purview DLP, evidence: secondary}
+    proposed_module: DLP-ENFORCEMENT-RUNTIME
+
+  - id: B3-MISSING-ENTITY-7
+    candidate: dlp_alerts
+    rationale: "Notification primitives delivered to SecOps; distinct from incidents (case records). Forcepoint and Broadcom keep these separate."
+    vendor_evidence:
+      - {vendor: Forcepoint DLP, evidence: 1st_class}
+      - {vendor: Broadcom Data Protection DLP, evidence: 1st_class}
+    proposed_module: DLP-ENFORCEMENT-RUNTIME
+
+  - id: B3-MISSING-ENTITY-8
+    candidate: dlp_dictionaries
+    rationale: "Custom term lists referenced by policies. Forcepoint, Purview."
+    vendor_evidence:
+      - {vendor: Forcepoint DLP, evidence: 1st_class}
+      - {vendor: Microsoft Purview DLP, evidence: 1st_class}
+    proposed_module: DLP-POLICY-CONTROL
+
+  - id: B3-MISSING-ENTITY-9
+    candidate: dlp_egress_channels
+    rationale: "Master of monitored channels (email, web, USB, print, cloud-app-id). Every flagship has a channel master; today's catalog implies channels via separate capabilities but no entity."
+    vendor_evidence:
+      - {vendor: Microsoft Purview DLP, evidence: 1st_class}
+      - {vendor: Forcepoint DLP, evidence: 1st_class}
+      - {vendor: Broadcom Data Protection DLP, evidence: 1st_class}
+    proposed_module: DLP-POLICY-CONTROL
+
+  - id: B3-MISSING-ENTITY-10
+    candidate: dlp_breach_notifications
+    rationale: "Regulator-facing notification primitive triggered by dlp_incident of severity=high. Compliance-driven (GDPR Art. 33/34, CCPA, HIPAA breach notification)."
+    vendor_evidence:
+      - {vendor: Microsoft Purview DLP, evidence: secondary}
+      - {vendor: Forcepoint DLP, evidence: secondary}
+    proposed_module: DLP-POLICY-CONTROL
+
+  - id: B3-MODULARIZATION-PROPOSAL
+    candidate: "2-module split (DLP-POLICY-CONTROL + DLP-ENFORCEMENT-RUNTIME), recommended baseline"
+    rationale: "With 8 capabilities, Rule #14 floor of 2 modules satisfied with headroom. Per-channel split shifts to 4 modules (DLP-EMAIL-MSG + DLP-ENDPOINT + DLP-NETWORK-WEB + DLP-CLOUD-API) matching Forcepoint/Broadcom legacy product lines but doubles authoring cost."
+    vendor_evidence:
+      - {vendor: Microsoft Purview DLP, evidence: secondary}
+      - {vendor: Forcepoint DLP, evidence: 1st_class}
+      - {vendor: Broadcom Data Protection DLP, evidence: 1st_class}
+
+  - id: B3-REG-GDPR
+    candidate: "domain_regulations row for GDPR (applicability=mandatory)"
+    rationale: "Article 5(1)(f) integrity and confidentiality; Article 33/34 breach notification. DLP is the primary technical control for both. Live enum is mandatory / recommended / conditional / optional (Rule #13 re-query), correcting the 2026-05-30 audit's 'direct' value."
+    vendor_evidence:
+      - {vendor: Microsoft Purview DLP, evidence: 1st_class}
+      - {vendor: Forcepoint DLP, evidence: 1st_class}
+    proposed_module: null
+    extra_applicability: mandatory
+
+  - id: B3-REG-HIPAA
+    candidate: "domain_regulations row for HIPAA (applicability=mandatory)"
+    rationale: "Security Rule 164.312(a)(1) Access Control; 164.308 Administrative Safeguards. DLP enforces ePHI egress controls."
+    vendor_evidence:
+      - {vendor: Microsoft Purview DLP, evidence: 1st_class}
+      - {vendor: Forcepoint DLP, evidence: 1st_class}
+    proposed_module: null
+    extra_applicability: mandatory
+
+  - id: B3-REG-PCI-DSS
+    candidate: "domain_regulations row for PCI-DSS (applicability=mandatory)"
+    rationale: "Req 3 (Protect stored cardholder data), Req 4 (Protect during transmission). DLP enforces cardholder-data egress prevention."
+    vendor_evidence:
+      - {vendor: Microsoft Purview DLP, evidence: 1st_class}
+      - {vendor: Forcepoint DLP, evidence: 1st_class}
+    proposed_module: null
+    extra_applicability: mandatory

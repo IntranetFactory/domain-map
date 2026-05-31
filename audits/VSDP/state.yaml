@@ -1,0 +1,289 @@
+schema_version: 2
+domain: VSDP
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S2
+    summary: "Author 3 to 5 capabilities and link via capability_domains."
+    finding: "Zero capability_domains rows on VSDP (domain_id=80). Independent of module-shape gate; capabilities can land before modules and inform the module-shape decision."
+    action: "Draft 3 to 5 capabilities (source-control + collaboration, CI/CD pipeline orchestration, build and artifact management, release and deployment orchestration, value-stream analytics) and load capabilities + capability_domains rows via the Phase A loader pattern."
+    affected_entities: [capabilities, capability_domains]
+
+  - id: B1A-A4
+    summary: "Draft and surface domains.catalog_tagline + catalog_description per Rule #20."
+    finding: "VSDP domain id 80 has empty catalog_tagline and catalog_description. Rule #20 requires buyer-voice copy on every domain; the M8 module rollup will inherit once modules land."
+    action: "Draft buyer-voice catalog_tagline (one sentence) + catalog_description (1 to 3 paragraphs) per Rule #20 voice rule, surface to user for review BEFORE writing. Never overwrite a non-empty value without explicit per-row user approval."
+    affected_entities: [domains]
+
+  - id: B1A-B5
+    summary: "Surface pattern flag candidates on build_artifacts and software_deployments to user for explicit confirmation."
+    finding: "B4 audit identifies build_artifacts (immutability post-publish, SLSA-provenance lock semantics) as a has_submit_lock candidate and software_deployments (single change approver in SOX/GxP-grade change windows) as a has_single_approver candidate. Audit narrative records the consideration per Rule #15 (no notes annotation); structured-column PATCH requires user confirmation."
+    action: "Surface candidate flips in chat. PATCH only on user confirmation per master."
+    affected_masters:
+      - {data_object_id: 681, name: build_artifacts, target_module_id: null, workflow: post_publish_immutability}
+      - {data_object_id: 682, name: software_deployments, target_module_id: null, workflow: regulated_change_approval}
+
+b1b:
+  - id: B1B-S1
+    summary: "0 domain_modules rows on VSDP; Rule #14 floor violation."
+    finding: "VSDP (domain_id=80) carries zero domain_modules rows. Rule #14 requires at least 1 module_kind='full' row per domains row; ≥2 once capabilities reach 3+. Blocks every downstream M, B (per-module attribution), E, F band."
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+    affected_modules: []
+    affected_entities: [domain_modules]
+
+  - id: B1B-S3
+    summary: "0 intra-VSDP entity edges + 0 users edges (Rule #10)."
+    finding: "Zero data_object_relationships rows between the 8 VSDP masters and zero edges from any VSDP master to users (id 748). Tuple authoring (verb, inverse_verb, relationship_type, relationship_kind, is_required, owner_side) still owed; the prior audit named candidate pairs but did not pre-specify tuples."
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: lifecycle states needed before some edges are stable}
+      - {type: user_decision, ref: B2-3, reason: TEST-MGMT boundary affects related_data_object_id selection for test_runs/ci_pipeline_runs edges}
+      - {type: user_decision, ref: B2-4, reason: KUBE-PLAT + APP-PAAS boundary affects software_deployments to platform-specific realization edges}
+    affected_masters:
+      - {data_object_id: 676, name: source_repositories, target_module_id: null, workflow: source_control_authoring}
+      - {data_object_id: 677, name: code_commits, target_module_id: null, workflow: source_control_authoring}
+      - {data_object_id: 678, name: pull_requests, target_module_id: null, workflow: pr_review_merge}
+      - {data_object_id: 679, name: ci_pipelines, target_module_id: null, workflow: pipeline_config}
+      - {data_object_id: 680, name: ci_pipeline_runs, target_module_id: null, workflow: pipeline_execution}
+      - {data_object_id: 681, name: build_artifacts, target_module_id: null, workflow: artifact_publish}
+      - {data_object_id: 682, name: software_deployments, target_module_id: null, workflow: deployment_rollout}
+      - {data_object_id: 683, name: value_stream_metrics, target_module_id: null, workflow: metric_snapshot}
+
+  - id: B1B-S4
+    summary: "0 VSDP roles, Phase E gap."
+    finding: "Zero roles tied to VSDP modules (no modules to tie to) and zero roles under business_function_id=60 (Platform Engineering). Multi-module-domain qualifier per E1 requires ≥3 distinct roles once modules land."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1, reason: roles need at least 2 modules per E2 floor}
+    affected_entities: [roles, role_modules, role_permissions]
+
+  - id: B1B-S5
+    summary: "Retire legacy vsdp-system skill and reauthor module-level system skill(s)."
+    finding: "Skill id 119 vsdp-system carries domain_id=80, domain_module_id=NULL, kebab-cased name (Rule #17 requires module-level with snake_case <module_code>_agent). Eight skill_tools rows of operation_kind='query' all platform-tier."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: user_decision, ref: B2-1, reason: module shape determines how many system skills to author and which tools migrate where}
+    affected_entities: [skills, skill_tools]
+
+  - id: B1B-S7
+    summary: "0 lifecycle states across all 8 VSDP masters."
+    finding: "Zero data_object_lifecycle_states rows for any VSDP master. Workflow-bearing masters that MUST have lifecycle states: pull_requests, ci_pipeline_runs, software_deployments. Config-shape exemption candidates per Rule #12: value_stream_metrics (derived), source_repositories (created/archived only), build_artifacts (publish-once immutable), ci_pipelines (configuration entity, runs are the workflow surface), code_commits (event entity, not a workflow). Exemption requires user surface per Rule #15 (no notes annotation)."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1, reason: domain_module_id attribution per M5 requires modules}
+      - {type: user_decision, ref: B2-7, reason: config-shape exemption candidates need explicit user decision per master}
+    affected_masters:
+      - {data_object_id: 678, name: pull_requests, target_module_id: null, workflow: draft_to_open_to_review_to_approved_to_merged_or_closed}
+      - {data_object_id: 680, name: ci_pipeline_runs, target_module_id: null, workflow: queued_to_running_to_succeeded_or_failed_or_cancelled}
+      - {data_object_id: 682, name: software_deployments, target_module_id: null, workflow: pending_to_running_to_succeeded_or_failed_with_rollback}
+      - {data_object_id: 676, name: source_repositories, target_module_id: null, workflow: config_shape_exemption_candidate}
+      - {data_object_id: 677, name: code_commits, target_module_id: null, workflow: event_only_no_workflow}
+      - {data_object_id: 679, name: ci_pipelines, target_module_id: null, workflow: config_shape_exemption_candidate}
+      - {data_object_id: 681, name: build_artifacts, target_module_id: null, workflow: publish_once_immutable}
+      - {data_object_id: 683, name: value_stream_metrics, target_module_id: null, workflow: derived_no_workflow}
+
+  - id: B1B-B1
+    summary: "9 outbound handoffs carry source_domain_module_id=NULL on VSDP side."
+    finding: "All 9 outbound cross-domain handoffs from VSDP (770, 771, 772, 773, 774, 775, 776, 777, 800) carry source_domain_module_id=NULL because VSDP has zero modules to anchor to. B10b derivation requires resolving the publishing master to its realizing module."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_handoffs:
+      - {handoff_id: 770, direction: outbound, source_domain: VSDP, target_domain: APP-PAAS, trigger_event: software_deployment.completed, payload: software_deployments, null_field: source_domain_module_id}
+      - {handoff_id: 771, direction: outbound, source_domain: VSDP, target_domain: TEST-MGMT, trigger_event: ci_pipeline_run.failed, payload: ci_pipeline_runs, null_field: source_domain_module_id}
+      - {handoff_id: 772, direction: outbound, source_domain: VSDP, target_domain: SPM, trigger_event: value_stream_metric.published, payload: value_stream_metrics, null_field: source_domain_module_id}
+      - {handoff_id: 773, direction: outbound, source_domain: VSDP, target_domain: OBS, trigger_event: software_deployment.completed, payload: software_deployments, null_field: source_domain_module_id}
+      - {handoff_id: 774, direction: outbound, source_domain: VSDP, target_domain: ITSM, trigger_event: software_deployment.failed, payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 775, direction: outbound, source_domain: VSDP, target_domain: PROD-MGMT, trigger_event: pull_request.merged, payload: pull_requests, null_field: source_domain_module_id}
+      - {handoff_id: 776, direction: outbound, source_domain: VSDP, target_domain: WORK-MGMT, trigger_event: pull_request.merged, payload: pull_requests, null_field: source_domain_module_id}
+      - {handoff_id: 777, direction: outbound, source_domain: VSDP, target_domain: EPM, trigger_event: value_stream_metric.threshold_breached, payload: value_stream_metrics, null_field: source_domain_module_id}
+      - {handoff_id: 800, direction: outbound, source_domain: VSDP, target_domain: GRC, trigger_event: build_artifact.published, payload: build_artifacts, null_field: source_domain_module_id}
+
+  - id: B1B-B2
+    summary: "10 inbound handoffs carry target_domain_module_id=NULL on VSDP side."
+    finding: "All 10 inbound cross-domain handoffs to VSDP carry target_domain_module_id=NULL because VSDP has zero modules to anchor to."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_handoffs:
+      - {handoff_id: 616, direction: inbound, source_domain: OBS, target_domain: VSDP, trigger_event: error_group.new_signature, payload: error_groups, null_field: target_domain_module_id}
+      - {handoff_id: 617, direction: inbound, source_domain: OBS, target_domain: VSDP, trigger_event: error_group.regression_detected, payload: error_groups, null_field: target_domain_module_id}
+      - {handoff_id: 747, direction: inbound, source_domain: APIM, target_domain: VSDP, trigger_event: api_deployment.published, payload: api_deployments, null_field: target_domain_module_id}
+      - {handoff_id: 754, direction: inbound, source_domain: APP-PAAS, target_domain: VSDP, trigger_event: paas_deployment.succeeded, payload: paas_deployments, null_field: target_domain_module_id}
+      - {handoff_id: 758, direction: inbound, source_domain: APP-PAAS, target_domain: VSDP, trigger_event: paas_build.failed, payload: paas_build_records, null_field: target_domain_module_id}
+      - {handoff_id: 762, direction: inbound, source_domain: KUBE-PLAT, target_domain: VSDP, trigger_event: helm_release.deployed, payload: helm_releases, null_field: target_domain_module_id}
+      - {handoff_id: 778, direction: inbound, source_domain: TEST-MGMT, target_domain: VSDP, trigger_event: test_run.completed, payload: test_runs, null_field: target_domain_module_id}
+      - {handoff_id: 782, direction: inbound, source_domain: TEST-MGMT, target_domain: VSDP, trigger_event: test_run.failed, payload: test_runs, null_field: target_domain_module_id}
+      - {handoff_id: 794, direction: inbound, source_domain: SPM, target_domain: VSDP, trigger_event: dependency_chain.identified, payload: dependency_chains, null_field: target_domain_module_id}
+      - {handoff_id: 801, direction: inbound, source_domain: IPAAS, target_domain: VSDP, trigger_event: integration_recipe.published, payload: integration_recipes, null_field: target_domain_module_id}
+
+  - id: B1B-B3
+    summary: "0 data_object_aliases rows on the 8 VSDP masters."
+    finding: "Zero aliases despite obvious industry-synonym candidates (pull_requests to merge_requests in GitLab; ci_pipelines to pipelines/workflows/builds; value_stream_metrics to dora_metrics/flow_metrics). Self-explanatory exemption candidates per master to be surfaced; Rule #15 forbids notes annotation."
+    blocked_by:
+      - {type: user_decision, ref: B2-2, reason: "vendor-terminology aliases align with the solutions inventory authored in Bucket 2 item 2 (GitLab merge_requests, Azure DevOps workflows, etc.)"}
+    affected_masters:
+      - {data_object_id: 678, name: pull_requests, target_module_id: null, workflow: industry_synonym_merge_requests}
+      - {data_object_id: 679, name: ci_pipelines, target_module_id: null, workflow: industry_synonym_pipelines_workflows_builds}
+      - {data_object_id: 683, name: value_stream_metrics, target_module_id: null, workflow: industry_synonym_dora_metrics_flow_metrics}
+      - {data_object_id: 676, name: source_repositories, target_module_id: null, workflow: alias_candidate_repos}
+      - {data_object_id: 680, name: ci_pipeline_runs, target_module_id: null, workflow: alias_candidate_workflow_runs_builds}
+      - {data_object_id: 681, name: build_artifacts, target_module_id: null, workflow: alias_candidate_packages_container_images}
+      - {data_object_id: 677, name: code_commits, target_module_id: null, workflow: self_explanatory_exemption_candidate}
+      - {data_object_id: 682, name: software_deployments, target_module_id: null, workflow: self_explanatory_exemption_candidate}
+
+  - id: B1B-B4
+    summary: "0 outbound cross-domain data_object_relationships from VSDP masters."
+    finding: "B8 audit shows zero data_object_relationships rows from any of the 8 VSDP masters into other domains. Each outbound handoff with a clean payload mapping implies a relationship row (e.g. software_deployments feeds environments via APP-PAAS / OBS / ITSM; pull_requests realizes work_items via WORK-MGMT)."
+    blocked_by:
+      - {type: user_decision, ref: B2-3, reason: TEST-MGMT boundary affects ci_pipeline_runs to test_runs verb selection}
+      - {type: user_decision, ref: B2-4, reason: KUBE-PLAT + APP-PAAS boundary affects software_deployments to platform-specific realization edges}
+    affected_handoffs:
+      - {handoff_id: 770, direction: outbound, source_domain: VSDP, target_domain: APP-PAAS, trigger_event: software_deployment.completed, payload: software_deployments, null_field: cross_domain_data_object_relationship}
+      - {handoff_id: 771, direction: outbound, source_domain: VSDP, target_domain: TEST-MGMT, trigger_event: ci_pipeline_run.failed, payload: ci_pipeline_runs, null_field: cross_domain_data_object_relationship}
+      - {handoff_id: 772, direction: outbound, source_domain: VSDP, target_domain: SPM, trigger_event: value_stream_metric.published, payload: value_stream_metrics, null_field: cross_domain_data_object_relationship}
+      - {handoff_id: 773, direction: outbound, source_domain: VSDP, target_domain: OBS, trigger_event: software_deployment.completed, payload: software_deployments, null_field: cross_domain_data_object_relationship}
+      - {handoff_id: 774, direction: outbound, source_domain: VSDP, target_domain: ITSM, trigger_event: software_deployment.failed, payload: service_incidents, null_field: cross_domain_data_object_relationship}
+      - {handoff_id: 775, direction: outbound, source_domain: VSDP, target_domain: PROD-MGMT, trigger_event: pull_request.merged, payload: pull_requests, null_field: cross_domain_data_object_relationship}
+      - {handoff_id: 776, direction: outbound, source_domain: VSDP, target_domain: WORK-MGMT, trigger_event: pull_request.merged, payload: pull_requests, null_field: cross_domain_data_object_relationship}
+      - {handoff_id: 777, direction: outbound, source_domain: VSDP, target_domain: EPM, trigger_event: value_stream_metric.threshold_breached, payload: value_stream_metrics, null_field: cross_domain_data_object_relationship}
+      - {handoff_id: 800, direction: outbound, source_domain: VSDP, target_domain: GRC, trigger_event: build_artifact.published, payload: build_artifacts, null_field: cross_domain_data_object_relationship}
+
+b2:
+  - id: B2-1
+    summary: "Module shape decision for VSDP."
+    question: "One consolidated VSDP-PLATFORM module, a 2-split (VSDP-DEV-PIPELINE + VSDP-DELIVERY-AND-VSM), a 4-split (SOURCE-CONTROL + CICD + DEPLOYMENT-MGMT + VALUE-STREAM-ANALYTICS), or a monolith plus VSDP-STARTER kit for SMB buyers?"
+    options:
+      - one consolidated VSDP-PLATFORM full module
+      - 2-split VSDP-DEV-PIPELINE + VSDP-DELIVERY-AND-VSM
+      - 4-split source-control + CICD + deployment-mgmt + value-stream-analytics
+      - VSDP-PLATFORM monolith plus VSDP-STARTER (module_kind=starter)
+    why: "Rule #14 requires ≥2 modules once capabilities reach ≥3. Bucket 3 candidate-queue domains (GITOPS-DELIVERY, ARTIFACT-REGISTRY, APPSEC-ORCH, SUPPLY-CHAIN-SEC) may carve out scope from the 4-split option if promoted."
+
+  - id: B2-2
+    summary: "Solutions inventory for VSDP."
+    question: "Which flagship vendors to author as solutions, at what coverage_level (primary vs secondary), and whether to roll up add-ons or treat as separate solutions?"
+    options:
+      - GitLab Ultimate (primary)
+      - GitHub Enterprise rolled up with Actions + Advanced Security (primary or separate rows)
+      - Azure DevOps Services (primary)
+      - Atlassian Bitbucket + Bitbucket Pipelines + Bamboo (primary or secondary)
+      - Jenkins (CloudBees), CircleCI, Buildkite (secondary)
+      - Harness CD, Argo CD, Octopus Deploy (secondary, may move to GITOPS-DELIVERY if promoted)
+      - Plandek, LinearB (secondary pure-play VSM)
+
+  - id: B2-3
+    summary: "TEST-MGMT boundary: test_runs canonical mastery."
+    question: "Should test_runs remain canonically mastered by TEST-MGMT (current) or become embedded_master in a future VSDP-CICD module? Also, data_object_relationships row 409 (test_defects surfaces_from ci_pipeline_runs, owner_side=target) for TEST-MGMT's next pairwise pass: should owner_side flip to source?"
+    options:
+      - keep TEST-MGMT canonical, no embedded_master in VSDP
+      - VSDP-CICD embedded_master with TEST-MGMT staying canonical
+      - flag row 409 owner_side for TEST-MGMT audit only, no VSDP change
+
+  - id: B2-4
+    summary: "KUBE-PLAT + APP-PAAS boundary: software_deployments role."
+    question: "Is software_deployments the umbrella event (current master role) over platform-specific realizations (helm_releases, paas_deployments), or a derived/computed view that should flip to role=derived (matches Plandek normalization model)?"
+    options:
+      - keep software_deployments role=master (umbrella over realizations)
+      - flip role=derived (computed view over platform-specific masters)
+
+  - id: B2-5
+    summary: "Bitbucket / Bamboo same-load addition."
+    question: "Add Atlassian Bitbucket + Bitbucket Pipelines + Bamboo as solutions in the same Phase A load that creates VSDP modules, or queue separately?"
+    options:
+      - same load
+      - separate later load
+      - skip
+
+  - id: B2-6
+    summary: "Regulations scope on VSDP."
+    question: "Attach NIST SSDF SP 800-218, EO 14028, EU Cyber Resilience Act, or SLSA framework as domain_regulations on VSDP, or keep them on candidate-queue APPSEC-ORCH / SUPPLY-CHAIN-SEC domains only?"
+    options:
+      - no regulations on VSDP (current)
+      - attach build_artifact-relevant subset (SLSA + NIST SSDF) to VSDP
+      - attach all four to VSDP
+
+  - id: B2-7
+    summary: "Pattern flag flips on build_artifacts and software_deployments."
+    question: "Confirm or reject the immutability flag (has_submit_lock) on build_artifacts (post-publish, SLSA-provenance-lock semantics) and the single-approver flag (has_single_approver) on software_deployments (regulated SOX/GxP change windows)? Also, confirm the config-shape lifecycle exemption (Rule #12) for source_repositories, build_artifacts, ci_pipelines, code_commits, value_stream_metrics."
+    options:
+      - flip build_artifacts.has_submit_lock=true
+      - flip software_deployments.has_single_approver=true
+      - both
+      - neither
+      - per-master decision: exemption confirmations for the five config-shape candidates listed in finding text
+
+b3:
+  - id: B3-1
+    candidate: deployment_environments
+    rationale: "Universal master across 5/5 flagship vendors as the canonical target of a software_deployment. GitLab Environments, GitHub Environments, Azure DevOps Environments, Argo CD Applications, Octopus Environments. Not in VSDP footprint."
+    vendor_evidence: [GitLab Ultimate, GitHub Enterprise, Azure DevOps Services, Argo CD, Octopus Deploy]
+    proposed_module: VSDP-DEPLOYMENT-MGMT
+  - id: B3-2
+    candidate: feature_flags
+    rationale: "Native in LaunchDarkly + GitLab + GitHub. Queued candidate-queue domain FEATURE-FLAGGING bumped to mention 3 by 2026-05-30 audit; if FEATURE-FLAGGING is promoted, VSDP consumes; if folded, VSDP masters."
+    vendor_evidence: [LaunchDarkly, GitLab Ultimate, GitHub Enterprise]
+    proposed_module: pending FEATURE-FLAGGING candidate decision
+  - id: B3-3
+    candidate: secrets
+    rationale: "Universal across 5/5 vendors (GitLab CI/CD variables, GitHub Actions secrets, Azure DevOps service connections, Jenkins credentials, CircleCI contexts). Workflow-critical for any CI/CD module."
+    vendor_evidence: [GitLab Ultimate, GitHub Enterprise, Azure DevOps Services, Jenkins, CircleCI]
+    proposed_module: VSDP-CICD
+  - id: B3-4
+    candidate: iac_modules
+    rationale: "Terraform / Pulumi / Bicep module catalogs surface in 4/5 vendors via partial integration; first-class in HashiCorp Terraform Cloud."
+    vendor_evidence: [HashiCorp Terraform Cloud, GitLab Ultimate, GitHub Enterprise, Azure DevOps Services]
+    proposed_module: VSDP-PLATFORM
+  - id: B3-5
+    candidate: container_images
+    rationale: "4/5 vendors. Overlaps ARTIFACT-REGISTRY candidate domain (queued in 2026-05-30 audit)."
+    vendor_evidence: [GitLab Ultimate, GitHub Enterprise, Azure DevOps Services, JFrog Artifactory]
+    proposed_module: VSDP-PLATFORM or ARTIFACT-REGISTRY pending candidate decision
+  - id: B3-6
+    candidate: sboms
+    rationale: "3/5 vendors. Supply-chain-security focal entity; sits squarely under SUPPLY-CHAIN-SEC candidate domain if promoted."
+    vendor_evidence: [GitHub Enterprise, GitLab Ultimate, JFrog Artifactory]
+    proposed_module: pending SUPPLY-CHAIN-SEC candidate decision
+  - id: B3-7
+    candidate: package_registries
+    rationale: "4/5 vendors (GitHub Packages, GitLab Package Registry, Azure Artifacts, JFrog Artifactory). Overlaps ARTIFACT-REGISTRY candidate domain."
+    vendor_evidence: [GitHub Enterprise, GitLab Ultimate, Azure DevOps Services, JFrog Artifactory]
+    proposed_module: pending ARTIFACT-REGISTRY candidate decision
+  - id: B3-8
+    candidate: runners
+    rationale: "5/5 vendors (GitLab runners, GitHub Actions runners, Azure DevOps agents, Jenkins agents, CircleCI executors). Universal CI/CD substrate."
+    vendor_evidence: [GitLab Ultimate, GitHub Enterprise, Azure DevOps Services, Jenkins, CircleCI]
+    proposed_module: VSDP-CICD
+  - id: B3-9
+    candidate: release_versions
+    rationale: "4/5 vendors (GitHub Releases, GitLab Releases, Azure DevOps Releases, Octopus Deploy)."
+    vendor_evidence: [GitHub Enterprise, GitLab Ultimate, Azure DevOps Services, Octopus Deploy]
+    proposed_module: VSDP-DEPLOYMENT-MGMT
+  - id: B3-10
+    candidate: branch_protection_rules
+    rationale: "5/5 vendors. Every major source-control vendor has this concept."
+    vendor_evidence: [GitHub Enterprise, GitLab Ultimate, Azure DevOps Services, Bitbucket, AWS CodeCommit]
+    proposed_module: VSDP-SOURCE-CONTROL
+  - id: B3-11
+    candidate: merge_queues
+    rationale: "3/5 vendors (GitHub merge queues, GitLab merge trains, Bitbucket merge queue). Newer surface, growing."
+    vendor_evidence: [GitHub Enterprise, GitLab Ultimate, Bitbucket]
+    proposed_module: VSDP-SOURCE-CONTROL
+  - id: B3-12
+    candidate: deployment_strategies
+    rationale: "4/5 vendors plus Argo Rollouts as a separate solution. Canary, blue-green, rolling, recreate."
+    vendor_evidence: [Argo CD, Octopus Deploy, Harness CD, GitLab Ultimate]
+    proposed_module: VSDP-DEPLOYMENT-MGMT
+  - id: B3-13
+    candidate: supply_chain_attestations
+    rationale: "3/5 vendors via Sigstore + GitHub Attestations + GitLab Trace Compliance."
+    vendor_evidence: [GitHub Enterprise, GitLab Ultimate, Sigstore]
+    proposed_module: pending SUPPLY-CHAIN-SEC candidate decision
+  - id: B3-14
+    candidate: vulnerability_findings
+    rationale: "5/5 vendors via APPSEC-ORCH-style sub-products (SAST / SCA / DAST results). Candidate-queue APPSEC-ORCH promotion decision determines whether VSDP consumes or masters."
+    vendor_evidence: [GitLab Ultimate, GitHub Enterprise (Advanced Security), Snyk, Checkmarx, Veracode]
+    proposed_module: pending APPSEC-ORCH candidate decision
+  - id: B3-15
+    candidate: engineering_workflows
+    rationale: "3/5 pure-play VSM vendors. Beyond DORA: flow_items, cycle-time-breakdown, team-health."
+    vendor_evidence: [Plandek, LinearB, Faros AI]
+    proposed_module: VSDP-VALUE-STREAM-ANALYTICS

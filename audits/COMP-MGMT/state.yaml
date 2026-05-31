@@ -1,0 +1,217 @@
+schema_version: 2
+domain: COMP-MGMT
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-A4
+    summary: "Draft buyer-voice catalog_tagline and catalog_description for domains row 60 (COMP-MGMT), surface drafts to user before write."
+    finding: "A4 hard fail (Rule #20). domains row 60 has empty catalog_tagline and catalog_description. Both surfaces feed the public catalog and the site generator; both are buyer-shaped (workflow + value), not analyst-shaped (market position + handoffs)."
+    action: "Draft both fields in buyer voice. Surface to user BEFORE writing. Rule #20 forbids overwrite of any non-empty value without explicit per-row approval, but empty values are backfillable with surfaced draft."
+
+  - id: B1A-M8
+    summary: "Draft buyer-voice catalog_tagline and catalog_description for all 4 COMP-MGMT modules, surface drafts to user before write."
+    finding: "M8 hard fail (Rule #20). All 4 modules (78 COMP-PLANNING, 79 COMP-INCENTIVES, 80 COMP-BENCHMARKING, 85 COMP-STATEMENTS) have empty catalog_tagline and catalog_description. Module-grain copy is what a deploy chooser renders, so the gap is visible to every buyer."
+    action: "Draft 4 module taglines and descriptions in buyer voice. Surface to user BEFORE writing. Same Rule #20 discipline as B1A-A4."
+    affected_modules: [78, 79, 80, 85]
+
+  - id: B1A-B11
+    summary: "Author 14 data_object_aliases rows across the 7 COMP-MGMT masters (compensation_plans, salary_bands, merit_cycles, merit_recommendations, compensation_statements, equity_grants, compensation_benchmarks)."
+    finding: "B11 hard fail. 0 data_object_aliases rows across all 7 masters. Aliases per 2026-05-30 audit: compensation_plans to comp_plans; merit_cycles to comp_cycles, planning_cycles; merit_recommendations to comp_recommendations, pay_increases; compensation_statements to total_rewards_statements, trs; equity_grants to stock_grants, rsu_grants, option_grants; salary_bands to pay_bands, grade_bands; compensation_benchmarks to market_benchmarks, comp_market_data."
+    action: "INSERT alias rows via the cluster-drafts loader pattern. Ship with empty notes (Rule #15)."
+    affected_masters:
+      - {data_object_id: 153, name: compensation_plans, target_module_id: 78, workflow: "alias: comp_plans"}
+      - {data_object_id: 154, name: salary_bands, target_module_id: 80, workflow: "aliases: pay_bands, grade_bands"}
+      - {data_object_id: 155, name: merit_cycles, target_module_id: 78, workflow: "aliases: comp_cycles, planning_cycles"}
+      - {data_object_id: 156, name: merit_recommendations, target_module_id: 78, workflow: "aliases: comp_recommendations, pay_increases"}
+      - {data_object_id: 157, name: compensation_statements, target_module_id: 85, workflow: "aliases: total_rewards_statements, trs"}
+      - {data_object_id: 158, name: equity_grants, target_module_id: 79, workflow: "aliases: stock_grants, rsu_grants, option_grants"}
+      - {data_object_id: 159, name: compensation_benchmarks, target_module_id: 80, workflow: "aliases: market_benchmarks, comp_market_data"}
+
+  - id: B1A-B8
+    summary: "Author outbound cross-domain payload-target data_object_relationships rows mirroring 3 handoffs that lack their relationship edge."
+    finding: "B8 partial-fail (outbound side, owned by COMP-MGMT). The following outbound cross-domain handoffs lack their corresponding payload-target relationship edge: handoff 106 / 422 (merit_recommendations to employees), handoff 423 vested (equity_grants to employees), handoff 1136 (compensation_statements to employees). Inbound-direction edges belong to source domains per the B8 asymmetry rule."
+    action: "INSERT 3 outbound relationship rows: merit_recommendations to employees, equity_grants to employees, compensation_statements to employees. Pick verb, cardinality, kind, owner_side per the handoff intent."
+    affected_handoffs:
+      - {handoff_id: 106, direction: outbound, source_domain: COMP-MGMT, target_domain: HCM, trigger_event: "merit_cycle.approved", payload: employees, null_field: relationship_edge}
+      - {handoff_id: 422, direction: outbound, source_domain: COMP-MGMT, target_domain: HCM, trigger_event: "merit_cycle.approved", payload: merit_recommendations, null_field: relationship_edge}
+      - {handoff_id: 423, direction: outbound, source_domain: COMP-MGMT, target_domain: PAYROLL, trigger_event: "equity_grant.vested", payload: equity_grants, null_field: relationship_edge}
+      - {handoff_id: 1136, direction: outbound, source_domain: COMP-MGMT, target_domain: EMP-EXP, trigger_event: "compensation_statement.issued", payload: compensation_statements, null_field: relationship_edge}
+
+  - id: B1A-S9
+    summary: "Re-derive APQC PCF process ids by name lookup, then propose ~20 agent_curated handoff_processes rows + REPLACE handoffs 123 + 372 from coarse L2 20599 to confident L3 / L4 rows."
+    finding: "H1 partial fix. 6 of 29 cross-domain handoffs tagged (was 4): 2 new agent_curated (handoff 1136 to process 1046 L4 Administer compensation and rewards, handoff 1137 to process 242 L3 Manage employee inquiry process). 2 discovery_override rows (handoffs 123, 372 at L2 20599 Manage employee onboarding training and development) remain coarse. The prior B1-S9 ~26-row batch is blocked because the audit-asserted PCF external_ids did not resolve in live /processes: 10511 was L4 Review compensation plan (not L3 Develop and manage rewards), 10532 was Deliver employee communications, 10742 was Process customer credit, and 10539 / 10544 / 10545 / 10547 / 10549 / 10550 did not exist. Volume gap to H1 target: ~15 to 18 more agent_curated rows."
+    action: "Re-derive PCF ids by name lookup (process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry) BEFORE any insert. Then propose (handoff_id, process_id, proposal_source='agent_curated', record_status='new') rows for the untagged handoffs (105, 106, 107, 113, 121, 187, 381, 385, 387, 398, 421, 422, 423, 424, 425, 439, 460, 1076, 1105, 1125, 1126, 1138, 1139, 1140, 1141). Also REPLACE handoffs 123 and 372 with a confident L3 / L4 row by name."
+    extra_pcf_id_assertion_status: "audit-prior external_ids unverified; do not insert from cached audit table without per-row live name lookup"
+    affected_handoffs:
+      - {handoff_id: 105, direction: outbound, source_domain: COMP-MGMT, target_domain: PAYROLL, trigger_event: "merit_cycle.approved", payload: merit_recommendations, null_field: handoff_processes}
+      - {handoff_id: 106, direction: outbound, source_domain: COMP-MGMT, target_domain: HCM, trigger_event: "merit_cycle.approved", payload: employees, null_field: handoff_processes}
+      - {handoff_id: 107, direction: outbound, source_domain: COMP-MGMT, target_domain: PA, trigger_event: "merit_cycle.closed", payload: compensation_statements, null_field: handoff_processes}
+      - {handoff_id: 113, direction: inbound, source_domain: TALENT-MGMT, target_domain: COMP-MGMT, trigger_event: "calibration.complete", payload: performance_reviews, null_field: handoff_processes}
+      - {handoff_id: 121, direction: inbound, source_domain: ATS, target_domain: COMP-MGMT, trigger_event: "job_offer.signed", payload: compensation_statements, null_field: handoff_processes}
+      - {handoff_id: 187, direction: outbound, source_domain: COMP-MGMT, target_domain: PAYROLL, trigger_event: "merit_cycle.approved", payload: pay_slips, null_field: handoff_processes}
+      - {handoff_id: 381, direction: inbound, source_domain: HCM, target_domain: COMP-MGMT, trigger_event: "employment_contract.executed", payload: employment_contracts, null_field: handoff_processes}
+      - {handoff_id: 385, direction: inbound, source_domain: HCM, target_domain: COMP-MGMT, trigger_event: "hcm_position.approved_for_creation", payload: hcm_positions, null_field: handoff_processes}
+      - {handoff_id: 387, direction: inbound, source_domain: HCM, target_domain: COMP-MGMT, trigger_event: "job_profile.published", payload: job_profiles, null_field: handoff_processes}
+      - {handoff_id: 398, direction: inbound, source_domain: ATS, target_domain: COMP-MGMT, trigger_event: "job_offer.signed", payload: job_offers, null_field: handoff_processes}
+      - {handoff_id: 421, direction: outbound, source_domain: COMP-MGMT, target_domain: TALENT-MGMT, trigger_event: "merit_cycle.closed", payload: merit_cycles, null_field: handoff_processes}
+      - {handoff_id: 422, direction: outbound, source_domain: COMP-MGMT, target_domain: HCM, trigger_event: "merit_cycle.approved", payload: merit_recommendations, null_field: handoff_processes}
+      - {handoff_id: 423, direction: outbound, source_domain: COMP-MGMT, target_domain: PAYROLL, trigger_event: "equity_grant.vested", payload: equity_grants, null_field: handoff_processes}
+      - {handoff_id: 424, direction: outbound, source_domain: COMP-MGMT, target_domain: ERP-FIN, trigger_event: "equity_grant.granted", payload: equity_grants, null_field: handoff_processes}
+      - {handoff_id: 425, direction: outbound, source_domain: COMP-MGMT, target_domain: ATS, trigger_event: "salary_band.updated", payload: salary_bands, null_field: handoff_processes}
+      - {handoff_id: 439, direction: inbound, source_domain: TALENT-MGMT, target_domain: COMP-MGMT, trigger_event: "nine_box_placement.updated", payload: nine_box_placements, null_field: handoff_processes}
+      - {handoff_id: 460, direction: inbound, source_domain: SWP, target_domain: COMP-MGMT, trigger_event: "labor_market_benchmark.refreshed", payload: labor_market_benchmarks, null_field: handoff_processes}
+      - {handoff_id: 1076, direction: inbound, source_domain: ATS, target_domain: COMP-MGMT, trigger_event: "job_offer.rescinded", payload: compensation_statements, null_field: handoff_processes}
+      - {handoff_id: 1105, direction: inbound, source_domain: PA, target_domain: COMP-MGMT, trigger_event: "pay_equity.gap_detected", payload: workforce_segments, null_field: handoff_processes}
+      - {handoff_id: 1125, direction: outbound, source_domain: COMP-MGMT, target_domain: HCM, trigger_event: "compensation_plan.published", payload: compensation_plans, null_field: handoff_processes}
+      - {handoff_id: 1126, direction: outbound, source_domain: COMP-MGMT, target_domain: PAYROLL, trigger_event: "compensation_plan.published", payload: compensation_plans, null_field: handoff_processes}
+      - {handoff_id: 1138, direction: outbound, source_domain: COMP-MGMT, target_domain: SWP, trigger_event: "compensation_benchmark.refreshed", payload: compensation_benchmarks, null_field: handoff_processes}
+      - {handoff_id: 1139, direction: outbound, source_domain: COMP-MGMT, target_domain: ATS, trigger_event: "compensation_benchmark.refreshed", payload: compensation_benchmarks, null_field: handoff_processes}
+      - {handoff_id: 1140, direction: outbound, source_domain: COMP-MGMT, target_domain: PAYROLL, trigger_event: "earning_code.created", payload: earning_codes, null_field: handoff_processes}
+      - {handoff_id: 1141, direction: outbound, source_domain: COMP-MGMT, target_domain: ERP-FIN, trigger_event: "earning_code.created", payload: earning_codes, null_field: handoff_processes}
+      - {handoff_id: 123, direction: inbound, source_domain: HCM, target_domain: COMP-MGMT, trigger_event: "employee.promoted", payload: employees, null_field: pcf_too_coarse}
+      - {handoff_id: 372, direction: inbound, source_domain: HCM, target_domain: COMP-MGMT, trigger_event: "employee.created", payload: employees, null_field: pcf_too_coarse}
+
+  - id: B1A-S8
+    summary: "Report-only routing: 5 outbound NULL target_domain_module_id + 1 inbound NULL target_domain_module_id need consumer DMDOs on the target domains. Schedule b1 audits on PA, HCM, EMP-EXP, ERP-FIN."
+    finding: "B10b in-scope partial-fail surfaces 5 outbound rows with NULL target_domain_module_id where the target domain has not declared a consumer DMDO on the payload data_object. The 5 outbound: 422 (HCM, merit_recommendations), 424 (ERP-FIN, equity_grants), 1125 (HCM, compensation_plans), 1136 (EMP-EXP, compensation_statements), 1141 (ERP-FIN, earning_codes). The 1 inbound: 1105 (PA, workforce_segments). COMP-MGMT cannot patch derivatively; the fix is on the target side."
+    action: "Schedule b1 audits on PA, HCM, EMP-EXP, ERP-FIN to declare the consumer DMDOs on these payloads, then re-run B10b in COMP-MGMT to derive the target_domain_module_id."
+    affected_handoffs:
+      - {handoff_id: 422, direction: outbound, source_domain: COMP-MGMT, target_domain: HCM, trigger_event: "merit_cycle.approved", payload: merit_recommendations, null_field: target_domain_module_id}
+      - {handoff_id: 424, direction: outbound, source_domain: COMP-MGMT, target_domain: ERP-FIN, trigger_event: "equity_grant.granted", payload: equity_grants, null_field: target_domain_module_id}
+      - {handoff_id: 1125, direction: outbound, source_domain: COMP-MGMT, target_domain: HCM, trigger_event: "compensation_plan.published", payload: compensation_plans, null_field: target_domain_module_id}
+      - {handoff_id: 1136, direction: outbound, source_domain: COMP-MGMT, target_domain: EMP-EXP, trigger_event: "compensation_statement.issued", payload: compensation_statements, null_field: target_domain_module_id}
+      - {handoff_id: 1141, direction: outbound, source_domain: COMP-MGMT, target_domain: ERP-FIN, trigger_event: "earning_code.created", payload: earning_codes, null_field: target_domain_module_id}
+      - {handoff_id: 1105, direction: inbound, source_domain: PA, target_domain: COMP-MGMT, trigger_event: "pay_equity.gap_detected", payload: workforce_segments, null_field: target_domain_module_id}
+
+b1b:
+  - id: B1B-M7
+    summary: "M7 hard fail: equity_grants (158) mastered in both CAP-TABLE-GRANTS (module 21, CAP-TABLE 162) and COMP-INCENTIVES (module 79, COMP-MGMT 60). Blueprint emitter cannot pick canonical owner."
+    finding: "Catalog-wide single-master violation. /domain_module_data_objects?data_object_id=eq.158&role=eq.master returns 2 rows. Default proposal: CAP-TABLE-GRANTS retains master (equity administration is the canonical home: cap-table tracking, 409A valuations, employee equity portals; vendors Carta, Shareworks, Pulley); COMP-INCENTIVES demotes to embedded_master to preserve standalone-deploy story when COMP-MGMT installs without CAP-TABLE. Lifecycle states 158.approved / .granted / .vesting / .exercised / .forfeited / .expired re-anchor or stay per the demotion contract."
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    affected_masters:
+      - {data_object_id: 158, name: equity_grants, target_module_id: 79, workflow: "demotion candidate"}
+      - {data_object_id: 158, name: equity_grants, target_module_id: 21, workflow: "recommended canonical master"}
+
+  - id: B1B-F2
+    summary: "F2 hard fail: 0 module-level system skills across 78 / 79 / 80 / 85; legacy domain-level skill 38 (comp-mgmt-system, 9 skill_tools) is migration target. Per-module Semantius score uncomputable."
+    finding: "No row in /skills with skill_type=system and domain_module_id IN (78, 79, 80, 85). Legacy skill 38 (domain_id=60, domain_module_id=null) persists with 9 skill_tools (7 query primitives + send_email + sign_document) at strict score 8/9 = 89% platform-tier. Rule #17 mandates one system skill per module."
+    action: "Once unblocked: INSERT 4 skills rows (comp_planning_agent, comp_incentives_agent, comp_benchmarking_agent, comp_statements_agent) with skill_type=system and domain_module_id set; migrate the 9 legacy skill_tools to the 4 new skills per their target masters; DELETE legacy skill 38 and its 9 skill_tools."
+    blocked_by:
+      - {type: depends_on, ref: B1B-M7, reason: "system-skill set on equity_grants moves to whichever module masters the entity"}
+      - {type: user_decision, ref: B2-S1}
+    affected_modules: [78, 79, 80, 85]
+
+  - id: B1B-E1
+    summary: "E1-E6 hard fail: 0 permissions and 0 role_modules on any COMP-MGMT module. Modules cannot be deployed."
+    finding: "/permissions?domain_module_id=in.(78,79,80,85) returns empty. /role_modules?domain_module_id=in.(78,79,80,85) returns empty. Expected: 12 baseline permissions (3 per module: read / manage / admin) + 18 workflow-gate permissions per the requires_permission=true lifecycle states (open / calibrate / approve / close / post on merit_cycles; submit / approve / finalize / reject on merit_recommendations; activate / archive on compensation_plans; generate / deliver on compensation_statements; approve / grant / forfeit on equity_grants). Roles to author: HR-COMPENSATION-ANALYST, HR-COMPENSATION-PARTNER, HR-EQUITY-ADMIN, HR-COMP-BENCHMARK-ANALYST, plus extend cross-functional HIRING-MANAGER and PEOPLE-MANAGER to touch COMP-PLANNING for merit_recommendation submission."
+    action: "Once unblocked: INSERT 12 baseline + 18 workflow-gate permissions; INSERT 3 to 4 roles in roles table with business_function=Compensation, plus role_modules + role_permissions for each."
+    blocked_by:
+      - {type: depends_on, ref: B1B-M7, reason: "workflow gates on equity_grants follow the master decision"}
+      - {type: depends_on, ref: B1B-F2, reason: "system-skill author drives which permissions appear in role bundles"}
+    affected_modules: [78, 79, 80, 85]
+
+b2:
+  - id: B2-S1
+    summary: "M7 resolution: which market canonically masters equity_grants (158), CAP-TABLE-GRANTS (21) vs COMP-INCENTIVES (79)?"
+    question: "Two master rows on equity_grants (data_object 158): CAP-TABLE-GRANTS module 21 (CAP-TABLE domain 162) AND COMP-INCENTIVES module 79 (COMP-MGMT domain 60). Which is canonical, and which demotes to embedded_master?"
+    options:
+      - "(a) CAP-TABLE-GRANTS keeps master, COMP-INCENTIVES demotes to embedded_master (recommended: cap-table is the equity-administration market; vendors Carta, Shareworks, Pulley anchor the canonical surface)."
+      - "(b) COMP-INCENTIVES keeps master, CAP-TABLE-GRANTS demotes (less coherent: equity admin is a richer scope than the comp side)."
+      - "(c) Defer; accept M7 hard fail until next audit."
+    why: "Architectural call. Both are defensible. CAP-TABLE-GRANTS hosts the post-grant lifecycle (vesting, exercise, forfeiture, expiration); COMP-INCENTIVES grants the equity component as part of total rewards."
+
+  - id: B2-S2
+    summary: "Rule #15 notes-pollution on 9 domain_data_objects rows (249, 269, 300, 884, 885, 886, 887, 1141, 1150) and 1 domain_module_data_objects row (588). User-approved or auto-populated?"
+    question: "Were the 10 polluted notes user-approved at load time, or auto-populated by a prior loader?"
+    options:
+      - "(a) Confirm user-approved; leave in place."
+      - "(b) Confirm auto-populated; PATCH all 10 to empty string and append a Rule #15 incident to .claude/skills/domain-map-analyst/references/skill-changelog.md."
+    why: "Cannot tell from audit alone; load-time approval status is unknown."
+
+  - id: B2-S3
+    summary: "A3 SCOPE-CREEP candidate: solution Sequoia One (id 502, secondary) is a PEO / benefits broker, not a comp-planning platform."
+    question: "Remove the solution_domains row 502 to 60, keep it, or move it to BEN-ADMIN / HRIS?"
+    options:
+      - "(a) Delete solution_domains row for Sequoia One on COMP-MGMT."
+      - "(b) Keep as secondary (broker-touches-comp narrative)."
+      - "(c) Move primary placement to BEN-ADMIN or HRIS where Sequoia One is a better fit."
+    why: "Editorial scope-creep call. Sequoia is an HR-as-a-service / PEO bundle; touches comp only incidentally."
+
+  - id: B2-S4
+    summary: "A3 duplication: beqom present 3 times (259 beqom, 414 beqom Pay, 497 Beqom Compensation). Pick canonical."
+    question: "Which beqom solution row is canonical, and what happens to the others?"
+    options:
+      - "(a) Keep id 259 (oldest, simplest name); delete the solution_domains rows for 414 and 497 (and the solutions rows themselves if not referenced elsewhere)."
+      - "(b) Promote id 497 Beqom Compensation (matches the product-name pattern of SAP SuccessFactors Compensation / Workday Compensation)."
+      - "(c) Keep all three (each represents a distinct beqom product line)."
+
+  - id: B2-S5
+    summary: "B12 config-shape exemption for salary_bands (154) and compensation_benchmarks (159): no lifecycle states authored."
+    question: "Confirm both as config-shape exempt (recorded in this audit log, NOT in data_objects.notes per rescinded Rule #15 license), or author lifecycle states?"
+    options:
+      - "(a) Confirm both config-shape exempt; exemption stays in audit log."
+      - "(b) Author lifecycle states for salary_bands (e.g. draft / active / archived); leave compensation_benchmarks as periodic refresh."
+      - "(c) Author lifecycle states for both."
+
+  - id: B2-S6
+    summary: "M4: PAY-EQUITY capability (id 36) realizes only on COMP-BENCHMARKING (80). Add a domain_module_capabilities row for COMP-PLANNING (78)?"
+    question: "Should PAY-EQUITY also realize on COMP-PLANNING (78) since pay-equity gap detection feeds merit calibration and EU Pay Transparency reporting?"
+    options:
+      - "(a) Add (78, 36) to domain_module_capabilities."
+      - "(b) Leave; benchmarking is the structural home and planning consumes the analysis as input."
+
+  - id: B2-S7
+    summary: "B4 pattern-flag re-evaluation on compensation_plans, equity_grants, compensation_statements."
+    question: "(a) compensation_plans.has_single_approver is false; plans are typically board-approved at issuance, should be true? (b) equity_grants.has_submit_lock is false; most equity-grant flows lock once approved, should be true? (c) compensation_statements.has_submit_lock is false; statements lock once delivered, could be true."
+    options:
+      - "Per-flag yes / no from user; capture in audit Decisions."
+
+b3:
+  - id: B3-PAY-EQUITY-ASSESSMENTS
+    candidate: pay_equity_assessments
+    rationale: "EU Pay Transparency Directive (2026 enforcement) and US state laws (CA SB 1162, CO Equal Pay for Equal Work Act, NY Pay Transparency Act, WA HB 1696) require structured pay-equity assessments with gap calculations per protected class. The current model has 0 entities for pay equity; the only signal is the inbound pay_equity.gap_detected handoff 1105 from PA."
+    vendor_evidence: [Trusaic, Syndio, Workday, "SAP SuccessFactors"]
+    proposed_module: "COMP-BENCHMARKING (master) or new HCM-PAY-EQUITY module"
+
+  - id: B3-INCENTIVE-PLANS
+    candidate: incentive_plans
+    rationale: "Distinct from compensation_plans: where comp plans define base + bonus targets, incentive plans (commissions, sales incentive plans, SPIFFs, MBOs) carry quota structures, accelerators, threshold conditions. Currently absent."
+    vendor_evidence: [Xactly, CaptivateIQ, Performio, "SAP SuccessFactors Incentive Management"]
+    proposed_module: "COMP-INCENTIVES (master)"
+
+  - id: B3-BONUS-POOLS
+    candidate: bonus_pools
+    rationale: "Workday Bonus Plan Pool, SAP SuccessFactors Variable Pay Pool, beqom Pool Management all model budget pools as separate first-class records with allocation and consumption tracking. Currently rolled into compensation_plans."
+    vendor_evidence: [Workday, "SAP SuccessFactors", beqom]
+    proposed_module: "COMP-PLANNING (master)"
+
+  - id: B3-COMMISSION-STATEMENTS
+    candidate: commission_statements
+    rationale: "A specific kind of compensation statement for sales reps: tracks commission accrual, draws, claw-backs, dispute states. Distinct lifecycle from total-rewards compensation_statements. Possibly belongs in SALES-PERF or a new ICM (Incentive Compensation Management) domain rather than COMP-MGMT."
+    vendor_evidence: [Xactly, CaptivateIQ, Spiff, Performio]
+    proposed_module: "new ICM domain or COMP-INCENTIVES (master)"
+
+  - id: B3-TOTAL-REWARDS-OFFERS
+    candidate: total_rewards_offers
+    rationale: "Workday, SuccessFactors model the rewards aspect of the offer (sign-on bonus, equity grant, relocation allowance, deferred comp) as a structured rewards offer separate from the ATS-side job_offers. The current job_offers consumer on COMP-STATEMENTS shows the lookup pattern but no first-class rewards offer entity exists."
+    vendor_evidence: [Workday, "SAP SuccessFactors"]
+    proposed_module: "COMP-STATEMENTS (master) or COMP-INCENTIVES"
+
+  - id: B3-PAY-TRANSPARENCY-DISCLOSURES
+    candidate: pay_transparency_disclosures
+    rationale: "EU Pay Transparency Directive requires structured disclosure records (pay range, gender gap report, individual right-to-know responses). The directive's compliance artifact is data, not a process. Currently absent."
+    vendor_evidence: [Trusaic, Syndio, Workday]
+    proposed_module: "COMP-BENCHMARKING (master) or new HCM-PAY-EQUITY module"
+
+  - id: B3-ICM-DOMAIN-SPLIT
+    candidate: "ICM (Incentive Compensation Management) as separate domain"
+    rationale: "COMP-INCENTIVES currently bundles bonus + equity + commission. In practice, sales-incentive management is a distinct point-solution market separate from equity admin and bonus planning. If commission_statements and quota_assignments land, splitting COMP-INCENTIVES into COMP-BONUS-EQUITY + ICM (or making ICM a new domain) is the cleaner shape."
+    vendor_evidence: [Xactly, Spiff, CaptivateIQ, Performio, "SAP Commissions", Varicent]
+
+  - id: B3-COMPLIANCE-REGULATIONS
+    candidate: "5 additional compliance regulations: Dodd-Frank 953(b) CEO Pay-Ratio, Dodd-Frank 956, IRC 409A, IRC 162(m), state pay-transparency laws (CA SB 1162, CO Equal Pay for Equal Work Act, NY Pay Transparency Act, WA HB 1696)"
+    rationale: "Currently 2 regulations linked (ERISA, EU Pay Transparency Directive). The US disclosure / executive-comp / equity-valuation regimes are first-class compliance anchors for COMP-MGMT and most flagship vendors model them as compliance metadata on plans / statements / grants. State pay-transparency laws are discrete from EU but cover comparable disclosure shapes."
+    vendor_evidence: [absent]

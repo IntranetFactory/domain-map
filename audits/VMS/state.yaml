@@ -1,0 +1,306 @@
+schema_version: 2
+domain: VMS
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-B5
+    summary: PATCH event_category to state_change on 6 VMS trigger events with empty category.
+    finding: |
+      6 of 8 VMS trigger_events carry empty event_category: 595 staffing_supplier.activated,
+      596 rate_card.published, 597 contingent_timesheet.approved, 598 contingent_timesheet.rejected,
+      599 contingent_invoice.received, 600 contingent_invoice.matched. All 6 are state_change
+      per the SKILL.md catalog enum (lifecycle / state_change / threshold / signal); each fires
+      on a master transitioning to a new state. Events 146 (pm_work_order.invoiced) and 147
+      (worker.tenure_threshold) are correctly populated.
+    action: |
+      Direct PATCH on each of the 6 rows: event_category=state_change. No gating; ships
+      standalone.
+    affected_events:
+      - {id: 595, event_name: staffing_supplier.activated, current_category: "", proposed_category: state_change}
+      - {id: 596, event_name: rate_card.published, current_category: "", proposed_category: state_change}
+      - {id: 597, event_name: contingent_timesheet.approved, current_category: "", proposed_category: state_change}
+      - {id: 598, event_name: contingent_timesheet.rejected, current_category: "", proposed_category: state_change}
+      - {id: 599, event_name: contingent_invoice.received, current_category: "", proposed_category: state_change}
+      - {id: 600, event_name: contingent_invoice.matched, current_category: "", proposed_category: state_change}
+
+  - id: B1A-B2
+    summary: INSERT one data_object_relationships row, contingent_workers converts_to employees.
+    finding: |
+      Handoff 118 (VMS to HCM on worker.tenure_threshold, manual_handoff, high friction)
+      has no forward conversion data_object_relationships row from contingent_workers (186)
+      to employees (31). Existing row 541 is contingent_workers reviewed_against employees
+      (owner_side=target), wrong direction for the conversion. Verb selection is judgment;
+      proposed verb converts_to follows the existing handoff verb space.
+    action: |
+      INSERT data_object_relationships row: data_object_id=186, related_data_object_id=31,
+      relationship_verb=converts_to, is_required=false, owner_side=source. Ships standalone;
+      not strictly gated on B1A-M1 or B2-1.
+    affected_entities: [contingent_workers, employees]
+
+b1b:
+  - id: B1B-M1
+    summary: INSERT 2 domain_modules + 5 domain_module_capabilities + 6 domain_module_data_objects.
+    finding: |
+      VMS has 0 domain_modules rows (M1 hard fail persists from 2026-05-30). Rule #14
+      first clause requires >=1 module_kind=full per domain; second clause requires >=2
+      full modules when capability count >=3 (VMS has 5: WORKER-REQ, STAFFING-SUPPLIER,
+      RATE-MGMT, CONTINGENT-TIME, WORKER-CLASS). Module split proposed as
+      VMS-WORKER-SOURCING (contingent_workers, entity 187, staffing_suppliers, rate_cards;
+      4 capabilities) + VMS-TIME-INVOICING (contingent_timesheets, contingent_invoices;
+      1 capability) but module names + entity 187 placement gated on Bucket 2 items.
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+      - {type: user_decision, ref: B2-4}
+    affected_masters:
+      - {data_object_id: 186, name: contingent_workers, target_module_id: null, workflow: sourcing}
+      - {data_object_id: 187, name: pm_work_orders, target_module_id: null, workflow: sourcing_or_eam_pending_B2_1}
+      - {data_object_id: 188, name: staffing_suppliers, target_module_id: null, workflow: sourcing}
+      - {data_object_id: 189, name: rate_cards, target_module_id: null, workflow: sourcing}
+      - {data_object_id: 190, name: contingent_timesheets, target_module_id: null, workflow: time_invoicing}
+      - {data_object_id: 191, name: contingent_invoices, target_module_id: null, workflow: time_invoicing}
+
+  - id: B1B-A4
+    summary: PATCH domains.catalog_tagline + catalog_description with user-approved wording.
+    finding: |
+      domains.catalog_tagline="" and domains.catalog_description="". Rule #20 forbids
+      PATCH without explicit user approval of the exact wording. Drafts surfaced as
+      Bucket 2 #B2-2 but not yet approved.
+    blocked_by:
+      - {type: user_decision, ref: B2-2}
+
+  - id: B1B-A5
+    summary: PATCH domains.business_logic with user-approved wording.
+    finding: |
+      domains.business_logic="" with crud_percentage=92 (<95). Rule #8 requires non-empty
+      business_logic whenever crud_percentage<95. Draft surfaced as Bucket 2 #B2-5.
+    blocked_by:
+      - {type: user_decision, ref: B2-5}
+
+  - id: B1B-B9
+    summary: INSERT 2 handoffs for rate_card.published (event 596) to PSA + ERP-FIN.
+    finding: |
+      Trigger event 596 (rate_card.published) has zero handoffs rows downstream. Event
+      description implies PSA bill-rate refresh + ERP-FIN cost-accrual refresh. Two
+      handoff rows missing: VMS to PSA on rate_cards (batch_sync) and VMS to ERP-FIN on
+      rate_cards (batch_sync). source_domain_module_id needs the WORKER-SOURCING module
+      id (or whichever resolves rate_cards under B1B-M1).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+
+  - id: B1B-B9b
+    summary: INSERT intra-domain lifecycle_progression handoffs across the WORKER-SOURCING to TIME-INVOICING boundary.
+    finding: |
+      Intra-domain progression staffing_supplier.activated -> rate_card.published ->
+      contingent_timesheet.approved -> contingent_invoice.received -> contingent_invoice.matched
+      crosses module boundary on contingent_timesheet.approved (sourcing produces the
+      request; time-invoicing executes). Authoring requires the modules to exist.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+
+  - id: B1B-B10b
+    summary: Backfill source_domain_module_id on 7 VMS outbound handoffs.
+    finding: |
+      All 7 outbound VMS handoffs have source_domain_module_id IS NULL because VMS has
+      no modules. Sub-case 1 (upstream M1 gap). After B1B-M1 lands, attribute each row
+      to the module that masters the trigger event's data_object_id.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+    affected_handoffs:
+      - {handoff_id: 117, direction: outbound, source_domain: VMS, target_domain: S2P, trigger_event: pm_work_order.invoiced, payload: contingent_invoices, null_field: source_domain_module_id}
+      - {handoff_id: 118, direction: outbound, source_domain: VMS, target_domain: HCM, trigger_event: worker.tenure_threshold, payload: contingent_workers, null_field: source_domain_module_id}
+      - {handoff_id: 587, direction: outbound, source_domain: VMS, target_domain: PSA, trigger_event: contingent_timesheet.approved, payload: contingent_timesheets, null_field: source_domain_module_id}
+      - {handoff_id: 588, direction: outbound, source_domain: VMS, target_domain: AP-AUTO, trigger_event: contingent_invoice.received, payload: contingent_invoices, null_field: source_domain_module_id}
+      - {handoff_id: 589, direction: outbound, source_domain: VMS, target_domain: ERP-FIN, trigger_event: contingent_invoice.matched, payload: contingent_invoices, null_field: source_domain_module_id}
+      - {handoff_id: 590, direction: outbound, source_domain: VMS, target_domain: PAYROLL, trigger_event: contingent_timesheet.approved, payload: contingent_timesheets, null_field: source_domain_module_id}
+      - {handoff_id: 591, direction: outbound, source_domain: VMS, target_domain: SUP-LIFE, trigger_event: staffing_supplier.activated, payload: staffing_suppliers, null_field: source_domain_module_id}
+
+  - id: B1B-B12
+    summary: INSERT lifecycle_states + workflow-gate permissions for 6 masters.
+    finding: |
+      Zero lifecycle states on any of the 6 masters. None qualifies for the config-shape
+      exemption (each is workflow-bearing). State-set sketches per master:
+      contingent_workers (active, on_assignment, tenure_threshold_reached, terminated),
+      staffing_suppliers (draft, activated, suspended, terminated), rate_cards (draft,
+      published, superseded, retired), contingent_timesheets (drafted, submitted,
+      approved, rejected, billed), contingent_invoices (received, matched, disputed,
+      paid). Entity 187 states depend on B2-1.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+      - {type: user_decision, ref: B2-1}
+    affected_masters:
+      - {data_object_id: 186, name: contingent_workers, target_module_id: null, workflow: tenure_progression}
+      - {data_object_id: 187, name: pm_work_orders, target_module_id: null, workflow: pending_B2_1}
+      - {data_object_id: 188, name: staffing_suppliers, target_module_id: null, workflow: supplier_lifecycle}
+      - {data_object_id: 189, name: rate_cards, target_module_id: null, workflow: publish_supersede}
+      - {data_object_id: 190, name: contingent_timesheets, target_module_id: null, workflow: submit_approve_bill}
+      - {data_object_id: 191, name: contingent_invoices, target_module_id: null, workflow: receive_match_pay}
+
+  - id: B1B-E1
+    summary: INSERT >=3 VMS roles against business_function_id=68 (Indirect Procurement).
+    finding: |
+      Zero roles authored under Indirect Procurement (BF 68). Need program manager,
+      supplier manager, and contingent-labor coordinator at minimum.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+
+  - id: B1B-E2
+    summary: INSERT role_modules for VMS roles + PATCH HIRING-MANAGER (10007) for VMS-WORKER-SOURCING secondary.
+    finding: |
+      Zero role_modules touching VMS modules. HIRING-MANAGER (10007) is bound to ATS-*
+      and ONB-* modules only; secondary binding on VMS-WORKER-SOURCING is missing
+      (hiring managers approve contingent worker requests).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+      - {type: prerequisite_entity, ref: B1B-E1}
+
+  - id: B1B-F1
+    summary: Retire legacy skill 118 (vms-system) and author 2 module-scoped system skills.
+    finding: |
+      Legacy skills.id=118 (vms-system, kebab-cased, domain_module_id=NULL) violates
+      Rule #17. After modularization, INSERT 2 new skills (one system per module),
+      redistribute 8 skill_tools rows across them, DELETE skill 118.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+
+  - id: B1B-F3
+    summary: Redistribute 8 legacy skill_tools across 2 new module-scoped system skills.
+    finding: |
+      Legacy skill 118 carries 8 skill_tools rows: 6 query tools (query_contingent_workers
+      757, query_work_orders 758, query_staffing_suppliers 759, query_rate_cards 760,
+      query_contingent_timesheets 761, query_contingent_invoices 762), send_email (37,
+      side_effect), sign_document (42, side_effect). Redistribute by data_object_id
+      (queries) and by module workflow (send_email + sign_document on WORKER-SOURCING,
+      send_email on TIME-INVOICING). Operation_kind invariants (Rule #17) pass on all 8.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+      - {type: prerequisite_entity, ref: B1B-F1}
+
+  - id: B1B-B1
+    summary: Resolve handoff 117 payload-vs-event mismatch.
+    finding: |
+      Outbound handoff 117 (VMS to S2P) has payload data_object_id=191 (contingent_invoices)
+      but trigger event 146 (pm_work_order.invoiced) has data_object_id=187 (pm_work_orders).
+      Mismatch: either the event's data_object_id is wrong (should be 191) or the handoff
+      payload is wrong (should be 187). Cascades from Bucket 2 #B2-1 because entity 187's
+      true identity determines the resolution.
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+b2:
+  - id: B2-1
+    summary: Entity 187 (pm_work_orders) identity, Preventive Maintenance vs staffing requisition / SOW.
+    question: |
+      Entity 187 is named pm_work_orders with singular_label "Preventive Maintenance
+      Work Order" and aliases preventive maintenance order, PM WO, but its description
+      and every attached workflow treat it as a staffing requisition / SOW. Which is
+      correct?
+    options:
+      - "a) Rename + relabel + re-alias the entity to staffing_work_orders / sow_work_orders; keep in VMS. Most consistent with the existing relationships and handoffs."
+      - "b) Treat as Preventive Maintenance, DELETE the VMS DMDO master row + the relationships connecting it to contingent-labor masters, route entity to EAM, INSERT a fresh staffing_requisitions master in VMS."
+      - "c) Split, keep pm_work_orders as Preventive Maintenance in EAM, INSERT a new staffing_requisitions master in VMS. Same end-state as b but explicit about retention."
+    why: |
+      Description + workflow + handoff 117 + trigger event 146 + relationship rows 524
+      (executes), 525 (executes), 528 (rolls up) point to staffing requisition / SOW.
+      Name + labels + aliases point to Preventive Maintenance. Only the user can pick.
+      Gates B1B-M1, B1B-B1, B1B-B12 (entity 187 states), B1B-B9b, all Bucket 3.
+
+  - id: B2-2
+    summary: Approve catalog_tagline + catalog_description wording for the VMS domain row.
+    question: |
+      Per Rule #20, catalog UX text on domains needs explicit user approval of the
+      exact string before PATCH. Drafts:
+      - tagline: "Source contingent workers through approved staffing suppliers, manage rate cards, and reconcile timesheets and invoices end-to-end."
+      - description (3 sentences): "Manage the full contingent-workforce cycle, requisitions, supplier distribution, candidate submissions, worker assignments, timesheets, and invoices, in one system. Approve rate cards by role and region; classify each worker against IR35, California AB5, and EU Platform Work rules; and feed approved timesheets to payroll and project accounting automatically. Procurement and HR run it jointly: procurement governs the supplier panel, HR governs the worker classification."
+    options:
+      - "Approve drafts as-written."
+      - "Rewrite, supply exact wording."
+      - "Defer."
+    why: Rule #20 hard rule; agent cannot PATCH on its own.
+
+  - id: B2-3
+    summary: Decide pattern flags (has_personal_content / has_submit_lock / has_single_approver) on 5 masters.
+    question: |
+      All 6 masters currently carry every pattern flag = false. Re-evaluation:
+      (i) contingent_workers.has_personal_content=true (PII: SSN, tax classification, IR35 status)?
+      (ii) staffing_suppliers.has_single_approver=true (procurement approves activation)?
+      (iii) rate_cards.has_single_approver=true (procurement or finance signs off)?
+      (iv) entity 187 has_single_approver=true (hiring manager approves), gated on B2-1?
+      (v) contingent_invoices.has_single_approver=true (AP approves payment)?
+    options:
+      - "Confirm each yes/no per item. No notes column writes per Rule #15."
+    why: |
+      Pattern flags affect downstream architect rendering and permission scoping; agent
+      cannot infer without user confirmation. Independent of B1B-M1.
+
+  - id: B2-4
+    summary: Module naming, two-way or three-way split, code preference.
+    question: |
+      Proposed module codes for the B1B-M1 split:
+      - 2-way: VMS-WORKER-SOURCING + VMS-TIME-INVOICING (default).
+      - 2-way alt: VMS-SOURCING-PIPELINE + VMS-TIME-INVOICE.
+      - 3-way: VMS-REQUISITIONS + VMS-SUPPLIERS-RATES + VMS-TIME-INVOICING.
+    options:
+      - "Default 2-way."
+      - "2-way alt naming."
+      - "3-way split."
+    why: Module codes are load-bearing in URLs, permission prefixes, and handoff backfills. Gated on B2-1.
+
+  - id: B2-5
+    summary: Approve business_logic wording on the VMS domain row.
+    question: |
+      Rule #8 requires non-empty business_logic when crud_percentage<95 (VMS=92).
+      Draft: "Rate-card refresh recomputes accrued cost across all active timesheets
+      when a rate row supersedes; worker-classification engine applies IR35 / California
+      AB5 / EU PWD precedence rules per engagement, producing a typed classification
+      record that downstream payroll and AP-AUTO rely on for withholding rules."
+    options:
+      - "Approve draft as-written."
+      - "Rewrite, supply exact wording."
+      - "Defer."
+    why: Business_logic is a domain-level field; safer to elicit user wording than to PATCH a 1-2 sentence summary that anchors downstream analysis.
+
+b3:
+  - id: B3-CANDIDATE-SUBMISSIONS
+    candidate: candidate_submissions
+    rationale: |
+      Suppliers slate candidates against a requisition; carries scoring,
+      hide-from-hiring-manager flags, withdrawal reasons. Universal in flagship VMS
+      vendors. Gates worker_assignments downstream.
+    vendor_evidence:
+      - {vendor: Workday VNDLY, evidence: 1st_class}
+      - {vendor: SAP Fieldglass, evidence: 1st_class}
+      - {vendor: Beeline, evidence: 1st_class}
+      - {vendor: Magnit, evidence: 1st_class}
+      - {vendor: Utmost, evidence: 1st_class}
+    proposed_module: VMS-WORKER-SOURCING
+
+  - id: B3-WORKER-ASSIGNMENTS
+    candidate: worker_assignments
+    rationale: |
+      1:1 with a winning candidate; carries start / end / billable rate / project / WBS
+      / location. Separate from contingent_workers because a worker can re-engage on
+      multiple assignments. Universal in flagship VMS vendors.
+    vendor_evidence:
+      - {vendor: Workday VNDLY, evidence: 1st_class}
+      - {vendor: SAP Fieldglass, evidence: 1st_class}
+      - {vendor: Beeline, evidence: 1st_class}
+      - {vendor: Magnit, evidence: 1st_class}
+      - {vendor: Utmost, evidence: 1st_class}
+    proposed_module: VMS-WORKER-SOURCING
+
+  - id: B3-WORKER-CLASSIFICATIONS
+    candidate: worker_classifications
+    rationale: |
+      Typed IR35 / California AB5 / EU Platform Work Directive determination per worker
+      per engagement. Mandatory under WORKER-CLASS capability and the 3 loaded
+      regulations. Specialist depth varies (SAP Fieldglass + Magnit ship explicit
+      classification engines; Workday VNDLY uses integration partners).
+    vendor_evidence:
+      - {vendor: SAP Fieldglass, evidence: 1st_class}
+      - {vendor: Magnit, evidence: 1st_class}
+      - {vendor: Beeline, evidence: 1st_class}
+      - {vendor: Utmost, evidence: secondary}
+      - {vendor: Workday VNDLY, evidence: secondary}
+    proposed_module: VMS-WORKER-SOURCING

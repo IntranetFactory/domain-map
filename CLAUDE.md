@@ -33,3 +33,5 @@ Write in **American English** for every artifact in this project (prose, code co
 ## Semantius CLI cwd
 
 The `semantius` CLI reads `.env` from the **current working directory**. Always invoke it from the project root (`c:/dev/domain-map`). Never `cd` into a subfolder (`.claude/skills/...`, `.tmp_deploy/`, etc.) before running `semantius` or a loader script that spawns it: the CLI silently falls back to a default config pointing at a different tenant. See [.claude/skills/domain-map-analyst/SKILL.md](.claude/skills/domain-map-analyst/SKILL.md) rule #6 for the full symptom list.
+
+**Equally important: do not `cd` *into* the project root either.** Your shell's cwd is **already** `c:/dev/domain-map`. Never prefix Bash commands with `cd c:/dev/domain-map &&`, `cd C:/dev/domain-map &&`, `cd "c:/dev/domain-map" &&`, `cd /c/dev/domain-map &&`, or any case/quoting/slash variant. This prefix is ceremony, adds nothing, and forces a permission prompt for the user. Call `semantius`, `bun`, `yq`, `git`, `grep`, etc. directly with no `cd` prefix. The same applies inside any subagent you dispatch.

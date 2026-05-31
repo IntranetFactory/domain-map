@@ -1,0 +1,338 @@
+schema_version: 2
+domain: SALES-PERF
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+# Audit 2026-05-31 (structural Validate b1) produced ZERO catalog writes.
+# Bucket 1 has 3 items (B1-A1, B1-M1, B1-S1). Two of three (B1-M1, B1-S1) are
+# gated on user-judgment Bucket 2 item B2-M1 (which module shape: 8 / 5 / 3).
+# B1-A1 (catalog UX) is independently agent-solvable BUT requires user approval
+# of the drafted wording per Rule #20 BEFORE any PATCH; it therefore parks in
+# b1b blocked_by user_decision until the user approves the 2026-05-30 drafts
+# (or supplies new wording). next_action_by is "user" because every active fix
+# surface needs a user decision before the agent can proceed.
+
+b1a: []
+
+b1b:
+  - id: B1B-A1
+    summary: A4 fails - empty catalog_tagline and catalog_description on the SALES-PERF domains row; per Rule #20 the agent drafted both on 2026-05-30 and cannot PATCH without explicit user approval of the wording.
+    finding: |
+      domains.catalog_tagline and domains.catalog_description on SALES-PERF (id 102) are both empty strings. A4 fails. Per Rule #20 the audit may draft both fields in buyer voice (workflow + value), surface to the user for review BEFORE any write. Drafts were authored in the 2026-05-30 audit section of history.md and remain pending user approval.
+    action: |
+      User reviews the drafted catalog_tagline and catalog_description (in audits/SALES-PERF/history.md under "Drafts for B1-A1" in the 2026-05-30 section) and either approves the exact wording or supplies replacements. On approval, agent PATCHes /domains?id=eq.102 with the approved strings. No record_status change. No notes write.
+    blocked_by:
+      - type: user_decision
+        ref: B1-A1
+        reason: "Rule #20 requires explicit per-row approval of catalog UX wording before any write; agent cannot self-approve drafts"
+    affected_entities:
+      - SALES-PERF
+    extra_drafts_in: audits/SALES-PERF/history.md (2026-05-30 section, "Drafts for B1-A1" subsection)
+
+  - id: B1B-M1
+    summary: M1 / M2 / M4 / M8 fail - zero domain_modules rows on a leadership-tier domain with 8 capabilities; blocks B5/B7/B9/B9b/B10b target-side/B11/B12 (vacuous-by-zero) and gates E1-E5 + F1-F5 positive-existence checks. Cannot proceed without B2-M1 module-shape decision.
+    finding: |
+      domain_modules count for SALES-PERF (id 102) = 0. domain_module_host_domains count = 0. Rule #14 has no leadership-tier exemption; every domain needs ≥1 module. With 8 capabilities (TERRITORY-DESIGN, QUOTA-ALLOCATION, INCENTIVE-COMP-MGMT, COMMISSION-CALCULATION, COMP-PLAN-MODELING, PAYEE-STATEMENTS, SALES-CAPACITY-PLANNING, SPIF-MGMT) the M2 floor is ≥2 modules. M4 fails by construction: all 8 capabilities are orphaned (no realizing module).
+    action: |
+      After user resolves B2-M1 (which module shape: 8 / 5 / 3), author the corresponding domain_modules rows with module_kind='full', each carrying domain_module_code, domain_module_name, description per the chosen shape. Bundle with domain_module_capabilities rows so every capability has ≥1 realizing module (M4) and every module realizes ≥1 capability (M6). Bundle with module-level catalog_tagline / catalog_description (M8) drafted in buyer voice, surfaced for user approval per Rule #20 before write. Use the standard idempotent loader pattern under .tmp_deploy/ (TypeScript on Bun; not Python).
+    blocked_by:
+      - {type: user_decision, ref: B2-M1, reason: module shape decision (8 / 5 / 3) determines the loader payload}
+    affected_modules: []
+    affected_entities:
+      - SALES-PERF-PLAN-DESIGN
+      - SALES-PERF-TERRITORY
+      - SALES-PERF-QUOTA
+      - SALES-PERF-CAPACITY
+      - SALES-PERF-COMMISSIONS
+      - SALES-PERF-DISPUTES
+      - SALES-PERF-SPIF
+      - SALES-PERF-COMP-EXPENSE
+    extra_module_proposal_shape_options:
+      - option: 8-module
+        modules:
+          - SALES-PERF-PLAN-DESIGN
+          - SALES-PERF-TERRITORY
+          - SALES-PERF-QUOTA
+          - SALES-PERF-CAPACITY
+          - SALES-PERF-COMMISSIONS
+          - SALES-PERF-DISPUTES
+          - SALES-PERF-SPIF
+          - SALES-PERF-COMP-EXPENSE
+        rationale: "one module per capability with shared Commissions module"
+      - option: 5-module
+        modules:
+          - SALES-PERF-PLANNING
+          - SALES-PERF-COMMISSIONS
+          - SALES-PERF-DISPUTES
+          - SALES-PERF-SPIF
+          - SALES-PERF-COMP-EXPENSE
+        rationale: "collapses PLAN-DESIGN + TERRITORY + QUOTA + CAPACITY into PLANNING (mirrors Anaplan / Pigment planning surface)"
+      - option: 3-module
+        modules:
+          - SALES-PERF-PLANNING
+          - SALES-PERF-EXECUTION
+          - SALES-PERF-FINANCE-BRIDGE
+        rationale: "planning / execution / finance split"
+
+  - id: B1B-S1
+    summary: B10b - 3 inbound handoffs (202, 203, 208) have target_domain_module_id NULL because SALES-PERF has zero modules; cannot resolve until B1-M1 lands.
+    finding: |
+      handoffs.target_domain_module_id is NULL on every inbound row: handoff 202 (CRM crm_opportunity.created on crm_opportunities), 203 (CRM account.tier_changed on customers), 208 (REV-INTEL pipeline_health.degraded on crm_opportunities). The target-side NULL is a B10b defect this domain owes; the source-side NULL on handoff 208 (source_domain_module_id NULL because REV-INTEL itself has zero modules) is REV-INTEL's B10b and routes to that domain's audit.
+    action: |
+      After B1-M1 lands and modules are loaded, re-run the B10b deterministic derivation against the new module set. Per the 2026-05-30 placeholder mapping (subject to revision if B2-M1 picks 5 / 3-module shape): handoff 202 - SALES-PERF-QUOTA (quota credit on opportunity creation), 203 - SALES-PERF-TERRITORY (territory realignment on account tier change), 208 - SALES-PERF-CAPACITY (capacity rebalance on pipeline degradation). PATCH the three handoff rows with the resolved target_domain_module_id. If any row's intended owning module is ambiguous under the chosen shape (e.g. 3-module collapse), surface that row to the user before patching.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1, reason: cannot patch target_domain_module_id until SALES-PERF modules exist}
+    affected_handoffs:
+      - {handoff_id: 202, direction: inbound, source_domain: CRM, target_domain: SALES-PERF, trigger_event: crm_opportunity.created, payload: crm_opportunities, null_field: target_domain_module_id}
+      - {handoff_id: 203, direction: inbound, source_domain: CRM, target_domain: SALES-PERF, trigger_event: account.tier_changed, payload: customers, null_field: target_domain_module_id}
+      - {handoff_id: 208, direction: inbound, source_domain: REV-INTEL, target_domain: SALES-PERF, trigger_event: pipeline_health.degraded, payload: crm_opportunities, null_field: target_domain_module_id}
+
+  - id: B1B-V1
+    summary: Vendor-surface master placeholder, compensation_plans - 9 of 9 ICM vendors master this entity (Varicent, Xactly Incent, Salesforce Spiff, CaptivateIQ, Performio, SAP Commissions, beqom Pay, QuotaPath, Anaplan Sales Planning); cannot load without target module.
+    finding: |
+      The vendor-surface market audit (Pass 2, 2026-05-30) identified compensation_plans as a Core master across every flagship ICM vendor. The catalog has zero data_objects, zero domain_data_objects, zero domain_module_data_objects for SALES-PERF.
+    action: |
+      Load data_objects(data_object_name='compensation_plans', singular_label='compensation plan', plural_label='compensation plans', kind='domain_owned'); apply Rule #9 naming arbitration; populate Rule #12 pattern flags via discussion; load domain_module_data_objects row with role='master', necessity='required', anchored at the SALES-PERF-PLAN-DESIGN module from B1B-M1; load lifecycle_states per the standard plan-design state machine; load data_object_aliases for cross-vendor synonyms.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1, reason: master must anchor to a real domain_modules row}
+      - {type: user_decision, ref: B2-M1, reason: target module identity depends on chosen module shape}
+    vendor_evidence:
+      - Varicent
+      - Xactly Incent
+      - Salesforce Spiff
+      - CaptivateIQ
+      - Performio
+      - SAP Commissions
+      - beqom Pay
+      - QuotaPath
+      - Anaplan Sales Planning
+    extra_proposed_module_8shape: SALES-PERF-PLAN-DESIGN
+
+  - id: B1B-V2
+    summary: Vendor-surface master placeholder, quotas - 9 of 9 ICM vendors master this entity; cannot load without target module.
+    finding: |
+      The vendor-surface market audit identified quotas as a Core master across every flagship ICM vendor. Currently absent.
+    action: |
+      Load data_objects(data_object_name='quotas', singular_label='quota', plural_label='quotas', kind='domain_owned'); load domain_module_data_objects(role='master', necessity='required', module=SALES-PERF-QUOTA from B1B-M1); load lifecycle states (draft / proposed / approved / active / closed) and aliases.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1, reason: master must anchor to a real domain_modules row}
+      - {type: user_decision, ref: B2-M1, reason: target module identity depends on chosen module shape}
+    vendor_evidence:
+      - Varicent
+      - Xactly Incent
+      - Salesforce Spiff
+      - CaptivateIQ
+      - Performio
+      - SAP Commissions
+      - beqom Pay
+      - QuotaPath
+      - Anaplan Sales Planning
+    extra_proposed_module_8shape: SALES-PERF-QUOTA
+
+  - id: B1B-V3
+    summary: Vendor-surface master placeholder, territories - 9 of 9 ICM vendors master this entity; cannot load without target module.
+    finding: |
+      The vendor-surface market audit identified territories as a Core master across every flagship ICM vendor. Currently absent.
+    action: |
+      Load data_objects(data_object_name='territories', singular_label='territory', plural_label='territories', kind='domain_owned'); apply Rule #9 (bare-word naming arbitration); load domain_module_data_objects(role='master', necessity='required', module=SALES-PERF-TERRITORY from B1B-M1); load lifecycle states and territory_assignments junction.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1, reason: master must anchor to a real domain_modules row}
+      - {type: user_decision, ref: B2-M1, reason: target module identity depends on chosen module shape}
+    vendor_evidence:
+      - Varicent
+      - Xactly Incent
+      - Salesforce Spiff
+      - CaptivateIQ
+      - Performio
+      - SAP Commissions
+      - beqom Pay
+      - QuotaPath
+      - Anaplan Sales Planning
+    extra_proposed_module_8shape: SALES-PERF-TERRITORY
+    extra_naming_collision_risk: bare-word 'territories' may collide with FSM / other domains; arbitrate via Rule #9 before insert
+
+  - id: B1B-V4
+    summary: Vendor-surface master placeholder, commission_calculations (headline master) - 9 of 9 ICM vendors master this entity; cannot load without target module.
+    finding: |
+      The vendor-surface market audit identified commission_calculations as the headline master across every flagship ICM vendor.
+    action: |
+      Load data_objects(data_object_name='commission_calculations', singular_label='commission calculation', plural_label='commission calculations', kind='domain_owned'); load domain_module_data_objects(role='master', necessity='required', module=SALES-PERF-COMMISSIONS from B1B-M1); load lifecycle states (calculated / approved / paid / disputed / adjusted) and aliases.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1, reason: master must anchor to a real domain_modules row}
+      - {type: user_decision, ref: B2-M1, reason: target module identity depends on chosen module shape}
+    vendor_evidence:
+      - Varicent
+      - Xactly Incent
+      - Salesforce Spiff
+      - CaptivateIQ
+      - Performio
+      - SAP Commissions
+      - beqom Pay
+      - QuotaPath
+      - Anaplan Sales Planning
+    extra_proposed_module_8shape: SALES-PERF-COMMISSIONS
+
+  - id: B1B-V5
+    summary: Vendor-surface master placeholder, commission_statements - 9 of 9 ICM vendors master this entity; cannot load without target module.
+    finding: |
+      The vendor-surface market audit identified commission_statements as a Core master.
+    action: |
+      Load data_objects(data_object_name='commission_statements', singular_label='commission statement', plural_label='commission statements', kind='domain_owned'); apply Rule #12 has_submit_lock pattern flag (statements lock once issued); load domain_module_data_objects(role='master', necessity='required', module=SALES-PERF-COMMISSIONS); load lifecycle states (draft / issued / acknowledged / disputed / finalized) and statement_acknowledgements junction.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1, reason: master must anchor to a real domain_modules row}
+      - {type: user_decision, ref: B2-M1, reason: target module identity depends on chosen module shape}
+    vendor_evidence:
+      - Varicent
+      - Xactly Incent
+      - Salesforce Spiff
+      - CaptivateIQ
+      - Performio
+      - SAP Commissions
+      - beqom Pay
+      - QuotaPath
+      - Anaplan Sales Planning
+    extra_proposed_module_8shape: SALES-PERF-COMMISSIONS
+
+  - id: B1B-V6
+    summary: Vendor-surface master placeholder, commission_disputes - 8 of 9 ICM vendors master this entity (Anaplan plan-side only); cannot load without target module.
+    finding: |
+      The vendor-surface market audit identified commission_disputes as a Common master (8 of 9 vendors; Anaplan Sales Planning is plan-side only and does not model the dispute workflow).
+    action: |
+      Load data_objects(data_object_name='commission_disputes', singular_label='commission dispute', plural_label='commission disputes', kind='domain_owned'); load domain_module_data_objects(role='master', necessity='required', module=SALES-PERF-DISPUTES); load lifecycle states (opened / under_review / resolved / rejected / escalated) and dispute_resolution_audit_trails junction.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1, reason: master must anchor to a real domain_modules row}
+      - {type: user_decision, ref: B2-M1, reason: target module identity depends on chosen module shape}
+    vendor_evidence:
+      - {vendor: Varicent, evidence: 1st_class}
+      - {vendor: Xactly Incent, evidence: 1st_class}
+      - {vendor: Salesforce Spiff, evidence: 1st_class}
+      - {vendor: CaptivateIQ, evidence: 1st_class}
+      - {vendor: Performio, evidence: 1st_class}
+      - {vendor: SAP Commissions, evidence: 1st_class}
+      - {vendor: beqom Pay, evidence: 1st_class}
+      - {vendor: QuotaPath, evidence: 1st_class}
+      - {vendor: Anaplan Sales Planning, evidence: absent}
+    extra_proposed_module_8shape: SALES-PERF-DISPUTES
+
+  - id: B1B-V7
+    summary: Vendor-surface master placeholder, payees - 9 of 9 ICM vendors master this entity; cannot load without target module.
+    finding: |
+      The vendor-surface market audit identified payees as a Core master (sales reps and managers receiving commissions). Subject to Rule #9 collision check against hcm_employees / users (the canonical platform_builtin); typically a thin extension entity FK to hcm_employees with comp-specific attributes (eligible_plans, hire_date_for_comp, draw_balance).
+    action: |
+      Load data_objects(data_object_name='payees', singular_label='payee', plural_label='payees', kind='domain_owned'); apply Rule #9 naming arbitration; populate Rule #12 has_personal_content flag (payee carries PII); load domain_module_data_objects(role='master', necessity='required', module=SALES-PERF-COMMISSIONS or SALES-PERF-PARTIES per modular shape); load Rule #10 platform_builtin edge to users.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1, reason: master must anchor to a real domain_modules row}
+      - {type: user_decision, ref: B2-M1, reason: target module identity depends on chosen module shape (a shared SALES-PERF-PARTIES module is one of the open options)}
+    vendor_evidence:
+      - Varicent
+      - Xactly Incent
+      - Salesforce Spiff
+      - CaptivateIQ
+      - Performio
+      - SAP Commissions
+      - beqom Pay
+      - QuotaPath
+      - Anaplan Sales Planning
+    extra_proposed_module_8shape: SALES-PERF-COMMISSIONS
+
+b2:
+  - id: B2-M1
+    summary: Modularization hypothesis - choose between 8-module (one per capability + shared Commissions), 5-module (PLANNING + COMMISSIONS + DISPUTES + SPIF + COMP-EXPENSE), or 3-module (PLANNING / EXECUTION / FINANCE-BRIDGE) shape.
+    question: Which module shape do you want for SALES-PERF, 8 / 5 / 3?
+    options:
+      - {label: "8-module", shape: [SALES-PERF-PLAN-DESIGN, SALES-PERF-TERRITORY, SALES-PERF-QUOTA, SALES-PERF-CAPACITY, SALES-PERF-COMMISSIONS, SALES-PERF-DISPUTES, SALES-PERF-SPIF, SALES-PERF-COMP-EXPENSE], rationale: one module per capability with shared Commissions, granular shape Varicent / Xactly / Spiff / CaptivateIQ / Performio / SAP cluster}
+      - {label: "5-module", shape: [SALES-PERF-PLANNING, SALES-PERF-COMMISSIONS, SALES-PERF-DISPUTES, SALES-PERF-SPIF, SALES-PERF-COMP-EXPENSE], rationale: collapse planning surface (PLAN-DESIGN + TERRITORY + QUOTA + CAPACITY) into one module mirroring Anaplan / Pigment}
+      - {label: "3-module", shape: [SALES-PERF-PLANNING, SALES-PERF-EXECUTION, SALES-PERF-FINANCE-BRIDGE], rationale: planning / execution / finance split for slim deploy targets}
+    why: Decision rewrites B1B-V1 through B1B-V7 module targets and the B1B-S1 backfill mapping; must resolve before B1B-M1 loader is authored.
+
+  - id: B2-C1
+    summary: Capability-level RACI override on INCENTIVE-COMP-MGMT - the 8 capabilities all inherit Sales Operations ownership at the domain level, but INCENTIVE-COMP-MGMT overlaps the broader employee-comp surface mastered in COMP-MGMT (HR / Total-Rewards owned).
+    question: Add a business_function_capabilities override for INCENTIVE-COMP-MGMT?
+    options:
+      - {label: "a", action: add Compensation Management as contributor}
+      - {label: "b", action: leave domain-level RACI as-is (Sales Ops owns sales comp end-to-end)}
+      - {label: "c", action: add Finance as co-owner reflecting the ASC 606 close cycle}
+    why: Cross-functional ownership of INCENTIVE-COMP-MGMT affects buyer-persona filtering and the RACI overlay; not a structural blocker.
+
+  - id: B2-R1
+    summary: Regulation coverage for SALES-PERF (currently zero domain_regulations rows); ASC 606-21 / IFRS 15 cover commission capitalization, SOX covers internal controls, GDPR covers payee PII, Reg BI / FINRA cover commissioned sellers in regulated financial products.
+    question: Which regulations should the SALES-PERF domain link to?
+    options:
+      - {label: "a", regulations: [ASC 606-21]}
+      - {label: "b", regulations: [ASC 606-21, SOX]}
+      - {label: "c", regulations: [ASC 606-21, SOX, GDPR]}
+      - {label: "d", regulations: [ASC 606-21, SOX, GDPR, Reg BI, FINRA], note: full set including regulated-finance carve-out}
+      - {label: "e", action: defer until Phase 0 confirms beqom Pay's regulated-finance specialization}
+    why: Option (d) is informed by B3-RegFin (vendor research on beqom and regulated finance); options (a) through (c) are independent.
+
+  - id: B2-H1
+    summary: Existing discovery_substring handoff_processes row 106 (handoff 203 -> process 54 "Perform planning and management accounting") is incorrect; the substring matcher picked an accounting process for "account.tier_changed". The agent_curated row pointing at process 713 already exists and supersedes in spirit.
+    question: What disposition for the discovery_substring row 106?
+    options:
+      - {label: "a", action: PATCH record_status='rejected' on row 106 and let the agent_curated row supersede}
+      - {label: "b", action: DELETE row 106 entirely (cleaner audit trail)}
+      - {label: "c", action: keep row 106 as-is (user disagrees with the audit verdict)}
+    why: The discovery_substring row remains at record_status='new' and skews the H-band provenance report; user picks the disposition.
+
+  - id: B2-P1
+    summary: Pairwise reconciliation timing post-B1B-M1 - both CRM (edge weight 2) and REV-INTEL (edge weight 1) are below the default deep-dive threshold (>=3) today; SALES-PERF cannot reconcile until it has modules.
+    question: When B1B-M1 lands, which pairwise passes do you want scheduled?
+    options:
+      - {label: "a", action: schedule both CRM and REV-INTEL pairwise passes immediately after B1B-M1 lands}
+      - {label: "b", action: defer until edge weight independently crosses 3}
+      - {label: "c", action: only run CRM pairwise since REV-INTEL is itself unmodularized (pairwise diff blocked symmetrically)}
+    why: Cross-domain reconciliation is read-only by construction and not a structural blocker; timing is your call.
+
+b3:
+  - id: B3-CompExpense
+    candidate: commission_expense_accruals + commission_expense_reversals + clawback_provisions as a dedicated SALES-PERF-COMP-EXPENSE module
+    rationale: |
+      Most ICM vendors (Varicent, Xactly, Performio) ship ASC 606 capitalization modules separately from the commission calculation engine. CaptivateIQ ships it inline. Salesforce Spiff is silent. The cardinality decision (separate module vs. enrich existing entity) affects M-band shape: 8-module shape ships SALES-PERF-COMP-EXPENSE as a distinct module, 5-module shape can fold it into SALES-PERF-COMMISSIONS or keep it separate, 3-module shape collapses into SALES-PERF-FINANCE-BRIDGE.
+    vendor_evidence:
+      - Varicent
+      - Xactly Incent
+      - Performio
+      - CaptivateIQ
+      - Salesforce Spiff
+    proposed_module: SALES-PERF-COMP-EXPENSE
+    extra_verification_path: Phase 0 against Varicent ASC 606 docs + Xactly Subscribe (RevRec) + CaptivateIQ inline; confirm vendor consensus before splitting the module.
+
+  - id: B3-CreditingRules
+    candidate: crediting_rules + eligibility_rules as a distinct rule-designer module vs. configuration tables under SALES-PERF-COMMISSIONS
+    rationale: |
+      Varicent and SAP Commissions have a separate "rule designer" surface with its own UI and its own audit trail; Spiff and CaptivateIQ ship rules inline as configuration; QuotaPath and Performio simplify or skip the surface. The decision affects whether the rule designer ships as a standalone module (and a standalone system skill) or as configuration entities inside SALES-PERF-COMMISSIONS.
+    vendor_evidence:
+      - {vendor: Varicent, evidence: 1st_class}
+      - {vendor: SAP Commissions, evidence: 1st_class}
+      - {vendor: Salesforce Spiff, evidence: secondary}
+      - {vendor: CaptivateIQ, evidence: secondary}
+      - {vendor: QuotaPath, evidence: absent}
+      - {vendor: Performio, evidence: absent}
+    proposed_module: SALES-PERF-COMMISSIONS (or a new SALES-PERF-RULES if vendor consensus says yes)
+    extra_verification_path: Phase 0 on Varicent rule designer + SAP CallidusCloud schema + Spiff inline configuration.
+
+  - id: B3-Overlay
+    candidate: overlay_assignments as a distinct entity vs. plan-component flags
+    rationale: |
+      Beqom, Varicent, Xactly all model overlay seller compensation (regional VP, SE, CS) as a distinct entity with its own crediting rules; Performio and Spiff fold it into base plan components. The decision affects whether overlay is a master / junction or a flag column.
+    vendor_evidence:
+      - {vendor: beqom Pay, evidence: 1st_class}
+      - {vendor: Varicent, evidence: 1st_class}
+      - {vendor: Xactly Incent, evidence: 1st_class}
+      - {vendor: Performio, evidence: absent}
+      - {vendor: Salesforce Spiff, evidence: absent}
+    proposed_module: SALES-PERF-COMMISSIONS
+    extra_verification_path: Phase 0 on beqom whitepapers + Varicent overlay docs.
+
+  - id: B3-CapacityCarveout
+    candidate: capacity planning as a SALES-PERF module vs. as a separate SALES-PLANNING-PLATFORM domain owned by a different buyer
+    rationale: |
+      Anaplan and Pigment market capacity planning as a distinct workflow with its own buyer (RevOps Strategy vs. Sales Ops Comp); Fullcast positions it as part of "territory ops". The question is whether SALES-PERF-CAPACITY exists as a module here, or is re-routed to a new SALES-PLANNING-PLATFORM domain. Decision feeds B2-M1 and vice versa; if a separate platform market exists, queue SALES-PLANNING-PLATFORM to audits/_missing-domains.md.
+    vendor_evidence:
+      - Anaplan Sales Planning
+      - Pigment
+      - Fullcast
+      - Board
+    proposed_module: SALES-PERF-CAPACITY (or queue SALES-PLANNING-PLATFORM as candidate domain)
+    extra_verification_path: Phase 0 on Anaplan Sales Planning + Pigment RevOps + Fullcast docs to test buyer separation.

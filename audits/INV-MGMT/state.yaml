@@ -1,0 +1,207 @@
+schema_version: 2
+domain: INV-MGMT
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S3
+    summary: "Author 4-5 intra-domain handoffs across INV's 3 modules (B9b hard fail, zero intra-domain handoffs today)."
+    finding: "INV-MGMT has 3 full modules (INV-CORE-STOCK 61, INV-REPLENISHMENT 62, INV-KITTING 63) but zero handoffs with source_domain_id=target_domain_id=164. The master relationship graph and lifecycle state machine imply at least 4 cross-module flows are missing."
+    action: "Author 4-5 handoff rows with source_domain_id=164, target_domain_id=164, integration_pattern='lifecycle_progression', friction_level='low'. Candidates: (a) 62 to 61 on inv_stock_movement.posted (1478) propagating receipt posting; (b) 61 to 62 on inv_stock_item.below_reorder_point (1199); (c) 61 to 62 on inv_stock_balance.on_hand_changed (1200); (d) 63 to 61 on a new inv_kit.assembled trigger_event so component-consumption movements post; (e) 61 to 63 on inv_stock_balance.allocated (1201) for kit reservations. Step (d) requires loading the new trigger_event first."
+    affected_modules:
+      - 61
+      - 62
+      - 63
+    extra_new_trigger_events:
+      - event_name: "inv_kit.assembled"
+        publishing_master: 794
+        event_category: "lifecycle"
+
+b1b:
+  - id: B1B-S1-M7
+    summary: "M7 within-domain hard fail: 4 consumer-with-master-sibling DMDO rows on inv_stock_items 785 and inv_stock_balances 787. Fix gated on B2-S6 architectural pick."
+    finding: "DMDO rows 252 (62 consumer on 785), 258 (63 consumer on 785), 251 (62 consumer on 787), 259 (63 consumer on 787) coexist with master rows 239 (61 on 785) and 241 (61 on 787). The autonomous-deployable-units model accepts this only when the sibling role is embedded_master, not consumer. Default fix is DELETE the 4 rows; alternative is PROMOTE each to embedded_master if INV-REPLENISHMENT and INV-KITTING must be standalone-deployable. Standalone deployability is plausible (reorder_rules and kit_definitions need item shells), so PROMOTE may be market-aligned."
+    blocked_by:
+      - {type: user_decision, ref: B2-S6}
+    affected_modules:
+      - 61
+      - 62
+      - 63
+    extra_affected_dmdo_rows:
+      - {id: 251, module: 62, data_object: inv_stock_balances, role: consumer}
+      - {id: 252, module: 62, data_object: inv_stock_items, role: consumer}
+      - {id: 258, module: 63, data_object: inv_stock_items, role: consumer}
+      - {id: 259, module: 63, data_object: inv_stock_balances, role: consumer}
+  - id: B1B-S1-B5
+    summary: "B5 hard fail: 2 embedded_master DMDO rows in INV-CORE-STOCK point at data_objects with no canonical role='master' DMDO anywhere in catalog."
+    finding: "Rows 247 (commerce_products 384 embedded_master on 61) and 248 (inventory_locations 425 embedded_master on 61) have no DMDO master row catalog-wide. Canonical owners exist via legacy domain_data_objects (B2C-COMM owns 384, OMS owns 425) but the DMDO graph the deployer reads is broken pointers."
+    blocked_by:
+      - {type: domain_audit, blocking_domain: B2C-COMM, milestone: declare-DMDO-master-on-commerce_products-384}
+      - {type: domain_audit, blocking_domain: OMS, milestone: declare-DMDO-master-on-inventory_locations-425}
+    affected_entities:
+      - commerce_products
+      - inventory_locations
+  - id: B1B-S4-B10b
+    summary: "10 outbound INV handoffs carry target_domain_module_id=NULL; backfill is owed by each target domain per B10b asymmetry."
+    finding: "Outbound handoffs 1050 (S2P), 1051 + 1052 (OMS), 1053 + 1054 (ERP-FIN), 1055 + 1056 + 1058 (CSM), 1057 (GRC), 1059 (B2C-COMM) all have target_domain_module_id=NULL. source_domain_module_id is populated on every row. No INV-MGMT write; tracked here for coordination."
+    blocked_by:
+      - {type: domain_audit, blocking_domain: S2P, milestone: B10b-backfill-1050}
+      - {type: domain_audit, blocking_domain: OMS, milestone: B10b-backfill-1051-1052}
+      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: B10b-backfill-1053-1054}
+      - {type: domain_audit, blocking_domain: CSM, milestone: B10b-backfill-1055-1056-1058}
+      - {type: domain_audit, blocking_domain: GRC, milestone: B10b-backfill-1057}
+      - {type: domain_audit, blocking_domain: B2C-COMM, milestone: B10b-backfill-1059}
+    affected_handoffs:
+      - {handoff_id: 1050, direction: outbound, source_domain: INV-MGMT, target_domain: S2P, trigger_event: "inv_stock_item.below_reorder_point", payload: "purchase_orders", null_field: target_domain_module_id}
+      - {handoff_id: 1051, direction: outbound, source_domain: INV-MGMT, target_domain: OMS, trigger_event: "inv_stock_balance.on_hand_changed", payload: "order_allocations", null_field: target_domain_module_id}
+      - {handoff_id: 1052, direction: outbound, source_domain: INV-MGMT, target_domain: OMS, trigger_event: "inv_stock_balance.allocated", payload: "order_allocations", null_field: target_domain_module_id}
+      - {handoff_id: 1053, direction: outbound, source_domain: INV-MGMT, target_domain: ERP-FIN, trigger_event: "inv_cycle_count.variance_posted", payload: "inv_cycle_counts", null_field: target_domain_module_id}
+      - {handoff_id: 1054, direction: outbound, source_domain: INV-MGMT, target_domain: ERP-FIN, trigger_event: "inv_stock_transfer.received", payload: "inv_stock_transfers", null_field: target_domain_module_id}
+      - {handoff_id: 1055, direction: outbound, source_domain: INV-MGMT, target_domain: CSM, trigger_event: "inv_inventory_lot.expiry_warning", payload: "inv_inventory_lots", null_field: target_domain_module_id}
+      - {handoff_id: 1056, direction: outbound, source_domain: INV-MGMT, target_domain: CSM, trigger_event: "inv_inventory_lot.recall_initiated", payload: "inv_inventory_lots", null_field: target_domain_module_id}
+      - {handoff_id: 1057, direction: outbound, source_domain: INV-MGMT, target_domain: GRC, trigger_event: "inv_inventory_lot.recall_initiated", payload: "inv_inventory_lots", null_field: target_domain_module_id}
+      - {handoff_id: 1058, direction: outbound, source_domain: INV-MGMT, target_domain: CSM, trigger_event: "inv_serialized_unit.warranty_activated", payload: "inv_serialized_units", null_field: target_domain_module_id}
+      - {handoff_id: 1059, direction: outbound, source_domain: INV-MGMT, target_domain: B2C-COMM, trigger_event: "inv_stock_item.created", payload: "commerce_products", null_field: target_domain_module_id}
+  - id: B1B-S5
+    summary: "F2/F3/F5 hard fail: zero skill_type='system' rows on any of the 3 INV modules; Rule #17 requires exactly one per module with >= 1 skill_tools. Phase-S workload, not a single PATCH."
+    finding: "Zero system skills exist for modules 61, 62, 63. Semantius score uncomputable. Author inv_core_stock_agent on 61, inv_replenishment_agent on 62, inv_kitting_agent on 63, each with 5-20 skill_tools rows covering query/mutate/workflow-gate primitives for that module's masters."
+    blocked_by:
+      - {type: user_decision, ref: B2-Phase-S-scope-and-timing}
+    affected_modules:
+      - 61
+      - 62
+      - 63
+  - id: B1B-H1
+    summary: "3 cross-domain handoffs untagged (multi-PCF candidates per audit); user pick required."
+    finding: "Following the 2026-05-31 continuation, 9 of 11 cross-domain handoffs carry handoff_processes rows. Remaining 3 handoffs each have 2 confident PCF candidates the audit could not pick alone: 1054 INV to ERP-FIN on inv_stock_transfer.received (PCF 859 Manage warehouse transfers OR 1326 Perform inventory accounting); 1055 INV to CSM on inv_inventory_lot.expiry_warning (PCF 206 Manage recall related communications OR 37 Manage product recalls and regulatory audits, medium confidence); 1058 INV to CSM on inv_serialized_unit.warranty_activated (PCF 201 Process warranty claims OR 122 Define warranty claims)."
+    blocked_by:
+      - {type: user_decision, ref: B1-H1-PCF-picks}
+    affected_handoffs:
+      - {handoff_id: 1054, direction: outbound, source_domain: INV-MGMT, target_domain: ERP-FIN, trigger_event: "inv_stock_transfer.received", payload: "inv_stock_transfers", null_field: handoff_processes}
+      - {handoff_id: 1055, direction: outbound, source_domain: INV-MGMT, target_domain: CSM, trigger_event: "inv_inventory_lot.expiry_warning", payload: "inv_inventory_lots", null_field: handoff_processes}
+      - {handoff_id: 1058, direction: outbound, source_domain: INV-MGMT, target_domain: CSM, trigger_event: "inv_serialized_unit.warranty_activated", payload: "inv_serialized_units", null_field: handoff_processes}
+    extra_pcf_options:
+      - {handoff_id: 1054, options: [859, 1326]}
+      - {handoff_id: 1055, options: [206, 37]}
+      - {handoff_id: 1058, options: [201, 122]}
+
+b2:
+  - id: B2-S1
+    summary: "Rule #15 notes-pollution on 7 data_objects (785, 786, 787, 788, 790, 793, 794): config-shape exemption commentary and pattern-flag context."
+    question: "Were the existing notes on these 7 rows user-approved at load time, or auto-populated by an earlier loader?"
+    options:
+      - "User-approved at load time, leave in place."
+      - "Auto-populated, PATCH all 7 rows' notes to empty string and log a Rule #15 incident in references/skill-changelog.md."
+    why: "Rule #15 RESCINDED the prior license for config-shape and pattern-flag annotations in data_objects.notes. The audit cannot tell from live state whether the load-time approval happened."
+    affected_entities:
+      - inv_stock_items
+      - inv_stock_locations
+      - inv_stock_balances
+      - inv_stock_movements
+      - inv_cycle_counts
+      - inv_reorder_rules
+      - inv_kit_definitions
+  - id: B2-S2
+    summary: "B4 pattern-flag re-evaluation: candidate flips on stock_transfers, inventory_lots, serialized_units, serialized_units personal-content."
+    question: "Should has_submit_lock be set true on inv_stock_transfers (lines immutable post-receipt), inv_inventory_lots (append-only after recall), and inv_serialized_units (immutable post-scrap)? Should has_personal_content be true on inv_serialized_units when warranty-customer registration captures PII?"
+    options:
+      - "Per-flag yes/no from user; agent loads only approved flips."
+    why: "Pattern flags are workflow-shape judgments the user owns. Current state: 788 has_submit_lock=true, 790 has_submit_lock=true + has_single_approver=true, all other 8 masters all-false."
+    affected_entities:
+      - inv_stock_transfers
+      - inv_inventory_lots
+      - inv_serialized_units
+  - id: B2-S3
+    summary: "M5 advisory: all 7 requires_permission=true lifecycle states leave domain_module_id NULL."
+    question: "Keep NULL (rely on permission materialization to prefix by master module), or pin per-state to the realizing module?"
+    options:
+      - "Leave NULL, trust materialization."
+      - "PATCH domain_module_id per-state."
+    why: "Permission-scope intent the user owns. INV masters live in INV-CORE-STOCK and INV-REPLENISHMENT; NULL means workflow-gate permissions auto-prefix with the master's owning module."
+    affected_masters:
+      - {data_object_id: 788, name: inv_stock_movements, target_module_id: 61, workflow: "posted/reversed gates"}
+      - {data_object_id: 789, name: inv_stock_transfers, target_module_id: 61, workflow: "approved/reconciled gates"}
+      - {data_object_id: 790, name: inv_cycle_counts, target_module_id: 61, workflow: "variance_review gate"}
+      - {data_object_id: 791, name: inv_inventory_lots, target_module_id: 61, workflow: "recalled gate"}
+      - {data_object_id: 792, name: inv_serialized_units, target_module_id: 61, workflow: "scrapped gate"}
+  - id: B2-S4
+    summary: "E4 permission-bundle drift: 7 workflow-gate permissions implied by lifecycle states are not enumerated on any role."
+    question: "Is the implicit-grant pattern (rely on permission_hierarchy to expand :manage and :admin tiers to gate permissions) intentional, or should specific gates be enumerated on specific roles?"
+    options:
+      - "Confirm hierarchy expands gates, leave 3 role bundles as-is (7 role_permissions total)."
+      - "Add explicit gate grants (e.g., approve_cycle_count_variance on FINANCE-INVENTORY-ACCOUNTANT, reorder gates on SUPPLY-CHAIN-INVENTORY-PLANNER)."
+      - "Drift accepted, full hierarchy materialization expected by the deployer."
+    why: "Permission hierarchy seeding state isn't introspected by the structural audit; the user owns the bundling intent."
+  - id: B2-S5
+    summary: "B11 advisory: inv_stock_locations (786) has zero alias rows; the 9 other INV masters carry 2-4 aliases each."
+    question: "Should the location master carry vendor synonyms (Warehouse, Branch, Site, DC, Hub, Bin, Zone) or stay self-explanatory?"
+    options:
+      - "Load 4-6 alias rows."
+      - "Accept as self-explanatory; record exemption in this audit."
+  - id: B2-S6
+    summary: "M7 architectural choice for B1B-S1-M7: DELETE 4 sibling consumer rows vs PROMOTE to embedded_master for standalone deployability."
+    question: "DELETE all 4, PROMOTE all 4 to embedded_master, or mixed (specify per row)?"
+    options:
+      - "DELETE all 4 sibling consumer rows (rows 251, 252, 258, 259); REPLENISHMENT and KITTING read items/balances by reference."
+      - "PROMOTE all 4 to embedded_master so REPLENISHMENT and KITTING are standalone-deployable."
+      - "Mixed: specify per row."
+    why: "Default per audit procedure is DELETE; market shape (reorder_rules and kit_definitions plausibly need a local item/balance shell) suggests PROMOTE may be more market-aligned for INV than the CLM precedent."
+
+b3:
+  - id: B3-MISSING-DEMAND-FORECASTS
+    candidate: inv_demand_forecasts
+    rationale: "Cin7 Core, Brightpearl, Fulfil, NetSuite, MS Dynamics 365 BC ship lightweight forecast records distinct from full SCP demand forecasts (rolling 30/60/90-day item-level demand based on sales history, not a full MRP model). Currently the catalog folds forecasting into SCP (not yet a domain). For INV-MGMT's SMB-band scope the embedded forecast is the right surface."
+    vendor_evidence:
+      - {vendor: "Cin7 Core", evidence: 1st_class}
+      - {vendor: "Brightpearl by Sage", evidence: 1st_class}
+      - {vendor: "Fulfil", evidence: 1st_class}
+      - {vendor: "Oracle NetSuite", evidence: 1st_class}
+      - {vendor: "Microsoft Dynamics 365 Business Central", evidence: 1st_class}
+    proposed_module: "INV-REPLENISHMENT or new INV-FORECASTING"
+  - id: B3-MISSING-LANDED-COSTS
+    candidate: inv_landed_costs
+    rationale: "Cin7, Fishbowl, Unleashed, Finale, SOS Inventory model landed-cost records (freight + duty + insurance + handling) separately from the stock_movement cost layer. Landed cost flows into ASC 330 / IAS 2 inventory valuation."
+    vendor_evidence:
+      - {vendor: "Cin7 Core", evidence: 1st_class}
+      - {vendor: "Fishbowl Inventory", evidence: 1st_class}
+      - {vendor: "Unleashed Software", evidence: 1st_class}
+      - {vendor: "Finale Inventory", evidence: 1st_class}
+      - {vendor: "SOS Inventory", evidence: 1st_class}
+    proposed_module: "INV-CORE-STOCK or new INV-COSTING"
+  - id: B3-MISSING-CONSIGNMENT-STOCK
+    candidate: inv_consignment_stock
+    rationale: "NetSuite, Fishbowl, Brightpearl, Linnworks support consignment-in (supplier-owned stock on premise) and consignment-out (customer-held stock owned by us). No consignment ownership distinction on stock_items today."
+    vendor_evidence:
+      - {vendor: "Oracle NetSuite", evidence: 1st_class}
+      - {vendor: "Fishbowl Inventory", evidence: 1st_class}
+      - {vendor: "Brightpearl by Sage", evidence: 1st_class}
+      - {vendor: "Linnworks", evidence: 1st_class}
+    proposed_module: "INV-CORE-STOCK or extension column on stock_items"
+  - id: B3-COMPLIANCE-CANDIDATES
+    candidate: "domain_regulations: FDA 21 CFR Part 211, FSMA-204, DEA Schedule II-V, ASC 330 / IFRS IAS 2, Hazmat DOT Title 49"
+    rationale: "Zero domain_regulations rows currently. INV-MGMT serves pharma SMBs (Part 211 lot tracking, segregation, expiry, recall); food vendors needing FSMA-204 lot-to-shipment traceability; controlled substances inventories needing DEA recordkeeping; every accounting-integrated solution declares ASC 330 / IAS 2 compliance; hazmat-bearing inventories needing DOT segregation and recordkeeping."
+    vendor_evidence:
+      - {vendor: "SOS Inventory", evidence: secondary}
+      - {vendor: "Fishbowl Inventory", evidence: secondary}
+      - {vendor: "Cin7 Core", evidence: secondary}
+      - {vendor: "Oracle NetSuite", evidence: 1st_class}
+      - {vendor: "Microsoft Dynamics 365 Business Central", evidence: 1st_class}
+      - {vendor: "SAP Business One", evidence: 1st_class}
+  - id: B3-MODULARIZATION-CANDIDATES
+    candidate: "INV-FORECASTING split (4th full module) and INV-POS-STARTER (starter kit)"
+    rationale: "If inv_demand_forecasts lands as master, a 4th module makes sense given forecast generation, accuracy tracking, and override approval are distinct from REPLENISHMENT's reorder-rule firing (pushes capability-to-module from 8-to-3 toward 8-to-4). INV-POS-STARTER is a module_kind='starter' for small retail with one location, no kitting, simple reorder, embedded shells from CORE-STOCK + REPLENISHMENT minus lot/serial/cycle-count complexity. Marketing-aligned with Sortly and inFlow entry-tier positioning."
+    vendor_evidence:
+      - {vendor: "Sortly", evidence: 1st_class}
+      - {vendor: "inFlow Inventory", evidence: 1st_class}
+  - id: B3-CANDIDATE-DOMAINS
+    candidate: "WMS (Warehouse Management) and SCP (Supply Chain Planning) as new domain rows"
+    rationale: "WMS pure-play warehouse execution layer (picking, packing, slotting, wave planning, RF/scanner workflows) is adjacent to INV-MGMT but not present in the catalog. SCP demand-forecasting / S&OP / MRP-light layer is also missing. Several INV handoffs would naturally route into WMS (pick.confirmed to inv_stock_movement post; receiving to goods_receipt) and SCP (forecast to reorder)."
+    vendor_evidence:
+      - {vendor: "Manhattan WMS", evidence: 1st_class}
+      - {vendor: "Blue Yonder WMS", evidence: 1st_class}
+      - {vendor: "Korber One Warehouse", evidence: 1st_class}
+      - {vendor: "o9", evidence: 1st_class}
+      - {vendor: "Kinaxis", evidence: 1st_class}
+      - {vendor: "Anaplan SCP", evidence: 1st_class}
+    extra_followup_target: "audits/_missing-domains.md"

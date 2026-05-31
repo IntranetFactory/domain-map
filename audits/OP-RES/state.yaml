@@ -1,0 +1,215 @@
+schema_version: 2
+domain: OP-RES
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a: []
+
+b1b:
+  - id: B1B-S1
+    summary: "Author OP-RES-LANDING module (M1, Rule #14 floor for leadership-tier landing surface)."
+    finding: "OP-RES domain (id=18, parent_domain_id=15) has zero `domain_modules` rows. Even leadership-tier domains require >=1 `module_kind='full'` row per Rule #14 (a derived-signals or landing module preserving the deploy-target contract). Catalog state verified live on 2026-05-31 by /domain_modules?domain_id=eq.18 returning []."
+    action: "Insert one `domain_modules` row with `domain_module_code='OP-RES-LANDING'` (or equivalent), `domain_id=18`, `module_kind='full'`. Empty `domain_module_data_objects` set is acceptable for a leadership-tier landing surface. Cascades into F2 (one system skill on the new module per Rule #17). Module creation excluded from truly-technical work per the 2026-05-31 continuation."
+    blocked_by:
+      - {type: user_decision, ref: B2-1, reason: "Leadership-tier-vs-promote answer determines whether one landing module or two master-bearing modules ship."}
+    extra_loader_group: "phase_a_modules"
+    extra_cascades: ["B1B-S4"]
+
+  - id: B1B-S2
+    summary: "Author 3-5 OP-RES capabilities and capability_domains links (A2)."
+    finding: "Zero `capability_domains` rows on domain_id=18 (verified live on 2026-05-31). Even leadership-tier domains usually carry 2-4 capability links describing what the market does at the capability level."
+    action: "Draft 3-5 capabilities aligned to the OP-RES vendor surface (candidates: important-business-service-mapping, impact-tolerance-setting, scenario-testing, dependency-graph-management, resilience-incident-reporting). Apply the cross-cutting capability convention given likely overlap with BCM and TPRM. Insert `capabilities` rows and `capability_domains` rows linking to domain_id=18."
+    blocked_by:
+      - {type: user_decision, ref: B2-1, reason: "Capability scope and naming depend on whether OP-RES stays leadership-tier (lean set) or promotes (broader set)."}
+    extra_naming_decision_required: true
+
+  - id: B1B-S3
+    summary: "Draft OP-RES domain `catalog_tagline` and `catalog_description` (A4, Rule #20)."
+    finding: "domain_id=18 has `catalog_tagline=''` and `catalog_description=''` (verified live on 2026-05-31). Rule #20 requires both fields populated in buyer voice (workflow + value), not analyst voice. A4 fails."
+    action: "Draft both fields per Rule #20, surface to the user for review BEFORE writing. Once approved, PATCH the domains row."
+    blocked_by:
+      - {type: user_decision, ref: B2-4, reason: "User must confirm whether agent drafts for review or supplies wording directly (Rule #20 user-approval gate)."}
+
+  - id: B1B-S4
+    summary: "Author one system skill on the new OP-RES landing module (F2, Rule #17)."
+    finding: "Zero `skills` rows on OP-RES at any level (`domain_id=eq.18` returns nothing, no `domain_module_id`-anchored rows; verified live on 2026-05-31). After B1B-S1 lands, the landing module needs exactly one `skill_type='system'` skill per Rule #17, with >=1 `skill_tools` row."
+    action: "Insert one `skills` row with `skill_type='system'`, `domain_module_id=<new OP-RES-LANDING id>`, `skill_name='op_res_landing_agent'` (or per the realizing module code). Author the minimal `tools` and `skill_tools` set (typically `query_*` over consumed masters once consumer DMDOs land in B1B-S6)."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: user_decision, ref: B2-1, reason: "Skill placement differs under (a) landing-only vs (b) two master-bearing modules."}
+    extra_cascades_into: "Rule #17 tool set must be authored alongside the skill."
+
+  - id: B1B-S5
+    summary: "Repoint inbound handoff 252 off defective trigger 227 and resolve both module FKs (B-band)."
+    finding: "Inbound handoff 252 (GRC -> OP-RES) carries the defective `trigger_event_id=227` (`assessment.completed`, points at `risk_assessments` (id 291) on the source side rather than at an OP-RES-relevant consumed payload). Both `source_domain_module_id` and `target_domain_module_id` are NULL. OP-RES has zero DMDO rows declaring any role on `risk_assessments`. Same defective trigger surfaced on handoff 253 (GRC -> BCM) and ATS rows 1180 / 1181, suggesting a wider GRC trigger audit. Verified live on 2026-05-31."
+    action: "Two-step. (a) Repoint trigger_event_id on handoff 252 to a non-defective trigger keyed against a payload OP-RES should consume. If no such trigger exists, GRC owes the trigger first (report-only). (b) After B1B-S1 lands AND B1B-S6 adds the consumer DMDO, set `target_domain_module_id` to the new OP-RES landing module id; `source_domain_module_id` remains GRC's B10b responsibility."
+    blocked_by:
+      - {type: domain_audit, blocking_domain: GRC, milestone: "B9 trigger authoring + B5 risk_assessments master"}
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: prerequisite_entity, ref: B1B-S6}
+    affected_handoffs:
+      - {handoff_id: 252, direction: inbound, source_domain: GRC, target_domain: OP-RES, trigger_event: "assessment.completed (trigger 227, defective)", payload: risk_assessments, null_field: "both source_domain_module_id and target_domain_module_id"}
+    extra_cascades_into: B1B-A1
+
+  - id: B1B-S6
+    summary: "Add consumer DMDOs on OP-RES-LANDING for the handoff 252 payload and adjacent masters (B-band)."
+    finding: "OP-RES declares zero `domain_module_data_objects` rows. After B1B-S1 lands a landing module, the leadership-tier landing surface should declare consumer DMDOs for the masters it reads from to compute derived signals. Verified live on 2026-05-31 by /domain_data_objects?domain_id=eq.18 returning []."
+    action: "After B1B-S1 lands, insert `domain_module_data_objects` rows on the OP-RES landing module with `role='consumer'` for at least the payload of handoff 252 (once B1B-S5 resolves which data_object that is). Likely additional consumer rows on CMDB, ITSM, SECOPS masters once B2-1 resolves."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: depends_on, ref: B1B-S5, reason: "Cannot author consumer DMDO without knowing the repointed payload."}
+      - {type: user_decision, ref: B2-1, reason: "Scope of consumer DMDOs differs under leadership-tier vs promote."}
+    affected_entities:
+      - risk_assessments
+
+  - id: B1B-A1
+    summary: "Author agent_curated handoff_processes row on handoff 252 (process 272, APQC L3)."
+    finding: "Existing tag on handoff 252 is `discovery_substring` at `record_status='new'` pointing at process_id=271 (Conduct and analyze IT compliance assessments, external_id 20743, L3). Better fit on the OP-RES target side is process_id=272 (Develop and execute IT resilience and continuity operations, external_id 20749, L3). Volume expectation: 1 cross-domain handoff, 0.5N to 0.8N target rounds to 0-1 new agent_curated tags."
+    action: "Insert `handoff_processes` row `(handoff_id=252, process_id=272, proposal_source='agent_curated', record_status='new')`. Leave the existing `discovery_substring` row in place (the natural composed key (handoff_id, process_id) allows both)."
+    blocked_by:
+      - {type: depends_on, ref: B1B-S5, reason: "Do not re-tag a relationship the handoff itself does not correctly express; repointing trigger 227 must land first."}
+    affected_handoffs:
+      - {handoff_id: 252, direction: inbound, source_domain: GRC, target_domain: OP-RES, trigger_event: "assessment.completed (trigger 227, defective)", payload: risk_assessments, null_field: "both source_domain_module_id and target_domain_module_id"}
+
+b2:
+  - id: B2-1
+    summary: "Is OP-RES correctly classified as leadership-tier, or should it be promoted to master-bearing?"
+    question: "SKILL.md lists OP-RES on the leadership-tier exception list. Catalog state matches the label (zero masters, zero modules, zero capabilities, all three linked solutions at coverage_level='secondary', no pure-play vendor at primary coverage). However, regulator-driven substrate (DORA Articles 11, 25, 28; NIS2 significant-incident reporting) imposes mandatory data shapes that look like masters (important_business_services, impact_tolerances, resilience_scenarios). Pure-play resilience vendors (Fusion Framework System, Castellan) ship the substrate as first-class entities; broader IRM suites (Riskonnect, ServiceNow IRM, Archer) carry it as named modules. Should OP-RES stay leadership-tier or promote?"
+    options:
+      - "(a) Keep leadership-tier; author OP-RES-LANDING only; declare consumer DMDOs on GRC, BCM, ITSM, SECOPS masters; treat regulator artifacts as derived-signal views."
+      - "(b) Promote to master-bearing; author OP-RES-MAPPING (important_business_services, impact_tolerances, service_dependency_maps) and OP-RES-TESTING-AND-INCIDENT (resilience_scenarios, resilience_tests, resilience_incidents, resilience_remediation_actions) modules; survivors of Phase 0 vendor research become Bucket 1 in a follow-up."
+      - "(c) Hybrid: author OP-RES-LANDING now as a thin landing surface, defer master-bearing modules to a follow-up Phase 0 load aligned with the parallel BCM B2-1 decision."
+    why: "Gates all 11 b3 items, gates B1B-S4 skill placement, gates B1B-S6 consumer DMDO scope. Coupled with the BCM B2-1; resolving them jointly avoids resilience-versus-continuity overlap on continuity_exercises versus resilience_tests."
+    vendor_evidence:
+      - {vendor: "Fusion Framework System", evidence: "1st_class"}
+      - {vendor: "Castellan", evidence: "1st_class"}
+      - {vendor: "Riskonnect Platform", evidence: "secondary"}
+      - {vendor: "ServiceNow Integrated Risk Management", evidence: "secondary"}
+      - {vendor: "Archer Suite", evidence: "secondary"}
+    extra_coupled_with: "BCM audit's B2-1"
+
+  - id: B2-2
+    summary: "Important Business Service register: OP-RES master, CMDB consumer overlay, or shared cross-cutting host?"
+    question: "The important-business-service register under DORA / UK PRA rules is the regulator-facing view of the same underlying `business_services` substrate that lives in CMDB / SVC-CAT for operational use. Pure-play resilience vendors (Fusion, Castellan) master it themselves; ServiceNow IRM embeds from the platform CMDB. Which ownership shape is right?"
+    options:
+      - "(a) OP-RES masters `important_business_services` as a separate data_object distinct from CMDB `business_services`, with regulator-facing fields (tolerance, criticality, regulator-mapping)."
+      - "(b) OP-RES consumes CMDB `business_services` and adds a per-service regulator overlay as a junction."
+      - "(c) Shared cross-cutting module (`IMPORTANT-BUSINESS-SERVICES`) hosted on OP-RES + CMDB + SVC-CAT via `domain_module_host_domains`."
+    why: "Affects the data_object boundary between OP-RES and CMDB / SVC-CAT and which domain owes a master row. Option (a) only applies if B2-1 resolves to promote."
+    vendor_evidence:
+      - {vendor: "Fusion Framework System", evidence: "1st_class"}
+      - {vendor: "Castellan", evidence: "1st_class"}
+      - {vendor: "ServiceNow Integrated Risk Management", evidence: "secondary"}
+    extra_depends_on: B2-1
+
+  - id: B2-3
+    summary: "DORA and NIS2 substrate ownership across OP-RES, BCM, TPRM, SECOPS."
+    question: "DORA mandates an ICT third-party register (Article 28; TPRM claim), TLPT artifacts (Article 25; OP-RES scenario testing plus SECOPS red-team execution), major-incident reporting (Article 19; OP-RES versus ITSM / SECOPS). NIS2 Article 23 adds significant-incident reporting. Where does the substrate live?"
+    options:
+      - "(a) Split the DORA substrate by artifact across OP-RES, BCM, TPRM, SECOPS, each domain mastering its slice."
+      - "(b) Author a single `DORA-COMPLIANCE` cross-cutting module hosted on OP-RES + BCM + TPRM + SECOPS via `domain_module_host_domains`."
+      - "(c) Defer until BCM B2-3 and TPRM B-band audits land so the DORA split is decided once."
+    why: "Affects which domain masters `ict_third_party_register_entries`, `dora_major_incident_reports`, `dora_threat_led_pen_tests`, `nis2_significant_incident_reports`. Independent of B2-1. Coupled with BCM B2-3."
+    vendor_evidence:
+      - {vendor: "Fusion Framework System", evidence: "1st_class"}
+      - {vendor: "Castellan", evidence: "1st_class"}
+      - {vendor: "Archer Suite", evidence: "secondary"}
+    extra_coupled_with: "BCM B2-3 and TPRM B-band audit"
+
+  - id: B2-4
+    summary: "Catalog UX wording flow for B1B-S3 (Rule #20)."
+    question: "Rule #20 requires user approval on the exact `catalog_tagline` and `catalog_description` wording before write. Does the user want the agent to draft both fields in buyer voice (workflow + value) for review, or supply the wording directly?"
+    options:
+      - "(a) Agent drafts both fields in buyer voice; user reviews and approves before write."
+      - "(b) User supplies the wording directly."
+    why: "Independent of other items. Gates B1B-S3."
+
+b3:
+  - id: B3-IBS
+    candidate: important_business_services
+    rationale: "Regulator-anchored register of services whose disruption would harm clients / market integrity. Owns tolerance levels and DORA / NIS2 reporting. DORA Article 11 mandates the artifact for in-scope financial entities."
+    vendor_evidence:
+      - Fusion Framework System
+      - Castellan
+      - Riskonnect Platform
+    proposed_module: "OP-RES-MAPPING (or shared cross-cutting per B2-2)"
+
+  - id: B3-IT
+    candidate: impact_tolerances
+    rationale: "Per-service maximum tolerable disruption thresholds. Regulator-facing artifact for DORA Article 11 and UK PRA / FCA operational-resilience rules."
+    vendor_evidence:
+      - Fusion Framework System
+      - Castellan
+    proposed_module: "OP-RES-MAPPING"
+
+  - id: B3-SDM
+    candidate: service_dependency_maps
+    rationale: "Graph mapping important business services to people, processes, technology, and third parties. Distinct from BCM's per-plan dependency view because the OP-RES view is regulator-facing and cross-service."
+    vendor_evidence:
+      - Fusion Framework System
+      - Castellan
+      - "ServiceNow Integrated Risk Management (CMDB-integrated)"
+    proposed_module: "OP-RES-MAPPING"
+
+  - id: B3-RS
+    candidate: resilience_scenarios
+    rationale: "Severe-but-plausible scenario library used for scenario testing. DORA Article 25 TLPT artifacts plug in here."
+    vendor_evidence:
+      - Fusion Framework System
+      - Castellan
+      - Archer Suite
+    proposed_module: "OP-RES-TESTING-AND-INCIDENT"
+
+  - id: B3-RT
+    candidate: resilience_tests
+    rationale: "Per-scenario execution records. Distinct from BCM `continuity_exercises` because OP-RES tests are scenario-driven against tolerances, not plan-walkthroughs."
+    vendor_evidence:
+      - Fusion Framework System
+      - Castellan
+    proposed_module: "OP-RES-TESTING-AND-INCIDENT"
+
+  - id: B3-RI
+    candidate: resilience_incidents
+    rationale: "Regulator-facing operational-resilience incident, distinct from ITSM incidents. DORA major-incident-reporting artifacts plug in here."
+    vendor_evidence:
+      - Fusion Framework System
+      - Castellan
+      - "ServiceNow Integrated Risk Management"
+    proposed_module: "OP-RES-TESTING-AND-INCIDENT"
+
+  - id: B3-RRA
+    candidate: resilience_remediation_actions
+    rationale: "Per-finding remediation, distinct from BCM exercise_findings because OP-RES remediation feeds the regulator."
+    vendor_evidence:
+      - "Universal across IRM suites"
+    proposed_module: "OP-RES-TESTING-AND-INCIDENT"
+
+  - id: B3-ICT3PR
+    candidate: ict_third_party_register_entries
+    rationale: "DORA Article 28 ICT third-party register. Strong ownership claim from TPRM (see B2-3)."
+    vendor_evidence:
+      - "Fusion Framework System (most mature surface)"
+    proposed_module: "OP-RES-DORA (new) or embedded_master from TPRM per B2-3"
+
+  - id: B3-DMIR
+    candidate: dora_major_incident_reports
+    rationale: "DORA Article 19 major-incident reports. Emerging vendor surface."
+    vendor_evidence:
+      - "Emerging vendor surface"
+    proposed_module: "OP-RES-DORA (new) or shared cross-cutting per B2-3"
+
+  - id: B3-DTLPT
+    candidate: dora_threat_led_pen_tests
+    rationale: "DORA Article 25 TLPT artifacts. Small-vendor surface (Fusion plus dedicated TLPT specialists)."
+    vendor_evidence:
+      - Fusion Framework System
+      - "dedicated TLPT specialists"
+    proposed_module: "OP-RES-DORA (new) or shared cross-cutting per B2-3"
+
+  - id: B3-NSIR
+    candidate: nis2_significant_incident_reports
+    rationale: "NIS2 Article 23 significant-incident reports. Vendor surface emerging."
+    vendor_evidence:
+      - "Emerging vendor surface"
+    proposed_module: "OP-RES-DORA (new) or shared cross-cutting per B2-3"

@@ -1,0 +1,139 @@
+schema_version: 2
+domain: ITSM
+status: feedback_needed
+next_action_by: agent
+last_audit: 2026-05-31
+
+b1a:
+  - id: B1A-H1-UNTAGGED
+    summary: 16 cross-domain ITSM handoffs lack handoff_processes rows; per-handoff PCF lookup needed
+    finding: H1 returned 65 of 80 ITSM cross-domain handoffs tagged (81%); 16 handoff ids carry zero handoff_processes rows. Each is a single PostgREST PCF lookup once the trigger_event, payload data_object, and source/target domain are read. Pattern, most will collapse to "Triage IT service delivery incidents" (PCF id 1299, external_id 20903), with a small minority deferring to Discover Pass 3 when no clean PCF exists (likely candidates dq_sla_definition.breached, dlp_incident.blocked, ml_model.drift_detected variants).
+    action: Author a per-handoff loader that emits handoff_processes rows with proposal_source='agent_curated', record_status='new'. Composed key (handoff_id, process_id) prevents duplicates; deferrals stay out of the catalog and get listed under the audit's Discover-Pass-3 follow-ups.
+    affected_handoffs:
+      - {handoff_id: 9, direction: unknown, scope_note: candidate, enumeration_status: id_only}
+      - {handoff_id: 31, direction: outbound, source_domain: ITSM, target_domain: ITAM, trigger_event: service_incident.asset_failure, payload: asset_lifecycle_events, scope_note: prior B1-S7 still standing}
+      - {handoff_id: 37, direction: unknown, scope_note: candidate, enumeration_status: id_only}
+      - {handoff_id: 140, direction: unknown, scope_note: candidate, enumeration_status: id_only}
+      - {handoff_id: 177, direction: unknown, scope_note: candidate, enumeration_status: id_only}
+      - {handoff_id: 239, direction: unknown, scope_note: candidate, enumeration_status: id_only}
+      - {handoff_id: 461, direction: unknown, scope_note: candidate, enumeration_status: id_only}
+      - {handoff_id: 463, direction: unknown, scope_note: candidate, enumeration_status: id_only}
+      - {handoff_id: 614, direction: unknown, scope_note: candidate, enumeration_status: id_only}
+      - {handoff_id: 615, direction: unknown, scope_note: candidate, enumeration_status: id_only}
+      - {handoff_id: 642, direction: unknown, scope_note: candidate, enumeration_status: id_only}
+      - {handoff_id: 644, direction: unknown, scope_note: candidate, enumeration_status: id_only}
+      - {handoff_id: 788, direction: unknown, scope_note: candidate, enumeration_status: id_only}
+      - {handoff_id: 843, direction: unknown, scope_note: candidate, enumeration_status: id_only}
+      - {handoff_id: 878, direction: unknown, scope_note: candidate, enumeration_status: id_only}
+      - {handoff_id: 901, direction: unknown, scope_note: candidate, enumeration_status: id_only}
+
+b1b:
+  - id: B1B-B9b
+    summary: B9b intra-domain cross-module handoff rows absent for ITSM; new trigger_events required for each edge
+    finding: ITSM has 8 modules but zero rows in handoffs with source_domain_id=target_domain_id=1. Eight expected intra-domain edges named in the 2026-05-29 audit (incident->problem, problem->change, change->configuration_items, request->incident, sla->incident, sla->request, incident->knowledge, problem->knowledge). Each needs a new trigger_events row authored with event_name, event_category, payload data_object_id, and condition; this is editorial choice not mechanical. The prior 2026-05-31 continuation classified B1-S5 as DEFER for the same reason.
+    blocked_by:
+      - {type: depends_on, ref: trigger-event-authoring-session, reason: creative pass; eight intra-domain trigger events need event_name + payload + condition editorial choice}
+
+  - id: B1B-M7-MONITORING-ALERTS
+    summary: monitoring_alerts canonical owner ambiguous between ITOM and RMM at the new domain_module_data_objects layer
+    finding: At the legacy domain_data_objects layer, monitoring_alerts (id 85) has master rows in both ITOM (domain 2) and RMM (domain 130). At the new domain_module_data_objects layer there is no master row at all; only ITSM's embedded_master in ITSM-EVENT-MGMT (module 42) and consumer rows elsewhere. B5 passes via the legacy rollup (Rule #11) but the catalog-wide M7 single-master rule is at risk once ITOM and RMM finish modularization.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: ITOM, milestone: m7-canonical-monitoring-alerts}
+      - {type: domain_audit, blocking_domain: RMM, milestone: m7-canonical-monitoring-alerts}
+
+  - id: B1B-ASSET-FAILURE
+    summary: event 65 service_incident.asset_failure cross-domain attribution question (carry from 2026-05-29 B1-S7)
+    finding: trigger_events.id=65 service_incident.asset_failure publishes on data_object_id=47 (service_incidents); handoff 31 attributes source_domain=1 ITSM -> ITAM. Open question whether the event correctly originates in ITSM or whether ITAM should author asset.failed as the publisher with ITSM as subscriber. Cross-domain ownership question; ITAM owns the resolution.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: ITAM, milestone: asset-failure-publisher-decision}
+    affected_handoffs:
+      - {handoff_id: 31, direction: outbound, source_domain: ITSM, target_domain: ITAM, trigger_event: service_incident.asset_failure, payload: asset_lifecycle_events}
+    affected_events:
+      - {id: 65, event_name: service_incident.asset_failure, current_category: state_change, proposed_category: state_change}
+
+b2:
+  - id: B2-CATALOG-UX
+    summary: Rule #20 catalog_tagline and catalog_description empty on the ITSM domain row and all 8 modules
+    question: Author catalog_tagline (single buyer-facing sentence) and catalog_description (1-3 buyer-facing paragraphs) for the ITSM domain row and each of the 8 modules? Rule #20 requires explicit user approval of the wording before any write.
+    options:
+      - Draft a full set agent-side and surface for approval line-by-line
+      - User supplies the wording row-by-row
+      - Defer indefinitely (rows remain empty; A4 and M8 stay failing)
+    why: A4 and M8 fail when these fields are empty. Rule #20 forbids the agent writing these without explicit per-row user approval; the audit cannot self-resolve.
+    affected_entities: [domains:ITSM, ITSM-INCIDENT-MGMT, ITSM-SERVICE-REQUEST, ITSM-PROBLEM-MGMT, ITSM-CHANGE-MGMT, ITSM-EVENT-MGMT, ITSM-KNOWLEDGE, ITSM-AGENT-WORKSPACE, ITSM-SLA-MGMT]
+    affected_modules: [38, 39, 40, 41, 42, 43, 44, 45]
+
+  - id: B2-PATTERN-FLAGS
+    summary: pattern flag positive re-evaluation on 3 masters (carry from 2026-05-29 B2-S2)
+    question: Per Rule #12 / B4 positive re-evaluation, should service_incidents.has_personal_content=true (incident descriptions routinely carry user PII)? knowledge_articles.has_personal_content=true (some KB articles reference customer cases)? service_changes.has_submit_lock=true (freeze change payload at CAB submission)?
+    options:
+      - Approve all three flips
+      - Approve a subset
+      - Decline all (flags stay false)
+    why: Pattern flags are workflow-shape judgments the user owns; defaults to false do not establish review. Recording the consideration in notes is forbidden by Rule #15, so the answer lives only in the audit decisions.
+    affected_masters:
+      - {data_object_id: 47, name: service_incidents, target_module_id: 38, workflow: incident}
+      - {data_object_id: 50, name: service_changes, target_module_id: 41, workflow: change}
+      - {data_object_id: 51, name: knowledge_articles, target_module_id: 43, workflow: knowledge}
+
+  - id: B2-SLA-LIFECYCLE
+    summary: service_slas (id 53) has zero lifecycle states (carry from 2026-05-29 B2-S1)
+    question: Apply the Rule #12 config-shape exemption (no notes write per Rule #15; decision lives in the audit file), or author a state machine (e.g. draft, published, active, expired, archived)?
+    options:
+      - Confirm config-shape exemption; track in this audit file only
+      - Author a state machine; surface proposed states for approval
+    why: B12 partial because service_slas master has no states. SLAs read as author-once / occasionally-edit (config shape) but a published SLA does have an effective period (active vs expired) worth modeling as state if the workflow demands it. Either choice is defensible; the user owns the call.
+    affected_masters:
+      - {data_object_id: 53, name: service_slas, target_module_id: 45, workflow: sla-config}
+
+  - id: B2-SKILL-NAMING
+    summary: ITSM system skills use kebab itsm-<module>-system, SKILL convention is snake <module_code_lower>_agent (carry from 2026-05-29 B2-S4)
+    question: Rename catalog-wide to the snake-agent convention, or accept the kebab shape and update SKILL.md to allow both?
+    options:
+      - Rename all 8 ITSM system skills via a focused loader; align catalog with SKILL.md
+      - Update SKILL.md to allow both naming shapes; ITSM and other earlier loads keep current names
+    why: Editorial / naming-policy call. Pure relabel; skill_tools FKs unaffected. ATS audit raised the same drift; a decision here likely cascades to ATS and other early-modular loads.
+    affected_entities: [itsm-incident-mgmt-system, itsm-service-request-system, itsm-problem-mgmt-system, itsm-change-mgmt-system, itsm-event-mgmt-system, itsm-knowledge-system, itsm-agent-workspace-system, itsm-sla-mgmt-system]
+
+b3:
+  - id: B3-SERVICE-OUTAGES
+    candidate: service_outages
+    rationale: ServiceNow Major Incident Management and Atlassian Statuspage both model a customer-facing outage record distinct from the internal incident. Catalog likely needs the split.
+    vendor_evidence: [ServiceNow, Atlassian Statuspage]
+    proposed_module: ITSM-INCIDENT-MGMT
+
+  - id: B3-CHANGE-COLLISIONS
+    candidate: change_collisions
+    rationale: ServiceNow Change Advisory detects overlapping change windows and blackout periods; modeled as a first-class catalog entity in flagship vendors.
+    vendor_evidence: [ServiceNow]
+    proposed_module: ITSM-CHANGE-MGMT
+
+  - id: B3-CAB-MEETINGS
+    candidate: cab_meetings
+    rationale: Change Advisory Board agenda and minutes are modeled as a first-class entity by ServiceNow and BMC Helix.
+    vendor_evidence: [ServiceNow, BMC Helix]
+    proposed_module: ITSM-CHANGE-MGMT
+
+  - id: B3-SERVICE-OFFERINGS-SPLIT
+    candidate: service_offerings
+    rationale: ServiceNow distinguishes the service definition (offering) from its catalog presentation (catalog_item); current model collapses both onto service_catalog_items.
+    vendor_evidence: [ServiceNow]
+    proposed_module: ITSM-SERVICE-REQUEST
+
+  - id: B3-WALKUP-VISITS
+    candidate: walkup_visits
+    rationale: ITSM-WALKUP capability realizes in ITSM-AGENT-WORKSPACE but no walkup_visits or walkup_kiosks master exists; capability-orphan finding from prior audit.
+    vendor_evidence: [ServiceNow]
+    proposed_module: ITSM-AGENT-WORKSPACE
+
+  - id: B3-VIRTUAL-AGENT-CONVERSATIONS
+    candidate: virtual_agent_conversations
+    rationale: ITSM-VIRTUAL-AGENT capability has no virtual_agent_conversations or chatbot_sessions master; capability-orphan finding from prior audit.
+    vendor_evidence: [ServiceNow, Atlassian]
+    proposed_module: ITSM-AGENT-WORKSPACE
+
+  - id: B3-CHARGEBACK-INVOICES
+    candidate: chargeback_invoices
+    rationale: ITSM-CHARGEBACK capability has no chargeback_invoices or service_cost_records master; capability-orphan finding from prior audit.
+    vendor_evidence: [ServiceNow Financial Management]
+    proposed_module: ITSM-SLA-MGMT

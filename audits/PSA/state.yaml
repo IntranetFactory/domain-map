@@ -1,0 +1,298 @@
+schema_version: 2
+domain: PSA
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+# Open items after the 2026-05-31 Audit. Resolved items live in history.md.
+# next_action_by=user: b1a is non-empty but every b1a item depends on a b2 decision
+# (B2-S4 unblocks B1A-B10B-IN; B2-NEW2 unblocks B1A-A4 + B1A-M8; H1 has no b2 gate
+# and is the one b1a item the agent could start on without user input).
+
+b1a:
+  - id: B1A-A4
+    summary: "Draft + load `domains.catalog_tagline` and `domains.catalog_description` for PSA (Rule #20)."
+    finding: "PSA `domains` row (id 68) has empty `catalog_tagline` AND empty `catalog_description`. Rule #20 requires both fields populated with buyer-voice copy."
+    action: "Drafted copy must route through B2-NEW2 for explicit per-row user approval BEFORE PATCH (Rule #20). On approval: PATCH `/domains?id=eq.68` with the approved tagline + description."
+    blocked_by:
+      - {type: user_decision, ref: B2-NEW2}
+    affected_entities:
+      - "domains row id 68"
+    extra_rule_ref: "Rule #20"
+
+  - id: B1A-M8
+    summary: "Draft + load `catalog_tagline` and `catalog_description` for each PSA module (Rule #20)."
+    finding: "All 4 PSA `domain_modules` rows (86 PSA-PROJECT-DELIVERY, 87 PSA-RESOURCE-MGMT, 88 PSA-TIME-EXPENSE, 89 PSA-PROJECT-FINANCIALS) have empty `catalog_tagline` AND empty `catalog_description`."
+    action: "Drafted copy must route through B2-NEW2 for explicit per-row user approval BEFORE PATCH. On approval: 4 PATCH calls against `/domain_modules?id=eq.<id>`."
+    blocked_by:
+      - {type: user_decision, ref: B2-NEW2}
+    affected_modules: [86, 87, 88, 89]
+    extra_rule_ref: "Rule #20"
+
+  - id: B1A-B10B-IN
+    summary: "Resolve 2 inbound handoffs (787 WORK-MGMT, 515 AGENCY-MGMT) with NULL `target_domain_module_id` and no PSA DMDO for payload."
+    finding: "Handoff 787 (WORK-MGMT->PSA on `work_automation.triggered`, payload data_object 246 `work_automations`) and handoff 515 (AGENCY-MGMT->PSA on `creative_brief.approved`, payload data_object 483 `creative_briefs`) carry NULL `target_domain_module_id`. No PSA module declares any role on either payload."
+    action: "Per B2-S4 outcome: (a) INSERT 2 `consumer + optional` DMDO rows on PSA-PROJECT-DELIVERY (86) for data_objects 246 + 483 + PATCH the 2 handoffs to `target_domain_module_id=86`; OR (b) DELETE handoffs 787 + 515 as mis-modeled."
+    blocked_by:
+      - {type: user_decision, ref: B2-S4}
+    affected_handoffs:
+      - {handoff_id: 787, direction: inbound, source_domain: WORK-MGMT, target_domain: PSA, trigger_event: "work_automation.triggered", payload: work_automations, null_field: target_domain_module_id}
+      - {handoff_id: 515, direction: inbound, source_domain: AGENCY-MGMT, target_domain: PSA, trigger_event: "creative_brief.approved", payload: creative_briefs, null_field: target_domain_module_id}
+
+  - id: B1A-H1
+    summary: "APQC tagging on 26 untagged cross-domain handoffs; 12 already tagged (none approved)."
+    finding: "PSA has 38 cross-domain handoffs. 12 carry `handoff_processes` rows (5 `discovery_substring`: 139, 1128, 132, 1129, 131; 7 `agent_curated`: 1020, 138, 515, 104, 428, 587, 132). 0 `record_status=approved`. 26 cross-domain handoffs remain untagged. Volume target per H1: 19-30 new `agent_curated` rows from this audit."
+    action: "Per-handoff PCF lookup against `/processes?source_framework=eq.apqc_pcf_cross_industry&process_name=ilike.*<term>*` to resolve `process_id` for each candidate listed in 2026-05-30 B1-H1 table (handoffs 1127, 1130, 1016, 1249, 1025, 1023, 1024, 1021, 1022, 1019, 1026, 1017, 1018, 1027, 132 REPLACE, 1129 REPLACE, 104, 137, 587, 787 defer, 428, 515 medium, 513 medium, 179, 1218-1226 HCM batch, 1325). INSERT `handoff_processes` rows with `proposal_source=agent_curated`, `record_status=new`."
+    affected_handoffs:
+      - {handoff_id: 1127, direction: outbound, source_domain: PSA, target_domain: ERP-FIN, trigger_event: "time_entry.approved", payload: time_entries, null_field: null}
+      - {handoff_id: 1130, direction: outbound, source_domain: PSA, target_domain: PA, trigger_event: "project_assignment.utilization_low", payload: project_assignments, null_field: null}
+      - {handoff_id: 1016, direction: outbound, source_domain: PSA, target_domain: HCM, trigger_event: "project_assignment.confirmed", payload: project_assignments, null_field: null}
+      - {handoff_id: 1249, direction: outbound, source_domain: PSA, target_domain: WORK-MGMT, trigger_event: "project_assignment.released", payload: project_assignments, null_field: null}
+      - {handoff_id: 1025, direction: outbound, source_domain: PSA, target_domain: ERP-FIN, trigger_event: "project_task.completed", payload: project_tasks, null_field: null}
+      - {handoff_id: 1023, direction: outbound, source_domain: PSA, target_domain: ATS, trigger_event: "project_resource_allocation.demand_unmet", payload: project_resource_allocations, null_field: null}
+      - {handoff_id: 1024, direction: outbound, source_domain: PSA, target_domain: WORK-MGMT, trigger_event: "project_task.completed", payload: project_tasks, null_field: null}
+      - {handoff_id: 1021, direction: outbound, source_domain: PSA, target_domain: EPM, trigger_event: "project_billing_milestone.slipped", payload: project_billing_milestones, null_field: null}
+      - {handoff_id: 1022, direction: outbound, source_domain: PSA, target_domain: HCM, trigger_event: "project_resource_allocation.committed", payload: project_resource_allocations, null_field: null}
+      - {handoff_id: 1019, direction: outbound, source_domain: PSA, target_domain: ERP-FIN, trigger_event: "project_billing_milestone.reached", payload: project_billing_milestones, null_field: null}
+      - {handoff_id: 1026, direction: outbound, source_domain: PSA, target_domain: HCM, trigger_event: "resource_skill_inventory.updated", payload: resource_skill_inventories, null_field: null}
+      - {handoff_id: 1017, direction: outbound, source_domain: PSA, target_domain: WORK-MGMT, trigger_event: "project_assignment.confirmed", payload: project_assignments, null_field: null}
+      - {handoff_id: 1018, direction: outbound, source_domain: PSA, target_domain: SWP, trigger_event: "project_assignment.released", payload: project_assignments, null_field: null}
+      - {handoff_id: 1027, direction: outbound, source_domain: PSA, target_domain: SWP, trigger_event: "resource_skill_inventory.gap_identified", payload: resource_skill_inventories, null_field: null}
+      - {handoff_id: 132, direction: outbound, source_domain: PSA, target_domain: S2P, trigger_event: "service_project.staffing_required", payload: purchase_requisitions, null_field: null, scope_note: "REPLACE existing weak discovery_substring tag (process 569)"}
+      - {handoff_id: 1129, direction: outbound, source_domain: PSA, target_domain: CRM, trigger_event: "service_project.completed", payload: service_projects, null_field: null, scope_note: "REPLACE existing weak discovery_substring tag (process 569)"}
+      - {handoff_id: 137, direction: inbound, source_domain: CRM, target_domain: PSA, trigger_event: "crm_opportunity.closed_won", payload: crm_opportunities, null_field: null}
+      - {handoff_id: 179, direction: inbound, source_domain: WORK-MGMT, target_domain: PSA, trigger_event: "work_project.completed", payload: work_projects, null_field: null}
+      - {handoff_id: 513, direction: inbound, source_domain: AGENCY-MGMT, target_domain: PSA, trigger_event: "agency_time_entry.submitted", payload: agency_time_entries, null_field: null}
+      - {handoff_id: 787, direction: inbound, source_domain: WORK-MGMT, target_domain: PSA, trigger_event: "work_automation.triggered", payload: work_automations, null_field: null, scope_note: "defer to Discover (no clean PCF match)"}
+      - {handoff_id: 1218, direction: inbound, source_domain: HCM, target_domain: PSA, trigger_event: "employee.created", payload: employees, null_field: null}
+      - {handoff_id: 1219, direction: inbound, source_domain: HCM, target_domain: PSA, trigger_event: "employee.promoted", payload: employees, null_field: null}
+      - {handoff_id: 1220, direction: inbound, source_domain: HCM, target_domain: PSA, trigger_event: "employee.terminated", payload: employees, null_field: null}
+      - {handoff_id: 1221, direction: inbound, source_domain: HCM, target_domain: PSA, trigger_event: "attrition_risk.high", payload: employees, null_field: null}
+      - {handoff_id: 1222, direction: inbound, source_domain: HCM, target_domain: PSA, trigger_event: "employee.terminated", payload: employees, null_field: null}
+      - {handoff_id: 1223, direction: inbound, source_domain: HCM, target_domain: PSA, trigger_event: "job_profile.published", payload: job_profiles, null_field: null}
+      - {handoff_id: 1224, direction: inbound, source_domain: HCM, target_domain: PSA, trigger_event: "job_profile.updated", payload: job_profiles, null_field: null}
+      - {handoff_id: 1225, direction: inbound, source_domain: HCM, target_domain: PSA, trigger_event: "job_profile.activated", payload: job_profiles, null_field: null}
+      - {handoff_id: 1226, direction: inbound, source_domain: HCM, target_domain: PSA, trigger_event: "job_profile.retired", payload: job_profiles, null_field: null}
+      - {handoff_id: 1325, direction: inbound, source_domain: WORK-MGMT, target_domain: PSA, trigger_event: "work_item.completed", payload: work_items, null_field: null}
+    extra_volume_target: "19-30 new agent_curated rows (target 0.5N-0.8N of N=38)"
+
+  - id: B1A-S1
+    summary: "M5/M7 boundary fix on `revenue_recognition_records` lifecycle state 403 (carry from 2026-05-30 B1-S1)."
+    finding: "Lifecycle state 403 `recognized` on data_object 109 `revenue_recognition_records` carries `requires_permission=true` AND `domain_module_id=89` (PSA-PROJECT-FINANCIALS). Data_object 109 is mastered by SUB-MGMT-SUBSCRIPTIONS (module 167, domain 97). Workflow-gate permission would materialize as `psa-project-financials:recognize_revenue_recognition_record` on a foreign master."
+    action: "Per B2-S3 outcome: (a) PATCH `data_object_lifecycle_states` row 403 `domain_module_id` to a SUB-MGMT module id (or NULL for always-reachable). (b) INSERT second `domain_module_data_objects` row on PSA module 89 with `role=master + necessity=required` for data_object 109 (multi-master slice decomposition; PSA owns project-revenue slice). (c) PATCH state to leave-as-is and accept wrong-prefix permission."
+    blocked_by:
+      - {type: user_decision, ref: B2-S3}
+    affected_masters:
+      - {data_object_id: 109, name: revenue_recognition_records, target_module_id: 89, workflow: "ASC 606 percentage-of-completion / milestone billing"}
+
+  - id: B1A-S7
+    summary: "Rule #15 notes-pollution sweep (carry from 2026-05-30 B1-S7)."
+    finding: "~20 rows across PSA-touching tables carry auto-generated prose matching Rule #15 forbidden patterns. `handoffs.notes` on 16 rows (131, 132, 515, 787, 1016, 1019, 1020, 1021, 1022, 1024, 1025, 1026, 1127, 1128, 1130, 179). `data_objects.notes` on 5 of 6 PSA masters (216, 217, 218, 219, 725, 726) carries `Pattern flags considered (2026-05-26 audit)...` prose plus config-shape exemption on 725. `domain_data_objects.notes` on 8 rows (162, 109, 31, 33, 100, 66, 210, 244) carries consumer-rationale prose. `domain_module_data_objects.notes` on 3 rows (633, 634, 635) carries optional-rationale prose."
+    action: "Per B2-S1 outcome: (a) PATCH all ~20 rows' `notes` columns to empty string and append a Rule #15 incident entry to `references/skill-changelog.md`. (b) Confirm load-time approval per row; leave intact. (c) Per-row review."
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    extra_affected_tables: [handoffs, data_objects, domain_data_objects, domain_module_data_objects]
+
+  - id: B1A-S8
+    summary: "Tool 1035 `recognize_project_revenue` boundary fix (carry from 2026-05-30 B1-S8)."
+    finding: "Tool 1035 has `operation_kind=mutate` with `data_object_id=109` (SUB-MGMT-mastered). F4 invariant satisfied formally, but PSA's agent directly mutates a SUB-MGMT-mastered record. Architectural symmetry with B1A-S1."
+    action: "Per B2-S3 outcome: (a) PATCH tool 1035 to `operation_kind=compute` with `data_object_id=NULL` if PSA's role demotes to proposing rev-rec records that SUB-MGMT records. (b) Leave as-is if PSA co-masters the slice (B2-S3 option b)."
+    blocked_by:
+      - {type: user_decision, ref: B2-S3}
+
+b1b:
+  - id: B1B-S5
+    summary: "Report-only: 9 outbound PSA handoffs with NULL `target_domain_module_id` (carry from 2026-05-30 B1-S5)."
+    finding: "Owed by ERP-FIN (131, 1127, 1128, 1025, 1019), PA (1130), HCM (1016, 1022, 1026), S2P (132), EPM (1021). Not PSA's local fix."
+    blocked_by:
+      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: "B10b on outbound from PSA"}
+      - {type: domain_audit, blocking_domain: PA, milestone: "B10b on outbound from PSA"}
+      - {type: domain_audit, blocking_domain: HCM, milestone: "B10b on outbound from PSA"}
+      - {type: domain_audit, blocking_domain: S2P, milestone: "B10b on outbound from PSA"}
+      - {type: domain_audit, blocking_domain: EPM, milestone: "B10b on outbound from PSA"}
+    affected_handoffs:
+      - {handoff_id: 131, direction: outbound, source_domain: PSA, target_domain: ERP-FIN, trigger_event: "revenue.recognised", payload: revenue_recognition_records, null_field: target_domain_module_id}
+      - {handoff_id: 1127, direction: outbound, source_domain: PSA, target_domain: ERP-FIN, trigger_event: "time_entry.approved", payload: time_entries, null_field: target_domain_module_id}
+      - {handoff_id: 1128, direction: outbound, source_domain: PSA, target_domain: ERP-FIN, trigger_event: "expense.approved", payload: expense_reports, null_field: target_domain_module_id}
+      - {handoff_id: 1025, direction: outbound, source_domain: PSA, target_domain: ERP-FIN, trigger_event: "project_task.completed", payload: project_tasks, null_field: target_domain_module_id}
+      - {handoff_id: 1019, direction: outbound, source_domain: PSA, target_domain: ERP-FIN, trigger_event: "project_billing_milestone.reached", payload: project_billing_milestones, null_field: target_domain_module_id}
+      - {handoff_id: 1130, direction: outbound, source_domain: PSA, target_domain: PA, trigger_event: "project_assignment.utilization_low", payload: project_assignments, null_field: target_domain_module_id}
+      - {handoff_id: 1016, direction: outbound, source_domain: PSA, target_domain: HCM, trigger_event: "project_assignment.confirmed", payload: project_assignments, null_field: target_domain_module_id}
+      - {handoff_id: 1022, direction: outbound, source_domain: PSA, target_domain: HCM, trigger_event: "project_resource_allocation.committed", payload: project_resource_allocations, null_field: target_domain_module_id}
+      - {handoff_id: 1026, direction: outbound, source_domain: PSA, target_domain: HCM, trigger_event: "resource_skill_inventory.updated", payload: resource_skill_inventories, null_field: target_domain_module_id}
+      - {handoff_id: 132, direction: outbound, source_domain: PSA, target_domain: S2P, trigger_event: "service_project.staffing_required", payload: purchase_requisitions, null_field: target_domain_module_id}
+      - {handoff_id: 1021, direction: outbound, source_domain: PSA, target_domain: EPM, trigger_event: "project_billing_milestone.slipped", payload: project_billing_milestones, null_field: target_domain_module_id}
+
+  - id: B1B-S6
+    summary: "Report-only: 5 inbound PSA handoffs with NULL `source_domain_module_id` (carry from 2026-05-30 B1-S6)."
+    finding: "Owed by WFM (104, 428), EXPENSE (139), VMS (587), AGENCY-MGMT (513). Not PSA's local fix; AGENCY-MGMT 515 also has NULL source but is also a PSA local fix on the target side (B1A-B10B-IN)."
+    blocked_by:
+      - {type: domain_audit, blocking_domain: WFM, milestone: "B10b on inbound to PSA"}
+      - {type: domain_audit, blocking_domain: EXPENSE, milestone: "B10b on inbound to PSA"}
+      - {type: domain_audit, blocking_domain: VMS, milestone: "B10b on inbound to PSA"}
+      - {type: domain_audit, blocking_domain: AGENCY-MGMT, milestone: "B10b on inbound to PSA"}
+    affected_handoffs:
+      - {handoff_id: 104, direction: inbound, source_domain: WFM, target_domain: PSA, trigger_event: "time_entry.approved", payload: time_entries, null_field: source_domain_module_id}
+      - {handoff_id: 428, direction: inbound, source_domain: WFM, target_domain: PSA, trigger_event: "work_schedule.published", payload: work_schedules, null_field: source_domain_module_id}
+      - {handoff_id: 139, direction: inbound, source_domain: EXPENSE, target_domain: PSA, trigger_event: "expense.approved", payload: expense_reports, null_field: source_domain_module_id}
+      - {handoff_id: 587, direction: inbound, source_domain: VMS, target_domain: PSA, trigger_event: "contingent_timesheet.approved", payload: contingent_timesheets, null_field: source_domain_module_id}
+      - {handoff_id: 513, direction: inbound, source_domain: AGENCY-MGMT, target_domain: PSA, trigger_event: "agency_time_entry.submitted", payload: agency_time_entries, null_field: source_domain_module_id}
+
+  - id: B1B-SUB-MGMT-REVREC
+    summary: "Conditional dependency: if B2-S3 lands option (a), confirm SUB-MGMT-owns-revrec home module."
+    finding: "If user resolves B2-S3 as option (a) (PSA contributor + PATCH state 403 `domain_module_id` to SUB-MGMT side), the receiving SUB-MGMT module must be named. SUB-MGMT-SUBSCRIPTIONS is module 167; whether a sibling SUB-MGMT-REVREC exists or needs to be created is a SUB-MGMT scope question."
+    blocked_by:
+      - {type: user_decision, ref: B2-S3}
+      - {type: domain_audit, blocking_domain: SUB-MGMT, milestone: "rev-rec module placement"}
+
+b2:
+  - id: B2-S1
+    summary: "Rule #15 notes-pollution sweep approval (carry from 2026-05-30)."
+    question: "Were the ~20 PSA-touching rows' `notes` columns user-approved at load time, or auto-populated?"
+    options: ["(a) Confirm auto-populated; revert all to empty string and log Rule #15 incident", "(b) Confirm user-approved; leave intact", "(c) Per-row review"]
+    why: "Rule #15 default is revert; the notes contain dated tags (`Pattern flags considered (2026-05-26 audit)`) suggesting auto-population, but the audit cannot confirm load-time approval status."
+
+  - id: B2-S2
+    summary: "B4 pattern-flag positive re-evaluation per Rule #12 (carry from 2026-05-30)."
+    question: "Which pattern flags should be set to `true` on the 6 PSA masters?"
+    options: ["per-flag yes/no on (a) project_assignments.has_personal_content, (b) resource_skill_inventories.has_personal_content, (c) project_billing_milestones.has_submit_lock, (d) service_projects.has_single_approver, and the remaining flag/master combinations"]
+    why: "Pattern flags are workflow-shape judgments the user owns; the audit re-evaluates and proposes, the user decides."
+
+  - id: B2-S3
+    summary: "M5/M7 boundary architectural choice on `revenue_recognition_records` (carry from 2026-05-30)."
+    question: "How should PSA's relationship to SUB-MGMT-mastered `revenue_recognition_records` be modeled?"
+    options: ["(a) PSA stays contributor; PATCH state 403 `domain_module_id` to a SUB-MGMT module (or NULL); PATCH tool 1035 to `compute` with NULL data_object", "(b) PSA co-masters the project-revenue slice; INSERT second `master` DMDO row on module 89 + slice decomposition recorded here", "(c) Leave as-is and accept wrong-prefix permission materialization"]
+    why: "Architectural intent question. The audit cannot decide whether PSA materializing the workflow on a foreign master was intent or mistake at original load time."
+
+  - id: B2-S4
+    summary: "Handling for inbound handoffs 787 + 515 with NULL target_module + no PSA DMDO (carry from 2026-05-30)."
+    question: "Per row: does PSA legitimately consume `work_automations` (787) and `creative_briefs` (515)?"
+    options: ["(a) INSERT consumer + optional DMDO rows on PSA-PROJECT-DELIVERY (86) for both payloads + PATCH handoffs", "(b) DELETE handoffs as mis-modeled", "(c) Per-row read"]
+
+  - id: B2-S5
+    summary: "CRM -> PSA renewal inbound (carry from 2026-05-30)."
+    question: "Are renewal opportunities distinct from `closed_won` in CRM, requiring their own PSA-facing handoff?"
+    options: ["(a) Same shape as existing 137; no new handoff", "(b) Author distinct `crm_renewal_opportunity.created` handoff to PSA-PROJECT-DELIVERY (86)"]
+
+  - id: B2-NEW1
+    summary: "`resource_skill_inventories` config-shape exemption recording mechanism."
+    question: "Where should the Rule #12 config-shape exemption claim for master 725 live once the notes-pollution sweep (B2-S1) reverts the existing `data_objects.notes` annotation?"
+    options: ["(a) Confirm exemption; let this audit's history.md narrative be the authoritative record. On B2-S1 cleanup, the notes revert to empty without a replacement annotation.", "(b) Reject exemption; load a state machine for 725."]
+    why: "Rule #12 + Rule #15 interaction: the config-shape exemption pattern is legitimate, but the historical mechanism (writing the exemption to `data_objects.notes`) is RESCINDED. The exemption claim needs an authoritative home outside the notes column."
+
+  - id: B2-NEW2
+    summary: "A4 + M8 catalog UX copy drafting + approval (Rule #20)."
+    question: "How should the buyer-voice copy for `domains.catalog_tagline` + `domains.catalog_description` + 4 modules' `catalog_tagline` + `catalog_description` be authored?"
+    options: ["(a) Agent drafts 5 tagline + description pairs in a follow-up Bucket-2 turn; user approves / rewrites / declines per row before PATCH", "(b) User supplies copy directly", "(c) Defer to a marketing pass; leave fields empty for now"]
+    why: "Rule #20 forbids auto-population without explicit per-row user approval; Rule #18 forbids vendor names in the copy; the agent can draft but not write without signoff."
+
+b3:
+  - id: B3-engagement_quotes
+    candidate: "engagement_quotes (or services_estimates)"
+    rationale: "Most PSA flagships model the estimate as a distinct record from the project with its own lifecycle (drafted, sent, approved, won, lost). The ENGAGE-CPQ capability (245) is realized on PSA-PROJECT-DELIVERY but no master entity exists."
+    vendor_evidence:
+      - "Certinia PS Cloud (Project Estimator)"
+      - "Kantata (Project Pricing)"
+      - "Deltek Vantagepoint (Pursuit / Estimate)"
+      - "Microsoft Dynamics 365 Project Operations (Project Quote)"
+    proposed_module: "PSA-PROJECT-DELIVERY or new PSA-ENGAGEMENT-QUOTING module"
+
+  - id: B3-project_change_requests
+    candidate: "project_change_requests"
+    rationale: "All flagship PSAs model change orders as first-class records modifying scope, schedule, budget. Distinct from `project_tasks` and from contract amendments."
+    vendor_evidence: ["Kantata", "Certinia PS Cloud", "Deltek Vantagepoint", "Oracle NetSuite OpenAir", "Oracle NetSuite", "Microsoft Dynamics 365 Project Operations"]
+    proposed_module: "PSA-PROJECT-DELIVERY"
+
+  - id: B3-project_risks
+    candidate: "project_risks (or risk_register_items)"
+    rationale: "First-class risk records with mitigation plans, distinct from project tasks."
+    vendor_evidence:
+      - "Kantata Risk Register"
+      - "Certinia Risk Management"
+      - "Deltek Vantagepoint (architecture/engineering vertical)"
+      - "Microsoft Dynamics 365 Project Operations (Risk)"
+    proposed_module: "PSA-PROJECT-DELIVERY"
+
+  - id: B3-project_status_reports
+    candidate: "project_status_reports"
+    rationale: "Recurring report records, distinct from ad-hoc notifications."
+    vendor_evidence: ["Kantata Status Reports", "Certinia Project Status", "Rocketlane Customer-Facing Status Updates"]
+    proposed_module: "PSA-PROJECT-DELIVERY"
+
+  - id: B3-project_deliverables
+    candidate: "project_deliverables"
+    rationale: "Distinct from `project_tasks` (which are the work) and from `project_billing_milestones` (which are the billing trigger). A deliverable is the artifact; a milestone may or may not be tied to one."
+    vendor_evidence: ["Microsoft Dynamics 365 Project Operations Project Deliverables", "Workday Projects Deliverables", "Deltek Vantagepoint"]
+    proposed_module: "PSA-PROJECT-DELIVERY"
+
+  - id: B3-billing_rate_cards
+    candidate: "billing_rate_cards (or rate_cards)"
+    rationale: "Every PSA flagship has rate-card management as a first-class entity (effective dates, currency, role-level, customer-level overrides). The existing tool layer `compute_project_revenue_recognition` and the financials skill imply rate-card consumption but no master entity exists."
+    vendor_evidence: ["Kantata", "Certinia PS Cloud", "Workday Projects", "Oracle NetSuite", "Deltek Vantagepoint", "Microsoft Dynamics 365 Project Operations"]
+    proposed_module: "PSA-PROJECT-FINANCIALS"
+
+  - id: B3-project_budgets
+    candidate: "project_budgets"
+    rationale: "Distinct from `project_billing_milestones` (budget is plan; milestones are billing schedule). Often versioned."
+    vendor_evidence: ["Kantata Project Budget", "Certinia Project Plan", "Workday Projects Budget Plan", "Oracle NetSuite Project Budgets"]
+    proposed_module: "PSA-PROJECT-FINANCIALS"
+
+  - id: B3-project_invoices
+    candidate: "project_invoices (staged)"
+    rationale: "Staged PSA-side invoice record before push to ERP-FIN's AR module. ERP-FIN masters `invoices` canonically; PSA may need an `embedded_master` or boundary `project_invoices` (boundary-object pattern)."
+    vendor_evidence: ["Kantata Invoice Workbench", "Certinia Bill Run", "Oracle NetSuite Project Invoice", "BigTime Invoice"]
+    proposed_module: "PSA-PROJECT-FINANCIALS"
+
+  - id: B3-staffing_requests
+    candidate: "staffing_requests"
+    rationale: "Distinct from `project_assignments` (request is demand; assignment is fulfillment). Currently the request->assignment flow is implicit via `service_project.staffing_required` event with no request entity."
+    vendor_evidence: ["Kantata Resource Request", "Certinia Resource Request", "Deltek Vantagepoint Resource Request", "Microsoft Dynamics 365 Project Operations Resource Request"]
+    proposed_module: "PSA-RESOURCE-MGMT"
+
+  - id: B3-capacity_plans
+    candidate: "capacity_plans"
+    rationale: "Aggregated forward-looking capacity by skill / role / region. Distinct from `project_resource_allocations` (allocations are per-project; capacity is aggregate)."
+    vendor_evidence: ["Kantata Capacity Planning", "Certinia Resource Forecast", "BigTime Resource Forecast", "Replicon Polaris Capacity"]
+    proposed_module: "PSA-RESOURCE-MGMT (boundary with SWP possible)"
+
+  - id: B3-utilization_reports
+    candidate: "utilization_reports (or utilization_records)"
+    rationale: "UTILIZATION capability is loaded (81 on PSA-RESOURCE-MGMT) but no master entity captures the utilization record itself (period, resource, billable hours, target, actual, variance)."
+    vendor_evidence: ["Kantata", "Certinia", "BigTime", "Replicon Polaris", "Oracle NetSuite OpenAir"]
+    proposed_module: "PSA-RESOURCE-MGMT"
+
+  - id: B3-project_profitability_records
+    candidate: "project_profitability_records"
+    rationale: "Distinct from rev-rec; the running-profit calculation per project (revenue minus cost minus admin)."
+    vendor_evidence: ["Certinia Project Profitability", "Kantata Margin Tracker", "Deltek Project Profitability", "Microsoft Dynamics 365 Project Operations Project Profitability"]
+    proposed_module: "PSA-PROJECT-FINANCIALS"
+
+  - id: B3-mod-engagement-quoting
+    candidate: "PSA-ENGAGEMENT-QUOTING module split"
+    rationale: "If `engagement_quotes`, `services_estimates`, rate-card management, and pursuit-tracking are loaded, a 5th module makes more sense than overloading PSA-PROJECT-DELIVERY. Capability count would grow from 10 to 12+. ENGAGE-CPQ (245) would move to this new module."
+    vendor_evidence: ["Kantata", "Certinia PS Cloud", "Deltek Vantagepoint", "Microsoft Dynamics 365 Project Operations"]
+    proposed_module: "(new) PSA-ENGAGEMENT-QUOTING"
+
+  - id: B3-mod-profitability-analytics
+    candidate: "PSA-PROFITABILITY-ANALYTICS module split"
+    rationale: "Project profitability + utilization analytics could split from PSA-PROJECT-FINANCIALS (which keeps the billing + rev-rec workflow). Mirrors the Kantata / Certinia split between Billing and Analytics."
+    vendor_evidence: ["Kantata", "Certinia PS Cloud"]
+    proposed_module: "(new) PSA-PROFITABILITY-ANALYTICS"
+
+  - id: B3-reg-dcaa
+    candidate: "DCAA applicability"
+    rationale: "Mandatory for US government contractor T&M billing rules. Current `domain_regulations` for PSA covers only ASC 606."
+    vendor_evidence: ["Deltek Vantagepoint (gov-contractor PSA focus)", "Unanet PSA (gov-contractor specialist)"]
+    proposed_module: "PSA domain-level regulation"
+
+  - id: B3-reg-sox
+    candidate: "SOX significant-engagement attestation"
+    rationale: "Mandatory for US publicly-listed companies with material services contracts. Already an ASC 606 sibling concern."
+    vendor_evidence: ["Workday Projects (enterprise public-co PSA)", "SAP S/4HANA Professional Services"]
+    proposed_module: "PSA domain-level regulation"
+
+  - id: B3-reg-gdpr
+    candidate: "GDPR consultant PII"
+    rationale: "Mandatory for EU consultant PII in skill profiles and project-level personal data."
+    vendor_evidence: ["Workday Projects", "Certinia PS Cloud", "Microsoft Dynamics 365 Project Operations"]
+    proposed_module: "PSA domain-level regulation"

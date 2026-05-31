@@ -1,0 +1,161 @@
+schema_version: 2
+domain: WSC
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-A4
+    summary: "WSC domain row 75 has empty catalog_tagline and catalog_description (Rule #20 A4 hard fail)."
+    finding: "domains.catalog_tagline and domains.catalog_description are both empty strings on row id=75 (WSC). A4 requires a buyer-voice single-sentence tagline and a 1-3 paragraph buyer-voice description (workflow + value), distinct from the analyst-voice description that already exists on the row. Rule #20 permits backfill on empty values via draft, review, write but forbids overwrite of any non-empty value without explicit per-row user approval."
+    action: "Draft both catalog_tagline and catalog_description in buyer voice (channel-based persistent chat, voice/video huddles, external guest collaboration). Surface to user for review BEFORE writing. PATCH /domains?id=eq.75 with the user-approved exact wording."
+    affected_entities:
+      - WSC
+    extra_table: domains
+    extra_columns: [catalog_tagline, catalog_description]
+
+  - id: B1A-M8
+    summary: "All 3 WSC modules (115, 116, 117) have empty catalog_tagline and catalog_description (Rule #20 M8 hard fail)."
+    finding: "Per-module catalog UX fields are empty on every domain_modules row hosted on WSC: id=115 WSC-CHANNELS-CONVERSATIONS, id=116 WSC-HUDDLES-VOICE, id=117 WSC-EXTERNAL-COLLAB. M8 requires buyer-voice tagline + 1-3 paragraph buyer-voice description on every module; the existing analyst-voice description column is separate."
+    action: "Draft tagline + description per module in buyer voice. Surface drafts to user for per-row review BEFORE writing. PATCH each domain_modules row with the user-approved exact wording."
+    affected_modules: [115, 116, 117]
+    extra_table: domain_modules
+    extra_columns: [catalog_tagline, catalog_description]
+
+  - id: B1A-B9b
+    summary: "Zero intra-domain cross-module handoffs on WSC (B9b hard fail, carried from 2026-05-30 B1-S3)."
+    finding: "WSC has 3 modules with two cross-module data_object_relationships that imply intra-domain handoff rows: row 281 (chat_channels 564 hosts chat_huddles 567, anchored 115 to 116) and row 283 (chat_channels 564 invites external_guest_invitations 569, anchored 115 to 117). No corresponding handoffs rows exist (zero intra-domain handoffs with source_domain_id=target_domain_id=75). Prior audit's B1-S3 was deferred in the 2026-05-31 fix-loop because new handoffs INSERTs were outside the technical scope."
+    action: "INSERT 2 handoffs rows. (a) {source_domain_id: 75, target_domain_id: 75, source_domain_module_id: 115, target_domain_module_id: 116, trigger_event_id: 914, data_object_id: 567, integration_pattern: 'lifecycle_progression', friction_level: 'low', notes: ''}. (b) {source_domain_id: 75, target_domain_id: 75, source_domain_module_id: 115, target_domain_module_id: 117, trigger_event_id: 916, data_object_id: 569, integration_pattern: 'lifecycle_progression', friction_level: 'low', notes: ''}."
+    affected_handoffs:
+      - {handoff_id: null, direction: intra, source_domain: WSC, target_domain: WSC, trigger_event: "chat_huddle.started", payload: "chat_huddles", null_field: "row missing", enumeration_status: proposed_insert, extra_source_module: WSC-CHANNELS-CONVERSATIONS, extra_target_module: WSC-HUDDLES-VOICE}
+      - {handoff_id: null, direction: intra, source_domain: WSC, target_domain: WSC, trigger_event: "external_guest.invited", payload: "external_guest_invitations", null_field: "row missing", enumeration_status: proposed_insert, extra_source_module: WSC-CHANNELS-CONVERSATIONS, extra_target_module: WSC-EXTERNAL-COLLAB}
+    affected_modules: [115, 116, 117]
+
+b1b:
+  - id: B1B-H790
+    summary: "WSC inbound handoff 790 has no handoff_processes row; deferred to Discover Pass 3 as no clean APQC PCF match (bot/automation-post workflow)."
+    finding: "handoff_id=790 (WORK-MGMT WORK-MGMT-AUTOMATION 149 to WSC-CHANNELS-CONVERSATIONS 115, trigger_event 870 work_automation.triggered, payload work_automations 246) has no handoff_processes row. The 2026-05-30 audit explicitly identified this as having no clean cross-industry APQC PCF activity match because the WSC-side bot/automation post is a modern digital concept absent from the PCF taxonomy. The 2026-05-31 fix-loop confirmed the deferral."
+    blocked_by:
+      - {type: catalog_addition, scope: processes, trigger: "Discover Pass 3 authors custom (non-APQC) process row for bot/automation chat-post workflow"}
+    affected_handoffs:
+      - {handoff_id: 790, direction: inbound, source_domain: WORK-MGMT, target_domain: WSC, trigger_event: "work_automation.triggered", payload: "work_automations", null_field: "handoff_processes row missing"}
+
+b2:
+  - id: B2-S1
+    summary: "Rule #15 notes-pollution on 10 WSC cross-domain handoffs; awaiting user confirmation to revert."
+    question: "Were the handoffs.notes strings on rows 828, 829, 830, 831, 832, 833, 834, 836 (variants of 'target NULL until X is modularized') and row 790 (now-stale 'target NULL until WSC declares a consumer DMDO on work_automations') user-approved at load time, or were they auto-populated by the loader under the rescinded write-time license? Rule #15 requires per-row user approval to keep them and per-row user approval to revert."
+    options:
+      - "Approve revert of all 10 rows to empty string and log a Rule-#15 incident entry in references/skill-changelog.md."
+      - "Leave in place (confirm load-time user approval)."
+      - "Partial: revert the 9 stale 'X is modularized' rows; decide handoff 790's wording separately."
+    why: "Pattern matches the forbidden 'until X is modularized' anti-pattern verbatim, strongly suggesting auto-population, but Rule #15 requires per-row user confirmation rather than agent-side inference. Handoff 790's note is additionally factually stale since B1-S4 wired the DMDO and target module."
+    affected_handoffs:
+      - {handoff_id: 828, direction: outbound, source_domain: WSC, target_domain: ECM, trigger_event: "chat_attachment.shared", payload: "chat_message_attachments", null_field: "notes field carries rescinded provenance"}
+      - {handoff_id: 829, direction: outbound, source_domain: WSC, target_domain: ECM, trigger_event: "chat_channel.archived", payload: "chat_channels", null_field: "notes field carries rescinded provenance"}
+      - {handoff_id: 830, direction: outbound, source_domain: WSC, target_domain: IGA, trigger_event: "external_guest.invited", payload: "external_guest_invitations", null_field: "notes field carries rescinded provenance"}
+      - {handoff_id: 831, direction: outbound, source_domain: WSC, target_domain: IGA, trigger_event: "channel_member.added", payload: "channel_members", null_field: "notes field carries rescinded provenance"}
+      - {handoff_id: 832, direction: outbound, source_domain: WSC, target_domain: DLP, trigger_event: "chat_message.posted", payload: "chat_messages", null_field: "notes field carries rescinded provenance"}
+      - {handoff_id: 833, direction: outbound, source_domain: WSC, target_domain: CCAAS, trigger_event: "chat_thread.escalated_to_ticket", payload: "chat_threads", null_field: "notes field carries rescinded provenance"}
+      - {handoff_id: 834, direction: outbound, source_domain: WSC, target_domain: ITSM, trigger_event: "chat_thread.escalated_to_ticket", payload: "service_incidents", null_field: "notes field carries rescinded provenance"}
+      - {handoff_id: 836, direction: outbound, source_domain: WSC, target_domain: IGA, trigger_event: "external_guest.access_revoked", payload: "external_guest_invitations", null_field: "notes field carries rescinded provenance"}
+      - {handoff_id: 790, direction: inbound, source_domain: WORK-MGMT, target_domain: WSC, trigger_event: "work_automation.triggered", payload: "work_automations", null_field: "notes field carries stale-and-incorrect provenance after B1-S4 fix"}
+
+  - id: B2-S2
+    summary: "Rule #15 notes-pollution on 5 WSC data_objects masters carrying rescinded Rule #12 config-shape exemption text."
+    question: "Were the data_objects.notes strings on chat_messages 565, chat_threads 566, channel_members 568, chat_message_attachments 570, channel_file_shares 571 user-approved at load time, or auto-populated under the rescinded Rule #12 license? Rule #15 RESCINDED the prior license to write the config-shape exemption to data_objects.notes."
+    options:
+      - "Approve revert of 5 rows to empty string; track the config-shape exemption decisions in this history.md narrative going forward."
+      - "Leave in place (confirm load-time user approval)."
+    affected_masters:
+      - {data_object_id: 565, name: "chat_messages", target_module_id: 115, workflow: "config-shape exemption text"}
+      - {data_object_id: 566, name: "chat_threads", target_module_id: 115, workflow: "config-shape exemption text"}
+      - {data_object_id: 568, name: "channel_members", target_module_id: 115, workflow: "config-shape exemption text"}
+      - {data_object_id: 570, name: "chat_message_attachments", target_module_id: 115, workflow: "config-shape exemption text"}
+      - {data_object_id: 571, name: "channel_file_shares", target_module_id: 115, workflow: "config-shape exemption text"}
+
+  - id: B2-S3
+    summary: "Rule #15 notes-pollution on 6 skill_tools rows across WSC system skills 174/175/176."
+    question: "Of the 6 populated skill_tools.notes rows, were any user-approved at load? The F7 channel-primitive justification on post_chat_message (skill 174, tool 40) is the row Rule #15 most directly invites a user-approved wording for; the other 5 (2 workflow-gate prefixes, 3 notify_person workflow-context lines on skills 174/175/176) are typical auto-population patterns."
+    options:
+      - "Approve revert of all 6 rows to empty string. For the F7 row, record the justification in this history.md instead."
+      - "Leave in place (confirm load-time user approval)."
+      - "Partial: revert 5 non-F7 rows; preserve F7 with user-approved exact wording (user supplies the string)."
+    why: "F7 mandates a per-row justification for channel-primitive linkage; Rule #15 requires the wording be user-approved per row."
+    extra_skill_tools:
+      - {skill_id: 174, tool_id: 40, tool_name: "post_chat_message", note_kind: "F7 channel-primitive justification"}
+      - {skill_id: 174, tool_id: 913, tool_name: "notify_person", note_kind: "workflow-context"}
+      - {skill_id: 174, tool_id: 971, tool_name: "archive_chat_channel", note_kind: "workflow-gate prefix"}
+      - {skill_id: 175, tool_id: 913, tool_name: "notify_person", note_kind: "workflow-context"}
+      - {skill_id: 176, tool_id: 913, tool_name: "notify_person", note_kind: "workflow-context"}
+      - {skill_id: 176, tool_id: 976, tool_name: "revoke_guest_access", note_kind: "workflow-gate prefix"}
+
+  - id: B2-S4
+    summary: "Pattern flag re-evaluation on WSC masters per Rule #12 (carried)."
+    question: "Should chat_channels.has_personal_content flip to true (private channels and DMs surface)? Should chat_channels.has_submit_lock flip to true (archived channels reject new posts)? Should channel_members.has_personal_content flip to true (sensitive-channel membership lists)?"
+    options:
+      - "Per-flag yes/no answers from the user."
+      - "Leave defaults (all false on chat_channels, channel_members, channel_file_shares)."
+    why: "Pattern flags are workflow-shape judgments the user owns; Rule #15 forbids recording the reasoning in notes."
+    affected_masters:
+      - {data_object_id: 564, name: "chat_channels", target_module_id: 115, workflow: "candidate flips: has_personal_content, has_submit_lock"}
+      - {data_object_id: 568, name: "channel_members", target_module_id: 115, workflow: "candidate flip: has_personal_content"}
+
+  - id: B2-S5
+    summary: "Microsoft Viva Connections links to WSC at coverage_level=partial; possibly scope creep (Viva is INTRANET 126)."
+    question: "Should the solution_domains row linking solution 466 (Microsoft Viva Connections) to WSC at coverage_level='partial' remain, or be deleted (Viva moves to INTRANET-only)?"
+    options:
+      - "DELETE the solution_domains row (Viva Connections becomes INTRANET-only)."
+      - "Leave as partial (the embedded Microsoft Teams chat surface inside Viva justifies the partial link)."
+    why: "Microsoft Teams chat is already linked as primary (solution 360, the correct WSC vehicle). The partial link reads as scope creep onto WSC from an INTRANET-shaped product."
+    vendor_evidence:
+      - {vendor: "Microsoft Viva Connections", evidence: "secondary"}
+
+  - id: B2-S6
+    summary: "WSC role bundle drift: EMPLOYEE-COLLAB-USER missing wsc-external-collab grant; IT-EXTERNAL-COLLAB-STEWARD missing wsc-huddles-voice grant."
+    question: "Should EMPLOYEE-COLLAB-USER (10064) get a wsc-external-collab:read or :manage row (employees self-serve guest invites)? Should IT-EXTERNAL-COLLAB-STEWARD (10063) get any row on WSC-HUDDLES-VOICE (116)?"
+    options:
+      - "ADD wsc-external-collab:read (or :manage) to EMPLOYEE-COLLAB-USER."
+      - "Leave (guest invites admin-only by intent, huddles not the steward's surface)."
+      - "Different mapping (user picks per-org)."
+    why: "Path A (role_modules) declares the surfaces each role touches; Path B (role_permissions via permissions.domain_module_id) declares actual granted access. The two should agree. Today the steward holds role_modules on 115 + 117 but role_permissions on 115 + 117 + nothing on 116, which is internally consistent. The employee role holds role_modules on 115 + 116 but role_permissions on 115 + 116 + nothing on 117, consistent. The question is whether the intent is correct or whether the missing row reflects an oversight."
+
+b3:
+  - id: B3-S1
+    candidate: chat_reactions
+    rationale: "Every flagship workstream collaboration platform (Slack, Microsoft Teams, Google Chat, Mattermost, Cisco Webex Teams) carries a first-class emoji-reaction surface that drives engagement analytics, message-pinning heuristics, and reaction-policy gates. Current WSC footprint has no master for this."
+    vendor_evidence:
+      - {vendor: "Slack", evidence: "1st_class"}
+      - {vendor: "Microsoft Teams", evidence: "1st_class"}
+      - {vendor: "Google Chat", evidence: "1st_class"}
+      - {vendor: "Mattermost", evidence: "1st_class"}
+      - {vendor: "Cisco Webex Teams", evidence: "1st_class"}
+    proposed_module: "WSC-CHANNELS-CONVERSATIONS (115)"
+
+  - id: B3-S2
+    candidate: direct_messages
+    rationale: "Direct messages (1:1 and group DMs) are a structurally distinct surface from channel-based messaging in every flagship: separate permission model, separate retention defaults, separate guest-access rules, no channel context. Current footprint collapses all messaging onto chat_messages parented at a chat_channels row."
+    vendor_evidence:
+      - {vendor: "Slack", evidence: "1st_class"}
+      - {vendor: "Microsoft Teams", evidence: "1st_class"}
+      - {vendor: "Google Chat", evidence: "1st_class"}
+      - {vendor: "Mattermost", evidence: "1st_class"}
+    proposed_module: "WSC-CHANNELS-CONVERSATIONS (115) - or a new WSC-DIRECT-MESSAGING module if discriminator-on-channels is rejected"
+
+  - id: B3-S3
+    candidate: huddle_recordings
+    rationale: "Slack Huddles, Microsoft Teams Meet, Cisco Webex, Zoom Team Chat all support recording and transcript generation. Current chat_huddles master covers the session lifecycle but not the recording/transcript artifacts. Compliance-regulated deployments (FINRA, MiFID II) require recording capture as a separate master with its own retention."
+    vendor_evidence:
+      - {vendor: "Slack", evidence: "1st_class"}
+      - {vendor: "Microsoft Teams", evidence: "1st_class"}
+      - {vendor: "Cisco Webex Teams", evidence: "1st_class"}
+      - {vendor: "Zoom Team Chat", evidence: "1st_class"}
+    proposed_module: "WSC-HUDDLES-VOICE (116) - adjacent to huddle_transcripts"
+
+  - id: B3-S4
+    candidate: chat_apps
+    rationale: "The platform axis of WSC (Slack Apps, Microsoft Teams Apps, Workflow Builder, Mattermost Plugins) is a substantial market surface: installed apps, bots, slash commands, custom workflows. None of this is in the current WSC footprint. Possibly overlaps with WORK-MGMT.work_automations."
+    vendor_evidence:
+      - {vendor: "Slack", evidence: "1st_class"}
+      - {vendor: "Microsoft Teams", evidence: "1st_class"}
+      - {vendor: "Mattermost", evidence: "1st_class"}
+    proposed_module: "new WSC-PLATFORM-APPS module, or fattened WSC-CHANNELS-CONVERSATIONS (115); cross-check overlap with WORK-MGMT-AUTOMATION"

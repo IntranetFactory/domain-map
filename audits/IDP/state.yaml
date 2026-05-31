@@ -1,0 +1,223 @@
+schema_version: 2
+domain: IDP
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a: []
+
+b1b:
+  - id: B1B-S1-MODULES
+    summary: "Author IDP `domain_modules` rows; M1 fails (0 rows for domain_id=39)."
+    finding: "Live state: `/domain_modules?domain_id=eq.39` returns 0 rows; `/domain_module_host_domains?domain_id=eq.39` returns 0 rows. M1 is a hard structural gate and blocks M2 through M8 plus every dependent band (B1 DMDOs, B10b module FKs, E1 roles, F2 system skills, A2 capability-to-module links). The 2026-05-30 audit proposed two splits (2-module, 3-module) and recommended option (b) 3-module: IDP-CAPTURE-CLASSIFY (capture_batches, document_classification_results, idp_extraction_templates), IDP-EXTRACT-VALIDATE (extracted_records, extracted_fields, idp_validation_results), IDP-MODEL-MGMT (idp_extraction_models, training_datasets)."
+    action: "After Bucket 2 #1 (B2-IDP-MODULE-SPLIT) lands, author the chosen module set in a focused loader. Each `domain_modules` row needs `module_kind=full`, `domain_id=39`, populated `catalog_tagline` + `catalog_description` per Rule #20 (Rule #20 requires user-approved wording before write)."
+    blocked_by:
+      - {type: user_decision, ref: B2-IDP-MODULE-SPLIT}
+    affected_entities: [capture_batches, document_classification_results, idp_extraction_templates, extracted_records, extracted_fields, idp_validation_results, idp_extraction_models, training_datasets]
+
+  - id: B1B-S2-CATALOG-UX
+    summary: "A4 fails: `catalog_tagline` and `catalog_description` both empty on `domains` row id=39."
+    finding: "Live state: `/domains?id=eq.39&select=catalog_tagline,catalog_description` returns both as empty strings. Rule #20 forbids any write without explicit user-approved wording. The 2026-05-30 audit drafted candidate text but it was not approved."
+    action: "Surface the drafted tagline and long-form text to the user (or solicit user-authored text). Once approved verbatim, PATCH `domains` row id=39 with both columns."
+    blocked_by:
+      - {type: user_decision, ref: B2-IDP-CATALOG-UX-TEXT}
+
+  - id: B1B-S3-CAPABILITIES
+    summary: "A2 fails: 0 `capability_domains` rows for IDP."
+    finding: "Live state: `/capability_domains?domain_id=eq.39` returns 0 rows. The 2026-05-30 audit proposed a 7-capability set (IDP-CAPTURE, IDP-CLASSIFICATION, IDP-EXTRACTION, IDP-VALIDATION, IDP-HITL-REVIEW, IDP-MODEL-MGMT, IDP-TEMPLATE-MGMT). Capability shape depends on the module split chosen in Bucket 2 #1 because each capability must map cleanly to a realizing module under Rule #14 (M4 / M6)."
+    action: "After B1B-S1-MODULES lands, author 7 `capabilities` rows + `capability_domains` rows + `domain_module_capabilities` links per the chosen module set."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1-MODULES}
+
+  - id: B1B-S4-DMDO
+    summary: "B1 (DMDO band): 0 `domain_module_data_objects` rows for any IDP master."
+    finding: "Live state: `/domain_module_data_objects?data_object_id=in.(530,531,532,533,534,535,536,537)` returns 0 rows. The 8 masters sit in legacy `domain_data_objects` (role=master, necessity=required) but no module hosts them at the modern DMDO grain. M-band gate B1 fails until modules land."
+    action: "After B1B-S1-MODULES lands, INSERT 8 DMDO rows assigning each master to its realizing module per the chosen split, role=master, necessity=required."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1-MODULES}
+    affected_masters:
+      - {data_object_id: 530, name: capture_batches, target_module_id: null, workflow: capture}
+      - {data_object_id: 531, name: idp_extraction_models, target_module_id: null, workflow: model_mgmt}
+      - {data_object_id: 532, name: extracted_fields, target_module_id: null, workflow: extract}
+      - {data_object_id: 533, name: extracted_records, target_module_id: null, workflow: extract}
+      - {data_object_id: 534, name: idp_validation_results, target_module_id: null, workflow: validate}
+      - {data_object_id: 535, name: document_classification_results, target_module_id: null, workflow: classify}
+      - {data_object_id: 536, name: idp_extraction_templates, target_module_id: null, workflow: template_mgmt}
+      - {data_object_id: 537, name: training_datasets, target_module_id: null, workflow: model_mgmt}
+
+  - id: B1B-S6-HANDOFF-MODULE-FKS
+    summary: "B10b fails: all 4 outbound handoffs have NULL on both `source_domain_module_id` and `target_domain_module_id`."
+    finding: "Live state: handoffs 732 (IDP -> ECM, extracted_record.completed, payload extracted_records), 733 (IDP -> AP-AUTO, same event), 734 (IDP -> AP-AUTO, extracted_record.requires_review), 735 (IDP -> ECM, document_classification_result.uncertain) all have NULL on both module FKs. Backfill requires both IDP modules AND counterparty modules (ECM and AP-AUTO) to exist. ECM and AP-AUTO each have 0 `domain_modules` rows per their own audits."
+    action: "Two-stage: (1) after B1B-S1-MODULES lands, PATCH `source_domain_module_id` per master-resolution rule (B1-S4 DMDO master rows decide). (2) after ECM and AP-AUTO modules land, PATCH `target_domain_module_id` per the same rule."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1-MODULES}
+      - {type: domain_audit, blocking_domain: ECM, milestone: modules_loaded}
+      - {type: domain_audit, blocking_domain: AP-AUTO, milestone: modules_loaded}
+    affected_handoffs:
+      - {handoff_id: 732, direction: outbound, source_domain: IDP, target_domain: ECM, trigger_event: extracted_record.completed, payload: extracted_records, null_field: both_module_fks}
+      - {handoff_id: 733, direction: outbound, source_domain: IDP, target_domain: AP-AUTO, trigger_event: extracted_record.completed, payload: extracted_records, null_field: both_module_fks}
+      - {handoff_id: 734, direction: outbound, source_domain: IDP, target_domain: AP-AUTO, trigger_event: extracted_record.requires_review, payload: extracted_records, null_field: both_module_fks}
+      - {handoff_id: 735, direction: outbound, source_domain: IDP, target_domain: ECM, trigger_event: document_classification_result.uncertain, payload: document_classification_results, null_field: both_module_fks}
+
+  - id: B1B-S8-INTRA-DOMAIN-RELS
+    summary: "B6 fails: 0 master-to-master `data_object_relationships` within IDP."
+    finding: "Live state: the 9 IDP-touching `data_object_relationships` rows are 7 user-edges (1824-1830) plus 2 cross-domain edges to ECM masters (585, 586). Zero intra-domain master-to-master edges exist. The 2026-05-30 audit named 7 candidate edge pairs (capture_batches -> document_classification_results, capture_batches -> extracted_records, extracted_records -> extracted_fields, extracted_records -> idp_validation_results, idp_extraction_templates -> extracted_records, idp_extraction_models -> extracted_records, training_datasets -> idp_extraction_models) but did not author the relationship_verb / inverse_verb / cardinality-equivalent / owner_side / is_required tuples per edge."
+    action: "Author the 7 edge tuples (skill rule #18 / Rule #15 require user-approved verb wording) and INSERT into `data_object_relationships` once approved."
+    blocked_by:
+      - {type: user_decision, ref: B2-IDP-INTRA-VERBS}
+    affected_entities: [capture_batches_to_document_classification_results, capture_batches_to_extracted_records, extracted_records_to_extracted_fields, extracted_records_to_idp_validation_results, idp_extraction_templates_to_extracted_records, idp_extraction_models_to_extracted_records, training_datasets_to_idp_extraction_models]
+
+  - id: B1B-S9-ALIASES
+    summary: "B11 fails: 0 `data_object_aliases` rows for any IDP master."
+    finding: "Live state: `/data_object_aliases?data_object_id=in.(530,531,532,533,534,535,536,537)` returns 0 rows. The 2026-05-30 audit named vendor synonyms in narrative form (capture_batches: case / batch / queue across Hyperscience / ABBYY / Rossum; extracted_records: extraction / processed document / analysis result; extracted_fields: field / entity; idp_extraction_models: processor / custom model; idp_validation_results: validation case / review item; document_classification_results: classification result / document classification) but did not produce exact `(data_object_id, alias_name, alias_type)` tuples."
+    action: "Surface exact alias tuples for user approval (Rule #18: vendor names live only on commerce-shaped entities; alias rows are explicitly licensed). INSERT once approved."
+    blocked_by:
+      - {type: user_decision, ref: B2-IDP-ALIAS-TUPLES}
+    affected_masters:
+      - {data_object_id: 530, name: capture_batches, target_module_id: null, workflow: capture}
+      - {data_object_id: 533, name: extracted_records, target_module_id: null, workflow: extract}
+      - {data_object_id: 532, name: extracted_fields, target_module_id: null, workflow: extract}
+      - {data_object_id: 531, name: idp_extraction_models, target_module_id: null, workflow: model_mgmt}
+      - {data_object_id: 534, name: idp_validation_results, target_module_id: null, workflow: validate}
+      - {data_object_id: 535, name: document_classification_results, target_module_id: null, workflow: classify}
+
+  - id: B1B-S10-SYSTEM-SKILLS
+    summary: "F1 + F2 fail: legacy domain-level `idp-system` skill (id 69) exists with `domain_module_id=NULL`; 0 module-scoped system skills."
+    finding: "Live state: `/skills?domain_id=eq.39` returns id=69 (`idp-system`, skill_type=system, domain_module_id=NULL) plus zero module-scoped rows. The skill carries 8 `skill_tools` (514-521), all query-tier with `coverage_tier=platform` and `data_object_id` set. F1 is in transitional-acceptable state today but must cure when F2 lands."
+    action: "After B1B-S1-MODULES lands, author 1 `skill_type=system` skill per module (Rule #17), redistribute the 8 query tools across the new skills by `data_object_id` ownership in the module split, then DELETE skill 69."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1-MODULES}
+
+  - id: B1B-S11-MUTATE-TOOLS
+    summary: "F3 floor unmet: every module-scoped system skill needs >=1 mutate + workflow-gate tool."
+    finding: "Cannot evaluate until F2 cures (no module-scoped skills exist). The existing 8 legacy tools are all `query` only; no mutate or workflow-gate tools exist for IDP."
+    action: "After B1B-S10-SYSTEM-SKILLS lands, author the missing mutate / workflow-gate tools per module (candidates: submit_capture_batch, classify_document, extract_record, validate_record, review_extraction, approve_extraction, reject_extraction, retrain_model, publish_template, publish_training_dataset) and link as `skill_tools` rows."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S10-SYSTEM-SKILLS}
+
+  - id: B1B-S12-LIFECYCLE-STATES
+    summary: "B12 fails: 0 `data_object_lifecycle_states` rows for any IDP master; pattern flags (B4) not positively re-evaluated."
+    finding: "Live state: `/data_object_lifecycle_states?data_object_id=in.(530,531,532,533,534,535,536,537)` returns 0 rows. Pattern flags (`has_personal_content`, `has_submit_lock`, `has_single_approver`) all false on every master with no audit-trail evidence of positive re-evaluation. Rule #12 requires lifecycle states on every `master + required` data_object except config-shaped masters; `idp_extraction_templates` is the only plausible config-shape exemption candidate. Workflow shapes proposed by 2026-05-30 audit: capture_batches (received -> processing -> completed -> failed), extracted_records (extracted -> requires_review -> validated -> rejected -> exported), idp_validation_results (pending -> passed -> failed), idp_extraction_models (drafted -> trained -> deployed -> degraded -> retired), training_datasets (drafting -> labeling -> published -> superseded)."
+    action: "Draft state machines for the 4 workflow-bearing masters + author pattern-flag PATCHes per Bucket 2 #4 + surface config-shape exemption decision for `idp_extraction_templates` per Bucket 2 #4. INSERT once approved; the realizing module's `domain_module_id` must be set on each state per M5."
+    blocked_by:
+      - {type: user_decision, ref: B2-IDP-PATTERN-FLAGS}
+      - {type: prerequisite_entity, ref: B1B-S1-MODULES}
+
+  - id: B1B-S13-ROLES
+    summary: "E1 fails: 0 roles touching IDP modules (vacuously, because no modules)."
+    finding: "Live state: 0 `role_modules` rows for any IDP module (no modules exist). Business Operations (id 34) has 8 roles, IT Operations (id 27) has 3 roles; none touch IDP today. Once modules land, the 2026-05-30 audit proposed 3 personas (IDP-VALIDATOR for HITL queue worker, IDP-MODEL-OWNER for data scientist / ML engineer, IDP-PROCESS-OWNER for business owner)."
+    action: "After B1B-S1-MODULES lands, author 3 roles each with >=2 `role_modules` rows (primary on one module, secondary on the other) + baseline `role_permissions` bundles."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1-MODULES}
+
+  - id: B1B-S14-CROSS-DOMAIN-VERBS
+    summary: "B8 partial: cross-domain `data_object_relationships` 585 and 586 carry questionable verbs."
+    finding: "Live state: row 585 (`extracted_records is_stored_as content_documents`, owner_side=target, is_required=false) reads as forced; row 586 (`document_classifications dispositions document_classification_results`, owner_side=source, is_required=false) has the verb direction inverted. The 2026-05-30 audit proposed re-authoring as `extracted_records derives_from content_documents` and `document_classification_results applies document_classifications`."
+    action: "PATCH (or DELETE + INSERT) once Bucket 2 #6 verbs are approved."
+    blocked_by:
+      - {type: user_decision, ref: B2-IDP-CROSS-DOMAIN-VERBS}
+    affected_entities: [data_object_relationships_585, data_object_relationships_586]
+
+b2:
+  - id: B2-IDP-MODULE-SPLIT
+    summary: "Choose IDP module set: (a) 2 modules, (b) 3 modules (recommended), or (c) 1 module."
+    question: "Which module split for IDP? Options: (a) IDP-CAPTURE-CLASSIFY + IDP-EXTRACT-VALIDATE; (b) IDP-CAPTURE-CLASSIFY + IDP-EXTRACT-VALIDATE + IDP-MODEL-MGMT (separates the data-science workflow); (c) single IDP-PIPELINE (violates Rule #14 once the 7 capabilities land)."
+    options: ["(a) 2 modules", "(b) 3 modules (audit recommendation)", "(c) 1 module (rule-violating once capabilities land)"]
+    why: "Gates B1B-S1-MODULES, which in turn gates 6 other Bucket-1b items. Highest-priority decision."
+
+  - id: B2-IDP-CATALOG-UX-TEXT
+    summary: "Approve exact wording for IDP `catalog_tagline` and `catalog_description` (A4 fix)."
+    question: "Approve (or rewrite) the draft buyer-facing text for the domain row. Draft tagline: `Turn unstructured documents into clean structured data your apps can act on.` Draft long-form: 3-sentence prose describing capture, classify, extract, validate, HITL, retrain. Rule #20 forbids any write without verbatim user approval."
+    options: ["approve drafts", "rewrite tagline only", "rewrite long-form only", "rewrite both", "defer"]
+    why: "Rule #20 + Rule #15-adjacent license: agent cannot draft buyer-shaped fields and load without approval. Pure user surface."
+
+  - id: B2-IDP-MLOPS-BOUNDARY
+    summary: "Confirm IDP keeps `idp_extraction_models` + `training_datasets` mastered locally pending MLOPS domain landing."
+    question: "Are `idp_extraction_models` (id 531) and `training_datasets` (id 537) correctly mastered in IDP today, with the understanding that they will `consume` from a future MLOPS master (model_registry, feature_store) once that domain ships?"
+    options: ["confirm IDP-local mastery, revisit at MLOPS landing", "defer mastership decision to MLOPS landing", "split off into MLOPS now"]
+    why: "Informational; no Bucket 1 item flexes today. Documenting the architectural intent now reduces ambiguity when MLOPS triages."
+
+  - id: B2-IDP-PATTERN-FLAGS
+    summary: "Decide pattern flags per master and config-shape exemption for `idp_extraction_templates`."
+    question: "Which masters get `has_personal_content=true`, `has_submit_lock=true`, `has_single_approver=true`? Audit candidates: capture_batches / extracted_records / extracted_fields for personal-content; idp_validation_results for submit-lock; none obvious for single-approver. Separately: does `idp_extraction_templates` qualify for the Rule #12 config-shape lifecycle exemption?"
+    options: ["per-master flag decisions + exemption yes", "flag decisions + exemption no (load template lifecycle)", "defer all flags + exemption"]
+    why: "Rule #15 forbids auto-populating `notes` to explain flags; the audit must surface for user decision and record the outcome in the gap report / PR description, not in `data_objects.notes`."
+
+  - id: B2-IDP-HIPAA-FERPA
+    summary: "Add HIPAA (mandatory?) and / or FERPA scoping to `domain_regulations`?"
+    question: "Current `domain_regulations` for IDP lists only GDPR (mandatory) and EU AI Act (mandatory). Sector-conditional regulations not loaded: HIPAA (PHI document processing) and FERPA (higher-ed transcripts / FAFSA). Default audit recommendation: add HIPAA mandatory; leave FERPA out unless explicit ed-sector scope."
+    options: ["add HIPAA mandatory, leave FERPA out", "add HIPAA + FERPA both mandatory", "add HIPAA applicable_when only", "leave both out", "user-authored applicability"]
+    why: "Mandatory vs applicable_when is a scope decision; the audit can implement either. Independent of Buckets 1 and 3."
+
+  - id: B2-IDP-CROSS-DOMAIN-VERBS
+    summary: "Approve verb rewrites for cross-domain rows 585 and 586."
+    question: "Re-author row 585 as `extracted_records derives_from content_documents` (owner_side=source, is_required=false) and row 586 as `document_classification_results applies document_classifications` (owner_side=target, is_required=false)?"
+    options: ["approve both rewrites", "approve 585 only", "approve 586 only", "rewrite differently (specify)", "decline (leave as-is)"]
+    why: "Cross-domain relationship verbs are load-bearing for the architect agent's relationship graph; user must approve the exact wording. Independent of other buckets."
+
+b3:
+  - id: B3-IDP-HUMAN-REVIEW-TASKS
+    candidate: human_review_tasks
+    rationale: "Universal across Hyperscience, Rossum, ABBYY, Instabase, UiPath flagship products. The HITL queue worker's worklist; distinct from `idp_validation_results` (the outcome) versus the work item (the task itself). Probably mastered alongside extracted_records in IDP-EXTRACT-VALIDATE."
+    vendor_evidence:
+      - {vendor: Hyperscience, evidence: 1st_class}
+      - {vendor: Rossum, evidence: 1st_class}
+      - {vendor: ABBYY Vantage, evidence: 1st_class}
+      - {vendor: Instabase, evidence: 1st_class}
+      - {vendor: UiPath Document Understanding, evidence: 1st_class}
+    proposed_module: IDP-EXTRACT-VALIDATE
+
+  - id: B3-IDP-EXTRACTION-CORRECTIONS
+    candidate: idp_extraction_corrections
+    rationale: "Universal across IDP vendors. Per-field operator corrections used both for audit trail and as future training signal (closed-loop retraining)."
+    vendor_evidence:
+      - {vendor: Hyperscience, evidence: 1st_class}
+      - {vendor: Rossum, evidence: 1st_class}
+      - {vendor: ABBYY Vantage, evidence: 1st_class}
+      - {vendor: Instabase, evidence: 1st_class}
+    proposed_module: IDP-EXTRACT-VALIDATE
+
+  - id: B3-IDP-DOCUMENT-LAYOUTS
+    candidate: document_layouts
+    rationale: "ABBYY, Rossum, Hyperscience detected layout / structure of a captured document; used by template matching and table extraction."
+    vendor_evidence:
+      - {vendor: ABBYY Vantage, evidence: 1st_class}
+      - {vendor: Rossum, evidence: 1st_class}
+      - {vendor: Hyperscience, evidence: 1st_class}
+    proposed_module: IDP-CAPTURE-CLASSIFY
+
+  - id: B3-IDP-CONFIDENCE-THRESHOLDS
+    candidate: confidence_thresholds
+    rationale: "Universal config table; per-template or per-field thresholds for low-confidence routing. Config-shape candidate."
+    vendor_evidence:
+      - {vendor: Hyperscience, evidence: 1st_class}
+      - {vendor: Rossum, evidence: 1st_class}
+      - {vendor: ABBYY Vantage, evidence: 1st_class}
+      - {vendor: Instabase, evidence: 1st_class}
+    proposed_module: IDP-EXTRACT-VALIDATE
+
+  - id: B3-IDP-OCR-RESULTS
+    candidate: ocr_results
+    rationale: "AWS Textract, Google Document AI, ABBYY model raw OCR text + bounding boxes separately from semantic extraction. May be an internal stage rather than a first-class master; Phase 0 vetting decides."
+    vendor_evidence:
+      - {vendor: AWS Textract, evidence: 1st_class}
+      - {vendor: Google Document AI, evidence: 1st_class}
+      - {vendor: ABBYY Vantage, evidence: 1st_class}
+    proposed_module: IDP-CAPTURE-CLASSIFY
+
+  - id: B3-IDP-REDACTION-RESULTS
+    candidate: redaction_results
+    rationale: "Specialist coverage (KIRA Systems / IronClad for contracts; Veriff for KYC; Microsoft PII redaction). Sector-conditional; possibly a separate domain rather than an IDP master."
+    vendor_evidence:
+      - {vendor: KIRA Systems, evidence: 1st_class}
+      - {vendor: Microsoft PII Detection, evidence: secondary}
+      - {vendor: Veriff, evidence: 1st_class}
+    proposed_module: IDP-EXTRACT-VALIDATE
+
+  - id: B3-IDP-VALIDATION-RULES
+    candidate: extraction_validation_rules
+    rationale: "Hyperscience and Rossum expose configurable business-rule validators. Config-shape; small surface."
+    vendor_evidence:
+      - {vendor: Hyperscience, evidence: 1st_class}
+      - {vendor: Rossum, evidence: 1st_class}
+    proposed_module: IDP-EXTRACT-VALIDATE

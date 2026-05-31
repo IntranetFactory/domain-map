@@ -1,0 +1,272 @@
+schema_version: 2
+domain: DSPM
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-H1-PARTIAL
+    summary: "5 of 6 untagged cross-domain handoffs are immediately APQC-taggable; one (288) gated on B2-S4."
+    finding: "7 of 13 DSPM cross-domain handoffs carry handoff_processes rows (agent_curated, record_status=new): 261, 285, 287, 290, 712, 729, 846. 6 remain untagged: 286, 288, 289, 847, 848, 849. The H1 volume target is 0.5N to 0.8N (6.5 to 10.4 rows) on N=13; current 7 sits at the bottom of the target. 5 of the 6 untagged handoffs (286, 289, 847, 848, 849) can be tagged immediately via PCF lookups; handoff 288 holds until B2-S4 resolves its event-payload mismatch (event 273 is owned by data_classifications 303 but payload is data_assets 300)."
+    action: "For each of handoffs 286, 289, 847, 848, 849, look up the implementing PCF activity (286 + 289 in 'Manage identities and access' / 'Manage entitlements' family; 847 in 'Manage IT security, privacy, and data protection'; 848 in 'Manage compliance with regulations'; 849 in 'Manage internal audit') via /processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry, then INSERT one handoff_processes row per handoff: {handoff_id, process_id, proposal_source: agent_curated, record_status: new, role: implements}. Handoff 288 stays untagged until B2-S4 settles."
+    affected_handoffs:
+      - {handoff_id: 286, direction: outbound, source_domain: DSPM, target_domain: IGA, trigger_event: "sensitive_data_incident.detected", payload: iam_access_policies, null_field: null}
+      - {handoff_id: 289, direction: outbound, source_domain: DSPM, target_domain: IGA, trigger_event: "iam_access_policy.permission_escalation_detected", payload: iam_access_policies, null_field: null}
+      - {handoff_id: 847, direction: outbound, source_domain: DSPM, target_domain: DLP, trigger_event: "data_warehouse.classified", payload: data_warehouses, null_field: null}
+      - {handoff_id: 848, direction: outbound, source_domain: DSPM, target_domain: GRC, trigger_event: "saas_app_instance.detected", payload: saas_app_instances, null_field: null}
+      - {handoff_id: 849, direction: outbound, source_domain: DSPM, target_domain: AUDIT, trigger_event: "cloud_database.discovered", payload: cloud_databases, null_field: null}
+
+b1b:
+  - id: B1B-S1
+    summary: "DSPM has 0 domain_modules; M1 hard-fails Rule #14 and gates all downstream module-keyed work."
+    finding: "DSPM (domain id=140) has 7 capabilities but 0 domain_modules rows of any module_kind and 0 domain_module_host_domains rows. Rule #14 mandates >=2 module_kind='full' rows for a >=3-capability domain. The audit proposes a 4-module split: DSPM-DISCOVERY-INVENTORY (masters cloud_storage_buckets, cloud_databases, data_warehouses, saas_app_instances, shadow_data_findings), DSPM-CLASSIFICATION-LINEAGE (contributors data_assets, data_classifications; consumer data_lineage_relationships), DSPM-ACCESS-RISK (masters iam_access_policies, data_risk_scores), DSPM-INCIDENT-REMEDIATION (master sensitive_data_incidents). Vendor evidence: Wiz, Cyera, Sentra, Securiti each separate Inventory / Classification / Risk and Access / Incidents and Remediation in their flagship UI."
+    action: "Once B2-S1 confirms the split, run a .tmp_deploy/fix_dspm_m1_modules.ts loader: INSERT 4 domain_modules rows, 4 domain_module_capabilities mappings (DSPM-DISCOVERY-INVENTORY gets DSPM-DATA-DISCOVERY + DSPM-SHADOW-DATA; others 1:1), migrate 11 DDO rows into 11+ DMDO rows in correct modules, INSERT placeholder embedded_master rows where modules need them."
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    affected_modules: []
+    affected_entities: [cloud_storage_buckets, cloud_databases, data_warehouses, saas_app_instances, shadow_data_findings, data_assets, data_classifications, data_lineage_relationships, iam_access_policies, data_risk_scores, sensitive_data_incidents]
+
+  - id: B1B-S3
+    summary: "B11 hard-fail: 0 data_object_lifecycle_states on 8 DSPM masters."
+    finding: "Workflow-bearing masters lack state machines: sensitive_data_incidents needs detected -> triaged -> investigating -> contained -> resolved/false_positive with requires_permission=true on triaged/contained/resolved; iam_access_policies needs observed -> flagged_for_review -> under_remediation -> corrected/accepted_risk with gates on flagged_for_review/under_remediation; data_risk_scores needs pending_calculation -> current -> stale (no permission gates); shadow_data_findings needs detected -> triaged -> assigned_to_owner -> resolved/accepted_risk with gates on triaged/assigned_to_owner; the 4 cloud-store masters (cloud_storage_buckets, cloud_databases, data_warehouses, saas_app_instances) are config-shape candidates for the static-shape exemption (B2-S2). Approximately 30 lifecycle-state rows expected if B2-S2 chooses to author them."
+    action: "Once B1B-S1 lands modules and B2-S2 / B2-S5 settle, INSERT approximately 30 data_object_lifecycle_states rows via .tmp_deploy/fix_dspm_lifecycle.ts. Each row's domain_module_id references the realizing module from B1B-S1."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: user_decision, ref: B2-S2}
+      - {type: user_decision, ref: B2-S5}
+    affected_masters:
+      - {data_object_id: 341, name: sensitive_data_incidents, target_module_id: null, workflow: "detected -> triaged -> investigating -> contained -> resolved/false_positive"}
+      - {data_object_id: 340, name: iam_access_policies, target_module_id: null, workflow: "observed -> flagged_for_review -> under_remediation -> corrected/accepted_risk"}
+      - {data_object_id: 342, name: data_risk_scores, target_module_id: null, workflow: "pending_calculation -> current -> stale"}
+      - {data_object_id: 343, name: shadow_data_findings, target_module_id: null, workflow: "detected -> triaged -> assigned_to_owner -> resolved/accepted_risk"}
+      - {data_object_id: 336, name: cloud_storage_buckets, target_module_id: null, workflow: "discovered -> inventoried -> decommissioned (config-shape candidate, B2-S2)"}
+      - {data_object_id: 337, name: cloud_databases, target_module_id: null, workflow: "discovered -> inventoried -> decommissioned (config-shape candidate, B2-S2)"}
+      - {data_object_id: 338, name: data_warehouses, target_module_id: null, workflow: "discovered -> inventoried -> decommissioned (config-shape candidate, B2-S2)"}
+      - {data_object_id: 339, name: saas_app_instances, target_module_id: null, workflow: "discovered -> inventoried -> decommissioned (config-shape candidate, B2-S2)"}
+
+  - id: B1B-S4
+    summary: "C1 fail: 0 business_function_domains rows for DSPM."
+    finding: "DSPM has 0 business_function_domains rows. The most natural owner is 'Information Security', but DSPM could plausibly sit under 'IT Risk Management' or 'Privacy and Data Protection' depending on the org's business-function taxonomy."
+    action: "INSERT 1 business_function_domains row pointing at the user-chosen business_function once B2-S6 resolves. business_functions column name needs verification at fix time (the canonical filter column is not function_label)."
+    blocked_by:
+      - {type: user_decision, ref: B2-S6}
+
+  - id: B1B-S5
+    summary: "Outbound handoff 285 has inverted direction; editorial DELETE vs new-event call."
+    finding: "Handoff 285 (DSPM -> DCG, trigger event 236 data_asset.classified, payload data_assets 300) inverts canonical ownership: event 236 is owned by data_object 300 which is DCG-mastered, and inbound handoff 261 (DCG -> DSPM on the same event/payload) already wires the canonical direction. 285 looks like a duplicate-but-reversed insert. The DSPM-emitted event here is plausibly 'data_asset.contributed_classification' (DSPM enriches the DCG-mastered data_asset with a sensitivity tag; DCG re-emits as data_asset.classified). 285 currently carries a handoff_processes row (process_id=275, agent_curated, new); if DELETE wins, that row falls with the handoff."
+    action: "On B2-S3 (a): DELETE handoff 285 (cascades the handoff_processes row). On B2-S3 (b): INSERT new trigger event 'data_asset.contributed_classification' owned by DSPM and PATCH handoff 285 to use it."
+    blocked_by:
+      - {type: user_decision, ref: B2-S3}
+    affected_handoffs:
+      - {handoff_id: 285, direction: outbound, source_domain: DSPM, target_domain: DCG, trigger_event: "data_asset.classified", payload: data_assets, null_field: null}
+
+  - id: B1B-S6
+    summary: "Handoff 288 has event-payload mismatch; editorial PATCH call."
+    finding: "Handoff 288 (DSPM -> PRIV-MGMT, trigger event 273 data_classification.sensitivity_elevated, payload data_assets 300) uses an event owned by data_classifications (303, DCG-mastered) but carries data_assets as payload. Event-source vs. payload coupling is incoherent: either the trigger event should be DSPM-owned (DSPM elevates sensitivity), or the payload should be data_classifications. Resolving B2-S4 also unblocks tagging this handoff in B1A-H1-PARTIAL."
+    action: "On B2-S4 (a): PATCH handoff 288 data_object_id to 303 (data_classifications). On B2-S4 (b): INSERT new DSPM-owned event 'data_asset.sensitivity_reclassified_by_dspm' and PATCH the handoff. On B2-S4 (c): DELETE 288."
+    blocked_by:
+      - {type: user_decision, ref: B2-S4}
+    affected_handoffs:
+      - {handoff_id: 288, direction: outbound, source_domain: DSPM, target_domain: PRIV-MGMT, trigger_event: "data_classification.sensitivity_elevated", payload: data_assets, null_field: null}
+
+  - id: B1B-S7
+    summary: "B10b: DSPM-owed source_domain_module_id NULL on all 10 outbound handoffs; gated on M1."
+    finding: "All 10 outbound DSPM handoffs (285, 286, 287, 288, 289, 290, 846, 847, 848, 849) have NULL source_domain_module_id; the FK becomes derivable only after B1B-S1 lands DSPM modules. Handoffs 286 and 289 already carry target_domain_module_id=146 (IGA), so once DSPM-INCIDENT-REMEDIATION (286) and DSPM-ACCESS-RISK (289) module ids exist, the symmetric pair completes. Other rows wait on each target domain's own B10b pass for target_domain_module_id."
+    action: "Once B1B-S1 lands the 4 DSPM modules, PATCH source_domain_module_id on all 10 outbounds per the master-to-module mapping: 285+846 (DCG, via data_assets/cloud_databases) -> DSPM-DISCOVERY-INVENTORY or DSPM-CLASSIFICATION-LINEAGE per B2-S3 / payload; 286+287+290 (sensitive_data_incidents) -> DSPM-INCIDENT-REMEDIATION; 288 (depends on B2-S4) -> DSPM-CLASSIFICATION-LINEAGE; 289 (iam_access_policies) -> DSPM-ACCESS-RISK; 847+848+849 -> DSPM-DISCOVERY-INVENTORY."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_handoffs:
+      - {handoff_id: 285, direction: outbound, source_domain: DSPM, target_domain: DCG, trigger_event: "data_asset.classified", payload: data_assets, null_field: source_domain_module_id}
+      - {handoff_id: 286, direction: outbound, source_domain: DSPM, target_domain: IGA, trigger_event: "sensitive_data_incident.detected", payload: iam_access_policies, null_field: source_domain_module_id}
+      - {handoff_id: 287, direction: outbound, source_domain: DSPM, target_domain: SECOPS, trigger_event: "sensitive_data_incident.detected", payload: sensitive_data_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 288, direction: outbound, source_domain: DSPM, target_domain: PRIV-MGMT, trigger_event: "data_classification.sensitivity_elevated", payload: data_assets, null_field: source_domain_module_id}
+      - {handoff_id: 289, direction: outbound, source_domain: DSPM, target_domain: IGA, trigger_event: "iam_access_policy.permission_escalation_detected", payload: iam_access_policies, null_field: source_domain_module_id}
+      - {handoff_id: 290, direction: outbound, source_domain: DSPM, target_domain: SECOPS, trigger_event: "sensitive_data_incident.resolved", payload: sensitive_data_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 846, direction: outbound, source_domain: DSPM, target_domain: DCG, trigger_event: "cloud_database.discovered", payload: cloud_databases, null_field: source_domain_module_id}
+      - {handoff_id: 847, direction: outbound, source_domain: DSPM, target_domain: DLP, trigger_event: "data_warehouse.classified", payload: data_warehouses, null_field: source_domain_module_id}
+      - {handoff_id: 848, direction: outbound, source_domain: DSPM, target_domain: GRC, trigger_event: "saas_app_instance.detected", payload: saas_app_instances, null_field: source_domain_module_id}
+      - {handoff_id: 849, direction: outbound, source_domain: DSPM, target_domain: AUDIT, trigger_event: "cloud_database.discovered", payload: cloud_databases, null_field: source_domain_module_id}
+
+  - id: B1B-F-BAND
+    summary: "F-band uncomputable: 0 modules, 1 orphan system skill (id=51), 0 skill_tools, Semantius score uncomputable."
+    finding: "Rule #17 requires exactly one skill_type='system' skill per domain_modules row with >=1 skill_tools row. DSPM currently has 0 modules but 1 orphan 'dspm-system' skill (id=51) with domain_module_id=NULL and 0 skill_tools. Once the 4-module split lands, Rule #17 mandates 4 system skills (one per module), so the cross-cutting orphan id=51 cannot satisfy the rule on its own. The Semantius score is uncomputable per F5 until F2-F4 are satisfied. B2-S9 asks the user to choose: bind id=51 to one module (and author its tools); DELETE id=51 and author 4 fresh skills; or treat id=51 as a placeholder the loader removes."
+    action: "Once B1B-S1 + B2-S8 + B2-S9 resolve, run a .tmp_deploy/fix_dspm_skills.ts loader: per B2-S9 either bind/repurpose id=51 or DELETE it, then INSERT 4 system skills (one per new module), and INSERT skill_tools rows per skill (5-20 each, required and optional)."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: user_decision, ref: B2-S8}
+      - {type: user_decision, ref: B2-S9}
+    affected_modules: []
+    affected_entities: [dspm-system]
+
+b2:
+  - id: B2-S1
+    summary: "DSPM module split: 4 modules as drafted, alternative shape, or defer."
+    question: "Approve the proposed 4-module split (DSPM-DISCOVERY-INVENTORY, DSPM-CLASSIFICATION-LINEAGE, DSPM-ACCESS-RISK, DSPM-INCIDENT-REMEDIATION), or pick an alternative?"
+    options:
+      - "(a) 4-module split as drafted"
+      - "(b) alt-a 2-module split (DSPM-DISCOVERY-RISK + DSPM-INCIDENT-REMEDIATION, matches Wiz tighter UI)"
+      - "(c) alt-b 5-module split (split DSPM-INCIDENT-REMEDIATION into DSPM-INCIDENT and DSPM-REMEDIATION-PLAYBOOKS)"
+      - "(d) alt-c 3-module split (collapse DSPM-CLASSIFICATION-LINEAGE into DSPM-DISCOVERY-INVENTORY)"
+      - "(e) defer pending further Phase 0 vendor research"
+    why: "Architectural intent + deployability strategy. The audit cannot pick the split on the user's behalf; vendor evidence supports the 4-module variant but other shapes are defensible."
+
+  - id: B2-S2
+    summary: "Static-shape exemption (Rule #12) for the 4 cloud-store masters."
+    question: "For cloud_storage_buckets, cloud_databases, data_warehouses, saas_app_instances: author 3-state lifecycles or apply the static-shape exemption?"
+    options:
+      - "(a) Author 3-state lifecycle (discovered -> inventoried -> decommissioned) on all 4"
+      - "(b) Apply static-shape exemption (no data_object_lifecycle_states rows; surface exemption in this audit log)"
+      - "(c) Mixed (specify per master)"
+    why: "Exemption-shape question per Rule #12; user owns the workflow-vs-config-shape call."
+
+  - id: B2-S3
+    summary: "Handoff 285 direction: DELETE or new DSPM-owned event."
+    question: "Resolve the inverted handoff 285 (DSPM -> DCG, event 236, payload data_assets) by DELETE or by repurposing with a new DSPM-owned event?"
+    options:
+      - "(a) DELETE handoff 285 as a duplicate-reversed insert (also drops its handoff_processes row)"
+      - "(b) INSERT new trigger event 'data_asset.contributed_classification' (DSPM-owned) and PATCH handoff 285 to use it"
+    why: "Editorial / workflow-shape question. Both are defensible; the audit's recommendation is (a)."
+
+  - id: B2-S4
+    summary: "Handoff 288 event-payload mismatch: PATCH payload, new event, or DELETE."
+    question: "Resolve the event-payload mismatch on handoff 288 (event 273 owned by data_classifications, payload data_assets) by patching the payload, inserting a new event, or deleting the handoff?"
+    options:
+      - "(a) PATCH handoff 288 data_object_id to 303 (data_classifications) to align with event ownership"
+      - "(b) INSERT new DSPM-owned event 'data_asset.sensitivity_reclassified_by_dspm' and PATCH the handoff"
+      - "(c) DELETE 288 (treat as misconceived; DSPM -> PRIV-MGMT signal already covered by SECOPS handoffs)"
+    why: "Editorial; affects both B1B-S6 and B1A-H1-PARTIAL (handoff 288's APQC tagging waits on this)."
+
+  - id: B2-S5
+    summary: "Pattern flags on 8 DSPM masters (Rule #12)."
+    question: "Which pattern flags should flip from default-false to true on the 8 DSPM masters?"
+    options:
+      - "Likely true (per audit reasoning): sensitive_data_incidents.has_personal_content=true (incidents reference PII exposures, signer identities, owner emails); iam_access_policies.has_submit_lock=true (remediation review locks policy until human accepts change); shadow_data_findings.has_personal_content=true (PII discoveries); iam_access_policies.has_single_approver=true (one-off accept-risk approvals)"
+      - "Other 4 cloud-store masters: plausibly stay all-false (static-shape inventory)"
+      - "Per-flag yes/no required from user; capture in Decisions"
+    why: "Pattern flags are workflow-shape judgments the user owns; the audit cannot assert them unilaterally."
+
+  - id: B2-S6
+    summary: "C1 business_function ownership for DSPM."
+    question: "Which business function should own DSPM?"
+    options:
+      - "(a) Information Security"
+      - "(b) IT Risk Management"
+      - "(c) Privacy and Data Protection"
+      - "(d) Multiple business_function_domains rows (specify combination)"
+    why: "Editorial / org-taxonomy-specific; canonical filter column on business_functions also needs verification at fix time."
+
+  - id: B2-S7
+    summary: "Compliance regulations to load on DSPM."
+    question: "Which of the 5 candidate regulations should DSPM declare via domain_regulations, and at what applicability?"
+    options:
+      - "GDPR (Articles 30, 32, 35) - mandatory for any EU-data-subject footprint"
+      - "CCPA / CPRA - mandatory for any California-consumer footprint"
+      - "HIPAA Security Rule - mandatory for any US-PHI footprint"
+      - "PCI-DSS 4.0 - mandatory for any cardholder-data footprint"
+      - "US state breach-notification laws - mandatory for any US-resident sensitive-data footprint (jurisdiction-grained applicability)"
+      - "Per-regulation yes/no + applicability (mandatory / recommended / optional) per Rule #3"
+    why: "Editorial scope; the audit cannot decide unilaterally which to load."
+
+  - id: B2-S8
+    summary: "F-band scope: same load as M1 or separate F-band load."
+    question: "Should the F-band (skills + skill_tools per Rule #17) ship in the same .tmp_deploy/fix_dspm_m1_modules.ts as M1, or in a follow-on F-band-only load?"
+    options:
+      - "(a) Same load: author 4 system skills + 20-40 skill_tools rows alongside the modules"
+      - "(b) Separate F-band load after B1B-S1 to lighten the first PR"
+    why: "Scope-of-fix decision; the audit can structure the loader either way."
+
+  - id: B2-S9
+    summary: "Orphan dspm-system skill (id=51) disposition."
+    question: "How to handle the existing orphan system skill id=51 ('dspm-system', domain_module_id=NULL, 0 skill_tools) when the M1 modules land?"
+    options:
+      - "(a) Bind id=51 to one of the 4 new modules (specify which) and author its skill_tools; DELETE-and-reinsert the other 3 skills fresh"
+      - "(b) DELETE id=51 and author 4 fresh system skills (one per module) under B1B-S1's loader"
+      - "(c) Treat id=51 as a placeholder the M1 loader cleans up automatically"
+    why: "Rule #17 requires one system skill per domain_modules row; the 4-module split makes a single cross-cutting skill incoherent. Audit recommendation: (b)."
+
+b3:
+  - id: B3-DATA-ACCESS-PATHS
+    candidate: data_access_paths
+    rationale: "Cyera, Wiz, Sentra surface 'Who can access this data and how' as first-class queryable paths (identity -> role -> permission -> resource). Currently the audit walks the join graph at query time; no master record. Could be a denormalized helper master under DSPM-ACCESS-RISK."
+    vendor_evidence:
+      - {vendor: Cyera, evidence: 1st_class}
+      - {vendor: Wiz, evidence: 1st_class}
+      - {vendor: Sentra, evidence: 1st_class}
+    proposed_module: DSPM-ACCESS-RISK
+
+  - id: B3-REMEDIATION-PLAYBOOKS
+    candidate: remediation_playbooks
+    rationale: "Cyera, Securiti, Wiz ship parameterized remediation playbooks as first-class records (bucket-public-access-revoke, IAM-overpermission-trim, KMS-key-rotate). Currently the catalog assumes ad-hoc remediation; no playbook master."
+    vendor_evidence:
+      - {vendor: Cyera, evidence: 1st_class}
+      - {vendor: Securiti, evidence: 1st_class}
+      - {vendor: Wiz, evidence: 1st_class}
+    proposed_module: DSPM-INCIDENT-REMEDIATION
+
+  - id: B3-DATA-PERIMETERS
+    candidate: data_perimeters
+    rationale: "BigID, Securiti, Concentric AI model 'data perimeters' as the union of stores subject to a single policy / regulation. Distinct from data_classifications (which tags individual records). Candidate to host its own DSPM-POLICY-PERIMETERS module."
+    vendor_evidence:
+      - {vendor: BigID, evidence: 1st_class}
+      - {vendor: Securiti, evidence: 1st_class}
+      - {vendor: Concentric AI, evidence: 1st_class}
+    proposed_module: DSPM-DISCOVERY-INVENTORY
+
+  - id: B3-TOXIC-COMBINATIONS
+    candidate: toxic_combinations
+    rationale: "Wiz 'toxic combinations' feature treats multi-factor risk patterns (PII + public-exposure + over-permissive IAM) as first-class findings distinct from data_risk_scores."
+    vendor_evidence:
+      - {vendor: Wiz, evidence: 1st_class}
+      - {vendor: Cyera, evidence: secondary}
+    proposed_module: DSPM-ACCESS-RISK
+
+  - id: B3-MOD-SPLIT-INCIDENT-REMEDIATION
+    candidate: "Split DSPM-INCIDENT-REMEDIATION into DSPM-INCIDENT + DSPM-REMEDIATION-PLAYBOOKS"
+    rationale: "If remediation_playbooks and sensitive_data_incidents both warrant module-level scope (Cyera and Securiti split them in the UI), 4 modules become 5. Feeds B2-S1 alt-b."
+    vendor_evidence:
+      - {vendor: Cyera, evidence: 1st_class}
+      - {vendor: Securiti, evidence: 1st_class}
+    proposed_module: null
+
+  - id: B3-MOD-POLICY-PERIMETERS
+    candidate: "New DSPM-POLICY-PERIMETERS module"
+    rationale: "If data_perimeters lands as a first-class master with its own policy-mapping and reporting workflow, it warrants its own module (BigID Discovery splits policy-perimeter management from store inventory)."
+    vendor_evidence:
+      - {vendor: BigID, evidence: 1st_class}
+    proposed_module: null
+
+  - id: B3-REG-GDPR
+    candidate: "GDPR (Articles 30, 32, 35)"
+    rationale: "Mandatory for any EU-data-subject footprint. Article 30 records of processing, Article 32 security-of-processing, Article 35 DPIAs. Flagship-vendor evidence (all DSPM tools market GDPR coverage)."
+    vendor_evidence: [Cyera, Wiz, BigID, OneTrust, Securiti]
+    proposed_module: null
+
+  - id: B3-REG-CCPA-CPRA
+    candidate: "CCPA / CPRA"
+    rationale: "Mandatory for any California-consumer footprint; consumer data inventories and right-to-know reporting are core DSPM use cases."
+    vendor_evidence: [BigID, OneTrust, Securiti, Cyera]
+    proposed_module: null
+
+  - id: B3-REG-HIPAA
+    candidate: "HIPAA Security Rule"
+    rationale: "Mandatory for any US-PHI footprint. PHI discovery and access auditing are DSPM-shaped activities."
+    vendor_evidence: [Cyera, BigID, Varonis]
+    proposed_module: null
+
+  - id: B3-REG-PCI-DSS-4
+    candidate: "PCI-DSS 4.0"
+    rationale: "Mandatory for any cardholder-data footprint. Cardholder-data scope reduction is a DSPM cornerstone."
+    vendor_evidence: [Cyera, BigID, Securiti]
+    proposed_module: null
+
+  - id: B3-REG-BREACH-NOTIFICATION
+    candidate: "US state breach-notification laws"
+    rationale: "Mandatory for any US-resident sensitive-data footprint; jurisdiction-grained applicability required."
+    vendor_evidence: [OneTrust, Securiti, BigID]
+    proposed_module: null
+
+extra_candidate_domains:
+  - {code: CSPM, name: "Cloud Security Posture Management", vendor_evidence: [Wiz, "Palo Alto Prisma Cloud", "Orca Security", Lacework, "Check Point CloudGuard", "Microsoft Defender for Cloud"]}
+  - {code: CIEM, name: "Cloud Infrastructure Entitlement Management", vendor_evidence: ["Sonrai Security", Saviynt, "Ermetic (Tenable)", "Microsoft Entra Permissions Management", Britive, "Authomize (Delinea)"]}
+  - {code: DDR, name: "Data Detection and Response", vendor_evidence: ["Cyera DDR", "Dig (Palo Alto)", "Sentra DDR", "Symmetry Systems DataGuard", "Varonis DatAlert"]}
+  - {code: AI-SPM, name: "AI Security Posture Management", vendor_evidence: ["Wiz AI-SPM", "Prisma AIRS (Palo Alto)", "Lasso Security", "Protect AI", HiddenLayer, CalypsoAI]}

@@ -1,0 +1,377 @@
+schema_version: 2
+domain: MA
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-H1-APQC-TAGGING
+    summary: "Tag 17 untagged + REPLACE 2 discovery_substring cross-domain handoffs with agent_curated handoff_processes rows."
+    finding: "H1 hard-fails. 2 of 19 cross-domain handoffs carry handoff_processes rows (78 to process 133 L3 `Establish goals, objectives, and measures for products/services by channel/segment`, discovery_substring, record_status=new; 232 to process 641 L4 `Acquire members to customer loyalty program`, discovery_substring, record_status=new). Zero agent_curated. Zero approved. Volume target per SKILL H1: 10 to 15 agent_curated rows. PCF id resolutions confirmed live for 22 (`Develop marketing strategy` L2), 23 (`Develop and manage marketing plans` L2), 147 (`Manage leads/opportunities` L3), 708 (`Identify/receive leads/opportunities` L4), 709 (`Validate and qualify leads/opportunities` L4), 1862 (`Collect and merge internal and third-party customer information` L5). Independent of B1A-M1; can load now."
+    action: "INSERT 17 + REPLACE 2 handoff_processes rows, all proposal_source=agent_curated, all record_status=new. Composed key (handoff_id, process_id) prevents duplicates."
+    affected_handoffs:
+      - {handoff_id: 60,  direction: outbound, source_domain: MA, target_domain: CRM,       trigger_event: "crm_lead.qualified",                payload: "crm_leads",            null_field: source_domain_module_id}
+      - {handoff_id: 69,  direction: outbound, source_domain: MA, target_domain: CDP,       trigger_event: "marketing_campaign.engagement_recorded", payload: "customers",         null_field: source_domain_module_id}
+      - {handoff_id: 74,  direction: outbound, source_domain: MA, target_domain: CDP,       trigger_event: "marketing_campaign.event_recorded",  payload: "customer_events",     null_field: source_domain_module_id}
+      - {handoff_id: 84,  direction: outbound, source_domain: MA, target_domain: CRM,       trigger_event: "nurture.completed",                  payload: "crm_leads",            null_field: source_domain_module_id}
+      - {handoff_id: 507, direction: outbound, source_domain: MA, target_domain: CRM,       trigger_event: "crm_lead.scored_above_threshold",    payload: "crm_leads",            null_field: source_domain_module_id}
+      - {handoff_id: 508, direction: outbound, source_domain: MA, target_domain: CDP,       trigger_event: "marketing_form.submitted",           payload: "crm_leads",            null_field: source_domain_module_id}
+      - {handoff_id: 509, direction: outbound, source_domain: MA, target_domain: CRM,       trigger_event: "nurture_journey.completed",          payload: "crm_leads",            null_field: source_domain_module_id}
+      - {handoff_id: 510, direction: outbound, source_domain: MA, target_domain: SALES-ENG, trigger_event: "lead_score.recomputed",              payload: "lead_scores",          null_field: source_domain_module_id}
+      - {handoff_id: 78,  direction: inbound,  source_domain: CDP,       target_domain: MA, trigger_event: "segment.activated",                  payload: "audience_segments",    null_field: target_domain_module_id}
+      - {handoff_id: 85,  direction: inbound,  source_domain: CRM,       target_domain: MA, trigger_event: "crm_contact.synced",                 payload: "crm_contacts",         null_field: target_domain_module_id}
+      - {handoff_id: 90,  direction: inbound,  source_domain: SMM,       target_domain: MA, trigger_event: "influencer_campaign.completed",      payload: "marketing_campaigns",  null_field: target_domain_module_id}
+      - {handoff_id: 91,  direction: inbound,  source_domain: SMM,       target_domain: MA, trigger_event: "social_post.published",              payload: "marketing_campaigns",  null_field: target_domain_module_id}
+      - {handoff_id: 94,  direction: inbound,  source_domain: HCMS,      target_domain: MA, trigger_event: "content_entry.published",            payload: "content_entries",      null_field: target_domain_module_id}
+      - {handoff_id: 232, direction: inbound,  source_domain: LOYALTY,   target_domain: MA, trigger_event: "member.lapsed",                      payload: "loyalty_members",      null_field: target_domain_module_id}
+      - {handoff_id: 327, direction: inbound,  source_domain: B2C-COMM,  target_domain: MA, trigger_event: "cart.abandoned",                     payload: "shopping_carts",       null_field: target_domain_module_id}
+      - {handoff_id: 328, direction: inbound,  source_domain: B2C-COMM,  target_domain: MA, trigger_event: "checkout.started",                   payload: "checkout_sessions",    null_field: target_domain_module_id}
+      - {handoff_id: 506, direction: inbound,  source_domain: B2C-COMM,  target_domain: MA, trigger_event: "coupon.redeemed",                    payload: "coupon_redemptions",   null_field: target_domain_module_id}
+      - {handoff_id: 808, direction: inbound,  source_domain: DXP,       target_domain: MA, trigger_event: "digital_experience.activated",       payload: "digital_experiences",  null_field: target_domain_module_id}
+      - {handoff_id: 811, direction: inbound,  source_domain: DXP,       target_domain: MA, trigger_event: "journey_step.abandoned",             payload: "journey_steps",        null_field: target_domain_module_id}
+    extra_proposed_pcf_tags:
+      - {handoff_id: 60,  process_id: 709,  action: insert,  confidence: confident_L4}
+      - {handoff_id: 84,  process_id: 147,  action: insert,  confidence: confident_L3}
+      - {handoff_id: 507, process_id: 709,  action: insert,  confidence: confident_L4}
+      - {handoff_id: 509, process_id: 147,  action: insert,  confidence: confident_L3}
+      - {handoff_id: 69,  process_id: 23,   action: insert,  confidence: confident_L2}
+      - {handoff_id: 74,  process_id: 23,   action: insert,  confidence: confident_L2}
+      - {handoff_id: 508, process_id: 708,  action: insert,  confidence: confident_L4}
+      - {handoff_id: 510, process_id: 147,  action: insert,  confidence: confident_L3}
+      - {handoff_id: 85,  process_id: 1862, action: insert,  confidence: confident_L5}
+      - {handoff_id: 90,  process_id: 23,   action: insert,  confidence: confident_L2}
+      - {handoff_id: 91,  process_id: 23,   action: insert,  confidence: confident_L2}
+      - {handoff_id: 94,  process_id: 23,   action: insert,  confidence: confident_L2}
+      - {handoff_id: 327, process_id: 23,   action: insert,  confidence: confident_L2}
+      - {handoff_id: 328, process_id: 23,   action: insert,  confidence: confident_L2}
+      - {handoff_id: 506, process_id: 23,   action: insert,  confidence: confident_L2}
+      - {handoff_id: 808, process_id: 23,   action: insert,  confidence: confident_L2}
+      - {handoff_id: 811, process_id: 23,   action: insert,  confidence: confident_L2}
+      - {handoff_id: 78,  process_id: 23,   action: replace, existing_process_id: 133, confidence: confident_L2}
+      - {handoff_id: 232, process_id: 23,   action: replace, existing_process_id: 641, confidence: confident_L2}
+
+b1b:
+  - id: B1B-M1-PHASE-M
+    summary: "Phase M load (>=2 modules + per-module system skills + per-module DMDO + per-master lifecycle states). Gated on user-owned architectural choices."
+    finding: "M1 hard-fails. Zero domain_modules rows on domain_id=70. Zero domain_module_host_domains rows. Per Rule #14 the >=3-capability threshold (MA carries 8: MA-EMAIL-CAMPAIGN, MA-JOURNEY-ORCH, MA-LEAD-SCORING, MA-LANDING-FORMS, MA-MOBILE-PUSH, MA-AB-OPTIMIZATION, MA-ATTRIB-MEASURE, MA-GEN-AI-CONTENT) requires >=2 module_kind=full modules. The deployable contract is missing. Five MA masters (marketing_campaigns 116, marketing_emails 117, lead_scores 118, nurture_journeys 119, marketing_forms 120) sit on the legacy domain_data_objects rollup with no module assignment. Per Rule #17 each module requires exactly one system skill with >=1 skill_tools row. Per Rule #12 each master+required data_object requires lifecycle states. None of these layers exist."
+    action: "Phase M load after Bucket 2 decisions land. Insert domain_modules per chosen split, per-module skills+skill_tools (the legacy ma-system skill id 17 with its 12 skill_tools rows is the seed), per-master data_object_lifecycle_states, per-module domain_module_data_objects rows that replace the current domain_data_objects rollup. Track as a separate Phase-A continuation, not a single-loader fix."
+    affected_masters:
+      - {data_object_id: 116, name: marketing_campaigns, target_module_id: null, workflow: campaign_authoring}
+      - {data_object_id: 117, name: marketing_emails,    target_module_id: null, workflow: email_send}
+      - {data_object_id: 118, name: lead_scores,         target_module_id: null, workflow: scoring}
+      - {data_object_id: 119, name: nurture_journeys,    target_module_id: null, workflow: journey_orchestration}
+      - {data_object_id: 120, name: marketing_forms,     target_module_id: null, workflow: form_capture}
+    blocked_by:
+      - {type: user_decision, ref: B2-M1}
+      - {type: user_decision, ref: B2-M2}
+
+  - id: B1B-B10b-OUTBOUND
+    summary: "PATCH source_domain_module_id on 8 outbound MA handoffs after Phase M lands."
+    finding: "B10b. All 8 outbound MA handoffs (60, 69, 74, 84, 507, 508, 509, 510) carry NULL source_domain_module_id. MA's owed work per B10b asymmetry. Provisional routing in B1-S3 of 2026-05-30 audit: 60 / 84 / 507 / 509 / 510 to MA-LEAD-SCORING; 69 / 74 to MA-JOURNEY-ORCH; 508 to MA-LANDING-PAGES (subject to final module split)."
+    action: "PATCH source_domain_module_id once domain_modules rows exist."
+    affected_handoffs:
+      - {handoff_id: 60,  direction: outbound, source_domain: MA, target_domain: CRM,       trigger_event: "crm_lead.qualified",                payload: "crm_leads",            null_field: source_domain_module_id}
+      - {handoff_id: 69,  direction: outbound, source_domain: MA, target_domain: CDP,       trigger_event: "marketing_campaign.engagement_recorded", payload: "customers",         null_field: source_domain_module_id}
+      - {handoff_id: 74,  direction: outbound, source_domain: MA, target_domain: CDP,       trigger_event: "marketing_campaign.event_recorded",  payload: "customer_events",     null_field: source_domain_module_id}
+      - {handoff_id: 84,  direction: outbound, source_domain: MA, target_domain: CRM,       trigger_event: "nurture.completed",                  payload: "crm_leads",            null_field: source_domain_module_id}
+      - {handoff_id: 507, direction: outbound, source_domain: MA, target_domain: CRM,       trigger_event: "crm_lead.scored_above_threshold",    payload: "crm_leads",            null_field: source_domain_module_id}
+      - {handoff_id: 508, direction: outbound, source_domain: MA, target_domain: CDP,       trigger_event: "marketing_form.submitted",           payload: "crm_leads",            null_field: source_domain_module_id}
+      - {handoff_id: 509, direction: outbound, source_domain: MA, target_domain: CRM,       trigger_event: "nurture_journey.completed",          payload: "crm_leads",            null_field: source_domain_module_id}
+      - {handoff_id: 510, direction: outbound, source_domain: MA, target_domain: SALES-ENG, trigger_event: "lead_score.recomputed",              payload: "lead_scores",          null_field: source_domain_module_id}
+    blocked_by:
+      - {type: depends_on, ref: B1B-M1-PHASE-M, reason: "No MA module FK target until Phase M lands."}
+
+  - id: B1B-B10b-INBOUND
+    summary: "PATCH target_domain_module_id on 11 inbound MA handoffs after Phase M lands."
+    finding: "B10b. All 11 inbound MA handoffs (78, 85, 90, 91, 94, 232, 327, 328, 506, 808, 811) carry NULL target_domain_module_id. MA's owed work per B10b asymmetry. Provisional routing in B1-S4 of 2026-05-30 audit: 78 to MA-JOURNEY-ORCH; 85 to MA-CAMPAIGN-AUTHORING; 90 / 91 to MA-CAMPAIGN-AUTHORING; 94 to MA-CAMPAIGN-AUTHORING; 232 to MA-JOURNEY-ORCH; 327 / 328 to MA-JOURNEY-ORCH; 506 to MA-ATTRIBUTION; 808 / 811 to MA-JOURNEY-ORCH."
+    action: "PATCH target_domain_module_id once domain_modules rows exist."
+    affected_handoffs:
+      - {handoff_id: 78,  direction: inbound,  source_domain: CDP,      target_domain: MA, trigger_event: "segment.activated",            payload: "audience_segments",   null_field: target_domain_module_id}
+      - {handoff_id: 85,  direction: inbound,  source_domain: CRM,      target_domain: MA, trigger_event: "crm_contact.synced",           payload: "crm_contacts",        null_field: target_domain_module_id}
+      - {handoff_id: 90,  direction: inbound,  source_domain: SMM,      target_domain: MA, trigger_event: "influencer_campaign.completed", payload: "marketing_campaigns", null_field: target_domain_module_id}
+      - {handoff_id: 91,  direction: inbound,  source_domain: SMM,      target_domain: MA, trigger_event: "social_post.published",        payload: "marketing_campaigns", null_field: target_domain_module_id}
+      - {handoff_id: 94,  direction: inbound,  source_domain: HCMS,     target_domain: MA, trigger_event: "content_entry.published",      payload: "content_entries",     null_field: target_domain_module_id}
+      - {handoff_id: 232, direction: inbound,  source_domain: LOYALTY,  target_domain: MA, trigger_event: "member.lapsed",                payload: "loyalty_members",     null_field: target_domain_module_id}
+      - {handoff_id: 327, direction: inbound,  source_domain: B2C-COMM, target_domain: MA, trigger_event: "cart.abandoned",               payload: "shopping_carts",      null_field: target_domain_module_id}
+      - {handoff_id: 328, direction: inbound,  source_domain: B2C-COMM, target_domain: MA, trigger_event: "checkout.started",             payload: "checkout_sessions",   null_field: target_domain_module_id}
+      - {handoff_id: 506, direction: inbound,  source_domain: B2C-COMM, target_domain: MA, trigger_event: "coupon.redeemed",              payload: "coupon_redemptions",  null_field: target_domain_module_id}
+      - {handoff_id: 808, direction: inbound,  source_domain: DXP,      target_domain: MA, trigger_event: "digital_experience.activated", payload: "digital_experiences", null_field: target_domain_module_id}
+      - {handoff_id: 811, direction: inbound,  source_domain: DXP,      target_domain: MA, trigger_event: "journey_step.abandoned",       payload: "journey_steps",       null_field: target_domain_module_id}
+    blocked_by:
+      - {type: depends_on, ref: B1B-M1-PHASE-M, reason: "No MA module FK target until Phase M lands."}
+
+  - id: B1B-A4-CATALOG-UX
+    summary: "Author domains.catalog_tagline + catalog_description per Rule #20 after user approves draft."
+    finding: "A4 fails. domains.catalog_tagline empty, domains.catalog_description empty. Per Rule #20 backfill is allowed but the draft must be surfaced and approved before write. Buyer-voice draft proposal: tagline = `Orchestrate marketing emails, nurture journeys, and lead-scoring across email, SMS, push, and the web.` Description = three paragraphs covering campaign authoring + send, journey orchestration + lead scoring, compliance-aware consent + preference management. Re-evaluation note: M8 (per-module UX copy) is the buyer surface a deploy chooser renders, so the user may prefer to defer A4 until Phase M lands and the module-grain copy drives the domain-grain copy."
+    action: "Surface the draft as B2-A4. Write to domains.catalog_tagline + domains.catalog_description only on explicit user approval."
+    blocked_by:
+      - {type: user_decision, ref: B2-A4}
+
+  - id: B1B-B6-INTRA-RELATIONSHIPS
+    summary: "Load 5 intra-domain data_object_relationships rows among the MA masters."
+    finding: "B6 fails. Zero data_object_relationships rows among the 5 MA masters (marketing_campaigns 116, marketing_emails 117, lead_scores 118, nurture_journeys 119, marketing_forms 120). Market-practice edges: marketing_campaigns has_many marketing_emails, nurture_journeys has_many marketing_emails (as steps), marketing_forms feeds lead_scores (form submission contributes scoring), nurture_journeys triggered_by lead_scores (score-threshold enrollment), marketing_campaigns has_many nurture_journeys. Verbs are editorial."
+    action: "Draft 5 relationship rows (verb + inverse_verb + relationship_type + relationship_kind + is_required + owner_side), surface to user per Rule #1, load via cluster-drafts loader."
+    affected_masters:
+      - {data_object_id: 116, name: marketing_campaigns, target_module_id: null, workflow: campaign_authoring}
+      - {data_object_id: 117, name: marketing_emails,    target_module_id: null, workflow: email_send}
+      - {data_object_id: 118, name: lead_scores,         target_module_id: null, workflow: scoring}
+      - {data_object_id: 119, name: nurture_journeys,    target_module_id: null, workflow: journey_orchestration}
+      - {data_object_id: 120, name: marketing_forms,     target_module_id: null, workflow: form_capture}
+    blocked_by:
+      - {type: user_decision, ref: B2-B6}
+
+  - id: B1B-B7-USERS-EDGES
+    summary: "Load 5 users-to-master data_object_relationships rows per Rule #10."
+    finding: "B7 fails. Zero users (data_object id 748, kind=platform_builtin) edges to any of the 5 MA masters. Expected actors: marketing_emails author, marketing_campaigns owner, nurture_journeys owner, marketing_forms owner, lead_scores scorer / model_owner. Verb mapping (catalog-conventional): users authors marketing_emails, users owns marketing_campaigns, users owns nurture_journeys, users owns marketing_forms, users configures lead_scores. The verbs are catalog-conventional, but user may want to confirm the actor mapping."
+    action: "Draft 5 user-edge rows (relationship_verb + inverse_verb + cardinality + is_required), surface to user, load."
+    affected_masters:
+      - {data_object_id: 116, name: marketing_campaigns, target_module_id: null, workflow: campaign_authoring}
+      - {data_object_id: 117, name: marketing_emails,    target_module_id: null, workflow: email_send}
+      - {data_object_id: 118, name: lead_scores,         target_module_id: null, workflow: scoring}
+      - {data_object_id: 119, name: nurture_journeys,    target_module_id: null, workflow: journey_orchestration}
+      - {data_object_id: 120, name: marketing_forms,     target_module_id: null, workflow: form_capture}
+    blocked_by:
+      - {type: user_decision, ref: B2-B7-VERBS, reason: "Confirmation of actor verb mapping (owns / authors / configures); user may prefer alternative phrasing."}
+
+  - id: B1B-B11-ALIASES
+    summary: "Author per-master data_object_aliases rows for the 5 MA masters; per-row wording per Rule #15."
+    finding: "B11 fails. Zero data_object_aliases on the 5 MA masters. Vendor terminology surface is clear from the 2026-05-30 audit: marketing_campaigns = `Campaign` (HubSpot, Marketo, Pardot) / `Journey` (SFMC, Braze) / `Flow` (Klaviyo, Iterable); nurture_journeys = `Journey` (Marketo, SFMC) / `Workflow` (HubSpot) / `Flow` (Klaviyo, ActiveCampaign, Iterable, Braze) / `Sequence` (Mailchimp); lead_scores = `Lead Score` (Marketo, Pardot, HubSpot) / `Predictive Lead Scoring` (HubSpot AI) / `Engagement Score` (SFMC variants); marketing_forms = `Form` (HubSpot) / `Landing Page Form` (Marketo) / `Form Handler` (Pardot); marketing_emails = `Email Send` (Marketo) / `Email Studio` (SFMC). Rule #15 requires per-row approval of `alias` text."
+    action: "Surface per-master alias candidate list as B2-B11. INSERT data_object_aliases rows only after user approves per-row wording. Aliases on data_object_aliases.alias_name are commerce-allowed under Rule #18 (data_object_aliases is one of the four commerce-shaped entities)."
+    affected_masters:
+      - {data_object_id: 116, name: marketing_campaigns, target_module_id: null, workflow: campaign_authoring}
+      - {data_object_id: 117, name: marketing_emails,    target_module_id: null, workflow: email_send}
+      - {data_object_id: 118, name: lead_scores,         target_module_id: null, workflow: scoring}
+      - {data_object_id: 119, name: nurture_journeys,    target_module_id: null, workflow: journey_orchestration}
+      - {data_object_id: 120, name: marketing_forms,     target_module_id: null, workflow: form_capture}
+    vendor_evidence:
+      - HubSpot Marketing Hub
+      - Adobe Marketo Engage
+      - Salesforce Marketing Cloud Account Engagement
+      - Salesforce Marketing Cloud Engagement
+      - Klaviyo
+      - Iterable
+      - Braze
+      - Mailchimp
+      - ActiveCampaign
+    blocked_by:
+      - {type: user_decision, ref: B2-B11}
+
+  - id: B1B-B12-LIFECYCLE-STATES
+    summary: "Load data_object_lifecycle_states for the 5 MA masters; gated on Phase M for domain_module_id anchoring."
+    finding: "B12 fails. Zero data_object_lifecycle_states across the 5 MA masters (marketing_campaigns 116, marketing_emails 117, lead_scores 118, nurture_journeys 119, marketing_forms 120). Rule #12 requires lifecycle states on every master+required data_object with a real workflow; no config-shape exemption is claimed (forms / campaigns / emails / nurture / scoring all have published vendor workflows). Per Rule #14 + M5 the requires_permission=true states need domain_module_id set to the realizing module, so the state load must follow Phase M."
+    action: "Draft state machines per master (initial / workflow gates with requires_permission=true / terminal / permission_verb_override for non-obvious verbs / domain_module_id once Phase M lands), surface to user, load via focused loader."
+    affected_masters:
+      - {data_object_id: 116, name: marketing_campaigns, target_module_id: null, workflow: draft_to_active_to_completed}
+      - {data_object_id: 117, name: marketing_emails,    target_module_id: null, workflow: draft_to_scheduled_to_sent_to_unsubscribed}
+      - {data_object_id: 118, name: lead_scores,         target_module_id: null, workflow: scored_to_recomputed_signal_loop}
+      - {data_object_id: 119, name: nurture_journeys,    target_module_id: null, workflow: draft_to_active_to_completed_to_paused}
+      - {data_object_id: 120, name: marketing_forms,     target_module_id: null, workflow: draft_to_published_to_archived}
+    blocked_by:
+      - {type: depends_on, ref: B1B-M1-PHASE-M, reason: "Workflow-gate states need domain_module_id (M5); requires Phase M modules first."}
+
+  - id: B1B-B4-PATTERN-FLAGS
+    summary: "Re-evaluate Rule #12 pattern flags on the 5 MA masters and PATCH the flips on user approval."
+    finding: "B4 partial pass. Pattern flags default to false on all 5 masters with no positive re-evaluation recorded. Vendor-shape re-evaluation: marketing_emails.has_submit_lock=true (once a send job is scheduled it locks per HubSpot / Marketo / SFMC), marketing_campaigns.has_submit_lock=true (similar lock pattern), nurture_journeys.has_submit_lock=true (activation locks the definition), marketing_forms.has_personal_content=true (forms collect PII directly), lead_scores.has_personal_content=false (derived). Per Rule #15 these PATCHes do not auto-populate notes; the audit decision is captured in history.md."
+    action: "PATCH each flag on user approval (per-flag yes/no). Independent of B1B-M1."
+    affected_masters:
+      - {data_object_id: 116, name: marketing_campaigns, target_module_id: null, workflow: campaign_authoring}
+      - {data_object_id: 117, name: marketing_emails,    target_module_id: null, workflow: email_send}
+      - {data_object_id: 118, name: lead_scores,         target_module_id: null, workflow: scoring}
+      - {data_object_id: 119, name: nurture_journeys,    target_module_id: null, workflow: journey_orchestration}
+      - {data_object_id: 120, name: marketing_forms,     target_module_id: null, workflow: form_capture}
+    blocked_by:
+      - {type: user_decision, ref: B2-B4}
+
+  - id: B1B-F1-LEGACY-SKILL
+    summary: "Replace legacy domain-level ma-system skill (id 17) with per-module system skills as Phase M lands."
+    finding: "F1 transitional pass today: legacy domain_id-anchored system skill 17 `ma-system` (domain_module_id=null) remains. Acceptable only while no module-level system skill exists. The 12 skill_tools rows on this skill (5 query, 4 mutate, 2 compute, 1 side_effect) are the seed for the per-module split. F1 will hard-fail the moment any Phase-M module-level skill is authored, so this is queued for replacement, not deletion."
+    action: "When Phase M loads the per-module skills, redistribute the 12 skill_tools rows by data_object_id (5 query rows go to the master's owning module, 4 mutate rows similarly), then DELETE the legacy ma-system row. Audit F4 invariant on every new skill_tools placement."
+    extra_legacy_skill_id: 17
+    extra_legacy_skill_tool_count: 12
+    blocked_by:
+      - {type: depends_on, ref: B1B-M1-PHASE-M, reason: "Per-module skills must exist before the legacy row can be retired."}
+
+b2:
+  - id: B2-M1
+    summary: "Module split for the MA Phase M load (5 / 4 / 3 modules)."
+    question: "How should MA be split into modules? Per Rule #14, the 8-capability count requires >=2 module_kind=full rows. Recommended: 4 modules (option b)."
+    options:
+      - "(a) 5 modules: MA-CAMPAIGN-AUTHORING (masters marketing_campaigns + marketing_emails), MA-JOURNEY-ORCH (masters nurture_journeys), MA-LEAD-SCORING (masters lead_scores), MA-LANDING-PAGES (masters marketing_forms), MA-ATTRIBUTION (no master, derived-signals)."
+      - "(b) 4 modules: same as (a) but fold MA-ATTRIBUTION into MA-CAMPAIGN-AUTHORING. Recommended."
+      - "(c) 3 modules: fold both MA-ATTRIBUTION and MA-LANDING-PAGES into MA-CAMPAIGN-AUTHORING."
+      - "(d) Other split (specify)."
+    why: "Architectural choice. Carried over from 2026-05-30 B2-S1."
+
+  - id: B2-A4
+    summary: "Approve buyer-voice catalog_tagline + catalog_description for domains.MA."
+    question: "Approve the draft, rewrite, or defer until Phase M lands?"
+    options:
+      - "Approve draft. Tagline: `Orchestrate marketing emails, nurture journeys, and lead-scoring across email, SMS, push, and the web.` Description: three paragraphs covering campaign authoring + send, journey orchestration + lead scoring, compliance-aware consent + preference management."
+      - "Rewrite (specify new tagline + description)."
+      - "Defer until Phase M lands so module-grain copy (M8) drives the domain-grain copy."
+    why: "Marketing voice ages on a different cycle from analyst voice; Rule #20 forbids overwriting once non-empty. User owns wording before first write."
+
+  - id: B2-B6
+    summary: "Approve verb wording for the 5 intra-master relationship edges."
+    question: "Approve verb set, rewrite, or drop specific edges?"
+    options:
+      - "Approve as proposed: marketing_campaigns has_many marketing_emails; nurture_journeys has_many marketing_emails (steps); marketing_forms feeds lead_scores; nurture_journeys triggered_by lead_scores; marketing_campaigns has_many nurture_journeys."
+      - "Rewrite specific verbs (specify per edge)."
+      - "Drop specific edges (specify)."
+    why: "Verb wording is editorial; user owns canonical phrasing."
+
+  - id: B2-B7-VERBS
+    summary: "Confirm verb mapping for the 5 users-to-master edges (Rule #10)."
+    question: "Approve verb mapping or alternative phrasing?"
+    options:
+      - "Approve as proposed: users authors marketing_emails; users owns marketing_campaigns; users owns nurture_journeys; users owns marketing_forms; users configures lead_scores."
+      - "Rewrite (specify per edge)."
+    why: "Catalog-conventional verbs, but user may prefer alternative phrasing per role."
+
+  - id: B2-B11
+    summary: "Alias authoring for the 5 MA masters per Rule #15."
+    question: "Supply per-master alias list, or skip until Phase M lands?"
+    options:
+      - "Approve per-master aliases from the candidate vendor-terminology surface (HubSpot, Marketo, SFMC, Pardot, Klaviyo, Iterable, Braze, Mailchimp, ActiveCampaign). User to specify per-row alias_name."
+      - "Skip; revisit after Phase M lands."
+    why: "Rule #15 forbids the agent from auto-populating any text field requiring editorial choice; per-row wording must be user-approved."
+
+  - id: B2-B4
+    summary: "Pattern-flag re-evaluation per Rule #12 on the 5 MA masters."
+    question: "Approve flag flips per master?"
+    options:
+      - "marketing_emails.has_submit_lock=true: yes / no."
+      - "marketing_campaigns.has_submit_lock=true: yes / no."
+      - "nurture_journeys.has_submit_lock=true: yes / no."
+      - "marketing_forms.has_personal_content=true: yes / no."
+      - "lead_scores.has_personal_content remains false (proposed): confirm."
+    why: "Workflow-shape judgment the user owns."
+
+  - id: B2-M2
+    summary: "Pre-M deployability execution path for the Phase M fix."
+    question: "How should the Phase M fix be scheduled?"
+    options:
+      - "(a) Schedule Phase M load now as a dedicated session (1 to 2 days)."
+      - "(b) Defer to a planned Phase A re-validation wave."
+      - "(c) Load only MA-CAMPAIGN-AUTHORING as a partial first step."
+    why: "Planning question, not a data question. Carried over from 2026-05-30 B2-S6."
+
+b3:
+  - id: B3-MARKETING-EMAIL-SENDS
+    candidate: "marketing_email_sends"
+    rationale: "Per-send instance modeled in every flagship platform (audience + time + variant). Current marketing_emails master conflates template and send. Verification path: HubSpot Email Send docs, Marketo Email Send API, SFMC Send Definition documentation."
+    vendor_evidence:
+      - Adobe Marketo Engage
+      - Salesforce Marketing Cloud Engagement
+      - HubSpot Marketing Hub
+      - Iterable
+      - Klaviyo
+    proposed_module: "MA-CAMPAIGN-AUTHORING"
+
+  - id: B3-AUDIENCE-LISTS
+    candidate: "audience_lists"
+    rationale: "First-class authored lists distinct from CDP-mastered audience_segments. The MA-side list is the campaign-targeting list, not the dynamic CDP segment. Verification path: HubSpot Lists docs, Marketo Smart List docs, Mailchimp Audience docs, Klaviyo Lists docs."
+    vendor_evidence:
+      - HubSpot Marketing Hub
+      - Adobe Marketo Engage
+      - Mailchimp
+      - Klaviyo
+    proposed_module: "MA-CAMPAIGN-AUTHORING"
+
+  - id: B3-SUBSCRIBER-PREFERENCES
+    candidate: "subscriber_preferences"
+    rationale: "Per-subscriber consent and frequency preferences distinct from CDP customers. MA owns the preference-center experience. Verification path: Klaviyo Subscriber Profiles, HubSpot Subscription Preferences, Marketo Communication Limits."
+    vendor_evidence:
+      - Klaviyo
+      - HubSpot Marketing Hub
+      - Adobe Marketo Engage
+      - Salesforce Marketing Cloud Account Engagement
+    proposed_module: "MA-CAMPAIGN-AUTHORING"
+
+  - id: B3-AB-TEST-VARIANTS
+    candidate: "ab_test_variants"
+    rationale: "A/B test variants modeled as first-class records (variant_a, variant_b, winner, metric). Capability MA-AB-OPTIMIZATION currently has no underlying entity. Verification path: Marketo A/B Test docs, HubSpot A/B Test docs, Klaviyo A/B Test docs."
+    vendor_evidence:
+      - Adobe Marketo Engage
+      - Oracle Eloqua
+      - HubSpot Marketing Hub
+      - Klaviyo
+    proposed_module: "MA-CAMPAIGN-AUTHORING"
+
+  - id: B3-EMAIL-SEND-METRICS
+    candidate: "email_send_metrics"
+    rationale: "Per-send aggregates (delivered, opened, clicked, bounced, complained, unsubscribed) modeled in every flagship platform. Currently the only proxy is the trigger_events 515 to 518; no master records the rollups. Verification path: vendor analytics docs."
+    vendor_evidence:
+      - Adobe Marketo Engage
+      - Salesforce Marketing Cloud Engagement
+      - HubSpot Marketing Hub
+      - Klaviyo
+      - Iterable
+    proposed_module: "MA-ATTRIBUTION"
+
+  - id: B3-JOURNEY-STEP-EVENTS
+    candidate: "journey_step_events"
+    rationale: "Per-step traversal events distinct from generic customer_events. Per-step latency, abandon, branch-taken. Links to the DXP journey_step.abandoned (handoff 811). Verification path: Braze Canvas Steps, Iterable Journey Steps, Customer.io Workflow Steps, SFMC Journey Builder."
+    vendor_evidence:
+      - Braze
+      - Iterable
+      - Salesforce Marketing Cloud Engagement
+    proposed_module: "MA-JOURNEY-ORCH"
+
+  - id: B3-SMS-MARKETING-DOMAIN
+    candidate: "SMS-MARKETING (candidate-domain)"
+    rationale: "Standalone SMS-marketing market with TCPA-shaped compliance surface, distinct from MA cross-channel orchestration. Adjacency: MA, CDP, B2C-COMM. Carried over from 2026-05-30."
+    vendor_evidence:
+      - Attentive
+      - Postscript
+      - Klaviyo
+      - Sinch
+      - Community
+    proposed_module: null
+
+  - id: B3-TRANSACT-EMAIL-DOMAIN
+    candidate: "TRANSACT-EMAIL (candidate-domain)"
+    rationale: "Transactional email infrastructure distinct from marketing email orchestration. Different buyer (engineering vs marketing ops), different SLAs, different deliverability model. Adjacency: MA, B2C-COMM, SUB-MGMT, CSM."
+    vendor_evidence:
+      - SendGrid
+      - Postmark
+      - Resend
+      - Mailgun
+      - AWS SES
+      - SparkPost
+    proposed_module: null
+
+  - id: B3-REVERSE-ETL-DOMAIN
+    candidate: "REVERSE-ETL (candidate-domain)"
+    rationale: "Already queued by the CDP audit; bumped by MA. MA is the primary downstream destination for reverse-ETL syncs."
+    vendor_evidence:
+      - Hightouch
+      - Census
+      - RudderStack
+      - Polytomic
+      - Grouparoo
+    proposed_module: null
+
+  - id: B3-MA-COMPLIANCE-MODULE
+    candidate: "MA-COMPLIANCE (or MA-PRIVACY) module"
+    rationale: "Consent management, preference center, double-opt-in records, unsubscribe lists, suppression. Currently spread across marketing_forms and the 7 regulations. A dedicated module would master subscriber_preferences plus a new consent_records entity. Verification path: HubSpot Subscription Preferences, OneTrust Consent (commerce-adjacent), Klaviyo Consent."
+    vendor_evidence:
+      - HubSpot Marketing Hub
+      - Klaviyo
+    proposed_module: "MA-COMPLIANCE"
+
+  - id: B3-MA-MOBILE-PUSH-MODULE
+    candidate: "MA-MOBILE-PUSH split or fold (modularization)"
+    rationale: "Capability MA-MOBILE-PUSH has no module home unless folded into MA-JOURNEY-ORCH. Braze / Iterable / Customer.io blur the line; SFMC MobileConnect / MobilePush keeps them as a sub-module. Folding into MA-JOURNEY-ORCH is the lighter option."
+    vendor_evidence:
+      - Braze
+      - Iterable
+      - Customer.io
+      - Salesforce Marketing Cloud Engagement
+    proposed_module: "MA-JOURNEY-ORCH"
+
+  - id: B3-REGULATION-CASL-LGPD-PIPEDA
+    candidate: "CASL / PIPEDA / LGPD / Australia Spam Act / ePrivacy Directive (regulations)"
+    rationale: "Possible additions for future Phase 0 review beyond the current 7 (GDPR, CCPA/CPRA, EU AI Act, EU DSA, COPPA, TCPA, CAN-SPAM)."
+    vendor_evidence: []
+    proposed_module: null

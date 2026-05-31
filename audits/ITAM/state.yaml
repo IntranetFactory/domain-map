@@ -1,0 +1,203 @@
+schema_version: 2
+domain: ITAM
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-N1
+    summary: PATCH notes to empty on 8 cross-domain handoffs that carry forbidden Rule #15 "source/target NULL until X is modularized" annotations.
+    finding: |
+      8 cross-domain handoff rows (ids 462, 632, 633, 634, 635, 645, 799, 853) carry forbidden notes strings of the form "source NULL until <DOMAIN> is modularized" or "target NULL until <DOMAIN> is modularized" naming GRC, ERP-FIN, HAM, IGA, RMM, KUBE-PLAT, and APM. Rule #15 RESCINDED the prior write-time license that authored these. The unmodularized counter-party is already tracked in the report-only follow-ups section of history.md; it does not need to live in the notes column.
+    action: |
+      PATCH handoffs.notes='' on ids 462, 632, 633, 634, 635, 645, 799, 853. Use semantius CLI surgical PATCHes (8 rows is below the loader threshold). Verify post-write with /handoffs?id=in.(...)&select=id,notes returning empty strings.
+    affected_handoffs:
+      - {handoff_id: 462, direction: inbound, source_domain: IGA, target_domain: ITAM, trigger_event: iga_provisioning_event.completed, payload: iga_provisioning_events, null_field: source_domain_module_id}
+      - {handoff_id: 632, direction: outbound, source_domain: ITAM, target_domain: ERP-FIN, trigger_event: asset_lifecycle_event.recorded, payload: asset_lifecycle_events, null_field: target_domain_module_id}
+      - {handoff_id: 633, direction: outbound, source_domain: ITAM, target_domain: HAM, trigger_event: asset.retired_for_disposal, payload: asset_lifecycle_events, null_field: target_domain_module_id}
+      - {handoff_id: 634, direction: outbound, source_domain: ITAM, target_domain: GRC, trigger_event: asset_contract.expired, payload: asset_contracts, null_field: target_domain_module_id}
+      - {handoff_id: 635, direction: outbound, source_domain: ITAM, target_domain: ERP-FIN, trigger_event: asset_contract.renewed, payload: asset_contracts, null_field: target_domain_module_id}
+      - {handoff_id: 645, direction: inbound, source_domain: RMM, target_domain: ITAM, trigger_event: automation_script.executed, payload: automation_scripts, null_field: source_domain_module_id}
+      - {handoff_id: 799, direction: inbound, source_domain: KUBE-PLAT, target_domain: ITAM, trigger_event: kubernetes_cluster.provisioned, payload: kubernetes_clusters, null_field: source_domain_module_id}
+      - {handoff_id: 853, direction: inbound, source_domain: APM, target_domain: ITAM, trigger_event: technology_platform.registered, payload: technology_platforms, null_field: source_domain_module_id}
+
+  - id: B1A-N2
+    summary: PATCH notes to empty on 4 intra-domain handoffs whose notes restate the structured columns.
+    finding: |
+      4 intra-domain handoff rows (ids 1083, 1084, 1085, 1086) carry single-sentence notes that restate the trigger_event + payload + module pair already in structured columns: "Contract activation seeds initial procured/deployed lifecycle events...", "Renewal generates renewed lifecycle events on covered assets.", "Expiry marks support_expired lifecycle events on covered assets; intra-domain leg complements the GRC outbound on id 634.", "Recorded lifecycle events feed the portfolio TCO rollup." Per Rule #15 the schema-restatement pattern is forbidden; the underlying meaning is already legible from trigger_event.description and the DMDO master pair.
+    action: |
+      PATCH handoffs.notes='' on ids 1083, 1084, 1085, 1086. Surgical PATCHes via semantius CLI.
+    affected_handoffs:
+      - {handoff_id: 1083, direction: intra-domain, source_domain: ITAM, target_domain: ITAM, trigger_event: asset_contract.activated, payload: asset_contracts, null_field: none}
+      - {handoff_id: 1084, direction: intra-domain, source_domain: ITAM, target_domain: ITAM, trigger_event: asset_contract.renewed, payload: asset_contracts, null_field: none}
+      - {handoff_id: 1085, direction: intra-domain, source_domain: ITAM, target_domain: ITAM, trigger_event: asset_contract.expired, payload: asset_contracts, null_field: none}
+      - {handoff_id: 1086, direction: intra-domain, source_domain: ITAM, target_domain: ITAM, trigger_event: asset_lifecycle_event.recorded, payload: asset_lifecycle_events, null_field: none}
+
+  - id: B1A-E1
+    summary: PATCH trigger_events.event_category to 'state_change' on 4 ITAM events that currently carry empty values.
+    finding: |
+      Events 613 (asset_contract.renewed), 614 (asset_contract.expired), 615 (asset_lifecycle_event.recorded), 616 (asset.retired_for_disposal) all carry event_category=''. Event 1209 (asset_contract.activated) carries 'state_change' correctly. Per Rule #13 the allowed enum is lifecycle, state_change, threshold, signal; all five events are state changes on their master.
+    action: |
+      PATCH trigger_events.event_category='state_change' on ids 613, 614, 615, 616. Surgical PATCH via semantius CLI postgrestRequest. Verify with /trigger_events?id=in.(613,614,615,616)&select=id,event_name,event_category.
+    affected_events:
+      - {id: 613, event_name: asset_contract.renewed, current_category: "", proposed_category: state_change}
+      - {id: 614, event_name: asset_contract.expired, current_category: "", proposed_category: state_change}
+      - {id: 615, event_name: asset_lifecycle_event.recorded, current_category: "", proposed_category: state_change}
+      - {id: 616, event_name: asset.retired_for_disposal, current_category: "", proposed_category: state_change}
+
+b1b:
+  - id: B1B-H8
+    summary: APQC tag for cross-domain handoff 31 (ITSM -> ITAM-LIFECYCLE, service_incident.asset_failure) deferred to Discover Pass 3 pending ITSM-side PCF attribution.
+    finding: |
+      Handoff 31 sits between ITSM incident management (PCF 20903 family) and ITAM asset-record maintenance (PCF 1552 / 19249). The current substring tagger may already attach an ITSM-side PCF; let Discover Pass 3 reconcile cross-domain attribution before this audit force-tags it.
+    blocked_by:
+      - {type: depends_on, ref: discover_pass_3_itsm_attribution, reason: ITSM-side PCF lookup must reconcile incident vs asset-record framing first}
+    affected_handoffs:
+      - {handoff_id: 31, direction: inbound, source_domain: ITSM, target_domain: ITAM, trigger_event: service_incident.asset_failure, payload: asset_lifecycle_events, null_field: none}
+
+  - id: B1B-H9
+    summary: APQC tag for cross-domain handoff 799 (KUBE-PLAT -> ITAM-NORMALIZATION-CATALOG, kubernetes_cluster.provisioned) deferred pending KUBE-PLAT scoping.
+    finding: |
+      Kubernetes container registration is closer to platform-discovery than fixed-asset accounting; APQC has no clean cloud-platform-registration entry. Defer pending KUBE-PLAT audit decisions about whether kube clusters belong in the asset register at all. Also linked to B2-MOD57 (does module 57 master anything).
+    blocked_by:
+      - {type: domain_audit, blocking_domain: KUBE-PLAT, milestone: scope_decision_for_kube_clusters_in_asset_register}
+      - {type: user_decision, ref: B2-MOD57}
+    affected_handoffs:
+      - {handoff_id: 799, direction: inbound, source_domain: KUBE-PLAT, target_domain: ITAM, trigger_event: kubernetes_cluster.provisioned, payload: kubernetes_clusters, null_field: source_domain_module_id}
+
+  - id: B1B-S4
+    summary: Rewrite domains.business_logic on ITAM (row 3) to remove em-dash and switch British "Normalisation" to American "Normalization". Awaits user OK on the exact wording.
+    finding: |
+      domains.business_logic for ITAM (id 3) currently reads "Normalisation tables (the same hardware/software model expressed inconsistently across feeds) are the small irreducible kernel <U+2014> they require maintained reference data, not a runtime engine." Both the em-dash (forbidden project-wide) and the British spelling violate project rules. Proposed replacement: "Normalization tables (the same hardware/software model expressed inconsistently across feeds) are the small irreducible kernel, they require maintained reference data, not a runtime engine."
+    blocked_by:
+      - {type: user_decision, ref: B1B-S4_wording_confirmation}
+
+  - id: B1B-S1
+    summary: Draft buyer-voice catalog_tagline + catalog_description for ITAM domain (row 3) plus all 4 ITAM modules (57, 58, 59, 60). Awaits user approval per Rule #20.
+    finding: |
+      A4 fails on the ITAM domain row (both catalog_tagline and catalog_description empty); M8 fails on every module (57 ITAM-NORMALIZATION-CATALOG, 58 ITAM-CONTRACTS, 59 ITAM-LIFECYCLE, 60 ITAM-PORTFOLIO-REPORTING). Rule #20 requires drafting both fields per the buyer-voice rule and surfacing for user review BEFORE writing. Five rows total. Once a non-empty value lands, future overwrites need explicit per-row approval.
+    blocked_by:
+      - {type: user_decision, ref: B1B-S1_request_drafts_now_or_defer}
+    affected_modules: [57, 58, 59, 60]
+
+b2:
+  - id: B2-MOD57
+    summary: ITAM-NORMALIZATION-CATALOG (module 57) has zero own data_objects but receives 2 inbound cross-domain handoffs.
+    question: |
+      Module 57 is described as a computed reconciliation layer with no own data_objects, yet handoffs 799 (KUBE-PLAT) and 853 (APM) target it with payloads kubernetes_clusters (448) and technology_platforms (269). Should we (a) re-route the inbounds to ITAM-LIFECYCLE which masters asset_lifecycle_events and can record the registration as a lifecycle event, (b) add a real master to module 57 such as asset_taxonomies / normalization_rules / vendor_normalizations modeled after Flexera Technopedia or Snow SLM, or (c) re-classify module 57 as module_kind='starter' since it has no master surface?
+    options:
+      - "(a) Re-route inbounds to ITAM-LIFECYCLE; module 57 stays a derived analytical layer."
+      - "(b) Add asset_taxonomies / normalization_rules master to module 57."
+      - "(c) Re-classify module 57 as starter."
+    why: |
+      Without one of these decisions, the two inbound handoffs arrive at a module that masters nothing, which leaves the deployer / fact-sheet emitter with no consumer DMDO row to attribute the inbound to. The decision also gates Bucket 3 row 3 (`normalization_rules` candidate) and Bucket 3 row 5 (`cost_allocations` boundary with FINOPS).
+
+  - id: B2-MOD60
+    summary: ITAM-PORTFOLIO-REPORTING (module 60) has 1 consumer DMDO and zero masters.
+    question: |
+      Should module 60 master a portfolio_snapshots entity that captures point-in-time TCO and portfolio-position rows (as Flexera One and ServiceNow ITAM do), or remain a derived analytical layer over upstream masters?
+    options:
+      - "(a) Add portfolio_snapshots (master + required) to module 60."
+      - "(b) Accept module 60 as a derived analytical layer; no master."
+    why: |
+      Same architectural shape as B2-MOD57. The Phase 0 candidate `portfolio_snapshots` (Bucket 3 row 4) depends on this decision.
+
+  - id: B2-S2P-PO
+    summary: purchase_orders (73) has no domain_module_data_objects master row anywhere in the catalog; canonical owner is S2P per legacy domain_data_objects only.
+    question: |
+      Schedule an S2P b1 audit to close the master gap, or accept it as a long-standing legacy gap that ITAM-LIFECYCLE consumes through?
+    options:
+      - "(a) Schedule S2P b1 audit; ITAM-LIFECYCLE consumer DMDO stays valid once S2P models the master at the module grain."
+      - "(b) Accept legacy gap; ITAM-LIFECYCLE consumer points at a data_object with no module-level canonical owner."
+    why: |
+      The local fix is a no-op (the consumer DMDO is correct on ITAM-LIFECYCLE side); only S2P can author the master.
+
+  - id: B2-GDPR
+    summary: GDPR applicability on ITAM is marked conditional.
+    question: |
+      Is "conditional" still right, or should it be tightened to "mandatory" given that EU deployments will trigger GDPR coverage on the embedded users edges and the hcm_positions reference shape?
+    options:
+      - "(a) Upgrade GDPR applicability to mandatory."
+      - "(b) Keep conditional; deployments outside EU jurisdictions may legitimately not trigger."
+    why: |
+      Tightening propagates compliance signals through the catalog; loosening keeps the room for non-EU-only deployments. Trade-off is real and the audit cannot resolve it without product / legal input.
+
+  - id: B2-CROSS-CUT-CAPS
+    summary: Cross-cutting capability rename for ITAM-NORMALIZATION (533) and ITAM-RECONCILIATION (537).
+    question: |
+      Should we rename these two capabilities to domain-neutral ASSET-NORMALIZATION / ASSET-RECONCILIATION and add capability_domains rows linking each to HAM, SAM, SMP, FINOPS, EAM (5 sub-domains each)?
+    options:
+      - "(a) Rename + link as cross-cutting; matches the Cross-cutting capability convention (>=3 domains)."
+      - "(b) Keep ITAM-prefixed; the substrate behavior is genuinely scoped to the umbrella domain."
+    why: |
+      Both capabilities describe substrate behaviors the sub-domains share. The convention says >=3 domains qualifies; 5 sub-domains is a clear pass.
+
+  - id: B2-LIFECYCLE-EXEMPT
+    summary: Confirm config-shape lifecycle exemption for asset_lifecycle_events (55) lives in history.md, not in data_objects.notes.
+    question: |
+      Do we positively confirm the B12 config-shape exemption for asset_lifecycle_events (zero lifecycle states because every state is captured by the event row itself) and let it live in this audit file going forward, never in data_objects.notes (Rule #15)?
+    options:
+      - "(a) Confirm exemption; tracked in history.md."
+      - "(b) Re-evaluate; perhaps a small lifecycle state machine (recorded -> superseded?) is justified."
+    why: |
+      The prior audit licensed populating data_objects.notes with the exemption rationale; Rule #15 rescinds that. We need an explicit user confirmation to make the exemption durable in the audit trail.
+
+  - id: B2-CONFIRM-N-FIXES
+    summary: Confirm Bucket 1 PATCH batch (B1A-N1 + B1A-N2 + B1A-E1) can run as a single loader pass.
+    question: |
+      Approve the 8 cross-domain notes wipes + 4 intra-domain notes wipes + 4 trigger_events event_category PATCHes as a single fix loader, or want them split into separate runs?
+    options:
+      - "(a) Single loader, all 16 rows; surgical idempotent PATCHes."
+      - "(b) Split: notes wipes first, event_category second."
+    why: |
+      All are mechanical and unrelated to each other; bundling reduces overhead but split keeps the audit trail per concern.
+
+b3:
+  - id: B3-ASSET-ASSIGN
+    candidate: asset_assignments
+    rationale: |
+      ServiceNow ITAM, Snow Atlas, and Flexera One all model current-holder (assigned employee, current location, cost center) as an entity distinct from asset lifecycle events. Today ITAM-LIFECYCLE captures every state change as an event but has no first-class "who currently holds this asset" master, which forces downstream consumers to derive the holder from the most recent assignment event. A first-class assignments master would also be the natural target for HCM employee.terminated handoffs (currently the handoff payload is asset_lifecycle_events).
+    vendor_evidence: [ServiceNow ITAM, Snow Atlas, Flexera One]
+    proposed_module: ITAM-LIFECYCLE
+
+  - id: B3-ASSET-AUDITS
+    candidate: asset_audits
+    rationale: |
+      Snow Atlas and Flexera One model periodic physical-asset audit cycles as a scoped reconciliation entity, distinct from point-in-time asset_lifecycle_events. The audit row captures the scope (location, asset_category), the schedule, the participants, and the reconciliation outcome. Without this, audit findings either pile into lifecycle events losing the scope, or live outside the catalog entirely.
+    vendor_evidence: [Snow Atlas, Flexera One]
+    proposed_module: ITAM-LIFECYCLE
+
+  - id: B3-NORM-RULES
+    candidate: normalization_rules / asset_taxonomies
+    rationale: |
+      Flexera Technopedia and Snow SLM ship vendor + product taxonomies; ITAM platforms host customer-side overrides on top. Today ITAM-NORMALIZATION-CATALOG (module 57) masters nothing. Adding a normalization_rules or asset_taxonomies master would give module 57 a real master surface; depends on B2-MOD57 resolution.
+    vendor_evidence: [Flexera Technopedia, Snow SLM]
+    proposed_module: ITAM-NORMALIZATION-CATALOG
+
+  - id: B3-PORTFOLIO-SNAP
+    candidate: portfolio_snapshots
+    rationale: |
+      ServiceNow ITAM and Flexera One model point-in-time portfolio snapshots for historical rollup reporting. Without it, ITAM-PORTFOLIO-REPORTING (module 60) cannot store its derivations and depends on recomputation on every read. Resolution depends on B2-MOD60.
+    vendor_evidence: [ServiceNow ITAM, Flexera One]
+    proposed_module: ITAM-PORTFOLIO-REPORTING
+
+  - id: B3-COST-ALLOC
+    candidate: cost_allocations
+    rationale: |
+      Snow Atlas and ServiceNow ITAM model cost-center / cost-allocation rules over asset spend, with allocations resolved at reporting time. Boundary with FINOPS: FinOps platforms also model cost allocations against cloud spend specifically. Decision on which domain owns the master is a Phase 0 finding pending vetting.
+    vendor_evidence: [Snow Atlas, ServiceNow ITAM]
+    proposed_module: ITAM-PORTFOLIO-REPORTING
+
+  - id: B3-CONTRACT-RENEWALS
+    candidate: contract_renewal_events
+    rationale: |
+      Many ITAM platforms model renewal as a first-class event distinct from contract state changes (separate workflow with its own approvals, separate accounting impact). Could either become its own master or fold into asset_lifecycle_events with a typed event_subtype. Vendor research would confirm which shape pure-play vendors use.
+    vendor_evidence: [Flexera One, ServiceNow ITAM]
+    proposed_module: ITAM-CONTRACTS
+
+  - id: B3-USAGE-METRICS
+    candidate: usage_metrics
+    rationale: |
+      SAM-adjacent: usage metering for software and SaaS. May belong in SAM or SMP rather than the ITAM umbrella. Phase 0 vetting would arbitrate ownership; current placement in ITAM-PORTFOLIO-REPORTING is speculative.
+    vendor_evidence: [Flexera One, Snow License Manager]
+    proposed_module: ITAM-PORTFOLIO-REPORTING

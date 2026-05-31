@@ -1,0 +1,228 @@
+schema_version: 2
+domain: SOAR
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-RULE-EMDASH
+    summary: "domains.business_logic for SOAR (id 12) contains a U+2014 em-dash; CLAUDE.md forbids the character everywhere including catalog data."
+    finding: |
+      The live value of domains.business_logic for SOAR (id 12) is:
+      "Playbook DSL runtime that executes orchestrated steps across security tools [U+2014] the engine IS the product, even if individual steps are declarative."
+      The U+2014 character is forbidden per CLAUDE.md (project-wide), which applies explicitly to descriptions, notes, and business_logic fields written via semantius.
+    action: |
+      PATCH /domains?id=eq.12 setting business_logic to:
+      "Playbook DSL runtime that executes orchestrated steps across security tools. The engine IS the product, even if individual steps are declarative."
+      No record_status change. No other field touched. Mechanical idempotent rewrite.
+    affected_entities:
+      - domains (id 12)
+    extra_rule_violated: "CLAUDE.md em-dash rule"
+
+  - id: B1-S3
+    summary: "B11 hard-fail: zero domain_aliases rows for SOAR."
+    finding: |
+      Live read /domain_aliases?domain_id=eq.12 returns 0 rows.
+      Rule #20 requires domain_aliases populated for catalog search + per-domain skill runtime trigger phrases.
+      Stable, vendor-neutral synonyms unchanged from prior audit:
+      security orchestration; security automation; playbook automation; SOC automation;
+      hyperautomation for SOC; security orchestration automation and response;
+      incident response automation; playbook orchestration.
+    action: |
+      Insert 6-8 domain_aliases rows under domain_id=12 with record_status='new'.
+      No vendor or product names per Rule #18. Surface the proposed list to the user before insert
+      (convention from prior audit), then bulk INSERT via the standard alias loader pattern.
+    affected_entities:
+      - domain_aliases (target: ~6-8 new rows on domain_id=12)
+
+  - id: B1-S9
+    summary: "Rule #1 record_status='new' discipline reminder for every downstream loader."
+    finding: |
+      Mechanical meta-reminder. No live target this pass (no recent loads to inspect).
+      Every loader producing rows under SOAR (capabilities, domain_modules, data_objects,
+      DMDOs, trigger_events, handoffs, skills, tools, skill_tools, handoff_processes,
+      domain_aliases) MUST omit record_status (default 'new') or set it explicitly to 'new'.
+      Any 'approved'/'pending'/'rejected' stamp requires explicit per-load user confirmation.
+    action: |
+      Per-loader pre-flight assert that every INSERT row either omits record_status
+      or sets it to 'new'. No bulk action this pass.
+    extra_meta_rule: true
+
+b1b:
+  - id: B1-S1
+    summary: "M1 + A2 hard-fail: zero domain_modules and zero capability_domains for SOAR. Phase A authoring blocked on Phase 0 decision."
+    finding: |
+      Live reads /domain_modules?domain_id=eq.12 and /capability_domains?domain_id=eq.12 both return 0 rows.
+      Rule #14 requires every domains row to have >=1 module_kind='full' domain_modules row.
+      A2 requires >=3 capabilities (typical 5-8) for a market-scale domain.
+      Proposed Phase A shape carried forward from 2026-05-30:
+        Modules: SOAR-PLAYBOOK-AUTHORING (security_playbooks, playbook_steps, playbook_versions, integration_connectors),
+                 SOAR-AUTOMATION-RUNTIME (automation_runs, automation_run_steps, automation_artifacts, automation_run_logs),
+                 SOAR-CASE-MGMT (security_cases, security_incidents, case_tasks, case_evidence, case_timelines, case_notes).
+        Capabilities (5-8 floor): PLAYBOOK-DESIGN, INTEGRATION-CONNECTORS, AUTOMATION-EXEC-ORCH,
+                                  CASE-MGMT-SEC, INCIDENT-RESPONSE-WORKFLOW, IOC-ENRICHMENT,
+                                  RESPONSE-METRICS-MTTR, SOC-PLAYBOOK-LIBRARY.
+    blocked_by:
+      - {type: user_decision, ref: B2-S3}
+    affected_modules: []
+    affected_entities: []
+    extra_proposed_modules: [SOAR-PLAYBOOK-AUTHORING, SOAR-AUTOMATION-RUNTIME, SOAR-CASE-MGMT]
+    extra_proposed_capabilities: [PLAYBOOK-DESIGN, INTEGRATION-CONNECTORS, AUTOMATION-EXEC-ORCH, CASE-MGMT-SEC, INCIDENT-RESPONSE-WORKFLOW, IOC-ENRICHMENT, RESPONSE-METRICS-MTTR, SOC-PLAYBOOK-LIBRARY]
+    extra_proposed_masters: [security_playbooks, playbook_steps, playbook_versions, integration_connectors, automation_runs, automation_run_steps, automation_artifacts, automation_run_logs, security_cases, security_incidents, case_tasks, case_evidence, case_timelines, case_notes]
+
+  - id: B1-S2
+    summary: "A4 hard-fail: catalog_tagline and catalog_description on domains id 12 are empty strings."
+    finding: |
+      Live read of /domains?id=eq.12 shows catalog_tagline='' and catalog_description=''.
+      Rule #20 requires both fields populated in buyer voice (workflow + value), no vendor names per Rule #18,
+      surfaced for user review BEFORE writing.
+    blocked_by:
+      - {type: user_decision, ref: B2-S4}
+    affected_entities:
+      - "domains (id 12, fields: catalog_tagline, catalog_description)"
+
+  - id: B1-S4
+    summary: "B9 hard-fail (cascaded): zero trigger_events for SOAR; cannot author until masters exist."
+    finding: |
+      trigger_events scope SOAR via domain_module_id (and indirectly via data_object_id -> data_objects -> domain).
+      Both surfaces are empty (no modules, no DMDO). Proposed event vocabulary carried forward:
+      security_playbook.executed/failed, automation_run.started/completed/failed/cancelled,
+      security_incident.created/contained/eradicated/closed/escalated, security_case.opened/assigned/closed,
+      indicator_of_compromise.enriched, integration_connector.connected/disconnected.
+      Each event needs event_category per Rule #13 (lifecycle | state_change | threshold | signal).
+    blocked_by:
+      - {type: depends_on, ref: B1-S1, reason: "events need underlying data_objects rows"}
+    extra_proposed_events: [security_playbook.executed, security_playbook.failed, automation_run.started, automation_run.completed, automation_run.failed, automation_run.cancelled, security_incident.created, security_incident.contained, security_incident.eradicated, security_incident.closed, security_incident.escalated, security_case.opened, security_case.assigned, security_case.closed, indicator_of_compromise.enriched, integration_connector.connected, integration_connector.disconnected]
+
+  - id: B1-S5
+    summary: "B9 publisher asymmetry: 5 inbound DLP / Data-Security events still terminate at SECOPS parent (id 11) rather than SOAR. Fan-out rows are owed by the publisher domains."
+    finding: |
+      Inbound handoffs targeting SECOPS id 11 (not SOAR) carry payloads SOAR ought to receive:
+      handoff 280 (dlp_incident.violation_detected), 282 (dlp_incident.escalated),
+      284 (data_exfiltration_attempt.initiated), 287 (sensitive_data_incident.detected),
+      290 (sensitive_data_incident.resolved).
+      Per the publisher-side asymmetry rule, the fan-out clone is authored on the publisher side,
+      not on SOAR. SOAR's audit only records that the fan-out target module must exist first.
+    blocked_by:
+      - {type: depends_on, ref: B1-S1, reason: "target SOAR modules do not exist yet"}
+      - {type: domain_audit, blocking_domain: DLP, milestone: "B9 fan-out clone of handoffs 280/282/284 into SOAR-CASE-MGMT/SOAR-AUTOMATION-RUNTIME"}
+      - {type: domain_audit, blocking_domain: DATA-SEC, milestone: "B9 fan-out clone of handoffs 287/290 into SOAR-CASE-MGMT"}
+    affected_handoffs:
+      - {handoff_id: 280, direction: inbound_to_publisher_terminates_at_SECOPS, source_domain: DLP, target_domain: SECOPS, trigger_event: "dlp_incident.violation_detected", payload: "dlp_incident", null_field: "target should fan out to SOAR-CASE-MGMT"}
+      - {handoff_id: 282, direction: inbound_to_publisher_terminates_at_SECOPS, source_domain: DLP, target_domain: SECOPS, trigger_event: "dlp_incident.escalated", payload: "dlp_incident", null_field: "target should fan out to SOAR-AUTOMATION-RUNTIME"}
+      - {handoff_id: 284, direction: inbound_to_publisher_terminates_at_SECOPS, source_domain: DLP, target_domain: SECOPS, trigger_event: "data_exfiltration_attempt.initiated", payload: "data_exfiltration_attempt", null_field: "target should fan out to SOAR-AUTOMATION-RUNTIME"}
+      - {handoff_id: 287, direction: inbound_to_publisher_terminates_at_SECOPS, source_domain: DATA-SEC, target_domain: SECOPS, trigger_event: "sensitive_data_incident.detected", payload: "sensitive_data_incident", null_field: "target should fan out to SOAR-CASE-MGMT"}
+      - {handoff_id: 290, direction: inbound_to_publisher_terminates_at_SECOPS, source_domain: DATA-SEC, target_domain: SECOPS, trigger_event: "sensitive_data_incident.resolved", payload: "sensitive_data_incident", null_field: "target should fan out to SOAR-CASE-MGMT"}
+
+  - id: B1-S6
+    summary: "F1-F5 hard-fail (cascaded): zero skills for SOAR; per-module system skills + tools blocked on modules existing."
+    finding: |
+      Rule #17 requires exactly one skill_type='system' skill per domain_modules row, each with >=1 skill_tools row.
+      No modules exist, so the floor cannot be authored. Proposed per-module skills carried forward:
+      soar_playbook_authoring_agent, soar_automation_runtime_agent, soar_case_mgmt_agent.
+      Tool floor: query_security_playbooks, create_security_playbook, update_security_playbook,
+      query_integration_connectors, create_integration_connector (PLAYBOOK-AUTHORING);
+      query_automation_runs, cancel_automation_run, retry_automation_run, receive_external_event (AUTOMATION-RUNTIME);
+      query_security_cases, create_security_case, assign_security_case, close_security_case,
+      notify_person, notify_team (CASE-MGMT). Workflow-gate tools materialize after B12 lifecycle states.
+    blocked_by:
+      - {type: depends_on, ref: B1-S1, reason: "no domain_modules to attach a system skill to"}
+    extra_proposed_skills: [soar_playbook_authoring_agent, soar_automation_runtime_agent, soar_case_mgmt_agent]
+
+  - id: B1-S7
+    summary: "B12 hard-fail (cascaded): lifecycle states for workflow-bearing SOAR masters blocked on masters existing."
+    finding: |
+      Workflow-bearing masters (per the proposed Phase A surface) need data_object_lifecycle_states:
+      security_playbooks: draft -> in_review -> approved -> active -> retired
+      automation_runs: queued -> running -> completed | failed | cancelled | timed_out
+      security_incidents: new -> investigating -> contained -> eradicated -> recovered -> closed
+      security_cases: open -> assigned -> in_progress -> on_hold -> resolved -> closed
+      integration_connectors (config-shape candidate): registered -> active -> degraded -> disabled.
+      Pre-specified permission_verb_overrides: contained -> contain_security_incident,
+      eradicated -> eradicate_security_incident, closed -> close_security_case.
+    blocked_by:
+      - {type: depends_on, ref: B1-S1, reason: "no data_objects rows to attach lifecycle states to"}
+      - {type: depends_on, ref: B1-S6, reason: "system skills consume the materialized workflow-gate permissions"}
+    affected_masters:
+      - {data_object_id: null, name: security_playbooks, target_module_id: null, workflow: "draft|in_review|approved|active|retired"}
+      - {data_object_id: null, name: automation_runs, target_module_id: null, workflow: "queued|running|completed|failed|cancelled|timed_out"}
+      - {data_object_id: null, name: security_incidents, target_module_id: null, workflow: "new|investigating|contained|eradicated|recovered|closed"}
+      - {data_object_id: null, name: security_cases, target_module_id: null, workflow: "open|assigned|in_progress|on_hold|resolved|closed"}
+      - {data_object_id: null, name: integration_connectors, target_module_id: null, workflow: "registered|active|degraded|disabled"}
+
+  - id: B1-S8
+    summary: "APQC TAGGING vacuous-pass: zero cross-domain handoffs in SOAR's footprint to anchor handoff_processes rows against."
+    finding: |
+      Live reads /handoffs?source_domain_id=eq.12 and /handoffs?target_domain_id=eq.12 both return 0 rows.
+      Pre-staged PCF anchors for the next re-audit (from 2026-05-30):
+      process 1182 (external_id 20742, L4) Monitor/analyze network intrusion detection data and resolve threats,
+      process 1164 (external_id 20723, L4) Analyze IT security threat impact,
+      process 1170 (external_id 20728, L4) Conduct IT risk and threat assessments,
+      process 1299 (external_id 20903, L4) Triage IT service delivery incidents,
+      process 199  (external_id 12840, L3) Report incidents and risks to regulatory bodies.
+    blocked_by:
+      - {type: depends_on, ref: B1-S1, reason: "no SOAR modules to author handoffs against"}
+      - {type: depends_on, ref: B1-S5, reason: "fan-out handoffs from DLP / Data-Security are the first cross-domain handoffs that anchor APQC rows"}
+    extra_pre_staged_pcf_processes:
+      - {process_id: 1182, external_id: 20742, hierarchy_level: 4, process_name: "Monitor/analyze network intrusion detection data and resolve threats"}
+      - {process_id: 1164, external_id: 20723, hierarchy_level: 4, process_name: "Analyze IT security threat impact"}
+      - {process_id: 1170, external_id: 20728, hierarchy_level: 4, process_name: "Conduct IT risk and threat assessments"}
+      - {process_id: 1299, external_id: 20903, hierarchy_level: 4, process_name: "Triage IT service delivery incidents"}
+      - {process_id: 199,  external_id: 12840, hierarchy_level: 3, process_name: "Report incidents and risks to regulatory bodies"}
+
+b2:
+  - id: B2-S1
+    summary: "C1 functional ownership: add a contributor / consumer row beyond the sole Security Operations Center owner?"
+    question: |
+      The single business_function_domains row on SOAR (function id 64, Security Operations Center, responsibility_type='owner')
+      omits Risk and Compliance contributorship (SEC 8-K 4-day clock and state breach-notification statutes)
+      and IT Operations consumption (SOAR playbooks call ITSM major-incident routines for cross-tower escalations).
+      Whether to add either or both is a buyer-persona judgment.
+    options:
+      - "(a) Add Risk and Compliance (or equivalent) as contributor"
+      - "(b) Add IT Operations as consumer"
+      - "(c) Add both"
+      - "(d) Leave as-is (SOC ownership sufficient)"
+    why: "Buyer-side practice differs (mature SOCs run SOAR autonomously; regulated industries enforce GRC sign-off)."
+
+  - id: B2-S2
+    summary: "domain_regulations: record SEC 8-K cyber-incident disclosure and state breach-notification statutes against SOAR?"
+    question: |
+      Zero domain_regulations rows for SOAR. SOAR is not the regulator's product target (the regulations apply to the company),
+      but the SOAR product structurally enforces the 4-day SEC 8-K clock and produces the audit trail the disclosure depends on.
+      Recording these as buyer-side applicability is a Phase-C editorial decision.
+    options:
+      - "(a) Add SEC 8-K (Cyber Disclosure) and state breach-notification statutes with applicability='consumer-system-inherited' (or equivalent)"
+      - "(b) Add only SEC 8-K"
+      - "(c) Add none (regulations belong on producing domains DLP / SECOPS, not SOAR)"
+      - "(d) Surface to user as analytics only, no catalog rows"
+    why: "No SOAR-specific regulator; the question is whether to inherit substrate obligations onto the SOAR row for downstream filtering."
+
+  - id: B2-S3
+    summary: "Phase 0 vendor research vs eyeball-mode before B1-S1 Phase-A authoring?"
+    question: |
+      Splunk SOAR (alert-centric), Cortex XSOAR (playbook-centric), and Tines / Torq (workflow-DAG-centric) diverge enough in
+      canonical schema that the agent's eyeball-mode entity list will mis-shape the modularization (specifically:
+      should security_cases master in a third module or fold into security_incidents? does integration_connectors warrant
+      its own module per the marketplace-shape of Splunk Apps / XSOAR Marketplace / Tines Stories?).
+      A formal Phase 0 subagent pass against public schemas + API references is the recommended gate.
+    options:
+      - "(a) Vetted route: spawn a formal Phase 0 subagent against Splunk SOAR / Cortex XSOAR / Tines / Torq / Swimlane public docs, save the surface JSON, then run Phase A"
+      - "(b) Eyeball route: accept the agent's proposed 3-module split (SOAR-PLAYBOOK-AUTHORING / SOAR-AUTOMATION-RUNTIME / SOAR-CASE-MGMT) and load"
+      - "(c) Defer Phase A authoring entirely until Phase 0 lands"
+    why: "Vendor schema divergence is large enough to shape modularization differently per chosen reference."
+
+  - id: B2-S4
+    summary: "B1-S2 catalog UX copy: supply tagline and description text per Rule #20 and Rule #15."
+    question: |
+      catalog_tagline and catalog_description on domains id 12 are empty.
+      Rule #20 requires buyer-voice copy (workflow + value, no vendor names per Rule #18, no analyst voice).
+      Rule #15 forbids the agent from auto-populating any prose without explicit user-approved wording.
+      Please supply the exact text, or ask the agent to propose a draft for your review.
+    options:
+      - "(a) Provide tagline + description text directly"
+      - "(b) Ask the agent to propose a draft for review"
+      - "(c) Defer until after Phase A modules land (description benefits from concrete module names)"
+    why: "Rule #15 / Rule #20 forbid the agent from writing prose without per-row approval."
+
+b3: []

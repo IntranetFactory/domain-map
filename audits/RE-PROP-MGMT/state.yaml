@@ -1,0 +1,388 @@
+schema_version: 2
+domain: RE-PROP-MGMT
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S11B
+    summary: Two RE-PROP-MGMT masters (`rent_payments` 360, `tenant_maintenance_requests` 361) still carry zero `data_object_aliases` rows; the other four masters were covered by the 2026-05-31 Continuation load.
+    finding: |
+      B11 audit shows 4 of 6 masters with aliases (10 rows total on `rental_units`, `property_tenants`, `rental_applications`, `rental_leases`). `rent_payments` and `tenant_maintenance_requests` have zero alias rows; both have non-self-explanatory vendor terminology.
+    action: |
+      INSERT `data_object_aliases` rows for `rent_payments` (Rent Charge, Payment, Receipt) and `tenant_maintenance_requests` (Work Order, Maintenance Ticket, Service Request). `record_status='new'`, `notes` empty (Rule #15).
+    affected_masters:
+      - {data_object_id: 360, name: rent_payments, target_module_id: null, workflow: collection}
+      - {data_object_id: 361, name: tenant_maintenance_requests, target_module_id: null, workflow: maintenance}
+
+  - id: B1A-S14
+    summary: Existing `data_object_relationships` row 473 (`rental_units` opens `customer_cases` 103) appears mis-pointed; payload target should be `real_estate_transactions` (353).
+    finding: |
+      Row 473: data_object_id=357 (`rental_units`), relationship_verb="opens", related_data_object_id=103 (`customer_cases`), inverse_verb="opened_from". The semantic intent looks like "rental_units spawns from real_estate_transactions" (closed sale starts a property under management), so the target should be `real_estate_transactions` (id 353), not `customer_cases` (id 103). Carry-forward from the 2026-05-30 "report-only follow-ups" subsection; promoted because the source row sits on a RE-PROP-MGMT master.
+    action: |
+      User confirms intent: either PATCH `related_data_object_id` to 353 (preferred if the closed-sale -> property-under-management edge is the intent), or DELETE the row. After user decision, single PostgREST PATCH or DELETE.
+    affected_entities: [rental_units, real_estate_transactions, customer_cases]
+
+b1b:
+  - id: B1B-S1
+    summary: Zero `domain_modules` rows for `domain_id=144`. Authoring blocked on Bucket 2 #1 module-split decision.
+    finding: |
+      M1 / M2 / M4 all fail (0 of expected ≥2 full modules per Rule #14, 6 capabilities orphaned). Every downstream M / B / E / F band failure inherits this root cause. Cannot author modules until the user picks one of the three module-split options in Bucket 2 #1.
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+    affected_modules: []
+    affected_entities: [rental_units, property_tenants, rental_applications, rent_payments, tenant_maintenance_requests, rental_leases]
+
+  - id: B1B-S2
+    summary: Capability count 6 requires ≥2 full modules per Rule #14; blocked by B1B-S1.
+    finding: M2 fail; resolves automatically once B1B-S1 lands.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: cannot satisfy ≥2 module floor without first authoring module set}
+
+  - id: B1B-S3
+    summary: All 6 capabilities (RE-PM-TENANT-SCREENING, RE-PM-RENT-COLLECTION, RE-PM-MAINT-REQUEST, RE-PM-LEASING-PIPELINE, RE-PM-PROP-ACCOUNTING, RE-PM-VACANCY-MARKETING) are realization-orphaned (zero realizing module).
+    finding: M4 fail. Each capability needs a `domain_module_capabilities` row after the module set lands.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: cannot create domain_module_capabilities without the realizing module}
+    affected_entities: [RE-PM-TENANT-SCREENING, RE-PM-RENT-COLLECTION, RE-PM-MAINT-REQUEST, RE-PM-LEASING-PIPELINE, RE-PM-PROP-ACCOUNTING, RE-PM-VACANCY-MARKETING]
+
+  - id: B1B-S4
+    summary: "`catalog_tagline` and `catalog_description` on `domains` row 144 still empty; per Rule #20 the draft wording must be user-approved before write."
+    finding: A4 fail. Bucket 2 #2 carries draft wording from 2026-05-30 awaiting approve / edit / rewrite per Rule #20.
+    blocked_by:
+      - {type: user_decision, ref: B2-2}
+
+  - id: B1B-S6
+    summary: Zero intra-domain `data_object_relationships` among the 6 masters. Audit lists 7 expected edges but per-edge `owner_side` / `relationship_kind` / `is_required` tuples need per-edge judgment.
+    finding: |
+      Expected edges (B6): `rental_units` has-many `rental_leases`; `rental_leases` covers `rental_units`; `rental_applications` results-in `rental_leases`; `property_tenants` signs `rental_leases`; `rental_leases` generates `rent_payments`; `rental_units` receives `tenant_maintenance_requests`; `property_tenants` submits `tenant_maintenance_requests`. Each row needs `owner_side`, `relationship_type`, `relationship_kind`, `is_required` decided.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: B9 / B10b downstream attribution needs modules in place; relationship loader idiom is M-band-after}
+      - {type: user_decision, ref: B2-1, reason: per-edge owner_side decisions are simpler with modules approved}
+    affected_masters:
+      - {data_object_id: 357, name: rental_units, target_module_id: null, workflow: lifecycle}
+      - {data_object_id: 358, name: property_tenants, target_module_id: null, workflow: lifecycle}
+      - {data_object_id: 359, name: rental_applications, target_module_id: null, workflow: screening}
+      - {data_object_id: 360, name: rent_payments, target_module_id: null, workflow: collection}
+      - {data_object_id: 361, name: tenant_maintenance_requests, target_module_id: null, workflow: maintenance}
+      - {data_object_id: 362, name: rental_leases, target_module_id: null, workflow: leasing}
+
+  - id: B1B-S9
+    summary: 5 trigger events (289 `rent_payment.delinquent`, 957 `rental_unit.listed`, 958 `rental_unit.occupied`, 960 `rental_lease.executed`, 961 `rental_lease.renewed`) have zero subscriber `handoffs` rows.
+    finding: |
+      B9 sub-gap. New handoff candidates per audit narrative: delinquent to CSM/collections, listed to CSM/CDP/vacancy syndication, executed to RE-INVEST, renewed to RE-INVEST. Each handoff row needs `source_domain_module_id` (blocked by M1) and ideally `target_domain_module_id` (blocked by partner-domain modularization).
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: handoff source_domain_module_id NULL without RE-PROP-MGMT modules}
+      - {type: domain_audit, blocking_domain: CSM, milestone: modules-lifecycle-cluster}
+      - {type: domain_audit, blocking_domain: RE-INVEST, milestone: rent-roll-or-owner-distribution-module}
+    affected_events:
+      - {id: 289, event_name: rent_payment.delinquent, current_category: threshold, proposed_category: threshold}
+      - {id: 957, event_name: rental_unit.listed, current_category: lifecycle, proposed_category: lifecycle}
+      - {id: 958, event_name: rental_unit.occupied, current_category: state_change, proposed_category: state_change}
+      - {id: 960, event_name: rental_lease.executed, current_category: lifecycle, proposed_category: lifecycle}
+      - {id: 961, event_name: rental_lease.renewed, current_category: lifecycle, proposed_category: lifecycle}
+
+  - id: B1B-S10
+    summary: All 7 outbound handoffs carry `source_domain_module_id=null`; inbound handoff 296 carries `target_domain_module_id=null`. Net root cause is M1 plus partner-side module gaps.
+    finding: |
+      B10b fail. Derivation rule: `source_domain_module_id` resolves to the RE-PROP-MGMT module mastering the event's data_object; until M-band lands every source attribution is null. Inbound 296 needs the leasing-pipeline target module. Partner-side targets blocked on AP-AUTO (29), LSD (25), RE-INVEST (146), GRC (15), ERP-FIN (65) each having zero `domain_modules`; CSM (modules 112-114) and FSM (modules 161-163) exist but don't yet hold the RE-PROP-MGMT payloads via `domain_module_data_objects` (handoff 299's `target_domain_module_id=161` was set pre-audit and remains).
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: source_domain_module_id PATCH requires RE-PROP-MGMT modules}
+      - {type: domain_audit, blocking_domain: AP-AUTO, milestone: any-modules}
+      - {type: domain_audit, blocking_domain: LSD, milestone: any-modules}
+      - {type: domain_audit, blocking_domain: RE-INVEST, milestone: any-modules}
+      - {type: domain_audit, blocking_domain: GRC, milestone: any-modules}
+      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: any-modules}
+    affected_handoffs:
+      - {handoff_id: 298, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: AP-AUTO, trigger_event: rent_payment.received, payload: rent_payments, null_field: source_domain_module_id}
+      - {handoff_id: 299, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: FSM, trigger_event: tenant_maintenance_request.created, payload: tenant_maintenance_requests, null_field: source_domain_module_id}
+      - {handoff_id: 300, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: LSD, trigger_event: property_tenant.evicted, payload: property_tenants, null_field: source_domain_module_id}
+      - {handoff_id: 301, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: RE-INVEST, trigger_event: rent_payment.received, payload: rental_leases, null_field: source_domain_module_id}
+      - {handoff_id: 310, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: GRC, trigger_event: rental_application.approved, payload: property_tenants, null_field: source_domain_module_id}
+      - {handoff_id: 864, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: ERP-FIN, trigger_event: rent_payment.received, payload: rental_leases, null_field: source_domain_module_id}
+      - {handoff_id: 865, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: CSM, trigger_event: rental_unit.vacant, payload: rental_units, null_field: source_domain_module_id}
+      - {handoff_id: 296, direction: inbound, source_domain: RE-BROKERAGE, target_domain: RE-PROP-MGMT, trigger_event: real_estate_transaction.closed, payload: real_estate_transactions, null_field: target_domain_module_id}
+
+  - id: B1B-S12
+    summary: Zero `data_object_lifecycle_states` rows on any of the 6 RE-PROP-MGMT masters. Per-state `domain_module_id` requires modules; blocked by B1B-S1.
+    finding: |
+      B12 fail. Expected workflows per 2026-05-30 narrative: `rental_units` (vacant -> listed -> applied -> approved -> occupied -> vacating -> vacant); `rental_applications` (draft -> submitted -> screening -> approved/declined -> withdrawn); `rental_leases` (drafted -> sent -> signed -> active -> ending -> terminated -> renewed); `rent_payments` (due -> received -> late -> delinquent -> in_collections); `property_tenants` (prospective -> current -> notice_given -> moved_out -> evicted); `tenant_maintenance_requests` (submitted -> triaged -> assigned -> in_progress -> resolved -> closed). Each row needs `state_order`, `is_initial` / `is_terminal`, `requires_permission`, `domain_module_id`.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: "per-state domain_module_id required by Rule #14 / M5"}
+    affected_masters:
+      - {data_object_id: 357, name: rental_units, target_module_id: null, workflow: vacant_to_occupied_cycle}
+      - {data_object_id: 358, name: property_tenants, target_module_id: null, workflow: prospective_to_moved_out}
+      - {data_object_id: 359, name: rental_applications, target_module_id: null, workflow: draft_to_approved_declined}
+      - {data_object_id: 360, name: rent_payments, target_module_id: null, workflow: due_to_in_collections}
+      - {data_object_id: 361, name: tenant_maintenance_requests, target_module_id: null, workflow: submitted_to_closed}
+      - {data_object_id: 362, name: rental_leases, target_module_id: null, workflow: drafted_to_renewed}
+
+  - id: B1B-S13
+    summary: Legacy domain-level `re-prop-mgmt-system` skill (id 98, `domain_id=144`, `domain_module_id=null`) still present. Retires only after Phase S authors per-module replacements.
+    finding: F1 fail (transitional acceptable). 8 `skill_tools` rows on id 98 (6 query_* tools at coverage_tier=platform + send_email + sign_document external). Strict score 7/8 = 87.5%.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: per-module system skills require modules to anchor to}
+      - {type: prerequisite_entity, ref: B1B-S1}
+
+  - id: B1B-M1
+    summary: MISSING entity `tenant_screening_reports` (RE-PM-TENANT-SCREENING module). FCRA-mandated.
+    finding: Independent screening-report entity distinct from `rental_applications`. FCRA section 604 governs consumer reports for tenancy. AppFolio, Buildium, TransUnion SmartMove all model this.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: needs RE-PM-TENANT-SCREENING module to master}
+    vendor_evidence: [AppFolio Property Manager, Buildium, TransUnion SmartMove, Experian RentBureau]
+    extra_proposed_module: RE-PM-TENANT-SCREENING
+    extra_regulation: FCRA
+
+  - id: B1B-M2
+    summary: MISSING entity `fcra_adverse_action_notices` (RE-PM-TENANT-SCREENING module). FCRA-mandated.
+    finding: Required notice to declined applicant naming the consumer-reporting agency. Distinct from generic decline reason.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: needs RE-PM-TENANT-SCREENING module to master}
+    vendor_evidence: [AppFolio Property Manager, Buildium, TransUnion SmartMove]
+    extra_proposed_module: RE-PM-TENANT-SCREENING
+    extra_regulation: FCRA
+
+  - id: B1B-M3
+    summary: MISSING entity `fair_housing_inquiries` (RE-PM-LEASING-PIPELINE module). Fair Housing Act mandated.
+    finding: Pre-application inquiry log (who asked about a unit, what they were told). Federal contractor + HUD-funded housing requires this.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: needs RE-PM-LEASING-PIPELINE module to master}
+      - {type: user_decision, ref: B2-3, reason: FHA applicability decision shapes scope}
+    vendor_evidence: [AppFolio Property Manager, Buildium, Entrata Platform]
+    extra_proposed_module: RE-PM-LEASING-PIPELINE
+    extra_regulation: Fair Housing Act
+
+  - id: B1B-M4
+    summary: MISSING entity `security_deposits` (RE-PM-RENT-COLLECTION module). State landlord-tenant statute mandated.
+    finding: Holding-period rules vary by state (15 to 60 days after move-out for itemized accounting). Distinct from `rent_payments`.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: needs RE-PM-RENT-COLLECTION module to master}
+      - {type: user_decision, ref: B2-4, reason: state-statute modeling strategy shapes regulation linkage}
+    vendor_evidence: [AppFolio Property Manager, Buildium, Yardi Breeze, Rent Manager, RealPage Property Management]
+    extra_proposed_module: RE-PM-RENT-COLLECTION
+
+  - id: B1B-M5
+    summary: MISSING entity `eviction_cases` (RE-PM-RENT-COLLECTION module). State eviction statutes mandated.
+    finding: Court-process tracking (notice served, complaint filed, hearing date, judgment, lockout). Handoff target for `property_tenant.evicted` (handoff 300 to LSD).
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: needs RE-PM-RENT-COLLECTION module to master}
+      - {type: user_decision, ref: B2-4, reason: state-statute modeling strategy shapes regulation linkage}
+    vendor_evidence: [AppFolio Property Manager, Buildium, RealPage Property Management]
+    extra_proposed_module: RE-PM-RENT-COLLECTION
+
+  - id: B1B-M6
+    summary: MISSING regulation row "Fair Housing Act" + corresponding `domain_regulations` link to RE-PROP-MGMT.
+    finding: Title VIII Civil Rights Act anti-discrimination statute; protected classes; applies to nearly every residential landlord. Not present anywhere in `regulations`. Required before B1B-M3 (`fair_housing_inquiries`) can carry a regulation tag.
+    blocked_by:
+      - {type: user_decision, ref: B2-3, reason: applicability tier (mandatory vs mandatory_with_exemptions) sets the junction value}
+    extra_regulation_name: Fair Housing Act
+
+  - id: B1B-U1
+    summary: MISSING entity `owner_distributions` (RE-PM-PROP-ACCOUNTING module). Universal-vendor.
+    finding: Periodic disbursement to the property owner (net rent minus expenses). Every flagship vendor masters this; parent of the AP-AUTO handoff payload.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: needs RE-PM-PROP-ACCOUNTING module to master}
+    vendor_evidence: [AppFolio Property Manager, Buildium, Yardi Breeze, Entrata Platform, RealPage Property Management, Rent Manager, Yardi Voyager]
+    extra_proposed_module: RE-PM-PROP-ACCOUNTING
+
+  - id: B1B-U2
+    summary: MISSING entity `lease_charges` (RE-PM-RENT-COLLECTION module). Per-month recurring charge schedule.
+    finding: Recurring charge schedule (rent, utilities, pet rent, parking) that produces `rent_payments`. Distinct from the payment itself.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: needs RE-PM-RENT-COLLECTION module to master}
+    vendor_evidence: [AppFolio Property Manager, Buildium, Yardi Breeze, Entrata Platform, RealPage Property Management, Rent Manager, Yardi Voyager]
+    extra_proposed_module: RE-PM-RENT-COLLECTION
+
+  - id: B1B-U3
+    summary: MISSING entity `late_fee_assessments` (RE-PM-RENT-COLLECTION module). Audit trail for late-fee posting.
+    finding: Tied to the `rent_payment.delinquent` event (id 289).
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: needs RE-PM-RENT-COLLECTION module to master}
+    vendor_evidence: [AppFolio Property Manager, Buildium, RealPage Property Management]
+    extra_proposed_module: RE-PM-RENT-COLLECTION
+
+  - id: B1B-U4
+    summary: MISSING entity `move_in_inspections` (RE-PM-LEASING-PIPELINE module).
+    finding: Initial condition report; cross-references for `security_deposits` itemization.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: needs RE-PM-LEASING-PIPELINE module to master}
+    vendor_evidence: [AppFolio Property Manager, Buildium, Yardi Breeze, Rent Manager]
+    extra_proposed_module: RE-PM-LEASING-PIPELINE
+
+  - id: B1B-U5
+    summary: MISSING entity `move_out_inspections` (RE-PM-LEASING-PIPELINE module).
+    finding: Closing condition report; required for security-deposit itemized accounting.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: needs RE-PM-LEASING-PIPELINE module to master}
+    vendor_evidence: [AppFolio Property Manager, Buildium, Yardi Breeze, Rent Manager]
+    extra_proposed_module: RE-PM-LEASING-PIPELINE
+
+  - id: B1B-U6
+    summary: MISSING entity `property_owners` (RE-PM-PROP-ACCOUNTING module).
+    finding: Owner of record for each rental unit (single-family-rental landlords or multifamily ownership entity). Distinct from `property_tenants`.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: needs RE-PM-PROP-ACCOUNTING module to master}
+    vendor_evidence: [AppFolio Property Manager, Buildium, Yardi Breeze, Entrata Platform, RealPage Property Management, Rent Manager, Yardi Voyager]
+    extra_proposed_module: RE-PM-PROP-ACCOUNTING
+
+  - id: B1B-U7
+    summary: MISSING entity `rental_listings` (RE-PM-VACANCY-MARKETING module).
+    finding: Marketing artifact published to listing channels. Distinct from `rental_units` (inventory record).
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: needs RE-PM-VACANCY-MARKETING module to master}
+      - {type: user_decision, ref: B2-1, reason: depends on whether the 5-module shape collapses vacancy-marketing into leasing-pipeline}
+    vendor_evidence: [AppFolio Property Manager, Buildium, Entrata Platform, RealPage Property Management]
+    extra_proposed_module: RE-PM-VACANCY-MARKETING
+
+  - id: B1B-WO1
+    summary: WRONG-OWNERSHIP. `supplier_invoices` (id 75) on RE-PROP-MGMT is `contributor + required`; likely should be `consumer + optional` (or removed) since RE-PROP-MGMT reads AP-paid status rather than writing supplier invoices.
+    finding: Carry-forward from 2026-05-30. RE-PROP-MGMT produces vendor work orders that AP-AUTO ingests; the supplier-invoice graph itself sits in S2P / AP-AUTO.
+    blocked_by:
+      - {type: user_decision, ref: B2-6, reason: vendor_work_orders placement decision shapes whether RE-PROP-MGMT still needs supplier_invoices linkage at all}
+
+  - id: B1B-B1
+    summary: All 7 outbound handoffs carry `source_domain_module_id=null`. Boundary-band rollup of B10b.
+    finding: Identical root cause to B1B-S10.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1}
+
+  - id: B1B-B2
+    summary: Inbound handoff 296 (from RE-BROKERAGE) carries `target_domain_module_id=null`.
+    finding: Resolves once the leasing-pipeline module exists on this side.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1}
+
+  - id: B1B-APQC-310
+    summary: Cross-domain handoff 310 (RE-PROP-MGMT to GRC on `rental_application.approved`) has no `handoff_processes` tag; explicitly deferred to Discover Pass 3 (no clean PCF cross-industry match).
+    finding: |
+      Fair-housing fair-treatment audit is not in PCF cross-industry framework; needs custom-process authoring in Discover Pass 3.
+    blocked_by:
+      - {type: catalog_addition, scope: custom_processes, trigger: Discover Pass 3 fair-housing custom-process author pass}
+    affected_handoffs:
+      - {handoff_id: 310, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: GRC, trigger_event: rental_application.approved, payload: property_tenants, null_field: handoff_processes}
+
+  - id: B1B-APQC-865
+    summary: Cross-domain handoff 865 (RE-PROP-MGMT to CSM on `rental_unit.vacant`) has no `handoff_processes` tag; explicitly deferred to Discover Pass 3 (no clean PCF cross-industry match).
+    finding: |
+      Resident-side service ticket from a vacancy event is industry-specific (multifamily resident services); no clean L2/L3 PCF parent.
+    blocked_by:
+      - {type: catalog_addition, scope: custom_processes, trigger: Discover Pass 3 resident-services custom-process author pass}
+    affected_handoffs:
+      - {handoff_id: 865, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: CSM, trigger_event: rental_unit.vacant, payload: rental_units, null_field: handoff_processes}
+
+b2:
+  - id: B2-1
+    summary: Pick the RE-PROP-MGMT module split for the M1 fix.
+    question: |
+      How do you want to split RE-PROP-MGMT into modules?
+    options:
+      - "(a) 6-module shape: RE-PM-TENANT-SCREENING, RE-PM-LEASING-PIPELINE, RE-PM-RENT-COLLECTION, RE-PM-MAINTENANCE, RE-PM-PROP-ACCOUNTING, RE-PM-VACANCY-MARKETING"
+      - "(b) 5-module shape collapsing RE-PM-VACANCY-MARKETING into RE-PM-LEASING-PIPELINE"
+      - "(c) different split (specify)"
+    why: |
+      Gates almost the entire Bucket 1 fix tree (B1B-S1/S2/S3/S6/S9/S10/S12/S13 plus every MISSING entity's proposed_module). Independent of Bucket 3 (vendor research won't shift this boundary materially).
+
+  - id: B2-2
+    summary: Approve / edit / rewrite the A4 catalog UX wording per Rule #20.
+    question: |
+      Draft catalog_tagline: "Collect rent, screen tenants, dispatch maintenance, and account for each property, all in one residential-management platform." Draft catalog_description: "Run a residential portfolio (single-family rentals, multifamily buildings, condo associations) end to end. Market vacant units to listing sites, screen applicants against credit, criminal, and eviction history, draft and sign leases, collect rent (with prorations, late fees, and security-deposit accounting), and handle maintenance requests with vendor or in-house teams. Per-property general ledger feeds owner distributions and investor reporting, with built-in compliance for the Fair Housing Act, FCRA-regulated screening, and state-by-state landlord-tenant statutes." Approve, edit, or rewrite?
+    options:
+      - "(a) approve as drafted"
+      - "(b) edit (supply revised wording)"
+      - "(c) rewrite entirely (supply alternative)"
+    why: |
+      Rule #20 requires per-row user approval before writing catalog_tagline / catalog_description on `domains`. A4 currently fails; B1B-S4 cannot land until the user authorizes wording.
+
+  - id: B2-3
+    summary: Fair Housing Act `domain_regulations.applicability` value.
+    question: |
+      Title VIII applies to nearly every residential landlord, with rare exemptions (owner-occupied small properties, religious housing). Apply `applicability=mandatory` catalog-wide, or `mandatory_with_exemptions`?
+    options:
+      - "(a) mandatory"
+      - "(b) mandatory_with_exemptions"
+    why: |
+      Gates B1B-M6 (regulation + junction load) and B1B-M3 (`fair_housing_inquiries`). Independent of Bucket 3.
+
+  - id: B2-4
+    summary: State landlord-tenant regulation modeling strategy.
+    question: |
+      Each state has its own landlord-tenant act (CA Civil Code 1940 series, NY RPL Article 7, TX Property Code Chapter 92, FL Statutes Chapter 83) with distinct security-deposit holding periods, eviction notice timing, and required disclosures. Pick a modeling strategy.
+    options:
+      - "(a) single umbrella regulation state_landlord_tenant_statutes linked to RE-PROP-MGMT"
+      - "(b) defer to per-jurisdiction modeling once jurisdictions rollup is loaded"
+    why: |
+      Gates how B1B-M4 (`security_deposits`) and B1B-M5 (`eviction_cases`) connect to regulation rows. Independent of Bucket 3.
+
+  - id: B2-5
+    summary: Pattern-flag re-evaluation per Rule #12 on RE-PROP-MGMT masters.
+    question: |
+      Confirm or reject the proposed flag flips. None of the 6 current masters carries any of `has_personal_content` / `has_submit_lock` / `has_single_approver` set; positive confirmation needed before flipping (Rule #12, B4).
+    options:
+      - "Flip rental_applications.has_personal_content=true (SSN + credit data)? y/n"
+      - "Flip rental_leases.has_submit_lock=true (post-signing lock)? y/n"
+      - "Once B1B-M1 (tenant_screening_reports) lands, flip its has_personal_content=true? y/n"
+    why: |
+      B4 audit pass requires positive re-evaluation, not default-false. Each true flag triggers schema-level behavior (PII-aware UI, immutable post-submit) at deploy time.
+
+  - id: B2-6
+    summary: vendor_work_orders placement decision.
+    question: |
+      Where should `vendor_work_orders` live?
+    options:
+      - "(a) Master in a new RE-PM-MAINTENANCE module (FSM handoff 299 stays for dispatch but the work-order record stays in RE-PROP-MGMT)"
+      - "(b) Keep FSM as canonical master; add vendor_work_orders as embedded_master + optional on RE-PM-MAINTENANCE (single-platform residential operators install both)"
+    why: |
+      Shapes the RE-PM-MAINTENANCE module's master set (Bucket 2 #1) and indirectly the B1B-WO1 reclassification (whether RE-PROP-MGMT needs supplier_invoices linkage at all if it carries its own work-order ledger).
+
+  - id: B2-7
+    summary: Re-run pairwise reconciliation (Pass 4) against RE-INVEST and RE-BROKERAGE after M-band lands.
+    question: |
+      After Bucket 2 #1 lands and RE-PROP-MGMT has modules, re-run the per-neighbor 5-section diff against RE-INVEST (edge weight 2) and RE-BROKERAGE (only inbound source)?
+    options:
+      - "(a) yes, schedule for the next pass after M-band lands"
+      - "(b) defer until partner-domain audits also run"
+    why: |
+      With M-band still failing, the per-neighbor deep dive is meaningless. Independent of Buckets 1 and 3.
+
+b3:
+  - id: B3-1
+    candidate: pet_profiles
+    rationale: |
+      Pet weight, breed, vaccination records; ties to pet rent and pet deposits. Universal in modern residential flagships.
+    vendor_evidence: [AppFolio Property Manager, Buildium, Entrata Platform]
+    proposed_module: RE-PM-LEASING-PIPELINE
+
+  - id: B3-2
+    candidate: renters_insurance_certificates
+    rationale: |
+      Required by most leases; certificate of insurance with policy holder + coverage limits.
+    vendor_evidence: [AppFolio Property Manager, Buildium, RealPage Property Management]
+    proposed_module: RE-PM-LEASING-PIPELINE
+
+  - id: B3-3
+    candidate: owner_statements
+    rationale: |
+      Periodic statement to the property owner (separate from the cash distribution; the statement is the rendered artifact).
+    vendor_evidence: [AppFolio Property Manager, Buildium, Yardi Breeze, Entrata Platform, RealPage Property Management, Rent Manager, Yardi Voyager]
+    proposed_module: RE-PM-PROP-ACCOUNTING
+
+  - id: B3-4
+    candidate: resident_portal_messages
+    rationale: |
+      Inbox / message thread in the resident-facing portal. Possible scope-creep from CSM; defer to vendor-research vetting.
+    vendor_evidence: [AppFolio Property Manager, Buildium, Entrata Platform, RealPage Property Management]
+    proposed_module: RE-PM-MAINTENANCE
+
+  - id: B3-5
+    candidate: lease_renewal_offers
+    rationale: |
+      Pre-expiration outreach offering renewal terms; distinct from `rental_leases.renewed` lifecycle state.
+    vendor_evidence: [AppFolio Property Manager, RealPage Property Management, Entrata Platform]
+    proposed_module: RE-PM-LEASING-PIPELINE
+
+  - id: B3-6
+    candidate: payment_methods
+    rationale: |
+      Stored payment-method registry (tenant ACH / credit card), PCI-scoped. May map to a cross-cutting payment-tokenization platform or stay local.
+    vendor_evidence: [AppFolio Property Manager, Buildium, Yardi Breeze, Entrata Platform, RealPage Property Management, Rent Manager, Yardi Voyager]
+    proposed_module: RE-PM-RENT-COLLECTION

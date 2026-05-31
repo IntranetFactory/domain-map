@@ -1,0 +1,241 @@
+schema_version: 2
+domain: FSQM
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S3
+    summary: B4 pattern-flag review on 7 FSQM masters (has_personal_content / has_submit_lock / has_single_approver all default false)
+    finding: All 7 FSQM masters (haccp_plans 507, critical_control_points 508, ccp_measurements 509, food_safety_incidents 510, allergen_programs 511, environmental_monitoring_samples 512, sanitation_records 513) carry all three pattern flags as default false. Rule #12 requires positive consideration per master; default false is not an audited answer. Rule #15 forbids notes annotation, so the audit pass itself is the only record of consideration.
+    action: Per-master PATCH after user confirms each flag value per row. Likely true cases (proposed for user review, not auto-applied), haccp_plans.has_submit_lock=true + has_single_approver=true (PCQI signs and locks on activation), food_safety_incidents.has_submit_lock=true (lock on close), allergen_programs.has_single_approver=true (QA manager signs).
+    affected_masters:
+      - {data_object_id: 507, name: haccp_plans, target_module_id: null, workflow: PCQI authors, plant manager signs, locks on activation}
+      - {data_object_id: 508, name: critical_control_points, target_module_id: null, workflow: defined by HACCP plan, deviation events}
+      - {data_object_id: 509, name: ccp_measurements, target_module_id: null, workflow: operator records, supervisor reviews}
+      - {data_object_id: 510, name: food_safety_incidents, target_module_id: null, workflow: opened, investigated, contained, closed; submit-lock on close}
+      - {data_object_id: 511, name: allergen_programs, target_module_id: null, workflow: QA owns, single approver}
+      - {data_object_id: 512, name: environmental_monitoring_samples, target_module_id: null, workflow: collected, in_lab, result_received, adverse, re-sampled}
+      - {data_object_id: 513, name: sanitation_records, target_module_id: null, workflow: scheduled, in_progress, completed, verified}
+
+b1b:
+  - id: B1B-S1
+    summary: A4 catalog_tagline + catalog_description empty on FSQM domain row
+    finding: domains.id=157, catalog_tagline and catalog_description both empty strings. Rule #20 requires non-empty buyer-voice tagline (one-liner) and 1-3 paragraph buyer-facing catalog_description.
+    action: Draft both per Rule #20 (buyer voice, workflow + value), surface drafts to user before writing.
+    blocked_by:
+      - {type: user_decision, ref: B2-CATALOG-PROSE, reason: "Rule #20 explicit user-approval gate, agent cannot author the prose unilaterally"}
+
+  - id: B1B-S2
+    summary: M1 GATING - 0 domain_modules rows for a 6-capability domain (Rule #14 requires >=2 module_kind=full modules)
+    finding: domain_modules with domain_id=157 returns 0 rows. domain_module_host_domains with domain_id=157 returns 0 rows. FSQM has 6 capabilities (FSQM-HACCP-PLAN 467, FSQM-CCP-MONITORING 468, FSQM-AUDIT-PREP 469, FSQM-ALLERGEN-CONTROL 470, FSQM-ENVIRONMENTAL-MONITORING 471, FSQM-SUPPLIER-RISK 472). Rule #14 mandates >=2 full modules for a >=3-capability domain. This blocks every M-band cascade and every module-anchored downstream check (M2, M4, M5, M6, M7-within-domain, M8, B9b, B10b per-module FK attribution, E1-E6, F2, F3, F4, F5).
+    action: Author the module set per Bucket 2 #1 selected shape. Default recommendation, 4 full modules (FSQM-HACCP, FSQM-CCP-MONITORING, FSQM-INCIDENT-RECALL, FSQM-CORE).
+    blocked_by:
+      - {type: user_decision, ref: B2-MODULE-SHAPE, reason: module split shape is a Bucket 2 judgment call}
+    affected_entities: [domain_modules, domain_module_data_objects, domain_module_capabilities, role_modules, role_permissions, skills, skill_tools, data_object_lifecycle_states, handoffs.source_domain_module_id, handoffs.target_domain_module_id]
+
+  - id: B1B-S7
+    summary: B9 missing normal-path trigger_events on 3 FSQM masters
+    finding: 7 trigger_events published (one per master, all deviation / approval / completion shape). Missing normal-lifecycle events on the workflow-bearing masters. haccp_plan.due_for_review (FSMA annual review cycle), food_safety_incident.opened (incident lifecycle start), food_safety_incident.closed (incident lifecycle terminal), environmental_monitoring_sample.adverse_trend (3 positives in 60 days at the same zone).
+    action: Author 4 new trigger_events rows + at least one corresponding handoff row per event. Two events (incident.opened, incident.closed) are intra-domain candidates that surface as B9b candidates once M1 cured.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S2, reason: per-state domain_module_id attribution required by M5 cannot resolve until modules exist}
+    affected_events:
+      - {id: null, event_name: haccp_plan.due_for_review, current_category: null, proposed_category: threshold}
+      - {id: null, event_name: food_safety_incident.opened, current_category: null, proposed_category: lifecycle}
+      - {id: null, event_name: food_safety_incident.closed, current_category: null, proposed_category: lifecycle}
+      - {id: null, event_name: environmental_monitoring_sample.adverse_trend, current_category: null, proposed_category: threshold}
+
+  - id: B1B-S9
+    summary: B11 0 aliases on every FSQM master; vendor synonyms require alias_type + solution_id arbitration
+    finding: data_object_aliases returns 0 rows for all 7 FSQM masters. Vendor-specific synonyms exist (ccp_measurements as Check Records per SafetyChain, Monitoring Forms per Safefood 360, Quality Records per TraceGains; haccp_plans as Food Safety Plan per FSMA usage; environmental_monitoring_samples as EMP Swabs / Pathogen Environmental Monitoring PEM). Per prior audit, the load requires alias_type + solution_id arbitration that this audit pass does not pre-specify.
+    action: Cluster-drafts load. Author alias rows once per-alias alias_type (statutory / industry / vendor_specific) and solution_id resolution are decided.
+    blocked_by:
+      - {type: user_decision, ref: B2-ALIAS-ARBITRATION, reason: alias_type and solution_id resolution required per row before load can run}
+    affected_masters:
+      - {data_object_id: 507, name: haccp_plans, target_module_id: null, workflow: cross-vendor and statutory synonyms}
+      - {data_object_id: 509, name: ccp_measurements, target_module_id: null, workflow: heavy cross-vendor naming variance}
+      - {data_object_id: 512, name: environmental_monitoring_samples, target_module_id: null, workflow: industry abbreviations EMP / PEM}
+
+  - id: B1B-S10
+    summary: B12 0 data_object_lifecycle_states on all 7 FSQM workflow-bearing masters
+    finding: data_object_lifecycle_states returns 0 rows for masters 507, 508, 509, 510, 511, 512, 513. Every master carries a real workflow (Rule #12 exemption for config-shape does not apply). Without states, M5 cannot run (no requires_permission gates to attribute to modules) and F2 / F3 / F4 / F5 cascade (workflow-gate permissions are materialized from lifecycle states).
+    action: Author state machines per master (haccp_plans, food_safety_incidents, ccp_measurements, allergen_programs, environmental_monitoring_samples, sanitation_records, critical_control_points). Per-state domain_module_id blocked on M1.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S2, reason: per-state domain_module_id required by M5; modules must exist first}
+    affected_masters:
+      - {data_object_id: 507, name: haccp_plans, target_module_id: null, workflow: draft -> reviewed -> approved -> in_effect -> superseded -> archived}
+      - {data_object_id: 508, name: critical_control_points, target_module_id: null, workflow: defined -> active -> deactivated}
+      - {data_object_id: 509, name: ccp_measurements, target_module_id: null, workflow: recorded -> reviewed -> in_deviation -> corrected}
+      - {data_object_id: 510, name: food_safety_incidents, target_module_id: null, workflow: opened -> under_investigation -> contained -> corrected -> closed; escalated branch to recall}
+      - {data_object_id: 511, name: allergen_programs, target_module_id: null, workflow: draft -> approved -> active -> suspended}
+      - {data_object_id: 512, name: environmental_monitoring_samples, target_module_id: null, workflow: collected -> in_lab -> result_received -> adverse -> re_sampled -> closed}
+      - {data_object_id: 513, name: sanitation_records, target_module_id: null, workflow: scheduled -> in_progress -> completed -> verified -> failed}
+
+  - id: B1B-S11
+    summary: F1 + F7 cleanup of legacy skills.id=64 (fsqm-system, domain_module_id=null) and its send_email channel pin
+    finding: skills.id=64 (fsqm-system) remains at domain_id=157 with domain_module_id=null. Per Rule #14 + F1, legacy domain-level system skill is obsolete once module-level system skills exist. Cannot DELETE before module-level skills are authored. F7 sub-finding, skill 64 links tool 37 (send_email) on a workflow that should default to notify_person / notify_team unless a workflow-specific channel justification applies (none recorded).
+    action: Sequenced. (1) author module-level system skills (one per FSQM domain_modules row per Rule #17), (2) re-link channel abstractions, (3) DELETE legacy skill 64 and its 8 skill_tools.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S2, reason: module-level system skills require modules to exist}
+    affected_entities: [skills(64), skill_tools(skill_id=64; 8 rows)]
+
+  - id: B1B-M1
+    summary: Missing master corrective_action_records (CAR) - FSQM-INCIDENT-RECALL placement
+    finding: All flagship vendors (SafetyChain, TraceGains, Safefood 360, Icicle, Intelex, FoodReady) carry CAR as first-class. FSQM models food_safety_incidents but not the CAR documents that close out a CCP deviation, allergen control failure, or EMP positive.
+    action: Load as FSQM master under FSQM-INCIDENT-RECALL once modules exist.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S2, reason: target module FSQM-INCIDENT-RECALL must exist before DMDO master row can land}
+    vendor_evidence: [SafetyChain, TraceGains, Safefood 360, Icicle, Intelex Food Safety, FoodReady]
+
+  - id: B1B-M2
+    summary: Missing master verification_records (HACCP verification activities)
+    finding: SQF / BRC GS clauses require verification log distinct from monitoring. Verification covers reviewing monitoring records, calibration checks, supplier-COA-review verifications.
+    action: Load as FSQM master anchored on FSQM-HACCP (or FSQM-CORE if 4-module shape chosen).
+    blocked_by:
+      - {type: depends_on, ref: B1B-S2, reason: target module must exist before DMDO master row can land}
+    vendor_evidence: [SafetyChain, TraceGains, Safefood 360]
+
+  - id: B1B-M3
+    summary: Missing master mock_recalls (traceback exercise records)
+    finding: TraceGains, SafetyChain, FoodReady all carry mock-recall scheduling and traceback-exercise records as distinct entities from recall_events.
+    action: Load as FSQM master under FSQM-INCIDENT-RECALL.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S2, reason: target module FSQM-INCIDENT-RECALL must exist before DMDO master row can land}
+    vendor_evidence: [TraceGains, SafetyChain, FoodReady]
+
+  - id: B1B-M4
+    summary: Missing master environmental_monitoring_programs (EMP program shell)
+    finding: SafetyChain, Safefood 360 carry EMP program shell separately from individual samples (organizes EMP zones, sites, frequencies, pathogens of concern).
+    action: Load as FSQM master under FSQM-EMP (or FSQM-CORE if 4-module shape chosen).
+    blocked_by:
+      - {type: depends_on, ref: B1B-S2, reason: target module must exist before DMDO master row can land}
+    vendor_evidence: [SafetyChain, Safefood 360]
+
+  - id: B1B-H1
+    summary: APQC tag approval cycle on 15 agent_curated handoff_processes rows
+    finding: 13/13 cross-domain handoffs covered; 15 handoff_processes rows all proposal_source=agent_curated, all record_status=new. H1 catalog quality headline = 0 approved. Rule #1 requires explicit user per-load confirmation before flipping record_status.
+    action: User pass on each row, mark approved / rejected / leave as new. Two layered tags on handoffs 975 and 979 (ids 683 and 684) may overlap with audit-curated proposals and need de-duplication review.
+    blocked_by:
+      - {type: user_decision, ref: B2-APQC-APPROVAL, reason: "Rule #1 record_status=new -> approved requires per-load user confirmation"}
+    affected_handoffs:
+      - {handoff_id: 356, direction: outbound, source_domain: FSQM, target_domain: FOOD-TRACE, trigger_event: food_safety_incident.escalated, payload: recall_events, null_field: null}
+      - {handoff_id: 358, direction: outbound, source_domain: FSQM, target_domain: GRC, trigger_event: ccp_measurement.deviation, payload: ccp_measurements, null_field: null}
+      - {handoff_id: 975, direction: outbound, source_domain: FSQM, target_domain: MFG-OPS, trigger_event: critical_control_point.deviation, payload: critical_control_points, null_field: null}
+      - {handoff_id: 976, direction: outbound, source_domain: FSQM, target_domain: FOOD-TRACE, trigger_event: critical_control_point.deviation, payload: critical_control_points, null_field: null}
+      - {handoff_id: 977, direction: outbound, source_domain: FSQM, target_domain: GRC, trigger_event: allergen_program.violation_detected, payload: allergen_programs, null_field: null}
+      - {handoff_id: 978, direction: outbound, source_domain: FSQM, target_domain: FOOD-TRACE, trigger_event: environmental_monitoring_sample.positive, payload: environmental_monitoring_samples, null_field: null}
+      - {handoff_id: 979, direction: outbound, source_domain: FSQM, target_domain: MFG-OPS, trigger_event: sanitation_record.completed, payload: sanitation_records, null_field: null}
+      - {handoff_id: 980, direction: outbound, source_domain: FSQM, target_domain: AUDIT, trigger_event: haccp_plan.approved, payload: haccp_plans, null_field: null}
+      - {handoff_id: 352, direction: inbound, source_domain: FMIS, target_domain: FSQM, trigger_event: field_application.recorded, payload: field_applications, null_field: null}
+      - {handoff_id: 354, direction: inbound, source_domain: DAIRY-MGMT, target_domain: FSQM, trigger_event: milk_quality_test.failed, payload: milk_quality_tests, null_field: null}
+      - {handoff_id: 355, direction: inbound, source_domain: DAIRY-MGMT, target_domain: FSQM, trigger_event: cow_health_event.treatment_administered, payload: cow_health_events, null_field: null}
+      - {handoff_id: 361, direction: inbound, source_domain: FOOD-TRACE, target_domain: FSQM, trigger_event: supplier_certification.expired, payload: supplier_certifications, null_field: null}
+      - {handoff_id: 971, direction: inbound, source_domain: FOOD-TRACE, target_domain: FSQM, trigger_event: traceability_lot.created, payload: traceability_lots, null_field: null}
+
+  - id: B1B-REG
+    summary: 0 domain_regulations rows for FSQM; regulations table itself missing FSMA / FDA Food Traceability / Codex HACCP / USDA FSIS HACCP / SQF / BRC GS / FSSC 22000 / IFS Food
+    finding: domain_regulations with domain_id=157 returns 0 rows. The food-safety regulations are not present in the regulations table; can only link existing rows, and new regulation inserts are out of scope for FSQM-only loads.
+    action: Defer pending a catalog-wide regulations table backfill (food-safety + statutory anchor pass).
+    blocked_by:
+      - {type: catalog_addition, scope: domains, trigger: regulations table backfill for food-safety statutory anchors}
+
+b2:
+  - id: B2-MODULE-SHAPE
+    summary: Module split shape decision unlocks every M-band cascade
+    question: Which module split do we author for FSQM (6 capabilities, $800M USA market, certification_required)?
+    options:
+      - 4 modules (recommended) - FSQM-HACCP, FSQM-CCP-MONITORING, FSQM-INCIDENT-RECALL, FSQM-CORE
+      - 6 modules - FSQM-HACCP, FSQM-CCP-MONITORING, FSQM-INCIDENT-RECALL, FSQM-ALLERGEN-CONTROL, FSQM-EMP, FSQM-SANITATION (plus optional FSQM-AUDIT-PREP)
+      - 3-module starter - FSQM-HACCP-MONITORING (covers HACCP + CCP), FSQM-INCIDENT-RECALL, FSQM-CORE
+      - 1 starter + 2 full - FSQM-LITE starter plus 2 full modules
+    why: Rule #14 requires >=2 module_kind=full for 6-capability domain. M-band cascade (M2/M4/M5/M6/M7/M8/B9b/B10b/E1-E6/F2-F5) cannot proceed until shape chosen.
+
+  - id: B2-GFSI-AUDITS-MASTERSHIP
+    summary: gfsi_audits / certification_audits mastership ownership
+    question: Does FSQM master certification-audit-specific entities, or does AUDIT continue to master with FSQM as contributor?
+    options:
+      - FSQM masters gfsi_audits (part of FSQM-AUDIT-PREP module if separate, otherwise FSQM-CORE)
+      - AUDIT continues to master, FSQM stays contributor
+      - Both - FSQM masters food-safety-specific certification_audits, AUDIT masters generic internal_audits
+    why: Vendors (SafetyChain, Safefood 360) lean FSQM-mastering; generic IT audit-management leans AUDIT. Decision gates Bucket 1 cross-domain relationship rows for FSQM-AUDIT-PREP slice.
+
+  - id: B2-VACCP-TACCP
+    summary: VACCP / TACCP fold-or-separate
+    question: How do we model food fraud (VACCP) and food defense (TACCP) entities?
+    options:
+      - Single vulnerability_assessments master with a type enum (VACCP / TACCP)
+      - Two separate masters - food_fraud_assessments and food_defense_plans
+      - Defer entirely (most SMB food makers do not run formal VACCP/TACCP)
+    why: FSMA Intentional Adulteration Rule (21 CFR 121) mandates Food Defense Plan; FSMA Preventive Controls (21 CFR 117) mandates Food Fraud Vulnerability Assessment for enterprise food brands. Vendor support uneven.
+
+  - id: B2-AUDIT-PREP-OVERRIDE
+    summary: business_function_capabilities override for FSQM-AUDIT-PREP capability (469)
+    question: Add a business_function_capabilities override row for FSQM-AUDIT-PREP that diverges from FSQM's owning GRC function?
+    options:
+      - Yes, override to GRC-Audit sub-function
+      - Yes, override to QUALITY sub-function under Business Operations
+      - No, leave on GRC default
+    why: Audit prep arguably maps better to a GRC-Audit or Operations-Quality sub-function than to the broad GRC compliance owner of FSQM.
+
+  - id: B2-CATALOG-PROSE
+    summary: Author exact catalog_tagline and catalog_description strings for FSQM domain row
+    question: Approve agent-drafted buyer-voice catalog_tagline (single sentence) and catalog_description (1-3 paragraphs) for the domain row?
+    options:
+      - Approve agent draft
+      - Approve with edits (user supplies wording)
+      - Decline (defer)
+    why: Rule #20 explicit user-approval gate prevents agent from writing prose unilaterally; A4 cure depends on it.
+
+  - id: B2-ALIAS-ARBITRATION
+    summary: Per-alias alias_type and solution_id arbitration for B11 cluster
+    question: Per-master, which alias rows do we load (alias_name + alias_type + solution_id)?
+    options:
+      - Author full cluster from SafetyChain / TraceGains / Safefood 360 / FSMA / GFSI scheme terminology (agent drafts the table for user review)
+      - Author only statutory anchors (Food Safety Plan, EMP / PEM) and defer vendor synonyms
+      - Defer entirely
+    why: alias_type discriminator and the linking solution_id (for vendor-specific synonyms) need per-row resolution before load.
+
+  - id: B2-APQC-APPROVAL
+    summary: Per-row record_status flip on 15 agent_curated handoff_processes rows
+    question: Which of the 15 rows (ids 359, 573, 574, 606, 607, 608, 609, 610, 611, 612, 613, 614, 615, 683, 684) does the reviewer mark approved? Two duplicated handoffs (975 has 608 + 683; 979 has 612 + 684) need de-duplication or accept-both decision.
+    options:
+      - Approve all 15 (treat both layers on 975/979 as additive)
+      - Approve curated layer only (606-615 + 359/573/574), reject duplicates 683/684
+      - Approve duplicate layer (683/684) and DELETE original on 975/979
+      - Mark all rejected, re-curate later
+    why: Rule #1 record_status default is new; flipping to approved requires explicit per-load user sign-off.
+
+b3:
+  - id: B3-FOOD-SAFETY-PLANS
+    candidate: food_safety_plans
+    rationale: FSMA Preventive Controls Rule (21 CFR 117) mandates a Food Safety Plan that supersedes the legacy HACCP-only contract. Open question - new master above haccp_plans, or rename haccp_plans to food_safety_plans, depending on whether the catalog wants to model the FSMA terminology shift.
+    vendor_evidence:
+      - {vendor: SafetyChain, evidence: 1st_class}
+      - {vendor: Safefood 360, evidence: 1st_class}
+      - {vendor: FoodReady, evidence: 1st_class}
+    proposed_module: FSQM-HACCP (or FSQM-CORE under 4-module shape)
+
+  - id: B3-COA-RECORDS
+    candidate: coa_records
+    rationale: Per-shipment certificates of analysis are a distinct workflow from supplier_certifications. Heavy in food-supplier programs. May belong in FOOD-TRACE or PROC-PARTNER rather than FSQM, but several flagship FSQM products carry COA workflows. Phase 0 needed to confirm canonical owner.
+    vendor_evidence:
+      - {vendor: TraceGains, evidence: 1st_class}
+      - {vendor: Trustwell Connect, evidence: 1st_class}
+      - {vendor: SafetyChain, evidence: secondary}
+    proposed_module: null
+
+  - id: B3-VACCP-TACCP
+    candidate: food_fraud_assessments and food_defense_plans
+    rationale: VACCP (food fraud vulnerability) and TACCP (food defense, intentional adulteration) are statutorily distinct from HACCP (21 CFR 121 for IA, 21 CFR 117 for PC). Routes here for vendor confirmation that flagship FSQM products consistently separate the two from HACCP rather than folding them in. Bucket 2 #3 fold-or-separate decision depends on this evidence.
+    vendor_evidence:
+      - {vendor: Safefood 360, evidence: 1st_class}
+      - {vendor: TraceGains, evidence: 1st_class}
+      - {vendor: FoodReady, evidence: 1st_class}
+    proposed_module: FSQM-CORE (under 4-module shape) or FSQM-AUDIT-PREP
+
+extra_carried_from_prior_audit:
+  prior_continuation_applied: "2026-05-31"
+  resolved_in_continuation: [B1-S4, B1-S5, B1-S6, B1-S8, B1-H1 partial (10 of 13 handoffs tagged)]
+  still_pending_carried_to_b1b: [B1-S1, B1-S2, B1-S3, B1-S7, B1-S9, B1-S10, B1-S11, B1-S12, B1-M1, B1-M2, B1-M3, B1-M4, regulations gap]
+  notes_on_h1_state: "Coverage 13/13 met after continuation. The 3 inbound handoffs (352/354/355) had agent_curated tags from a prior run with process_ids that diverge from the audit's curated list; current state retains the prior tags (359/573/574) and the audit-proposed alternates were not loaded for those three."

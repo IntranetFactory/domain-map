@@ -1,0 +1,94 @@
+schema_version: 2
+domain: SMP
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-M6-R18
+    summary: SMP-AUTOMATION (185) domain_modules.description trails with vendor names; Rule #18 violation on a non-commerce text field.
+    finding: |
+      `domain_modules.description` on SMP-AUTOMATION (id=185) ends with a parenthetical naming two vendors and a product surface. Rule #18 lists `domain_modules` as a forbidden-zone table for vendor and product names; the entity description column must characterise the module by its capability shape, not by who sells into it.
+    action: |
+      PATCH `/domain_modules?id=eq.185` with a `description` rewrite that drops the trailing vendor parenthetical and keeps the capability framing (declarative automation workflows, workflow run history, employee-facing self-service app-access requests, as the automation surface of an SMP deployment).
+    affected_modules:
+      - 185
+  - id: B1A-B9B
+    summary: 4 SMP-side trigger_events carry event_category="" (out-of-vocabulary per Rule #13).
+    finding: |
+      Trigger_events 621 (`saas_application.discovered`), 622 (`saas_application.sanctioned`), 623 (`saas_application.deprovisioned`), and 625 (`saas_usage_metric.idle_threshold`) all carry `event_category=""`. Rule #13 lists the allowed vocabulary as `lifecycle` / `state_change` / `threshold` / `signal`. All four are state-mutation events on a master entity, mapping cleanly to `lifecycle`.
+    action: |
+      PATCH `/trigger_events?id=in.(621,622,623,625)` setting `event_category="lifecycle"`. Verify post-PATCH that no further empty `event_category` rows exist via `/trigger_events?domain_module_id=in.(30,31,184,185)&event_category=eq.`.
+    affected_events:
+      - {id: 621, event_name: saas_application.discovered, current_category: "", proposed_category: lifecycle}
+      - {id: 622, event_name: saas_application.sanctioned, current_category: "", proposed_category: lifecycle}
+      - {id: 623, event_name: saas_application.deprovisioned, current_category: "", proposed_category: lifecycle}
+      - {id: 625, event_name: saas_usage_metric.idle_threshold, current_category: "", proposed_category: lifecycle}
+  - id: B1A-DESC-R18-988
+    summary: data_objects.description on smp_app_lifecycle_stages (988) names a vendor product as the flagship taxonomy; Rule #18 violation.
+    finding: |
+      `data_objects.description` on id=988 (`smp_app_lifecycle_stages`) closes with a sentence naming a specific vendor product as the flagship taxonomy. `data_objects.description` is on the Rule #18 forbidden list.
+    action: |
+      PATCH `/data_objects?id=eq.988` setting `description` to the existing text with the flagship-vendor sentence removed; keep the TIME-taxonomy framing as generic without attribution.
+    affected_entities:
+      - smp_app_lifecycle_stages
+  - id: B1A-DESC-R18-998
+    summary: data_objects.description on smp_workflow_runs (998) names two vendors as the flagship shape; Rule #18 violation.
+    finding: |
+      `data_objects.description` on id=998 (`smp_workflow_runs`) closes with a sentence naming two specific vendor products as the flagship shape. `data_objects.description` is on the Rule #18 forbidden list.
+    action: |
+      PATCH `/data_objects?id=eq.998` setting `description` to the existing text with the final vendor sentence removed; keep the execution-log framing as generic.
+    affected_entities:
+      - smp_workflow_runs
+
+b1b: []
+
+b2:
+  - id: B2-R11-EMBEDDED-NO-MASTER
+    summary: smp_app_lifecycle_stages (988) and smp_workflow_runs (998) are kind=domain_owned embedded_master rows with no canonical master row anywhere; Rule #11 wording does not license this shape.
+    question: |
+      Both 988 (host module 30) and 998 (host module 185) are `embedded_master` with `kind=domain_owned` and zero `role=master` rows in `domain_module_data_objects` catalog-wide. Rule #11 wording requires a canonical master row somewhere OR `kind=platform_builtin`; neither holds today. How should this be resolved?
+    options:
+      - "(a) Promote each DMDO row from embedded_master to master on its current host module (988 -> 30, 998 -> 185). Semantically natural since each is the sole owner of its lifecycle states; recommended."
+      - "(b) Convert both to pure parent-owned composition: drop the DMDO row entirely, model the entity solely as a one_to_many child of its parent master via data_object_relationships (988 child of saas_applications, 998 child of smp_automation_workflows). Deletes lifecycle-state rows and the embedded-master-only tool surface."
+      - "(c) Carve a Rule #11 exemption for 'sub-state masters of an already-canonical master in the same module'; update SKILL.md and the loader pre-flight to recognise the pattern."
+    why: |
+      The catalog already runs lifecycle states and gated tools off both entities. Option (a) preserves all of that and is the cheapest, but violates the strict reading of Rule #11. Option (b) is the cleanest from a schema-purity angle but bins ops-grade data. Option (c) is the most invasive (rule change) but is the only path that endorses the as-loaded shape.
+    affected_entities:
+      - smp_app_lifecycle_stages
+      - smp_workflow_runs
+    affected_modules:
+      - 30
+      - 185
+  - id: B2-M4-CAP-REALIZATIONS
+    summary: 7 capability realizations still anchor only on modules 30 / 31; modules 184 (SMP-OPTIMIZATION) and 185 (SMP-AUTOMATION) have zero realized capabilities.
+    question: |
+      The 2026-05-29 4-module restructure renamed modules 30 -> SMP-DISCOVERY and 31 -> SMP-RENEWAL-VENDOR, then created 184 (SMP-OPTIMIZATION) and 185 (SMP-AUTOMATION). `domain_module_capabilities` rows were not redistributed. SMP-USAGE-ANALYTICS (522) and SMP-LICENSE-OPT (523) are now content-misaligned with module 30; module 185 has no realized capability at all. How to redistribute?
+    options:
+      - "Move SMP-USAGE-ANALYTICS (522) and SMP-LICENSE-OPT (523) from 30 to 184; leave 185 without a realized capability."
+      - "Move SMP-LICENSE-OPT (523) from 30 to 184; split SMP-USAGE-ANALYTICS (522) into two realizations (30 for raw collection, 184 for analysis)."
+      - "Add a new capability SMP-AUTOMATION-WORKFLOWS (or similar) and realize it on 185; redistribute 522 and 523 to 184."
+    why: |
+      Capability-to-module realization drives the marketing surface and the per-module discoverability layer. Leaving 184 and 185 with zero capabilities tilts the rendered footprint back toward the pre-restructure 2-module shape and obscures the optimization / automation flagship surfaces.
+    affected_modules:
+      - 30
+      - 184
+      - 185
+    affected_entities:
+      - SMP-USAGE-ANALYTICS
+      - SMP-LICENSE-OPT
+  - id: B2-E3-PROCUREMENT-AUTOMATION
+    summary: PROCUREMENT-SAAS-RENEWAL-OWNER (10119) has no role_modules row for SMP-AUTOMATION (185); intentional persona scope or coverage gap?
+    question: |
+      Role 10119 (PROCUREMENT-SAAS-RENEWAL-OWNER) carries 3 role_modules rows (30 secondary, 31 primary, 184 secondary) but none for module 185. Is procurement intentionally out of scope for self-service app-request automation, or should a secondary interaction be added so renewal-side procurement sees automation-driven app requests and reclamation events?
+    options:
+      - "Leave as-is: procurement is out of scope for self-service automation."
+      - "Add role_modules row (10119, 185, secondary) and a role_permissions row binding `smp-automation:read` (10800)."
+    why: |
+      Self-service app requests originated by employees in module 185 ultimately spawn renewals and seat-grant decisions in module 31; whether procurement needs visibility into the upstream automation depends on org practice.
+    affected_modules:
+      - 185
+    affected_entities:
+      - PROCUREMENT-SAAS-RENEWAL-OWNER
+
+b3: []

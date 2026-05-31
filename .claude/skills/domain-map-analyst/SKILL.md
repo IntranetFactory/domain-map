@@ -148,6 +148,7 @@ Do not append the error to any file. The incidents are logged server-side.
 **Other rules (still apply):**
 
 - Never `cd` into `.claude/skills/...` or `.tmp_deploy/` before running anything that calls `semantius` — the CLI reads `.env` from cwd.
+- **Never prefix any Bash command with `cd c:/dev/domain-map &&` (or any case variant: `cd C:/dev/domain-map &&`, `cd "c:/dev/domain-map" &&`, `cd /c/dev/domain-map &&`, etc.).** Your shell's cwd is already the project root. The `cd-into-the-root` prefix is pure ceremony that forces a permission prompt for the user and adds zero value. Call `semantius`, `bun`, `yq`, etc. directly with no `cd` prefix.
 - Invoke loader scripts with an absolute path from the project root: `bun run "<absolute-path-to-loader>"`.
 - If you ever need to sanity-check the tenant: `semantius call crud getCurrentUser '{}'` and confirm `email` and `semantius_org` match the project.
 
@@ -1064,7 +1065,11 @@ The market audit closes that gap. It is the **regression test for Phase 0**: whe
 1. Pull current state from live tables — `domains`, `domain_modules`, `domain_module_host_domains`, `domain_module_data_objects`. Never from blueprints, never from deploy scripts (Rule: live state only).
 2. Spawn a `general-purpose` subagent to generate the market surface fresh, with the prompt template in the reference doc. Subagent produces JSON + markdown at `c:/tmp/<DOMAIN>-market-surface-<date>.json` / `.md` containing the vendor surface matrix and a diff against the current footprint.
 3. Surface a one-table summary (MISSING / WRONG-OWNERSHIP / SCOPE-CREEP / MODULARIZATION counts) to the user, then offer to drill into any category.
-4. Append the audit section to `audits/<DOMAIN_CODE>.md` (one file per domain, append-only, git-tracked). The raw subagent JSON drafts stay in `c:/tmp/` (ephemeral).
+4. Write TWO outputs to the per-domain audit directory:
+   - **Append** a new dated `## YYYY-MM-DD — Audit` section to `audits/<DOMAIN_CODE>/history.md` (append-only, git-tracked) carrying the full narrative.
+   - **Rewrite in place** `audits/<DOMAIN_CODE>/state.yaml` in `schema_version: 2` format (see [audits/README.md](../../../../audits/README.md)) with current open `b1a` (agent-solvable) / `b1b` (blocked) / `b2` (user-judgment) / `b3` (research-pending) items. Resolved items live ONLY in `history.md`, not in `state.yaml`.
+
+   The raw subagent JSON drafts stay in `c:/tmp/` (ephemeral).
 5. Schedule fix loads per finding type: MISSING → Phase B insert; WRONG-OWNERSHIP → DELETE + INSERT in right module; SCOPE-CREEP → DELETE + cascade; MODULARIZATION → separate refactor conversation (don't fold into the fix-loop).
 6. Re-run after fixes land. Acceptance criterion: zero MISSING / WRONG-OWNERSHIP / SCOPE-CREEP (modulo user-accepted exceptions).
 

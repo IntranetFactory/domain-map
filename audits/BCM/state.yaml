@@ -1,0 +1,303 @@
+schema_version: 2
+domain: BCM
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a: []
+
+b1b:
+  - id: B1B-S1
+    summary: Author landing or master-bearing modules for BCM (M1 fix, prerequisite for B1-S4 and B1-S6).
+    finding: |
+      BCM (domain_id 17) has zero domain_modules rows. Rule #14 requires every domains row, including leadership-tier, to have at least one module_kind='full' row (a derived-signals or landing module preserves the deploy-target contract). The audit cannot author the module without B2-1, since the count and naming differ between scenarios: leadership-tier yields a single BCM-LANDING with empty DMDO set; promote yields BCM-PLANNING plus BCM-EXERCISE-AND-CRISIS each with master DMDOs; hybrid yields BCM-LANDING now plus deferred master-bearing modules.
+    action: |
+      After B2-1 lands, author the agreed module set with domain_id=17, module_kind='full', user-approved description prose. Cascade is B1-S4 (system skill on each new module, Rule #17) and B1-S6 (consumer DMDOs on the landing module so handoff 253 has a resolvable target_domain_module_id).
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+    affected_modules: []
+    extra_cascades_to: [B1B-S4, B1B-S6]
+
+  - id: B1B-S2
+    summary: Author 3-5 capabilities for BCM and link via capability_domains.
+    finding: |
+      Zero capability_domains rows on domain_id=17. Even leadership-tier domains usually carry 2-4 capability links describing what the market does at the capability level. The 2026-05-30 audit drafted a candidate list (business-impact-analysis, continuity-planning, exercise-execution, crisis-management, dependency-mapping); the wording, count, and capability_code formatting need user vetting before write.
+    action: |
+      Surface the candidate capability list to the user. After user approval of name, code, description per row, insert capabilities rows plus capability_domains rows (domain_id=17). No agent-side authoring without user sign-off on each label.
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+    extra_candidate_capabilities: [business-impact-analysis, continuity-planning, exercise-execution, crisis-management, dependency-mapping]
+
+  - id: B1B-S3
+    summary: Draft catalog_tagline and catalog_description for the BCM domains row (Rule #20).
+    finding: |
+      domains.catalog_tagline and domains.catalog_description are both empty strings on row id=17. Rule #20 forbids agent-side write of these columns without explicit user approval of the exact wording.
+    action: |
+      Draft buyer-voice tagline plus description per Rule #20 voice guide (workflow plus value, not analyst voice). Surface in chat for user approval of exact strings. Only PATCH after explicit user OK.
+    blocked_by:
+      - {type: user_decision, ref: B2-4}
+
+  - id: B1B-S4
+    summary: Author one skill_type='system' skill per new BCM module (Rule #17), with at least one skill_tools row.
+    finding: |
+      Zero skills rows at domain_id=17 or anchored on any BCM module. After B1B-S1 lands, each new domain_modules row needs exactly one skill_type='system' skill with at least one skill_tools row to make the module's Semantius score computable (Rule #17 plus F2 to F5).
+    action: |
+      For each module created under B1B-S1, author skills row (skill_type='system', domain_module_id=<new module>), then attach skill_tools rows with operation_kind matching the consumer DMDOs (query_<entity> floor, plus light mutates only if lifecycle states justify them).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: user_decision, ref: B2-1}
+
+  - id: B1B-S5
+    summary: Repoint handoff 253 trigger_event_id and backfill both module FK columns.
+    finding: |
+      Handoff 253 (GRC source domain 15 to BCM target domain 17) carries trigger_event_id=227 ('assessment.completed', event_category='lifecycle'), which the SKILL.md notes flag as defective because the trigger's data_object_id points at risk_assessments while the handoff's payload data_object_id=282 is compliance_risks. Both source_domain_module_id and target_domain_module_id are NULL. Target-side NULL is BCM's own (B1B-S1 owed); source-side NULL is GRC B10b owed (GRC has zero modules per its own M-band).
+    action: |
+      Two-step. (a) Wait for GRC B9 to author a non-defective trigger keyed on compliance_risks, then PATCH handoff 253 trigger_event_id to the new trigger. (b) Once BCM-LANDING (or the post-B2-1 equivalent) exists with a consumer DMDO on compliance_risks (see B1B-S6), PATCH target_domain_module_id; source_domain_module_id PATCH happens when GRC's M-band resolves and the GRC module owning compliance_risks is created.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: GRC, milestone: B9 non-defective trigger on compliance_risks}
+      - {type: domain_audit, blocking_domain: GRC, milestone: M1 GRC modules created}
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: prerequisite_entity, ref: B1B-S6}
+    affected_handoffs:
+      - {handoff_id: 253, direction: inbound, source_domain: GRC, target_domain: BCM, trigger_event: "assessment.completed (id 227, defective)", payload: compliance_risks, null_field: source_domain_module_id}
+      - {handoff_id: 253, direction: inbound, source_domain: GRC, target_domain: BCM, trigger_event: "assessment.completed (id 227, defective)", payload: compliance_risks, null_field: target_domain_module_id}
+    affected_events:
+      - {id: 227, event_name: "assessment.completed", current_category: "lifecycle", proposed_category: "lifecycle"}
+
+  - id: B1B-S6
+    summary: Add consumer DMDO on BCM landing module for compliance_risks (and likely additional GRC and ITSM masters under promote scenario).
+    finding: |
+      BCM declares no role on compliance_risks (data_object id 282, mastered by GRC) nor on any other data_object. Handoff 253's payload is compliance_risks, but BCM has no domain_module_data_objects row claiming consumer, contributor, or embedded_master on it. Without this row, B10b on the target side cannot resolve. The minimal consumer set under leadership-tier (option a of B2-1) is just compliance_risks; under promote (option b) the set grows to include masters from GRC, IT Operations, and possibly TPRM that the BCM workflow reads.
+    action: |
+      After B1B-S1 lands BCM-LANDING (or equivalent), insert at least one domain_module_data_objects row (domain_module_id=<new module>, data_object_id=282, role='consumer', necessity='optional' per Rule #16 if treated as infrastructure-shaped, otherwise 'required'). Re-evaluate the broader consumer set once B2-1 resolves.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: user_decision, ref: B2-1}
+    affected_masters:
+      - {data_object_id: 282, name: compliance_risks, target_module_id: null, workflow: "GRC publishes compliance_risks; BCM reads to update continuity exposure"}
+
+  - id: B1B-A1
+    summary: Author agent_curated APQC tag (process 269 "Plan and manage IT continuity" L3) on handoff 253, leaving the existing discovery_substring tag in place.
+    finding: |
+      handoff_processes already carries one row on handoff 253 (process 271 "Conduct and analyze IT compliance assessments" L3, proposal_source='discovery_substring', record_status='new'). The 2026-05-30 audit identified process 269 "Plan and manage IT continuity" (external_id 20731) as a better L3 fit for the target-side semantics (BCM reads the assessment result to update continuity exposure). The composed key (handoff_id, process_id) supports both tags coexisting. Blocked because the underlying handoff still mis-expresses the relationship via defective trigger 227; tagging an incorrectly-attributed handoff entrenches the defect.
+    action: |
+      Once B1B-S5 resolves (trigger repointed onto a compliance_risks-keyed trigger), insert (handoff_id=253, process_id=269, proposal_source='agent_curated', record_status='new', role='implements'). Leave the existing discovery_substring row in place.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S5, reason: "do not tag a handoff whose trigger event mis-expresses the publisher"}
+    affected_handoffs:
+      - {handoff_id: 253, direction: inbound, source_domain: GRC, target_domain: BCM, trigger_event: "assessment.completed (id 227, defective)", payload: compliance_risks, null_field: null}
+
+b2:
+  - id: B2-1
+    summary: Is BCM correctly classified as leadership-tier, or should it promote to a master-bearing domain?
+    question: |
+      The SKILL.md B1 exception list flags BCM as leadership-tier (zero masters expected). The catalog state matches. But solution_domains carries two pure-play BCM specialists (Fusion Framework System primary, Castellan primary), which is the Rule #2 point-solution-market test for a non-leadership domain. The 2026-05-30 vendor surface lists 11 plus 1 candidate masters including business_continuity_plans, business_impact_analyses, continuity_exercises, crisis_events.
+    options:
+      - "a, keep leadership-tier; author BCM-LANDING only; declare consumer DMDOs on GRC and ITSM masters"
+      - "b, promote to master-bearing; author BCM-PLANNING plus BCM-EXERCISE-AND-CRISIS with masters per Bucket 3 list"
+      - "c, hybrid; author BCM-LANDING now as thin starter; defer master-bearing modules to a follow-up Phase 0 vendor-research load"
+    why: |
+      Keystone decision: shapes B1B-S1 module count and naming, B1B-S2 capability scope, B1B-S4 system-skill placement, B1B-S6 consumer DMDO breadth, and the entirety of Bucket 3 vetting.
+
+  - id: B2-2
+    summary: DRP, separate domain or BCM sub-module?
+    question: |
+      Vendor split. ServiceNow and Archer carry distinct DRP modules alongside BCM. Fusion Framework System and Castellan fold DR into BCM as a recovery-strategy slice. The catalog has no DRP domain row today.
+    options:
+      - "a, keep DR inside BCM as data_objects (disaster_recovery_plans, recovery_strategies) on BCM-PLANNING"
+      - "b, queue DRP as a separate candidate domain via append_missing_domain.ts"
+      - "c, defer until DORA and NIS2 substrate is loaded (which forces an ICT third-party register more naturally in DRP)"
+    why: |
+      Depends on B2-1; option (a) is only available if BCM promotes under B2-1.
+
+  - id: B2-3
+    summary: DORA and NIS2 ICT third-party register ownership.
+    question: |
+      DORA and NIS2 mandate an ICT third-party register, regulatory continuity reporting, and TLPT artifacts. The ICT third-party register has stronger ownership claims in TPRM (a separate domain in the catalog).
+    options:
+      - "a, BCM hosts the ICT register as embedded_master from TPRM"
+      - "b, BCM consumes from TPRM; the register lives in TPRM"
+      - "c, author a separate OP-RES-DORA or BCM-DORA-RESILIENCE module hosted on both BCM and OP-RES via domain_module_host_domains"
+    why: |
+      Independent of B2-1 (applies in both leadership-tier and promote scenarios). Sets cross-domain ownership for the DORA-mandated entities and shapes Bucket 3 vetting of dora_third_party_register_entries.
+
+  - id: B2-4
+    summary: Catalog UX wording flow for B1B-S3.
+    question: |
+      Does the user want the agent to draft buyer-voice catalog_tagline and catalog_description in chat for approval, or supply the wording directly?
+    options:
+      - "a, agent drafts; user approves or rewrites"
+      - "b, user supplies wording directly"
+    why: |
+      Independent of other items. Rule #20 forbids any agent write to these columns without explicit per-string user approval, regardless of flow.
+
+b3:
+  - id: B3-BCP
+    candidate: business_continuity_plans
+    rationale: |
+      Top-level BCP document with RTO and RPO targets and lifecycle states (draft, approved, active, superseded). Universal across all 5 flagship vendors. Proposed module assumes B2-1 = promote.
+    vendor_evidence:
+      - {vendor: Fusion Framework System, evidence: 1st_class}
+      - {vendor: Castellan, evidence: 1st_class}
+      - {vendor: Archer Suite, evidence: 1st_class}
+      - {vendor: Riskonnect Platform, evidence: 1st_class}
+      - {vendor: ServiceNow Integrated Risk Management, evidence: 1st_class}
+    proposed_module: BCM-PLANNING
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B3-BIA
+    candidate: business_impact_analyses
+    rationale: |
+      BIA artifact, scopes a business process or service, drives RTO and RPO. Universal across all 5 flagship vendors.
+    vendor_evidence:
+      - {vendor: Fusion Framework System, evidence: 1st_class}
+      - {vendor: Castellan, evidence: 1st_class}
+      - {vendor: Archer Suite, evidence: 1st_class}
+      - {vendor: Riskonnect Platform, evidence: 1st_class}
+      - {vendor: ServiceNow Integrated Risk Management, evidence: 1st_class}
+    proposed_module: BCM-PLANNING
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B3-BSVC
+    candidate: business_services
+    rationale: |
+      BCM-anchored view of business services; typically embedded_master from CMDB or service-portfolio master per Rule #19 starter pattern. Universal across the surface.
+    vendor_evidence:
+      - {vendor: Fusion Framework System, evidence: 1st_class}
+      - {vendor: Castellan, evidence: 1st_class}
+      - {vendor: Archer Suite, evidence: 1st_class}
+      - {vendor: Riskonnect Platform, evidence: 1st_class}
+      - {vendor: ServiceNow Integrated Risk Management, evidence: 1st_class}
+    proposed_module: BCM-PLANNING
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B3-DEPMAP
+    candidate: dependency_maps
+    rationale: |
+      Service-to-app-to-infra mapping driving recovery sequencing. Strong in Fusion, Castellan, ServiceNow. The dependency-mapping algorithm is also the modest algorithmic layer flagged in BCM.business_logic.
+    vendor_evidence:
+      - {vendor: Fusion Framework System, evidence: 1st_class}
+      - {vendor: Castellan, evidence: 1st_class}
+      - {vendor: ServiceNow Integrated Risk Management, evidence: 1st_class}
+      - {vendor: Archer Suite, evidence: secondary}
+      - {vendor: Riskonnect Platform, evidence: secondary}
+    proposed_module: BCM-PLANNING
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B3-RECSTRAT
+    candidate: recovery_strategies
+    rationale: |
+      Per-asset and per-service recovery strategy (hot site, warm site, manual workaround). Universal across the 5 flagship vendors.
+    vendor_evidence:
+      - {vendor: Fusion Framework System, evidence: 1st_class}
+      - {vendor: Castellan, evidence: 1st_class}
+      - {vendor: Archer Suite, evidence: 1st_class}
+      - {vendor: Riskonnect Platform, evidence: 1st_class}
+      - {vendor: ServiceNow Integrated Risk Management, evidence: 1st_class}
+    proposed_module: BCM-PLANNING
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B3-DRP
+    candidate: disaster_recovery_plans
+    rationale: |
+      IT-side recovery plan, distinct from a BCP. Vendor split: ServiceNow and Archer carry distinct DRP modules; Fusion and Castellan fold into BCM as recovery_strategies. Module assignment depends on B2-2.
+    vendor_evidence:
+      - {vendor: ServiceNow Integrated Risk Management, evidence: 1st_class}
+      - {vendor: Archer Suite, evidence: 1st_class}
+      - {vendor: Fusion Framework System, evidence: secondary}
+      - {vendor: Castellan, evidence: secondary}
+      - {vendor: Riskonnect Platform, evidence: secondary}
+    proposed_module: BCM-PLANNING
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+      - {type: user_decision, ref: B2-2}
+
+  - id: B3-EXERCISE
+    candidate: continuity_exercises
+    rationale: |
+      Tabletop, walkthrough, full-interruption test records with scheduled, executed, closed lifecycle. Universal.
+    vendor_evidence:
+      - {vendor: Fusion Framework System, evidence: 1st_class}
+      - {vendor: Castellan, evidence: 1st_class}
+      - {vendor: Archer Suite, evidence: 1st_class}
+      - {vendor: Riskonnect Platform, evidence: 1st_class}
+      - {vendor: ServiceNow Integrated Risk Management, evidence: 1st_class}
+    proposed_module: BCM-EXERCISE-AND-CRISIS
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B3-EXFINDINGS
+    candidate: exercise_findings
+    rationale: |
+      Per-exercise gaps and action items fed back to plans. Universal in Fusion, Castellan, Archer (named differently but same concept).
+    vendor_evidence:
+      - {vendor: Fusion Framework System, evidence: 1st_class}
+      - {vendor: Castellan, evidence: 1st_class}
+      - {vendor: Archer Suite, evidence: 1st_class}
+      - {vendor: Riskonnect Platform, evidence: 1st_class}
+      - {vendor: ServiceNow Integrated Risk Management, evidence: 1st_class}
+    proposed_module: BCM-EXERCISE-AND-CRISIS
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B3-CRISIS
+    candidate: crisis_events
+    rationale: |
+      Live invocation of a plan; owns activation, stand-down lifecycle. Universal in Fusion and Castellan; Archer and Riskonnect via incident framing.
+    vendor_evidence:
+      - {vendor: Fusion Framework System, evidence: 1st_class}
+      - {vendor: Castellan, evidence: 1st_class}
+      - {vendor: Archer Suite, evidence: secondary}
+      - {vendor: Riskonnect Platform, evidence: secondary}
+      - {vendor: ServiceNow Integrated Risk Management, evidence: 1st_class}
+    proposed_module: BCM-EXERCISE-AND-CRISIS
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B3-CRISCOMM
+    candidate: crisis_communications
+    rationale: |
+      Per-event outbound communications log. Specialist depth in mass-notification integrations (Everbridge, OnSolve). Universal.
+    vendor_evidence:
+      - {vendor: Fusion Framework System, evidence: 1st_class}
+      - {vendor: Castellan, evidence: 1st_class}
+      - {vendor: Archer Suite, evidence: 1st_class}
+      - {vendor: Riskonnect Platform, evidence: 1st_class}
+      - {vendor: ServiceNow Integrated Risk Management, evidence: 1st_class}
+    proposed_module: BCM-EXERCISE-AND-CRISIS
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B3-EMERGCONTACT
+    candidate: emergency_contacts
+    rationale: |
+      Crisis-call-tree and mass-notification roster. Likely embedded_master from HCM users. Universal call-tree concept.
+    vendor_evidence:
+      - {vendor: Fusion Framework System, evidence: 1st_class}
+      - {vendor: Castellan, evidence: 1st_class}
+      - {vendor: Archer Suite, evidence: 1st_class}
+      - {vendor: Riskonnect Platform, evidence: 1st_class}
+      - {vendor: ServiceNow Integrated Risk Management, evidence: 1st_class}
+    proposed_module: BCM-EXERCISE-AND-CRISIS
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B3-DORAREG
+    candidate: dora_third_party_register_entries
+    rationale: |
+      DORA-mandated third-party ICT dependency register. Vendor support emerging; Fusion has the most mature surface. Ownership shared with TPRM per B2-3.
+    vendor_evidence:
+      - {vendor: Fusion Framework System, evidence: 1st_class}
+      - {vendor: Castellan, evidence: secondary}
+      - {vendor: Archer Suite, evidence: secondary}
+      - {vendor: Riskonnect Platform, evidence: secondary}
+      - {vendor: ServiceNow Integrated Risk Management, evidence: secondary}
+    proposed_module: BCM-DORA-RESILIENCE
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+      - {type: user_decision, ref: B2-3}

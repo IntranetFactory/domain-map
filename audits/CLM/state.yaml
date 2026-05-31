@@ -1,0 +1,284 @@
+schema_version: 2
+domain: CLM
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a: []
+
+b1b:
+  - id: B1B-S10-EVENT-CAT
+    summary: trigger_event 589 sourcing_event.awarded has empty event_category; S2P owns the publisher row.
+    finding: >
+      Live PostgREST read confirms trigger_events.id=589 (event_name='sourcing_event.awarded', data_object_id=71 sourcing_events)
+      carries event_category=''. Rule #13 requires one of lifecycle / state_change / threshold / signal. Per Rule #18 and the
+      handoff direction (handoff 602: S2P 27 -> CLM 26 on this event), S2P is the publishing domain and owns the trigger_events row.
+      CLM is downstream consumer via CLM-AUTHORING 125.
+    action: PATCH trigger_events.id=589 set event_category='state_change' during the S2P b1 audit (queued under D8). Not CLM's load.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: S2P, milestone: b1-event-category-backfill}
+    affected_events:
+      - {id: 589, event_name: sourcing_event.awarded, current_category: "", proposed_category: state_change}
+    affected_handoffs:
+      - {handoff_id: 602, direction: inbound, source_domain: S2P, target_domain: CLM, trigger_event: sourcing_event.awarded, payload: sourcing_events, null_field: null}
+  - id: B1B-B10B-OUTBOUND
+    summary: 8 outbound CLM handoffs carry NULL target_domain_module_id; backfill is each target domain's B10b work.
+    finding: >
+      Live read of /handoffs?or=(source_domain_id.eq.26,target_domain_id.eq.26) confirms 8 outbound rows with NULL target FK:
+      41 (S2P), 215 (S2P), 216 (AP-AUTO), 342 (AGENCY-MGMT), 518 (ERP-FIN), 519 (SUB-MGMT), 520 (CSM), 521 (GRC).
+      CLM-side source_domain_module_id is populated on every one. Per the B10b asymmetry rule, the target module is the
+      receiving domain's audit responsibility.
+    action: On each target domain's b1 audit, PATCH the target_domain_module_id to the consuming module. Add consumer DMDO on the relevant CLM master if the receiving domain does not already declare the dependency.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: S2P, milestone: b1-b10b-backfill-target}
+      - {type: domain_audit, blocking_domain: AP-AUTO, milestone: b1-b10b-backfill-target}
+      - {type: domain_audit, blocking_domain: AGENCY-MGMT, milestone: b1-b10b-backfill-target}
+      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: b1-b10b-backfill-target}
+      - {type: domain_audit, blocking_domain: SUB-MGMT, milestone: b1-b10b-backfill-target}
+      - {type: domain_audit, blocking_domain: CSM, milestone: b1-b10b-backfill-target}
+      - {type: domain_audit, blocking_domain: GRC, milestone: b1-b10b-backfill-target}
+    affected_handoffs:
+      - {handoff_id: 41, direction: outbound, source_domain: CLM, target_domain: S2P, trigger_event: legal_contract.signed, payload: purchase_orders, null_field: target_domain_module_id}
+      - {handoff_id: 215, direction: outbound, source_domain: CLM, target_domain: S2P, trigger_event: legal_contract.expired, payload: legal_contracts, null_field: target_domain_module_id}
+      - {handoff_id: 216, direction: outbound, source_domain: CLM, target_domain: AP-AUTO, trigger_event: legal_contract.amended, payload: legal_contracts, null_field: target_domain_module_id}
+      - {handoff_id: 342, direction: outbound, source_domain: CLM, target_domain: AGENCY-MGMT, trigger_event: legal_contract.signed, payload: agency_jobs, null_field: target_domain_module_id}
+      - {handoff_id: 518, direction: outbound, source_domain: CLM, target_domain: ERP-FIN, trigger_event: legal_contract.signed, payload: legal_contracts, null_field: target_domain_module_id}
+      - {handoff_id: 519, direction: outbound, source_domain: CLM, target_domain: SUB-MGMT, trigger_event: legal_contract.signed, payload: legal_contracts, null_field: target_domain_module_id}
+      - {handoff_id: 520, direction: outbound, source_domain: CLM, target_domain: CSM, trigger_event: contract_obligation.due, payload: contract_obligations, null_field: target_domain_module_id}
+      - {handoff_id: 521, direction: outbound, source_domain: CLM, target_domain: GRC, trigger_event: contract_obligation.breached, payload: contract_obligations, null_field: target_domain_module_id}
+  - id: B1B-B10B-INBOUND
+    summary: 5 inbound CLM handoffs carry NULL source_domain_module_id; backfill is each source domain's B10b work.
+    finding: >
+      Live read confirms 5 inbound rows with NULL source FK: 217 (ESIGN), 309 (RE-CRE, also NULL target FK), 339 (ACCT-PRACT-MGMT),
+      469 (CRM, also NULL target FK), 1014 (CPQ). CLM-side target_domain_module_id is populated on 217, 339; 309 and 469 carry NULL on both FKs.
+    action: On each source domain's b1 audit, PATCH the source_domain_module_id. On CLM-side for 309 and 469, populate target_domain_module_id once the source audit confirms the publishing module shape (CLM target is 127 CLM-REPOSITORY for both, deterministic from trigger event semantics).
+    blocked_by:
+      - {type: domain_audit, blocking_domain: ESIGN, milestone: b1-b10b-backfill-source}
+      - {type: domain_audit, blocking_domain: RE-CRE, milestone: b1-b10b-backfill-source}
+      - {type: domain_audit, blocking_domain: ACCT-PRACT-MGMT, milestone: b1-b10b-backfill-source}
+      - {type: domain_audit, blocking_domain: CRM, milestone: b1-b10b-backfill-source}
+      - {type: domain_audit, blocking_domain: CPQ, milestone: b1-b10b-backfill-source}
+    affected_handoffs:
+      - {handoff_id: 217, direction: inbound, source_domain: ESIGN, target_domain: CLM, trigger_event: envelope.completed, payload: envelopes, null_field: source_domain_module_id}
+      - {handoff_id: 309, direction: inbound, source_domain: RE-CRE, target_domain: CLM, trigger_event: commercial_lease.executed, payload: commercial_leases, null_field: both}
+      - {handoff_id: 339, direction: inbound, source_domain: ACCT-PRACT-MGMT, target_domain: CLM, trigger_event: engagement_letter.signed, payload: engagement_letters, null_field: source_domain_module_id}
+      - {handoff_id: 469, direction: inbound, source_domain: CRM, target_domain: CLM, trigger_event: crm_opportunity.closed_won, payload: crm_opportunities, null_field: both}
+      - {handoff_id: 1014, direction: inbound, source_domain: CPQ, target_domain: CLM, trigger_event: quote_discount.approved, payload: quote_discounts, null_field: source_domain_module_id}
+  - id: B1B-CONSUMER-DMDO
+    summary: 7 downstream domains need consumer DMDOs on CLM masters per pairwise reconciliation.
+    finding: >
+      Pairwise Section 4 surfaced (in the 2026-05-30 audit) that SUB-MGMT, AGENCY-MGMT, CPQ, ERP-FIN, CSM, GRC, AP-AUTO each
+      consume CLM masters (legal_contracts, contract_templates, or contract_obligations) without declaring the dependency via a
+      domain_module_data_objects row in the receiving module. Re-confirmed on this pass: handoffs 41, 63, 215, 216, 342, 469, 482,
+      517, 518, 519, 520, 521, 1014 all imply consumer DMDOs that the target domain has not loaded.
+    action: Each target domain's b1 audit adds consumer DMDO on the relevant CLM master (legal_contracts 66, contract_templates 69, contract_obligations 67) in the receiving module.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: SUB-MGMT, milestone: b1-consumer-dmdo}
+      - {type: domain_audit, blocking_domain: AGENCY-MGMT, milestone: b1-consumer-dmdo}
+      - {type: domain_audit, blocking_domain: CPQ, milestone: b1-consumer-dmdo}
+      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: b1-consumer-dmdo}
+      - {type: domain_audit, blocking_domain: CSM, milestone: b1-consumer-dmdo}
+      - {type: domain_audit, blocking_domain: GRC, milestone: b1-consumer-dmdo}
+      - {type: domain_audit, blocking_domain: AP-AUTO, milestone: b1-consumer-dmdo}
+    affected_masters:
+      - {data_object_id: 66, name: legal_contracts, target_module_id: null, workflow: signed-contract-consumption}
+      - {data_object_id: 69, name: contract_templates, target_module_id: null, workflow: template-published-consumption}
+      - {data_object_id: 67, name: contract_obligations, target_module_id: null, workflow: obligation-state-consumption}
+
+b2:
+  - id: B2-S2
+    summary: Rule #15 notes-pollution on all 5 CLM master data_objects; revert needs user authorization.
+    question: >
+      data_objects rows 66 (legal_contracts), 67 (contract_obligations), 68 (contract_clauses), 69 (contract_templates),
+      70 (signature_records) all carry templated notes restating has_submit_lock rationale and multi-approver workflow context.
+      Rule #15 forbids auto-populated notes and rescinds the prior Rule #12 license for pattern-flag context. Were these notes
+      user-approved at load time, or were they auto-populated by the loader?
+    options:
+      - "a: confirm user-approved at load time, leave in place"
+      - "b: confirm auto-populated, PATCH all 5 rows' notes to empty string and log a Rule #15 incident in skill-changelog.md"
+    why: Audit cannot infer load-time approval status from catalog state alone; only the user has provenance.
+    affected_entities:
+      - legal_contracts
+      - contract_obligations
+      - contract_clauses
+      - contract_templates
+      - signature_records
+  - id: B2-S3
+    summary: F7 channel-primitive justification for sign_document on CLM-REPOSITORY and REAL-ESTATE-AGENT skills.
+    question: >
+      sign_document (tool 42, side_effect, external) is linked on skill 198 (CLM-REPOSITORY) and skill 220 (REAL-ESTATE-AGENT)
+      with empty skill_tools.notes. F7 wants the channel-primitive linkage justified in skill_tools.notes; Rule #15 wants the agent
+      not to author the wording. Two routes.
+    options:
+      - "a: supply user-approved wording for the 2 skill_tools rows"
+      - "b: treat F7 as satisfied via this audit conversation, leave notes empty"
+  - id: B2-S4
+    summary: Pattern flag re-evaluation per Rule #12 on legal_contracts, signature_records, contract_obligations.
+    question: >
+      Current flags read: legal_contracts.has_personal_content=false, signature_records.has_personal_content=false,
+      contract_obligations.has_single_approver=false. Plausible re-evaluations: (a) legal_contracts.has_personal_content=true
+      (counterparty contact info, signatory names), (b) signature_records.has_personal_content=true (signer names, IP addresses,
+      signature images), (c) contract_obligations.has_single_approver=true (obligation owner closes the record).
+    options:
+      - "a/b/c per flag: yes/no"
+  - id: B2-S5
+    summary: E6 permission-bundle drift; implicit hierarchy vs explicit gate grants.
+    question: >
+      CONTRACT-OPS-MANAGER has clm-repository:admin / clm-obligation-mgmt:admin / clm-renewal:admin and clm-authoring:manage /
+      clm-negotiation:manage. LEGAL-COUNSEL has clm-authoring:admin / clm-negotiation:admin and clm-repository:manage. The
+      workflow-gate permissions (approve_legal_contract, execute_legal_contract, amend_legal_contract, terminate_legal_contract,
+      renew_legal_contract, approve_contract_clause / contract_template, close_contract_obligation, etc.) are not explicitly granted;
+      the bundles rely on permission_hierarchy to expand :manage / :admin to include gates.
+    options:
+      - "a: confirm hierarchy expands gates, leave bundles as-is"
+      - "b: add explicit gate grants for LEGAL-COUNSEL on approve_* gates"
+      - "c: leave drift; expectation is permission_hierarchy covers everything catalog-wide"
+  - id: B2-S6
+    summary: REAL-ESTATE-AGENT starter intent; lite-flow or refactor to consume full CLM-REPOSITORY.
+    question: >
+      Starter 153 (REAL-ESTATE-AGENT) embeds legal_contracts and signature_records via embedded_master rather than consumer.
+      The canonical masters exist in CLM-REPOSITORY (127), satisfying Rule #19 invariant 2. Is the starter intentionally a lite path
+      (small brokerage installs the starter standalone without full CLM-REPOSITORY) or should the starter consume full CLM-REPOSITORY
+      when both are deployed together?
+    options:
+      - "a: starter is intentionally lite, leave embedded_master"
+      - "b: refactor to consume full CLM-REPOSITORY"
+
+b3:
+  - id: B3-CONTRACT-AMENDMENTS
+    candidate: contract_amendments
+    rationale: >
+      Icertis, Ironclad, Sirion model amendments as first-class records distinct from contract_clauses (modify existing terms,
+      retain audit-trail). The existing legal_contract.amended event has no master amendment record; the amendment lives implicitly
+      inside legal_contracts.
+    vendor_evidence:
+      - Icertis Contract Intelligence
+      - Ironclad
+      - Sirion CLM
+    proposed_module: CLM-REPOSITORY
+  - id: B3-CONTRACT-RENEWAL-RECORDS
+    candidate: contract_renewal_records
+    rationale: >
+      Ironclad, LinkSquares, Workday Evisort model the renewal record as distinct from the original contract (one parent, many
+      renewal records). Currently legal_contract.renewed transitions the original record's state but produces no new master.
+    vendor_evidence:
+      - Ironclad
+      - LinkSquares Finalize
+      - Workday Evisort
+    proposed_module: CLM-RENEWAL
+  - id: B3-CLAUSE-LIBRARIES
+    candidate: clause_libraries
+    rationale: >
+      Icertis, Sirion, ContractPodAi maintain library entities distinct from individual clauses (versioned clause sets,
+      jurisdictional libraries). Current contract_clauses master conflates the library with individual clauses.
+    vendor_evidence:
+      - Icertis
+      - Sirion CLM
+      - ContractPodAi Leah
+    proposed_module: CLM-AUTHORING
+  - id: B3-PLAYBOOKS
+    candidate: playbooks
+    rationale: >
+      Ironclad and LinkSquares model Playbooks distinct from contract templates (negotiation guidance, fallback positions).
+      Existing contract_templates alias includes "playbook" but the entity may warrant its own master.
+    vendor_evidence:
+      - Ironclad
+      - LinkSquares Finalize
+    proposed_module: CLM-NEGOTIATION
+  - id: B3-RISK-ASSESSMENTS
+    candidate: risk_assessments
+    rationale: >
+      Icertis "Risk Score", Sirion "Compliance Score", ContractPodAi "Risk Detection" produce structured risk records per clause /
+      per contract. detect_clause_risk tool is linked to CLM-NEGOTIATION but no clause_risk_assessments master records the output.
+    vendor_evidence:
+      - Icertis Contract Intelligence
+      - Sirion CLM
+      - ContractPodAi Leah
+    proposed_module: CLM-NEGOTIATION
+  - id: B3-COUNTERPARTIES
+    candidate: counterparties
+    rationale: >
+      Icertis, LinkSquares, Agiloft model counterparties as a first-class master distinct from crm_accounts. Currently no
+      counterparty entity, the relationship lives via crm_accounts or vendors.
+    vendor_evidence:
+      - Icertis Contract Intelligence
+      - LinkSquares Finalize
+      - Agiloft CLM
+    proposed_module: CLM-REPOSITORY
+  - id: B3-CONTRACT-MILESTONES
+    candidate: contract_milestones
+    rationale: >
+      Distinct from contract_obligations in Sirion, Icertis (milestones are date-driven checkpoints; obligations are deliverables).
+      Currently the catalog folds milestones into obligations.
+    vendor_evidence:
+      - Sirion CLM
+      - Icertis Contract Intelligence
+    proposed_module: CLM-OBLIGATION-MGMT
+  - id: B3-DATA-PROTECTION-ADDENDA
+    candidate: data_protection_addenda
+    rationale: >
+      GDPR DPA compliance requires DPAs as first-class records with their own renewal cycle. Icertis, Ironclad, OneTrust have
+      specialized DPA modules.
+    vendor_evidence:
+      - Icertis Contract Intelligence
+      - Ironclad
+      - OneTrust
+    proposed_module: new CLM-COMPLIANCE module candidate
+  - id: B3-CONTRACT-NEGOTIATION-THREADS
+    candidate: contract_negotiation_threads
+    rationale: >
+      Ironclad and DocuSign CLM model negotiation rounds and counterparty exchanges as structured threads (separate from clauses,
+      separate from the contract). Currently no thread entity, the negotiation history is opaque.
+    vendor_evidence:
+      - Ironclad
+      - DocuSign CLM
+    proposed_module: CLM-NEGOTIATION
+  - id: B3-REG-GDPR-DPA
+    candidate: GDPR DPA regulation
+    rationale: Mandatory for EU data subjects. Currently absent from CLM's domain_regulations rows (eIDAS + ASC 606 only).
+    vendor_evidence:
+      - Icertis Contract Intelligence
+      - OneTrust
+    proposed_module: cross-cutting compliance attachment
+  - id: B3-REG-HIPAA-BAA
+    candidate: HIPAA BAA regulation
+    rationale: Mandatory for US healthcare. Currently absent.
+    vendor_evidence:
+      - Agiloft CLM
+      - Icertis Contract Intelligence
+    proposed_module: cross-cutting compliance attachment
+  - id: B3-REG-SOX
+    candidate: SOX significant-contract attestation
+    rationale: Mandatory for US publicly-listed companies. Currently absent.
+    vendor_evidence:
+      - Workday Evisort
+      - LinkSquares Finalize
+    proposed_module: cross-cutting compliance attachment
+  - id: B3-REG-FAR-DFARS
+    candidate: FAR / DFARS
+    rationale: Mandatory for US federal contracting. Currently absent.
+    vendor_evidence:
+      - Icertis Contract Intelligence
+      - Agiloft CLM
+    proposed_module: cross-cutting compliance attachment
+  - id: B3-MOD-CLM-COMPLIANCE
+    candidate: CLM-COMPLIANCE module split
+    rationale: >
+      If DPAs + risk_assessments + counterparty obligations get loaded, a sixth module (CLM-COMPLIANCE) makes more sense than
+      overloading CLM-OBLIGATION-MGMT. Would push CLM from 5 full modules to 6, still consistent with the capability count.
+    vendor_evidence:
+      - Icertis Contract Intelligence
+      - Sirion CLM
+      - OneTrust
+    proposed_module: new full module
+  - id: B3-MOD-CLM-NEGOTIATION-SPLIT
+    candidate: CLM-NEGOTIATION split into CLM-REDLINING + CLM-CLAUSE-RISK-DETECT
+    rationale: >
+      Negotiation threads + redlining + AI risk detection + approval workflow could split into two modules (CLM-REDLINING for the
+      markup mechanics and CLM-CLAUSE-RISK-DETECT for the AI overlay). Current single module mixes a workflow surface with an
+      AI-overlay surface.
+    vendor_evidence:
+      - Ironclad
+      - DocuSign CLM
+      - Icertis Contract Intelligence
+    proposed_module: split CLM-NEGOTIATION

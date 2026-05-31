@@ -1,0 +1,351 @@
+schema_version: 2
+domain: ACCT-PLAN
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a: []
+
+b1b:
+  - id: B1B-A1-PATCH
+    summary: "PATCH /domains?id=eq.105 with user-approved catalog_tagline and catalog_description once wording is supplied."
+    finding: "A4 still FAILS on the ACCT-PLAN domains row (id 105): both catalog_tagline and catalog_description are empty strings. The 2026-05-30 audit drafted candidate wording per Rule #20 (buyer-voice). The drafts have not been reviewed or approved; until the user supplies the exact text the agent cannot PATCH (Rule #20 forbids unilateral writes to catalog_tagline / catalog_description)."
+    action: "User reviews the 2026-05-30 drafts in history.md (B1-A1 section), supplies the exact wording (verbatim, including any edits). Agent then issues PATCH /domains?id=eq.105 with the approved strings. No other field touched."
+    blocked_by:
+      - {type: user_decision, ref: catalog-UX-wording, reason: "Rule #20 forbids unilateral catalog_tagline / catalog_description writes"}
+    affected_entities:
+      - domains
+    extra_target_row_id: 105
+
+  - id: B1B-M1-MODULES
+    summary: "Author the chosen domain_modules set (6 / 4 / 3 module shape) plus domain_module_capabilities so every capability has a realizer."
+    finding: "M1 / M2 / M4 FAIL. Zero domain_modules rows on a domain with 7 capabilities (RELATIONSHIP-MAPPING, WHITESPACE-MAPPING, ACCOUNT-PLAN-AUTHORING, MUTUAL-ACTION-PLANS, QBR-AUTOMATION, KEY-ACCOUNT-METRICS, POLITICAL-MAP-VISUALIZATION). Blocks the entire B / E / F surface and the per-module FK attribution on handoffs 209 and 210."
+    action: "Once B2-L1 resolves toward (a) reclassify or (c) hybrid and B2-M1 picks a module shape, author the modules as module_kind='full' rows. The 2026-05-30 hypothesis proposes 6 modules (ACCT-PLAN-CORE, ACCT-PLAN-MUTUAL-ACTION, ACCT-PLAN-RELATIONSHIP, ACCT-PLAN-WHITESPACE, ACCT-PLAN-QBR, ACCT-PLAN-METRICS); alternatives are 4-module (CORE / RELATIONSHIP-WHITESPACE / EXECUTION / METRICS) and 3-module (CORE / EXECUTION / METRICS). Bundle with domain_module_capabilities so all 7 capabilities are realized."
+    blocked_by:
+      - {type: user_decision, ref: B2-L1}
+      - {type: user_decision, ref: B2-M1}
+    affected_modules: []
+    affected_entities:
+      - domain_modules
+      - domain_module_capabilities
+
+  - id: B1B-S1-B10B-BACKFILL
+    summary: "Re-run the B10b source_domain_module_id backfill on handoffs 209 and 210 once modules exist."
+    finding: "Handoffs 209 (target CSM, event 169 account_health.declined) and 210 (target SALES-ENG, event 170 whitespace.identified) carry source_domain_module_id=NULL because ACCT-PLAN has zero modules. Inbound query has 0 rows. Handoff 209's attribution depends on the B2-T1 publisher decision: if the publisher moves to CRM, the row should be re-attributed at source side instead of backfilled."
+    action: "After B1B-M1-MODULES lands and B2-T1 resolves, PATCH the source_domain_module_id on handoff 210 to point at the new ACCT-PLAN-WHITESPACE module (id TBD). Handoff 209 is conditional on B2-T1: if (a) it points at ACCT-PLAN-METRICS; if (b) the row instead moves to CRM as source."
+    blocked_by:
+      - {type: depends_on, ref: B1B-M1-MODULES, reason: "modules must exist to point the FK at"}
+      - {type: user_decision, ref: B2-T1}
+    affected_handoffs:
+      - {handoff_id: 209, direction: outbound, source_domain: ACCT-PLAN, target_domain: CSM, trigger_event: account_health.declined, payload: customers, null_field: source_domain_module_id}
+      - {handoff_id: 210, direction: outbound, source_domain: ACCT-PLAN, target_domain: SALES-ENG, trigger_event: whitespace.identified, payload: customers, null_field: source_domain_module_id}
+
+  - id: B1B-H1-209
+    summary: "Author the missing handoff_processes APQC tag on handoff 209 (PCF 717, Manage sales/key account plan)."
+    finding: "Handoff 209 (ACCT-PLAN to CSM, account_health.declined, payload customers) is still untagged. Coverage of cross-domain handoffs sits at 1 of 2 (handoff 210 was tagged in the 2026-05-31 technical continuation as handoff_processes id 377 against process 929). Proposed tag: PCF 717 'Manage sales/key account plan' (L4)."
+    action: "Once B2-T1 resolves: if option (a) keeps ACCT-PLAN as publisher, INSERT handoff_processes row (handoff_id=209, process_id=717, proposal_source='agent_curated', role='implements', record_status default 'new'). If option (b) reattributes to CRM, the tag belongs on CRM's outbound handoff instead and this item drops from this state."
+    blocked_by:
+      - {type: user_decision, ref: B2-T1}
+    affected_handoffs:
+      - {handoff_id: 209, direction: outbound, source_domain: ACCT-PLAN, target_domain: CSM, trigger_event: account_health.declined, payload: customers}
+    extra_proposed_process_id: 717
+    extra_proposed_process_name: "Manage sales/key account plan"
+
+  - id: B1B-V1-ACCOUNT-PLANS
+    summary: "Load account_plans master in ACCT-PLAN-CORE (or wherever B2-M1's module shape lands it)."
+    finding: "MISSING entity. The account_plans master is the headline record-type across all 5 flagships (Upland Altify, Revegy, DemandFarm, Prolifiq CRUSH, Demandbase Account Planning); it is the parent record for objectives, strategies, white-space cells, and stakeholder rollups."
+    action: "Author data_objects row plus domain_module_data_objects (role=master, necessity=required) on the chosen target module, plus baseline lifecycle states (draft, approved, executed, archived) and pattern flags per Rule #12."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
+      - {type: user_decision, ref: B2-L1}
+      - {type: user_decision, ref: B2-M1}
+    affected_entities:
+      - account_plans
+    vendor_evidence:
+      - Upland Altify
+      - Revegy
+      - DemandFarm
+      - Prolifiq CRUSH
+      - Demandbase Account Planning
+    extra_proposed_module: ACCT-PLAN-CORE
+
+  - id: B1B-V2-MUTUAL-ACTION-PLANS
+    summary: "Load mutual_action_plans master (prefixed per Rule #9 due to EMP-EXP action_plans collision)."
+    finding: "MISSING entity. Collides on bare-word 'action_plans' with EMP-EXP's existing master (data_objects id 184); Rule #9 requires prefix arbitration. Mutual action plans (a.k.a. joint success plans, mutual close plans) ship in all 5 flagships."
+    action: "Author data_objects row with data_object_name='mutual_action_plans' (prefix form), plus DMDO and lifecycle states (draft, shared_with_buyer, acknowledged, in_progress, completed)."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
+      - {type: user_decision, ref: B2-L1}
+      - {type: user_decision, ref: B2-M1}
+    affected_entities:
+      - mutual_action_plans
+    vendor_evidence:
+      - Upland Altify
+      - Revegy
+      - DemandFarm
+      - Prolifiq CRUSH
+      - Demandbase Account Planning
+    extra_proposed_module: ACCT-PLAN-MUTUAL-ACTION
+    extra_collision_with: {data_object_id: 184, owner_domain: EMP-EXP, bare_word: action_plans}
+
+  - id: B1B-V3-RELATIONSHIP-MAPS
+    summary: "Load relationship_maps master in ACCT-PLAN-RELATIONSHIP."
+    finding: "MISSING entity. The per-account org chart with influence and sentiment overlay; Revegy and DemandFarm headline this surface, Altify and Prolifiq carry it as a core sub-surface, Demandbase Account Planning treats it as an ABM-adjacent visualization."
+    action: "Author data_objects row plus DMDO. Likely sibling masters: stakeholder_records, stakeholder_relationships, political_maps."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
+      - {type: user_decision, ref: B2-L1}
+      - {type: user_decision, ref: B2-M1}
+    affected_entities:
+      - relationship_maps
+    vendor_evidence:
+      - Upland Altify
+      - Revegy
+      - DemandFarm
+      - Prolifiq CRUSH
+      - Demandbase Account Planning
+    extra_proposed_module: ACCT-PLAN-RELATIONSHIP
+
+  - id: B1B-V4-WHITE-SPACE-MAPS
+    summary: "Load white_space_maps master in ACCT-PLAN-WHITESPACE."
+    finding: "MISSING entity. The product-by-business-unit grid per account; DemandFarm headlines the grid surface, all other flagships ship it. The outbound whitespace.identified event (handoff 210) should fire from this master once it exists."
+    action: "Author data_objects row plus DMDO; likely sibling masters: white_space_opportunities, product_coverage_records."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
+      - {type: user_decision, ref: B2-L1}
+      - {type: user_decision, ref: B2-M1}
+    affected_entities:
+      - white_space_maps
+    vendor_evidence:
+      - Upland Altify
+      - Revegy
+      - DemandFarm
+      - Prolifiq CRUSH
+      - Demandbase Account Planning
+    extra_proposed_module: ACCT-PLAN-WHITESPACE
+
+  - id: B1B-V5-KEY-ACCOUNTS
+    summary: "Load key_accounts master (or alternative shape per B2-K1) in ACCT-PLAN-CORE."
+    finding: "MISSING entity (depending on shape decision). Strategic key-account designation surface; flagship vendors split on whether it is a separate master (Altify, Revegy) or an enriched attribute on customers (DemandFarm, Demandbase)."
+    action: "If B2-K1 = (a), author key_accounts as a master with FK to customers. If (b), PATCH /fields to add key_account_tier / assigned_account_team on customers (cross-domain coordination with CRM). If (c), author a junction key_account_designations on (customers, key_account_segments)."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
+      - {type: user_decision, ref: B2-L1}
+      - {type: user_decision, ref: B2-M1}
+      - {type: user_decision, ref: B2-K1}
+    affected_entities:
+      - key_accounts
+      - customers
+    vendor_evidence:
+      - Upland Altify
+      - Revegy
+      - DemandFarm
+      - Prolifiq CRUSH
+      - Demandbase Account Planning
+    extra_proposed_module: ACCT-PLAN-CORE
+
+  - id: B1B-V6-QBR-MEETINGS
+    summary: "Load qbr_meetings master in ACCT-PLAN-QBR."
+    finding: "MISSING entity. The scheduled / held QBR session with attendees and outcomes; all 5 flagships ship this surface, though Gainsight EBR / Totango QBR / ChurnZero ship competing CSM-side variants (Bucket 3 candidate 6)."
+    action: "Author data_objects row plus DMDO; likely sibling masters: qbr_action_items, qbr_decks (templates), qbr_audit_trails."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
+      - {type: user_decision, ref: B2-L1}
+      - {type: user_decision, ref: B2-M1}
+    affected_entities:
+      - qbr_meetings
+    vendor_evidence:
+      - Upland Altify
+      - Revegy
+      - DemandFarm
+      - Prolifiq CRUSH
+      - Demandbase Account Planning
+    extra_proposed_module: ACCT-PLAN-QBR
+
+  - id: B1B-V7-ACCOUNT-HEALTH-SCORES
+    summary: "Load account_health_scores master in ACCT-PLAN-METRICS (the master from which event 169 should fire)."
+    finding: "MISSING entity. Composite health rollup per account, with feature contributions; this is the planning-side analytic master from which the outbound account_health.declined event (handoff 209) should fire under B2-T1 option (a)."
+    action: "Author data_objects row plus DMDO; likely sibling masters: account_growth_metrics, account_engagement_metrics, account_scoring_models. Interacts with B2-T1: if (a), event 169 anchor moves from customers to this master."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
+      - {type: user_decision, ref: B2-L1}
+      - {type: user_decision, ref: B2-M1}
+      - {type: user_decision, ref: B2-T1}
+    affected_entities:
+      - account_health_scores
+    vendor_evidence:
+      - Upland Altify
+      - Revegy
+      - DemandFarm
+      - Prolifiq CRUSH
+      - Demandbase Account Planning
+    extra_proposed_module: ACCT-PLAN-METRICS
+
+b2:
+  - id: B2-L1
+    summary: "Leadership-tier classification: reclassify ACCT-PLAN as normal Phase-B, keep as pure-overlay leadership-tier, or hybrid?"
+    question: "ACCT-PLAN is in SKILL.md B1's leadership-tier exception (with REV-INTEL, SALES-PERF, GTM-PLAN, PRM, OP-RES, BCM, SECOPS, SOAR, THREAT-INTEL, TPRM, VULN-MGMT, PRIV-MGMT, FINOPS, INTRANET, COLLAB-GOV) which implies zero masters. The flagship vendor surface shows it masters real entities (account_plans, mutual_action_plans, relationship_maps, white_space_maps, qbr_decks, key_account_metrics). Should we reclassify?"
+    options:
+      - "(a) reclassify as normal Phase-B and load the full master surface in B1B-V1 through B1B-V7"
+      - "(b) keep leadership-tier and treat as pure-overlay (proposed masters move to a queued ABM-Planning or KAM domain; existing solutions become coverage of the overlay)"
+      - "(c) hybrid: keep account_health_scores / account_growth_metrics as derived-signals consistent with leadership-tier; load account_plans, mutual_action_plans, relationship_maps, white_space_maps, qbr_decks as normal masters"
+    why: "Gates B1B-M1, B1B-V*, and the SKILL.md leadership-tier list edit."
+
+  - id: B2-M1
+    summary: "Module shape: 6 modules (granular), 4 modules (clustered), or 3 modules (lean)?"
+    question: "If B2-L1 lands on (a) or (c), how should the ACCT-PLAN module surface split?"
+    options:
+      - "(a) 6 modules: ACCT-PLAN-CORE, ACCT-PLAN-MUTUAL-ACTION, ACCT-PLAN-RELATIONSHIP, ACCT-PLAN-WHITESPACE, ACCT-PLAN-QBR, ACCT-PLAN-METRICS (granular per cluster, mirrors capability set)"
+      - "(b) 4 modules: ACCT-PLAN-CORE (plans + objectives + strategies + key_accounts + segments) / ACCT-PLAN-RELATIONSHIP-WHITESPACE / ACCT-PLAN-EXECUTION (mutual_action_plans + qbr_meetings + qbr_action_items) / ACCT-PLAN-METRICS"
+      - "(c) 3 modules: ACCT-PLAN-CORE / ACCT-PLAN-EXECUTION / ACCT-PLAN-METRICS (lean, collapses relationship + whitespace into core)"
+    why: "Rewrites the proposed_module column on every B1B-V* row."
+
+  - id: B2-T1
+    summary: "Trigger-event publisher attribution: move events 169 and 170 to ACCT-PLAN masters, keep on customers (CRM), or introduce derived-signal events?"
+    question: "Event 169 (account_health.declined) is dual-published from ACCT-PLAN (handoff 209) and CRM (handoff 1216), violating one-event-one-publisher. Event 170 (whitespace.identified) is on customers but only fired from ACCT-PLAN. How should we attribute?"
+    options:
+      - "(a) move event 169 anchor to a new account_health_scores ACCT-PLAN master (after B1B-V7); same for event 170 to white_space_maps (after B1B-V4); re-attribute CRM handoff 1216 to subscribe to ACCT-PLAN's publication"
+      - "(b) keep events on customers (CRM-mastered); re-attribute ACCT-PLAN handoffs 209, 210 to have CRM as source instead; B1B-H1-209 drops here and moves to CRM"
+      - "(c) introduce derived-signal trigger_events carrying own publisher independent of underlying master (catalog-wide shape change)"
+    why: "Gates B1B-H1-209 and the eventual disposition of handoffs 209, 210. Interacts with B2-D1."
+    affected_handoffs:
+      - {handoff_id: 209, direction: outbound, source_domain: ACCT-PLAN, target_domain: CSM, trigger_event: account_health.declined, payload: customers}
+      - {handoff_id: 210, direction: outbound, source_domain: ACCT-PLAN, target_domain: SALES-ENG, trigger_event: whitespace.identified, payload: customers}
+      - {handoff_id: 1216, direction: cross-reference, source_domain: CRM, target_domain: FARMER-DIRECT-SALES, trigger_event: account_health.declined, payload: customers}
+    affected_events:
+      - {id: 169, event_name: account_health.declined, current_category: threshold}
+      - {id: 170, event_name: whitespace.identified, current_category: signal}
+
+  - id: B2-D1
+    summary: "Duplicate event resolution: consolidate health_score.declined (197) and account_health.declined (169), keep both with distinct semantics, or accept redundancy."
+    question: "Event 197 (health_score.declined) and event 169 (account_health.declined) both fire on customers and describe the same general signal. Event 197 has 3 handoff users (224 CRM to FINOPS, 486 CRM to CRM-internal, 1217 CRM to FARMER-DIRECT-SALES). Event 169 has 2 (209 ACCT-PLAN to CSM, 1216 CRM to FARMER-DIRECT-SALES). What's the call?"
+    options:
+      - "(a) consolidate on event 169, DELETE event 197, re-point handoffs 224, 486, 1217 to event 169"
+      - "(b) keep both: event 197 is the analytics-side score-drop signal (CRM-scored), event 169 is the planning-side detection (ACCT-PLAN-flagged); distinct semantics"
+      - "(c) keep both as known catalog redundancy"
+    why: "Interacts with B2-T1; resolving (a) here constrains B2-T1's CRM-side re-attribution."
+    affected_events:
+      - {id: 197, event_name: health_score.declined, current_category: threshold}
+      - {id: 169, event_name: account_health.declined, current_category: threshold}
+    affected_handoffs:
+      - {handoff_id: 209, direction: outbound, source_domain: ACCT-PLAN, target_domain: CSM, trigger_event: account_health.declined, payload: customers}
+      - {handoff_id: 224, direction: cross-reference, source_domain: CRM, target_domain: FINOPS, trigger_event: health_score.declined, payload: customers}
+      - {handoff_id: 486, direction: cross-reference, source_domain: CRM, target_domain: CRM, trigger_event: health_score.declined, payload: customers}
+      - {handoff_id: 1216, direction: cross-reference, source_domain: CRM, target_domain: FARMER-DIRECT-SALES, trigger_event: account_health.declined, payload: customers}
+      - {handoff_id: 1217, direction: cross-reference, source_domain: CRM, target_domain: FARMER-DIRECT-SALES, trigger_event: health_score.declined, payload: customers}
+
+  - id: B2-K1
+    summary: "key_accounts shape: separate master, enum attribute on customers, or junction?"
+    question: "How should strategic key-account designation be modeled?"
+    options:
+      - "(a) key_accounts as a separate master in ACCT-PLAN-CORE referencing customers (Altify, Revegy shape)"
+      - "(b) customers gains key_account_tier (enum) and assigned_account_team (json) fields (DemandFarm, Demandbase shape; CRM-extending)"
+      - "(c) junction key_account_designations on (customers, key_account_segments) (compromise)"
+    why: "Affects B1B-V5 directly. (b) requires cross-domain CRM coordination."
+
+  - id: B2-C1
+    summary: "Function-spine contributors: add Customer Success and Sales Operations, only Customer Success, or leave Sales-only?"
+    question: "Only Sales is loaded as owner of ACCT-PLAN. The flagship vendor base argues Customer Success and Sales Operations are routine contributors. Should we load them?"
+    options:
+      - "(a) add Customer Success (id 23) and Sales Operations (id 52) as responsibility_type='contributor' rows"
+      - "(b) add only Customer Success"
+      - "(c) leave as-is; revisit during E-band authoring"
+    why: "Independent; can apply any time. Affects RACI rollups."
+
+  - id: B2-E1
+    summary: "KAM-shaped role authoring: 4 roles, 2 roles, or defer."
+    question: "Once B1B-M1 lands, which roles should we author for ACCT-PLAN?"
+    options:
+      - "(a) author 4 roles: Strategic Account Manager (cross-functional, business_function_id NULL), Key Account Director (Sales), Customer Success Account Manager (CSM, cross-module), Sales Operations Analyst (touches METRICS plus SALES-PERF)"
+      - "(b) author only Strategic Account Manager plus Customer Success Account Manager (highest-traffic pair)"
+      - "(c) defer until a dedicated E-band authoring pass"
+    why: "Gated on B1B-M1 and B2-M1."
+
+  - id: B2-A1
+    summary: "Domain aliases: author 4, 2, or defer."
+    question: "Zero domain_aliases rows on ACCT-PLAN. The market has well-known synonyms; how many should we load?"
+    options:
+      - "(a) author 4 aliases: KAM, key account management, strategic account management, account planning"
+      - "(b) author 2 aliases: KAM, key account management"
+      - "(c) defer until a separate aliases pass"
+    why: "Independent. Feeds catalog search and per-domain skill trigger phrases per Rule #20."
+
+  - id: B2-V1
+    summary: "Salesforce Industries Cloud Strategic Account Plans positioning: add secondary, keep pure-play list, or industry-conditional."
+    question: "Industries Cloud (Manufacturing / Consumer Goods / Financial Services) ships an industry-flavored Strategic Account Plans surface that overlaps both CRM (Sales Cloud) and pure-play ACCT-PLAN. Should we represent it?"
+    options:
+      - "(a) add Salesforce Sales Cloud or Industries Cloud as coverage_level='secondary' on ACCT-PLAN"
+      - "(b) keep the 5-flagship pure-play list; treat CRM-suite competition as per-industry concern in industry-domain audits"
+      - "(c) industry-conditional: add only if a pure-play coverage gap shows up on industry-flavored deployments"
+    why: "Independent; commerce-shape decision."
+
+b3:
+  - id: B3-ABM-PLAN-SURFACE
+    candidate: "ABM-Planning surface as own domain, sub-surface of ACCT-PLAN, or sub-surface of MA."
+    rationale: "Demandbase Account Planning, 6sense, Madison Logic, Terminus all ship ABM platforms with planning surfaces, some explicitly called account planning. The boundary between ACCT-PLAN (named-existing-accounts deepening) and ABM-PLAN (targeted-net-new-accounts marketing) is real but the products blur it."
+    vendor_evidence:
+      - {vendor: Demandbase, evidence: 1st_class}
+      - {vendor: 6sense, evidence: 1st_class}
+      - {vendor: Madison Logic, evidence: secondary}
+      - {vendor: Terminus, evidence: 1st_class}
+    proposed_module: ABM-PLAN candidate domain (queued to audits/_missing-domains.md if the surface diverges enough)
+
+  - id: B3-SALES-METHODOLOGY-OVERLAYS
+    candidate: "sales_methodologies as a catalog-primitive master overlaying TAS / Miller Heiman / Strategic Selling / GAP."
+    rationale: "Altify TAS, Revegy Miller Heiman, Prolifiq Strategic Selling, Salesforce Sales Methodology, and Korn Ferry GAP all overlay the same underlying record types. Either it is a config master (a row per methodology, referenced by account_plan_strategies) or vendor-internal."
+    vendor_evidence:
+      - {vendor: Upland Altify, evidence: 1st_class}
+      - {vendor: Revegy, evidence: 1st_class}
+      - {vendor: Prolifiq CRUSH, evidence: 1st_class}
+      - {vendor: Korn Ferry, evidence: secondary}
+    proposed_module: ACCT-PLAN-CORE (if loaded as catalog primitive)
+
+  - id: B3-DIGITAL-SALES-ROOMS
+    candidate: "Digital sales room (DSR) overlap with mutual_action_plans: DSR as enrichment, MAP sub-shape, or own domain (DIGITAL-SALES-ROOM)."
+    rationale: "GetAccept, Recapped, Aligned, and Trumpet are pure-play DSR vendors. The shape: shared workspace plus chat plus e-sign plus content sharing plus mutual-close milestone tracking. Boundary with mutual_action_plans is fuzzy."
+    vendor_evidence:
+      - {vendor: GetAccept, evidence: 1st_class}
+      - {vendor: Recapped, evidence: 1st_class}
+      - {vendor: Aligned, evidence: 1st_class}
+      - {vendor: Trumpet, evidence: 1st_class}
+    proposed_module: DIGITAL-SALES-ROOM candidate (queue to audits/_missing-domains.md)
+
+  - id: B3-TIER-PROMOTION-LIFECYCLE
+    candidate: "Account-tier promotion / demotion as workflow gate (lifecycle states on key_accounts) vs. configuration (no workflow)."
+    rationale: "Altify and Revegy ship explicit promotion workflows (revenue, comp, CSM implications); DemandFarm treats tier as manual setting. The decision affects whether key_accounts has requires_permission=true lifecycle states."
+    vendor_evidence:
+      - {vendor: Upland Altify, evidence: 1st_class}
+      - {vendor: Revegy, evidence: 1st_class}
+      - {vendor: DemandFarm, evidence: absent}
+    proposed_module: ACCT-PLAN-CORE (for the lifecycle states on key_accounts)
+
+  - id: B3-TEAM-ASSIGNMENTS-SHAPE
+    candidate: "key_account_team_assignments as separate junction master vs. per-role columns on key_accounts."
+    rationale: "Altify and Revegy carry the junction (account director, CSM, sales engineer, executive sponsor); Prolifiq embeds as columns. RBAC over the planning surface favors the junction shape."
+    vendor_evidence:
+      - {vendor: Upland Altify, evidence: 1st_class}
+      - {vendor: Revegy, evidence: 1st_class}
+      - {vendor: Prolifiq CRUSH, evidence: secondary}
+    proposed_module: ACCT-PLAN-CORE
+
+  - id: B3-QBR-OWNERSHIP-BOUNDARY
+    candidate: "QBR ownership: ACCT-PLAN-mastered, CSM-mastered, or shared master with embedded_master in the non-owning side."
+    rationale: "Gainsight EBR / QBR Composer, Totango QBR module, ChurnZero QBR templates live in CSM platforms. Altify, Revegy, DemandFarm ship QBR surfaces in account planning. May reshape proposed ACCT-PLAN-QBR module into a shared master with CSM as embedded_master."
+    vendor_evidence:
+      - {vendor: Gainsight, evidence: 1st_class}
+      - {vendor: Totango, evidence: 1st_class}
+      - {vendor: ChurnZero, evidence: 1st_class}
+      - {vendor: Upland Altify, evidence: 1st_class}
+      - {vendor: Revegy, evidence: 1st_class}
+      - {vendor: DemandFarm, evidence: 1st_class}
+    proposed_module: ACCT-PLAN-QBR vs. CSM module
+
+  - id: B3-PREDICTIVE-WHITESPACE
+    candidate: "Predictive whitespace scoring as ML-driven (account_scoring_models covers it) vs. configuration-driven (manual grid; no separate model master)."
+    rationale: "DemandFarm AI and Demandbase Intent ship predictive whitespace; Altify and Revegy treat as static grid. The 5-vendor surface splits 2:3 on predictive vs. manual."
+    vendor_evidence:
+      - {vendor: DemandFarm, evidence: 1st_class}
+      - {vendor: Demandbase, evidence: 1st_class}
+      - {vendor: Upland Altify, evidence: absent}
+      - {vendor: Revegy, evidence: absent}
+    proposed_module: ACCT-PLAN-METRICS (if a separate whitespace_scoring_models is warranted)

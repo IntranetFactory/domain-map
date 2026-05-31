@@ -1,0 +1,218 @@
+schema_version: 2
+domain: EM-FUND-PLATFORM
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-W1
+    summary: Missing master entity_filings on EM-FUND-FORMATION; state-level + IRS filings (Delaware certificate of formation, EIN, blue-sky) as a master separate from fund_formations
+    finding: entity_filings is universal across Sydecar, AngelList Stack, Allocations; the formation workflow produces durable per-jurisdiction filing artifacts that need their own status and approver lifecycle, not folded onto fund_formations.
+    action: Author entity_filings data_object + domain_module_data_objects row (role=master, necessity=required, domain_module_id=26) + lifecycle states + intra-domain relationship to fund_formations + at least one state-change trigger event.
+    proposed_module: EM-FUND-FORMATION
+    vendor_evidence: [Sydecar, AngelList Stack, Allocations]
+
+  - id: B1A-W2
+    summary: Missing master banking_onboardings on EM-FUND-FORMATION; Mercury / Brex / SVB banking-application case with KYC sub-status
+    finding: Banking onboarding is a separately-tracked case in Sydecar + AngelList Stack GP dashboards; KYC checks, approver, and status differ from fund_formations.
+    action: Author banking_onboardings data_object + DMDO row (master, required, module 26) + lifecycle states + relationship to fund_formations + user actor edge (applies).
+    proposed_module: EM-FUND-FORMATION
+    vendor_evidence: [Sydecar, AngelList Stack]
+
+  - id: B1A-W3
+    summary: Missing embedded_master lp_kyc_records on EM-FUND-OPS-LITE; KYC / AML / sanctions output as embedded shell deferring to canonical FUND-ADMIN master
+    finding: KYC artifact for LP onboarding under the lite shape (Sydecar's investor verification tab). Canonical mastery belongs in FUND-ADMIN-LP-COMMITMENTS; this is an embedded shell.
+    action: Confirm canonical lp_kyc_records master exists somewhere in FUND-ADMIN (per Rule #11); if so, insert lp_kyc_records data_object + DMDO (embedded_master, optional, module 28); if not, escalate to B1B.
+    proposed_module: EM-FUND-OPS-LITE
+    vendor_evidence: [Sydecar]
+
+  - id: B1A-W4
+    summary: Missing master spv_kyc_records on EM-FUND-SPV; per-subscription KYC distinct from spv_subscriptions and from lp_kyc_records
+    finding: Sydecar / Allocations / AngelList all run KYC per SPV subscription separately from fund-level KYC; SPV-subscriber pool is wider and looser than fund LP base.
+    action: Author spv_kyc_records data_object + DMDO (master, required, module 27) + lifecycle states + relationship to spv_subscriptions + user actor edge (verifies).
+    proposed_module: EM-FUND-SPV
+    vendor_evidence: [Sydecar, Allocations, AngelList Stack]
+
+  - id: B1A-W5
+    summary: Missing master templated_documents on EM-FUND-FORMATION (destination module shifts on B2-2 outcome)
+    finding: Templated LPA + side-letter library + SPV agreement set is the explicit value engineering of the market; Sydecar markets this in product copy. Module placement may shift if Bucket 2 #2 collapses EM-FUND-CAPTABLE-LITE.
+    action: Author templated_documents data_object + DMDO (master, required) + lifecycle states for version control + relationship to fund_formations.
+    proposed_module: EM-FUND-FORMATION
+    vendor_evidence: [Sydecar, AngelList Stack, Vauban]
+
+  - id: B1A-B6
+    summary: Intra-domain relationship graph thin; only 2 of 4 expected intra-domain edges exist
+    finding: Existing data_object_relationships rows 871 (spvs is subscribed via spv_subscriptions) and 872 (fund_formations becomes funds). Missing intra-domain edges fund_formations spawns spvs and fund_formations spawns cap_tables (both implied by the bundle's day-1 deployment shape).
+    action: Author 2 data_object_relationships rows with relationship_verb / inverse_verb / relationship_kind / relationship_type / owner_side / is_required per Rule #10 pattern.
+    affected_entities: [fund_formations, spvs, cap_tables]
+
+  - id: B1A-B9b
+    summary: Zero intra-domain handoffs across 4 modules; 4 candidates identified from lifecycle progression
+    finding: B12 fails. Candidates from event + master matrix; all routed by fund_formation.operational or spv.active.
+    action: Author 3-4 intra-domain handoffs with source_domain_id=target_domain_id=163, integration_pattern=lifecycle_progression, friction_level=low.
+    affected_handoffs:
+      - {direction: intra_domain, source_domain: EM-FUND-PLATFORM, target_domain: EM-FUND-PLATFORM, trigger_event: fund_formation.operational, payload: fund_formations, scope_note: "EM-FUND-FORMATION -> EM-FUND-OPS-LITE"}
+      - {direction: intra_domain, source_domain: EM-FUND-PLATFORM, target_domain: EM-FUND-PLATFORM, trigger_event: fund_formation.operational, payload: fund_formations, scope_note: "EM-FUND-FORMATION -> EM-FUND-CAPTABLE-LITE"}
+      - {direction: intra_domain, source_domain: EM-FUND-PLATFORM, target_domain: EM-FUND-PLATFORM, trigger_event: fund_formation.operational, payload: fund_formations, scope_note: "EM-FUND-FORMATION -> EM-FUND-SPV"}
+      - {direction: intra_domain, source_domain: EM-FUND-PLATFORM, target_domain: EM-FUND-PLATFORM, trigger_event: spv.active, payload: spvs, scope_note: "EM-FUND-SPV -> EM-FUND-OPS-LITE (gated on B1A-L2)"}
+
+  - id: B1A-H1a
+    summary: Defer cross-domain handoff 1046 (fund_formation.operational -> funds) to Discover Pass 3 custom-process authoring
+    finding: No clean cross-industry APQC PCF row for fund-formation-to-fund-administration handoff; generic candidate 10737 (Manage international funds / consolidation) is a low-confidence placeholder. Coverage 0 of 1; provenance 0 of 1.
+    action: Mark handoff 1046 as deferred to Discover Pass 3 custom-process authoring; candidate custom process name private_capital.fund_formation_to_administration.
+    affected_handoffs:
+      - {handoff_id: 1046, direction: outbound, source_domain: EM-FUND-PLATFORM, target_domain: FUND-ADMIN, trigger_event: fund_formation.operational, payload: funds}
+
+b1b:
+  - id: B1B-L1
+    summary: Missing trigger events on fund_formations (drafted, filed) and pending workflow-gate flips on filed / operational
+    finding: 3 lifecycle states exist on fund_formations (drafted / filed / operational) with domain_module_id=26 and requires_permission=false on all; only fund_formation.operational has a trigger_events row.
+    action: After Bucket 2 #3 (starter-kit) lands, author fund_formation.drafted + fund_formation.filed state-change events and consider flipping requires_permission on filed and operational.
+    blocked_by:
+      - {type: user_decision, ref: B2-3, reason: "permission materialization scope changes between full and starter module_kind"}
+    affected_events:
+      - {event_name: fund_formation.drafted, current_category: null, proposed_category: state_change}
+      - {event_name: fund_formation.filed, current_category: null, proposed_category: state_change}
+
+  - id: B1B-L2
+    summary: Missing trigger events on spvs (forming, active, wound_down) and workflow-gate evaluation on active
+    finding: 3 lifecycle states exist on spvs (forming / active / wound_down) with domain_module_id=27 and requires_permission=false on all; no spv.* trigger_events exist at all.
+    action: After Bucket 2 #3 settles, author 3 state-change trigger_events plus consider workflow-gate on active (deal-launch sign-off).
+    blocked_by:
+      - {type: user_decision, ref: B2-3, reason: "permission materialization scope changes between full and starter module_kind"}
+    affected_events:
+      - {event_name: spv.forming, current_category: null, proposed_category: state_change}
+      - {event_name: spv.active, current_category: null, proposed_category: state_change}
+      - {event_name: spv.wound_down, current_category: null, proposed_category: state_change}
+
+  - id: B1B-L3
+    summary: Zero lifecycle states on spv_subscriptions despite real workflow; required for B5 + workflow-gate permissions + B11 events
+    finding: spv_subscriptions (master, 783, EM-FUND-SPV module 27) has 0 lifecycle states. Real workflow drafted / signed / funded / confirmed. Config-shape exemption unlikely (the workflow IS the value).
+    action: After Bucket 2 #3 settles, author 4 data_object_lifecycle_states rows with domain_module_id=27 + 2 follow-on state-change events (spv_subscription.signed, spv_subscription.funded). Lifecycle row signing-and-funding gates likely require_permission=true.
+    blocked_by:
+      - {type: user_decision, ref: B2-3, reason: "permission materialization scope shifts between full and starter"}
+    affected_masters:
+      - {data_object_id: 783, name: spv_subscriptions, target_module_id: 27, workflow: "drafted -> signed -> funded -> confirmed"}
+
+  - id: B1B-S6
+    summary: Zero system skills across all 4 modules; Semantius score uncomputable
+    finding: Rule #17 fails on all 4 modules. F2/F3/F5 fail. Tools depend on lifecycle gates existing first (workflow-gate tools).
+    action: After Bucket 2 #3 and B1B-L1/L2/L3 land, author 4 system skills (em_fund_formation_agent, em_fund_spv_agent, em_fund_ops_lite_agent, em_fund_captable_lite_agent) each with 5-15 tools per Rule #17 operation_kind invariants.
+    blocked_by:
+      - {type: user_decision, ref: B2-3, reason: "skill scope shifts between full and starter module_kind"}
+      - {type: depends_on, ref: B1B-L1, reason: "workflow-gate tools need lifecycle states"}
+      - {type: depends_on, ref: B1B-L2, reason: "workflow-gate tools need lifecycle states"}
+      - {type: depends_on, ref: B1B-L3, reason: "workflow-gate tools need lifecycle states"}
+    affected_modules: [26, 27, 28, 29]
+
+  - id: B1B-S7
+    summary: Zero roles + role_modules + role_permissions; E1-E5 fail across the domain
+    finding: 4 modules but no role_modules rows; no roles authored at all. Operator personas (solo GP, fund-ops lead, LP-portal-only viewer) are real per 2026-05-30 audit.
+    action: After Bucket 2 #3 and lifecycle states land, author baseline roles + role_modules + workflow-gate role_permissions (baseline 3 per starter, lifecycle-gated per full module).
+    blocked_by:
+      - {type: user_decision, ref: B2-3, reason: "permission materialization scope shifts between full and starter"}
+      - {type: depends_on, ref: B1B-L1, reason: "workflow-gate permissions need lifecycle states with requires_permission=true"}
+      - {type: depends_on, ref: B1B-L2, reason: "workflow-gate permissions need lifecycle states with requires_permission=true"}
+      - {type: depends_on, ref: B1B-L3, reason: "workflow-gate permissions need lifecycle states with requires_permission=true"}
+    affected_modules: [26, 27, 28, 29]
+
+  - id: B1B-S1
+    summary: A4 catalog_tagline + catalog_description empty; Rule #20 forbids load without user-approved exact text
+    finding: domains.catalog_tagline='' and catalog_description='' on EM-FUND-PLATFORM (id 163). Rule #20 explicitly forbids the agent authoring without surface-to-user.
+    action: Surface buyer-voice copy direction prompts to user (operator-led vs brand-led; mention upgrade path?), receive exact text, then PATCH /domains?id=eq.163.
+    blocked_by:
+      - {type: user_decision, ref: B2-1, reason: "Rule #20 requires explicit user-approved wording"}
+
+  - id: B1B-S2
+    summary: B7 pattern-flag flips need user re-confirmation per row (Rule #15 prevents the agent populating notes context)
+    finding: spv_subscriptions.has_submit_lock=false (likely should be true; sub docs lock on signature, universal in private placement law). fund_formations.has_single_approver=false and spvs.has_single_approver=false (GP sign-off is plausibly single-approver).
+    action: After user judgment in Bucket 2 #4, PATCH each approved row individually. Do NOT populate notes (Rule #15).
+    blocked_by:
+      - {type: user_decision, ref: B2-4, reason: "pattern flags require per-row business confirmation"}
+    affected_entities: [spv_subscriptions, fund_formations, spvs]
+
+  - id: B1B-S3
+    summary: B9 spv_subscriptions has has_personal_content=true but zero user actor edges
+    finding: lp_subscriptions has 2 user edges (onboarded by / reviewed by, rows 1900/1901). spv_subscriptions has 0 user edges despite identical personal-content shape. After B1A-W2 + B1A-W4 land, additional user edges follow on banking_onboardings (applies) and spv_kyc_records (verifies).
+    action: After user supplies verb choice (subscribes_via / invests_through / reviewed_by) in a Bucket 2-style prompt, author 1-2 user actor edges on spv_subscriptions; then user edges on B1A-W2 / B1A-W4 once those entities exist.
+    blocked_by:
+      - {type: user_decision, ref: null, reason: "verb choice needs user pick; not auto-pickable from catalog state"}
+      - {type: prerequisite_entity, ref: B1A-W2, reason: "banking_onboardings user edge gated on entity creation"}
+      - {type: prerequisite_entity, ref: B1A-W4, reason: "spv_kyc_records user edge gated on entity creation"}
+
+  - id: B1B-S5
+    summary: B10b aliases missing on fund_formations (0), spv_subscriptions (0), capital_calls (0); needs exact (alias_name, alias_type) tuples from user
+    finding: Aliases present on spvs (2), funds (2), cap_tables (2), lp_commitments (1). 2026-05-30 audit lists candidate forms ("fund vehicle setup", "syndicate subscriptions", etc.) but not exact (alias_name, alias_type) tuples.
+    action: After user supplies exact tuples, insert 3-4 alias rows per gap.
+    blocked_by:
+      - {type: user_decision, ref: null, reason: "exact (alias_name, alias_type) tuples need user pick"}
+    affected_entities: [fund_formations, spv_subscriptions, capital_calls]
+
+b2:
+  - id: B2-1
+    summary: Catalog UX copy direction for EM-FUND-PLATFORM (A4)
+    question: What tone (operator-led vs brand-led) and emphasis (call out upgrade path to full FUND-ADMIN or stay self-contained) should the catalog_tagline + catalog_description carry? Supply exact text per Rule #20.
+    options: [operator-led-mention-upgrade, operator-led-self-contained, brand-led-mention-upgrade, brand-led-self-contained, custom-text]
+    why: Rule #20 forbids agent-authored buyer-voice copy without explicit user wording. Carried verbatim from 2026-05-30 audit.
+
+  - id: B2-2
+    summary: Collapse EM-FUND-CAPTABLE-LITE into EM-FUND-FORMATION?
+    question: cap_tables is the only embedded master in module 29 (single capability EMFUND-CAPTABLE-LITE); flagship vendors ship cap-table as a tab inside fund-formation, not as a deployable. Keep current 4-module shape or merge module 29 into module 26 (drops module count to 3, still satisfies Rule #14 floor for 3-capability+ domains)?
+    options: [keep-4-modules, collapse-29-into-26]
+    why: Architectural intent question; agent cannot resolve. Carried verbatim from 2026-05-30 audit. Decision affects B1A-W5 destination module.
+
+  - id: B2-3
+    summary: Promote 3 of 4 modules to module_kind='starter' (Rule #19)?
+    question: Domain's own description calls it bundle-only and architecturally not separately-purchasable. Convert 3 modules to starter (FUND-FORMATION stays as full anchor) or keep all 4 as full with documented bundle-atomicity? Starter materialization shifts the F-band + E-band design.
+    options: [convert-3-to-starter, keep-all-4-full]
+    why: Rule #19 starter contract changes permission materialization (3 baseline per starter vs lifecycle-gated per full); skill scope shifts. Blocks B1B-L1/L2/L3, B1B-S6, B1B-S7. Carried verbatim from 2026-05-30 audit.
+
+  - id: B2-4
+    summary: spv_subscriptions pattern flag confirmations
+    question: Confirm has_submit_lock=true on spv_subscriptions (sub docs lock on signature, universal in private placement law)? Also possibly has_single_approver=true (GP signs SPV subscription accept)? Plus fund_formations.has_single_approver=true and spvs.has_single_approver=true?
+    options: [submit_lock-only, submit_lock-and-single_approver-on-spv_subs, submit_lock-and-single_approver-on-all-3, no-flips]
+    why: Pattern flags need per-row business confirmation; agent cannot infer. Blocks B1B-S2. Carried verbatim from 2026-05-30 audit.
+
+  - id: B2-5
+    summary: Pairwise reconciliation scope for FUND-ADMIN + CAP-TABLE neighbors
+    question: "Cross-domain neighbors FUND-ADMIN (weight 1, 1 outbound handoff, embedded shells of 4 FUND-ADMIN-mastered entities) and CAP-TABLE (weight 1, 0 handoffs, embedded shell of cap_tables) both below the weight-3 deep-dive threshold. Accept one-line summary or request deep-dive?"
+    options: [summary-only, deep-dive-FUND-ADMIN, deep-dive-CAP-TABLE, deep-dive-both]
+    why: Pairwise reconciliation depth is a user editorial call. Carried verbatim from 2026-05-30 audit.
+
+b3:
+  - id: B3-1
+    candidate: rolling_fund_periods
+    rationale: AngelList's rolling-fund product is the canonical case; quarterly subscription windows for a continuous fund vehicle. Distinct from lp_subscriptions (per-period vs per-LP).
+    vendor_evidence: [AngelList Stack]
+    proposed_module: EM-FUND-OPS-LITE
+
+  - id: B3-2
+    candidate: gp_management_fees
+    rationale: Universal across Sydecar, AngelList, Vauban; management fee schedule and accrual record. May overlap with FUND-ADMIN-level GP accounting; lite version is simpler (single-class flat fee).
+    vendor_evidence: [Sydecar, AngelList Stack, Vauban]
+    proposed_module: EM-FUND-OPS-LITE
+
+  - id: B3-3
+    candidate: spv_carry_distributions
+    rationale: Per-SPV distribution event with embedded carry split. Distinct from fund-level distribution row.
+    vendor_evidence: [Sydecar, Allocations]
+    proposed_module: EM-FUND-SPV
+
+  - id: B3-4
+    candidate: lp_communication_log
+    rationale: LP portal vendors expose per-LP communication history (notices, replies, document downloads). Configurable as embedded shell of a CRM-style communication entity.
+    vendor_evidence: [Sydecar, AngelList Stack, Vauban]
+    proposed_module: EM-FUND-OPS-LITE
+
+  - id: B3-5
+    candidate: regulatory_filings
+    rationale: Form D within 15 days of first sale of fund interest; Form ADV annual for ERA filers. May fold into entity_filings (B1A-W1) depending on user scoping call.
+    vendor_evidence: [Sydecar, AngelList Stack, Allocations, Vauban]
+    proposed_module: EM-FUND-FORMATION
+    extra_overlap_with: B1A-W1
+
+  - id: B3-6
+    candidate: fund_class_terms
+    rationale: Templated mgmt fee + carry + hurdle for the lite single-class shape. Vauban (Carta) and AngelList both expose this as a settable template.
+    vendor_evidence: [Vauban, AngelList Stack]
+    proposed_module: EM-FUND-OPS-LITE

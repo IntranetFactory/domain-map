@@ -1,0 +1,291 @@
+schema_version: 2
+domain: EXPENSE
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-A4
+    summary: A4 hard fail, draft buyer-voice catalog_tagline and catalog_description for the EXPENSE domain row (id 67), surface to user, then PATCH.
+    finding: |
+      `domains.catalog_tagline` and `domains.catalog_description` are both empty strings on the EXPENSE domain row (id 67). Rule #20 requires both populated in buyer voice (workflow + value), not analyst voice. Module-grain M8 (per-module catalog_tagline / catalog_description) is gated on B1-S1 because there are no modules yet, so the same backfill on `domain_modules` rows happens only after the module split lands.
+    action: |
+      1. Draft `catalog_tagline` (one buyer-facing sentence) and `catalog_description` (1-3 buyer-facing paragraphs) for the EXPENSE domain row.
+      2. Surface both drafts in chat for user approval BEFORE writing per Rule #20.
+      3. PATCH `/domains?id=eq.67` with the approved values.
+    affected_entities:
+      - "domains.id=67 (EXPENSE)"
+
+b1b:
+  - id: B1B-S1
+    summary: Phase M load, author `domain_modules` rows for EXPENSE, migrate legacy `domain_data_objects` to `domain_module_data_objects`, blocked on B2-S1 module split decision.
+    finding: |
+      0 `domain_modules` rows for domain 67 despite 6 capabilities and 6 masters. Rule #14 requires at least 2 full modules for a 6-capability market. Recommended 3-module split (EXPENSE-CAPTURE-AND-REPORTING, CORP-CARD-RECON, TRAVEL-AND-PER-DIEM) but the architectural call is the user's per B2-S1. After the split, migrate the 9 legacy `domain_data_objects` rows into module-scoped `domain_module_data_objects` rows.
+    action: |
+      After B2-S1 returns the module split, author 2 to 4 `domain_modules` rows (`module_kind='full'`), populate per-module `catalog_tagline` / `catalog_description` (Rule #20), then migrate the 9 legacy DDO rows to DMDO on the right module per master ownership.
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    affected_modules: []
+    affected_masters:
+      - {data_object_id: 210, name: expense_reports, target_module_id: null, workflow: capture_and_reporting}
+      - {data_object_id: 211, name: expense_lines, target_module_id: null, workflow: capture_and_reporting}
+      - {data_object_id: 214, name: expense_policies, target_module_id: null, workflow: policy_enforcement}
+      - {data_object_id: 212, name: corporate_cards, target_module_id: null, workflow: card_recon}
+      - {data_object_id: 213, name: card_transactions, target_module_id: null, workflow: card_recon}
+      - {data_object_id: 215, name: travel_bookings, target_module_id: null, workflow: travel_and_per_diem}
+
+  - id: B1B-S3
+    summary: Author 6 master state machines (data_object_lifecycle_states), blocked on B1-S1 because state rows carry `domain_module_id`.
+    finding: |
+      0 `data_object_lifecycle_states` rows across the 6 `master + required` data_objects (210, 211, 212, 213, 214, 215). Rule #12 is unconditional for workflow-bearing masters. Proposed state machines per 2026-05-30 audit: expense_reports (draft to submitted to in_review to approved to posted_to_gl to reimbursed to closed, with rejected branch), expense_lines (entered to matched_to_receipt to policy_check to submitted to approved to posted, with violation branch), corporate_cards (issued to active to suspended to cancelled), card_transactions (posted to matched to expense_line_created to reconciled, with disputed branch), expense_policies (draft to active to deprecated), travel_bookings (shopped to reserved to confirmed to ticketed to completed to cancelled).
+    action: |
+      After B1B-S1 lands modules, author ~28 to 34 lifecycle-state rows (one batch per master) so each row can carry `domain_module_id` per Rule #12 permission materialization. Workflow-gate states with `requires_permission=true` materialize into `<domain_module_code>:<verb>_<entity>` permissions.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: state rows carry domain_module_id}
+    affected_masters:
+      - {data_object_id: 210, name: expense_reports, target_module_id: null, workflow: full_state_machine}
+      - {data_object_id: 211, name: expense_lines, target_module_id: null, workflow: full_state_machine}
+      - {data_object_id: 212, name: corporate_cards, target_module_id: null, workflow: full_state_machine}
+      - {data_object_id: 213, name: card_transactions, target_module_id: null, workflow: full_state_machine}
+      - {data_object_id: 214, name: expense_policies, target_module_id: null, workflow: config_versioned}
+      - {data_object_id: 215, name: travel_bookings, target_module_id: null, workflow: full_state_machine}
+
+  - id: B1B-S4
+    summary: Rebind or split `expense-system` skill (57) per module, blocked on B1-S1 because Rule #17 invariant is one system skill per `domain_modules` row.
+    finding: |
+      Skill 57 `expense-system` has `domain_module_id IS NULL`, violating Rule #17 (exactly one `system` skill per `domain_modules` row, skill carries the module FK). With 0 modules the skill is structurally orphaned. The 7 existing `skill_tools` rows split cleanly along the recommended 3-module shape: 3 query tools for CAPTURE-AND-REPORTING (210, 211, 214), 2 for CORP-CARD-RECON (212, 213), 1 for TRAVEL-AND-PER-DIEM (215), and `send_email` channel primitive shipped on all.
+    action: |
+      After B1B-S1 lands modules, either rebind skill 57 to a single module if a 1-module shape is chosen, or split into N system skills (one per module) and redistribute the 7 `skill_tools` rows accordingly.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: skill.domain_module_id requires modules to exist}
+    extra_existing_skill_id: 57
+    extra_existing_tool_count: 7
+
+  - id: B1B-S5
+    summary: PATCH 8 pattern flag flips on 6 `data_objects` rows, blocked on B2-S4 per-flag user confirmation.
+    finding: |
+      All 6 masters carry blanket false flags. Per 2026-05-30 audit, vendor surface implies 8 positive re-evaluations: expense_reports.has_personal_content=true, expense_reports.has_submit_lock=true, expense_lines.has_submit_lock=true, travel_bookings.has_personal_content=true, card_transactions.has_personal_content=true, corporate_cards.has_single_approver=true, expense_reports.has_single_approver=false (confirm current), expense_policies.has_submit_lock=false (confirm current).
+    action: |
+      After B2-S4 per-flag confirmation, PATCH `/data_objects?id=eq.<id>` for each approved flag flip. Rule #15 forbids auto-populating `data_objects.notes` to explain the flag rationale; surface in chat instead.
+    blocked_by:
+      - {type: user_decision, ref: B2-S4}
+    affected_masters:
+      - {data_object_id: 210, name: expense_reports, target_module_id: null, workflow: pattern_flags}
+      - {data_object_id: 211, name: expense_lines, target_module_id: null, workflow: pattern_flags}
+      - {data_object_id: 212, name: corporate_cards, target_module_id: null, workflow: pattern_flags}
+      - {data_object_id: 213, name: card_transactions, target_module_id: null, workflow: pattern_flags}
+      - {data_object_id: 214, name: expense_policies, target_module_id: null, workflow: pattern_flags}
+      - {data_object_id: 215, name: travel_bookings, target_module_id: null, workflow: pattern_flags}
+
+  - id: B1B-H1
+    summary: APQC tagging, 7 net-new `agent_curated` proposals plus 4 REPLACE candidates against existing `discovery_*` rows; partial unblockable now but several need PCF lookups deferred to fix time.
+    finding: |
+      10 of 17 cross-domain handoffs remain untagged (129 to ERP-FIN, 171 to SPEND-MGMT, 551 to ERP-FIN, 552 to SPEND-MGMT, 555 to SPEND-MGMT, 599 to PAYROLL, 165 from SPEND-MGMT, 559 from SPEND-MGMT, 600 from SPEND-MGMT, 1157 from PAYROLL). 4 prior `discovery_*` rows (38 to 317, 101 to 59, 139 to 59, 468 to 41) are REPLACE / CONFIRM candidates per the 2026-05-30 audit. H1 quality headline (`record_status='approved'`) is 0; 3 net-new `agent_curated` rows shipped between 2026-05-30 and this audit (130, 553, 554) remain `record_status='new'`.
+    action: |
+      Author a chunked POST of `handoff_processes` rows for the 7 net-new untagged handoffs where PCF id is resolvable (599 to PCF 1445, 1157 to PCF 1445 / 58 / 316, 129 to PCF 1379, 551 to PCF 1379, 171 to PCF 1442). Defer the 5 remaining (552, 555, 165, 559, 600) and the 4 REPLACE candidates to a separate pass once the user has approved the REPLACE semantics. All rows ship `record_status='new'` per Rule #1.
+    blocked_by:
+      - {type: user_decision, ref: B2-EM, reason: optional, REPLACE semantics on existing discovery_* rows is a Bucket 2 conversation}
+    affected_handoffs:
+      - {handoff_id: 129, direction: outbound, source_domain: EXPENSE, target_domain: ERP-FIN, trigger_event: expense_report.approved, payload: expense_reports, null_field: handoff_processes_row}
+      - {handoff_id: 171, direction: outbound, source_domain: EXPENSE, target_domain: SPEND-MGMT, trigger_event: expense_policy.updated, payload: expense_policies, null_field: handoff_processes_row}
+      - {handoff_id: 551, direction: outbound, source_domain: EXPENSE, target_domain: ERP-FIN, trigger_event: expense_line.posted_to_gl, payload: expense_lines, null_field: handoff_processes_row}
+      - {handoff_id: 552, direction: outbound, source_domain: EXPENSE, target_domain: SPEND-MGMT, trigger_event: expense_line.policy_violation, payload: expense_lines, null_field: handoff_processes_row}
+      - {handoff_id: 555, direction: outbound, source_domain: EXPENSE, target_domain: SPEND-MGMT, trigger_event: travel_booking.out_of_policy, payload: travel_bookings, null_field: handoff_processes_row}
+      - {handoff_id: 599, direction: outbound, source_domain: EXPENSE, target_domain: PAYROLL, trigger_event: expense_line.approved, payload: expense_lines, null_field: handoff_processes_row}
+      - {handoff_id: 165, direction: inbound, source_domain: SPEND-MGMT, target_domain: EXPENSE, trigger_event: card_transaction.posted, payload: card_transactions, null_field: handoff_processes_row}
+      - {handoff_id: 559, direction: inbound, source_domain: SPEND-MGMT, target_domain: EXPENSE, trigger_event: spend_policy.updated, payload: spend_policies, null_field: handoff_processes_row}
+      - {handoff_id: 600, direction: inbound, source_domain: SPEND-MGMT, target_domain: EXPENSE, trigger_event: card_authorization.declined, payload: card_authorizations, null_field: handoff_processes_row}
+      - {handoff_id: 1157, direction: inbound, source_domain: PAYROLL, target_domain: EXPENSE, trigger_event: pay_run.disbursed, payload: expense_reports, null_field: handoff_processes_row}
+      - {handoff_id: 38, direction: outbound, source_domain: EXPENSE, target_domain: SMP, trigger_event: card.saas_charge_detected, payload: shadow_it_apps, null_field: replace_existing_discovery_substring}
+      - {handoff_id: 101, direction: inbound, source_domain: PAYROLL, target_domain: EXPENSE, trigger_event: expense.reimbursable, payload: pay_slips, null_field: replace_existing_discovery_substring}
+      - {handoff_id: 139, direction: outbound, source_domain: EXPENSE, target_domain: PSA, trigger_event: expense.approved, payload: expense_reports, null_field: replace_existing_discovery_substring}
+      - {handoff_id: 468, direction: inbound, source_domain: HCM, target_domain: EXPENSE, trigger_event: employee.terminated, payload: employees, null_field: replace_existing_discovery_override}
+    extra_existing_tag_count: 7
+    extra_net_new_count: 7
+    extra_replace_candidate_count: 4
+
+b2:
+  - id: B2-S1
+    summary: EXPENSE module split shape (3 / 2 / 4 / custom). Architectural backbone every other fix depends on.
+    question: Which module split should EXPENSE adopt? The 2026-05-30 audit recommends 3 modules (EXPENSE-CAPTURE-AND-REPORTING, CORP-CARD-RECON, TRAVEL-AND-PER-DIEM) because it cleanly survives the CORP-CARD-PROGRAM and TRAVEL-MGMT candidate-domain promotions.
+    options:
+      - "a, 3 modules per recommendation"
+      - "b, 2 modules (collapse card recon into main expense module)"
+      - "c, 4 modules (split policy enforcement)"
+      - "d, custom (specify per-module masters)"
+    why: |
+      Module split is the architectural backbone every other fix depends on. B1B-S1, B1B-S3, B1B-S4 all gate on this call.
+
+  - id: B2-S2
+    summary: Does EXPENSE own corporate_cards (212) and card_transactions (213), or should they migrate to a future CORP-CARD-PROGRAM domain?
+    question: Vendor surface splits cleanly between issuance / program-management (Brex, Ramp, Marqeta, Stripe Issuing) and expense-reporting consumption (Concur, Expensify, Workday). CORP-CARD-PROGRAM is a candidate domain queued at mention_count 2.
+    options:
+      - "a, keep both masters in EXPENSE (simple)"
+      - "b, migrate both to CORP-CARD-PROGRAM after promotion (deferred until that domain lands)"
+      - "c, split (keep corporate_cards in EXPENSE, migrate card_transactions to CORP-CARD-PROGRAM)"
+    why: |
+      Architectural call gated on candidate-domain triage. Has Bucket 3 dependency on CORP-CARD-PROGRAM promotion (see _missing-domains.md).
+
+  - id: B2-S3
+    summary: Does EXPENSE own travel_bookings (215), or should it migrate to TRAVEL-MGMT?
+    question: Same shape as B2-S2. Vendor surface (Navan, Egencia, Concur Travel, Spotnana) models travel-booking as a distinct market. TRAVEL-MGMT candidate at mention_count 2.
+    options:
+      - "a, keep travel_bookings in EXPENSE"
+      - "b, migrate to TRAVEL-MGMT after promotion"
+      - "c, keep but author thin (travel_bookings as integration record only)"
+    why: |
+      Same dependency shape as B2-S2. Bucket 3 dependency on TRAVEL-MGMT promotion.
+
+  - id: B2-S4
+    summary: B4 pattern-flag specific calls per master, 8 proposed flips.
+    question: Per-flag confirmation for B1B-S5. Proposed flips, expense_reports.has_personal_content=true, expense_reports.has_submit_lock=true, expense_lines.has_submit_lock=true, travel_bookings.has_personal_content=true, card_transactions.has_personal_content=true, corporate_cards.has_single_approver=true, expense_reports.has_single_approver=false (confirm), expense_policies.has_submit_lock=false (confirm).
+    options:
+      - "per-flag yes / no on the 8 proposed flips, captured in Decisions"
+    why: |
+      Workflow-shape judgments the user owns. Rule #15 forbids auto-populating `data_objects.notes` with rationale.
+
+  - id: B2-S5
+    summary: expense_policies (214) vs spend_policies (747) overlap, parallel masters via sync or collapse to single primitive.
+    question: SPEND-MGMT is the heaviest neighbor (weight 10). `syncs_to` cross-rel 733 declares them parallel, but vendor surface (Brex, Ramp, Pleo, Navan, Volopay) increasingly ships a single policy primitive that drives both card limits and expense-report acceptance.
+    options:
+      - "a, keep parallel-master shape (mirror via sync)"
+      - "b, collapse to single expense_policies master in EXPENSE with SPEND-MGMT consuming it"
+      - "c, collapse to spend_policies in SPEND-MGMT with EXPENSE consuming it"
+    why: |
+      Cross-domain architectural decision touching two domains' module shapes. Creates work for the SPEND-MGMT b1 audit when it runs.
+
+  - id: B2-S6
+    summary: Reimbursement disbursement path, PAYROLL-side, AP-AUTO-side, or both.
+    question: EXPENSE consumes `supplier_invoices` (75) and the `expense_reports becomes supplier_invoices` cross-rel (725) declares the post-approval handoff to AP-AUTO. But the `expense.reimbursable` inbound from PAYROLL (101) and `pay_run.disbursed` inbound from PAYROLL (1157) both target `expense_reports`. Two reimbursement paths exist.
+    options:
+      - "a, model both paths (current implicit state)"
+      - "b, pick PAYROLL-side, deprecate the AP-AUTO consumer"
+      - "c, pick AP-AUTO-side, deprecate the PAYROLL handoffs"
+    why: |
+      Workflow scope decision.
+
+  - id: B2-EM
+    summary: domains.business_logic on EXPENSE row contains a forbidden em-dash; needs user-approved replacement wording.
+    question: The string `Policy engine (per-diem caps, currency, category limits) and OCR for receipt extraction <EM-DASH> both increasingly declarative or ML-based.` violates the project "No em-dashes" rule. The agent will not unilaterally rewrite non-empty descriptive prose.
+    options:
+      - "a, replace em-dash with a comma"
+      - "b, split sentence (replace with period)"
+      - "c, rewrite (user supplies wording)"
+      - "d, defer"
+    why: |
+      Rewriting prose is editorial. Rule #15 covers `notes` columns only, but the project-wide em-dash rule applies catalog-wide.
+
+b3:
+  - id: B3-RECEIPTS
+    candidate: receipts
+    rationale: |
+      Concur, Expensify, Rydoo, Fyle, Pleo model the receipt image / extracted text as a first-class master distinct from `expense_lines` (one receipt can split into N lines; receipts have their own lifecycle: captured to OCR'd to matched to archived). Current shape folds receipts into expense_lines.
+    vendor_evidence: [SAP Concur, Expensify, Rydoo, Fyle, Pleo]
+    proposed_module: EXPENSE-CAPTURE-AND-REPORTING
+
+  - id: B3-MILEAGE-LOGS
+    candidate: mileage_logs
+    rationale: |
+      Concur Drive, Expensify, MileIQ, Cardata model mileage as a distinct master with GPS tracks, start / end points, business-purpose categorization. Currently absent.
+    vendor_evidence: [SAP Concur Drive, Expensify, MileIQ, Cardata]
+    proposed_module: EXPENSE-CAPTURE-AND-REPORTING or TRAVEL-AND-PER-DIEM
+
+  - id: B3-PER-DIEM-RATES
+    candidate: per_diem_rates
+    rationale: |
+      Concur, Workday Expenses, GSA per-diem feed, FOREIGNGOV / OCONUS rate tables. Reference data master. Currently absent.
+    vendor_evidence: [SAP Concur, Workday Expenses]
+    proposed_module: TRAVEL-AND-PER-DIEM
+
+  - id: B3-CASH-ADVANCES
+    candidate: cash_advances
+    rationale: |
+      Concur, Workday Expenses, Emburse Chrome River model cash advances as a distinct master with issue / reconciliation / settlement lifecycle. Currently absent.
+    vendor_evidence: [SAP Concur, Workday Expenses, Emburse Chrome River]
+    proposed_module: EXPENSE-CAPTURE-AND-REPORTING
+
+  - id: B3-EXPENSE-CATEGORIES
+    candidate: expense_categories
+    rationale: |
+      Every vendor has a category taxonomy distinct from the policy entity (meals, lodging, ground transport, supplies, etc.) often mapped to GL accounts. Currently inlined onto `expense_lines`.
+    vendor_evidence: [SAP Concur, Expensify, Brex, Ramp, Workday Expenses, all vendors in the surface]
+    proposed_module: EXPENSE-CAPTURE-AND-REPORTING
+
+  - id: B3-TRAVELER-PROFILES
+    candidate: traveler_profiles
+    rationale: |
+      Navan, Egencia, Concur Travel, Spotnana model traveler profiles as a distinct master with passport / loyalty / dietary preferences / TSA-precheck. Currently absent.
+    vendor_evidence: [Navan, Egencia, SAP Concur Travel, Spotnana]
+    proposed_module: TRAVEL-AND-PER-DIEM
+
+  - id: B3-POLICY-VIOLATIONS
+    candidate: policy_violations
+    rationale: |
+      Concur, Expensify, Brex, Ramp model violations as a distinct master separate from `expense_lines` (one line can carry multiple violations; violations have their own resolution lifecycle: flagged to reviewed to exception_granted / line_corrected). Currently violations are implicit on `expense_line.policy_violation` events.
+    vendor_evidence: [SAP Concur, Expensify, Brex, Ramp]
+    proposed_module: EXPENSE-CAPTURE-AND-REPORTING or EXPENSE-POLICY-AND-AUDIT
+
+  - id: B3-DELEGATE-AUTHORIZATIONS
+    candidate: delegate_authorizations
+    rationale: |
+      Concur, Workday, Expensify all model proxy / delegate permissions (employee A submits on behalf of employee B; manager A approves on behalf of manager B during PTO). Currently absent.
+    vendor_evidence: [SAP Concur, Workday Expenses, Expensify]
+    proposed_module: EXPENSE-CAPTURE-AND-REPORTING
+
+  - id: B3-VAT-TAX-RECORDS
+    candidate: vat_tax_records
+    rationale: |
+      Concur Tax Assurance, VATBox, Vatglobal handle VAT extraction and recovery as a distinct record-type with reclaim lifecycle. EU VAT directive (already loaded) is the anchor. Currently absent.
+    vendor_evidence: [SAP Concur Tax Assurance, VATBox, Vatglobal]
+    proposed_module: EXPENSE-POLICY-AND-AUDIT or new EXPENSE-VAT module
+
+  - id: B3-AUDIT-TRAIL-RECORDS
+    candidate: audit_trail_records
+    rationale: |
+      SOX / IRS substantiation needs immutable audit-trail records distinct from the expense-line state machine (who edited, who viewed, who approved, with timestamps). Currently absent as a queryable entity, though implicit in `record_status` columns.
+    vendor_evidence: [SAP Concur, Workday Expenses, all SOX-anchored vendors]
+    proposed_module: EXPENSE-POLICY-AND-AUDIT
+
+  - id: B3-MOD-TRAVEL-MGMT
+    candidate: TRAVEL-AND-PER-DIEM module migration to TRAVEL-MGMT domain
+    rationale: |
+      If B2-S3 returns "migrate to TRAVEL-MGMT", the TRAVEL-AND-PER-DIEM module empties out and either retires or becomes a thin integration module. TRAVEL-MGMT candidate queued at mention_count 2 in _missing-domains.md.
+    vendor_evidence: [Navan, Egencia, SAP Concur Travel, Spotnana, AmTrav]
+    proposed_module: TRAVEL-MGMT (new domain)
+
+  - id: B3-MOD-CORP-CARD-PROGRAM
+    candidate: CORP-CARD-RECON module migration to CORP-CARD-PROGRAM domain
+    rationale: |
+      If B2-S2 returns "migrate cards", the CORP-CARD-RECON module either retires (cards fully owned by CORP-CARD-PROGRAM) or shrinks to a thin consumer. CORP-CARD-PROGRAM candidate queued at mention_count 2 in _missing-domains.md.
+    vendor_evidence: [Marqeta, Stripe Issuing, Highnote, Lithic, Brex Card, Ramp Card]
+    proposed_module: CORP-CARD-PROGRAM (new domain)
+
+  - id: B3-REG-IRS-463
+    candidate: IRS Publication 463 regulation
+    rationale: |
+      Mandatory for US employer per-diem and substantiation rules; underpins `per_diem_rates` and `cash_advances` masters.
+    vendor_evidence: [SAP Concur, Workday Expenses, IRS Publication 463 statutory anchor]
+
+  - id: B3-REG-HMRC-P11D
+    candidate: HMRC P11D regulation
+    rationale: |
+      Mandatory for UK employer benefits-in-kind reporting; affects which expense categories require reporting.
+    vendor_evidence: [SAP Concur UK, Rydoo, HMRC P11D statutory anchor]
+
+  - id: B3-REG-FCPA
+    candidate: FCPA (Foreign Corrupt Practices Act) regulation
+    rationale: |
+      Mandatory for US-listed entities and foreign subsidiaries; gift / hospitality / travel-with-foreign-officials tracking.
+    vendor_evidence: [SAP Concur, Workday Expenses, FCPA statutory anchor]
+
+  - id: B3-REG-GDPR
+    candidate: GDPR regulation applicability
+    rationale: |
+      Mandatory for EEA traveler PII handling in `traveler_profiles` and `travel_bookings`.
+    vendor_evidence: [Navan, SAP Concur, GDPR statutory anchor]
+
+  - id: B3-REG-PCI-DSS
+    candidate: PCI-DSS regulation applicability
+    rationale: |
+      Mandatory if EXPENSE ever stores PAN or full card numbers; usually scoped out by tokenization at the CORP-CARD-PROGRAM tier but flagged for completeness.
+    vendor_evidence: [Brex, Ramp, PCI-DSS standard]

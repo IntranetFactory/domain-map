@@ -1,0 +1,267 @@
+schema_version: 2
+domain: IWMS
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-N15
+    summary: PATCH notes="" on handoffs 1165 and 1166 to revert Rule #15 forbidden "target NULL until X is modularized" annotations
+    finding: |
+      handoffs.notes on row 1165 carries "target NULL until IGA is modularized" and row 1166 carries
+      "target NULL until ERP-FIN is modularized". Both match the rescinded "until X is modularized"
+      pattern explicitly listed as forbidden in Rule #15. Audit-revert is permitted since this audit
+      names the row IDs and the prior license has been rescinded.
+    action: |
+      semantius call crud postgrestRequest with PATCH /handoffs?id=eq.1165 body {"notes":""} and
+      PATCH /handoffs?id=eq.1166 body {"notes":""}. No loader needed; two surgical CLI calls.
+    affected_handoffs:
+      - {handoff_id: 1165, direction: outbound, source_domain: IWMS, target_domain: IGA, trigger_event: desk_booking.checked_in, payload: desk_bookings, null_field: none}
+      - {handoff_id: 1166, direction: outbound, source_domain: IWMS, target_domain: ERP-FIN, trigger_event: workplace_service_request.resolved, payload: workplace_service_requests, null_field: target_domain_module_id}
+
+  - id: B1A-M6
+    summary: INSERT domain_module_capabilities (100, 374) to cure M6 capability-orphan on IWMS-ROOM-RESERVATION
+    finding: |
+      Module 100 IWMS-ROOM-RESERVATION still has zero rows in domain_module_capabilities. Every
+      other IWMS module realizes at least one capability. Audit-default fix links to existing
+      REAL-SPACE-OPTIM (374) since space-optimization is the closest match and already realized by
+      IWMS-DESK-RESERVATION (99) and IWMS-SPACE-ANALYTICS (102).
+    action: |
+      semantius call crud postgrestRequest with POST /domain_module_capabilities body
+      [{"domain_module_id":100,"capability_id":374}]. Skip if B2-CAP option (b) picked
+      (then blocked on new REAL-MEETING-MGMT capability authoring).
+    blocked_by:
+      - {type: user_decision, ref: B2-CAP}
+    affected_modules: [100]
+
+  - id: B1A-F2
+    summary: Author 5 system skills (one per module) + 5 to 12 skill_tools per skill to cure F2/F3/F5/F7
+    finding: |
+      /skills?domain_module_id=in.(98,99,100,101,102)&skill_type=eq.system returns []. Rule #17 is
+      a Phase-A obligation: one system skill per domain_modules row, each with at least one
+      skill_tools row. Semantius score uncomputable until this is cured. Module count is 5 if
+      DESK/ROOM split is kept, 4 if merged.
+    action: |
+      Author 5 skills (iwms_location_master_agent, iwms_desk_reservation_agent,
+      iwms_room_reservation_agent, iwms_workplace_service_desk_agent, iwms_space_analytics_agent),
+      each anchored on its matching domain_module_id with skill_type='system'. Bundle 5 to 12
+      skill_tools per skill mixing query / mutate / workflow-gate. WSD includes
+      triage_service_request and resolve_service_request workflow-gate tools. Loader pattern in
+      scripts/loaders/load_research.ts.
+    blocked_by:
+      - {type: user_decision, ref: B2-SPLIT}
+    affected_modules: [98, 99, 100, 101, 102]
+
+  - id: B1A-B4
+    summary: PATCH pattern flags (has_submit_lock / has_single_approver) on workflow-bearing masters per Rule #12 positive re-evaluation
+    finding: |
+      Every workflow-bearing master has has_submit_lock=false and has_single_approver=false.
+      Re-evaluation candidates per Rule #12: desk_bookings.has_submit_lock=true once checked_in
+      (Robin, Eptura, Tactic all enforce edit-lock after check-in), room_reservations.has_submit_lock=true
+      once checked_in, workplace_service_requests.has_single_approver=true given the
+      triaged -> resolved single-approver path.
+    action: |
+      PATCH /data_objects?id=eq.<id> per flag the user approves in B2-FLAGS. Three candidate
+      patches: id 590 has_submit_lock=true, id 591 has_submit_lock=true, id 592
+      has_single_approver=true.
+    blocked_by:
+      - {type: user_decision, ref: B2-FLAGS}
+    affected_masters:
+      - {data_object_id: 590, name: desk_bookings, target_module_id: 99, workflow: booking_lifecycle}
+      - {data_object_id: 591, name: room_reservations, target_module_id: 100, workflow: reservation_lifecycle}
+      - {data_object_id: 592, name: workplace_service_requests, target_module_id: 101, workflow: request_triage_resolve}
+
+b1b:
+  - id: B1B-B10b-OUT
+    summary: 3 outbound IWMS handoffs carry NULL target_domain_module_id; owed by HCM, REAL-EST, ERP-FIN audits
+    finding: |
+      Handoff 869 (DESK -> HCM, workplace_feedback.submitted, payload workplace_experience_feedback)
+      has target_domain_module_id NULL. Handoff 870 (ANALYTICS -> REAL-EST, space_utilization.measured,
+      payload space_utilization_reports) has target_domain_module_id NULL. Handoff 1166
+      (WSD -> ERP-FIN, workplace_service_request.resolved, payload workplace_service_requests) has
+      target_domain_module_id NULL. The target FK is the receiving domain's audit responsibility per
+      B10b asymmetry. IWMS side (source_domain_module_id) is populated on every outbound row.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: HCM, milestone: identify_workplace_feedback_consumer_module}
+      - {type: domain_audit, blocking_domain: REAL-EST, milestone: identify_space_utilization_consumer_module}
+      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: identify_workplace_chargeback_consumer_module}
+    affected_handoffs:
+      - {handoff_id: 869, direction: outbound, source_domain: IWMS, target_domain: HCM, trigger_event: workplace_feedback.submitted, payload: workplace_experience_feedback, null_field: target_domain_module_id}
+      - {handoff_id: 870, direction: outbound, source_domain: IWMS, target_domain: REAL-EST, trigger_event: space_utilization.measured, payload: space_utilization_reports, null_field: target_domain_module_id}
+      - {handoff_id: 1166, direction: outbound, source_domain: IWMS, target_domain: ERP-FIN, trigger_event: workplace_service_request.resolved, payload: workplace_service_requests, null_field: target_domain_module_id}
+
+  - id: B1B-B10b-IN
+    summary: 1 inbound IWMS handoff carries NULL source_domain_module_id; owed by REAL-EST audit
+    finding: |
+      Handoff 858 (REAL-EST -> IWMS-SPACE-ANALYTICS, floor_plan.updated, payload floor_plans) has
+      source_domain_module_id NULL. Target side (target_domain_module_id=102) is populated.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: REAL-EST, milestone: identify_floor_plan_publisher_module}
+    affected_handoffs:
+      - {handoff_id: 858, direction: inbound, source_domain: REAL-EST, target_domain: IWMS, trigger_event: floor_plan.updated, payload: floor_plans, null_field: source_domain_module_id}
+
+  - id: B1B-DMDO
+    summary: Consumer DMDOs missing on 4 neighbor modules for IWMS-mastered payloads
+    finding: |
+      Each outbound handoff implies a consumer DMDO row on the receiving module that does not
+      yet exist: HCM consumes workplace_experience_feedback (594) per handoff 869; REAL-EST
+      consumes space_utilization_reports (593) per handoff 870; ERP-FIN consumes
+      workplace_service_requests (592) per handoff 1166; IGA-AUTO-PROVISIONING (148) consumes
+      desk_bookings (590) per handoff 1165 (target module known but no consumer DMDO).
+    blocked_by:
+      - {type: domain_audit, blocking_domain: HCM, milestone: add_consumer_DMDO_workplace_experience_feedback}
+      - {type: domain_audit, blocking_domain: REAL-EST, milestone: add_consumer_DMDO_space_utilization_reports}
+      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: add_consumer_DMDO_workplace_service_requests}
+      - {type: domain_audit, blocking_domain: IGA, milestone: add_consumer_DMDO_desk_bookings_on_module_148}
+    affected_masters:
+      - {data_object_id: 594, name: workplace_experience_feedback, target_module_id: null, workflow: HCM_consumer_module_pending}
+      - {data_object_id: 593, name: space_utilization_reports, target_module_id: null, workflow: REAL-EST_consumer_module_pending}
+      - {data_object_id: 592, name: workplace_service_requests, target_module_id: null, workflow: ERP-FIN_consumer_module_pending}
+      - {data_object_id: 590, name: desk_bookings, target_module_id: 148, workflow: IGA_consumer_DMDO_pending}
+
+  - id: B1B-B8
+    summary: 4 outbound cross-domain data_object_relationships edges missing; need neighbor master FK
+    finding: |
+      B8 outbound check: workplace_experience_feedback flows_into <HCM master> (handoff 869);
+      space_utilization_reports signals <REAL-EST master> (handoff 870); workplace_service_requests
+      chargebacks_to <ERP-FIN master> (handoff 1166); desk_bookings provisions <IGA master>
+      (handoff 1165). All four require the target-master id which lives in the neighbor catalog;
+      not authorable until neighbor audits identify the receiving master.
+    blocked_by:
+      - {type: depends_on, ref: B1B-DMDO, reason: target master FK on each neighbor must be identified before relationship row is authorable}
+    affected_handoffs:
+      - {handoff_id: 869, direction: outbound, source_domain: IWMS, target_domain: HCM, trigger_event: workplace_feedback.submitted, payload: workplace_experience_feedback, null_field: data_object_relationship}
+      - {handoff_id: 870, direction: outbound, source_domain: IWMS, target_domain: REAL-EST, trigger_event: space_utilization.measured, payload: space_utilization_reports, null_field: data_object_relationship}
+      - {handoff_id: 1166, direction: outbound, source_domain: IWMS, target_domain: ERP-FIN, trigger_event: workplace_service_request.resolved, payload: workplace_service_requests, null_field: data_object_relationship}
+      - {handoff_id: 1165, direction: outbound, source_domain: IWMS, target_domain: IGA, trigger_event: desk_booking.checked_in, payload: desk_bookings, null_field: data_object_relationship}
+
+  - id: B1B-B9b
+    summary: Author up to 7 new intra-domain handoff rows + up to 3 new trigger_events; gated on module-split decision
+    finding: |
+      Only 2 intra-domain handoffs (1167, 1168) on a 5-module domain. Expected coverage per the
+      master relationship graph: LOCATION-MASTER (98) -> all 4 sibling modules on a new
+      location.created trigger_event (4 handoff rows + 1 event); DESK -> ANALYTICS on
+      desk_booking.cancelled (969) and desk_booking.completed (new event); ROOM -> ANALYTICS on
+      room_reservation.completed (new event); WSD -> ANALYTICS on
+      workplace_service_request.resolved (1250). Total potential: 7 handoff rows + 3 trigger_events.
+      Volume scales with B2-SPLIT.
+    blocked_by:
+      - {type: user_decision, ref: B2-SPLIT}
+    affected_modules: [98, 99, 100, 101, 102]
+    affected_events:
+      - {id: null, event_name: location.created, current_category: not_created, proposed_category: lifecycle}
+      - {id: null, event_name: desk_booking.completed, current_category: not_created, proposed_category: state_change}
+      - {id: null, event_name: room_reservation.completed, current_category: not_created, proposed_category: state_change}
+
+b2:
+  - id: B2-CAP
+    summary: M6 capability fix path for IWMS-ROOM-RESERVATION
+    question: Which capability should be linked to IWMS-ROOM-RESERVATION (100) to cure M6?
+    options:
+      - (a) link to existing REAL-SPACE-OPTIM (374); audit default; matches DESK/ANALYTICS pattern
+      - (b) author new REAL-MEETING-MGMT capability and link it; more granular; may force the same split on DESK
+      - (c) mixed (specify per module)
+    why: |
+      Capability granularity decision; some flagships (Robin, Tactic) market desk + room as one
+      workflow while others (Condeco, Spacewell) treat them as distinct.
+
+  - id: B2-FLAGS
+    summary: B4 pattern-flag positive re-evaluation per Rule #12
+    question: |
+      Set has_submit_lock=true on desk_bookings (590)? On room_reservations (591)?
+      Set has_single_approver=true on workplace_service_requests (592)?
+    options:
+      - per-flag yes / no answer; capture decisions for B1A-B4 PATCH
+    why: |
+      Pattern flags are workflow-shape judgments the user owns. Vendor evidence supports
+      submit-lock on check-in (Robin, Eptura, Tactic) and single-approver on triage -> resolve.
+
+  - id: B2-SPLIT
+    summary: Keep DESK + ROOM split or merge to single IWMS-RESERVATIONS module
+    question: Maintain the two-module split for desk and room reservations, or merge?
+    options:
+      - (a) keep split, current default; works for customers buying Robin Desk vs Robin Rooms separately
+      - (b) merge to single IWMS-RESERVATIONS, simpler agent surface, mirrors pure-plays selling both
+    why: |
+      Decision drives B1A-F2 skill count (4 vs 5) and B1B-B9b intra-domain handoff shape.
+      B3 candidates (parking_reservations, move_orders) may argue against merge.
+
+  - id: B2-FLOOR
+    summary: Floor-plan trigger events 940 / 941 audit-perimeter ownership
+    question: |
+      Trigger events 940 (floor_plan.created) and 941 (floor_plan.updated) are on
+      data_object_id=346 floor_plans, mastered by REAL-EST. Both already carry event_category.
+      Cataloging question: keep them tagged to IWMS B9 sweep or formally route to REAL-EST?
+    options:
+      - (a) leave under IWMS audit perimeter; events touch IWMS handoff 858
+      - (b) defer to REAL-EST audit perimeter
+    why: |
+      No PATCH required either way; purely a tracking decision so future audits know which audit
+      owns event lifecycle for floor_plans-emitted events.
+
+b3:
+  - id: B3-MOVE-ORDERS
+    candidate: move_orders
+    rationale: |
+      Robin, Eptura, Planon, Tango model employee / team relocations as first-class records
+      (move ticket, target seat, target floor, effective date). No IWMS master captures this;
+      relocations would currently be modeled as workplace_service_requests of a special type.
+    vendor_evidence: [Robin, Eptura, Planon, Tango]
+    proposed_module: new IWMS-MOVE-MGMT module, or new master inside IWMS-DESK-RESERVATION
+
+  - id: B3-PARKING
+    candidate: parking_reservations
+    rationale: |
+      Eptura, Robin, Officely, Tactic, Condeco include parking-spot reservations as a sibling to
+      desk and room reservations. The flagship surface uses a distinct entity (capacity model,
+      hourly grain, vehicle / license-plate attribute).
+    vendor_evidence: [Eptura, Robin, Officely, Tactic, Condeco]
+    proposed_module: new IWMS-PARKING module, or new master inside IWMS-DESK-RESERVATION
+
+  - id: B3-WAYFINDING
+    candidate: wayfinding_signals
+    rationale: |
+      Spacewell, FM:Systems Wayfinding, MRI OnCore Wayfinding produce structured wayfinding
+      records (digital signage routing, kiosk paths, indoor positioning). Becoming a buyer-evaluated
+      feature in 2025.
+    vendor_evidence: [Spacewell, "FM:Systems", MRI OnCore]
+    proposed_module: new master in IWMS-LOCATION-MASTER or sibling module
+
+  - id: B3-OCC-SENSORS
+    candidate: occupancy_sensor_readings
+    rationale: |
+      Spacewell, VergeSense, Disruptive Technologies, Density, Butlr, Rifiniti, Honeywell Forge
+      ingest occupancy sensor signals (PIR, thermal, lidar). The signal feeds
+      space_utilization_reports but the raw sensor records may warrant their own master (audit
+      trail, sensor calibration, vendor mapping).
+    vendor_evidence: [Spacewell, VergeSense, Disruptive Technologies, Density, Butlr, Rifiniti, Honeywell Forge]
+    proposed_module: new master in IWMS-SPACE-ANALYTICS, or candidate BMS domain (see B3-BMS)
+
+  - id: B3-MODULAR
+    candidate: IWMS-MOVE-MGMT or IWMS-PARKING module
+    rationale: |
+      If move_orders and / or parking_reservations are loaded, each may warrant its own module
+      rather than overloading IWMS-DESK-RESERVATION; pushes IWMS from 5 modules toward 6 or 7.
+    vendor_evidence: [Robin, Eptura, Planon, Officely, Tactic, Condeco]
+    proposed_module: new modules under domain 23
+
+  - id: B3-COMPLIANCE
+    candidate: OSHA + GDPR + CCPA + local building / fire codes
+    rationale: |
+      OSHA workplace safety (US, >10-employee employers); GDPR / employee data protection (EU,
+      covers booking data and occupancy sensor data tied to badge swipes); CCPA / state privacy
+      (US employee data); local building / fire codes per jurisdiction. No domain_regulations rows
+      currently on IWMS.
+    vendor_evidence: [statutory frameworks]
+    proposed_module: domain_regulations on IWMS (23)
+
+  - id: B3-BMS
+    candidate: BMS (Building Management System) domain
+    rationale: |
+      Honeywell Forge Building Operations, Siemens Desigo CC, Schneider EcoStruxure Building
+      Operation, Johnson Controls OpenBlue, Spacewell IoT cluster a distinct point-solution market
+      around HVAC control, BACnet / Modbus device integration, occupancy sensor ingestion, fault
+      detection. Adjacent to IWMS, REAL-EST, ESG, EAM. If promoted, B3-OCC-SENSORS likely lives in
+      BMS, not IWMS.
+    vendor_evidence: [Honeywell Forge Building Operations, Siemens Desigo CC, Schneider EcoStruxure, Johnson Controls OpenBlue, Spacewell IoT]
+    proposed_module: new domain row; queue via audits/_missing-domains.md

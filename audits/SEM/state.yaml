@@ -1,0 +1,331 @@
+schema_version: 2
+domain: SEM
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S2
+    summary: "Author 2 missing intra-domain rollup handoffs to STRATEGY-DEFINITION (105)."
+    finding: >-
+      B11 gap: the rollup loops back to module 105 are absent. (a) okr_objective.scored
+      rollup from EXECUTION-TRACKING (106) to STRATEGY-DEFINITION (105) on
+      okr_objectives (245). (b) strategic_initiative.completed rollup from
+      OPERATING-RHYTHM (107) to STRATEGY-DEFINITION (105) on strategic_initiatives
+      (274) for benefits-realisation. Both source events exist live (trigger_event_id
+      1375 and 1266 respectively).
+    action: >-
+      INSERT 2 handoffs rows: (a) source_domain_module_id=106,
+      target_domain_module_id=105, trigger_event_id=1375, data_object_id=245,
+      integration_pattern='lifecycle_progression', friction_level='low'; (b)
+      source_domain_module_id=107, target_domain_module_id=105,
+      trigger_event_id=1266, data_object_id=274,
+      integration_pattern='lifecycle_progression', friction_level='low'.
+    affected_modules: [105, 106, 107]
+    affected_events:
+      - {id: 1375, event_name: okr_objective.scored, current_category: lifecycle, proposed_category: lifecycle}
+      - {id: 1266, event_name: strategic_initiative.completed, current_category: state_change, proposed_category: state_change}
+    affected_masters:
+      - {data_object_id: 245, name: okr_objectives, target_module_id: 105, workflow: rollup_to_strategy_map}
+      - {data_object_id: 274, name: strategic_initiatives, target_module_id: 105, workflow: benefits_realisation_rollup}
+
+  - id: B1A-S3
+    summary: "Insert 2 missing trigger_events that unblock SEM downstream rollups and re-baseline cascades."
+    finding: >-
+      B11 / B12 gap: two events are absent. (a) okr_objective.deprecated
+      (event_category='state_change', data_object_id=245) supports re-baseline
+      cascades when the strategy map is re-authored and child OKRs become obsolete.
+      (b) strategic_initiative.benefits_realized (event_category='state_change',
+      data_object_id=274) supports the EPM benefits-realisation feed inbound
+      candidate.
+    action: >-
+      INSERT 2 trigger_events rows on data_objects 245 and 274 with the categories
+      stated above. record_status defaults to 'new' (Rule #1, omit the field).
+    affected_masters:
+      - {data_object_id: 245, name: okr_objectives, target_module_id: null, workflow: re_baseline_cascade}
+      - {data_object_id: 274, name: strategic_initiatives, target_module_id: null, workflow: benefits_realisation}
+    affected_events:
+      - {event_name: okr_objective.deprecated, current_category: null, proposed_category: state_change}
+      - {event_name: strategic_initiative.benefits_realized, current_category: null, proposed_category: state_change}
+
+  - id: B1A-S8
+    summary: "Optional event_category PATCH on trigger_events 1264 (lifecycle -> state_change)."
+    finding: >-
+      Event 1264 strategic_objective.cascaded is currently event_category='lifecycle'.
+      Cascading reads more like a state_change on the okr_objectives lifecycle than
+      a recurring rhythm. Both readings are defensible; mechanical PATCH if the user
+      confirms.
+    action: "PATCH /trigger_events?id=eq.1264 with event_category='state_change'."
+    affected_events:
+      - {id: 1264, event_name: strategic_objective.cascaded, current_category: lifecycle, proposed_category: state_change}
+
+b1b:
+  - id: B1B-S1
+    summary: "Author inbound cross-domain handoffs to close B12 zero-inbound asymmetry; gated on user judgment."
+    finding: >-
+      SEM has 4 outbound and 0 inbound cross-domain handoffs. Sensor surface
+      candidates: (a) WORK-MGMT.okr_objective.scored (1375 exists) -> module 106;
+      (b) WORK-MGMT.okr_objective.committed (1374 exists) -> module 105; (c)
+      EPM.financial_plan.approved -> 106; (d) EPM.variance_analysis.material_variance
+      -> 107; (e) ERP-FIN.financial_period.closed -> 106; (f)
+      TALENT-MGMT.performance_review.completed -> 107. (a) + (b) are ready now
+      because source events exist; (c)-(f) need source-domain coordination or
+      B1A-S3 events. Gated on B2-S2 (authoring scope) and B2-S5 (integrated vs
+      write-mostly intent).
+    blocked_by:
+      - {type: user_decision, ref: B2-S2}
+      - {type: user_decision, ref: B2-S5}
+    affected_handoffs:
+      - {direction: inbound_candidate, source_domain: WORK-MGMT, target_domain: SEM, trigger_event: okr_objective.scored, payload: okr_objectives, null_field: target_domain_module_id_candidate_106}
+      - {direction: inbound_candidate, source_domain: WORK-MGMT, target_domain: SEM, trigger_event: okr_objective.committed, payload: okr_objectives, null_field: target_domain_module_id_candidate_105}
+      - {direction: inbound_candidate, source_domain: EPM, target_domain: SEM, trigger_event: financial_plan.approved, payload: financial_plans, null_field: source_event_not_loaded}
+      - {direction: inbound_candidate, source_domain: EPM, target_domain: SEM, trigger_event: variance_analysis.material_variance, payload: variance_analyses, null_field: source_event_not_loaded}
+      - {direction: inbound_candidate, source_domain: ERP-FIN, target_domain: SEM, trigger_event: financial_period.closed, payload: financial_periods, null_field: source_domain_no_modules}
+      - {direction: inbound_candidate, source_domain: TALENT-MGMT, target_domain: SEM, trigger_event: performance_review.completed, payload: performance_reviews, null_field: source_event_not_loaded}
+
+  - id: B1B-S4
+    summary: "Backfill target_domain_module_id on 4 outbound cross-domain handoffs after SPM and EPM Phase B lands."
+    finding: >-
+      All 4 outbound cross-domain handoffs (1205, 1206 to SPM domain 9; 1207, 1208
+      to EPM domain 66) carry NULL target_domain_module_id. Both SPM and EPM still
+      have zero domain_modules rows in the catalog, so there is no module to point
+      at yet. Per the B10b asymmetry rule this is the target domains' work; queue
+      until Phase B lands on each.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: SPM, milestone: phase_b_modules_loaded}
+      - {type: domain_audit, blocking_domain: EPM, milestone: phase_b_modules_loaded}
+    affected_handoffs:
+      - {handoff_id: 1205, direction: outbound, source_domain: SEM, target_domain: SPM, trigger_event: strategic_initiative.approved, payload: strategic_initiatives, null_field: target_domain_module_id}
+      - {handoff_id: 1206, direction: outbound, source_domain: SEM, target_domain: SPM, trigger_event: strategic_initiative.cancelled, payload: strategic_initiatives, null_field: target_domain_module_id}
+      - {handoff_id: 1207, direction: outbound, source_domain: SEM, target_domain: EPM, trigger_event: strategic_initiative.approved, payload: strategic_initiatives, null_field: target_domain_module_id}
+      - {handoff_id: 1208, direction: outbound, source_domain: SEM, target_domain: EPM, trigger_event: strategic_objective.cascaded, payload: okr_objectives, null_field: target_domain_module_id}
+
+  - id: B1B-S5
+    summary: "Resolve event 150 okr_objective.created publisher ownership."
+    finding: >-
+      trigger_events row 150 (okr_objective.created, data_object_id=245) is the
+      source event for handoff 178 (SPM -> WORK-MGMT). SPM has zero modules and
+      does not master okr_objectives (WORK-MGMT-GOALS-OKR 150 does). Either re-home
+      the event to be published from WORK-MGMT-GOALS-OKR (cleaner) or settle that
+      SPM is the publisher when SPM modules eventually land. Routes to WORK-MGMT
+      and SPM audits.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: WORK-MGMT, milestone: event_150_ownership_decision}
+      - {type: domain_audit, blocking_domain: SPM, milestone: phase_b_modules_loaded}
+    affected_events:
+      - {id: 150, event_name: okr_objective.created, current_category: lifecycle, proposed_category: lifecycle}
+    affected_handoffs:
+      - {handoff_id: 178, direction: outbound, source_domain: SPM, target_domain: WORK-MGMT, trigger_event: okr_objective.created, payload: okr_objectives, null_field: publisher_ownership_review}
+
+  - id: B1B-S6
+    summary: "Backfill cross-domain consumer DMDOs on SEM masters from SPM, EPM, ERP-FIN, HCM."
+    finding: >-
+      SEM has only one cross-domain consumer DMDO today (WORK-MGMT-TASK-EXEC 149
+      on strategic_initiatives 274). Expected additions from the workflow shape:
+      (a) SPM modules `consumer + optional` on strategic_initiatives; (b) EPM
+      modules `consumer + required` on strategic_initiatives (variance attribution)
+      and `consumer + optional` on okr_objectives (benefits); (c) ERP-FIN modules
+      `consumer + optional` on strategic_initiatives (revenue attribution); (d)
+      HCM modules `consumer + optional` on okr_objectives if performance reviews
+      tie to OKRs. None are SEM's fix; queued to each receiving domain's b1 audit.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: SPM, milestone: phase_b_modules_loaded}
+      - {type: domain_audit, blocking_domain: EPM, milestone: phase_b_modules_loaded}
+      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: phase_b_modules_loaded}
+      - {type: domain_audit, blocking_domain: HCM, milestone: phase_b_modules_loaded}
+    affected_masters:
+      - {data_object_id: 274, name: strategic_initiatives, target_module_id: null, workflow: cross_domain_consume}
+      - {data_object_id: 245, name: okr_objectives, target_module_id: null, workflow: cross_domain_consume}
+
+  - id: B1B-S7
+    summary: "Revert Rule #15 notes pollution on 45 rows across 5 tables."
+    finding: >-
+      Rule #15 notes-pollution remediation, scope expanded vs. 2026-05-30. Confirmed
+      live: (i) data_objects.notes on strategy_maps (808) carries config-shape
+      rationale prose; (ii) all 27 skill_tools.notes rows on skills 166 / 167 / 168
+      carry workflow-context prose; (iii) 5 domain_data_objects.notes rows on
+      domain 166 carry master / consumer rationale prose (strategic_initiatives,
+      users, org_units, employees, cost_centers, okr_objectives); (iv) all 9
+      role_modules.notes rows for roles 10055 / 10056 / 10057 carry per-role
+      per-module prose; (v) 3 role_permissions.notes rows on workflow-gate grants
+      to roles 10056 / 10057 carry workflow rationale prose. Total polluted rows:
+      45 across 5 tables. All wording reads as auto-populated by loaders.
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    affected_entities:
+      - "data_objects.notes on row 808 (strategy_maps): 1 row"
+      - "skill_tools.notes on rows 1508-1534 (skills 166/167/168): 27 rows"
+      - "domain_data_objects.notes on domain 166 rows (strategic_initiatives, users, org_units, employees, cost_centers, okr_objectives): 5 rows"
+      - "role_modules.notes on role_modules 160-168 (roles 10055/10056/10057 on modules 105/106/107): 9 rows"
+      - "role_permissions.notes on 10056.10285, 10057.10282, 10057.10283: 3 rows"
+
+  - id: B1B-A4
+    summary: "Backfill empty catalog_tagline and catalog_description on SEM domain + all 3 modules (Rule #20)."
+    finding: >-
+      A4 + M8 fail. SEM domain (166) carries empty catalog_tagline and
+      catalog_description. All 3 modules (105, 106, 107) carry empty catalog_tagline
+      and catalog_description. Total 8 empty buyer-facing fields. Rule #20 allows
+      backfill via draft / surface / approve / write loop; agent never writes
+      without explicit per-row user approval of the wording.
+    blocked_by:
+      - {type: user_decision, ref: B2-A4}
+    affected_modules: [105, 106, 107]
+    affected_entities:
+      - "domains.catalog_tagline on 166 SEM (empty)"
+      - "domains.catalog_description on 166 SEM (empty)"
+      - "domain_modules.catalog_tagline on 105 SEM-STRATEGY-DEFINITION (empty)"
+      - "domain_modules.catalog_description on 105 SEM-STRATEGY-DEFINITION (empty)"
+      - "domain_modules.catalog_tagline on 106 SEM-EXECUTION-TRACKING (empty)"
+      - "domain_modules.catalog_description on 106 SEM-EXECUTION-TRACKING (empty)"
+      - "domain_modules.catalog_tagline on 107 SEM-OPERATING-RHYTHM (empty)"
+      - "domain_modules.catalog_description on 107 SEM-OPERATING-RHYTHM (empty)"
+
+b2:
+  - id: B2-S1
+    summary: "Confirm whether 45 polluted notes rows were user-approved or auto-populated."
+    question: >-
+      Were any of the 45 polluted notes rows (1 data_objects + 27 skill_tools +
+      5 domain_data_objects + 9 role_modules + 3 role_permissions) user-approved
+      at load time, or are they all loader-auto-populated and should be reverted
+      to empty string per Rule #15?
+    options:
+      - "(a) Confirm all auto-populated; PATCH all 45 rows to notes='' and log Rule #15 incident in references/skill-changelog.md."
+      - "(b) Confirm user-approved; leave wording in place (notes that prior Rule #15 licenses are rescinded for future loads)."
+      - "(c) Per-row decision; specify which rows keep their wording."
+    why: "The audit cannot tell from PostgREST whether the strings were typed by the user or by the loader; empirically the wording reads as auto-populated (uniform tone, mechanical paraphrase)."
+
+  - id: B2-S2
+    summary: "B12 zero-inbound authoring scope: 2 readily-available now, 4 queued?"
+    question: >-
+      Of the 6 candidate inbound cross-domain handoffs for SEM (2 with source
+      events already loaded, 4 needing source-domain coordination), which scope
+      should the next load cover?
+    options:
+      - "(a) Author 2 now (WORK-MGMT.okr_objective.committed and .scored), queue 4 with cross-domain coordination."
+      - "(b) Queue all 6 until source-domain Phase 0 / b1 audits land."
+      - "(c) Author 2 now AND queue a SEM follow-up audit for the 4 once source audits return."
+    why: "Workflow priority: 2 are mechanically clean (events exist); 4 need EPM / ERP-FIN / TALENT-MGMT audits to land first. Depends on B2-S5 intent."
+
+  - id: B2-S5
+    summary: "Integrated vs write-mostly SEM intent (decides whether B1A-S1 is acted on)."
+    question: >-
+      Should SEM model the integrated-publisher path (act on B1B-S1 / B2-S2 with
+      inbound handoffs from EPM / ERP-FIN / TALENT-MGMT) or the write-mostly path
+      (accept the zero-inbound asymmetry as workflow-correct, decline B1B-S1)?
+      Also folds in the earlier pattern-flag re-evaluation: should
+      strategic_initiatives.has_submit_lock flip to true for terminal states
+      completed / cancelled?
+    options:
+      - "(a) Integrated path; load the inbound handoffs and flip pattern flags."
+      - "(b) Write-mostly path; accept zero inbound as the SEM market shape and leave pattern flags."
+      - "(c) Mixed; specify which inbounds to load and which flags to flip."
+    why: "Product-shape choice anchored by the flagship vendor surface (Cascade / Quantive / OnStrategy lean write-mostly; Workboard / ClearPoint / ESM lean integrated)."
+
+  - id: B2-A4
+    summary: "Catalog UX backfill: draft 8 buyer-facing strings for SEM domain + 3 modules?"
+    question: >-
+      Rule #20 allows backfill of empty catalog_tagline and catalog_description on
+      domains and domain_modules via the draft / surface / approve / write loop.
+      Should the agent draft all 8 strings (1 tagline + 1 description for SEM
+      domain + each of 3 modules) and surface them for user approval, or defer to
+      a marketing pass, or backfill module strings only and leave domain-grain for
+      later?
+    options:
+      - "(a) Draft all 8 strings and surface in a follow-up message; await per-row approval before any write."
+      - "(b) Defer to a marketing pass."
+      - "(c) Draft module strings (6) only; leave domain-grain (2) for later."
+    why: "Marketing voice is the buyer-facing surface and ages on a different cycle than the analyst catalog; unapproved overwrite is forbidden by Rule #20 (and the values are empty here, not non-empty, so backfill is allowed once drafted)."
+
+b3:
+  - id: B3-KPIS
+    candidate: kpis
+    rationale: >-
+      Spider Impact, ClearPoint, i-nexus, Cascade all model KPIs as a first-class
+      master distinct from key_results: KPIs are persistent measures with thresholds
+      and red / amber / green status, attached to objectives but living independently
+      across planning cycles. okr_key_results conflates the two and KPIs disappear
+      when their parent OKR closes.
+    vendor_evidence:
+      - {vendor: Spider Impact, evidence: 1st_class}
+      - {vendor: ClearPoint Strategy, evidence: 1st_class}
+      - {vendor: i-nexus, evidence: 1st_class}
+      - {vendor: Cascade, evidence: 1st_class}
+    proposed_module: SEM-KPI-MGMT (new) or extend SEM-STRATEGY-DEFINITION
+
+  - id: B3-STRATEGIC-THEMES
+    candidate: strategic_themes
+    rationale: >-
+      Quantive, ClearPoint, OnStrategy, AchieveIt model strategic themes / pillars
+      as a layer between strategy_maps and individual objectives (Customer / Process
+      / Learning / Financial perspectives in balanced-scorecard; Hoshin pillars in
+      Hoshin Kanri). strategy_maps conflates visualisation with the theme entity.
+    vendor_evidence:
+      - {vendor: Quantive Results, evidence: 1st_class}
+      - {vendor: ClearPoint Strategy, evidence: 1st_class}
+      - {vendor: OnStrategy, evidence: secondary}
+      - {vendor: AchieveIt, evidence: secondary}
+    proposed_module: SEM-STRATEGY-DEFINITION
+
+  - id: B3-OKR-CHECKIN-SUMMARIES
+    candidate: okr_check_in_summaries
+    rationale: >-
+      WorkBoard, Profit.co, Quantive produce period-level (weekly / monthly)
+      check-in aggregates distinct from individual okr_check_ins records (which are
+      per-OKR, per-update). The aggregate is the rollup that feeds the operating
+      cadence.
+    vendor_evidence:
+      - {vendor: WorkBoard, evidence: 1st_class}
+      - {vendor: Profit.co, evidence: 1st_class}
+      - {vendor: Quantive Results, evidence: 1st_class}
+    proposed_module: SEM-OPERATING-RHYTHM (consumer; canonical master could be WORK-MGMT-GOALS-OKR)
+
+  - id: B3-STRATEGY-HEALTH-SIGNALS
+    candidate: strategy_health_signals
+    rationale: >-
+      Quantive Reflect, Cascade Insight, ClearPoint AI produce structured anomaly /
+      drift / risk records at the strategy-map level (separate from initiative
+      status). The business_logic column on domain 166 mentions "anomaly detection
+      on goal drift" but no master records it.
+    vendor_evidence:
+      - {vendor: Quantive Results, evidence: 1st_class}
+      - {vendor: Cascade, evidence: 1st_class}
+      - {vendor: ClearPoint Strategy, evidence: 1st_class}
+    proposed_module: SEM-OPERATING-RHYTHM or SEM-EXECUTION-TRACKING
+
+  - id: B3-BENEFITS-TRACKING-CONSUMER
+    candidate: benefits_tracking_records (as SEM consumer)
+    rationale: >-
+      EPM and SPM already model benefits tracking. SEM strategy-office tools
+      (Cascade, Workboard, ClearPoint) layer benefits against initiatives natively;
+      SEM today treats benefits as inline strategic_initiatives columns. Whether
+      SEM needs its own master or should consume SPM's benefits_tracking_records is
+      a judgment call (BENEFITS-TRACKING master is expected to live in SPM).
+    vendor_evidence:
+      - {vendor: Cascade, evidence: 1st_class}
+      - {vendor: WorkBoard, evidence: 1st_class}
+      - {vendor: ClearPoint Strategy, evidence: 1st_class}
+    proposed_module: SEM-EXECUTION-TRACKING (consumer of SPM master)
+
+  - id: B3-SEM-KPI-MGMT-MODULE
+    candidate: SEM-KPI-MGMT (new fourth module)
+    rationale: >-
+      If kpis and strategy_health_signals land, a fourth module separating
+      measurement / KPI-management from strategy authoring / execution / rhythm
+      makes shape sense. Spider Impact, ClearPoint, i-nexus are pure-play KPI
+      tracker vendors whose product is exactly this slice.
+    vendor_evidence:
+      - {vendor: Spider Impact, evidence: 1st_class}
+      - {vendor: ClearPoint Strategy, evidence: 1st_class}
+      - {vendor: i-nexus, evidence: 1st_class}
+    proposed_module: null
+
+  - id: B3-HOSHIN-PILLARS-CAPABILITY
+    candidate: Strategic Themes / Hoshin Pillars Capability
+    rationale: >-
+      No capability row for the pillar / theme layer alongside SEM-OBJECTIVES and
+      SEM-STRATEGY-MAPS.
+    vendor_evidence:
+      - {vendor: ClearPoint Strategy, evidence: 1st_class}
+      - {vendor: Quantive Results, evidence: 1st_class}
+      - {vendor: OnStrategy, evidence: secondary}
+    proposed_module: SEM-STRATEGY-DEFINITION

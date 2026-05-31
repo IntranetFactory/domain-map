@@ -1,0 +1,272 @@
+schema_version: 2
+domain: ONBOARDING
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-APQC-COVERAGE
+    summary: "10 ONBOARDING cross-domain handoffs need APQC tagging (6 INSERT + 4 REPLACE)"
+    finding: >
+      H1 hard-fail. Of 17 cross-domain handoffs only 11 carry handoff_processes
+      rows; 0 are record_status='approved'; 2 are agent_curated (handoffs 5 and
+      409, both -> PCF 224 "Manage employee onboarding" 10469). 6 handoffs are
+      untagged: 2 (ATS->ONB job_offer.accepted), 410 (ONB->HCM
+      doc_collection.completed), 411 (ONB->PAYROLL doc_collection.completed),
+      1074 (ATS->ONB job_offer.rescinded), 1231 (ONB->EMP-EXP stage.completed),
+      1233 (ONB->LMS cohort.activated). 4 handoffs carry wrong / coarse tags:
+      handoff 7 (ONB->PAYROLL journey.day_one_reached) mapped to PCF 1814
+      "Create customer journey maps" L5 19965 (CRM mapping, substring matcher
+      caught "journey"); handoff 3 (HCM->ONB employee.created) mapped to PCF 41
+      L2 20599 instead of L3/L4 receiving-side onboarding; handoff 394
+      (ATS->ONB candidate.hired) mapped to "Recruit/Source candidates" PCF 220
+      10440 (upstream sourcing, wrong side); handoff 8 (ONB->LMS
+      task.compliance_training_required) currently mapped to PCF 224 via
+      discovery_override but the proper L3/L4 is in the LMS training-delivery
+      branch (PCF 1039 "Develop, conduct, and manage employee training
+      programs"). Target PCFs to investigate at fix time: 224 / 10469 Manage
+      employee onboarding, 345 Provide workspace and facilities, 273 Manage IT
+      user identity and authorization, 1039 Develop conduct and manage
+      employee training programs, 236 Administer Payroll, 250 Conduct employee
+      engagement surveys, 242 / 10523 Manage employee inquiry process. Per H1
+      volume target (0.5N-0.8N for N=17), reaching ~12 agent_curated tags is
+      the goal.
+    action: >
+      Per-handoff PCF classification pass. INSERT 6 new agent_curated rows for
+      untagged handoffs; REPLACE 4 rows (h3, h7, h8 wrong/coarse, h394
+      wrong-side). Use composed (handoff_id, process_id) natural key for
+      idempotency. Lookup process_id at fix time via
+      /processes?source_framework=eq.apqc_pcf_cross_industry&process_name=ilike.*<term>*.
+      Each new row: proposal_source='agent_curated', record_status='new',
+      role='implements'.
+    affected_handoffs:
+      - {handoff_id: 2, direction: inbound, source_domain: ATS, target_domain: ONBOARDING, trigger_event: "job_offer.accepted", payload: "onboarding_journeys", null_field: handoff_processes}
+      - {handoff_id: 3, direction: inbound, source_domain: HCM, target_domain: ONBOARDING, trigger_event: "employee.created", payload: "onboarding_journeys", null_field: "coarse_pcf_L2"}
+      - {handoff_id: 7, direction: outbound, source_domain: ONBOARDING, target_domain: PAYROLL, trigger_event: "journey.day_one_reached", payload: "onboarding_journeys", null_field: "wrong_pcf"}
+      - {handoff_id: 8, direction: outbound, source_domain: ONBOARDING, target_domain: LMS, trigger_event: "task.compliance_training_required", payload: "onboarding_tasks", null_field: "coarse_pcf"}
+      - {handoff_id: 394, direction: inbound, source_domain: ATS, target_domain: ONBOARDING, trigger_event: "candidate.hired", payload: "candidates", null_field: "wrong_side_pcf"}
+      - {handoff_id: 410, direction: outbound, source_domain: ONBOARDING, target_domain: HCM, trigger_event: "onboarding_document_collection.completed", payload: "onboarding_document_collections", null_field: handoff_processes}
+      - {handoff_id: 411, direction: outbound, source_domain: ONBOARDING, target_domain: PAYROLL, trigger_event: "onboarding_document_collection.completed", payload: "onboarding_document_collections", null_field: handoff_processes}
+      - {handoff_id: 1074, direction: inbound, source_domain: ATS, target_domain: ONBOARDING, trigger_event: "job_offer.rescinded", payload: "onboarding_journeys", null_field: handoff_processes}
+      - {handoff_id: 1231, direction: outbound, source_domain: ONBOARDING, target_domain: EMP-EXP, trigger_event: "onboarding_stage.completed", payload: "onboarding_journeys", null_field: handoff_processes}
+      - {handoff_id: 1233, direction: outbound, source_domain: ONBOARDING, target_domain: LMS, trigger_event: "onboarding_cohort.activated", payload: "onboarding_cohorts", null_field: handoff_processes}
+    vendor_evidence: []
+
+b1b:
+  - id: B1B-WORKFLOW-GATE-PERMISSIONS
+    summary: "22 ONBOARDING lifecycle states need workflow-gate permissions; blocked by B2-S3 verb authoring"
+    finding: >
+      B12 + E6 hard-fail. 22 of 36 lifecycle states across all 8 ONBOARDING
+      masters carry requires_permission=true with empty permission_verb_override.
+      Zero workflow-gate permissions exist on modules 35 / 36 / 37; only the 9
+      baseline-read/manage/admin rows are loaded. Per Rule #12 each
+      requires_permission=true state warrants a <module_code>:<verb>_<entity>
+      permission realized on the state's domain_module_id. State distribution:
+      ONB-JOURNEY-MGMT (mod 35) realizes 12 states across onboarding_plans
+      (approved 87, active 88, retired 89), onboarding_journeys (completed 84,
+      cancelled 85), onboarding_stages (completed 92, skipped 93),
+      onboarding_tasks (completed 96, skipped 97, cancelled 98),
+      onboarding_cohorts (active 71, completed 72, cancelled 73);
+      ONB-DOCUMENT-INTAKE (mod 36) realizes 4 states on
+      onboarding_document_collections (submitted 76, approved 77, rejected 78,
+      archived 79); ONB-WELCOME-EXPERIENCE (mod 37) realizes 7 states across
+      buddy_assignments (active 67, completed 68, cancelled 69) and
+      welcome_communications (sent 101, delivered 102, failed 103, cancelled
+      104). Total 23 states across modules. Plus role_permission mappings:
+      Onboarding HR Partner (10012) -> approve / reject document_collection,
+      activate / retire plan, complete / cancel journey; Onboarding Coordinator
+      (10011) -> complete stage, complete task; Onboarding Program Manager
+      (10013) -> admin tier across all three modules; Hiring Manager (10007)
+      -> read on multiple modules. Authoring per-state verbs without B2-S3
+      guidance reproduces the ATS B12 stale-permission-name bug.
+    action: >
+      Once B2-S3 verb authoring lands, INSERT 22-23 workflow-gate permissions
+      with tier=workflow-gate, prefixed by domain_module_code:lower.
+      INSERT role_permissions rows mapping each gate to the appropriate role
+      bundle. Use a focused loader following the canonical Rule #12 pattern;
+      pre-flight check that permission_verb_override is non-empty on every
+      lifecycle state before deriving the permission_name.
+    affected_masters:
+      - {data_object_id: 15, name: "onboarding_plans", target_module_id: 35, workflow: "draft -> approved -> active -> retired"}
+      - {data_object_id: 16, name: "onboarding_journeys", target_module_id: 35, workflow: "scheduled -> pre_boarding -> day_one -> in_progress -> completed | cancelled"}
+      - {data_object_id: 17, name: "onboarding_stages", target_module_id: 35, workflow: "pending -> active -> completed | skipped"}
+      - {data_object_id: 18, name: "onboarding_tasks", target_module_id: 35, workflow: "pending -> in_progress -> completed | skipped | cancelled"}
+      - {data_object_id: 19, name: "buddy_assignments", target_module_id: 37, workflow: "assigned -> active -> completed | cancelled"}
+      - {data_object_id: 20, name: "onboarding_cohorts", target_module_id: 35, workflow: "planned -> active -> completed | cancelled"}
+      - {data_object_id: 21, name: "welcome_communications", target_module_id: 37, workflow: "draft -> scheduled -> sent -> delivered | failed | cancelled"}
+      - {data_object_id: 22, name: "onboarding_document_collections", target_module_id: 36, workflow: "pending -> in_progress -> submitted -> approved | rejected -> archived"}
+    affected_modules: [35, 36, 37]
+    blocked_by:
+      - {type: user_decision, ref: B2-S3}
+
+  - id: B1B-DOWNSTREAM-CONSUMER-DMDOS
+    summary: "Consumer DMDOs owed by ITSM / IGA / HRSD / IWMS / LMS / PAYROLL / EMP-EXP for inbound ONBOARDING handoffs"
+    finding: >
+      B10 report-only. ONBOARDING-outbound handoffs imply consumer DMDOs on
+      target domains that may not exist today. Pattern: handoffs 4, 408
+      (task.it_provisioning_required, task.workplace_setup_required ->
+      ITSM-CHANGE module 39, payload onboarding_tasks); handoffs 5, 407
+      (task.access_provisioning_required, task.it_provisioning_required ->
+      IGA-LIFECYCLE module 144, payload onboarding_tasks); handoff 6
+      (task.workplace_setup_required -> IWMS module 101, payload
+      onboarding_tasks); handoff 9 (task.escalation_required -> HRSD-CASE-MGMT
+      module 75, payload onboarding_tasks); handoffs 7, 411
+      (journey.day_one_reached, doc_collection.completed -> PAYROLL module 90);
+      handoff 8 (task.compliance_training_required -> LMS module 33, payload
+      onboarding_tasks); handoff 1233 (cohort.activated -> LMS module 33,
+      payload onboarding_cohorts); handoffs 409, 1231 (journey.day_one_reached,
+      stage.completed -> EMP-EXP module 64, payload onboarding_journeys);
+      handoff 410 (doc_collection.completed -> HCM module 54, payload
+      onboarding_document_collections). HCM b1 (2026-05-30) already covered the
+      HCM side (DMDO 678 onboarding_document_collections consumer on
+      HCM-CORE-WORKER). Each remaining target domain owes a consumer DMDO on
+      the relevant ONBOARDING master. Not ONBOARDING's fix.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: ITSM, milestone: "consumer DMDO on onboarding_tasks"}
+      - {type: domain_audit, blocking_domain: IGA, milestone: "consumer DMDO on onboarding_tasks"}
+      - {type: domain_audit, blocking_domain: HRSD, milestone: "consumer DMDO on onboarding_tasks"}
+      - {type: domain_audit, blocking_domain: IWMS, milestone: "consumer DMDO on onboarding_tasks"}
+      - {type: domain_audit, blocking_domain: LMS, milestone: "consumer DMDO on onboarding_tasks + onboarding_cohorts"}
+      - {type: domain_audit, blocking_domain: PAYROLL, milestone: "consumer DMDO on onboarding_journeys + onboarding_document_collections"}
+      - {type: domain_audit, blocking_domain: EMP-EXP, milestone: "consumer DMDO on onboarding_journeys"}
+    affected_handoffs:
+      - {handoff_id: 4, direction: outbound, source_domain: ONBOARDING, target_domain: ITSM, trigger_event: "task.it_provisioning_required", payload: "onboarding_tasks", null_field: "consumer_dmdo_target"}
+      - {handoff_id: 408, direction: outbound, source_domain: ONBOARDING, target_domain: ITSM, trigger_event: "task.workplace_setup_required", payload: "onboarding_tasks", null_field: "consumer_dmdo_target"}
+      - {handoff_id: 5, direction: outbound, source_domain: ONBOARDING, target_domain: IGA, trigger_event: "task.access_provisioning_required", payload: "onboarding_tasks", null_field: "consumer_dmdo_target"}
+      - {handoff_id: 407, direction: outbound, source_domain: ONBOARDING, target_domain: IGA, trigger_event: "task.it_provisioning_required", payload: "onboarding_tasks", null_field: "consumer_dmdo_target"}
+      - {handoff_id: 6, direction: outbound, source_domain: ONBOARDING, target_domain: IWMS, trigger_event: "task.workplace_setup_required", payload: "onboarding_tasks", null_field: "consumer_dmdo_target"}
+      - {handoff_id: 9, direction: outbound, source_domain: ONBOARDING, target_domain: HRSD, trigger_event: "task.escalation_required", payload: "onboarding_tasks", null_field: "consumer_dmdo_target"}
+      - {handoff_id: 7, direction: outbound, source_domain: ONBOARDING, target_domain: PAYROLL, trigger_event: "journey.day_one_reached", payload: "onboarding_journeys", null_field: "consumer_dmdo_target"}
+      - {handoff_id: 411, direction: outbound, source_domain: ONBOARDING, target_domain: PAYROLL, trigger_event: "onboarding_document_collection.completed", payload: "onboarding_document_collections", null_field: "consumer_dmdo_target"}
+      - {handoff_id: 8, direction: outbound, source_domain: ONBOARDING, target_domain: LMS, trigger_event: "task.compliance_training_required", payload: "onboarding_tasks", null_field: "consumer_dmdo_target"}
+      - {handoff_id: 1233, direction: outbound, source_domain: ONBOARDING, target_domain: LMS, trigger_event: "onboarding_cohort.activated", payload: "onboarding_cohorts", null_field: "consumer_dmdo_target"}
+      - {handoff_id: 409, direction: outbound, source_domain: ONBOARDING, target_domain: EMP-EXP, trigger_event: "journey.day_one_reached", payload: "onboarding_journeys", null_field: "consumer_dmdo_target"}
+      - {handoff_id: 1231, direction: outbound, source_domain: ONBOARDING, target_domain: EMP-EXP, trigger_event: "onboarding_stage.completed", payload: "onboarding_journeys", null_field: "consumer_dmdo_target"}
+
+b2:
+  - id: B2-NOTES-POLLUTION
+    summary: "Rule #15 notes pollution on 31 rows across domain_data_objects, skill_tools, handoffs; pre-existing carry-over"
+    question: >
+      Were these 31 populated notes user-approved at load time, or
+      auto-populated by prior loaders before Rule #15 was tightened? The 6
+      domain_data_objects rows (DDO 51, 92, 98, 879, 880, 881) describe
+      provenance and cross-domain context; the 16 skill_tools rows carry F7
+      channel-justification / context strings; the 9 handoffs rows include
+      "B10b resolved 2026-05-26..." on row 9, "cross | ATS->ONBOARDING | ..."
+      cluster-draft prefix on row 1074, and sentence-shaped commentary on
+      intra-domain rows 1227, 1228, 1229, 1230, 1231, 1232, 1233.
+    options:
+      - "(a) Confirm user-approved at load time; leave in place."
+      - "(b) Confirm auto-populated; PATCH all 31 rows notes to empty string and log a Rule #15 incident entry in references/skill-changelog.md."
+      - "(c) Per-row decision; agent surfaces each row's text for individual approval."
+    why: >
+      Rule #15 forbids populating any notes column without explicit per-row
+      user approval. Carry-over from 2026-05-30 audit B2-S1 and B2-S2; the
+      2026-05-31 Continuation deferred resolution back to the user. The
+      handoffs subset is newly enumerated in this audit.
+    affected_entities:
+      - "domain_data_objects: 51, 92, 98, 879, 880, 881"
+      - "skill_tools: 1876, 1877, 1878, 1879, 1884, 1885, 1887, 1890, 1891, 1892, 1895, 1896, 1899, 1900, 1901, plus one more from skill 204 channel justification"
+      - "handoffs: 9, 1074, 1227, 1228, 1229, 1230, 1231, 1232, 1233"
+
+  - id: B2-PATTERN-FLAGS
+    summary: "B4 positive re-evaluation: 3 pattern-flag flips proposed on onboarding_journeys and onboarding_tasks"
+    question: >
+      Approve each pattern-flag flip individually: (1)
+      onboarding_journeys.has_submit_lock=true (state machine append-only once
+      in_progress; cannot rewind to scheduled / pre_boarding), (2)
+      onboarding_journeys.has_single_approver=true (final completion gate
+      signed off by Onboarding HR Partner or Coordinator), (3)
+      onboarding_tasks.has_submit_lock=true (completed terminal, append-only).
+    options:
+      - "(a) Approve all 3 flips."
+      - "(b) Approve a subset; name which."
+      - "(c) Skip all 3 flips."
+    why: >
+      Pattern flags are workflow-shape judgments the user owns per Rule #12.
+      Auto-flipping without per-row review reproduces the silent-pollution
+      class of bug.
+    affected_entities:
+      - "data_objects: 16 onboarding_journeys (has_submit_lock, has_single_approver)"
+      - "data_objects: 18 onboarding_tasks (has_submit_lock)"
+
+  - id: B2-WORKFLOW-GATE-VERBS
+    summary: "Per-state verb authoring for 22 lifecycle states; unblocks B1B-WORKFLOW-GATE-PERMISSIONS"
+    question: >
+      For each of 22 lifecycle states carrying requires_permission=true,
+      author the permission_verb_override OR collapse the gating
+      (requires_permission=false). Candidate verb set by module: ONB-JOURNEY-MGMT
+      (12) approve_onboarding_plan, activate_onboarding_plan,
+      retire_onboarding_plan, complete_onboarding_journey,
+      cancel_onboarding_journey, complete_onboarding_stage,
+      skip_onboarding_stage, complete_onboarding_task, skip_onboarding_task,
+      cancel_onboarding_task, activate_onboarding_cohort,
+      complete_onboarding_cohort, cancel_onboarding_cohort; ONB-WELCOME-EXPERIENCE
+      (7) activate_buddy_assignment, complete_buddy_assignment,
+      cancel_buddy_assignment, mark_welcome_sent, mark_welcome_delivered,
+      mark_welcome_failed, cancel_welcome_communication; ONB-DOCUMENT-INTAKE
+      (4) submit_onboarding_document_collection,
+      approve_onboarding_document_collection,
+      reject_onboarding_document_collection,
+      archive_onboarding_document_collection. Re-counts to 23-24 once
+      mark_welcome_sent split is decided.
+    options:
+      - "(a) Materialize all 22-24 explicit verbs."
+      - "(b) Collapse subset to baseline-manage / baseline-admin; only approval gates (plan.approved, document_collection.approved / rejected, journey.completed) get explicit verbs (~6 verbs)."
+      - "(c) Per-state decision."
+    why: >
+      Authoring verbs from state_name alone reproduces the ATS B12
+      stale-permission-name bug (state_name="approved" -> permission
+      "submitted_interview_scorecard" diverging from the intended verb). The
+      audit must NOT invent verbs.
+    affected_modules: [35, 36, 37]
+
+  - id: B2-CATALOG-UX-FIELDS
+    summary: "M8 / Rule #20: catalog_tagline + catalog_description empty on all 3 ONBOARDING modules"
+    question: >
+      Modules 35 (ONB-JOURNEY-MGMT), 36 (ONB-DOCUMENT-INTAKE), 37
+      (ONB-WELCOME-EXPERIENCE) all carry empty catalog_tagline and empty
+      catalog_description. Per Rule #20 these must NOT be authored without
+      explicit user-approved wording. Should the user supply wording now, or
+      defer to a marketing copy pass?
+    options:
+      - "(a) User supplies one-line tagline + 1-3 paragraph description per module; agent loads after approval."
+      - "(b) Defer to marketing pass; M8 stays open across the catalog."
+    why: >
+      Rule #20 expressly forbids agent-authored marketing copy. The fields are
+      buyer-facing and outside the agent's voice.
+    affected_modules: [35, 36, 37]
+
+b3:
+  - id: B3-PRIOR
+    candidate: "Prior 2026-05-30 Bucket 3 candidates remain unvetted"
+    rationale: >
+      The 2026-05-30 audit surfaced 7 MISSING entity candidates and 3
+      compliance-regulation candidates from flagship-vendor knowledge that were
+      never resolved. They remain Phase 0 pending: onboarding_documents
+      (per-document records vs. current collection wrapper), provisioning_tasks
+      (sub-typed IT / HR / compliance tasks vs. current single onboarding_tasks
+      master), onboarding_check_ins / pulse_check_ins (30 / 60 / 90 cadence as
+      first-class records), manager_actions / manager_tasks (manager-side
+      checklist as separate master vs. rolled into onboarding_tasks),
+      background_check_records (post-offer / pre-Day-1 lifecycle), equipment_orders
+      / provisioning_orders (Day-1 readiness orders), refined buddy program
+      (program-level configuration entity beyond the current buddy_assignments).
+      Regulations: W-4 / W-2 statutory framework, OSHA new-hire safety training,
+      US state-specific new-hire reporting.
+    vendor_evidence:
+      - "Workday Journeys"
+      - "BambooHR Onboarding"
+      - "HiBob Onboarding"
+      - "Rippling Onboarding"
+      - "iCIMS Onboard"
+      - "Enboarder"
+      - "Sapling (Kallidus)"
+      - "Talmundo"
+      - "Click Boarding"
+      - "Appical"
+      - "Greenhouse Onboarding"
+      - "SmartRecruiters Onboarding"
+      - "WorkBright (FCRA / I-9 / E-Verify specialist)"
+      - "ServiceNow Employee Workflows (upmarket orchestration)"
+    proposed_module: "Mix of ONB-JOURNEY-MGMT, ONB-DOCUMENT-INTAKE, and a candidate ONB-COMPLIANCE-INTAKE if the high-sensitivity entities load"

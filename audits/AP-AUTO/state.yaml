@@ -1,0 +1,354 @@
+schema_version: 2
+domain: AP-AUTO
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S14
+    summary: PATCH em-dash in domains.id=29 business_logic with user-approved replacement wording (CLAUDE.md hygiene).
+    finding: >-
+      domains.id=29 business_logic contains one U+2014 em-dash in the substring
+      "and fraud rules <EMDASH> algorithm-heavy at the front of the workflow."
+      CLAUDE.md forbids em-dashes everywhere in this project including catalog
+      prose. The field itself is structured business_logic prose (not a notes
+      column), so a targeted PATCH is mechanical, but the replacement wording
+      requires user approval before any PATCH lands.
+    action: >-
+      Surface proposed replacement text "OCR/IDP for invoice capture, three-way
+      match against PO and receipt, duplicate detection, and fraud rules.
+      Algorithm-heavy at the front of the workflow." Wait for user approval or
+      rewrite, then PATCH /domains?id=eq.29 with the approved business_logic
+      value. Re-read after PATCH and confirm no U+2014 remaining.
+    extra_field: business_logic
+    extra_target_id: 29
+
+b1b:
+  - id: B1B-S1
+    summary: Author AP-AUTO domain_modules (M1 hard fail, dominant blocker).
+    finding: >-
+      Zero domain_modules.domain_id=29 rows and zero domain_module_host_domains.domain_id=29
+      rows. Rule #14 requires every domains row to have at least one module_kind=full
+      module. This blocks F2/F3/F5, M4/M6, E1, B9b, B10b on AP-AUTO's side, and B12's
+      permission materialization. Recommended baseline shape: 3 modules
+      AP-AUTO-INVOICE-CAPTURE (contributor on supplier_invoices, future master on
+      invoice_capture_jobs once Phase 0 vetted), AP-AUTO-MATCHING (masters
+      invoice_matches), AP-AUTO-PAYMENT-RUNS (masters payment_runs).
+    blocked_by:
+      - {type: user_decision, ref: B2-MOD-SHAPE}
+    affected_modules: []
+    affected_entities: [invoice_matches, payment_runs, supplier_invoices, suppliers, org_units]
+
+  - id: B1B-S2
+    summary: Load 5-7 AP-AUTO capabilities (A2 hard fail).
+    finding: >-
+      Only 1 capability (APPROVAL-WORKFLOW, id 311, cross-cutting) attached to
+      domain_id=29. A2 typical floor is 5-8 capabilities for an active SaaS market.
+      Vendor surface implies INVOICE-CAPTURE-OCR, THREE-WAY-MATCH,
+      INVOICE-APPROVAL-ROUTING, PAYMENT-EXECUTION, SUPPLIER-PAYMENT-PORTAL,
+      AP-FRAUD-DETECTION, EARLY-PAYMENT-DISCOUNT, INVOICE-EXCEPTION-RESOLUTION.
+    blocked_by:
+      - {type: user_decision, ref: B2-MOD-SHAPE}
+      - {type: prerequisite_entity, ref: B1B-S1}
+    vendor_evidence: [Tipalti, AvidXchange, Stampli, BILL AP, Esker AP, Basware AP Automation]
+
+  - id: B1B-S3
+    summary: Author lifecycle states for invoice_matches and payment_runs (B12 hard fail).
+    finding: >-
+      Zero rows in data_object_lifecycle_states for either AP-AUTO master.
+      invoice_matches state machine: queued, matched, quantity_variance, price_variance,
+      no_po, exception_pending, manually_overridden, released_for_payment, closed.
+      payment_runs state machine: draft, approved, executing, executed,
+      partially_failed, failed, reconciled, closed. Each state with
+      requires_permission=true becomes a permission once the realizing module exists.
+      No config-shape exemption applies.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_masters:
+      - {data_object_id: 204, name: invoice_matches, target_module_id: null, workflow: three_way_match}
+      - {data_object_id: 205, name: payment_runs, target_module_id: null, workflow: payment_execution}
+
+  - id: B1B-S4
+    summary: Author data_object_aliases for invoice_matches and payment_runs (B11 hard fail).
+    finding: >-
+      Zero data_object_aliases rows for either AP-AUTO master. Vendor terminology
+      diverges. invoice_matches surfaces as Match / Three-Way Match / PPM /
+      Reconciliation Outcome across Coupa and Tipalti. payment_runs surfaces as
+      Payment Batch / Bill Run / Pay Cycle / Payment Schedule / BACS Run across
+      vendors and UK terminology. Loader rule defers bulk alias INSERTs until
+      exact (alias_name, alias_type) tuples are pre-specified by user.
+    blocked_by:
+      - {type: user_decision, ref: B2-ALIAS-TUPLES}
+
+  - id: B1B-S8
+    summary: Resolve trigger_event id 12 bill_payment.completed disposition (B9 hygiene).
+    finding: >-
+      trigger_event id 12 bill_payment.completed is anchored on
+      data_object_id=205 payment_runs but the event noun does not match the
+      payload. Description says "Fired when a Payment Run is completed."
+      Zero handoffs.trigger_event_id=12. Options: clean DELETE,
+      RENAME to payment_run.completed, or investigate bill_payments as a candidate
+      master in its own right (would spawn a Bucket 3 vendor research item).
+    blocked_by:
+      - {type: user_decision, ref: B2-EVENT-12}
+    affected_events:
+      - {id: 12, event_name: bill_payment.completed, current_category: state_change, proposed_category: state_change}
+
+  - id: B1B-S9
+    summary: Retire legacy domain-scoped skill ap-auto-system, author per-module system skills (F1 transitional).
+    finding: >-
+      Legacy skill id 28 ap-auto-system with skill_type=system and
+      domain_module_id=null is the only system skill AP-AUTO has today. Once
+      per-module skills exist (one per AP-AUTO-INVOICE-CAPTURE, AP-AUTO-MATCHING,
+      AP-AUTO-PAYMENT-RUNS), this row must DELETE along with its 3 skill_tools
+      rows (query_invoice_matches id 301, query_payment_runs id 302, send_email
+      id 37). Per-module skills inherit the query tools naturally; send_email
+      disposition is Bucket 2 item 3.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: user_decision, ref: B2-SEND-EMAIL}
+
+  - id: B1B-S10
+    summary: Backfill source/target_domain_module_id on 30 handoffs (B10b hard fail, AP-AUTO side).
+    finding: >-
+      All 10 outbound handoffs from AP-AUTO (125, 126, 191, 192, 193, 542, 543,
+      544, 545, 598) carry NULL source_domain_module_id. All 20 inbound handoffs
+      to AP-AUTO carry NULL target_domain_module_id on the AP-AUTO side. Per
+      B10b, both halves are AP-AUTO's side to backfill once modules exist.
+      Source-module resolution per trigger_event payload: handoffs on
+      invoice_matches and supplier_invoices route to AP-AUTO-MATCHING; handoff
+      125 on payment_runs routes to AP-AUTO-PAYMENT-RUNS. Target-module
+      resolution per payload: supplier_invoices and extracted_records to
+      AP-AUTO-INVOICE-CAPTURE; bank_accounts, suppliers,
+      vendor_payment_authorizations to AP-AUTO-PAYMENT-RUNS; legal_contracts,
+      purchase_orders, goods_receipts, expense_lines, contingent_invoices,
+      supplier_qualifications, cam_charges, rent_payments, vehicle_work_orders,
+      tax_returns to AP-AUTO-MATCHING; expense_reports to AP-AUTO-PAYMENT-RUNS.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_handoffs:
+      - {handoff_id: 125, direction: outbound, source_domain: AP-AUTO, target_domain: ERP-FIN, trigger_event: payment_run.executed, payload: payment_runs, null_field: source_domain_module_id}
+      - {handoff_id: 126, direction: outbound, source_domain: AP-AUTO, target_domain: ERP-FIN, trigger_event: supplier_invoice.matched, payload: invoice_matches, null_field: source_domain_module_id}
+      - {handoff_id: 191, direction: outbound, source_domain: AP-AUTO, target_domain: ERP-FIN, trigger_event: supplier_invoice.duplicate_detected, payload: supplier_invoices, null_field: source_domain_module_id}
+      - {handoff_id: 192, direction: outbound, source_domain: AP-AUTO, target_domain: ERP-FIN, trigger_event: payment.exception, payload: payment_runs, null_field: source_domain_module_id}
+      - {handoff_id: 193, direction: outbound, source_domain: AP-AUTO, target_domain: CSM, trigger_event: payment.exception, payload: payment_runs, null_field: source_domain_module_id}
+      - {handoff_id: 542, direction: outbound, source_domain: AP-AUTO, target_domain: ERP-FIN, trigger_event: invoice_match.three_way_passed, payload: invoice_matches, null_field: source_domain_module_id}
+      - {handoff_id: 543, direction: outbound, source_domain: AP-AUTO, target_domain: SUP-LIFE, trigger_event: invoice_match.exception_raised, payload: invoice_matches, null_field: source_domain_module_id}
+      - {handoff_id: 544, direction: outbound, source_domain: AP-AUTO, target_domain: AUDIT, trigger_event: invoice_match.manual_override, payload: invoice_matches, null_field: source_domain_module_id}
+      - {handoff_id: 545, direction: outbound, source_domain: AP-AUTO, target_domain: S2P, trigger_event: invoice_match.exception_raised, payload: invoice_matches, null_field: source_domain_module_id}
+      - {handoff_id: 598, direction: outbound, source_domain: AP-AUTO, target_domain: SPEND-MGMT, trigger_event: invoice_match.three_way_passed, payload: invoice_matches, null_field: source_domain_module_id}
+      - {handoff_id: 128, direction: inbound, source_domain: SUP-LIFE, target_domain: AP-AUTO, trigger_event: supplier.bank_changed, payload: suppliers, null_field: target_domain_module_id}
+      - {handoff_id: 130, direction: inbound, source_domain: EXPENSE, target_domain: AP-AUTO, trigger_event: expense_report.approved, payload: expense_reports, null_field: target_domain_module_id}
+      - {handoff_id: 168, direction: inbound, source_domain: SPEND-MGMT, target_domain: AP-AUTO, trigger_event: supplier_invoice.received, payload: supplier_invoices, null_field: target_domain_module_id}
+      - {handoff_id: 302, direction: inbound, source_domain: RE-CRE, target_domain: AP-AUTO, trigger_event: cam_charge.reconciled, payload: cam_charges, null_field: target_domain_module_id}
+      - {handoff_id: 298, direction: inbound, source_domain: RE-PROP-MGMT, target_domain: AP-AUTO, trigger_event: rent_payment.received, payload: rent_payments, null_field: target_domain_module_id}
+      - {handoff_id: 316, direction: inbound, source_domain: FLEET-MAINT, target_domain: AP-AUTO, trigger_event: vehicle_work_order.completed, payload: vehicle_work_orders, null_field: target_domain_module_id}
+      - {handoff_id: 340, direction: inbound, source_domain: ACCT-PRACT-MGMT, target_domain: AP-AUTO, trigger_event: tax_return.filed, payload: supplier_invoices, null_field: target_domain_module_id}
+      - {handoff_id: 537, direction: inbound, source_domain: ERP-FIN, target_domain: AP-AUTO, trigger_event: bank_account.added, payload: bank_accounts, null_field: target_domain_module_id}
+      - {handoff_id: 547, direction: inbound, source_domain: SUP-LIFE, target_domain: AP-AUTO, trigger_event: supplier_qualification.approved, payload: supplier_qualifications, null_field: target_domain_module_id}
+      - {handoff_id: 553, direction: inbound, source_domain: EXPENSE, target_domain: AP-AUTO, trigger_event: expense_line.approved, payload: expense_lines, null_field: target_domain_module_id}
+      - {handoff_id: 556, direction: inbound, source_domain: SPEND-MGMT, target_domain: AP-AUTO, trigger_event: vendor_payment_authorization.approved, payload: vendor_payment_authorizations, null_field: target_domain_module_id}
+      - {handoff_id: 581, direction: inbound, source_domain: S2P, target_domain: AP-AUTO, trigger_event: purchase_order.issued, payload: purchase_orders, null_field: target_domain_module_id}
+      - {handoff_id: 583, direction: inbound, source_domain: S2P, target_domain: AP-AUTO, trigger_event: purchase_order.changed, payload: purchase_orders, null_field: target_domain_module_id}
+      - {handoff_id: 584, direction: inbound, source_domain: S2P, target_domain: AP-AUTO, trigger_event: goods_receipt.posted, payload: goods_receipts, null_field: target_domain_module_id}
+      - {handoff_id: 588, direction: inbound, source_domain: VMS, target_domain: AP-AUTO, trigger_event: contingent_invoice.received, payload: contingent_invoices, null_field: target_domain_module_id}
+      - {handoff_id: 596, direction: inbound, source_domain: SUP-LIFE, target_domain: AP-AUTO, trigger_event: supplier_qualification.expired, payload: supplier_qualifications, null_field: target_domain_module_id}
+      - {handoff_id: 597, direction: inbound, source_domain: ERP-FIN, target_domain: AP-AUTO, trigger_event: bank_account.statement_received, payload: bank_accounts, null_field: target_domain_module_id}
+      - {handoff_id: 733, direction: inbound, source_domain: IDP, target_domain: AP-AUTO, trigger_event: extracted_record.completed, payload: extracted_records, null_field: target_domain_module_id}
+      - {handoff_id: 734, direction: inbound, source_domain: IDP, target_domain: AP-AUTO, trigger_event: extracted_record.requires_review, payload: extracted_records, null_field: target_domain_module_id}
+      - {handoff_id: 216, direction: inbound, source_domain: CLM, target_domain: AP-AUTO, trigger_event: legal_contract.amended, payload: legal_contracts, null_field: target_domain_module_id}
+
+  - id: B1B-S11
+    summary: Author intra-domain handoffs across new AP-AUTO modules (B9b, gated on M1).
+    finding: >-
+      Three intra-domain handoffs become required once B1B-S1's modules ship.
+      AP-AUTO-INVOICE-CAPTURE to AP-AUTO-MATCHING on supplier_invoice.captured
+      (contributor module hands captured invoice to matching module for three-way
+      match). AP-AUTO-MATCHING to AP-AUTO-PAYMENT-RUNS on
+      invoice_match.three_way_passed (matched invoice queued into next payment
+      run). AP-AUTO-MATCHING to AP-AUTO-PAYMENT-RUNS on invoice_match.manual_override
+      (overridden invoice flows into payment-run inclusion). All
+      integration_pattern=lifecycle_progression, friction_level=low.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+
+  - id: B1B-S12
+    summary: First-write catalog_tagline + catalog_description per Rule #20 (A4 hard fail).
+    finding: >-
+      domains.id=29 catalog_tagline and catalog_description both empty string.
+      A4 hard fail; Rule #20 requires buyer-voice draft surfaced to user BEFORE
+      any write and forbids overwrite once non-empty. Prior proposed tagline:
+      "Capture invoices, match them to POs and receipts, and pay suppliers on
+      time without the spreadsheet shuffle." User supplies exact wording for
+      both fields.
+    blocked_by:
+      - {type: user_decision, ref: B2-CATALOG-COPY}
+
+  - id: B1B-B1
+    summary: BOUNDARY mirror cross-rels on AP-AUTO outbound to ERP-FIN (gated on M1).
+    finding: >-
+      Outbound handoffs 125, 126, 542, 191, 192 to ERP-FIN lack
+      data_object_relationships rows mirroring them on the AP-AUTO master side.
+      Example proposal: payment_runs posts_journal_to journal_entries.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: M1}
+
+  - id: B1B-B2
+    summary: BOUNDARY mirror cross-rel on AP-AUTO outbound to S2P (gated on M1).
+    finding: >-
+      Outbound handoff 545 (invoice_match.exception_raised to S2P) lacks the
+      mirror cross-rel invoice_matches escalates_to purchase_orders or similar.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: domain_audit, blocking_domain: S2P, milestone: M1}
+
+  - id: B1B-B3
+    summary: BOUNDARY mirror cross-rel on AP-AUTO outbound to SUP-LIFE (gated on M1).
+    finding: >-
+      Outbound handoff 543 (invoice_match.exception_raised to SUP-LIFE) lacks
+      the mirror cross-rel invoice_matches escalates_to suppliers or similar.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: domain_audit, blocking_domain: SUP-LIFE, milestone: M1}
+
+  - id: B1B-B4
+    summary: BOUNDARY mirror cross-rel on AP-AUTO outbound to SPEND-MGMT (gated on M1).
+    finding: >-
+      Outbound handoff 598 (invoice_match.three_way_passed to SPEND-MGMT) lacks
+      a mirror cross-rel.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: domain_audit, blocking_domain: SPEND-MGMT, milestone: M1}
+
+b2:
+  - id: B2-MOD-SHAPE
+    summary: Decide AP-AUTO module split shape (2 vs 3 vs 4 modules) before M1 load.
+    question: >-
+      Which AP-AUTO module split should the M1 fix load: (a) 2 modules
+      AP-AUTO-PROCESSING + AP-AUTO-PAYMENT-RUNS, (b) 3 modules
+      AP-AUTO-INVOICE-CAPTURE + AP-AUTO-MATCHING + AP-AUTO-PAYMENT-RUNS (audit
+      baseline, matches Tipalti / AvidXchange / Stampli), or (c) 4 modules
+      adding AP-AUTO-SUPPLIER-PORTAL if portal scope sits inside AP-AUTO rather
+      than SUP-LIFE?
+    options: [a_two_module, b_three_module_recommended, c_four_module_with_portal]
+    why: >-
+      M1 load shape determines: capability-to-module routing for B1B-S2, which
+      module masters each lifecycle state for B1B-S3, which modules retire skill
+      28 and which inherit which skill_tools for B1B-S9, source/target module
+      backfill for B1B-S10's 30 handoffs, intra-domain handoff endpoints for
+      B1B-S11, and placement of the Bucket 3 candidate payment_methods.
+
+  - id: B2-PATTERN-FLAGS
+    summary: Re-evaluate B4 pattern flags on both AP-AUTO masters.
+    question: >-
+      For invoice_matches and payment_runs, set has_submit_lock and
+      has_single_approver to true or false?
+    options:
+      - invoice_matches.has_submit_lock
+      - invoice_matches.has_single_approver
+      - payment_runs.has_submit_lock
+      - payment_runs.has_single_approver
+    why: >-
+      Defaults are all false. Audit hypothesis: invoice_matches.has_submit_lock=true
+      at released_for_payment; payment_runs.has_submit_lock=true at executed;
+      payment_runs.has_single_approver org-policy-dependent (SOX dual-control
+      typical). has_personal_content stays false on both (no PII payloads).
+
+  - id: B2-SEND-EMAIL
+    summary: Replace send_email skill_tool on legacy skill 28 with notify_person, or keep.
+    question: >-
+      Should the send_email skill_tools row (id 339, tool_id 37) on legacy skill
+      ap-auto-system (id 28) PATCH to notify_person (tool_id TBD), or stay as
+      send_email?
+    options: [patch_to_notify_person, keep_send_email_with_workflow_justification]
+    why: >-
+      Rule #17 / F7 default for generic notifications is notify_person.
+      send_email is a channel primitive. If SOX evidence trail requires written
+      email per regulator, keep with workflow-specific justification.
+
+  - id: B2-EVENT-12
+    summary: Trigger event 12 bill_payment.completed disposition.
+    question: >-
+      trigger_event id 12 bill_payment.completed (data_object_id=205
+      payment_runs, zero handoff references) DELETE, RENAME to
+      payment_run.completed, or investigate bill_payments as candidate master?
+    options: [delete_recommended, rename_to_payment_run_completed, investigate_bill_payments_as_master_routes_to_bucket3]
+
+  - id: B2-CATALOG-COPY
+    summary: User-supplied wording for domains.id=29 catalog_tagline + catalog_description (Rule #20).
+    question: >-
+      Exact buyer-voice wording for AP-AUTO catalog_tagline and
+      catalog_description. Both currently empty. Rule #20 forbids overwrite once
+      non-empty, so this is a first-write.
+    options:
+      - tagline_proposed: "Capture invoices, match them to POs and receipts, and pay suppliers on time without the spreadsheet shuffle."
+      - description_user_supplies
+    why: >-
+      A4 hard fail until populated; Rule #20 voice rule requires user-approved
+      wording.
+
+  - id: B2-ALIAS-TUPLES
+    summary: Approve exact data_object_aliases (alias_name, alias_type) tuples for AP-AUTO masters before bulk INSERT.
+    question: >-
+      Approve alias tuples for invoice_matches and payment_runs. Candidates
+      surfaced previously: invoice_matches -> {Match, Three-Way Match, PPM,
+      Reconciliation Outcome}; payment_runs -> {Payment Batch, Bill Run, Pay
+      Cycle, Payment Schedule, BACS Run}. User specifies exact alias_type per
+      tuple.
+    options: [approve_all_as_listed, edit_per_tuple, defer_to_phase0_alias_research]
+
+b3:
+  - id: B3-INVOICE-CAPTURE-JOBS
+    candidate: invoice_capture_jobs
+    rationale: >-
+      OCR/IDP capture job record (one row per ingestion attempt) carrying OCR
+      confidence, mailbox-source, IDP-extraction-source. AP-AUTO currently
+      carries only supplier_invoices (S2P-mastered) and invoice_matches; the
+      capture job itself is missing. Proposed module: AP-AUTO-INVOICE-CAPTURE.
+    vendor_evidence:
+      - {vendor: Tipalti, evidence: 1st_class}
+      - {vendor: Stampli, evidence: 1st_class}
+      - {vendor: Esker, evidence: 1st_class}
+      - {vendor: Basware, evidence: 1st_class}
+    proposed_module: AP-AUTO-INVOICE-CAPTURE
+
+  - id: B3-PAYMENT-METHODS
+    candidate: payment_methods
+    rationale: >-
+      Per-supplier payment-method preference (ACH / wire / check / SEPA /
+      virtual card / cross-border FX). Tipalti's core differentiator. Placement
+      depends on Bucket 2 item 1 (B2-MOD-SHAPE): if 4-module split adds
+      AP-AUTO-SUPPLIER-PORTAL, payment_methods likely lives there; otherwise
+      AP-AUTO-PAYMENT-RUNS. May alternatively sit on suppliers (SUP-LIFE-mastered).
+    vendor_evidence:
+      - {vendor: Tipalti, evidence: 1st_class}
+      - {vendor: AvidXchange, evidence: 1st_class}
+      - {vendor: BILL AP, evidence: 1st_class}
+    proposed_module: AP-AUTO-PAYMENT-RUNS
+
+  - id: B3-PAYMENT-RUN-LINES
+    candidate: payment_run_lines
+    rationale: >-
+      Per-invoice line on a payment run with line-level status (queued,
+      executed, failed, returned, voided). Required for payment.exception event
+      semantics to make sense at line level rather than whole-run level. All
+      flagship vendors model this.
+    vendor_evidence:
+      - {vendor: Tipalti, evidence: 1st_class}
+      - {vendor: AvidXchange, evidence: 1st_class}
+    proposed_module: AP-AUTO-PAYMENT-RUNS
+
+  - id: B3-UNNAMED-POOL
+    candidate: unnamed_pool
+    rationale: >-
+      Speculative candidates flagged by the vendor matrix but not promoted to
+      named Bucket 3 entries pending formal Phase 0 vetting:
+      early_payment_discount_offers, dynamic_discounting_terms, fraud_flags,
+      kyc_vendor_checks (overlaps SUP-LIFE), tax_withholding_records (overlaps
+      tax provision domain, see TRM queue), virtual_card_authorizations.
+    vendor_evidence:
+      - {vendor: Tipalti, evidence: secondary}
+      - {vendor: AvidXchange, evidence: secondary}
+      - {vendor: BILL AP, evidence: secondary}
+    proposed_module: null

@@ -1,0 +1,260 @@
+schema_version: 2
+domain: SAM
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S14
+    summary: PATCH domains.id=52.description to American English (replace `normalisation`, `defence`, `licences`).
+    finding: |
+      `domains.description` on SAM (id 52) reads `Discovery, normalisation, entitlement reconciliation, and audit defence for software licences.` CLAUDE.md mandates American English in every artifact, including catalog text fields. Three British spellings present: `normalisation`, `defence`, `licences`.
+    action: |
+      1 PATCH via `semantius call crud postgrestRequest` setting `description` on `/domains?id=eq.52` to `Discovery, normalization, entitlement reconciliation, and audit defense for software licenses.` Verify the column after PATCH; surface the UI link `https://tests.semantius.app/domain_map/domains` for spot check.
+    affected_entities:
+      - domains.id=52
+    extra_pattern: mechanical_patch
+    extra_blocking: none
+
+b1b:
+  - id: B1B-S1
+    summary: Phase A re-author of SAM module shape (4 vs 6 modules) and Bucket-3 38-master load.
+    finding: |
+      M1 hard-fail persists: 0 `domain_modules` rows for SAM. Per Rule #14 every `domains` row MUST have >=1 `module_kind='full'` row, and with 5 capabilities SAM needs >=2 modules. Two competing shapes are on the table: the Phase-1 4-module shape (SAM-CATALOG, SAM-ENTITLEMENT-MGMT, SAM-DISCOVERY-INVENTORY, SAM-AUDIT-DEFENSE) and the Pass 2 6-module shape (SAM-CATALOG, SAM-DISCOVERY, SAM-ENTITLEMENT, SAM-METERING, SAM-AUDIT, SAM-RENEWAL) backed by the vendor surface. 38 new masters are queued behind whichever shape lands. Blocks B1-S5 (lifecycle states need `domain_module_id`), B1-S9 (B10b backfill needs module FKs), B1-S11 (intra-domain handoffs need module endpoints), F2-F5 (one system skill per module), E1-E6 (role bundles per module).
+    blocked_by:
+      - {type: user_decision, ref: B2-S1, reason: "4 vs 6 module shape pending user choice"}
+      - {type: depends_on, ref: B3-S1, reason: "38 new masters from market-surface JSON queued"}
+    affected_modules: []
+    affected_masters:
+      - {data_object_id: 57, name: software_titles, target_module_id: null, workflow: catalog_substrate}
+      - {data_object_id: 58, name: software_licenses, target_module_id: null, workflow: entitlement_lifecycle}
+      - {data_object_id: 59, name: software_installations, target_module_id: null, workflow: discovery_inventory}
+      - {data_object_id: 60, name: license_audits, target_module_id: null, workflow: audit_defense}
+    extra_shape_candidates: ["4_module_phase1", "6_module_pass2"]
+  - id: B1B-S3
+    summary: Re-point + dedup 3 `software_installations` trigger_events to source-domain masters.
+    finding: |
+      trigger_events 121 (`software_endpoint.discovered`), 122 (`software_install.detected`), 123 (`software.discovered`) all carry `data_object_id=59` (SAM `software_installations`) but the publishers are different domains: 121 sources from RMM (handoff 145), 122 is SAM's outbound to VULN-MGMT (handoff 36), 123 sources from DISCOVERY (handoff 33). The publisher-attribution rule says the trigger event's `data_object_id` should point at the publisher's master, not SAM's. Re-point 121 to an RMM-mastered data_object (`discovered_devices` or `rmm_agents`); re-point 123 to DISCOVERY-mastered `discovery_scans` (81); keep 122 on SAM 59 (SAM publishes). PATCH handoffs 33 and 145 to reference the new trigger_event_ids.
+    blocked_by:
+      - {type: user_decision, ref: B2-S3-source, reason: "source-domain master targets and event renames require judgment"}
+    affected_events:
+      - {id: 121, event_name: software_endpoint.discovered, current_category: signal, proposed_category: signal}
+      - {id: 122, event_name: software_install.detected, current_category: signal, proposed_category: signal}
+      - {id: 123, event_name: software.discovered, current_category: signal, proposed_category: signal}
+    affected_handoffs:
+      - {handoff_id: 33, direction: inbound, source_domain: DISCOVERY, target_domain: SAM, trigger_event: software.discovered, payload: software_installations, null_field: target_domain_module_id}
+      - {handoff_id: 145, direction: inbound, source_domain: RMM, target_domain: SAM, trigger_event: software_endpoint.discovered, payload: software_installations, null_field: target_domain_module_id}
+    extra_dedup_target: software_installations.discovered
+  - id: B1B-S4
+    summary: Author 10 missing lifecycle trigger_events on license_audits + software_licenses.
+    finding: |
+      Once lifecycle states land per B1-S5, 10 trigger_events are missing: `license_audit.opened`, `license_audit.evidence_gathered`, `license_audit.submitted`, `license_audit.negotiating`, `license_audit.resolved`, `license_audit.closed` (6 on data_object_id 60); `software_license.activated`, `software_license.renewal_due`, `software_license.renewed`, `software_license.retired` (4 on data_object_id 58). Each carries `event_category` of `lifecycle` or `state_change`. Several become candidate publishers for cross-domain handoffs (e.g. `license_audit.submitted -> S2P` or Legal; `software_license.renewal_due -> S2P`).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S5, reason: "lifecycle states land first; the events describe transitions on those states"}
+    affected_events: []
+    extra_count: 10
+  - id: B1B-S5
+    summary: Author lifecycle states on 2-4 SAM masters (B12 / Rule #12).
+    finding: |
+      All 4 SAM masters have 0 rows in `data_object_lifecycle_states`. Per Rule #12 every `master + required` data_object needs lifecycle rows OR a config-shape exemption surfaced (Rule #15 forbids the prior auto-write-to-notes carve-out). Two confirmed state machines: `license_audits` (`requested -> evidence_gathering -> submitted [requires_permission, verb=submit_audit] -> negotiating -> resolved`) and `software_licenses` (`pending_purchase -> active -> expiring -> renewing -> renewed | expired | retired`). Two pending: `software_titles` and `software_installations` are candidates for config-shape exemption, gated on B2-S3.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1, reason: "each lifecycle row carries domain_module_id; depends on B1-S1 modules"}
+      - {type: user_decision, ref: B2-S2, reason: "license_audits pattern flags (submit_lock, single_approver) inform state semantics"}
+      - {type: user_decision, ref: B2-S3, reason: "software_titles / software_installations exemption decision"}
+    affected_masters:
+      - {data_object_id: 60, name: license_audits, target_module_id: null, workflow: "requested -> evidence_gathering -> submitted -> negotiating -> resolved"}
+      - {data_object_id: 58, name: software_licenses, target_module_id: null, workflow: "pending_purchase -> active -> expiring -> renewing -> renewed | expired | retired"}
+      - {data_object_id: 57, name: software_titles, target_module_id: null, workflow: "config_shape_candidate"}
+      - {data_object_id: 59, name: software_installations, target_module_id: null, workflow: "config_shape_candidate"}
+  - id: B1B-S6
+    summary: Author 8-12 `data_object_aliases` rows across the 4 SAM masters (B11).
+    finding: |
+      Zero aliases on any of the 4 SAM masters. Industry-standard synonyms exist and qualify as Rule #18 commerce-layer allowed: `software_titles` ("Software Product Catalog Entry", "Publisher Catalog Item", "Normalized Software Product"); `software_licenses` ("Software Entitlement", "License Certificate", "ELP Record"); `software_installations` ("Software Deployment", "Install Record", "DCR Record"); `license_audits` ("Publisher Audit Case", "Software Audit Engagement", "DCR Submission"). The bulk-insert blocker is that exact `(data_object_id, alias_name)` tuples need user-approved choices since some synonyms ("Software Entitlement") collide with proposed Phase-3 masters.
+    blocked_by:
+      - {type: user_decision, ref: B2-S6-aliases, reason: "exact alias tuples need approval; some collide with proposed Phase-3 entities"}
+    affected_masters:
+      - {data_object_id: 57, name: software_titles, target_module_id: null, workflow: aliases_pending}
+      - {data_object_id: 58, name: software_licenses, target_module_id: null, workflow: aliases_pending}
+      - {data_object_id: 59, name: software_installations, target_module_id: null, workflow: aliases_pending}
+      - {data_object_id: 60, name: license_audits, target_module_id: null, workflow: aliases_pending}
+    extra_count_range: "8_to_12"
+  - id: B1B-S7
+    summary: Author 6 intra-SAM `data_object_relationships` edges (B6).
+    finding: |
+      0 intra-SAM relationship rows among the 4 masters. Expected graph: (a) `software_licenses entitles software_titles` (many_to_one, owner_side source, required); (b) `software_installations is_of software_titles` (many_to_one, owner_side source, required); (c) `software_installations consumes software_licenses` (many_to_one, owner_side source, optional); (d) `license_audits audits software_titles` (many_to_many); (e) `license_audits scrutinizes software_licenses` (many_to_many); (f) `license_audits examines software_installations` (many_to_many). The blocker is judgment on cardinality choices, junction tables for the many_to_many edges, and `is_required` defaults.
+    blocked_by:
+      - {type: user_decision, ref: B2-S7-relationships, reason: "6 edges need cardinality + junction + is_required judgment"}
+    affected_masters:
+      - {data_object_id: 57, name: software_titles, target_module_id: null, workflow: relationship_target}
+      - {data_object_id: 58, name: software_licenses, target_module_id: null, workflow: relationship_target}
+      - {data_object_id: 59, name: software_installations, target_module_id: null, workflow: relationship_target}
+      - {data_object_id: 60, name: license_audits, target_module_id: null, workflow: relationship_source}
+    extra_count: 6
+  - id: B1B-S9
+    summary: B10b backfill - PATCH `source_domain_module_id` on 6 outbound + 5 inbound NULL on SAM side.
+    finding: |
+      All 6 outbound handoffs carry NULL `source_domain_module_id` (35, 36, 37, 636, 637, 638); 5 of 7 inbound carry NULL `target_domain_module_id` (33, 145, 623, 662, 798); inbound 235 + 238 have `source_domain_module_id=103` from APM side but NULL `target_domain_module_id` on SAM side. SAM owns the PATCH on all of these once B1-S1 modules land. Mappings per the audit table: outbound (35 -> SAM-ENTITLEMENT-MGMT, 36 -> SAM-DISCOVERY-INVENTORY, 37 -> SAM-AUDIT-DEFENSE, 636 -> SAM-ENTITLEMENT-MGMT, 637 -> SAM-ENTITLEMENT-MGMT, 638 -> SAM-CATALOG); inbound target (33/145/623/662/798 -> SAM-DISCOVERY-INVENTORY; 235/238 -> SAM-CATALOG or SAM-DISCOVERY-INVENTORY).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1, reason: "no SAM modules exist to PATCH FK to"}
+    affected_handoffs:
+      - {handoff_id: 35, direction: outbound, source_domain: SAM, target_domain: ITSM, trigger_event: license.expiry_warning, payload: service_requests, null_field: source_domain_module_id}
+      - {handoff_id: 36, direction: outbound, source_domain: SAM, target_domain: VULN-MGMT, trigger_event: software_install.detected, payload: software_installations, null_field: source_domain_module_id}
+      - {handoff_id: 37, direction: outbound, source_domain: SAM, target_domain: ITSM, trigger_event: license_audit.required, payload: service_requests, null_field: source_domain_module_id}
+      - {handoff_id: 636, direction: outbound, source_domain: SAM, target_domain: S2P, trigger_event: software_license.over_consumed, payload: software_licenses, null_field: source_domain_module_id}
+      - {handoff_id: 637, direction: outbound, source_domain: SAM, target_domain: FINOPS, trigger_event: software_license.under_consumed, payload: software_licenses, null_field: source_domain_module_id}
+      - {handoff_id: 638, direction: outbound, source_domain: SAM, target_domain: GRC, trigger_event: software_title.eol_reached, payload: software_titles, null_field: source_domain_module_id}
+      - {handoff_id: 33, direction: inbound, source_domain: DISCOVERY, target_domain: SAM, trigger_event: software.discovered, payload: software_installations, null_field: target_domain_module_id}
+      - {handoff_id: 145, direction: inbound, source_domain: RMM, target_domain: SAM, trigger_event: software_endpoint.discovered, payload: software_installations, null_field: target_domain_module_id}
+      - {handoff_id: 235, direction: inbound, source_domain: APM, target_domain: SAM, trigger_event: application.onboarded, payload: enterprise_applications, null_field: target_domain_module_id}
+      - {handoff_id: 238, direction: inbound, source_domain: APM, target_domain: SAM, trigger_event: application.lifecycle_state_changed, payload: enterprise_applications, null_field: target_domain_module_id}
+      - {handoff_id: 623, direction: inbound, source_domain: DISCOVERY, target_domain: SAM, trigger_event: discovery_scan.completed, payload: discovery_scans, null_field: target_domain_module_id}
+      - {handoff_id: 662, direction: inbound, source_domain: UEM, target_domain: SAM, trigger_event: device_app_assignment.deployed, payload: device_app_assignments, null_field: target_domain_module_id}
+      - {handoff_id: 798, direction: inbound, source_domain: APP-PAAS, target_domain: SAM, trigger_event: paas_addon.provisioned, payload: paas_addons, null_field: target_domain_module_id}
+  - id: B1B-S11
+    summary: Author 4 intra-domain handoffs across SAM modules (B9b).
+    finding: |
+      0 intra-domain handoffs in SAM. Once B1-S1 lands a 4-or-6 module shape, intra-domain handoff candidates emerge: (a) `SAM-CATALOG -> SAM-ENTITLEMENT[-MGMT]` on `software_title.added_to_catalog`; (b) `SAM-DISCOVERY[-INVENTORY] -> SAM-ENTITLEMENT[-MGMT]` on `software_install.detected`; (c) `SAM-ENTITLEMENT[-MGMT] -> SAM-AUDIT[-DEFENSE]` on `license_audit.required`; (d) `SAM-CATALOG -> SAM-AUDIT[-DEFENSE]` on `software_title.eol_reached`. All `integration_pattern='lifecycle_progression'`, `friction_level='low'`.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1, reason: "module endpoints need to exist"}
+      - {type: prerequisite_entity, ref: B1B-S4, reason: "lifecycle events need to be authored"}
+    affected_handoffs:
+      - {count: 4, scope_note: "4 intra-SAM handoffs across the post-B1-S1 module shape", enumeration_status: source_count_only}
+  - id: B1B-S12
+    summary: Author 4-5 DMDO consumer rows for inbound payloads.
+    finding: |
+      SAM has 5 inbound handoffs whose payloads are not declared as `consumer` in `domain_data_objects`: `enterprise_applications` (267), `discovery_scans` (81), `device_app_assignments` (560), `paas_addons` (467), `legal_contracts` (66). Per Rule #11 and B5/B8 spirit every consumed payload needs an explicit DMDO row. Necessity defaults: `enterprise_applications`, `discovery_scans`, `device_app_assignments` -> required; `paas_addons` -> gated on B2-S6 scope decision; `legal_contracts` -> optional.
+    blocked_by:
+      - {type: user_decision, ref: B2-S6, reason: "paas_addons necessity blocked on PaaS-addon-licensing scope decision"}
+    affected_masters:
+      - {data_object_id: 267, name: enterprise_applications, target_module_id: null, workflow: consumer_required}
+      - {data_object_id: 81, name: discovery_scans, target_module_id: null, workflow: consumer_required}
+      - {data_object_id: 560, name: device_app_assignments, target_module_id: null, workflow: consumer_required}
+      - {data_object_id: 467, name: paas_addons, target_module_id: null, workflow: consumer_optional_gated}
+      - {data_object_id: 66, name: legal_contracts, target_module_id: null, workflow: consumer_optional}
+  - id: B1B-S13
+    summary: Author CLM -> SAM `contract.activated` inbound handoff.
+    finding: |
+      The relationship row id 491 (`legal_contracts activates software_licenses`) implies an event-driven flow but no `handoffs` row captures it. Without it, the deployer cannot wire contract lifecycle to license activation. Author 1 inbound handoff: source CLM, target SAM, payload `software_licenses`, trigger_event `contract.activated`, `integration_pattern='event_stream'`, `friction_level='medium'`. Blocked on CLM modularization for the source-module FK.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: CLM, milestone: M1_modules_landed}
+    affected_handoffs:
+      - {count: 1, scope_note: "CLM -> SAM contract.activated", enumeration_status: source_count_only}
+  - id: B1B-H1
+    summary: APQC tag the remaining 5 untagged cross-domain handoffs + evaluate 1 REPLACE.
+    finding: |
+      8 of 13 SAM cross-domain handoffs carry `handoff_processes` rows; 5 untagged remain (36 SAM -> VULN-MGMT software_install.detected, 37 SAM -> ITSM license_audit.required, 145 RMM -> SAM software_endpoint.discovered, 638 SAM -> GRC software_title.eol_reached, 662 UEM -> SAM device_app_assignment.deployed). Volume target for N=13 is 7-10 agent_curated total; current is 4, so author 3-6 more. 1 REPLACE candidate: handoff 35 (license.expiry_warning -> service_requests) currently tagged to PCF 1290 (Plan and budget IT license usage volumes); the activity match is borderline since the handoff is service-request creation, not budget planning. Lookup PCF candidates via `/processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry` per handoff and INSERT into `handoff_processes` with `proposal_source='agent_curated'`.
+    blocked_by:
+      - {type: depends_on, ref: B1B-S3, reason: "handoff 145 PCF target depends on B1-S3 dedup outcome"}
+    affected_handoffs:
+      - {handoff_id: 36, direction: outbound, source_domain: SAM, target_domain: VULN-MGMT, trigger_event: software_install.detected, payload: software_installations, null_field: handoff_processes}
+      - {handoff_id: 37, direction: outbound, source_domain: SAM, target_domain: ITSM, trigger_event: license_audit.required, payload: service_requests, null_field: handoff_processes}
+      - {handoff_id: 145, direction: inbound, source_domain: RMM, target_domain: SAM, trigger_event: software_endpoint.discovered, payload: software_installations, null_field: handoff_processes}
+      - {handoff_id: 638, direction: outbound, source_domain: SAM, target_domain: GRC, trigger_event: software_title.eol_reached, payload: software_titles, null_field: handoff_processes}
+      - {handoff_id: 662, direction: inbound, source_domain: UEM, target_domain: SAM, trigger_event: device_app_assignment.deployed, payload: device_app_assignments, null_field: handoff_processes}
+    extra_replace_candidate: "handoff 35 currently pinned to PCF 1290 (Plan and budget IT license usage volumes); borderline match"
+    extra_volume_target: "7_to_10_agent_curated"
+    extra_volume_current: 4
+
+b2:
+  - id: B2-S1
+    summary: Confirm 4-module vs 6-module shape for SAM Phase A re-author.
+    question: |
+      Phase-1 hypothesis proposed 4 modules (SAM-CATALOG, SAM-ENTITLEMENT-MGMT, SAM-DISCOVERY-INVENTORY, SAM-AUDIT-DEFENSE). Pass 2 vendor surface argues for 6 modules (SAM-CATALOG, SAM-DISCOVERY, SAM-ENTITLEMENT, SAM-METERING, SAM-AUDIT, SAM-RENEWAL). Which target?
+    options:
+      - confirm_6_module_pass2_shape
+      - confirm_4_module_phase1_shape
+      - hybrid_5_module
+      - push_back_per_module_boundary
+    why: |
+      Vendor surface (Flexera, Snow, USU, ServiceNow SAM Pro, Anglepoint, Certero, Eracent) treats catalog substrate, metering substrate, and renewal as distinct workflows. The 4-module shape collapses metering into entitlement-mgmt and renewal under entitlement. Splitting is grounded; collapsing is the simpler load. User judgment.
+  - id: B2-S2
+    summary: license_audits pattern flags has_submit_lock and has_single_approver -> true?
+    question: |
+      `license_audits` (id 60) currently has all 3 pattern flags `false`. Domain knowledge says: once a publisher audit response is submitted, the snapshot is locked (`has_submit_lock=true`); the response is approved by an IT Asset Management lead / CIO before submission (`has_single_approver=true`). Flip both to true?
+    options:
+      - flip_both_to_true
+      - flip_submit_lock_only
+      - flip_single_approver_only
+      - keep_false
+    why: |
+      Pattern flags inform the platform-side validation rules and the lifecycle-state-to-permission derivation. Wrong flag values silently mis-shape the deployer's permission set.
+  - id: B2-S3
+    summary: software_titles and software_installations lifecycle - config-shape exemption or full state machine?
+    question: |
+      `software_titles` could be config-shape (catalog entry edited occasionally) or have lifecycle (`active`, `eol`, `retired`). `software_installations` could be ephemeral discovery rows or have (`detected`, `verified`, `licensed`, `unlicensed`, `removed`). Per Rule #12 + Rule #15, exemption must be surfaced.
+    options:
+      - both_config_shape_exempt
+      - both_full_lifecycle
+      - titles_full_installations_config
+      - titles_config_installations_full
+    why: |
+      Each path shapes a different downstream module: a config-shape `software_titles` simplifies SAM-CATALOG to a maintained reference table; a full-lifecycle one makes EOL state a first-class workflow event with publishers + audit handoffs.
+  - id: B2-S4
+    summary: Vendor record refresh - Snow Software acquisition by Insight Enterprises.
+    question: |
+      Snow Software was acquired by Insight Enterprises in 2024. The `vendors` row reads `vendor_name=Snow Software`; predecessor mention on `solutions.notes` requires explicit user-approved wording per Rule #15 (the carve-out is rescinded).
+    options:
+      - leave_as_is
+      - update_vendor_record
+      - approve_predecessor_note_wording_on_solution
+    why: |
+      Out of scope for routine audit. A5 is opt-in. Surfaced for awareness only.
+  - id: B2-S5
+    summary: Missing handoff candidate - SAM -> APM on software_title.eol_reached.
+    question: |
+      SAM publishes `software_title.eol_reached` to GRC (handoff 638) but not to APM. APM's `enterprise_applications` consume `software_titles` via existing relationships (ids 222, 233). An EOL title should propagate to APM so dependent applications get flagged for replacement.
+    options:
+      - add_apm_subscriber
+      - keep_grc_only
+      - defer_to_grc_publishes_downstream
+    why: |
+      The handoff is straightforward to load; the call is whether GRC is the only legitimate subscriber or whether APM is also a subscriber. Recommendation: add APM.
+  - id: B2-S6
+    summary: PaaS addon licensing scope - in or out of SAM.
+    question: |
+      Handoff 798 brings `paas_addon.provisioned` from APP-PAAS into SAM. Some PaaS addons (DB, queue, cache) are billable separately and have entitlement structures; others are bundled. Whether SAM models these as `software_installations` or a new `paas_addon_installations` master is a scope decision.
+    options:
+      - stay_narrow_informational_only
+      - extend_sam_to_master_paas_licensing
+      - align_with_finops_consumption_master
+    why: |
+      Choice determines whether B1-S12's `paas_addons` DMDO row is `optional` (recommended) or `required` plus a new master entity.
+  - id: B2-S7
+    summary: Missing handoff candidate - S2P -> SAM on purchase_order.approved.
+    question: |
+      When S2P approves a software-license PO, the new `software_licenses` row should auto-create in SAM. Today's shape requires manual entry or a batch sync. Add this handoff to close the purchase-to-entitlement loop?
+    options:
+      - add_handoff_after_s2p_audit
+      - defer_until_s2p_audited
+      - skip
+    why: |
+      Plausible to add. Source side may need authoring of `purchase_order.approved` in S2P. Schedule S2P audit independently.
+  - id: B2-S8
+    summary: Missing handoff candidate - GRC -> SAM on vulnerability.published.
+    question: |
+      When GRC publishes a vulnerability finding tied to a software title, SAM could trigger a deployment scope check. Volume-low; most CVE-to-title mapping happens in VULN-MGMT not GRC. May be redundant with SAM -> VULN-MGMT handoff 36.
+    options:
+      - defer_redundant
+      - add_handoff
+      - escalate_to_vuln_mgmt_only
+    why: |
+      Recommendation: defer; not a true boundary gap.
+
+b3:
+  - id: B3-S1
+    candidate: 38 new SAM masters across 6 modules from market-surface JSON.
+    rationale: |
+      Vendor-surface subagent (2026-05-30) enumerated 42 entities across 7 flagships, 38 of which are missing from the current footprint, 4 are wrong-ownership (the existing rollup masters need re-homing into the proposed 6-module shape). Grouped by destination module: SAM-CATALOG +7 (software_editions, software_versions, software_categories, publishers, publisher_product_catalogs, software_normalization_rules, eol_eosl_calendars); SAM-DISCOVERY +3 (discovery_runs, discovery_sources, swid_tags); SAM-ENTITLEMENT +11 (license_contracts, license_terms, license_metrics, license_keys, entitlement_pools, purchase_orders embedded, license_allocations, named_user_assignments, publisher_use_rights, downgrade_rights, second_use_rights); SAM-METERING +8 (usage_meterings, reclamation_requests, license_harvest_jobs, effective_license_positions, compliance_postures, oracle_options_packs, sap_indirect_access_documents, ibm_subcapacity_declarations); SAM-AUDIT +7 (publisher_audits, audit_evidence_packages, audit_findings, audit_responses, audit_response_letters, true_up_events, gdpr_processing_records); SAM-RENEWAL +3 (renewals, renewal_quotes, product_lifecycle_states). 4 modularization-issues callouts noted: true_up_events vs entitlement_pools boundary; license_contracts vs CLM legal_contracts; publisher-specific exotica placement (Oracle/SAP/IBM); no 7th audit-defense module.
+    vendor_evidence:
+      - {vendor: Flexera, evidence: 1st_class}
+      - {vendor: Snow, evidence: 1st_class}
+      - {vendor: USU, evidence: 1st_class}
+      - {vendor: ServiceNow SAM Pro, evidence: 1st_class}
+      - {vendor: Anglepoint, evidence: 1st_class}
+      - {vendor: Certero, evidence: 1st_class}
+      - {vendor: Eracent, evidence: 1st_class}
+    proposed_module: "SAM-CATALOG | SAM-DISCOVERY | SAM-ENTITLEMENT | SAM-METERING | SAM-AUDIT | SAM-RENEWAL (6-module Pass 2 shape)"
+    extra_source_artifact: "c:/tmp/SAM-market-surface-2026-05-30.json"
+    extra_missing_count: 38
+    extra_wrong_ownership_count: 4
+    extra_scope_creep_count: 0

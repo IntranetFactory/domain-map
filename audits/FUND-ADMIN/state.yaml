@@ -1,0 +1,405 @@
+schema_version: 2
+domain: FUND-ADMIN
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-M1
+    summary: Insert 4 missing regulations rows (SEC Marketing Rule, ILPA Reporting Standards, CRS, Cayman Mutual Funds Law) and link via domain_regulations to FUND-ADMIN (id 160).
+    finding: |
+      domain_regulations on FUND-ADMIN currently links 2 of the 6 regulations the 2026-05-30 audit flagged: AIFMD (regulation_id 41) and FATCA (50). The remaining 4 (SEC Marketing Rule Rule 206(4)-1, ILPA Reporting Standards, CRS, Cayman Mutual Funds Law) do not yet exist in the regulations table and so could not be linked during the 2026-05-31 continuation.
+    action: |
+      Idempotent loader extension: read existing regulations by regulation_name; insert the 4 missing rows with appropriate descriptions; then insert 4 domain_regulations rows linking each to domain_id 160 with applicability (AIFMD-class: mandatory; SEC Marketing Rule: mandatory for US-marketed funds; ILPA Reporting Standards: voluntary-but-de-facto-mandatory; CRS: mandatory for funds accepting CRS-reportable LP capital; Cayman Mutual Funds Law: mandatory for Cayman-domiciled funds).
+    affected_entities:
+      - sec_marketing_rule
+      - ilpa_reporting_standards
+      - common_reporting_standard
+      - cayman_mutual_funds_law
+
+  - id: B1A-W1
+    summary: Insert subscription_documents master under FUND-ADMIN-LP-COMMITMENTS (module 13).
+    finding: |
+      Subscription documents are the legal artifact of an lp_subscription; PDF blobs + version history. Universal in Juniper Square, Allvue, Carta. Cannot be folded into lp_subscriptions because docs persist across amended subscriptions.
+    action: |
+      Insert data_objects row subscription_documents (kind=domain_owned); DMDO master+required on module 13; data_object_relationships subscription_documents -> lp_subscriptions (many_to_one reference); user-edge per Rule #10; lifecycle states drafted -> signed -> countersigned -> archived (with countersigned state requires_permission=true on module 13).
+    affected_modules: [13]
+    affected_masters:
+      - data_object_id: null
+        name: subscription_documents
+        target_module_id: 13
+        workflow: "drafted->signed->countersigned->archived"
+    vendor_evidence: [Juniper Square, Allvue, Carta Fund Admin]
+
+  - id: B1A-W2
+    summary: Insert lp_kyc_records master under FUND-ADMIN-LP-COMMITMENTS (module 13).
+    finding: |
+      KYC/AML output + sanction-screening trail; required at subscription time and re-screened periodically. Distinct from lp_subscriptions which is the legal commitment.
+    action: |
+      Insert data_objects row lp_kyc_records (kind=domain_owned); DMDO master+required on module 13; relationships lp_kyc_records -> lp_subscriptions (many_to_one) and lp_kyc_records -> lp_commitments (many_to_one); lifecycle states pending -> screened -> cleared -> requires_review with the cleared state requires_permission=true.
+    affected_modules: [13]
+    affected_masters:
+      - data_object_id: null
+        name: lp_kyc_records
+        target_module_id: 13
+        workflow: "pending->screened->cleared->requires_review"
+    vendor_evidence: [Juniper Square, Allvue, Carta Fund Admin]
+
+  - id: B1A-W3
+    summary: Insert distribution_notices master under FUND-ADMIN-DISTRIBUTIONS (module 15).
+    finding: |
+      The LP-facing notice for a fund_distribution is a separately-stored artifact with publication timestamps; ILPA template format. Universal across flagship vendors.
+    action: |
+      Insert data_objects row distribution_notices (kind=domain_owned, has_submit_lock=true); DMDO master+required on module 15; relationship distribution_notices -> fund_distributions (many_to_one); lifecycle states drafted -> reviewed -> approved -> published with approved state requires_permission=true.
+    affected_modules: [15]
+    affected_masters:
+      - data_object_id: null
+        name: distribution_notices
+        target_module_id: 15
+        workflow: "drafted->reviewed->approved->published"
+    vendor_evidence: [Juniper Square, Allvue, Carta Fund Admin, eFront]
+
+  - id: B1A-W4
+    summary: Insert capital_call_notices master under FUND-ADMIN-CAPITAL-CALLS (module 14).
+    finding: |
+      Analogous to distribution_notices; the LP-facing notice document, separate from the capital_calls event row. Universal.
+    action: |
+      Insert data_objects row capital_call_notices (kind=domain_owned, has_submit_lock=true); DMDO master+required on module 14; relationship capital_call_notices -> capital_calls (many_to_one); lifecycle states drafted -> reviewed -> approved -> published with approved state requires_permission=true.
+    affected_modules: [14]
+    affected_masters:
+      - data_object_id: null
+        name: capital_call_notices
+        target_module_id: 14
+        workflow: "drafted->reviewed->approved->published"
+    vendor_evidence: [Juniper Square, Allvue, Carta Fund Admin, eFront]
+
+  - id: B1A-L1
+    summary: Author lifecycle states + trigger events for lp_subscriptions (data_object_id 758) on module 13.
+    finding: |
+      lp_subscriptions has zero data_object_lifecycle_states rows. Required states: drafted, submitted, kyc_passed, executed, withdrawn. Missing trigger_events lp_subscription.submitted and lp_subscription.executed.
+    action: |
+      Insert 5 lifecycle states (domain_module_id=13); insert 2 trigger_events with event_category=state_change; executed state requires_permission=true.
+    affected_masters:
+      - data_object_id: 758
+        name: lp_subscriptions
+        target_module_id: 13
+        workflow: "drafted->submitted->kyc_passed->executed->withdrawn"
+    affected_events:
+      - id: null
+        event_name: lp_subscription.submitted
+        current_category: null
+        proposed_category: state_change
+      - id: null
+        event_name: lp_subscription.executed
+        current_category: null
+        proposed_category: state_change
+
+  - id: B1A-L2
+    summary: Author lifecycle states + trigger events for pcap_statements (760) on module 13.
+    finding: |
+      pcap_statements has zero data_object_lifecycle_states rows. Required states: drafted, reviewed, published. Missing trigger_event pcap_statement.published.
+    action: |
+      Insert 3 lifecycle states (domain_module_id=13); insert pcap_statement.published trigger_event (state_change); published state requires_permission=true.
+    affected_masters:
+      - data_object_id: 760
+        name: pcap_statements
+        target_module_id: 13
+        workflow: "drafted->reviewed->published"
+    affected_events:
+      - id: null
+        event_name: pcap_statement.published
+        current_category: null
+        proposed_category: state_change
+
+  - id: B1A-L3
+    summary: Author missing lifecycle states + drafted trigger event for capital_calls (367) on module 14.
+    finding: |
+      capital_calls has zero data_object_lifecycle_states rows but trigger_events ids 295 (capital_call.issued) and 1186 (capital_call.funded) exist. Required states: drafted, issued, funded, closed. Missing trigger_event for the .drafted entry-point.
+    action: |
+      Insert 4 lifecycle states (domain_module_id=14); insert capital_call.drafted trigger_event (lifecycle); issued state requires_permission=true (gates LP notice publish).
+    affected_masters:
+      - data_object_id: 367
+        name: capital_calls
+        target_module_id: 14
+        workflow: "drafted->issued->funded->closed"
+    affected_events:
+      - id: null
+        event_name: capital_call.drafted
+        current_category: null
+        proposed_category: lifecycle
+
+  - id: B1A-L4
+    summary: Author lifecycle states + trigger event for fund_close_periods (757) on module 12.
+    finding: |
+      fund_close_periods has zero data_object_lifecycle_states rows. Required states: open, soft_closed, reviewed, locked. Missing trigger_event fund_close_period.locked.
+    action: |
+      Insert 4 lifecycle states (domain_module_id=12); insert fund_close_period.locked trigger_event (state_change); locked state requires_permission=true.
+    blocked_by:
+      - type: user_decision
+        ref: B2-CLOSE-MODULE
+        reason: "Bucket 2 item 2 may split FUND-ADMIN-CLOSE-AND-AUDIT off FUND-LEDGER, module attribution flips if so."
+    affected_masters:
+      - data_object_id: 757
+        name: fund_close_periods
+        target_module_id: 12
+        workflow: "open->soft_closed->reviewed->locked"
+    affected_events:
+      - id: null
+        event_name: fund_close_period.locked
+        current_category: null
+        proposed_category: state_change
+
+  - id: B1A-L5
+    summary: Author lifecycle states + 2 trigger events for capital_call_responses (761) on module 14.
+    finding: |
+      capital_call_responses has zero data_object_lifecycle_states rows. Required states: scheduled, paid, partial, defaulted. Missing trigger_events capital_call_response.paid and capital_call_response.defaulted.
+    action: |
+      Insert 4 lifecycle states (domain_module_id=14); insert 2 trigger_events (state_change); defaulted state requires_permission=true (gates default-handling workflow).
+    affected_masters:
+      - data_object_id: 761
+        name: capital_call_responses
+        target_module_id: 14
+        workflow: "scheduled->paid->partial->defaulted"
+    affected_events:
+      - id: null
+        event_name: capital_call_response.paid
+        current_category: null
+        proposed_category: state_change
+      - id: null
+        event_name: capital_call_response.defaulted
+        current_category: null
+        proposed_category: state_change
+
+  - id: B1A-L6
+    summary: Author lifecycle states + trigger event for waterfall_calculations (762) on module 15.
+    finding: |
+      waterfall_calculations has zero data_object_lifecycle_states rows. Required states: drafted, reviewed, approved. Missing trigger_event waterfall_calculation.approved. Highest-stakes single approval in fund admin.
+    action: |
+      Insert 3 lifecycle states (domain_module_id=15); insert waterfall_calculation.approved trigger_event (state_change); approved state requires_permission=true.
+    affected_masters:
+      - data_object_id: 762
+        name: waterfall_calculations
+        target_module_id: 15
+        workflow: "drafted->reviewed->approved"
+    affected_events:
+      - id: null
+        event_name: waterfall_calculation.approved
+        current_category: null
+        proposed_category: state_change
+
+  - id: B1A-B9b
+    summary: Author 5 intra-domain handoff rows wiring the 4 FUND-ADMIN modules.
+    finding: |
+      Zero intra-domain handoffs rows on FUND-ADMIN. Five candidate pairs from the relationship graph: (FUND-LEDGER -> LP-COMMITMENTS) on fund.final_close (event 1185); (LP-COMMITMENTS -> CAPITAL-CALLS) on lp_commitment.committed (event TBD per B1A-Lx); (CAPITAL-CALLS -> LP-COMMITMENTS) on capital_call.funded (event 1186); (DISTRIBUTIONS -> LP-COMMITMENTS) on fund_distribution.executed (event 1187); (DISTRIBUTIONS -> FUND-LEDGER) on fund_distribution.executed posting to GL.
+    action: |
+      Insert 5 handoffs with source_domain_id = target_domain_id = 160, integration_pattern=lifecycle_progression, friction_level=low, payload set per the structural model.
+    blocked_by:
+      - type: prerequisite_entity
+        ref: B1A-L1
+      - type: prerequisite_entity
+        ref: B1A-L5
+    affected_modules: [12, 13, 14, 15]
+
+  - id: B1A-H2
+    summary: Reviewer pass to flip record_status on the 9 agent_curated handoff_processes rows for FUND-ADMIN handoffs from new to approved per row.
+    finding: |
+      record_status='approved' count on handoff_processes for FUND-ADMIN handoffs (1038, 1040, 1041, 1042, 1043, 1044, 1046) is 0. Catalog quality headline.
+    action: |
+      Per Rule 1 the flip is per-row with explicit user sign-off, not a bulk update. Queue 9 rows (ids 571, 633, 634, 712, 713, 761, 762, 763, 764) for review; agent presents per-row and PATCHes only the rows user approves.
+    extra_review_queue_ids: [571, 633, 634, 712, 713, 761, 762, 763, 764]
+
+b1b:
+  - id: B1B-L7
+    summary: fund_ledger_entries (756) config-shape exemption decision before authoring lifecycle states.
+    finding: |
+      Rule 12 allows a config-shape exemption from lifecycle authoring for author-once / occasionally-edit masters where record_status alone is the workflow. fund_ledger_entries fits the shape but the exemption requires user surfacing per Rule 15 (no auto-write to notes).
+    blocked_by:
+      - type: user_decision
+        ref: B2-LEDGER-LIFECYCLE
+        reason: "Surface to user, then either author lifecycle states or accept the exemption with the audit narrative as the record."
+
+  - id: B1B-H1a
+    summary: Handoff 1040 APQC tagging, supersede legacy discovery_substring tag with agent-curated PCF 10751?
+    finding: |
+      Handoff 1040 (FUND-LEDGER -> INV-CRM on fund.final_close -> lp_prospects) currently has only a discovery_substring tag (id 177, PCF 10737 Manage international funds/consolidation). The 2026-05-30 proposal recommended PCF 10751 (Perform capital planning and project approval) with medium confidence and explicitly deferred superseding to user.
+    blocked_by:
+      - type: user_decision
+        ref: B2-H1A-OVERRIDE
+        reason: "Whether to keep, supersede, or add a second tag is a user call."
+
+  - id: B1B-H1e
+    summary: Handoff 1044 APQC tagging, replace current strategy-development tags with a payments-side PCF?
+    finding: |
+      Handoff 1044 (CAP-TABLE -> DISTRIBUTIONS on exit_scenario.executed -> fund_distributions) has 2 agent_curated tags (PCF 10952 Develop exit strategy id 712 + PCF 16805 Develop merger/demerger/acquisition/exit strategy id 713). The 2026-05-30 proposal recommended a payments-side PCF (10911 family) which is a closer post-exit-distribution match than strategy-development.
+    blocked_by:
+      - type: user_decision
+        ref: B2-H1E-OVERRIDE
+        reason: "Whether to keep strategy tags, replace, or attach both is a user call."
+
+  - id: B1B-H1g
+    summary: Handoff 1046 APQC tagging, attach PCF 10737 (low confidence) or run Phase 0 search for a closer fund-launch PCF?
+    finding: |
+      Handoff 1046 (EM-FUND-PLATFORM -> FUND-LEDGER on fund_formation.operational -> funds) has zero handoff_processes rows. The 2026-05-30 proposal suggested PCF 10737 with low confidence and recommended a Phase 0 search for a fund-launch row.
+    blocked_by:
+      - type: depends_on
+        ref: B3-PCF-FUND-LAUNCH
+        reason: "Phase 0 PCF search ranks as Bucket 3 surface area, eyeball-mode could resolve immediately."
+
+  - id: B1B-CATALOG-UX
+    summary: A4 catalog_tagline and catalog_description on domain row 160 remain empty strings.
+    finding: |
+      Rule 20 forbids writing catalog_tagline / catalog_description without user approval of the exact wording. The 2026-05-30 audit surfaced a draft tagline but no description direction was supplied.
+    blocked_by:
+      - type: user_decision
+        ref: B2-CATALOG-UX
+        reason: "User-authored copy required by Rule 20."
+
+  - id: B1B-PATTERN-FLAGS
+    summary: Pattern flags on 4 masters (capital_calls, fund_distributions, fund_close_periods, waterfall_calculations) plausibly need flips, principally has_single_approver=true on waterfall_calculations.
+    finding: |
+      All 4 masters default-false on every pattern flag. Strongest case: waterfall_calculations.has_single_approver=true (CFO/COO sign-off universal). Weaker cases follow once the workflow shape is settled.
+    blocked_by:
+      - type: user_decision
+        ref: B2-PATTERN-FLAGS
+        reason: "B4 re-evaluation is a user-judgment flip per the 2026-05-30 audit, depends partly on B1A-W3 / W4 for the new notice entities."
+
+  - id: B1B-E-BAND
+    summary: Phase E (roles, role_modules, role_permissions, permissions) entirely empty for FUND-ADMIN.
+    finding: |
+      0 roles, 0 role_modules, 0 role_permissions, 0 module-scoped permissions across modules 12, 13, 14, 15. E1 through E5 fail. Workflow-gate permissions for the 6 requires_permission=true states (existing fund.final_close, fund_distribution.declared, plus the 6 added by B1A-L1..L6) cannot materialize without the role bundling layer.
+    blocked_by:
+      - type: prerequisite_entity
+        ref: B1A-L1
+      - type: prerequisite_entity
+        ref: B1A-L2
+      - type: prerequisite_entity
+        ref: B1A-L3
+      - type: prerequisite_entity
+        ref: B1A-L4
+      - type: prerequisite_entity
+        ref: B1A-L5
+      - type: prerequisite_entity
+        ref: B1A-L6
+      - type: user_decision
+        ref: B2-APPROVAL-WORKFLOW
+        reason: "APPROVAL-WORKFLOW realization shape gates which module owns the cross-cutting gate."
+    affected_modules: [12, 13, 14, 15]
+
+  - id: B1B-F-BAND
+    summary: Phase F (system skills + tools + skill_tools) entirely empty for FUND-ADMIN.
+    finding: |
+      0 system skills across modules 12, 13, 14, 15. F2 / F3 / F5 fail, Semantius score uncomputable.
+    blocked_by:
+      - type: prerequisite_entity
+        ref: B1B-E-BAND
+        reason: "System skills are typically authored after the role layer per the per-domain checklist."
+    affected_modules: [12, 13, 14, 15]
+
+  - id: B1B-RE-INVEST-M7
+    summary: Legacy domain_data_objects master rows on RE-INVEST for capital_calls (id 597) and fund_distributions (id 598).
+    finding: |
+      Both rows are pre-modular drift, module-level mastership is clean (FUND-ADMIN modules 14 + 15 only). RE-INVEST has zero domain_modules rows so the legacy domain row registers as a second master at domain-level.
+    blocked_by:
+      - type: domain_audit
+        blocking_domain: RE-INVEST
+        milestone: M7-delete-legacy-rows-or-load-modules
+    affected_entities: [capital_calls, fund_distributions]
+
+b2:
+  - id: B2-CATALOG-UX
+    summary: A4 catalog_tagline + catalog_description wording for FUND-ADMIN.
+    question: Please provide the exact wording for catalog_tagline (single-sentence buyer-voice line) and catalog_description (1-3 buyer-voice paragraphs).
+    options:
+      - "Accept draft tagline carried from 2026-05-30 and author a description from scratch."
+      - "Author both from scratch in your own voice (operations-led or CFO-led tone)."
+      - "Defer until other A / M-band fixes land."
+    why: "Rule 20 forbids the agent drafting and writing this without explicit per-row approval."
+
+  - id: B2-CLOSE-MODULE
+    summary: Split FUND-ADMIN-CLOSE-AND-AUDIT off FUND-LEDGER as a 5th module?
+    question: "Carta and Allvue both expose Close as a distinct surface. Promote fund_close_periods + audit-support capability to its own module, or keep current 4-module shape?"
+    options: [Split, "Keep 4-module shape", Defer]
+    why: "Module shape decision, gates B1A-L4 module attribution and the audit-support capability's home."
+
+  - id: B2-LP-PORTAL
+    summary: Promote LP-PORTAL from a capability to a 5th deployable module?
+    question: "Juniper Square markets the LP portal as a standalone product. Promote capability 498 to its own module under domain 160, or keep as capability of LP-COMMITMENTS?"
+    options: [Promote, "Keep as capability", Defer]
+    why: "Affects pcap_statements lifecycle state module attribution within B1A-L2."
+
+  - id: B2-PATTERN-FLAGS
+    summary: Pattern flag flips on waterfall_calculations and 3 adjacent masters.
+    question: "Confirm waterfall_calculations.has_single_approver=true (CFO/COO sign-off universal). Also confirm or decline has_submit_lock=true on waterfall_calculations, has_single_approver on capital_calls and fund_distributions, submit_lock on fund_close_periods."
+    options: ["Approve all suggested flips", "Approve waterfall.has_single_approver only", "Decline all", Other]
+    why: "B4 re-evaluation is a structural change, default-false on highest-stakes approval is almost certainly wrong but the precise flag set is a user call."
+
+  - id: B2-APPROVAL-WORKFLOW
+    summary: APPROVAL-WORKFLOW cross-cutting capability realization shape.
+    question: "Should each FUND-ADMIN module materialize its own workflow-gate permissions (capital call approval, distribution waterfall approval, fund close approval), or should APPROVAL-WORKFLOW be a shared abstraction module?"
+    options: ["Per-module gates", "Shared abstraction", Hybrid]
+    why: "Cascades into Phase E role design and gates B1B-E-BAND."
+
+  - id: B2-PAIRWISE-RECONCILIATION
+    summary: Inline pairwise reconciliation with PORT-MONIT and INV-CRM, or defer per-neighbor passes?
+    question: "Cross-domain weights PORT-MONIT (~5), INV-CRM (3). Procedure says deep dive at weight >=3. Run inline now, or defer to per-neighbor Validate runs?"
+    options: ["Inline now", Defer]
+    why: "Throughput vs depth tradeoff, the gap-list itself does not change either way."
+
+  - id: B2-LEDGER-LIFECYCLE
+    summary: fund_ledger_entries (756) lifecycle authoring or config-shape exemption?
+    question: "fund_ledger_entries fits the Rule 12 config-shape exemption (append-only journal where record_status is the workflow). Accept the exemption (record in audit narrative, no notes write), or author a lifecycle (drafted -> posted -> reversed)?"
+    options: ["Accept exemption", "Author lifecycle"]
+    why: "Rule 15 forbids auto-writing the exemption to data_objects.notes, the call needs the user."
+
+  - id: B2-H1A-OVERRIDE
+    summary: Handoff 1040 APQC tag, supersede the legacy discovery_substring PCF 10737?
+    question: "Replace the existing discovery_substring tag with PCF 10751 (Perform capital planning and project approval), add PCF 10751 as a second agent_curated tag alongside the legacy, or keep current."
+    options: [Replace, "Add second", "Keep current", Defer]
+
+  - id: B2-H1E-OVERRIDE
+    summary: Handoff 1044 APQC tag, replace strategy-development tags with payments-side PCF?
+    question: "Replace the 2 strategy-development tags (PCF 10952 + 16805) with a payments-side PCF (10911 family), keep current, or attach both."
+    options: ["Replace with 10911-family", "Keep current", "Attach both", Defer]
+
+b3:
+  - id: B3-GP-CARRY-ALLOCATIONS
+    candidate: gp_carry_allocations
+    rationale: "Separates LP distribution from GP carry calculation. Belongs either in a new FUND-ADMIN-CARRY module or in FUND-ADMIN-DISTRIBUTIONS. Cross-pollinates with candidate MGMT-CO-ACCT domain queued in _missing-domains.md."
+    vendor_evidence: ["Carta GP Books", "Allvue GP Admin"]
+    proposed_module: "FUND-ADMIN-CARRY (new) or FUND-ADMIN-DISTRIBUTIONS"
+
+  - id: B3-LP-SIDE-LETTERS
+    candidate: lp_side_letters
+    rationale: "Bilateral amendments that override standard subscription terms (fee discounts, co-investment rights, MFN clauses). Universal across the flagship vendors."
+    vendor_evidence: ["Juniper Square", "Carta Fund Admin", Allvue, eFront]
+    proposed_module: FUND-ADMIN-LP-COMMITMENTS
+
+  - id: B3-NAV-REVALUATIONS
+    candidate: nav_revaluations
+    rationale: "FX revaluation of fund NAV at period-end across multi-currency LP commitments."
+    vendor_evidence: [eFront, Allvue]
+    proposed_module: FUND-ADMIN-FUND-LEDGER
+
+  - id: B3-RECALLABLE-DISTRIBUTIONS
+    candidate: recallable_distributions
+    rationale: "LPA-driven distributions that count back against unfunded commitments and can be re-called within a window. Affects DPI / RVPI calculations."
+    vendor_evidence: [Allvue, eFront, "Juniper Square"]
+    proposed_module: FUND-ADMIN-DISTRIBUTIONS
+
+  - id: B3-FUND-EXPENSES
+    candidate: fund_expenses
+    rationale: "Fund operating expenses (audit, legal, admin) charged against fund NAV, tracked separately from fund_ledger_entries because of LP-allocation rules."
+    vendor_evidence: [Allvue, eFront, "Carta Fund Admin", "Juniper Square"]
+    proposed_module: FUND-ADMIN-FUND-LEDGER
+
+  - id: B3-LP-COMMITMENT-TRANSFERS
+    candidate: lp_commitment_transfers
+    rationale: "Secondaries market, tracks transfer of an LP commitment from seller LP to buyer LP. Significant lifecycle distinct from lp_subscriptions."
+    vendor_evidence: ["Juniper Square", "Carta Fund Admin"]
+    proposed_module: FUND-ADMIN-LP-COMMITMENTS
+
+  - id: B3-PCF-FUND-LAUNCH
+    candidate: pcf_row_for_fund_launch
+    rationale: "APQC PCF Cross-Industry framework appears to lack a dedicated fund-launch process, handoff 1046 (EM-FUND-PLATFORM -> FUND-LEDGER on fund_formation.operational) currently has no clean PCF match. Phase 0 search across PCF Financial Services and PCF Insurance vertical frameworks may surface a better row."
+    vendor_evidence: ["APQC PCF Financial Services framework"]
+    proposed_module: "n/a (cross-cutting tag)"

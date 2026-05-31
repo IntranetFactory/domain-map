@@ -1,0 +1,173 @@
+schema_version: 2
+domain: DCG
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-H1
+    summary: Tag handoff 1341 (BI -> DCG bi_dashboard.published) with PCF process 277 "Manage business information" as agent_curated.
+    finding: Of 30 cross-domain handoffs touching DCG, 25 carry a handoff_processes row. Handoff 1341 (source_domain BI, target DCG, trigger_event bi_dashboard.published, payload bi_dashboards 692) is untagged. The sibling handoff 688 (bi_report.published) was tagged with process_id 277 "Manage business information" (L3, external_id 20779) as agent_curated; 1341 fits the same pattern with confident L3 confidence. The 4 other untagged handoffs (683 ml_model.deployed, 685 feature_set.published, 698 / 699 KGP entity events) stay deferred to Discover Pass 3 per the 2026-05-30 audit licensing.
+    action: INSERT 1 row into handoff_processes with handoff_id=1341, process_id=277, proposal_source='agent_curated', role='implements'. record_status defaulted to 'new' per Rule #1. notes omitted per Rule #15. Single surgical CLI POST; idempotent on the natural (handoff_id, process_id) key.
+    affected_handoffs:
+      - {handoff_id: 1341, direction: inbound, source_domain: BI, target_domain: DCG, trigger_event: bi_dashboard.published, payload: bi_dashboards, null_field: handoff_processes}
+
+b1b:
+  - id: B1B-S1
+    summary: Insert 6 candidate domain_modules for DCG (DCG-CATALOG / DCG-LINEAGE / DCG-GLOSSARY / DCG-STEWARDSHIP / DCG-ACCESS-GOV / DCG-DATA-PRODUCTS) plus Phase B / E / F / S rows, gated on B2-S1 architectural choice.
+    finding: M1 hard-fail unchanged. DCG has zero domain_modules rows; Rule #14 mandates >=1 module_kind='full' per domains row. Cascades into B1B-S4 (lifecycle states), B1B-S6 (29 cross-domain handoff module FKs), and the entire E / F bands. The recommended 6-module split is anchored on Alation / Atlan / Collibra / Microsoft Purview product taxonomy; the user may prefer a tighter 3-module or wider 7-module split (see B2-S1 options).
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    affected_modules: []
+    affected_entities: [data_assets, data_lineage_relationships, glossary_terms, data_classifications, data_domains, data_stewardship_assignments, data_certifications, data_access_policies, data_usage_metrics, data_products, metric_definitions, ontologies]
+
+  - id: B1B-S2
+    summary: Insert 10 candidate capabilities + capability_domains rows for DCG, gated on B2-S2 capability-list confirmation.
+    finding: A2 hard-fail unchanged. Zero capability_domains rows for domain_id=88. Rule #14's >=3-capability floor cannot be tested without the rows. Candidates from the 2026-05-30 enumeration are technical-metadata-harvesting, business-glossary-management, data-lineage, automated-data-classification, data-stewardship-workflow, data-quality-scorecards, certification-workflow, data-product-publishing, access-request-and-policy-authoring, regulatory-mapping.
+    blocked_by:
+      - {type: user_decision, ref: B2-S2}
+    affected_entities: []
+
+  - id: B1B-S4
+    summary: Author data_object_lifecycle_states rows for the 9 workflow-bearing DCG masters once modules exist and the config-shape exemption is decided.
+    finding: Rule #12 hard violation unchanged. Zero data_object_lifecycle_states rows across all 12 DCG masters. 9 of 12 are workflow-bearing (data_assets, data_lineage_relationships, data_classifications, data_stewardship_assignments, data_certifications, data_access_policies, data_products, metric_definitions, ontologies). 3 are config-shape candidates pending B2-S4 user judgment (data_domains, glossary_terms, data_usage_metrics).
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: user_decision, ref: B2-S4}
+    affected_masters:
+      - {data_object_id: 300, name: data_assets, target_module_id: null, workflow: discovered_to_deprecated}
+      - {data_object_id: 301, name: data_lineage_relationships, target_module_id: null, workflow: recorded_to_broken}
+      - {data_object_id: 303, name: data_classifications, target_module_id: null, workflow: proposed_to_enforced}
+      - {data_object_id: 305, name: data_stewardship_assignments, target_module_id: null, workflow: proposed_to_assigned_to_revoked}
+      - {data_object_id: 306, name: data_certifications, target_module_id: null, workflow: requested_to_granted_to_revoked}
+      - {data_object_id: 307, name: data_access_policies, target_module_id: null, workflow: drafted_to_approved_to_enforced}
+      - {data_object_id: 232, name: data_products, target_module_id: null, workflow: drafted_to_published_to_deprecated}
+      - {data_object_id: 252, name: metric_definitions, target_module_id: null, workflow: drafted_to_certified_to_deprecated}
+      - {data_object_id: 254, name: ontologies, target_module_id: null, workflow: drafted_to_published_to_deprecated}
+
+  - id: B1B-S6
+    summary: Populate source_domain_module_id / target_domain_module_id on 29 cross-domain handoffs once DCG modules exist.
+    finding: B10b hard-fail. Of 30 cross-domain handoffs touching DCG (source_domain_id=88 OR target_domain_id=88), 29 have NULL DCG-side module FK. The only exception is handoff 263 (target_domain_module_id=144 IGA-ACCESS-REQUEST). Each handoff's DCG-side FK derives from the trigger event's data_object_id mapping to whichever DCG module masters it post-B2-S1 split.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+    affected_handoffs:
+      - {handoff_id: 152, direction: inbound, source_domain: DATA-AI-PLAT, target_domain: DCG, trigger_event: data_product.published, payload: data_products, null_field: target_domain_module_id}
+      - {handoff_id: 158, direction: outbound, source_domain: DCG, target_domain: DATA-AI-PLAT, trigger_event: access_policy.updated, payload: data_access_policies, null_field: source_domain_module_id}
+      - {handoff_id: 220, direction: outbound, source_domain: DCG, target_domain: METRICS-LAYER, trigger_event: metric.deprecated, payload: metric_definitions, null_field: source_domain_module_id}
+      - {handoff_id: 223, direction: outbound, source_domain: DCG, target_domain: KGP, trigger_event: ontology.published, payload: ontologies, null_field: source_domain_module_id}
+      - {handoff_id: 259, direction: inbound, source_domain: DI, target_domain: DCG, trigger_event: data_asset.discovered, payload: data_assets, null_field: target_domain_module_id}
+      - {handoff_id: 260, direction: outbound, source_domain: DCG, target_domain: DLP, trigger_event: data_asset.classified, payload: data_assets, null_field: source_domain_module_id}
+      - {handoff_id: 261, direction: outbound, source_domain: DCG, target_domain: DSPM, trigger_event: data_asset.classified, payload: data_assets, null_field: source_domain_module_id}
+      - {handoff_id: 262, direction: outbound, source_domain: DCG, target_domain: DQ, trigger_event: data_asset.certified, payload: data_assets, null_field: source_domain_module_id}
+      - {handoff_id: 264, direction: outbound, source_domain: DCG, target_domain: DLP, trigger_event: data_access_request.approved, payload: data_access_policies, null_field: source_domain_module_id}
+      - {handoff_id: 265, direction: outbound, source_domain: DCG, target_domain: KGP, trigger_event: glossary_term.published, payload: glossary_terms, null_field: source_domain_module_id}
+      - {handoff_id: 268, direction: inbound, source_domain: DQ, target_domain: DCG, trigger_event: profile_result.updated, payload: data_assets, null_field: target_domain_module_id}
+      - {handoff_id: 285, direction: inbound, source_domain: DSPM, target_domain: DCG, trigger_event: data_asset.classified, payload: data_assets, null_field: target_domain_module_id}
+      - {handoff_id: 683, direction: inbound, source_domain: DATA-AI-PLAT, target_domain: DCG, trigger_event: ml_model.deployed, payload: ml_models, null_field: target_domain_module_id}
+      - {handoff_id: 685, direction: inbound, source_domain: DATA-AI-PLAT, target_domain: DCG, trigger_event: feature_set.published, payload: feature_sets, null_field: target_domain_module_id}
+      - {handoff_id: 688, direction: inbound, source_domain: BI, target_domain: DCG, trigger_event: bi_report.published, payload: bi_reports, null_field: target_domain_module_id}
+      - {handoff_id: 694, direction: inbound, source_domain: AUDIT, target_domain: DCG, trigger_event: query_lineage.captured, payload: query_lineage_records, null_field: target_domain_module_id}
+      - {handoff_id: 698, direction: inbound, source_domain: KGP, target_domain: DCG, trigger_event: kgp_knowledge_graph_entity.merged, payload: kgp_knowledge_graph_entities, null_field: target_domain_module_id}
+      - {handoff_id: 699, direction: inbound, source_domain: KGP, target_domain: DCG, trigger_event: kgp_knowledge_graph_entity.created, payload: kgp_knowledge_graph_entities, null_field: target_domain_module_id}
+      - {handoff_id: 707, direction: inbound, source_domain: LCAP, target_domain: DCG, trigger_event: lcap_business_object.schema_changed, payload: lcap_business_objects, null_field: target_domain_module_id}
+      - {handoff_id: 708, direction: outbound, source_domain: DCG, target_domain: DQ, trigger_event: data_certification.granted, payload: data_certifications, null_field: source_domain_module_id}
+      - {handoff_id: 709, direction: outbound, source_domain: DCG, target_domain: DLP, trigger_event: data_domain.created, payload: data_domains, null_field: source_domain_module_id}
+      - {handoff_id: 710, direction: outbound, source_domain: DCG, target_domain: AUDIT, trigger_event: data_lineage_relationship.broken, payload: data_lineage_relationships, null_field: source_domain_module_id}
+      - {handoff_id: 711, direction: outbound, source_domain: DCG, target_domain: BI, trigger_event: data_certification.revoked, payload: data_certifications, null_field: source_domain_module_id}
+      - {handoff_id: 712, direction: outbound, source_domain: DCG, target_domain: DSPM, trigger_event: data_usage_metric.spike_detected, payload: data_usage_metrics, null_field: source_domain_module_id}
+      - {handoff_id: 713, direction: inbound, source_domain: DQ, target_domain: DCG, trigger_event: dq_dimension.threshold_breached, payload: dq_dimensions, null_field: target_domain_module_id}
+      - {handoff_id: 719, direction: inbound, source_domain: MDM, target_domain: DCG, trigger_event: merge_rule.published, payload: merge_rules, null_field: target_domain_module_id}
+      - {handoff_id: 726, direction: inbound, source_domain: DI, target_domain: DCG, trigger_event: pipeline_run.completed, payload: pipeline_runs, null_field: target_domain_module_id}
+      - {handoff_id: 846, direction: inbound, source_domain: DSPM, target_domain: DCG, trigger_event: cloud_database.discovered, payload: cloud_databases, null_field: target_domain_module_id}
+      - {handoff_id: 1341, direction: inbound, source_domain: BI, target_domain: DCG, trigger_event: bi_dashboard.published, payload: bi_dashboards, null_field: target_domain_module_id}
+
+  - id: B1B-S7
+    summary: PATCH wording on handoffs 158, 223, 265 to comply with Rule #18 (no vendor / product names in non-commerce-entity text).
+    finding: Carryover. Handoff 158 description contains "the platform's native RBAC layer" generic vendor-landscape narration. Handoff 223 description starts "Data Catalog and Governance platforms maintain business glossaries..." with "platforms maintain" reading as vendor-landscape narration. Handoff 265 description contains "KGP (Knowledge Graph Platform)" with the parenthetical expansion reading as a product-name gloss.
+    blocked_by:
+      - {type: user_decision, ref: B2-S3}
+    affected_handoffs:
+      - {handoff_id: 158, direction: outbound, source_domain: DCG, target_domain: DATA-AI-PLAT, trigger_event: access_policy.updated, payload: data_access_policies, null_field: description}
+      - {handoff_id: 223, direction: outbound, source_domain: DCG, target_domain: KGP, trigger_event: ontology.published, payload: ontologies, null_field: description}
+      - {handoff_id: 265, direction: outbound, source_domain: DCG, target_domain: KGP, trigger_event: glossary_term.published, payload: glossary_terms, null_field: description}
+
+  - id: B1B-S9
+    summary: Surface neighbor-DMDO consumer-declaration gaps to 9 neighbor domain b1 audits (DI, KGP, DLP, DSPM, BI, AUDIT, MDM, METRICS-LAYER, DATA-AI-PLAT).
+    finding: Report-only. Only 2 external consumer DMDOs on DCG masters exist (APM-PORTFOLIO-REGISTRY on data_products 232 optional; IGA-ACCESS-REQUEST on data_access_policies 307 optional). The 29 cross-domain handoffs imply many more consumer DMDOs (each receiving module of a DCG-mastered payload owes a consumer DMDO row per Rule #11 and the cross-domain pairwise recipe). The DCG-side fix is to author the masters in DCG modules (B1B-S1); the receiving-side fix sits on each neighbor's b1 audit.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: domain_audit, blocking_domain: DI, milestone: consumer-dmdo-on-DCG-data_assets}
+      - {type: domain_audit, blocking_domain: KGP, milestone: consumer-dmdo-on-DCG-glossary_terms-ontologies}
+      - {type: domain_audit, blocking_domain: DLP, milestone: consumer-dmdo-on-DCG-data_classifications-data_access_policies}
+      - {type: domain_audit, blocking_domain: DSPM, milestone: consumer-dmdo-on-DCG-data_assets-data_usage_metrics}
+      - {type: domain_audit, blocking_domain: BI, milestone: consumer-dmdo-on-DCG-data_assets-data_certifications}
+      - {type: domain_audit, blocking_domain: AUDIT, milestone: consumer-dmdo-on-DCG-data_lineage_relationships}
+      - {type: domain_audit, blocking_domain: MDM, milestone: consumer-dmdo-on-DCG-data_assets-optional}
+      - {type: domain_audit, blocking_domain: METRICS-LAYER, milestone: consumer-dmdo-on-DCG-metric_definitions}
+      - {type: domain_audit, blocking_domain: DATA-AI-PLAT, milestone: consumer-dmdo-on-DCG-data_assets-glossary_terms}
+    affected_entities: [data_assets, glossary_terms, ontologies, data_classifications, data_access_policies, data_usage_metrics, data_certifications, data_lineage_relationships, metric_definitions]
+
+b2:
+  - id: B2-S1
+    summary: Choose the DCG module split (6-module agent recommendation vs alternatives).
+    question: How should DCG be split into deployable modules? Agent's recommendation is 6 modules (DCG-CATALOG, DCG-LINEAGE, DCG-GLOSSARY, DCG-STEWARDSHIP, DCG-ACCESS-GOV, DCG-DATA-PRODUCTS) anchored on Alation / Atlan / Collibra / Microsoft Purview product taxonomy. The choice drives Phase B / E / F / S work and gates B1B-S1, B1B-S4, B1B-S6, B1B-S9.
+    options: [agent_6_module_recommendation, tight_3_module_split, four_module_split, seven_module_split_with_DCG-CLASSIFICATION, other_user_specified]
+    why: Architectural decision depending on whether DCG ships as a unified governance stack alongside DSPM / DLP (favors fewer modules) or as a discrete catalog product (favors more).
+
+  - id: B2-S2
+    summary: Confirm DCG capability enumeration.
+    question: Author all 10 candidate capabilities (technical-metadata-harvesting, business-glossary-management, data-lineage, automated-data-classification, data-stewardship-workflow, data-quality-scorecards, certification-workflow, data-product-publishing, access-request-and-policy-authoring, regulatory-mapping), or a tighter list?
+    options: [all_10, tighter_6_or_7_list_user_specified, other_user_specified]
+    why: Market-definition call; influences how DCG compares against neighbor domains in fact-sheet and blueprint surfaces.
+
+  - id: B2-S3
+    summary: Approve wording for Rule #18 cleanup on handoffs 158, 223, 265.
+    question: What replacement text should the agent use for handoff descriptions 158 ("the platform's native RBAC layer"), 223 ("Data Catalog and Governance platforms maintain..."), 265 ("KGP (Knowledge Graph Platform)")? Agent cannot auto-rewrite per Rule #15 cousin.
+    options: [approve_agent_drafts_per_row, supply_own_text, confirm_leave_as_is]
+    why: Wording is load-bearing prose subject to per-row user approval.
+
+  - id: B2-S4
+    summary: Decide Rule #12 config-shape exemption per master.
+    question: Per master, exempt from lifecycle-state authoring or require lifecycle states? Candidates for exemption are data_domains (304, reference data), glossary_terms (302, debatable), data_usage_metrics (308, signal-only).
+    options: [per_master_exempt_or_author]
+    why: Exemption is the user's call per Rule #12; agent must not auto-decide and must not populate data_objects.notes per Rule #15.
+
+  - id: B2-S5
+    summary: Re-evaluate pattern flags on 4 DCG masters.
+    question: Flip has_personal_content / has_submit_lock / has_single_approver on data_access_policies (307), data_stewardship_assignments (305), data_certifications (306), data_classifications (303)? Audit re-evaluation suggests several flips that the current default-false state misses.
+    options: [per_flag_yes_or_no]
+    why: Workflow-shape judgments per Rule #12; Rule #15 forbids auto-populating notes that document the choice.
+
+  - id: B2-S6
+    summary: Decide which DCG regulations to author as domain_regulations rows.
+    question: Author rows for which of 9 candidate regulations (GDPR Article 30, CCPA / CPRA, HIPAA, SOX ICFR, BCBS 239, GLBA, EU AI Act, SR 11-7, US state-level privacy laws)?
+    options: [all_9, subset_user_specified, none_for_now, defer_to_phase_0]
+    why: Market-scoping decision determining which sub-markets of DCG to formally model. Independent of all other items.
+
+b3:
+  - id: B3-ENTITIES
+    candidate: 10 missing-entity candidates (data_contracts, data_quality_rules DCG-scoped, data_access_requests, data_marketplace_listings, lineage_pipelines, query_lineage_records (currently AUDIT-owned), data_impact_analyses, metadata_collection_jobs, data_sensitivity_labels, data_collaboration_threads).
+    rationale: Each candidate surfaces in 2 or more flagship-vendor product surfaces but has no master row in the DCG footprint. Routing depends on whether the user accepts the 6-module split (B2-S1) and on whether DATA-CONTRACTS / DATA-MARKETPLACE are promoted as separate domains.
+    vendor_evidence: [Alation, Atlan, Collibra, data.world, Informatica EDC + AXON, Microsoft Purview, Open Metadata, Acryl DataHub, Apache Atlas, Apache Polaris, Databricks Unity Catalog, Immuta]
+    proposed_module: gated_on_B2-S1
+
+  - id: B3-MODULARIZATION
+    candidate: 2 modularization questions, DCG-LINEAGE possibly subsumed into DCG-CATALOG as a tab (Atlan / data.world / Castor pattern); DCG-DATA-PRODUCTS scope contested by an emerging DATA-CONTRACTS market candidate.
+    rationale: Both inform B2-S1 module-split choice. Phase 0 verification should check whether flagship lineage / data-contract surfaces warrant standalone modules or fold into adjacent ones.
+    vendor_evidence: [Atlan, data.world, Castor, Open Metadata, Collibra, Gable.ai, Datacontract.com, Confluent Schema Registry, PayPal Data Contract CLI, Buf Schema Registry]
+
+  - id: B3-REGULATIONS
+    candidate: 8 regulation rows missing (GDPR Article 30 records-of-processing, CCPA / CPRA consumer inventory + deletion, HIPAA PHI inventory, SOX ICFR financial-data lineage, BCBS 239 risk data aggregation, GLBA financial privacy, EU AI Act training-data provenance, SR 11-7 model risk management).
+    rationale: Each is a statutory anchor visible on flagship DCG vendor compliance surfaces. Authoring populates `regulations` and `domain_regulations`; gated on B2-S6 scoping decision.
+    vendor_evidence: [Collibra Compliance, Informatica AXON, Microsoft Purview Compliance Manager, OneTrust Data Discovery, BigID, Securiti]
+    proposed_module: gated_on_B2-S1
+
+  - id: B3-CANDIDATE-DOMAINS
+    candidate: 2 new domain-tier candidates to queue in `_missing-domains.md`, DATA-OBSERVABILITY and DATA-CONTRACTS.
+    rationale: "Each has a recognized point-solution vendor market (Monte Carlo / Acceldata / Bigeye / Anomalo / Soda / Sifflet / Metaplane / Datafold for observability; Gable.ai / Datacontract.com / PayPal Data Contract CLI / Confluent SR / Buf SR for contracts). Independent of DCG b1 audit but related, promotion changes B2-S1 module-split shape."
+    vendor_evidence: [Monte Carlo, Acceldata, Bigeye, Anomalo, Soda, Sifflet, Metaplane, Datafold, Gable.ai, Datacontract.com, PayPal Data Contract CLI, Confluent Schema Registry, Buf Schema Registry]
+
+  - id: B3-DISCOVER-PASS-3
+    candidate: 4 cross-domain handoffs (683 ml_model.deployed, 685 feature_set.published, 698 / 699 kgp_knowledge_graph_entity.merged / .created) that lack a clean APQC cross-industry PCF match and are routed to Discover Pass 3 custom-process authoring (source_framework='custom').
+    rationale: PCF cross-industry framework does not carry first-class activities for ML model registration or knowledge-graph operations. Each handoff stays untagged (or discovery_substring) until Discover Pass 3 publishes custom processes.
+    vendor_evidence: [absent]

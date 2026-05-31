@@ -1,0 +1,269 @@
+schema_version: 2
+domain: BANK-OPS
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-B1
+    summary: "Author 7 intra-domain data_object_relationships among BANK-OPS masters (loan_applications, account_applications, account_openings, banking_kyc_reviews, banking_cases, wire_transfers, loan_disbursements, banking_transactions)."
+    finding: "B6 boundary, zero intra-domain data_object_relationships rows among the 8 BANK-OPS masters. Cross-domain edges to CSM customer_cases exist (rows 462, 463) and 14 user-edges to data_object_id=748 exist via the 2026-05-31 Continuation, but no master-to-master edges within BANK-OPS."
+    action: "Focused TypeScript loader in .tmp_deploy/, idempotent by composed key (data_object_id, related_data_object_id, relationship_verb). INSERT 7 rows on data_object_relationships with owner_side='source', relationship_kind='reference', record_status='new'. Edges: (1) loan_applications spawns loan_disbursements, 1:1, required; (2) account_applications spawns account_openings, 1:1, required; (3) loan_applications requires banking_kyc_reviews, many_to_one, required; (4) account_applications requires banking_kyc_reviews, many_to_one, required; (5) wire_transfers logs banking_transactions, one_to_many, required; (6) loan_disbursements logs banking_transactions, 1:1, required; (7) banking_cases references banking_transactions, many_to_many, optional."
+    affected_entities:
+      - loan_applications
+      - account_applications
+      - account_openings
+      - banking_kyc_reviews
+      - banking_cases
+      - wire_transfers
+      - loan_disbursements
+      - banking_transactions
+
+b1b:
+  - id: B1B-S1
+    summary: "Author at least 1 (likely 5-7) full domain_modules rows for BANK-OPS; M1 hard-fail."
+    finding: "M1 HARD FAIL, zero domain_modules rows on BANK-OPS (domain_id=43). Per Rule #14 every domains row needs at least one module_kind='full' row. Cascades: F2 / F5 / E1-E6 / B9b / module-level skill (F1 transitional only) are all blocked."
+    action: "Phase A loader, hand-authored after Bucket 2 #1 decision. Insert domain_modules rows per chosen split, then DMDO rows linking the 8 masters (and any new MISSING masters from Bucket 1 M-series or Bucket 3 vetted candidates) to the right module."
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B1B-S2
+    summary: "Author 7 capability_domains rows for BANK-OPS (A2 fail)."
+    finding: "A2 FAIL, zero capability_domains rows. Market shape suggests at minimum BANK-ORIGINATION, BANK-DEPOSIT-OPS, BANK-KYC-AML, BANK-PAYMENT-OPS, BANK-CASE-MGMT, BANK-LOAN-SERVICING, BANK-REGULATORY-REPORTING (7 capabilities); some may rise to domain-neutral if cross-cutting markets are promoted (e.g. KYC-AML across queued KYC-AML-PLATFORM)."
+    action: "Phase A loader; insert capabilities + capability_domains; if modules already shipped, also link domain_module_capabilities. Module placement depends on Bucket 2 #1 shape."
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B1B-S3
+    summary: "Populate domains.catalog_tagline and catalog_description for BANK-OPS (A4 fail)."
+    finding: "A4 FAIL, both catalog_tagline and catalog_description are empty strings. Per Rule #20 the agent cannot author these without user-supplied wording."
+    action: "User supplies tagline + description text. Agent applies via PATCH on /domains?id=eq.43."
+    blocked_by:
+      - {type: user_decision, ref: B2-tagline-text}
+
+  - id: B1B-S4
+    summary: "Replace send_email on bank-ops-system skill with notify_person (F7); rename skill to module-scoped <module>_agent form (F1)."
+    finding: "F7 FAIL, send_email (tool id 37) linked on bank-ops-system as channel primitive without workflow justification; Rule says notify_person is the right capability. F1 transitional, the skill kebab-case name bank-ops-system should migrate to snake-case <module>_agent once per-module skills ship."
+    action: "Two PATCHes. (a) skill_tools row id=361 swap tool_id from 37 -> notify_person tool id (look up via /tools?tool_name=eq.notify_person). (b) Rename happens at Phase-S migration time after modules exist."
+    blocked_by:
+      - {type: user_decision, ref: B2-4}
+      - {type: depends_on, ref: B1B-S1, reason: "F1 rename gated on per-module skills existing"}
+
+  - id: B1B-M1
+    summary: "Insert beneficial_ownership_records master (BSA Customer Due Diligence Rule mandate)."
+    finding: "Bucket 1 MISSING, compliance-mandated entity not in catalog. UBO 25%-threshold owners + control-prong record for legal-entity customers, required at account opening under FinCEN 31 CFR 1010.230."
+    action: "Phase B loader. INSERT data_objects + DMDO row in chosen KYC-AML module + lifecycle_states + intra-domain relationship to banking_kyc_reviews."
+    blocked_by:
+      - {type: user_decision, ref: B2-1, reason: "needs target module"}
+      - {type: prerequisite_entity, ref: B1B-S1}
+
+  - id: B1B-M2
+    summary: "Insert sar_filings master (BSA 31 USC 5318(g) Suspicious Activity Reports)."
+    finding: "Bucket 1 MISSING, statute-mandated SAR filing record. Required within 30 days of detection."
+    action: "Phase B loader. INSERT data_objects + DMDO row in chosen REGULATORY or KYC-AML module + lifecycle_states (draft / submitted / filed / acknowledged) + intra-domain relationships to banking_transactions, banking_kyc_reviews, banking_cases."
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+      - {type: prerequisite_entity, ref: B1B-S1}
+
+  - id: B1B-M3
+    summary: "Insert ctr_reports master (BSA 31 CFR 1010.311 Currency Transaction Reports)."
+    finding: "Bucket 1 MISSING, statute-mandated CTR for cash transactions > USD 10k."
+    action: "Phase B loader. INSERT data_objects + DMDO row in chosen REGULATORY module + lifecycle_states + intra-domain relationship to banking_transactions."
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+      - {type: prerequisite_entity, ref: B1B-S1}
+
+  - id: B1B-M4
+    summary: "Insert ofac_screening_records master (OFAC sanctions program 50 USC 1701)."
+    finding: "Bucket 1 MISSING, OFAC screening result records for sanctions audit trail beyond the existing wire_transfer.sanctions_hit trigger event."
+    action: "Phase B loader. INSERT data_objects + DMDO row in chosen KYC-AML module + lifecycle_states + intra-domain relationships to wire_transfers, banking_kyc_reviews."
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+      - {type: prerequisite_entity, ref: B1B-S1}
+
+  - id: B1B-B3
+    summary: "Author 5 cross-domain mirror data_object_relationships on BANK-OPS outbound handoffs (886, 887, 888, 889, 892)."
+    finding: "B8 outbound, 5 of 7 cross-domain handoffs lack mirror data_object_relationships. 3 GRC-targeted handoffs (886 banking_kyc_review.flagged, 887 wire_transfer.sanctions_hit, 888 banking_transaction.suspicious) need an edge to GRC's compliance-alert master; 2 ERP-FIN-targeted handoffs (889 loan_disbursement.executed, 892 wire_transfer.initiated) need an edge to ERP-FIN's journal / payment master."
+    action: "Focused loader, INSERT 5 rows on data_object_relationships. Requires lookup of GRC's compliance-alert master id (likely compliance_alerts) and ERP-FIN's payment / journal master id."
+    affected_handoffs:
+      - {handoff_id: 886, direction: outbound, source_domain: BANK-OPS, target_domain: GRC, trigger_event: banking_kyc_review.flagged, payload: banking_kyc_reviews, null_field: target_data_object_id}
+      - {handoff_id: 887, direction: outbound, source_domain: BANK-OPS, target_domain: GRC, trigger_event: wire_transfer.sanctions_hit, payload: wire_transfers, null_field: target_data_object_id}
+      - {handoff_id: 888, direction: outbound, source_domain: BANK-OPS, target_domain: GRC, trigger_event: banking_transaction.suspicious, payload: banking_transactions, null_field: target_data_object_id}
+      - {handoff_id: 889, direction: outbound, source_domain: BANK-OPS, target_domain: ERP-FIN, trigger_event: loan_disbursement.executed, payload: loan_disbursements, null_field: target_data_object_id}
+      - {handoff_id: 892, direction: outbound, source_domain: BANK-OPS, target_domain: ERP-FIN, trigger_event: wire_transfer.initiated, payload: wire_transfers, null_field: target_data_object_id}
+    blocked_by:
+      - {type: catalog_addition, scope: domains, trigger: "GRC compliance-alert master lookup"}
+      - {type: catalog_addition, scope: domains, trigger: "ERP-FIN payment/journal master lookup"}
+
+  - id: B1B-B6
+    summary: "Author data_object_lifecycle_states for the 7 workflow-bearing BANK-OPS masters."
+    finding: "B12 FAIL, zero data_object_lifecycle_states for any master. Workflow-bearing masters needing state machines: loan_applications, account_applications, account_openings, banking_kyc_reviews, banking_cases, wire_transfers, loan_disbursements. banking_transactions is borderline config-shape (Bucket 2 #3 decides)."
+    action: "Phase B lifecycle loader. INSERT data_object_lifecycle_states with domain_module_id populated per module split, requires_permission=true on workflow gates, permission_verb_override per Bucket 2 #5 decisions."
+    affected_masters:
+      - {data_object_id: 602, name: loan_applications, target_module_id: null, workflow: "draft / submitted / under_review / approved / declined / funded / archived"}
+      - {data_object_id: 603, name: account_applications, target_module_id: null, workflow: "submitted / kyc_pending / approved / declined / converted_to_opening"}
+      - {data_object_id: 604, name: account_openings, target_module_id: null, workflow: "provisioning / active / dormant / closed"}
+      - {data_object_id: 605, name: banking_kyc_reviews, target_module_id: null, workflow: "queued / in_review / flagged / cleared / escalated / closed"}
+      - {data_object_id: 606, name: banking_cases, target_module_id: null, workflow: "open / triaged / investigating / escalated / resolved / closed"}
+      - {data_object_id: 607, name: wire_transfers, target_module_id: null, workflow: "initiated / screening / approved / sent / settled / returned / rejected"}
+      - {data_object_id: 608, name: loan_disbursements, target_module_id: null, workflow: "scheduled / authorized / executed / reversed"}
+    blocked_by:
+      - {type: user_decision, ref: B2-1, reason: "states need realizing domain_module_id"}
+      - {type: user_decision, ref: B2-3, reason: "banking_transactions inclusion / shape"}
+      - {type: user_decision, ref: B2-5, reason: "verb override wording for 4 ambiguous gates"}
+      - {type: prerequisite_entity, ref: B1B-S1}
+
+  - id: B1B-B7
+    summary: "PATCH pattern flags (has_personal_content, has_submit_lock, has_single_approver) on 5 BANK-OPS masters."
+    finding: "B4 FAIL, all three pattern flags default false on every master. Proposed: loan_applications {personal_content, submit_lock, single_approver}, account_applications {personal_content, submit_lock}, banking_kyc_reviews {personal_content}, banking_cases {personal_content}, wire_transfers {submit_lock, single_approver above threshold}."
+    action: "PATCH on data_objects per master. No notes annotation (Rule #15)."
+    affected_entities:
+      - loan_applications
+      - account_applications
+      - banking_kyc_reviews
+      - banking_cases
+      - wire_transfers
+    blocked_by:
+      - {type: depends_on, ref: B1B-B6, reason: "optimal flag pattern depends on lifecycle shape, which depends on module split"}
+
+  - id: B1B-B8
+    summary: "Author 6 domain_aliases rows for BANK-OPS."
+    finding: "Zero domain_aliases for BANK-OPS. Proposed: banking operations, retail banking ops, commercial banking ops, deposit operations, core banking ops, bank back-office."
+    action: "Loader INSERT on domain_aliases."
+    blocked_by:
+      - {type: user_decision, ref: B2-aliases-text, reason: "Rule #20-adjacent buyer-shaped wording, confirm list with user"}
+
+b2:
+  - id: B2-1
+    summary: "Module split for BANK-OPS, gates ~10 b1b items."
+    question: "Which module shape for BANK-OPS? (a) 7-module: BANK-OPS-ORIGINATION + BANK-OPS-ACCOUNT-MGMT + BANK-OPS-KYC-AML + BANK-OPS-PAYMENTS + BANK-OPS-CASES + BANK-OPS-LOAN-SERVICING + BANK-OPS-REGULATORY; (b) 5-module collapse KYC-AML + REGULATORY into BANK-OPS-COMPLIANCE; (c) 6-module collapse ORIGINATION + ACCOUNT-MGMT into BANK-OPS-ONBOARDING; (d) defer KYC-AML out to queued KYC-AML-PLATFORM domain (rehomes B1B-M1 / B1B-M4 / partly B1B-M2); (e) some other shape."
+    options: ["a-7module", "b-5module-compliance", "c-6module-onboarding", "d-defer-kyc-aml-platform", "e-other"]
+    why: "Drives the entire M-band, E-band, F2-F5, lifecycle realizing module FKs, and re-homes several Bucket 1 / Bucket 3 candidates."
+
+  - id: B2-2
+    summary: "banking_cases vs CSM customer_cases reconciliation."
+    question: "Resolve overlap between BANK-OPS banking_cases (id 606) and CSM customer_cases (id 103). Rows 462/463 already use verb 'opens' which reads chained. (a) keep banking_cases as own master, rewrite verb to triggers/spawns; (b) demote banking_cases to embedded_master of customer_cases (CSM-owned); (c) keep both with disambiguated verbs."
+    options: ["a-rewrite-verb", "b-demote-to-embedded", "c-disambiguate"]
+    why: "Option (b) collapses ~one module worth of work (no BANK-OPS-CASES module needed) and changes B1B-M1-M4 module placement for any banking-case-shaped masters."
+
+  - id: B2-3
+    summary: "banking_transactions lifecycle shape."
+    question: "B12 for banking_transactions (id 609): (a) full workflow with dispute/reverse gates (pending / posted / reconciled / disputed / reversed); (b) slim 3-state pending/posted/reconciled with no permission gates; (c) skip the master entirely from B12 (config-shape exemption, surface to user per Rule #12)."
+    options: ["a-full", "b-slim-no-gates", "c-skip-config-shape"]
+
+  - id: B2-4
+    summary: "Channel pattern for compliance fan-out events."
+    question: "For wire_transfer.sanctions_hit and banking_transaction.suspicious (compliance team + originator + manager): use (a) one notify_team tool (broadcast), (b) multiple notify_person rows, or (c) keep send_email despite F7?"
+    options: ["a-notify-team", "b-multi-notify-person", "c-keep-send-email"]
+    why: "Drives B1B-S4 fix shape."
+
+  - id: B2-5
+    summary: "Verb override wording for 4 ambiguous workflow-gate verbs."
+    question: "Pick verb wording for permission codes: (a) loan_applications.approved -> approve_loan_application; (b) wire_transfers.approved -> approve_wire_transfer (verify OFAC vs dual-approval); (c) banking_kyc_reviews.cleared -> clear_kyc_review or disposition_kyc_review; (d) banking_cases.resolved -> resolve_banking_case or close_case."
+    options: ["per-item user wording"]
+    why: "Drives the permission_verb_override on B1B-B6 lifecycle states."
+
+  - id: B2-6
+    summary: "Add Risk / Compliance C-band contributor on BANK-OPS."
+    question: "Add a third business_function_domains row mapping the risk/compliance function (GRC owner) as a contributor on BANK-OPS? Depends on the function spine naming."
+    options: ["a-add-risk-compliance", "b-leave-current-two"]
+
+  - id: B2-7
+    summary: "GRC pairwise reconciliation timing."
+    question: "GRC clears weight-3 threshold for pairwise. (a) defer until M1 cured (most legs blocked on module attribution); (b) run lightweight GRC pairwise now to surface candidate missing handoffs from GRC side; (c) run CSM and ERP-FIN pairwise too despite weight 2."
+    options: ["a-defer-until-m1", "b-lightweight-grc-now", "c-all-three"]
+
+  - id: B2-8
+    summary: "H1 catalog-quality approvals on 7 agent_curated handoff_processes rows."
+    question: "Per Rule #1, agent cannot self-approve. Stamp record_status='approved' on (handoff_id, process_id) pairs: 886/70, 887/70, 888/323, 889/1438, 890/196, 891/323, 892/1438? Pair 890/196 was originally flagged 'medium L3 confidence'."
+    options: ["a-approve-all", "b-approve-except-890", "c-per-row-review", "d-keep-new"]
+    why: "Headline H1 quality measure is approved-count, not agent_curated-count."
+
+  - id: B2-tagline-text
+    summary: "Supply tagline + description text for A4."
+    question: "Rule #20 requires user-supplied wording for catalog_tagline and catalog_description on domains.id=43. Provide buyer-shaped copy."
+    options: ["user-text"]
+
+  - id: B2-aliases-text
+    summary: "Confirm 6 domain_aliases for BANK-OPS."
+    question: "Confirm or rewrite list: banking operations, retail banking ops, commercial banking ops, deposit operations, core banking ops, bank back-office."
+    options: ["confirm", "rewrite", "skip"]
+
+b3:
+  - id: B3-borrower-profiles
+    candidate: borrower_profiles
+    rationale: "Distinct from generic CRM contacts; carries credit-profile / FICO snapshots specific to lending. Universal vendor entity across loan-origination products."
+    vendor_evidence: ["nCino", "Blend", "Encompass", "Mortgage Cadence"]
+    proposed_module: BANK-OPS-ORIGINATION
+
+  - id: B3-collateral-records
+    candidate: collateral_records
+    rationale: "Mortgage / auto / commercial collateral records carrying valuation history and perfection status."
+    vendor_evidence: ["nCino", "Encompass", "Baker Hill"]
+    proposed_module: BANK-OPS-ORIGINATION
+
+  - id: B3-credit-decisions
+    candidate: credit_decisions
+    rationale: "Underwriting decision artifact (score, decline reasons, conditions); distinct from loan_applications because it's the decision record, not the application."
+    vendor_evidence: ["nCino", "Blend", "Roostify"]
+    proposed_module: BANK-OPS-ORIGINATION
+
+  - id: B3-loan-servicing-accounts
+    candidate: loan_servicing_accounts
+    rationale: "Post-disbursement servicing record (balance, escrow, payment schedule); distinct from loan_disbursements which is point-in-time."
+    vendor_evidence: ["Mambu", "Thought Machine", "Black Knight MSP"]
+    proposed_module: BANK-OPS-LOAN-SERVICING
+
+  - id: B3-repayment-schedules
+    candidate: repayment_schedules
+    rationale: "Amortization rows by period; child of loan_servicing_accounts."
+    vendor_evidence: ["Mambu", "Thought Machine"]
+    proposed_module: BANK-OPS-LOAN-SERVICING
+
+  - id: B3-adverse-media-screenings
+    candidate: adverse_media_screenings
+    rationale: "Negative-news matches separate from sanctions; needed under FATF guidance for enhanced due diligence."
+    vendor_evidence: ["ComplyAdvantage", "Refinitiv World-Check", "LSEG"]
+    proposed_module: BANK-OPS-KYC-AML
+
+  - id: B3-pep-screenings
+    candidate: pep_screenings
+    rationale: "Politically Exposed Person screening history; FATF-recommended ongoing monitoring."
+    vendor_evidence: ["ComplyAdvantage", "Dow Jones", "Refinitiv"]
+    proposed_module: BANK-OPS-KYC-AML
+
+  - id: B3-chargebacks
+    candidate: chargebacks
+    rationale: "Card-network dispute records with distinct lifecycle from banking_cases (Visa/MC dispute reason codes, time-bounded responses)."
+    vendor_evidence: ["Featurespace", "Marqeta", "Stripe Issuing"]
+    proposed_module: BANK-OPS-CASES
+
+  - id: B3-ach-transfers
+    candidate: ach_transfers
+    rationale: "Distinct from wire_transfers, different rail (ACH not RTGS), NACHA rules, return windows up to 60 days."
+    vendor_evidence: ["Modern Treasury", "Stripe Treasury", "Plaid Transfer", "NACHA"]
+    proposed_module: BANK-OPS-PAYMENTS
+
+  - id: B3-card-authorizations
+    candidate: card_authorizations
+    rationale: "Real-time card auth records; volume-heavy distinct entity from banking_transactions."
+    vendor_evidence: ["Marqeta", "Lithic", "Stripe Issuing"]
+    proposed_module: BANK-OPS-PAYMENTS
+
+  - id: B3-correspondent-bank-relationships
+    candidate: correspondent_bank_relationships
+    rationale: "Nostro / vostro accounts for international payment routing."
+    vendor_evidence: ["Backbase", "SWIFT GPI", "Wise Platform"]
+    proposed_module: BANK-OPS-PAYMENTS
+
+  - id: B3-banking-product-catalog-items
+    candidate: banking_product_catalog_items
+    rationale: "Configurable product templates (deposit / loan / card variants); config-shape master."
+    vendor_evidence: ["Mambu", "Thought Machine", "FIS Core", "Finastra"]
+    proposed_module: BANK-OPS-ACCOUNT-MGMT
+
+  - id: B3-regulatory-reports
+    candidate: regulatory_reports
+    rationale: "Generic regulatory-report master beyond SAR / CTR (FBAR, FATCA, BCBS, CRR/CRD reporting)."
+    vendor_evidence: ["SAS AML", "Oracle FCC", "Fiserv"]
+    proposed_module: BANK-OPS-REGULATORY

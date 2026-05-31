@@ -68,6 +68,7 @@
       "Bash(sort *)",
       "Bash(uniq *)",
       "Bash(jq *)",
+      "Bash(yq *)",
       "Bash(date *)",
       "Bash(echo *)",
       "Bash(pwd)",

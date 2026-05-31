@@ -1,0 +1,320 @@
+schema_version: 2
+domain: CDP
+status: feedback_needed
+next_action_by: agent
+last_audit: "2026-05-31"
+
+b1a:
+  - id: B1A-S10
+    summary: "APQC tagging on 23 cross-domain CDP handoffs (4 REPLACE + 1 FLIP + 17 INSERT + 1 NO-OP), all rows ship proposal_source=agent_curated record_status=new"
+    finding: "23 cross-domain handoffs (9 outbound + 14 inbound); 7 carry a handoff_processes row of which 4 substring rows point at wrong PCF activities (68 -> Analyze spend profile L4; 78/80/478 -> Establish goals/objectives L3; 480 -> Create customer journey maps L5 narrower than L3 parent), 1 discovery_override row is correct (77 -> Manage customer service problems L3), 1 agent_curated row is correct (89 -> Analyze and respond to customer insight L3). 16 handoffs untagged. Zero rows at record_status=approved. H1 volume target 12-18 NEW agent_curated proposals; current load delivered 1."
+    action: "Author a small focused loader. Per-row actions (handoff_id, action, PCF target): 68 REPLACE Manage customer accounts and relationships L3; 78 REPLACE Develop and manage customer loyalty programs L3; 79 INSERT Develop sales strategy/Sell products and services L3 medium; 80 REPLACE Manage commerce experience digital storefronts L3; 478 REPLACE Develop and manage customer loyalty programs L3; 479 INSERT Manage customer service requests/Service quality L3 medium; 480 REPLACE L5 1814 with Manage customer experience L3; 481 INSERT Manage master data L2/Manage data integrity L3; 529 INSERT Manage customer experience L3 medium; 69 INSERT Develop and manage marketing campaigns L3; 74 INSERT Develop and manage marketing campaigns L3; 75 INSERT Manage commerce experience L3; 76 INSERT Manage sales orders/Pipeline management L3; 77 FLIP discovery_override to agent_curated; 89 NO-OP; 997 INSERT Develop products and services L2/product launch L3 medium; 508 INSERT Develop and manage marketing campaigns L3; 504 INSERT Manage commerce experience L3 medium; 717 INSERT Manage master data L2; 809 INSERT Manage customer experience L3; 810 INSERT Manage customer experience L3; 272 INSERT Manage master data L2; 1004 INSERT Develop products and services L2/product adoption L3 medium. Composed key (handoff_id, process_id) prevents duplicates."
+    affected_handoffs:
+      - {handoff_id: 68, direction: outbound, source_domain: CDP, target_domain: CRM, trigger_event: profile.lifecycle_changed, payload: customers, null_field: source_domain_module_id}
+      - {handoff_id: 78, direction: outbound, source_domain: CDP, target_domain: LOYALTY, trigger_event: segment.activated, payload: audience_segments, null_field: source_domain_module_id}
+      - {handoff_id: 79, direction: outbound, source_domain: CDP, target_domain: SALES-ENG, trigger_event: high_intent_signal.detected, payload: sales_cadences, null_field: source_domain_module_id}
+      - {handoff_id: 80, direction: outbound, source_domain: CDP, target_domain: B2C-COMM, trigger_event: segment.activated, payload: customers, null_field: source_domain_module_id}
+      - {handoff_id: 478, direction: outbound, source_domain: CDP, target_domain: LOYALTY, trigger_event: segment.activated, payload: audience_segments, null_field: source_domain_module_id}
+      - {handoff_id: 479, direction: outbound, source_domain: CDP, target_domain: CSM, trigger_event: customer_attributes.refreshed, payload: customer_attributes, null_field: source_domain_module_id}
+      - {handoff_id: 480, direction: outbound, source_domain: CDP, target_domain: B2C-COMM, trigger_event: customer_journey.stage_entered, payload: customer_journeys, null_field: source_domain_module_id}
+      - {handoff_id: 481, direction: outbound, source_domain: CDP, target_domain: MDM, trigger_event: identity_graph.updated, payload: identity_graphs, null_field: source_domain_module_id}
+      - {handoff_id: 529, direction: outbound, source_domain: CDP, target_domain: B2C-COMM, trigger_event: customer_attributes.refreshed, payload: customer_attributes, null_field: source_domain_module_id}
+      - {handoff_id: 69, direction: inbound, source_domain: MA, target_domain: CDP, trigger_event: marketing_campaign.engagement_recorded, payload: customers, null_field: target_domain_module_id}
+      - {handoff_id: 74, direction: inbound, source_domain: MA, target_domain: CDP, trigger_event: marketing_campaign.event_recorded, payload: customer_events, null_field: target_domain_module_id}
+      - {handoff_id: 75, direction: inbound, source_domain: B2C-COMM, target_domain: CDP, trigger_event: storefront.interaction, payload: customer_events, null_field: target_domain_module_id}
+      - {handoff_id: 76, direction: inbound, source_domain: CRM, target_domain: CDP, trigger_event: crm_opportunity.stage_changed, payload: customer_events, null_field: target_domain_module_id}
+      - {handoff_id: 77, direction: inbound, source_domain: CSM, target_domain: CDP, trigger_event: case.created, payload: customer_events, null_field: none}
+      - {handoff_id: 89, direction: inbound, source_domain: SMM, target_domain: CDP, trigger_event: social_engagement.recorded, payload: customers, null_field: target_domain_module_id}
+      - {handoff_id: 997, direction: inbound, source_domain: PROD-MGMT, target_domain: CDP, trigger_event: beta_program.launched, payload: beta_programs, null_field: target_domain_module_id}
+      - {handoff_id: 508, direction: inbound, source_domain: MA, target_domain: CDP, trigger_event: marketing_form.submitted, payload: crm_leads, null_field: target_domain_module_id}
+      - {handoff_id: 504, direction: inbound, source_domain: B2C-COMM, target_domain: CDP, trigger_event: commerce_product.published, payload: commerce_products, null_field: target_domain_module_id}
+      - {handoff_id: 717, direction: inbound, source_domain: MDM, target_domain: CDP, trigger_event: source_record.merged_to_golden, payload: source_records, null_field: target_domain_module_id}
+      - {handoff_id: 809, direction: inbound, source_domain: DXP, target_domain: CDP, trigger_event: segment_dxp.published, payload: segments_dxp, null_field: target_domain_module_id}
+      - {handoff_id: 810, direction: inbound, source_domain: DXP, target_domain: CDP, trigger_event: journey_step.entered, payload: journey_steps, null_field: target_domain_module_id}
+      - {handoff_id: 272, direction: inbound, source_domain: MDM, target_domain: CDP, trigger_event: customer_golden_record.updated, payload: customers, null_field: target_domain_module_id}
+      - {handoff_id: 1004, direction: inbound, source_domain: PROD-MGMT, target_domain: CDP, trigger_event: product_feature.adoption_threshold_reached, payload: product_features, null_field: target_domain_module_id}
+    vendor_evidence: [Twilio Segment, Tealium AudienceStream, mParticle, Treasure Data CDP, Salesforce Data Cloud, Adobe Real-Time CDP, Hightouch]
+    extra_loader_group: apqc_tagging
+    extra_sequencing: "independent of B1B-S1 (M1 hard-fail); APQC tags route by trigger_event semantics not module attribution"
+
+b1b:
+  - id: B1B-S1
+    summary: "M1 hard fail. Zero domain_modules on a 9-capability domain; Rule #14 requires >=2 full modules. Phase A/M/B/E/F/S full load needed"
+    finding: "domain_modules count = 0 for CDP id 72; domain_module_host_domains count = 0; 9 capability_domains rows (CDP-INGEST 254, IDENTITY-RESOLUTION 255, CDP-UNIFIED-PROFILE 256, CDP-SEGMENTATION 257, CDP-ACTIVATION 258, CDP-CONSENT-PRIV 259, CDP-PREDICTIVE 260, CDP-COMPOSABLE-WH 261, CUSTOMER-360 310). 6 masters on the legacy domain_data_objects rollup (customers 97, customer_events 111, identity_graphs 112, audience_segments 113, customer_attributes 114, customer_journeys 115). 1 legacy skill_type=system skill (cdp-system id 35, domain_module_id null). Every downstream M/B(module-grain)/E/F band check is moot until modules exist. Proposed 6-module split: CDP-INGEST (customer_events + Phase 0 data_sources/event_sinks), CDP-IDENTITY (identity_graphs + Phase 0 identity_rules/merge_decisions), CDP-UNIFIED-PROFILE (customers + customer_attributes), CDP-SEGMENTATION (audience_segments + Phase 0 segment_definitions), CDP-ACTIVATION (Phase 0 activation_destinations/activation_runs), CDP-JOURNEYS (customer_journeys)."
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+      - {type: user_decision, ref: B2-S5}
+    affected_masters:
+      - {data_object_id: 97, name: customers, target_module_id: null, workflow: CDP-UNIFIED-PROFILE}
+      - {data_object_id: 111, name: customer_events, target_module_id: null, workflow: CDP-INGEST}
+      - {data_object_id: 112, name: identity_graphs, target_module_id: null, workflow: CDP-IDENTITY}
+      - {data_object_id: 113, name: audience_segments, target_module_id: null, workflow: CDP-SEGMENTATION}
+      - {data_object_id: 114, name: customer_attributes, target_module_id: null, workflow: CDP-UNIFIED-PROFILE}
+      - {data_object_id: 115, name: customer_journeys, target_module_id: null, workflow: CDP-JOURNEYS}
+    extra_load_scope: "6 domain_modules + 6 system skills + ~40-60 tools/skill_tools + ~30-40 domain_module_data_objects + ~12-18 permissions + ~5-7 roles/role_modules/role_permissions"
+
+  - id: B1B-S3
+    summary: "B10b CDP-side: 9 outbound + 13 inbound handoffs carry NULL CDP-side domain_module_id, blocked on B1B-S1"
+    finding: "All 9 CDP outbound handoffs (68, 78, 79, 80, 478, 479, 480, 481, 529) have source_domain_module_id=null. 13 of 14 inbound have target_domain_module_id=null (handoff 77 is the only one; CSM-side source 112 is populated). No CDP modules exist to point at."
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: "requires CDP modules to exist"}
+    affected_handoffs:
+      - {handoff_id: 68, direction: outbound, source_domain: CDP, target_domain: CRM, trigger_event: profile.lifecycle_changed, payload: customers, null_field: source_domain_module_id}
+      - {handoff_id: 78, direction: outbound, source_domain: CDP, target_domain: LOYALTY, trigger_event: segment.activated, payload: audience_segments, null_field: source_domain_module_id}
+      - {handoff_id: 79, direction: outbound, source_domain: CDP, target_domain: SALES-ENG, trigger_event: high_intent_signal.detected, payload: sales_cadences, null_field: source_domain_module_id}
+      - {handoff_id: 80, direction: outbound, source_domain: CDP, target_domain: B2C-COMM, trigger_event: segment.activated, payload: customers, null_field: source_domain_module_id}
+      - {handoff_id: 478, direction: outbound, source_domain: CDP, target_domain: LOYALTY, trigger_event: segment.activated, payload: audience_segments, null_field: source_domain_module_id}
+      - {handoff_id: 479, direction: outbound, source_domain: CDP, target_domain: CSM, trigger_event: customer_attributes.refreshed, payload: customer_attributes, null_field: source_domain_module_id}
+      - {handoff_id: 480, direction: outbound, source_domain: CDP, target_domain: B2C-COMM, trigger_event: customer_journey.stage_entered, payload: customer_journeys, null_field: source_domain_module_id}
+      - {handoff_id: 481, direction: outbound, source_domain: CDP, target_domain: MDM, trigger_event: identity_graph.updated, payload: identity_graphs, null_field: source_domain_module_id}
+      - {handoff_id: 529, direction: outbound, source_domain: CDP, target_domain: B2C-COMM, trigger_event: customer_attributes.refreshed, payload: customer_attributes, null_field: source_domain_module_id}
+      - {handoff_id: 69, direction: inbound, source_domain: MA, target_domain: CDP, trigger_event: marketing_campaign.engagement_recorded, payload: customers, null_field: target_domain_module_id}
+      - {handoff_id: 74, direction: inbound, source_domain: MA, target_domain: CDP, trigger_event: marketing_campaign.event_recorded, payload: customer_events, null_field: target_domain_module_id}
+      - {handoff_id: 75, direction: inbound, source_domain: B2C-COMM, target_domain: CDP, trigger_event: storefront.interaction, payload: customer_events, null_field: target_domain_module_id}
+      - {handoff_id: 76, direction: inbound, source_domain: CRM, target_domain: CDP, trigger_event: crm_opportunity.stage_changed, payload: customer_events, null_field: target_domain_module_id}
+      - {handoff_id: 89, direction: inbound, source_domain: SMM, target_domain: CDP, trigger_event: social_engagement.recorded, payload: customers, null_field: target_domain_module_id}
+      - {handoff_id: 997, direction: inbound, source_domain: PROD-MGMT, target_domain: CDP, trigger_event: beta_program.launched, payload: beta_programs, null_field: target_domain_module_id}
+      - {handoff_id: 508, direction: inbound, source_domain: MA, target_domain: CDP, trigger_event: marketing_form.submitted, payload: crm_leads, null_field: target_domain_module_id}
+      - {handoff_id: 504, direction: inbound, source_domain: B2C-COMM, target_domain: CDP, trigger_event: commerce_product.published, payload: commerce_products, null_field: target_domain_module_id}
+      - {handoff_id: 717, direction: inbound, source_domain: MDM, target_domain: CDP, trigger_event: source_record.merged_to_golden, payload: source_records, null_field: target_domain_module_id}
+      - {handoff_id: 809, direction: inbound, source_domain: DXP, target_domain: CDP, trigger_event: segment_dxp.published, payload: segments_dxp, null_field: target_domain_module_id}
+      - {handoff_id: 810, direction: inbound, source_domain: DXP, target_domain: CDP, trigger_event: journey_step.entered, payload: journey_steps, null_field: target_domain_module_id}
+      - {handoff_id: 272, direction: inbound, source_domain: MDM, target_domain: CDP, trigger_event: customer_golden_record.updated, payload: customers, null_field: target_domain_module_id}
+      - {handoff_id: 1004, direction: inbound, source_domain: PROD-MGMT, target_domain: CDP, trigger_event: product_feature.adoption_threshold_reached, payload: product_features, null_field: target_domain_module_id}
+
+  - id: B1B-S4
+    summary: "B10b owed by partner domains: 9 inbound NULL source_domain_module_id (MA, B2C-COMM, SMM, MDM, DXP) plus 2 outbound NULL targets (LOYALTY, SALES-ENG)"
+    finding: "Inbound NULL source_domain_module_id: 69, 74, 508 (MA); 75, 504 (B2C-COMM); 89 (SMM); 717, 272 (MDM); 809, 810 (DXP). Outbound NULL target_domain_module_id owed by partner: 78 (LOYALTY), 79 (SALES-ENG). Already-correct partner-side FKs: 68 CRM-target=46; 76 CRM-source=48; 77 CSM-source=112; 997 / 1004 PROD-MGMT-source=131."
+    blocked_by:
+      - {type: domain_audit, blocking_domain: MA, milestone: B10b-source-backfill}
+      - {type: domain_audit, blocking_domain: B2C-COMM, milestone: B10b-source-backfill}
+      - {type: domain_audit, blocking_domain: SMM, milestone: B10b-source-backfill}
+      - {type: domain_audit, blocking_domain: MDM, milestone: B10b-source-backfill}
+      - {type: domain_audit, blocking_domain: DXP, milestone: B10b-source-backfill}
+      - {type: domain_audit, blocking_domain: LOYALTY, milestone: B10b-target-backfill}
+      - {type: domain_audit, blocking_domain: SALES-ENG, milestone: B10b-target-backfill}
+      - {type: domain_audit, blocking_domain: CSM, milestone: B10b-target-on-479}
+    affected_handoffs:
+      - {handoff_id: 69, direction: inbound, source_domain: MA, target_domain: CDP, trigger_event: marketing_campaign.engagement_recorded, payload: customers, null_field: source_domain_module_id}
+      - {handoff_id: 74, direction: inbound, source_domain: MA, target_domain: CDP, trigger_event: marketing_campaign.event_recorded, payload: customer_events, null_field: source_domain_module_id}
+      - {handoff_id: 508, direction: inbound, source_domain: MA, target_domain: CDP, trigger_event: marketing_form.submitted, payload: crm_leads, null_field: source_domain_module_id}
+      - {handoff_id: 75, direction: inbound, source_domain: B2C-COMM, target_domain: CDP, trigger_event: storefront.interaction, payload: customer_events, null_field: source_domain_module_id}
+      - {handoff_id: 504, direction: inbound, source_domain: B2C-COMM, target_domain: CDP, trigger_event: commerce_product.published, payload: commerce_products, null_field: source_domain_module_id}
+      - {handoff_id: 89, direction: inbound, source_domain: SMM, target_domain: CDP, trigger_event: social_engagement.recorded, payload: customers, null_field: source_domain_module_id}
+      - {handoff_id: 717, direction: inbound, source_domain: MDM, target_domain: CDP, trigger_event: source_record.merged_to_golden, payload: source_records, null_field: source_domain_module_id}
+      - {handoff_id: 272, direction: inbound, source_domain: MDM, target_domain: CDP, trigger_event: customer_golden_record.updated, payload: customers, null_field: source_domain_module_id}
+      - {handoff_id: 809, direction: inbound, source_domain: DXP, target_domain: CDP, trigger_event: segment_dxp.published, payload: segments_dxp, null_field: source_domain_module_id}
+      - {handoff_id: 810, direction: inbound, source_domain: DXP, target_domain: CDP, trigger_event: journey_step.entered, payload: journey_steps, null_field: source_domain_module_id}
+      - {handoff_id: 78, direction: outbound, source_domain: CDP, target_domain: LOYALTY, trigger_event: segment.activated, payload: audience_segments, null_field: target_domain_module_id}
+      - {handoff_id: 478, direction: outbound, source_domain: CDP, target_domain: LOYALTY, trigger_event: segment.activated, payload: audience_segments, null_field: target_domain_module_id}
+      - {handoff_id: 79, direction: outbound, source_domain: CDP, target_domain: SALES-ENG, trigger_event: high_intent_signal.detected, payload: sales_cadences, null_field: target_domain_module_id}
+      - {handoff_id: 479, direction: outbound, source_domain: CDP, target_domain: CSM, trigger_event: customer_attributes.refreshed, payload: customer_attributes, null_field: target_domain_module_id}
+
+  - id: B1B-S5
+    summary: "Lifecycle states gap on 5 of 6 CDP masters; requires module attribution (B1B-S1) and user split decision (B2-S3)"
+    finding: "customer_events, identity_graphs, audience_segments, customer_attributes, customer_journeys carry zero data_object_lifecycle_states. Proposal: author for audience_segments (draft/active/paused/archived) + customer_journeys (active/completed/abandoned); exempt customer_events (append-only stream), customer_attributes (derived materialization), identity_graphs (resolution overlay) under Rule #12 config-shape carve-out. Rule #15 forbids auto-annotating the exemption in notes; surface decision in chat per audit."
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: "lifecycle states need domain_module_id attribution"}
+      - {type: user_decision, ref: B2-S3}
+    affected_masters:
+      - {data_object_id: 113, name: audience_segments, target_module_id: null, workflow: draft-active-paused-archived}
+      - {data_object_id: 115, name: customer_journeys, target_module_id: null, workflow: active-completed-abandoned}
+      - {data_object_id: 111, name: customer_events, target_module_id: null, workflow: config-shape-exempt-candidate}
+      - {data_object_id: 114, name: customer_attributes, target_module_id: null, workflow: config-shape-exempt-candidate}
+      - {data_object_id: 112, name: identity_graphs, target_module_id: null, workflow: config-shape-exempt-candidate}
+
+  - id: B1B-S6
+    summary: "domain_regulations partial: 4 linked (GDPR, CCPA, EU-AI-ACT, COPPA), 4 candidates pending user scope decision and 4 missing rows in regulations table"
+    finding: "Currently linked: regulation_id 1 (GDPR), 3 (CCPA/CPRA), 33 (EU-AI-ACT), 55 (COPPA). Missing per vendor surface: LGPD (Brazil), IAB TCF v2 (ad-tech consent framework), Quebec Law 25, POPIA (South Africa). The 4 missing rows are not present in the regulations master table yet; creating master regulation rows is itself a judgment call deferred to B2-S4."
+    blocked_by:
+      - {type: user_decision, ref: B2-S4}
+      - {type: catalog_addition, scope: domains, trigger: "create regulations master rows for LGPD, IAB TCF v2, Quebec Law 25, POPIA"}
+
+  - id: B1B-S7
+    summary: "customers lifecycle state_order collisions (engagement vs billing collapsed onto one master)"
+    finding: "6 customers lifecycle states show duplicate state_order: state_order=3 on both inactive and past_due; state_order=4 on both churned and cancelled. Two parallel state machines collapsed onto the customers master without disambiguation. Engagement axis: prospect (1) -> active (2) -> inactive (3) -> churned (4). Billing axis: prospect (1) -> active (2) -> past_due (3) -> cancelled (4)."
+    blocked_by:
+      - {type: user_decision, ref: B2-S8}
+    affected_masters:
+      - {data_object_id: 97, name: customers, target_module_id: null, workflow: dual-state-machine}
+
+  - id: B1B-S8
+    summary: "Rule #10 users edges missing on all 6 CDP masters"
+    finding: "Zero data_object_relationships rows linking any CDP master (97, 111, 112, 113, 114, 115) to the users platform-builtin row. Per Rule #10, every master with a user-typed actor (segment author, journey definer, audience owner, attribute owner, event recorder) needs at least one edge to users. Technically unblocked by B1B-S1; deferred so Phase B re-load authors users edges, lifecycle states, and intra-domain relationships in one pass."
+    blocked_by:
+      - {type: depends_on, ref: B1B-S1, reason: "deferred for one-pass Phase B re-load"}
+    affected_masters:
+      - {data_object_id: 97, name: customers, target_module_id: null, workflow: needs-users-edge}
+      - {data_object_id: 111, name: customer_events, target_module_id: null, workflow: needs-users-edge}
+      - {data_object_id: 112, name: identity_graphs, target_module_id: null, workflow: needs-users-edge}
+      - {data_object_id: 113, name: audience_segments, target_module_id: null, workflow: needs-users-edge}
+      - {data_object_id: 114, name: customer_attributes, target_module_id: null, workflow: needs-users-edge}
+      - {data_object_id: 115, name: customer_journeys, target_module_id: null, workflow: needs-users-edge}
+
+  - id: B1B-S9
+    summary: "A4 catalog UX empty on domains row; Rule #20 requires explicit user approval"
+    finding: "domains.catalog_tagline and catalog_description are both empty strings on CDP id 72. Rule #20 forbids drafting and writing without explicit per-row user approval of buyer-voice copy."
+    blocked_by:
+      - {type: user_decision, ref: B2-S9}
+
+b2:
+  - id: B2-S1
+    summary: "Phase-A re-do shape (6-module split vs alternatives) gates B1B-S1"
+    question: "Accept the 6-module split (CDP-INGEST, CDP-IDENTITY, CDP-UNIFIED-PROFILE, CDP-SEGMENTATION, CDP-ACTIVATION, CDP-JOURNEYS) or counter-propose?"
+    options:
+      - "Accept the 6-module split as proposed"
+      - "Counter-propose"
+      - "Decide customers master ownership first (B2-S5) then revisit"
+    why: "Architectural product decision. Rule #14 ships modules same Phase A as the domain; this is post-hoc structural recovery. Possible variants surfaced in 2026-05-30 audit: collapse JOURNEYS into UNIFIED-PROFILE (5 modules), split IDENTITY into IDENTITY-RESOLUTION + CONSENT-PRIV, add CDP-COMPOSABLE-WH for warehouse-native."
+
+  - id: B2-S2
+    summary: "Pattern flag re-evaluation per Rule #12 on the 5 non-customers masters"
+    question: "Should has_personal_content flip to true on customer_events, identity_graphs, customer_journeys, customer_attributes, audience_segments?"
+    options:
+      - "Per-flag yes/no across 5 masters"
+    why: "Pattern flags are workflow-shape judgments the user owns. Recommendation: true on customer_events (IPs, device fingerprints, email opens), identity_graphs (email-to-device-to-cookie map), customer_journeys (per-customer traces). Borderline on customer_attributes (LTV/churn at per-customer grain) and audience_segments (segment membership rosters are personal)."
+
+  - id: B2-S3
+    summary: "Lifecycle state split decision (author vs Rule #12 config-shape exemption)"
+    question: "Confirm the split: author lifecycle states for audience_segments + customer_journeys; exempt customer_events, customer_attributes, identity_graphs?"
+    options:
+      - "Accept 2 author + 3 exempt as proposed"
+      - "Different split (specify which masters get lifecycles)"
+      - "All 5 get lifecycles (specify state lists)"
+    why: "Workflow-shape decision. Rule #12 exemption requires user acknowledgement per Rule #15 (no auto-populate notes)."
+
+  - id: B2-S4
+    summary: "domain_regulations scope: which of LGPD, IAB TCF v2, Quebec Law 25, POPIA to link"
+    question: "For each of LGPD, IAB TCF v2, Quebec Law 25, POPIA: link to CDP or skip?"
+    options:
+      - "Per-regulation yes/no"
+    why: "Regulatory scope is jurisdictional + product-strategy specific. Creating the 4 missing regulations master rows is itself a judgment call (none currently exist in the regulations table)."
+
+  - id: B2-S5
+    summary: "customers multi-master architecture decision"
+    question: "Should customers stay single-master in CDP, get promoted to a platform-builtin-like master, or follow explicit multi-master decomposition?"
+    options:
+      - "CDP keeps single-master; CRM/CSM/SUB-MGMT add consumer DMDOs at their next audits"
+      - "Promote customers to a master in a CDP-UNIFIED-PROFILE module and let CRM/CSM/SUB-MGMT embed via embedded_master"
+      - "Adopt explicit multi-master decomposition the description hints at"
+    why: "Architectural choice the audit cannot make alone. Collides with the users platform-builtin pattern. May shift B2-S1."
+
+  - id: B2-S6
+    summary: "Composable CDP / Reverse-ETL classification (capability vs module vs separate domain)"
+    question: "Should CDP-COMPOSABLE-WH stay a CDP capability, become a separate CDP module, or split into a new REVERSE-ETL domain?"
+    options:
+      - "Keep as CDP capability (current)"
+      - "Split into a REVERSE-ETL domain (Hightouch, Census, RudderStack, Polytomic, Grouparoo pass the 3-vendor test)"
+      - "Treat as a CDP module (CDP-COMPOSABLE) but not a separate domain"
+    why: "Rule #2 (point-solution-market test) judgment. The 3-vendor test passes for Reverse-ETL specifically."
+
+  - id: B2-S7
+    summary: "trigger_event 473 customer_journey.exited event_category semantics"
+    question: "Keep customer_journey.exited as lifecycle (current) or flip to state_change?"
+    options:
+      - "Keep lifecycle (journey ends, irreversible)"
+      - "Flip to state_change (just another step transition)"
+    why: "Vendor-semantic judgment. Adobe and Tealium model journey end as state termination; Segment models as lifecycle off-ramp tied to goal-attainment."
+
+  - id: B2-S8
+    summary: "customers lifecycle state_order collisions resolution (B1B-S7 dependency)"
+    question: "How should the dual state machine on customers (engagement vs billing) be untangled?"
+    options:
+      - "Re-order to a single linear sequence on customers"
+      - "Split into two state machines on the same master (engagement axis vs billing axis)"
+      - "Move billing states (past_due, cancelled) to SUB-MGMT-mastered entity (subscriptions or customer_billing_status); leave engagement states on customers"
+    why: "Domain decomposition choice. Engagement and billing lifecycles are conceptually independent; collapsing them lost the disambiguation."
+
+  - id: B2-S9
+    summary: "A4 catalog UX copy approval for domains row and per-module copy at M8"
+    question: "Draft catalog_tagline + catalog_description for the CDP domains row now (and per-module at M8) for explicit approval, defer until modules exist, or skip?"
+    options:
+      - "Draft now and approve verbatim before write"
+      - "Defer until modules exist (joint draft of A4 + M8 copy)"
+      - "Skip the audit on these fields"
+    why: "Rule #20 forbids unapproved writes to catalog_tagline / catalog_description. Per project rule, the agent surfaces drafts and waits for the exact wording from the user."
+
+b3:
+  - id: B3-DATA-SOURCES
+    candidate: data_sources
+    rationale: "First-class sources catalog (a web SDK, a mobile SDK, a Kafka topic, a Snowflake table, a Stripe webhook). Currently no entity."
+    vendor_evidence: [Twilio Segment "Sources", mParticle "Inputs", Tealium "Tag Configurations", Treasure Data "Connectors"]
+    proposed_module: CDP-INGEST
+
+  - id: B3-EVENT-SINKS
+    candidate: event_sinks
+    rationale: "Downstream activation targets (Mailchimp, Facebook Ads, Salesforce campaigns, Slack webhooks). Naming alternate: destinations."
+    vendor_evidence: [Twilio Segment "Destinations", mParticle "Outputs", Hightouch "Destinations", Twilio Engage activations]
+    proposed_module: CDP-ACTIVATION
+
+  - id: B3-ACTIVATION-RUNS
+    candidate: activation_runs
+    rationale: "Per-run status / throughput / error log of a destination sync. Operational backbone of activation."
+    vendor_evidence: [Hightouch "Syncs", Census "Sync runs"]
+    proposed_module: CDP-ACTIVATION
+
+  - id: B3-IDENTITY-RULES
+    candidate: identity_rules
+    rationale: "Configuration that drives identity_graph stitching (which IDs are deterministic, which probabilistic, which blocked)."
+    vendor_evidence: [Tealium "ID merge rules", Twilio Segment "Identity Resolution Settings", mParticle "Identity Strategy"]
+    proposed_module: CDP-IDENTITY
+
+  - id: B3-MERGE-DECISIONS
+    candidate: merge_decisions
+    rationale: "Audit trail of identity stitches (which two records merged, when, by which rule, with what confidence). Compliance-relevant for GDPR Article 17."
+    vendor_evidence: [Tealium "Merge Audit Log", mParticle "Identity History"]
+    proposed_module: CDP-IDENTITY
+
+  - id: B3-CONSENT-RECORDS
+    candidate: consent_records
+    rationale: "Per-data-subject consent state with grant/revoke timestamps and per-purpose scoping (IAB TCF v2 purposes 1-10)."
+    vendor_evidence: [OneTrust (cross-vendor), Adobe Real-Time CDP "Consent and Preferences", Tealium "Consent Management"]
+    proposed_module: CDP-CONSENT-PRIV
+
+  - id: B3-DATA-SUBJECT-REQUESTS
+    candidate: data_subject_requests
+    rationale: "GDPR Article 15/17/20 request records. Compliance-mandatory."
+    vendor_evidence: [Salesforce Data Cloud "Consumer Data Requests", Adobe Real-Time CDP "Privacy Service Requests", mParticle "DSR Workbench"]
+    proposed_module: CDP-CONSENT-PRIV
+
+  - id: B3-SEGMENT-DEFINITIONS
+    candidate: segment_definitions
+    rationale: "Distinct from audience_segments (materialized roster) vs the query / rule that defines the segment. May collapse with audience_segments per vendor model."
+    vendor_evidence: [Twilio Segment "Audience SQL", BlueConic "Segments", Treasure Data "Audience definitions"]
+    proposed_module: CDP-SEGMENTATION
+
+  - id: B3-PREDICTIVE-MODELS
+    candidate: predictive_models
+    rationale: "Per-model definitions (LTV, churn-risk, propensity-to-buy)."
+    vendor_evidence: [Adobe Real-Time CDP "AI Service models", Salesforce Data Cloud "Einstein Models", BlueConic "AI Workbench", Lytics "ML scoring"]
+    proposed_module: CDP-PREDICTIVE
+
+  - id: B3-MODEL-PREDICTIONS
+    candidate: model_predictions
+    rationale: "Per-customer per-model output, often updated daily."
+    vendor_evidence: [Salesforce Data Cloud "Predictions", Adobe Real-Time CDP "AI Scores"]
+    proposed_module: CDP-PREDICTIVE
+
+  - id: B3-JOURNEY-DEFINITIONS
+    candidate: journey_definitions
+    rationale: "Distinct from customer_journeys (observed) vs the configured definition of journey stages."
+    vendor_evidence: [Adobe Journey Optimizer "Journeys", Salesforce Marketing Cloud "Journey Builder canvases"]
+    proposed_module: CDP-JOURNEYS
+
+  - id: B3-MOD-CONSENT-PRIV
+    candidate: "module promotion CDP-CONSENT-PRIV"
+    rationale: "Currently loaded only as a capability; consent + DSR + privacy artifacts justify a separate module rather than folding into UNIFIED-PROFILE. Promote to module-kind=full."
+    vendor_evidence: [OneTrust (cross-vendor anchor), Adobe Real-Time CDP, Tealium, Salesforce Data Cloud]
+    proposed_module: CDP-CONSENT-PRIV
+
+  - id: B3-MOD-PREDICTIVE
+    candidate: "module split CDP-PREDICTIVE"
+    rationale: "Vendors with significant AI/ML positioning ship distinct UX surfaces and roles. Warranted if predictive_models + model_predictions become entities."
+    vendor_evidence: [Adobe Sensei, Salesforce Einstein, Lytics, BlueConic AI Workbench]
+    proposed_module: CDP-PREDICTIVE
+
+  - id: B3-DOM-REVERSE-ETL
+    candidate: "candidate-domain REVERSE-ETL"
+    rationale: "Reverse-ETL / Warehouse-Activation. Passes 3-vendor test. Adjacent to CDP, DBT-like tooling, activation half of CDP."
+    vendor_evidence: [Hightouch, Census, RudderStack Reverse-ETL, Polytomic, Grouparoo]
+    proposed_module: null
