@@ -704,7 +704,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   // this scope (any DMDO role) shows its full state machine; per-state
   // `realizing module` column indicates whose permission prefix the gate uses,
   // or "(always)" when the gate is universal (domain_module_id is NULL).
-  out.push("## 7. Lifecycle states (per touched entity)");
+  out.push("## 7. Lifecycle states");
   out.push("");
   if (lifecycleRows.length === 0) {
     out.push("_(no lifecycle states loaded for the entities in this scope.)_");

@@ -233,7 +233,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `internal_opportunities` | embedded_master | optional | TLNT-INTEL-MARKETPLACE (TLNT-INTEL) | - |
 | `talent_pools` | consumer | required | ATS-TALENT-POOLS (ATS) | - |
 
-## 7. Lifecycle states (per touched entity)
+## 7. Lifecycle states
 
 ### `candidate_consents` (Candidate Consent)
 

@@ -192,8 +192,8 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | target module | source domain | source module | trigger_event | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-BACKGROUND-CHECKS | ATS | ATS-OFFERS | `job_offer.rescinded` | `background_checks` | lifecycle_progression | medium | - |
 | ATS-BACKGROUND-CHECKS | ATS | ATS-OFFERS | `job_offer.accepted` | `background_checks` | lifecycle_progression | low | - |
+| ATS-BACKGROUND-CHECKS | ATS | ATS-OFFERS | `job_offer.rescinded` | `background_checks` | lifecycle_progression | medium | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -202,7 +202,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `candidates` | embedded_master | required | ATS-CANDIDATE-CRM (ATS) | - |
 | `job_offers` | embedded_master | required | ATS-OFFERS (ATS) | - |
 
-## 7. Lifecycle states (per touched entity)
+## 7. Lifecycle states
 
 ### `adverse_action_notices` (Adverse Action Notice)
 

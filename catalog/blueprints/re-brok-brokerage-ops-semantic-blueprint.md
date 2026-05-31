@@ -135,7 +135,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `disclosure_documents` | embedded_master | required | RE-BROK-AGENT-OPS (RE-BROKERAGE) | - |
 | `real_estate_transactions` | embedded_master | required | RE-BROK-AGENT-OPS (RE-BROKERAGE) | - |
 
-## 7. Lifecycle states (per touched entity)
+## 7. Lifecycle states
 
 ### `commission_splits` (Commission Split)
 

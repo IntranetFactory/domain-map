@@ -316,7 +316,7 @@ _(no inbound `handoffs` whose payload is in this scope.)_
 | `skill_profiles` | consumer | optional | SKILLS-MGMT-PROFILE (SKILLS-MGMT) | - |
 | `skills_gap_analyses` | consumer | required | SWP-DEMAND-FORECAST (SWP) | - |
 
-## 7. Lifecycle states (per touched entity)
+## 7. Lifecycle states
 
 ### `course_enrollments` (Course Enrollment)
 

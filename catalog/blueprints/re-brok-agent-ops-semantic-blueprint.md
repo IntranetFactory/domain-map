@@ -182,7 +182,7 @@ _(no context cross-scope edges on this scope's embedded shells or consumed entit
 | `crm_contacts` | contributor | required | CRM-ACCT-MGT (CRM) | - |
 | `crm_leads` | contributor | required | CRM-LEAD-MGT (CRM) | - |
 
-## 7. Lifecycle states (per touched entity)
+## 7. Lifecycle states
 
 ### `commission_splits` (Commission Split)
 

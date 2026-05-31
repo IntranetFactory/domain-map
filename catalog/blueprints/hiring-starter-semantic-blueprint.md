@@ -196,7 +196,7 @@ _(no inbound `handoffs` whose payload is in this scope.)_
 | `recruitment_sources` | embedded_master | optional | ATS-CANDIDATE-CRM (ATS) | - |
 | `users` | consumer | required | _(platform built-in)_ | - |
 
-## 7. Lifecycle states (per touched entity)
+## 7. Lifecycle states
 
 ### `candidates` (Candidate)
 

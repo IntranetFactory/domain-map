@@ -196,7 +196,7 @@ _(no inbound `handoffs` whose payload is in this scope.)_
 | `tour_appointments` | embedded_master | required | RE-BROK-AGENT-OPS (RE-BROKERAGE) | - |
 | `users` | consumer | required | _(platform built-in)_ | - |
 
-## 7. Lifecycle states (per touched entity)
+## 7. Lifecycle states
 
 ### `crm_contacts` (Contact)
 

@@ -351,11 +351,11 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | LMS-COURSE-DELIVERY | HCM | _(domain-level)_ | `course_completion.recorded` | `course_completions` | event_stream | low | - |
 | LMS-COURSE-DELIVERY | HCM | _(domain-level)_ | `learning_record.posted` | `learning_records` | event_stream | low | Authoritative learning transcript visible in HCM employee record. |
-| LMS-COURSE-DELIVERY | LMS | LMS-CREDENTIALS | `assessment_attempt.passed` | `assessment_attempts` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | LMS | LMS-COMPLIANCE-TRAINING | `course.published` | `courses` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | LMS | LMS-ILT-DELIVERY | `course_version.published` | `course_versions` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | LMS | LMS-CREDENTIALS | `course_completion.recorded` | `course_completions` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | LMS | LMS-COMPLIANCE-TRAINING | `course_completion.recorded` | `course_completions` | lifecycle_progression | low | - |
+| LMS-COURSE-DELIVERY | LMS | LMS-CREDENTIALS | `assessment_attempt.passed` | `assessment_attempts` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | TALENT-MGMT | TALENT-SUCCESSION-CAREER | `course_enrollment.completed` | `course_enrollments` | event_stream | low | Course completion updates skill-profile; TALENT-MGMT reflects in dev-plans and succession. |
 | LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course_enrollment.completed` | `course_enrollments` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course_version.published` | `course_versions` | lifecycle_progression | low | - |
@@ -377,7 +377,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `hcm_positions` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | - |
 | `org_units` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | - |
 
-## 7. Lifecycle states (per touched entity)
+## 7. Lifecycle states
 
 ### `assessment_attempts` (Assessment Attempt)
 

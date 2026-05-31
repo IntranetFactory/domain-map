@@ -171,7 +171,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | --- | --- | --- | --- | --- |
 | `work_items` | embedded_master | required | WORK-MGMT-TASK-EXEC (WORK-MGMT) | - |
 
-## 7. Lifecycle states (per touched entity)
+## 7. Lifecycle states
 
 ### `okr_key_results` (Key Result)
 
