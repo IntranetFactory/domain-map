@@ -8,7 +8,7 @@ domain_modules:
   - re-brok-brokerage-ops
 domain_code: RE-BROKERAGE
 related_modules: [re-brok-agent-ops]
-created_at: 2026-05-31
+created_at: 2026-06-01
 ---
 
 # Brokerage Oversight and Commission Management

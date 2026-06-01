@@ -8,7 +8,7 @@ domain_modules:
   - hiring-starter
 domain_code: ATS
 related_modules: [ats-candidate-crm, ats-interviews, ats-offers, ats-recruitment-pipeline]
-created_at: 2026-05-31
+created_at: 2026-06-01
 ---
 
 # Hiring Starter

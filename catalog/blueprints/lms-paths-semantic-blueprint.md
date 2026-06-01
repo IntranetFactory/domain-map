@@ -8,7 +8,7 @@ domain_modules:
   - lms-paths
 domain_code: LMS
 related_modules: [hcm-core-worker, hcm-org-positions, lms-course-delivery, lms-credentials, skills-mgmt-profile, swp-demand-forecast, talent-performance-mgmt]
-created_at: 2026-05-31
+created_at: 2026-06-01
 ---
 
 # Learning Paths

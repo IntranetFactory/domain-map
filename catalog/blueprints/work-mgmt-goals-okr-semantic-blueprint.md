@@ -8,7 +8,7 @@ domain_modules:
   - work-mgmt-goals-okr
 domain_code: WORK-MGMT
 related_modules: [pm-roadmap-delivery, sem-execution-tracking, sem-operating-rhythm, sem-strategy-definition, talent-performance-mgmt, work-mgmt-task-exec]
-created_at: 2026-05-31
+created_at: 2026-06-01
 ---
 
 # Team-Execution Goals and OKRs
@@ -190,8 +190,8 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `drafted` | ✓ | - | - | - | - |
 | 1 | `drafted` | ✓ | - | - | - | Objective drafted by the owner. |
-| 2 | `committed` | - | - | ✓ | `talent-performance-mgmt:commit_okr_objective` | Owner and manager commit to the objective for the cycle. |
 | 2 | `committed` | - | - | ✓ | `work-mgmt-goals-okr:commit_okr_objective` | - |
+| 2 | `committed` | - | - | ✓ | `talent-performance-mgmt:commit_okr_objective` | Owner and manager commit to the objective for the cycle. |
 | 3 | `in_progress` | - | - | - | - | - |
 | 3 | `in_progress` | - | - | - | - | Objective is being pursued; key results updated. |
 | 4 | `graded` | - | - | ✓ | `talent-performance-mgmt:grade_okr_objective` | End-of-cycle score (0.0-1.0) recorded. |

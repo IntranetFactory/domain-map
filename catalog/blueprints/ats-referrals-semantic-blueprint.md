@@ -8,7 +8,7 @@ domain_modules:
   - ats-referrals
 domain_code: ATS
 related_modules: [ats-candidate-crm, payroll-earnings-deductions]
-created_at: 2026-05-31
+created_at: 2026-06-01
 ---
 
 # Employee Referrals
@@ -183,7 +183,7 @@ _This scope holds `candidates` as **embedded_master**; the canonical state machi
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `draft` | ✓ | - | - | - | Campaign being scoped. |
-| 2 | `active` | - | - | ✓ | `ats-referrals:active_referral_campaign` | Campaign live; referrals submitted during window qualify for override reward. |
+| 2 | `active` | - | - | - | - | Campaign live; referrals submitted during window qualify for override reward. |
 | 3 | `ended` | - | ✓ | - | - | Campaign window closed. |
 
 ### `referral_payouts` (Referral Payout)
@@ -191,9 +191,9 @@ _This scope holds `candidates` as **embedded_master**; the canonical state machi
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `pending` | ✓ | - | - | - | Referral hire confirmed; tenure clock running. |
-| 2 | `approved` | - | - | ✓ | `ats-referrals:approved_referral_payout` | Tenure condition met; payout approved by HR/Finance. |
-| 3 | `paid` | - | ✓ | ✓ | `ats-referrals:paid_referral_payout` | Payout disbursed to referrer. |
-| 4 | `clawed_back` | - | ✓ | ✓ | `ats-referrals:clawed_back_referral_payout` | Referred employee left before tenure clause expired; payout reversed. |
+| 2 | `approved` | - | - | ✓ | `ats-referrals:approve_referral_payout` | Tenure condition met; payout approved by HR/Finance. |
+| 3 | `paid` | - | ✓ | - | - | Payout disbursed to referrer. |
+| 4 | `clawed_back` | - | ✓ | ✓ | `ats-referrals:clawback_referral_payout` | Referred employee left before tenure clause expired; payout reversed. |
 | 5 | `forfeited` | - | ✓ | - | - | Conditions never met (referred candidate not hired, did not start, voided). |
 
 ## 8. Permissions and business rules (derived)
@@ -206,10 +206,8 @@ _This scope holds `candidates` as **embedded_master**; the canonical state machi
 | `ats-referrals:manage` | baseline-manage | Edit operational records | ✓ |
 | `ats-referrals:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
 | `ats-referrals:pay_referral_bonus` | workflow-gate (lifecycle) | Transition `candidate_referrals` into state `bonus_payable` | ✓ |
-| `ats-referrals:approved_referral_payout` | workflow-gate (lifecycle) | Transition `referral_payouts` into state `approved` | ✓ |
-| `ats-referrals:paid_referral_payout` | workflow-gate (lifecycle) | Transition `referral_payouts` into state `paid` | ✓ |
-| `ats-referrals:clawed_back_referral_payout` | workflow-gate (lifecycle) | Transition `referral_payouts` into state `clawed_back` | ✓ |
-| `ats-referrals:active_referral_campaign` | workflow-gate (lifecycle) | Transition `referral_campaigns` into state `active` | ✓ |
+| `ats-referrals:approve_referral_payout` | workflow-gate (lifecycle) | Transition `referral_payouts` into state `approved` | ✓ |
+| `ats-referrals:clawback_referral_payout` | workflow-gate (lifecycle) | Transition `referral_payouts` into state `clawed_back` | ✓ |
 
 ### 8.2 Business rules
 

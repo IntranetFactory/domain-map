@@ -8,7 +8,7 @@ domain_modules:
   - ats-recruitment-pipeline
 domain_code: ATS
 related_modules: [ats-candidate-crm, ats-interviews, ats-offers, ats-talent-pools, hcm-core-worker, hcm-org-positions, hiring-starter, iwms-location-master, swp-demand-forecast, tlnt-intel-mobility]
-created_at: 2026-05-31
+created_at: 2026-06-01
 ---
 
 # Recruitment Pipeline
@@ -64,11 +64,11 @@ flowchart TD
   application_screening_questions["Application Screening Questions"]
   application_screening_answers["Application Screening Answers"]
   eeo_responses["EEO Responses"]
-  applicant_flow_records["Applicant Flow Records"]
-  application_dispositions["Application Dispositions"]
-  voluntary_self_identifications["Voluntary Self-Identifications"]
-  ofccp_audit_trails["OFCCP Audit Trails"]
   hiring_team_assignments["Hiring Team Assignments"]
+  application_dispositions["Application Dispositions"]
+  ofccp_audit_trails["OFCCP Audit Trails"]
+  applicant_flow_records["Applicant Flow Records"]
+  voluntary_self_identifications["Voluntary Self-Identifications"]
   users["Users"]
   job_requisitions -->|"defines_pipeline"| application_stages
   job_applications -->|"transitions_via"| application_stage_transitions
@@ -119,24 +119,28 @@ flowchart TD
   class application_screening_questions master;
   class application_screening_answers master;
   class eeo_responses master;
-  class applicant_flow_records master;
-  class application_dispositions master;
-  class voluntary_self_identifications master;
-  class ofccp_audit_trails master;
   class hiring_team_assignments master;
+  class application_dispositions master;
+  class ofccp_audit_trails master;
+  class applicant_flow_records master;
+  class voluntary_self_identifications master;
   class users platform_builtin;
   style hcm_positions stroke-dasharray:5 5;
   style org_units stroke-dasharray:5 5;
   style locations stroke-dasharray:5 5;
   style eeo_responses stroke-dasharray:5 5;
+  style application_dispositions stroke-dasharray:5 5;
+  style ofccp_audit_trails stroke-dasharray:5 5;
+  style applicant_flow_records stroke-dasharray:5 5;
+  style voluntary_self_identifications stroke-dasharray:5 5;
 ```
 
 ## 3. Entities catalog
 
 | # | data_object | role | mastered in | label | necessity | pattern flags | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `applicant_flow_records` (Applicant Flow Records) | master | - | - | required | personal_content, submit_lock | - |
-| 2 | `application_dispositions` (Application Dispositions) | master | - | - | required | - | - |
+| 1 | `applicant_flow_records` (Applicant Flow Records) | master | - | - | optional | personal_content, submit_lock | - |
+| 2 | `application_dispositions` (Application Dispositions) | master | - | - | optional | - | - |
 | 3 | `application_screening_answers` (Application Screening Answers) | master | - | - | required | personal_content | - |
 | 4 | `application_screening_questions` (Application Screening Questions) | master | - | - | required | - | - |
 | 5 | `application_stage_transitions` (Application Stage Transitions) | master | - | - | required | - | - |
@@ -147,9 +151,9 @@ flowchart TD
 | 10 | `job_posting_distributions` (Job Posting Distributions) | master | - | - | required | - | - |
 | 11 | `job_postings` (Job Postings) | master | - | - | required | - | - |
 | 12 | `job_requisitions` (Job Requisitions) | master | - | - | required | single_approver | - |
-| 13 | `ofccp_audit_trails` (OFCCP Audit Trails) | master | - | - | required | submit_lock | - |
+| 13 | `ofccp_audit_trails` (OFCCP Audit Trails) | master | - | - | optional | submit_lock | - |
 | 14 | `requisition_approvals` (Requisition Approvals) | master | - | - | required | single_approver | - |
-| 15 | `voluntary_self_identifications` (Voluntary Self-Identifications) | master | - | - | required | personal_content, submit_lock | - |
+| 15 | `voluntary_self_identifications` (Voluntary Self-Identifications) | master | - | - | optional | personal_content, submit_lock | - |
 | 16 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | - |
 | 17 | `job_profiles` (Job Profiles) | embedded_master | `hcm-org-positions` | Organisation and Position Management | required | single_approver | - |
 | 18 | `locations` (Locations) | embedded_master | `iwms-location-master` | Location and Property Master | optional | - | - |
@@ -347,6 +351,15 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 ## 7. Lifecycle states
 
+### `applicant_flow_records` (Applicant Flow Record)
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `applied` | ✓ | - | - | - | Initial Internet Applicant capture at application submission. Demographics (voluntary) attached if self-identification was provided. |
+| 2 | `under_consideration` | - | - | - | - | Applicant has advanced past initial screening and is in active consideration. Auto-progressed when the linked application advances stages. |
+| 3 | `dispositioned` | - | - | ✓ | `ats-recruitment-pipeline:disposition_applicant` | Recruiter codes the OFCCP disposition reason on the applicant (selected, not selected with typed reason, withdrew, etc.). |
+| 4 | `archived` | - | ✓ | - | - | Auto-archived per OFCCP retention rules (typically a two-year retention window for federal contractors). |
+
 ### `candidates` (Candidate)
 
 _This scope holds `candidates` as **embedded_master**; the canonical state machine is owned by `ATS-CANDIDATE-CRM`._
@@ -449,8 +462,8 @@ _This scope holds `org_units` as **embedded_master**; the canonical state machin
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `pending` | ✓ | - | - | - | Approval step awaiting decision. |
-| 2 | `approved` | - | ✓ | ✓ | `ats-recruitment-pipeline:approved_requisition_approval` | Step approved; requisition advances or opens. |
-| 3 | `rejected` | - | ✓ | ✓ | `ats-recruitment-pipeline:rejected_requisition_approval` | Step rejected; requisition blocked. |
+| 2 | `approved` | - | ✓ | ✓ | `ats-recruitment-pipeline:approve_requisition` | Step approved; requisition advances or opens. |
+| 3 | `rejected` | - | ✓ | ✓ | `ats-recruitment-pipeline:reject_requisition` | Step rejected; requisition blocked. |
 | 4 | `withdrawn` | - | ✓ | - | - | Request withdrawn by submitter before decision. |
 
 ## 8. Permissions and business rules (derived)
@@ -465,8 +478,9 @@ _This scope holds `org_units` as **embedded_master**; the canonical state machin
 | `ats-recruitment-pipeline:approve_requisition` | workflow-gate (lifecycle) | Transition `job_requisitions` into state `open` | ✓ |
 | `ats-recruitment-pipeline:close_requisition` | workflow-gate (lifecycle) | Transition `job_requisitions` into state `filled` | ✓ |
 | `ats-recruitment-pipeline:publish_posting` | workflow-gate (lifecycle) | Transition `job_postings` into state `published` | ✓ |
-| `ats-recruitment-pipeline:approved_requisition_approval` | workflow-gate (lifecycle) | Transition `requisition_approvals` into state `approved` | ✓ |
-| `ats-recruitment-pipeline:rejected_requisition_approval` | workflow-gate (lifecycle) | Transition `requisition_approvals` into state `rejected` | ✓ |
+| `ats-recruitment-pipeline:approve_requisition` | workflow-gate (lifecycle) | Transition `requisition_approvals` into state `approved` | ✓ |
+| `ats-recruitment-pipeline:reject_requisition` | workflow-gate (lifecycle) | Transition `requisition_approvals` into state `rejected` | ✓ |
+| `ats-recruitment-pipeline:disposition_applicant` | workflow-gate (lifecycle) | Transition `applicant_flow_records` into state `dispositioned` | ✓ |
 | `ats-recruitment-pipeline:view_all_applications` | override (personal_content) | View all `job_applications` rows beyond row-scope | ✓ |
 | `ats-recruitment-pipeline:manage_all_applications` | override (personal_content) | Manage all `job_applications` rows beyond row-scope | ✓ |
 | `ats-recruitment-pipeline:view_all_application_screening_answers` | override (personal_content) | View all `application_screening_answers` rows beyond row-scope | ✓ |
@@ -474,13 +488,13 @@ _This scope holds `org_units` as **embedded_master**; the canonical state machin
 | `ats-recruitment-pipeline:view_all_eeo_responses` | override (personal_content) | View all `eeo_responses` rows beyond row-scope | ✓ |
 | `ats-recruitment-pipeline:manage_all_eeo_responses` | override (personal_content) | Manage all `eeo_responses` rows beyond row-scope | ✓ |
 | `ats-recruitment-pipeline:submit_eeo_response` | override (submit_lock) | Submit and lock a `eeo_responses` row (post-submit edits gated) | ✓ |
+| `ats-recruitment-pipeline:submit_ofccp_audit_trail` | override (submit_lock) | Submit and lock a `ofccp_audit_trails` row (post-submit edits gated) | ✓ |
 | `ats-recruitment-pipeline:view_all_applicant_flow_records` | override (personal_content) | View all `applicant_flow_records` rows beyond row-scope | ✓ |
 | `ats-recruitment-pipeline:manage_all_applicant_flow_records` | override (personal_content) | Manage all `applicant_flow_records` rows beyond row-scope | ✓ |
 | `ats-recruitment-pipeline:submit_applicant_flow_record` | override (submit_lock) | Submit and lock a `applicant_flow_records` row (post-submit edits gated) | ✓ |
 | `ats-recruitment-pipeline:view_all_voluntary_self-identifications` | override (personal_content) | View all `voluntary_self_identifications` rows beyond row-scope | ✓ |
 | `ats-recruitment-pipeline:manage_all_voluntary_self-identifications` | override (personal_content) | Manage all `voluntary_self_identifications` rows beyond row-scope | ✓ |
 | `ats-recruitment-pipeline:submit_voluntary_self-identification` | override (submit_lock) | Submit and lock a `voluntary_self_identifications` row (post-submit edits gated) | ✓ |
-| `ats-recruitment-pipeline:submit_ofccp_audit_trail` | override (submit_lock) | Submit and lock a `ofccp_audit_trails` row (post-submit edits gated) | ✓ |
 
 ### 8.2 Business rules
 
@@ -492,8 +506,8 @@ _This scope holds `org_units` as **embedded_master**; the canonical state machin
 | `application_screening_answer_edit_scope` | `application_screening_answers` | has_personal_content | Row-scope by default; override via `ats-recruitment-pipeline:view_all_application_screening_answers` / `ats-recruitment-pipeline:manage_all_application_screening_answers` |
 | `eeo_response_edit_scope` | `eeo_responses` | has_personal_content | Row-scope by default; override via `ats-recruitment-pipeline:view_all_eeo_responses` / `ats-recruitment-pipeline:manage_all_eeo_responses` |
 | `submit_restricted_to_eeo_response_owner` | `eeo_responses` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `ats-recruitment-pipeline:manage_all_eeo_responses` |
+| `submit_restricted_to_ofccp_audit_trail_owner` | `ofccp_audit_trails` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `ats-recruitment-pipeline:manage_all_ofccp_audit_trails` |
 | `applicant_flow_record_edit_scope` | `applicant_flow_records` | has_personal_content | Row-scope by default; override via `ats-recruitment-pipeline:view_all_applicant_flow_records` / `ats-recruitment-pipeline:manage_all_applicant_flow_records` |
 | `submit_restricted_to_applicant_flow_record_owner` | `applicant_flow_records` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `ats-recruitment-pipeline:manage_all_applicant_flow_records` |
 | `voluntary_self-identification_edit_scope` | `voluntary_self_identifications` | has_personal_content | Row-scope by default; override via `ats-recruitment-pipeline:view_all_voluntary_self-identifications` / `ats-recruitment-pipeline:manage_all_voluntary_self-identifications` |
 | `submit_restricted_to_voluntary_self-identification_owner` | `voluntary_self_identifications` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `ats-recruitment-pipeline:manage_all_voluntary_self-identifications` |
-| `submit_restricted_to_ofccp_audit_trail_owner` | `ofccp_audit_trails` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `ats-recruitment-pipeline:manage_all_ofccp_audit_trails` |

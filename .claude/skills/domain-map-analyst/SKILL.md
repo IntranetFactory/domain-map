@@ -210,16 +210,33 @@ When a domain's data_objects reference platform built-ins (currently only `users
 
 Every `domain_data_objects` row with `role='embedded_master'` requires that the same `data_object_id` has a `master` row somewhere in `domain_data_objects`, OR the data_object has `kind='platform_builtin'`. The deployer relies on this to find the canonical owner at deploy time; an `embedded_master` row pointing at a data_object that no domain canonically masters is a broken pointer. Loaders MUST validate before inserting any `embedded_master` row — pull the existing `master` rows for that `data_object_id` first; if none exist and the data_object isn't a built-in, fail loudly.
 
-### 12. Lifecycle states and pattern flags are part of Phase B. No deferrals.
+### 12. Lifecycle states are gated by `data_objects.entity_type`.
 
-Every `master + required` data_object MUST have:
+Every master data_object MUST have `entity_type` classified (default `unclassified` is treated as an audit failure). The classification determines whether lifecycle states are required:
 
-- Rows in `data_object_lifecycle_states` describing the state machine the entity travels through, AND
-- Pattern flags on `data_objects` (`has_personal_content`, `has_submit_lock`, `has_single_approver`) considered. **Do NOT auto-populate `notes` to explain the flag** — Rule #15 forbids it. If a flag's reasoning is non-obvious, surface in chat for the user to decide whether and how to record it.
+| `entity_type` | Lifecycle states | Audit |
+|---|---|---|
+| `operational_workflow` | required | fail if missing |
+| `operational_record` | not required | pass |
+| `catalog` | not required (permitted; templates with publishing flows like `offer_letter_templates` DO have lifecycle) | pass |
+| `junction` | not required (permitted; qualifier-carrying junctions like `talent_pool_memberships` DO have lifecycle) | pass |
+| `computed` | not required | pass |
+| `unclassified` | indeterminate | fail |
 
-**The only exemption** is a config-shaped master with no workflow (e.g. `service_catalog_items`, `service_slas`, `knowledge_articles` to some extent) — author-once / occasionally-edit records whose `record_status` is the only state worth tracking. The exemption used to require a justification in `data_objects.notes`; per Rule #15 that license is RESCINDED. Surface the exemption to the user during the audit so it can be tracked outside the notes column (gap report, PR description, or — only with explicit user-approved wording — a notes write).
+**The exemption is structural now, not prose.** If a master is genuinely config / record / junction / computed, classify it via `entity_type` and move on. The earlier practice of recording the config-shape exemption in `data_objects.notes` is RESCINDED at every layer: Rule #15 removed the license for the notes write; this rule moves the classification itself to a typed column. There is no notes-based exemption surface.
 
-There is **no deferral surface**. There used to be language about adding a domain to a "lifecycle-states-pending tracking section" of some plan file — that surface was always phantom (no plan file ever owned it, and skill files don't store mutable state). The rule is now unconditional: load the states, or surface the config-shape exemption to the user. Lifecycle states are the source from which workflow-gate permissions are materialized (one row per state with `requires_permission=true` ⇒ one `<module>:<verb>_<entity>` permission via Rule #14's module-permission derivation) — skipping them silently hollows the entire role-bundling layer for that domain.
+**Pattern flags** (`has_personal_content`, `has_submit_lock`, `has_single_approver`) still need to be considered for any master with `entity_type='operational_workflow'`. Auto-populating `notes` to explain a flag remains forbidden (Rule #15). If a flag's reasoning is non-obvious, surface in chat so the user can decide whether and how to record it.
+
+**Why this matters mechanically.** Lifecycle states are the source from which workflow-gate permissions materialize, one row with `requires_permission=true` ⇒ one `<module>:<verb>_<entity>` permission via Rule #14's module-permission derivation. Skipping them on an `operational_workflow` entity silently hollows the entire role-bundling layer for that domain. The `entity_type` enum makes "should this have lifecycle?" deterministic at audit time and stops the audit from re-asking the same per-row question every pass.
+
+**Classification heuristic** (use at insert time):
+
+- `operational_workflow` — real-world business object with a workflow (candidates, incidents, job_offers, employees, change_requests)
+- `operational_record` — per-X record without business workflow (notes, files, acknowledgements, log entries, append-only trails, audit logs)
+- `catalog` — config / template / taxonomy / rule definition referenced by other entities (templates, question banks, taxonomies, configured bundles)
+- `junction` — N:M link, may carry a qualifier (`<a>_<b>_assignments`, `<a>_<b>_memberships`)
+- `computed` — derived rollup or projection (workloads, aggregate ratings)
+- `unclassified` — fallback only; surfaces as an audit failure (B13)
 
 ### 13. Catalog enums to know without rediscovering them.
 
@@ -309,17 +326,62 @@ If a column is named `notes`, the default is empty string. Period.
 
 **If you find yourself reaching for prose to fill any column whose name is exactly `notes`, stop.** That impulse is the bug. The audit query for whether your load polluted notes is: `SELECT table_name, count(*) FROM all_notes_columns WHERE notes != '' AND created_at > '<load_start>'`. If that returns anything you didn't get user approval on, revert.
 
-### 16. Infrastructure masters are always `necessity: optional` on non-master rows.
+### 16. Necessity is sector- / vendor- / deployment-shape-conditional.
 
-`locations`, `org_units`, `cost_centers`, and any future reference-data masters (currencies, calendars, fiscal periods, GL accounts, tax codes, job grades, job families) follow this rule. The criterion for `necessity: required` is "the core workflow fails without the master being present." Infrastructure masters fail that test:
+`necessity` on `domain_module_data_objects` and `domain_data_objects` signals what the deployer must install. Three classes of `optional` rows exist; only one of them keeps `required` as the universal default for masters.
 
-- A smaller org with one office, one cost center, or one flat org structure doesn't need the master deployed at all; the data inlines onto the consumer record as a text field, country code, or single-value attribute.
-- A larger org deploying the master unlocks **features** (site-scoped change windows, RBAC by org unit, cost-center-scoped reporting). Features are not workflow-blockers; the embedding module still runs without them.
-- "X local-masters when Y not deployed" is implicit on every embedded_master row by definition. Marking such a row `required` adds nothing except false friction for downstream tooling that treats `required` as "you MUST deploy the master."
+**A. Non-master rows on infrastructure masters → optional.**
 
-**Only flip non-master rows** (`embedded_master`, `contributor`, `consumer`). The mastering module's own row (`role=master`) keeps `necessity: required` — that's the deploying module's contract, not the consumer's dependency. Workflow-bearing masters (`job_offers`, `incidents`, `change_requests`, `assets`, `employees`, `candidates`) follow the original criterion and are typically `required` where embedded.
+`locations`, `org_units`, `cost_centers`, and any future reference-data masters (currencies, calendars, fiscal periods, GL accounts, tax codes, job grades, job families) follow this rule. The criterion: "if a smaller org could plausibly inline the data as a text field, country code, or single-value attribute, the consumer row is optional."
 
-When loading a new module: if you can plausibly imagine an SMB or single-site deployment functioning without the master row, the necessity is `optional`. If the workflow genuinely halts (incident routing without a `users` row, an asset without an `asset_categories` row), it's `required`.
+- A smaller org with one office, one cost center, or one flat org structure doesn't need the master deployed at all.
+- A larger org deploying the master unlocks **features** (site-scoped change windows, RBAC by org unit, cost-center-scoped reporting). Features are not workflow-blockers.
+- "X local-masters when Y not deployed" is implicit on every `embedded_master` row by definition; marking such a row `required` is false friction.
+
+Applies to: `embedded_master`, `contributor`, `consumer`. The mastering module's own `master` row is governed by B or C below.
+
+**B. Master rows that are sector / jurisdiction-conditional → optional.**
+
+A `master` row is `optional` when the entity is bound to a specific legal framework, regulatory regime, or industry sector and a deployment outside that scope would not use it. Test: *"Could a tenant in a different jurisdiction or sector legitimately install the module without this entity?"* If yes → `master + optional`.
+
+Recurring examples:
+
+| Statute / regime | Scope | Example entities |
+|---|---|---|
+| FCRA | US consumer-report law (employment background checks) | `fcra_disclosures`, `adverse_action_notices`, `pre_adverse_action_notices`, `fcra_summary_of_rights_acknowledgements` |
+| OFCCP | US federal contractors (Internet Applicant Rule) | `applicant_flow_records`, `voluntary_self_identifications`, `ofccp_audit_trails`, `application_dispositions` |
+| HIPAA | US healthcare | `hipaa_training_records`, `phi_access_logs` |
+| OSHA | US occupational safety | `osha_training_records`, `safety_incidents` |
+| SOX | US public-company financial controls | `sox_training_evidence`, `sox_control_evidence` |
+| FERPA | US education records | `ferpa_training_records` |
+| FINRA | US securities-industry continuing education | `finra_ce_records` |
+| GDPR / CCPA | EU / California data subject rights | `data_subject_requests`, `gdpr_consent_records`, `ccpa_opt_outs` |
+| EEOC | US equal-opportunity self-id | `eeo_responses`, `voluntary_self_identifications` |
+
+When in doubt, check whether the entity's name is statute-prefixed (`fcra_*`, `ofccp_*`, `hipaa_*`, etc.). Statute-prefixed entities are nearly always sector-conditional and ship `master + optional` even within their canonical module. The module itself is the activation gate; the tenant enables based on jurisdiction.
+
+**C. Master rows that ≥1 flagship vendor doesn't model → optional.**
+
+A `master` row is `optional` when the Phase 0 vendor surface shows ≥1 flagship vendor (out of 4-5 surveyed) without the entity as a first-class master AND the workflow degrades gracefully without it. Test: *"If a flagship vendor's schema doesn't have this entity AND its workflow still works, the entity is an organizational choice on the tenant side, not a module requirement."* If yes → `master + optional`. The deployer asks the tenant at install time whether to include it.
+
+Examples: `candidate_consents` (some ATS vendors don't formalize consent into a typed record), `referral_campaigns` (organic referrals work without formal campaign structures), `recruitment_events` (event-based sourcing isn't universal), `disclosure_documents` (real estate disclosures vary by state but the universe of forms is jurisdiction-shaped).
+
+The 80% threshold is a heuristic, not a hard cutoff. If 4 of 5 flagship vendors model the entity but the 5th explicitly relies on a different shape (e.g. consent as an attribute, not a record), the entity is still `optional` because the deployer must decide.
+
+**D. Workflow-bearing universal masters → required.**
+
+Entities the module cannot operate without, regardless of jurisdiction or vendor: `job_offers`, `incidents`, `change_requests`, `assets`, `employees`, `candidates`, `job_requisitions`. The workflow halts without them. These ship `master + required`.
+
+**Authoring summary at insert time.**
+
+For every new master row, before writing `necessity`:
+
+1. **Is the entity name statute-prefixed?** (fcra_, ofccp_, hipaa_, osha_, sox_, ferpa_, finra_, gdpr_, ccpa_, eeo_, etc.) → `optional` (B).
+2. **Is the entity bound to a specific industry sector or geography?** (US healthcare, EU privacy, US federal contractor, US securities) → `optional` (B).
+3. **Did Phase 0 show ≥1 flagship vendor without this entity?** → `optional` (C).
+4. **None of the above and the workflow halts without it?** → `required` (D).
+
+For non-master rows on infrastructure masters, rule A still applies.
 
 ### 17. Every `domain_modules` row has exactly one `skill_type='system'` skill, and that skill has ≥1 `skill_tools` row.
 
@@ -593,7 +655,7 @@ For any task that fits this skill — "research vendors for X", "is Y a domain?"
    **Phase B — Data-object footprint** (load second, against the same domain). The Phase-B contract ships seven deliverables:
 
    1. **`data_objects`** that the domain masters (3–8 noun-plural snake_case names; apply the "what would a flagship vendor build their schema around?" test). Each row populates `singular_label`, `plural_label`, and — per Rule #12 — the pattern flags `has_personal_content` / `has_submit_lock` / `has_single_approver` where the master entity matches the pattern. Apply Rule #9 (naming arbitration) before insert.
-   2. **`domain_module_data_objects`** rows on the modules from Phase A: `master` for the new objects, plus `embedded_master`, `contributor`, and `consumer` rows where a module enriches or reads existing cluster-owned objects (almost always `contacts` / `customers` / `campaigns` / `audience_segments` exist already — link to them rather than re-mastering). Validate Rule #11 before inserting any `embedded_master` row. **The legacy `domain_data_objects` rollup is derived from this junction** (group by data_object_id, strongest role wins); do not hand-write `domain_data_objects` for modularized domains.
+   2. **`domain_module_data_objects`** rows on the modules from Phase A: `master` for the new objects, plus `embedded_master`, `contributor`, and `consumer` rows where a module enriches or reads existing cluster-owned objects (almost always `contacts` / `customers` / `campaigns` / `audience_segments` exist already — link to them rather than re-mastering). Validate Rule #11 before inserting any `embedded_master` row. **Apply Rule #16 at insert time to decide `necessity`** — every new `master` row passes through the four-question check (statute-prefixed name? sector-bound? Phase 0 vendor surface shows ≥1 missing? workflow halts without it?); `necessity='optional'` is the answer whenever the first three are yes. **The legacy `domain_data_objects` rollup is derived from this junction** (group by data_object_id, strongest role wins); do not hand-write `domain_data_objects` for modularized domains.
    3. **`handoffs`** from this domain outbound (and inbound where the partner domain is loaded) — apply the high-friction shape recognition in the "Data-object research" section below.
    4. **`data_object_relationships`** — intra-domain edges + `users`-edge entries (Rule #10) + cross-domain edges for every `handoffs` row with a clean payload→target mapping (e.g. `candidates →becomes→ employees`). Each row carries `relationship_verb`, `inverse_verb`, `relationship_type` (cardinality), `relationship_kind`, `is_required`, and `owner_side`. Drafts MUST surface the relationship graph as a mermaid block in the Phase-B preview before loading.
    5. **`data_object_aliases`** — ≥1 alias per non-self-explanatory master (industry synonyms, vendor-specific labels). The fact sheet generator embeds these directly.
@@ -903,10 +965,22 @@ The legacy B9 / B10 queries deliberately did not include these columns. Future a
 - Pass: every master that has any cross-vendor / cross-industry synonym has ≥1 alias row. Self-explanatory masters (e.g. `hcm_employees` for "employee", `job_postings` for "job posting") are exempt — record the exemption decision in the audit conversation / gap report, not in `notes` (Rule #15).
 - Fix: draft alias rows; bundle into the cluster-drafts pattern.
 
-**B12. `data_object_lifecycle_states` + pattern flags loaded.** (Rule #12.)
-- Query: `/data_object_lifecycle_states?data_object_id=in.(<masters>)&select=data_object_id,state_name,state_order,is_initial,is_terminal,requires_permission,permission_verb_override,domain_module_id`
-- Pass: every `master + necessity=required` data_object with a real workflow has lifecycle states loaded. Config-shaped masters with no workflow are exempt only when `data_objects.notes` carries an explicit justification (e.g. *"Config-shaped; no workflow"*). No catalog-wide tracking surface for deferrals — load it or annotate the exemption.
-- Fix: draft state machines (initial state + workflow gates marked `requires_permission=true` + `permission_verb_override` for non-obvious verbs + `domain_module_id` when the state belongs to a specific module); load via a focused loader.
+**B12. `data_object_lifecycle_states` loaded on every `operational_workflow` master.** (Rule #12.)
+- Query: `/data_objects?id=in.(<masters>)&entity_type=eq.operational_workflow&select=id,data_object_name` then `/data_object_lifecycle_states?data_object_id=in.(<workflow_masters>)&select=data_object_id`
+- Pass: every master with `entity_type='operational_workflow'` has ≥1 lifecycle state row. Masters with `entity_type ∈ (operational_record, catalog, junction, computed)` pass regardless of whether lifecycle rows exist. Masters with `entity_type='unclassified'` are flagged under B13, not B12.
+- Fix: either author the missing lifecycle states (initial state + workflow gates marked `requires_permission=true` + `permission_verb_override` for non-obvious verbs + `domain_module_id` when the state belongs to a specific module), OR PATCH `entity_type` to the correct value if the master was mis-classified.
+
+**B13. `entity_type` classified on every master.** (Rule #12.)
+- Query: `/data_objects?id=in.(<masters>)&entity_type=eq.unclassified&select=id,data_object_name,description`
+- Pass: empty result (every master carries a typed `entity_type`).
+- Fix: PATCH each row to the correct value per Rule #12's enum (`operational_workflow` / `operational_record` / `catalog` / `junction` / `computed`). Classification is deterministic from the description for nearly every master; if a row genuinely doesn't fit any value, surface to the user before forcing a classification.
+
+**B14. Sector- / vendor-conditional masters flagged `master + optional`.** (Rule #16 cases B + C.)
+- Query (statute-prefix scan): `/domain_module_data_objects?role=eq.master&necessity=eq.required&domain_module_id=in.(<modIds>)&data_objects.data_object_name=in.(<prefixed>)&select=id,data_objects(data_object_name),domain_modules(domain_module_code)` where `<prefixed>` enumerates names matching `fcra_*` / `ofccp_*` / `hipaa_*` / `osha_*` / `sox_*` / `ferpa_*` / `finra_*` / `gdpr_*` / `ccpa_*` / `eeo_*` / `*adverse_action*` / `*data_subject*` / `*self_id*` / `*applicant_flow*` etc. Run as a single `data_object_name=ilike.*<token>*` set per token.
+- Query (vendor-shape scan): cross-reference the domain's `master + required` rows against the Phase 0 vendor surface matrix; flag any row where ≥1 flagship vendor lacks the entity as a first-class master.
+- Pass: every `master + required` row in this domain's modules is either (a) genuinely universal (workflow halts without it), (b) flagged optional, or (c) the user has explicitly recorded a "kept required" decision.
+- Fix: PATCH the failing rows to `necessity='optional'`. Re-emit the affected blueprints. Surface the decision rationale in the audit's gap report (the entity name + statute/vendor reasoning, NOT in `notes` per Rule #15).
+- Why this is its own check: B1 only enforces ≥1 master; B4 only enforces pattern flags. Neither asks the necessity-conditional question. Without B14, statute-prefixed masters land `required` by default and propagate as "every tenant must install this" downstream. Catalog-wide audit on 2026-06-01 found 12 such rows across ATS / LMS / RE-BROKERAGE; B14 closes the recurrence.
 
 ### C. Phase C — Functional ownership
 
@@ -1034,7 +1108,7 @@ A `discovery_substring` row that the reviewer approves IS high-quality (column 1
 3. Run every **in-scope** band check (A / M / B / C / D / E / F / **H**) in order. Skip A5 unless the user has explicitly asked for a vendor-ownership refresh. **H1 is NOT optional** — audits that skip the H-band are incomplete; do not surface the gap report until H1 has been worked.
 4. Classify each result:
    - **Structural gate** — M1–M7 failures block every downstream concern. A domain with no modules (or with capability-orphaned modules) can't be modeled in Phase B/E correctly until the M-band is clean. Resolve M-band first. (M8 is a content-quality check, not a structural gate.)
-   - **In-scope fix** — this domain can fix locally (S1–S3 zero-row anomalies, A1–A4, M1–M8, B1–B9, B9b, B10b, B11–B12, C1–C2, D1, E1–E6, F1–F5, F7, **H1**). Goes into the **gap report** as actionable. Fact-sheet emission is **not** an audit step — see § "Fact sheets" below.
+   - **In-scope fix** — this domain can fix locally (S1–S3 zero-row anomalies, A1–A4, M1–M8, B1–B9, B9b, B10b, B11–B13, C1–C2, D1, E1–E6, F1–F5, F7, **H1**). Goes into the **gap report** as actionable. Fact-sheet emission is **not** an audit step — see § "Fact sheets" below.
    - **Report-only follow-up** — the symmetric side is owned by another domain (B8 inbound direction, all of B10). Goes into a separate **"report-only follow-ups"** subsection of the report, naming the source domain + the missing check ID on that side (e.g. "HCM B9 owes outbound on `hcm_positions`"). **Do not author fixes for these from this domain's audit.** These items NEVER block the audited domain's green status; they are observations the user can act on by scheduling audits of the source domains.
 4. Surface the gap report to the user **before** authoring any fixes. Include the failing query output snippet so the user can sanity-check. Ask whether to also kick off audits on the source domains in the report-only section.
 5. For each accepted in-scope fix, author it (markdown draft, or directly in a loader); never load AI-generated content without a user review pass (Rule #1).

@@ -7,7 +7,7 @@ system_slug: real-estate-agent
 domain_modules:
   - real-estate-agent
 related_modules: [clm-repository, crm-acct-mgt, crm-lead-mgt, re-brok-agent-ops]
-created_at: 2026-05-31
+created_at: 2026-06-01
 ---
 
 # Real Estate Agent (solo / small firm bundle)

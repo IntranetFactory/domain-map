@@ -8,7 +8,7 @@ domain_modules:
   - ats-talent-pools
 domain_code: ATS
 related_modules: [ats-candidate-crm]
-created_at: 2026-05-31
+created_at: 2026-06-01
 ---
 
 # Talent Pools
@@ -148,7 +148,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | data_object | other module / domain | role | necessity | notes |
 | --- | --- | --- | --- | --- |
-| `talent_pools` | ATS-CANDIDATE-CRM (Candidate CRM) - ATS | consumer | required | - |
+| `talent_pools` | ATS-CANDIDATE-CRM (Candidate CRM) - ATS | consumer | optional | - |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 

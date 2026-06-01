@@ -132,6 +132,7 @@ License attribution for APQC PCF imports: see repo-level [`LICENSE-APQC-PCF.md`]
 | `display_label` | text | yes | Legacy column retained transitionally. Every new write goes to `singular_label`/`plural_label`. |
 | `description` | multiline | yes | |
 | `kind` | enum | yes | Default `domain_owned`. Values: `domain_owned`, `platform_builtin`. Seed today: `users` only as `platform_builtin`. |
+| `entity_type` | enum | yes | Default `unclassified`. Values: `operational_workflow`, `operational_record`, `catalog`, `junction`, `computed`, `unclassified`. Drives Rule #12 lifecycle audit: only `operational_workflow` masters fail B12 when missing lifecycle states. See Rule #12 classification heuristic. |
 | `is_canonical_bare_word` | boolean | yes | Default `false`. TRUE when this domain holds catalog-wide canonical authority for the bare-noun name (e.g. `customers`, `employees`, `incidents`, `assets`). Requires `naming_authority_rationale`. |
 | `naming_authority_rationale` | text | yes | Empty string unless `is_canonical_bare_word=true`. Explains why this domain owns the unprefixed name catalog-wide. |
 | `has_personal_content` | boolean | yes | Default `false`. TRUE when the data_object contains personal content where only the owner / specific actors see specific rows (e.g. interview scorecards, performance reviews, employee notes). Pattern-flag derivation produces `view_all_*` / `manage_all_*` permissions + edit-scope ABAC. |

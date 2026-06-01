@@ -505,3 +505,58 @@ The master+embedded_master case wasn't one of these invariants at all — it was
 ### Process note
 
 The 2026-05-26 module-split decision's "lifecycle rows can stay there per the multi-master pattern" clause should be read narrowly going forward: lifecycle states can sit on multiple modules (because `data_object_lifecycle_states.domain_module_id` is per-row), but `domain_module_data_objects.role='master'` must collapse to one canonical owner. Future module splits that touch a multi-master data_object need an explicit demotion step on the non-canonical side, loaded in the same migration as the new master row. Skipping it produces silent catalog-wide hard fails of the shape M7 now catches.
+
+## 2026-05-31 — Rule #12 moved to a typed column; add B13; ATS audit cleanup
+
+### What changed
+
+- New column `data_objects.entity_type` (enum: `operational_workflow`, `operational_record`, `catalog`, `junction`, `computed`, `unclassified`; default `unclassified`, NOT NULL).
+- **Rule #12** rewritten in SKILL.md. The rule was previously a per-row judgment surfaced to the user at audit time ("is this config-shape exempt?"); it is now driven by `entity_type`. Only masters with `entity_type='operational_workflow'` fail B12 when missing lifecycle states. All other classified values pass B12 regardless of lifecycle presence.
+- **B12 in the per-domain completeness checklist** rewritten to read `entity_type` and only fail on `operational_workflow + no states`. The prior "config-shape exemption recorded in notes" pattern is gone; the exemption is now structural via the typed column.
+- **B13 added to the per-domain completeness checklist**: count `data_objects.entity_type=unclassified` for the domain's masters; pass = 0. Surfaces unclassified rows as audit failures so the typed column can never silently sit empty.
+- **`data_objects.notes` description** patched to remove the stale "(1) config-shape exemption justification" use case (Rule #15 had already rescinded the license; this change closes the loop by removing the description's reference to it).
+- **Audit recipe "in-scope fix" list** extended from `B11–B12` to `B11–B13`.
+- **`references/module-shape.md`** `data_objects` table updated to list `entity_type` next to `kind`.
+- **ATS** backfilled: all 22 ATS masters previously without lifecycle states now carry `entity_type` (8 operational_record, 7 catalog, 2 junction, 5 operational_workflow). Loader: [scripts/loaders/backfill_ats_entity_type_2026_05_31.ts](../../../../scripts/loaders/backfill_ats_entity_type_2026_05_31.ts).
+
+### Why
+
+Rule #12's per-row "surface to user for judgment" mechanic produced two pathologies that repeated every audit:
+
+- **False-positive noise.** Catalog tables (taxonomies, question banks, template libraries), junctions (assignment tables), append-only logs, and other genuinely-stateless rows all triggered the rule even though their statelessness was correct. The reviewer had to confirm each one as "config-shape exempt" pass after pass, since the prior decision was recorded only in chat or in `notes` (which Rule #15 then rescinded). Without a structural record, every audit re-asked the same questions about the same entities.
+- **False-negative silence.** Operational entities that genuinely needed a state machine could ship without one if the audit user grew tired of the false-positive noise and started rubber-stamping. The 2026-05-31 ATS audit caught five real compliance-driven gaps (`pre_adverse_action_notices`, `applicant_flow_records`, `data_subject_requests`, `fcra_summary_of_rights_acknowledgements`, `voluntary_self_identifications`); under the old rule they were buried alongside 17 non-gaps.
+
+The discussion that produced the change worked through three iterations:
+
+1. *"Append-only log"* was initially a proposed shape; conceded as not real (Semantius tables all support CRUD; append-only is an application-layer property, not a structural one). Collapsed into `operational_record`.
+2. *Lifecycle presence as the second axis* was considered (two-column design: `entity_type` + `lifecycle_required: bool`). Rejected after noting that for non-operational entities, the existence of lifecycle states *is itself* the declaration that the entity needs them; no second decision exists to record. One column suffices.
+3. *Workflow vs state-machine* as separate concepts was considered. Conceded as the same concept: every state machine is a workflow. The real distinction is gating (`requires_permission` on each state), already captured by the existing column. Collapsed.
+
+### Impact (catalog-wide measurement)
+
+Pre-change Rule #12 surface (catalog-wide masters without lifecycle states): **148**. Heuristic classification under the new rule:
+
+- operational_workflow: 79 (still surfaces)
+- catalog: 42 (auto-passes)
+- operational_record: 14 (auto-passes)
+- computed: 7 (auto-passes)
+- junction: 6 (auto-passes)
+
+Mechanical heuristic disappears 69 of 148 = 47%. After careful per-entity classification (the actual backfill workflow), the operational_workflow set shrinks further (the heuristic over-attributes things like `audiences`, `course_modules`, `service_slas`, `salary_bands` to operational_workflow when they are catalog). Realistic post-backfill reduction: ~70%, leaving ~40-50 genuine workflow-gap rows catalog-wide, which is the population that should have always been surfaced.
+
+### Scope of this change
+
+- Schema: one `create_field` call against `data_objects` (catalog-wide column add, default `unclassified` so no data migration needed).
+- ATS: 22 rows backfilled to specific values.
+- SKILL.md + module-shape.md + this changelog: in-place edits.
+- **Not in scope:** catalog-wide backfill of the other 906 - 22 = 884 data_objects rows. They sit at the default `unclassified` until a future per-domain pass touches them. Each domain audit that runs against an unclassified domain will surface B13 failures and prompt the backfill at that point.
+
+### Process notes
+
+- The earlier "surface to user during audit, possibly track via PR description / gap report" mechanism is RESCINDED for the config-shape exemption specifically. That mechanism only ever existed to compensate for the missing structural column; with the column in place, the workaround is no longer needed and authoring it would re-introduce the false-positive noise this change closes.
+- Pattern flags (`has_personal_content` / `has_submit_lock` / `has_single_approver`) are unchanged. They still need to be considered for `operational_workflow` masters, and `notes` is still forbidden for explaining a flag (Rule #15).
+- Workflow-gate permission materialization (Rule #14 derivation from `data_object_lifecycle_states` with `requires_permission=true`) is unchanged. The change only affects *which* entities the audit demands a state machine on; the materialization mechanic that consumes the state machine continues as before.
+
+### Status
+
+Active. ATS is the first domain on the new contract. Catalog-wide backfill will land incrementally as each domain is audited.

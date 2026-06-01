@@ -8,7 +8,7 @@ domain_modules:
   - re-brok-agent-ops
 domain_code: RE-BROKERAGE
 related_modules: [crm-acct-mgt, crm-lead-mgt, re-brok-brokerage-ops, real-estate-agent]
-created_at: 2026-05-31
+created_at: 2026-06-01
 ---
 
 # Real Estate Agent Operations
@@ -40,10 +40,10 @@ flowchart TD
   real_estate_listings["Real Estate Listings"]
   tour_appointments["Tour Appointments"]
   real_estate_transactions["Real Estate Transactions"]
-  disclosure_documents["Disclosure Documents"]
   crm_leads["Leads"]
   crm_contacts["Contacts"]
   commission_splits["Commission Splits"]
+  disclosure_documents["Disclosure Documents"]
   users["Users"]
   real_estate_listings -->|"generates"| real_estate_transactions
   real_estate_listings -->|"has tours"| tour_appointments
@@ -62,19 +62,20 @@ flowchart TD
   class real_estate_listings master;
   class tour_appointments master;
   class real_estate_transactions master;
-  class disclosure_documents master;
   class crm_leads contributor;
   class crm_contacts contributor;
   class commission_splits embedded_master;
+  class disclosure_documents master;
   class users platform_builtin;
   style commission_splits stroke-dasharray:5 5;
+  style disclosure_documents stroke-dasharray:5 5;
 ```
 
 ## 3. Entities catalog
 
 | # | data_object | role | mastered in | label | necessity | pattern flags | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `disclosure_documents` (Disclosure Documents) | master | - | - | required | personal_content, submit_lock, single_approver | - |
+| 1 | `disclosure_documents` (Disclosure Documents) | master | - | - | optional | personal_content, submit_lock, single_approver | - |
 | 2 | `real_estate_listings` (Real Estate Listings) | master | - | - | required | personal_content | - |
 | 3 | `real_estate_transactions` (Real Estate Transactions) | master | - | - | required | personal_content, submit_lock | - |
 | 4 | `tour_appointments` (Tour Appointments) | master | - | - | required | personal_content | - |

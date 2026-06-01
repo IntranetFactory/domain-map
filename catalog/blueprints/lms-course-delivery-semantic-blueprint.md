@@ -8,7 +8,7 @@ domain_modules:
   - lms-course-delivery
 domain_code: LMS
 related_modules: [hcm-core-worker, hcm-org-positions, lms-automation, lms-compliance-training, lms-credentials, lms-ilt-delivery, lms-paths, pa-predictive-models, skills-mgmt-profile, talent-succession-career]
-created_at: 2026-05-31
+created_at: 2026-06-01
 ---
 
 # Course Delivery

@@ -334,3 +334,104 @@ _none this pass; structural Validate is read-only until user decisions on Bucket
 ### `domains.notes` pointer (if updated)
 
 _not yet written_
+
+## 2026-06-01 — Continuation: Bucket 2 close-out + catalog-wide drift fix
+
+### Bucket 2 decisions
+
+| Item | Decision |
+|---|---|
+| B2-OLT-VERBS | (c) Keep 2 gates (approve_offer_letter_template + retire_offer_letter_template), flip 2 (in_review + active → requires_permission=false). |
+| B2-LFC-MASTERS-WITH-NO-STATES | Scope corrected from 17 to 5: only 5 of the 17 listed entities were actually `operational_workflow` without lifecycle states; the rest already passed B12 by `entity_type` classification (`catalog` / `operational_record` / `junction`). The 5 are FCRA / OFCCP / GDPR / EEOC compliance entities. Decision: flip all 5 to `master + optional` (sector-conditional); demote `fcra_summary_of_rights_acknowledgements` (902) + `voluntary_self_identifications` (903) to `entity_type='operational_record'` (no lifecycle authored — pure audit-trail acks). Author lifecycle on the 3 with real human gates: `pre_adverse_action_notices` (898), `applicant_flow_records` (899), `data_subject_requests` (901). |
+| B2-LFC-EMPTY-VERB-OVERRIDES | (c) Mixed mapping approved: 11 explicit verb_overrides on human gates + 3 flips to `requires_permission=false` on auto-progressed states. |
+| B2-ROLE-2-MASS-ASSIGNMENT | Left untouched at user direction. Pollution scope confirmed catalog-wide (881 → 900 role_permissions after this load); 895 of role 2's 900 grants are domain perms; **only 5 are legitimate platform grants**. Subsequently re-framed as a platform-layer architectural finding (see § Role / permission catalog extraction). |
+
+### Fixes applied
+
+Loader: [.tmp_deploy/fix_ats_audit_2026_06_01.ts](../.tmp_deploy/fix_ats_audit_2026_06_01.ts).
+
+| Phase | Action | Row counts |
+|---|---|---|
+| 1 | PATCH `domain_module_data_objects` necessity → optional (898/899/901/902/903) | 5 |
+| 2 | PATCH `data_objects` entity_type → operational_record (902, 903) | 2 |
+| 3 | INSERT compliance lifecycle states on 898 (6), 899 (4), 901 (6) | 16 |
+| 4 | PATCH 14 existing lifecycle states (11 verb_override + 3 flip) | 14 |
+| 5 | PATCH 2 OLT lifecycle states (1496 in_review, 1498 active → flip) | 2 |
+| 6 | PATCH 20 trigger_events.event_category (B1A-EVT-CATEGORIES) | 20 |
+| 7 | PATCH 2 permission names (B1A-B12-PERM-RESIDUE) | 2 |
+| 8 | PATCH DMDO 950 (talent_pools consumer in ATS-CANDIDATE-CRM) → optional | 1 |
+| 9 | INSERT 19 workflow-gate permissions across modules 1 / 3 / 4 / 6 / 7 | 19 |
+| 10 | INSERT role_permissions for role 2 (auto-granted at INSERT-time by platform mechanism; loader's idempotent check found them already present) | 19 |
+
+### FCRA consistency fix + catalog-wide drift audit
+
+Triggered by a user observation while reviewing the regenerated `ats-background-checks` blueprint: `fcra_disclosures` (879) and `adverse_action_notices` (881) had been left as `master + required` while their sibling FCRA entities (898, 902) had just been flipped to `master + optional`. Same statute (FCRA), same module, inconsistent necessity.
+
+Cause: the 2026-06-01 loader only scoped to the 5 Bucket-2 compliance entities; the pre-existing FCRA entities 879 + 881 were not reviewed under the same sector-conditional test.
+
+**Fix on the ATS scope:**
+- PATCH DMDO 964 (`fcra_disclosures` master in ATS-BACKGROUND-CHECKS) → `optional`
+- PATCH DMDO 966 (`adverse_action_notices` master in ATS-BACKGROUND-CHECKS) → `optional`
+
+**Catalog-wide audit follow-up.** A search for regulator-named masters currently `required` surfaced 10 more candidates outside ATS. All flipped to `master + optional` after user confirmation:
+
+| DMDO | Entity | Module | Statute / scope |
+|---|---|---|---|
+| 775 | disclosure_documents | RE-BROK-AGENT-OPS | US state-level RE disclosures |
+| 955 | candidate_consents | ATS-CANDIDATE-CRM | GDPR/CCPA-shaped consent record |
+| 986 | application_dispositions | ATS-RECRUITMENT-PIPELINE | OFCCP typed reason codes |
+| 990 | ofccp_audit_trails | ATS-RECRUITMENT-PIPELINE | OFCCP US federal contractor |
+| 1028 | finra_ce_records | LMS-CREDENTIALS | FINRA US securities CE |
+| 1039 | hipaa_training_records | LMS-COMPLIANCE-TRAINING | HIPAA US healthcare |
+| 1040 | osha_training_records | LMS-COMPLIANCE-TRAINING | OSHA US workplace safety |
+| 1041 | sox_training_evidence | LMS-COMPLIANCE-TRAINING | SOX US public companies |
+| 1042 | ferpa_training_records | LMS-COMPLIANCE-TRAINING | FERPA US education |
+| 1046 | gdpr_consent_records | LMS-CT-GDPR | GDPR EU |
+
+Total this pass: **12 DMDO rows flipped to `master + optional`** (2 FCRA consistency + 10 catalog-wide drift).
+
+### Blueprints regenerated
+
+5 existing blueprints regenerated in place against post-flip catalog state:
+- ats-background-checks
+- ats-candidate-crm
+- ats-recruitment-pipeline
+- lms-compliance-training
+- re-brok-agent-ops
+
+Plus the prior 17-blueprint baseline regeneration that established the pre-migration snapshot (Phase A7 of [plans/extract-role-permission-catalog.md](../plans/extract-role-permission-catalog.md)).
+
+### SKILL.md updates
+
+Three edits to [.claude/skills/domain-map-analyst/SKILL.md](../.claude/skills/domain-map-analyst/SKILL.md):
+
+- **Rule #16 rewritten** to cover three classes of `optional` rows: (A) non-master rows on infrastructure masters (original rule); (B) `master + optional` when sector / jurisdiction-conditional (FCRA, OFCCP, HIPAA, SOX, FERPA, FINRA, GDPR, CCPA, EEO); (C) `master + optional` when ≥1 flagship vendor's schema lacks the entity AND the workflow degrades gracefully without it. Added four-question authoring summary at insert time.
+- **B14 added to the per-domain audit checklist** — a positive scan for `master + required` rows that should be flagged optional under Rule #16 cases B + C. References the canonical query that surfaced today's 12 flips.
+- **Phase B step #2 updated** — explicit reference to Rule #16 at insert time for every new `master` row.
+
+### Role / permission catalog extraction (out of scope for this audit)
+
+While investigating the role 2 mass-assignment (B2-ROLE-2), an architectural finding surfaced: the catalog has been writing role / permission / role_permission / permission_hierarchy rows into the `_core` platform module's RBAC tables for weeks, rather than into Domain Map catalog entities (none of which exist for these concepts today). Live counts:
+
+- `_core.roles`: 121 total. Legitimate: 2 origin=`system` + 15 origin=`user` (tenant test accounts). Polluting: 104 origin=`model`/`model_master` (catalog content).
+- `_core.permissions`: 901 total. Legitimate: 6 (no domain_module_id). Polluting: 895 (every domain-prefixed perm).
+- `_core.role_permissions`: 1386 total. Legitimate: ~10. Polluting: ~1376.
+
+Auto-grant mechanism: every INSERT into `_core.permissions` triggers a `role_permission` row for role 2 (Administrator) with `granted_by=null` and `granted_at` matching the permission's `created_at` to the microsecond. Not documented in `use-semantius`; lives in the platform layer.
+
+Detailed migration plan written to [plans/extract-role-permission-catalog.md](../plans/extract-role-permission-catalog.md). Phases A (inventory) through G (DELETE polluting rows after user approval), with byte-identical blueprint regeneration as a hard gate. Other skills (`semantic-model-deployer`, `semantic-model-optimizer`, `semantic-model-analyst`, `semantius-skill-maker`, `semantius-agent-maker`, `semantius-deploy-test-maker`, `use-semantius`) are NOT touched — they consume blueprint artifacts only, and the contract is that blueprints regenerate byte-identical post-migration.
+
+### Status
+
+**ATS audit not yet closed.** Open items deferred until role / permission catalog extraction completes:
+- B1A-B7-USER-EDGES-NEWER (~25-35 user edges on later-added masters)
+- B1A-H-APQC-COVERAGE (~24 handoff_processes rows)
+- B1B-REG-CODES-EMPTY (FCRA / OFCCP regulation_code; awaits cross-domain regulations Validate)
+- Audit final close-out / `state.yaml` flip to `passed`
+
+UI spot-checks:
+- https://tests.semantius.app/domain_map/data_object_lifecycle_states (16 new compliance rows)
+- https://tests.semantius.app/domain_map/data_object_relationships (no change this pass)
+- https://tests.semantius.app/domain_map/domain_module_data_objects (12 necessity flips today + 5 flips in Phase 1)
+- https://tests.semantius.app/domain_map/trigger_events (20 event_category PATCHes)
+- https://tests.semantius.app/domain_map/permissions (19 new workflow-gate rows in `_core.permissions` — note: pollution per the migration plan, will move to `domain_permissions` post-extraction)

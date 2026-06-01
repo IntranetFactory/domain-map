@@ -1,2 +1,5 @@
 .tmp_deploy/
 .env
+node_modules/
+.claude/worktrees/
+crud.log

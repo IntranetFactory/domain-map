@@ -8,7 +8,7 @@ domain_modules:
   - ats-offers
 domain_code: ATS
 related_modules: [ats-background-checks, ats-candidate-crm, ats-pre-employee-record, ats-recruitment-pipeline, comp-statements, hcm-lifecycle-workflows, hiring-starter]
-created_at: 2026-05-31
+created_at: 2026-06-01
 ---
 
 # Offers
@@ -238,8 +238,8 @@ _This scope holds `job_applications` as **embedded_master**; the canonical state
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `pending` | ✓ | - | - | - | Approval step awaiting decision. |
-| 2 | `approved` | - | ✓ | ✓ | `ats-offers:approved_offer_approval` | Step approved; offer can advance. |
-| 3 | `rejected` | - | ✓ | ✓ | `ats-offers:rejected_offer_approval` | Step rejected; offer blocked or requires revision. |
+| 2 | `approved` | - | ✓ | ✓ | `ats-offers:approve_offer` | Step approved; offer can advance. |
+| 3 | `rejected` | - | ✓ | ✓ | `ats-offers:reject_offer` | Step rejected; offer blocked or requires revision. |
 | 4 | `escalated` | - | - | - | - | Step escalated to a higher approver. |
 
 ### `offer_letter_documents` (Offer Letter Document)
@@ -256,9 +256,9 @@ _This scope holds `job_applications` as **embedded_master**; the canonical state
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 10 | `draft` | ✓ | - | - | - | Template is being authored; not visible for offer generation. |
-| 20 | `in_review` | - | - | ✓ | `ats-offers:submit_offer_letter_template_for_review` | Author has submitted the template for legal or HR-Comp review. |
+| 20 | `in_review` | - | - | - | - | Author has submitted the template for legal or HR-Comp review. |
 | 30 | `approved` | - | - | ✓ | `ats-offers:approve_offer_letter_template` | Single approver (legal or HR-Comp) has signed off; ready for activation. |
-| 40 | `active` | - | - | ✓ | `ats-offers:activate_offer_letter_template` | Template is live and available for new offers to render against. |
+| 40 | `active` | - | - | - | - | Template is live and available for new offers to render against. |
 | 50 | `superseded` | - | - | - | - | A newer version of this template has been activated; this row is retained for historical offers. |
 | 60 | `retired` | - | ✓ | ✓ | `ats-offers:retire_offer_letter_template` | Template withdrawn from use; no new offers may render against it. |
 
@@ -283,11 +283,9 @@ _This scope holds `job_applications` as **embedded_master**; the canonical state
 | `ats-offers:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
 | `ats-offers:approve_offer` | workflow-gate (lifecycle) | Transition `job_offers` into state `approved` | ✓ |
 | `ats-offers:rescind_offer` | workflow-gate (lifecycle) | Transition `job_offers` into state `rescinded` | ✓ |
-| `ats-offers:approved_offer_approval` | workflow-gate (lifecycle) | Transition `offer_approvals` into state `approved` | ✓ |
-| `ats-offers:rejected_offer_approval` | workflow-gate (lifecycle) | Transition `offer_approvals` into state `rejected` | ✓ |
-| `ats-offers:submit_offer_letter_template_for_review` | workflow-gate (lifecycle) | Transition `offer_letter_templates` into state `in_review` | ✓ |
+| `ats-offers:approve_offer` | workflow-gate (lifecycle) | Transition `offer_approvals` into state `approved` | ✓ |
+| `ats-offers:reject_offer` | workflow-gate (lifecycle) | Transition `offer_approvals` into state `rejected` | ✓ |
 | `ats-offers:approve_offer_letter_template` | workflow-gate (lifecycle) | Transition `offer_letter_templates` into state `approved` | ✓ |
-| `ats-offers:activate_offer_letter_template` | workflow-gate (lifecycle) | Transition `offer_letter_templates` into state `active` | ✓ |
 | `ats-offers:retire_offer_letter_template` | workflow-gate (lifecycle) | Transition `offer_letter_templates` into state `retired` | ✓ |
 | `ats-offers:view_all_offers` | override (personal_content) | View all `job_offers` rows beyond row-scope | ✓ |
 | `ats-offers:manage_all_offers` | override (personal_content) | Manage all `job_offers` rows beyond row-scope | ✓ |

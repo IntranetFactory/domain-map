@@ -126,16 +126,22 @@ A `discovery_substring` row a reviewer approved is high-quality. A `agent_curate
 
 **Anti-pattern:** completing the structural pass, surfacing the gap report, then "leaving APQC tagging for Discover later." This is what the prior design said and what the first 2026-05-29 ITSM audit did. The analyst's mental model — built from reading 80+ handoffs in detail — does not survive the session. Two weeks later, Discover's substring matcher recovers ~60% of it lossily. The correct behavior is to tag while the model is fresh; ship the human-curated rows in the same audit pass that produced them.
 
-### Step 4 — Append the audit section to the domain's history file
+### Step 4 — Write history.md (append) and state.yaml (rewrite)
 
-Audit history is git-tracked. One markdown file per domain at `c:/dev/domain-map/audits/<DOMAIN_CODE>.md`, append-only. Each Validate run appends a new dated section; prior sections are never edited (corrections come as a new audit, not as an overwrite). See [`audits/README.md`](../../../../audits/README.md) for the directory convention.
+Each domain has its own directory: `audits/<DOMAIN_CODE>/history.md` + `audits/<DOMAIN_CODE>/state.yaml`. Every audit run produces TWO outputs:
+
+- **`history.md`** is the append-only narrative. Every Validate run appends a new dated `## YYYY-MM-DD — Audit` section; prior sections are never edited (corrections come as a new audit, not as an overwrite).
+- **`state.yaml`** is the current open-items index, `schema_version: 2`. Rewritten in place each audit. Carries only PENDING items (b1a / b1b / b2 / b3). Resolved items live ONLY in `history.md`, never in `state.yaml`.
+
+See [`audits/README.md`](../../../../audits/README.md) for the full `state.yaml` schema and the rules around back-reference resolution, count enumeration, and blocker-vs-affected distinction.
 
 **Procedure:**
 
-1. **Read the existing file** at `audits/<DOMAIN_CODE>.md` if it exists, to ensure the new section appends below prior history. If it doesn't exist, the new section starts a fresh file with a `# <DOMAIN_CODE> — Audit History` header.
-2. **Append a new `## YYYY-MM-DD — Audit` section** at the bottom of the file. Structure mirrors the three buckets from Step 3.
-3. **Drafts and subagent JSON stay in `c:/tmp/`** (gitignored, ephemeral). Only the final per-audit markdown section lands in `audits/`.
-4. **Commit timing is the user's call** — the agent writes the file but does not commit unless the user asks. `git log audits/<DOMAIN_CODE>.md` becomes the audit timeline once commits happen.
+1. **Read the existing `audits/<DOMAIN_CODE>/history.md`** for prior context (last audit's findings, prior Decisions, prior Continuations). Read `audits/<DOMAIN_CODE>/state.yaml` to see what's currently open per the previous audit.
+2. **Append a new `## YYYY-MM-DD — Audit` section** at the bottom of `history.md`. Structure mirrors the three buckets from Step 3 plus any later Decisions / Fixes-applied / Pairwise reconciliation sub-sections.
+3. **Rewrite `state.yaml` in place** in `schema_version: 2` format. Every Bucket 1/2/3 finding still pending after this audit run becomes an entry in `b1a` / `b1b` / `b2` / `b3` per the classification rules in `audits/README.md`. Resolved items are dropped from `state.yaml` (they live in `history.md`).
+4. **Drafts and subagent JSON stay in `c:/tmp/`** (gitignored, ephemeral). Only the final per-audit narrative section in `history.md` and the rewritten `state.yaml` land in `audits/`.
+5. **Commit timing is the user's call** — the agent writes the files but does not commit unless the user asks. `git log audits/<DOMAIN_CODE>/` becomes the audit timeline once commits happen.
 
 **Section template (appended to the file):**
 

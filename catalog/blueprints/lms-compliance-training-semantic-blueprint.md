@@ -8,7 +8,7 @@ domain_modules:
   - lms-compliance-training
 domain_code: LMS
 related_modules: [clm-repository, hcm-core-worker, hcm-org-positions, hrsd-case-mgmt, iga-auto-provisioning, lms-automation, lms-course-delivery, lms-credentials, onb-journey-mgmt, skills-mgmt-profile, training-records-starter]
-created_at: 2026-05-31
+created_at: 2026-06-01
 ---
 
 # Compliance Training
@@ -67,13 +67,13 @@ flowchart TD
   harassment_training_acknowledgements["Harassment Training Acknowledgements"]
   recertification_schedules["Recertification Schedules"]
   regulator_filing_exports["Regulator Filing Exports"]
+  fda_part11_audit_trails["FDA Part 11 Audit Trails"]
+  bsa_aml_training_records["BSA / AML Training Records"]
+  signature_records["Signature Records"]
   hipaa_training_records["HIPAA Training Records"]
   osha_training_records["OSHA Training Records"]
   sox_training_evidence["SOX Training Evidence"]
   ferpa_training_records["FERPA Training Records"]
-  fda_part11_audit_trails["FDA Part 11 Audit Trails"]
-  bsa_aml_training_records["BSA / AML Training Records"]
-  signature_records["Signature Records"]
   users["Users"]
   compliance_training_campaigns -->|"generates"| compliance_assignments
   compliance_assignments -->|"evidences (opt)"| compliance_audit_records
@@ -136,17 +136,21 @@ flowchart TD
   class harassment_training_acknowledgements master;
   class recertification_schedules master;
   class regulator_filing_exports master;
+  class fda_part11_audit_trails master;
+  class bsa_aml_training_records master;
+  class signature_records embedded_master;
   class hipaa_training_records master;
   class osha_training_records master;
   class sox_training_evidence master;
   class ferpa_training_records master;
-  class fda_part11_audit_trails master;
-  class bsa_aml_training_records master;
-  class signature_records embedded_master;
   class users platform_builtin;
   style org_units stroke-dasharray:5 5;
   style cost_centers stroke-dasharray:5 5;
   style hcm_positions stroke-dasharray:5 5;
+  style hipaa_training_records stroke-dasharray:5 5;
+  style osha_training_records stroke-dasharray:5 5;
+  style sox_training_evidence stroke-dasharray:5 5;
+  style ferpa_training_records stroke-dasharray:5 5;
 ```
 
 ## 3. Entities catalog
@@ -158,13 +162,13 @@ flowchart TD
 | 3 | `compliance_assignments` (Compliance Training Assignments) | master | - | - | required | personal_content | - |
 | 4 | `compliance_training_campaigns` (Compliance Training Campaigns) | master | - | - | required | submit_lock | - |
 | 5 | `fda_part11_audit_trails` (FDA Part 11 Audit Trails) | master | - | - | required | personal_content, submit_lock | - |
-| 6 | `ferpa_training_records` (FERPA Training Records) | master | - | - | required | personal_content, submit_lock | - |
+| 6 | `ferpa_training_records` (FERPA Training Records) | master | - | - | optional | personal_content, submit_lock | - |
 | 7 | `harassment_training_acknowledgements` (Harassment Training Acknowledgements) | master | - | - | required | personal_content, submit_lock | - |
-| 8 | `hipaa_training_records` (HIPAA Training Records) | master | - | - | required | personal_content, submit_lock | - |
-| 9 | `osha_training_records` (OSHA Training Records) | master | - | - | required | personal_content, submit_lock | - |
+| 8 | `hipaa_training_records` (HIPAA Training Records) | master | - | - | optional | personal_content, submit_lock | - |
+| 9 | `osha_training_records` (OSHA Training Records) | master | - | - | optional | personal_content, submit_lock | - |
 | 10 | `recertification_schedules` (Recertification Schedules) | master | - | - | required | - | - |
 | 11 | `regulator_filing_exports` (Regulator Filing Exports) | master | - | - | required | submit_lock | - |
-| 12 | `sox_training_evidence` (SOX Training Evidence) | master | - | - | required | personal_content, submit_lock | - |
+| 12 | `sox_training_evidence` (SOX Training Evidence) | master | - | - | optional | personal_content, submit_lock | - |
 | 13 | `training_evidence_records` (Training Evidence Records) | master | - | - | required | personal_content, submit_lock | - |
 | 14 | `learner_certifications` (Certifications) | embedded_master | `lms-credentials` | Credentials, Badges and Continuing Education | required | personal_content, submit_lock | - |
 | 15 | `cost_centers` (Cost Centers) | embedded_master | `ERP-FIN` _(domain-level, not modularized)_ | Core ERP Financial Management | optional | - | - |
@@ -644,6 +648,12 @@ _This scope holds `signature_records` as **embedded_master**; the canonical stat
 | `lms-compliance-training:manage_all_harassment_training_acknowledgements` | override (personal_content) | Manage all `harassment_training_acknowledgements` rows beyond row-scope | ✓ |
 | `lms-compliance-training:submit_harassment_training_acknowledgement` | override (submit_lock) | Submit and lock a `harassment_training_acknowledgements` row (post-submit edits gated) | ✓ |
 | `lms-compliance-training:submit_regulator_filing_export` | override (submit_lock) | Submit and lock a `regulator_filing_exports` row (post-submit edits gated) | ✓ |
+| `lms-compliance-training:view_all_fda_part_11_audit_trails` | override (personal_content) | View all `fda_part11_audit_trails` rows beyond row-scope | ✓ |
+| `lms-compliance-training:manage_all_fda_part_11_audit_trails` | override (personal_content) | Manage all `fda_part11_audit_trails` rows beyond row-scope | ✓ |
+| `lms-compliance-training:submit_fda_part_11_audit_trail` | override (submit_lock) | Submit and lock a `fda_part11_audit_trails` row (post-submit edits gated) | ✓ |
+| `lms-compliance-training:view_all_bsa_/_aml_training_records` | override (personal_content) | View all `bsa_aml_training_records` rows beyond row-scope | ✓ |
+| `lms-compliance-training:manage_all_bsa_/_aml_training_records` | override (personal_content) | Manage all `bsa_aml_training_records` rows beyond row-scope | ✓ |
+| `lms-compliance-training:submit_bsa_/_aml_training_record` | override (submit_lock) | Submit and lock a `bsa_aml_training_records` row (post-submit edits gated) | ✓ |
 | `lms-compliance-training:view_all_hipaa_training_records` | override (personal_content) | View all `hipaa_training_records` rows beyond row-scope | ✓ |
 | `lms-compliance-training:manage_all_hipaa_training_records` | override (personal_content) | Manage all `hipaa_training_records` rows beyond row-scope | ✓ |
 | `lms-compliance-training:submit_hipaa_training_record` | override (submit_lock) | Submit and lock a `hipaa_training_records` row (post-submit edits gated) | ✓ |
@@ -656,12 +666,6 @@ _This scope holds `signature_records` as **embedded_master**; the canonical stat
 | `lms-compliance-training:view_all_ferpa_training_records` | override (personal_content) | View all `ferpa_training_records` rows beyond row-scope | ✓ |
 | `lms-compliance-training:manage_all_ferpa_training_records` | override (personal_content) | Manage all `ferpa_training_records` rows beyond row-scope | ✓ |
 | `lms-compliance-training:submit_ferpa_training_record` | override (submit_lock) | Submit and lock a `ferpa_training_records` row (post-submit edits gated) | ✓ |
-| `lms-compliance-training:view_all_fda_part_11_audit_trails` | override (personal_content) | View all `fda_part11_audit_trails` rows beyond row-scope | ✓ |
-| `lms-compliance-training:manage_all_fda_part_11_audit_trails` | override (personal_content) | Manage all `fda_part11_audit_trails` rows beyond row-scope | ✓ |
-| `lms-compliance-training:submit_fda_part_11_audit_trail` | override (submit_lock) | Submit and lock a `fda_part11_audit_trails` row (post-submit edits gated) | ✓ |
-| `lms-compliance-training:view_all_bsa_/_aml_training_records` | override (personal_content) | View all `bsa_aml_training_records` rows beyond row-scope | ✓ |
-| `lms-compliance-training:manage_all_bsa_/_aml_training_records` | override (personal_content) | Manage all `bsa_aml_training_records` rows beyond row-scope | ✓ |
-| `lms-compliance-training:submit_bsa_/_aml_training_record` | override (submit_lock) | Submit and lock a `bsa_aml_training_records` row (post-submit edits gated) | ✓ |
 
 ### 8.2 Business rules
 
@@ -676,6 +680,10 @@ _This scope holds `signature_records` as **embedded_master**; the canonical stat
 | `harassment_training_acknowledgement_edit_scope` | `harassment_training_acknowledgements` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_harassment_training_acknowledgements` / `lms-compliance-training:manage_all_harassment_training_acknowledgements` |
 | `submit_restricted_to_harassment_training_acknowledgement_owner` | `harassment_training_acknowledgements` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `lms-compliance-training:manage_all_harassment_training_acknowledgements` |
 | `submit_restricted_to_regulator_filing_export_owner` | `regulator_filing_exports` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `lms-compliance-training:manage_all_regulator_filing_exports` |
+| `fda_part_11_audit_trail_edit_scope` | `fda_part11_audit_trails` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_fda_part_11_audit_trails` / `lms-compliance-training:manage_all_fda_part_11_audit_trails` |
+| `submit_restricted_to_fda_part_11_audit_trail_owner` | `fda_part11_audit_trails` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `lms-compliance-training:manage_all_fda_part_11_audit_trails` |
+| `bsa_/_aml_training_record_edit_scope` | `bsa_aml_training_records` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_bsa_/_aml_training_records` / `lms-compliance-training:manage_all_bsa_/_aml_training_records` |
+| `submit_restricted_to_bsa_/_aml_training_record_owner` | `bsa_aml_training_records` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `lms-compliance-training:manage_all_bsa_/_aml_training_records` |
 | `hipaa_training_record_edit_scope` | `hipaa_training_records` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_hipaa_training_records` / `lms-compliance-training:manage_all_hipaa_training_records` |
 | `submit_restricted_to_hipaa_training_record_owner` | `hipaa_training_records` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `lms-compliance-training:manage_all_hipaa_training_records` |
 | `osha_training_record_edit_scope` | `osha_training_records` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_osha_training_records` / `lms-compliance-training:manage_all_osha_training_records` |
@@ -684,7 +692,3 @@ _This scope holds `signature_records` as **embedded_master**; the canonical stat
 | `submit_restricted_to_sox_training_evidence_owner` | `sox_training_evidence` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `lms-compliance-training:manage_all_sox_training_evidence` |
 | `ferpa_training_record_edit_scope` | `ferpa_training_records` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_ferpa_training_records` / `lms-compliance-training:manage_all_ferpa_training_records` |
 | `submit_restricted_to_ferpa_training_record_owner` | `ferpa_training_records` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `lms-compliance-training:manage_all_ferpa_training_records` |
-| `fda_part_11_audit_trail_edit_scope` | `fda_part11_audit_trails` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_fda_part_11_audit_trails` / `lms-compliance-training:manage_all_fda_part_11_audit_trails` |
-| `submit_restricted_to_fda_part_11_audit_trail_owner` | `fda_part11_audit_trails` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `lms-compliance-training:manage_all_fda_part_11_audit_trails` |
-| `bsa_/_aml_training_record_edit_scope` | `bsa_aml_training_records` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_bsa_/_aml_training_records` / `lms-compliance-training:manage_all_bsa_/_aml_training_records` |
-| `submit_restricted_to_bsa_/_aml_training_record_owner` | `bsa_aml_training_records` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `lms-compliance-training:manage_all_bsa_/_aml_training_records` |

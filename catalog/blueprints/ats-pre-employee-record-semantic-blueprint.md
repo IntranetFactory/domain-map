@@ -8,7 +8,7 @@ domain_modules:
   - ats-pre-employee-record
 domain_code: ATS
 related_modules: [ats-background-checks, ats-candidate-crm, ats-offers, hcm-lifecycle-workflows]
-created_at: 2026-05-31
+created_at: 2026-06-01
 ---
 
 # Pre-Employee Record
