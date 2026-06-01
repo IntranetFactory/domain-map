@@ -259,6 +259,20 @@ for (const e of edges) {
   if (!["true", "false"].includes(e.required)) validationErrors.push(`edge ${e.cluster}/${e.domain_code}: invalid required '${e.required}'`);
 }
 
+// Step C (m4b, m5, M7): relationship shape pre-flight. Soft warnings per Policy 1 — these
+// never block the load, but surface edges that violate the owner_side / verb-direction
+// invariants so they can be normalized before they reach the catalog.
+const shapeWarnings: string[] = [];
+for (const e of edges) {
+  if (!e.inverse_verb || e.inverse_verb.trim() === "") {
+    shapeWarnings.push(`${e.cluster}/${e.domain_code}: empty inverse_verb on '${e.from} ${e.verb} ${e.to}' (m4b)`);
+  }
+  if ((e.cardinality === "one_to_many" || e.kind === "composition") && e.owner_side === "target") {
+    const tag = e.kind === "composition" ? "composition" : "one_to_many";
+    shapeWarnings.push(`${e.cluster}/${e.domain_code}: ${tag} edge '${e.from} ${e.verb} ${e.to}' has owner_side=target; owner_side must name the parent (cascade root). If target is genuinely the parent the row is semantically OK but non-canonical; prefer authoring parent-first (owner_side=source, forward verb parent-to-child) (m5/M7)`);
+  }
+}
+
 const seenAliases = new Set<string>();
 for (const a of aliases) {
   if (!idByName.has(a.data_object)) validationErrors.push(`alias ${a.cluster}/${a.domain_code}: unknown data_object '${a.data_object}'`);
@@ -287,6 +301,12 @@ const softWarnings = validationErrors.filter((e) => e.includes("type=industry_te
 
 if (softWarnings.length > 0) {
   console.log(`\nINFO: ${softWarnings.length} industry_term/solution_term aliases will be loaded as 'synonym' (industry_id/solution_id resolution deferred — review post-load).`);
+}
+
+if (shapeWarnings.length > 0) {
+  console.log(`\nSHAPE WARNINGS (${shapeWarnings.length}), soft, do not block (m4b/m5/M7):`);
+  for (const w of shapeWarnings.slice(0, 30)) console.log(`  ${w}`);
+  if (shapeWarnings.length > 30) console.log(`  …+${shapeWarnings.length - 30} more`);
 }
 
 if (hardErrors.length > 0) {

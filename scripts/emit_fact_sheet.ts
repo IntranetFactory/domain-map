@@ -362,6 +362,28 @@ function masteredIn(r: ScopeRow, owners: Map<number, OwnerInfo>): { code: string
   return { code: "-", label: "-" };
 }
 
+// M1 (plan-1-consistency.md): the single canonical gate-code derivation, shared by the §7
+// lifecycle renderer and §8 deriveWorkflowGatesAndRules so the two can never disagree on a
+// gate's module prefix. Canonical fallback: a state with NULL domain_module_id is gated by
+// the module that masters its data_object in scope. Returns null when no module resolves
+// (the §7 caller renders a blank/annotation; §8 simply does not mint the gate).
+function deriveGate(
+  state: any,
+  scopeRows: ScopeRow[],
+): { code: string; gateModule: ModuleRow; verbSegment: string; obj: DataObject } | null {
+  const obj = dataObjectsById.get(state.data_object_id as number);
+  if (!obj) return null;
+  const realizingId = state.domain_module_id as number | null;
+  const gateModule = realizingId !== null
+    ? modulesById.get(realizingId)
+    : scopeRows.find((r) => r.data_object_id === state.data_object_id && r.role === "master")?.modules[0];
+  if (!gateModule) return null;
+  const verbSegment = state.permission_verb_override
+    ? (state.permission_verb_override as string)
+    : `${state.state_name}_${entitySingularToken(obj)}`;
+  return { code: `${moduleSlug(gateModule.domain_module_code)}:${verbSegment}`, gateModule, verbSegment, obj };
+}
+
 function renderDependencies(scopeRows: ScopeRow[], owners: Map<number, OwnerInfo>): string[] {
   const out: string[] = [];
   const deps = scopeRows.filter((r) => r.role !== "master");
@@ -452,6 +474,10 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
     parentDomains,
   } = cat;
   const moduleIdSet = new Set(modules.map((m) => m.id));
+  // M1 cross-section consistency: collect the in-scope gates §7 shows and the gates §8 mints,
+  // then warn (Policy 1, never throw) if §7 shows an in-scope gate §8 fails to mint.
+  const section7InScopeGates = new Set<string>();
+  const section8Gates = new Set<string>();
   const relatedModules: ModuleRow[] = [...relatedModuleIds]
     .map((id) => modulesById.get(id))
     .filter((m): m is ModuleRow => Boolean(m));
@@ -739,17 +765,20 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
       out.push(tableHeader(headers));
       for (const s of states) {
         const realizingId = s.domain_module_id as number | null;
-        // For permission gate slug: the realizing module's slug if set; else the master's
-        // owning-module slug (the module in scope that has role=master on this data_object).
-        const masterModule = scopeRows.find((r) => r.data_object_id === did && r.role === "master")?.modules[0];
-        let gateModule: ModuleRow | undefined;
-        if (realizingId !== null) gateModule = modulesById.get(realizingId);
-        else gateModule = masterModule;
-        const gateSlug = gateModule ? moduleSlug(gateModule.domain_module_code) : "";
-        const verbSegment = s.permission_verb_override
-          ? s.permission_verb_override
-          : `${s.state_name}_${entitySingularToken(obj)}`;
-        const gate = s.requires_permission && gateSlug ? `\`${gateSlug}:${verbSegment}\`` : "";
+        // M1: gate code comes from the single shared deriveGate (canonical fallback: NULL
+        // domain_module_id is gated by the in-scope master's owning module). Byte-identical
+        // to the previous inline computation on every resolving path.
+        const g = deriveGate(s, scopeRows);
+        let gate = s.requires_permission && g ? `\`${g.code}\`` : "";
+        if (s.requires_permission && g && moduleIdSet.has(g.gateModule.id)) section7InScopeGates.add(g.code);
+        // M2 (Policy 1): a requires_permission state on an entity mastered IN this scope that
+        // still resolves to no module is a genuine gap (e.g. a dangling realizing module),
+        // not the benign "gate owned by an out-of-scope master" case (which stays blank).
+        // Annotate + warn rather than emit a silent empty gate.
+        if (s.requires_permission && !g && scopeRows.some((r) => r.data_object_id === did && r.role === "master")) {
+          gate = "⚠ _(unresolved gate: no realizing module)_";
+          console.warn(`  ⚠ M2: requires_permission state \`${obj.data_object_name}.${s.state_name}\` resolves to no gate (${modules.map((m) => m.domain_module_code).join("+")})`);
+        }
         const realizingLabel = realizingId === null
           ? "_(always)_"
           : moduleIdSet.has(realizingId)
@@ -764,6 +793,24 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
         if (showModulesCol) cells.push(realizingLabel);
         cells.push(s.requires_permission ? "✓" : "", gate, s.description || "");
         out.push(tableRow(cells));
+      }
+      // M4-emit (Policy 1): soft-assert the state-machine shape — exactly one is_initial, at
+      // least one is_terminal, and unique/monotonic state_order. Annotate + warn on violation;
+      // never throw (the audit and loader bands carry the hard enforcement).
+      {
+        const initials = states.filter((s: any) => s.is_initial).length;
+        const terminals = states.filter((s: any) => s.is_terminal).length;
+        const orders = states.map((s: any) => s.state_order as number);
+        const orderOk = orders.every((v: number, i: number) => i === 0 || v > orders[i - 1]);
+        const problems: string[] = [];
+        if (initials !== 1) problems.push(`${initials} is_initial (expected exactly 1)`);
+        if (terminals < 1) problems.push(`no is_terminal (expected at least 1)`);
+        if (!orderOk) problems.push(`state_order not unique/monotonic`);
+        if (problems.length > 0) {
+          out.push("");
+          out.push(`> ⚠ **state-machine shape:** ${problems.join("; ")}.`);
+          console.warn(`  ⚠ M4: ${obj.data_object_name} state machine — ${problems.join("; ")} (${modules.map((m) => m.domain_module_code).join("+")})`);
+        }
       }
       out.push("");
     }
@@ -781,6 +828,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
       return masterHere || s.domain_module_id === m.id;
     });
     const { permissions, businessRules } = deriveWorkflowGatesAndRules(slug, moduleScopeRows, moduleLifecycle, m.id);
+    for (const p of permissions) if (p.tier === "workflow-gate (lifecycle)") section8Gates.add(p.code);
     out.push("### 8.1 Permissions");
     out.push("");
     out.push(tableHeader(["permission", "tier", "description", "included in `:admin`?"]));
@@ -804,6 +852,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
         return masterHere || s.domain_module_id === m.id;
       });
       const { permissions, businessRules } = deriveWorkflowGatesAndRules(slug, moduleScopeRows, moduleLifecycle, m.id);
+      for (const p of permissions) if (p.tier === "workflow-gate (lifecycle)") section8Gates.add(p.code);
       out.push(`### 8.${idx + 1} \`${m.domain_module_code}\``);
       out.push("");
       out.push(tableHeader(["permission", "tier", "description", "included in `:admin`?"]));
@@ -819,6 +868,14 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
     });
   }
 
+  // M1 cross-section consistency check (Policy 1: warn, never throw). Every in-scope gate
+  // §7 shows must also be minted by §8; a miss means the two derivations disagree.
+  for (const code of section7InScopeGates) {
+    if (!section8Gates.has(code)) {
+      console.warn(`  ⚠ M1: §7 shows in-scope gate \`${code}\` that §8 does not mint (${modules.map((m) => m.domain_module_code).join("+")})`);
+    }
+  }
+
   // Capabilities moved to front matter (see `capabilities: [...]` above). The parent
   // domain's capability catalog is metadata, not body prose - reader can query the
   // domain map for realization details.
@@ -831,8 +888,8 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
 function renderHandoffTable(rows: any[], direction: "outbound" | "inbound"): string[] {
   const out: string[] = [];
   const headers = direction === "outbound"
-    ? ["source module", "target domain", "target module", "trigger_event", "payload", "integration", "friction", "description"]
-    : ["target module", "source domain", "source module", "trigger_event", "payload", "integration", "friction", "description"];
+    ? ["source module", "target domain", "target module", "trigger_event", "transition", "payload", "integration", "friction", "description"]
+    : ["target module", "source domain", "source module", "trigger_event", "transition", "payload", "integration", "friction", "description"];
   out.push(tableHeader(headers));
   for (const h of rows) {
     const sourceMod = modulesById.get(h.source_domain_module_id as number);
@@ -844,11 +901,18 @@ function renderHandoffTable(rows: any[], direction: "outbound" | "inbound"): str
     const sourceDomLabel = sourceDom ? sourceDom.domain_code : `domain #${h.source_domain_id}`;
     const targetDomLabel = targetDom ? targetDom.domain_code : `domain #${h.target_domain_id}`;
     const trigger = h.trigger_events?.event_name ? `\`${h.trigger_events.event_name}\`` : "";
+    // m8b: carry the trigger's state transition (and event_category) into §6 — the transition
+    // is what defines the event, and §6 previously dropped it.
+    const te = h.trigger_events || {};
+    const fromS = te.from_state ? `\`${te.from_state}\`` : "";
+    const toS = te.to_state ? `\`${te.to_state}\`` : "";
+    const trans = fromS && toS ? `${fromS} → ${toS}` : (toS || fromS || "");
+    const transition = te.event_category ? (trans ? `${trans} _(${te.event_category})_` : `_(${te.event_category})_`) : trans;
     const payload = h.data_objects?.data_object_name ? `\`${h.data_objects.data_object_name}\`` : "";
     if (direction === "outbound") {
-      out.push(tableRow([sourceModLabel, targetDomLabel, targetModLabel, trigger, payload, h.integration_pattern || "", h.friction_level || "", h.description || ""]));
+      out.push(tableRow([sourceModLabel, targetDomLabel, targetModLabel, trigger, transition, payload, h.integration_pattern || "", h.friction_level || "", h.description || ""]));
     } else {
-      out.push(tableRow([targetModLabel, sourceDomLabel, sourceModLabel, trigger, payload, h.integration_pattern || "", h.friction_level || "", h.description || ""]));
+      out.push(tableRow([targetModLabel, sourceDomLabel, sourceModLabel, trigger, transition, payload, h.integration_pattern || "", h.friction_level || "", h.description || ""]));
     }
   }
   return out;
@@ -883,15 +947,14 @@ function deriveWorkflowGatesAndRules(
     const ownsAsRealizer = realizingId === thisModuleId;
     const ownsAsMaster = realizingId === null && moduleMasterIds.has(ls.data_object_id as number);
     if (!ownsAsRealizer && !ownsAsMaster) continue;
-    const obj = dataObjectsById.get(ls.data_object_id as number);
-    if (!obj) continue;
-    const verbSegment = ls.permission_verb_override
-      ? (ls.permission_verb_override as string)
-      : `${ls.state_name}_${entitySingularToken(obj)}`;
+    // M1: same shared deriveGate as §7. On this ownership path its prefix is always this
+    // module's slug, so the emitted code is byte-identical to the previous `${slug}:...`.
+    const g = deriveGate(ls, moduleObjects);
+    if (!g) continue;
     permissions.push({
-      code: `${slug}:${verbSegment}`,
+      code: g.code,
       tier: "workflow-gate (lifecycle)",
-      description: `Transition \`${obj.data_object_name}\` into state \`${ls.state_name}\``,
+      description: `Transition \`${g.obj.data_object_name}\` into state \`${ls.state_name}\``,
       includedInAdmin: true,
     });
   }
@@ -937,11 +1000,22 @@ function deriveWorkflowGatesAndRules(
       });
     }
     if (o.has_single_approver) {
+      // M3: name the entity's ACTUAL approval gate (honoring permission_verb_override) instead
+      // of the unconditional approve_<entity>. Find the entity's approve-class requires_permission
+      // state and resolve its gate via the shared deriveGate. Only override when such a gate
+      // exists and differs, so entities without one keep their previous (byte-identical) intent.
+      const approveState = lifecycleRows.find((ls: any) =>
+        ls.data_object_id === r.data_object_id && ls.requires_permission &&
+        /approv/i.test(String(ls.permission_verb_override || ls.state_name)));
+      const approveGate = approveState ? deriveGate(approveState, moduleObjects) : null;
+      const intent = approveGate && approveGate.code !== `${slug}:approve_${entitySingular}`
+        ? `Exactly one explicit approver required; uses the module's approval gate (\`${approveGate.code}\`).`
+        : `Exactly one explicit approver required; uses the module's approval gate (\`${slug}:approve_${entitySingular}\` if surfaced as a lifecycle workflow gate).`;
       businessRules.push({
         name: `approve_${entitySingular}_requires_approver`,
         dataObject: o.data_object_name,
         sourceFlag: "has_single_approver",
-        intent: `Exactly one explicit approver required; uses the module's approval gate (\`${slug}:approve_${entitySingular}\` if surfaced as a lifecycle workflow gate).`,
+        intent,
       });
     }
   }
@@ -979,20 +1053,35 @@ if (MODULE_CODE) {
   if (CHECK && r.changed) exit(1);
 } else if (ALL) {
   let modulesChanged = 0;
+  // m9 (plan-1-consistency.md Policy 1): collect per-module integrity errors and keep
+  // going. One module's violation (e.g. a multi-master data_object) must never brick the
+  // whole corpus; the rest still regenerates and the failures are reported as a banner
+  // below, which forces a non-zero exit so CI still sees them.
+  const failures: { code: string; message: string }[] = [];
   for (const m of allModules) {
     try {
       const r = await emitOneModuleFactSheet(m);
       if (r.changed) modulesChanged++;
       console.log(`${r.changed ? (CHECK ? "WOULD-CHANGE" : "wrote") : "unchanged"}  module ${m.domain_module_code}  →  ${r.path}`);
     } catch (e) {
-      console.error(`FAILED module ${m.domain_module_code}:`, (e as Error).message);
-      throw e;
+      const message = (e as Error).message;
+      failures.push({ code: m.domain_module_code, message });
+      console.error(`FAILED module ${m.domain_module_code}: ${message}`);
     }
   }
   console.log("");
-  console.log(`summary: modules ${modulesChanged}/${allModules.length} ${CHECK ? "would change" : "changed"}`);
+  console.log(`summary: modules ${modulesChanged}/${allModules.length} ${CHECK ? "would change" : "changed"}, ${failures.length} failed`);
+  let bad = false;
+  if (failures.length > 0) {
+    console.error("");
+    console.error(`=== ${failures.length} module(s) failed integrity and were skipped ===`);
+    for (const f of failures) console.error(`  - ${f.code}: ${f.message}`);
+    console.error("(corpus still regenerated for every passing module; fix the data above to clear these.)");
+    bad = true;
+  }
   if (CHECK && modulesChanged > 0) {
     console.error("drift detected - re-run without --check to regenerate, then commit.");
-    exit(1);
+    bad = true;
   }
+  if (bad) exit(1);
 }

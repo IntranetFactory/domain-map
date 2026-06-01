@@ -278,6 +278,22 @@ Label column (auto-computed): `handoff_label` = `<source_domain> → <target_dom
 
 **Trigger-event ownership.** When a single trigger fires from one domain to multiple targets (e.g. `employee.created` → Onboarding + Payroll + IGA + Talent-Mgmt), **all four subscriber rows reference the SAME `trigger_events.id`** via `trigger_event_id`. Don't duplicate events per subscriber, it breaks the trigger-event-prefix clustering signal Phase D depends on.
 
+### `handoff_processes` (junction: `handoffs` ↔ `processes`)
+
+Links a directional handoff to the APQC PCF activity (or custom process) it realizes. Schema authored in `create_handoff_processes.ts`; `proposal_source` added by `add_handoff_processes_proposal_source_2026_05_29.ts`.
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `handoff_id` | parent → `handoffs` | yes | Cascade on delete. The handoff edge being linked. |
+| `process_id` | parent → `processes` | yes | Cascade on delete. The process activity the handoff realizes. |
+| `role` | enum | yes | `implements` (this handoff IS the activity). Default `implements`. Add values only when discovery proposes rows that clearly do not fit. |
+| `proposal_source` | enum | yes | `human_curated` / `agent_curated` / `discovery_override` / `discovery_substring`. Default `discovery_substring`. Provenance and confidence: agent-authored rows use `agent_curated` (Rule #1); `human_curated` only when the user explicitly typed the tag. Live enum is authoritative (Rule #13 enum-drift check). |
+| `notes` | multiline | yes | Empty by default (Rule #15). |
+| `record_status` | enum | yes | `new` / `pending` / `approved` / `rejected`. Default `new`. |
+| `key` | text (computed) | no | Computed 2-tuple natural key `handoff_id.process_id`, `unique_value=true`. Enforces idempotency on the pair. |
+
+Composed unique key: `(handoff_id, process_id)`.
+
 ### `data_object_relationships`
 
 | Field | Format | Required | Notes |
@@ -289,6 +305,7 @@ Label column (auto-computed): `handoff_label` = `<source_domain> → <target_dom
 | `relationship_verb` | string | yes | Forward verb phrase (e.g. "owns", "places", "is a") |
 | `inverse_verb` | string | yes | Reverse phrase (e.g. "is owned by", "is placed by", "is supertype of") |
 | `is_required` | boolean | yes | Whether the relationship is mandatory. Default `false` |
+| `owner_side` | enum | yes | `source` / `target`. Default `source`. NOT NULL. **Names the PARENT (lifecycle owner / cascade root) of the edge**, a domain-map catalog concept, not a Semantius platform primitive: `source` = `data_object_id` is the parent (cascades into the related object on delete); `target` = the related object is the parent. Drives the architect's delete-mode derivation downstream (composition / parent gives the Semantius `parent` FK + cascade; reference gives `reference`). Canonical invariant: for `composition` and `one_to_many` edges, `owner_side` names the parent and the forward `relationship_verb` should read parent-to-child (M7, m5). Do NOT blindly set `owner_side=source`: pick whichever side is actually the parent. For a child-first edge (`child belongs_to parent`) the parent is the `target`, so `owner_side=target` is correct. |
 | `notes` | multiline | yes | |
 | `record_status` | enum | yes | Default `new` |
 
@@ -334,7 +351,8 @@ Label column: `tool_name` (lowercase snake_case verb form — `send_email`, `que
 |---|---|---|---|
 | `description` | multiline | yes | |
 | `skill_type` | enum | yes | Default `system`. Values: `system` (mirrors one domain one-to-one), `process` (orchestrates a cross-domain handoff cluster), `role` (wraps a specific user-role workflow) |
-| `domain_id` | reference → `domains` | no | **Required when `skill_type = 'system'`; null otherwise.** Enforced by `domain_required_when_skill_type_is_system` |
+| `domain_module_id` | reference → `domain_modules` | no | **The system-skill anchor: required when `skill_type = 'system'`** (exactly one system skill per `domain_modules` row, per Rule #14 / Rule #17). |
+| `domain_id` | reference → `domains` | no | **Transitional.** Pre-modular system skills anchored on `domain_id` (with `domain_module_id` null) are migration targets, not the pattern for new authoring. The legacy `domain_required_when_skill_type_is_system` rule keys on this column; new system skills set `domain_module_id` and re-anchor off `domain_id`. |
 | `record_status` | enum | yes | Default `new` |
 
 Label column: `skill_name` (lowercase snake_case or kebab-case — `domain-map-analyst`, `onboarding-process`, `lead-to-cash`).

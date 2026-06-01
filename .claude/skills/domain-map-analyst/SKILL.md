@@ -240,18 +240,20 @@ Every master data_object MUST have `entity_type` classified (default `unclassifi
 
 ### 13. Catalog enums to know without rediscovering them.
 
-The Semantius platform enforces enum check-constraints on several catalog columns. Guessing values that "sound right" wastes a round-trip and a re-run. The non-obvious ones, sourced from the live `/fields` definitions:
+The Semantius platform enforces enum check-constraints on several catalog columns. Guessing values that "sound right" wastes a round-trip and a re-run. **The live `/fields` definitions are the only source of truth for these vocabularies.** The table below is a convenience cache, not hand-authored truth: it is re-derived and verified against live by the enum-drift review-band check (which fails when any hand-maintained copy disagrees with `/fields`), so treat it as a generated artifact. If it ever disagrees with a live constraint, live wins and the check will flag the drift. The non-obvious ones:
 
 | Table.field | Allowed values | Common wrong guesses |
 |---|---|---|
 | `trigger_events.event_category` | `lifecycle`, `state_change`, `threshold`, `signal` | `state_transition` ❌ |
 | `handoffs.integration_pattern` | `event_stream`, `api_call`, `batch_sync`, `manual_handoff`, `file_drop`, `lifecycle_progression` | `event_driven` ❌ |
-| `handoffs.friction_level` | `low`, `medium`, `high` | — |
+| `handoffs.friction_level` | `low`, `medium`, `high` | (none) |
 | `domain_data_objects.role` / `domain_module_data_objects.role` | `master`, `embedded_master`, `contributor`, `consumer`, `derived` | `owned`, `referenced` ❌ |
 | `domain_data_objects.necessity` / `domain_module_data_objects.necessity` | `required`, `optional` | `mandatory` ❌ |
-| `*.record_status` | `new`, `pending`, `approved`, `rejected` | — |
+| `handoff_processes.proposal_source` | `human_curated`, `agent_curated`, `discovery_override`, `discovery_substring` | (none) |
+| `handoff_processes.role` | `implements` | (none) |
+| `*.record_status` | `new`, `pending`, `approved`, `rejected` | (none) |
 
-When adding a new column to this catalog with an enum, copy the value vocabulary from an existing analogous column rather than inventing a new one (e.g. `domain_module_data_objects.necessity` deliberately mirrors `domain_data_objects.necessity` — same two values, same default `required`). If a loader fails with `(23514) violates check constraint "<table>_<field>_check"`, re-query `/fields?table_name=eq.<table>&field_name=eq.<field>` to see the allowed values; don't guess again.
+When adding a new column to this catalog with an enum, copy the value vocabulary from an existing analogous column rather than inventing a new one (e.g. `domain_module_data_objects.necessity` deliberately mirrors `domain_data_objects.necessity` — same two values, same default `required`). If a loader fails with `(23514) violates check constraint "<table>_<field>_check"`, re-query `/fields?table_name=eq.<table>&field_name=eq.<field>` to see the allowed values; don't guess again. Run `bun run scripts/analytics/enum_drift_probe.ts` to verify this whole table against live; it exits non-zero if any row drifted (and `--list` shows live enums not yet in the table).
 
 ### 14. Every domain has at least one full `domain_modules` row. Domains with ≥3 capabilities need ≥2 full modules.
 
@@ -497,7 +499,7 @@ Forbidden patterns:
 
 ## The module at a glance
 
-32 entities (11 core concepts + 1 module concept + 12 junctions + 1 alias + 4 agent-tooling + 3 role layer). Read [references/module-shape.md](references/module-shape.md) for the per-entity field shapes, enums, and FK formats before doing any write that touches a field you haven't used recently. The two long-form rule sets — modules and roles — live in [references/modules.md](references/modules.md) and [references/roles.md](references/roles.md).
+33 entities (11 core concepts + 1 module concept + 13 junctions + 1 alias + 4 agent-tooling + 3 role layer). Read [references/module-shape.md](references/module-shape.md) for the per-entity field shapes, enums, and FK formats before doing any write that touches a field you haven't used recently. The two long-form rule sets — modules and roles — live in [references/modules.md](references/modules.md) and [references/roles.md](references/roles.md).
 
 ### Core concepts (11 entities)
 
@@ -521,7 +523,7 @@ Forbidden patterns:
 |---|---|---|
 | `domain_modules` | Autonomous deployable units inside a domain (`ATS-CANDIDATE-CRM`, `ITSM-INCIDENT-MGMT`, `KNOWLEDGE-MGMT`). Natural key `domain_module_code`. `domain_id` is the primary host (nullable for genuinely-cross-cutting modules); see `domain_module_host_domains` for additional hosts. | no |
 
-### Junctions with qualifiers (14 entities)
+### Junctions with qualifiers (13 entities)
 
 | Table | Connects | Qualifier column |
 |---|---|---|
@@ -534,6 +536,7 @@ Forbidden patterns:
 | `solution_domains` | solutions ↔ domains | coverage_level (primary / secondary / partial) |
 | `data_object_relationships` | data_objects ↔ data_objects | cardinality + kind |
 | `handoffs` | domain_modules → domain_modules (via data_object) | `trigger_event_id` (FK to `trigger_events`) + integration_pattern + friction_level. Covers both cross-domain handoffs (source ≠ target; the Signal 2 substrate for platform-vs-silos analysis, where Signal 1 is the multi-master count on `domain_data_objects` where `role ∈ {master, embedded_master}` AND `necessity = required`) and intra-domain handoffs (source = target, typically `integration_pattern: lifecycle_progression`). The cross-domain filter is applied at query time, not by a validation rule. |
+| `handoff_processes` | handoffs ↔ processes | `role` (`implements`) + `proposal_source` (provenance) + `record_status`; links a handoff to the APQC PCF activity it realizes |
 | `domain_module_capabilities` | domain_modules ↔ capabilities | which capabilities a module realizes; one capability may realize in multiple modules |
 | `domain_module_data_objects` | domain_modules ↔ data_objects | role (same 5-value enum as `domain_data_objects`) + necessity + `notes`. Once a domain has modules, `domain_data_objects` is a **derived rollup** from this junction (group by data_object_id, strongest role wins). The single-master rule applies at this layer: exactly one row per `data_object_id` may have `role=master`; the blueprint emitter throws if it sees more. `notes` is empty by default — see Rule #15. |
 | `domain_module_host_domains` | domain_modules ↔ domains | additional hosts beyond `domain_modules.domain_id`. Cross-cutting modules use this to declare every domain they install on. |
@@ -659,7 +662,7 @@ For any task that fits this skill — "research vendors for X", "is Y a domain?"
    3. **`handoffs`** from this domain outbound (and inbound where the partner domain is loaded) — apply the high-friction shape recognition in the "Data-object research" section below.
    4. **`data_object_relationships`** — intra-domain edges + `users`-edge entries (Rule #10) + cross-domain edges for every `handoffs` row with a clean payload→target mapping (e.g. `candidates →becomes→ employees`). Each row carries `relationship_verb`, `inverse_verb`, `relationship_type` (cardinality), `relationship_kind`, `is_required`, and `owner_side`. Drafts MUST surface the relationship graph as a mermaid block in the Phase-B preview before loading.
    5. **`data_object_aliases`** — ≥1 alias per non-self-explanatory master (industry synonyms, vendor-specific labels). The fact sheet generator embeds these directly.
-   6. **`data_object_lifecycle_states`** — for every `master + required` data_object with a real workflow (Rule #12). Each row carries `state_name`, `state_order`, `is_initial` / `is_terminal`, `requires_permission` (true = derive a `<module>:<verb>_<entity>` workflow gate prefixed with the realizing module's `domain_module_code`), `permission_verb_override` (when auto-derivation is wrong — e.g. `hired → hire_candidate`), and `domain_module_id` (nullable; NULL = state always reachable when the master is installed). Config-shaped masters with no workflow are exempt only when annotated in `data_objects.notes`.
+   6. **`data_object_lifecycle_states`** — for every `master + required` data_object with a real workflow (Rule #12). Each row carries `state_name`, `state_order`, `is_initial` / `is_terminal`, `requires_permission` (true = derive a `<module>:<verb>_<entity>` workflow gate prefixed with the realizing module's `domain_module_code`), `permission_verb_override` (when auto-derivation is wrong — e.g. `hired → hire_candidate`), and `domain_module_id` (nullable; NULL = state always reachable when the master is installed). Config / record / catalog / junction / computed masters with no workflow are exempt structurally by carrying the matching `entity_type` value (Rule #12); there is no notes-based exemption surface (Rule #15).
    7. **`handoff_processes`** — **active deliverable, not opt-in.** For each cross-domain handoff the analyst is authoring, do the PCF lookup and draft a `handoff_processes` row pointing at the matching `processes.id`. The same mental model that lets the analyst pick the right `trigger_event`, payload, source/target modules, and friction level is what's needed to pick the right PCF activity — same context, one extra lookup. All rows ship as `record_status='new'`, `proposal_source='agent_curated'` per Rule #1 (the human still reviews; provenance flags confidence, doesn't bypass approval). **`proposal_source='human_curated'` is reserved for cases where the user explicitly typed *"add tag X for handoff Y"*** — agent-authored work always uses `agent_curated`. PCF lookup pattern: `/processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry`. **Untagged-deferred is allowed** only for handoffs with no clean PCF match (`data_asset.*`, `dlp_incident.*`, industry-specific workflows) — these become custom-process candidates in Discover Pass 3. The same rule applies during Validate b1's audit pass (see [references/domain-audit-procedure.md](references/domain-audit-procedure.md) § APQC TAGGING). The motivation: substring inference recovers ~60% of the analyst's intent; capturing at author time is lossless and free (you're already reading the handoff).
 
    Field-level constraints on embedded shells (which columns the local copy must include when a module embedded_masters another domain's data_object) are NOT a domain-map concern. The deployer validates embedded shells against the canonical entity's `fields` metadata at deploy time. The catalog does not duplicate that field-level contract.
@@ -884,6 +887,15 @@ Modules within a domain are **autonomous deployable units** (per § "The module 
 - Pass: every master that participates in the domain's primary workflow has ≥1 edge to another in-domain master. For ATS: `candidates ↔ job_applications`, `job_applications → interviews`, `interviews → interview_scorecards`, `job_applications → job_offers`, `candidate_referrals → candidates`, `recruitment_sources → candidates`, `job_requisitions → job_applications` must all exist. An isolated master is allowed only if a `data_object_relationships.notes` entry explicitly justifies it.
 - Fix: draft edges (verb + cardinality + necessity + owner_side) and load via the cluster-drafts loader (see plan §9.1 Step 5 + [scripts/loaders/load_cluster_drafts.ts](../../../scripts/loaders/load_cluster_drafts.ts) for the markdown→loader pipeline).
 
+**B6b. `data_object_relationships` shape invariants** (owner_side, cardinality, verbs). (M7, m5, m4b; soft, surfaced as warnings, never a hard block.)
+- Query: `/data_object_relationships?data_object_id=in.(<masters>)&select=data_object_id,related_data_object_id,relationship_type,relationship_kind,relationship_verb,inverse_verb,is_required,owner_side`
+- Pass (re-derive each offending set at run time, never trust a stale count):
+  - **inverse_verb non-empty (m4b):** every row has a non-empty `inverse_verb`. The 2026-06-01 audit saw 6 empty rows.
+  - **one_to_many parent fixed (m5):** for `relationship_type='one_to_many'`, `owner_side` names the "one" / parent side and the forward `relationship_verb` reads parent-to-child (after the loader auto-flips `many_to_one`, the parent is the canonical side).
+  - **composition parent = owner_side (M7):** for `relationship_kind='composition'`, `owner_side` equals the cardinality "one" side and the forward verb reads parent-to-child.
+  - **composition ownership coherence (M7):** the composed child is mastered by the same module / domain that masters the composing parent, or is a non-shared dependent. Cross-check against `domain_module_data_objects` master roles; a composition edge must not point a master at a child mastered by an unrelated module.
+- Fix: `owner_side` names the **parent** (lifecycle owner / cascade root). Set it to whichever side is actually the parent, NOT a blanket flip to `source`: a child-first edge (`child belongs_to parent`) already has the parent on the `target` side, so `owner_side=target` is correct and must NOT be flipped (flipping it inverts the delete semantics). Only flip to `source` when the parent is genuinely the source (e.g. `transaction requires disclosures`). The verb-direction half of the invariant (forward verb reads parent-to-child) is fixed separately by swapping `relationship_verb` with `inverse_verb`, leaving `owner_side` alone. Fill empty `inverse_verb`. Snapshot before any `owner_side` change.
+
 **B7. `users` edges populated.** (Rule #10.)
 - Query: `/data_object_relationships?and=(data_object_id.in.(<masters>),related_data_object_id.eq.<users_id>)&select=data_object_id,relationship_verb` — and the symmetric `users → masters` direction.
 - Pass: every master with a user-typed actor (assignee, creator, approver, panelist, owner, hiring_manager, recruiter, author) has ≥1 edge to `users`. ATS example: `users` should edge to `job_requisitions` (recruiter, hiring_manager), `job_applications` (recruiter), `interviews` (coordinator), `interview_scorecards` (interviewer), `job_offers` (approver), `candidate_referrals` (referring_employee), `application_notes` (author).
@@ -917,6 +929,11 @@ For any domain with ≥2 `domain_modules`, the catalog requires explicit `handof
 - Pass: every expected pair from sources 1-3 above has ≥1 intra-domain handoff row, OR the user has explicitly approved skipping it (recorded in the gap report or a cluster-drafts annotation, NOT in `handoffs.notes` per Rule #15). No expected pair sits silently uncovered.
 - Fix: draft the missing rows with `source_domain_id = target_domain_id = <id>`, `source_domain_module_id` and `target_domain_module_id` per the master-resolution rule, `integration_pattern: lifecycle_progression` as the default (use `api_call` or `event_stream` only when a real out-of-process message moves between modules, e.g. background-check rescind callbacks), `friction_level: low` as the default (intra-domain rows rarely break — bump to `medium` only with a concrete failure mode in `notes`). Load via the standard handoffs loader pattern.
 - Report-only follow-ups: intra-domain handoffs sit entirely within this domain — there is no other-domain side to defer to. Every B9b miss is an in-scope fix for this domain's audit.
+
+**B9c. `trigger_events` state fields resolve to the lifecycle state machine.** (M14; soft cross-check, never a hard FK — `to_state` is free text today.)
+- Query: `/trigger_events?data_object_id=in.(<masters>)&select=event_name,data_object_id,from_state,to_state,event_category` plus each master's `data_object_lifecycle_states` state_names.
+- Pass (surface mismatches, do not block): every `trigger_events.to_state` resolves to a real `data_object_lifecycle_states.state_name` on the SAME `data_object_id`; and an event firing a gated transition corresponds to a `requires_permission` lifecycle state. A `to_state` matching no state_name is a drift signal (the event and the state machine are two unjoined models of the same transition).
+- Fix: align `to_state` to the lifecycle `state_name` (or add the missing lifecycle state). Report-only when the publisher entity is mastered out of this domain's scope.
 
 **B10. Inbound `handoffs` — REPORT ONLY (the fix lives on the source domain).**
 - **Asymmetry rule.** Inbound handoffs to this domain are outbound handoffs from someone else's perspective. They are **published** by the source domain's `trigger_events` + `handoffs` rows (its own B9 work). When researching or loading this domain, you can only legitimately produce *outbound* handoff rows (events this domain publishes). Authoring inbound handoffs from this domain would mean inventing rows on behalf of a source domain you haven't audited; that's how the catalog accumulates wrong-looking handoffs without provenance.
@@ -968,6 +985,7 @@ The legacy B9 / B10 queries deliberately did not include these columns. Future a
 **B12. `data_object_lifecycle_states` loaded on every `operational_workflow` master.** (Rule #12.)
 - Query: `/data_objects?id=in.(<masters>)&entity_type=eq.operational_workflow&select=id,data_object_name` then `/data_object_lifecycle_states?data_object_id=in.(<workflow_masters>)&select=data_object_id`
 - Pass: every master with `entity_type='operational_workflow'` has ≥1 lifecycle state row. Masters with `entity_type ∈ (operational_record, catalog, junction, computed)` pass regardless of whether lifecycle rows exist. Masters with `entity_type='unclassified'` are flagged under B13, not B12.
+- Pass (state-machine shape, M4): for every master with lifecycle rows, exactly one state has `is_initial=true`, at least one has `is_terminal=true`, and `state_order` is unique and monotonic within the state set. The emitter annotates violations at emit time (M4-emit); this band is the authoring-time gate. The 2026-06-01 catalog audit found duplicate `state_order` on `customers`, two initial states on `okr_objectives`, and no terminal state on `lp_commitments`.
 - Fix: either author the missing lifecycle states (initial state + workflow gates marked `requires_permission=true` + `permission_verb_override` for non-obvious verbs + `domain_module_id` when the state belongs to a specific module), OR PATCH `entity_type` to the correct value if the master was mis-classified.
 
 **B13. `entity_type` classified on every master.** (Rule #12.)

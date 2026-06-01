@@ -148,22 +148,22 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
-| source module | target domain | target module | trigger_event | payload | integration | friction | description |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| WORK-MGMT-GOALS-OKR | SPM | _(domain-level)_ | `okr_objective.committed` | `okr_objectives` | api_call | medium | Team-level OKR commits in WM cascade upward into SPM portfolio rollup. SPM tracks corporate / strategic OKRs and aggregates team commits for portfolio reporting. target_domain_module_id NULL because SPM is not yet modularized. |
-| WORK-MGMT-GOALS-OKR | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `okr_objective.scored` | `okr_objectives` | api_call | high | End-of-cycle OKR score feeds directly into per-employee performance review compensation discussion. High friction: most-cited integration pain point across Lattice/15Five/Culture Amp user surveys when the team OKR tool is a separate vendor from the perf review tool - managers re-derive scores manually, often after late-bound corrections to the OKR-side scoring. |
-| WORK-MGMT-GOALS-OKR | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `okr_objective.committed` | `okr_objectives` | api_call | medium | Team OKR commits in WORK-MGMT-GOALS-OKR; TALENT-PERFORMANCE-MGMT reads the committed objective so per-employee performance_goals can align to its KRs. Most modern perf platforms (Lattice, 15Five, Culture Amp) ship OKR-tool sync; non-trivial when the OKR tool is separate from the perf tool because employee-to-KR mapping is manual. |
-| WORK-MGMT-GOALS-OKR | PROD-MGMT | PM-ROADMAP-DELIVERY | `okr_objective.committed` | `okr_objectives` | api_call | medium | Team OKR commits in WM; PROD-MGMT roadmaps that align to OKR cycles pick up the committed objective for alignment scoring. Aha, Productboard, and similar tools maintain OKR sync as a paid feature. |
-| WORK-MGMT-GOALS-OKR | PROD-MGMT | PM-ROADMAP-DELIVERY | `okr_objective.scored` | `okr_objectives` | api_call | medium | End-of-cycle OKR score feeds PROD-MGMT retrospective and next-cycle roadmap prioritization. Distinct from committed (kickoff) and aligned to roadmap delivery KPIs. |
-| WORK-MGMT-GOALS-OKR | WORK-MGMT | WORK-MGMT-TASK-EXEC | `okr_objective.committed` | `okr_objectives` | lifecycle_progression | low | Committing an OKR unlocks KR-to-work_item linking and optionally auto-creates placeholder work_items per the objective's templates. Reverse direction of the rollup flow. |
+| source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| WORK-MGMT-GOALS-OKR | SPM | _(domain-level)_ | `okr_objective.committed` | `drafted` → `committed` _(lifecycle)_ | `okr_objectives` | api_call | medium | Team-level OKR commits in WM cascade upward into SPM portfolio rollup. SPM tracks corporate / strategic OKRs and aggregates team commits for portfolio reporting. target_domain_module_id NULL because SPM is not yet modularized. |
+| WORK-MGMT-GOALS-OKR | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `okr_objective.scored` | `in_progress` → `scored` _(lifecycle)_ | `okr_objectives` | api_call | high | End-of-cycle OKR score feeds directly into per-employee performance review compensation discussion. High friction: most-cited integration pain point across Lattice/15Five/Culture Amp user surveys when the team OKR tool is a separate vendor from the perf review tool - managers re-derive scores manually, often after late-bound corrections to the OKR-side scoring. |
+| WORK-MGMT-GOALS-OKR | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `okr_objective.committed` | `drafted` → `committed` _(lifecycle)_ | `okr_objectives` | api_call | medium | Team OKR commits in WORK-MGMT-GOALS-OKR; TALENT-PERFORMANCE-MGMT reads the committed objective so per-employee performance_goals can align to its KRs. Most modern perf platforms (Lattice, 15Five, Culture Amp) ship OKR-tool sync; non-trivial when the OKR tool is separate from the perf tool because employee-to-KR mapping is manual. |
+| WORK-MGMT-GOALS-OKR | PROD-MGMT | PM-ROADMAP-DELIVERY | `okr_objective.committed` | `drafted` → `committed` _(lifecycle)_ | `okr_objectives` | api_call | medium | Team OKR commits in WM; PROD-MGMT roadmaps that align to OKR cycles pick up the committed objective for alignment scoring. Aha, Productboard, and similar tools maintain OKR sync as a paid feature. |
+| WORK-MGMT-GOALS-OKR | PROD-MGMT | PM-ROADMAP-DELIVERY | `okr_objective.scored` | `in_progress` → `scored` _(lifecycle)_ | `okr_objectives` | api_call | medium | End-of-cycle OKR score feeds PROD-MGMT retrospective and next-cycle roadmap prioritization. Distinct from committed (kickoff) and aligned to roadmap delivery KPIs. |
+| WORK-MGMT-GOALS-OKR | WORK-MGMT | WORK-MGMT-TASK-EXEC | `okr_objective.committed` | `drafted` → `committed` _(lifecycle)_ | `okr_objectives` | lifecycle_progression | low | Committing an OKR unlocks KR-to-work_item linking and optionally auto-creates placeholder work_items per the objective's templates. Reverse direction of the rollup flow. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
-| target module | source domain | source module | trigger_event | payload | integration | friction | description |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| WORK-MGMT-GOALS-OKR | SPM | _(domain-level)_ | `okr_objective.created` | `okr_objectives` | manual_handoff | high | Executive-level OKRs created in SPM (or in a slide deck, or an HCM perf system) need to cascade into team-level OKRs in the work-management tool. Almost universally manual: someone reads the corporate OKR and authors child OKRs in the WORK-MGMT goals module. The cascade gap is what dedicated OKR-platform vendors exist to close. |
-| WORK-MGMT-GOALS-OKR | WORK-MGMT | WORK-MGMT-TASK-EXEC | `work_item.completed` | `work_items` | lifecycle_progression | low | Terminal completion of a work item is the strongest progress signal - drives KR closure recalculation and triggers KR-fully-met evaluations on linked objectives. |
-| WORK-MGMT-GOALS-OKR | WORK-MGMT | WORK-MGMT-TASK-EXEC | `work_item.status_changed` | `work_items` | lifecycle_progression | low | Work item status change triggers KR progress recalculation in GOALS-OKR for any objective that has linked the item to a key result. In-process FK + state read; no message moves. |
+| target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| WORK-MGMT-GOALS-OKR | SPM | _(domain-level)_ | `okr_objective.created` | `draft` _(lifecycle)_ | `okr_objectives` | manual_handoff | high | Executive-level OKRs created in SPM (or in a slide deck, or an HCM perf system) need to cascade into team-level OKRs in the work-management tool. Almost universally manual: someone reads the corporate OKR and authors child OKRs in the WORK-MGMT goals module. The cascade gap is what dedicated OKR-platform vendors exist to close. |
+| WORK-MGMT-GOALS-OKR | WORK-MGMT | WORK-MGMT-TASK-EXEC | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | lifecycle_progression | low | Terminal completion of a work item is the strongest progress signal - drives KR closure recalculation and triggers KR-fully-met evaluations on linked objectives. |
+| WORK-MGMT-GOALS-OKR | WORK-MGMT | WORK-MGMT-TASK-EXEC | `work_item.status_changed` | `any` → `any` _(lifecycle)_ | `work_items` | lifecycle_progression | low | Work item status change triggers KR progress recalculation in GOALS-OKR for any objective that has linked the item to a key result. In-process FK + state read; no message moves. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -198,6 +198,8 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | 4 | `scored` | - | - | ✓ | `work-mgmt-goals-okr:score_okr_objective` | - |
 | 5 | `closed` | - | ✓ | - | - | - |
 | 5 | `closed` | - | ✓ | - | - | Cycle closed; objective archived. |
+
+> ⚠ **state-machine shape:** 2 is_initial (expected exactly 1); state_order not unique/monotonic.
 
 ### `work_items` (Work Item)
 

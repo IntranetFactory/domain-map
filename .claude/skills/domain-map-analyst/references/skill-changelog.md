@@ -560,3 +560,23 @@ Mechanical heuristic disappears 69 of 148 = 47%. After careful per-entity classi
 ### Status
 
 Active. ATS is the first domain on the new contract. Catalog-wide backfill will land incrementally as each domain is audited.
+
+## 2026-06-01 - Plan 1: consistency and invariants reconciliations
+
+**Context.** The 2026-06-01 coherence audit (plans/model-map-coherence-audit.md) found documentation and emitter contradictions needing mechanical fixes with no new modeling. Plan 1 (plans/plan-1-consistency.md) executed them.
+
+**Decision.** Several reconciliations are now canonical:
+- **m1:** the lifecycle exemption is structural via `entity_type` (config / record / catalog / junction / computed), not a notes annotation. SKILL.md ~line 662 rewritten to match Rule #12 / Rule #15; the notes-based exemption surface is gone.
+- **M15a:** the `skills` system-skill anchor is `domain_module_id` (required-when-system, Rule #14 / #17); `domain_id` is transitional. Documented in references/module-shape.md, with a new `handoff_processes` field-shape section and the at-a-glance inventory recounted to 33 entities (13 junctions; this also corrected a pre-existing 12-vs-14 junction-count mismatch).
+- **m4a:** `owner_side` added to the `data_object_relationships` manifest with its delete-mode semantics.
+- **Rule #13 reframed:** the enum table is a generated / checked artifact, not hand-authored truth. Live `/fields` is the only source of truth; scripts/analytics/enum_drift_probe.ts verifies the table against live (subsumes the B6 finding). `handoff_processes.proposal_source` / `role` added under that framing.
+- **Policy-1 invariant approach:** every new invariant is enforced in the audit band and the loader pre-flight, and at emit time it WARNS (annotates), never throws, so existing data violations cannot brick the blueprint corpus. New emitter self-checks: M1 shared `deriveGate` + section-7-vs-8.1 cross-check (warn), M2 unresolved-gate annotation, M4-emit state-machine shape assert, m9 per-module error banner. New audit bands: B6b (relationship shape: M7 / m5 / m4b), B9c (M14 trigger-state cross-check), B12 extended with the M4 shape check.
+- **`owner_side` = parent (terminology):** `owner_side` on `data_object_relationships` names the PARENT (lifecycle owner / cascade root) of an edge; it is a domain-map catalog concept, not a Semantius platform primitive. Clarified in the live field description, references/module-shape.md, and B6b so future authoring sets `owner_side` to the actual parent. M7-fix is per-row, not a blanket flip: for a child-first edge (`child belongs_to parent`) the parent is the `target`, so `owner_side=target` is already correct and flipping it would invert the delete semantics.
+
+**Reasoning.** The audit was repo-only and B6 was a stale-file false positive, so the durable fix is to make live the source of truth and let checks (enum-drift probe, emit-time asserts, audit bands) catch drift, rather than hand-copying facts that re-rot. Soft-warn-not-throw keeps a single bad row from making the whole corpus non-regenerable: before m9, the corpus could not regenerate at all because of a live multi-master on `data_products`.
+
+**Scope.** Catalog-wide. Code: scripts/emit_fact_sheet.ts, scripts/lib/catalog.ts, scripts/loaders/load_cluster_drafts.ts, scripts/analytics/enum_drift_probe.ts. Docs: SKILL.md, references/module-shape.md.
+
+**Data debt surfaced, NOT fixed by Plan 1 (deferred to a separate cleanup):** m9 + M4-emit exposed 10 multi-master violations (data_products, equity_grants, suppliers, monitoring_alerts) and malformed state machines (customers duplicate state_order, okr_objectives 2 initial states, lp_commitments no terminal state). Flagged per Policy 1, not repaired here.
+
+**Status.** Active. M7-fix executed 2026-06-01: only 3 of the audit's 16 composition rows were actually wrong (ids 1186 / 1187 / 1491, flipped owner_side target->source); the other 13 already had `owner_side` correctly naming the parent and were left untouched. m11-fix decided surface-only: the read-only probe `scripts/analytics/m11_rollup_probe.ts` is the standing stored-matches-derived invariant, and the corrective rollup write is DEFERRED to per-domain re-analysis (the rollup is consumed only as a fallback for non-modularized domains, so a stale modularized-domain rollup has no real consumer and self-heals as each domain is rebuilt). No further Plan 1 live writes remain.

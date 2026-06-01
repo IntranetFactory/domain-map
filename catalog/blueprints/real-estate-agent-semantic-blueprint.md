@@ -45,12 +45,12 @@ flowchart TD
   users["Users"]
   real_estate_listings -->|"generates"| real_estate_transactions
   real_estate_listings -->|"has tours"| tour_appointments
-  real_estate_transactions -->|"requires disclosures"| disclosure_documents
   real_estate_listings -->|"has listing agent"| users
   tour_appointments -->|"has showing agent"| users
   real_estate_transactions -->|"has listing-side agent"| users
   real_estate_transactions -->|"has buyer-side agent (opt)"| users
   disclosure_documents -->|"has preparer"| users
+  real_estate_transactions -->|"requires disclosures"| disclosure_documents
   users -->|"owns (opt)"| legal_contracts
   users -->|"approved (opt)"| legal_contracts
   users -->|"drafted (opt)"| legal_contracts
@@ -100,7 +100,7 @@ flowchart TD
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `real_estate_listings` | generates | `real_estate_transactions` | one_to_many | reference | required | target | - |
 | `real_estate_listings` | has tours | `tour_appointments` | one_to_many | reference | required | target | - |
-| `real_estate_transactions` | requires disclosures | `disclosure_documents` | one_to_many | composition | required | target | - |
+| `real_estate_transactions` | requires disclosures | `disclosure_documents` | one_to_many | composition | required | source | - |
 | `crm_contacts` | converted_from_lead | `crm_leads` | one_to_many | reference | optional | source | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)

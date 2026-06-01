@@ -286,7 +286,7 @@ export async function loadAllRelationships(): Promise<AllRelationships> {
     pg("GET", "/data_object_aliases?select=data_object_id,alias_name,alias_type,is_preferred,industry_id,solution_id,notes&order=alias_name.asc&limit=20000"),
     pg("GET", "/data_object_relationships?select=data_object_id,related_data_object_id,relationship_type,relationship_kind,relationship_verb,inverse_verb,is_required,owner_side,notes&limit=20000"),
     pg("GET", "/data_object_lifecycle_states?select=data_object_id,state_name,state_order,description,is_initial,is_terminal,requires_permission,permission_verb_override,domain_module_id&order=data_object_id.asc,state_order.asc&limit=20000"),
-    pg("GET", "/handoffs?select=source_domain_id,target_domain_id,source_domain_module_id,target_domain_module_id,data_object_id,integration_pattern,friction_level,description,notes,data_objects(data_object_name),trigger_events(event_name,description)&order=target_domain_id.asc&limit=20000"),
+    pg("GET", "/handoffs?select=source_domain_id,target_domain_id,source_domain_module_id,target_domain_module_id,data_object_id,integration_pattern,friction_level,description,notes,data_objects(data_object_name),trigger_events(event_name,description,from_state,to_state,event_category)&order=target_domain_id.asc&limit=20000"),
     pg("GET", "/domain_module_host_domains?select=domain_module_id,domain_id&limit=10000"),
   ]);
 
