@@ -7,7 +7,7 @@ system_slug: ats-referrals
 domain_modules:
   - ats-referrals
 domain_code: ATS
-related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-talent-pools, payroll-earnings-deductions]
+related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-talent-pools, ben-enrollment, hcm-lifecycle-workflows, onb-journey-mgmt, payroll-earnings-deductions]
 created_at: 2026-06-02
 ---
 
@@ -104,27 +104,27 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | clear | reference | - |
-| `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | required | restrict | reference | - |
-| `candidates` | noted_via | `recruiter_interactions` | one_to_many | optional | clear | reference | - |
-| `candidates` | consents_via | `candidate_consents` | one_to_many | required | cascade | parent | - |
-| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | required | restrict | reference | - |
-| `candidates` | discloses_via | `fcra_disclosures` | one_to_many | required | cascade | parent | - |
-| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | optional | cascade | parent | - |
-| `candidates` | submits_via | `data_subject_requests` | one_to_many | optional | cascade | parent | - |
-| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | optional | cascade | parent | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | cascade | parent | - |
-| `candidates` | documented_via | `candidate_documents` | one_to_many | optional | cascade | parent | - |
-| `candidates` | annotated_via | `candidate_notes` | one_to_many | optional | cascade | parent | - |
-| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | clear | reference | - |
-| `skill_profiles` | feeds | `candidates` | one_to_many | optional | clear | reference | - |
-| `candidates` | submits | `job_applications` | one_to_many | required | restrict | reference | - |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | required | restrict | reference | - |
-| `recruitment_agencies` | sources | `candidates` | one_to_many | required | restrict | reference | - |
-| `recruitment_events` | attracts | `candidates` | one_to_many | required | restrict | reference | - |
-| `talent_pools` | groups | `candidates` | many_to_many | required | restrict | reference | - |
-| `candidates` | becomes | `employees` | one_to_one | required | restrict | reference | - |
-| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | restrict | reference | - |
+| `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | none | n/a | - |
+| `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | required | none (required-if-present) | n/a | - |
+| `candidates` | noted_via | `recruiter_interactions` | one_to_many | optional | none | n/a | - |
+| `candidates` | consents_via | `candidate_consents` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | required | none (required-if-present) | n/a | - |
+| `candidates` | discloses_via | `fcra_disclosures` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | optional | none | n/a | - |
+| `candidates` | submits_via | `data_subject_requests` | one_to_many | optional | none | n/a | - |
+| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | optional | none | n/a | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | none | n/a | - |
+| `candidates` | documented_via | `candidate_documents` | one_to_many | optional | none | n/a | - |
+| `candidates` | annotated_via | `candidate_notes` | one_to_many | optional | none | n/a | - |
+| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | none | n/a | - |
+| `skill_profiles` | feeds | `candidates` | one_to_many | optional | none | n/a | - |
+| `candidates` | submits | `job_applications` | one_to_many | required | none (required-if-present) | n/a | - |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
+| `recruitment_agencies` | sources | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
+| `recruitment_events` | attracts | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
+| `talent_pools` | groups | `candidates` | many_to_many | required | none (required-if-present) | n/a | - |
+| `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
+| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
 
 </details>
 
@@ -140,8 +140,11 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ATS-CANDIDATE-CRM | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
 | ATS-REFERRALS | PAYROLL | PAYROLL-EARNINGS-DEDUCTIONS | `candidate_referral.bonus_earned` | _(state_change)_ | `candidate_referrals` | api_call | medium | Referral-bonus eligibility milestone reached; PAYROLL pays bonus via off-cycle or next regular run. |
 | ATS-REFERRALS | ATS | ATS-CANDIDATE-CRM | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
+| ATS-CANDIDATE-CRM | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
+| ATS-CANDIDATE-CRM | ONBOARDING | ONB-JOURNEY-MGMT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | medium | Hired candidate drives onboarding-plan kickoff with role/location/manager context from ATS payload. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
@@ -174,8 +177,8 @@ _This scope holds `candidates` as **embedded_master**; the canonical state machi
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `prospect` | ✓ | - | - | - | Person known to the recruiting org with no active application. |
 | 2 | `active` | - | - | - | - | Candidate has at least one open application or is actively engaged. |
-| 3 | `hired` | - | ✓ | ✓ | `ats-candidate-crm:hire_candidate` | Candidate accepted an offer and converted to employee. |
-| 4 | `do_not_hire` | - | ✓ | ✓ | `ats-candidate-crm:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
+| 3 | `hired` | - | ✓ | ✓ | `ats-referrals:hire_candidate` | Candidate accepted an offer and converted to employee. |
+| 4 | `do_not_hire` | - | ✓ | ✓ | `ats-referrals:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
 | 5 | `archived` | - | ✓ | - | - | Candidate kept in the database but not active in any pipeline. |
 
 ### `referral_campaigns` (Referral Campaign)
@@ -205,13 +208,19 @@ _This scope holds `candidates` as **embedded_master**; the canonical state machi
 | `ats-referrals:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `ats-referrals:manage` | baseline-manage | Edit operational records | ✓ |
 | `ats-referrals:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
+| `ats-referrals:hire_candidate` | workflow-gate (lifecycle) | Transition `candidates` into state `hired` | ✓ |
+| `ats-referrals:flag_do_not_hire` | workflow-gate (lifecycle) | Transition `candidates` into state `do_not_hire` | ✓ |
 | `ats-referrals:pay_referral_bonus` | workflow-gate (lifecycle) | Transition `candidate_referrals` into state `bonus_payable` | ✓ |
 | `ats-referrals:approve_referral_payout` | workflow-gate (lifecycle) | Transition `referral_payouts` into state `approved` | ✓ |
 | `ats-referrals:clawback_referral_payout` | workflow-gate (lifecycle) | Transition `referral_payouts` into state `clawed_back` | ✓ |
+| `ats-referrals:view_all_candidates` | override (personal_content) | View all `candidates` rows beyond row-scope | ✓ |
+| `ats-referrals:manage_all_candidates` | override (personal_content) | Manage all `candidates` rows beyond row-scope | ✓ |
 
 ### 8.2 Business rules
 
-_(no flag-derived business rules.)_
+| rule_name | data_object | source flag | intent |
+| --- | --- | --- | --- |
+| `candidate_edit_scope` | `candidates` | has_personal_content | Row-scope by default; override via `ats-referrals:view_all_candidates` / `ats-referrals:manage_all_candidates` |
 
 ## 9. Roles, RACI, and responsibilities (derived)
 
@@ -233,13 +242,21 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `ats-referrals:admin` | `ats-referrals:manage` |
 | `ats-referrals:manage` | `ats-referrals:read` |
+| `ats-referrals:admin` | `ats-referrals:hire_candidate` |
+| `ats-referrals:admin` | `ats-referrals:flag_do_not_hire` |
 | `ats-referrals:admin` | `ats-referrals:pay_referral_bonus` |
 | `ats-referrals:admin` | `ats-referrals:approve_referral_payout` |
 | `ats-referrals:admin` | `ats-referrals:clawback_referral_payout` |
+| `ats-referrals:admin` | `ats-referrals:view_all_candidates` |
+| `ats-referrals:admin` | `ats-referrals:manage_all_candidates` |
 
 **RACI realization:**
 
-_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_
+| actor | kind | raci | process | realization |
+| --- | --- | --- | --- | --- |
+| `RECRUITING-RECRUITER` | persona | responsible | Hire candidate | grant gates [ats-referrals:hire_candidate] + the gated entities' write tier |
+| `HIRING-MANAGER` | persona | accountable | Hire candidate | approval gate |
+| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | Hire candidate | notification side effect (trigger_event / webhook_receiver) |
 
 ### 9.2 Functional ownership and default grants
 

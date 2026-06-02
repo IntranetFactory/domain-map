@@ -270,15 +270,15 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `test_defects` | spawns | `work_items` | one_to_many | optional | clear | reference | - |
-| `work_form_submissions` | converts_to | `work_items` | one_to_many | optional | clear | reference | - |
-| `work_forms` | routes_to | `work_projects` | one_to_many | optional | clear | reference | - |
-| `okr_objectives` | tracked_by | `work_items` | one_to_many | optional | clear | reference | - |
-| `work_projects` | aligned_to | `okr_objectives` | many_to_many | optional | clear | reference | - |
-| `work_items` | mirrors_to | `service_requests` | one_to_one | optional | clear | reference | - |
-| `work_automations` | propagates_to | `service_requests` | many_to_many | optional | clear | reference | - |
-| `work_projects` | closes_into | `service_projects` | one_to_one | optional | clear | reference | - |
-| `work_automations` | posts_to | `chat_channels` | many_to_many | optional | clear | reference | - |
+| `test_defects` | spawns | `work_items` | one_to_many | optional | none | n/a | - |
+| `work_form_submissions` | converts_to | `work_items` | one_to_many | optional | none | n/a | - |
+| `work_forms` | routes_to | `work_projects` | one_to_many | optional | none | n/a | - |
+| `okr_objectives` | tracked_by | `work_items` | one_to_many | optional | none | n/a | - |
+| `work_projects` | aligned_to | `okr_objectives` | many_to_many | optional | none | n/a | - |
+| `work_items` | mirrors_to | `service_requests` | one_to_one | optional | none | n/a | - |
+| `work_automations` | propagates_to | `service_requests` | many_to_many | optional | none | n/a | - |
+| `work_projects` | closes_into | `service_projects` | one_to_one | optional | none | n/a | - |
+| `work_automations` | posts_to | `chat_channels` | many_to_many | optional | none | n/a | - |
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
@@ -289,29 +289,29 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `customers` | flags_churn_risk_on | `crm_opportunities` | one_to_many | optional | clear | reference | - |
-| `crm_opportunities` | is activity context for | `customer_cases` | one_to_many | optional | clear | reference | - |
-| `deal_risk_scores` | scores | `crm_opportunities` | one_to_many | optional | clear | reference | - |
-| `revenue_forecasts` | forecasts | `crm_opportunities` | one_to_many | optional | clear | reference | - |
-| `captured_activities` | attributed_to | `crm_opportunities` | one_to_many | optional | clear | reference | - |
-| `crm_opportunities` | opens | `customer_cases` | one_to_many | optional | clear | reference | - |
-| `customers` | impacted_by | `product_releases` | many_to_many | optional | clear | reference | - |
-| `legal_contracts` | renewal_warns | `crm_opportunities` | one_to_many | optional | clear | reference | - |
-| `okr_objectives` | advanced_by | `strategic_initiatives` | many_to_many | optional | clear | reference | - |
-| `strategic_initiatives` | reviewed_in | `operating_reviews` | many_to_many | optional | clear | reference | - |
-| `strategy_decisions` | affects | `strategic_initiatives` | many_to_many | optional | clear | reference | - |
-| `engagement_drivers` | triggers | `action_plans` | one_to_many | optional | clear | reference | - |
-| `org_units` | owns | `action_plans` | one_to_many | optional | clear | reference | - |
-| `crm_opportunities` | drafts | `legal_contracts` | one_to_many | optional | clear | reference | - |
-| `customers` | has_opportunities | `crm_opportunities` | one_to_many | required | restrict | reference | - |
-| `crm_opportunities` | converted_from_lead | `crm_leads` | one_to_many | optional | clear | reference | - |
-| `pipeline_stages` | tracks | `crm_opportunities` | one_to_many | required | restrict | reference | - |
-| `crm_opportunities` | involves_contacts | `crm_contacts` | many_to_many | optional | clear | reference | - |
-| `crm_opportunities` | has_activities | `sales_activities` | one_to_many | optional | clear | reference | - |
-| `service_projects` | contains | `project_tasks` | one_to_many | required | cascade | parent | - |
-| `service_projects` | staffs | `project_assignments` | one_to_many | required | cascade | parent | - |
-| `project_assignments` | requires_skills_from | `resource_skill_inventories` | many_to_many | optional | clear | reference | - |
-| `project_resource_allocations` | confirms_into | `project_assignments` | one_to_many | optional | clear | reference | - |
+| `customers` | flags_churn_risk_on | `crm_opportunities` | one_to_many | optional | none | n/a | - |
+| `crm_opportunities` | is activity context for | `customer_cases` | one_to_many | optional | none | n/a | - |
+| `deal_risk_scores` | scores | `crm_opportunities` | one_to_many | optional | none | n/a | - |
+| `revenue_forecasts` | forecasts | `crm_opportunities` | one_to_many | optional | none | n/a | - |
+| `captured_activities` | attributed_to | `crm_opportunities` | one_to_many | optional | none | n/a | - |
+| `crm_opportunities` | opens | `customer_cases` | one_to_many | optional | none | n/a | - |
+| `customers` | impacted_by | `product_releases` | many_to_many | optional | none | n/a | - |
+| `legal_contracts` | renewal_warns | `crm_opportunities` | one_to_many | optional | none | n/a | - |
+| `okr_objectives` | advanced_by | `strategic_initiatives` | many_to_many | optional | none | n/a | - |
+| `strategic_initiatives` | reviewed_in | `operating_reviews` | many_to_many | optional | none | n/a | - |
+| `strategy_decisions` | affects | `strategic_initiatives` | many_to_many | optional | none | n/a | - |
+| `engagement_drivers` | triggers | `action_plans` | one_to_many | optional | none | n/a | - |
+| `org_units` | owns | `action_plans` | one_to_many | optional | none | n/a | - |
+| `crm_opportunities` | drafts | `legal_contracts` | one_to_many | optional | none | n/a | - |
+| `customers` | has_opportunities | `crm_opportunities` | one_to_many | required | none (required-if-present) | n/a | - |
+| `crm_opportunities` | converted_from_lead | `crm_leads` | one_to_many | optional | none | n/a | - |
+| `pipeline_stages` | tracks | `crm_opportunities` | one_to_many | required | none (required-if-present) | n/a | - |
+| `crm_opportunities` | involves_contacts | `crm_contacts` | many_to_many | optional | none | n/a | - |
+| `crm_opportunities` | has_activities | `sales_activities` | one_to_many | optional | none | n/a | - |
+| `service_projects` | contains | `project_tasks` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `service_projects` | staffs | `project_assignments` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `project_assignments` | requires_skills_from | `resource_skill_inventories` | many_to_many | optional | none | n/a | - |
+| `project_resource_allocations` | confirms_into | `project_assignments` | one_to_many | optional | none | n/a | - |
 
 </details>
 

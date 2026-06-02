@@ -7,7 +7,7 @@ system_slug: work-mgmt-goals-okr
 domain_modules:
   - work-mgmt-goals-okr
 domain_code: WORK-MGMT
-related_modules: [pm-roadmap-delivery, sem-execution-tracking, sem-operating-rhythm, sem-strategy-definition, talent-performance-mgmt, work-mgmt-task-exec]
+related_modules: [pm-roadmap-delivery, psa-project-delivery, sem-execution-tracking, sem-operating-rhythm, sem-strategy-definition, talent-performance-mgmt, work-mgmt-task-exec]
 created_at: 2026-06-02
 ---
 
@@ -98,13 +98,13 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `strategy_maps` | organizes | `okr_objectives` | one_to_many | optional | clear | reference | - |
-| `okr_objectives` | advanced_by | `strategic_initiatives` | many_to_many | optional | clear | reference | - |
-| `okr_objectives` | reviewed_in | `operating_reviews` | many_to_many | optional | clear | reference | - |
-| `strategy_decisions` | affects | `okr_objectives` | many_to_many | optional | clear | reference | - |
-| `work_projects` | aligned_to | `okr_objectives` | many_to_many | optional | clear | reference | - |
-| `performance_reviews` | evaluates | `okr_objectives` | one_to_many | optional | clear | reference | - |
-| `performance_goals` | aligns_to | `okr_objectives` | many_to_many | optional | clear | reference | - |
+| `strategy_maps` | organizes | `okr_objectives` | one_to_many | optional | none | n/a | - |
+| `okr_objectives` | advanced_by | `strategic_initiatives` | many_to_many | optional | none | n/a | - |
+| `okr_objectives` | reviewed_in | `operating_reviews` | many_to_many | optional | none | n/a | - |
+| `strategy_decisions` | affects | `okr_objectives` | many_to_many | optional | none | n/a | - |
+| `work_projects` | aligned_to | `okr_objectives` | many_to_many | optional | none | n/a | - |
+| `performance_reviews` | evaluates | `okr_objectives` | one_to_many | optional | none | n/a | - |
+| `performance_goals` | aligns_to | `okr_objectives` | many_to_many | optional | none | n/a | - |
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
@@ -115,22 +115,22 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `test_defects` | spawns | `work_items` | one_to_many | optional | clear | reference | - |
-| `work_dependencies` | blocks | `work_items` | many_to_many | required | restrict | reference | - |
-| `work_approval_chains` | gates | `work_items` | many_to_many | optional | clear | reference | - |
-| `work_user_workloads` | rolls_up | `work_items` | many_to_many | required | restrict | reference | - |
-| `work_custom_field_values` | set_on | `work_items` | one_to_many | required | cascade | parent | - |
-| `work_items` | placed_in | `work_sections` | one_to_many | optional | clear | reference | - |
-| `work_task_templates` | seeds_item | `work_items` | one_to_many | optional | clear | reference | - |
-| `work_item_tags` | tagged_on | `work_items` | one_to_many | required | cascade | parent | - |
-| `work_item_comments` | belongs_to | `work_items` | one_to_many | required | cascade | parent | - |
-| `work_item_attachments` | belongs_to | `work_items` | one_to_many | required | cascade | parent | - |
-| `work_form_submissions` | converts_to | `work_items` | one_to_many | optional | clear | reference | - |
-| `action_plans` | spawns | `work_items` | one_to_many | optional | clear | reference | - |
-| `work_projects` | contains | `work_items` | one_to_many | required | cascade | parent | - |
-| `work_automations` | drives | `work_items` | one_to_many | optional | clear | reference | - |
-| `work_items` | mirrors_to | `service_requests` | one_to_one | optional | clear | reference | - |
-| `strategic_initiatives` | portfolio rollup from | `work_items` | one_to_many | optional | clear | reference | - |
+| `test_defects` | spawns | `work_items` | one_to_many | optional | none | n/a | - |
+| `work_dependencies` | blocks | `work_items` | many_to_many | required | none (required-if-present) | n/a | - |
+| `work_approval_chains` | gates | `work_items` | many_to_many | optional | none | n/a | - |
+| `work_user_workloads` | rolls_up | `work_items` | many_to_many | required | none (required-if-present) | n/a | - |
+| `work_custom_field_values` | set_on | `work_items` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `work_items` | placed_in | `work_sections` | one_to_many | optional | none | n/a | - |
+| `work_task_templates` | seeds_item | `work_items` | one_to_many | optional | none | n/a | - |
+| `work_item_tags` | tagged_on | `work_items` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `work_item_comments` | belongs_to | `work_items` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `work_item_attachments` | belongs_to | `work_items` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `work_form_submissions` | converts_to | `work_items` | one_to_many | optional | none | n/a | - |
+| `action_plans` | spawns | `work_items` | one_to_many | optional | none | n/a | - |
+| `work_projects` | contains | `work_items` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `work_automations` | drives | `work_items` | one_to_many | optional | none | n/a | - |
+| `work_items` | mirrors_to | `service_requests` | one_to_one | optional | none | n/a | - |
+| `strategic_initiatives` | portfolio rollup from | `work_items` | one_to_many | optional | none | n/a | - |
 
 </details>
 
@@ -151,9 +151,12 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | WORK-MGMT-GOALS-OKR | SPM | _(domain-level)_ | `okr_objective.committed` | `drafted` → `committed` _(lifecycle)_ | `okr_objectives` | api_call | medium | Team-level OKR commits in WM cascade upward into SPM portfolio rollup. SPM tracks corporate / strategic OKRs and aggregates team commits for portfolio reporting. target_domain_module_id NULL because SPM is not yet modularized. |
+| WORK-MGMT-TASK-EXEC | SPM | _(domain-level)_ | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | batch_sync | medium | Work-management platforms publish task-completion data to portfolio dashboards in SPM tools. The portfolio rollup powers strategy-to-execution dashboards and OKR progress (via okr_objectives.key_results linking down to work_items). Nightly sync is the common pattern; richer real-time integrations exist but are vendor-specific. |
 | WORK-MGMT-GOALS-OKR | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `okr_objective.committed` | `drafted` → `committed` _(lifecycle)_ | `okr_objectives` | api_call | medium | Team OKR commits in WORK-MGMT-GOALS-OKR; TALENT-PERFORMANCE-MGMT reads the committed objective so per-employee performance_goals can align to its KRs. Most modern perf platforms (Lattice, 15Five, Culture Amp) ship OKR-tool sync; non-trivial when the OKR tool is separate from the perf tool because employee-to-KR mapping is manual. |
 | WORK-MGMT-GOALS-OKR | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `okr_objective.scored` | `in_progress` → `scored` _(lifecycle)_ | `okr_objectives` | api_call | high | End-of-cycle OKR score feeds directly into per-employee performance review compensation discussion. High friction: most-cited integration pain point across Lattice/15Five/Culture Amp user surveys when the team OKR tool is a separate vendor from the perf review tool - managers re-derive scores manually, often after late-bound corrections to the OKR-side scoring. |
+| WORK-MGMT-TASK-EXEC | PSA | PSA-PROJECT-DELIVERY | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | api_call | low | When WM is the work tracker for a PSA-managed delivery, work_item completion closes the loop on PSA-side time / utilization accounting. Pairs with the existing PSA -> WM project_task.completed inbound for the bidirectional sync pattern. |
 | WORK-MGMT-GOALS-OKR | PROD-MGMT | PM-ROADMAP-DELIVERY | `okr_objective.committed` | `drafted` → `committed` _(lifecycle)_ | `okr_objectives` | api_call | medium | Team OKR commits in WM; PROD-MGMT roadmaps that align to OKR cycles pick up the committed objective for alignment scoring. Aha, Productboard, and similar tools maintain OKR sync as a paid feature. |
+| WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | api_call | medium | WM work_item completion updates PROD-MGMT roadmap progress when items are linked to feature_requests or product_releases. Most product-mgmt tools (Aha, Productboard, Roadmunk) integrate via this signal but each integration is bespoke - friction is the mapping between work_item id and roadmap_item id. |
 | WORK-MGMT-GOALS-OKR | PROD-MGMT | PM-ROADMAP-DELIVERY | `okr_objective.scored` | `in_progress` → `scored` _(lifecycle)_ | `okr_objectives` | api_call | medium | End-of-cycle OKR score feeds PROD-MGMT retrospective and next-cycle roadmap prioritization. Distinct from committed (kickoff) and aligned to roadmap delivery KPIs. |
 | WORK-MGMT-GOALS-OKR | WORK-MGMT | WORK-MGMT-TASK-EXEC | `okr_objective.committed` | `drafted` → `committed` _(lifecycle)_ | `okr_objectives` | lifecycle_progression | low | Committing an OKR unlocks KR-to-work_item linking and optionally auto-creates placeholder work_items per the objective's templates. Reverse direction of the rollup flow. |
 
@@ -211,7 +214,7 @@ _This scope holds `work_items` as **embedded_master**; the canonical state machi
 | 2 | `in_progress` | - | - | - | - | - |
 | 3 | `blocked` | - | - | - | - | - |
 | 4 | `done` | - | ✓ | - | - | - |
-| 5 | `cancelled` | - | ✓ | ✓ | `work-mgmt-task-exec:cancel_work_item` | - |
+| 5 | `cancelled` | - | ✓ | ✓ | `work-mgmt-goals-okr:cancel_work_item` | - |
 
 ## 8. Permissions and business rules (derived)
 
@@ -222,6 +225,7 @@ _This scope holds `work_items` as **embedded_master**; the canonical state machi
 | `work-mgmt-goals-okr:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `work-mgmt-goals-okr:manage` | baseline-manage | Edit operational records | ✓ |
 | `work-mgmt-goals-okr:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
+| `work-mgmt-goals-okr:cancel_work_item` | workflow-gate (lifecycle) | Transition `work_items` into state `cancelled` | ✓ |
 | `work-mgmt-goals-okr:commit_okr_objective` | workflow-gate (lifecycle) | Transition `okr_objectives` into state `committed` | ✓ |
 | `work-mgmt-goals-okr:score_okr_objective` | workflow-gate (lifecycle) | Transition `okr_objectives` into state `scored` | ✓ |
 | `work-mgmt-goals-okr:commit_okr_key_result` | workflow-gate (lifecycle) | Transition `okr_key_results` into state `committed` | ✓ |
@@ -258,6 +262,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `work-mgmt-goals-okr:admin` | `work-mgmt-goals-okr:manage` |
 | `work-mgmt-goals-okr:manage` | `work-mgmt-goals-okr:read` |
+| `work-mgmt-goals-okr:admin` | `work-mgmt-goals-okr:cancel_work_item` |
 | `work-mgmt-goals-okr:admin` | `work-mgmt-goals-okr:commit_okr_objective` |
 | `work-mgmt-goals-okr:admin` | `work-mgmt-goals-okr:score_okr_objective` |
 | `work-mgmt-goals-okr:admin` | `work-mgmt-goals-okr:commit_okr_key_result` |

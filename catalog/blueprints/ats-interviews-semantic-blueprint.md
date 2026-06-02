@@ -7,7 +7,7 @@ system_slug: ats-interviews
 domain_modules:
   - ats-interviews
 domain_code: ATS
-related_modules: [ats-background-checks, ats-candidate-crm, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, hcm-lifecycle-workflows, hiring-starter, pa-workforce-metrics, talent-performance-mgmt, talent-succession-career]
+related_modules: [ats-background-checks, ats-candidate-crm, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, hcm-lifecycle-workflows, hiring-starter, onb-journey-mgmt, pa-workforce-metrics, talent-performance-mgmt, talent-succession-career]
 created_at: 2026-06-02
 ---
 
@@ -142,34 +142,34 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | clear | reference | - |
-| `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | required | restrict | reference | - |
-| `candidates` | noted_via | `recruiter_interactions` | one_to_many | optional | clear | reference | - |
-| `candidates` | consents_via | `candidate_consents` | one_to_many | required | cascade | parent | - |
-| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | required | restrict | reference | - |
-| `candidates` | discloses_via | `fcra_disclosures` | one_to_many | required | cascade | parent | - |
-| `job_applications` | transitions_via | `application_stage_transitions` | one_to_many | required | cascade | parent | - |
-| `job_applications` | answers_via | `application_screening_answers` | one_to_many | optional | cascade | parent | - |
-| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | optional | cascade | parent | - |
-| `candidates` | submits_via | `data_subject_requests` | one_to_many | optional | cascade | parent | - |
-| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | optional | cascade | parent | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | cascade | parent | - |
-| `job_applications` | disposed_via | `application_dispositions` | one_to_many | optional | cascade | parent | - |
-| `job_applications` | logged_via | `applicant_flow_records` | one_to_one | required | cascade | parent | - |
-| `candidates` | documented_via | `candidate_documents` | one_to_many | optional | cascade | parent | - |
-| `candidates` | annotated_via | `candidate_notes` | one_to_many | optional | cascade | parent | - |
-| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | clear | reference | - |
-| `skill_profiles` | feeds | `candidates` | one_to_many | optional | clear | reference | - |
-| `job_requisitions` | receives | `job_applications` | one_to_many | required | restrict | reference | - |
-| `job_postings` | is applied to via | `job_applications` | one_to_many | required | restrict | reference | - |
-| `candidate_referrals` | introduces | `candidates` | one_to_many | required | restrict | reference | - |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | required | restrict | reference | - |
-| `recruitment_agencies` | sources | `candidates` | one_to_many | required | restrict | reference | - |
-| `recruitment_events` | attracts | `candidates` | one_to_many | required | restrict | reference | - |
-| `talent_pools` | groups | `candidates` | many_to_many | required | restrict | reference | - |
-| `job_applications` | results in | `job_offers` | one_to_many | required | restrict | reference | - |
-| `candidates` | becomes | `employees` | one_to_one | required | restrict | reference | - |
-| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | restrict | reference | - |
+| `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | none | n/a | - |
+| `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | required | none (required-if-present) | n/a | - |
+| `candidates` | noted_via | `recruiter_interactions` | one_to_many | optional | none | n/a | - |
+| `candidates` | consents_via | `candidate_consents` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | required | none (required-if-present) | n/a | - |
+| `candidates` | discloses_via | `fcra_disclosures` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `job_applications` | transitions_via | `application_stage_transitions` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `job_applications` | answers_via | `application_screening_answers` | one_to_many | optional | none | n/a | - |
+| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | optional | none | n/a | - |
+| `candidates` | submits_via | `data_subject_requests` | one_to_many | optional | none | n/a | - |
+| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | optional | none | n/a | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | none | n/a | - |
+| `job_applications` | disposed_via | `application_dispositions` | one_to_many | optional | none | n/a | - |
+| `job_applications` | logged_via | `applicant_flow_records` | one_to_one | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `candidates` | documented_via | `candidate_documents` | one_to_many | optional | none | n/a | - |
+| `candidates` | annotated_via | `candidate_notes` | one_to_many | optional | none | n/a | - |
+| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | none | n/a | - |
+| `skill_profiles` | feeds | `candidates` | one_to_many | optional | none | n/a | - |
+| `job_requisitions` | receives | `job_applications` | one_to_many | required | none (required-if-present) | n/a | - |
+| `job_postings` | is applied to via | `job_applications` | one_to_many | required | none (required-if-present) | n/a | - |
+| `candidate_referrals` | introduces | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
+| `recruitment_agencies` | sources | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
+| `recruitment_events` | attracts | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
+| `talent_pools` | groups | `candidates` | many_to_many | required | none (required-if-present) | n/a | - |
+| `job_applications` | results in | `job_offers` | one_to_many | required | none (required-if-present) | n/a | - |
+| `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
+| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
 
 </details>
 
@@ -190,17 +190,23 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ATS-INTERVIEWS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate_assessment.failed` | _(lifecycle)_ | `candidate_assessments` | event_stream | low | Failed-assessment outcomes close the candidate's loop in ATS and propagate to HCM only if the candidate is an internal-mobility applicant whose profile should reflect the development gap. |
 | ATS-INTERVIEWS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate_assessment.passed` | _(lifecycle)_ | `candidate_assessments` | event_stream | medium | Passing an assessment advances the candidate; on eventual hire, HCM uses the assessment result as the first data point for the new-hire skill profile. |
+| ATS-CANDIDATE-CRM | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
 | ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `candidate_assessment.failed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `candidate_assessment.passed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `interview.completed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
+| ATS-RECRUITMENT-PIPELINE | ATS | ATS-TALENT-POOLS | `job_application.rejected` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-INTERVIEWS | TALENT-MGMT | TALENT-SUCCESSION-CAREER | `candidate_assessment.passed` | _(lifecycle)_ | `candidate_assessments` | api_call | medium | Completed assessment scores seed the talent-management skill profile for hired candidates and a structured talent pool for non-hires. |
+| ATS-CANDIDATE-CRM | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
 | ATS-INTERVIEWS | PA | PA-WORKFORCE-METRICS | `interview_scorecard.submitted` | _(lifecycle)_ | `interview_scorecards` | event_stream | low | - |
+| ATS-CANDIDATE-CRM | ONBOARDING | ONB-JOURNEY-MGMT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | medium | Hired candidate drives onboarding-plan kickoff with role/location/manager context from ATS payload. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `job_application.advanced` | _(state_change)_ | `interviews` | lifecycle_progression | low | - |
+| ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
+| ATS-RECRUITMENT-PIPELINE | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_activated` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -237,8 +243,8 @@ _This scope holds `candidates` as **embedded_master**; the canonical state machi
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `prospect` | ✓ | - | - | - | Person known to the recruiting org with no active application. |
 | 2 | `active` | - | - | - | - | Candidate has at least one open application or is actively engaged. |
-| 3 | `hired` | - | ✓ | ✓ | `ats-candidate-crm:hire_candidate` | Candidate accepted an offer and converted to employee. |
-| 4 | `do_not_hire` | - | ✓ | ✓ | `ats-candidate-crm:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
+| 3 | `hired` | - | ✓ | ✓ | `ats-interviews:hire_candidate` | Candidate accepted an offer and converted to employee. |
+| 4 | `do_not_hire` | - | ✓ | ✓ | `ats-interviews:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
 | 5 | `archived` | - | ✓ | - | - | Candidate kept in the database but not active in any pipeline. |
 
 ### `interview_kits` (Interview Kit)
@@ -295,7 +301,7 @@ _This scope holds `job_applications` as **embedded_master**; the canonical state
 | 2 | `screening` | - | - | - | - | Recruiter is reviewing resume and qualifications. |
 | 3 | `interviewing` | - | - | - | - | Candidate is progressing through interview loops. |
 | 4 | `offer_extended` | - | - | - | - | An offer has been generated and is in flight for this application. |
-| 5 | `hired` | - | ✓ | ✓ | `ats-pre-employee-record:hire_candidate` | Candidate accepted the offer and was hired; gated transition. |
+| 5 | `hired` | - | ✓ | ✓ | `ats-interviews:hire_candidate` | Candidate accepted the offer and was hired; gated transition. |
 | 6 | `rejected` | - | ✓ | - | - | Application closed without progression by recruiter or hiring manager. |
 | 7 | `withdrawn` | - | ✓ | - | - | Candidate withdrew their application. |
 
@@ -308,10 +314,16 @@ _This scope holds `job_applications` as **embedded_master**; the canonical state
 | `ats-interviews:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `ats-interviews:manage` | baseline-manage | Edit operational records | ✓ |
 | `ats-interviews:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
+| `ats-interviews:hire_candidate` | workflow-gate (lifecycle) | Transition `candidates` into state `hired` | ✓ |
+| `ats-interviews:flag_do_not_hire` | workflow-gate (lifecycle) | Transition `candidates` into state `do_not_hire` | ✓ |
 | `ats-interviews:submit_scorecard` | workflow-gate (lifecycle) | Transition `interview_scorecards` into state `submitted` | ✓ |
 | `ats-interviews:view_all_interview_scorecards` | override (personal_content) | View all `interview_scorecards` rows beyond row-scope | ✓ |
 | `ats-interviews:manage_all_interview_scorecards` | override (personal_content) | Manage all `interview_scorecards` rows beyond row-scope | ✓ |
 | `ats-interviews:submit_interview_scorecard` | override (submit_lock) | Submit and lock a `interview_scorecards` row (post-submit edits gated) | ✓ |
+| `ats-interviews:view_all_candidates` | override (personal_content) | View all `candidates` rows beyond row-scope | ✓ |
+| `ats-interviews:manage_all_candidates` | override (personal_content) | Manage all `candidates` rows beyond row-scope | ✓ |
+| `ats-interviews:view_all_applications` | override (personal_content) | View all `job_applications` rows beyond row-scope | ✓ |
+| `ats-interviews:manage_all_applications` | override (personal_content) | Manage all `job_applications` rows beyond row-scope | ✓ |
 | `ats-interviews:submit_assessment` | override (submit_lock) | Submit and lock a `candidate_assessments` row (post-submit edits gated) | ✓ |
 
 ### 8.2 Business rules
@@ -320,6 +332,8 @@ _This scope holds `job_applications` as **embedded_master**; the canonical state
 | --- | --- | --- | --- |
 | `interview_scorecard_edit_scope` | `interview_scorecards` | has_personal_content | Row-scope by default; override via `ats-interviews:view_all_interview_scorecards` / `ats-interviews:manage_all_interview_scorecards` |
 | `submit_restricted_to_interview_scorecard_owner` | `interview_scorecards` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `ats-interviews:manage_all_interview_scorecards` |
+| `candidate_edit_scope` | `candidates` | has_personal_content | Row-scope by default; override via `ats-interviews:view_all_candidates` / `ats-interviews:manage_all_candidates` |
+| `application_edit_scope` | `job_applications` | has_personal_content | Row-scope by default; override via `ats-interviews:view_all_applications` / `ats-interviews:manage_all_applications` |
 | `submit_restricted_to_assessment_owner` | `candidate_assessments` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `ats-interviews:manage_all_assessments` |
 
 ## 9. Roles, RACI, and responsibilities (derived)
@@ -342,16 +356,25 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `ats-interviews:admin` | `ats-interviews:manage` |
 | `ats-interviews:manage` | `ats-interviews:read` |
+| `ats-interviews:admin` | `ats-interviews:hire_candidate` |
+| `ats-interviews:admin` | `ats-interviews:flag_do_not_hire` |
 | `ats-interviews:admin` | `ats-interviews:submit_scorecard` |
 | `ats-interviews:admin` | `ats-interviews:view_all_interview_scorecards` |
 | `ats-interviews:admin` | `ats-interviews:manage_all_interview_scorecards` |
 | `ats-interviews:admin` | `ats-interviews:submit_interview_scorecard` |
+| `ats-interviews:admin` | `ats-interviews:view_all_candidates` |
+| `ats-interviews:admin` | `ats-interviews:manage_all_candidates` |
+| `ats-interviews:admin` | `ats-interviews:view_all_applications` |
+| `ats-interviews:admin` | `ats-interviews:manage_all_applications` |
 | `ats-interviews:admin` | `ats-interviews:submit_assessment` |
 
 **RACI realization:**
 
 | actor | kind | raci | process | realization |
 | --- | --- | --- | --- | --- |
+| `RECRUITING-RECRUITER` | persona | responsible | Hire candidate | grant gates [ats-interviews:hire_candidate, ats-interviews:hire_candidate] + the gated entities' write tier |
+| `HIRING-MANAGER` | persona | accountable | Hire candidate | approval gate |
+| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | Hire candidate | notification side effect (trigger_event / webhook_receiver) |
 | `HIRING-MANAGER` | persona | responsible | Interview candidates | grant gates [ats-interviews:submit_scorecard] + the gated entities' write tier |
 | `RECRUITING-MANAGER` | persona | accountable | Interview candidates | approval gate |
 | `RECRUITING-RECRUITER` | persona | consulted | Interview candidates | advisory read grant |

@@ -696,27 +696,51 @@ export function loadModuleCatalog(
   // ---- handoffs ----
   const handoffRows = all.handoffs.filter((h: any) => scopeObjectIdSet.has(h.data_object_id as number));
 
-  // Handoff attribution (see emit_fact_sheet.ts comment block for rationale).
+  // Handoff attribution. A unit surfaces a handoff when the handoff CROSSES its boundary. Plan 4:
+  // the unit "plays" its own modules PLUS the canonical owner modules of every entity it carries as
+  // `embedded_master` (it stands in for them when deployed standalone, the same self-containment
+  // principle as the re-prefixed gates). Without this an embedded entity's module-level handoffs
+  // (whose endpoints are the canonical modules, not this unit) silently vanished.
+  const playedModuleIds = new Set<number>(moduleIdSet);
+  for (const r of scopeRows) {
+    if (r.role !== "embedded_master") continue;
+    for (const m of owners.get(r.data_object_id as number)?.modules ?? []) playedModuleIds.add(m.id);
+  }
   const outboundHandoffs: any[] = [];
   const inboundHandoffs: any[] = [];
   for (const h of handoffRows ?? []) {
     const payloadId = h.data_object_id as number;
     const scopeRole = scopeRolesById.get(payloadId);
-    const srcModuleInScope =
-      h.source_domain_module_id !== null && moduleIdSet.has(h.source_domain_module_id as number);
-    const tgtModuleInScope =
-      h.target_domain_module_id !== null && moduleIdSet.has(h.target_domain_module_id as number);
+    const srcMod = h.source_domain_module_id as number | null;
+    const tgtMod = h.target_domain_module_id as number | null;
+    const srcModuleInScope = srcMod !== null && moduleIdSet.has(srcMod);
+    const tgtModuleInScope = tgtMod !== null && moduleIdSet.has(tgtMod);
     const srcDomainInScope = parentDomainIds.has(h.source_domain_id as number);
     const tgtDomainInScope = parentDomainIds.has(h.target_domain_id as number);
     const payloadMasteredHere = scopeRole === "master";
     const payloadHeldNonMaster = scopeRole !== undefined && scopeRole !== "master";
-    if (srcModuleInScope || (srcDomainInScope && h.source_domain_module_id === null && payloadMasteredHere)) {
+    if (srcModuleInScope || (srcDomainInScope && srcMod === null && payloadMasteredHere)) {
       outboundHandoffs.push(h);
     } else if (
       tgtModuleInScope ||
-      (tgtDomainInScope && h.target_domain_module_id === null && payloadHeldNonMaster)
+      (tgtDomainInScope && tgtMod === null && payloadHeldNonMaster)
     ) {
       inboundHandoffs.push(h);
+    } else if (scopeRole === "embedded_master") {
+      // The payload is carried here as an embedded shell but neither endpoint module is one of our
+      // OWN modules. Stand in for the payload's canonical owner: outbound if we own the source side
+      // and the target is outside what we play, inbound if we own the target side and the source is
+      // outside. A handoff whose counterparty we ALSO play is internal to the embedded set -> hidden.
+      const ownerIds = (owners.get(payloadId)?.modules ?? []).map((m) => m.id);
+      const ownsSrc = srcMod !== null && ownerIds.includes(srcMod);
+      const ownsTgt = tgtMod !== null && ownerIds.includes(tgtMod);
+      const srcPlayed = srcMod !== null && playedModuleIds.has(srcMod);
+      const tgtPlayed = tgtMod !== null && playedModuleIds.has(tgtMod);
+      if (ownsSrc && !tgtPlayed) {
+        outboundHandoffs.push(h);
+      } else if (ownsTgt && !srcPlayed) {
+        inboundHandoffs.push(h);
+      }
     }
   }
 

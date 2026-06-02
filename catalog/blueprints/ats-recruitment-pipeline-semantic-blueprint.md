@@ -7,7 +7,7 @@ system_slug: ats-recruitment-pipeline
 domain_modules:
   - ats-recruitment-pipeline
 domain_code: ATS
-related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-referrals, ats-talent-pools, hcm-core-worker, hcm-org-positions, hiring-starter, iwms-location-master, swp-demand-forecast, tlnt-intel-mobility]
+related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-referrals, ats-talent-pools, ben-enrollment, comp-benchmarking, comp-planning, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, hiring-starter, iga-access-request, iwms-location-master, onb-journey-mgmt, psa-resource-mgmt, skills-mgmt-profile, swp-demand-forecast, tlnt-intel-mobility]
 created_at: 2026-06-02
 ---
 
@@ -218,13 +218,13 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `job_applications` | schedules | `interviews` | one_to_many | required | restrict | reference | - |
-| `job_applications` | requires | `candidate_assessments` | one_to_many | required | restrict | reference | - |
-| `job_applications` | results in | `job_offers` | one_to_many | required | restrict | reference | - |
-| `job_requisitions` | updates | `position_demand_forecasts` | many_to_many | optional | clear | reference | - |
-| `job_requisitions` | feeds | `people_kpis` | many_to_many | optional | clear | reference | - |
-| `headcount_plans` | authorizes | `job_requisitions` | one_to_many | required | restrict | reference | - |
-| `position_demand_forecasts` | triggers | `job_requisitions` | one_to_many | optional | clear | reference | - |
+| `job_applications` | schedules | `interviews` | one_to_many | required | none (required-if-present) | n/a | - |
+| `job_applications` | requires | `candidate_assessments` | one_to_many | required | none (required-if-present) | n/a | - |
+| `job_applications` | results in | `job_offers` | one_to_many | required | none (required-if-present) | n/a | - |
+| `job_requisitions` | updates | `position_demand_forecasts` | many_to_many | optional | none | n/a | - |
+| `job_requisitions` | feeds | `people_kpis` | many_to_many | optional | none | n/a | - |
+| `headcount_plans` | authorizes | `job_requisitions` | one_to_many | required | none (required-if-present) | n/a | - |
+| `position_demand_forecasts` | triggers | `job_requisitions` | one_to_many | optional | none | n/a | - |
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
@@ -235,53 +235,53 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `job_profiles` | expects | `competency_models` | one_to_many | optional | clear | reference | - |
-| `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | clear | reference | - |
-| `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | required | restrict | reference | - |
-| `candidates` | noted_via | `recruiter_interactions` | one_to_many | optional | clear | reference | - |
-| `candidates` | consents_via | `candidate_consents` | one_to_many | required | cascade | parent | - |
-| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | required | restrict | reference | - |
-| `candidates` | discloses_via | `fcra_disclosures` | one_to_many | required | cascade | parent | - |
-| `candidates` | submits_via | `data_subject_requests` | one_to_many | optional | cascade | parent | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | cascade | parent | - |
-| `candidates` | documented_via | `candidate_documents` | one_to_many | optional | cascade | parent | - |
-| `candidates` | annotated_via | `candidate_notes` | one_to_many | optional | cascade | parent | - |
-| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | clear | reference | - |
-| `locations` | hosts_desk_bookings | `desk_bookings` | one_to_many | required | restrict | reference | - |
-| `locations` | hosts_room_reservations | `room_reservations` | one_to_many | required | restrict | reference | - |
-| `locations` | site_of_service_requests | `workplace_service_requests` | one_to_many | required | restrict | reference | - |
-| `locations` | measured_by_reports | `space_utilization_reports` | one_to_many | required | restrict | reference | - |
-| `locations` | subject_of_feedback | `workplace_experience_feedback` | one_to_many | optional | clear | reference | - |
-| `org_units` | groups | `employees` | one_to_many | required | restrict | reference | - |
-| `hcm_positions` | is_filled_by | `employees` | one_to_one | optional | clear | reference | - |
-| `cost_centers` | funds | `org_units` | one_to_many | required | restrict | reference | - |
-| `org_units` | engages | `contingent_workers` | one_to_many | optional | clear | reference | - |
-| `org_units` | is_scored_by | `engagement_drivers` | one_to_many | optional | clear | reference | - |
-| `org_units` | is_measured_by | `people_kpis` | one_to_many | optional | clear | reference | - |
-| `job_profiles` | maps_to | `skill_profiles` | many_to_many | optional | clear | reference | - |
-| `org_units` | triggers | `iga_entitlement_definitions` | one_to_many | optional | clear | reference | - |
-| `job_profiles` | maps_to | `courses` | many_to_many | optional | clear | reference | - |
-| `salary_bands` | anchors | `hcm_positions` | one_to_many | optional | clear | reference | - |
-| `salary_bands` | bands | `job_profiles` | one_to_many | optional | clear | reference | - |
-| `org_units` | maps_to | `cost_centers` | one_to_one | optional | clear | reference | - |
-| `hcm_positions` | requires | `compliance_assignments` | one_to_many | optional | clear | reference | - |
-| `job_profiles` | requires | `learning_paths` | many_to_many | optional | clear | reference | - |
-| `job_profiles` | expects | `skill_profiles` | many_to_many | optional | clear | reference | - |
-| `org_units` | sponsors | `compliance_assignments` | one_to_many | optional | clear | reference | - |
-| `skill_profiles` | feeds | `candidates` | one_to_many | optional | clear | reference | - |
-| `org_units` | sponsors | `benefit_plans` | many_to_many | optional | clear | reference | - |
-| `survey_campaigns` | targets | `org_units` | many_to_many | optional | clear | reference | - |
-| `org_units` | owns | `action_plans` | one_to_many | optional | clear | reference | - |
-| `candidate_referrals` | introduces | `candidates` | one_to_many | required | restrict | reference | - |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | required | restrict | reference | - |
-| `recruitment_agencies` | sources | `candidates` | one_to_many | required | restrict | reference | - |
-| `recruitment_events` | attracts | `candidates` | one_to_many | required | restrict | reference | - |
-| `talent_pools` | groups | `candidates` | many_to_many | required | restrict | reference | - |
-| `candidates` | becomes | `employees` | one_to_one | required | restrict | reference | - |
-| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | restrict | reference | - |
-| `employees` | fills | `hcm_positions` | one_to_one | optional | clear | reference | - |
-| `workforce_scenarios` | drives | `hcm_positions` | one_to_many | required | restrict | reference | - |
-| `org_designs` | proposes | `hcm_positions` | one_to_many | required | restrict | reference | - |
+| `job_profiles` | expects | `competency_models` | one_to_many | optional | none | n/a | - |
+| `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | none | n/a | - |
+| `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | required | none (required-if-present) | n/a | - |
+| `candidates` | noted_via | `recruiter_interactions` | one_to_many | optional | none | n/a | - |
+| `candidates` | consents_via | `candidate_consents` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | required | none (required-if-present) | n/a | - |
+| `candidates` | discloses_via | `fcra_disclosures` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `candidates` | submits_via | `data_subject_requests` | one_to_many | optional | none | n/a | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | none | n/a | - |
+| `candidates` | documented_via | `candidate_documents` | one_to_many | optional | none | n/a | - |
+| `candidates` | annotated_via | `candidate_notes` | one_to_many | optional | none | n/a | - |
+| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | none | n/a | - |
+| `locations` | hosts_desk_bookings | `desk_bookings` | one_to_many | required | none (required-if-present) | n/a | - |
+| `locations` | hosts_room_reservations | `room_reservations` | one_to_many | required | none (required-if-present) | n/a | - |
+| `locations` | site_of_service_requests | `workplace_service_requests` | one_to_many | required | none (required-if-present) | n/a | - |
+| `locations` | measured_by_reports | `space_utilization_reports` | one_to_many | required | none (required-if-present) | n/a | - |
+| `locations` | subject_of_feedback | `workplace_experience_feedback` | one_to_many | optional | none | n/a | - |
+| `org_units` | groups | `employees` | one_to_many | required | none (required-if-present) | n/a | - |
+| `hcm_positions` | is_filled_by | `employees` | one_to_one | optional | none | n/a | - |
+| `cost_centers` | funds | `org_units` | one_to_many | required | none (required-if-present) | n/a | - |
+| `org_units` | engages | `contingent_workers` | one_to_many | optional | none | n/a | - |
+| `org_units` | is_scored_by | `engagement_drivers` | one_to_many | optional | none | n/a | - |
+| `org_units` | is_measured_by | `people_kpis` | one_to_many | optional | none | n/a | - |
+| `job_profiles` | maps_to | `skill_profiles` | many_to_many | optional | none | n/a | - |
+| `org_units` | triggers | `iga_entitlement_definitions` | one_to_many | optional | none | n/a | - |
+| `job_profiles` | maps_to | `courses` | many_to_many | optional | none | n/a | - |
+| `salary_bands` | anchors | `hcm_positions` | one_to_many | optional | none | n/a | - |
+| `salary_bands` | bands | `job_profiles` | one_to_many | optional | none | n/a | - |
+| `org_units` | maps_to | `cost_centers` | one_to_one | optional | none | n/a | - |
+| `hcm_positions` | requires | `compliance_assignments` | one_to_many | optional | none | n/a | - |
+| `job_profiles` | requires | `learning_paths` | many_to_many | optional | none | n/a | - |
+| `job_profiles` | expects | `skill_profiles` | many_to_many | optional | none | n/a | - |
+| `org_units` | sponsors | `compliance_assignments` | one_to_many | optional | none | n/a | - |
+| `skill_profiles` | feeds | `candidates` | one_to_many | optional | none | n/a | - |
+| `org_units` | sponsors | `benefit_plans` | many_to_many | optional | none | n/a | - |
+| `survey_campaigns` | targets | `org_units` | many_to_many | optional | none | n/a | - |
+| `org_units` | owns | `action_plans` | one_to_many | optional | none | n/a | - |
+| `candidate_referrals` | introduces | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
+| `recruitment_agencies` | sources | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
+| `recruitment_events` | attracts | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
+| `talent_pools` | groups | `candidates` | many_to_many | required | none (required-if-present) | n/a | - |
+| `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
+| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
+| `employees` | fills | `hcm_positions` | one_to_one | optional | none | n/a | - |
+| `workforce_scenarios` | drives | `hcm_positions` | one_to_many | required | none (required-if-present) | n/a | - |
+| `org_designs` | proposes | `hcm_positions` | one_to_many | required | none (required-if-present) | n/a | - |
 
 </details>
 
@@ -304,20 +304,39 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| HCM-ORG-POSITIONS | IGA | IGA-ACCESS-REQUEST | `org_unit.created` | - | `org_units` | event_stream | medium | New org unit drives IGA group/role provisioning. Group-name conventions and ownership must be encoded; otherwise orphan groups proliferate. |
+| HCM-ORG-POSITIONS | IGA | IGA-ACCESS-REQUEST | `org_unit.merged` | _(state_change)_ | `org_units` | event_stream | high | Org-unit merge consolidates IGA groups: members migrate, entitlements deduplicated, SoD revalidated. Often runs as a batch project rather than event. |
+| HCM-ORG-POSITIONS | IGA | IGA-ACCESS-REQUEST | `org_unit.disbanded` | _(state_change)_ | `org_units` | event_stream | high | Org-unit disbandment requires IGA group cleanup; orphan-group risk if employees re-assigned slowly. |
+| HCM-ORG-POSITIONS | HCM | HCM-CORE-WORKER | `hcm_position.approved_for_creation` | `approved_for_creation` _(lifecycle)_ | `hcm_positions` | lifecycle_progression | low | Approved position becomes hireable; worker-record module can attach a new employee once the requisition closes. |
 | ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `headcount.approved` | `approved` _(state_change)_ | `job_requisitions` | event_stream | low | Headcount approval (often originating from HCM/SWP) confirmed back to HCM; gives ATS green light to source. |
 | ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `requisition.filled` | `filled` _(state_change)_ | `job_requisitions` | event_stream | low | Requisition fill closes headcount slot; HCM headcount-plan updates. |
+| HCM-ORG-POSITIONS | HCM | HCM-CORE-WORKER | `org_unit.merged` | _(state_change)_ | `org_units` | lifecycle_progression | medium | Org-unit consolidation cascades employee re-assignment, manager and dotted-line reassignment, and reporting-line recompute on the worker record. |
+| HCM-ORG-POSITIONS | HCM | HCM-CORE-WORKER | `org_unit.disbanded` | _(state_change)_ | `org_units` | lifecycle_progression | high | Disbanded org unit requires every incumbent employee to be re-placed before close; worker-record module blocks the close until reassignment completes. |
+| ATS-CANDIDATE-CRM | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-CANDIDATE-CRM | `job_posting.published` | _(state_change)_ | `job_postings` | lifecycle_progression | low | - |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-TALENT-POOLS | `job_application.rejected` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
+| HCM-ORG-POSITIONS | COMP-MGMT | COMP-BENCHMARKING | `job_profile.published` | _(state_change)_ | `job_profiles` | event_stream | low | Job profile links to salary bands; COMP-MGMT mapping authoritative. |
+| HCM-ORG-POSITIONS | COMP-MGMT | COMP-PLANNING | `hcm_position.approved_for_creation` | `approved_for_creation` _(lifecycle)_ | `hcm_positions` | event_stream | low | Approved position carries grade/band, anchoring offer-comp generation. |
+| ATS-CANDIDATE-CRM | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
+| HCM-ORG-POSITIONS | ERP-FIN | _(domain-level)_ | `org_unit.created` | - | `org_units` | api_call | medium | New org unit usually maps to cost-center; ERP-FIN must reflect the structure for budgeting and labor allocation. |
+| HCM-ORG-POSITIONS | PSA | PSA-RESOURCE-MGMT | `job_profile.activated` | _(state_change)_ | `job_profiles` | event_stream | low | Job profile activated for production. PSA makes the role assignable on new project_assignments and project_resource_allocations. |
+| HCM-ORG-POSITIONS | PSA | PSA-RESOURCE-MGMT | `job_profile.published` | _(state_change)_ | `job_profiles` | event_stream | low | New job profile published. PSA picks up the role definition (competencies, level) as a new shape for skill-based demand modeling and resource_skill_inventories matching. |
+| HCM-ORG-POSITIONS | PSA | PSA-RESOURCE-MGMT | `job_profile.updated` | _(state_change)_ | `job_profiles` | event_stream | low | Job profile updated (competencies, level, responsibilities). PSA revalidates the resource pool's skill matches and surfaces gaps via existing resource_skill_inventory.gap_identified signal. |
+| HCM-ORG-POSITIONS | PSA | PSA-RESOURCE-MGMT | `job_profile.retired` | _(state_change)_ | `job_profiles` | event_stream | low | Job profile retired. PSA blocks new assignments to the role and surfaces a migration list for any existing project_assignments still referencing it. |
+| ATS-CANDIDATE-CRM | ONBOARDING | ONB-JOURNEY-MGMT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | medium | Hired candidate drives onboarding-plan kickoff with role/location/manager context from ATS payload. |
 | ATS-RECRUITMENT-PIPELINE | SWP | SWP-DEMAND-FORECAST | `requisition.filled` | `filled` _(state_change)_ | `job_requisitions` | event_stream | low | Filled requisition feeds SWP actuals-vs-plan reconciliation. |
+| HCM-ORG-POSITIONS | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `job_profile.published` | _(state_change)_ | `job_profiles` | event_stream | low | Job profile competencies drive LMS skill-profile expectations and required-training assignments. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| HCM-ORG-POSITIONS | HCM | HCM-CORE-WORKER | `employee.terminated` | `terminated` _(lifecycle)_ | `hcm_positions` | lifecycle_progression | low | Position transitions from filled to open as the incumbent terminates; org-position module recomputes vacancy and span-of-control rollups. |
 | ATS-RECRUITMENT-PIPELINE | SWP | SWP-DEMAND-FORECAST | `headcount.approved` | `approved` _(state_change)_ | `job_requisitions` | api_call | high | Approved headcount in SWP authorises requisition creation in ATS. THIS IS THE CO-MASTER BRIDGE: SWP masters the intent slice (approved position, budget, time window) and ATS masters the execution slice (pipeline, candidates, interviews, offer). High friction because SWP's plan structure (org × geo × level × time) rarely matches ATS's requisition template structure (job code × location × hiring manager × pay range), requiring mapping rules that drift as either side evolves. |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-INTERVIEWS | `candidate_assessment.failed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-INTERVIEWS | `candidate_assessment.passed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-INTERVIEWS | `interview.completed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
+| ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_activated` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-RECRUITMENT-PIPELINE | HCM | HCM-CORE-WORKER | `employee.terminated` | `terminated` _(lifecycle)_ | `job_requisitions` | api_call | low | Employee termination in HCM optionally triggers backfill requisition consideration in ATS. Low friction when SWP-driven; some orgs auto-open a backfill req on regrettable losses, others route through SWP for approval first. |
 | ATS-RECRUITMENT-PIPELINE | HCM | HCM-ORG-POSITIONS | `job_profile.published` | _(state_change)_ | `job_profiles` | event_stream | low | Canonical job profile feeds ATS posting templates and screening criteria. |
@@ -368,8 +387,8 @@ _This scope holds `candidates` as **embedded_master**; the canonical state machi
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `prospect` | ✓ | - | - | - | Person known to the recruiting org with no active application. |
 | 2 | `active` | - | - | - | - | Candidate has at least one open application or is actively engaged. |
-| 3 | `hired` | - | ✓ | ✓ | `ats-candidate-crm:hire_candidate` | Candidate accepted an offer and converted to employee. |
-| 4 | `do_not_hire` | - | ✓ | ✓ | `ats-candidate-crm:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
+| 3 | `hired` | - | ✓ | ✓ | `ats-recruitment-pipeline:hire_candidate` | Candidate accepted an offer and converted to employee. |
+| 4 | `do_not_hire` | - | ✓ | ✓ | `ats-recruitment-pipeline:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
 | 5 | `archived` | - | ✓ | - | - | Candidate kept in the database but not active in any pipeline. |
 
 ### `eeo_responses` (EEO Response)
@@ -387,11 +406,11 @@ _This scope holds `hcm_positions` as **embedded_master**; the canonical state ma
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `proposed` | ✓ | - | - | - | Position has been designed but not yet approved against the headcount plan. |
-| 2 | `approved` | - | - | ✓ | `hcm-org-positions:approved_position` | Cleared by headcount/finance owner; eligible to spawn a requisition. |
-| 3 | `open` | - | - | ✓ | `hcm-org-positions:open_position` | Approved and actively being recruited against; not yet filled. |
-| 4 | `filled` | - | - | ✓ | `hcm-org-positions:filled_position` | An employee occupies the position. |
-| 5 | `frozen` | - | - | ✓ | `hcm-org-positions:frozen_position` | Temporarily not fillable (hiring freeze, budget hold); retains the slot. |
-| 6 | `eliminated` | - | ✓ | ✓ | `hcm-org-positions:eliminated_position` | Removed from the org structure permanently. |
+| 2 | `approved` | - | - | ✓ | `ats-recruitment-pipeline:approved_position` | Cleared by headcount/finance owner; eligible to spawn a requisition. |
+| 3 | `open` | - | - | ✓ | `ats-recruitment-pipeline:open_position` | Approved and actively being recruited against; not yet filled. |
+| 4 | `filled` | - | - | ✓ | `ats-recruitment-pipeline:filled_position` | An employee occupies the position. |
+| 5 | `frozen` | - | - | ✓ | `ats-recruitment-pipeline:frozen_position` | Temporarily not fillable (hiring freeze, budget hold); retains the slot. |
+| 6 | `eliminated` | - | ✓ | ✓ | `ats-recruitment-pipeline:eliminated_position` | Removed from the org structure permanently. |
 
 ### `job_applications` (Application)
 
@@ -431,9 +450,9 @@ _This scope holds `job_profiles` as **embedded_master**; the canonical state mac
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `draft` | ✓ | - | - | - | Profile is being authored or revised; not yet available for position assignment. |
-| 2 | `approved` | - | - | ✓ | `hcm-org-positions:approved_job_profile` | Cleared by the catalog owner; ready to be referenced by positions and postings. |
-| 3 | `active` | - | - | ✓ | `hcm-org-positions:active_job_profile` | In production use; positions and postings can reference it. |
-| 4 | `retired` | - | ✓ | ✓ | `hcm-org-positions:retired_job_profile` | No longer assignable to new positions; historical references preserved. |
+| 2 | `approved` | - | - | ✓ | `ats-recruitment-pipeline:approved_job_profile` | Cleared by the catalog owner; ready to be referenced by positions and postings. |
+| 3 | `active` | - | - | ✓ | `ats-recruitment-pipeline:active_job_profile` | In production use; positions and postings can reference it. |
+| 4 | `retired` | - | ✓ | ✓ | `ats-recruitment-pipeline:retired_job_profile` | No longer assignable to new positions; historical references preserved. |
 
 ### `job_requisitions` (Job Requisition)
 
@@ -453,9 +472,9 @@ _This scope holds `org_units` as **embedded_master**; the canonical state machin
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `draft` | ✓ | - | - | - | Org unit defined as part of a future structure; not yet operational. |
-| 2 | `active` | - | - | ✓ | `hcm-org-positions:active_org_unit` | Operational unit; carries headcount, cost-center linkage, and reporting lines. |
-| 3 | `reorganized` | - | ✓ | ✓ | `hcm-org-positions:reorganized_org_unit` | Unit folded into or replaced by a new structure; references remain for history. |
-| 4 | `closed` | - | ✓ | ✓ | `hcm-org-positions:closed_org_unit` | Unit dissolved; no employees or positions reside in it. |
+| 2 | `active` | - | - | ✓ | `ats-recruitment-pipeline:active_org_unit` | Operational unit; carries headcount, cost-center linkage, and reporting lines. |
+| 3 | `reorganized` | - | ✓ | ✓ | `ats-recruitment-pipeline:reorganized_org_unit` | Unit folded into or replaced by a new structure; references remain for history. |
+| 4 | `closed` | - | ✓ | ✓ | `ats-recruitment-pipeline:closed_org_unit` | Unit dissolved; no employees or positions reside in it. |
 
 ### `requisition_approvals` (Requisition Approval)
 
@@ -478,11 +497,25 @@ _This scope holds `org_units` as **embedded_master**; the canonical state machin
 | `ats-recruitment-pipeline:approve_requisition` | workflow-gate (lifecycle) | Transition `job_requisitions` into state `open` | ✓ |
 | `ats-recruitment-pipeline:close_requisition` | workflow-gate (lifecycle) | Transition `job_requisitions` into state `filled` | ✓ |
 | `ats-recruitment-pipeline:publish_posting` | workflow-gate (lifecycle) | Transition `job_postings` into state `published` | ✓ |
-| `ats-recruitment-pipeline:approve_requisition` | workflow-gate (lifecycle) | Transition `requisition_approvals` into state `approved` | ✓ |
+| `ats-recruitment-pipeline:hire_candidate` | workflow-gate (lifecycle) | Transition `candidates` into state `hired` | ✓ |
+| `ats-recruitment-pipeline:flag_do_not_hire` | workflow-gate (lifecycle) | Transition `candidates` into state `do_not_hire` | ✓ |
+| `ats-recruitment-pipeline:approved_position` | workflow-gate (lifecycle) | Transition `hcm_positions` into state `approved` | ✓ |
+| `ats-recruitment-pipeline:open_position` | workflow-gate (lifecycle) | Transition `hcm_positions` into state `open` | ✓ |
+| `ats-recruitment-pipeline:filled_position` | workflow-gate (lifecycle) | Transition `hcm_positions` into state `filled` | ✓ |
+| `ats-recruitment-pipeline:frozen_position` | workflow-gate (lifecycle) | Transition `hcm_positions` into state `frozen` | ✓ |
+| `ats-recruitment-pipeline:eliminated_position` | workflow-gate (lifecycle) | Transition `hcm_positions` into state `eliminated` | ✓ |
+| `ats-recruitment-pipeline:approved_job_profile` | workflow-gate (lifecycle) | Transition `job_profiles` into state `approved` | ✓ |
+| `ats-recruitment-pipeline:active_job_profile` | workflow-gate (lifecycle) | Transition `job_profiles` into state `active` | ✓ |
+| `ats-recruitment-pipeline:retired_job_profile` | workflow-gate (lifecycle) | Transition `job_profiles` into state `retired` | ✓ |
+| `ats-recruitment-pipeline:active_org_unit` | workflow-gate (lifecycle) | Transition `org_units` into state `active` | ✓ |
+| `ats-recruitment-pipeline:reorganized_org_unit` | workflow-gate (lifecycle) | Transition `org_units` into state `reorganized` | ✓ |
+| `ats-recruitment-pipeline:closed_org_unit` | workflow-gate (lifecycle) | Transition `org_units` into state `closed` | ✓ |
 | `ats-recruitment-pipeline:reject_requisition` | workflow-gate (lifecycle) | Transition `requisition_approvals` into state `rejected` | ✓ |
 | `ats-recruitment-pipeline:disposition_applicant` | workflow-gate (lifecycle) | Transition `applicant_flow_records` into state `dispositioned` | ✓ |
 | `ats-recruitment-pipeline:view_all_applications` | override (personal_content) | View all `job_applications` rows beyond row-scope | ✓ |
 | `ats-recruitment-pipeline:manage_all_applications` | override (personal_content) | Manage all `job_applications` rows beyond row-scope | ✓ |
+| `ats-recruitment-pipeline:view_all_candidates` | override (personal_content) | View all `candidates` rows beyond row-scope | ✓ |
+| `ats-recruitment-pipeline:manage_all_candidates` | override (personal_content) | Manage all `candidates` rows beyond row-scope | ✓ |
 | `ats-recruitment-pipeline:view_all_application_screening_answers` | override (personal_content) | View all `application_screening_answers` rows beyond row-scope | ✓ |
 | `ats-recruitment-pipeline:manage_all_application_screening_answers` | override (personal_content) | Manage all `application_screening_answers` rows beyond row-scope | ✓ |
 | `ats-recruitment-pipeline:view_all_eeo_responses` | override (personal_content) | View all `eeo_responses` rows beyond row-scope | ✓ |
@@ -502,6 +535,9 @@ _This scope holds `org_units` as **embedded_master**; the canonical state machin
 | --- | --- | --- | --- |
 | `approve_job_requisition_requires_approver` | `job_requisitions` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`ats-recruitment-pipeline:approve_requisition`). |
 | `application_edit_scope` | `job_applications` | has_personal_content | Row-scope by default; override via `ats-recruitment-pipeline:view_all_applications` / `ats-recruitment-pipeline:manage_all_applications` |
+| `candidate_edit_scope` | `candidates` | has_personal_content | Row-scope by default; override via `ats-recruitment-pipeline:view_all_candidates` / `ats-recruitment-pipeline:manage_all_candidates` |
+| `approve_position_requires_approver` | `hcm_positions` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`ats-recruitment-pipeline:approved_position`). |
+| `approve_job_profile_requires_approver` | `job_profiles` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`ats-recruitment-pipeline:approved_job_profile`). |
 | `approve_requisition_approval_requires_approver` | `requisition_approvals` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`ats-recruitment-pipeline:approve_requisition`). |
 | `application_screening_answer_edit_scope` | `application_screening_answers` | has_personal_content | Row-scope by default; override via `ats-recruitment-pipeline:view_all_application_screening_answers` / `ats-recruitment-pipeline:manage_all_application_screening_answers` |
 | `eeo_response_edit_scope` | `eeo_responses` | has_personal_content | Row-scope by default; override via `ats-recruitment-pipeline:view_all_eeo_responses` / `ats-recruitment-pipeline:manage_all_eeo_responses` |
@@ -535,11 +571,25 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:approve_requisition` |
 | `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:close_requisition` |
 | `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:publish_posting` |
-| `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:approve_requisition` |
+| `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:hire_candidate` |
+| `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:flag_do_not_hire` |
+| `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:approved_position` |
+| `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:open_position` |
+| `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:filled_position` |
+| `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:frozen_position` |
+| `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:eliminated_position` |
+| `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:approved_job_profile` |
+| `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:active_job_profile` |
+| `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:retired_job_profile` |
+| `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:active_org_unit` |
+| `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:reorganized_org_unit` |
+| `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:closed_org_unit` |
 | `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:reject_requisition` |
 | `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:disposition_applicant` |
 | `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:view_all_applications` |
 | `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:manage_all_applications` |
+| `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:view_all_candidates` |
+| `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:manage_all_candidates` |
 | `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:view_all_application_screening_answers` |
 | `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:manage_all_application_screening_answers` |
 | `ats-recruitment-pipeline:admin` | `ats-recruitment-pipeline:view_all_eeo_responses` |
@@ -561,7 +611,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `RECRUITING-RECRUITER` | persona | responsible | Recruit/Source candidates | grant gates [ats-recruitment-pipeline:publish_posting] + the gated entities' write tier |
 | `RECRUITING-MANAGER` | persona | accountable | Recruit/Source candidates | approval gate |
 | `HIRING-MANAGER` | persona | informed | Recruit/Source candidates | notification side effect (trigger_event / webhook_receiver) |
-| `RECRUITING-RECRUITER` | persona | responsible | Hire candidate | grant gates [ats-pre-employee-record:hire_candidate] + the gated entities' write tier |
+| `RECRUITING-RECRUITER` | persona | responsible | Hire candidate | grant gates [ats-recruitment-pipeline:hire_candidate, ats-pre-employee-record:hire_candidate] + the gated entities' write tier |
 | `HIRING-MANAGER` | persona | accountable | Hire candidate | approval gate |
 | `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | Hire candidate | notification side effect (trigger_event / webhook_receiver) |
 

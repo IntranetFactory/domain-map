@@ -304,7 +304,7 @@ Composed unique key: `(handoff_id, process_id)`.
 | `relationship_kind` | enum | yes | `composition` / `reference` / `association` / `inheritance`. Default `reference` |
 | `relationship_verb` | string | yes | Forward verb phrase (e.g. "owns", "places", "is a") |
 | `inverse_verb` | string | yes | Reverse phrase (e.g. "is owned by", "is placed by", "is supertype of") |
-| `is_required` | boolean | yes | Whether the relationship is mandatory. Default `false` |
+| `is_required` | boolean | yes | PRESENCE-CONDITIONAL (plan-4): a mandatory FK only WHEN the target entity is installed in the deploying unit; it never forces the target to install. "This entity must always be present" is expressed by the TARGET's own `necessity=required` (Rule #16), not by this flag. Default `false` |
 | `owner_side` | enum | yes | `source` / `target`. Default `source`. NOT NULL. **Names the PARENT (lifecycle owner / cascade root) of the edge**, a domain-map catalog concept, not a Semantius platform primitive: `source` = `data_object_id` is the parent (cascades into the related object on delete); `target` = the related object is the parent. Drives the architect's delete-mode derivation downstream (composition / parent gives the Semantius `parent` FK + cascade; reference gives `reference`). Canonical invariant: for `composition` and `one_to_many` edges, `owner_side` names the parent and the forward `relationship_verb` should read parent-to-child (M7, m5). Do NOT blindly set `owner_side=source`: pick whichever side is actually the parent. For a child-first edge (`child belongs_to parent`) the parent is the `target`, so `owner_side=target` is correct. |
 | `notes` | multiline | yes | |
 | `record_status` | enum | yes | Default `new` |
@@ -313,7 +313,9 @@ Self-references allowed (`User` directly manages `User`).
 
 ### Delete-mode derivation (B4)
 
-The delete mode is NOT stored per edge; it is DERIVED from the stored inputs by `deriveDeleteMode` in `scripts/emit_fact_sheet.ts` and emitted as the section-5 `delete_mode` / `fk_format` columns. The applied `ON DELETE` lands in the tenant DB at deploy. Total over every `relationship_kind`:
+The delete mode is NOT stored per edge; it is DERIVED from the stored inputs by `deriveDeleteMode` in `scripts/emit_fact_sheet.ts` and emitted as the section-5 `delete_mode` / `fk_format` columns. Plan 4 added a presence-conditional dimension: whether the edge's OTHER endpoint is in the deploying unit. An intra-scope (§5.1) or built-in (§5.2) edge has its target present; a cross-scope (§5.3) edge has its target absent, so no FK can be emitted in this unit. The applied `ON DELETE` lands in the tenant DB at deploy.
+
+Target present (intra-scope / built-in edge), over every `relationship_kind`:
 
 | `relationship_kind` | `is_required` | `delete_mode` | `fk_format` |
 |---|---|---|---|
@@ -323,6 +325,17 @@ The delete mode is NOT stored per edge; it is DERIVED from the stored inputs by 
 | `association` | required | `restrict` | `reference` |
 | `association` | optional | `clear` | `reference` |
 | `inheritance` | any | `restrict` | `reference` |
+
+Target absent (cross-scope edge: the referenced table is not installed in this unit):
+
+| `relationship_kind` | `is_required` | `delete_mode` | `fk_format` |
+|---|---|---|---|
+| `reference` / `association` | optional | `none` | `n/a` |
+| `reference` / `association` | required | `none (required-if-present)` | `n/a` |
+| `composition` | required | `⚠ audit: required composed child out of scope` | `n/a` |
+| `composition` | optional | `none` | `n/a` |
+
+A required reference / association edge to an absent target is "required-if-present": the FK materializes only when the tenant also installs the target, never forcing it (the plan-4 keystone). A required COMPOSITION edge to an absent child is a self-containment violation surfaced as the M9 relationship-layer audit finding (resolve by embedding the child or relaxing, never silently dropped).
 
 `owner_side` orients WHICH endpoint physically holds the FK (the child side); it does not change the mode or format and is surfaced in its own column. `clear` is the Semantius term for SET NULL (the platform `reference_delete_mode` enum is `restrict` / `clear` / `cascade`). `inheritance` is defensive (0 live edges as of 2026-06-01).
 

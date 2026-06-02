@@ -130,12 +130,12 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `customers` | has_contacts | `crm_contacts` | one_to_many | optional | clear | reference | - |
-| `customers` | converted_from_lead | `crm_leads` | one_to_many | optional | clear | reference | - |
-| `crm_opportunities` | converted_from_lead | `crm_leads` | one_to_many | optional | clear | reference | - |
-| `crm_opportunities` | involves_contacts | `crm_contacts` | many_to_many | optional | clear | reference | - |
-| `crm_contacts` | has_activities | `sales_activities` | one_to_many | optional | clear | reference | - |
-| `crm_leads` | has_activities | `sales_activities` | one_to_many | optional | clear | reference | - |
+| `customers` | has_contacts | `crm_contacts` | one_to_many | optional | none | n/a | - |
+| `customers` | converted_from_lead | `crm_leads` | one_to_many | optional | none | n/a | - |
+| `crm_opportunities` | converted_from_lead | `crm_leads` | one_to_many | optional | none | n/a | - |
+| `crm_opportunities` | involves_contacts | `crm_contacts` | many_to_many | optional | none | n/a | - |
+| `crm_contacts` | has_activities | `sales_activities` | one_to_many | optional | none | n/a | - |
+| `crm_leads` | has_activities | `sales_activities` | one_to_many | optional | none | n/a | - |
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
@@ -192,10 +192,10 @@ _This scope holds `commission_splits` as **embedded_master**; the canonical stat
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `calculated` | ✓ | - | - | - | Split row auto-derived from transaction close (listing-side vs buyer-side splits, agent shares, franchise overrides). Pending review. |
-| 2 | `reviewed` | - | - | ✓ | `re-brok-brokerage-ops:review_commission_split` | Broker reviewed split accuracy against the listing agreement and brokerage policy; flagged any anomalies. |
-| 3 | `disputed` | - | - | ✓ | `re-brok-brokerage-ops:dispute_commission_split` | One participating agent contests the calculated split. Holds disbursement pending resolution; may return to reviewed after adjustment. |
-| 4 | `approved` | - | - | ✓ | `re-brok-brokerage-ops:approve_commission_split` | Broker approved the split for payment. Ready for disbursement. |
-| 5 | `paid` | - | ✓ | ✓ | `re-brok-brokerage-ops:disburse_commission` | Commission funds disbursed to participating agents and franchise; ledger entry recorded. |
+| 2 | `reviewed` | - | - | ✓ | `re-brok-agent-ops:review_commission_split` | Broker reviewed split accuracy against the listing agreement and brokerage policy; flagged any anomalies. |
+| 3 | `disputed` | - | - | ✓ | `re-brok-agent-ops:dispute_commission_split` | One participating agent contests the calculated split. Holds disbursement pending resolution; may return to reviewed after adjustment. |
+| 4 | `approved` | - | - | ✓ | `re-brok-agent-ops:approve_commission_split` | Broker approved the split for payment. Ready for disbursement. |
+| 5 | `paid` | - | ✓ | ✓ | `re-brok-agent-ops:disburse_commission` | Commission funds disbursed to participating agents and franchise; ledger entry recorded. |
 
 ### `crm_contacts` (Contact)
 
@@ -280,6 +280,10 @@ _This scope holds `crm_leads` as **contributor**; the canonical state machine is
 | `re-brok-agent-ops:clear_contingencies` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `contingencies_cleared` | ✓ |
 | `re-brok-agent-ops:close_transaction` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `closed` | ✓ |
 | `re-brok-agent-ops:cancel_transaction` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `cancelled` | ✓ |
+| `re-brok-agent-ops:review_commission_split` | workflow-gate (lifecycle) | Transition `commission_splits` into state `reviewed` | ✓ |
+| `re-brok-agent-ops:dispute_commission_split` | workflow-gate (lifecycle) | Transition `commission_splits` into state `disputed` | ✓ |
+| `re-brok-agent-ops:approve_commission_split` | workflow-gate (lifecycle) | Transition `commission_splits` into state `approved` | ✓ |
+| `re-brok-agent-ops:disburse_commission` | workflow-gate (lifecycle) | Transition `commission_splits` into state `paid` | ✓ |
 | `re-brok-agent-ops:confirm_tour` | workflow-gate (lifecycle) | Transition `tour_appointments` into state `confirmed` | ✓ |
 | `re-brok-agent-ops:complete_tour` | workflow-gate (lifecycle) | Transition `tour_appointments` into state `completed` | ✓ |
 | `re-brok-agent-ops:cancel_tour` | workflow-gate (lifecycle) | Transition `tour_appointments` into state `cancelled` | ✓ |
@@ -292,6 +296,7 @@ _This scope holds `crm_leads` as **contributor**; the canonical state machine is
 | `re-brok-agent-ops:view_all_real_estate_transactions` | override (personal_content) | View all `real_estate_transactions` rows beyond row-scope | ✓ |
 | `re-brok-agent-ops:manage_all_real_estate_transactions` | override (personal_content) | Manage all `real_estate_transactions` rows beyond row-scope | ✓ |
 | `re-brok-agent-ops:submit_real_estate_transaction` | override (submit_lock) | Submit and lock a `real_estate_transactions` row (post-submit edits gated) | ✓ |
+| `re-brok-agent-ops:submit_commission_split` | override (submit_lock) | Submit and lock a `commission_splits` row (post-submit edits gated) | ✓ |
 | `re-brok-agent-ops:view_all_disclosure_documents` | override (personal_content) | View all `disclosure_documents` rows beyond row-scope | ✓ |
 | `re-brok-agent-ops:manage_all_disclosure_documents` | override (personal_content) | Manage all `disclosure_documents` rows beyond row-scope | ✓ |
 | `re-brok-agent-ops:submit_disclosure_document` | override (submit_lock) | Submit and lock a `disclosure_documents` row (post-submit edits gated) | ✓ |
@@ -304,6 +309,8 @@ _This scope holds `crm_leads` as **contributor**; the canonical state machine is
 | `tour_appointment_edit_scope` | `tour_appointments` | has_personal_content | Row-scope by default; override via `re-brok-agent-ops:view_all_tour_appointments` / `re-brok-agent-ops:manage_all_tour_appointments` |
 | `real_estate_transaction_edit_scope` | `real_estate_transactions` | has_personal_content | Row-scope by default; override via `re-brok-agent-ops:view_all_real_estate_transactions` / `re-brok-agent-ops:manage_all_real_estate_transactions` |
 | `submit_restricted_to_real_estate_transaction_owner` | `real_estate_transactions` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `re-brok-agent-ops:manage_all_real_estate_transactions` |
+| `submit_restricted_to_commission_split_owner` | `commission_splits` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `re-brok-agent-ops:manage_all_commission_splits` |
+| `approve_commission_split_requires_approver` | `commission_splits` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`re-brok-agent-ops:approve_commission_split` if surfaced as a lifecycle workflow gate). |
 | `disclosure_document_edit_scope` | `disclosure_documents` | has_personal_content | Row-scope by default; override via `re-brok-agent-ops:view_all_disclosure_documents` / `re-brok-agent-ops:manage_all_disclosure_documents` |
 | `submit_restricted_to_disclosure_document_owner` | `disclosure_documents` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `re-brok-agent-ops:manage_all_disclosure_documents` |
 | `approve_disclosure_document_requires_approver` | `disclosure_documents` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`re-brok-agent-ops:approve_disclosure_document` if surfaced as a lifecycle workflow gate). |
@@ -336,6 +343,10 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `re-brok-agent-ops:admin` | `re-brok-agent-ops:clear_contingencies` |
 | `re-brok-agent-ops:admin` | `re-brok-agent-ops:close_transaction` |
 | `re-brok-agent-ops:admin` | `re-brok-agent-ops:cancel_transaction` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:review_commission_split` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:dispute_commission_split` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:approve_commission_split` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:disburse_commission` |
 | `re-brok-agent-ops:admin` | `re-brok-agent-ops:confirm_tour` |
 | `re-brok-agent-ops:admin` | `re-brok-agent-ops:complete_tour` |
 | `re-brok-agent-ops:admin` | `re-brok-agent-ops:cancel_tour` |
@@ -348,6 +359,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `re-brok-agent-ops:admin` | `re-brok-agent-ops:view_all_real_estate_transactions` |
 | `re-brok-agent-ops:admin` | `re-brok-agent-ops:manage_all_real_estate_transactions` |
 | `re-brok-agent-ops:admin` | `re-brok-agent-ops:submit_real_estate_transaction` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:submit_commission_split` |
 | `re-brok-agent-ops:admin` | `re-brok-agent-ops:view_all_disclosure_documents` |
 | `re-brok-agent-ops:admin` | `re-brok-agent-ops:manage_all_disclosure_documents` |
 | `re-brok-agent-ops:admin` | `re-brok-agent-ops:submit_disclosure_document` |

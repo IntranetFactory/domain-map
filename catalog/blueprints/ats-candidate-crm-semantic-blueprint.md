@@ -165,17 +165,17 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | required | restrict | reference | - |
-| `candidates` | discloses_via | `fcra_disclosures` | one_to_many | required | cascade | parent | - |
-| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | optional | cascade | parent | - |
-| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | optional | cascade | parent | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | cascade | parent | - |
-| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | clear | reference | - |
-| `skill_profiles` | feeds | `candidates` | one_to_many | optional | clear | reference | - |
-| `candidates` | submits | `job_applications` | one_to_many | required | restrict | reference | - |
-| `candidate_referrals` | introduces | `candidates` | one_to_many | required | restrict | reference | - |
-| `candidates` | becomes | `employees` | one_to_one | required | restrict | reference | - |
-| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | restrict | reference | - |
+| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | required | none (required-if-present) | n/a | - |
+| `candidates` | discloses_via | `fcra_disclosures` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | optional | none | n/a | - |
+| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | optional | none | n/a | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | none | n/a | - |
+| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | none | n/a | - |
+| `skill_profiles` | feeds | `candidates` | one_to_many | optional | none | n/a | - |
+| `candidates` | submits | `job_applications` | one_to_many | required | none (required-if-present) | n/a | - |
+| `candidate_referrals` | introduces | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
+| `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
+| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
@@ -186,10 +186,10 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `internal_opportunities` | receives | `opportunity_applications` | one_to_many | optional | cascade | parent | - |
-| `internal_opportunities` | ranked by | `fit_scores` | one_to_many | optional | clear | reference | - |
-| `talent_pools` | has_member | `talent_pool_memberships` | one_to_many | required | cascade | parent | - |
-| `talent_segments` | materializes_into | `talent_pools` | one_to_many | optional | clear | reference | - |
+| `internal_opportunities` | receives | `opportunity_applications` | one_to_many | optional | none | n/a | - |
+| `internal_opportunities` | ranked by | `fit_scores` | one_to_many | optional | none | n/a | - |
+| `talent_pools` | has_member | `talent_pool_memberships` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `talent_segments` | materializes_into | `talent_pools` | one_to_many | optional | none | n/a | - |
 
 </details>
 
@@ -293,10 +293,10 @@ _This scope holds `internal_opportunities` as **embedded_master**; the canonical
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `draft` | ✓ | - | - | - | - |
-| 2 | `open` | - | - | ✓ | `tlnt-intel-marketplace:publish_opportunity` | - |
-| 3 | `closed` | - | - | ✓ | `tlnt-intel-marketplace:close_opportunity` | - |
+| 2 | `open` | - | - | ✓ | `ats-candidate-crm:publish_opportunity` | - |
+| 3 | `closed` | - | - | ✓ | `ats-candidate-crm:close_opportunity` | - |
 | 4 | `filled` | - | ✓ | - | - | - |
-| 5 | `cancelled` | - | ✓ | ✓ | `tlnt-intel-marketplace:cancel_opportunity` | - |
+| 5 | `cancelled` | - | ✓ | ✓ | `ats-candidate-crm:cancel_opportunity` | - |
 
 ### `recruiting_event_attendances` (Recruiting Event Attendance)
 
@@ -347,6 +347,9 @@ _This scope holds `talent_pools` as **consumer**; the canonical state machine is
 | `ats-candidate-crm:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
 | `ats-candidate-crm:hire_candidate` | workflow-gate (lifecycle) | Transition `candidates` into state `hired` | ✓ |
 | `ats-candidate-crm:flag_do_not_hire` | workflow-gate (lifecycle) | Transition `candidates` into state `do_not_hire` | ✓ |
+| `ats-candidate-crm:publish_opportunity` | workflow-gate (lifecycle) | Transition `internal_opportunities` into state `open` | ✓ |
+| `ats-candidate-crm:close_opportunity` | workflow-gate (lifecycle) | Transition `internal_opportunities` into state `closed` | ✓ |
+| `ats-candidate-crm:cancel_opportunity` | workflow-gate (lifecycle) | Transition `internal_opportunities` into state `cancelled` | ✓ |
 | `ats-candidate-crm:withdraw_consent` | workflow-gate (lifecycle) | Transition `candidate_consents` into state `withdrawn` | ✓ |
 | `ats-candidate-crm:verify_dsr_identity` | workflow-gate (lifecycle) | Transition `data_subject_requests` into state `verified` | ✓ |
 | `ats-candidate-crm:fulfill_dsr` | workflow-gate (lifecycle) | Transition `data_subject_requests` into state `fulfilled` | ✓ |
@@ -360,6 +363,7 @@ _This scope holds `talent_pools` as **consumer**; the canonical state machine is
 | `ats-candidate-crm:manage_all_recruiter_interactions` | override (personal_content) | Manage all `recruiter_interactions` rows beyond row-scope | ✓ |
 | `ats-candidate-crm:view_all_candidate_consents` | override (personal_content) | View all `candidate_consents` rows beyond row-scope | ✓ |
 | `ats-candidate-crm:manage_all_candidate_consents` | override (personal_content) | Manage all `candidate_consents` rows beyond row-scope | ✓ |
+| `ats-candidate-crm:submit_opportunity` | override (submit_lock) | Submit and lock a `internal_opportunities` row (post-submit edits gated) | ✓ |
 | `ats-candidate-crm:view_all_candidate_documents` | override (personal_content) | View all `candidate_documents` rows beyond row-scope | ✓ |
 | `ats-candidate-crm:manage_all_candidate_documents` | override (personal_content) | Manage all `candidate_documents` rows beyond row-scope | ✓ |
 | `ats-candidate-crm:view_all_candidate_notes` | override (personal_content) | View all `candidate_notes` rows beyond row-scope | ✓ |
@@ -375,6 +379,8 @@ _This scope holds `talent_pools` as **consumer**; the canonical state machine is
 | `candidate_engagement_edit_scope` | `candidate_engagements` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_candidate_engagements` / `ats-candidate-crm:manage_all_candidate_engagements` |
 | `recruiter_interaction_edit_scope` | `recruiter_interactions` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_recruiter_interactions` / `ats-candidate-crm:manage_all_recruiter_interactions` |
 | `candidate_consent_edit_scope` | `candidate_consents` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_candidate_consents` / `ats-candidate-crm:manage_all_candidate_consents` |
+| `submit_restricted_to_opportunity_owner` | `internal_opportunities` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `ats-candidate-crm:manage_all_opportunities` |
+| `approve_opportunity_requires_approver` | `internal_opportunities` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`ats-candidate-crm:approve_opportunity` if surfaced as a lifecycle workflow gate). |
 | `candidate_document_edit_scope` | `candidate_documents` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_candidate_documents` / `ats-candidate-crm:manage_all_candidate_documents` |
 | `candidate_note_edit_scope` | `candidate_notes` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_candidate_notes` / `ats-candidate-crm:manage_all_candidate_notes` |
 | `data_subject_request_edit_scope` | `data_subject_requests` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_data_subject_requests` / `ats-candidate-crm:manage_all_data_subject_requests` |
@@ -401,6 +407,9 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `ats-candidate-crm:manage` | `ats-candidate-crm:read` |
 | `ats-candidate-crm:admin` | `ats-candidate-crm:hire_candidate` |
 | `ats-candidate-crm:admin` | `ats-candidate-crm:flag_do_not_hire` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:publish_opportunity` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:close_opportunity` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:cancel_opportunity` |
 | `ats-candidate-crm:admin` | `ats-candidate-crm:withdraw_consent` |
 | `ats-candidate-crm:admin` | `ats-candidate-crm:verify_dsr_identity` |
 | `ats-candidate-crm:admin` | `ats-candidate-crm:fulfill_dsr` |
@@ -414,6 +423,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `ats-candidate-crm:admin` | `ats-candidate-crm:manage_all_recruiter_interactions` |
 | `ats-candidate-crm:admin` | `ats-candidate-crm:view_all_candidate_consents` |
 | `ats-candidate-crm:admin` | `ats-candidate-crm:manage_all_candidate_consents` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:submit_opportunity` |
 | `ats-candidate-crm:admin` | `ats-candidate-crm:view_all_candidate_documents` |
 | `ats-candidate-crm:admin` | `ats-candidate-crm:manage_all_candidate_documents` |
 | `ats-candidate-crm:admin` | `ats-candidate-crm:view_all_candidate_notes` |

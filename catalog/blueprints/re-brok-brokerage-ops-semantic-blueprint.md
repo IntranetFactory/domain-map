@@ -103,7 +103,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `real_estate_listings` | generates | `real_estate_transactions` | one_to_many | required | restrict | reference | - |
+| `real_estate_listings` | generates | `real_estate_transactions` | one_to_many | required | none (required-if-present) | n/a | - |
 
 </details>
 
@@ -119,8 +119,11 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| RE-BROK-AGENT-OPS | GRC | _(domain-level)_ | `real_estate_transaction.closed` | `pending` → `closed` _(lifecycle)_ | `disclosure_documents` | batch_sync | low | Disclosure-document completeness per closed transaction feeds brokerage-compliance audit and state-real-estate-commission requirements. |
 | RE-BROK-BROKERAGE-OPS | RE-BROKERAGE | RE-BROK-AGENT-OPS | `commission_split.paid` | _(lifecycle)_ | `commission_splits` | lifecycle_progression | low | Broker disbursed commission; agent-side surfaces the paid status for the recipient agent. |
 | RE-BROK-BROKERAGE-OPS | RE-BROKERAGE | RE-BROK-AGENT-OPS | `real_estate_transaction.cleared_to_close` | _(state_change)_ | `real_estate_transactions` | lifecycle_progression | low | Broker compliance review approved; transaction returns to agent-side for closing coordination. |
+| RE-BROK-AGENT-OPS | RE-PROP-MGMT | _(domain-level)_ | `real_estate_transaction.closed` | `pending` → `closed` _(lifecycle)_ | `real_estate_transactions` | manual_handoff | high | Closed sale of a rental property results in a new landlord-of-record; the new owner's property-management platform must be configured (often manual handoff via email; the buyer's PM and the seller's brokerage are different vendors). |
+| RE-BROK-AGENT-OPS | RE-CRE | _(domain-level)_ | `real_estate_transaction.closed` | `pending` → `closed` _(lifecycle)_ | `real_estate_transactions` | manual_handoff | high | Closed sale of a CRE asset transfers operations to the new owner's CRE platform; rent-roll, leases, and CAM history must be carried over (typically manual). |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
@@ -154,8 +157,8 @@ _This scope holds `disclosure_documents` as **embedded_master**; the canonical s
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `drafted` | ✓ | - | - | - | Disclosure generated from a state-specific template (agency disclosure, lead-paint, natural-hazards, transfer disclosure). Not yet delivered. |
-| 2 | `delivered` | - | - | ✓ | `re-brok-agent-ops:deliver_disclosure` | Disclosure sent to recipient (buyer or seller); recipient acknowledgment pending. |
-| 3 | `acknowledged` | - | ✓ | ✓ | `re-brok-agent-ops:acknowledge_disclosure` | Recipient signed acknowledgment recorded (typically via eSign callback). Disclosure satisfies the compliance requirement on the transaction. |
+| 2 | `delivered` | - | - | ✓ | `re-brok-brokerage-ops:deliver_disclosure` | Disclosure sent to recipient (buyer or seller); recipient acknowledgment pending. |
+| 3 | `acknowledged` | - | ✓ | ✓ | `re-brok-brokerage-ops:acknowledge_disclosure` | Recipient signed acknowledgment recorded (typically via eSign callback). Disclosure satisfies the compliance requirement on the transaction. |
 | 4 | `rejected` | - | ✓ | - | - | Recipient refused to acknowledge or signed under dispute. Typically requires the transaction to address the rejection before progressing. |
 
 ### `real_estate_transactions` (Real Estate Transaction)
@@ -165,13 +168,13 @@ _This scope holds `real_estate_transactions` as **embedded_master**; the canonic
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `opened` | ✓ | - | - | - | Accepted offer created the transaction; buyer/seller, listing reference, offer price, escrow agent, target close date captured. |
-| 2 | `inspection` | - | - | ✓ | `re-brok-agent-ops:schedule_inspection` | Inspection period active; structural / pest / specialty inspections scheduled or in progress. |
-| 3 | `financing` | - | - | ✓ | `re-brok-agent-ops:submit_financing` | Buyer's loan application in underwriting; appraisal pending; financing contingency open. |
-| 4 | `contingencies_cleared` | - | - | ✓ | `re-brok-agent-ops:clear_contingencies` | All contingencies (inspection, financing, appraisal, title) satisfied or waived. Transaction ready for broker compliance review. |
+| 2 | `inspection` | - | - | ✓ | `re-brok-brokerage-ops:schedule_inspection` | Inspection period active; structural / pest / specialty inspections scheduled or in progress. |
+| 3 | `financing` | - | - | ✓ | `re-brok-brokerage-ops:submit_financing` | Buyer's loan application in underwriting; appraisal pending; financing contingency open. |
+| 4 | `contingencies_cleared` | - | - | ✓ | `re-brok-brokerage-ops:clear_contingencies` | All contingencies (inspection, financing, appraisal, title) satisfied or waived. Transaction ready for broker compliance review. |
 | 5 | `compliance_review` | - | - | ✓ | `re-brok-brokerage-ops:submit_for_compliance_review` | Broker / transaction coordinator reviewing transaction file for compliance (disclosure completeness, signature audit, trust-account accounting). Only realized when BROKERAGE-OPS module is deployed. |
 | 6 | `cleared_to_close` | - | - | ✓ | `re-brok-brokerage-ops:approve_for_closing` | Broker signed off; closing date and location confirmed. Only realized when BROKERAGE-OPS module is deployed. |
-| 7 | `closed` | - | ✓ | ✓ | `re-brok-agent-ops:close_transaction` | Deed recorded, funds disbursed via escrow; transaction complete. Commission splits become payable; downstream domains notified. |
-| 8 | `cancelled` | - | ✓ | ✓ | `re-brok-agent-ops:cancel_transaction` | Transaction fell through (failed inspection beyond repair, financing denied, mutual cancellation, contingency invocation). Listing typically returns to active. |
+| 7 | `closed` | - | ✓ | ✓ | `re-brok-brokerage-ops:close_transaction` | Deed recorded, funds disbursed via escrow; transaction complete. Commission splits become payable; downstream domains notified. |
+| 8 | `cancelled` | - | ✓ | ✓ | `re-brok-brokerage-ops:cancel_transaction` | Transaction fell through (failed inspection beyond repair, financing denied, mutual cancellation, contingency invocation). Listing typically returns to active. |
 
 ## 8. Permissions and business rules (derived)
 
@@ -182,13 +185,26 @@ _This scope holds `real_estate_transactions` as **embedded_master**; the canonic
 | `re-brok-brokerage-ops:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `re-brok-brokerage-ops:manage` | baseline-manage | Edit operational records | ✓ |
 | `re-brok-brokerage-ops:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
+| `re-brok-brokerage-ops:schedule_inspection` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `inspection` | ✓ |
+| `re-brok-brokerage-ops:submit_financing` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `financing` | ✓ |
+| `re-brok-brokerage-ops:clear_contingencies` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `contingencies_cleared` | ✓ |
 | `re-brok-brokerage-ops:submit_for_compliance_review` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `compliance_review` | ✓ |
 | `re-brok-brokerage-ops:approve_for_closing` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `cleared_to_close` | ✓ |
+| `re-brok-brokerage-ops:close_transaction` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `closed` | ✓ |
+| `re-brok-brokerage-ops:cancel_transaction` | workflow-gate (lifecycle) | Transition `real_estate_transactions` into state `cancelled` | ✓ |
 | `re-brok-brokerage-ops:review_commission_split` | workflow-gate (lifecycle) | Transition `commission_splits` into state `reviewed` | ✓ |
 | `re-brok-brokerage-ops:dispute_commission_split` | workflow-gate (lifecycle) | Transition `commission_splits` into state `disputed` | ✓ |
 | `re-brok-brokerage-ops:approve_commission_split` | workflow-gate (lifecycle) | Transition `commission_splits` into state `approved` | ✓ |
 | `re-brok-brokerage-ops:disburse_commission` | workflow-gate (lifecycle) | Transition `commission_splits` into state `paid` | ✓ |
+| `re-brok-brokerage-ops:deliver_disclosure` | workflow-gate (lifecycle) | Transition `disclosure_documents` into state `delivered` | ✓ |
+| `re-brok-brokerage-ops:acknowledge_disclosure` | workflow-gate (lifecycle) | Transition `disclosure_documents` into state `acknowledged` | ✓ |
 | `re-brok-brokerage-ops:submit_commission_split` | override (submit_lock) | Submit and lock a `commission_splits` row (post-submit edits gated) | ✓ |
+| `re-brok-brokerage-ops:view_all_disclosure_documents` | override (personal_content) | View all `disclosure_documents` rows beyond row-scope | ✓ |
+| `re-brok-brokerage-ops:manage_all_disclosure_documents` | override (personal_content) | Manage all `disclosure_documents` rows beyond row-scope | ✓ |
+| `re-brok-brokerage-ops:submit_disclosure_document` | override (submit_lock) | Submit and lock a `disclosure_documents` row (post-submit edits gated) | ✓ |
+| `re-brok-brokerage-ops:view_all_real_estate_transactions` | override (personal_content) | View all `real_estate_transactions` rows beyond row-scope | ✓ |
+| `re-brok-brokerage-ops:manage_all_real_estate_transactions` | override (personal_content) | Manage all `real_estate_transactions` rows beyond row-scope | ✓ |
+| `re-brok-brokerage-ops:submit_real_estate_transaction` | override (submit_lock) | Submit and lock a `real_estate_transactions` row (post-submit edits gated) | ✓ |
 
 ### 8.2 Business rules
 
@@ -196,6 +212,11 @@ _This scope holds `real_estate_transactions` as **embedded_master**; the canonic
 | --- | --- | --- | --- |
 | `submit_restricted_to_commission_split_owner` | `commission_splits` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `re-brok-brokerage-ops:manage_all_commission_splits` |
 | `approve_commission_split_requires_approver` | `commission_splits` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`re-brok-brokerage-ops:approve_commission_split` if surfaced as a lifecycle workflow gate). |
+| `disclosure_document_edit_scope` | `disclosure_documents` | has_personal_content | Row-scope by default; override via `re-brok-brokerage-ops:view_all_disclosure_documents` / `re-brok-brokerage-ops:manage_all_disclosure_documents` |
+| `submit_restricted_to_disclosure_document_owner` | `disclosure_documents` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `re-brok-brokerage-ops:manage_all_disclosure_documents` |
+| `approve_disclosure_document_requires_approver` | `disclosure_documents` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`re-brok-brokerage-ops:approve_disclosure_document` if surfaced as a lifecycle workflow gate). |
+| `real_estate_transaction_edit_scope` | `real_estate_transactions` | has_personal_content | Row-scope by default; override via `re-brok-brokerage-ops:view_all_real_estate_transactions` / `re-brok-brokerage-ops:manage_all_real_estate_transactions` |
+| `submit_restricted_to_real_estate_transaction_owner` | `real_estate_transactions` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `re-brok-brokerage-ops:manage_all_real_estate_transactions` |
 
 ## 9. Roles, RACI, and responsibilities (derived)
 
@@ -216,13 +237,26 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:manage` |
 | `re-brok-brokerage-ops:manage` | `re-brok-brokerage-ops:read` |
+| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:schedule_inspection` |
+| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:submit_financing` |
+| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:clear_contingencies` |
 | `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:submit_for_compliance_review` |
 | `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:approve_for_closing` |
+| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:close_transaction` |
+| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:cancel_transaction` |
 | `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:review_commission_split` |
 | `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:dispute_commission_split` |
 | `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:approve_commission_split` |
 | `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:disburse_commission` |
+| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:deliver_disclosure` |
+| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:acknowledge_disclosure` |
 | `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:submit_commission_split` |
+| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:view_all_disclosure_documents` |
+| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:manage_all_disclosure_documents` |
+| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:submit_disclosure_document` |
+| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:view_all_real_estate_transactions` |
+| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:manage_all_real_estate_transactions` |
+| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:submit_real_estate_transaction` |
 
 **RACI realization:**
 

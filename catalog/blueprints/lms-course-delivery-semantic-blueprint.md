@@ -7,7 +7,7 @@ system_slug: lms-course-delivery
 domain_modules:
   - lms-course-delivery
 domain_code: LMS
-related_modules: [hcm-core-worker, hcm-org-positions, lms-automation, lms-compliance-training, lms-credentials, lms-ilt-delivery, lms-paths, pa-predictive-models, skills-mgmt-profile, talent-succession-career]
+related_modules: [ats-candidate-crm, ats-recruitment-pipeline, ben-enrollment, comp-planning, emp-exp-continuous-listen, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, hrsd-case-mgmt, iga-access-request, lms-automation, lms-compliance-training, lms-credentials, lms-ilt-delivery, lms-paths, pa-predictive-models, payroll-run, psa-project-delivery, psa-resource-mgmt, skills-mgmt-profile, talent-performance-mgmt, talent-succession-career]
 created_at: 2026-06-02
 ---
 
@@ -251,19 +251,19 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `courses` | scheduled_as | `course_offerings` | one_to_many | optional | clear | reference | - |
-| `courses` | grants | `certification_definitions` | many_to_many | optional | clear | reference | - |
-| `courses` | yields_credits_via | `continuing_education_credits` | many_to_many | optional | clear | reference | - |
-| `learning_path_steps` | references | `courses` | one_to_many | optional | clear | reference | - |
-| `automated_enrollment_rules` | creates | `course_enrollments` | one_to_many | optional | clear | reference | - |
-| `job_profiles` | maps_to | `courses` | many_to_many | optional | clear | reference | - |
-| `onboarding_tasks` | spawns | `course_enrollments` | one_to_many | optional | clear | reference | - |
-| `courses` | sequenced_into | `learning_paths` | many_to_many | optional | clear | reference | - |
-| `courses` | fulfills | `compliance_assignments` | one_to_many | optional | clear | reference | - |
-| `courses` | grants | `learner_certifications` | one_to_many | optional | clear | reference | - |
-| `skill_profiles` | updated by | `course_enrollments` | one_to_many | optional | clear | reference | - |
-| `course_enrollments` | updates | `career_aspirations` | one_to_many | optional | clear | reference | - |
-| `learning_records` | feeds | `people_kpis` | one_to_many | optional | clear | reference | - |
+| `courses` | scheduled_as | `course_offerings` | one_to_many | optional | none | n/a | - |
+| `courses` | grants | `certification_definitions` | many_to_many | optional | none | n/a | - |
+| `courses` | yields_credits_via | `continuing_education_credits` | many_to_many | optional | none | n/a | - |
+| `learning_path_steps` | references | `courses` | one_to_many | optional | none | n/a | - |
+| `automated_enrollment_rules` | creates | `course_enrollments` | one_to_many | optional | none | n/a | - |
+| `job_profiles` | maps_to | `courses` | many_to_many | optional | none | n/a | - |
+| `onboarding_tasks` | spawns | `course_enrollments` | one_to_many | optional | none | n/a | - |
+| `courses` | sequenced_into | `learning_paths` | many_to_many | optional | none | n/a | - |
+| `courses` | fulfills | `compliance_assignments` | one_to_many | optional | none | n/a | - |
+| `courses` | grants | `learner_certifications` | one_to_many | optional | none | n/a | - |
+| `skill_profiles` | updated by | `course_enrollments` | one_to_many | optional | none | n/a | - |
+| `course_enrollments` | updates | `career_aspirations` | one_to_many | optional | none | n/a | - |
+| `learning_records` | feeds | `people_kpis` | one_to_many | optional | none | n/a | - |
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
@@ -274,56 +274,56 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `employees` | triggers | `iga_provisioning_events` | one_to_many | optional | clear | reference | - |
-| `employees` | finalized by | `onboarding_document_collections` | one_to_many | optional | clear | reference | - |
-| `pre_employees` | promotes to | `employees` | one_to_one | required | restrict | reference | - |
-| `legal_holds` | identifies_custodians_from | `employees` | many_to_many | optional | clear | reference | - |
-| `legal_advice_records` | references | `employees` | many_to_many | optional | clear | reference | - |
-| `employees` | is host for | `host_assignments` | one_to_many | required | restrict | reference | - |
-| `employees` | requests | `absence_requests` | one_to_many | optional | clear | reference | - |
-| `job_profiles` | defines | `hcm_positions` | one_to_many | required | restrict | reference | - |
-| `employees` | signs | `employment_contracts` | one_to_many | required | cascade | parent | - |
-| `employees` | generates | `employment_events` | one_to_many | required | cascade | parent | - |
-| `employees` | triggers | `asset_lifecycle_events` | one_to_many | optional | clear | reference | - |
-| `employees` | holds | `skill_profiles` | one_to_one | optional | clear | reference | - |
-| `org_units` | engages | `contingent_workers` | one_to_many | optional | clear | reference | - |
-| `org_units` | is_scored_by | `engagement_drivers` | one_to_many | optional | clear | reference | - |
-| `org_units` | is_measured_by | `people_kpis` | one_to_many | optional | clear | reference | - |
-| `employees` | triggers | `service_requests` | one_to_many | optional | clear | reference | - |
-| `org_units` | triggers | `iga_entitlement_definitions` | one_to_many | optional | clear | reference | - |
-| `employees` | triggers | `pay_runs` | one_to_many | optional | clear | reference | - |
-| `hcm_positions` | spawns | `job_requisitions` | one_to_many | optional | clear | reference | - |
-| `employees` | becomes | `career_aspirations` | one_to_one | optional | clear | reference | - |
-| `employees` | becomes | `work_shifts` | one_to_many | optional | clear | reference | - |
-| `employees` | becomes | `compensation_statements` | one_to_one | optional | clear | reference | - |
-| `salary_bands` | anchors | `hcm_positions` | one_to_many | optional | clear | reference | - |
-| `employees` | triggers | `benefit_enrollments` | one_to_many | optional | clear | reference | - |
-| `employees` | triggers | `corporate_cards` | one_to_many | optional | clear | reference | - |
-| `employees` | spawns | `onboarding_journeys` | one_to_one | optional | clear | reference | - |
-| `employees` | spawns | `hr_cases` | one_to_many | optional | clear | reference | - |
-| `employees` | feeds | `headcount_plans` | one_to_many | optional | clear | reference | - |
-| `employees` | feeds | `agency_time_entries` | one_to_many | optional | clear | reference | - |
-| `employees` | onboarded by | `onboarding_journeys` | one_to_many | required | restrict | reference | - |
-| `hcm_positions` | requires | `compliance_assignments` | one_to_many | optional | clear | reference | - |
-| `org_units` | sponsors | `compliance_assignments` | one_to_many | optional | clear | reference | - |
-| `employees` | reflected on | `compliance_assignments` | one_to_many | optional | clear | reference | - |
-| `employees` | declares | `life_events` | one_to_many | optional | clear | reference | - |
-| `org_units` | sponsors | `benefit_plans` | many_to_many | optional | clear | reference | - |
-| `employees` | updated by | `life_events` | one_to_many | optional | clear | reference | - |
-| `survey_campaigns` | targets | `org_units` | many_to_many | optional | clear | reference | - |
-| `org_units` | owns | `action_plans` | one_to_many | optional | clear | reference | - |
-| `employees` | submits | `survey_responses` | one_to_many | optional | clear | reference | - |
-| `employees` | flagged on | `engagement_drivers` | one_to_many | optional | clear | reference | - |
-| `employees` | reflected on | `engagement_drivers` | one_to_many | optional | clear | reference | - |
-| `employees` | raises | `hr_cases` | one_to_many | required | restrict | reference | - |
-| `employees` | updated by | `hr_cases` | one_to_many | optional | clear | reference | - |
-| `case_categories` | drives | `employees` | one_to_many | optional | clear | reference | - |
-| `contingent_workers` | reviewed_against | `employees` | one_to_one | optional | clear | reference | - |
-| `candidates` | becomes | `employees` | one_to_one | required | restrict | reference | - |
-| `employees` | enrolls_in | `benefit_enrollments` | one_to_many | required | restrict | reference | - |
-| `survey_campaigns` | targets | `employees` | many_to_many | optional | clear | reference | - |
-| `workforce_scenarios` | drives | `hcm_positions` | one_to_many | required | restrict | reference | - |
-| `org_designs` | proposes | `hcm_positions` | one_to_many | required | restrict | reference | - |
+| `employees` | triggers | `iga_provisioning_events` | one_to_many | optional | none | n/a | - |
+| `employees` | finalized by | `onboarding_document_collections` | one_to_many | optional | none | n/a | - |
+| `pre_employees` | promotes to | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
+| `legal_holds` | identifies_custodians_from | `employees` | many_to_many | optional | none | n/a | - |
+| `legal_advice_records` | references | `employees` | many_to_many | optional | none | n/a | - |
+| `employees` | is host for | `host_assignments` | one_to_many | required | none (required-if-present) | n/a | - |
+| `employees` | requests | `absence_requests` | one_to_many | optional | none | n/a | - |
+| `job_profiles` | defines | `hcm_positions` | one_to_many | required | none (required-if-present) | n/a | - |
+| `employees` | signs | `employment_contracts` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `employees` | generates | `employment_events` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `employees` | triggers | `asset_lifecycle_events` | one_to_many | optional | none | n/a | - |
+| `employees` | holds | `skill_profiles` | one_to_one | optional | none | n/a | - |
+| `org_units` | engages | `contingent_workers` | one_to_many | optional | none | n/a | - |
+| `org_units` | is_scored_by | `engagement_drivers` | one_to_many | optional | none | n/a | - |
+| `org_units` | is_measured_by | `people_kpis` | one_to_many | optional | none | n/a | - |
+| `employees` | triggers | `service_requests` | one_to_many | optional | none | n/a | - |
+| `org_units` | triggers | `iga_entitlement_definitions` | one_to_many | optional | none | n/a | - |
+| `employees` | triggers | `pay_runs` | one_to_many | optional | none | n/a | - |
+| `hcm_positions` | spawns | `job_requisitions` | one_to_many | optional | none | n/a | - |
+| `employees` | becomes | `career_aspirations` | one_to_one | optional | none | n/a | - |
+| `employees` | becomes | `work_shifts` | one_to_many | optional | none | n/a | - |
+| `employees` | becomes | `compensation_statements` | one_to_one | optional | none | n/a | - |
+| `salary_bands` | anchors | `hcm_positions` | one_to_many | optional | none | n/a | - |
+| `employees` | triggers | `benefit_enrollments` | one_to_many | optional | none | n/a | - |
+| `employees` | triggers | `corporate_cards` | one_to_many | optional | none | n/a | - |
+| `employees` | spawns | `onboarding_journeys` | one_to_one | optional | none | n/a | - |
+| `employees` | spawns | `hr_cases` | one_to_many | optional | none | n/a | - |
+| `employees` | feeds | `headcount_plans` | one_to_many | optional | none | n/a | - |
+| `employees` | feeds | `agency_time_entries` | one_to_many | optional | none | n/a | - |
+| `employees` | onboarded by | `onboarding_journeys` | one_to_many | required | none (required-if-present) | n/a | - |
+| `hcm_positions` | requires | `compliance_assignments` | one_to_many | optional | none | n/a | - |
+| `org_units` | sponsors | `compliance_assignments` | one_to_many | optional | none | n/a | - |
+| `employees` | reflected on | `compliance_assignments` | one_to_many | optional | none | n/a | - |
+| `employees` | declares | `life_events` | one_to_many | optional | none | n/a | - |
+| `org_units` | sponsors | `benefit_plans` | many_to_many | optional | none | n/a | - |
+| `employees` | updated by | `life_events` | one_to_many | optional | none | n/a | - |
+| `survey_campaigns` | targets | `org_units` | many_to_many | optional | none | n/a | - |
+| `org_units` | owns | `action_plans` | one_to_many | optional | none | n/a | - |
+| `employees` | submits | `survey_responses` | one_to_many | optional | none | n/a | - |
+| `employees` | flagged on | `engagement_drivers` | one_to_many | optional | none | n/a | - |
+| `employees` | reflected on | `engagement_drivers` | one_to_many | optional | none | n/a | - |
+| `employees` | raises | `hr_cases` | one_to_many | required | none (required-if-present) | n/a | - |
+| `employees` | updated by | `hr_cases` | one_to_many | optional | none | n/a | - |
+| `case_categories` | drives | `employees` | one_to_many | optional | none | n/a | - |
+| `contingent_workers` | reviewed_against | `employees` | one_to_one | optional | none | n/a | - |
+| `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
+| `employees` | enrolls_in | `benefit_enrollments` | one_to_many | required | none (required-if-present) | n/a | - |
+| `survey_campaigns` | targets | `employees` | many_to_many | optional | none | n/a | - |
+| `workforce_scenarios` | drives | `hcm_positions` | one_to_many | required | none (required-if-present) | n/a | - |
+| `org_designs` | proposes | `hcm_positions` | one_to_many | required | none (required-if-present) | n/a | - |
 
 </details>
 
@@ -349,14 +349,53 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| HCM-CORE-WORKER | HRSD | HRSD-CASE-MGMT | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | medium | Termination kicks off offboarding case (exit interview, knowledge transfer, paperwork). Multiple downstream HRSD tasks created. |
+| HCM-CORE-WORKER | IGA | IGA-ACCESS-REQUEST | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | high | Promotion (mover event) requires entitlement re-evaluation: add new role access, revoke prior-role access. SoD risk window during transition. |
+| HCM-CORE-WORKER | IGA | IGA-ACCESS-REQUEST | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | api_call | high | Termination in HCM must immediately revoke identity access in IGA: disable account, remove group memberships, terminate app-level entitlements. Failure modes: contractor terminations not flowing (different HCM table); rehires confuse the de-provisioning idempotency; access lingers after termination is the canonical audit finding. |
+| HCM-ORG-POSITIONS | IGA | IGA-ACCESS-REQUEST | `org_unit.created` | - | `org_units` | event_stream | medium | New org unit drives IGA group/role provisioning. Group-name conventions and ownership must be encoded; otherwise orphan groups proliferate. |
+| HCM-ORG-POSITIONS | IGA | IGA-ACCESS-REQUEST | `org_unit.merged` | _(state_change)_ | `org_units` | event_stream | high | Org-unit merge consolidates IGA groups: members migrate, entitlements deduplicated, SoD revalidated. Often runs as a batch project rather than event. |
+| HCM-ORG-POSITIONS | IGA | IGA-ACCESS-REQUEST | `org_unit.disbanded` | _(state_change)_ | `org_units` | event_stream | high | Org-unit disbandment requires IGA group cleanup; orphan-group risk if employees re-assigned slowly. |
+| HCM-CORE-WORKER | IGA | IGA-ACCESS-REQUEST | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | high | New employee in HCM triggers directory account creation and birthright-role assignment in IGA. High friction because role-to-entitlement mappings drift per business unit, and IGA frequently needs additional context (cost center, manager, location) that arrives later in the journey. Same trigger event as the HCM → Onboarding and HCM → Payroll handoffs. |
+| HCM-CORE-WORKER | HCM | HCM-LIFECYCLE-WORKFLOWS | `employee.created` | `created` _(lifecycle)_ | `employees` | lifecycle_progression | low | New worker record surfaces in self-service: manager dashboard, new-hire welcome surface, lifecycle task inbox. In-process state read; no message bus. |
+| HCM-CORE-WORKER | HCM | HCM-LIFECYCLE-WORKFLOWS | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | lifecycle_progression | low | Termination drives the offboarding self-service flow: exit-interview prompt, equipment-return task, knowledge-handoff surfaces in the lifecycle workflow module. |
 | LMS-COURSE-DELIVERY | HCM | _(domain-level)_ | `course_completion.recorded` | _(lifecycle)_ | `course_completions` | event_stream | low | - |
 | LMS-COURSE-DELIVERY | HCM | _(domain-level)_ | `learning_record.posted` | _(lifecycle)_ | `learning_records` | event_stream | low | Authoritative learning transcript visible in HCM employee record. |
+| HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | high | Termination drives final pay (severance, accrued PTO payout, prorated bonus). Cross-vendor stack when HCM and PAYROLL are different vendors; retro-adjustments are common. |
+| HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | medium | Promotion typically includes salary change. Effective-dated change must flow to PAYROLL with retroactive handling. |
+| HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | medium | New employee in HCM triggers comp profile activation in Payroll: gross-to-net rules selected by jurisdiction, deductions initialised, bank account and tax setup collected via Onboarding flow. Same trigger event as the HCM → Onboarding handoff; both subscribe to the employee.created event. |
+| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.approved_for_creation` | `approved_for_creation` _(lifecycle)_ | `hcm_positions` | event_stream | medium | Approved position flows to ATS as the basis for a requisition. Approval state must be in sync to avoid requisitions opened against unapproved positions. |
+| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.closed` | _(state_change)_ | `org_units` | api_call | high | - |
+| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.reorganized` | _(state_change)_ | `org_units` | api_call | high | - |
+| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.activated` | _(state_change)_ | `org_units` | api_call | low | - |
+| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.eliminated` | _(state_change)_ | `hcm_positions` | api_call | high | - |
+| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.frozen` | _(state_change)_ | `hcm_positions` | api_call | high | - |
+| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.filled` | _(state_change)_ | `hcm_positions` | api_call | medium | - |
+| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.opened` | _(state_change)_ | `hcm_positions` | api_call | medium | - |
+| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.approved` | _(state_change)_ | `hcm_positions` | api_call | medium | - |
+| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.disbanded` | _(state_change)_ | `org_units` | api_call | high | - |
+| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.merged` | _(state_change)_ | `org_units` | api_call | high | - |
+| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.created` | - | `org_units` | api_call | medium | - |
 | LMS-COURSE-DELIVERY | LMS | LMS-COMPLIANCE-TRAINING | `course.published` | _(lifecycle)_ | `courses` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | LMS | LMS-COMPLIANCE-TRAINING | `course_completion.recorded` | _(lifecycle)_ | `course_completions` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | LMS | LMS-CREDENTIALS | `course_completion.recorded` | _(lifecycle)_ | `course_completions` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | LMS | LMS-ILT-DELIVERY | `course_version.published` | _(lifecycle)_ | `course_versions` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | LMS | LMS-CREDENTIALS | `assessment_attempt.passed` | _(lifecycle)_ | `assessment_attempts` | lifecycle_progression | low | - |
+| HCM-CORE-WORKER | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | low | Promotion updates succession-plan slots and 9-box placement context. |
 | LMS-COURSE-DELIVERY | TALENT-MGMT | TALENT-SUCCESSION-CAREER | `course_enrollment.completed` | _(lifecycle)_ | `course_enrollments` | event_stream | low | Course completion updates skill-profile; TALENT-MGMT reflects in dev-plans and succession. |
+| HCM-CORE-WORKER | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | low | New employee triggers talent-profile initialisation in Talent Management: career aspirations, mobility preferences, skills profile stubs. Same employee.created trigger as Onboarding / Payroll / IGA handoffs. |
+| HCM-CORE-WORKER | WFM | _(domain-level)_ | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New employee provisioned in HCM becomes a schedulable resource in WFM - identity, position, base FTE. Mid-shift onboarding and badge-binding are typical edge cases. |
+| HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New-hire creation provides compensation basis. Bands and grades attach via job profile. |
+| HCM-ORG-POSITIONS | COMP-MGMT | COMP-PLANNING | `hcm_position.approved_for_creation` | `approved_for_creation` _(lifecycle)_ | `hcm_positions` | event_stream | low | Approved position carries grade/band, anchoring offer-comp generation. |
+| HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | low | Promotion event triggers off-cycle compensation review (eligibility, band placement, increase recommendation) in COMP-MGMT. |
+| HCM-CORE-WORKER | BEN-ADMIN | BEN-ENROLLMENT | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | medium | New-hire creation seeds benefits eligibility (waiting periods, default elections). Drives carrier feed setup at end of new-hire window. |
+| HCM-CORE-WORKER | BEN-ADMIN | BEN-ENROLLMENT | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | high | Termination triggers benefits termination, COBRA / equivalent notices, and dependent coverage decisions. Late notifications cause coverage gaps. |
+| HCM-ORG-POSITIONS | ERP-FIN | _(domain-level)_ | `org_unit.created` | - | `org_units` | api_call | medium | New org unit usually maps to cost-center; ERP-FIN must reflect the structure for budgeting and labor allocation. |
+| HCM-CORE-WORKER | EXPENSE | _(domain-level)_ | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | medium | Termination triggers EXPENSE corporate-card deactivation and outstanding-report close-out. |
+| HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New consultant hired. PSA resource pool adds the employee as available capacity; skill inventory record is seeded for downstream certifications. |
+| HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | low | Consultant promoted (level / job profile change). PSA reevaluates billable rate band and skill inventory; existing project_assignments may need rate revision. |
+| HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | medium | Consultant terminated. PSA must release any active project_assignments, return capacity to bench and re-allocate forecast. Medium friction: leaver-event timing varies (immediate vs notice period) and active assignments may need urgent rebalancing. |
+| HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `attrition_risk.high` | _(state_change)_ | `employees` | event_stream | high | ML attrition score crosses high threshold. PSA resource managers may proactively rebalance assignments away from at-risk consultants on critical engagements. High friction: probabilistic→deterministic pattern (score requires judgement call), false-positive volume can swamp the staffing queue. |
+| HCM-CORE-WORKER | PSA | PSA-PROJECT-DELIVERY | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | medium | Terminated employee may be the assignee on open project_tasks. PROJECT-DELIVERY needs to surface affected tasks for reassignment or completion handover. |
 | LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course_version.published` | _(lifecycle)_ | `course_versions` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course.published` | _(lifecycle)_ | `courses` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course_enrollment.completed` | _(lifecycle)_ | `course_enrollments` | lifecycle_progression | low | - |
@@ -366,6 +405,11 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| HCM-CORE-WORKER | ATS | ATS-CANDIDATE-CRM | `candidate.hired` | `hired` _(lifecycle)_ | `employees` | event_stream | medium | Candidate-to-employee conversion: hired candidate from ATS triggers employee-record creation in HCM. Field mapping (candidate → employee) is rarely perfect; missing fields (legal name spelling, work-eligibility detail, tax IDs) get collected in the Onboarding journey and back-filled into HCM. |
+| HCM-CORE-WORKER | MDM | _(domain-level)_ | `employee_golden_record.created` | `active` _(lifecycle)_ | `employees` | api_call | medium | Resolved identity → HCM links operational HR record. |
+| HCM-CORE-WORKER | EMP-EXP | EMP-EXP-CONTINUOUS-LISTEN | `attrition_risk.high` | _(state_change)_ | `employees` | api_call | high | Attrition-risk inference from engagement signals surfaces to managers via HCM dashboards. Probabilistic-signal → deterministic-action pattern: a risk score is not a directive; intervention is gated by manager judgement, data-privacy rules (anonymity floor), and DEI-bias concerns. |
+| HCM-CORE-WORKER | PA | PA-PREDICTIVE-MODELS | `attrition_risk.high` | _(state_change)_ | `employees` | event_stream | high | Flight-risk score flagged on employee; HR-business-partner motion required. Probabilistic-signal-to-deterministic-action friction shape; false-positive volume drives mistrust. |
+| HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `merit_cycle.approved` | `approved` _(state_change)_ | `employees` | event_stream | low | Cycle-close pay-rate changes post to the worker record (base salary, bonus target, equity guideline). |
 | LMS-COURSE-DELIVERY | HCM | HCM-CORE-WORKER | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New-hire creation provisions required-training assignments (compliance, role-based). Drives day-one and 30-day learning workflows. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
@@ -458,10 +502,10 @@ _This scope holds `employees` as **embedded_master**; the canonical state machin
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `draft` | ✓ | - | - | - | Pre-hire stub created during requisition or onboarding handoff; not yet a worker of record. |
-| 2 | `active` | - | - | ✓ | `hcm-core-worker:active_employee` | Worker is currently employed and appears in headcount, payroll eligibility, and directory feeds. |
-| 3 | `on_leave` | - | - | ✓ | `hcm-core-worker:on_leave_employee` | Employee is on approved leave (parental, medical, sabbatical); active record but suppressed from some downstream feeds. |
-| 4 | `suspended` | - | - | ✓ | `hcm-core-worker:suspended_employee` | Employment temporarily halted (investigation, disciplinary); pay and access may be paused. |
-| 5 | `terminated` | - | ✓ | ✓ | `hcm-core-worker:terminated_employee` | Employment ended (voluntary or involuntary); final pay processed, access deprovisioned. |
+| 2 | `active` | - | - | ✓ | `lms-course-delivery:active_employee` | Worker is currently employed and appears in headcount, payroll eligibility, and directory feeds. |
+| 3 | `on_leave` | - | - | ✓ | `lms-course-delivery:on_leave_employee` | Employee is on approved leave (parental, medical, sabbatical); active record but suppressed from some downstream feeds. |
+| 4 | `suspended` | - | - | ✓ | `lms-course-delivery:suspended_employee` | Employment temporarily halted (investigation, disciplinary); pay and access may be paused. |
+| 5 | `terminated` | - | ✓ | ✓ | `lms-course-delivery:terminated_employee` | Employment ended (voluntary or involuntary); final pay processed, access deprovisioned. |
 
 ### `hcm_positions` (Position)
 
@@ -470,11 +514,11 @@ _This scope holds `hcm_positions` as **embedded_master**; the canonical state ma
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `proposed` | ✓ | - | - | - | Position has been designed but not yet approved against the headcount plan. |
-| 2 | `approved` | - | - | ✓ | `hcm-org-positions:approved_position` | Cleared by headcount/finance owner; eligible to spawn a requisition. |
-| 3 | `open` | - | - | ✓ | `hcm-org-positions:open_position` | Approved and actively being recruited against; not yet filled. |
-| 4 | `filled` | - | - | ✓ | `hcm-org-positions:filled_position` | An employee occupies the position. |
-| 5 | `frozen` | - | - | ✓ | `hcm-org-positions:frozen_position` | Temporarily not fillable (hiring freeze, budget hold); retains the slot. |
-| 6 | `eliminated` | - | ✓ | ✓ | `hcm-org-positions:eliminated_position` | Removed from the org structure permanently. |
+| 2 | `approved` | - | - | ✓ | `lms-course-delivery:approved_position` | Cleared by headcount/finance owner; eligible to spawn a requisition. |
+| 3 | `open` | - | - | ✓ | `lms-course-delivery:open_position` | Approved and actively being recruited against; not yet filled. |
+| 4 | `filled` | - | - | ✓ | `lms-course-delivery:filled_position` | An employee occupies the position. |
+| 5 | `frozen` | - | - | ✓ | `lms-course-delivery:frozen_position` | Temporarily not fillable (hiring freeze, budget hold); retains the slot. |
+| 6 | `eliminated` | - | ✓ | ✓ | `lms-course-delivery:eliminated_position` | Removed from the org structure permanently. |
 
 ### `learning_content_assets` (Learning Content Asset)
 
@@ -500,9 +544,9 @@ _This scope holds `org_units` as **embedded_master**; the canonical state machin
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `draft` | ✓ | - | - | - | Org unit defined as part of a future structure; not yet operational. |
-| 2 | `active` | - | - | ✓ | `hcm-org-positions:active_org_unit` | Operational unit; carries headcount, cost-center linkage, and reporting lines. |
-| 3 | `reorganized` | - | ✓ | ✓ | `hcm-org-positions:reorganized_org_unit` | Unit folded into or replaced by a new structure; references remain for history. |
-| 4 | `closed` | - | ✓ | ✓ | `hcm-org-positions:closed_org_unit` | Unit dissolved; no employees or positions reside in it. |
+| 2 | `active` | - | - | ✓ | `lms-course-delivery:active_org_unit` | Operational unit; carries headcount, cost-center linkage, and reporting lines. |
+| 3 | `reorganized` | - | ✓ | ✓ | `lms-course-delivery:reorganized_org_unit` | Unit folded into or replaced by a new structure; references remain for history. |
+| 4 | `closed` | - | ✓ | ✓ | `lms-course-delivery:closed_org_unit` | Unit dissolved; no employees or positions reside in it. |
 
 ### `scorm_packages` (SCORM Package)
 
@@ -522,6 +566,18 @@ _This scope holds `org_units` as **embedded_master**; the canonical state machin
 | `lms-course-delivery:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `lms-course-delivery:manage` | baseline-manage | Edit operational records | ✓ |
 | `lms-course-delivery:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
+| `lms-course-delivery:active_employee` | workflow-gate (lifecycle) | Transition `employees` into state `active` | ✓ |
+| `lms-course-delivery:on_leave_employee` | workflow-gate (lifecycle) | Transition `employees` into state `on_leave` | ✓ |
+| `lms-course-delivery:suspended_employee` | workflow-gate (lifecycle) | Transition `employees` into state `suspended` | ✓ |
+| `lms-course-delivery:terminated_employee` | workflow-gate (lifecycle) | Transition `employees` into state `terminated` | ✓ |
+| `lms-course-delivery:approved_position` | workflow-gate (lifecycle) | Transition `hcm_positions` into state `approved` | ✓ |
+| `lms-course-delivery:open_position` | workflow-gate (lifecycle) | Transition `hcm_positions` into state `open` | ✓ |
+| `lms-course-delivery:filled_position` | workflow-gate (lifecycle) | Transition `hcm_positions` into state `filled` | ✓ |
+| `lms-course-delivery:frozen_position` | workflow-gate (lifecycle) | Transition `hcm_positions` into state `frozen` | ✓ |
+| `lms-course-delivery:eliminated_position` | workflow-gate (lifecycle) | Transition `hcm_positions` into state `eliminated` | ✓ |
+| `lms-course-delivery:active_org_unit` | workflow-gate (lifecycle) | Transition `org_units` into state `active` | ✓ |
+| `lms-course-delivery:reorganized_org_unit` | workflow-gate (lifecycle) | Transition `org_units` into state `reorganized` | ✓ |
+| `lms-course-delivery:closed_org_unit` | workflow-gate (lifecycle) | Transition `org_units` into state `closed` | ✓ |
 | `lms-course-delivery:publish` | workflow-gate (lifecycle) | Transition `courses` into state `published` | ✓ |
 | `lms-course-delivery:retire` | workflow-gate (lifecycle) | Transition `courses` into state `retired` | ✓ |
 | `lms-course-delivery:complete` | workflow-gate (lifecycle) | Transition `course_enrollments` into state `completed` | ✓ |
@@ -530,25 +586,18 @@ _This scope holds `org_units` as **embedded_master**; the canonical state machin
 | `lms-course-delivery:withdraw` | workflow-gate (lifecycle) | Transition `course_enrollments` into state `withdrawn` | ✓ |
 | `lms-course-delivery:validate` | workflow-gate (lifecycle) | Transition `learning_records` into state `validated` | ✓ |
 | `lms-course-delivery:void` | workflow-gate (lifecycle) | Transition `learning_records` into state `voided` | ✓ |
-| `lms-course-delivery:publish` | workflow-gate (lifecycle) | Transition `course_versions` into state `published` | ✓ |
-| `lms-course-delivery:retire` | workflow-gate (lifecycle) | Transition `course_versions` into state `retired` | ✓ |
 | `lms-course-delivery:archive` | workflow-gate (lifecycle) | Transition `learning_content_assets` into state `archived` | ✓ |
-| `lms-course-delivery:validate` | workflow-gate (lifecycle) | Transition `scorm_packages` into state `validated` | ✓ |
 | `lms-course-delivery:deprecate` | workflow-gate (lifecycle) | Transition `scorm_packages` into state `deprecated` | ✓ |
-| `lms-course-delivery:validate` | workflow-gate (lifecycle) | Transition `course_completions` into state `validated` | ✓ |
-| `lms-course-delivery:void` | workflow-gate (lifecycle) | Transition `course_completions` into state `voided` | ✓ |
-| `lms-course-delivery:publish` | workflow-gate (lifecycle) | Transition `course_assessments` into state `published` | ✓ |
-| `lms-course-delivery:retire` | workflow-gate (lifecycle) | Transition `course_assessments` into state `retired` | ✓ |
 | `lms-course-delivery:submit` | workflow-gate (lifecycle) | Transition `assessment_attempts` into state `submitted` | ✓ |
 | `lms-course-delivery:grade` | workflow-gate (lifecycle) | Transition `assessment_attempts` into state `graded` | ✓ |
 | `lms-course-delivery:close` | workflow-gate (lifecycle) | Transition `course_discussions` into state `closed` | ✓ |
-| `lms-course-delivery:archive` | workflow-gate (lifecycle) | Transition `course_discussions` into state `archived` | ✓ |
-| `lms-course-delivery:publish` | workflow-gate (lifecycle) | Transition `course_reviews` into state `published` | ✓ |
 | `lms-course-delivery:remove` | workflow-gate (lifecycle) | Transition `course_reviews` into state `removed` | ✓ |
 | `lms-course-delivery:view_all_course_enrollments` | override (personal_content) | View all `course_enrollments` rows beyond row-scope | ✓ |
 | `lms-course-delivery:manage_all_course_enrollments` | override (personal_content) | Manage all `course_enrollments` rows beyond row-scope | ✓ |
 | `lms-course-delivery:view_all_learning_records` | override (personal_content) | View all `learning_records` rows beyond row-scope | ✓ |
 | `lms-course-delivery:manage_all_learning_records` | override (personal_content) | Manage all `learning_records` rows beyond row-scope | ✓ |
+| `lms-course-delivery:view_all_employees` | override (personal_content) | View all `employees` rows beyond row-scope | ✓ |
+| `lms-course-delivery:manage_all_employees` | override (personal_content) | Manage all `employees` rows beyond row-scope | ✓ |
 | `lms-course-delivery:submit_course_version` | override (submit_lock) | Submit and lock a `course_versions` row (post-submit edits gated) | ✓ |
 | `lms-course-delivery:view_all_xapi_statements` | override (personal_content) | View all `xapi_statements` rows beyond row-scope | ✓ |
 | `lms-course-delivery:manage_all_xapi_statements` | override (personal_content) | Manage all `xapi_statements` rows beyond row-scope | ✓ |
@@ -576,6 +625,8 @@ _This scope holds `org_units` as **embedded_master**; the canonical state machin
 | --- | --- | --- | --- |
 | `course_enrollment_edit_scope` | `course_enrollments` | has_personal_content | Row-scope by default; override via `lms-course-delivery:view_all_course_enrollments` / `lms-course-delivery:manage_all_course_enrollments` |
 | `learning_record_edit_scope` | `learning_records` | has_personal_content | Row-scope by default; override via `lms-course-delivery:view_all_learning_records` / `lms-course-delivery:manage_all_learning_records` |
+| `employee_edit_scope` | `employees` | has_personal_content | Row-scope by default; override via `lms-course-delivery:view_all_employees` / `lms-course-delivery:manage_all_employees` |
+| `approve_position_requires_approver` | `hcm_positions` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`lms-course-delivery:approved_position`). |
 | `submit_restricted_to_course_version_owner` | `course_versions` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `lms-course-delivery:manage_all_course_versions` |
 | `xapi_statement_edit_scope` | `xapi_statements` | has_personal_content | Row-scope by default; override via `lms-course-delivery:view_all_xapi_statements` / `lms-course-delivery:manage_all_xapi_statements` |
 | `course_completion_edit_scope` | `course_completions` | has_personal_content | Row-scope by default; override via `lms-course-delivery:view_all_course_completions` / `lms-course-delivery:manage_all_course_completions` |
@@ -609,6 +660,18 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `lms-course-delivery:admin` | `lms-course-delivery:manage` |
 | `lms-course-delivery:manage` | `lms-course-delivery:read` |
+| `lms-course-delivery:admin` | `lms-course-delivery:active_employee` |
+| `lms-course-delivery:admin` | `lms-course-delivery:on_leave_employee` |
+| `lms-course-delivery:admin` | `lms-course-delivery:suspended_employee` |
+| `lms-course-delivery:admin` | `lms-course-delivery:terminated_employee` |
+| `lms-course-delivery:admin` | `lms-course-delivery:approved_position` |
+| `lms-course-delivery:admin` | `lms-course-delivery:open_position` |
+| `lms-course-delivery:admin` | `lms-course-delivery:filled_position` |
+| `lms-course-delivery:admin` | `lms-course-delivery:frozen_position` |
+| `lms-course-delivery:admin` | `lms-course-delivery:eliminated_position` |
+| `lms-course-delivery:admin` | `lms-course-delivery:active_org_unit` |
+| `lms-course-delivery:admin` | `lms-course-delivery:reorganized_org_unit` |
+| `lms-course-delivery:admin` | `lms-course-delivery:closed_org_unit` |
 | `lms-course-delivery:admin` | `lms-course-delivery:publish` |
 | `lms-course-delivery:admin` | `lms-course-delivery:retire` |
 | `lms-course-delivery:admin` | `lms-course-delivery:complete` |
@@ -617,25 +680,18 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `lms-course-delivery:admin` | `lms-course-delivery:withdraw` |
 | `lms-course-delivery:admin` | `lms-course-delivery:validate` |
 | `lms-course-delivery:admin` | `lms-course-delivery:void` |
-| `lms-course-delivery:admin` | `lms-course-delivery:publish` |
-| `lms-course-delivery:admin` | `lms-course-delivery:retire` |
 | `lms-course-delivery:admin` | `lms-course-delivery:archive` |
-| `lms-course-delivery:admin` | `lms-course-delivery:validate` |
 | `lms-course-delivery:admin` | `lms-course-delivery:deprecate` |
-| `lms-course-delivery:admin` | `lms-course-delivery:validate` |
-| `lms-course-delivery:admin` | `lms-course-delivery:void` |
-| `lms-course-delivery:admin` | `lms-course-delivery:publish` |
-| `lms-course-delivery:admin` | `lms-course-delivery:retire` |
 | `lms-course-delivery:admin` | `lms-course-delivery:submit` |
 | `lms-course-delivery:admin` | `lms-course-delivery:grade` |
 | `lms-course-delivery:admin` | `lms-course-delivery:close` |
-| `lms-course-delivery:admin` | `lms-course-delivery:archive` |
-| `lms-course-delivery:admin` | `lms-course-delivery:publish` |
 | `lms-course-delivery:admin` | `lms-course-delivery:remove` |
 | `lms-course-delivery:admin` | `lms-course-delivery:view_all_course_enrollments` |
 | `lms-course-delivery:admin` | `lms-course-delivery:manage_all_course_enrollments` |
 | `lms-course-delivery:admin` | `lms-course-delivery:view_all_learning_records` |
 | `lms-course-delivery:admin` | `lms-course-delivery:manage_all_learning_records` |
+| `lms-course-delivery:admin` | `lms-course-delivery:view_all_employees` |
+| `lms-course-delivery:admin` | `lms-course-delivery:manage_all_employees` |
 | `lms-course-delivery:admin` | `lms-course-delivery:submit_course_version` |
 | `lms-course-delivery:admin` | `lms-course-delivery:view_all_xapi_statements` |
 | `lms-course-delivery:admin` | `lms-course-delivery:manage_all_xapi_statements` |

@@ -270,7 +270,7 @@ function renderAliases(aliasRows: any[]): string[] {
   return out;
 }
 
-function renderRelationshipTable(rows: any[], opts: { includeOwnerSide: boolean; includeKind: boolean }): string[] {
+function renderRelationshipTable(rows: any[], opts: { includeOwnerSide: boolean; includeKind: boolean; targetInScope: boolean }): string[] {
   const out: string[] = [];
   if (rows.length === 0) return out;
   const headers: string[] = ["from", "verb", "to", "cardinality"];
@@ -292,8 +292,9 @@ function renderRelationshipTable(rows: any[], opts: { includeOwnerSide: boolean;
     if (opts.includeKind) cells.push(r.relationship_kind || "");
     cells.push(r.is_required ? "required" : "optional");
     if (opts.includeOwnerSide) cells.push(r.owner_side || "");
-    // B4: resolved ON DELETE mode + Semantius FK format per edge.
-    const dm = deriveDeleteMode(r.relationship_kind, r.owner_side, Boolean(r.is_required));
+    // B4 + Plan 4 step C: resolved ON DELETE mode + Semantius FK format per edge, presence-
+    // conditional on whether the other endpoint is in the emitted scope (opts.targetInScope).
+    const dm = deriveDeleteMode(r.relationship_kind, r.owner_side, Boolean(r.is_required), opts.targetInScope);
     cells.push(dm.mode, dm.fkFormat);
     cells.push(r.notes || "");
     out.push(tableRow(cells));
@@ -373,7 +374,8 @@ function masteredIn(r: ScopeRow, owners: Map<number, OwnerInfo>): { code: string
 function deriveGate(
   state: any,
   scopeRows: ScopeRow[],
-): { code: string; gateModule: ModuleRow; verbSegment: string; obj: DataObject } | null {
+  reprefixModuleIdSet?: Set<number>,
+): { code: string; gateModule: ModuleRow; verbSegment: string; obj: DataObject; reprefixed: boolean } | null {
   const obj = dataObjectsById.get(state.data_object_id as number);
   if (!obj) return null;
   const realizingId = state.domain_module_id as number | null;
@@ -384,7 +386,22 @@ function deriveGate(
   const verbSegment = state.permission_verb_override
     ? (state.permission_verb_override as string)
     : `${state.state_name}_${entitySingularToken(obj)}`;
-  return { code: `${moduleSlug(gateModule.domain_module_code)}:${verbSegment}`, gateModule, verbSegment, obj };
+  // Plan 4 step D: re-prefix the gate to the installing unit when the canonical realizing module
+  // is NOT in the emitted scope but this scope carries the entity as `embedded_master`. The entity
+  // is present standalone, so its gate must be realized (and minted in §8) under the installing
+  // module's slug instead of dangling at the absent realizer's prefix. `gateModule` is left
+  // pointing at the canonical realizer so the §7 "realizing module" column can annotate the
+  // re-prefix. When `reprefixModuleIdSet` is omitted this is a no-op (byte-identical to before).
+  let prefixModule = gateModule;
+  let reprefixed = false;
+  if (reprefixModuleIdSet && !reprefixModuleIdSet.has(gateModule.id)) {
+    const here = scopeRows.find((r) => r.data_object_id === state.data_object_id);
+    if (here && here.role === "embedded_master" && here.modules.length > 0) {
+      prefixModule = here.modules[0];
+      reprefixed = true;
+    }
+  }
+  return { code: `${moduleSlug(prefixModule.domain_module_code)}:${verbSegment}`, gateModule, verbSegment, obj, reprefixed };
 }
 
 function renderDependencies(scopeRows: ScopeRow[], owners: Map<number, OwnerInfo>): string[] {
@@ -666,7 +683,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   if (rels.intra.length === 0) {
     out.push("_(no `data_object_relationships` with both endpoints inside the scope.)_");
   } else {
-    out.push(...renderRelationshipTable(rels.intra, { includeOwnerSide: true, includeKind: true }));
+    out.push(...renderRelationshipTable(rels.intra, { includeOwnerSide: true, includeKind: true, targetInScope: true }));
   }
   out.push("");
   out.push("### 5.2 Built-in edges (`users` and other platform built-ins)");
@@ -674,7 +691,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   if (rels.userRels.length === 0) {
     out.push("_(no relationships against platform built-ins recorded for this scope.)_");
   } else {
-    out.push(...renderRelationshipTable(rels.userRels, { includeOwnerSide: true, includeKind: false }));
+    out.push(...renderRelationshipTable(rels.userRels, { includeOwnerSide: true, includeKind: false, targetInScope: true }));
   }
   out.push("");
   out.push("### 5.3 Cross-scope edges");
@@ -686,7 +703,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   if (rels.crossOutbound.length === 0) {
     out.push("_(no outbound cross-scope edges from this scope's masters or contributors.)_");
   } else {
-    out.push(...renderRelationshipTable(rels.crossOutbound, { includeOwnerSide: false, includeKind: false }));
+    out.push(...renderRelationshipTable(rels.crossOutbound, { includeOwnerSide: false, includeKind: false, targetInScope: false }));
   }
   out.push("");
   out.push("#### 5.3b Context edges on embedded shells and consumed entities");
@@ -699,7 +716,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
     out.push("<details>");
     out.push("<summary>" + rels.crossContext.length + " context edges</summary>");
     out.push("");
-    out.push(...renderRelationshipTable(rels.crossContext, { includeOwnerSide: false, includeKind: false }));
+    out.push(...renderRelationshipTable(rels.crossContext, { includeOwnerSide: false, includeKind: false, targetInScope: false }));
     out.push("");
     out.push("</details>");
   }
@@ -776,9 +793,12 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
         // M1: gate code comes from the single shared deriveGate (canonical fallback: NULL
         // domain_module_id is gated by the in-scope master's owning module). Byte-identical
         // to the previous inline computation on every resolving path.
-        const g = deriveGate(s, scopeRows);
+        const g = deriveGate(s, scopeRows, moduleIdSet);
         let gate = s.requires_permission && g ? `\`${g.code}\`` : "";
-        if (s.requires_permission && g && moduleIdSet.has(g.gateModule.id)) section7InScopeGates.add(g.code);
+        // Plan 4 step D: a re-prefixed gate is realized locally by the installing unit, so it
+        // counts as in-scope for the M1 §7-vs-§8 cross-check even though its canonical realizer
+        // is out of scope.
+        if (s.requires_permission && g && (moduleIdSet.has(g.gateModule.id) || g.reprefixed)) section7InScopeGates.add(g.code);
         // M2 (Policy 1): a requires_permission state on an entity mastered IN this scope that
         // still resolves to no module is a genuine gap (e.g. a dangling realizing module),
         // not the benign "gate owned by an out-of-scope master" case (which stays blank).
@@ -791,7 +811,10 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
           ? "_(always)_"
           : moduleIdSet.has(realizingId)
             ? `\`${modulesById.get(realizingId)?.domain_module_code ?? `#${realizingId}`}\``
-            : `\`${modulesById.get(realizingId)?.domain_module_code ?? `#${realizingId}`}\` (needs install)`;
+            : g?.reprefixed
+              // Plan 4 step D: realizer absent, entity carried as embedded_master, gate re-prefixed.
+              ? `\`${modulesById.get(realizingId)?.domain_module_code ?? `#${realizingId}`}\` (gate re-prefixed to installing unit)`
+              : `\`${modulesById.get(realizingId)?.domain_module_code ?? `#${realizingId}`}\` (needs install)`;
         const cells: (string | number)[] = [
           s.state_order,
           `\`${s.state_name}\``,
@@ -831,11 +854,8 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
     const m = modules[0];
     const slug = moduleSlug(m.domain_module_code);
     const moduleScopeRows = scopeRows.filter((r) => r.modules.includes(m));
-    const moduleLifecycle = (lifecycleRows ?? []).filter((s: any) => {
-      const masterHere = moduleScopeRows.some((r) => r.data_object_id === s.data_object_id && r.role === "master");
-      return masterHere || s.domain_module_id === m.id;
-    });
-    const { permissions, businessRules } = deriveWorkflowGatesAndRules(slug, moduleScopeRows, moduleLifecycle, m.id);
+    const moduleLifecycle = moduleLifecycleScope(m, moduleScopeRows, lifecycleRows, moduleIdSet);
+    const { permissions, businessRules } = deriveWorkflowGatesAndRules(slug, moduleScopeRows, moduleLifecycle, m.id, moduleIdSet);
     for (const p of permissions) if (p.tier === "workflow-gate (lifecycle)") section8Gates.add(p.code);
     out.push("### 8.1 Permissions");
     out.push("");
@@ -855,11 +875,8 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
     modules.forEach((m, idx) => {
       const slug = moduleSlug(m.domain_module_code);
       const moduleScopeRows = scopeRows.filter((r) => r.modules.includes(m));
-      const moduleLifecycle = (lifecycleRows ?? []).filter((s: any) => {
-        const masterHere = moduleScopeRows.some((r) => r.data_object_id === s.data_object_id && r.role === "master");
-        return masterHere || s.domain_module_id === m.id;
-      });
-      const { permissions, businessRules } = deriveWorkflowGatesAndRules(slug, moduleScopeRows, moduleLifecycle, m.id);
+      const moduleLifecycle = moduleLifecycleScope(m, moduleScopeRows, lifecycleRows, moduleIdSet);
+      const { permissions, businessRules } = deriveWorkflowGatesAndRules(slug, moduleScopeRows, moduleLifecycle, m.id, moduleIdSet);
       for (const p of permissions) if (p.tier === "workflow-gate (lifecycle)") section8Gates.add(p.code);
       out.push(`### 8.${idx + 1} \`${m.domain_module_code}\``);
       out.push("");
@@ -887,14 +904,11 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   modules.forEach((m, idx) => {
     const slug = moduleSlug(m.domain_module_code);
     const moduleScopeRows = scopeRows.filter((r) => r.modules.includes(m));
-    const moduleLifecycle = (lifecycleRows ?? []).filter((s: any) => {
-      const masterHere = moduleScopeRows.some((r) => r.data_object_id === s.data_object_id && r.role === "master");
-      return masterHere || s.domain_module_id === m.id;
-    });
-    const { permissions } = deriveWorkflowGatesAndRules(slug, moduleScopeRows, moduleLifecycle, m.id);
+    const moduleLifecycle = moduleLifecycleScope(m, moduleScopeRows, lifecycleRows, moduleIdSet);
+    const { permissions } = deriveWorkflowGatesAndRules(slug, moduleScopeRows, moduleLifecycle, m.id, moduleIdSet);
     const baseRoles = deriveBaselineRoles(slug, moduleScopeRows, rels);
     const hierarchy = derivePermissionHierarchy(slug, permissions);
-    const raci = deriveRaciRealization(moduleScopeRows, moduleLifecycle, allRelationships);
+    const raci = deriveRaciRealization(moduleScopeRows, moduleLifecycle, allRelationships, moduleIdSet);
 
     out.push(`### 9.${idx + 1} \`${m.domain_module_code}\``);
     out.push("");
@@ -1039,16 +1053,33 @@ function deriveWriteTier(entityType: string | null | undefined, endpointEntityTy
   }
 }
 
-// B4 (plan-2-entity-type-tiers.md): the resolved ON DELETE mode + Semantius FK format per edge,
-// derived from (relationship_kind, is_required). Total over all four relationship_kind values;
-// `inheritance` is defensive (0 live edges as of 2026-06-01). `owner_side` orients WHICH endpoint
-// physically holds the FK (surfaced in its own column) and does not change the mode/format, so it
-// is not consulted here. The applied ON DELETE lands in the tenant DB at deploy. M7 (Plan 1)
-// already normalized owner_side, so the orientation column is trustworthy.
+// B4 (plan-2-entity-type-tiers.md) + Plan 4 step C: the resolved ON DELETE mode + Semantius FK
+// format per edge, derived from (relationship_kind, is_required, targetInScope). `targetInScope`
+// is the Plan 4 presence-conditional dimension: when the edge's other endpoint is NOT in the
+// emitted scope (a cross-scope §5.3 edge), the referenced table is absent from this deployable
+// unit, so no FK / no constraint can be emitted here regardless of is_required. A required
+// reference / association edge to an absent target is "required-if-present" (the FK materializes
+// only when the tenant also installs the target, never forcing it to install, the keystone of
+// plan-4). A required COMPOSITION edge to an absent child is a self-containment violation surfaced
+// as a step-B audit finding, never silently dropped. `owner_side` orients WHICH endpoint
+// physically holds the FK (its own column) and does not change the mode/format. The applied
+// ON DELETE lands in the tenant DB at deploy. M7 (Plan 1) already normalized owner_side.
 type DeleteMode = { mode: string; fkFormat: string };
 
-function deriveDeleteMode(relationshipKind: string, ownerSide: string | null | undefined, isRequired: boolean): DeleteMode {
+function deriveDeleteMode(
+  relationshipKind: string,
+  ownerSide: string | null | undefined,
+  isRequired: boolean,
+  targetInScope = true,
+): DeleteMode {
   void ownerSide; // orients the FK side (its own column); mode/format are owner_side-independent
+  if (!targetInScope) {
+    // Plan 4 step C: the referenced entity is absent from this deployable unit; no FK to emit.
+    if (relationshipKind === "composition" && isRequired) {
+      return { mode: "⚠ audit: required composed child out of scope", fkFormat: "n/a" };
+    }
+    return { mode: isRequired ? "none (required-if-present)" : "none", fkFormat: "n/a" };
+  }
   switch (relationshipKind) {
     case "composition":
       return { mode: "cascade", fkFormat: "parent" };
@@ -1079,11 +1110,32 @@ function neighborEntityTypes(doId: number, rels: { all: any[] }): string[] {
   return [...types];
 }
 
+// Plan 4 step D: the lifecycle states a module realizes when emitted as a standalone unit.
+// `master`-here or this-module-realized states (the pre-plan-4 set), PLUS states for entities
+// carried as `embedded_master` whose canonical realizing module is out of the emitted scope (the
+// installing unit realizes and mints those gates locally, re-prefixed by deriveGate). For a module
+// whose embedded entities all have in-scope realizers this returns the same set as before.
+function moduleLifecycleScope(
+  m: ModuleRow,
+  moduleScopeRows: ScopeRow[],
+  lifecycleRows: any[],
+  moduleIdSet: Set<number>,
+): any[] {
+  return (lifecycleRows ?? []).filter((s: any) => {
+    const here = moduleScopeRows.find((r) => r.data_object_id === s.data_object_id);
+    const masterHere = here?.role === "master";
+    const embeddedHere = here?.role === "embedded_master";
+    const realizerOutOfScope = s.domain_module_id != null && !moduleIdSet.has(s.domain_module_id as number);
+    return masterHere || s.domain_module_id === m.id || (embeddedHere && realizerOutOfScope);
+  });
+}
+
 function deriveWorkflowGatesAndRules(
   slug: string,
   moduleObjects: any[],
   lifecycleRows: any[],
   thisModuleId: number,
+  emittedModuleIdSet: Set<number>,
 ): { permissions: Permission[]; businessRules: BusinessRule[] } {
   const permissions: Permission[] = [];
   const businessRules: BusinessRule[] = [];
@@ -1095,16 +1147,31 @@ function deriveWorkflowGatesAndRules(
   const moduleMasterIds = new Set(
     moduleObjects.filter((r) => r.role === "master").map((r) => r.data_object_id as number),
   );
+  const moduleEmbeddedIds = new Set(
+    moduleObjects.filter((r) => r.role === "embedded_master").map((r) => r.data_object_id as number),
+  );
   for (const ls of lifecycleRows) {
     if (!ls.requires_permission) continue;
     const realizingId = ls.domain_module_id as number | null;
     const ownsAsRealizer = realizingId === thisModuleId;
     const ownsAsMaster = realizingId === null && moduleMasterIds.has(ls.data_object_id as number);
-    if (!ownsAsRealizer && !ownsAsMaster) continue;
-    // M1: same shared deriveGate as §7. On this ownership path its prefix is always this
-    // module's slug, so the emitted code is byte-identical to the previous `${slug}:...`.
-    const g = deriveGate(ls, moduleObjects);
+    // Plan 4 step D: the installing unit realizes (and mints, re-prefixed) the gate for an entity
+    // it carries as `embedded_master` whose canonical realizing module is out of the emitted
+    // scope. Without this a starter (or any standalone-emitted module embedding such an entity)
+    // shows the gate in §7 but mints nothing in §8.1, leaving the transition ungoverned.
+    const realizerOutOfScope = realizingId !== null && !emittedModuleIdSet.has(realizingId);
+    const ownsByEmbedding = realizerOutOfScope && moduleEmbeddedIds.has(ls.data_object_id as number);
+    if (!ownsAsRealizer && !ownsAsMaster && !ownsByEmbedding) continue;
+    // M1: same shared deriveGate as §7, passed the emitted scope so the re-prefix is identical.
+    // On the realizer/master paths the realizer is in scope, so the re-prefix is a no-op and the
+    // code stays `${slug}:...` (byte-identical to before); on the embedded path it re-prefixes to
+    // this installing module's slug, which is also `${slug}`.
+    const g = deriveGate(ls, moduleObjects, emittedModuleIdSet);
     if (!g) continue;
+    // Override collision (modules.md §4): two transitions can collapse to one gate code, made
+    // more common by plan-4 re-prefixing (e.g. candidates.hired + job_applications.hired both
+    // → `<unit>:hire_candidate`). Mint the permission once; the deployer treats them as one.
+    if (permissions.some((p) => p.code === g.code)) continue;
     permissions.push({
       code: g.code,
       tier: "workflow-gate (lifecycle)",
@@ -1114,7 +1181,12 @@ function deriveWorkflowGatesAndRules(
   }
 
   for (const r of moduleObjects) {
-    if (r.role !== "master") continue;
+    // Plan 4: pattern-flag overrides + business rules follow the ENTITY, not the role. A unit
+    // carrying an entity as `embedded_master` is its local master when deployed standalone, so it
+    // mints the same row-scope / submit / approver governance, re-prefixed to this unit (`slug`),
+    // exactly as the gate mint above does. (Single-module blueprints are the only kind emitted, so
+    // an `embedded_master` row here always means the canonical master is out of scope.)
+    if (r.role !== "master" && r.role !== "embedded_master") continue;
     const o = r.data_object as DataObject;
     if (!o) continue;
     // M6 (plan-2-entity-type-tiers.md): pattern-flag overrides are valid only on operational
@@ -1166,7 +1238,7 @@ function deriveWorkflowGatesAndRules(
       const approveState = lifecycleRows.find((ls: any) =>
         ls.data_object_id === r.data_object_id && ls.requires_permission &&
         /approv/i.test(String(ls.permission_verb_override || ls.state_name)));
-      const approveGate = approveState ? deriveGate(approveState, moduleObjects) : null;
+      const approveGate = approveState ? deriveGate(approveState, moduleObjects, emittedModuleIdSet) : null;
       const intent = approveGate && approveGate.code !== `${slug}:approve_${entitySingular}`
         ? `Exactly one explicit approver required; uses the module's approval gate (\`${approveGate.code}\`).`
         : `Exactly one explicit approver required; uses the module's approval gate (\`${slug}:approve_${entitySingular}\` if surfaced as a lifecycle workflow gate).`;
@@ -1228,7 +1300,7 @@ function derivePermissionHierarchy(slug: string, permissions: Permission[]): Hie
 // B3: realize each process_raci row. The relevant processes are those wired to this scope's
 // gated lifecycle states via data_object_lifecycle_states.process_id (the process-to-permission
 // edge). Branch on the RACI letter and the actor kind (persona vs agent skill).
-function deriveRaciRealization(moduleScopeRows: ScopeRow[], moduleLifecycle: any[], arel: AllRelationships): RaciGrant[] {
+function deriveRaciRealization(moduleScopeRows: ScopeRow[], moduleLifecycle: any[], arel: AllRelationships, moduleIdSet: Set<number>): RaciGrant[] {
   const grants: RaciGrant[] = [];
   const processIds = new Set<number>();
   for (const ls of moduleLifecycle) if (ls.process_id != null) processIds.add(ls.process_id as number);
@@ -1237,7 +1309,7 @@ function deriveRaciRealization(moduleScopeRows: ScopeRow[], moduleLifecycle: any
     const procName = proc?.process_name ?? `process#${pid}`;
     const gateCodes = moduleLifecycle
       .filter((ls) => ls.process_id === pid && ls.requires_permission)
-      .map((ls) => deriveGate(ls, moduleScopeRows)?.code)
+      .map((ls) => deriveGate(ls, moduleScopeRows, moduleIdSet)?.code)
       .filter((c): c is string => Boolean(c));
     for (const row of arel.processRaciByProcessId.get(pid) ?? []) {
       const isPersona = row.actor_role_id != null;

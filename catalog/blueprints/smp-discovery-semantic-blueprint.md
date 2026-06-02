@@ -111,18 +111,18 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `enterprise_applications` | aliased_as | `saas_applications` | one_to_one | optional | clear | reference | - |
-| `saas_applications` | lifecycle events for | `asset_lifecycle_events` | one_to_many | optional | clear | reference | - |
-| `asset_contracts` | covers | `saas_applications` | many_to_many | optional | clear | reference | - |
-| `saas_applications` | entitles_to | `iga_user_entitlements` | one_to_many | required | restrict | reference | - |
-| `saas_applications` | recommends_for_app | `smp_optimization_recommendations` | one_to_many | optional | clear | reference | - |
-| `saas_applications` | benchmarks_for | `smp_app_benchmarks` | one_to_many | required | restrict | reference | - |
-| `saas_applications` | assesses_app | `smp_vendor_risk_assessments` | one_to_many | required | restrict | reference | - |
-| `saas_applications` | automates_app | `smp_automation_workflows` | one_to_many | optional | clear | reference | - |
-| `smp_app_catalog_listings` | requests_listing | `smp_app_requests` | one_to_many | required | restrict | reference | - |
-| `saas_applications` | has | `saas_subscriptions` | one_to_many | optional | clear | reference | - |
-| `saas_applications` | measured_by | `saas_usage_metrics` | one_to_many | required | cascade | parent | - |
-| `saas_applications` | assigned_via | `smp_license_seat_assignments` | one_to_many | required | cascade | parent | - |
+| `enterprise_applications` | aliased_as | `saas_applications` | one_to_one | optional | none | n/a | - |
+| `saas_applications` | lifecycle events for | `asset_lifecycle_events` | one_to_many | optional | none | n/a | - |
+| `asset_contracts` | covers | `saas_applications` | many_to_many | optional | none | n/a | - |
+| `saas_applications` | entitles_to | `iga_user_entitlements` | one_to_many | required | none (required-if-present) | n/a | - |
+| `saas_applications` | recommends_for_app | `smp_optimization_recommendations` | one_to_many | optional | none | n/a | - |
+| `saas_applications` | benchmarks_for | `smp_app_benchmarks` | one_to_many | required | none (required-if-present) | n/a | - |
+| `saas_applications` | assesses_app | `smp_vendor_risk_assessments` | one_to_many | required | none (required-if-present) | n/a | - |
+| `saas_applications` | automates_app | `smp_automation_workflows` | one_to_many | optional | none | n/a | - |
+| `smp_app_catalog_listings` | requests_listing | `smp_app_requests` | one_to_many | required | none (required-if-present) | n/a | - |
+| `saas_applications` | has | `saas_subscriptions` | one_to_many | optional | none | n/a | - |
+| `saas_applications` | measured_by | `saas_usage_metrics` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `saas_applications` | assigned_via | `smp_license_seat_assignments` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
