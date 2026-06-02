@@ -876,6 +876,67 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
     });
   }
 
+  // §9 Roles, RACI, and responsibilities (DERIVED, Plan 3 step B). Baseline roles (B1),
+  // permission hierarchy (B2), and RACI realization (B3) per module; functional ownership +
+  // default grants (B5) once per scope. Nothing here is stored: the deployer provisions the
+  // tenant from this blueprint (see references/roles.md and downstream-updates rows 3-5).
+  out.push("## 9. Roles, RACI, and responsibilities (derived)");
+  out.push("");
+  out.push("_Baseline roles, the permission hierarchy, and RACI realization are DERIVED from this scope's entity-type write tiers + `process_raci`; none of it is stored in the catalog (the deployer provisions it from this blueprint)._");
+  out.push("");
+  modules.forEach((m, idx) => {
+    const slug = moduleSlug(m.domain_module_code);
+    const moduleScopeRows = scopeRows.filter((r) => r.modules.includes(m));
+    const moduleLifecycle = (lifecycleRows ?? []).filter((s: any) => {
+      const masterHere = moduleScopeRows.some((r) => r.data_object_id === s.data_object_id && r.role === "master");
+      return masterHere || s.domain_module_id === m.id;
+    });
+    const { permissions } = deriveWorkflowGatesAndRules(slug, moduleScopeRows, moduleLifecycle, m.id);
+    const baseRoles = deriveBaselineRoles(slug, moduleScopeRows, rels);
+    const hierarchy = derivePermissionHierarchy(slug, permissions);
+    const raci = deriveRaciRealization(moduleScopeRows, moduleLifecycle, allRelationships);
+
+    out.push(`### 9.${idx + 1} \`${m.domain_module_code}\``);
+    out.push("");
+    out.push("**Baseline roles:**");
+    out.push("");
+    out.push(tableHeader(["role", "baseline grant"]));
+    for (const r of baseRoles) out.push(tableRow([`\`${r.code}\``, `\`${r.grant}\``]));
+    out.push("");
+    out.push("**Permission hierarchy:**");
+    out.push("");
+    out.push(tableHeader(["permission", "includes"]));
+    for (const e of hierarchy) out.push(tableRow([`\`${e.including}\``, `\`${e.included}\``]));
+    out.push("");
+    out.push("**RACI realization:**");
+    out.push("");
+    if (raci.length === 0) {
+      out.push("_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_");
+    } else {
+      out.push(tableHeader(["actor", "kind", "raci", "process", "realization"]));
+      for (const g of raci) out.push(tableRow([`\`${g.actor}\``, g.actorKind, g.raci, g.process, g.realization]));
+    }
+    out.push("");
+  });
+  const ownership = deriveMarketRaci(parentDomains, allRelationships);
+  out.push(`### 9.${modules.length + 1} Functional ownership and default grants`);
+  out.push("");
+  if (ownership.length === 0) {
+    out.push("_(no `business_function_domains` rows for this scope's domain.)_");
+  } else {
+    out.push(tableHeader(["responsibility", "business function", "default role", "default tier"]));
+    for (const o of ownership) out.push(tableRow([o.responsibility, o.func, `\`${o.defaultRole}\``, `\`${o.defaultTier}\``]));
+  }
+  out.push("");
+
+  // NOTE: a former "§10 Deployable closure" section was removed (Plan 3 review, 2026-06-02).
+  // A correctly-modeled module is SELF-CONTAINED: everything it touches is master,
+  // embedded_master (a local shell), or necessity=optional, so it has no hard prerequisites.
+  // "Related modules" (data coupling + handoffs + persona reach) are emitted in the front
+  // matter `related_modules`, not duplicated here; the self-containment invariant is enforced
+  // in the audit/review band (a contributor or required non-embedded consumer is a finding),
+  // not rendered in the deploy contract.
+
   // M1 cross-section consistency check (Policy 1: warn, never throw). Every in-scope gate
   // §7 shows must also be minted by §8; a miss means the two derivations disagree.
   for (const code of section7InScopeGates) {
@@ -1119,6 +1180,126 @@ function deriveWorkflowGatesAndRules(
   }
 
   return { permissions, businessRules };
+}
+
+// ============================================================
+// §9 / §10 derivations (Plan 3, step B). All DERIVED + emitted, never stored:
+// a persona's bundle = f(role_modules reach, process_raci gates, the tier policy);
+// the hierarchy = f(tiers); the deployer provisions the tenant from the blueprint.
+// ============================================================
+
+type BaselineRole = { code: string; grant: string };
+type HierarchyEdge = { including: string; included: string };
+type RaciGrant = { actor: string; actorKind: string; raci: string; process: string; realization: string };
+type FunctionalOwnership = { responsibility: string; func: string; defaultRole: string; defaultTier: string };
+
+// B1: three baseline roles per module. viewer/manager always; admin only when the module
+// has an admin-tier (catalog write) entity, decided by the same deriveWriteTier as §3.
+function deriveBaselineRoles(slug: string, moduleScopeRows: ScopeRow[], rels: { all: any[] }): BaselineRole[] {
+  const hasAdminTier = moduleScopeRows.some((r) => {
+    if (r.role !== "master") return false;
+    const o = r.data_object;
+    const ep = o.entity_type === "junction" ? neighborEntityTypes(r.data_object_id, rels) : [];
+    return deriveWriteTier(o.entity_type, ep).write === ":admin";
+  });
+  const roles: BaselineRole[] = [
+    { code: `${slug}_viewer`, grant: `${slug}:read` },
+    { code: `${slug}_manager`, grant: `${slug}:manage` },
+  ];
+  if (hasAdminTier) roles.push({ code: `${slug}_admin`, grant: `${slug}:admin` });
+  return roles;
+}
+
+// B2: hierarchy from the §8 permission set. admin includes manage includes read, and admin
+// includes every workflow gate / pattern-flag override.
+function derivePermissionHierarchy(slug: string, permissions: Permission[]): HierarchyEdge[] {
+  const edges: HierarchyEdge[] = [
+    { including: `${slug}:admin`, included: `${slug}:manage` },
+    { including: `${slug}:manage`, included: `${slug}:read` },
+  ];
+  for (const p of permissions) {
+    if (p.tier.startsWith("workflow-gate") || p.tier.startsWith("override")) {
+      edges.push({ including: `${slug}:admin`, included: p.code });
+    }
+  }
+  return edges;
+}
+
+// B3: realize each process_raci row. The relevant processes are those wired to this scope's
+// gated lifecycle states via data_object_lifecycle_states.process_id (the process-to-permission
+// edge). Branch on the RACI letter and the actor kind (persona vs agent skill).
+function deriveRaciRealization(moduleScopeRows: ScopeRow[], moduleLifecycle: any[], arel: AllRelationships): RaciGrant[] {
+  const grants: RaciGrant[] = [];
+  const processIds = new Set<number>();
+  for (const ls of moduleLifecycle) if (ls.process_id != null) processIds.add(ls.process_id as number);
+  for (const pid of processIds) {
+    const proc = arel.processesById.get(pid);
+    const procName = proc?.process_name ?? `process#${pid}`;
+    const gateCodes = moduleLifecycle
+      .filter((ls) => ls.process_id === pid && ls.requires_permission)
+      .map((ls) => deriveGate(ls, moduleScopeRows)?.code)
+      .filter((c): c is string => Boolean(c));
+    for (const row of arel.processRaciByProcessId.get(pid) ?? []) {
+      const isPersona = row.actor_role_id != null;
+      const actorKind = isPersona ? "persona" : "skill";
+      const actor = isPersona
+        ? (arel.domainRolesById.get(row.actor_role_id as number)?.role_code ?? `role#${row.actor_role_id}`)
+        : `skill#${row.actor_skill_id}`;
+      let realization = "";
+      switch (row.raci) {
+        case "responsible":
+          realization = isPersona
+            ? `grant gates [${gateCodes.join(", ") || "none wired"}] + the gated entities' write tier`
+            : "require skill_tools coverage of the process's mutating ops";
+          break;
+        case "accountable":
+          realization = isPersona ? "approval gate" : "autonomous-action note";
+          break;
+        case "consulted":
+          realization = row.consultation_blocking ? "blocking consultation state" : "advisory read grant";
+          break;
+        case "informed":
+          realization = "notification side effect (trigger_event / webhook_receiver)";
+          break;
+        default:
+          realization = String(row.raci);
+      }
+      grants.push({ actor, actorKind, raci: String(row.raci), process: procName, realization });
+    }
+  }
+  return grants;
+}
+
+// (B4 deriveDeployableClosure removed in the Plan 3 review, 2026-06-02: "deployable closure /
+// required modules" was the wrong frame -- a module is self-contained, so it has no hard
+// prerequisites; related modules live in the front-matter `related_modules`, and the
+// self-containment invariant is an audit-band check, not an emitted section.)
+
+// B5: market RACI (M11) + default grant (M13). From business_function_domains for the scope's
+// domain(s): owner -> admin, contributor -> manage, consumer -> read.
+function deriveMarketRaci(parentDomains: Domain[], arel: AllRelationships): FunctionalOwnership[] {
+  const TIER: Record<string, { role: string; tier: string }> = {
+    owner: { role: "admin", tier: ":admin" },
+    contributor: { role: "manage", tier: ":manage" },
+    consumer: { role: "read", tier: ":read" },
+  };
+  const out: FunctionalOwnership[] = [];
+  const seen = new Set<string>();
+  for (const d of parentDomains) {
+    for (const bfd of arel.businessFunctionDomainsByDomainId.get(d.id) ?? []) {
+      const fn = arel.businessFunctionsById.get(bfd.business_function_id as number);
+      const func = fn?.business_function_name ?? `function#${bfd.business_function_id}`;
+      const rt = String(bfd.responsibility_type);
+      const key = `${rt}:${func}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const t = TIER[rt] ?? { role: "?", tier: "?" };
+      out.push({ responsibility: rt, func, defaultRole: t.role, defaultTier: t.tier });
+    }
+  }
+  const ord: Record<string, number> = { owner: 0, contributor: 1, consumer: 2 };
+  out.sort((a, b) => (ord[a.responsibility] ?? 9) - (ord[b.responsibility] ?? 9) || a.func.localeCompare(b.func));
+  return out;
 }
 
 // ============================================================

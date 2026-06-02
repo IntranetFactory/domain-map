@@ -8,7 +8,7 @@ domain_modules:
   - re-brok-agent-ops
 domain_code: RE-BROKERAGE
 related_modules: [crm-acct-mgt, crm-lead-mgt, re-brok-brokerage-ops, real-estate-agent]
-created_at: 2026-06-01
+created_at: 2026-06-02
 ---
 
 # Real Estate Agent Operations
@@ -307,3 +307,59 @@ _This scope holds `crm_leads` as **contributor**; the canonical state machine is
 | `disclosure_document_edit_scope` | `disclosure_documents` | has_personal_content | Row-scope by default; override via `re-brok-agent-ops:view_all_disclosure_documents` / `re-brok-agent-ops:manage_all_disclosure_documents` |
 | `submit_restricted_to_disclosure_document_owner` | `disclosure_documents` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `re-brok-agent-ops:manage_all_disclosure_documents` |
 | `approve_disclosure_document_requires_approver` | `disclosure_documents` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`re-brok-agent-ops:approve_disclosure_document` if surfaced as a lifecycle workflow gate). |
+
+## 9. Roles, RACI, and responsibilities (derived)
+
+_Baseline roles, the permission hierarchy, and RACI realization are DERIVED from this scope's entity-type write tiers + `process_raci`; none of it is stored in the catalog (the deployer provisions it from this blueprint)._
+
+### 9.1 `RE-BROK-AGENT-OPS`
+
+**Baseline roles:**
+
+| role | baseline grant |
+| --- | --- |
+| `re-brok-agent-ops_viewer` | `re-brok-agent-ops:read` |
+| `re-brok-agent-ops_manager` | `re-brok-agent-ops:manage` |
+
+**Permission hierarchy:**
+
+| permission | includes |
+| --- | --- |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:manage` |
+| `re-brok-agent-ops:manage` | `re-brok-agent-ops:read` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:activate_listing` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:mark_under_contract` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:close_listing` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:withdraw_listing` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:schedule_inspection` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:submit_financing` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:clear_contingencies` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:close_transaction` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:cancel_transaction` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:confirm_tour` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:complete_tour` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:cancel_tour` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:deliver_disclosure` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:acknowledge_disclosure` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:view_all_real_estate_listings` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:manage_all_real_estate_listings` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:view_all_tour_appointments` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:manage_all_tour_appointments` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:view_all_real_estate_transactions` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:manage_all_real_estate_transactions` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:submit_real_estate_transaction` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:view_all_disclosure_documents` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:manage_all_disclosure_documents` |
+| `re-brok-agent-ops:admin` | `re-brok-agent-ops:submit_disclosure_document` |
+
+**RACI realization:**
+
+_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_
+
+### 9.2 Functional ownership and default grants
+
+| responsibility | business function | default role | default tier |
+| --- | --- | --- | --- |
+| owner | Sales | `admin` | `:admin` |
+| contributor | Marketing | `manage` | `:manage` |
+| consumer | Accounting | `read` | `:read` |

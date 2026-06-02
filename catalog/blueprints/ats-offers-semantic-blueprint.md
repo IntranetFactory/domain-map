@@ -7,8 +7,8 @@ system_slug: ats-offers
 domain_modules:
   - ats-offers
 domain_code: ATS
-related_modules: [ats-background-checks, ats-candidate-crm, ats-pre-employee-record, ats-recruitment-pipeline, comp-statements, hcm-lifecycle-workflows, hiring-starter]
-created_at: 2026-06-01
+related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, comp-statements, hcm-lifecycle-workflows, hiring-starter]
+created_at: 2026-06-02
 ---
 
 # Offers
@@ -303,3 +303,51 @@ _This scope holds `job_applications` as **embedded_master**; the canonical state
 | `offer_version_edit_scope` | `offer_versions` | has_personal_content | Row-scope by default; override via `ats-offers:view_all_offer_versions` / `ats-offers:manage_all_offer_versions` |
 | `approve_offer_approval_requires_approver` | `offer_approvals` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`ats-offers:approve_offer`). |
 | `offer_letter_document_edit_scope` | `offer_letter_documents` | has_personal_content | Row-scope by default; override via `ats-offers:view_all_offer_letter_documents` / `ats-offers:manage_all_offer_letter_documents` |
+
+## 9. Roles, RACI, and responsibilities (derived)
+
+_Baseline roles, the permission hierarchy, and RACI realization are DERIVED from this scope's entity-type write tiers + `process_raci`; none of it is stored in the catalog (the deployer provisions it from this blueprint)._
+
+### 9.1 `ATS-OFFERS`
+
+**Baseline roles:**
+
+| role | baseline grant |
+| --- | --- |
+| `ats-offers_viewer` | `ats-offers:read` |
+| `ats-offers_manager` | `ats-offers:manage` |
+| `ats-offers_admin` | `ats-offers:admin` |
+
+**Permission hierarchy:**
+
+| permission | includes |
+| --- | --- |
+| `ats-offers:admin` | `ats-offers:manage` |
+| `ats-offers:manage` | `ats-offers:read` |
+| `ats-offers:admin` | `ats-offers:approve_offer` |
+| `ats-offers:admin` | `ats-offers:rescind_offer` |
+| `ats-offers:admin` | `ats-offers:approve_offer` |
+| `ats-offers:admin` | `ats-offers:reject_offer` |
+| `ats-offers:admin` | `ats-offers:approve_offer_letter_template` |
+| `ats-offers:admin` | `ats-offers:retire_offer_letter_template` |
+| `ats-offers:admin` | `ats-offers:view_all_offers` |
+| `ats-offers:admin` | `ats-offers:manage_all_offers` |
+| `ats-offers:admin` | `ats-offers:view_all_offer_versions` |
+| `ats-offers:admin` | `ats-offers:manage_all_offer_versions` |
+| `ats-offers:admin` | `ats-offers:view_all_offer_letter_documents` |
+| `ats-offers:admin` | `ats-offers:manage_all_offer_letter_documents` |
+
+**RACI realization:**
+
+| actor | kind | raci | process | realization |
+| --- | --- | --- | --- | --- |
+| `RECRUITING-RECRUITER` | persona | responsible | Draw up and make offer | grant gates [ats-offers:approve_offer] + the gated entities' write tier |
+| `HIRING-MANAGER` | persona | accountable | Draw up and make offer | approval gate |
+| `RECRUITING-MANAGER` | persona | consulted | Draw up and make offer | advisory read grant |
+
+### 9.2 Functional ownership and default grants
+
+| responsibility | business function | default role | default tier |
+| --- | --- | --- | --- |
+| owner | Recruiting | `admin` | `:admin` |
+| contributor | Legal | `manage` | `:manage` |

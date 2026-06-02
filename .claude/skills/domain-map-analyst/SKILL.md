@@ -270,7 +270,7 @@ When adding a new column to this catalog with an enum, copy the value vocabulary
 
 A `domains` row is a market entry, useful for SEO and analysis but **not deployable** on its own. The deployable unit is the **module** (`domain_modules`):
 
-- **Every `domains` row MUST have ≥1 `domain_modules` row with `module_kind='full'`.** No exceptions, including leadership-tier / aggregation-tier domains. If a market warrants a `domains` row at all, it has at least one full module: for narrowly-scoped domains that's a single module covering the whole market; for leadership-tier domains it's a "derived-signals" or "landing" module whose `domain_module_data_objects` may be empty but whose existence preserves the deploy-target contract.
+- **Every `domains` row MUST have ≥1 `domain_modules` row with `module_kind='full'`.** No exceptions. If a market warrants a `domains` row at all, it has at least one full module: for narrowly-scoped domains that's a single module covering the whole market. A genuine derive/overlay domain (one that persists no records of its own; see the overlay test in § "Master-bearing vs derive/overlay domains") still ships a real module whose `domain_module_data_objects` carries the `consumer` / `embedded_master` / `derived` rows for what it reads and republishes. A `domain_modules` row with an entirely empty `domain_module_data_objects` set is a smell, not a valid shape: it means the domain is either unbuilt (run Phase B) or not actually a distinct market. "Preserves the deploy-target contract" is not a license to ship an empty module: an empty module deploys nothing (no tables, no permissions, no agent surface).
 
 - **Domains with ≥3 `capabilities` (per `capability_domains`) MUST have ≥2 `module_kind='full'` `domain_modules` rows.** A 3-capability market has enough surface to be a meaningful split.
 
@@ -300,7 +300,7 @@ This rule has been violated repeatedly. Earlier versions were scoped too narrowl
 - `data_objects.notes` (including the prior "config-shape exemption" annotation — RESCINDED)
 - `domain_modules.description` is NOT a notes field, but watch the boundary: descriptions describe the row's content; notes are commentary about the row. If in doubt, treat as a notes field.
 - `solutions.notes`, `vendors.notes` (including the prior "acknowledge predecessor after acquisition" carve-out — RESCINDED unless user approves the specific string)
-- `role_modules.notes`, `role_permissions.notes`
+- `role_modules.notes` (no `notes` column on `domain_roles` or `process_raci`)
 - `skill_tools.notes`, `tool_solutions.notes`
 - `solution_domains.notes`
 - any other `notes` column added to the catalog in the future
@@ -437,7 +437,7 @@ Vendor names, product names, brand names, and trademarks (Salesforce, ServiceNow
 - `tools` — `tool_name`, `description`.
 - `skills` — `skill_name`, `description`.
 - All junctions — `domain_data_objects.notes`, `domain_module_data_objects.notes`, `data_object_relationships.notes`, `solution_domains.notes`, `role_modules.notes`, `skill_tools.notes`, etc.
-- `roles`, `permissions`, `role_modules`, `role_permissions`.
+- `domain_roles`, `role_modules`, `process_raci` (catalog-owned personas + RACI; the `_core` `roles` / `permissions` / `role_permissions` are platform RBAC, not catalog-written).
 - `industries`, `jurisdictions`, `business_functions`.
 
 The single legitimate exception is acknowledging a predecessor inside `solutions.notes` after a re-brand or acquisition (e.g. "formerly LeanIX, acquired by SAP SE 2023"). That's metadata about the same product, not a competitor mention; it stays in the commerce layer.
@@ -598,33 +598,28 @@ Conventions:
 
 ### Role layer (1 new entity + 3 extended built-ins)
 
-Roles are the first-class home for **cross-module permission bundling** — what per-module `:admin` / `:manage` / `:read` rollups can't express. A Recruiter touches 6 ATS modules; a Service Desk Agent touches 4+ ITSM modules. The catalog captures both the role and its access bundle. Long-form rules and worked examples live in [references/roles.md](references/roles.md).
+Personas and responsibility are **catalog-owned** (module 1001). `domain_roles` holds operational personas (job-shaped workflows spanning modules); `process_raci` holds RACI responsibility with a polymorphic actor (a persona OR an agent skill). A persona's permission **bundle is DERIVED** (emitter §9) from reach + RACI + the entity-type tier policy, NOT stored. Plan 3 (2026-06-02) deleted the `_core` `roles` / `role_permissions` / `permission_hierarchy` persona layer (it had rotted) and re-homed personas here. Long-form rules in [references/roles.md](references/roles.md); schemas in [module-shape.md § Role layer](references/module-shape.md#role-layer).
 
 | Table | Holds | Built-in vs. catalog | Qualifier |
 |---|---|---|---|
-| `roles` | User persona / job-shaped role whose workflow spans modules. Semantius built-in extended with `role_code`, `business_function_id` (nullable — NULL = cross-functional), `record_status` | Semantius built-in (extended) | `business_function_id` (NULL = cross-functional, e.g. Hiring Manager) |
-| `role_modules` | Junction: which modules each role touches, at what `interaction_level` (`primary` / `secondary`). Carries optional `notes`. | Catalog (NEW) | `interaction_level`. Read-only-ness is captured by the role's bundle holding only `:read`, not a separate axis. |
-| `role_permissions` | Junction: the cross-module permission bundle the deployer provisions. Each role declares its complete bundle directly — no role-level inheritance, no role composition. | Semantius built-in (extended) | Tier-level entries (`:read`/`:manage`/`:admin`) auto-expand via Semantius's existing `permission_hierarchy` at request time |
-| `permissions` (extended) | Catalog-derived permissions following `<domain_module_code>:<verb>`. Gained `domain_module_id` FK and `tier` enum (`baseline-read` / `baseline-manage` / `baseline-admin` / `workflow-gate` / `override`). Materialized from lifecycle states + pattern flags. | Semantius built-in (extended) | Permission prefix is the **realizing module's** code, not the domain's. See [references/modules.md](references/modules.md) on permission materialization. |
+| `domain_roles` | Operational persona: job-shaped workflow spanning ≥2 modules. `role_code`, `role_name`, `description`, `business_function_id` (nullable, NULL = cross-functional), `record_status`. No `slug`. | Catalog-owned (module 1001) | Replaces deleted `_core` `roles` persona rows (origin `model` / `model_master`). |
+| `role_modules` | REACH junction: which modules a persona touches, at what `interaction_level` (`primary` / `secondary`). `role_id` re-pointed to `domain_roles` (Plan 3). | Catalog-owned | Read-only-ness is captured by the derived bundle holding only `:read`, not a separate axis. |
+| `process_raci` | RESPONSIBILITY junction: process ↔ polymorphic actor (`actor_role_id` persona XOR `actor_skill_id` skill), `raci` letter, `consultation_blocking`. | Catalog-owned (NEW, Plan 3) | Hard `exactly_one_actor` validation_rules trigger. R can be an agent while A is human. |
+| `data_object_lifecycle_states.process_id` | The process-to-permission edge: which gate realizes which process. Authored per-domain. | Catalog (column, Plan 3) | Distinct from `process_raci.process_id`; lets an R/A assignment resolve to concrete gates. |
 
-**Hard invariants** (loader-enforced):
+**Hard invariants:**
 
-- **2-module floor.** Every `roles` row MUST have ≥2 `role_modules` entries. A single-module persona is just a permission tier on that module, not a role.
-- **Flat roles.** No `parent_role_id`, no role composition, no DAGs. Inheritance lives at the **permission** layer via Semantius's existing `permission_hierarchy`. Manager-of-IC distinction is expressed by upgrading the permission tier (`:manage` → `:admin`), not by chaining roles.
-- **Function-scoped naming.** `role_code` = `<FUNCTION-CODE>-<ROLE-NAME>` (`RECRUITING-RECRUITER`, `IT-SERVICE-DESK-AGENT`). Cross-functional roles drop the prefix entirely (`HIRING-MANAGER`). Domain prefixes (`ATS-RECRUITER`) are an anti-pattern — roles are function-scoped, not domain-scoped.
-- **`roles.slug` is snake_case.** The built-in `valid_role_slug` check constraint rejects kebab — slugify `role_code` to lowercase + underscores (`RECRUITING-RECRUITER` → `recruiting_recruiter`).
-- **Permission-bundle minimum.** Every role has ≥1 `role_permissions` row (typical: 4–8). Prefer tier-level grants (`<module>:admin`) over enumerating every workflow gate — `permission_hierarchy` auto-includes lifecycle gates at request time. Only list specific gates when an IC-tier role needs them explicitly (e.g. `ats-offers:approve_offer` for Recruiter, who otherwise has `:manage` not `:admin`).
+- **2-module floor.** Every `domain_roles` persona MUST have ≥2 `role_modules` entries. A single-module persona is just a permission tier on that module, not a persona.
+- **Flat personas.** No `parent_role_id`, no composition, no DAGs. Manager-of-IC is expressed by upgrading the DERIVED tier (`:manage` to `:admin`) via reach/responsibility, not by chaining personas.
+- **Function-scoped naming.** `role_code` = `<FUNCTION-CODE>-<ROLE-NAME>` (`RECRUITING-RECRUITER`); cross-functional drops the prefix (`HIRING-MANAGER`). Domain prefixes (`ATS-RECRUITER`) are an anti-pattern. No `slug` / `valid_role_slug` constraint (that was a `_core` artifact, now gone).
+- **Exactly-one-actor.** Every `process_raci` row sets exactly one of `actor_role_id` / `actor_skill_id`, enforced by a hard validation_rules trigger (`check_violation` raised on neither/both).
+- **Bundle is derived, never stored (HARD RULE).** No catalog loader writes the `_core` `roles` / `role_permissions` / `permission_hierarchy` / `permissions` tables. You author reach (`role_modules`) + responsibility (`process_raci`); the emitter derives the bundle, hierarchy, and permission names into the blueprint (§9) and the deployer provisions from it. The 6 surviving `_core` permissions are platform RBAC for the catalog app, not catalog content.
 
-**Two equivalent paths from `roles` to `domains` exist** — they should agree, divergence is a bug:
-
-- Path A: `roles → role_modules → domain_modules.domain_id` (carries `interaction_level`) — **authoritative**.
-- Path B: `roles → role_permissions → permissions.domain_module_id → domain_modules.domain_id` (carries actual granted access) — drift cross-check.
-
-Divergence means either a `role_modules` entry without a matching bundle row on that module, or a bundle row on a module not declared in `role_modules`.
+**Reach reconciliation** (replaces the old two-path check): there is no stored bundle to disagree with reach. The review band reconciles `role_modules` reach against the DERIVED permissions: every reached module gets a derived tier, and every granted gate traces to a reach row or a `process_raci` R/A row whose process has a `process_id`-wired lifecycle gate.
 
 **Cross-functional vs. cross-domain** are different concepts:
-- **Cross-functional** = `roles.business_function_id IS NULL` (explicit, e.g. Hiring Manager).
-- **Cross-domain** = derived from `role_modules` spanning ≥2 `domain_modules.domain_id` values. Not stored; aggregate at query time.
+- **Cross-functional** = `domain_roles.business_function_id IS NULL` (explicit, e.g. Hiring Manager).
+- **Cross-domain** = `role_modules` spanning ≥2 `domain_modules.domain_id` values. Not stored; aggregate at query time.
 
 ---
 
@@ -632,7 +627,7 @@ Divergence means either a `role_modules` entry without a matching bundle row on 
 
 For any task that fits this skill — "research vendors for X", "is Y a domain?", "load this list of competitors", "find capabilities for Z" — work in this order. Don't skip steps; each one prevents a class of mistake.
 
-> **Domain research without the module + data-object + function phases is incomplete.** Phase 0 (vendor surface research — flagship vendors + entity surface matrix + compliance entities + modularization hypothesis), Phase A (market shape — domains/capabilities/modules/vendors/solutions), Phase B (data-object footprint — data_objects + Signal 1 + Signal 2), Phase C (organisational-function coverage — `business_function_domains` + `business_function_capabilities`), and Phase E (roles & permission bundling — universal under Rule #14) are all per-market defaults. Skipping Phase 0 ships modules that have the headline master and miss the workflow substrate (engagement, compliance, transitions, approvals). Skipping B kills the platform-vs-silos analysis (Signals 1 & 2). Skipping C kills the buyer-persona / RACI axis (Signal 3 — *who in the org owns, contributes to, or consumes this market?*). Skipping E leaves modules without deployable user personas.
+> **Domain research without the module + data-object + function phases is incomplete.** Phase 0 (vendor surface research — flagship vendors + entity surface matrix + compliance entities + modularization hypothesis), Phase A (market shape — domains/capabilities/modules/vendors/solutions), Phase B (data-object footprint — data_objects + Signal 1 + Signal 2), Phase C (organisational-function coverage — `business_function_domains` + `business_function_capabilities`), and Phase E (personas + RACI: `domain_roles` reach + `process_raci` responsibility, the permission bundle DERIVED not authored, universal under Rule #14) are all per-market defaults. Skipping Phase 0 ships modules that have the headline master and miss the workflow substrate (engagement, compliance, transitions, approvals). Skipping B kills the platform-vs-silos analysis (Signals 1 & 2). Skipping C kills the buyer-persona / RACI axis (Signal 3 — *who in the org owns, contributes to, or consumes this market?*). Skipping E leaves modules without deployable personas or a RACI / responsibility layer.
 >
 > [Phase D — process-skill discovery](#phase-d--process-skill-discovery-substrate-level) is a **substrate-level analytic**, not a per-market step. It runs across the catalog once Phase B has shipped for enough clusters, and is re-runnable on demand. See the dedicated section below.
 
@@ -749,8 +744,8 @@ The S-band is a single coverage sweep that runs **before** any band-level check.
   | --- | --- | --- | --- |
 
 - Expected-non-zero call (the schema doesn't carry this; it follows from catalog rules):
-  - Always non-zero: `business_function_domains` (C1), `capability_domains` (A2), `domain_data_objects` (B1 except leadership-tier), `domain_modules` (M1), `solution_domains` (A3), `handoffs.source_domain_id` (B9 for any non-leaf domain), `skills` (F2 — exactly one `skill_type='system'` row per `domain_modules` row).
-  - Non-zero when applicable: `domain_regulations` (most domains have ≥1 regulation in scope), `handoffs.target_domain_id` (most non-leadership domains receive at least one inbound handoff).
+  - Always non-zero: `business_function_domains` (C1), `capability_domains` (A2), `domain_data_objects` (B1; for a derive/overlay domain the rows are `consumer`/`derived` rather than `master`, but the set is still non-zero), `domain_modules` (M1), `solution_domains` (A3), `handoffs.source_domain_id` (B9 for any non-leaf domain), `skills` (F2 — exactly one `skill_type='system'` row per `domain_modules` row).
+  - Non-zero when applicable: `domain_regulations` (most domains have ≥1 regulation in scope), `handoffs.target_domain_id` (most non-leaf domains receive at least one inbound handoff).
   - Routinely zero: `domain_module_host_domains` (only when cross-cutting modules host on this domain), `domains.parent_domain_id` (only when this domain has sub-domains).
 - Fix: zero-row anomalies on "expected non-zero" rows are blocking. The fix routes back into the owning band — S1 just makes the gap legible at a glance and catches cases the band's own pass test missed.
 
@@ -761,7 +756,7 @@ For every `domain_modules` row hosted on this domain (primary host + `domain_mod
   | Module | data_objects | capabilities |
   | --- | --- | --- |
 
-- Zero `domain_module_capabilities` on a module routes to M6 (the reverse-orphan check added below). Zero `domain_module_data_objects` is usually a leadership-tier landing module (Rule #14) and acceptable; otherwise routes to the relevant Phase-A or Phase-B band.
+- Zero `domain_module_capabilities` on a module routes to M6 (the reverse-orphan check added below). Zero `domain_module_data_objects` on a module is a smell (Rule #14): a derive/overlay module still carries `consumer`/`derived` rows, so an empty set means the module is unbuilt. Routes to the relevant Phase-A or Phase-B band.
 
 **S3. Per-master indirect-table coverage.**
 
@@ -782,7 +777,7 @@ For every `master + required` data_object in this domain, count `data_object_lif
 
 **A2. Capabilities linked.**
 - Query: `/capability_domains?domain_id=eq.<id>&select=capabilities(capability_code)`
-- Pass: ≥3 rows (typical: 5–8). For leadership-tier domains, may be lower.
+- Pass: ≥3 rows (typical: 5–8). For narrowly-scoped domains, may be lower.
 - Fix: extend Phase A loader for this market; apply Cross-cutting capability convention (§ below) for any capability that spans ≥3 domains.
 
 **A3. Solutions linked with coverage_level.**
@@ -815,7 +810,7 @@ A `domains` row is not deployable on its own. Modules are. The M-band is a struc
 **M1. ≥1 `domain_modules` row exists for this domain.**
 - Query: `/domain_modules?domain_id=eq.<id>&select=id,domain_module_code,domain_module_name` UNION `/domain_module_host_domains?domain_id=eq.<id>&select=domain_module:domain_modules(id,domain_module_code,domain_module_name)` (the second query catches cross-cutting modules hosted on this domain via the host junction).
 - Pass: combined result ≥1.
-- Fix: hand-author the module set. For domains with <3 capabilities the answer is one starter module covering the whole market. For leadership-tier domains with no masters, the module is a "derived-signals" landing surface — it exists for the deploy contract even if its `domain_module_data_objects` set is empty.
+- Fix: hand-author the module set. For domains with <3 capabilities the answer is one full module covering the whole market. For a genuine derive/overlay domain that masters nothing (see § "Master-bearing vs derive/overlay domains"), the module is a derived-signals surface whose `domain_module_data_objects` carries the `consumer`/`embedded_master`/`derived` rows for what it reads and republishes (NOT an empty set). If the domain actually persists records of its own, it is master-bearing and unbuilt: run Phase B and author the masters rather than shipping a thin module.
 
 **M2. Domains with ≥3 capabilities have ≥2 modules.**
 - Capability count query: `/capability_domains?domain_id=eq.<id>&select=capability_id` (count the rows).
@@ -866,11 +861,17 @@ Modules within a domain are **autonomous deployable units** (per § "The module 
 - Pass: every module's `catalog_tagline` is a non-empty single-sentence buyer-facing one-liner; every module's `catalog_description` is a non-empty 1-3 paragraph buyer-facing long-form description. Both are written in buyer voice (workflow + value), NOT analyst voice. A4 is the equivalent check at the domain grain; M8 is the per-module rollup.
 - Fix: draft both fields per Rule #20, surface to the user for review BEFORE writing. Once a non-empty value exists, never overwrite without explicit per-row user approval; marketing may have fine-tuned the original.
 
+**M9. Module self-containment — every module is independently deployable (no hard prerequisites).**
+- The invariant: a module deploys standalone. Every data_object it touches must be `master` (it owns), `embedded_master` (it carries a local shell, so the canonical owner is NOT required — it defers to it only if installed; see [references/modules.md](references/modules.md#5-embedded-shell-contracts-live-at-deploy-time-not-in-the-catalog)), `necessity=optional` (degrades gracefully, Rule #16), or a `consumer` of a platform built-in / shared master that is always present (`users`, master-data).
+- Query: `/domain_module_data_objects?domain_module_id=in.(<modIds>)&select=role,necessity,data_object:data_objects(data_object_name,kind)`. Flag any row that is `role=contributor`, or `role=consumer AND necessity=required`, whose data_object is mastered by ANOTHER domain module (not a platform built-in / master-data) and is NOT also `embedded_master` here.
+- Pass: no flagged rows. A flagged row is a self-containment VIOLATION: the module cannot deploy without co-installing another module.
+- Fix: convert the relationship to `embedded_master` (carry a local shell), or set `necessity=optional` (presence-conditional). Do NOT "document" the dependency: a hard prerequisite is a modeling failure, not a deploy fact. (This replaces the abandoned "deployable closure / required modules" idea: related modules are an informational hint in the blueprint front-matter `related_modules`, never a requirement.)
+
 ### B. Phase B — Data-object footprint
 
 **B1. ≥1 `master` data_object exists.**
 - Query: `/domain_data_objects?domain_id=eq.<id>&role=eq.master&select=data_object_id`
-- Pass: ≥1 row. **EXCEPTION:** leadership-tier domains (REV-INTEL, SALES-PERF, GTM-PLAN, ACCT-PLAN, PRM, OP-RES, BCM, SECOPS, SOAR, THREAT-INTEL, TPRM, VULN-MGMT, PRIV-MGMT, FINOPS, INTRANET, COLLAB-GOV — see § "Leadership-layer domains") are expected to have zero masters; checklist passes by exception.
+- Pass: ≥1 row. **EXCEPTION (narrow, evidence-based, NOT a fixed domain list):** a domain passes B1 with zero masters ONLY if it is a genuine derive/overlay domain (persists no record of its own; computes its entire output at query time from other domains' masters). Apply the overlay test in § "Master-bearing vs derive/overlay domains". An overlay that passes B1 by this exception is NOT a free pass: it MUST instead carry ≥1 `consumer`/`derived`/`embedded_master` row (B5) and a real non-empty module (M1). Note: there is no hard-coded "leadership-tier" list of zero-master domains. A domain that persists records no other domain masters (deal scores, forecasts, quotas, partner deal registrations, vulnerabilities, DSARs, account plans, etc.) is master-bearing and fails B1 with zero masters; if it has none, it is unbuilt, not exempt.
 - Fix: run Phase 1 of the data-object research workflow (§ below).
 
 **B2. Every master has `singular_label` and `plural_label`.**
@@ -1032,37 +1033,39 @@ The legacy B9 / B10 queries deliberately did not include these columns. Future a
 
 > Fact-sheet emission used to live here as D1 / D2 of the checklist. It has been pulled out of every sequence (load, audit, fix-loop) and is now an explicit, user-triggered step. See § "Fact sheets (explicit step, not part of any sequence)" below the audit recipe.
 
-### E. Roles & permission bundling (universal under Rule #14)
+### E. Personas, RACI & responsibilities (review band)
 
-Roles capture the user personas whose workflows span the domain's modules and bundle their cross-module permissions. Under Rule #14 every domain has ≥1 module — but a single-module domain may not have any natural multi-module personas (the 2-module floor would block authoring them), so E1's threshold is qualified by capability count. Long-form rules in [references/roles.md](references/roles.md).
+Personas (`domain_roles`) capture the job-shaped workflows that span a domain's modules; `process_raci` captures who is Responsible / Accountable / Consulted / Informed for each process (polymorphic actor: persona or agent skill). The permission bundle is DERIVED (emitter §9), NOT stored, so this band checks AUTHORED reach + responsibility and reconciles them against the derivation, never a stored bundle. Under Rule #14 every domain has ≥1 module, but a single-module domain can't host multi-module personas (the 2-module floor), so E1's threshold is qualified by capability/module count. Replaces the former roles / permission-bundle E-band (Plan 3, 2026-06-02; the `_core` `roles` / `role_permissions` layer was deleted). Long-form rules in [references/roles.md](references/roles.md).
 
-**E1. Role coverage matches the domain's module shape.**
-- Query: `/roles?business_function_id=eq.<fn_id>&select=id,role_code,role_name` UNION cross-functional roles touching any of the domain's modules: `/role_modules?domain_module_id=in.(<modIds>)&select=role:roles!inner(id,role_code,business_function_id)&role.business_function_id=is.null`
-- Pass: **single-module domains** (capability_count < 3, exactly 1 module) — E1 vacuously passes; no roles needed since the 2-module floor blocks role authoring anyway. **Multi-module domains** (≥2 modules) — ≥3 distinct roles across both queries. Typical: 3–5 for tightly-scoped, 5–7 for broad.
-- Fix: hand-author the roles using the function-scoped naming pattern; load via a focused loader.
+**E1. Persona coverage matches the domain's module shape (ZERO-PERSONA COVERAGE EXPECTATION).**
+- Query: `/domain_roles?business_function_id=eq.<fn_id>&select=id,role_code,role_name` UNION cross-functional personas touching any of the domain's modules: `/role_modules?domain_module_id=in.(<modIds>)&select=role:domain_roles!inner(id,role_code,business_function_id)`.
+- Pass: **single-module domains** (capability_count < 3, exactly 1 module) — E1 vacuously passes; the 2-module floor blocks persona authoring. **Multi-module domains** (≥2 modules / capability_count ≥ 3) — ≥1 persona, and this check **FIRES a finding on ZERO**. This is the forcing function behind the Plan-3 throwaway: after the deletion every qualifying domain reads zero personas until authored, so absence is LOUD, never silently "done". Typical when authored: 3-5 personas tightly-scoped, 5-7 broad.
+- Fix: author the personas (function-scoped naming) + their `role_modules` reach + `process_raci` assignments via Phase E / a focused loader.
 
-**E2. 2-module floor satisfied on every loaded role for this domain.**
-- Query: for each role from E1, count `/role_modules?role_id=eq.<role_id>` rows.
-- Pass: every role has ≥2 entries. Loader pre-flight should already block this; this check catches drift from manual edits.
-- Fix: either add the missing `role_modules` row (if the role legitimately spans more modules) or delete the role (single-module persona = permission tier, not a role).
+**E2. 2-module floor on every persona.**
+- Query: for each persona from E1, count `/role_modules?role_id=eq.<id>` rows.
+- Pass: every persona has ≥2 entries.
+- Fix: add the missing reach row (if the persona legitimately spans more modules), or delete the persona (single-module = a permission tier, not a persona).
 
 **E3. Every `role_modules` row has `interaction_level` set.**
-- Query: `/role_modules?role_id=in.(<roleIds>)&select=interaction_level&interaction_level=is.null`
-- Pass: empty result. Only `primary` / `secondary` are valid — no `read_only` (captured implicitly by the role's bundle).
+- Query: `/role_modules?role_id=in.(<ids>)&interaction_level=is.null&select=id`
+- Pass: empty result. Only `primary` / `secondary` are valid (read-only is captured by the derived bundle holding only `:read`).
 - Fix: PATCH the missing values.
 
-**E4. Every role has a non-empty `role_permissions` bundle.**
-- Query: for each role from E1, count `/role_permissions?role_id=eq.<role_id>` rows.
-- Pass: every role has ≥1 row (typical: 4–8). Tier-level entries (`:read`/`:manage`/`:admin`) expand via `permission_hierarchy` at request time — bundles stay short by design.
-- Fix: author the bundle; prefer tier-level grants and specific lifecycle gates over enumerating every workflow-gate / override.
+**E4. RACI coverage: the domain's gated processes have `process_raci` assignments.**
+- Query: the domain's processes whose masters carry gated lifecycle states (`data_object_lifecycle_states.process_id` set), then `/process_raci?process_id=in.(<procIds>)&select=process_id,raci,actor_role_id,actor_skill_id`.
+- Pass: each gated process has ≥1 Responsible and ≥1 Accountable assignment. Exactly-one-actor is hard-enforced by the `exactly_one_actor` trigger, so it needs no audit. Skill actors are deferred, so persona actors are expected today.
+- Fix: author the missing `process_raci` rows; ensure each gated lifecycle transition has its `process_id` wired (E6 reconciles this).
 
-**E5. Path A / Path B agree on the role's domain footprint.**
-- Query A: `/role_modules?role_id=eq.<role_id>&select=domain_module:domain_modules(domain_id)`
-- Query B: `/role_permissions?role_id=eq.<role_id>&select=permission:permissions(domain_module:domain_modules(domain_id))`
-- Pass: the set of distinct `domain_id` values reachable via each path agree. Divergence = drift (a `role_modules` entry without a matching bundle row on that module, or a bundle row on a module not declared in `role_modules`).
-- Fix: add the missing junction row on whichever side is incomplete.
+**E5. `has_single_approver` ↔ Accountable consistency (soft-warn, Policy 1).**
+- For each master with `has_single_approver=true`, its approve process should carry exactly one `process_raci` Accountable row.
+- Pass: agreement, or a recorded reason for divergence. Never blocks the load.
+- Fix: reconcile the flag with the RACI Accountable, or note why they differ (the legacy flag is a human-only RACI fragment this layer generalizes).
 
-**E6. Permission-bundle drift audit.** When a module adds a new `workflow-gate` permission (a new lifecycle state with `requires_permission=true`), every role touching that module potentially needs the gate. Surface drift as a warning, not a load-blocker: "every permission generated by a module is either in at least one role's bundle, OR explicitly marked admin-only via `permission_hierarchy` edges to `<module>:admin`."
+**E6. Reach reconciles against the DERIVED permissions + `entity_type` is classified (B13 folded in).**
+- Reach: regenerate the blueprint and confirm §9 resolves — every module in a persona's `role_modules` gets a derived tier (no dropped reach), and every granted gate traces to a reach row or a `process_raci` R/A row whose process has a `process_id`-wired lifecycle gate (no grant from nowhere). A `process_raci` R/A row whose process has no wired gate derives nothing — that is the new drift signal (the old stored-bundle drift cannot occur, since the bundle is recomputed every emit).
+- entity_type: every master has `entity_type` set (not `unclassified`); the write-tier derivation depends on it.
+- Fix: wire the missing lifecycle `process_id`, or classify the master, then re-emit.
 
 ### F. Skill-layer integrity
 
@@ -1275,7 +1278,7 @@ Commands:
 - `bun run scripts/emit_fact_sheet.ts --all` — regenerates every per-module blueprint in one pass.
 - `bun run scripts/emit_fact_sheet.ts --all --check` — CI drift check; exits non-zero if any blueprint would change.
 
-When the user does ask for an emit, the quality check on the output is: every `_(no … loaded)_` placeholder in the generated file is justified by (a) the leadership-tier exception list (B1), (b) a `data_objects.notes` config-shape exemption on a master with no workflow (B12, per Rule #12), or (c) an explicit "self-explanatory masters" / "isolated master" justification recorded in the catalog notes (B6, B11). Unjustified placeholders signal a real gap in live state — fix the gap and re-emit. Never hand-edit the rendered files to silence a placeholder.
+When the user does ask for an emit, the quality check on the output is: every `_(no … loaded)_` placeholder in the generated file is justified by (a) a genuine derive/overlay domain that masters nothing (B1 narrow exception; the module still carries `consumer`/`derived` rows), (b) a master classified as config / record / catalog / junction / computed via `entity_type` with no workflow (B12, per Rule #12), or (c) an explicit "self-explanatory masters" / "isolated master" justification recorded in the audit / gap report (B6, B11). Unjustified placeholders signal a real gap in live state — fix the gap and re-emit. Never hand-edit the rendered files to silence a placeholder.
 
 ### Cross-cutting capability convention
 
@@ -1431,7 +1434,12 @@ The discovery questions, in order:
 
 **Task fan-out (templated workflow) is a distinct shape from event fan-out.** When `HCM.employee.terminated` produces a fan-out of offboarding-task tickets in ITSM (workspace cleanup, mail-forwarding, equipment return, exit interview), each downstream ticket is per a template, not per a subscriber domain. The handoff is recorded once (HCM→ITSM on `employee.terminated`) but the downstream effect is N tickets correlated by the termination event. Don't model each template as its own `handoffs` row — that explodes the count and dilutes the signal. The same pattern shows up on ATS `offer.accepted` → Onboarding (N template tasks per role) and FSM `work_order.dispatched` → ITAM (N inventory updates per part used).
 
-**Leadership-layer / aggregation-tier domains often master nothing of their own.** REV-INTEL, SALES-PERF, GTM-PLAN, ACCT-PLAN, PRM (Sales cluster) typically don't master their own `data_objects` — they read from CRM (`opportunities`, `customers`, `leads`) and publish derived signals against those upstream data_objects. EPM (Finance cluster) is the same shape: it reads ERP-FIN journal entries, payroll cycles, and SWP cost projections, and publishes `forecast.refreshed` / `variance.threshold_breached` events against `forecasts` / `financial_plans`. When loading such a domain, don't scaffold synthetic data_objects to "give it ownership"; leave it data-object-empty and have its events publish via the upstream cluster's data_objects (handoff row's `data_object_id` is the payload, not the publisher's ownership claim).
+**Master-bearing vs derive/overlay domains.** Some domains read mostly from upstream and feel "analytical", but that feeling is NOT a reason to file them as zero-master. Apply this test per domain:
+
+- **The overlay test:** *Does this domain persist any record that no other domain canonically masters?* If yes → it is **master-bearing**: author those masters in Phase B, give it modules and a system skill like any other domain. If it persists nothing and recomputes its entire output at query time from other domains' masters → it is a **genuine derive/overlay domain**.
+- A derive/overlay domain still ships a **non-empty** module: `consumer` / `embedded_master` rows for what it reads, `derived` rows for the signals it republishes. Its events fire on the upstream data_objects (the handoff's `data_object_id` is the payload, not an ownership claim). Don't scaffold *synthetic* masters to "give it ownership" — but do author *real* masters when the records are real.
+- **The tells of a master-bearing domain:** a high `crud_percentage` (a forms-and-records market by definition), and a vendor surface where flagship products persist the entity as a first-class, historized record (Gong deal scores, Clari forecasts, Xactly quotas, OneTrust DSARs, Tenable vulnerabilities, partner deal registrations, account plans). Computed records (`entity_type='computed'`) are still *mastered* by the domain that produces them — "derived from upstream" ≠ "owned by upstream".
+- There is **no fixed list** of zero-master domains. The genuinely-overlay case is rare (a pure umbrella that consumes from its own sub-domains, e.g. a security-operations umbrella over SOAR / VULN-MGMT / THREAT-INTEL). A domain stub with capabilities and handoffs but zero data_objects of any role is **unbuilt**, not overlay-by-design — run Phase B.
 
 **Trigger-event ownership: "one event, many subscribers".** All fan-out rows for a single event reference the **same** `trigger_events.id` via `handoffs.trigger_event_id`. Event semantics (publisher, data object, state transition, description) live in one `trigger_events` row; per-edge integration metadata lives on each handoff row. Never duplicate `trigger_events` rows per subscriber, it breaks the trigger-event-prefix clustering signal that Phase D depends on. Full rationale in [Phase D — Process-skill discovery](#phase-d--process-skill-discovery-substrate-level).
 
@@ -1681,15 +1689,13 @@ The lowest-% skills in the catalog are the ones that combine multiple of these p
 
 The highest non-100% are **LMS and B2C-COMM, both at 91%** — each with only two non-covered tools (LMS: `send_email`; B2C-COMM: `send_email` + `execute_payment`). When Semantius ships native email (= `notify_person` flips to `coverage_tier='platform'` once both the `crud` MCP server AND the `semantius` CLI carry the dispatcher), LMS flips to 100% via a single UPDATE, and B2C-COMM moves to ~95%. These are the "almost-Semantius" canaries — watch for them when scanning for skills near the 100% boundary.
 
-### Leadership-layer domains have no system skill
+### When a domain has no system skill
 
-Domains that the catalog marks as leadership-layer / aggregation-tier (per the SKILL.md "Leadership-layer / aggregation-tier domains often master nothing" rule) do **not** get a system skill. They read upstream and publish derived signals; there's no domain-owned data_object surface for a system skill to operate on.
+A domain has no system skill ONLY when it is a genuine derive/overlay domain (per § "Master-bearing vs derive/overlay domains") that masters nothing AND has no actionable consumed/derived surface to operate on. This is rare. Most analytical-feeling domains are master-bearing and DO get a system skill once their masters are loaded.
 
-**Verified leadership-tier (by-design zero masters; do NOT scaffold Phase-B for these):** REV-INTEL, SALES-PERF, GTM-PLAN, ACCT-PLAN, PRM, OP-RES, BCM, SECOPS, SOAR, THREAT-INTEL, TPRM, VULN-MGMT, PRIV-MGMT, FINOPS, INTRANET, COLLAB-GOV — **16 domains**. They read from upstream cluster data_objects (CRM `opportunities`, CMDB `configuration_items`, ESG `emissions_records`, ERP-FIN `journal_entries`, etc.) and publish derived signals via `handoffs` with `data_object_id` pointing at the upstream master.
+**There is no fixed "leadership-tier" list of skill-less domains.** The earlier version of this rule named 16 "verified zero-master" domains (REV-INTEL, SALES-PERF, GTM-PLAN, ACCT-PLAN, PRM, OP-RES, BCM, SECOPS, SOAR, THREAT-INTEL, TPRM, VULN-MGMT, PRIV-MGMT, FINOPS, INTRANET, COLLAB-GOV) and told you to NOT scaffold Phase-B for them. That was wrong: ~14 of those persist real records by their own descriptions and `crud_percentage` (e.g. partner deal registrations, vulnerabilities, DSARs, quotas, account plans, deal scores, forecasts) and are simply unbuilt. Do NOT treat a domain as skill-less because it appears on an old list. Apply the overlay test instead. EPM is the canonical illustration: it reads ERP-FIN journal entries and SWP cost projections but **masters** `financial_plans` / `budgets` / `forecasts` / `variance_analyses` / `financial_scenarios`, so it is master-bearing and gets a system skill.
 
-EPM is a partial exception — it has the leadership-layer character but does master `financial_plans`/`budgets`/`forecasts`/`variance_analyses`/`financial_scenarios`, so EPM does get a system skill.
-
-Quick check before drafting any system skill: `semantius call crud postgrestRequest '{"method":"GET","path":"/domain_data_objects?domain_id=eq.<id>&role=eq.master"}'`. Zero masters = skip. If the domain genuinely is supposed to have masters (and you're not skipping for the leadership-layer reason), that's a Phase-B gap — backfill before drafting the skill. Don't paper over a Phase-B gap by inventing skill_tools that reference data_objects from other domains — that produces a skill whose entire required-tool set is consumer-reads, which is not a system skill.
+Quick check before drafting any system skill: `semantius call crud postgrestRequest '{"method":"GET","path":"/domain_data_objects?domain_id=eq.<id>&role=eq.master"}'`. Zero masters means one of two things, and you must decide which via the overlay test: (a) the domain is a genuine overlay (masters nothing, recomputes at query time) — skip the system skill but still author its `consumer`/`derived` footprint and module; or (b) the domain is master-bearing but **unbuilt** — that's a Phase-B gap; run Phase B and author the masters, then draft the skill. Don't paper over a Phase-B gap by inventing skill_tools that reference data_objects from other domains — that produces a skill whose entire required-tool set is consumer-reads, which is not a system skill.
 
 ### Anti-patterns specific to system-skill derivation
 
@@ -1698,7 +1704,7 @@ Quick check before drafting any system skill: `semantius call crud postgrestRequ
 - ❌ Creating a generic `mutate_<data_object>` tool for every master. The existing convention is verb-driven (`update_budget`, `create_audit_finding`, `approve_headcount_plan`). Generic `mutate_*` names are not searchable and lose the workflow semantics.
 - ❌ Using `vendors` as a `data_object_id` target for query tools. `vendors` is the catalog's vendor reference table (legal entities); it is **not** a Semantius data_object. Read vendor-shaped records via `query_suppliers` (the `suppliers` data_object).
 - ❌ Re-creating query tools that already exist. Always read `/tools` and dedupe by `tool_name` before drafting. Past loads have surfaced multiple duplicates (`query_employees`, `query_journal_entries`, `query_suppliers`) that the dedup pre-check catches.
-- ❌ Drafting a system skill for a domain with zero masters. The skill would have nothing to query/mutate, which means either (a) the domain is leadership-layer and shouldn't have a skill at all, or (b) Phase-B is incomplete and needs backfilling first. **Don't paper over a Phase-B gap by inventing skill_tools that reference data_objects from other domains** — that produces a skill whose entire required-tool set is consumer-reads, which is not a system skill.
+- ❌ Drafting a system skill for a domain with zero masters. The skill would have nothing to query/mutate, which means either (a) the domain is a genuine derive/overlay that masters nothing and has no actionable consumed/derived surface (rare — apply the overlay test), or (b) Phase-B is incomplete and needs backfilling first (the common case). **Don't paper over a Phase-B gap by inventing skill_tools that reference data_objects from other domains** — that produces a skill whose entire required-tool set is consumer-reads, which is not a system skill.
 - ❌ Stamping `record_status='approved'` on freshly-loaded skills/tools/skill_tools without an explicit user review pass. Rule #1 applies to these entities the same as to any other catalog row.
 
 ---
@@ -1732,14 +1738,14 @@ Reference loader: [scripts/loaders/load_p25b_process_skills.ts](../../../scripts
 - ❌ Stopping after Phase A (market shape) and not running Phase B (data-object footprint — data_objects, domain_data_objects, handoffs). A market without its mastered/contributed data objects and its outbound handoffs contributes zero to Signal 1 and Signal 2, which is what the catalog exists to support. See workflow step 5.
 - ❌ Stopping after Phase A+B and not running Phase C (business_function_domains, optionally business_function_capabilities). A market without functional ownership contributes zero to the buyer-persona / RACI axis (Signal 3). The function-axis spine is small, but the per-domain links are part of every market load.
 - ❌ Skipping Phase M (modules) on a new domain load. Every domain has ≥1 module per Rule #14 — no exceptions. A domain row without modules is non-deployable; it's a market-research stub, not a working catalog entry.
-- ❌ Loading a multi-module domain (≥3 capabilities) without Phase E. A domain with modules but no roles is half-loaded — the deployer can install the modules but can't provision the users. Run E1–E6 before declaring the load done. See the E section of the completeness checklist.
-- ❌ Authoring a role with `role_modules` on only 1 module. Single-module personas are a permission tier on that module, not a role. The 2-module floor (E2) is the structural justification for a row existing in `roles` at all.
+- ❌ Loading a multi-module domain (≥3 capabilities) without Phase E. A domain with modules but no personas is half-loaded: the deployer can install the modules but can't provision the users or their responsibilities. Run E1-E6 before declaring the load done. See the E section of the completeness checklist.
+- ❌ Authoring a persona (`domain_roles`) with `role_modules` on only 1 module. Single-module personas are a permission tier on that module, not a persona. The 2-module floor (E2) is the structural justification for a row existing in `domain_roles` at all.
 - ❌ Domain-prefixing role codes (`ATS-RECRUITER`, `ITSM-AGENT`). Roles are function-scoped, not domain-scoped — a Recruiter belongs to Recruiting, not to ATS. Use `<FUNCTION-CODE>-<ROLE-NAME>` (`RECRUITING-RECRUITER`) or, for cross-functional roles, drop the prefix entirely (`HIRING-MANAGER`).
-- ❌ Enumerating every workflow gate in a role's `role_permissions` bundle. Use the tier-level grant (`<module>:admin`) and let Semantius's `permission_hierarchy` auto-include the gates — bundles stay short, new gates auto-flow to admin-tier roles. Only list specific gates that an IC-tier role needs explicitly (e.g. `ats-offers:approve_offer` for Recruiter, who otherwise has `:manage` not `:admin`).
+- ❌ Trying to author a stored permission bundle for a persona. There is no `role_permissions` for `domain_roles` (Plan 3): the bundle is DERIVED by the emitter (§9) from `role_modules` reach + `process_raci` responsibility + the entity-type tier policy. Author reach + RACI, never a permission list. To give a persona a specific gate (e.g. offer approval), add the `process_raci` Responsible row for that process and wire the gate's lifecycle `process_id`; the emitter grants it.
 - ❌ Treating [Phase D](#phase-d--process-skill-discovery-substrate-level) as a fourth per-market load step. Phase D is a **substrate-level analytic** that runs across the catalog once Phase B is broadly complete. Running it after every single market load is wasted work; skipping it entirely once enough clusters have shipped Phase B is the actual failure mode.
 - ❌ Creating one `trigger_events` row per subscriber when a single event fans out. All subscribers of `employee.created` share **one** `trigger_events.id`; only the handoff rows differ. Duplicating events per subscriber breaks Phase D's primary clustering signal.
 - ❌ Treating `handoffs.data_object_id` as the publisher's data_object. It's the **per-edge payload** — the artifact in flight on that specific handoff. The publisher's data_object lives on `trigger_events.data_object_id` and is shared across every subscriber of the event. These two columns ARE allowed to differ (HCM publishes `employee.created` on `employees`; the HCM→Onboarding handoff carries `onboarding_journeys` as the payload). Reviewers regularly conflate them when reading a handoff row in isolation.
-- ❌ Scaffolding synthetic `data_objects` for leadership-layer / aggregation-tier domains (REV-INTEL, SALES-PERF, GTM-PLAN, ACCT-PLAN, PRM, EPM) just so they "own something". These domains read upstream and publish derived signals; the handoff's `data_object_id` references the upstream cluster's data_object directly. Forcing ownership via synthetic objects creates dead rows that nothing else references.
+- ❌ Scaffolding *synthetic* `data_objects` for a genuine derive/overlay domain just so it "owns something". A true overlay reads upstream and republishes derived signals; the handoff's `data_object_id` references the upstream cluster's data_object directly, and inventing fake masters creates dead rows nothing references. **But the inverse error is now the more common one:** filing a master-bearing domain as "overlay" and leaving it empty. If the domain persists real records (apply the overlay test in § "Master-bearing vs derive/overlay domains"), author the *real* masters in Phase B — don't park it as zero-master because it appeared on an old "leadership-tier" list.
 - ❌ Inferring catalog state from any deploy script (`scripts/loaders/*.ts` or `.tmp_deploy/*.ts`). They drift the moment they ship. Cluster inventories MUST query live `postgrestRequest` endpoints — see workflow step 1.
 - ❌ Treating `domain_data_objects.notes` as a required field on every master row. `notes` is for research details / decisions worth preserving (slice ownership on multi-master rows per Rule #3 and the anti-pattern above, point-solution-vs-holistic carve-outs, classification rationale a future reviewer would otherwise have to re-derive). Empty `notes` on a single-master row with no decision worth recording is the right shape, not a gap. Do **not** write demotion-path prose on embedded_master rows: `role=embedded_master` + the canonical master's existence already conveys it; notes that restate the schema are noise. The blueprint emitter and the per-domain checklist both treat this column as opt-in metadata, not a populate-on-every-row obligation. For the module-level junction (`domain_module_data_objects.notes`), see Rule #15: empty by default unless the user explicitly asks for a note.
 - ❌ Loading a market with `min_org_size` of `xs`/`s` but only enterprise-tier solutions. If the stated minimum buyer is SMB/mid-market, the solution list must include at least 1–2 vendors that actually sell into that band. A list of pure enterprise solutions under an SMB-minimum domain is internally inconsistent and misleads downstream filters.

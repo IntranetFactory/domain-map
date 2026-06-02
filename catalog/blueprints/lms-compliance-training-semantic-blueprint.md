@@ -8,7 +8,7 @@ domain_modules:
   - lms-compliance-training
 domain_code: LMS
 related_modules: [clm-repository, hcm-core-worker, hcm-org-positions, hrsd-case-mgmt, iga-auto-provisioning, lms-automation, lms-course-delivery, lms-credentials, onb-journey-mgmt, skills-mgmt-profile, training-records-starter]
-created_at: 2026-06-01
+created_at: 2026-06-02
 ---
 
 # Compliance Training
@@ -368,25 +368,25 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| LMS-COMPLIANCE-TRAINING | GRC | _(domain-level)_ | `compliance_assignment.due` | _(threshold)_ | `compliance_assignments` | event_stream | medium | GRC obligation tracker updates the per-employee compliance status to 'due' so the regulator-evidence dashboard reflects the impending breach risk. Drives audit-evidence reporting (e.g., Compliance Operations dashboard). |
-| LMS-COMPLIANCE-TRAINING | GRC | _(domain-level)_ | `training_evidence_record.submitted` | _(lifecycle)_ | `training_evidence_records` | event_stream | low | - |
-| LMS-COMPLIANCE-TRAINING | GRC | _(domain-level)_ | `compliance_assignment.expired` | _(threshold)_ | `compliance_assignments` | event_stream | high | - |
-| LMS-COMPLIANCE-TRAINING | GRC | _(domain-level)_ | `compliance_assignment.completed` | _(lifecycle)_ | `compliance_assignments` | event_stream | low | - |
 | LMS-COMPLIANCE-TRAINING | GRC | _(domain-level)_ | `compliance_assignment.overdue` | _(threshold)_ | `compliance_assignments` | event_stream | high | Compliance training overdue is a control failure; GRC tracks obligation status, IGA may suspend high-risk access. |
+| LMS-COMPLIANCE-TRAINING | GRC | _(domain-level)_ | `compliance_assignment.due` | _(threshold)_ | `compliance_assignments` | event_stream | medium | GRC obligation tracker updates the per-employee compliance status to 'due' so the regulator-evidence dashboard reflects the impending breach risk. Drives audit-evidence reporting (e.g., Compliance Operations dashboard). |
+| LMS-COMPLIANCE-TRAINING | GRC | _(domain-level)_ | `compliance_assignment.completed` | _(lifecycle)_ | `compliance_assignments` | event_stream | low | - |
+| LMS-COMPLIANCE-TRAINING | GRC | _(domain-level)_ | `compliance_assignment.expired` | _(threshold)_ | `compliance_assignments` | event_stream | high | - |
+| LMS-COMPLIANCE-TRAINING | GRC | _(domain-level)_ | `training_evidence_record.submitted` | _(lifecycle)_ | `training_evidence_records` | event_stream | low | - |
 | LMS-COMPLIANCE-TRAINING | HRSD | HRSD-CASE-MGMT | `compliance_assignment.due` | _(threshold)_ | `compliance_assignments` | api_call | medium | HR Service Delivery opens (or updates) an employee-facing case/task with the impending obligation, deadline, and link to the assigned course. Failure mode: when an HRSD platform isn't deployed, the nudge falls back to direct email and the in-tool reminder. |
 | LMS-COMPLIANCE-TRAINING | IGA | IGA-AUTO-PROVISIONING | `compliance_assignment.overdue` | _(threshold)_ | `compliance_assignments` | api_call | high | Severe overdue (PCI, HIPAA, SOX-relevant) may auto-suspend system access pending completion. Alert-without-feedback-loop common. |
 | LMS-COMPLIANCE-TRAINING | IGA | IGA-AUTO-PROVISIONING | `compliance_assignment.expired` | _(threshold)_ | `compliance_assignments` | api_call | high | - |
 | LMS-COMPLIANCE-TRAINING | HCM | _(domain-level)_ | `compliance_assignment.due` | _(threshold)_ | `compliance_assignments` | event_stream | medium | Compliance assignment due-date nudges to HCM-mastered manager/employee record. HCM surfaces the impending obligation on the employee profile and routes a reminder to the line manager. |
-| LMS-COMPLIANCE-TRAINING | LMS | LMS-AUTOMATION | `compliance_training_campaign.launched` | _(lifecycle)_ | `compliance_training_campaigns` | lifecycle_progression | low | - |
 | LMS-COMPLIANCE-TRAINING | LMS | LMS-AUTOMATION | `compliance_assignment.overdue` | _(threshold)_ | `compliance_assignments` | lifecycle_progression | low | - |
+| LMS-COMPLIANCE-TRAINING | LMS | LMS-AUTOMATION | `compliance_training_campaign.launched` | _(lifecycle)_ | `compliance_training_campaigns` | lifecycle_progression | low | - |
 | LMS-COMPLIANCE-TRAINING | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `learner_certification.earned` | _(lifecycle)_ | `learner_certifications` | lifecycle_progression | low | - |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| LMS-COMPLIANCE-TRAINING | LMS | LMS-COURSE-DELIVERY | `course.published` | _(lifecycle)_ | `courses` | lifecycle_progression | low | - |
 | LMS-COMPLIANCE-TRAINING | GRC | _(domain-level)_ | `compliance_policy.updated` | `published` → `republished` _(state_change)_ | `policy_attestations` | api_call | medium | Policy version triggers LMS compliance-training requirement for scoped users. |
+| LMS-COMPLIANCE-TRAINING | LMS | LMS-COURSE-DELIVERY | `course.published` | _(lifecycle)_ | `courses` | lifecycle_progression | low | - |
 | LMS-COMPLIANCE-TRAINING | ONBOARDING | ONB-JOURNEY-MGMT | `task.compliance_training_required` | _(state_change)_ | `onboarding_tasks` | api_call | medium | Compliance training items (security awareness, anti-harassment, HIPAA, country-specific code-of-conduct, role-specific certifications) trigger LMS enrollments. LMS masters the enrollment record and completion certificate; Onboarding consumes the completion event to close out its task. Friction sits in keeping the training catalog mapped to roles/jurisdictions. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
@@ -692,3 +692,101 @@ _This scope holds `signature_records` as **embedded_master**; the canonical stat
 | `submit_restricted_to_sox_training_evidence_owner` | `sox_training_evidence` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `lms-compliance-training:manage_all_sox_training_evidence` |
 | `ferpa_training_record_edit_scope` | `ferpa_training_records` | has_personal_content | Row-scope by default; override via `lms-compliance-training:view_all_ferpa_training_records` / `lms-compliance-training:manage_all_ferpa_training_records` |
 | `submit_restricted_to_ferpa_training_record_owner` | `ferpa_training_records` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `lms-compliance-training:manage_all_ferpa_training_records` |
+
+## 9. Roles, RACI, and responsibilities (derived)
+
+_Baseline roles, the permission hierarchy, and RACI realization are DERIVED from this scope's entity-type write tiers + `process_raci`; none of it is stored in the catalog (the deployer provisions it from this blueprint)._
+
+### 9.1 `LMS-COMPLIANCE-TRAINING`
+
+**Baseline roles:**
+
+| role | baseline grant |
+| --- | --- |
+| `lms-compliance-training_viewer` | `lms-compliance-training:read` |
+| `lms-compliance-training_manager` | `lms-compliance-training:manage` |
+
+**Permission hierarchy:**
+
+| permission | includes |
+| --- | --- |
+| `lms-compliance-training:admin` | `lms-compliance-training:manage` |
+| `lms-compliance-training:manage` | `lms-compliance-training:read` |
+| `lms-compliance-training:admin` | `lms-compliance-training:issue` |
+| `lms-compliance-training:admin` | `lms-compliance-training:renew` |
+| `lms-compliance-training:admin` | `lms-compliance-training:revoke` |
+| `lms-compliance-training:admin` | `lms-compliance-training:complete` |
+| `lms-compliance-training:admin` | `lms-compliance-training:waive` |
+| `lms-compliance-training:admin` | `lms-compliance-training:expire` |
+| `lms-compliance-training:admin` | `lms-compliance-training:schedule` |
+| `lms-compliance-training:admin` | `lms-compliance-training:complete` |
+| `lms-compliance-training:admin` | `lms-compliance-training:cancel` |
+| `lms-compliance-training:admin` | `lms-compliance-training:validate` |
+| `lms-compliance-training:admin` | `lms-compliance-training:submit` |
+| `lms-compliance-training:admin` | `lms-compliance-training:archive` |
+| `lms-compliance-training:admin` | `lms-compliance-training:finalize` |
+| `lms-compliance-training:admin` | `lms-compliance-training:submit` |
+| `lms-compliance-training:admin` | `lms-compliance-training:archive` |
+| `lms-compliance-training:admin` | `lms-compliance-training:acknowledge` |
+| `lms-compliance-training:admin` | `lms-compliance-training:archive` |
+| `lms-compliance-training:admin` | `lms-compliance-training:finalize` |
+| `lms-compliance-training:admin` | `lms-compliance-training:file` |
+| `lms-compliance-training:admin` | `lms-compliance-training:archive` |
+| `lms-compliance-training:admin` | `lms-compliance-training:validate` |
+| `lms-compliance-training:admin` | `lms-compliance-training:archive` |
+| `lms-compliance-training:admin` | `lms-compliance-training:validate` |
+| `lms-compliance-training:admin` | `lms-compliance-training:archive` |
+| `lms-compliance-training:admin` | `lms-compliance-training:validate` |
+| `lms-compliance-training:admin` | `lms-compliance-training:archive` |
+| `lms-compliance-training:admin` | `lms-compliance-training:validate` |
+| `lms-compliance-training:admin` | `lms-compliance-training:archive` |
+| `lms-compliance-training:admin` | `lms-compliance-training:validate` |
+| `lms-compliance-training:admin` | `lms-compliance-training:archive` |
+| `lms-compliance-training:admin` | `lms-compliance-training:validate` |
+| `lms-compliance-training:admin` | `lms-compliance-training:archive` |
+| `lms-compliance-training:admin` | `lms-compliance-training:view_all_compliance_training_assignments` |
+| `lms-compliance-training:admin` | `lms-compliance-training:manage_all_compliance_training_assignments` |
+| `lms-compliance-training:admin` | `lms-compliance-training:submit_compliance_training_campaign` |
+| `lms-compliance-training:admin` | `lms-compliance-training:view_all_compliance_audit_records` |
+| `lms-compliance-training:admin` | `lms-compliance-training:manage_all_compliance_audit_records` |
+| `lms-compliance-training:admin` | `lms-compliance-training:submit_compliance_audit_record` |
+| `lms-compliance-training:admin` | `lms-compliance-training:view_all_training_evidence_records` |
+| `lms-compliance-training:admin` | `lms-compliance-training:manage_all_training_evidence_records` |
+| `lms-compliance-training:admin` | `lms-compliance-training:submit_training_evidence_record` |
+| `lms-compliance-training:admin` | `lms-compliance-training:view_all_harassment_training_acknowledgements` |
+| `lms-compliance-training:admin` | `lms-compliance-training:manage_all_harassment_training_acknowledgements` |
+| `lms-compliance-training:admin` | `lms-compliance-training:submit_harassment_training_acknowledgement` |
+| `lms-compliance-training:admin` | `lms-compliance-training:submit_regulator_filing_export` |
+| `lms-compliance-training:admin` | `lms-compliance-training:view_all_fda_part_11_audit_trails` |
+| `lms-compliance-training:admin` | `lms-compliance-training:manage_all_fda_part_11_audit_trails` |
+| `lms-compliance-training:admin` | `lms-compliance-training:submit_fda_part_11_audit_trail` |
+| `lms-compliance-training:admin` | `lms-compliance-training:view_all_bsa_/_aml_training_records` |
+| `lms-compliance-training:admin` | `lms-compliance-training:manage_all_bsa_/_aml_training_records` |
+| `lms-compliance-training:admin` | `lms-compliance-training:submit_bsa_/_aml_training_record` |
+| `lms-compliance-training:admin` | `lms-compliance-training:view_all_hipaa_training_records` |
+| `lms-compliance-training:admin` | `lms-compliance-training:manage_all_hipaa_training_records` |
+| `lms-compliance-training:admin` | `lms-compliance-training:submit_hipaa_training_record` |
+| `lms-compliance-training:admin` | `lms-compliance-training:view_all_osha_training_records` |
+| `lms-compliance-training:admin` | `lms-compliance-training:manage_all_osha_training_records` |
+| `lms-compliance-training:admin` | `lms-compliance-training:submit_osha_training_record` |
+| `lms-compliance-training:admin` | `lms-compliance-training:view_all_sox_training_evidence` |
+| `lms-compliance-training:admin` | `lms-compliance-training:manage_all_sox_training_evidence` |
+| `lms-compliance-training:admin` | `lms-compliance-training:submit_sox_training_evidence` |
+| `lms-compliance-training:admin` | `lms-compliance-training:view_all_ferpa_training_records` |
+| `lms-compliance-training:admin` | `lms-compliance-training:manage_all_ferpa_training_records` |
+| `lms-compliance-training:admin` | `lms-compliance-training:submit_ferpa_training_record` |
+
+**RACI realization:**
+
+_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_
+
+### 9.2 Functional ownership and default grants
+
+| responsibility | business function | default role | default tier |
+| --- | --- | --- | --- |
+| owner | Learning and Development | `admin` | `:admin` |
+| contributor | Governance, Risk and Compliance | `manage` | `:manage` |
+| contributor | Legal | `manage` | `:manage` |
+| consumer | Manufacturing Operations | `read` | `:read` |
+| consumer | Sales | `read` | `:read` |
+| consumer | Software Engineering | `read` | `:read` |

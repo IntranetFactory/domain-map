@@ -8,7 +8,7 @@ domain_modules:
   - work-mgmt-goals-okr
 domain_code: WORK-MGMT
 related_modules: [pm-roadmap-delivery, sem-execution-tracking, sem-operating-rhythm, sem-strategy-definition, talent-performance-mgmt, work-mgmt-task-exec]
-created_at: 2026-06-01
+created_at: 2026-06-02
 ---
 
 # Team-Execution Goals and OKRs
@@ -151,8 +151,8 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | WORK-MGMT-GOALS-OKR | SPM | _(domain-level)_ | `okr_objective.committed` | `drafted` → `committed` _(lifecycle)_ | `okr_objectives` | api_call | medium | Team-level OKR commits in WM cascade upward into SPM portfolio rollup. SPM tracks corporate / strategic OKRs and aggregates team commits for portfolio reporting. target_domain_module_id NULL because SPM is not yet modularized. |
-| WORK-MGMT-GOALS-OKR | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `okr_objective.scored` | `in_progress` → `scored` _(lifecycle)_ | `okr_objectives` | api_call | high | End-of-cycle OKR score feeds directly into per-employee performance review compensation discussion. High friction: most-cited integration pain point across Lattice/15Five/Culture Amp user surveys when the team OKR tool is a separate vendor from the perf review tool - managers re-derive scores manually, often after late-bound corrections to the OKR-side scoring. |
 | WORK-MGMT-GOALS-OKR | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `okr_objective.committed` | `drafted` → `committed` _(lifecycle)_ | `okr_objectives` | api_call | medium | Team OKR commits in WORK-MGMT-GOALS-OKR; TALENT-PERFORMANCE-MGMT reads the committed objective so per-employee performance_goals can align to its KRs. Most modern perf platforms (Lattice, 15Five, Culture Amp) ship OKR-tool sync; non-trivial when the OKR tool is separate from the perf tool because employee-to-KR mapping is manual. |
+| WORK-MGMT-GOALS-OKR | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `okr_objective.scored` | `in_progress` → `scored` _(lifecycle)_ | `okr_objectives` | api_call | high | End-of-cycle OKR score feeds directly into per-employee performance review compensation discussion. High friction: most-cited integration pain point across Lattice/15Five/Culture Amp user surveys when the team OKR tool is a separate vendor from the perf review tool - managers re-derive scores manually, often after late-bound corrections to the OKR-side scoring. |
 | WORK-MGMT-GOALS-OKR | PROD-MGMT | PM-ROADMAP-DELIVERY | `okr_objective.committed` | `drafted` → `committed` _(lifecycle)_ | `okr_objectives` | api_call | medium | Team OKR commits in WM; PROD-MGMT roadmaps that align to OKR cycles pick up the committed objective for alignment scoring. Aha, Productboard, and similar tools maintain OKR sync as a paid feature. |
 | WORK-MGMT-GOALS-OKR | PROD-MGMT | PM-ROADMAP-DELIVERY | `okr_objective.scored` | `in_progress` → `scored` _(lifecycle)_ | `okr_objectives` | api_call | medium | End-of-cycle OKR score feeds PROD-MGMT retrospective and next-cycle roadmap prioritization. Distinct from committed (kickoff) and aligned to roadmap delivery KPIs. |
 | WORK-MGMT-GOALS-OKR | WORK-MGMT | WORK-MGMT-TASK-EXEC | `okr_objective.committed` | `drafted` → `committed` _(lifecycle)_ | `okr_objectives` | lifecycle_progression | low | Committing an OKR unlocks KR-to-work_item linking and optionally auto-creates placeholder work_items per the objective's templates. Reverse direction of the rollup flow. |
@@ -161,9 +161,9 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| WORK-MGMT-GOALS-OKR | SPM | _(domain-level)_ | `okr_objective.created` | `draft` _(lifecycle)_ | `okr_objectives` | manual_handoff | high | Executive-level OKRs created in SPM (or in a slide deck, or an HCM perf system) need to cascade into team-level OKRs in the work-management tool. Almost universally manual: someone reads the corporate OKR and authors child OKRs in the WORK-MGMT goals module. The cascade gap is what dedicated OKR-platform vendors exist to close. |
 | WORK-MGMT-GOALS-OKR | WORK-MGMT | WORK-MGMT-TASK-EXEC | `work_item.completed` | `in_progress` → `done` _(lifecycle)_ | `work_items` | lifecycle_progression | low | Terminal completion of a work item is the strongest progress signal - drives KR closure recalculation and triggers KR-fully-met evaluations on linked objectives. |
 | WORK-MGMT-GOALS-OKR | WORK-MGMT | WORK-MGMT-TASK-EXEC | `work_item.status_changed` | `any` → `any` _(lifecycle)_ | `work_items` | lifecycle_progression | low | Work item status change triggers KR progress recalculation in GOALS-OKR for any objective that has linked the item to a key result. In-process FK + state read; no message moves. |
+| WORK-MGMT-GOALS-OKR | SPM | _(domain-level)_ | `okr_objective.created` | `draft` _(lifecycle)_ | `okr_objectives` | manual_handoff | high | Executive-level OKRs created in SPM (or in a slide deck, or an HCM perf system) need to cascade into team-level OKRs in the work-management tool. Almost universally manual: someone reads the corporate OKR and authors child OKRs in the WORK-MGMT goals module. The cascade gap is what dedicated OKR-platform vendors exist to close. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -190,14 +190,14 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `drafted` | ✓ | - | - | - | - |
 | 1 | `drafted` | ✓ | - | - | - | Objective drafted by the owner. |
-| 2 | `committed` | - | - | ✓ | `work-mgmt-goals-okr:commit_okr_objective` | - |
 | 2 | `committed` | - | - | ✓ | `talent-performance-mgmt:commit_okr_objective` | Owner and manager commit to the objective for the cycle. |
+| 2 | `committed` | - | - | ✓ | `work-mgmt-goals-okr:commit_okr_objective` | - |
 | 3 | `in_progress` | - | - | - | - | - |
 | 3 | `in_progress` | - | - | - | - | Objective is being pursued; key results updated. |
 | 4 | `graded` | - | - | ✓ | `talent-performance-mgmt:grade_okr_objective` | End-of-cycle score (0.0-1.0) recorded. |
 | 4 | `scored` | - | - | ✓ | `work-mgmt-goals-okr:score_okr_objective` | - |
-| 5 | `closed` | - | ✓ | - | - | - |
 | 5 | `closed` | - | ✓ | - | - | Cycle closed; objective archived. |
+| 5 | `closed` | - | ✓ | - | - | - |
 
 > ⚠ **state-machine shape:** 2 is_initial (expected exactly 1); state_order not unique/monotonic.
 
@@ -238,3 +238,46 @@ _This scope holds `work_items` as **embedded_master**; the canonical state machi
 | --- | --- | --- | --- |
 | `objective_/_okr_edit_scope` | `okr_objectives` | has_personal_content | Row-scope by default; override via `work-mgmt-goals-okr:view_all_objective_/_okrs` / `work-mgmt-goals-okr:manage_all_objective_/_okrs` |
 | `okr_check-in_edit_scope` | `okr_check_ins` | has_personal_content | Row-scope by default; override via `work-mgmt-goals-okr:view_all_okr_check-ins` / `work-mgmt-goals-okr:manage_all_okr_check-ins` |
+
+## 9. Roles, RACI, and responsibilities (derived)
+
+_Baseline roles, the permission hierarchy, and RACI realization are DERIVED from this scope's entity-type write tiers + `process_raci`; none of it is stored in the catalog (the deployer provisions it from this blueprint)._
+
+### 9.1 `WORK-MGMT-GOALS-OKR`
+
+**Baseline roles:**
+
+| role | baseline grant |
+| --- | --- |
+| `work-mgmt-goals-okr_viewer` | `work-mgmt-goals-okr:read` |
+| `work-mgmt-goals-okr_manager` | `work-mgmt-goals-okr:manage` |
+
+**Permission hierarchy:**
+
+| permission | includes |
+| --- | --- |
+| `work-mgmt-goals-okr:admin` | `work-mgmt-goals-okr:manage` |
+| `work-mgmt-goals-okr:manage` | `work-mgmt-goals-okr:read` |
+| `work-mgmt-goals-okr:admin` | `work-mgmt-goals-okr:commit_okr_objective` |
+| `work-mgmt-goals-okr:admin` | `work-mgmt-goals-okr:score_okr_objective` |
+| `work-mgmt-goals-okr:admin` | `work-mgmt-goals-okr:commit_okr_key_result` |
+| `work-mgmt-goals-okr:admin` | `work-mgmt-goals-okr:achieve_okr_key_result` |
+| `work-mgmt-goals-okr:admin` | `work-mgmt-goals-okr:miss_okr_key_result` |
+| `work-mgmt-goals-okr:admin` | `work-mgmt-goals-okr:view_all_objective_/_okrs` |
+| `work-mgmt-goals-okr:admin` | `work-mgmt-goals-okr:manage_all_objective_/_okrs` |
+| `work-mgmt-goals-okr:admin` | `work-mgmt-goals-okr:view_all_okr_check-ins` |
+| `work-mgmt-goals-okr:admin` | `work-mgmt-goals-okr:manage_all_okr_check-ins` |
+
+**RACI realization:**
+
+_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_
+
+### 9.2 Functional ownership and default grants
+
+| responsibility | business function | default role | default tier |
+| --- | --- | --- | --- |
+| owner | Business Operations | `admin` | `:admin` |
+| contributor | Customer Success | `manage` | `:manage` |
+| contributor | Marketing | `manage` | `:manage` |
+| contributor | Product Management | `manage` | `:manage` |
+| consumer | Sales | `read` | `:read` |

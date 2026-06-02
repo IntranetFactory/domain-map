@@ -7,7 +7,7 @@ system_slug: real-estate-agent
 domain_modules:
   - real-estate-agent
 related_modules: [clm-repository, crm-acct-mgt, crm-lead-mgt, re-brok-agent-ops]
-created_at: 2026-06-01
+created_at: 2026-06-02
 ---
 
 # Real Estate Agent (solo / small firm bundle)
@@ -302,3 +302,31 @@ _This scope holds `tour_appointments` as **embedded_master**; the canonical stat
 ### 8.2 Business rules
 
 _(no flag-derived business rules.)_
+
+## 9. Roles, RACI, and responsibilities (derived)
+
+_Baseline roles, the permission hierarchy, and RACI realization are DERIVED from this scope's entity-type write tiers + `process_raci`; none of it is stored in the catalog (the deployer provisions it from this blueprint)._
+
+### 9.1 `REAL-ESTATE-AGENT`
+
+**Baseline roles:**
+
+| role | baseline grant |
+| --- | --- |
+| `real-estate-agent_viewer` | `real-estate-agent:read` |
+| `real-estate-agent_manager` | `real-estate-agent:manage` |
+
+**Permission hierarchy:**
+
+| permission | includes |
+| --- | --- |
+| `real-estate-agent:admin` | `real-estate-agent:manage` |
+| `real-estate-agent:manage` | `real-estate-agent:read` |
+
+**RACI realization:**
+
+_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_
+
+### 9.2 Functional ownership and default grants
+
+_(no `business_function_domains` rows for this scope's domain.)_

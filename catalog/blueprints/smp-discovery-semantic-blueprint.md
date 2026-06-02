@@ -8,7 +8,7 @@ domain_modules:
   - smp-discovery
 domain_code: SMP
 related_modules: [apm-portfolio-registry, iga-entitlement-catalog, itam-portfolio-reporting, smp-renewal-vendor]
-created_at: 2026-06-01
+created_at: 2026-06-02
 ---
 
 # SMP Discovery and Catalog
@@ -269,3 +269,57 @@ _This scope holds `smp_app_lifecycle_stages` as **embedded_master**; the canonic
 | rule_name | data_object | source flag | intent |
 | --- | --- | --- | --- |
 | `saas_app_owner_edit_scope` | `smp_app_owners` | has_personal_content | Row-scope by default; override via `smp-discovery:view_all_saas_app_owners` / `smp-discovery:manage_all_saas_app_owners` |
+
+## 9. Roles, RACI, and responsibilities (derived)
+
+_Baseline roles, the permission hierarchy, and RACI realization are DERIVED from this scope's entity-type write tiers + `process_raci`; none of it is stored in the catalog (the deployer provisions it from this blueprint)._
+
+### 9.1 `SMP-DISCOVERY`
+
+**Baseline roles:**
+
+| role | baseline grant |
+| --- | --- |
+| `smp-discovery_viewer` | `smp-discovery:read` |
+| `smp-discovery_manager` | `smp-discovery:manage` |
+
+**Permission hierarchy:**
+
+| permission | includes |
+| --- | --- |
+| `smp-discovery:admin` | `smp-discovery:manage` |
+| `smp-discovery:manage` | `smp-discovery:read` |
+| `smp-discovery:admin` | `smp-discovery:sanction_application` |
+| `smp-discovery:admin` | `smp-discovery:deprecate_application` |
+| `smp-discovery:admin` | `smp-discovery:deprovision_application` |
+| `smp-discovery:admin` | `smp-discovery:promote_shadow_app` |
+| `smp-discovery:admin` | `smp-discovery:block_shadow_app` |
+| `smp-discovery:admin` | `smp-discovery:revoke_app_owner` |
+| `smp-discovery:admin` | `smp-discovery:mark_integration_degraded` |
+| `smp-discovery:admin` | `smp-discovery:disconnect_integration` |
+| `smp-discovery:admin` | `smp-discovery:archive_integration` |
+| `smp-discovery:admin` | `smp-discovery:publish_catalog_listing` |
+| `smp-discovery:admin` | `smp-discovery:deprecate_catalog_listing` |
+| `smp-discovery:admin` | `smp-discovery:unlist_catalog_listing` |
+| `smp-discovery:admin` | `smp-discovery:acknowledge_alert` |
+| `smp-discovery:admin` | `smp-discovery:triage_alert` |
+| `smp-discovery:admin` | `smp-discovery:resolve_alert` |
+| `smp-discovery:admin` | `smp-discovery:suppress_alert` |
+| `smp-discovery:admin` | `smp-discovery:promote_to_pilot` |
+| `smp-discovery:admin` | `smp-discovery:promote_to_sanctioned` |
+| `smp-discovery:admin` | `smp-discovery:sunset_app` |
+| `smp-discovery:admin` | `smp-discovery:retire_app` |
+| `smp-discovery:admin` | `smp-discovery:view_all_saas_app_owners` |
+| `smp-discovery:admin` | `smp-discovery:manage_all_saas_app_owners` |
+
+**RACI realization:**
+
+_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_
+
+### 9.2 Functional ownership and default grants
+
+| responsibility | business function | default role | default tier |
+| --- | --- | --- | --- |
+| owner | IT Asset Management | `admin` | `:admin` |
+| contributor | Finance | `manage` | `:manage` |
+| contributor | Procurement | `manage` | `:manage` |

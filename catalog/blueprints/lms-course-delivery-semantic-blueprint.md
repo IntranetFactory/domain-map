@@ -8,7 +8,7 @@ domain_modules:
   - lms-course-delivery
 domain_code: LMS
 related_modules: [hcm-core-worker, hcm-org-positions, lms-automation, lms-compliance-training, lms-credentials, lms-ilt-delivery, lms-paths, pa-predictive-models, skills-mgmt-profile, talent-succession-career]
-created_at: 2026-06-01
+created_at: 2026-06-02
 ---
 
 # Course Delivery
@@ -352,15 +352,15 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | LMS-COURSE-DELIVERY | HCM | _(domain-level)_ | `course_completion.recorded` | _(lifecycle)_ | `course_completions` | event_stream | low | - |
 | LMS-COURSE-DELIVERY | HCM | _(domain-level)_ | `learning_record.posted` | _(lifecycle)_ | `learning_records` | event_stream | low | Authoritative learning transcript visible in HCM employee record. |
 | LMS-COURSE-DELIVERY | LMS | LMS-COMPLIANCE-TRAINING | `course.published` | _(lifecycle)_ | `courses` | lifecycle_progression | low | - |
-| LMS-COURSE-DELIVERY | LMS | LMS-ILT-DELIVERY | `course_version.published` | _(lifecycle)_ | `course_versions` | lifecycle_progression | low | - |
-| LMS-COURSE-DELIVERY | LMS | LMS-CREDENTIALS | `course_completion.recorded` | _(lifecycle)_ | `course_completions` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | LMS | LMS-COMPLIANCE-TRAINING | `course_completion.recorded` | _(lifecycle)_ | `course_completions` | lifecycle_progression | low | - |
+| LMS-COURSE-DELIVERY | LMS | LMS-CREDENTIALS | `course_completion.recorded` | _(lifecycle)_ | `course_completions` | lifecycle_progression | low | - |
+| LMS-COURSE-DELIVERY | LMS | LMS-ILT-DELIVERY | `course_version.published` | _(lifecycle)_ | `course_versions` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | LMS | LMS-CREDENTIALS | `assessment_attempt.passed` | _(lifecycle)_ | `assessment_attempts` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | TALENT-MGMT | TALENT-SUCCESSION-CAREER | `course_enrollment.completed` | _(lifecycle)_ | `course_enrollments` | event_stream | low | Course completion updates skill-profile; TALENT-MGMT reflects in dev-plans and succession. |
-| LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course_enrollment.completed` | _(lifecycle)_ | `course_enrollments` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course_version.published` | _(lifecycle)_ | `course_versions` | lifecycle_progression | low | - |
-| LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course_completion.recorded` | _(lifecycle)_ | `course_completions` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course.published` | _(lifecycle)_ | `courses` | lifecycle_progression | low | - |
+| LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course_enrollment.completed` | _(lifecycle)_ | `course_enrollments` | lifecycle_progression | low | - |
+| LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course_completion.recorded` | _(lifecycle)_ | `course_completions` | lifecycle_progression | low | - |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
@@ -589,3 +589,85 @@ _This scope holds `org_units` as **embedded_master**; the canonical state machin
 | `course_review_edit_scope` | `course_reviews` | has_personal_content | Row-scope by default; override via `lms-course-delivery:view_all_course_reviews` / `lms-course-delivery:manage_all_course_reviews` |
 | `submit_restricted_to_course_review_owner` | `course_reviews` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `lms-course-delivery:manage_all_course_reviews` |
 | `course_rating_edit_scope` | `course_ratings` | has_personal_content | Row-scope by default; override via `lms-course-delivery:view_all_course_ratings` / `lms-course-delivery:manage_all_course_ratings` |
+
+## 9. Roles, RACI, and responsibilities (derived)
+
+_Baseline roles, the permission hierarchy, and RACI realization are DERIVED from this scope's entity-type write tiers + `process_raci`; none of it is stored in the catalog (the deployer provisions it from this blueprint)._
+
+### 9.1 `LMS-COURSE-DELIVERY`
+
+**Baseline roles:**
+
+| role | baseline grant |
+| --- | --- |
+| `lms-course-delivery_viewer` | `lms-course-delivery:read` |
+| `lms-course-delivery_manager` | `lms-course-delivery:manage` |
+
+**Permission hierarchy:**
+
+| permission | includes |
+| --- | --- |
+| `lms-course-delivery:admin` | `lms-course-delivery:manage` |
+| `lms-course-delivery:manage` | `lms-course-delivery:read` |
+| `lms-course-delivery:admin` | `lms-course-delivery:publish` |
+| `lms-course-delivery:admin` | `lms-course-delivery:retire` |
+| `lms-course-delivery:admin` | `lms-course-delivery:complete` |
+| `lms-course-delivery:admin` | `lms-course-delivery:fail` |
+| `lms-course-delivery:admin` | `lms-course-delivery:expire` |
+| `lms-course-delivery:admin` | `lms-course-delivery:withdraw` |
+| `lms-course-delivery:admin` | `lms-course-delivery:validate` |
+| `lms-course-delivery:admin` | `lms-course-delivery:void` |
+| `lms-course-delivery:admin` | `lms-course-delivery:publish` |
+| `lms-course-delivery:admin` | `lms-course-delivery:retire` |
+| `lms-course-delivery:admin` | `lms-course-delivery:archive` |
+| `lms-course-delivery:admin` | `lms-course-delivery:validate` |
+| `lms-course-delivery:admin` | `lms-course-delivery:deprecate` |
+| `lms-course-delivery:admin` | `lms-course-delivery:validate` |
+| `lms-course-delivery:admin` | `lms-course-delivery:void` |
+| `lms-course-delivery:admin` | `lms-course-delivery:publish` |
+| `lms-course-delivery:admin` | `lms-course-delivery:retire` |
+| `lms-course-delivery:admin` | `lms-course-delivery:submit` |
+| `lms-course-delivery:admin` | `lms-course-delivery:grade` |
+| `lms-course-delivery:admin` | `lms-course-delivery:close` |
+| `lms-course-delivery:admin` | `lms-course-delivery:archive` |
+| `lms-course-delivery:admin` | `lms-course-delivery:publish` |
+| `lms-course-delivery:admin` | `lms-course-delivery:remove` |
+| `lms-course-delivery:admin` | `lms-course-delivery:view_all_course_enrollments` |
+| `lms-course-delivery:admin` | `lms-course-delivery:manage_all_course_enrollments` |
+| `lms-course-delivery:admin` | `lms-course-delivery:view_all_learning_records` |
+| `lms-course-delivery:admin` | `lms-course-delivery:manage_all_learning_records` |
+| `lms-course-delivery:admin` | `lms-course-delivery:submit_course_version` |
+| `lms-course-delivery:admin` | `lms-course-delivery:view_all_xapi_statements` |
+| `lms-course-delivery:admin` | `lms-course-delivery:manage_all_xapi_statements` |
+| `lms-course-delivery:admin` | `lms-course-delivery:view_all_course_completions` |
+| `lms-course-delivery:admin` | `lms-course-delivery:manage_all_course_completions` |
+| `lms-course-delivery:admin` | `lms-course-delivery:submit_course_completion` |
+| `lms-course-delivery:admin` | `lms-course-delivery:submit_course_assessment` |
+| `lms-course-delivery:admin` | `lms-course-delivery:view_all_assessment_attempts` |
+| `lms-course-delivery:admin` | `lms-course-delivery:manage_all_assessment_attempts` |
+| `lms-course-delivery:admin` | `lms-course-delivery:submit_assessment_attempt` |
+| `lms-course-delivery:admin` | `lms-course-delivery:view_all_quiz_responses` |
+| `lms-course-delivery:admin` | `lms-course-delivery:manage_all_quiz_responses` |
+| `lms-course-delivery:admin` | `lms-course-delivery:submit_quiz_response` |
+| `lms-course-delivery:admin` | `lms-course-delivery:view_all_course_discussions` |
+| `lms-course-delivery:admin` | `lms-course-delivery:manage_all_course_discussions` |
+| `lms-course-delivery:admin` | `lms-course-delivery:view_all_course_reviews` |
+| `lms-course-delivery:admin` | `lms-course-delivery:manage_all_course_reviews` |
+| `lms-course-delivery:admin` | `lms-course-delivery:submit_course_review` |
+| `lms-course-delivery:admin` | `lms-course-delivery:view_all_course_ratings` |
+| `lms-course-delivery:admin` | `lms-course-delivery:manage_all_course_ratings` |
+
+**RACI realization:**
+
+_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_
+
+### 9.2 Functional ownership and default grants
+
+| responsibility | business function | default role | default tier |
+| --- | --- | --- | --- |
+| owner | Learning and Development | `admin` | `:admin` |
+| contributor | Governance, Risk and Compliance | `manage` | `:manage` |
+| contributor | Legal | `manage` | `:manage` |
+| consumer | Manufacturing Operations | `read` | `:read` |
+| consumer | Sales | `read` | `:read` |
+| consumer | Software Engineering | `read` | `:read` |

@@ -8,7 +8,7 @@ domain_modules:
   - ats-candidate-crm
 domain_code: ATS
 related_modules: [ats-background-checks, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, hcm-lifecycle-workflows, hiring-starter, onb-journey-mgmt, pa-workforce-metrics, tlnt-intel-marketplace]
-created_at: 2026-06-01
+created_at: 2026-06-02
 ---
 
 # Candidate CRM
@@ -226,8 +226,8 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-CANDIDATE-CRM | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_added` | _(lifecycle)_ | `talent_pools` | lifecycle_progression | low | - |
 | ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
+| ATS-CANDIDATE-CRM | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_added` | _(lifecycle)_ | `talent_pools` | lifecycle_progression | low | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -378,3 +378,60 @@ _This scope holds `talent_pools` as **consumer**; the canonical state machine is
 | `candidate_document_edit_scope` | `candidate_documents` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_candidate_documents` / `ats-candidate-crm:manage_all_candidate_documents` |
 | `candidate_note_edit_scope` | `candidate_notes` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_candidate_notes` / `ats-candidate-crm:manage_all_candidate_notes` |
 | `data_subject_request_edit_scope` | `data_subject_requests` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_data_subject_requests` / `ats-candidate-crm:manage_all_data_subject_requests` |
+
+## 9. Roles, RACI, and responsibilities (derived)
+
+_Baseline roles, the permission hierarchy, and RACI realization are DERIVED from this scope's entity-type write tiers + `process_raci`; none of it is stored in the catalog (the deployer provisions it from this blueprint)._
+
+### 9.1 `ATS-CANDIDATE-CRM`
+
+**Baseline roles:**
+
+| role | baseline grant |
+| --- | --- |
+| `ats-candidate-crm_viewer` | `ats-candidate-crm:read` |
+| `ats-candidate-crm_manager` | `ats-candidate-crm:manage` |
+| `ats-candidate-crm_admin` | `ats-candidate-crm:admin` |
+
+**Permission hierarchy:**
+
+| permission | includes |
+| --- | --- |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:manage` |
+| `ats-candidate-crm:manage` | `ats-candidate-crm:read` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:hire_candidate` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:flag_do_not_hire` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:withdraw_consent` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:verify_dsr_identity` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:fulfill_dsr` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:fulfill_dsr_partially` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:reject_dsr` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:view_all_candidates` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:manage_all_candidates` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:view_all_candidate_engagements` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:manage_all_candidate_engagements` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:view_all_recruiter_interactions` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:manage_all_recruiter_interactions` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:view_all_candidate_consents` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:manage_all_candidate_consents` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:view_all_candidate_documents` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:manage_all_candidate_documents` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:view_all_candidate_notes` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:manage_all_candidate_notes` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:view_all_data_subject_requests` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:manage_all_data_subject_requests` |
+
+**RACI realization:**
+
+| actor | kind | raci | process | realization |
+| --- | --- | --- | --- | --- |
+| `RECRUITING-RECRUITER` | persona | responsible | Hire candidate | grant gates [ats-candidate-crm:hire_candidate] + the gated entities' write tier |
+| `HIRING-MANAGER` | persona | accountable | Hire candidate | approval gate |
+| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | Hire candidate | notification side effect (trigger_event / webhook_receiver) |
+
+### 9.2 Functional ownership and default grants
+
+| responsibility | business function | default role | default tier |
+| --- | --- | --- | --- |
+| owner | Recruiting | `admin` | `:admin` |
+| contributor | Legal | `manage` | `:manage` |

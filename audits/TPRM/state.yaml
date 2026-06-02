@@ -1,10 +1,23 @@
 schema_version: 2
 domain: TPRM
-status: feedback_needed
-next_action_by: user
+status: audit_stale
+next_action_by: agent
 last_audit: "2026-05-31"
 
 b1a:
+  - id: B1A-RECLASS
+    summary: "Leadership-tier zero-master exemption rescinded 2026-06-02; re-run Validate treating TPRM as master-bearing (overlay test). Build needed, not an exemption."
+    finding: >
+      SKILL.md's fixed leadership-tier exemption was rescinded (references/skill-changelog.md
+      2026-06-02). Under the overlay test TPRM is master-bearing: masters third-party risk assessments and due-diligence records (crud_percentage 92; OneTrust / ProcessUnity / Prevalent class). The prior audit's
+      "keep leadership-tier / ship an empty landing module" option is no longer valid. Live state
+      2026-06-02: 0 domain_modules (M1 fail), so the domain is not deployable today.
+    action: >
+      Re-run the full 4-pass Validate under the corrected rule. The module-shape, promote-scope,
+      and catalog-UX decisions already in b2 still apply and re-surface after the re-audit; this
+      item records only that the classification is settled (master-bearing) and the domain needs
+      a build, not an exemption.
+    extra_reclassified: "2026-06-02 skill-changelog"
   - id: B1A-H3
     summary: DELETE redundant L4 APQC tag on handoff 278 (process_id 815) to keep the cleaner L3 framing on PCF 167 "Manage suppliers".
     finding: |

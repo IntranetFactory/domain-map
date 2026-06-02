@@ -7,8 +7,8 @@ system_slug: ats-interviews
 domain_modules:
   - ats-interviews
 domain_code: ATS
-related_modules: [ats-candidate-crm, ats-recruitment-pipeline, hcm-lifecycle-workflows, hiring-starter, pa-workforce-metrics, talent-performance-mgmt, talent-succession-career]
-created_at: 2026-06-01
+related_modules: [ats-background-checks, ats-candidate-crm, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, hcm-lifecycle-workflows, hiring-starter, pa-workforce-metrics, talent-performance-mgmt, talent-succession-career]
+created_at: 2026-06-02
 ---
 
 # Interviews
@@ -188,10 +188,10 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-INTERVIEWS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate_assessment.passed` | _(lifecycle)_ | `candidate_assessments` | event_stream | medium | Passing an assessment advances the candidate; on eventual hire, HCM uses the assessment result as the first data point for the new-hire skill profile. |
 | ATS-INTERVIEWS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate_assessment.failed` | _(lifecycle)_ | `candidate_assessments` | event_stream | low | Failed-assessment outcomes close the candidate's loop in ATS and propagate to HCM only if the candidate is an internal-mobility applicant whose profile should reflect the development gap. |
-| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `candidate_assessment.passed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
+| ATS-INTERVIEWS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate_assessment.passed` | _(lifecycle)_ | `candidate_assessments` | event_stream | medium | Passing an assessment advances the candidate; on eventual hire, HCM uses the assessment result as the first data point for the new-hire skill profile. |
 | ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `candidate_assessment.failed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
+| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `candidate_assessment.passed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `interview.completed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-INTERVIEWS | TALENT-MGMT | TALENT-SUCCESSION-CAREER | `candidate_assessment.passed` | _(lifecycle)_ | `candidate_assessments` | api_call | medium | Completed assessment scores seed the talent-management skill profile for hired candidates and a structured talent pool for non-hires. |
 | ATS-INTERVIEWS | PA | PA-WORKFORCE-METRICS | `interview_scorecard.submitted` | _(lifecycle)_ | `interview_scorecards` | event_stream | low | - |
@@ -321,3 +321,45 @@ _This scope holds `job_applications` as **embedded_master**; the canonical state
 | `interview_scorecard_edit_scope` | `interview_scorecards` | has_personal_content | Row-scope by default; override via `ats-interviews:view_all_interview_scorecards` / `ats-interviews:manage_all_interview_scorecards` |
 | `submit_restricted_to_interview_scorecard_owner` | `interview_scorecards` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `ats-interviews:manage_all_interview_scorecards` |
 | `submit_restricted_to_assessment_owner` | `candidate_assessments` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `ats-interviews:manage_all_assessments` |
+
+## 9. Roles, RACI, and responsibilities (derived)
+
+_Baseline roles, the permission hierarchy, and RACI realization are DERIVED from this scope's entity-type write tiers + `process_raci`; none of it is stored in the catalog (the deployer provisions it from this blueprint)._
+
+### 9.1 `ATS-INTERVIEWS`
+
+**Baseline roles:**
+
+| role | baseline grant |
+| --- | --- |
+| `ats-interviews_viewer` | `ats-interviews:read` |
+| `ats-interviews_manager` | `ats-interviews:manage` |
+| `ats-interviews_admin` | `ats-interviews:admin` |
+
+**Permission hierarchy:**
+
+| permission | includes |
+| --- | --- |
+| `ats-interviews:admin` | `ats-interviews:manage` |
+| `ats-interviews:manage` | `ats-interviews:read` |
+| `ats-interviews:admin` | `ats-interviews:submit_scorecard` |
+| `ats-interviews:admin` | `ats-interviews:view_all_interview_scorecards` |
+| `ats-interviews:admin` | `ats-interviews:manage_all_interview_scorecards` |
+| `ats-interviews:admin` | `ats-interviews:submit_interview_scorecard` |
+| `ats-interviews:admin` | `ats-interviews:submit_assessment` |
+
+**RACI realization:**
+
+| actor | kind | raci | process | realization |
+| --- | --- | --- | --- | --- |
+| `HIRING-MANAGER` | persona | responsible | Interview candidates | grant gates [ats-interviews:submit_scorecard] + the gated entities' write tier |
+| `RECRUITING-MANAGER` | persona | accountable | Interview candidates | approval gate |
+| `RECRUITING-RECRUITER` | persona | consulted | Interview candidates | advisory read grant |
+| `RECRUITING-COORDINATOR` | persona | informed | Interview candidates | notification side effect (trigger_event / webhook_receiver) |
+
+### 9.2 Functional ownership and default grants
+
+| responsibility | business function | default role | default tier |
+| --- | --- | --- | --- |
+| owner | Recruiting | `admin` | `:admin` |
+| contributor | Legal | `manage` | `:manage` |

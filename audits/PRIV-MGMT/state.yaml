@@ -1,10 +1,23 @@
 schema_version: 2
 domain: PRIV-MGMT
-status: feedback_needed
-next_action_by: user
+status: audit_stale
+next_action_by: agent
 last_audit: "2026-05-31"
 
 b1a:
+  - id: B1A-RECLASS
+    summary: "Leadership-tier zero-master exemption rescinded 2026-06-02; re-run Validate treating PRIV-MGMT as master-bearing (overlay test). Build needed, not an exemption."
+    finding: >
+      SKILL.md's fixed leadership-tier exemption was rescinded (references/skill-changelog.md
+      2026-06-02). Under the overlay test PRIV-MGMT is master-bearing: masters data_subject_requests, consent_records, processing inventory (ROPA), privacy assessments (crud_percentage 88; OneTrust class). The prior audit's
+      "keep leadership-tier / ship an empty landing module" option is no longer valid. Live state
+      2026-06-02: 0 domain_modules (M1 fail), so the domain is not deployable today.
+    action: >
+      Re-run the full 4-pass Validate under the corrected rule. The module-shape, promote-scope,
+      and catalog-UX decisions already in b2 still apply and re-surface after the re-audit; this
+      item records only that the classification is settled (master-bearing) and the domain needs
+      a build, not an exemption.
+    extra_reclassified: "2026-06-02 skill-changelog"
   - id: B1A-APQC-HANDOFF-288
     summary: "Load handoff_processes row for inbound handoff 288 (DSPM data_classification.sensitivity_elevated -> PRIV-MGMT) once B2-5 timing is decided."
     finding: >-

@@ -1,10 +1,23 @@
 schema_version: 2
 domain: SECOPS
-status: feedback_needed
+status: audit_stale
 next_action_by: agent
 last_audit: "2026-05-31"
 
 b1a:
+  - id: B1A-RECLASS
+    summary: "Leadership-tier zero-master exemption rescinded 2026-06-02; re-run Validate treating SECOPS as master-bearing (overlay test). Build needed, not an exemption."
+    finding: >
+      SKILL.md's fixed leadership-tier exemption was rescinded (references/skill-changelog.md
+      2026-06-02). Under the overlay test SECOPS is master-bearing: genuine umbrella case: the overlay-vs-promote call (B2-1) is still real, but even as an overlay it needs a NON-EMPTY module with consumer DMDOs over ITSM/DLP/DSPM masters; the empty-stub it has today is invalid either way. The prior audit's
+      "keep leadership-tier / ship an empty landing module" option is no longer valid. Live state
+      2026-06-02: 0 domain_modules (M1 fail), so the domain is not deployable today.
+    action: >
+      Re-run the full 4-pass Validate under the corrected rule. The module-shape, promote-scope,
+      and catalog-UX decisions already in b2 still apply and re-surface after the re-audit; this
+      item records only that the classification is settled (master-bearing) and the domain needs
+      a build, not an exemption.
+    extra_reclassified: "2026-06-02 skill-changelog"
   - id: B1A-D1
     summary: "PATCH domains.business_logic on SECOPS id 11 to replace the em-dash before 'the SIEM/EDR core' with a comma per CLAUDE.md project-wide em-dash ban."
     finding: "domains.business_logic for SECOPS id 11 currently contains a literal U+2014 em-dash character between '...high-volume log analytics' and 'the SIEM/EDR core.' This violates the project-wide em-dash ban in CLAUDE.md (forbidden in all prose, code comments, docs, plan files, commit messages, and all catalog data including descriptions and business_logic fields). The fact sheet emitter sanitizes em-dashes at render time as a safety net, but source data must stay clean."

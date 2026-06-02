@@ -8,7 +8,7 @@ domain_modules:
   - lms-paths
 domain_code: LMS
 related_modules: [hcm-core-worker, hcm-org-positions, lms-course-delivery, lms-credentials, skills-mgmt-profile, swp-demand-forecast, talent-performance-mgmt]
-created_at: 2026-06-01
+created_at: 2026-06-02
 ---
 
 # Learning Paths
@@ -486,3 +486,50 @@ _This scope holds `skills_gap_analyses` as **consumer**; the canonical state mac
 | --- | --- | --- | --- |
 | `learning_path_assignment_edit_scope` | `learning_path_assignments` | has_personal_content | Row-scope by default; override via `lms-paths:view_all_learning_path_assignments` / `lms-paths:manage_all_learning_path_assignments` |
 | `learning_plan_edit_scope` | `learning_plans` | has_personal_content | Row-scope by default; override via `lms-paths:view_all_learning_plans` / `lms-paths:manage_all_learning_plans` |
+
+## 9. Roles, RACI, and responsibilities (derived)
+
+_Baseline roles, the permission hierarchy, and RACI realization are DERIVED from this scope's entity-type write tiers + `process_raci`; none of it is stored in the catalog (the deployer provisions it from this blueprint)._
+
+### 9.1 `LMS-PATHS`
+
+**Baseline roles:**
+
+| role | baseline grant |
+| --- | --- |
+| `lms-paths_viewer` | `lms-paths:read` |
+| `lms-paths_manager` | `lms-paths:manage` |
+
+**Permission hierarchy:**
+
+| permission | includes |
+| --- | --- |
+| `lms-paths:admin` | `lms-paths:manage` |
+| `lms-paths:manage` | `lms-paths:read` |
+| `lms-paths:admin` | `lms-paths:publish` |
+| `lms-paths:admin` | `lms-paths:retire` |
+| `lms-paths:admin` | `lms-paths:publish` |
+| `lms-paths:admin` | `lms-paths:retire` |
+| `lms-paths:admin` | `lms-paths:complete` |
+| `lms-paths:admin` | `lms-paths:activate` |
+| `lms-paths:admin` | `lms-paths:complete` |
+| `lms-paths:admin` | `lms-paths:archive` |
+| `lms-paths:admin` | `lms-paths:view_all_learning_path_assignments` |
+| `lms-paths:admin` | `lms-paths:manage_all_learning_path_assignments` |
+| `lms-paths:admin` | `lms-paths:view_all_learning_plans` |
+| `lms-paths:admin` | `lms-paths:manage_all_learning_plans` |
+
+**RACI realization:**
+
+_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_
+
+### 9.2 Functional ownership and default grants
+
+| responsibility | business function | default role | default tier |
+| --- | --- | --- | --- |
+| owner | Learning and Development | `admin` | `:admin` |
+| contributor | Governance, Risk and Compliance | `manage` | `:manage` |
+| contributor | Legal | `manage` | `:manage` |
+| consumer | Manufacturing Operations | `read` | `:read` |
+| consumer | Sales | `read` | `:read` |
+| consumer | Software Engineering | `read` | `:read` |

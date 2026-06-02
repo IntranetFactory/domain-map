@@ -216,6 +216,12 @@ export type AllRelationships = {
   lifecycle: any[]; // data_object_lifecycle_states
   handoffs: any[]; // handoffs (with trigger_events + data_objects joined)
   hostDomains: any[]; // domain_module_host_domains
+  domainRoles: any[]; // domain_roles (catalog personas, Plan 3)
+  roleModules: any[]; // role_modules (persona reach; role_id -> domain_roles)
+  processRaci: any[]; // process_raci (responsibility, Plan 3)
+  businessFunctions: any[]; // business_functions
+  businessFunctionDomains: any[]; // business_function_domains (market RACI)
+  processes: any[]; // processes
 
   // Pre-built indices keyed by id, populated by loadAllRelationships.
   dmdoByModuleId: Map<number, any[]>;
@@ -226,6 +232,13 @@ export type AllRelationships = {
   relationshipsTouchingDataObjectId: Map<number, any[]>;
   lifecycleByDataObjectId: Map<number, any[]>;
   handoffsByDataObjectId: Map<number, any[]>;
+  roleModulesByModuleId: Map<number, any[]>;
+  roleModulesByRoleId: Map<number, any[]>;
+  processRaciByProcessId: Map<number, any[]>;
+  businessFunctionDomainsByDomainId: Map<number, any[]>;
+  domainRolesById: Map<number, any>;
+  businessFunctionsById: Map<number, any>;
+  processesById: Map<number, any>;
 };
 
 type RawRelationships = {
@@ -236,6 +249,12 @@ type RawRelationships = {
   lifecycle: any[];
   handoffs: any[];
   hostDomains: any[];
+  domainRoles: any[];
+  roleModules: any[];
+  processRaci: any[];
+  businessFunctions: any[];
+  businessFunctionDomains: any[];
+  processes: any[];
 };
 
 // Pure in-memory: build the Map indices from raw arrays. Reused by loadAllRelationships
@@ -272,6 +291,12 @@ function buildRelationshipIndices(raw: RawRelationships): AllRelationships {
     lifecycle: raw.lifecycle,
     handoffs: raw.handoffs,
     hostDomains: raw.hostDomains,
+    domainRoles: raw.domainRoles ?? [],
+    roleModules: raw.roleModules ?? [],
+    processRaci: raw.processRaci ?? [],
+    businessFunctions: raw.businessFunctions ?? [],
+    businessFunctionDomains: raw.businessFunctionDomains ?? [],
+    processes: raw.processes ?? [],
     dmdoByModuleId: groupBy(raw.dmdo, (r: any) => r.domain_module_id),
     dmdoByDataObjectId: groupBy(raw.dmdo, (r: any) => r.data_object_id),
     ddoByDomainId: groupBy(raw.ddo, (r: any) => r.domain_id),
@@ -280,18 +305,32 @@ function buildRelationshipIndices(raw: RawRelationships): AllRelationships {
     relationshipsTouchingDataObjectId,
     lifecycleByDataObjectId: groupBy(raw.lifecycle, (r: any) => r.data_object_id),
     handoffsByDataObjectId: groupBy(raw.handoffs, (r: any) => r.data_object_id),
+    roleModulesByModuleId: groupBy(raw.roleModules, (r: any) => r.domain_module_id),
+    roleModulesByRoleId: groupBy(raw.roleModules, (r: any) => r.role_id),
+    processRaciByProcessId: groupBy(raw.processRaci, (r: any) => r.process_id),
+    businessFunctionDomainsByDomainId: groupBy(raw.businessFunctionDomains, (r: any) => r.domain_id),
+    domainRolesById: new Map((raw.domainRoles ?? []).map((r: any) => [r.id as number, r])),
+    businessFunctionsById: new Map((raw.businessFunctions ?? []).map((r: any) => [r.id as number, r])),
+    processesById: new Map((raw.processes ?? []).map((r: any) => [r.id as number, r])),
   };
 }
 
 export async function loadAllRelationships(): Promise<AllRelationships> {
-  const [dmdo, ddo, aliases, relationships, lifecycle, handoffs, hostDomains] = await Promise.all([
+  const [dmdo, ddo, aliases, relationships, lifecycle, handoffs, hostDomains, domainRoles, roleModules, processRaci, businessFunctions, businessFunctionDomains, processes] = await Promise.all([
     pg("GET", "/domain_module_data_objects?select=domain_module_id,data_object_id,role,necessity,notes&limit=20000"),
     pg("GET", "/domain_data_objects?select=domain_id,data_object_id,role,necessity,notes&limit=20000"),
     pg("GET", "/data_object_aliases?select=data_object_id,alias_name,alias_type,is_preferred,industry_id,solution_id,notes&order=alias_name.asc&limit=20000"),
     pg("GET", "/data_object_relationships?select=data_object_id,related_data_object_id,relationship_type,relationship_kind,relationship_verb,inverse_verb,is_required,owner_side,notes&limit=20000"),
-    pg("GET", "/data_object_lifecycle_states?select=data_object_id,state_name,state_order,description,is_initial,is_terminal,requires_permission,permission_verb_override,domain_module_id&order=data_object_id.asc,state_order.asc&limit=20000"),
+    pg("GET", "/data_object_lifecycle_states?select=data_object_id,state_name,state_order,description,is_initial,is_terminal,requires_permission,permission_verb_override,domain_module_id,process_id&order=data_object_id.asc,state_order.asc&limit=20000"),
     pg("GET", "/handoffs?select=source_domain_id,target_domain_id,source_domain_module_id,target_domain_module_id,data_object_id,integration_pattern,friction_level,description,notes,data_objects(data_object_name),trigger_events(event_name,description,from_state,to_state,event_category)&order=target_domain_id.asc&limit=20000"),
     pg("GET", "/domain_module_host_domains?select=domain_module_id,domain_id&limit=10000"),
+    // Plan 3 persona / RACI / function loads (B0).
+    pg("GET", "/domain_roles?select=id,role_code,role_name,description,business_function_id,record_status&limit=20000"),
+    pg("GET", "/role_modules?select=id,role_id,domain_module_id,interaction_level,notes&limit=20000"),
+    pg("GET", "/process_raci?select=id,process_id,actor_role_id,actor_skill_id,raci,consultation_blocking&limit=20000"),
+    pg("GET", "/business_functions?select=id,business_function_name,parent_business_function_id&limit=10000"),
+    pg("GET", "/business_function_domains?select=business_function_id,domain_id,responsibility_type&limit=20000"),
+    pg("GET", "/processes?select=id,process_name,external_id,hierarchy_level,source_framework&limit=20000"),
   ]);
 
   return buildRelationshipIndices({
@@ -302,6 +341,12 @@ export async function loadAllRelationships(): Promise<AllRelationships> {
     lifecycle: lifecycle ?? [],
     handoffs: handoffs ?? [],
     hostDomains: hostDomains ?? [],
+    domainRoles: domainRoles ?? [],
+    roleModules: roleModules ?? [],
+    processRaci: processRaci ?? [],
+    businessFunctions: businessFunctions ?? [],
+    businessFunctionDomains: businessFunctionDomains ?? [],
+    processes: processes ?? [],
   });
 }
 
@@ -355,6 +400,12 @@ export function writeCatalogCache(
         lifecycle: all.lifecycle.length,
         handoffs: all.handoffs.length,
         hostDomains: all.hostDomains.length,
+        domainRoles: all.domainRoles.length,
+        roleModules: all.roleModules.length,
+        processRaci: all.processRaci.length,
+        businessFunctions: all.businessFunctions.length,
+        businessFunctionDomains: all.businessFunctionDomains.length,
+        processes: all.processes.length,
       },
     },
     index: {
@@ -371,6 +422,12 @@ export function writeCatalogCache(
       lifecycle: all.lifecycle,
       handoffs: all.handoffs,
       hostDomains: all.hostDomains,
+      domainRoles: all.domainRoles,
+      roleModules: all.roleModules,
+      processRaci: all.processRaci,
+      businessFunctions: all.businessFunctions,
+      businessFunctionDomains: all.businessFunctionDomains,
+      processes: all.processes,
     },
   };
   writeFileSync(cacheFile, JSON.stringify(payload), "utf8");
@@ -663,7 +720,10 @@ export function loadModuleCatalog(
     }
   }
 
-  // Related modules: union of four data-coupling sources, deduped, with self removed.
+  // Related modules: union of data-coupling sources + handoffs + persona reach, deduped,
+  // with self removed. NOTE these are RELATED (navigation / integration hints), NOT
+  // requirements: a module is self-contained (it embedded_masters or optionally consumes
+  // what it touches), so "related" never implies "must co-deploy".
   const relatedModuleIds = new Set<number>();
   for (const info of owners.values()) {
     for (const m of info.modules) {
@@ -682,6 +742,20 @@ export function loadModuleCatalog(
   for (const h of outboundHandoffs) {
     const tgtId = h.target_domain_module_id as number | null;
     if (tgtId !== null && !moduleIdSet.has(tgtId)) relatedModuleIds.add(tgtId);
+  }
+  // Persona reach (Plan 3): modules that share >=1 persona with this scope via role_modules.
+  // A persona whose workspace spans modules makes them related (same job-shaped workflow).
+  {
+    const personaIds = new Set<number>();
+    for (const mid of moduleIds) {
+      for (const rm of all.roleModulesByModuleId.get(mid) ?? []) personaIds.add(rm.role_id as number);
+    }
+    for (const pid of personaIds) {
+      for (const rm of all.roleModulesByRoleId.get(pid) ?? []) {
+        const mid = rm.domain_module_id as number;
+        if (!moduleIdSet.has(mid)) relatedModuleIds.add(mid);
+      }
+    }
   }
 
   return {

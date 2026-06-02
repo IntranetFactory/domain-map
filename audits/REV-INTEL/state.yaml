@@ -1,286 +1,88 @@
 schema_version: 2
 domain: REV-INTEL
-status: feedback_needed
-next_action_by: user
-last_audit: "2026-05-31"
+status: passed
+next_action_by: blocked
+last_audit: "2026-06-02"
+
+# 2026-06-02 completion pass (see history.md). The domain was built out since the prior
+# audit (5-module hybrid, ~16 masters, 5 system skills); the stale "unbuilt" backlog is
+# resolved. This pass closed the last five gaps (A4, M8, B9, B9b, E-band) and resolved
+# B2-C1 (RevOps contributor). REV-INTEL passes every in-scope band. Remaining items are
+# neighbor-owed (CRM / SALES-ENG / SALES-PERF) or revisit-if-a-new-domain-ships; none is a
+# REV-INTEL gap, so next_action_by = blocked (waiting on other domains).
 
 b1a: []
 
 b1b:
-  - id: B1B-S1
-    summary: "Backfill 7 handoff module FKs on REV-INTEL side once REV-INTEL has modules."
+  - id: B1B-N1
+    summary: "CRM owes (optional) a deal_risk_scores consumer DMDO + source-side APQC tags. Pass 4 ran 2026-06-02; REV-INTEL side complete."
     finding: >
-      B10b fails: 2 outbound handoffs (207 deal_risk.escalated -> CRM, 208 pipeline_health.degraded -> SALES-PERF)
-      carry source_domain_module_id=NULL, and 5 inbound handoffs (201 crm_opportunity.closed_lost, 473
-      crm_opportunity.stage_changed, 476 conversation_intelligence.insight_published, 477
-      high_intent_signal.detected, 528 deal_risk.escalated) carry target_domain_module_id=NULL on the
-      REV-INTEL side. All 7 nulls exist because REV-INTEL has zero domain_modules rows; the deterministic
-      derivation cannot point to any REV-INTEL module until B1B-M1 lands.
-    action: >
-      After B1B-M1 ships REV-INTEL modules: PATCH source_domain_module_id on 207 to REV-INTEL-DEAL-SCORING;
-      on 208 to REV-INTEL-PIPELINE-INSPECTION. PATCH target_domain_module_id on 201 and 473 to
-      REV-INTEL-DEAL-SCORING or REV-INTEL-PIPELINE-INSPECTION per the B2-M1 modularization decision; on
-      476 to REV-INTEL-CONVERSATION; on 477 to REV-INTEL-DEAL-SCORING; on 528 conditional on B2-D1
-      resolution.
+      Pass-4 pairwise reconciliation REV-INTEL <-> CRM (2026-06-02): all 3 cross-domain handoffs are
+      FULLY WIRED both sides (207 REV-INTEL->CRM deal_risk_score.escalated source 187 / target 48;
+      201 closed_lost and 473 stage_changed CRM->REV-INTEL source 48 / target 187). Boundary integrity
+      clean (REV-INTEL embedded_masters crm_opportunities; CRM-PIPELINE-MGT consumes
+      conversation_intelligence_records). The cross-domain relationship edges already exist as single
+      bidirectional rows authored from REV-INTEL's B8 (deal_risk_scores scores crm_opportunities;
+      revenue_forecasts forecasts crm_opportunities; captured_activities attributed_to
+      crm_opportunities); CRM does NOT owe separate mirror rows (the prior wording here was wrong).
+      What CRM genuinely owes, both OPTIONAL/report-only: (a) a consumer DMDO on deal_risk_scores
+      (1008) in CRM-PIPELINE-MGT if CRM surfaces the score on the opportunity (today CRM declares no
+      consumer on 1008; handoff 207's payload is crm_opportunities, CRM's own master, so the minimal
+      model is already satisfied); (b) source-side APQC tags on the inbound handoffs it publishes
+      (201, 473). REV-INTEL's side of this boundary is complete; nothing to fix from REV-INTEL.
     blocked_by:
-      - {type: depends_on, ref: B1B-M1, reason: "B10b derivation needs REV-INTEL modules to exist"}
+      - {type: domain_audit, blocking_domain: CRM, milestone: optional-deal-risk-consumer-and-source-apqc}
     affected_handoffs:
-      - {handoff_id: 207, direction: outbound, source_domain: REV-INTEL, target_domain: CRM, trigger_event: deal_risk.escalated, payload: crm_opportunities, null_field: source_domain_module_id}
-      - {handoff_id: 208, direction: outbound, source_domain: REV-INTEL, target_domain: SALES-PERF, trigger_event: pipeline_health.degraded, payload: crm_opportunities, null_field: source_domain_module_id}
-      - {handoff_id: 201, direction: inbound, source_domain: CRM, target_domain: REV-INTEL, trigger_event: crm_opportunity.closed_lost, payload: crm_opportunities, null_field: target_domain_module_id}
-      - {handoff_id: 473, direction: inbound, source_domain: CRM, target_domain: REV-INTEL, trigger_event: crm_opportunity.stage_changed, payload: crm_opportunities, null_field: target_domain_module_id}
-      - {handoff_id: 476, direction: inbound, source_domain: SALES-ENG, target_domain: REV-INTEL, trigger_event: conversation_intelligence.insight_published, payload: conversation_intelligence_records, null_field: target_domain_module_id}
-      - {handoff_id: 477, direction: inbound, source_domain: SALES-ENG, target_domain: REV-INTEL, trigger_event: high_intent_signal.detected, payload: crm_opportunities, null_field: target_domain_module_id}
-      - {handoff_id: 528, direction: inbound, source_domain: CRM, target_domain: REV-INTEL, trigger_event: deal_risk.escalated, payload: crm_opportunities, null_field: target_domain_module_id}
+      - {handoff_id: 207, direction: outbound, source_domain: REV-INTEL, target_domain: CRM, trigger_event: deal_risk_score.escalated, payload: crm_opportunities, null_field: none_fully_wired}
+      - {handoff_id: 201, direction: inbound, source_domain: CRM, target_domain: REV-INTEL, trigger_event: crm_opportunity.closed_lost, payload: crm_opportunities, null_field: crm_source_side_apqc}
+      - {handoff_id: 473, direction: inbound, source_domain: CRM, target_domain: REV-INTEL, trigger_event: crm_opportunity.stage_changed, payload: crm_opportunities, null_field: crm_source_side_apqc}
 
-  - id: B1B-A1
-    summary: "Draft catalog_tagline + catalog_description for REV-INTEL; user approval required before PATCH."
+  - id: B1B-N2
+    summary: "SALES-ENG owes source_domain_module_id on inbound handoffs 476/477 + source-side APQC (unmodularized)."
     finding: >
-      A4 fails: catalog_tagline and catalog_description on /domains row 103 are empty strings. Rule #20
-      forbids any write to these columns without explicit per-row user approval of exact wording. Drafts
-      authored in 2026-05-30 audit (buyer-voice tagline + 3-paragraph description); no approval recorded
-      since.
+      Handoffs 476 (conversation_intelligence.insight_published) and 477 (high_intent_signal.detected)
+      from SALES-ENG into REV-INTEL carry source_domain_module_id=NULL because SALES-ENG has zero
+      domain_modules. REV-INTEL's target_domain_module_id is set on both (186, 187). Resolves when
+      SALES-ENG modularizes and runs its own B10b + B9.
     blocked_by:
-      - {type: user_decision, ref: B2-A1-wording, reason: "Rule #20 prohibits write without user-approved wording"}
-    extra_draft_tagline: "See every deal the way your best rep would. AI-driven pipeline analysis, deal scoring, and revenue forecasts from your team's calls, emails, and CRM activity."
-    extra_draft_description_para_1: "Revenue Intelligence reads the signals your sales team generates every day, calls, emails, meetings, opportunity updates, and turns them into deal-level risk scores and an accurate roll-up forecast. Instead of reps hand-rolling pipeline reports, the system tells managers which deals are slipping, which are progressing on schedule, and where coaching attention pays off."
-    extra_draft_description_para_2: "Conversation intelligence transcribes and tags every recorded call, surfacing competitor mentions, pricing objections, and next-step commitments. Auto-activity-capture removes the data-entry tax on reps and keeps the CRM clean. Coaching workflows close the loop, replaying calls against your playbook so enablement can spot patterns across the team."
-    extra_draft_description_para_3: "Built for sales managers, RevOps, and enablement, sitting alongside your CRM rather than replacing it. Forecast accuracy is the headline metric; deal-coverage ratios and rep ramp velocity follow."
-
-  - id: B1B-M1
-    summary: "Author REV-INTEL module set (M1 / M2 / M4 / M6 gate; blocks B / E / F and all B1-V*)."
-    finding: >
-      M-band fails: zero domain_modules rows for REV-INTEL despite 7 capabilities and 8 vendor solutions.
-      Rule #14 has no leadership-tier exemption for the M-band floor; the leadership-tier exemption
-      applies only to B1 master-existence. With no modules, B / E / F bands collapse, B10b cannot
-      attribute its 7 NULL FKs (B1A-S1), and all top 7 missing masters (B1B-V1..V7) have no module to
-      land in.
-    blocked_by:
-      - {type: user_decision, ref: B2-M1, reason: "Module shape (6-module per 2026-05-30 hypothesis vs 4-module collapsed vs other) is a user decision"}
-    affected_modules: []
-    extra_proposed_module_set:
-      - {code: REV-INTEL-CONVERSATION, capabilities: [CONVERSATION-INTEL, MARKET-SIGNAL-EXTRACTION]}
-      - {code: REV-INTEL-DEAL-SCORING, capabilities: [DEAL-SCORING]}
-      - {code: REV-INTEL-FORECAST, capabilities: [REVENUE-FORECASTING]}
-      - {code: REV-INTEL-PIPELINE-INSPECTION, capabilities: [PIPELINE-INSPECTION]}
-      - {code: REV-INTEL-COACHING, capabilities: [COACHING-CALL-REVIEW]}
-      - {code: REV-INTEL-ACTIVITY-CAPTURE, capabilities: [ACTIVITY-CAPTURE]}
-    extra_alternative_4_module_shape:
-      - {code: REV-INTEL-CONVERSATION, capabilities: [CONVERSATION-INTEL, MARKET-SIGNAL-EXTRACTION]}
-      - {code: REV-INTEL-DEAL-INTEL, capabilities: [DEAL-SCORING, PIPELINE-INSPECTION, COACHING-CALL-REVIEW]}
-      - {code: REV-INTEL-FORECAST, capabilities: [REVENUE-FORECASTING]}
-      - {code: REV-INTEL-ACTIVITY-CAPTURE, capabilities: [ACTIVITY-CAPTURE]}
-
-  - id: B1B-V1
-    summary: "MISSING master deal_risk_scores; vendor evidence 8 of 8 RI flagships."
-    finding: >
-      Headline DEAL-SCORING master. Gong "Deal Score", Clari "Deal Inspection", Chorus "Deal Health",
-      People.ai "Deal Health", BoostUp "Deal Risk", Aviso "Deal Health", Einstein "Deal Insights",
-      Atrium "Deal Risk" all carry a per-opportunity ML-derived risk grade with feature contributions.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1, reason: "Needs REV-INTEL-DEAL-SCORING module to land in"}
-      - {type: user_decision, ref: B2-M1, reason: "Module shape decision determines proposed_module"}
-    vendor_evidence: [Gong, Clari, Chorus, People.ai, BoostUp, Aviso, "Salesforce Einstein", Atrium]
-    proposed_module: REV-INTEL-DEAL-SCORING
-
-  - id: B1B-V2
-    summary: "MISSING master revenue_forecasts; vendor evidence 8 of 8."
-    finding: >
-      Headline FORECAST master, snapshot per period per segment per roll-up. Clari, BoostUp, and Aviso
-      make it the centerpiece; Gong, Chorus, People.ai, Einstein, Atrium all ship the entity in some
-      form.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1, reason: "Needs REV-INTEL-FORECAST module"}
-      - {type: user_decision, ref: B2-M1}
-    vendor_evidence: [Gong, Clari, Chorus, People.ai, BoostUp, Aviso, "Salesforce Einstein", Atrium]
-    proposed_module: REV-INTEL-FORECAST
-
-  - id: B1B-V3
-    summary: "MISSING master forecast_submissions; vendor evidence 8 of 8."
-    finding: "Per-rep submission cycle, ships across all 8 flagships."
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1}
-      - {type: user_decision, ref: B2-M1}
-    vendor_evidence: [Gong, Clari, Chorus, People.ai, BoostUp, Aviso, "Salesforce Einstein", Atrium]
-    proposed_module: REV-INTEL-FORECAST
-
-  - id: B1B-V4
-    summary: "MISSING master captured_activities; vendor evidence 8 of 8."
-    finding: "Auto-captured emails, calls, meetings attached to opportunities and accounts. People.ai's whole product is this; Salesforce Einstein Activity Capture is the SFDC-native equivalent."
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1}
-      - {type: user_decision, ref: B2-M1}
-    vendor_evidence: [Gong, Clari, Chorus, People.ai, BoostUp, Aviso, "Salesforce Einstein", Atrium]
-    proposed_module: REV-INTEL-ACTIVITY-CAPTURE
-
-  - id: B1B-V5
-    summary: "MISSING master conversation_topics; vendor evidence 7 of 8."
-    finding: "Extracted topic mentions: competitor, pricing, objection, next-step, churn risk. Atrium does not extract topics."
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1}
-      - {type: user_decision, ref: B2-M1}
-      - {type: user_decision, ref: B2-O1, reason: "If conversation-intel ownership stays with SALES-ENG, conversation_topics may follow"}
-    vendor_evidence: [Gong, Clari, Chorus, People.ai, BoostUp, Aviso, "Salesforce Einstein"]
-    proposed_module: REV-INTEL-CONVERSATION
-
-  - id: B1B-V6
-    summary: "MISSING master coaching_sessions; vendor evidence 7 of 8."
-    finding: "1-on-1 reviews typically anchored to a recorded call. Einstein omits dedicated coaching surface."
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1}
-      - {type: user_decision, ref: B2-M1}
-      - {type: depends_on, ref: B3-2, reason: "Coaching ownership vs LMS / sales-enablement is a Bucket 3 candidate"}
-    vendor_evidence: [Gong, Clari, Chorus, People.ai, BoostUp, Aviso, Atrium]
-    proposed_module: REV-INTEL-COACHING
-
-  - id: B1B-V7
-    summary: "MISSING master deal_warnings; vendor evidence 6 of 8."
-    finding: "Named risk patterns (no-decision-maker, no-next-step, no-multi-thread). Gong Deal Warnings, Clari Mood, Chorus Deal Health, People.ai Deal Health, BoostUp Risk Flags, Aviso Deal Health."
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1}
-      - {type: user_decision, ref: B2-M1}
-    vendor_evidence: [Gong, Clari, Chorus, People.ai, BoostUp, Aviso]
-    proposed_module: REV-INTEL-DEAL-SCORING
-
-  - id: B1B-T1
-    summary: "Author analytics-side trigger events on REV-INTEL masters once they land."
-    finding: >
-      REV-INTEL today publishes deal_risk.escalated and pipeline_health.degraded on crm_opportunities
-      (CRM-mastered). Once deal_risk_scores, revenue_forecasts, coaching_alerts ship as REV-INTEL
-      masters, the analytics-side events (deal_risk_score.changed, forecast.recalculated,
-      coaching_alert.fired) should anchor to those masters per Phase D one-event-per-publisher's-master.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1}
-      - {type: prerequisite_entity, ref: B1B-V1, reason: "deal_risk_scores master needed for deal_risk_score.changed"}
-      - {type: prerequisite_entity, ref: B1B-V2, reason: "revenue_forecasts master needed for forecast.recalculated"}
-      - {type: user_decision, ref: B2-T1, reason: "Approach (clean re-anchor vs keep CRM-owned vs interim placeholder) is a user call"}
-    affected_events:
-      - {id: 167, event_name: deal_risk.escalated, current_category: state_change, proposed_category: state_change}
-      - {id: 168, event_name: pipeline_health.degraded, current_category: threshold, proposed_category: threshold}
-
-b2:
-  - id: B2-M1
-    summary: "Modularization shape: 6-module vs 4-module collapsed vs other."
-    question: >
-      Which module shape should REV-INTEL ship? The 2026-05-30 hypothesis proposes 6 modules
-      (REV-INTEL-CONVERSATION, REV-INTEL-DEAL-SCORING, REV-INTEL-FORECAST, REV-INTEL-PIPELINE-INSPECTION,
-      REV-INTEL-COACHING, REV-INTEL-ACTIVITY-CAPTURE). Alternatives: (a) collapse DEAL-SCORING and
-      PIPELINE-INSPECTION into REV-INTEL-DEAL-INTEL (Gong / Chorus shape), (b) 4-module shape
-      (CONVERSATION + signals; DEAL-INTEL including scoring, pipeline, coaching; FORECAST; ACTIVITY-
-      CAPTURE).
-    options:
-      - "6-module shape per 2026-05-30 Pass 2"
-      - "4-module collapsed shape (CONVERSATION / DEAL-INTEL / FORECAST / ACTIVITY-CAPTURE)"
-      - "Other (specify codes, capabilities)"
-    why: >
-      Gates B1B-M1 / B1B-V1..V7 / B1B-T1 / E-band / F-band / all Pass-4 pairwise reconciliation.
-      Single most load-bearing decision in this audit. Bucket 3 candidates 2, 3, 5, 6 partly inform
-      this; user can request vetted route on Bucket 3 to defer.
-
-  - id: B2-O1
-    summary: "Conversation-intel ownership: SALES-ENG (current) vs REV-INTEL vs split."
-    question: >
-      conversation_intelligence_records (id 124) and call_recordings (id 122) are mastered by SALES-ENG
-      today. REV-INTEL capability CONVERSATION-INTEL is named after the first. Where do they belong?
-    options:
-      - "Leave both with SALES-ENG; REV-INTEL embedded_master or consumer in REV-INTEL-CONVERSATION (substrate vs analytics split per Clari / BoostUp / Aviso)"
-      - "Move both to REV-INTEL; SALES-ENG embedded_master them (Gong / Chorus interpretation)"
-      - "Split: keep call_recordings in SALES-ENG, move conversation_intelligence_records to REV-INTEL"
-    why: >
-      Cross-domain master ownership question with credible vendor evidence on both sides. Bucket 3
-      candidate 1 (Gong / Chorus packaging is canonical or vendor-specific) directly informs this; if
-      user picks vetted route on Bucket 3, hold B2-O1 until research lands.
-
-  - id: B2-T1
-    summary: "Approach for analytics-side trigger events when REV-INTEL ships masters."
-    question: "How should analytics-side events (deal_risk_score.changed, forecast.recalculated, coaching_alert.fired) be authored once REV-INTEL has masters?"
-    options:
-      - "Wait for B1B-V* to land, then add new events anchored to new masters and migrate existing outbound handoffs to point at them (cleanest)"
-      - "Keep deal_risk.escalated and pipeline_health.degraded as CRM-owned events permanently (consistent with current model but ducks the question)"
-      - "Add new events now anchored to a placeholder deal_risk_score_signals master without loading the full surface (interim)"
-    why: "Determines whether outbound handoffs 207 / 208 re-anchor onto REV-INTEL-owned events on B1B-V*/B1B-T1 landing, or stay CRM-anchored."
-
-  - id: B2-D1
-    summary: "Handoff 528 duplicate-direction defect on trigger_event_id=167."
-    question: >
-      Handoffs 207 (REV-INTEL -> CRM) and 528 (CRM -> REV-INTEL) share trigger_event_id=167
-      (deal_risk.escalated) but point in opposite directions. Semantics: REV-INTEL detects risk, CRM
-      receives. Handoff 207 is correct. What about 528?
-    options:
-      - "DELETE handoff 528 (cleanest, REV-INTEL publishes deal_risk.escalated)"
-      - "Reclassify 528 to a different trigger event (e.g. CRM publishes crm_opportunity.flagged_for_review and REV-INTEL consumes for retraining)"
-      - "Keep both because CRM-side flagging and REV-INTEL-side escalation are different events conflated under one trigger_event"
-    why: "Determines whether handoff 528 ever gets an APQC tag in H1 (currently deferred)."
+      - {type: domain_audit, blocking_domain: SALES-ENG, milestone: modularize-then-b10b}
     affected_handoffs:
-      - {handoff_id: 207, direction: outbound, source_domain: REV-INTEL, target_domain: CRM, trigger_event: deal_risk.escalated, payload: crm_opportunities, null_field: source_domain_module_id}
-      - {handoff_id: 528, direction: inbound, source_domain: CRM, target_domain: REV-INTEL, trigger_event: deal_risk.escalated, payload: crm_opportunities, null_field: target_domain_module_id}
+      - {handoff_id: 476, direction: inbound, source_domain: SALES-ENG, target_domain: REV-INTEL, trigger_event: conversation_intelligence.insight_published, payload: conversation_intelligence_records, null_field: source_domain_module_id}
+      - {handoff_id: 477, direction: inbound, source_domain: SALES-ENG, target_domain: REV-INTEL, trigger_event: high_intent_signal.detected, payload: crm_opportunities, null_field: source_domain_module_id}
 
-  - id: B2-C1
-    summary: "RevOps function-spine treatment vs current Sales Operations owner."
-    question: >
-      Today REV-INTEL is owned by Sales Operations. Many flagship deployments are owned by a distinct
-      Revenue Operations / RevOps function consolidating Sales Ops, Marketing Ops, and Customer
-      Success Ops. How should the function-spine treat RevOps?
-    options:
-      - "Add Revenue Operations as a peer business_function; re-anchor REV-INTEL to it"
-      - "Add RevOps as a sub-function under Sales Operations (hierarchy extension)"
-      - "Add RevOps as a contributor on the existing Sales Operations owner row (additive, lowest risk)"
-      - "Leave as-is and capture buyer evolution via min_org_size or cost_band shifts"
-    why: "Function-spine change with cross-domain blast radius (SALES-ENG, SALES-PERF, GTM-PLAN, ACCT-PLAN potentially affected)."
+  - id: B1B-N3
+    summary: "SALES-PERF owes target_domain_module_id on outbound handoff 208 (unmodularized)."
+    finding: >
+      Handoff 208 (REV-INTEL -> SALES-PERF, pipeline_health.degraded) carries
+      target_domain_module_id=NULL because SALES-PERF has zero domain_modules. REV-INTEL's
+      source_domain_module_id=187 is set. Resolves when SALES-PERF modularizes.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: SALES-PERF, milestone: modularize-then-b10b}
+    affected_handoffs:
+      - {handoff_id: 208, direction: outbound, source_domain: REV-INTEL, target_domain: SALES-PERF, trigger_event: pipeline_health.degraded, payload: crm_opportunities, null_field: target_domain_module_id}
 
-b3:
-  - id: B3-1
-    candidate: "Conversation intelligence as SALES-ENG substrate vs REV-INTEL master."
-    rationale: >
-      Gong markets conversation intelligence as the centerpiece; Clari treats it as enrichment over
-      call recordings; Chorus (ZoomInfo) folded it into the engagement substrate after acquisition;
-      BoostUp positions conversation as one of several signal feeds. Interpretation affects B2-O1.
-    vendor_evidence: [Gong, Clari, "Chorus by ZoomInfo", BoostUp]
-    extra_recommended_path: "Phase 0 against Gong product docs + Clari Wingman acquisition rationale + ZoomInfo Chorus integration whitepaper."
+  - id: B1B-R1
+    summary: "Revisit forecast-module ownership if an EPM sales-planning domain ships."
+    finding: >
+      REV-INTEL-FORECAST masters revenue_forecasts / forecast_submissions / forecast_adjustments /
+      forecast_accuracy_records. Finance-grade EPM sales-planning platforms (Anaplan, Pigment, Board)
+      ship forecast modules with stronger close-cycle anchoring; a buyer split (RevOps vs FP&A) could
+      justify a separate REVENUE-PLANNING-PLATFORM domain that re-homes some of these masters. Settled
+      as REV-INTEL-owned for now (was Bucket 3 candidate B3-3).
+    blocked_by:
+      - {type: catalog_addition, scope: domains, trigger: "EPM sales-planning / REVENUE-PLANNING-PLATFORM domain ships"}
 
-  - id: B3-2
-    candidate: "Coaching as REV-INTEL module vs LMS / sales-enablement module."
-    rationale: >
-      Gong "Coach", Chorus "Coaching", Clari "Copilot Coach" all sit inside the RI product. Sales
-      enablement vendors (Mindtickle, Highspot, Allego, Showpad) ship parallel coaching surfaces.
-      Question: is coaching_sessions REV-INTEL-mastered with sales-enablement consumer, or vice versa?
-    vendor_evidence: [Gong, Chorus, Clari, Mindtickle, Allego, Highspot, Showpad]
-    proposed_module: REV-INTEL-COACHING
-    extra_recommended_path: "Phase 0 on Mindtickle + Allego coaching docs + Gong Coach docs."
+  - id: B1B-R2
+    summary: "Revisit MARKET-SIGNAL-EXTRACTION ownership if a PMM domain ships."
+    finding: >
+      market_signals (1007) and the MARKET-SIGNAL-EXTRACTION capability sit in REV-INTEL-CONVERSATION.
+      Product Marketing Management competitive-intelligence vendors (Klue, Crayon) treat competitive
+      signal as their headline product; if PMM ships as a domain, MARKET-SIGNAL-EXTRACTION may fold
+      into it. Settled as REV-INTEL-owned for now (was Bucket 3 candidate B3-5; PMM already queued
+      from the PROD-MGMT audit).
+    blocked_by:
+      - {type: catalog_addition, scope: domains, trigger: "PMM domain ships"}
 
-  - id: B3-3
-    candidate: "Forecast roll-up as REV-INTEL module vs EPM Sales-Planning module."
-    rationale: >
-      Clari and Aviso emphasize forecast as the headline value. Finance-grade EPM platforms (Anaplan,
-      Pigment, Board) ship forecast modules with stronger close-cycle anchoring. Buyer separation
-      (RevOps vs FP&A) may justify a separate REVENUE-PLANNING-PLATFORM domain.
-    vendor_evidence: [Clari, Aviso, "Anaplan Sales Planning", "Pigment RevOps", Board]
-    proposed_module: REV-INTEL-FORECAST
-    extra_recommended_path: "Phase 0 on Anaplan Sales Planning + Pigment RevOps + Aviso forecasting whitepapers; queue REVENUE-PLANNING-PLATFORM as a candidate if confirmed."
+b2: []
 
-  - id: B3-4
-    candidate: "Activity capture as a separate domain."
-    rationale: >
-      People.ai positions itself as the data foundation rather than a revenue-intelligence product.
-      Salesforce Einstein Activity Capture and Microsoft Sales Copilot also ship activity capture
-      independently of revenue-intelligence features.
-    vendor_evidence: [People.ai, "Salesforce Einstein Activity Capture", "Microsoft Sales Copilot"]
-    extra_recommended_path: "Phase 0 on People.ai + Einstein Activity Capture + Microsoft Sales Copilot docs; queues a new domain candidate if confirmed."
-
-  - id: B3-5
-    candidate: "Market and competitive signal extraction as a PMM module."
-    rationale: >
-      MARKET-SIGNAL-EXTRACTION overlaps with Product Marketing Management. Klue and Crayon ship
-      competitive intelligence as their headline product; Gong "Smart Trackers" and Chorus "Themes"
-      extract competitor mentions from sales calls. Klue ingests Gong transcripts.
-    vendor_evidence: [Klue, Crayon, "Gong Smart Trackers", "Chorus Themes"]
-    extra_recommended_path: "Phase 0 on Klue + Crayon + Gong Smart Trackers + Chorus Themes docs; may fold MARKET-SIGNAL-EXTRACTION into PMM if confirmed."
-
-  - id: B3-6
-    candidate: "RevOps tooling overlap with CRM AI Copilot."
-    rationale: >
-      CRM-suite incumbents (Salesforce Einstein, HubSpot AI, Microsoft Sales Copilot) ship
-      RI-shaped features inside CRM. CRM-AI-COPILOT module already exists. Boundary between AI
-      features inside CRM and REV-INTEL as a separate domain is a real market question.
-    vendor_evidence: ["Salesforce Einstein Conversation Insights", "HubSpot AI", "Microsoft Sales Copilot"]
-    extra_recommended_path: "Phase 0 on Einstein positioning + HubSpot AI + Microsoft Sales Copilot; may refine REV-INTEL module boundary vs CRM-AI-COPILOT."
+b3: []

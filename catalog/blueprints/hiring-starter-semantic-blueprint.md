@@ -8,7 +8,7 @@ domain_modules:
   - hiring-starter
 domain_code: ATS
 related_modules: [ats-candidate-crm, ats-interviews, ats-offers, ats-recruitment-pipeline]
-created_at: 2026-06-01
+created_at: 2026-06-02
 ---
 
 # Hiring Starter
@@ -285,3 +285,34 @@ _This scope holds `job_postings` as **embedded_master**; the canonical state mac
 ### 8.2 Business rules
 
 _(no flag-derived business rules.)_
+
+## 9. Roles, RACI, and responsibilities (derived)
+
+_Baseline roles, the permission hierarchy, and RACI realization are DERIVED from this scope's entity-type write tiers + `process_raci`; none of it is stored in the catalog (the deployer provisions it from this blueprint)._
+
+### 9.1 `HIRING-STARTER`
+
+**Baseline roles:**
+
+| role | baseline grant |
+| --- | --- |
+| `hiring-starter_viewer` | `hiring-starter:read` |
+| `hiring-starter_manager` | `hiring-starter:manage` |
+
+**Permission hierarchy:**
+
+| permission | includes |
+| --- | --- |
+| `hiring-starter:admin` | `hiring-starter:manage` |
+| `hiring-starter:manage` | `hiring-starter:read` |
+
+**RACI realization:**
+
+_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_
+
+### 9.2 Functional ownership and default grants
+
+| responsibility | business function | default role | default tier |
+| --- | --- | --- | --- |
+| owner | Recruiting | `admin` | `:admin` |
+| contributor | Legal | `manage` | `:manage` |

@@ -537,3 +537,117 @@ Carried forward from 2026-05-30 unchanged. No vetting work performed since.
 - Bucket 1: 3 unblocked or blocking fix surfaces. Approve B1-A1 wording, B1-M1 module set + shape (or pick B2-M1 option first), or skip. Reply `all` (gated on B2-M1 decision for B1-M1), `just A1`, `just M1 with the 6-module shape`, or `skip`.
 - Bucket 2: 5 judgment calls. Decide per item; B2-M1 and B2-O1 are the most consequential.
 - Bucket 3: vet via Phase 0 research or eyeball-mode. Candidates 1 and 3 are most consequential. If eyeball, name which to treat as confirmed.
+
+## 2026-06-02, Audit (re-run under rescinded leadership-tier exemption)
+
+### Summary
+
+- Trigger: the fixed "leadership-tier" zero-master exemption was rescinded (skill-changelog 2026-06-02). Under the overlay test REV-INTEL is **master-bearing**: it persists computed records no other domain masters (deal-risk scores, revenue forecasts, captured activities, coaching sessions, conversation topics). The prior audits' "B1 vacuously passes (leadership-tier)" line no longer holds. **B1 now FAILS**: a master-bearing domain with zero masters is **unbuilt**, not exempt.
+- Live state 2026-06-02 (verified against live tables, not inferred): 0 masters, 0 modules, 0 domain_data_objects rows, 7 capabilities, 8 solutions (all primary), 1 owner function (Sales Operations), 0 regulations, 0 domain-owned trigger_events, 2 outbound + 5 inbound cross-domain handoffs, 0 system skills, 0 roles. Byte-identical to the 2026-05-31 snapshot; nothing has been built since.
+- Net effect of the reclassification: the entire Pass-2 market surface (deal_risk_scores, revenue_forecasts, forecast_submissions, captured_activities, conversation_topics, coaching_sessions, deal_warnings, and the rest) moves from "placeholder MISSING, gated, speculative" to **confirmed in-scope build targets**. REV-INTEL needs a full Phase A to S build (modules + masters + DMDOs + lifecycle + handoff re-attribution + system skills + roles), not an exemption.
+- The build is gated on one user decision: **B2-M1 module shape** (6-module vs 4-module collapsed vs other). It is the single most load-bearing decision in the audit; B1B-M1, all B1B-V*, B1B-S1, B1B-T1, the E-band and F-band all flow from it.
+
+### Delta vs 2026-05-31 audit
+
+The structural state is byte-identical to 2026-05-31. The only thing that changed is the classification rule:
+
+| Band | 2026-05-31 | 2026-06-02 (this run) |
+|---|---|---|
+| B1 | vacuous pass (leadership-tier exemption) | **FAIL** (master-bearing, 0 masters = unbuilt) |
+| MISSING masters | placeholders, "gated + speculative", split Bucket 1 top-7 / Bucket 3 | confirmed in-scope build targets (Bucket 1), still sequenced behind B1B-M1 + B2-M1 |
+| Domain disposition | "leadership-tier, ship an empty landing module" was a valid option | RESCINDED; the domain is unbuilt and needs a real build |
+
+All other band results carry forward unchanged (per-band detail below).
+
+### Structural pass (verified live)
+
+- **A1 PASS.** crud_percentage=35, business_logic populated, min_org_size `20 s <500`, cost_band `$$$`, certification_required=false, usa_market_size_usd_m=1500, source year 2024.
+- **A2 PASS.** 7 capabilities (CONVERSATION-INTEL, DEAL-SCORING, REVENUE-FORECASTING, PIPELINE-INSPECTION, COACHING-CALL-REVIEW, ACTIVITY-CAPTURE, MARKET-SIGNAL-EXTRACTION).
+- **A3 PASS.** 8 solutions, all coverage_level=primary.
+- **A4 FAIL.** catalog_tagline and catalog_description both empty. Drafts carried forward (Rule #20: user approves wording before write). See B1B-A1.
+- **M1/M2/M4/M6 FAIL.** Zero domain_modules, zero domain_module_host_domains. 7 capabilities all orphaned. See B1B-M1.
+- **M5/M7/M8 vacuous** internally. M7 cross-domain note: SALES-ENG (95) masters conversation_intelligence_records (124) and call_recordings (122); REV-INTEL capability CONVERSATION-INTEL is named after the first. See B2-O1.
+- **B1 FAIL.** Master-bearing domain, zero masters. Overlay test: REV-INTEL persists deal-risk scores and forecasts (entity_type=computed, but a computed record is still mastered by the domain that produces it) that no other domain masters, so it is unbuilt, not a genuine overlay. This is the headline change this run.
+- **B2 through B8 vacuous** (no masters yet); these go live once masters land.
+- **B9 vacuous.** REV-INTEL owns zero trigger_events. Its 2 outbound events (deal_risk.escalated 167, pipeline_health.degraded 168) fire on crm_opportunities (100, CRM-mastered), so they live with CRM today. B2-T1 covers re-anchoring once REV-INTEL masters deal_risk_scores / revenue_forecasts.
+- **B9b vacuous** (0 modules).
+- **B10b FAIL.** 7 NULL module FKs on the REV-INTEL side: source_domain_module_id NULL on outbound 207, 208; target_domain_module_id NULL on inbound 201, 473, 476, 477, 528. All gated on B1B-M1. See B1B-S1.
+- **B10 report-only.** 5 inbound handoffs; fixes owed by source domains (CRM, SALES-ENG).
+- **C1 PASS** (owner Sales Operations). **C2 PASS** (no diverging capability override at current granularity; RevOps question in B2-C1).
+- **D1 DEFER** (UI spot-check after build).
+- **E-band / F-band vacuous** (0 modules). Become applicable on B1B-M1. F1 PASS (no legacy domain-level system skills).
+- **H1.** 6 of 7 cross-domain handoffs carry an agent_curated APQC tag (handoff_processes 385/386/387/388/389/395, plus 411 a second tag on 208); 0 of 7 approved (Rule #1); handoff 528 untagged, deferred to B2-D1. Coverage unchanged from 2026-05-31.
+
+### Market audit (semantic), neighbor discovery, pairwise
+
+Vendor surface unchanged from 2026-05-30 (Gong, Clari, Chorus by ZoomInfo, People.ai, BoostUp.ai, Aviso AI, Salesforce Einstein Conversation Insights, Atrium; all 8 primary). Under the new rule the dominant finding flips from "every entity MISSING but the domain is exempt, so informational" to "every entity MISSING and the domain must be built." The Pass-2 surface and 6-module hypothesis stand as the build proposal pending B2-M1. CRM (edge weight 4) remains the only deep-dive neighbor; SALES-ENG (2) and SALES-PERF (1) get one-line summaries. All pairwise reconciliation stays gated on B1B-M1 (every REV-INTEL-side module FK is NULL today). No change from 2026-05-31.
+
+### Disposition
+
+REV-INTEL is reclassified master-bearing and confirmed **unbuilt**. B1A-RECLASS (the re-run owed by the 2026-06-02 reclassification) is hereby resolved: the re-run is complete and the classification is settled. The backlog (B1B-M1, B1B-V1..V7, B1B-S1, B1B-T1, B1B-A1; B2-M1, B2-O1, B2-T1, B2-C1; B3-1..B3-6) carries forward, now framed as a build rather than an exemption. next_action_by flips from agent to **user**: the build cannot start until B2-M1 (module shape) is decided.
+
+### Fixes applied this run
+
+- **B2-D1 resolved: handoff 528 DELETED** (user-approved). Handoff 528 (CRM 69 -> REV-INTEL 103, deal_risk.escalated, trigger_event_id 167) was the inverted duplicate of handoff 207 (REV-INTEL -> CRM, same event). REV-INTEL is the publisher of deal_risk.escalated and CRM the consumer, so 207 carries the correct direction and 528 was mis-attributed. It carried no handoff_processes row, so the delete was clean. Effects: cross-domain handoff count drops 7 -> 6; H1 coverage is now 6 of 6 tagged (was 6 of 7, with 528 the lone untagged row); B1B-S1's NULL-FK backlog drops from 7 to 6 (528's NULL target_domain_module_id removed). B2-D1 leaves the b2 queue.
+
+## 2026-06-02, Completion pass (build reconciliation + close-out)
+
+### Headline: the audit files were stale; the build had already happened
+
+A continuation audit opened against the "unbuilt, gated on B2-M1" state.yaml above, but a live-state verification (per the skill's never-trust-the-snapshot rule) found REV-INTEL had been built out since those files were written. state.yaml/history.md described zero modules; live showed 5 modules, ~16 masters, one system skill per module. The 2026-06-02 audit's backlog (B1B-M1, B1B-V1..V7, B1B-S1, and most of the b2 queue) had already been executed, in a shape that is neither the 6-module nor the 4-module hypothesis but a 5-module hybrid:
+
+| Module (id) | Capabilities | Masters | System skill |
+|---|---|---|---|
+| REV-INTEL-CONVERSATION (186) | CONVERSATION-INTEL, MARKET-SIGNAL-EXTRACTION | conversation_intelligence_records (124), conversation_topics (1005), conversation_action_items (1006), market_signals (1007) | rev_intel_conversation_agent (252) |
+| REV-INTEL-DEAL-INTEL (187) | DEAL-SCORING, PIPELINE-INSPECTION | deal_risk_scores (1008), deal_warnings (1009) | rev_intel_deal_intel_agent (253) |
+| REV-INTEL-FORECAST (188) | REVENUE-FORECASTING | revenue_forecasts (1010), forecast_submissions (1011), forecast_adjustments (1012), forecast_accuracy_records (1013) | rev_intel_forecast_agent (254) |
+| REV-INTEL-COACHING (189) | COACHING-CALL-REVIEW | coaching_sessions (1014), coaching_scorecards (1015), call_review_comments (1016) | rev_intel_coaching_agent (255) |
+| REV-INTEL-ACTIVITY-CAPTURE (190) | ACTIVITY-CAPTURE | captured_activities (1017), activity_attribution_rules (1018), engagement_scores (1019) | rev_intel_activity_capture_agent (256) |
+
+### Decisions resolved by the build (verified live)
+
+- **B2-M1 (module shape): resolved** as the 5-module hybrid above (DEAL-SCORING + PIPELINE-INSPECTION collapsed into REV-INTEL-DEAL-INTEL; COACHING kept separate).
+- **B2-O1 (conversation-intel ownership): resolved as the split.** conversation_intelligence_records (124) moved to REV-INTEL master (REV-INTEL-CONVERSATION); SALES-ENG cleanly demoted to embedded_master; call_recordings (122) stays SALES-ENG master with REV-INTEL embedded_master. M7 single-master integrity holds on both 124 and 122 (exactly one master row each, verified across domain_data_objects and domain_module_data_objects).
+- **B2-D1: resolved earlier** (handoff 528 deleted).
+- **B1B-S1 (B10b): done on the REV-INTEL side.** Handoffs 201/207/473/476/477 carry their REV-INTEL-side module FK; the remaining NULLs (208 target, 476/477 source) are owed by unmodularized SALES-PERF / SALES-ENG (report-only).
+
+### Reconciled band results (live)
+
+PASS: A1, A2, A3; M1, M2, M4, M5, M6, M7; B1 (now master-bearing and built), B2 (all 16 masters carry singular/plural labels), B3, B5, B6 (rich intra-domain master-to-master edges), B7 (8 users edges on actor-bearing masters), B8 (cross-domain edges deal_risk_scores->crm_opportunities, revenue_forecasts->crm_opportunities, captured_activities->crm_opportunities), B11 (aliases on the cross-vendor-synonym masters), B12 (all 4 operational_workflow masters carry valid module-anchored state machines), B13 (all masters classified), B14; C1, C2; F1-F4, F7. H1 6 of 6 cross-domain handoffs tagged (agent_curated, new). Five gaps remained at audit open (A4, M8, B9, B9b, E1) and were all closed this pass.
+
+F5 Semantius scores (strict, informational): COACHING 100% (7/7 platform); DEAL-INTEL 89% (compute_deal_risk_score external); FORECAST 86% (compute_revenue_forecast); ACTIVITY-CAPTURE 80% (fetch_email_activity); CONVERSATION 63% (transcribe_audio, classify_text, detect_sentiment). The non-platform tools are exactly the ML/transcription primitives expected for a conversation-and-scoring market; not gaps.
+
+### Fixes loaded this pass
+
+Loader `.tmp_deploy/fix_rev_intel_completion_2026_06_02.ts` (idempotent; re-run verified as a full no-op). record_status omitted everywhere (DB default new, Rule #1); no notes written (Rule #15).
+
+1. **A4 — domain catalog UX.** PATCHed domains row 103 catalog_tagline + catalog_description (Rule #20 user-approved wording; guarded to skip if non-empty).
+2. **M8 — module catalog UX.** PATCHed catalog_tagline + catalog_description on all 5 modules (buyer voice; Rule #20 user-approved; skip-if-non-empty guard).
+3. **B9 / B2-T1 — analytics-side trigger events (resolved as "add events + re-anchor").** Re-anchored event 167 (deal_risk.escalated -> deal_risk_score.escalated; data_object 100 -> deal_risk_scores 1008) and 168 (pipeline_health.degraded -> 1008). Inserted 9 new events on REV-INTEL masters: deal_risk_score.changed (1008), revenue_forecast.recalculated (1010), forecast_submission.submitted/locked (1011), deal_warning.acknowledged/cleared (1009), coaching_session.completed (1014), conversation_action_item.done (1006), captured_activity.captured (1017). to_state aligned to the lifecycle state_name on each gated event (B9c).
+4. **B9b — intra-domain cross-module handoffs.** Inserted 4 rows (integration_pattern lifecycle_progression, friction_level low): CONVERSATION (186) -> DEAL-INTEL (187) and CONVERSATION (186) -> COACHING (189) on conversation_intelligence.insight_published (469, payload 124); ACTIVITY-CAPTURE (190) -> DEAL-INTEL (187) on captured_activity.captured (payload 1017); DEAL-INTEL (187) -> FORECAST (188) on deal_risk_score.changed (payload 1008). These mirror the embedded_master cross-module dependencies (124 embedded in 187/189; 1017 in 187; 1008 in 188).
+5. **E-band — personas + reach + RACI.** 4 personas: SALES-MANAGER (Sales 21), SALES-OPS-REVOPS-ANALYST (Sales Operations 52), SALES-REP (Sales 21), ENABLEMENT-COACH (cross-functional, NULL). 14 role_modules reach rows (each persona >= 2 modules: SM 4, RevOps 4, Rep 4, Coach 2; interaction_level set on all). Custom process CUSTOM-REVINTEL-CALL-COACHING (2018, source_framework custom). process_id wired on 5 gated lifecycle states: forecast_submissions submitted/locked -> 687 (Generate sales forecast); deal_warnings acknowledged/cleared -> 712 (Manage opportunity pipeline); coaching_sessions completed -> 2018. 8 process_raci rows, each gated process carrying >= 1 Responsible + 1 Accountable (687: R Sales Rep / A Sales Manager / C RevOps Analyst; 712: R+A Sales Manager / C RevOps Analyst; 2018: R Enablement Coach / A Sales Manager).
+6. **B2-C1 — RevOps function-spine (additive, lowest risk).** Created business_function Revenue Operations (86, top-level, parent NULL). Added it as a contributor on REV-INTEL (business_function_domains); Sales Operations (52) stays owner.
+
+### Disposition
+
+REV-INTEL is built and passes every in-scope band. status -> passed. The whole prior backlog (B1B-M1, B1B-V1..V7, B1B-S1, B1B-T1, B1B-A1; B2-M1, B2-O1, B2-T1, B2-D1, B2-C1) is resolved and leaves the queue. Remaining items are not REV-INTEL gaps:
+
+- **Report-only neighbor catch-up (b1b):** CRM owes its mirror cross-domain data_object_relationships (crm_opportunities scored_by/forecast_by deal_risk_scores/revenue_forecasts) + source-side APQC tags on inbound handoffs; SALES-ENG owes source_domain_module_id on 476/477 (unmodularized) + source-side APQC; SALES-PERF owes target_domain_module_id on 208 (unmodularized). Each resolves when that domain is audited.
+- **Revisit-if-ships (b1b, catalog_addition):** B3-3 (forecast roll-up could re-home to an EPM sales-planning domain if one ships) and B3-5 (MARKET-SIGNAL-EXTRACTION could fold into PMM if it ships). The build settled both as REV-INTEL-owned for now; B3-1/2/4/6 are settled by the build (conversation split done; coaching kept in REV-INTEL; activity-capture kept as a REV-INTEL module; CRM-AI-COPILOT boundary holds).
+
+UI: https://tests.semantius.app/domain_map/domain_modules , /trigger_events , /handoffs , /domain_roles , /process_raci
+
+### Pass 4 — pairwise reconciliation (now unblocked by the build)
+
+Pass 4 was gated through every prior audit (REV-INTEL had no modules, so every boundary FK was NULL). With modules + masters in place it ran this pass.
+
+**REV-INTEL <-> CRM (edge weight 4, deep dive):**
+- Section 1 (fully wired): all 3 cross-domain handoffs now have all four module FKs resolved. 207 (REV-INTEL->CRM deal_risk_score.escalated) source REV-INTEL-DEAL-INTEL (187) / target CRM-PIPELINE-MGT (48); 201 (closed_lost) and 473 (stage_changed) CRM->REV-INTEL source 48 / target 187. This was the headline gap in every prior pass (zero wired); now closed.
+- Section 2 (NULL module FK): none for the CRM pair.
+- Section 4 (boundary integrity): clean. REV-INTEL embedded_masters crm_opportunities (CRM-mastered); CRM-PIPELINE-MGT consumes conversation_intelligence_records (REV-INTEL-mastered, required). No orphan references.
+- Section 5 (cross-domain relationships): the edges deal_risk_scores scores crm_opportunities, revenue_forecasts forecasts crm_opportunities, captured_activities attributed_to crm_opportunities all exist as single bidirectional rows (authored from REV-INTEL B8). No MISSING-RELATIONSHIP.
+- CRM-owed (report-only, both optional): (a) a consumer DMDO on deal_risk_scores (1008) in CRM-PIPELINE-MGT if CRM chooses to surface the score on the opportunity (handoff 207's payload is crm_opportunities, CRM's own master, so the minimal model is already satisfied without it); (b) source-side APQC tags on inbound handoffs 201 / 473. Both resolve when CRM is audited; REV-INTEL's side of this boundary is complete. (Corrects the imprecise "CRM owes mirror edges" wording in b1b N1 of the prior state.yaml.)
+
+**SALES-ENG (edge weight 2), SALES-PERF (edge weight 1):** one-line summaries; pairwise blocked because each has zero domain_modules. Handoffs 476/477 (SALES-ENG->REV-INTEL) carry source_domain_module_id=NULL; 208 (REV-INTEL->SALES-PERF) carries target_domain_module_id=NULL. REV-INTEL's side of all three is set. Tracked as b1b N2 / N3; resolve when those domains modularize.
+
+Net: REV-INTEL's 4-pass Validate is complete. No REV-INTEL-side fixes remain on any boundary.

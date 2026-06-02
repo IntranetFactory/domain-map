@@ -7,8 +7,8 @@ system_slug: ats-pre-employee-record
 domain_modules:
   - ats-pre-employee-record
 domain_code: ATS
-related_modules: [ats-background-checks, ats-candidate-crm, ats-offers, hcm-lifecycle-workflows]
-created_at: 2026-06-01
+related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, hcm-lifecycle-workflows]
+created_at: 2026-06-02
 ---
 
 # Pre-Employee Record
@@ -144,9 +144,9 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-OFFERS | `job_offer.accepted` | `accepted` _(state_change)_ | `pre_employees` | lifecycle_progression | low | - |
 | ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-BACKGROUND-CHECKS | `background_check.cleared` | _(lifecycle)_ | `pre_employees` | lifecycle_progression | low | - |
 | ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-OFFERS | `job_offer.rescinded` | _(state_change)_ | `pre_employees` | lifecycle_progression | high | - |
-| ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-OFFERS | `job_offer.accepted` | `accepted` _(state_change)_ | `pre_employees` | lifecycle_progression | low | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -211,3 +211,37 @@ _This scope holds `job_offers` as **embedded_master**; the canonical state machi
 | rule_name | data_object | source flag | intent |
 | --- | --- | --- | --- |
 | `pre-employee_edit_scope` | `pre_employees` | has_personal_content | Row-scope by default; override via `ats-pre-employee-record:view_all_pre-employees` / `ats-pre-employee-record:manage_all_pre-employees` |
+
+## 9. Roles, RACI, and responsibilities (derived)
+
+_Baseline roles, the permission hierarchy, and RACI realization are DERIVED from this scope's entity-type write tiers + `process_raci`; none of it is stored in the catalog (the deployer provisions it from this blueprint)._
+
+### 9.1 `ATS-PRE-EMPLOYEE-RECORD`
+
+**Baseline roles:**
+
+| role | baseline grant |
+| --- | --- |
+| `ats-pre-employee-record_viewer` | `ats-pre-employee-record:read` |
+| `ats-pre-employee-record_manager` | `ats-pre-employee-record:manage` |
+
+**Permission hierarchy:**
+
+| permission | includes |
+| --- | --- |
+| `ats-pre-employee-record:admin` | `ats-pre-employee-record:manage` |
+| `ats-pre-employee-record:manage` | `ats-pre-employee-record:read` |
+| `ats-pre-employee-record:admin` | `ats-pre-employee-record:activate_pre_employee` |
+| `ats-pre-employee-record:admin` | `ats-pre-employee-record:view_all_pre-employees` |
+| `ats-pre-employee-record:admin` | `ats-pre-employee-record:manage_all_pre-employees` |
+
+**RACI realization:**
+
+_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_
+
+### 9.2 Functional ownership and default grants
+
+| responsibility | business function | default role | default tier |
+| --- | --- | --- | --- |
+| owner | Recruiting | `admin` | `:admin` |
+| contributor | Legal | `manage` | `:manage` |

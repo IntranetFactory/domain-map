@@ -8,7 +8,7 @@ domain_modules:
   - re-brok-brokerage-ops
 domain_code: RE-BROKERAGE
 related_modules: [re-brok-agent-ops]
-created_at: 2026-06-01
+created_at: 2026-06-02
 ---
 
 # Brokerage Oversight and Commission Management
@@ -196,3 +196,42 @@ _This scope holds `real_estate_transactions` as **embedded_master**; the canonic
 | --- | --- | --- | --- |
 | `submit_restricted_to_commission_split_owner` | `commission_splits` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `re-brok-brokerage-ops:manage_all_commission_splits` |
 | `approve_commission_split_requires_approver` | `commission_splits` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`re-brok-brokerage-ops:approve_commission_split` if surfaced as a lifecycle workflow gate). |
+
+## 9. Roles, RACI, and responsibilities (derived)
+
+_Baseline roles, the permission hierarchy, and RACI realization are DERIVED from this scope's entity-type write tiers + `process_raci`; none of it is stored in the catalog (the deployer provisions it from this blueprint)._
+
+### 9.1 `RE-BROK-BROKERAGE-OPS`
+
+**Baseline roles:**
+
+| role | baseline grant |
+| --- | --- |
+| `re-brok-brokerage-ops_viewer` | `re-brok-brokerage-ops:read` |
+| `re-brok-brokerage-ops_manager` | `re-brok-brokerage-ops:manage` |
+
+**Permission hierarchy:**
+
+| permission | includes |
+| --- | --- |
+| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:manage` |
+| `re-brok-brokerage-ops:manage` | `re-brok-brokerage-ops:read` |
+| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:submit_for_compliance_review` |
+| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:approve_for_closing` |
+| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:review_commission_split` |
+| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:dispute_commission_split` |
+| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:approve_commission_split` |
+| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:disburse_commission` |
+| `re-brok-brokerage-ops:admin` | `re-brok-brokerage-ops:submit_commission_split` |
+
+**RACI realization:**
+
+_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_
+
+### 9.2 Functional ownership and default grants
+
+| responsibility | business function | default role | default tier |
+| --- | --- | --- | --- |
+| owner | Sales | `admin` | `:admin` |
+| contributor | Marketing | `manage` | `:manage` |
+| consumer | Accounting | `read` | `:read` |

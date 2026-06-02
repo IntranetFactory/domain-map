@@ -7,8 +7,8 @@ system_slug: ats-background-checks
 domain_modules:
   - ats-background-checks
 domain_code: ATS
-related_modules: [ats-candidate-crm, ats-offers, hrsd-case-mgmt, payroll-run]
-created_at: 2026-06-01
+related_modules: [ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, hrsd-case-mgmt, payroll-run]
+created_at: 2026-06-02
 ---
 
 # Background Checks
@@ -196,8 +196,8 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-BACKGROUND-CHECKS | ATS | ATS-OFFERS | `job_offer.accepted` | `accepted` _(state_change)_ | `background_checks` | lifecycle_progression | low | - |
 | ATS-BACKGROUND-CHECKS | ATS | ATS-OFFERS | `job_offer.rescinded` | _(state_change)_ | `background_checks` | lifecycle_progression | medium | - |
+| ATS-BACKGROUND-CHECKS | ATS | ATS-OFFERS | `job_offer.accepted` | `accepted` _(state_change)_ | `background_checks` | lifecycle_progression | low | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -355,3 +355,66 @@ _This scope holds `job_offers` as **embedded_master**; the canonical state machi
 | `fcra_summary_of_rights_acknowledgement_edit_scope` | `fcra_summary_of_rights_acknowledgements` | has_personal_content | Row-scope by default; override via `ats-background-checks:view_all_fcra_summary_of_rights_acknowledgements` / `ats-background-checks:manage_all_fcra_summary_of_rights_acknowledgements` |
 | `submit_restricted_to_fcra_summary_of_rights_acknowledgement_owner` | `fcra_summary_of_rights_acknowledgements` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `ats-background-checks:manage_all_fcra_summary_of_rights_acknowledgements` |
 | `adverse_action_notice_edit_scope` | `adverse_action_notices` | has_personal_content | Row-scope by default; override via `ats-background-checks:view_all_adverse_action_notices` / `ats-background-checks:manage_all_adverse_action_notices` |
+
+## 9. Roles, RACI, and responsibilities (derived)
+
+_Baseline roles, the permission hierarchy, and RACI realization are DERIVED from this scope's entity-type write tiers + `process_raci`; none of it is stored in the catalog (the deployer provisions it from this blueprint)._
+
+### 9.1 `ATS-BACKGROUND-CHECKS`
+
+**Baseline roles:**
+
+| role | baseline grant |
+| --- | --- |
+| `ats-background-checks_viewer` | `ats-background-checks:read` |
+| `ats-background-checks_manager` | `ats-background-checks:manage` |
+| `ats-background-checks_admin` | `ats-background-checks:admin` |
+
+**Permission hierarchy:**
+
+| permission | includes |
+| --- | --- |
+| `ats-background-checks:admin` | `ats-background-checks:manage` |
+| `ats-background-checks:manage` | `ats-background-checks:read` |
+| `ats-background-checks:admin` | `ats-background-checks:adjudicate_background_check` |
+| `ats-background-checks:admin` | `ats-background-checks:clear_adjudication` |
+| `ats-background-checks:admin` | `ats-background-checks:engage_adjudication` |
+| `ats-background-checks:admin` | `ats-background-checks:decline_adjudication` |
+| `ats-background-checks:admin` | `ats-background-checks:send_post_adverse_notice` |
+| `ats-background-checks:admin` | `ats-background-checks:mark_pre_adverse_dispute_filed` |
+| `ats-background-checks:admin` | `ats-background-checks:clear_pre_adverse_notice` |
+| `ats-background-checks:admin` | `ats-background-checks:escalate_to_final_adverse_action` |
+| `ats-background-checks:admin` | `ats-background-checks:view_all_background_checks` |
+| `ats-background-checks:admin` | `ats-background-checks:manage_all_background_checks` |
+| `ats-background-checks:admin` | `ats-background-checks:submit_background_check` |
+| `ats-background-checks:admin` | `ats-background-checks:view_all_background_check_components` |
+| `ats-background-checks:admin` | `ats-background-checks:manage_all_background_check_components` |
+| `ats-background-checks:admin` | `ats-background-checks:view_all_background_check_adjudications` |
+| `ats-background-checks:admin` | `ats-background-checks:manage_all_background_check_adjudications` |
+| `ats-background-checks:admin` | `ats-background-checks:view_all_background_check_disputes` |
+| `ats-background-checks:admin` | `ats-background-checks:manage_all_background_check_disputes` |
+| `ats-background-checks:admin` | `ats-background-checks:view_all_fcra_disclosures` |
+| `ats-background-checks:admin` | `ats-background-checks:manage_all_fcra_disclosures` |
+| `ats-background-checks:admin` | `ats-background-checks:view_all_pre-adverse_action_notices` |
+| `ats-background-checks:admin` | `ats-background-checks:manage_all_pre-adverse_action_notices` |
+| `ats-background-checks:admin` | `ats-background-checks:submit_pre-adverse_action_notice` |
+| `ats-background-checks:admin` | `ats-background-checks:view_all_fcra_summary_of_rights_acknowledgements` |
+| `ats-background-checks:admin` | `ats-background-checks:manage_all_fcra_summary_of_rights_acknowledgements` |
+| `ats-background-checks:admin` | `ats-background-checks:submit_fcra_summary_of_rights_acknowledgement` |
+| `ats-background-checks:admin` | `ats-background-checks:view_all_adverse_action_notices` |
+| `ats-background-checks:admin` | `ats-background-checks:manage_all_adverse_action_notices` |
+
+**RACI realization:**
+
+| actor | kind | raci | process | realization |
+| --- | --- | --- | --- | --- |
+| `LEGAL-COMPLIANCE-SPECIALIST` | persona | responsible | Manage new hire/re-hire | grant gates [ats-background-checks:adjudicate_background_check] + the gated entities' write tier |
+| `RECRUITING-MANAGER` | persona | accountable | Manage new hire/re-hire | approval gate |
+| `RECRUITING-COORDINATOR` | persona | consulted | Manage new hire/re-hire | blocking consultation state |
+
+### 9.2 Functional ownership and default grants
+
+| responsibility | business function | default role | default tier |
+| --- | --- | --- | --- |
+| owner | Recruiting | `admin` | `:admin` |
+| contributor | Legal | `manage` | `:manage` |

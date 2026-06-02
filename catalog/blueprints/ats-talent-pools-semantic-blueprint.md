@@ -7,8 +7,8 @@ system_slug: ats-talent-pools
 domain_modules:
   - ats-talent-pools
 domain_code: ATS
-related_modules: [ats-candidate-crm]
-created_at: 2026-06-01
+related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals]
+created_at: 2026-06-02
 ---
 
 # Talent Pools
@@ -218,3 +218,35 @@ _This scope holds `candidates` as **embedded_master**; the canonical state machi
 ### 8.2 Business rules
 
 _(no flag-derived business rules.)_
+
+## 9. Roles, RACI, and responsibilities (derived)
+
+_Baseline roles, the permission hierarchy, and RACI realization are DERIVED from this scope's entity-type write tiers + `process_raci`; none of it is stored in the catalog (the deployer provisions it from this blueprint)._
+
+### 9.1 `ATS-TALENT-POOLS`
+
+**Baseline roles:**
+
+| role | baseline grant |
+| --- | --- |
+| `ats-talent-pools_viewer` | `ats-talent-pools:read` |
+| `ats-talent-pools_manager` | `ats-talent-pools:manage` |
+| `ats-talent-pools_admin` | `ats-talent-pools:admin` |
+
+**Permission hierarchy:**
+
+| permission | includes |
+| --- | --- |
+| `ats-talent-pools:admin` | `ats-talent-pools:manage` |
+| `ats-talent-pools:manage` | `ats-talent-pools:read` |
+
+**RACI realization:**
+
+_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_
+
+### 9.2 Functional ownership and default grants
+
+| responsibility | business function | default role | default tier |
+| --- | --- | --- | --- |
+| owner | Recruiting | `admin` | `:admin` |
+| contributor | Legal | `manage` | `:manage` |

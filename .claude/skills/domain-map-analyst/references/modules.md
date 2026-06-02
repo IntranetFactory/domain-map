@@ -104,20 +104,22 @@ Read is uniformly `<module>:read`. Which baseline governs an entity's WRITES is 
 
 No new permission is minted: `:manage` and `:admin` already exist per module, so `entity_type` only selects which existing baseline tier applies. The M6 generator guard suppresses pattern-flag overrides on `catalog` / `junction` / `computed` masters.
 
-### `permissions` table
+### `permissions` (DERIVED + emitted, materialized by the deployer in the tenant)
 
-Two columns added to the Semantius built-in (per [module-shape.md § Role layer](module-shape.md#role-layer)):
+As of Plan 3 the catalog does NOT store derived permissions. The emitter (§8) derives the per-module codes + tiers from lifecycle states + the entity-type write tier; the blueprint carries them; the deployer materializes them as tenant `permissions` rows. Each derived permission carries:
 
-- `domain_module_id` (reference, nullable) — set on catalog-derived permissions; NULL on built-in Semantius permissions.
-- `tier` (enum) — `baseline-read` / `baseline-manage` / `baseline-admin` / `workflow-gate` / `override`.
+- a code: `<domain_module_code>:<verb>_<entity_singular>` for gates (verb = `permission_verb_override` if set, else `state_name`), or the baseline `<module>:read` / `:manage` / `:admin`.
+- a `tier`: `baseline-read` / `baseline-manage` / `baseline-admin` / `workflow-gate` / `override`.
 
-### `permission_hierarchy` (Semantius built-in)
+The catalog's own `_core` `permissions` table holds only the 6 platform rows (the catalog app's RBAC); no catalog loader writes derived permissions into it.
 
-Per-module hierarchy edges with `origin='model'`:
+### `permission_hierarchy` (DERIVED + emitted, materialized by the deployer)
+
+The emitter (§9, B2) derives per-module hierarchy edges:
 - `<module>:admin` ⊃ `<module>:manage` ⊃ `<module>:read`
 - `<module>:admin` ⊃ every workflow gate and pattern-flag override in that module
 
-`<module>:admin` ⊃ `<module>:manage` ⊃ `<module>:read` is the standard chain; auto-expansion happens at request time. Roles bundle tier-level grants (`<module>:admin`) and `permission_hierarchy` does the rest.
+The derived persona bundle uses tier-level grants (`<module>:admin`) and the derived hierarchy auto-expands them at request time. None of this is stored in the catalog; the deployer provisions it in the tenant from the blueprint.
 
 ### Override collisions
 
@@ -140,6 +142,16 @@ Field-level shell contracts (which columns each embedded_master rendition includ
 The catalog (`domain_data_objects`, `domain_module_data_objects`) records *that* a module embedded_masters a data_object and *what role* it plays — it does not duplicate the field-level shape.
 
 > **History.** An earlier `data_objects.minimum_embedded_shape` markdown column intended to declare embed-time required fields was dropped after the field-level contract was correctly relocated to the deployer.
+
+### Self-containment invariant (no hard prerequisites)
+
+`embedded_master` is the mechanism that makes a module **independently deployable**, so the invariant follows: **every module deploys standalone, with no hard prerequisite on another module.** Every data_object a module touches is one of:
+- `master` (it owns), or
+- `embedded_master` (it carries a local shell; the canonical owner is OPTIONAL, deferred to only if installed), or
+- `necessity=optional` (presence-conditional, Rule #16: a required edge to an un-installed target carries no constraint), or
+- a `consumer` of a platform built-in / shared master that is always present (`users`, master-data).
+
+A `contributor`, or a `consumer` with `necessity=required`, pointing at **another domain module's** entity that is **not** also embedded here, is a **self-containment VIOLATION** (the module can't deploy without co-installing that module). The fix is to embed the entity (`embedded_master`) or make it optional, NOT to document a dependency. This is enforced by audit check M9; there is deliberately no "deployable closure / required modules" output, because a correct module has none. Modules that are merely *related* (data coupling, handoffs, shared personas) are surfaced as the informational `related_modules` front-matter hint in the blueprint, never as a requirement.
 
 ---
 
@@ -172,4 +184,4 @@ The prior editorial `domain_starter_modules` junction (one recommended-install o
 - ❌ Cloning a cross-cutting module per host (e.g. `ITSM-KNOWLEDGE` + `CSM-KNOWLEDGE` + `HRSD-KNOWLEDGE` instead of one `KNOWLEDGE-MGMT` with three `domain_module_host_domains` rows). One module row, multiple host rows.
 - ❌ Domain-prefixing a permission code on a cross-cutting module (`itsm:publish_article`). The prefix is the **module's** `domain_module_code`, which is `knowledge-mgmt:publish_article` regardless of which host the deploy lives on.
 - ❌ Omitting `domain_module_id` on a workflow-gate lifecycle state. NULL is only correct for states always reachable when the master is installed; module-specific states need the FK set.
-- ❌ Listing every workflow gate in a role's `role_permissions` bundle. Use the tier-level grant + `permission_hierarchy` auto-expansion.
+- ❌ Trying to author a stored permission bundle for a persona. There is no `role_permissions` for `domain_roles` (Plan 3); the bundle is DERIVED (emitter §9) from `role_modules` reach + `process_raci` responsibility. Author reach + RACI, not a permission list.

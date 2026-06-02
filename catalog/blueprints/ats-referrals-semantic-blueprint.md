@@ -7,8 +7,8 @@ system_slug: ats-referrals
 domain_modules:
   - ats-referrals
 domain_code: ATS
-related_modules: [ats-candidate-crm, payroll-earnings-deductions]
-created_at: 2026-06-01
+related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-talent-pools, payroll-earnings-deductions]
+created_at: 2026-06-02
 ---
 
 # Employee Referrals
@@ -212,3 +212,38 @@ _This scope holds `candidates` as **embedded_master**; the canonical state machi
 ### 8.2 Business rules
 
 _(no flag-derived business rules.)_
+
+## 9. Roles, RACI, and responsibilities (derived)
+
+_Baseline roles, the permission hierarchy, and RACI realization are DERIVED from this scope's entity-type write tiers + `process_raci`; none of it is stored in the catalog (the deployer provisions it from this blueprint)._
+
+### 9.1 `ATS-REFERRALS`
+
+**Baseline roles:**
+
+| role | baseline grant |
+| --- | --- |
+| `ats-referrals_viewer` | `ats-referrals:read` |
+| `ats-referrals_manager` | `ats-referrals:manage` |
+| `ats-referrals_admin` | `ats-referrals:admin` |
+
+**Permission hierarchy:**
+
+| permission | includes |
+| --- | --- |
+| `ats-referrals:admin` | `ats-referrals:manage` |
+| `ats-referrals:manage` | `ats-referrals:read` |
+| `ats-referrals:admin` | `ats-referrals:pay_referral_bonus` |
+| `ats-referrals:admin` | `ats-referrals:approve_referral_payout` |
+| `ats-referrals:admin` | `ats-referrals:clawback_referral_payout` |
+
+**RACI realization:**
+
+_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_
+
+### 9.2 Functional ownership and default grants
+
+| responsibility | business function | default role | default tier |
+| --- | --- | --- | --- |
+| owner | Recruiting | `admin` | `:admin` |
+| contributor | Legal | `manage` | `:manage` |

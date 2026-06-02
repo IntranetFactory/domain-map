@@ -498,6 +498,7 @@ Records hosts beyond the primary `domain_modules.domain_id`. Convention: never b
 | `requires_permission` | boolean | yes | Default `false`. TRUE = transitioning *into* this state needs an explicit permission; produces a `<module>:<verb>_<entity>` workflow gate during permission materialization. |
 | `permission_verb_override` | text | yes | Empty string unless auto-derivation produces a clumsy verb. Replaces `state_name` in the derived verb. Examples: `hired → hire_candidate`, `approved → approve_change`. |
 | `domain_module_id` | reference → `domain_modules` | no | Nullable. NULL = state always reachable when the master is installed. Non-NULL = state realized only when that specific module is deployed (the deployer prunes unreachable states). The permission prefix at materialization time is the realizing module's `domain_module_code`. |
+| `process_id` | reference → `processes` | no | Nullable (Plan 3). The process whose gated transition this state realizes: the process-to-permission edge. Distinct from `domain_module_id` (which module realizes the gate) and from `process_raci.process_id` (which RACI row is about the process). Authored per-domain in Phase E; lets a `process_raci` Responsible/Accountable assignment resolve to the concrete gate(s) of its process. `clear` on delete. |
 | `record_status` | enum | yes | Default `new` |
 
 Permission materialization rule (per Rule #14 + Rule #12): for each row with `requires_permission=true`, the deployer creates `permissions.permission_name = <domain_module_code>:<verb>_<entity_singular>` where `<verb>` = `permission_verb_override` if set, else `state_name`. Override collisions (e.g. `candidates.hired` and `job_applications.hired` both overriding to `hire_candidate`) legitimately collapse to one permission fired by two transitions.
@@ -506,48 +507,49 @@ Permission materialization rule (per Rule #14 + Rule #12): for each row with `re
 
 ## Role layer
 
-> See [roles.md](roles.md) for the long-form rules (hard invariants, two-path equivalence, bundling patterns). Schemas below.
+> See [roles.md](roles.md) for the long-form rules (hard invariants, RACI realization, store-vs-derive). Schemas below. Personas and their RACI are **catalog-owned** (module 1001 `domain_map`). As of Plan 3 (2026-06-02) the catalog NO LONGER writes the `_core` `roles` / `role_permissions` / `permission_hierarchy` tables; a persona's permission BUNDLE, the hierarchy, and the permission-name mirror are DERIVED and emitted into the blueprint (emitter §9), never stored. You author REACH (`role_modules`) and RESPONSIBILITY (`process_raci`); the bundle is computed from them.
 
-### `roles` (Semantius built-in, extended)
+### `domain_roles` (catalog-owned persona; module 1001)
 
 | Field | Format | Required | Notes |
 |---|---|---|---|
-| `role_code` | text | yes | Natural key. `<FUNCTION-CODE>-<ROLE-NAME>` for function-scoped (`RECRUITING-RECRUITER`); bare for cross-functional (`HIRING-MANAGER`). |
-| `role_name` | text | yes | Human-friendly label |
-| `slug` | text | yes | snake_case (`recruiting_recruiter`). Enforced by built-in `valid_role_slug` check constraint. |
-| `business_function_id` | reference → `business_functions` | no | Nullable. NULL = cross-functional. |
-| `description` | multiline | yes | |
+| `role_code` | text | yes | Natural key. `<FUNCTION-CODE>-<ROLE-NAME>` for function-scoped (`RECRUITING-RECRUITER`); bare for cross-functional (`HIRING-MANAGER`). No `slug` field and no `valid_role_slug` constraint (those were `_core` artifacts). |
+| `role_name` | text | yes | Human-friendly label; the entity's `label_column`. |
+| `description` | multiline | yes | What the persona does and why it exists. |
+| `business_function_id` | reference → `business_functions` | no | Nullable. NULL = cross-functional. `clear` on delete. |
+| `record_status` | enum | yes | `new` / `pending` / `approved` / `rejected`; default `new`. |
+
+Replaces the `_core` `roles` persona rows (origin `model` / `model_master`), which were deleted in Plan 3. No `notes` field (unlike the old `roles`). The catalog app's own scaffold roles (`Domain Map Viewer`/`Manager`, empty `role_code`, origin `model_master`) still live in `_core` `roles` and are platform RBAC, NOT personas.
+
+### `role_modules` (junction: `domain_roles` ↔ `domain_modules`, catalog-owned)
+
+The authored REACH layer: which modules a persona touches.
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `role_id` | parent → `domain_roles` | yes | Re-pointed from `_core` `roles` to `domain_roles` in Plan 3; format `parent`, cascade. |
+| `domain_module_id` | parent → `domain_modules` | yes | cascade. |
+| `interaction_level` | enum | yes | `primary` / `secondary`. No `read_only`: a read-only touch is just the absence of a write grant in the derived bundle. |
 | `notes` | multiline | yes | |
-| `record_status` | enum | yes | Default `new` |
 
-### `role_modules` (junction: `roles` ↔ `domain_modules`, catalog-NEW)
+(No `record_status` on `role_modules`; `id` / `role_module_label` / `created_at` / `updated_at` are platform-managed.)
 
-| Field | Format | Required | Notes |
-|---|---|---|---|
-| `role_id` | parent → `roles` | yes | |
-| `domain_module_id` | parent → `domain_modules` | yes | |
-| `interaction_level` | enum | yes | `primary` / `secondary`. No `read_only` — bundle-only-read captures that case implicitly. |
-| `notes` | multiline | yes | |
-| `record_status` | enum | yes | Default `new` |
+2-module floor: every `domain_roles` persona MUST have ≥2 `role_modules` entries. A single-module persona is a permission tier on that module, not a persona. The auto `role_module_label` composes `<role_code> on <domain_module_code>` from `domain_roles` (computed_field, recomputed on write).
 
-2-module floor: every role MUST have ≥2 `role_modules` entries. Single-module personas = permission tier, not a role.
+### `process_raci` (junction: `processes` ↔ polymorphic actor, catalog-owned, Plan 3)
 
-### `role_permissions` (Semantius built-in, extended; junction: `roles` ↔ `permissions`)
+The authored RESPONSIBILITY layer: who is Responsible / Accountable / Consulted / Informed for each process. The actor is **polymorphic**: a persona OR an agent skill (the AI-native twist: R can be an agent while A is a human).
 
 | Field | Format | Required | Notes |
 |---|---|---|---|
-| `role_id` | parent → `roles` | yes | |
-| `permission_id` | parent → `permissions` | yes | |
-| `notes` | multiline | yes | |
-| `record_status` | enum | yes | Default `new` |
+| `process_id` | parent → `processes` | yes | The process the assignment is about; cascade. |
+| `actor_role_id` | reference → `domain_roles` | no | Persona actor. Nullable; cascade. |
+| `actor_skill_id` | reference → `skills` | no | Agent-skill actor. Nullable; cascade. Populated when the process-skills layer lands (deferred); the polymorphic shape is baked in now to avoid a later migration. |
+| `raci` | enum | yes | `responsible` / `accountable` / `consulted` / `informed`. |
+| `consultation_blocking` | boolean | yes | For `consulted` rows: input is required (blocking) vs advisory. Default `false`. |
 
-Prefer tier-level grants (`<module>:admin`, `:manage`, `:read`) over enumerating every workflow gate. `permission_hierarchy` (Semantius built-in) auto-expands tier-level grants at request time.
+**Exactly-one-actor** is a hard `validation_rules` (JsonLogic) entry (`exactly_one_actor`): the platform compiles it into a `BEFORE INSERT/UPDATE` trigger that raises a `check_violation` if neither or both actor FKs are set. It is a real constraint, not a soft warn. The auto `process_raci_label` composes `<process_name> / <raci> = <actor_code>`. The process-to-permission edge a Responsible/Accountable row resolves through is `data_object_lifecycle_states.process_id`.
 
-### `permissions` (Semantius built-in, extended)
+### Derived RBAC: NOT stored (store-vs-derive, Plan 3)
 
-Catalog adds two columns to the built-in:
-
-| Field | Format | Required | Notes |
-|---|---|---|---|
-| `domain_module_id` | reference → `domain_modules` | no | Nullable. NULL on built-in Semantius permissions. Set on catalog-derived permissions to record the realizing module. |
-| `tier` | enum | yes | `baseline-read` / `baseline-manage` / `baseline-admin` / `workflow-gate` / `override`. Materialized from lifecycle states + pattern flags per the materialization rules in [modules.md](modules.md). |
+A persona's permission **bundle** (persona → permission codes), the permission **hierarchy** (`admin ⊃ manage ⊃ read` + gates), and the **permission-name mirror** are DERIVED by the emitter (§9) from the persona's `role_modules` reach + its `process_raci` gates + the entity-type write-tier policy, and emitted into the blueprint; the deployer provisions the tenant from the blueprint. The catalog does NOT create `domain_permissions` / `domain_role_permissions` / `domain_permission_hierarchy`, and **no loader writes to the `_core` `permissions` / `role_permissions` / `permission_hierarchy` tables** (storing derived RBAC is exactly what rotted `_core`). The 6 surviving `_core` `permissions` (`domain_map:read`/`manage`, `user:read`/`manage`, `public:read`, `admin`) are platform RBAC for the catalog app itself, not catalog content. RACI realization (no new tier): R → permission (persona) or `skill_tools` coverage (skill); A → approval gate; C → a consultation lifecycle state (`consultation_blocking=true`) or a read grant; I → a notification side effect. See downstream-updates rows 3-5.
