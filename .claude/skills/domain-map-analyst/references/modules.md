@@ -90,6 +90,20 @@ Permissions are **derived** from `data_object_lifecycle_states` (workflow gates)
   - `has_submit_lock` → `<module>:submit_<entity>` + restriction rule
   - `has_single_approver` → `<module>:approve_<entity>_requires_approver` rule
 
+### Write tier by `entity_type` (B2)
+
+Read is uniformly `<module>:read`. Which baseline governs an entity's WRITES is derived from `data_objects.entity_type` (not stored, not authored): `deriveWriteTier` in `scripts/emit_fact_sheet.ts` resolves it and renders the section-3 "write tier" column.
+
+| `entity_type` | write tier |
+|---|---|
+| `operational_workflow` / `operational_record` | `<module>:manage` (plus workflow gates for `operational_workflow`) |
+| `catalog` | `<module>:admin` |
+| `junction` | `<module>:admin` if a linked endpoint is `catalog`, else `<module>:manage` |
+| `computed` | none (read-only) |
+| `unclassified` | `<module>:manage`, flagged pending (graceful; the hard check is audit band B13) |
+
+No new permission is minted: `:manage` and `:admin` already exist per module, so `entity_type` only selects which existing baseline tier applies. The M6 generator guard suppresses pattern-flag overrides on `catalog` / `junction` / `computed` masters.
+
 ### `permissions` table
 
 Two columns added to the Semantius built-in (per [module-shape.md § Role layer](module-shape.md#role-layer)):

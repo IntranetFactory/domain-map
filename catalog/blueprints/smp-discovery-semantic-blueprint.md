@@ -67,15 +67,15 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `smp_app_catalog_listings` (App Catalog Listings) | master | - | - | required | - | - |
-| 2 | `smp_alerts` (SaaS Alerts) | master | - | - | required | - | - |
-| 3 | `smp_app_integrations` (SaaS App Integrations) | master | - | - | required | - | - |
-| 4 | `smp_app_owners` (SaaS App Owners) | master | - | - | required | personal_content | - |
-| 5 | `saas_applications` (SaaS Applications) | master | - | - | required | - | - |
-| 6 | `shadow_it_apps` (Shadow IT Apps) | master | - | - | required | - | - |
-| 7 | `smp_app_lifecycle_stages` (App Lifecycle Stages) | embedded_master | - | - | optional | - | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `smp_app_catalog_listings` (App Catalog Listings) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 2 | `smp_alerts` (SaaS Alerts) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 3 | `smp_app_integrations` (SaaS App Integrations) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 4 | `smp_app_owners` (SaaS App Owners) | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
+| 5 | `saas_applications` (SaaS Applications) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 6 | `shadow_it_apps` (Shadow IT Apps) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 7 | `smp_app_lifecycle_stages` (App Lifecycle Stages) | embedded_master | - | - | optional | - | `:manage` _(pending)_ | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -85,23 +85,23 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 ### 5.1 Intra-scope edges
 
-| from | verb | to | cardinality | kind | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `saas_applications` | owns | `smp_app_owners` | many_to_many | reference | required | source | - |
-| `saas_applications` | integrates_with | `smp_app_integrations` | one_to_many | reference | required | target | - |
-| `saas_applications` | publishes | `smp_app_catalog_listings` | one_to_one | reference | required | source | - |
-| `saas_applications` | raised_for | `smp_alerts` | one_to_many | reference | optional | target | - |
-| `shadow_it_apps` | raised_for_shadow | `smp_alerts` | one_to_many | reference | optional | target | - |
-| `saas_applications` | tracks_stage | `smp_app_lifecycle_stages` | one_to_one | reference | required | target | - |
-| `shadow_it_apps` | promotes_to | `saas_applications` | one_to_one | reference | optional | source | - |
+| from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `saas_applications` | owns | `smp_app_owners` | many_to_many | reference | required | source | restrict | reference | - |
+| `saas_applications` | integrates_with | `smp_app_integrations` | one_to_many | reference | required | target | restrict | reference | - |
+| `saas_applications` | publishes | `smp_app_catalog_listings` | one_to_one | reference | required | source | restrict | reference | - |
+| `saas_applications` | raised_for | `smp_alerts` | one_to_many | reference | optional | target | clear | reference | - |
+| `shadow_it_apps` | raised_for_shadow | `smp_alerts` | one_to_many | reference | optional | target | clear | reference | - |
+| `saas_applications` | tracks_stage | `smp_app_lifecycle_stages` | one_to_one | reference | required | target | restrict | reference | - |
+| `shadow_it_apps` | promotes_to | `saas_applications` | one_to_one | reference | optional | source | clear | reference | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
-| from | verb | to | cardinality | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- |
-| `users` | assigned_owner | `smp_app_owners` | many_to_many | required | source | - |
-| `users` | owns | `saas_applications` | one_to_many | required | target | - |
-| `users` | triggered | `shadow_it_apps` | one_to_many | optional | target | - |
+| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `users` | assigned_owner | `smp_app_owners` | many_to_many | required | source | restrict | reference | - |
+| `users` | owns | `saas_applications` | one_to_many | required | target | restrict | reference | - |
+| `users` | triggered | `shadow_it_apps` | one_to_many | optional | target | clear | reference | - |
 
 ### 5.3 Cross-scope edges
 
@@ -109,20 +109,20 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
 
-| from | verb | to | cardinality | necessity | notes |
-| --- | --- | --- | --- | --- | --- |
-| `enterprise_applications` | aliased_as | `saas_applications` | one_to_one | optional | - |
-| `saas_applications` | lifecycle events for | `asset_lifecycle_events` | one_to_many | optional | - |
-| `asset_contracts` | covers | `saas_applications` | many_to_many | optional | - |
-| `saas_applications` | entitles_to | `iga_user_entitlements` | one_to_many | required | - |
-| `saas_applications` | recommends_for_app | `smp_optimization_recommendations` | one_to_many | optional | - |
-| `saas_applications` | benchmarks_for | `smp_app_benchmarks` | one_to_many | required | - |
-| `saas_applications` | assesses_app | `smp_vendor_risk_assessments` | one_to_many | required | - |
-| `saas_applications` | automates_app | `smp_automation_workflows` | one_to_many | optional | - |
-| `smp_app_catalog_listings` | requests_listing | `smp_app_requests` | one_to_many | required | - |
-| `saas_applications` | has | `saas_subscriptions` | one_to_many | optional | - |
-| `saas_applications` | measured_by | `saas_usage_metrics` | one_to_many | required | - |
-| `saas_applications` | assigned_via | `smp_license_seat_assignments` | one_to_many | required | - |
+| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `enterprise_applications` | aliased_as | `saas_applications` | one_to_one | optional | clear | reference | - |
+| `saas_applications` | lifecycle events for | `asset_lifecycle_events` | one_to_many | optional | clear | reference | - |
+| `asset_contracts` | covers | `saas_applications` | many_to_many | optional | clear | reference | - |
+| `saas_applications` | entitles_to | `iga_user_entitlements` | one_to_many | required | restrict | reference | - |
+| `saas_applications` | recommends_for_app | `smp_optimization_recommendations` | one_to_many | optional | clear | reference | - |
+| `saas_applications` | benchmarks_for | `smp_app_benchmarks` | one_to_many | required | restrict | reference | - |
+| `saas_applications` | assesses_app | `smp_vendor_risk_assessments` | one_to_many | required | restrict | reference | - |
+| `saas_applications` | automates_app | `smp_automation_workflows` | one_to_many | optional | clear | reference | - |
+| `smp_app_catalog_listings` | requests_listing | `smp_app_requests` | one_to_many | required | restrict | reference | - |
+| `saas_applications` | has | `saas_subscriptions` | one_to_many | optional | clear | reference | - |
+| `saas_applications` | measured_by | `saas_usage_metrics` | one_to_many | required | cascade | parent | - |
+| `saas_applications` | assigned_via | `smp_license_seat_assignments` | one_to_many | required | cascade | parent | - |
 
 #### 5.3b Context edges on embedded shells and consumed entities
 

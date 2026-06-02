@@ -155,32 +155,32 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `assessment_attempts` (Assessment Attempts) | master | - | - | required | personal_content, submit_lock | - |
-| 2 | `assessment_questions` (Assessment Questions) | master | - | - | required | - | - |
-| 3 | `course_assessments` (Course Assessments) | master | - | - | required | submit_lock | - |
-| 4 | `course_catalogs` (Course Catalogs) | master | - | - | required | - | - |
-| 5 | `course_categories` (Course Categories) | master | - | - | required | - | - |
-| 6 | `course_completions` (Course Completions) | master | - | - | required | personal_content, submit_lock | - |
-| 7 | `course_discussions` (Course Discussions) | master | - | - | required | personal_content | - |
-| 8 | `course_enrollments` (Course Enrollments) | master | - | - | required | personal_content | - |
-| 9 | `course_modules` (Course Modules) | master | - | - | required | - | - |
-| 10 | `course_ratings` (Course Ratings) | master | - | - | required | personal_content | - |
-| 11 | `course_reviews` (Course Reviews) | master | - | - | required | personal_content, submit_lock | - |
-| 12 | `course_tags` (Course Tags) | master | - | - | required | - | - |
-| 13 | `course_versions` (Course Versions) | master | - | - | required | submit_lock | - |
-| 14 | `courses` (Courses) | master | - | - | required | - | - |
-| 15 | `learning_content_assets` (Learning Content Assets) | master | - | - | required | - | - |
-| 16 | `learning_records` (Learning Records) | master | - | - | required | personal_content | - |
-| 17 | `lessons` (Lessons) | master | - | - | required | - | - |
-| 18 | `quiz_responses` (Quiz Responses) | master | - | - | required | personal_content, submit_lock | - |
-| 19 | `scorm_packages` (SCORM Packages) | master | - | - | required | - | - |
-| 20 | `xapi_statements` (xAPI Statements) | master | - | - | required | personal_content | - |
-| 21 | `cost_centers` (Cost Centers) | embedded_master | `ERP-FIN` _(domain-level, not modularized)_ | Core ERP Financial Management | optional | - | - |
-| 22 | `employees` (Employees) | embedded_master | `hcm-core-worker` | Core Worker Record | required | personal_content | - |
-| 23 | `org_units` (Org Units) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | - | - |
-| 24 | `hcm_positions` (Positions) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | single_approver | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `assessment_attempts` (Assessment Attempts) | master | - | - | required | personal_content, submit_lock | `:manage` _(pending)_ | - |
+| 2 | `assessment_questions` (Assessment Questions) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 3 | `course_assessments` (Course Assessments) | master | - | - | required | submit_lock | `:manage` _(pending)_ | - |
+| 4 | `course_catalogs` (Course Catalogs) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 5 | `course_categories` (Course Categories) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 6 | `course_completions` (Course Completions) | master | - | - | required | personal_content, submit_lock | `:manage` _(pending)_ | - |
+| 7 | `course_discussions` (Course Discussions) | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
+| 8 | `course_enrollments` (Course Enrollments) | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
+| 9 | `course_modules` (Course Modules) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 10 | `course_ratings` (Course Ratings) | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
+| 11 | `course_reviews` (Course Reviews) | master | - | - | required | personal_content, submit_lock | `:manage` _(pending)_ | - |
+| 12 | `course_tags` (Course Tags) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 13 | `course_versions` (Course Versions) | master | - | - | required | submit_lock | `:manage` _(pending)_ | - |
+| 14 | `courses` (Courses) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 15 | `learning_content_assets` (Learning Content Assets) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 16 | `learning_records` (Learning Records) | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
+| 17 | `lessons` (Lessons) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 18 | `quiz_responses` (Quiz Responses) | master | - | - | required | personal_content, submit_lock | `:manage` _(pending)_ | - |
+| 19 | `scorm_packages` (SCORM Packages) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 20 | `xapi_statements` (xAPI Statements) | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
+| 21 | `cost_centers` (Cost Centers) | embedded_master | `ERP-FIN` _(domain-level, not modularized)_ | Core ERP Financial Management | optional | - | `:manage` _(pending)_ | - |
+| 22 | `employees` (Employees) | embedded_master | `hcm-core-worker` | Core Worker Record | required | personal_content | `:manage` _(pending)_ | - |
+| 23 | `org_units` (Org Units) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | - | `:manage` _(pending)_ | - |
+| 24 | `hcm_positions` (Positions) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | single_approver | `:manage` _(pending)_ | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -190,58 +190,58 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 ### 5.1 Intra-scope edges
 
-| from | verb | to | cardinality | kind | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `courses` | has_version | `course_versions` | one_to_many | composition | required | source | - |
-| `course_versions` | contains | `course_modules` | one_to_many | composition | optional | source | - |
-| `course_modules` | contains | `lessons` | one_to_many | composition | optional | source | - |
-| `lessons` | uses | `learning_content_assets` | many_to_many | association | optional | source | - |
-| `course_versions` | imports | `scorm_packages` | one_to_many | reference | optional | source | - |
-| `course_completions` | records_completion_of | `course_versions` | one_to_many | reference | required | target | - |
-| `course_enrollments` | yields | `course_completions` | one_to_many | composition | optional | source | - |
-| `course_assessments` | contains | `assessment_questions` | one_to_many | composition | optional | source | - |
-| `course_assessments` | attempted_by | `assessment_attempts` | one_to_many | reference | optional | source | - |
-| `assessment_attempts` | produces | `quiz_responses` | one_to_many | composition | optional | source | - |
-| `courses` | classified_as | `course_categories` | many_to_many | association | optional | source | - |
-| `courses` | tagged_with | `course_tags` | many_to_many | association | optional | source | - |
-| `course_catalogs` | lists | `courses` | many_to_many | association | optional | source | - |
-| `courses` | reviewed_via | `course_reviews` | one_to_many | reference | optional | target | - |
-| `courses` | rated_via | `course_ratings` | one_to_many | reference | optional | target | - |
-| `courses` | discussed_in | `course_discussions` | one_to_many | reference | optional | target | - |
-| `org_units` | groups | `employees` | one_to_many | reference | required | source | - |
-| `org_units` | contains | `hcm_positions` | one_to_many | reference | required | source | - |
-| `hcm_positions` | is_filled_by | `employees` | one_to_one | reference | optional | target | - |
-| `cost_centers` | funds | `org_units` | one_to_many | reference | required | source | - |
-| `employees` | enrolls_in | `course_enrollments` | one_to_many | reference | optional | source | - |
-| `org_units` | maps_to | `cost_centers` | one_to_one | reference | optional | source | - |
-| `courses` | enrolled_via | `course_enrollments` | one_to_many | reference | required | source | - |
-| `course_enrollments` | produces | `learning_records` | one_to_many | composition | required | source | - |
-| `cost_centers` | funds | `course_enrollments` | one_to_many | reference | optional | source | - |
-| `employees` | reflects | `learning_records` | one_to_many | reference | optional | source | - |
-| `employees` | fills | `hcm_positions` | one_to_one | reference | optional | source | - |
-| `employees` | learns_via | `course_enrollments` | one_to_many | reference | required | source | - |
-| `org_units` | rolls_up_to | `org_units` | one_to_many | reference | optional | source | - |
+| from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `courses` | has_version | `course_versions` | one_to_many | composition | required | source | cascade | parent | - |
+| `course_versions` | contains | `course_modules` | one_to_many | composition | optional | source | cascade | parent | - |
+| `course_modules` | contains | `lessons` | one_to_many | composition | optional | source | cascade | parent | - |
+| `lessons` | uses | `learning_content_assets` | many_to_many | association | optional | source | clear | reference | - |
+| `course_versions` | imports | `scorm_packages` | one_to_many | reference | optional | source | clear | reference | - |
+| `course_completions` | records_completion_of | `course_versions` | one_to_many | reference | required | target | restrict | reference | - |
+| `course_enrollments` | yields | `course_completions` | one_to_many | composition | optional | source | cascade | parent | - |
+| `course_assessments` | contains | `assessment_questions` | one_to_many | composition | optional | source | cascade | parent | - |
+| `course_assessments` | attempted_by | `assessment_attempts` | one_to_many | reference | optional | source | clear | reference | - |
+| `assessment_attempts` | produces | `quiz_responses` | one_to_many | composition | optional | source | cascade | parent | - |
+| `courses` | classified_as | `course_categories` | many_to_many | association | optional | source | clear | reference | - |
+| `courses` | tagged_with | `course_tags` | many_to_many | association | optional | source | clear | reference | - |
+| `course_catalogs` | lists | `courses` | many_to_many | association | optional | source | clear | reference | - |
+| `courses` | reviewed_via | `course_reviews` | one_to_many | reference | optional | target | clear | reference | - |
+| `courses` | rated_via | `course_ratings` | one_to_many | reference | optional | target | clear | reference | - |
+| `courses` | discussed_in | `course_discussions` | one_to_many | reference | optional | target | clear | reference | - |
+| `org_units` | groups | `employees` | one_to_many | reference | required | source | restrict | reference | - |
+| `org_units` | contains | `hcm_positions` | one_to_many | reference | required | source | restrict | reference | - |
+| `hcm_positions` | is_filled_by | `employees` | one_to_one | reference | optional | target | clear | reference | - |
+| `cost_centers` | funds | `org_units` | one_to_many | reference | required | source | restrict | reference | - |
+| `employees` | enrolls_in | `course_enrollments` | one_to_many | reference | optional | source | clear | reference | - |
+| `org_units` | maps_to | `cost_centers` | one_to_one | reference | optional | source | clear | reference | - |
+| `courses` | enrolled_via | `course_enrollments` | one_to_many | reference | required | source | restrict | reference | - |
+| `course_enrollments` | produces | `learning_records` | one_to_many | composition | required | source | cascade | parent | - |
+| `cost_centers` | funds | `course_enrollments` | one_to_many | reference | optional | source | clear | reference | - |
+| `employees` | reflects | `learning_records` | one_to_many | reference | optional | source | clear | reference | - |
+| `employees` | fills | `hcm_positions` | one_to_one | reference | optional | source | clear | reference | - |
+| `employees` | learns_via | `course_enrollments` | one_to_many | reference | required | source | restrict | reference | - |
+| `org_units` | rolls_up_to | `org_units` | one_to_many | reference | optional | source | clear | reference | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
-| from | verb | to | cardinality | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- |
-| `users` | owns | `courses` | one_to_many | optional | source | - |
-| `users` | attempts | `assessment_attempts` | one_to_many | required | source | - |
-| `users` | answers | `quiz_responses` | one_to_many | optional | source | - |
-| `users` | completes | `course_completions` | one_to_many | required | source | - |
-| `users` | posts_in | `course_discussions` | one_to_many | optional | source | - |
-| `users` | authors | `course_reviews` | one_to_many | optional | source | - |
-| `users` | rates_via | `course_ratings` | one_to_many | optional | source | - |
-| `employees` | is_linked_to | `users` | one_to_one | optional | target | - |
-| `users` | manages | `hcm_positions` | one_to_many | optional | source | - |
-| `users` | leads | `org_units` | one_to_many | optional | source | - |
-| `users` | owns | `cost_centers` | one_to_many | optional | source | - |
-| `users` | authors | `courses` | one_to_many | optional | source | - |
-| `users` | enrolls in | `course_enrollments` | one_to_many | required | source | - |
-| `users` | assigns | `course_enrollments` | one_to_many | optional | source | - |
-| `users` | earns | `learning_records` | one_to_many | required | source | - |
-| `org_units` | has members | `users` | one_to_many | optional | target | - |
+| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `users` | owns | `courses` | one_to_many | optional | source | clear | reference | - |
+| `users` | attempts | `assessment_attempts` | one_to_many | required | source | restrict | reference | - |
+| `users` | answers | `quiz_responses` | one_to_many | optional | source | clear | reference | - |
+| `users` | completes | `course_completions` | one_to_many | required | source | restrict | reference | - |
+| `users` | posts_in | `course_discussions` | one_to_many | optional | source | clear | reference | - |
+| `users` | authors | `course_reviews` | one_to_many | optional | source | clear | reference | - |
+| `users` | rates_via | `course_ratings` | one_to_many | optional | source | clear | reference | - |
+| `employees` | is_linked_to | `users` | one_to_one | optional | target | clear | reference | - |
+| `users` | manages | `hcm_positions` | one_to_many | optional | source | clear | reference | - |
+| `users` | leads | `org_units` | one_to_many | optional | source | clear | reference | - |
+| `users` | owns | `cost_centers` | one_to_many | optional | source | clear | reference | - |
+| `users` | authors | `courses` | one_to_many | optional | source | clear | reference | - |
+| `users` | enrolls in | `course_enrollments` | one_to_many | required | source | restrict | reference | - |
+| `users` | assigns | `course_enrollments` | one_to_many | optional | source | clear | reference | - |
+| `users` | earns | `learning_records` | one_to_many | required | source | restrict | reference | - |
+| `org_units` | has members | `users` | one_to_many | optional | target | clear | reference | - |
 
 ### 5.3 Cross-scope edges
 
@@ -249,21 +249,21 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
 
-| from | verb | to | cardinality | necessity | notes |
-| --- | --- | --- | --- | --- | --- |
-| `courses` | scheduled_as | `course_offerings` | one_to_many | optional | - |
-| `courses` | grants | `certification_definitions` | many_to_many | optional | - |
-| `courses` | yields_credits_via | `continuing_education_credits` | many_to_many | optional | - |
-| `learning_path_steps` | references | `courses` | one_to_many | optional | - |
-| `automated_enrollment_rules` | creates | `course_enrollments` | one_to_many | optional | - |
-| `job_profiles` | maps_to | `courses` | many_to_many | optional | - |
-| `onboarding_tasks` | spawns | `course_enrollments` | one_to_many | optional | - |
-| `courses` | sequenced_into | `learning_paths` | many_to_many | optional | - |
-| `courses` | fulfills | `compliance_assignments` | one_to_many | optional | - |
-| `courses` | grants | `learner_certifications` | one_to_many | optional | - |
-| `skill_profiles` | updated by | `course_enrollments` | one_to_many | optional | - |
-| `course_enrollments` | updates | `career_aspirations` | one_to_many | optional | - |
-| `learning_records` | feeds | `people_kpis` | one_to_many | optional | - |
+| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `courses` | scheduled_as | `course_offerings` | one_to_many | optional | clear | reference | - |
+| `courses` | grants | `certification_definitions` | many_to_many | optional | clear | reference | - |
+| `courses` | yields_credits_via | `continuing_education_credits` | many_to_many | optional | clear | reference | - |
+| `learning_path_steps` | references | `courses` | one_to_many | optional | clear | reference | - |
+| `automated_enrollment_rules` | creates | `course_enrollments` | one_to_many | optional | clear | reference | - |
+| `job_profiles` | maps_to | `courses` | many_to_many | optional | clear | reference | - |
+| `onboarding_tasks` | spawns | `course_enrollments` | one_to_many | optional | clear | reference | - |
+| `courses` | sequenced_into | `learning_paths` | many_to_many | optional | clear | reference | - |
+| `courses` | fulfills | `compliance_assignments` | one_to_many | optional | clear | reference | - |
+| `courses` | grants | `learner_certifications` | one_to_many | optional | clear | reference | - |
+| `skill_profiles` | updated by | `course_enrollments` | one_to_many | optional | clear | reference | - |
+| `course_enrollments` | updates | `career_aspirations` | one_to_many | optional | clear | reference | - |
+| `learning_records` | feeds | `people_kpis` | one_to_many | optional | clear | reference | - |
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
@@ -272,58 +272,58 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 <details>
 <summary>50 context edges</summary>
 
-| from | verb | to | cardinality | necessity | notes |
-| --- | --- | --- | --- | --- | --- |
-| `employees` | triggers | `iga_provisioning_events` | one_to_many | optional | - |
-| `employees` | finalized by | `onboarding_document_collections` | one_to_many | optional | - |
-| `pre_employees` | promotes to | `employees` | one_to_one | required | - |
-| `legal_holds` | identifies_custodians_from | `employees` | many_to_many | optional | - |
-| `legal_advice_records` | references | `employees` | many_to_many | optional | - |
-| `employees` | is host for | `host_assignments` | one_to_many | required | - |
-| `employees` | requests | `absence_requests` | one_to_many | optional | - |
-| `job_profiles` | defines | `hcm_positions` | one_to_many | required | - |
-| `employees` | signs | `employment_contracts` | one_to_many | required | - |
-| `employees` | generates | `employment_events` | one_to_many | required | - |
-| `employees` | triggers | `asset_lifecycle_events` | one_to_many | optional | - |
-| `employees` | holds | `skill_profiles` | one_to_one | optional | - |
-| `org_units` | engages | `contingent_workers` | one_to_many | optional | - |
-| `org_units` | is_scored_by | `engagement_drivers` | one_to_many | optional | - |
-| `org_units` | is_measured_by | `people_kpis` | one_to_many | optional | - |
-| `employees` | triggers | `service_requests` | one_to_many | optional | - |
-| `org_units` | triggers | `iga_entitlement_definitions` | one_to_many | optional | - |
-| `employees` | triggers | `pay_runs` | one_to_many | optional | - |
-| `hcm_positions` | spawns | `job_requisitions` | one_to_many | optional | - |
-| `employees` | becomes | `career_aspirations` | one_to_one | optional | - |
-| `employees` | becomes | `work_shifts` | one_to_many | optional | - |
-| `employees` | becomes | `compensation_statements` | one_to_one | optional | - |
-| `salary_bands` | anchors | `hcm_positions` | one_to_many | optional | - |
-| `employees` | triggers | `benefit_enrollments` | one_to_many | optional | - |
-| `employees` | triggers | `corporate_cards` | one_to_many | optional | - |
-| `employees` | spawns | `onboarding_journeys` | one_to_one | optional | - |
-| `employees` | spawns | `hr_cases` | one_to_many | optional | - |
-| `employees` | feeds | `headcount_plans` | one_to_many | optional | - |
-| `employees` | feeds | `agency_time_entries` | one_to_many | optional | - |
-| `employees` | onboarded by | `onboarding_journeys` | one_to_many | required | - |
-| `hcm_positions` | requires | `compliance_assignments` | one_to_many | optional | - |
-| `org_units` | sponsors | `compliance_assignments` | one_to_many | optional | - |
-| `employees` | reflected on | `compliance_assignments` | one_to_many | optional | - |
-| `employees` | declares | `life_events` | one_to_many | optional | - |
-| `org_units` | sponsors | `benefit_plans` | many_to_many | optional | - |
-| `employees` | updated by | `life_events` | one_to_many | optional | - |
-| `survey_campaigns` | targets | `org_units` | many_to_many | optional | - |
-| `org_units` | owns | `action_plans` | one_to_many | optional | - |
-| `employees` | submits | `survey_responses` | one_to_many | optional | - |
-| `employees` | flagged on | `engagement_drivers` | one_to_many | optional | - |
-| `employees` | reflected on | `engagement_drivers` | one_to_many | optional | - |
-| `employees` | raises | `hr_cases` | one_to_many | required | - |
-| `employees` | updated by | `hr_cases` | one_to_many | optional | - |
-| `case_categories` | drives | `employees` | one_to_many | optional | - |
-| `contingent_workers` | reviewed_against | `employees` | one_to_one | optional | - |
-| `candidates` | becomes | `employees` | one_to_one | required | - |
-| `employees` | enrolls_in | `benefit_enrollments` | one_to_many | required | - |
-| `survey_campaigns` | targets | `employees` | many_to_many | optional | - |
-| `workforce_scenarios` | drives | `hcm_positions` | one_to_many | required | - |
-| `org_designs` | proposes | `hcm_positions` | one_to_many | required | - |
+| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `employees` | triggers | `iga_provisioning_events` | one_to_many | optional | clear | reference | - |
+| `employees` | finalized by | `onboarding_document_collections` | one_to_many | optional | clear | reference | - |
+| `pre_employees` | promotes to | `employees` | one_to_one | required | restrict | reference | - |
+| `legal_holds` | identifies_custodians_from | `employees` | many_to_many | optional | clear | reference | - |
+| `legal_advice_records` | references | `employees` | many_to_many | optional | clear | reference | - |
+| `employees` | is host for | `host_assignments` | one_to_many | required | restrict | reference | - |
+| `employees` | requests | `absence_requests` | one_to_many | optional | clear | reference | - |
+| `job_profiles` | defines | `hcm_positions` | one_to_many | required | restrict | reference | - |
+| `employees` | signs | `employment_contracts` | one_to_many | required | cascade | parent | - |
+| `employees` | generates | `employment_events` | one_to_many | required | cascade | parent | - |
+| `employees` | triggers | `asset_lifecycle_events` | one_to_many | optional | clear | reference | - |
+| `employees` | holds | `skill_profiles` | one_to_one | optional | clear | reference | - |
+| `org_units` | engages | `contingent_workers` | one_to_many | optional | clear | reference | - |
+| `org_units` | is_scored_by | `engagement_drivers` | one_to_many | optional | clear | reference | - |
+| `org_units` | is_measured_by | `people_kpis` | one_to_many | optional | clear | reference | - |
+| `employees` | triggers | `service_requests` | one_to_many | optional | clear | reference | - |
+| `org_units` | triggers | `iga_entitlement_definitions` | one_to_many | optional | clear | reference | - |
+| `employees` | triggers | `pay_runs` | one_to_many | optional | clear | reference | - |
+| `hcm_positions` | spawns | `job_requisitions` | one_to_many | optional | clear | reference | - |
+| `employees` | becomes | `career_aspirations` | one_to_one | optional | clear | reference | - |
+| `employees` | becomes | `work_shifts` | one_to_many | optional | clear | reference | - |
+| `employees` | becomes | `compensation_statements` | one_to_one | optional | clear | reference | - |
+| `salary_bands` | anchors | `hcm_positions` | one_to_many | optional | clear | reference | - |
+| `employees` | triggers | `benefit_enrollments` | one_to_many | optional | clear | reference | - |
+| `employees` | triggers | `corporate_cards` | one_to_many | optional | clear | reference | - |
+| `employees` | spawns | `onboarding_journeys` | one_to_one | optional | clear | reference | - |
+| `employees` | spawns | `hr_cases` | one_to_many | optional | clear | reference | - |
+| `employees` | feeds | `headcount_plans` | one_to_many | optional | clear | reference | - |
+| `employees` | feeds | `agency_time_entries` | one_to_many | optional | clear | reference | - |
+| `employees` | onboarded by | `onboarding_journeys` | one_to_many | required | restrict | reference | - |
+| `hcm_positions` | requires | `compliance_assignments` | one_to_many | optional | clear | reference | - |
+| `org_units` | sponsors | `compliance_assignments` | one_to_many | optional | clear | reference | - |
+| `employees` | reflected on | `compliance_assignments` | one_to_many | optional | clear | reference | - |
+| `employees` | declares | `life_events` | one_to_many | optional | clear | reference | - |
+| `org_units` | sponsors | `benefit_plans` | many_to_many | optional | clear | reference | - |
+| `employees` | updated by | `life_events` | one_to_many | optional | clear | reference | - |
+| `survey_campaigns` | targets | `org_units` | many_to_many | optional | clear | reference | - |
+| `org_units` | owns | `action_plans` | one_to_many | optional | clear | reference | - |
+| `employees` | submits | `survey_responses` | one_to_many | optional | clear | reference | - |
+| `employees` | flagged on | `engagement_drivers` | one_to_many | optional | clear | reference | - |
+| `employees` | reflected on | `engagement_drivers` | one_to_many | optional | clear | reference | - |
+| `employees` | raises | `hr_cases` | one_to_many | required | restrict | reference | - |
+| `employees` | updated by | `hr_cases` | one_to_many | optional | clear | reference | - |
+| `case_categories` | drives | `employees` | one_to_many | optional | clear | reference | - |
+| `contingent_workers` | reviewed_against | `employees` | one_to_one | optional | clear | reference | - |
+| `candidates` | becomes | `employees` | one_to_one | required | restrict | reference | - |
+| `employees` | enrolls_in | `benefit_enrollments` | one_to_many | required | restrict | reference | - |
+| `survey_campaigns` | targets | `employees` | many_to_many | optional | clear | reference | - |
+| `workforce_scenarios` | drives | `hcm_positions` | one_to_many | required | restrict | reference | - |
+| `org_designs` | proposes | `hcm_positions` | one_to_many | required | restrict | reference | - |
 
 </details>
 

@@ -171,35 +171,35 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `work_approval_chains` (Approval Chains) | master | - | - | required | - | - |
-| 2 | `work_approval_steps` (Approval Steps) | master | - | - | required | single_approver | - |
-| 3 | `work_custom_field_values` (Custom Field Values) | master | - | - | required | - | - |
-| 4 | `work_custom_fields` (Custom Fields) | master | - | - | required | - | - |
-| 5 | `work_item_attachments` (Item Attachments) | master | - | - | required | - | - |
-| 6 | `work_item_comments` (Item Comments) | master | - | - | required | personal_content | - |
-| 7 | `work_item_tags` (Item Tag Assignments) | master | - | - | required | - | - |
-| 8 | `work_milestones` (Milestones) | master | - | - | required | - | - |
-| 9 | `work_project_templates` (Project Templates) | master | - | - | required | - | - |
-| 10 | `work_sections` (Sections) | master | - | - | required | - | - |
-| 11 | `work_tags` (Tags) | master | - | - | required | - | - |
-| 12 | `work_task_templates` (Task Templates) | master | - | - | required | - | - |
-| 13 | `work_automations` (Work Automations) | master | - | - | required | - | - |
-| 14 | `work_dependencies` (Work Dependencies) | master | - | - | required | - | - |
-| 15 | `work_items` (Work Items) | master | - | - | required | - | - |
-| 16 | `work_projects` (Work Projects) | master | - | - | required | submit_lock | - |
-| 17 | `work_user_workloads` (Workloads) | master | - | - | required | personal_content | - |
-| 18 | `business_value_assessments` (Business Value Assessments) | consumer | `SPM` _(domain-level, not modularized)_ | Strategic Portfolio Management | optional | - | - |
-| 19 | `action_plans` (Engagement Action Plans) | consumer | `emp-exp-action-planning` | Action Planning | optional | - | - |
-| 20 | `feature_requests` (Feature Requests) | consumer | `pm-discovery` | Product Discovery and Prioritization | optional | - | - |
-| 21 | `crm_opportunities` (Opportunities) | consumer | `crm-pipeline-mgt` | Opportunity and Pipeline Management | optional | - | - |
-| 22 | `strategic_portfolios` (Portfolios) | consumer | `SPM` _(domain-level, not modularized)_ | Strategic Portfolio Management | optional | - | - |
-| 23 | `product_releases` (Product Releases) | consumer | `pm-roadmap-delivery` | Roadmap, Release, and Strategy | optional | - | - |
-| 24 | `product_roadmaps` (Product Roadmaps) | consumer | `pm-roadmap-delivery` | Roadmap, Release, and Strategy | optional | - | - |
-| 25 | `project_assignments` (Project Assignments) | consumer | `psa-resource-mgmt` | Resource Management | optional | - | - |
-| 26 | `project_tasks` (Project Tasks) | consumer | `psa-project-delivery` | Project Delivery | optional | - | - |
-| 27 | `strategic_initiatives` (Strategic Initiatives) | consumer | `sem-execution-tracking` | Execution Tracking | optional | - | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `work_approval_chains` (Approval Chains) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 2 | `work_approval_steps` (Approval Steps) | master | - | - | required | single_approver | `:manage` _(pending)_ | - |
+| 3 | `work_custom_field_values` (Custom Field Values) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 4 | `work_custom_fields` (Custom Fields) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 5 | `work_item_attachments` (Item Attachments) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 6 | `work_item_comments` (Item Comments) | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
+| 7 | `work_item_tags` (Item Tag Assignments) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 8 | `work_milestones` (Milestones) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 9 | `work_project_templates` (Project Templates) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 10 | `work_sections` (Sections) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 11 | `work_tags` (Tags) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 12 | `work_task_templates` (Task Templates) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 13 | `work_automations` (Work Automations) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 14 | `work_dependencies` (Work Dependencies) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 15 | `work_items` (Work Items) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 16 | `work_projects` (Work Projects) | master | - | - | required | submit_lock | `:manage` _(pending)_ | - |
+| 17 | `work_user_workloads` (Workloads) | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
+| 18 | `business_value_assessments` (Business Value Assessments) | consumer | `SPM` _(domain-level, not modularized)_ | Strategic Portfolio Management | optional | - | `:manage` _(pending)_ | - |
+| 19 | `action_plans` (Engagement Action Plans) | consumer | `emp-exp-action-planning` | Action Planning | optional | - | `:manage` _(pending)_ | - |
+| 20 | `feature_requests` (Feature Requests) | consumer | `pm-discovery` | Product Discovery and Prioritization | optional | - | `:manage` _(pending)_ | - |
+| 21 | `crm_opportunities` (Opportunities) | consumer | `crm-pipeline-mgt` | Opportunity and Pipeline Management | optional | - | `:manage` _(pending)_ | - |
+| 22 | `strategic_portfolios` (Portfolios) | consumer | `SPM` _(domain-level, not modularized)_ | Strategic Portfolio Management | optional | - | `:manage` _(pending)_ | - |
+| 23 | `product_releases` (Product Releases) | consumer | `pm-roadmap-delivery` | Roadmap, Release, and Strategy | optional | - | `:manage` _(pending)_ | - |
+| 24 | `product_roadmaps` (Product Roadmaps) | consumer | `pm-roadmap-delivery` | Roadmap, Release, and Strategy | optional | - | `:manage` _(pending)_ | - |
+| 25 | `project_assignments` (Project Assignments) | consumer | `psa-resource-mgmt` | Resource Management | optional | - | `:manage` _(pending)_ | - |
+| 26 | `project_tasks` (Project Tasks) | consumer | `psa-project-delivery` | Project Delivery | optional | - | `:manage` _(pending)_ | - |
+| 27 | `strategic_initiatives` (Strategic Initiatives) | consumer | `sem-execution-tracking` | Execution Tracking | optional | - | `:manage` _(pending)_ | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -209,58 +209,58 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 ### 5.1 Intra-scope edges
 
-| from | verb | to | cardinality | kind | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `work_dependencies` | blocks | `work_items` | many_to_many | association | required | source | - |
-| `work_milestones` | belongs_to | `work_projects` | one_to_many | composition | required | target | - |
-| `work_approval_steps` | belongs_to | `work_approval_chains` | one_to_many | composition | required | target | - |
-| `work_approval_chains` | gates | `work_items` | many_to_many | reference | optional | source | - |
-| `work_approval_chains` | gates_project | `work_projects` | many_to_many | reference | optional | source | - |
-| `work_user_workloads` | rolls_up | `work_items` | many_to_many | reference | required | source | - |
-| `work_custom_fields` | applies_to | `work_projects` | one_to_many | reference | optional | source | - |
-| `work_custom_field_values` | valued_for | `work_custom_fields` | one_to_many | composition | required | target | - |
-| `work_custom_field_values` | set_on | `work_items` | one_to_many | composition | required | target | - |
-| `work_sections` | belongs_to | `work_projects` | one_to_many | composition | required | target | - |
-| `work_items` | placed_in | `work_sections` | one_to_many | reference | optional | target | - |
-| `work_project_templates` | seeds | `work_projects` | one_to_many | reference | optional | source | - |
-| `work_task_templates` | seeds_item | `work_items` | one_to_many | reference | optional | source | - |
-| `work_item_tags` | references_tag | `work_tags` | one_to_many | composition | required | target | - |
-| `work_item_tags` | tagged_on | `work_items` | one_to_many | composition | required | target | - |
-| `work_item_comments` | belongs_to | `work_items` | one_to_many | composition | required | target | - |
-| `work_item_attachments` | belongs_to | `work_items` | one_to_many | composition | required | target | - |
-| `action_plans` | spawns | `work_items` | one_to_many | reference | optional | source | - |
-| `work_items` | depends_on | `work_items` | many_to_many | association | optional | source | - |
-| `work_projects` | contains | `work_items` | one_to_many | composition | required | source | - |
-| `work_automations` | drives | `work_items` | one_to_many | reference | optional | source | - |
-| `work_automations` | applies_to | `work_projects` | many_to_many | association | optional | target | - |
-| `strategic_initiatives` | portfolio rollup from | `work_items` | one_to_many | reference | optional | target | - |
-| `work_automations` | rolls_up_into | `strategic_portfolios` | many_to_many | reference | optional | source | - |
-| `work_automations` | feeds | `project_tasks` | many_to_many | reference | optional | source | - |
-| `work_automations` | mirrors_to | `product_roadmaps` | many_to_many | reference | optional | source | - |
-| `project_tasks` | performed_by | `project_assignments` | many_to_many | association | optional | target | - |
+| from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `work_dependencies` | blocks | `work_items` | many_to_many | association | required | source | restrict | reference | - |
+| `work_milestones` | belongs_to | `work_projects` | one_to_many | composition | required | target | cascade | parent | - |
+| `work_approval_steps` | belongs_to | `work_approval_chains` | one_to_many | composition | required | target | cascade | parent | - |
+| `work_approval_chains` | gates | `work_items` | many_to_many | reference | optional | source | clear | reference | - |
+| `work_approval_chains` | gates_project | `work_projects` | many_to_many | reference | optional | source | clear | reference | - |
+| `work_user_workloads` | rolls_up | `work_items` | many_to_many | reference | required | source | restrict | reference | - |
+| `work_custom_fields` | applies_to | `work_projects` | one_to_many | reference | optional | source | clear | reference | - |
+| `work_custom_field_values` | valued_for | `work_custom_fields` | one_to_many | composition | required | target | cascade | parent | - |
+| `work_custom_field_values` | set_on | `work_items` | one_to_many | composition | required | target | cascade | parent | - |
+| `work_sections` | belongs_to | `work_projects` | one_to_many | composition | required | target | cascade | parent | - |
+| `work_items` | placed_in | `work_sections` | one_to_many | reference | optional | target | clear | reference | - |
+| `work_project_templates` | seeds | `work_projects` | one_to_many | reference | optional | source | clear | reference | - |
+| `work_task_templates` | seeds_item | `work_items` | one_to_many | reference | optional | source | clear | reference | - |
+| `work_item_tags` | references_tag | `work_tags` | one_to_many | composition | required | target | cascade | parent | - |
+| `work_item_tags` | tagged_on | `work_items` | one_to_many | composition | required | target | cascade | parent | - |
+| `work_item_comments` | belongs_to | `work_items` | one_to_many | composition | required | target | cascade | parent | - |
+| `work_item_attachments` | belongs_to | `work_items` | one_to_many | composition | required | target | cascade | parent | - |
+| `action_plans` | spawns | `work_items` | one_to_many | reference | optional | source | clear | reference | - |
+| `work_items` | depends_on | `work_items` | many_to_many | association | optional | source | clear | reference | - |
+| `work_projects` | contains | `work_items` | one_to_many | composition | required | source | cascade | parent | - |
+| `work_automations` | drives | `work_items` | one_to_many | reference | optional | source | clear | reference | - |
+| `work_automations` | applies_to | `work_projects` | many_to_many | association | optional | target | clear | reference | - |
+| `strategic_initiatives` | portfolio rollup from | `work_items` | one_to_many | reference | optional | target | clear | reference | - |
+| `work_automations` | rolls_up_into | `strategic_portfolios` | many_to_many | reference | optional | source | clear | reference | - |
+| `work_automations` | feeds | `project_tasks` | many_to_many | reference | optional | source | clear | reference | - |
+| `work_automations` | mirrors_to | `product_roadmaps` | many_to_many | reference | optional | source | clear | reference | - |
+| `project_tasks` | performed_by | `project_assignments` | many_to_many | association | optional | target | clear | reference | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
-| from | verb | to | cardinality | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- |
-| `users` | owns_milestones | `work_milestones` | one_to_many | optional | source | - |
-| `users` | approves_steps | `work_approval_steps` | one_to_many | optional | source | - |
-| `users` | initiated_chains | `work_approval_chains` | one_to_many | optional | source | - |
-| `users` | created_custom_fields | `work_custom_fields` | one_to_many | optional | source | - |
-| `users` | created_sections | `work_sections` | one_to_many | optional | source | - |
-| `users` | authored_project_templates | `work_project_templates` | one_to_many | optional | source | - |
-| `users` | authored_task_templates | `work_task_templates` | one_to_many | optional | source | - |
-| `users` | authored_comments | `work_item_comments` | one_to_many | optional | source | - |
-| `users` | uploaded_attachments | `work_item_attachments` | one_to_many | optional | source | - |
-| `users` | owns | `action_plans` | one_to_many | required | source | - |
-| `action_plans` | is_assigned_to | `users` | many_to_many | optional | target | - |
-| `users` | assigned items | `work_items` | one_to_many | optional | source | - |
-| `users` | created items | `work_items` | one_to_many | required | source | - |
-| `users` | owns projects | `work_projects` | one_to_many | required | source | - |
-| `users` | authored automations | `work_automations` | one_to_many | required | source | - |
-| `users` | owns | `crm_opportunities` | one_to_many | required | source | - |
-| `users` | assigned_to | `project_tasks` | many_to_many | optional | target | - |
-| `users` | staffed_on | `project_assignments` | one_to_many | required | target | - |
+| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `users` | owns_milestones | `work_milestones` | one_to_many | optional | source | clear | reference | - |
+| `users` | approves_steps | `work_approval_steps` | one_to_many | optional | source | clear | reference | - |
+| `users` | initiated_chains | `work_approval_chains` | one_to_many | optional | source | clear | reference | - |
+| `users` | created_custom_fields | `work_custom_fields` | one_to_many | optional | source | clear | reference | - |
+| `users` | created_sections | `work_sections` | one_to_many | optional | source | clear | reference | - |
+| `users` | authored_project_templates | `work_project_templates` | one_to_many | optional | source | clear | reference | - |
+| `users` | authored_task_templates | `work_task_templates` | one_to_many | optional | source | clear | reference | - |
+| `users` | authored_comments | `work_item_comments` | one_to_many | optional | source | clear | reference | - |
+| `users` | uploaded_attachments | `work_item_attachments` | one_to_many | optional | source | clear | reference | - |
+| `users` | owns | `action_plans` | one_to_many | required | source | restrict | reference | - |
+| `action_plans` | is_assigned_to | `users` | many_to_many | optional | target | clear | reference | - |
+| `users` | assigned items | `work_items` | one_to_many | optional | source | clear | reference | - |
+| `users` | created items | `work_items` | one_to_many | required | source | restrict | reference | - |
+| `users` | owns projects | `work_projects` | one_to_many | required | source | restrict | reference | - |
+| `users` | authored automations | `work_automations` | one_to_many | required | source | restrict | reference | - |
+| `users` | owns | `crm_opportunities` | one_to_many | required | source | restrict | reference | - |
+| `users` | assigned_to | `project_tasks` | many_to_many | optional | target | clear | reference | - |
+| `users` | staffed_on | `project_assignments` | one_to_many | required | target | restrict | reference | - |
 
 ### 5.3 Cross-scope edges
 
@@ -268,17 +268,17 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
 
-| from | verb | to | cardinality | necessity | notes |
-| --- | --- | --- | --- | --- | --- |
-| `test_defects` | spawns | `work_items` | one_to_many | optional | - |
-| `work_form_submissions` | converts_to | `work_items` | one_to_many | optional | - |
-| `work_forms` | routes_to | `work_projects` | one_to_many | optional | - |
-| `okr_objectives` | tracked_by | `work_items` | one_to_many | optional | - |
-| `work_projects` | aligned_to | `okr_objectives` | many_to_many | optional | - |
-| `work_items` | mirrors_to | `service_requests` | one_to_one | optional | - |
-| `work_automations` | propagates_to | `service_requests` | many_to_many | optional | - |
-| `work_projects` | closes_into | `service_projects` | one_to_one | optional | - |
-| `work_automations` | posts_to | `chat_channels` | many_to_many | optional | - |
+| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `test_defects` | spawns | `work_items` | one_to_many | optional | clear | reference | - |
+| `work_form_submissions` | converts_to | `work_items` | one_to_many | optional | clear | reference | - |
+| `work_forms` | routes_to | `work_projects` | one_to_many | optional | clear | reference | - |
+| `okr_objectives` | tracked_by | `work_items` | one_to_many | optional | clear | reference | - |
+| `work_projects` | aligned_to | `okr_objectives` | many_to_many | optional | clear | reference | - |
+| `work_items` | mirrors_to | `service_requests` | one_to_one | optional | clear | reference | - |
+| `work_automations` | propagates_to | `service_requests` | many_to_many | optional | clear | reference | - |
+| `work_projects` | closes_into | `service_projects` | one_to_one | optional | clear | reference | - |
+| `work_automations` | posts_to | `chat_channels` | many_to_many | optional | clear | reference | - |
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
@@ -287,28 +287,28 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 <details>
 <summary>20 context edges</summary>
 
-| from | verb | to | cardinality | necessity | notes |
-| --- | --- | --- | --- | --- | --- |
-| `customers` | flags_churn_risk_on | `crm_opportunities` | one_to_many | optional | - |
-| `crm_opportunities` | is activity context for | `customer_cases` | one_to_many | optional | - |
-| `crm_opportunities` | opens | `customer_cases` | one_to_many | optional | - |
-| `customers` | impacted_by | `product_releases` | many_to_many | optional | - |
-| `legal_contracts` | renewal_warns | `crm_opportunities` | one_to_many | optional | - |
-| `okr_objectives` | advanced_by | `strategic_initiatives` | many_to_many | optional | - |
-| `strategic_initiatives` | reviewed_in | `operating_reviews` | many_to_many | optional | - |
-| `strategy_decisions` | affects | `strategic_initiatives` | many_to_many | optional | - |
-| `engagement_drivers` | triggers | `action_plans` | one_to_many | optional | - |
-| `org_units` | owns | `action_plans` | one_to_many | optional | - |
-| `crm_opportunities` | drafts | `legal_contracts` | one_to_many | optional | - |
-| `customers` | has_opportunities | `crm_opportunities` | one_to_many | required | - |
-| `crm_opportunities` | converted_from_lead | `crm_leads` | one_to_many | optional | - |
-| `pipeline_stages` | tracks | `crm_opportunities` | one_to_many | required | - |
-| `crm_opportunities` | involves_contacts | `crm_contacts` | many_to_many | optional | - |
-| `crm_opportunities` | has_activities | `sales_activities` | one_to_many | optional | - |
-| `service_projects` | contains | `project_tasks` | one_to_many | required | - |
-| `service_projects` | staffs | `project_assignments` | one_to_many | required | - |
-| `project_assignments` | requires_skills_from | `resource_skill_inventories` | many_to_many | optional | - |
-| `project_resource_allocations` | confirms_into | `project_assignments` | one_to_many | optional | - |
+| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `customers` | flags_churn_risk_on | `crm_opportunities` | one_to_many | optional | clear | reference | - |
+| `crm_opportunities` | is activity context for | `customer_cases` | one_to_many | optional | clear | reference | - |
+| `crm_opportunities` | opens | `customer_cases` | one_to_many | optional | clear | reference | - |
+| `customers` | impacted_by | `product_releases` | many_to_many | optional | clear | reference | - |
+| `legal_contracts` | renewal_warns | `crm_opportunities` | one_to_many | optional | clear | reference | - |
+| `okr_objectives` | advanced_by | `strategic_initiatives` | many_to_many | optional | clear | reference | - |
+| `strategic_initiatives` | reviewed_in | `operating_reviews` | many_to_many | optional | clear | reference | - |
+| `strategy_decisions` | affects | `strategic_initiatives` | many_to_many | optional | clear | reference | - |
+| `engagement_drivers` | triggers | `action_plans` | one_to_many | optional | clear | reference | - |
+| `org_units` | owns | `action_plans` | one_to_many | optional | clear | reference | - |
+| `crm_opportunities` | drafts | `legal_contracts` | one_to_many | optional | clear | reference | - |
+| `customers` | has_opportunities | `crm_opportunities` | one_to_many | required | restrict | reference | - |
+| `crm_opportunities` | converted_from_lead | `crm_leads` | one_to_many | optional | clear | reference | - |
+| `pipeline_stages` | tracks | `crm_opportunities` | one_to_many | required | restrict | reference | - |
+| `crm_opportunities` | involves_contacts | `crm_contacts` | many_to_many | optional | clear | reference | - |
+| `crm_opportunities` | has_activities | `sales_activities` | one_to_many | optional | clear | reference | - |
+| `service_projects` | contains | `project_tasks` | one_to_many | required | cascade | parent | - |
+| `service_projects` | staffs | `project_assignments` | one_to_many | required | cascade | parent | - |
+| `project_assignments` | requires_skills_from | `resource_skill_inventories` | many_to_many | optional | clear | reference | - |
+| `project_resource_allocations` | confirms_into | `project_assignments` | one_to_many | optional | clear | reference | - |
 
 </details>
 

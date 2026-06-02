@@ -103,22 +103,22 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `candidate_consents` (Candidate Consents) | master | - | - | optional | personal_content | - |
-| 2 | `candidate_documents` (Candidate Documents) | master | - | - | required | personal_content | - |
-| 3 | `candidate_engagements` (Candidate Engagements) | master | - | - | required | personal_content | - |
-| 4 | `candidate_notes` (Candidate Notes) | master | - | - | required | personal_content | - |
-| 5 | `candidate_nurture_campaigns` (Candidate Nurture Campaigns) | master | - | - | required | - | - |
-| 6 | `candidates` (Candidates) | master | - | - | required | personal_content | - |
-| 7 | `data_subject_requests` (Data Subject Requests) | master | - | - | optional | personal_content | - |
-| 8 | `recruiter_interactions` (Recruiter Interactions) | master | - | - | required | personal_content | - |
-| 9 | `recruiting_event_attendances` (Recruiting Event Attendances) | master | - | - | required | personal_content | - |
-| 10 | `recruitment_agencies` (Recruitment Agencies) | master | - | - | required | - | - |
-| 11 | `recruitment_events` (Recruitment Events) | master | - | - | required | - | - |
-| 12 | `recruitment_sources` (Recruitment Sources) | master | - | - | required | - | - |
-| 13 | `internal_opportunities` (Opportunities) | embedded_master | `tlnt-intel-marketplace` | Talent Marketplace | optional | submit_lock, single_approver | - |
-| 14 | `talent_pools` (Talent Pools) | consumer | `ats-talent-pools` | Talent Pools | optional | - | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `candidate_consents` (Candidate Consents) | master | - | - | optional | personal_content | `:manage` | - |
+| 2 | `candidate_documents` (Candidate Documents) | master | - | - | required | personal_content | `:manage` | - |
+| 3 | `candidate_engagements` (Candidate Engagements) | master | - | - | required | personal_content | `:manage` | - |
+| 4 | `candidate_notes` (Candidate Notes) | master | - | - | required | personal_content | `:manage` | - |
+| 5 | `candidate_nurture_campaigns` (Candidate Nurture Campaigns) | master | - | - | required | - | `:manage` | - |
+| 6 | `candidates` (Candidates) | master | - | - | required | personal_content | `:manage` | - |
+| 7 | `data_subject_requests` (Data Subject Requests) | master | - | - | optional | personal_content | `:manage` | - |
+| 8 | `recruiter_interactions` (Recruiter Interactions) | master | - | - | required | personal_content | `:manage` | - |
+| 9 | `recruiting_event_attendances` (Recruiting Event Attendances) | master | - | - | required | personal_content | `:manage` | - |
+| 10 | `recruitment_agencies` (Recruitment Agencies) | master | - | - | required | - | `:manage` | - |
+| 11 | `recruitment_events` (Recruitment Events) | master | - | - | required | - | `:manage` | - |
+| 12 | `recruitment_sources` (Recruitment Sources) | master | - | - | required | - | `:admin` | - |
+| 13 | `internal_opportunities` (Opportunities) | embedded_master | `tlnt-intel-marketplace` | Talent Marketplace | optional | submit_lock, single_approver | `:manage` _(pending)_ | - |
+| 14 | `talent_pools` (Talent Pools) | consumer | `ats-talent-pools` | Talent Pools | optional | - | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -128,34 +128,34 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 ### 5.1 Intra-scope edges
 
-| from | verb | to | cardinality | kind | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `candidates` | engaged_via | `candidate_engagements` | one_to_many | reference | optional | target | - |
-| `candidate_nurture_campaigns` | generates | `candidate_engagements` | one_to_many | composition | optional | source | - |
-| `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | reference | required | target | - |
-| `recruitment_events` | has_attendance | `recruiting_event_attendances` | one_to_many | composition | required | source | - |
-| `candidates` | noted_via | `recruiter_interactions` | one_to_many | reference | optional | target | - |
-| `candidates` | consents_via | `candidate_consents` | one_to_many | composition | required | source | - |
-| `talent_pools` | targets | `candidate_nurture_campaigns` | many_to_many | reference | optional | source | - |
-| `candidates` | submits_via | `data_subject_requests` | one_to_many | composition | optional | source | - |
-| `candidates` | documented_via | `candidate_documents` | one_to_many | composition | optional | source | - |
-| `candidates` | annotated_via | `candidate_notes` | one_to_many | composition | optional | source | - |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | reference | required | target | - |
-| `recruitment_agencies` | sources | `candidates` | one_to_many | reference | required | target | - |
-| `recruitment_events` | attracts | `candidates` | one_to_many | reference | required | target | - |
-| `talent_pools` | groups | `candidates` | many_to_many | reference | required | target | - |
+| from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `candidates` | engaged_via | `candidate_engagements` | one_to_many | reference | optional | target | clear | reference | - |
+| `candidate_nurture_campaigns` | generates | `candidate_engagements` | one_to_many | composition | optional | source | cascade | parent | - |
+| `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | reference | required | target | restrict | reference | - |
+| `recruitment_events` | has_attendance | `recruiting_event_attendances` | one_to_many | composition | required | source | cascade | parent | - |
+| `candidates` | noted_via | `recruiter_interactions` | one_to_many | reference | optional | target | clear | reference | - |
+| `candidates` | consents_via | `candidate_consents` | one_to_many | composition | required | source | cascade | parent | - |
+| `talent_pools` | targets | `candidate_nurture_campaigns` | many_to_many | reference | optional | source | clear | reference | - |
+| `candidates` | submits_via | `data_subject_requests` | one_to_many | composition | optional | source | cascade | parent | - |
+| `candidates` | documented_via | `candidate_documents` | one_to_many | composition | optional | source | cascade | parent | - |
+| `candidates` | annotated_via | `candidate_notes` | one_to_many | composition | optional | source | cascade | parent | - |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | reference | required | target | restrict | reference | - |
+| `recruitment_agencies` | sources | `candidates` | one_to_many | reference | required | target | restrict | reference | - |
+| `recruitment_events` | attracts | `candidates` | one_to_many | reference | required | target | restrict | reference | - |
+| `talent_pools` | groups | `candidates` | many_to_many | reference | required | target | restrict | reference | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
-| from | verb | to | cardinality | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- |
-| `users` | posts | `internal_opportunities` | one_to_many | required | source | - |
-| `candidates` | has owning recruiter | `users` | many_to_many | optional | source | - |
-| `talent_pools` | has owner | `users` | many_to_many | required | source | - |
-| `recruitment_agencies` | has relationship owner | `users` | many_to_many | required | source | - |
-| `recruitment_events` | has coordinator | `users` | many_to_many | required | source | - |
-| `users` | uploaded documents | `candidate_documents` | one_to_many | optional | source | - |
-| `users` | authored notes | `candidate_notes` | one_to_many | optional | source | - |
+| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `users` | posts | `internal_opportunities` | one_to_many | required | source | restrict | reference | - |
+| `candidates` | has owning recruiter | `users` | many_to_many | optional | source | clear | reference | - |
+| `talent_pools` | has owner | `users` | many_to_many | required | source | restrict | reference | - |
+| `recruitment_agencies` | has relationship owner | `users` | many_to_many | required | source | restrict | reference | - |
+| `recruitment_events` | has coordinator | `users` | many_to_many | required | source | restrict | reference | - |
+| `users` | uploaded documents | `candidate_documents` | one_to_many | optional | source | clear | reference | - |
+| `users` | authored notes | `candidate_notes` | one_to_many | optional | source | clear | reference | - |
 
 ### 5.3 Cross-scope edges
 
@@ -163,19 +163,19 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
 
-| from | verb | to | cardinality | necessity | notes |
-| --- | --- | --- | --- | --- | --- |
-| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | required | - |
-| `candidates` | discloses_via | `fcra_disclosures` | one_to_many | required | - |
-| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | optional | - |
-| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | optional | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | - |
-| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | - |
-| `skill_profiles` | feeds | `candidates` | one_to_many | optional | - |
-| `candidates` | submits | `job_applications` | one_to_many | required | - |
-| `candidate_referrals` | introduces | `candidates` | one_to_many | required | - |
-| `candidates` | becomes | `employees` | one_to_one | required | - |
-| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | - |
+| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | required | restrict | reference | - |
+| `candidates` | discloses_via | `fcra_disclosures` | one_to_many | required | cascade | parent | - |
+| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | optional | cascade | parent | - |
+| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | optional | cascade | parent | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | cascade | parent | - |
+| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | clear | reference | - |
+| `skill_profiles` | feeds | `candidates` | one_to_many | optional | clear | reference | - |
+| `candidates` | submits | `job_applications` | one_to_many | required | restrict | reference | - |
+| `candidate_referrals` | introduces | `candidates` | one_to_many | required | restrict | reference | - |
+| `candidates` | becomes | `employees` | one_to_one | required | restrict | reference | - |
+| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | restrict | reference | - |
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
@@ -184,12 +184,12 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 <details>
 <summary>4 context edges</summary>
 
-| from | verb | to | cardinality | necessity | notes |
-| --- | --- | --- | --- | --- | --- |
-| `internal_opportunities` | receives | `opportunity_applications` | one_to_many | optional | - |
-| `internal_opportunities` | ranked by | `fit_scores` | one_to_many | optional | - |
-| `talent_pools` | has_member | `talent_pool_memberships` | one_to_many | required | - |
-| `talent_segments` | materializes_into | `talent_pools` | one_to_many | optional | - |
+| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `internal_opportunities` | receives | `opportunity_applications` | one_to_many | optional | cascade | parent | - |
+| `internal_opportunities` | ranked by | `fit_scores` | one_to_many | optional | clear | reference | - |
+| `talent_pools` | has_member | `talent_pool_memberships` | one_to_many | required | cascade | parent | - |
+| `talent_segments` | materializes_into | `talent_pools` | one_to_many | optional | clear | reference | - |
 
 </details>
 
@@ -356,8 +356,6 @@ _This scope holds `talent_pools` as **consumer**; the canonical state machine is
 | `ats-candidate-crm:manage_all_candidates` | override (personal_content) | Manage all `candidates` rows beyond row-scope | ✓ |
 | `ats-candidate-crm:view_all_candidate_engagements` | override (personal_content) | View all `candidate_engagements` rows beyond row-scope | ✓ |
 | `ats-candidate-crm:manage_all_candidate_engagements` | override (personal_content) | Manage all `candidate_engagements` rows beyond row-scope | ✓ |
-| `ats-candidate-crm:view_all_recruiting_event_attendances` | override (personal_content) | View all `recruiting_event_attendances` rows beyond row-scope | ✓ |
-| `ats-candidate-crm:manage_all_recruiting_event_attendances` | override (personal_content) | Manage all `recruiting_event_attendances` rows beyond row-scope | ✓ |
 | `ats-candidate-crm:view_all_recruiter_interactions` | override (personal_content) | View all `recruiter_interactions` rows beyond row-scope | ✓ |
 | `ats-candidate-crm:manage_all_recruiter_interactions` | override (personal_content) | Manage all `recruiter_interactions` rows beyond row-scope | ✓ |
 | `ats-candidate-crm:view_all_candidate_consents` | override (personal_content) | View all `candidate_consents` rows beyond row-scope | ✓ |
@@ -375,7 +373,6 @@ _This scope holds `talent_pools` as **consumer**; the canonical state machine is
 | --- | --- | --- | --- |
 | `candidate_edit_scope` | `candidates` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_candidates` / `ats-candidate-crm:manage_all_candidates` |
 | `candidate_engagement_edit_scope` | `candidate_engagements` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_candidate_engagements` / `ats-candidate-crm:manage_all_candidate_engagements` |
-| `recruiting_event_attendance_edit_scope` | `recruiting_event_attendances` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_recruiting_event_attendances` / `ats-candidate-crm:manage_all_recruiting_event_attendances` |
 | `recruiter_interaction_edit_scope` | `recruiter_interactions` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_recruiter_interactions` / `ats-candidate-crm:manage_all_recruiter_interactions` |
 | `candidate_consent_edit_scope` | `candidate_consents` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_candidate_consents` / `ats-candidate-crm:manage_all_candidate_consents` |
 | `candidate_document_edit_scope` | `candidate_documents` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_candidate_documents` / `ats-candidate-crm:manage_all_candidate_documents` |

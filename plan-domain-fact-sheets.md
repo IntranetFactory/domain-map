@@ -79,7 +79,7 @@ All additive; no migrations needed. Apply via `semantius` field-creation tooling
 | Column | Type | Purpose |
 |---|---|---|
 | `relationship_label` | text | Semantic verb (`schedules`, `extends`, `groups`, `owns`, `manages`). The verb that drives §4 of the fact sheet and the architect's relationship narrative. |
-| `necessity` | enum (`required` / `optional`) | Required edges exist in every deployment of the domain; optional are deployment-shape-dependent. Combined with `kind` derives delete-mode (parent → cascade; reference + required → restrict; reference + optional → clear). |
+| `necessity` | enum (`required` / `optional`) | Required edges exist in every deployment of the domain; optional are deployment-shape-dependent. Delete-mode / FK is now derived canonically from `relationship_kind` + `is_required` (see the Delete-mode derivation (B4) table in `.claude/skills/domain-map-analyst/references/module-shape.md`); the older `kind`+`necessity` formula here is superseded. |
 | `owner_side` | enum (`source` / `target`) | Which side is the lifecycle owner. Matters for delete-cascade semantics architect derives. |
 
 ### 3.3 NEW table `data_object_lifecycle_states`

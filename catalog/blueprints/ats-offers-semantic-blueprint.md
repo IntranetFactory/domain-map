@@ -67,15 +67,15 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `offer_approvals` (Offer Approvals) | master | - | - | required | single_approver | - |
-| 2 | `offer_letter_documents` (Offer Letter Documents) | master | - | - | required | personal_content | - |
-| 3 | `offer_letter_templates` (Offer Letter Templates) | master | - | - | required | submit_lock, single_approver | - |
-| 4 | `offer_versions` (Offer Versions) | master | - | - | required | personal_content | - |
-| 5 | `job_offers` (Offers) | master | - | - | required | personal_content, single_approver | - |
-| 6 | `job_applications` (Applications) | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | personal_content | - |
-| 7 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `offer_approvals` (Offer Approvals) | master | - | - | required | single_approver | `:manage` | - |
+| 2 | `offer_letter_documents` (Offer Letter Documents) | master | - | - | required | personal_content | `:manage` | - |
+| 3 | `offer_letter_templates` (Offer Letter Templates) | master | - | - | required | submit_lock, single_approver | `:admin` | - |
+| 4 | `offer_versions` (Offer Versions) | master | - | - | required | personal_content | `:manage` | - |
+| 5 | `job_offers` (Offers) | master | - | - | required | personal_content, single_approver | `:manage` | - |
+| 6 | `job_applications` (Applications) | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | personal_content | `:manage` | - |
+| 7 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -85,24 +85,24 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 ### 5.1 Intra-scope edges
 
-| from | verb | to | cardinality | kind | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `job_offers` | evolves_through | `offer_versions` | one_to_many | composition | required | source | - |
-| `job_offers` | gated_by | `offer_approvals` | one_to_many | composition | optional | source | - |
-| `offer_versions` | renders_as | `offer_letter_documents` | one_to_one | composition | required | source | - |
-| `offer_letter_templates` | rendered_as | `offer_letter_documents` | one_to_many | reference | optional | source | - |
-| `candidates` | submits | `job_applications` | one_to_many | reference | required | target | - |
-| `job_applications` | results in | `job_offers` | one_to_many | reference | required | source | - |
+| from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `job_offers` | evolves_through | `offer_versions` | one_to_many | composition | required | source | cascade | parent | - |
+| `job_offers` | gated_by | `offer_approvals` | one_to_many | composition | optional | source | cascade | parent | - |
+| `offer_versions` | renders_as | `offer_letter_documents` | one_to_one | composition | required | source | cascade | parent | - |
+| `offer_letter_templates` | rendered_as | `offer_letter_documents` | one_to_many | reference | optional | source | clear | reference | - |
+| `candidates` | submits | `job_applications` | one_to_many | reference | required | target | restrict | reference | - |
+| `job_applications` | results in | `job_offers` | one_to_many | reference | required | source | restrict | reference | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
-| from | verb | to | cardinality | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- |
-| `candidates` | has owning recruiter | `users` | many_to_many | optional | source | - |
-| `users` | authored templates | `offer_letter_templates` | one_to_many | optional | source | - |
-| `users` | approved templates | `offer_letter_templates` | one_to_many | optional | source | - |
-| `job_applications` | has owning recruiter | `users` | many_to_many | required | source | - |
-| `job_offers` | has approver | `users` | many_to_many | required | source | - |
+| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `candidates` | has owning recruiter | `users` | many_to_many | optional | source | clear | reference | - |
+| `users` | authored templates | `offer_letter_templates` | one_to_many | optional | source | clear | reference | - |
+| `users` | approved templates | `offer_letter_templates` | one_to_many | optional | source | clear | reference | - |
+| `job_applications` | has owning recruiter | `users` | many_to_many | required | source | restrict | reference | - |
+| `job_offers` | has approver | `users` | many_to_many | required | source | restrict | reference | - |
 
 ### 5.3 Cross-scope edges
 
@@ -110,14 +110,14 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
 
-| from | verb | to | cardinality | necessity | notes |
-| --- | --- | --- | --- | --- | --- |
-| `offer_versions` | proposes | `equity_grants` | one_to_many | optional | - |
-| `job_offers` | is contingent on | `background_checks` | one_to_many | required | - |
-| `job_offers` | spawns | `onboarding_journeys` | one_to_one | required | - |
-| `job_offers` | triggers | `benefit_enrollments` | one_to_one | required | - |
-| `job_offers` | seeds | `compensation_statements` | one_to_one | required | - |
-| `job_offers` | spawns pre-employee record | `pre_employees` | one_to_one | required | - |
+| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `offer_versions` | proposes | `equity_grants` | one_to_many | optional | clear | reference | - |
+| `job_offers` | is contingent on | `background_checks` | one_to_many | required | restrict | reference | - |
+| `job_offers` | spawns | `onboarding_journeys` | one_to_one | required | restrict | reference | - |
+| `job_offers` | triggers | `benefit_enrollments` | one_to_one | required | restrict | reference | - |
+| `job_offers` | seeds | `compensation_statements` | one_to_one | required | restrict | reference | - |
+| `job_offers` | spawns pre-employee record | `pre_employees` | one_to_one | required | restrict | reference | - |
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
@@ -126,37 +126,37 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 <details>
 <summary>29 context edges</summary>
 
-| from | verb | to | cardinality | necessity | notes |
-| --- | --- | --- | --- | --- | --- |
-| `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | - |
-| `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | required | - |
-| `candidates` | noted_via | `recruiter_interactions` | one_to_many | optional | - |
-| `candidates` | consents_via | `candidate_consents` | one_to_many | required | - |
-| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | required | - |
-| `candidates` | discloses_via | `fcra_disclosures` | one_to_many | required | - |
-| `job_applications` | transitions_via | `application_stage_transitions` | one_to_many | required | - |
-| `job_applications` | answers_via | `application_screening_answers` | one_to_many | optional | - |
-| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | optional | - |
-| `candidates` | submits_via | `data_subject_requests` | one_to_many | optional | - |
-| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | optional | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | - |
-| `job_applications` | disposed_via | `application_dispositions` | one_to_many | optional | - |
-| `job_applications` | logged_via | `applicant_flow_records` | one_to_one | required | - |
-| `candidates` | documented_via | `candidate_documents` | one_to_many | optional | - |
-| `candidates` | annotated_via | `candidate_notes` | one_to_many | optional | - |
-| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | - |
-| `skill_profiles` | feeds | `candidates` | one_to_many | optional | - |
-| `job_requisitions` | receives | `job_applications` | one_to_many | required | - |
-| `job_postings` | is applied to via | `job_applications` | one_to_many | required | - |
-| `candidate_referrals` | introduces | `candidates` | one_to_many | required | - |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | required | - |
-| `recruitment_agencies` | sources | `candidates` | one_to_many | required | - |
-| `recruitment_events` | attracts | `candidates` | one_to_many | required | - |
-| `talent_pools` | groups | `candidates` | many_to_many | required | - |
-| `job_applications` | schedules | `interviews` | one_to_many | required | - |
-| `job_applications` | requires | `candidate_assessments` | one_to_many | required | - |
-| `candidates` | becomes | `employees` | one_to_one | required | - |
-| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | - |
+| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | clear | reference | - |
+| `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | required | restrict | reference | - |
+| `candidates` | noted_via | `recruiter_interactions` | one_to_many | optional | clear | reference | - |
+| `candidates` | consents_via | `candidate_consents` | one_to_many | required | cascade | parent | - |
+| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | required | restrict | reference | - |
+| `candidates` | discloses_via | `fcra_disclosures` | one_to_many | required | cascade | parent | - |
+| `job_applications` | transitions_via | `application_stage_transitions` | one_to_many | required | cascade | parent | - |
+| `job_applications` | answers_via | `application_screening_answers` | one_to_many | optional | cascade | parent | - |
+| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | optional | cascade | parent | - |
+| `candidates` | submits_via | `data_subject_requests` | one_to_many | optional | cascade | parent | - |
+| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | optional | cascade | parent | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | cascade | parent | - |
+| `job_applications` | disposed_via | `application_dispositions` | one_to_many | optional | cascade | parent | - |
+| `job_applications` | logged_via | `applicant_flow_records` | one_to_one | required | cascade | parent | - |
+| `candidates` | documented_via | `candidate_documents` | one_to_many | optional | cascade | parent | - |
+| `candidates` | annotated_via | `candidate_notes` | one_to_many | optional | cascade | parent | - |
+| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | clear | reference | - |
+| `skill_profiles` | feeds | `candidates` | one_to_many | optional | clear | reference | - |
+| `job_requisitions` | receives | `job_applications` | one_to_many | required | restrict | reference | - |
+| `job_postings` | is applied to via | `job_applications` | one_to_many | required | restrict | reference | - |
+| `candidate_referrals` | introduces | `candidates` | one_to_many | required | restrict | reference | - |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | required | restrict | reference | - |
+| `recruitment_agencies` | sources | `candidates` | one_to_many | required | restrict | reference | - |
+| `recruitment_events` | attracts | `candidates` | one_to_many | required | restrict | reference | - |
+| `talent_pools` | groups | `candidates` | many_to_many | required | restrict | reference | - |
+| `job_applications` | schedules | `interviews` | one_to_many | required | restrict | reference | - |
+| `job_applications` | requires | `candidate_assessments` | one_to_many | required | restrict | reference | - |
+| `candidates` | becomes | `employees` | one_to_one | required | restrict | reference | - |
+| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | restrict | reference | - |
 
 </details>
 
@@ -293,7 +293,6 @@ _This scope holds `job_applications` as **embedded_master**; the canonical state
 | `ats-offers:manage_all_offer_versions` | override (personal_content) | Manage all `offer_versions` rows beyond row-scope | ✓ |
 | `ats-offers:view_all_offer_letter_documents` | override (personal_content) | View all `offer_letter_documents` rows beyond row-scope | ✓ |
 | `ats-offers:manage_all_offer_letter_documents` | override (personal_content) | Manage all `offer_letter_documents` rows beyond row-scope | ✓ |
-| `ats-offers:submit_offer_letter_template` | override (submit_lock) | Submit and lock a `offer_letter_templates` row (post-submit edits gated) | ✓ |
 
 ### 8.2 Business rules
 
@@ -304,5 +303,3 @@ _This scope holds `job_applications` as **embedded_master**; the canonical state
 | `offer_version_edit_scope` | `offer_versions` | has_personal_content | Row-scope by default; override via `ats-offers:view_all_offer_versions` / `ats-offers:manage_all_offer_versions` |
 | `approve_offer_approval_requires_approver` | `offer_approvals` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`ats-offers:approve_offer`). |
 | `offer_letter_document_edit_scope` | `offer_letter_documents` | has_personal_content | Row-scope by default; override via `ats-offers:view_all_offer_letter_documents` / `ats-offers:manage_all_offer_letter_documents` |
-| `submit_restricted_to_offer_letter_template_owner` | `offer_letter_templates` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `ats-offers:manage_all_offer_letter_templates` |
-| `approve_offer_letter_template_requires_approver` | `offer_letter_templates` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`ats-offers:approve_offer_letter_template` if surfaced as a lifecycle workflow gate). |

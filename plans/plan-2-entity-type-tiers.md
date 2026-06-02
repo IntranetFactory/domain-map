@@ -74,8 +74,8 @@ Confirm this table before B4 emits. It is total over all four `relationship_kind
 
 ### D. Verification
 - Snapshot `catalog/blueprints/` before changes. Force a catalog-cache refresh first (delete `.tmp_deploy/.catalog-cache.json` or pass `forceRefresh`): the cache validity check does not detect the new `entity_type` column, so a fresh-but-pre-change cache within its 5-minute TTL would emit `entity_type` as undefined.
-- Regenerate with `bun run scripts/emit_fact_sheet.ts --all` and diff. Expected diffs: the new per-entity write-tier column in section 3; the section-8 change limited to the M6 guard suppressing flag overrides on no-write entities; and the new delete-mode / FK columns in section 5. No other section should move.
-- Run `--all --check` as the gate. Append a `skill-changelog` Decisions entry for the entity_type and delete-mode derivations.
+- Regenerate ONLY the existing blueprint files (one `bun run scripts/emit_fact_sheet.ts --module <CODE>` per file already in `catalog/blueprints/`). Do NOT use `--all`: the committed corpus is a curated subset (~18 modules), and `--all` would emit ~130 new blueprints for unclassified modules that have no committed file. Diff. Expected diffs: the new per-entity write-tier column in section 3; the new delete-mode / FK columns in section 5; and, in section 8, the M6 guard suppressing flag-derived overrides on classified catalog / junction / computed masters that still carry a legacy flag. No other section should move.
+- Gate: re-run `--module <CODE> --check` over the same existing files and confirm zero drift. Append a `skill-changelog` Decisions entry for the entity_type and delete-mode derivations.
 
 ## Live-write inventory
 None. Plan 2 is code, docs, and derived blueprint output only. Its one external dependency,
@@ -89,7 +89,11 @@ Logs rows 1 (per-entity write tier) and 2 (delete-mode / FK format) in
 the deployer selects FK shapes rather than reconstructing them.
 
 ## Status
-UNBLOCKED, with NO live-write dependency. All gating decisions made; Plan 1's M1 and M7 are
-both DONE (2026-06-01), so B4's `owner_side` inputs are trustworthy and Plan 2 is genuinely
-code-only. Ready to run now. The only open detail is sign-off on the delete-mode mapping
-table above.
+EXECUTED 2026-06-01. B2 (write-tier wiring + section-3 column), B4 (`deriveDeleteMode` +
+section-5 columns), and the M5 / M6 guard + soft annotations are implemented in
+`scripts/emit_fact_sheet.ts` + `scripts/lib/catalog.ts`; the delete-mode table above is the one
+that shipped. The 18 existing blueprints were regenerated (existing files only, NOT `--all`) and
+pass per-module `--check` with zero drift. Docs updated (SKILL.md Rule #12, references/modules.md
+section 4, references/module-shape.md, plan-domain-fact-sheets.md) and a Plan 2 skill-changelog
+entry added. Data debt surfaced (3 non-operational masters carrying legacy flags) is deferred to
+per-domain review. No live writes.

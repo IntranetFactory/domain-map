@@ -73,15 +73,15 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `disclosure_documents` (Disclosure Documents) | master | - | - | optional | personal_content, submit_lock, single_approver | - |
-| 2 | `real_estate_listings` (Real Estate Listings) | master | - | - | required | personal_content | - |
-| 3 | `real_estate_transactions` (Real Estate Transactions) | master | - | - | required | personal_content, submit_lock | - |
-| 4 | `tour_appointments` (Tour Appointments) | master | - | - | required | personal_content | - |
-| 5 | `commission_splits` (Commission Splits) | embedded_master | `re-brok-brokerage-ops` | Brokerage Oversight and Commission Management | optional | submit_lock, single_approver | - |
-| 6 | `crm_contacts` (Contacts) | contributor | `crm-acct-mgt` | Account and Contact Management | required | personal_content | - |
-| 7 | `crm_leads` (Leads) | contributor | `crm-lead-mgt` | Lead Capture and Qualification | required | personal_content | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `disclosure_documents` (Disclosure Documents) | master | - | - | optional | personal_content, submit_lock, single_approver | `:manage` _(pending)_ | - |
+| 2 | `real_estate_listings` (Real Estate Listings) | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
+| 3 | `real_estate_transactions` (Real Estate Transactions) | master | - | - | required | personal_content, submit_lock | `:manage` _(pending)_ | - |
+| 4 | `tour_appointments` (Tour Appointments) | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
+| 5 | `commission_splits` (Commission Splits) | embedded_master | `re-brok-brokerage-ops` | Brokerage Oversight and Commission Management | optional | submit_lock, single_approver | `:manage` _(pending)_ | - |
+| 6 | `crm_contacts` (Contacts) | contributor | `crm-acct-mgt` | Account and Contact Management | required | personal_content | `:manage` _(pending)_ | - |
+| 7 | `crm_leads` (Leads) | contributor | `crm-lead-mgt` | Lead Capture and Qualification | required | personal_content | `:manage` _(pending)_ | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -100,27 +100,27 @@ flowchart TD
 
 ### 5.1 Intra-scope edges
 
-| from | verb | to | cardinality | kind | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `real_estate_listings` | generates | `real_estate_transactions` | one_to_many | reference | required | target | - |
-| `real_estate_listings` | has tours | `tour_appointments` | one_to_many | reference | required | target | - |
-| `real_estate_transactions` | requires disclosures | `disclosure_documents` | one_to_many | composition | required | source | - |
-| `real_estate_transactions` | produces commission splits | `commission_splits` | one_to_many | composition | required | source | - |
-| `crm_contacts` | converted_from_lead | `crm_leads` | one_to_many | reference | optional | source | - |
+| from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `real_estate_listings` | generates | `real_estate_transactions` | one_to_many | reference | required | target | restrict | reference | - |
+| `real_estate_listings` | has tours | `tour_appointments` | one_to_many | reference | required | target | restrict | reference | - |
+| `real_estate_transactions` | requires disclosures | `disclosure_documents` | one_to_many | composition | required | source | cascade | parent | - |
+| `real_estate_transactions` | produces commission splits | `commission_splits` | one_to_many | composition | required | source | cascade | parent | - |
+| `crm_contacts` | converted_from_lead | `crm_leads` | one_to_many | reference | optional | source | clear | reference | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
-| from | verb | to | cardinality | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- |
-| `real_estate_listings` | has listing agent | `users` | many_to_many | required | source | - |
-| `tour_appointments` | has showing agent | `users` | many_to_many | required | source | - |
-| `real_estate_transactions` | has listing-side agent | `users` | many_to_many | required | source | - |
-| `real_estate_transactions` | has buyer-side agent | `users` | many_to_many | optional | source | - |
-| `disclosure_documents` | has preparer | `users` | many_to_many | required | source | - |
-| `commission_splits` | has recipient agent | `users` | many_to_many | required | source | - |
-| `commission_splits` | has approving broker | `users` | many_to_many | required | source | - |
-| `users` | owns | `crm_leads` | one_to_many | required | source | - |
-| `users` | owns | `crm_contacts` | one_to_many | optional | source | - |
+| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `real_estate_listings` | has listing agent | `users` | many_to_many | required | source | restrict | reference | - |
+| `tour_appointments` | has showing agent | `users` | many_to_many | required | source | restrict | reference | - |
+| `real_estate_transactions` | has listing-side agent | `users` | many_to_many | required | source | restrict | reference | - |
+| `real_estate_transactions` | has buyer-side agent | `users` | many_to_many | optional | source | clear | reference | - |
+| `disclosure_documents` | has preparer | `users` | many_to_many | required | source | restrict | reference | - |
+| `commission_splits` | has recipient agent | `users` | many_to_many | required | source | restrict | reference | - |
+| `commission_splits` | has approving broker | `users` | many_to_many | required | source | restrict | reference | - |
+| `users` | owns | `crm_leads` | one_to_many | required | source | restrict | reference | - |
+| `users` | owns | `crm_contacts` | one_to_many | optional | source | clear | reference | - |
 
 ### 5.3 Cross-scope edges
 
@@ -128,14 +128,14 @@ flowchart TD
 
 _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
 
-| from | verb | to | cardinality | necessity | notes |
-| --- | --- | --- | --- | --- | --- |
-| `customers` | has_contacts | `crm_contacts` | one_to_many | optional | - |
-| `customers` | converted_from_lead | `crm_leads` | one_to_many | optional | - |
-| `crm_opportunities` | converted_from_lead | `crm_leads` | one_to_many | optional | - |
-| `crm_opportunities` | involves_contacts | `crm_contacts` | many_to_many | optional | - |
-| `crm_contacts` | has_activities | `sales_activities` | one_to_many | optional | - |
-| `crm_leads` | has_activities | `sales_activities` | one_to_many | optional | - |
+| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `customers` | has_contacts | `crm_contacts` | one_to_many | optional | clear | reference | - |
+| `customers` | converted_from_lead | `crm_leads` | one_to_many | optional | clear | reference | - |
+| `crm_opportunities` | converted_from_lead | `crm_leads` | one_to_many | optional | clear | reference | - |
+| `crm_opportunities` | involves_contacts | `crm_contacts` | many_to_many | optional | clear | reference | - |
+| `crm_contacts` | has_activities | `sales_activities` | one_to_many | optional | clear | reference | - |
+| `crm_leads` | has_activities | `sales_activities` | one_to_many | optional | clear | reference | - |
 
 #### 5.3b Context edges on embedded shells and consumed entities
 

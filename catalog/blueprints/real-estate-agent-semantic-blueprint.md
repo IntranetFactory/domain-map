@@ -69,16 +69,16 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `crm_contacts` (Contacts) | embedded_master | `crm-acct-mgt` | Account and Contact Management | required | personal_content | - |
-| 2 | `legal_contracts` (Contracts) | embedded_master | `clm-repository` | Contract Repository | required | submit_lock | - |
-| 3 | `disclosure_documents` (Disclosure Documents) | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock, single_approver | - |
-| 4 | `crm_leads` (Leads) | embedded_master | `crm-lead-mgt` | Lead Capture and Qualification | required | personal_content | - |
-| 5 | `real_estate_listings` (Real Estate Listings) | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content | - |
-| 6 | `real_estate_transactions` (Real Estate Transactions) | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock | - |
-| 7 | `tour_appointments` (Tour Appointments) | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content | - |
-| 8 | `users` (Users) | consumer | _(platform built-in)_ | _(platform built-in)_ | required | - | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `crm_contacts` (Contacts) | embedded_master | `crm-acct-mgt` | Account and Contact Management | required | personal_content | `:manage` _(pending)_ | - |
+| 2 | `legal_contracts` (Contracts) | embedded_master | `clm-repository` | Contract Repository | required | submit_lock | `:manage` _(pending)_ | - |
+| 3 | `disclosure_documents` (Disclosure Documents) | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock, single_approver | `:manage` _(pending)_ | - |
+| 4 | `crm_leads` (Leads) | embedded_master | `crm-lead-mgt` | Lead Capture and Qualification | required | personal_content | `:manage` _(pending)_ | - |
+| 5 | `real_estate_listings` (Real Estate Listings) | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content | `:manage` _(pending)_ | - |
+| 6 | `real_estate_transactions` (Real Estate Transactions) | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock | `:manage` _(pending)_ | - |
+| 7 | `tour_appointments` (Tour Appointments) | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content | `:manage` _(pending)_ | - |
+| 8 | `users` (Users) | consumer | _(platform built-in)_ | _(platform built-in)_ | required | - | `:manage` _(pending)_ | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -96,27 +96,27 @@ flowchart TD
 
 ### 5.1 Intra-scope edges
 
-| from | verb | to | cardinality | kind | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `real_estate_listings` | generates | `real_estate_transactions` | one_to_many | reference | required | target | - |
-| `real_estate_listings` | has tours | `tour_appointments` | one_to_many | reference | required | target | - |
-| `real_estate_transactions` | requires disclosures | `disclosure_documents` | one_to_many | composition | required | source | - |
-| `crm_contacts` | converted_from_lead | `crm_leads` | one_to_many | reference | optional | source | - |
+| from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `real_estate_listings` | generates | `real_estate_transactions` | one_to_many | reference | required | target | restrict | reference | - |
+| `real_estate_listings` | has tours | `tour_appointments` | one_to_many | reference | required | target | restrict | reference | - |
+| `real_estate_transactions` | requires disclosures | `disclosure_documents` | one_to_many | composition | required | source | cascade | parent | - |
+| `crm_contacts` | converted_from_lead | `crm_leads` | one_to_many | reference | optional | source | clear | reference | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
-| from | verb | to | cardinality | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- |
-| `real_estate_listings` | has listing agent | `users` | many_to_many | required | source | - |
-| `tour_appointments` | has showing agent | `users` | many_to_many | required | source | - |
-| `real_estate_transactions` | has listing-side agent | `users` | many_to_many | required | source | - |
-| `real_estate_transactions` | has buyer-side agent | `users` | many_to_many | optional | source | - |
-| `disclosure_documents` | has preparer | `users` | many_to_many | required | source | - |
-| `users` | owns | `legal_contracts` | one_to_many | optional | source | - |
-| `users` | approved | `legal_contracts` | one_to_many | optional | source | - |
-| `users` | drafted | `legal_contracts` | one_to_many | optional | source | - |
-| `users` | owns | `crm_leads` | one_to_many | required | source | - |
-| `users` | owns | `crm_contacts` | one_to_many | optional | source | - |
+| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `real_estate_listings` | has listing agent | `users` | many_to_many | required | source | restrict | reference | - |
+| `tour_appointments` | has showing agent | `users` | many_to_many | required | source | restrict | reference | - |
+| `real_estate_transactions` | has listing-side agent | `users` | many_to_many | required | source | restrict | reference | - |
+| `real_estate_transactions` | has buyer-side agent | `users` | many_to_many | optional | source | clear | reference | - |
+| `disclosure_documents` | has preparer | `users` | many_to_many | required | source | restrict | reference | - |
+| `users` | owns | `legal_contracts` | one_to_many | optional | source | clear | reference | - |
+| `users` | approved | `legal_contracts` | one_to_many | optional | source | clear | reference | - |
+| `users` | drafted | `legal_contracts` | one_to_many | optional | source | clear | reference | - |
+| `users` | owns | `crm_leads` | one_to_many | required | source | restrict | reference | - |
+| `users` | owns | `crm_contacts` | one_to_many | optional | source | clear | reference | - |
 
 ### 5.3 Cross-scope edges
 
@@ -133,40 +133,40 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 <details>
 <summary>32 context edges</summary>
 
-| from | verb | to | cardinality | necessity | notes |
-| --- | --- | --- | --- | --- | --- |
-| `in_house_legal_matters` | references | `legal_contracts` | many_to_many | optional | - |
-| `legal_contracts` | governs | `customer_entitlements` | one_to_many | optional | - |
-| `legal_contracts` | backs | `customer_subscriptions` | one_to_many | optional | - |
-| `real_estate_transactions` | produces commission splits | `commission_splits` | one_to_many | required | - |
-| `contract_templates` | seeds | `legal_contracts` | one_to_many | optional | - |
-| `legal_contracts` | contains | `contract_clauses` | one_to_many | optional | - |
-| `legal_contracts` | imposes | `contract_obligations` | one_to_many | required | - |
-| `legal_contracts` | witnessed_by | `signature_records` | one_to_many | required | - |
-| `legal_contracts` | activates | `saas_subscriptions` | one_to_many | optional | - |
-| `legal_contracts` | activates | `software_licenses` | one_to_many | optional | - |
-| `sourcing_events` | originates | `legal_contracts` | one_to_many | optional | - |
-| `legal_contracts` | triggers_creation_of | `purchase_orders` | one_to_many | optional | - |
-| `legal_contracts` | triggers_review_in | `purchase_requisitions` | one_to_many | optional | - |
-| `legal_contracts` | propagates_terms_to | `invoice_matches` | one_to_many | optional | - |
-| `legal_contracts` | feeds_revrec_in | `revenue_recognition_records` | one_to_many | optional | - |
-| `legal_contracts` | seeds | `service_projects` | one_to_many | optional | - |
-| `legal_contracts` | renewal_warns | `crm_opportunities` | one_to_many | optional | - |
-| `legal_contracts` | renewal_warns | `saas_subscriptions` | one_to_many | optional | - |
-| `legal_contracts` | renewed_into | `customer_subscriptions` | one_to_many | optional | - |
-| `legal_contracts` | seeds | `agency_jobs` | one_to_many | optional | - |
-| `crm_opportunities` | drafts | `legal_contracts` | one_to_many | optional | - |
-| `sales_quotes` | drafts | `legal_contracts` | one_to_many | optional | - |
-| `contract_drafts` | drafts | `legal_contracts` | one_to_many | optional | - |
-| `quote_discounts` | flows into | `legal_contracts` | one_to_many | optional | - |
-| `commercial_leases` | flows into | `legal_contracts` | one_to_many | optional | - |
-| `engagement_letters` | flows into | `legal_contracts` | one_to_many | optional | - |
-| `customers` | has_contacts | `crm_contacts` | one_to_many | optional | - |
-| `customers` | converted_from_lead | `crm_leads` | one_to_many | optional | - |
-| `crm_opportunities` | converted_from_lead | `crm_leads` | one_to_many | optional | - |
-| `crm_opportunities` | involves_contacts | `crm_contacts` | many_to_many | optional | - |
-| `crm_contacts` | has_activities | `sales_activities` | one_to_many | optional | - |
-| `crm_leads` | has_activities | `sales_activities` | one_to_many | optional | - |
+| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `in_house_legal_matters` | references | `legal_contracts` | many_to_many | optional | clear | reference | - |
+| `legal_contracts` | governs | `customer_entitlements` | one_to_many | optional | clear | reference | - |
+| `legal_contracts` | backs | `customer_subscriptions` | one_to_many | optional | clear | reference | - |
+| `real_estate_transactions` | produces commission splits | `commission_splits` | one_to_many | required | cascade | parent | - |
+| `contract_templates` | seeds | `legal_contracts` | one_to_many | optional | clear | reference | - |
+| `legal_contracts` | contains | `contract_clauses` | one_to_many | optional | cascade | parent | - |
+| `legal_contracts` | imposes | `contract_obligations` | one_to_many | required | cascade | parent | - |
+| `legal_contracts` | witnessed_by | `signature_records` | one_to_many | required | cascade | parent | - |
+| `legal_contracts` | activates | `saas_subscriptions` | one_to_many | optional | clear | reference | - |
+| `legal_contracts` | activates | `software_licenses` | one_to_many | optional | clear | reference | - |
+| `sourcing_events` | originates | `legal_contracts` | one_to_many | optional | clear | reference | - |
+| `legal_contracts` | triggers_creation_of | `purchase_orders` | one_to_many | optional | clear | reference | - |
+| `legal_contracts` | triggers_review_in | `purchase_requisitions` | one_to_many | optional | clear | reference | - |
+| `legal_contracts` | propagates_terms_to | `invoice_matches` | one_to_many | optional | clear | reference | - |
+| `legal_contracts` | feeds_revrec_in | `revenue_recognition_records` | one_to_many | optional | clear | reference | - |
+| `legal_contracts` | seeds | `service_projects` | one_to_many | optional | clear | reference | - |
+| `legal_contracts` | renewal_warns | `crm_opportunities` | one_to_many | optional | clear | reference | - |
+| `legal_contracts` | renewal_warns | `saas_subscriptions` | one_to_many | optional | clear | reference | - |
+| `legal_contracts` | renewed_into | `customer_subscriptions` | one_to_many | optional | clear | reference | - |
+| `legal_contracts` | seeds | `agency_jobs` | one_to_many | optional | clear | reference | - |
+| `crm_opportunities` | drafts | `legal_contracts` | one_to_many | optional | clear | reference | - |
+| `sales_quotes` | drafts | `legal_contracts` | one_to_many | optional | clear | reference | - |
+| `contract_drafts` | drafts | `legal_contracts` | one_to_many | optional | clear | reference | - |
+| `quote_discounts` | flows into | `legal_contracts` | one_to_many | optional | clear | reference | - |
+| `commercial_leases` | flows into | `legal_contracts` | one_to_many | optional | clear | reference | - |
+| `engagement_letters` | flows into | `legal_contracts` | one_to_many | optional | clear | reference | - |
+| `customers` | has_contacts | `crm_contacts` | one_to_many | optional | clear | reference | - |
+| `customers` | converted_from_lead | `crm_leads` | one_to_many | optional | clear | reference | - |
+| `crm_opportunities` | converted_from_lead | `crm_leads` | one_to_many | optional | clear | reference | - |
+| `crm_opportunities` | involves_contacts | `crm_contacts` | many_to_many | optional | clear | reference | - |
+| `crm_contacts` | has_activities | `sales_activities` | one_to_many | optional | clear | reference | - |
+| `crm_leads` | has_activities | `sales_activities` | one_to_many | optional | clear | reference | - |
 
 </details>
 

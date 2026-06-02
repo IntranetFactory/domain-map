@@ -311,6 +311,21 @@ Composed unique key: `(handoff_id, process_id)`.
 
 Self-references allowed (`User` directly manages `User`).
 
+### Delete-mode derivation (B4)
+
+The delete mode is NOT stored per edge; it is DERIVED from the stored inputs by `deriveDeleteMode` in `scripts/emit_fact_sheet.ts` and emitted as the section-5 `delete_mode` / `fk_format` columns. The applied `ON DELETE` lands in the tenant DB at deploy. Total over every `relationship_kind`:
+
+| `relationship_kind` | `is_required` | `delete_mode` | `fk_format` |
+|---|---|---|---|
+| `composition` | any | `cascade` | `parent` |
+| `reference` | required | `restrict` | `reference` |
+| `reference` | optional | `clear` | `reference` |
+| `association` | required | `restrict` | `reference` |
+| `association` | optional | `clear` | `reference` |
+| `inheritance` | any | `restrict` | `reference` |
+
+`owner_side` orients WHICH endpoint physically holds the FK (the child side); it does not change the mode or format and is surfaced in its own column. `clear` is the Semantius term for SET NULL (the platform `reference_delete_mode` enum is `restrict` / `clear` / `cascade`). `inheritance` is defensive (0 live edges as of 2026-06-01).
+
 ### `data_object_aliases`
 
 | Field | Format | Required | Notes |

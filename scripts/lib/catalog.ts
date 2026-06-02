@@ -51,6 +51,10 @@ export type DataObject = {
   has_personal_content: boolean;
   has_submit_lock: boolean;
   has_single_approver: boolean;
+  // B2 (plan-2-entity-type-tiers.md): drives the per-entity write tier (deriveWriteTier) and
+  // the M5/M6 invariants. Enum: operational_workflow / operational_record / catalog / junction /
+  // computed / unclassified. `unclassified` (the bulk of the catalog today) degrades gracefully.
+  entity_type: string | null;
 };
 
 export type Domain = {
@@ -185,7 +189,7 @@ export async function loadCatalogIndex(): Promise<CatalogIndex> {
     ) as Promise<Domain[]>,
     pg(
       "GET",
-      "/data_objects?select=id,data_object_name,singular_label,plural_label,description,kind,is_canonical_bare_word,has_personal_content,has_submit_lock,has_single_approver&limit=10000",
+      "/data_objects?select=id,data_object_name,singular_label,plural_label,description,kind,is_canonical_bare_word,has_personal_content,has_submit_lock,has_single_approver,entity_type&limit=10000",
     ) as Promise<DataObject[]>,
     pg("GET", "/industries?select=id,industry_name&limit=10000") as Promise<IndustryRow[]>,
     pg(

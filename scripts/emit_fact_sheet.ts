@@ -277,7 +277,7 @@ function renderRelationshipTable(rows: any[], opts: { includeOwnerSide: boolean;
   if (opts.includeKind) headers.push("kind");
   headers.push("necessity");
   if (opts.includeOwnerSide) headers.push("owner_side");
-  headers.push("notes");
+  headers.push("delete_mode", "fk_format", "notes");
   out.push(tableHeader(headers));
   for (const r of rows) {
     const a = dataObjectsById.get(r.data_object_id as number);
@@ -292,6 +292,9 @@ function renderRelationshipTable(rows: any[], opts: { includeOwnerSide: boolean;
     if (opts.includeKind) cells.push(r.relationship_kind || "");
     cells.push(r.is_required ? "required" : "optional");
     if (opts.includeOwnerSide) cells.push(r.owner_side || "");
+    // B4: resolved ON DELETE mode + Semantius FK format per edge.
+    const dm = deriveDeleteMode(r.relationship_kind, r.owner_side, Boolean(r.is_required));
+    cells.push(dm.mode, dm.fkFormat);
     cells.push(r.notes || "");
     out.push(tableRow(cells));
   }
@@ -609,7 +612,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   if (scopeRows.length === 0) {
     out.push("_(no data_objects in scope.)_");
   } else {
-    const headers = ["#", "data_object", "role", "mastered in", "label", "necessity", "pattern flags"];
+    const headers = ["#", "data_object", "role", "mastered in", "label", "necessity", "pattern flags", "write tier"];
     if (showModulesCol) headers.push("modules");
     headers.push("notes");
     out.push(tableHeader(headers, ["right"]));
@@ -628,6 +631,10 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
       if (o.has_submit_lock) flags.push("submit_lock");
       if (o.has_single_approver) flags.push("single_approver");
       const owner = masteredIn(r, owners);
+      // B2: per-entity write tier from entity_type (junctions consult their neighbors).
+      const epTypes = o.entity_type === "junction" ? neighborEntityTypes(r.data_object_id, rels) : [];
+      const wt = deriveWriteTier(o.entity_type, epTypes);
+      const wtCell = wt.write === null ? "read-only" : `\`${wt.write}\`${wt.pending ? " _(pending)_" : ""}`;
       const cells: (string | number)[] = [
         i++,
         `\`${o.data_object_name}\` (${o.plural_label})`,
@@ -636,6 +643,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
         owner.label,
         r.necessity || "-",
         flags.join(", "),
+        wtCell,
       ];
       if (showModulesCol) cells.push(r.modules.map((m) => m.domain_module_code).sort().join(", "));
       cells.push(r.notes || "");
@@ -880,6 +888,27 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   // domain's capability catalog is metadata, not body prose - reader can query the
   // domain map for realization details.
 
+  // M5 / M6 emit-time soft annotations (Policy 1: warn, never throw). Surface classification
+  // violations without bricking the corpus; the hard checks live in audit bands B12 / B13.
+  {
+    const lifecycleObjIds = new Set<number>((lifecycleRows ?? []).map((s: any) => s.data_object_id as number));
+    const modCodes = modules.map((m) => m.domain_module_code).join("+");
+    for (const r of scopeRows) {
+      if (r.role !== "master") continue;
+      const o = r.data_object;
+      const et = o.entity_type;
+      // M5: an operational_workflow master must carry >=1 lifecycle state.
+      if (et === "operational_workflow" && !lifecycleObjIds.has(r.data_object_id)) {
+        console.warn(`  ⚠ M5: \`${o.data_object_name}\` is operational_workflow but has no lifecycle states (${modCodes})`);
+      }
+      // M6: pattern flags are forbidden on catalog / junction / computed (overrides suppressed).
+      const hasFlag = o.has_personal_content || o.has_submit_lock || o.has_single_approver;
+      if (hasFlag && (et === "catalog" || et === "junction" || et === "computed")) {
+        console.warn(`  ⚠ M6: \`${o.data_object_name}\` is ${et} but carries a pattern flag (overrides suppressed) (${modCodes})`);
+      }
+    }
+  }
+
   // Sanitize em-dashes that may have leaked in from DB-authored descriptions / notes.
   // Project rule (see CLAUDE.md feedback): em-dashes are forbidden everywhere.
   return out.join("\n").replace(/—/g, "-");
@@ -925,6 +954,70 @@ function renderHandoffTable(rows: any[], direction: "outbound" | "inbound"): str
 type Permission = { code: string; tier: string; description: string; includedInAdmin: boolean };
 type BusinessRule = { name: string; dataObject: string; sourceFlag: string; intent: string };
 
+// B2 (plan-2-entity-type-tiers.md): the per-entity write tier, derived from `entity_type`.
+// Read is uniformly `:read`; the write tier selects which existing module baseline governs
+// mutations. No new permission is minted: `:manage` / `:admin` already exist per module.
+// `endpointEntityTypes` matters only for junctions (admin when a linked endpoint is a catalog).
+// `unclassified` (and null / unknown) degrade gracefully to `:manage`, flagged pending (m2):
+// the emitter never aborts; the hard classification check lives in audit band B13.
+type WriteTier = { read: string; write: string | null; pending: boolean };
+
+function deriveWriteTier(entityType: string | null | undefined, endpointEntityTypes: string[] = []): WriteTier {
+  switch (entityType) {
+    case "operational_workflow":
+    case "operational_record":
+      return { read: ":read", write: ":manage", pending: false };
+    case "catalog":
+      return { read: ":read", write: ":admin", pending: false };
+    case "junction":
+      return { read: ":read", write: endpointEntityTypes.includes("catalog") ? ":admin" : ":manage", pending: false };
+    case "computed":
+      return { read: ":read", write: null, pending: false };
+    default: // unclassified, null, or any unknown value
+      return { read: ":read", write: ":manage", pending: true };
+  }
+}
+
+// B4 (plan-2-entity-type-tiers.md): the resolved ON DELETE mode + Semantius FK format per edge,
+// derived from (relationship_kind, is_required). Total over all four relationship_kind values;
+// `inheritance` is defensive (0 live edges as of 2026-06-01). `owner_side` orients WHICH endpoint
+// physically holds the FK (surfaced in its own column) and does not change the mode/format, so it
+// is not consulted here. The applied ON DELETE lands in the tenant DB at deploy. M7 (Plan 1)
+// already normalized owner_side, so the orientation column is trustworthy.
+type DeleteMode = { mode: string; fkFormat: string };
+
+function deriveDeleteMode(relationshipKind: string, ownerSide: string | null | undefined, isRequired: boolean): DeleteMode {
+  void ownerSide; // orients the FK side (its own column); mode/format are owner_side-independent
+  switch (relationshipKind) {
+    case "composition":
+      return { mode: "cascade", fkFormat: "parent" };
+    case "reference":
+    case "association":
+      return isRequired ? { mode: "restrict", fkFormat: "reference" } : { mode: "clear", fkFormat: "reference" };
+    case "inheritance":
+      return { mode: "restrict", fkFormat: "reference" };
+    default:
+      return { mode: "restrict", fkFormat: "reference" }; // defensive: unknown kind
+  }
+}
+
+// B2: entity_types of a data_object's relationship neighbors. Used to resolve a junction's
+// write tier (a junction that links a catalog entity is admin-governed, else manage).
+function neighborEntityTypes(doId: number, rels: { all: any[] }): string[] {
+  const types = new Set<string>();
+  for (const r of rels.all) {
+    const otherId = r.data_object_id === doId
+      ? (r.related_data_object_id as number)
+      : r.related_data_object_id === doId
+        ? (r.data_object_id as number)
+        : null;
+    if (otherId === null) continue;
+    const o = dataObjectsById.get(otherId);
+    if (o?.entity_type) types.add(o.entity_type);
+  }
+  return [...types];
+}
+
 function deriveWorkflowGatesAndRules(
   slug: string,
   moduleObjects: any[],
@@ -963,6 +1056,11 @@ function deriveWorkflowGatesAndRules(
     if (r.role !== "master") continue;
     const o = r.data_object as DataObject;
     if (!o) continue;
+    // M6 (plan-2-entity-type-tiers.md): pattern-flag overrides are valid only on operational
+    // entities. Suppress on catalog / junction / computed masters (corrective where a classified
+    // master still carries a legacy flag; a no-op otherwise). `unclassified` keeps its overrides
+    // until classified (m2 graceful degradation).
+    if (o.entity_type === "catalog" || o.entity_type === "junction" || o.entity_type === "computed") continue;
     const entitySingular = entitySingularToken(o);
     const entityPlural = entityPluralToken(o);
     if (o.has_personal_content) {

@@ -223,6 +223,17 @@ Every master data_object MUST have `entity_type` classified (default `unclassifi
 | `computed` | not required | pass |
 | `unclassified` | indeterminate | fail |
 
+**Write tier by `entity_type` (B2).** Beyond lifecycle, `entity_type` also selects which existing module baseline governs an entity's WRITES (read is uniformly `:read`). This is DERIVED at emit time by `deriveWriteTier` in `scripts/emit_fact_sheet.ts` and rendered as the section-3 "write tier" column; no new permission is minted and nothing is stored on `data_objects`.
+
+| `entity_type` | write tier | notes |
+|---|---|---|
+| `operational_workflow` | `:manage` | plus the workflow gates on `requires_permission` transitions |
+| `operational_record` | `:manage` | |
+| `catalog` | `:admin` | reference data; reconfiguring it is an admin act |
+| `junction` | `:admin` if a linked endpoint is `catalog`, else `:manage` | resolved from the relationship endpoints |
+| `computed` | none (read-only) | no write permission emitted |
+| `unclassified` | `:manage` _(pending)_ | graceful fallback (m2); the emitter never aborts, the hard check is audit band B13 |
+
 **The exemption is structural now, not prose.** If a master is genuinely config / record / junction / computed, classify it via `entity_type` and move on. The earlier practice of recording the config-shape exemption in `data_objects.notes` is RESCINDED at every layer: Rule #15 removed the license for the notes write; this rule moves the classification itself to a typed column. There is no notes-based exemption surface.
 
 **Pattern flags** (`has_personal_content`, `has_submit_lock`, `has_single_approver`) still need to be considered for any master with `entity_type='operational_workflow'`. Auto-populating `notes` to explain a flag remains forbidden (Rule #15). If a flag's reasoning is non-obvious, surface in chat so the user can decide whether and how to record it.

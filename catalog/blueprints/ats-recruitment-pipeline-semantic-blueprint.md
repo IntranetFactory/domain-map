@@ -137,28 +137,28 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `applicant_flow_records` (Applicant Flow Records) | master | - | - | optional | personal_content, submit_lock | - |
-| 2 | `application_dispositions` (Application Dispositions) | master | - | - | optional | - | - |
-| 3 | `application_screening_answers` (Application Screening Answers) | master | - | - | required | personal_content | - |
-| 4 | `application_screening_questions` (Application Screening Questions) | master | - | - | required | - | - |
-| 5 | `application_stage_transitions` (Application Stage Transitions) | master | - | - | required | - | - |
-| 6 | `application_stages` (Application Stages) | master | - | - | required | - | - |
-| 7 | `job_applications` (Applications) | master | - | - | required | personal_content | - |
-| 8 | `eeo_responses` (EEO Responses) | master | - | - | optional | personal_content, submit_lock | - |
-| 9 | `hiring_team_assignments` (Hiring Team Assignments) | master | - | - | required | - | - |
-| 10 | `job_posting_distributions` (Job Posting Distributions) | master | - | - | required | - | - |
-| 11 | `job_postings` (Job Postings) | master | - | - | required | - | - |
-| 12 | `job_requisitions` (Job Requisitions) | master | - | - | required | single_approver | - |
-| 13 | `ofccp_audit_trails` (OFCCP Audit Trails) | master | - | - | optional | submit_lock | - |
-| 14 | `requisition_approvals` (Requisition Approvals) | master | - | - | required | single_approver | - |
-| 15 | `voluntary_self_identifications` (Voluntary Self-Identifications) | master | - | - | optional | personal_content, submit_lock | - |
-| 16 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | - |
-| 17 | `job_profiles` (Job Profiles) | embedded_master | `hcm-org-positions` | Organisation and Position Management | required | single_approver | - |
-| 18 | `locations` (Locations) | embedded_master | `iwms-location-master` | Location and Property Master | optional | - | - |
-| 19 | `org_units` (Org Units) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | - | - |
-| 20 | `hcm_positions` (Positions) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | single_approver | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `applicant_flow_records` (Applicant Flow Records) | master | - | - | optional | personal_content, submit_lock | `:manage` | - |
+| 2 | `application_dispositions` (Application Dispositions) | master | - | - | optional | - | `:manage` | - |
+| 3 | `application_screening_answers` (Application Screening Answers) | master | - | - | required | personal_content | `:manage` | - |
+| 4 | `application_screening_questions` (Application Screening Questions) | master | - | - | required | - | `:admin` | - |
+| 5 | `application_stage_transitions` (Application Stage Transitions) | master | - | - | required | - | `:manage` | - |
+| 6 | `application_stages` (Application Stages) | master | - | - | required | - | `:admin` | - |
+| 7 | `job_applications` (Applications) | master | - | - | required | personal_content | `:manage` | - |
+| 8 | `eeo_responses` (EEO Responses) | master | - | - | optional | personal_content, submit_lock | `:manage` | - |
+| 9 | `hiring_team_assignments` (Hiring Team Assignments) | master | - | - | required | - | `:manage` | - |
+| 10 | `job_posting_distributions` (Job Posting Distributions) | master | - | - | required | - | `:manage` | - |
+| 11 | `job_postings` (Job Postings) | master | - | - | required | - | `:manage` | - |
+| 12 | `job_requisitions` (Job Requisitions) | master | - | - | required | single_approver | `:manage` | - |
+| 13 | `ofccp_audit_trails` (OFCCP Audit Trails) | master | - | - | optional | submit_lock | `:manage` | - |
+| 14 | `requisition_approvals` (Requisition Approvals) | master | - | - | required | single_approver | `:manage` | - |
+| 15 | `voluntary_self_identifications` (Voluntary Self-Identifications) | master | - | - | optional | personal_content, submit_lock | `:manage` | - |
+| 16 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
+| 17 | `job_profiles` (Job Profiles) | embedded_master | `hcm-org-positions` | Organisation and Position Management | required | single_approver | `:manage` _(pending)_ | - |
+| 18 | `locations` (Locations) | embedded_master | `iwms-location-master` | Location and Property Master | optional | - | `:manage` _(pending)_ | - |
+| 19 | `org_units` (Org Units) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | - | `:manage` _(pending)_ | - |
+| 20 | `hcm_positions` (Positions) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | single_approver | `:manage` _(pending)_ | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -168,47 +168,47 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 ### 5.1 Intra-scope edges
 
-| from | verb | to | cardinality | kind | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `job_requisitions` | defines_pipeline | `application_stages` | one_to_many | reference | required | source | - |
-| `job_applications` | transitions_via | `application_stage_transitions` | one_to_many | composition | required | source | - |
-| `application_stages` | lands_at | `application_stage_transitions` | one_to_many | reference | required | target | - |
-| `job_requisitions` | gated_by | `requisition_approvals` | one_to_many | composition | required | source | - |
-| `job_postings` | syndicates_via | `job_posting_distributions` | one_to_many | composition | optional | source | - |
-| `job_postings` | asks | `application_screening_questions` | one_to_many | composition | optional | source | - |
-| `job_applications` | answers_via | `application_screening_answers` | one_to_many | composition | optional | source | - |
-| `application_screening_questions` | answered_by | `application_screening_answers` | one_to_many | reference | required | source | - |
-| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | composition | optional | source | - |
-| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | composition | optional | source | - |
-| `job_applications` | disposed_via | `application_dispositions` | one_to_many | composition | optional | source | - |
-| `job_applications` | logged_via | `applicant_flow_records` | one_to_one | composition | required | source | - |
-| `job_requisitions` | staffed_by | `hiring_team_assignments` | one_to_many | composition | required | source | - |
-| `applicant_flow_records` | audited_via | `ofccp_audit_trails` | one_to_many | composition | required | source | - |
-| `org_units` | contains | `hcm_positions` | one_to_many | reference | required | source | - |
-| `job_profiles` | defines | `hcm_positions` | one_to_many | reference | required | source | - |
-| `hcm_positions` | spawns | `job_requisitions` | one_to_many | reference | optional | source | - |
-| `job_profiles` | feeds | `job_postings` | one_to_many | reference | optional | source | - |
-| `job_requisitions` | is advertised through | `job_postings` | one_to_many | reference | required | source | - |
-| `job_requisitions` | receives | `job_applications` | one_to_many | reference | required | source | - |
-| `job_postings` | is applied to via | `job_applications` | one_to_many | reference | required | source | - |
-| `candidates` | submits | `job_applications` | one_to_many | reference | required | target | - |
-| `org_units` | rolls_up_to | `org_units` | one_to_many | reference | optional | source | - |
-| `locations` | rolls_up_to | `locations` | one_to_many | reference | optional | source | - |
+| from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `job_requisitions` | defines_pipeline | `application_stages` | one_to_many | reference | required | source | restrict | reference | - |
+| `job_applications` | transitions_via | `application_stage_transitions` | one_to_many | composition | required | source | cascade | parent | - |
+| `application_stages` | lands_at | `application_stage_transitions` | one_to_many | reference | required | target | restrict | reference | - |
+| `job_requisitions` | gated_by | `requisition_approvals` | one_to_many | composition | required | source | cascade | parent | - |
+| `job_postings` | syndicates_via | `job_posting_distributions` | one_to_many | composition | optional | source | cascade | parent | - |
+| `job_postings` | asks | `application_screening_questions` | one_to_many | composition | optional | source | cascade | parent | - |
+| `job_applications` | answers_via | `application_screening_answers` | one_to_many | composition | optional | source | cascade | parent | - |
+| `application_screening_questions` | answered_by | `application_screening_answers` | one_to_many | reference | required | source | restrict | reference | - |
+| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | composition | optional | source | cascade | parent | - |
+| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | composition | optional | source | cascade | parent | - |
+| `job_applications` | disposed_via | `application_dispositions` | one_to_many | composition | optional | source | cascade | parent | - |
+| `job_applications` | logged_via | `applicant_flow_records` | one_to_one | composition | required | source | cascade | parent | - |
+| `job_requisitions` | staffed_by | `hiring_team_assignments` | one_to_many | composition | required | source | cascade | parent | - |
+| `applicant_flow_records` | audited_via | `ofccp_audit_trails` | one_to_many | composition | required | source | cascade | parent | - |
+| `org_units` | contains | `hcm_positions` | one_to_many | reference | required | source | restrict | reference | - |
+| `job_profiles` | defines | `hcm_positions` | one_to_many | reference | required | source | restrict | reference | - |
+| `hcm_positions` | spawns | `job_requisitions` | one_to_many | reference | optional | source | clear | reference | - |
+| `job_profiles` | feeds | `job_postings` | one_to_many | reference | optional | source | clear | reference | - |
+| `job_requisitions` | is advertised through | `job_postings` | one_to_many | reference | required | source | restrict | reference | - |
+| `job_requisitions` | receives | `job_applications` | one_to_many | reference | required | source | restrict | reference | - |
+| `job_postings` | is applied to via | `job_applications` | one_to_many | reference | required | source | restrict | reference | - |
+| `candidates` | submits | `job_applications` | one_to_many | reference | required | target | restrict | reference | - |
+| `org_units` | rolls_up_to | `org_units` | one_to_many | reference | optional | source | clear | reference | - |
+| `locations` | rolls_up_to | `locations` | one_to_many | reference | optional | source | clear | reference | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
-| from | verb | to | cardinality | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- |
-| `hiring_team_assignments` | assigns | `users` | many_to_many | required | source | - |
-| `candidates` | has owning recruiter | `users` | many_to_many | optional | source | - |
-| `job_postings` | has publisher | `users` | many_to_many | required | source | - |
-| `users` | manages | `hcm_positions` | one_to_many | optional | source | - |
-| `users` | leads | `org_units` | one_to_many | optional | source | - |
-| `users` | owns | `job_profiles` | one_to_many | optional | source | - |
-| `job_requisitions` | has recruiter and hiring manager | `users` | many_to_many | required | source | - |
-| `job_applications` | has owning recruiter | `users` | many_to_many | required | source | - |
-| `org_units` | has members | `users` | one_to_many | optional | target | - |
-| `locations` | houses | `users` | one_to_many | optional | target | - |
+| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `hiring_team_assignments` | assigns | `users` | many_to_many | required | source | restrict | reference | - |
+| `candidates` | has owning recruiter | `users` | many_to_many | optional | source | clear | reference | - |
+| `job_postings` | has publisher | `users` | many_to_many | required | source | restrict | reference | - |
+| `users` | manages | `hcm_positions` | one_to_many | optional | source | clear | reference | - |
+| `users` | leads | `org_units` | one_to_many | optional | source | clear | reference | - |
+| `users` | owns | `job_profiles` | one_to_many | optional | source | clear | reference | - |
+| `job_requisitions` | has recruiter and hiring manager | `users` | many_to_many | required | source | restrict | reference | - |
+| `job_applications` | has owning recruiter | `users` | many_to_many | required | source | restrict | reference | - |
+| `org_units` | has members | `users` | one_to_many | optional | target | clear | reference | - |
+| `locations` | houses | `users` | one_to_many | optional | target | clear | reference | - |
 
 ### 5.3 Cross-scope edges
 
@@ -216,15 +216,15 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
 
-| from | verb | to | cardinality | necessity | notes |
-| --- | --- | --- | --- | --- | --- |
-| `job_applications` | schedules | `interviews` | one_to_many | required | - |
-| `job_applications` | requires | `candidate_assessments` | one_to_many | required | - |
-| `job_applications` | results in | `job_offers` | one_to_many | required | - |
-| `job_requisitions` | updates | `position_demand_forecasts` | many_to_many | optional | - |
-| `job_requisitions` | feeds | `people_kpis` | many_to_many | optional | - |
-| `headcount_plans` | authorizes | `job_requisitions` | one_to_many | required | - |
-| `position_demand_forecasts` | triggers | `job_requisitions` | one_to_many | optional | - |
+| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `job_applications` | schedules | `interviews` | one_to_many | required | restrict | reference | - |
+| `job_applications` | requires | `candidate_assessments` | one_to_many | required | restrict | reference | - |
+| `job_applications` | results in | `job_offers` | one_to_many | required | restrict | reference | - |
+| `job_requisitions` | updates | `position_demand_forecasts` | many_to_many | optional | clear | reference | - |
+| `job_requisitions` | feeds | `people_kpis` | many_to_many | optional | clear | reference | - |
+| `headcount_plans` | authorizes | `job_requisitions` | one_to_many | required | restrict | reference | - |
+| `position_demand_forecasts` | triggers | `job_requisitions` | one_to_many | optional | clear | reference | - |
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
@@ -233,55 +233,55 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 <details>
 <summary>47 context edges</summary>
 
-| from | verb | to | cardinality | necessity | notes |
-| --- | --- | --- | --- | --- | --- |
-| `job_profiles` | expects | `competency_models` | one_to_many | optional | - |
-| `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | - |
-| `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | required | - |
-| `candidates` | noted_via | `recruiter_interactions` | one_to_many | optional | - |
-| `candidates` | consents_via | `candidate_consents` | one_to_many | required | - |
-| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | required | - |
-| `candidates` | discloses_via | `fcra_disclosures` | one_to_many | required | - |
-| `candidates` | submits_via | `data_subject_requests` | one_to_many | optional | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | - |
-| `candidates` | documented_via | `candidate_documents` | one_to_many | optional | - |
-| `candidates` | annotated_via | `candidate_notes` | one_to_many | optional | - |
-| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | - |
-| `locations` | hosts_desk_bookings | `desk_bookings` | one_to_many | required | - |
-| `locations` | hosts_room_reservations | `room_reservations` | one_to_many | required | - |
-| `locations` | site_of_service_requests | `workplace_service_requests` | one_to_many | required | - |
-| `locations` | measured_by_reports | `space_utilization_reports` | one_to_many | required | - |
-| `locations` | subject_of_feedback | `workplace_experience_feedback` | one_to_many | optional | - |
-| `org_units` | groups | `employees` | one_to_many | required | - |
-| `hcm_positions` | is_filled_by | `employees` | one_to_one | optional | - |
-| `cost_centers` | funds | `org_units` | one_to_many | required | - |
-| `org_units` | engages | `contingent_workers` | one_to_many | optional | - |
-| `org_units` | is_scored_by | `engagement_drivers` | one_to_many | optional | - |
-| `org_units` | is_measured_by | `people_kpis` | one_to_many | optional | - |
-| `job_profiles` | maps_to | `skill_profiles` | many_to_many | optional | - |
-| `org_units` | triggers | `iga_entitlement_definitions` | one_to_many | optional | - |
-| `job_profiles` | maps_to | `courses` | many_to_many | optional | - |
-| `salary_bands` | anchors | `hcm_positions` | one_to_many | optional | - |
-| `salary_bands` | bands | `job_profiles` | one_to_many | optional | - |
-| `org_units` | maps_to | `cost_centers` | one_to_one | optional | - |
-| `hcm_positions` | requires | `compliance_assignments` | one_to_many | optional | - |
-| `job_profiles` | requires | `learning_paths` | many_to_many | optional | - |
-| `job_profiles` | expects | `skill_profiles` | many_to_many | optional | - |
-| `org_units` | sponsors | `compliance_assignments` | one_to_many | optional | - |
-| `skill_profiles` | feeds | `candidates` | one_to_many | optional | - |
-| `org_units` | sponsors | `benefit_plans` | many_to_many | optional | - |
-| `survey_campaigns` | targets | `org_units` | many_to_many | optional | - |
-| `org_units` | owns | `action_plans` | one_to_many | optional | - |
-| `candidate_referrals` | introduces | `candidates` | one_to_many | required | - |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | required | - |
-| `recruitment_agencies` | sources | `candidates` | one_to_many | required | - |
-| `recruitment_events` | attracts | `candidates` | one_to_many | required | - |
-| `talent_pools` | groups | `candidates` | many_to_many | required | - |
-| `candidates` | becomes | `employees` | one_to_one | required | - |
-| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | - |
-| `employees` | fills | `hcm_positions` | one_to_one | optional | - |
-| `workforce_scenarios` | drives | `hcm_positions` | one_to_many | required | - |
-| `org_designs` | proposes | `hcm_positions` | one_to_many | required | - |
+| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `job_profiles` | expects | `competency_models` | one_to_many | optional | clear | reference | - |
+| `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | clear | reference | - |
+| `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | required | restrict | reference | - |
+| `candidates` | noted_via | `recruiter_interactions` | one_to_many | optional | clear | reference | - |
+| `candidates` | consents_via | `candidate_consents` | one_to_many | required | cascade | parent | - |
+| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | required | restrict | reference | - |
+| `candidates` | discloses_via | `fcra_disclosures` | one_to_many | required | cascade | parent | - |
+| `candidates` | submits_via | `data_subject_requests` | one_to_many | optional | cascade | parent | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | cascade | parent | - |
+| `candidates` | documented_via | `candidate_documents` | one_to_many | optional | cascade | parent | - |
+| `candidates` | annotated_via | `candidate_notes` | one_to_many | optional | cascade | parent | - |
+| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | clear | reference | - |
+| `locations` | hosts_desk_bookings | `desk_bookings` | one_to_many | required | restrict | reference | - |
+| `locations` | hosts_room_reservations | `room_reservations` | one_to_many | required | restrict | reference | - |
+| `locations` | site_of_service_requests | `workplace_service_requests` | one_to_many | required | restrict | reference | - |
+| `locations` | measured_by_reports | `space_utilization_reports` | one_to_many | required | restrict | reference | - |
+| `locations` | subject_of_feedback | `workplace_experience_feedback` | one_to_many | optional | clear | reference | - |
+| `org_units` | groups | `employees` | one_to_many | required | restrict | reference | - |
+| `hcm_positions` | is_filled_by | `employees` | one_to_one | optional | clear | reference | - |
+| `cost_centers` | funds | `org_units` | one_to_many | required | restrict | reference | - |
+| `org_units` | engages | `contingent_workers` | one_to_many | optional | clear | reference | - |
+| `org_units` | is_scored_by | `engagement_drivers` | one_to_many | optional | clear | reference | - |
+| `org_units` | is_measured_by | `people_kpis` | one_to_many | optional | clear | reference | - |
+| `job_profiles` | maps_to | `skill_profiles` | many_to_many | optional | clear | reference | - |
+| `org_units` | triggers | `iga_entitlement_definitions` | one_to_many | optional | clear | reference | - |
+| `job_profiles` | maps_to | `courses` | many_to_many | optional | clear | reference | - |
+| `salary_bands` | anchors | `hcm_positions` | one_to_many | optional | clear | reference | - |
+| `salary_bands` | bands | `job_profiles` | one_to_many | optional | clear | reference | - |
+| `org_units` | maps_to | `cost_centers` | one_to_one | optional | clear | reference | - |
+| `hcm_positions` | requires | `compliance_assignments` | one_to_many | optional | clear | reference | - |
+| `job_profiles` | requires | `learning_paths` | many_to_many | optional | clear | reference | - |
+| `job_profiles` | expects | `skill_profiles` | many_to_many | optional | clear | reference | - |
+| `org_units` | sponsors | `compliance_assignments` | one_to_many | optional | clear | reference | - |
+| `skill_profiles` | feeds | `candidates` | one_to_many | optional | clear | reference | - |
+| `org_units` | sponsors | `benefit_plans` | many_to_many | optional | clear | reference | - |
+| `survey_campaigns` | targets | `org_units` | many_to_many | optional | clear | reference | - |
+| `org_units` | owns | `action_plans` | one_to_many | optional | clear | reference | - |
+| `candidate_referrals` | introduces | `candidates` | one_to_many | required | restrict | reference | - |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | required | restrict | reference | - |
+| `recruitment_agencies` | sources | `candidates` | one_to_many | required | restrict | reference | - |
+| `recruitment_events` | attracts | `candidates` | one_to_many | required | restrict | reference | - |
+| `talent_pools` | groups | `candidates` | many_to_many | required | restrict | reference | - |
+| `candidates` | becomes | `employees` | one_to_one | required | restrict | reference | - |
+| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | restrict | reference | - |
+| `employees` | fills | `hcm_positions` | one_to_one | optional | clear | reference | - |
+| `workforce_scenarios` | drives | `hcm_positions` | one_to_many | required | restrict | reference | - |
+| `org_designs` | proposes | `hcm_positions` | one_to_many | required | restrict | reference | - |
 
 </details>
 

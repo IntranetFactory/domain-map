@@ -51,11 +51,11 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `commission_splits` (Commission Splits) | master | - | - | required | submit_lock, single_approver | - |
-| 2 | `disclosure_documents` (Disclosure Documents) | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock, single_approver | - |
-| 3 | `real_estate_transactions` (Real Estate Transactions) | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `commission_splits` (Commission Splits) | master | - | - | required | submit_lock, single_approver | `:manage` _(pending)_ | - |
+| 2 | `disclosure_documents` (Disclosure Documents) | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock, single_approver | `:manage` _(pending)_ | - |
+| 3 | `real_estate_transactions` (Real Estate Transactions) | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock | `:manage` _(pending)_ | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -71,20 +71,20 @@ flowchart TD
 
 ### 5.1 Intra-scope edges
 
-| from | verb | to | cardinality | kind | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `real_estate_transactions` | requires disclosures | `disclosure_documents` | one_to_many | composition | required | source | - |
-| `real_estate_transactions` | produces commission splits | `commission_splits` | one_to_many | composition | required | source | - |
+| from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `real_estate_transactions` | requires disclosures | `disclosure_documents` | one_to_many | composition | required | source | cascade | parent | - |
+| `real_estate_transactions` | produces commission splits | `commission_splits` | one_to_many | composition | required | source | cascade | parent | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
-| from | verb | to | cardinality | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- |
-| `real_estate_transactions` | has listing-side agent | `users` | many_to_many | required | source | - |
-| `real_estate_transactions` | has buyer-side agent | `users` | many_to_many | optional | source | - |
-| `disclosure_documents` | has preparer | `users` | many_to_many | required | source | - |
-| `commission_splits` | has recipient agent | `users` | many_to_many | required | source | - |
-| `commission_splits` | has approving broker | `users` | many_to_many | required | source | - |
+| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `real_estate_transactions` | has listing-side agent | `users` | many_to_many | required | source | restrict | reference | - |
+| `real_estate_transactions` | has buyer-side agent | `users` | many_to_many | optional | source | clear | reference | - |
+| `disclosure_documents` | has preparer | `users` | many_to_many | required | source | restrict | reference | - |
+| `commission_splits` | has recipient agent | `users` | many_to_many | required | source | restrict | reference | - |
+| `commission_splits` | has approving broker | `users` | many_to_many | required | source | restrict | reference | - |
 
 ### 5.3 Cross-scope edges
 
@@ -101,9 +101,9 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 <details>
 <summary>1 context edges</summary>
 
-| from | verb | to | cardinality | necessity | notes |
-| --- | --- | --- | --- | --- | --- |
-| `real_estate_listings` | generates | `real_estate_transactions` | one_to_many | required | - |
+| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `real_estate_listings` | generates | `real_estate_transactions` | one_to_many | required | restrict | reference | - |
 
 </details>
 

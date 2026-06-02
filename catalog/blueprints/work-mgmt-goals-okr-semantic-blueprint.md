@@ -57,12 +57,12 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `okr_key_results` (Key Results) | master | - | - | required | - | - |
-| 2 | `okr_objectives` (Objective / OKRs) | master | - | - | required | personal_content | - |
-| 3 | `okr_check_ins` (OKR Check-ins) | master | - | - | required | personal_content | - |
-| 4 | `work_items` (Work Items) | embedded_master | `work-mgmt-task-exec` | Task and Project Execution | required | - | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `okr_key_results` (Key Results) | master | - | - | required | - | `:manage` _(pending)_ | - |
+| 2 | `okr_objectives` (Objective / OKRs) | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
+| 3 | `okr_check_ins` (OKR Check-ins) | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
+| 4 | `work_items` (Work Items) | embedded_master | `work-mgmt-task-exec` | Task and Project Execution | required | - | `:manage` _(pending)_ | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -72,23 +72,23 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 ### 5.1 Intra-scope edges
 
-| from | verb | to | cardinality | kind | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `okr_key_results` | belongs_to | `okr_objectives` | one_to_many | composition | required | target | - |
-| `okr_check_ins` | belongs_to | `okr_objectives` | one_to_many | composition | required | target | - |
-| `okr_check_ins` | references | `okr_key_results` | one_to_many | reference | optional | target | - |
-| `work_items` | depends_on | `work_items` | many_to_many | association | optional | source | - |
-| `okr_objectives` | tracked_by | `work_items` | one_to_many | reference | optional | source | - |
+| from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `okr_key_results` | belongs_to | `okr_objectives` | one_to_many | composition | required | target | cascade | parent | - |
+| `okr_check_ins` | belongs_to | `okr_objectives` | one_to_many | composition | required | target | cascade | parent | - |
+| `okr_check_ins` | references | `okr_key_results` | one_to_many | reference | optional | target | clear | reference | - |
+| `work_items` | depends_on | `work_items` | many_to_many | association | optional | source | clear | reference | - |
+| `okr_objectives` | tracked_by | `work_items` | one_to_many | reference | optional | source | clear | reference | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
-| from | verb | to | cardinality | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- |
-| `users` | owns_key_results | `okr_key_results` | one_to_many | optional | source | - |
-| `users` | authored_check_ins | `okr_check_ins` | one_to_many | optional | source | - |
-| `users` | assigned items | `work_items` | one_to_many | optional | source | - |
-| `users` | created items | `work_items` | one_to_many | required | source | - |
-| `users` | owns OKR | `okr_objectives` | one_to_many | required | source | - |
+| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `users` | owns_key_results | `okr_key_results` | one_to_many | optional | source | clear | reference | - |
+| `users` | authored_check_ins | `okr_check_ins` | one_to_many | optional | source | clear | reference | - |
+| `users` | assigned items | `work_items` | one_to_many | optional | source | clear | reference | - |
+| `users` | created items | `work_items` | one_to_many | required | source | restrict | reference | - |
+| `users` | owns OKR | `okr_objectives` | one_to_many | required | source | restrict | reference | - |
 
 ### 5.3 Cross-scope edges
 
@@ -96,15 +96,15 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
 
-| from | verb | to | cardinality | necessity | notes |
-| --- | --- | --- | --- | --- | --- |
-| `strategy_maps` | organizes | `okr_objectives` | one_to_many | optional | - |
-| `okr_objectives` | advanced_by | `strategic_initiatives` | many_to_many | optional | - |
-| `okr_objectives` | reviewed_in | `operating_reviews` | many_to_many | optional | - |
-| `strategy_decisions` | affects | `okr_objectives` | many_to_many | optional | - |
-| `work_projects` | aligned_to | `okr_objectives` | many_to_many | optional | - |
-| `performance_reviews` | evaluates | `okr_objectives` | one_to_many | optional | - |
-| `performance_goals` | aligns_to | `okr_objectives` | many_to_many | optional | - |
+| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `strategy_maps` | organizes | `okr_objectives` | one_to_many | optional | clear | reference | - |
+| `okr_objectives` | advanced_by | `strategic_initiatives` | many_to_many | optional | clear | reference | - |
+| `okr_objectives` | reviewed_in | `operating_reviews` | many_to_many | optional | clear | reference | - |
+| `strategy_decisions` | affects | `okr_objectives` | many_to_many | optional | clear | reference | - |
+| `work_projects` | aligned_to | `okr_objectives` | many_to_many | optional | clear | reference | - |
+| `performance_reviews` | evaluates | `okr_objectives` | one_to_many | optional | clear | reference | - |
+| `performance_goals` | aligns_to | `okr_objectives` | many_to_many | optional | clear | reference | - |
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
@@ -113,24 +113,24 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 <details>
 <summary>16 context edges</summary>
 
-| from | verb | to | cardinality | necessity | notes |
-| --- | --- | --- | --- | --- | --- |
-| `test_defects` | spawns | `work_items` | one_to_many | optional | - |
-| `work_dependencies` | blocks | `work_items` | many_to_many | required | - |
-| `work_approval_chains` | gates | `work_items` | many_to_many | optional | - |
-| `work_user_workloads` | rolls_up | `work_items` | many_to_many | required | - |
-| `work_custom_field_values` | set_on | `work_items` | one_to_many | required | - |
-| `work_items` | placed_in | `work_sections` | one_to_many | optional | - |
-| `work_task_templates` | seeds_item | `work_items` | one_to_many | optional | - |
-| `work_item_tags` | tagged_on | `work_items` | one_to_many | required | - |
-| `work_item_comments` | belongs_to | `work_items` | one_to_many | required | - |
-| `work_item_attachments` | belongs_to | `work_items` | one_to_many | required | - |
-| `work_form_submissions` | converts_to | `work_items` | one_to_many | optional | - |
-| `action_plans` | spawns | `work_items` | one_to_many | optional | - |
-| `work_projects` | contains | `work_items` | one_to_many | required | - |
-| `work_automations` | drives | `work_items` | one_to_many | optional | - |
-| `work_items` | mirrors_to | `service_requests` | one_to_one | optional | - |
-| `strategic_initiatives` | portfolio rollup from | `work_items` | one_to_many | optional | - |
+| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `test_defects` | spawns | `work_items` | one_to_many | optional | clear | reference | - |
+| `work_dependencies` | blocks | `work_items` | many_to_many | required | restrict | reference | - |
+| `work_approval_chains` | gates | `work_items` | many_to_many | optional | clear | reference | - |
+| `work_user_workloads` | rolls_up | `work_items` | many_to_many | required | restrict | reference | - |
+| `work_custom_field_values` | set_on | `work_items` | one_to_many | required | cascade | parent | - |
+| `work_items` | placed_in | `work_sections` | one_to_many | optional | clear | reference | - |
+| `work_task_templates` | seeds_item | `work_items` | one_to_many | optional | clear | reference | - |
+| `work_item_tags` | tagged_on | `work_items` | one_to_many | required | cascade | parent | - |
+| `work_item_comments` | belongs_to | `work_items` | one_to_many | required | cascade | parent | - |
+| `work_item_attachments` | belongs_to | `work_items` | one_to_many | required | cascade | parent | - |
+| `work_form_submissions` | converts_to | `work_items` | one_to_many | optional | clear | reference | - |
+| `action_plans` | spawns | `work_items` | one_to_many | optional | clear | reference | - |
+| `work_projects` | contains | `work_items` | one_to_many | required | cascade | parent | - |
+| `work_automations` | drives | `work_items` | one_to_many | optional | clear | reference | - |
+| `work_items` | mirrors_to | `service_requests` | one_to_one | optional | clear | reference | - |
+| `strategic_initiatives` | portfolio rollup from | `work_items` | one_to_many | optional | clear | reference | - |
 
 </details>
 

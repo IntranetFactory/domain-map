@@ -70,16 +70,16 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | label | necessity | pattern flags | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `job_applications` (Applications) | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | personal_content | - |
-| 2 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | - |
-| 3 | `interview_scorecards` (Interview Scorecards) | embedded_master | `ats-interviews` | Interviews | optional | personal_content, submit_lock | - |
-| 4 | `interviews` (Interviews) | embedded_master | `ats-interviews` | Interviews | required | - | - |
-| 5 | `job_postings` (Job Postings) | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | - | - |
-| 6 | `job_offers` (Offers) | embedded_master | `ats-offers` | Offers | required | personal_content, single_approver | - |
-| 7 | `recruitment_sources` (Recruitment Sources) | embedded_master | `ats-candidate-crm` | Candidate CRM | optional | - | - |
-| 8 | `users` (Users) | consumer | _(platform built-in)_ | _(platform built-in)_ | required | - | - |
+| # | data_object | role | mastered in | label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `job_applications` (Applications) | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | personal_content | `:manage` | - |
+| 2 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
+| 3 | `interview_scorecards` (Interview Scorecards) | embedded_master | `ats-interviews` | Interviews | optional | personal_content, submit_lock | `:manage` | - |
+| 4 | `interviews` (Interviews) | embedded_master | `ats-interviews` | Interviews | required | - | `:manage` | - |
+| 5 | `job_postings` (Job Postings) | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | - | `:manage` | - |
+| 6 | `job_offers` (Offers) | embedded_master | `ats-offers` | Offers | required | personal_content, single_approver | `:manage` | - |
+| 7 | `recruitment_sources` (Recruitment Sources) | embedded_master | `ats-candidate-crm` | Candidate CRM | optional | - | `:admin` | - |
+| 8 | `users` (Users) | consumer | _(platform built-in)_ | _(platform built-in)_ | required | - | `:manage` _(pending)_ | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -89,25 +89,25 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 ### 5.1 Intra-scope edges
 
-| from | verb | to | cardinality | kind | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `job_postings` | is applied to via | `job_applications` | one_to_many | reference | required | source | - |
-| `candidates` | submits | `job_applications` | one_to_many | reference | required | target | - |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | reference | required | target | - |
-| `job_applications` | schedules | `interviews` | one_to_many | reference | required | source | - |
-| `interviews` | is scored via | `interview_scorecards` | one_to_many | reference | required | source | - |
-| `job_applications` | results in | `job_offers` | one_to_many | reference | required | source | - |
+| from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `job_postings` | is applied to via | `job_applications` | one_to_many | reference | required | source | restrict | reference | - |
+| `candidates` | submits | `job_applications` | one_to_many | reference | required | target | restrict | reference | - |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | reference | required | target | restrict | reference | - |
+| `job_applications` | schedules | `interviews` | one_to_many | reference | required | source | restrict | reference | - |
+| `interviews` | is scored via | `interview_scorecards` | one_to_many | reference | required | source | restrict | reference | - |
+| `job_applications` | results in | `job_offers` | one_to_many | reference | required | source | restrict | reference | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
-| from | verb | to | cardinality | necessity | owner_side | notes |
-| --- | --- | --- | --- | --- | --- | --- |
-| `candidates` | has owning recruiter | `users` | many_to_many | optional | source | - |
-| `job_postings` | has publisher | `users` | many_to_many | required | source | - |
-| `job_applications` | has owning recruiter | `users` | many_to_many | required | source | - |
-| `interviews` | has coordinator and panelists | `users` | many_to_many | required | source | - |
-| `interview_scorecards` | has interviewer as author | `users` | many_to_many | required | source | - |
-| `job_offers` | has approver | `users` | many_to_many | required | source | - |
+| from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `candidates` | has owning recruiter | `users` | many_to_many | optional | source | clear | reference | - |
+| `job_postings` | has publisher | `users` | many_to_many | required | source | restrict | reference | - |
+| `job_applications` | has owning recruiter | `users` | many_to_many | required | source | restrict | reference | - |
+| `interviews` | has coordinator and panelists | `users` | many_to_many | required | source | restrict | reference | - |
+| `interview_scorecards` | has interviewer as author | `users` | many_to_many | required | source | restrict | reference | - |
+| `job_offers` | has approver | `users` | many_to_many | required | source | restrict | reference | - |
 
 ### 5.3 Cross-scope edges
 
@@ -124,49 +124,49 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 <details>
 <summary>41 context edges</summary>
 
-| from | verb | to | cardinality | necessity | notes |
-| --- | --- | --- | --- | --- | --- |
-| `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | - |
-| `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | required | - |
-| `candidates` | noted_via | `recruiter_interactions` | one_to_many | optional | - |
-| `candidates` | consents_via | `candidate_consents` | one_to_many | required | - |
-| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | required | - |
-| `candidates` | discloses_via | `fcra_disclosures` | one_to_many | required | - |
-| `job_applications` | transitions_via | `application_stage_transitions` | one_to_many | required | - |
-| `job_postings` | syndicates_via | `job_posting_distributions` | one_to_many | optional | - |
-| `job_postings` | asks | `application_screening_questions` | one_to_many | optional | - |
-| `job_applications` | answers_via | `application_screening_answers` | one_to_many | optional | - |
-| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | optional | - |
-| `interview_kits` | shapes | `interviews` | one_to_many | optional | - |
-| `interviews` | convenes | `interview_panels` | one_to_one | required | - |
-| `interview_panels` | produces | `interview_scorecards` | one_to_many | optional | - |
-| `interviewer_availability_slots` | booked_for | `interviews` | one_to_one | optional | - |
-| `job_offers` | evolves_through | `offer_versions` | one_to_many | required | - |
-| `job_offers` | gated_by | `offer_approvals` | one_to_many | optional | - |
-| `candidates` | submits_via | `data_subject_requests` | one_to_many | optional | - |
-| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | optional | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | - |
-| `job_applications` | disposed_via | `application_dispositions` | one_to_many | optional | - |
-| `job_applications` | logged_via | `applicant_flow_records` | one_to_one | required | - |
-| `candidates` | documented_via | `candidate_documents` | one_to_many | optional | - |
-| `candidates` | annotated_via | `candidate_notes` | one_to_many | optional | - |
-| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | - |
-| `job_profiles` | feeds | `job_postings` | one_to_many | optional | - |
-| `skill_profiles` | feeds | `candidates` | one_to_many | optional | - |
-| `job_requisitions` | is advertised through | `job_postings` | one_to_many | required | - |
-| `job_requisitions` | receives | `job_applications` | one_to_many | required | - |
-| `candidate_referrals` | introduces | `candidates` | one_to_many | required | - |
-| `recruitment_agencies` | sources | `candidates` | one_to_many | required | - |
-| `recruitment_events` | attracts | `candidates` | one_to_many | required | - |
-| `talent_pools` | groups | `candidates` | many_to_many | required | - |
-| `job_applications` | requires | `candidate_assessments` | one_to_many | required | - |
-| `job_offers` | is contingent on | `background_checks` | one_to_many | required | - |
-| `job_offers` | spawns | `onboarding_journeys` | one_to_one | required | - |
-| `job_offers` | triggers | `benefit_enrollments` | one_to_one | required | - |
-| `job_offers` | seeds | `compensation_statements` | one_to_one | required | - |
-| `candidates` | becomes | `employees` | one_to_one | required | - |
-| `job_offers` | spawns pre-employee record | `pre_employees` | one_to_one | required | - |
-| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | - |
+| from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | clear | reference | - |
+| `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | required | restrict | reference | - |
+| `candidates` | noted_via | `recruiter_interactions` | one_to_many | optional | clear | reference | - |
+| `candidates` | consents_via | `candidate_consents` | one_to_many | required | cascade | parent | - |
+| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | required | restrict | reference | - |
+| `candidates` | discloses_via | `fcra_disclosures` | one_to_many | required | cascade | parent | - |
+| `job_applications` | transitions_via | `application_stage_transitions` | one_to_many | required | cascade | parent | - |
+| `job_postings` | syndicates_via | `job_posting_distributions` | one_to_many | optional | cascade | parent | - |
+| `job_postings` | asks | `application_screening_questions` | one_to_many | optional | cascade | parent | - |
+| `job_applications` | answers_via | `application_screening_answers` | one_to_many | optional | cascade | parent | - |
+| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | optional | cascade | parent | - |
+| `interview_kits` | shapes | `interviews` | one_to_many | optional | clear | reference | - |
+| `interviews` | convenes | `interview_panels` | one_to_one | required | cascade | parent | - |
+| `interview_panels` | produces | `interview_scorecards` | one_to_many | optional | cascade | parent | - |
+| `interviewer_availability_slots` | booked_for | `interviews` | one_to_one | optional | clear | reference | - |
+| `job_offers` | evolves_through | `offer_versions` | one_to_many | required | cascade | parent | - |
+| `job_offers` | gated_by | `offer_approvals` | one_to_many | optional | cascade | parent | - |
+| `candidates` | submits_via | `data_subject_requests` | one_to_many | optional | cascade | parent | - |
+| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | optional | cascade | parent | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | cascade | parent | - |
+| `job_applications` | disposed_via | `application_dispositions` | one_to_many | optional | cascade | parent | - |
+| `job_applications` | logged_via | `applicant_flow_records` | one_to_one | required | cascade | parent | - |
+| `candidates` | documented_via | `candidate_documents` | one_to_many | optional | cascade | parent | - |
+| `candidates` | annotated_via | `candidate_notes` | one_to_many | optional | cascade | parent | - |
+| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | clear | reference | - |
+| `job_profiles` | feeds | `job_postings` | one_to_many | optional | clear | reference | - |
+| `skill_profiles` | feeds | `candidates` | one_to_many | optional | clear | reference | - |
+| `job_requisitions` | is advertised through | `job_postings` | one_to_many | required | restrict | reference | - |
+| `job_requisitions` | receives | `job_applications` | one_to_many | required | restrict | reference | - |
+| `candidate_referrals` | introduces | `candidates` | one_to_many | required | restrict | reference | - |
+| `recruitment_agencies` | sources | `candidates` | one_to_many | required | restrict | reference | - |
+| `recruitment_events` | attracts | `candidates` | one_to_many | required | restrict | reference | - |
+| `talent_pools` | groups | `candidates` | many_to_many | required | restrict | reference | - |
+| `job_applications` | requires | `candidate_assessments` | one_to_many | required | restrict | reference | - |
+| `job_offers` | is contingent on | `background_checks` | one_to_many | required | restrict | reference | - |
+| `job_offers` | spawns | `onboarding_journeys` | one_to_one | required | restrict | reference | - |
+| `job_offers` | triggers | `benefit_enrollments` | one_to_one | required | restrict | reference | - |
+| `job_offers` | seeds | `compensation_statements` | one_to_one | required | restrict | reference | - |
+| `candidates` | becomes | `employees` | one_to_one | required | restrict | reference | - |
+| `job_offers` | spawns pre-employee record | `pre_employees` | one_to_one | required | restrict | reference | - |
+| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | restrict | reference | - |
 
 </details>
 
