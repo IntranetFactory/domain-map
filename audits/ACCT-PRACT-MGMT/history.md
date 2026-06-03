@@ -459,3 +459,47 @@ UI for spot-check (unchanged):
 - https://tests.semantius.app/domain_map/handoff_processes
 - https://tests.semantius.app/domain_map/data_object_relationships
 - https://tests.semantius.app/domain_map/domains
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+M1 hard fail cured. ACCT-PRACT-MGMT (domain_id=152) went from 0 `domain_modules` to 3 `module_kind='full'` modules. Scope of this pass was modules + entity assignment ONLY: linked the 6 existing capabilities into modules, assigned the 6 existing `domain_data_objects` (2 master + 4 contributor) at their existing role + necessity. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. Loader: `.tmp_deploy/modularize_acct_pract_mgmt_2026-06-02.ts` (idempotent; re-run is a no-op). All `semantius call crud postgrestRequest` calls returned cleanly; zero JWT errors.
+
+The prior audit's Pass-2 5-to-7-module proposal assumed new masters (acct_engagement_proposals, acct_workflow_templates / tasks, acct_client_documents / messages, acct_invoices / payment_transactions / retainer_balances, etc.) that remain Bucket 3 / Phase 0 candidates. Those entities are out of scope for a reuse-only modularization, so the practical Rule #14 floor with only the 6 existing data_objects is a 3-module split that keeps each capability placed, each master single-mastered, and no module empty. When the Bucket 3 entities land via a future Phase A/B pass, the 3 modules can be split further toward the 5-to-7 shape (notably carving ACCT-TAX-RETURNS out of TAX-RETURN-PREP, ACCT-ENGAGEMENT-LTR-MGMT out of ENGAGEMENT-WORKFLOW, and ACCT-CLIENT-PORTAL out of CLIENT-PORTAL-BILLING).
+
+### Module split
+
+| module (code, id) | capabilities | data_objects (role, necessity) |
+| --- | --- | --- |
+| ACCT-PRACT-MGMT-ENGAGEMENT-WORKFLOW (id=207) | ACCT-WORKFLOW (434), ACCT-DEADLINE-MGMT (438), ACCT-ENGAGEMENT-LTR (437) | client_engagements (401, **master**, required); engagement_letters (394, contributor, required; LEGAL-PRACT-MGMT-mastered); crm_contacts (98, contributor, required; CRM-mastered) |
+| ACCT-PRACT-MGMT-TAX-RETURN-PREP (id=208) | ACCT-DOC-MGMT (439) | tax_returns (400, **master**, required); supplier_invoices (75, contributor, required; S2P-mastered) |
+| ACCT-PRACT-MGMT-CLIENT-PORTAL-BILLING (id=209) | ACCT-CLIENT-PORTAL (435), ACCT-TIME-BILLING (436) | time_entries (162, contributor, required; WFM-mastered) |
+
+### Counts
+
+- domain_modules inserted: 3 (all `module_kind='full'`, `record_status='new'`, `catalog_tagline=''`, `catalog_description=''`).
+- domain_module_capabilities inserted: 6 (all 6 domain capabilities placed in exactly one module; M4 satisfied).
+- domain_module_data_objects inserted: 6 (matches the 6 `domain_data_objects` rows 1:1; roles + necessity preserved verbatim).
+- Masters: tax_returns (400) and client_engagements (401), each master in exactly one module (M7 single-master satisfied).
+- Empty modules: 0 (every module has >=1 capability and >=1 data_object; M6 satisfied).
+- Rule #14: 6 capabilities -> >=2 full modules required; 3 delivered. PASS.
+
+### Verification (live re-query)
+
+- `/domain_modules?domain_id=eq.152`: 3 rows, ids 207-209, all full, all `record_status='new'`.
+- DMC rows: 6; capabilities placed 6/6 (434, 435, 436, 437, 438, 439).
+- DMDO rows: 6; master 400 in 1 module, master 401 in 1 module; no empty module.
+- Idempotent re-run: second run inserted nothing.
+
+### Deferred gaps (owed but out of this pass's scope)
+
+- **Per-module system skills (Rule #17 -> F2/F3).** Each of the 3 new modules now owes exactly one `system` skill with `domain_module_id` set, and the legacy `acct-pract-mgmt-system` skill id=25 (`domain_module_id=null`) needs retire-and-split with its 4-tool surface redistributed and extended (no `mutate`/`fetch`/`inbound` today; `send_email` -> `notify_person` per F7). Now agent-actionable since modules exist (state.yaml `b1a` B1A-MODULE-SKILLS).
+- **Catalog UX backfill (M8/A4, Rule #20).** All 3 modules ship empty `catalog_tagline` / `catalog_description`, plus the domain-level pair on domains.id=152 is still empty. Buyer-voice wording needs user authoring/approval (state.yaml b1a B1A-MODULE-SKILLS notes the per-module copy; the domain-level copy stays Bucket 2 / b1b under Rule #20).
+- **Missing-master candidates (now agent-flaggable as b3).** The reuse-only split leaves TAX-RETURN-PREP, ENGAGEMENT-WORKFLOW and CLIENT-PORTAL-BILLING coarser than the eventual target shape because the per-capability masters do not exist yet: acct_workflow_templates / acct_workflow_tasks / acct_capacity_forecasts / acct_tax_calendar_deadlines (ACCT-WORKFLOW + ACCT-DEADLINE-MGMT), acct_engagement_proposals / acct_e_signature_envelopes (ACCT-ENGAGEMENT-LTR), acct_client_documents / acct_client_messages (ACCT-CLIENT-PORTAL + ACCT-DOC-MGMT), acct_invoices / acct_payment_transactions / acct_retainer_balances (ACCT-TIME-BILLING). Until they exist, ACCT-DOC-MGMT, ACCT-CLIENT-PORTAL and ACCT-TIME-BILLING are realized only by contributor data_objects, not by a domain-owned master.
+- **Module-scoped backfills now unblocked by M1 cure (were b1b-on-M1).** B10b source-side FK on handoffs 338/339/340 (338 + 340 from ACCT-PRACT-MGMT-TAX-RETURN-PREP id=208 since tax_returns masters there; 339 from ACCT-PRACT-MGMT-ENGAGEMENT-WORKFLOW id=207 since engagement_letters lives there); event-332 intra-domain fan-out; B12 lifecycle-state realizing-module assignment. These remain deferred to the next Validate pass (this pass was modules + entity assignment only) but their M1 blocker is resolved.
+
+UI for spot-check:
+- https://tests.semantius.app/domain_map/domain_modules?domain_id=eq.152
+- https://tests.semantius.app/domain_map/domain_module_capabilities
+- https://tests.semantius.app/domain_map/domain_module_data_objects

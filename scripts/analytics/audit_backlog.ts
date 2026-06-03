@@ -69,11 +69,14 @@ async function get(path: string): Promise<any[]> {
   return JSON.parse(stdout);
 }
 
-const [domains, modules, capDomains, ddo, bfd, skills, handoffs, handoffProc, solDomains] = await Promise.all([
+const [domains, modules, capDomains, dmdoMasters, bfd, skills, handoffs, handoffProc, solDomains] = await Promise.all([
   get(`/domains?select=id,domain_code,domain_name,crud_percentage,business_logic,min_org_size,cost_band,usa_market_size_usd_m,market_size_source_year&limit=10000`),
   get(`/domain_modules?select=id,domain_id,domain_module_code&limit=10000`),
   get(`/capability_domains?select=domain_id,capability_id&limit=10000`),
-  get(`/domain_data_objects?role=eq.master&select=domain_id,data_object_id&limit=10000`),
+  // Masters come from the module junction (domain_data_objects retired 2026-06-02); rolled up
+  // to domain via the module->domain map below. Un-modularized domains report zero masters (an
+  // M1 failure, surfaced as no modules), which is the correct post-retirement signal.
+  get(`/domain_module_data_objects?role=eq.master&select=domain_module_id,data_object_id&limit=10000`),
   get(`/business_function_domains?select=domain_id&limit=10000`),
   get(`/skills?skill_type=eq.system&select=id,domain_module_id&limit=10000`),
   get(`/handoffs?select=id,source_domain_id,target_domain_id&limit=20000`),
@@ -93,9 +96,14 @@ for (const c of capDomains) {
   capCountByDomain.set(c.domain_id, (capCountByDomain.get(c.domain_id) ?? 0) + 1);
 }
 
+const moduleToDomain = new Map<number, number>();
+for (const m of modules) moduleToDomain.set(m.id, m.domain_id);
+
 const masterCountByDomain = new Map<number, number>();
-for (const d of ddo) {
-  masterCountByDomain.set(d.domain_id, (masterCountByDomain.get(d.domain_id) ?? 0) + 1);
+for (const d of dmdoMasters) {
+  const domId = moduleToDomain.get(d.domain_module_id);
+  if (domId == null) continue;
+  masterCountByDomain.set(domId, (masterCountByDomain.get(domId) ?? 0) + 1);
 }
 
 const bfCountByDomain = new Map<number, number>();

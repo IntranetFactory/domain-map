@@ -1,10 +1,67 @@
 schema_version: 2
 domain: FMIS
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-05-31"
+next_action_by: agent
+last_audit: "2026-06-02"
 
 b1a:
+  - id: B1A-SYSTEM-SKILLS
+    summary: "Rule #17 / F2 / F3: 4 new modules have zero per-module system skills; legacy domain-level fmis-system (id 61) still anchored at domain level."
+    finding: >-
+      FMIS modularized 2026-06-02 into 4 full modules (252 FMIS-FIELD-CROP-PLANNING,
+      253 FMIS-FIELD-OPS-RECORDS, 254 FMIS-PRECISION-AG, 255 FMIS-INPUT-INVENTORY-ANALYTICS),
+      but no skills.domain_module_id is set on any of them. Rule #17 requires exactly one system
+      skill per domain_modules row. The legacy skills.id=61 (skill_name='fmis-system',
+      skill_type='system', domain_id=154, domain_module_id=null) with 8 query_<entity> skill_tools
+      (all coverage_tier=platform) is the pre-modular pattern that F1 expects to retire once
+      module-level skills exist. The B1B-S1 prerequisite (modules exist) is now satisfied.
+    action: >-
+      Author one <module_code>_agent system skill per new module anchored via domain_module_id
+      (e.g. fmis_field_crop_planning_agent on 252, fmis_field_ops_records_agent on 253,
+      fmis_precision_ag_agent on 254, fmis_input_inventory_analytics_agent on 255) with the
+      appropriate query / create / update tools for each module's master roster; rebind the 8
+      existing platform-tier query_ tools onto the new skills; DELETE skills.id=61 only after the
+      new rows exist. Out of scope for the 2026-06-02 modules-only pass.
+    affected_modules: [252, 253, 254, 255]
+
+  - id: B1A-CATALOG-UX
+    summary: "A4 (Rule #20) + M8: domains.catalog_tagline / catalog_description empty on FMIS, and 4 new modules have no catalog UX prose."
+    finding: >-
+      domains.catalog_tagline = '' and catalog_description = '' for FMIS (id 154); Rule #20 requires
+      both populated in buyer voice (workflow + value), distinct from the analyst-voice domains.description.
+      Additionally the 4 new modules (252-255) were inserted with catalog_tagline / catalog_description
+      omitted (M8 module-level catalog UX), so the per-module buyer-facing surface is empty.
+    action: >-
+      Draft domain-level catalog_tagline + catalog_description AND per-module catalog UX for the 4
+      modules in buyer voice, surface to user for review per Rule #20 BEFORE PATCH, then write.
+      Independent of remaining bands; loadable now after user-approved wording.
+    affected_modules: [252, 253, 254, 255]
+
+  - id: B1A-B10B-BACKFILL
+    summary: "B10b source-side: 10/10 outbound handoffs carry NULL source_domain_module_id; now executable because FMIS has modules."
+    finding: >-
+      All 10 outbound FMIS handoffs still have source_domain_module_id=null. The B1B-S1 gate
+      (FMIS has no modules to point at) is now cleared by the 2026-06-02 modularization. Each
+      handoff's trigger_event data_object is mastered in exactly one new module, so the backfill
+      target is now deterministic.
+    action: >-
+      For each handoff set source_domain_module_id to the module mastering the trigger_event's
+      data_object: harvest_record.* (349,350) -> 253; field_application.recorded (351,352) -> 253;
+      planting_record.completed (965) -> 253; variable_rate_prescription.published (966) -> 254;
+      ag_input_inventory.low (967) -> 255; machinery_telemetry_record.captured (968) -> 254;
+      farm_field.boundary_updated (969) -> 252; crop_plan.committed (970) -> 252.
+    affected_handoffs:
+      - {handoff_id: 349, direction: outbound, source_domain: FMIS, target_domain: FOOD-TRACE, trigger_event: harvest_record.created, payload: harvest_records, null_field: source_domain_module_id}
+      - {handoff_id: 350, direction: outbound, source_domain: FMIS, target_domain: FARMER-DIRECT-SALES, trigger_event: harvest_record.created, payload: harvest_records, null_field: source_domain_module_id}
+      - {handoff_id: 351, direction: outbound, source_domain: FMIS, target_domain: FOOD-TRACE, trigger_event: field_application.recorded, payload: field_applications, null_field: source_domain_module_id}
+      - {handoff_id: 352, direction: outbound, source_domain: FMIS, target_domain: FSQM, trigger_event: field_application.recorded, payload: field_applications, null_field: source_domain_module_id}
+      - {handoff_id: 965, direction: outbound, source_domain: FMIS, target_domain: FOOD-TRACE, trigger_event: planting_record.completed, payload: planting_records, null_field: source_domain_module_id}
+      - {handoff_id: 966, direction: outbound, source_domain: FMIS, target_domain: TELEMATICS, trigger_event: variable_rate_prescription.published, payload: variable_rate_prescriptions, null_field: source_domain_module_id}
+      - {handoff_id: 967, direction: outbound, source_domain: FMIS, target_domain: ERP-FIN, trigger_event: ag_input_inventory.low, payload: ag_input_inventory, null_field: source_domain_module_id}
+      - {handoff_id: 968, direction: outbound, source_domain: FMIS, target_domain: TELEMATICS, trigger_event: machinery_telemetry_record.captured, payload: machinery_telemetry_records, null_field: source_domain_module_id}
+      - {handoff_id: 969, direction: outbound, source_domain: FMIS, target_domain: FOOD-TRACE, trigger_event: farm_field.boundary_updated, payload: farm_fields, null_field: source_domain_module_id}
+      - {handoff_id: 970, direction: outbound, source_domain: FMIS, target_domain: ERP-FIN, trigger_event: crop_plan.committed, payload: crop_plans, null_field: source_domain_module_id}
+
   - id: B1A-S4
     summary: "B11 hard fail: 0 data_object_aliases on 8 FMIS masters; needs alias drafts + user approval before insert."
     finding: >-
@@ -16,16 +73,16 @@ b1a:
       machinery_telemetry_records: task data / ISOXML record) but the exact alias_name and alias_type tuples are not yet drafted.
     action: >-
       Draft per-master alias rows (alias_name + alias_type), surface to user for approval per Rule #1,
-      then load via cluster-drafts loader. Independent of M-band; loadable now.
+      then load via cluster-drafts loader. Independent of remaining bands; loadable now.
     affected_masters:
-      - {data_object_id: 486, name: farm_fields, target_module_id: null, workflow: aliases-only}
-      - {data_object_id: 487, name: crop_plans, target_module_id: null, workflow: aliases-only}
-      - {data_object_id: 488, name: planting_records, target_module_id: null, workflow: aliases-only}
-      - {data_object_id: 489, name: field_applications, target_module_id: null, workflow: aliases-only}
-      - {data_object_id: 490, name: harvest_records, target_module_id: null, workflow: aliases-only}
-      - {data_object_id: 491, name: ag_input_inventory, target_module_id: null, workflow: aliases-only}
-      - {data_object_id: 492, name: variable_rate_prescriptions, target_module_id: null, workflow: aliases-only}
-      - {data_object_id: 493, name: machinery_telemetry_records, target_module_id: null, workflow: aliases-only}
+      - {data_object_id: 486, name: farm_fields, target_module_id: 252, workflow: aliases-only}
+      - {data_object_id: 487, name: crop_plans, target_module_id: 252, workflow: aliases-only}
+      - {data_object_id: 488, name: planting_records, target_module_id: 253, workflow: aliases-only}
+      - {data_object_id: 489, name: field_applications, target_module_id: 253, workflow: aliases-only}
+      - {data_object_id: 490, name: harvest_records, target_module_id: 253, workflow: aliases-only}
+      - {data_object_id: 491, name: ag_input_inventory, target_module_id: 255, workflow: aliases-only}
+      - {data_object_id: 492, name: variable_rate_prescriptions, target_module_id: 254, workflow: aliases-only}
+      - {data_object_id: 493, name: machinery_telemetry_records, target_module_id: 254, workflow: aliases-only}
 
   - id: B1A-S7
     summary: "B6 hard fail: 0 intra-domain data_object_relationships across 8 FMIS masters; 11 expected edges."
@@ -45,105 +102,45 @@ b1a:
     action: >-
       Author 11 intra-domain relationship rows with relationship_verb + inverse_verb + relationship_type
       + relationship_kind=reference + is_required + owner_side. Load via cluster-drafts loader.
-      Independent of M-band; loadable now.
+      Independent of remaining bands; loadable now.
     affected_masters:
-      - {data_object_id: 486, name: farm_fields, target_module_id: null, workflow: intra-domain-edges}
-      - {data_object_id: 487, name: crop_plans, target_module_id: null, workflow: intra-domain-edges}
-      - {data_object_id: 488, name: planting_records, target_module_id: null, workflow: intra-domain-edges}
-      - {data_object_id: 489, name: field_applications, target_module_id: null, workflow: intra-domain-edges}
-      - {data_object_id: 490, name: harvest_records, target_module_id: null, workflow: intra-domain-edges}
-      - {data_object_id: 491, name: ag_input_inventory, target_module_id: null, workflow: intra-domain-edges}
-      - {data_object_id: 492, name: variable_rate_prescriptions, target_module_id: null, workflow: intra-domain-edges}
-      - {data_object_id: 493, name: machinery_telemetry_records, target_module_id: null, workflow: intra-domain-edges}
-
-  - id: B1A-A4
-    summary: "A4 fail (Rule #20): domains.catalog_tagline and catalog_description both empty on FMIS."
-    finding: >-
-      domains.catalog_tagline = '' and catalog_description = '' for FMIS (id 154).
-      Rule #20 requires both populated in buyer voice (workflow + value), distinct from analyst voice
-      already present in domains.description.
-    action: >-
-      Draft both fields in buyer voice, surface to user for review BEFORE PATCH, then write.
-      Independent of M-band; loadable now after user-approved wording.
+      - {data_object_id: 486, name: farm_fields, target_module_id: 252, workflow: intra-domain-edges}
+      - {data_object_id: 487, name: crop_plans, target_module_id: 252, workflow: intra-domain-edges}
+      - {data_object_id: 488, name: planting_records, target_module_id: 253, workflow: intra-domain-edges}
+      - {data_object_id: 489, name: field_applications, target_module_id: 253, workflow: intra-domain-edges}
+      - {data_object_id: 490, name: harvest_records, target_module_id: 253, workflow: intra-domain-edges}
+      - {data_object_id: 491, name: ag_input_inventory, target_module_id: 255, workflow: intra-domain-edges}
+      - {data_object_id: 492, name: variable_rate_prescriptions, target_module_id: 254, workflow: intra-domain-edges}
+      - {data_object_id: 493, name: machinery_telemetry_records, target_module_id: 254, workflow: intra-domain-edges}
 
 b1b:
-  - id: B1B-S1
-    summary: "M1 / M2 hard fail: 0 domain_modules rows; needs Phase A loader after the 2-vs-3 module split decision (B3-S1)."
-    finding: >-
-      Zero rows in domain_modules for domain_id=154. With 8 capabilities the M2 floor demands >=2 full modules.
-      Recommended split shapes (subject to B3-S1 user pick): (a) 3-module (FMIS-FIELD-OPS, FMIS-HARVEST-YIELD,
-      FMIS-MACHINERY-TELEMETRY); (b) 2-module (FMIS-FIELD-OPS folding harvest in, FMIS-MACHINERY-TELEMETRY).
-    blocked_by:
-      - {type: user_decision, ref: B3-S1}
-    affected_masters:
-      - {data_object_id: 486, name: farm_fields, target_module_id: null, workflow: phase-A-module-split}
-      - {data_object_id: 487, name: crop_plans, target_module_id: null, workflow: phase-A-module-split}
-      - {data_object_id: 488, name: planting_records, target_module_id: null, workflow: phase-A-module-split}
-      - {data_object_id: 489, name: field_applications, target_module_id: null, workflow: phase-A-module-split}
-      - {data_object_id: 490, name: harvest_records, target_module_id: null, workflow: phase-A-module-split}
-      - {data_object_id: 491, name: ag_input_inventory, target_module_id: null, workflow: phase-A-module-split}
-      - {data_object_id: 492, name: variable_rate_prescriptions, target_module_id: null, workflow: phase-A-module-split}
-      - {data_object_id: 493, name: machinery_telemetry_records, target_module_id: null, workflow: phase-A-module-split}
-
-  - id: B1B-S2
-    summary: "M4 / M6 hard fail: all 8 capabilities are module-orphan; ships in B1A-S1's Phase A loader."
-    finding: >-
-      Every capability of FMIS (FMIS-FIELD-MAPPING, FMIS-CROP-PLANNING, FMIS-PLANTING-RECORDS,
-      FMIS-INPUT-INVENTORY, FMIS-HARVEST-TRACKING, FMIS-VARIABLE-RATE-PRESCRIPTION,
-      FMIS-MACHINERY-TELEMETRY, FMIS-YIELD-ANALYTICS) has zero realizing modules.
-      M4 (every capability has a realizing module) and M6 (every module realizes a capability)
-      both 0/8 until B1B-S1 lands.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-    affected_entities:
-      - FMIS-FIELD-MAPPING
-      - FMIS-CROP-PLANNING
-      - FMIS-PLANTING-RECORDS
-      - FMIS-INPUT-INVENTORY
-      - FMIS-HARVEST-TRACKING
-      - FMIS-VARIABLE-RATE-PRESCRIPTION
-      - FMIS-MACHINERY-TELEMETRY
-      - FMIS-YIELD-ANALYTICS
-
-  - id: B1B-S3
-    summary: "F1 partial fail: legacy domain-level system skill fmis-system (id 61, domain_module_id=null) needs retirement once per-module skills exist."
-    finding: >-
-      skills.id=61 (skill_name='fmis-system', skill_type='system', domain_id=154, domain_module_id=null)
-      with 8 query_<entity> skill_tools rows (all coverage_tier=platform) is the pre-modular pattern.
-      Rule #17 requires one system skill per domain_modules row anchored via domain_module_id.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-    action: >-
-      After B1B-S1 lands, author one <module_code>_agent system skill per new module with the
-      appropriate query / create / update tools; rebind / re-author the 8 platform-tier query_
-      tools onto the new skills; DELETE skills.id=61 only after the new rows exist.
-
   - id: B1B-S5
-    summary: "B12 hard fail: 0 data_object_lifecycle_states across 8 FMIS masters; gated on B1B-S1 (needs domain_module_id) and B2-S4 (pattern-flag decisions)."
+    summary: "B12 hard fail: 0 data_object_lifecycle_states across 8 FMIS masters; module_id anchors now exist, still gated on B2-S4 pattern-flag decisions."
     finding: >-
-      Zero rows in data_object_lifecycle_states for data_object_ids 486-493. Expected state machines:
-      crop_plans (draft -> committed -> in-progress -> harvested -> archived);
+      Zero rows in data_object_lifecycle_states for data_object_ids 486-493. The B1B-S1 module-id
+      gate is now cleared (4 modules exist), so domain_module_id anchors are available. Expected
+      state machines: crop_plans (draft -> committed -> in-progress -> harvested -> archived);
       planting_records (in-progress -> completed -> reconciled);
       field_applications (planned -> recorded -> REI-cleared -> verified);
       harvest_records (in-progress -> completed -> reconciled -> invoiced);
       variable_rate_prescriptions (drafted -> published -> dispatched -> consumed);
       ag_input_inventory (active -> low -> ordered -> received).
-      farm_fields and machinery_telemetry_records are candidates for the config-shape exemption (append-only history surfaces); needs B2-S4 call.
+      farm_fields and machinery_telemetry_records are candidates for the config-shape exemption
+      (append-only history surfaces); needs B2-S4 call.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
       - {type: user_decision, ref: B2-S4}
     affected_masters:
-      - {data_object_id: 486, name: farm_fields, target_module_id: null, workflow: lifecycle-or-config-exempt}
-      - {data_object_id: 487, name: crop_plans, target_module_id: null, workflow: lifecycle}
-      - {data_object_id: 488, name: planting_records, target_module_id: null, workflow: lifecycle}
-      - {data_object_id: 489, name: field_applications, target_module_id: null, workflow: lifecycle}
-      - {data_object_id: 490, name: harvest_records, target_module_id: null, workflow: lifecycle}
-      - {data_object_id: 491, name: ag_input_inventory, target_module_id: null, workflow: lifecycle}
-      - {data_object_id: 492, name: variable_rate_prescriptions, target_module_id: null, workflow: lifecycle}
-      - {data_object_id: 493, name: machinery_telemetry_records, target_module_id: null, workflow: lifecycle-or-config-exempt}
+      - {data_object_id: 486, name: farm_fields, target_module_id: 252, workflow: lifecycle-or-config-exempt}
+      - {data_object_id: 487, name: crop_plans, target_module_id: 252, workflow: lifecycle}
+      - {data_object_id: 488, name: planting_records, target_module_id: 253, workflow: lifecycle}
+      - {data_object_id: 489, name: field_applications, target_module_id: 253, workflow: lifecycle}
+      - {data_object_id: 490, name: harvest_records, target_module_id: 253, workflow: lifecycle}
+      - {data_object_id: 491, name: ag_input_inventory, target_module_id: 255, workflow: lifecycle}
+      - {data_object_id: 492, name: variable_rate_prescriptions, target_module_id: 254, workflow: lifecycle}
+      - {data_object_id: 493, name: machinery_telemetry_records, target_module_id: 254, workflow: lifecycle-or-config-exempt}
 
   - id: B1B-S9
-    summary: "B8 hard fail: 0 cross-domain outbound data_object_relationships from FMIS masters; partial gating on neighbor modularization."
+    summary: "B8 hard fail: 0 cross-domain outbound data_object_relationships from FMIS masters; gated on neighbor modularization."
     finding: >-
       Zero rows in data_object_relationships where data_object_id is an FMIS master and
       related_data_object_id is outside FMIS. 10 outbound handoffs imply at least 6 payload-target
@@ -157,7 +154,6 @@ b1b:
       - {type: domain_audit, blocking_domain: ERP-FIN, milestone: M1-plus-procurement-Phase-B}
     affected_handoffs:
       - {handoff_id: 349, direction: outbound, source_domain: FMIS, target_domain: FOOD-TRACE, trigger_event: harvest_record.created, payload: harvest_records, null_field: target_domain_module_id}
-      - {handoff_id: 350, direction: outbound, source_domain: FMIS, target_domain: FARMER-DIRECT-SALES, trigger_event: harvest_record.created, payload: harvest_records, null_field: source_domain_module_id}
       - {handoff_id: 351, direction: outbound, source_domain: FMIS, target_domain: FOOD-TRACE, trigger_event: field_application.recorded, payload: field_applications, null_field: target_domain_module_id}
       - {handoff_id: 352, direction: outbound, source_domain: FMIS, target_domain: FSQM, trigger_event: field_application.recorded, payload: field_applications, null_field: target_domain_module_id}
       - {handoff_id: 965, direction: outbound, source_domain: FMIS, target_domain: FOOD-TRACE, trigger_event: planting_record.completed, payload: planting_records, null_field: target_domain_module_id}
@@ -166,25 +162,6 @@ b1b:
       - {handoff_id: 968, direction: outbound, source_domain: FMIS, target_domain: TELEMATICS, trigger_event: machinery_telemetry_record.captured, payload: machinery_telemetry_records, null_field: target_domain_module_id}
       - {handoff_id: 969, direction: outbound, source_domain: FMIS, target_domain: FOOD-TRACE, trigger_event: farm_field.boundary_updated, payload: farm_fields, null_field: target_domain_module_id}
       - {handoff_id: 970, direction: outbound, source_domain: FMIS, target_domain: ERP-FIN, trigger_event: crop_plan.committed, payload: crop_plans, null_field: target_domain_module_id}
-
-  - id: B1B-S10
-    summary: "B10b source-side: 10/10 outbound handoffs carry NULL source_domain_module_id; gated on B1B-S1."
-    finding: >-
-      All 10 outbound FMIS handoffs have source_domain_module_id=null. Cannot be resolved until
-      FMIS has domain_modules rows whose data_object roster includes the trigger_event's data_object_id.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-    affected_handoffs:
-      - {handoff_id: 349, direction: outbound, source_domain: FMIS, target_domain: FOOD-TRACE, trigger_event: harvest_record.created, payload: harvest_records, null_field: source_domain_module_id}
-      - {handoff_id: 350, direction: outbound, source_domain: FMIS, target_domain: FARMER-DIRECT-SALES, trigger_event: harvest_record.created, payload: harvest_records, null_field: source_domain_module_id}
-      - {handoff_id: 351, direction: outbound, source_domain: FMIS, target_domain: FOOD-TRACE, trigger_event: field_application.recorded, payload: field_applications, null_field: source_domain_module_id}
-      - {handoff_id: 352, direction: outbound, source_domain: FMIS, target_domain: FSQM, trigger_event: field_application.recorded, payload: field_applications, null_field: source_domain_module_id}
-      - {handoff_id: 965, direction: outbound, source_domain: FMIS, target_domain: FOOD-TRACE, trigger_event: planting_record.completed, payload: planting_records, null_field: source_domain_module_id}
-      - {handoff_id: 966, direction: outbound, source_domain: FMIS, target_domain: TELEMATICS, trigger_event: variable_rate_prescription.published, payload: variable_rate_prescriptions, null_field: source_domain_module_id}
-      - {handoff_id: 967, direction: outbound, source_domain: FMIS, target_domain: ERP-FIN, trigger_event: ag_input_inventory.low, payload: ag_input_inventory, null_field: source_domain_module_id}
-      - {handoff_id: 968, direction: outbound, source_domain: FMIS, target_domain: TELEMATICS, trigger_event: machinery_telemetry_record.captured, payload: machinery_telemetry_records, null_field: source_domain_module_id}
-      - {handoff_id: 969, direction: outbound, source_domain: FMIS, target_domain: FOOD-TRACE, trigger_event: farm_field.boundary_updated, payload: farm_fields, null_field: source_domain_module_id}
-      - {handoff_id: 970, direction: outbound, source_domain: FMIS, target_domain: ERP-FIN, trigger_event: crop_plan.committed, payload: crop_plans, null_field: source_domain_module_id}
 
 b2:
   - id: B2-S1
@@ -241,31 +218,40 @@ b2:
       - "(c) leave all flags false; record the consideration outside notes (gap report)"
 
 b3:
-  - id: B3-S1
-    candidate: "Module split shape: 2 modules vs 3 modules for FMIS Phase A."
+  - id: B3-MASTER-SOIL-ZONES
+    candidate: "soil_zones (+ soil_test_results)"
     rationale: >-
-      The 3-module split proposed in the prior audit (FMIS-FIELD-OPS / FMIS-HARVEST-YIELD / FMIS-MACHINERY-TELEMETRY)
-      corresponds to John Deere Operations Center's split. A 2-module split (FMIS-FIELD-OPS folding harvest in,
-      FMIS-MACHINERY-TELEMETRY) lumping harvest into FIELD-OPS is also defensible, matches Conservis / AgriWebb's
-      single-module surface for smallholders. Climate FieldView splits into 'decision' (plan + Rx) and 'record'
-      (as-planted / as-applied / as-harvested); Trimble splits along precision-ag vs general-FMIS lines.
-      Highest-leverage Bucket 3 item because it gates B1B-S1.
+      Missing-master candidate feeding FMIS-PRECISION-AG. variable_rate_prescriptions is mastered
+      (492) but its upstream inputs (soil-type / productivity zones, soil-test sample results) have
+      no master; they are implicit in farm_fields.productivity-zones prose and in the prescription
+      result. Every precision-ag flagship treats soil sampling + zone delineation as a first-class
+      data layer that prescriptions are authored from. If loaded, masters in FMIS-PRECISION-AG (254).
     vendor_evidence:
-      - {vendor: Conservis, evidence: 1st_class}
-      - {vendor: AgriWebb, evidence: 1st_class}
       - {vendor: Climate FieldView, evidence: 1st_class}
-      - {vendor: John Deere Operations Center, evidence: 1st_class}
       - {vendor: Trimble Ag Software, evidence: 1st_class}
-    proposed_module: null
+      - {vendor: Granular, evidence: secondary}
+    proposed_module: FMIS-PRECISION-AG
+
+  - id: B3-MASTER-WEATHER-OBS
+    candidate: weather_observations
+    rationale: >-
+      Missing-master candidate. field_applications already records weather-at-application as inline
+      fields, and crop planning / spray-window decisions depend on a weather feed, but there is no
+      weather_observations master. Flagship FMIS authors ingest field-level weather (station + modeled)
+      as a queryable layer. If loaded, masters in FMIS-FIELD-OPS-RECORDS (253) or a future agronomy module.
+    vendor_evidence:
+      - {vendor: Climate FieldView, evidence: 1st_class}
+      - {vendor: AgWorld, evidence: secondary}
+    proposed_module: FMIS-FIELD-OPS-RECORDS
 
   - id: B3-S2
-    candidate: "Agronomic recommendations / agronomy as a possibly-separate module."
+    candidate: "agronomic_recommendations (agronomy as a possibly-separate module)"
     rationale: >-
       Climate FieldView and Granular both ship agronomic-advisor surfaces (planting-window recommendations,
       spray-window recommendations, soil-zone recommendations) as distinct from the record-keeping master.
-      Current FMIS footprint has no agronomic_recommendations / soil_test_results / soil_zones / weather_observations
-      masters; the recommendation surface is implicit in variable_rate_prescriptions (the result) but not in the
-      upstream data. Candidate MISSING entity cluster, possibly a 4th module.
+      Current FMIS footprint has no agronomic_recommendations master; the recommendation surface is implicit
+      in variable_rate_prescriptions (the result) but not in the upstream decision layer. Candidate MISSING
+      entity cluster, possibly a 5th module (FMIS-AGRONOMY) or an addition to FMIS-PRECISION-AG.
     vendor_evidence:
       - {vendor: Climate FieldView, evidence: 1st_class}
       - {vendor: Granular, evidence: 1st_class}
@@ -276,9 +262,11 @@ b3:
     candidate: "Livestock / cattle-grazing scope: in-scope or separate LIVESTOCK-MGMT domain."
     rationale: >-
       AgriWebb is primarily a livestock-FMIS (paddocks, mob movements, individual-animal records). Current FMIS
-      footprint reads as crop-only. Either (a) FMIS is implicitly crop-FMIS and a separate domain (LIVESTOCK-MGMT)
-      should be queued, (b) FMIS covers both and needs livestock_records / pasture_assignments / animal_movements
-      masters added, (c) the AgriWebb solution_domain row should drop to secondary or partial coverage_level.
+      footprint reads as crop-only, and the 2026-06-02 modularization tagged all 4 modules industry_id=22
+      (Crop Production), reinforcing the crop-only read. Either (a) FMIS is implicitly crop-FMIS and a separate
+      domain (LIVESTOCK-MGMT) should be queued, (b) FMIS covers both and needs livestock_records /
+      pasture_assignments / animal_movements masters added (would need a livestock module), (c) the AgriWebb
+      solution_domain row should drop to secondary or partial coverage_level.
     vendor_evidence:
       - {vendor: AgriWebb, evidence: 1st_class}
       - {vendor: Cattle Manager, evidence: secondary}

@@ -1,30 +1,90 @@
 schema_version: 2
 domain: LCAP
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-05-31"
+next_action_by: agent
+last_audit: "2026-06-02"
 
 b1a:
+  - id: B1A-SYSTEM-SKILLS
+    summary: "Author 2 module-anchored system skills (one per LCAP module) and retire legacy domain-level skill lcap-system (id 79); rename 5 legacy extend_* tools to lcap_* shape."
+    finding: >
+      F2 hard-fail now actionable. With modules live (265 LCAP-VISUAL-COMPOSITION,
+      266 LCAP-RUNTIME-LIFECYCLE), Rule #17 requires one domain_module_id-anchored
+      system skill per module, but zero exist. The legacy domain_id-anchored system
+      skill lcap-system (id 79) remains with 5 query-only skill_tools (564
+      query_extend_apps, 565 query_extend_business_objects, 566 query_extend_workflows,
+      822 query_extend_pages, 823 query_extend_data_sources) still carrying the legacy
+      extend_* tool_name even though the underlying data_objects were renamed lcap_*.
+      Rule #17 floor of 5-20 tools per system skill (query + mutate + workflow-gate mix)
+      is below the current 5 query-only set.
+    action: >
+      Author 2 new domain_module_id-anchored system skills (265, 266), rename the 5 tools
+      (extend_* -> lcap_*), reassign skill_tools to the new skills per module shape, add
+      mutate + workflow-gate tools to clear the Rule #17 floor, then DELETE skill 79.
+    affected_modules: [265, 266]
+    affected_entities:
+      - lcap-system
+      - query_extend_apps
+      - query_extend_business_objects
+      - query_extend_workflows
+      - query_extend_pages
+      - query_extend_data_sources
+  - id: B1A-LIFECYCLE-STATES
+    summary: "Author ~25 data_object_lifecycle_states across the 5 LCAP masters, each carrying its owning domain_module_id per M5."
+    finding: >
+      B12 hard-fail, now actionable with modules live. Zero lifecycle states across the
+      5 LCAP masters. Each has an obvious state machine: draft -> validated -> published
+      -> deprecated -> retired for apps/pages/workflows/business_objects (masters in 265
+      for apps/pages/business_objects, 266 for workflows); configured -> tested -> active
+      -> degraded -> retired for lcap_data_sources (265). requires_permission=true on
+      publish, deprecate, retire gates. No config-shape exemption applies (Rule #12).
+    action: >
+      Draft state machines and load via a focused loader. Each row sets domain_module_id
+      to the master's owning module (220/221/715/716 -> 265; 222 -> 266) per M5. notes=''
+      per Rule #15.
+    affected_masters:
+      - {data_object_id: 220, name: lcap_apps, target_module_id: 265, workflow: lifecycle}
+      - {data_object_id: 221, name: lcap_business_objects, target_module_id: 265, workflow: lifecycle}
+      - {data_object_id: 222, name: lcap_workflows, target_module_id: 266, workflow: lifecycle}
+      - {data_object_id: 715, name: lcap_pages, target_module_id: 265, workflow: lifecycle}
+      - {data_object_id: 716, name: lcap_data_sources, target_module_id: 265, workflow: connection}
   - id: B1A-S5
     summary: "Author 8 intra-domain data_object_relationships across the 5 LCAP masters (lcap_apps, lcap_business_objects, lcap_workflows, lcap_pages, lcap_data_sources)."
-    finding: "B6 hard-fail. Zero intra-domain data_object_relationships exist between LCAP masters even though the cluster is internally coupled. Minimum coherent edge set: lcap_apps contains_pages lcap_pages (1:N), lcap_apps contains_workflows lcap_workflows (1:N), lcap_apps defines lcap_business_objects (1:N), lcap_apps binds_to lcap_data_sources (M:N), lcap_pages displays lcap_business_objects (M:N), lcap_workflows operates_on lcap_business_objects (M:N), lcap_workflows triggers_from lcap_pages (M:N), lcap_business_objects sources_from lcap_data_sources (M:N)."
-    action: "Draft 8 rows in cluster-drafts format (verb + cardinality + necessity + owner_side, notes='' per Rule #15, record_status default 'new' per Rule #1). Load via scripts/loaders/load_cluster_drafts.ts. Independent of B2-S1 module split decision; can run any time."
+    finding: >
+      B6 hard-fail. Zero intra-domain data_object_relationships exist between LCAP masters
+      even though the cluster is internally coupled. Minimum coherent edge set: lcap_apps
+      contains_pages lcap_pages (1:N), lcap_apps contains_workflows lcap_workflows (1:N),
+      lcap_apps defines lcap_business_objects (1:N), lcap_apps binds_to lcap_data_sources
+      (M:N), lcap_pages displays lcap_business_objects (M:N), lcap_workflows operates_on
+      lcap_business_objects (M:N), lcap_workflows triggers_from lcap_pages (M:N),
+      lcap_business_objects sources_from lcap_data_sources (M:N).
+    action: >
+      Draft 8 rows in cluster-drafts format (verb + cardinality + necessity + owner_side,
+      notes='' per Rule #15). Load via scripts/loaders/load_cluster_drafts.ts. Independent
+      of the module build; can run any time.
     affected_masters:
-      - {data_object_id: 220, name: lcap_apps, target_module_id: null, workflow: composition}
-      - {data_object_id: 221, name: lcap_business_objects, target_module_id: null, workflow: composition}
-      - {data_object_id: 222, name: lcap_workflows, target_module_id: null, workflow: runtime}
-      - {data_object_id: 715, name: lcap_pages, target_module_id: null, workflow: composition}
-      - {data_object_id: 716, name: lcap_data_sources, target_module_id: null, workflow: integration}
+      - {data_object_id: 220, name: lcap_apps, target_module_id: 265, workflow: composition}
+      - {data_object_id: 221, name: lcap_business_objects, target_module_id: 265, workflow: composition}
+      - {data_object_id: 222, name: lcap_workflows, target_module_id: 266, workflow: runtime}
+      - {data_object_id: 715, name: lcap_pages, target_module_id: 265, workflow: composition}
+      - {data_object_id: 716, name: lcap_data_sources, target_module_id: 265, workflow: integration}
   - id: B1A-S8
     summary: "Author ~20 data_object_aliases across the 5 LCAP masters covering OutSystems, Mendix, Power Apps, Appian, Pega vendor terminology."
-    finding: "B11 hard-fail. Zero data_object_aliases on any LCAP master even though every flagship vendor uses its own naming (OutSystems module/entity, Mendix domain entity/microflow, Power Apps canvas app/table/flow, Appian record type/process model, Pega case type). Without aliases the architect agent can't bridge vendor terminology back into the canonical names."
-    action: "Draft alias tuples (5 masters x ~4 aliases) and load via cluster-drafts loader. Tuples need authoring before bulk insert; loader pre-flight per Rule #15 keeps notes empty. Independent of B2-S1."
+    finding: >
+      B11 hard-fail. Zero data_object_aliases on any LCAP master even though every flagship
+      vendor uses its own naming (OutSystems module/entity, Mendix domain entity/microflow,
+      Power Apps canvas app/table/flow, Appian record type/process model, Pega case type).
+      Without aliases the architect agent can't bridge vendor terminology back into the
+      canonical names.
+    action: >
+      Draft alias tuples (5 masters x ~4 aliases) and load via cluster-drafts loader. Loader
+      pre-flight per Rule #15 keeps notes empty. Independent of the module build.
     affected_masters:
-      - {data_object_id: 220, name: lcap_apps, target_module_id: null, workflow: composition}
-      - {data_object_id: 221, name: lcap_business_objects, target_module_id: null, workflow: composition}
-      - {data_object_id: 222, name: lcap_workflows, target_module_id: null, workflow: runtime}
-      - {data_object_id: 715, name: lcap_pages, target_module_id: null, workflow: composition}
-      - {data_object_id: 716, name: lcap_data_sources, target_module_id: null, workflow: integration}
+      - {data_object_id: 220, name: lcap_apps, target_module_id: 265, workflow: composition}
+      - {data_object_id: 221, name: lcap_business_objects, target_module_id: 265, workflow: composition}
+      - {data_object_id: 222, name: lcap_workflows, target_module_id: 266, workflow: runtime}
+      - {data_object_id: 715, name: lcap_pages, target_module_id: 265, workflow: composition}
+      - {data_object_id: 716, name: lcap_data_sources, target_module_id: 265, workflow: integration}
     vendor_evidence:
       - OutSystems
       - Mendix
@@ -33,71 +93,59 @@ b1a:
       - Pega Platform
   - id: B1A-S14-ITSM
     summary: "Author 1 cross-domain data_object_relationship from lcap_apps to ITSM service_incidents covering handoff 706."
-    finding: "B8 hard-fail (partial). 4 LCAP outbound handoffs have zero cross-domain data_object_relationships. Of the 4, handoff 706 (lcap_app.deployment_failed -> ITSM, payload service_incidents) is directly resolvable today because service_incidents is a known ITSM master. The other 3 outbound rows (704 APP-PAAS, 705 IPAAS, 707 DCG) need target-domain master verification first."
-    action: "Insert 1 data_object_relationships row (lcap_apps opens service_incidents) via the cluster-drafts pattern. Bundle with B1A-S5 if running together. notes='' per Rule #15."
+    finding: >
+      B8 hard-fail (partial). 4 LCAP outbound handoffs have zero cross-domain
+      data_object_relationships. Of the 4, handoff 706 (lcap_app.deployment_failed -> ITSM,
+      payload service_incidents) is directly resolvable today because service_incidents is
+      a known ITSM master. The other 3 outbound rows (704 APP-PAAS, 705 IPAAS, 707 DCG)
+      need target-domain master verification first (see B1B-S14-OTHERS).
+    action: >
+      Insert 1 data_object_relationships row (lcap_apps opens service_incidents) via the
+      cluster-drafts pattern. Bundle with B1A-S5 if running together. notes='' per Rule #15.
     affected_handoffs:
       - {handoff_id: 706, direction: outbound, source_domain: LCAP, target_domain: ITSM, trigger_event: lcap_app.deployment_failed, payload: service_incidents, null_field: cross_domain_relationship_missing}
-
-b1b:
-  - id: B1B-S1
-    summary: "Author the LCAP domain_modules (M1/M2/M4/M6 cure) once user picks the module split shape."
-    finding: "M1, M2, M4, M6 hard-fail. Zero domain_modules rows for LCAP with 7 capabilities. Rule #14 requires >=2 modules for domains with >=3 capabilities. Every M5, M7, M8, B9b, B10b, B12, F1, F2, F3, F4, F5, E1-E5 check inherits the gap."
-    blocked_by:
-      - {type: user_decision, ref: B2-S1}
-    affected_modules: []
-    affected_entities:
-      - lcap_apps
-      - lcap_business_objects
-      - lcap_workflows
-      - lcap_pages
-      - lcap_data_sources
-  - id: B1B-S9
-    summary: "Author ~25 data_object_lifecycle_states rows across the 5 LCAP masters."
-    finding: "B12 hard-fail. Zero lifecycle states across 5 LCAP masters; every master has an obvious state machine (draft -> validated -> published -> deprecated -> retired for apps/pages/workflows/business_objects; configured -> tested -> active -> degraded -> retired for data_sources). Rule #12 requires lifecycle states on master+required data_objects; no config-shape exemption applies. requires_permission=true on publish, deprecate, retire gates."
-    action: "Draft state machines, load via focused loader. Each row needs domain_module_id per M5 once modules exist."
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-    affected_masters:
-      - {data_object_id: 220, name: lcap_apps, target_module_id: null, workflow: lifecycle}
-      - {data_object_id: 221, name: lcap_business_objects, target_module_id: null, workflow: lifecycle}
-      - {data_object_id: 222, name: lcap_workflows, target_module_id: null, workflow: lifecycle}
-      - {data_object_id: 715, name: lcap_pages, target_module_id: null, workflow: lifecycle}
-      - {data_object_id: 716, name: lcap_data_sources, target_module_id: null, workflow: connection}
-  - id: B1B-S10
-    summary: "Retire legacy domain-level system skill lcap-system (id 79) and author 2 module-anchored system skills. Also rename 5 legacy extend_* tool rows to lcap_* shape."
-    finding: "F1 transitional pass (legacy skill exists, no module-level skill exists yet). F2 hard-fail (zero domain_module_id-anchored system skills). Tools 564 query_extend_apps, 565 query_extend_business_objects, 566 query_extend_workflows, 822 query_extend_pages, 823 query_extend_data_sources still carry the legacy extend_* tool_name even though the underlying data_objects were renamed in the 2026-05-31 continuation. Rule #17 floor of 5-20 tools per system skill (mix of query + mutate + workflow-gate) is below the current 5 query-only set."
-    action: "After B1B-S1 lands: author 2 new domain_module_id-anchored system skills, rename the 5 tools (extend_* -> lcap_*), reassign skill_tools to the new skills per module shape, then DELETE skill 79. Add mutate + workflow-gate tools per Rule #17 floor."
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-    affected_entities:
-      - lcap-system
-      - query_extend_apps
-      - query_extend_business_objects
-      - query_extend_workflows
-      - query_extend_pages
-      - query_extend_data_sources
-  - id: B1B-S12
-    summary: "PATCH source_domain_module_id on 4 outbound LCAP handoffs once modules exist."
-    finding: "B10b hard-fail. All 4 outbound handoffs (704, 705, 706, 707) have source_domain_module_id=NULL. After B1B-S1 the source module resolves deterministically per the role-strength rule: 704 (lcap_app.published) and 706 (lcap_app.deployment_failed) -> LCAP-VISUAL-COMPOSITION (masters lcap_apps); 705 (lcap_workflow.published) -> LCAP-RUNTIME-LIFECYCLE; 707 (lcap_business_object.schema_changed) -> LCAP-VISUAL-COMPOSITION. Target-side module also pending: 706 already has target_domain_module_id=38 (ITSM module); 704/705/707 target NULL pending counterparty audits."
-    action: "Single PATCH pass on 4 rows after B1B-S1. Reference loader pattern: scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts."
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
+  - id: B1A-HANDOFF-SOURCE-MODULES
+    summary: "PATCH source_domain_module_id on 4 outbound LCAP handoffs (704, 705, 706, 707) now that modules exist."
+    finding: >
+      B10b hard-fail, now resolvable. All 4 outbound handoffs have source_domain_module_id=NULL.
+      With modules live the source resolves deterministically by master ownership: 704
+      (lcap_app.published), 706 (lcap_app.deployment_failed), 707 (lcap_business_object.schema_changed)
+      -> 265 LCAP-VISUAL-COMPOSITION; 705 (lcap_workflow.published) -> 266 LCAP-RUNTIME-LIFECYCLE.
+      Target-side: 706 already has target_domain_module_id=38 (ITSM); 704/705/707 target NULL
+      pending counterparty audits (see B1B-S14-OTHERS).
+    action: >
+      Single PATCH pass on 4 rows. Reference loader pattern:
+      scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts.
     affected_handoffs:
       - {handoff_id: 704, direction: outbound, source_domain: LCAP, target_domain: APP-PAAS, trigger_event: lcap_app.published, payload: lcap_apps, null_field: source_domain_module_id}
       - {handoff_id: 705, direction: outbound, source_domain: LCAP, target_domain: IPAAS, trigger_event: lcap_workflow.published, payload: lcap_workflows, null_field: source_domain_module_id}
       - {handoff_id: 706, direction: outbound, source_domain: LCAP, target_domain: ITSM, trigger_event: lcap_app.deployment_failed, payload: service_incidents, null_field: source_domain_module_id}
       - {handoff_id: 707, direction: outbound, source_domain: LCAP, target_domain: DCG, trigger_event: lcap_business_object.schema_changed, payload: lcap_business_objects, null_field: source_domain_module_id}
+
+b1b:
   - id: B1B-S13
-    summary: "Author 3 intra-domain handoffs (cross-module lifecycle progressions) once modules exist."
-    finding: "B9b hard-fail. With 2 modules expected, cross-module transitions need explicit handoff rows: workflow definitions edited in LCAP-VISUAL-COMPOSITION execute in LCAP-RUNTIME-LIFECYCLE (lcap_workflow.published); business-object schema authored in LCAP-VISUAL-COMPOSITION drives runtime data layer in LCAP-RUNTIME-LIFECYCLE (lcap_business_object.schema_changed); runtime errors fire back from LCAP-RUNTIME-LIFECYCLE to LCAP-VISUAL-COMPOSITION (lcap_workflow.failed)."
-    action: "Author 3 intra-domain handoffs rows with source_domain_id = target_domain_id = 37, integration_pattern=lifecycle_progression, friction_level=low, notes='' per Rule #15."
+    summary: "Author 3 intra-domain handoffs (cross-module lifecycle progressions) between the 2 LCAP modules."
+    finding: >
+      B9b hard-fail. With 2 modules live (265, 266), cross-module transitions need explicit
+      handoff rows: workflow definitions edited in 265 execute in 266 (lcap_workflow.published);
+      business-object schema authored in 265 drives the runtime data layer in 266
+      (lcap_business_object.schema_changed); runtime errors fire back from 266 to 265
+      (lcap_workflow.failed).
+    action: >
+      Author 3 intra-domain handoff rows with source_domain_id = target_domain_id = 37,
+      integration_pattern=lifecycle_progression, friction_level=low, notes='' per Rule #15.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
       - {type: depends_on, ref: B1A-S5, reason: needs cross-module data_object_relationships to derive the expected pair set}
   - id: B1B-S14-OTHERS
     summary: "Author 3 cross-domain data_object_relationships rows for outbound handoffs 704 (APP-PAAS), 705 (IPAAS), 707 (DCG) once each target domain's masters are confirmed."
-    finding: "B8 hard-fail (partial). 3 of 4 outbound handoffs need cross-domain relationship rows but the target-side master is not yet confirmed in the receiving domain's modularization. Proposed verbs: lcap_apps deploys_to <app_paas_master>, lcap_workflows registers_with <ipaas_master>, lcap_business_objects publishes_to <dcg_catalog_master>."
-    action: "After APP-PAAS / IPAAS / DCG modularize, confirm the target master, then INSERT the 3 rows via cluster-drafts."
+    finding: >
+      B8 hard-fail (partial). 3 of 4 outbound handoffs need cross-domain relationship rows
+      but the target-side master is not yet confirmed in the receiving domain's modularization.
+      Proposed verbs: lcap_apps deploys_to <app_paas_master>, lcap_workflows registers_with
+      <ipaas_master>, lcap_business_objects publishes_to <dcg_catalog_master>.
+    action: >
+      After APP-PAAS / IPAAS / DCG modularize, confirm the target master, then INSERT the 3
+      rows via cluster-drafts.
     blocked_by:
       - {type: domain_audit, blocking_domain: APP-PAAS, milestone: target_master_identified_for_lcap_apps_consumer}
       - {type: domain_audit, blocking_domain: IPAAS, milestone: target_master_identified_for_lcap_workflows_consumer}
@@ -108,25 +156,39 @@ b1b:
       - {handoff_id: 707, direction: outbound, source_domain: LCAP, target_domain: DCG, trigger_event: lcap_business_object.schema_changed, payload: lcap_business_objects, null_field: cross_domain_relationship_missing}
   - id: B1B-H1-NCDB
     summary: "APQC tagging for inbound handoff 701 (NCDB -> LCAP) deferred pending NCDB canonical-master cure."
-    finding: "H1 partial. 4 of 5 cross-domain handoffs carry handoff_processes (agent_curated, record_status=new). The 5th (handoff 701, inbound from NCDB on nocode_record_definition.changed) cannot be classified until NCDB cures its B5 integrity gap on nocode_record_definitions (data_object_id 242 has no master row anywhere in domain_module_data_objects)."
+    finding: >
+      H1 partial. 4 of 5 cross-domain handoffs carry handoff_processes (agent_curated,
+      record_status=new). The 5th (handoff 701, inbound from NCDB on
+      nocode_record_definition.changed) cannot be classified until NCDB cures its B5
+      integrity gap on nocode_record_definitions (data_object_id 242 has no master row
+      anywhere in domain_module_data_objects).
     blocked_by:
       - {type: domain_audit, blocking_domain: NCDB, milestone: nocode_record_definitions_canonical_master_loaded}
     affected_handoffs:
       - {handoff_id: 701, direction: inbound, source_domain: NCDB, target_domain: LCAP, trigger_event: nocode_record_definition.changed, payload: nocode_record_definitions, null_field: handoff_processes_classification}
 
 b2:
-  - id: B2-S1
-    summary: "Pick LCAP module split shape (gates B1B-S1 and all downstream M / B12 / F / E work)."
-    question: "What is the LCAP module split? Proposed 2-module: LCAP-VISUAL-COMPOSITION (lcap_apps, lcap_pages, lcap_business_objects, lcap_data_sources; realizes LCAP-VISUAL-MODELING, LCAP-INTEGRATION-CONNECTORS, LCAP-AI-ASSIST, OPERATIONAL-DATA-APPS) + LCAP-RUNTIME-LIFECYCLE (lcap_workflows; realizes LCAP-MANAGED-RUNTIME, LCAP-WORKFLOW-AUTO, LCAP-LIFECYCLE-MGMT)."
+  - id: B2-MODULE-CATALOG-UX
+    summary: "M8 / A4 (Rule #20) catalog_tagline + catalog_description empty on the 2 new module rows (265, 266) and the domain row."
+    question: >
+      domain_modules 265 (LCAP-VISUAL-COMPOSITION) and 266 (LCAP-RUNTIME-LIFECYCLE) were
+      inserted with catalog_tagline and catalog_description omitted per Rule #20, which
+      forbids the agent drafting and inserting that copy without explicit user approval.
+      domains.catalog_tagline / catalog_description are likewise empty. How should the
+      catalog-facing copy be authored for the 2 modules and the domain row?
     options:
-      - "(a) 2-module split as proposed."
-      - "(b) 3-module split adding LCAP-INTEGRATION (masters lcap_data_sources; realizes LCAP-INTEGRATION-CONNECTORS)."
-      - "(c) 4-module split (split visual modeling, runtime, ALM, AI-assist into separate modules)."
-      - "(d) user-proposed split."
-    why: "Modularization is a deploy-shape decision. Vendor matrix supports several splits; catalog convention favors 2-3 functional modules over many narrow ones."
+      - "(a) user supplies wording for all three rows (2 modules + domain)."
+      - "(b) agent drafts for review (one round only; no auto-insert)."
+      - "(c) defer to a catalog-wide UX-copy pass."
+    why: "Rule #20 forbids drafting and inserting catalog-tagline / catalog-description without user approval."
   - id: B2-S2
     summary: "B4 pattern flag re-evaluation (Rule #12). Per-master proposed flips on lcap_apps, lcap_business_objects, lcap_data_sources, lcap_workflows."
-    question: "For each master, yes/no on the proposed pattern flag flips: (i) lcap_apps.has_submit_lock=true once a published version exists; (ii) lcap_business_objects.has_submit_lock=true once schema is deployed with dependent pages; (iii) lcap_data_sources.has_personal_content=true because connection credentials are personal-content-shaped; (iv) lcap_workflows.has_submit_lock=true once active."
+    question: >
+      For each master, yes/no on the proposed pattern flag flips: (i) lcap_apps.has_submit_lock=true
+      once a published version exists; (ii) lcap_business_objects.has_submit_lock=true once schema
+      is deployed with dependent pages; (iii) lcap_data_sources.has_personal_content=true because
+      connection credentials are personal-content-shaped; (iv) lcap_workflows.has_submit_lock=true
+      once active.
     options:
       - "(a) all four yes."
       - "(b) selective yes (specify which)."
@@ -134,7 +196,10 @@ b2:
     why: "Pattern flags are workflow-shape judgments the user owns. Per Rule #15 the rationale cannot be auto-recorded in notes."
   - id: B2-S3
     summary: "C1 business function spine alignment for LCAP."
-    question: "Live owner is IT Infrastructure, contributors Software Engineering + Business Operations. The canonical 20-function spine names IT Operations (not IT Infrastructure) and has no Business Operations row. Re-anchor or leave?"
+    question: >
+      Live owner is IT Infrastructure, contributors Software Engineering + Business Operations.
+      The canonical 20-function spine names IT Operations (not IT Infrastructure) and has no
+      Business Operations row. Re-anchor or leave?
     options:
       - "(a) re-anchor to spine: owner IT Operations, contributor Software Engineering, drop Business Operations."
       - "(b) leave as-is: spine is documentation, live data is authoritative."
@@ -142,7 +207,11 @@ b2:
     why: "Agent can't tell whether the live business_functions table has been extended beyond the canonical spine deliberately or by drift. Re-anchoring without confirmation could break existing analysis."
   - id: B2-S4
     summary: "Cross-cutting capability OPERATIONAL-DATA-APPS scope decision."
-    question: "Should OPERATIONAL-DATA-APPS stay single-domain on LCAP, or expand to NCDB / APP-PAAS so the cross-domain shape is captured? Vendors marketing operational data apps: LCAP (Power Platform, Mendix, OutSystems), NCDB (Airtable, Smartsheet, Notion DBs), borderline APP-PAAS."
+    question: >
+      Should OPERATIONAL-DATA-APPS stay single-domain on LCAP (now placed in module 265
+      LCAP-VISUAL-COMPOSITION), or expand to NCDB / APP-PAAS so the cross-domain shape is
+      captured? Vendors marketing operational data apps: LCAP (Power Platform, Mendix,
+      OutSystems), NCDB (Airtable, Smartsheet, Notion DBs), borderline APP-PAAS.
     options:
       - "(a) keep LCAP-only."
       - "(b) +NCDB."
@@ -150,25 +219,22 @@ b2:
     why: "Cross-cutting capability scope is a market-test decision the user owns; the vendor surface across LCAP / NCDB / APP-PAAS is borderline."
   - id: B2-S5
     summary: "domains.business_logic carries U+2014 em-dash (CLAUDE.md violation)."
-    question: "Current text: 'Runtime, compiler, and visual modeller [U+2014] the entire platform is code. The end-user app surface is whatever the customer builds; the LCAP itself is platform.' Suggested rewrite: 'Runtime, compiler, and visual modeller. The entire platform is code, the end-user app surface is whatever the customer builds, and the LCAP itself is platform.'"
+    question: >
+      Current text: 'Runtime, compiler, and visual modeller [U+2014] the entire platform is
+      code. The end-user app surface is whatever the customer builds; the LCAP itself is
+      platform.' Suggested rewrite: 'Runtime, compiler, and visual modeller. The entire
+      platform is code, the end-user app surface is whatever the customer builds, and the
+      LCAP itself is platform.'
     options:
       - "(a) apply suggested rewrite."
       - "(b) provide alternative wording."
       - "(c) defer to catalog-wide em-dash cleanup pass."
     why: "Editorial wording on existing catalog rows is the user's call; CLAUDE.md no-em-dash rule forbids U+2014."
-  - id: B2-S6
-    summary: "A4 / M8 Rule #20 catalog_tagline + catalog_description authoring on domain row and (future) module rows."
-    question: "domains.catalog_tagline and domains.catalog_description are empty. Per Rule #20, agent cannot draft and insert without explicit per-row user approval. Same applies on every module after B1B-S1."
-    options:
-      - "(a) user supplies wording for both fields."
-      - "(b) agent drafts for review (one round only; no auto-insert)."
-      - "(c) defer until after B2-S1 / B1B-S1 land so module copy can be drafted in the same pass."
-    why: "Rule #20 forbids drafting and inserting catalog-tagline / catalog-description without user approval."
 
 b3:
   - id: B3-LCAP-VERSIONS
     candidate: lcap_app_versions
-    rationale: "Source of the published lifecycle. Every flagship LCAP models app versions as first-class (Mendix model versions, Power Apps versions, OutSystems module versions, ServiceNow update sets)."
+    rationale: "Source of the published lifecycle. Every flagship LCAP models app versions as first-class (Mendix model versions, Power Apps versions, OutSystems module versions, ServiceNow update sets). Missing-master candidate for module 265."
     vendor_evidence:
       - {vendor: Mendix, evidence: 1st_class}
       - {vendor: Microsoft Power Platform, evidence: 1st_class}
@@ -177,7 +243,7 @@ b3:
     proposed_module: LCAP-VISUAL-COMPOSITION
   - id: B3-LCAP-DEPLOYMENTS
     candidate: lcap_deployments
-    rationale: "One app has many deployments; flagships model the deployment unit distinctly from the app (OutSystems deployment plan, Mendix deployment package, Appian deployment unit)."
+    rationale: "One app has many deployments; flagships model the deployment unit distinctly from the app (OutSystems deployment plan, Mendix deployment package, Appian deployment unit). Missing-master candidate for module 266."
     vendor_evidence:
       - {vendor: OutSystems, evidence: 1st_class}
       - {vendor: Mendix, evidence: 1st_class}
@@ -185,7 +251,7 @@ b3:
     proposed_module: LCAP-RUNTIME-LIFECYCLE
   - id: B3-LCAP-ENVIRONMENTS
     candidate: lcap_environments
-    rationale: "dev / test / acceptance / prod environment promotion is universal across flagship LCAPs (Power Apps environments, OutSystems environments)."
+    rationale: "dev / test / acceptance / prod environment promotion is universal across flagship LCAPs (Power Apps environments, OutSystems environments). Missing-master candidate for module 266."
     vendor_evidence:
       - {vendor: Microsoft Power Platform, evidence: 1st_class}
       - {vendor: OutSystems, evidence: 1st_class}
@@ -193,7 +259,7 @@ b3:
     proposed_module: LCAP-RUNTIME-LIFECYCLE
   - id: B3-LCAP-PACKAGES
     candidate: lcap_app_packages
-    rationale: "Distribution unit, distinct from the app (ServiceNow update sets + scoped apps, Salesforce unmanaged / managed packages, OutSystems solution)."
+    rationale: "Distribution unit, distinct from the app (ServiceNow update sets + scoped apps, Salesforce unmanaged / managed packages, OutSystems solution). Missing-master candidate for module 266."
     vendor_evidence:
       - {vendor: ServiceNow App Engine, evidence: 1st_class}
       - {vendor: Salesforce Platform, evidence: 1st_class}
@@ -209,7 +275,7 @@ b3:
     proposed_module: LCAP-VISUAL-COMPOSITION
   - id: B3-LCAP-EXECUTIONS
     candidate: lcap_workflow_executions
-    rationale: "Run-time instance records; observability source distinct from workflow definitions."
+    rationale: "Run-time instance records; observability source distinct from workflow definitions. Missing-master candidate for module 266."
     vendor_evidence:
       - {vendor: Microsoft Power Platform, evidence: 1st_class}
       - {vendor: Mendix, evidence: 1st_class}
@@ -217,7 +283,7 @@ b3:
     proposed_module: LCAP-RUNTIME-LIFECYCLE
   - id: B3-LCAP-AUDIT-LOGS
     candidate: lcap_audit_logs
-    rationale: "Cross-flagship: every LCAP records who-did-what for compliance; distinct from runtime execution telemetry."
+    rationale: "Cross-flagship: every LCAP records who-did-what for compliance; distinct from runtime execution telemetry. Missing-master candidate for module 266."
     vendor_evidence:
       - {vendor: ServiceNow App Engine, evidence: 1st_class}
       - {vendor: Mendix, evidence: 1st_class}
@@ -225,7 +291,7 @@ b3:
     proposed_module: LCAP-RUNTIME-LIFECYCLE
   - id: B3-LCAP-ENDPOINTS
     candidate: lcap_integration_endpoints
-    rationale: "External services exposed by an app (REST endpoints, webhook receivers); distinct from lcap_data_sources which is inbound."
+    rationale: "External services exposed by an app (REST endpoints, webhook receivers); distinct from lcap_data_sources which is inbound. Missing-master candidate for module 265."
     vendor_evidence:
       - {vendor: OutSystems, evidence: 1st_class}
       - {vendor: Mendix, evidence: 1st_class}
@@ -233,7 +299,7 @@ b3:
     proposed_module: LCAP-VISUAL-COMPOSITION
   - id: B3-LCAP-AI-PROMPTS
     candidate: lcap_ai_prompts
-    rationale: "AI-assist capability needs a backing entity (Power Apps Copilot, OutSystems AI Mentor, Mendix Maia, ServiceNow Now Assist)."
+    rationale: "AI-assist capability (337, placed in 265) needs a backing entity (Power Apps Copilot, OutSystems AI Mentor, Mendix Maia, ServiceNow Now Assist). Missing-master candidate for module 265."
     vendor_evidence:
       - {vendor: Microsoft Power Platform, evidence: 1st_class}
       - {vendor: OutSystems, evidence: 1st_class}
@@ -242,7 +308,7 @@ b3:
     proposed_module: LCAP-VISUAL-COMPOSITION
   - id: B3-LCAP-GEN-ARTIFACTS
     candidate: lcap_generated_artifacts
-    rationale: "AI-generated pages / workflows / business objects from prompts; lineage for AI governance."
+    rationale: "AI-generated pages / workflows / business objects from prompts; lineage for AI governance. Missing-master candidate for module 265."
     vendor_evidence:
       - {vendor: Microsoft Power Platform, evidence: 1st_class}
       - {vendor: OutSystems, evidence: 1st_class}

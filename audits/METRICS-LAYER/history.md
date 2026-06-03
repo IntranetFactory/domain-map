@@ -346,3 +346,60 @@ Every neighbor pass blocks on B1A-M1 (METRICS-LAYER has no modules to attribute 
 - **Bucket 2 prompt:** "Bucket 2 has 6 carried judgment calls (B2-1 to B2-6). B2-1 is the gating decision: 2-split vs. 3-split (recommended) vs. 4-split. What is your call on each item?"
 - **Bucket 3 prompt:** "Bucket 3 has 6 carried speculative items (B3-1 to B3-6). Vet via Phase 0 vendor research or eyeball-mode?"
 
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+Built the METRICS-LAYER module set: the domain went from **0 to 3 `domain_modules`**, all `module_kind='full'`. The recommended 3-module split from the 2026-05-30 / 2026-05-31 audits (B2-MODULE-SPLIT / B1A-M1) was adopted as designed. Scope of this pass was modules + capability links + master-entity assignment only; no new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. Existing entities reused at existing roles.
+
+Loader: [.tmp_deploy/modularize_metrics_layer_2026-06-02.ts](../../.tmp_deploy/modularize_metrics_layer_2026-06-02.ts), idempotent, verified by a clean second run that inserted nothing.
+
+### Modules created
+
+| id | code | name | capabilities | masters |
+| --- | --- | --- | --- | --- |
+| 275 | METRICS-LAYER-DEFINITIONS | Metric and Dimensional Definitions | 345 (METRICS-DEF), 346 (METRICS-DIMENSIONAL-MODEL), 197 (SEMANTIC-MODELING), 347 (METRICS-GOVERNANCE) | 252 metric_definitions, 253 dimensional_models |
+| 276 | METRICS-LAYER-COMPUTE | Federation, Caching, and Lineage | 348 (METRICS-QUERY-FEDERATION), 349 (METRICS-CACHE-OPT) | 709 metric_materializations, 710 query_lineage_records |
+| 277 | METRICS-LAYER-DELIVERY | Multi-Protocol Delivery and Access | 350 (METRICS-API-DELIVERY), 351 (METRICS-AI-CONSUMPTION) | 711 metric_access_policies |
+
+All 8 capabilities placed (197, 345, 346, 347, 348, 349, 350, 351), each in exactly one module (M4 satisfied). Every module has >=1 capability (M6) and >=1 data_object (no empty module). Rule #14 satisfied (8 caps -> 3 full modules).
+
+### Master assignment and catalog-wide pre-check
+
+Catalog-wide master pre-check ran against `/domain_module_data_objects?data_object_id=in.(252,253,709,710,711)&role=eq.master` BEFORE any write: **zero** existing master rows for any of the 5 data_objects. The only pre-existing DMDO row was `metric_definitions` (252) at `role='consumer'` in DATA-AI-PLAT-SEMANTIC-CATALOG (module 224, domain 129), which does not block mastering here. `semantic_metrics` (data_object 230, mastered by DATA-AI-PLAT) is a distinct entity and is NOT in the METRICS-LAYER set, so the adjacency warning did not trigger a demotion.
+
+Result: all 5 masters assigned `role='master', necessity='required'`, each appearing in exactly one METRICS-LAYER module and exactly one master row catalog-wide (M7 satisfied in-domain and catalog-wide). **Zero demotions** to embedded_master were needed.
+
+| master | id | module | role | necessity |
+| --- | --- | --- | --- | --- |
+| metric_definitions | 252 | METRICS-LAYER-DEFINITIONS (275) | master | required |
+| dimensional_models | 253 | METRICS-LAYER-DEFINITIONS (275) | master | required |
+| metric_materializations | 709 | METRICS-LAYER-COMPUTE (276) | master | required |
+| query_lineage_records | 710 | METRICS-LAYER-COMPUTE (276) | master | required |
+| metric_access_policies | 711 | METRICS-LAYER-DELIVERY (277) | master | required |
+
+Note: the prior B1A-M1 / B1-S1 spec mentioned cross-module embedded_master shells (e.g. `metric_definitions` as embedded_master on COMPUTE and DELIVERY, `metric_access_policies` as consumer on the other two). Those rows were NOT authored in this pass: the job scope is "assign data_objects at their existing role+necessity" and there were no existing embedded_master/consumer rows for these 5 entities to preserve. Cross-module shell rows are a deliberate design addition deferred as a new b1a item (B1A-EMBED-SHELLS) for a follow-up pass.
+
+### Band impact (cured / advanced this pass)
+
+- **M1 / M2** cured: 3 full modules now exist (was 0); the >=2-full-modules floor for 8 capabilities is met.
+- **M4 / M6** cured: every capability realized by exactly one module; every module realizes >=1 capability.
+- **M7** holds in-domain and catalog-wide: each master once.
+- **M5 / B12** still open: lifecycle states can now be attributed to a module (modules exist) but were not authored this pass (out of scope; carried as b1a).
+- **B10b** unblocked: handoff module-FK backfill can now derive (252/253 -> 275, 709/710 -> 276, 711 -> 277); not executed this pass (carried as b1a).
+- **F2 / F3** unblocked: per-module system skills can now be anchored; not authored this pass (carried as b1a, Rule #17).
+- **F1** still blocked on F2 (legacy skill 83 delete waits for module-anchored skills).
+- **A4 / M8** still open: domain `catalog_tagline` / `catalog_description` empty (Rule #20 user-approval gate, B2-CATALOG-UX); modules now exist so M8 catalog UX per-module fields are also authorable.
+
+### Verification (live, post-load)
+
+- `/domain_modules?domain_id=eq.137` -> 3 rows (275, 276, 277), all `module_kind='full'`.
+- Capability coverage: 197, 345, 346, 347, 348, 349, 350, 351 all placed; none orphaned; none double-placed.
+- Per-master catalog-wide master count: 252=1, 253=1, 709=1, 710=1, 711=1 (all OK).
+- No empty module (each has >=1 cap and >=1 DMDO).
+- `notes` empty on every DMDO and capability row (Rule #15); `record_status` omitted on every insert (Rule #1).
+
+### Deferred (out of scope for this modules-only pass)
+
+Carried as b1a (now agent-actionable since modules exist): B1A-B12 (lifecycle states + module attribution), B1A-B10b (handoff module-FK backfill), B1A-F2 (3 module-anchored system skills + tools per Rule #17), B1A-F1 (legacy skill 83 delete, gated on F2), B1A-EMBED-SHELLS (cross-module embedded_master / consumer shell rows). Carried independent b1a: B1A-A4 (catalog UX, gated on B2-CATALOG-UX), B1A-M8 (per-module catalog UX), B1A-B6 (intra-domain master-to-master relationships), B1A-B11 (aliases), B1A-B8 (cross-domain relationships), B1A-H1 (APQC tagging). Bucket 2 judgment items (B2-PATTERN-FLAGS, B2-CATALOG-UX, B2-NAMING-ARBITRATION, B2-LOOKER-RECLASSIFICATION, B2-DCG-INBOUND-TAG) and Bucket 3 speculative masters (B3-*) unchanged.
+

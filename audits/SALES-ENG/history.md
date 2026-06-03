@@ -310,3 +310,41 @@ Carried forward + extended with this audit's findings:
 - No `notes` columns inspected for content drift since no writes proposed touch them.
 - Live state confirms the 2026-05-31 technical continuation applied correctly (events 463-469 carry non-empty `event_category`; 4 user-edge `data_object_relationships` rows present on `users (748) →` each of 121, 122, 123, 124).
 - UI links for spot-check after future loads: https://tests.semantius.app/domain_map/domain_modules and https://tests.semantius.app/domain_map/handoffs.
+
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+SALES-ENG (domains.id 95) went from 0 `domain_modules` to 3 `full` modules. Scope of this pass: modules + entity assignment only, reusing existing capabilities and data_objects. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. This resolves B1A-BUILD (the unbuilt-domain M1 fail) and B1B-M-AUTH-MODULES, and commits a module shape for the open B2-MODULE-SHAPE decision (chose a 3-module split, option (b)-shaped, over the 2-module proposal because the domain has 3 distinct in-domain masters that map one-per-module cleanly).
+
+### Modules created
+
+| id | code | capabilities | data_objects (role) |
+|---|---|---|---|
+| 296 | SALES-ENG-CADENCE-OUTREACH | SE-CADENCE-SEQ (278), SE-AUTO-DIALER (279), SE-INTENT-DATA (283) | sales_cadences (121, master, required); crm_contacts (98, contributor, required) |
+| 297 | SALES-ENG-EMAIL-SCHEDULING | SE-EMAIL-TRACKING (280), SE-MEETING-SCHED (282), SE-AI-EMAIL-DRAFT (284) | sales_emails (123, master, required); crm_contacts (98, contributor, required) |
+| 298 | SALES-ENG-CONVERSATION-COACHING | SE-CONV-INTEL (281), SE-REP-COACHING (285) | call_recordings (122, master, required); conversation_intelligence_records (124, embedded_master, required) |
+
+8 `domain_module_capabilities` rows (all 8 SE capabilities placed exactly once, M4 satisfied). 6 `domain_module_data_objects` rows. Every module has >=1 capability (M6) and >=1 data_object (no empty module). Rule #14 satisfied (>=2 full modules for 8 capabilities).
+
+### Catalog-wide master pre-check (M7, MANDATORY)
+
+Queried `/domain_module_data_objects?data_object_id=eq.<id>&role=eq.master` for every intended master before writing:
+
+- **sales_cadences (121):** zero existing `master` rows catalog-wide (only a `consumer` row in CRM-ACTIVITY, module 49). SALES-ENG-CADENCE-OUTREACH masters it. No demotion.
+- **call_recordings (122):** zero existing `master` rows catalog-wide. It carried `embedded_master` in REV-INTEL-CONVERSATION (186) and REV-INTEL-COACHING (189), and `consumer` in CRM-ACTIVITY (49), but no canonical master existed. SALES-ENG-CONVERSATION-COACHING masters it. No demotion.
+- **sales_emails (123):** zero existing `master` rows catalog-wide (only `contributor` in CRM-ACTIVITY, `consumer` in CDP-SEGMENTATION-ACTIVATION). SALES-ENG-EMAIL-SCHEDULING masters it. No demotion.
+- **conversation_intelligence_records (124):** ALREADY mastered by REV-INTEL-CONVERSATION (module 186). Pre-check hit -> assigned `embedded_master` here, NOT a second master. Matches its legacy `embedded_master` role in `domain_data_objects`.
+- **crm_contacts (98):** mastered by CRM-ACCT-MGT (module 46). Assigned `contributor` here (preserved its existing borrowed role). Never promoted.
+
+Post-write verification confirmed each of 121, 122, 123 appears as `master` in exactly ONE module catalog-wide (in-domain AND globally). The legacy `domain_data_objects` rollup (4 master rows + 1 contributor) is consistent with the new module-grain masters; it is the deprecated derived rollup and was not hand-edited.
+
+### Fixes applied
+
+- Inserted 3 `domain_modules` (296, 297, 298), 8 `domain_module_capabilities`, 6 `domain_module_data_objects`. `record_status` omitted on every insert (R1). `notes` empty on every DMDO row (R15). No vendor/product names in any module name or description (R18). Module descriptions are workflow-voice.
+- Loader: `.tmp_deploy/modularize_sales_eng_2026-06-02.ts`, idempotent (re-run confirmed: "modules already present", zero duplicate inserts).
+
+### Deferred / unchanged
+
+Out of scope for this pass (entity-only reuse): per-module system skills (B1B-F-RETIRE-LEGACY-SKILL, legacy skill 104), catalog UX copy (B1B-A-CATALOG-UX), lifecycle states (B1B-B-LIFECYCLE), intra/cross-domain relationships (B1B-B-INTRA-RELS, B1B-B-CROSS-RELS), aliases (B1B-B-ALIASES), handoff module-FK backfills (B1B-S-OUT-SRC-MODFK, B1B-S-IN-TGT-MODFK), event retargeting (B1B-S-RETARGET-EVENTS), and APQC tagging (B1B-H-APQC-TAGGING). These now have concrete target module ids and are re-expressed in state.yaml with the module mapping resolved where it was previously NULL. No master-less capability gaps: all 8 capabilities are backed by an in-domain master or a borrowed master in their module.

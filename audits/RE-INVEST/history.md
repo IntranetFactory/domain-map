@@ -376,3 +376,61 @@ Carried forward from 2026-05-30; no resolution. Plus one update:
 - No `notes` columns touched (Rule #15).
 - No vendor names embedded in non-commerce text (Rule #18).
 - No `catalog_tagline` / `catalog_description` writes (Rule #20).
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+RE-INVEST went from **0 modules** (M1 hard fail since 2026-05-30) to **3 `module_kind='full'` modules**. Scope this pass: modules + capability links + reuse-only data-object assignment. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. The long-standing M7 demotion question (Bucket 2 #1) was resolved **mechanically by the catalog-wide master pre-check**, not by user judgment: `capital_calls` (367) and `fund_distributions` (368) are already mastered catalog-wide by FUND-ADMIN modules 14 / 15, so they were assigned `embedded_master` here. This realizes option (a) from the prior audits (FUND-ADMIN owns; RE-INVEST embeds) for the modularization layer.
+
+Module `industry_id` set to **15 (Real Estate)** on all three modules: a clear single industry row exists.
+
+### Modules created
+
+| id | code | module_kind | industry_id | capabilities | data_objects |
+|---|---|---|---|---|---|
+| 279 | RE-INVEST-FUND-ACCT | full | 15 | 398 (Fund Accounting), 402 (Capital Call and Distribution Management) | master: investment_funds (727), asset_management_fees (729); embedded_master: capital_calls (367), fund_distributions (368) |
+| 280 | RE-INVEST-INVESTOR-REPORTING | full | 15 | 399 (Investor Reporting and Portal) | master: limited_partners (728); embedded_master: capital_calls (367), fund_distributions (368); consumer: rental_leases (362), commercial_leases (363) |
+| 281 | RE-INVEST-PORTFOLIO-VAL | full | 15 | 400 (Portfolio Valuation), 401 (Acquisition Underwriting), 403 (NAV and NOI Modeling) | master: investment_properties (366), property_valuations (369) |
+
+### Master assignment (catalog-wide single-master honored)
+
+| data_object | id | role here | module | mastered elsewhere |
+|---|---|---|---|---|
+| investment_funds | 727 | master | RE-INVEST-FUND-ACCT (279) | no (sole master) |
+| asset_management_fees | 729 | master | RE-INVEST-FUND-ACCT (279) | no (sole master) |
+| limited_partners | 728 | master | RE-INVEST-INVESTOR-REPORTING (280) | no (sole master) |
+| investment_properties | 366 | master | RE-INVEST-PORTFOLIO-VAL (281) | no (sole master) |
+| property_valuations | 369 | master | RE-INVEST-PORTFOLIO-VAL (281) | no (sole master) |
+| capital_calls | 367 | embedded_master | 279 + 280 | **FUND-ADMIN-CAPITAL-CALLS (module 14)** |
+| fund_distributions | 368 | embedded_master | 279 + 280 | **FUND-ADMIN-DISTRIBUTIONS (module 15)** |
+
+Demotions via the pre-check: **capital_calls (367)** and **fund_distributions (368)**. Their legacy `domain_data_objects.role='master'` on RE-INVEST (rows 597 / 598) is now superseded at the module grain by `embedded_master`; the legacy DDO rows remain as drift to be cleaned by FUND-ADMIN's B1B-RE-INVEST-M7 follow-up.
+
+### Verification (live)
+
+- All 6 capabilities (398-403) placed in exactly one module each; M4 satisfied.
+- Each of the 5 RE-INVEST masters (366, 369, 727, 728, 729) appears exactly once as `master` both in-domain and catalog-wide (M7 pass).
+- 367 / 368 carry `master` nowhere on RE-INVEST; FUND-ADMIN remains sole catalog master.
+- No empty module: 279 (2 caps / 4 DMDO), 280 (1 cap / 5 DMDO), 281 (3 caps / 2 DMDO). M6 + no-empty-module pass.
+- Rule #14: 6 caps, 3 full modules (floor of 2 cleared).
+- Loader re-run produced zero new rows (idempotent).
+
+### What this unblocks / leaves open
+
+Now that modules exist, the following previously M1-gated items move from b1b to actionable next passes (not done this pass; out of scope):
+
+- **F1 / F7:** legacy domain-level skill `re-invest-system` (id 97, `domain_module_id=null`, 9 skill_tools incl. `send_email`) is now retireable, and each module needs exactly one `skill_type='system'` skill with >=1 `skill_tools` (Rule #17 -> F2 / F3). These are the new b1a items.
+- **M8:** all 3 modules have empty `catalog_tagline` / `catalog_description`; **A4:** domain 146 still empty on both. Rule #20 requires user-approved copy before write.
+- **B1B handoff backfills** (PR-EF-1, PR-RC-1) can now resolve source/target module FKs: portfolio-val (281) consumes the inbound RE-CRE / REAL-EST / RE-PROP-MGMT / RE-BROKERAGE payloads; fund-acct (279) sources the outbound ERP-FIN handoffs (306 fund_distributions, 307 capital_calls, 863 asset_management_fees); portfolio-val (281) sources 305 (property_valuations -> FINOPS).
+- **B12 lifecycle** can now attach `domain_module_id` for the 5 RE-INVEST-mastered entities.
+
+### Rule compliance
+
+- Writes via `semantius` CLI from project root only (Rule #0, #6). No `mcp__*` tools.
+- No `record_status` set on any insert (Rule #1); all default.
+- TypeScript on Bun loader by absolute path (Rule #4b, #6); idempotent, safe to re-run.
+- No `notes` on any DMDO / DMC row (Rule #15).
+- No vendor / product names in module name or description (Rule #18).
+- No em-dashes; American English.
+- No JWT errors during the run.

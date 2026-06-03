@@ -2,93 +2,118 @@ schema_version: 2
 domain: SMP
 status: feedback_needed
 next_action_by: agent
-last_audit: "2026-05-31"
+last_audit: "2026-06-02"
 
 b1a:
-  - id: B1A-M6-R18
-    summary: SMP-AUTOMATION (185) domain_modules.description trails with vendor names; Rule #18 violation on a non-commerce text field.
-    finding: |
-      `domain_modules.description` on SMP-AUTOMATION (id=185) ends with a parenthetical naming two vendors and a product surface. Rule #18 lists `domain_modules` as a forbidden-zone table for vendor and product names; the entity description column must characterise the module by its capability shape, not by who sells into it.
-    action: |
-      PATCH `/domain_modules?id=eq.185` with a `description` rewrite that drops the trailing vendor parenthetical and keeps the capability framing (declarative automation workflows, workflow run history, employee-facing self-service app-access requests, as the automation surface of an SMP deployment).
-    affected_modules:
-      - 185
-  - id: B1A-B9B
-    summary: 4 SMP-side trigger_events carry event_category="" (out-of-vocabulary per Rule #13).
-    finding: |
-      Trigger_events 621 (`saas_application.discovered`), 622 (`saas_application.sanctioned`), 623 (`saas_application.deprovisioned`), and 625 (`saas_usage_metric.idle_threshold`) all carry `event_category=""`. Rule #13 lists the allowed vocabulary as `lifecycle` / `state_change` / `threshold` / `signal`. All four are state-mutation events on a master entity, mapping cleanly to `lifecycle`.
-    action: |
-      PATCH `/trigger_events?id=in.(621,622,623,625)` setting `event_category="lifecycle"`. Verify post-PATCH that no further empty `event_category` rows exist via `/trigger_events?domain_module_id=in.(30,31,184,185)&event_category=eq.`.
-    affected_events:
-      - {id: 621, event_name: saas_application.discovered, current_category: "", proposed_category: lifecycle}
-      - {id: 622, event_name: saas_application.sanctioned, current_category: "", proposed_category: lifecycle}
-      - {id: 623, event_name: saas_application.deprovisioned, current_category: "", proposed_category: lifecycle}
-      - {id: 625, event_name: saas_usage_metric.idle_threshold, current_category: "", proposed_category: lifecycle}
-  - id: B1A-DESC-R18-988
-    summary: data_objects.description on smp_app_lifecycle_stages (988) names a vendor product as the flagship taxonomy; Rule #18 violation.
-    finding: |
-      `data_objects.description` on id=988 (`smp_app_lifecycle_stages`) closes with a sentence naming a specific vendor product as the flagship taxonomy. `data_objects.description` is on the Rule #18 forbidden list.
-    action: |
-      PATCH `/data_objects?id=eq.988` setting `description` to the existing text with the flagship-vendor sentence removed; keep the TIME-taxonomy framing as generic without attribution.
-    affected_entities:
-      - smp_app_lifecycle_stages
-  - id: B1A-DESC-R18-998
-    summary: data_objects.description on smp_workflow_runs (998) names two vendors as the flagship shape; Rule #18 violation.
-    finding: |
-      `data_objects.description` on id=998 (`smp_workflow_runs`) closes with a sentence naming two specific vendor products as the flagship shape. `data_objects.description` is on the Rule #18 forbidden list.
-    action: |
-      PATCH `/data_objects?id=eq.998` setting `description` to the existing text with the final vendor sentence removed; keep the execution-log framing as generic.
-    affected_entities:
-      - smp_workflow_runs
+  - id: B1A-SELF-CONTAIN
+    summary: "1 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
+    finding: "Live triage 2026-06-02: 1 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
+    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
+    extra_m9_shapes:
+      - {entity: legal_contracts, module: SMP-RENEWAL-VENDOR, role: contributor, master_domain: CLM}
+    extra_phase_p_triage: "2026-06-02"
 
-b1b: []
+b1b:
+  - id: B1B-PARTNER-MODFK
+    summary: Partner-side handoff module FKs are NULL because the counterparty domains are not modularized; report-only on those domains.
+    finding: |
+      SMP's own side of all 13 cross-domain handoffs is module-attributed (B10b passes for SMP). The opposite side carries NULL module FKs because the counterparty domains have not modularized: S2P (handoffs 39/45 target, 42 source), FINOPS (641/643 target), EXPENSE (38 source), DISCOVERY (47 source), SPEND-MGMT (174 source), ITSM (642 target). Each resolves when the named domain runs its own Validate/modularization pass.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: S2P, milestone: modularize-and-backfill-module-fks}
+      - {type: domain_audit, blocking_domain: FINOPS, milestone: modularize}
+      - {type: domain_audit, blocking_domain: ITSM, milestone: resolve-642-target-module}
+      - {type: domain_audit, blocking_domain: EXPENSE, milestone: modularize}
+      - {type: domain_audit, blocking_domain: DISCOVERY, milestone: modularize}
+      - {type: domain_audit, blocking_domain: SPEND-MGMT, milestone: modularize}
+    affected_handoffs:
+      - {handoff_id: 39, direction: outbound, source_domain: SMP, target_domain: S2P, trigger_event: shadow_app.requires_sanctioning, payload: purchase_requisitions, null_field: target_domain_module_id}
+      - {handoff_id: 45, direction: outbound, source_domain: SMP, target_domain: S2P, trigger_event: seat_demand.exceeded, payload: purchase_requisitions, null_field: target_domain_module_id}
+      - {handoff_id: 42, direction: inbound, source_domain: S2P, target_domain: SMP, trigger_event: po.saas_subscription_created, payload: saas_subscriptions, null_field: source_domain_module_id}
+      - {handoff_id: 641, direction: outbound, source_domain: SMP, target_domain: FINOPS, trigger_event: saas_application.sanctioned, payload: saas_applications, null_field: target_domain_module_id}
+      - {handoff_id: 643, direction: outbound, source_domain: SMP, target_domain: FINOPS, trigger_event: saas_usage_metric.idle_threshold, payload: saas_usage_metrics, null_field: target_domain_module_id}
+      - {handoff_id: 38, direction: inbound, source_domain: EXPENSE, target_domain: SMP, trigger_event: card.saas_charge_detected, payload: shadow_it_apps, null_field: source_domain_module_id}
+      - {handoff_id: 47, direction: inbound, source_domain: DISCOVERY, target_domain: SMP, trigger_event: sso_login.unsanctioned_app, payload: shadow_it_apps, null_field: source_domain_module_id}
+      - {handoff_id: 174, direction: inbound, source_domain: SPEND-MGMT, target_domain: SMP, trigger_event: card_transaction.posted, payload: shadow_it_apps, null_field: source_domain_module_id}
+      - {handoff_id: 642, direction: outbound, source_domain: SMP, target_domain: ITSM, trigger_event: saas_application.deprovisioned, payload: incidents, null_field: target_domain_module_id}
+  - id: B1B-TE127-SSO
+    summary: trigger_event 127 (sso_login.unsanctioned_app) publisher data_object re-point blocked on DISCOVERY modeling sso_logins.
+    finding: |
+      TE 127 (`sso_login.unsanctioned_app`) is published from DISCOVERY but its `data_object_id` cannot be set to the true publisher (`sso_logins` / login events) until DISCOVERY authors that master in its Phase B. Currently points at shadow_it_apps (the SMP-side payload). Cross-domain re-point deferred.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: DISCOVERY, milestone: author-sso_logins-master}
+  - id: B1B-IGA-HANDOFFS
+    summary: SMP-IGA assignment-grain handoff candidates blocked on IGA validate.
+    finding: |
+      Three SMP-to-IGA handoff candidates remain open from the 2026-05-28 saas_app_assignments split and the 4-module restructure: smp_license_seat_assignment.provisioned -> iga_user_entitlement.requested (assignment grain vs the existing application-grain handoff 640); smp_app_request.it_approved -> IGA; smp_reclamation_action.reclaimed -> IGA. Direction and necessity depend on IGA's own audit.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: IGA, milestone: validate-entitlement-boundary}
 
 b2:
-  - id: B2-R11-EMBEDDED-NO-MASTER
-    summary: smp_app_lifecycle_stages (988) and smp_workflow_runs (998) are kind=domain_owned embedded_master rows with no canonical master row anywhere; Rule #11 wording does not license this shape.
+  - id: B2-E4-RACI
+    summary: SMP personas + reach are authored; the process_raci responsibility overlay and lifecycle process_id wiring (E4/E6) are not yet done.
     question: |
-      Both 988 (host module 30) and 998 (host module 185) are `embedded_master` with `kind=domain_owned` and zero `role=master` rows in `domain_module_data_objects` catalog-wide. Rule #11 wording requires a canonical master row somewhere OR `kind=platform_builtin`; neither holds today. How should this be resolved?
+      The 3 SMP personas (IT-SAAS-ADMIN id16, PROCUREMENT-SAAS-RENEWAL-OWNER id17, ITAM-SAAS-PORTFOLIO-MANAGER id18) have reach (role_modules); the derived bundle is functional from reach + entity-type tier. Author the responsibility overlay now (process_raci R/A/C/I per process + wire data_object_lifecycle_states.process_id on the gated SMP transitions), or defer? RACI needs a process-to-gate mapping (which APQC PCF or custom process realizes each gated transition).
     options:
-      - "(a) Promote each DMDO row from embedded_master to master on its current host module (988 -> 30, 998 -> 185). Semantically natural since each is the sole owner of its lifecycle states; recommended."
-      - "(b) Convert both to pure parent-owned composition: drop the DMDO row entirely, model the entity solely as a one_to_many child of its parent master via data_object_relationships (988 child of saas_applications, 998 child of smp_automation_workflows). Deletes lifecycle-state rows and the embedded-master-only tool surface."
-      - "(c) Carve a Rule #11 exemption for 'sub-state masters of an already-canonical master in the same module'; update SKILL.md and the loader pre-flight to recognise the pattern."
+      - "(a) Author process_raci + wire lifecycle process_id for the gated SMP processes (full E4/E6)."
+      - "(b) Defer the RACI overlay; reach-only bundle is sufficient for now."
     why: |
-      The catalog already runs lifecycle states and gated tools off both entities. Option (a) preserves all of that and is the cheapest, but violates the strict reading of Rule #11. Option (b) is the cleanest from a schema-purity angle but bins ops-grade data. Option (c) is the most invasive (rule change) but is the only path that endorses the as-loaded shape.
-    affected_entities:
-      - smp_app_lifecycle_stages
-      - smp_workflow_runs
-    affected_modules:
-      - 30
-      - 185
-  - id: B2-M4-CAP-REALIZATIONS
-    summary: 7 capability realizations still anchor only on modules 30 / 31; modules 184 (SMP-OPTIMIZATION) and 185 (SMP-AUTOMATION) have zero realized capabilities.
+      E4 only fires for processes whose lifecycle gates carry process_id; with none wired today it is vacuous and the reach-only bundle passes E1/E2/E3/E6. The overlay adds responsibility/accountability semantics (e.g. PROCUREMENT-SAAS-RENEWAL-OWNER Accountable for the renewal-decision gate) and is an enhancement, not a blocker.
+    affected_modules: [30, 31, 184, 185]
+  - id: B2-M9-SELFCONTAIN
+    summary: Module 31 (SMP-RENEWAL-VENDOR) holds saas_applications (consumer+required, sibling-module master) and legal_contracts (contributor+required, CLM master) as hard cross-scope prerequisites.
     question: |
-      The 2026-05-29 4-module restructure renamed modules 30 -> SMP-DISCOVERY and 31 -> SMP-RENEWAL-VENDOR, then created 184 (SMP-OPTIMIZATION) and 185 (SMP-AUTOMATION). `domain_module_capabilities` rows were not redistributed. SMP-USAGE-ANALYTICS (522) and SMP-LICENSE-OPT (523) are now content-misaligned with module 30; module 185 has no realized capability at all. How to redistribute?
+      SMP-RENEWAL-VENDOR cannot deploy standalone while it requires a sibling/foreign master. Convert each to embedded_master (carry a local shell) or relax to necessity=optional?
     options:
-      - "Move SMP-USAGE-ANALYTICS (522) and SMP-LICENSE-OPT (523) from 30 to 184; leave 185 without a realized capability."
-      - "Move SMP-LICENSE-OPT (523) from 30 to 184; split SMP-USAGE-ANALYTICS (522) into two realizations (30 for raw collection, 184 for analysis)."
-      - "Add a new capability SMP-AUTOMATION-WORKFLOWS (or similar) and realize it on 185; redistribute 522 and 523 to 184."
-    why: |
-      Capability-to-module realization drives the marketing surface and the per-module discoverability layer. Leaving 184 and 185 with zero capabilities tilts the rendered footprint back toward the pre-restructure 2-module shape and obscures the optimization / automation flagship surfaces.
-    affected_modules:
-      - 30
-      - 184
-      - 185
-    affected_entities:
-      - SMP-USAGE-ANALYTICS
-      - SMP-LICENSE-OPT
-  - id: B2-E3-PROCUREMENT-AUTOMATION
-    summary: PROCUREMENT-SAAS-RENEWAL-OWNER (10119) has no role_modules row for SMP-AUTOMATION (185); intentional persona scope or coverage gap?
+      - "(a) saas_applications (61) -> embedded_master + required; legal_contracts (66) -> embedded_master + optional."
+      - "(b) Set both to necessity=optional, leave roles as-is (presence-conditional)."
+      - "(c) Leave as-is (accept the cross-module/cross-domain prerequisite)."
+    affected_modules: [31]
+    affected_entities: [saas_applications, legal_contracts]
+  - id: B2-B4-SUBMITLOCK
+    summary: smp_app_requests (999) — set has_submit_lock?
     question: |
-      Role 10119 (PROCUREMENT-SAAS-RENEWAL-OWNER) carries 3 role_modules rows (30 secondary, 31 primary, 184 secondary) but none for module 185. Is procurement intentionally out of scope for self-service app-request automation, or should a secondary interaction be added so renewal-side procurement sees automation-driven app requests and reclamation events?
+      smp_app_requests has a gated initial `submitted` state (requires_permission) and two-stage manager+IT approval. Should has_submit_lock=true be set on the master? has_single_approver correctly stays false (two distinct approvers).
     options:
-      - "Leave as-is: procurement is out of scope for self-service automation."
-      - "Add role_modules row (10119, 185, secondary) and a role_permissions row binding `smp-automation:read` (10800)."
-    why: |
-      Self-service app requests originated by employees in module 185 ultimately spawn renewals and seat-grant decisions in module 31; whether procurement needs visibility into the upstream automation depends on org practice.
-    affected_modules:
-      - 185
-    affected_entities:
-      - PROCUREMENT-SAAS-RENEWAL-OWNER
+      - "(a) Set has_submit_lock=true (submit then locked pending approval)."
+      - "(b) Leave false."
+    affected_entities: [smp_app_requests]
+  - id: B2-B6B-OWNERSIDE
+    summary: ~13 one_to_many/composition relationship rows carry owner_side=target with a parent-first verb; soft B6b warning, needs review.
+    question: |
+      Several SMP relationship rows set owner_side=target while the forward verb reads parent-to-child from the source (e.g. saas_applications integrates_with smp_app_integrations; smp_renewal_engagements negotiated_under smp_vendor_negotiations). Review owner_side and verb direction? Soft (never blocks); affects delete-mode semantics and the blueprint mermaid renderer.
+    options:
+      - "(a) Run a B6b owner_side/verb-direction correction pass (surfaced per-row first)."
+      - "(b) Leave as authored."
+  - id: B2-B8-XREL
+    summary: Missing cross-domain mirror data_object_relationships for outbound handoffs to S2P (payload purchase_requisitions) and ITSM (payload incidents).
+    question: |
+      Outbound handoffs 39/45 (-> S2P) and 642 (-> ITSM) have no corresponding cross-domain data_object_relationships rows (payload->target). Author them, or treat as event-only handoffs?
+    options:
+      - "(a) Author the mirror relationships (verb + inverse + cardinality + owner_side)."
+      - "(b) Event-only; no relationship row."
+    affected_handoffs:
+      - {handoff_id: 39, direction: outbound, source_domain: SMP, target_domain: S2P, trigger_event: shadow_app.requires_sanctioning, payload: purchase_requisitions, null_field: data_object_relationship}
+      - {handoff_id: 45, direction: outbound, source_domain: SMP, target_domain: S2P, trigger_event: seat_demand.exceeded, payload: purchase_requisitions, null_field: data_object_relationship}
+      - {handoff_id: 642, direction: outbound, source_domain: SMP, target_domain: ITSM, trigger_event: saas_application.deprovisioned, payload: incidents, null_field: data_object_relationship}
+  - id: B2-CAP-AUTOMATION
+    summary: Is a distinct automation / self-service-provisioning capability warranted for SMP-AUTOMATION (185), or does SMP-APP-LIFECYCLE (524, now realized there) suffice?
+    question: |
+      M6 was cured by moving SMP-APP-LIFECYCLE (524) onto module 185. Module 185 also masters self-service app requests + workflow runs. Author a dedicated capability (e.g. SMP-WORKFLOW-AUTOMATION) for the declarative-automation surface, or keep APP-LIFECYCLE as the single realized capability?
+    options:
+      - "(a) Add SMP-WORKFLOW-AUTOMATION capability realized on 185; keep APP-LIFECYCLE too."
+      - "(b) Keep APP-LIFECYCLE as the sole 185 capability."
 
-b3: []
+b3:
+  - id: B3-DEFERRED-COMPLIANCE-ENTITIES
+    candidate: smp_data_residency_attestations / smp_subprocessor_disclosures / smp_user_app_exposures
+    rationale: |
+      Deferred 2026-05-29 as single-vendor Core (Flexera-only surface for the first two; user_app_exposures inferred only and better modeled as a DSAR-driven view in a privacy/consent domain). Re-vet before any load.
+    vendor_evidence:
+      - {vendor: Flexera One, evidence: 1st_class}
+      - {vendor: Productiv, evidence: absent}
+      - {vendor: Zylo, evidence: absent}
+  - id: B3-MARKET-SURFACE-REFRESH
+    candidate: fresh SMP market-surface (semantic) pass
+    rationale: |
+      No market-surface subagent run this round (the structural + handoff passes covered the live state). A fresh Phase-0-style MISSING / WRONG-OWNERSHIP / SCOPE-CREEP / MODULARIZATION pass against flagship vendors (Zylo, Productiv, Torii, BetterCloud, LeanIX, Flexera) is optional; last full surface ran 2026-05-29 and loaded 16 entities.
+    vendor_evidence: [Zylo, Productiv, Torii, BetterCloud, LeanIX SaaS Management, Flexera One]

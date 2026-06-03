@@ -281,3 +281,57 @@ Subagent continuation pass: apply only truly-technical B1 fixes the orchestrator
 
 Same as 2026-05-30, unchanged: DXP, B2C-COMM, MA, DAM, LSD, WEB-CONTOPS each owe M1 closure + their slice of B10b NULL population on the 15 HCMS cross-domain handoffs.
 
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+Scope: modules + entity assignment ONLY (reuse existing entities). HCMS (domain 93, Headless Content Management: API-first content platforms and headless CMS for omnichannel content delivery, decoupled from presentation) moved from 0 domain_modules (M1 hard-fail) to 3 full domain_modules. This closes the B1B-S1 / B2-S4 module-split gate that blocked the prior audit. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. All existing roles + necessity preserved.
+
+### Decision: B2-S4 module split resolved to option (a), 3-module MODELING / AUTHORING / DELIVERY
+
+Prior audit surfaced B2-S4 with options (a) 3-module, (b) 2-module PLATFORM/DELIVERY, (c) 4-module incl. HCMS-LOCALIZATION, (d) 1-module waiver. Selected (a): clean modeling-vs-authoring-vs-delivery separation that maps every capability and every master to exactly one home, satisfies Rule #14 (>=3 caps -> >=2 full modules; delivered 3), and keeps each module non-empty. Option (c)'s HCMS-LOCALIZATION remains a defensible future split if translation_jobs (B3-E6) lands; deferred, not chosen, because content_locales alone does not yet justify a fourth module.
+
+### Modules created
+
+| id  | code           | kind | capabilities                         | data_objects (role)                                                                 |
+|-----|----------------|------|--------------------------------------|-------------------------------------------------------------------------------------|
+| 260 | HCMS-MODELING  | full | 132 (HCMS-MODEL)                     | content_types 131 (master), content_environments 136 (master)                       |
+| 261 | HCMS-AUTHORING | full | 134, 135, 136, 137, 139              | content_entries 132 (master), editorial_workflows 134 (master), content_locales 135 (master), digital_assets 137 (contributor) |
+| 262 | HCMS-DELIVERY  | full | 133 (HCMS-DELIVERY), 138 (HCMS-WEBHOOKS) | content_releases 133 (master)                                                   |
+
+Capability codes: 132 HCMS-MODEL, 133 HCMS-DELIVERY, 134 HCMS-AUTHORING, 135 HCMS-I18N, 136 HCMS-DAM, 137 HCMS-VERSIONING, 138 HCMS-WEBHOOKS, 139 HCMS-VISUAL.
+
+### Master -> module mapping (each master in exactly one module, in-domain and catalog-wide)
+
+- content_types 131 -> HCMS-MODELING (260)
+- content_environments 136 -> HCMS-MODELING (260)
+- content_entries 132 -> HCMS-AUTHORING (261)
+- editorial_workflows 134 -> HCMS-AUTHORING (261)
+- content_locales 135 -> HCMS-AUTHORING (261)
+- content_releases 133 -> HCMS-DELIVERY (262)
+
+digital_assets 137 stays contributor/required in HCMS-AUTHORING; DAM masters it (preserved, never promoted).
+
+### M7 pre-check
+
+Ran catalog-wide master pre-check on all 6 master candidates (131, 132, 133, 134, 135, 136) before writing any role='master': zero pre-existing master rows anywhere. No demotions to embedded_master required. digital_assets 137 had zero module assignments and was assigned contributor (its existing in-domain role), not promoted.
+
+### Verification (live, post-load)
+
+- 3 full modules; each module has >=1 capability and >=1 data_object (no empty module).
+- All 8 capabilities placed exactly once across the 3 modules (M4 satisfied).
+- All 6 masters appear exactly once each, both in-domain (M7) and catalog-wide.
+- digital_assets contributor preserved.
+
+### Fixes applied
+
+- INSERT 3 domain_modules (260, 261, 262), all module_kind='full', record_status omitted.
+- INSERT 8 domain_module_capabilities rows (1 + 5 + 2), notes empty.
+- INSERT 7 domain_module_data_objects rows (2 + 4 + 1), notes empty; 6 master + 1 contributor.
+
+Loader: .tmp_deploy/modularize_hcms_2026-06-02.ts (idempotent, safe to re-run).
+
+### Deferred (unchanged, now actionable post-modularization)
+
+The system-skill reparent/split (B1B-S3), mutate-tool authoring (B1B-S4), lifecycle-states authoring (B2-S1), pattern-flag re-evaluation (B2-S2), and the 3 candidate handoffs (B1B-S7) all had B1B-S1 (modules exist) as their gate. That gate is now closed; these become agent-actionable on the next pass and are recorded in state.yaml. The B3 entity / domain candidates and the APQC handoff-tag work (B1A-H1) are out of scope for this modularization pass and carried forward.

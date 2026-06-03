@@ -466,3 +466,44 @@ Unchanged from 2026-05-30:
 Unchanged: EA (Enterprise Architecture) and IBPMS (Intelligent Business Process Management Suite). Both still pending promotion decisions.
 
 JWT errors: none.
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+BPA was an unbuilt domain (M1 hard fail: 0 `domain_modules`) carrying 7 capabilities and 4 master-claimed data_objects via the legacy `domain_data_objects` rollup. This pass executed the modularization-only scope: it authored the BPA module set, linked every capability, and assigned every existing data_object at its preserved role and necessity. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. The default 3-module shape from the 2026-05-30 audit (Bucket 2 #1 option a) was adopted.
+
+The single load-bearing structural decision: `business_capability_maps` (248) already holds its one catalog-wide `role='master'` DMDO row on **APM-PORTFOLIO-REGISTRY** (module 103, APM domain). Under M7 (single-master) and the "reuse existing entities, never promote to master" rule, 248 was assigned in BPA as **embedded_master / required**, NOT master. The B2-CAPMAP-OWNER user decision (relocate the master to BPA vs accept APM as canonical) remains open and untouched. Likewise capabilities 343 (BUSINESS-CAPABILITY-MAP) and 344 (REFERENCE-FRAME-LIBRARY) are now realized through the new BPA-CAPABILITY-MAP module **in addition to** their existing APM-103 realizations; the APM realizations were left in place (their removal is part of the deferred capmap-owner reconciliation, not this scope).
+
+### Module split
+
+| Module (id) | Capabilities | Data objects (role / necessity) |
+|---|---|---|
+| BPA-PROCESS-REPO (220) | 338 BPA-BPMN-MODEL, 339 BPA-PROCESS-REPO, 342 BPA-PUBLISH | 247 business_process_models (master / required) |
+| BPA-CAPABILITY-MAP (221) | 343 BUSINESS-CAPABILITY-MAP, 344 REFERENCE-FRAME-LIBRARY | 248 business_capability_maps (embedded_master / required) |
+| BPA-VALUE-STREAM (222) | 341 BPA-VALUE-STREAM, 340 BPA-SIMULATION | 249 value_streams (master / required), 250 process_simulation_runs (master / required) |
+
+All three modules `module_kind='full'`, `record_status='new'`. `catalog_tagline` and `catalog_description` intentionally left empty on all three (M8 / A4 buyer-copy gap, owed back to Phase A and the user per Rule 20).
+
+### Counts
+
+- `domain_modules` for BPA: 0 -> 3.
+- `domain_module_capabilities`: 7 new rows; all 7 BPA capabilities now realized by a BPA module (M4 satisfied). Capabilities 343, 344 also retain their pre-existing APM-103 realizations (deferred cleanup).
+- `domain_module_data_objects`: 4 new rows (3 master, 1 embedded_master); `notes=''` on all (R15).
+- Master single-location check (M7): 247 master only on 220, 249 + 250 master only on 222, 248 master only on APM-103 (untouched). Each master held in exactly one module.
+- M6: every module realizes >=1 capability and holds >=1 data_object; no empty module.
+- Rule #14: 7 capabilities (>=3) yield 3 full modules (within the 2-3 target).
+
+### Loader
+
+`c:/dev/domain-map/.tmp_deploy/modularize_bpa_2026-06-02.ts`. Idempotent (re-checks each module by `domain_module_code`, each DMC by `(domain_module_id, capability_id)`, each DMDO by `(domain_module_id, data_object_id)`; re-reads modules for the code->id map, no hard-coded module ids). Verified idempotent on a second run (all rows reported as already present). JWT errors: none.
+
+### Deferred gaps (now owed by the modularization)
+
+- **Per-module system skills (Rule #17 -> F2/F3).** Each of the 3 new modules now owes exactly one `skill_type='system'` skill anchored by `domain_module_id`. The legacy `bpa-system` skill (id 34, `domain_module_id=null`) with its 4 query-tier `skill_tools` (332/65/333/334) must be DELETEd once the per-module skills land. Captured as b1a B1A-SKILLS.
+- **Catalog UX backfill (M8 / A4).** `domains.catalog_tagline` / `domains.catalog_description` on row 136, and `catalog_tagline` / `catalog_description` on the 3 new module rows, are all empty. Rule 20 requires user-approved buyer copy before any write. Captured as b1a B1A-SKILLS (UX backfill clause) and b2 B2-CATALOG-UX.
+- **Missing-master candidate.** None genuinely missing from this scope. 248's master location is a user-decision (B2-CAPMAP-OWNER / B3-CAPMAP-RELOCATE), not a missing master: it is mastered by APM today and embedded by BPA here. Recorded as b3 B3-CAPMAP-RELOCATE so the relocate option stays visible.
+- **Capability-realization cleanup.** Capabilities 343, 344 are now double-realized (new BPA-221 rows plus legacy APM-103 rows). The APM-103 DMC rows (190, 191) should be removed if and only if B2-CAPMAP-OWNER resolves BPA as canonical owner. Left in place by design.
+- **Downstream M-band fixes now unblocked.** B1B-M2 (already satisfied for 247/249/250 by the new master rows), B1B-M4 (relocate lifecycle states 673/674/675 to BPA-221, gated on capmap-owner), B1B-M5 (capability links, now landed for the BPA side), B1B-S3/S4 (handoff source/target module FK backfill, now derivable), B1B-S5 (intra-domain handoffs), B1B-B4 (lifecycle states on 247/249/250). These remain in the b1b queue: they require entity creation or PATCHes outside this modules-and-assignment-only scope.
+
+JWT errors: none.

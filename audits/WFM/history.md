@@ -353,3 +353,48 @@ _(empty; awaiting user response per per-bucket prompts)_
 
 _(empty; this audit is report-only)_
 
+## 2026-06-02 — Audit (modularization)
+
+### Summary
+
+WFM went from ZERO `domain_modules` to a 3-module `module_kind='full'` split, resolving the long-standing M1 hard-fail and closing B1-S1 / B1B-S1 (and superseding the B2-S1 module-shape question, which is now decided in favor of the 3-module shape). Scope this pass was modules + entity assignment ONLY: no new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. All existing roles + necessities were preserved verbatim from `domain_data_objects`.
+
+The 3-module shape (WFM-TIME-ATTENDANCE / WFM-SCHEDULING / WFM-ABSENCE) was adopted as proposed across the 2026-05-30 and 2026-05-31 audits; it mirrors the UKG Dimensions / Workday / Replicon product taxonomies and maps cleanly to the 6 capabilities and 7 WFM-owned masters.
+
+Loader: [.tmp_deploy/modularize_wfm_2026-06-02.ts](../../.tmp_deploy/modularize_wfm_2026-06-02.ts) (idempotent; re-run confirmed no-op).
+
+### Module split
+
+| Module (code, id) | Capabilities realized | data_objects (role / necessity) |
+|---|---|---|
+| **WFM-TIME-ATTENDANCE** (194) | TIME-TRACKING (30), LABOR-COMPLIANCE (34) | time_entries (master / required), meal_break_records (master / required), employees (embedded_master / required), hcm_positions (embedded_master / required), org_units (embedded_master / required), cost_centers (embedded_master / optional) |
+| **WFM-SCHEDULING** (195) | SCHEDULING (31), LABOR-FORECAST (33), WORKFORCE-SCHEDULING (312) | work_schedules (master / required), work_shifts (master / required), employees (embedded_master / required), hcm_positions (embedded_master / required), job_profiles (embedded_master / required), org_units (embedded_master / required) |
+| **WFM-ABSENCE** (196) | ABSENCE-MGMT (32) | absence_requests (master / required), absence_balances (master / required), time_off_policies (master / required), employees (embedded_master / required), org_units (embedded_master / required) |
+
+**M7 single-master check:** each of the 7 WFM-owned masters lands as `master` in exactly one module (time_entries, meal_break_records -> 194; work_schedules, work_shifts -> 195; absence_requests, absence_balances, time_off_policies -> 196). The 5 shared embedded masters (employees, org_units, hcm_positions, job_profiles, cost_centers) are HCM/Finance-owned and repeat across modules where genuinely consumed, retaining their `embedded_master` role and original necessity.
+
+**M4 / M6 check:** all 6 capabilities placed (M4); every module realizes >=1 capability and holds >=1 data_object, no empty module (M6).
+
+### Counts created
+
+| Table | Rows inserted |
+|---|---|
+| domain_modules | 3 |
+| domain_module_capabilities | 6 |
+| domain_module_data_objects | 17 |
+
+`record_status` omitted on every insert (Rule #1, DB default `new`). `notes` left empty on every DMC + DMDO row (Rule #15). No vendor/product names in module name or description (Rule #18). `catalog_tagline` / `catalog_description` deliberately left empty -> M8/A4 buyer-copy gap recorded below.
+
+### Deferred gaps (recorded, not filled this pass)
+
+- **M8 / A4 catalog UX copy backfill** (new b1a B1A-CATALOG-COPY): all 3 modules carry empty `catalog_tagline` + `catalog_description`. Buyer-facing copy was intentionally not invented this pass.
+- **Phase-S system skills** (new b1a B1A-MODULE-SKILLS): Rule #17 now demands one `skill_type='system'` skill per module (3 needed). The legacy domain-level `wfm-system` skill (id 121, `domain_module_id` NULL) is still the F1 anti-pattern and must be retired or rehomed (carried B2-S5 route question). Now unblocked structurally (modules exist).
+- **B10b handoff module FKs** (carried b1b B1B-S6 / S12 / S13): the 8 outbound + 6 inbound handoffs can now be PATCHed with the realizing module FKs (modules exist). Mapping in those items still holds against the realized module ids: 194 WFM-TIME-ATTENDANCE, 195 WFM-SCHEDULING, 196 WFM-ABSENCE.
+- **B12 lifecycle states** (carried b1b B1B-S3): now able to point `domain_module_id` at the realizing module.
+- **B11 aliases** (carried b1b B1B-S2), **B9 events** (B1B-S5), **B7 work_shifts user edge** (carried b1a B1A-S8-A), **B8 outbound relationships** (B1B-S10): unchanged by this pass.
+- **Missing-master candidates** (Bucket 3, carried as b3): time_clocks, clock_punch_corrections, labor_demand_forecasts, shift_swap_offers/requests, availability_preferences, predictive_schedule_notices, accrual_grant/carryover_events, labor_law_jurisdiction_rules. Each maps to one of the 3 realized modules per its proposed_module.
+
+### JWT errors
+
+None observed during the run.
+

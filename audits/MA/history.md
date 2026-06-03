@@ -369,3 +369,51 @@ CASL, PIPEDA, LGPD, Australia Spam Act, ePrivacy Directive.
 ### Decisions
 
 (empty until reviewed)
+
+## 2026-06-02 — Audit (modularization)
+
+### Summary
+
+Phase M (Rule #14) executed: MA went from 0 `domain_modules` to **4 `module_kind='full'` modules**. The 4-module split is option (b) from the carried-over B2-M1 / B2-S1 recommendation (fold `MA-ATTRIBUTION` into campaign authoring; fold `MA-MOBILE-PUSH` into journey orchestration; keep `MA-LANDING-FORMS` separate from campaign authoring). Every existing capability is now realized by exactly one module (M4), every existing master sits in exactly one module as `role='master'` (M7), and every existing data_object is assigned to the module(s) it belongs to with its prior role + necessity preserved. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created in this pass; reused existing entities only.
+
+Loader: [.tmp_deploy/modularize_ma_2026-06-02.ts](../../.tmp_deploy/modularize_ma_2026-06-02.ts) (gitignored, idempotent; re-run inserts 0 rows). Module ids assigned: MA-CAMPAIGN-AUTHORING 197, MA-JOURNEY-ORCH 198, MA-LEAD-SCORING 199, MA-LANDING-FORMS 200.
+
+### Module split
+
+| Module (code → id) | Capabilities | Data objects (role / necessity) |
+|---|---|---|
+| MA-CAMPAIGN-AUTHORING (197) | MA-EMAIL-CAMPAIGN (262), MA-AB-OPTIMIZATION (267), MA-GEN-AI-CONTENT (269), MA-ATTRIB-MEASURE (268) | marketing_campaigns (116, master/req), marketing_emails (117, master/req), crm_contacts (98, contributor/req), customer_events (111, contributor/req), audience_segments (113, consumer/req), customer_attributes (114, consumer/req) |
+| MA-JOURNEY-ORCH (198) | MA-JOURNEY-ORCH (263), MA-MOBILE-PUSH (266) | nurture_journeys (119, master/req), customers (97, contributor/req), customer_events (111, contributor/req), audience_segments (113, consumer/req), customer_attributes (114, consumer/req) |
+| MA-LEAD-SCORING (199) | MA-LEAD-SCORING (264) | lead_scores (118, master/req), crm_contacts (98, contributor/req), customer_events (111, contributor/req), customer_attributes (114, consumer/req) |
+| MA-LANDING-FORMS (200) | MA-LANDING-FORMS (265) | marketing_forms (120, master/req), crm_contacts (98, contributor/req), customers (97, contributor/req) |
+
+All 8 capabilities placed (M4 satisfied). All 5 masters single-mastered (M7): 116/117→197, 119→198, 118→199, 120→200. Contributors/consumers fan out to the modules that read them; roles + necessity copied verbatim from the prior `domain_data_objects` rollup (every prior row was `required`). No module is empty (M6: each has ≥1 capability and ≥1 master).
+
+### Counts created
+
+| Entity | Inserted |
+|---|---|
+| `domain_modules` (module_kind=full) | 4 |
+| `domain_module_capabilities` | 8 |
+| `domain_module_data_objects` | 18 (5 master, 7 contributor, 6 consumer) |
+
+All `notes` columns left empty on every DMC and DMDO row (Rule #15). All inserts omit `record_status` (Rule #1, DB default `new`). `catalog_tagline` / `catalog_description` left empty on all 4 modules (deferred → M8/A4 gap, recorded below). No vendor/product names in any module name or description (Rule #18).
+
+### Verification
+
+- Re-run of the loader inserted 0 rows (idempotent on `domain_module_code`, `(domain_module_id, capability_id)`, `(domain_module_id, data_object_id)`).
+- `/domain_modules?domain_id=eq.70` returns 4 rows, all `module_kind=full`, all with empty `catalog_tagline`/`catalog_description`.
+- `/domain_module_capabilities` for 197-200 returns 8 rows covering capability ids 262-269 with no duplicate placement.
+- `/domain_module_data_objects` for 197-200 returns 18 rows, all `notes=''`; the 5 master rows (116,117,118,119,120) each appear in exactly one module.
+
+### Deferred gaps (not filled in this scope-limited pass)
+
+- **M8 / A4 — per-module + domain catalog UX copy.** All 4 new modules ship with empty `catalog_tagline` / `catalog_description`; `domains.MA` catalog copy also still empty (carried `B1B-A4-CATALOG-UX`). Backfill is buyer-voice editorial requiring user approval (Rule #20); surfaced as `b1a` (B1A-M8-MODULE-UX) plus the existing `b1b`/`b2` A4 items.
+- **Rule #17 / F2 / F3 — per-module system skills.** Each of the 4 modules now requires exactly one `system` skill with ≥1 `skill_tools` row. None exist; the legacy domain-anchored `ma-system` skill (id 17, `domain_module_id=null`, 12 skill_tools) is the seed to redistribute and then retire (carried `B1B-F1-LEGACY-SKILL`). Recorded as `b1a` (B1A-M-SYSTEM-SKILLS) per Rule #17 → F2/F3.
+- **B10b handoff FK backfill (now unblocked).** The 8 outbound (`source_domain_module_id`) and 11 inbound (`target_domain_module_id`) NULL FKs can now be PATCHed against the real module ids. Provisional routing from the 2026-05-30 audit maps onto the final split: MA-CAMPAIGN-AUTHORING=197, MA-JOURNEY-ORCH=198, MA-LEAD-SCORING=199, MA-LANDING-FORMS=200 (note: the old provisional `MA-LANDING-PAGES` is this split's `MA-LANDING-FORMS` 200; `MA-ATTRIBUTION` was folded into 197, so handoff 506 routes to 197). Outside this pass's scope (handoffs not in scope); the dependent b1b items are now unblocked at the FK-target level.
+- **B12 lifecycle states (now unblocked for module anchoring).** The 5 masters still carry 0 `data_object_lifecycle_states`; workflow-gate states now have real `domain_module_id` targets. Outside this pass's scope.
+- **Missing-master candidates (b3, unchanged).** `marketing_email_sends`, `audience_lists`, `subscriber_preferences`, `ab_test_variants` → MA-CAMPAIGN-AUTHORING (197); `email_send_metrics` → MA-CAMPAIGN-AUTHORING (197, since MA-ATTRIBUTION folded in); `journey_step_events` → MA-JOURNEY-ORCH (198). Not created (scope: reuse existing entities only).
+
+### Decisions
+
+- Adopted the 4-module split (option b) as the realized architecture. This resolves B2-M1 in favor of (b) and supersedes the provisional 5-module `MA-ATTRIBUTION` / `MA-LANDING-PAGES` naming: attribution is a capability inside MA-CAMPAIGN-AUTHORING (197), and the forms module is `MA-LANDING-FORMS` (200).

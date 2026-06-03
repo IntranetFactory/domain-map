@@ -309,3 +309,49 @@ _(empty until reviewed)_
 ### Fixes applied
 
 _(empty; this is a read-only audit pass; no writes were made to the catalog)_
+
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+DSPM was modularized from 0 modules to 3 `full` modules, resolving the long-standing M1 hard-fail (Rule #14) that gated every downstream module-keyed band. Scope was modules + entity assignment ONLY: existing capabilities were linked, existing data_objects were assigned at their existing role and necessity, and no new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created.
+
+The prior audit (2026-05-30 / 2026-05-31) drafted a 4-module split pending B2-S1. This pass executed the 3-module variant (the audit own alt-c: collapse classification-lineage into discovery-inventory), which is the coherent 3-module shape: one discovery-and-classification surface, one access-and-risk engine, one incident-and-remediation workflow. All 7 capabilities and all 11 domain_data_objects were placed; no module is empty.
+
+### Modules created
+
+| id | code | module_kind | capabilities | data_objects |
+|---|---|---|---|---|
+| 233 | DSPM-DISCOVERY-CLASSIFICATION | full | 366 DSPM-DATA-DISCOVERY, 367 DSPM-CLASSIFICATION, 369 DSPM-LINEAGE, 372 DSPM-SHADOW-DATA | masters: 336 cloud_storage_buckets, 337 cloud_databases, 338 data_warehouses, 339 saas_app_instances, 343 shadow_data_findings; contributors: 300 data_assets, 303 data_classifications; consumer: 301 data_lineage_relationships |
+| 234 | DSPM-ACCESS-RISK | full | 368 DSPM-ACCESS-AUDIT, 370 DSPM-RISK-SCORING | masters: 340 iam_access_policies, 342 data_risk_scores |
+| 235 | DSPM-INCIDENT-REMEDIATION | full | 371 DSPM-REMEDIATION | master: 341 sensitive_data_incidents |
+
+7 `domain_module_capabilities` rows (4 + 2 + 1). 11 `domain_module_data_objects` rows (8 + 2 + 1).
+
+### Master assignment (catalog-wide pre-check)
+
+The mandatory catalog-wide master pre-check ran before any `role='master'` write: `GET /domain_module_data_objects?data_object_id=in.(336,337,338,339,340,341,342,343,300,303,301)&role=eq.master`. It returned ZERO rows, so none of the candidates were mastered by any module catalog-wide. All 8 native masters (336-343) were therefore assigned `master` in DSPM without conflict. No demotions to `embedded_master` were required this pass.
+
+The 3 borrowed entities kept their existing legacy roles (DCG masters all three): 300 data_assets (contributor / required), 303 data_classifications (contributor / required), 301 data_lineage_relationships (consumer / required). None was promoted.
+
+Master-to-module mapping (each master in exactly one module, in-domain and catalog-wide):
+- cloud_storage_buckets 336, cloud_databases 337, data_warehouses 338, saas_app_instances 339, shadow_data_findings 343 -> DSPM-DISCOVERY-CLASSIFICATION (233)
+- iam_access_policies 340, data_risk_scores 342 -> DSPM-ACCESS-RISK (234)
+- sensitive_data_incidents 341 -> DSPM-INCIDENT-REMEDIATION (235)
+
+### Verification
+
+- All 7 capabilities placed exactly once (M4): 366/367/369/372 -> 233, 368/370 -> 234, 371 -> 235.
+- Each of the 8 native masters mastered exactly once, all rows in DSPM modules (M7 in-domain and catalog-wide; re-queried post-insert).
+- No empty module (M6 / no-empty-module: 8 / 2 / 1 DMDO rows; every module has >=1 capability and >=1 data_object).
+- Rule #14: 3 `full` modules for a 7-capability domain (floor is >=2). Pass.
+- Rule #15: `notes` left empty on every DMC and DMDO row. Rule #18: no vendor or product names in any module name or description. R1: `record_status` omitted on all inserts.
+
+### Loader
+
+`.tmp_deploy/modularize_dspm_2026-06-02.ts` (idempotent; re-reads modules after insert for the code->id map; guards with a catalog-wide master pre-check that aborts on any foreign master; safe to re-run).
+
+### Out of scope this pass (deferred, see state.yaml)
+
+Per-module system skills + skill_tools (Rule #17 / F2-F3), catalog UX taglines and descriptions (M8 / A4), lifecycle states on workflow-bearing masters (B11), pattern-flag re-evaluation, business_function ownership, regulations, handoff direction fixes, and DSPM-owed source_domain_module_id back-fill on the 10 outbound handoffs all remain open. The B3 vendor-research candidates (data_access_paths, remediation_playbooks, data_perimeters, toxic_combinations) carry forward unchanged.

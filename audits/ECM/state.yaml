@@ -2,7 +2,7 @@ schema_version: 2
 domain: ECM
 status: feedback_needed
 next_action_by: agent
-last_audit: "2026-05-31"
+last_audit: "2026-06-02"
 
 b1a:
   - id: B1A-S9
@@ -29,43 +29,169 @@ b1a:
       - {id: 899, event_name: "document.retention_expired", current_category: "", proposed_category: "state_change"}
       - {id: 901, event_name: "document_folder.permissions_changed", current_category: "", proposed_category: "state_change"}
 
-b1b:
-  - id: B1B-S1
-    summary: "Author the ECM module set (3 / 4 / 5 candidate splits surfaced); blocked on user decision."
+  - id: B1A-F2-SYSTEM-SKILLS
+    summary: "Author one `skill_type='system'` skill per ECM module (F2, Rule #17): 3 modules now exist, 0 module-level system skills."
     finding: >-
-      `/domain_modules?domain_id=eq.91` returns 0 rows. Per Rule #14 every `domains` row
-      requires >=1 `module_kind='full'` row, and a 7-capability domain requires >=2 full
-      modules. This is the headline structural blocker. M1 / M2 / M4 / M6 / M7 / M8 /
-      B9b / B10b (8 outbound + 10 inbound module-FK NULLs) / E1-E5 / F2-F5 all cure once
-      a module set lands.
+      The 2026-06-02 modularization landed 3 `full` modules: ECM-REPOSITORY (id 242),
+      ECM-RECORDS-GOV (id 243), ECM-WORKFLOW (id 244). Per Rule #17 every `domain_modules`
+      row needs exactly one `skill_type='system'` skill with `domain_module_id` set. None of
+      the 3 modules has one today, so F2 fails 3 times. A legacy domain-level system skill
+      `ecm-system` (id 54, `domain_module_id=null`) still exists and is acceptable only until
+      module-level skills land (F1).
     action: >-
-      Once the user picks a split shape in B2-MODULE-SPLIT, INSERT the 3 / 4 / 5
-      `domain_modules` rows with `domain_id=91`, `module_kind='full'`, draft module codes
-      `ECM-REPO` / `ECM-RECORDS` / `ECM-CLASSIFY` / `ECM-WORKFLOW` (4-shape default).
-      Then INSERT `domain_module_capabilities`, `domain_module_data_objects`,
-      `data_object_lifecycle_states` with `domain_module_id` populated, the 4 intra-domain
-      `handoffs`, and PATCH the 18 cross-domain `handoffs` module FKs per the
-      master-resolution rule.
-    blocked_by:
-      - {type: user_decision, ref: B2-MODULE-SPLIT}
-    affected_modules: []
-    affected_entities: [content_documents, document_versions, document_folders, document_classifications, records_retention_policies]
+      Run Phase S against domain 91. INSERT one system skill per module:
+      `ecm_repository_agent` (domain_module_id=242), `ecm_records_gov_agent` (243),
+      `ecm_workflow_agent` (244), each with `skill_type='system'` and `domain_id=91`. Then
+      INSERT >=1 `skill_tools` row per skill (F3) using query_/mutate_ tools whose
+      `operation_kind` matches the module's `data_object_id` set (F4). Mirror the ATS / SMP
+      Phase-S loader shape. After these exist, retire legacy skill id 54 per B1B-F1.
+    affected_modules: [242, 243, 244]
 
-  - id: B1B-S2
-    summary: "Link 7 ECM capabilities to realising module(s) once split lands."
+  - id: B1A-M8-MODULE-UX
+    summary: "Draft + load module-level `catalog_tagline` + `catalog_description` on the 3 new ECM modules (M8, Rule #20)."
     finding: >-
-      `/domain_module_capabilities` is empty for ECM because no modules exist. Per M4
-      every capability must have >=1 realising module. The 7 capabilities are ECM-REPO,
-      ECM-RECORDS, ECM-WORKFLOW, ECM-INFOGOV, ECM-CAPTURE, ECM-AUDIT, ECM-CLASSIFY.
+      The 3 modules were inserted with `catalog_tagline` / `catalog_description` omitted
+      (per the modularization insert shape), so both are empty on ECM-REPOSITORY (242),
+      ECM-RECORDS-GOV (243), and ECM-WORKFLOW (244). M8 fails on each. Rule #20 forbids any
+      write without explicit user-approved exact buyer-voice text.
     action: >-
-      After B1B-S1 lands, INSERT `domain_module_capabilities` rows mapping each capability
-      to its realising module per the chosen split shape (default 4-split:
-      ECM-REPO and ECM-CAPTURE -> ECM-REPO module; ECM-RECORDS and ECM-INFOGOV ->
-      ECM-RECORDS; ECM-CLASSIFY -> ECM-CLASSIFY; ECM-WORKFLOW -> ECM-WORKFLOW;
-      ECM-AUDIT -> ECM-RECORDS).
+      Draft a one-sentence buyer-voice tagline and a 1-3 paragraph buyer-voice description
+      for each of the 3 modules per Rule #20, surface to the user for review, then PATCH the
+      approved exact text onto `/domain_modules?id=eq.<242|243|244>`. Pairs with the
+      domain-level A4 backfill (B2-CATALOG-UX).
+    affected_modules: [242, 243, 244]
+
+b1b:
+  - id: B1B-L1
+    summary: "Load `content_documents` lifecycle states (5 states + workflow gates) now that modules exist."
+    finding: >-
+      `/data_object_lifecycle_states?data_object_id=eq.429` returns zero rows. Per Rule #12
+      every `master + required` data_object with a real workflow loads its state machine. The
+      `requires_permission` states need a `domain_module_id`, which now exists:
+      `content_documents` is mastered by ECM-REPOSITORY (id 242). Out of scope for the
+      modules-only 2026-06-02 pass (creating lifecycle states); now unblocked for the next pass.
+    action: >-
+      INSERT lifecycle states for id 429: `draft` (initial),
+      `in_review` (`requires_permission`, override `review_content_document`),
+      `published` (`requires_permission`, `publish_content_document`),
+      `superseded` (terminal), `under_legal_hold` (branch from event 900),
+      `archived` (terminal). Set `domain_module_id=242` on the permission-gated states.
     blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: "needs domain_modules rows to FK against"}
-    affected_entities: [ECM-REPO, ECM-RECORDS, ECM-WORKFLOW, ECM-INFOGOV, ECM-CAPTURE, ECM-AUDIT, ECM-CLASSIFY]
+      - {type: depends_on, ref: "next audit pass", reason: "modules-only scope on 2026-06-02 did not author lifecycle states; modules now exist as FK target"}
+    affected_masters:
+      - {data_object_id: 429, name: content_documents, target_module_id: 242, workflow: "draft -> in_review -> published -> superseded; branch -> under_legal_hold; terminal -> archived"}
+
+  - id: B1B-L2
+    summary: "Load `document_versions` lifecycle states (2-state minimum)."
+    finding: >-
+      `/data_object_lifecycle_states?data_object_id=eq.430` returns zero rows.
+      `document_versions` is mastered by ECM-REPOSITORY (id 242).
+    action: >-
+      INSERT states for id 430: `draft` (initial), `published` (terminal). Optional
+      `withdrawn` (terminal) if a version-withdraw workflow is needed.
+    blocked_by:
+      - {type: depends_on, ref: "next audit pass", reason: "lifecycle states out of modules-only scope"}
+    affected_masters:
+      - {data_object_id: 430, name: document_versions, target_module_id: 242, workflow: "draft -> published; optional -> withdrawn"}
+
+  - id: B1B-L5
+    summary: "Load `records_retention_policies` lifecycle states (4-state minimum)."
+    finding: >-
+      `/data_object_lifecycle_states?data_object_id=eq.433` returns zero rows.
+      `records_retention_policies` is mastered by ECM-RECORDS-GOV (id 243).
+    action: >-
+      INSERT states for id 433: `draft` (initial), `under_review` (optional),
+      `active` (`requires_permission`, override `activate_retention_policy`),
+      `superseded` (terminal), `retired` (terminal). Set `domain_module_id=243` on the gate.
+    blocked_by:
+      - {type: depends_on, ref: "next audit pass", reason: "lifecycle states out of modules-only scope"}
+    affected_masters:
+      - {data_object_id: 433, name: records_retention_policies, target_module_id: 243, workflow: "draft -> under_review -> active -> superseded; terminal -> retired"}
+
+  - id: B1B-B1
+    summary: "Backfill `source_domain_module_id` on 8 outbound ECM handoffs now that modules exist."
+    finding: >-
+      All 8 outbound ECM handoffs (821, 822, 823, 839, 824, 825, 826, 827) have
+      `source_domain_module_id=null`. The source module is the ECM module that masters the
+      trigger event's `data_object_id`: documents / versions / folders / classifications ->
+      ECM-REPOSITORY (242); retention -> ECM-RECORDS-GOV (243). Out of scope for the
+      modules-only pass (PATCHes handoffs); now unblocked.
+    action: >-
+      PATCH each row to the realising ECM module per the master-resolution rule
+      (`master` > `embedded_master` > `contributor` > `consumer` > `derived`). Use the loader
+      pattern from `scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts`.
+    blocked_by:
+      - {type: depends_on, ref: "next audit pass", reason: "handoff backfill out of modules-only scope"}
+    affected_handoffs:
+      - {handoff_id: 821, direction: outbound, source_domain: ECM, target_domain: DLP, trigger_event: "content_document.uploaded", payload: content_documents, null_field: source_domain_module_id}
+      - {handoff_id: 822, direction: outbound, source_domain: ECM, target_domain: DLP, trigger_event: "document.classified", payload: document_classifications, null_field: source_domain_module_id}
+      - {handoff_id: 823, direction: outbound, source_domain: ECM, target_domain: IGA, trigger_event: "document_folder.permissions_changed", payload: document_folders, null_field: source_domain_module_id}
+      - {handoff_id: 839, direction: outbound, source_domain: ECM, target_domain: IGA, trigger_event: "document.classified", payload: content_documents, null_field: source_domain_module_id}
+      - {handoff_id: 824, direction: outbound, source_domain: ECM, target_domain: LSD, trigger_event: "content_document.legal_hold_applied", payload: content_documents, null_field: source_domain_module_id}
+      - {handoff_id: 825, direction: outbound, source_domain: ECM, target_domain: AUDIT, trigger_event: "document.retention_expired", payload: records_retention_policies, null_field: source_domain_module_id}
+      - {handoff_id: 826, direction: outbound, source_domain: ECM, target_domain: KMS, trigger_event: "document.version_published", payload: document_versions, null_field: source_domain_module_id}
+      - {handoff_id: 827, direction: outbound, source_domain: ECM, target_domain: GRC, trigger_event: "document.classified", payload: document_classifications, null_field: source_domain_module_id}
+
+  - id: B1B-B3
+    summary: "Backfill `target_domain_module_id` on 10 inbound ECM handoffs now that modules exist."
+    finding: >-
+      All 10 inbound ECM handoffs (732, 735, 911, 912, 915, 919, 828, 829, 1028, 1031) have
+      `target_domain_module_id=null`. The target module is the ECM module that holds the
+      payload `data_object_id` with the strongest role. Most payloads resolve against
+      `content_documents` (ECM-REPOSITORY, 242); retention / records context resolves against
+      ECM-RECORDS-GOV (243). Out of scope for the modules-only pass; now unblocked.
+    action: >-
+      PATCH each row per the consumer-DMDO resolution rule. Note the inbound payloads
+      (extracted_records, legal_holds, ediscovery_requests, etc.) are foreign-domain masters;
+      resolve to the ECM consumer/derived row that ingests them.
+    blocked_by:
+      - {type: depends_on, ref: "next audit pass", reason: "handoff backfill out of modules-only scope"}
+    affected_handoffs:
+      - {handoff_id: 732, direction: inbound, source_domain: IDP, target_domain: ECM, trigger_event: "extracted_record.completed", payload: extracted_records, null_field: target_domain_module_id}
+      - {handoff_id: 735, direction: inbound, source_domain: IDP, target_domain: ECM, trigger_event: "document_classification_result.uncertain", payload: document_classification_results, null_field: target_domain_module_id}
+      - {handoff_id: 911, direction: inbound, source_domain: LSD, target_domain: ECM, trigger_event: "legal_hold.issued", payload: legal_holds, null_field: target_domain_module_id}
+      - {handoff_id: 912, direction: inbound, source_domain: LSD, target_domain: ECM, trigger_event: "ediscovery_request.created", payload: ediscovery_requests, null_field: target_domain_module_id}
+      - {handoff_id: 915, direction: inbound, source_domain: LSD, target_domain: ECM, trigger_event: "legal_matter.opened", payload: in_house_legal_matters, null_field: target_domain_module_id}
+      - {handoff_id: 919, direction: inbound, source_domain: LEGAL-PRACT-MGMT, target_domain: ECM, trigger_event: "court_filing.submitted", payload: external_court_filings, null_field: target_domain_module_id}
+      - {handoff_id: 828, direction: inbound, source_domain: WSC, target_domain: ECM, trigger_event: "chat_attachment.shared", payload: chat_message_attachments, null_field: target_domain_module_id}
+      - {handoff_id: 829, direction: inbound, source_domain: WSC, target_domain: ECM, trigger_event: "chat_channel.archived", payload: chat_channels, null_field: target_domain_module_id}
+      - {handoff_id: 1028, direction: inbound, source_domain: LSD, target_domain: ECM, trigger_event: "in_house_legal_matter.opened", payload: in_house_legal_matters, null_field: target_domain_module_id}
+      - {handoff_id: 1031, direction: inbound, source_domain: LSD, target_domain: ECM, trigger_event: "legal_advice_record.issued", payload: legal_advice_records, null_field: target_domain_module_id}
+
+  - id: B1B-B5
+    summary: "Author 4 intra-domain ECM handoffs now that the module split exists."
+    finding: >-
+      With 3 modules live, 4 intra-domain handoffs derive from cross-module
+      `data_object_relationships`: classification -> repository (same module now, may be
+      n/a), retention -> repository (documents), retention -> repository (folders),
+      retention -> classification. The retention source is ECM-RECORDS-GOV (243); the targets
+      are ECM-REPOSITORY (242). Out of scope for the modules-only pass.
+    action: >-
+      Re-derive the cross-module edges against the actual 3-module split (CLASSIFY folded into
+      ECM-REPOSITORY, so classification -> repository is now intra-module and drops out),
+      then INSERT the surviving intra-domain `handoffs` with
+      `source_domain_id=target_domain_id=91`, `integration_pattern='lifecycle_progression'`,
+      `friction_level='low'`, source module 243 -> target module 242.
+    blocked_by:
+      - {type: depends_on, ref: "next audit pass", reason: "intra-domain handoff authoring out of modules-only scope"}
+    affected_handoffs:
+      - {handoff_id: null, direction: intra-domain, source_domain: ECM, target_domain: ECM, trigger_event: "document.retention_expired", payload: content_documents, null_field: null, scope_note: "records module 243 -> repo module 242"}
+      - {handoff_id: null, direction: intra-domain, source_domain: ECM, target_domain: ECM, trigger_event: "document_folder.retention_expired", payload: document_folders, null_field: null, scope_note: "records module 243 -> repo module 242 (folders)"}
+      - {handoff_id: null, direction: intra-domain, source_domain: ECM, target_domain: ECM, trigger_event: "retention_policy.applied_to_classification", payload: document_classifications, null_field: null, scope_note: "records module 243 -> repo module 242 (classification now in repo)"}
+
+  - id: B1B-F1
+    summary: "Retire legacy domain-level system skill `ecm-system` (id 54) after module-level skills exist."
+    finding: >-
+      `/skills?domain_id=eq.91&skill_type=eq.system` returns id 54 with
+      `domain_module_id=null`. Per F1 this is acceptable only until a module-level system skill
+      exists for ECM. Once B1A-F2-SYSTEM-SKILLS lands, the legacy row is obsolete.
+    action: >-
+      After B1A-F2-SYSTEM-SKILLS lands, DELETE skill id 54 and its 5 `skill_tools` rows
+      (436-440) pointing at platform-covered query_* tools. The 5 tools stay in the catalog and
+      get re-linked from the new per-module skills.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1A-F2-SYSTEM-SKILLS}
+    affected_entities: [skills#54, skill_tools#436, skill_tools#437, skill_tools#438, skill_tools#439, skill_tools#440]
 
   - id: B1B-S4
     summary: "Add the 6 missing flagship ECM solutions + `solution_domains` rows."
@@ -90,35 +216,6 @@ b1b:
       - Microsoft SharePoint Online
       - Laserfiche
       - IBM FileNet
-
-  - id: B1B-S6
-    summary: "Draft + load `catalog_tagline` and `catalog_description` on `domains` id 91."
-    finding: >-
-      `/domains?id=eq.91&select=catalog_tagline,catalog_description` returns empty strings
-      on both. A4 fails. Per Rule #20 these fields are buyer-shaped and must be drafted in
-      buyer voice (workflow + value), then surfaced for user approval before any write.
-    action: >-
-      Draft tagline + 1-3 paragraph description per Rule #20 voice rule, surface to user,
-      load only the approved exact text. Sample draft tagline: "Store, classify, and
-      retain every document with built-in workflow and audit-ready compliance." Sample
-      description outline: capture, repository plus versioning, classification plus
-      retention policy, workflow plus approvals, eDiscovery plus legal-hold posture.
-    blocked_by:
-      - {type: user_decision, ref: B2-CATALOG-UX}
-
-  - id: B1B-S7
-    summary: "`content_documents` (id 429) naming decision: keep / claim canonical `documents` / rename to `ecm_documents`."
-    finding: >-
-      The 4 other ECM masters all use a 2-prefix pattern (`document_*` or `records_*`);
-      `content_documents` is the odd one. Bare `documents` is uncontested catalog-wide.
-      Blast radius if renamed by id: 27 `data_object_relationships` + 5 handoffs reference
-      id 429; all PATCHable surgically since the FK is the id not the name.
-    action: >-
-      User chooses (a) keep `content_documents`, (b) rename to `documents` with
-      `is_canonical_bare_word=true` + `naming_authority_rationale`, or (c) rename to
-      `ecm_documents` for prefix consistency.
-    blocked_by:
-      - {type: user_decision, ref: B2-CONTENT-DOCUMENTS-RENAME}
 
   - id: B1B-H1a
     summary: "Retag 5 LSD->ECM handoffs from legal-investigation PCFs to content cluster 8.4."
@@ -149,202 +246,28 @@ b1b:
       and 301 (`chat_channels archives_to content_documents`, owner_side=target) describe
       the same edges as rows 587 (`content_documents captures chat_message_attachments`,
       owner_side=target) and 588 (`document_folders archives chat_channels`,
-      owner_side=target). Likely cluster-drafts authored 300/301 first; ECM's source-side
-      authoring re-emerged as 587/588.
+      owner_side=target).
     action: >-
       Once the user confirms the direction in Bucket 2 #4, DELETE rows 300 and 301.
     blocked_by:
       - {type: user_decision, ref: B2-DEDUPE-WSC-RELATIONSHIPS}
     affected_entities: [data_object_relationships#300, data_object_relationships#301, data_object_relationships#587, data_object_relationships#588]
 
-  - id: B1B-L1
-    summary: "Load `content_documents` lifecycle states (5 states + workflow gates)."
-    finding: >-
-      `/data_object_lifecycle_states?data_object_id=eq.429` returns zero rows. Per Rule
-      #12 every `master + required` data_object with a real workflow loads its state
-      machine in Phase B. Universal across the 7 flagship vendors.
-    action: >-
-      After B1B-S1 lands so `domain_module_id` is available for `requires_permission`
-      states, INSERT lifecycle states: `draft` (initial),
-      `in_review` (`requires_permission`, override `review_content_document`),
-      `published` (`requires_permission`, `publish_content_document`),
-      `superseded` (terminal), `under_legal_hold` (branch from event 900),
-      `archived` (terminal).
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: "requires_permission states need domain_module_id (Rule #12 + M5)"}
-    affected_masters:
-      - {data_object_id: 429, name: content_documents, target_module_id: null, workflow: "draft -> in_review -> published -> superseded; branch -> under_legal_hold; terminal -> archived"}
-
-  - id: B1B-L2
-    summary: "Load `document_versions` lifecycle states (2-state minimum)."
-    finding: >-
-      `/data_object_lifecycle_states?data_object_id=eq.430` returns zero rows.
-    action: >-
-      After B1B-S1, INSERT states: `draft` (initial), `published` (terminal). Optional
-      `withdrawn` (terminal) if version-withdraw workflow needed.
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1}
-    affected_masters:
-      - {data_object_id: 430, name: document_versions, target_module_id: null, workflow: "draft -> published; optional -> withdrawn"}
-
-  - id: B1B-L3
-    summary: "Confirm config-shape exemption for `document_folders` (no workflow)."
-    finding: >-
-      `document_folders` (id 431) appears to be a config-shape master: no per-row
-      workflow, only `record_status`. Per Rule #12 this is an allowed exemption. Per
-      Rule #15 the prior license to annotate the exemption in `data_objects.notes` is
-      RESCINDED.
-    action: >-
-      Surface the exemption to the user for explicit acknowledgement; record the
-      decision in the audit narrative, NOT in `data_objects.notes`.
-    blocked_by:
-      - {type: user_decision, ref: B2-FOLDER-EXEMPTION}
-    affected_masters:
-      - {data_object_id: 431, name: document_folders, target_module_id: null, workflow: "config-shape: no workflow expected"}
-
-  - id: B1B-L4
-    summary: "Confirm config-shape exemption for `document_classifications` (taxonomy)."
-    finding: >-
-      `document_classifications` (id 432) reads as a classification-taxonomy master with
-      no per-row workflow (labels exist, get applied, occasionally retired). Per Rule
-      #12 the config-shape exemption may apply, but B2 pattern-flag review may flip
-      `has_submit_lock=true` which would imply at least a 2-state lifecycle (`draft` ->
-      `locked`).
-    action: >-
-      Surface to user alongside Bucket 2 #6 (pattern flag review). If `has_submit_lock`
-      flips true, author a 2-state machine; otherwise record the exemption in the audit
-      narrative.
-    blocked_by:
-      - {type: user_decision, ref: B2-PATTERN-FLAGS}
-    affected_masters:
-      - {data_object_id: 432, name: document_classifications, target_module_id: null, workflow: "config-shape or 2-state pending pattern-flag review"}
-
-  - id: B1B-L5
-    summary: "Load `records_retention_policies` lifecycle states (4-state minimum)."
-    finding: >-
-      `/data_object_lifecycle_states?data_object_id=eq.433` returns zero rows. Universal
-      across vendors.
-    action: >-
-      After B1B-S1, INSERT states: `draft` (initial), `under_review` (optional),
-      `active` (`requires_permission`, override `activate_retention_policy`),
-      `superseded` (terminal), `retired` (terminal).
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1}
-    affected_masters:
-      - {data_object_id: 433, name: records_retention_policies, target_module_id: null, workflow: "draft -> under_review -> active -> superseded; terminal -> retired"}
-
-  - id: B1B-B1
-    summary: "Backfill `source_domain_module_id` on 8 outbound ECM handoffs."
-    finding: >-
-      All 8 outbound ECM handoffs (821, 822, 823, 839, 824, 825, 826, 827) have
-      `source_domain_module_id=null` because ECM has no modules yet. Per B10b the source
-      module is the ECM module that masters the trigger event's `data_object_id`.
-    action: >-
-      After B1B-S1 lands, PATCH each row to point at the realising ECM module per the
-      master-resolution rule (`master` > `embedded_master` > `contributor` > `consumer`
-      > `derived`). Use the loader pattern from
-      `scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts`.
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1}
-    affected_handoffs:
-      - {handoff_id: 821, direction: outbound, source_domain: ECM, target_domain: DLP, trigger_event: "content_document.uploaded", payload: content_documents, null_field: source_domain_module_id}
-      - {handoff_id: 822, direction: outbound, source_domain: ECM, target_domain: DLP, trigger_event: "document.classified", payload: document_classifications, null_field: source_domain_module_id}
-      - {handoff_id: 823, direction: outbound, source_domain: ECM, target_domain: IGA, trigger_event: "document_folder.permissions_changed", payload: document_folders, null_field: source_domain_module_id}
-      - {handoff_id: 839, direction: outbound, source_domain: ECM, target_domain: IGA, trigger_event: "document.classified", payload: content_documents, null_field: source_domain_module_id}
-      - {handoff_id: 824, direction: outbound, source_domain: ECM, target_domain: LSD, trigger_event: "content_document.legal_hold_applied", payload: content_documents, null_field: source_domain_module_id}
-      - {handoff_id: 825, direction: outbound, source_domain: ECM, target_domain: AUDIT, trigger_event: "document.retention_expired", payload: records_retention_policies, null_field: source_domain_module_id}
-      - {handoff_id: 826, direction: outbound, source_domain: ECM, target_domain: KMS, trigger_event: "document.version_published", payload: document_versions, null_field: source_domain_module_id}
-      - {handoff_id: 827, direction: outbound, source_domain: ECM, target_domain: GRC, trigger_event: "document.classified", payload: document_classifications, null_field: source_domain_module_id}
-
-  - id: B1B-B3
-    summary: "Backfill `target_domain_module_id` on 10 inbound ECM handoffs."
-    finding: >-
-      All 10 inbound ECM handoffs (732, 735, 911, 912, 915, 919, 828, 829, 1028, 1031)
-      have `target_domain_module_id=null` because ECM has no modules yet. Per B10b the
-      target module is the ECM module that holds the payload `data_object_id` with the
-      strongest role.
-    action: >-
-      After B1B-S1 lands, PATCH each row per the consumer-DMDO resolution rule.
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1}
-    affected_handoffs:
-      - {handoff_id: 732, direction: inbound, source_domain: IDP, target_domain: ECM, trigger_event: "extracted_record.completed", payload: extracted_records, null_field: target_domain_module_id}
-      - {handoff_id: 735, direction: inbound, source_domain: IDP, target_domain: ECM, trigger_event: "document_classification_result.uncertain", payload: document_classification_results, null_field: target_domain_module_id}
-      - {handoff_id: 911, direction: inbound, source_domain: LSD, target_domain: ECM, trigger_event: "legal_hold.issued", payload: legal_holds, null_field: target_domain_module_id}
-      - {handoff_id: 912, direction: inbound, source_domain: LSD, target_domain: ECM, trigger_event: "ediscovery_request.created", payload: ediscovery_requests, null_field: target_domain_module_id}
-      - {handoff_id: 915, direction: inbound, source_domain: LSD, target_domain: ECM, trigger_event: "legal_matter.opened", payload: in_house_legal_matters, null_field: target_domain_module_id}
-      - {handoff_id: 919, direction: inbound, source_domain: LEGAL-PRACT-MGMT, target_domain: ECM, trigger_event: "court_filing.submitted", payload: external_court_filings, null_field: target_domain_module_id}
-      - {handoff_id: 828, direction: inbound, source_domain: WSC, target_domain: ECM, trigger_event: "chat_attachment.shared", payload: chat_message_attachments, null_field: target_domain_module_id}
-      - {handoff_id: 829, direction: inbound, source_domain: WSC, target_domain: ECM, trigger_event: "chat_channel.archived", payload: chat_channels, null_field: target_domain_module_id}
-      - {handoff_id: 1028, direction: inbound, source_domain: LSD, target_domain: ECM, trigger_event: "in_house_legal_matter.opened", payload: in_house_legal_matters, null_field: target_domain_module_id}
-      - {handoff_id: 1031, direction: inbound, source_domain: LSD, target_domain: ECM, trigger_event: "legal_advice_record.issued", payload: legal_advice_records, null_field: target_domain_module_id}
-
-  - id: B1B-B5
-    summary: "Author 4 intra-domain ECM handoffs once modules exist."
-    finding: >-
-      `domain_modules` count is 0, so B9b currently skips. After the module split lands,
-      4 intra-domain handoffs derive from cross-module `data_object_relationships`:
-      classification -> repository, retention -> repository (documents),
-      retention -> repository (folders), retention -> classification.
-    action: >-
-      After B1B-S1, INSERT 4 `handoffs` with `source_domain_id=target_domain_id=91`,
-      `integration_pattern='lifecycle_progression'`, `friction_level='low'`,
-      module FKs per the chosen split shape.
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1}
-    affected_handoffs:
-      - {handoff_id: null, direction: intra-domain, source_domain: ECM, target_domain: ECM, trigger_event: "document.classified", payload: content_documents, null_field: null, scope_note: "classification module -> repo module"}
-      - {handoff_id: null, direction: intra-domain, source_domain: ECM, target_domain: ECM, trigger_event: "document.retention_expired", payload: content_documents, null_field: null, scope_note: "records module -> repo module"}
-      - {handoff_id: null, direction: intra-domain, source_domain: ECM, target_domain: ECM, trigger_event: "document_folder.retention_expired", payload: document_folders, null_field: null, scope_note: "records module -> repo module (folders)"}
-      - {handoff_id: null, direction: intra-domain, source_domain: ECM, target_domain: ECM, trigger_event: "retention_policy.applied_to_classification", payload: document_classifications, null_field: null, scope_note: "records module -> classification module"}
-
-  - id: B1B-F1
-    summary: "Retire legacy domain-level system skill `ecm-system` (id 54) after module-level skills exist."
-    finding: >-
-      `/skills?domain_id=eq.91&skill_type=eq.system` returns id 54 with
-      `domain_module_id=null`. Per F1 this is acceptable transitional state until any
-      module-level system skill exists for ECM; once they exist the legacy row becomes
-      obsolete.
-    action: >-
-      After B1B-S1 + Phase S for the new modules lands, DELETE skill id 54 (and its
-      5 `skill_tools` rows pointing at platform-covered query_* tools). The 5 tools
-      themselves stay in the catalog and get re-linked from the new per-module skills.
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: "module-level system skills must exist before legacy row can be retired"}
-    affected_entities: [skills#54, skill_tools#436, skill_tools#437, skill_tools#438, skill_tools#439, skill_tools#440]
-
 b2:
   - id: B2-CATALOG-UX
-    summary: "Supply or approve exact `catalog_tagline` + `catalog_description` for ECM."
+    summary: "Supply or approve exact `catalog_tagline` + `catalog_description` for ECM domain and the 3 new modules."
     question: >-
-      A4 requires both fields populated in buyer voice. Rule #20 forbids any write
-      without explicit user-approved exact text. Either supply the text or approve a
-      fresh draft. Sample tagline draft: "Store, classify, and retain every document
-      with built-in workflow and audit-ready compliance." Sample description outline:
-      capture, repository plus versioning, classification plus retention policy,
-      workflow plus approvals, eDiscovery plus legal-hold posture.
+      A4 requires both domain-level fields populated in buyer voice; M8 requires the same on
+      each of the 3 new modules (ECM-REPOSITORY 242, ECM-RECORDS-GOV 243, ECM-WORKFLOW 244).
+      Rule #20 forbids any write without explicit user-approved exact text. Either supply the
+      text or approve a fresh draft. Sample domain tagline draft: "Store, classify, and retain
+      every document with built-in workflow and audit-ready compliance."
     options:
-      - "Supply exact text"
+      - "Supply exact text for domain + 3 modules"
       - "Approve agent's draft verbatim"
       - "Approve revised wording"
       - "Defer to a later audit"
-    why: "Rule #20 + Rule #15 forbid agent-side writes on these columns without per-row approval."
-
-  - id: B2-MODULE-SPLIT
-    summary: "Pick module split shape (3 / 4 / 5) for ECM."
-    question: >-
-      ECM has 0 modules and 7 capabilities (M1 + M2 fail). Three candidate shapes:
-      3-module (REPO + RECORDS + WORKFLOW; CLASSIFY folds into REPO),
-      4-module (REPO + RECORDS + CLASSIFY + WORKFLOW; default),
-      5-module (REPO + RECORDS + CLASSIFY + WORKFLOW + CAPTURE, with AUDIT folded
-      into RECORDS or split out as a 6th module if Bucket 3's `document_audit_trail_entries`
-      lands).
-    options:
-      - "3-module (REPO / RECORDS / WORKFLOW)"
-      - "4-module (REPO / RECORDS / CLASSIFY / WORKFLOW) - agent default"
-      - "5-module (add CAPTURE)"
-      - "6-module (add CAPTURE + AUDIT)"
-    why: "Gates B1B-S1 / S2 / B1, B3, B5, L1, L2, L5, F1; no STRUCTURAL fix can land until shape is fixed."
+    why: "Rule #20 + Rule #15 forbid agent-side writes on these columns without per-row approval. Pairs with B1A-M8-MODULE-UX."
 
   - id: B2-CONTENT-DOCUMENTS-RENAME
     summary: "Decide `content_documents` naming."
@@ -362,10 +285,8 @@ b2:
   - id: B2-DEDUPE-WSC-RELATIONSHIPS
     summary: "Confirm DELETE of `data_object_relationships` rows 300 and 301."
     question: >-
-      Rows 300 (`chat_message_attachments captured_in content_documents`,
-      owner_side=target) and 301 (`chat_channels archives_to content_documents`,
-      owner_side=target) duplicate rows 587 and 588 from ECM's source-side authoring.
-      Recommend DELETE 300 + 301; keep 587 + 588.
+      Rows 300 and 301 (WSC-authored, owner_side=target) duplicate rows 587 and 588 from
+      ECM's source-side authoring. Recommend DELETE 300 + 301; keep 587 + 588.
     options:
       - "DELETE 300 + 301 (recommended)"
       - "DELETE 587 + 588 instead"
@@ -376,11 +297,9 @@ b2:
   - id: B2-LSD-RETAG
     summary: "Decide LSD->ECM H1 retag (5 handoffs)."
     question: >-
-      Handoffs 911, 912, 915, 1028, 1031 (LSD -> ECM) currently carry `agent_curated`
-      rows pointing at PCFs 373 (Investigate legal aspects), 396 (Resolve disputes),
-      373, 373, 397 (Provide legal advice). From ECM's receive-side perspective the
-      activity is in cluster 8.4: 430 (Control delivered content), 429 (Deliver
-      approved content), or 1440 (Retain records).
+      Handoffs 911, 912, 915, 1028, 1031 (LSD -> ECM) carry `agent_curated` rows pointing at
+      LSD-side legal PCFs. From ECM's receive-side perspective the activity is in cluster 8.4
+      (430 Control delivered content, 429 Deliver approved content, 1440 Retain records).
     options:
       - "DELETE + replace with content-cluster PCFs (911->430, 912->430, 915->430, 1028->430, 1031->429)"
       - "Keep the LSD-side classification (treat as the implementing process for the inbound)"
@@ -391,18 +310,19 @@ b2:
   - id: B2-PATTERN-FLAGS
     summary: "Re-evaluate B4 pattern flags on the 5 masters."
     question: >-
-      All three pattern flags default `false` on every ECM master. Per Rule #12 + B4
-      this requires a positive re-evaluation. Candidates: `content_documents.has_personal_content=true`
-      (HR / health / contract content), `records_retention_policies.has_single_approver=true`
-      (records officer sign-off), `document_classifications.has_submit_lock=true`
-      (label assignment locks the row). Confirm or decline each.
+      All three pattern flags default `false` on every ECM master. Candidates:
+      `content_documents.has_personal_content=true` (HR / health / contract content),
+      `records_retention_policies.has_single_approver=true` (records officer sign-off),
+      `document_classifications.has_submit_lock=true` (label assignment locks the row).
+      Confirm or decline each. A `has_submit_lock` flip on `document_classifications` implies a
+      2-state lifecycle (`draft` -> `locked`).
     options:
       - "Flip all three candidates true"
       - "Flip only the personal_content + single_approver pair"
       - "Flip only personal_content"
       - "Confirm all five masters at false (record decision in audit narrative)"
       - "Custom selection"
-    why: "Affects B1B-L4 (`document_classifications` lifecycle) and the workflow-gate permission derivation later."
+    why: "Affects `document_classifications` lifecycle and the workflow-gate permission derivation later."
 
   - id: B2-VENDOR-NAMING
     summary: "Confirm Rule #18 review on the 7 new ECM solutions before they load."
@@ -422,23 +342,38 @@ b2:
   - id: B2-FOLDER-EXEMPTION
     summary: "Acknowledge config-shape exemption for `document_folders`."
     question: >-
-      `document_folders` reads as a config-shape master (folders are created, renamed,
-      occasionally archived; no per-row workflow). Per Rule #12 this is exempt from
-      mandatory lifecycle states. Per Rule #15 the exemption cannot be annotated in
-      `data_objects.notes`; it lives in the audit narrative only.
+      `document_folders` (id 431, mastered by ECM-REPOSITORY) reads as a config-shape master
+      (folders are created, renamed, occasionally archived; no per-row workflow). Per Rule #12
+      this is exempt from mandatory lifecycle states. Per Rule #15 the exemption cannot be
+      annotated in `data_objects.notes`; it lives in the audit narrative only.
     options:
       - "Confirm config-shape exemption (no lifecycle states)"
       - "Author a 2-state lifecycle (active -> archived)"
       - "Defer to a later audit"
     why: "B4 + Rule #12: exemption must be positively confirmed each audit."
 
+  - id: B2-CLASSIFICATION-EXEMPTION
+    summary: "Acknowledge config-shape exemption (or 2-state) for `document_classifications`."
+    question: >-
+      `document_classifications` (id 432, mastered by ECM-REPOSITORY) reads as a
+      classification-taxonomy master with no per-row workflow (labels exist, get applied,
+      occasionally retired). Per Rule #12 the config-shape exemption may apply, but a
+      `has_submit_lock=true` flip in B2-PATTERN-FLAGS would imply a 2-state lifecycle
+      (`draft` -> `locked`).
+    options:
+      - "Confirm config-shape exemption (no lifecycle states)"
+      - "Author a 2-state lifecycle (draft -> locked) if has_submit_lock flips true"
+      - "Defer alongside B2-PATTERN-FLAGS"
+    why: "Coupled to B2-PATTERN-FLAGS; the lifecycle shape depends on the flag decision."
+
 b3:
   - id: B3-DOC-WORKFLOW
     candidate: "document_workflow_definitions + document_workflow_instances"
     rationale: >-
-      Universal entity pair across OpenText, Hyland, M-Files, Laserfiche, Box, FileNet.
-      If loaded, ECM-WORKFLOW gains a real master rather than being workflow-only and
-      argues strongly for keeping ECM-WORKFLOW as a distinct module in B2-MODULE-SPLIT.
+      Universal entity pair across OpenText, Hyland, M-Files, Laserfiche, Box, FileNet. ECM-WORKFLOW
+      (id 244) currently has NO master of its own (it consumes content_documents + document_versions);
+      loading this pair gives it a real master and converts the consume-only module into a
+      master-bearing one. Strongest missing-master candidate for the new module set.
     vendor_evidence: [OpenText Documentum, Hyland OnBase, M-Files, Laserfiche, Box Content Cloud, IBM FileNet]
     proposed_module: ECM-WORKFLOW
 
@@ -446,7 +381,8 @@ b3:
     candidate: document_approvals
     rationale: >-
       5 of 7 flagship vendors model approvals as a distinct entity. Pairs naturally with
-      `document_workflow_instances` (the approval is a step in the workflow).
+      `document_workflow_instances` (the approval is a step in the workflow). Would also master in
+      ECM-WORKFLOW.
     vendor_evidence: [OpenText Documentum, Hyland OnBase, M-Files, Box Content Cloud, IBM FileNet]
     proposed_module: ECM-WORKFLOW
 
@@ -454,23 +390,24 @@ b3:
     candidate: document_audit_trail_entries
     rationale: >-
       Universal compliance-driven entity; supports the regulatory load already linked
-      (SOX, GDPR, HIPAA, GLBA, FDA 21 CFR Part 11, eIDAS). Could be ECM-RECORDS-mastered
-      or `embedded_master` from a separate AUDIT module.
+      (SOX, GDPR, HIPAA, GLBA, FDA 21 CFR Part 11, eIDAS). Would master in ECM-RECORDS-GOV
+      (which hosts the ECM-AUDIT capability) and back its audit-trail capability with a real entity.
     vendor_evidence: [OpenText Documentum, Hyland OnBase, M-Files, Box Content Cloud, IBM FileNet, Microsoft SharePoint Online]
-    proposed_module: ECM-RECORDS
+    proposed_module: ECM-RECORDS-GOV
 
   - id: B3-METADATA-PROPS
     candidate: metadata_property_definitions
     rationale: >-
       Anchors the metadata-driven ECM model (M-Files's whole architecture). Universal at
-      OpenText, Hyland, SharePoint as "managed properties" or "term store".
+      OpenText, Hyland, SharePoint as "managed properties" or "term store". Would master in
+      ECM-REPOSITORY alongside content_documents and document_classifications.
     vendor_evidence: [M-Files, OpenText Documentum, Hyland OnBase, Microsoft SharePoint Online]
-    proposed_module: ECM-REPO
+    proposed_module: ECM-REPOSITORY
 
   - id: B3-DOC-RENDITIONS
     candidate: document_renditions
     rationale: >-
       Universal across vendors (PDF, preview, thumbnail rendering). Vendor shape varies
-      between separate entity and computed attribute.
+      between separate entity and computed attribute. Would master in ECM-REPOSITORY.
     vendor_evidence: [OpenText Documentum, Hyland OnBase, M-Files, Box Content Cloud, IBM FileNet, Microsoft SharePoint Online]
-    proposed_module: ECM-REPO
+    proposed_module: ECM-REPOSITORY

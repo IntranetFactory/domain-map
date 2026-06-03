@@ -346,3 +346,82 @@ None. This is a read-only structural Validate audit; no writes to the live catal
 
 Not updated this audit. Rule #15: no auto-write.
 
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+Resolved M1 catastrophic (B1B-AS1-MODULES / B1A-BUILD). Created the domain's first
+3 `domain_modules` rows (all `module_kind='full'`, `record_status='new'`), linked all
+11 capabilities, and assigned all 13 distinct data_objects (8 masters + 5 consumers) at
+their existing role+necessity from `domain_data_objects`. Scope was strictly modules +
+entity assignment: no new data_objects, capabilities, lifecycle states, skills, tools,
+handoffs, or relationships were created. The split follows the recommended B2-S1 option
+(b), proposed unchanged across the 2026-05-30 and 2026-05-31 audits (Deltek WorkBook
+product shape): JOB-TRAFFIC + MEDIA-BUY + CREATIVE-OPS.
+
+Loader: [.tmp_deploy/modularize_agency_mgmt_2026-06-02.ts](../../.tmp_deploy/modularize_agency_mgmt_2026-06-02.ts)
+(idempotent; module key `domain_module_code`, DMC key `(domain_module_id, capability_id)`,
+DMDO key `(domain_module_id, data_object_id)`; re-run is a no-op, verified +0/+0).
+
+### Module split
+
+| Module (id) | Code | Capabilities (ids) | Data objects: role / necessity |
+|---|---|---|---|
+| Job and Traffic Management (210) | AGENCY-MGMT-JOB-TRAFFIC | AGENCY-MGMT-JOBS (440), AGENCY-MGMT-RETAINER (441), AGENCY-MGMT-ESTIMATE (443), AGENCY-MGMT-MARKUP (444), AGENCY-MGMT-PROFITABILITY (445), TIME-TRACKING (30), RATE-MGMT (56), RESOURCE-PLAN (77), BILLING-PROJ (80) | agency_jobs (478) master/req; agency_time_entries (479) master/req; agency_retainers (480) master/req; agency_estimates (485) master/req; customers (97) consumer/req; employees (31) consumer/req; legal_contracts (66) consumer/req; crm_opportunities (100) consumer/req |
+| Media Plan and Insertion Order Management (211) | AGENCY-MGMT-MEDIA-BUY | AGENCY-MGMT-MEDIA-BUY (442) | media_plans (481) master/req; insertion_orders (482) master/req; suppliers (206) consumer/req; customers (97) consumer/req |
+| Creative Operations and Proofing (212) | AGENCY-MGMT-CREATIVE-OPS | CREATIVE-REVIEW (446) | creative_briefs (483) master/req; creative_deliverables (484) master/req; customers (97) consumer/req |
+
+Capability placement rationale: the 4 shared capabilities all serve the job/billing
+core, so they land in JOB-TRAFFIC (TIME-TRACKING -> agency_time_entries; RATE-MGMT +
+BILLING-PROJ -> markup/estimate/profitability; RESOURCE-PLAN -> job staffing).
+MARKUP (444) and PROFITABILITY (445) are billing-logic capabilities with no dedicated
+master here; they realize through the job + time + estimate + retainer masters in
+JOB-TRAFFIC and are placed there. MEDIA-BUY and CREATIVE-REVIEW map 1:1 to their
+respective modules.
+
+Consumer placement: `customers` is consumed by all 3 modules (jobs, media outlets'
+client, briefs all reference the client). `employees` + `legal_contracts` +
+`crm_opportunities` attach to JOB-TRAFFIC (time authors, contract anchor, won-deal
+origination). `suppliers` (media outlets) attaches to MEDIA-BUY only.
+
+### Counts
+
+- domain_modules created: 3 (all `module_kind='full'`, `record_status='new'`).
+- domain_module_capabilities created: 11 (9 + 1 + 1). Coverage 11/11 (M4 satisfied).
+- domain_module_data_objects created: 15 (8 + 4 + 3). 8 distinct masters, each in
+  exactly one module (M7 satisfied, zero multi-mastered). 5 distinct consumers
+  (customers spans all 3 modules). All `notes` empty (R15).
+- No empty module (M6: every module has >=1 capability and >=1 master).
+- Rule #14 satisfied: 11 capabilities, 3 full modules (>=2 required).
+
+### Verification (live re-query)
+
+- `/domain_modules?domain_id=eq.153`: 3 rows, all full, all `record_status='new'`,
+  `catalog_tagline` + `catalog_description` empty (M8/A4 buyer-copy gap, intentional).
+- Capability coverage: 11/11 placed, none missing.
+- Masters: 8 distinct, none in >1 module.
+- DMDO + DMC `notes` all empty.
+- Idempotent re-run produced +0 capability links, +0 DMDO rows.
+
+### Deferred gaps (out of scope for this pass)
+
+- **Per-module system skills (Rule #17 -> F2/F3).** Skill 26 `agency-mgmt-system`
+  (9 skill_tools) is still `domain_module_id IS NULL`. With 3 modules now live it must
+  be split into 3 module-scoped system skills (or attached to one + 2 siblings authored)
+  and the 9 tools re-allocated by entity. Tracked as B1A-AS3-SKILL26-RENAME +
+  B1B-AS5-SKILL-SPLIT + B1B-AS6-TOOL-FLOOR; B2-S2 owns the naming/split choice.
+- **Catalog buyer copy (M8/A4).** All 3 modules carry empty `catalog_tagline` +
+  `catalog_description`; buyer-facing copy backfill owed.
+- **B-band module FK backfill (now unblocked).** 11 trigger_events
+  (B1A-AS1-EVENT-MODULE-FK) and 12 cross-domain handoffs (B1B-AS3-HANDOFF-CASCADE)
+  carry NULL on the AGENCY-MGMT-side module FK; the master->module map is now concrete
+  (210/211/212) so these become mechanical PATCHes on the next pass.
+- **Lifecycle states (B1B-AS2-LIFECYCLE).** 0 `data_object_lifecycle_states` across the
+  8 masters; states now have realizing modules to pin to but B2-S5 (config-shape
+  exemption) is still open.
+- **Pattern flags (B1B-AS4), regulation link (B1A-AS2-REG-ASC606), APQC remainder
+  (B1A-H1-APQC-REMAINDER / B1A-H1-REPLACE-348).** Unchanged; independent of this pass.
+- **Missing-master candidates (b3).** agency_invoices, agency_rate_cards,
+  agency_change_orders, media_buys, creative_proofing_rounds remain Phase 0 candidates
+  (B3-*); not created (reuse-only scope).
+

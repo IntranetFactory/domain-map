@@ -435,3 +435,94 @@ UI spot-checks:
 - https://tests.semantius.app/domain_map/domain_module_data_objects (12 necessity flips today + 5 flips in Phase 1)
 - https://tests.semantius.app/domain_map/trigger_events (20 event_category PATCHes)
 - https://tests.semantius.app/domain_map/permissions (19 new workflow-gate rows in `_core.permissions` — note: pollution per the migration plan, will move to `domain_permissions` post-extraction)
+
+## 2026-06-02 – Audit
+
+### Summary
+
+- Current footprint: 60 master data_objects across 8 full modules + 1 starter (HIRING-STARTER); 7 capabilities; 10 solutions (9 primary); 10 regulations; 27 ATS-owned trigger events; 26 outbound + 24 inbound cross-domain handoffs + 18 intra-domain handoffs; 6 personas (`domain_roles`) + role_modules; 9 system skills + skill_tools.
+- **Prior blocker cleared.** The 2026-06-01 audit was blocked on the role/permission catalog extraction ([plans/extract-role-permission-catalog.md](../../plans/extract-role-permission-catalog.md)). Plan 3 (2026-06-02) executed it: deleted the `_core` roles / role_permissions / permission_hierarchy pollution and re-homed personas to `domain_roles`. ATS now carries 6 well-formed personas (RECRUITING-RECRUITER, RECRUITING-SOURCER, RECRUITING-COORDINATOR, RECRUITING-MANAGER, HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST), all reaching >=2 modules; E-band passes. The two deferred items (B7 user edges, H-APQC) are unblocked and completed this pass.
+- Bucket 1 (agent-fixable, all loaded): M7 fix + B7 (+22 user edges) + H-APQC (+37 tags) + M8 (+9 module copy).
+- Bucket 2 (user judgment, open): 2 items.
+- Bucket 3 (market, open): 4 high-confidence + ~6 judgment MISSING.
+
+Structural pass (derived from the authoritative `domain_module_data_objects` junction, not the stale rollup): A passes (7 metadata fields + domain catalog UX). M passes except M7 (one within-domain incoherence, fixed) and M8 (9 modules with empty catalog copy, fixed). B passes (B1/B2/B3/B5/B12/B13/B14 clean). C1 passes (thin). E passes (6 personas, all >=2 modules). F passes (F1-F5, F7; Semantius scores CANDIDATE-CRM 71%, OFFERS 88%, STARTER 94%, rest 100%). H was the gap (38/50 untagged), fixed to 49/50.
+
+**B5 false-positive corrected.** The audit script flagged 5 embedded masters as orphan; live verification confirmed all have canonical masters elsewhere: `hcm_positions` / `job_profiles` / `org_units` -> HCM-ORG-POSITIONS, `locations` -> IWMS-LOCATION-MASTER, `internal_opportunities` -> TLNT-INTEL-MARKETPLACE. B5 passes; the script had scoped its canonical-master lookup to ATS-owned ids only.
+
+**Stale rollup noted.** The legacy `domain_data_objects` rollup carries only 15 of 60 masters (the pre-modular Phase-B set); never regenerated post-modularization. Tracked as Bucket 2 B2-ROLLUP-POLICY.
+
+### Bucket 1 — In-scope confirmed gaps (all loaded, `record_status='new'`)
+
+#### STRUCTURAL / M7 — within-domain role incoherence (fixed)
+
+`talent_pools` (id 7) was `master` in ATS-TALENT-POOLS (module 2) AND `consumer` in ATS-CANDIDATE-CRM (module 1). The 2026-06-01 pass flipped its necessity to optional but left the role incoherent (M7 hard-fail). Fix: PATCH DMDO row 950 `consumer` -> `embedded_master` (necessity stays `optional`). Now `master` + `embedded_master` = the autonomous-deployable PASS shape; B5 satisfied via the canonical master in module 2.
+
+#### STRUCTURAL / B7 — user edges (resolves prior B1A-B7-USER-EDGES-NEWER)
+
+Subagent enumerated user-typed actors across the 41 user-less masters. 22 staff-actor edges authored to `users` (#748), matching ATS convention (`relationship_kind='reference'`, `relationship_type='many_to_many'`, `owner_side='source'`, verb "has &lt;role&gt;"). 18 skipped: candidate-submitted records (eeo_responses, voluntary_self_identifications, candidate_consents, fcra_disclosures, fcra_summary_of_rights_acknowledgements, application_screening_answers) + pure-config (application_stages, candidate_tags, interview_kits, interview_questions, recruitment_sources, referral_rewards, talent_segments, candidate_assessment_templates, background_check_packages, application_screening_questions) + 2 uncertain left unedged (application_dispositions, job_posting_distributions). 4 optional edges flagged uncertain but loaded (background_check_components, background_check_disputes, applicant_flow_records, recruiting_event_attendances; all `is_required=false`). Masters with user edges now 41/60.
+
+#### H — APQC handoff tagging (resolves prior B1A-H-APQC-COVERAGE)
+
+37 of 38 untagged cross-domain handoffs classified to APQC PCF cross-industry activities and loaded as `handoff_processes` (`proposal_source='agent_curated'`, `role='implements'`, `record_status='new'`). All 15 distinct `process_id` FKs verified against live `/processes` before load. 1 deferred: `predictive_model.scored` (#453), no cross-industry PCF analog for ML scoring (routes to Discover Pass 3 custom-process). Cross-domain APQC coverage now 49/50 (process side-bar; headline approved count remains 0 pending review). Key clusters: offer signed/accepted/rescinded -> "Manage new hire/re-hire" (222) / "Hire candidate" (1019) / "Manage employee onboarding" (224); 15 HCM org/position/profile lifecycle inbound -> "Create organizational design" (97) + "Develop and maintain job descriptions" (995). 1 weak match flagged: `project_resource_allocation.demand_unmet` (#1023) -> "Identify, select, and assign resources" (905).
+
+#### M8 — module catalog copy (fixed)
+
+All 9 modules had empty `catalog_tagline` + `catalog_description` (Rule #20 buyer copy). Drafted buyer-voice copy for all 9; user approved "load it"; backfilled with an overwrite guard (only writes where empty).
+
+#### B9 — event-less trigger_events (assessed, no action)
+
+4 trigger_events with no handoff (`interview.scheduled`, `job_posting.closed`, `background_check.initiated`, `recruitment_agency.engaged`) assessed as justified leaf / boundary events (start-of-process or terminal with no reactor). Recorded as intentional, not gaps.
+
+### Bucket 2 — Surface-for-user (open)
+
+1. **B2-ROLLUP-POLICY** — `domain_data_objects` rollup carries 15/60 ATS masters (stale post-modularization). Deprecate (migrate readers + checklist `<masters>` definition to `domain_module_data_objects`; agent recommends) vs regenerate catalog-wide vs leave. Catalog-wide, not ATS-scoped.
+2. **B2-C1-FUNCTION-ROWS** — `business_function_domains` has 2 rows (Recruiting owner, Legal contributor). C1 passes but is thin. Optionally add Human Resources (contributor) + Finance (consumer).
+
+### Bucket 3 — Market gaps (open)
+
+Market-surface subagent enumerated 7 vendors (Greenhouse, Lever, Ashby, SmartRecruiters, Workday Recruiting + Checkr & HireRight). Verdict: modularization **coherent**, 0 WRONG-OWNERSHIP; FCRA adverse-action + OFCCP applicant-flow already fully covered. 12 MISSING (3 compliance), 4 SCOPE-CREEP (none actionable: `job_profiles` + `internal_opportunities` confirmed correctly modeled as `embedded_master` shells by the structural pass; `candidate_assessments` + `talent_segments` keep).
+
+High-confidence MISSING (recommend): `right_to_work_verifications` (PRE-EMPLOYEE-RECORD, I-9 / E-Verify), `agency_submissions` (CANDIDATE-CRM, fills the dangling recruitment_agencies submission junction), `outreach_sequences` + `outreach_sequence_steps` (CANDIDATE-CRM), `candidate_emails` (CANDIDATE-CRM).
+
+Judgment MISSING: `onboarding_handoffs` (overlaps existing ATS->ONBOARDING handoffs), `pre_employee_documents`, `candidate_data_retention_policies` (GDPR), `drug_health_screenings` + `continuous_monitoring_subscriptions` (HireRight specialist), `interview_feedback_reminders`, `offer_approval_chains`.
+
+Subagent artifacts: [c:/tmp/ATS-market-surface-2026-06-02.json](c:/tmp/ATS-market-surface-2026-06-02.json), [.md](c:/tmp/ATS-market-surface-2026-06-02.md).
+
+### Decisions
+
+- **Bucket 1:** approved "all" — M7 fix + 22 user edges + 37 APQC tags loaded.
+- **M8:** "load it" — 9 module copy blocks loaded.
+- **M7:** option (a) — `consumer` -> `embedded_master`.
+- **Bucket 2 (#3 rollup, C1) + Bucket 3:** pending user.
+
+### Fixes applied
+
+| Action | Surface | Rows |
+|---|---|---|
+| PATCH DMDO 950 `talent_pools` consumer -> embedded_master | inline CLI | 1 |
+| INSERT `handoff_processes` (APQC tags) | [.tmp_deploy/load_ats_b1_fixes_2026_06_02.ts](../../.tmp_deploy/load_ats_b1_fixes_2026_06_02.ts) | 37 |
+| INSERT `data_object_relationships` (user edges) | same loader | 22 |
+| PATCH `domain_modules` catalog_tagline + catalog_description | [.tmp_deploy/load_ats_m8_catalog_copy_2026_06_02.ts](../../.tmp_deploy/load_ats_m8_catalog_copy_2026_06_02.ts) | 9 |
+
+Read-only audit script: [.tmp_deploy/audit_ats_2026_06_02.ts](../../.tmp_deploy/audit_ats_2026_06_02.ts).
+
+All inserts `record_status='new'` (Rule #1). No `notes` populated (Rule #15). No vendor names in any forbidden-zone field (Rule #18). Module copy is buyer-voice backfill of empty fields (Rule #20).
+
+UI spot-checks:
+- https://tests.semantius.app/domain_map/handoff_processes (37 new tags)
+- https://tests.semantius.app/domain_map/data_object_relationships (22 new user edges)
+- https://tests.semantius.app/domain_map/domain_modules (9 catalog-copy backfills)
+- https://tests.semantius.app/domain_map/domain_module_data_objects (DMDO 950 role flip)
+
+### Neighbor / pairwise
+
+Neighbors by edge weight: HCM 26 (dominant), COMP-MGMT 5, PA 4, SWP 4, BEN-ADMIN 3, ONBOARDING 3, PAYROLL 2, HRSD 1, TALENT-MGMT 1, PSA 1. The 15 inbound HCM org/position/profile lifecycle feeds are HCM's outbound (owed in HCM's B9); ATS's consumer side is wired via `embedded_master` shells of `hcm_positions` / `org_units` / `job_profiles`, and all 15 are now APQC-tagged. No new in-scope pairwise gaps this pass; the full five-neighbor pairwise (HCM / COMP-MGMT / SWP / ONBOARDING / BEN-ADMIN) ran clean 2026-05-28.
+
+### Status
+
+Bucket 1 closed; prior deferred items (B7 user edges, H-APQC) resolved. Open: Bucket 2 (rollup policy, C1) + Bucket 3 (market gaps) pending user. `status: feedback_needed`; `next_action_by: user`.
+
+### `domains.notes` pointer (if updated)
+
+_not written; would require user-approved wording per Rule #15_

@@ -136,6 +136,17 @@ b1a:
       - {handoff_id: 150, direction: outbound, source_domain: HAM, target_domain: RMM, trigger_event: asset.retired, payload: rmm_agents, null_field: handoff_processes_insert_after_S9}
       - {handoff_id: 633, direction: inbound, source_domain: ITAM, target_domain: HAM, trigger_event: asset.retired_for_disposal, payload: asset_lifecycle_events, null_field: discovery_substring_delete}
     extra_band: H1
+  - id: B1A-PHASE-P
+    summary: "Multi-module (2 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
+    finding: "Live triage 2026-06-02: 2 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 2 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    extra_phase_p_triage: "2026-06-02"
+  - id: B1A-ENTITY-TYPE
+    summary: "5 masters carry entity_type unclassified/null (B13): classify them."
+    finding: "Live triage 2026-06-02: 5 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
+    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
+    affected_entities: [hardware_assets, hardware_disposal_records, hardware_models, hardware_warranties, spare_parts_inventory]
+    extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-S2

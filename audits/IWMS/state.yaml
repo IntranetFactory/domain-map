@@ -70,6 +70,17 @@ b1a:
       - {data_object_id: 590, name: desk_bookings, target_module_id: 99, workflow: booking_lifecycle}
       - {data_object_id: 591, name: room_reservations, target_module_id: 100, workflow: reservation_lifecycle}
       - {data_object_id: 592, name: workplace_service_requests, target_module_id: 101, workflow: request_triage_resolve}
+  - id: B1A-PHASE-P
+    summary: "Multi-module (5 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
+    finding: "Live triage 2026-06-02: 5 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 5 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    extra_phase_p_triage: "2026-06-02"
+  - id: B1A-ENTITY-TYPE
+    summary: "6 masters carry entity_type unclassified/null (B13): classify them."
+    finding: "Live triage 2026-06-02: 6 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
+    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
+    affected_entities: [desk_bookings, locations, room_reservations, space_utilization_reports, workplace_experience_feedback, workplace_service_requests]
+    extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-B10b-OUT

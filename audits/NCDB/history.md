@@ -305,3 +305,51 @@ Carried forward verbatim from 2026-05-30 audit. No Phase 0 vendor research has b
 - Catalog-wide: `Smartsheet` (solution 70) and `ClickUp` (598) should likely be linked to NCDB via `solution_domains` (secondary).
 
 No JWT errors. No `notes` writes. No `record_status` writes. No vendor names in any non-commerce text.
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+NCDB is **No-Code Database** (id 134, crud 80): spreadsheet-database hybrids that let non-developers model structured data, link records across tables, build forms / views / dashboards, and automate without code. Bought self-serve by citizen developers in marketing, ops, HR, and PMO, expanding to enterprise via Business / Enterprise tiers. Explicitly distinct from LCAP (no managed app runtime / environments / version pipeline / compiled UI), from BI (no warehouse, no analytical semantic layer), and from work management (the data model is the buy reason, not the project view).
+
+This pass executed the **modularization** scope only (B1A-BUILD / B1B-S1): authored the full `domain_modules` set, linked the existing capabilities, and assigned the existing master data_objects at their existing role + necessity. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. The 2026-05-30 audit's B2-S1 option (a) 3-module split was the proven design and was adopted as-is.
+
+### Modules authored (3 full)
+
+| Module id | Code | Capabilities | Masters |
+|---|---|---|---|
+| 282 | NCDB-SCHEMA-BUILDER (Visual Schema and Linked Records) | NCDB-FLEX-SCHEMA (320), NCDB-LINKED-RECORDS (321), NCDB-FORMULAS (323), SEMANTIC-MODELING (197) | nocode_bases (241), nocode_record_definitions (242) |
+| 283 | NCDB-VIEWS-FORMS (Views and Form Capture) | NCDB-VIEWS (322), NCDB-FORM-CAPTURE (324), OPERATIONAL-DATA-APPS (201) | nocode_views (713), nocode_forms (712) |
+| 284 | NCDB-AUTOMATION-SYNC (Automation and External Sync) | NCDB-SYNC-EXTERNAL (325) | nocode_automations (714) |
+
+All 3 modules are `module_kind=full`. `record_status`, `catalog_tagline`, `catalog_description` omitted on every insert. `notes` empty on every DMC and DMDO row. No vendor / product names in any module name or description.
+
+### Master pre-check (catalog-wide, mandatory)
+
+Queried `/domain_module_data_objects?data_object_id=eq.<id>&role=eq.master` for all 5 masters (241, 242, 712, 713, 714) before writing. **Zero pre-existing master rows for any of the 5** anywhere in the catalog, so each was assigned `master` here, each in exactly one NCDB module. No demotions to `embedded_master` were required. Roles + necessity preserved verbatim from the legacy `domain_data_objects` rollup (all master / required).
+
+### Verification (live, post-load)
+
+- M1 / M2 cured: 3 full modules (was 0).
+- M4: every capability placed in exactly 1 module (8 of 8: 197/320/321/323 -> 282; 201/322/324 -> 283; 325 -> 284).
+- M6: every module has >=1 capability AND >=1 data_object; no empty module.
+- M7 (in-domain + catalog-wide): each of the 5 masters appears in exactly one master row, all under domain 134's modules. Single-master invariant holds.
+- Rule #14: 7 native + cross-cutting capabilities -> 3 full modules (within the 2-4 aim).
+
+### Deferred (out of this pass's scope, owed by a later NCDB pass)
+
+The modularization unblocks but does not execute the following carried-forward items from the 2026-05-31 audit. They are now agent-solvable (the module gate is cleared):
+
+- **B1B-S6** (~20 `data_object_lifecycle_states`): now unblocked, each state's `domain_module_id` resolves to the realizing module (242/241 -> 282, 712/713 -> 283, 714 -> 284).
+- **B1B-S7** (3 module-anchored system skills per Rule #17 + retire legacy domain-anchored skill 86): now unblocked.
+- **B1B-S9** (PATCH `source_domain_module_id` on 4 outbound handoffs): now derivable (700 -> 284, 701 -> 282, 702 -> 283, 703 -> 284).
+- **B1B-S13** (3 intra-domain cross-module handoffs): now unblocked.
+- **B1B-S2** (B4 pattern flags), **B1B-S5** (~22 aliases), **B1B-S8** (A4 catalog UX), **B1B-S11** (cross-domain DOR), **B2-S1..S6** judgment calls: unchanged by this pass.
+
+### Flagged gaps (not filled this pass)
+
+- Per-module **system skills** are absent (Rule #17 -> F2/F3): the 3 new modules each need exactly one `domain_module_id`-anchored system skill; legacy skill 86 must then be retired. Recorded as b1a B1A-MOD-SKILLS.
+- **Catalog UX** (M8 / A4): `catalog_tagline` and `catalog_description` still empty; surface drafts to user before write (Rule #20). Recorded as b1a B1A-CATALOG-UX.
+- **Missing-master candidates** (b3, carried forward from prior audit): nocode_sync_connections, nocode_share_links, nocode_record_comments, nocode_templates, nocode_ai_field_outputs, nocode_revision_history, nocode_workspace_members.
+
+No JWT errors. No `notes` writes. No `record_status` writes. No vendor names in any non-commerce text. No em-dashes.

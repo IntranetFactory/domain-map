@@ -1,24 +1,45 @@
 schema_version: 2
 domain: FOOD-TRACE
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-05-31"
+next_action_by: agent
+last_audit: "2026-06-02"
 
 b1a:
-  - id: B1A-S1
-    summary: A4 fail, catalog_tagline and catalog_description still empty on FOOD-TRACE
+  - id: B1A-SYS-SKILLS
+    summary: "Rule #17 / F2 / F3: each of the 3 new modules needs its own skill_type=system skill; legacy domain-level skill id=62 then deleted"
+    finding: |
+      As of the 2026-06-02 modularization, FOOD-TRACE has 3 domain_modules
+      (FOOD-TRACE-TRACEABILITY-EVENTS id 256, FOOD-TRACE-RECALL-MGMT id 257,
+      FOOD-TRACE-SUPPLIER-PROVENANCE id 258) but 0 module-level system skills.
+      `/skills?domain_id=eq.155` returns only the legacy id 62 (food-trace-system,
+      skill_type=system, domain_module_id null). Rule #17 / F2 / F3 require one
+      skill_type=system skill per domain_modules row with domain_module_id set.
+      Deleting id 62 before per-module skills exist would leave the domain with no
+      agent surface (was B1B-S11, previously blocked on module existence, now unblocked).
+    action: |
+      Author one skill_type=system skill per module (domain_module_id = 256, 257, 258),
+      link channel abstractions (notify_person / notify_team) instead of send_email per
+      F7, then DELETE skills.id=62. Do not delete id 62 before the 3 per-module skills
+      exist.
+    affected_modules: [256, 257, 258]
+
+  - id: B1A-CATALOG-UX
+    summary: "A4 / M8 fail: catalog_tagline and catalog_description still empty on FOOD-TRACE; per-module catalog copy also unwritten"
     finding: |
       `/domains?id=eq.155&select=catalog_tagline,catalog_description` returns both fields
       as empty strings. Rule #20 requires buyer-voice drafts (workflow plus value) for the
-      catalog list card and the catalog detail page. Drafts must be surfaced before any
-      write per Rule #20; once a non-empty value exists the column may not be overwritten
-      without explicit per-row user approval.
+      catalog list card and the catalog detail page. The 3 new domain_modules likewise have
+      empty catalog_tagline / catalog_description. Drafts must be surfaced before any write
+      per Rule #20; once a non-empty value exists the column may not be overwritten without
+      explicit per-row user approval.
     action: |
-      Draft `catalog_tagline` (single buyer-facing sentence) and `catalog_description`
-      (1 to 3 buyer-facing paragraphs) in workflow plus value voice, surface in chat for
-      user review, then PATCH `/domains?id=eq.155` only after explicit approval. Anchor
-      copy on FSMA-204 readiness, recall execution, lot genealogy, supplier-document
-      ingest.
+      Draft domain-level catalog_tagline (single buyer-facing sentence) and
+      catalog_description (1 to 3 buyer-facing paragraphs) plus per-module taglines, in
+      workflow-plus-value voice; surface in chat for user review; then PATCH
+      /domains?id=eq.155 and the 3 /domain_modules rows only after explicit approval.
+      Anchor copy on FSMA-204 readiness, recall execution, lot genealogy, supplier-document
+      ingest, provenance verification.
+    affected_modules: [256, 257, 258]
 
   - id: B1A-S5
     summary: B6 fail, 0 intra-domain `data_object_relationships` rows on the 5 FOOD-TRACE masters
@@ -26,7 +47,8 @@ b1a:
       Query `/data_object_relationships?and=(data_object_id.in.(494,495,496,497,498),related_data_object_id.in.(494,495,496,497,498))`
       returns 0 rows. The domain's core workflow (lot creation, CTE / KDE capture, recall
       targeting, certification-based provenance) implies multiple required edges between
-      the masters.
+      the masters. Out of scope for the modularization pass (modules plus entity assignment
+      only); now actionable as a follow-up authoring pass.
     action: |
       Author and load: `traceability_lots originates critical_tracking_events` (one to
       many), `critical_tracking_events carries key_data_elements` (one to many),
@@ -36,11 +58,11 @@ b1a:
       transform genealogy). One row per verb plus its inverse; `is_required` per the
       workflow; `owner_side` per § B6.
     affected_masters:
-      - {data_object_id: 494, name: traceability_lots, target_module_id: null, workflow: lot-genealogy}
-      - {data_object_id: 495, name: critical_tracking_events, target_module_id: null, workflow: cte-capture}
-      - {data_object_id: 496, name: key_data_elements, target_module_id: null, workflow: cte-capture}
-      - {data_object_id: 497, name: recall_events, target_module_id: null, workflow: recall}
-      - {data_object_id: 498, name: supplier_certifications, target_module_id: null, workflow: supplier-docs}
+      - {data_object_id: 494, name: traceability_lots, target_module_id: 256, workflow: lot-genealogy}
+      - {data_object_id: 495, name: critical_tracking_events, target_module_id: 256, workflow: cte-capture}
+      - {data_object_id: 496, name: key_data_elements, target_module_id: 256, workflow: cte-capture}
+      - {data_object_id: 497, name: recall_events, target_module_id: 257, workflow: recall}
+      - {data_object_id: 498, name: supplier_certifications, target_module_id: 258, workflow: supplier-docs}
 
   - id: B1A-S8
     summary: B9 partial, missing lifecycle and side-channel `trigger_events` on the 5 FOOD-TRACE masters
@@ -48,7 +70,7 @@ b1a:
       `/trigger_events?data_object_id=in.(494,495,496,497,498)` returns 5 rows, one per
       master, each carrying only the most-prominent verb. Each master publishes a richer
       vocabulary of state transitions that FSMA 204, FDA Reportable Food Registry, and
-      EPCIS 2.0 conformance require.
+      EPCIS 2.0 conformance require. Out of scope for the modularization pass; now actionable.
     action: |
       Author and load: `recall_event.classified`, `recall_event.notification_sent`,
       `recall_event.consolidated`, `recall_event.reconciled`, `recall_event.effectiveness_verified`,
@@ -77,22 +99,31 @@ b1a:
       - {id: null, event_name: supplier_certification.renewed, current_category: null, proposed_category: lifecycle}
       - {id: null, event_name: supplier_certification.revoked, current_category: null, proposed_category: lifecycle}
 
-b1b:
-  - id: B1B-S2
-    summary: M1 fail (GATING), 0 `domain_modules` rows for the 6-capability FOOD-TRACE domain
+  - id: B1A-S10
+    summary: B12 fail, 0 lifecycle states on any of the 5 masters; realizing module now known
     finding: |
-      `/domain_modules?domain_id=eq.155` returns 0 rows. Rule #14 requires at least 2
-      `module_kind='full'` modules for a domain with 3 or more capabilities. Every M /
-      B9b / B10b / E / F cascade hinges on this fix. M-band is the structural gate.
+      `/data_object_lifecycle_states?data_object_id=in.(494,495,496,497,498)` returns 0
+      rows. Per Rule #12 every `master + required` data_object with a real workflow needs
+      states; none of these are config-shaped. The realizing-module FK was the blocker
+      (was B1B-S10, gated on M1); modules now exist, so this is actionable.
     action: |
-      Author the module set per the Bucket 2 #1 decision. Recommended default: 4 modules
-      (`FOOD-TRACE-LOT-GENEALOGY`, `FOOD-TRACE-CTE-CAPTURE`, `FOOD-TRACE-RECALL`,
-      `FOOD-TRACE-CORE` covering supplier-docs / provenance / query). Load
-      `domain_modules` plus `domain_module_capabilities` plus `domain_module_data_objects`
-      in one Phase-A extension load.
-    blocked_by:
-      - {type: user_decision, ref: B2-1}
+      Author per-master state machines: `traceability_lots` (created to active to
+      split / merged / transformed to consumed to archived; recalled branch) under module
+      256; `critical_tracking_events` (recorded to validated to amended to closed) under
+      256; `key_data_elements` (captured to validated to flagged to resolved) under 256;
+      `recall_events` (initiated to classified to notification_sent to consolidating to
+      reconciling to effectiveness_verified to terminated; class branches I, II, III) under
+      257; `supplier_certifications` (uploaded to verified to active to expiring to expired
+      to renewed to revoked) under 258. Mark workflow-gate states `requires_permission=true`
+      and set `domain_module_id` per realizing module.
+    affected_masters:
+      - {data_object_id: 494, name: traceability_lots, target_module_id: 256, workflow: lot-lifecycle}
+      - {data_object_id: 495, name: critical_tracking_events, target_module_id: 256, workflow: cte-lifecycle}
+      - {data_object_id: 496, name: key_data_elements, target_module_id: 256, workflow: kde-lifecycle}
+      - {data_object_id: 497, name: recall_events, target_module_id: 257, workflow: recall-lifecycle}
+      - {data_object_id: 498, name: supplier_certifications, target_module_id: 258, workflow: cert-lifecycle}
 
+b1b:
   - id: B1B-S3
     summary: 0 `domain_regulations` for a market whose primary demand driver is regulatory
     finding: |
@@ -101,8 +132,8 @@ b1b:
       USDA FSIS COOL, FDA Bioterrorism Act recordkeeping. Most of these likely do not yet
       have `regulations` rows either.
     action: |
-      Confirm scope per Bucket 2 #3 (minimum vs extended set, GS1 EPCIS handling,
-      Codex Alimentarius inclusion). Pre-flight against `/regulations?regulation_name=ilike.*FSMA*`
+      Confirm scope per B2-3 (minimum vs extended set, GS1 EPCIS handling, Codex
+      Alimentarius inclusion). Pre-flight against `/regulations?regulation_name=ilike.*FSMA*`
       and similar; load missing `regulations` rows first, then link `domain_regulations`
       with `applicability` set per junction qualifier.
     blocked_by:
@@ -123,11 +154,11 @@ b1b:
     blocked_by:
       - {type: user_decision, ref: B2-pattern-flag-review}
     affected_masters:
-      - {data_object_id: 494, name: traceability_lots, target_module_id: null, workflow: lot-identity-lock}
-      - {data_object_id: 495, name: critical_tracking_events, target_module_id: null, workflow: cte-event-amendment}
-      - {data_object_id: 496, name: key_data_elements, target_module_id: null, workflow: kde-validation}
-      - {data_object_id: 497, name: recall_events, target_module_id: null, workflow: recall-lock-and-signoff}
-      - {data_object_id: 498, name: supplier_certifications, target_module_id: null, workflow: cert-validity-lock}
+      - {data_object_id: 494, name: traceability_lots, target_module_id: 256, workflow: lot-identity-lock}
+      - {data_object_id: 495, name: critical_tracking_events, target_module_id: 256, workflow: cte-event-amendment}
+      - {data_object_id: 496, name: key_data_elements, target_module_id: 256, workflow: kde-validation}
+      - {data_object_id: 497, name: recall_events, target_module_id: 257, workflow: recall-lock-and-signoff}
+      - {data_object_id: 498, name: supplier_certifications, target_module_id: 258, workflow: cert-validity-lock}
 
   - id: B1B-S7
     summary: B8 outbound, 7 of 8 outbound cross-domain handoffs lack a mirror `data_object_relationships` row
@@ -174,159 +205,40 @@ b1b:
     blocked_by:
       - {type: user_decision, ref: B2-alias-tuple-binding}
     affected_masters:
-      - {data_object_id: 494, name: traceability_lots, target_module_id: null, workflow: alias-load}
-      - {data_object_id: 495, name: critical_tracking_events, target_module_id: null, workflow: alias-load}
-      - {data_object_id: 496, name: key_data_elements, target_module_id: null, workflow: alias-load}
-      - {data_object_id: 497, name: recall_events, target_module_id: null, workflow: alias-load}
-
-  - id: B1B-S10
-    summary: B12 fail, 0 lifecycle states on any of the 5 masters
-    finding: |
-      `/data_object_lifecycle_states?data_object_id=in.(494,495,496,497,498)` returns 0
-      rows. Per Rule #12 every `master + required` data_object with a real workflow needs
-      states; none of these are config-shaped. Workflow-gate states need
-      `domain_module_id` set per the realizing module, which requires M1 to be cured
-      first.
-    action: |
-      Author per-master state machines: `traceability_lots` (created to active to
-      split / merged / transformed to consumed to archived; recalled branch);
-      `critical_tracking_events` (recorded to validated to amended to closed);
-      `key_data_elements` (captured to validated to flagged to resolved); `recall_events`
-      (initiated to classified to notification_sent to consolidating to reconciling to
-      effectiveness_verified to terminated; class branches I, II, III); `supplier_certifications`
-      (uploaded to verified to active to expiring to expired to renewed to revoked). Mark
-      workflow-gate states `requires_permission=true` and set `domain_module_id` per
-      realizing module.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S2}
-
-  - id: B1B-S11
-    summary: F1 fail, legacy `skills.id=62` (`food-trace-system`) remains, no module-level system skills
-    finding: |
-      `/skills?domain_id=eq.155&skill_type=eq.system&domain_module_id=is.null` returns
-      skill id 62. Per F1 this becomes obsolete once module-level system skills are
-      authored under Rule #14 / Rule #17, but DELETE before per-module skills exist
-      would leave the domain with no agent surface.
-    action: |
-      Sequenced: (1) once modules exist (B1B-S2), author one `skill_type='system'` skill
-      per `domain_modules` row with `domain_module_id` set; (2) link channel abstractions
-      (`notify_person` / `notify_team`) instead of `send_email` per F7; (3) DELETE
-      `skills.id=62`. Do not delete before per-module skills exist.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S2}
+      - {data_object_id: 494, name: traceability_lots, target_module_id: 256, workflow: alias-load}
+      - {data_object_id: 495, name: critical_tracking_events, target_module_id: 256, workflow: alias-load}
+      - {data_object_id: 496, name: key_data_elements, target_module_id: 256, workflow: alias-load}
+      - {data_object_id: 497, name: recall_events, target_module_id: 257, workflow: alias-load}
 
   - id: B1B-S12
     summary: C2 capability-divergence review for `FOOD-TRACE-RECALL-EXECUTION`
     finding: |
-      The capability may legitimately have a different owning function than the domain's
-      GRC-Compliance owner. Likely candidates GRC-Crisis or QA-Recall sub-functions.
+      The recall-execution capability (458, now realized in module 257
+      FOOD-TRACE-RECALL-MGMT) may legitimately have a different owning function than the
+      domain's GRC-Compliance owner. Likely candidates GRC-Crisis or QA-Recall sub-functions.
     action: |
       User decides whether to add a `business_function_capabilities` override row. If
       yes, identify the target function and load.
     blocked_by:
       - {type: user_decision, ref: B2-4}
 
-  - id: B1B-M1
-    summary: MISSING master, `traceability_queries` (regulator and partner trace-request workflow, FSMA-204 24-hour SLA)
-    finding: |
-      Trustwell, TraceGains, FoodLogiQ master `trace_request` workflow as first class.
-      FSMA 204 mandates a 24-hour response to FDA requests. Not present in the current
-      catalog.
-    action: |
-      Load as FOOD-TRACE master under `FOOD-TRACE-QUERY` or `FOOD-TRACE-CORE` depending
-      on Bucket 2 #1. Include lifecycle (received to scoped to gathered to responded to
-      closed), audit trail of who fulfilled what.
-    blocked_by:
-      - {type: user_decision, ref: B2-1}
-    vendor_evidence:
-      - Trustwell
-      - TraceGains
-      - FoodLogiQ Connect
-
-  - id: B1B-M2
-    summary: MISSING master, `chain_of_custody_records`
-    finding: |
-      IBM Food Trust, Wholechain, Provenance model CoC as the cross-organization edge
-      with attestation. GS1 EPCIS encodes CoC natively. Not in catalog.
-    action: |
-      Load as FOOD-TRACE master under `FOOD-TRACE-LOT-GENEALOGY` or
-      `FOOD-TRACE-PROVENANCE`.
-    blocked_by:
-      - {type: user_decision, ref: B2-1}
-    vendor_evidence:
-      - IBM Food Trust
-      - Wholechain
-      - Provenance Platform
-
-  - id: B1B-M3
-    summary: MISSING master, `provenance_attestations`
-    finding: |
-      Provenance, Bext360, IBM Food Trust treat signed claims about origin, growing
-      method, certifications as distinct from supplier certifications (vendor-issued vs
-      producer-claimed).
-    action: |
-      Load as FOOD-TRACE master under `FOOD-TRACE-PROVENANCE`.
-    blocked_by:
-      - {type: user_decision, ref: B2-1}
-    vendor_evidence:
-      - Provenance Platform
-      - Bext360
-      - IBM Food Trust
-
-  - id: B1B-M4
-    summary: MISSING master, `recall_communications`
-    finding: |
-      Trustwell, FoodLogiQ model per-recipient communications log (FDA, state agencies,
-      distributors, retailers, consumers) as a separate ledger from the recall event for
-      audit defense.
-    action: |
-      Load as FOOD-TRACE master under `FOOD-TRACE-RECALL`.
-    blocked_by:
-      - {type: user_decision, ref: B2-1}
-    vendor_evidence:
-      - Trustwell
-      - FoodLogiQ Connect
-
-  - id: B1B-M5
-    summary: MISSING master, `regulatory_filings`
-    finding: |
-      Trustwell, ReposiTrak carry the filing as a distinct artifact from the recall
-      event. One recall may produce many filings to different agencies (FDA Reportable
-      Food Registry, USDA FSIS, state-level).
-    action: |
-      Load as FOOD-TRACE master under `FOOD-TRACE-RECALL`.
-    blocked_by:
-      - {type: user_decision, ref: B2-1}
-    vendor_evidence:
-      - Trustwell
-      - ReposiTrak Traceability Network
-
-  - id: B1B-M6
-    summary: MISSING master, `traceback_exercises` / `mock_traces`
-    finding: |
-      Trustwell, FoodLogiQ run scheduled traceback drills against historical CTEs to
-      validate retrieval-time SLAs. Not in catalog.
-    action: |
-      Load as FOOD-TRACE master under `FOOD-TRACE-QUERY` or `FOOD-TRACE-CORE`.
-    blocked_by:
-      - {type: user_decision, ref: B2-1}
-    vendor_evidence:
-      - Trustwell
-      - FoodLogiQ Connect
-
   - id: B1B-B10b
-    summary: B10b fail, 19 of 20 cross-domain handoffs carry NULL module FKs on one or both sides
+    summary: B10b fail, 19 of 20 cross-domain handoffs carry NULL module FKs; source side now backfillable
     finding: |
       Every outbound row (359, 360, 361, 362, 971, 972, 973, 974) has NULL
-      `source_domain_module_id` (cascade of M1). Every inbound row except 963 has NULL
-      `target_domain_module_id`. Handoff 963 has FDS source module 123 attributed but
-      target NULL.
+      `source_domain_module_id` (cascade of the prior M1 gap). Every inbound row except 963
+      has NULL `target_domain_module_id`. Handoff 963 has FDS source module 123 attributed
+      but target NULL. Now that FOOD-TRACE has modules (256/257/258), the source side of
+      every outbound row and the target side of every inbound row is backfillable; the
+      remote side of each row still cures as each neighbor modularizes.
     action: |
-      Backfill once `domain_modules` rows exist. `source_domain_module_id` = the FOOD-TRACE
-      module that holds the trigger_event's `data_object_id` with the strongest role.
-      `target_domain_module_id` cures incrementally as each neighbor modularizes.
+      Backfill `source_domain_module_id` on outbound rows and `target_domain_module_id` on
+      inbound rows to the FOOD-TRACE module holding the trigger_event's `data_object_id`
+      with the strongest role: recall_events -> 257; traceability_lots / critical_tracking_events
+      / key_data_elements / harvest_records / bulk_milk_shipments -> 256; supplier_certifications
+      / suppliers -> 258. The opposite-side FK cures incrementally per neighbor.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S2}
+      - {type: catalog_addition, scope: modules, trigger: "neighbor domains (GRC, ERP-FIN, FSQM, SUP-LIFE, AUDIT, FMIS, DAIRY-MGMT, MFG-OPS, FARMER-DIRECT-SALES) modularize to fill the opposite-side module FK"}
     affected_handoffs:
       - {handoff_id: 359, direction: outbound, source_domain: FOOD-TRACE, target_domain: GRC, trigger_event: recall_event.initiated, payload: recall_events, null_field: both}
       - {handoff_id: 360, direction: outbound, source_domain: FOOD-TRACE, target_domain: ERP-FIN, trigger_event: recall_event.initiated, payload: recall_events, null_field: both}
@@ -350,39 +262,24 @@ b1b:
       - {handoff_id: 978, direction: inbound, source_domain: FSQM, target_domain: FOOD-TRACE, trigger_event: environmental_monitoring_sample.positive, payload: environmental_monitoring_samples, null_field: both}
 
 b2:
-  - id: B2-1
-    summary: Module split shape for FOOD-TRACE (gates every M / B-cascade / E / F item)
-    question: |
-      Which `domain_modules` shape should the 6-capability FOOD-TRACE domain ship?
-      Decision unlocks B1B-S2, B1B-S10, B1B-S11, B1B-M1 to B1B-M6, B1B-B10b, E1 to E5,
-      F2 to F5.
-    options:
-      - 4 modules (recommended default), FOOD-TRACE-LOT-GENEALOGY, FOOD-TRACE-CTE-CAPTURE, FOOD-TRACE-RECALL, FOOD-TRACE-CORE covering supplier-docs / provenance / query
-      - 6 modules, LOT-GENEALOGY, CTE-CAPTURE, RECALL, SUPPLIER-DOCS, PROVENANCE, QUERY
-      - 3-module starter, LOT-GENEALOGY, CTE-CAPTURE, RECALL (defers supplier-docs / provenance / query)
-      - 2 full plus 1 starter, LOT-GENEALOGY-AND-CTE plus RECALL-AND-COMPLIANCE plus FOOD-TRACE-LITE starter
-    why: |
-      Rule #14 requires at least 2 `module_kind='full'` modules for a domain with 3 or
-      more capabilities (FOOD-TRACE has 6). Every Phase-B authoring decision
-      (lifecycle-state realizing module, intra-domain handoff cross-product, embedded-master
-      shells, role bundles) anchors on the module set. Bucket 1 STRUCTURAL cascade and
-      Bucket 1 MISSING items all sit behind this.
-
   - id: B2-2
-    summary: "`supplier_certifications` mastership arbitration (catalog-wide M7 hard fail)"
+    summary: "`supplier_certifications` forward-looking mastership reconciliation with SUP-LIFE"
     question: |
-      Catalog-wide single-master rule is violated. `data_object_id=498` has
-      `role='master'` rows in both SUP-LIFE (id 28) and FOOD-TRACE (id 155). Which side
-      keeps catalog mastership?
+      M7 is satisfied today: data_object 498 has exactly one master DMDO row
+      (FOOD-TRACE module 258 FOOD-TRACE-SUPPLIER-PROVENANCE) plus one contributor row in
+      FSQM (module 264). SUP-LIFE has no DMDO row for 498 yet (unmodularized). When
+      SUP-LIFE modularizes, which side keeps catalog mastership?
     options:
-      - SUP-LIFE keeps master, FOOD-TRACE demotes to `embedded_master` once both sides modularize (recommended)
-      - FOOD-TRACE keeps master, SUP-LIFE demotes to `embedded_master`
-      - Split into two data_objects, `supplier_certifications` (SUP-LIFE master, procurement shape) and `food_supplier_certifications` (FOOD-TRACE master, food-safety shape)
+      - FOOD-TRACE keeps master (current state); SUP-LIFE consumes or embeds 498 when it modularizes (recommended, avoids a re-home)
+      - SUP-LIFE takes master on modularization; FOOD-TRACE demotes 498 to embedded_master
+      - Split into two data_objects, `supplier_certifications` (SUP-LIFE master, procurement shape) and a food-safety-shaped variant (FOOD-TRACE master)
     why: |
-      Vendor evidence is split. SUP-LIFE-shape vendors (Coupa, SAP Ariba, Ivalua) master
-      cert from procurement angle. FOOD-TRACE-shape vendors (Trustwell, TraceGains,
-      FoodLogiQ) master cert because it governs lot-level traceability under FSMA 204.
-      M7 enforcement blocks until one side surrenders.
+      Vendor evidence is split. Procurement-shape vendors (Coupa, SAP Ariba, Ivalua) master
+      cert from the procurement angle; food-trace vendors (Trustwell, TraceGains, FoodLogiQ)
+      master cert because it governs lot-level traceability under FSMA 204. This is no
+      longer a hard fail (the legacy claim was based on legacy domain_data_objects, not the
+      authoritative DMDO junction), but the SUP-LIFE audit must honor the decision to avoid
+      a second master appearing.
 
   - id: B2-3
     summary: Regulations scope and depth for `domain_regulations` link
@@ -395,10 +292,11 @@ b2:
       - Custom user-supplied list
 
   - id: B2-4
-    summary: Capability-function-divergence override for `FOOD-TRACE-RECALL-EXECUTION`
+    summary: Capability-function-divergence override for the recall-execution capability (module 257)
     question: |
-      Add a `business_function_capabilities` override row pointing this capability at a
-      function different from the domain's GRC-Compliance owner?
+      Add a `business_function_capabilities` override row pointing capability 458
+      (FOOD-TRACE-RECALL-EXECUTION, realized in module 257) at a function different from
+      the domain's GRC-Compliance owner?
     options:
       - No override (domain RACI is sufficient)
       - Add override to GRC-Crisis
@@ -421,31 +319,82 @@ b2:
       cascade through that row.
 
 b3:
+  - id: B3-M1-TRACEABILITY-QUERIES
+    candidate: traceability_queries
+    rationale: |
+      Trustwell, TraceGains, FoodLogiQ master a `trace_request` workflow as first class.
+      FSMA 204 mandates a 24-hour response to FDA requests. Not present in the current
+      catalog. Fits the TRACEABILITY-EVENTS module (query over CTE / KDE / lot data).
+    vendor_evidence: [Trustwell, TraceGains, FoodLogiQ Connect]
+    proposed_module: FOOD-TRACE-TRACEABILITY-EVENTS
+
+  - id: B3-M2-CHAIN-OF-CUSTODY
+    candidate: chain_of_custody_records
+    rationale: |
+      IBM Food Trust, Wholechain, Provenance model chain of custody as the
+      cross-organization edge with attestation. GS1 EPCIS encodes CoC natively. Not in
+      catalog.
+    vendor_evidence: [IBM Food Trust, Wholechain, Provenance Platform]
+    proposed_module: FOOD-TRACE-TRACEABILITY-EVENTS
+
+  - id: B3-M3-PROVENANCE-ATTESTATIONS
+    candidate: provenance_attestations
+    rationale: |
+      Provenance, Bext360, IBM Food Trust treat signed claims about origin, growing
+      method, certifications as distinct from supplier certifications (vendor-issued vs
+      producer-claimed).
+    vendor_evidence: [Provenance Platform, Bext360, IBM Food Trust]
+    proposed_module: FOOD-TRACE-SUPPLIER-PROVENANCE
+
+  - id: B3-M4-RECALL-COMMUNICATIONS
+    candidate: recall_communications
+    rationale: |
+      Trustwell, FoodLogiQ model a per-recipient communications log (FDA, state agencies,
+      distributors, retailers, consumers) as a separate ledger from the recall event for
+      audit defense.
+    vendor_evidence: [Trustwell, FoodLogiQ Connect]
+    proposed_module: FOOD-TRACE-RECALL-MGMT
+
+  - id: B3-M5-REGULATORY-FILINGS
+    candidate: regulatory_filings
+    rationale: |
+      Trustwell, ReposiTrak carry the filing as a distinct artifact from the recall event.
+      One recall may produce many filings to different agencies (FDA Reportable Food
+      Registry, USDA FSIS, state-level).
+    vendor_evidence: [Trustwell, ReposiTrak Traceability Network]
+    proposed_module: FOOD-TRACE-RECALL-MGMT
+
+  - id: B3-M6-TRACEBACK-EXERCISES
+    candidate: "traceback_exercises / mock_traces"
+    rationale: |
+      Trustwell, FoodLogiQ run scheduled traceback drills against historical CTEs to
+      validate retrieval-time SLAs. Not in catalog.
+    vendor_evidence: [Trustwell, FoodLogiQ Connect]
+    proposed_module: FOOD-TRACE-TRACEABILITY-EVENTS
+
   - id: B3-gs1-identifiers
     candidate: gs1_identifiers
     rationale: |
       Whether FOOD-TRACE masters the GS1 GTIN / SSCC / GLN registry, or whether the
       master lives in PIM / MDM. IBM Food Trust and Wholechain treat GS1 identifiers as
       the substrate of every event; ReposiTrak and FoodLogiQ defer to external PIM.
-      Decision shapes how thick `FOOD-TRACE-LOT-GENEALOGY` becomes (B2-1).
     vendor_evidence:
       - {vendor: IBM Food Trust, evidence: 1st_class}
       - {vendor: Wholechain, evidence: 1st_class}
       - {vendor: ReposiTrak Traceability Network, evidence: absent}
       - {vendor: FoodLogiQ Connect, evidence: absent}
-    proposed_module: FOOD-TRACE-LOT-GENEALOGY
+    proposed_module: FOOD-TRACE-TRACEABILITY-EVENTS
 
   - id: B3-ftl-classifications
     candidate: food_traceability_list_classifications
     rationale: |
       Whether FSMA 204 Food Traceability List classification per product is a FOOD-TRACE
       master or a PIM column. TraceGains and Trustwell carry it as first class because
-      FTL status drives the workflow gate; lighter products treat it as a product
-      boolean.
+      FTL status drives the workflow gate; lighter products treat it as a product boolean.
     vendor_evidence:
       - {vendor: TraceGains, evidence: 1st_class}
       - {vendor: Trustwell, evidence: 1st_class}
-    proposed_module: FOOD-TRACE-CORE
+    proposed_module: FOOD-TRACE-TRACEABILITY-EVENTS
 
   - id: B3-provenance-certificates
     candidate: provenance_certificates
@@ -458,7 +407,7 @@ b3:
       - {vendor: Provenance Platform, evidence: 1st_class}
       - {vendor: Wholechain, evidence: 1st_class}
       - {vendor: Bext360, evidence: 1st_class}
-    proposed_module: FOOD-TRACE-PROVENANCE
+    proposed_module: FOOD-TRACE-SUPPLIER-PROVENANCE
 
   - id: B3-coa-records
     candidate: coa_records
@@ -472,4 +421,4 @@ b3:
       - {vendor: FoodLogiQ Connect, evidence: 1st_class}
       - {vendor: SafetyChain, evidence: 1st_class}
       - {vendor: Safefood 360, evidence: 1st_class}
-    proposed_module: FOOD-TRACE-CORE
+    proposed_module: FOOD-TRACE-SUPPLIER-PROVENANCE

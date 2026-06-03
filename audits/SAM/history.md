@@ -390,3 +390,63 @@ B2-S2 (`license_audits` pattern flags `has_submit_lock=true`, `has_single_approv
 ### Next action
 
 `agent` (b1a has B1-S14 ready for one mechanical PATCH; the remaining b1a entries are all gated downstream of B1-S1 which itself is b2 / b3 dependent).
+
+## 2026-06-02, Audit (modularization)
+
+### Summary
+
+Scope: modules + entity assignment only (Phase M, Rule #14). Closed **B1-S1 / M1** by authoring SAM's full `domain_modules` set, linking every capability to a realizing module, and assigning every existing data_object to its module preserving role + necessity. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created (out of scope this pass).
+
+SAM had **0 `domain_modules`** rows before this pass and now has **3 full modules**. A focused 3-module shape was chosen over the 6-module Bucket-3 vendor-surface target (B3-S1): the 6-module shape is predicated on loading 38 net-new masters, which is explicitly out of scope here. With only the 6 existing data_objects (4 masters), splitting into 6 modules would create empty / single-row modules that violate the no-empty-module rule and over-split a domain that today carries one master per workflow cluster. The 3-module shape places all 5 capabilities, masters each of the 4 SAM masters exactly once (M7), and leaves every module non-empty. When the Bucket-3 38-master load lands, SAM-ENTITLEMENT-MGMT and SAM-CATALOG-DISCOVERY can be re-split toward the 6-module shape; that re-split is deferred to the B3-S1 / B2-S1 build, not blocked by this pass.
+
+`module_kind='full'` on all three; `catalog_tagline` and `catalog_description` left empty by design (records the M8/A4 buyer-copy backfill gap, now tracked as B1A-CATALOG-COPY). No `record_status` overrides (Rule #1). No `notes` writes on any DMC or DMDO row (Rule #15). No vendor/product names in module names or descriptions (Rule #18).
+
+Loader: `c:/dev/domain-map/.tmp_deploy/modularize_sam_2026-06-02.ts` (idempotent, Bun, run from project root; re-running skips all inserts). Module ids assigned: 201, 202, 203.
+
+### Module split
+
+| Module (code) | id | Capabilities realized | Data_objects (role / necessity) |
+|---|---|---|---|
+| `SAM-CATALOG-DISCOVERY` | 201 | SAM-DISCOVERY (234) | `software_titles` 57 (master/required), `software_installations` 59 (master/required), `configuration_items` 76 (contributor/required, CMDB-mastered), `org_units` 34 (embedded_master/required, HCM-mastered) |
+| `SAM-ENTITLEMENT-MGMT` | 202 | SAM-ENTITLEMENT (235), SAM-METER (237), SAM-RENEWAL (238) | `software_licenses` 58 (master/required) |
+| `SAM-AUDIT-DEFENSE` | 203 | SAM-AUDIT (236) | `license_audits` 60 (master/required) |
+
+Master -> module mapping (M7 single-master, each mastered in exactly one module):
+- `software_titles` (57) -> SAM-CATALOG-DISCOVERY (201)
+- `software_installations` (59) -> SAM-CATALOG-DISCOVERY (201)
+- `software_licenses` (58) -> SAM-ENTITLEMENT-MGMT (202)
+- `license_audits` (60) -> SAM-AUDIT-DEFENSE (203)
+
+### Counts created
+
+| Table | Rows inserted |
+|---|---|
+| `domain_modules` | 3 |
+| `domain_module_capabilities` | 5 |
+| `domain_module_data_objects` | 6 |
+
+### Structural verification
+
+- **M1 PASS** (3 `domain_modules` rows; was hard-fail).
+- **M2 PASS** (5 capabilities -> >=2 full modules required; 3 present).
+- **M4 PASS** (every capability realized: 234->201; 235/237/238->202; 236->203).
+- **M6 PASS** (every module realizes >=1 capability).
+- **M7 PASS** (each of the 4 masters mastered in exactly one module; loader enforces this with an author-time guard that throws on >1).
+- **No empty module** (each holds >=1 data_object; 201 holds 4, 202 holds 1, 203 holds 1).
+- Roles + necessity preserved verbatim from `domain_data_objects` (contributor + embedded_master copied unchanged onto 201; the 4 masters keep master/required).
+
+### Deferred gaps (recorded in state.yaml)
+
+- **B1A-SYSSKILL-MODULES** (Rule #17 -> F2/F3): each of the 3 new modules now requires exactly one `skills.skill_type='system'` row with `domain_module_id` set. Zero exist (the only SAM system skill is the legacy `sam-system` id 105 with `domain_module_id=NULL`, F1 transitional). Authoring the 3 module-level system skills + their tool floors is a Phase-S follow-up, out of scope for this modules-only pass.
+- **B1A-CATALOG-COPY** (M8 / A4): all 3 modules carry empty `catalog_tagline` and `catalog_description`. Buyer-facing copy backfill deferred (not invented this pass per the prompt).
+- **B1A-LEGACY-SKILL-RETIRE** (F1): `sam-system` id 105 (`domain_module_id=NULL`) is now a retirement target since module-level system skills can exist; fold its 4 `query_*` tools into the per-module skills authored under B1A-SYSSKILL-MODULES.
+- All previously-open downstream b1a items (B1-S5 lifecycle states, B1-S9 B10b backfill, B1-S11 intra-domain handoffs) are now UNGATED on the module side: the `domain_module_id` FKs and module endpoints they needed now exist. They remain gated only on their own non-module prerequisites (B2-S2 / B2-S3 pattern + exemption judgment, B1-S4 events). Module->handoff mappings for B1-S9 update to the 3-module shape: outbound 35/636/637 -> SAM-ENTITLEMENT-MGMT (202), 36 -> SAM-CATALOG-DISCOVERY (201), 37 -> SAM-AUDIT-DEFENSE (203), 638 -> SAM-CATALOG-DISCOVERY (201); inbound 33/145/623/662/798 -> SAM-CATALOG-DISCOVERY (201); 235/238 -> SAM-CATALOG-DISCOVERY (201).
+- **No missing-master candidates surfaced this pass** beyond the existing B3-S1 38-master backlog (unchanged). No genuinely-missing master blocks the 3-module shape: every capability and every existing data_object is placed.
+
+### Rule audit (this run)
+
+- Rule #0 PASS (CLI direct, no MCP). Rule #1 PASS (no `record_status`). Rule #4b PASS (TypeScript on Bun). Rule #6 PASS (no `cd`). Rule #15 PASS (0 `notes` writes on DMC / DMDO). Rule #18 PASS (no vendor/product names in module names or descriptions). Rule #14 PASS (>=2 full modules for a >=3-capability domain). JWT-audience errors: 0.
+
+### Next action
+
+`agent` (b1a non-empty: B1-S14 mechanical PATCH still pending from prior pass; B1A-SYSSKILL-MODULES + B1A-CATALOG-COPY + B1A-LEGACY-SKILL-RETIRE are the new module-downstream agent tasks).

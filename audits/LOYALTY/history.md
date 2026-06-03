@@ -355,3 +355,53 @@ H1 PASSES by volume (7 of 7 handoffs tagged). No new `agent_curated` rows propos
 **Bucket 2:** Five items. Item 1 (module split) is the gating decision; pick a shape. Items 2 (catalog UX), 3 (lifecycle exemption), 4 (pattern flags), 5 (`send_email` disposition) can be answered independently.
 
 **Bucket 3:** Vet via formal Phase 0 research, or eyeball-mode? If eyeball, name which of the five ring true.
+
+## 2026-06-02 Audit (modularization)
+
+### Scope
+
+Modularization-only pass: authored the LOYALTY `domain_modules` set, linked existing capabilities, and assigned existing data_objects at their established role and necessity. Reuse-only: no new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. This cures the long-standing M1 hard fail (B1-S1 / B1B-S1, gating block) using a 3-module shape rather than the prior 4-module proposal, because the 4th proposed module (LOY-PARTNER-PROMO) had no in-domain master to anchor it (its intended master `promotion_campaigns` is an unbuilt B1B-M4 entity, out of scope for a reuse-only pass). The partner and promotion capabilities fold into a single member-engagement module instead.
+
+### Module shape authored (3 full modules)
+
+| Module | id | module_kind | Capabilities | Data objects (role, necessity) |
+|---|---|---|---|---|
+| LOYALTY-PROGRAM-CORE | 272 | full | LOY-PROGRAM-MGT (286), LOY-MEMBER-MGT (287), LOY-TIER-MGT (290) | loyalty_members (263, master, required); loyalty_tiers (265, master, required); customers (97, contributor, required) |
+| LOYALTY-POINTS-REWARDS | 273 | full | LOY-POINTS-LEDGER (288), LOY-REWARDS-CAT (289) | loyalty_transactions (264, master, required); redemption_rewards (717, master, required); redemption_transactions (718, master, required) |
+| LOYALTY-ENGAGEMENT | 274 | full | LOY-PROMOTION-ENG (291), LOY-PARTNER-ECO (292), LOY-MEMBER-PORTAL (293) | loyalty_members (263, consumer, required) |
+
+Totals: 3 modules, 8 DMC rows (every capability placed exactly once, M4 pass), 7 DMDO rows.
+
+### Deviation from prior 4-module proposal
+
+The 2026-05-30 and 2026-05-31 audits proposed a 4-module split with a dedicated LOY-PARTNER-PROMO module mastering `promotion_campaigns` (B1B-M4). That entity does not exist, and entity creation is out of scope for a reuse-only modularization pass. Rather than ship an empty module (no in-domain master, would violate the no-empty-module rule and M6 if it also lacked a data_object), the partner-ecosystem and promotions capabilities were folded together with the member-portal capability into LOYALTY-ENGAGEMENT. LOYALTY-ENGAGEMENT carries `loyalty_members` as a `consumer` (portal and promotions read member identity and balances) so the module is non-empty while the single master copy of `loyalty_members` stays in LOYALTY-PROGRAM-CORE.
+
+### Master pre-check (catalog-wide, MANDATORY)
+
+Ran `/domain_module_data_objects?data_object_id=in.(263,264,265,717,718,97)&role=eq.master` before any write.
+
+- customers (97): one foreign master row in module 46 (CRM-ACCT-MGT). Assigned `contributor` here (its existing LOYALTY role). No demotion needed, never promoted.
+- loyalty_members (263), loyalty_transactions (264), loyalty_tiers (265), redemption_rewards (717), redemption_transactions (718): zero existing master rows anywhere. Each safely mastered in exactly one LOYALTY module. No demotions via the pre-check.
+
+The loader also re-runs the pre-check defensively and aborts if any foreign master claim appears on the five in-domain masters.
+
+### Verification (live, post-load)
+
+- M4: all 8 capabilities placed exactly once across the 3 modules. PASS.
+- M6 / no-empty-module: every module has >=1 capability and >=1 data_object (272: 3 caps / 3 DMDO; 273: 2 caps / 3 DMDO; 274: 3 caps / 1 DMDO). PASS.
+- M7 in-domain: each of the 5 masters appears as `master` in exactly one LOYALTY module. PASS.
+- M7 catalog-wide: re-query confirms each master has exactly one `master` row catalog-wide (263->272, 264->273, 265->272, 717->273, 718->273). `customers` master remains solely in module 46. PASS.
+- Rule #14: 8 capabilities -> 3 full modules. PASS.
+- Idempotency: loader re-run made zero changes.
+
+### Loader
+
+`c:/dev/domain-map/.tmp_deploy/modularize_loyalty_2026-06-02.ts` (idempotent; module key = domain_module_code, DMC key = (domain_module_id, capability_id), DMDO key = (domain_module_id, data_object_id)).
+
+### Unblocked / changed downstream items
+
+M1 now passes, which unblocks the module-dependent items previously parked behind B1B-S1 (the `{type: prerequisite_entity, ref: B1B-S1}` chain). The module id map for those items is now: PROGRAM-CORE 272 (masters loyalty_members 263, loyalty_tiers 265), POINTS-REWARDS 273 (masters loyalty_transactions 264, redemption_rewards 717, redemption_transactions 718), ENGAGEMENT 274 (no in-domain master). Note the prior 4-module module-name assumptions in those items (e.g. LOY-MEMBER-MGT, LOY-LEDGER-REWARDS, LOY-PARTNER-PROMO) now map onto this 3-module shape; downstream loaders should target module ids 272/273/274, not the old proposed codes.
+
+### Deferred (out of scope for this pass)
+
+All non-module work remains for later passes: per-module system skills + legacy skill 81 retirement (F2/F3/F1, was B1B-S2/S3), lifecycle states (B1B-S4), aliases (B1B-S5), intra/cross-domain and users relationships (B1B-S6/S7/S8), handoff source-module backfill (B1B-S9, now unblocked), catalog UX (A4, B1B-S10), capability ownership overrides (C2, B1B-S11), and the five missing-master candidates (B1B-M1..M5). B1B-M4 (`promotion_campaigns`) is now the natural master for LOYALTY-ENGAGEMENT (id 274), which currently has no in-domain master; flagged as the priority missing-master for this domain.

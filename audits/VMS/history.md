@@ -487,3 +487,57 @@ User picks (a) vetted route (formal Phase 0 also checks `interview_slots` and `s
 - No `record_status='approved'` flips; no `notes` writes (Rules #1 / #15).
 - Rule #9 collision check on `rate_cards`: 0 collisions (substring matches `corporate_cards` / `corporate_card_accounts` are semantically distinct; no bare-word `rate_card` exists). `rate_cards` is prefix-free already, optionally claim canonical (judgment for the user; not surfaced as a Bucket 2 because the catalog impact is cosmetic).
 - The em-dash review was performed in-memory against the draft text before writing; no U+2014 characters appear in this section.
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+Built the VMS module set: VMS had 0 `domain_modules` (M1 hard fail since 2026-05-30). Created **2 `full` modules** and wired the existing entities. Scope was modules + entity assignment only: no new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. Loader: [.tmp_deploy/modularize_vms_2026-06-02.ts](../../.tmp_deploy/modularize_vms_2026-06-02.ts), idempotent, run twice (clean re-run, zero duplicate inserts).
+
+VMS confirmed from `domains.description`: Vendor Management System for the contingent workforce: contingent-worker sourcing, staffing-supplier management, rate cards, contingent timesheets, and worker-classification compliance. Run jointly by procurement and HR. Not a generic supplier-master or SRM domain.
+
+### Modules created
+
+| id | code | name | capabilities | masters |
+|---|---|---|---|---|
+| 315 | VMS-WORKER-SOURCING | Worker Sourcing and Supplier Management | WORKER-REQ (54), STAFFING-SUPPLIER (55), RATE-MGMT (56), WORKER-CLASS (58) | pm_work_orders (187), staffing_suppliers (188), rate_cards (189), contingent_workers (186) |
+| 316 | VMS-TIME-INVOICING | Contingent Time and Invoicing | CONTINGENT-TIME (57) | contingent_timesheets (190), contingent_invoices (191) |
+
+VMS-TIME-INVOICING additionally consumes contingent_workers (186, whose hours) and rate_cards (189, bill-rate basis) as `consumer`/`required` non-master rows.
+
+This is the 2-way split proposed as B1B-M1 / B2-4-default in the 2026-05-31 audit. The module boundary follows the natural process seam: sourcing produces the requisition, supplier panel, rate card, and worker record; time-invoicing executes against them and reconciles billing.
+
+### Catalog-wide master pre-check (mandatory)
+
+Queried `/domain_module_data_objects?data_object_id=in.(186,187,188,189,190,191)&role=eq.master` before any write. **Empty result**: none of the 6 VMS masters is mastered in any module anywhere in the catalog. All 6 were assigned `master` here, each in exactly one VMS module (M7 single-master satisfied in-domain AND catalog-wide). **No demotions to embedded_master were required.**
+
+### Verification (live, post-load)
+
+- Every capability placed in >=1 module: 54, 55, 56, 57, 58 all present (M4 pass).
+- Each module has >=1 capability (M6) and >=1 data_object (no empty module).
+- Each of the 6 masters mastered exactly once, in-domain and catalog-wide.
+- Rule #14: 5 capabilities (>=3) -> 2 `full` modules (satisfies both clauses).
+- All inserts omit `record_status` (R1); all DMDO/DMC rows omit `notes` (R15); module descriptions carry no vendor/product names (R18); no em-dashes.
+
+### pm_work_orders (187) caveat carried forward
+
+Entity 187 is named `pm_work_orders` / "Preventive Maintenance Work Order" but its description and every attached workflow treat it as the staffing requisition / SOW. It was placed as a `master` in VMS-WORKER-SOURCING consistent with its description and the contingent-labor workflow. The identity question (B2-1) and any rename are out of scope for this modularization pass and remain open for user judgment. If B2-1 resolves to route the entity to EAM (options b/c), this master assignment moves with the replacement `staffing_requisitions` entity.
+
+### Items resolved by this pass
+
+- **B1A-BUILD** (unbuilt domain, 0 modules): resolved. 2 modules now exist.
+- **B1B-M1** (insert 2 modules + 5 cap links + 6+ DMDO): resolved. Module names/codes used the default 2-way split (B2-4 default); placement of entity 187 followed its description without resolving B2-1. The 187 identity question stays open but no longer blocks the build.
+
+### Items unblocked (now agent-actionable on the next pass)
+
+The following 2026-05-31 b1b items were gated on B1B-M1 (prerequisite_entity) and are now executable, with `source_domain_module_id` resolvable from the new module ids (315 / 316):
+
+- B1B-B9 (2 handoffs for rate_card.published), B1B-B9b (intra-domain progression handoffs across the 315/316 boundary), B1B-B10b (backfill source_domain_module_id on 7 outbound handoffs), B1B-B12 (lifecycle states + workflow-gate permissions on 6 masters), B1B-E1 (>=3 Indirect-Procurement roles), B1B-E2 (role_modules + HIRING-MANAGER secondary on 315), B1B-F1 (retire legacy skill 118, author 2 module-scoped system skills), B1B-F3 (redistribute 8 skill_tools).
+
+These remain out of this pass's scope (modules + entity assignment only) but are recorded so the next audit picks them up. Several still also carry user-decision gates (B2-1 for 187 lifecycle states; B2-4 confirmation of the codes actually used).
+
+### Notes on the run
+
+- JWT errors: none.
+- No `record_status` writes; no `notes` writes; no new entities/relationships/skills/handoffs.
+- Module-to-master mapping written to `domain_module_data_objects` (module grain), not the deprecated `domain_data_objects` rollup. The legacy rollup still lists the 6 as domain-grain masters; it is a derived view and was not hand-edited.

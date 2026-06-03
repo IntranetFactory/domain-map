@@ -68,6 +68,11 @@ b1a:
       - {handoff_id: null, direction: outbound, source_domain: NPMD, target_domain: AIOPS, trigger_event: "network_path.degraded", payload: network_paths, null_field: source_domain_module_id}
       - {handoff_id: null, direction: outbound, source_domain: NPMD, target_domain: ITSM, trigger_event: "network_path.degraded", payload: service_incidents, null_field: source_domain_module_id}
       - {handoff_id: null, direction: outbound, source_domain: NPMD, target_domain: ITSM, trigger_event: "network_interface.flapping", payload: service_incidents, null_field: source_domain_module_id}
+  - id: B1A-BUILD
+    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
+    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
+    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-M1

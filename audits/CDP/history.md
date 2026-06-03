@@ -433,3 +433,38 @@ Carry-forward from 2026-05-30, unchanged: 11 MISSING entity candidates (`data_so
 ### Decisions
 
 (awaiting user input per the Per-bucket prompts)
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+Scope-limited modularization pass (modules + entity assignment only; reuse existing entities). Cured the M1 hard fail: CDP went from 0 `domain_modules` to 4 `module_kind='full'` modules. All 8 capabilities and all 10 existing data_objects (6 masters, 3 consumers, 1 contributor) were placed; each master lands in exactly one module (M7); every module realizes >=1 capability (M6) and holds >=1 data_object (no empty module). No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created; the B3 entity candidates (data_sources, consent_records, identity_rules, etc.) remain un-created, so the module split is built from existing masters only. This deliberately diverges from the prior B2-S1 6-module proposal (which assumed Phase 0 entities would land first); see Deferred gaps.
+
+Loader: `.tmp_deploy/modularize_cdp_2026-06-02.ts` (idempotent; re-run = no inserts). Module ids assigned: 216-219.
+
+### Module split
+
+| Module (code, id) | Capabilities | Data objects (role / necessity) |
+|---|---|---|
+| CDP-INGEST-IDENTITY (216) | CDP-INGEST (254), IDENTITY-RESOLUTION (255) | customer_events 111 (master/required), identity_graphs 112 (master/required), crm_contacts 98 (contributor/required) |
+| CDP-UNIFIED-PROFILE (217) | CDP-UNIFIED-PROFILE (256), CDP-PREDICTIVE (260), CDP-CONSENT-PRIV (259) | customers 97 (master/required), customer_attributes 114 (master/required), lead_scores 118 (consumer/required) |
+| CDP-SEGMENTATION-ACTIVATION (218) | CDP-SEGMENTATION (257), CDP-ACTIVATION (258), CDP-COMPOSABLE-WH (261) | audience_segments 113 (master/required), marketing_campaigns 116 (consumer/required), sales_emails 123 (consumer/required) |
+| CDP-JOURNEYS-360 (219) | CUSTOMER-360 (310) | customer_journeys 115 (master/required) |
+
+Roles + necessity preserved verbatim from `domain_data_objects`: all 6 masters were master/required there and stay master/required (each in exactly one module); the 3 consumers and 1 contributor kept their existing roles (no promotion to master). `customers` stays single-master in CDP per the live rollup (B2-S5 architectural decision still open, not pre-empted).
+
+### Counts
+
+- domain_modules: 4 (all `full`).
+- domain_module_capabilities: 9 rows (8 distinct capabilities; CUSTOMER-360 placed once).
+- domain_module_data_objects: 10 rows (6 master, 3 consumer, 1 contributor).
+- Masters as master exactly once: 6/6 (M7 clean). Capabilities placed: 8/8 (M4 clean). Empty modules: 0.
+
+### Deferred gaps
+
+- **Per-module system skills (Rule #17 -> F2/F3):** 4 modules now exist with zero `skill_type='system'` skills. The legacy domain-level `cdp-system` skill (id 35, domain_module_id null) does not satisfy the per-module requirement. Tracked as B1A-SYS-SKILLS (agent-solvable, out of this pass's scope).
+- **Catalog UX backfill (M8 / A4):** all 4 new modules ship with empty `catalog_tagline` / `catalog_description` (deliberate per insert shape), plus the domain-row A4 copy is still empty (B1B-S9 / B2-S9). Rule #20 requires user-approved buyer-voice copy. Tracked in B1A-SYS-SKILLS finding.
+- **Module split divergence from B2-S1:** this 4-module split (built from 6 existing masters) is NOT the prior 6-module proposal (CDP-INGEST / CDP-IDENTITY / CDP-UNIFIED-PROFILE / CDP-SEGMENTATION / CDP-ACTIVATION / CDP-JOURNEYS), which depended on Phase 0 entities (data_sources, event_sinks, activation_runs, identity_rules, merge_decisions, consent_records, etc.) that do not exist. INGEST+IDENTITY were merged (both anchor on raw signal masters), and SEGMENTATION+ACTIVATION were merged (activation has no master of its own without event_sinks/activation_runs). If the Phase 0 entities land, CDP-INGEST-IDENTITY and CDP-SEGMENTATION-ACTIVATION are the natural split points. CDP-CONSENT-PRIV remains a capability folded into CDP-UNIFIED-PROFILE rather than its own module (B3-MOD-CONSENT-PRIV still open) because it has no existing master.
+- **Missing-master candidates (B3):** the modules are thin on owned masters for INGEST (no data_sources), ACTIVATION (no event_sinks / activation_runs), CONSENT-PRIV (no consent_records / data_subject_requests), PREDICTIVE (no predictive_models / model_predictions). Carried as b3 missing-master candidates; these are the entities that would justify the 6-module split and a CDP-CONSENT-PRIV / CDP-PREDICTIVE promotion.
+- **B10b CDP-side FKs (B1B-S3):** 9 outbound + 13 inbound handoffs still carry NULL CDP-side `domain_module_id`. Modules now exist to point at, but FK attribution is out of this pass's scope (modules + entity assignment only). Unblocked for a future B10b pass.
+- **Lifecycle states (B1B-S5), users edges (B1B-S8):** still owed; out of this pass's scope (no lifecycle/relationship writes).

@@ -1,11 +1,52 @@
 schema_version: 2
 domain: SMM
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-05-31"
+next_action_by: agent
+last_audit: "2026-06-02"
+
+# 2026-06-02 modularization built the 4-module shape (path a): SMM-PUBLISHING (299),
+# SMM-ENGAGEMENT (300), SMM-LISTENING (301), SMM-INFLUENCER (302). All M-band structural
+# items (M1/M4/M6/M7/Rule #14) now PASS. B2-MODULE-SHAPE + B2-S4-EMP-ADVOCACY resolved by
+# the build; cascade items below lose their B2-MODULE-SHAPE gate but keep independent blockers.
 
 # b1a: agent-solvable; no other blocker; ready for next-pass technical action
 b1a:
+  - id: B1A-F2-PER-MODULE-SKILLS
+    summary: Retire legacy skill smm-system (id 18) and author 4 per-module system skills (Rule #17 -> F2/F3); redistribute its 12 skill_tools.
+    finding: >-
+      skills.id=18 smm-system carries skill_type=system with domain_module_id=null
+      (F1 transitional state), acceptable only until module-level system skills exist.
+      As of 2026-06-02 the 4 SMM modules exist (SMM-PUBLISHING 299, SMM-ENGAGEMENT 300,
+      SMM-LISTENING 301, SMM-INFLUENCER 302), so the transitional state is now a defect.
+      12 skill_tools hang off skill 18 (8 platform query/mutate, 4 external compute/side_effect:
+      post_social_message, detect_sentiment, generate_image, generate_text).
+    action: >-
+      Author 4 skills rows (skill_type=system, domain_module_id set to 299/300/301/302)
+      e.g. smm_publishing_agent / smm_engagement_agent / smm_listening_agent /
+      smm_influencer_agent; redistribute the 12 skill_tools per module scope (publishing:
+      generate_image, generate_text, post; engagement: post_social_message, detect_sentiment;
+      listening: detect_sentiment; etc.); then DELETE skill 18. Resolve B2-NOTES-SKILLTOOLS
+      (carry-forward vs strip notes) before writing the new skill_tools rows.
+    affected_modules: [299, 300, 301, 302]
+    extra_origin_id: B1-S2 (was B1B-F1-LEGACY-SKILL; unblocked by 2026-06-02 build)
+    extra_first_seen: "2026-05-30"
+
+  - id: B1A-A4-CATALOG-UX
+    summary: Draft and surface domains.catalog_tagline + catalog_description for SMM (M8/A4, Rule #20).
+    finding: >-
+      domains.catalog_tagline and catalog_description are both empty string on the
+      SMM row (id 106). Rule #20 backfill obligation; A4 / M8 hard fail. domains.description
+      already carries analyst copy (workflow + disambiguation against MA / CDP /
+      SALES-ENG); the buyer-voice copy on catalog_tagline / catalog_description is
+      separate and must be drafted afresh.
+    action: >-
+      Draft buyer-voice tagline (one sentence, workflow + value) + buyer-voice
+      description (1-3 paragraphs covering what the buyer can do, NOT market
+      taxonomy). Surface to user for review BEFORE writing. Once non-empty, never
+      overwrite without per-row approval per Rule #20.
+    extra_origin_id: B1-2026-05-31-A
+    extra_first_seen: "2026-05-31"
+
   - id: B1A-B7-USERS-EDGES
     summary: Author 6-10 users-edge data_object_relationships rows across SMM masters per Rule #10.
     finding: >-
@@ -20,12 +61,12 @@ b1a:
       manages_influencer_relationship, owns_social_listening_topic and inverses
       where cardinality warrants.
     affected_masters:
-      - {data_object_id: 125, name: social_posts, target_module_id: null, workflow: author/scheduler/approver}
-      - {data_object_id: 126, name: social_accounts, target_module_id: null, workflow: owner}
-      - {data_object_id: 127, name: social_messages, target_module_id: null, workflow: assignee/resolver}
-      - {data_object_id: 128, name: social_mentions, target_module_id: null, workflow: assignee}
-      - {data_object_id: 129, name: social_listening_topics, target_module_id: null, workflow: owner}
-      - {data_object_id: 130, name: influencers, target_module_id: null, workflow: relationship_manager/contract_signer}
+      - {data_object_id: 125, name: social_posts, target_module_id: 299, workflow: author/scheduler/approver}
+      - {data_object_id: 126, name: social_accounts, target_module_id: 299, workflow: owner}
+      - {data_object_id: 127, name: social_messages, target_module_id: 300, workflow: assignee/resolver}
+      - {data_object_id: 128, name: social_mentions, target_module_id: 301, workflow: assignee}
+      - {data_object_id: 129, name: social_listening_topics, target_module_id: 301, workflow: owner}
+      - {data_object_id: 130, name: influencers, target_module_id: 302, workflow: relationship_manager/contract_signer}
     extra_origin_id: B1-S4
     extra_first_seen: "2026-05-30"
 
@@ -41,12 +82,12 @@ b1a:
       Load 4 rows with verb + inverse_verb + cardinality + relationship_kind +
       is_required + owner_side. Surface mermaid in draft pre-load.
     affected_masters:
-      - {data_object_id: 126, name: social_accounts, target_module_id: null, workflow: publisher/receiver}
-      - {data_object_id: 125, name: social_posts, target_module_id: null, workflow: published_by_account / authored_by_influencer}
-      - {data_object_id: 130, name: influencers, target_module_id: null, workflow: authors_post}
-      - {data_object_id: 129, name: social_listening_topics, target_module_id: null, workflow: matches_mention}
-      - {data_object_id: 128, name: social_mentions, target_module_id: null, workflow: matched_by_topic}
-      - {data_object_id: 127, name: social_messages, target_module_id: null, workflow: received_by_account}
+      - {data_object_id: 126, name: social_accounts, target_module_id: 299, workflow: publisher/receiver}
+      - {data_object_id: 125, name: social_posts, target_module_id: 299, workflow: published_by_account / authored_by_influencer}
+      - {data_object_id: 130, name: influencers, target_module_id: 302, workflow: authors_post}
+      - {data_object_id: 129, name: social_listening_topics, target_module_id: 301, workflow: matches_mention}
+      - {data_object_id: 128, name: social_mentions, target_module_id: 301, workflow: matched_by_topic}
+      - {data_object_id: 127, name: social_messages, target_module_id: 300, workflow: received_by_account}
     extra_origin_id: B1-S5
     extra_first_seen: "2026-05-30"
 
@@ -62,12 +103,12 @@ b1a:
       Author rows with alias_type=vendor_specific for tool-shaped synonyms and
       alias_type=industry_synonym for broadly understood market terms.
     affected_masters:
-      - {data_object_id: 127, name: social_messages, target_module_id: null, workflow: vendor synonyms}
-      - {data_object_id: 128, name: social_mentions, target_module_id: null, workflow: vendor synonyms}
-      - {data_object_id: 125, name: social_posts, target_module_id: null, workflow: vendor synonyms}
-      - {data_object_id: 126, name: social_accounts, target_module_id: null, workflow: vendor synonyms}
-      - {data_object_id: 129, name: social_listening_topics, target_module_id: null, workflow: vendor synonyms}
-      - {data_object_id: 130, name: influencers, target_module_id: null, workflow: vendor synonyms}
+      - {data_object_id: 127, name: social_messages, target_module_id: 300, workflow: vendor synonyms}
+      - {data_object_id: 128, name: social_mentions, target_module_id: 301, workflow: vendor synonyms}
+      - {data_object_id: 125, name: social_posts, target_module_id: 299, workflow: vendor synonyms}
+      - {data_object_id: 126, name: social_accounts, target_module_id: 299, workflow: vendor synonyms}
+      - {data_object_id: 129, name: social_listening_topics, target_module_id: 301, workflow: vendor synonyms}
+      - {data_object_id: 130, name: influencers, target_module_id: 302, workflow: vendor synonyms}
     vendor_evidence:
       - Sprout Social
       - Sprinklr Social
@@ -81,22 +122,6 @@ b1a:
       - Mavrck
     extra_origin_id: B1-S11
     extra_first_seen: "2026-05-30"
-
-  - id: B1A-A4-CATALOG-UX
-    summary: Draft and surface domains.catalog_tagline + catalog_description for SMM (Rule #20).
-    finding: >-
-      domains.catalog_tagline and catalog_description are both empty string on the
-      SMM row (id 106). Rule #20 backfill obligation; A4 hard fail. domains.description
-      already carries analyst copy (workflow + disambiguation against MA / CDP /
-      SALES-ENG); the buyer-voice copy on catalog_tagline / catalog_description is
-      separate and must be drafted afresh.
-    action: >-
-      Draft buyer-voice tagline (one sentence, workflow + value) + buyer-voice
-      description (1-3 paragraphs covering what the buyer can do, NOT market
-      taxonomy). Surface to user for review BEFORE writing. Once non-empty, never
-      overwrite without per-row approval per Rule #20.
-    extra_origin_id: B1-2026-05-31-A
-    extra_first_seen: "2026-05-31"
 
   - id: B1A-H1-PCF-RELOOKUP
     summary: Re-lookup APQC PCF for handoffs 90 (influencer_campaign.completed -> MA) and 91 (social_post.published -> MA); tag or defer to Discover Pass 3.
@@ -121,27 +146,8 @@ b1a:
 
 # b1b: blocked on a prior item or on a separate domain audit
 b1b:
-  - id: B1B-F1-LEGACY-SKILL
-    summary: Retire legacy skill smm-system (id 18) and redistribute its 12 skill_tools across per-module system skills.
-    finding: >-
-      skills.id=18 smm-system carries skill_type=system with domain_module_id=null
-      (F1 transitional state). Acceptable only until module-level system skills
-      exist. Currently 12 skill_tools rows hang off it (8 platform query/mutate,
-      4 external compute/side_effect: post_social_message, detect_sentiment,
-      generate_image, generate_text).
-    action: >-
-      After B2-MODULE-SHAPE resolves and modules ship: author 4 (or 5) new
-      skills rows (skill_type=system, domain_module_id set) named like
-      smm_publishing_agent / smm_engagement_agent / smm_listening_agent /
-      smm_influencer_agent (+ smm_advocacy_agent if path b); redistribute
-      skill_tools per module scope; DELETE skill 18.
-    blocked_by:
-      - {type: depends_on, ref: B2-MODULE-SHAPE, reason: needs per-module skill anchors before legacy can retire}
-    extra_origin_id: B1-S2
-    extra_first_seen: "2026-05-30"
-
   - id: B1B-B12-LIFECYCLE-STATES
-    summary: Load data_object_lifecycle_states for all workflow-bearing SMM masters; anchor gate-states' domain_module_id post-M1.
+    summary: Load data_object_lifecycle_states for all workflow-bearing SMM masters; anchor gate-states' domain_module_id to the realizing module.
     finding: >-
       Zero data_object_lifecycle_states rows across all 6 SMM masters. Workflow-bearing
       state machines per audit observation, social_posts (draft -> submitted ->
@@ -150,19 +156,21 @@ b1b:
       (prospect -> outreach -> contracted -> active -> terminated), social_accounts
       (pending_connection -> active -> expired -> disconnected). social_listening_topics
       candidate config-shape exempt; social_mentions is event-shape (no states needed).
+      Module ids now exist (2026-06-02 build) so gate-state domain_module_id can be set
+      at insert: social_posts/social_accounts gates -> 299, social_messages -> 300,
+      influencers -> 302.
     action: >-
       Draft state machines (state_name + state_order + is_initial / is_terminal +
-      requires_permission + permission_verb_override where non-obvious). Load states
-      before B1A-B9-MISSING-EVENTS. Once modules ship, PATCH gate-state
-      domain_module_id to the realizing module per Rule #14 prefix derivation.
+      requires_permission + permission_verb_override where non-obvious) and set
+      domain_module_id on gate states per the module map. Load before B1B-B9-MISSING-EVENTS.
     blocked_by:
-      - {type: depends_on, ref: B2-MODULE-SHAPE, reason: gate-state domain_module_id anchor needs module ids}
+      - {type: user_decision, ref: B2-PATTERN-FLAGS, reason: has_submit_lock / has_single_approver on social_posts shape the gate-state requires_permission flags}
     affected_masters:
-      - {data_object_id: 125, name: social_posts, target_module_id: null, workflow: draft->submitted->approved->scheduled->published/failed/cancelled}
-      - {data_object_id: 127, name: social_messages, target_module_id: null, workflow: new->triaged->assigned->responded/escalated->closed}
-      - {data_object_id: 130, name: influencers, target_module_id: null, workflow: prospect->outreach->contracted->active->terminated}
-      - {data_object_id: 126, name: social_accounts, target_module_id: null, workflow: pending_connection->active->expired->disconnected}
-      - {data_object_id: 129, name: social_listening_topics, target_module_id: null, workflow: config-shape candidate; surface exemption}
+      - {data_object_id: 125, name: social_posts, target_module_id: 299, workflow: draft->submitted->approved->scheduled->published/failed/cancelled}
+      - {data_object_id: 127, name: social_messages, target_module_id: 300, workflow: new->triaged->assigned->responded/escalated->closed}
+      - {data_object_id: 130, name: influencers, target_module_id: 302, workflow: prospect->outreach->contracted->active->terminated}
+      - {data_object_id: 126, name: social_accounts, target_module_id: 299, workflow: pending_connection->active->expired->disconnected}
+      - {data_object_id: 129, name: social_listening_topics, target_module_id: 301, workflow: config-shape candidate; surface exemption}
     extra_origin_id: B1-S3
     extra_first_seen: "2026-05-30"
 
@@ -191,21 +199,22 @@ b1b:
     extra_first_seen: "2026-05-30"
 
   - id: B1B-B10B-SOURCE-MODULE-BACKFILL
-    summary: Backfill source_domain_module_id on all 8 outbound SMM handoffs once modules ship.
+    summary: Backfill source_domain_module_id on the 4 well-formed outbound SMM handoffs now that modules exist.
     finding: >-
-      All 8 SMM outbound handoffs (86, 87, 88, 89, 90, 91, 511, 512) currently carry
-      source_domain_module_id=NULL. Legitimate while M1 unresolved; once modules
-      ship the NULL becomes a defect per B10b. Per-row derivation per master-resolution
-      rule, 86, 87 -> module that masters social_messages; 91 -> module that
-      masters social_posts; 511 -> module that masters social_listening_topics;
-      88, 89, 90, 512 carry the B1B-B9-ATTR-DEFECT shape (event mis-attributed,
-      no module candidate until events are re-targeted).
+      All 8 SMM outbound handoffs (86, 87, 88, 89, 90, 91, 511, 512) carry
+      source_domain_module_id=NULL. Now that modules ship (2026-06-02) this is a defect
+      per B10b for the well-formed handoffs. Per-row master-resolution: 86, 87 -> module
+      that masters social_messages (SMM-ENGAGEMENT 300); 91 -> module that masters
+      social_posts (SMM-PUBLISHING 299); 511 -> module that masters social_listening_topics
+      (SMM-LISTENING 301). 88, 89, 90, 512 carry the B1B-B9-ATTR-DEFECT shape (event
+      mis-attributed; no module candidate until events are re-targeted).
     action: >-
-      After B2-MODULE-SHAPE lands and the 4 (or 5) modules exist, run the deterministic
-      master-resolution backfill against handoffs 86, 87, 91, 511 to populate
-      source_domain_module_id. Handoffs 88, 89, 90, 512 wait for B1B-B9-ATTR-DEFECT.
+      Run the deterministic master-resolution backfill against handoffs 86, 87, 91, 511:
+      86 -> 300, 87 -> 300 (social_mentions payload but on-channel inbox source; confirm
+      mastering module is SMM-LISTENING 301 if payload-master rule applies), 91 -> 299,
+      511 -> 301. Handoffs 88, 89, 90, 512 wait for B1B-B9-ATTR-DEFECT.
     blocked_by:
-      - {type: depends_on, ref: B2-MODULE-SHAPE, reason: needs module ids to attribute}
+      - {type: depends_on, ref: B1B-B9-ATTR-DEFECT, reason: 4 of 8 handoffs need event re-targeting before their source module resolves}
     affected_handoffs:
       - {handoff_id: 86, direction: outbound, source_domain: SMM, target_domain: CSM, trigger_event: social_message.received, payload: social_messages, null_field: source_domain_module_id}
       - {handoff_id: 87, direction: outbound, source_domain: SMM, target_domain: CSM, trigger_event: social_mention.detected, payload: social_mentions, null_field: source_domain_module_id}
@@ -227,11 +236,10 @@ b1b:
       social_engagement.observed on social_mentions or social_messages; social_post.campaign_completed
       on social_posts) and re-target handoffs.
     action: >-
-      After B2-MODULE-SHAPE lands, author 3 replacement events (per the audit's
-      proposal), re-target handoffs 88, 89, 90, 512 to the new events, DELETE
-      (or archive) the misattributed events. User judgment on naming.
+      Author 3 replacement events (per the audit's proposal), re-target handoffs
+      88, 89, 90, 512 to the new events, DELETE (or archive) the misattributed events.
+      Module anchors now exist for the SMM-mastered data_objects. User judgment on naming.
     blocked_by:
-      - {type: depends_on, ref: B2-MODULE-SHAPE, reason: replacement events need module-anchored data_object discipline}
       - {type: user_decision, ref: B1-S10-NAMING, reason: replacement event names are an editorial decision}
     affected_handoffs:
       - {handoff_id: 88, direction: outbound, source_domain: SMM, target_domain: CRM, trigger_event: social_lead.captured, payload: crm_leads, null_field: trigger_event_data_object_attribution}
@@ -285,51 +293,20 @@ b1b:
 
 # b2: user judgment required
 b2:
-  - id: B2-MODULE-SHAPE
-    summary: M1 hard fail; author 4 or 5 domain_modules rows for SMM. Editorial decision on module count and EMPLOYEE-ADVOCACY placement.
-    question: >-
-      Zero domain_modules rows for SMM (id 106). Rule #14 mandates >=2 modules
-      (7 capabilities). Proposed module shape from prior audit, SMM-PUBLISHING
-      (masters social_posts, social_accounts; capabilities SOCIAL-PUB, CONTENT-CAL,
-      SOCIAL-ANALYTICS), SMM-ENGAGEMENT (master social_messages; embedded_master
-      social_accounts; capabilities SOCIAL-ENGAGE, SOCIAL-ANALYTICS), SMM-LISTENING
-      (masters social_mentions, social_listening_topics; capabilities SOCIAL-LISTEN,
-      SOCIAL-ANALYTICS), SMM-INFLUENCER (master influencers; capability INFLUENCER-MGMT).
-      EMPLOYEE-ADVOCACY capability is orphan candidate; see B2-S4-EMP-ADVOCACY for the
-      a/b/c choice. Once shape is set, all M-band + cascade items unblock.
-    options:
-      - (4-module-shape) Approve SMM-PUBLISHING + SMM-ENGAGEMENT + SMM-LISTENING + SMM-INFLUENCER; fold EMPLOYEE-ADVOCACY into SMM-PUBLISHING (B2-S4 path a).
-      - (5-module-shape) Approve the 4 above + SMM-ADVOCACY (B2-S4 path b).
-      - (split-domain) Approve the 4 above; split EMPLOYEE-ADVOCACY off as candidate domain EMP-ADVOCACY (B2-S4 path c, kicks Bucket 3 vetting on B3-S1).
-    why: >-
-      The point-solution-market test (Rule #2) returns YES for advocacy
-      (GaggleAMP, Bambu, EveryoneSocial are independent flagship vendors), so
-      path b or c is defensible; path a is the cheapest cure and keeps the
-      capability in SMM. Editorial decision belongs to the user.
-    extra_gating_for:
-      - B1B-F1-LEGACY-SKILL
-      - B1B-B12-LIFECYCLE-STATES
-      - B1B-B10B-SOURCE-MODULE-BACKFILL
-      - B1B-B9-ATTR-DEFECT
-      - B1B-B8-CROSS-DOMAIN-RELS
-    extra_origin_id: B1-S1 (re-classified)
-    extra_first_seen: "2026-05-30"
-
   - id: B2-NOTES-DDO
-    summary: Rule #15 notes-pollution on 8 domain_data_objects rows for SMM. User-approved at load time, or auto-populated?
+    summary: Rule #15 notes-pollution on domain_data_objects rows for SMM. User-approved at load time, or auto-populated?
     question: >-
-      Eight domain_data_objects rows for SMM (5 cross-domain, audience_segments,
-      crm_leads, customers, crm_contacts, marketing_campaigns; 3 SMM-mastered,
-      social_messages, social_mentions, social_listening_topics... checked,
-      actually social_messages + social_mentions only) carry populated notes
-      describing the role / consumer semantics. Per Rule #15 these need to have
-      been explicitly user-approved at load time or they get reverted.
+      Several domain_data_objects rows for SMM carry populated notes describing the
+      role / consumer semantics. Per Rule #15 these need to have been explicitly
+      user-approved at load time or they get reverted. (The new domain_module_data_objects
+      rows authored 2026-06-02 ship with empty notes per R15; this item is only about
+      the legacy domain_data_objects rollup rows.)
     options:
       - (approved) Confirm user-approved at load time; leave in place.
-      - (revert) Confirm auto-populated; PATCH all 8 rows to empty string and append a Rule-#15 incident to references/skill-changelog.md.
+      - (revert) Confirm auto-populated; PATCH the rows to empty string and append a Rule-#15 incident to references/skill-changelog.md.
     why: >-
       Cannot tell from audit alone; the loader script for SMM
-      ([scripts/loaders/load_smm_data_objects.ts]) would carry the original text.
+      (scripts/loaders/load_smm_data_objects.ts) would carry the original text.
     extra_origin_id: B2-S1
     extra_first_seen: "2026-05-30"
 
@@ -340,14 +317,14 @@ b2:
       notes, Posts published externally to social network destinations, Mention
       sentiment is core SMM analytics, AI-generated post imagery, AI-generated
       post copy. Per Rule #15 these need to have been explicitly user-approved
-      at load time. Once B1B-F1-LEGACY-SKILL retires skill 18 and per-module
-      system skills land, the question is whether the new rows ship with empty
-      notes or carry the same prose.
+      at load time. When B1A-F2-PER-MODULE-SKILLS retires skill 18 and per-module
+      system skills land, decide whether the new rows ship with empty notes or
+      carry the same prose.
     options:
       - (approved-keep) The prose was user-approved; carry forward verbatim to new per-module skill_tools rows.
       - (revert-and-strip) The prose was auto-written; do not carry forward. New rows ship with empty notes.
     why: >-
-      Same as B2-NOTES-DDO; depends on load-time provenance.
+      Same as B2-NOTES-DDO; depends on load-time provenance. Gates B1A-F2-PER-MODULE-SKILLS write step.
     extra_origin_id: B2-S2
     extra_first_seen: "2026-05-30"
 
@@ -364,29 +341,10 @@ b2:
       - (skip-all-false) Confirm all-false is correct (the audit records the positive review even when no flag flips).
     why: >-
       Pattern flags are workflow-shape judgments the user owns; the default-false
-      doesn't establish review per Rule #12. The audit records the decision,
-      not a notes annotation per Rule #15.
+      doesn't establish review per Rule #12. Feeds B1B-B12-LIFECYCLE-STATES gate-state flags.
+    extra_gating_for:
+      - B1B-B12-LIFECYCLE-STATES
     extra_origin_id: B2-S3
-    extra_first_seen: "2026-05-30"
-
-  - id: B2-S4-EMP-ADVOCACY
-    summary: Module shape for EMPLOYEE-ADVOCACY capability (orphan under proposed 4-module set).
-    question: >-
-      The 4-module proposal in B2-MODULE-SHAPE covers 6 of 7 SMM capabilities;
-      EMPLOYEE-ADVOCACY is the orphan. Three paths, (a) fold into SMM-PUBLISHING
-      as a feature, (b) author SMM-ADVOCACY module with employee_share_records
-      master, (c) split off as candidate domain EMP-ADVOCACY (queued in
-      _missing-domains.md, mention_count 2 with vendor evidence Hootsuite Amplify,
-      Sprinklr Advocacy, Smarp, Bambu, EveryoneSocial, GaggleAMP, Oktopost).
-    options:
-      - (a) fold EMPLOYEE-ADVOCACY into SMM-PUBLISHING (cheapest, minimizes load)
-      - (b) author SMM-ADVOCACY module (5-module set, preserves capability in SMM, keeps EMP-ADVOCACY queue entry alive for later Phase 0)
-      - (c) split as EMP-ADVOCACY candidate domain (kicks Bucket 3 B3-S1 vetting)
-    why: >-
-      Linked to B3-S1 (employee_share_records master + advocacy module shape).
-      Picking (c) makes Bucket 3 B3-S1 the gating step. Picking (a) or (b)
-      keeps the question independent.
-    extra_origin_id: B2-S4
     extra_first_seen: "2026-05-30"
 
   - id: B2-PARENT-DOMAIN
@@ -423,17 +381,19 @@ b2:
     extra_origin_id: B1-2026-05-31-C
     extra_first_seen: "2026-05-31"
 
-# b3: vendor research pending (Phase 0)
+# b3: vendor research pending (Phase 0) -- missing-master candidates
 b3:
   - id: B3-EMPLOYEE-SHARE-RECORDS
     candidate: employee_share_records
     rationale: >-
-      Advocacy data shape (share events per employee, attribution back to brand,
-      gamification points) is genuinely distinct from social_posts. Folds into
-      B2-S4-EMP-ADVOCACY decision. If user picks path b (SMM-ADVOCACY module),
-      no Phase 0 vetting needed (entity surface is well-known). If user picks
-      path c (split as candidate domain EMP-ADVOCACY), formal Phase 0 vendor
-      surface pass required.
+      EMPLOYEE-ADVOCACY (cap 131) was folded into SMM-PUBLISHING (299) on 2026-06-02
+      (B2-S4 path a, cheapest cure) and currently has no dedicated master. Advocacy data
+      shape (share events per employee, attribution back to brand, gamification points)
+      is genuinely distinct from social_posts. If this candidate is loaded it would
+      master in SMM-PUBLISHING (or, if scope grows, justify splitting an SMM-ADVOCACY
+      module per the deferred B2-S4 path b). The point-solution-market test returns YES
+      (GaggleAMP, EveryoneSocial, Bambu are independent flagships), so a future EMP-ADVOCACY
+      candidate domain (path c) also remains a live option.
     vendor_evidence:
       - Hootsuite Amplify
       - Sprinklr Advocacy
@@ -442,22 +402,20 @@ b3:
       - EveryoneSocial
       - Smarp
       - Oktopost
-    proposed_module: SMM-ADVOCACY (path b) OR EMP-ADVOCACY/<TBD> (path c)
+    proposed_module: SMM-PUBLISHING (299) as feature; or future SMM-ADVOCACY / EMP-ADVOCACY domain
     extra_origin_id: B3-S1
     extra_first_seen: "2026-05-30"
 
   - id: B3-INFLUENCER-WORKFLOW
     candidate: influencer_contracts, influencer_deliverables, influencer_briefs, influencer_payments
     rationale: >-
-      Current influencers master is a relationship record, not the workflow.
-      Flagship influencer platforms (CreatorIQ, Aspire, Grin) model the workflow
-      as discovery -> brief -> contract -> deliverables review -> payment.
-      SMM-INFLUENCER (proposed module) would master only the relationship, not
-      the workflow substrate. Two paths, (a) extend SMM-INFLUENCER with the 4
-      missing masters (deepens SMM coverage), (b) defer to a separate
-      INFLUENCER-MGMT domain (queued in _missing-domains.md mention_count 2 with
-      flagship vendor evidence CreatorIQ / Aspire / Grin / Klear / Upfluence /
-      Mavrck / Traackr; passes the point-solution-market test).
+      SMM-INFLUENCER (302) masters only the influencers relationship record, not the
+      workflow. Flagship influencer platforms (CreatorIQ, Aspire, Grin) model the workflow
+      as discovery -> brief -> contract -> deliverables review -> payment. Two paths,
+      (a) extend SMM-INFLUENCER with the 4 missing masters (deepens SMM coverage),
+      (b) defer to a separate INFLUENCER-MGMT domain (queued in _missing-domains.md
+      mention_count 2 with flagship vendor evidence CreatorIQ / Aspire / Grin / Klear /
+      Upfluence / Mavrck / Traackr; passes the point-solution-market test).
     vendor_evidence:
       - CreatorIQ
       - Aspire
@@ -466,7 +424,7 @@ b3:
       - Upfluence
       - Mavrck
       - Traackr
-    proposed_module: SMM-INFLUENCER (path a) OR INFLUENCER-MGMT/<TBD> (path b, recommended)
+    proposed_module: SMM-INFLUENCER (302, path a) OR INFLUENCER-MGMT/<TBD> (path b, recommended)
     extra_origin_id: B3-S2
     extra_first_seen: "2026-05-30"
 
@@ -474,10 +432,10 @@ b3:
     candidate: listening_queries, listening_alerts, share_of_voice_snapshots, competitor_mentions, crisis_detection_signals
     rationale: >-
       Brandwatch, Talkwalker, Meltwater model these as distinct entities; today
-      social_listening_topics collapses query, alert, share-of-voice, and crisis
-      surface into one master. SOCIAL-LISTENING is queued in _missing-domains.md
-      mention_count 2. Two paths, (a) extend SMM-LISTENING with the 4 missing
-      masters, (b) defer to a separate SOCIAL-LISTENING domain (passes
+      SMM-LISTENING (301) collapses query, alert, share-of-voice, and crisis surface
+      into social_listening_topics + social_mentions. SOCIAL-LISTENING is queued in
+      _missing-domains.md mention_count 2. Two paths, (a) extend SMM-LISTENING with
+      the missing masters, (b) defer to a separate SOCIAL-LISTENING domain (passes
       point-solution-market test; Brandwatch alone has 5+ flagship pure-play vendors).
     vendor_evidence:
       - Brandwatch
@@ -485,7 +443,7 @@ b3:
       - Meltwater Engage
       - Sprout Listening
       - Khoros
-    proposed_module: SMM-LISTENING (path a) OR SOCIAL-LISTENING/<TBD> (path b, recommended)
+    proposed_module: SMM-LISTENING (301, path a) OR SOCIAL-LISTENING/<TBD> (path b, recommended)
     extra_origin_id: B3-S3
     extra_first_seen: "2026-05-30"
 
@@ -493,15 +451,16 @@ b3:
     candidate: paid_social_campaigns, social_ad_creatives, ad_targeting_segments, ad_budget_pacing_records, ad_creative_variants
     rationale: >-
       Smartly.io, Sprinklr Ads, AdEspresso, Madgicx model paid-social as a distinct
-      workflow on top of organic social. SMM has no paid-social entities today.
-      SOCIAL-ADS is queued in _missing-domains.md mention_count 2. Two paths,
-      (a) extend SMM-PUBLISHING with paid-ad entities, (b) defer to SOCIAL-ADS
-      candidate domain (passes point-solution-market test; strong adjacency to ADV-AD-TECH).
+      workflow on top of organic social. SMM has no paid-social entities today; none
+      of the 4 modules built 2026-06-02 covers ad buying. SOCIAL-ADS is queued in
+      _missing-domains.md mention_count 2. Two paths, (a) extend SMM-PUBLISHING with
+      paid-ad entities, (b) defer to SOCIAL-ADS candidate domain (passes
+      point-solution-market test; strong adjacency to ADV-AD-TECH).
     vendor_evidence:
       - Smartly.io
       - Sprinklr Ads
       - AdEspresso
       - Madgicx
-    proposed_module: SMM-PUBLISHING (path a) OR SOCIAL-ADS/<TBD> (path b, recommended)
+    proposed_module: SMM-PUBLISHING (299, path a) OR SOCIAL-ADS/<TBD> (path b, recommended)
     extra_origin_id: B3-S4
     extra_first_seen: "2026-05-30"

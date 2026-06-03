@@ -107,3 +107,31 @@ Untagged cross-domain handoffs: **1,005 / 1,164 (86%)**. Zero conflicts. Zero ap
 - **B8-rev (838) and B9 (702) are heavily inflated by the no-DMDO domains.** ERP-FIN alone accounts for 97 of B8-rev. The "per-handoff" framing implies individual fixes; the truth is closer to "6 Phase B loads close 246 defects in one batch."
 - **B10b counts (262) are reliable.** Each is one mechanical PATCH via the [backfill_ats_handoff_modules_2026_05_23.ts](../scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts) pattern.
 - **Orphaned trigger_events (273) need a query-quality second pass** before treating as actionable. The relaxed v2 check still surfaces trigger_events whose data_objects are config-shaped (no workflow → no lifecycle_state, by Rule #12 exemption) — those are likely false positives.
+
+## 2026-06-02 — peer-owed null module FKs surfaced by the LMS b1 Validate
+
+The LMS per-domain audit (2026-06-02) found cross-domain handoffs whose NULL module FK is owed by the
+PEER domain's B10b (asymmetry rule: LMS does not author these). Routed here for the owning domains.
+
+**Owed by HCM (B10b target-side, `target_domain_module_id` null on LMS-outbound):**
+- 431 (LMS → HCM, `learning_record.posted` / learning_records)
+- 1047 (LMS → HCM, `compliance_assignment.due` / compliance_assignments)
+- 1311 (LMS → HCM, `course_completion.recorded` / course_completions)
+- 1313 (LMS → HCM, `gdpr_consent_record.withdrawn` / gdpr_consent_records)
+- 1314 (LMS → HCM, `data_deletion_request.fulfilled` / data_deletion_requests)
+
+**Owed by GRC (B10b target-side):**
+- 434 (LMS → GRC, `compliance_assignment.overdue` / compliance_assignments)
+- 1049 (LMS → GRC, `compliance_assignment.due` / compliance_assignments)
+- 1308 (LMS → GRC, `compliance_assignment.completed` / compliance_assignments)
+- 1310 (LMS → GRC, `compliance_assignment.expired` / compliance_assignments)
+- 1312 (LMS → GRC, `training_evidence_record.submitted` / training_evidence_records)
+
+**Owed by SKILLS-MGMT (B10b target-side):**
+- 1307 (LMS → SKILLS-MGMT, `learner_badge.earned` / learner_badges)
+
+**Owed by GRC (B10b source-side, `source_domain_module_id` null on LMS-inbound):**
+- 249 (GRC → LMS, `compliance_policy.updated` / policy_attestations)
+
+Each is one mechanical PATCH on the owning domain's next b1 pass (derive the strongest-role module on
+that domain's side). Not blockers for LMS.

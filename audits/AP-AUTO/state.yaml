@@ -22,6 +22,11 @@ b1a:
       value. Re-read after PATCH and confirm no U+2014 remaining.
     extra_field: business_logic
     extra_target_id: 29
+  - id: B1A-BUILD
+    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 1 capabilities awaiting a build."
+    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 1 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
+    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-S1

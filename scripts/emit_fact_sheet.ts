@@ -129,6 +129,19 @@ function escapeYaml(s: string): string {
   return JSON.stringify(s);
 }
 
+// Push a `key: value` front-matter line, rendering multi-paragraph prose (e.g. a 1-3
+// paragraph `catalog_description`) as a YAML literal block scalar so it stays human-readable
+// in the committed file. Single-line values fall back to escapeYaml. Blank lines between
+// paragraphs are emitted unindented (valid inside a literal block scalar).
+function pushYamlField(out: string[], key: string, value: string): void {
+  if (value.includes("\n")) {
+    out.push(`${key}: |`);
+    for (const line of value.split("\n")) out.push(line ? `  ${line}` : "");
+  } else {
+    out.push(`${key}: ${escapeYaml(value)}`);
+  }
+}
+
 const ROLE_INFO: Record<string, { classDef: string }> = {
   master: { classDef: "fill:#d4f4dd,stroke:#27ae60,color:#0b3d20" },
   embedded_master: { classDef: "fill:#fff4cc,stroke:#c79100,color:#5b4500" },
@@ -524,20 +537,43 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   const systemDescription = isStarterKit ? parentDomains[0].domain_name : modules[0].domain_module_name;
   const systemSlug = moduleSlug(systemName);
 
-  // catalog_tagline: buyer-voice one-liner from the source row (per Rule #20). Single
-  // module: pull from that module. Multi-module starter kit or domain-bundle: pull from
-  // the parent domain. Empty when the catalog UX field hasn't been backfilled yet; the
-  // M8 / A4 audits catch the gap.
+  // Buyer-voice catalog copy from the source row (per Rule #20), surfaced into front matter
+  // for the catalog / site generator. Single module: pull from that module. Multi-module
+  // starter kit or domain-bundle: pull from the parent domain. Empty when the catalog UX
+  // field hasn't been backfilled yet; the M8 / A4 audits catch the gap.
+  //   - tagline: the one-liner (catalog_tagline).
+  //   - description: the long-form 1-3 paragraph buyer copy (catalog_description).
+  // These replace the former in-body §1.1/§1.2 overview split: the body's §1 now carries
+  // only the analyst voice (no sub-headings); the buyer voice lives entirely here.
   const catalogTagline = isStarterKit
     ? parentDomains[0].catalog_tagline || ""
     : modules[0].catalog_tagline || "";
+  const catalogDescription = isStarterKit
+    ? parentDomains[0].catalog_description || ""
+    : modules[0].catalog_description || "";
+
+  // persona: the deduplicated persona actors realized in the §9 RACI tables (B3), aggregated
+  // across every module in scope. Only `actorKind === "persona"` rows count; agent-skill
+  // actors are excluded. Same derivation the §9 loop renders per module, sorted for a stable
+  // emit. Empty array when no `process_raci` rows are wired to this scope's gated processes.
+  const personaSet = new Set<string>();
+  for (const m of modules) {
+    const mScopeRows = scopeRows.filter((r) => r.modules.includes(m));
+    const mLifecycle = moduleLifecycleScope(m, mScopeRows, lifecycleRows, moduleIdSet);
+    for (const g of deriveRaciRealization(mScopeRows, mLifecycle, allRelationships, moduleIdSet)) {
+      if (g.actorKind === "persona") personaSet.add(g.actor);
+    }
+  }
+  const personas = [...personaSet].sort();
 
   out.push("---");
   out.push("artifact: semantic-blueprint");
   out.push(`fact_sheet_version: "${FACT_SHEET_VERSION}"`);
+  out.push("license: MIT");
   out.push(`system_name: ${systemName}`);
   out.push(`system_description: ${escapeYaml(systemDescription)}`);
-  if (catalogTagline) out.push(`catalog_tagline: ${escapeYaml(catalogTagline)}`);
+  if (catalogTagline) out.push(`tagline: ${escapeYaml(catalogTagline)}`);
+  if (catalogDescription) pushYamlField(out, "description", catalogDescription);
   out.push(`system_slug: ${systemSlug}`);
   out.push("domain_modules:");
   for (const m of modules) out.push(`  - ${moduleSlug(m.domain_module_code)}`);
@@ -548,6 +584,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   if (relatedModules.length > 0) {
     out.push(`related_modules: [${relatedModules.map((m) => moduleSlug(m.domain_module_code)).join(", ")}]`);
   }
+  out.push(`persona: [${personas.join(", ")}]`);
   out.push(`created_at: ${TODAY}`);
   out.push("---");
   out.push("");
@@ -566,21 +603,15 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   out.push("");
 
   // §1 Overview
-  // Two voices, two sub-sections (per Rule #20):
-  //   1.1 Analyst overview - the row's `description` (single-module: domain_modules.description;
-  //       multi-module: domains.description + business_logic). Internal-facing; describes
-  //       market position, mastership, handoffs.
-  //   1.2 Buyer overview - the row's `catalog_description` (single-module:
-  //       domain_modules.catalog_description; multi-module: domains.catalog_description).
-  //       Marketing-facing; describes what the buyer can do. Rendered only when present.
-  // If `description` is missing the review must catch it upstream (A1 / per-module
-  // description); the emitter never emits a placeholder. Same for catalog_description
-  // (M8 / A4 catch the gap).
+  // Analyst voice only (the row's `description`: single-module domain_modules.description;
+  // multi-module domains.description + business_logic). Internal-facing; describes market
+  // position, mastership, handoffs. No sub-headings. The buyer voice (catalog_tagline /
+  // catalog_description, per Rule #20) is NOT rendered in the body any more; it lives in the
+  // front matter `tagline` / `description` fields. If `description` is missing the review
+  // must catch it upstream (A1 / per-module description); the emitter never emits a placeholder.
   const analystOverviewLines: string[] = [];
-  let buyerOverview = "";
   if (modules.length === 1) {
     if (modules[0].description) analystOverviewLines.push(modules[0].description);
-    buyerOverview = modules[0].catalog_description || "";
   } else if (parentDomains.length === 1) {
     const d = parentDomains[0];
     if (d.description) analystOverviewLines.push(d.description);
@@ -588,28 +619,15 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
       if (analystOverviewLines.length > 0) analystOverviewLines.push("");
       analystOverviewLines.push(d.business_logic);
     }
-    buyerOverview = d.catalog_description || "";
   } else {
     const joined = parentDomains.map((d) => d.description).filter(Boolean).join(" ");
     if (joined) analystOverviewLines.push(joined);
   }
-  if (analystOverviewLines.length > 0 || buyerOverview) {
+  if (analystOverviewLines.length > 0) {
     out.push("## 1. Overview");
     out.push("");
-    if (analystOverviewLines.length > 0) {
-      out.push("### 1.1 Analyst overview");
-      out.push("");
-      out.push(...analystOverviewLines);
-      out.push("");
-    }
-    if (buyerOverview) {
-      out.push("### 1.2 Buyer overview");
-      out.push("");
-      out.push("_Buyer-voice marketing copy from `catalog_description` (Rule #20)._");
-      out.push("");
-      out.push(buyerOverview);
-      out.push("");
-    }
+    out.push(...analystOverviewLines);
+    out.push("");
   }
 
   // §2 Entity summary - table + mermaid in the same section
@@ -922,13 +940,21 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
     out.push(tableHeader(["permission", "includes"]));
     for (const e of hierarchy) out.push(tableRow([`\`${e.including}\``, `\`${e.included}\``]));
     out.push("");
+    const wiredProcesses = deriveWiredProcesses(moduleLifecycle, allRelationships);
+    if (wiredProcesses.length > 0) {
+      out.push("**Processes wired:**");
+      out.push("");
+      out.push(tableHeader(["process_key", "process_name", "PCF code", "PCF ID", "level", "description"]));
+      for (const p of wiredProcesses) out.push(tableRow([p.key ? `\`${p.key}\`` : "", p.name, p.code, p.pcfId, p.level, p.description]));
+      out.push("");
+    }
     out.push("**RACI realization:**");
     out.push("");
     if (raci.length === 0) {
       out.push("_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_");
     } else {
-      out.push(tableHeader(["actor", "kind", "raci", "process", "realization"]));
-      for (const g of raci) out.push(tableRow([`\`${g.actor}\``, g.actorKind, g.raci, g.process, g.realization]));
+      out.push(tableHeader(["actor", "kind", "raci", "process_key", "realization"]));
+      for (const g of raci) out.push(tableRow([`\`${g.actor}\``, g.actorKind, g.raci, g.process ? `\`${g.process}\`` : "", g.realization]));
     }
     out.push("");
   });
@@ -1264,6 +1290,7 @@ type BaselineRole = { code: string; grant: string };
 type HierarchyEdge = { including: string; included: string };
 type RaciGrant = { actor: string; actorKind: string; raci: string; process: string; realization: string };
 type FunctionalOwnership = { responsibility: string; func: string; defaultRole: string; defaultTier: string };
+type WiredProcess = { name: string; key: string; code: string; pcfId: string; level: string; description: string };
 
 // B1: three baseline roles per module. viewer/manager always; admin only when the module
 // has an admin-tier (catalog write) entity, decided by the same deriveWriteTier as §3.
@@ -1306,7 +1333,8 @@ function deriveRaciRealization(moduleScopeRows: ScopeRow[], moduleLifecycle: any
   for (const ls of moduleLifecycle) if (ls.process_id != null) processIds.add(ls.process_id as number);
   for (const pid of processIds) {
     const proc = arel.processesById.get(pid);
-    const procName = proc?.process_name ?? `process#${pid}`;
+    // RACI table references the process by its unique process_key (process_name is not unique).
+    const procKey = proc?.process_key ?? `process#${pid}`;
     const gateCodes = moduleLifecycle
       .filter((ls) => ls.process_id === pid && ls.requires_permission)
       .map((ls) => deriveGate(ls, moduleScopeRows, moduleIdSet)?.code)
@@ -1336,10 +1364,37 @@ function deriveRaciRealization(moduleScopeRows: ScopeRow[], moduleLifecycle: any
         default:
           realization = String(row.raci);
       }
-      grants.push({ actor, actorKind, raci: String(row.raci), process: procName, realization });
+      grants.push({ actor, actorKind, raci: String(row.raci), process: procKey, realization });
     }
   }
   return grants;
+}
+
+// B3 companion: the distinct processes that appear in the RACI realization table (those wired
+// to this module's gated lifecycle states AND carrying >=1 process_raci row), surfaced with
+// their APQC PCF code / level / description so the blueprint is self-contained. Iteration order
+// mirrors deriveRaciRealization (first-seen in moduleLifecycle) so the reference table and the
+// RACI table list processes in the same order.
+function deriveWiredProcesses(moduleLifecycle: any[], arel: AllRelationships): WiredProcess[] {
+  const out: WiredProcess[] = [];
+  const seen = new Set<number>();
+  for (const ls of moduleLifecycle) {
+    const pid = ls.process_id as number | null;
+    if (pid == null || seen.has(pid)) continue;
+    seen.add(pid);
+    if ((arel.processRaciByProcessId.get(pid) ?? []).length === 0) continue;
+    const proc = arel.processesById.get(pid);
+    const name = proc?.process_name ?? `process#${pid}`;
+    out.push({
+      name,
+      key: proc?.process_key ? String(proc.process_key) : "",
+      code: proc?.process_code ? String(proc.process_code) : "",
+      pcfId: proc?.external_id ? String(proc.external_id) : "",
+      level: proc?.hierarchy_level != null ? String(proc.hierarchy_level) : "",
+      description: proc?.description ? String(proc.description) : "",
+    });
+  }
+  return out;
 }
 
 // (B4 deriveDeployableClosure removed in the Plan 3 review, 2026-06-02: "deployable closure /

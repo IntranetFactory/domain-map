@@ -355,3 +355,58 @@ Carried over from 2026-05-30:
 ### JWT errors
 
 None.
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+Built the deployable module layer for SPEND-MGMT (domain_id 133), which previously had zero `domain_modules`. Scope was modules + entity assignment only: reuse existing capabilities and data_objects, create no new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships. This resolves the long-standing M1 hard fail (B1A-BUILD, B1B-S1-MODULES) without touching the gated B2-S1 reimbursement-vs-EXPENSE decision: rather than author a master-less SPEND-REIMBURSEMENT module (which would have forced the B2-S1 call), the reimbursement capability is co-located in the policy/approval module that already carries in-domain masters.
+
+### Module set authored (3 full)
+
+| id | code | name | masters | other DMDOs | capabilities |
+|---|---|---|---|---|---|
+| 303 | SPEND-MGMT-CARDS | Corporate Cards and Authorization Controls | corporate_card_accounts (744), card_authorizations (745) | none | SPEND-CARD-ISSUANCE (313), SPEND-CARD-AUTH (314), CORP-CARD (74), SPEND-FX-TREASURY (318) |
+| 304 | SPEND-MGMT-BILL-PAY | Vendor Bill Pay | vendor_payment_authorizations (746) | supplier_invoices (75, contributor/req), payment_runs (205, contributor/req), suppliers (206, consumer/req) | SPEND-BILL-PAY (316) |
+| 305 | SPEND-MGMT-POLICY-APPROVAL | Pre-Spend Approval and Policy | spend_requests (240), spend_policies (747) | expense_policies (214, contributor/req), expense_reports (210, contributor/req) | SPEND-PRE-APPROVAL (317), EXPENSE-POLICY (73), APPROVAL-WORKFLOW (311), SPEND-ANALYTICS (319), SPEND-REIMBURSEMENT (315), EXPENSE-CAPTURE (72) |
+
+All three `module_kind='full'`. `record_status` omitted on insert (DB default `new`). `catalog_tagline` / `catalog_description` left empty (M8 / A4 backfill remains a user-gated item). `notes` empty on every DMDO row.
+
+### Counts
+
+- 3 domain_modules.
+- 11 domain_module_capabilities (every one of the domain's 11 capabilities placed exactly once; M4 satisfied).
+- 10 domain_module_data_objects: 5 master + 4 contributor + 1 consumer.
+
+### Master assignment (M7 in-domain AND catalog-wide single-master)
+
+Catalog-wide master pre-check ran before any write: all 5 intended masters (240, 744, 745, 746, 747) had zero pre-existing `role='master'` rows in any module catalog-wide, so each is mastered exactly once, here. No demotions to `embedded_master` were required. Post-load verification confirms each of the 5 carries exactly one catalog-wide master row.
+
+Borrowed objects were assigned at their existing domain-rollup role + necessity and NOT promoted: supplier_invoices (75) and payment_runs (205) as contributor/required, suppliers (206) as consumer/required, expense_policies (214) and expense_reports (210) as contributor/required. Pre-check confirmed expense_reports (210) and expense_policies (214) are mastered in module 191 (EXPENSE); they correctly remain contributor here.
+
+### Master-less capabilities (flagged b3, not filled)
+
+Placed in a backed module but lacking their own in-domain master:
+
+- SPEND-FX-TREASURY (318), SPEND-ANALYTICS (319): no FX-treasury or analytics master entity exists in the domain. Both sit in modules with masters (CARDS, POLICY-APPROVAL respectively) but are master-less capability links.
+- SPEND-REIMBURSEMENT (315), EXPENSE-CAPTURE (72): realized off EXPENSE-mastered objects (expense_reports 210, expense_policies 214); no in-domain master. The B2-S1 boundary question still governs whether these should split into their own module.
+- CORP-CARD (74), EXPENSE-POLICY (73): reconciliation / policy-enforcement capabilities backed by EXPENSE masters; CORP-CARD co-located with the card masters, EXPENSE-POLICY with spend_policies.
+
+### Verification
+
+- 11/11 capabilities placed (no orphans; M4 pass).
+- Every module has >= 1 capability and >= 1 data_object, and >= 1 master (no empty module; M6 pass).
+- Each of the 5 masters single-mastered in-domain and catalog-wide (M7 pass).
+- Idempotent re-run is clean (no duplicate inserts after pre-check own-module exclusion fix).
+
+### Loader
+
+`c:/dev/domain-map/.tmp_deploy/modularize_spend_mgmt_2026-06-02.ts` (safe to re-run).
+
+### Not done (out of this pass's scope, remain open)
+
+Lifecycle states (B1B-S3-LIFECYCLE), handoff FK patches (B1B-S4 / S5), per-module system skills + retire legacy skill 107 (B1B-S8-SYSTEM-SKILLS), APQC tagging (B1B-S9 / S10 / H1), catalog UX (B1B-S11-CATALOG-UX), and all Bucket 2 / Bucket 3 items. These were gated on the modules existing; the modules now exist, so they are unblocked for a follow-up pass. Note the realizing-module mapping has changed from the prior plan's 4-full + 1-starter proposal to this 3-full set: SPEND-MGMT-CARDS (303), SPEND-MGMT-BILL-PAY (304), SPEND-MGMT-POLICY-APPROVAL (305).
+
+### JWT errors
+
+None.

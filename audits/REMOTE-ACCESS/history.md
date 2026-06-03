@@ -416,3 +416,59 @@ Approve existing `handoff_processes` rows (7 currently `record_status='new'`)? T
 ### Fixes applied this Audit
 
 None. Structural re-classification only. Prior Continuation (2026-05-31) applied 13 writes; this Audit run reads live state and re-classifies under schema v2.
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+Resolved the M1 hard fail. REMOTE-ACCESS went from ZERO `domain_modules` to EXACTLY 2 `full` modules, the supported ceiling for a domain with only 2 master `data_objects` (one master per module; Rule #14 floor of 2 met, no empty module). Scope was deliberately narrowed to modules + capability links + DMDO assignment only: no new `data_objects`, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. The prior audit's 3-module Phase-0 hypothesis (ATTENDED / UNATTENDED / GOVERNANCE) was consolidated to 2 because the catalog holds only 2 backing masters; the third hypothesized module (GOVERNANCE) had no existing master to anchor it and its proposed contents (`access_policies`, `consent_records`, `mfa_challenges`, `recording_retention_policies`) remain Phase-0 Bucket-3 candidates. The B2-S5 module-naming question is now moot for the build (a 2-module shape needs neither the 3-name triple); naming chosen is workflow-descriptive and vendor-neutral per Rule #18.
+
+### Module set authored
+
+| Module | id | kind | Capabilities | Master DMDO | Other DMDOs |
+|---|---|---|---|---|---|
+| `REMOTE-ACCESS-SESSION` ("Remote Session Control") | 294 | full | RA-ATTENDED (217), RA-UNATTENDED (218), RA-XFER (220), RA-ELEVATE (221), RA-NAT (222) | `remote_sessions` (238) master/required | `rmm_agents` (223) consumer/required; `service_incidents` (47) consumer/required |
+| `REMOTE-ACCESS-RECORDING-AUDIT` ("Session Recording and Audit") | 295 | full | RA-RECORD (219) | `session_recordings` (239) master/required | none |
+
+Capability split rationale: the SESSION module realizes everything that happens while a live session is connected (attended + unattended connect, NAT-traversal relay, file/clipboard transfer, just-in-time privilege elevation); the RECORDING-AUDIT module realizes the distinct recording artifact lifecycle (RA-RECORD) which the catalog already models as a separate master (`session_recordings`, distinct artifact lifecycle from the parent session). Every one of the 6 capabilities lands in exactly one module (M4 satisfied). The 2 legacy consumer DMDOs were folded into SESSION at their existing role+necessity (`consumer`/`required`), preserved verbatim.
+
+### Master pre-check (catalog-wide single-master)
+
+Before any `role='master'` write, queried `/domain_module_data_objects?data_object_id=eq.<id>&role=eq.master`. Both `remote_sessions` (238) and `session_recordings` (239) returned ZERO master rows catalog-wide (they existed only via the legacy `domain_data_objects` rollup, which carries `role` but is not the module junction). Both were therefore eligible to be mastered here. Post-write verification confirms each is mastered exactly once: 238 by module 294, 239 by module 295. No demotions to `embedded_master` were required.
+
+### Verification (live, post-load)
+
+- 2 modules in domain 132, both `module_kind='full'`.
+- All 6 capabilities placed (M4 OK). Every module has ≥1 capability (M6 OK) and ≥1 data_object (no empty module).
+- 6 `domain_module_capabilities` rows (5 + 1). 4 `domain_module_data_objects` rows (3 + 1).
+- M7 in-domain and catalog-wide: each master in exactly one module.
+- Loader is idempotent (re-run inserts nothing; pre-check tolerates its own prior master rows by module-code match).
+
+### Fixes applied this Audit
+
+- Authored 2 `domain_modules` (294 `REMOTE-ACCESS-SESSION`, 295 `REMOTE-ACCESS-RECORDING-AUDIT`), both `full`, `record_status` omitted, `catalog_tagline`/`catalog_description` omitted.
+- Authored 6 `domain_module_capabilities` rows (M4 / M1 resolution).
+- Authored 4 `domain_module_data_objects` rows: 2 masters + 2 preserved consumers; `notes` empty on every row.
+- Loader: `.tmp_deploy/modularize_remote_access_2026-06-02.ts` (idempotent, safe to re-run).
+
+### Items resolved (move off open state)
+
+- **B1-S1 / B1B-M1 (M1 hard fail)** resolved: modules now exist (2, not the hypothesized 3, per the 2-master ceiling).
+- **B1-S2 / B1B-M4 (6 orphan capabilities)** resolved: all 6 capabilities linked to a realizing module.
+- **B1A-BUILD** resolved: the domain is now built and deployable (2 modules); downstream Phase P (personas / RACI) is unblocked but out of this run's scope.
+- **B2-S5 (module-naming triple)** retired: a 2-module build does not consume the 3-name choice; names chosen are workflow-descriptive and vendor-neutral.
+
+### Items still open (carried / re-pointed)
+
+Most prior open items are downstream of M1 and were blocked on it; they are NOT auto-resolved by modularization and stay open, re-pointed at the new module ids where relevant:
+
+- **B1A-B6** (intra-domain rel `remote_sessions produces session_recordings`) — still open; out of this run's scope (no new relationships).
+- **B1A-B11** (6-8 aliases on both masters) — still open; out of scope.
+- **B1A-A4 / M8 / catalog UX** (`catalog_tagline` + `catalog_description` empty on the domain AND on both new modules) — still open; Rule #20 forbids auto-write of buyer-voice copy.
+- **B1B-B4** (pattern-flag re-eval), **B1B-B8** (cross-domain rels), **B1B-B10b** (handoff module-FK backfill, now unblockable against modules 294/295), **B1B-B12** (lifecycle states), **B1B-F-RETIRE** (retire legacy skill 100 after per-module system skills exist), **B1B-REG** (3 `domain_regulations`) — all still open; each was blocked on M1 and is now unblocked but out of this modules-only run's scope.
+- **B2-S1 / S2 / S3 / S4 / B2-H1** — user-judgment items, carried unchanged.
+- **B3-S1..S9** — Phase-0 vendor-research candidates, carried unchanged (including the master-less GOVERNANCE-class entities `access_policies`, `consent_records`, `mfa_challenges`, `recording_retention_policies`).
+
+### Master-less capabilities (b3 flags this run)
+
+All 6 capabilities now have a realizing module AND a backing master in that module, so no capability is master-less at the module level. The genuine vendor-surface gaps (governance/compliance entities the flagship products master but the catalog does not) remain the existing B3-S1..S9 set and are not refiled.

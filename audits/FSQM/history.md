@@ -424,3 +424,61 @@ Every master has 0 lifecycle states (B12 fail) and 0 aliases (B11 fail for cross
 ### JWT errors
 
 None.
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+Cured the M1 gating fail. FSQM went from 0 to 3 `module_kind='full'` domain_modules, all
+`industry_id=24` (Food and Beverage Manufacturing, NAICS 311-312, the single clear food
+manufacturer row; FSQM buyer is the FSMA-subject food manufacturer). Scope was modules +
+entity assignment only: linked all 6 existing capabilities, assigned all 12 existing
+data_objects at their existing role + necessity. No new data_objects, capabilities, lifecycle
+states, skills, tools, handoffs, or relationships were created. Loader:
+[.tmp_deploy/modularize_fsqm_2026-06-02.ts](../../.tmp_deploy/modularize_fsqm_2026-06-02.ts),
+idempotent, run from project root.
+
+### Module shape chosen
+
+Built a 3-module split (not the prior audit's 4-module HACCP / CCP-MONITORING / INCIDENT-RECALL
+/ CORE default). The 3-module shape maps cleanly to the 6 capabilities (2 per module) and keeps
+each master in exactly one module without an empty "CORE" catch-all. The prior B2-MODULE-SHAPE
+options are superseded by the as-built shape below; the open question is closed.
+
+| Module code | id | Capabilities | Masters (role=master) | Borrowed (existing role preserved) |
+| --- | --- | --- | --- | --- |
+| FSQM-HACCP-CCP | 259 | 467 HACCP Plan Authoring, 468 CCP Monitoring and Deviation Management | haccp_plans (507), critical_control_points (508), ccp_measurements (509), food_safety_incidents (510) | audit_findings (294) contributor/required |
+| FSQM-HYGIENE-CONTROL | 263 | 470 Allergen Control, 471 Environmental Monitoring | allergen_programs (511), environmental_monitoring_samples (512), sanitation_records (513) | (none) |
+| FSQM-AUDIT-SUPPLIER | 264 | 469 Certification Audit Prep, 472 Supplier Risk Scoring | (none) | supplier_certifications (498) contributor/required, recall_events (497) contributor/required, compliance_obligations (287) contributor/required, suppliers (206) consumer/required |
+
+### Master placement (M7)
+
+All 7 FSQM masters were unmastered catalog-wide before this run (pre-check returned 0 rows for
+all of 507,508,509,510,511,512,513). Each is now mastered in exactly one FSQM module (4 in 259,
+3 in 263). No demotions to embedded_master were needed; no double-master created. Re-check after
+insert confirms each master appears once catalog-wide.
+
+food_safety_incidents (510) is mastered in FSQM-HACCP-CCP (CAPA from CCP deviation). recall_events
+(497) stays a contributor in FSQM-AUDIT-SUPPLIER (canonical master is FOOD-TRACE per prior audit);
+not promoted. FSQM-AUDIT-SUPPLIER carries no master but is non-empty (4 borrowed data_objects + 2
+capabilities), satisfying M6 and the no-empty-module rule.
+
+### Verification
+
+- 3 full modules, all industry_id=24. M1 cured.
+- 6 capability links, every capability placed exactly once (M4).
+- 12 DMDO rows, no empty module, all borrowed roles + necessity preserved.
+- Catalog-wide master re-check: each of the 7 masters mastered exactly once.
+
+### Deferred / still pending (unchanged by this pass, now actionable post-M1)
+
+Lifecycle states (B1-S10), per-module system skills + legacy skill 64 cleanup (B1-S11/F1/F7),
+B9 missing trigger_events (B1-S7), pattern-flag review (B1-S3), aliases (B1-S9), catalog
+tagline/description (B1-S1), missing masters corrective_action_records / verification_records /
+mock_recalls / environmental_monitoring_programs (B1-M1..M4), handoff source/target module-FK
+backfill (B10b cascade), APQC approval cycle (B1-H1). M8 catalog UX (module catalog_tagline /
+catalog_description) now applicable to the 3 new modules.
+
+### JWT errors
+
+None.

@@ -1,104 +1,99 @@
 schema_version: 2
 domain: ATS
-status: blocked_on_migration
+status: feedback_needed
 next_action_by: user
-last_audit: "2026-06-01"
-blocked_on:
-  - {ref: "plans/extract-role-permission-catalog.md", reason: "role / permission writes from this audit's loader landed in _core; ATS close-out (B7 user edges, H-band APQC) deferred until migration completes"}
+last_audit: "2026-06-02"
 
-b1a:
-  - id: B1A-B7-USER-EDGES-NEWER
-    summary: "~30 later-added ATS masters lack user edges; subagent enumeration pass pending"
-    finding: >
-      Of the 45 newer ATS masters (ids 866-905, 1000-1004), only hiring_team_assignments
-      (905) currently has a Rule #10 edge to users (data_object_id=748). Many of the
-      others carry user-typed actor columns that should produce edges:
-      recruiter_interactions.recruiter, candidate_consents.granted_by,
-      recruiter_saved_searches.owner, requisition_approvals.approver,
-      offer_approvals.approver, background_check_adjudications.adjudicator,
-      data_subject_requests requested_by / handled_by,
-      applicant_flow_records.disposition_actor, ofccp_audit_trails.actor,
-      candidate_notes.author, candidate_documents.uploaded_by, etc.
-    action: >
-      Spawn a general-purpose subagent (NOT Explore — needs Write tool) to enumerate
-      user-typed columns per entity, produce a JSON proposal at
-      c:/tmp/ats-b7-user-edges-<date>.json, then batch INSERT into
-      data_object_relationships with related_data_object_id=748, owner_side='source',
-      relationship_verb='has <role>', is_required by column nullability,
-      record_status='new'. Estimated 25-35 new edges. Idempotent by
-      (data_object_id, related_data_object_id, relationship_verb).
-    deferred_pending: "plans/extract-role-permission-catalog.md"
-
-  - id: B1A-H-APQC-COVERAGE
-    summary: "~36 ATS cross-domain handoffs lack handoff_processes APQC tags"
-    finding: >
-      ATS has ~48 cross-domain handoffs; 12 are already tagged in handoff_processes;
-      ~36 remain untagged. None are record_status='approved'. Per H-band procedure
-      each cross-domain handoff should be classified to an APQC PCF cross-industry
-      activity at audit time. Most untagged subjects: job_offer.rescinded fan-out (4),
-      job_offer.accepted fan-out (3), job_offer.signed → COMP, requisition.filled
-      fan-out (PA + SWP), candidate.hired → BEN-ADMIN,
-      background_check.cleared → ONBOARDING, background_check.flagged → COMPLIANCE,
-      candidate_assessment.passed/failed → HCM + TALENT-MGMT,
-      interview_scorecard.submitted → PA, recruitment_source.attributed → PA,
-      candidate_referral.bonus_earned → PAYROLL, pre_employee.activated → HCM,
-      and 15 HCM-mod-55 → ATS-RECRUITMENT-PIPELINE feeds covering hcm_position
-      lifecycle, job_profile lifecycle, org_unit lifecycle.
-    action: >
-      Per-handoff PCF classification pass against
-      /processes?source_framework=eq.apqc_pcf_cross_industry. Author ~24 rows
-      (~0.5N coverage) with proposal_source='agent_curated', record_status='new'.
-      Surface drafts to user before INSERT per Rule #1.
-    deferred_pending: "plans/extract-role-permission-catalog.md"
+b1a: []
 
 b1b:
   - id: B1B-REG-CODES-EMPTY
     summary: "regulations rows 84 (FCRA) and 85 (OFCCP) carry empty regulation_code"
     finding: >
-      The 2026-05-28 audit INSERTED regulations rows id=84 (Fair Credit Reporting Act)
-      and id=85 (Federal Contract Compliance Programs Regulations) with
-      regulation_code="" while other regulations in the catalog use short codes
-      (GDPR, CCPA, ADA, TITLE-VII, ADEA, EEO-1, EU-PAY-TRANS, EU-AI-ACT). The natural
-      codes would be FCRA and OFCCP. The regulations table is a catalog-wide shared
-      master; PATCH affects every consuming domain.
+      regulations id=84 (Fair Credit Reporting Act) and id=85 (Federal Contract
+      Compliance Programs Regulations) were inserted 2026-05-28 with regulation_code="".
+      Other regulations carry short codes (GDPR, CCPA, ADA, TITLE-VII, ADEA, EEO-1,
+      EU-PAY-TRANS, EU-AI-ACT). Natural codes: FCRA, OFCCP. regulations is a catalog-wide
+      shared master; a PATCH affects every consuming domain.
     action: >
-      Defer to the regulations master / cross-domain governance Validate.
-      Once cleared, PATCH /regulations?id=eq.84 {regulation_code: "FCRA"} and
-      /regulations?id=eq.85 {regulation_code: "OFCCP"}.
+      PATCH /regulations?id=eq.84 {regulation_code:"FCRA"} and
+      /regulations?id=eq.85 {regulation_code:"OFCCP"} once the regulations master /
+      cross-domain governance Validate confirms the code namespace.
     blocked_by:
       - {type: catalog_addition, scope: domains, trigger: "regulations master Validate to confirm code namespace ownership"}
 
-b2: []
+  - id: B1B-APQC-PREDICTIVE-MODEL-DEFERRED
+    summary: "handoff #453 predictive_model.scored has no cross-industry PCF analog"
+    finding: >
+      Inbound handoff #453 (PA -> ATS, predictive_model.scored, payload predictive_models)
+      has no clean APQC cross-industry PCF activity (ML/AI scoring is a modern digital
+      concept absent from the framework). It is the only ATS cross-domain handoff left
+      untagged after the 2026-06-02 H-band pass (coverage 49/50).
+    action: >
+      Route to Discover Pass 3 custom-process authoring (source_framework='custom',
+      CUSTOM-<CLUSTER>-<SHORT-NAME>). Not an ATS-local fix.
+    blocked_by:
+      - {type: depends_on, ref: "Discover Pass 3", reason: "custom-process authoring for ML-scoring handoffs"}
 
-b3: []
+b2:
+  - id: B2-ROLLUP-POLICY
+    summary: "legacy domain_data_objects rollup carries 15 of 60 ATS masters (stale post-modularization)"
+    question: >
+      domain_data_objects is a derived rollup of domain_module_data_objects but was never
+      regenerated after ATS modularized; it lists only the 15 pre-modular masters. A naive
+      auditor deriving <masters> from it under-counts by 45. Deprecate, regenerate, or leave?
+    options:
+      - "deprecate: migrate the checklist <masters> definition + any readers to domain_module_data_objects (agent recommends; catalog-wide)"
+      - "regenerate: idempotent derived-rollup script run catalog-wide (other modularized domains likely drifted too)"
+      - "leave: accept drift; the blueprint emitter reads the module junction directly so renders are unaffected"
+    why: "Catalog-wide policy decision, not ATS-scoped. Affects audit integrity for every modularized domain."
 
-resolved_2026_06_01:
-  - id: B1A-EVT-CATEGORIES
-    summary: "20 ATS-owned trigger_events PATCHed (6 state_change + 14 lifecycle)"
+  - id: B2-C1-FUNCTION-ROWS
+    summary: "business_function_domains has only 2 rows (Recruiting owner, Legal contributor)"
+    question: >
+      C1 passes (an owner exists) but ATS plausibly has more functional stakeholders.
+      Add rows or leave at Recruiting + Legal?
+    options:
+      - "add Human Resources (contributor) + Finance (consumer)"
+      - "leave at Recruiting + Legal"
+    why: "Sharpens buyer-persona / RACI (Signal 3). Optional, not a gap."
 
-  - id: B1A-B12-PERM-RESIDUE
-    summary: "permissions 10030 + 10045 renamed to intended verbs (submit_scorecard, adjudicate_background_check)"
-
-  - id: B1A-M-CONSUMER-NECESSITY
-    summary: "DMDO row 950 (talent_pools consumer in ATS-CANDIDATE-CRM) PATCHed to necessity='optional'"
-
-  - id: B1A-LFC-OLT-TEMPLATES-AUTO-VERB
-    summary: "OLT state machine resolved via B2-OLT-VERBS decision (c): 2 gates kept (approve_offer_letter_template, retire_offer_letter_template), 2 states flipped to requires_permission=false (in_review, active)"
-
-  - id: B2-OLT-VERBS
-    summary: "Decision (c): 2 gates + 2 flips. Materialised 2 new permissions in module 6."
-
-  - id: B2-LFC-MASTERS-WITH-NO-STATES
-    summary: "Scope corrected from 17 to 5. All 5 flipped to master+optional; 902 + 903 demoted to entity_type=operational_record (no lifecycle); 898 / 899 / 901 author lifecycle (16 states)."
-
-  - id: B2-LFC-EMPTY-VERB-OVERRIDES
-    summary: "Decision (c) mixed: 11 explicit verb_overrides on human gates + 3 flips on auto-progressed states."
-
-  - id: B2-ROLE-2-MASS-ASSIGNMENT
-    summary: "Left untouched at user direction. Re-framed as a catalog-extraction architectural finding; see plans/extract-role-permission-catalog.md."
-
-  - id: FCRA-CONSISTENCY-FIX
-    summary: "879 (fcra_disclosures) + 881 (adverse_action_notices) DMDOs flipped to master+optional. Spotted by user during blueprint review: same statute, same module, inconsistent necessity after the Bucket 2 flip pass."
-
-  - id: SECTOR-DRIFT-AUDIT-2026-06-01
-    summary: "Catalog-wide scan for regulator-named masters with necessity=required. 10 candidates surfaced across ATS / LMS / RE-BROKERAGE; all flipped to master+optional. Drove the SKILL.md Rule #16 rewrite + B14 audit check."
+b3:
+  - id: B3-RIGHT-TO-WORK
+    candidate: right_to_work_verifications
+    rationale: >
+      Hard US legal requirement (Form I-9 / E-Verify) at the pre-hire stage, entirely
+      absent. Compliance, distinct from FCRA screening.
+    vendor_evidence: [Workday Recruiting, HireRight]
+    proposed_module: ATS-PRE-EMPLOYEE-RECORD
+  - id: B3-AGENCY-SUBMISSIONS
+    candidate: agency_submissions
+    rationale: >
+      recruitment_agencies is a dangling master with no junction recording who submitted
+      whom (the billable / ownership / dedup event). Every agency-fed pipeline needs it.
+    vendor_evidence: [Greenhouse, SmartRecruiters]
+    proposed_module: ATS-CANDIDATE-CRM
+  - id: B3-OUTREACH-SEQUENCES
+    candidate: "outreach_sequences (+ outreach_sequence_steps)"
+    rationale: >
+      Automated multi-step sourcing cadence; the modern sourcing primitive that
+      candidate_nurture_campaigns + recruiter_interactions do not cover.
+    vendor_evidence: [Ashby, Lever]
+    proposed_module: ATS-CANDIDATE-CRM
+  - id: B3-CANDIDATE-EMAILS
+    candidate: candidate_emails
+    rationale: >
+      Persisted candidate communication thread as a first-class object, distinct from
+      free-text notes and engagement summaries.
+    vendor_evidence: [Greenhouse, Lever, Ashby]
+    proposed_module: ATS-CANDIDATE-CRM
+  - id: B3-MARKET-JUDGMENT-LOWER-CONFIDENCE
+    candidate: "onboarding_handoffs, pre_employee_documents, candidate_data_retention_policies, drug_health_screenings, continuous_monitoring_subscriptions, interview_feedback_reminders, offer_approval_chains"
+    rationale: >
+      Vendor-real but lower-impact / specialist / boundary-debatable. onboarding_handoffs
+      overlaps the existing ATS -> ONBOARDING handoffs; candidate_data_retention_policies is
+      a GDPR purge entity; drug_health_screenings + continuous_monitoring_subscriptions are
+      HireRight-specialist; interview_feedback_reminders + offer_approval_chains are config
+      refinements. Decide load vs skip per entity.
+    vendor_evidence: [Workday Recruiting, HireRight, SmartRecruiters, Ashby]
+    proposed_module: various

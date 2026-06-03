@@ -392,3 +392,47 @@ After surfacing Bucket 1: *"Fix these now? Reply 'all', 'just <ids>', or 'skip'.
 After surfacing Bucket 2: *"What's your call on items 1 to 7? I will wait per item before acting. For item 2 (catalog UX) please approve / edit / rewrite the exact wording per Rule #20."*
 
 After surfacing Bucket 3: *"Vet via Phase 0 research, or eyeball-mode? If eyeball, name which candidates to treat as confirmed and I will roll them into Bucket 1 on the next pass."*
+
+## 2026-06-02 Audit (modularization)
+
+Loader: [.tmp_deploy/modularize_re_prop_mgmt_2026-06-02.ts](../../.tmp_deploy/modularize_re_prop_mgmt_2026-06-02.ts) (run from project root, idempotent, safe to re-run).
+
+### Summary
+
+Resolved the long-standing M1 / M2 / M4 root failure: RE-PROP-MGMT went from 0 domain_modules to 3 full modules. Scope was modules + entity assignment only (reuse existing entities); no new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. All 6 capabilities are now realized; all 6 in-domain masters plus the 1 contributor are assigned. The 5-to-6-module split sketched in the 2026-05-30 Bucket 2 #1 proposal was consolidated to a 3-module shape that still honors single-master and one-capability-per-module rules while staying within the modularization scope (no entity creation).
+
+### Module set (all `module_kind=full`, `industry_id=15` Real Estate / NAICS 531)
+
+| id | code | capabilities | data_objects (role / necessity) |
+|---|---|---|---|
+| 285 | RE-PROP-MGMT-LEASING | 386 Tenant Screening, 389 Leasing Pipeline, 391 Vacancy Marketing | 359 rental_applications (master/req), 362 rental_leases (master/req), 358 property_tenants (master/req), 357 rental_units (consumer/req) |
+| 286 | RE-PROP-MGMT-OPERATIONS | 388 Maintenance Request Portal | 357 rental_units (master/req), 361 tenant_maintenance_requests (master/req) |
+| 287 | RE-PROP-MGMT-FINANCIALS | 387 Rent Collection, 390 Property Accounting | 360 rent_payments (master/req), 75 supplier_invoices (contributor/req), 362 rental_leases (consumer/req) |
+
+### Master placement (each master in exactly one module, in-domain AND catalog-wide)
+
+| data_object | master module |
+|---|---|
+| 357 rental_units | RE-PROP-MGMT-OPERATIONS (286) |
+| 358 property_tenants | RE-PROP-MGMT-LEASING (285) |
+| 359 rental_applications | RE-PROP-MGMT-LEASING (285) |
+| 360 rent_payments | RE-PROP-MGMT-FINANCIALS (287) |
+| 361 tenant_maintenance_requests | RE-PROP-MGMT-OPERATIONS (286) |
+| 362 rental_leases | RE-PROP-MGMT-LEASING (285) |
+
+M7 catalog-wide pre-check ran on all 6 intended masters before write: none was mastered by any existing module elsewhere, so **no demotions to embedded_master** were required. `rental_units` is mastered in OPERATIONS and consumed in LEASING; `rental_leases` is mastered in LEASING and consumed in FINANCIALS, keeping the single-master invariant.
+
+### Entity-role preservation
+
+`supplier_invoices` (75) was carried at its existing `contributor + required` role (canonically mastered by S2P). The pre-existing B1-WO1 question (whether it should be `consumer + optional`, or dropped once `vendor_work_orders` lands) is unchanged and remains a user-judgment item; this pass did not re-classify it.
+
+### Verification (live)
+
+- 3 `domain_modules` on domain 144, all `module_kind=full`, all `industry_id=15`.
+- 6 `domain_module_capabilities` rows: every capability (386, 387, 388, 389, 390, 391) realized exactly once (M4 pass).
+- 9 `domain_module_data_objects` rows: every module has >=1 capability (M6) and >=1 data_object (no empty module).
+- Catalog-wide master query on (357, 358, 359, 360, 361, 362) returns exactly one master row each, all on RE-PROP-MGMT modules (M7 pass, in-domain and catalog-wide).
+
+### Out of scope this pass (unchanged, carried in state.yaml)
+
+Lifecycle states (B1-S12), intra-domain relationships (B1-S6/S14), missing handoffs (B1-S9), handoff module-FK backfill (B1-S10/B10b), per-module system skills + legacy skill 98 retirement (Rule #17 -> F2/F3), catalog UX wording (A4 / B1-S4), all MISSING / UNIVERSAL entity candidates (B1-M*, B1-U*), and Bucket 2/3 judgment items. The newly created modules now unblock several of these (source-side handoff attribution, lifecycle `domain_module_id`, per-module skills, role authoring).

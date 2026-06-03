@@ -1,87 +1,100 @@
 schema_version: 2
 domain: REMOTE-ACCESS
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-05-31"
+next_action_by: agent
+last_audit: "2026-06-02"
 
 b1a:
-  - id: B1A-A4
-    summary: "Backfill domains.catalog_tagline + catalog_description (Rule #20 buyer voice; agent drafts, user approves before write)."
-    finding: "domains row 132 (REMOTE-ACCESS) has empty catalog_tagline and empty catalog_description. A4 fails. Rule #20 forbids auto-write of catalog UX copy; agent must draft + surface for user wording approval before PATCH."
-    action: "Draft a one-sentence buyer-voice catalog_tagline and a 1-3 paragraph buyer-voice catalog_description anchored to the domain's workflow (attended + unattended remote control of workstations / servers, session recording, file transfer, privilege elevation, NAT-traversal relay). Surface drafts; on user approval, PATCH /domains?id=eq.132."
+  - id: B1A-SYSTEM-SKILLS
+    summary: "Author 1 system skill per new module (294, 295) per Rule #17; retire legacy domain-level skill 100 after."
+    finding: >
+      The 2026-06-02 modularization created modules REMOTE-ACCESS-SESSION (294) and
+      REMOTE-ACCESS-RECORDING-AUDIT (295) but no per-module system skills (F2 still
+      fails: 1-system-skill-per-module unmet). The only system skill on REMOTE-ACCESS
+      is the legacy domain-level skill id=100 (remote-access-system, domain_module_id=null)
+      with 4 skill_tools rows (791 query_remote_sessions, 792 query_session_recordings,
+      793 send_email, 794 post_chat_message). Per Rule #17 each module needs its own
+      system skill scoped to that module's masters; per the Channel-vs-capability rule
+      the channel primitives send_email + post_chat_message (F3/F7) should be replaced
+      with notify_person (or notify_team for broadcast).
+    action: >
+      Author 1 system skill for module 294 (scoped to remote_sessions 238, reading
+      rmm_agents 223 + service_incidents 47) and 1 for module 295 (scoped to
+      session_recordings 239), each with notify_person in place of raw channel tools.
+      After both per-module skills exist, DELETE legacy skill 100 + its 4 skill_tools
+      (791-794). Supersedes B1B-F-RETIRE now that modules exist.
+    affected_modules: [294, 295]
+    affected_entities: ["skills.id=100", "skill_tools.id=791-794"]
+    extra_rule: 17
+    extra_replace_channel_tools_with: notify_person
+  - id: B1A-CATALOG-UX
+    summary: "Draft + (on approval) PATCH catalog_tagline + catalog_description on domain 132 and both modules 294, 295 (M8 / A4, Rule #20)."
+    finding: >
+      A4 / M8 fail. domains row 132 (REMOTE-ACCESS) has empty catalog_tagline and empty
+      catalog_description. The 2 new modules REMOTE-ACCESS-SESSION (294) and
+      REMOTE-ACCESS-RECORDING-AUDIT (295) were authored with catalog_tagline /
+      catalog_description omitted (per insert rule), so both lack buyer-voice UX copy.
+      Rule #20 forbids auto-writing catalog UX copy; the agent must draft and surface
+      for user wording approval before any PATCH.
+    action: >
+      Draft a one-sentence buyer-voice catalog_tagline + 1-3 paragraph catalog_description
+      for: (1) domain 132 anchored to attended + unattended remote control, recording,
+      file transfer, privilege elevation, NAT-traversal relay; (2) module 294 anchored to
+      live remote-session control; (3) module 295 anchored to session recording + audit +
+      retention. Surface drafts; on approval PATCH /domains?id=eq.132,
+      /domain_modules?id=eq.294, /domain_modules?id=eq.295.
+    affected_modules: [294, 295]
     affected_entities: [domains]
-    extra_target_row_id: 132
+    extra_target_domain_row_id: 132
     extra_rule: 20
   - id: B1A-B6
     summary: "Author intra-domain relationship remote_sessions produces session_recordings."
-    finding: "Zero intra-domain data_object_relationships between the two REMOTE-ACCESS masters. The natural edge remote_sessions (238) -> session_recordings (239) with verb produces / produced_during is absent. Cardinality (1:0..1 vs 1:N depending on session-segmentation policy) is a user pick."
-    action: "Surface the cardinality question (1:0..1 single recording per session, or 1:N segmented recordings per session). On user pick, INSERT one data_object_relationships row: data_object_id=238, related_data_object_id=239, relationship_verb='produces', inverse_verb='produced_during', relationship_type=<pick>, relationship_kind='reference', is_required=false, owner_side='source'."
+    finding: >
+      Zero intra-domain data_object_relationships between the two REMOTE-ACCESS masters.
+      The natural edge remote_sessions (238) -> session_recordings (239) with verb
+      produces / produced_during is absent. Cardinality (1:0..1 single recording per
+      session, or 1:N segmented recordings per session) is a user pick. Both masters now
+      live in separate modules (238 in 294, 239 in 295), so this is a cross-module
+      intra-domain edge.
+    action: >
+      Surface the cardinality question. On user pick, INSERT one data_object_relationships
+      row: data_object_id=238, related_data_object_id=239, relationship_verb='produces',
+      inverse_verb='produced_during', relationship_type=<pick>, relationship_kind='reference',
+      is_required=false, owner_side='source'.
     affected_entities: [remote_sessions, session_recordings]
+    affected_modules: [294, 295]
     extra_proposed_verb: produces
     extra_proposed_inverse_verb: produced_during
     extra_open_question: "1:0..1 vs 1:N cardinality"
   - id: B1A-B11
     summary: "Author 6-8 data_object_aliases rows on remote_sessions + session_recordings; user picks tuples."
-    finding: "Zero data_object_aliases on either REMOTE-ACCESS master. Common cross-vendor synonyms: remote_sessions -> 'support sessions' / 'attended sessions' / 'unattended sessions' / 'remote control sessions'; session_recordings -> 'support recordings' / 'compliance recordings' / 'audit recordings' / 'session capture'."
-    action: "Surface the candidate tuple set; on user confirmation of exact strings, INSERT data_object_aliases rows. Per Rule #15, alias_name is commerce-shaped (allowed by Rule #18) but tuple choice + any notes column needs explicit per-row user approval before write."
+    finding: >
+      Zero data_object_aliases on either REMOTE-ACCESS master. Common cross-vendor synonyms:
+      remote_sessions -> 'support sessions' / 'attended sessions' / 'unattended sessions' /
+      'remote control sessions'; session_recordings -> 'support recordings' /
+      'compliance recordings' / 'audit recordings' / 'session capture'.
+    action: >
+      Surface the candidate tuple set; on user confirmation of exact strings, INSERT
+      data_object_aliases rows. Per Rule #15, alias_name is commerce-shaped but tuple
+      choice needs explicit per-row user approval before write.
     affected_entities: [remote_sessions, session_recordings]
     extra_candidate_count: 8
-
-b1b:
-  - id: B1B-M1
-    summary: "M1 hard fail: author 3 full domain_modules + module-DMDO masters for 238 + 239 (Phase A extension)."
-    finding: "REMOTE-ACCESS has zero domain_modules rows. Domain has 6 capabilities + 18 solutions but no deployable units. M1 / M2 / M4 / M6 / M8 all fail; B9b / B10b / B12 / E1-E5 / F2 / F3 / F5 cascade vacuous. Catalog-wide single-master cross-check returns ZERO role='master' DMDO rows on 238 + 239; the masters exist only via the legacy domain_data_objects rollup."
-    blocked_by:
-      - {type: user_decision, ref: B2-S1, reason: "master split (one master + mode vs split into attended_sessions + unattended_sessions) drives the DMDO master target"}
-      - {type: user_decision, ref: B2-S5, reason: "module naming pick (ATTENDED/UNATTENDED/GOVERNANCE vs SUPPORT/PLATFORM/COMPLIANCE)"}
-    affected_modules: []
-    affected_masters:
-      - {data_object_id: 238, name: remote_sessions, target_module_id: null, workflow: "attended + unattended remote control sessions"}
-      - {data_object_id: 239, name: session_recordings, target_module_id: null, workflow: "session recording + retention + audit"}
-    affected_entities: [remote_sessions, session_recordings]
-    extra_proposed_module_count: 3
-    extra_proposed_module_codes_a: [REMOTE-ACCESS-ATTENDED, REMOTE-ACCESS-UNATTENDED, REMOTE-ACCESS-GOVERNANCE]
-    extra_proposed_module_codes_b: [REMOTE-ACCESS-SUPPORT, REMOTE-ACCESS-PLATFORM, REMOTE-ACCESS-COMPLIANCE]
-    extra_capability_count_to_link: 6
-  - id: B1B-M4
-    summary: "Link 6 orphan capabilities to realizing modules via domain_module_capabilities (after B1B-M1)."
-    finding: "6 capabilities (RA-ATTENDED 217, RA-UNATTENDED 218, RA-RECORD 219, RA-XFER 220, RA-ELEVATE 221, RA-NAT 222) have no realizing module (M4 fails). Mechanical after B1B-M1 lands."
-    blocked_by:
-      - {type: depends_on, ref: B1B-M1, reason: "needs domain_modules to exist"}
-    affected_entities: [RA-ATTENDED, RA-UNATTENDED, RA-RECORD, RA-XFER, RA-ELEVATE, RA-NAT]
-    extra_planned_map_a:
-      RA-ATTENDED: REMOTE-ACCESS-ATTENDED
-      RA-UNATTENDED: REMOTE-ACCESS-UNATTENDED
-      RA-RECORD: REMOTE-ACCESS-GOVERNANCE
-      RA-XFER: REMOTE-ACCESS-ATTENDED
-      RA-ELEVATE: REMOTE-ACCESS-ATTENDED
-      RA-NAT: REMOTE-ACCESS-UNATTENDED
-  - id: B1B-B4
-    summary: "Positive re-eval of B4 pattern flags on 238 + 239, PATCH per B2-S3 answers."
-    finding: "Both masters carry has_personal_content=false, has_submit_lock=false, has_single_approver=false. Per Rule #12 an audit MUST positively re-evaluate; false-by-default is not the same as false-after-review. Candidates: session_recordings.has_personal_content=true (recording IS the personal content), session_recordings.has_submit_lock=true (finalized recording is immutable for retention), remote_sessions.has_personal_content=true (screen content during a session), remote_sessions.has_single_approver=true (privilege elevation typically needs single approver)."
-    blocked_by:
-      - {type: user_decision, ref: B2-S3, reason: "per-flag yes/no user pick"}
-    affected_masters:
-      - {data_object_id: 238, name: remote_sessions, target_module_id: null, workflow: "pattern flag re-eval"}
-      - {data_object_id: 239, name: session_recordings, target_module_id: null, workflow: "pattern flag re-eval"}
-  - id: B1B-B8
-    summary: "Author 3-5 outbound cross-domain data_object_relationships (remote_sessions -> msp_tickets / service_incidents / msp_time_entries; GRC edges blocked on B3)."
-    finding: "Zero cross-domain data_object_relationships on REMOTE-ACCESS masters. Outbound edges owed for handoffs 162 / 163 / 164 / 646 / 647 / 648: remote_sessions references msp_tickets (h.163, h.647), remote_sessions resolves service_incidents (h.162, h.646), remote_sessions generates_billing_for msp_time_entries (h.163). GRC-targeted edges (h.164 session_recordings -> ?, h.648 remote_sessions -> ?) blocked on Bucket 3 target masters not existing in GRC yet."
-    blocked_by:
-      - {type: depends_on, ref: B1B-M1, reason: "module FK anchoring for cross-domain rels relies on REMOTE-ACCESS modules"}
-      - {type: prerequisite_entity, ref: B3-S3, reason: "GRC-targeted edges need GRC target masters which are Phase 0 pending"}
-    affected_handoffs:
-      - {handoff_id: 162, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: ITSM, trigger_event: support_session.completed, payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 163, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: MSP-PSA, trigger_event: msp_session.completed, payload: msp_time_entries, null_field: source_domain_module_id}
-      - {handoff_id: 164, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: GRC, trigger_event: session.recorded, payload: session_recordings, null_field: source_domain_module_id+target_domain_module_id}
-      - {handoff_id: 646, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: ITSM, trigger_event: remote_session.ended, payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 647, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: MSP-PSA, trigger_event: remote_session.ended, payload: remote_sessions, null_field: source_domain_module_id}
-      - {handoff_id: 648, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: GRC, trigger_event: remote_session.unauthorized_access_attempt, payload: remote_sessions, null_field: source_domain_module_id+target_domain_module_id}
-  - id: B1B-B10b
-    summary: "Backfill module FKs on 6 outbound + 1 inbound handoffs after B1B-M1."
-    finding: "All 6 outbound handoffs (162, 163, 164, 646, 647, 648) carry NULL source_domain_module_id; inbound handoff 160 (from MSP-PSA-FIELD-SVC 137) carries NULL target_domain_module_id. Standard B10b own-side backfill once REMOTE-ACCESS modules exist. Handoffs 164 + 648 additionally carry NULL target_domain_module_id - that side is GRC's own B10b."
-    blocked_by:
-      - {type: depends_on, ref: B1B-M1, reason: "no REMOTE-ACCESS modules to derive FKs against"}
+  - id: B1A-B10b
+    summary: "Backfill module FKs on 6 outbound + 1 inbound handoffs now that modules 294/295 exist."
+    finding: >
+      All 6 outbound handoffs (162, 163, 164, 646, 647, 648) carry NULL source_domain_module_id;
+      inbound handoff 160 (from MSP-PSA-FIELD-SVC 137) carries NULL target_domain_module_id.
+      Standard B10b own-side backfill, now unblocked: the source/target module derives from
+      which module holds the event's payload master. Events on remote_sessions (238) ->
+      module 294 (REMOTE-ACCESS-SESSION); event session.recorded on session_recordings (239)
+      -> module 295 (REMOTE-ACCESS-RECORDING-AUDIT). Handoffs 164 + 648 additionally carry
+      NULL target_domain_module_id - that side is GRC's own B10b, not ours.
+    action: >
+      PATCH source_domain_module_id: 162 -> 294, 163 -> 294, 646 -> 294, 647 -> 294,
+      648 -> 294 (remote_sessions payload), 164 -> 295 (session_recordings payload).
+      PATCH target_domain_module_id on inbound 160 -> 294 (msp_ticket.escalated lands a
+      new attended session).
+    affected_modules: [294, 295]
     affected_handoffs:
       - {handoff_id: 162, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: ITSM, trigger_event: support_session.completed, payload: service_incidents, null_field: source_domain_module_id}
       - {handoff_id: 163, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: MSP-PSA, trigger_event: msp_session.completed, payload: msp_time_entries, null_field: source_domain_module_id}
@@ -90,25 +103,75 @@ b1b:
       - {handoff_id: 647, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: MSP-PSA, trigger_event: remote_session.ended, payload: remote_sessions, null_field: source_domain_module_id}
       - {handoff_id: 648, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: GRC, trigger_event: remote_session.unauthorized_access_attempt, payload: remote_sessions, null_field: source_domain_module_id}
       - {handoff_id: 160, direction: inbound, source_domain: MSP-PSA, target_domain: REMOTE-ACCESS, trigger_event: msp_ticket.escalated, payload: msp_tickets, null_field: target_domain_module_id}
-  - id: B1B-B12
-    summary: "Author lifecycle states on 238 + 239 after B1B-M1 + B2-S2."
-    finding: "Zero data_object_lifecycle_states on either REMOTE-ACCESS master. Per Rule #12 every master+required entity needs a state machine OR a config-shape exemption surfaced to user. remote_sessions and session_recordings both carry workflows. Per Rule #14, workflow-gate permissions need the realizing module's domain_module_code as prefix, so M1 must land first."
+  - id: B1A-B9-EVENT-CATEGORY
+    summary: "PATCH empty event_category on 3 trigger_events (653, 654, 655) per Rule #13."
+    finding: >
+      3 trigger_events on REMOTE-ACCESS masters carry empty event_category (Rule #13 enum
+      violation): 653 remote_session.started, 654 remote_session.ended,
+      655 remote_session.unauthorized_access_attempt. The 4th event 113 session.recorded
+      is already 'signal' (valid). Not gated on modules; independently fixable.
+    action: >
+      PATCH 653 -> state_change, 654 -> state_change, 655 -> signal (matches the existing
+      113 signal pattern for security-signal events).
+    affected_events:
+      - {id: 653, event_name: remote_session.started, current_category: "", proposed_category: state_change}
+      - {id: 654, event_name: remote_session.ended, current_category: "", proposed_category: state_change}
+      - {id: 655, event_name: remote_session.unauthorized_access_attempt, current_category: "", proposed_category: signal}
+
+b1b:
+  - id: B1B-B4
+    summary: "Positive re-eval of B4 pattern flags on 238 + 239, PATCH per B2-S3 answers."
+    finding: >
+      Both masters carry has_personal_content=false, has_submit_lock=false,
+      has_single_approver=false. Per Rule #12 an audit MUST positively re-evaluate;
+      false-by-default is not false-after-review. Candidates:
+      session_recordings.has_personal_content=true (recording IS the personal content),
+      session_recordings.has_submit_lock=true (finalized recording immutable for retention),
+      remote_sessions.has_personal_content=true (screen content carries PII / PHI),
+      remote_sessions.has_single_approver=true (privilege elevation single-approver gate).
     blocked_by:
-      - {type: depends_on, ref: B1B-M1, reason: "module prefix for workflow-gate permissions"}
+      - {type: user_decision, ref: B2-S3, reason: "per-flag yes/no user pick"}
+    affected_masters:
+      - {data_object_id: 238, name: remote_sessions, target_module_id: 294, workflow: "pattern flag re-eval"}
+      - {data_object_id: 239, name: session_recordings, target_module_id: 295, workflow: "pattern flag re-eval"}
+  - id: B1B-B12
+    summary: "Author lifecycle states on 238 (module 294) + 239 (module 295) after B2-S2."
+    finding: >
+      Zero data_object_lifecycle_states on either REMOTE-ACCESS master. remote_sessions
+      and session_recordings both carry workflows. Per Rule #14 workflow-gate permissions
+      use the realizing module's domain_module_code as prefix: remote_sessions ->
+      REMOTE-ACCESS-SESSION (294), session_recordings -> REMOTE-ACCESS-RECORDING-AUDIT (295).
+      Module prefix now exists (M1 resolved); only the per-state user pick remains.
+    blocked_by:
       - {type: user_decision, ref: B2-S2, reason: "state-list + per-gate user picks"}
     affected_masters:
-      - {data_object_id: 238, name: remote_sessions, target_module_id: null, workflow: "requested -> consent_pending -> connected -> privileged -> ended (proposed)"}
-      - {data_object_id: 239, name: session_recordings, target_module_id: null, workflow: "recording -> archived -> retention_lock -> expired (proposed)"}
-  - id: B1B-F-RETIRE
-    summary: "Retire legacy domain-level system skill 100 + its 4 skill_tools after per-module Phase-S load."
-    finding: "Legacy skill 100 (remote-access-system, domain_module_id=null) with 4 skill_tools rows (791 query_remote_sessions, 792 query_session_recordings, 793 send_email, 794 post_chat_message) is the only system skill on REMOTE-ACCESS. Acceptable transitional shape per F1 while no module-level skills exist. Once B1B-M1 lands and per-module Phase-S authoring delivers 3 system skills + skill_tools, retire skill 100 + its 4 skill_tools. Re-author replaces send_email + post_chat_message with notify_person (or notify_team if broadcast) per Channel vs capability rule."
+      - {data_object_id: 238, name: remote_sessions, target_module_id: 294, workflow: "requested -> consent_pending -> connected -> privileged -> ended (proposed)"}
+      - {data_object_id: 239, name: session_recordings, target_module_id: 295, workflow: "recording -> archived -> retention_lock -> expired (proposed)"}
+  - id: B1B-B8
+    summary: "Author 3-5 outbound cross-domain data_object_relationships (remote_sessions -> msp_tickets / service_incidents / msp_time_entries; GRC edges blocked on B3)."
+    finding: >
+      Zero cross-domain data_object_relationships on REMOTE-ACCESS masters. Outbound edges
+      owed for handoffs 162 / 163 / 164 / 646 / 647 / 648: remote_sessions references
+      msp_tickets (h.163, h.647), remote_sessions resolves service_incidents (h.162, h.646),
+      remote_sessions generates_billing_for msp_time_entries (h.163). All source from
+      remote_sessions (238) in module 294. GRC-targeted edges (h.164 session_recordings -> ?,
+      h.648 remote_sessions -> ?) blocked on Bucket 3 GRC target masters not existing yet.
     blocked_by:
-      - {type: depends_on, ref: B1B-M1, reason: "per-module system skills require modules"}
-    affected_entities: [skills.id=100, skill_tools.id=791-794]
-    extra_replace_channel_tools_with: notify_person
+      - {type: prerequisite_entity, ref: B3-S3, reason: "GRC-targeted edges need GRC target masters which are Phase 0 pending"}
+    affected_handoffs:
+      - {handoff_id: 162, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: ITSM, trigger_event: support_session.completed, payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 163, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: MSP-PSA, trigger_event: msp_session.completed, payload: msp_time_entries, null_field: source_domain_module_id}
+      - {handoff_id: 164, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: GRC, trigger_event: session.recorded, payload: session_recordings, null_field: source_domain_module_id+target_domain_module_id}
+      - {handoff_id: 646, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: ITSM, trigger_event: remote_session.ended, payload: service_incidents, null_field: source_domain_module_id}
+      - {handoff_id: 647, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: MSP-PSA, trigger_event: remote_session.ended, payload: remote_sessions, null_field: source_domain_module_id}
+      - {handoff_id: 648, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: GRC, trigger_event: remote_session.unauthorized_access_attempt, payload: remote_sessions, null_field: source_domain_module_id+target_domain_module_id}
   - id: B1B-REG
     summary: "Author 3 domain_regulations rows after B2-S4 scoping pick."
-    finding: "Zero domain_regulations on REMOTE-ACCESS. Candidates: HIPAA Security Rule (technical safeguards on remote access to ePHI), PCI-DSS 8.2 + 10.7 (MFA for remote access + audit-log retention), SOX (audit trail for privileged session activity). Applicability scoping (mandatory vs optional-when-customer-handles-X vs vertical) is B2-S4."
+    finding: >
+      Zero domain_regulations on REMOTE-ACCESS. Candidates: HIPAA Security Rule (technical
+      safeguards on remote access to ePHI), PCI-DSS 8.2 + 10.7 (MFA for remote access +
+      audit-log retention), SOX (audit trail for privileged session activity). Applicability
+      scoping is B2-S4.
     blocked_by:
       - {type: user_decision, ref: B2-S4, reason: "regulation applicability scoping"}
     affected_entities: [domain_regulations]
@@ -117,76 +180,95 @@ b1b:
 b2:
   - id: B2-S1
     summary: "Master split: one master + session_mode discriminator, or split into attended_sessions + unattended_sessions?"
-    question: "Should remote_sessions stay one master with a session_mode discriminator (TeamViewer / AnyDesk pattern), or split into two separate masters attended_sessions + unattended_sessions (BeyondTrust pattern)?"
-    options: ["(a) one master + session_mode discriminator; ATTENDED + UNATTENDED both role=embedded_master if needed for autonomous deploy", "(b) split into two masters; rename 238 to attended_sessions and add unattended_sessions; update handoffs + events accordingly", "(c) defer; ship 3-module shape with ATTENDED owning remote_sessions master, UNATTENDED embedded_master-ing it, revisit once first real deploys exist"]
-    why: "Architectural / market-shape decision; deployment model varies by vendor. Drives B1B-M1, B1B-B8, B1B-B10b, B1B-B12."
+    question: >
+      Should remote_sessions stay one master with a session_mode discriminator (TeamViewer /
+      AnyDesk pattern), or split into two separate masters attended_sessions +
+      unattended_sessions (BeyondTrust pattern)? Note: the 2026-06-02 build mastered the
+      single remote_sessions entity in REMOTE-ACCESS-SESSION (294); a split would re-shape
+      that module and possibly add a third module, exceeding the current 2-master ceiling.
+    options:
+      - "(a) one master + session_mode discriminator (matches the shipped 2-module build)"
+      - "(b) split into two masters; rename 238 to attended_sessions and add unattended_sessions; re-shape modules accordingly"
+      - "(c) defer; keep the shipped single-master shape, revisit once first real deploys exist"
+    why: "Architectural / market-shape decision; deployment model varies by vendor. Drives B1B-B8, B1B-B12 and any future re-modularization."
   - id: B2-S2
     summary: "Lifecycle-state per-state + per-gate yes/no for remote_sessions + session_recordings."
-    question: "Confirm the proposed state machines: remote_sessions = requested -> consent_pending -> connected -> privileged -> ended with workflow gates on privileged (elevate_remote_session) and ended (end_remote_session); session_recordings = recording -> archived -> retention_lock -> expired with gates on retention_lock (lock_session_recording) and expired (purge_session_recording)?"
+    question: >
+      Confirm the proposed state machines: remote_sessions = requested -> consent_pending ->
+      connected -> privileged -> ended with gates on privileged (elevate_remote_session) and
+      ended (end_remote_session); session_recordings = recording -> archived -> retention_lock
+      -> expired with gates on retention_lock (lock_session_recording) and expired
+      (purge_session_recording)? Prefixes now resolve to REMOTE-ACCESS-SESSION (294) and
+      REMOTE-ACCESS-RECORDING-AUDIT (295).
     options: ["accept proposed shape", "alter per-state list (specify)", "alter per-gate requires_permission (specify)", "defer"]
     why: "Workflow shape decisions; per-vendor practice varies. Drives B1B-B12."
   - id: B2-S3
     summary: "Pattern flag positive re-eval (Rule #12) on remote_sessions + session_recordings."
-    question: "Which pattern flags should be TRUE on each master? remote_sessions: has_personal_content (screen content carries PII / PHI), has_single_approver (privilege elevation gate)? session_recordings: has_personal_content (recording IS personal content), has_submit_lock (finalized recording immutable for retention)?"
+    question: >
+      Which pattern flags should be TRUE on each master? remote_sessions: has_personal_content
+      (screen content carries PII / PHI), has_single_approver (privilege elevation gate)?
+      session_recordings: has_personal_content (recording IS personal content), has_submit_lock
+      (finalized recording immutable for retention)?
     options: ["accept all proposed TRUE flips", "accept some (specify)", "decline all (false-after-review is documented stance)"]
-    why: "Pattern flags are workflow-shape judgments; defaults are false-by-default which is not the same as false-after-review. Drives B1B-B4."
+    why: "Pattern flags are workflow-shape judgments; false-by-default is not false-after-review. Drives B1B-B4."
   - id: B2-S4
     summary: "Regulation scoping HIPAA / PCI-DSS / SOX."
-    question: "Which regulations apply to REMOTE-ACCESS and with what applicability (mandatory / optional / vertical)? BeyondTrust positions HIPAA + PCI + SOX + GDPR + ISO 27001 as a vendor-access governance bundle; not equally applicable in every deployment."
+    question: >
+      Which regulations apply to REMOTE-ACCESS and with what applicability (mandatory /
+      optional / vertical)? BeyondTrust positions HIPAA + PCI + SOX + GDPR + ISO 27001 as a
+      vendor-access governance bundle; not equally applicable in every deployment.
     options: ["(a) all three required", "(b) HIPAA + PCI required, SOX optional", "(c) all optional", "(d) other (specify regulations + applicability)"]
-    why: "Scope decisions require knowing which buyer slice the catalog is modeling (MSP-shaped vs enterprise-vendor-access vs consumer IT support). Drives B1B-REG."
-  - id: B2-S5
-    summary: "Module-naming pick: ATTENDED/UNATTENDED/GOVERNANCE vs SUPPORT/PLATFORM/COMPLIANCE."
-    question: "Which module-naming triple should B1B-M1 author?"
-    options: ["(a) REMOTE-ACCESS-ATTENDED / REMOTE-ACCESS-UNATTENDED / REMOTE-ACCESS-GOVERNANCE (matches capability codes RA-ATTENDED / RA-UNATTENDED / RA-RECORD)", "(b) REMOTE-ACCESS-SUPPORT / REMOTE-ACCESS-PLATFORM / REMOTE-ACCESS-COMPLIANCE (matches BeyondTrust / TeamViewer Tensor vendor positioning)", "(c) other (specify)"]
-    why: "Naming convention is editorial; both shapes load identically. Drives B1B-M1, downstream affects B1B-M4 capability-link map."
+    why: "Scope decisions require knowing which buyer slice the catalog is modeling. Drives B1B-REG."
   - id: B2-H1
-    summary: "Approve 7 existing handoff_processes rows (record_status='new') to flip catalog-quality headline off zero."
-    question: "Approve the 7 existing agent_curated handoff_processes rows on handoffs 162 / 163 / 164 / 646 / 647 / 648 / 160? Approval moves the H1 catalog-quality headline from '0 approved' to '7 approved'."
+    summary: "Approve 7 existing handoff_processes rows (record_status='new') to flip the H1 catalog-quality headline off zero."
+    question: >
+      Approve the 7 existing agent_curated handoff_processes rows on handoffs
+      162 / 163 / 164 / 646 / 647 / 648 / 160? Approval moves the H1 headline from
+      '0 approved' to '7 approved'.
     options: ["approve all 7", "approve subset (specify by handoff_id)", "decline / re-tag"]
-    why: "Approving handoff_processes shifts record_status from 'new' to 'approved'; this requires explicit per-load user confirmation per Rule #1. Volume is small enough for bulk approval; alternative is per-row review."
+    why: "Approving handoff_processes shifts record_status to 'approved'; requires explicit per-load user confirmation per Rule #1."
 
 b3:
   - id: B3-S1
     candidate: endpoint_devices
-    rationale: "Registered unattended-access target devices. Used by TeamViewer Devices, AnyDesk Address Book, Splashtop Computers, ScreenConnect Sessions, RealVNC Connections. Core to UNATTENDED module surface."
+    rationale: "Registered unattended-access target devices. Core to a future UNATTENDED-shaped surface. Master-less today (RA-UNATTENDED 218 is realized by REMOTE-ACCESS-SESSION 294, which masters remote_sessions, not a device registry)."
     vendor_evidence:
       - {vendor: TeamViewer, evidence: 1st_class}
       - {vendor: AnyDesk, evidence: 1st_class}
       - {vendor: Splashtop, evidence: 1st_class}
       - {vendor: ScreenConnect, evidence: 1st_class}
       - {vendor: RealVNC, evidence: 1st_class}
-    proposed_module: REMOTE-ACCESS-UNATTENDED
+    proposed_module: REMOTE-ACCESS-SESSION
   - id: B3-S2
     candidate: endpoint_groups
-    rationale: "Logical groups of endpoints for access-policy assignment. Used by TeamViewer Groups, ScreenConnect Group Path, RealVNC Teams, BeyondTrust Jump Groups."
+    rationale: "Logical groups of endpoints for access-policy assignment. Master-less today."
     vendor_evidence:
       - {vendor: TeamViewer, evidence: 1st_class}
       - {vendor: ScreenConnect, evidence: 1st_class}
       - {vendor: RealVNC, evidence: 1st_class}
       - {vendor: BeyondTrust, evidence: 1st_class}
-    proposed_module: REMOTE-ACCESS-UNATTENDED
+    proposed_module: REMOTE-ACCESS-SESSION
   - id: B3-S3
     candidate: access_policies
-    rationale: "Who can access which endpoints under what conditions (MFA, time window, source IP). Used by TeamViewer Tensor Policies, BeyondTrust Group Policies, AnyDesk Custom Clients, ScreenConnect Roles."
+    rationale: "Who can access which endpoints under what conditions (MFA, time window, source IP). A governance-class master with no backing entity today; RA capabilities it would support are spread across SESSION (294)."
     vendor_evidence:
       - {vendor: TeamViewer Tensor, evidence: 1st_class}
       - {vendor: BeyondTrust, evidence: 1st_class}
       - {vendor: AnyDesk, evidence: 1st_class}
       - {vendor: ScreenConnect, evidence: 1st_class}
-    proposed_module: REMOTE-ACCESS-GOVERNANCE
+    proposed_module: REMOTE-ACCESS-RECORDING-AUDIT
   - id: B3-S4
     candidate: privilege_elevations
-    rationale: "UAC / sudo elevations during a session. Used by AnyDesk request_elevation, ScreenConnect Privileged Mode, BeyondTrust Privileged Remote Access, GoTo Resolve."
+    rationale: "UAC / sudo elevations during a session. Backs RA-ELEVATE (221), which is currently realized by REMOTE-ACCESS-SESSION (294) via the remote_sessions master with no dedicated elevation entity."
     vendor_evidence:
       - {vendor: AnyDesk, evidence: 1st_class}
       - {vendor: ScreenConnect, evidence: 1st_class}
       - {vendor: BeyondTrust, evidence: 1st_class}
       - {vendor: GoTo Resolve, evidence: 1st_class}
-    proposed_module: REMOTE-ACCESS-ATTENDED
+    proposed_module: REMOTE-ACCESS-SESSION
   - id: B3-S5
     candidate: file_transfers
-    rationale: "Per-session file move log; clipboard_transfers as a sibling for clipboard share events. All flagship products expose this as an audit-trail surface."
+    rationale: "Per-session file move log; clipboard_transfers as a sibling. Backs RA-XFER (220), realized by REMOTE-ACCESS-SESSION (294) with no dedicated transfer-log entity."
     vendor_evidence:
       - {vendor: TeamViewer, evidence: 1st_class}
       - {vendor: AnyDesk, evidence: 1st_class}
@@ -195,37 +277,37 @@ b3:
       - {vendor: Zoho Assist, evidence: 1st_class}
       - {vendor: RealVNC, evidence: 1st_class}
       - {vendor: BeyondTrust, evidence: 1st_class}
-    proposed_module: REMOTE-ACCESS-ATTENDED
+    proposed_module: REMOTE-ACCESS-SESSION
   - id: B3-S6
     candidate: consent_records
-    rationale: "End-user consent prompts for attended sessions (GDPR Art. 6 lawful-basis evidence). TeamViewer / AnyDesk attended-mode prompts; BeyondTrust customer-side click-to-allow."
+    rationale: "End-user consent prompts for attended sessions (GDPR Art. 6 lawful-basis evidence). Master-less today."
     vendor_evidence:
       - {vendor: TeamViewer, evidence: 1st_class}
       - {vendor: AnyDesk, evidence: 1st_class}
       - {vendor: Splashtop, evidence: 1st_class}
       - {vendor: BeyondTrust, evidence: 1st_class}
-    proposed_module: REMOTE-ACCESS-GOVERNANCE
+    proposed_module: REMOTE-ACCESS-RECORDING-AUDIT
   - id: B3-S7
     candidate: mfa_challenges
-    rationale: "Per-session step-up authentication outcomes. BeyondTrust, TeamViewer Tensor, GoTo Resolve treat as first-class compliance surface (PCI / HIPAA)."
+    rationale: "Per-session step-up authentication outcomes. Master-less today (PCI / HIPAA compliance surface)."
     vendor_evidence:
       - {vendor: BeyondTrust, evidence: 1st_class}
       - {vendor: TeamViewer Tensor, evidence: 1st_class}
       - {vendor: GoTo Resolve, evidence: 1st_class}
-    proposed_module: REMOTE-ACCESS-GOVERNANCE
+    proposed_module: REMOTE-ACCESS-RECORDING-AUDIT
   - id: B3-S8
     candidate: relay_nodes
-    rationale: "Managed NAT-traversal relays (on-prem or vendor cloud). TeamViewer Master Servers, AnyDesk On-Premises, BeyondTrust Appliances, RealVNC Cloud Connections."
+    rationale: "Managed NAT-traversal relays (on-prem or vendor cloud). Backs RA-NAT (222), realized by REMOTE-ACCESS-SESSION (294) with no dedicated relay-infrastructure entity."
     vendor_evidence:
       - {vendor: TeamViewer, evidence: 1st_class}
       - {vendor: AnyDesk, evidence: 1st_class}
       - {vendor: BeyondTrust, evidence: 1st_class}
       - {vendor: RealVNC, evidence: 1st_class}
-    proposed_module: REMOTE-ACCESS-UNATTENDED
+    proposed_module: REMOTE-ACCESS-SESSION
   - id: B3-S9
     candidate: recording_retention_policies
-    rationale: "Per-tenant retention windows for session_recordings. BeyondTrust + TeamViewer Tensor expose this as first-class policy object (HIPAA / PCI / SOX retention)."
+    rationale: "Per-tenant retention windows for session_recordings. Would back the retention slice of RA-RECORD (219) in REMOTE-ACCESS-RECORDING-AUDIT (295); master-less today."
     vendor_evidence:
       - {vendor: BeyondTrust, evidence: 1st_class}
       - {vendor: TeamViewer Tensor, evidence: 1st_class}
-    proposed_module: REMOTE-ACCESS-GOVERNANCE
+    proposed_module: REMOTE-ACCESS-RECORDING-AUDIT

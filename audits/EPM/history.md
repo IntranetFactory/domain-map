@@ -289,3 +289,52 @@ Bucket 1 finding-type rollup: STRUCTURAL = 10 (S1, S2, S3, S4, S5, S6, S7b, S8, 
 
 This was a structural Validate b1 pass only; no catalog writes were issued.
 
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+Scope of this pass: modules plus entity assignment only. Built EPM's `domain_modules` set from zero, linked the 6 existing capabilities, and assigned the 8 existing `domain_module_data_objects` at their existing roles. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. This resolves the dominant M1 blocker (B1B-S1) using option (d), the recommended 3-module split that the 2026-05-30 and 2026-05-31 audits proposed, plus the implicit M2/M4/M6 cascade (B1B-S2).
+
+The module-split shape question B2-S1 was the gating user pick in the prior buckets. This pass adopted option (d) (the audit-recommended 3-module split) because it is the option the prior audit narratives recommended and matches the natural lifecycle clusters of the 5 masters and the Rule #14 floor (6 capabilities require >=2 full modules). If the user prefers an alternative split shape (a/c/custom), this is reversible: the modules and their junction rows can be rebuilt.
+
+### Modules created (all module_kind=full, domain_id=66)
+
+| id | code | name | capabilities | masters | borrowed |
+|---|---|---|---|---|---|
+| 239 | EPM-PLAN-BUDGET | Planning and Budgeting | BUDGET-PLAN (66), DRIVER-MODEL (68), WORKFORCE-PLAN-EPM (71) | financial_plans (37), financial_budgets (38) | org_units (34, contributor, HCM-mastered), cost_centers (196, contributor) |
+| 240 | EPM-FORECAST-SCENARIO | Forecasting and Scenario Modeling | FORECAST (67), SCENARIO-MODEL (69) | financial_forecasts (39), financial_scenarios (40) | journal_entries (194, consumer, ERP-FIN) |
+| 241 | EPM-VARIANCE-REPORT | Variance and Management Reporting | MGMT-REPORT (70) | variance_analyses (41) | journal_entries (194, consumer), cost_centers (196, contributor) |
+
+### Master pre-check (M7 catalog-wide)
+
+Ran the mandatory catalog-wide master pre-check on all 5 intended masters (37, 38, 39, 40, 41) plus the 3 borrowed entities (34, 196, 194) before any `role='master'` write:
+
+- financial_plans (37), financial_budgets (38), financial_forecasts (39), financial_scenarios (40), variance_analyses (41): zero pre-existing `role='master'` rows anywhere in the catalog. EPM masters all 5. No demotions.
+- org_units (34): already mastered by HCM-ORG-POSITIONS (module 55, domain 54). Assigned `contributor` here. NOT promoted.
+- cost_centers (196): no `master` row anywhere (only the EPM legacy contributor row); a Finance/GL domain would be its eventual master. Assigned `contributor` here, no promotion.
+- journal_entries (194): no `master` row anywhere; ERP-FIN owns it. Assigned `consumer` here, no promotion.
+
+No demotions were required (no second-master collision occurred).
+
+### Verification (live)
+
+- domain_module_capabilities for modules 239/240/241: 6 rows, every EPM capability (66, 67, 68, 69, 70, 71) placed in exactly one module. M4 satisfied. Every module has >=1 capability (M6).
+- domain_module_data_objects for modules 239/240/241: 10 rows. Every module has >=1 data_object (no empty module). Each of the 5 masters appears exactly once in-domain AND exactly once catalog-wide (re-queried `data_object_id=in.(37,38,39,40,41)&role=eq.master`, all 5 resolve to a single EPM module). M7 satisfied.
+- Rule #14 floor satisfied: 3 full modules >= the 2-module floor for a 6-capability domain.
+
+### Cascade now unblocked (deferred, out of this pass's scope)
+
+The module landing converts several B1B items from blocked to agent-actionable on the next technical pass:
+- B1B-S8 (F1): retire legacy domain-scoped `epm-system` skill (id 4, 9 skill_tools); author one per-module system skill on each of 239/240/241 (Rule #17). Now technically unblocked.
+- B1B-S9 (B10b source side): backfill `source_domain_module_id` on 8 outbound EPM handoffs (10, 561, 601 -> 239; 27, 199, 562 -> 240; 563, 564 -> 241).
+- B1B-S10 (B9b): author 3 intra-domain lifecycle_progression handoffs (239 -> 240 on financial_plan.published; 239 -> 241 on financial_budget.approved; 240 -> 241 on financial_forecast.refreshed).
+- B1B-S3 (B12 lifecycle states), B1B-S5/S6 (B7/B6 edges), B1B-S4 (B11 aliases): the realizer `domain_module_id` column now has targets, but each still awaits its own user-pick tuples (and B2-S3 pattern flags for the lifecycle shapes). Left as b1b.
+
+### Catalog UX (M8/A4)
+
+Modules were created without `catalog_tagline` / `catalog_description` per the insert shape for this pass (omitted). These are a follow-up catalog-UX item (surfaced in state.yaml b1a B1A-CATALOG-UX).
+
+### No other writes
+
+No lifecycle states, aliases, relationships, skills, tools, handoffs, regulations, or trigger_event PATCHes were issued. Genuine gaps (cost_allocations B3-S1, headcount_plans B3-S2, the 4th consol/disclosure module B3-S3) remain flagged in b3, unfilled.
+

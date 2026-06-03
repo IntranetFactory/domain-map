@@ -472,3 +472,81 @@ _none, Validate b1 is read-only_
 
 _not yet written; requires user-approved wording per Rule #15_
 
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+Built the ECM module set, the headline structural blocker (B1B-S1) from the 2026-05-31 pass.
+Scope was strictly modules + entity assignment: reuse existing capabilities and data_objects,
+create no new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or
+relationships. Pre-build live triage confirmed 0 `domain_modules`, 7 `capability_domains` rows
+(169-175), 5 master `domain_data_objects` (429-433), and 2 `solution_domains` rows
+(Microsoft Syntex, Microsoft Purview Information Protection, both secondary).
+
+The prior pass surfaced a 3 / 4 / 5 split question (B2-MODULE-SPLIT). Under the reuse-only scope
+the 4-split and 5-split both collapse, because the WORKFLOW, CAPTURE, and AUDIT capabilities have
+no loaded master entity of their own (their candidate masters `document_workflow_*`,
+`document_approvals`, `document_audit_trail_entries` are still B3 vendor-research items, not in the
+catalog). A module with only those capabilities and no data_object would violate the no-empty-module
+rule. The agent therefore selected the structurally valid **3-module** shape and folded CAPTURE and
+CLASSIFY into the repository module and AUDIT into the records/governance module.
+
+### Module set authored (3 full modules)
+
+- **ECM-REPOSITORY** (id 242) "Content Repository and Capture" -- caps ECM-REPO (169),
+  ECM-CAPTURE (173), ECM-CLASSIFY (175). Masters: `content_documents` (429),
+  `document_versions` (430), `document_folders` (431), `document_classifications` (432).
+- **ECM-RECORDS-GOV** (id 243) "Records Management and Information Governance" -- caps
+  ECM-RECORDS (170), ECM-INFOGOV (172), ECM-AUDIT (174). Master:
+  `records_retention_policies` (433). Consumer: `content_documents` (429, required) -- holds and
+  disposition act on documents.
+- **ECM-WORKFLOW** (id 244) "Document Workflow Automation" -- cap ECM-WORKFLOW (171). No own
+  master (workflow master entities are B3-deferred). Consumers: `content_documents` (429, required),
+  `document_versions` (430, optional) -- the documents and versions that workflow routes and approves.
+
+### Catalog-wide master pre-check
+
+Ran the mandatory pre-check on all five intended masters (429, 430, 431, 432, 433) BEFORE writing
+any `role='master'` row: `/domain_module_data_objects?data_object_id=in.(...)&role=eq.master`
+returned zero rows. No foreign module masters any of the five, so every ECM master could be authored
+as a true `master` (none demoted to `embedded_master`). The loader also re-runs this guard on every
+invocation and aborts if a foreign master ever appears.
+
+### Verification (live, post-load)
+
+- M1: 3 `domain_modules` rows on domain 91 (was 0).
+- M4: all 7 capabilities placed (169-175), each in exactly one module.
+- M6: every module carries >=1 capability (3 / 3 / 1).
+- No empty module: every module carries >=1 data_object (4 / 2 / 2 DMDO rows; 8 total).
+- M7 in-domain AND catalog-wide: each of the 5 masters is mastered by exactly one module
+  (429/430/431/432 -> ECM-REPOSITORY; 433 -> ECM-RECORDS-GOV).
+- R15: `notes` omitted on every DMDO and DMC row. R1: `record_status` omitted on every insert.
+  R18: no vendor / product names in any module name or description.
+
+### Decisions
+
+- 3-module shape selected over the prior 4 / 5 candidates, forced by the reuse-only scope plus the
+  no-empty-module rule. If the B3 workflow / audit / capture masters are later loaded, ECM-WORKFLOW
+  gains a real master and CAPTURE / AUDIT can split out, reopening the 4 / 5 / 6 shape question.
+- `content_documents` consumed (not co-mastered) in ECM-RECORDS-GOV and ECM-WORKFLOW: its single
+  catalog-wide master stays in ECM-REPOSITORY per M7.
+
+### Fixes applied
+
+- INSERT 3 `domain_modules` (242, 243, 244), 7 `domain_module_capabilities`,
+  8 `domain_module_data_objects`. Loader:
+  `.tmp_deploy/modularize_ecm_2026-06-02.ts` (idempotent; re-run prints zero inserts).
+
+### Deferred / out of scope (not touched this pass)
+
+- B1B-S1's downstream cascade (lifecycle states L1 / L2 / L5, handoff module-FK backfills
+  B1 / B3 / B5, legacy skill retirement F1, the 4 intra-domain handoffs) was NOT executed: those
+  create lifecycle / handoff / skill rows, which are outside this modules-only scope. They are now
+  unblocked (the `domain_modules` rows they FK against exist) and move to b1a / b1b for the next pass.
+- B1B-S4 (6 missing flagship solutions), B2 catalog-UX (A4 / M8) text, the `content_documents`
+  rename, pattern-flag review, and the LSD retag remain user / research decisions, unchanged.
+
+### JWT errors
+
+None encountered during this pass.
+

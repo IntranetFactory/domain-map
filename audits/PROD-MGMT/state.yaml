@@ -62,6 +62,17 @@ b1a:
       - {handoff_id: 1323, direction: inbound, source_domain: WORK-MGMT, target_domain: PROD-MGMT, trigger_event: "okr_objective.committed", payload: "okr_objectives", null_field: none}
       - {handoff_id: 1324, direction: inbound, source_domain: WORK-MGMT, target_domain: PROD-MGMT, trigger_event: "okr_objective.scored", payload: "okr_objectives", null_field: none}
     extra_existing_agent_curated_pending_approval: 16
+  - id: B1A-PHASE-P
+    summary: "Multi-module (2 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
+    finding: "Live triage 2026-06-02: 2 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 2 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    extra_phase_p_triage: "2026-06-02"
+  - id: B1A-ENTITY-TYPE
+    summary: "8 masters carry entity_type unclassified/null (B13): classify them."
+    finding: "Live triage 2026-06-02: 8 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
+    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
+    affected_entities: [beta_programs, customer_feedback_items, feature_requests, product_features, product_lines, product_metrics, product_releases, product_roadmaps]
+    extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-NEIGHBOR-NULL-OUTBOUND

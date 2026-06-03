@@ -53,6 +53,17 @@ b1a:
       - {handoff_id: 1195, direction: outbound, source_domain: APM, target_domain: GRC, trigger_event: technology_fit.assessment_completed, payload: technology_fit_assessments, null_field: target_domain_module_id}
       - {handoff_id: 1197, direction: outbound, source_domain: APM, target_domain: EPM, trigger_event: application_cost.updated, payload: application_costs, null_field: target_domain_module_id}
       - {handoff_id: 1198, direction: outbound, source_domain: APM, target_domain: SPM, trigger_event: application_value.recalculated, payload: application_value_scores, null_field: target_domain_module_id}
+  - id: B1A-PHASE-P
+    summary: "Multi-module (2 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
+    finding: "Live triage 2026-06-02: 2 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 2 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    extra_phase_p_triage: "2026-06-02"
+  - id: B1A-ENTITY-TYPE
+    summary: "7 masters carry entity_type unclassified/null (B13): classify them."
+    finding: "Live triage 2026-06-02: 7 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
+    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
+    affected_entities: [application_costs, application_interfaces, application_value_scores, business_capability_maps, enterprise_applications, technology_fit_assessments, technology_platforms]
+    extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-M7

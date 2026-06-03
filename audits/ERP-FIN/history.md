@@ -432,3 +432,56 @@ Verified live: relationship_ids 1520-1525 in place. 6 of 11 masters now carry us
 ### Report-only follow-ups (owed by other domains)
 
 Carried verbatim from 2026-05-30. Each inbound handoff into ERP-FIN with `source_domain_module_id=NULL` owes a PATCH from the source-domain audit; consumer DMDOs on `journal_entries` (and other ERP-FIN masters) owed by every transactional-domain audit. Tracked in those domains' `audits/<DOMAIN>/state.yaml` files, not duplicated here.
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+Built ERP-FIN's module substrate. The domain had 0 `domain_modules` (M1 hard-fail per B1B-S1). This pass authored 4 `full` modules, linked all 7 capabilities, and assigned all 14 existing data_objects at their existing role + necessity. Scope was modules + entity assignment ONLY: no new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. Implemented the B2-S4 option (b) split (4 modules), dropping the AR-BILLING and AP-DISBURSE modules from the 6-module default because neither has any ERP-FIN-mastered data_object: customer-invoice processing is mastered downstream (CRM / OMS / SUB-MGMT) and supplier-invoice processing by AP-AUTO. The two missing capabilities (AR id 60, AP id 61) were instead anchored to ERP-FIN-CASH-BANKING, where cash application (AR) and disbursement (AP) genuinely live against `bank_accounts` / `cash_transactions`.
+
+### Modules created
+
+| id | code | kind | capabilities | masters | embedded_master | consumers |
+|---|---|---|---|---|---|---|
+| 245 | ERP-FIN-GL-CLOSE | full | GL (59), CLOSE-CONSOL (63), MULTI-ENTITY (64) | journal_entries (194), general_ledger_accounts (195), cost_centers (196), legal_entities (197), accounting_periods (198), intercompany_transactions (203) | - | payroll_journal_entries (145), benefit_enrollments (147), expense_reports (210) |
+| 246 | ERP-FIN-FIXED-ASSETS | full | FIXED-ASSETS (62) | fixed_assets (201), asset_depreciation_schedules (202) | - | - |
+| 247 | ERP-FIN-CASH-BANKING | full | AR (60), AP (61) | bank_accounts (199), cash_transactions (200) | - | - |
+| 248 | ERP-FIN-REVENUE-RECOGNITION | full | REVENUE-RECOG (65) | - | revenue_recognition_records (109) | service_projects (216) |
+
+7 `domain_module_capabilities` rows + 15 `domain_module_data_objects` rows inserted. Loader: `.tmp_deploy/modularize_erp_fin_2026-06-02.ts` (idempotent, safe to re-run).
+
+### Catalog-wide master pre-check (MANDATORY, M7)
+
+Ran `/domain_module_data_objects?data_object_id=eq.<id>&role=eq.master` on all 11 master candidates before writing any `role='master'`:
+
+- **109 revenue_recognition_records: DEMOTED to `embedded_master`.** Already mastered catalog-wide by `SUB-MGMT-SUBSCRIPTIONS` (module 167, domain 97). Legacy `domain_data_objects` role was `master`; the pre-check overrode it to avoid a second catalog-wide master. This is the bridge entity between SUB-MGMT and Finance/GL; SUB-MGMT keeps mastership.
+- **194, 195, 196, 197, 198, 199, 200, 201, 202, 203: confirmed genuine ERP-FIN masters.** Zero pre-existing master rows anywhere. Each now mastered by exactly one ERP-FIN module.
+
+Post-insert re-check confirms each of 194-203 appears exactly once as master (in-domain and catalog-wide); 109 remains mastered only by SUB-MGMT-SUBSCRIPTIONS.
+
+### Borrowed (consumer) data_objects, roles preserved
+
+- 145 payroll_journal_entries: consumer here (master PAYROLL-RUN, module 90).
+- 147 benefit_enrollments: consumer here (master BEN-ENROLLMENT, module 72).
+- 210 expense_reports: consumer here (master EXPENSE-CAPTURE-AND-REPORTING, module 191).
+- 216 service_projects: consumer here (master PSA-PROJECT-DELIVERY, module 86).
+
+No borrowed master was promoted. Legacy roles preserved.
+
+### Structural checks
+
+- Rule #14: 4 `full` modules for a 7-capability domain (>=2 satisfied). PASS.
+- M4: all 7 capabilities placed in >=1 module. PASS.
+- M6: every module has >=1 capability. PASS.
+- No empty module: every module has >=1 data_object. PASS.
+- M7: each master in exactly one module in-domain AND catalog-wide. PASS.
+
+### Resolved vs carried
+
+- **B1B-S1 (M1 hard-fail) RESOLVED**: 4 modules now exist. Downstream B1B-S5b, B1B-S6, B1B-S10b unblock from the module-existence dependency but remain open (master-to-master edges, per-module skills, 113 handoff target_domain_module_id PATCHes) and now move to b1a/b1b as next-pass work.
+- **B2-S4 effectively answered** by implementing option (b); recorded as a decision rather than a carried question. If the user prefers the full 6-module split (adding AR-BILLING + AP-DISBURSE as borrowed-master modules), that is a reversible follow-up.
+- B1A-S3 (business_function_domains), B1A-S4 (aliases), B1A-S7 (APQC tagging), B2-S1/S2/S3/S6, and all b3 entity candidates carry forward unchanged (out of this pass's scope).
+
+### Deferred gaps (flagged, not filled)
+
+Per scope, no entities were created. The b3 vendor-research candidates (chart_of_accounts_segments, journal_entry_lines, currencies/exchange_rates, allocations, revaluation_runs, consolidation_units/elimination_entries, revenue_contracts/performance_obligations, tax_codes) remain open and would land in GL-CLOSE / CASH-BANKING / REVENUE-RECOGNITION once vetted.

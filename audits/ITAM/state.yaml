@@ -44,6 +44,24 @@ b1a:
       - {id: 614, event_name: asset_contract.expired, current_category: "", proposed_category: state_change}
       - {id: 615, event_name: asset_lifecycle_event.recorded, current_category: "", proposed_category: state_change}
       - {id: 616, event_name: asset.retired_for_disposal, current_category: "", proposed_category: state_change}
+  - id: B1A-PHASE-P
+    summary: "Multi-module (4 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
+    finding: "Live triage 2026-06-02: 4 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    extra_phase_p_triage: "2026-06-02"
+  - id: B1A-ENTITY-TYPE
+    summary: "2 masters carry entity_type unclassified/null (B13): classify them."
+    finding: "Live triage 2026-06-02: 2 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
+    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
+    affected_entities: [asset_contracts, asset_lifecycle_events]
+    extra_phase_p_triage: "2026-06-02"
+  - id: B1A-SELF-CONTAIN
+    summary: "1 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
+    finding: "Live triage 2026-06-02: 1 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
+    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
+    extra_m9_shapes:
+      - {entity: saas_applications, module: ITAM-PORTFOLIO-REPORTING, role: consumer, master_domain: SMP}
+    extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-H8

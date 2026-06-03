@@ -270,3 +270,39 @@ Recomputed: IWMS still primary neighbor (weight 4), no new cross-domain DMDO sin
 ### Continuation: not applied this pass
 
 Structural-only Validate b1 run. No PATCH or INSERT writes. All 9 Bucket 1 items either need user gating (B1-S1 module split, B1-S2 catalog UX copy, B1-S5 alias tuples, B1-S7 pattern flags, B1-S8 business-function rows, B1-S9 H1 cleanup) or are gated on B1-S1 (B1-S4, B1-S6). B1-S3 (intra-domain master-to-master relationships) is the one technical item not gated on modules; surfaced for next pass.
+
+## 2026-06-02 Audit (modularization)
+
+Loader: `.tmp_deploy/modularize_real_est_2026-06-02.ts` (idempotent, safe to re-run). Scope: modules + entity assignment only (reuse existing entities). No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created.
+
+### What REAL-EST is
+
+REAL-EST (id 141, "Real Estate and Workplace Management") is the umbrella corporate-real-estate / workplace / facilities domain: properties, leases, spaces, occupancy, maintenance, capital projects, and utility consumption (Scope 1+2 emissions source for ESG). It carries two market-tier sub-domains via `parent_domain_id` (IWMS enterprise, CAFM mid-market). This is a horizontal corporate-function domain consumed across every industry vertical (IWMS/CAFM serve all sectors), not the real-estate-services industry itself; `domain_modules.industry_id` left null on all 4 modules (no single-industry binding; the clean `Real Estate` industry row id=15, NAICS 531000, denotes the vertical market, not this corporate-function umbrella).
+
+### Modules created (4 full)
+
+Resolves the long-open B2-S1 (module split) on option (c) and B2-S2 on option (b) peer-market split: REAL-EST now masters its 8 entities in its own modules; IWMS keeps its 6.
+
+| Module id | Code | Capabilities | Masters | Borrowed (role/necessity) |
+|---|---|---|---|---|
+| 288 | REAL-EST-PORTFOLIO | REAL-PROPERTY-MGMT (373), REAL-LEASE-MGMT (375) | real_estate_properties (344), property_leases (345), floor_plans (346) | locations (795 contributor/optional), configuration_items (76 consumer/required) |
+| 289 | REAL-EST-SPACE-OPS | REAL-SPACE-OPTIM (374), REAL-OCCUPANCY-ANALYTICS (377) | property_spaces (347), occupancy_records (348) | employees (31 consumer/required) |
+| 290 | REAL-EST-FACILITY-OPS | REAL-MAINTENANCE (376), REAL-UTILITY-TRACKING (378) | facility_work_orders (349), utility_meter_readings (350) | — |
+| 291 | REAL-EST-CAPITAL-PROJECTS | REAL-CAPITAL-PROJECTS (379) | capital_projects (351) | — |
+
+### Verification (live)
+
+- M1/M2 pass: 4 full modules for 7 capabilities (floor of 2 met).
+- M4 pass: all 7 capabilities placed in exactly one REAL-EST module each; none orphaned.
+- M6 / no-empty-module pass: every module has >=1 capability and >=1 data_object.
+- M7 pass (in-domain AND catalog-wide): all 8 masters (344-351) appear exactly once, each in one REAL-EST module. Pre-check query found zero pre-existing `role=master` rows on any of the 8 ids catalog-wide; no demotions to embedded_master were required.
+- Borrowed roles preserved: locations contributor/optional, configuration_items consumer/required, employees consumer/required (unchanged from legacy `domain_data_objects`).
+- DMDO + DMC `notes` empty (R15); no `record_status` on any insert (R1); no vendor/product names in module names/descriptions (R18).
+
+### Demotions via pre-check
+
+None. All 8 intended masters were unclaimed catalog-wide.
+
+### Deferred / unchanged this pass (carried into state.yaml)
+
+Out of modularization scope per the job: B1A-S3 (8 intra-domain master-to-master relationships, ungated, now loadable), lifecycle states (B12, now have a `domain_module_id` to anchor), per-module system skills + legacy skill 99 retirement (F1/F2/F3, Rule #17), catalog UX copy (A4 / M8 catalog_tagline + catalog_description), aliases (B11), pattern-flag positive review (B4), business_function_domains (C1), NULL handoff module FKs (B10b, now derivable from the 4 module ids), H1 substring-row cleanup, and the 7 Phase-0 vendor candidates (b3). The B2 architectural questions B2-S1/B2-S2 are now resolved by this build; B2-S4 (CAFM), B2-S5 (real_estate_properties vs locations collision), B2-S6 (cross-domain target masters), B2-S7 (H1 cleanup) remain user-owned.

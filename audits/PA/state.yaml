@@ -115,6 +115,28 @@ b1a:
       - {handoff_id: 107, direction: inbound, source_domain: COMP-MGMT, target_domain: PA, trigger_event: merit_cycle.closed, payload: compensation_statements, null_field: process_id_unresolved}
       - {handoff_id: 115, direction: inbound, source_domain: EMP-EXP, target_domain: PA, trigger_event: survey.cycle_closed, payload: engagement_drivers, null_field: replace_existing_10018}
       - {handoff_id: 1281, direction: inbound, source_domain: ATS, target_domain: PA, trigger_event: interview_scorecard.submitted, payload: interview_scorecards, null_field: process_id_unresolved}
+  - id: B1A-PHASE-P
+    summary: "Multi-module (4 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
+    finding: "Live triage 2026-06-02: 4 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    extra_phase_p_triage: "2026-06-02"
+  - id: B1A-ENTITY-TYPE
+    summary: "5 masters carry entity_type unclassified/null (B13): classify them."
+    finding: "Live triage 2026-06-02: 5 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
+    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
+    affected_entities: [attrition_forecasts, engagement_surveys, people_kpis, predictive_models, workforce_segments]
+    extra_phase_p_triage: "2026-06-02"
+  - id: B1A-SELF-CONTAIN
+    summary: "5 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
+    finding: "Live triage 2026-06-02: 5 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
+    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
+    extra_m9_shapes:
+      - {entity: hcm_positions, module: PA-DEI-ANALYTICS, role: consumer, master_domain: HCM}
+      - {entity: hcm_positions, module: PA-PREDICTIVE-MODELS, role: consumer, master_domain: HCM}
+      - {entity: hcm_positions, module: PA-WORKFORCE-METRICS, role: consumer, master_domain: HCM}
+      - {entity: recruitment_sources, module: PA-WORKFORCE-METRICS, role: consumer, master_domain: ATS}
+      - {entity: survey_responses, module: PA-ENGAGEMENT-SURVEYS, role: consumer, master_domain: EMP-EXP}
+    extra_phase_p_triage: "2026-06-02"
 
 b1b: []
 

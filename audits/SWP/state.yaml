@@ -74,6 +74,35 @@ b1a:
       - {existing_handoff_processes_id: 101, handoff_id: 13, current_process_external_id: "10175", current_process_name: "Analyze customer attrition and retention rates", reason: wrong_context_customer_vs_workforce}
       - {existing_handoff_processes_id: 130, handoff_id: 241, current_process_external_id: "10016", current_process_name: "Develop and measure strategic initiatives", reason: L2_too_coarse}
       - {existing_handoff_processes_id: 132, handoff_id: 242, current_process_external_id: "10209", current_process_name: "Determine sales resource allocation", reason: wrong_context_sales_vs_workforce}
+  - id: B1A-PHASE-P
+    summary: "Multi-module (4 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
+    finding: "Live triage 2026-06-02: 4 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    extra_phase_p_triage: "2026-06-02"
+  - id: B1A-ENTITY-TYPE
+    summary: "8 masters carry entity_type unclassified/null (B13): classify them."
+    finding: "Live triage 2026-06-02: 8 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
+    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
+    affected_entities: [headcount_plans, labor_market_benchmarks, org_designs, position_demand_forecasts, skills_gap_analyses, workforce_cost_projections, workforce_plans, workforce_scenarios]
+    extra_phase_p_triage: "2026-06-02"
+  - id: B1A-SELF-CONTAIN
+    summary: "12 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
+    finding: "Live triage 2026-06-02: 12 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
+    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
+    extra_m9_shapes:
+      - {entity: attrition_forecasts, module: SWP-DEMAND-FORECAST, role: consumer, master_domain: PA}
+      - {entity: attrition_forecasts, module: SWP-SUPPLY-PLANNING, role: consumer, master_domain: PA}
+      - {entity: employees, module: SWP-COST-PROJECTIONS, role: consumer, master_domain: HCM}
+      - {entity: employees, module: SWP-DEMAND-FORECAST, role: consumer, master_domain: HCM}
+      - {entity: employees, module: SWP-SUPPLY-PLANNING, role: consumer, master_domain: HCM}
+      - {entity: hcm_positions, module: SWP-COST-PROJECTIONS, role: consumer, master_domain: HCM}
+      - {entity: hcm_positions, module: SWP-DEMAND-FORECAST, role: consumer, master_domain: HCM}
+      - {entity: hcm_positions, module: SWP-SUPPLY-PLANNING, role: consumer, master_domain: HCM}
+      - {entity: job_profiles, module: SWP-DEMAND-FORECAST, role: consumer, master_domain: HCM}
+      - {entity: job_profiles, module: SWP-SCENARIO-MODELING, role: consumer, master_domain: HCM}
+      - {entity: job_profiles, module: SWP-SUPPLY-PLANNING, role: consumer, master_domain: HCM}
+      - {entity: job_requisitions, module: SWP-DEMAND-FORECAST, role: contributor, master_domain: ATS}
+    extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-F1-F2-MODULE-SKILLS

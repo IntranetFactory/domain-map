@@ -306,3 +306,55 @@ The 2026-05-31 Continuation applied B1-S3 and B1-S5 (3 of 6 user-edges) plus 10 
 
 None encountered during this run.
 
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+DLP was built from 0 `domain_modules` to 2 `full` modules under the recommended Policy-vs-Runtime split (B2-S1 option a). This is the M1-blocking build that every B-band, E-band, and F-band item was gated on. Scope of this pass: modules + capability links + data_object assignment ONLY, reusing existing entities. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. The catalog-wide single-master pre-check ran clean for all 6 DLP masters (none mastered elsewhere); only `employees` (31) is mastered elsewhere (HCM module 54) and is correctly assigned `consumer` here, not master.
+
+Loader: `.tmp_deploy/modularize_dlp_2026-06-02.ts` (idempotent; module key = `domain_module_code`, DMC key = `(domain_module_id, capability_id)`, DMDO key = `(domain_module_id, data_object_id)`; re-read modules after insert for the code->id map). Run from project root. Safe to re-run (verified: second pass inserts nothing, no false master conflict).
+
+### Module split
+
+| Module (code) | id | Capabilities (codes) | Masters | Other roles |
+|---|---|---|---|---|
+| DLP-POLICY-CONTROL (Policy and Classification Control) | 231 | DLP-CLASSIFY (358), DLP-POLICY-ENGINE (359), DLP-FINGERPRINT (365) | dlp_policies (331), dlp_exceptions (334) | data_classifications (303) contributor/required |
+| DLP-ENFORCEMENT-RUNTIME (Egress Enforcement and Incident Response) | 232 | DLP-EMAIL-EGRESS (360), DLP-ENDPOINT-AGENT (361), DLP-NETWORK-INLINE (362), DLP-CLOUD-API (363), DLP-INCIDENT-MGMT (364) | dlp_incidents (330), data_exfiltration_attempts (332), dlp_quarantine_items (333), dlp_user_activity_logs (335) | employees (31) consumer/required |
+
+Rationale: POLICY-CONTROL is the authoring surface (what is sensitive, which policies and exceptions apply); ENFORCEMENT-RUNTIME is the runtime detection-and-response surface (egress channels, exfiltration events, incidents, quarantine, activity trail). Classification feeds policy authoring (contributor); employees are referenced in the runtime incident context (consumer).
+
+### Master -> module mapping (each master once, in-domain and catalog-wide)
+
+- dlp_policies (331) -> DLP-POLICY-CONTROL (231) master
+- dlp_exceptions (334) -> DLP-POLICY-CONTROL (231) master
+- dlp_incidents (330) -> DLP-ENFORCEMENT-RUNTIME (232) master
+- data_exfiltration_attempts (332) -> DLP-ENFORCEMENT-RUNTIME (232) master
+- dlp_quarantine_items (333) -> DLP-ENFORCEMENT-RUNTIME (232) master
+- dlp_user_activity_logs (335) -> DLP-ENFORCEMENT-RUNTIME (232) master
+
+No master demoted to embedded_master: all 6 were unmastered catalog-wide before this pass.
+
+### Counts
+
+- domain_modules created: 2 (both `module_kind=full`, `record_status=new`).
+- domain_module_capabilities: 8 (3 on 231, 5 on 232). All 8 DLP capabilities placed (M4 satisfied); every module realizes >=1 capability (M6).
+- domain_module_data_objects: 8 (3 on 231, 5 on 232). 6 master + 1 contributor + 1 consumer. Roles and necessity preserved verbatim from legacy `domain_data_objects`. `notes` empty on every row (R15). No empty module.
+- Structural rules satisfied: Rule #14 (>=3 caps => >=2 full modules), M4, M6, M7 (single-master in-domain AND catalog-wide).
+
+### Deferred gaps (out of scope for this modules-only pass)
+
+The 2026-05-31 audit's downstream items are now unblocked by the existence of modules 231/232 but were NOT actioned here (entity/relationship/skill/handoff creation is out of scope):
+
+- B12 lifecycle states for the 4 workflow-bearing masters (dlp_incidents, dlp_policies, dlp_quarantine_items, dlp_exceptions); B2-S3 still governs the config-shape exemption for data_exfiltration_attempts and dlp_user_activity_logs. The `domain_module_id` realization column can now be set (231/232 exist).
+- F1/F2/F3 per-module system skills (Rule #17): retire legacy skill 50 (domain-level, domain_module_id=NULL), author dlp_policy_control_agent (231) + dlp_enforcement_runtime_agent (232), migrate the 6 query skill_tools, add >=1 mutate/master, >=1 side_effect/module, >=1 inbound.
+- B10b handoff module-FK backfill (8 outbound + 10 inbound), now that source/target module ids are resolvable.
+- B9 missing handoffs (6 events) and B9b intra-domain handoffs (dlp_policy.activated, dlp_incident.detected, dlp_exception.approved) now modellable across 231<->232.
+- E-band roles/role_modules/role_permissions (DLP-ADMIN, DLP-INCIDENT-RESPONDER, SECURITY-ANALYST).
+- B6 intra-domain master relationships, B7 remaining 3 user-edges, B8 outbound cross-domain relationships, B11 aliases.
+- A4/M8 catalog UX copy (domains.catalog_tagline/description empty; module-grain taglines/descriptions also empty), Rule #20 buyer-voice draft-then-confirm loop.
+- B3 missing-master candidates (10) still pending vendor vet: dlp_sensitive_data_types, dlp_content_fingerprints, dlp_sensitivity_labels, dlp_dictionaries, dlp_egress_channels, dlp_breach_notifications (-> POLICY-CONTROL 231); dlp_policy_violations, dlp_enforcement_actions, dlp_forensic_evidence, dlp_alerts (-> ENFORCEMENT-RUNTIME 232).
+
+### JWT errors
+
+None encountered during this run.
+

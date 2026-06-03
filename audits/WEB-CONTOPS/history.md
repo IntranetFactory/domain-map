@@ -346,3 +346,45 @@ Unchanged from 2026-05-30:
 - `https://tests.semantius.app/domain_map/handoff_processes`
 
 No JWT-audience errors encountered during this audit run.
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+WEB-CONTOPS was modularized from 0 modules to a 4-module `full` set. This resolves the M1 / M2 / M4 / M5 / M6 / M8 cascade that had blocked the domain since 2026-05-30 and supersedes the standing B2-1 user decision (the 3-module proposal in `WCO-AUDIT-COMPLIANCE` / `WCO-SEO-LINKS` / `WCO-EDITORIAL-PLANNING`). An eyeball-mode 4-module split was authored instead, aligned to the four distinct buyer surfaces in the vendor field (full-estate audit / inventory, editorial production and planning, quality-and-accessibility scanning, technical SEO and link governance). Scope of this pass: `domain_modules` + capability links + data_object assignment ONLY. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created; those remain open per the b1b items carried forward.
+
+### Module set authored
+
+| id | code | module_kind | capabilities | masters |
+|---|---|---|---|---|
+| 317 | WEB-CONTOPS-AUDIT-INVENTORY | full | 155 (WCO-AUDIT) | 684 content_audits, 685 web_content_inventory_records |
+| 318 | WEB-CONTOPS-EDITORIAL-PLANNING | full | 156 (WCO-EDITORIAL), 161 (WCO-CALENDAR) | 690 content_lifecycle_plans |
+| 319 | WEB-CONTOPS-QUALITY-ACCESS | full | 157 (WCO-QUALITY), 158 (WCO-ACCESS), 162 (WCO-BRAND-VOICE) | 686 accessibility_scan_findings, 689 brand_voice_violations |
+| 320 | WEB-CONTOPS-SEO-LINKS | full | 159 (WCO-SEO-GOV), 160 (WCO-LINKS) | 688 technical_seo_findings, 687 broken_link_findings |
+
+Loader: [.tmp_deploy/modularize_web_contops_2026-06-02.ts](../../.tmp_deploy/modularize_web_contops_2026-06-02.ts) (idempotent, safe to re-run).
+
+### Design rationale (departure from the 3-module proposal)
+
+- The 2026-05-30 audit proposed `web_content_inventory_records` (685) as a cross-module joiner: `master` on `WCO-SEO-LINKS`, `embedded_master` on the other two. This pass instead masters 685 cleanly in `WEB-CONTOPS-AUDIT-INVENTORY` alongside `content_audits` (684), because the inventory record is the output of the audit / crawl rather than of the SEO surface. No `embedded_master` is required: every master sits in exactly one module, and the catalog-wide pre-check confirmed none of the 7 are mastered elsewhere, so no demotion was needed.
+- The 3-module proposal folded WCO-QUALITY + WCO-ACCESS + WCO-BRAND-VOICE into a single `WCO-AUDIT-COMPLIANCE` module sharing the audit run. The 4-module split separates the audit / inventory surface (the crawl that enumerates the estate) from the scanning surface (the findings the scan produces). This keeps `content_audits` (the run boundary) and `web_content_inventory_records` (the page-level estate) in one module while the two finding masters that share a remediation-queue workflow (`accessibility_scan_findings`, `brand_voice_violations`) sit together in `WEB-CONTOPS-QUALITY-ACCESS`, and the two crawl-derived technical masters (`technical_seo_findings`, `broken_link_findings`) sit together in `WEB-CONTOPS-SEO-LINKS`.
+
+### Structural verification (post-load)
+
+- M1 / M2: 4 `full` modules for domain 128 (was 0). Rule #14 satisfied (8 capabilities so >=2 full modules required; 4 authored).
+- M4 / M6: all 8 capabilities placed in exactly one module each; no orphaned capability; every module carries >=1 capability.
+- M7 (single-master, in-domain AND catalog-wide): each of the 7 masters appears as `role=master` in exactly one module. Catalog-wide re-check `/domain_module_data_objects?data_object_id=in.(684..690)&role=eq.master` returns exactly 7 rows, all in domain 128 modules.
+- No empty module: every module has >=1 capability and >=1 DMDO row.
+- Existing role+necessity preserved: all 7 masters retained `role=master / necessity=required` from the legacy `domain_data_objects` rollup. No promotions or demotions.
+
+### Not done this pass (carried forward as b1b)
+
+The following remain open and are now unblocked by the module set landing: lifecycle states for the 7 masters (was B1B-S2), intra-domain master-to-master relationships (was B1B-S5), aliases (was B1B-S6), workflow-gate `trigger_events` (was B1B-S8), and module-anchored system skills + tools with deletion of legacy domain-level skill 120 (was B1B-S10). Per Rule #17 each of the 4 new modules now needs exactly one `skill_type='system'` skill with `domain_module_id` set; none exist yet (F2 still fails). The B8 outbound cross-domain relationship rows (was B1B-S1's sibling B1A-S9) and the catalog UX fields (`catalog_tagline` / `catalog_description` at both domain and module level, M8 / A4) are also still open.
+
+### Post-load spot-check
+
+- `https://tests.semantius.app/domain_map/domain_modules?domain_id=eq.128`
+- `https://tests.semantius.app/domain_map/domain_module_data_objects`
+- `https://tests.semantius.app/domain_map/domain_module_capabilities`
+
+No JWT-audience errors encountered during this audit run.

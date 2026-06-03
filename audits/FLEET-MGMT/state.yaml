@@ -1,58 +1,70 @@
 schema_version: 2
 domain: FLEET-MGMT
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-05-31"
+next_action_by: agent
+last_audit: "2026-06-02"
 
-b1a: []
+b1a:
+  - id: B1A-SYSTEM-SKILLS
+    summary: "3 new modules each need a <module_code_lower>_agent system skill; legacy domain-scoped skill 60 must retire (Rule #17 -> F2/F3)."
+    finding: >-
+      The 2026-06-02 modularization created 3 full modules
+      (FLEET-MGMT-VEHICLE-LIFECYCLE id 204, FLEET-MGMT-DRIVER-OPS id 205,
+      FLEET-MGMT-FUEL-COMPLIANCE id 206) with zero module-scoped system skills.
+      Rule #17 (F2) requires exactly one <module_code_lower>_agent system skill
+      per module; F3 requires >=1 skill_tools row each. Legacy domain-scoped
+      skill fleet-mgmt-system (id 60, domain_id=147, domain_module_id=NULL)
+      remains and carries 7 skill_tools (5 query_* covering all 5 masters, plus
+      send_email and sign_document). The module-split prerequisite that
+      previously blocked this (B1B-MODULES-PENDING) is now satisfied.
+    action: >-
+      Author 3 system skills (fleet_mgmt_vehicle_lifecycle_agent on 204,
+      fleet_mgmt_driver_ops_agent on 205, fleet_mgmt_fuel_compliance_agent on
+      206). Redistribute the 5 query_* tools by mastered entity (vehicle ->
+      204; drivers/assignments/inspections -> 205; fuel -> 206). Resolve
+      send_email per B1B-CHANNEL-PRIMITIVE (substitute notify_person) and
+      sign_document per B2-SIGN-DOCUMENT, then DELETE skill 60.
+    affected_modules: [204, 205, 206]
+
+  - id: B1A-CATALOG-UX-COPY
+    summary: "All 3 new modules + the domains row carry empty catalog_tagline / catalog_description (M8 / A4 backfill)."
+    finding: >-
+      The 3 new modules (204, 205, 206) were created with empty catalog_tagline
+      and catalog_description (buyer-facing copy deliberately left empty in the
+      modularization pass). The domains row (147) also still has both empty (A4
+      fail). Rule #20 gates these writes on user-approved buyer-voice text.
+    action: >-
+      After the user supplies / approves buyer-voice wording (the domain-level
+      wording rides B2-CATALOG-COPY), PATCH catalog_tagline + catalog_description
+      on modules 204, 205, 206 and on domains id=147. Per-module copy describes
+      each module's workflow + value (vehicle-as-asset lifecycle; driver ops +
+      dispatch + inspections; fuel cost + DOT/IFTA compliance).
+    affected_modules: [204, 205, 206]
 
 b1b:
-  - id: B1B-MODULES-PENDING
-    summary: Zero domain_modules rows for FLEET-MGMT, blocks every module-FK fix downstream.
-    finding: >-
-      FLEET-MGMT has 6 capabilities (FLEET-VEHICLE-INVENTORY, FLEET-DRIVER-MGMT,
-      FLEET-FUEL-MGMT, FLEET-DISPATCH, FLEET-UTILIZATION, FLEET-COMPLIANCE) and 5
-      mastered data_objects (fleet_vehicles 370, fleet_drivers 371,
-      fuel_transactions 372, fleet_assignments 373, vehicle_inspections 374) but
-      ships zero domain_modules rows and zero domain_module_host_domains rows.
-      Rule #14 requires >=2 module_kind='full' rows for any domain with >=3
-      capabilities. M1, M2, M6 all hard fail. Until the module set lands, every
-      B-band module-FK PATCH, every F-band module-scoped skill, every E-band
-      role / permission row, and every BOUNDARY module-FK on the FLEET-MGMT side
-      stays blocked.
-    action: >-
-      User resolves B2-MODULE-SPLIT, then author the agreed module set in a
-      Phase-A load (standard pattern: 3 full modules per the 2026-05-30 audit
-      recommendation, alternative 2 modules if user prefers). After the load,
-      cascade the B-band, F-band, E-band, and BOUNDARY fixes that were blocked.
-    blocked_by:
-      - {type: user_decision, ref: B2-MODULE-SPLIT}
-    affected_masters:
-      - {data_object_id: 370, name: fleet_vehicles, target_module_id: null, workflow: vehicle lifecycle}
-      - {data_object_id: 371, name: fleet_drivers, target_module_id: null, workflow: driver lifecycle}
-      - {data_object_id: 372, name: fuel_transactions, target_module_id: null, workflow: fuel transaction append-only telemetry}
-      - {data_object_id: 373, name: fleet_assignments, target_module_id: null, workflow: dispatch assignment lifecycle}
-      - {data_object_id: 374, name: vehicle_inspections, target_module_id: null, workflow: DVIR / PMI inspection lifecycle}
-
   - id: B1B-HANDOFF-MODULE-FKS
-    summary: 11 cross-domain handoffs touching FLEET-MGMT all NULL on the FLEET-MGMT-side module FK; 7 also NULL on partner side.
+    summary: 11 cross-domain handoffs touching FLEET-MGMT still NULL on the FLEET-MGMT-side module FK; the FLEET-MGMT-side gate is now cleared and can be PATCHed.
     finding: >-
-      Per live re-pull, every cross-domain handoff touching FLEET-MGMT carries
+      Every cross-domain handoff touching FLEET-MGMT carries
       target_domain_module_id=NULL (inbound) or source_domain_module_id=NULL
-      (outbound) on the FLEET-MGMT side, awaiting B1B-MODULES-PENDING resolution.
-      On the partner side: TELEMATICS (148) has zero modules so 4 cross-edges
-      stay NULL on TELEMATICS side too; FLEET-MAINT (149) has zero modules so 3
-      cross-edges stay NULL on FLEET-MAINT side too; FSM (31) partially populated
-      (handoffs 318, 884 carry source_domain_module_id=161; 318 still NULL on
-      source side per audit but 884 is partly clean); ERP-FIN (65) module shape
-      not verified in this audit.
+      (outbound) on the FLEET-MGMT side. As of 2026-06-02 the FLEET-MGMT modules
+      exist (204/205/206) so the FLEET-MGMT-side FK can now be filled per the
+      master->module mapping: fleet_vehicles events -> 204; fleet_assignments /
+      vehicle_inspections / fleet_driver events -> 205; fuel_transactions events
+      -> 206. Partner-side NULLs persist: TELEMATICS (148) has zero modules so 4
+      cross-edges stay NULL on TELEMATICS side; FLEET-MAINT (149) has zero
+      modules so 3 cross-edges stay NULL on FLEET-MAINT side; FSM (31) partially
+      populated (handoffs 318, 884 carry source_domain_module_id=161); ERP-FIN
+      (65) module shape not verified.
     action: >-
-      After B1B-MODULES-PENDING resolves, PATCH the FLEET-MGMT-side module FK on
-      all 11 rows per the master->module mapping the user picks. Partner-side
-      NULLs remain report-only until TELEMATICS, FLEET-MAINT, and ERP-FIN
-      modularize per their own audits.
+      PATCH the FLEET-MGMT-side module FK on all 11 rows per the mapping above
+      (875/313/874/876 vehicle -> 204 source; 317 fuel -> 206 source; 318/884
+      assignment -> 205 target; 319/880 driver -> 205 target; 321 trip -> 205
+      target; 877 maintenance_defect -> 205 target). This is now agent-solvable
+      on the FLEET-MGMT side but is a separate Phase-B handoff-FK pass, not part
+      of the modularization scope. Partner-side NULLs remain report-only until
+      TELEMATICS, FLEET-MAINT, and ERP-FIN modularize.
     blocked_by:
-      - {type: depends_on, ref: B1B-MODULES-PENDING, reason: no FLEET-MGMT module to PATCH to}
       - {type: domain_audit, blocking_domain: TELEMATICS, milestone: modules-authored}
       - {type: domain_audit, blocking_domain: FLEET-MAINT, milestone: modules-authored}
       - {type: domain_audit, blocking_domain: ERP-FIN, milestone: module-shape-confirmed}
@@ -70,7 +82,7 @@ b1b:
       - {handoff_id: 884, direction: inbound, source_domain: FSM, target_domain: FLEET-MGMT, trigger_event: service_work_order.assigned, payload: service_work_orders, null_field: target_only}
 
   - id: B1B-LIFECYCLE-STATES
-    summary: Zero data_object_lifecycle_states on 4 workflow-bearing FLEET-MGMT masters; authoring needs domain_module_id per Rule #14 permission-materialization scope.
+    summary: Zero data_object_lifecycle_states on 4 workflow-bearing FLEET-MGMT masters; module split now provides the domain_module_id scope (Rule #14).
     finding: >-
       data_object_lifecycle_states is empty for all 5 FLEET-MGMT masters.
       fleet_vehicles, fleet_drivers, fleet_assignments, vehicle_inspections each
@@ -82,25 +94,26 @@ b1b:
       config-shape exemption (append-only telemetry, Rule #12). The hire /
       separate states on fleet_drivers need requires_permission=true plus
       permission_verb_override (active -> activate_driver, separated ->
-      separate_driver). Rule #14 scopes workflow-gate permissions to the
-      realizing module; rows need a domain_module_id which does not yet exist.
+      separate_driver). As of 2026-06-02 the modules exist so the required
+      domain_module_id is now available: fleet_vehicles -> 204; fleet_drivers,
+      fleet_assignments, vehicle_inspections -> 205.
     action: >-
-      After B1B-MODULES-PENDING resolves, author lifecycle states per master
-      with domain_module_id set per the module split, then deploy
-      permission_verb_override on the driver hire / separate states. Surface
-      the fuel_transactions config-shape exemption to the user in chat without
-      writing data_objects.notes (Rule #15).
+      Author lifecycle states per master with domain_module_id set (370 -> 204;
+      371, 373, 374 -> 205), then deploy permission_verb_override on the driver
+      hire / separate states. Surface the fuel_transactions config-shape
+      exemption to the user in chat without writing data_objects.notes (Rule
+      #15). Separate Phase-B pass, not part of modularization scope.
     blocked_by:
-      - {type: depends_on, ref: B1B-MODULES-PENDING, reason: "lifecycle states scope by domain_module_id per Rule #14"}
+      - {type: depends_on, ref: B1A-SYSTEM-SKILLS, reason: "sequence lifecycle-state permission scoping after module-scoped skills land; not a hard gate"}
     affected_masters:
-      - {data_object_id: 370, name: fleet_vehicles, target_module_id: null, workflow: acquired in_service assigned maintenance retired sold}
-      - {data_object_id: 371, name: fleet_drivers, target_module_id: null, workflow: "applicant qualified active on_leave separated, with verb override on active and separated"}
-      - {data_object_id: 372, name: fuel_transactions, target_module_id: null, workflow: "config-shape exempt, surface to user"}
-      - {data_object_id: 373, name: fleet_assignments, target_module_id: null, workflow: scheduled active completed cancelled}
-      - {data_object_id: 374, name: vehicle_inspections, target_module_id: null, workflow: scheduled in_progress passed failed repair_completed}
+      - {data_object_id: 370, name: fleet_vehicles, target_module_id: 204, workflow: acquired in_service assigned maintenance retired sold}
+      - {data_object_id: 371, name: fleet_drivers, target_module_id: 205, workflow: "applicant qualified active on_leave separated, with verb override on active and separated"}
+      - {data_object_id: 372, name: fuel_transactions, target_module_id: 206, workflow: "config-shape exempt, surface to user"}
+      - {data_object_id: 373, name: fleet_assignments, target_module_id: 205, workflow: scheduled active completed cancelled}
+      - {data_object_id: 374, name: vehicle_inspections, target_module_id: 205, workflow: scheduled in_progress passed failed repair_completed}
 
   - id: B1B-LEGACY-SKILL
-    summary: Legacy domain-scoped fleet-mgmt-system skill (id 60) must be retired once module-scoped skills exist; cannot be retired before modules exist.
+    summary: Legacy domain-scoped fleet-mgmt-system skill (id 60) must be retired once module-scoped skills exist; modules now exist so retirement is unblocked.
     finding: >-
       skills row id 60 (name fleet-mgmt-system, skill_type=system, domain_id=147,
       domain_module_id=NULL) is the legacy pre-modularization shape. Per F1 it
@@ -108,14 +121,15 @@ b1b:
       It carries 7 skill_tools rows: 5 query_* (covering all 5 masters), plus
       send_email (channel primitive flagged separately, see
       B1B-CHANNEL-PRIMITIVE) and sign_document (external side_effect, see
-      B2-SIGN-DOCUMENT for workflow rationale).
+      B2-SIGN-DOCUMENT for workflow rationale). The module-split prerequisite is
+      cleared as of 2026-06-02.
     action: >-
-      After B1B-MODULES-PENDING resolves and module-scoped system skills are
-      authored, redistribute the 5 query_* tools by mastered entity to the
-      target module's skill, resolve sign_document per B2-SIGN-DOCUMENT,
-      substitute send_email per B1B-CHANNEL-PRIMITIVE, then DELETE skill 60.
+      Folded into B1A-SYSTEM-SKILLS: after the 3 module-scoped system skills are
+      authored, redistribute the 5 query_* tools by mastered entity, resolve
+      sign_document per B2-SIGN-DOCUMENT, substitute send_email per
+      B1B-CHANNEL-PRIMITIVE, then DELETE skill 60.
     blocked_by:
-      - {type: depends_on, ref: B1B-MODULES-PENDING, reason: cannot retire before module-scoped skills exist}
+      - {type: prerequisite_entity, ref: B1A-SYSTEM-SKILLS}
 
   - id: B1B-CHANNEL-PRIMITIVE
     summary: send_email channel primitive linked to legacy skill 60 without per-skill workflow rationale; substitute with notify_person.
@@ -128,11 +142,10 @@ b1b:
       notification (inspection-due reminders, license-expiry alerts,
       fuel-exception alerts), not channel-bound.
     action: >-
-      During the F1 / F2 restructure (gated on B1B-MODULES-PENDING and
-      B1B-LEGACY-SKILL), PATCH the skill_tools row pointing at send_email to
-      point at notify_person on whichever new module-scoped skill owns the
-      notification workflow, OR DELETE the row if the new skill already links
-      notify_person.
+      During the B1A-SYSTEM-SKILLS / F1 restructure, PATCH the skill_tools row
+      pointing at send_email to point at notify_person on whichever new
+      module-scoped skill owns the notification workflow, OR DELETE the row if
+      the new skill already links notify_person.
     blocked_by:
       - {type: depends_on, ref: B1B-LEGACY-SKILL, reason: substitution rides along with the legacy skill retirement}
 
@@ -140,7 +153,7 @@ b1b:
     summary: 5 floor regulations missing from the regulations table, blocks domain_regulations authoring.
     finding: >-
       Zero domain_regulations rows for FLEET-MGMT. The market is heavily
-      regulated. VERIFIED LIVE this audit: zero of FMCSA Part 391, FMCSA Part
+      regulated. VERIFIED LIVE in prior audit: zero of FMCSA Part 391, FMCSA Part
       395, FMCSA Part 396, IFTA, IRP exist as rows in the regulations table.
       Cannot author junction rows pointing at non-existent regulations.
     action: >-
@@ -154,28 +167,6 @@ b1b:
       - {type: user_decision, ref: B2-REGULATION-SCOPE}
 
 b2:
-  - id: B2-MODULE-SPLIT
-    summary: Pick the FLEET-MGMT module split shape; gates every module-FK fix.
-    question: >-
-      What module split does FLEET-MGMT ship? The 2026-05-30 audit recommended
-      3 full modules (FLEET-VEHICLE-LIFECYCLE mastering fleet_vehicles, embedding
-      drivers + registrations + insurance + telematics devices;
-      FLEET-DRIVER-OPS mastering fleet_drivers + fleet_assignments +
-      vehicle_inspections, embedding qualification files + clearinghouse queries
-      + motor-pool reservations; FLEET-FUEL-COMPLIANCE mastering fuel_transactions,
-      embedding fuel_cards + IFTA returns + parking/toll). Alternative is a
-      2-module split merging vehicle + driver-ops into FLEET-VEHICLE-OPS and
-      keeping FLEET-FUEL-COMPLIANCE standalone; still satisfies Rule #14's >=2
-      floor for the 6-capability domain.
-    options:
-      - 3 full modules per the 2026-05-30 recommendation (recommended)
-      - 2 full modules (FLEET-VEHICLE-OPS + FLEET-FUEL-COMPLIANCE)
-      - other split (user names the modules and master assignments)
-    why: >-
-      Gates B1B-MODULES-PENDING, B1B-HANDOFF-MODULE-FKS, B1B-LIFECYCLE-STATES,
-      B1B-LEGACY-SKILL, B1B-CHANNEL-PRIMITIVE, and the F-band restructure. Until
-      this resolves, no agent-solvable module-FK work can proceed.
-
   - id: B2-PATTERN-FLAGS
     summary: Personal-content scope for the 5 FLEET-MGMT masters.
     question: >-
@@ -203,14 +194,16 @@ b2:
       include contractors, owner-operators, and W-9 carriers who never sit in
       HCM. Alternative pattern (a) is HCM-master + FLEET-MGMT-embedded shell +
       a smaller FLEET-MGMT-mastered driver_profile carrying CDL / medical /
-      HOS data (the Samsara pattern).
+      HOS data (the Samsara pattern). As of 2026-06-02 the contributor row on
+      employees is assigned to FLEET-MGMT-DRIVER-OPS (id 205) preserving its
+      role/necessity; this question does not change that assignment.
     options:
       - keep (b) FLEET-MGMT masters fleet_drivers, contributor on employees (recommended for US trucking market with non-trivial contractor / owner-operator population)
       - switch to (a) HCM masters, FLEET-MGMT embeds shell + masters driver_profile
     why: >-
       Decision cascades into B3-DRIVER-QUALIFICATION-FILES and
-      B3-DRIVER-CLEARINGHOUSE-QUERIES module placement (in B1B-MODULES-PENDING
-      module set if recommended; on HCM-side embedded otherwise).
+      B3-DRIVER-CLEARINGHOUSE-QUERIES module placement (DRIVER-OPS id 205 if
+      recommended; on HCM-side embedded otherwise).
 
   - id: B2-VEHICLE-INSPECTIONS-DVIR
     summary: vehicle_inspections scope and DVIR overlap with TELEMATICS audit B1-M1.
@@ -219,7 +212,8 @@ b2:
       entity under TELEMATICS-COMPLIANCE-SAFETY and flagged collision with
       FLEET-MGMT's vehicle_inspections. Should vehicle_inspections cover both
       DVIR (driver pre/post-trip) and PMI (mechanic periodic) with a kind
-      discriminator, split, or move entirely?
+      discriminator, split, or move entirely? vehicle_inspections (374) is now
+      mastered in FLEET-MGMT-DRIVER-OPS (id 205).
     options:
       - split DVIR to TELEMATICS, FLEET-MGMT keeps PMI
       - keep unified at FLEET-MGMT with discriminator (recommended; data shape is identical)
@@ -236,13 +230,13 @@ b2:
       CDL attestation), vehicle purchase agreements, lease docs, or vestigial
       cargo-cult from another domain's loader?
     options:
-      - keep, redistribute to FLEET-DRIVER-OPS skill for driver onboarding
-      - keep, redistribute to FLEET-VEHICLE-LIFECYCLE skill for purchase / lease / title docs
+      - keep, redistribute to FLEET-MGMT-DRIVER-OPS skill for driver onboarding
+      - keep, redistribute to FLEET-MGMT-VEHICLE-LIFECYCLE skill for purchase / lease / title docs
       - keep on both modules' skills (both workflows real)
       - DELETE as vestigial
     why: >-
-      Tool stays only if a real workflow uses it; the F-band restructure
-      otherwise drops it. Folds into B1B-LEGACY-SKILL retirement.
+      Tool stays only if a real workflow uses it; the B1A-SYSTEM-SKILLS
+      restructure otherwise drops it. Folds into B1B-LEGACY-SKILL retirement.
 
   - id: B2-REGULATION-SCOPE
     summary: Floor vs stretch regulation set for domain_regulations.
@@ -266,31 +260,33 @@ b2:
       Should the catalog model employee.hired -> driver_activation and
       employee.terminated -> driver_separation as cross-domain handoffs from
       HCM to FLEET-MGMT? HCM's B9 owes the outbound trigger_events + handoffs
-      if yes.
+      if yes. The FLEET-MGMT-side consumer DMDO would land on
+      FLEET-MGMT-DRIVER-OPS (id 205).
     options:
       - yes, author both directions (recommended; HOS auto-deactivation on separation is regulator-relevant)
       - no, driver-record creation stays manual in fleet products
       - only the termination direction
     why: >-
       Decision cascades into HCM B9 owed work and a future FLEET-MGMT inbound
-      consumer DMDO after B1B-MODULES-PENDING.
+      consumer DMDO on module 205.
 
   - id: B2-MOTOR-POOL
     summary: motor_pool_reservations as separate sub-module or embedded feature.
     question: >-
       Should B1-M8 motor_pool_reservations (public-sector + corporate-fleet
-      reservation workflow) ship as its own sub-module (FLEET-MOTOR-POOL,
+      reservation workflow) ship as its own sub-module (FLEET-MGMT-MOTOR-POOL,
       matching AssetWorks / Agile Fleet shape) or embedded inside
-      FLEET-DRIVER-OPS?
+      FLEET-MGMT-DRIVER-OPS (id 205)? It is a deferred new entity (b3); this
+      question only sets where it lands when authored.
     options:
-      - embed in FLEET-DRIVER-OPS (recommended for catalog parsimony)
-      - separate FLEET-MOTOR-POOL sub-module
+      - embed in FLEET-MGMT-DRIVER-OPS (recommended for catalog parsimony)
+      - separate FLEET-MGMT-MOTOR-POOL sub-module
     why: >-
-      Decision is part of the B2-MODULE-SPLIT shape; surfaces independently
-      because it can flip the count from 3 to 4 modules.
+      Could flip the module count from 3 to 4 when the entity is authored;
+      surfaced independently from the now-resolved module split.
 
   - id: B2-EVENT-CATEGORIES
-    summary: trigger_event event_category enum violation on 5 (or 6) lifecycle-shaped events.
+    summary: trigger_event event_category enum violation on 6 lifecycle-shaped events.
     question: >-
       Live re-pull shows 6 trigger_events on FLEET-MGMT masters carry
       event_category="" instead of one of lifecycle / state_change / threshold /
@@ -314,18 +310,20 @@ b2:
       judgment call. After user picks, fix is one PATCH per event.
 
   - id: B2-CATALOG-COPY
-    summary: catalog_tagline and catalog_description on the domains row, buyer-voice text needed.
+    summary: catalog_tagline and catalog_description on the domains row (and now 3 modules), buyer-voice text needed.
     question: >-
-      domains.catalog_tagline and catalog_description are both empty (A4 fail).
-      Rule #20 forbids writes without user-approved buyer-voice text. Supply
-      the exact strings to write.
+      domains.catalog_tagline and catalog_description are both empty (A4 fail),
+      and as of 2026-06-02 the 3 new modules (204, 205, 206) also have empty
+      catalog copy. Rule #20 forbids writes without user-approved buyer-voice
+      text. Supply the exact strings to write (domain-level + per-module).
     options:
       - approve recommended tagline "Track every vehicle, driver, and fuel dollar across the fleet, with built-in DOT and IFTA compliance from day one." and a buyer-voice description authored by the user
       - supply different text
       - defer
     why: >-
       Rule #20 hard-gates the write; the agent cannot author either string
-      without user-approved wording.
+      without user-approved wording. The write itself is queued as
+      B1A-CATALOG-UX-COPY.
 
   - id: B2-ALIASES
     summary: data_object_aliases vendor-lexicon picks for the 5 FLEET-MGMT masters.
@@ -393,6 +391,76 @@ b3:
       - Trax Technologies
       - Transporeon
 
+  - id: B3-DRIVER-QUALIFICATION-FILES
+    candidate: driver_qualification_files master
+    rationale: >-
+      FMCSA Part 391 mandates a DQ file per driver (license verification, MVR,
+      drug-test history, medical certificate, road-test certificate,
+      application). 5/5 flagship vendors expose this; Motive and Samsara include
+      FMCSA-clearinghouse query integration. Deferred new-entity authoring;
+      target module FLEET-MGMT-DRIVER-OPS (id 205). Placement gated on
+      B2-DRIVERS-VS-EMPLOYEES (HCM-side if pattern a).
+    vendor_evidence:
+      - Motive
+      - Samsara
+      - Fleetio
+    proposed_module: FLEET-MGMT-DRIVER-OPS
+
+  - id: B3-VEHICLE-REGISTRATIONS
+    candidate: vehicle_registrations master
+    rationale: >-
+      DOT registration, IRP apportioned plates, state title and registration
+      renewal cycles. Tracked separately from fleet_vehicles because a single
+      vehicle has many registration records over its lifetime. Target module
+      FLEET-MGMT-VEHICLE-LIFECYCLE (id 204). Deferred new-entity authoring.
+    vendor_evidence:
+      - AssetWorks FleetFocus
+      - Fleetio
+      - Verizon Connect
+    proposed_module: FLEET-MGMT-VEHICLE-LIFECYCLE
+
+  - id: B3-IFTA-QUARTERLY-RETURNS
+    candidate: ifta_quarterly_returns master
+    rationale: >-
+      IFTA requires quarterly per-jurisdiction mile / fuel summaries filed by
+      carrier; derived from fuel_transactions + telematics mileage. Geotab,
+      Samsara, Motive, Verizon Connect all surface this. Target module
+      FLEET-MGMT-FUEL-COMPLIANCE (id 206). Deferred new-entity authoring.
+    vendor_evidence:
+      - Geotab
+      - Samsara
+      - Motive
+      - Verizon Connect
+    proposed_module: FLEET-MGMT-FUEL-COMPLIANCE
+
+  - id: B3-VEHICLE-INSURANCE-POLICIES
+    candidate: vehicle_insurance_policies master
+    rationale: >-
+      Per-vehicle insurance: policy number, carrier, premium, coverage limits,
+      claims history, certificate-of-insurance docs. Tracked separately from
+      fleet_vehicles because policy boundaries and certificates have their own
+      lifecycle. Target module FLEET-MGMT-VEHICLE-LIFECYCLE (id 204). Deferred
+      new-entity authoring.
+    vendor_evidence:
+      - Verizon Connect
+      - Fleetio
+      - AssetWorks FleetFocus
+    proposed_module: FLEET-MGMT-VEHICLE-LIFECYCLE
+
+  - id: B3-FUEL-CARDS
+    candidate: fuel_cards master
+    rationale: >-
+      Issued fuel card master (card number, assigned driver or vehicle, vendor,
+      expiration, PIN, status). Distinct from fuel_transactions (per-charge).
+      WEX / Comdata / Fleetcor card-management integrations on Samsara, Motive,
+      Fleetio. Target module FLEET-MGMT-FUEL-COMPLIANCE (id 206). Deferred
+      new-entity authoring.
+    vendor_evidence:
+      - Samsara
+      - Motive
+      - Fleetio
+    proposed_module: FLEET-MGMT-FUEL-COMPLIANCE
+
   - id: B3-VEHICLE-TELEMATICS-DEVICES-OWNERSHIP
     candidate: vehicle_telematics_devices ownership (FLEET-MGMT vs TELEMATICS)
     rationale: >-
@@ -400,10 +468,37 @@ b3:
       operations side (FLEET-MGMT owns the hardware) or the data side
       (TELEMATICS owns the device because it produces the telemetry). 2026-05-30
       recommendation is FLEET-MGMT (matches B1-M6). Samsara documents devices
-      in both surfaces.
+      in both surfaces. Target module FLEET-MGMT-VEHICLE-LIFECYCLE (id 204) if
+      FLEET-MGMT-owned.
     vendor_evidence:
       - Samsara
-    proposed_module: FLEET-VEHICLE-LIFECYCLE
+    proposed_module: FLEET-MGMT-VEHICLE-LIFECYCLE
+
+  - id: B3-DRIVER-CLEARINGHOUSE-QUERIES
+    candidate: driver_clearinghouse_queries master
+    rationale: >-
+      FMCSA Drug-and-Alcohol Clearinghouse: annual + pre-employment queries per
+      driver, query receipt records, violation hits. Motive and Samsara include
+      native Clearinghouse integration; regulator-mandated for CDL drivers.
+      Target module FLEET-MGMT-DRIVER-OPS (id 205). Deferred new-entity
+      authoring. Placement gated on B2-DRIVERS-VS-EMPLOYEES.
+    vendor_evidence:
+      - Motive
+      - Samsara
+    proposed_module: FLEET-MGMT-DRIVER-OPS
+
+  - id: B3-PARKING-TOLL-ASSIGNMENTS
+    candidate: parking_violations / toll_assignments master
+    rationale: >-
+      Inbound feed from toll networks and parking enforcement: tickets
+      attributed to vehicle, then re-attributed to driver via fleet_assignments.
+      Fleetio, AssetWorks, Verizon Connect all expose. Target module
+      FLEET-MGMT-FUEL-COMPLIANCE (id 206). Deferred new-entity authoring.
+    vendor_evidence:
+      - Fleetio
+      - AssetWorks FleetFocus
+      - Verizon Connect
+    proposed_module: FLEET-MGMT-FUEL-COMPLIANCE
 
   - id: B3-DRIVER-MESSAGES
     candidate: driver_messages / driver-app messaging
@@ -434,8 +529,10 @@ b3:
     rationale: >-
       Eyeball decision; lease lifecycle is distinct from insurance. Element
       Fleet, LeasePlan, ARI / Holman all surface this; in lease-back commercial
-      fleet scenarios it's a major workflow.
+      fleet scenarios it's a major workflow. Target module
+      FLEET-MGMT-VEHICLE-LIFECYCLE (id 204) if authored.
     vendor_evidence:
       - Element Fleet
       - LeasePlan
       - ARI Holman
+    proposed_module: FLEET-MGMT-VEHICLE-LIFECYCLE

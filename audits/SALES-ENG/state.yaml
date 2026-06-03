@@ -1,41 +1,63 @@
 schema_version: 2
 domain: SALES-ENG
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-05-31"
+next_action_by: agent
+last_audit: "2026-06-02"
 
-# b1a empty: every B1A item is gated either on a Bucket 2 user decision
-# (B2-MODULE-SHAPE for module-dependent fixes, B2-RETARGET-OR-MOVE for handoff
-# attribution, B2-CATALOG-COPY for catalog UX) or on a parallel B1A (modules
-# must land before module-FK PATCHes, lifecycle states, per-module skills, and
-# cross-domain relationships can derive their FKs). Standalone items (intra-domain
-# relationships, aliases, APQC tagging) are also held until the user signals
-# Bucket 1 scope. next_action_by is therefore "user" until Bucket 2 lands.
-b1a: []
+# 2026-06-02: domain modularized into 3 full modules (entity-only reuse pass).
+#   296 SALES-ENG-CADENCE-OUTREACH      master sales_cadences (121); contributor crm_contacts (98)
+#   297 SALES-ENG-EMAIL-SCHEDULING      master sales_emails (123);   contributor crm_contacts (98)
+#   298 SALES-ENG-CONVERSATION-COACHING master call_recordings (122); embedded_master conversation_intelligence_records (124)
+# Resolved this pass (now in history.md): B1A-BUILD, B1B-M-AUTH-MODULES, and the
+# B2-MODULE-SHAPE decision (3-module split chosen). The b1a items below are the
+# module-dependent follow-ups whose target-module FKs are now derivable; they were
+# previously gated on B1B-M-AUTH-MODULES (modules) and are unblocked on that axis.
+# next_action_by = agent (b1a non-empty).
+
+b1a:
+  - id: B1A-F-PER-MODULE-SKILLS
+    summary: "Retire legacy domain-level skill 104; author 3 per-module system skills (Rule #17 -> F2/F3)."
+    finding: >-
+      Skill id 104 `sales-eng-system` has `domain_module_id` NULL and `domain_id=95`. Under
+      Rule #14 / #17 every `full` module ships exactly one `system` skill mirroring the module,
+      and once any module-level system skill exists the legacy domain-level row is obsolete (F1).
+      SALES-ENG now has 3 full modules (296 SALES-ENG-CADENCE-OUTREACH, 297 SALES-ENG-EMAIL-SCHEDULING,
+      298 SALES-ENG-CONVERSATION-COACHING) and zero module-level skills. The prior 2026-05-31 plan
+      assumed a 2-module split (cadence + conv-intel); the realized shape is 3 modules, so the skill
+      authoring must produce 3 rows, not 2, and the legacy tool split is re-keyed accordingly.
+    action: >-
+      DELETE skill 104 + its 5 `skill_tools` rows. INSERT 3 `system` skills with `domain_module_id`
+      set: one on 296 (cadence enrollment + dialler), one on 297 (sales email + meeting scheduling),
+      one on 298 (conversation intelligence + coaching). Then INSERT per-module `skill_tools` splits
+      and any workflow-gate tools. F7 channel-link justification on the cadence-step `send_email`
+      tool still needs user-supplied `notes` wording (see B2-CHANNEL-NOTES).
+    affected_modules: [296, 297, 298]
+    extra_legacy_skill_id: 104
+    extra_legacy_skill_tools_count: 5
+    extra_skill_module_map:
+      - {module_id: 296, code: SALES-ENG-CADENCE-OUTREACH, scope: "cadence enrollment, dialler, intent-triggered start"}
+      - {module_id: 297, code: SALES-ENG-EMAIL-SCHEDULING, scope: "tracked sales email, AI drafting, meeting booking"}
+      - {module_id: 298, code: SALES-ENG-CONVERSATION-COACHING, scope: "call recording, conversation intelligence, coaching"}
+
+  - id: B1A-A-CATALOG-UX
+    summary: "Draft buyer-voice catalog copy for the SALES-ENG domain and 3 new modules (M8 / A4 / Rule #20)."
+    finding: >-
+      `domains.catalog_tagline` and `domains.catalog_description` are empty on id 95. The 3 new
+      modules (296, 297, 298) were inserted with `domain_module_name` + `description` but no
+      `catalog_tagline` / `catalog_description` (both omitted per the modularization insert shape).
+      Per Rule #20 / M8, the domain card needs a single-sentence buyer-facing tagline and a 1-3
+      paragraph buyer-facing description, and each module card needs buyer-voice catalog copy.
+    action: >-
+      Draft buyer-voice `catalog_tagline` + `catalog_description` for domain 95 and for each of
+      modules 296, 297, 298 in workflow + value voice (no vendor/product names, no em-dashes).
+      Surface drafts to the user for review BEFORE writing (Rule #20 requires review even on
+      empty fields). Gated on B2-CATALOG-COPY.
+    blocked_by:
+      - {type: user_decision, ref: B2-CATALOG-COPY}
+    affected_modules: [296, 297, 298]
+    affected_entities: [SALES-ENG]
 
 b1b:
-  - id: B1B-M-AUTH-MODULES
-    summary: "Author 2 SALES-ENG `domain_modules` per Rule #14 (8 capabilities require ≥2 full modules)."
-    finding: >-
-      Zero `domain_modules` rows for SALES-ENG (id 95). Per Rule #14, a domain with ≥3 capabilities
-      requires ≥2 `module_kind='full'` modules. SALES-ENG has 8 capabilities. The proposed split
-      from 2026-05-30 (SALES-ENG-CADENCE: SE-CADENCE-SEQ, SE-EMAIL-TRACKING, SE-AI-EMAIL-DRAFT,
-      SE-MEETING-SCHED with masters `sales_cadences`, `sales_emails`; SALES-ENG-CONV-INTEL:
-      SE-AUTO-DIALER, SE-CONV-INTEL, SE-REP-COACHING, SE-INTENT-DATA with masters `call_recordings`,
-      `conversation_intelligence_records`) satisfies M2 / M4 / M6.
-    action: >-
-      Hand-author 2 `domain_modules` rows + 8 `domain_module_capabilities` rows + 4 master DMDOs
-      + a `contributor` DMDO on `crm_contacts` (98) against the cadence module. Loader pattern:
-      extend `scripts/loaders/load_research.ts` per the canonical idempotent shape.
-    blocked_by:
-      - {type: user_decision, ref: B2-MODULE-SHAPE}
-    affected_modules: []
-    affected_entities: [sales_cadences, sales_emails, call_recordings, conversation_intelligence_records, crm_contacts]
-    vendor_evidence: [Outreach, Salesloft, "Apollo.io", "Gong Engage", Salesloft, Groove, Mixmax, Yesware, "ZoomInfo Engage"]
-    extra_proposed_split:
-      - {module_code: SALES-ENG-CADENCE, capabilities: [SE-CADENCE-SEQ, SE-EMAIL-TRACKING, SE-AI-EMAIL-DRAFT, SE-MEETING-SCHED], masters: [sales_cadences, sales_emails]}
-      - {module_code: SALES-ENG-CONV-INTEL, capabilities: [SE-AUTO-DIALER, SE-CONV-INTEL, SE-REP-COACHING, SE-INTENT-DATA], masters: [call_recordings, conversation_intelligence_records]}
-
   - id: B1B-S-RETARGET-EVENTS
     summary: "Resolve 3 SE-outbound handoffs whose trigger_events publish CRM-mastered data_objects."
     finding: >-
@@ -44,14 +66,15 @@ b1b:
       `meeting.no_show`, payload `sales_activities` 102) source from SALES-ENG but their
       trigger_events publish on CRM-mastered data_objects, violating B9 attribution. Either
       author SE-keyed events on SE masters and retarget the handoffs, OR move the handoffs to
-      CRM as their true publisher.
+      CRM as their true publisher. With the 3-module shape: a `cadence_call.completed` event
+      keys on `call_recordings` (122) -> source module 298; a `cadence_meeting.no_show` event
+      keys on `sales_cadences` (121) -> source module 296; a mirrored `deal_insight.captured`
+      on `conversation_intelligence_records` (124) -> source module 298.
     action: >-
       Per user choice in B2-RETARGET-OR-MOVE: (a) author 2-3 new `trigger_events` rows on SE
-      masters (e.g. `cadence_call.completed` on `call_recordings` 122, `cadence_meeting.no_show`
-      on `sales_cadences` 121, optional `deal_insight.captured` mirrored on
-      `conversation_intelligence_records` 124) and PATCH handoffs 82, 83, 206 to point at the
-      new ids; OR (b) PATCH `source_domain_id` to 69 (CRM) on the 3 handoffs and route them
-      out of SE's audit scope.
+      masters and PATCH handoffs 82, 83, 206 to point at the new ids and the correct
+      `source_domain_module_id` (296 or 298 per master above); OR (b) PATCH `source_domain_id`
+      to 69 (CRM) on the 3 handoffs and route them out of SE's audit scope.
     blocked_by:
       - {type: user_decision, ref: B2-RETARGET-OR-MOVE}
     affected_handoffs:
@@ -64,18 +87,22 @@ b1b:
       - {id: 166, event_name: "meeting.no_show", current_category: state_change, proposed_category: state_change}
 
   - id: B1B-S-OUT-SRC-MODFK
-    summary: "PATCH `source_domain_module_id` on 8 outbound handoffs after SE modules exist."
+    summary: "PATCH `source_domain_module_id` on 8 outbound handoffs now that the 3 SE modules exist."
     finding: >-
       8 outbound handoffs (82, 83, 205, 206, 474, 475, 476, 477) carry NULL `source_domain_module_id`.
-      Derivation per B10b: handoff publishing on `sales_cadences` (205) or `sales_emails` (474)
-      routes to SALES-ENG-CADENCE; on `call_recordings` (475) or `conversation_intelligence_records`
-      (476) routes to SALES-ENG-CONV-INTEL; 82, 83, 206 source-module resolves to whichever new
-      SE module hosts the retargeted SE-keyed event from B1B-S-RETARGET-EVENTS; 477 reuses event 63
-      on `sales_cadences` 121, source = SALES-ENG-CADENCE.
-    action: PATCH `source_domain_module_id` on 8 rows. Use the canonical B10b derivation loader pattern in `scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts`.
+      Master-to-module derivation under the realized 3-module shape: payload on `sales_cadences` (121)
+      -> 296 SALES-ENG-CADENCE-OUTREACH; on `sales_emails` (123) -> 297 SALES-ENG-EMAIL-SCHEDULING;
+      on `call_recordings` (122) or `conversation_intelligence_records` (124) -> 298
+      SALES-ENG-CONVERSATION-COACHING. So 205 (sales_cadences) -> 296; 474 (sales_emails) -> 297;
+      475 (call_recordings) -> 298; 476 (conversation_intelligence_records) -> 298; 477 (event 63 on
+      sales_cadences) -> 296. Handoffs 82, 83, 206 resolve to the source module of the retargeted
+      SE-keyed event from B1B-S-RETARGET-EVENTS (82 -> 298, 206 -> 296, 83 -> 298 if mirrored).
+    action: >-
+      PATCH `source_domain_module_id` on 8 rows per the mapping above. Use the canonical B10b
+      derivation loader pattern in `scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts`.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M-AUTH-MODULES}
       - {type: depends_on, ref: B1B-S-RETARGET-EVENTS, reason: "handoffs 82, 83, 206 source module depends on retargeted event"}
+    affected_modules: [296, 297, 298]
     affected_handoffs:
       - {handoff_id: 82, direction: outbound, source_domain: SALES-ENG, target_domain: CRM, trigger_event: "call.completed", payload: sales_activities, null_field: source_domain_module_id}
       - {handoff_id: 83, direction: outbound, source_domain: SALES-ENG, target_domain: CRM, trigger_event: "deal_insight.captured", payload: crm_opportunities, null_field: source_domain_module_id}
@@ -87,14 +114,14 @@ b1b:
       - {handoff_id: 477, direction: outbound, source_domain: SALES-ENG, target_domain: "REV-INTEL", trigger_event: "high_intent_signal.detected", payload: crm_opportunities, null_field: source_domain_module_id}
 
   - id: B1B-S-IN-TGT-MODFK
-    summary: "PATCH `target_domain_module_id` on 5 inbound handoffs to SALES-ENG-CADENCE after modules exist."
+    summary: "PATCH `target_domain_module_id` on 5 inbound handoffs to SALES-ENG-CADENCE-OUTREACH (296)."
     finding: >-
       5 inbound handoffs (79, 81, 200, 210, 510) carry NULL `target_domain_module_id`. Every one
-      resolves to SALES-ENG-CADENCE per the cadence-consumes pattern (lead, intent signal,
-      whitespace, score recompute, opportunity assignment all flow into a cadence start).
-    action: PATCH `target_domain_module_id` on 5 inbound rows once SALES-ENG-CADENCE id is known.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M-AUTH-MODULES}
+      resolves to module 296 SALES-ENG-CADENCE-OUTREACH per the cadence-consumes pattern (lead,
+      intent signal, whitespace, score recompute, opportunity assignment all flow into a cadence
+      start). The cadence module masters `sales_cadences` (121), the consumed entity for 79 and 81.
+    action: PATCH `target_domain_module_id` = 296 on the 5 inbound rows.
+    affected_modules: [296]
     affected_handoffs:
       - {handoff_id: 79, direction: inbound, source_domain: CDP, target_domain: SALES-ENG, trigger_event: "high_intent_signal.detected", payload: sales_cadences, null_field: target_domain_module_id}
       - {handoff_id: 81, direction: inbound, source_domain: CRM, target_domain: SALES-ENG, trigger_event: "crm_opportunity.assigned", payload: sales_cadences, null_field: target_domain_module_id}
@@ -109,7 +136,8 @@ b1b:
       cadence-shaped vendor surface: `sales_cadences` produces_cadence_emails `sales_emails`
       (one_to_many), `sales_cadences` produces_cadence_calls `call_recordings` (one_to_many),
       `call_recordings` produces_conversation_insights `conversation_intelligence_records`
-      (one_to_many).
+      (one_to_many). Note these now span modules: cadences (296) -> emails (297), cadences (296)
+      -> recordings (298), recordings (298) -> CI (298), which is expected and allowed.
     action: Author 3 `data_object_relationships` rows with the verb tuples above. Each carries `relationship_verb`, `inverse_verb`, `relationship_type=one_to_many`, `relationship_kind=reference`, `is_required` per workflow, `owner_side=source`.
     blocked_by:
       - {type: user_decision, ref: "B1 scope approval"}
@@ -122,13 +150,12 @@ b1b:
   - id: B1B-B-CROSS-RELS
     summary: "Insert 3 cross-domain outbound `data_object_relationships` mirroring SE-outbound handoffs."
     finding: >-
-      Zero outbound cross-domain relationship rows. 3 outbound handoffs have clean payload→target
-      master mappings: handoff 474 `sales_emails` → CRM activity master, 475 `call_recordings` →
-      CRM activity master, 476 `conversation_intelligence_records` → REV-INTEL master. Handoff
-      477 is fan-out reusing event 63 with non-SE-mastered payload, skipped per SKILL guidance.
-    action: After modules and CRM/REV-INTEL master resolution, insert 3 `data_object_relationships` rows mirroring the handoff payload→target shape.
+      Zero outbound cross-domain relationship rows. 3 outbound handoffs have clean payload->target
+      master mappings: handoff 474 `sales_emails` (297) -> CRM activity master, 475 `call_recordings`
+      (298) -> CRM activity master, 476 `conversation_intelligence_records` (298) -> REV-INTEL master.
+      Handoff 477 is fan-out reusing event 63 with non-SE-mastered payload, skipped per SKILL guidance.
+    action: After CRM/REV-INTEL master resolution, insert 3 `data_object_relationships` rows mirroring the handoff payload->target shape.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M-AUTH-MODULES}
       - {type: catalog_addition, scope: domains, trigger: "CRM and REV-INTEL master resolution for relationship targets"}
     affected_handoffs:
       - {handoff_id: 474, direction: outbound, source_domain: SALES-ENG, target_domain: CRM, trigger_event: "sales_email.replied", payload: sales_emails, null_field: cross_relationship}
@@ -148,57 +175,33 @@ b1b:
     vendor_evidence: [Outreach, Salesloft, "Apollo.io", "Gong Engage", Mixmax, Yesware, Groove, Clari]
 
   - id: B1B-B-LIFECYCLE
-    summary: "Insert ~17 `data_object_lifecycle_states` after modules exist."
+    summary: "Insert ~17 `data_object_lifecycle_states` keyed to the realizing module."
     finding: >-
-      Zero lifecycle-state rows on any master. None is config-shaped. Proposed machines:
-      `sales_cadences` (draft, active, paused, completed, archived; `active` and `paused` gate),
-      `call_recordings` (captured, transcribed, analyzed, archived),
-      `sales_emails` (drafted, queued, sent, opened, replied, bounced; `sent` gates),
-      `conversation_intelligence_records` (captured, analyzed, published, reviewed).
-    action: Insert ~17 rows with `state_order`, `is_initial`, `is_terminal`, `requires_permission` flagged on the gating states, `domain_module_id` per the master-to-module mapping.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M-AUTH-MODULES}
+      Zero lifecycle-state rows on any master. None is config-shaped. Proposed machines, with the
+      realized `domain_module_id` resolved: `sales_cadences` (module 296: draft, active, paused,
+      completed, archived; `active` and `paused` gate), `call_recordings` (module 298: captured,
+      transcribed, analyzed, archived), `sales_emails` (module 297: drafted, queued, sent, opened,
+      replied, bounced; `sent` gates), `conversation_intelligence_records` (module 298: captured,
+      analyzed, published, reviewed).
+    action: Insert ~17 rows with `state_order`, `is_initial`, `is_terminal`, `requires_permission` flagged on the gating states, and `domain_module_id` per the master-to-module mapping below.
     affected_masters:
-      - {data_object_id: 121, name: sales_cadences, target_module_id: null, workflow: "draft → active → paused → completed → archived"}
-      - {data_object_id: 122, name: call_recordings, target_module_id: null, workflow: "captured → transcribed → analyzed → archived"}
-      - {data_object_id: 123, name: sales_emails, target_module_id: null, workflow: "drafted → queued → sent → opened → replied|bounced"}
-      - {data_object_id: 124, name: conversation_intelligence_records, target_module_id: null, workflow: "captured → analyzed → published → reviewed"}
-
-  - id: B1B-A-CATALOG-UX
-    summary: "Draft buyer-voice `catalog_tagline` and `catalog_description` for SALES-ENG domain."
-    finding: >-
-      `domains.catalog_tagline` empty and `domains.catalog_description` empty on id 95. Per
-      Rule #20, the catalog cards need a single-sentence buyer-facing tagline and a 1-3 paragraph
-      buyer-facing description in workflow + value voice.
-    action: Draft both fields per Rule #20 voice rule. Surface draft to user for review BEFORE writing.
-    blocked_by:
-      - {type: user_decision, ref: B2-CATALOG-COPY}
-    affected_entities: [SALES-ENG]
-
-  - id: B1B-F-RETIRE-LEGACY-SKILL
-    summary: "DELETE legacy skill 104 + author 2 per-module system skills after modules exist."
-    finding: >-
-      Skill id 104 `sales-eng-system` has `domain_module_id` NULL and `domain_id=95`. Under
-      Rule #14 every system skill mirrors a module. Per F1, once any module-level system skill
-      exists for this domain, the legacy row is obsolete. Today no module-level skill exists yet.
-    action: After modules land, DELETE skill 104 + its 5 `skill_tools` rows, INSERT 2 new `system` skills (`sales_eng_cadence_agent` and `sales_eng_conv_intel_agent`) with `domain_module_id` set, then INSERT the per-module tool splits + workflow-gate tools.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M-AUTH-MODULES}
-    affected_modules: []
-    extra_legacy_skill_id: 104
-    extra_legacy_skill_tools_count: 5
+      - {data_object_id: 121, name: sales_cadences, target_module_id: 296, workflow: "draft -> active -> paused -> completed -> archived"}
+      - {data_object_id: 122, name: call_recordings, target_module_id: 298, workflow: "captured -> transcribed -> analyzed -> archived"}
+      - {data_object_id: 123, name: sales_emails, target_module_id: 297, workflow: "drafted -> queued -> sent -> opened -> replied|bounced"}
+      - {data_object_id: 124, name: conversation_intelligence_records, target_module_id: 298, workflow: "captured -> analyzed -> published -> reviewed"}
 
   - id: B1B-H-APQC-TAGGING
-    summary: "INSERT 8 `agent_curated` `handoff_processes` rows after live PCF lookups confirm `external_id` values."
+    summary: "INSERT `agent_curated` `handoff_processes` rows after live PCF lookups confirm `external_id` values."
     finding: >-
-      5 of 13 cross-domain handoffs carry APQC tags (2 `discovery_substring`, 3 `agent_curated`).
-      8 untagged: 79, 81, 83, 200, 205, 474, 475, 510. Volume target 0.5N to 0.8N = 7-10 means
-      ≥2 more `agent_curated` rows required to clear the H1 threshold; for full coverage,
-      tag all 8 untagged (minus user-accepted deferrals in B2-APQC-INBOUND-DEFER).
-      The 2026-05-30 audit proposed PCF external_id values (10009, 10010, 12878, 20110) that
-      did not resolve in the live `processes` table at continuation time, so the loader
-      deferred every row. Re-derive via live `/processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry` lookups for each handoff before insert.
-    action: For each untagged handoff, run live PCF substring lookup, pick a confident L2/L3 match (prefer L3 parent over L4), INSERT `(handoff_id, process_id, proposal_source='agent_curated', record_status='new', role='implements')`. 2026-05-30 B2-APQC-INBOUND-DEFER may exclude handoffs 81, 210, 510 (210 already has agent_curated row from 2026-05-31).
+      5 of 13 cross-domain handoffs carry an APQC tag (2 `discovery_substring`, 3 `agent_curated`).
+      8 untagged: 79, 81, 83, 200, 205, 474, 475, 510. Volume target 0.5N-0.8N = 7-10 means
+      >=2 more `agent_curated` rows required to clear the H1 threshold; for full coverage, tag all
+      8 untagged (minus user-accepted deferrals in B2-APQC-INBOUND-DEFER). The 2026-05-30 proposed
+      PCF external_id values (10009, 10010, 12878, 20110) did not resolve in the live `processes`
+      table; re-derive via live `/processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry`
+      lookups for each handoff before insert. Independent of modules (handoff_processes does not key
+      on module), so unblocked by this pass.
+    action: For each untagged handoff, run live PCF substring lookup, pick a confident L2/L3 match (prefer L3 parent over L4), INSERT `(handoff_id, process_id, proposal_source='agent_curated', record_status='new', role='implements')`. B2-APQC-INBOUND-DEFER may exclude 81, 210, 510 (210 already has an agent_curated row).
     blocked_by:
       - {type: user_decision, ref: B2-APQC-INBOUND-DEFER}
       - {type: user_decision, ref: B2-APQC-WRONG-SUBSTRING}
@@ -216,17 +219,29 @@ b1b:
     extra_volume_target: "7 to 10 agent_curated rows for N=13 cross-domain handoffs"
 
 b2:
-  - id: B2-MODULE-SHAPE
-    summary: "Pick SE module split shape."
-    question: "Should SALES-ENG modularize as (a) 2-module CADENCE + CONV-INTEL, (b) 3-module CADENCE + VOICE + CONV-INTEL, or (c) defer until Bucket 3 vendor research lands?"
-    options: [a_2_module_cadence_convintel, b_3_module_cadence_voice_convintel, c_defer_until_phase_0]
-    why: "Vendors split differently (Outreach + Salesloft bundle cadence + dialler + email; Gong splits Engage from Revenue Intelligence; Apollo bundles intent + cadence + dialler). The catalog's 8 capabilities do not cleanly map to 3 modules; defaults to (a). User owns the call."
-
   - id: B2-PATTERN-FLAGS
     summary: "Per-flag yes/no on 5 pattern-flag candidates on SE masters."
     question: "Confirm per-flag flips: call_recordings.has_personal_content, sales_emails.has_personal_content, sales_cadences.has_submit_lock, conversation_intelligence_records.has_personal_content, call_recordings.has_single_approver."
     options: [per_flag_yes_no]
     why: "Per Rule #12 every master MUST be positively re-evaluated even when defaults are false. Per Rule #15 rationale lives in audit conversation, not in `notes`."
+
+  - id: B2-CATALOG-COPY
+    summary: "Approve agent-drafted catalog copy for the SALES-ENG domain and 3 modules."
+    question: "Per Rule #20, agent will draft buyer-voice tagline + description for `domains.catalog_tagline`/`catalog_description` on id 95 and for modules 296, 297, 298. Approve the drafts before they get written?"
+    options: [request_draft_review_first, supply_exact_text]
+    why: "Rule #20 forbids overwriting non-empty values without approval and requires user-review-before-write even on empty fields. All target fields are currently empty."
+
+  - id: B2-RETARGET-OR-MOVE
+    summary: "Resolve B9 attribution defect on 3 SE-outbound handoffs."
+    question: "Handoffs 82, 83, 206 source from SE but their trigger_events publish on CRM-mastered data_objects. Author SE-keyed events and retarget (preferred per 2026-05-30, the workflow IS rep-initiated from the cadence step), or move the handoffs to CRM as their true publisher?"
+    options: [author_se_keyed_events_and_retarget, move_handoffs_to_crm]
+    why: "B9 requires events to publish on the master they describe. The structural fix changes which domain owns these handoffs."
+
+  - id: B2-CHANNEL-NOTES
+    summary: "`skill_tools.notes` wording for `send_email` channel-link justification."
+    question: "Supply the exact text for `skill_tools.notes` on the `send_email` row (Rule #15: agent cannot draft `notes` wording)."
+    options: [supply_exact_text, skip_the_notes]
+    why: "F7 asks for workflow-specific justification when a channel primitive is linked instead of `notify_person`. The cadence-step send IS the workflow, so the link stays; the audit-trail surface is the only outstanding piece. Rule #15 requires user-supplied wording."
 
   - id: B2-APQC-L3-PROMOTION
     summary: "Promote handoff 206 PCF tag from L4 to L3 parent."
@@ -240,76 +255,52 @@ b2:
     options: [delete_at_fix_time, leave_for_reviewer_rejected]
     why: "Per Discover Pass 1.5 procedure, `agent_curated` rows OVERRIDE `discovery_substring`. Audit-workflow question, not a data question."
 
-  - id: B2-CHANNEL-NOTES
-    summary: "`skill_tools.notes` wording for `send_email` channel-link justification."
-    question: "Supply the exact text for `skill_tools.notes` on the `send_email` row (Rule #15: agent cannot draft `notes` wording)."
-    options: [supply_exact_text, skip_the_notes]
-    why: "F7 asks for workflow-specific justification when a channel primitive is linked instead of `notify_person`. The cadence-step send IS the workflow, so the link stays; the audit-trail surface is the only outstanding piece. Rule #15 requires user-supplied wording."
-
   - id: B2-APQC-INBOUND-DEFER
     summary: "Accept APQC deferrals on 3 inbound handoffs, or force weak L4 tags."
     question: "Handoffs 81 (crm_opportunity.assigned), 210 (whitespace.identified, already tagged via agent_curated), and 510 (lead_score.recomputed) have no clean PCF cross-industry analog. Accept Discover Pass 3 deferral (preferred), or force a weak L4 tag and accept the catalog-quality hit?"
     options: [accept_deferrals, force_weak_L4]
     why: "Editorial. SKILL allows deferrals when no clean PCF match exists; forcing a weak tag pollutes the catalog."
 
-  - id: B2-CATALOG-COPY
-    summary: "Approve agent-drafted `catalog_tagline` + `catalog_description` for SALES-ENG domain."
-    question: "Per Rule #20, agent will draft buyer-voice tagline + description for `domains.catalog_tagline` and `domains.catalog_description` on id 95. Approve the drafts before they get written?"
-    options: [request_draft_review_first, supply_exact_text]
-    why: "Rule #20 forbids overwriting non-empty values without approval, and requires user-review-before-write even on empty fields. Both fields are currently empty."
-
-  - id: B2-RETARGET-OR-MOVE
-    summary: "Resolve B9 attribution defect on 3 SE-outbound handoffs."
-    question: "Handoffs 82, 83, 206 source from SE but their trigger_events publish on CRM-mastered data_objects. Author SE-keyed events and retarget (preferred per 2026-05-30, the workflow IS rep-initiated from the cadence step), or move the handoffs to CRM as their true publisher?"
-    options: [author_se_keyed_events_and_retarget, move_handoffs_to_crm]
-    why: "B9 requires events to publish on the master they describe. The structural fix changes which domain owns these handoffs."
-
 b3:
   - id: B3-CADENCE-STEPS
     candidate: cadence_steps
     rationale: "Every cadence-shaped vendor models the cadence as a graph of typed steps (email, call, LinkedIn, manual task). The current `sales_cadences` master collapses this into the parent row, missing the most-edited entity in the vendor surface."
     vendor_evidence: [Outreach, Salesloft, "Apollo.io", "Reply.io"]
-    proposed_module: SALES-ENG-CADENCE
+    proposed_module: SALES-ENG-CADENCE-OUTREACH
 
   - id: B3-PROSPECTS
     candidate: prospects
     rationale: "Sales-engagement vendors maintain their own prospect record that may exist before CRM sync (cold outbound from import). Currently SE relies on `crm_contacts` (contributor) and `crm_leads` (consumer via handoff 200)."
     vendor_evidence: [Outreach, Salesloft, "Apollo.io", "ZoomInfo Engage"]
-    proposed_module: SALES-ENG-CADENCE
-
-  - id: B3-SEQUENCES-VS-CADENCES
-    candidate: terminology_alias
-    rationale: "Outreach uses Sequence; Salesloft uses Cadence; catalog standardized on Cadence. Already captured in B1B-B-ALIASES; no additional Bucket 3 work."
-    vendor_evidence: [Outreach, Salesloft]
-    proposed_module: SALES-ENG-CADENCE
+    proposed_module: SALES-ENG-CADENCE-OUTREACH
 
   - id: B3-EMAIL-TEMPLATES
     candidate: email_templates
-    rationale: "Cadence-driven email needs reusable templates with variable substitution. None loaded today."
+    rationale: "Cadence-driven email needs reusable templates with variable substitution. None loaded today. Lands in the email/scheduling module (297) since that module masters sales_emails."
     vendor_evidence: [Outreach, Salesloft, "Apollo.io", Mixmax, Yesware]
-    proposed_module: SALES-ENG-CADENCE
+    proposed_module: SALES-ENG-EMAIL-SCHEDULING
 
   - id: B3-DIALER-INFRA
     candidate: dialer_phone_numbers and dialer_sessions
-    rationale: "Voice dialler features need per-rep phone number pools (often per-region) and per-session state (live, paused, recording). None loaded."
+    rationale: "Voice dialler features need per-rep phone number pools (often per-region) and per-session state (live, paused, recording). None loaded. Dialling lives in the cadence/outreach module (296, capability SE-AUTO-DIALER)."
     vendor_evidence: ["Outreach Voice", "Apollo Dialer", "Salesloft Dialer"]
-    proposed_module: SALES-ENG-CONV-INTEL
+    proposed_module: SALES-ENG-CADENCE-OUTREACH
 
   - id: B3-CI-TOPICS-TRACKERS
     candidate: conversation_intelligence_topics and conversation_intelligence_trackers
     rationale: "Gong and Chorus model trackers (competitor mentions, pricing keywords, objection types) as first-class entities; insights aggregate against trackers. The catalog has `conversation_intelligence_records` but no tracker concept."
     vendor_evidence: ["Gong", "Chorus"]
-    proposed_module: SALES-ENG-CONV-INTEL
+    proposed_module: SALES-ENG-CONVERSATION-COACHING
 
   - id: B3-INTENT-SIGNALS
     candidate: intent_signals and intent_topics
-    rationale: "Intent data is the substrate behind capability SE-INTENT-DATA, but no master is loaded. Bombora, 6sense, G2 are intent specialists; SE consumes the signal but the catalog has no entity. Candidate new domain INTENT-DATA per Rule #2."
+    rationale: "Intent data is the substrate behind capability SE-INTENT-DATA (placed in module 296), but no master is loaded. Bombora, 6sense, G2 are intent specialists; SE consumes the signal but the catalog has no entity. Candidate new domain INTENT-DATA per Rule #2."
     vendor_evidence: [Bombora, 6sense, G2]
     proposed_module: candidate_new_domain_INTENT-DATA
 
   - id: B3-MEETING-SCHEDULER
     candidate: meeting_scheduler_slots and meeting_links
-    rationale: "Chili Piper, Calendly Scheduling, Outreach Meetings model schedulable time slots, availability windows, and booking links. Capability SE-MEETING-SCHED is loaded with no backing entity. Likely promotes to a separate MEETING-SCHEDULER candidate domain."
+    rationale: "Chili Piper, Calendly Scheduling, Outreach Meetings model schedulable time slots, availability windows, and booking links. Capability SE-MEETING-SCHED is placed in module 297 with no backing master entity. Likely promotes to a separate MEETING-SCHEDULER candidate domain."
     vendor_evidence: ["Chili Piper", "Calendly", "Outreach Meetings"]
     proposed_module: candidate_new_domain_MEETING-SCHEDULER
 

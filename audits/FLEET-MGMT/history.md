@@ -305,3 +305,42 @@ None this pass. Structural-audit-only run.
 ### Report-only follow-ups (owed by other domains)
 
 Same as 2026-05-30: TELEMATICS M1, FLEET-MAINT M1, ERP-FIN B10b, FSM B10b on handoff 318, HCM B9 on driver-lifecycle events (conditional on Bucket 2 #7).
+
+## 2026-06-02 - Audit (modularization)
+
+### Summary
+
+Phase M modularization pass. FLEET-MGMT went from 0 `domain_modules` to 3 `module_kind='full'` modules, clearing the M1 / M2 / M6 hard fail (Rule #14 floor of >=2 full modules for a 6-capability domain is now met). Scope was modules + entity assignment only: no new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. The split adopts the 2026-05-30 / 2026-05-31 recommended 3-module shape (B2-MODULE-SPLIT option a), restricted to the entities that exist live today.
+
+All 6 capabilities were placed (each realized by exactly one module, M4 tick). All 5 masters were placed in exactly one module each (M7 single-master tick). The lone contributor (`employees`, id 31) was assigned to DRIVER-OPS preserving its existing `role=contributor`, `necessity=required`. No module is empty (each holds >=1 capability and >=1 data_object). `notes` left empty on every DMC and DMDO row (Rule #15). `record_status` omitted on all inserts (defaulted to `new`, Rule #1). No vendor/product names in any module name or description (Rule #18).
+
+Loader: `.tmp_deploy/modularize_fleet_mgmt_2026-06-02.ts`, idempotent (re-read by natural key before each insert), verified safe to re-run (second run inserted 0 rows).
+
+### Module split
+
+| Module code | id | Capabilities | Data_objects (role / necessity) |
+|---|---|---|---|
+| `FLEET-MGMT-VEHICLE-LIFECYCLE` | 204 | 404 FLEET-VEHICLE-INVENTORY, 408 FLEET-UTILIZATION | `fleet_vehicles` 370 (master / required) |
+| `FLEET-MGMT-DRIVER-OPS` | 205 | 405 FLEET-DRIVER-MGMT, 407 FLEET-DISPATCH | `fleet_drivers` 371 (master / required); `fleet_assignments` 373 (master / required); `vehicle_inspections` 374 (master / required); `employees` 31 (contributor / required) |
+| `FLEET-MGMT-FUEL-COMPLIANCE` | 206 | 406 FLEET-FUEL-MGMT, 409 FLEET-COMPLIANCE | `fuel_transactions` 372 (master / required) |
+
+Master -> module mapping (M7, each master in exactly one module): `fleet_vehicles` -> VEHICLE-LIFECYCLE; `fleet_drivers`, `fleet_assignments`, `vehicle_inspections` -> DRIVER-OPS; `fuel_transactions` -> FUEL-COMPLIANCE.
+
+### Counts created
+
+- 3 `domain_modules` (ids 204, 205, 206), all `module_kind='full'`.
+- 6 `domain_module_capabilities` (2 per module): 204 -> {404, 408}; 205 -> {405, 407}; 206 -> {406, 409}.
+- 6 `domain_module_data_objects`: 1 on 204 (370); 4 on 205 (371, 373, 374, 31); 1 on 206 (372).
+- 0 `domain_module_host_domains` (all 3 modules are single-domain on 147; no cross-host hosting required this pass).
+
+### Deferred gaps (out of scope this pass)
+
+- **M8 / A4 catalog UX copy backfill (now per-module).** All 3 new modules carry empty `catalog_tagline` + `catalog_description`; the domains-row `catalog_tagline` + `catalog_description` remain empty too. Rule #20 gates these writes on user-approved buyer-voice text. Recorded as b1a-CATALOG-UX-COPY (agent-solvable once wording is approved; the wording itself rides B2-CATALOG-COPY).
+- **Phase-S system skills now required per module (Rule #17 -> F2 / F3).** Each of the 3 new modules now needs exactly one `<module_code_lower>_agent` system skill with >=1 `skill_tools` row, and legacy domain-scoped skill `fleet-mgmt-system` (id 60) must be retired and its 7 tools redistributed. Recorded as b1a-SYSTEM-SKILLS. This unblocks the previously-blocked B1B-LEGACY-SKILL and B1B-CHANNEL-PRIMITIVE (the gating `module-split` prerequisite is now satisfied).
+- **Handoff module-FK PATCHes now unblocked on the FLEET-MGMT side.** With modules present, the 11 cross-domain handoffs can take their FLEET-MGMT-side module FK per the master->module mapping above (vehicle events -> 204; assignment / inspection / driver events -> 205; fuel events -> 206). Partner-side NULLs (TELEMATICS, FLEET-MAINT, ERP-FIN) remain report-only. Tracked under the existing B1B-HANDOFF-MODULE-FKS (its `prerequisite_entity` gate is now cleared).
+- **Lifecycle states now scopable.** The 4 workflow-bearing masters can now have `data_object_lifecycle_states` authored with a `domain_module_id` (370 -> 204; 371, 373, 374 -> 205). Tracked under the existing B1B-LIFECYCLE-STATES (gate cleared).
+- **No missing-master candidates added this pass.** The 2026-05-30 audit's B1-M1..M9 missing entities (`driver_qualification_files`, `vehicle_registrations`, `ifta_quarterly_returns`, `vehicle_insurance_policies`, `fuel_cards`, `vehicle_telematics_devices`, `driver_clearinghouse_queries`, `motor_pool_reservations`, `parking_violations`) remain deferred new-entity authoring; they continue to live in b3 and are not blockers for this modularization. Target modules per the split: VEHICLE-LIFECYCLE for `vehicle_registrations` / `vehicle_insurance_policies` / `vehicle_telematics_devices`; DRIVER-OPS for `driver_qualification_files` / `driver_clearinghouse_queries` / `motor_pool_reservations`; FUEL-COMPLIANCE for `ifta_quarterly_returns` / `fuel_cards` / `parking_violations`.
+
+### Fixes applied
+
+- 3 modules + 6 DMC + 6 DMDO inserted via the idempotent loader. Verified live: 3 full modules, all 6 capabilities placed once, all 5 masters mastered once, no empty module, all `notes` empty, all `record_status=new`.

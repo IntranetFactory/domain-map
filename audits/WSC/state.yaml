@@ -30,6 +30,17 @@ b1a:
       - {handoff_id: null, direction: intra, source_domain: WSC, target_domain: WSC, trigger_event: "chat_huddle.started", payload: "chat_huddles", null_field: "row missing", enumeration_status: proposed_insert, extra_source_module: WSC-CHANNELS-CONVERSATIONS, extra_target_module: WSC-HUDDLES-VOICE}
       - {handoff_id: null, direction: intra, source_domain: WSC, target_domain: WSC, trigger_event: "external_guest.invited", payload: "external_guest_invitations", null_field: "row missing", enumeration_status: proposed_insert, extra_source_module: WSC-CHANNELS-CONVERSATIONS, extra_target_module: WSC-EXTERNAL-COLLAB}
     affected_modules: [115, 116, 117]
+  - id: B1A-PHASE-P
+    summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
+    finding: "Live triage 2026-06-02: 3 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    extra_phase_p_triage: "2026-06-02"
+  - id: B1A-ENTITY-TYPE
+    summary: "8 masters carry entity_type unclassified/null (B13): classify them."
+    finding: "Live triage 2026-06-02: 8 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
+    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
+    affected_entities: [channel_file_shares, channel_members, chat_channels, chat_huddles, chat_message_attachments, chat_messages, chat_threads, external_guest_invitations]
+    extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-H790

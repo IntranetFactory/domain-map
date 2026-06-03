@@ -2,185 +2,82 @@ schema_version: 2
 domain: RE-INVEST
 status: feedback_needed
 next_action_by: agent
-last_audit: "2026-05-31"
+last_audit: "2026-06-02"
 
 b1a:
-  - id: B1A-B9-a
-    summary: "PATCH trigger_event 953 fund.created event_category from empty to lifecycle."
-    finding: "Trigger event id 953 event_name fund.created has event_category empty string. Per Rule #13 allowed values are lifecycle, state_change, threshold, signal. fund.created is a creation transition on data_object 727 investment_funds."
-    action: "semantius call crud postgrestRequest method PATCH path /trigger_events?id=eq.953 body {event_category: lifecycle}."
-    affected_events:
-      - {id: 953, event_name: "fund.created", current_category: "", proposed_category: "lifecycle"}
+  - id: B1A-F2-SYSTEM-SKILLS
+    summary: "Author one skill_type='system' skill per RE-INVEST module (3 modules) plus skill_tools rows (Rule #17 -> F2/F3)."
+    finding: >
+      RE-INVEST was modularized 2026-06-02 into 3 full modules: RE-INVEST-FUND-ACCT (279),
+      RE-INVEST-INVESTOR-REPORTING (280), RE-INVEST-PORTFOLIO-VAL (281). Rule #17 requires
+      exactly one skill_type='system' skill per domain_modules row, each with >=1 skill_tools
+      row (F2 / F3). Today there are zero module-level system skills; the only skills row is
+      the legacy domain-level re-invest-system (id 97, domain_module_id=null).
+    action: >
+      Phase S loader (mirror scripts/loaders ATS / SMP pattern): insert 3 system skills with
+      domain_module_id in (279, 280, 281); attach skill_tools (query tools for the module's
+      masters, plus notify_person for LP capital-call / distribution / statement notifications
+      in place of send_email). Then DELETE legacy skill 97 and its 9 skill_tools rows (cures F1 / F7).
+    affected_modules: [279, 280, 281]
 
-  - id: B1A-B9-b
-    summary: "PATCH trigger_event 954 fund.closed event_category from empty to lifecycle."
-    finding: "Trigger event id 954 event_name fund.closed has event_category empty string. Closure is a terminal-state lifecycle transition on data_object 727 investment_funds."
-    action: "semantius call crud postgrestRequest method PATCH path /trigger_events?id=eq.954 body {event_category: lifecycle}."
-    affected_events:
-      - {id: 954, event_name: "fund.closed", current_category: "", proposed_category: "lifecycle"}
-
-  - id: B1A-B9-c
-    summary: "PATCH trigger_event 955 lp_subscription.executed event_category from empty to state_change."
-    finding: "Trigger event id 955 event_name lp_subscription.executed has event_category empty string. The LP subscription moves from pending to active, a state_change on data_object 728 limited_partners."
-    action: "semantius call crud postgrestRequest method PATCH path /trigger_events?id=eq.955 body {event_category: state_change}."
-    affected_events:
-      - {id: 955, event_name: "lp_subscription.executed", current_category: "", proposed_category: "state_change"}
-
-  - id: B1A-B9-d
-    summary: "PATCH trigger_event 956 asset_fee.charged event_category from empty to signal."
-    finding: "Trigger event id 956 event_name asset_fee.charged has event_category empty string. This is an accrual signal on data_object 729 asset_management_fees, not a lifecycle transition on the fee itself."
-    action: "semantius call crud postgrestRequest method PATCH path /trigger_events?id=eq.956 body {event_category: signal}."
-    affected_events:
-      - {id: 956, event_name: "asset_fee.charged", current_category: "", proposed_category: "signal"}
-
-b1b:
-  - id: B1B-M1
-    summary: "Author RE-INVEST domain_modules rows (2 to 3 full + optional starter). Rule #14 M1 hard fail; domain has zero modules and 6 capabilities."
-    finding: "RE-INVEST has zero domain_modules rows. With 6 capabilities the Rule #14 floor is two module_kind=full rows. Proposed modules tracked in the audit: RE-INVEST-FUND-ACCT, RE-INVEST-INVESTOR-REPORTING, RE-INVEST-PORTFOLIO-VAL; plus optional RE-INVEST-LITE starter."
-    action: "Phase A loader: insert 2 to 3 full modules + 6 domain_module_capabilities rows + per-module system skills + skill_tools. Re-attach lifecycle states on fund_distributions (currently on FUND-ADMIN module 15) to the correct RE-INVEST module when M7 resolves toward RE-INVEST mastery, or leave on FUND-ADMIN if option (a) is chosen."
+  - id: B1A-F1-LEGACY-SKILL
+    summary: "DELETE legacy domain-level skill re-invest-system (id 97) and its skill_tools once module system skills exist."
+    finding: >
+      skills row id 97 (skill_name re-invest-system, skill_type system, domain_module_id NULL)
+      with 9 skill_tools rows including a send_email channel-primitive (skill_tools id 771).
+      The Rule #17 transitional pass that tolerated a domain-level system skill no longer applies
+      now that modules exist; F1 must retire the legacy row and F7 replaces send_email with
+      notify_person on the new module-level skills.
+    action: >
+      Same loader as B1A-F2-SYSTEM-SKILLS DELETEs skill 97 and its skill_tools rows after the
+      3 module-level system skills land.
     blocked_by:
-      - {type: user_decision, ref: B2-M7-DEMOTION}
-    affected_modules: []
-    extra_module_proposals:
-      - {code: RE-INVEST-FUND-ACCT, capabilities: [398, 402]}
-      - {code: RE-INVEST-INVESTOR-REPORTING, capabilities: [399]}
-      - {code: RE-INVEST-PORTFOLIO-VAL, capabilities: [400, 401, 403]}
+      - {type: prerequisite_entity, ref: B1A-F2-SYSTEM-SKILLS}
+    extra_legacy_skill: {skill_id: 97, skill_tools_count: 9, send_email_skill_tools_id: 771}
 
-  - id: B1B-M4
-    summary: "Realize 6 capabilities via domain_module_capabilities once modules exist."
-    finding: "Zero domain_module_capabilities rows. The 6 RE-INVEST capabilities (398-403) are unrealized."
-    action: "Insert 6 domain_module_capabilities rows during the M1 loader pass, distributing across the new modules per the proposal in B1B-M1."
+  - id: B1A-M8-MODULE-UX
+    summary: "PATCH catalog_tagline + catalog_description on the 3 new modules (M8); Rule #20 needs user-approved copy."
+    finding: >
+      domain_modules 279, 280, 281 were created 2026-06-02 with empty catalog_tagline and
+      catalog_description. M8 requires a non-empty buyer-voice one-liner and 1-3 paragraph
+      description per module. Rule #20 forbids auto-write without user approval of exact wording.
+    action: >
+      Draft buyer-voice tagline + description per module, surface for user review, then PATCH
+      /domain_modules?id=eq.<id>. No write until per-row approval (gated by B2-MODULE-UX).
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1}
-    affected_entities: [RE-INV-FUND-ACCOUNTING, RE-INV-INVESTOR-REPORTING, RE-INV-PORTFOLIO-VALUATION, RE-INV-ACQ-UNDERWRITING, RE-INV-CAPITAL-CALLS, RE-INV-NAV-NOI-MODELING]
+      - {type: user_decision, ref: B2-MODULE-UX}
+    affected_modules: [279, 280, 281]
 
-  - id: B1B-M7a
-    summary: "Resolve catalog-wide dual-master on capital_calls (367); FUND-ADMIN-CAPITAL-CALLS module 14 also masters it."
-    finding: "data_object 367 capital_calls is mastered by RE-INVEST at domain_data_objects row 597 AND by FUND-ADMIN at domain_module_data_objects row 44 (module 14 FUND-ADMIN-CAPITAL-CALLS). Two catalog-wide masters for one data_object."
-    action: "Per Bucket 2 #1 resolution: (a) demote RE-INVEST to embedded_master under the new RE-INVEST module; (b) rename via industry split; (c) consolidate domains. Loader writes flow from the chosen option."
-    blocked_by:
-      - {type: user_decision, ref: B2-M7-DEMOTION}
-    affected_masters:
-      - {data_object_id: 367, name: capital_calls, target_module_id: null, workflow: "capital call issuance and funding"}
-    extra_competing_owners:
-      - {domain: RE-INVEST, scope: domain_data_objects, role: master, id: 597}
-      - {domain: FUND-ADMIN, scope: domain_module_data_objects, role: master, id: 44, module_id: 14}
-
-  - id: B1B-M7b
-    summary: "Resolve catalog-wide dual-master on fund_distributions (368); FUND-ADMIN-DISTRIBUTIONS module 15 also masters it."
-    finding: "data_object 368 fund_distributions is mastered by RE-INVEST at domain_data_objects row 598 AND by FUND-ADMIN at domain_module_data_objects row 48 (module 15 FUND-ADMIN-DISTRIBUTIONS). The 4 lifecycle states are attached to module 15 today, not to RE-INVEST."
-    action: "Per Bucket 2 #1 resolution: (a) demote RE-INVEST to embedded_master and keep lifecycle states on FUND-ADMIN; (b) industry split with renames; (c) consolidate domains. Loader writes flow from the chosen option."
-    blocked_by:
-      - {type: user_decision, ref: B2-M7-DEMOTION}
-    affected_masters:
-      - {data_object_id: 368, name: fund_distributions, target_module_id: 15, workflow: "distribution waterfall declared executed completed"}
-    extra_competing_owners:
-      - {domain: RE-INVEST, scope: domain_data_objects, role: master, id: 598}
-      - {domain: FUND-ADMIN, scope: domain_module_data_objects, role: master, id: 48, module_id: 15}
-
-  - id: B1B-B3
-    summary: "Naming arbitration on investment_funds (727) vs funds (755). Same concept under two names; investment_funds has zero DMDO rows."
-    finding: "data_object 727 investment_funds is mastered only by RE-INVEST at the legacy DDO level (row 1038) and has zero domain_module_data_objects rows. data_object 755 funds is mastered by FUND-ADMIN-FUND-LEDGER (module 12, row 37) and embedded by 6 other modules. The two cover the same concept; the collision violates Rule #9 implicitly."
-    action: "Per Bucket 2 #2 resolution: (a) DELETE 727 and retarget RE-INVEST DDO + future DMDO rows to 755, port relationships 846/847/874/1888; (b) rename 727 to re_investment_funds and add 'funds is_specialized_by re_investment_funds'; (c) keep both (anti-pattern)."
-    blocked_by:
-      - {type: user_decision, ref: B2-FUNDS-RENAME}
-      - {type: depends_on, ref: B1B-M7a}
-    affected_masters:
-      - {data_object_id: 727, name: investment_funds, target_module_id: null, workflow: "RE-side fund formation and close"}
-
-  - id: B1B-B4
-    summary: "Pattern flag flips on six masters require per-row user approval (Rule #12)."
-    finding: "All 7 RE-INVEST masters have has_personal_content=false, has_submit_lock=false, has_single_approver=false. Audit proposes flips on 4 of them: capital_calls.has_single_approver=true, fund_distributions.has_submit_lock=true and has_single_approver=true, limited_partners.has_personal_content=true, investment_funds.has_single_approver=true."
-    action: "Per Bucket 2 #5 resolution: PATCH each approved flag via /data_objects?id=eq.<id>. Per Rule #12 + Rule #15, no notes are auto-populated. Per-row approval required."
-    blocked_by:
-      - {type: user_decision, ref: B2-PATTERN-FLAGS}
-    affected_masters:
-      - {data_object_id: 367, name: capital_calls, target_module_id: null, workflow: "has_single_approver"}
-      - {data_object_id: 368, name: fund_distributions, target_module_id: 15, workflow: "has_submit_lock and has_single_approver"}
-      - {data_object_id: 728, name: limited_partners, target_module_id: null, workflow: "has_personal_content"}
-      - {data_object_id: 727, name: investment_funds, target_module_id: null, workflow: "has_single_approver"}
-
-  - id: B1B-B6
-    summary: "Author intra-domain master-master data_object_relationships (audit lists 7 candidate edges as prose only)."
-    finding: "Zero intra-domain master-master data_object_relationships exist (verified via /data_object_relationships query against masters 366, 367, 368, 369, 727, 728, 729). Candidate edges: investment_funds owns investment_properties, issues capital_calls, declares fund_distributions, subscribed_by limited_partners, accrues asset_management_fees; fund_distributions offsets capital_calls; investment_properties revalued_by property_valuations."
-    action: "Once the audit pre-specifies exact (verb, inverse_verb, relationship_type, relationship_kind, owner_side, is_required) tuples, draft data_object_relationships inserts. Tuples currently only narrated as prose."
-    blocked_by:
-      - {type: depends_on, ref: B1B-M1}
-      - {type: depends_on, ref: B1B-M7a}
-    affected_entities: [investment_funds, investment_properties, capital_calls, fund_distributions, limited_partners, asset_management_fees, property_valuations]
-
-  - id: B1B-B11
-    summary: "Aliases unstarted on every master; audit names example aliases as prose only."
-    finding: "data_object_aliases rows for all 7 RE-INVEST masters: 0. Audit names example aliases (LP, NAV, IRR, AUM, REIT, K-1) as prose, no exact tuples specified."
-    action: "Audit must pre-specify (data_object_id, alias_name) tuples per Rule #15 + agent contract before any insert. Then a small loader inserts 2-4 aliases per master."
-    blocked_by:
-      - {type: depends_on, ref: B1B-M7a}
-    affected_masters:
-      - {data_object_id: 366, name: investment_properties, target_module_id: null, workflow: "alias enumeration pending"}
-      - {data_object_id: 367, name: capital_calls, target_module_id: null, workflow: "alias enumeration pending"}
-      - {data_object_id: 368, name: fund_distributions, target_module_id: 15, workflow: "alias enumeration pending"}
-      - {data_object_id: 369, name: property_valuations, target_module_id: null, workflow: "alias enumeration pending"}
-      - {data_object_id: 727, name: investment_funds, target_module_id: null, workflow: "alias enumeration pending"}
-      - {data_object_id: 728, name: limited_partners, target_module_id: null, workflow: "alias enumeration pending"}
-      - {data_object_id: 729, name: asset_management_fees, target_module_id: null, workflow: "alias enumeration pending"}
-
-  - id: B1B-B12
-    summary: "Lifecycle states missing on 6 of 7 masters; gated on M1 for domain_module_id attribution."
-    finding: "data_object_lifecycle_states has 4 rows total, all on fund_distributions (368) tied to FUND-ADMIN module 15 (drafted, declared with permission_verb_override declare_distribution, executed, completed). Other 6 masters have zero states. Proposed: capital_calls (drafted to issued to funded), investment_properties (pipeline to under_contract to acquired to owned to disposed), investment_funds (forming to open to closing to harvest to liquidated), limited_partners (prospective to subscribed to active to redeemed). property_valuations and asset_management_fees are config-shape candidates pending exemption decision."
-    action: "Once M1 lands AND M7 demotion is fixed AND lifecycle exemptions are decided (B2-LIFECYCLE-EXEMPT), draft data_object_lifecycle_states inserts with proper domain_module_id attribution."
-    blocked_by:
-      - {type: depends_on, ref: B1B-M1}
-      - {type: user_decision, ref: B2-M7-DEMOTION}
-      - {type: user_decision, ref: B2-LIFECYCLE-EXEMPT}
-    affected_masters:
-      - {data_object_id: 366, name: investment_properties, target_module_id: null, workflow: "pipeline to disposed (5 states)"}
-      - {data_object_id: 367, name: capital_calls, target_module_id: null, workflow: "drafted to issued to funded"}
-      - {data_object_id: 369, name: property_valuations, target_module_id: null, workflow: "config-shape candidate"}
-      - {data_object_id: 727, name: investment_funds, target_module_id: null, workflow: "forming to liquidated"}
-      - {data_object_id: 728, name: limited_partners, target_module_id: null, workflow: "prospective to redeemed"}
-      - {data_object_id: 729, name: asset_management_fees, target_module_id: null, workflow: "config-shape candidate"}
-
-  - id: B1B-A4
-    summary: "PATCH domains.catalog_tagline and catalog_description; Rule #20 requires per-row user approval."
-    finding: "/domains?id=eq.146 returns catalog_tagline='' and catalog_description=''. Drafts proposed in 2026-05-30 Bucket 2 #6; not yet approved."
-    action: "Per Bucket 2 #6 approval, PATCH /domains?id=eq.146 with the user-approved exact wording. No write without explicit per-row approval."
-    blocked_by:
-      - {type: user_decision, ref: B2-CATALOG-UX}
-
-  - id: B1B-F1
-    summary: "DELETE legacy domain-level skill re-invest-system (id 97) once module-level system skills exist."
-    finding: "skills row id 97 skill_name re-invest-system skill_type system domain_module_id NULL. Conditional pass today (no module-level skills yet) per Rule #17 transitional language, but must retire once M1 modules and per-module system skills land."
-    action: "Same loader that creates the module-level system skills DELETEs row 97."
-    blocked_by:
-      - {type: depends_on, ref: B1B-M1}
-    extra_legacy_skill: {skill_id: 97, skill_tools_count: 9}
-
-  - id: B1B-F7
-    summary: "Replace send_email channel-primitive on legacy skill with notify_person abstraction."
-    finding: "skill_tools row 771 binds the send_email tool (operation_kind=side_effect, data_object_id=null) to skill 97 re-invest-system. LP capital-call notification is the substitutable-channel pattern; notify_person is the right abstraction."
-    action: "When per-module system skills land, replace with notify_person; DELETE the old skill_tools row when row 97 is deleted under B1B-F1."
-    blocked_by:
-      - {type: depends_on, ref: B1B-F1}
-    extra_legacy_skill: {skill_id: 97, skill_tools_id: 771}
-
-  - id: B1B-PR-EF-1
-    summary: "Backfill source_domain_module_id on 3 outbound handoffs to ERP-FIN once RE-INVEST modules exist."
-    finding: "Handoffs 305 (property_valuation.refreshed to FINOPS), 306 (fund_distribution.declared to ERP-FIN), 307 (capital_call.issued to ERP-FIN), 863 (asset_fee.charged to ERP-FIN) all carry source_domain_module_id=NULL. RE-INVEST has zero modules; FK cannot resolve."
-    action: "After B1-M1 lands, PATCH each handoff with the source module derived from the payload data_object's mastering module (per Rule #14 module-permission derivation)."
-    blocked_by:
-      - {type: depends_on, ref: B1B-M1}
+  - id: B1A-PR-EF-1
+    summary: "Backfill source_domain_module_id on 4 outbound handoffs to ERP-FIN / FINOPS now that modules exist."
+    finding: >
+      Handoffs 305 (property_valuation.refreshed -> FINOPS), 306 (fund_distribution.declared ->
+      ERP-FIN), 307 (capital_call.issued -> ERP-FIN), 863 (asset_fee.charged -> ERP-FIN) carry
+      source_domain_module_id=NULL. With modules live the source FK resolves from the payload's
+      mastering / embedding RE-INVEST module: 305 -> 281 (property_valuations master), 306 -> 279
+      (fund_distributions embedded), 307 -> 279 (capital_calls embedded), 863 -> 279
+      (asset_management_fees master). Target FKs still depend on ERP-FIN / FINOPS module shape.
+    action: >
+      PATCH each handoff source_domain_module_id per the derivation above. Target FK backfill
+      stays owed by ERP-FIN / FINOPS B10b.
     affected_handoffs:
       - {handoff_id: 305, direction: outbound, source_domain: RE-INVEST, target_domain: FINOPS, trigger_event: property_valuation.refreshed, payload: property_valuations, null_field: source_domain_module_id}
       - {handoff_id: 306, direction: outbound, source_domain: RE-INVEST, target_domain: ERP-FIN, trigger_event: fund_distribution.declared, payload: fund_distributions, null_field: source_domain_module_id}
       - {handoff_id: 307, direction: outbound, source_domain: RE-INVEST, target_domain: ERP-FIN, trigger_event: capital_call.issued, payload: capital_calls, null_field: source_domain_module_id}
       - {handoff_id: 863, direction: outbound, source_domain: RE-INVEST, target_domain: ERP-FIN, trigger_event: asset_fee.charged, payload: asset_management_fees, null_field: source_domain_module_id}
 
-  - id: B1B-PR-RC-1
-    summary: "Backfill target_domain_module_id on 5 inbound handoffs to RE-INVEST once modules exist."
-    finding: "Handoffs 301 (rent_payment.received from RE-PROP-MGMT), 303 (commercial_lease.executed from RE-CRE), 857 (property.updated from REAL-EST), 859 (tenant_credit.assessed from RE-CRE), 862 (listing.sold from RE-BROKERAGE) all carry target_domain_module_id=NULL. RE-INVEST has zero modules."
-    action: "After B1-M1 lands, PATCH each handoff with the target module that consumes the payload (portfolio-valuation / fund-accounting modules)."
-    blocked_by:
-      - {type: depends_on, ref: B1B-M1}
+  - id: B1A-PR-RC-1
+    summary: "Backfill target_domain_module_id on 5 inbound handoffs now that modules exist."
+    finding: >
+      Handoffs 301 (rent_payment.received from RE-PROP-MGMT, payload rental_leases), 303
+      (commercial_lease.executed from RE-CRE, payload commercial_leases), 857 (property.updated
+      from REAL-EST), 859 (tenant_credit.assessed from RE-CRE), 862 (listing.sold from
+      RE-BROKERAGE) carry target_domain_module_id=NULL. rental_leases (362) and commercial_leases
+      (363) are consumed by RE-INVEST-INVESTOR-REPORTING (280); property / valuation feeds land on
+      RE-INVEST-PORTFOLIO-VAL (281).
+    action: >
+      PATCH each handoff target_domain_module_id to the consuming module: 301 -> 280, 303 -> 280,
+      857 -> 281, 859 -> 281 (credit feeds underwriting), 862 -> 281.
     affected_handoffs:
       - {handoff_id: 301, direction: inbound, source_domain: RE-PROP-MGMT, target_domain: RE-INVEST, trigger_event: rent_payment.received, payload: rental_leases, null_field: target_domain_module_id}
       - {handoff_id: 303, direction: inbound, source_domain: RE-CRE, target_domain: RE-INVEST, trigger_event: commercial_lease.executed, payload: commercial_leases, null_field: target_domain_module_id}
@@ -188,74 +85,188 @@ b1b:
       - {handoff_id: 859, direction: inbound, source_domain: RE-CRE, target_domain: RE-INVEST, trigger_event: tenant_credit.assessed, payload: tenant_credit_records, null_field: target_domain_module_id}
       - {handoff_id: 862, direction: inbound, source_domain: RE-BROKERAGE, target_domain: RE-INVEST, trigger_event: listing.sold, payload: real_estate_listings, null_field: target_domain_module_id}
 
-  - id: B1B-PR-FA-1
-    summary: "Zero handoffs to FUND-ADMIN despite shared masters; FUND-ADMIN owes outbound under option (a)."
-    finding: "No handoffs exist between RE-INVEST and FUND-ADMIN today, yet both catalog-master capital_calls and fund_distributions (M7a, M7b). Under option (a) FUND-ADMIN owes outbound handoffs to RE-INVEST whenever a master row transitions state."
-    action: "Per Bucket 2 #1 resolution. Cross-domain follow-up tracked in FUND-ADMIN's next audit per the report-only section."
+b1b:
+  - id: B1B-B6
+    summary: "Author intra-domain master-master data_object_relationships (audit lists 7 candidate edges as prose only)."
+    finding: >
+      Zero intra-domain master-master data_object_relationships exist among the masters 366, 367,
+      368, 369, 727, 728, 729. Candidate edges: investment_funds owns investment_properties, issues
+      capital_calls, declares fund_distributions, subscribed_by limited_partners, accrues
+      asset_management_fees; fund_distributions offsets capital_calls; investment_properties
+      revalued_by property_valuations. Tuples are narrated as prose, not as exact
+      (verb, inverse_verb, relationship_type, relationship_kind, owner_side, is_required) sets.
+    action: >
+      Once the audit pre-specifies exact relationship tuples, draft data_object_relationships
+      inserts. Out of scope for the modularization pass (no new relationships).
+    affected_entities: [investment_funds, investment_properties, capital_calls, fund_distributions, limited_partners, asset_management_fees, property_valuations]
+
+  - id: B1B-B11
+    summary: "Aliases unstarted on every master; audit names example aliases as prose only."
+    finding: >
+      data_object_aliases rows for all 7 RE-INVEST masters: 0. Audit names example aliases (LP,
+      NAV, IRR, AUM, REIT, K-1) as prose, no exact (data_object_id, alias_name) tuples specified.
+    action: >
+      Audit must pre-specify (data_object_id, alias_name) tuples before any insert. Then a small
+      loader inserts 2-4 aliases per master.
+    affected_masters:
+      - {data_object_id: 366, name: investment_properties, target_module_id: 281, workflow: "alias enumeration pending"}
+      - {data_object_id: 367, name: capital_calls, target_module_id: 279, workflow: "alias enumeration pending"}
+      - {data_object_id: 368, name: fund_distributions, target_module_id: 279, workflow: "alias enumeration pending"}
+      - {data_object_id: 369, name: property_valuations, target_module_id: 281, workflow: "alias enumeration pending"}
+      - {data_object_id: 727, name: investment_funds, target_module_id: 279, workflow: "alias enumeration pending"}
+      - {data_object_id: 728, name: limited_partners, target_module_id: 280, workflow: "alias enumeration pending"}
+      - {data_object_id: 729, name: asset_management_fees, target_module_id: 279, workflow: "alias enumeration pending"}
+
+  - id: B1B-B12
+    summary: "Lifecycle states missing on 6 of 7 masters; now attributable to the correct RE-INVEST module."
+    finding: >
+      data_object_lifecycle_states has 4 rows total, all on fund_distributions (368) tied to
+      FUND-ADMIN module 15. The 5 RE-INVEST-mastered entities now have a home module for
+      domain_module_id attribution: investment_properties (366) -> 281, property_valuations (369)
+      -> 281, investment_funds (727) -> 279, limited_partners (728) -> 280, asset_management_fees
+      (729) -> 279. Proposed machines: capital_calls (drafted to issued to funded; but embedded,
+      lifecycle owned by FUND-ADMIN), investment_properties (pipeline to under_contract to acquired
+      to owned to disposed), investment_funds (forming to open to closing to harvest to liquidated),
+      limited_partners (prospective to subscribed to active to redeemed). property_valuations and
+      asset_management_fees are config-shape candidates pending exemption (B2-LIFECYCLE-EXEMPT).
+    action: >
+      Draft data_object_lifecycle_states inserts with domain_module_id attribution per the mapping
+      above once exemptions are decided. Out of scope for the modularization pass (no new lifecycle).
     blocked_by:
-      - {type: user_decision, ref: B2-M7-DEMOTION}
-      - {type: domain_audit, blocking_domain: FUND-ADMIN, milestone: "B8 outbound on capital_calls, fund_distributions"}
+      - {type: user_decision, ref: B2-LIFECYCLE-EXEMPT}
+    affected_masters:
+      - {data_object_id: 366, name: investment_properties, target_module_id: 281, workflow: "pipeline to disposed (5 states)"}
+      - {data_object_id: 369, name: property_valuations, target_module_id: 281, workflow: "config-shape candidate"}
+      - {data_object_id: 727, name: investment_funds, target_module_id: 279, workflow: "forming to liquidated"}
+      - {data_object_id: 728, name: limited_partners, target_module_id: 280, workflow: "prospective to redeemed"}
+      - {data_object_id: 729, name: asset_management_fees, target_module_id: 279, workflow: "config-shape candidate"}
+
+  - id: B1B-B4
+    summary: "Pattern flag flips on four masters require per-row user approval (Rule #12)."
+    finding: >
+      All 7 RE-INVEST masters have has_personal_content=false, has_submit_lock=false,
+      has_single_approver=false. Audit proposes flips: capital_calls.has_single_approver=true
+      (GP signs; but embedded here, owned by FUND-ADMIN), fund_distributions.has_submit_lock=true
+      and has_single_approver=true (owned by FUND-ADMIN), limited_partners.has_personal_content=true
+      (LP PII, accreditation), investment_funds.has_single_approver=true (fund formation).
+      RE-INVEST can only flip the masters it owns (727, 728); flags on 367 / 368 are FUND-ADMIN's call.
+    action: >
+      Per approval, PATCH each approved flag via /data_objects?id=eq.<id>. No notes auto-populated
+      (Rule #15). Per-row approval required.
+    blocked_by:
+      - {type: user_decision, ref: B2-PATTERN-FLAGS}
+    affected_masters:
+      - {data_object_id: 728, name: limited_partners, target_module_id: 280, workflow: "has_personal_content"}
+      - {data_object_id: 727, name: investment_funds, target_module_id: 279, workflow: "has_single_approver"}
+
+  - id: B1B-A4
+    summary: "PATCH domains.catalog_tagline and catalog_description on domain 146; Rule #20 requires per-row user approval."
+    finding: >
+      /domains?id=eq.146 returns catalog_tagline='' and catalog_description=''. Drafts proposed in
+      the 2026-05-30 Bucket 2 #6 (tagline: 'Run fund accounting, investor reporting, and portfolio
+      valuation for real estate funds and REITs in one place.'); not yet approved.
+    action: >
+      Per approval, PATCH /domains?id=eq.146 with user-approved exact wording. No write without
+      explicit per-row approval.
+    blocked_by:
+      - {type: user_decision, ref: B2-CATALOG-UX}
+
+  - id: B1B-LEGACY-DDO-DRIFT
+    summary: "Legacy domain_data_objects master rows 597 (capital_calls) and 598 (fund_distributions) on RE-INVEST are now stale post-modularization."
+    finding: >
+      The 2026-06-02 modularization assigned capital_calls (367) and fund_distributions (368) as
+      embedded_master at the module grain (FUND-ADMIN keeps catalog mastery). The pre-modular
+      domain_data_objects rows 597 / 598 still read role='master' on RE-INVEST, which a naive
+      DDO-reading auditor would treat as a competing catalog master. This is the same rollup-drift
+      class as ATS B2-ROLLUP-POLICY.
+    action: >
+      Either PATCH rows 597 / 598 to role='embedded_master' (or DELETE if the DDO rollup is being
+      deprecated catalog-wide), tracked jointly with FUND-ADMIN B1B-RE-INVEST-M7. Defer to the
+      catalog-wide rollup policy decision (ATS B2-ROLLUP-POLICY).
+    blocked_by:
+      - {type: depends_on, ref: "ATS B2-ROLLUP-POLICY", reason: "catalog-wide domain_data_objects rollup deprecate/regenerate decision"}
+    affected_masters:
+      - {data_object_id: 367, name: capital_calls, target_module_id: 279, workflow: "demote legacy DDO row 597 to embedded_master or delete"}
+      - {data_object_id: 368, name: fund_distributions, target_module_id: 279, workflow: "demote legacy DDO row 598 to embedded_master or delete"}
+
+  - id: B1B-PR-FA-1
+    summary: "Zero handoffs to FUND-ADMIN despite shared embedded masters; FUND-ADMIN owes outbound."
+    finding: >
+      No handoffs exist between RE-INVEST and FUND-ADMIN, yet RE-INVEST embeds capital_calls (367)
+      and fund_distributions (368) that FUND-ADMIN catalog-masters. Under the realized option (a),
+      FUND-ADMIN owes outbound handoffs to RE-INVEST whenever a master row transitions state
+      (capital call funded, distribution executed).
+    action: >
+      Cross-domain follow-up owned by FUND-ADMIN's next audit (B8 outbound on capital_calls,
+      fund_distributions to RE-INVEST). Report-only here.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: FUND-ADMIN, milestone: "B8 outbound on capital_calls, fund_distributions to RE-INVEST"}
 
 b2:
-  - id: B2-M7-DEMOTION
-    summary: "Who owns canonical mastery of capital_calls (367) and fund_distributions (368)?"
-    question: "FUND-ADMIN modules 14 and 15 already master both data_objects; RE-INVEST also masters them at the legacy domain_data_objects level. Catalog-wide single-master invariant requires one canonical owner."
+  - id: B2-MODULE-UX
+    summary: "Approve catalog_tagline and catalog_description for the 3 new RE-INVEST modules (M8, Rule #20)."
+    question: >
+      Modules 279 (RE-INVEST-FUND-ACCT), 280 (RE-INVEST-INVESTOR-REPORTING), 281
+      (RE-INVEST-PORTFOLIO-VAL) have empty catalog UX fields. Approve agent-drafted buyer-voice
+      copy per module, or provide your own wording?
     options:
-      - "(a) FUND-ADMIN owns; RE-INVEST demotes to embedded_master once RE-INVEST modules exist. Recommended on coherence grounds."
-      - "(b) Industry split: rename to re_capital_calls and pe_capital_calls; both keep master. Heavy lift."
-      - "(c) Consolidate RE-INVEST into FUND-ADMIN as a vertical. Deepest change."
-    why: "Decision gates the entire M-band (M1, M4, M7a, M7b), B6, B12 attachments, F1/F7, and all BOUNDARY backfills. Module shape depends on which entities RE-INVEST canonically masters."
-
-  - id: B2-FUNDS-RENAME
-    summary: "investment_funds (727) vs funds (755) consolidation direction."
-    question: "Both are domain_owned, model the same concept; investment_funds has zero DMDO rows."
-    options:
-      - "(a) Merge into funds: DELETE 727, retarget RE-INVEST rows to 755."
-      - "(b) Keep investment_funds prefixed re_investment_funds for the RE subclass."
-      - "(c) Keep both as-is (anti-pattern)."
-    why: "Resolution flows from B2-M7-DEMOTION (option (a) on M7 implies merge into funds; option (b) implies rename)."
-
-  - id: B2-LIMITED-PARTNERS-OWNER
-    summary: "limited_partners (728) ownership: RE-INVEST or FUND-ADMIN-LP-COMMITMENTS (module 13)?"
-    question: "FUND-ADMIN has a dedicated LP-COMMITMENTS module. RE-INVEST currently masters limited_partners at the DDO level. Does the RE-specific LP onboarding flow (accreditation, ERISA, RE syndicate quirks) warrant separate mastery?"
-    options:
-      - "(a) Move to FUND-ADMIN-LP-COMMITMENTS as master; RE-INVEST consumes."
-      - "(b) Keep on RE-INVEST as RE-specific master."
-      - "(c) Industry split similar to capital_calls."
-    why: "Flows from B2-M7-DEMOTION root."
-
-  - id: B2-FEES-OWNER
-    summary: "asset_management_fees (729) ownership: RE-specific or generic GP-LP mechanic?"
-    question: "Asset-management-fee accounting is a generic GP-LP mechanic, not RE-specific. Strong fit on FUND-ADMIN."
-    options:
-      - "(a) Move mastery to FUND-ADMIN."
-      - "(b) Keep on RE-INVEST as RE-specific fee schedule (acquisition fees, AUM-based fees with RE quirks)."
-      - "(c) Rename to fee_schedules and surface the cross-industry meaning."
-    why: "Flows from B2-M7-DEMOTION root."
-
-  - id: B2-PATTERN-FLAGS
-    summary: "Per-master pattern-flag flips per Rule #12 + Rule #15."
-    question: "Audit proposes 5 flag flips across 4 masters. Each TRUE flag requires explicit per-row user approval. No notes auto-populated."
-    options:
-      - "Per master, approve / reject / rewrite: capital_calls.has_single_approver=true (GP signs)."
-      - "fund_distributions.has_submit_lock=true (declared waterfall immutable)."
-      - "fund_distributions.has_single_approver=true (CFO approves)."
-      - "limited_partners.has_personal_content=true (LP PII, accreditation)."
-      - "investment_funds.has_single_approver=true (fund formation)."
-    why: "Defaults stand on the other masters. Independent of M7 gate; can be answered standalone but PATCHes only land after B1-M1 cures so module-level system skills can derive permissions correctly."
+      - "(a) Agent drafts buyer-voice tagline + description per module; you approve per row before write."
+      - "(b) You provide exact wording per module."
+      - "(c) Hold; leave empty for now."
+    why: "Rule #20 forbids auto-write of catalog UX fields without explicit per-row approval."
 
   - id: B2-CATALOG-UX
-    summary: "Approve catalog_tagline and catalog_description for RE-INVEST per Rule #20."
-    question: "Both fields are empty. The 2026-05-30 audit drafted candidate wording in Bucket 2 #6; user must approve the exact text before any PATCH."
+    summary: "Approve catalog_tagline and catalog_description for the RE-INVEST domain (146) per Rule #20."
+    question: >
+      Both domain-level fields are empty. The 2026-05-30 audit drafted candidate wording; user must
+      approve the exact text before any PATCH.
     options:
       - "(a) Approve the 2026-05-30 drafts verbatim."
       - "(b) Rewrite the wording (provide exact text)."
       - "(c) Hold; leave both empty."
     why: "Rule #20 forbids auto-write; the agent cannot proceed without exact user-approved wording."
 
+  - id: B2-LIMITED-PARTNERS-OWNER
+    summary: "limited_partners (728) now mastered by RE-INVEST-INVESTOR-REPORTING (280); confirm vs FUND-ADMIN-LP-COMMITMENTS (module 13)."
+    question: >
+      The 2026-06-02 modularization mastered limited_partners on RE-INVEST module 280. FUND-ADMIN has
+      a dedicated LP-COMMITMENTS module (13). Does the RE-specific LP onboarding flow (accreditation,
+      ERISA, RE syndicate quirks) warrant RE-INVEST mastery, or should mastery move to FUND-ADMIN and
+      RE-INVEST consume?
+    options:
+      - "(a) Keep on RE-INVEST-INVESTOR-REPORTING (280) as RE-specific master (current state)."
+      - "(b) Move mastery to FUND-ADMIN-LP-COMMITMENTS (13); RE-INVEST demotes to embedded_master / consumer."
+    why: "Affects which domain owns LP PII, K-1 issuance, and consent tracking. Current modularization defaults to (a)."
+
+  - id: B2-FEES-OWNER
+    summary: "asset_management_fees (729) now mastered by RE-INVEST-FUND-ACCT (279); confirm vs generic FUND-ADMIN fee accounting."
+    question: >
+      The 2026-06-02 modularization mastered asset_management_fees on RE-INVEST module 279.
+      Asset-management-fee accounting is a generic GP-LP mechanic with a strong FUND-ADMIN fit.
+      Keep RE-specific, or move mastery to FUND-ADMIN?
+    options:
+      - "(a) Keep on RE-INVEST-FUND-ACCT (279) as RE-specific fee schedule (current state)."
+      - "(b) Move mastery to FUND-ADMIN; RE-INVEST demotes to embedded_master."
+    why: "Current modularization defaults to (a). A move would re-home the master and its future lifecycle."
+
+  - id: B2-PATTERN-FLAGS
+    summary: "Per-master pattern-flag flips on the masters RE-INVEST owns (727, 728)."
+    question: >
+      Audit proposes investment_funds.has_single_approver=true (fund formation) and
+      limited_partners.has_personal_content=true (LP PII, accreditation). Each TRUE flag requires
+      explicit per-row approval. Flags on capital_calls / fund_distributions are FUND-ADMIN's call
+      (they catalog-master those).
+    options:
+      - "investment_funds.has_single_approver=true (approve / reject / rewrite)."
+      - "limited_partners.has_personal_content=true (approve / reject / rewrite)."
+    why: "Defaults stand otherwise. No notes auto-populated (Rule #15)."
+
   - id: B2-LIFECYCLE-EXEMPT
-    summary: "Lifecycle exemption decision for property_valuations and asset_management_fees."
-    question: "Both are config-shape candidates per Rule #12 exemption. Approve exemption from full lifecycle authoring, or author minimal state machines?"
+    summary: "Lifecycle exemption decision for property_valuations (369) and asset_management_fees (729)."
+    question: >
+      Both are config-shape candidates per Rule #12 exemption. Approve exemption from full lifecycle
+      authoring, or author minimal state machines? Both now have a home module for attribution
+      (369 -> 281, 729 -> 279).
     options:
       - "(a) Exempt both; no lifecycle states authored."
       - "(b) Author minimal 3-state machine on property_valuations (refresh_scheduled to calculated to published), exempt asset_management_fees."
@@ -264,16 +275,23 @@ b2:
 
   - id: B2-H1-301-DOUBLE
     summary: "Handoff 301 (rent_payment.received) carries two competing agent_curated PCF tags."
-    question: "handoff_processes rows 759 (PCF 1356 Receive/Deposit customer payments, 10800) and 768 (PCF 1351 Generate customer billing data, 10795) both tag handoff 301 as agent_curated, record_status=new. Which survives at approved?"
+    question: >
+      handoff_processes rows 759 (PCF 1356 Receive/Deposit customer payments, 10800) and 768 (PCF
+      1351 Generate customer billing data, 10795) both tag handoff 301 as agent_curated,
+      record_status=new. Which survives at approved?
     options:
       - "(a) Approve 759, reject 768. Closer L4 match to rent_payment.received."
       - "(b) Approve 768, reject 759. Reads as upstream billing activity."
       - "(c) Approve both; legitimate dual classification."
-    why: "Independent of all other items. Cannot ship until user picks."
+    why: "Independent of all other items."
 
   - id: B2-H1-857-DOUBLE
     summary: "Handoff 857 (property.updated) carries a strategic discovery_substring tag and an operational agent_curated tag."
-    question: "handoff_processes rows 169 (discovery_substring, PCF 343 Develop property strategy and long term vision, L3 strategic) and 760 (agent_curated, PCF 1511 Confirm alignment of property requirements with business strategy, L4 operational) both tag handoff 857. Which survives at approved?"
+    question: >
+      handoff_processes rows 169 (discovery_substring, PCF 343 Develop property strategy and long
+      term vision, L3 strategic) and 760 (agent_curated, PCF 1511 Confirm alignment of property
+      requirements with business strategy, L4 operational) both tag handoff 857. Which survives at
+      approved?
     options:
       - "(a) Approve 760, reject 169. L4 operational is the better match for property.updated."
       - "(b) Approve 169, reject 760. Strategic framing intended."
@@ -283,7 +301,10 @@ b2:
 b3:
   - id: B3-RE-ACQ-PIPELINE
     candidate: re_acquisition_pipeline_deals
-    rationale: "ARGUS Enterprise, Yardi Investment Manager, and Juniper Square all model the acquisition pipeline as a first-class entity with stages (sourced, underwriting, LOI, due_diligence, closed). RE-INVEST has investment_properties only with no upstream pipeline."
+    rationale: >
+      ARGUS Enterprise, Yardi Investment Manager, and Juniper Square all model the acquisition
+      pipeline as a first-class entity with stages (sourced, underwriting, LOI, due_diligence,
+      closed). RE-INVEST has investment_properties only with no upstream pipeline.
     vendor_evidence:
       - {vendor: "ARGUS Enterprise", evidence: 1st_class}
       - {vendor: "Yardi Investment Management", evidence: 1st_class}
@@ -292,7 +313,9 @@ b3:
 
   - id: B3-RENT-ROLLS
     candidate: rent_rolls
-    rationale: "Every flagship platform models the rent roll as the bridge between leases and NOI rollup. Lives at the property level."
+    rationale: >
+      Every flagship platform models the rent roll as the bridge between leases and NOI rollup.
+      Lives at the property level.
     vendor_evidence:
       - {vendor: "Yardi Investment Management", evidence: 1st_class}
       - {vendor: "MRI Investment Management", evidence: 1st_class}
@@ -301,7 +324,9 @@ b3:
 
   - id: B3-NOI-CALCULATIONS
     candidate: noi_calculations
-    rationale: "NOI is the load-bearing metric for both valuation and distribution forecasting. Flagship platforms model it as a queryable entity, not a computed report."
+    rationale: >
+      NOI is the load-bearing metric for both valuation and distribution forecasting. Flagship
+      platforms model it as a queryable entity, not a computed report.
     vendor_evidence:
       - {vendor: "ARGUS Enterprise", evidence: 1st_class}
       - {vendor: "Juniper Square", evidence: 1st_class}
@@ -309,7 +334,9 @@ b3:
 
   - id: B3-DEBT-FACILITIES
     candidate: debt_facilities
-    rationale: "RE funds carry property-level and fund-level debt; covenant breaches trigger distribution holdbacks."
+    rationale: >
+      RE funds carry property-level and fund-level debt; covenant breaches trigger distribution
+      holdbacks.
     vendor_evidence:
       - {vendor: "ARGUS Enterprise", evidence: 1st_class}
       - {vendor: "Yardi Investment Management", evidence: 1st_class}
@@ -325,7 +352,10 @@ b3:
 
   - id: B3-REGULATIONS
     candidate: domain_regulations
-    rationale: "Zero domain_regulations rows on RE-INVEST. Candidates: SEC Custody Rule (PE/RE fund custody), AIFMD (EU fund managers), GAAP ASC 946 (Investment Companies), IFRS 9 / IFRS 13 (financial instruments + fair value), FATCA / FBAR (foreign LPs), state Blue Sky laws (private fund offerings)."
+    rationale: >
+      Zero domain_regulations rows on RE-INVEST. Candidates: SEC Custody Rule (PE/RE fund custody),
+      AIFMD (EU fund managers), GAAP ASC 946 (Investment Companies), IFRS 9 / IFRS 13 (financial
+      instruments + fair value), FATCA / FBAR (foreign LPs), state Blue Sky laws (private fund offerings).
     vendor_evidence:
       - {vendor: "Juniper Square", evidence: 1st_class}
       - {vendor: "MRI Investment Management", evidence: secondary}

@@ -328,3 +328,53 @@ None.
 - `audits/FLEET-MAINT/history.md` (this append)
 - `audits/FLEET-MAINT/state.yaml` (rewrite to v2 with PENDING-only b1a / b1b / b2 / b3)
 
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+FLEET-MAINT modularized: the M1 hard fail (zero `domain_modules` against 6 capabilities) carried since the 2026-05-30 audit is resolved. Adopted the 3-module split proposed in B2-1 (the recommended option). Scope of this pass was modules + capability links + data_object assignment ONLY: no new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. Loader [.tmp_deploy/modularize_fleet_maint_2026-06-02.ts](../.tmp_deploy/modularize_fleet_maint_2026-06-02.ts), idempotent, 3 module inserts + 6 capability links + 10 DMDO rows on first run, 0 skips.
+
+### Modules authored
+
+| id | code | kind | capabilities | masters | other DMDO |
+|---|---|---|---|---|---|
+| 249 | FLEET-MAINT-WORK-ORDER | full | FM-WORK-ORDER (417), FM-MECHANIC-MGMT (419), FM-INSPECTION-DVIR (421) | `vehicle_work_orders` (379), `maintenance_defects` (703) | `fleet_vehicles` (370) consumer/required, `vehicle_inspections` (374) consumer/required, `org_units` (34) embedded_master/optional, `locations` (795) embedded_master/required |
+| 250 | FLEET-MAINT-PM | full | FM-PM-SCHEDULING (416) | `preventive_maintenance_schedules` (380) | `fleet_vehicles` (370) consumer/required |
+| 251 | FLEET-MAINT-PARTS | full | FM-PARTS-INV (418), FM-WARRANTY (420) | `vehicle_parts_inventory` (702) | `locations` (795) embedded_master/required |
+
+### Catalog-wide master pre-check (M7)
+
+Ran `/domain_module_data_objects?data_object_id=eq.<id>&role=eq.master` for all six in-domain assignable entities before writing any `role='master'`:
+
+- `vehicle_work_orders` (379): no prior master anywhere -> FLEET-MAINT-WORK-ORDER masters.
+- `maintenance_defects` (703): no prior master anywhere -> FLEET-MAINT-WORK-ORDER masters.
+- `preventive_maintenance_schedules` (380): no prior master anywhere -> FLEET-MAINT-PM masters.
+- `vehicle_parts_inventory` (702): no prior master anywhere -> FLEET-MAINT-PARTS masters.
+- `fleet_vehicles` (370): mastered catalog-wide by FLEET-MGMT-VEHICLE-LIFECYCLE (module 204, domain 147). Assigned `consumer`/`required` here (legacy `domain_data_objects` role was already `consumer`). NO demotion needed.
+- `vehicle_inspections` (374): mastered catalog-wide by FLEET-MGMT-DRIVER-OPS (module 205, domain 147). Assigned `consumer`/`required` here (legacy role already `consumer`). NO demotion needed.
+
+No demotions were required: the two FLEET-MGMT-mastered entities were already `consumer` in the legacy rollup, so no legacy `master` role had to be downgraded to `embedded_master`. The four FLEET-MAINT-local masters are each mastered in exactly one module in-domain AND catalog-wide.
+
+### Verification (post-load)
+
+- M1 / M2 pass: 3 `full` modules exist against 6 capabilities.
+- Rule #14 pass: 6 capabilities -> 3 modules (within the 2-3 target).
+- M4 pass: all 6 capabilities placed, each in exactly one module (417/419/421 -> 249; 416 -> 250; 418/420 -> 251).
+- M6 pass: every module has >=1 capability and >=1 data_object; no empty module.
+- M7 pass (in-domain AND catalog-wide): each of the 4 local masters appears as `master` in exactly one module catalog-wide (re-pull confirmed 379->249, 703->249, 380->250, 702->251; no second master row anywhere).
+- Roles + necessity for borrowed (non-master) entities preserved verbatim from the legacy `domain_data_objects` rollup.
+
+### Downstream now unblocked (deferred, out of this pass scope)
+
+The modules existing now satisfies the `{type: prerequisite_entity, ref: B1B-S1}` gate that previously blocked B1B-S7, S9 (FLEET-MAINT source-side handoff FKs), S11 (`permission_verb_override` scoping), S12 (module-scoped system skills + legacy skill 59 retirement), S14, S15, B1B-M1..M8 (missing-master loads), and the source-side FKs of B1B-B1..B6. These are NOT part of the modularization scope and remain open. Rule #17 (F2/F3) now requires one `<module_code_lower>_agent` system skill per new module (`fleet_maint_work_order_agent` on 249, `fleet_maint_pm_agent` on 250, `fleet_maint_parts_agent` on 251), each with >=1 `skill_tools` row; legacy domain-scoped skill `fleet-maint-system` (id 59, 6 skill_tools) must retire once those exist. M8/A4 catalog UX copy (`catalog_tagline` + `catalog_description`) is still empty on the domain (id 149) and now also on the 3 new modules; gated on user-approved buyer-voice wording (Rule #20).
+
+### JWT errors
+
+None.
+
+### Files written
+
+- `audits/FLEET-MAINT/history.md` (this append)
+- `audits/FLEET-MAINT/state.yaml` (rewrite to v2; module FKs filled in on affected_masters, B1B-S1 resolved into history, new b1a system-skill + catalog-UX items added)
+- `.tmp_deploy/modularize_fleet_maint_2026-06-02.ts` (idempotent loader)
+

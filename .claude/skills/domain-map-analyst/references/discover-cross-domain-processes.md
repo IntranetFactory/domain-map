@@ -130,7 +130,7 @@ The Discover report is **appended** to `audits/_discover.md` (a single catalog-w
 - Pass 2 ranked candidate table snapshot + the `handoff_processes` write count (against the untagged-only subset)
 - Pass 3 review-queue state (per-process approval counts, broken out by provenance) + which process skills got `process_id` backfilled or newly authored
 
-The raw subagent / ranked-table JSON dumps stay in `c:/tmp/` (gitignored, ephemeral).
+The raw subagent / ranked-table JSON dumps stay in `.tmp_deploy/` (gitignored, ephemeral).
 
 ## Anti-patterns
 

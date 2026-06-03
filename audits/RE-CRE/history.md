@@ -316,3 +316,44 @@ Carried forward from 2026-05-30 with no new candidates this audit (no Phase 0 ve
 - **CLM audit** - target-side module FK on handoff 309.
 - **AUDIT audit** - target-side module FK on handoff 860.
 - **FSM audit** - target-side module FK on handoff 304 (already 161 set; verify it points at the right FSM module after B2-S3).
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+RE-CRE was unbuilt (0 `domain_modules`, M1 hard fail) despite carrying 6 capabilities and 7 attributed data_objects (6 in-domain masters + 1 cross-domain contributor). This pass executes the modularization scope only: it authors the module set, links every capability, and assigns every existing data_object at its existing role + necessity. No new data_objects, capabilities, lifecycle states, relationships, skills, tools, or handoffs were created. Workflow substrate (B1A-B6 relationships, B1A-B11 aliases, B1B-B12 lifecycle states), handoff module-FK wiring, pattern flags, catalog UX, and regulations all remain owed by later passes and are carried forward in state.yaml.
+
+This resolves the structural hard fails M1 (>=1 module), M2 (every capability in a module), M4 (capability placement), M7 (single-master in-domain and catalog-wide), and Rule #14 (>=2 full modules for >=3 capabilities). It supersedes the open user decision B2-S1 (module-split shape): a 3-module split was chosen over the prior 2/4/5-module options, folding market intelligence into the space-inventory module because no `market_comparables` data_object exists yet (it remains a B3 candidate).
+
+### Module design (3 full modules, all industry_id=15 Real Estate)
+
+- **RE-CRE-LEASING (id 278)** - Commercial Leasing Pipeline. Caps: RE-CRE-LEASING-PIPELINE (392). Masters: commercial_leases (363), tenant_credit_records (719), sublease_transactions (720). Contributor: investment_properties (366, required, preserved). Folds tenant-credit underwriting and sublease grants into the leasing deal workflow per their natural lifecycle coupling to the head lease.
+- **RE-CRE-CAM-OPS (id 292)** - CAM Reconciliation and Rent Escalations. Caps: RE-CRE-CAM-RECONCILE (393), RE-CRE-RENT-ESCALATIONS (397). Master: cam_charges (365). The two recurring-billing capabilities share the same expense-pool / breakpoint substrate, so they co-locate; cam_charges is the single master and the module is non-empty.
+- **RE-CRE-SPACE-MARKET (id 293)** - Space Inventory and Market Intelligence. Caps: RE-CRE-STACKING-PLANS (394), RE-CRE-MARKET-COMPS (395), RE-CRE-TENANT-RELATIONS (396). Masters: stacking_plans (364), building_certifications (721). Market comps and tenant relations have no dedicated master yet; they ride the space-inventory module. building_certifications sits here as the underwriting/tenant-appeal artifact closest to the stacking/space view.
+
+### Catalog-wide master pre-check (MANDATORY)
+
+All 6 in-domain masters (363, 364, 365, 719, 720, 721) were queried against `domain_module_data_objects?role=eq.master` before any write. Every query returned zero rows: no module anywhere in the catalog already masters these entities. No demotions to embedded_master were required. Each is now mastered in exactly one RE-CRE module (in-domain AND catalog-wide unique). The sibling real-estate domains (REAL-EST, RE-INVEST, RE-PROP-MGMT) had not claimed any of them.
+
+### Verification (live)
+
+- modules: 3 (all module_kind=full, industry_id=15).
+- capabilities placed: 6/6, none missing.
+- DMDO rows: 7 (6 master + 1 contributor); roles + necessity preserved from prior domain_data_objects attribution.
+- master uniqueness: each of 363/364/365/719/720/721 returns exactly 1 master row catalog-wide [OK].
+- no empty module (min DMDO count = 1 on RE-CRE-CAM-OPS; min capability count = 1 on RE-CRE-LEASING).
+
+### Fixes applied
+
+- Loader: `.tmp_deploy/modularize_re_cre_2026-06-02.ts` (idempotent; one transient MCP timeout on the first DMDO insert for module 278, recovered by re-run with zero duplicates).
+- INSERT 3 domain_modules (278, 292, 293).
+- INSERT 6 domain_module_capabilities (392 -> 278; 393, 397 -> 292; 394, 395, 396 -> 293).
+- INSERT 7 domain_module_data_objects (363/719/720 master + 366 contributor -> 278; 365 master -> 292; 364/721 master -> 293).
+
+### Carried forward (out of scope this pass)
+
+- Per-module system skills + legacy skill 96 retirement (Rule #17, F2/F3): legacy domain-level skill `re-cre-system` (id 96, domain_module_id=null) is still the only RE-CRE skill; 0 module-level system skills. Now actionable since modules exist (b1a B1A-SYS-SKILLS).
+- Catalog UX (M8/A4): domains.catalog_tagline and catalog_description both empty (b1a B1A-CATALOG-UX, was B1B-A4 / B2-S6).
+- Workflow substrate: B6 intra-domain relationships, B11 aliases, B12 lifecycle states (now have realizing modules for the gate states), B4 pattern flags.
+- Handoff module-FK backfill (B10b) and cross-domain relationships (B8) now have source-side module ids available.
+- Missing-master candidates (B3): rent_rolls, tenant_improvement_allowances, percentage_rent_calculations, lease_abstracts, market_comparables, letters_of_intent - all deferred to vendor-research / user decision.

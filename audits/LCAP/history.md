@@ -323,3 +323,44 @@ Carries over from 2026-05-30 audit. 11 candidate entities (lcap_app_versions, lc
 | DCG | B8 inbound consumer-DMDO on `lcap_business_objects` for the schema-changed handoff. | LCAP audit (carry-over) |
 | Catalog-wide | Em-dash cleanup pass across `domains.business_logic` and other description columns. LCAP confirmed carrying U+2014. | LCAP audit A-band review (carry-over) |
 
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+Built the LCAP domain's `domain_modules` for the first time. Prior state was 0 modules (M1/M2/M4/M6 hard-fail) against 7 capabilities and 5 masters. Applied the 2-module split that the prior audit proposed as B2-S1 option (a), which satisfies Rule #14 (>=3 caps => >=2 full modules). Scope was modules + entity assignment only: no new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. Existing masters were reused at their existing master/required role + necessity.
+
+### Modules created
+
+| id | code | kind | capabilities | data_objects |
+|---|---|---|---|---|
+| 265 | LCAP-VISUAL-COMPOSITION | full | LCAP-VISUAL-MODELING (332), LCAP-INTEGRATION-CONNECTORS (334), LCAP-AI-ASSIST (337), OPERATIONAL-DATA-APPS (201) | lcap_apps (220, master/required), lcap_pages (715, master/required), lcap_business_objects (221, master/required), lcap_data_sources (716, master/required) |
+| 266 | LCAP-RUNTIME-LIFECYCLE | full | LCAP-MANAGED-RUNTIME (333), LCAP-WORKFLOW-AUTO (335), LCAP-LIFECYCLE-MGMT (336) | lcap_workflows (222, master/required) |
+
+### Master pre-check (catalog-wide, MANDATORY)
+
+All 5 masters (220, 221, 222, 715, 716) queried before write: zero pre-existing `role='master'` rows anywhere in `domain_module_data_objects`. All assigned `master` here. No demotions to `embedded_master` were needed.
+
+### Verification (live)
+
+- M1/M2/M6: 2 full modules, each with >=1 capability and >=1 data_object. No empty module.
+- M4: all 7 capabilities placed (4 on 265, 3 on 266).
+- M7 in-domain + catalog-wide: each master appears in exactly one module (220/221/715/716 -> 265; 222 -> 266). Re-query of each data_object_id with `role=eq.master` returns exactly one row.
+- Loader idempotent: second run inserted nothing ("modules already present").
+
+### Fixes applied
+
+- Cured B1A-BUILD and B1B-S1 (the M-band build). The 2-module split is now live, so all items blocked by `prerequisite_entity: B1B-S1` are unblocked for a future pass (B1B-S9 lifecycle states, B1B-S10 system skills, B1B-S12 handoff source-module backfill, B1B-S13 intra-domain handoffs).
+
+### Deferred (out of scope for this modularization pass)
+
+- B1B-S9 lifecycle states (~25 rows across 5 masters), now needing `domain_module_id` per M5.
+- B1B-S10 system skills: legacy domain-level skill `lcap-system` (79) still present; per-module system skills (Rule #17 -> F2/F3) not authored.
+- B1A-S5 intra-domain relationships, B1A-S8 aliases, B1A-S14-ITSM cross-domain relationship (independent of the build).
+- B1B-S12 handoff `source_domain_module_id` backfill (704/705/706/707): now deterministically resolvable against modules 265/266.
+- M8 / A4 (Rule #20) `catalog_tagline` + `catalog_description` on the 2 new module rows: omitted on insert per Rule #20 (needs user-approved copy).
+- B3 master candidates (lcap_app_versions, lcap_deployments, lcap_environments, lcap_app_packages, etc.) carry over unchanged.
+
+### Module-code -> capability/master mapping note for downstream backfill
+
+Per B1B-S12, source-module resolution after this build: handoffs 704 (lcap_app.published) and 706 (lcap_app.deployment_failed) and 707 (lcap_business_object.schema_changed) -> LCAP-VISUAL-COMPOSITION (265); 705 (lcap_workflow.published) -> LCAP-RUNTIME-LIFECYCLE (266).

@@ -372,3 +372,58 @@ None this audit. The 2026-05-31 continuation already applied B1-S2 (9 PATCH oper
 ### JWT errors
 
 None.
+
+## 2026-06-02 — Audit (modularization)
+
+### Summary
+
+Phase-M modularization pass (scope: `domain_modules` + capability links + entity assignment only). EXPENSE went from 0 `domain_modules` (M1 hard fail carried since 2026-05-30) to 3 `module_kind='full'` modules, resolving M1. The split adopts the 2026-05-30 / 2026-05-31 audit recommendation (option (a) under B2-S1): EXPENSE-CAPTURE-AND-REPORTING, EXPENSE-CORP-CARD-RECON, EXPENSE-TRAVEL-AND-PER-DIEM. This shape cleanly survives the queued CORP-CARD-PROGRAM and TRAVEL-MGMT candidate-domain promotions (B2-S2 / B2-S3) because the card and travel masters are already isolated into their own modules.
+
+All 6 capabilities were placed on a realizing module (M4 pass). All 9 linked data_objects were assigned to their owning module, preserving the existing `role` + `necessity` from `domain_data_objects`. Every master lands in exactly one module (M7 single-master pass). No module is empty (each realizes >=1 capability and holds >=1 data_object).
+
+This pass did NOT create data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships. Module codes carry the `EXPENSE-` prefix and `module_kind='full'`. `record_status` omitted on every insert (R1; all rows landed `new`). `notes` left empty on every DMC / DMDO row (R15). Module `catalog_tagline` / `catalog_description` intentionally left empty (M8 / A4 backfill gap, recorded below). No vendor/product names in module names or descriptions (R18).
+
+### Module split
+
+| Module (code, id) | Capabilities realized | Data objects (role / necessity) |
+|---|---|---|
+| EXPENSE-CAPTURE-AND-REPORTING (191) | EXPENSE-CAPTURE (72), EXPENSE-POLICY (73), REIMBURSEMENT (76), TIME-TRACKING (30, shared) | expense_reports (210, master/required), expense_lines (211, master/required), expense_policies (214, master/required), org_units (34, embedded_master/required), saas_subscriptions (62, consumer/required), supplier_invoices (75, consumer/required) |
+| EXPENSE-CORP-CARD-RECON (192) | CORP-CARD (74) | corporate_cards (212, master/required), card_transactions (213, master/required) |
+| EXPENSE-TRAVEL-AND-PER-DIEM (193) | TRAVEL-BOOK (75) | travel_bookings (215, master/required) |
+
+Placement rationale: the policy-enforcement capability (73) co-locates with capture-and-reporting because `expense_policies` is applied at `expense_line` entry; a dedicated EXPENSE-POLICY-AND-AUDIT module (the option (c) 4-module shape) was not adopted because there is no policy-only master to anchor it today (the `policy_violations`, `vat_tax_records`, `audit_trail_records` candidates remain Bucket 3). The shared TIME-TRACKING capability (30) is realized through time-card collection feeding expense entry, so it sits on capture-and-reporting. The two `consumer` data_objects (saas_subscriptions for the SMP shadow-IT signal, supplier_invoices for the AP-AUTO reimbursement path) sit on capture-and-reporting where expense_reports / expense_lines live.
+
+### Master -> module mapping
+
+- expense_reports (210) -> 191 (master)
+- expense_lines (211) -> 191 (master)
+- expense_policies (214) -> 191 (master)
+- corporate_cards (212) -> 192 (master)
+- card_transactions (213) -> 192 (master)
+- travel_bookings (215) -> 193 (master)
+
+Each master is mastered in exactly one module (M7 satisfied).
+
+### Counts created
+
+| Table | Rows inserted |
+|---|---|
+| domain_modules | 3 |
+| domain_module_capabilities | 6 |
+| domain_module_data_objects | 9 |
+
+### Deferred gaps (out of scope for this pass)
+
+- **Phase-S system skill per module (Rule #17 -> F2/F3).** Skill 57 `expense-system` still has `domain_module_id IS NULL` (orphan). With 3 modules now live, Rule #17 requires one `system` skill per `domain_modules` row, so the single orphan skill must be split into 3 module-bound system skills (191 / 192 / 193) with its 7 `skill_tools` redistributed: query tools for 210/211/214 -> 191, query tools for 212/213 -> 192, query tool for 215 -> 193, `send_email` channel primitive on all. Recorded as B1A-S4 (now agent-actionable, no longer blocked). Note: skill 57's `description` also still contains an em-dash, a separate editorial item tracked under B2-EM.
+- **Module-grain catalog UX copy (M8 / A4 -> Rule #20).** All 3 new modules have empty `catalog_tagline` / `catalog_description`. Buyer-voice copy backfill (with surface-for-user approval) is now possible since the modules exist. Recorded as B1A-M8. The domain-row A4 backfill (B1A-A4) remains open and independent.
+- **6 master state machines (Rule #12 / B12).** Still 0 `data_object_lifecycle_states` rows across 210, 211, 212, 213, 214, 215. Now unblocked because the modules exist to carry `domain_module_id` on each state row. Carried as B1B-S3, re-pointed at the new module ids.
+- **EXPENSE-side B10b NULL FK backfills.** Outbound `source_domain_module_id` (11 rows) and inbound `target_domain_module_id` (6 rows) can now be populated against modules 191 / 192 / 193. Carried as B1B-S6 / B1B-S9 (re-pointed).
+- **Pattern flag flips (B4) and APQC tagging (H1).** Unchanged and independent of this pass; carried forward.
+
+### Fixes applied (this audit)
+
+- Created 3 `domain_modules` (191, 192, 193), 6 `domain_module_capabilities`, 9 `domain_module_data_objects`. Loader: [.tmp_deploy/modularize_expense_2026-06-02.ts](../../.tmp_deploy/modularize_expense_2026-06-02.ts) (idempotent; safe to re-run).
+
+### JWT errors
+
+None.

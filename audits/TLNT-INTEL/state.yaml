@@ -1,7 +1,7 @@
 schema_version: 2
 domain: TLNT-INTEL
 status: feedback_needed
-next_action_by: user
+next_action_by: agent
 last_audit: "2026-05-31"
 
 b1a:
@@ -49,6 +49,34 @@ b1a:
     action: |
       Draft both fields per Rule #20 voice rule per module. Surface drafts to user for review BEFORE writing. Same Rule #20 discipline as S10.
     affected_modules: [175, 176, 177]
+  - id: B1A-PHASE-P
+    summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
+    finding: "Live triage 2026-06-02: 3 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    extra_phase_p_triage: "2026-06-02"
+  - id: B1A-ENTITY-TYPE
+    summary: "7 masters carry entity_type unclassified/null (B13): classify them."
+    finding: "Live triage 2026-06-02: 7 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
+    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
+    affected_entities: [career_path_suggestions, fit_scores, internal_opportunities, match_inference_runs, mentorship_engagements, mobility_recommendations, opportunity_applications]
+    extra_phase_p_triage: "2026-06-02"
+  - id: B1A-SELF-CONTAIN
+    summary: "11 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
+    finding: "Live triage 2026-06-02: 11 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
+    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
+    extra_m9_shapes:
+      - {entity: career_aspirations, module: TLNT-INTEL-MOBILITY, role: consumer, master_domain: TALENT-MGMT}
+      - {entity: competency_models, module: TLNT-INTEL-INSIGHTS, role: consumer, master_domain: SKILLS-MGMT}
+      - {entity: competency_models, module: TLNT-INTEL-MOBILITY, role: consumer, master_domain: SKILLS-MGMT}
+      - {entity: job_postings, module: TLNT-INTEL-MOBILITY, role: consumer, master_domain: ATS}
+      - {entity: job_profiles, module: TLNT-INTEL-MOBILITY, role: consumer, master_domain: HCM}
+      - {entity: job_requisitions, module: TLNT-INTEL-MOBILITY, role: consumer, master_domain: ATS}
+      - {entity: skill_profiles, module: TLNT-INTEL-INSIGHTS, role: consumer, master_domain: SKILLS-MGMT}
+      - {entity: skill_profiles, module: TLNT-INTEL-MARKETPLACE, role: consumer, master_domain: SKILLS-MGMT}
+      - {entity: skill_profiles, module: TLNT-INTEL-MOBILITY, role: consumer, master_domain: SKILLS-MGMT}
+      - {entity: skill_taxonomies, module: TLNT-INTEL-MOBILITY, role: consumer, master_domain: SKILLS-MGMT}
+      - {entity: skills_gap_analyses, module: TLNT-INTEL-INSIGHTS, role: consumer, master_domain: SWP}
+    extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-S2

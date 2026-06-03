@@ -2,92 +2,91 @@ schema_version: 2
 domain: FLEET-MAINT
 status: feedback_needed
 next_action_by: agent
-last_audit: "2026-05-31"
+last_audit: "2026-06-02"
 
 b1a:
-  - id: B1A-A1
-    summary: APQC tag handoff 878 (FLEET-MAINT -> ITSM, maintenance_defect.reported) to PCF 352 Manage asset maintenance via agent_curated.
-    finding: |
-      Handoff 878 (FLEET-MAINT -> ITSM-INCIDENT-MGMT id 38, trigger_event 991 maintenance_defect.reported, payload data_object_id 47 service_incidents) is the only outbound handoff with a target module FK already resolved but it has no row in handoff_processes. Audit B1-A4 proposed PCF 352 Manage asset maintenance at confident L3.
-    action: |
-      INSERT one handoff_processes row {handoff_id: 878, process_id: 352, proposal_source: agent_curated, role: implements}. record_status defaults to new. Idempotent on the natural key (handoff_id, process_id).
-    affected_handoffs:
-      - {handoff_id: 878, direction: outbound, source_domain: FLEET-MAINT, target_domain: ITSM, trigger_event: maintenance_defect.reported, payload: service_incidents, null_field: handoff_processes_row}
-    vendor_evidence:
-      - Fleetio
-      - AssetWorks FleetFocus
-      - Trimble TMT
-  - id: B1A-A2
-    summary: APQC tag handoff 879 (FLEET-MAINT -> ERP-FIN, parts_inventory.adjusted) to PCF 1326 Perform inventory accounting via agent_curated.
-    finding: |
-      Handoff 879 (FLEET-MAINT -> ERP-FIN, trigger_event 993 parts_inventory.adjusted, payload data_object_id 702 vehicle_parts_inventory) has no row in handoff_processes. Audit B1-A5 proposed PCF 1326 Perform inventory accounting at confident L4.
-    action: |
-      INSERT one handoff_processes row {handoff_id: 879, process_id: 1326, proposal_source: agent_curated, role: implements}. record_status defaults to new.
-    affected_handoffs:
-      - {handoff_id: 879, direction: outbound, source_domain: FLEET-MAINT, target_domain: ERP-FIN, trigger_event: parts_inventory.adjusted, payload: vehicle_parts_inventory, null_field: handoff_processes_row}
-    vendor_evidence:
-      - Fleetio
-      - AssetWorks FleetFocus
-      - Trimble TMT
+  - id: B1A-SYSTEM-SKILLS
+    summary: "3 new modules each need a <module_code_lower>_agent system skill; legacy domain-scoped skill 59 must retire (Rule #17 -> F2/F3)."
+    finding: >-
+      The 2026-06-02 modularization created 3 full modules
+      (FLEET-MAINT-WORK-ORDER id 249, FLEET-MAINT-PM id 250, FLEET-MAINT-PARTS id
+      251) with zero module-scoped system skills. Rule #17 (F2) requires exactly
+      one <module_code_lower>_agent system skill per module; F3 requires >=1
+      skill_tools row each. Legacy domain-scoped skill fleet-maint-system (id 59,
+      domain_id=149, domain_module_id=NULL) remains with 6 skill_tools (rows 544,
+      545, 546, 547, 969, 970): 4 query_* covering the 4 masters (470
+      vehicle_work_orders, 471 preventive_maintenance_schedules, 807
+      vehicle_parts_inventory, 808 maintenance_defects), plus send_email (id 37,
+      channel primitive, see B1B-S14) and sign_document (id 42, external
+      side_effect, see B2-6 for the workflow rationale). The module-split
+      prerequisite (formerly B1B-S1) is satisfied as of 2026-06-02.
+    action: >-
+      Author 3 system skills (fleet_maint_work_order_agent on 249,
+      fleet_maint_pm_agent on 250, fleet_maint_parts_agent on 251). Redistribute
+      the 4 query_* tools by mastered entity (vehicle_work_orders +
+      maintenance_defects -> 249; preventive_maintenance_schedules -> 250;
+      vehicle_parts_inventory -> 251). Resolve send_email per B1B-S14 (substitute
+      notify_person) and sign_document per B2-6, then DELETE skill 59 and its 6
+      skill_tools last.
+    affected_modules: [249, 250, 251]
+    extra_legacy_skill_id: 59
+    extra_legacy_skill_tool_ids: [544, 545, 546, 547, 969, 970]
+
+  - id: B1A-CATALOG-UX-COPY
+    summary: "domains row 149 + the 3 new modules carry empty catalog_tagline / catalog_description (M8 / A4 backfill)."
+    finding: >-
+      domains.catalog_tagline and catalog_description on FLEET-MAINT (id 149) are
+      both empty (A4 fail, open since 2026-05-30). As of 2026-06-02 the 3 new
+      modules (249, 250, 251) were also created with empty catalog copy
+      (buyer-facing wording deliberately left empty in the modularization pass).
+      Rule #20 gates these writes on user-approved buyer-voice text.
+    action: >-
+      After the user supplies / approves buyer-voice wording (the domain-level
+      string rides B2-CATALOG-COPY), PATCH catalog_tagline + catalog_description
+      on the domains row (149) and on modules 249, 250, 251. Per-module copy
+      describes each module's workflow + value (shop-floor work-order execution
+      and defect triage; preventive-maintenance planning and trigger-driven
+      work-order generation; parts stock plus OEM warranty and recall coverage).
+    affected_modules: [249, 250, 251]
 
 b1b:
-  - id: B1B-S1
-    summary: Author the FLEET-MAINT module set (3 full modules default) once Bucket 2 #1 resolves; gates all B / E / F / H1 fixes.
-    finding: |
-      Zero domain_modules rows for FLEET-MAINT against 6 capabilities (FM-PM-SCHEDULING 416, FM-WORK-ORDER 417, FM-PARTS-INV 418, FM-MECHANIC-MGMT 419, FM-WARRANTY 420, FM-INSPECTION-DVIR 421) and 4 mastered data_objects (vehicle_work_orders 379, preventive_maintenance_schedules 380, vehicle_parts_inventory 702, maintenance_defects 703). M1, M2, M6, B9b, B10b, E-band, F2-F5 all blocked. Default proposal: FLEET-MAINT-WORK-ORDER (masters vehicle_work_orders + maintenance_defects, realizes FM-WORK-ORDER + FM-MECHANIC-MGMT + FM-INSPECTION-DVIR); FLEET-MAINT-PM (masters preventive_maintenance_schedules, realizes FM-PM-SCHEDULING); FLEET-MAINT-PARTS (masters vehicle_parts_inventory, realizes FM-PARTS-INV + FM-WARRANTY).
-    blocked_by:
-      - {type: user_decision, ref: B2-1}
-    affected_modules: []
-    affected_masters:
-      - {data_object_id: 379, name: vehicle_work_orders, target_module_id: null, workflow: work_order_lifecycle}
-      - {data_object_id: 703, name: maintenance_defects, target_module_id: null, workflow: defect_triage}
-      - {data_object_id: 380, name: preventive_maintenance_schedules, target_module_id: null, workflow: pm_planning}
-      - {data_object_id: 702, name: vehicle_parts_inventory, target_module_id: null, workflow: parts_stock_mgmt}
-  - id: B1B-S2
-    summary: Draft and load catalog_tagline + catalog_description per Rule #20 after user approves wording.
-    finding: |
-      domains.catalog_tagline and domains.catalog_description on FLEET-MAINT (id 149) are both empty string. Rule #20 forbids agent-authored copy without explicit user approval of the exact wording.
-    blocked_by:
-      - {type: user_decision, ref: A4-copy-approval}
   - id: B1B-S3
     summary: PATCH pattern flags on vehicle_work_orders (has_submit_lock) and maintenance_defects (has_personal_content) after Bucket 2 #2.
     finding: |
-      All 4 FLEET-MAINT masters carry the schema default (false / false / false). vehicle_work_orders id 379 plausibly has_submit_lock=true once completed (parts + labor + invoice freeze). maintenance_defects id 703 plausibly has_personal_content=true (DVIR photos + driver signature).
+      All 4 FLEET-MAINT masters carry the schema default (false / false / false). vehicle_work_orders id 379 plausibly has_submit_lock=true once completed (parts + labor + invoice freeze for AP posting). maintenance_defects id 703 plausibly has_personal_content=true (DVIR photos + driver signature). vehicle_work_orders is now mastered in FLEET-MAINT-WORK-ORDER (249); maintenance_defects in FLEET-MAINT-WORK-ORDER (249).
     blocked_by:
       - {type: user_decision, ref: B2-2}
     affected_masters:
-      - {data_object_id: 379, name: vehicle_work_orders, target_module_id: null, workflow: submit_lock_on_completion}
-      - {data_object_id: 703, name: maintenance_defects, target_module_id: null, workflow: dvir_personal_content}
+      - {data_object_id: 379, name: vehicle_work_orders, target_module_id: 249, workflow: submit_lock_on_completion}
+      - {data_object_id: 703, name: maintenance_defects, target_module_id: 249, workflow: dvir_personal_content}
   - id: B1B-S4-R5
     summary: Encode the maintenance_defects triggers_revision preventive_maintenance_schedules relationship after Bucket 2 #10 picks a cardinality.
     finding: |
-      The 2026-05-30 audit specified maintenance_defects -> preventive_maintenance_schedules with cardinality many_to_one, verb triggers_revision, inverse revised_via. data_object_relationships.relationship_type enum is one_to_one | one_to_many | many_to_many; no many_to_one. The other 4 audit-specified intra-domain edges (R1 R2 R3 R4) are already loaded as rows 1912-1915.
+      The 2026-05-30 audit specified maintenance_defects -> preventive_maintenance_schedules with cardinality many_to_one, verb triggers_revision, inverse revised_via. data_object_relationships.relationship_type enum is one_to_one | one_to_many | many_to_many; no many_to_one. The other 4 audit-specified intra-domain edges (R1 R2 R3 R4) are already loaded as rows 1912-1915. Both entities are now FLEET-MAINT-mastered (maintenance_defects -> 249, preventive_maintenance_schedules -> 250).
     blocked_by:
       - {type: user_decision, ref: B2-10}
   - id: B1B-S7
-    summary: Author intra-domain handoffs (lifecycle_progression pattern) and the missing maintenance_defect.resolved outbound (1-3 rows per Bucket 2 #5) once modules exist.
+    summary: Author intra-domain handoffs (lifecycle_progression pattern) and the missing maintenance_defect.resolved outbound (1-3 rows per Bucket 2 #5) now modules exist.
     finding: |
-      After B1B-S1 lands, B9b derives intra-domain handoffs for PM.due -> work-order generation, defect.reported -> parts-consumption, work-order.completed -> warranty-claim-eligibility. The maintenance_defect.resolved trigger_event 992 currently has zero handoff rows; Bucket 2 #5 picks the outbound shape (intra + AP-AUTO + FLEET-MGMT recommended).
+      The module split (formerly B1B-S1) landed 2026-06-02, so B9b now derives intra-domain handoffs: PM.due (FLEET-MAINT-PM 250) -> work-order generation (FLEET-MAINT-WORK-ORDER 249); defect.reported (249) -> parts-consumption (FLEET-MAINT-PARTS 251); work-order.completed (249) -> warranty-claim-eligibility (251). The maintenance_defect.resolved trigger_event 992 currently has zero handoff rows; Bucket 2 #5 picks the outbound shape (intra + AP-AUTO + FLEET-MGMT recommended).
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
       - {type: user_decision, ref: B2-5}
     affected_events:
       - {id: 992, event_name: maintenance_defect.resolved, current_category: "", proposed_category: lifecycle}
+    affected_modules: [249, 250, 251]
   - id: B1B-S8
     summary: Re-attribute handoff 312 (preventive_maintenance.due) after Bucket 2 #4 picks an attribution option.
     finding: |
-      Trigger event 304 preventive_maintenance.due (data_object_id 380 preventive_maintenance_schedules) is mastered by FLEET-MAINT but handoff 312 has source_domain_id=148 TELEMATICS, target_domain_id=149 FLEET-MAINT. Source mis-attribution. Bucket 2 #4 picks: (a) introduce a TELEMATICS-published trigger like engine_hours.threshold_reached and re-direct handoff 312 (recommended), (b) self-handoff source=target=FLEET-MAINT after modularization, (c) leave as-is.
+      Trigger event 304 preventive_maintenance.due (data_object_id 380 preventive_maintenance_schedules, now mastered in FLEET-MAINT-PM 250) but handoff 312 has source_domain_id=148 TELEMATICS, target_domain_id=149 FLEET-MAINT. Source mis-attribution. Bucket 2 #4 picks: (a) introduce a TELEMATICS-published trigger like engine_hours.threshold_reached and re-direct handoff 312 (recommended), (b) self-handoff source=target=FLEET-MAINT, (c) leave as-is.
     blocked_by:
       - {type: user_decision, ref: B2-4}
     affected_handoffs:
       - {handoff_id: 312, direction: inbound, source_domain: TELEMATICS, target_domain: FLEET-MAINT, trigger_event: preventive_maintenance.due, payload: preventive_maintenance_schedules, null_field: source_attribution}
   - id: B1B-S9
-    summary: PATCH source_domain_module_id and target_domain_module_id on the 9 FLEET-MAINT handoffs after B1B-S1 lands and partners modularize.
+    summary: PATCH source_domain_module_id (now resolvable on the 5 FLEET-MAINT outbound) and target_domain_module_id on the 9 FLEET-MAINT handoffs once partners modularize.
     finding: |
-      All 9 FLEET-MAINT handoffs have source_domain_module_id=NULL; all 9 have target_domain_module_id=NULL except handoff 878 (target=38 ITSM-INCIDENT-MGMT). Source-side FKs on the 5 outbound resolve locally to the new FLEET-MAINT module mastering the trigger event's data_object once B1B-S1 lands. Source-side FKs on the 4 inbound and target-side FKs on outbounds toward FLEET-MGMT, EAM, AP-AUTO, ERP-FIN, TELEMATICS stay NULL until those partners modularize.
+      The module split landed 2026-06-02 so the FLEET-MAINT source-side FK on the 5 outbound handoffs now resolves locally: vehicle_work_order.completed (316, 320) and maintenance_defect.reported (877, 878) -> FLEET-MAINT-WORK-ORDER (249); parts_inventory.adjusted (879) -> FLEET-MAINT-PARTS (251). The 4 inbound source-side FKs and the target-side FKs on outbounds toward FLEET-MGMT (147, now modularized: 204/205/206), EAM, AP-AUTO, ERP-FIN, TELEMATICS stay NULL until each partner side is mapped. Handoff 878 already carries target_domain_module_id=38 (ITSM-INCIDENT-MGMT).
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-      - {type: domain_audit, blocking_domain: FLEET-MGMT, milestone: M1_modules_exist}
       - {type: domain_audit, blocking_domain: TELEMATICS, milestone: M1_modules_exist}
       - {type: domain_audit, blocking_domain: AP-AUTO, milestone: M1_modules_exist}
       - {type: domain_audit, blocking_domain: EAM, milestone: M1_modules_exist}
@@ -95,12 +94,12 @@ b1b:
     affected_handoffs:
       - {handoff_id: 875, direction: inbound, source_domain: FLEET-MGMT, target_domain: FLEET-MAINT, trigger_event: fleet_vehicle.acquired, payload: fleet_vehicles, null_field: both_module_fks}
       - {handoff_id: 313, direction: inbound, source_domain: FLEET-MGMT, target_domain: FLEET-MAINT, trigger_event: vehicle_inspection.failed, payload: vehicle_inspections, null_field: both_module_fks}
-      - {handoff_id: 877, direction: outbound, source_domain: FLEET-MAINT, target_domain: FLEET-MGMT, trigger_event: maintenance_defect.reported, payload: maintenance_defects, null_field: both_module_fks}
+      - {handoff_id: 877, direction: outbound, source_domain: FLEET-MAINT, target_domain: FLEET-MGMT, trigger_event: maintenance_defect.reported, payload: maintenance_defects, null_field: target_module_fk}
       - {handoff_id: 312, direction: inbound, source_domain: TELEMATICS, target_domain: FLEET-MAINT, trigger_event: preventive_maintenance.due, payload: preventive_maintenance_schedules, null_field: both_module_fks}
       - {handoff_id: 881, direction: inbound, source_domain: TELEMATICS, target_domain: FLEET-MAINT, trigger_event: fleet_vehicle.mileage_milestone_reached, payload: fleet_vehicles, null_field: both_module_fks}
-      - {handoff_id: 316, direction: outbound, source_domain: FLEET-MAINT, target_domain: AP-AUTO, trigger_event: vehicle_work_order.completed, payload: vehicle_work_orders, null_field: both_module_fks}
-      - {handoff_id: 320, direction: outbound, source_domain: FLEET-MAINT, target_domain: EAM, trigger_event: vehicle_work_order.completed, payload: vehicle_work_orders, null_field: both_module_fks}
-      - {handoff_id: 879, direction: outbound, source_domain: FLEET-MAINT, target_domain: ERP-FIN, trigger_event: parts_inventory.adjusted, payload: vehicle_parts_inventory, null_field: both_module_fks}
+      - {handoff_id: 316, direction: outbound, source_domain: FLEET-MAINT, target_domain: AP-AUTO, trigger_event: vehicle_work_order.completed, payload: vehicle_work_orders, null_field: target_module_fk}
+      - {handoff_id: 320, direction: outbound, source_domain: FLEET-MAINT, target_domain: EAM, trigger_event: vehicle_work_order.completed, payload: vehicle_work_orders, null_field: target_module_fk}
+      - {handoff_id: 879, direction: outbound, source_domain: FLEET-MAINT, target_domain: ERP-FIN, trigger_event: parts_inventory.adjusted, payload: vehicle_parts_inventory, null_field: target_module_fk}
       - {handoff_id: 878, direction: outbound, source_domain: FLEET-MAINT, target_domain: ITSM, trigger_event: maintenance_defect.reported, payload: service_incidents, null_field: source_module_fk}
   - id: B1B-S10
     summary: Author data_object_aliases for FLEET-MAINT masters (vendor lexicon hints) after user supplies exact tuples.
@@ -114,43 +113,35 @@ b1b:
       - vehicle_parts_inventory
       - maintenance_defects
   - id: B1B-S11
-    summary: Author data_object_lifecycle_states for vehicle_work_orders and maintenance_defects; surface vehicle_parts_inventory config-shape exemption without writing notes (Rule #15).
+    summary: Author data_object_lifecycle_states for vehicle_work_orders and maintenance_defects with domain_module_id set; surface vehicle_parts_inventory config-shape exemption without writing notes (Rule #15).
     finding: |
-      Zero data_object_lifecycle_states rows. vehicle_work_orders state machine (draft -> assigned -> in_progress -> on_hold -> completed -> invoiced -> closed -> cancelled), maintenance_defects (reported -> triaged -> in_progress -> resolved -> deferred), preventive_maintenance_schedules optionally workflow-bearing (draft -> active -> due_soon -> overdue -> disabled). vehicle_parts_inventory is config-shape. permission_verb_override needs setting on vehicle_work_orders completion / closure / cancellation states.
+      Zero data_object_lifecycle_states rows. vehicle_work_orders state machine (draft -> assigned -> in_progress -> on_hold -> completed -> invoiced -> closed -> cancelled), maintenance_defects (reported -> triaged -> in_progress -> resolved -> deferred), preventive_maintenance_schedules optionally workflow-bearing (draft -> active -> due_soon -> overdue -> disabled). vehicle_parts_inventory is config-shape. permission_verb_override needs setting on vehicle_work_orders completion / closure / cancellation states. The module split landed 2026-06-02 so the required domain_module_id is now available (vehicle_work_orders + maintenance_defects -> 249; preventive_maintenance_schedules -> 250; vehicle_parts_inventory -> 251).
     blocked_by:
       - {type: user_decision, ref: B12-state-machine-approval}
       - {type: user_decision, ref: B12-pm-schedules-config-shape}
     affected_masters:
-      - {data_object_id: 379, name: vehicle_work_orders, target_module_id: null, workflow: full_state_machine_with_workflow_gates}
-      - {data_object_id: 703, name: maintenance_defects, target_module_id: null, workflow: triage_state_machine}
-      - {data_object_id: 380, name: preventive_maintenance_schedules, target_module_id: null, workflow: pm_state_machine_optional}
-      - {data_object_id: 702, name: vehicle_parts_inventory, target_module_id: null, workflow: config_shape_exemption}
-  - id: B1B-S12
-    summary: After B1B-S1, retire legacy skill 59, author 3 module-scoped system skills, redistribute existing query_* tools, add workflow-gate tools.
+      - {data_object_id: 379, name: vehicle_work_orders, target_module_id: 249, workflow: full_state_machine_with_workflow_gates}
+      - {data_object_id: 703, name: maintenance_defects, target_module_id: 249, workflow: triage_state_machine}
+      - {data_object_id: 380, name: preventive_maintenance_schedules, target_module_id: 250, workflow: pm_state_machine_optional}
+      - {data_object_id: 702, name: vehicle_parts_inventory, target_module_id: 251, workflow: config_shape_exemption}
+  - id: B1B-S15
+    summary: After Bucket 2 #6 resolves, either redistribute or DELETE skill_tools row 547 (sign_document tool 42); folds into B1A-SYSTEM-SKILLS.
     finding: |
-      Legacy fleet-maint-system skill 59 (domain_id=149, domain_module_id=NULL) still present with 6 skill_tools (rows 544, 545, 546, 547, 969, 970). After B1B-S1, author fleet_maint_work_order_agent, fleet_maint_pm_agent, fleet_maint_parts_agent; redistribute the 4 query_* tools (470 vehicle_work_orders, 471 preventive_maintenance_schedules, 807 vehicle_parts_inventory, 808 maintenance_defects) by ownership; add workflow gates (complete_work_order, assign_mechanic, resolve_defect, adjust_parts_stock, apply_warranty_credit, schedule_pm); DELETE skill 59 and its 6 skill_tools last.
+      skill_tools row 547 links legacy skill 59 to sign_document (tool id 42, operation_kind=side_effect, coverage_tier=external, data_object_id=NULL). Operation_kind invariant ticks. Workflow rationale unclear: customer signature on shop completion, OEM warranty attestation, owner-paid-repair authorization, or vestigial. Redistribution target (if kept): FLEET-MAINT-WORK-ORDER 249 (customer signature) or FLEET-MAINT-PARTS 251 (warranty attestation).
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-    affected_modules: []
-    extra_legacy_skill_id: 59
-    extra_legacy_skill_tool_ids: [544, 545, 546, 547, 969, 970]
+      - {type: user_decision, ref: B2-6}
+      - {type: prerequisite_entity, ref: B1A-SYSTEM-SKILLS}
+    extra_skill_tool_id: 547
+    extra_current_tool_id: 42
   - id: B1B-S14
-    summary: PATCH skill_tools row 546 (send_email channel primitive) to notify_person, or DELETE row 546 if the new module-scoped skills already link notify_person.
+    summary: PATCH skill_tools row 546 (send_email channel primitive) to notify_person, or DELETE row 546 if the new module-scoped skills already link notify_person; folds into B1A-SYSTEM-SKILLS.
     finding: |
-      skill_tools row 546 links skill 59 to send_email (tool id 37) without justification. send_email is a channel primitive; workflow default is notify_person so deployment can substitute channel. FLEET-MAINT email use is generic operational notification (PM-due reminders, defect alerts, work-order-completion, parts-low alerts).
+      skill_tools row 546 links legacy skill 59 to send_email (tool id 37) without justification. send_email is a channel primitive; workflow default is notify_person so deployment can substitute channel. FLEET-MAINT email use is generic operational notification (PM-due reminders, defect alerts, work-order-completion, parts-low alerts), not channel-bound.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S12}
+      - {type: prerequisite_entity, ref: B1A-SYSTEM-SKILLS}
     extra_skill_tool_id: 546
     extra_current_tool_id: 37
     extra_proposed_tool_name: notify_person
-  - id: B1B-S15
-    summary: After Bucket 2 #6 resolves, either redistribute or DELETE skill_tools row 547 (sign_document tool 42).
-    finding: |
-      skill_tools row 547 links skill 59 to sign_document (tool id 42, operation_kind=side_effect, coverage_tier=external, data_object_id=NULL). Operation_kind invariant ticks. Workflow rationale unclear: customer signature on shop completion, OEM warranty attestation, owner-paid-repair authorization, or vestigial.
-    blocked_by:
-      - {type: user_decision, ref: B2-6}
-    extra_skill_tool_id: 547
-    extra_current_tool_id: 42
   - id: B1B-S16
     summary: Load domain_regulations floor set once underlying regulations rows exist (upstream catalog_addition).
     finding: |
@@ -164,75 +155,16 @@ b1b:
       - NHTSA 49 CFR 573
       - EPA emissions inspection
       - OSHA 29 CFR 1910
-  - id: B1B-M1
-    summary: Load missing master parts_orders into FLEET-MAINT-PARTS once B1B-S1 lands.
-    finding: |
-      parts_orders (vendor PO, expected delivery, receipt confirmation, line items) is distinct from vehicle_parts_inventory and surfaced by Fleetio, AssetWorks, Trimble TMT.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-    vendor_evidence: [Fleetio, AssetWorks FleetFocus, Trimble TMT]
-  - id: B1B-M2
-    summary: Load missing master vehicle_warranty_claims into FLEET-MAINT-PARTS once B1B-S1 lands.
-    finding: |
-      OEM warranty claim master (per-vehicle, per-part, claim number, submission date, OEM disposition, credit). Magnuson-Moss Warranty Act adjacent.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-    vendor_evidence: [Fleetio, AssetWorks FleetFocus, Trimble TMT]
-  - id: B1B-M3
-    summary: Load missing master vehicle_recall_campaigns once B1B-S1 lands and Bucket 2 #8 picks placement.
-    finding: |
-      NHTSA recall ingestion (49 CFR 573): per-VIN match, OEM campaign code, fix-deadline, completion attestation. Placement options in Bucket 2 #8.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-      - {type: user_decision, ref: B2-8}
-    vendor_evidence: [Fleetio, AssetWorks FleetFocus, Recall Masters, CDK Global Recall]
-  - id: B1B-M4
-    summary: Load missing master mechanic_labor_entries into FLEET-MAINT-WORK-ORDER once B1B-S1 lands.
-    finding: |
-      Per-mechanic time entries on a work order (clock-in / out, labor code, billing rate). Distinct from generic users edge.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-    vendor_evidence: [AssetWorks FleetFocus, Trimble TMT]
-  - id: B1B-M5
-    summary: Load missing master service_tasks into FLEET-MAINT-PM once B1B-S1 lands.
-    finding: |
-      Service task catalog (oil change, brake pad replacement, tire rotation) with default labor units and parts BOM. PM schedules reference these.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-    vendor_evidence: [Fleetio, AssetWorks FleetFocus, Trimble TMT]
-  - id: B1B-M6
-    summary: Load missing master mechanic_certifications into FLEET-MAINT-WORK-ORDER once B1B-S1 lands.
-    finding: |
-      ASE + manufacturer-specific certifications (Diesel Cummins, EV high-voltage) for skill-matching mechanics to work orders.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-    vendor_evidence: [Trimble TMT, AssetWorks FleetFocus]
-  - id: B1B-M7
-    summary: Load missing master shops into FLEET-MAINT-WORK-ORDER once B1B-S1 lands and Bucket 2 #9 picks shape.
-    finding: |
-      Physical shop master (in-house garage, external dealer, mobile mechanic) with bay capacity, hours, certification scope. Distinct from locations embedded_master.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-      - {type: user_decision, ref: B2-9}
-    vendor_evidence: [Fleetio, AssetWorks FleetFocus]
-  - id: B1B-M8
-    summary: Load missing master meter_readings into FLEET-MAINT-PM once B1B-S1 lands.
-    finding: |
-      Mileage / engine-hours / DTC fault-code readings from telematics or manual entry. PM trigger basis distinct from telematics trip rows.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-    vendor_evidence: [Fleetio, AssetWorks FleetFocus, Samsara, Geotab, Trimble TMT, Whip Around]
   - id: B1B-B1
-    summary: BOUNDARY FLEET-MGMT, source / target module FKs pending FLEET-MGMT M1.
+    summary: BOUNDARY FLEET-MGMT, target module FK on inbound now mappable (FLEET-MGMT modularized); FLEET-MAINT source FK on outbound 877 now resolvable.
     finding: |
-      Handoffs 875, 313 (inbound), 877 (outbound) all carry NULL module FKs and depend on FLEET-MGMT having domain_modules rows (currently zero per its own 2026-05-30 audit).
+      Handoffs 875, 313 (inbound from FLEET-MGMT), 877 (outbound to FLEET-MGMT). FLEET-MGMT now has modules (204/205/206 as of its 2026-06-02 modularization) and FLEET-MAINT now has 249/250/251. Inbound target-side FK on 875 (fleet_vehicle.acquired, PM-template seeding) -> 249 or 250; 313 (vehicle_inspection.failed, work-order auto-create) -> 249. Outbound 877 source-side -> 249. Partner-side FKs are a separate handoff-FK pass (B1B-S9), not modularization scope.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-      - {type: domain_audit, blocking_domain: FLEET-MGMT, milestone: M1_modules_exist}
+      - {type: depends_on, ref: B1B-S9, reason: "rolled into the handoff-FK PATCH pass; both FLEET-MGMT and FLEET-MAINT now modular"}
     affected_handoffs:
       - {handoff_id: 875, direction: inbound, source_domain: FLEET-MGMT, target_domain: FLEET-MAINT, trigger_event: fleet_vehicle.acquired, payload: fleet_vehicles, null_field: both_module_fks}
       - {handoff_id: 313, direction: inbound, source_domain: FLEET-MGMT, target_domain: FLEET-MAINT, trigger_event: vehicle_inspection.failed, payload: vehicle_inspections, null_field: both_module_fks}
-      - {handoff_id: 877, direction: outbound, source_domain: FLEET-MAINT, target_domain: FLEET-MGMT, trigger_event: maintenance_defect.reported, payload: maintenance_defects, null_field: both_module_fks}
+      - {handoff_id: 877, direction: outbound, source_domain: FLEET-MAINT, target_domain: FLEET-MGMT, trigger_event: maintenance_defect.reported, payload: maintenance_defects, null_field: target_module_fk}
   - id: B1B-B2
     summary: BOUNDARY TELEMATICS, blocked by Bucket 2 #4 and TELEMATICS M1.
     finding: |
@@ -244,51 +176,39 @@ b1b:
       - {handoff_id: 312, direction: inbound, source_domain: TELEMATICS, target_domain: FLEET-MAINT, trigger_event: preventive_maintenance.due, payload: preventive_maintenance_schedules, null_field: source_attribution_and_module_fks}
       - {handoff_id: 881, direction: inbound, source_domain: TELEMATICS, target_domain: FLEET-MAINT, trigger_event: fleet_vehicle.mileage_milestone_reached, payload: fleet_vehicles, null_field: both_module_fks}
   - id: B1B-B3
-    summary: BOUNDARY AP-AUTO, target module FK pending AP-AUTO M1.
+    summary: BOUNDARY AP-AUTO, source FK now resolvable (FLEET-MAINT modular); target module FK pending AP-AUTO M1.
     finding: |
-      Outbound handoff 316 (vehicle_work_order.completed -> AP-AUTO) carries NULL module FKs. AP-AUTO has zero domain_modules.
+      Outbound handoff 316 (vehicle_work_order.completed -> AP-AUTO). FLEET-MAINT source-side now resolves to FLEET-MAINT-WORK-ORDER (249). AP-AUTO has zero domain_modules so the target-side FK stays NULL.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
       - {type: domain_audit, blocking_domain: AP-AUTO, milestone: M1_modules_exist}
     affected_handoffs:
-      - {handoff_id: 316, direction: outbound, source_domain: FLEET-MAINT, target_domain: AP-AUTO, trigger_event: vehicle_work_order.completed, payload: vehicle_work_orders, null_field: both_module_fks}
+      - {handoff_id: 316, direction: outbound, source_domain: FLEET-MAINT, target_domain: AP-AUTO, trigger_event: vehicle_work_order.completed, payload: vehicle_work_orders, null_field: target_module_fk}
   - id: B1B-B4
-    summary: BOUNDARY EAM, target module FK pending EAM M1.
+    summary: BOUNDARY EAM, source FK now resolvable; target module FK pending EAM M1.
     finding: |
-      Outbound handoff 320 (vehicle_work_order.completed -> EAM) carries NULL module FKs. EAM has zero domain_modules. The EAM-side relationship row 640 (eam_work_orders aggregates vehicle_work_orders) is already loaded.
+      Outbound handoff 320 (vehicle_work_order.completed -> EAM). FLEET-MAINT source-side now resolves to FLEET-MAINT-WORK-ORDER (249). EAM has zero domain_modules so the target-side FK stays NULL. The EAM-side relationship row 640 (eam_work_orders aggregates vehicle_work_orders) is already loaded.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
       - {type: domain_audit, blocking_domain: EAM, milestone: M1_modules_exist}
     affected_handoffs:
-      - {handoff_id: 320, direction: outbound, source_domain: FLEET-MAINT, target_domain: EAM, trigger_event: vehicle_work_order.completed, payload: vehicle_work_orders, null_field: both_module_fks}
+      - {handoff_id: 320, direction: outbound, source_domain: FLEET-MAINT, target_domain: EAM, trigger_event: vehicle_work_order.completed, payload: vehicle_work_orders, null_field: target_module_fk}
   - id: B1B-B5
-    summary: BOUNDARY ERP-FIN, target module FK pending ERP-FIN M1.
+    summary: BOUNDARY ERP-FIN, source FK now resolvable; target module FK pending ERP-FIN M1.
     finding: |
-      Outbound handoff 879 (parts_inventory.adjusted -> ERP-FIN) carries NULL module FKs. ERP-FIN has zero domain_modules; likely target ERP-FIN-INVENTORY-ACCOUNTING per PCF 1326.
+      Outbound handoff 879 (parts_inventory.adjusted -> ERP-FIN). FLEET-MAINT source-side now resolves to FLEET-MAINT-PARTS (251). ERP-FIN has zero domain_modules; likely target ERP-FIN-INVENTORY-ACCOUNTING per PCF 1326.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
       - {type: domain_audit, blocking_domain: ERP-FIN, milestone: M1_modules_exist}
     affected_handoffs:
-      - {handoff_id: 879, direction: outbound, source_domain: FLEET-MAINT, target_domain: ERP-FIN, trigger_event: parts_inventory.adjusted, payload: vehicle_parts_inventory, null_field: both_module_fks}
+      - {handoff_id: 879, direction: outbound, source_domain: FLEET-MAINT, target_domain: ERP-FIN, trigger_event: parts_inventory.adjusted, payload: vehicle_parts_inventory, null_field: target_module_fk}
   - id: B1B-B6
-    summary: BOUNDARY ITSM, source module FK pending FLEET-MAINT B1B-S1; target side already resolved.
+    summary: BOUNDARY ITSM, source module FK now resolvable (FLEET-MAINT modular); target side already resolved.
     finding: |
-      Outbound handoff 878 (maintenance_defect.reported -> ITSM-INCIDENT-MGMT id 38) has target_domain_module_id=38 set; source_domain_module_id NULL pending FLEET-MAINT B1B-S1. The payload data_object_id 47 (service_incidents) is the intended payload swap.
+      Outbound handoff 878 (maintenance_defect.reported -> ITSM-INCIDENT-MGMT id 38) has target_domain_module_id=38 set; source_domain_module_id now resolves to FLEET-MAINT-WORK-ORDER (249) in the B1B-S9 PATCH pass. The payload data_object_id 47 (service_incidents) is the intended payload swap.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: depends_on, ref: B1B-S9, reason: "source-side FK PATCH rides the handoff-FK pass"}
     affected_handoffs:
       - {handoff_id: 878, direction: outbound, source_domain: FLEET-MAINT, target_domain: ITSM, trigger_event: maintenance_defect.reported, payload: service_incidents, null_field: source_module_fk}
 
 b2:
-  - id: B2-1
-    summary: Module split shape for FLEET-MAINT (3 vs 2 modules) - gates everything downstream.
-    question: |
-      Adopt the default 3-module split (FLEET-MAINT-WORK-ORDER, FLEET-MAINT-PM, FLEET-MAINT-PARTS) or the alternative 2-module split (FLEET-MAINT-OPS merging work-order + PM, FLEET-MAINT-PARTS standalone)?
-    options:
-      - 3-module split (recommended; matches AssetWorks and Trimble product-line split)
-      - 2-module split (still satisfies Rule #14 >=2-module floor)
-      - Other split, name the modules and their masters
-    why: Every subsequent B / E / F / H1 fix needs concrete module FKs. Until this resolves, B1B-S7, S9, S11 permission_verb_override, S12, S14, S15, B1B-M1..M8, B1B-B1..B6 source-side FKs all remain blocked.
   - id: B2-2
     summary: Pattern-flag scope on maintenance_defects (has_personal_content) and vehicle_work_orders (has_submit_lock).
     question: Set has_submit_lock=true on vehicle_work_orders (post-completion freeze) and has_personal_content=true on maintenance_defects (DVIR photos + driver signature)?
@@ -302,35 +222,35 @@ b2:
     question: Should FLEET-MGMT keep unified vehicle_inspections master with an inspection_kind discriminator, or should FLEET-MAINT master a separate mechanic_periodic_inspections for PMI?
     options:
       - (a) FLEET-MGMT unified with discriminator (recommended; matches Whip Around and Fleetio)
-      - (b) FLEET-MAINT separate mechanic_periodic_inspections
-    why: PMI completion is a work-order outcome (mechanic signs off); DVIR is driver activity. Cross-coordinated decision; resolving here cascades into FLEET-MGMT.
+      - (b) FLEET-MAINT separate mechanic_periodic_inspections (would add a new FLEET-MAINT-WORK-ORDER 249 master)
+    why: PMI completion is a work-order outcome (mechanic signs off); DVIR is driver activity. vehicle_inspections (374) is consumed (consumer/required) in FLEET-MAINT-WORK-ORDER 249; FLEET-MGMT masters it in module 205. Cross-coordinated decision.
   - id: B2-4
     summary: preventive_maintenance.due attribution defect on handoff 312.
     question: How should the PM.due event be attributed - TELEMATICS-owned upstream signal or FLEET-MAINT-owned lifecycle event?
     options:
       - (a) Introduce TELEMATICS-owned engine_hours.threshold_reached, redirect handoff 312 source/target (recommended; cleanest)
-      - (b) Self-handoff source=target=FLEET-MAINT once modules land, remove TELEMATICS from PM.due picture
+      - (b) Self-handoff source=target=FLEET-MAINT (FLEET-MAINT-PM 250 publishes, FLEET-MAINT-WORK-ORDER 249 consumes)
       - (c) Accept current shape (informal acknowledgement that TELEMATICS upstream)
-    why: Trigger event 304 is published on FLEET-MAINT's master (PM schedules). Handoff 312's source=TELEMATICS mis-attributes the event source.
+    why: Trigger event 304 is published on FLEET-MAINT's master (PM schedules, now in FLEET-MAINT-PM 250). Handoff 312's source=TELEMATICS mis-attributes the event source.
   - id: B2-5
     summary: maintenance_defect.resolved outbound handoff shape (1-3 new handoff rows).
     question: Which targets consume the maintenance_defect.resolved event (trigger event 992)?
     options:
-      - (a) Intra-domain only (FLEET-MAINT-WORK-ORDER consumes once modules land)
+      - (a) Intra-domain only (FLEET-MAINT-WORK-ORDER 249 consumes)
       - (b) Outbound to AP-AUTO for repair invoice
       - (c) Outbound to ERP-FIN for fixed-asset depreciation
       - (d) Outbound to FLEET-MGMT for vehicle return-to-service status
       - (a) + (b) + (d) (recommended)
     why: Event fires but no handoff row consumes it; need user to scope outbound shape.
   - id: B2-6
-    summary: sign_document workflow rationale on legacy skill 59.
+    summary: sign_document workflow rationale on legacy skill 59 (folds into B1A-SYSTEM-SKILLS).
     question: Why is sign_document linked from skill 59 (tool id 42)?
     options:
-      - (a) Customer signature on shop completion - keep, redistribute to FLEET-MAINT-WORK-ORDER skill
-      - (b) OEM warranty claim attestation - keep, redistribute to FLEET-MAINT-PARTS skill
+      - (a) Customer signature on shop completion - keep, redistribute to fleet_maint_work_order_agent (module 249)
+      - (b) OEM warranty claim attestation - keep, redistribute to fleet_maint_parts_agent (module 251)
       - (c) Both real workflows - keep on both modules' skills (recommended if both confirm)
       - (d) Vestigial - DELETE skill_tools row 547
-    why: F4 invariant ticks but the workflow rationale is unverified; needs user judgment on the real use case.
+    why: F4 invariant ticks but the workflow rationale is unverified; needs user judgment on the real use case. Resolves B1B-S15.
   - id: B2-7
     summary: domain_regulations scope (floor vs stretch set).
     question: Which regulations should domain_regulations carry for FLEET-MAINT?
@@ -341,17 +261,17 @@ b2:
     why: All underlying regulations rows are missing from the catalog (upstream gap); this question also gates the upstream catalog_addition for B1B-S16.
   - id: B2-8
     summary: vehicle_recall_campaigns module placement.
-    question: Should vehicle_recall_campaigns (B1B-M3) embed in FLEET-MAINT-WORK-ORDER, split into its own sub-module, or wait for VEHICLE-RECALL-MGMT promotion via Phase 0?
+    question: Should vehicle_recall_campaigns (B3-M3) embed in FLEET-MAINT-PARTS (251), split into its own sub-module, or wait for VEHICLE-RECALL-MGMT promotion via Phase 0?
     options:
-      - (a) Embed in FLEET-MAINT-WORK-ORDER (recommended for catalog parsimony)
+      - (a) Embed in FLEET-MAINT-PARTS 251 (recommended for catalog parsimony; warranty + recall coverage already live here)
       - (b) Split into its own FLEET-MAINT-RECALL sub-module
       - (c) Promote VEHICLE-RECALL-MGMT to its own domain after Phase 0 (depends on B3-2)
-    why: Recall Masters and CDK Global treat it as a discrete buyer journey; broader flagships embed.
+    why: Recall Masters and CDK Global treat it as a discrete buyer journey; broader flagships embed. FM-WARRANTY (420) landed in FLEET-MAINT-PARTS 251, so recall fits there.
   - id: B2-9
     summary: shops master shape vs locations embedded_master vs IWMS authority.
     question: How should the shops master be modeled?
     options:
-      - (a) FLEET-MAINT-WORK-ORDER masters shops with FK to locations (recommended; maintenance-specific operational metadata)
+      - (a) FLEET-MAINT-WORK-ORDER 249 masters shops with FK to locations (recommended; maintenance-specific operational metadata)
       - (b) Leave shop attributes on locations; skip shops entirely (overloads locations)
       - (c) IWMS masters shops; FLEET-MAINT embedded_master (consistent with IWMS locations mastery)
     why: shops is more specific than locations (bay capacity, mechanic roster, certification scope); the maintenance-specific metadata is operationally distinct.
@@ -363,8 +283,69 @@ b2:
       - (b) Keep verb direction with one_to_many (logically inverted from audit text)
       - (c) Abandon the edge
     why: 2026-05-30 audit specified many_to_one, which is not a valid relationship_type value. Decision unblocks B1B-S4-R5.
+  - id: B2-CATALOG-COPY
+    summary: catalog_tagline and catalog_description on the domains row (149) and now the 3 modules - buyer-voice text needed.
+    question: >-
+      domains.catalog_tagline and catalog_description on FLEET-MAINT (149) are
+      both empty (A4 fail), and as of 2026-06-02 the 3 new modules (249, 250,
+      251) also have empty catalog copy. Rule #20 forbids writes without
+      user-approved buyer-voice text. Supply the exact strings (domain-level +
+      per-module).
+    options:
+      - approve a recommended tagline shape ("Keep every vehicle on the road. Schedule preventive maintenance from telematics, dispatch mechanics to defects, and track parts cost-per-mile in one place.") plus a buyer-voice description authored by the user
+      - supply different text
+      - defer
+    why: Rule #20 hard-gates the write; the agent cannot author either string without user-approved wording. The write itself is queued as B1A-CATALOG-UX-COPY.
 
 b3:
+  - id: B3-M1
+    candidate: parts_orders master
+    rationale: |
+      Vendor PO, expected delivery, receipt confirmation, line items; distinct from vehicle_parts_inventory (on-hand stock). Surfaced by Fleetio, AssetWorks FleetFocus, Trimble TMT. Now-concrete target module after the 2026-06-02 split.
+    vendor_evidence: [Fleetio, AssetWorks FleetFocus, Trimble TMT]
+    proposed_module: FLEET-MAINT-PARTS (251)
+  - id: B3-M2
+    candidate: vehicle_warranty_claims master
+    rationale: |
+      OEM warranty claim master (per-vehicle, per-part, claim number, submission date, OEM disposition, credit). Magnuson-Moss Warranty Act adjacent. FM-WARRANTY (420) lives in FLEET-MAINT-PARTS.
+    vendor_evidence: [Fleetio, AssetWorks FleetFocus, Trimble TMT]
+    proposed_module: FLEET-MAINT-PARTS (251)
+  - id: B3-M3
+    candidate: vehicle_recall_campaigns master
+    rationale: |
+      NHTSA recall ingestion (49 CFR 573): per-VIN match, OEM campaign code, fix-deadline, completion attestation. Placement options in Bucket 2 #8.
+    vendor_evidence: [Fleetio, AssetWorks FleetFocus, Recall Masters, CDK Global Recall]
+    proposed_module: FLEET-MAINT-PARTS (251)
+  - id: B3-M4
+    candidate: mechanic_labor_entries master
+    rationale: |
+      Per-mechanic time entries on a work order (clock-in / out, labor code, billing rate). Distinct from the generic users edge. FM-MECHANIC-MGMT (419) lives in FLEET-MAINT-WORK-ORDER.
+    vendor_evidence: [AssetWorks FleetFocus, Trimble TMT]
+    proposed_module: FLEET-MAINT-WORK-ORDER (249)
+  - id: B3-M5
+    candidate: service_tasks master
+    rationale: |
+      Service task catalog (oil change, brake pad replacement, tire rotation) with default labor units and parts BOM. PM schedules reference these. Intersects B3-4 (service_tasks vs processes granularity).
+    vendor_evidence: [Fleetio, AssetWorks FleetFocus, Trimble TMT]
+    proposed_module: FLEET-MAINT-PM (250)
+  - id: B3-M6
+    candidate: mechanic_certifications master
+    rationale: |
+      ASE + manufacturer-specific certifications (Diesel Cummins, EV high-voltage) for skill-matching mechanics to work orders.
+    vendor_evidence: [Trimble TMT, AssetWorks FleetFocus]
+    proposed_module: FLEET-MAINT-WORK-ORDER (249)
+  - id: B3-M7
+    candidate: shops master
+    rationale: |
+      Physical shop master (in-house garage, external dealer, mobile mechanic) with bay capacity, hours, certification scope. Distinct from locations embedded_master. Shape picked in Bucket 2 #9.
+    vendor_evidence: [Fleetio, AssetWorks FleetFocus]
+    proposed_module: FLEET-MAINT-WORK-ORDER (249)
+  - id: B3-M8
+    candidate: meter_readings master
+    rationale: |
+      Mileage / engine-hours / DTC fault-code readings from telematics or manual entry. PM trigger basis distinct from telematics trip rows.
+    vendor_evidence: [Fleetio, AssetWorks FleetFocus, Samsara, Geotab, Trimble TMT, Whip Around]
+    proposed_module: FLEET-MAINT-PM (250)
   - id: B3-1
     candidate: TIRE-MGMT (Fleet Tire Management)
     rationale: |
@@ -375,7 +356,7 @@ b3:
       - IDSC Tire Operations
       - Hankook Tire Management
       - Continental ContiConnect
-    proposed_module: FLEET-MAINT-PARTS (if folded) or new TIRE-MGMT domain
+    proposed_module: FLEET-MAINT-PARTS (251, if folded) or new TIRE-MGMT domain
   - id: B3-2
     candidate: VEHICLE-RECALL-MGMT (Vehicle Recall Management)
     rationale: |
@@ -398,18 +379,18 @@ b3:
       - Sparkion
       - AMPECO
   - id: B3-4
-    candidate: service_tasks (B1B-M5) vs processes (APQC PCF) granularity
+    candidate: service_tasks (B3-M5) vs processes (APQC PCF) granularity
     rationale: |
       Trimble, AssetWorks, Fleetio all expose service tasks with parts BOM + labor units - industry-specific shape so FLEET-MAINT mastery appropriate; processes is wrong granularity. Eyeball decision available.
     vendor_evidence: [Trimble TMT, AssetWorks FleetFocus, Fleetio]
-    proposed_module: FLEET-MAINT-PM
+    proposed_module: FLEET-MAINT-PM (250)
   - id: B3-5
     candidate: vehicle_diagnostic_codes (DTC code dictionary + per-vehicle occurrence)
     rationale: |
       Dictionary side (SAE J1939 / J2012) is reference data; occurrence side is TELEMATICS-mastered. FLEET-MAINT consumes both. Phase 0 to verify whether dictionary belongs in FLEET-MAINT or TELEMATICS. Intersects with TELEMATICS audit B-band.
     vendor_evidence: [Samsara, Geotab, Motive]
   - id: B3-6
-    candidate: mechanic_skill_inventory separate from mechanic_certifications (B1B-M6)
+    candidate: mechanic_skill_inventory separate from mechanic_certifications (B3-M6)
     rationale: |
       Certifications side is regulated / credentialed; skills side is informal (knows F-150, knows EV high-voltage by experience). Probably overkill for catalog at this scale; eyeball decision.
     vendor_evidence: [AssetWorks FleetFocus, Trimble TMT]
@@ -421,5 +402,5 @@ b3:
   - id: B3-8
     candidate: Mobile-mechanic dispatch overlap with FSM
     rationale: |
-      Wrench, YourMechanic, Bridgestone Roadside, Cummins Care dispatch mechanics to vehicles. From FLEET-MAINT side this looks like special-case work-order assignment; from FSM side it looks like field dispatch. May warrant sub-module or stay in FLEET-MAINT-WORK-ORDER.
+      Wrench, YourMechanic, Bridgestone Roadside, Cummins Care dispatch mechanics to vehicles. From FLEET-MAINT side this looks like special-case work-order assignment; from FSM side it looks like field dispatch. May warrant sub-module or stay in FLEET-MAINT-WORK-ORDER (249).
     vendor_evidence: [Wrench, YourMechanic, Bridgestone Roadside, Cummins Care]

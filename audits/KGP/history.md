@@ -262,3 +262,83 @@ None this audit (Validate b1 is read-only).
 
 Not updated this audit (no user-approved wording supplied; Rule #15 / Rule #20 applies).
 
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+KGP went from M1 HARD FAIL (zero `domain_modules`) to a clean 2-module build. The
+2026-05-30 audit proposed a 3-module split (ONTOLOGY-ENGINE, QUERY-FEDERATION,
+AGENT-INTEGRATION), but KGP has only 2 in-domain masters (`kgp_ontologies` 742,
+`kgp_knowledge_graph_entities` 743). A 3-module split would have stranded at least one
+module with no master (an empty-master module). This pass therefore built EXACTLY 2 full
+modules, one master each, splitting all 8 capabilities across them. This resolves
+B1B-M1-MODULES (under the 2-module shape of B2-S4 option (b)) and B1B-B5-EMBEDDED-MASTERS
+(both masters land at `role=master`, no embedded_master shells were needed because no
+module is master-less). Scope was modules + capability links + master assignment ONLY; no
+new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships
+were created (those remain deferred per the b1b/b3 carry-forwards).
+
+### Modules built
+
+| id | code | kind | capabilities | master (role/necessity) |
+|---|---|---|---|---|
+| 270 | KGP-ONTOLOGY-ENGINE | full | KG-ONTOLOGY-AUTHORING (352), KG-REASONING-INFERENCE (353), KG-NATIVE-STORAGE (357), SEMANTIC-MODELING (197) | kgp_ontologies (742) master/required |
+| 271 | KGP-GRAPH-QUERY-APPS | full | KG-SPARQL-FEDERATION (354), KG-VIRTUAL-GRAPHS (355), KG-AI-AGENT-INTEGRATION (356), OPERATIONAL-DATA-APPS (201) | kgp_knowledge_graph_entities (743) master/required |
+
+Capability allocation rationale: module 270 is the modeling/reasoning/storage tier where
+ontologies are the natural master (authoring, inference, native graph persistence, and the
+cross-cutting semantic-modeling capability all read or write the ontology). Module 271 is
+the query/operational tier where KG entities are the natural master (federated SPARQL,
+virtual-graph translation, vector+symbolic agent retrieval, and operational data apps all
+traverse and write back graph entities).
+
+### M7 master pre-check (catalog-wide, mandatory)
+
+Before writing `role=master` on either master, queried
+`/domain_module_data_objects?data_object_id=eq.<id>&role=eq.master`. Both 742 and 743
+returned zero existing master rows, so both were assigned `master` (no demotion to
+embedded_master needed). Post-load re-verification: 742 has exactly 1 master row (module
+270); 743 has exactly 1 master row (module 271). M7 single-master holds in-domain AND
+catalog-wide. (Note: the legacy `domain_data_objects` rollup double-master on the
+sibling bare-word objects 254 `ontologies` / 255 `knowledge_graph_entities` across
+DCG / DATA-AI-PLAT remains a separate catalog-wide M7 item owned by B2-S1 / B2-S2; this
+pass did not touch those rows and the KGP-prefixed masters 742/743 are distinct
+data_object ids.)
+
+### Verification (live, post-load)
+
+- 2 `domain_modules` rows on domain 138, both `module_kind=full`. M1 PASS.
+- 8/8 capabilities placed in exactly one module each (M4 PASS, no unplaced).
+- Each module: 4 capabilities (>= M6 floor) + 1 master data_object (no empty module).
+- Each master appears exactly once catalog-wide (M7 PASS).
+- Loader re-run confirmed idempotent (second run inserted nothing).
+
+### Capabilities lacking a backing master (flagged b3)
+
+KGP has 8 capabilities but only 2 in-domain masters, so most capabilities are realized
+without a dedicated master record. Two of these gaps were already vendor-evidenced in the
+2026-05-30 audit and carry forward as concrete master candidates:
+
+- KG-REASONING-INFERENCE (353) has no rule/inference master. Candidate
+  `kgp_inference_rules` (B3-S1; Stardog / GraphDB / AllegroGraph all expose a 1st-class
+  rules surface). Proposed module: KGP-ONTOLOGY-ENGINE (270).
+- KG-NATIVE-STORAGE (357) + KG-SPARQL-FEDERATION (354) have no partition/access-control
+  master. Candidate `kgp_named_graphs` (B3-S2; named graphs are the RDF triple-store
+  access-control and partitioning unit). Proposed module: KGP-ONTOLOGY-ENGINE (270) or
+  split across both.
+
+The remaining master-less capabilities are KG-VIRTUAL-GRAPHS (355, mapping-config shaped;
+arguably a `kgp_virtual_graph_mappings` candidate, not yet vendor-vetted),
+KG-AI-AGENT-INTEGRATION (356, operates over 743 plus embeddings, no own master needed),
+SEMANTIC-MODELING (197) and OPERATIONAL-DATA-APPS (201) (cross-cutting realizations that
+read the two masters rather than introducing their own). These are NOT filled this pass;
+new-master authoring is out of scope. See state.yaml b3 for the carried candidates.
+
+### Deferred / unchanged (out of scope this pass)
+
+Per-module system skills (Rule #17 / F2 / F3), module + domain catalog UX copy (M8 / A4),
+lifecycle states (B12), B8 outbound mirror relationships, B10b module-FK backfill on the 7
+KGP-touching handoffs, F1 legacy skill (76) retirement, and APQC handoff tagging all remain
+open. Several were gated on M1 and are now UNBLOCKED by this build (skills, lifecycle,
+B10b backfill, F1 retirement) and move to b1a; the rest stay b1b/b3. See state.yaml.
+

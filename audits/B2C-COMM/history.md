@@ -323,3 +323,64 @@ _(awaiting user input per bucket)_
 ### Fixes applied
 
 _(none yet, audit only)_
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+Executed B1B-S2-MODULES (the M1 hard-fail fix) by hand-authoring the 3-module split the 2026-05-30 baseline recommended (B2-S5 option a, B2-S6 option a: fulfillments / shipments master in a dedicated FULFILL-SHIP module). Scope was modules + entity assignment ONLY: reused all 8 existing capabilities and all 16 existing data_objects at their existing roles and necessity. Created NO new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships.
+
+Before: 0 domain_modules (M1 hard-fail), 0 domain_module_host_domains. After: 3 full modules, 9 domain_module_capabilities rows (all 8 capabilities placed; COMM-ORDER-CAPTURE realized by 2 modules), 17 domain_module_data_objects rows (all 10 masters placed exactly once per M7; all 6 contributor / consumer rows placed). All catalog_tagline / catalog_description left empty on all 3 modules (deliberate M8 / A4 gap). All record_status default 'new'. All DMDO / DMC notes empty (Rule #15). Loader idempotent (re-run = no-op, verified).
+
+This resolves the structural blocker B1B-S2-MODULES that gated B1B-S3 / S4 / S6 / S7 / S8 / S9 / S10 / S11 and B1-S13. Those downstream items are now unblocked but remain OUT OF SCOPE for this modules-only pass (they need relationships, lifecycle states, aliases, skill redistribution, and handoff-FK backfills, none of which this pass touched).
+
+### Module-split table
+
+| Module (id) | Code | Capabilities | Data objects (role / necessity) |
+|---|---|---|---|
+| 213 | B2C-COMM-CATALOG-MERCH | COMM-CATALOG-MERCH (302), COMM-STOREFRONT (304), COMM-SEARCH-DISC (307), COMM-PROMOTIONS (306) | commerce_products (384, master/req), commerce_storefronts (385, master/req), coupons (390, master/req), audience_segments (113, consumer/req), marketing_campaigns (116, consumer/req) |
+| 214 | B2C-COMM-ORDER-CAPTURE | COMM-CART-CHECKOUT (303), COMM-ORDER-CAPTURE (305), COMM-HEADLESS-API (309), COMM-B2B-COMM (308) | carts (383, master/req), checkouts (386, master/req), commerce_orders (381, master/req), order_lines (382, master/req), payment_transactions (387, master/req), customers (97, contributor/req), crm_leads (99, contributor/req), customer_events (111, contributor/req), customer_subscriptions (106, consumer/req), customer_invoices (107, consumer/req) |
+| 215 | B2C-COMM-FULFILL-SHIP | COMM-ORDER-CAPTURE (305, shared fulfill/ship slice) | fulfillments (388, master/req), commerce_shipments (389, master/req) |
+
+### Master-to-module mapping (M7 single-master, each master in exactly one module)
+
+- B2C-COMM-CATALOG-MERCH (213): commerce_products, commerce_storefronts, coupons
+- B2C-COMM-ORDER-CAPTURE (214): carts, checkouts, commerce_orders, order_lines, payment_transactions
+- B2C-COMM-FULFILL-SHIP (215): fulfillments, commerce_shipments
+
+### Counts
+
+- domain_modules: 0 -> 3 (all module_kind=full)
+- domain_module_capabilities: 0 -> 9 (8 distinct capabilities; COMM-ORDER-CAPTURE 305 linked twice across modules 214 and 215, which M4 permits)
+- domain_module_data_objects: 0 -> 17 (10 masters + 6 non-master rows: 3 contributors customers / crm_leads / customer_events, 3 consumers audience_segments / marketing_campaigns in CATALOG-MERCH plus customer_subscriptions / customer_invoices in ORDER-CAPTURE)
+- Masters placed exactly once: 10 / 10 (M7 pass)
+- Capabilities placed: 8 / 8 (M4 pass)
+- Empty modules: 0 (each module holds >=1 master and realizes >=1 capability, M6 pass)
+
+### Structural checks
+
+- Rule #14: 8 capabilities -> >=2 full modules. 3 full modules authored. Pass.
+- M4: every capability in >=1 module. Pass.
+- M6: every module realizes >=1 capability and holds >=1 data_object. Pass.
+- M7: each master in exactly one module as master. Pass.
+- Roles / necessity preserved verbatim from domain_data_objects (contributors customers / crm_leads / customer_events kept contributor, never promoted to master; consumers kept consumer). Pass.
+- R18: module names / descriptions describe capability shape, no vendor / product names. Pass.
+- R15: all DMDO / DMC notes empty. Pass.
+- R1: record_status omitted on every insert (DB default 'new'). Pass.
+
+### Deferred gaps (now owed, out of scope for this modules-only pass)
+
+- **b1a (agent-solvable next pass):** per-module system skills are now owed. Rule #17 / F2 / F3 require one system skill per module (3 module-level skills) and retirement of the legacy domain-level skill 24 (b2c-comm-system, domain_module_id=NULL, 23 skill_tools rows redistributed across the 3 modules). Catalog UX backfill (M8 / A4): all 3 modules carry empty catalog_tagline / catalog_description; needs buyer-voice copy per Rule #20. These two are folded into B1A-MODULE-SKILLS-UX.
+- **b1b (still gated / out of scope here):** B1B-S3 (intra-domain master-master relationships), B1B-S4 (users edges), B1B-S6 (aliases), B1B-S7 (lifecycle states), B1B-S8 / S9 (handoff module-FK backfill, now unblocked by modules 213/214/215), B1B-S10 (legacy skill retirement + redistribution), B1B-S11 (send_email -> notify_person), B1B-S13 (catalog UX, see b1a), plus the H-band carry-forwards (B1B-H1-CSM-COARSE, B1B-H1-DEFER-DISCOVER, B1B-H1-529-VERIFY) and B1A-H1-CORE.
+- **b2 (user judgment):** B2-S1 (PII flags), B2-S3 (parent_domain_id=69 CRM), B2-S4 (COMM-B2B-COMM ownership override). B2-S5 / B2-S6 are now RESOLVED in fact (the 3-module split with FULFILL-SHIP mastering fulfillments / shipments was the recommended baseline and is now loaded); they no longer gate anything.
+- **b3 (vendor research):** B3-S1 (catalog substrate: product_variants, product_categories, catalog_attributes), B3-S2 (payments / pricing / tax), B3-S3 (post-purchase / returns / reviews), B3-S4 (B2B commerce surface). These are missing-master candidates; this pass added NO new data_objects so they remain open.
+
+### Loader
+
+`c:/dev/domain-map/.tmp_deploy/modularize_b2c_comm_2026-06-02.ts`. Idempotent on natural keys (module = domain_module_code; DMC = (domain_module_id, capability_id); DMDO = (domain_module_id, data_object_id)). Re-read modules after insert for the code -> id map; no hard-coded ids. Verified re-run is a no-op.
+
+### UI spot-check links
+
+- https://tests.semantius.app/domain_map/domain_modules
+- https://tests.semantius.app/domain_map/domain_module_capabilities
+- https://tests.semantius.app/domain_map/domain_module_data_objects

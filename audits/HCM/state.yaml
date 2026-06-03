@@ -21,6 +21,30 @@ b1a:
     finding: "Of 123 cross-and-intra-domain handoffs touching HCM, 45 carry handoff_processes rows; only 17 are proposal_source='agent_curated' record_status='new' (5 outbound: 19 122 371 379 388; 12 inbound: 118 295 427 442 448 601 869 873 913 935 1032 1078). Zero rows at record_status='approved' (catalog quality headline). The 2026-05-30 audit listed ~68 candidate rows; ~78 remain to author. The Continuation note warns the audit's external_id hints fail to resolve in live state; each row needs per-row PCF name lookup at write time."
     action: "Loader: per-row PCF lookup via /processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry; insert (handoff_id, process_id, proposal_source='agent_curated', record_status='new', role='implements'). Candidate handoff IDs from the 2026-05-30 H1 sub-table (outbound 3, 17, 18, 20, 21, 22, 34, 122, 123, 134, 185, 186, 348, 366, 367, 369, 372, 373, 374, 375, 376, 377, 378, 380, 381, 382, 383, 385, 386, 387, 388, 389, 390, 391, 392, 393, 396, 468, 1176-1190, 1218-1226; inbound 17, 393, 1037, 396, 399, 406, 1033, 1035, 410, 412, 1154, 106, 422, 1125, 418, 135, 431, 1047, 1311, 1313, 1314, 437, 438, 441, 116, 449, 451, 1111, 1103, 446, 448, 454, 457, 459, 15, 274, 718, 1016, 1022, 1026, 842)."
     vendor_evidence: []
+  - id: B1A-PHASE-P
+    summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
+    finding: "Live triage 2026-06-02: 3 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    extra_phase_p_triage: "2026-06-02"
+  - id: B1A-ENTITY-TYPE
+    summary: "6 masters carry entity_type unclassified/null (B13): classify them."
+    finding: "Live triage 2026-06-02: 6 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
+    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
+    affected_entities: [employees, employment_contracts, employment_events, hcm_positions, job_profiles, org_units]
+    extra_phase_p_triage: "2026-06-02"
+  - id: B1A-SELF-CONTAIN
+    summary: "7 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
+    finding: "Live triage 2026-06-02: 7 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
+    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
+    extra_m9_shapes:
+      - {entity: asset_lifecycle_events, module: HCM-LIFECYCLE-WORKFLOWS, role: contributor, master_domain: ITAM}
+      - {entity: candidate_assessments, module: HCM-LIFECYCLE-WORKFLOWS, role: consumer, master_domain: ATS}
+      - {entity: candidates, module: HCM-LIFECYCLE-WORKFLOWS, role: consumer, master_domain: ATS}
+      - {entity: job_offers, module: HCM-LIFECYCLE-WORKFLOWS, role: consumer, master_domain: ATS}
+      - {entity: job_requisitions, module: HCM-ORG-POSITIONS, role: consumer, master_domain: ATS}
+      - {entity: onboarding_document_collections, module: HCM-CORE-WORKER, role: consumer, master_domain: ONBOARDING}
+      - {entity: pre_employees, module: HCM-LIFECYCLE-WORKFLOWS, role: consumer, master_domain: ATS}
+    extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-S1

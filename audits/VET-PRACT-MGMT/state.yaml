@@ -1,77 +1,135 @@
 schema_version: 2
 domain: VET-PRACT-MGMT
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-05-31"
+next_action_by: agent
+last_audit: "2026-06-02"
 
-b1a: []
+b1a:
+  - id: B1A-MODULE-SYSTEM-SKILLS
+    summary: "3 new full modules (321/322/323) have zero system skills; Rule #17 requires exactly one skill_type=system skill per module."
+    finding: >
+      Modularization on 2026-06-02 created VET-PRACT-MGMT-CLINICAL-CARE (321),
+      VET-PRACT-MGMT-FRONT-OFFICE (322), VET-PRACT-MGMT-PHARMACY-RX (323), all module_kind=full.
+      None has a domain_module-scoped system skill yet. A legacy domain-level skill (id 116,
+      domain_module_id=null) with 6 thin tools still exists and must be retired once per-module
+      skills land. F2/F3 substrate: redistribute the 5 legacy query tools (744-748) by entity
+      ownership across the 3 modules; add per-module mutate tools (mutate_animal_patient_status
+      and mutate_veterinary_lab_result_review on 321; mutate_controlled_substance_ledger_dispense
+      DEA-attributed on 323).
+    action: >
+      Author exactly one skill_type=system skill per module (321/322/323) per Rule #17 (F2/F3).
+      Redistribute legacy tools 744-748 + 37 by module entity ownership; add the per-module mutate
+      tools; then retire legacy skill id 116. fetch_idexx_vetconnect_lab_result /
+      fetch_antech_lab_result / inbound lab-result + payment-settlement webhooks attach to 321/322
+      and depend on the B3 lab-order / invoice entities (defer those tool legs).
+    affected_modules: [321, 322, 323]
+    extra_legacy_skill_id: 116
+    extra_legacy_tool_ids: [744, 745, 746, 747, 748, 37]
 
-b1b:
-  - id: B1B-M1-MODULES
-    summary: Zero domain_modules rows for VET-PRACT-MGMT; M1 hard fail gates every module-touching fix.
-    finding: |
-      domain_id=151 has zero rows in domain_modules and zero rows in domain_module_host_domains. Per Rule #14 every
-      domains row needs >=1 domain_modules row; with 6 capabilities the floor is >=2 full modules. Proposed module
-      set per the prior audit's Pass-2 modularization: VET-PRACT-MGMT-PATIENT-CARE, VET-PRACT-MGMT-APPOINTMENTS,
-      VET-PRACT-MGMT-INVENTORY-RX, VET-PRACT-MGMT-LAB-INTEGRATION, VET-PRACT-MGMT-INVOICING (BOARDING optional 6th).
-      The 5 current masters cluster cleanly across this split.
-    action: |
-      Resolve Bucket 2 item 1 (module shape: 4 vs 5 vs 6 modules; boarding scope) first. Then author the agreed
-      module set with full Rule #14 + Rule #17 + Rule #20 contract (capabilities mapping, system skill per module,
-      catalog_tagline + catalog_description, baseline permissions).
-    blocked_by:
-      - {type: user_decision, ref: B2-MODULE-SHAPE}
-    affected_capabilities:
-      - VET-PATIENT-CARE
-      - VET-APPT-SCHED
-      - VET-INVOICING
-      - VET-INVENTORY-RX
-      - VET-LAB-INTEGRATION
-      - VET-REMINDER-MGMT
-    affected_masters:
-      - {data_object_id: 395, name: animal_patients, target_module_id: null, workflow: clinical}
-      - {data_object_id: 396, name: pet_owners, target_module_id: null, workflow: client-record}
-      - {data_object_id: 397, name: veterinary_vaccinations, target_module_id: null, workflow: preventive-care}
-      - {data_object_id: 398, name: veterinary_lab_results, target_module_id: null, workflow: diagnostics}
-      - {data_object_id: 399, name: controlled_substance_ledger_entries, target_module_id: null, workflow: DEA-controlled-dispense}
-    vendor_evidence:
-      - IDEXX Cornerstone
-      - ezyVet
-      - AVImark
-      - ImproMed
-      - Vetspire
-      - Provet Cloud
-      - NaVetor
-      - Hippo Manager
-      - Shepherd
-
-  - id: B1B-A4-CATALOG-COPY
-    summary: catalog_tagline and catalog_description on domains row are empty; Rule #20 requires user-approved buyer-voice copy.
-    finding: |
-      /domains?id=eq.151 returns catalog_tagline='' and catalog_description=''. A4 of the per-domain checklist
-      requires non-empty buyer-voice copy. Rule #20 forbids overwriting non-empty values without explicit user
-      approval, and equally requires user review of any first-fill draft before write.
-    action: |
-      Surface a draft tagline + 1-3-paragraph description in buyer voice (workflow + value) and wait for user
-      approval / rewrite before PATCH. The same pattern applies to M8 (per-module catalog UX fields) once modules
-      are authored.
-    blocked_by:
-      - {type: user_decision, ref: B2-CATALOG-COPY}
+  - id: B1A-MODULE-CATALOG-UX
+    summary: "3 new modules have empty catalog_tagline + catalog_description (M8); domain-grain A4 copy also empty."
+    finding: >
+      Modules 321/322/323 were inserted with name + description only; their catalog_tagline and
+      catalog_description (M8 per-module buyer-voice UX fields) are empty. The domains row (id 151)
+      also still has empty catalog_tagline + catalog_description (A4). Rule #20 requires
+      user-approved buyer-voice copy and forbids overwriting non-empty values without per-row
+      approval, but a first-fill draft is authorable now that the modules exist.
+    action: >
+      Draft per-module catalog_tagline (one sentence) + catalog_description (1-3 short paragraphs,
+      buyer voice: workflow + value) for 321/322/323 and the domain-grain A4 copy for domains id 151.
+      Surface drafts for user approval before PATCH per Rule #20 (links to B2-CATALOG-COPY for the
+      domain-grain trigger choice).
+    affected_modules: [321, 322, 323]
     extra_target_columns:
+      - domain_modules.catalog_tagline
+      - domain_modules.catalog_description
       - domains.catalog_tagline
       - domains.catalog_description
+
+b1b:
+  - id: B1B-B12-LIFECYCLE-STATES
+    summary: Zero data_object_lifecycle_states across all 5 masters; module_id now assignable post-M1.
+    finding: |
+      All 5 masters carry observable workflows: animal_patients
+      (active/inactive/deceased/transferred), pet_owners (prospective/active/collections/inactive),
+      veterinary_vaccinations (scheduled/administered/due/overdue/waived), veterinary_lab_results
+      (ordered/sampled/received/reviewed/critical/archived), controlled_substance_ledger_entries
+      (drawn/dispensed/wasted/reconciled/discrepancy-flagged, DEA Form 41 wastage path). None
+      qualifies for the Rule #12 config-shape exemption. The M1 prerequisite is now cleared:
+      domain_module_id maps to 321 (animal_patients, veterinary_vaccinations, veterinary_lab_results),
+      322 (pet_owners), 323 (controlled_substance_ledger_entries).
+    action: |
+      Author state machines per the list above. Each row carries state_name, state_order,
+      is_initial / is_terminal, requires_permission, permission_verb_override for non-obvious verbs
+      (deceased -> mark_deceased, reconciled -> reconcile_ledger), and domain_module_id per the
+      mapping above. Still gated only on the config-shape confirmation (B2-CONFIG-SHAPE-CHECK).
+    blocked_by:
+      - {type: user_decision, ref: B2-CONFIG-SHAPE-CHECK, reason: "confirm none qualifies for Rule 12 config-shape exemption"}
+    affected_masters:
+      - {data_object_id: 395, name: animal_patients, target_module_id: 321, workflow: clinical-lifecycle}
+      - {data_object_id: 396, name: pet_owners, target_module_id: 322, workflow: client-lifecycle}
+      - {data_object_id: 397, name: veterinary_vaccinations, target_module_id: 321, workflow: vaccination-lifecycle}
+      - {data_object_id: 398, name: veterinary_lab_results, target_module_id: 321, workflow: lab-result-lifecycle}
+      - {data_object_id: 399, name: controlled_substance_ledger_entries, target_module_id: 323, workflow: DEA-ledger-lifecycle}
+
+  - id: B1B-B11-ALIASES
+    summary: Zero data_object_aliases on any of the 5 masters; "Client" alias on pet_owners triggers Rule #9 collision arbitration.
+    finding: |
+      Vendor-universal aliases are absent: pet_owners <-> "Client" (the universal PIMS term across
+      IDEXX Cornerstone, ezyVet, AVImark), "Owner"; animal_patients <-> "Patient", "Pet Patient";
+      veterinary_vaccinations <-> "Vaccine Record", "Immunization"; veterinary_lab_results <-> "Lab
+      Test", "Diagnostics Result"; controlled_substance_ledger_entries <-> "DEA Log Entry",
+      "Schedule Drug Log", "C2-5 Ledger". "Client" is the most load-bearing (IDEXX/ezyVet UIs use it
+      pervasively) and is a high-collision bare word (CSM customer_contacts, CRM customers).
+    action: |
+      Draft ~8 alias rows. Surface the "Client" canonical-bare-word posture (alias-only vs.
+      canonical claim) for user decision; load the rest as straight aliases. data_object_aliases.notes
+      is off-limits per Rule #15.
+    blocked_by:
+      - {type: user_decision, ref: B2-CLIENT-ALIAS-POSTURE, reason: "Rule 9 arbitration on Client cross-catalog collision"}
+    affected_masters:
+      - {data_object_id: 395, name: animal_patients, target_module_id: 321, workflow: clinical}
+      - {data_object_id: 396, name: pet_owners, target_module_id: 322, workflow: client-record}
+      - {data_object_id: 397, name: veterinary_vaccinations, target_module_id: 321, workflow: preventive-care}
+      - {data_object_id: 398, name: veterinary_lab_results, target_module_id: 321, workflow: diagnostics}
+      - {data_object_id: 399, name: controlled_substance_ledger_entries, target_module_id: 323, workflow: DEA-controlled-dispense}
+
+  - id: B1B-B10b-SOURCE-MODULE-FK
+    summary: All 6 outbound handoffs carry source_domain_module_id=NULL; source module now resolvable post-M1.
+    finding: |
+      handoffs 335 (-> GRC), 336 (-> SUP-LIFE), 337 (-> CSM), 946 (-> ERP-FIN), 947 (-> CSM), 948
+      (-> GRC) each have source_domain_module_id=NULL. The M1 prerequisite is now cleared, so the
+      source side is deterministic: controlled_substance.* (335, 336) -> PHARMACY-RX (323);
+      animal_patient.appointment_due (337) -> FRONT-OFFICE (322, scheduling lives there);
+      pet_owner.registered (946) -> FRONT-OFFICE (322); veterinary_vaccination.due (947) ->
+      CLINICAL-CARE (321); veterinary_lab_result.critical (948) -> CLINICAL-CARE (321). Target-side
+      NULLs still split per partner-domain M1.
+    action: |
+      Backfill source_domain_module_id on all 6 handoffs per the mapping above. Target-side FKs:
+      CSM targets (337, 947) resolvable to CSM-CASE-MGMT (id 112) on CSM's own B10b; GRC, SUP-LIFE,
+      ERP-FIN targets wait on those partner-domain M1 cures.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: GRC, milestone: M1-modules-authored}
+      - {type: domain_audit, blocking_domain: SUP-LIFE, milestone: M1-modules-authored}
+      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: M1-modules-authored}
+    affected_handoffs:
+      - {handoff_id: 335, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: GRC, trigger_event: controlled_substance.dispensed, payload: controlled_substance_ledger_entries, null_field: source_domain_module_id+target_domain_module_id}
+      - {handoff_id: 336, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: SUP-LIFE, trigger_event: controlled_substance.dispensed, payload: controlled_substance_ledger_entries, null_field: source_domain_module_id+target_domain_module_id}
+      - {handoff_id: 337, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: CSM, trigger_event: animal_patient.appointment_due, payload: animal_patients, null_field: source_domain_module_id+target_domain_module_id}
+      - {handoff_id: 946, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: ERP-FIN, trigger_event: pet_owner.registered, payload: pet_owners, null_field: source_domain_module_id+target_domain_module_id}
+      - {handoff_id: 947, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: CSM, trigger_event: veterinary_vaccination.due, payload: veterinary_vaccinations, null_field: source_domain_module_id+target_domain_module_id}
+      - {handoff_id: 948, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: GRC, trigger_event: veterinary_lab_result.critical, payload: veterinary_lab_results, null_field: source_domain_module_id+target_domain_module_id}
 
   - id: B1B-B9-VACCINATION-ADMINISTERED-HANDOFF
     summary: trigger_event 1088 (veterinary_vaccination.administered) has zero handoffs rows.
     finding: |
-      The event description names two downstream consumers (CSM next-dose reminder scheduling; GRC rabies-tag
-      reporting where state law requires submission), but no handoff row was loaded. Comparable events on this
-      domain (1089 vaccination.due, 330 appointment.due) already have CSM rows; the GRC reporting outbound is a
-      net-new flow.
+      The event description names two downstream consumers (CSM next-dose reminder scheduling; GRC
+      rabies-tag reporting where state law requires submission), but no handoff row was loaded. Source
+      module now resolvable: CLINICAL-CARE (321).
     action: |
-      Author 2 outbound handoffs on trigger_event_id=1088 (data_object_id=397, source_domain_id=151). Targets:
-      CSM (id 30) and GRC (id 15). integration_pattern + friction_level need user judgment per row. CSM target
-      module is deterministic (CSM-CASE-MGMT, id 112); GRC target module waits on GRC M1.
+      Author 2 outbound handoffs on trigger_event_id=1088 (data_object_id=397, source_domain_id=151,
+      source_domain_module_id=321). Targets: CSM (id 30, -> CSM-CASE-MGMT 112) and GRC (id 15).
+      integration_pattern + friction_level need user judgment per row.
     blocked_by:
       - {type: user_decision, ref: B2-VACCINATION-ADMIN-PATTERN, reason: integration_pattern + friction_level + GRC inclusion}
       - {type: domain_audit, blocking_domain: GRC, milestone: M1-modules-authored}
@@ -81,105 +139,17 @@ b1b:
       - {handoff_id: null, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: CSM, trigger_event: veterinary_vaccination.administered, payload: veterinary_vaccinations, null_field: row-not-yet-loaded}
       - {handoff_id: null, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: GRC, trigger_event: veterinary_vaccination.administered, payload: veterinary_vaccinations, null_field: row-not-yet-loaded}
 
-  - id: B1B-B11-ALIASES
-    summary: Zero data_object_aliases on any of the 5 masters; "Client" alias on pet_owners triggers Rule #9 collision arbitration.
-    finding: |
-      Vendor-universal aliases are absent: pet_owners <-> "Client" (the universal PIMS term across IDEXX
-      Cornerstone, ezyVet, AVImark), "Owner"; animal_patients <-> "Patient", "Pet Patient"; veterinary_vaccinations
-      <-> "Vaccine Record", "Immunization"; veterinary_lab_results <-> "Lab Test", "Diagnostics Result";
-      controlled_substance_ledger_entries <-> "DEA Log Entry", "Schedule Drug Log", "C2-5 Ledger". "Client" is
-      the most load-bearing because IDEXX/ezyVet UIs use it pervasively. Rule #9 collision arbitration: "Client"
-      is a high-collision bare word across the catalog (CSM customer_contacts, CRM customers, etc.) and warrants
-      explicit canonical-bare-word stance or domain-prefixed alias.
-    action: |
-      Draft ~8 alias rows. Surface the "Client" canonical-bare-word posture (alias-only vs. canonical claim) for
-      user decision; load the rest as straight aliases. data_object_aliases.notes is off-limits per Rule #15.
-    blocked_by:
-      - {type: user_decision, ref: B2-CLIENT-ALIAS-POSTURE, reason: "Rule 9 arbitration on Client cross-catalog collision"}
-    affected_masters:
-      - {data_object_id: 395, name: animal_patients, target_module_id: null, workflow: clinical}
-      - {data_object_id: 396, name: pet_owners, target_module_id: null, workflow: client-record}
-      - {data_object_id: 397, name: veterinary_vaccinations, target_module_id: null, workflow: preventive-care}
-      - {data_object_id: 398, name: veterinary_lab_results, target_module_id: null, workflow: diagnostics}
-      - {data_object_id: 399, name: controlled_substance_ledger_entries, target_module_id: null, workflow: DEA-controlled-dispense}
-
-  - id: B1B-B12-LIFECYCLE-STATES
-    summary: Zero data_object_lifecycle_states across all 5 masters; Rule #12 requires states or config-shape exemption per master.
-    finding: |
-      All 5 masters carry observable workflows per the prior audit's B12 sketch: animal_patients
-      (active/inactive/deceased/transferred), pet_owners (prospective/active/collections/inactive),
-      veterinary_vaccinations (scheduled/administered/due/overdue/waived), veterinary_lab_results
-      (ordered/sampled/received/reviewed/critical/archived), controlled_substance_ledger_entries
-      (drawn/dispensed/wasted/reconciled/discrepancy-flagged with DEA Form 41 wastage path). None qualifies for
-      the config-shape exemption.
-    action: |
-      Author state machines per the B12 list. Each row carries state_name, state_order, is_initial / is_terminal,
-      requires_permission flags, permission_verb_override for non-obvious verbs (e.g. deceased -> mark_deceased,
-      reconciled -> reconcile_ledger), and domain_module_id (depends on module shape from B1B-M1-MODULES).
-    blocked_by:
-      - {type: user_decision, ref: B2-CONFIG-SHAPE-CHECK, reason: "confirm none qualifies for Rule 12 config-shape exemption"}
-      - {type: prerequisite_entity, ref: B1B-M1-MODULES, reason: "domain_module_id assignment needs modules"}
-    affected_masters:
-      - {data_object_id: 395, name: animal_patients, target_module_id: null, workflow: clinical-lifecycle}
-      - {data_object_id: 396, name: pet_owners, target_module_id: null, workflow: client-lifecycle}
-      - {data_object_id: 397, name: veterinary_vaccinations, target_module_id: null, workflow: vaccination-lifecycle}
-      - {data_object_id: 398, name: veterinary_lab_results, target_module_id: null, workflow: lab-result-lifecycle}
-      - {data_object_id: 399, name: controlled_substance_ledger_entries, target_module_id: null, workflow: DEA-ledger-lifecycle}
-
-  - id: B1B-F1-F3-F7-SKILL-LAYER
-    summary: Legacy vet-pract-mgmt-system skill (id 116, domain_module_id=null) with 6 thin tools; F2 + F3 + F7 all gated on M1.
-    finding: |
-      F1 transitional state: 1 legacy domain-level skill, no module-level skills exist yet (acceptable per F1 only
-      until modules are authored). F3: thin tool set (5 query + 1 send_email side_effect, all coverage_tier=
-      platform); zero mutate, zero workflow gates, zero fetch (IDEXX VetConnect Plus / Antech), zero inbound
-      (lab-result push, payment-settlement). F7: send_email is a channel primitive on reminder workflows that
-      qualify as substitutable-channel (vaccination-due, appointment-due, lab-critical) and should default to
-      notify_person; only retain channel-direct linkage if a workflow truly requires a specific channel.
-    action: |
-      Once Bucket 2.1 module shape is resolved and modules are authored: (1) author one skill_type='system' skill
-      per module (Rule #17); (2) redistribute the 5 query tools across the per-module skills following entity
-      ownership; (3) add per-module mutate tools (mutate_animal_patient_status, mutate_controlled_substance_
-      ledger_dispense (DEA-attributed), mutate_veterinary_lab_result_review) plus fetch_idexx_vetconnect_lab_
-      result, fetch_antech_lab_result, inbound_receive_lab_result_webhook, inbound_receive_payment_settlement_
-      webhook; (4) swap send_email links for notify_person on reminder flows; (5) retire the legacy id=116 skill.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1-MODULES, reason: per-module skills require modules}
-    extra_legacy_skill_id: 116
-    extra_legacy_tool_ids: [744, 745, 746, 747, 748, 37]
-
-  - id: B1B-B10b-SOURCE-MODULE-FK
-    summary: All 6 outbound handoffs carry source_domain_module_id=NULL; gated on VET-PRACT-MGMT M1.
-    finding: |
-      handoffs 335 (-> GRC), 336 (-> SUP-LIFE), 337 (-> CSM), 946 (-> ERP-FIN), 947 (-> CSM), 948 (-> GRC) each
-      have source_domain_module_id=NULL because VET-PRACT-MGMT has zero modules. Target-side NULLs split: CSM
-      targets (337, 947) are deterministically resolvable to CSM-CASE-MGMT (id 112) on CSM's own B10b audit; GRC,
-      SUP-LIFE, ERP-FIN targets wait on those partner-domain M1 cures.
-    action: |
-      After VET-PRACT-MGMT modules are authored (B1B-M1-MODULES), backfill source_domain_module_id per the
-      master-of-trigger_event rule: pet_owner.* -> PATIENT-CARE or INVOICING per Bucket 2.1; controlled_substance
-      .* -> INVENTORY-RX; animal_patient.* -> PATIENT-CARE or APPOINTMENTS; vaccination.* -> PATIENT-CARE;
-      lab_result.* -> LAB-INTEGRATION.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
-    affected_handoffs:
-      - {handoff_id: 335, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: GRC, trigger_event: controlled_substance.dispensed, payload: controlled_substance_ledger_entries, null_field: source_domain_module_id+target_domain_module_id}
-      - {handoff_id: 336, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: SUP-LIFE, trigger_event: controlled_substance.dispensed, payload: controlled_substance_ledger_entries, null_field: source_domain_module_id+target_domain_module_id}
-      - {handoff_id: 337, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: CSM, trigger_event: animal_patient.appointment_due, payload: animal_patients, null_field: source_domain_module_id+target_domain_module_id}
-      - {handoff_id: 946, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: ERP-FIN, trigger_event: pet_owner.registered, payload: pet_owners, null_field: source_domain_module_id+target_domain_module_id}
-      - {handoff_id: 947, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: CSM, trigger_event: veterinary_vaccination.due, payload: veterinary_vaccinations, null_field: source_domain_module_id+target_domain_module_id}
-      - {handoff_id: 948, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: GRC, trigger_event: veterinary_lab_result.critical, payload: veterinary_lab_results, null_field: source_domain_module_id+target_domain_module_id}
-
   - id: B1B-B8-GRC-MIRRORS
     summary: No outbound data_object_relationships mirror handoffs 335 + 948 (-> GRC); blocked on GRC payload masters.
     finding: |
-      handoff 335 (controlled_substance.dispensed -> GRC) and 948 (veterinary_lab_result.critical -> GRC) carry
-      payloads (controlled_substance_ledger_entries 399, veterinary_lab_results 398) but no data_object_
-      relationships row mirrors them to a GRC-side master. GRC has 0 modules and likely 0 candidate payload
-      masters (compliance_obligations, adverse_events) loaded.
+      handoff 335 (controlled_substance.dispensed -> GRC) and 948 (veterinary_lab_result.critical ->
+      GRC) carry payloads (controlled_substance_ledger_entries 399, veterinary_lab_results 398) but no
+      data_object_relationships row mirrors them to a GRC-side master. GRC has 0 modules and no
+      candidate payload masters loaded.
     action: |
-      Wait for GRC M1 + Phase B to land the payload masters (likely compliance_obligations / adverse_events /
-      regulatory_reports). Then author 2 cross-domain data_object_relationships per Rule B8 outbound asymmetry
-      (this domain's masters as source).
+      Wait for GRC M1 + Phase B to land the payload masters (likely compliance_obligations /
+      adverse_events / regulatory_reports). Then author 2 cross-domain data_object_relationships per
+      Rule B8 outbound asymmetry (this domain's masters as source).
     blocked_by:
       - {type: domain_audit, blocking_domain: GRC, milestone: M1-modules-and-payload-masters}
     affected_handoffs:
@@ -189,8 +159,8 @@ b1b:
   - id: B1B-B8-SUP-LIFE-MIRROR
     summary: No outbound data_object_relationships mirror handoff 336 (-> SUP-LIFE); blocked on SUP-LIFE reorder payload master.
     finding: |
-      handoff 336 (controlled_substance.dispensed -> SUP-LIFE) is the reorder loop; no SUP-LIFE-side master for
-      replenishment_orders / supplier_orders exists. SUP-LIFE has 0 modules per spot-check.
+      handoff 336 (controlled_substance.dispensed -> SUP-LIFE) is the reorder loop; no SUP-LIFE-side
+      master for replenishment_orders / supplier_orders exists. SUP-LIFE has 0 modules.
     action: |
       Wait for SUP-LIFE M1 + Phase B. Then author one cross-domain data_object_relationships row from
       controlled_substance_ledger_entries (399) to the SUP-LIFE reorder master.
@@ -202,11 +172,11 @@ b1b:
   - id: B1B-B8-ERP-FIN-MIRROR
     summary: No outbound data_object_relationships mirror handoff 946 (-> ERP-FIN); blocked on ERP-FIN AR payload master.
     finding: |
-      handoff 946 (pet_owner.registered -> ERP-FIN) creates the AR profile; ERP-FIN has 0 modules and no
-      candidate payload master (customers / ar_accounts) loaded for this domain to point at.
+      handoff 946 (pet_owner.registered -> ERP-FIN) creates the AR profile; ERP-FIN has 0 modules and
+      no candidate payload master (customers / ar_accounts) loaded for this domain to point at.
     action: |
-      Wait for ERP-FIN M1 + Phase B. Then author one cross-domain data_object_relationships row from pet_owners
-      (396) to the ERP-FIN AR master.
+      Wait for ERP-FIN M1 + Phase B. Then author one cross-domain data_object_relationships row from
+      pet_owners (396) to the ERP-FIN AR master.
     blocked_by:
       - {type: domain_audit, blocking_domain: ERP-FIN, milestone: M1-modules-and-AR-master}
     affected_handoffs:
@@ -215,214 +185,231 @@ b1b:
   - id: B1B-H1-ERP-FIN-APQC
     summary: Handoff 946 (pet_owner.registered -> ERP-FIN) is the only outbound without a handoff_processes row.
     finding: |
-      handoff_processes coverage on the 6 outbound handoffs: 5 carry agent_curated tags (335 -> 199, 336 -> 815,
-      337 -> 734, 947 -> 734, 948 -> 199). Handoff 946 remains untagged. The closest cross-industry PCF
-      candidates are 303 "Process accounts receivable (AR)" (L3) which mis-frames the trigger (registration, not
-      invoicing/collection), and 736 "Collect and maintain account information" (L4) which fits the substrate
-      but mis-frames the trigger similarly.
+      handoff_processes coverage on the 6 outbound handoffs: 5 carry agent_curated tags (335 -> 199,
+      336 -> 815, 337 -> 734, 947 -> 734, 948 -> 199). Handoff 946 remains untagged. Closest
+      cross-industry PCF candidates: 303 "Process accounts receivable (AR)" (L3) and 736 "Collect and
+      maintain account information" (L4), both mis-framing the trigger (registration, not invoicing).
     action: |
-      Either (a) author handoff_processes (handoff_id=946, process_id=736, proposal_source='agent_curated') as
-      best-available, OR (b) defer to Discover Pass 3 custom-process authoring for a "register new customer
-      account" activity. User picks which.
+      Either (a) author handoff_processes (handoff_id=946, process_id=736, proposal_source=
+      'agent_curated') as best-available, OR (b) defer to Discover Pass 3 custom-process authoring.
+      User picks which.
     blocked_by:
       - {type: user_decision, ref: B2-ERP-FIN-APQC, reason: classify-or-defer choice}
     affected_handoffs:
       - {handoff_id: 946, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: ERP-FIN, trigger_event: pet_owner.registered, payload: pet_owners, null_field: handoff_processes-row}
 
 b2:
-  - id: B2-MODULE-SHAPE
-    summary: Pick the VET-PRACT-MGMT module set (4 / 5 / 6 modules; boarding scope).
+  - id: B2-MODULE-RESHAPE-ON-B3
+    summary: "Whether to split the 3 modules into the richer 4-6 module shape once the B3 entities land."
     question: |
-      How many modules should VET-PRACT-MGMT have and which masters anchor each? Options below.
+      The 2026-06-02 build used a 3-module shape (CLINICAL-CARE / FRONT-OFFICE / PHARMACY-RX) because
+      only the 5 existing masters were available. The prior B2-MODULE-SHAPE 5/6-split presumed
+      veterinary_appointments, vet_invoices, lab_test_orders, drug_inventory etc. Once those B3
+      entities are loaded, split FRONT-OFFICE into APPOINTMENTS + INVOICING, and/or carve
+      LAB-INTEGRATION out of CLINICAL-CARE, and/or add BOARDING?
     options:
-      - a) 5-module split: PATIENT-CARE (animal_patients + veterinary_vaccinations + future exam_notes + reminder_protocols + species_breeds); APPOINTMENTS (future veterinary_appointments); INVENTORY-RX (controlled_substance_ledger_entries + future prescriptions + drug_inventory + dea_reports); LAB-INTEGRATION (veterinary_lab_results + future lab_test_orders); INVOICING (pet_owners + future invoices + payment_transactions).
-      - b) 4-module split: collapses APPOINTMENTS into PATIENT-CARE (IDEXX / ezyVet bundle scheduling tightly with patient records).
-      - c) 6-module split: adds BOARDING (future boarding_reservations).
+      - keep-3-modules-and-grow-them-in-place
+      - split-to-5-when-appointments+invoices+lab-orders+inventory-land
+      - split-to-6-adding-BOARDING
     why: |
-      pet_owners is dual-anchored (clinical + billing); module choice determines whether INVOICING is master or
-      embedded_master of pet_owners. Rule #17 + Rule #14 require a system skill + capability mapping per module,
-      so split granularity changes the Phase-S work substantially.
+      pet_owners currently masters in FRONT-OFFICE; splitting INVOICING out would re-home invoicing
+      data_objects but leave pet_owners mastered in the client/scheduling half. Reshape is cheap while
+      the modules are still entity-light; deferring past the B3 load risks a bigger migration.
 
   - id: B2-CATALOG-COPY
-    summary: Approve buyer-voice catalog_tagline + catalog_description for VET-PRACT-MGMT.
+    summary: Approve buyer-voice catalog UX copy for the domain (A4) and the 3 modules (M8).
     question: |
-      Rule #20 requires user-approved buyer-voice copy for the domain's catalog_tagline (one sentence) and
-      catalog_description (1-3 paragraphs). Agent will draft on request; please confirm the trigger.
+      Rule #20 requires user-approved buyer-voice copy for domains id 151 (catalog_tagline +
+      catalog_description) and for each of modules 321/322/323 (catalog_tagline + catalog_description).
+      All are currently empty. Agent will draft on request; confirm the trigger.
     options:
-      - draft-and-surface (agent drafts, user approves wording)
+      - draft-and-surface (agent drafts all, user approves wording)
       - user-supplies-text (user provides exact wording)
-      - defer-until-modules (write per-module M8 copy first, then derive the domain-grain summary)
+      - modules-first-then-derive-domain-summary
     why: |
-      Once a non-empty value lands, Rule #20 forbids overwrite without per-row approval; marketing voice ages on
-      a different cycle than the analyst catalog.
+      Once a non-empty value lands, Rule #20 forbids overwrite without per-row approval; this is the
+      execution gate for B1A-MODULE-CATALOG-UX.
 
   - id: B2-PET-OWNER-PERSONAL-CONTENT
     summary: PATCH data_objects.has_personal_content=true on pet_owners (id 396)?
     question: |
-      pet_owners carries PII (name, address, payment instrument, ZIP, optional SSN-derived credit data); state
-      consumer-privacy laws (CCPA, etc.) apply to veterinary clinics even though HIPAA does not. Should
-      has_personal_content be set true?
+      pet_owners carries PII (name, address, payment instrument, ZIP, optional SSN-derived credit
+      data); state consumer-privacy laws (CCPA, etc.) apply to veterinary clinics even though HIPAA
+      does not. Should has_personal_content be set true?
     options:
       - "yes"
       - "no"
       - defer-to-Phase-0
     why: |
-      Pattern flag drives downstream RBAC + retention scaffolding; positive re-eval is required per Rule #12 and
-      should not be left at false-by-default without an explicit user decision.
+      Pattern flag drives downstream RBAC + retention scaffolding; positive re-eval is required per
+      Rule #12 and should not be left at false-by-default without an explicit user decision.
 
   - id: B2-CONTROLLED-SUBSTANCE-SUBMIT-LOCK
     summary: PATCH data_objects.has_submit_lock=true on controlled_substance_ledger_entries (id 399)?
     question: |
-      DEA 21 CFR 1304 makes the controlled-substance ledger append-only by federal law; corrections require a
-      strikethrough + initialed entry, not edit-in-place. Should has_submit_lock be set true?
+      DEA 21 CFR 1304 makes the controlled-substance ledger append-only by federal law; corrections
+      require a strikethrough + initialed entry, not edit-in-place. Should has_submit_lock be true?
     options:
       - "yes"
       - "no"
       - defer-to-Phase-0
     why: |
-      Submit-lock flag drives the platform's post-submit edit guard; mis-set on a DEA ledger is a regulatory
-      hazard.
+      Submit-lock flag drives the platform's post-submit edit guard; mis-set on a DEA ledger is a
+      regulatory hazard.
 
   - id: B2-CONFIG-SHAPE-CHECK
     summary: Confirm none of the 5 current masters qualifies for the Rule #12 config-shape exemption.
     question: |
-      Each of animal_patients, pet_owners, veterinary_vaccinations, veterinary_lab_results, and controlled_
-      substance_ledger_entries carries an observable workflow (drafted in B12). Confirm all 5 get lifecycle
+      Each of animal_patients, pet_owners, veterinary_vaccinations, veterinary_lab_results, and
+      controlled_substance_ledger_entries carries an observable workflow. Confirm all 5 get lifecycle
       states loaded, none exempt?
     options:
       - confirm-all-5-get-states
       - exempt-one-or-more-and-name-which
     why: |
-      Rule #12 exemption is config-shape (author-once / occasionally-edit, no workflow); none of these qualify.
-      Explicit confirmation closes the audit cleanly.
+      Rule #12 exemption is config-shape (author-once / occasionally-edit, no workflow); none of these
+      qualify. Explicit confirmation unblocks B1B-B12-LIFECYCLE-STATES.
 
   - id: B2-CAPABILITY-FUNCTION-OVERRIDES
-    summary: Load 3 business_function_capabilities overrides where the capability's owner diverges from the domain's owner.
+    summary: Load 3 business_function_capabilities overrides where the capability owner diverges from the domain owner.
     question: |
-      Plausible overrides: VET-INVOICING -> Accounts Receivable; VET-INVENTORY-RX -> Compliance Operations
-      (DEA); VET-REMINDER-MGMT -> Customer Service. Domain owner is Business Operations. Add all three?
+      Plausible overrides: VET-INVOICING -> Accounts Receivable; VET-INVENTORY-RX -> Compliance
+      Operations (DEA); VET-REMINDER-MGMT -> Customer Service. Domain owner is Business Operations.
+      Add all three?
     options:
       - all-three
       - subset-name-which
       - none-keep-domain-RACI
     why: |
-      Rule C2 only requires overrides where the capability diverges; over-loading clutters the catalog, under-
-      loading hides the per-capability ownership.
+      Rule C2 only requires overrides where the capability diverges; over-loading clutters the catalog,
+      under-loading hides per-capability ownership.
 
   - id: B2-VACCINATION-ADMIN-PATTERN
     summary: integration_pattern, friction_level, and GRC-inclusion for the 2 proposed handoffs on trigger_event 1088.
     question: |
-      For trigger_event 1088 (veterinary_vaccination.administered), pattern + friction for the CSM next-dose
-      reminder row and the GRC rabies-tag reporting row. Should GRC be included given state law variance?
+      For trigger_event 1088 (veterinary_vaccination.administered), pattern + friction for the CSM
+      next-dose reminder row and the GRC rabies-tag reporting row. Should GRC be included given state
+      law variance?
     options:
       - CSM-api-call-low + GRC-batch_sync-medium
       - CSM-api-call-low-only-defer-GRC
       - CSM-api-call-low + GRC-event_stream-low
     why: |
-      No deterministic default; pattern shape depends on whether GRC reporting is real-time or end-of-day.
+      No deterministic default; pattern shape depends on whether GRC reporting is real-time or
+      end-of-day. Unblocks B1B-B9-VACCINATION-ADMINISTERED-HANDOFF.
 
   - id: B2-CLIENT-ALIAS-POSTURE
     summary: Rule #9 arbitration on the "Client" alias for pet_owners.
     question: |
-      "Client" is a high-collision bare word (CSM customer_contacts, CRM customers, etc.). For pet_owners alias,
-      pick: industry-synonym only (`alias_name='Client'`, scoped to vet vendors), domain-prefixed (`alias_name=
-      'vet client'`), or canonical-claim (none — pet_owners stays prefixed, "Client" is the alias).
+      "Client" is a high-collision bare word (CSM customer_contacts, CRM customers). For the
+      pet_owners alias, pick: industry-synonym only (alias_name='Client', scoped to vet vendors),
+      domain-prefixed (alias_name='vet client'), or canonical-claim (none, pet_owners stays prefixed
+      and "Client" is the alias).
     options:
       - alias-only-Client
       - alias-only-vet-client
       - canonical-claim-defer
     why: |
-      Universal PIMS UI label across IDEXX, ezyVet, AVImark; not flipping the alias means search/triggering will
-      miss the term entirely.
+      Universal PIMS UI label across IDEXX, ezyVet, AVImark; not flipping the alias means
+      search/triggering misses the term. Unblocks B1B-B11-ALIASES.
 
   - id: B2-ERP-FIN-APQC
     summary: Classify or defer the only untagged outbound handoff (946 -> ERP-FIN).
     question: |
-      Best-available cross-industry PCF candidate is 736 "Collect and maintain account information" (L4). The
-      trigger (pet_owner.registered) is registration, not AR collection, so the match is partial. Tag with 736,
-      or defer to Discover Pass 3 custom-process authoring?
+      Best-available cross-industry PCF candidate is 736 "Collect and maintain account information"
+      (L4). The trigger (pet_owner.registered) is registration, not AR collection, so the match is
+      partial. Tag with 736, or defer to Discover Pass 3 custom-process authoring?
     options:
       - tag-with-process-736
       - tag-with-process-303-AR-parent
       - defer-to-discover
     why: |
-      H1 coverage on the domain is otherwise 5 of 6; clean closure or explicit deferral keeps the audit honest.
+      H1 coverage on the domain is otherwise 5 of 6; clean closure or explicit deferral keeps the audit
+      honest. Unblocks B1B-H1-ERP-FIN-APQC.
 
 b3:
   - id: B3-VETERINARY-APPOINTMENTS
     candidate: veterinary_appointments
     rationale: |
-      Vendor-universal master (IDEXX Cornerstone appointment book, ezyVet calendar, AVImark scheduler, Vetspire
-      Calendar, Provet boarding). Effectively required for the VET-APPT-SCHED capability to land in any module.
-      Phase 0 verification: confirm appointment as first-class entity vs. derived from exam_notes.
+      Vendor-universal master (IDEXX Cornerstone appointment book, ezyVet calendar, AVImark scheduler,
+      Vetspire Calendar, Provet boarding). The VET-APPT-SCHED capability (429) currently sits in
+      FRONT-OFFICE with NO dedicated appointment master (it leans on pet_owners + embedded
+      animal_patients). This is the single most load-bearing missing master: scheduling has no
+      first-class entity. Phase 0: confirm appointment as first-class vs. derived from exam_notes.
     vendor_evidence:
       - IDEXX Cornerstone
       - ezyVet
       - AVImark
       - Vetspire
-    proposed_module: VET-PRACT-MGMT-APPOINTMENTS
+    proposed_module: VET-PRACT-MGMT-FRONT-OFFICE
 
-  - id: B3-EXAM-NOTES-REMINDER-PROTOCOLS
-    candidate: veterinary_exam_notes, vaccination_reminder_protocols
+  - id: B3-INVOICES-PAYMENTS
+    candidate: vet_invoices, vet_payment_transactions
     rationale: |
-      SOAP-note master (IDEXX SOAP editor, ezyVet clinical-records, Vetspire SOAP). Reminder protocols are config
-      (AAHA / AVMA vaccine schedules keyed off species + breed + age). Phase 0: SOAP structure varies vendor-by-
-      vendor (structured fields vs. rich text); reminder_protocols may qualify for Rule #12 config-shape
-      exemption.
+      VET-INVOICING capability (430) sits in FRONT-OFFICE but has NO domain-owned invoice/payment
+      master; it currently borrows supplier_invoices (AP-side, id 75) as a contributor, which is the
+      wrong direction (that is vendor-billing, not client-billing). In-clinic POS + client invoicing
+      (IDEXX integrated POS via Worldpay, ezyVet Stripe/Square, Provet payments) is a real client-side
+      master gap. Phase 0: invoice/payment may partly belong to ERP-FIN; veterinary POS is in-clinic
+      and PCI-DSS-bounded so a domain-owned master makes sense.
     vendor_evidence:
-      - IDEXX Cornerstone
+      - IDEXX integrated POS
       - ezyVet
-      - Vetspire
-      - AAHA/AVMA guidelines
-    proposed_module: VET-PRACT-MGMT-PATIENT-CARE
+      - Provet Cloud
+    proposed_module: VET-PRACT-MGMT-FRONT-OFFICE
 
   - id: B3-PRESCRIPTIONS-INVENTORY-DEA-REPORTS
     candidate: veterinary_prescriptions, vet_drug_inventory_items, dea_reports
     rationale: |
-      Three INVENTORY-RX masters: e-Rx (IDEXX Rx pad, ezyVet e-Rx, Cubex Rx), drug inventory (AVImark inventory,
-      ezyVet stock control, IDEXX Inventory Pro), DEA Form 41 (wastage) / Form 222 (Schedule II ordering) /
-      state PMP reports. Phase 0: prescriptions as separate master from ledger-entry; dea_reports as derived
-      aggregations vs. master-with-workflow.
+      PHARMACY-RX (323) currently masters only controlled_substance_ledger_entries; the VET-INVENTORY-RX
+      capability also needs general drug inventory (AVImark inventory, ezyVet stock control, IDEXX
+      Inventory Pro), e-Rx (IDEXX Rx pad, ezyVet e-Rx, Cubex Rx), and DEA Form 41 (wastage) / Form 222
+      (Schedule II ordering) / state PMP reports. Without vet_drug_inventory_items the module cannot
+      represent non-controlled stock or reorder thresholds. Phase 0: prescriptions as separate master
+      from ledger-entry; dea_reports as derived vs. master-with-workflow.
     vendor_evidence:
       - IDEXX Inventory Pro
       - Cubex
       - ezyVet
       - DEA Form 41 / 222
-    proposed_module: VET-PRACT-MGMT-INVENTORY-RX
+    proposed_module: VET-PRACT-MGMT-PHARMACY-RX
 
-  - id: B3-INVOICES-PAYMENTS
-    candidate: vet_invoices, vet_payment_transactions
+  - id: B3-EXAM-NOTES-REMINDER-PROTOCOLS
+    candidate: veterinary_exam_notes, vaccination_reminder_protocols
     rationale: |
-      In-clinic POS + invoicing (IDEXX integrated POS via Worldpay, ezyVet Stripe/Square, Provet payments).
-      Phase 0: invoice/payment may partly belong to ERP-FIN; veterinary POS is in-clinic and PCI-DSS-bounded so
-      a domain-owned master makes sense for the clinical surface even with ERP-FIN integration.
+      CLINICAL-CARE (321) hosts VET-PATIENT-CARE but has no SOAP-note master (IDEXX SOAP editor, ezyVet
+      clinical-records, Vetspire SOAP) and no reminder-protocol config (AAHA / AVMA vaccine schedules
+      keyed off species + breed + age) for VET-REMINDER-MGMT. Phase 0: SOAP structure varies vendor-by-
+      vendor; reminder_protocols may qualify for the Rule #12 config-shape exemption.
     vendor_evidence:
-      - IDEXX integrated POS
+      - IDEXX Cornerstone
       - ezyVet
-      - Provet Cloud
-    proposed_module: VET-PRACT-MGMT-INVOICING
+      - Vetspire
+      - AAHA/AVMA guidelines
+    proposed_module: VET-PRACT-MGMT-CLINICAL-CARE
+
+  - id: B3-LAB-TEST-ORDERS-SPECIES-BREEDS
+    candidate: lab_test_orders, vet_species_breeds
+    rationale: |
+      CLINICAL-CARE masters veterinary_lab_results but not lab_test_orders (orders fire to IDEXX VetLab
+      / VetConnect Plus or Antech, results return asynchronously) and not vet_species_breeds (config
+      table driving weight-based dose calc + breed-specific reminder protocols). Phase 0: lab_orders
+      pattern (master with workflow vs. derived from appointments).
+    vendor_evidence:
+      - IDEXX VetLab / VetConnect Plus
+      - Antech Lab
+      - AAHA species/breed reference
+    proposed_module: VET-PRACT-MGMT-CLINICAL-CARE
 
   - id: B3-BOARDING-RESERVATIONS
     candidate: boarding_reservations
     rationale: |
-      Optional capability NOT in the current 6-capability list. Many US clinics outsource boarding; flagship
-      vendors that bundle it: AVImark boarding, IDEXX Cornerstone boarding, Provet boarding module. Phase 0
-      decision is whether to add the capability + module at all.
+      Optional capability NOT in the current 6-capability list. Many US clinics outsource boarding;
+      flagship vendors that bundle it: AVImark boarding, IDEXX Cornerstone boarding, Provet boarding
+      module. Phase 0 decision is whether to add the capability + module at all (would be a 4th/6th
+      module).
     vendor_evidence:
       - AVImark boarding
       - IDEXX Cornerstone boarding
       - Provet Cloud
     proposed_module: VET-PRACT-MGMT-BOARDING
-
-  - id: B3-LAB-TEST-ORDERS-SPECIES-BREEDS
-    candidate: lab_test_orders, vet_species_breeds
-    rationale: |
-      lab_test_orders are typically distinct from lab_results (orders fire to IDEXX VetLab / VetConnect Plus or
-      Antech, results return asynchronously). vet_species_breeds is a config table driving weight-based dose
-      calc + breed-specific reminder protocols (AAHA/AVMA reference). Phase 0: lab_orders pattern (master with
-      workflow vs. derived from appointments).
-    vendor_evidence:
-      - IDEXX VetLab / VetConnect Plus
-      - Antech Lab
-      - AAHA species/breed reference
-    proposed_module: VET-PRACT-MGMT-LAB-INTEGRATION

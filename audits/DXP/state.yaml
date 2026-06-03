@@ -1,14 +1,117 @@
 schema_version: 2
 domain: DXP
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-05-31"
+next_action_by: agent
+last_audit: "2026-06-02"
 
 b1a:
+  - id: B1A-SYSTEM-SKILLS
+    summary: "Author one skill_type='system' skill per DXP module (236 / 237 / 238) with 4-8 tools each, then DELETE legacy domain-level skill dxp-system (id 52)."
+    finding: >
+      F1 / F2 / F3 hard fail, now unblocked by the 2026-06-02 modularization. DXP has 3 full
+      modules (DXP-AUTHORING 236, DXP-EXPERIENCE-PERSONALIZATION 237, DXP-PORTAL-JOURNEYS 238)
+      but zero module-anchored system skills. Rule #17 requires exactly one skill_type='system'
+      skill with domain_module_id set and >=1 skill_tools row per module. The legacy skill
+      dxp-system (id 52, domain_id 77, domain_module_id null) carries 7 query-only skill_tools
+      (query_web_pages, query_content_components, query_experiences, query_personalization_rules,
+      query_ab_tests, query_segments_dxp, query_journey_steps): zero mutate, zero workflow-gate,
+      zero side_effect. It is the migration target, not the target state.
+    action: >
+      Author one system skill per module with domain_module_id set: DXP-AUTHORING (236) tools
+      over web_pages / content_components / digital_experiences (query + mutate create_web_page,
+      publish_web_page, update_content_component + side_effect purge_cdn_cache / invalidate_render_cache);
+      DXP-EXPERIENCE-PERSONALIZATION (237) over personalization_rules / ab_tests / segments_dxp
+      (query + mutate activate_personalization_rule, start_ab_test, publish_segment_dxp);
+      DXP-PORTAL-JOURNEYS (238) over journey_steps / digital_experiences (query + mutate +
+      inbound receive_cdp_segment_update). 4-8 tools per skill mixing query / mutate / workflow-gate /
+      side_effect / inbound. After all three ship with >=1 skill_tools, DELETE legacy dxp-system id 52 (F1).
+    affected_modules: [236, 237, 238]
+    extra_legacy_skill_to_delete: {skill_id: 52, skill_name: "dxp-system"}
+    extra_required_tool_shapes: ["query (per master)", "mutate (publish / activate / start)", "side_effect (purge_cdn_cache, invalidate_render_cache)", "inbound (receive_cdp_segment_update)"]
+
+  - id: B1A-LIFECYCLE-STATES
+    summary: "Author data_object_lifecycle_states for all 7 DXP masters with domain_module_id set on workflow gates (modules now exist)."
+    finding: >
+      B12 hard fail, now unblocked. Zero data_object_lifecycle_states for any DXP master. Each
+      master has an obvious ladder: web_pages (441) draft / in_review / approved / published /
+      unpublished / archived; content_components (442) draft / published / deprecated;
+      digital_experiences (443) planned / active / ended; personalization_rules (444) draft /
+      active / paused / retired; ab_tests (445) configured / running / completed / archived;
+      segments_dxp (446) draft / published / retired; journey_steps (447) defined / entered /
+      exited / abandoned. domain_module_id is now resolvable: 441 / 442 / 443 -> 236;
+      444 / 445 / 446 -> 237; 447 -> 238.
+    action: >
+      Author lifecycle states per the ladders above; mark requires_permission=true on workflow
+      gates (publish, unpublish, activate, retire, start, complete); set domain_module_id to the
+      mastering module (441 / 442 / 443 -> 236, 444 / 445 / 446 -> 237, 447 -> 238).
+    affected_masters:
+      - {data_object_id: 441, name: web_pages, target_module_id: 236, workflow: "draft -> in_review -> approved -> published -> unpublished -> archived"}
+      - {data_object_id: 442, name: content_components, target_module_id: 236, workflow: "draft -> published -> deprecated"}
+      - {data_object_id: 443, name: digital_experiences, target_module_id: 236, workflow: "planned -> active -> ended"}
+      - {data_object_id: 444, name: personalization_rules, target_module_id: 237, workflow: "draft -> active -> paused -> retired"}
+      - {data_object_id: 445, name: ab_tests, target_module_id: 237, workflow: "configured -> running -> completed -> archived"}
+      - {data_object_id: 446, name: segments_dxp, target_module_id: 237, workflow: "draft -> published -> retired"}
+      - {data_object_id: 447, name: journey_steps, target_module_id: 238, workflow: "defined -> entered -> exited -> abandoned"}
+
+  - id: B1A-INTRA-RELATIONSHIPS
+    summary: "Author 6-8 intra-domain master-to-master data_object_relationships rows now that the cross-module diagram is stable."
+    finding: >
+      B6 hard fail, now unblocked. Zero intra-domain master-to-master data_object_relationships
+      among the 7 DXP masters (ids 441-447). Expected edges: web_pages embeds content_components
+      (one-to-many); digital_experiences spans web_pages (one-to-many); personalization_rules
+      targets segments_dxp (many-to-many); ab_tests runs_on web_pages (one-to-many); ab_tests
+      evaluates personalization_rules (one-to-many); journey_steps composes digital_experiences
+      (many-to-one); journey_steps references web_pages (many-to-many).
+    action: >
+      Author 6-8 data_object_relationships rows per the edge list above. is_required keys off the
+      lifecycle state shapes from B1A-LIFECYCLE-STATES (author that first). notes empty per Rule #15.
+    affected_entities: [web_pages, content_components, digital_experiences, personalization_rules, ab_tests, segments_dxp, journey_steps]
+
+  - id: B1A-ALIASES
+    summary: "Author 14-20 data_object_aliases rows covering flagship vendor terminology for the 7 DXP masters."
+    finding: >
+      B11 hard fail, now unblocked (modules give rendering scope). Zero data_object_aliases across
+      all 7 masters. Vendor terminology: web_pages -> Page, Item, Node; content_components ->
+      Experience Fragment, Rendering, Block; digital_experiences -> Campaign, Experience;
+      personalization_rules -> Activity, Personalization Rule, Experience; ab_tests -> Experience,
+      Activity, Experiment; segments_dxp -> Audience, Profile; journey_steps -> Journey Step, Stage.
+    action: "Author 14-20 alias rows mapping each master to its flagship vendor synonyms."
+    affected_entities: [web_pages, content_components, digital_experiences, personalization_rules, ab_tests, segments_dxp, journey_steps]
+    vendor_evidence: ["Adobe AEM Sites", "Sitecore XM Cloud", "Drupal", "Adobe Target", "Optimizely", "Bloomreach", "Salesforce Experience Cloud"]
+
+  - id: B1A-WORKFLOW-EVENTS
+    summary: "Insert 5-7 trigger_events rows for workflow-gate state transitions once lifecycle states land."
+    finding: >
+      B9 coverage gap, unblocked by modules. Once B1A-LIFECYCLE-STATES lands, workflow-gate state
+      transitions web_page.archived, web_page.draft, ab_test.archived, personalization_rule.paused,
+      personalization_rule.retired, segment_dxp.retired, digital_experience.ended will have
+      requires_permission=true states but no matching trigger_events row.
+    action: "After lifecycle states land, insert 5-7 trigger_events rows, event_category='state_change', data_object_id pointing at the publishing master."
+    affected_events:
+      - {id: null, event_name: "web_page.archived", current_category: null, proposed_category: state_change}
+      - {id: null, event_name: "web_page.draft", current_category: null, proposed_category: state_change}
+      - {id: null, event_name: "ab_test.archived", current_category: null, proposed_category: state_change}
+      - {id: null, event_name: "personalization_rule.paused", current_category: null, proposed_category: state_change}
+      - {id: null, event_name: "personalization_rule.retired", current_category: null, proposed_category: state_change}
+      - {id: null, event_name: "segment_dxp.retired", current_category: null, proposed_category: state_change}
+      - {id: null, event_name: "digital_experience.ended", current_category: null, proposed_category: state_change}
+
   - id: B1A-S9
     summary: "Author 4-6 outbound cross-domain data_object_relationships from DXP masters to neighbor masters where the neighbor masters already exist in the catalog."
-    finding: "B8 hard fail. Zero outbound cross-domain data_object_relationships from DXP masters (ids 441-447) exist. The 8 outbound handoffs imply matching payload-target relationship edges that mirror each handoff's source_master -> target_master shape. Subset of 4-6 edges is loadable now where target masters are already in the catalog; the rest defer until target masters land."
-    action: "Author 4-6 data_object_relationships rows: digital_experiences -> marketing_campaigns or marketing_campaign (handoff 808 DXP->MA), segments_dxp -> audience_segments or customer_profiles (handoff 809 DXP->CDP), journey_steps -> audience_segments (handoff 810 DXP->CDP), ab_tests -> product_features or experiment_results (handoff 813 DXP->PROD-MGMT, target PM-DISCOVERY 130), web_pages -> page_audits or web_lifecycle_plans (handoffs 814 / 838 DXP->WEB-CONTOPS). Each row: relationship_type=many_to_many, relationship_kind=reference, is_required=false, owner_side=source, record_status=new. Verify target master ids via /domain_data_objects?domain_id=eq.<neighbor_id>&role=eq.master before insert. notes empty per Rule #15."
+    finding: >
+      B8 hard fail. Zero outbound cross-domain data_object_relationships from DXP masters
+      (ids 441-447). The 8 outbound handoffs imply matching payload-target relationship edges.
+      Subset of 4-6 edges is loadable now where target masters are already in the catalog; the
+      rest defer until target masters land. Now also benefits from a module home per master
+      (441 / 442 / 443 -> 236, 444 / 445 / 446 -> 237, 447 -> 238).
+    action: >
+      Author 4-6 data_object_relationships rows: digital_experiences -> marketing_campaigns
+      (handoff 808 DXP->MA), segments_dxp -> audience_segments or customer_profiles (809 DXP->CDP),
+      journey_steps -> audience_segments (810 DXP->CDP), ab_tests -> product_features or
+      experiment_results (813 DXP->PROD-MGMT, target PM-DISCOVERY 130), web_pages -> page_audits
+      or web_lifecycle_plans (814 / 838 DXP->WEB-CONTOPS). Each row: relationship_type=many_to_many,
+      relationship_kind=reference, is_required=false, owner_side=source. Verify target master ids
+      via /domain_module_data_objects?...&role=eq.master before insert. notes empty per Rule #15.
     affected_handoffs:
       - {handoff_id: 808, direction: outbound, source_domain: DXP, target_domain: MA, trigger_event: "digital_experience.activated", payload: digital_experiences, null_field: target_domain_module_id}
       - {handoff_id: 809, direction: outbound, source_domain: DXP, target_domain: CDP, trigger_event: "segment_dxp.published", payload: segments_dxp, null_field: target_domain_module_id}
@@ -19,18 +122,26 @@ b1a:
       - {handoff_id: 814, direction: outbound, source_domain: DXP, target_domain: WEB-CONTOPS, trigger_event: "web_page.published", payload: web_pages, null_field: target_domain_module_id}
       - {handoff_id: 838, direction: outbound, source_domain: DXP, target_domain: WEB-CONTOPS, trigger_event: "web_page.unpublished", payload: web_pages, null_field: target_domain_module_id}
     affected_masters:
-      - {data_object_id: 441, name: web_pages, target_module_id: null, workflow: publish_lifecycle}
-      - {data_object_id: 443, name: digital_experiences, target_module_id: null, workflow: campaign_activation}
-      - {data_object_id: 444, name: personalization_rules, target_module_id: null, workflow: activation}
-      - {data_object_id: 445, name: ab_tests, target_module_id: 130, workflow: experiment_completion}
-      - {data_object_id: 446, name: segments_dxp, target_module_id: null, workflow: publish}
-      - {data_object_id: 447, name: journey_steps, target_module_id: null, workflow: progression}
-    extra_subset: "Load only the 4-6 rows whose target master is already in the catalog. Defer the rest as B8 follow-ups until target-side masters land."
+      - {data_object_id: 441, name: web_pages, target_module_id: 236, workflow: publish_lifecycle}
+      - {data_object_id: 443, name: digital_experiences, target_module_id: 236, workflow: campaign_activation}
+      - {data_object_id: 444, name: personalization_rules, target_module_id: 237, workflow: activation}
+      - {data_object_id: 445, name: ab_tests, target_module_id: 237, workflow: experiment_completion}
+      - {data_object_id: 446, name: segments_dxp, target_module_id: 237, workflow: publish}
+      - {data_object_id: 447, name: journey_steps, target_module_id: 238, workflow: progression}
+    extra_subset: "Load only the 4-6 rows whose target master is already in the catalog. Defer the rest until target-side masters land."
 
   - id: B1A-S11
     summary: "Author 10-15 agent_curated handoff_processes rows for the 17 untagged DXP cross-domain handoffs (2 of 19 already covered)."
-    finding: "H1 hard fail. 2 of 19 cross-domain handoffs carry handoff_processes rows (handoffs 1009 product_release.shipped via process_id 1262, 1011 product_roadmap.published via process_id 625; both agent_curated + record_status=new). 0 are approved. Volume expectation per the H-band procedure target: 0.5N to 0.8N agent_curated tags on the remaining 17 untagged handoffs."
-    action: "Per handoff: search /processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry&select=id,process_name,external_id,hierarchy_level using the trigger event noun + payload data_object_name as search terms. Pick the confident L2 / L3 match, prefer parent if confident only at L4 / L5. Insert (handoff_id, process_id, proposal_source='agent_curated', record_status='new', role='implements'). For handoffs with no clean PCF match (modern digital concepts like accessibility_finding, seo_finding, content_type), defer to Discover Pass 3 custom-process authoring path and note in the audit which handoffs were deferred. Pre-specified PCF lookup proposals from the 2026-05-30 audit's B1-S11 table remain the starting point."
+    finding: >
+      H1 hard fail. 2 of 19 cross-domain handoffs carry handoff_processes rows (1009 via 1262,
+      1011 via 625; both agent_curated, record_status=new). Volume expectation 0.5N-0.8N on the
+      remaining 17 untagged handoffs.
+    action: >
+      Per handoff, search /processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry
+      using the trigger noun + payload name. Pick the confident L2 / L3 match. Insert
+      (handoff_id, process_id, proposal_source='agent_curated', record_status='new', role='implements').
+      For modern digital concepts with no clean PCF match (accessibility_finding, seo_finding,
+      content_type), defer to Discover Pass 3 custom-process authoring.
     affected_handoffs:
       - {handoff_id: 808, direction: outbound, source_domain: DXP, target_domain: MA, trigger_event: "digital_experience.activated", payload: digital_experiences, null_field: none}
       - {handoff_id: 809, direction: outbound, source_domain: DXP, target_domain: CDP, trigger_event: "segment_dxp.published", payload: segments_dxp, null_field: none}
@@ -52,94 +163,39 @@ b1a:
     extra_already_tagged: [1009, 1011]
     extra_defer_candidates: [97, 815, 820]
 
+  - id: B1A-CATALOG-UX
+    summary: "PATCH catalog_tagline and catalog_description onto the 3 new DXP modules (M8) once the domain-level wording in B2-3 is settled."
+    finding: >
+      M8 / A4. The 3 new DXP modules (236, 237, 238) and domain 77 carry empty catalog_tagline /
+      catalog_description. Module rows now exist to PATCH (the prior audit noted M8 had no rows to
+      target). Rule #20 forbids agent-authored buyer-voice wording without user approval, so the
+      domain-level fields stay gated on B2-3, but per-module taglines / descriptions can be PATCHed
+      once that wording style is approved.
+    action: >
+      After B2-3 resolves the buyer-voice wording, PATCH /domain_modules?id=eq.236 / 237 / 238 with
+      catalog_tagline (single sentence) and catalog_description, and PATCH /domains?id=eq.77 with the
+      same. No em-dashes; American English.
+    affected_modules: [236, 237, 238]
+
 b1b:
-  - id: B1B-S1
-    summary: "Author 2-4 domain_modules rows for DXP per the module split shape decided in B2-1; cascade fixes M1 / M2 / M4 / M5 / M6 / M8."
-    finding: "M1 / M2 / M4 / M5 / M6 / M8 hard fail. Zero domain_modules rows for DXP (domain_id 77). 6 capabilities so the >=3 -> >=2 modules floor applies. M5 cannot anchor lifecycle states, M6 leaves every capability orphaned, M8 has no rows to PATCH, F2 / F3 / F5 are blocked. Every other M / F / B band failure is a downstream cascade. The split shape (2 / 3 / 4 modules) is itself a user-judgment call queued as B2-1, which is informed by Phase 0 outcomes B3-5 / B3-7."
-    blocked_by:
-      - {type: user_decision, ref: B2-1}
-    affected_modules: []
-    extra_capabilities: [DXP-WCM, DXP-PERSONALIZE, DXP-PORTAL, DXP-AB-TEST, DXP-MULTISITE, DXP-FORM-JOURNEY]
-    extra_masters: [web_pages, content_components, digital_experiences, personalization_rules, ab_tests, segments_dxp, journey_steps]
-
-  - id: B1B-S2
-    summary: "Author data_object_lifecycle_states rows for all 7 DXP masters with domain_module_id set on workflow gates."
-    finding: "B12 hard fail. Zero data_object_lifecycle_states for any DXP master. Each master has an obvious workflow ladder: web_pages (draft, in_review, approved, published, unpublished, archived); ab_tests (configured, running, completed, archived); personalization_rules (draft, active, paused, retired); journey_steps (defined, entered, exited, abandoned); digital_experiences (planned, active, ended); content_components (draft, published, deprecated); segments_dxp (draft, published, retired). Workflow-gate states (publish, unpublish, activate, retire, start, complete) flagged requires_permission=true."
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: "states need domain_module_id which requires modules to exist"}
-    affected_masters:
-      - {data_object_id: 441, name: web_pages, target_module_id: null, workflow: "draft -> in_review -> approved -> published -> unpublished -> archived"}
-      - {data_object_id: 442, name: content_components, target_module_id: null, workflow: "draft -> published -> deprecated"}
-      - {data_object_id: 443, name: digital_experiences, target_module_id: null, workflow: "planned -> active -> ended"}
-      - {data_object_id: 444, name: personalization_rules, target_module_id: null, workflow: "draft -> active -> paused -> retired"}
-      - {data_object_id: 445, name: ab_tests, target_module_id: null, workflow: "configured -> running -> completed -> archived"}
-      - {data_object_id: 446, name: segments_dxp, target_module_id: null, workflow: "draft -> published -> retired"}
-      - {data_object_id: 447, name: journey_steps, target_module_id: null, workflow: "defined -> entered -> exited -> abandoned"}
-
   - id: B1B-S3
     summary: "PATCH pattern flags (has_personal_content, has_submit_lock, has_single_approver) on the 7 DXP masters per the B2-2 per-flag user decisions."
-    finding: "B4 hard fail. All 7 DXP masters (web_pages, content_components, digital_experiences, personalization_rules, ab_tests, segments_dxp, journey_steps) have all three pattern flags false-by-default. Rule #12 requires positive re-evaluation, not silence."
+    finding: >
+      B4 hard fail. All 7 DXP masters (web_pages, content_components, digital_experiences,
+      personalization_rules, ab_tests, segments_dxp, journey_steps) have all three pattern flags
+      false-by-default. Rule #12 requires positive re-evaluation, not silence.
     blocked_by:
       - {type: user_decision, ref: B2-2}
     affected_masters:
-      - {data_object_id: 441, name: web_pages, target_module_id: null, workflow: pattern_flags_review}
-      - {data_object_id: 442, name: content_components, target_module_id: null, workflow: pattern_flags_review}
-      - {data_object_id: 443, name: digital_experiences, target_module_id: null, workflow: pattern_flags_review}
-      - {data_object_id: 444, name: personalization_rules, target_module_id: null, workflow: pattern_flags_review}
-      - {data_object_id: 445, name: ab_tests, target_module_id: null, workflow: pattern_flags_review}
-      - {data_object_id: 446, name: segments_dxp, target_module_id: null, workflow: pattern_flags_review}
-      - {data_object_id: 447, name: journey_steps, target_module_id: null, workflow: pattern_flags_review}
-
-  - id: B1B-S5
-    summary: "Author 6-8 intra-domain master-to-master data_object_relationships rows once modules and lifecycle states exist."
-    finding: "B6 hard fail. Zero intra-domain master-to-master data_object_relationships among the 7 DXP masters (ids 441-447). Expected edges: web_pages embeds content_components (one-to-many); digital_experiences spans web_pages (one-to-many); personalization_rules targets segments_dxp (many-to-many); ab_tests runs_on web_pages (one-to-many); ab_tests evaluates personalization_rules (one-to-many); journey_steps composes digital_experiences (many-to-one); journey_steps references web_pages (many-to-many)."
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: "edges need stable cross-module diagram"}
-      - {type: depends_on, ref: B1B-S2, reason: "is_required values key off lifecycle state shapes"}
-    affected_entities: [web_pages, content_components, digital_experiences, personalization_rules, ab_tests, segments_dxp, journey_steps]
-
-  - id: B1B-S6
-    summary: "Author 14-20 data_object_aliases rows covering flagship vendor terminology for the 7 DXP masters."
-    finding: "B11 hard fail. Zero data_object_aliases across all 7 DXP masters. Vendor terminology rendering is blocked: web_pages -> Page (AEM), Item (Sitecore), Node (Drupal); content_components -> Experience Fragment, Rendering, Block; digital_experiences -> Campaign, Experience; personalization_rules -> Activity, Personalization Rule, Experience; ab_tests -> Experience, Activity, Experiment; segments_dxp -> Audience, Profile; journey_steps -> Journey Step, Stage."
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: "aliases benefit from a module home for rendering scope"}
-    affected_entities: [web_pages, content_components, digital_experiences, personalization_rules, ab_tests, segments_dxp, journey_steps]
-    vendor_evidence: ["Adobe AEM Sites", "Sitecore XM Cloud", "Drupal", "Adobe Target", "Optimizely", "Bloomreach", "Salesforce Experience Cloud"]
-
-  - id: B1B-S8
-    summary: "Insert 5-7 additional trigger_events rows for workflow-gate state transitions once lifecycle states exist."
-    finding: "B9 coverage gap. Once B1B-S2 lands, workflow-gate state transitions web_page.archived, web_page.draft, ab_test.archived, personalization_rule.paused, personalization_rule.retired, segment_dxp.retired, digital_experience.ended will have lifecycle states with requires_permission=true but no matching trigger_events rows."
-    blocked_by:
-      - {type: depends_on, ref: B1B-S2, reason: "events fire on lifecycle states that do not exist yet"}
-    affected_events:
-      - {id: null, event_name: "web_page.archived", current_category: null, proposed_category: state_change}
-      - {id: null, event_name: "web_page.draft", current_category: null, proposed_category: state_change}
-      - {id: null, event_name: "ab_test.archived", current_category: null, proposed_category: state_change}
-      - {id: null, event_name: "personalization_rule.paused", current_category: null, proposed_category: state_change}
-      - {id: null, event_name: "personalization_rule.retired", current_category: null, proposed_category: state_change}
-      - {id: null, event_name: "segment_dxp.retired", current_category: null, proposed_category: state_change}
-      - {id: null, event_name: "digital_experience.ended", current_category: null, proposed_category: state_change}
-
-  - id: B1B-S10
-    summary: "Author one module-anchored skill_type='system' skill per new DXP module with 4-8 tools per skill; DELETE legacy dxp-system row afterwards."
-    finding: "F1 / F2 / F3 hard fail. Legacy skill dxp-system (id 52, domain_id 77, domain_module_id null) carries 7 query-only skill_tools rows (query_web_pages, query_content_components, query_experiences, query_personalization_rules, query_ab_tests, query_segments_dxp, query_journey_steps). Zero mutate, zero workflow-gate, zero side_effect / compute. Rule #17 requires one skill_type='system' per domain_modules row with >=1 skill_tools; the legacy skill is the migration target, not the target state."
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: "system skills need domain_module_id which requires modules to exist"}
-    affected_modules: []
-    extra_required_tool_shapes: ["query (per embedded master)", "mutate (publish_web_page, update_personalization_rule, etc.)", "side_effect (purge_cdn_cache, invalidate_render_cache)", "inbound (receive_cdp_segment_update)"]
-    extra_legacy_skill_to_delete: {skill_id: 52, skill_name: "dxp-system"}
+      - {data_object_id: 441, name: web_pages, target_module_id: 236, workflow: pattern_flags_review}
+      - {data_object_id: 442, name: content_components, target_module_id: 236, workflow: pattern_flags_review}
+      - {data_object_id: 443, name: digital_experiences, target_module_id: 236, workflow: pattern_flags_review}
+      - {data_object_id: 444, name: personalization_rules, target_module_id: 237, workflow: pattern_flags_review}
+      - {data_object_id: 445, name: ab_tests, target_module_id: 237, workflow: pattern_flags_review}
+      - {data_object_id: 446, name: segments_dxp, target_module_id: 237, workflow: pattern_flags_review}
+      - {data_object_id: 447, name: journey_steps, target_module_id: 238, workflow: pattern_flags_review}
 
 b2:
-  - id: B2-1
-    summary: "Pick the DXP module split shape: 2, 3, or 4 modules, or defer pending Phase 0."
-    question: "Which module split should DXP adopt? This decision gates B1B-S1, B1B-S2, B1B-S5, B1B-S6, B1B-S10 and is informed by Bucket 3 outcomes B3-5 / B3-7 (whether portal and personalization spin out as separate domains)."
-    options:
-      - "(a) 4-module split: DXP-AUTHORING (web_pages + content_components, DXP-WCM + DXP-MULTISITE), DXP-PERSONALIZATION-EXPERIMENTATION (personalization_rules + ab_tests + segments_dxp, DXP-PERSONALIZE + DXP-AB-TEST), DXP-PORTAL (DXP-PORTAL capability + portal masters from B3-5), DXP-FORMS-JOURNEYS (journey_steps + forms from B3-4, DXP-FORM-JOURNEY)."
-      - "(b) 2-module split: DXP-AUTHORING (pages + components + templates + sites + digital_experiences) + DXP-AUDIENCE-OPS (personalization + segments + ab_tests + journey_steps), matches the AEM Sites / Sitecore XM Cloud authoring vs experience line."
-      - "(c) 3-module split aligned to major flagship product lines: DXP-WCM, DXP-PERSONALIZE-EXPERIMENT, DXP-PORTAL with forms / journeys folded into the relevant module."
-      - "(d) defer until Phase 0 produces the formal vendor surface."
-    why: "Module split is a design call the user owns; committing before Phase 0 ratifies the surface risks a redo. B3-5 and B3-7 may shrink (portal / personalization spin out) or grow (folded back in) the catalog before the split commits."
-
   - id: B2-2
     summary: "Per-flag yes / no decision on 7 pattern-flag candidates across the 7 DXP masters."
     question: "Which of these pattern flags should flip to true on the corresponding master? Each affects derived permissions and the workflow-gate surface."
@@ -154,13 +210,13 @@ b2:
     why: "Pattern-flag judgments are workflow-shape decisions the user owns; false-by-default doesn't establish review."
 
   - id: B2-3
-    summary: "Supply catalog_tagline and catalog_description for DXP (Rule #20 forbids agent-authored wording)."
-    question: "What buyer-voice catalog_tagline (single sentence) and catalog_description (1-3 paragraphs) should I PATCH onto domains.id=77? Both are currently empty, which fails A4."
+    summary: "Supply catalog_tagline and catalog_description for DXP domain 77 and the 3 modules (Rule #20 forbids agent-authored wording)."
+    question: "What buyer-voice catalog_tagline (single sentence) and catalog_description (1-3 paragraphs) should I PATCH onto domains.id=77 and the 3 module rows (236, 237, 238)? All are currently empty, which fails A4 / M8."
     options:
-      - "(a) supply exact wording for both fields."
+      - "(a) supply exact wording for the domain and each module."
       - "(b) ask agent for a buyer-voice draft to approve or rewrite."
       - "(c) defer until marketing-led copy is ready."
-    why: "Rule #20 requires explicit user approval of catalog_tagline / catalog_description wording; the agent will not draft these without per-row approval."
+    why: "Rule #20 requires explicit user approval of catalog_tagline / catalog_description wording; the agent will not draft these without per-row approval. Modules now exist to PATCH (B1A-CATALOG-UX executes once wording is approved)."
 
   - id: B2-4
     summary: "Decide segments_dxp naming arbitration ahead of DIGITAL-PERSONALIZATION promotion (carried)."
@@ -174,7 +230,11 @@ b2:
 b3:
   - id: B3-1
     candidate: site_definitions
-    rationale: "Multi-site / multi-brand master backing the DXP-MULTISITE capability, which currently has no master backing. Every flagship vendor distinguishes Site / Tenant / Property from Page (AEM Sites site, Sitecore tenant, Drupal site). Common-class entity in the union surface."
+    rationale: >
+      Multi-site / multi-brand master backing the DXP-MULTISITE capability (in DXP-AUTHORING 236),
+      which currently has no dedicated master backing. Every flagship vendor distinguishes
+      Site / Tenant / Property from Page (AEM Sites site, Sitecore tenant, Drupal site).
+      Common-class entity in the union surface. Would land in DXP-AUTHORING (236) as a master.
     vendor_evidence:
       - {vendor: "Adobe Experience Manager Sites", evidence: 1st_class}
       - {vendor: "Sitecore XM Cloud", evidence: 1st_class}
@@ -184,11 +244,14 @@ b3:
       - {vendor: "Salesforce Experience Cloud", evidence: 1st_class}
       - {vendor: "Bloomreach Content", evidence: 1st_class}
     proposed_module: DXP-AUTHORING
-    extra_verification: "Phase 0: confirm field set (locale, brand, environment, base_url, cdn_config, theme); confirm relationship site_definitions has_many web_pages."
 
   - id: B3-2
     candidate: "page_templates, layouts, content_blocks"
-    rationale: "Authoring substrate beyond web_pages. Every flagship vendor distinguishes a page instance from a reusable template (AEM page template, Sitecore Page Type / Rendering, Drupal Layout Builder). Backs DXP-WCM beyond the bare web_pages master. Pick which name is canonical and whether content_blocks merges with content_components."
+    rationale: >
+      Authoring substrate beyond web_pages. Every flagship vendor distinguishes a page instance
+      from a reusable template (AEM page template, Sitecore Page Type / Rendering, Drupal Layout
+      Builder). Backs DXP-WCM (in DXP-AUTHORING 236) beyond the bare web_pages master. Pick which
+      name is canonical and whether content_blocks merges with content_components.
     vendor_evidence:
       - {vendor: "Adobe Experience Manager Sites", evidence: 1st_class}
       - {vendor: "Sitecore XM Cloud", evidence: 1st_class}
@@ -201,53 +264,61 @@ b3:
 
   - id: B3-3
     candidate: "experiment_variants, experiment_results"
-    rationale: "Current ab_tests master collapses experiment, variant, and result. Optimizely Web Experimentation, Sitecore Personalize, and Adobe Target all model experiment (definition), variant (served version), and result (measured outcome) as separate masters with their own lifecycles. Matters for cross-domain relationships from PROD-MGMT that reference the result, not the definition."
+    rationale: >
+      Current ab_tests master (445, in DXP-EXPERIENCE-PERSONALIZATION 237) collapses experiment,
+      variant, and result. Optimizely Web Experimentation, Sitecore Personalize, and Adobe Target
+      all model experiment (definition), variant (served version), and result (measured outcome)
+      as separate masters. Matters for cross-domain relationships from PROD-MGMT that reference
+      the result, not the definition (handoff 813).
     vendor_evidence:
       - {vendor: "Optimizely Web Experimentation", evidence: 1st_class}
       - {vendor: "Adobe Target", evidence: 1st_class}
       - {vendor: "Sitecore Personalize", evidence: 1st_class}
       - {vendor: "AB Tasty", evidence: 1st_class}
-    proposed_module: DXP-PERSONALIZATION-EXPERIMENTATION
+    proposed_module: DXP-EXPERIENCE-PERSONALIZATION
 
   - id: B3-4
     candidate: "forms, form_fields, form_submissions"
-    rationale: "Form-authoring substrate backing DXP-FORM-JOURNEY. AEM Forms, Sitecore Forms, Drupal Webform, Salesforce Experience Cloud Forms all carry these masters. journey_steps is the orchestration layer; forms is the data-capture layer. Without forms, DXP-FORM-JOURNEY has half its substrate missing. Open question: standalone FORMS market (Typeform, Formstack, JotForm) vs DXP-internal master."
+    rationale: >
+      Form-authoring substrate backing DXP-FORM-JOURNEY (in DXP-PORTAL-JOURNEYS 238). AEM Forms,
+      Sitecore Forms, Drupal Webform, Salesforce Experience Cloud Forms all carry these masters.
+      journey_steps is the orchestration layer; forms is the data-capture layer. Without forms,
+      the form half of DXP-PORTAL-JOURNEYS has no master backing. Open question: standalone FORMS
+      market (Typeform, Formstack, JotForm) vs DXP-internal master.
     vendor_evidence:
       - {vendor: "AEM Forms", evidence: 1st_class}
       - {vendor: "Sitecore Forms", evidence: 1st_class}
       - {vendor: "Drupal Webform", evidence: 1st_class}
       - {vendor: "Salesforce Experience Cloud Forms", evidence: 1st_class}
-    proposed_module: DXP-FORMS-JOURNEYS
+    proposed_module: DXP-PORTAL-JOURNEYS
 
   - id: B3-5
     candidate: "portal_pages, portal_widgets, portal_user_profiles"
-    rationale: "B2B portal substrate backing DXP-PORTAL. Liferay portlets, Salesforce Experience Cloud components, IBM HCL Digital Experience portal pages all carry this distinct surface from public web pages. The portal authentication shape (logged-in users, role-scoped widgets, organization-scoped pages) is structurally different from public web_pages. PORTAL-FRAMEWORK has been queued as a separate candidate market."
+    rationale: >
+      B2B portal substrate backing DXP-PORTAL (in DXP-PORTAL-JOURNEYS 238), which currently has no
+      master backing: the module is anchored only by journey_steps plus the digital_experiences
+      embedded_master. Liferay portlets, Salesforce Experience Cloud components, IBM HCL Digital
+      Experience portal pages all carry this distinct surface from public web pages. PORTAL-FRAMEWORK
+      is queued as a separate candidate market; if it promotes, DXP-PORTAL becomes a consumer of its
+      masters and DXP-PORTAL-JOURNEYS may collapse to journeys/forms only.
     vendor_evidence:
       - {vendor: "Liferay DXP", evidence: 1st_class}
       - {vendor: "Salesforce Experience Cloud", evidence: 1st_class}
       - {vendor: "IBM HCL Digital Experience", evidence: 1st_class}
       - {vendor: "Backbase", evidence: 1st_class}
-    proposed_module: DXP-PORTAL
-    extra_alternative: "If PORTAL-FRAMEWORK promotes, DXP-PORTAL capability either disappears (portal moves out) or becomes a consumer of PORTAL-FRAMEWORK masters."
-
-  - id: B3-6
-    candidate: "Module split shape ratification"
-    rationale: "The proposed 2 / 3 / 4 module split for DXP (B2-1) needs Phase 0 ratification. If portals move to PORTAL-FRAMEWORK, DXP-PORTAL disappears. If forms move to a standalone FORMS market, DXP-FORMS-JOURNEYS collapses to journeys only. Net plausible end states: 2, 3, or 4 modules."
-    vendor_evidence:
-      - {vendor: "Adobe Experience Manager Sites", evidence: secondary}
-      - {vendor: "Sitecore XM Cloud", evidence: secondary}
-      - {vendor: "Optimizely DXP", evidence: secondary}
-      - {vendor: "Acquia DXP", evidence: secondary}
-      - {vendor: "Liferay DXP", evidence: secondary}
-      - {vendor: "Salesforce Experience Cloud", evidence: secondary}
-      - {vendor: "Bloomreach Content", evidence: secondary}
-    extra_recommendation: "Run formal Phase 0 subagent pass per the standard procedure; output goes to c:/tmp/DXP-phase0-<YYYY-MM-DD>.md listing each entity's vendor surface and proposed module."
+    proposed_module: DXP-PORTAL-JOURNEYS
+    extra_alternative: "If PORTAL-FRAMEWORK promotes, the DXP-PORTAL capability moves out or becomes a consumer of PORTAL-FRAMEWORK masters."
 
   - id: B3-7
     candidate: "segments_dxp, personalization_rules ownership"
-    rationale: "May belong to a future DIGITAL-PERSONALIZATION domain (queued in _missing-domains.md). Adobe Target, Sitecore Personalize, and Optimizely Personalization are positioned as point solutions. If DIGITAL-PERSONALIZATION promotes and absorbs these as canonical masters, DXP's personalization_rules and segments_dxp move out; if it folds back, they remain."
+    rationale: >
+      May belong to a future DIGITAL-PERSONALIZATION domain (queued in _missing-domains.md). Adobe
+      Target, Sitecore Personalize, and Optimizely Personalization are positioned as point
+      solutions. If DIGITAL-PERSONALIZATION promotes and absorbs these as canonical masters, DXP's
+      personalization_rules (444) and segments_dxp (446) move out of DXP-EXPERIENCE-PERSONALIZATION
+      (237); if it folds back, they remain.
     vendor_evidence:
       - {vendor: "Adobe Target", evidence: 1st_class}
       - {vendor: "Sitecore Personalize", evidence: 1st_class}
       - {vendor: "Optimizely Personalization", evidence: 1st_class}
-    extra_dependency: "Resolution informs B2-1 module split (whether personalization is a DXP module or a separate domain)."
+    extra_dependency: "Informs whether DXP-EXPERIENCE-PERSONALIZATION (237) loses its personalization masters."

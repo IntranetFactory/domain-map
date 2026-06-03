@@ -398,3 +398,50 @@ None.
 ### Decisions
 
 (none yet, awaiting user)
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+RMM was modularized from 0 `domain_modules` to **4 full modules** (module_kind=full), clearing the M1 hard-fail and the B1A-BUILD item. Scope of this pass was strictly modules + entity assignment: no new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. All 8 capabilities now sit in >=1 module (M4 clean), every in-domain master is mastered exactly once (M7 clean), the catalog-wide master pre-check held (M7 catalog-wide clean), and no module is empty.
+
+Loader: `.tmp_deploy/modularize_rmm_2026-06-02.ts` (idempotent, re-runnable).
+
+### Module set
+
+| id | code | capabilities | data_objects (role/necessity) |
+|---|---|---|---|
+| 311 | RMM-AGENT-MGMT | RMM-EPM (203), RMM-MT (209), RMM-DISC (206), RMM-INV (207) | rmm_agents 223 master/req; discovered_devices 82 contributor/req; configuration_items 76 contributor/req; hardware_assets 56 contributor/req; software_installations 59 contributor/req |
+| 312 | RMM-MONITORING | RMM-EPM (203), RMM-ALERT (208), RMM-AI (210) | monitoring_policies 86 embedded_master/req; monitoring_alerts 85 embedded_master/req; service_incidents 47 consumer/req; service_requests 48 consumer/req |
+| 313 | RMM-PATCH-MGMT | RMM-PATCH (204) | patch_jobs 224 master/req; service_changes 50 contributor/req |
+| 314 | RMM-AUTOMATION | RMM-SCRIPT (205) | automation_scripts 225 master/req |
+
+This realizes option (c), the proposed-4 split from the prior B2-S1 question, refined by the master pre-check.
+
+### Master pre-check (M7 catalog-wide)
+
+Before writing any `role='master'`, queried `/domain_module_data_objects?data_object_id=eq.<id>&role=eq.master`.
+
+- `monitoring_alerts` (85) and `monitoring_policies` (86): already mastered catalog-wide by **ITOM-INFRA-MON (module 267, domain 2 ITOM)**. Per the catalog-wide M7 rule these were assigned **embedded_master** in RMM-MONITORING, NOT a second master. This is the concrete realization of the prior B2-S3 collision: RMM does not master the monitoring substrate; ITOM does. RMM holds the operational endpoint-telemetry slice as embedded_master.
+- `rmm_agents` (223), `patch_jobs` (224), `automation_scripts` (225): no existing catalog-wide master. RMM masters each in exactly one module (AGENT-MGMT, PATCH-MGMT, AUTOMATION respectively). Note `automation_scripts` is still co-claimed by TEST-MGMT at the legacy rollup level (B2-S4) but TEST-MGMT has no `role='master'` row in `domain_module_data_objects` today, so the pre-check passed; RMM is the sole module-grain master. TEST-MGMT modularization may surface a genuine collision later.
+
+### Demotions via the pre-check
+
+- monitoring_alerts (85): intended-master demoted to embedded_master (canonical: ITOM-INFRA-MON 267).
+- monitoring_policies (86): intended-master demoted to embedded_master (canonical: ITOM-INFRA-MON 267).
+
+### Verification (live, post-load)
+
+- M4: all 8 capabilities placed (203 in two modules, 204/205/206/207/208/209/210 each in one). PASS.
+- M6 / no-empty-module: every module has >=1 capability and >=1 data_object. PASS.
+- M7 in-domain: each of the 3 RMM-owned masters appears in exactly one RMM module. PASS.
+- M7 catalog-wide: 85/86 mastered only by 267; 223/224/225 mastered only by RMM. PASS.
+- Non-master roles + necessity preserved from the legacy domain_data_objects rollup (contributors: 76, 56, 59, 82, 50; consumers: 47, 48). PASS.
+
+### Carried forward / not in scope this pass
+
+The module build unblocks several previously-blocked items now re-homed as agent-solvable (system skills per Rule #17 -> F2/F3; module catalog UX per M8; domain catalog UX per A4) and lets the handoff module-id backfills (former B1B-S5/S6) proceed. Lifecycle states (former B1B-S4), trigger events (former B1B-S3), intra-domain handoffs (former B1B-S9), RBAC (B2-S7), and the B3 entity candidates remain out of this modularization pass's scope and are retained in state.yaml. The legacy `domain_data_objects` rollup for RMM still carries the pre-modular master rows and should be reconciled against the new `domain_module_data_objects` grain (catalog-wide B2-ROLLUP-POLICY decision, mirrored from ATS).
+
+### JWT errors
+
+None.

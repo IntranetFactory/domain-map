@@ -2,140 +2,36 @@ schema_version: 2
 domain: UEM
 status: feedback_needed
 next_action_by: agent
-last_audit: "2026-05-31"
+last_audit: "2026-06-02"
 
 b1a:
-  - id: B1A-S4
-    summary: PATCH domains.catalog_tagline and catalog_description after user supplies wording (Rule #20)
-    finding: domains.id=86 row has catalog_tagline="" and catalog_description="". A4 fails until non-empty buyer-voice text is loaded.
-    action: Surface drafts to user, accept exact strings, PATCH /domains?id=eq.86 with the two columns. No write without per-row approval.
-    blocked_by:
-      - {type: user_decision, ref: B2-2}
+  - id: B1A-SYSTEM-SKILLS
+    summary: "Author one skill_type=system skill per UEM module (3 needed) plus tools + skill_tools (Rule #17 -> F2/F3); then retire legacy uem-system skill 114 (F1)"
+    finding: >
+      As of 2026-06-02 UEM has 3 domain_modules (UEM-DEVICE-LIFECYCLE id 308,
+      UEM-CONFIG-APPS id 309, UEM-COMPLIANCE-POSTURE id 310) but zero per-module system
+      skills. F2/F3 fail. The legacy domain_id-only system skill uem-system (id 114) holds
+      8 query_* skill_tools that must redistribute to the per-module skills before it can
+      retire (F1). Module split removed the prior B1B-S1 gate, so this is now agent-solvable.
+    action: >
+      Per Phase-S, name each skill <module_code_lower>_agent (uem_device_lifecycle_agent,
+      uem_config_apps_agent, uem_compliance_posture_agent); INSERT skills rows with the
+      module's domain_module_id; INSERT tools + skill_tools (>=1 each, typical 5-20). F4
+      invariant: query/mutate need data_object_id; fetch/side_effect/compute must NOT;
+      inbound is either. After all three land + skill_tools redistributed, DELETE skill 114.
+    affected_modules: [308, 309, 310]
 
-  - id: B1A-S5
-    summary: Insert pure-play UEM vendors and solutions, link via solution_domains at coverage_level=primary
-    finding: A3 fails. Five existing solution_domains rows (NinjaOne, Kaseya VSA, N-able N-central, ManageEngine Endpoint Central, GoTo Resolve) all at partial/secondary. Zero primary coverage_level rows.
-    action: INSERT vendors (Microsoft Corporation already exists, Jamf Holding Corp., Omnissa LLC, Kandji Inc., Mitsogo Inc., IBM existing as applicable) plus solutions (Microsoft Intune, Jamf Pro, Workspace ONE / Omnissa Workspace ONE, Kandji, Hexnode UEM, IBM MaaS360) plus solution_domains rows at coverage_level=primary. Rebalance the 5 existing rows per B2-5.
-    vendor_evidence:
-      - Microsoft Intune
-      - Jamf Pro
-      - Workspace ONE / Omnissa Workspace ONE
-      - Kandji
-      - Hexnode UEM
-      - IBM MaaS360
-
-  - id: B1A-S6
-    summary: PATCH relationship_verb on 6 existing user-edge data_object_relationships rows
-    finding: B7 partially loaded. Rows 1847-1852 carry data_object_id and related_data_object_id correctly (UEM masters to users id 748) but relationship_verb="" on every row. The label is unreadable until verbs are populated.
-    action: PATCH /data_object_relationships?id=eq.<id> with user-approved verbs - prior audit pre-spec - 1847 "has assigned", 1848 "has last seen", 1849 "has issued to", 1850 "has created by", 1851 "has owned by", 1852 "has uploaded by".
-    blocked_by:
-      - {type: user_decision, ref: B2-3}
-
-  - id: B1A-H1
-    summary: Move 8 handoff_processes rows from record_status=new to approved after user review
-    finding: H1 coverage is 8 of 9 cross-domain handoffs tagged but every row at record_status=new. Headline approved count = 0.
-    action: After user-reviews each (handoff_id, process_id) pair, PATCH /handoff_processes record_status=approved per row. Handoff 662 remains deferred (no PCF coverage).
-    affected_handoffs:
-      - {handoff_id: 655, direction: outbound, source_domain: UEM, target_domain: ITSM, trigger_event: enrolled_device.enrolled, payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 656, direction: outbound, source_domain: UEM, target_domain: IGA, trigger_event: enrolled_device.enrolled, payload: enrolled_devices, null_field: source_domain_module_id}
-      - {handoff_id: 657, direction: outbound, source_domain: UEM, target_domain: HAM, trigger_event: enrolled_device.retired, payload: enrolled_devices, null_field: "source_domain_module_id and target_domain_module_id"}
-      - {handoff_id: 658, direction: outbound, source_domain: UEM, target_domain: IGA, trigger_event: enrolled_device.lost_or_stolen, payload: enrolled_devices, null_field: source_domain_module_id}
-      - {handoff_id: 659, direction: outbound, source_domain: UEM, target_domain: IGA, trigger_event: device_compliance_result.non_compliant, payload: device_compliance_results, null_field: source_domain_module_id}
-      - {handoff_id: 660, direction: outbound, source_domain: UEM, target_domain: ITSM, trigger_event: device_compliance_result.non_compliant, payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 661, direction: outbound, source_domain: UEM, target_domain: IGA, trigger_event: device_compliance_result.compliant, payload: device_compliance_results, null_field: source_domain_module_id}
-      - {handoff_id: 663, direction: outbound, source_domain: UEM, target_domain: ITSM, trigger_event: device_configuration_profile.drift_detected, payload: service_incidents, null_field: source_domain_module_id}
-
-b1b:
-  - id: B1B-S1
-    summary: Author UEM domain_modules set (4-module split proposed); gates the cascade through M2/M4/M5/M6/M7/M8 plus B/E/F bands
-    finding: M1 fails. UEM has 0 domain_modules rows and 0 cross-cutting modules via domain_module_host_domains. Domain capability_count=5 also fails M2 (>=2 module floor). Five capabilities orphaned per M4. Legacy uem-system skill (id 114) cannot retire (F1) until per-module skills exist.
-    action: Author domain_modules rows (proposed shape pending B2-1 decision), domain_module_capabilities links, domain_module_data_objects rows (8 masters anchored, plus IGA-AUTO-PROVISIONING consumer rows preserved), and module-level catalog_tagline / catalog_description (Rule #20, user-approved). Then run downstream loaders: B1B-B1, B1B-S8, B1B-F2, B1B-E1, B1B-S2, B1B-S3.
-    blocked_by:
-      - {type: user_decision, ref: B2-1}
-    affected_modules: []
-    extra_proposed_split: 4-module (UEM-DEVICE-LIFECYCLE, UEM-POLICY-CONFIG, UEM-APP-DELIVERY, UEM-COMPLIANCE-POSTURE)
-
-  - id: B1B-S2
-    summary: Link 5 orphan capabilities to realizing modules via domain_module_capabilities
-    finding: M4 fails. UEM-MDM (239), UEM-CONFIG (240), UEM-APP-DIST (241), UEM-ZTP (242), UEM-COMPLIANCE (243) have no realizing module.
-    action: After B1B-S1 lands modules, INSERT domain_module_capabilities rows per the agreed mapping.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-    affected_entities:
-      - UEM-MDM
-      - UEM-CONFIG
-      - UEM-APP-DIST
-      - UEM-ZTP
-      - UEM-COMPLIANCE
-
-  - id: B1B-S3
-    summary: Populate module-level catalog_tagline / catalog_description on every UEM domain_modules row (Rule #20)
-    finding: M8 cannot be verified while M1 fails. Once modules exist, M8 will fail until per-module buyer-voice text loads.
-    action: Surface drafts per module to user; PATCH only with per-row approved exact strings (Rule #20).
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-      - {type: user_decision, ref: B2-2}
-
-  - id: B1B-S8
-    summary: Author lifecycle states for all 8 UEM masters; mark workflow gates requires_permission=true; anchor domain_module_id per the new module shape
-    finding: B12 fails. 0 lifecycle states across data_object_id 556-563. Twelve trigger events imply states (enrolled / lost_or_stolen / retired on enrolled_devices; draft / published / drift_detected on device_configuration_profiles; draft / published / revoked on device_compliance_policies; uploaded / published / deprecated on mobile_app_packages; assigned / deployed / failed / removed on device_app_assignments; issued / consumed / revoked / expired on enrollment_tokens; queued / succeeded / failed on device_deployment_results; evaluating / compliant / non_compliant on device_compliance_results).
-    action: Draft per-master state rows; PATCH domain_module_id per realizing module from B1B-S1; load via focused loader.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-    affected_masters:
-      - {data_object_id: 556, name: enrolled_devices, target_module_id: null, workflow: "enrolled to compliant/non_compliant to lost_or_stolen/retired"}
-      - {data_object_id: 557, name: device_configuration_profiles, target_module_id: null, workflow: "draft to published to assigned to drift_detected"}
-      - {data_object_id: 558, name: device_compliance_policies, target_module_id: null, workflow: "draft to published to revoked"}
-      - {data_object_id: 559, name: mobile_app_packages, target_module_id: null, workflow: "uploaded to published to deprecated"}
-      - {data_object_id: 560, name: device_app_assignments, target_module_id: null, workflow: "assigned to deployed to failed/removed"}
-      - {data_object_id: 561, name: enrollment_tokens, target_module_id: null, workflow: "issued to consumed/revoked/expired"}
-      - {data_object_id: 562, name: device_deployment_results, target_module_id: null, workflow: "queued to succeeded/failed"}
-      - {data_object_id: 563, name: device_compliance_results, target_module_id: null, workflow: "evaluating to compliant/non_compliant"}
-
-  - id: B1B-S7
-    summary: Author data_object_aliases rows for the 8 UEM masters
-    finding: B11 fails. 0 alias rows across all masters; vendor synonyms are universal in this market.
-    action: Draft 1-3 aliases per master with exact alias_name + alias_type tuples; user confirms; load via focused loader.
-    blocked_by:
-      - {type: user_decision, ref: B2-1}
-    affected_masters:
-      - {data_object_id: 556, name: enrolled_devices, target_module_id: null, workflow: alias load}
-      - {data_object_id: 557, name: device_configuration_profiles, target_module_id: null, workflow: alias load}
-      - {data_object_id: 558, name: device_compliance_policies, target_module_id: null, workflow: alias load}
-      - {data_object_id: 559, name: mobile_app_packages, target_module_id: null, workflow: alias load}
-      - {data_object_id: 560, name: device_app_assignments, target_module_id: null, workflow: alias load}
-      - {data_object_id: 561, name: enrollment_tokens, target_module_id: null, workflow: alias load}
-      - {data_object_id: 562, name: device_deployment_results, target_module_id: null, workflow: alias load}
-      - {data_object_id: 563, name: device_compliance_results, target_module_id: null, workflow: alias load}
-
-  - id: B1B-S9
-    summary: PATCH pattern flags on candidate masters after user confirms each
-    finding: "B4 fails. All three pattern flags are false on every UEM master and there is no positive-review record. Candidates: enrolled_devices.has_personal_content=true (BYOD); enrollment_tokens.has_submit_lock=true (one-shot); device_compliance_policies.has_submit_lock=true (published-immutable)."
-    action: PATCH /data_objects?id=eq.<id> per confirmed flag. Rule #15 forbids notes-based annotation.
-    blocked_by:
-      - {type: user_decision, ref: B2-4}
-
-  - id: B1B-S10
-    summary: Author 7 intra-domain data_object_relationships rows between UEM masters
-    finding: B6 fails. 0 intra-domain edges between UEM masters. Required shape includes device_app_assignments to enrolled_devices and mobile_app_packages; device_compliance_results to enrolled_devices and device_compliance_policies; device_deployment_results to enrolled_devices; enrollment_tokens to enrolled_devices; device_configuration_profiles to enrolled_devices (M:N).
-    action: Draft full tuples (relationship_verb, relationship_type, relationship_kind, owner_side, is_required, inverse_verb). User confirms verbs (Rule #15 risk on notes).
-    blocked_by:
-      - {type: user_decision, ref: B2-3}
-
-  - id: B1B-S11
-    summary: Author outbound cross-domain data_object_relationships mirroring 9 outbound handoffs
-    finding: B8 outbound fails. 0 outbound cross-domain edges from UEM masters to neighbor-domain payloads. Required pairings include enrolled_devices to ITSM service_incidents, enrolled_devices to IGA access_grants (verify exists), enrolled_devices to HAM hardware_assets, device_compliance_results to IGA access_decisions (verify exists), device_app_assignments to SAM software_entitlements (verify exists).
-    action: Pre-flight existence-check each target entity in the neighbor domain. Drop unverifiable targets, surface as B2 follow-ups. Author the rest with full tuples.
-    blocked_by:
-      - {type: catalog_addition, scope: domains, trigger: "neighbor-target entity verification"}
-    affected_modules: []
-
-  - id: B1B-B1
-    summary: Backfill source_domain_module_id on all 9 outbound handoffs (655-663) once modules exist
-    finding: B10b fails. Every outbound handoff has source_domain_module_id=NULL.
-    action: "After B1B-S1 lands, run deterministic backfill per the strongest-role rule. Loader pattern: backfill_ats_handoff_modules_2026_05_23.ts."
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
+  - id: B1A-HANDOFF-MODULE-BACKFILL
+    summary: "Backfill source_domain_module_id on all 9 outbound UEM handoffs (655-663) now that modules exist (B10b)"
+    finding: >
+      All 9 outbound handoffs carry source_domain_module_id=NULL. The B1-S1 module gate is
+      now cleared (3 modules live), so the deterministic strongest-role backfill can run.
+    action: >
+      Backfill per trigger-event master ownership: events on enrolled_devices (655, 656,
+      657, 658) -> 308 UEM-DEVICE-LIFECYCLE; on device_compliance_results (659, 660, 661) ->
+      310 UEM-COMPLIANCE-POSTURE; on device_configuration_profiles (663) -> 309 UEM-CONFIG-APPS;
+      on device_app_assignments (662) -> 309 UEM-CONFIG-APPS. Loader pattern:
+      backfill_ats_handoff_modules_2026_05_23.ts.
     affected_handoffs:
       - {handoff_id: 655, direction: outbound, source_domain: UEM, target_domain: ITSM, trigger_event: enrolled_device.enrolled, payload: service_incidents, null_field: source_domain_module_id}
       - {handoff_id: 656, direction: outbound, source_domain: UEM, target_domain: IGA, trigger_event: enrolled_device.enrolled, payload: enrolled_devices, null_field: source_domain_module_id}
@@ -147,124 +43,278 @@ b1b:
       - {handoff_id: 662, direction: outbound, source_domain: UEM, target_domain: SAM, trigger_event: device_app_assignment.deployed, payload: device_app_assignments, null_field: "source_domain_module_id and target_domain_module_id"}
       - {handoff_id: 663, direction: outbound, source_domain: UEM, target_domain: ITSM, trigger_event: device_configuration_profile.drift_detected, payload: service_incidents, null_field: source_domain_module_id}
 
-  - id: B1B-B3
-    summary: Retire legacy uem-system skill (id 114) after per-module skills exist (F1)
-    finding: F1 cannot fire until F2 cures. Legacy domain_id-only skill 114 has 8 query_* tools that must redistribute to the per-module system skills first.
-    action: After F2 + F3 land per-module skills + skill_tools, DELETE skill 114. Loader pattern from prior ATS skill 127-134 rename.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-F2}
+  - id: B1A-LIFECYCLE-STATES
+    summary: "Author lifecycle states for all 8 UEM masters; anchor domain_module_id per the new 3-module shape (B12)"
+    finding: >
+      0 lifecycle states across data_object_id 556-563. Module gate now cleared, so states
+      can carry domain_module_id. Twelve trigger events imply the state vocabulary.
+    action: >
+      Draft per-master state rows; set domain_module_id per realizing module (556/561/562 ->
+      308; 557/559/560 -> 309; 558/563 -> 310); mark workflow gates requires_permission=true.
+    affected_masters:
+      - {data_object_id: 556, name: enrolled_devices, target_module_id: 308, workflow: "enrolled to compliant/non_compliant to lost_or_stolen/retired"}
+      - {data_object_id: 561, name: enrollment_tokens, target_module_id: 308, workflow: "issued to consumed/revoked/expired"}
+      - {data_object_id: 562, name: device_deployment_results, target_module_id: 308, workflow: "queued to succeeded/failed"}
+      - {data_object_id: 557, name: device_configuration_profiles, target_module_id: 309, workflow: "draft to published to assigned to drift_detected"}
+      - {data_object_id: 559, name: mobile_app_packages, target_module_id: 309, workflow: "uploaded to published to deprecated"}
+      - {data_object_id: 560, name: device_app_assignments, target_module_id: 309, workflow: "assigned to deployed to failed/removed"}
+      - {data_object_id: 558, name: device_compliance_policies, target_module_id: 310, workflow: "draft to published to revoked"}
+      - {data_object_id: 563, name: device_compliance_results, target_module_id: 310, workflow: "evaluating to compliant/non_compliant"}
 
-  - id: B1B-F2
-    summary: Author one skill_type=system skill per UEM domain_module (Rule #17) plus tools + skill_tools rows
-    finding: F2 fails. Zero per-module system skills. F3, F4 (for per-module), F5 all gated on this.
-    action: "Per Phase-S, name skill <module_code_lower>_agent; INSERT skills row with domain_module_id; INSERT tools and skill_tools rows (>=1 each; typical 5-20 per skill). F4 invariant: query/mutate need data_object_id, fetch/side_effect/compute must NOT have data_object_id, inbound is either."
+b1b:
+  - id: B1B-CATALOG-UX
+    summary: "Populate domain-level and per-module catalog_tagline / catalog_description (M8 / A4, Rule #20)"
+    finding: >
+      domains.id=86 has catalog_tagline="" and catalog_description="". The 3 new modules
+      (308, 309, 310) were inserted with both columns omitted (Rule #20). A4 and M8 fail
+      until user-approved buyer-voice text loads.
+    action: >
+      Surface drafts per row (domain + each module) to the user; PATCH only with per-row
+      approved exact strings. No write without explicit sign-off.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: user_decision, ref: B2-CATALOG-UX}
+    affected_modules: [308, 309, 310]
 
-  - id: B1B-E1
-    summary: Author UEM-shaped roles under End-User Computing function (business_function_id=59)
-    finding: E1-E5 all fail. Only 2 EUC roles loaded (IT-COLLAB-PLATFORM-ADMIN id 10062, IT-EXTERNAL-COLLAB-STEWARD id 10063), neither UEM-shaped. Multi-module domains need >=3 roles per E1; 2-module floor in E2.
-    action: After B1B-S1 lands modules, author EUC-DEVICE-ADMIN, EUC-HELP-DESK-DEVICE-OPERATOR, EUC-COMPLIANCE-AUDITOR (plus EUC-APP-CATALOG-MANAGER if module split warrants). Each gets role_modules rows (>=2 modules, interaction_level set), role_permissions bundle (>=1 row).
+  - id: B1B-EUC-ROLES
+    summary: "Author UEM-shaped roles under End-User Computing function (business_function_id=59)"
+    finding: >
+      E1-E5 fail. Only 2 EUC roles loaded (IT-COLLAB-PLATFORM-ADMIN 10062,
+      IT-EXTERNAL-COLLAB-STEWARD 10063), neither UEM-shaped. With 3 modules the >=3 role
+      floor (E1) and 2-module role_modules floor (E2) apply.
+    action: >
+      Author EUC-DEVICE-ADMIN, EUC-HELP-DESK-DEVICE-OPERATOR, EUC-COMPLIANCE-AUDITOR (plus
+      EUC-APP-CATALOG-MANAGER if the config-apps split warrants). Each gets role_modules
+      rows (>=2 of modules 308/309/310, interaction_level set) and a role_permissions bundle.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: prerequisite_entity, ref: B1A-SYSTEM-SKILLS}
 
-  - id: B1B-M7-1
-    summary: PATCH UEM domain.notes pointer back to audits/UEM/ once user signs off
+  - id: B1B-USER-EDGE-VERBS
+    summary: "PATCH relationship_verb on 6 existing user-edge data_object_relationships rows (1847-1852)"
+    finding: >
+      Rows 1847-1852 carry data_object_id and related_data_object_id correctly (UEM masters
+      to users id 748) but relationship_verb="" on every row. Label unreadable until verbs
+      populate.
+    action: >
+      PATCH /data_object_relationships?id=eq.<id> with user-approved verbs (prior pre-spec):
+      1847 "has assigned", 1848 "has last seen", 1849 "has issued to", 1850 "has created by",
+      1851 "has owned by", 1852 "has uploaded by".
+    blocked_by:
+      - {type: user_decision, ref: B2-VERBS}
+
+  - id: B1B-INTRA-DOMAIN-RELS
+    summary: "Author 7 intra-domain data_object_relationships between UEM masters (B6)"
+    finding: >
+      0 intra-domain edges. Required: device_app_assignments to enrolled_devices and
+      mobile_app_packages; device_compliance_results to enrolled_devices and
+      device_compliance_policies; device_deployment_results to enrolled_devices;
+      enrollment_tokens to enrolled_devices; device_configuration_profiles to enrolled_devices (M:N).
+    action: >
+      Draft full tuples (relationship_verb, relationship_type, relationship_kind, owner_side,
+      is_required, inverse_verb). User confirms verbs (Rule #15 risk on notes).
+    blocked_by:
+      - {type: user_decision, ref: B2-VERBS}
+
+  - id: B1B-CROSS-DOMAIN-RELS
+    summary: "Author outbound cross-domain data_object_relationships mirroring 9 outbound handoffs (B8)"
+    finding: >
+      0 outbound cross-domain edges from UEM masters to neighbor payloads. Candidate pairings:
+      enrolled_devices to ITSM service_incidents, to HAM hardware_assets, to IGA access_grants
+      (verify exists); device_compliance_results to IGA access_decisions (verify exists);
+      device_app_assignments to SAM software_entitlements (verify exists).
+    action: >
+      Pre-flight existence-check each neighbor target. Drop unverifiable targets, surface as
+      B2 follow-ups. Author the rest with full tuples.
+    blocked_by:
+      - {type: catalog_addition, scope: domains, trigger: "neighbor-target entity verification"}
+
+  - id: B1B-PATTERN-FLAGS
+    summary: "PATCH pattern flags on candidate UEM masters after user confirms each (B4)"
+    finding: >
+      All three pattern flags false on every master, no positive review. Candidates:
+      enrolled_devices.has_personal_content=true (BYOD); enrollment_tokens.has_submit_lock=true
+      (one-shot); device_compliance_policies.has_submit_lock=true (published-immutable).
+    action: PATCH /data_objects?id=eq.<id> per confirmed flag. Rule #15 forbids notes annotation.
+    blocked_by:
+      - {type: user_decision, ref: B2-PATTERN-FLAGS}
+
+  - id: B1B-ALIASES
+    summary: "Author data_object_aliases rows for the 8 UEM masters (B11)"
+    finding: >
+      0 alias rows across all masters; vendor synonyms are universal (managedDevices,
+      configuration_profiles, compliancePolicies, mobileApps, enrollmentProfiles, etc.).
+    action: Draft 1-3 aliases per master (exact alias_name + alias_type tuples); user confirms; load.
+    blocked_by:
+      - {type: user_decision, ref: B2-VERBS}
+
+  - id: B1B-PURE-PLAY-SOLUTIONS
+    summary: "Insert pure-play UEM solutions at coverage_level=primary (A3)"
+    finding: >
+      A3 fails. 5 existing solution_domains rows (NinjaOne, Kaseya VSA, N-able N-central,
+      ManageEngine Endpoint Central, GoTo Resolve) all partial/secondary. Zero primary.
+    action: >
+      INSERT vendors + solutions (Microsoft Intune, Jamf Pro, Workspace ONE / Omnissa,
+      Kandji, Hexnode UEM, IBM MaaS360) + solution_domains at coverage_level=primary.
+      Rebalance the 5 RMM rows per B2-COVERAGE.
+    blocked_by:
+      - {type: user_decision, ref: B2-COVERAGE}
+
+  - id: B1B-RETIRE-LEGACY-SKILL
+    summary: "Retire legacy uem-system skill (id 114) after per-module skills exist (F1)"
+    finding: >
+      F1 cannot fire until per-module skills cure F2. Legacy domain_id-only skill 114 has 8
+      query_* tools that must redistribute to the 3 per-module system skills first.
+    action: After B1A-SYSTEM-SKILLS lands skills + skill_tools, DELETE skill 114.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1A-SYSTEM-SKILLS}
+
+  - id: B1B-DOMAIN-NOTES
+    summary: "PATCH UEM domain.notes pointer back to audits/UEM/ once user signs off"
     finding: Optional pointer per audit procedure Step 5. domain.notes is currently empty.
-    action: User supplies exact wording; PATCH /domains?id=eq.86 notes column with the approved string. Rule #15 forbids agent-authored notes.
+    action: User supplies exact wording; PATCH /domains?id=eq.86 notes column. Rule #15 forbids agent-authored notes.
     blocked_by:
-      - {type: user_decision, ref: B2-2}
+      - {type: user_decision, ref: B2-CATALOG-UX}
 
 b2:
-  - id: B2-1
-    summary: UEM module split shape decision (gates the entire B1B cascade)
-    question: Which split shape does UEM adopt - the prior 4-module proposal (UEM-DEVICE-LIFECYCLE, UEM-POLICY-CONFIG, UEM-APP-DELIVERY, UEM-COMPLIANCE-POSTURE), a 3-module collapse, a 5-module variant separating zero-touch onboarding, or another shape?
-    options:
-      - "4-module proposed"
-      - "3-module collapse of POLICY-CONFIG + COMPLIANCE-POSTURE"
-      - "5-module variant separating UEM-ZERO-TOUCH-ONBOARDING from UEM-DEVICE-LIFECYCLE"
-      - "Other split user proposes"
-    why: M1 fails and every other M / B / E / F dependency cascades from this single decision. Module count, capability mapping, lifecycle state attribution, system-skill scope, role bundles, and handoff source_domain_module_id backfill all derive from the chosen shape.
-
-  - id: B2-2
-    summary: Catalog UX wording (Rule #20) for domain and per-module rows
-    question: What exact catalog_tagline and catalog_description strings should be PATCHed on /domains?id=eq.86 and on each new domain_modules row?
+  - id: B2-CATALOG-UX
+    summary: "Catalog UX wording (Rule #20) for the domain and the 3 new module rows"
+    question: >
+      What exact catalog_tagline and catalog_description strings should be PATCHed on
+      /domains?id=eq.86 and on each of UEM-DEVICE-LIFECYCLE (308), UEM-CONFIG-APPS (309),
+      UEM-COMPLIANCE-POSTURE (310)?
     options:
       - "User supplies exact strings per row"
       - "User edits an agent-proposed draft and supplies the final"
       - "Defer to a separate marketing pass"
-    why: Rule #20 forbids agent-authored buyer-voice prose without explicit per-row approval. The prior audit drafts are starting points only.
+    why: "Rule #20 forbids agent-authored buyer-voice prose without explicit per-row approval."
 
-  - id: B2-3
-    summary: Relationship verbs for B7 user-edges and B6 intra-domain edges
-    question: What exact relationship_verb strings should be loaded on the 6 existing user-edge rows (1847-1852) and the 7 proposed intra-domain edges?
+  - id: B2-VERBS
+    summary: "Relationship verbs for B7 user-edges, B6 intra-domain edges, and B11 aliases"
+    question: >
+      What exact relationship_verb strings on the 6 user-edge rows (1847-1852) and the 7
+      proposed intra-domain edges, and which alias_name + alias_type tuples on the 8 masters?
     options:
-      - "Confirm prior continuation labels (has assigned / has last seen / has issued to / has created by / has owned by / has uploaded by for users edges)"
+      - "Confirm prior continuation labels (has assigned / has last seen / has issued to / has created by / has owned by / has uploaded by)"
       - "Revise specific verbs"
-      - "Defer until B12 lifecycle states author"
-    why: Rule #15 forbids agent-populated notes; the verb column itself is structural but the exact wording reads as label so user confirms.
+      - "Defer until lifecycle states author"
+    why: "Rule #15 forbids agent-populated notes; verb/alias wording reads as label so user confirms."
 
-  - id: B2-4
-    summary: Pattern-flag confirmation on candidate UEM masters
-    question: Confirm or revise these flag candidates - enrolled_devices.has_personal_content=true, enrollment_tokens.has_submit_lock=true, device_compliance_policies.has_submit_lock=true.
+  - id: B2-PATTERN-FLAGS
+    summary: "Pattern-flag confirmation on candidate UEM masters"
+    question: >
+      Confirm or revise: enrolled_devices.has_personal_content=true,
+      enrollment_tokens.has_submit_lock=true, device_compliance_policies.has_submit_lock=true.
     options:
       - "All three confirmed"
       - "Some flipped (specify)"
-      - "Defer until module split decides BYOD scope handling"
-    why: Pattern flags are catalog-wide truths about the master; choosing default vs per-deployment-override has downstream privacy and lifecycle implications.
+      - "Defer pending BYOD scope handling"
+    why: "Pattern flags are catalog-wide truths about the master with privacy/lifecycle implications."
 
-  - id: B2-5
-    summary: coverage_level rebalancing for the 5 RMM / PSA solutions after pure-play UEM vendors land
-    question: After pure-play UEM solutions (Intune, Jamf Pro, Workspace ONE / Omnissa, Kandji, Hexnode UEM, MaaS360) land at coverage_level=primary, do the existing 5 rows stay partial (status quo) or move OFF UEM into the RMM domain (id 130)?
+  - id: B2-COVERAGE
+    summary: "coverage_level rebalancing for the 5 RMM / PSA solutions after pure-play UEM vendors land"
+    question: >
+      After pure-play UEM solutions (Intune, Jamf Pro, Workspace ONE / Omnissa, Kandji,
+      Hexnode UEM, MaaS360) land at primary, do the 5 existing rows stay partial or move OFF
+      UEM into RMM (domain id 130)?
     options:
       - "Keep partial on UEM (status quo)"
       - "Move primary attribution to RMM, drop UEM rows"
       - "Hybrid - keep partial on UEM and also add primary on RMM"
-    why: Existing rows are RMM / PSA platforms with UEM-as-feature. The semantic call is whether they primarily serve the UEM market (vendor pitch) or the RMM market (buyer view).
+    why: "Existing rows are RMM/PSA platforms with UEM-as-feature; the call is vendor-pitch vs buyer-view."
 
-  - id: B2-6
-    summary: Regulation scope - which UEM-applicable regulations to load
-    question: Load 0, 1, or all of GDPR (BYOD personal data), HIPAA (healthcare device PHI), CCPA / CPRA (US PI on devices), FedRAMP (US public-sector UEM)?
+  - id: B2-REGULATIONS
+    summary: "Regulation scope - which UEM-applicable regulations to load"
+    question: "Load 0, 1, or all of GDPR (BYOD personal data), HIPAA (healthcare device PHI), CCPA / CPRA, FedRAMP (US public-sector UEM)?"
     options:
       - "All four"
       - "GDPR only (universal)"
       - "Specific subset (user names which)"
-      - "Defer to Phase 0 vendor research per Bucket 3 vetted route"
-    why: UEM is sector-neutral but the regulation choice anchors compliance-shaped capability authoring (no audit blocker today, but affects downstream M-band capability rollups).
+      - "Defer to Phase 0 vendor research"
+    why: "UEM is sector-neutral but the choice anchors compliance-shaped capability rollups."
+
+  - id: B2-CONFIG-APPS-SPLIT
+    summary: "Whether to split UEM-CONFIG-APPS (309) into separate POLICY-CONFIG and APP-DELIVERY modules once new masters land"
+    question: >
+      UEM-CONFIG-APPS folds the UEM-CONFIG and UEM-APP-DIST capabilities into one module
+      because reuse-only modularization gave neither enough master substrate to stand alone.
+      If the 7 candidate masters in b3 (device_groups, device_scripts, device_certificates,
+      etc.) land, should 309 split into UEM-POLICY-CONFIG + UEM-APP-DELIVERY (the prior
+      4-module shape), or stay merged?
+    options:
+      - "Split into POLICY-CONFIG + APP-DELIVERY when the new masters land"
+      - "Keep merged as UEM-CONFIG-APPS"
+      - "Decide later, after b3 vetting"
+    why: "Module boundary is reversible today; the prior audit's 4-module proposal assumed these masters exist."
 
 b3:
-  - id: B3-1
-    candidate: device_telemetry_streams
-    rationale: Continuous device telemetry stream rows (battery, posture, network conditions). DEX-adjacent. Distinct from inventory snapshots (B3-4) and compliance results (already mastered as 563). Whether to master in UEM or split into a DEX domain is open.
-    vendor_evidence:
-      - Workspace ONE Intelligence
-      - Kandji Pulse
-      - Jamf Protect
-    proposed_module: UEM-COMPLIANCE-POSTURE
-
-  - id: B3-2
-    candidate: device_remote_sessions
-    rationale: Remote-assist / remote-control session records (technician initiated). Channel ambiguity with RMM (RMM domain id 130 likely has overlapping concept). Should UEM master, RMM master, or split?
-    vendor_evidence:
-      - Intune Remote Help
-      - Jamf Remote
-      - Workspace ONE Assist
+  - id: B3-DEVICE-GROUPS
+    candidate: device_groups
+    rationale: >
+      Universal targeting axis for every assignment (Intune deviceGroups, Jamf smart/static
+      groups, Workspace ONE smart groups, Kandji Blueprints, Hexnode device groups). Absent.
+      Would anchor UEM-CONFIG-APPS (or a split-out UEM-POLICY-CONFIG).
+    vendor_evidence: [Microsoft Intune, Jamf Pro, Workspace ONE / Omnissa, Kandji, Hexnode UEM]
+    proposed_module: UEM-CONFIG-APPS
+  - id: B3-DEVICE-SCRIPTS
+    candidate: device_scripts
+    rationale: >
+      Universal, distinct from configuration profiles (Intune deviceManagementScripts, Jamf
+      scripts, Workspace ONE scripts, Kandji custom scripts, Hexnode custom scripts).
+    vendor_evidence: [Microsoft Intune, Jamf Pro, Workspace ONE / Omnissa, Kandji, Hexnode UEM]
+    proposed_module: UEM-CONFIG-APPS
+  - id: B3-DEVICE-ACTIONS
+    candidate: device_actions
+    rationale: >
+      Universal command/action log (restart, wipe, lock, sync) with issued + result. Intune
+      deviceActionResults, Jamf mdm_commands, Workspace ONE Device Actions, Kandji commands.
+    vendor_evidence: [Microsoft Intune, Jamf Pro, Workspace ONE / Omnissa, Kandji]
     proposed_module: UEM-DEVICE-LIFECYCLE
-
-  - id: B3-3
-    candidate: enrolled_device_blockages
-    rationale: Conditional-access block records when a UEM policy gates a device. Could be derived from device_compliance_results (id 563) rather than mastered standalone.
-    vendor_evidence:
-      - Intune compliance / conditional access
-      - Workspace ONE conditional access
+  - id: B3-ENROLLMENT-PROFILES
+    candidate: enrollment_profiles
+    rationale: >
+      Reusable zero-touch template (Autopilot / ADE) distinct from enrollment_tokens (the
+      issued instance). Intune enrollmentProfiles, Jamf pre_stage_enrollments, Kandji Blueprints.
+    vendor_evidence: [Microsoft Intune, Jamf Pro, Kandji]
+    proposed_module: UEM-DEVICE-LIFECYCLE
+  - id: B3-DEVICE-CERTIFICATES
+    candidate: device_certificates
+    rationale: >
+      Per-device cert issuance for Wi-Fi / VPN / mTLS (Intune SCEP/PKCS rows, Jamf
+      certificates, Workspace ONE CA profiles). Required substrate for config delivery.
+    vendor_evidence: [Microsoft Intune, Jamf Pro, Workspace ONE / Omnissa]
+    proposed_module: UEM-CONFIG-APPS
+  - id: B3-DEVICE-USERS
+    candidate: device_users
+    rationale: >
+      Per-device assigned-user junction for shared-iPad, kiosk, multi-user-Mac shapes.
+      Intune userDeviceCheckin, Jamf user-to-device assignment, Workspace ONE Device Users.
+    vendor_evidence: [Microsoft Intune, Jamf Pro, Workspace ONE / Omnissa]
+    proposed_module: UEM-DEVICE-LIFECYCLE
+  - id: B3-POLICY-ASSIGNMENT-RESULTS
+    candidate: policy_assignment_results
+    rationale: >
+      Per-device per-policy assignment outcome (deployed/failed/pending), distinct from
+      device_deployment_results (whole-deployment) and device_compliance_results (state eval).
+      Intune deviceConfigurationDeviceStatuses, Jamf policy_logs, Workspace ONE Profile Status.
+    vendor_evidence: [Microsoft Intune, Jamf Pro, Workspace ONE / Omnissa]
     proposed_module: UEM-COMPLIANCE-POSTURE
-
-  - id: B3-4
+  - id: B3-DEVICE-TELEMETRY-STREAMS
+    candidate: device_telemetry_streams
+    rationale: >
+      Continuous device telemetry (battery, posture, network). DEX-adjacent; distinct from
+      compliance results (already mastered as 563). Master in UEM or split into a DEX domain is open.
+    vendor_evidence: [Workspace ONE Intelligence, Kandji Pulse, Jamf Protect]
+    proposed_module: UEM-COMPLIANCE-POSTURE
+  - id: B3-DEVICE-REMOTE-SESSIONS
+    candidate: device_remote_sessions
+    rationale: >
+      Remote-assist / remote-control session records. Channel ambiguity with RMM (domain 130).
+      Should UEM master, RMM master, or split?
+    vendor_evidence: [Intune Remote Help, Jamf Remote, Workspace ONE Assist]
+    proposed_module: UEM-DEVICE-LIFECYCLE
+  - id: B3-DEVICE-INVENTORY-SNAPSHOTS
     candidate: device_inventory_snapshots
-    rationale: Periodic hardware / software inventory snapshot rows. Hexnode + Workspace ONE master this; Intune + Jamf treat as derived from enrolled_devices state. Whether to master depends on retention requirements and reporting needs.
-    vendor_evidence:
-      - Hexnode UEM
-      - Workspace ONE inventory
-      - Intune device inventory
-      - Jamf inventory
+    rationale: >
+      Periodic hardware / software inventory snapshots. Hexnode + Workspace ONE master;
+      Intune + Jamf treat as derived from enrolled_devices state. Depends on retention needs.
+    vendor_evidence: [Hexnode UEM, Workspace ONE, Microsoft Intune, Jamf Pro]
     proposed_module: UEM-DEVICE-LIFECYCLE

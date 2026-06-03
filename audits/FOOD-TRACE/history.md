@@ -482,3 +482,46 @@ Carry-over from 2026-05-30: SUP-LIFE M7 / B-band (single-master conflict on `sup
 ### Status frontmatter
 
 `feedback_needed` (Bucket 2 module split + supplier_certifications arbitration + regulations scope are gating). `next_action_by: user`.
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+FOOD-TRACE was an unbuilt domain (0 `domain_modules`, M1 fail) with 6 capabilities and 9 assigned data_objects (5 master, 3 consumer, 1 contributor). This pass built the structural module set per Rule #14 without waiting on the B2-1 user decision, picking a coherent 3-module split that places every capability and every data_object. Scope was strictly modules plus entity assignment: no new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. The prior B2-1 question (2-to-6 module options) is now resolved in practice by the 3-full-module shape loaded here; the deferred MISSING masters (B1B-M1 to M6) and B3 candidates remain parked for a later research / build pass.
+
+### Modules built (all module_kind=full, domain_id=155, industry_id=24 Food and Beverage Manufacturing)
+
+- **FOOD-TRACE-TRACEABILITY-EVENTS** (id 256): capabilities CTE-CAPTURE (455), KDE-REPORTING (456), LOT-GENEALOGY (459). Masters traceability_lots (494), critical_tracking_events (495), key_data_elements (496). Consumers harvest_records (490), bulk_milk_shipments (506).
+- **FOOD-TRACE-RECALL-MGMT** (id 257): capability RECALL-EXECUTION (458). Master recall_events (497). Contributor compliance_obligations (287).
+- **FOOD-TRACE-SUPPLIER-PROVENANCE** (id 258): capabilities SUPPLIER-DOCS (457), PROVENANCE-VERIF (460). Master supplier_certifications (498). Consumer suppliers (206).
+
+Totals: 3 modules, 6 DMC rows (every capability placed once, M4 satisfied), 9 DMDO rows. No empty module (each has at least 1 capability and at least 1 data_object).
+
+### Industry attribution
+
+Set `domain_modules.industry_id = 24` (Food and Beverage Manufacturing, NAICS 311-312) on all 3 modules. The domain description names the food manufacturer / distributor / grower-shipper subject to FSMA 204 as the buyer; id 24 is the single cleanest fit over Agriculture (20) or the retail / food-service rows.
+
+### M7 catalog-wide master pre-check
+
+Pre-check ran on all 5 candidate masters (494, 495, 496, 497, 498). Zero pre-existing `domain_module_data_objects` master rows for any of them, so all 5 are mastered in FOOD-TRACE. No demotions were required.
+
+Note on B2-2: the prior audit flagged `supplier_certifications` (498) as a catalog-wide M7 hard fail because legacy `domain_data_objects` listed it as master in both SUP-LIFE and FOOD-TRACE. The authoritative DMDO junction tells a different story: 498 had NO master DMDO row anywhere before this pass (SUP-LIFE has not modularized). After this pass 498 has exactly one master DMDO row (FOOD-TRACE module 258) plus one contributor row (FSQM-AUDIT-SUPPLIER, module 264). M7 is satisfied today. B2-2 is retained as a forward-looking reconciliation: when SUP-LIFE modularizes it must NOT also master 498 (it should consume / embed), or the two sides must agree which keeps catalog mastership.
+
+### Verification
+
+- `domain_module_capabilities` for modules 256/257/258: 6 rows, all 6 capabilities placed exactly once.
+- `domain_module_data_objects`: 9 rows; non-master roles and necessity preserved from legacy `domain_data_objects` (harvest_records / bulk_milk_shipments / suppliers = consumer/required; compliance_obligations = contributor/required).
+- Each of the 5 masters appears exactly once catalog-wide and in-domain.
+- No empty module.
+
+### Fixes applied this audit pass
+
+Loaded 3 `domain_modules`, 6 `domain_module_capabilities`, 9 `domain_module_data_objects` via `.tmp_deploy/modularize_food_trace_2026-06-02.ts` (idempotent). No other writes.
+
+### Items unblocked by this build
+
+M1 is now satisfied, so the following prerequisite-gated items move from b1b to actionable next pass: per-module system skills under Rule #17 / F2 / F3 (was B1B-S11, gated on B1B-S2), per-master lifecycle states with realizing module FK (B1B-S10), and cross-domain handoff module-FK backfill (B1B-B10b). The legacy domain-level system skill `skills.id=62` (food-trace-system, domain_module_id null) should be replaced by 3 per-module system skills and then deleted.
+
+### Status frontmatter
+
+`feedback_needed`. `next_action_by: agent` (b1a now holds the per-module system skill build plus the still-open catalog UX draft).

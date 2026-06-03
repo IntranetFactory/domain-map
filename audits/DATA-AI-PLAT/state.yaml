@@ -2,12 +2,22 @@ schema_version: 2
 domain: DATA-AI-PLAT
 status: feedback_needed
 next_action_by: agent
-last_audit: "2026-05-31"
+last_audit: "2026-06-02"
 
 b1a:
+  - id: B1A-SYSTEM-SKILLS
+    summary: "Per-module system skills now owed: 4 full modules live (223 LAKEHOUSE, 224 SEMANTIC-CATALOG, 225 ML, 226 AI-AGENTS), but only 1 system skill exists (skill 45, domain_module_id IS NULL)."
+    finding: "The 2026-06-02 modularization landed 4 module_kind='full' rows (DATA-AI-PLAT-LAKEHOUSE 223, DATA-AI-PLAT-SEMANTIC-CATALOG 224, DATA-AI-PLAT-ML 225, DATA-AI-PLAT-AI-AGENTS 226). Rule #17 mandates exactly one system skill per full module (F2), each with >=1 skill_tools (F3). Today there is a single domain-level system skill 45 (data-ai-plat-system) with domain_module_id IS NULL and 9 skill_tools rows (all operation_kind='query' with valid data_object_id, so F4 invariants pass on the current shape). One module is unassigned at minimum; three modules have no system skill at all. This supersedes the now-resolved gated portion of former B2-S4 (the module split it waited on has landed)."
+    action: "Re-target skill 45 to one module (recommend 224 DATA-AI-PLAT-SEMANTIC-CATALOG, where the bulk of the query tools sit) and author 3 additional system skills, one per remaining full module (223, 225, 226), each with >=1 query skill_tools over that module's masters. Run Phase S then Phase P (personas, role_modules, process_raci, lifecycle.process_id) for the now-multi-module domain."
+    affected_modules: [223, 224, 225, 226]
+  - id: B1A-CATALOG-UX
+    summary: "M8/A4 buyer-copy gap: all 4 new modules ship with empty catalog_tagline and catalog_description."
+    finding: "The 2026-06-02 modularization deliberately omitted buyer-facing copy. Modules 223, 224, 225, 226 each carry catalog_tagline='' and catalog_description=''. M8/A4 expect populated buyer copy per full module."
+    action: "Author catalog_tagline and catalog_description per module describing the capability shape (no vendor/product names, Rule #18; no em-dashes). Source from the module descriptions already loaded."
+    affected_modules: [223, 224, 225, 226]
   - id: B1A-H1R
     summary: "APQC PCF tagging remainder: 9 untagged cross-domain handoffs (155, 156, 683, 684, 685, 221, 693, 697, 715) plus optional REPLACE of weak discovery_substring on 219."
-    finding: "12 of 20 cross-domain handoffs are APQC-tagged (11 agent_curated from the 2026-05-31 continuation loader, plus 1 legacy discovery_substring on handoff 219 pointing at process 505 Establish baseline metrics L4, weak). Untagged remainder: 155 (DATA-AI-PLAT -> MDM, golden_record.synced, payload data_products), 156 (DATA-AI-PLAT -> DQ, quality_check.failed, payload lakehouse_tables), 683 (DATA-AI-PLAT -> DCG, ml_model.deployed, payload ml_models), 684 (DATA-AI-PLAT -> DQ, feature_set.staleness_breached, payload feature_sets), 685 (DATA-AI-PLAT -> DCG, feature_set.published, payload feature_sets), 221 (KGP -> DATA-AI-PLAT, ontology.published, payload ontologies), 693 (METRICS-LAYER -> DATA-AI-PLAT, metric_materialization.refreshed, payload metric_materializations), 697 (KGP -> DATA-AI-PLAT, kgp_ontology.imported, payload kgp_ontologies), 715 (DQ -> DATA-AI-PLAT, dq_dimension.threshold_breached, payload dq_dimensions; defer to DQ audit's authoring). Volume against 0.5N to 0.8N expectation (10 to 16 for N=20): currently 11 agent_curated, within band but trailing on the modern-AI-specific events."
+    finding: "12 of 20 cross-domain handoffs are APQC-tagged (11 agent_curated from the 2026-05-31 continuation loader, plus 1 legacy discovery_substring on handoff 219 pointing at process 505 Establish baseline metrics L4, weak). Untagged remainder: 155 (DATA-AI-PLAT -> MDM, golden_record.synced, payload data_products), 156 (DATA-AI-PLAT -> DQ, quality_check.failed, payload lakehouse_tables), 683 (DATA-AI-PLAT -> DCG, ml_model.deployed, payload ml_models), 684 (DATA-AI-PLAT -> DQ, feature_set.staleness_breached, payload feature_sets), 685 (DATA-AI-PLAT -> DCG, feature_set.published, payload feature_sets), 221 (KGP -> DATA-AI-PLAT, ontology.published, payload ontologies), 693 (METRICS-LAYER -> DATA-AI-PLAT, metric_materialization.refreshed, payload metric_materializations), 697 (KGP -> DATA-AI-PLAT, kgp_ontology.imported, payload kgp_ontologies), 715 (DQ -> DATA-AI-PLAT, dq_dimension.threshold_breached, payload dq_dimensions; defer to DQ audit's authoring). Independent of the module split; unchanged by the 2026-06-02 modularization."
     action: "Per-handoff PCF lookup at fix time. INSERT into handoff_processes with proposal_source='agent_curated', record_status='new', role='implements'. Defer modern-AI events (ml_model.deployed, feature_set.published, feature_set.staleness_breached) to Discover Pass 3 custom processes if no clean L2/L3 cross-industry PCF anchor exists. Optionally REPLACE handoff 219's discovery_substring row with a stronger agent_curated row."
     affected_handoffs:
       - {handoff_id: 155, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: MDM, trigger_event: "golden_record.synced", payload: "data_products"}
@@ -20,13 +30,10 @@ b1a:
       - {handoff_id: 697, direction: inbound, source_domain: KGP, target_domain: DATA-AI-PLAT, trigger_event: "kgp_ontology.imported", payload: "kgp_ontologies"}
       - {handoff_id: 715, direction: inbound, source_domain: DQ, target_domain: DATA-AI-PLAT, trigger_event: "dq_dimension.threshold_breached", payload: "dq_dimensions"}
     extra_optional_replace_handoff: 219
-
-b1b:
-  - id: B1B-S2-OUTBOUND-FK
-    summary: "B10b own-side: populate source_domain_module_id on 11 outbound cross-domain handoffs once B2-S1 lands a DATA-AI-PLAT module split."
-    finding: "All 11 outbound handoffs carry NULL on source_domain_module_id. Cannot populate until DATA-AI-PLAT has any domain_modules rows (B2-S1). The target-side target_domain_module_id is owed by each receiving domain's own b1 audit (BI, DCG, CONV-AI, AIOPS, MDM, DQ, ITSM), except 682 and 686 which already carry target_domain_module_id=38 (ITSM module)."
-    blocked_by:
-      - {type: user_decision, ref: B2-S1, reason: "module split must land before source FK is populatable"}
+  - id: B1A-S2-OUTBOUND-FK
+    summary: "Own-side: populate source_domain_module_id on 11 outbound cross-domain handoffs now that the DATA-AI-PLAT module split has landed (223/224/225/226)."
+    finding: "All 11 outbound handoffs carry NULL on source_domain_module_id. This was gated on B2-S1 (module split), which landed 2026-06-02. The source FK is now populatable by mapping each payload master to its owning module: data_products (232)->224, lakehouse_tables (226)->223, ml_models (228)->225, feature_sets (229)->225, semantic_metrics (230)->224, ai_agents (231)->226, data_pipelines (227)->223. The target-side target_domain_module_id is still owed by each receiving domain's own b1 audit (BI, DCG, CONV-AI, AIOPS, MDM, DQ, ITSM), except 682 and 686 which already carry target_domain_module_id=38 (ITSM module). Out of scope for the 2026-06-02 modularization-only pass; flagged as the next agent action."
+    action: "PATCH source_domain_module_id per handoff by payload master->module: 151 semantic_metrics->224; 152 data_products->224; 153 ai_agents->226; 154 data_pipelines->223; 155 data_products->224; 156 lakehouse_tables->223; 682 ml_models->225; 683 ml_models->225; 684 feature_sets->225; 685 feature_sets->225; 686 ml_models->225."
     affected_handoffs:
       - {handoff_id: 151, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: BI, trigger_event: "semantic_metric.published", payload: "semantic_metrics", null_field: "source_domain_module_id"}
       - {handoff_id: 152, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: DCG, trigger_event: "data_product.published", payload: "data_products", null_field: "source_domain_module_id"}
@@ -39,12 +46,10 @@ b1b:
       - {handoff_id: 684, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: DQ, trigger_event: "feature_set.staleness_breached", payload: "feature_sets", null_field: "source_domain_module_id"}
       - {handoff_id: 685, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: DCG, trigger_event: "feature_set.published", payload: "feature_sets", null_field: "source_domain_module_id"}
       - {handoff_id: 686, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: ITSM, trigger_event: "ml_model.evaluation_failed", payload: "service_incidents", null_field: "source_domain_module_id"}
-
-  - id: B1B-S3-INBOUND-FK
-    summary: "B10b own-side: populate target_domain_module_id on 9 inbound cross-domain handoffs once B2-S1 lands a DATA-AI-PLAT module split."
-    finding: "All 9 inbound handoffs carry NULL on target_domain_module_id (and source_domain_module_id is owed by source-domain audits)."
-    blocked_by:
-      - {type: user_decision, ref: B2-S1, reason: "module split must land before target FK is populatable"}
+  - id: B1A-S3-INBOUND-FK
+    summary: "Own-side: populate target_domain_module_id on 9 inbound cross-domain handoffs now that the DATA-AI-PLAT module split has landed."
+    finding: "All 9 inbound handoffs carry NULL on target_domain_module_id. This was gated on B2-S1, which landed 2026-06-02. The target FK is now populatable by mapping each payload to the consuming DATA-AI-PLAT module: lakehouse_tables (226)->223, metric_definitions (252)->224, ontologies (254)->224, pipeline_runs/data_pipelines->223, schema_registries (lakehouse engineering)->223, metric_materializations->224 (semantic), kgp_ontologies->224, dq_dimensions->224 (or 223 per DQ semantics). Source side (source_domain_module_id) is still owed by each source domain's audit (DI, DCG, METRICS-LAYER, KGP, DQ). Out of scope for the modularization-only pass."
+    action: "PATCH target_domain_module_id per handoff by payload->consuming module: 157 lakehouse_tables->223; 158 lakehouse_tables->223; 219 metric_definitions->224; 221 ontologies->224; 693 metric_materializations->224; 697 kgp_ontologies->224; 715 dq_dimensions->224; 725 pipeline_runs->223; 731 schema_registries->223. Confirm 715 (dq_dimensions) module placement against DQ semantics before patching."
     affected_handoffs:
       - {handoff_id: 157, direction: inbound, source_domain: DI, target_domain: DATA-AI-PLAT, trigger_event: "replication_load.completed", payload: "lakehouse_tables", null_field: "target_domain_module_id"}
       - {handoff_id: 158, direction: inbound, source_domain: DCG, target_domain: DATA-AI-PLAT, trigger_event: "access_policy.updated", payload: "lakehouse_tables", null_field: "target_domain_module_id"}
@@ -56,36 +61,42 @@ b1b:
       - {handoff_id: 725, direction: inbound, source_domain: DI, target_domain: DATA-AI-PLAT, trigger_event: "pipeline_run.completed", payload: "pipeline_runs", null_field: "target_domain_module_id"}
       - {handoff_id: 731, direction: inbound, source_domain: DI, target_domain: DATA-AI-PLAT, trigger_event: "schema_registry.schema_evolved", payload: "schema_registries", null_field: "target_domain_module_id"}
 
-b2:
-  - id: B2-S1
-    summary: "M1 hard-fail: pick the module split for DATA-AI-PLAT (8 capabilities require at least 2 full modules per Rule #14)."
-    question: "Which module split should DATA-AI-PLAT land? The smallest coherent split covering 8 capabilities and 9 own masters is 4 modules: DATA-AI-PLAT-LAKEHOUSE (lakehouse_tables, data_pipelines; caps LAKEHOUSE-STORAGE + DATA-PIPELINE-ORCH), DATA-AI-PLAT-SEMANTIC (semantic_metrics, ontologies, knowledge_graph_entities, data_products; caps SEMANTIC-MODELING + UNIFIED-GOV-CATALOG + OPERATIONAL-DATA-APPS), DATA-AI-PLAT-ML (ml_models, feature_sets; cap ML-LIFECYCLE), DATA-AI-PLAT-AI-AGENTS (ai_agents; caps LLM-ORCH + NOTEBOOK-ANALYTICS). Alternatives per flagship vendor lens."
-    options:
-      - "(a) 4-module split as proposed"
-      - "(b) coarser 2-module split: DATA-AI-PLAT-DATA + DATA-AI-PLAT-AI"
-      - "(c) finer 6-module split mirroring Fabric: Engineering / Warehouse / Science / RT-Intel / Semantic / Agents"
-      - "(d) defer to a separate Phase A authoring session"
-    why: "Architectural intent: every flagship vendor splits the surface differently (Databricks vs Snowflake vs Fabric vs Foundry); the audit cannot pick the split without explicit user direction. Choice gates B2-S2 (lifecycle authoring per master), B2-S4 (system skill module assignment), B1B-S2 / B1B-S3 (source/target FK populate on 20 handoffs), F5 (per-module Semantius score), and all B3 entity inserts."
+b1b:
+  - id: B1B-S2-LIFECYCLE
+    summary: "C1: author lifecycle states for the 9 own masters; module ids now available to anchor domain_module_id."
+    finding: "0 data_object_lifecycle_states on any of the 9 own masters. This was gated on B2-S1 (module split) for the per-state domain_module_id anchor, which landed 2026-06-02 (masters now map: lakehouse_tables 226->223, data_pipelines 227->223, ml_models 228->225, feature_sets 229->225, semantic_metrics 230->224, ai_agents 231->226, data_products 232->224, ontologies 254->224, knowledge_graph_entities 255->224). Per-master workflow-shape vs config-shape decision (former B2-S2) is still a user judgment call and remains parked under B2-LIFECYCLE-SHAPE; authoring is out of scope for the modularization-only pass."
+    blocked_by:
+      - {type: user_decision, ref: B2-LIFECYCLE-SHAPE, reason: "per-master workflow-shape vs config-shape decision must land before lifecycle states are authored"}
+    affected_masters:
+      - {data_object_id: 226, name: "lakehouse_tables", target_module_id: 223, workflow: "config-shape candidate"}
+      - {data_object_id: 227, name: "data_pipelines", target_module_id: 223, workflow: "active / paused vs running / failed / succeeded"}
+      - {data_object_id: 228, name: "ml_models", target_module_id: 225, workflow: "registered -> staging -> production -> archived"}
+      - {data_object_id: 229, name: "feature_sets", target_module_id: 225, workflow: "registered -> online -> stale -> archived"}
+      - {data_object_id: 230, name: "semantic_metrics", target_module_id: 224, workflow: "proposed -> certified -> deprecated"}
+      - {data_object_id: 231, name: "ai_agents", target_module_id: 226, workflow: "draft -> published -> deployed -> retired"}
+      - {data_object_id: 232, name: "data_products", target_module_id: 224, workflow: "proposed -> in_development -> published -> deprecated"}
+      - {data_object_id: 254, name: "ontologies", target_module_id: 224, workflow: "draft -> released -> deprecated"}
+      - {data_object_id: 255, name: "knowledge_graph_entities", target_module_id: 224, workflow: "config-shape candidate"}
 
-  - id: B2-S2
-    summary: "C1 hard-fail: lifecycle state authoring decision per each of the 9 own masters."
+b2:
+  - id: B2-LIFECYCLE-SHAPE
+    summary: "C1: per-master lifecycle authoring decision (workflow-shape vs documented config-shape exemption) for the 9 own masters."
     question: "Per-master decision on the lifecycle state machine. Workflow-shape masters: ml_models (registered -> staging -> production -> archived); data_pipelines (active / paused vs running / failed / succeeded); ai_agents (draft -> published -> deployed -> retired); data_products (proposed -> in_development -> published -> deprecated); semantic_metrics (proposed -> certified -> deprecated); ontologies (draft -> released -> deprecated); feature_sets (registered -> online -> stale -> archived). Plausibly config-shape: lakehouse_tables, knowledge_graph_entities."
     options:
       - "(a) author the proposed default state machine"
       - "(b) document config-shape exemption (lakehouse_tables, knowledge_graph_entities plausibly)"
       - "(c) skip authoring this round, re-surface at next audit"
-    why: "Rule #12 requires per-master positive consideration. Rule #15 forbids auto-populating data_objects.notes for the exemption justification; exemption decisions land in history.md instead."
+    why: "Rule #12 requires per-master positive consideration. Rule #15 forbids auto-populating data_objects.notes for the exemption justification; exemption decisions land in history.md instead. The module-split blocker on this item (former B2-S2 dependency on B2-S1) is now cleared: target_module_id per master is resolved (see B1B-S2-LIFECYCLE)."
     affected_masters:
-      - {data_object_id: 226, name: "lakehouse_tables", target_module_id: null, workflow: "config-shape candidate"}
-      - {data_object_id: 227, name: "data_pipelines", target_module_id: null, workflow: "active / paused vs running / failed / succeeded"}
-      - {data_object_id: 228, name: "ml_models", target_module_id: null, workflow: "registered -> staging -> production -> archived"}
-      - {data_object_id: 229, name: "feature_sets", target_module_id: null, workflow: "registered -> online -> stale -> archived"}
-      - {data_object_id: 230, name: "semantic_metrics", target_module_id: null, workflow: "proposed -> certified -> deprecated"}
-      - {data_object_id: 231, name: "ai_agents", target_module_id: null, workflow: "draft -> published -> deployed -> retired"}
-      - {data_object_id: 232, name: "data_products", target_module_id: null, workflow: "proposed -> in_development -> published -> deprecated"}
-      - {data_object_id: 254, name: "ontologies", target_module_id: null, workflow: "draft -> released -> deprecated"}
-      - {data_object_id: 255, name: "knowledge_graph_entities", target_module_id: null, workflow: "config-shape candidate"}
-    extra_dependency: "Gated on B2-S1 module split for target_module_id resolution per master."
+      - {data_object_id: 226, name: "lakehouse_tables", target_module_id: 223, workflow: "config-shape candidate"}
+      - {data_object_id: 227, name: "data_pipelines", target_module_id: 223, workflow: "active / paused vs running / failed / succeeded"}
+      - {data_object_id: 228, name: "ml_models", target_module_id: 225, workflow: "registered -> staging -> production -> archived"}
+      - {data_object_id: 229, name: "feature_sets", target_module_id: 225, workflow: "registered -> online -> stale -> archived"}
+      - {data_object_id: 230, name: "semantic_metrics", target_module_id: 224, workflow: "proposed -> certified -> deprecated"}
+      - {data_object_id: 231, name: "ai_agents", target_module_id: 226, workflow: "draft -> published -> deployed -> retired"}
+      - {data_object_id: 232, name: "data_products", target_module_id: 224, workflow: "proposed -> in_development -> published -> deprecated"}
+      - {data_object_id: 254, name: "ontologies", target_module_id: 224, workflow: "draft -> released -> deprecated"}
+      - {data_object_id: 255, name: "knowledge_graph_entities", target_module_id: 224, workflow: "config-shape candidate"}
 
   - id: B2-S3
     summary: "D1 soft-fail: alias coverage on the 9 own masters across 10 flagship vendors with widely varying naming."
@@ -94,102 +105,87 @@ b2:
       - "(a) load the 9 proposed aliases"
       - "(b) load a user-specified subset"
       - "(c) defer to Phase B follow-up"
-    why: "Aliases are commerce-shaped (Rule #18 allowed list). Rule #15 forbids auto-populating data_object_aliases.notes; alias loads need per-row user approval of any notes column population. Independent of B2-S1 since aliases live on data_objects."
+    why: "Aliases are commerce-shaped (Rule #18 allowed list). Rule #15 forbids auto-populating data_object_aliases.notes; alias loads need per-row user approval of any notes column population. Independent of the module split since aliases live on data_objects."
     affected_masters:
-      - {data_object_id: 226, name: "lakehouse_tables", target_module_id: null, workflow: "alias candidates: Tables, Objects, Datasets"}
-      - {data_object_id: 227, name: "data_pipelines", target_module_id: null, workflow: "alias candidates: Pipelines, Workflows, DAGs, Jobs"}
-      - {data_object_id: 228, name: "ml_models", target_module_id: null, workflow: "alias candidates: Models, Registered Models, Endpoints"}
-      - {data_object_id: 229, name: "feature_sets", target_module_id: null, workflow: "alias candidates: Features, Feature Views"}
-      - {data_object_id: 230, name: "semantic_metrics", target_module_id: null, workflow: "alias candidates: Metrics, Measures, Semantic Layer Objects"}
-      - {data_object_id: 231, name: "ai_agents", target_module_id: null, workflow: "alias candidates: Agents, Assistants, Bots, Copilots"}
-      - {data_object_id: 232, name: "data_products", target_module_id: null, workflow: "alias candidates: Data Products, Marketplace Listings"}
-      - {data_object_id: 254, name: "ontologies", target_module_id: null, workflow: "alias candidates: Ontology, Semantic Model, Knowledge Graph Schema"}
-      - {data_object_id: 255, name: "knowledge_graph_entities", target_module_id: null, workflow: "alias candidates: Entities, Nodes, Vertices"}
-
-  - id: B2-S4
-    summary: "F2 / F4: system skill 45 module assignment (currently domain_module_id IS NULL)."
-    question: "Once B2-S1 lands the module split, how should skill 45 (data-ai-plat-system) be reconciled with the new module set? Rule #17 mandates exactly one system skill per module_kind='full' row; the current single skill cannot satisfy the per-module floor for a multi-module domain."
-    options:
-      - "(a) re-target skill 45 to one new module and create additional system skills (one per module)"
-      - "(b) delete skill 45 and re-author one system skill per module from scratch"
-      - "(c) leave skill 45 as a pre-split placeholder (not recommended)"
-    why: "F2 (1 system skill per full module) cannot be satisfied with 0 modules. F4 invariants currently pass on the 9 skill_tools (all query + valid data_object_id). Gated on B2-S1."
+      - {data_object_id: 226, name: "lakehouse_tables", target_module_id: 223, workflow: "alias candidates: Tables, Objects, Datasets"}
+      - {data_object_id: 227, name: "data_pipelines", target_module_id: 223, workflow: "alias candidates: Pipelines, Workflows, DAGs, Jobs"}
+      - {data_object_id: 228, name: "ml_models", target_module_id: 225, workflow: "alias candidates: Models, Registered Models, Endpoints"}
+      - {data_object_id: 229, name: "feature_sets", target_module_id: 225, workflow: "alias candidates: Features, Feature Views"}
+      - {data_object_id: 230, name: "semantic_metrics", target_module_id: 224, workflow: "alias candidates: Metrics, Measures, Semantic Layer Objects"}
+      - {data_object_id: 231, name: "ai_agents", target_module_id: 226, workflow: "alias candidates: Agents, Assistants, Bots, Copilots"}
+      - {data_object_id: 232, name: "data_products", target_module_id: 224, workflow: "alias candidates: Data Products, Marketplace Listings"}
+      - {data_object_id: 254, name: "ontologies", target_module_id: 224, workflow: "alias candidates: Ontology, Semantic Model, Knowledge Graph Schema"}
+      - {data_object_id: 255, name: "knowledge_graph_entities", target_module_id: 224, workflow: "alias candidates: Entities, Nodes, Vertices"}
 
 b3:
+  - id: B3-MISSING-MASTER-NOTEBOOKS
+    candidate: "notebooks (missing master backing NOTEBOOK-ANALYTICS capability 202)"
+    rationale: "NOTEBOOK-ANALYTICS (202) was placed in DATA-AI-PLAT-LAKEHOUSE 223 to satisfy M4, but the capability has NO backing master. The module is non-empty on lakehouse_tables / data_pipelines, but the capability itself is entity-orphaned. Add notebooks (Databricks Notebooks, Hex, Foundry Code Workbook, Snowflake Notebooks, Vertex Workbench all model the notebook as a first-class master with versioning, schedule, parameter binding) or retire the dangling capability. Missing-master candidate surfaced by the 2026-06-02 modularization."
+    vendor_evidence: ["Databricks Notebooks", "Hex", "Foundry Code Workbook", "Snowflake Notebooks", "Vertex Workbench"]
+    proposed_module: "DATA-AI-PLAT-LAKEHOUSE (223) or new DATA-AI-PLAT-NOTEBOOKS"
+
   - id: B3-ENT-MODEL-EXPERIMENTS
     candidate: "model_experiments"
     rationale: "MLflow, Databricks, Weights & Biases, SageMaker, Vertex AI all model experiments as first-class masters distinct from ml_models. The current ml_models master conflates the registered model with its training experiments. Phase 0 vendor research needed."
     vendor_evidence: ["MLflow", "Databricks", "Weights & Biases", "SageMaker", "Vertex AI"]
-    proposed_module: "DATA-AI-PLAT-ML"
+    proposed_module: "DATA-AI-PLAT-ML (225)"
 
   - id: B3-ENT-MODEL-ENDPOINTS
     candidate: "model_endpoints"
     rationale: "SageMaker, Vertex AI, Databricks Model Serving, Foundry all model the deployed inference endpoint as a separate master (online / batch / streaming inference targets); currently folded into ml_models."
     vendor_evidence: ["SageMaker", "Vertex AI", "Databricks Model Serving", "Foundry"]
-    proposed_module: "DATA-AI-PLAT-ML"
+    proposed_module: "DATA-AI-PLAT-ML (225)"
 
   - id: B3-ENT-VECTOR-INDEXES
     candidate: "vector_indexes"
     rationale: "Databricks Vector Search, Snowflake Cortex Search, Fabric AI Search, Foundry AIP, SageMaker JumpStart all expose vector indexes as a separate master for similarity search and RAG."
     vendor_evidence: ["Databricks Vector Search", "Snowflake Cortex Search", "Fabric AI Search", "Foundry AIP", "SageMaker JumpStart"]
-    proposed_module: "DATA-AI-PLAT-AI-AGENTS"
+    proposed_module: "DATA-AI-PLAT-AI-AGENTS (226)"
 
   - id: B3-ENT-PROMPT-TEMPLATES
     candidate: "prompt_templates"
     rationale: "Mosaic AI Agent Framework, Vertex Agent Builder, Snowflake Cortex, watsonx.ai Prompt Lab all model prompt templates as versioned first-class entities."
     vendor_evidence: ["Mosaic AI Agent Framework", "Vertex Agent Builder", "Snowflake Cortex", "watsonx.ai Prompt Lab"]
-    proposed_module: "DATA-AI-PLAT-AI-AGENTS"
+    proposed_module: "DATA-AI-PLAT-AI-AGENTS (226)"
 
   - id: B3-ENT-AGENT-TOOLS
     candidate: "agent_tools"
     rationale: "Mosaic AI Agent Framework, Bedrock Agents, Vertex Agent Builder, watsonx.ai, Foundry AIP all expose tools the agent calls as a separate master. Distinct from Semantius's own tools master."
     vendor_evidence: ["Mosaic AI Agent Framework", "Bedrock Agents", "Vertex Agent Builder", "watsonx.ai", "Foundry AIP"]
-    proposed_module: "DATA-AI-PLAT-AI-AGENTS"
+    proposed_module: "DATA-AI-PLAT-AI-AGENTS (226)"
 
   - id: B3-ENT-RAG-RETRIEVERS
     candidate: "rag_retrievers"
     rationale: "Bedrock Knowledge Bases, Vertex RAG Engine, Databricks Vector Search, watsonx.ai RAG, LangChain-style retrievers all model retrieval policy as a versioned master separate from the underlying index."
     vendor_evidence: ["Bedrock Knowledge Bases", "Vertex RAG Engine", "Databricks Vector Search", "watsonx.ai RAG"]
-    proposed_module: "DATA-AI-PLAT-AI-AGENTS"
-
-  - id: B3-ENT-NOTEBOOKS
-    candidate: "notebooks"
-    rationale: "Databricks Notebooks, Hex, Foundry Code Workbook, Snowflake Notebooks, Vertex Workbench, Jupyter on AWS all model the notebook as a first-class master. Backs the orphan NOTEBOOK-ANALYTICS capability that currently has no entity."
-    vendor_evidence: ["Databricks Notebooks", "Hex", "Foundry Code Workbook", "Snowflake Notebooks", "Vertex Workbench"]
-    proposed_module: "DATA-AI-PLAT-LAKEHOUSE or new DATA-AI-PLAT-NOTEBOOKS"
+    proposed_module: "DATA-AI-PLAT-AI-AGENTS (226)"
 
   - id: B3-ENT-DATA-CONTRACTS
     candidate: "data_contracts"
     rationale: "Databricks Unity Catalog Data Contracts, Foundry Ontology Contracts, Snowflake Horizon, watsonx.data, Atlan, DataHub all model producer / consumer SLA on a data_product as a separate master."
     vendor_evidence: ["Databricks Unity Catalog Data Contracts", "Foundry Ontology Contracts", "Snowflake Horizon", "watsonx.data", "Atlan", "DataHub"]
-    proposed_module: "DATA-AI-PLAT-SEMANTIC"
+    proposed_module: "DATA-AI-PLAT-SEMANTIC-CATALOG (224)"
 
   - id: B3-ENT-LINEAGE-EVENTS
     candidate: "lineage_events"
     rationale: "Unity Catalog lineage, OpenLineage, Foundry data lineage, Vertex AI lineage all surface lineage as queryable records. Could materialize as a master if the catalog wants queryable lineage; otherwise stays as data_object_relationships."
     vendor_evidence: ["Unity Catalog lineage", "OpenLineage", "Foundry data lineage", "Vertex AI lineage"]
-    proposed_module: "DATA-AI-PLAT-LAKEHOUSE"
+    proposed_module: "DATA-AI-PLAT-LAKEHOUSE (223)"
 
   - id: B3-MOD-AGENTS-SPLIT
-    candidate: "DATA-AI-PLAT-AI-AGENTS split"
-    rationale: "If ai_agents + prompt_templates + agent_tools + rag_retrievers + vector_indexes all land, that single module exceeds the master count of three other modules combined and looks like a separate market. Candidate split: DATA-AI-PLAT-AGENT-RUNTIME (ai_agents, agent_tools) + DATA-AI-PLAT-RAG (vector_indexes, prompt_templates, rag_retrievers). Possibly the agent runtime is itself a domain candidate."
+    candidate: "DATA-AI-PLAT-AI-AGENTS (226) split"
+    rationale: "If ai_agents + prompt_templates + agent_tools + rag_retrievers + vector_indexes all land, that single module exceeds the master count of three other modules combined and looks like a separate market. Candidate split: DATA-AI-PLAT-AGENT-RUNTIME (ai_agents, agent_tools) + DATA-AI-PLAT-RAG (vector_indexes, prompt_templates, rag_retrievers). Possibly the agent runtime is itself a domain candidate. Today 226 holds only ai_agents, so the split is premature until the B3-ENT-* AI entities land."
     vendor_evidence: ["Databricks Mosaic AI", "Bedrock Agents", "Vertex Agent Builder", "watsonx.ai", "Foundry AIP"]
     proposed_module: "DATA-AI-PLAT-AGENT-RUNTIME + DATA-AI-PLAT-RAG"
 
   - id: B3-MOD-MLOPS-DOMAIN
-    candidate: "MLOPS domain promotion (vs DATA-AI-PLAT-ML module)"
-    rationale: "Queued in _missing-domains.md. If model_experiments + model_endpoints get their own modules with own lifecycle/RBAC, the shape matches the MLOPS market (Weights & Biases, MLflow, Comet, Domino Data Lab, Neptune.ai, ClearML). Market-boundary call: fold into DATA-AI-PLAT-ML or promote to a separate domain."
+    candidate: "MLOPS domain promotion (vs DATA-AI-PLAT-ML module 225)"
+    rationale: "Queued in _missing-domains.md. If model_experiments + model_endpoints get their own modules with own lifecycle/RBAC, the shape matches the MLOPS market (Weights & Biases, MLflow, Comet, Domino Data Lab, Neptune.ai, ClearML). Market-boundary call: fold into DATA-AI-PLAT-ML (225) or promote to a separate domain."
     vendor_evidence: ["Weights & Biases", "MLflow", "Comet ML", "Domino Data Lab", "Neptune.ai", "ClearML", "Iguazio", "DataRobot MLOps"]
-    proposed_module: "domain promotion vs DATA-AI-PLAT-ML"
-
-  - id: B3-MOD-NOTEBOOK-CAPABILITY
-    candidate: "NOTEBOOK-ANALYTICS capability resolution"
-    rationale: "NOTEBOOK-ANALYTICS capability has no master backing it today. Either add notebooks (preferred; see B3-ENT-NOTEBOOKS) or retire the dangling capability."
-    vendor_evidence: ["Databricks Notebooks", "Snowflake Notebooks", "Hex", "Vertex Workbench", "Foundry Code Workbook"]
-    proposed_module: "DATA-AI-PLAT-LAKEHOUSE or new DATA-AI-PLAT-NOTEBOOKS"
+    proposed_module: "domain promotion vs DATA-AI-PLAT-ML (225)"
 
   - id: B3-REG-CANDIDATES
     candidate: "domain_regulations rows for DATA-AI-PLAT"
-    rationale: "Zero domain_regulations rows today. Candidates: EU AI Act (in force 2025-08-01, phased through 2027, mandatory for EU-market AI providers), NIST AI Risk Management Framework (US guidance, de-facto industry baseline), ISO/IEC 42001 (international AI management system standard), SR 11-7 (US Federal Reserve model risk management, mandatory for US banks), GDPR Article 22 (right-to-explanation for automated decisions), HIPAA applicability for PHI slices in the lakehouse. Independent of B2-S1 (regulations live at the domain layer)."
+    rationale: "Zero domain_regulations rows today. Candidates: EU AI Act (in force 2025-08-01, phased through 2027, mandatory for EU-market AI providers), NIST AI Risk Management Framework (US guidance, de-facto industry baseline), ISO/IEC 42001 (international AI management system standard), SR 11-7 (US Federal Reserve model risk management, mandatory for US banks), GDPR Article 22 (right-to-explanation for automated decisions), HIPAA applicability for PHI slices in the lakehouse. Independent of the module split (regulations live at the domain layer)."
     vendor_evidence: ["IBM watsonx.governance", "Credo AI", "Holistic AI"]
     proposed_module: null

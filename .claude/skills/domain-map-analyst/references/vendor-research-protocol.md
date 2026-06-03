@@ -99,7 +99,7 @@ The modularization is a **hypothesis** — module names and scopes may change du
 
 Output: a markdown report containing the vendor surface matrix + modularization hypothesis + compliance entity list. User approves before Phase A loads any rows.
 
-The report saves to `c:/tmp/<DOMAIN>-phase0-<YYYY-MM-DD>.md` so it's available as input for the subsequent Phase A/B drafting passes (subagents can read it back).
+The report saves to `.tmp_deploy/<DOMAIN>-phase0-<YYYY-MM-DD>.md` so it's available as input for the subsequent Phase A/B drafting passes (subagents can read it back).
 
 ## Subagent prompt template
 
@@ -140,7 +140,7 @@ Task:
    - Every module has >=1 master
    - Domains with >=3 capabilities have >=2 modules
 
-6. Output: save the report to c:/tmp/[DOMAIN_CODE]-phase0-[YYYY-MM-DD].md with this shape:
+6. Output: save the report to .tmp_deploy/[DOMAIN_CODE]-phase0-[YYYY-MM-DD].md with this shape:
 
    # [DOMAIN_CODE] Phase 0 — Vendor Surface
 

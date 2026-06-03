@@ -339,3 +339,47 @@ Carried forward from 2026-05-30 audit (no fresh subagent surface this pass; the 
 - All queries executed via `semantius` CLI from project root cwd. Zero MCP calls.
 - Skipped B9b (pre-check: `domain_modules` count < 2).
 
+## 2026-06-02 Audit (modularization)
+
+Scope: modules + entity assignment ONLY. Created the domain's `domain_modules`, linked existing capabilities, and assigned existing master data_objects at their existing role and necessity. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships authored. This cures the long-standing M1 / M2 / M4 / M6 failures (UEM was the canonical non-modularized domain blocking its entire B / E / F cascade).
+
+### Decision: 3-module split (not the prior 4-module proposal)
+
+The prior audit's 4-module hypothesis (UEM-DEVICE-LIFECYCLE, UEM-POLICY-CONFIG, UEM-APP-DELIVERY, UEM-COMPLIANCE-POSTURE) leaned on 7 net-new masters (device_groups, device_scripts, device_actions, enrollment_profiles, device_certificates, device_users, policy_assignment_results) to give POLICY-CONFIG and APP-DELIVERY enough substance to stand alone. This pass is reuse-only (no new masters permitted), so a 4-way split would leave APP-DELIVERY thin and POLICY-CONFIG without its config-substrate masters. The coherent reuse-only shape is 3 modules. POLICY-CONFIG and APP-DELIVERY fold into a single Configuration and Application Delivery module, which both the UEM-CONFIG and UEM-APP-DIST capabilities realize. If and when the 7 candidate masters land (carried as b3), UEM-CONFIG-APPS can split into the prior two modules without disturbing the other two.
+
+### Modules created
+
+| Module code | id | Capabilities | Master data_objects (role / necessity) |
+|---|---|---|---|
+| UEM-DEVICE-LIFECYCLE | 308 | UEM-MDM (239), UEM-ZTP (242) | enrolled_devices (556), enrollment_tokens (561), device_deployment_results (562) - all master / required |
+| UEM-CONFIG-APPS | 309 | UEM-CONFIG (240), UEM-APP-DIST (241) | device_configuration_profiles (557), mobile_app_packages (559), device_app_assignments (560) - all master / required |
+| UEM-COMPLIANCE-POSTURE | 310 | UEM-COMPLIANCE (243) | device_compliance_policies (558), device_compliance_results (563) - all master / required |
+
+All 3 modules `module_kind=full`. `record_status` omitted on every insert (Rule #1). `catalog_tagline` / `catalog_description` omitted (Rule #20, deferred to the user via b1a CATALOG-UX). `notes` empty on all 8 DMDO and all 5 DMC rows (Rule #15).
+
+### Master pre-check (M7, catalog-wide)
+
+Ran the mandatory catalog-wide pre-check on all 8 masters (556-563) before writing any `role=master`. Query: `/domain_module_data_objects?data_object_id=in.(...)&role=eq.master`. Result: zero pre-existing master rows for every one of the 8. No demotions to embedded_master were required. Each master now appears in EXACTLY ONE UEM module and is the ONLY master row catalog-wide. The pre-existing 2 IGA-AUTO-PROVISIONING `consumer + optional` rows on enrolled_devices (556) and device_compliance_results (563) are untouched (consumer role, not master, no conflict).
+
+### Verification (live, post-load)
+
+- 3 `domain_modules` rows under domain 86 (M1 / M2 pass: >= 2 full modules for a 5-capability domain).
+- 5/5 capabilities placed (M4): no orphans.
+- Every module has >= 1 capability (M6) and >= 1 data_object (no empty module).
+- Each of the 8 masters: exactly 1 catalog-wide master row (M7 in-domain and catalog-wide pass).
+- Loader is idempotent: a second run inserted zero rows.
+
+### Deferred (out of this pass's scope, carried in state.yaml)
+
+- Per-module system skills (Rule #17 -> F2 / F3): one `skill_type=system` skill per module (3 needed) plus tools + skill_tools; retire legacy uem-system skill 114 (F1) afterward.
+- Catalog UX (M8 / A4, Rule #20): domain-level and per-module `catalog_tagline` / `catalog_description` need user-approved buyer-voice strings.
+- B-band substrate gaps unchanged from prior audits: 7 missing-master candidates (b3), lifecycle states (B12), aliases (B11), pattern flags (B4), intra/cross-domain relationships (B6 / B8), handoff source_domain_module_id backfill (B10b, now unblocked by modules), pure-play vendor solutions (A3).
+- Handoff `source_domain_module_id` backfill (handoffs 655-663) is now unblocked since modules exist; deterministic mapping by trigger-event master: events on enrolled_devices -> 308, on device_configuration_profiles -> 309, on device_compliance_results -> 310, on device_app_assignments -> 309. Carried as b1a HANDOFF-MODULE-BACKFILL.
+
+### Notes
+
+- All writes via `semantius call crud postgrestRequest` (Rule #0). Zero MCP calls. TypeScript on Bun loader by absolute path (Rule #4b / #6).
+- No JWT-audience errors during this run.
+- Loader: [.tmp_deploy/modularize_uem_2026-06-02.ts](../../.tmp_deploy/modularize_uem_2026-06-02.ts).
+- UI: https://tests.semantius.app/domain_map/domain_modules?domain_id=eq.86 , https://tests.semantius.app/domain_map/domain_module_data_objects .
+

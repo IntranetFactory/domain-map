@@ -318,7 +318,12 @@ function buildRelationshipIndices(raw: RawRelationships): AllRelationships {
 export async function loadAllRelationships(): Promise<AllRelationships> {
   const [dmdo, ddo, aliases, relationships, lifecycle, handoffs, hostDomains, domainRoles, roleModules, processRaci, businessFunctions, businessFunctionDomains, processes] = await Promise.all([
     pg("GET", "/domain_module_data_objects?select=domain_module_id,data_object_id,role,necessity,notes&limit=20000"),
-    pg("GET", "/domain_data_objects?select=domain_id,data_object_id,role,necessity,notes&limit=20000"),
+    // domain_data_objects (the legacy domain-grain rollup) is RETIRED: masters derive from
+    // domain_module_data_objects. The source is kept empty (not a GET) so the entity can be
+    // deleted without this read 404-ing; all.ddo is [] everywhere downstream and the
+    // un-modularized fallback below is a no-op. Full backup in backups/. See skill-changelog
+    // 2026-06-02 "<masters> audit definition reads the module junction".
+    Promise.resolve([] as any[]),
     pg("GET", "/data_object_aliases?select=data_object_id,alias_name,alias_type,is_preferred,industry_id,solution_id,notes&order=alias_name.asc&limit=20000"),
     pg("GET", "/data_object_relationships?select=data_object_id,related_data_object_id,relationship_type,relationship_kind,relationship_verb,inverse_verb,is_required,owner_side,notes&limit=20000"),
     pg("GET", "/data_object_lifecycle_states?select=data_object_id,state_name,state_order,description,is_initial,is_terminal,requires_permission,permission_verb_override,domain_module_id,process_id&order=data_object_id.asc,state_order.asc&limit=20000"),
@@ -330,7 +335,7 @@ export async function loadAllRelationships(): Promise<AllRelationships> {
     pg("GET", "/process_raci?select=id,process_id,actor_role_id,actor_skill_id,raci,consultation_blocking&limit=20000"),
     pg("GET", "/business_functions?select=id,business_function_name,parent_business_function_id&limit=10000"),
     pg("GET", "/business_function_domains?select=business_function_id,domain_id,responsibility_type&limit=20000"),
-    pg("GET", "/processes?select=id,process_name,external_id,hierarchy_level,source_framework&limit=20000"),
+    pg("GET", "/processes?select=id,process_name,process_key,process_code,description,external_id,hierarchy_level,source_framework&limit=20000"),
   ]);
 
   return buildRelationshipIndices({

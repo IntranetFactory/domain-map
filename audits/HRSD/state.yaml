@@ -1,7 +1,7 @@
 schema_version: 2
 domain: HRSD
 status: feedback_needed
-next_action_by: user
+next_action_by: agent
 last_audit: "2026-05-31"
 
 b1a:
@@ -18,6 +18,28 @@ b1a:
     action: "Draft 3 sets of per-module buyer-voice copy (one tagline + 1-3 paragraph description per module). Surface to user per Rule #20 BEFORE writing. PATCH /domain_modules?id=eq.<mid> per row."
     affected_modules: [75, 76, 77]
     extra_field_grain: module
+  - id: B1A-PHASE-P
+    summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
+    finding: "Live triage 2026-06-02: 3 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    extra_phase_p_triage: "2026-06-02"
+  - id: B1A-ENTITY-TYPE
+    summary: "2 masters carry entity_type unclassified/null (B13): classify them."
+    finding: "Live triage 2026-06-02: 2 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
+    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
+    affected_entities: [case_categories, hr_cases]
+    extra_phase_p_triage: "2026-06-02"
+  - id: B1A-SELF-CONTAIN
+    summary: "5 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
+    finding: "Live triage 2026-06-02: 5 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
+    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
+    extra_m9_shapes:
+      - {entity: employees, module: HRSD-CASE-MGMT, role: consumer, master_domain: HCM}
+      - {entity: employees, module: HRSD-EMPLOYEE-PORTAL, role: consumer, master_domain: HCM}
+      - {entity: knowledge_articles, module: HRSD-EMPLOYEE-PORTAL, role: consumer, master_domain: ITSM}
+      - {entity: knowledge_articles, module: HRSD-KNOWLEDGE, role: consumer, master_domain: ITSM}
+      - {entity: service_requests, module: HRSD-EMPLOYEE-PORTAL, role: consumer, master_domain: ITSM}
+    extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-APQC-REPLACE

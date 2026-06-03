@@ -459,3 +459,47 @@ Unchanged from 2026-05-30: B3-S1, B3-S2, B3-S3, B3-S4, B3-S5.
 
 ### JWT errors
 None.
+
+## 2026-06-02 Audit (modularization)
+
+Scope: modules + entity assignment ONLY (reuse existing entities). Resolved the BLOCKING M1 gap (B1-S4 / B1B-S4) by authoring the ITOM `domain_modules` set, linking all 6 existing capabilities, and assigning all 5 existing data_objects at their existing role+necessity. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. Loader: `.tmp_deploy/modularize_itom_2026-06-02.ts` (idempotent, TS + Bun, run from project root; verified no-op on second run).
+
+### Catalog-wide master pre-check (high risk, run rigorously)
+
+Queried `/domain_module_data_objects?data_object_id=eq.<id>&role=eq.master` for each intended master BEFORE writing:
+
+- monitoring_events (84): zero master rows catalog-wide -> ITOM masters it.
+- monitoring_alerts (85): zero master rows catalog-wide -> ITOM masters it. (The 2026-05-30 B2-S1 / M7 conflict with RMM was at the legacy `domain_data_objects` rollup layer; at the `domain_module_data_objects` layer there is no competing master, so ITOM masters cleanly. RMM still owes its rollup demotion under B2-S1.)
+- monitoring_policies (86): zero master rows catalog-wide -> ITOM masters it. (Same RMM rollup note as 85.)
+- capacity_records (87): zero master rows catalog-wide -> ITOM masters it.
+- service_incidents (47): mastered by ITSM-INCIDENT-MGMT (module 38). ITOM keeps it at its existing domain-level role `contributor`. NOT promoted.
+
+No demotions were required (no pre-existing competing masters at the module-junction layer). monitoring_alerts (85) is also referenced by ITOM-OPS-AUTOMATION as `embedded_master` (runbook / job-scheduling automation consumes alerts as triggers); this is NOT a second master.
+
+### Modules authored (all `module_kind='full'`)
+
+| id | code | capabilities | data_objects (role / necessity) |
+| --- | --- | --- | --- |
+| 267 | ITOM-INFRA-MON | 223 (Infrastructure Monitoring), 224 (Event Mgmt and Correlation), 225 (Log Aggregation and Analysis) | monitoring_events 84 (master/required), monitoring_alerts 85 (master/required), monitoring_policies 86 (master/required), service_incidents 47 (contributor/required) |
+| 268 | ITOM-CAPACITY-PLAN | 227 (Capacity Planning) | capacity_records 87 (master/required) |
+| 269 | ITOM-OPS-AUTOMATION | 228 (Runbook Automation), 226 (Job Scheduling and Workload Automation) | monitoring_alerts 85 (embedded_master/required) |
+
+Module-count note (Rule #14): capability count is 6, so the >=2 full-modules floor applies; 3 authored. Log Aggregation (225) was folded into ITOM-INFRA-MON rather than a standalone ITOM-LOG-AGG (no distinct log master entity exists today). Runbook (228) + Job Scheduling (226) were grouped into one ITOM-OPS-AUTOMATION module: B2-S5 (promote ITPA / WORKLOAD-AUTO out, or keep) remains an open user judgment call; this modularization keeps them in-domain pending that decision, and the module currently has no domain-owned master because `runbook_definitions` / `job_definitions` are unverified Bucket 3 candidates (B3-S1, B3-S2). It satisfies the no-empty-module rule via the `embedded_master` reference to monitoring_alerts.
+
+### Verification (live, post-load)
+
+- All 6 capabilities placed in >=1 module (M4 PASS): 223/224/225 -> 267, 227 -> 268, 228/226 -> 269.
+- Each of the 4 ITOM masters mastered in EXACTLY ONE module in-domain AND catalog-wide (M7 PASS): 84/85/86 -> 267, 87 -> 268. monitoring_alerts 85 second reference is `embedded_master`, not master.
+- No empty module: each of 267/268/269 has >=1 capability and >=1 data_object (M6 PASS).
+- service_incidents (47) preserved at `contributor` (ITSM-mastered); no borrowed master promoted.
+- Idempotent: second loader run produced zero inserts.
+
+### Deferred / not in scope (unchanged, now partially unblocked by module bring-up)
+
+The module set unblocks the M1-gated items for future passes: B1B-S9 (per-module handoff FK backfill, 12 ITOM-side FKs), B1B-S12 (role_modules: NOC Engineer, SRE, Capacity Planner), B1B-S13 (retire legacy `itom-system` skill id 74 once per-module system skills exist), B1B-S14 (re-anchor channel primitives on notify_person / notify_team), B1B-S18 (consumer DMDO rows for inbound foreign-mastered payloads). Per-module system skills (Rule #17 -> F2/F3) and catalog UX taglines (A4 / Rule #20, B1B-S3) are NOT yet authored. These are tracked in state.yaml. No new entities, relationships, or skills were created on this pass per scope.
+
+### JWT errors
+None. One transient `SERVER_CONNECTION_FAILED` (500 from the MCP endpoint) on the first loader run; retried successfully on reconnect. Not a JWT audience error.
+
+### Loader
+`c:/dev/domain-map/.tmp_deploy/modularize_itom_2026-06-02.ts`

@@ -505,3 +505,53 @@ Reclassified from B1-H1 (per 2026-05-31 continuation's defer):
 
 (none this audit; Validate b1 is a structural audit, not a fix pass.)
 
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+DAIRY-MGMT was modularized for the first time, curing the dominant M1 hard fail that had blocked the E / F band and most of the B band across the two prior audits. Scope was deliberately narrow: `domain_modules` + `domain_module_capabilities` + `domain_module_data_objects` only. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. All existing roles and necessities were preserved.
+
+Four `full` modules were authored, adopting the prior audits' Pass-2 4-module proposal (B2-1 option a: HERD + PARLOR + MILK-QUALITY + FEED), which merges the three animal-centric capabilities (COW-LIFECYCLE, REPRODUCTION, HERD-HEALTH) into a single HERD module. All four modules carry `industry_id=26` (industries row `Dairy`, NAICS 1121, child of Animal Production and Aquaculture), which is the single clear industry match for this industry-specific domain.
+
+Loader: `c:/dev/domain-map/.tmp_deploy/modularize_dairy_mgmt_2026-06-02.ts`, idempotent (re-run inserts nothing), keyed on `domain_module_code` for modules, `(domain_module_id, capability_id)` for capability links, and `(domain_module_id, data_object_id)` for DMDO rows. Module ids re-read after insert (never hard-coded).
+
+### Module split
+
+| module (id) | capabilities | data_objects (role / necessity) |
+| --- | --- | --- |
+| DAIRY-MGMT-HERD (227) | DAIRY-MGMT-COW-LIFECYCLE (461), DAIRY-MGMT-REPRODUCTION (464), DAIRY-MGMT-HERD-HEALTH (466) | dairy_cows (499, master/required), lactation_records (500, master/required), breeding_events (503, master/required), cow_health_events (504, master/required), suppliers (206, consumer/required) |
+| DAIRY-MGMT-PARLOR (228) | DAIRY-MGMT-PARLOR-INTEGRATION (462) | milkings (501, master/required), bulk_milk_shipments (506, master/required) |
+| DAIRY-MGMT-MILK-QUALITY (229) | DAIRY-MGMT-MILK-QUALITY (463) | milk_quality_tests (502, master/required) |
+| DAIRY-MGMT-FEED (230) | DAIRY-MGMT-FEED-RATIONING (465) | feed_rations (505, master/required) |
+
+`suppliers` (206) is mastered elsewhere (SUP-LIFE id=28 / MDM id=87, the unresolved catalog-wide M7); it was kept at its existing `consumer` / `required` role and placed on HERD (vet-drug, semen, and feed-input supplier relationships are the dominant operational supplier ties). It is the only non-master assignment.
+
+### Counts
+
+- domain_modules: 0 -> 4 (all `module_kind=full`, all `industry_id=26`, all `record_status=new`).
+- domain_module_capabilities: 0 -> 6 (all 6 capabilities placed exactly once; M4 satisfied).
+- domain_module_data_objects: 0 -> 9 (8 domain-owned masters each in exactly one module as `master`; M7 satisfied; 1 consumer row for `suppliers`).
+- Every module realizes >=1 capability (M6) and holds >=1 data_object (no empty module). Rule #14 satisfied (4 >= 2 full modules for a 6-capability domain).
+
+### Structural-rule verification (live re-query)
+
+- M4: all 6 capability_domains rows (461-466) appear in exactly one domain_module_capabilities row. PASS.
+- M6: each of the 4 modules has >=1 capability link. PASS.
+- M7 single-master: each of the 8 domain-owned masters (499, 500, 501, 502, 503, 504, 505, 506) is `role=master` in exactly one module. PASS.
+- No empty module: each module has >=1 DMDO row. PASS.
+- Preserved roles: all 8 masters kept master/required; suppliers kept consumer/required. No promotion. PASS.
+- R1: every inserted row has `record_status=new` (omitted on insert). R15: all DMC and DMDO `notes` empty. R18: module names/descriptions describe capability shape, no vendor/product names. PASS.
+
+### Deferred gaps (now owed, post-modularization)
+
+- **A4 / M8 catalog UX backfill (now b1b -> still user-gated B2-2):** `catalog_tagline` and `catalog_description` left empty on all 4 modules per instructions (Rule #20 requires user-authored buyer-voice wording). Now owed at the per-module grain, not just the domain grain.
+- **Per-module system skills (Rule #17 -> F2 / F3, new b1a):** 4 modules now exist with zero module-level `skills` rows. The legacy `dairy-mgmt-system` skill (id=43, `domain_module_id=null`) and its 8 `query`-only `skill_tools` must be retired and split into one `<module_code_lower>_agent` system skill per module (`dairy_mgmt_herd_agent`, `dairy_mgmt_parlor_agent`, `dairy_mgmt_milk_quality_agent`, `dairy_mgmt_feed_agent`). This is the new agent-solvable next action.
+- **B10b source_domain_module_id backfill (now unblocked by module shape, b1a):** all 8 outbound handoffs (353, 354, 355, 955, 956, 957, 958, 959) still have `source_domain_module_id=NULL`. Routing is now determinable: parlor/milking events (955 milking.completed, 353 bulk_milk_shipment.dispatched) -> PARLOR (228); milk-quality event (354) -> MILK-QUALITY (229); feed-ration events (958, 959 feed_ration.changed) -> FEED (230); cow / lactation / breeding / cow-health events (956 lactation_record.opened, 957 breeding_event.recorded, 355 cow_health_event.treatment_administered, plus the still-missing dairy_cow.lifecycle_changed handoff) -> HERD (227). Out of scope this pass (handoff edits not part of modularization scope) but now technically executable.
+- **Missing-master candidates (b3 carry-over):** the 6 Phase-0 vendor-research candidates (cow_groups, heat_detections/pregnancy_checks, bulk_tanks/milk_meter_readings, feed_ingredients/tmr_batches, somatic_cell_counts/withdrawal_period_holds, dry_off_events/calvings/culling_decisions) now have concrete target modules per the realized split.
+- **Carry-over from prior audits (unchanged, not in scope this pass):** B11 aliases (B1A-S7), lactation_records users edge (B1A-S11), B6 intra-domain relationships, B12 lifecycle states, B8 cross-domain mirrors (gated on neighbor audits), B2 user-judgment items 2-8.
+
+### Decisions
+
+- B2-1 (module shape) resolved as **option (a) 4-module split** per the standing Pass-2 recommendation in this domain's prior audits. REPRODUCTION and HERD-HEALTH fold into HERD rather than standing alone; revisit only if Phase-0 candidate masters (heat_detections, pregnancy_checks) land and inflate the HERD data-object count enough to justify a REPRODUCTION split.
+- industry_id set to 26 (Dairy) on all 4 modules: single unambiguous industry row, consistent with the domain's own description ("workflows are fundamentally different from beef / swine").
+

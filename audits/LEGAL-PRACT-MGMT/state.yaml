@@ -15,6 +15,25 @@ b1a:
     extra_proposed_pcf:
       - {handoff_id: 333, process_id: 325, process_name: "Operate controls and monitor compliance with internal controls policies and procedures", external_id: "21574", hierarchy_level: 3}
       - {handoff_id: 918, process_id: 303, process_name: "Process accounts receivable (AR)", external_id: "10744", hierarchy_level: 3}
+  - id: B1A-PHASE-P
+    summary: "Multi-module (5 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
+    finding: "Live triage 2026-06-02: 5 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 5 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    extra_phase_p_triage: "2026-06-02"
+  - id: B1A-ENTITY-TYPE
+    summary: "6 masters carry entity_type unclassified/null (B13): classify them."
+    finding: "Live triage 2026-06-02: 6 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
+    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
+    affected_entities: [client_invoices, conflict_checks, engagement_letters, external_court_filings, legal_matters, trust_accounts]
+    extra_phase_p_triage: "2026-06-02"
+  - id: B1A-SELF-CONTAIN
+    summary: "2 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
+    finding: "Live triage 2026-06-02: 2 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
+    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
+    extra_m9_shapes:
+      - {entity: crm_contacts, module: LEGAL-INTAKE-CONFLICT, role: contributor, master_domain: CRM}
+      - {entity: crm_contacts, module: LEGAL-MATTER-MGMT, role: contributor, master_domain: CRM}
+    extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-M7-LEGAL-MATTERS

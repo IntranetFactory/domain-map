@@ -330,3 +330,51 @@ All four items carried forward verbatim from 2026-05-30 audit. Status: none vett
 - https://tests.semantius.app/domain_map/handoff_processes
 - https://tests.semantius.app/domain_map/data_object_lifecycle_states
 - https://tests.semantius.app/domain_map/data_object_aliases
+
+---
+
+## 2026-06-02 Audit (modularization)
+
+Built the SMM domain's module set from scratch. Domain 106 had zero `domain_modules` (M1 hard fail per every prior audit). This pass authors the 4-module shape that the prior B2-MODULE-SHAPE proposal recommended (path a: fold EMPLOYEE-ADVOCACY into SMM-PUBLISHING as the cheapest cure that keeps the capability in SMM). Scope was modules + capability links + entity assignment ONLY: no new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. Existing entities reused at their existing roles.
+
+### Modules created (all module_kind=full)
+
+- **SMM-PUBLISHING** (id 299) Social Publishing and Planning. Masters `social_posts` (125), `social_accounts` (126). Capabilities SOCIAL-PUB (125), CONTENT-CAL (129), EMPLOYEE-ADVOCACY (131), SOCIAL-ANALYTICS (128). Borrowed: `marketing_campaigns` (116, contributor), `audience_segments` (113, consumer).
+- **SMM-ENGAGEMENT** (id 300) Social Engagement Inbox. Master `social_messages` (127); embedded_master `social_accounts` (126). Capability SOCIAL-ENGAGE (126). Borrowed: `customers` (97, contributor), `crm_contacts` (98, contributor), `crm_leads` (99, consumer).
+- **SMM-LISTENING** (id 301) Social Listening and Monitoring. Masters `social_mentions` (128), `social_listening_topics` (129). Capability SOCIAL-LISTEN (127).
+- **SMM-INFLUENCER** (id 302) Influencer and Creator Programs. Master `influencers` (130). Capability INFLUENCER-MGMT (130). Borrowed: `marketing_campaigns` (116, contributor).
+
+### Master placement (each master in exactly one module, in-domain AND catalog-wide)
+
+Catalog-wide master pre-check ran BEFORE writing any `role=master` (query `/domain_module_data_objects?data_object_id=in.(125,126,127,128,129,130)&role=eq.master`): returned ZERO existing master rows. So all six in-domain masters were free to master here; no demotions were forced by the pre-check. Final mapping:
+
+| data_object | id | mastering module |
+| --- | --- | --- |
+| social_posts | 125 | SMM-PUBLISHING (299) |
+| social_accounts | 126 | SMM-PUBLISHING (299) |
+| social_messages | 127 | SMM-ENGAGEMENT (300) |
+| social_mentions | 128 | SMM-LISTENING (301) |
+| social_listening_topics | 129 | SMM-LISTENING (301) |
+| influencers | 130 | SMM-INFLUENCER (302) |
+
+`social_accounts` (126) is single-mastered in SMM-PUBLISHING and assigned `embedded_master` (not a second master) in SMM-ENGAGEMENT, which needs the account context for the inbox. M7 holds in-domain and catalog-wide.
+
+### Structural checks (verified live post-load)
+
+- Rule #14: 7 capabilities require >=2 full modules; shipped 4. PASS.
+- M4: all 7 capabilities placed in exactly one module each. PASS.
+- M6: every module has >=1 capability. PASS.
+- No empty module: every module has >=1 data_object. PASS.
+- M7: each of the 6 masters appears exactly once with role=master (re-checked catalog-wide). PASS.
+- Borrowed rows (113, 116, 97, 98, 99) preserved existing role + necessity from `domain_data_objects`; no master promoted. PASS.
+- R1 record_status omitted, R15 notes omitted on every DMC + DMDO, R18 no vendor/product names in module name/description.
+
+### What this unblocks
+
+The module ids now exist, so the cascade items that were `blocked_by: B2-MODULE-SHAPE` (lifecycle-state gate anchoring, source_domain_module_id backfill, event re-attribution, per-module system skills) are mechanically unblocked except where they carry an independent user_decision or depends_on. B2-MODULE-SHAPE is resolved by this build (path a chosen); B2-S4-EMP-ADVOCACY resolved by folding EMPLOYEE-ADVOCACY into SMM-PUBLISHING. The 4 Bucket-3 candidate-domain / substrate questions (B3-EMPLOYEE-SHARE-RECORDS, B3-INFLUENCER-WORKFLOW, B3-SOCIAL-LISTENING-SUBSTRATE, B3-PAID-SOCIAL) remain open as deferred research; this modularization deliberately did not fill them.
+
+### Deferred / out of scope this pass
+
+- Per-module system skills (Rule #17 -> F2/F3): legacy skill `smm-system` (id 18, domain_module_id=null) still carries all 12 skill_tools. Now that 4 module anchors exist, it should be retired and split into per-module system skills. Tracked b1a (B1A-F2-PER-MODULE-SKILLS).
+- Catalog UX (M8/A4): `domains.catalog_tagline` + `catalog_description` still empty on row 106. Tracked b1a (B1A-A4-CATALOG-UX), surface-before-write.
+- Missing-master research (b3): the 4 substrate / candidate-domain questions above remain Phase-0 research.

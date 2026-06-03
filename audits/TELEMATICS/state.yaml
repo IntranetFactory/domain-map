@@ -1,50 +1,35 @@
 schema_version: 2
 domain: TELEMATICS
 status: feedback_needed
-last_audit: "2026-05-31"
-next_action_by: user
+next_action_by: agent
+last_audit: "2026-06-02"
 
 b1a:
-  - id: B1A-A4-CATALOG-UX
-    summary: Draft buyer-voice catalog_tagline + catalog_description on the TELEMATICS domain row and surface to user before write (Rule #20).
+  - id: B1A-F2-MODULE-SYSTEM-SKILLS
+    summary: Author two module-scoped system skills (one per new module, Rule #17 -> F2/F3) and retire legacy telematics-system skill 112.
     finding: |
-      Live `/domains?id=eq.148` returns empty `catalog_tagline` and `catalog_description`. A4 fails per Rule #20: every domain row needs a one-sentence buyer-voice tagline (workflow + value) plus a 1-3 paragraph buyer-voice description for the catalog landing page. The drift query is independent of the M-band modularization decision (module-level UX copy lives on `domain_modules.catalog_*` and is owed once the modules land, per M8).
+      TELEMATICS now has two full modules (TELEMATICS-FLEET-TRACKING id 306, TELEMATICS-COMPLIANCE-SAFETY id 307) but zero module-scoped system skills. F2 fails: Rule #17 requires exactly one `<module_code_lower>_agent` system skill per module. F1 fails: the legacy domain-level system skill `telematics-system` (id 112, domain_id=148, domain_module_id=NULL, kebab + `-system` suffix) still carries the 8 platform-tier query tools. F3 (tool re-link) is owed once the new skills exist.
     action: |
-      Draft both fields in buyer voice ("Live vehicle tracking, HOS compliance, and driver-safety telemetry from one connected fleet platform" shape per the 2026-05-30 audit's recommendation), surface to user for review, write only after user-approved text. Do NOT overwrite without per-row approval; the column is buyer-shaped.
-    extra_fix_surface: surgical PATCH on /domains?id=eq.148 after user-approved wording
+      Author `telematics_fleet_tracking_agent` (domain_module_id 306) and `telematics_compliance_safety_agent` (domain_module_id 307). Re-link the 8 existing platform-tier query tools (skill_tools ids 717, 718, 719, 720, 847, 848, 849, 850) to the correct new module's skill by which module masters the tool's data_object, then DELETE legacy skill 112.
+    extra_tool_ids: [717, 718, 719, 720, 847, 848, 849, 850]
+    extra_legacy_skill_id: 112
+    affected_modules: [306, 307]
+  - id: B1A-M8-MODULE-CATALOG-UX
+    summary: Draft buyer-voice catalog_tagline + catalog_description on both new module rows (M8) and surface to user before write (Rule #20).
+    finding: |
+      Both new modules were created with empty `catalog_tagline` / `catalog_description` (omitted on insert per the modularization scope). M8 requires module-level buyer-voice landing copy on every `full` module. The domain-level A4 fields on `/domains?id=eq.148` also remain empty (catalog_tagline="" / catalog_description="").
+    action: |
+      Draft a one-sentence buyer-voice tagline + 1-3 paragraph description per module (TELEMATICS-FLEET-TRACKING 306, TELEMATICS-COMPLIANCE-SAFETY 307) and for the domain row, surface to user for review, PATCH only the approved text. Do NOT overwrite without per-row approval; the columns are buyer-shaped.
+    affected_modules: [306, 307]
+    extra_fix_surface: surgical PATCH on /domain_modules?id=in.(306,307) and /domains?id=eq.148 after user-approved wording
 
 b1b:
-  - id: B1B-S1-MODULE-LOAD
-    summary: Phase A module load for TELEMATICS, gated on Bucket 2 #1 module-split decision.
-    finding: |
-      Live `/domain_modules?domain_id=eq.148` returns zero rows. Rule #14 requires >=1 module on every domain and >=2 full modules on domains with >=3 capabilities (TELEMATICS has 6). M1, M2, M6 all hard-fail. Every downstream B-band (B1-S6, S8, S10, S11, M1-M5, R1-R10, X1-X3, B1-B5), every E-band role wiring, and the F2 module-scoped system skill load all depend on the module set existing first.
-    blocked_by:
-      - {type: user_decision, ref: B2-MODULE-SPLIT}
-    affected_modules: []
-    extra_proposed_split: "TELEMATICS-FLEET-TRACKING (vehicle_trips, gps_waypoints, idle_events, geofence_events; capabilities TEL-GPS-TRACKING/TEL-GEOFENCING/TEL-VEHICLE-DIAG; embedded-masters fleet_vehicles + fleet_drivers) and TELEMATICS-COMPLIANCE-SAFETY (eld_logs, dashcam_events, driver_behavior_events, driver_safety_scorecards; capabilities TEL-ELD-HOS/TEL-DRIVER-BEHAVIOR/TEL-DASHCAM-VIDEO; embedded-master fleet_drivers; hosts FMCSA Part 395/396 + Lytx-style video review)"
-
-  - id: B1B-S3-PATTERN-FLAGS
-    summary: PATCH `has_personal_content=true` on driver-attributed masters after user judgment on Bucket 2 #2.
-    finding: |
-      All 8 masters carry `has_personal_content=false`, `has_submit_lock=false`, `has_single_approver=false` at the schema default with no positive re-evaluation. B4 fails Rule #12's pattern-flag consideration step. The four driver-attributed masters (`driver_behavior_events` 376, `dashcam_events` 378, `driver_safety_scorecards` 734, `eld_logs` 377) are clear candidates for `has_personal_content=true`; the four position-telemetry masters (`vehicle_trips` 375, `gps_waypoints` 731, `idle_events` 732, `geofence_events` 733) are arguably also personal-by-association under GDPR / CCPA.
-    blocked_by:
-      - {type: user_decision, ref: B2-PERSONAL-CONTENT-SCOPE}
-    affected_masters:
-      - {data_object_id: 376, name: driver_behavior_events, target_module_id: null, workflow: personal-content-flip}
-      - {data_object_id: 377, name: eld_logs, target_module_id: null, workflow: personal-content-flip}
-      - {data_object_id: 378, name: dashcam_events, target_module_id: null, workflow: personal-content-flip}
-      - {data_object_id: 734, name: driver_safety_scorecards, target_module_id: null, workflow: personal-content-flip}
-      - {data_object_id: 375, name: vehicle_trips, target_module_id: null, workflow: personal-content-flip-conditional}
-      - {data_object_id: 731, name: gps_waypoints, target_module_id: null, workflow: personal-content-flip-conditional}
-      - {data_object_id: 732, name: idle_events, target_module_id: null, workflow: personal-content-flip-conditional}
-      - {data_object_id: 733, name: geofence_events, target_module_id: null, workflow: personal-content-flip-conditional}
-
   - id: B1B-S4-INTRA-DOMAIN-EDGES
     summary: Author 10 intra-domain `data_object_relationships` rows per the prior audit's B1-R1..R10 specification.
     finding: |
-      Zero intra-domain edges among the 8 mastered data_objects. B6 fails. The workflow chain is unrecorded: `gps_waypoints` compose into `vehicle_trips`; trips surface `idle_events`, `geofence_events`, `driver_behavior_events`; `eld_logs` co-anchor trips; behavior + dashcam events feed `driver_safety_scorecards`. Without these edges, the architect cannot reconstruct the verb graph for the domain.
+      Zero intra-domain edges among the 8 mastered data_objects. B6 fails. The workflow chain is unrecorded: `gps_waypoints` compose into `vehicle_trips`; trips surface `idle_events`, `geofence_events`, `driver_behavior_events`; `eld_logs` co-anchor trips; behavior + dashcam events feed `driver_safety_scorecards`. The module split is now resolved (B1B-S1 closed 2026-06-02) so the edge set is fully derivable; out of the modularization-pass scope, owed by a relationship-authoring pass.
     blocked_by:
-      - {type: user_decision, ref: B2-MODULE-SPLIT}
+      - {type: catalog_addition, scope: modules, trigger: "relationship-authoring pass (out of modularization scope; module FKs now exist)"}
     extra_proposed_edges:
       - {verb: "composes/composed_of", source: gps_waypoints, target: vehicle_trips, cardinality: many_to_one, required: true}
       - {verb: "surfaces/surfaced_by", source: vehicle_trips, target: driver_behavior_events, cardinality: one_to_many, required: false}
@@ -57,12 +42,38 @@ b1b:
       - {verb: "informs/informed_by", source: eld_logs, target: driver_safety_scorecards, cardinality: many_to_one, required: false}
       - {verb: "qualifies/qualified_by", source: geofence_events, target: vehicle_trips, cardinality: many_to_one, required: false}
 
-  - id: B1B-S6-HANDOFF-MODULE-FKS
-    summary: Backfill `source_domain_module_id` and (where possible) `target_domain_module_id` on the 11 TELEMATICS-touching handoffs once modules exist.
+  - id: B1B-X-CROSS-DOMAIN-EDGES
+    summary: Load 3 cross-domain outbound `data_object_relationships` from TELEMATICS masters to FLEET-MGMT masters.
     finding: |
-      Every cross-domain handoff with source or target = 148 carries NULL on both module FKs. B10b hard-fails. The source-side derivation deterministically resolves once TELEMATICS has its modules: each handoff's `trigger_events.data_object_id` maps to whichever new TELEMATICS module masters that data_object. The target-side derivation cannot complete because each neighbor still has zero modules (live check on 147, 149, 15, 44, 154).
+      B8 cross-domain outbound coverage is zero. Three edges match handoffs already published: `vehicle_trips` reconciles_with `fuel_transactions` (FLEET-MGMT 372); `driver_behavior_events` attributed_to `fleet_drivers` (FLEET-MGMT 371); `driver_safety_scorecards` summarizes_behavior_of `fleet_drivers` (FLEET-MGMT 371). Rule #11/B8 asymmetry: TELEMATICS authors only the outbound direction.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1-MODULE-LOAD}
+      - {type: catalog_addition, scope: modules, trigger: "relationship-authoring pass (out of modularization scope)"}
+    extra_proposed_edges:
+      - {verb: reconciles_with, source: vehicle_trips, target: fuel_transactions, cardinality: many_to_many}
+      - {verb: attributed_to, source: driver_behavior_events, target: fleet_drivers, cardinality: many_to_one}
+      - {verb: summarizes_behavior_of, source: driver_safety_scorecards, target: fleet_drivers, cardinality: many_to_one}
+
+  - id: B1B-S3-PATTERN-FLAGS
+    summary: PATCH `has_personal_content=true` on driver-attributed masters after user judgment on B2-PERSONAL-CONTENT-SCOPE.
+    finding: |
+      All 8 masters carry `has_personal_content=false`, `has_submit_lock=false`, `has_single_approver=false` at the schema default with no positive re-evaluation. B4 fails Rule #12's pattern-flag consideration step. The four driver-attributed masters (`driver_behavior_events` 376, `dashcam_events` 378, `driver_safety_scorecards` 734, `eld_logs` 377) are clear candidates for `has_personal_content=true`; the four position-telemetry masters (`vehicle_trips` 375, `gps_waypoints` 731, `idle_events` 732, `geofence_events` 733) are arguably personal-by-association under GDPR / CCPA.
+    blocked_by:
+      - {type: user_decision, ref: B2-PERSONAL-CONTENT-SCOPE}
+    affected_masters:
+      - {data_object_id: 376, name: driver_behavior_events, target_module_id: 307, workflow: personal-content-flip}
+      - {data_object_id: 377, name: eld_logs, target_module_id: 307, workflow: personal-content-flip}
+      - {data_object_id: 378, name: dashcam_events, target_module_id: 307, workflow: personal-content-flip}
+      - {data_object_id: 734, name: driver_safety_scorecards, target_module_id: 307, workflow: personal-content-flip}
+      - {data_object_id: 375, name: vehicle_trips, target_module_id: 306, workflow: personal-content-flip-conditional}
+      - {data_object_id: 731, name: gps_waypoints, target_module_id: 306, workflow: personal-content-flip-conditional}
+      - {data_object_id: 732, name: idle_events, target_module_id: 306, workflow: personal-content-flip-conditional}
+      - {data_object_id: 733, name: geofence_events, target_module_id: 306, workflow: personal-content-flip-conditional}
+
+  - id: B1B-S6-HANDOFF-MODULE-FKS
+    summary: Backfill `source_domain_module_id` (now derivable) and `target_domain_module_id` (where the neighbor has modules) on the 11 TELEMATICS-touching handoffs.
+    finding: |
+      Every cross-domain handoff with source or target = 148 carries NULL on both module FKs. B10b hard-fails. The source-side derivation now resolves: each handoff's `trigger_events.data_object_id` maps to whichever new TELEMATICS module masters that data_object (306 for vehicle_trips/gps/idle/geofence payloads; 307 for eld_logs/dashcam/behavior/scorecard payloads). The target-side cannot complete because each neighbor still has zero modules (live check on 147, 149, 15, 44, 154 unchanged at last audit).
+    blocked_by:
       - {type: domain_audit, blocking_domain: FLEET-MGMT, milestone: M1-modules}
       - {type: domain_audit, blocking_domain: FLEET-MAINT, milestone: M1-modules}
       - {type: domain_audit, blocking_domain: GRC, milestone: M1-modules}
@@ -86,41 +97,32 @@ b1b:
     finding: |
       Zero alias rows for any TELEMATICS master. B11 fails. The vendor lexicon supplies clear synonyms: `eld_logs` -> "HOS Logs" / "Driver Logs"; `dashcam_events` -> "Video Events" / "Risk Triggers"; `driver_behavior_events` -> "Safety Events" / "DriveCam Events"; `vehicle_trips` -> "Drives" / "Routes"; `driver_safety_scorecards` -> "CSA Scores" / "Driver Scores".
     blocked_by:
-      - {type: user_decision, ref: B2-MODULE-SPLIT}
+      - {type: catalog_addition, scope: modules, trigger: "alias-authoring pass (out of modularization scope)"}
     extra_proposed_count: 8-12
 
   - id: B1B-S8-LIFECYCLE-STATES
     summary: Author lifecycle states for the 4 workflow-bearing masters; surface 4 config-shape exemptions to the user.
     finding: |
-      Zero `data_object_lifecycle_states` rows. B12 fails Rule #12. Four masters have real workflow: `dashcam_events` (flagged -> reviewed -> coached -> archived), `driver_behavior_events` (similar), `eld_logs` (active -> certified -> auditor_locked), `driver_safety_scorecards` (recompute cadence). The other four (`gps_waypoints`, `idle_events`, `geofence_events`, `vehicle_trips`) are append-only telemetry and qualify for the config-shape exemption (surface to user; do NOT auto-populate `data_objects.notes` per Rule #15).
+      Zero `data_object_lifecycle_states` rows. B12 fails Rule #12. Four masters have real workflow: `dashcam_events` (flagged -> reviewed -> coached -> archived), `driver_behavior_events` (similar), `eld_logs` (active -> certified -> auditor_locked), `driver_safety_scorecards` (recompute cadence) - all on module 307. The other four (`gps_waypoints` 731, `idle_events` 732, `geofence_events` 733, `vehicle_trips` 375; module 306) are append-only telemetry and qualify for the config-shape exemption (surface to user; do NOT auto-populate `data_objects.notes` per Rule #15).
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1-MODULE-LOAD}
-      - {type: user_decision, ref: B2-MODULE-SPLIT}
+      - {type: user_decision, ref: B2-LIFECYCLE-EXEMPTIONS}
     affected_masters:
-      - {data_object_id: 376, name: driver_behavior_events, target_module_id: null, workflow: flagged-reviewed-coached-archived}
-      - {data_object_id: 377, name: eld_logs, target_module_id: null, workflow: active-certified-auditor_locked}
-      - {data_object_id: 378, name: dashcam_events, target_module_id: null, workflow: flagged-reviewed-coached-archived}
-      - {data_object_id: 734, name: driver_safety_scorecards, target_module_id: null, workflow: recompute-cadence}
-      - {data_object_id: 375, name: vehicle_trips, target_module_id: null, workflow: config-shape-exemption}
-      - {data_object_id: 731, name: gps_waypoints, target_module_id: null, workflow: config-shape-exemption}
-      - {data_object_id: 732, name: idle_events, target_module_id: null, workflow: config-shape-exemption}
-      - {data_object_id: 733, name: geofence_events, target_module_id: null, workflow: config-shape-exemption}
-
-  - id: B1B-S10-LEGACY-SKILL-RENAME
-    summary: Retire legacy `telematics-system` skill (id 112) once module-scoped system skills land per F1/F2.
-    finding: |
-      F1 fails: legacy domain-level system skill 112 `telematics-system` exists (kebab + `-system` suffix; pre-modular convention). F2 fails: zero module-scoped system skills. Once TELEMATICS modules land, author one `<module_code_lower>_agent` per module (e.g. `telematics_fleet_tracking_agent`, `telematics_compliance_safety_agent`), re-link the 8 platform-tier query tools (ids 717, 718, 719, 720, 847, 848, 849, 850) to the new skills, then DELETE skill 112.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1-MODULE-LOAD}
-    extra_tool_ids: [717, 718, 719, 720, 847, 848, 849, 850]
+      - {data_object_id: 376, name: driver_behavior_events, target_module_id: 307, workflow: flagged-reviewed-coached-archived}
+      - {data_object_id: 377, name: eld_logs, target_module_id: 307, workflow: active-certified-auditor_locked}
+      - {data_object_id: 378, name: dashcam_events, target_module_id: 307, workflow: flagged-reviewed-coached-archived}
+      - {data_object_id: 734, name: driver_safety_scorecards, target_module_id: 307, workflow: recompute-cadence}
+      - {data_object_id: 375, name: vehicle_trips, target_module_id: 306, workflow: config-shape-exemption}
+      - {data_object_id: 731, name: gps_waypoints, target_module_id: 306, workflow: config-shape-exemption}
+      - {data_object_id: 732, name: idle_events, target_module_id: 306, workflow: config-shape-exemption}
+      - {data_object_id: 733, name: geofence_events, target_module_id: 306, workflow: config-shape-exemption}
 
   - id: B1B-M1-MISSING-ENTITIES
-    summary: Load 5 compliance/workflow-mandated missing entities once module split + DVIR ownership decisions land.
+    summary: Load 5 compliance/workflow-mandated missing entities onto the now-live modules once DVIR ownership decision lands.
     finding: |
-      Five compliance / FMCSA-mandated entities are missing from the TELEMATICS footprint per the 2026-05-30 market audit. Each lands on a specific module once the split exists; the DVIR entity additionally depends on the canonical ownership decision (Bucket 2 #3).
+      Five compliance / FMCSA-mandated entities are missing per the 2026-05-30 market audit. Module targets are now concrete: `dvir_inspections`, `hos_certifications`, `driver_coaching_sessions` -> TELEMATICS-COMPLIANCE-SAFETY (307); `ifta_jurisdiction_summaries`, `fault_codes` -> TELEMATICS-FLEET-TRACKING (306). The DVIR entity additionally depends on the canonical-ownership decision (B2-DVIR-OWNERSHIP).
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1-MODULE-LOAD}
       - {type: user_decision, ref: B2-DVIR-OWNERSHIP}
+      - {type: catalog_addition, scope: solutions, trigger: "missing-entity load is out of modularization scope (creates new data_objects)"}
     affected_entities:
       - dvir_inspections
       - hos_certifications
@@ -134,54 +136,42 @@ b1b:
       - {vendor: Verizon Connect, evidence: 1st_class}
       - {vendor: Lytx, evidence: 1st_class}
 
-  - id: B1B-X-CROSS-DOMAIN-EDGES
-    summary: Load 3 cross-domain outbound `data_object_relationships` from TELEMATICS masters to FLEET-MGMT masters.
-    finding: |
-      B8 cross-domain outbound coverage is zero. Three edges match handoffs already published: `vehicle_trips` reconciles_with `fuel_transactions` (FLEET-MGMT 372); `driver_behavior_events` attributed_to `fleet_drivers` (FLEET-MGMT 371); `driver_safety_scorecards` summarizes_behavior_of `fleet_drivers` (FLEET-MGMT 371). Rule #11/B8 asymmetry says TELEMATICS authors only the outbound direction; the inbound mirrors live on FLEET-MGMT's B8.
-    blocked_by:
-      - {type: user_decision, ref: B2-MODULE-SPLIT}
-    extra_proposed_edges:
-      - {verb: reconciles_with, source: vehicle_trips, target: fuel_transactions, cardinality: many_to_many}
-      - {verb: attributed_to, source: driver_behavior_events, target: fleet_drivers, cardinality: many_to_one}
-      - {verb: summarizes_behavior_of, source: driver_safety_scorecards, target: fleet_drivers, cardinality: many_to_one}
-
   - id: B1B-A5-RETIRE-OR-UPGRADE
-    summary: Retire or upgrade the existing `discovery_substring` tag on handoff 312 once Bucket 2 #7 resolves.
+    summary: Retire or upgrade the existing `discovery_substring` tag on handoff 312 once B2-HANDOFF-312-FATE resolves.
     finding: |
-      Handoff 312 carries a `discovery_substring` `handoff_processes` row pointing at PCF 823 (`Plan for preventive maintenance`). The tag's validity depends on whether handoff 312 itself stays (its trigger_event 304 / payload 380 sit on a FLEET-MAINT-mastered data_object that TELEMATICS does not model). If 312 is retired or re-pointed in Bucket 2 #7, the tag becomes moot.
+      Handoff 312 carries a `discovery_substring` `handoff_processes` row pointing at PCF 823 (`Plan for preventive maintenance`). The tag's validity depends on whether handoff 312 itself stays (its trigger_event 304 / payload 380 sit on a FLEET-MAINT-mastered data_object that TELEMATICS does not model). If 312 is retired or re-pointed, the tag becomes moot.
     blocked_by:
       - {type: user_decision, ref: B2-HANDOFF-312-FATE}
 
 b2:
-  - id: B2-MODULE-SPLIT
-    summary: Pick the module split shape for TELEMATICS. Gates every downstream B/E/F item that needs a module FK.
-    question: Two full modules (TELEMATICS-FLEET-TRACKING + TELEMATICS-COMPLIANCE-SAFETY) per the 2026-05-30 proposal? Or 3-module split spinning TELEMATICS-VIDEO-COACHING out? Or a different cut?
-    options:
-      - 2-module-fleet-tracking-plus-compliance-safety
-      - 3-module-add-video-coaching
-      - other-user-specified
-    why: |
-      Rule #14 requires >=2 full modules on this 6-capability domain. The default 2-module split was justified in the 2026-05-30 audit; the 3-module variant matches Lytx as a pure-play but is probably too granular at this catalog scale.
-
   - id: B2-PERSONAL-CONTENT-SCOPE
     summary: Decide pattern-flag `has_personal_content` scope on the position-telemetry masters.
-    question: Should `has_personal_content` be true on all 8 masters (strict privacy reading), only on the 4 driver-attributed masters, or only on dashcam + behavior pair (operational reading)?
+    question: Should `has_personal_content` be true on all 8 masters (strict privacy reading), only on the 4 driver-attributed masters (376/377/378/734), or only on the dashcam + behavior pair (operational reading)?
     options:
       - all-8-personal
       - 4-driver-attributed-only
       - dashcam-and-behavior-only
     why: |
-      Position telemetry is personal data under GDPR / CCPA when tied to an identified driver. Vendor practice varies; the catalog needs an explicit answer per Rule #12's positive re-evaluation requirement.
+      Position telemetry is personal data under GDPR / CCPA when tied to an identified driver. Vendor practice varies; the catalog needs an explicit answer per Rule #12's positive re-evaluation requirement. Gates B1B-S3.
+
+  - id: B2-LIFECYCLE-EXEMPTIONS
+    summary: Confirm the 4 config-shape lifecycle exemptions on the position-telemetry masters.
+    question: Are `vehicle_trips` (375), `gps_waypoints` (731), `idle_events` (732), `geofence_events` (733) all append-only telemetry that may skip lifecycle states (config-shape exemption), leaving only the 4 module-307 masters to get state machines?
+    options:
+      - confirm-4-exemptions
+      - require-states-on-some
+    why: |
+      Rule #12 wants every master either to carry lifecycle states or to be a justified config-shape exemption. Gates B1B-S8.
 
   - id: B2-DVIR-OWNERSHIP
     summary: Decide canonical ownership of DVIR (driver vehicle inspection reports).
-    question: New `dvir_inspections` under TELEMATICS-COMPLIANCE-SAFETY (keeping FLEET-MGMT `vehicle_inspections` for periodic PMI), OR extend FLEET-MGMT `vehicle_inspections` with a `kind` discriminator, OR move ownership of `vehicle_inspections` to TELEMATICS?
+    question: New `dvir_inspections` under TELEMATICS-COMPLIANCE-SAFETY (307) keeping FLEET-MGMT `vehicle_inspections` for periodic PMI, OR extend FLEET-MGMT `vehicle_inspections` with a `kind` discriminator, OR move ownership of `vehicle_inspections` to TELEMATICS?
     options:
       - new-dvir-inspections-under-telematics
       - extend-fleet-mgmt-vehicle-inspections-with-kind
       - move-vehicle-inspections-to-telematics
     why: |
-      Vendor practice treats DVIR (driver pre/post-trip) and PMI (mechanic-completed) as distinct workflows; recommended option is the first.
+      Vendor practice treats DVIR (driver pre/post-trip) and PMI (mechanic-completed) as distinct workflows; recommended option is the first. Gates B1B-M1 (dvir_inspections).
 
   - id: B2-NOTIFY-TEAM-COVERAGE-TIER
     summary: Cross-catalog resolution of `notify_team.coverage_tier` blocks Phase-S authoring for TELEMATICS modules.
@@ -209,7 +199,7 @@ b2:
       - add-consumer-dmdos-cross-vertical
       - queue-ag-telematics-candidate
     why: |
-      Agricultural-machinery telemetry sits between agronomy / FMIS and a hypothetical AG-TELEMATICS sibling. Coordinated with Bucket 3 #1 (AG-TELEMATICS Phase 0 research).
+      Agricultural-machinery telemetry sits between agronomy / FMIS and a hypothetical AG-TELEMATICS sibling. Coordinated with B3-AG-TELEMATICS.
 
   - id: B2-HANDOFF-312-FATE
     summary: Decide the fate of handoff 312 + trigger_event 304 (`preventive_maintenance.due` on `preventive_maintenance_schedules`).
@@ -219,13 +209,52 @@ b2:
       - re-point-trigger-event
       - leave-with-debt-flag
     why: |
-      Payload 380 (`preventive_maintenance_schedules`) is FLEET-MAINT-mastered; TELEMATICS does not model the entity. Likely modeling debt from a pre-modular load.
+      Payload 380 (`preventive_maintenance_schedules`) is FLEET-MAINT-mastered; TELEMATICS does not model the entity. Likely modeling debt from a pre-modular load. Gates B1B-A5.
 
 b3:
+  - id: B3-IFTA-JURISDICTION-SUMMARIES
+    candidate: ifta_jurisdiction_summaries
+    rationale: |
+      IFTA (International Fuel Tax Agreement) requires quarterly per-jurisdiction mile / fuel summaries derived from GPS traces plus fuel transactions. A missing-master candidate for TELEMATICS-FLEET-TRACKING (306): TELEMATICS owns the jurisdiction-segmented mileage source (`vehicle_trips` already records jurisdictions for IFTA) but no aggregate master exists. Bridges to FLEET-MGMT `fuel_transactions`.
+    vendor_evidence:
+      - {vendor: Geotab, evidence: 1st_class}
+      - {vendor: Samsara, evidence: 1st_class}
+      - {vendor: Verizon Connect, evidence: 1st_class}
+      - {vendor: Motive, evidence: 1st_class}
+    proposed_module: TELEMATICS-FLEET-TRACKING
+  - id: B3-FAULT-CODES
+    candidate: fault_codes
+    rationale: |
+      Engine / DTC fault data via OBD-II / J1939 is exposed by 5/5 flagship vendors and underpins the TEL-VEHICLE-DIAG capability (415) already placed on TELEMATICS-FLEET-TRACKING (306). The capability is mastered but its anchor entity (per-vehicle fault-code record) is missing - a clean missing-master candidate.
+    vendor_evidence:
+      - {vendor: Samsara, evidence: 1st_class}
+      - {vendor: Geotab, evidence: 1st_class}
+      - {vendor: Motive, evidence: 1st_class}
+      - {vendor: Verizon Connect, evidence: 1st_class}
+      - {vendor: Lytx, evidence: 1st_class}
+    proposed_module: TELEMATICS-FLEET-TRACKING
+  - id: B3-DRIVER-COACHING-SESSIONS
+    candidate: driver_coaching_sessions
+    rationale: |
+      Lytx, Samsara, Motive all formalize the coaching workflow that follows a `driver_behavior_event.triggered`. A missing-master candidate for TELEMATICS-COMPLIANCE-SAFETY (307): joins `driver_behavior_events` -> `users` (coach) with date, outcome, video evidence. Underwriter-required for ISO 39001 / fleet-insurance discount programs.
+    vendor_evidence:
+      - {vendor: Lytx, evidence: 1st_class}
+      - {vendor: Samsara, evidence: 1st_class}
+      - {vendor: Motive, evidence: 1st_class}
+    proposed_module: TELEMATICS-COMPLIANCE-SAFETY
+  - id: B3-HOS-CERTIFICATIONS
+    candidate: hos_certifications
+    rationale: |
+      FMCSA Part 395.20 requires the driver to certify each day's HOS log - a distinct workflow / master from `eld_logs` (the raw log). Missing-master candidate for TELEMATICS-COMPLIANCE-SAFETY (307).
+    vendor_evidence:
+      - {vendor: Motive, evidence: 1st_class}
+      - {vendor: Samsara, evidence: 1st_class}
+      - {vendor: Geotab, evidence: 1st_class}
+    proposed_module: TELEMATICS-COMPLIANCE-SAFETY
   - id: B3-AG-TELEMATICS
     candidate: AG-TELEMATICS (new candidate domain)
     rationale: |
-      FMIS inbound handoffs 966 + 968 on agricultural payloads (`variable_rate_prescriptions`, `machinery_telemetry_records`) land on TELEMATICS with no declared role. The FMIS subscriber was probably a hypothetical AG-TELEMATICS sibling, not vehicle telematics. Phase 0 research would enumerate flagship vendors (John Deere Operations Center, Trimble Ag, AGCO Fuse, Topcon Ag, CNH Industrial AFS Connect) and confirm whether the candidate warrants a `domains` row. Coordinated with B2-FMIS-INBOUND-ROUTING.
+      FMIS inbound handoffs 966 + 968 on agricultural payloads (`variable_rate_prescriptions`, `machinery_telemetry_records`) land on TELEMATICS with no declared role. The FMIS subscriber was probably a hypothetical AG-TELEMATICS sibling, not vehicle telematics. Phase 0 research would enumerate flagship vendors and confirm whether the candidate warrants a `domains` row. Coordinated with B2-FMIS-INBOUND-ROUTING.
     vendor_evidence:
       - John Deere Operations Center
       - Trimble Ag
@@ -233,7 +262,6 @@ b3:
       - Topcon Ag
       - CNH Industrial AFS Connect
     proposed_module: null
-
   - id: B3-DRIVER-MESSAGES
     candidate: driver_messages (dispatch messaging)
     rationale: |
@@ -243,7 +271,6 @@ b3:
       - Motive
       - Verizon Connect
     proposed_module: null
-
   - id: B3-VEHICLE-ENV-SENSORS
     candidate: vehicle_environmental_sensors (cargo temperature, door open, asset trailer)
     rationale: |
@@ -252,7 +279,6 @@ b3:
       - Samsara
       - Geotab
     proposed_module: null
-
   - id: B3-ROUTE-EXECUTIONS
     candidate: route_executions (planned-vs-actual route reconciliation)
     rationale: |

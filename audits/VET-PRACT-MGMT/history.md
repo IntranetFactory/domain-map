@@ -558,3 +558,48 @@ Unchanged from prior audit (no vendor-surface re-spawn this run):
 - **b2 (user-judgment):** 6 items per Bucket 2 above.
 - **b3 (Phase 0 pending):** 6 items per Bucket 3 above.
 - **next_action_by:** `user` (b1a empty -> b2 non-empty).
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+Built the domain's module layer. VET-PRACT-MGMT went from 0 to 3 `full` `domain_modules`, resolving the long-standing M1 hard fail (B1A-BUILD / B1B-M1-MODULES). Scope this pass was deliberately narrow: modules + capability links + assignment of the existing entities only. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created (those remain deferred per the prior audit's b2 / b3 items).
+
+The prior B2-MODULE-SHAPE proposed a 4 / 5 / 6 module split, but every variant beyond 3 modules leaned on data_objects that do not exist yet (veterinary_appointments, vet_invoices, vet_payment_transactions, lab_test_orders, drug_inventory). With only the 5 existing in-domain masters (395-399) plus one borrowed contributor (supplier_invoices, id 75), a finer split would produce empty modules and violate the "every module >=1 data_object" rule. The 3-module shape places all 6 capabilities and all entities with no empty module. The richer split stays open as a future reshape once the B3 entities land.
+
+### Module set authored
+
+- **VET-PRACT-MGMT-CLINICAL-CARE** (id 321) - caps VET-PATIENT-CARE (428), VET-LAB-INTEGRATION (432), VET-REMINDER-MGMT (433). Masters: animal_patients (395), veterinary_vaccinations (397), veterinary_lab_results (398). Embedded: pet_owners (396).
+- **VET-PRACT-MGMT-FRONT-OFFICE** (id 322) - caps VET-APPT-SCHED (429), VET-INVOICING (430). Master: pet_owners (396). Embedded: animal_patients (395). Contributor: supplier_invoices (75, required, role preserved from the borrowed AP master).
+- **VET-PRACT-MGMT-PHARMACY-RX** (id 323) - cap VET-INVENTORY-RX (431). Master: controlled_substance_ledger_entries (399). Embedded: animal_patients (395).
+
+All 3 carry `module_kind=full`, `industry_id=18` (Veterinary Services, NAICS 541940 - the single clear industry row). Descriptions are vendor-free (Rule #18) and em-dash-free.
+
+### Master mapping (M7, in-domain AND catalog-wide)
+
+| master | id | module |
+|---|---|---|
+| animal_patients | 395 | CLINICAL-CARE (321) |
+| veterinary_vaccinations | 397 | CLINICAL-CARE (321) |
+| veterinary_lab_results | 398 | CLINICAL-CARE (321) |
+| pet_owners | 396 | FRONT-OFFICE (322) |
+| controlled_substance_ledger_entries | 399 | PHARMACY-RX (323) |
+
+Catalog-wide master pre-check before any `role=master` write: all 5 masters returned zero pre-existing master rows anywhere in the catalog, so all 5 stay `master` (no demotions to embedded_master required). pet_owners is dual-anchored (clinical + billing) but masters exactly once in FRONT-OFFICE and is embedded_master in CLINICAL-CARE; animal_patients masters in CLINICAL-CARE and is embedded_master in the two other modules where it is referenced.
+
+### Counts
+
+- 3 domain_modules, 6 domain_module_capabilities (3 + 2 + 1), 9 domain_module_data_objects (4 + 3 + 2).
+- Verification (independent live re-query): every capability placed, every module non-empty on both caps and data_objects, each master exactly 1 row catalog-wide.
+
+### Loader
+
+`.tmp_deploy/modularize_vet_pract_mgmt_2026-06-02.ts`, idempotent (module key = domain_module_code, DMC key = (domain_module_id, capability_id), DMDO key = (domain_module_id, data_object_id)). Re-run made zero inserts.
+
+### Deferred (unchanged, now partially unblocked by M1)
+
+The B1B prerequisite gate on M1-MODULES is now cleared, so the following become technically authorable in a future pass (still each carry their own user-decision or partner-domain gate): per-module lifecycle states (B1B-B12, domain_module_id now assignable), per-module system skills + tool redistribution + legacy skill 116 retirement (B1B-F1-F3-F7-SKILL-LAYER), source_domain_module_id backfill on the 6 outbound handoffs (B1B-B10b), aliases (B1B-B11), and the per-module / domain catalog UX copy (M8 / A4). The B3 vendor-research entities (appointments, exam_notes, prescriptions, invoices, boarding, lab_orders) remain Phase-0 pending and would drive the future 4-6 module reshape.
+
+### next_action_by
+
+`agent` - new b1a items are now technically actionable post-M1 (per-module system skills F2/F3, per-module catalog UX M8/A4). Several still funnel into existing b2 user-decision gates, but the skill + catalog-UX scaffolding can proceed.

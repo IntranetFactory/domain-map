@@ -270,3 +270,54 @@ The cross-cluster modularization debt on FOOD-TRACE / FSQM / TELEMATICS / ERP-FI
 - **Bucket 1**, fix open items now? Reply `all`, `just S4 / S7 / A4`, or `skip`. B1-S1 / B1-S2 / B1-S3 / B1-S5 / B1-S10 wait on the module-split decision (B3-S1). B1-A4 wants user-reviewed buyer-voice drafts before PATCH.
 - **Bucket 2**, per-item decision needed on B2-S1 (Rule #15 DMDO notes), B2-S2 (Rule #15 handoff notes), B2-S3 (Rule #18 vendor reference), B2-S4 (pattern flags).
 - **Bucket 3**, vet via Phase 0 vendor research, or eyeball-mode? B3-S1 is the highest-leverage item.
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+Scope of this pass: modules + entity assignment only (reuse existing entities). No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. The long-standing M1/M2/M4/M6 collapse is now resolved: FMIS went from 0 to 4 `full` `domain_modules`.
+
+Loader: [.tmp_deploy/modularize_fmis_2026-06-02.ts](../../.tmp_deploy/modularize_fmis_2026-06-02.ts), idempotent and safe to re-run.
+
+### Modules created (4 full, all industry_id=22 Crop Production / NAICS 111)
+
+| id | code | capabilities | masters |
+|---|---|---|---|
+| 252 | FMIS-FIELD-CROP-PLANNING | 447 FIELD-MAPPING, 448 CROP-PLANNING | farm_fields (486), crop_plans (487) |
+| 253 | FMIS-FIELD-OPS-RECORDS | 449 PLANTING-RECORDS, 451 HARVEST-TRACKING | planting_records (488), field_applications (489), harvest_records (490) |
+| 254 | FMIS-PRECISION-AG | 452 VARIABLE-RATE-PRESCRIPTION, 453 MACHINERY-TELEMETRY | variable_rate_prescriptions (492), machinery_telemetry_records (493) |
+| 255 | FMIS-INPUT-INVENTORY-ANALYTICS | 450 INPUT-INVENTORY, 454 YIELD-ANALYTICS | ag_input_inventory (491) |
+
+Industry resolution: `/industries` carries a clean single row id=22 "Crop Production" (NAICS 111); set on all four modules. The broader id=20 "Agriculture, Forestry, Fishing and Hunting" (NAICS 11) was rejected as too coarse. Livestock scope (B3-S3) remains undecided, which is consistent with a crop-production tagging.
+
+### Capability placement (M4 / M6)
+
+All 8 capabilities placed in exactly one module each; every module realizes exactly 2 capabilities. 8 `domain_module_capabilities` rows. M4 (every capability has a realizing module) and M6 (every module realizes a capability) now pass.
+
+### Data_object assignment (M7)
+
+14 `domain_module_data_objects` rows total. Master pre-check (catalog-wide) ran on all 8 masters (`/domain_module_data_objects?data_object_id=eq.<id>&role=eq.master`): zero pre-existing master rows for any, so all 8 are mastered in FMIS for the first time. No demotions to embedded_master were required. Each master is now mastered in exactly one module (in-domain and catalog-wide, verified):
+
+- 486 farm_fields -> 252; 487 crop_plans -> 252
+- 488 planting_records -> 253; 489 field_applications -> 253; 490 harvest_records -> 253
+- 492 variable_rate_prescriptions -> 254; 493 machinery_telemetry_records -> 254
+- 491 ag_input_inventory -> 255
+
+In-domain `consumer` rows added to keep no module empty of context and to wire the analytics / per-field surfaces without a second master (all preserve a non-master role, none promoted): module 253 consumes farm_fields + crop_plans; module 254 consumes farm_fields; module 255 consumes harvest_records + field_applications + crop_plans (yield analytics + input-spend reconciliation + budget projection).
+
+### Module split decision (resolves B3-S1)
+
+Chose a 4-module split rather than the previously-floated 2-module or 3-module shapes. Rationale: with 8 capabilities the M2 floor is >=2 full modules and the skill aims for 3-4; the 4-way split keeps each module at 2 coherent capabilities and isolates the cross-vendor integration boundaries cleanly (FMIS-FIELD-OPS-RECORDS owns the FOOD-TRACE / FSQM record handoffs; FMIS-PRECISION-AG owns the TELEMATICS prescription / telemetry handoffs; FMIS-INPUT-INVENTORY-ANALYTICS owns the ERP-FIN input-low handoff). This refines (not contradicts) the prior 3-module proposal by splitting harvest into the records module and pulling yield-analytics next to input-inventory.
+
+### Bands cleared this pass
+
+- M1 / M2: hard fail -> pass (4 full modules).
+- M4 / M6: hard fail -> pass.
+- M7: now evaluable and passes (each master mastered once, in-domain and catalog-wide).
+
+### Out of scope this pass (deferred, unchanged)
+
+- B1B-S3 / F1: legacy domain-level system skill `fmis-system` (id 61, domain_module_id=null) still present; now unblocked (B1B-S1 prerequisite satisfied) but per-module system-skill authoring (Rule #17, one skill per module) is a Phase S job, not this modules-only pass.
+- B1B-S5 / B12: 0 lifecycle states; now has `domain_module_id` anchors available but still gated on B2-S4 pattern-flag decisions.
+- B1B-S10 / B10b source-side: 10/10 outbound handoffs still carry NULL `source_domain_module_id`; the backfill is now executable (modules exist) but was not run in this entity-assignment-only pass.
+- B1A-S4 (aliases), B1A-S7 (intra-domain relationships), B1B-S9 (cross-domain relationships), B1A-A4 (catalog UX), and all Bucket 2 / Bucket 3 items remain open.

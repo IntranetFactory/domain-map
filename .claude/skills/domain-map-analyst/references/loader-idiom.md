@@ -25,9 +25,11 @@ Every loader follows the same order; each phase reads existing state before writ
 
 Define each row with `data_object_name` (snake_case_plural natural key), `display_label`, `description`, and a script-internal `master_domain` field that names the target master domain. Use `syncByKey` against `/data_objects` keyed on `data_object_name`.
 
-### Phase 2 — master links into `domain_data_objects`
+### Phase 2 — master links into `domain_module_data_objects` (NOT `domain_data_objects`)
 
-For each row in Phase 1, insert a `(domain_id, data_object_id, role: "master", notes: "")` row keyed on the `master_domain` from Phase 1. Skip rows that already exist (idempotent against `(domain_id, data_object_id)`).
+> **`domain_data_objects` is a deprecated, derived rollup being retired as modularization completes. Do NOT hand-write it for a modularized domain.** Masters for a modularized domain go into `domain_module_data_objects` (module-grain) with `role: "master"`, keyed on the realizing module. The domain-grain rollup is derived from that junction (group by `data_object_id`, strongest role wins) and is no longer maintained by hand. The nine historical loaders that still POST `domain_data_objects` (and the pre-modular shape described below) predate this and must not be copied for new work. See SKILL.md `<masters>` definition and [skill-changelog.md](skill-changelog.md).
+
+For a domain with **no** modules yet (un-modularized), the legacy pre-modular shape below still applies as transitional input: insert a `(domain_id, data_object_id, role: "master", notes: "")` row keyed on the `master_domain` from Phase 1, idempotent against `(domain_id, data_object_id)`. These rows are migration scaffolding: once the domain is modularized, its masters move to `domain_module_data_objects` and its `domain_data_objects` rows are deleted.
 
 ### Phase 3 — multi-master / contributor / consumer rows
 

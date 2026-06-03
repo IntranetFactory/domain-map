@@ -268,3 +268,121 @@ No pairwise pass invoked this audit. Neighbor set discovered from handoffs: HCM 
 ### Fixes applied
 
 *(None; this pass is read-only against the live catalog. All proposed inserts/PATCHes await per-bucket approval.)*
+
+## 2026-06-02, Audit
+
+Full 4-pass Validate (structural + market-surface + neighbor discovery + light pairwise). Read-only;
+nothing written to the catalog. Market subagent surface at `c:/tmp/LMS-market-surface-2026-06-02.{md,json}`.
+
+### Summary
+
+- **Footprint:** 8 modules (7 full + 1 starter), **64 LMS-owned masters**, 113 DMDO rows, ~67 trigger
+  events, ~63 aliases, ~167 lifecycle-state rows across 47 masters, 8 system skills.
+- **Semantius score:** **100% strict on every module** (every linked tool `coverage_tier=platform`).
+  F1-F5 + F7 all pass.
+- **Strong bands:** A1/A2/A3, M1/M2/M5/M6/M7, B1/B2/B5/B6/B6b/B7/B9/B9b/B11, C1/C2, F1-F7.
+- **This pass found four issues the prior two audits (2026-05-29, 2026-05-31) missed, corrected one
+  false prior finding, and added refactor-level market findings the prior market pass did not surface.**
+
+### Correction to prior audits
+
+- **`B1A-B7-USER-EDGES` was a false finding.** Both prior audits claimed "zero `data_object_relationships`
+  between LMS masters and `users` (data_object id 41)". Data_object **41 is `variance_analyses`**, not
+  users; the platform `users` built-in is **748**. Querying 748 returns **37 user-to-master edges**
+  (users owns/curates/authors courses + learning_paths, enrolls/completes, earns badges/credits,
+  signs acknowledgements, files SAR/deletion, etc.). **B7 PASSES.** The prior b1a item is dropped.
+
+### New findings (not in prior audits)
+
+| ID | Band | Finding |
+| --- | --- | --- |
+| B13 | B13 | **All 64 LMS masters have `entity_type='unclassified'`.** Blocks B12 (lifecycle requirement is gated on entity_type) and the write-tier derivation. Classification is deterministic (operational_workflow / operational_record / catalog / junction / computed). Dominant fix. |
+| DDO-DRIFT | (S1 data-quality) | The legacy `domain_data_objects` rollup carries **6 master rows; the `domain_module_data_objects` junction has 64.** The rollup never regenerated after the modules 178-181 + course-delivery expansion. Anything reading the rollup sees ~9% of LMS. Mechanical regen. |
+| M9 | M9 (part 1) | **Four `consumer + required` rows on externally-mastered objects break standalone deployability:** COMPLIANCE-TRAINING requires `onboarding_tasks` (ONBOARDING) + `policy_attestations` (GRC); PATHS requires `performance_goals` (TALENT-MGMT) + `skills_gap_analyses` (SKILLS-MGMT). Fix = flip to `optional` (likely) or `embedded_master`. |
+| B14 | B14 | `fda_part11_audit_trails` (948) + `bsa_aml_training_records` (949) are `master + required` but sector-bound (life-sciences / banking) -> should be `optional`. **Superseded if Refactor C (shell collapse) is adopted** (those masters get deleted). |
+
+### Market-surface findings (refactor-level; prior market pass reported 0 scope-creep / 0 modularization)
+
+Counts: MISSING 7, SCOPE-CREEP 2, WRONG-OWNERSHIP 2, MODULARIZATION 5. Three refactors planned in
+[plans/lms-refactor-2026-06-02.md](../../plans/lms-refactor-2026-06-02.md):
+
+- **Refactor A (cross-domain, HIGH):** dissolve LMS-CT-GDPR (180). DSAR/consent are fragmented across
+  ATS (masters `data_subject_requests` 901 + `candidate_consents` 870), LMS (masters 950/951/952), and
+  PRIV-MGMT (domain 20, masters none yet). Real fix = consolidate under PRIV-MGMT; ATS + LMS demote.
+  Prerequisite: build PRIV-MGMT canonical. Treat as a separate cross-domain initiative; interim
+  scope-creep acceptable.
+- **Refactor B (trivial, LOW):** collapse `continuing_education_credits` (935) + `ceu_records` (936)
+  into one (survivor 936). Verify 935 is not a distinct credit-bank rollup first.
+- **Refactor C (HIGH):** collapse 6 per-regulation evidence shells (944/945/946/947/948/949) into
+  typed rows of `training_evidence_records` (940) keyed by `regulation_type`. Trade-off: loses
+  per-statute install-axis gating (recover via tenant "active regulations" config). Supersedes B14.
+- **WRONG-OWNERSHIP (minor):** `course_resources` (930) overlaps `learning_content_assets` (909);
+  move to COURSE-DELIVERY when next touched.
+- **NEW MISSING (anchored):** `learning_evaluations`/`training_surveys` (Kirkpatrick L1-L3),
+  `training_requests` + approvals, `external_training_records`, plus the prior-audit set
+  (observation_checklists, gamification, question_banks, cmi5, gxp_training_signoffs, etc.).
+- **Vindicated, keep:** `audiences`, `notification_templates`/`manager_nudges`/`escalation_rules`,
+  the definition/instance pairs (`*_definitions` vs `learner_*`).
+
+### Carried-forward open items (still valid)
+
+- **APQC tagging (H1):** 8 of 31 cross-domain handoffs tagged (~26%). ~23 untagged; the prior
+  agent_curated proposal table still applies (see 2026-05-31 section + state.yaml).
+- **A4 + M8:** domain + all 8 modules have empty `catalog_tagline`/`catalog_description`.
+- **M4:** `SKILLS-MGMT` capability (20) orphan on LMS (no realizing module).
+- **E1:** zero personas reach any LMS module; zero `process_raci`; every lifecycle state has
+  `process_id=null`. Multi-module domain with no deployable personas.
+- **B10b:** inbound handoff 1121 (HRSD -> LMS, `case_categories`) has null target module + no LMS
+  role; peer-domain NULL target/source module FKs owed back by HCM/GRC/SKILLS-MGMT (report-only).
+- **B9c (soft):** all LMS `trigger_events` have empty `from_state`/`to_state`.
+- **B3 (soft):** bare-word masters `lessons`/`instructors`/`curricula`/`audiences` lack a canonical
+  claim or prefix; `domain_regulations` lists only FERPA (missing GDPR + HIPAA/OSHA/SOX given the
+  compliance module); `has_single_approver=false` on every master.
+
+### Pairwise reconciliation
+
+Neighbors (by edge weight): HCM, GRC, IGA, SKILLS-MGMT, TALENT-MGMT, ONBOARDING, HRSD. Heaviest:
+HCM + GRC + IGA. Light pass only; the cross-domain findings reduce to (a) the peer-owed B10b null
+module FKs above and (b) handoff 1121's questionable HRSD->LMS `case_categories` edge. Full HCM /
+GRC pairwise deferred.
+
+### Decisions
+
+User (2026-06-02, first pass): decide refactors first, plan them now (not execute), persist the audit.
+Refactor plan written to [plans/lms-refactor-2026-06-02.md](../../plans/lms-refactor-2026-06-02.md).
+
+User (2026-06-02, second pass): **"do B2-REFACTOR-B now, postpone other B2, do b1a."**
+
+- **REFACTOR-B DECLINED on inspection.** Verify-before-delete found `continuing_education_credits`
+  (935) is a genuine credit-value DEFINITION master ("credit hours, accrediting body, eligible
+  courses"), and `ceu_records` (936) is the per-learner earned ledger. They are a definition/instance
+  pair (`courses -> yields_credits_via -> 935 -> earned_in -> 936`), exactly like
+  certification_definitions/learner_certifications which the market audit said to KEEP. The market
+  subagent mis-flagged them as redundant without reading the descriptions. No delete performed; both
+  kept and classified (935=catalog, 936=operational_workflow) via the entity_type pass.
+- **Other B2 (REFACTOR-A, REFACTOR-C, and the remaining judgment calls) postponed** per the user.
+
+### Fixes applied (2026-06-02, executed + verified)
+
+1. **B13 entity_type — classified all 64 LMS masters** (35 operational_workflow / 9 operational_record
+   / 19 catalog / 1 junction). 0 remain unclassified. Loader:
+   `.tmp_deploy/lms_entity_type_2026_06_02.ts`.
+2. **B12 resolved as a consequence** — every operational_workflow master has lifecycle states; every
+   stateless master was classified config-shape (catalog/record/junction). No workflow master lacks
+   lifecycle. The prior b1b B12-LIFECYCLE item + B2-B12-CLASSIFICATION are closed.
+3. **DDO rollup regenerated** — `domain_data_objects` for domain 57 went 12 -> 77 rows (64 master +
+   7 embedded_master + 6 consumer), strongest-role-wins from the module junction; 1 stale necessity
+   patched (org_units -> optional). Loader: `.tmp_deploy/lms_ddo_rollup_2026_06_02.ts`.
+4. **H1 APQC tags — inserted 18 agent_curated `handoff_processes` rows** (record_status default 'new').
+   Cross-domain coverage 8 -> **26 of 31** (24 agent_curated + 2 discovery_override). The 5 remaining
+   are SKILLS-MGMT-feed handoffs (1287, 1307, 1315) + 249 + 1233, deferred to Discover Pass 3 (no
+   clean PCF match). Loader: `.tmp_deploy/lms_apqc_tags_2026_06_02.ts`.
+5. **Peer-owed B10b null module FKs reported** to [audits/_validate-cross-domain.md](../_validate-cross-domain.md)
+   (12 rows owed by HCM / GRC / SKILLS-MGMT; report-only, not LMS's fix).
+
+**Correction logged:** the prior `B1A-B7-USER-EDGES` finding was false (it queried data_object 41 =
+`variance_analyses`; `users` is 748). B7 passes (37 user-to-master edges). Item dropped.
+
+UI spot-check: https://tests.semantius.app/domain_map/data_objects ,
+https://tests.semantius.app/domain_map/handoff_processes ,
+https://tests.semantius.app/domain_map/domain_data_objects

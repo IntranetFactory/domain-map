@@ -517,3 +517,88 @@ None. Audit-only pass.
 
 None. CLI calls completed cleanly throughout.
 
+## 2026-06-02 — Audit
+
+### Summary
+
+Full Validate run (structural + market-shape + neighbor/pairwise reconciliation, no fresh market-surface subagent). Live PostgREST via `semantius` CLI. Scope SMP (id=85) across 4 full modules: SMP-DISCOVERY (30), SMP-RENEWAL-VENDOR (31), SMP-OPTIMIZATION (184), SMP-AUTOMATION (185). User directive: "fix all b1 then update state."
+
+- Footprint: 21 domain-owned masters across 4 modules; 7 capabilities; 9 solutions (6 primary); 2 regulations (GDPR conditional, SOC 2 recommended); 13 cross-domain handoffs (8 outbound + 5 inbound) now all APQC-tagged; 7 NEW intra-domain handoffs; 4 system skills with 88 skill_tools.
+- Domain Semantius score (strict): 85/86 = **98.8%**. Single external tool: `sign_document` (required on smp_renewal_vendor_agent, legitimate e-signature).
+- Applied all agent-solvable Bucket-1 work in one loader (8 fix categories). Held A4/M8 catalog copy for user review (Rule #20). Surfaced refreshed Bucket-2 list.
+
+### Bucket 1 — fixes applied
+
+Loader: [.tmp_deploy/fix_smp_bucket1_2026_06_02.ts](../../.tmp_deploy/fix_smp_bucket1_2026_06_02.ts)
+
+| Band | Finding | Fix | Verified |
+|---|---|---|---|
+| B13 | All 21 SMP masters `entity_type='unclassified'` (missed by every prior audit). | Classified all 21: 14 operational_workflow, 2 junction (63 seat_assignments, 984 app_owners), 2 catalog (986 catalog_listings, 997 automation_workflows), 2 computed (64 usage_metrics, 991 benchmarks), 1 operational_record (998 workflow_runs). | 0 unclassified remain |
+| B5 / Rule #11 | `smp_app_lifecycle_stages` (988) and `smp_workflow_runs` (998) were orphan `embedded_master` rows (kind=domain_owned, no canonical master anywhere). This is prior b2 item B2-R11; resolved via the recommended option (a). | Promoted both DMDO rows to `role=master`, `necessity=required` (988 in module 30, 998 in module 185). | each = single master |
+| M6 | Modules 184 (SMP-OPTIMIZATION) and 185 (SMP-AUTOMATION) realized zero capabilities; analytics/optimization/automation caps parked on SMP-DISCOVERY. Prior b2 item B2-M4. | Relinked SMP-USAGE-ANALYTICS (522) + SMP-LICENSE-OPT (523) → 184; SMP-APP-LIFECYCLE (524) → 185. Module 30 keeps DISCOVERY (520) + SHADOW-IT (521). | every module ≥1 cap |
+| B9b | Zero intra-domain handoffs on a 4-module domain despite ~9 cross-module master relationships. | Authored 7 intra-domain handoffs (`lifecycle_progression`, low): sanctioned→seat provisioning (30→184), catalog published→app requests (30→185), request fulfilled→seat (185→184), subscription cancelled→reclamation (31→184), recommendation generated→renewal engagement (184→31), app deprovisioned→seat reclaim (30→184), risk remediation→portfolio alert (31→30). | 7 present |
+| B7 / Rule #10 | 9 workflow masters with user actors lacked `users` edges. | Added 9 edges (748→985/986/987/989/990/993/994/996/997). | 9 present |
+| H1 | 4 of 13 cross-domain handoffs untagged with APQC. | Tagged 639/640/642 → PCF 273 (Manage IT user identity and authorization); 174 → PCF 317 (Manage corporate credit cards, matching sibling handoff 38). All `agent_curated`, `new`. | 4 present; 13/13 tagged |
+| prior b1a (event_category) | 5 SMP trigger_events carried `event_category=""` (prior audit caught 4; 624 was also empty). | 621/622/623=lifecycle, 624=signal, 625=threshold. | 0 empty remain |
+| prior b1a (Rule #18) | Vendor names in `domain_modules.description` (185) and `data_objects.description` (988, 998). | Rewrote all three vendor-neutral; kept TIME-taxonomy framing generic on 988. | confirmed clean |
+
+### Bucket 2 — surfaced for user (open)
+
+1. **A4/M8 catalog UX copy (Rule #20).** Domain SMP + all 4 modules have empty `catalog_tagline` / `catalog_description`. Buyer-voice drafts authored and surfaced in chat; Rule #20 requires user review before write. Drafts carried in state.yaml B2-CATALOG-COPY.
+2. **E1 persona regression (Plan 3).** Plan 3 (2026-06-02) deleted the `_core` roles layer; SMP's 3 prior personas (IT-SAAS-ADMIN, PROCUREMENT-SAAS-RENEWAL-OWNER, ITAM-SMP-ADMIN) were NOT re-homed to `domain_roles`. Live: zero `domain_roles`, zero `role_modules` for SMP modules, zero `process_id`-wired lifecycle gates. Multi-module domain → E1 fires. Needs persona + reach + RACI re-authoring under the new derived-bundle model.
+3. **M9 self-containment (module 31).** SMP-RENEWAL-VENDOR holds `saas_applications` (61) as `consumer + required` (sibling-module master) and `legal_contracts` (66) as `contributor + required` (CLM master). Both are hard cross-scope prerequisites. Convert to `embedded_master` or `necessity=optional`?
+4. **B4 pattern flag.** `smp_app_requests` (999) has a gated initial `submitted` state and two-stage (manager + IT) approval. Set `has_submit_lock=true`? (`has_single_approver` correctly false.)
+5. **B6b owner_side / verb-direction.** ~13 one_to_many/composition rows set `owner_side=target` with a parent-first verb (e.g. 61 integrates_with 985; 993 negotiated_under 994). Soft, never blocks; needs a review pass.
+6. **B8 cross-domain mirror relationships.** Outbound handoffs to S2P (payload 72) and ITSM (payload 47) have no mirror `data_object_relationships` rows.
+7. **Capability completeness.** SMP-AUTOMATION now realizes SMP-APP-LIFECYCLE (524). Is a distinct automation/self-service-provisioning capability warranted, or does APP-LIFECYCLE suffice?
+
+### Bucket 3 — research pending
+
+Carried from 2026-05-29 (single-vendor Core, deferred): `smp_data_residency_attestations`, `smp_subprocessor_disclosures`, `smp_user_app_exposures`. No fresh market-surface subagent run this round; a deeper Phase-0 semantic pass remains optional.
+
+### Neighbor / pairwise (report-only, owed by other domains)
+
+SMP's own side of all 13 cross-domain handoffs is module-attributed. Partner-side NULL module FKs (owed by those domains' audits): S2P (39/45 target, 42 source), FINOPS (641/643 target), EXPENSE (38 source), DISCOVERY (47 source), SPEND-MGMT (174 source), ITSM (642 target). TE 127 (`sso_login.unsanctioned_app`) data_object re-point blocked on DISCOVERY authoring `sso_logins`. SMP↔IGA new handoff candidates blocked on IGA validate.
+
+### Decisions
+
+- B2-R11 (988/998 orphans): resolved via option (a) promote to master, per user "fix all b1" + this run's Bucket-1 placement.
+- B2-M4 (cap realizations): resolved by relinking 522/523→184 and 524→185 (gives 185 a realized capability without inventing a new capability).
+- B13 entity_type borderline calls (998 operational_record vs operational_workflow; 997/986 catalog; 63/984 junction; 995 operational_workflow) applied as best-judgment; flagged for user override if any are wrong.
+
+### JWT errors
+
+None. CLI calls completed cleanly throughout.
+
+## 2026-06-02, Continuation — catalog copy + personas
+
+User directive: "continue" (proceed with the catalog copy + personas proposed at the close of the audit).
+
+Loader: [.tmp_deploy/smp_personas_and_catalog_2026_06_02.ts](../../.tmp_deploy/smp_personas_and_catalog_2026_06_02.ts)
+
+### A4 / M8 — catalog UX copy (RESOLVED)
+
+User approved the drafted buyer-voice copy. Written into the domain (85) and all 4 modules (30/31/184/185), guarded to only fill currently-empty fields (Rule #20 no-overwrite). 10 values written; verified A4 + M8 now pass (zero empty `catalog_tagline` / `catalog_description` on SMP or its modules).
+
+### B2-E1 — persona regression repaired (reach layer)
+
+Re-authored the 3 SMP personas that Plan 3 deleted, now under the `domain_roles` + `role_modules` model (bundle DERIVED from reach + entity-type tier policy; no permission list authored, per roles.md §4):
+
+| role_code | business_function | reach (module:level) |
+|---|---|---|
+| IT-SAAS-ADMIN (id 16) | IT Operations (27) | 30:primary, 184:primary, 185:primary, 31:secondary |
+| PROCUREMENT-SAAS-RENEWAL-OWNER (id 17) | Procurement (19) | 31:primary, 30:secondary, 184:secondary |
+| ITAM-SAAS-PORTFOLIO-MANAGER (id 18) | IT Asset Management (84) | 30:primary, 31:primary, 184:primary, 185:primary |
+
+3 `domain_roles` + 11 `role_modules` inserted (`record_status='new'`). E1 (≥1 persona on a multi-module domain), E2 (2-module floor: 4/3/4), and E3 (`interaction_level` set on every row) now pass. The third persona was renamed from the prior `ITAM-SMP-ADMIN` to `ITAM-SAAS-PORTFOLIO-MANAGER` to drop the domain-prefix anti-pattern (roles.md §9).
+
+**Decisions made here:**
+- Prior B2-E3 (procurement reach into SMP-AUTOMATION, module 185): resolved as "out of scope". PROCUREMENT-SAAS-RENEWAL-OWNER does not reach 185; self-service automation is an IT-ops/ITAM concern.
+- ITAM-SAAS-PORTFOLIO-MANAGER is the SMP owner-function persona (C1 owner = IT Asset Management), spanning all 4 modules as the cross-module portfolio owner.
+
+**Not done (deliberate):** `process_raci` + `data_object_lifecycle_states.process_id` wiring (E4/E6 responsibility overlay). The derived bundle is functional from reach + tier alone; RACI adds the responsibility/accountability layer and needs a process-to-gate mapping. Tracked as B2-E4-RACI.
+
+### JWT errors
+
+None. CLI calls completed cleanly throughout.
+

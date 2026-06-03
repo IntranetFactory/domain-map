@@ -1,96 +1,89 @@
 schema_version: 2
 domain: SPEND-MGMT
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-05-31"
+next_action_by: agent
+last_audit: "2026-06-02"
 
 b1a:
-  - id: B1A-S2-EVENT-CATEGORY
-    summary: PATCH 6 trigger_events to set event_category enum (Rule #13 vocabulary)
+  - id: B1A-SYSTEM-SKILLS
+    summary: "Author 3 per-module system skills (Rule #17 F2/F3); migrate the 8 skill_tools off legacy domain skill 107 and DELETE it (F1)."
     finding: >-
-      Six trigger_events on SPEND-MGMT masters (577 card_authorization.declined,
-      578 card_authorization.high_value, 579 vendor_payment_authorization.approved,
-      580 vendor_payment_authorization.rejected, 581 spend_policy.updated,
-      582 corporate_card_account.balance_threshold) carried empty event_category at
-      load time, violating Rule #13. Resolved 2026-05-31 via the technical-fix
-      continuation loader. State confirmed correct on 2026-05-31 re-audit, kept here
-      only for traceability across passes. NO REMAINING WORK; close-out marker.
-    action: closed (no action)
-    extra_status: resolved_pending_close
+      Modularization landed 2026-06-02: SPEND-MGMT now has 3 full modules
+      (SPEND-MGMT-CARDS 303, SPEND-MGMT-BILL-PAY 304, SPEND-MGMT-POLICY-APPROVAL
+      305). Zero skill_type='system' skills carry domain_module_id (F2 hard fail).
+      Legacy domain-level skill 107 'spend-mgmt-system' (domain_id=133,
+      domain_module_id=null) still holds 8 skill_tools rows pointing at the right
+      master ids: query_corporate_card_accounts -> 744, query_card_authorizations
+      -> 745 (both now in module 303); query_vendor_payment_authorizations -> 746
+      (now in module 304); query_spend_requests -> 240, query_spend_policies -> 747
+      (both now in module 305); plus query_corporate_cards -> 212 (EXPENSE),
+      query_card_transactions -> 213 (EXPENSE), and a send_email side_effect.
+      Rule #17 requires exactly one system skill per full module; F1 requires the
+      legacy domain-level skill to be retired once any module-level skill exists.
+    action: >-
+      Author 3 module-level system skills (one per full module), redistribute the
+      8 existing skill_tools to the correct per-module skill by realizing module
+      (744/745 -> 303 skill, 746 -> 304 skill, 240/747 -> 305 skill; the 2 EXPENSE
+      tools + send_email attach to the module whose workflow consumes them), then
+      DELETE skill 107.
+    affected_modules: [303, 304, 305]
+    extra_legacy_skill_id: 107
+    extra_existing_skill_tool_count: 8
 
-b1b:
-  - id: B1B-S1-MODULES
-    summary: >-
-      M1 hard fail. Author 4 full domain_modules rows (SPEND-CARDS,
-      SPEND-REIMBURSEMENT, SPEND-BILL-PAY, SPEND-POLICY-AND-APPROVAL) plus 1 starter
-      (SMB-SPEND-STARTER) + 5 master DMDOs + 4 cross-module contributor/consumer DMDOs
-      + 1 starter shell. Per Rule #14 a domain with 11 capabilities needs >=2 full
-      modules; current count is 0.
+  - id: B1A-CATALOG-UX
+    summary: "Backfill catalog_tagline + catalog_description on the 3 new modules (M8) and on domain 133 (A4 / Rule #20)."
     finding: >-
-      SPEND-MGMT (id 133) has 11 capabilities (SPEND-CARD-ISSUANCE,
-      SPEND-CARD-AUTH, SPEND-REIMBURSEMENT, SPEND-BILL-PAY, SPEND-PRE-APPROVAL,
-      SPEND-FX-TREASURY, SPEND-ANALYTICS, CORP-CARD, EXPENSE-CAPTURE,
-      EXPENSE-POLICY, APPROVAL-WORKFLOW) and 0 domain_modules rows. Five masters
-      (spend_requests 240, corporate_card_accounts 744, card_authorizations 745,
-      vendor_payment_authorizations 746, spend_policies 747) exist in
-      domain_data_objects but have no realizing module. Proposed module set carried
-      from 2026-05-30 audit: SPEND-CARDS (masters 744, 745), SPEND-REIMBURSEMENT
-      (consumer on EXPENSE masters; scope gated on B2-S1), SPEND-BILL-PAY (master
-      746), SPEND-POLICY-AND-APPROVAL (masters 240, 747), SMB-SPEND-STARTER
-      (embedded_master on 744, 745, 240, 747, 746; consumer on users).
-    blocked_by:
-      - {type: user_decision, ref: B2-S1, reason: SPEND-REIMBURSEMENT vs EXPENSE boundary decision determines module count}
-    action: Phase A loader after B2-S1 resolution. Use .tmp_deploy/ scratch.
-    affected_modules: []
+      All 3 new modules (303 SPEND-MGMT-CARDS, 304 SPEND-MGMT-BILL-PAY, 305
+      SPEND-MGMT-POLICY-APPROVAL) carry empty catalog_tagline and
+      catalog_description; domain 133 also still carries both fields empty (the
+      pre-existing A4 fail). Per Rule #20 these are buyer-voice fields (workflow +
+      value, not analyst voice) and the first non-empty value cannot be
+      overwritten without explicit per-row user approval, so the agent drafts and
+      surfaces, the user approves the exact wording, then the agent PATCHes.
+    action: >-
+      Agent drafts buyer-voice tagline + 1-3 paragraph description for each of the
+      3 modules and for domain 133, surfaces the drafts, user approves wording,
+      agent PATCHes.
+    affected_modules: [303, 304, 305]
+
+  - id: B1A-LIFECYCLE-STATES
+    summary: "Load lifecycle states on the 4 workflow-bearing masters with domain_module_id pointing at the realizing module."
+    finding: >-
+      Zero data_object_lifecycle_states rows on any SPEND-MGMT master. Per Rule
+      #12 every master + required object needs lifecycle states unless config-shape.
+      Four are workflow-bearing: spend_requests (240, module 305) draft ->
+      submitted -> approved/rejected -> spent/cancelled; corporate_card_accounts
+      (744, module 303) application -> active -> frozen/closed; card_authorizations
+      (745, module 303) requested -> approved/declined -> posted ->
+      reconciled/disputed; vendor_payment_authorizations (746, module 304)
+      requested -> approved/rejected -> released/held. spend_policies (747, module
+      305) is plausibly config-shape, gated on B2-S2. Modules now exist so
+      data_object_lifecycle_states.domain_module_id can be set.
+    action: >-
+      Lifecycle-states loader: author each state machine, set requires_permission
+      on gate states, set permission_verb_override for non-obvious verbs, set
+      domain_module_id per realizing module (744/745 -> 303, 746 -> 304, 240 -> 305).
+      spend_policies (747) gated on B2-S2.
     affected_masters:
-      - {data_object_id: 240, name: spend_requests, target_module_id: null, workflow: SPEND-POLICY-AND-APPROVAL}
-      - {data_object_id: 744, name: corporate_card_accounts, target_module_id: null, workflow: SPEND-CARDS}
-      - {data_object_id: 745, name: card_authorizations, target_module_id: null, workflow: SPEND-CARDS}
-      - {data_object_id: 746, name: vendor_payment_authorizations, target_module_id: null, workflow: SPEND-BILL-PAY}
-      - {data_object_id: 747, name: spend_policies, target_module_id: null, workflow: SPEND-POLICY-AND-APPROVAL}
-    extra_proposed_modules:
-      - SPEND-CARDS
-      - SPEND-REIMBURSEMENT
-      - SPEND-BILL-PAY
-      - SPEND-POLICY-AND-APPROVAL
-      - SMB-SPEND-STARTER
-
-  - id: B1B-S3-LIFECYCLE
-    summary: Load lifecycle states on 4 workflow-bearing masters with domain_module_id pointing at realizing module
-    finding: >-
-      Zero data_object_lifecycle_states rows on any of the 5 SPEND-MGMT masters.
-      Per Rule #12 every master + required object needs lifecycle states unless
-      config-shape. Four workflow-bearing: spend_requests (240) draft -> submitted
-      -> approved/rejected -> spent/cancelled; corporate_card_accounts (744)
-      application -> active -> frozen/closed; card_authorizations (745) requested
-      -> approved/declined -> posted -> reconciled/disputed;
-      vendor_payment_authorizations (746) requested -> approved/rejected ->
-      released/held. spend_policies (747) is plausibly config-shape, gated on B2-S2.
+      - {data_object_id: 240, name: spend_requests, target_module_id: 305, workflow: "draft->submitted->approved/rejected->spent/cancelled"}
+      - {data_object_id: 744, name: corporate_card_accounts, target_module_id: 303, workflow: "application->active->frozen/closed"}
+      - {data_object_id: 745, name: card_authorizations, target_module_id: 303, workflow: "requested->approved/declined->posted->reconciled/disputed"}
+      - {data_object_id: 746, name: vendor_payment_authorizations, target_module_id: 304, workflow: "requested->approved/rejected->released/held"}
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1-MODULES, reason: data_object_lifecycle_states.domain_module_id must reference a realizing module}
-      - {type: user_decision, ref: B2-S2, reason: whether spend_policies needs lifecycle states or qualifies for config-shape exemption}
-    action: Lifecycle-states loader after B1B-S1-MODULES lands. Author state machine per master, set requires_permission on gate states, set permission_verb_override for non-obvious verbs, set domain_module_id per realizing module.
-    affected_masters:
-      - {data_object_id: 240, name: spend_requests, target_module_id: null, workflow: draft->submitted->approved/rejected->spent/cancelled}
-      - {data_object_id: 744, name: corporate_card_accounts, target_module_id: null, workflow: application->active->frozen/closed}
-      - {data_object_id: 745, name: card_authorizations, target_module_id: null, workflow: requested->approved/declined->posted->reconciled/disputed}
-      - {data_object_id: 746, name: vendor_payment_authorizations, target_module_id: null, workflow: requested->approved/rejected->released/held}
+      - {type: user_decision, ref: B2-S2, reason: "whether spend_policies (747) needs lifecycle states or qualifies for config-shape exemption"}
 
-  - id: B1B-S4-OUTBOUND-SOURCE-FK
-    summary: PATCH source_domain_module_id on 14 outbound handoffs cascading from M1
+  - id: B1A-OUTBOUND-SOURCE-FK
+    summary: "PATCH source_domain_module_id on 14 outbound handoffs now that the realizing modules exist."
     finding: >-
-      14 outbound cross-domain handoffs (165 -> EXPENSE card_transaction.posted,
-      166 -> ERP-FIN card_transaction.posted, 167 -> ERP-FIN bill_payment.completed,
-      168 -> AP-AUTO supplier_invoice.received, 169 -> ERP-FIN spend_request.approved,
-      172 -> EPM spend_commitment.created, 173 -> FINOPS card_transaction.posted,
-      174 -> SMP card_transaction.posted, 556 -> AP-AUTO
-      vendor_payment_authorization.approved, 557 -> ERP-FIN
-      card_authorization.high_value, 558 -> AUDIT card_authorization.high_value,
-      559 -> EXPENSE spend_policy.updated, 560 -> S2P spend_policy.updated,
-      600 -> EXPENSE card_authorization.declined) all carry NULL source_domain_module_id.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1-MODULES, reason: target module ids do not yet exist}
-    action: PATCH each row's source_domain_module_id per master->module mapping from B1B-S1-MODULES. 165/166/173/174/558/557/600 -> SPEND-CARDS module id; 167/168/556 -> SPEND-BILL-PAY module id; 169/172/559/560 -> SPEND-POLICY-AND-APPROVAL module id.
+      14 outbound cross-domain handoffs carry NULL source_domain_module_id. With
+      the 3 modules now live, each maps to a realizing module:
+      card/auth-payload handoffs -> 303 (SPEND-MGMT-CARDS); vendor-payment /
+      invoice / payment-run handoffs -> 304 (SPEND-MGMT-BILL-PAY); spend-request /
+      spend-policy handoffs -> 305 (SPEND-MGMT-POLICY-APPROVAL).
+    action: >-
+      PATCH each row's source_domain_module_id:
+      165/166/173/174/557/558/600 -> 303; 167/168/556 -> 304;
+      169/172/559/560 -> 305.
     affected_handoffs:
       - {handoff_id: 165, direction: outbound, source_domain: SPEND-MGMT, target_domain: EXPENSE, trigger_event: card_transaction.posted, payload: card_transactions, null_field: source_domain_module_id}
       - {handoff_id: 166, direction: outbound, source_domain: SPEND-MGMT, target_domain: ERP-FIN, trigger_event: card_transaction.posted, payload: card_transactions, null_field: source_domain_module_id}
@@ -107,18 +100,15 @@ b1b:
       - {handoff_id: 560, direction: outbound, source_domain: SPEND-MGMT, target_domain: S2P, trigger_event: spend_policy.updated, payload: spend_policies, null_field: source_domain_module_id}
       - {handoff_id: 600, direction: outbound, source_domain: SPEND-MGMT, target_domain: EXPENSE, trigger_event: card_authorization.declined, payload: card_authorizations, null_field: source_domain_module_id}
 
-  - id: B1B-S5-INBOUND-TARGET-FK
-    summary: PATCH target_domain_module_id on 5 inbound handoffs cascading from M1
+  - id: B1A-INBOUND-TARGET-FK
+    summary: "PATCH target_domain_module_id on 5 inbound handoffs now that the realizing modules exist."
     finding: >-
-      Five inbound cross-domain handoffs (170 S2P vendor.added -> suppliers,
-      171 EXPENSE expense_policy.updated -> expense_policies, 552 EXPENSE
-      expense_line.policy_violation -> expense_lines, 555 EXPENSE
-      travel_booking.out_of_policy -> travel_bookings, 598 AP-AUTO
-      invoice_match.three_way_passed -> invoice_matches) all carry NULL
-      target_domain_module_id.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1-MODULES, reason: target module ids do not yet exist}
-    action: "PATCH each row post-B1B-S1: 170 / 171 / 552 / 555 -> SPEND-POLICY-AND-APPROVAL module id (policy and policy-violation feeds into the policy module); 598 -> SPEND-BILL-PAY module id (three-way match passing releases the payment authorization)."
+      Five inbound cross-domain handoffs carry NULL target_domain_module_id. With
+      the modules live: supplier-onboard and policy / policy-violation feeds land
+      on 305 (SPEND-MGMT-POLICY-APPROVAL); three-way-match-passed releases the
+      vendor payment authorization on 304 (SPEND-MGMT-BILL-PAY).
+    action: >-
+      PATCH: 170 / 171 / 552 / 555 -> 305; 598 -> 304.
     affected_handoffs:
       - {handoff_id: 170, direction: inbound, source_domain: S2P, target_domain: SPEND-MGMT, trigger_event: vendor.added, payload: suppliers, null_field: target_domain_module_id}
       - {handoff_id: 171, direction: inbound, source_domain: EXPENSE, target_domain: SPEND-MGMT, trigger_event: expense_policy.updated, payload: expense_policies, null_field: target_domain_module_id}
@@ -126,363 +116,224 @@ b1b:
       - {handoff_id: 555, direction: inbound, source_domain: EXPENSE, target_domain: SPEND-MGMT, trigger_event: travel_booking.out_of_policy, payload: travel_bookings, null_field: target_domain_module_id}
       - {handoff_id: 598, direction: inbound, source_domain: AP-AUTO, target_domain: SPEND-MGMT, trigger_event: invoice_match.three_way_passed, payload: invoice_matches, null_field: target_domain_module_id}
 
-  - id: B1B-S8-SYSTEM-SKILLS
-    summary: Author 5 module-level system skills + tools + skill_tools and retire legacy skill 107
+b1b:
+  - id: B1B-APQC-MISSING
+    summary: "Author/REPLACE APQC handoff_processes tags on the currently untagged cross-domain handoffs."
     finding: >-
-      Zero skill_type='system' skills with domain_module_id set (F2 hard fail).
-      Legacy domain-level skill 107 spend-mgmt-system (domain_id=133,
-      domain_module_id=null) carries 8 skill_tools rows already pointing at the
-      right master ids (query_corporate_card_accounts -> 744,
-      query_card_authorizations -> 745, query_vendor_payment_authorizations -> 746,
-      query_spend_policies -> 747, query_spend_requests -> 240,
-      query_corporate_cards -> 212 EXPENSE, query_card_transactions -> 213 EXPENSE,
-      send_email side_effect). Plan post-B1B-S1: author 5 module-level system
-      skills (one per full module + one for the starter SMB-SPEND-STARTER),
-      redistribute the 8 existing skill_tools to the right per-module skills,
-      DELETE skill 107 to satisfy F1.
+      Coverage still below the H1 floor. Untagged outbound/inbound handoffs need
+      agent_curated PCF tags; handoff 170 carries a wrong-PCF discovery_substring
+      row (process 1010 'Manage recruitment vendors', semantically wrong for S2P
+      supplier onboarding) needing REPLACE. The prior technical pass found every
+      cited external_id resolves to a process whose name disagrees with the audit
+      prose, so PCF selection needs user confirmation per row before insert.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1-MODULES, reason: skills.domain_module_id must reference a module that exists}
-    action: Phase S loader after B1B-S1-MODULES. Naming per loader idiom (e.g. spend_cards_agent, spend_bill_pay_agent, spend_policy_approval_agent, spend_reimbursement_agent if module survives B2-S1, smb_spend_starter_agent). Migrate the 8 existing skill_tools, then DELETE skill 107.
-    extra_legacy_skill_id: 107
-    extra_existing_skill_tool_count: 8
-
-  - id: B1B-S9-APQC-VERIFY
-    summary: Surface 2 weak agent_curated PCF picks for user review (handoffs 558, 560)
-    finding: >-
-      Six handoff_processes agent_curated rows were loaded on 2026-05-31 (handoffs
-      168 -> Process accounts payable AP id 315 L3, 172 -> Operationalize and
-      implement plans to achieve budget id 1323 L4, 173 -> Monitor and analyze IT
-      financial performance id 1132 L4, 558 -> Audit invoices and key data in AP
-      system id 1433 L4, 560 -> Develop procurement plan id 793 L4, 598 -> Process
-      accounts payable AP id 315 L3). Spot-verified labels against live processes
-      table. Concerns: handoff 558 (card_authorization.high_value -> AUDIT) maps
-      to an L4 row about AP invoice audit semantics; a Manage Internal Controls L3
-      parent would likely cluster better. Handoff 560 (spend_policy.updated ->
-      S2P) maps to Develop procurement plan L4; an Establish Policies L3 parent
-      may be a more natural home. Other 4 picks look correct.
-    blocked_by:
-      - {type: user_decision, ref: B2-S7, reason: PCF re-classification is editorial taxonomy judgment}
-    action: User reviews handoffs 558 and 560 PCF picks; PATCH process_id where indicated.
-    affected_handoffs:
-      - {handoff_id: 558, direction: outbound, source_domain: SPEND-MGMT, target_domain: AUDIT, trigger_event: card_authorization.high_value, payload: card_authorizations, null_field: process_id_quality}
-      - {handoff_id: 560, direction: outbound, source_domain: SPEND-MGMT, target_domain: S2P, trigger_event: spend_policy.updated, payload: spend_policies, null_field: process_id_quality}
-
-  - id: B1B-S10-WRONG-PCF-170
-    summary: Replace wrong-PCF discovery_substring row on handoff 170 with correct agent_curated tag
-    finding: >-
-      Handoff 170 (S2P vendor.added -> SPEND-MGMT suppliers) carries a single
-      handoff_processes row (proposal_source=discovery_substring, record_status=new)
-      pointing at PCF id 1010 Manage recruitment vendors. The substring matcher
-      matched on 'vendor' but the semantics are wrong: vendor.added here is S2P
-      supplier onboarding, not recruitment vendor management. Recruitment vendor
-      mgmt belongs in HR / Talent Acquisition.
-    blocked_by:
-      - {type: user_decision, ref: B2-S8, reason: choice of correct PCF (Process accounts payable parent vs Manage Suppliers parent vs other) is taxonomy judgment}
-    action: DELETE row (handoff_id=170, process_id=1010); INSERT replacement agent_curated row with process_id user-confirmed (candidate id 315 Process accounts payable L3 or another Manage Suppliers parent if framework carries one).
-    affected_handoffs:
-      - {handoff_id: 170, direction: inbound, source_domain: S2P, target_domain: SPEND-MGMT, trigger_event: vendor.added, payload: suppliers, null_field: wrong_pcf}
-
-  - id: B1B-S11-CATALOG-UX
-    summary: Backfill domains.catalog_tagline and domains.catalog_description on SPEND-MGMT per Rule #20
-    finding: >-
-      Both fields are empty strings on domain 133. Rule #20 requires the
-      buyer-voice tagline (one sentence) and the buyer-voice catalog_description
-      (1-3 paragraphs). Voice is buyer-shaped (workflow + value), NOT analyst voice.
-      Marketing may want to fine-tune; first non-empty value cannot be overwritten
-      without explicit per-row user approval.
-    blocked_by:
-      - {type: user_decision, ref: B2-S9, reason: "Rule #20 requires user to approve exact wording before write"}
-    action: Agent drafts both fields, surfaces drafts to user, user approves exact wording, agent PATCHes.
-
-  - id: B1B-H1-APQC-MISSING
-    summary: Author 10 new agent_curated handoff_processes rows on currently untagged cross-domain handoffs
-    finding: >-
-      10 cross-domain handoffs are not yet tagged with any PCF row. Per H1 volume
-      target (0.5N to 0.8N for N=19 means 10 to 15 agent_curated tags), current
-      coverage 7/19 = 37% sits below the 53% floor. Untagged: 165 (SPEND-MGMT ->
-      EXPENSE card_transaction.posted), 166 (-> ERP-FIN card_transaction.posted),
-      167 (-> ERP-FIN bill_payment.completed), 169 (-> ERP-FIN
-      spend_request.approved), 171 (EXPENSE -> SPEND-MGMT expense_policy.updated),
-      552 (EXPENSE -> SPEND-MGMT expense_line.policy_violation), 555 (EXPENSE ->
-      SPEND-MGMT travel_booking.out_of_policy), 556 (-> AP-AUTO
-      vendor_payment_authorization.approved), 557 (-> ERP-FIN
-      card_authorization.high_value), 559 (-> EXPENSE spend_policy.updated), 600
-      (-> EXPENSE card_authorization.declined). That is 11 untagged. (Handoff 170
-      is also untagged-by-correct-row but covered by B1B-S10 as a REPLACE.)
-    blocked_by:
-      - {type: user_decision, ref: B2-S10, reason: per-handoff PCF selection requires user review of candidate parents before insert}
-    action: Per-handoff PCF lookup via /processes?process_name=ilike.*term*&source_framework=eq.apqc_pcf_cross_industry, draft candidate rows, surface to user, INSERT on per-row approval with proposal_source=agent_curated and record_status=new.
-    affected_handoffs:
-      - {handoff_id: 165, direction: outbound, source_domain: SPEND-MGMT, target_domain: EXPENSE, trigger_event: card_transaction.posted, payload: card_transactions, null_field: missing_pcf_tag}
-      - {handoff_id: 166, direction: outbound, source_domain: SPEND-MGMT, target_domain: ERP-FIN, trigger_event: card_transaction.posted, payload: card_transactions, null_field: missing_pcf_tag}
-      - {handoff_id: 167, direction: outbound, source_domain: SPEND-MGMT, target_domain: ERP-FIN, trigger_event: bill_payment.completed, payload: payment_runs, null_field: missing_pcf_tag}
-      - {handoff_id: 169, direction: outbound, source_domain: SPEND-MGMT, target_domain: ERP-FIN, trigger_event: spend_request.approved, payload: spend_requests, null_field: missing_pcf_tag}
-      - {handoff_id: 171, direction: inbound, source_domain: EXPENSE, target_domain: SPEND-MGMT, trigger_event: expense_policy.updated, payload: expense_policies, null_field: missing_pcf_tag}
-      - {handoff_id: 552, direction: inbound, source_domain: EXPENSE, target_domain: SPEND-MGMT, trigger_event: expense_line.policy_violation, payload: expense_lines, null_field: missing_pcf_tag}
-      - {handoff_id: 555, direction: inbound, source_domain: EXPENSE, target_domain: SPEND-MGMT, trigger_event: travel_booking.out_of_policy, payload: travel_bookings, null_field: missing_pcf_tag}
-      - {handoff_id: 556, direction: outbound, source_domain: SPEND-MGMT, target_domain: AP-AUTO, trigger_event: vendor_payment_authorization.approved, payload: vendor_payment_authorizations, null_field: missing_pcf_tag}
-      - {handoff_id: 557, direction: outbound, source_domain: SPEND-MGMT, target_domain: ERP-FIN, trigger_event: card_authorization.high_value, payload: card_authorizations, null_field: missing_pcf_tag}
-      - {handoff_id: 559, direction: outbound, source_domain: SPEND-MGMT, target_domain: EXPENSE, trigger_event: spend_policy.updated, payload: spend_policies, null_field: missing_pcf_tag}
-      - {handoff_id: 600, direction: outbound, source_domain: SPEND-MGMT, target_domain: EXPENSE, trigger_event: card_authorization.declined, payload: card_authorizations, null_field: missing_pcf_tag}
+      - {type: user_decision, ref: B2-APQC, reason: "per-handoff PCF selection requires user review of candidate parents before insert"}
+    action: >-
+      Per-handoff PCF lookup via
+      /processes?process_name=ilike.*term*&source_framework=eq.apqc_pcf_cross_industry;
+      draft candidate rows; surface to user; INSERT agent_curated on per-row
+      approval; DELETE+INSERT the wrong row on handoff 170.
 
 b2:
   - id: B2-S1
-    summary: SPEND-REIMBURSEMENT vs EXPENSE scope boundary
+    summary: "SPEND-REIMBURSEMENT vs EXPENSE scope boundary (does SPEND-MGMT own a distinct reimbursement module?)."
     question: >-
-      The proposed SPEND-REIMBURSEMENT module in B1B-S1 covers out-of-pocket
-      reimbursement, which is exactly EXPENSE's flagship surface. Either (a)
-      SPEND-MGMT does not own a reimbursement module and the SPEND-REIMBURSEMENT
-      capability (315) is realized by EXPENSE, or (b) SPEND-MGMT owns a thin
-      reimbursement workflow distinct from EXPENSE's (e.g. corporate-card
-      cardholder reimbursement of personal-charge spillover), or (c) the
-      SPEND-MGMT domain row's description is wrong and SPEND-MGMT absorbs EXPENSE
-      entirely (Brex / Ramp / Airbase / BILL bundle both).
+      The reimbursement capability (SPEND-REIMBURSEMENT 315) and EXPENSE-CAPTURE
+      (72) are currently co-located in SPEND-MGMT-POLICY-APPROVAL (305) as
+      master-less links backed by EXPENSE masters, deliberately avoiding a
+      separate master-less module. Should SPEND-MGMT instead own a distinct
+      reimbursement module, leave it folded into 305, or have EXPENSE realize
+      these capabilities entirely?
     options:
-      - "(a) drop SPEND-REIMBURSEMENT module from the split; EXPENSE realizes the reimbursement capability"
-      - "(b) keep a thin SPEND-MGMT-owned reimbursement module distinct from EXPENSE (user specifies scope)"
-      - "(c) merge EXPENSE into SPEND-MGMT entirely (large refactor)"
+      - "(a) leave folded in SPEND-MGMT-POLICY-APPROVAL (current state); EXPENSE remains the master"
+      - "(b) carve a thin SPEND-MGMT-owned reimbursement module distinct from EXPENSE (user specifies scope and any new master)"
+      - "(c) drop the links from SPEND-MGMT; EXPENSE realizes the reimbursement + capture capabilities"
     why: >-
-      Architectural / market-definition question. The flagship vendors (Brex /
-      Ramp / BILL Spend & Expense / Pleo / Mesh / Airwallex) bundle expense
-      management, but the catalog deliberately separates EXPENSE from SPEND-MGMT.
-      Decision shifts the module count in B1B-S1.
+      Architectural / market-definition question. Modularization chose (a) as the
+      reuse-only default; (b) and (c) require either a new master or a capability
+      re-link the user must authorize.
 
   - id: B2-S2
-    summary: spend_policies (747) lifecycle exemption per Rule #12
+    summary: "spend_policies (747) lifecycle exemption per Rule #12."
     question: >-
-      spend_policies plausibly fits the config-shape exemption (policies are
-      versioned config, not a workflow record). The other 4 masters
-      (spend_requests, corporate_card_accounts, card_authorizations,
-      vendor_payment_authorizations) are workflow-bearing. Per Rule #15 the
-      agent cannot auto-populate data_objects.notes to record the exemption.
+      spend_policies plausibly fits the config-shape exemption (versioned config,
+      not a workflow record). The other 4 masters are workflow-bearing. Per Rule
+      #15 the agent cannot auto-populate data_objects.notes to record the
+      exemption.
     options:
       - "(a) Confirm config-shape; record exemption in audit; do NOT populate data_objects.notes"
-      - "(b) Treat as workflow-bearing (draft -> active -> superseded -> retired); load lifecycle states alongside other 4 masters"
-    why: Editorial decision on policy lifecycle plus the Rule #15 question of how to record the exemption.
+      - "(b) Treat as workflow-bearing (draft -> active -> superseded -> retired); load lifecycle states alongside the other 4 masters"
+    why: "Editorial decision on policy lifecycle plus the Rule #15 question of how to record the exemption. Gates B1A-LIFECYCLE-STATES for 747."
 
   - id: B2-S3
-    summary: B4 pattern-flag positive re-evaluation on 5 SPEND-MGMT masters
+    summary: "B4 pattern-flag positive re-evaluation on 5 SPEND-MGMT masters."
     question: >-
-      All 5 masters carry default pattern flags. Re-evaluation candidates:
+      All 5 masters carry default pattern flags. Candidates:
       (a) card_authorizations.has_personal_content likely true (cardholder name,
       merchant location, IP/device); (b) spend_requests.has_submit_lock likely
-      true (no edit after submit until reject/return); (c)
-      vendor_payment_authorizations.has_submit_lock likely true (queued for run
-      after approve); (d) corporate_card_accounts.has_personal_content possibly
-      true (PII, possibly personal SSN for primary card); (e)
-      vendor_payment_authorizations.has_single_approver may be true for
+      true; (c) vendor_payment_authorizations.has_submit_lock likely true;
+      (d) corporate_card_accounts.has_personal_content possibly true;
+      (e) vendor_payment_authorizations.has_single_approver may be true for
       sub-threshold authorizations.
     options:
       - "Per-flag yes/no on the 5 candidate flips"
-    why: Pattern flags are workflow-shape judgments the user owns.
+    why: "Pattern flags are workflow-shape judgments the user owns."
 
   - id: B2-S4
-    summary: PCI-DSS / AML-KYC / SOX regulation rows missing
+    summary: "PCI-DSS / AML-KYC / SOX regulation rows missing."
     question: >-
       SPEND-MGMT touches cardholder data (PAN, expiry, CVV at issuance) and
-      merchant data at authorization. PCI-DSS applies. AML/KYC applies on the
-      card-program side. SOX applies for segregation of duties on payment
-      authorization. Catalog has 0 domain_regulations rows for SPEND-MGMT.
+      merchant data at authorization. PCI-DSS, AML/KYC, and SOX apply. Catalog has
+      0 domain_regulations rows for SPEND-MGMT.
     options:
-      - "(a) Load 3 domain_regulations rows (PCI-DSS, AML/KYC, SOX) on SPEND-MGMT"
+      - "(a) Load 3 domain_regulations rows (PCI-DSS, AML/KYC, SOX) on SPEND-MGMT (or per realizing module 303)"
       - "(b) Anchor on CORP-CARD-PROGRAM candidate domain if promoted"
-      - "(c) Defer until B1B-S1 lands and assign to the realizing module(s)"
-    why: Compliance scoping decision; depends on whether CORP-CARD-PROGRAM gets promoted (Bucket 3 dependency).
+      - "(c) Defer"
+    why: "Compliance scoping decision; depends on whether CORP-CARD-PROGRAM gets promoted (Bucket 3 dependency)."
 
   - id: B2-S5
-    summary: Missing intra-domain data_object_relationships among 5 SPEND-MGMT masters
+    summary: "Missing intra-domain data_object_relationships among the 5 SPEND-MGMT masters."
     question: >-
       Per the workflow model: spend_requests -> vendor_payment_authorizations
-      (approved request generates a payment authorization); card_authorizations
-      -> corporate_card_accounts (every auth belongs to an account); spend_requests
-      -> spend_policies (request is evaluated against policy at submission).
-      Catalog has 0 intra-domain relationships among the 5 masters.
+      (approved request generates a payment authorization); card_authorizations ->
+      corporate_card_accounts (every auth belongs to an account); spend_requests
+      -> spend_policies (request evaluated against policy). Catalog has 0
+      intra-domain relationships among the 5 masters.
     options:
-      - "(a) Author 3-5 intra-domain relationships with proposed verbs (generates_payment_for, belongs_to_account, evaluated_against) alongside B1B-S1"
-      - "(b) Defer to separate authoring pass"
-    why: Relationships are obvious but verbs and relationship_kind (reference vs parent) are workflow-shape calls.
+      - "(a) Author 3-5 intra-domain relationships with proposed verbs (generates_payment_for, belongs_to_account, evaluated_against)"
+      - "(b) Defer to a separate authoring pass"
+    why: "Relationships are obvious but verbs and relationship_kind (reference vs parent) are workflow-shape calls. (Relationship authoring is out of the modularization pass scope.)"
 
   - id: B2-S6
-    summary: vendor_payment_authorizations vs AP-AUTO payment-run authorization overlap
+    summary: "vendor_payment_authorizations vs AP-AUTO payment-run authorization overlap."
     question: >-
       AP-AUTO's payment_runs (205) has its own approval step. SPEND-MGMT's
-      vendor_payment_authorizations (746) is per-vendor pre-authorization
-      flowing into AP-AUTO via handoff 556. Are these one workflow split across
-      two domains, or two distinct approval gates? Brex/Ramp/Airwallex unify
-      them; SAP Concur/Workday split them.
+      vendor_payment_authorizations (746) is per-vendor pre-authorization flowing
+      into AP-AUTO. payment_runs is now a contributor on SPEND-MGMT-BILL-PAY (304).
+      Is this one workflow split across two domains, or two distinct approval gates?
     options:
-      - "(a) Unified flow: treat payment_runs as consumer in SPEND-BILL-PAY downstream of vendor_payment_authorizations"
-      - "(b) Split flow: vendor_payment_authorizations is SPEND-MGMT-side approval; AP-AUTO has its own payment_runs approval separately"
-    why: Architectural decision; depends on whether catalog models the unified flow or the split flow.
+      - "(a) Unified flow: payment_runs as downstream consumer/contributor of vendor_payment_authorizations in SPEND-MGMT-BILL-PAY (current shape)"
+      - "(b) Split flow: vendor_payment_authorizations is SPEND-MGMT-side approval; AP-AUTO owns its payment_runs approval separately"
+    why: "Architectural decision; the current contributor placement assumes the unified read."
 
-  - id: B2-S7
-    summary: Re-classify PCF picks on handoffs 558 and 560
+  - id: B2-APQC
+    summary: "Approve per-handoff PCF candidates for the untagged cross-domain handoffs (incl. wrong-PCF handoff 170)."
     question: >-
-      The 6 agent_curated APQC tags loaded 2026-05-31 are mostly correct. Two
-      weak picks: handoff 558 (card_authorization.high_value -> AUDIT) tagged at
-      Audit invoices and key data in AP system (L4 id 1433); handoff 560
-      (spend_policy.updated -> S2P) tagged at Develop procurement plan (L4 id
-      793). Both might cluster better at L3 parents (Manage Internal Controls
-      and Establish Policies respectively, if those parents exist in
-      cross-industry framework).
+      Agent proposes candidate PCF ids per untagged handoff and a replacement for
+      the wrong-PCF row on handoff 170; user approves per-row, INSERT on approval.
+      Prior pass found cited external_ids disagree with the audit prose labels, so
+      every pick needs user confirmation.
     options:
-      - "(a) Keep current PCF ids on both"
-      - "(b) Re-target 558 to a Manage Internal Controls L3 parent"
-      - "(c) Re-target 560 to an Establish Policies L3 parent"
-      - "(d) Both (b) and (c)"
-    why: PCF re-classification is editorial taxonomy judgment.
-
-  - id: B2-S8
-    summary: Pick correct PCF for handoff 170 vendor.added (S2P -> SPEND-MGMT supplier onboarding)
-    question: >-
-      Existing discovery_substring row points at id 1010 Manage recruitment
-      vendors which is semantically wrong (recruitment vs procurement). Candidate
-      replacements: 315 Process accounts payable (AP) L3 (where supplier
-      onboarding feeds into); a Manage Suppliers L3 parent if cross-industry
-      framework carries one.
-    options:
-      - "(a) Replace with id 315 Process accounts payable (AP) L3"
-      - "(b) Replace with a Manage Suppliers parent (user names id after lookup)"
-      - "(c) Other PCF id (user names)"
-    why: PCF selection is editorial.
-
-  - id: B2-S9
-    summary: Approve buyer-voice wording for domains.catalog_tagline and domains.catalog_description on SPEND-MGMT
-    question: >-
-      Rule #20 requires user to approve exact wording before write. Agent
-      drafts buyer-voice tagline + 1-3 paragraph description per Rule #20 voice
-      rules (workflow + value, NOT analyst voice / market position / handoffs);
-      user approves the exact text or rewrites.
-    options:
-      - "Agent surfaces drafts; user approves or edits"
-    why: Rule #20 prohibits agent from writing catalog UX fields without explicit per-row approval.
-
-  - id: B2-S10
-    summary: Approve per-handoff PCF candidates for the 11 untagged cross-domain handoffs
-    question: >-
-      Agent proposes candidate PCF ids per untagged handoff (165, 166, 167, 169,
-      171, 552, 555, 556, 557, 559, 600 listed in B1B-H1-APQC-MISSING); user
-      approves per-row, INSERT on approval.
-    options:
-      - "Agent surfaces per-handoff PCF candidates; user approves or names alternative"
-    why: PCF taxonomy selection per cross-domain handoff is editorial.
+      - "Agent surfaces per-handoff PCF candidates; user approves or names an alternative"
+    why: "PCF taxonomy selection per cross-domain handoff is editorial."
 
 b3:
+  - id: B3-MASTERLESS-FX-TREASURY
+    candidate: "SPEND-FX-TREASURY capability (318) has no backing in-domain master"
+    rationale: >-
+      Placed in SPEND-MGMT-CARDS (303) but no FX/treasury master entity exists in
+      the domain. Brex / Airwallex / Mesh / Pleo model multi-currency wallets, FX
+      rate locks, and treasury netting as first-class records (e.g. fx_rate_locks,
+      currency_wallets, treasury_netting_runs). Candidate master to fill the gap.
+    vendor_evidence: [Brex, Airwallex Spend, Mesh Payments, Pleo]
+    proposed_module: SPEND-MGMT-CARDS
+  - id: B3-MASTERLESS-ANALYTICS
+    candidate: "SPEND-ANALYTICS capability (319) has no backing in-domain master"
+    rationale: >-
+      Placed in SPEND-MGMT-POLICY-APPROVAL (305) but analytics is realized off
+      other masters with no analytics-specific entity. Flagship platforms surface
+      spend_anomalies / spend_insights as persisted records (an anomaly is a
+      reviewable, dismissible object, not just a query). Candidate master.
+    vendor_evidence: [Ramp, Brex, Spendesk]
+    proposed_module: SPEND-MGMT-POLICY-APPROVAL
+  - id: B3-MASTERLESS-REIMBURSEMENT
+    candidate: "SPEND-REIMBURSEMENT (315) + EXPENSE-CAPTURE (72) have no in-domain master"
+    rationale: >-
+      Both capabilities are co-located in SPEND-MGMT-POLICY-APPROVAL (305) backed
+      only by EXPENSE-mastered objects (expense_reports 210, expense_policies 214).
+      Whether SPEND-MGMT should own a reimbursement-request master (e.g.
+      reimbursement_requests distinct from EXPENSE's expense_reports) is the open
+      B2-S1 architectural question. Master-less until B2-S1 resolves.
+    vendor_evidence: [Brex, Ramp, Pleo, Spendesk]
+    proposed_module: SPEND-MGMT-POLICY-APPROVAL
+  - id: B3-MASTERLESS-CORP-CARD-EXPENSE-POLICY
+    candidate: "CORP-CARD (74) + EXPENSE-POLICY (73) realized off EXPENSE masters, no in-domain master"
+    rationale: >-
+      CORP-CARD (reconciliation) sits in SPEND-MGMT-CARDS (303) and EXPENSE-POLICY
+      (enforcement) sits in SPEND-MGMT-POLICY-APPROVAL (305); both are realized off
+      EXPENSE-domain masters (corporate_cards 212, card_transactions 213,
+      expense_policies 214). These may be intentional cross-domain capability links
+      rather than gaps to fill; flagged for review, not for filling.
+    vendor_evidence: [Brex, Ramp, BILL Spend & Expense]
+    proposed_module: "various (303 / 305)"
   - id: B3-MERCHANT-CATEGORY-RULES
     candidate: merchant_category_rules
     rationale: >-
       Brex / Ramp / Mesh / Pleo all model MCC-level policy as a first-class
-      versioned record (this MCC, this card, this user, this geography, this
-      time window -> allow / decline). Currently the policy logic is implicit
-      in spend_policies (747); flagship platforms maintain a separate MCC-rules
-      table the auth engine consults.
-    vendor_evidence:
-      - Brex
-      - Ramp
-      - Mesh Payments
-      - Pleo
-    proposed_module: SPEND-CARDS or SPEND-POLICY-AND-APPROVAL
-
+      versioned record (this MCC, this card, this user, this geography, this time
+      window -> allow/decline). Currently the policy logic is implicit in
+      spend_policies (747).
+    vendor_evidence: [Brex, Ramp, Mesh Payments, Pleo]
+    proposed_module: "SPEND-MGMT-CARDS or SPEND-MGMT-POLICY-APPROVAL"
   - id: B3-CARD-DISPUTES
     candidate: card_disputes
     rationale: >-
       Brex / Ramp / Airwallex / Mesh expose card-dispute workflows (fraudulent /
-      duplicate / not received; vendor returns chargeback packet; case carries
-      to resolution). Currently no dispute entity.
-    vendor_evidence:
-      - Brex
-      - Ramp
-      - Airwallex Spend
-      - Mesh Payments
-    proposed_module: SPEND-CARDS
-
+      duplicate / not received; chargeback packet; case to resolution). No dispute
+      entity currently.
+    vendor_evidence: [Brex, Ramp, Airwallex Spend, Mesh Payments]
+    proposed_module: SPEND-MGMT-CARDS
   - id: B3-RECEIPT-RECORDS
     candidate: receipt_records
     rationale: >-
-      Brex / Ramp / Pleo / BILL each treat receipts as first-class records
-      distinct from card transactions (one transaction can have many receipts,
-      OCR-extracted fields, matched-or-unmatched state). Currently folded into
-      card_transactions (213, EXPENSE) or expense_lines (211, EXPENSE).
-    vendor_evidence:
-      - Brex
-      - Ramp
-      - Pleo
-      - BILL Spend & Expense
-    proposed_module: candidate master split or stays in EXPENSE
-
+      Brex / Ramp / Pleo / BILL treat receipts as first-class records distinct
+      from card transactions (one transaction, many receipts; OCR fields;
+      matched/unmatched state). Currently folded into EXPENSE objects.
+    vendor_evidence: [Brex, Ramp, Pleo, BILL Spend & Expense]
+    proposed_module: "candidate master split or stays in EXPENSE"
   - id: B3-VENDOR-PAYMENT-METHODS
     candidate: vendor_payment_methods
     rationale: >-
-      Brex / Ramp / BILL each model vendor payment method (ACH / wire /
-      virtual-card / check) as a first-class master tied to the vendor with
-      bank-account details and KYC state. Currently no entity; routing is
-      implicit on vendor_payment_authorizations.
-    vendor_evidence:
-      - Brex
-      - Ramp
-      - BILL Spend & Expense
-    proposed_module: SPEND-BILL-PAY
-
+      Brex / Ramp / BILL model vendor payment method (ACH / wire / virtual-card /
+      check) as a first-class master tied to the vendor with bank-account details
+      and KYC state. Routing is currently implicit on vendor_payment_authorizations.
+    vendor_evidence: [Brex, Ramp, BILL Spend & Expense]
+    proposed_module: SPEND-MGMT-BILL-PAY
   - id: B3-VIRTUAL-CARDS
     candidate: virtual_cards
     rationale: >-
       Brex / Ramp / Mesh / Marqeta-backed platforms expose virtual cards as a
-      first-class master distinct from the underlying corporate card account
-      (one virtual card per vendor or per project, with spend caps and validity
-      windows). Currently no entity.
-    vendor_evidence:
-      - Brex
-      - Ramp
-      - Mesh Payments
-      - Marqeta (issuer-layer)
-    proposed_module: SPEND-CARDS
-
+      first-class master distinct from the underlying corporate card account (one
+      virtual card per vendor or per project, with spend caps and validity
+      windows). No entity currently.
+    vendor_evidence: [Brex, Ramp, Mesh Payments, "Marqeta (issuer-layer)"]
+    proposed_module: SPEND-MGMT-CARDS
   - id: B3-REG-PCI-DSS
     candidate: PCI-DSS regulation row
-    rationale: Mandatory for any system touching cardholder data. SPEND-MGMT processes PAN at issuance and at authorization.
-    vendor_evidence:
-      - "PCI Security Standards Council (statutory anchor, not vendor)"
-    proposed_module: cross-cutting (applies to SPEND-CARDS and SMB-SPEND-STARTER)
-
+    rationale: "Mandatory for any system touching cardholder data. SPEND-MGMT processes PAN at issuance and at authorization."
+    vendor_evidence: ["PCI Security Standards Council (statutory anchor, not vendor)"]
+    proposed_module: "cross-cutting (applies to SPEND-MGMT-CARDS)"
   - id: B3-REG-AML-KYC
     candidate: AML / KYC / Bank Secrecy Act regulation row
-    rationale: Mandatory for the card-program side, even if SPEND-MGMT consumes the BIN-sponsor's compliance not its own.
-    vendor_evidence:
-      - "FinCEN, OCC (statutory anchors, not vendor)"
-    proposed_module: cross-cutting (applies to SPEND-CARDS)
-
+    rationale: "Mandatory for the card-program side, even if SPEND-MGMT consumes the BIN-sponsor's compliance not its own."
+    vendor_evidence: ["FinCEN, OCC (statutory anchors, not vendor)"]
+    proposed_module: "cross-cutting (applies to SPEND-MGMT-CARDS)"
   - id: B3-DOMAIN-TRAVEL-MGMT
     candidate: TRAVEL-MGMT (domain-tier candidate)
     rationale: >-
-      Navan / Egencia / SAP Concur Travel / TripActions / Spotnana / AmTrav /
-      BCD Travel / CWT all sell pure-play corporate travel management
-      independent of expense and spend. Surfaces because Navan and Spendesk
-      bundle travel booking with spend; the existing travel_bookings (215)
-      data_object suggests partial modeling, but no domain owns the booking
-      flow.
-    vendor_evidence:
-      - Navan
-      - Egencia
-      - SAP Concur Travel
-      - TripActions
-      - Spotnana
-      - AmTrav
-      - BCD Travel
-      - CWT
-    proposed_module: n/a (domain candidate)
-
+      Navan / Egencia / SAP Concur Travel / TripActions / Spotnana / AmTrav / BCD
+      Travel / CWT all sell pure-play corporate travel management independent of
+      expense and spend. The existing travel_bookings (215) data_object suggests
+      partial modeling, but no domain owns the booking flow.
+    vendor_evidence: [Navan, Egencia, "SAP Concur Travel", TripActions, Spotnana, AmTrav, "BCD Travel", CWT]
+    proposed_module: "n/a (domain candidate)"
   - id: B3-DOMAIN-CORP-CARD-PROGRAM
     candidate: CORP-CARD-PROGRAM (domain-tier candidate)
     rationale: >-
       Marqeta / Stripe Issuing / Highnote / Lithic / Adyen Issuing all sell
-      pure-play card-issuing platforms independent of spend management.
-      Surfaces because Brex / Ramp / Airwallex run on Marqeta / Stripe Issuing;
-      the BIN-sponsor layer is structurally distinct from the spend-management
-      UX layer. Promotion would re-route PCI-DSS / AML-KYC anchoring (B2-S4).
-    vendor_evidence:
-      - Marqeta
-      - Stripe Issuing
-      - Highnote
-      - Lithic
-      - Adyen Issuing
-    proposed_module: n/a (domain candidate)
+      pure-play card-issuing platforms independent of spend management. Brex / Ramp
+      / Airwallex run on Marqeta / Stripe Issuing; the BIN-sponsor layer is
+      structurally distinct from the spend-management UX layer. Promotion would
+      re-route PCI-DSS / AML-KYC anchoring (B2-S4).
+    vendor_evidence: [Marqeta, "Stripe Issuing", Highnote, Lithic, "Adyen Issuing"]
+    proposed_module: "n/a (domain candidate)"

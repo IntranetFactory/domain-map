@@ -1,7 +1,7 @@
 schema_version: 2
 domain: HC-PATIENT
 status: feedback_needed
-next_action_by: user
+next_action_by: agent
 last_audit: "2026-05-31"
 
 b1a:
@@ -132,6 +132,11 @@ b1a:
       - {handoff_id: 902, direction: outbound, source_domain: HC-PATIENT, target_domain: CSM, trigger_event: patient_referral.created, payload: patient_referrals, null_field: handoff_processes}
       - {handoff_id: 903, direction: outbound, source_domain: HC-PATIENT, target_domain: ERP-FIN, trigger_event: clinical_note.signed, payload: clinical_notes, null_field: handoff_processes}
       - {handoff_id: 896, direction: inbound, source_domain: CLIN-DEV, target_domain: HC-PATIENT, trigger_event: device_recall.issued, payload: device_recalls, null_field: handoff_processes}
+  - id: B1A-BUILD
+    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
+    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
+    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    extra_phase_p_triage: "2026-06-02"
 
 b1b: []
 

@@ -323,3 +323,47 @@ _(empty until reviewed)_
 
 ### Fixes applied
 _(empty in this audit pass; the 2026-05-31 continuation loader cured B1-S1 and inserted 11 `agent_curated` handoff_processes rows)_
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+Resolved the long-standing M1 hard-fail. DATA-AI-PLAT went from **0 `domain_modules`** to **4 `module_kind='full'` modules** built on B2-S1 option (a), the smallest coherent split covering all 8 capabilities and the 9 own masters. Scope was modularization only: modules + capability links + data_object assignment, reusing existing entities. No new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created.
+
+Loader: [.tmp_deploy/modularize_data_ai_plat_2026-06-02.ts](../../.tmp_deploy/modularize_data_ai_plat_2026-06-02.ts) (idempotent; verified no-op on re-run).
+
+Module ids assigned by the DB: LAKEHOUSE 223, SEMANTIC-CATALOG 224, ML 225, AI-AGENTS 226. All four carry `record_status='new'` (Rule #1) and empty `catalog_tagline` / `catalog_description` (deliberate M8/A4 buyer-copy gap, tracked under B1A-CATALOG-UX below).
+
+### Module split
+
+| Module (code) | Module id | Capabilities (id) | Data objects (id, role/necessity) |
+|---|---|---|---|
+| DATA-AI-PLAT-LAKEHOUSE (Lakehouse and Pipeline Engineering) | 223 | LAKEHOUSE-STORAGE (195), DATA-PIPELINE-ORCH (196), NOTEBOOK-ANALYTICS (202) | lakehouse_tables (226, master/required), data_pipelines (227, master/required) |
+| DATA-AI-PLAT-SEMANTIC-CATALOG (Semantic Layer, Governance, and Data Products) | 224 | SEMANTIC-MODELING (197), UNIFIED-GOV-CATALOG (200), OPERATIONAL-DATA-APPS (201) | semantic_metrics (230, master/required), ontologies (254, master/required), knowledge_graph_entities (255, master/required), data_products (232, master/required), metric_definitions (252, consumer/required) |
+| DATA-AI-PLAT-ML (Machine Learning Lifecycle) | 225 | ML-LIFECYCLE (198) | ml_models (228, master/required), feature_sets (229, master/required) |
+| DATA-AI-PLAT-AI-AGENTS (LLM Orchestration and AI Agents) | 226 | LLM-ORCH (199) | ai_agents (231, master/required) |
+
+### Counts
+
+- domain_modules inserted: **4** (all `module_kind='full'`).
+- domain_module_capabilities inserted: **8** (every one of the 8 domain capabilities placed in exactly one module; M4 satisfied; M6 satisfied, every module realizes >=1 capability).
+- domain_module_data_objects inserted: **10** (9 own masters + 1 cross-domain consumer).
+- Masters placed: **9**, each in exactly one module as master (M7 single-master satisfied): 226->223, 227->223, 230->224, 232->224, 254->224, 255->224, 228->225, 229->225, 231->226.
+- Cross-domain consumer preserved: metric_definitions (252) at consumer/required (mastered by METRICS-LAYER); role NOT promoted.
+- Empty modules: **0** (every module holds >=1 capability AND >=1 data_object).
+- `notes` left empty on all DMC and DMDO rows (Rule #15).
+
+### Placement notes
+
+- **NOTEBOOK-ANALYTICS (202)** has no backing master today (the standing B3-MOD-NOTEBOOK-CAPABILITY / B3-ENT-NOTEBOOKS gap). It was placed in DATA-AI-PLAT-LAKEHOUSE, which holds the notebook-adjacent lakehouse compute (`lakehouse_tables`, `data_pipelines`), to satisfy M4 without leaving the capability orphaned. The module is non-empty on its own masters regardless; the capability itself still lacks a dedicated entity. Carried as B3 (unchanged).
+- **metric_definitions (252)** consumer landed in DATA-AI-PLAT-SEMANTIC-CATALOG alongside the platform's own `semantic_metrics` master, the module that actually consumes the certified metric definition.
+- The 4-module split intentionally folds the prior proposal's separate AI-AGENTS scope (vector_indexes / prompt_templates / agent_tools / rag_retrievers) into a single module since those entities do not yet exist; the B3-MOD-AGENTS-SPLIT refactor remains queued for if/when they land.
+
+### Deferred gaps (carried, not filled this pass)
+
+- **Per-module system skills (Rule #17 -> F2/F3).** With 4 full modules now live, the domain owes one system skill per module (currently only skill 45 `data-ai-plat-system` exists, `domain_module_id IS NULL`). Tracked as new B1A-SYSTEM-SKILLS. Supersedes the gated portion of B2-S4.
+- **Catalog UX backfill (M8/A4).** All 4 modules ship with empty `catalog_tagline` / `catalog_description`. Tracked as new B1A-CATALOG-UX.
+- **Source-side handoff FKs (B1B-S2-OUTBOUND-FK / B1B-S3-INBOUND-FK).** Now unblocked on the DATA-AI-PLAT side: `source_domain_module_id` on the 11 outbound and `target_domain_module_id` on the 9 inbound cross-domain handoffs can be populated now that modules exist. Out of scope for this modularization-only pass; re-pointed off B2-S1 to the live module ids.
+- **Lifecycle states (B2-S2).** 0 lifecycle states on the 9 masters; not authored this pass (out of scope). Module ids now available to anchor `data_object_lifecycle_states.domain_module_id` when authored.
+- **Aliases (B2-S3), regulations (B3-REG-CANDIDATES), entity candidates (B3-ENT-*), MLOPS/agents domain-boundary calls (B3-MOD-*).** All carried unchanged.
+- **APQC tagging remainder (B1A-H1R).** Carried unchanged; independent of modularization.

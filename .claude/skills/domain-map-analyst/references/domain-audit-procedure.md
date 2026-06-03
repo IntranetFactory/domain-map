@@ -52,7 +52,7 @@ Cache as the **current footprint** + the **APQC coverage map** (handoff_id → l
 
 Spawn a `general-purpose` subagent (not `Explore` — Explore lacks `Write`, and the agent needs to persist JSON). Use the [prompt template below](#subagent-prompt-template).
 
-The subagent produces `c:/tmp/<DOMAIN>-market-surface-<YYYY-MM-DD>.json` with the vendor surface matrix + the diff against the current footprint.
+The subagent produces `.tmp_deploy/<DOMAIN>-market-surface-<YYYY-MM-DD>.json` with the vendor surface matrix + the diff against the current footprint.
 
 ### Step 3 — Surface the gap report to the user, categorized into three buckets
 
@@ -140,7 +140,7 @@ See [`audits/README.md`](../../../../audits/README.md) for the full `state.yaml`
 1. **Read the existing `audits/<DOMAIN_CODE>/history.md`** for prior context (last audit's findings, prior Decisions, prior Continuations). Read `audits/<DOMAIN_CODE>/state.yaml` to see what's currently open per the previous audit.
 2. **Append a new `## YYYY-MM-DD — Audit` section** at the bottom of `history.md`. Structure mirrors the three buckets from Step 3 plus any later Decisions / Fixes-applied / Pairwise reconciliation sub-sections.
 3. **Rewrite `state.yaml` in place** in `schema_version: 2` format. Every Bucket 1/2/3 finding still pending after this audit run becomes an entry in `b1a` / `b1b` / `b2` / `b3` per the classification rules in `audits/README.md`. Resolved items are dropped from `state.yaml` (they live in `history.md`).
-4. **Drafts and subagent JSON stay in `c:/tmp/`** (gitignored, ephemeral). Only the final per-audit narrative section in `history.md` and the rewritten `state.yaml` land in `audits/`.
+4. **Drafts and subagent JSON stay in `.tmp_deploy/`** (gitignored, ephemeral). Only the final per-audit narrative section in `history.md` and the rewritten `state.yaml` land in `audits/`.
 5. **Commit timing is the user's call** — the agent writes the files but does not commit unless the user asks. `git log audits/<DOMAIN_CODE>/` becomes the audit timeline once commits happen.
 
 **Section template (appended to the file):**
@@ -279,7 +279,7 @@ Task:
    Recommend merges / splits / renames if not. Use the test: "if I had to onboard a
    first-time deployer to this domain, would the module names + scopes self-explain?"
 
-Output: save the result as JSON to c:/tmp/[DOMAIN_CODE]-market-surface-[YYYY-MM-DD].json:
+Output: save the result as JSON to .tmp_deploy/[DOMAIN_CODE]-market-surface-[YYYY-MM-DD].json:
 
 {
   "domain_code": "<CODE>",
@@ -305,7 +305,7 @@ Output: save the result as JSON to c:/tmp/[DOMAIN_CODE]-market-surface-[YYYY-MM-
 }
 
 Then also save a human-readable summary as markdown at
-c:/tmp/[DOMAIN_CODE]-market-surface-[YYYY-MM-DD].md alongside the JSON, with sections:
+.tmp_deploy/[DOMAIN_CODE]-market-surface-[YYYY-MM-DD].md alongside the JSON, with sections:
 - Vendors
 - Surface matrix table
 - Diff summary counts

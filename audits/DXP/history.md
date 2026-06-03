@@ -340,3 +340,52 @@ UI for spot-checking when fixes land:
 - https://tests.semantius.app/domain_map/domain_modules
 - https://tests.semantius.app/domain_map/data_object_lifecycle_states
 - https://tests.semantius.app/domain_map/handoff_processes
+
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+Built the DXP module set: cured the standing M1 / M2 / M4 / M6 / M8 hard fail. DXP went from 0 `domain_modules` to **3 full modules** (`module_kind='full'`), all 6 capabilities linked, all 7 existing masters assigned at module grain. Scope was modularization + entity assignment only: no new data_objects, capabilities, lifecycle states, skills, tools, handoffs, or relationships were created. The 7 masters were reused at their existing roles; `digital_experiences` is the only cross-module joiner.
+
+Loader: [.tmp_deploy/modularize_dxp_2026-06-02.ts](../../.tmp_deploy/modularize_dxp_2026-06-02.ts) (idempotent; re-run inserts nothing).
+
+### Module split adopted (3-module, option (c) lineage)
+
+The 2026-05-30 / 2026-05-31 audits parked the split shape on B2-1 (user decision among 2 / 3 / 4 modules). The modularization pass adopts a 3-module split aligned to the major flagship product lines (authoring vs experience-personalization vs portal/journeys), which is option (c) from B2-1 and is robust to the Bucket-3 spin-out risks: if PORTAL-FRAMEWORK or DIGITAL-PERSONALIZATION later promote, only one module's masters relocate, not the whole shape.
+
+| Module | id | code | Capabilities | data_objects (role / necessity) |
+|---|---|---|---|---|
+| Authoring and Multi-Site | 236 | DXP-AUTHORING | DXP-WCM, DXP-MULTISITE | web_pages (441, master/required), content_components (442, master/required), digital_experiences (443, master/required) |
+| Experience Personalization and Experimentation | 237 | DXP-EXPERIENCE-PERSONALIZATION | DXP-PERSONALIZE, DXP-AB-TEST | personalization_rules (444, master/required), ab_tests (445, master/required), segments_dxp (446, master/required), digital_experiences (443, embedded_master/optional) |
+| Portal and Journey Orchestration | 238 | DXP-PORTAL-JOURNEYS | DXP-PORTAL, DXP-FORM-JOURNEY | journey_steps (447, master/required), digital_experiences (443, embedded_master/optional) |
+
+### Catalog-wide master pre-check (M7)
+
+Before writing any `role='master'`, queried `/domain_module_data_objects?data_object_id=in.(441..447)&role=eq.master`. Result: **empty**, no DXP master is mastered by any module catalog-wide. The only pre-existing DMDO on any of the 7 was module 130 (PM-DISCOVERY) consuming `ab_tests` (445) as `consumer`, which does not contest mastership. No demotions were required. All 7 masters were assigned `master` in exactly one DXP module.
+
+`digital_experiences` (443) is the cross-module joiner: `master` in DXP-AUTHORING (where it is authored), `embedded_master` in DXP-EXPERIENCE-PERSONALIZATION and DXP-PORTAL-JOURNEYS (which read it). Single-master in-domain and catalog-wide is preserved (count 1 per id).
+
+### Writes applied
+
+- **3 `domain_modules`** (ids 236, 237, 238), all `module_kind='full'`, `record_status` omitted (Rule #1).
+- **6 `domain_module_capabilities`** (2 per module), covering all 6 DXP capabilities (M4).
+- **9 `domain_module_data_objects`**: 7 `master` (one per master, ids 441-447) + 2 `embedded_master` (443 in modules 237 and 238). `notes` empty on every row (Rule #15).
+
+### Verification
+
+- Catalog-wide master uniqueness: 441:1 442:1 443:1 444:1 445:1 446:1 447:1 (each mastered exactly once). M7 pass.
+- Every capability placed in >=1 module (M4): all 6 covered.
+- Every module has >=1 capability (M6) and >=1 data_object (no empty module): 236 = 2 caps / 3 dobjs, 237 = 2 caps / 4 dobjs, 238 = 2 caps / 2 dobjs.
+- Rule #14 (>=3 caps -> >=2 full modules): 6 caps -> 3 full modules. Pass.
+- Idempotent re-run: no duplicate inserts.
+
+### Bands cured vs deferred
+
+- **Cured:** M1, M2, M4, M6, M8 (modules now exist to PATCH catalog UX onto). M7 holds (single master per object).
+- **Now unblocked (were `depends_on B1B-S1`, out of this pass's scope):** B1B-S2 (lifecycle states with `domain_module_id`), B1B-S5 (intra-domain master relationships), B1B-S6 (aliases), B1B-S8 (workflow-gate events), B1B-S10 (per-module `skill_type='system'` skills + DELETE legacy `dxp-system` id 52). These move to b1a as agent-solvable next-pass work now that the modules exist.
+- **Still user-gated:** B2-2 (pattern flags), B2-3 / A4 (catalog_tagline + catalog_description, Rule #20), B2-4 (segments_dxp naming). B1A-S9 / B1A-S11 (cross-domain relationships + APQC tagging) carry unchanged.
+
+UI:
+- https://tests.semantius.app/domain_map/domain_modules?domain_id=eq.77
+- https://tests.semantius.app/domain_map/domain_module_data_objects
+- https://tests.semantius.app/domain_map/domain_module_capabilities

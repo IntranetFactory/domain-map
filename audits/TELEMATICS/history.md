@@ -278,3 +278,55 @@ All five carried forward from 2026-05-30. Live check confirms each neighbor stil
 - **FMIS (154) cross-domain mis-routing:** the 966 + 968 routing question may be a fix on FMIS rather than TELEMATICS (see Bucket 2 #6 + Bucket 3 #1).
 - **FLEET-MGMT B8 owes (inbound mirror):** symmetric to B1-X1 / X2 / X3 from the prior audit (intra-FLEET-MGMT side of `vehicle_trips ↔ fuel_transactions` and `driver_behavior_events / driver_safety_scorecards ↔ fleet_drivers`).
 
+## 2026-06-02 Audit (modularization)
+
+### Summary
+
+Scope was deliberately narrow: build the `domain_modules` set and wire the existing capabilities and data_objects into it. No new data_objects, capabilities, lifecycle states, relationships, aliases, skills, tools, or handoffs were created. The long-standing M1 / M2 / M6 hard fail (zero modules) is now cleared; the domain is structurally deployable for the first time.
+
+The 2026-05-30 / 05-31 audits proposed a 2-module split and parked it on Bucket 2 #1 (B2-MODULE-SPLIT). That split is adopted here as authored by this modularization pass. The user can still re-cut it (the 3-module TELEMATICS-VIDEO-COACHING variant) but the 2-module shape is now live and consistent with the prior proposal and the FLEET-MGMT adjacency.
+
+### Modules authored (both `module_kind=full`)
+
+- **TELEMATICS-FLEET-TRACKING** (id 306) - "Fleet Tracking and Telemetry". Position-and-utilization data layer.
+  - Capabilities: TEL-GPS-TRACKING (410), TEL-GEOFENCING (414), TEL-VEHICLE-DIAG (415).
+  - Masters: `vehicle_trips` (375), `gps_waypoints` (731), `idle_events` (732), `geofence_events` (733).
+  - Consumers: `fleet_vehicles` (370, FLEET-MGMT-mastered), `fleet_drivers` (371, FLEET-MGMT-mastered).
+- **TELEMATICS-COMPLIANCE-SAFETY** (id 307) - "Compliance and Driver Safety". FMCSA HOS leg + video-and-coaching surface.
+  - Capabilities: TEL-ELD-HOS (411), TEL-DRIVER-BEHAVIOR (412), TEL-DASHCAM-VIDEO (413).
+  - Masters: `eld_logs` (377), `dashcam_events` (378), `driver_behavior_events` (376), `driver_safety_scorecards` (734).
+  - Consumers: `fleet_drivers` (371, FLEET-MGMT-mastered).
+
+### Catalog-wide master pre-check (M7, MANDATORY)
+
+Ran `/domain_module_data_objects?data_object_id=eq.<id>&role=eq.master` for all 10 footprint data_objects before any write:
+
+- The 8 in-domain masters (375, 731, 732, 733, 377, 378, 376, 734) had ZERO pre-existing master rows catalog-wide. All assigned `master` here, each in exactly one TELEMATICS module. No demotions to `embedded_master` were needed.
+- `fleet_vehicles` (370) is mastered by FLEET-MGMT-VEHICLE-LIFECYCLE (module 204); `fleet_drivers` (371) by FLEET-MGMT-DRIVER-OPS (module 205). Both preserved at their existing `consumer` / `required` role here. No master promotion.
+
+Post-write re-check confirms exactly 8 master rows across the two modules (one per in-domain master), each catalog-wide-unique.
+
+### Structural verification
+
+- Rule #14: 5-capability domain => >=2 full modules. Two `full` modules authored. PASS.
+- M4: every capability placed in >=1 module (5/5, no overlap). PASS.
+- M6 / no-empty-module: each module has >=1 capability AND >=1 data_object. PASS.
+- M7 single-master in-domain AND catalog-wide: every master appears once. PASS.
+- Non-master roles preserved: both consumer rows unchanged. PASS.
+
+### Loader
+
+`.tmp_deploy/modularize_telematics_2026-06-02.ts` (idempotent; re-reads modules after insert for the code->id map; run from project root). Writes: 2 `domain_modules`, 6 `domain_module_capabilities`, 11 `domain_module_data_objects`. No `record_status`, no `notes`, no `catalog_*` on modules.
+
+### What this pass did NOT touch (deferred, owned by a future full Validate)
+
+Everything outside modules + entity assignment stays open and is re-keyed in state.yaml against the now-live module ids:
+
+- B1B-S1-MODULE-LOAD and B2-MODULE-SPLIT are RESOLVED by this pass (modules now exist; the prior B1A-BUILD triage item is likewise satisfied).
+- Still owed, now unblocked on the module FK but out of this pass's scope: handoff module-FK backfill (11 handoffs), intra-domain relationship edges (10), cross-domain outbound edges (3), aliases (8-12), lifecycle states (4 workflow masters + 4 config-shape exemptions), pattern-flag re-eval, missing compliance entities (dvir_inspections, hos_certifications, driver_coaching_sessions, ifta_jurisdiction_summaries, fault_codes).
+- New this pass: per-module system skills (Rule #17 -> F2 / F3) are now owed - two module-scoped `<module>_agent` skills must replace legacy `telematics-system` (skill 112). Module-level catalog UX copy (M8) is owed on both new `domain_modules.catalog_*`, and the domain-level A4 tagline/description remain empty.
+
+### Report-only follow-ups (unchanged, owed by neighbors)
+
+FLEET-MGMT, FLEET-MAINT, GRC, INS-CLAIMS, FMIS module-FK obligations on the 11 TELEMATICS-touching handoffs persist. The source-side FK is now derivable (TELEMATICS modules exist); the target-side stays NULL pending each neighbor's modularization.
+

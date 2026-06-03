@@ -1,75 +1,71 @@
 schema_version: 2
 domain: EPM
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-05-31"
+next_action_by: agent
+last_audit: "2026-06-02"
 
 b1a:
+  - id: B1A-SYSTEM-SKILLS
+    summary: "Author one per-module system skill on each of the 3 new EPM modules and retire legacy epm-system skill id=4 (Rule #17 -> F2/F3, was B1B-S8)."
+    finding: "The 2026-06-02 modularization pass created 3 full EPM modules (239 EPM-PLAN-BUDGET, 240 EPM-FORECAST-SCENARIO, 241 EPM-VARIANCE-REPORT). Rule #17 mandates exactly one system skill per domain_modules row anchored on domain_module_id. Today the only EPM system skill is the legacy domain-scoped row skills id=4 (skill_name=epm-system, skill_type=system, domain_id=66, domain_module_id=null) carrying 9 skill_tools (query_financial_plans, query_budgets, query_forecasts, query_variance_analyses, query_financial_scenarios, update_budget, update_forecast, query_journal_entries, generate_text). F2/F3 now fail because the modules exist but carry no module-anchored system skill. This pass was scoped to modules + entity assignment only, so the skills were not authored."
+    action: "Author 3 system skills (one per module) anchored on domain_module_id in (239, 240, 241); redistribute the 9 skill_tools from skill id=4 to the matching per-module skill (plan/budget tools -> 239, forecast/scenario tools -> 240, variance + journal_entries query -> 241; generate_text replicated where needed); then DELETE skills id=4 and its 9 skill_tools rows once the per-module skills exist."
+    affected_modules: [239, 240, 241]
+    affected_entities: [skill_id_4]
+    extra_skill_tools_count: 9
+
+  - id: B1A-CATALOG-UX
+    summary: "Populate catalog_tagline and catalog_description on the 3 new EPM modules (M8/A4)."
+    finding: "Modules 239, 240, 241 were inserted by the 2026-06-02 modularization pass with catalog_tagline and catalog_description omitted (per the modularization insert shape, which omits both). M8/A4 catalog-UX completeness wants a buyer-facing tagline and description per module."
+    action: "PATCH each of /domain_modules?id=eq.239|240|241 with a buyer-facing catalog_tagline and catalog_description (no em-dashes, American English). Trivial 3-row PATCH; no entity or junction changes."
+    affected_modules: [239, 240, 241]
+
+  - id: B1A-S9
+    summary: "Backfill source_domain_module_id on 8 outbound EPM handoffs now that modules exist (B10b source side, was B1B-S9)."
+    finding: "8 outbound handoffs from EPM (id 10, 27, 199, 561, 562, 563, 564, 601) carry source_domain_module_id=NULL. The 3 modules now exist, so the source-module routing is derivable: handoffs 10, 561, 601 (events on financial_budgets/financial_plans) -> 239 EPM-PLAN-BUDGET; handoffs 27, 199, 562 (events on financial_forecasts/financial_scenarios) -> 240 EPM-FORECAST-SCENARIO; handoffs 563, 564 (events on variance_analyses) -> 241 EPM-VARIANCE-REPORT."
+    action: "PATCH source_domain_module_id on the 8 outbound handoffs per the routing above. Trivial derivable backfill; no user pick needed."
+    affected_handoffs:
+      - {handoff_id: 10, direction: outbound, source_domain: EPM, target_domain: SWP, trigger_event: financial_budget.cycle_started, payload: workforce_plans, null_field: source_domain_module_id}
+      - {handoff_id: 27, direction: outbound, source_domain: EPM, target_domain: SWP, trigger_event: financial_forecast.refreshed, payload: workforce_plans, null_field: source_domain_module_id}
+      - {handoff_id: 199, direction: outbound, source_domain: EPM, target_domain: AUDIT, trigger_event: financial_forecast.refreshed, payload: financial_forecasts, null_field: source_domain_module_id}
+      - {handoff_id: 561, direction: outbound, source_domain: EPM, target_domain: ERP-FIN, trigger_event: financial_plan.approved, payload: financial_plans, null_field: source_domain_module_id}
+      - {handoff_id: 562, direction: outbound, source_domain: EPM, target_domain: SPM, trigger_event: financial_scenario.modeled, payload: financial_scenarios, null_field: source_domain_module_id}
+      - {handoff_id: 563, direction: outbound, source_domain: EPM, target_domain: ERP-FIN, trigger_event: variance_analysis.material_variance, payload: variance_analyses, null_field: source_domain_module_id}
+      - {handoff_id: 564, direction: outbound, source_domain: EPM, target_domain: AUDIT, trigger_event: variance_analysis.material_variance, payload: variance_analyses, null_field: source_domain_module_id}
+      - {handoff_id: 601, direction: outbound, source_domain: EPM, target_domain: HCM, trigger_event: financial_plan.approved, payload: financial_plans, null_field: source_domain_module_id}
+
+  - id: B1A-S10
+    summary: "Author 3 intra-domain lifecycle_progression handoffs between the new EPM modules (B9b, was B1B-S10)."
+    finding: "With the 3-module shape now live, 3 intra-domain handoffs become required (integration_pattern=lifecycle_progression, friction_level=low): 239 EPM-PLAN-BUDGET -> 240 EPM-FORECAST-SCENARIO on financial_plan.published; 239 EPM-PLAN-BUDGET -> 241 EPM-VARIANCE-REPORT on financial_budget.approved; 240 EPM-FORECAST-SCENARIO -> 241 EPM-VARIANCE-REPORT on financial_forecast.refreshed."
+    action: "INSERT 3 handoffs rows with source/target domain_module_id pointing at the new module ids, integration_pattern=lifecycle_progression, friction_level=low. Now technically unblocked (modules exist)."
+    affected_handoffs:
+      - {handoff_id: null, direction: intra_domain, source_domain: EPM, target_domain: EPM, trigger_event: financial_plan.published, payload: financial_plans, null_field: source_239_target_240}
+      - {handoff_id: null, direction: intra_domain, source_domain: EPM, target_domain: EPM, trigger_event: financial_budget.approved, payload: financial_budgets, null_field: source_239_target_241}
+      - {handoff_id: null, direction: intra_domain, source_domain: EPM, target_domain: EPM, trigger_event: financial_forecast.refreshed, payload: financial_forecasts, null_field: source_240_target_241}
+
   - id: B1A-S7b
-    summary: "PATCH trigger_event 587 variance_analysis.material_variance event_category from empty to enum value chosen in B2-S7b."
-    finding: "Live trigger_events row id=587 (event_name=variance_analysis.material_variance, data_object_id=41) carries event_category='' (empty string). The 2026-05-31 technical pass PATCHed events 583, 584, 585, 586 to state_change but missed 587. Per Rule #13, allowed values are lifecycle, state_change, threshold, signal."
+    summary: "PATCH trigger_event 587 variance_analysis.material_variance event_category from empty to the enum value chosen in B2-S7b."
+    finding: "Live trigger_events row id=587 (event_name=variance_analysis.material_variance, data_object_id=41) carries event_category='' (empty string). The 2026-05-31 technical pass PATCHed 583, 584, 585, 586 to state_change but missed 587. Per Rule #13, allowed values are lifecycle, state_change, threshold, signal."
     action: "PATCH /trigger_events?id=eq.587 with body {event_category: <value from B2-S7b>}. Trivial single-row write; gated on B2-S7b user pick (threshold versus state_change)."
     blocked_by:
       - type: user_decision
         ref: B2-S7b
     affected_events:
-      - id: 587
-        event_name: variance_analysis.material_variance
-        current_category: ""
-        proposed_category: state_change_or_threshold
+      - {id: 587, event_name: variance_analysis.material_variance, current_category: "", proposed_category: state_change_or_threshold}
 
 b1b:
-  - id: B1B-S1
-    summary: "M1 module split for EPM (0 domain_modules rows). Dominant blocker. Author 3-module loader once user picks split shape."
-    finding: "domain_id=66 (EPM) has 0 rows in domain_modules and 0 rows in domain_module_host_domains. Rule #14 requires every domains row to have >=1 module_kind='full' module; with 6 capabilities EPM is above the 3-capability floor and so requires >=2 full modules. Recommended shape: EPM-PLAN-BUDGET (masters financial_plans + financial_budgets, realizes BUDGET-PLAN + DRIVER-MODEL + WORKFORCE-PLAN-EPM), EPM-FORECAST-SCENARIO (masters financial_forecasts + financial_scenarios, realizes FORECAST + SCENARIO-MODEL), EPM-VARIANCE-REPORT (masters variance_analyses, realizes MGMT-REPORT). Cascades to B1B-S2 (M2/M4/M6), B1B-S3 (B12), B1B-S8 (F1), B1B-S9 (B10b source-side), B1B-S10 (B9b)."
-    blocked_by:
-      - type: user_decision
-        ref: B2-S1
-    affected_modules: []
-    affected_entities: [financial_plans, financial_budgets, financial_forecasts, financial_scenarios, variance_analyses]
-    extra_capabilities: [BUDGET-PLAN, FORECAST, DRIVER-MODEL, SCENARIO-MODEL, MGMT-REPORT, WORKFORCE-PLAN-EPM]
-    vendor_evidence: [Workday Adaptive Planning, Anaplan, OneStream, Oracle EPM Cloud, SAP Analytics Cloud Planning, Pigment, Vena, Planful, Board, Prophix One]
-
-  - id: B1B-S2
-    summary: "M2/M4/M6 cascade (6 EPM capabilities unrealized) resolves as side effect of B1B-S1."
-    finding: "capability_domains for domain_id=66 lists 6 capability_ids (66 BUDGET-PLAN, 67 FORECAST, 68 DRIVER-MODEL, 69 SCENARIO-MODEL, 70 MGMT-REPORT, 71 WORKFORCE-PLAN-EPM) but zero domain_module_capabilities rows exist for EPM modules (because there are no EPM modules). Cap-to-module mapping is loaded with B1B-S1."
-    blocked_by:
-      - type: depends_on
-        ref: B1B-S1
-        reason: cascade
-    extra_capability_ids: [66, 67, 68, 69, 70, 71]
-
   - id: B1B-S3
-    summary: "B12 hard fail, 0 lifecycle states on the 5 EPM masters. Realizer module needed first."
-    finding: "data_object_lifecycle_states for data_object_id in (37, 38, 39, 40, 41) returns 0 rows. Each master has a real workflow (no config-shape exemption applies). financial_plans (draft -> in_review -> approved -> published -> locked -> archived), financial_budgets (draft -> submitted -> approved -> locked -> variance_tracked -> closed), financial_forecasts (draft -> refreshed -> published -> superseded), financial_scenarios (draft -> modeled -> reviewed -> selected -> archived), variance_analyses (draft -> analyzed -> reviewed -> escalated -> closed). States with requires_permission=true become workflow-gate permissions prefixed by the realizing module's domain_module_code."
+    summary: "B12 hard fail, 0 lifecycle states on the 5 EPM masters. Realizer modules now exist; awaits B2-S3 pattern-flag picks."
+    finding: "data_object_lifecycle_states for data_object_id in (37, 38, 39, 40, 41) returns 0 rows. Each master has a real workflow (no config-shape exemption applies). financial_plans (draft -> in_review -> approved -> published -> locked -> archived), financial_budgets (draft -> submitted -> approved -> locked -> variance_tracked -> closed), financial_forecasts (draft -> refreshed -> published -> superseded), financial_scenarios (draft -> modeled -> reviewed -> selected -> archived), variance_analyses (draft -> analyzed -> reviewed -> escalated -> closed). The realizing module_id is now resolvable (37, 38 -> 239; 39, 40 -> 240; 41 -> 241), but the state-machine shape still depends on the B2-S3 pattern-flag answers (submit_lock, single_approver)."
     blocked_by:
-      - type: depends_on
-        ref: B1B-S1
-        reason: "lifecycle_states.domain_module_id needs a realizing module"
       - type: user_decision
         ref: B2-S3
-        reason: "pattern-flag answers influence state-machine shape (submit_lock, single_approver)"
+        reason: "pattern-flag answers influence state-machine shape (submit_lock, single_approver) and which states carry requires_permission"
     affected_masters:
-      - data_object_id: 37
-        name: financial_plans
-        target_module_id: null
-        workflow: "draft -> in_review -> approved -> published -> locked -> archived"
-      - data_object_id: 38
-        name: financial_budgets
-        target_module_id: null
-        workflow: "draft -> submitted -> approved -> locked -> variance_tracked -> closed"
-      - data_object_id: 39
-        name: financial_forecasts
-        target_module_id: null
-        workflow: "draft -> refreshed -> published -> superseded"
-      - data_object_id: 40
-        name: financial_scenarios
-        target_module_id: null
-        workflow: "draft -> modeled -> reviewed -> selected -> archived"
-      - data_object_id: 41
-        name: variance_analyses
-        target_module_id: null
-        workflow: "draft -> analyzed -> reviewed -> escalated -> closed"
+      - {data_object_id: 37, name: financial_plans, target_module_id: 239, workflow: "draft -> in_review -> approved -> published -> locked -> archived"}
+      - {data_object_id: 38, name: financial_budgets, target_module_id: 239, workflow: "draft -> submitted -> approved -> locked -> variance_tracked -> closed"}
+      - {data_object_id: 39, name: financial_forecasts, target_module_id: 240, workflow: "draft -> refreshed -> published -> superseded"}
+      - {data_object_id: 40, name: financial_scenarios, target_module_id: 240, workflow: "draft -> modeled -> reviewed -> selected -> archived"}
+      - {data_object_id: 41, name: variance_analyses, target_module_id: 241, workflow: "draft -> analyzed -> reviewed -> escalated -> closed"}
 
   - id: B1B-S4
     summary: "B11 hard fail, 0 aliases on the 5 EPM masters. Awaits exact (alias_name, alias_type) tuples."
@@ -79,214 +75,49 @@ b1b:
         ref: B2-aliases
         reason: "exact alias_name and alias_type tuples per master not pre-specified"
     affected_masters:
-      - data_object_id: 37
-        name: financial_plans
-        target_module_id: null
-        workflow: alias_set_pending
-      - data_object_id: 38
-        name: financial_budgets
-        target_module_id: null
-        workflow: alias_set_pending
-      - data_object_id: 39
-        name: financial_forecasts
-        target_module_id: null
-        workflow: alias_set_pending
-      - data_object_id: 40
-        name: financial_scenarios
-        target_module_id: null
-        workflow: alias_set_pending
-      - data_object_id: 41
-        name: variance_analyses
-        target_module_id: null
-        workflow: alias_set_pending
+      - {data_object_id: 37, name: financial_plans, target_module_id: 239, workflow: alias_set_pending}
+      - {data_object_id: 38, name: financial_budgets, target_module_id: 239, workflow: alias_set_pending}
+      - {data_object_id: 39, name: financial_forecasts, target_module_id: 240, workflow: alias_set_pending}
+      - {data_object_id: 40, name: financial_scenarios, target_module_id: 240, workflow: alias_set_pending}
+      - {data_object_id: 41, name: variance_analyses, target_module_id: 241, workflow: alias_set_pending}
 
   - id: B1B-S5
     summary: "B7 hard fail, 0 users (id 748) edges on the 5 EPM masters. Awaits exact (relationship_verb, inverse_verb) tuples."
-    finding: "data_object_relationships with (data_object_id in (37,38,39,40,41) or related_data_object_id in (37,38,39,40,41)) returns 4 cross-domain edges and 0 user edges. Specifically zero edges where data_object_id=748 (users) or related_data_object_id=748. Rule #10 makes built-in edges first-class. Expected verbs. plan_owner / approver / controller on financial_plans; budget_owner / submitter / approver on financial_budgets; forecast_owner / fp_analyst on financial_forecasts; scenario_modeler / reviewer on financial_scenarios; analyst / reviewer / accountable_manager on variance_analyses."
+    finding: "data_object_relationships with (data_object_id in (37,38,39,40,41) or related_data_object_id in (37,38,39,40,41)) returns 4 cross-domain edges and 0 user edges. Specifically zero edges where data_object_id=748 (users) or related_data_object_id=748. Rule #10 makes built-in edges first-class. Expected verbs: plan_owner / approver / controller on financial_plans; budget_owner / submitter / approver on financial_budgets; forecast_owner / fp_analyst on financial_forecasts; scenario_modeler / reviewer on financial_scenarios; analyst / reviewer / accountable_manager on variance_analyses."
     blocked_by:
       - type: user_decision
         ref: B2-user-edges
         reason: "exact verb and inverse_verb tuples per edge not pre-specified"
     affected_masters:
-      - data_object_id: 37
-        name: financial_plans
-        target_module_id: null
-        workflow: user_edges_pending
-      - data_object_id: 38
-        name: financial_budgets
-        target_module_id: null
-        workflow: user_edges_pending
-      - data_object_id: 39
-        name: financial_forecasts
-        target_module_id: null
-        workflow: user_edges_pending
-      - data_object_id: 40
-        name: financial_scenarios
-        target_module_id: null
-        workflow: user_edges_pending
-      - data_object_id: 41
-        name: variance_analyses
-        target_module_id: null
-        workflow: user_edges_pending
+      - {data_object_id: 37, name: financial_plans, target_module_id: 239, workflow: user_edges_pending}
+      - {data_object_id: 38, name: financial_budgets, target_module_id: 239, workflow: user_edges_pending}
+      - {data_object_id: 39, name: financial_forecasts, target_module_id: 240, workflow: user_edges_pending}
+      - {data_object_id: 40, name: financial_scenarios, target_module_id: 240, workflow: user_edges_pending}
+      - {data_object_id: 41, name: variance_analyses, target_module_id: 241, workflow: user_edges_pending}
 
   - id: B1B-S6
     summary: "B6 hard fail, 0 intra-domain edges between the 5 EPM masters. Awaits full edge tuples."
-    finding: "data_object_relationships shows 4 edges touching EPM masters but all are cross-domain (id 330 strategic_initiatives <- financial_scenarios, id 345 audit_findings <-> financial_forecasts, id 346 audit_findings <-> variance_analyses, id 1027 workforce_cost_projections -> financial_plans). 0 edges among financial_plans, financial_budgets, financial_forecasts, financial_scenarios, variance_analyses. Expected composition. financial_plans composes financial_budgets / _forecasts / _scenarios (one_to_many, parent owner_side); variance_analyses compares financial_budgets / _forecasts (many_to_one)."
+    finding: "data_object_relationships shows 4 edges touching EPM masters but all are cross-domain (id 330 strategic_initiatives <- financial_scenarios, id 345 audit_findings <-> financial_forecasts, id 346 audit_findings <-> variance_analyses, id 1027 workforce_cost_projections -> financial_plans). 0 edges among financial_plans, financial_budgets, financial_forecasts, financial_scenarios, variance_analyses. Expected composition: financial_plans composes financial_budgets / _forecasts / _scenarios (one_to_many, parent owner_side); variance_analyses compares financial_budgets / _forecasts (many_to_one). Note: financial_plans (37) and financial_budgets (38) now co-reside in module 239; financial_forecasts (39) and financial_scenarios (40) in module 240; cross-module edges to 240/241 become intra-domain cross-module references."
     blocked_by:
       - type: user_decision
         ref: B2-intra-rels
         reason: "exact (relationship_verb, inverse_verb, relationship_kind, relationship_type, is_required, owner_side) tuple per edge not pre-specified"
     affected_masters:
-      - data_object_id: 37
-        name: financial_plans
-        target_module_id: null
-        workflow: "composes financial_budgets, financial_forecasts, financial_scenarios"
-      - data_object_id: 41
-        name: variance_analyses
-        target_module_id: null
-        workflow: "compares financial_budgets and financial_forecasts"
-
-  - id: B1B-S8
-    summary: "F1 hard fail, retire legacy epm-system skill (id 4) once per-module system skills exist."
-    finding: "skills row id=4 (skill_name=epm-system, skill_type=system, domain_id=66, domain_module_id=null) is the sole EPM system skill and carries 9 skill_tools rows (query_financial_plans, query_budgets, query_forecasts, query_variance_analyses, query_financial_scenarios, update_budget, update_forecast, query_journal_entries, generate_text). Rule #17 mandates exactly one system skill per domain_modules row anchored on domain_module_id; the domain-scoped row must DELETE once module-anchored system skills exist."
-    blocked_by:
-      - type: depends_on
-        ref: B1B-S1
-        reason: "per-module system skills require modules to exist"
-    affected_entities: [skill_id_4]
-    extra_skill_tools_count: 9
-
-  - id: B1B-S9
-    summary: "B10b hard fail EPM source side, backfill source_domain_module_id on 8 outbound EPM handoffs."
-    finding: "8 outbound handoffs from EPM (id 10, 27, 199, 561, 562, 563, 564, 601) carry source_domain_module_id=NULL because EPM has 0 modules. Proposed source-module routing per the recommended 3-module shape. handoffs 10, 561, 601 -> EPM-PLAN-BUDGET; handoffs 27, 199, 562 -> EPM-FORECAST-SCENARIO; handoffs 563, 564 -> EPM-VARIANCE-REPORT."
-    blocked_by:
-      - type: depends_on
-        ref: B1B-S1
-        reason: "source_domain_module_id cannot point at modules that do not exist yet"
-    affected_handoffs:
-      - handoff_id: 10
-        direction: outbound
-        source_domain: EPM
-        target_domain: SWP
-        trigger_event: financial_budget.cycle_started
-        payload: workforce_plans
-        null_field: source_domain_module_id
-      - handoff_id: 27
-        direction: outbound
-        source_domain: EPM
-        target_domain: SWP
-        trigger_event: financial_forecast.refreshed
-        payload: workforce_plans
-        null_field: source_domain_module_id
-      - handoff_id: 199
-        direction: outbound
-        source_domain: EPM
-        target_domain: AUDIT
-        trigger_event: financial_forecast.refreshed
-        payload: financial_forecasts
-        null_field: source_domain_module_id
-      - handoff_id: 561
-        direction: outbound
-        source_domain: EPM
-        target_domain: ERP-FIN
-        trigger_event: financial_plan.approved
-        payload: financial_plans
-        null_field: source_domain_module_id
-      - handoff_id: 562
-        direction: outbound
-        source_domain: EPM
-        target_domain: SPM
-        trigger_event: financial_scenario.modeled
-        payload: financial_scenarios
-        null_field: source_domain_module_id
-      - handoff_id: 563
-        direction: outbound
-        source_domain: EPM
-        target_domain: ERP-FIN
-        trigger_event: variance_analysis.material_variance
-        payload: variance_analyses
-        null_field: source_domain_module_id
-      - handoff_id: 564
-        direction: outbound
-        source_domain: EPM
-        target_domain: AUDIT
-        trigger_event: variance_analysis.material_variance
-        payload: variance_analyses
-        null_field: source_domain_module_id
-      - handoff_id: 601
-        direction: outbound
-        source_domain: EPM
-        target_domain: HCM
-        trigger_event: financial_plan.approved
-        payload: financial_plans
-        null_field: source_domain_module_id
-
-  - id: B1B-S10
-    summary: "B9b cascade, author 3 intra-domain handoffs between EPM modules once modules land."
-    finding: "With the recommended 3-module shape, 3 intra-domain handoffs become required (integration_pattern=lifecycle_progression, friction_level=low). EPM-PLAN-BUDGET -> EPM-FORECAST-SCENARIO on financial_plan.published (forecast module picks up new plan baselines); EPM-PLAN-BUDGET -> EPM-VARIANCE-REPORT on financial_budget.approved (variance module starts tracking actuals against the approved budget); EPM-FORECAST-SCENARIO -> EPM-VARIANCE-REPORT on financial_forecast.refreshed (variance module rebases comparison points)."
-    blocked_by:
-      - type: depends_on
-        ref: B1B-S1
-        reason: "handoffs cannot point at modules that do not exist yet"
-    affected_handoffs:
-      - handoff_id: null
-        direction: intra_domain
-        source_domain: EPM
-        target_domain: EPM
-        trigger_event: financial_plan.published
-        payload: financial_plans
-        null_field: intra_domain_handoff_pending_module_creation
-      - handoff_id: null
-        direction: intra_domain
-        source_domain: EPM
-        target_domain: EPM
-        trigger_event: financial_budget.approved
-        payload: financial_budgets
-        null_field: intra_domain_handoff_pending_module_creation
-      - handoff_id: null
-        direction: intra_domain
-        source_domain: EPM
-        target_domain: EPM
-        trigger_event: financial_forecast.refreshed
-        payload: financial_forecasts
-        null_field: intra_domain_handoff_pending_module_creation
+      - {data_object_id: 37, name: financial_plans, target_module_id: 239, workflow: "composes financial_budgets, financial_forecasts, financial_scenarios"}
+      - {data_object_id: 41, name: variance_analyses, target_module_id: 241, workflow: "compares financial_budgets and financial_forecasts"}
 
   - id: B1B-H1-flip
     summary: "APQC TAGGING, flip 4 discovery_substring rows to agent_curated where the proposed PCF matches."
-    finding: "handoff_processes pre-existing discovery_substring rows on (handoff_id, process_id) pairs the 2026-05-30 audit confirmed. 199->1324 Prepare periodic financial forecasts, 540->1392 Calculate and record depreciation expense, 563->1325 Perform variance analysis against forecasts and budgets, 564->1325 same. The 2026-05-31 technical pass authorized INSERTs only, not source-flip PATCHes."
+    finding: "handoff_processes pre-existing discovery_substring rows on (handoff_id, process_id) pairs the 2026-05-30 audit confirmed: 199->1324 Prepare periodic financial forecasts, 540->1392 Calculate and record depreciation expense, 563->1325 Perform variance analysis against forecasts and budgets, 564->1325 same. The 2026-05-31 technical pass authorized INSERTs only, not source-flip PATCHes."
     blocked_by:
       - type: user_decision
         ref: B1-H1-flip-approval
         reason: "PATCH source flip is a judgment call per Rule #1"
     affected_handoffs:
-      - handoff_id: 199
-        direction: outbound
-        source_domain: EPM
-        target_domain: AUDIT
-        trigger_event: financial_forecast.refreshed
-        payload: financial_forecasts
-        null_field: proposal_source_flip_pending
-      - handoff_id: 540
-        direction: inbound
-        source_domain: ERP-FIN
-        target_domain: EPM
-        trigger_event: depreciation.posted
-        payload: asset_depreciation_schedules
-        null_field: proposal_source_flip_pending
-      - handoff_id: 563
-        direction: outbound
-        source_domain: EPM
-        target_domain: ERP-FIN
-        trigger_event: variance_analysis.material_variance
-        payload: variance_analyses
-        null_field: proposal_source_flip_pending
-      - handoff_id: 564
-        direction: outbound
-        source_domain: EPM
-        target_domain: AUDIT
-        trigger_event: variance_analysis.material_variance
-        payload: variance_analyses
-        null_field: proposal_source_flip_pending
+      - {handoff_id: 199, direction: outbound, source_domain: EPM, target_domain: AUDIT, trigger_event: financial_forecast.refreshed, payload: financial_forecasts, null_field: proposal_source_flip_pending}
+      - {handoff_id: 540, direction: inbound, source_domain: ERP-FIN, target_domain: EPM, trigger_event: depreciation.posted, payload: asset_depreciation_schedules, null_field: proposal_source_flip_pending}
+      - {handoff_id: 563, direction: outbound, source_domain: EPM, target_domain: ERP-FIN, trigger_event: variance_analysis.material_variance, payload: variance_analyses, null_field: proposal_source_flip_pending}
+      - {handoff_id: 564, direction: outbound, source_domain: EPM, target_domain: AUDIT, trigger_event: variance_analysis.material_variance, payload: variance_analyses, null_field: proposal_source_flip_pending}
 
   - id: B1B-H1-mediums
     summary: "APQC TAGGING, 4 medium-confidence handoffs need per-item user pick."
@@ -296,66 +127,35 @@ b1b:
         ref: B1-H1-mediums-pick
         reason: "per-item PCF selection requires user pick or defer to Discover"
     affected_handoffs:
-      - handoff_id: 256
-        direction: inbound
-        source_domain: AUDIT
-        target_domain: EPM
-        trigger_event: recommendation.accepted
-        payload: audit_recommendations
-        null_field: pcf_replace_16817_with_20136_or_defer
-      - handoff_id: 534
-        direction: inbound
-        source_domain: ERP-FIN
-        target_domain: EPM
-        trigger_event: gl_account.mapping_changed
-        payload: general_ledger_accounts
-        null_field: pcf_pick_1379_or_10728
-      - handoff_id: 777
-        direction: inbound
-        source_domain: VSDP
-        target_domain: EPM
-        trigger_event: value_stream_metric.threshold_breached
-        payload: value_stream_metrics
-        null_field: defer_to_vsdp_custom_process
-      - handoff_id: 792
-        direction: inbound
-        source_domain: SPM
-        target_domain: EPM
-        trigger_event: benefits_tracking_record.realized
-        payload: benefits_tracking_records
-        null_field: defer_to_spm_specific
-      - handoff_id: 795
-        direction: inbound
-        source_domain: SPM
-        target_domain: EPM
-        trigger_event: benefits_tracking_record.at_risk
-        payload: benefits_tracking_records
-        null_field: defer_to_spm_specific
+      - {handoff_id: 256, direction: inbound, source_domain: AUDIT, target_domain: EPM, trigger_event: recommendation.accepted, payload: audit_recommendations, null_field: pcf_replace_16817_with_20136_or_defer}
+      - {handoff_id: 534, direction: inbound, source_domain: ERP-FIN, target_domain: EPM, trigger_event: gl_account.mapping_changed, payload: general_ledger_accounts, null_field: pcf_pick_1379_or_10728}
+      - {handoff_id: 777, direction: inbound, source_domain: VSDP, target_domain: EPM, trigger_event: value_stream_metric.threshold_breached, payload: value_stream_metrics, null_field: defer_to_vsdp_custom_process}
+      - {handoff_id: 792, direction: inbound, source_domain: SPM, target_domain: EPM, trigger_event: benefits_tracking_record.realized, payload: benefits_tracking_records, null_field: defer_to_spm_specific}
+      - {handoff_id: 795, direction: inbound, source_domain: SPM, target_domain: EPM, trigger_event: benefits_tracking_record.at_risk, payload: benefits_tracking_records, null_field: defer_to_spm_specific}
 
 b2:
   - id: B2-S1
-    summary: "Module-split shape for EPM (drives B1B-S1)."
-    question: "Which module-split shape should EPM take?"
+    summary: "Module-split shape for EPM (adopted option d this pass; confirm or change)."
+    question: "The 2026-06-02 modularization pass adopted option (d), the recommended 3-module split (EPM-PLAN-BUDGET 239 + EPM-FORECAST-SCENARIO 240 + EPM-VARIANCE-REPORT 241). Confirm this shape, or request an alternative?"
     options:
-      - "(a) 5-module per-capability split, EPM-BUDGET + EPM-FORECAST + EPM-SCENARIO + EPM-WORKFORCE-PLAN + EPM-VARIANCE"
-      - "(b) 1-module EPM-PLATFORM (violates M2 floor, rejected by Rule #14)"
-      - "(c) 2-module split, EPM-PLAN (plans + budgets + forecasts + scenarios) + EPM-REPORT (variances)"
-      - "(d) 3-module recommended split, EPM-PLAN-BUDGET (financial_plans + financial_budgets, realizes BUDGET-PLAN + DRIVER-MODEL + WORKFORCE-PLAN-EPM) + EPM-FORECAST-SCENARIO (financial_forecasts + financial_scenarios, realizes FORECAST + SCENARIO-MODEL) + EPM-VARIANCE-REPORT (variance_analyses, realizes MGMT-REPORT)"
-      - "(e) custom alternative supplied by user"
-    why: "The split affects every downstream load, role / skill / permission shape, and gates the entire cascade of B1B-S1 through B1B-S10 plus B1B-S8."
+      - "(d) ADOPTED: 3-module split, EPM-PLAN-BUDGET (financial_plans + financial_budgets, BUDGET-PLAN + DRIVER-MODEL + WORKFORCE-PLAN-EPM) + EPM-FORECAST-SCENARIO (financial_forecasts + financial_scenarios, FORECAST + SCENARIO-MODEL) + EPM-VARIANCE-REPORT (variance_analyses, MGMT-REPORT)"
+      - "(a) 5-module per-capability split, EPM-BUDGET + EPM-FORECAST + EPM-SCENARIO + EPM-WORKFORCE-PLAN + EPM-VARIANCE (rebuild required)"
+      - "(c) 2-module split, EPM-PLAN (plans + budgets + forecasts + scenarios) + EPM-REPORT (variances) (rebuild required)"
+      - "(e) custom alternative supplied by user (rebuild required)"
+    why: "The split is now live; this is a confirm-or-revert call. Changing it cascades to the per-module skills (B1A-SYSTEM-SKILLS), handoff routing (B1A-S9/S10), and lifecycle realizer module_ids (B1B-S3)."
 
   - id: B2-S2
-    summary: "WORKFORCE-PLAN-EPM role scoping for FPA-WORKFORCE-PARTNER once EPM modules exist."
-    question: "Should FPA-WORKFORCE-PARTNER (currently grounded entirely on SWP modules) gain primary scope on the future EPM-PLAN-BUDGET module (the headcount-spend slice of the budget), stay entirely on SWP, or split into two roles?"
+    summary: "WORKFORCE-PLAN-EPM role scoping for FPA-WORKFORCE-PARTNER now that EPM-PLAN-BUDGET (239) exists."
+    question: "Should FPA-WORKFORCE-PARTNER (currently grounded entirely on SWP modules) gain primary scope on EPM-PLAN-BUDGET (239, the headcount-spend slice of the budget, which realizes WORKFORCE-PLAN-EPM), stay entirely on SWP, or split into two roles?"
     options:
-      - "(a) FPA-WORKFORCE-PARTNER becomes primary on EPM-PLAN-BUDGET and secondary on SWP-COST-PROJECTIONS"
+      - "(a) FPA-WORKFORCE-PARTNER becomes primary on EPM-PLAN-BUDGET (239) and secondary on SWP-COST-PROJECTIONS"
       - "(b) Keep entirely on SWP, surface EPM consumption via permission grants only"
       - "(c) Split into two roles, one EPM-scoped and one SWP-scoped"
-    why: "Depends on B1B-S1 (modules must exist) and B3-S2 (headcount_plans candidate). Hold until both land."
+    why: "EPM-PLAN-BUDGET now exists, so option (a) is actionable. Still depends on B3-S2 (headcount_plans candidate) for whether a dedicated headcount master changes the slice."
 
   - id: B2-S3
     summary: "B4 pattern-flag positive confirmation per Rule #12 for the 5 EPM masters."
-    question: "Per-flag yes or no on each master? Rule #12 requires positive consideration, not default acceptance."
+    question: "Per-flag yes or no on each master? Rule #12 requires positive consideration, not default acceptance. Drives the B1B-S3 lifecycle-state shape."
     options:
       - "financial_plans.has_submit_lock yes (approved plans freeze) or no"
       - "financial_plans.has_single_approver yes (CFO / controller single approver) or no"
@@ -370,7 +170,7 @@ b2:
     options:
       - "(a) Approved at load time, leave both in place"
       - "(b) Auto-populated, PATCH both to empty string and append a Rule #15 incident entry to references/skill-changelog.md"
-    why: "The audit cannot determine load-time approval status from history alone. Row id=334 was already reverted in the 2026-05-31 technical pass."
+    why: "The audit cannot determine load-time approval status from history alone. Row id=334 was already reverted in the 2026-05-31 technical pass. Note: the modularization pass wrote the new domain_module_data_objects rows with notes empty per Rule #15; these legacy domain_data_objects rows are the residual concern."
 
   - id: B2-S7b
     summary: "Trigger_event 587 event_category enum pick (drives B1A-S7b)."
@@ -383,18 +183,18 @@ b2:
 b3:
   - id: B3-S1
     candidate: cost_allocations
-    rationale: "Every flagship EPM platform ships an allocation engine; the records (allocation rule definitions and per-period executions) are first-class but absent from EPM's footprint. This is the crud_percentage=50 slice the EPM domain row signals (the calc kernel beyond simple JsonLogic). Highest-leverage Bucket 3 candidate; the absence is what makes the catalog read EPM as 'another forms tool' rather than a calc-kernel platform."
+    rationale: "Every flagship EPM platform ships an allocation engine; the records (allocation rule definitions and per-period executions) are first-class but absent from EPM's footprint. This is the crud_percentage=50 slice the EPM domain row signals (the calc kernel beyond simple JsonLogic). Highest-leverage Bucket 3 candidate; the absence is what makes the catalog read EPM as 'another forms tool' rather than a calc-kernel platform. Proposed module now resolvable: 240 EPM-FORECAST-SCENARIO or 241 EPM-VARIANCE-REPORT."
     vendor_evidence: [Oracle EPM Cloud, Anaplan, OneStream, SAP Analytics Cloud Planning, Workday Adaptive Planning, Pigment]
-    proposed_module: "EPM-FORECAST-SCENARIO or EPM-VARIANCE-REPORT, pending B1B-S1"
+    proposed_module: "EPM-FORECAST-SCENARIO (240) or EPM-VARIANCE-REPORT (241)"
 
   - id: B3-S2
     candidate: headcount_plans
-    rationale: "Every flagship has a headcount / position-level plan distinct from the dollar plan. Today EPM conflates this into financial_plans via the WORKFORCE-PLAN-EPM capability with the line-item flow from SWP (workforce_cost_projections feeds financial_plans, edge id 1027). Either add the master to EPM or shift responsibility wholly to SWP."
+    rationale: "Every flagship has a headcount / position-level plan distinct from the dollar plan. Today EPM conflates this into financial_plans via the WORKFORCE-PLAN-EPM capability (now realized by module 239) with the line-item flow from SWP (workforce_cost_projections feeds financial_plans, edge id 1027). Either add the master to EPM-PLAN-BUDGET (239) or shift responsibility wholly to SWP."
     vendor_evidence: [Workday Adaptive Workforce, Anaplan Connected Workforce, Pigment People]
-    proposed_module: "EPM-PLAN-BUDGET or SWP, pending B2-S2"
+    proposed_module: "EPM-PLAN-BUDGET (239) or SWP, pending B2-S2"
 
   - id: B3-S3
     candidate: EPM-CONSOL_or_EPM-DISCLOSURE_module
-    rationale: "OneStream and Oracle EPM bundle close / consolidation / disclosure narrative onto the same platform. EPM in our catalog has zero close / consolidation / disclosure surface; the _missing-domains.md queue carries CCM, FIN-CONSOL, DISCLOSURE-MGMT as candidates. Triage those first; if promoted, EPM stays scoped (no 4th module); if folded, EPM gains a 4th module."
+    rationale: "OneStream and Oracle EPM bundle close / consolidation / disclosure narrative onto the same platform. EPM in our catalog has zero close / consolidation / disclosure surface; the _missing-domains.md queue carries CCM, FIN-CONSOL, DISCLOSURE-MGMT as candidates. Triage those first; if promoted, EPM stays at 3 modules; if folded, EPM gains a 4th module."
     vendor_evidence: [OneStream Platform, Oracle EPM Cloud]
     proposed_module: "pending _missing-domains.md triage"
