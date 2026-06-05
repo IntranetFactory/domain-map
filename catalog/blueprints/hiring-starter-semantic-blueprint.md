@@ -46,7 +46,7 @@ flowchart TD
   job_offers["Offers"]
   recruitment_sources["Recruitment Sources"]
   users["Users"]
-  candidates -->|"has owning recruiter (opt)"| users
+  candidates -->|"has owning recruiter"| users
   job_postings -->|"has publisher"| users
   job_postings -->|"is applied to via"| job_applications
   candidates -->|"submits"| job_applications
@@ -85,7 +85,7 @@ flowchart TD
 
 ## 4. Aliases and industry synonyms
 
-_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
+_(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
@@ -117,14 +117,11 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
 
-_(no outbound cross-scope edges from this scope's masters or contributors.)_
+_(none: no outbound cross-scope edges from this scope's masters or contributors)_
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
-
-<details>
-<summary>41 context edges</summary>
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -170,12 +167,11 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `job_offers` | spawns pre-employee record | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
 
-</details>
-
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
+_(none: no other module embeds this scope's masters; the canonical owners do.)_
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 

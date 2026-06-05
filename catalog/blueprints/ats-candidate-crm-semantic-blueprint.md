@@ -63,31 +63,31 @@ flowchart TD
   candidate_notes["Candidate Notes"]
   data_subject_requests["Data Subject Requests"]
   users["Users"]
-  candidates -->|"engaged_via (opt)"| candidate_engagements
-  candidate_nurture_campaigns -->|"generates (opt)"| candidate_engagements
+  candidates -->|"engaged_via"| candidate_engagements
+  candidate_nurture_campaigns -->|"generates"| candidate_engagements
   candidates -->|"attends_via"| recruiting_event_attendances
   recruitment_events -->|"has_attendance"| recruiting_event_attendances
-  candidates -->|"noted_via (opt)"| recruiter_interactions
+  candidates -->|"noted_via"| recruiter_interactions
   candidates -->|"consents_via"| candidate_consents
-  talent_pools -->|"targets (opt)"| candidate_nurture_campaigns
-  candidates -->|"submits_via (opt)"| data_subject_requests
-  candidates -->|"documented_via (opt)"| candidate_documents
-  candidates -->|"annotated_via (opt)"| candidate_notes
+  talent_pools -->|"targets"| candidate_nurture_campaigns
+  candidates -->|"submits_via"| data_subject_requests
+  candidates -->|"documented_via"| candidate_documents
+  candidates -->|"annotated_via"| candidate_notes
   recruitment_sources -->|"attributes"| candidates
   recruitment_agencies -->|"sources"| candidates
   recruitment_events -->|"attracts"| candidates
   talent_pools -->|"groups"| candidates
   users -->|"posts"| internal_opportunities
-  candidates -->|"has owning recruiter (opt)"| users
+  candidates -->|"has owning recruiter"| users
   talent_pools -->|"has owner"| users
   recruitment_agencies -->|"has relationship owner"| users
   recruitment_events -->|"has coordinator"| users
-  users -->|"uploaded documents (opt)"| candidate_documents
-  users -->|"authored notes (opt)"| candidate_notes
+  users -->|"uploaded documents"| candidate_documents
+  users -->|"authored notes"| candidate_notes
   candidate_engagements -->|"has recruiter"| users
-  candidate_nurture_campaigns -->|"has owner (opt)"| users
-  data_subject_requests -->|"has owner (opt)"| users
-  recruiting_event_attendances -->|"has owner (opt)"| users
+  candidate_nurture_campaigns -->|"has owner"| users
+  data_subject_requests -->|"has owner"| users
+  recruiting_event_attendances -->|"has owner"| users
   recruiter_interactions -->|"has author"| users
   class candidates master;
   class recruitment_sources master;
@@ -131,7 +131,7 @@ flowchart TD
 
 ## 4. Aliases and industry synonyms
 
-_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
+_(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
@@ -195,17 +195,12 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
-<details>
-<summary>4 context edges</summary>
-
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `internal_opportunities` | receives | `opportunity_applications` | one_to_many | optional | none | n/a | - |
 | `internal_opportunities` | ranked by | `fit_scores` | one_to_many | optional | none | n/a | - |
 | `talent_pools` | has_member | `talent_pool_memberships` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
 | `talent_segments` | materializes_into | `talent_pools` | one_to_many | optional | none | n/a | - |
-
-</details>
 
 ## 6. Cross-domain context
 

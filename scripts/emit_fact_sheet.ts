@@ -137,6 +137,18 @@ function escapeYaml(s: string): string {
   return JSON.stringify(s);
 }
 
+// Empty-section convention (the blueprint schema, applied to EVERY generated blueprint,
+// including clone-like starter / lite units). Every canonical section heading is always
+// emitted; nothing is ever silently omitted (no numbering gaps). A section with no content
+// carries this canonical placeholder, never a bare-empty heading and never an old-form
+// `_(no ...)_` sentence stub. Format: `_(none: <short reason>)_` - lowercase `none`, a
+// COLON (never an em-dash; that is a project rule and a downstream scan rewrites them), then
+// a brief reason. A bare `_(none)_` is allowed when no reason adds value. Route every
+// empty-section placeholder through this helper so the format cannot drift section to section.
+function noneSection(reason?: string): string {
+  return reason ? `_(none: ${reason})_` : "_(none)_";
+}
+
 // Push a `key: value` front-matter line, rendering multi-paragraph prose (e.g. a 1-3
 // paragraph `catalog_description`) as a YAML literal block scalar so it stays human-readable
 // in the committed file. Single-line values fall back to escapeYaml. Blank lines between
@@ -217,9 +229,12 @@ function renderMermaid(
     const a = dataObjectsById.get(r.data_object_id as number);
     const b = dataObjectsById.get(r.related_data_object_id as number);
     if (!a || !b) continue;
+    // Rule 5 (edge-verb consistency): the diagram edge label must equal the §5.1 / §5.2 verb
+    // column byte-for-byte. The verb column is the bare `relationship_verb`; edge optionality is
+    // conveyed by the §5 `necessity` column (and the per-node dashed-stroke overlay below), NOT by
+    // an `(opt)` suffix on the label, so we emit the bare verb here too.
     const verb = (r.relationship_verb || "→").replace(/"/g, '\\"');
-    const opt = r.is_required ? "" : " (opt)";
-    lines.push(`  ${a.data_object_name} -->|"${verb}${opt}"| ${b.data_object_name}`);
+    lines.push(`  ${a.data_object_name} -->|"${verb}"| ${b.data_object_name}`);
   }
   // Class assignments.
   for (const id of nodeIds) {
@@ -274,7 +289,7 @@ function renderAliases(aliasRows: any[]): string[] {
     (a.alias_type !== "synonym" || a.industry_id !== null) && a.solution_id === null,
   );
   if (filtered.length === 0) {
-    out.push("_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_");
+    out.push(noneSection("no industry-scoped aliases for this scope"));
     return out;
   }
   out.push(tableHeader(["data_object", "alias", "alias_type", "preferred?", "industry", "notes"]));
@@ -619,8 +634,9 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   // multi-module domains.description + business_logic). Internal-facing; describes market
   // position, mastership, handoffs. No sub-headings. The buyer voice (catalog_tagline /
   // catalog_description, per Rule #20) is NOT rendered in the body any more; it lives in the
-  // front matter `tagline` / `description` fields. If `description` is missing the review
-  // must catch it upstream (A1 / per-module description); the emitter never emits a placeholder.
+  // front matter `tagline` / `description` fields. If `description` is missing the heading is
+  // still emitted with the canonical empty-section placeholder (Rule 1: never a numbering gap);
+  // the A1 / per-module-description review independently catches the missing prose upstream.
   const analystOverviewLines: string[] = [];
   if (modules.length === 1) {
     if (modules[0].description) analystOverviewLines.push(modules[0].description);
@@ -635,19 +651,24 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
     const joined = parentDomains.map((d) => d.description).filter(Boolean).join(" ");
     if (joined) analystOverviewLines.push(joined);
   }
+  out.push("## 1. Overview");
+  out.push("");
   if (analystOverviewLines.length > 0) {
-    out.push("## 1. Overview");
-    out.push("");
     out.push(...analystOverviewLines);
-    out.push("");
+  } else {
+    out.push(noneSection("no analyst overview authored for this scope"));
   }
+  out.push("");
 
   // §2 Entity summary - table + mermaid in the same section
   out.push("## 2. Entity summary");
   out.push("");
-  out.push(...renderEntitySummary(scopeRows));
-  out.push("");
-  if (rels.all.length > 0 || scopeRows.length > 0) {
+  if (scopeRows.length === 0) {
+    out.push(noneSection("no data_objects in scope"));
+    out.push("");
+  } else {
+    out.push(...renderEntitySummary(scopeRows));
+    out.push("");
     out.push(...renderMermaid(scopeRolesById, scopeNecessityById, rels.all));
     out.push("");
   }
@@ -657,7 +678,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   out.push("");
   const showModulesCol = modules.length > 1;
   if (scopeRows.length === 0) {
-    out.push("_(no data_objects in scope.)_");
+    out.push(noneSection("no data_objects in scope"));
   } else {
     const headers = ["#", "data_object", "singular", "plural", "role", "mastered in", "mastered label", "necessity", "pattern flags", "write tier"];
     if (showModulesCol) headers.push("modules");
@@ -713,7 +734,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   out.push("### 5.1 Intra-scope edges");
   out.push("");
   if (rels.intra.length === 0) {
-    out.push("_(no `data_object_relationships` with both endpoints inside the scope.)_");
+    out.push(noneSection("no relationships with both endpoints inside the scope"));
   } else {
     out.push(...renderRelationshipTable(rels.intra, { includeOwnerSide: true, includeKind: true, targetInScope: true }));
   }
@@ -721,7 +742,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   out.push("### 5.2 Built-in edges (`users` and other platform built-ins)");
   out.push("");
   if (rels.userRels.length === 0) {
-    out.push("_(no relationships against platform built-ins recorded for this scope.)_");
+    out.push(noneSection("no relationships against platform built-ins"));
   } else {
     out.push(...renderRelationshipTable(rels.userRels, { includeOwnerSide: true, includeKind: false, targetInScope: true }));
   }
@@ -733,7 +754,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   out.push("_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._");
   out.push("");
   if (rels.crossOutbound.length === 0) {
-    out.push("_(no outbound cross-scope edges from this scope's masters or contributors.)_");
+    out.push(noneSection("no outbound cross-scope edges from this scope's masters or contributors"));
   } else {
     out.push(...renderRelationshipTable(rels.crossOutbound, { includeOwnerSide: false, includeKind: false, targetInScope: false }));
   }
@@ -743,14 +764,10 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   out.push("_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._");
   out.push("");
   if (rels.crossContext.length === 0) {
-    out.push("_(no context cross-scope edges on this scope's embedded shells or consumed entities.)_");
+    out.push(noneSection("no context cross-scope edges on this scope's embedded shells or consumed entities"));
   } else {
-    out.push("<details>");
-    out.push("<summary>" + rels.crossContext.length + " context edges</summary>");
-    out.push("");
+    // Rule 4 (no raw HTML): plain markdown table, never a `<details>` / `<summary>` collapsible.
     out.push(...renderRelationshipTable(rels.crossContext, { includeOwnerSide: false, includeKind: false, targetInScope: false }));
-    out.push("");
-    out.push("</details>");
   }
   out.push("");
 
@@ -759,12 +776,16 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   out.push("");
   out.push("### 6.1 Master consumers (other modules / domains that embed this scope's masters)");
   out.push("");
-  out.push(...renderCoMasters(coMasters));
+  if (coMasters.length === 0) {
+    out.push(noneSection("no other module embeds this scope's masters; the canonical owners do."));
+  } else {
+    out.push(...renderCoMasters(coMasters));
+  }
   out.push("");
   out.push("### 6.2 Outbound handoffs (events this scope publishes)");
   out.push("");
   if (outboundHandoffs.length === 0) {
-    out.push("_(no outbound `handoffs` whose payload is in this scope.)_");
+    out.push(noneSection("no outbound handoffs whose payload is in this scope"));
   } else {
     out.push(...renderHandoffTable(outboundHandoffs, "outbound"));
   }
@@ -772,14 +793,18 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   out.push("### 6.3 Inbound handoffs (events this scope reacts to)");
   out.push("");
   if (inboundHandoffs.length === 0) {
-    out.push("_(no inbound `handoffs` whose payload is in this scope.)_");
+    out.push(noneSection("no inbound handoffs whose payload is in this scope"));
   } else {
     out.push(...renderHandoffTable(inboundHandoffs, "inbound"));
   }
   out.push("");
   out.push("### 6.4 Master providers (modules / domains that own masters this scope embeds)");
   out.push("");
-  out.push(...renderDependencies(scopeRows, owners));
+  if (scopeRows.some((r) => r.role !== "master")) {
+    out.push(...renderDependencies(scopeRows, owners));
+  } else {
+    out.push(noneSection("this scope embeds no masters owned elsewhere; every entity is mastered here"));
+  }
   out.push("");
 
   // §7 Lifecycle states
@@ -790,7 +815,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   out.push("## 7. Lifecycle states");
   out.push("");
   if (lifecycleRows.length === 0) {
-    out.push("_(no lifecycle states loaded for the entities in this scope.)_");
+    out.push(noneSection("no lifecycle states for the entities in this scope"));
   } else {
     const byObj = new Map<number, any[]>();
     for (const ls of lifecycleRows) {
@@ -897,7 +922,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
     out.push("### 8.2 Business rules");
     out.push("");
     if (businessRules.length === 0) {
-      out.push("_(no flag-derived business rules.)_");
+      out.push(noneSection("no flag-derived business rules"));
     } else {
       out.push(tableHeader(["rule_name", "data_object", "source flag", "intent"]));
       for (const r of businessRules) out.push(tableRow([`\`${r.name}\``, `\`${r.dataObject}\``, r.sourceFlag, r.intent]));
@@ -965,7 +990,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
     out.push("**RACI realization:**");
     out.push("");
     if (raci.length === 0) {
-      out.push("_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_");
+      out.push(noneSection("no process_raci assignments wired to this module's gated processes yet"));
     } else {
       out.push(tableHeader(["actor", "kind", "raci", "process_key", "realization"]));
       for (const g of raci) out.push(tableRow([`\`${g.actor}\``, g.actorKind, g.raci, g.process ? `\`${g.process}\`` : "", g.realization]));
@@ -976,7 +1001,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   out.push(`### 9.${modules.length + 1} Functional ownership and default grants`);
   out.push("");
   if (ownership.length === 0) {
-    out.push("_(no `business_function_domains` rows for this scope's domain.)_");
+    out.push(noneSection("no business_function_domains rows for this scope's domain"));
   } else {
     out.push(tableHeader(["responsibility", "business function", "default role", "default tier"]));
     for (const o of ownership) out.push(tableRow([o.responsibility, o.func, `\`${o.defaultRole}\``, `\`${o.defaultTier}\``]));

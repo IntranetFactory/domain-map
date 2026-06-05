@@ -48,16 +48,16 @@ flowchart TD
   saas_applications -->|"owns"| smp_app_owners
   saas_applications -->|"integrates_with"| smp_app_integrations
   saas_applications -->|"publishes"| smp_app_catalog_listings
-  saas_applications -->|"raised_for (opt)"| smp_alerts
-  shadow_it_apps -->|"raised_for_shadow (opt)"| smp_alerts
+  saas_applications -->|"raised_for"| smp_alerts
+  shadow_it_apps -->|"raised_for_shadow"| smp_alerts
   saas_applications -->|"tracks_stage"| smp_app_lifecycle_stages
-  shadow_it_apps -->|"promotes_to (opt)"| saas_applications
+  shadow_it_apps -->|"promotes_to"| saas_applications
   users -->|"assigned_owner"| smp_app_owners
   users -->|"configures"| smp_app_integrations
-  users -->|"curates (opt)"| smp_app_catalog_listings
-  users -->|"triages (opt)"| smp_alerts
+  users -->|"curates"| smp_app_catalog_listings
+  users -->|"triages"| smp_alerts
   users -->|"owns"| saas_applications
-  users -->|"triggered (opt)"| shadow_it_apps
+  users -->|"triggered"| shadow_it_apps
   class saas_applications master;
   class shadow_it_apps master;
   class smp_app_owners master;
@@ -82,7 +82,7 @@ flowchart TD
 
 ## 4. Aliases and industry synonyms
 
-_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
+_(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
@@ -134,7 +134,7 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
-_(no context cross-scope edges on this scope's embedded shells or consumed entities.)_
+_(none: no context cross-scope edges on this scope's embedded shells or consumed entities)_
 
 ## 6. Cross-domain context
 
@@ -166,6 +166,7 @@ _(no context cross-scope edges on this scope's embedded shells or consumed entit
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
+_(none: this scope embeds no masters owned elsewhere; every entity is mastered here)_
 
 ## 7. Lifecycle states
 
@@ -266,7 +267,7 @@ _(no context cross-scope edges on this scope's embedded shells or consumed entit
 
 ### 8.2 Business rules
 
-_(no flag-derived business rules.)_
+_(none: no flag-derived business rules)_
 
 ## 9. Roles, RACI, and responsibilities (derived)
 
@@ -311,7 +312,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 
 **RACI realization:**
 
-_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_
+_(none: no process_raci assignments wired to this module's gated processes yet)_
 
 ### 9.2 Functional ownership and default grants
 

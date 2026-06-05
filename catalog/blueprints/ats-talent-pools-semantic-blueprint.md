@@ -48,13 +48,13 @@ flowchart TD
   users["Users"]
   talent_pools -->|"has_member"| talent_pool_memberships
   candidates -->|"member_of_via"| talent_pool_memberships
-  talent_segments -->|"materializes_into (opt)"| talent_pools
-  candidates -->|"tagged_via (opt)"| candidate_tag_assignments
+  talent_segments -->|"materializes_into"| talent_pools
+  candidates -->|"tagged_via"| candidate_tag_assignments
   candidate_tags -->|"applied_via"| candidate_tag_assignments
   talent_pools -->|"groups"| candidates
-  candidates -->|"has owning recruiter (opt)"| users
+  candidates -->|"has owning recruiter"| users
   talent_pools -->|"has owner"| users
-  users -->|"assigned tags (opt)"| candidate_tag_assignments
+  users -->|"assigned tags"| candidate_tag_assignments
   recruiter_saved_searches -->|"has owner"| users
   class talent_pools master;
   class candidates embedded_master;
@@ -81,7 +81,7 @@ flowchart TD
 
 ## 4. Aliases and industry synonyms
 
-_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
+_(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
@@ -119,9 +119,6 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
-<details>
-<summary>19 context edges</summary>
-
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | none | n/a | - |
@@ -143,8 +140,6 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `recruitment_events` | attracts | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
 | `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
-
-</details>
 
 ## 6. Cross-domain context
 

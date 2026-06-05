@@ -47,17 +47,17 @@ flowchart TD
   offer_letter_templates["Offer Letter Templates"]
   users["Users"]
   job_offers -->|"evolves_through"| offer_versions
-  job_offers -->|"gated_by (opt)"| offer_approvals
+  job_offers -->|"gated_by"| offer_approvals
   offer_versions -->|"renders_as"| offer_letter_documents
-  offer_letter_templates -->|"rendered_as (opt)"| offer_letter_documents
+  offer_letter_templates -->|"rendered_as"| offer_letter_documents
   candidates -->|"submits"| job_applications
   job_applications -->|"results in"| job_offers
-  candidates -->|"has owning recruiter (opt)"| users
-  users -->|"authored templates (opt)"| offer_letter_templates
-  users -->|"approved templates (opt)"| offer_letter_templates
+  candidates -->|"has owning recruiter"| users
+  users -->|"authored templates"| offer_letter_templates
+  users -->|"approved templates"| offer_letter_templates
   offer_versions -->|"has author"| users
   offer_approvals -->|"has approver"| users
-  offer_letter_documents -->|"has owner (opt)"| users
+  offer_letter_documents -->|"has owner"| users
   job_applications -->|"has owning recruiter"| users
   job_offers -->|"has approver"| users
   class job_offers master;
@@ -84,7 +84,7 @@ flowchart TD
 
 ## 4. Aliases and industry synonyms
 
-_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
+_(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
@@ -131,9 +131,6 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
-<details>
-<summary>29 context edges</summary>
-
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | none | n/a | - |
@@ -165,8 +162,6 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `job_applications` | requires | `candidate_assessments` | one_to_many | required | none (required-if-present) | n/a | - |
 | `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
-
-</details>
 
 ## 6. Cross-domain context
 

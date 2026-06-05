@@ -48,15 +48,15 @@ flowchart TD
   real_estate_listings -->|"has listing agent"| users
   tour_appointments -->|"has showing agent"| users
   real_estate_transactions -->|"has listing-side agent"| users
-  real_estate_transactions -->|"has buyer-side agent (opt)"| users
+  real_estate_transactions -->|"has buyer-side agent"| users
   disclosure_documents -->|"has preparer"| users
   real_estate_transactions -->|"requires disclosures"| disclosure_documents
-  users -->|"owns (opt)"| legal_contracts
-  users -->|"approved (opt)"| legal_contracts
-  users -->|"drafted (opt)"| legal_contracts
-  crm_contacts -->|"converted_from_lead (opt)"| crm_leads
+  users -->|"owns"| legal_contracts
+  users -->|"approved"| legal_contracts
+  users -->|"drafted"| legal_contracts
+  crm_contacts -->|"converted_from_lead"| crm_leads
   users -->|"owns"| crm_leads
-  users -->|"owns (opt)"| crm_contacts
+  users -->|"owns"| crm_contacts
   class legal_contracts embedded_master;
   class crm_leads embedded_master;
   class crm_contacts embedded_master;
@@ -124,14 +124,11 @@ flowchart TD
 
 _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
 
-_(no outbound cross-scope edges from this scope's masters or contributors.)_
+_(none: no outbound cross-scope edges from this scope's masters or contributors)_
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
-
-<details>
-<summary>32 context edges</summary>
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -168,12 +165,11 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `crm_contacts` | has_activities | `sales_activities` | one_to_many | optional | none | n/a | - |
 | `crm_leads` | has_activities | `sales_activities` | one_to_many | optional | none | n/a | - |
 
-</details>
-
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
+_(none: no other module embeds this scope's masters; the canonical owners do.)_
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
@@ -440,8 +436,8 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 
 **RACI realization:**
 
-_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_
+_(none: no process_raci assignments wired to this module's gated processes yet)_
 
 ### 9.2 Functional ownership and default grants
 
-_(no `business_function_domains` rows for this scope's domain.)_
+_(none: no business_function_domains rows for this scope's domain)_

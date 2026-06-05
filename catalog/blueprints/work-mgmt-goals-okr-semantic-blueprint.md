@@ -40,12 +40,12 @@ flowchart TD
   users["Users"]
   okr_key_results -->|"belongs_to"| okr_objectives
   okr_check_ins -->|"belongs_to"| okr_objectives
-  okr_check_ins -->|"references (opt)"| okr_key_results
-  work_items -->|"depends_on (opt)"| work_items
-  okr_objectives -->|"tracked_by (opt)"| work_items
-  users -->|"owns_key_results (opt)"| okr_key_results
-  users -->|"authored_check_ins (opt)"| okr_check_ins
-  users -->|"assigned items (opt)"| work_items
+  okr_check_ins -->|"references"| okr_key_results
+  work_items -->|"depends_on"| work_items
+  okr_objectives -->|"tracked_by"| work_items
+  users -->|"owns_key_results"| okr_key_results
+  users -->|"authored_check_ins"| okr_check_ins
+  users -->|"assigned items"| work_items
   users -->|"created items"| work_items
   users -->|"owns OKR"| okr_objectives
   class okr_objectives master;
@@ -66,7 +66,7 @@ flowchart TD
 
 ## 4. Aliases and industry synonyms
 
-_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
+_(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
@@ -110,9 +110,6 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
-<details>
-<summary>16 context edges</summary>
-
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `test_defects` | spawns | `work_items` | one_to_many | optional | none | n/a | - |
@@ -131,8 +128,6 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `work_automations` | drives | `work_items` | one_to_many | optional | none | n/a | - |
 | `work_items` | mirrors_to | `service_requests` | one_to_one | optional | none | n/a | - |
 | `strategic_initiatives` | portfolio rollup from | `work_items` | one_to_many | optional | none | n/a | - |
-
-</details>
 
 ## 6. Cross-domain context
 

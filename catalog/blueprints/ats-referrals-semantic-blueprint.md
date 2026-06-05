@@ -42,13 +42,13 @@ flowchart TD
   referral_payouts["Referral Payouts"]
   referral_campaigns["Referral Campaigns"]
   users["Users"]
-  candidate_referrals -->|"earns (opt)"| referral_payouts
+  candidate_referrals -->|"earns"| referral_payouts
   referral_rewards -->|"governs"| referral_payouts
-  referral_campaigns -->|"overrides (opt)"| referral_rewards
+  referral_campaigns -->|"overrides"| referral_rewards
   candidate_referrals -->|"introduces"| candidates
-  candidates -->|"has owning recruiter (opt)"| users
-  referral_payouts -->|"has approver (opt)"| users
-  referral_campaigns -->|"has owner (opt)"| users
+  candidates -->|"has owning recruiter"| users
+  referral_payouts -->|"has approver"| users
+  referral_campaigns -->|"has owner"| users
   candidate_referrals -->|"has referring employee"| users
   class candidate_referrals master;
   class candidates embedded_master;
@@ -71,7 +71,7 @@ flowchart TD
 
 ## 4. Aliases and industry synonyms
 
-_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
+_(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
@@ -99,14 +99,11 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
 
-_(no outbound cross-scope edges from this scope's masters or contributors.)_
+_(none: no outbound cross-scope edges from this scope's masters or contributors)_
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
-
-<details>
-<summary>21 context edges</summary>
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -132,8 +129,6 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
 
-</details>
-
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
@@ -154,7 +149,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
-_(no inbound `handoffs` whose payload is in this scope.)_
+_(none: no inbound handoffs whose payload is in this scope)_
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 

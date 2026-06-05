@@ -79,50 +79,50 @@ flowchart TD
   course_ratings["Course Ratings"]
   users["Users"]
   courses -->|"has_version"| course_versions
-  course_versions -->|"contains (opt)"| course_modules
-  course_modules -->|"contains (opt)"| lessons
-  lessons -->|"uses (opt)"| learning_content_assets
-  course_versions -->|"imports (opt)"| scorm_packages
+  course_versions -->|"contains"| course_modules
+  course_modules -->|"contains"| lessons
+  lessons -->|"uses"| learning_content_assets
+  course_versions -->|"imports"| scorm_packages
   course_completions -->|"records_completion_of"| course_versions
-  course_enrollments -->|"yields (opt)"| course_completions
-  course_assessments -->|"contains (opt)"| assessment_questions
-  course_assessments -->|"attempted_by (opt)"| assessment_attempts
-  assessment_attempts -->|"produces (opt)"| quiz_responses
-  courses -->|"classified_as (opt)"| course_categories
-  courses -->|"tagged_with (opt)"| course_tags
-  course_catalogs -->|"lists (opt)"| courses
-  courses -->|"reviewed_via (opt)"| course_reviews
-  courses -->|"rated_via (opt)"| course_ratings
-  courses -->|"discussed_in (opt)"| course_discussions
+  course_enrollments -->|"yields"| course_completions
+  course_assessments -->|"contains"| assessment_questions
+  course_assessments -->|"attempted_by"| assessment_attempts
+  assessment_attempts -->|"produces"| quiz_responses
+  courses -->|"classified_as"| course_categories
+  courses -->|"tagged_with"| course_tags
+  course_catalogs -->|"lists"| courses
+  courses -->|"reviewed_via"| course_reviews
+  courses -->|"rated_via"| course_ratings
+  courses -->|"discussed_in"| course_discussions
   org_units -->|"groups"| employees
   org_units -->|"contains"| hcm_positions
-  hcm_positions -->|"is_filled_by (opt)"| employees
+  hcm_positions -->|"is_filled_by"| employees
   cost_centers -->|"funds"| org_units
-  employees -->|"enrolls_in (opt)"| course_enrollments
-  org_units -->|"maps_to (opt)"| cost_centers
+  employees -->|"enrolls_in"| course_enrollments
+  org_units -->|"maps_to"| cost_centers
   courses -->|"enrolled_via"| course_enrollments
   course_enrollments -->|"produces"| learning_records
-  cost_centers -->|"funds (opt)"| course_enrollments
-  employees -->|"reflects (opt)"| learning_records
-  employees -->|"fills (opt)"| hcm_positions
+  cost_centers -->|"funds"| course_enrollments
+  employees -->|"reflects"| learning_records
+  employees -->|"fills"| hcm_positions
   employees -->|"learns_via"| course_enrollments
-  org_units -->|"rolls_up_to (opt)"| org_units
-  users -->|"owns (opt)"| courses
+  org_units -->|"rolls_up_to"| org_units
+  users -->|"owns"| courses
   users -->|"attempts"| assessment_attempts
-  users -->|"answers (opt)"| quiz_responses
+  users -->|"answers"| quiz_responses
   users -->|"completes"| course_completions
-  users -->|"posts_in (opt)"| course_discussions
-  users -->|"authors (opt)"| course_reviews
-  users -->|"rates_via (opt)"| course_ratings
-  employees -->|"is_linked_to (opt)"| users
-  users -->|"manages (opt)"| hcm_positions
-  users -->|"leads (opt)"| org_units
-  users -->|"owns (opt)"| cost_centers
-  users -->|"authors (opt)"| courses
+  users -->|"posts_in"| course_discussions
+  users -->|"authors"| course_reviews
+  users -->|"rates_via"| course_ratings
+  employees -->|"is_linked_to"| users
+  users -->|"manages"| hcm_positions
+  users -->|"leads"| org_units
+  users -->|"owns"| cost_centers
+  users -->|"authors"| courses
   users -->|"enrolls in"| course_enrollments
-  users -->|"assigns (opt)"| course_enrollments
+  users -->|"assigns"| course_enrollments
   users -->|"earns"| learning_records
-  org_units -->|"has members (opt)"| users
+  org_units -->|"has members"| users
   class org_units embedded_master;
   class courses master;
   class course_enrollments master;
@@ -184,7 +184,7 @@ flowchart TD
 
 ## 4. Aliases and industry synonyms
 
-_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
+_(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
@@ -269,9 +269,6 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
-<details>
-<summary>50 context edges</summary>
-
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `employees` | triggers | `iga_provisioning_events` | one_to_many | optional | none | n/a | - |
@@ -324,8 +321,6 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `survey_campaigns` | targets | `employees` | many_to_many | optional | none | n/a | - |
 | `workforce_scenarios` | drives | `hcm_positions` | one_to_many | required | none (required-if-present) | n/a | - |
 | `org_designs` | proposes | `hcm_positions` | one_to_many | required | none (required-if-present) | n/a | - |
-
-</details>
 
 ## 6. Cross-domain context
 
@@ -716,7 +711,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 
 **RACI realization:**
 
-_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_
+_(none: no process_raci assignments wired to this module's gated processes yet)_
 
 ### 9.2 Functional ownership and default grants
 

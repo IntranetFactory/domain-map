@@ -79,40 +79,40 @@ flowchart TD
   job_applications -->|"transitions_via"| application_stage_transitions
   application_stages -->|"lands_at"| application_stage_transitions
   job_requisitions -->|"gated_by"| requisition_approvals
-  job_postings -->|"syndicates_via (opt)"| job_posting_distributions
-  job_postings -->|"asks (opt)"| application_screening_questions
-  job_applications -->|"answers_via (opt)"| application_screening_answers
+  job_postings -->|"syndicates_via"| job_posting_distributions
+  job_postings -->|"asks"| application_screening_questions
+  job_applications -->|"answers_via"| application_screening_answers
   application_screening_questions -->|"answered_by"| application_screening_answers
-  candidates -->|"self_identifies_via (opt)"| eeo_responses
-  candidates -->|"self_ids_via (opt)"| voluntary_self_identifications
-  job_applications -->|"disposed_via (opt)"| application_dispositions
+  candidates -->|"self_identifies_via"| eeo_responses
+  candidates -->|"self_ids_via"| voluntary_self_identifications
+  job_applications -->|"disposed_via"| application_dispositions
   job_applications -->|"logged_via"| applicant_flow_records
   job_requisitions -->|"staffed_by"| hiring_team_assignments
   applicant_flow_records -->|"audited_via"| ofccp_audit_trails
   org_units -->|"contains"| hcm_positions
   job_profiles -->|"defines"| hcm_positions
-  hcm_positions -->|"spawns (opt)"| job_requisitions
-  job_profiles -->|"feeds (opt)"| job_postings
+  hcm_positions -->|"spawns"| job_requisitions
+  job_profiles -->|"feeds"| job_postings
   job_requisitions -->|"is advertised through"| job_postings
   job_requisitions -->|"receives"| job_applications
   job_postings -->|"is applied to via"| job_applications
   candidates -->|"submits"| job_applications
-  org_units -->|"rolls_up_to (opt)"| org_units
-  locations -->|"rolls_up_to (opt)"| locations
+  org_units -->|"rolls_up_to"| org_units
+  locations -->|"rolls_up_to"| locations
   hiring_team_assignments -->|"assigns"| users
-  candidates -->|"has owning recruiter (opt)"| users
+  candidates -->|"has owning recruiter"| users
   job_postings -->|"has publisher"| users
-  application_stage_transitions -->|"has author (opt)"| users
-  applicant_flow_records -->|"has owner (opt)"| users
+  application_stage_transitions -->|"has author"| users
+  applicant_flow_records -->|"has owner"| users
   requisition_approvals -->|"has approver"| users
-  ofccp_audit_trails -->|"has author (opt)"| users
-  users -->|"manages (opt)"| hcm_positions
-  users -->|"leads (opt)"| org_units
-  users -->|"owns (opt)"| job_profiles
+  ofccp_audit_trails -->|"has author"| users
+  users -->|"manages"| hcm_positions
+  users -->|"leads"| org_units
+  users -->|"owns"| job_profiles
   job_requisitions -->|"has recruiter and hiring manager"| users
   job_applications -->|"has owning recruiter"| users
-  org_units -->|"has members (opt)"| users
-  locations -->|"houses (opt)"| users
+  org_units -->|"has members"| users
+  locations -->|"houses"| users
   class job_requisitions master;
   class job_postings master;
   class job_applications master;
@@ -171,7 +171,7 @@ flowchart TD
 
 ## 4. Aliases and industry synonyms
 
-_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
+_(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
@@ -243,9 +243,6 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
-<details>
-<summary>47 context edges</summary>
-
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `job_profiles` | expects | `competency_models` | one_to_many | optional | none | n/a | - |
@@ -295,8 +292,6 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `employees` | fills | `hcm_positions` | one_to_one | optional | none | n/a | - |
 | `workforce_scenarios` | drives | `hcm_positions` | one_to_many | required | none (required-if-present) | n/a | - |
 | `org_designs` | proposes | `hcm_positions` | one_to_many | required | none (required-if-present) | n/a | - |
-
-</details>
 
 ## 6. Cross-domain context
 

@@ -39,7 +39,7 @@ flowchart TD
   real_estate_transactions -->|"requires disclosures"| disclosure_documents
   real_estate_transactions -->|"produces commission splits"| commission_splits
   real_estate_transactions -->|"has listing-side agent"| users
-  real_estate_transactions -->|"has buyer-side agent (opt)"| users
+  real_estate_transactions -->|"has buyer-side agent"| users
   disclosure_documents -->|"has preparer"| users
   commission_splits -->|"has recipient agent"| users
   commission_splits -->|"has approving broker"| users
@@ -92,20 +92,15 @@ flowchart TD
 
 _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
 
-_(no outbound cross-scope edges from this scope's masters or contributors.)_
+_(none: no outbound cross-scope edges from this scope's masters or contributors)_
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
-<details>
-<summary>1 context edges</summary>
-
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `real_estate_listings` | generates | `real_estate_transactions` | one_to_many | required | none (required-if-present) | n/a | - |
-
-</details>
 
 ## 6. Cross-domain context
 
@@ -260,7 +255,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 
 **RACI realization:**
 
-_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_
+_(none: no process_raci assignments wired to this module's gated processes yet)_
 
 ### 9.2 Functional ownership and default grants
 

@@ -52,20 +52,20 @@ flowchart TD
   interview_questions["Interview Questions"]
   interviewer_availability_slots["Interviewer Availability Slots"]
   users["Users"]
-  interview_kits -->|"shapes (opt)"| interviews
-  interview_kits -->|"includes (opt)"| interview_questions
+  interview_kits -->|"shapes"| interviews
+  interview_kits -->|"includes"| interview_questions
   interviews -->|"convenes"| interview_panels
-  interview_panels -->|"produces (opt)"| interview_scorecards
-  candidate_assessment_templates -->|"instantiates_as (opt)"| candidate_assessments
-  interviewer_availability_slots -->|"booked_for (opt)"| interviews
+  interview_panels -->|"produces"| interview_scorecards
+  candidate_assessment_templates -->|"instantiates_as"| candidate_assessments
+  interviewer_availability_slots -->|"booked_for"| interviews
   candidates -->|"submits"| job_applications
   job_applications -->|"schedules"| interviews
   interviews -->|"is scored via"| interview_scorecards
   job_applications -->|"requires"| candidate_assessments
-  candidates -->|"has owning recruiter (opt)"| users
+  candidates -->|"has owning recruiter"| users
   candidate_assessments -->|"has invitation author"| users
   interviewer_availability_slots -->|"has owner"| users
-  interview_panels -->|"has owner (opt)"| users
+  interview_panels -->|"has owner"| users
   job_applications -->|"has owning recruiter"| users
   interviews -->|"has coordinator and panelists"| users
   interview_scorecards -->|"has interviewer as author"| users
@@ -100,7 +100,7 @@ flowchart TD
 
 ## 4. Aliases and industry synonyms
 
-_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
+_(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
@@ -137,14 +137,11 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
 
-_(no outbound cross-scope edges from this scope's masters or contributors.)_
+_(none: no outbound cross-scope edges from this scope's masters or contributors)_
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
-
-<details>
-<summary>28 context edges</summary>
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -176,8 +173,6 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `job_applications` | results in | `job_offers` | one_to_many | required | none (required-if-present) | n/a | - |
 | `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
-
-</details>
 
 ## 6. Cross-domain context
 

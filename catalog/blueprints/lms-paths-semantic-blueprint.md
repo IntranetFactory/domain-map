@@ -62,39 +62,39 @@ flowchart TD
   prerequisite_rules["Prerequisite Rules"]
   users["Users"]
   learning_paths -->|"contains"| learning_path_steps
-  curricula -->|"comprises (opt)"| learning_paths
-  learning_paths -->|"assigned_via (opt)"| learning_path_assignments
-  learning_plans -->|"composes (opt)"| learning_paths
-  learning_path_steps -->|"gated_by (opt)"| prerequisite_rules
+  curricula -->|"comprises"| learning_paths
+  learning_paths -->|"assigned_via"| learning_path_assignments
+  learning_plans -->|"composes"| learning_paths
+  learning_path_steps -->|"gated_by"| prerequisite_rules
   org_units -->|"groups"| employees
   org_units -->|"contains"| hcm_positions
-  hcm_positions -->|"is_filled_by (opt)"| employees
+  hcm_positions -->|"is_filled_by"| employees
   job_profiles -->|"defines"| hcm_positions
-  employees -->|"holds (opt)"| skill_profiles
-  job_profiles -->|"maps_to (opt)"| skill_profiles
-  employees -->|"enrolls_in (opt)"| course_enrollments
-  skill_profiles -->|"updated by (opt)"| learner_certifications
-  skill_profiles -->|"updated by (opt)"| course_enrollments
-  job_profiles -->|"requires (opt)"| learning_paths
-  job_profiles -->|"expects (opt)"| skill_profiles
-  employees -->|"fills (opt)"| hcm_positions
+  employees -->|"holds"| skill_profiles
+  job_profiles -->|"maps_to"| skill_profiles
+  employees -->|"enrolls_in"| course_enrollments
+  skill_profiles -->|"updated by"| learner_certifications
+  skill_profiles -->|"updated by"| course_enrollments
+  job_profiles -->|"requires"| learning_paths
+  job_profiles -->|"expects"| skill_profiles
+  employees -->|"fills"| hcm_positions
   employees -->|"learns_via"| course_enrollments
-  org_units -->|"rolls_up_to (opt)"| org_units
-  skills_gap_analyses -->|"prescribes (opt)"| learning_paths
-  users -->|"curates (opt)"| learning_paths
+  org_units -->|"rolls_up_to"| org_units
+  skills_gap_analyses -->|"prescribes"| learning_paths
+  users -->|"curates"| learning_paths
   users -->|"assigned_path"| learning_path_assignments
   users -->|"owns_plan"| learning_plans
-  employees -->|"is_linked_to (opt)"| users
-  users -->|"manages (opt)"| hcm_positions
-  users -->|"leads (opt)"| org_units
-  users -->|"owns (opt)"| job_profiles
+  employees -->|"is_linked_to"| users
+  users -->|"manages"| hcm_positions
+  users -->|"leads"| org_units
+  users -->|"owns"| job_profiles
   users -->|"enrolls in"| course_enrollments
-  users -->|"assigns (opt)"| course_enrollments
+  users -->|"assigns"| course_enrollments
   users -->|"holds"| learner_certifications
   users -->|"holds"| skill_profiles
   users -->|"owns"| performance_goals
-  org_units -->|"has members (opt)"| users
-  users -->|"prepares (opt)"| skills_gap_analyses
+  org_units -->|"has members"| users
+  users -->|"prepares"| skills_gap_analyses
   class learning_paths master;
   class employees embedded_master;
   class hcm_positions embedded_master;
@@ -139,7 +139,7 @@ flowchart TD
 
 ## 4. Aliases and industry synonyms
 
-_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
+_(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
@@ -201,9 +201,6 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 #### 5.3b Context edges on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
-
-<details>
-<summary>77 context edges</summary>
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -285,12 +282,11 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `workforce_scenarios` | drives | `hcm_positions` | one_to_many | required | none (required-if-present) | n/a | - |
 | `org_designs` | proposes | `hcm_positions` | one_to_many | required | none (required-if-present) | n/a | - |
 
-</details>
-
 ## 6. Cross-domain context
 
 ### 6.1 Master consumers (other modules / domains that embed this scope's masters)
 
+_(none: no other module embeds this scope's masters; the canonical owners do.)_
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
@@ -639,7 +635,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 
 **RACI realization:**
 
-_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_
+_(none: no process_raci assignments wired to this module's gated processes yet)_
 
 ### 9.2 Functional ownership and default grants
 

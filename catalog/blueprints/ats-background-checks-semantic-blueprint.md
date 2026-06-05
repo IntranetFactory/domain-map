@@ -61,19 +61,19 @@ flowchart TD
   background_check_packages -->|"shapes"| background_checks
   candidates -->|"discloses_via"| fcra_disclosures
   background_checks -->|"adjudicated_via"| background_check_adjudications
-  background_check_adjudications -->|"triggers (opt)"| adverse_action_notices
-  background_check_components -->|"disputed_via (opt)"| background_check_disputes
-  candidates -->|"acknowledges_via (opt)"| fcra_summary_of_rights_acknowledgements
-  background_checks -->|"triggers_pre_notice (opt)"| pre_adverse_action_notices
+  background_check_adjudications -->|"triggers"| adverse_action_notices
+  background_check_components -->|"disputed_via"| background_check_disputes
+  candidates -->|"acknowledges_via"| fcra_summary_of_rights_acknowledgements
+  background_checks -->|"triggers_pre_notice"| pre_adverse_action_notices
   background_checks -->|"gated_by"| fcra_summary_of_rights_acknowledgements
   job_offers -->|"is contingent on"| background_checks
-  candidates -->|"has owning recruiter (opt)"| users
+  candidates -->|"has owning recruiter"| users
   background_checks -->|"has requester"| users
-  background_check_components -->|"has owner (opt)"| users
+  background_check_components -->|"has owner"| users
   background_check_adjudications -->|"has adjudicator"| users
-  adverse_action_notices -->|"has owner (opt)"| users
-  background_check_disputes -->|"has owner (opt)"| users
-  pre_adverse_action_notices -->|"has owner (opt)"| users
+  adverse_action_notices -->|"has owner"| users
+  background_check_disputes -->|"has owner"| users
+  pre_adverse_action_notices -->|"has owner"| users
   job_offers -->|"has approver"| users
   class background_checks master;
   class candidates embedded_master;
@@ -111,7 +111,7 @@ flowchart TD
 
 ## 4. Aliases and industry synonyms
 
-_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
+_(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
@@ -149,14 +149,11 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 
 _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._
 
-_(no outbound cross-scope edges from this scope's masters or contributors.)_
+_(none: no outbound cross-scope edges from this scope's masters or contributors)_
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
-
-<details>
-<summary>27 context edges</summary>
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -187,8 +184,6 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
 | `job_offers` | spawns pre-employee record | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
-
-</details>
 
 ## 6. Cross-domain context
 

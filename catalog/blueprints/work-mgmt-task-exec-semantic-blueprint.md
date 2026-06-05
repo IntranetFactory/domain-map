@@ -87,47 +87,47 @@ flowchart TD
   work_dependencies -->|"blocks"| work_items
   work_milestones -->|"belongs_to"| work_projects
   work_approval_steps -->|"belongs_to"| work_approval_chains
-  work_approval_chains -->|"gates (opt)"| work_items
-  work_approval_chains -->|"gates_project (opt)"| work_projects
+  work_approval_chains -->|"gates"| work_items
+  work_approval_chains -->|"gates_project"| work_projects
   work_user_workloads -->|"rolls_up"| work_items
-  work_custom_fields -->|"applies_to (opt)"| work_projects
+  work_custom_fields -->|"applies_to"| work_projects
   work_custom_field_values -->|"valued_for"| work_custom_fields
   work_custom_field_values -->|"set_on"| work_items
   work_sections -->|"belongs_to"| work_projects
-  work_items -->|"placed_in (opt)"| work_sections
-  work_project_templates -->|"seeds (opt)"| work_projects
-  work_task_templates -->|"seeds_item (opt)"| work_items
+  work_items -->|"placed_in"| work_sections
+  work_project_templates -->|"seeds"| work_projects
+  work_task_templates -->|"seeds_item"| work_items
   work_item_tags -->|"references_tag"| work_tags
   work_item_tags -->|"tagged_on"| work_items
   work_item_comments -->|"belongs_to"| work_items
   work_item_attachments -->|"belongs_to"| work_items
-  action_plans -->|"spawns (opt)"| work_items
-  work_items -->|"depends_on (opt)"| work_items
+  action_plans -->|"spawns"| work_items
+  work_items -->|"depends_on"| work_items
   work_projects -->|"contains"| work_items
-  work_automations -->|"drives (opt)"| work_items
-  work_automations -->|"applies_to (opt)"| work_projects
-  strategic_initiatives -->|"portfolio rollup from (opt)"| work_items
-  work_automations -->|"rolls_up_into (opt)"| strategic_portfolios
-  work_automations -->|"feeds (opt)"| project_tasks
-  work_automations -->|"mirrors_to (opt)"| product_roadmaps
-  project_tasks -->|"performed_by (opt)"| project_assignments
-  users -->|"owns_milestones (opt)"| work_milestones
-  users -->|"approves_steps (opt)"| work_approval_steps
-  users -->|"initiated_chains (opt)"| work_approval_chains
-  users -->|"created_custom_fields (opt)"| work_custom_fields
-  users -->|"created_sections (opt)"| work_sections
-  users -->|"authored_project_templates (opt)"| work_project_templates
-  users -->|"authored_task_templates (opt)"| work_task_templates
-  users -->|"authored_comments (opt)"| work_item_comments
-  users -->|"uploaded_attachments (opt)"| work_item_attachments
+  work_automations -->|"drives"| work_items
+  work_automations -->|"applies_to"| work_projects
+  strategic_initiatives -->|"portfolio rollup from"| work_items
+  work_automations -->|"rolls_up_into"| strategic_portfolios
+  work_automations -->|"feeds"| project_tasks
+  work_automations -->|"mirrors_to"| product_roadmaps
+  project_tasks -->|"performed_by"| project_assignments
+  users -->|"owns_milestones"| work_milestones
+  users -->|"approves_steps"| work_approval_steps
+  users -->|"initiated_chains"| work_approval_chains
+  users -->|"created_custom_fields"| work_custom_fields
+  users -->|"created_sections"| work_sections
+  users -->|"authored_project_templates"| work_project_templates
+  users -->|"authored_task_templates"| work_task_templates
+  users -->|"authored_comments"| work_item_comments
+  users -->|"uploaded_attachments"| work_item_attachments
   users -->|"owns"| action_plans
-  action_plans -->|"is_assigned_to (opt)"| users
-  users -->|"assigned items (opt)"| work_items
+  action_plans -->|"is_assigned_to"| users
+  users -->|"assigned items"| work_items
   users -->|"created items"| work_items
   users -->|"owns projects"| work_projects
   users -->|"authored automations"| work_automations
   users -->|"owns"| crm_opportunities
-  users -->|"assigned_to (opt)"| project_tasks
+  users -->|"assigned_to"| project_tasks
   users -->|"staffed_on"| project_assignments
   class work_items master;
   class work_projects master;
@@ -203,7 +203,7 @@ flowchart TD
 
 ## 4. Aliases and industry synonyms
 
-_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
+_(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
@@ -284,9 +284,6 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
 
-<details>
-<summary>23 context edges</summary>
-
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `customers` | flags_churn_risk_on | `crm_opportunities` | one_to_many | optional | none | n/a | - |
@@ -312,8 +309,6 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `service_projects` | staffs | `project_assignments` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
 | `project_assignments` | requires_skills_from | `resource_skill_inventories` | many_to_many | optional | none | n/a | - |
 | `project_resource_allocations` | confirms_into | `project_assignments` | one_to_many | optional | none | n/a | - |
-
-</details>
 
 ## 6. Cross-domain context
 

@@ -76,51 +76,51 @@ flowchart TD
   ferpa_training_records["FERPA Training Records"]
   users["Users"]
   compliance_training_campaigns -->|"generates"| compliance_assignments
-  compliance_assignments -->|"evidences (opt)"| compliance_audit_records
-  compliance_audit_records -->|"rolled_into (opt)"| training_evidence_records
-  training_evidence_records -->|"supplies (opt)"| regulator_filing_exports
-  compliance_assignments -->|"acknowledged_via (opt)"| harassment_training_acknowledgements
-  recertification_schedules -->|"triggers (opt)"| compliance_training_campaigns
-  compliance_assignments -->|"produces (opt)"| hipaa_training_records
-  compliance_assignments -->|"produces (opt)"| osha_training_records
-  compliance_assignments -->|"produces (opt)"| sox_training_evidence
-  compliance_assignments -->|"produces (opt)"| ferpa_training_records
-  compliance_assignments -->|"produces (opt)"| fda_part11_audit_trails
-  compliance_assignments -->|"produces (opt)"| bsa_aml_training_records
+  compliance_assignments -->|"evidences"| compliance_audit_records
+  compliance_audit_records -->|"rolled_into"| training_evidence_records
+  training_evidence_records -->|"supplies"| regulator_filing_exports
+  compliance_assignments -->|"acknowledged_via"| harassment_training_acknowledgements
+  recertification_schedules -->|"triggers"| compliance_training_campaigns
+  compliance_assignments -->|"produces"| hipaa_training_records
+  compliance_assignments -->|"produces"| osha_training_records
+  compliance_assignments -->|"produces"| sox_training_evidence
+  compliance_assignments -->|"produces"| ferpa_training_records
+  compliance_assignments -->|"produces"| fda_part11_audit_trails
+  compliance_assignments -->|"produces"| bsa_aml_training_records
   org_units -->|"groups"| employees
   org_units -->|"contains"| hcm_positions
-  hcm_positions -->|"is_filled_by (opt)"| employees
+  hcm_positions -->|"is_filled_by"| employees
   cost_centers -->|"funds"| org_units
-  org_units -->|"maps_to (opt)"| cost_centers
-  courses -->|"fulfills (opt)"| compliance_assignments
-  courses -->|"grants (opt)"| learner_certifications
-  hcm_positions -->|"requires (opt)"| compliance_assignments
-  org_units -->|"sponsors (opt)"| compliance_assignments
-  employees -->|"reflected on (opt)"| compliance_assignments
-  employees -->|"fills (opt)"| hcm_positions
-  org_units -->|"rolls_up_to (opt)"| org_units
-  users -->|"owns (opt)"| courses
+  org_units -->|"maps_to"| cost_centers
+  courses -->|"fulfills"| compliance_assignments
+  courses -->|"grants"| learner_certifications
+  hcm_positions -->|"requires"| compliance_assignments
+  org_units -->|"sponsors"| compliance_assignments
+  employees -->|"reflected on"| compliance_assignments
+  employees -->|"fills"| hcm_positions
+  org_units -->|"rolls_up_to"| org_units
+  users -->|"owns"| courses
   users -->|"acknowledges"| harassment_training_acknowledgements
-  users -->|"evidenced_by_record_for (opt)"| hipaa_training_records
-  users -->|"evidenced_by_record_for (opt)"| osha_training_records
-  users -->|"evidenced_by_record_for (opt)"| sox_training_evidence
-  users -->|"evidenced_by_record_for (opt)"| ferpa_training_records
-  users -->|"audit_trailed_in (opt)"| fda_part11_audit_trails
-  users -->|"evidenced_by_record_for (opt)"| bsa_aml_training_records
-  users -->|"attests to policies (opt)"| policy_attestations
+  users -->|"evidenced_by_record_for"| hipaa_training_records
+  users -->|"evidenced_by_record_for"| osha_training_records
+  users -->|"evidenced_by_record_for"| sox_training_evidence
+  users -->|"evidenced_by_record_for"| ferpa_training_records
+  users -->|"audit_trailed_in"| fda_part11_audit_trails
+  users -->|"evidenced_by_record_for"| bsa_aml_training_records
+  users -->|"attests to policies"| policy_attestations
   policy_attestations -->|"has attester"| users
-  users -->|"signed (opt)"| signature_records
-  employees -->|"is_linked_to (opt)"| users
-  users -->|"manages (opt)"| hcm_positions
-  users -->|"leads (opt)"| org_units
-  users -->|"owns (opt)"| cost_centers
-  users -->|"performs (opt)"| onboarding_tasks
-  users -->|"created (opt)"| onboarding_tasks
-  users -->|"authors (opt)"| courses
+  users -->|"signed"| signature_records
+  employees -->|"is_linked_to"| users
+  users -->|"manages"| hcm_positions
+  users -->|"leads"| org_units
+  users -->|"owns"| cost_centers
+  users -->|"performs"| onboarding_tasks
+  users -->|"created"| onboarding_tasks
+  users -->|"authors"| courses
   users -->|"must complete"| compliance_assignments
-  users -->|"owns (opt)"| compliance_assignments
+  users -->|"owns"| compliance_assignments
   users -->|"holds"| learner_certifications
-  org_units -->|"has members (opt)"| users
+  org_units -->|"has members"| users
   class org_units embedded_master;
   class compliance_assignments master;
   class employees embedded_master;
@@ -182,7 +182,7 @@ flowchart TD
 
 ## 4. Aliases and industry synonyms
 
-_(no industry-scoped aliases or non-synonym alias types loaded for this scope; generic synonyms are omitted as common knowledge.)_
+_(none: no industry-scoped aliases for this scope)_
 
 ## 5. Relationships
 
@@ -258,9 +258,6 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 #### 5.3b Context edges on embedded shells and consumed entities
 
 _Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._
-
-<details>
-<summary>78 context edges</summary>
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -342,8 +339,6 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `survey_campaigns` | targets | `employees` | many_to_many | optional | none | n/a | - |
 | `workforce_scenarios` | drives | `hcm_positions` | one_to_many | required | none (required-if-present) | n/a | - |
 | `org_designs` | proposes | `hcm_positions` | one_to_many | required | none (required-if-present) | n/a | - |
-
-</details>
 
 ## 6. Cross-domain context
 
@@ -839,7 +834,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 
 **RACI realization:**
 
-_(no `process_raci` assignments wired to this module's gated processes yet; authored per-domain in Phase E.)_
+_(none: no process_raci assignments wired to this module's gated processes yet)_
 
 ### 9.2 Functional ownership and default grants
 
