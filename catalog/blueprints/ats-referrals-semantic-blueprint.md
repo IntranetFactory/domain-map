@@ -1,33 +1,35 @@
 ---
 artifact: semantic-blueprint
 fact_sheet_version: "2.0"
+license: MIT
 system_name: ATS-REFERRALS
 system_description: Employee Referrals
+tagline: Turn your employees into your best sourcing channel.
+description: Let employees submit referrals, track each one through the pipeline, and pay out rewards automatically when a hire sticks. Campaigns and reward tiers keep participation high without manual bookkeeping.
 system_slug: ats-referrals
 domain_modules:
   - ats-referrals
 domain_code: ATS
 related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-talent-pools, ben-enrollment, hcm-lifecycle-workflows, onb-journey-mgmt, payroll-earnings-deductions]
-created_at: 2026-06-02
+persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-RECRUITER]
+created_at: 2026-06-05
 ---
 
 # Employee Referrals
 
 ## 1. Overview
 
-### 1.1 Analyst overview
-
 Employee-driven candidate sourcing with referral-bonus tracking (`candidate_referrals`). Embedded-masters `candidates`. Cross-domain handoffs to PAYROLL (bonus payout) and EMP-EXP (engagement signal).
 
 ## 2. Entity summary
 
-| Name | Description |
-| --- | --- |
-| Referral Campaigns | Time-bounded promotion offering bonus referral rewards (e.g. 'double bonus for engineering Q3 2026', 'spot-bonus for hard-to-fill roles'). Scopes a referral_rewards override. |
-| Referral Payouts | Individual payout instance triggered when a referred candidate is hired and meets tenure conditions. Lifecycle: pending -> approved -> paid (-> clawed_back). |
-| Referral Rewards | Bounty rule defining the payout amount and conditions for a successful referral (e.g. $5000 paid 90 days after hire start, scaled by role level). |
-| Referrals | Employee-submitted candidate suggestion linked to a requisition. Tracks the referring employee, candidate, status, and any payable bonus. |
-| Candidates | Person known to the recruiting org, with or without an active application. Carries contact details, resume, tags, GDPR consent, and source. Distinct from Employee until hired. |
+| Name | data_object | Description |
+| --- | --- | --- |
+| Referral Campaigns | `referral_campaigns` | Time-bounded promotion offering bonus referral rewards (e.g. 'double bonus for engineering Q3 2026', 'spot-bonus for hard-to-fill roles'). Scopes a referral_rewards override. |
+| Referral Payouts | `referral_payouts` | Individual payout instance triggered when a referred candidate is hired and meets tenure conditions. Lifecycle: pending -> approved -> paid (-> clawed_back). |
+| Referral Rewards | `referral_rewards` | Bounty rule defining the payout amount and conditions for a successful referral (e.g. $5000 paid 90 days after hire start, scaled by role level). |
+| Referrals | `candidate_referrals` | Employee-submitted candidate suggestion linked to a requisition. Tracks the referring employee, candidate, status, and any payable bonus. |
+| Candidates | `candidates` | Person known to the recruiting org, with or without an active application. Carries contact details, resume, tags, GDPR consent, and source. Distinct from Employee until hired. |
 
 ```mermaid
 flowchart TD
@@ -45,6 +47,8 @@ flowchart TD
   referral_campaigns -->|"overrides (opt)"| referral_rewards
   candidate_referrals -->|"introduces"| candidates
   candidates -->|"has owning recruiter (opt)"| users
+  referral_payouts -->|"has approver (opt)"| users
+  referral_campaigns -->|"has owner (opt)"| users
   candidate_referrals -->|"has referring employee"| users
   class candidate_referrals master;
   class candidates embedded_master;
@@ -57,13 +61,13 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `referral_campaigns` (Referral Campaigns) | master | - | - | optional | - | `:manage` | - |
-| 2 | `referral_payouts` (Referral Payouts) | master | - | - | required | - | `:manage` | - |
-| 3 | `referral_rewards` (Referral Rewards) | master | - | - | required | - | `:admin` | - |
-| 4 | `candidate_referrals` (Referrals) | master | - | - | required | - | `:manage` | - |
-| 5 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
+| # | data_object | singular | plural | role | mastered in | mastered label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `referral_campaigns` | Referral Campaign | Referral Campaigns | master | - | - | optional | - | `:manage` | - |
+| 2 | `referral_payouts` | Referral Payout | Referral Payouts | master | - | - | required | - | `:manage` | - |
+| 3 | `referral_rewards` | Referral Reward | Referral Rewards | master | - | - | required | - | `:admin` | - |
+| 4 | `candidate_referrals` | Referral | Referrals | master | - | - | required | - | `:manage` | - |
+| 5 | `candidates` | Candidate | Candidates | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -85,6 +89,8 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `candidates` | has owning recruiter | `users` | many_to_many | optional | source | clear | reference | - |
+| `referral_payouts` | has approver | `users` | many_to_many | optional | source | clear | reference | - |
+| `referral_campaigns` | has owner | `users` | many_to_many | optional | source | clear | reference | - |
 | `candidate_referrals` | has referring employee | `users` | many_to_many | required | source | restrict | reference | - |
 
 ### 5.3 Cross-scope edges
@@ -250,13 +256,19 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `ats-referrals:admin` | `ats-referrals:view_all_candidates` |
 | `ats-referrals:admin` | `ats-referrals:manage_all_candidates` |
 
+**Processes wired:**
+
+| process_key | process_name | PCF code | PCF ID | level | description |
+| --- | --- | --- | --- | --- | --- |
+| `hire_candidate` | Hire candidate | 7.2.4.3 | 10465 | 4 | Wrapping up the process for hiring candidates. Agree to all hiring terms and conditions. Have the candidate accept and sign the job offer. |
+
 **RACI realization:**
 
-| actor | kind | raci | process | realization |
+| actor | kind | raci | process_key | realization |
 | --- | --- | --- | --- | --- |
-| `RECRUITING-RECRUITER` | persona | responsible | Hire candidate | grant gates [ats-referrals:hire_candidate] + the gated entities' write tier |
-| `HIRING-MANAGER` | persona | accountable | Hire candidate | approval gate |
-| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | Hire candidate | notification side effect (trigger_event / webhook_receiver) |
+| `RECRUITING-RECRUITER` | persona | responsible | `hire_candidate` | grant gates [ats-referrals:hire_candidate] + the gated entities' write tier |
+| `HIRING-MANAGER` | persona | accountable | `hire_candidate` | approval gate |
+| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | `hire_candidate` | notification side effect (trigger_event / webhook_receiver) |
 
 ### 9.2 Functional ownership and default grants
 

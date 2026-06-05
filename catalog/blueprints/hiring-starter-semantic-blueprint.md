@@ -1,36 +1,38 @@
 ---
 artifact: semantic-blueprint
 fact_sheet_version: "2.0"
+license: MIT
 system_name: HIRING-STARTER
 system_description: Hiring Starter
+tagline: Everything a small team needs to hire, in one lightweight package.
+description: "A starter bundle covering the core hiring path (postings, candidates, applications, interviews, and offers) without the breadth of the full module set. Stand up hiring quickly, then grow into the full modules as your volume increases; your data moves with you when you do."
 system_slug: hiring-starter
 domain_modules:
   - hiring-starter
 domain_code: ATS
 related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, comp-statements, hcm-lifecycle-workflows, onb-journey-mgmt, pa-workforce-metrics]
-created_at: 2026-06-02
+persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-COORDINATOR, RECRUITING-MANAGER, RECRUITING-RECRUITER, RECRUITING-SOURCER]
+created_at: 2026-06-05
 ---
 
 # Hiring Starter
 
 ## 1. Overview
 
-### 1.1 Analyst overview
-
 Entry-tier deployable for a basic hiring workflow: post jobs, capture applications, run interviews, generate offers. Embeds the canonical masters from the full ATS modules and inherits their lifecycle states. Ships three baseline permissions and one system skill; no workflow gates, no requisition approvals, no background-check orchestration, no pre-employee reconciliation. Upgrades to the full ATS surface without tenant data migration via the embedded-master demotion path.
 
 ## 2. Entity summary
 
-| Name | Description |
-| --- | --- |
-| Applications | A candidate's submission against a specific requisition. Carries pipeline stage, status (active / rejected / withdrawn / hired), source, and the full evaluation history. |
-| Candidates | Person known to the recruiting org, with or without an active application. Carries contact details, resume, tags, GDPR consent, and source. Distinct from Employee until hired. |
-| Interview Scorecards | Structured interviewer feedback against a defined rubric: per-competency ratings, written notes, and a hire/no-hire recommendation. |
-| Interviews | Scheduled assessment event between a candidate and one or more interviewers. Carries time, location/medium, panel, interview kit, and outcome. |
-| Job Postings | Published, candidate-facing version of a requisition on a career site or job board. One requisition can have many postings (per board, language, or region). |
-| Offers | Formal employment offer extended to a candidate. Carries compensation components, start date, terms, approval chain, and status (draft / approved / sent / accepted / declined / rescinded). |
-| Recruitment Sources | Channel a candidate came from: job board, referral, agency, sourcing campaign, career event, or inbound. Used for source-of-hire analytics and channel ROI. |
-| Users | Semantius platform-owned user table. Referenced from domain `data_objects` via `data_object_relationships` for assignee / author / approver / creator edges. Not surfaced in domain-level analytics (Signal 1/2 ignore `kind='platform_builtin'`). |
+| Name | data_object | Description |
+| --- | --- | --- |
+| Applications | `job_applications` | A candidate's submission against a specific requisition. Carries pipeline stage, status (active / rejected / withdrawn / hired), source, and the full evaluation history. |
+| Candidates | `candidates` | Person known to the recruiting org, with or without an active application. Carries contact details, resume, tags, GDPR consent, and source. Distinct from Employee until hired. |
+| Interview Scorecards | `interview_scorecards` | Structured interviewer feedback against a defined rubric: per-competency ratings, written notes, and a hire/no-hire recommendation. |
+| Interviews | `interviews` | Scheduled assessment event between a candidate and one or more interviewers. Carries time, location/medium, panel, interview kit, and outcome. |
+| Job Postings | `job_postings` | Published, candidate-facing version of a requisition on a career site or job board. One requisition can have many postings (per board, language, or region). |
+| Offers | `job_offers` | Formal employment offer extended to a candidate. Carries compensation components, start date, terms, approval chain, and status (draft / approved / sent / accepted / declined / rescinded). |
+| Recruitment Sources | `recruitment_sources` | Channel a candidate came from: job board, referral, agency, sourcing campaign, career event, or inbound. Used for source-of-hire analytics and channel ROI. |
+| Users | `users` | Semantius platform-owned user table. Referenced from domain `data_objects` via `data_object_relationships` for assignee / author / approver / creator edges. Not surfaced in domain-level analytics (Signal 1/2 ignore `kind='platform_builtin'`). |
 
 ```mermaid
 flowchart TD
@@ -70,16 +72,16 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `job_applications` (Applications) | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | personal_content | `:manage` | - |
-| 2 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
-| 3 | `interview_scorecards` (Interview Scorecards) | embedded_master | `ats-interviews` | Interviews | optional | personal_content, submit_lock | `:manage` | - |
-| 4 | `interviews` (Interviews) | embedded_master | `ats-interviews` | Interviews | required | - | `:manage` | - |
-| 5 | `job_postings` (Job Postings) | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | - | `:manage` | - |
-| 6 | `job_offers` (Offers) | embedded_master | `ats-offers` | Offers | required | personal_content, single_approver | `:manage` | - |
-| 7 | `recruitment_sources` (Recruitment Sources) | embedded_master | `ats-candidate-crm` | Candidate CRM | optional | - | `:admin` | - |
-| 8 | `users` (Users) | consumer | _(platform built-in)_ | _(platform built-in)_ | required | - | `:manage` _(pending)_ | - |
+| # | data_object | singular | plural | role | mastered in | mastered label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `job_applications` | Application | Applications | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | personal_content | `:manage` | - |
+| 2 | `candidates` | Candidate | Candidates | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
+| 3 | `interview_scorecards` | Interview Scorecard | Interview Scorecards | embedded_master | `ats-interviews` | Interviews | optional | personal_content, submit_lock | `:manage` | - |
+| 4 | `interviews` | Interview | Interviews | embedded_master | `ats-interviews` | Interviews | required | - | `:manage` | - |
+| 5 | `job_postings` | Job Posting | Job Postings | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | - | `:manage` | - |
+| 6 | `job_offers` | Offer | Offers | embedded_master | `ats-offers` | Offers | required | personal_content, single_approver | `:manage` | - |
+| 7 | `recruitment_sources` | Recruitment Source | Recruitment Sources | embedded_master | `ats-candidate-crm` | Candidate CRM | optional | - | `:admin` | - |
+| 8 | `users` | User | Users | consumer | _(platform built-in)_ | _(platform built-in)_ | required | - | `:manage` _(pending)_ | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -179,13 +181,13 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-OFFERS | HCM | HCM-LIFECYCLE-WORKFLOWS | `job_offer.accepted` | `accepted` _(state_change)_ | `job_offers` | event_stream | medium | Offer acceptance signals firm hiring intent; HCM creates pending-employee record. |
 | ATS-CANDIDATE-CRM | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
+| ATS-OFFERS | HCM | HCM-LIFECYCLE-WORKFLOWS | `job_offer.accepted` | `accepted` _(state_change)_ | `job_offers` | event_stream | medium | Offer acceptance signals firm hiring intent; HCM creates pending-employee record. |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-TALENT-POOLS | `job_application.rejected` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-OFFERS | COMP-MGMT | COMP-STATEMENTS | `job_offer.signed` | `signed` _(lifecycle)_ | `job_offers` | event_stream | low | Signed offer establishes the comp baseline; COMP-MGMT incorporates into cycle history. |
 | ATS-CANDIDATE-CRM | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
-| ATS-CANDIDATE-CRM | PA | PA-WORKFORCE-METRICS | `recruitment_source.attributed` | _(lifecycle)_ | `recruitment_sources` | batch_sync | low | Source attribution feeds people-analytics quality-of-hire and cost-per-hire models. |
 | ATS-INTERVIEWS | PA | PA-WORKFORCE-METRICS | `interview_scorecard.submitted` | _(lifecycle)_ | `interview_scorecards` | event_stream | low | - |
+| ATS-CANDIDATE-CRM | PA | PA-WORKFORCE-METRICS | `recruitment_source.attributed` | _(lifecycle)_ | `recruitment_sources` | batch_sync | low | Source attribution feeds people-analytics quality-of-hire and cost-per-hire models. |
 | ATS-CANDIDATE-CRM | ONBOARDING | ONB-JOURNEY-MGMT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | medium | Hired candidate drives onboarding-plan kickoff with role/location/manager context from ATS payload. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
@@ -193,8 +195,8 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ATS-OFFERS | ATS | ATS-BACKGROUND-CHECKS | `background_check.flagged` | _(lifecycle)_ | `job_offers` | lifecycle_progression | medium | - |
-| ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_activated` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
+| ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -356,24 +358,33 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `hiring-starter:admin` | `hiring-starter:view_all_offers` |
 | `hiring-starter:admin` | `hiring-starter:manage_all_offers` |
 
+**Processes wired:**
+
+| process_key | process_name | PCF code | PCF ID | level | description |
+| --- | --- | --- | --- | --- | --- |
+| `recruit_source_candidates` | Recruit/Source candidates | 7.2.2 | 10440 | 3 | Recruiting new candidates for deployment across various functional areas inside the organization. Select methods for sourcing new employees. Manage relationships with third-party agencies. Stage recruitment fairs and drives. Manage employee referral programs. |
+| `hire_candidate` | Hire candidate | 7.2.4.3 | 10465 | 4 | Wrapping up the process for hiring candidates. Agree to all hiring terms and conditions. Have the candidate accept and sign the job offer. |
+| `interview_candidates` | Interview candidates | 7.2.3.2 | 10457 | 4 | Assessing the candidates by their performance in the interviews. Conduct HR interview, technical interview, hiring manager interview, etc. Understand the mindset of the candidate, and comprehend his/her personal and professional lives. |
+| `draw_up_make_offer` | Draw up and make offer | 7.2.4.1 | 10463 | 4 | Compiling job-related information for the selected candidates in order to make up a job. Include information about the job description, reporting relationship, salary, bonus potential, benefits, and vacation allotment. |
+
 **RACI realization:**
 
-| actor | kind | raci | process | realization |
+| actor | kind | raci | process_key | realization |
 | --- | --- | --- | --- | --- |
-| `RECRUITING-SOURCER` | persona | responsible | Recruit/Source candidates | grant gates [hiring-starter:publish_posting] + the gated entities' write tier |
-| `RECRUITING-RECRUITER` | persona | responsible | Recruit/Source candidates | grant gates [hiring-starter:publish_posting] + the gated entities' write tier |
-| `RECRUITING-MANAGER` | persona | accountable | Recruit/Source candidates | approval gate |
-| `HIRING-MANAGER` | persona | informed | Recruit/Source candidates | notification side effect (trigger_event / webhook_receiver) |
-| `RECRUITING-RECRUITER` | persona | responsible | Hire candidate | grant gates [hiring-starter:hire_candidate, hiring-starter:hire_candidate] + the gated entities' write tier |
-| `HIRING-MANAGER` | persona | accountable | Hire candidate | approval gate |
-| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | Hire candidate | notification side effect (trigger_event / webhook_receiver) |
-| `HIRING-MANAGER` | persona | responsible | Interview candidates | grant gates [hiring-starter:submit_scorecard] + the gated entities' write tier |
-| `RECRUITING-MANAGER` | persona | accountable | Interview candidates | approval gate |
-| `RECRUITING-RECRUITER` | persona | consulted | Interview candidates | advisory read grant |
-| `RECRUITING-COORDINATOR` | persona | informed | Interview candidates | notification side effect (trigger_event / webhook_receiver) |
-| `RECRUITING-RECRUITER` | persona | responsible | Draw up and make offer | grant gates [hiring-starter:approve_offer] + the gated entities' write tier |
-| `HIRING-MANAGER` | persona | accountable | Draw up and make offer | approval gate |
-| `RECRUITING-MANAGER` | persona | consulted | Draw up and make offer | advisory read grant |
+| `RECRUITING-SOURCER` | persona | responsible | `recruit_source_candidates` | grant gates [hiring-starter:publish_posting] + the gated entities' write tier |
+| `RECRUITING-RECRUITER` | persona | responsible | `recruit_source_candidates` | grant gates [hiring-starter:publish_posting] + the gated entities' write tier |
+| `RECRUITING-MANAGER` | persona | accountable | `recruit_source_candidates` | approval gate |
+| `HIRING-MANAGER` | persona | informed | `recruit_source_candidates` | notification side effect (trigger_event / webhook_receiver) |
+| `RECRUITING-RECRUITER` | persona | responsible | `hire_candidate` | grant gates [hiring-starter:hire_candidate, hiring-starter:hire_candidate] + the gated entities' write tier |
+| `HIRING-MANAGER` | persona | accountable | `hire_candidate` | approval gate |
+| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | `hire_candidate` | notification side effect (trigger_event / webhook_receiver) |
+| `HIRING-MANAGER` | persona | responsible | `interview_candidates` | grant gates [hiring-starter:submit_scorecard] + the gated entities' write tier |
+| `RECRUITING-MANAGER` | persona | accountable | `interview_candidates` | approval gate |
+| `RECRUITING-RECRUITER` | persona | consulted | `interview_candidates` | advisory read grant |
+| `RECRUITING-COORDINATOR` | persona | informed | `interview_candidates` | notification side effect (trigger_event / webhook_receiver) |
+| `RECRUITING-RECRUITER` | persona | responsible | `draw_up_make_offer` | grant gates [hiring-starter:approve_offer] + the gated entities' write tier |
+| `HIRING-MANAGER` | persona | accountable | `draw_up_make_offer` | approval gate |
+| `RECRUITING-MANAGER` | persona | consulted | `draw_up_make_offer` | advisory read grant |
 
 ### 9.2 Functional ownership and default grants
 

@@ -1,35 +1,37 @@
 ---
 artifact: semantic-blueprint
 fact_sheet_version: "2.0"
+license: MIT
 system_name: ATS-OFFERS
 system_description: Offers
+tagline: Generate, approve, and send offers without losing a version.
+description: Draft offers from templates, route them through approval chains, and track every version until acceptance. Generated offer letters stay linked to the offer record, so what was approved is exactly what was sent.
 system_slug: ats-offers
 domain_modules:
   - ats-offers
 domain_code: ATS
 related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, comp-statements, hcm-lifecycle-workflows, hiring-starter, onb-journey-mgmt]
-created_at: 2026-06-02
+persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-MANAGER, RECRUITING-RECRUITER]
+created_at: 2026-06-05
 ---
 
 # Offers
 
 ## 1. Overview
 
-### 1.1 Analyst overview
-
 Offer drafting, approval, extension, signature, and acceptance. Realizes OFFER-MGMT. Realizes the `offer_extended` state on `job_applications`. Requires an external `sign_document` tool, drops module Semantius coverage to ~83%.
 
 ## 2. Entity summary
 
-| Name | Description |
-| --- | --- |
-| Offer Approvals | Approval step in the offer-approval chain (HRBP -> Comp -> Finance -> Exec). Triggered when an offer exceeds band, includes non-standard equity, or matches other escalation rules. |
-| Offer Letter Documents | Generated PDF artifact of the offer terms, distinct from the structured offer record. Versioned in lockstep with offer_versions. Carries template_id, render timestamp, e-sign envelope link. |
-| Offer Letter Templates | Reusable letter template with merge tokens (candidate name, role, base salary, start date, equity, bonus terms). Versioned. Renders offer_letter_documents at offer time. Carries template name, body, token schema, jurisdiction, language, active flag, and version. |
-| Offer Versions | Versioned snapshot of a job_offer during negotiation (initial -> counter -> revised -> accepted). Each version carries the structured terms (base, bonus, equity, start_date) and the author of the change. |
-| Offers | Formal employment offer extended to a candidate. Carries compensation components, start date, terms, approval chain, and status (draft / approved / sent / accepted / declined / rescinded). |
-| Applications | A candidate's submission against a specific requisition. Carries pipeline stage, status (active / rejected / withdrawn / hired), source, and the full evaluation history. |
-| Candidates | Person known to the recruiting org, with or without an active application. Carries contact details, resume, tags, GDPR consent, and source. Distinct from Employee until hired. |
+| Name | data_object | Description |
+| --- | --- | --- |
+| Offer Approvals | `offer_approvals` | Approval step in the offer-approval chain (HRBP -> Comp -> Finance -> Exec). Triggered when an offer exceeds band, includes non-standard equity, or matches other escalation rules. |
+| Offer Letter Documents | `offer_letter_documents` | Generated PDF artifact of the offer terms, distinct from the structured offer record. Versioned in lockstep with offer_versions. Carries template_id, render timestamp, e-sign envelope link. |
+| Offer Letter Templates | `offer_letter_templates` | Reusable letter template with merge tokens (candidate name, role, base salary, start date, equity, bonus terms). Versioned. Renders offer_letter_documents at offer time. Carries template name, body, token schema, jurisdiction, language, active flag, and version. |
+| Offer Versions | `offer_versions` | Versioned snapshot of a job_offer during negotiation (initial -> counter -> revised -> accepted). Each version carries the structured terms (base, bonus, equity, start_date) and the author of the change. |
+| Offers | `job_offers` | Formal employment offer extended to a candidate. Carries compensation components, start date, terms, approval chain, and status (draft / approved / sent / accepted / declined / rescinded). |
+| Applications | `job_applications` | A candidate's submission against a specific requisition. Carries pipeline stage, status (active / rejected / withdrawn / hired), source, and the full evaluation history. |
+| Candidates | `candidates` | Person known to the recruiting org, with or without an active application. Carries contact details, resume, tags, GDPR consent, and source. Distinct from Employee until hired. |
 
 ```mermaid
 flowchart TD
@@ -53,6 +55,9 @@ flowchart TD
   candidates -->|"has owning recruiter (opt)"| users
   users -->|"authored templates (opt)"| offer_letter_templates
   users -->|"approved templates (opt)"| offer_letter_templates
+  offer_versions -->|"has author"| users
+  offer_approvals -->|"has approver"| users
+  offer_letter_documents -->|"has owner (opt)"| users
   job_applications -->|"has owning recruiter"| users
   job_offers -->|"has approver"| users
   class job_offers master;
@@ -67,15 +72,15 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `offer_approvals` (Offer Approvals) | master | - | - | required | single_approver | `:manage` | - |
-| 2 | `offer_letter_documents` (Offer Letter Documents) | master | - | - | required | personal_content | `:manage` | - |
-| 3 | `offer_letter_templates` (Offer Letter Templates) | master | - | - | required | submit_lock, single_approver | `:admin` | - |
-| 4 | `offer_versions` (Offer Versions) | master | - | - | required | personal_content | `:manage` | - |
-| 5 | `job_offers` (Offers) | master | - | - | required | personal_content, single_approver | `:manage` | - |
-| 6 | `job_applications` (Applications) | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | personal_content | `:manage` | - |
-| 7 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
+| # | data_object | singular | plural | role | mastered in | mastered label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `offer_approvals` | Offer Approval | Offer Approvals | master | - | - | required | single_approver | `:manage` | - |
+| 2 | `offer_letter_documents` | Offer Letter Document | Offer Letter Documents | master | - | - | required | personal_content | `:manage` | - |
+| 3 | `offer_letter_templates` | Offer Letter Template | Offer Letter Templates | master | - | - | required | submit_lock, single_approver | `:admin` | - |
+| 4 | `offer_versions` | Offer Version | Offer Versions | master | - | - | required | personal_content | `:manage` | - |
+| 5 | `job_offers` | Offer | Offers | master | - | - | required | personal_content, single_approver | `:manage` | - |
+| 6 | `job_applications` | Application | Applications | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | personal_content | `:manage` | - |
+| 7 | `candidates` | Candidate | Candidates | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -101,6 +106,9 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `candidates` | has owning recruiter | `users` | many_to_many | optional | source | clear | reference | - |
 | `users` | authored templates | `offer_letter_templates` | one_to_many | optional | source | clear | reference | - |
 | `users` | approved templates | `offer_letter_templates` | one_to_many | optional | source | clear | reference | - |
+| `offer_versions` | has author | `users` | many_to_many | required | source | restrict | reference | - |
+| `offer_approvals` | has approver | `users` | many_to_many | required | source | restrict | reference | - |
+| `offer_letter_documents` | has owner | `users` | many_to_many | optional | source | clear | reference | - |
 | `job_applications` | has owning recruiter | `users` | many_to_many | required | source | restrict | reference | - |
 | `job_offers` | has approver | `users` | many_to_many | required | source | restrict | reference | - |
 
@@ -176,8 +184,8 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-OFFERS | HCM | HCM-LIFECYCLE-WORKFLOWS | `job_offer.accepted` | `accepted` _(state_change)_ | `job_offers` | event_stream | medium | Offer acceptance signals firm hiring intent; HCM creates pending-employee record. |
 | ATS-CANDIDATE-CRM | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
+| ATS-OFFERS | HCM | HCM-LIFECYCLE-WORKFLOWS | `job_offer.accepted` | `accepted` _(state_change)_ | `job_offers` | event_stream | medium | Offer acceptance signals firm hiring intent; HCM creates pending-employee record. |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-TALENT-POOLS | `job_application.rejected` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-OFFERS | COMP-MGMT | COMP-STATEMENTS | `job_offer.signed` | `signed` _(lifecycle)_ | `job_offers` | event_stream | low | Signed offer establishes the comp baseline; COMP-MGMT incorporates into cycle history. |
 | ATS-CANDIDATE-CRM | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
@@ -188,12 +196,12 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ATS-OFFERS | ATS | ATS-BACKGROUND-CHECKS | `background_check.flagged` | _(lifecycle)_ | `job_offers` | lifecycle_progression | medium | - |
-| ATS-OFFERS | ATS | ATS-RECRUITMENT-PIPELINE | `job_application.advanced` | _(state_change)_ | `job_offers` | lifecycle_progression | low | - |
-| ATS-RECRUITMENT-PIPELINE | ATS | ATS-INTERVIEWS | `candidate_assessment.failed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
-| ATS-RECRUITMENT-PIPELINE | ATS | ATS-INTERVIEWS | `candidate_assessment.passed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
-| ATS-RECRUITMENT-PIPELINE | ATS | ATS-INTERVIEWS | `interview.completed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
-| ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_activated` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
+| ATS-RECRUITMENT-PIPELINE | ATS | ATS-INTERVIEWS | `interview.completed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
+| ATS-RECRUITMENT-PIPELINE | ATS | ATS-INTERVIEWS | `candidate_assessment.passed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
+| ATS-RECRUITMENT-PIPELINE | ATS | ATS-INTERVIEWS | `candidate_assessment.failed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
+| ATS-OFFERS | ATS | ATS-RECRUITMENT-PIPELINE | `job_application.advanced` | _(state_change)_ | `job_offers` | lifecycle_progression | low | - |
+| ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -358,16 +366,23 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `ats-offers:admin` | `ats-offers:view_all_offer_letter_documents` |
 | `ats-offers:admin` | `ats-offers:manage_all_offer_letter_documents` |
 
+**Processes wired:**
+
+| process_key | process_name | PCF code | PCF ID | level | description |
+| --- | --- | --- | --- | --- | --- |
+| `hire_candidate` | Hire candidate | 7.2.4.3 | 10465 | 4 | Wrapping up the process for hiring candidates. Agree to all hiring terms and conditions. Have the candidate accept and sign the job offer. |
+| `draw_up_make_offer` | Draw up and make offer | 7.2.4.1 | 10463 | 4 | Compiling job-related information for the selected candidates in order to make up a job. Include information about the job description, reporting relationship, salary, bonus potential, benefits, and vacation allotment. |
+
 **RACI realization:**
 
-| actor | kind | raci | process | realization |
+| actor | kind | raci | process_key | realization |
 | --- | --- | --- | --- | --- |
-| `RECRUITING-RECRUITER` | persona | responsible | Hire candidate | grant gates [ats-offers:hire_candidate, ats-offers:hire_candidate] + the gated entities' write tier |
-| `HIRING-MANAGER` | persona | accountable | Hire candidate | approval gate |
-| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | Hire candidate | notification side effect (trigger_event / webhook_receiver) |
-| `RECRUITING-RECRUITER` | persona | responsible | Draw up and make offer | grant gates [ats-offers:approve_offer] + the gated entities' write tier |
-| `HIRING-MANAGER` | persona | accountable | Draw up and make offer | approval gate |
-| `RECRUITING-MANAGER` | persona | consulted | Draw up and make offer | advisory read grant |
+| `RECRUITING-RECRUITER` | persona | responsible | `hire_candidate` | grant gates [ats-offers:hire_candidate, ats-offers:hire_candidate] + the gated entities' write tier |
+| `HIRING-MANAGER` | persona | accountable | `hire_candidate` | approval gate |
+| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | `hire_candidate` | notification side effect (trigger_event / webhook_receiver) |
+| `RECRUITING-RECRUITER` | persona | responsible | `draw_up_make_offer` | grant gates [ats-offers:approve_offer] + the gated entities' write tier |
+| `HIRING-MANAGER` | persona | accountable | `draw_up_make_offer` | approval gate |
+| `RECRUITING-MANAGER` | persona | consulted | `draw_up_make_offer` | advisory read grant |
 
 ### 9.2 Functional ownership and default grants
 

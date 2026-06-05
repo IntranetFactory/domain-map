@@ -1,35 +1,37 @@
 ---
 artifact: semantic-blueprint
 fact_sheet_version: "2.0"
+license: MIT
 system_name: ATS-TALENT-POOLS
 system_description: Talent Pools
+tagline: Group and segment candidates so the right shortlist is one search away.
+description: Organize candidates into pools and segments, tag them by skill or stage, and save the searches you run most. When a requisition opens, your shortlist is already assembled instead of rebuilt from scratch.
 system_slug: ats-talent-pools
 domain_modules:
   - ats-talent-pools
 domain_code: ATS
 related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ben-enrollment, hcm-lifecycle-workflows, onb-journey-mgmt]
-created_at: 2026-06-02
+persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-RECRUITER]
+created_at: 2026-06-05
 ---
 
 # Talent Pools
 
 ## 1. Overview
 
-### 1.1 Analyst overview
-
 Curated candidate groupings for nurture and pipeline-building (`talent_pools`). Embedded-masters `candidates`; deployed alone, materializes a thin candidate shell. Mirrors standalone talent-acquisition CRM products.
 
 ## 2. Entity summary
 
-| Name | Description |
-| --- | --- |
-| Candidate Tag Assignments | Many-to-many junction between candidates and candidate_tags. Carries assigned_by, assigned_at, and optional context. |
-| Candidate Tags | Free-form label applied to a candidate to support segmentation, search, and pool inclusion rules. Distinct from talent pools (curated membership lists). Carries name, optional category, and color. |
-| Recruiter Saved Searches | Persisted recruiter boolean query over the candidate database. Carries filter expression, last_run timestamp, alert preferences. |
-| Talent Pool Memberships | Junction between candidates and talent_pools. Carries added timestamp, source, status_in_pool (cold/warm/hot), match score, and last_engagement timestamp. |
-| Talent Pools | Curated segment or pipeline of candidates kept warm for future roles (e.g. silver medallists, alumni, target-school grads, hard-to-fill skill clusters). |
-| Talent Segments | Rule-based pool definition (boolean filter over candidates) that materializes membership automatically. Examples: 'Senior PMs in NYC with FinTech experience', 'Engineering alumni who left in the last 2 years'. |
-| Candidates | Person known to the recruiting org, with or without an active application. Carries contact details, resume, tags, GDPR consent, and source. Distinct from Employee until hired. |
+| Name | data_object | Description |
+| --- | --- | --- |
+| Candidate Tag Assignments | `candidate_tag_assignments` | Many-to-many junction between candidates and candidate_tags. Carries assigned_by, assigned_at, and optional context. |
+| Candidate Tags | `candidate_tags` | Free-form label applied to a candidate to support segmentation, search, and pool inclusion rules. Distinct from talent pools (curated membership lists). Carries name, optional category, and color. |
+| Recruiter Saved Searches | `recruiter_saved_searches` | Persisted recruiter boolean query over the candidate database. Carries filter expression, last_run timestamp, alert preferences. |
+| Talent Pool Memberships | `talent_pool_memberships` | Junction between candidates and talent_pools. Carries added timestamp, source, status_in_pool (cold/warm/hot), match score, and last_engagement timestamp. |
+| Talent Pools | `talent_pools` | Curated segment or pipeline of candidates kept warm for future roles (e.g. silver medallists, alumni, target-school grads, hard-to-fill skill clusters). |
+| Talent Segments | `talent_segments` | Rule-based pool definition (boolean filter over candidates) that materializes membership automatically. Examples: 'Senior PMs in NYC with FinTech experience', 'Engineering alumni who left in the last 2 years'. |
+| Candidates | `candidates` | Person known to the recruiting org, with or without an active application. Carries contact details, resume, tags, GDPR consent, and source. Distinct from Employee until hired. |
 
 ```mermaid
 flowchart TD
@@ -53,6 +55,7 @@ flowchart TD
   candidates -->|"has owning recruiter (opt)"| users
   talent_pools -->|"has owner"| users
   users -->|"assigned tags (opt)"| candidate_tag_assignments
+  recruiter_saved_searches -->|"has owner"| users
   class talent_pools master;
   class candidates embedded_master;
   class talent_pool_memberships master;
@@ -66,15 +69,15 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `candidate_tag_assignments` (Candidate Tag Assignments) | master | - | - | required | - | `:admin` | - |
-| 2 | `candidate_tags` (Candidate Tags) | master | - | - | required | - | `:admin` | - |
-| 3 | `recruiter_saved_searches` (Recruiter Saved Searches) | master | - | - | optional | - | `:admin` | - |
-| 4 | `talent_pool_memberships` (Talent Pool Memberships) | master | - | - | required | personal_content | `:manage` | - |
-| 5 | `talent_pools` (Talent Pools) | master | - | - | required | - | `:manage` | - |
-| 6 | `talent_segments` (Talent Segments) | master | - | - | required | - | `:admin` | - |
-| 7 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
+| # | data_object | singular | plural | role | mastered in | mastered label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `candidate_tag_assignments` | Candidate Tag Assignment | Candidate Tag Assignments | master | - | - | required | - | `:admin` | - |
+| 2 | `candidate_tags` | Candidate Tag | Candidate Tags | master | - | - | required | - | `:admin` | - |
+| 3 | `recruiter_saved_searches` | Recruiter Saved Search | Recruiter Saved Searches | master | - | - | optional | - | `:admin` | - |
+| 4 | `talent_pool_memberships` | Talent Pool Membership | Talent Pool Memberships | master | - | - | required | personal_content | `:manage` | - |
+| 5 | `talent_pools` | Talent Pool | Talent Pools | master | - | - | required | - | `:manage` | - |
+| 6 | `talent_segments` | Talent Segment | Talent Segments | master | - | - | required | - | `:admin` | - |
+| 7 | `candidates` | Candidate | Candidates | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -100,6 +103,7 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | `candidates` | has owning recruiter | `users` | many_to_many | optional | source | clear | reference | - |
 | `talent_pools` | has owner | `users` | many_to_many | required | source | restrict | reference | - |
 | `users` | assigned tags | `candidate_tag_assignments` | one_to_many | optional | source | clear | reference | - |
+| `recruiter_saved_searches` | has owner | `users` | many_to_many | required | source | restrict | reference | - |
 
 ### 5.3 Cross-scope edges
 
@@ -148,7 +152,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | data_object | other module / domain | role | necessity | notes |
 | --- | --- | --- | --- | --- |
-| `talent_pools` | ATS-CANDIDATE-CRM (Candidate CRM) - ATS | consumer | optional | - |
+| `talent_pools` | ATS-CANDIDATE-CRM (Candidate CRM) - ATS | embedded_master | optional | - |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
@@ -255,13 +259,19 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `ats-talent-pools:admin` | `ats-talent-pools:view_all_candidates` |
 | `ats-talent-pools:admin` | `ats-talent-pools:manage_all_candidates` |
 
+**Processes wired:**
+
+| process_key | process_name | PCF code | PCF ID | level | description |
+| --- | --- | --- | --- | --- | --- |
+| `hire_candidate` | Hire candidate | 7.2.4.3 | 10465 | 4 | Wrapping up the process for hiring candidates. Agree to all hiring terms and conditions. Have the candidate accept and sign the job offer. |
+
 **RACI realization:**
 
-| actor | kind | raci | process | realization |
+| actor | kind | raci | process_key | realization |
 | --- | --- | --- | --- | --- |
-| `RECRUITING-RECRUITER` | persona | responsible | Hire candidate | grant gates [ats-talent-pools:hire_candidate] + the gated entities' write tier |
-| `HIRING-MANAGER` | persona | accountable | Hire candidate | approval gate |
-| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | Hire candidate | notification side effect (trigger_event / webhook_receiver) |
+| `RECRUITING-RECRUITER` | persona | responsible | `hire_candidate` | grant gates [ats-talent-pools:hire_candidate] + the gated entities' write tier |
+| `HIRING-MANAGER` | persona | accountable | `hire_candidate` | approval gate |
+| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | `hire_candidate` | notification side effect (trigger_event / webhook_receiver) |
 
 ### 9.2 Functional ownership and default grants
 

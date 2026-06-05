@@ -14,12 +14,18 @@
 //
 // Usage:
 //   bun run scripts/emit_fact_sheet.ts --module ATS-CANDIDATE-CRM
-//   bun run scripts/emit_fact_sheet.ts --all
-//   bun run scripts/emit_fact_sheet.ts --all --check        # CI drift check
+//   bun run scripts/emit_fact_sheet.ts --regenerate         # refresh ONLY the existing blueprint files
+//   bun run scripts/emit_fact_sheet.ts --regenerate --check # CI drift check over existing files
+//   bun run scripts/emit_fact_sheet.ts --all                # (re)generate a file for EVERY module (rare)
+//
+// "Regenerate" means refresh what already exists on disk; it never creates a file for a module
+// that has no blueprint yet (that is what --all does). Default to --regenerate. Use --all only
+// when explicitly asked to (re)generate the entire corpus, because it walks every domain_modules
+// row and can be far slower and wider than the curated set of committed blueprints.
 
 export {};
 
-import { writeFileSync, mkdirSync, existsSync, readFileSync } from "node:fs";
+import { writeFileSync, mkdirSync, existsSync, readFileSync, readdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { argv, exit } from "node:process";
 import {
@@ -43,6 +49,7 @@ import {
 // ---------- args ----------
 const args = argv.slice(2);
 const ALL = args.includes("--all");
+const REGEN = args.includes("--regenerate");
 const CHECK = args.includes("--check");
 const NO_CACHE = args.includes("--no-cache");
 const CLEAR_CACHE = args.includes("--clear-cache");
@@ -58,10 +65,11 @@ if (CLEAR_CACHE) {
   if (!ALL && !MODULE_CODE) exit(0);
 }
 
-if (!ALL && !MODULE_CODE) {
+if (!ALL && !REGEN && !MODULE_CODE) {
   console.error("usage:");
   console.error("  emit_fact_sheet.ts --module <MODULE_CODE> [--no-cache] [--clear-cache]");
-  console.error("  emit_fact_sheet.ts --all [--check] [--no-cache]");
+  console.error("  emit_fact_sheet.ts --regenerate [--check] [--no-cache]   # refresh ONLY existing blueprint files");
+  console.error("  emit_fact_sheet.ts --all [--check] [--no-cache]          # (re)generate a file for EVERY module");
   console.error("  emit_fact_sheet.ts --clear-cache");
   exit(2);
 }
@@ -236,9 +244,9 @@ function renderMermaid(
 function renderEntitySummary(scopeRows: ScopeRow[]): string[] {
   const out: string[] = [];
   if (scopeRows.length === 0) return out;
-  // Two columns matching the old ATS.md baseline: Name (plural) + Description.
+  // Three columns: Name (plural label) + data_object (snake_case natural key) + Description.
   // Role classification is conveyed visually via the mermaid color coding below.
-  out.push(tableHeader(["Name", "Description"]));
+  out.push(tableHeader(["Name", "data_object", "Description"]));
   const sorted = [...scopeRows].sort((a, b) => {
     const ra = ROLE_RANK[a.role] ?? 99;
     const rb = ROLE_RANK[b.role] ?? 99;
@@ -246,7 +254,11 @@ function renderEntitySummary(scopeRows: ScopeRow[]): string[] {
     return a.data_object.plural_label.localeCompare(b.data_object.plural_label);
   });
   for (const r of sorted) {
-    out.push(tableRow([r.data_object.plural_label, r.data_object.description || ""]));
+    out.push(tableRow([
+      r.data_object.plural_label,
+      `\`${r.data_object.data_object_name}\``,
+      r.data_object.description || "",
+    ]));
   }
   return out;
 }
@@ -647,7 +659,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   if (scopeRows.length === 0) {
     out.push("_(no data_objects in scope.)_");
   } else {
-    const headers = ["#", "data_object", "role", "mastered in", "label", "necessity", "pattern flags", "write tier"];
+    const headers = ["#", "data_object", "singular", "plural", "role", "mastered in", "mastered label", "necessity", "pattern flags", "write tier"];
     if (showModulesCol) headers.push("modules");
     headers.push("notes");
     out.push(tableHeader(headers, ["right"]));
@@ -672,7 +684,9 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
       const wtCell = wt.write === null ? "read-only" : `\`${wt.write}\`${wt.pending ? " _(pending)_" : ""}`;
       const cells: (string | number)[] = [
         i++,
-        `\`${o.data_object_name}\` (${o.plural_label})`,
+        `\`${o.data_object_name}\``,
+        o.singular_label,
+        o.plural_label,
         r.role,
         owner.code,
         owner.label,
@@ -1448,23 +1462,24 @@ async function emitOneModuleFactSheet(m: ModuleRow): Promise<{ path: string; cha
   return { path: outPath, changed };
 }
 
-if (MODULE_CODE) {
-  const m = modulesByCode.get(MODULE_CODE);
-  if (!m) {
-    console.error(`module ${MODULE_CODE} not found in domain_modules`);
-    exit(2);
-  }
-  const r = await emitOneModuleFactSheet(m);
-  console.log(`${r.changed ? (CHECK ? "WOULD-CHANGE" : "wrote") : "unchanged"}  ${MODULE_CODE}  →  ${r.path}`);
-  if (CHECK && r.changed) exit(1);
-} else if (ALL) {
+// regen = refresh what already exists. Enumerate committed blueprint files and return their
+// slug stems (filename without the `-semantic-blueprint.md` suffix). Each stem is the module's
+// moduleSlug(domain_module_code), so it maps straight back to a module below.
+function blueprintSlugsOnDisk(): string[] {
+  if (!existsSync(BLUEPRINTS_DIR)) return [];
+  return readdirSync(BLUEPRINTS_DIR)
+    .filter((f) => f.endsWith(BLUEPRINT_SUFFIX))
+    .map((f) => f.slice(0, -BLUEPRINT_SUFFIX.length))
+    .sort();
+}
+
+// Shared driver for the multi-module paths (--regenerate and --all). Keeps going on a single
+// module's integrity failure (m9 / plan-1-consistency.md Policy 1): one bad row must never brick
+// the rest of the corpus; failures are banner-reported and force a non-zero exit so CI sees them.
+async function emitModuleList(modules: ModuleRow[], label: string): Promise<void> {
   let modulesChanged = 0;
-  // m9 (plan-1-consistency.md Policy 1): collect per-module integrity errors and keep
-  // going. One module's violation (e.g. a multi-master data_object) must never brick the
-  // whole corpus; the rest still regenerates and the failures are reported as a banner
-  // below, which forces a non-zero exit so CI still sees them.
   const failures: { code: string; message: string }[] = [];
-  for (const m of allModules) {
+  for (const m of modules) {
     try {
       const r = await emitOneModuleFactSheet(m);
       if (r.changed) modulesChanged++;
@@ -1476,7 +1491,7 @@ if (MODULE_CODE) {
     }
   }
   console.log("");
-  console.log(`summary: modules ${modulesChanged}/${allModules.length} ${CHECK ? "would change" : "changed"}, ${failures.length} failed`);
+  console.log(`summary (${label}): modules ${modulesChanged}/${modules.length} ${CHECK ? "would change" : "changed"}, ${failures.length} failed`);
   let bad = false;
   if (failures.length > 0) {
     console.error("");
@@ -1490,4 +1505,33 @@ if (MODULE_CODE) {
     bad = true;
   }
   if (bad) exit(1);
+}
+
+if (MODULE_CODE) {
+  const m = modulesByCode.get(MODULE_CODE);
+  if (!m) {
+    console.error(`module ${MODULE_CODE} not found in domain_modules`);
+    exit(2);
+  }
+  const r = await emitOneModuleFactSheet(m);
+  console.log(`${r.changed ? (CHECK ? "WOULD-CHANGE" : "wrote") : "unchanged"}  ${MODULE_CODE}  →  ${r.path}`);
+  if (CHECK && r.changed) exit(1);
+} else if (REGEN) {
+  // Refresh ONLY the blueprint files already on disk. Map each filename slug back to its
+  // module; never (re)generate a file for a module that has no committed blueprint.
+  const bySlug = new Map(allModules.map((m) => [moduleSlug(m.domain_module_code), m] as const));
+  const modules: ModuleRow[] = [];
+  const orphans: string[] = [];
+  for (const slug of blueprintSlugsOnDisk()) {
+    const m = bySlug.get(slug);
+    if (m) modules.push(m);
+    else orphans.push(slug);
+  }
+  if (orphans.length > 0) {
+    console.error(`note: ${orphans.length} blueprint file(s) have no matching module and were left untouched: ${orphans.join(", ")}`);
+  }
+  console.log(`regenerating ${modules.length} existing blueprint(s) (no new files created)`);
+  await emitModuleList(modules, "regenerate");
+} else if (ALL) {
+  await emitModuleList(allModules, "all");
 }

@@ -1,40 +1,41 @@
 ---
 artifact: semantic-blueprint
 fact_sheet_version: "2.0"
+license: MIT
 system_name: SMP-DISCOVERY
 system_description: SMP Discovery and Catalog
+tagline: Find every SaaS app in use, including the ones nobody told you about.
+description: Automatically discover sanctioned and shadow SaaS across your org, assign an owner to each app, and connect the integrations that feed usage and spend data. Publish a clean app catalog, stage each application through its portfolio lifecycle, and get alerted the moment something needs attention.
 system_slug: smp-discovery
 domain_modules:
   - smp-discovery
 domain_code: SMP
-related_modules: [apm-portfolio-registry, iga-entitlement-catalog, itam-portfolio-reporting, smp-renewal-vendor]
-created_at: 2026-06-02
+related_modules: [apm-portfolio-registry, iga-entitlement-catalog, itam-portfolio-reporting, smp-automation, smp-optimization, smp-renewal-vendor]
+persona: []
+created_at: 2026-06-05
 ---
 
 # SMP Discovery and Catalog
 
 ## 1. Overview
 
-### 1.1 Analyst overview
-
 Discovery of sanctioned and shadow SaaS, app inventory, ownership, integrations, lifecycle staging, catalog publication, and operational signal/alerts. The discovery substrate of an SMP deployment.
 
 ## 2. Entity summary
 
-| Name | Description |
-| --- | --- |
-| App Catalog Listings | Curated, published listing of a sanctioned SaaS application that employees can browse and request access to. Carries description, owner, request route, SSO availability, approval workflow. Distinct from saas_applications (the discovered inventory of what's running); the catalog is the publication of what's offered. LeanIX, Torii, BetterCloud flagship. |
-| SaaS Alerts | System-raised anomaly on the SaaS portfolio: shadow-IT signup detected, license-overage projected, renewal window opening, integration token expiring, vendor-risk score change. Distinct from monitoring_alerts (OBS/AIOPS infrastructure-grain). BetterCloud Alert Center and Torii Alerts are the flagship surfaces. |
-| SaaS App Integrations | Discovered or configured connection between SMP and a SaaS application's APIs (SSO source, SCIM source, finance source, usage source). Per-app per-tenant, with auth state and last-sync time. Distinct from IPAAS integration_connectors (platform-grain vendor-connector definitions); BetterCloud's App Integrations flagship surface. |
-| SaaS App Owners | Typed role assignment of a user to a SaaS application (business owner, IT owner, finance owner, security owner). Not a flat FK on saas_applications because one app may have multiple typed owners; modeled by Productiv and LeanIX as a first-class junction. |
-| SaaS Applications | Canonical SaaS app in the portfolio (collaboration, CRM, productivity, design, work-management tools). Carries vendor, category, criticality tier, sanctioned/shadow flag, and links to the active subscription. Distinct from SAM's software_titles which are typically installed (or hybrid). The flagship SMP entity. |
-| Shadow IT Apps | SaaS app discovered in use but not officially sanctioned. Found via expense data (corporate card SaaS charges), SSO logs (unsanctioned login), browser extensions, network traffic, or signup-with-corporate-email detection. The thing finance, security, IT, and SMP all want to see but historically nobody owns end-to-end. |
-| App Lifecycle Stages | Portfolio-rationalization stage of a SaaS application (Evaluate, Pilot, Sanctioned, Sunset, Retired). Distinct from saas_applications.record_status (discovered → sanctioned → deprecated → deprovisioned, which tracks discovery state). LeanIX's TIME taxonomy is the flagship. |
+| Name | data_object | Description |
+| --- | --- | --- |
+| App Catalog Listings | `smp_app_catalog_listings` | Curated, published listing of a sanctioned SaaS application that employees can browse and request access to. Carries description, owner, request route, SSO availability, approval workflow. Distinct from saas_applications (the discovered inventory of what's running); the catalog is the publication of what's offered. LeanIX, Torii, BetterCloud flagship. |
+| App Lifecycle Stages | `smp_app_lifecycle_stages` | Portfolio-rationalization stage of a SaaS application (Evaluate, Pilot, Sanctioned, Sunset, Retired). Distinct from saas_applications.record_status (discovered, sanctioned, deprecated, deprovisioned), which tracks discovery state. The stage set follows the industry-standard TIME portfolio taxonomy (Tolerate, Invest, Migrate, Eliminate). |
+| SaaS Alerts | `smp_alerts` | System-raised anomaly on the SaaS portfolio: shadow-IT signup detected, license-overage projected, renewal window opening, integration token expiring, vendor-risk score change. Distinct from monitoring_alerts (OBS/AIOPS infrastructure-grain). BetterCloud Alert Center and Torii Alerts are the flagship surfaces. |
+| SaaS App Integrations | `smp_app_integrations` | Discovered or configured connection between SMP and a SaaS application's APIs (SSO source, SCIM source, finance source, usage source). Per-app per-tenant, with auth state and last-sync time. Distinct from IPAAS integration_connectors (platform-grain vendor-connector definitions); BetterCloud's App Integrations flagship surface. |
+| SaaS App Owners | `smp_app_owners` | Typed role assignment of a user to a SaaS application (business owner, IT owner, finance owner, security owner). Not a flat FK on saas_applications because one app may have multiple typed owners; modeled by Productiv and LeanIX as a first-class junction. |
+| SaaS Applications | `saas_applications` | Canonical SaaS app in the portfolio (collaboration, CRM, productivity, design, work-management tools). Carries vendor, category, criticality tier, sanctioned/shadow flag, and links to the active subscription. Distinct from SAM's software_titles which are typically installed (or hybrid). The flagship SMP entity. |
+| Shadow IT Apps | `shadow_it_apps` | SaaS app discovered in use but not officially sanctioned. Found via expense data (corporate card SaaS charges), SSO logs (unsanctioned login), browser extensions, network traffic, or signup-with-corporate-email detection. The thing finance, security, IT, and SMP all want to see but historically nobody owns end-to-end. |
 
 ```mermaid
 flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
-  classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
   saas_applications["SaaS Applications"]
   shadow_it_apps["Shadow IT Apps"]
@@ -52,6 +53,9 @@ flowchart TD
   saas_applications -->|"tracks_stage"| smp_app_lifecycle_stages
   shadow_it_apps -->|"promotes_to (opt)"| saas_applications
   users -->|"assigned_owner"| smp_app_owners
+  users -->|"configures"| smp_app_integrations
+  users -->|"curates (opt)"| smp_app_catalog_listings
+  users -->|"triages (opt)"| smp_alerts
   users -->|"owns"| saas_applications
   users -->|"triggered (opt)"| shadow_it_apps
   class saas_applications master;
@@ -60,22 +64,21 @@ flowchart TD
   class smp_app_integrations master;
   class smp_app_catalog_listings master;
   class smp_alerts master;
-  class smp_app_lifecycle_stages embedded_master;
+  class smp_app_lifecycle_stages master;
   class users platform_builtin;
-  style smp_app_lifecycle_stages stroke-dasharray:5 5;
 ```
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `smp_app_catalog_listings` (App Catalog Listings) | master | - | - | required | - | `:manage` _(pending)_ | - |
-| 2 | `smp_alerts` (SaaS Alerts) | master | - | - | required | - | `:manage` _(pending)_ | - |
-| 3 | `smp_app_integrations` (SaaS App Integrations) | master | - | - | required | - | `:manage` _(pending)_ | - |
-| 4 | `smp_app_owners` (SaaS App Owners) | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
-| 5 | `saas_applications` (SaaS Applications) | master | - | - | required | - | `:manage` _(pending)_ | - |
-| 6 | `shadow_it_apps` (Shadow IT Apps) | master | - | - | required | - | `:manage` _(pending)_ | - |
-| 7 | `smp_app_lifecycle_stages` (App Lifecycle Stages) | embedded_master | - | - | optional | - | `:manage` _(pending)_ | - |
+| # | data_object | singular | plural | role | mastered in | mastered label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `smp_app_catalog_listings` | App Catalog Listing | App Catalog Listings | master | - | - | required | - | `:admin` | - |
+| 2 | `smp_app_lifecycle_stages` | App Lifecycle Stage | App Lifecycle Stages | master | - | - | required | - | `:manage` | - |
+| 3 | `smp_alerts` | SaaS Alert | SaaS Alerts | master | - | - | required | - | `:manage` | - |
+| 4 | `smp_app_integrations` | SaaS App Integration | SaaS App Integrations | master | - | - | required | - | `:manage` | - |
+| 5 | `smp_app_owners` | SaaS App Owner | SaaS App Owners | master | - | - | required | personal_content | `:manage` | - |
+| 6 | `saas_applications` | SaaS Application | SaaS Applications | master | - | - | required | - | `:manage` | - |
+| 7 | `shadow_it_apps` | Shadow IT App | Shadow IT Apps | master | - | - | required | - | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -100,6 +103,9 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `users` | assigned_owner | `smp_app_owners` | many_to_many | required | source | restrict | reference | - |
+| `users` | configures | `smp_app_integrations` | one_to_many | required | target | restrict | reference | - |
+| `users` | curates | `smp_app_catalog_listings` | one_to_many | optional | target | clear | reference | - |
+| `users` | triages | `smp_alerts` | one_to_many | optional | target | clear | reference | - |
 | `users` | owns | `saas_applications` | one_to_many | required | target | restrict | reference | - |
 | `users` | triggered | `shadow_it_apps` | one_to_many | optional | target | clear | reference | - |
 
@@ -145,9 +151,9 @@ _(no context cross-scope edges on this scope's embedded shells or consumed entit
 
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SMP-DISCOVERY | IGA | IGA-ENTITLEMENT-CATALOG | `saas_application.sanctioned` | - | `saas_applications` | api_call | low | Sanctioned SaaS apps are wired into IGA provisioning catalog. |
-| SMP-DISCOVERY | IGA | IGA-ENTITLEMENT-CATALOG | `saas_application.discovered` | - | `saas_applications` | event_stream | medium | Newly discovered SaaS apps surface to IGA for shadow-IT visibility and access governance. |
-| SMP-DISCOVERY | FINOPS | _(domain-level)_ | `saas_application.sanctioned` | - | `saas_applications` | event_stream | medium | Sanctioned SaaS apps come under FINOPS spend tracking. |
+| SMP-DISCOVERY | IGA | IGA-ENTITLEMENT-CATALOG | `saas_application.discovered` | _(lifecycle)_ | `saas_applications` | event_stream | medium | Newly discovered SaaS apps surface to IGA for shadow-IT visibility and access governance. |
+| SMP-DISCOVERY | IGA | IGA-ENTITLEMENT-CATALOG | `saas_application.sanctioned` | _(lifecycle)_ | `saas_applications` | api_call | low | Sanctioned SaaS apps are wired into IGA provisioning catalog. |
+| SMP-DISCOVERY | FINOPS | _(domain-level)_ | `saas_application.sanctioned` | _(lifecycle)_ | `saas_applications` | event_stream | medium | Sanctioned SaaS apps come under FINOPS spend tracking. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
@@ -156,12 +162,10 @@ _(no context cross-scope edges on this scope's embedded shells or consumed entit
 | SMP-DISCOVERY | EXPENSE | _(domain-level)_ | `card.saas_charge_detected` | _(state_change)_ | `shadow_it_apps` | event_stream | high | Corporate-card SaaS charge detected by the expense system surfaces a candidate shadow-IT app in SMP. High friction: finance sees the charge, IT/SMP sees (or doesn't see) the app - reconciling vendor-name-on-card with app-name-in-portfolio is messy and is one of the highest-value SMP-to-EXPENSE integrations. |
 | SMP-DISCOVERY | DISCOVERY | _(domain-level)_ | `sso_login.unsanctioned_app` | _(state_change)_ | `shadow_it_apps` | event_stream | medium | SSO logs reveal a login to a SaaS app that's not in the sanctioned catalog - flagged as shadow IT. Complements the EXPENSE-side detection: SSO catches apps that use corporate SSO but aren't tracked; expense catches credit-card paid apps that don't. |
 | SMP-DISCOVERY | SPEND-MGMT | _(domain-level)_ | `card_transaction.posted` | `posted` _(signal)_ | `shadow_it_apps` | api_call | high | SaaS purchases on corporate cards reveal shadow IT to SMP - merchant categorization required to identify SaaS subscriptions vs other spend, then deduplicated against the existing SMP saas_subscription catalog. The card-side discovery path is the primary signal for off-procurement SaaS today. Shadow-data pattern. |
+| SMP-DISCOVERY | SMP | SMP-RENEWAL-VENDOR | `smp_vendor_risk_assessment.remediation_required` | _(state_change)_ | `smp_alerts` | lifecycle_progression | low | A vendor risk assessment requiring remediation raises a portfolio alert on the application. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
-| data_object | role here | necessity | canonical owner(s) | slice notes |
-| --- | --- | --- | --- | --- |
-| `smp_app_lifecycle_stages` | embedded_master | optional | _(no canonical owner recorded)_ | - |
 
 ## 7. Lifecycle states
 
@@ -215,8 +219,6 @@ _(no context cross-scope edges on this scope's embedded shells or consumed entit
 
 ### `smp_app_lifecycle_stages` (App Lifecycle Stage)
 
-_This scope holds `smp_app_lifecycle_stages` as **embedded_master**; the canonical state machine is owned by _(no canonical master found)_._
-
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 10 | `evaluate` | ✓ | - | - | - | - |
@@ -261,14 +263,10 @@ _This scope holds `smp_app_lifecycle_stages` as **embedded_master**; the canonic
 | `smp-discovery:promote_to_sanctioned` | workflow-gate (lifecycle) | Transition `smp_app_lifecycle_stages` into state `sanctioned` | ✓ |
 | `smp-discovery:sunset_app` | workflow-gate (lifecycle) | Transition `smp_app_lifecycle_stages` into state `sunset` | ✓ |
 | `smp-discovery:retire_app` | workflow-gate (lifecycle) | Transition `smp_app_lifecycle_stages` into state `retired` | ✓ |
-| `smp-discovery:view_all_saas_app_owners` | override (personal_content) | View all `smp_app_owners` rows beyond row-scope | ✓ |
-| `smp-discovery:manage_all_saas_app_owners` | override (personal_content) | Manage all `smp_app_owners` rows beyond row-scope | ✓ |
 
 ### 8.2 Business rules
 
-| rule_name | data_object | source flag | intent |
-| --- | --- | --- | --- |
-| `saas_app_owner_edit_scope` | `smp_app_owners` | has_personal_content | Row-scope by default; override via `smp-discovery:view_all_saas_app_owners` / `smp-discovery:manage_all_saas_app_owners` |
+_(no flag-derived business rules.)_
 
 ## 9. Roles, RACI, and responsibilities (derived)
 
@@ -282,6 +280,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `smp-discovery_viewer` | `smp-discovery:read` |
 | `smp-discovery_manager` | `smp-discovery:manage` |
+| `smp-discovery_admin` | `smp-discovery:admin` |
 
 **Permission hierarchy:**
 
@@ -309,8 +308,6 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `smp-discovery:admin` | `smp-discovery:promote_to_sanctioned` |
 | `smp-discovery:admin` | `smp-discovery:sunset_app` |
 | `smp-discovery:admin` | `smp-discovery:retire_app` |
-| `smp-discovery:admin` | `smp-discovery:view_all_saas_app_owners` |
-| `smp-discovery:admin` | `smp-discovery:manage_all_saas_app_owners` |
 
 **RACI realization:**
 

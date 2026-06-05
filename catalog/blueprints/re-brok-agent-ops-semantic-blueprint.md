@@ -1,6 +1,7 @@
 ---
 artifact: semantic-blueprint
 fact_sheet_version: "2.0"
+license: MIT
 system_name: RE-BROK-AGENT-OPS
 system_description: Real Estate Agent Operations
 system_slug: re-brok-agent-ops
@@ -8,28 +9,27 @@ domain_modules:
   - re-brok-agent-ops
 domain_code: RE-BROKERAGE
 related_modules: [crm-acct-mgt, crm-lead-mgt, re-brok-brokerage-ops, real-estate-agent]
-created_at: 2026-06-02
+persona: []
+created_at: 2026-06-05
 ---
 
 # Real Estate Agent Operations
 
 ## 1. Overview
 
-### 1.1 Analyst overview
-
 Agent-facing workflow from lead capture through closing. Lead nurture (writes back into CRM contributor flow), listing creation and MLS syndication, tour scheduling and execution, transaction management (offer to escrow to contingencies to close), and buyer/seller disclosure handling. The deployable unit for solo agents and small firms; agents in larger brokerages work here while broker oversight runs in BROKERAGE-OPS.
 
 ## 2. Entity summary
 
-| Name | Description |
-| --- | --- |
-| Disclosure Documents | State-mandated and brokerage-policy disclosure forms attached to transactions (agency disclosure, property condition, lead paint, HOA documents); required for compliance audit. |
-| Real Estate Listings | Property offered for sale or rent on an MLS or brokerage marketplace; carries pricing, photos, descriptive text, agent representation, and listing-status lifecycle (active/contingent/pending/sold/withdrawn). |
-| Real Estate Transactions | Deal pipeline from offer through close: parties, terms, contingencies, escrow timeline, and document compliance. One transaction per accepted offer; survives the listing once the offer is bound. |
-| Tour Appointments | Scheduled property showings with lock-box codes, access windows, agent attendance, and follow-up tracking. |
-| Commission Splits | Per-transaction commission distribution across listing-side and buyer-side brokerages, then internal agent splits per franchise rules; referenced by accounting and 1099 processes. |
-| Contacts | Person at a customer account (B2B) or contact-level record (B2C-relevant). Carries title, email, decision-maker flag, preferred channel, opt-in state. MA contributes engagement data; SALES-ENG contributes cadence touchpoints. |
-| Leads | Pre-qualification prospect record - source, score, status (new/working/qualified/disqualified/converted), assigned rep, conversion target (which contact + account it would become). MQL handoff from MA lands here. |
+| Name | data_object | Description |
+| --- | --- | --- |
+| Disclosure Documents | `disclosure_documents` | State-mandated and brokerage-policy disclosure forms attached to transactions (agency disclosure, property condition, lead paint, HOA documents); required for compliance audit. |
+| Real Estate Listings | `real_estate_listings` | Property offered for sale or rent on an MLS or brokerage marketplace; carries pricing, photos, descriptive text, agent representation, and listing-status lifecycle (active/contingent/pending/sold/withdrawn). |
+| Real Estate Transactions | `real_estate_transactions` | Deal pipeline from offer through close: parties, terms, contingencies, escrow timeline, and document compliance. One transaction per accepted offer; survives the listing once the offer is bound. |
+| Tour Appointments | `tour_appointments` | Scheduled property showings with lock-box codes, access windows, agent attendance, and follow-up tracking. |
+| Commission Splits | `commission_splits` | Per-transaction commission distribution across listing-side and buyer-side brokerages, then internal agent splits per franchise rules; referenced by accounting and 1099 processes. |
+| Contacts | `crm_contacts` | Person at a customer account (B2B) or contact-level record (B2C-relevant). Carries title, email, decision-maker flag, preferred channel, opt-in state. MA contributes engagement data; SALES-ENG contributes cadence touchpoints. |
+| Leads | `crm_leads` | Pre-qualification prospect record - source, score, status (new/working/qualified/disqualified/converted), assigned rep, conversion target (which contact + account it would become). MQL handoff from MA lands here. |
 
 ```mermaid
 flowchart TD
@@ -73,15 +73,15 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `disclosure_documents` (Disclosure Documents) | master | - | - | optional | personal_content, submit_lock, single_approver | `:manage` _(pending)_ | - |
-| 2 | `real_estate_listings` (Real Estate Listings) | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
-| 3 | `real_estate_transactions` (Real Estate Transactions) | master | - | - | required | personal_content, submit_lock | `:manage` _(pending)_ | - |
-| 4 | `tour_appointments` (Tour Appointments) | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
-| 5 | `commission_splits` (Commission Splits) | embedded_master | `re-brok-brokerage-ops` | Brokerage Oversight and Commission Management | optional | submit_lock, single_approver | `:manage` _(pending)_ | - |
-| 6 | `crm_contacts` (Contacts) | contributor | `crm-acct-mgt` | Account and Contact Management | required | personal_content | `:manage` _(pending)_ | - |
-| 7 | `crm_leads` (Leads) | contributor | `crm-lead-mgt` | Lead Capture and Qualification | required | personal_content | `:manage` _(pending)_ | - |
+| # | data_object | singular | plural | role | mastered in | mastered label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `disclosure_documents` | Disclosure Document | Disclosure Documents | master | - | - | optional | personal_content, submit_lock, single_approver | `:manage` _(pending)_ | - |
+| 2 | `real_estate_listings` | Real Estate Listing | Real Estate Listings | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
+| 3 | `real_estate_transactions` | Real Estate Transaction | Real Estate Transactions | master | - | - | required | personal_content, submit_lock | `:manage` _(pending)_ | - |
+| 4 | `tour_appointments` | Tour Appointment | Tour Appointments | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
+| 5 | `commission_splits` | Commission Split | Commission Splits | embedded_master | `re-brok-brokerage-ops` | Brokerage Oversight and Commission Management | optional | submit_lock, single_approver | `:manage` _(pending)_ | - |
+| 6 | `crm_contacts` | Contact | Contacts | contributor | `crm-acct-mgt` | Account and Contact Management | required | personal_content | `:manage` _(pending)_ | - |
+| 7 | `crm_leads` | Lead | Leads | contributor | `crm-lead-mgt` | Lead Capture and Qualification | required | personal_content | `:manage` _(pending)_ | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -164,16 +164,16 @@ _(no context cross-scope edges on this scope's embedded shells or consumed entit
 | RE-BROK-AGENT-OPS | CRM | CRM-LEAD-MGT | `real_estate_listing.qualified` | `qualified` _(signal)_ | `crm_leads` | api_call | medium | Qualified buyer/seller leads flow into CRM-cluster contacts and the agent's CRM for nurture and conversion tracking. |
 | RE-BROK-AGENT-OPS | RE-BROKERAGE | RE-BROK-BROKERAGE-OPS | `real_estate_transaction.contingencies_cleared` | _(state_change)_ | `real_estate_transactions` | lifecycle_progression | low | Agent-side has cleared inspection, financing, and appraisal contingencies; broker oversight takes the transaction into compliance review before authorizing closing. |
 | RE-BROK-AGENT-OPS | RE-PROP-MGMT | _(domain-level)_ | `real_estate_transaction.closed` | `pending` → `closed` _(lifecycle)_ | `real_estate_transactions` | manual_handoff | high | Closed sale of a rental property results in a new landlord-of-record; the new owner's property-management platform must be configured (often manual handoff via email; the buyer's PM and the seller's brokerage are different vendors). |
-| RE-BROK-AGENT-OPS | RE-CRE | _(domain-level)_ | `listing.sold` | _(lifecycle)_ | `real_estate_listings` | batch_sync | medium | Closed sale triggers commercial lease setup if multi-tenant. |
 | RE-BROK-AGENT-OPS | RE-CRE | _(domain-level)_ | `real_estate_transaction.closed` | `pending` → `closed` _(lifecycle)_ | `real_estate_transactions` | manual_handoff | high | Closed sale of a CRE asset transfers operations to the new owner's CRE platform; rent-roll, leases, and CAM history must be carried over (typically manual). |
+| RE-BROK-AGENT-OPS | RE-CRE | _(domain-level)_ | `listing.sold` | _(lifecycle)_ | `real_estate_listings` | batch_sync | medium | Closed sale triggers commercial lease setup if multi-tenant. |
 | RE-BROK-AGENT-OPS | RE-INVEST | _(domain-level)_ | `listing.sold` | _(lifecycle)_ | `real_estate_listings` | manual_handoff | high | Sale closing triggers fund NAV and LP-reporting recalculation. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| RE-BROK-AGENT-OPS | RE-BROKERAGE | RE-BROK-BROKERAGE-OPS | `commission_split.paid` | _(lifecycle)_ | `commission_splits` | lifecycle_progression | low | Broker disbursed commission; agent-side surfaces the paid status for the recipient agent. |
 | RE-BROK-AGENT-OPS | RE-BROKERAGE | RE-BROK-BROKERAGE-OPS | `real_estate_transaction.cleared_to_close` | _(state_change)_ | `real_estate_transactions` | lifecycle_progression | low | Broker compliance review approved; transaction returns to agent-side for closing coordination. |
+| RE-BROK-AGENT-OPS | RE-BROKERAGE | RE-BROK-BROKERAGE-OPS | `commission_split.paid` | _(lifecycle)_ | `commission_splits` | lifecycle_progression | low | Broker disbursed commission; agent-side surfaces the paid status for the recipient agent. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 

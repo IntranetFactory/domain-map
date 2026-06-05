@@ -1293,9 +1293,12 @@ The emitter at [scripts/emit_fact_sheet.ts](../../../scripts/emit_fact_sheet.ts)
 Per-domain "starter kit" blueprints (the prior `catalog/blueprints/starter-kits/<DOMAIN-CODE>-...md` shape backed by the now-deleted `domain_starter_modules` junction) are gone (Rule #19 made starter kits first-class deployable units, so they emit as ordinary per-module blueprints). Any legacy `domain-fact-sheets/` or `catalog/blueprints/starter-kits/` directories on disk are no longer regenerated; treat them as historical.
 
 Commands:
+- `bun run scripts/emit_fact_sheet.ts --regenerate` — **the default.** Refreshes ONLY the blueprint files already on disk (`catalog/blueprints/*.md`), mapping each filename back to its module. "Regenerate" means refresh what exists; it never creates a file for a module that has no committed blueprint. This is what "regen / regenerate the blueprints / refresh the blueprints" always means.
+- `bun run scripts/emit_fact_sheet.ts --regenerate --check` — CI drift check over the existing files; exits non-zero if any would change.
 - `bun run scripts/emit_fact_sheet.ts --module <MODULE_CODE>` — regenerates one module's page (works for both `module_kind` values).
-- `bun run scripts/emit_fact_sheet.ts --all` — regenerates every per-module blueprint in one pass.
-- `bun run scripts/emit_fact_sheet.ts --all --check` — CI drift check; exits non-zero if any blueprint would change.
+- `bun run scripts/emit_fact_sheet.ts --all` — **rarely what you want.** Walks EVERY `domain_modules` row and writes a blueprint for each, including modules with no committed file. Far wider and slower than `--regenerate`. Use ONLY when the user explicitly says "all" / "the entire corpus". Never reach for `--all` to "regenerate the blueprints" — that is `--regenerate`.
+
+> ⚠️ Regenerate trap (do not repeat): a plain "regenerate the blueprints" request means `--regenerate`, NOT `--all`. Reaching for `--all` re-emits the whole catalog (many more files than the curated committed set) and is slow enough to look like a hang. Default to `--regenerate` every time; only escalate to `--all` when the user literally asks for all modules.
 
 When the user does ask for an emit, the quality check on the output is: every `_(no … loaded)_` placeholder in the generated file is justified by (a) a genuine derive/overlay domain that masters nothing (B1 narrow exception; the module still carries `consumer`/`derived` rows), (b) a master classified as config / record / catalog / junction / computed via `entity_type` with no workflow (B12, per Rule #12), or (c) an explicit "self-explanatory masters" / "isolated master" justification recorded in the audit / gap report (B6, B11). Unjustified placeholders signal a real gap in live state — fix the gap and re-emit. Never hand-edit the rendered files to silence a placeholder.
 

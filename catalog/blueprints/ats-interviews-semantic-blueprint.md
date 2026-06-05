@@ -1,38 +1,40 @@
 ---
 artifact: semantic-blueprint
 fact_sheet_version: "2.0"
+license: MIT
 system_name: ATS-INTERVIEWS
 system_description: Interviews
+tagline: Run consistent, structured interviews and collect comparable feedback.
+description: Schedule interviews against panel availability, equip interviewers with kits and question banks, and gather scorecards and assessments in a single structured record. Consistent inputs make hiring decisions easier to defend and faster to reach.
 system_slug: ats-interviews
 domain_modules:
   - ats-interviews
 domain_code: ATS
 related_modules: [ats-background-checks, ats-candidate-crm, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, hcm-lifecycle-workflows, hiring-starter, onb-journey-mgmt, pa-workforce-metrics, talent-performance-mgmt, talent-succession-career]
-created_at: 2026-06-02
+persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-COORDINATOR, RECRUITING-MANAGER, RECRUITING-RECRUITER]
+created_at: 2026-06-05
 ---
 
 # Interviews
 
 ## 1. Overview
 
-### 1.1 Analyst overview
-
 Interview scheduling, panel coordination, scorecards, and structured assessments. Realizes INTERVIEW-MGMT. Realizes the `interviewing` lifecycle state on `job_applications` (state pruned when this module is not installed).
 
 ## 2. Entity summary
 
-| Name | Description |
-| --- | --- |
-| Assessments | Skills, cognitive, technical, or personality test result attached to an application. Often sourced from an external assessment provider and referenced here. |
-| Candidate Assessment Templates | Library item for assessments (coding challenge, work sample, take-home, skills test). Carries title, vendor, time limit, scoring rubric. Materializes into candidate_assessments when assigned. |
-| Interview Kits | Reusable interview template per role / stage. Bundles assigned questions, target competencies, recommended scorecard, expected duration. Greenhouse's core authoring unit. |
-| Interview Panels | Composition of interviewers assigned to a specific interview, including their role on the panel (lead, technical, behavioral, debrief moderator) and weighting on the consolidated scorecard. |
-| Interview Questions | Question bank entry tied to competencies. Carries question text, type (behavioral / technical / situational), competency tags, suggested follow-ups, rubric. |
-| Interview Scorecards | Structured interviewer feedback against a defined rubric: per-competency ratings, written notes, and a hire/no-hire recommendation. |
-| Interviewer Availability Slots | Bookable time window an interviewer has marked available. Drives self-serve scheduling (Goodtime / Modern Hire / Calendly for Recruiting). Carries interviewer, start, end, allowed interview types. |
-| Interviews | Scheduled assessment event between a candidate and one or more interviewers. Carries time, location/medium, panel, interview kit, and outcome. |
-| Applications | A candidate's submission against a specific requisition. Carries pipeline stage, status (active / rejected / withdrawn / hired), source, and the full evaluation history. |
-| Candidates | Person known to the recruiting org, with or without an active application. Carries contact details, resume, tags, GDPR consent, and source. Distinct from Employee until hired. |
+| Name | data_object | Description |
+| --- | --- | --- |
+| Assessments | `candidate_assessments` | Skills, cognitive, technical, or personality test result attached to an application. Often sourced from an external assessment provider and referenced here. |
+| Candidate Assessment Templates | `candidate_assessment_templates` | Library item for assessments (coding challenge, work sample, take-home, skills test). Carries title, vendor, time limit, scoring rubric. Materializes into candidate_assessments when assigned. |
+| Interview Kits | `interview_kits` | Reusable interview template per role / stage. Bundles assigned questions, target competencies, recommended scorecard, expected duration. Greenhouse's core authoring unit. |
+| Interview Panels | `interview_panels` | Composition of interviewers assigned to a specific interview, including their role on the panel (lead, technical, behavioral, debrief moderator) and weighting on the consolidated scorecard. |
+| Interview Questions | `interview_questions` | Question bank entry tied to competencies. Carries question text, type (behavioral / technical / situational), competency tags, suggested follow-ups, rubric. |
+| Interview Scorecards | `interview_scorecards` | Structured interviewer feedback against a defined rubric: per-competency ratings, written notes, and a hire/no-hire recommendation. |
+| Interviewer Availability Slots | `interviewer_availability_slots` | Bookable time window an interviewer has marked available. Drives self-serve scheduling (Goodtime / Modern Hire / Calendly for Recruiting). Carries interviewer, start, end, allowed interview types. |
+| Interviews | `interviews` | Scheduled assessment event between a candidate and one or more interviewers. Carries time, location/medium, panel, interview kit, and outcome. |
+| Applications | `job_applications` | A candidate's submission against a specific requisition. Carries pipeline stage, status (active / rejected / withdrawn / hired), source, and the full evaluation history. |
+| Candidates | `candidates` | Person known to the recruiting org, with or without an active application. Carries contact details, resume, tags, GDPR consent, and source. Distinct from Employee until hired. |
 
 ```mermaid
 flowchart TD
@@ -62,6 +64,8 @@ flowchart TD
   job_applications -->|"requires"| candidate_assessments
   candidates -->|"has owning recruiter (opt)"| users
   candidate_assessments -->|"has invitation author"| users
+  interviewer_availability_slots -->|"has owner"| users
+  interview_panels -->|"has owner (opt)"| users
   job_applications -->|"has owning recruiter"| users
   interviews -->|"has coordinator and panelists"| users
   interview_scorecards -->|"has interviewer as author"| users
@@ -81,18 +85,18 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `candidate_assessments` (Assessments) | master | - | - | required | submit_lock | `:manage` | - |
-| 2 | `candidate_assessment_templates` (Candidate Assessment Templates) | master | - | - | required | - | `:admin` | - |
-| 3 | `interview_kits` (Interview Kits) | master | - | - | required | - | `:admin` | - |
-| 4 | `interview_panels` (Interview Panels) | master | - | - | required | - | `:manage` | - |
-| 5 | `interview_questions` (Interview Questions) | master | - | - | required | - | `:admin` | - |
-| 6 | `interview_scorecards` (Interview Scorecards) | master | - | - | required | personal_content, submit_lock | `:manage` | - |
-| 7 | `interviewer_availability_slots` (Interviewer Availability Slots) | master | - | - | optional | - | `:manage` | - |
-| 8 | `interviews` (Interviews) | master | - | - | required | - | `:manage` | - |
-| 9 | `job_applications` (Applications) | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | personal_content | `:manage` | - |
-| 10 | `candidates` (Candidates) | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
+| # | data_object | singular | plural | role | mastered in | mastered label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `candidate_assessments` | Assessment | Assessments | master | - | - | required | submit_lock | `:manage` | - |
+| 2 | `candidate_assessment_templates` | Candidate Assessment Template | Candidate Assessment Templates | master | - | - | required | - | `:admin` | - |
+| 3 | `interview_kits` | Interview Kit | Interview Kits | master | - | - | required | - | `:admin` | - |
+| 4 | `interview_panels` | Interview Panel | Interview Panels | master | - | - | required | - | `:manage` | - |
+| 5 | `interview_questions` | Interview Question | Interview Questions | master | - | - | required | - | `:admin` | - |
+| 6 | `interview_scorecards` | Interview Scorecard | Interview Scorecards | master | - | - | required | personal_content, submit_lock | `:manage` | - |
+| 7 | `interviewer_availability_slots` | Interviewer Availability Slot | Interviewer Availability Slots | master | - | - | optional | - | `:manage` | - |
+| 8 | `interviews` | Interview | Interviews | master | - | - | required | - | `:manage` | - |
+| 9 | `job_applications` | Application | Applications | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | personal_content | `:manage` | - |
+| 10 | `candidates` | Candidate | Candidates | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -121,6 +125,8 @@ _(no industry-scoped aliases or non-synonym alias types loaded for this scope; g
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `candidates` | has owning recruiter | `users` | many_to_many | optional | source | clear | reference | - |
 | `candidate_assessments` | has invitation author | `users` | many_to_many | required | source | restrict | reference | - |
+| `interviewer_availability_slots` | has owner | `users` | many_to_many | required | source | restrict | reference | - |
+| `interview_panels` | has owner | `users` | many_to_many | optional | source | clear | reference | - |
 | `job_applications` | has owning recruiter | `users` | many_to_many | required | source | restrict | reference | - |
 | `interviews` | has coordinator and panelists | `users` | many_to_many | required | source | restrict | reference | - |
 | `interview_scorecards` | has interviewer as author | `users` | many_to_many | required | source | restrict | reference | - |
@@ -188,13 +194,13 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-INTERVIEWS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate_assessment.failed` | _(lifecycle)_ | `candidate_assessments` | event_stream | low | Failed-assessment outcomes close the candidate's loop in ATS and propagate to HCM only if the candidate is an internal-mobility applicant whose profile should reflect the development gap. |
-| ATS-INTERVIEWS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate_assessment.passed` | _(lifecycle)_ | `candidate_assessments` | event_stream | medium | Passing an assessment advances the candidate; on eventual hire, HCM uses the assessment result as the first data point for the new-hire skill profile. |
 | ATS-CANDIDATE-CRM | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
-| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `candidate_assessment.failed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
-| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `candidate_assessment.passed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
-| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `interview.completed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
+| ATS-INTERVIEWS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate_assessment.passed` | _(lifecycle)_ | `candidate_assessments` | event_stream | medium | Passing an assessment advances the candidate; on eventual hire, HCM uses the assessment result as the first data point for the new-hire skill profile. |
+| ATS-INTERVIEWS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate_assessment.failed` | _(lifecycle)_ | `candidate_assessments` | event_stream | low | Failed-assessment outcomes close the candidate's loop in ATS and propagate to HCM only if the candidate is an internal-mobility applicant whose profile should reflect the development gap. |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-TALENT-POOLS | `job_application.rejected` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
+| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `interview.completed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
+| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `candidate_assessment.passed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
+| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `candidate_assessment.failed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-INTERVIEWS | TALENT-MGMT | TALENT-SUCCESSION-CAREER | `candidate_assessment.passed` | _(lifecycle)_ | `candidate_assessments` | api_call | medium | Completed assessment scores seed the talent-management skill profile for hired candidates and a structured talent pool for non-hires. |
 | ATS-CANDIDATE-CRM | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
 | ATS-INTERVIEWS | PA | PA-WORKFORCE-METRICS | `interview_scorecard.submitted` | _(lifecycle)_ | `interview_scorecards` | event_stream | low | - |
@@ -204,9 +210,9 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `job_application.advanced` | _(state_change)_ | `interviews` | lifecycle_progression | low | - |
-| ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_activated` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
+| ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
+| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `job_application.advanced` | _(state_change)_ | `interviews` | lifecycle_progression | low | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -368,17 +374,24 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `ats-interviews:admin` | `ats-interviews:manage_all_applications` |
 | `ats-interviews:admin` | `ats-interviews:submit_assessment` |
 
+**Processes wired:**
+
+| process_key | process_name | PCF code | PCF ID | level | description |
+| --- | --- | --- | --- | --- | --- |
+| `hire_candidate` | Hire candidate | 7.2.4.3 | 10465 | 4 | Wrapping up the process for hiring candidates. Agree to all hiring terms and conditions. Have the candidate accept and sign the job offer. |
+| `interview_candidates` | Interview candidates | 7.2.3.2 | 10457 | 4 | Assessing the candidates by their performance in the interviews. Conduct HR interview, technical interview, hiring manager interview, etc. Understand the mindset of the candidate, and comprehend his/her personal and professional lives. |
+
 **RACI realization:**
 
-| actor | kind | raci | process | realization |
+| actor | kind | raci | process_key | realization |
 | --- | --- | --- | --- | --- |
-| `RECRUITING-RECRUITER` | persona | responsible | Hire candidate | grant gates [ats-interviews:hire_candidate, ats-interviews:hire_candidate] + the gated entities' write tier |
-| `HIRING-MANAGER` | persona | accountable | Hire candidate | approval gate |
-| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | Hire candidate | notification side effect (trigger_event / webhook_receiver) |
-| `HIRING-MANAGER` | persona | responsible | Interview candidates | grant gates [ats-interviews:submit_scorecard] + the gated entities' write tier |
-| `RECRUITING-MANAGER` | persona | accountable | Interview candidates | approval gate |
-| `RECRUITING-RECRUITER` | persona | consulted | Interview candidates | advisory read grant |
-| `RECRUITING-COORDINATOR` | persona | informed | Interview candidates | notification side effect (trigger_event / webhook_receiver) |
+| `RECRUITING-RECRUITER` | persona | responsible | `hire_candidate` | grant gates [ats-interviews:hire_candidate, ats-interviews:hire_candidate] + the gated entities' write tier |
+| `HIRING-MANAGER` | persona | accountable | `hire_candidate` | approval gate |
+| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | `hire_candidate` | notification side effect (trigger_event / webhook_receiver) |
+| `HIRING-MANAGER` | persona | responsible | `interview_candidates` | grant gates [ats-interviews:submit_scorecard] + the gated entities' write tier |
+| `RECRUITING-MANAGER` | persona | accountable | `interview_candidates` | approval gate |
+| `RECRUITING-RECRUITER` | persona | consulted | `interview_candidates` | advisory read grant |
+| `RECRUITING-COORDINATOR` | persona | informed | `interview_candidates` | notification side effect (trigger_event / webhook_receiver) |
 
 ### 9.2 Functional ownership and default grants
 

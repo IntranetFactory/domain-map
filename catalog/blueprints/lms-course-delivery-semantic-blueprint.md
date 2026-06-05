@@ -1,52 +1,52 @@
 ---
 artifact: semantic-blueprint
 fact_sheet_version: "2.0"
+license: MIT
 system_name: LMS-COURSE-DELIVERY
 system_description: Course Delivery
 system_slug: lms-course-delivery
 domain_modules:
   - lms-course-delivery
 domain_code: LMS
-related_modules: [ats-candidate-crm, ats-recruitment-pipeline, ben-enrollment, comp-planning, emp-exp-continuous-listen, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, hrsd-case-mgmt, iga-access-request, lms-automation, lms-compliance-training, lms-credentials, lms-ilt-delivery, lms-paths, pa-predictive-models, payroll-run, psa-project-delivery, psa-resource-mgmt, skills-mgmt-profile, talent-performance-mgmt, talent-succession-career]
-created_at: 2026-06-02
+related_modules: [ats-candidate-crm, ats-recruitment-pipeline, ben-enrollment, comp-planning, emp-exp-continuous-listen, erp-fin-gl-close, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, hrsd-case-mgmt, iga-access-request, lms-automation, lms-compliance-training, lms-credentials, lms-ilt-delivery, lms-paths, pa-predictive-models, payroll-run, psa-project-delivery, psa-resource-mgmt, skills-mgmt-profile, talent-performance-mgmt, talent-succession-career]
+persona: []
+created_at: 2026-06-05
 ---
 
 # Course Delivery
 
 ## 1. Overview
 
-### 1.1 Analyst overview
-
 The core LMS workflow: course authoring, content delivery, enrollment, completion tracking, and transcript posting. Masters `courses`, `course_enrollments`, `learning_records`. Realizes COURSE-AUTHOR and CONTENT-DELIVERY capabilities. The backbone module every LMS deployment installs first; the other LMS modules embedded_master courses to reference content.
 
 ## 2. Entity summary
 
-| Name | Description |
-| --- | --- |
-| Assessment Attempts | Per-learner per-attempt audit row: start time, score, pass/fail, time-on-task. FINRA / Part 11 evidence substrate. |
-| Assessment Questions | Item-bank entry: question stem, choices, scoring, and metadata for randomization. |
-| Course Assessments | Quiz or exam definition associated with a course or lesson; carries passing score and attempt policy. |
-| Course Catalogs | Scoped catalog view: subset of courses surfaced to a specific audience, branch, or domain. |
-| Course Categories | Hierarchical taxonomy for catalog browsing and reporting. |
-| Course Completions | Terminal completion record per learner per course version. Distinct from learning_records (event log). |
-| Course Discussions | Forum-style discussion thread attached to a course or lesson; collaborative-learning surface. |
-| Course Enrollments | Per-learner per-course state record: assigned date, due date, attempts, status (not_started, in_progress, completed, expired), score. The operational unit of learning tracking. |
-| Course Modules | Intra-course composition unit grouping related lessons; supports completion tracking at sub-course granularity. |
-| Course Ratings | Numeric rating (typically 1-5) per learner per course; aggregate analytics surface. |
-| Course Reviews | Learner-authored qualitative review of a course post-completion. |
-| Course Tags | Free-form taxonomy alongside categories; supports faceted search. |
-| Course Versions | Versioned snapshot of a course's content lineage. Required for compliance retention: regulators ask which version of training each learner completed. |
-| Courses | Atomic learning unit: e-learning module, video, live session, blended programme, external content. Carries content reference, duration, format, language, prerequisites, certification award. |
-| Learning Content Assets | Reusable content asset (video, PDF, image, audio) referenced by lessons and modules. |
-| Learning Records | Granular completion event for a course or activity, often xAPI / SCORM / cmi5 statement: actor, verb, object, result, timestamp. Feeds skill_profiles and certifications. |
-| Lessons | Leaf consumable inside a course module: video, document, SCORM block, or live activity. |
-| Quiz Responses | Item-level learner response capture for psychometric analysis and per-question review. |
-| SCORM Packages | SCORM / AICC / cmi5 content package import; carries content interop manifest and runtime state. |
-| xAPI Statements | Experience-API event log row capturing actor-verb-object learning activity inside or outside the LMS. |
-| Cost Centers | Organisational unit for cost allocation: name, code, manager, hierarchy, currency. Drives variance reporting and project / departmental P&L. A near-universal foreign key in finance and payroll. |
-| Employees | Canonical record of a person currently or formerly employed by the organization. Carries identity (legal name, contact, IDs), employment metadata (start date, end date, employment type, country), and pointers to position, job profile, org unit, manager, and life-event history. The most multi-mastered data object in the catalog: HCM masters the core HR slice, Payroll masters the comp/withholding slice, and IGA masters the identity/access slice. Onboarding, PA, and Talent Management consume or contribute. |
-| Org Units | Node in the organizational hierarchy: division, business unit, department, team. Carries manager, cost center alignment, geographic scope, and parent/child relationships. HCM masters the operational hierarchy; EPM contributes the cost-center mapping (which would be Finance-mastered once a Finance/GL domain is loaded). |
-| Positions | Approved slot in the org - a 'chair' with role definition, cost center, reporting line, location, and FTE allocation. Distinct from job_profiles (the catalog definition) and from employees (the person filling the slot). A position can be open, filled, or eliminated. SWP designs future positions via org_designs; HCM operationalizes them once approved. |
+| Name | data_object | Description |
+| --- | --- | --- |
+| Assessment Attempts | `assessment_attempts` | Per-learner per-attempt audit row: start time, score, pass/fail, time-on-task. FINRA / Part 11 evidence substrate. |
+| Assessment Questions | `assessment_questions` | Item-bank entry: question stem, choices, scoring, and metadata for randomization. |
+| Course Assessments | `course_assessments` | Quiz or exam definition associated with a course or lesson; carries passing score and attempt policy. |
+| Course Catalogs | `course_catalogs` | Scoped catalog view: subset of courses surfaced to a specific audience, branch, or domain. |
+| Course Categories | `course_categories` | Hierarchical taxonomy for catalog browsing and reporting. |
+| Course Completions | `course_completions` | Terminal completion record per learner per course version. Distinct from learning_records (event log). |
+| Course Discussions | `course_discussions` | Forum-style discussion thread attached to a course or lesson; collaborative-learning surface. |
+| Course Enrollments | `course_enrollments` | Per-learner per-course state record: assigned date, due date, attempts, status (not_started, in_progress, completed, expired), score. The operational unit of learning tracking. |
+| Course Modules | `course_modules` | Intra-course composition unit grouping related lessons; supports completion tracking at sub-course granularity. |
+| Course Ratings | `course_ratings` | Numeric rating (typically 1-5) per learner per course; aggregate analytics surface. |
+| Course Reviews | `course_reviews` | Learner-authored qualitative review of a course post-completion. |
+| Course Tags | `course_tags` | Free-form taxonomy alongside categories; supports faceted search. |
+| Course Versions | `course_versions` | Versioned snapshot of a course's content lineage. Required for compliance retention: regulators ask which version of training each learner completed. |
+| Courses | `courses` | Atomic learning unit: e-learning module, video, live session, blended programme, external content. Carries content reference, duration, format, language, prerequisites, certification award. |
+| Learning Content Assets | `learning_content_assets` | Reusable content asset (video, PDF, image, audio) referenced by lessons and modules. |
+| Learning Records | `learning_records` | Granular completion event for a course or activity, often xAPI / SCORM / cmi5 statement: actor, verb, object, result, timestamp. Feeds skill_profiles and certifications. |
+| Lessons | `lessons` | Leaf consumable inside a course module: video, document, SCORM block, or live activity. |
+| Quiz Responses | `quiz_responses` | Item-level learner response capture for psychometric analysis and per-question review. |
+| SCORM Packages | `scorm_packages` | SCORM / AICC / cmi5 content package import; carries content interop manifest and runtime state. |
+| xAPI Statements | `xapi_statements` | Experience-API event log row capturing actor-verb-object learning activity inside or outside the LMS. |
+| Cost Centers | `cost_centers` | Organisational unit for cost allocation: name, code, manager, hierarchy, currency. Drives variance reporting and project / departmental P&L. A near-universal foreign key in finance and payroll. |
+| Employees | `employees` | Canonical record of a person currently or formerly employed by the organization. Carries identity (legal name, contact, IDs), employment metadata (start date, end date, employment type, country), and pointers to position, job profile, org unit, manager, and life-event history. The most multi-mastered data object in the catalog: HCM masters the core HR slice, Payroll masters the comp/withholding slice, and IGA masters the identity/access slice. Onboarding, PA, and Talent Management consume or contribute. |
+| Org Units | `org_units` | Node in the organizational hierarchy: division, business unit, department, team. Carries manager, cost center alignment, geographic scope, and parent/child relationships. HCM masters the operational hierarchy; EPM contributes the cost-center mapping (which would be Finance-mastered once a Finance/GL domain is loaded). |
+| Positions | `hcm_positions` | Approved slot in the org - a 'chair' with role definition, cost center, reporting line, location, and FTE allocation. Distinct from job_profiles (the catalog definition) and from employees (the person filling the slot). A position can be open, filled, or eliminated. SWP designs future positions via org_designs; HCM operationalizes them once approved. |
 
 ```mermaid
 flowchart TD
@@ -155,32 +155,32 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | role | mastered in | label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `assessment_attempts` (Assessment Attempts) | master | - | - | required | personal_content, submit_lock | `:manage` _(pending)_ | - |
-| 2 | `assessment_questions` (Assessment Questions) | master | - | - | required | - | `:manage` _(pending)_ | - |
-| 3 | `course_assessments` (Course Assessments) | master | - | - | required | submit_lock | `:manage` _(pending)_ | - |
-| 4 | `course_catalogs` (Course Catalogs) | master | - | - | required | - | `:manage` _(pending)_ | - |
-| 5 | `course_categories` (Course Categories) | master | - | - | required | - | `:manage` _(pending)_ | - |
-| 6 | `course_completions` (Course Completions) | master | - | - | required | personal_content, submit_lock | `:manage` _(pending)_ | - |
-| 7 | `course_discussions` (Course Discussions) | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
-| 8 | `course_enrollments` (Course Enrollments) | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
-| 9 | `course_modules` (Course Modules) | master | - | - | required | - | `:manage` _(pending)_ | - |
-| 10 | `course_ratings` (Course Ratings) | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
-| 11 | `course_reviews` (Course Reviews) | master | - | - | required | personal_content, submit_lock | `:manage` _(pending)_ | - |
-| 12 | `course_tags` (Course Tags) | master | - | - | required | - | `:manage` _(pending)_ | - |
-| 13 | `course_versions` (Course Versions) | master | - | - | required | submit_lock | `:manage` _(pending)_ | - |
-| 14 | `courses` (Courses) | master | - | - | required | - | `:manage` _(pending)_ | - |
-| 15 | `learning_content_assets` (Learning Content Assets) | master | - | - | required | - | `:manage` _(pending)_ | - |
-| 16 | `learning_records` (Learning Records) | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
-| 17 | `lessons` (Lessons) | master | - | - | required | - | `:manage` _(pending)_ | - |
-| 18 | `quiz_responses` (Quiz Responses) | master | - | - | required | personal_content, submit_lock | `:manage` _(pending)_ | - |
-| 19 | `scorm_packages` (SCORM Packages) | master | - | - | required | - | `:manage` _(pending)_ | - |
-| 20 | `xapi_statements` (xAPI Statements) | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
-| 21 | `cost_centers` (Cost Centers) | embedded_master | `ERP-FIN` _(domain-level, not modularized)_ | Core ERP Financial Management | optional | - | `:manage` _(pending)_ | - |
-| 22 | `employees` (Employees) | embedded_master | `hcm-core-worker` | Core Worker Record | required | personal_content | `:manage` _(pending)_ | - |
-| 23 | `org_units` (Org Units) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | - | `:manage` _(pending)_ | - |
-| 24 | `hcm_positions` (Positions) | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | single_approver | `:manage` _(pending)_ | - |
+| # | data_object | singular | plural | role | mastered in | mastered label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `assessment_attempts` | Assessment Attempt | Assessment Attempts | master | - | - | required | personal_content, submit_lock | `:manage` | - |
+| 2 | `assessment_questions` | Assessment Question | Assessment Questions | master | - | - | required | - | `:admin` | - |
+| 3 | `course_assessments` | Course Assessment | Course Assessments | master | - | - | required | submit_lock | `:manage` | - |
+| 4 | `course_catalogs` | Course Catalog | Course Catalogs | master | - | - | required | - | `:admin` | - |
+| 5 | `course_categories` | Course Category | Course Categories | master | - | - | required | - | `:admin` | - |
+| 6 | `course_completions` | Course Completion | Course Completions | master | - | - | required | personal_content, submit_lock | `:manage` | - |
+| 7 | `course_discussions` | Course Discussion | Course Discussions | master | - | - | required | personal_content | `:manage` | - |
+| 8 | `course_enrollments` | Course Enrollment | Course Enrollments | master | - | - | required | personal_content | `:manage` | - |
+| 9 | `course_modules` | Course Module | Course Modules | master | - | - | required | - | `:admin` | - |
+| 10 | `course_ratings` | Course Rating | Course Ratings | master | - | - | required | personal_content | `:manage` | - |
+| 11 | `course_reviews` | Course Review | Course Reviews | master | - | - | required | personal_content, submit_lock | `:manage` | - |
+| 12 | `course_tags` | Course Tag | Course Tags | master | - | - | required | - | `:admin` | - |
+| 13 | `course_versions` | Course Version | Course Versions | master | - | - | required | submit_lock | `:manage` | - |
+| 14 | `courses` | Course | Courses | master | - | - | required | - | `:manage` | - |
+| 15 | `learning_content_assets` | Learning Content Asset | Learning Content Assets | master | - | - | required | - | `:admin` | - |
+| 16 | `learning_records` | Learning Record | Learning Records | master | - | - | required | personal_content | `:manage` | - |
+| 17 | `lessons` | Lesson | Lessons | master | - | - | required | - | `:admin` | - |
+| 18 | `quiz_responses` | Quiz Response | Quiz Responses | master | - | - | required | personal_content, submit_lock | `:manage` | - |
+| 19 | `scorm_packages` | SCORM Package | SCORM Packages | master | - | - | required | - | `:manage` | - |
+| 20 | `xapi_statements` | xAPI Statement | xAPI Statements | master | - | - | required | personal_content | `:manage` | - |
+| 21 | `cost_centers` | Cost Center | Cost Centers | embedded_master | `erp-fin-gl-close` | General Ledger and Close | optional | - | `:manage` _(pending)_ | - |
+| 22 | `employees` | Employee | Employees | embedded_master | `hcm-core-worker` | Core Worker Record | required | personal_content | `:manage` _(pending)_ | - |
+| 23 | `org_units` | Org Unit | Org Units | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | - | `:manage` _(pending)_ | - |
+| 24 | `hcm_positions` | Position | Positions | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | single_approver | `:manage` _(pending)_ | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -351,35 +351,35 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | HCM-CORE-WORKER | HRSD | HRSD-CASE-MGMT | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | medium | Termination kicks off offboarding case (exit interview, knowledge transfer, paperwork). Multiple downstream HRSD tasks created. |
 | HCM-CORE-WORKER | IGA | IGA-ACCESS-REQUEST | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | high | Promotion (mover event) requires entitlement re-evaluation: add new role access, revoke prior-role access. SoD risk window during transition. |
-| HCM-CORE-WORKER | IGA | IGA-ACCESS-REQUEST | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | api_call | high | Termination in HCM must immediately revoke identity access in IGA: disable account, remove group memberships, terminate app-level entitlements. Failure modes: contractor terminations not flowing (different HCM table); rehires confuse the de-provisioning idempotency; access lingers after termination is the canonical audit finding. |
 | HCM-ORG-POSITIONS | IGA | IGA-ACCESS-REQUEST | `org_unit.created` | - | `org_units` | event_stream | medium | New org unit drives IGA group/role provisioning. Group-name conventions and ownership must be encoded; otherwise orphan groups proliferate. |
-| HCM-ORG-POSITIONS | IGA | IGA-ACCESS-REQUEST | `org_unit.merged` | _(state_change)_ | `org_units` | event_stream | high | Org-unit merge consolidates IGA groups: members migrate, entitlements deduplicated, SoD revalidated. Often runs as a batch project rather than event. |
-| HCM-ORG-POSITIONS | IGA | IGA-ACCESS-REQUEST | `org_unit.disbanded` | _(state_change)_ | `org_units` | event_stream | high | Org-unit disbandment requires IGA group cleanup; orphan-group risk if employees re-assigned slowly. |
+| HCM-CORE-WORKER | IGA | IGA-ACCESS-REQUEST | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | api_call | high | Termination in HCM must immediately revoke identity access in IGA: disable account, remove group memberships, terminate app-level entitlements. Failure modes: contractor terminations not flowing (different HCM table); rehires confuse the de-provisioning idempotency; access lingers after termination is the canonical audit finding. |
 | HCM-CORE-WORKER | IGA | IGA-ACCESS-REQUEST | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | high | New employee in HCM triggers directory account creation and birthright-role assignment in IGA. High friction because role-to-entitlement mappings drift per business unit, and IGA frequently needs additional context (cost center, manager, location) that arrives later in the journey. Same trigger event as the HCM → Onboarding and HCM → Payroll handoffs. |
-| HCM-CORE-WORKER | HCM | HCM-LIFECYCLE-WORKFLOWS | `employee.created` | `created` _(lifecycle)_ | `employees` | lifecycle_progression | low | New worker record surfaces in self-service: manager dashboard, new-hire welcome surface, lifecycle task inbox. In-process state read; no message bus. |
+| HCM-ORG-POSITIONS | IGA | IGA-ACCESS-REQUEST | `org_unit.disbanded` | _(state_change)_ | `org_units` | event_stream | high | Org-unit disbandment requires IGA group cleanup; orphan-group risk if employees re-assigned slowly. |
+| HCM-ORG-POSITIONS | IGA | IGA-ACCESS-REQUEST | `org_unit.merged` | _(state_change)_ | `org_units` | event_stream | high | Org-unit merge consolidates IGA groups: members migrate, entitlements deduplicated, SoD revalidated. Often runs as a batch project rather than event. |
 | HCM-CORE-WORKER | HCM | HCM-LIFECYCLE-WORKFLOWS | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | lifecycle_progression | low | Termination drives the offboarding self-service flow: exit-interview prompt, equipment-return task, knowledge-handoff surfaces in the lifecycle workflow module. |
-| LMS-COURSE-DELIVERY | HCM | _(domain-level)_ | `course_completion.recorded` | _(lifecycle)_ | `course_completions` | event_stream | low | - |
+| HCM-CORE-WORKER | HCM | HCM-LIFECYCLE-WORKFLOWS | `employee.created` | `created` _(lifecycle)_ | `employees` | lifecycle_progression | low | New worker record surfaces in self-service: manager dashboard, new-hire welcome surface, lifecycle task inbox. In-process state read; no message bus. |
 | LMS-COURSE-DELIVERY | HCM | _(domain-level)_ | `learning_record.posted` | _(lifecycle)_ | `learning_records` | event_stream | low | Authoritative learning transcript visible in HCM employee record. |
-| HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | high | Termination drives final pay (severance, accrued PTO payout, prorated bonus). Cross-vendor stack when HCM and PAYROLL are different vendors; retro-adjustments are common. |
+| LMS-COURSE-DELIVERY | HCM | _(domain-level)_ | `course_completion.recorded` | _(lifecycle)_ | `course_completions` | event_stream | low | - |
 | HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | medium | Promotion typically includes salary change. Effective-dated change must flow to PAYROLL with retroactive handling. |
+| HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | high | Termination drives final pay (severance, accrued PTO payout, prorated bonus). Cross-vendor stack when HCM and PAYROLL are different vendors; retro-adjustments are common. |
 | HCM-CORE-WORKER | PAYROLL | PAYROLL-RUN | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | medium | New employee in HCM triggers comp profile activation in Payroll: gross-to-net rules selected by jurisdiction, deductions initialised, bank account and tax setup collected via Onboarding flow. Same trigger event as the HCM → Onboarding handoff; both subscribe to the employee.created event. |
-| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.approved_for_creation` | `approved_for_creation` _(lifecycle)_ | `hcm_positions` | event_stream | medium | Approved position flows to ATS as the basis for a requisition. Approval state must be in sync to avoid requisitions opened against unapproved positions. |
-| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.closed` | _(state_change)_ | `org_units` | api_call | high | - |
-| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.reorganized` | _(state_change)_ | `org_units` | api_call | high | - |
-| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.activated` | _(state_change)_ | `org_units` | api_call | low | - |
-| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.eliminated` | _(state_change)_ | `hcm_positions` | api_call | high | - |
-| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.frozen` | _(state_change)_ | `hcm_positions` | api_call | high | - |
 | HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.filled` | _(state_change)_ | `hcm_positions` | api_call | medium | - |
+| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.approved_for_creation` | `approved_for_creation` _(lifecycle)_ | `hcm_positions` | event_stream | medium | Approved position flows to ATS as the basis for a requisition. Approval state must be in sync to avoid requisitions opened against unapproved positions. |
 | HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.opened` | _(state_change)_ | `hcm_positions` | api_call | medium | - |
 | HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.approved` | _(state_change)_ | `hcm_positions` | api_call | medium | - |
 | HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.disbanded` | _(state_change)_ | `org_units` | api_call | high | - |
 | HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.merged` | _(state_change)_ | `org_units` | api_call | high | - |
+| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.eliminated` | _(state_change)_ | `hcm_positions` | api_call | high | - |
+| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.activated` | _(state_change)_ | `org_units` | api_call | low | - |
+| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.reorganized` | _(state_change)_ | `org_units` | api_call | high | - |
+| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.closed` | _(state_change)_ | `org_units` | api_call | high | - |
+| HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `hcm_position.frozen` | _(state_change)_ | `hcm_positions` | api_call | high | - |
 | HCM-ORG-POSITIONS | ATS | ATS-RECRUITMENT-PIPELINE | `org_unit.created` | - | `org_units` | api_call | medium | - |
 | LMS-COURSE-DELIVERY | LMS | LMS-COMPLIANCE-TRAINING | `course.published` | _(lifecycle)_ | `courses` | lifecycle_progression | low | - |
+| LMS-COURSE-DELIVERY | LMS | LMS-CREDENTIALS | `assessment_attempt.passed` | _(lifecycle)_ | `assessment_attempts` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | LMS | LMS-COMPLIANCE-TRAINING | `course_completion.recorded` | _(lifecycle)_ | `course_completions` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | LMS | LMS-CREDENTIALS | `course_completion.recorded` | _(lifecycle)_ | `course_completions` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | LMS | LMS-ILT-DELIVERY | `course_version.published` | _(lifecycle)_ | `course_versions` | lifecycle_progression | low | - |
-| LMS-COURSE-DELIVERY | LMS | LMS-CREDENTIALS | `assessment_attempt.passed` | _(lifecycle)_ | `assessment_attempts` | lifecycle_progression | low | - |
 | HCM-CORE-WORKER | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | low | Promotion updates succession-plan slots and 9-box placement context. |
 | LMS-COURSE-DELIVERY | TALENT-MGMT | TALENT-SUCCESSION-CAREER | `course_enrollment.completed` | _(lifecycle)_ | `course_enrollments` | event_stream | low | Course completion updates skill-profile; TALENT-MGMT reflects in dev-plans and succession. |
 | HCM-CORE-WORKER | TALENT-MGMT | TALENT-PERFORMANCE-MGMT | `employee.created` | `created` _(lifecycle)_ | `employees` | api_call | low | New employee triggers talent-profile initialisation in Talent Management: career aspirations, mobility preferences, skills profile stubs. Same employee.created trigger as Onboarding / Payroll / IGA handoffs. |
@@ -387,8 +387,8 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New-hire creation provides compensation basis. Bands and grades attach via job profile. |
 | HCM-ORG-POSITIONS | COMP-MGMT | COMP-PLANNING | `hcm_position.approved_for_creation` | `approved_for_creation` _(lifecycle)_ | `hcm_positions` | event_stream | low | Approved position carries grade/band, anchoring offer-comp generation. |
 | HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | low | Promotion event triggers off-cycle compensation review (eligibility, band placement, increase recommendation) in COMP-MGMT. |
-| HCM-CORE-WORKER | BEN-ADMIN | BEN-ENROLLMENT | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | medium | New-hire creation seeds benefits eligibility (waiting periods, default elections). Drives carrier feed setup at end of new-hire window. |
 | HCM-CORE-WORKER | BEN-ADMIN | BEN-ENROLLMENT | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | high | Termination triggers benefits termination, COBRA / equivalent notices, and dependent coverage decisions. Late notifications cause coverage gaps. |
+| HCM-CORE-WORKER | BEN-ADMIN | BEN-ENROLLMENT | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | medium | New-hire creation seeds benefits eligibility (waiting periods, default elections). Drives carrier feed setup at end of new-hire window. |
 | HCM-ORG-POSITIONS | ERP-FIN | _(domain-level)_ | `org_unit.created` | - | `org_units` | api_call | medium | New org unit usually maps to cost-center; ERP-FIN must reflect the structure for budgeting and labor allocation. |
 | HCM-CORE-WORKER | EXPENSE | _(domain-level)_ | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | medium | Termination triggers EXPENSE corporate-card deactivation and outstanding-report close-out. |
 | HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New consultant hired. PSA resource pool adds the employee as available capacity; skill inventory record is seeded for downstream certifications. |
@@ -397,8 +397,8 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `attrition_risk.high` | _(state_change)_ | `employees` | event_stream | high | ML attrition score crosses high threshold. PSA resource managers may proactively rebalance assignments away from at-risk consultants on critical engagements. High friction: probabilistic→deterministic pattern (score requires judgement call), false-positive volume can swamp the staffing queue. |
 | HCM-CORE-WORKER | PSA | PSA-PROJECT-DELIVERY | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | medium | Terminated employee may be the assignee on open project_tasks. PROJECT-DELIVERY needs to surface affected tasks for reassignment or completion handover. |
 | LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course_version.published` | _(lifecycle)_ | `course_versions` | lifecycle_progression | low | - |
-| LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course.published` | _(lifecycle)_ | `courses` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course_enrollment.completed` | _(lifecycle)_ | `course_enrollments` | lifecycle_progression | low | - |
+| LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course.published` | _(lifecycle)_ | `courses` | lifecycle_progression | low | - |
 | LMS-COURSE-DELIVERY | SKILLS-MGMT | SKILLS-MGMT-PROFILE | `course_completion.recorded` | _(lifecycle)_ | `course_completions` | lifecycle_progression | low | - |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
@@ -406,18 +406,18 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | HCM-CORE-WORKER | ATS | ATS-CANDIDATE-CRM | `candidate.hired` | `hired` _(lifecycle)_ | `employees` | event_stream | medium | Candidate-to-employee conversion: hired candidate from ATS triggers employee-record creation in HCM. Field mapping (candidate → employee) is rarely perfect; missing fields (legal name spelling, work-eligibility detail, tax IDs) get collected in the Onboarding journey and back-filled into HCM. |
-| HCM-CORE-WORKER | MDM | _(domain-level)_ | `employee_golden_record.created` | `active` _(lifecycle)_ | `employees` | api_call | medium | Resolved identity → HCM links operational HR record. |
-| HCM-CORE-WORKER | EMP-EXP | EMP-EXP-CONTINUOUS-LISTEN | `attrition_risk.high` | _(state_change)_ | `employees` | api_call | high | Attrition-risk inference from engagement signals surfaces to managers via HCM dashboards. Probabilistic-signal → deterministic-action pattern: a risk score is not a directive; intervention is gated by manager judgement, data-privacy rules (anonymity floor), and DEI-bias concerns. |
 | HCM-CORE-WORKER | PA | PA-PREDICTIVE-MODELS | `attrition_risk.high` | _(state_change)_ | `employees` | event_stream | high | Flight-risk score flagged on employee; HR-business-partner motion required. Probabilistic-signal-to-deterministic-action friction shape; false-positive volume drives mistrust. |
+| HCM-CORE-WORKER | MDM | _(domain-level)_ | `employee_golden_record.created` | `active` _(lifecycle)_ | `employees` | api_call | medium | Resolved identity → HCM links operational HR record. |
 | HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `merit_cycle.approved` | `approved` _(state_change)_ | `employees` | event_stream | low | Cycle-close pay-rate changes post to the worker record (base salary, bonus target, equity guideline). |
+| HCM-CORE-WORKER | EMP-EXP | EMP-EXP-CONTINUOUS-LISTEN | `attrition_risk.high` | _(state_change)_ | `employees` | api_call | high | Attrition-risk inference from engagement signals surfaces to managers via HCM dashboards. Probabilistic-signal → deterministic-action pattern: a risk score is not a directive; intervention is gated by manager judgement, data-privacy rules (anonymity floor), and DEI-bias concerns. |
 | LMS-COURSE-DELIVERY | HCM | HCM-CORE-WORKER | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New-hire creation provisions required-training assignments (compliance, role-based). Drives day-one and 30-day learning workflows. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
 | data_object | role here | necessity | canonical owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
-| `cost_centers` | embedded_master | optional | ERP-FIN (Core ERP Financial Management) | - |
-| `employees` | embedded_master | required | HCM-CORE-WORKER (HCM), PAYROLL (Payroll Management), IGA (Identity Governance and Administration), MDM (Master Data Management) | - |
+| `cost_centers` | embedded_master | optional | ERP-FIN-GL-CLOSE (ERP-FIN) | - |
+| `employees` | embedded_master | required | HCM-CORE-WORKER (HCM) | - |
 | `hcm_positions` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | - |
 | `org_units` | embedded_master | optional | HCM-ORG-POSITIONS (HCM) | - |
 
@@ -653,6 +653,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `lms-course-delivery_viewer` | `lms-course-delivery:read` |
 | `lms-course-delivery_manager` | `lms-course-delivery:manage` |
+| `lms-course-delivery_admin` | `lms-course-delivery:admin` |
 
 **Permission hierarchy:**
 
