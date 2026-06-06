@@ -364,7 +364,7 @@ _(awaiting user input on B2-S1 through B2-S6; B1B items remain blocked until res
 
 The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
 Any open item that says "author/split a per-module system skill", "one system skill per
-domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELLED.
+domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELED.
 New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
 domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;

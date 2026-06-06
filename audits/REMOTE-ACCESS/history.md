@@ -528,7 +528,7 @@ Re-query of live state showed the three events already carry the proposed catego
 
 The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
 Any open item that says "author/split a per-module system skill", "one system skill per
-domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELLED.
+domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELED.
 New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
 domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;

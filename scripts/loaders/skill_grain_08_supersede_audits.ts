@@ -9,7 +9,7 @@
  * blindly executes them would undo this migration. This pass ENUMERATES every affected file and
  * SUPERSEDES the per-module instruction with a uniform, prominent banner.
  *
- *   - state.yaml: PREPEND a YAML comment banner (valid YAML; the open items below it are cancelled).
+ *   - state.yaml: PREPEND a YAML comment banner (valid YAML; the open items below it are canceled).
  *   - history.md: APPEND a dated correction note (history is append-only).
  *
  * Idempotent: skips a file that already carries the sentinel. Over-inclusion is safe (the banner is
@@ -29,7 +29,7 @@ const PATTERN = /skill_tools|per-module skill|per-module system skill|system ski
 const BODY_LINES = [
   "The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).",
   "Any open item that says \"author/split a per-module system skill\", \"one system skill per",
-  "domain_modules row\", \"add/PATCH skill_tools\", or \"<module>_agent per module\" is CANCELLED.",
+  "domain_modules row\", \"add/PATCH skill_tools\", or \"<module>_agent per module\" is CANCELED.",
   "New model: tool requirements live on `domain_module_tools` (author tools onto modules); each",
   "domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that",
   "DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;",
