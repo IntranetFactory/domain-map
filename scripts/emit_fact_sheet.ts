@@ -4,9 +4,11 @@
 // Per-module emitter:
 //   Per-module fact sheets → blueprints/<MODULE-CODE>-semantic-blueprint.md
 //   One per `domain_modules` row. The deployable unit's surface: data_objects assigned to
-//   this module, lifecycle states on this module's masters, system skill + skill_tools +
-//   Semantius coverage %, module-scoped permissions and business rules, capabilities
-//   realized, outbound/inbound integration handoffs, architect handoff hints.
+//   this module, lifecycle states on this module's masters, module-scoped permissions and
+//   business rules, capabilities realized, outbound/inbound integration handoffs, architect
+//   handoff hints. (Tool requirements live on `domain_module_tools`; the domain's single
+//   `system` skill derives its toolset from them. Semantius coverage % is a domain-grain
+//   rollup, not rendered here; see scripts/analytics/coverage_rollup.ts.)
 //
 // Starter-kit rendering is gone (multi-module bundles are no longer authored as a separate
 // artifact). Cross-cutting modules live alongside everyone else in blueprints/; their fact
@@ -481,28 +483,11 @@ function renderDependencies(scopeRows: ScopeRow[], owners: Map<number, OwnerInfo
   return out;
 }
 
-// Coverage % derivation per plan-modules.md §5.6:
-// required tools with operation_kind ∈ {query, mutate} / total required tools.
-// Optional tools (consumer reads, AI augmentations) excluded from the denominator.
-const SEMANTIUS_COVERED = new Set(["query", "mutate"]);
-
-type CoverageResult = {
-  required: number;
-  covered: number;
-  pct: number;
-  nonCoveredTools: { tool: string; kind: string }[];
-};
-
-function computeCoverage(skillToolRows: any[]): CoverageResult {
-  const required = skillToolRows.filter((r) => r.requirement_level === "required");
-  const denom = required.length;
-  const covered = required.filter((r) => SEMANTIUS_COVERED.has(r.tools?.operation_kind)).length;
-  const pct = denom === 0 ? 0 : Math.round((covered / denom) * 100);
-  const nonCoveredTools = required
-    .filter((r) => !SEMANTIUS_COVERED.has(r.tools?.operation_kind))
-    .map((r) => ({ tool: String(r.tools?.tool_name ?? "?"), kind: String(r.tools?.operation_kind ?? "?") }));
-  return { required: denom, covered, pct, nonCoveredTools };
-}
+// Coverage % is no longer rendered in the per-module fact sheet. It is computed at the domain
+// grain from `domain_module_tools` (rolled up over the domain's primary + host modules) by
+// scripts/analytics/coverage_rollup.ts, after the per-domain-skill migration retired the
+// per-module `system` skill + `skill_tools` grain. The former dead `computeCoverage` helper that
+// read `skill_tools` was removed with that migration (it had no call site).
 
 // ============================================================
 // UNIFIED FACT-SHEET EMITTER
@@ -1389,7 +1374,7 @@ function deriveRaciRealization(moduleScopeRows: ScopeRow[], moduleLifecycle: any
         case "responsible":
           realization = isPersona
             ? `grant gates [${gateCodes.join(", ") || "none wired"}] + the gated entities' write tier`
-            : "require skill_tools coverage of the process's mutating ops";
+            : "require process_tools coverage of the process's mutating ops";
           break;
         case "accountable":
           realization = isPersona ? "approval gate" : "autonomous-action note";

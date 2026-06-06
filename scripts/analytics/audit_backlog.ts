@@ -24,7 +24,7 @@
 //   B1  zero master data_objects (skipped for leadership-tier)
 //   C1  zero business_function_domains
 //   M1  zero domain_modules
-//   F2  any module without a system skill (skill_type='system', domain_module_id set)
+//   F2  any full module (module_kind != 'starter') without domain_module_tools
 //   H1  cross-domain handoffs with no handoff_processes rows
 //   AUD audits/<DOMAIN_CODE>.md does not exist
 //
@@ -69,16 +69,16 @@ async function get(path: string): Promise<any[]> {
   return JSON.parse(stdout);
 }
 
-const [domains, modules, capDomains, dmdoMasters, bfd, skills, handoffs, handoffProc, solDomains] = await Promise.all([
+const [domains, modules, capDomains, dmdoMasters, bfd, dmTools, handoffs, handoffProc, solDomains] = await Promise.all([
   get(`/domains?select=id,domain_code,domain_name,crud_percentage,business_logic,min_org_size,cost_band,usa_market_size_usd_m,market_size_source_year&limit=10000`),
-  get(`/domain_modules?select=id,domain_id,domain_module_code&limit=10000`),
+  get(`/domain_modules?select=id,domain_id,domain_module_code,module_kind&limit=10000`),
   get(`/capability_domains?select=domain_id,capability_id&limit=10000`),
   // Masters come from the module junction (domain_data_objects retired 2026-06-02); rolled up
   // to domain via the module->domain map below. Un-modularized domains report zero masters (an
   // M1 failure, surfaced as no modules), which is the correct post-retirement signal.
   get(`/domain_module_data_objects?role=eq.master&select=domain_module_id,data_object_id&limit=10000`),
   get(`/business_function_domains?select=domain_id&limit=10000`),
-  get(`/skills?skill_type=eq.system&select=id,domain_module_id&limit=10000`),
+  get(`/domain_module_tools?select=domain_module_id&limit=30000`),
   get(`/handoffs?select=id,source_domain_id,target_domain_id&limit=20000`),
   get(`/handoff_processes?select=handoff_id&limit=20000`),
   get(`/solution_domains?select=domain_id&limit=20000`),
@@ -111,11 +111,10 @@ for (const r of bfd) {
   bfCountByDomain.set(r.domain_id, (bfCountByDomain.get(r.domain_id) ?? 0) + 1);
 }
 
-const systemSkillByModule = new Map<number, number>();
-for (const s of skills) {
-  if (s.domain_module_id == null) continue;
-  systemSkillByModule.set(s.domain_module_id, (systemSkillByModule.get(s.domain_module_id) ?? 0) + 1);
-}
+// Post per-domain-skill migration: tool requirements live on modules (`domain_module_tools`);
+// the domain's single `system` skill derives from them. F2 now checks module tool presence.
+const modulesWithTools = new Set<number>();
+for (const r of dmTools) modulesWithTools.add(r.domain_module_id);
 
 const taggedHandoffs = new Set<number>(handoffProc.map((r: any) => r.handoff_id));
 const crossDomainByDomain = new Map<number, { total: number; tagged: number }>();
@@ -244,13 +243,14 @@ for (const d of domains) {
   const mods = modulesByDomain.get(d.id) ?? [];
   if (mods.length === 0) findings.push({ id: "M1", detail: "zero domain_modules" });
 
-  // F2 — every module needs a system skill
+  // F2 — every full module needs >=1 domain_module_tools (starters exempt). The domain's single
+  // domain-grain system skill derives its toolset from these; a full module with none is incomplete.
   if (mods.length > 0) {
-    const orphans = mods.filter(m => !systemSkillByModule.has(m.id));
+    const orphans = mods.filter(m => m.module_kind !== "starter" && !modulesWithTools.has(m.id));
     if (orphans.length > 0) {
       findings.push({
         id: "F2",
-        detail: `${orphans.length}/${mods.length} modules lack a system skill: ${orphans.map(o => o.domain_module_code).slice(0, 5).join(", ")}${orphans.length > 5 ? "..." : ""}`,
+        detail: `${orphans.length}/${mods.length} modules lack domain_module_tools: ${orphans.map(o => o.domain_module_code).slice(0, 5).join(", ")}${orphans.length > 5 ? "..." : ""}`,
       });
     }
   }
@@ -388,6 +388,6 @@ console.log(`  ratio  ent / max(Q, 1) - higher = quicker to close out`);
 console.log(`  score  count of failing structural checks (A1/A2/B1/C1/M1/F2/H1/AUD)`);
 console.log(`\nLegend (findings column):`);
 console.log(`  A1=metadata  A2=<3 caps  B1=no masters  C1=no func ownership`);
-console.log(`  M1=no modules  F2=module missing system skill  H1=untagged xdom handoffs  AUD=no audit file`);
+console.log(`  M1=no modules  F2=full module missing domain_module_tools  H1=untagged xdom handoffs  AUD=no audit file`);
 console.log(`\nNext: dispatch a Validate (mode b1) on a low-hanging-fruit batch, or run subagents`);
 console.log(`with --json output to draft audits/<CODE>.md files for human review.\n`);
