@@ -1,4 +1,4 @@
-# Pre-migration snapshot — per-domain-skill restoration
+# Pre-migration snapshot - per-domain-skill restoration
 
 Captured 2026-06-06 by `scripts/loaders/skill_grain_01_snapshot.ts` as Step 0 of
 [../per-domain-skill-restoration.md](../per-domain-skill-restoration.md).

@@ -376,6 +376,22 @@ The two changes are paired, not independent: Phase 0 prevents the failure at loa
 
 ---
 
+## 2026-06-06 - Per-domain-skill restoration: tools move to modules, `skill_tools` retired
+
+**Context.** Tool requirements were stored on per-module `system` skills (one skill per `domain_modules` row, with a `skill_tools` junction). That grain was wrong: it sharded the agent surface to mirror the module decomposition, contradicted Rule #17's "one coherent domain agent", and made the source-of-truth doc self-contradict on skill grain. The catalog held 312 system skills (251 per-module + 61 per-domain), 2767 `skill_tools`.
+
+**Decision.** A tool is ATOMIC (lives once in `tools`). Tool requirements are m:n RELATIONSHIPS on the deployable unit: `domain_module_tools` (module ↔ tool) and `process_tools` (process ↔ tool). A `system` skill exists per DEPLOYABLE UNIT only: one per DOMAIN (`domain_id` set, `domain_module_id` null) and one per STARTER module (`module_kind='starter'`); FULL modules get NO skill. A `process` skill links via `skills.process_id`. Every skill DERIVES its toolset from the unit's relationships and stores no tools. `skill_tools` is dropped.
+
+**Reasoning.** One domain agent reasons across the domain's modules without inter-skill handoffs; per-module coverage stays computable as a rollup over each module's `domain_module_tools` (a property of `module -> its tools`), so the per-deployable-unit coverage distinction survives without a skill row per module. Storing requirements on the unit (not the skill) makes the skill a pure derivation and removes the duplicate-tool risk.
+
+**Migration (plans/per-domain-skill-restoration.md, executed).** Created `domain_module_tools` + `process_tools`; migrated the 2013 per-module `skill_tools` to `domain_module_tools` (1927 full + 86 starter); created/reused one domain-grain system skill per full-module domain (65 new, 55/57 reused for the EMP-EXP/EXPENSE name collisions); purged the 528 per-domain-skill `skill_tools` (snapshot retained in `plans/snapshots/`; re-authoring at module grain enrolled in `audits/_modularization-backlog.md`, 57 domains + 5 orphan `side_effect` links); built the 3 value-stream `processes` and migrated the 226 process `skill_tools` to `process_tools`; deleted the 244 FULL-module system skills by predicate (cascade) and dropped `skill_tools`. Accounting closed exactly: 2767 = 624 + 226 + 1917. SKILL.md (Rule #17/#18/#19, Phase S, Semantius-score, F-band) and the `coverage_rollup.ts` / `audit_backlog.ts` / `emit_fact_sheet.ts` scripts were repointed; `module-shape.md` / `semantius-coverage-rollup.md` / `discover-cross-domain-processes.md` / `roles.md` updated.
+
+**Scope.** Catalog-wide. The F-band now derives coverage from `domain_module_tools` (F3) with starters exempt from F1; `audit_backlog.ts` F2 flags FULL modules lacking `domain_module_tools`.
+
+**Status.** active.
+
+---
+
 # Incidents
 
 Append one entry per occurrence. Used by SKILL.md Rule #15 — the agent MUST log here when notes have been written without user approval, AND revert the writes, AND propose a SKILL.md edit that removes whatever passage rationalized the violation.

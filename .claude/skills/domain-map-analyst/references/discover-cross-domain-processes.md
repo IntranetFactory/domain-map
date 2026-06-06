@@ -16,7 +16,7 @@ APQC linkage is captured at the layer where the information exists. The substrin
 
 ## The dependency on Validate
 
-Discover **layers** APQC PCF mappings + process-skill linkage onto cross-domain handoffs. Each cross-domain `handoffs` row is one edge in the catalog-wide DAG; Discover clusters edges, anchors clusters to PCF activities, and authors process skills whose `skill_tools` orchestrate the cluster.
+Discover **layers** APQC PCF mappings + process-skill linkage onto cross-domain handoffs. Each cross-domain `handoffs` row is one edge in the catalog-wide DAG; Discover clusters edges, anchors clusters to PCF activities, and authors process skills whose toolset (derived from the process's `process_tools`) orchestrates the cluster.
 
 This only makes sense if the underlying edges are clean. Validate's per-domain Pass 4 (pairwise reconciliation) already guarantees that each handoff between two specific domains is structurally complete: producer master + lifecycle, trigger event, handoff row with both module FKs, consumer DMDO on the target side. Discover assumes this. Pass 0 below is the catalog-wide rollup of those same checks, run as a pre-flight gate.
 
@@ -91,7 +91,7 @@ The candidate table is printed; the `handoff_processes` rows are persisted.
 
 ### Pass 3 — Review queue + process-skill authoring (the ONLY place process skills are generated)
 
-Two sub-steps that close the chain `tool → skill_tools → skill → process → APQC PCF`:
+Two sub-steps that close the chain `tool → process_tools → process → skill (via skills.process_id) → APQC PCF`:
 
 **3a. Batch review of `handoff_processes WHERE record_status='new'`.** Group by `process_id`, sort by row count desc. The Pass-1.5 review of authored-pending rows happened earlier, so by this point most authored rows are already approved or rejected. This sub-step focuses on the discovered-pending set from Pass 2.
 
@@ -105,10 +105,10 @@ Apply choices via PATCH `record_status`. Rule #1 applies: the agent never auto-f
 **3b. Process-skill linkage.** For each process where `handoff_processes` accumulates `record_status='approved'` rows above some threshold (default: ≥3 approved rows on a process means the orchestration is real), check whether a `skills` row exists with `skill_type='process' AND process_id=<id>`. Three sub-cases:
 
 1. **Process-skill exists with `process_id` set correctly:** nothing to do. Score the skill via the existing tools layer and surface in the report.
-2. **Process-skill exists with `process_id=NULL`:** propose PATCH to set `process_id`. The 3 process skills loaded as of 2026-05-29 (`employee-jml-process`, `opportunity-l2c-process`, `case-service-process`) sit in this state.
-3. **No process-skill exists yet:** propose authoring one. Derive the involved-domain set from the bucket's source + target domains; derive required tools per § "Process-skill tool derivation" (auto-derive `query_<master>` tools across all involved domains' masters; mutates from target-side writes; cross-tranche externals like `send_email`, `sign_document` per the cross-tranche patterns). Surface for user approval per Rule #1. All new `skills` and `skill_tools` rows ship as `record_status='new'`.
+2. **Process-skill exists with `process_id=NULL`:** propose PATCH to set `process_id`. The 3 process skills (`employee-jml-process`, `opportunity-l2c-process`, `case-service-process`) were linked to their value-stream `processes` rows by the per-domain-skill migration (2026-06-06); pre-migration they sat in this state.
+3. **No process-skill exists yet:** propose authoring one. First create or reuse the value-stream `processes` row, then derive the involved-domain set from the bucket's source + target domains and author its required tools as `process_tools` on the process (auto-derive `query_<master>` tools across all involved domains' masters; mutates from target-side writes; cross-tranche externals like `send_email`, `sign_document` per the cross-tranche patterns). Link the `skills` row via `process_id`; the skill derives its toolset from the `process_tools`. Surface for user approval per Rule #1. All new `skills`, `processes`, and `process_tools` rows ship as `record_status='new'`.
 
-Pass 3 is the only pass that writes outside the `handoff_processes.record_status` PATCH and the optional `skills.process_id` PATCH. Loader writes (a new `skills` row + its `skill_tools` set) only happen on explicit per-row approval.
+Pass 3 is the only pass that writes outside the `handoff_processes.record_status` PATCH and the optional `skills.process_id` PATCH. Loader writes (a new `skills` row, its `processes` row, and that process's `process_tools` set) only happen on explicit per-row approval.
 
 ## Re-runnability
 

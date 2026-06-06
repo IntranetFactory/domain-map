@@ -1,4 +1,4 @@
-// Semantius coverage rollup — per deployable unit (domain + value-stream process).
+// Semantius coverage rollup - per deployable unit (domain + value-stream process).
 //
 // After the per-domain-skill migration (plans/per-domain-skill-restoration.md), tool requirements
 // live on the modules (`domain_module_tools`) and on the value-stream processes (`process_tools`),
@@ -93,7 +93,7 @@ async function main() {
       get(`/domain_module_tools?select=domain_module_id,tool_id,requirement_level&limit=${LIMIT}`) as Promise<(TR & { domain_module_id: number })[]>,
     ]);
     const domainCode = new Map(domains.map(d => [d.id, d.domain_code]));
-    // module -> set of domain_ids (primary + host) — the m11_rollup_probe.ts idiom.
+    // module -> set of domain_ids (primary + host) - the m11_rollup_probe.ts idiom.
     const modToDomains = new Map<number, Set<number>>();
     for (const m of modules) { const s = modToDomains.get(m.id) ?? new Set<number>(); if (m.domain_id != null) s.add(m.domain_id); modToDomains.set(m.id, s); }
     for (const h of hosts) { const s = modToDomains.get(h.domain_module_id) ?? new Set<number>(); s.add(h.domain_id); modToDomains.set(h.domain_module_id, s); }

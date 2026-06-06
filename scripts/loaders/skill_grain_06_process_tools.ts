@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * skill_grain_06_process_tools.ts — Step 5 of plans/per-domain-skill-restoration.md.
+ * skill_grain_06_process_tools.ts - Step 5 of plans/per-domain-skill-restoration.md.
  *
  * The 3 `process` skills (124/125/126) get a real `processes` target each, are linked via
  * skills.process_id, and their 226 skill_tools migrate into process_tools.
@@ -75,7 +75,7 @@ const skillByName = new Map((await get(`/skills?skill_type=eq.process&select=id,
 const processIdBySkill = new Map<number, number>();
 for (const vs of VALUE_STREAMS) {
   const skill = skillByName.get(vs.skillName);
-  if (!skill) throw new Error(`process skill '${vs.skillName}' not found — ABORT`);
+  if (!skill) throw new Error(`process skill '${vs.skillName}' not found - ABORT`);
   let proc = (await get(`/processes?process_key=eq.${vs.process_key}&select=id,process_key`))[0];
   if (!proc) {
     const res = await post(`/processes`, [{
@@ -109,7 +109,7 @@ for (const vs of VALUE_STREAMS) {
 const processSkillIds = [...processIdBySkill.keys()];
 const st = await get(`/skill_tools?skill_id=in.(${processSkillIds.join(",")})&select=id,skill_id,tool_id,requirement_level,notes,record_status&limit=${LIMIT}`);
 console.log(`\nprocess-skill skill_tools to migrate: ${st.length} (expect 226)`);
-if (st.length !== 226) throw new Error(`expected 226, got ${st.length} — ABORT`);
+if (st.length !== 226) throw new Error(`expected 226, got ${st.length} - ABORT`);
 
 const existingPT = new Set((await get(`/process_tools?select=process_id,tool_id&limit=${LIMIT}`)).map(r => `${r.process_id}.${r.tool_id}`));
 const byKey = new Map<string, Row>();
@@ -134,12 +134,12 @@ console.log(`  + inserted ${inserted} process_tools`);
 
 const ptCount = (await get(`/process_tools?select=process_id&limit=${LIMIT}`)).length;
 console.log(`process_tools now: ${ptCount} (expect 226)`);
-if (ptCount !== 226) throw new Error(`process_tools count ${ptCount} != 226 — ABORT before delete`);
+if (ptCount !== 226) throw new Error(`process_tools count ${ptCount} != 226 - ABORT before delete`);
 
 // 4. Delete the 226 skill_tools (snapshot-verified by id).
 const ids = st.map(r => Number(r.id));
 const missing = ids.filter(id => !snapIds.has(id));
-if (missing.length) throw new Error(`${missing.length} process skill_tools not in snapshot — ABORT`);
+if (missing.length) throw new Error(`${missing.length} process skill_tools not in snapshot - ABORT`);
 console.log(`HARD INVARIANT OK: all ${ids.length} rows present in committed snapshot.`);
 let deleted = 0;
 for (let i = 0; i < ids.length; i += CHUNK) {
@@ -157,5 +157,5 @@ const allLinked = skillsAfter.every(s => s.process_id != null);
 console.log(`\nskill_tools now: ${stAfter.length} (expect 1917 = 2143 - 226)`);
 console.log(`skills 124/125/126 process_id: ${skillsAfter.map(s => `${s.id}->${s.process_id}`).join(", ")}`);
 const ok = stAfter.length === 1917 && ptCount === 226 && allLinked;
-console.log(ok ? "VERIFIED: 3 processes created, skills linked, 226 in process_tools, 226 skill_tools deleted." : "MISMATCH — investigate.");
+console.log(ok ? "VERIFIED: 3 processes created, skills linked, 226 in process_tools, 226 skill_tools deleted." : "MISMATCH - investigate.");
 if (!ok) process.exit(1);

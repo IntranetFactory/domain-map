@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * skill_grain_04_per_domain_skills.ts — Step 3 of plans/per-domain-skill-restoration.md.
+ * skill_grain_04_per_domain_skills.ts - Step 3 of plans/per-domain-skill-restoration.md.
  *
  * One `system` skill per deployable DOMAIN. The 5 starter skills stay as-is (kept). For the 67
  * full-module domains lacking a per-domain skill, create one (`domain_id` set, `domain_module_id`
@@ -56,8 +56,8 @@ const lacking = [...fullModuleDomains].filter(d => !domainsWithPerDomain.has(d))
 console.log(`full-module domains: ${fullModuleDomains.size} (expect 71)`);
 console.log(`already have a per-domain skill: ${[...fullModuleDomains].filter(d => domainsWithPerDomain.has(d)).sort((a,b)=>a-b).join(",")} (expect 72,91,130,149)`);
 console.log(`lacking a per-domain skill: ${lacking.length} (expect 67)`);
-if (fullModuleDomains.size !== 71) throw new Error(`expected 71 full-module domains, got ${fullModuleDomains.size} — ABORT`);
-if (lacking.length !== 67) throw new Error(`expected 67 lacking domains, got ${lacking.length} — ABORT`);
+if (fullModuleDomains.size !== 71) throw new Error(`expected 71 full-module domains, got ${fullModuleDomains.size} - ABORT`);
+if (lacking.length !== 67) throw new Error(`expected 67 lacking domains, got ${lacking.length} - ABORT`);
 
 const targetName = (d: any) => `${String(d.domain_code).toLowerCase()}-system`;
 
@@ -75,7 +75,7 @@ for (const did of lacking) {
   } else {
     // any OTHER existing system skill already carrying this exact name would be an unexpected clash
     const otherClash = allSystem.find(s => s.skill_name === name && s.domain_id !== did);
-    if (otherClash) throw new Error(`target name '${name}' (domain ${did}) clashes with skill ${otherClash.id} in domain ${otherClash.domain_id} — unexpected, ABORT`);
+    if (otherClash) throw new Error(`target name '${name}' (domain ${did}) clashes with skill ${otherClash.id} in domain ${otherClash.domain_id} - unexpected, ABORT`);
     toCreate.push({
       domainId: did,
       name,
@@ -87,12 +87,12 @@ for (const did of lacking) {
 
 console.log(`\nreuse (null domain_module_id): ${reuses.map(r => `${r.name}#${r.skillId}(dom ${r.domainId})`).join(", ")}`);
 console.log(`new to create: ${toCreate.length}`);
-if (reuses.length !== 2) throw new Error(`expected exactly 2 reuse collisions, got ${reuses.length} — ABORT`);
+if (reuses.length !== 2) throw new Error(`expected exactly 2 reuse collisions, got ${reuses.length} - ABORT`);
 const reuseIds = reuses.map(r => r.skillId).sort((a, b) => a - b);
 const reuseDomains = reuses.map(r => r.domainId).sort((a, b) => a - b);
-if (JSON.stringify(reuseIds) !== JSON.stringify([55, 57])) throw new Error(`reuse skill ids ${JSON.stringify(reuseIds)} != [55,57] — ABORT`);
-if (JSON.stringify(reuseDomains) !== JSON.stringify([62, 67])) throw new Error(`reuse domains ${JSON.stringify(reuseDomains)} != [62,67] — ABORT`);
-if (toCreate.length !== 65) throw new Error(`expected 65 new, got ${toCreate.length} — ABORT`);
+if (JSON.stringify(reuseIds) !== JSON.stringify([55, 57])) throw new Error(`reuse skill ids ${JSON.stringify(reuseIds)} != [55,57] - ABORT`);
+if (JSON.stringify(reuseDomains) !== JSON.stringify([62, 67])) throw new Error(`reuse domains ${JSON.stringify(reuseDomains)} != [62,67] - ABORT`);
+if (toCreate.length !== 65) throw new Error(`expected 65 new, got ${toCreate.length} - ABORT`);
 
 // --- mutations ---
 // Reuse: null the domain_module_id so 55/57 become per-domain skills (escaping the Step-6 delete predicate).
@@ -135,5 +135,5 @@ for (const did of fullModuleDomains) {
 console.log(`\nper-domain system skills now: ${after.length} (61 prior + 65 new + 2 reused 55/57 = 128 expected)`);
 console.log(`full-module domains missing a per-domain skill: ${missing}; with duplicates: ${dup}`);
 const ok = missing === 0 && dup === 0 && after.length === 128;
-console.log(ok ? "VERIFIED: every full-module domain has exactly one per-domain system skill." : "MISMATCH — investigate.");
+console.log(ok ? "VERIFIED: every full-module domain has exactly one per-domain system skill." : "MISMATCH - investigate.");
 if (!ok) process.exit(1);

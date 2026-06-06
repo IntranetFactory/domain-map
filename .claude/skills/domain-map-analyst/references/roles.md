@@ -76,7 +76,7 @@ Each row assigns ONE actor ONE RACI letter on ONE process. The actor is polymorp
 
 ### The four letters and how they realize (no new permission tier)
 
-- **R (responsible).** *persona*: grant the process's gates + the gated entities' write tier. *skill*: require/emit `skill_tools` coverage of the process's mutating ops (the AI-native case, R = agent).
+- **R (responsible).** *persona*: grant the process's gates + the gated entities' write tier. *skill*: require/emit `process_tools` (or, for a domain skill, `domain_module_tools`) coverage of the process's mutating ops (the AI-native case, R = agent).
 - **A (accountable).** *persona*: an approval gate. *skill*: an autonomous-action note (rare; usually A stays human even when R is an agent).
 - **C (consulted).** a consultation lifecycle state when input is required (`consultation_blocking = true`), else a read grant.
 - **I (informed).** a notification side effect (`trigger_event` / `webhook_receiver`) to the actor.

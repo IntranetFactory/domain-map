@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * skill_grain_03_migrate_module_tools.ts — Step 2 of plans/per-domain-skill-restoration.md.
+ * skill_grain_03_migrate_module_tools.ts - Step 2 of plans/per-domain-skill-restoration.md.
  *
  * For each of the 251 per-module system skills (FULL and STARTER), insert its skill_tools rows
  * into domain_module_tools keyed on the skill's domain_module_id, preserving requirement_level,
@@ -36,7 +36,7 @@ const [skills, modules, st, existing] = await Promise.all([
   get(`/domain_module_tools?select=domain_module_id,tool_id&limit=${LIMIT}`),
 ]);
 
-if (skills.length !== 251) throw new Error(`expected 251 per-module skills, got ${skills.length} — ABORT`);
+if (skills.length !== 251) throw new Error(`expected 251 per-module skills, got ${skills.length} - ABORT`);
 const starterModuleIds = new Set<number>(modules.filter(m => m.module_kind === "starter").map(m => m.id));
 const skillModule = new Map<number, number>(skills.map(s => [s.id, s.domain_module_id]));
 const perModuleSkillIds = new Set<number>(skills.map(s => s.id));
@@ -45,7 +45,7 @@ const perModuleSkillIds = new Set<number>(skills.map(s => s.id));
 type Cand = { domain_module_id: number; tool_id: number; requirement_level: string; notes: any; record_status: string };
 const stOnPerModule = st.filter(r => perModuleSkillIds.has(r.skill_id));
 console.log(`skill_tools on the 251 per-module skills: ${stOnPerModule.length} (expect 2013)`);
-if (stOnPerModule.length !== 2013) throw new Error(`expected 2013 source rows, got ${stOnPerModule.length} — ABORT`);
+if (stOnPerModule.length !== 2013) throw new Error(`expected 2013 source rows, got ${stOnPerModule.length} - ABORT`);
 
 // Dedup on (domain_module_id, tool_id); required wins over optional.
 const byKey = new Map<string, Cand>();
@@ -95,5 +95,5 @@ const finalStarter = finalRows.filter(r => starterModuleIds.has(r.domain_module_
 console.log(`\ndomain_module_tools now holds ${finalRows.length} rows (full ${finalFull} + starter ${finalStarter})`);
 
 const ok = finalRows.length === 2013 && finalFull === 1927 && finalStarter === 86;
-console.log(ok ? "VERIFIED: 2013 == 1927 full + 86 starter." : "MISMATCH — investigate before proceeding.");
+console.log(ok ? "VERIFIED: 2013 == 1927 full + 86 starter." : "MISMATCH - investigate before proceeding.");
 if (!ok) process.exit(1);

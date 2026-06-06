@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * skill_grain_01_snapshot.ts — Step 0 of plans/per-domain-skill-restoration.md.
+ * skill_grain_01_snapshot.ts - Step 0 of plans/per-domain-skill-restoration.md.
  *
  * Pulls EVERY row (select=*) of `skills` (315) and `skill_tools` (2767) and writes them to
  * plans/snapshots/ as pretty JSON. This is the HARD INVARIANT gate: no destructive step may run
@@ -8,9 +8,9 @@
  * Cascade deletes are irreversible without this snapshot.
  *
  * Writes:
- *   plans/snapshots/skills.json        — all 315 skills, full rows
- *   plans/snapshots/skill_tools.json   — all 2767 skill_tools, full rows
- *   plans/snapshots/README.md          — manifest (counts, date, purpose, rollback note)
+ *   plans/snapshots/skills.json        - all 315 skills, full rows
+ *   plans/snapshots/skill_tools.json   - all 2767 skill_tools, full rows
+ *   plans/snapshots/README.md          - manifest (counts, date, purpose, rollback note)
  *
  * Read-only against the catalog. Run from project root:
  *   bun run scripts/loaders/skill_grain_01_snapshot.ts
@@ -38,8 +38,8 @@ const [skills, skillTools] = await Promise.all([
   pg(`/skill_tools?select=*&order=id&limit=${LIMIT}`),
 ]);
 
-if (skills.length !== 315) throw new Error(`expected 315 skills, got ${skills.length} — ABORT, state has drifted`);
-if (skillTools.length !== 2767) throw new Error(`expected 2767 skill_tools, got ${skillTools.length} — ABORT, state has drifted`);
+if (skills.length !== 315) throw new Error(`expected 315 skills, got ${skills.length} - ABORT, state has drifted`);
+if (skillTools.length !== 2767) throw new Error(`expected 2767 skill_tools, got ${skillTools.length} - ABORT, state has drifted`);
 if (skills.length >= LIMIT || skillTools.length >= LIMIT) throw new Error("server row cap hit; raise LIMIT");
 
 mkdirSync(SNAP_DIR, { recursive: true });
@@ -49,7 +49,7 @@ writeFileSync(resolve(SNAP_DIR, "skill_tools.json"), JSON.stringify(skillTools, 
 const systemCount = skills.filter(s => s.skill_type === "system").length;
 const processCount = skills.filter(s => s.skill_type === "process").length;
 
-const readme = `# Pre-migration snapshot — per-domain-skill restoration
+const readme = `# Pre-migration snapshot - per-domain-skill restoration
 
 Captured ${SNAP_DATE} by \`scripts/loaders/skill_grain_01_snapshot.ts\` as Step 0 of
 [../per-domain-skill-restoration.md](../per-domain-skill-restoration.md).

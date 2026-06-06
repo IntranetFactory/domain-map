@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * skill_grain_02_create_junctions.ts — Step 1 of plans/per-domain-skill-restoration.md.
+ * skill_grain_02_create_junctions.ts - Step 1 of plans/per-domain-skill-restoration.md.
  *
  * Creates the two m:n tool-requirement junction entities, mirroring
  * scripts/loaders/create_handoff_processes.ts (FK parent/cascade, computed unique key
@@ -260,7 +260,7 @@ async function ensureJunction(j: Junction): Promise<void> {
 }
 
 async function main() {
-  console.log("Create domain_module_tools + process_tools — Step 1");
+  console.log("Create domain_module_tools + process_tools - Step 1");
   console.log("===================================================");
   for (const j of JUNCTIONS) await ensureJunction(j);
   console.log("\nOK: both junction entities ready.");

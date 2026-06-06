@@ -1,33 +1,47 @@
-# Semantius coverage rollup — system skills
+# Semantius coverage rollup - per deployable unit (domain + value-stream process)
 
-The saved query that certifies "% Semantius OOTB" per system skill. Re-runnable any time the catalog changes.
+The saved query that certifies "% Semantius OOTB" per deployable unit. Re-runnable any time the catalog changes.
 
-Implementation: [scripts/analytics/coverage_rollup.ts](../../../../scripts/analytics/coverage_rollup.ts). Run from project root (the `semantius` CLI reads `.env` from cwd — see [CLAUDE.md](../../../../CLAUDE.md)).
+Since the per-domain-skill migration (plans/per-domain-skill-restoration.md), tool requirements live on the
+modules (`domain_module_tools`) and on the value-stream processes (`process_tools`), not on per-module
+`skill_tools` (retired). A domain's coverage is the rollup of its modules' tool requirements over the domain's
+**primary AND host** modules (`domain_modules.domain_id = X` UNION `domain_module_host_domains.domain_id = X`),
+deduped by tool with `required` winning over `optional`. **NO fallback:** a domain whose modules carry no
+`domain_module_tools` reads as INCOMPLETE (band F3), not as 0-of-0 covered.
+
+Implementation: [scripts/analytics/coverage_rollup.ts](../../../../scripts/analytics/coverage_rollup.ts). Run from project root (the `semantius` CLI reads `.env` from cwd - see [CLAUDE.md](../../../../CLAUDE.md)).
 
 ```sh
-# Full rollup, sorted by skill_name
+# Full per-domain rollup, sorted by domain_code
 bun run scripts/analytics/coverage_rollup.ts
 
-# Only skills <100%, with the specific tools dragging them down
+# Only domains <100% (or incomplete), with the specific tools dragging them down
 bun run scripts/analytics/coverage_rollup.ts --diagnostic
 
-# Machine-readable CSV (skill_name,domain_code,pct,covered,required)
+# Machine-readable CSV (domain_code,pct,covered,required)
 bun run scripts/analytics/coverage_rollup.ts --csv
 
-# Single skill
-bun run scripts/analytics/coverage_rollup.ts --skill crm-system
+# Single domain
+bun run scripts/analytics/coverage_rollup.ts --domain CRM
+
+# Value-stream processes instead of domains (rolls up process_tools)
+bun run scripts/analytics/coverage_rollup.ts --process
 ```
 
 ## The formula
 
-For each `skills` row with `skill_type = 'system'`:
+For each deployable unit (a domain via `domain_module_tools`, or a value-stream process via `process_tools`):
 
 ```
-% = count(required tools whose operation_kind ∈ SEMANTIUS_COVERED)
-    / count(required tools)
+% = count(distinct required tools whose operation_kind ∈ SEMANTIUS_COVERED)
+    / count(distinct required tools)
 ```
 
-`required` means `skill_tools.requirement_level = 'required'`. `optional` and `fallback` rows are ignored — they don't drag the score down. **Per-tool aggregation, not per-operation_kind**: a skill needing 5 `query` tools + 1 `send_email` tool sits at **5/6 = 83%**, not 50%. The tool is the unit of count; `operation_kind` classifies tools.
+The domain's tool set is the union of `domain_module_tools` across the domain's primary + host modules, deduped
+by `tool_id` (`required` wins over `optional` on a collision). `optional` rows are ignored for the percentage -
+they don't drag the score down. **Per-tool aggregation, not per-operation_kind**: a domain needing 5 `query`
+tools + 1 `send_email` tool sits at **5/6 = 83%**, not 50%. The tool is the unit of count; `operation_kind`
+classifies tools. A domain with zero required tools is reported as **incomplete** (`n/a`), never as covered.
 
 ## The Semantius-covered set
 
@@ -37,17 +51,16 @@ For each `skills` row with `skill_type = 'system'`:
 SEMANTIUS_COVERED = { "query", "mutate" }
 ```
 
-The cheapest representation while the Semantius-covered set churns. If a customer-coverage rollup later needs to read the set dynamically, promote to a config table (`semantius_native_operation_kinds`) or to a column on a future `operation_kinds` lookup entity. Until then: edit the constant when Semantius gains a new generic primitive.
+The cheapest representation while the Semantius-covered set churns. Edit the constant when Semantius gains a new
+generic primitive (e.g. native email send → a new `operation_kind` value), then re-run. No DDL needed.
 
-**Update procedure when the set changes:** When Semantius gains a new generic primitive (e.g. native email send → new `operation_kind` value `notify_email`), edit the constant in [coverage_rollup.ts](../../../../scripts/analytics/coverage_rollup.ts) and re-run. No DDL needed.
+## Per-unit diagnostic output
 
-## Per-skill diagnostic output
-
-For skills <100%, the script lists the offending tools inline. Example:
+For units <100%, the script lists the offending tools inline. Example:
 
 ```
-⬇  86%  pa-system                        12/14   ↳ NOT covered: generate_text(compute), send_email(side_effect)
-⬇  60%  ccaas-system                     6/10   ↳ NOT covered: make_phone_call(side_effect), send_sms(side_effect), transcribe_audio(compute), detect_sentiment(compute)
+⬇  86%  PA                   12/14   ↳ NOT covered: generate_text(compute), send_email(side_effect)
+∅  n/a  CONV-AI              0/0     ↳ INCOMPLETE: no required domain_module_tools (band M1/F3)
 ```
 
 The set in parentheses is `operation_kind`. `side_effect` and `compute` are the two non-Semantius kinds today.
@@ -55,65 +68,49 @@ The set in parentheses is `operation_kind`. `side_effect` and `compute` are the 
 ## Equivalent SQL (for psql or any DB tool)
 
 ```sql
--- Full rollup
-with required as (
-  select s.skill_name, s.domain_id, t.tool_name, t.operation_kind,
-         case when t.operation_kind in ('query', 'mutate') then 1 else 0 end as covered
-  from skills s
-  join skill_tools st on st.skill_id = s.id
-  join tools t        on t.id = st.tool_id
-  where s.skill_type = 'system'
-    and st.requirement_level = 'required'
-)
-select skill_name,
-       sum(covered)::int       as covered_count,
-       count(*)::int           as required_count,
-       round(100.0 * sum(covered) / count(*))::int as pct
-from required
-group by skill_name
-order by skill_name;
-
--- Diagnostic: which specific tools drag each <100% skill down
-with required as (
-  select s.skill_name, t.tool_name, t.operation_kind,
-         case when t.operation_kind in ('query', 'mutate') then 1 else 0 end as covered
-  from skills s
-  join skill_tools st on st.skill_id = s.id
-  join tools t        on t.id = st.tool_id
-  where s.skill_type = 'system'
-    and st.requirement_level = 'required'
+-- Per-domain rollup over domain_module_tools (primary + host modules), deduped by tool.
+with module_domain as (   -- each module mapped to every domain it serves (primary + host)
+  select id as domain_module_id, domain_id from domain_modules where domain_id is not null
+  union
+  select domain_module_id, domain_id from domain_module_host_domains
 ),
-pct as (
-  select skill_name, round(100.0 * sum(covered) / count(*))::int as pct
-  from required group by skill_name
+domain_tool as (          -- distinct required tools per domain, required wins over optional
+  select md.domain_id, dmt.tool_id, bool_or(dmt.requirement_level = 'required') as is_required
+  from module_domain md
+  join domain_module_tools dmt on dmt.domain_module_id = md.domain_module_id
+  group by md.domain_id, dmt.tool_id
+),
+scored as (
+  select dt.domain_id, t.tool_name, t.operation_kind,
+         case when t.operation_kind in ('query','mutate') then 1 else 0 end as covered
+  from domain_tool dt
+  join tools t on t.id = dt.tool_id
+  where dt.is_required
 )
-select r.skill_name, r.tool_name, r.operation_kind
-from required r
-join pct on pct.skill_name = r.skill_name
-where pct.pct < 100
-  and r.operation_kind not in ('query', 'mutate')
-order by r.skill_name, r.tool_name;
+select d.domain_code,
+       sum(covered)::int as covered_count,
+       count(*)::int     as required_count,
+       round(100.0 * sum(covered) / nullif(count(*),0))::int as pct
+from scored s
+join domains d on d.id = s.domain_id
+group by d.domain_code
+order by d.domain_code;
 ```
+
+For the value-stream processes, substitute `process_tools` keyed on `processes.id` for the `domain_tool` CTE.
 
 ## Interpreting results
 
-- **100% pure-Semantius cluster:** platform/infra/security/content/pure-CRUD domains (APIM, IPAAS, KUBE-PLAT, DCIM, NPMD, UEM, VSDP, ITAM/HAM/SAM, IGA, BPA, PSA, WORK-MGMT, etc). Master count varies, but with no required externals every tool is `query` or `mutate`.
+- **100% pure-Semantius cluster:** platform/infra/security/content/pure-CRUD domains (APIM, IPAAS, KUBE-PLAT, DCIM, NPMD, UEM, VSDP, ITAM/HAM/SAM, IGA, BPA, PSA, WORK-MGMT, etc). With no required externals every tool is `query` or `mutate`.
 - **+email cluster (~80-92%):** operational domains where notifications are a workflow requirement (CRM, CSM, HRSD, ERP-FIN, OMS, etc).
 - **+email +sign cluster (~67-86%):** talent/contract/real-estate/supplier domains where document signing is integral.
 - **+email +chat cluster (~67-80%):** IT-ops/ChatOps domains (AIOPS, ITOM, OBS, RMM, MSP-PSA, WSC).
-- **Specialty low scores:** CONV-AI (40%, three compute externals), CCAAS (60%, voice+SMS+audio+sentiment), FSM (50%, +email+SMS with only 2 masters).
-- **Master-count distortion:** Small-master domains (2-4 masters) in any +external category drop sharply because the denominator is small. Not a coverage deficit — a measurement artifact. Flag to the user when scoring decisions hinge on a thin-master domain.
-
-## Acceptance criterion
-
-≥5 system skills at 100% Semantius-covered. Current state: **54/122**. Re-verify by running the rollup.
+- **Specialty low scores:** CONV-AI (compute externals), CCAAS (voice+SMS+audio+sentiment).
+- **Incomplete (n/a):** a domain whose modules carry no `domain_module_tools` yet. This is a band F3 gap (author the modules' tools), surfaced loudly with no fallback, not a coverage deficit.
 
 ## Why the rollup looks this way
 
-- **Per-tool, not per-operation_kind.** The tool is the unit of work an agent calls — counting at the kind-level would conflate "needs 5 reads" with "needs 1 read" into the same denominator.
-- **`operation_kind` is the partition.** Semantius covers `{query, mutate}` today via CRUD + cube. `side_effect` (email, SMS, signature, calendar) and `compute` (AI, text generation, web automation) are external by definition. Coverage evolves with the platform — new generic primitives get new `operation_kind` values (or split existing ones) and the constant is updated.
-- **Semantius is NOT a row in `solutions`.** Coverage is intrinsic to `operation_kind`. There are no pseudo-tools (`semantius_crud`, etc.) and no `solution_kind='semantius_native'`. `tool_solutions` records non-Semantius deliveries only.
-
-## Related references
-
-- [scripts/loaders/load_p25a_i.ts](../../../../scripts/loaders/load_p25a_i.ts), [load_p25a_ii.ts](../../../../scripts/loaders/load_p25a_ii.ts), [load_p25a_iii.ts](../../../../scripts/loaders/load_p25a_iii.ts) — the three loaders that populated the system-skill matrix this rollup measures.
+- **Per-tool, not per-operation_kind.** The tool is the unit of work an agent calls - counting at the kind-level would conflate "needs 5 reads" with "needs 1 read".
+- **`operation_kind` is the partition.** Semantius covers `{query, mutate}` today via CRUD + cube. `side_effect` (email, SMS, signature, calendar) and `compute` (AI, text generation, web automation) are external by definition.
+- **The unit is the deployable thing, not the skill.** A domain's coverage rolls up its modules' `domain_module_tools`; a value stream rolls up its `process_tools`. The `system` / `process` skill derives its toolset from these relationships and stores nothing, so the score is computed from the relationships directly.
+- **Semantius is NOT a row in `solutions`.** Coverage is intrinsic to `operation_kind`. `tool_solutions` records non-Semantius deliveries only.

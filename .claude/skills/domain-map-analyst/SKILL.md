@@ -264,6 +264,7 @@ The Semantius platform enforces enum check-constraints on several catalog column
 | `domain_data_objects.necessity` / `domain_module_data_objects.necessity` | `required`, `optional` | `mandatory` ❌ |
 | `handoff_processes.proposal_source` | `human_curated`, `agent_curated`, `discovery_override`, `discovery_substring` | (none) |
 | `handoff_processes.role` | `implements` | (none) |
+| `*.requirement_level` | `required`, `optional` | `mandatory` ❌ |
 | `*.record_status` | `new`, `pending`, `approved`, `rejected` | (none) |
 
 When adding a new column to this catalog with an enum, copy the value vocabulary from an existing analogous column rather than inventing a new one (e.g. `domain_module_data_objects.necessity` deliberately mirrors `domain_data_objects.necessity` — same two values, same default `required`). If a loader fails with `(23514) violates check constraint "<table>_<field>_check"`, re-query `/fields?table_name=eq.<table>&field_name=eq.<field>` to see the allowed values; don't guess again. Run `bun run scripts/analytics/enum_drift_probe.ts` to verify this whole table against live; it exits non-zero if any row drifted (and `--list` shows live enums not yet in the table).
@@ -290,7 +291,7 @@ A `domains` row is a market entry, useful for SEO and analysis but **not deploya
 
 ### 15. **Every `notes` column on every table is empty by default. NEVER populate any `notes` field without first surfacing the specific proposed text to the user and getting explicit per-row approval.**
 
-This rule has been violated repeatedly. Earlier versions were scoped too narrowly (only DMDO + relationships) while other SKILL.md passages actively told the agent to populate notes elsewhere (handoffs, starter modules, aliases, data_objects, skill_tools, solutions). All of those passages are now subordinate to this rule. **When Rule #15 contradicts any other instruction in SKILL.md or any `references/*.md` file, Rule #15 wins.**
+This rule has been violated repeatedly. Earlier versions were scoped too narrowly (only DMDO + relationships) while other SKILL.md passages actively told the agent to populate notes elsewhere (handoffs, starter modules, aliases, data_objects, tool-requirement junctions, solutions). All of those passages are now subordinate to this rule. **When Rule #15 contradicts any other instruction in SKILL.md or any `references/*.md` file, Rule #15 wins.**
 
 **Scope: columns whose name is exactly `notes`.** Not `_notes`-suffix columns like `condition_notes` — those are load-bearing schema content (the column's value IS the data), not commentary. The list below is every catalog column the rule covers today; new columns named `notes` join automatically.
 
@@ -303,7 +304,7 @@ This rule has been violated repeatedly. Earlier versions were scoped too narrowl
 - `domain_modules.description` is NOT a notes field, but watch the boundary: descriptions describe the row's content; notes are commentary about the row. If in doubt, treat as a notes field.
 - `solutions.notes`, `vendors.notes` (including the prior "acknowledge predecessor after acquisition" carve-out — RESCINDED unless user approves the specific string)
 - `role_modules.notes` (no `notes` column on `domain_roles` or `process_raci`)
-- `skill_tools.notes`, `tool_solutions.notes`
+- `domain_module_tools.notes`, `process_tools.notes`, `tool_solutions.notes`
 - `solution_domains.notes`
 - any other `notes` column added to the catalog in the future
 
@@ -318,7 +319,7 @@ If a column is named `notes`, the default is empty string. Period.
 - "Reads from X when integrated; standalone keeps the embedded shell" / "X local-masters Y when Z absent" / any restatement of `role` + `necessity`
 - "<scope> | <cluster> | <DOMAIN> | ..." prefixes from cluster-drafts work
 - Single-sentence cardinality narration ("A part has many revisions") / actor labels ("Cashier-user") that restate the structured columns
-- Channel-justification prose on skill_tools rows
+- Channel-justification prose on `domain_module_tools` / `process_tools` rows
 - Pattern-flag context ("Submit-lock engages on activation: once active, ...")
 - Vendor terminology context on aliases ("ConnectWise PSA terminology")
 
@@ -336,7 +337,7 @@ If a column is named `notes`, the default is empty string. Period.
 - Lifecycle exemption for config-shape masters used to require `data_objects.notes`; now: surface to user, do NOT auto-populate.
 - handoffs.notes write-time policy ("target NULL until <DOMAIN> is modularized") is gone; surface the NULL counter-party as a gap-report follow-up, never as a notes annotation.
 - multi-master `domain_data_objects.notes` slice-decomposition prose: never auto-write; if the user wants slice context, they'll author the wording.
-- skill_tools workflow-context notes: never auto-write.
+- `domain_module_tools` / `process_tools` workflow-context notes: never auto-write.
 - Predecessor mention in `solutions.notes` after acquisition: only with explicit user approval of the wording.
 
 **If you find yourself reaching for prose to fill any column whose name is exactly `notes`, stop.** That impulse is the bug. The audit query for whether your load polluted notes is: `SELECT table_name, count(*) FROM all_notes_columns WHERE notes != '' AND created_at > '<load_start>'`. If that returns anything you didn't get user approval on, revert.
@@ -406,19 +407,19 @@ For non-master rows on infrastructure masters, rule A still applies.
 - The genuine "this entity must always be present wherever the source is installed" case is expressed by the TARGET's own `necessity=required` in that scope, NOT by the edge. A required edge is about FK shape; a required install is about `necessity`.
 - The emitter renders this in §5: a required cross-scope edge shows `none (required-if-present)` (reference / association) or a `⚠ audit` finding (composition); the M9 relationship-layer band (M9 in the per-domain checklist) flags required edges whose other endpoint is out of scope so the author picks embed-vs-optional-vs-target-required. Full delete-mode table in [references/module-shape.md](references/module-shape.md); deploy semantics in [references/modules.md](references/modules.md) §4 / §5.
 
-### 17. Every domain with masters has exactly one `skill_type='system'` skill, anchored at the domain grain, with ≥1 `skill_tools` row.
+### 17. Every domain with masters has exactly one `skill_type='system'` skill, anchored at the domain grain, deriving its toolset from the domain's modules.
 
-A domain's `system` skill is the single self-contained agent surface for that domain. It is anchored at the **domain** grain, not the module grain: one `skills` row with `skill_type='system'`, `domain_id=<id>`, and `domain_module_id` NULL (convention `skill_name='<domain_code_lower>-system'`, e.g. `grc-system`, `itsm-system`). The skill carries the **union** of the domain's tools (each master's query / mutate, the lifecycle-gate mutations, the `notify_person` / `notify_team` abstractions, the handoff-fired cross-domain tools) and **discovers at runtime** which of the domain's modules and tools are installed in the deploying tenant, scoping itself to that subset. Without the skill the domain has no agent surface, and the Semantius score, the metric the entire tools/skills layer exists to compute, is uncomputable for that domain.
+A domain's `system` skill is the single self-contained agent surface for that domain. It is anchored at the **domain** grain, not the module grain: one `skills` row with `skill_type='system'`, `domain_id=<id>`, and `domain_module_id` NULL (convention `skill_name='<domain_code_lower>-system'`, e.g. `grc-system`, `itsm-system`). The skill **derives** its toolset as the **union** of the domain's modules' `domain_module_tools` (each master's query / mutate, the lifecycle-gate mutations, the `notify_person` / `notify_team` abstractions, the handoff-fired cross-domain tools) and **discovers at runtime** which of the domain's modules and tools are installed in the deploying tenant, scoping itself to that subset. It stores no tools of its own (`skill_tools` is retired; tool requirements live on the modules). Without the skill the domain has no agent surface, and the Semantius score, the metric the entire tools/skills layer exists to compute, is uncomputable for that domain.
 
-The module decomposition (`domain_modules`, Rule #14) stays the deployable / marketing / coverage unit; the skill is **not** sharded to mirror it. One coherent domain agent reasons across the domain's modules (e.g. account -> pipeline -> quote) without inter-skill handoffs. Per-module Semantius coverage remains computable as a rollup over each module's required tools (a property of `module -> its tools`), so the per-deployable-unit coverage distinction survives without a skill row per module.
+The module decomposition (`domain_modules`, Rule #14) stays the deployable / marketing / coverage unit; the skill is **not** sharded to mirror it. One coherent domain agent reasons across the domain's modules (e.g. account -> pipeline -> quote) without inter-skill handoffs. Per-module Semantius coverage remains computable as a rollup over each module's `domain_module_tools` (a property of `module -> its tools`), so the per-deployable-unit coverage distinction survives without a skill row per module.
 
-- **One `system` skill per domain.** `skills.skill_type='system'` AND `skills.domain_id=<id>` AND `skills.domain_module_id IS NULL`. Authoring more than one system skill for a domain, or anchoring a system skill to a `domain_module_id`, is a rule violation (the latter is the deprecated per-module grain; F1 cleans it up).
-- **That skill has ≥1 `skill_tools` row.** Typical shape is 8–40 tools (the union across the domain's modules; required + optional). Required tools are the irreducible set the agent needs for the domain's primary workflows; optional tools cover degraded modes (lower-tier ML, alternate channels). The practical `required` floor is ≥1 `query`, ≥1 `mutate`, and ≥1 workflow gate.
+- **One `system` skill per domain.** `skills.skill_type='system'` AND `skills.domain_id=<id>` AND `skills.domain_module_id IS NULL`. Authoring more than one system skill for a domain is a rule violation. Anchoring a system skill to a `domain_module_id` is a rule violation **except** for a `module_kind='starter'` module: a starter is itself a deployable unit and keeps its own module-anchored system skill (Rule #19 #6), deriving from the starter's own `domain_module_tools`. FULL modules get **no** skill. F1 cleans up any system skill anchored to a non-starter module.
+- **That skill derives ≥1 tool.** Its toolset is the union of `domain_module_tools` over the domain's primary + host modules; typical shape is 8–40 tools (required + optional). Required tools are the irreducible set the agent needs for the domain's primary workflows; optional tools cover degraded modes (lower-tier ML, alternate channels). The practical `required` floor is ≥1 `query`, ≥1 `mutate`, and ≥1 workflow gate **across the domain's modules**. (A cross-domain value stream is a `process` skill instead, linked via `skills.process_id` and deriving from `process_tools`.)
 - **Tool `operation_kind` invariants** (enforced platform-side via JsonLogic `input_type_rule` on `fields.tools.data_object_id`; loader pre-flight mirrors): `query` and `mutate` REQUIRE `data_object_id`; `fetch`, `side_effect`, and `compute` REQUIRE `data_object_id` to be NULL; `inbound` makes `data_object_id` OPTIONAL. `fetch` is the read-side counterpart of `side_effect`: agent calls an external vendor API and gets data back (hotel offers, currency rates, stock quotes, web search results) where Semantius doesn't own the source schema.
 
-**This is a Phase-A obligation, not Phase E**, parallel to Rule #14. When loading a new market, the domain's system skill + tools + skill_tools ship in the same load as `domains` + `capabilities` + `domain_modules` + `solutions`. The Phase-S step in the workflow (§ "Workflow for any research task") is the canonical authoring procedure.
+**This is a Phase-A obligation, not Phase E**, parallel to Rule #14. When loading a new market, the domain's system skill + the modules' `tools` + `domain_module_tools` ship in the same load as `domains` + `capabilities` + `domain_modules` + `solutions`. The Phase-S step in the workflow (§ "Workflow for any research task") is the canonical authoring procedure.
 
-**Audit blockers.** A domain with zero or >1 domain-level system skills fails F2; any system skill anchored to a `domain_module_id` fails F1; a system skill with zero `skill_tools` fails F3; a tool with an invalid `operation_kind` ↔ `data_object_id` pairing fails F4; an uncomputable Semantius score is the F5 rollup. Each blocks the per-domain audit until cured. See F1–F5 in the per-domain completeness checklist.
+**Audit blockers.** A domain with zero or >1 domain-level system skills fails F2; any system skill anchored to a non-starter `domain_module_id` fails F1; a domain whose modules carry zero `domain_module_tools` fails F3; a tool with an invalid `operation_kind` ↔ `data_object_id` pairing fails F4; an uncomputable Semantius score is the F5 rollup. Each blocks the per-domain audit until cured. See F1–F5 in the per-domain completeness checklist.
 
 **Why this rule exists:** before F2-F5 became positive-existence checks, the per-domain audit could tick green on a domain with zero system skills (the F-band only carried a legacy-cleanup check). The Semantius score was then uncomputable but the gap went silent. F2-F5 close that.
 
@@ -448,7 +449,7 @@ Vendor names, product names, brand names, and trademarks (Salesforce, ServiceNow
 - `processes` — `process_name`, `description`.
 - `tools` — `tool_name`, `description`.
 - `skills` — `skill_name`, `description`.
-- All junctions — `domain_data_objects.notes`, `domain_module_data_objects.notes`, `data_object_relationships.notes`, `solution_domains.notes`, `role_modules.notes`, `skill_tools.notes`, etc.
+- All junctions - `domain_data_objects.notes`, `domain_module_data_objects.notes`, `data_object_relationships.notes`, `solution_domains.notes`, `role_modules.notes`, `domain_module_tools.notes`, `process_tools.notes`, etc.
 - `domain_roles`, `role_modules`, `process_raci` (catalog-owned personas + RACI; the `_core` `roles` / `permissions` / `role_permissions` are platform RBAC, not catalog-written).
 - `industries`, `jurisdictions`, `business_functions`.
 
@@ -483,11 +484,11 @@ Starter kits used to be an editorial junction (`domain_starter_modules`) recomme
 3. **No lifecycle states authored.** No inserts into `data_object_lifecycle_states` from a starter load. Lifecycle is the canonical master's contract; the starter's blueprint cross-references the master's states via the emitter, the catalog rows live on the master only.
 4. **Baseline permissions, PLUS the full re-prefixed governance of every embedded entity (plan-4 revises the old "exactly three rows").** A starter ships the three baseline rows `<starter_code>:read` / `:manage` / `:admin` (tiers `baseline-read` / `baseline-manage` / `baseline-admin`), and ALSO carries, re-prefixed to the starter, the complete derived governance of every entity it embeds whose canonical realizing module is outside the deploying unit: the **workflow gates** (e.g. `hiring-starter:approve_offer`), the **pattern-flag overrides** (`view_all_` / `manage_all_` / `submit_`, e.g. `hiring-starter:view_all_candidates`), and the matching **§8.2 business rules**. Governance follows the entity, not the role: when the canonical master is absent the starter IS the local master and must govern the entity fully, exactly as it would if it mastered it. All of it is DERIVED by the emitter (`deriveWorkflowGatesAndRules` + the shared `deriveGate`), not authored by the loader, and materialized by the deployer; the loader still inserts NO derived permission rows (the catalog stores no derived permissions, see [references/modules.md](references/modules.md) §4 / Plan 3). Rationale: a gated transition (or a personal-content row-scope) reachable standalone with no permission is ungoverned (anyone with `:manage` fires it / reads every row), so the installing unit must realize it. See Rule #12 "Gate prefix and re-prefix".
 5. **`domain_module_capabilities` allowed.** A starter realizes a subset of capabilities, same shape as full modules. This is the marketing surface that makes a starter discoverable.
-6. **Exactly one `system` skill** (Rule #17 applies identically to starters). The starter's `skills` row has `skill_type='system'`, `domain_module_id` set, and ≥1 `skill_tools` row. Floor: `query_<entity>` for each embedded master plus light mutates where the workflow supports them. The skill MAY carry workflow-gate tools for the standalone-reachable, re-prefixed gates its embedded entities expose (plan-4 revises the prior "no workflow-gate tools" floor: per invariant #4 those gates now exist on the starter).
+6. **Exactly one `system` skill** (Rule #17 applies, with the starter exception). A starter is a deployable unit, so unlike a FULL module it KEEPS its own module-anchored skill: the starter's `skills` row has `skill_type='system'`, `domain_module_id` set to the starter module, and the skill **derives** its toolset from the starter module's own `domain_module_tools` (it stores no tools; `skill_tools` is retired). Floor: ≥1 `domain_module_tools` row, with `query_<entity>` for each embedded master plus light mutates where the workflow supports them. The starter's `domain_module_tools` MAY carry workflow-gate tools for the standalone-reachable, re-prefixed gates its embedded entities expose (plan-4 revises the prior "no workflow-gate tools" floor: per invariant #4 those gates now exist on the starter).
 
 **Naming convention.** Free-form. Authors pick `<DOMAIN>-LITE`, `<DOMAIN>-STARTER`, `REAL-ESTATE-AGENT`, `SMB-CRM`, etc. The `module_kind` discriminator carries the structural signal; the code is free to be marketing-shaped.
 
-**Upgrade behavior.** When a tenant later installs the full module whose data_objects the starter embedded, the embedded shells deterministically demote via the existing rule for `embedded_master` rows with a canonical master elsewhere. No tenant-side data migration (same `data_object_id`, same table). The starter's baseline permissions stick around after upgrade; its re-prefixed workflow gates (invariant #4) are superseded by the full module's canonical-prefixed gates once it installs (provisional cleanup, revisit after first real starter ships). The tenant manages skill cleanup; catalog ships both the starter's system skill and the full module's system skill side-by-side.
+**Upgrade behavior.** When a tenant later installs the full module whose data_objects the starter embedded, the embedded shells deterministically demote via the existing rule for `embedded_master` rows with a canonical master elsewhere. No tenant-side data migration (same `data_object_id`, same table). The starter's baseline permissions stick around after upgrade; its re-prefixed workflow gates (invariant #4) are superseded by the full module's canonical-prefixed gates once it installs (provisional cleanup, revisit after first real starter ships). The tenant manages skill cleanup; the catalog ships the starter's system skill alongside the host domain's system skill (the FULL module carries no skill of its own; its tools roll up into the host domain's skill via `domain_module_tools`).
 
 **Audit blocker.** A starter row violating any of the six invariants fails the per-domain checklist on F2 / F3 (system skill) or a Rule-#11 / Rule-#12 cross-check depending on which invariant is violated. The platform-side validation_rule throws on the master-role violation independently of the audit.
 
@@ -578,25 +579,28 @@ Forbidden patterns:
 | Table | Holds | Qualifier / discriminator |
 |---|---|---|
 | `tools` | JSON-RPC-shaped capability primitives an agent skill can call (`send_email`, `query_invoices`, `search_web`, `transcribe_audio`, `receive_webhook`). Includes two abstraction primitives, `notify_person` (single-recipient outbound) and `notify_team` (broadcast), that capture the substitutable-channel pattern; skills link these by default for generic notifications and link concrete channels only when the workflow requires a specific channel | `operation_kind` enum (`query` / `mutate` / `fetch` / `side_effect` / `compute` / `inbound`). The six values pair as: internal-read = `query`, external-read = `fetch`; internal-write = `mutate`, external-write = `side_effect`; pure-transform = `compute`; event-receive = `inbound`. `coverage_tier` enum (`platform` / `external` / `integration`) drives the Semantius score; read this column, not `operation_kind`. `data_object_id` FK is **required** when `operation_kind ∈ {query, mutate}`, **must be NULL** for `fetch` / `side_effect` / `compute`, **optional** for `inbound`. The pairing is enforced platform-side by a JsonLogic `input_type_rule` on `fields.tools.data_object_id` |
-| `skills` | Agent skills (system / process / role). `system` skills mirror **one module 1:1** (`skill_type='system'`, `domain_module_id` set) — target state per Rule #14. `process` skills wrap a cross-domain handoff cluster; `role` wraps a user-role workflow. **Transitional note:** the catalog still carries domain-level system skills (`domain_id` set, `domain_module_id` null) from the pre-modular era — these are migration targets, not the pattern for new authoring. | `skill_type` enum + `domain_module_id` (required when `system`, per Rule #14) |
+| `skills` | Agent skills (system / process / role). A `system` skill is the agent surface for a **deployable unit**: one per **domain** (`skill_type='system'`, `domain_id` set, `domain_module_id` null) that **derives** its toolset from the domain's modules, plus one per **starter module** (`module_kind='starter'`, `domain_module_id` set) that derives from the starter's own tools. FULL modules get no skill (Rule #17). A `process` skill wraps a cross-domain value stream (`process_id` set) and derives from `process_tools`; `role` wraps a user-role workflow. | `skill_type` enum + `domain_id` (system at the domain grain) / `domain_module_id` (system on a starter) / `process_id` (process). A skill stores **no** tools; it derives them from the unit it represents |
 | `tool_solutions` | N:M between `tools` and `solutions` — which non-Semantius solutions deliver this tool, and how | `delivery_strength` + `delivery_method` (`mcp_server` preferred) + optional `endpoint_url`. Computed label `<tool> via <solution>`. **No Semantius row** — its coverage is read from `tools.coverage_tier` directly |
-| `skill_tools` | N:M between `skills` and `tools` — which tools a skill needs to function | `requirement_level` (`required` / `optional`). `notes` exists on the row but is off-limits without user-approved wording per Rule #15. Computed label `<skill> needs <tool>` |
+| `domain_module_tools` | N:M between `domain_modules` and `tools` - which atomic tools a module requires | `requirement_level` (`required` / `optional`). `notes` off-limits without user-approved wording per Rule #15. Computed unique key `<domain_module_id>.<tool_id>`. A domain's `system` skill derives its toolset by rolling these up over the domain's primary + host modules |
+| `process_tools` | N:M between `processes` and `tools` - which atomic tools a value-stream process requires | `requirement_level` (`required` / `optional`). `notes` off-limits per Rule #15. Computed unique key `<process_id>.<tool_id>`. The matching `process` skill derives its toolset from these |
 
-These four tables coexist with `domain_map.solutions`, which gained `solution_kind` enum (`external_connector` / `action` / `compute_service` / `standard_solution`) to classify which solutions are tool-delivery sources. The killer hypothesis the layer exists to test: **how many of the loaded domains have a system skill where every required tool is Semantius-covered (i.e. `coverage_tier='platform'` for every required `skill_tools` row)?**
+These tables coexist with `domain_map.solutions`, which gained `solution_kind` enum (`external_connector` / `action` / `compute_service` / `standard_solution`) to classify which solutions are tool-delivery sources. A tool is **atomic**: `tools` is the single canonical store; `domain_module_tools` and `process_tools` are m:n RELATIONSHIPS that only reference `tool_id`, never copy a tool. The killer hypothesis the layer exists to test: **how many of the loaded domains have a `domain_module_tools` rollup where every required tool is Semantius-covered (i.e. `coverage_tier='platform'` for every required tool the domain's modules carry)?**
 
 #### Semantius score
 
-The **Semantius score** of a skill (and the module realised by that skill) reads from `tools.coverage_tier`, not from `operation_kind`. Two scores are reported together:
+The **Semantius score** of a deployable unit (a domain, a starter, or a value-stream process) reads from `tools.coverage_tier`, not from `operation_kind`. It is computed from the unit's tool RELATIONSHIPS (`domain_module_tools` for a domain / starter, `process_tools` for a process), not from any stored skill toolset. Two scores are reported together:
 
 ```
-strict_score(skill) =
-   count(skill_tools WHERE tools.coverage_tier = 'platform')
- / count(skill_tools)
+strict_score(domain) =
+   count(distinct tools over the domain's domain_module_tools WHERE tools.coverage_tier = 'platform')
+ / count(distinct tools over the domain's domain_module_tools)
 
-operational_score(skill) =
-   count(skill_tools WHERE tools.coverage_tier IN ('platform', 'integration'))
- / count(skill_tools)
+operational_score(domain) =
+   count(distinct tools over the domain's domain_module_tools WHERE tools.coverage_tier IN ('platform', 'integration'))
+ / count(distinct tools over the domain's domain_module_tools)
 ```
+
+The domain's tool set is the union of `domain_module_tools` over the domain's modules (primary `domain_modules.domain_id = X` UNION `domain_module_host_domains.domain_id = X`), deduped by `tool_id`. A process unit substitutes `process_tools` keyed on `processes.id`.
 
 `strict_score` is the share served by the platform alone (what runs on Semantius with no external glue). `operational_score` adds curated OOTB integrations the platform maintains (e.g. an MCP server in the Semantius catalog for a vendor). The gap between the two is the value of the integration catalog.
 
@@ -604,10 +608,10 @@ operational_score(skill) =
 
 Conventions:
 
-- **Denominator is all `skill_tools` rows**, both `required` and `optional`. The score answers "what share of this skill's needs can the platform serve" — optional tools count because they're still real needs (lower-tier AI matching, optional notifications).
-- For a per-module score, join via `skills.domain_module_id` (one system skill per module under Rule #14). Modules without a system skill row have no score.
-- For a per-domain score, aggregate `skill_tools` across all system skills for modules where `domain_modules.domain_id = X` (i.e. union the numerators and denominators, then divide). Do not average per-module scores — that biases toward small modules.
-- A score below 100% always points at specific tool rows: `SELECT tool_id, tool_name, coverage_tier FROM skill_tools JOIN tools WHERE coverage_tier != 'platform'`. Surface those tools by name when reporting the score — the gap is the actionable information, not the percentage.
+- **Denominator is all of the unit's tools**, both `required` and `optional`. The score answers "what share of this unit's needs can the platform serve" - optional tools count because they're still real needs (lower-tier AI matching, optional notifications).
+- For a **per-module** coverage view (which deployable modules are 100% platform-covered), roll up each module's own `domain_module_tools` independently - a property of `module -> its tools`, computed without any skill row.
+- For the **per-domain** score, union the numerators and denominators of `domain_module_tools` across the domain's primary AND host modules, then divide. **NO fallback:** a domain whose modules carry no `domain_module_tools` reads as incomplete (band F3), not as 0-of-0 covered. Do not average per-module scores - that biases toward small modules.
+- A score below 100% always points at specific tool rows: `SELECT tool_id, tool_name, coverage_tier FROM domain_module_tools JOIN tools WHERE coverage_tier != 'platform'` (scoped to the domain's modules). Surface those tools by name when reporting the score - the gap is the actionable information, not the percentage.
 
 ### Role layer (1 new entity + 3 extended built-ins)
 
@@ -697,11 +701,11 @@ For any task that fits this skill — "research vendors for X", "is Y a domain?"
 
    Phase C answers *"who in the org buys / runs / consumes this market?"* and powers buyer-persona filtering, RACI overlays, and the org-side analogue of the data-object signals. If the function spine is empty (only true at the very start of the catalog), populate it once before adding `business_function_domains` rows — see "Function spine" below for the canonical 20-function shape.
 
-   **Phase S — System skills + tools** (load fourth, against the same domain). Under Rule #17 every `domain_modules` row needs exactly one `skill_type='system'` skill, and that skill needs ≥1 `skill_tools` rows. Phase S delivers:
+   **Phase S - System skill + tools** (load fourth, against the same domain). Under Rule #17 every domain needs exactly one domain-grain `skill_type='system'` skill that **derives** its toolset from the domain's modules' `domain_module_tools`; each `module_kind='starter'` module keeps its own module-anchored system skill; a FULL module gets no skill but carries its tool requirements as `domain_module_tools`. Phase S delivers:
 
-   1. **`skills`** — one row per module with `skill_type='system'`, `domain_module_id` set, and a short `skill_name` like `<module_code>_agent` (e.g. `crm_acct_mgt_agent`). The skill encodes what an agent can do against that module's data and lifecycle.
+   1. **`skills`** - one row per **domain** with `skill_type='system'`, `domain_id` set, `domain_module_id` NULL, and `skill_name='<domain_code_lower>-system'` (e.g. `crm-system`); plus one row per `module_kind='starter'` module (`domain_module_id` set to the starter). FULL modules get none. The skill encodes what an agent can do across the domain's data and lifecycle; it derives its toolset and stores no tools.
    2. **`tools`** — JSON-RPC-shaped capability primitives keyed verb-first against the module's masters: `query_<entity>`, `create_<entity>`, `update_<entity>` for CRUD; `send_<message>`, `parse_<artifact>`, `match_<thing>_to_<thing>` for side-effect / compute work; `receive_<channel>` / `ingest_<source>` for inbound channels. Set `operation_kind` per the invariant in Rule #17 (`query`/`mutate` ⇒ `data_object_id` required; `side_effect`/`compute` ⇒ `data_object_id` null; `inbound` ⇒ `data_object_id` optional). Reuse existing tool rows where the same primitive already exists (the `tools` table is catalog-wide, not per-module). **Authoring default for notifications**: link the abstraction tools `notify_person` / `notify_team` rather than channel-specific primitives (`send_email`, `send_sms`, `post_chat_message`) — see § "Channel vs capability authoring rule" below.
-   3. **`skill_tools`** — one row per (skill, tool) pair the skill calls. Carry `requirement_level` (`required` for irreducible workflow tools, `optional` for degraded modes). **Do NOT auto-populate `notes`** per Rule #15. The set of `requirement_level='required'` rows is the irreducible surface; `optional` rows raise the ceiling without raising the floor.
+   3. **`domain_module_tools`** - one row per (module, tool) pair the module requires (and **`process_tools`** for a cross-domain value-stream process keyed on `processes.id`). Carry `requirement_level` (`required` for irreducible workflow tools, `optional` for degraded modes). **Do NOT auto-populate `notes`** per Rule #15. The set of `requirement_level='required'` rows is the irreducible surface; `optional` rows raise the ceiling without raising the floor. The domain's system skill derives its toolset from these; never author tool rows onto the skill.
    4. **`tool_solutions`** (where applicable) — for any tool whose `coverage_tier != 'platform'`, link the non-Semantius solutions that deliver it. Platform-covered tools (today: every `query`/`mutate` row plus `receive_webhook`; more once the platform ships natively) don't need `tool_solutions` rows for the platform itself; vendor-alternative rows on those tools remain valid.
 
    Phase S is **not optional** per Rule #17. The killer hypothesis of the entire tools/skills layer (*"how many of the loaded domains have a system skill where every required tool is Semantius-covered?"*) is uncomputable without it. Reference Phase-S loader pattern: the ATS / SMP / TALENT-MGMT / EMP-EXP loads set the shape; mirror them when authoring for other domains.
@@ -712,7 +716,7 @@ For any task that fits this skill — "research vendors for X", "is Y a domain?"
 
 ## Channel vs capability authoring rule
 
-Applies to every Phase-S skill_tools authoring pass.
+Applies to every Phase-S `domain_module_tools` / `process_tools` authoring pass.
 
 The catalog distinguishes two kinds of `tools` rows the agent can call:
 
@@ -728,7 +732,7 @@ The catalog distinguishes two kinds of `tools` rows the agent can call:
 
 **Why the abstraction layer exists.** Empirically, `notify_person` / `notify_team` are the only substitutable-channel patterns in the catalog: skills use multi-channel notifications, but none need multi-text-generation or multi-extraction tools. Adding a heavyweight capability table for one pattern was over-engineering; two abstraction tool rows with the same shape as everything else solves the problem. Channels stay in `tools` for vendor delivery via `tool_solutions` and for skills that genuinely need a specific channel.
 
-**Score behavior.** When `tools.coverage_tier='platform'` on `notify_person` (i.e., the platform ships an outbound dispatcher), every skill linking `notify_person` is platform-covered on the notification axis with one UPDATE — no per-skill retrofit needed. That's the entire reason this layer exists; if we'd kept channel-specific links everywhere, every platform-ships-email event would have required N skill_tools rewrites.
+**Score behavior.** When `tools.coverage_tier='platform'` on `notify_person` (i.e., the platform ships an outbound dispatcher), every module (and process) linking `notify_person` is platform-covered on the notification axis with one UPDATE - no per-unit retrofit needed. That's the entire reason this layer exists; if we'd kept channel-specific links everywhere, every platform-ships-email event would have required N `domain_module_tools` / `process_tools` rewrites.
 
 ---
 
@@ -757,7 +761,7 @@ The S-band is a single coverage sweep that runs **before** any band-level check.
   | --- | --- | --- | --- |
 
 - Expected-non-zero call (the schema doesn't carry this; it follows from catalog rules):
-  - Always non-zero: `business_function_domains` (C1), `capability_domains` (A2), `domain_data_objects` (B1; for a derive/overlay domain the rows are `consumer`/`derived` rather than `master`, but the set is still non-zero), `domain_modules` (M1), `solution_domains` (A3), `handoffs.source_domain_id` (B9 for any non-leaf domain), `skills` (F2 — exactly one `skill_type='system'` row per `domain_modules` row).
+  - Always non-zero: `business_function_domains` (C1), `capability_domains` (A2), `domain_data_objects` (B1; for a derive/overlay domain the rows are `consumer`/`derived` rather than `master`, but the set is still non-zero), `domain_modules` (M1), `solution_domains` (A3), `handoffs.source_domain_id` (B9 for any non-leaf domain), `skills` (F2 - exactly one domain-grain `skill_type='system'` row, `domain_module_id` NULL, per domain). `domain_module_tools` is non-zero across the domain's modules once tools are authored (F3); it is an indirect-table check (S2), not a direct FK to `domains`.
   - Non-zero when applicable: `domain_regulations` (most domains have ≥1 regulation in scope), `handoffs.target_domain_id` (most non-leaf domains receive at least one inbound handoff).
   - Routinely zero: `domain_module_host_domains` (only when cross-cutting modules host on this domain), `domains.parent_domain_id` (only when this domain has sub-domains).
 - Fix: zero-row anomalies on "expected non-zero" rows are blocking. The fix routes back into the owning band — S1 just makes the gap legible at a glance and catches cases the band's own pass test missed.
@@ -1091,39 +1095,39 @@ Personas (`domain_roles`) capture the job-shaped workflows that span a domain's 
 
 ### F. Skill-layer integrity
 
-The `skills` table sits next to `roles` but represents agent skills, not user roles. The F-band enforces Rule #17's positive-existence requirement (one `system` skill per domain, anchored at the domain grain, with ≥1 `skill_tools` row) as well as a grain-cleanup check (F1).
+The `skills` table sits next to `roles` but represents agent skills, not user roles. The F-band enforces Rule #17's positive-existence requirement (one `system` skill per domain, anchored at the domain grain, deriving a non-empty toolset from `domain_module_tools`) as well as a grain-cleanup check (F1).
 
-**F1. No module-anchored system skills remain; the domain's system skill is anchored at the domain grain.**
-- Query: `/skills?domain_id=eq.<id>&skill_type=eq.system&domain_module_id=not.is.null&select=id,skill_name,domain_module_id`.
-- Pass: empty result. A `skill_type='system'` row with a non-null `domain_module_id` is the deprecated per-module grain (Rule #17): the domain's agent surface is a single domain-level skill, not one per module.
-- Fix: consolidate the module-anchored system skills into the domain's `<domain_code_lower>-system` skill (union their `skill_tools` onto it, dedup by `tool_id`, `required` wins over `optional`), then DELETE the module-anchored rows. The shared `tools` rows are catalog-wide and are never deleted, only relinked.
+**F1. No system skill is anchored to a FULL module; only starters keep a module-anchored skill.**
+- Query: `/skills?domain_id=eq.<id>&skill_type=eq.system&domain_module_id=not.is.null&select=id,skill_name,domain_module_id,domain_module:domain_modules(module_kind)`.
+- Pass: every returned row's module is `module_kind='starter'` (and ideally the result is empty). A `skill_type='system'` row anchored to a NON-starter (FULL) module is the deprecated per-module grain (Rule #17): a FULL module's tools belong on `domain_module_tools`, and the agent surface is the domain's single domain-level skill. Starter-anchored skills are correct and exempt.
+- Fix: for each FULL-module-anchored skill, ensure its tools live on `domain_module_tools` for that module (where they roll up into the domain skill), then DELETE the module-anchored skill row. The shared `tools` rows are catalog-wide and are never deleted, only related via `domain_module_tools`.
 
 **F2. The domain has exactly one `skill_type='system'` skill, anchored to the domain.** (Rule #17.)
 - Query: `/skills?domain_id=eq.<id>&skill_type=eq.system&domain_module_id=is.null&select=id,skill_name`.
-- Pass: exactly one row. Zero is a Phase-S gap; >1 is a rule violation (keep one, union the others' `skill_tools` onto it, delete the extras).
-- Fix: author the missing domain system skill per Phase S in the workflow. Use `skill_name='<domain_code_lower>-system'` (e.g. `grc-system`), `domain_id=<id>`, `domain_module_id` NULL; load alongside the domain's tools and `skill_tools` in the same loader.
+- Pass: exactly one row. Zero is a Phase-S gap; >1 is a rule violation (keep one, delete the extras; their tools already live on `domain_module_tools`).
+- Fix: author the missing domain system skill per Phase S in the workflow. Use `skill_name='<domain_code_lower>-system'` (e.g. `grc-system`), `domain_id=<id>`, `domain_module_id` NULL; load alongside the modules' tools and `domain_module_tools` in the same loader.
 
-**F3. The domain's system skill has ≥1 `skill_tools` row.** (Rule #17.)
-- Query: for the skill id from F2, `/skill_tools?skill_id=eq.<skillId>&select=skill_id,tool_id,requirement_level`.
-- Pass: ≥1 row. Typical shape is 8–40 tools (the union across the domain's modules; mix of `required` + `optional`).
-- Fix: extend the Phase-S loader to author the missing tools + `skill_tools` rows. A `required` floor of ≥3 tools is the practical minimum: at least one `query`, one `mutate`, one workflow gate.
+**F3. The domain's modules carry ≥1 `domain_module_tools` (the derived toolset is non-empty).** (Rule #17.)
+- Query: union over the domain's modules (primary `domain_modules?domain_id=eq.<id>&select=id` + `domain_module_host_domains?domain_id=eq.<id>&select=domain_module_id`), then `/domain_module_tools?domain_module_id=in.(<modIds>)&select=domain_module_id,tool_id,requirement_level`.
+- Pass: ≥1 row across the union. Typical shape is 8–40 distinct tools (deduped across the domain's modules; mix of `required` + `optional`).
+- Fix: extend the Phase-S loader to author the missing `tools` + `domain_module_tools` rows on the modules. A `required` floor of ≥3 distinct tools is the practical minimum across the domain: at least one `query`, one `mutate`, one workflow gate.
 
-**F4. Tool `operation_kind` ↔ `data_object_id` invariant holds on every linked tool.** (Rule #17 sub-invariant.)
-- Query: `/skill_tools?skill_id=in.(<skillIds>)&select=tools(id,tool_name,operation_kind,data_object_id)`.
+**F4. Tool `operation_kind` ↔ `data_object_id` invariant holds on every required tool.** (Rule #17 sub-invariant.)
+- Query: `/domain_module_tools?domain_module_id=in.(<modIds>)&select=tools(id,tool_name,operation_kind,data_object_id)` (and `/process_tools?process_id=in.(<procIds>)&select=tools(...)` for the domain's value-stream processes).
 - Pass: for every tool, `operation_kind ∈ {query, mutate}` implies `data_object_id` set; `operation_kind ∈ {fetch, side_effect, compute}` implies `data_object_id` is null; `operation_kind = inbound` allows either (NULL or set). Any row that violates this pairing is a tool-row defect. The constraint is enforced platform-side via JsonLogic on `fields.tools.data_object_id`, but the F4 audit verifies on the read path in case a row got in before the rule was installed.
 - Fix: PATCH the offending `tools` row (either set / clear `data_object_id`, or correct the `operation_kind`). Re-PATCH the catalog, not the junction.
 
 **F5. Semantius score is computable for this domain.**
-- Derivation: per the formulas in § "Semantius score", `strict_score(skill) = count(skill_tools WHERE tools.coverage_tier='platform') / count(skill_tools)` and `operational_score(skill) = count(WHERE tools.coverage_tier IN ('platform','integration')) / count(skill_tools)`, on the domain's single system skill. A per-module coverage view (which deployable modules are 100% platform-covered) is a separate rollup over each module's required tools, computed from `module -> its tools` independently of the skill grain.
-- Pass: the domain returns both scores (numbers in [0, 1], including 0 if every linked tool is `external`). The metric must be computable, not high. A low score is information about the gap, not a failure.
-- Fix: F5 cannot fail independently. F2 + F3 + F4 cure every F5 failure. The check is here as a rollup so the audit gap report leads with the score (or the literal "uncomputable, see F2/F3").
+- Derivation: per the formulas in § "Semantius score", computed over the union of `domain_module_tools` across the domain's primary + host modules (deduped by `tool_id`): `strict_score = count(distinct platform-tier tools) / count(distinct tools)` and `operational_score = count(distinct platform+integration tools) / count(distinct tools)`. A per-module coverage view (which deployable modules are 100% platform-covered) is a separate rollup over each module's own `domain_module_tools`, computed from `module -> its tools` independently of the skill grain.
+- Pass: the domain returns both scores (numbers in [0, 1], including 0 if every tool is `external`). The metric must be computable, not high. A low score is information about the gap, not a failure.
+- Fix: F5 cannot fail independently. F3 + F4 cure every F5 failure (F3 makes the toolset non-empty; F4 keeps the tools valid). The check is here as a rollup so the audit gap report leads with the score (or the literal "uncomputable, see F3").
 
 **F6. (Future) The `tools` catalog is deduplicated.** *(reserved — not part of routine audit.)* A tool with the same `tool_name` and `operation_kind` and `data_object_id` linked from multiple skills is the same primitive and should be a single `tools` row. The deduplication pass runs catalog-wide, not per-domain; F6 reserves the ID for when it ships.
 
 **F7. Channel primitives are only linked when the workflow requires a specific channel; otherwise the skill uses the `notify_person` / `notify_team` abstraction.** (Per the § "Channel vs capability authoring rule".)
-- Query: `/skill_tools?skill_id=in.(<skillIds>)&select=skill_id,notes,tools!inner(tool_name)&tools.tool_name=in.(send_email,send_sms,post_chat_message,make_phone_call,send_push_notification,send_whatsapp_message)`
-- Pass: every returned row carries a workflow-specific justification in `skill_tools.notes` explaining why the channel can't be substituted (e.g. "voice IS the workflow", "envelope-completion webhook is the contract", "EDI message exchange per trading-partner contract"). Rows with empty `notes` OR with generic notification-shaped notes ("enrollment confirmations", "due-date reminders", "completion notifications", "assignee notification") fail. The default for generic notifications is `notify_person`; the default for broadcast is `notify_team`.
-- Fix: PATCH the offending `skill_tools.tool_id` to point at `notify_person` (or `notify_team` for broadcast). Idempotency-safe: if the same skill already links the abstraction, DELETE the channel-primitive row instead of PATCHing. Multi-channel rows mean broadcast (AND), not at-least-one (OR); if the skill genuinely needs to fire on BOTH email and chat, keep both with notes justifying each.
+- Query: `/domain_module_tools?domain_module_id=in.(<modIds>)&select=domain_module_id,notes,tools!inner(tool_name)&tools.tool_name=in.(send_email,send_sms,post_chat_message,make_phone_call,send_push_notification,send_whatsapp_message)` (and the same shape on `/process_tools?process_id=in.(<procIds>)` for the domain's value-stream processes).
+- Pass: every returned row carries a workflow-specific justification in `domain_module_tools.notes` (or `process_tools.notes`) explaining why the channel can't be substituted (e.g. "voice IS the workflow", "envelope-completion webhook is the contract", "EDI message exchange per trading-partner contract"). Rows with empty `notes` OR with generic notification-shaped notes ("enrollment confirmations", "due-date reminders", "completion notifications", "assignee notification") fail. The default for generic notifications is `notify_person`; the default for broadcast is `notify_team`.
+- Fix: PATCH the offending `domain_module_tools.tool_id` (or `process_tools.tool_id`) to point at `notify_person` (or `notify_team` for broadcast). Idempotency-safe: if the module already links the abstraction, DELETE the channel-primitive row instead of PATCHing. Multi-channel rows mean broadcast (AND), not at-least-one (OR); if the workflow genuinely needs to fire on BOTH email and chat, keep both with notes justifying each.
 - Why this is here: the rule was stated in the authoring section but missed at audit time on at least three loads. The abstraction's structural value is that when the platform ships outbound, `notify_person.coverage_tier` flips to `platform` with one UPDATE and every skill using it re-scores; channel-specific links don't ride that flip and have to be hand-patched.
 
 ### H. Handoff APQC coverage (per-domain checklist)
@@ -1636,7 +1640,7 @@ Beyond the point-solution-market test, these heuristics resolve the ambiguous ca
 
 ### Session bootstrap — always verify catalog state first
 
-When you start a session that involves drafting / loading `skills` or `skill_tools`, the **first action** is to verify live counts. The catalog is multi-session and **users add domains between sessions** — assume the row counts you remembered from a prior conversation are wrong.
+When you start a session that involves drafting / loading `skills` or `domain_module_tools` / `process_tools`, the **first action** is to verify live counts. The catalog is multi-session and **users add domains between sessions** - assume the row counts you remembered from a prior conversation are wrong.
 
 ### Subagent prompt discipline for Phase-B research
 
@@ -1669,9 +1673,9 @@ Always query live state (counts, existing skills, existing tools) before draftin
 
 ### Three-source derivation procedure
 
-When authoring a `skills` row with `skill_type='system'` (one-to-one with a domain), the required-tool set is derived from three sources, in order:
+When authoring a `skills` row with `skill_type='system'` (one-to-one with a domain), the required-tool set is derived from three sources, in order. The skill stores no tools: author each derived tool onto the module that owns the relevant master via `domain_module_tools` (the domain skill derives the union over its modules). For a cross-domain value stream, author onto `process_tools` instead.
 
-1. **The domain's `data_objects` masters** — every master gets at minimum `query_<data_object_name>`, and for any master with an obvious write workflow also a representative mutate tool (verb-driven name like `create_incident`, `update_budget`, `approve_headcount_plan`). Both are `requirement_level='required'`. This alone usually gets you to ~80% of the required-tool set.
+1. **The domain's `data_objects` masters** - every master gets at minimum `query_<data_object_name>`, and for any master with an obvious write workflow also a representative mutate tool (verb-driven name like `create_incident`, `update_budget`, `approve_headcount_plan`). Both are `requirement_level='required'` on the owning module's `domain_module_tools`. This alone usually gets you to ~80% of the required-tool set.
 2. **The domain's `contributor` / `consumer` `data_objects`** — query tools for the cross-domain reads the workflow can't function without (e.g. PA `query_employees` reads HCM; EPM `query_journal_entries` reads ERP-FIN). Mark `required` only when the workflow demonstrably needs the read, not for every consumer relationship the catalog records.
 3. **The domain's outbound `handoffs`** — when a handoff says "this domain triggers an event that creates a record in another domain", the system skill needs the mutate tool on the receiving side. Canonical examples: CMDB → ITSM `create_incident` for `ci.unauthorized_change_detected`; SWP → ATS `create_candidate` for `headcount.approved`; AUDIT → GRC `close_follow_up_action` for finding-closure cascades. These are `required`.
 
@@ -1719,7 +1723,7 @@ A domain has no system skill ONLY when it is a genuine derive/overlay domain (pe
 
 **There is no fixed "leadership-tier" list of skill-less domains.** The earlier version of this rule named 16 "verified zero-master" domains (REV-INTEL, SALES-PERF, GTM-PLAN, ACCT-PLAN, PRM, OP-RES, BCM, SECOPS, SOAR, THREAT-INTEL, TPRM, VULN-MGMT, PRIV-MGMT, FINOPS, INTRANET, COLLAB-GOV) and told you to NOT scaffold Phase-B for them. That was wrong: ~14 of those persist real records by their own descriptions and `crud_percentage` (e.g. partner deal registrations, vulnerabilities, DSARs, quotas, account plans, deal scores, forecasts) and are simply unbuilt. Do NOT treat a domain as skill-less because it appears on an old list. Apply the overlay test instead. EPM is the canonical illustration: it reads ERP-FIN journal entries and SWP cost projections but **masters** `financial_plans` / `budgets` / `forecasts` / `variance_analyses` / `financial_scenarios`, so it is master-bearing and gets a system skill.
 
-Quick check before drafting any system skill: `semantius call crud postgrestRequest '{"method":"GET","path":"/domain_data_objects?domain_id=eq.<id>&role=eq.master"}'`. Zero masters means one of two things, and you must decide which via the overlay test: (a) the domain is a genuine overlay (masters nothing, recomputes at query time) — skip the system skill but still author its `consumer`/`derived` footprint and module; or (b) the domain is master-bearing but **unbuilt** — that's a Phase-B gap; run Phase B and author the masters, then draft the skill. Don't paper over a Phase-B gap by inventing skill_tools that reference data_objects from other domains — that produces a skill whose entire required-tool set is consumer-reads, which is not a system skill.
+Quick check before drafting any system skill: `semantius call crud postgrestRequest '{"method":"GET","path":"/domain_data_objects?domain_id=eq.<id>&role=eq.master"}'`. Zero masters means one of two things, and you must decide which via the overlay test: (a) the domain is a genuine overlay (masters nothing, recomputes at query time) - skip the system skill but still author its `consumer`/`derived` footprint and module; or (b) the domain is master-bearing but **unbuilt** - that's a Phase-B gap; run Phase B and author the masters, then draft the skill. Don't paper over a Phase-B gap by inventing `domain_module_tools` that reference data_objects from other domains - that produces a derived toolset whose entire required set is consumer-reads, which is not a system skill.
 
 ### Anti-patterns specific to system-skill derivation
 
@@ -1728,8 +1732,8 @@ Quick check before drafting any system skill: `semantius call crud postgrestRequ
 - ❌ Creating a generic `mutate_<data_object>` tool for every master. The existing convention is verb-driven (`update_budget`, `create_audit_finding`, `approve_headcount_plan`). Generic `mutate_*` names are not searchable and lose the workflow semantics.
 - ❌ Using `vendors` as a `data_object_id` target for query tools. `vendors` is the catalog's vendor reference table (legal entities); it is **not** a Semantius data_object. Read vendor-shaped records via `query_suppliers` (the `suppliers` data_object).
 - ❌ Re-creating query tools that already exist. Always read `/tools` and dedupe by `tool_name` before drafting. Past loads have surfaced multiple duplicates (`query_employees`, `query_journal_entries`, `query_suppliers`) that the dedup pre-check catches.
-- ❌ Drafting a system skill for a domain with zero masters. The skill would have nothing to query/mutate, which means either (a) the domain is a genuine derive/overlay that masters nothing and has no actionable consumed/derived surface (rare — apply the overlay test), or (b) Phase-B is incomplete and needs backfilling first (the common case). **Don't paper over a Phase-B gap by inventing skill_tools that reference data_objects from other domains** — that produces a skill whose entire required-tool set is consumer-reads, which is not a system skill.
-- ❌ Stamping `record_status='approved'` on freshly-loaded skills/tools/skill_tools without an explicit user review pass. Rule #1 applies to these entities the same as to any other catalog row.
+- ❌ Drafting a system skill for a domain with zero masters. The skill would have nothing to query/mutate, which means either (a) the domain is a genuine derive/overlay that masters nothing and has no actionable consumed/derived surface (rare - apply the overlay test), or (b) Phase-B is incomplete and needs backfilling first (the common case). **Don't paper over a Phase-B gap by inventing `domain_module_tools` that reference data_objects from other domains** - that produces a derived toolset whose entire required set is consumer-reads, which is not a system skill.
+- ❌ Stamping `record_status='approved'` on freshly-loaded skills/tools/`domain_module_tools`/`process_tools` without an explicit user review pass. Rule #1 applies to these entities the same as to any other catalog row.
 
 ---
 

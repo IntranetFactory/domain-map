@@ -42,7 +42,7 @@ Label column: `domain_name` (auto-managed by `create_entity`; set it once at ent
 | `description` | multiline | yes | |
 | `vendor_url` | url | yes | Canonical homepage. Empty string acceptable |
 | `headquarters_country` | string | yes | E.g. "USA", "Germany", "Netherlands" |
-| `notes` | multiline | yes | Empty by default — see SKILL.md Rule #15. |
+| `notes` | multiline | yes | Empty by default - see SKILL.md Rule #15. |
 | `record_status` | enum | yes | Default `new` |
 
 Label column: `vendor_name`.
@@ -201,7 +201,7 @@ The data-silo map: rows here with the same `data_object_id` across multiple `sol
 | `data_object_id` | parent → `data_objects` | yes | |
 | `role` | enum | yes | `master` / `embedded_master` / `contributor` / `consumer` / `derived`. Default `master`. Multi-master rows are expected — different domains master different slices of shared objects. Multi-master count = Signal 1; embedded_master count = Signal 1b of the platform-vs-silos analysis. |
 | `necessity` | enum | yes | `required` / `optional`. Default `required`. `master` rows always required. `embedded_master`/`contributor`/`consumer` rows are optional when the workflow tolerates absence in some deployments. |
-| `notes` | multiline | yes | Empty by default — see SKILL.md Rule #15. |
+| `notes` | multiline | yes | Empty by default - see SKILL.md Rule #15. |
 | `record_status` | enum | yes | Default `new` |
 
 Migrated from an earlier `mastery_role` enum (`primary` / `secondary` / `derived`). `primary` mapped to `master`; the old `secondary` was a junk drawer. The current five-role enum forces an explicit choice.
@@ -378,9 +378,10 @@ Label column: `tool_name` (lowercase snake_case verb form — `send_email`, `que
 | Field | Format | Required | Notes |
 |---|---|---|---|
 | `description` | multiline | yes | |
-| `skill_type` | enum | yes | Default `system`. Values: `system` (mirrors one domain one-to-one), `process` (orchestrates a cross-domain handoff cluster), `role` (wraps a specific user-role workflow) |
-| `domain_module_id` | reference → `domain_modules` | no | **The system-skill anchor: required when `skill_type = 'system'`** (exactly one system skill per `domain_modules` row, per Rule #14 / Rule #17). |
-| `domain_id` | reference → `domains` | no | **Transitional.** Pre-modular system skills anchored on `domain_id` (with `domain_module_id` null) are migration targets, not the pattern for new authoring. The legacy `domain_required_when_skill_type_is_system` rule keys on this column; new system skills set `domain_module_id` and re-anchor off `domain_id`. |
+| `skill_type` | enum | yes | Default `system`. Values: `system` (the agent surface for a deployable unit: one per domain, plus one per starter module), `process` (orchestrates a cross-domain value stream), `role` (wraps a specific user-role workflow) |
+| `domain_id` | reference → `domains` | no | **The domain-grain anchor for a `system` skill** (`domain_module_id` NULL). Exactly one such skill per domain (Rule #17); it derives its toolset from the domain's modules' `domain_module_tools`. The `domain_required_when_skill_type_is_system` rule keys on this column. |
+| `domain_module_id` | reference → `domain_modules` | no | Set ONLY for a `system` skill on a `module_kind='starter'` module (the starter is itself a deployable unit and derives from its own `domain_module_tools`). A domain `system` skill leaves this NULL. FULL modules carry no skill. |
+| `process_id` | reference → `processes` | no | Set for a `process` skill (the cross-domain value stream it wraps); the skill derives its toolset from that process's `process_tools`. |
 | `record_status` | enum | yes | Default `new` |
 
 Label column: `skill_name` (lowercase snake_case or kebab-case — `domain-map-analyst`, `onboarding-process`, `lead-to-cash`).
@@ -399,17 +400,31 @@ Label column: `skill_name` (lowercase snake_case or kebab-case — `domain-map-a
 
 Label column: `tool_solution_label` (computed: `<tool_name> via <solution_name>`; auto-disabled in the UI). Intended-unique on `(tool_id, solution_id)` — caller-side dedup, platform's native unique annotation is single-column.
 
-### `skill_tools` (junction: `skills` ↔ `tools`)
+### `domain_module_tools` (junction: `domain_modules` ↔ `tools`)
 
 | Field | Format | Required | Notes |
 |---|---|---|---|
-| `skill_id` | parent → `skills` | yes | Cascade on delete |
+| `domain_module_id` | parent → `domain_modules` | yes | Cascade on delete |
 | `tool_id` | parent → `tools` | yes | Cascade on delete |
-| `requirement_level` | enum | yes | Default `required`. Values: `required` (skill cannot function without), `optional` (improves; degrades gracefully without). |
-| `notes` | multiline | yes | Empty by default — see SKILL.md Rule #15. |
+| `requirement_level` | enum | yes | Default `required`. Values: `required` (the module's workflow gates without this tool), `optional` (improves; degrades gracefully without). |
+| `notes` | multiline | yes | Empty by default - see SKILL.md Rule #15. |
 | `record_status` | enum | yes | Default `new` |
 
-Label column: `skill_tool_label` (computed: `<skill_name> needs <tool_name>`; auto-disabled in the UI). Intended-unique on `(skill_id, tool_id)` — caller-side dedup.
+Label column: computed `key` (`<domain_module_id>.<tool_id>`; readonly). **Unique** on `(domain_module_id, tool_id)`, enforced at the database layer. The domain's `system` skill derives its toolset by rolling these up over the domain's primary + host modules.
+
+### `process_tools` (junction: `processes` ↔ `tools`)
+
+| Field | Format | Required | Notes |
+|---|---|---|---|
+| `process_id` | parent → `processes` | yes | Cascade on delete |
+| `tool_id` | parent → `tools` | yes | Cascade on delete |
+| `requirement_level` | enum | yes | Default `required`. Same semantics as above. |
+| `notes` | multiline | yes | Empty by default - see SKILL.md Rule #15. |
+| `record_status` | enum | yes | Default `new` |
+
+Label column: computed `key` (`<process_id>.<tool_id>`; readonly). **Unique** on `(process_id, tool_id)`. A `process` skill (linked via `skills.process_id`) derives its toolset from these.
+
+> The former `skill_tools` (`skills` ↔ `tools`) junction is **RETIRED**: a tool is atomic and lives once in `tools`; requirements are relationships on the deployable unit (`domain_module_tools` / `process_tools`), and skills DERIVE their toolset. See plans/per-domain-skill-restoration.md.
 
 **Semantius coverage rollup:** Semantius coverage is intrinsic to `tools.operation_kind`. The enum partitions:
 
@@ -565,4 +580,4 @@ The authored RESPONSIBILITY layer: who is Responsible / Accountable / Consulted 
 
 ### Derived RBAC: NOT stored (store-vs-derive, Plan 3)
 
-A persona's permission **bundle** (persona → permission codes), the permission **hierarchy** (`admin ⊃ manage ⊃ read` + gates), and the **permission-name mirror** are DERIVED by the emitter (§9) from the persona's `role_modules` reach + its `process_raci` gates + the entity-type write-tier policy, and emitted into the blueprint; the deployer provisions the tenant from the blueprint. The catalog does NOT create `domain_permissions` / `domain_role_permissions` / `domain_permission_hierarchy`, and **no loader writes to the `_core` `permissions` / `role_permissions` / `permission_hierarchy` tables** (storing derived RBAC is exactly what rotted `_core`). The 6 surviving `_core` `permissions` (`domain_map:read`/`manage`, `user:read`/`manage`, `public:read`, `admin`) are platform RBAC for the catalog app itself, not catalog content. RACI realization (no new tier): R → permission (persona) or `skill_tools` coverage (skill); A → approval gate; C → a consultation lifecycle state (`consultation_blocking=true`) or a read grant; I → a notification side effect. See downstream-updates rows 3-5.
+A persona's permission **bundle** (persona → permission codes), the permission **hierarchy** (`admin ⊃ manage ⊃ read` + gates), and the **permission-name mirror** are DERIVED by the emitter (§9) from the persona's `role_modules` reach + its `process_raci` gates + the entity-type write-tier policy, and emitted into the blueprint; the deployer provisions the tenant from the blueprint. The catalog does NOT create `domain_permissions` / `domain_role_permissions` / `domain_permission_hierarchy`, and **no loader writes to the `_core` `permissions` / `role_permissions` / `permission_hierarchy` tables** (storing derived RBAC is exactly what rotted `_core`). The 6 surviving `_core` `permissions` (`domain_map:read`/`manage`, `user:read`/`manage`, `public:read`, `admin`) are platform RBAC for the catalog app itself, not catalog content. RACI realization (no new tier): R → permission (persona) or `domain_module_tools` / `process_tools` coverage (skill); A → approval gate; C → a consultation lifecycle state (`consultation_blocking=true`) or a read grant; I → a notification side effect. See downstream-updates rows 3-5.

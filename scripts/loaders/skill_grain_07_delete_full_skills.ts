@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * skill_grain_07_delete_full_skills.ts — Step 6 of plans/per-domain-skill-restoration.md.
+ * skill_grain_07_delete_full_skills.ts - Step 6 of plans/per-domain-skill-restoration.md.
  *
  * After Steps 3 and 5, delete every `system` skill whose domain_module_id is not null AND whose
  * module is NOT a starter. That is the 244 full-module skills (= 246 minus the 55/57 reused).
@@ -33,7 +33,7 @@ const LIMIT = 200000;
 
 // 1. Re-assert actor_skill_id still 0 non-null (deleting actor skills would orphan RACI otherwise).
 const praci = await get(`/process_raci?actor_skill_id=not.is.null&select=id&limit=${LIMIT}`);
-if (praci.length !== 0) throw new Error(`process_raci.actor_skill_id has ${praci.length} non-null — ABORT (cascade would orphan)`);
+if (praci.length !== 0) throw new Error(`process_raci.actor_skill_id has ${praci.length} non-null - ABORT (cascade would orphan)`);
 console.log(`process_raci.actor_skill_id non-null: 0 (safe)`);
 
 // 2. Identify the predicate target (244 full-module system skills).
@@ -44,7 +44,7 @@ const PRED = `skill_type=eq.system&domain_module_id=not.is.null&domain_module_id
 
 const target = await get(`/skills?${PRED}&select=id,domain_module_id&limit=${LIMIT}`);
 console.log(`predicate matches: ${target.length} skills (expect 244)`);
-if (target.length !== 244) throw new Error(`expected 244 target skills, got ${target.length} — ABORT`);
+if (target.length !== 244) throw new Error(`expected 244 target skills, got ${target.length} - ABORT`);
 
 // 3. Confirm the cascade target: all remaining skill_tools are on these 244 skills (1917), nothing else.
 const targetIds = new Set(target.map(s => s.id));
@@ -53,7 +53,7 @@ const onTarget = st.filter(r => targetIds.has(r.skill_id)).length;
 const offTarget = st.filter(r => !targetIds.has(r.skill_id));
 console.log(`skill_tools total ${st.length}; on target ${onTarget}; off target ${offTarget.length}`);
 if (st.length !== 1917 || onTarget !== 1917 || offTarget.length !== 0) {
-  throw new Error(`cascade target mismatch (total ${st.length}, on ${onTarget}, off ${offTarget.length}) — ABORT`);
+  throw new Error(`cascade target mismatch (total ${st.length}, on ${onTarget}, off ${offTarget.length}) - ABORT`);
 }
 console.log(`cascade will remove exactly 1917 skill_tools; no other skill_tools exist.`);
 
@@ -75,14 +75,14 @@ const sys = allSkills.filter(s => s.skill_type === "system").length;
 const proc = allSkills.filter(s => s.skill_type === "process").length;
 console.log(`  system ${sys} (expect 133) + process ${proc} (expect 3)`);
 if (!(remainingPerModule.length === 5 && remainStarter && stAfter.length === 0 && allSkills.length === 136 && sys === 133 && proc === 3)) {
-  throw new Error("post-delete verification failed — ABORT before dropping skill_tools");
+  throw new Error("post-delete verification failed - ABORT before dropping skill_tools");
 }
 
 // 6. Drop the now-empty skill_tools entity (retired per the target model).
 console.log(`\ndropping skill_tools entity...`);
 await semCall("delete_entity", { table_name: "skill_tools" });
 const stillThere = await get(`/entities?table_name=eq.skill_tools&select=table_name`);
-if (stillThere.length !== 0) throw new Error(`skill_tools entity still present after drop — ${JSON.stringify(stillThere)}`);
+if (stillThere.length !== 0) throw new Error(`skill_tools entity still present after drop - ${JSON.stringify(stillThere)}`);
 console.log(`  + skill_tools entity dropped (GET /entities?table_name=eq.skill_tools -> [])`);
 
 console.log(`\nVERIFIED: 244 full-module skills deleted; only 5 starter per-module skills remain; skill_tools dropped.`);

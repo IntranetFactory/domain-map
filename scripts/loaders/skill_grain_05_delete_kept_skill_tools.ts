@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * skill_grain_05_delete_kept_skill_tools.ts — Step 4 of plans/per-domain-skill-restoration.md.
+ * skill_grain_05_delete_kept_skill_tools.ts - Step 4 of plans/per-domain-skill-restoration.md.
  *
  * Deletes the 624 skill_tools rows on KEPT system skills, AFTER Step 2 migrated the recoverable
  * ones to domain_module_tools:
@@ -41,7 +41,7 @@ const LIMIT = 200000;
 const snapPath = resolve(process.cwd(), "plans/snapshots/skill_tools.json");
 const snapshot = JSON.parse(readFileSync(snapPath, "utf8")) as any[];
 const snapIds = new Set<number>(snapshot.map(r => Number(r.id)));
-if (snapshot.length !== 2767) throw new Error(`snapshot has ${snapshot.length} rows, expected 2767 — ABORT`);
+if (snapshot.length !== 2767) throw new Error(`snapshot has ${snapshot.length} rows, expected 2767 - ABORT`);
 console.log(`snapshot loaded: ${snapshot.length} skill_tools rows (ids verified set of ${snapIds.size})`);
 
 // 2. Identify KEPT system skills (per-domain + starter).
@@ -64,12 +64,12 @@ const onStarters = target.filter(r => starterSkillIds.has(r.skill_id)).length;
 const on5557 = target.filter(r => r.skill_id === 55 || r.skill_id === 57).length;
 const onOrig61 = target.length - onStarters - on5557;
 console.log(`  breakdown: ${onOrig61} on original per-domain (expect 528) + ${on5557} on 55/57 (expect 10) + ${onStarters} on starters (expect 86)`);
-if (target.length !== 624) throw new Error(`expected 624 target rows, got ${target.length} — ABORT`);
-if (onStarters !== 86 || on5557 !== 10 || onOrig61 !== 528) throw new Error(`breakdown mismatch — ABORT`);
+if (target.length !== 624) throw new Error(`expected 624 target rows, got ${target.length} - ABORT`);
+if (onStarters !== 86 || on5557 !== 10 || onOrig61 !== 528) throw new Error(`breakdown mismatch - ABORT`);
 
 // 4. HARD INVARIANT: every target id must be in the committed snapshot.
 const missing = target.filter(r => !snapIds.has(Number(r.id)));
-if (missing.length > 0) throw new Error(`${missing.length} target rows NOT in snapshot — ABORT (ids: ${missing.slice(0,10).map(r=>r.id)})`);
+if (missing.length > 0) throw new Error(`${missing.length} target rows NOT in snapshot - ABORT (ids: ${missing.slice(0,10).map(r=>r.id)})`);
 console.log(`HARD INVARIANT OK: all ${target.length} target rows present in committed snapshot.`);
 
 // 5. Delete by id in batches.
@@ -89,5 +89,5 @@ const survivingKept = after.filter(r => keptIds.has(r.skill_id)).length;
 console.log(`\nskill_tools now: ${after.length} (expect 2143 = 2767 - 624)`);
 console.log(`skill_tools surviving on kept system skills: ${survivingKept} (expect 0)`);
 const ok = after.length === 2143 && survivingKept === 0;
-console.log(ok ? "VERIFIED: 624 deleted; no kept system skill retains any skill_tools." : "MISMATCH — investigate.");
+console.log(ok ? "VERIFIED: 624 deleted; no kept system skill retains any skill_tools." : "MISMATCH - investigate.");
 if (!ok) process.exit(1);

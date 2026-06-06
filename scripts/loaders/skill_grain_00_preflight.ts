@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * skill_grain_00_preflight.ts — read-only verification that the live catalog matches
+ * skill_grain_00_preflight.ts - read-only verification that the live catalog matches
  * the assumptions in plans/per-domain-skill-restoration.md §2 BEFORE any migration step runs.
  *
  * Writes NOTHING. Prints a PASS/FAIL line per assertion and exits non-zero if ANY fails.
@@ -25,7 +25,7 @@ let failures = 0;
 function check(label: string, cond: boolean, detail = ""): void {
   const tag = cond ? "PASS" : "FAIL";
   if (!cond) failures++;
-  console.log(`  [${tag}] ${label}${detail ? `  — ${detail}` : ""}`);
+  console.log(`  [${tag}] ${label}${detail ? `  - ${detail}` : ""}`);
 }
 
 const LIMIT = 200000;
@@ -165,5 +165,5 @@ check("domain_module_tools + process_tools do NOT exist yet", entCheck.length ==
 const nonNullActor = praci.filter(r => r.actor_skill_id != null).length;
 check("process_raci.actor_skill_id has 0 non-null", nonNullActor === 0, `${nonNullActor} non-null`);
 
-console.log(`\n${failures === 0 ? "ALL PREFLIGHT CHECKS PASSED" : `${failures} PREFLIGHT CHECK(S) FAILED — DO NOT PROCEED`}`);
+console.log(`\n${failures === 0 ? "ALL PREFLIGHT CHECKS PASSED" : `${failures} PREFLIGHT CHECK(S) FAILED - DO NOT PROCEED`}`);
 process.exit(failures === 0 ? 0 : 1);
