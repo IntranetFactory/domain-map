@@ -99,6 +99,47 @@ BCM, FINOPS, OP-RES, PRIV-MGMT, PRM, SECOPS, SOAR, THREAT-INTEL, TPRM, VULN-MGMT
 
 ## Out of scope for the modularization pass (tracked per-domain, not here)
 
-Every modularized domain still owes, after Phase M: per-module **system skills + tools** (Rule #17, F2/F3) and
-buyer-facing **catalog UX copy** (`catalog_tagline` / `catalog_description`, M8/A4, needs user-approved wording).
-These are recorded as `b1a` items in each domain's `state.yaml`, not in this file.
+Every modularized domain still owes, after Phase M: per-module **tool requirements** on
+`domain_module_tools` (Rule #17, F3; the domain's single domain-grain `system` skill derives its
+toolset from these) and buyer-facing **catalog UX copy** (`catalog_tagline` / `catalog_description`,
+M8/A4, needs user-approved wording). These are recorded as `b1a` items in each domain's `state.yaml`,
+not in this file.
+
+The earlier per-module-`system`-skill instruction (author one `<module_code>_agent` per module, then
+delete the domain-level skill) is SUPERSEDED by the per-domain-skill migration
+(plans/per-domain-skill-restoration.md): tools now live on modules via `domain_module_tools`, and each
+domain carries exactly one domain-grain `system` skill that derives its toolset (no `skill_tools`).
+Author tools onto modules, never onto skills.
+
+## Per-module tool re-authoring (post per-domain-skill migration, 2026-06-06)
+
+The per-domain-skill restoration (plans/per-domain-skill-restoration.md) retired the per-module
+`system` skills and moved tool requirements onto modules (`domain_module_tools`) and value-stream
+processes (`process_tools`). As part of it, the 528 domain-grain tool requirements stored on the 61
+per-domain `system` skills were PURGED (retained in `plans/snapshots/skill_tools.json`). The
+authoritative way tools reach modules is the per-module tool authoring a domain audit performs, so
+re-authoring these is standing audit-backlog work, tracked here.
+
+**57 domains owe per-module tool authoring** (their per-domain skill carried tool requirements that
+were purged; their modules carry none yet):
+
+- **45 zero-module domains** (modularize first, then author tools; already enrolled in the buckets above):
+  AIOPS, AP-AUTO, APIM, APP-PAAS, AUDIT, BANK-OPS, BI, CCAAS, CLIN-DEV, CONV-AI, DAM, DCG, DCIM, DEM,
+  DI, DISCOVERY, DQ, EAM, ESG, ESIGN, GRC, HC-PATIENT, IDP, INS-CLAIMS, IPAAS, KMS, KUBE-PLAT, LSD,
+  MDM, MFG-OPS, NPMD, OBS, OMS, PROC-MIN, PS-LIC, RET-STORE, RPA, S2P, SPM, SUP-LIFE, TELCO-BSS,
+  TEST-MGMT, UTIL-OPS, VIS-MGMT, VSDP
+- **12 un-authored multi-module domains** (have modules but no `domain_module_tools` yet; author tools
+  onto the existing modules):
+  AGENCY-MGMT, COMP-MGMT, CPQ, FLEET-MGMT, HAM, IWMS, MSP-PSA, PA, PAYROLL, SUB-MGMT, SWP, WFM
+
+The 4 already-authored full-module domains (72 CDP, 91 ECM, 130 RMM, 149 FLEET-MAINT) kept their
+per-module tools through the migration and are NOT enrolled.
+
+**5 generic `side_effect` links with no module counterpart** that per-module re-authoring will NOT
+auto-restore (domain-grain only; retained in the snapshot; re-add them explicitly when these already
+authored domains gain or revise tools):
+
+- domain 72 (CDP): `send_email`
+- domain 130 (RMM): `send_email`, `post_chat_message`
+- domain 149 (FLEET-MAINT): `send_email`, `sign_document`
+- domain 91 (ECM): none
