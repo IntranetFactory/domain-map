@@ -534,3 +534,16 @@ Applied the documented B10b derivation (the prompt directs B9/B10b for handoffs)
 - handoffs source_domain_id=65 with NULL source_domain_module_id: 0 (was 16).
 - handoffs target_domain_id=65 with non-NULL target_domain_module_id: 8 (was 0); 89 remain NULL (no-candidate, reported).
 - handoff_processes coverage on the 113 ERP-FIN handoffs: 110 distinct tagged; provenance agent_curated 97 / discovery_substring 11 / discovery_override 2.
+
+---
+
+## 2026-06-06 - Per-domain-skill restoration (SUPERSEDED 2026-06-06: per-domain-skill restoration)
+
+The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
+Any open item that says "author/split a per-module system skill", "one system skill per
+domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELLED.
+New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
+domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
+DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
+cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
+re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.

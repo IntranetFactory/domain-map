@@ -651,3 +651,16 @@ Pass 4 was gated through every prior audit (REV-INTEL had no modules, so every b
 **SALES-ENG (edge weight 2), SALES-PERF (edge weight 1):** one-line summaries; pairwise blocked because each has zero domain_modules. Handoffs 476/477 (SALES-ENG->REV-INTEL) carry source_domain_module_id=NULL; 208 (REV-INTEL->SALES-PERF) carries target_domain_module_id=NULL. REV-INTEL's side of all three is set. Tracked as b1b N2 / N3; resolve when those domains modularize.
 
 Net: REV-INTEL's 4-pass Validate is complete. No REV-INTEL-side fixes remain on any boundary.
+
+---
+
+## 2026-06-06 - Per-domain-skill restoration (SUPERSEDED 2026-06-06: per-domain-skill restoration)
+
+The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
+Any open item that says "author/split a per-module system skill", "one system skill per
+domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELLED.
+New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
+domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
+DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
+cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
+re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.

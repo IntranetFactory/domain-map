@@ -411,3 +411,15 @@ Carry-over from 2026-05-30, no fresh enumeration on this pass (single-pass struc
 
 CLM structural Validate b1 audit clean on the in-scope agent surface. All prior decisions (D1-D8) verified against live state. Outstanding work is judgment-routed (Bucket 2) and research-routed (Bucket 3); both queues are stable across the 2026-05-30 and 2026-05-31 passes. `next_action_by` rolls forward to `user` because b1a is empty and b2 is non-empty.
 
+---
+
+## 2026-06-06 - Per-domain-skill restoration (SUPERSEDED 2026-06-06: per-domain-skill restoration)
+
+The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
+Any open item that says "author/split a per-module system skill", "one system skill per
+domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELLED.
+New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
+domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
+DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
+cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
+re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.

@@ -398,3 +398,16 @@ None. Both b1a items fully resolved. The b1b / b2 / b3 items were context-only a
 ### next_action_by
 
 Recomputed: b1a now empty, b2 non-empty (B2-S2..S7 user decisions) -> `next_action_by: user`.
+
+---
+
+## 2026-06-06 - Per-domain-skill restoration (SUPERSEDED 2026-06-06: per-domain-skill restoration)
+
+The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
+Any open item that says "author/split a per-module system skill", "one system skill per
+domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELLED.
+New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
+domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
+DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
+cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
+re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.

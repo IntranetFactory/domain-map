@@ -292,3 +292,16 @@ No new structural pollution, no new findings, no `notes` columns written, no `re
 - **Bucket 1 (10 items):** Reply with `all`, list (e.g. `S1, S2, S4`), or `skip`. Note B1-S1 is the gating fix for 5 of the 10.
 - **Bucket 2 (4 items):** Reply per-item: B2-S1 a/b/c, B2-S2 a/b/c, B2-S3 yes/no per flag, B2-S4 a/b/c.
 - **Bucket 3 (4 items):** Vet via Phase 0 vendor research or eyeball-mode? If eyeball, name which candidates ring true (per B2-S4).
+
+---
+
+## 2026-06-06 - Per-domain-skill restoration (SUPERSEDED 2026-06-06: per-domain-skill restoration)
+
+The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
+Any open item that says "author/split a per-module system skill", "one system skill per
+domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELLED.
+New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
+domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
+DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
+cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
+re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.

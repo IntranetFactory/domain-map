@@ -504,3 +504,16 @@ None of the 5 b1a items were skipped. (b1b / b2 / b3 left untouched, out of scop
 - B10b outbound: `/handoffs?source_domain_id=eq.146&source_domain_module_id=is.null` -> 0 rows.
 - B10b inbound: `/handoffs?target_domain_id=eq.146&target_domain_module_id=is.null` -> 0 rows.
 - M8: `/domain_modules?id=in.(279,280,281)` -> all 3 carry non-empty `catalog_tagline` + `catalog_description`, record_status `new`.
+
+---
+
+## 2026-06-06 - Per-domain-skill restoration (SUPERSEDED 2026-06-06: per-domain-skill restoration)
+
+The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
+Any open item that says "author/split a per-module system skill", "one system skill per
+domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELLED.
+New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
+domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
+DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
+cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
+re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.

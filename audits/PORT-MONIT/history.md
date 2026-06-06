@@ -326,3 +326,15 @@ Unchanged from 2026-05-30 audit:
 
 None during this run. Two column-name probe errors against the catalog: `data_object_relationships.verb` does not exist, `trigger_events.source_data_object_id` does not exist (correct column is `data_object_id`), `permissions.permission_code` does not exist, `business_function_capabilities.responsibility` does not exist, `business_functions.business_function_code` does not exist, `tools.domain_module_id` does not exist, `role_modules.assignment_strength` does not exist. None of these blocked the audit; recovered by re-issuing the read with correct columns. Not JWT issues.
 
+---
+
+## 2026-06-06 - Per-domain-skill restoration (SUPERSEDED 2026-06-06: per-domain-skill restoration)
+
+The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
+Any open item that says "author/split a per-module system skill", "one system skill per
+domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELLED.
+New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
+domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
+DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
+cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
+re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.

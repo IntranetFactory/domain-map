@@ -511,3 +511,16 @@ Fields written (buyer voice: workflow + value; no vendor/product names; no em-da
 - Removed B1A-M8-MODULE-UX from `state.yaml` `b1a` (resolved by writing the fields; the stale `user_decision` block was moot for empty fields under revised Rule #20). `b1a` is now empty.
 - Recomputed `next_action_by`: b1a empty -> b2 non-empty -> `user`. (Precedence: agent if b1a non-empty > user if b2 > research if b3 > blocked if b1b.) Unchanged at `user`, now justified by open `b2` items rather than the (removed) gated `b1a` item.
 - `last_audit`: "2026-06-06".
+
+---
+
+## 2026-06-06 - Per-domain-skill restoration (SUPERSEDED 2026-06-06: per-domain-skill restoration)
+
+The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
+Any open item that says "author/split a per-module system skill", "one system skill per
+domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELLED.
+New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
+domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
+DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
+cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
+re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.

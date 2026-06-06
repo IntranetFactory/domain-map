@@ -378,3 +378,16 @@ DELETE legacy domain-level system skill 99 (`real-est-system`, `domain_id=141`, 
 
 - Handoff 870 target module FK: user design decision (consumer DMDO on a REAL-EST module).
 - All b1b items (B1B-S2 catalog UX, B1B-S5 aliases, B1B-S7 pattern flags, B1B-S8 business_function_domains, B1B-S9 H1 cleanup): each carries a `blocked_by: user_decision`; not executed (out of scope for this b1a run). No empty catalog UX field appeared in a b1a item, so revised Rule #20 backfill did not apply this run.
+
+---
+
+## 2026-06-06 - Per-domain-skill restoration (SUPERSEDED 2026-06-06: per-domain-skill restoration)
+
+The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
+Any open item that says "author/split a per-module system skill", "one system skill per
+domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELLED.
+New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
+domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
+DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
+cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
+re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.

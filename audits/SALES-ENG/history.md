@@ -428,3 +428,16 @@ To revert: PATCH each of the 8 fields back to `""` on the rows above.
 Copy is buyer-voice (workflow + value, "what the buyer can do"), distinct from the analyst-voice `description` column on each row. No vendor/product names, no handoff/parent-domain/taxonomy enumeration, no em-dashes, American English. `record_status` was OMITTED on every PATCH (rows stay `new`); no `notes` column touched. All writes via the `semantius` CLI; no MCP tools (Rule #0). No JWT-audience errors.
 
 **Loader:** `.tmp_deploy/sales_eng_b1a_catalog_ux_2026_06_06.ts` (gitignored, one-off). Idempotent: re-reads live state per field; once a field is non-empty the empty-guard skips it. Invoked from project root `c:/dev/domain-map` per Rule #6. UI spot-check: https://tests.semantius.app/domain_map/domains , https://tests.semantius.app/domain_map/domain_modules .
+
+---
+
+## 2026-06-06 - Per-domain-skill restoration (SUPERSEDED 2026-06-06: per-domain-skill restoration)
+
+The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
+Any open item that says "author/split a per-module system skill", "one system skill per
+domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELLED.
+New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
+domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
+DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
+cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
+re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.

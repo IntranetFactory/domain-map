@@ -375,3 +375,16 @@ Executing only the head of the action (author the 3 module-scoped skills + redis
 State verified unchanged: skill 60 (`fleet-mgmt-system`, domain_id=147, domain_module_id=NULL) still present with all 7 `skill_tools` rows (548-554) intact; no module-scoped system skills exist on 204/205/206. `notify_person` (tool id 913, coverage_tier=platform) confirmed present in the catalog for when the substitution can proceed.
 
 Dependent b1b items remain blocked behind this: B1B-LEGACY-SKILL (`prerequisite_entity: B1A-SYSTEM-SKILLS`) and B1B-CHANNEL-PRIMITIVE (`depends_on: B1B-LEGACY-SKILL`). No writes made for any of them.
+
+---
+
+## 2026-06-06 - Per-domain-skill restoration (SUPERSEDED 2026-06-06: per-domain-skill restoration)
+
+The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
+Any open item that says "author/split a per-module system skill", "one system skill per
+domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELLED.
+New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
+domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
+DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
+cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
+re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.

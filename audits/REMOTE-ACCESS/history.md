@@ -521,3 +521,16 @@ Re-query of live state showed the three events already carry the proposed catego
 
 - **B1A-B6** - SKIPPED. The `action` text gates the INSERT on a user pick of cardinality (1:0..1 single recording per session vs 1:N segmented recordings), confirmed by `extra_open_question`. Master-data cardinality is a judgment call beyond the action text (non-negotiable rule #12); kept open, re-pointed at the same masters. The 238<->239 direct edge does not yet exist (the only edges on 238/239 are `users` (748) actor edges 1613-1616).
 - **B1A-B11** - SKIPPED. The `action` text requires explicit per-row user confirmation of the exact alias strings before write (Rule #15: alias tuple choice is user-approval-only). Kept open. Zero aliases on 238/239 confirmed.
+
+---
+
+## 2026-06-06 - Per-domain-skill restoration (SUPERSEDED 2026-06-06: per-domain-skill restoration)
+
+The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
+Any open item that says "author/split a per-module system skill", "one system skill per
+domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELLED.
+New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
+domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
+DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
+cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
+re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.

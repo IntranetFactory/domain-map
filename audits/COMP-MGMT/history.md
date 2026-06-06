@@ -325,3 +325,16 @@ Carries forward from 2026-05-30 verbatim; no fresh Phase 0 research in this pass
 - B1A-S8 expansion: schedule b1 audits on PA, HCM, EMP-EXP, ERP-FIN to declare consumer DMDOs on `workforce_segments`, `merit_recommendations`, `compensation_plans`, `compensation_statements`, `equity_grants`, `earning_codes`.
 - Cross-domain `data_object_relationships` missing on the inbound side, owed by other domains' B8 outbound passes (12 inbound rows imply matching source-side relationships on HCM, ATS, TALENT-MGMT, SWP, PA).
 - B5 integrity: clean from COMP-MGMT side.
+
+---
+
+## 2026-06-06 - Per-domain-skill restoration (SUPERSEDED 2026-06-06: per-domain-skill restoration)
+
+The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
+Any open item that says "author/split a per-module system skill", "one system skill per
+domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELLED.
+New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
+domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
+DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
+cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
+re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
