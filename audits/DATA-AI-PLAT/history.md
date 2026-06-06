@@ -367,3 +367,52 @@ Module ids assigned by the DB: LAKEHOUSE 223, SEMANTIC-CATALOG 224, ML 225, AI-A
 - **Lifecycle states (B2-S2).** 0 lifecycle states on the 9 masters; not authored this pass (out of scope). Module ids now available to anchor `data_object_lifecycle_states.domain_module_id` when authored.
 - **Aliases (B2-S3), regulations (B3-REG-CANDIDATES), entity candidates (B3-ENT-*), MLOPS/agents domain-boundary calls (B3-MOD-*).** All carried unchanged.
 - **APQC tagging remainder (B1A-H1R).** Carried unchanged; independent of modularization.
+
+## 2026-06-05 - b1a execution
+
+Executed the agent-solvable `b1a` items against the live `domain_map` module for DATA-AI-PLAT (domain 129). All inserts omit `record_status` (DB default `new`, Rule #1/#4); no row stamped approved/pending/rejected. No `notes` column written (Rule #15). No em-dashes.
+
+### B1A-SYSTEM-SKILLS - DONE (Phase S only); Phase P moved to b1b (blocked)
+
+Phase S (per-module system skills, Rule #17) authored. Loader `.tmp_deploy/data_ai_plat_phase_s_2026_06_05.ts`.
+
+- **PATCH `skills` id 45** (prior values: `skill_name='data-ai-plat-system'`, `domain_module_id=NULL`, description "System skill for Data and AI Platform - runtime workflows over the domain's master data, derived from masters + cross-domain handoffs."). Retargeted to `domain_module_id=224` (SEMANTIC-CATALOG), renamed `data_ai_plat_semantic_catalog_agent`, description updated to the module scope.
+- **INSERT 3 `skills` rows** (`skill_type='system'`, `domain_id=129`): id 271 `data_ai_plat_lakehouse_agent` (module 223), id 272 `data_ai_plat_ml_agent` (module 225), id 273 `data_ai_plat_ai_agents_agent` (module 226).
+- **PATCH 5 `skill_tools` rows** re-pointed `skill_id` from 45 to the owning module's skill (no tools created or deleted; the 9 existing query tools redistributed): 444 (query_lakehouse_tables) -> 271; 445 (query_data_pipelines) -> 271; 446 (query_ml_models) -> 272; 447 (query_feature_sets) -> 272; 449 (query_ai_agents) -> 273. Skill 45 retains 448/450/451/452 (semantic_metrics, data_products, ontologies, knowledge_graph_entities).
+- Result: F1 clean (no legacy domain-level system skill), F2 = exactly one system skill per module (223->271, 224->45, 225->272, 226->273), F3 = each skill >=1 skill_tools, F4 = every tool `query` with a valid `data_object_id`.
+- **Phase P NOT executed (blocked).** The action's "then Phase P (personas, role_modules, process_raci, lifecycle.process_id)" cannot run: `process_raci` gated assignments and `data_object_lifecycle_states.process_id` both require lifecycle states, and lifecycle authoring is blocked by user_decision B2-LIFECYCLE-SHAPE (per B1B-S2-LIFECYCLE). Also, all 9 masters are still `entity_type='unclassified'` (B13), which gates whether lifecycle is even required. Moved the Phase P residual to b1b under B1B-S-PHASE-P.
+
+### B1A-CATALOG-UX - DONE
+
+Loader `.tmp_deploy/data_ai_plat_catalog_ux_2026_06_05.ts`. Empty-guard applied per field; all 4 modules had empty `catalog_tagline` and `catalog_description`, so all 8 fields written (buyer voice, no vendor names, no em-dashes). No non-empty value overwritten.
+
+- **PATCH `domain_modules`** 223, 224, 225, 226: `catalog_tagline` + `catalog_description` written into the empty fields. Prior value on every field = `''`. `record_status` untouched (carries the review signal).
+
+### B1A-H1R - DONE (5 tagged + 1 replace; 4 deferred per action)
+
+Loader `.tmp_deploy/data_ai_plat_h1r_2026_06_05.ts`. Per-handoff PCF lookup at fix time; all new rows `proposal_source='agent_curated'`, `role='implements'`, `record_status` omitted (`new`).
+
+- **INSERT 5 `handoff_processes`**: 155 (golden_record.synced) -> process 771 "Maintain master data" (10252, L4); 156 (quality_check.failed) -> 1212 "Monitor and control business information" (20780, L4); 221 (ontology.published) -> 275 "Define and maintain business information architecture" (20770, L3); 693 (metric_materialization.refreshed) -> 1213 "Maintain business information feeds and repositories" (20781, L4); 697 (kgp_ontology.imported) -> 1209 "Maintain and evolve enterprise data and information architecture" (20775, L4).
+- **REPLACE on handoff 219** (optional, taken): DELETED prior weak row id 125 (`proposal_source='discovery_substring'`, `process_id=505` "Establish baseline metrics" 19954 L4, `record_status='new'`, `role='implements'`); INSERTED agent_curated row 219 -> process 1203 "Establish data, information, and analytic governance" (20768, L4). [Prior row snapshot recorded here for reversibility.]
+- **DEFERRED, no tag** (per action text): 683 (ml_model.deployed), 684 (feature_set.staleness_breached), 685 (feature_set.published) - modern-AI events with no clean cross-industry PCF anchor, route to Discover Pass 3 custom processes; 715 (dq_dimension.threshold_breached) - DQ owns the L3 anchor, defer to DQ audit's authoring. Carried as B3-H1R-DEFERRED.
+
+### B1A-S2-OUTBOUND-FK - DONE
+
+Loader `.tmp_deploy/data_ai_plat_handoff_fk_2026_06_05.ts`. Prior value on every patched column = NULL. Mapping = trigger_event's data_object -> owning module (B10b source rule), which matches the action text.
+
+- **PATCH `handoffs.source_domain_module_id`** on 11 outbound: 151->224, 152->224, 153->226, 154->223, 155->224, 156->223, 682->225, 683->225, 684->225, 685->225, 686->225. Verified: 0 outbound DATA-AI-PLAT handoffs remain NULL on source_domain_module_id.
+
+### B1A-S3-INBOUND-FK - DONE for 4 of 9; 5 SKIPPED (B10b no-candidate)
+
+Same loader. `target_domain_module_id` = module that holds the payload data_object with a DMDO role (B10b target rule).
+
+- **PATCH `handoffs.target_domain_module_id`** on 4 inbound whose payload is declared on a DATA-AI-PLAT module: 157 (lakehouse_tables, master on 223) -> 223; 158 (lakehouse_tables) -> 223; 219 (metric_definitions, consumer on 224) -> 224; 221 (ontologies, master on 224) -> 224. Prior value = NULL.
+- **SKIPPED 5 inbound** - payload has NO `domain_module_data_objects` (and no legacy `domain_data_objects`) role on any DATA-AI-PLAT module, so B10b yields "no candidate"; patching would point the FK at a module that declares no role on the payload. These need a `consumer` DMDO row authored first (Phase B), which is a modeling decision outside this b1a action: 693 (metric_materializations 709), 697 (kgp_ontologies 742), 715 (dq_dimensions 312), 725 (pipeline_runs 434), 731 (schema_registries 438). Carried as B3-INBOUND-DMDO.
+
+### Verification (re-queried after writes)
+
+- `skills` system rows for domain 129: 4 (one per module 223/224/225/226). F2 satisfied.
+- `skill_tools`: 9 rows redistributed across the 4 skills (2+4+2+1); no orphan.
+- `handoffs.source_domain_module_id` NULL on DATA-AI-PLAT outbound: 0.
+- `handoff_processes` on 155/156/219/221/693/697: all present, agent_curated.
+- `domain_modules` 223/224/225/226 catalog_tagline/catalog_description: all non-empty.

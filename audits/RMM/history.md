@@ -445,3 +445,66 @@ The module build unblocks several previously-blocked items now re-homed as agent
 ### JWT errors
 
 None.
+
+
+## 2026-06-06 - b1a execution
+
+Executed the agent-solvable b1a items for RMM (domain 130, modules 311-314) via loader c:/tmp/rmm_b1a_exec.ts. All writes via the semantius CLI on the adenin tenant (api_baseurl https://adenin.semantius.ai). record_status omitted on every insert (DB default new).
+
+### B1A-HANDOFF-SRC-MODID (DONE)
+
+PATCHed source_domain_module_id on 11 outbound handoffs (prior value NULL on every row): 140->312, 141->312, 142->313, 143->313, 144->311, 145->311, 146->311, 147->311, 159->312, 644->314, 645->314. Verify: /handoffs?source_domain_id=eq.130&source_domain_module_id=is.null returns [].
+
+### B1A-HANDOFF-TGT-MODID (DONE)
+
+PATCHed handoff 150 target_domain_module_id NULL -> 311 (RMM-AGENT-MGMT masters rmm_agents). Verify: /handoffs?target_domain_id=eq.130&target_domain_module_id=is.null returns [].
+
+### B1A-H1 APQC tagging (DONE)
+
+handoff_processes INSERTs (proposal_source=agent_curated, role=implements, record_status=new):
+- 140 -> process 1299 (APQC 20903 Triage IT service delivery incidents, L4)
+- 144 -> process 1312 (APQC 20918 Maintain IT asset records, L4)
+- 145 -> process 1312 (APQC 20918 Maintain IT asset records, L4)
+- 159 -> process 927 (APQC 10395 Resolve customer problems, requests, and inquiries, L4)
+- 644 -> process 1299 (APQC 20903 Triage IT service delivery incidents, L4)
+
+REPLACE on handoff 150: DELETED prior handoff_processes row (id 98, process_id 10 = APQC 19207 Acquire, Construct, and Manage Assets, L1 catch-all, proposal_source discovery_substring); INSERTed tighter process 355 (APQC 19258 Decommission productive assets, L3; agent_curated, new). Prior-row snapshot: {id:98, handoff_id:150, process_id:10, proposal_source:discovery_substring, record_status:new, role:implements}.
+
+### B1A-LIFECYCLE-STATES (DONE, partial scope)
+
+Prereq classification (B13): PATCHed data_objects.entity_type from unclassified -> operational_workflow on 223 (rmm_agents) and 224 (patch_jobs). Prior value: unclassified on both. Required so the lifecycle rows are valid under Rule #12.
+
+Lifecycle states INSERTed (data_object_lifecycle_states):
+- rmm_agents (223, module 311): pending (initial), installed (gate, override install_agent), online, offline, uninstalled (terminal, gate, override uninstall_agent). orders 10/20/30/40/50.
+- patch_jobs (224, module 313): scheduled (initial, gate, override schedule_patch_job), running, succeeded (terminal), failed (terminal), rolled_back (terminal, gate, override rollback_patch_job). orders 10/20/30/40/50.
+
+SKIPPED automation_scripts (225): blocked_by B2-S6 (config-shape exemption user_decision). NOT authored: monitoring_alerts (85) / monitoring_policies (86) lifecycle, owned by ITOM-INFRA-MON (267) as canonical master (embedded_master in RMM).
+
+### B1A-SYSTEM-SKILLS Phase S (DONE)
+
+4 system skills (skills, skill_type=system, domain_id=130): rmm_agent_mgmt_agent (id 308, module 311), rmm_monitoring_agent (id 309, module 312), rmm_patch_mgmt_agent (id 310, module 313), rmm_automation_agent (id 311, module 314).
+
+13 new tools INSERTed (ids 1645-1657): update_rmm_agent(mutate,223), install_agent(side_effect), uninstall_agent(side_effect), suppress_monitoring_alert(mutate,85), evaluate_threshold(compute), compute_anomaly_score(compute), schedule_patch_job(mutate,224), rollback_patch_job(mutate,224), execute_patch_job(side_effect), list_available_patches(fetch), create_automation_script(mutate,225), approve_automation_script(mutate,225), execute_script_on_endpoint(side_effect). F4 invariant verified (mutate=>data_object_id set; side_effect/compute/fetch=>null).
+
+Reused existing tool rows (no dup): query_rmm_agents(680), query_alerts(542), query_monitoring_policies(543), query_patch_jobs(681), query_automation_scripts(682), acknowledge_monitoring_alert(1628), resolve_monitoring_alert(1629), create_monitoring_policy(1630), activate_monitoring_policy(1631), notify_person(913).
+
+26 skill_tools rows: 308=5, 309=10, 310=6, 311=5. notify_person (abstraction) used for notifications per channel-vs-capability rule; no channel primitives linked.
+
+### B1A-INTRA-HANDOFFS (DONE)
+
+5 intra-domain handoffs (source_domain_id=target_domain_id=130, integration_pattern=lifecycle_progression, friction_level=low), ids 1356-1360:
+- 1356: 312->313 auto-patch (payload patch_jobs 224, te 6 monitoring_alert.threshold_breached)
+- 1357: 312->314 remediation-trigger (payload automation_scripts 225, te 6)
+- 1358: 311->312 install->policy-enroll (payload monitoring_policies 86, te null)
+- 1359: 311->313 install->patch-scope (payload patch_jobs 224, te null)
+- 1360: 313->314 patch-failure->remediation (payload automation_scripts 225, te null)
+
+te null where the lifecycle-derived event is not yet in catalog (rmm_agent.installed, patch_job.failed) - those events are B1B-S3, blocked on lifecycle landing; the handoff rows stand without a trigger_event_id until then.
+
+### B1A-CATALOG-UX (DONE)
+
+Wrote catalog_tagline + catalog_description (buyer voice, no vendor names, no em-dashes) into the EMPTY fields per Rule #20 empty-guard, on domain 130 and modules 311, 312, 313, 314. All 5 rows had both fields empty before; all 10 fields written. record_status carries the review signal.
+
+### JWT errors
+
+None.

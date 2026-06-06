@@ -403,3 +403,68 @@ Note: the prior B1A-M1 / B1-S1 spec mentioned cross-module embedded_master shell
 
 Carried as b1a (now agent-actionable since modules exist): B1A-B12 (lifecycle states + module attribution), B1A-B10b (handoff module-FK backfill), B1A-F2 (3 module-anchored system skills + tools per Rule #17), B1A-F1 (legacy skill 83 delete, gated on F2), B1A-EMBED-SHELLS (cross-module embedded_master / consumer shell rows). Carried independent b1a: B1A-A4 (catalog UX, gated on B2-CATALOG-UX), B1A-M8 (per-module catalog UX), B1A-B6 (intra-domain master-to-master relationships), B1A-B11 (aliases), B1A-B8 (cross-domain relationships), B1A-H1 (APQC tagging). Bucket 2 judgment items (B2-PATTERN-FLAGS, B2-CATALOG-UX, B2-NAMING-ARBITRATION, B2-LOOKER-RECLASSIFICATION, B2-DCG-INBOUND-TAG) and Bucket 3 speculative masters (B3-*) unchanged.
 
+## 2026-06-06 - b1a execution
+
+Executed the agent-solvable b1a list against the live module. Loader: [c:/tmp/load_metrics_layer_b1a_2026_06_06.ts](file:///c:/tmp/load_metrics_layer_b1a_2026_06_06.ts) (gitignored one-off, idempotent, chunked array-body POST via stdin). Re-ran clean. Per item:
+
+### B1A-B12 - lifecycle states (DONE)
+
+- **Prerequisite write:** PATCHed `data_objects.entity_type` from `unclassified` to `operational_workflow` on all 5 masters (252, 253, 709, 710, 711). Prior value on each: `entity_type='unclassified'`. Rationale: Rule #12 makes a classified `entity_type` the precondition for coherent lifecycle authoring; all 5 carry ordered state machines per the finding, so `operational_workflow` is the deterministic class (710 query_lineage_records was flagged "borderline config-shape" but its captured/processed/archived progression is an ordered workflow with a terminal state, so classified the same way to keep the lifecycle write coherent; if the reviewer prefers `operational_record` for 710 the lifecycle rows remain valid since `operational_record` permits lifecycle).
+- **`data_object_lifecycle_states`:** 21 rows inserted. 252 (-> module 275): draft(initial) / in_review / certified(gate, verb certify) / deprecated(gate, verb deprecate) / retired(terminal, gate, verb retire). 253 (-> 275): draft(initial) / published(gate, verb publish) / deprecated(gate) / retired(terminal, gate). 709 (-> 276): scheduled(initial) / refreshing / refreshed / stale / failed(terminal), no gates. 710 (-> 276): captured(initial) / processed / archived(terminal), no gates. 711 (-> 277): draft(initial) / active(gate, verb activate) / superseded(gate, verb supersede) / retired(terminal, gate). `requires_permission=true` on the certify/deprecate/publish/retire/activate/supersede transitions per the finding; `domain_module_id` set 252/253->275, 709/710->276, 711->277. `notes` omitted (Rule #15); `record_status` omitted (default new).
+
+### B1A-F2 - module-anchored system skills + tools + skill_tools (DONE)
+
+- **`tools`:** 15 new rows created (5 query tools 109/582/828/829/830 reused). New: create_metric_definition, certify_metric_definition, deprecate_metric_definition (mutate, do=252, platform); publish_dimensional_model (mutate, do=253, platform); validate_metric_compilation, translate_question_to_metric (compute, do=null, external); schedule_materialization_refresh (mutate, do=709, platform), capture_query_lineage (mutate, do=710, platform), refresh_materialization_now (side_effect, null, external), analyze_query_cost (compute, null, external); create_metric_access_policy, activate_metric_access_policy (mutate, do=711, platform), deliver_metric_query (compute, null, external), serve_metric_via_sql_endpoint, serve_metric_via_rest_endpoint (side_effect, null, external). All checked against `/tools?tool_name=in.(...)` before insert (none pre-existed); query/mutate coverage_tier=platform, compute/side_effect=external. operation_kind<->data_object_id invariant holds on every row (F4).
+- **`skills`:** 3 system skills created. id 348 `metrics_layer_definitions_agent` (domain_module_id 275), 349 `metrics_layer_compute_agent` (276), 350 `metrics_layer_delivery_agent` (277). Live `domain_required_when_skill_type_is_system` constraint still requires `domain_id`, so each row carries `domain_id=137` AND `domain_module_id` (module-anchored; distinguished from legacy by non-null `domain_module_id`).
+- **`skill_tools`:** 20 rows. 348 needs 8 (7 required + 1 optional: translate_question_to_metric). 349 needs 6 (5 required + 1 optional: analyze_query_cost). 350 needs 6 (5 required + 1 optional: serve_metric_via_rest_endpoint). `notes` omitted (Rule #15).
+
+### B1A-F1 - delete legacy skill 83 (DONE)
+
+- DELETE `/skills?id=eq.83`. Cascade removed its 5 skill_tools rows. **Prior values snapshot:** skill 83 = `{skill_name: metrics-layer-system, skill_type: system, domain_id: 137, domain_module_id: null}`; its 5 skill_tools were tool_id 109 (query_metric_definitions), 582 (query_dimensional_models), 828 (query_metric_materializations), 829 (query_query_lineage_records), 830 (query_metric_access_policies), all requirement_level=required. The 5 query tools themselves were preserved (re-linked to the new module skills); only the skill row + its junction rows were deleted.
+
+### B1A-B10b - handoff module-FK backfill (DONE)
+
+- PATCHed `source_domain_module_id` on the 7 outbound handoffs (prior value NULL on each): 218->275, 219->275, 692->275, 693->276, 694->276, 695->277, 696->276 (derived from each handoff's `trigger_events.data_object_id` -> mastering module). PATCHed `target_domain_module_id` on inbound handoff 220 -> 275 (prior NULL; payload metric_definitions mastered by 275). Note: 219's `target_domain_module_id` was already 224 (left untouched). The target side of the 6 outbound handoffs (218/692/693/694/695/696) remains NULL by design - that is the target domains' (BI/DATA-AI-PLAT/DCG) B10b, out of METRICS-LAYER scope.
+
+### B1A-B6 - intra-domain relationships (DONE)
+
+- 6 `data_object_relationships` inserted: 252 belongs to / contains 253 (one_to_many, reference, owner_side=target); 709 precomputes / is precomputed by 252 (one_to_many, reference, is_required=true, owner_side=target); 710 traces / is traced by 252 and 253 (many_to_many, reference, owner_side=target); 711 governs / is governed by 252 and 253 (many_to_many, reference, owner_side=source). `data_object_relationships` has no `description` column, so the verb pair carries the semantics; `notes` omitted (Rule #15).
+
+### B1A-B11 - aliases (DONE)
+
+- 20 `data_object_aliases` (alias_type synonym): 252 = Measure / Metric / KPI / Calculation; 253 = Cube / Semantic Model / Logical Data Model / Universe / Explore; 709 = Pre-Aggregation / Aggregate / Materialized View / Cache; 710 = Query Log / Audit Record / Query History; 711 = Row-Level Security Policy / Cell-Level Policy / Access Grant / Data Permission. Within the 18-25 target.
+
+### B1A-H1 - APQC handoff tagging (DONE, partial per finding)
+
+- Inserted 1 `handoff_processes` row: handoff 219 -> process 277 "Manage business information" (proposal_source agent_curated, record_status new, role implements), matching handoff 218's tag per the finding. 219 already carried process 1203 (agent_curated) from a prior pass; the new row coexists by the (handoff_id, process_id) key. 220 left untouched (its `discovery_substring` false-positive on process 505 is the B2-DCG-INBOUND-TAG user decision; Rule #1 forbids the flip). 693 already carries process 1213 (agent_curated) since the 2026-05-31 pass; no action. 695 carries zero tags and is a Discover Pass 3 candidate per the finding (no clean PCF for a policy-change broadcast); deferred, no write.
+
+### B1A-A4 / B1A-M8 - catalog UX (DONE, written per revised Rule #20)
+
+- Empty-guard applied per field (write only when empty; never overwrite). All targets were empty. Wrote `catalog_tagline` + `catalog_description` on `domains.id=137` and on modules 275 / 276 / 277. Buyer voice, no vendor/product names, no em-dashes, American English. The row's `record_status` carries the review signal (reviewed in the catalog UI, not parked in this file per the revised Rule #20). Domain tagline: "Define your business metrics once and serve them to every dashboard, agent, and app."
+
+### B1A-EMBED-SHELLS - SKIPPED (judgment, deferred)
+
+- The action explicitly requires "Confirm the exact shell set against the current emitter behavior before writing" and the finding labels the shells "a design addition, not a reuse." Authoring `embedded_master`/`consumer` DMDO shells is a load-bearing structural design decision conditioned on emitter-behavior confirmation, which is beyond the deterministic action text (task rule: skip ambiguous items needing judgment on master data). Skipped and carried. Note for the follow-up: the new B6 edge `metric_materializations precomputes metric_definitions` (is_required=true) crosses module boundaries (709 on 276 -> 252 on 275), so the spec'd `252 embedded_master on 276` shell would resolve a real M9 self-containment finding; the 252-on-277 and 711-consumer-on-275/276 shells remain design choices for the emitter-confirmation pass.
+
+### Verification (live, post-load)
+
+- `/data_object_lifecycle_states?data_object_id=in.(252,253,709,710,711)` -> 21 rows.
+- `/skills?domain_module_id=in.(275,276,277)&skill_type=eq.system` -> 3 rows (348/275, 349/276, 350/277); `/skills?id=eq.83` -> []; `/skill_tools?skill_id=eq.83` -> [].
+- `/skill_tools?skill_id=in.(348,349,350)` -> 20 rows; operation_kind<->data_object_id invariant holds.
+- Handoffs 218/219/692/693/694/695/696 source_domain_module_id set; 220 target_domain_module_id=275.
+- `/data_object_relationships` intra-domain (252,253,709,710,711) -> 6 master-to-master rows.
+- `/data_object_aliases` for the 5 masters -> 20 rows.
+- `/handoff_processes?handoff_id=eq.219` -> 2 rows (1203, 277).
+- Domain 137 + modules 275/276/277 catalog_tagline + catalog_description non-empty.
+- `notes` omitted on every insert (Rule #15); `record_status` omitted on every insert (default new, Rule #1).
+
+UI links: https://tests.semantius.app/domain_map/skills , https://tests.semantius.app/domain_map/data_object_lifecycle_states , https://tests.semantius.app/domain_map/data_object_relationships , https://tests.semantius.app/domain_map/data_object_aliases , https://tests.semantius.app/domain_map/handoffs
+
+### Still open after this pass
+
+- **b1a:** B1A-EMBED-SHELLS (skipped, judgment/emitter-confirmation).
+- **b1b:** B1B-B8 (cross-domain relationships, blocked on target masters in BI/DATA-AI-PLAT/DCG).
+- **b2:** B2-PATTERN-FLAGS, B2-CATALOG-UX (the wording-approval question is now moot for the written fields under revised Rule #20; pattern flags remain), B2-NAMING-ARBITRATION, B2-LOOKER-RECLASSIFICATION, B2-DCG-INBOUND-TAG.
+- **b3:** B3-* speculative masters unchanged.
+- **Out-of-scope follow-up (B13):** all 5 masters were classified `operational_workflow` as the B12 precondition; if the reviewer disagrees on 710, re-classify (lifecycle rows stay valid). No standalone B13 item was in the b1a list.
+

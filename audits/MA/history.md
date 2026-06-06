@@ -417,3 +417,105 @@ All `notes` columns left empty on every DMC and DMDO row (Rule #15). All inserts
 ### Decisions
 
 - Adopted the 4-module split (option b) as the realized architecture. This resolves B2-M1 in favor of (b) and supersedes the provisional 5-module `MA-ATTRIBUTION` / `MA-LANDING-PAGES` naming: attribution is a capability inside MA-CAMPAIGN-AUTHORING (197), and the forms module is `MA-LANDING-FORMS` (200).
+
+## 2026-06-06 - b1a execution
+
+Executed the agent-solvable `b1a` actions against the live `domain_map` module (org `adenin`, confirmed via `getCurrentUser`: `ma@adenin.com`). Loader: `.tmp_deploy/ma_b1a_execution_2026_06_06.ts` (idempotent, live-read guarded). All writes omit `record_status` (DB default `new`, Rule #1) and leave every `notes` column empty (Rule #15).
+
+### B1A-B10b-OUTBOUND - DONE
+
+PATCHed `source_domain_module_id` on 8 outbound MA handoffs (all prior value NULL):
+
+| handoff | prior | new module |
+|---|---|---|
+| 60 | NULL | 199 (MA-LEAD-SCORING) |
+| 84 | NULL | 199 |
+| 507 | NULL | 199 |
+| 509 | NULL | 199 |
+| 510 | NULL | 199 |
+| 69 | NULL | 198 (MA-JOURNEY-ORCH) |
+| 74 | NULL | 198 |
+| 508 | NULL | 200 (MA-LANDING-FORMS) |
+
+Post-check: `/handoffs?id=in.(60,69,74,84,507,508,509,510)&source_domain_module_id=is.null` returns 0 rows.
+
+### B1A-B10b-INBOUND - DONE
+
+PATCHed `target_domain_module_id` on 11 inbound MA handoffs (all prior value NULL):
+
+| handoff | prior | new module |
+|---|---|---|
+| 85, 90, 91, 94, 506 | NULL | 197 (MA-CAMPAIGN-AUTHORING) |
+| 78, 232, 327, 328, 808, 811 | NULL | 198 (MA-JOURNEY-ORCH) |
+
+Post-check: `/handoffs?id=in.(78,85,90,91,94,232,327,328,506,808,811)&target_domain_module_id=is.null` returns 0 rows.
+
+### B1A-H1-APQC-TAGGING - DONE (with one documented skip)
+
+INSERTed 17 `handoff_processes` rows, all `proposal_source='agent_curated'`, `role='implements'`, `record_status` defaulted to `new`, `notes` empty. Composed key `(handoff_id, process_id)` (unique, DB-enforced) deduped against the 6 pre-existing rows found at run time.
+
+Inserts (handoff -> process_id): 60->709, 84->147, 507->709, 509->147, 510->147, 69->23, 74->23, 508->708, 85->1862, 90->23, 91->23, 94->23, 327->23, 328->23, 506->23, 808->23, 811->23.
+
+REPLACE (232): the finding's premise matched live. SNAPSHOT of deleted row before DELETE: `handoff_processes id=129, handoff_id=232, process_id=641 (Acquire members to customer loyalty program, L4), proposal_source=discovery_substring, record_status=new`. Deleted id 129, inserted `232 -> 23 (Develop and manage marketing plans, L2), agent_curated, new`.
+
+REPLACE (78): **SKIPPED.** Finding premise (existing tag = process 133, `discovery_substring`) is stale. Live state at run time: handoff 78 already carries `handoff_processes id=81, process_id=132 (Design and manage customer loyalty program, L3), proposal_source=agent_curated, record_status=new`. There was no `discovery_substring->133` row to replace. Re-pointing 78 to process 23 on a falsified premise is a judgment call beyond the action text (prompt Rule #12), and H1 coverage for 78 is already satisfied by the existing agent_curated row, so no write was made. Flag for user: decide whether 78 should also carry a `->23` tag or have its existing `->132` tag retargeted.
+
+Additional note: the finding also claimed only "2 of 19" handoffs carried tags pre-run; live showed 6 (69->136, 74->136, 78->132, 232->641, 508->136, 808->665). The 3 extra agent_curated `->136`/`->665` rows (promotional-activity processes) were left untouched; the new `->23`/`->708` tags coexist with them under the composed key (a handoff may carry multiple process tags).
+
+Post-check: all 19 cross-domain MA handoffs now have >=1 `handoff_processes` row (H1 coverage = 19/19).
+
+### B1A-M-SYSTEM-SKILLS - DONE
+
+Authored 4 per-module `skill_type='system'` skills (`skill_name='<module_code_lower>_agent'`, `domain_id=70`, `domain_module_id` set, `record_status` defaulted `new`, workflow-shaped descriptions, no vendor names per Rule #18, no em-dashes):
+
+| skill id | skill_name | module |
+|---|---|---|
+| 343 | ma_campaign_authoring_agent | 197 |
+| 344 | ma_journey_orch_agent | 198 |
+| 345 | ma_lead_scoring_agent | 199 |
+| 346 | ma_landing_forms_agent | 200 |
+
+Re-pointed the 12 legacy `skill_tools` rows (ids 216-227) from legacy skill 17 to the owning module's skill via PATCH on `skill_id` (preserves `requirement_level`, per B2-SYSTEM-SKILL-SPLIT mapping: query/mutate route to the master's module; compute/side_effect route per channel/primitive):
+
+| skill_tools id | tool (id) | -> skill (module) |
+|---|---|---|
+| 216 | query_campaigns (223, do 116) | 343 (197) |
+| 217 | query_marketing_emails (224, do 117) | 343 (197) |
+| 221 | create_campaign (255, do 116) | 343 (197) |
+| 222 | send_marketing_email (256, do 117) | 343 (197) |
+| 225 | send_email (37, side_effect) | 343 (197) |
+| 227 | generate_text (49, compute, optional) | 343 (197) |
+| 220 | query_nurture_journeys (227, do 119) | 344 (198) |
+| 224 | update_nurture_journey (258, do 119) | 344 (198) |
+| 218 | query_lead_scores (225, do 118) | 345 (199) |
+| 223 | score_lead (257, do 118) | 345 (199) |
+| 226 | classify_text (53, compute) | 345 (199) |
+| 219 | query_forms (226, do 120) | 346 (200) |
+
+Resulting per-module skill_tools counts: 197=6, 198=2, 199=3, 200=1 (all F3 pass, >=1). F4 invariant verified on every row: query/mutate tools all carry `data_object_id`; side_effect/compute tools all carry NULL `data_object_id`.
+
+DELETE legacy skill 17 (`ma-system`). SNAPSHOT before DELETE: `skills id=17, skill_name=ma-system, skill_type=system, domain_id=70, domain_module_id=null, record_status=new, description="System skill for Marketing Automation ... email distribution is the core action."` (the row carried an em-dash in its description; it is now removed). Verified 0 remaining skill_tools on skill 17 before deletion. Post-check: `/skills?id=eq.17` returns 0 rows; F1 now passes (legacy domain-anchored skill retired).
+
+### B1A-M8-MODULE-UX - DONE
+
+Per revised Rule #20 (prompt Rule #6): wrote buyer-voice `catalog_tagline` + `catalog_description` directly into the EMPTY fields (empty-guard applied per field; all 10 fields were empty pre-write). No vendor/product names (Rule #18), no em-dashes. `record_status` carries the review signal (all rows `new`). Drafts were NOT parked in history; the copy lives in the records.
+
+- Module 197 (MA-CAMPAIGN-AUTHORING): tagline + description written.
+- Module 198 (MA-JOURNEY-ORCH): tagline + description written.
+- Module 199 (MA-LEAD-SCORING): tagline + description written.
+- Module 200 (MA-LANDING-FORMS): tagline + description written.
+- domains.MA (70): tagline + description written.
+
+Post-check: all 4 modules and domain 70 report `catalog_tagline` set and `catalog_description` set.
+
+### Not in this pass
+
+- 78 APQC replace (skipped, see above) - flagged for user.
+- All `b1b` items (B12 lifecycle, B6/B7 relationships, B11 aliases, B4 pattern flags) remain blocked on `user_decision` per their `blocked_by`; not executed.
+
+### UI spot-check links
+
+- https://adenin.semantius.ai/domain_map/handoffs
+- https://adenin.semantius.ai/domain_map/handoff_processes
+- https://adenin.semantius.ai/domain_map/skills
+- https://adenin.semantius.ai/domain_map/domain_modules

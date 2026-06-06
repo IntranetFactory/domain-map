@@ -1,47 +1,10 @@
 schema_version: 2
 domain: EPM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
 b1a:
-  - id: B1A-SYSTEM-SKILLS
-    summary: "Author one per-module system skill on each of the 3 new EPM modules and retire legacy epm-system skill id=4 (Rule #17 -> F2/F3, was B1B-S8)."
-    finding: "The 2026-06-02 modularization pass created 3 full EPM modules (239 EPM-PLAN-BUDGET, 240 EPM-FORECAST-SCENARIO, 241 EPM-VARIANCE-REPORT). Rule #17 mandates exactly one system skill per domain_modules row anchored on domain_module_id. Today the only EPM system skill is the legacy domain-scoped row skills id=4 (skill_name=epm-system, skill_type=system, domain_id=66, domain_module_id=null) carrying 9 skill_tools (query_financial_plans, query_budgets, query_forecasts, query_variance_analyses, query_financial_scenarios, update_budget, update_forecast, query_journal_entries, generate_text). F2/F3 now fail because the modules exist but carry no module-anchored system skill. This pass was scoped to modules + entity assignment only, so the skills were not authored."
-    action: "Author 3 system skills (one per module) anchored on domain_module_id in (239, 240, 241); redistribute the 9 skill_tools from skill id=4 to the matching per-module skill (plan/budget tools -> 239, forecast/scenario tools -> 240, variance + journal_entries query -> 241; generate_text replicated where needed); then DELETE skills id=4 and its 9 skill_tools rows once the per-module skills exist."
-    affected_modules: [239, 240, 241]
-    affected_entities: [skill_id_4]
-    extra_skill_tools_count: 9
-
-  - id: B1A-CATALOG-UX
-    summary: "Populate catalog_tagline and catalog_description on the 3 new EPM modules (M8/A4)."
-    finding: "Modules 239, 240, 241 were inserted by the 2026-06-02 modularization pass with catalog_tagline and catalog_description omitted (per the modularization insert shape, which omits both). M8/A4 catalog-UX completeness wants a buyer-facing tagline and description per module."
-    action: "PATCH each of /domain_modules?id=eq.239|240|241 with a buyer-facing catalog_tagline and catalog_description (no em-dashes, American English). Trivial 3-row PATCH; no entity or junction changes."
-    affected_modules: [239, 240, 241]
-
-  - id: B1A-S9
-    summary: "Backfill source_domain_module_id on 8 outbound EPM handoffs now that modules exist (B10b source side, was B1B-S9)."
-    finding: "8 outbound handoffs from EPM (id 10, 27, 199, 561, 562, 563, 564, 601) carry source_domain_module_id=NULL. The 3 modules now exist, so the source-module routing is derivable: handoffs 10, 561, 601 (events on financial_budgets/financial_plans) -> 239 EPM-PLAN-BUDGET; handoffs 27, 199, 562 (events on financial_forecasts/financial_scenarios) -> 240 EPM-FORECAST-SCENARIO; handoffs 563, 564 (events on variance_analyses) -> 241 EPM-VARIANCE-REPORT."
-    action: "PATCH source_domain_module_id on the 8 outbound handoffs per the routing above. Trivial derivable backfill; no user pick needed."
-    affected_handoffs:
-      - {handoff_id: 10, direction: outbound, source_domain: EPM, target_domain: SWP, trigger_event: financial_budget.cycle_started, payload: workforce_plans, null_field: source_domain_module_id}
-      - {handoff_id: 27, direction: outbound, source_domain: EPM, target_domain: SWP, trigger_event: financial_forecast.refreshed, payload: workforce_plans, null_field: source_domain_module_id}
-      - {handoff_id: 199, direction: outbound, source_domain: EPM, target_domain: AUDIT, trigger_event: financial_forecast.refreshed, payload: financial_forecasts, null_field: source_domain_module_id}
-      - {handoff_id: 561, direction: outbound, source_domain: EPM, target_domain: ERP-FIN, trigger_event: financial_plan.approved, payload: financial_plans, null_field: source_domain_module_id}
-      - {handoff_id: 562, direction: outbound, source_domain: EPM, target_domain: SPM, trigger_event: financial_scenario.modeled, payload: financial_scenarios, null_field: source_domain_module_id}
-      - {handoff_id: 563, direction: outbound, source_domain: EPM, target_domain: ERP-FIN, trigger_event: variance_analysis.material_variance, payload: variance_analyses, null_field: source_domain_module_id}
-      - {handoff_id: 564, direction: outbound, source_domain: EPM, target_domain: AUDIT, trigger_event: variance_analysis.material_variance, payload: variance_analyses, null_field: source_domain_module_id}
-      - {handoff_id: 601, direction: outbound, source_domain: EPM, target_domain: HCM, trigger_event: financial_plan.approved, payload: financial_plans, null_field: source_domain_module_id}
-
-  - id: B1A-S10
-    summary: "Author 3 intra-domain lifecycle_progression handoffs between the new EPM modules (B9b, was B1B-S10)."
-    finding: "With the 3-module shape now live, 3 intra-domain handoffs become required (integration_pattern=lifecycle_progression, friction_level=low): 239 EPM-PLAN-BUDGET -> 240 EPM-FORECAST-SCENARIO on financial_plan.published; 239 EPM-PLAN-BUDGET -> 241 EPM-VARIANCE-REPORT on financial_budget.approved; 240 EPM-FORECAST-SCENARIO -> 241 EPM-VARIANCE-REPORT on financial_forecast.refreshed."
-    action: "INSERT 3 handoffs rows with source/target domain_module_id pointing at the new module ids, integration_pattern=lifecycle_progression, friction_level=low. Now technically unblocked (modules exist)."
-    affected_handoffs:
-      - {handoff_id: null, direction: intra_domain, source_domain: EPM, target_domain: EPM, trigger_event: financial_plan.published, payload: financial_plans, null_field: source_239_target_240}
-      - {handoff_id: null, direction: intra_domain, source_domain: EPM, target_domain: EPM, trigger_event: financial_budget.approved, payload: financial_budgets, null_field: source_239_target_241}
-      - {handoff_id: null, direction: intra_domain, source_domain: EPM, target_domain: EPM, trigger_event: financial_forecast.refreshed, payload: financial_forecasts, null_field: source_240_target_241}
-
   - id: B1A-S7b
     summary: "PATCH trigger_event 587 variance_analysis.material_variance event_category from empty to the enum value chosen in B2-S7b."
     finding: "Live trigger_events row id=587 (event_name=variance_analysis.material_variance, data_object_id=41) carries event_category='' (empty string). The 2026-05-31 technical pass PATCHed 583, 584, 585, 586 to state_change but missed 587. Per Rule #13, allowed values are lifecycle, state_change, threshold, signal."
@@ -51,6 +14,17 @@ b1a:
         ref: B2-S7b
     affected_events:
       - {id: 587, event_name: variance_analysis.material_variance, current_category: "", proposed_category: state_change_or_threshold}
+
+  - id: B1A-S10b
+    summary: "Residual of B1A-S10: the third intra-domain handoff (239 EPM-PLAN-BUDGET -> 241 EPM-VARIANCE-REPORT on financial_budget.approved) could not be inserted because no financial_budget.approved trigger_event exists."
+    finding: "B1A-S10 inserted 2 of 3 intra-domain lifecycle_progression handoffs on 2026-06-06 (handoff 1354: 239->240 on financial_plan.published / event 583; handoff 1355: 240->241 on financial_forecast.refreshed / event 58). The third row, 239->241 on financial_budget.approved, has no backing trigger_events row: the only financial_budget.* event in the catalog is id 13 financial_budget.cycle_started. Authoring a new financial_budget.approved trigger_event is master-data creation beyond the original action text (INSERT handoffs), so it was not guessed."
+    action: "USER DECISION: author a financial_budget.approved trigger_event on data_object 38 (financial_budgets), then INSERT the intra-domain handoff 239->241 (integration_pattern=lifecycle_progression, friction_level=low, payload financial_budgets 38). The budget lifecycle (B1B-S3, draft -> submitted -> approved -> ...) already names an approved state, so the event is consistent with the planned state machine; it is gated on the B1B-S3 lifecycle authoring and a user OK to mint the event."
+    blocked_by:
+      - type: user_decision
+        ref: B2-S3
+        reason: "financial_budget.approved event + its from/to_state depend on the financial_budgets state-machine shape (B2-S3 pattern flags / B1B-S3 lifecycle states); authoring the event before the state machine is settled risks rework"
+    affected_handoffs:
+      - {handoff_id: null, direction: intra_domain, source_domain: EPM, target_domain: EPM, trigger_event: financial_budget.approved, payload: financial_budgets, null_field: source_239_target_241_missing_event}
 
 b1b:
   - id: B1B-S3
@@ -142,7 +116,7 @@ b2:
       - "(a) 5-module per-capability split, EPM-BUDGET + EPM-FORECAST + EPM-SCENARIO + EPM-WORKFORCE-PLAN + EPM-VARIANCE (rebuild required)"
       - "(c) 2-module split, EPM-PLAN (plans + budgets + forecasts + scenarios) + EPM-REPORT (variances) (rebuild required)"
       - "(e) custom alternative supplied by user (rebuild required)"
-    why: "The split is now live; this is a confirm-or-revert call. Changing it cascades to the per-module skills (B1A-SYSTEM-SKILLS), handoff routing (B1A-S9/S10), and lifecycle realizer module_ids (B1B-S3)."
+    why: "The split is now live, plus the 3 per-module system skills (302/303/304) and module-grain catalog UX now hang off it; this is a confirm-or-revert call. Changing it cascades to the per-module skills, handoff routing (B1A-S9 source FK now backfilled, B1A-S10 intra-domain rows now live), and lifecycle realizer module_ids (B1B-S3)."
 
   - id: B2-S2
     summary: "WORKFORCE-PLAN-EPM role scoping for FPA-WORKFORCE-PARTNER now that EPM-PLAN-BUDGET (239) exists."
@@ -155,7 +129,7 @@ b2:
 
   - id: B2-S3
     summary: "B4 pattern-flag positive confirmation per Rule #12 for the 5 EPM masters."
-    question: "Per-flag yes or no on each master? Rule #12 requires positive consideration, not default acceptance. Drives the B1B-S3 lifecycle-state shape."
+    question: "Per-flag yes or no on each master? Rule #12 requires positive consideration, not default acceptance. Drives the B1B-S3 lifecycle-state shape AND the B1A-S10b financial_budget.approved event/handoff."
     options:
       - "financial_plans.has_submit_lock yes (approved plans freeze) or no"
       - "financial_plans.has_single_approver yes (CFO / controller single approver) or no"

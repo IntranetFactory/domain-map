@@ -344,3 +344,34 @@ Master -> module mapping (M7, each master in exactly one module): `fleet_vehicle
 ### Fixes applied
 
 - 3 modules + 6 DMC + 6 DMDO inserted via the idempotent loader. Verified live: 3 full modules, all 6 capabilities placed once, all 5 masters mastered once, no empty module, all `notes` empty, all `record_status=new`.
+
+## 2026-06-06 - b1a execution
+
+Executed the agent-solvable b1a items for FLEET-MGMT under the revised Rule #20 / task-prompt rule #6 (write buyer-voice catalog copy directly into empty fields). Loader: `.tmp_deploy/fleet_mgmt_catalog_ux_2026-06-06.ts` (PATCH, empty-guard per field, prior values snapshotted below).
+
+### B1A-CATALOG-UX-COPY - DONE
+
+Wrote buyer-voice `catalog_tagline` + `catalog_description` into the EMPTY fields on the domains row and all 3 modules. Empty-guard fired correctly: every target field was empty before the write, so all 8 fields were written and none overwritten.
+
+Tables + rows written (8 fields across 4 rows, all PATCH):
+
+| Table | id | catalog_tagline | catalog_description | prior values |
+|---|---|---|---|---|
+| `domains` | 147 | written (127 chars) | written (693 chars) | both `""` |
+| `domain_modules` | 204 (FLEET-MGMT-VEHICLE-LIFECYCLE) | written (110 chars) | written (473 chars) | both `""` |
+| `domain_modules` | 205 (FLEET-MGMT-DRIVER-OPS) | written (109 chars) | written (501 chars) | both `""` |
+| `domain_modules` | 206 (FLEET-MGMT-FUEL-COMPLIANCE) | written (108 chars) | written (491 chars) | both `""` |
+
+Prior value for every field on every row was the empty string `""` (reversible: restore by setting each field back to `""`). Copy is buyer-voice (workflow + value), contains no vendor/product names, no em-dashes, American English. `record_status` left untouched (carries the review signal per Rule #20). Verified live: all 4 rows now report non-empty tagline + description.
+
+This resolves A4 (domain grain) and M8 (per-module grain) for FLEET-MGMT.
+
+### B1A-SYSTEM-SKILLS - SKIPPED (blocked by user_decision B2-SIGN-DOCUMENT)
+
+Not executed. The item's `action` is a single atomic sequence that ends in "...then DELETE skill 60", and the DELETE is explicitly gated on resolving `sign_document per B2-SIGN-DOCUMENT`. B2-SIGN-DOCUMENT is a b2 `user_decision`: whether `sign_document` (skill_tools row 554, tool 42, external side_effect) stays and on which module's skill (DRIVER-OPS for driver onboarding paperwork vs VEHICLE-LIFECYCLE for purchase/lease/title docs vs both), or is dropped as vestigial, has not been decided. Per task rules #7 (skip b1a blocked by a user_decision) and #12 (do not guess on master data), the legacy skill cannot be safely retired and its tools redistributed without that decision.
+
+Executing only the head of the action (author the 3 module-scoped skills + redistribute the 5 `query_*` tools + substitute `send_email`/row 553 with `notify_person`) while leaving skill 60 undeleted would leave the skills layer in a worse transient state than today: two parallel system-skill sets (legacy 60 plus 3 new), F1 and F2 failing in new ways, and an orphaned `sign_document` link. So the whole item is held, not partially executed.
+
+State verified unchanged: skill 60 (`fleet-mgmt-system`, domain_id=147, domain_module_id=NULL) still present with all 7 `skill_tools` rows (548-554) intact; no module-scoped system skills exist on 204/205/206. `notify_person` (tool id 913, coverage_tier=platform) confirmed present in the catalog for when the substitution can proceed.
+
+Dependent b1b items remain blocked behind this: B1B-LEGACY-SKILL (`prerequisite_entity: B1A-SYSTEM-SKILLS`) and B1B-CHANNEL-PRIMITIVE (`depends_on: B1B-LEGACY-SKILL`). No writes made for any of them.

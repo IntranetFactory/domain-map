@@ -1,46 +1,10 @@
 schema_version: 2
 domain: SAM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
-b1a:
-  - id: B1A-S14
-    summary: PATCH domains.id=52.description to American English (replace `normalisation`, `defence`, `licences`).
-    finding: |
-      `domains.description` on SAM (id 52) reads `Discovery, normalisation, entitlement reconciliation, and audit defence for software licences.` CLAUDE.md mandates American English in every artifact, including catalog text fields. Three British spellings present: `normalisation`, `defence`, `licences`.
-    action: |
-      1 PATCH via `semantius call crud postgrestRequest` setting `description` on `/domains?id=eq.52` to `Discovery, normalization, entitlement reconciliation, and audit defense for software licenses.` Verify the column after PATCH; surface the UI link `https://tests.semantius.app/domain_map/domains` for spot check.
-    affected_entities:
-      - domains.id=52
-    extra_pattern: mechanical_patch
-    extra_blocking: none
-  - id: B1A-SYSSKILL-MODULES
-    summary: "Author one Phase-S `system` skill per new SAM module (Rule #17 -> F2/F3): 3 skills for modules 201/202/203."
-    finding: |
-      Modularization landed 2026-06-02: SAM now has 3 full `domain_modules` (201 SAM-CATALOG-DISCOVERY, 202 SAM-ENTITLEMENT-MGMT, 203 SAM-AUDIT-DEFENSE). Per Rule #17 every `domain_modules` row needs exactly one `skills.skill_type='system'` row with `domain_module_id` set; today zero module-level system skills exist (F2/F3 fail). The only SAM system skill is the legacy `sam-system` (id 105) with `domain_module_id=NULL` (F1 transitional). Without module-level skills the per-module Semantius score is uncomputable.
-    action: |
-      Author 3 `system` skills (one per module 201/202/203), each with `skill_type='system'`, `domain_module_id` set, and >=1 `skill_tools` row. Derive the tool floor per module surface: SAM-AUDIT-DEFENSE (203) likely needs external-channel tools (send_email / sign_document for publisher audit-response submission); SAM-CATALOG-DISCOVERY (201) likely needs receive_webhook / notify_team for discovery ingestion; SAM-ENTITLEMENT-MGMT (202) needs the entitlement-reconciliation + renewal mutate floor. Out of scope for the modules-only pass; a Phase-S follow-up.
-    affected_modules: [201, 202, 203]
-    extra_phase: S
-    extra_blocking: none
-  - id: B1A-CATALOG-COPY
-    summary: "Backfill `catalog_tagline` + `catalog_description` on the 3 new SAM modules (M8 / A4)."
-    finding: |
-      The 3 SAM modules authored 2026-06-02 (201, 202, 203) carry empty `catalog_tagline` and `catalog_description`. Buyer-facing copy was intentionally left empty in the modularization pass (not invented). M8/A4 buyer-copy is missing for all three.
-    action: |
-      Author buyer-facing `catalog_tagline` (short) and `catalog_description` (paragraph) per module, describing the deployable unit by its capability shape (no vendor/product names, Rule #18; American English; no em-dashes). PATCH `/domain_modules?id=eq.<201|202|203>`.
-    affected_modules: [201, 202, 203]
-    extra_blocking: none
-  - id: B1A-LEGACY-SKILL-RETIRE
-    summary: "Retire / re-home legacy `sam-system` skill (id 105, domain_module_id=NULL) into the 3 module-level skills."
-    finding: |
-      `sam-system` (id 105) is the legacy domain-level `system` skill with `domain_module_id=NULL` and 4 `skill_tools` rows (all `query_*`, all platform-tier). F1 treats it as the canonical transitional state while no module-level skill exists; now that modules 201/202/203 exist, it becomes a retirement target. Its 4 query tools should fold into the per-module skills authored under B1A-SYSSKILL-MODULES.
-    action: |
-      After B1A-SYSSKILL-MODULES lands, fold the 4 `sam-system` query tools into the appropriate module-level skill(s) and retire/repoint skill 105 per the F1 retirement path.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1A-SYSSKILL-MODULES, reason: "module-level skills must exist before the legacy skill can be folded in and retired"}
-    extra_blocking: none
+b1a: []
 
 b1b:
   - id: B1B-S3

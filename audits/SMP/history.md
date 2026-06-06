@@ -602,3 +602,29 @@ Re-authored the 3 SMP personas that Plan 3 deleted, now under the `domain_roles`
 
 None. CLI calls completed cleanly throughout.
 
+## 2026-06-06 - b1a execution
+
+User directive: execute the pending `b1a` technical fixes for SMP (one item: `B1A-SELF-CONTAIN`).
+
+### B1A-SELF-CONTAIN (M9 self-containment, module 31) - DONE
+
+The single enumerated M9 shape (`extra_m9_shapes`) was `legal_contracts` on SMP-RENEWAL-VENDOR as `role=contributor`, `necessity=required`, pointing at the CLM-mastered entity (no `embedded_master` shell here). This made module 31 non-deployable standalone (hard cross-domain prerequisite on CLM's `legal_contracts`).
+
+- **Table:** `domain_module_data_objects`, row **id=97** (domain_module_id=31, data_object_id=66).
+- **Prior values (PATCH snapshot):** `role=contributor`, `necessity=required`, `notes=""`.
+- **Change:** `necessity` `required` -> `optional`. Role left as `contributor` (the contribution into CLM's `legal_contracts` is now presence-conditional: SMP-RENEWAL-VENDOR contributes renewal-decision provenance into CLM's contracts only when CLM is co-installed, and deploys standalone otherwise). Chose the presence-conditional fix over `embedded_master` because contract documents are CLM's to master; SMP should not carry a local `legal_contracts` shell. This is the explicitly-offered `necessity=optional` option in the b1a action text.
+- **Canonical master confirmed:** `legal_contracts` (66) is mastered by CLM (domain 26, `domain_data_objects` id=79). Not SMP.
+- **Verification:** re-ran the M9 part-1 flag query on module 31 (`role=eq.contributor` OR `role=eq.consumer AND necessity=eq.required`). Row 97 (`legal_contracts`) now `contributor`+`optional` (no longer flagged). The only remaining flagged row is id=98 `saas_applications` (61, `consumer`+`required`), which is a SIBLING-module SMP master (SMP-DISCOVERY id=30), NOT in this b1a scope, and is the open user-decision item B2-M9-SELFCONTAIN.
+
+### Catalog UX (Rule #20) - no action needed
+
+Per the revised Rule #20 backfill instruction, checked the domain row (85) and all 4 modules (30/31/184/185) for empty `catalog_tagline` / `catalog_description`. All are already non-empty (written 2026-06-02 in the personas + catalog continuation). Overwrite is forbidden without per-row user approval, so nothing was written.
+
+### Skipped / blocked
+
+None in `b1a` beyond the resolved item. The wider M9 decision (`saas_applications` consumer+required, and the embedded-vs-optional choice for both entities together) remains the user-decision item B2-M9-SELFCONTAIN in `b2`.
+
+### JWT errors
+
+None. CLI calls completed cleanly throughout.
+

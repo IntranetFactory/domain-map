@@ -503,3 +503,83 @@ UI for spot-check:
 - https://tests.semantius.app/domain_map/domain_modules?domain_id=eq.152
 - https://tests.semantius.app/domain_map/domain_module_capabilities
 - https://tests.semantius.app/domain_map/domain_module_data_objects
+
+## 2026-06-05 — b1a execution
+
+Agent pass executed the 3 agent-solvable b1a items. All `semantius call crud postgrestRequest` calls returned cleanly; zero JWT errors. `record_status` omitted on every insert (DB default `new`). No `notes`, `catalog_tagline`, or `catalog_description` written.
+
+### B1A-B6-INTRA-EDGE — DONE
+
+INSERTED 1 row into `data_object_relationships` (id=**2015**):
+- `client_engagements scopes tax_returns`: `data_object_id=401`, `related_data_object_id=400`, `relationship_verb='scopes'`, `inverse_verb='is scoped by'`, `relationship_type='one_to_many'`, `relationship_kind='reference'`, `is_required=false`, `owner_side='source'` (the engagement is the "one"/parent scoping many returns), `record_status='new'`.
+
+Verification: the intra-domain edge set between masters (400, 401) is now 1 row (was 0). B6 cured for the two-master domain.
+
+### B1A-B9-MISSING-EVENTS — DONE
+
+INSERTED 5 rows into `trigger_events` (ids **1493–1497**), all `record_status='new'`, `domain_module_id=NULL` (matching the established pattern on prior rows 331/332; the b1a action specified only `event_name` / `event_category` / `data_object_id`):
+
+| id | event_name | data_object_id | event_category | from_state | to_state |
+| --- | --- | --- | --- | --- | --- |
+| 1493 | tax_return.accepted_by_irs | 400 | lifecycle | filed | accepted_by_irs |
+| 1494 | tax_return.rejected_by_irs | 400 | lifecycle | filed | rejected_by_irs |
+| 1495 | tax_return.amended | 400 | state_change | accepted_by_irs | amended |
+| 1496 | client_engagement.completed | 401 | lifecycle | active | completed |
+| 1497 | client_engagement.terminated | 401 | lifecycle | active | terminated |
+
+Verification: `trigger_events` on masters (400, 401) is now 7 rows (was 2). Categories: 6 lifecycle + 1 state_change.
+
+### B1A-MODULE-SKILLS — DONE
+
+Loader: `.tmp_deploy/fix_acct_pract_mgmt_module_skills_2026_06_05.ts` (idempotent; re-run is a no-op). Authored one `skill_type='system'` skill per module (Rule #17 / F2), distributed and extended the tool surface (mutate + fetch + inbound + notify_person), and retired the legacy domain-level skill.
+
+**Tools created** (3 rows into `tools`, domain-specific to the masters / external fetch; deduped by `tool_name`, `record_status='new'`, `coverage_tier` as noted):
+- id=**1588** `update_tax_return` — `mutate`, `data_object_id=400`, `coverage_tier='platform'`.
+- id=**1589** `update_client_engagement` — `mutate`, `data_object_id=401`, `coverage_tier='platform'`.
+- id=**1590** `fetch_irs_acceptance_status` — `fetch`, `data_object_id=NULL`, `coverage_tier='external'`.
+
+**Tools reused** (catalog-wide shared rows, NOT recreated): `query_tax_returns`(287), `query_client_engagements`(288), `query_time_entries`(780), `notify_person`(913, platform), `receive_webhook`(896, inbound platform), `sign_document`(42, external).
+
+**System skills created** (3 rows into `skills`, `skill_type='system'`, `domain_id=152`, `domain_module_id` set, `record_status='new'`):
+- id=**264** `acct_pract_mgmt_engagement_workflow_agent` — module 207.
+- id=**265** `acct_pract_mgmt_tax_return_prep_agent` — module 208.
+- id=**266** `acct_pract_mgmt_client_portal_billing_agent` — module 209.
+
+**skill_tools links inserted** (10 rows, `record_status='new'`, `notes=''` per Rule #15):
+- Skill 264 (module 207, masters client_engagements 401): `query_client_engagements`(288, required), `update_client_engagement`(1589, required), `notify_person`(913, optional).
+- Skill 265 (module 208, masters tax_returns 400): `query_tax_returns`(287, required), `update_tax_return`(1588, required), `sign_document`(42, required — e-signature IS the workflow per F7), `fetch_irs_acceptance_status`(1590, optional), `receive_webhook`(896, optional).
+- Skill 266 (module 209, carries time_entries 162 contributor): `query_time_entries`(780, required), `notify_person`(913, optional).
+
+Per the F7 / channel-vs-capability rule, generic client notifications use the `notify_person` abstraction (not the legacy `send_email` channel primitive). `sign_document` was kept as a direct channel primitive because e-signature is the workflow (envelope-completion contract).
+
+**Legacy skill retired (DELETE) — prior values snapshotted for reversibility:**
+- DELETED `skills` id=**25**: `skill_name='acct-pract-mgmt-system'`, `skill_type='system'`, `domain_id=152`, `domain_module_id=NULL`, `description='System skill for Accounting Practice Management — runtime workflows over the domain's master data, derived from masters + cross-domain handoffs.'`, `record_status='new'`.
+- DELETED its 4 `skill_tools` rows (cascade-eligible, deleted explicitly first):
+  - id=318 → tool 287 `query_tax_returns` (required)
+  - id=319 → tool 288 `query_client_engagements` (required)
+  - id=320 → tool 37 `send_email` (side_effect, platform) (required)
+  - id=321 → tool 42 `sign_document` (side_effect, external) (required)
+- No `tools` rows were deleted (the catalog-wide `tools` table is shared; only the legacy skill's junction links were removed). Tools 287, 288, 42 are re-linked from the new module skills; tool 37 `send_email` is no longer linked from this domain (superseded by `notify_person`).
+
+### Verification (live re-query)
+
+- `/skills?domain_id=eq.152&skill_type=eq.system`: 3 rows (264/207, 265/208, 266/209); zero `domain_module_id=NULL` rows. F1/F2 clean (exactly one system skill per module).
+- `/skills?id=eq.25`: empty (legacy retired).
+- `/skill_tools?skill_id=in.(264,265,266)`: 10 rows; every `query`/`mutate` tool has `data_object_id` set, every `fetch`/`side_effect` tool has NULL, `inbound` NULL allowed. F3/F4 clean.
+- `/trigger_events?data_object_id=in.(400,401)`: 7 rows.
+- `/data_object_relationships` between (400,401): 1 row (id=2015).
+
+### Left OPEN / not executed (per task guardrails)
+
+- Catalog UX copy (`catalog_tagline` / `catalog_description`) on the 3 modules (207/208/209) and on `domains.id=152` was NOT written (Rule #20 — user decision B2-CATALOG-WORDING). Draft proposals surfaced in the agent report for user approval; the b1b row `B1B-A4-CATALOG-UX` stays open.
+
+UI for spot-check:
+- https://tests.semantius.app/domain_map/skills
+- https://tests.semantius.app/domain_map/tools
+- https://tests.semantius.app/domain_map/skill_tools
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/data_object_relationships
+
+### 2026-06-05 catalog UX written (supersedes the "drafted, left open" note above)
+
+The empty `catalog_tagline` / `catalog_description` on the ACCT-PRACT-MGMT domain row and modules 207, 208, 209 were WRITTEN (not parked). Loader: `.tmp_deploy/backfill_catalog_ux_2026_06_05.ts` (empty-guard: only empty fields written, no overwrite). record_status on these rows is `new`, so the copy is reviewed in-record per the revised Rule #20. The prior note in this date section that left the UX "open" is superseded; the UX-only state.yaml items were removed.

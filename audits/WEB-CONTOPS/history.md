@@ -388,3 +388,80 @@ The following remain open and are now unblocked by the module set landing: lifec
 - `https://tests.semantius.app/domain_map/domain_module_capabilities`
 
 No JWT-audience errors encountered during this audit run.
+
+## 2026-06-06 - b1a execution
+
+Executed the three b1a items against the live `domain_map` module (domain 128). Loader: [.tmp_deploy/web_contops_b1a_load.ts](../../.tmp_deploy/web_contops_b1a_load.ts) (idempotent). All inserts omit `record_status` (DB default `new`); all `notes` columns left empty per Rule #15.
+
+### B1A-LIFECYCLE - DONE
+
+Inserted 33 `data_object_lifecycle_states` rows (ids 1778-1810) for the 7 masters, each with `domain_module_id` set to the realizing module. `requires_permission=true` on the transition states (archived, retained, retired, resolved, wont_fix, verified, ignored, accepted, dismissed, revised); false on entry/intermediate states.
+
+| data_object | module | states (order) | gated states |
+|---|---|---|---|
+| 684 content_audits | 317 | scheduled, running, completed, archived | archived |
+| 685 web_content_inventory_records | 317 | discovered, classified, in_review, retained, retired | retained, retired |
+| 686 accessibility_scan_findings | 319 | detected, triaged, in_remediation, resolved, wont_fix, verified | resolved, wont_fix, verified |
+| 687 broken_link_findings | 320 | detected, in_remediation, resolved, ignored | resolved, ignored |
+| 688 technical_seo_findings | 320 | detected, triaged, in_remediation, resolved, wont_fix | resolved, wont_fix |
+| 689 brand_voice_violations | 319 | detected, in_review, accepted, dismissed | accepted, dismissed |
+| 690 content_lifecycle_plans | 318 | draft, active, review_due, revised, retired | revised, retired |
+
+Note: the 7 masters all still carry `entity_type='unclassified'`. The b1a action did not instruct an `entity_type` PATCH, so it was not performed. These are clearly `operational_workflow` entities; flagging the classification gap for a follow-up pass (B13). Lifecycle states were authored as the action specified regardless.
+
+### B1A-SKILLS - DONE
+
+New tools inserted (ids 1765-1777), all deduped by `tool_name` against the catalog-wide `tools` table immediately before insert:
+
+| id | tool_name | operation_kind | data_object_id | coverage_tier |
+|---|---|---|---|---|
+| 1765 | create_content_audit | mutate | 684 | platform |
+| 1766 | retire_inventory_record | mutate | 685 | platform |
+| 1767 | resolve_accessibility_finding | mutate | 686 | platform |
+| 1768 | dismiss_brand_violation | mutate | 689 | platform |
+| 1769 | resolve_broken_link_finding | mutate | 687 | platform |
+| 1770 | resolve_technical_seo_finding | mutate | 688 | platform |
+| 1771 | retire_content_lifecycle_plan | mutate | 690 | platform |
+| 1772 | trigger_external_a11y_rescan | side_effect | null | external |
+| 1773 | submit_redirect_request | side_effect | null | external |
+| 1774 | fetch_wcag_rules | fetch | null | external |
+| 1775 | fetch_seo_serp_data | fetch | null | external |
+| 1776 | receive_scanner_callback | inbound | null | external |
+| 1777 | receive_crawler_completion | inbound | null | external |
+
+Four `skill_type='system'` skills inserted (one per module). Platform constraint `domain_required_when_skill_type_is_system` still requires `domain_id`, so each skill carries both `domain_id=128` and `domain_module_id`:
+
+| id | skill_name | domain_module_id | tools (required / total) |
+|---|---|---|---|
+| 376 | web-contops-audit-inventory-system | 317 | 4 / 5 |
+| 377 | web-contops-editorial-planning-system | 318 | 2 / 4 |
+| 378 | web-contops-quality-access-system | 319 | 4 / 7 |
+| 379 | web-contops-seo-links-system | 320 | 4 / 6 |
+
+22 `skill_tools` rows inserted. Existing query tools 771-777 reused (not re-created) where the module's masters matched; `notify_person` (913, platform) reused as an optional tool on module 318. Skill-tool assignment:
+
+- 376 (317): query_content_audits(771,req), query_web_content_inventory_records(772,req), create_content_audit(1765,req), retire_inventory_record(1766,req), receive_crawler_completion(1777,opt).
+- 377 (318): query_content_lifecycle_plans(777,req), retire_content_lifecycle_plan(1771,req), query_web_content_inventory_records(772,opt - governs the inventory it reads), notify_person(913,opt).
+- 378 (319): query_accessibility_scan_findings(773,req), query_brand_voice_violations(776,req), resolve_accessibility_finding(1767,req), dismiss_brand_violation(1768,req), trigger_external_a11y_rescan(1772,opt), fetch_wcag_rules(1774,opt), receive_scanner_callback(1776,opt).
+- 379 (320): query_broken_link_findings(774,req), query_technical_seo_findings(775,req), resolve_broken_link_finding(1769,req), resolve_technical_seo_finding(1770,req), submit_redirect_request(1773,opt), fetch_seo_serp_data(1775,opt).
+
+Legacy domain-level skill 120 (`web-contops-system`, domain_module_id NULL) DELETED along with its 7 `skill_tools` rows (ids 925-931). Snapshot of the deleted skill 120 row prior to delete: `{id:120, skill_name:"web-contops-system", skill_type:"system", domain_id:128, domain_module_id:null, record_status:"new"}` with description "System skill for Web Content Operations & Governance ... derived from masters + cross-domain handoffs." The 7 query tools 771-777 it linked were NOT deleted (reused by the new module skills). Post-delete verify: skills(120)=0, skill_tools(120)=0.
+
+### B1A-CATALOG-UX - DONE
+
+Wrote buyer-voice `catalog_tagline` + `catalog_description` directly into the empty fields per revised Rule #20 / Rule #6 (empty-guard satisfied: all 5 targets were empty before the write; record_status `new` carries the review signal). No vendor/product names, no em-dashes, American English.
+
+- domain 128 (WEB-CONTOPS): tagline "Govern every page on your public website from one place."
+- module 317 (AUDIT-INVENTORY): tagline "See every page you publish, and how healthy it is."
+- module 318 (EDITORIAL-PLANNING): tagline "Plan, assign, and refresh content on a calendar everyone can see."
+- module 319 (QUALITY-ACCESS): tagline "Catch accessibility and brand-voice problems before your visitors do."
+- module 320 (SEO-LINKS): tagline "Keep your site crawlable, indexed, and free of broken links."
+
+### Spot-check links
+
+- https://tests.semantius.app/domain_map/skills
+- https://tests.semantius.app/domain_map/data_object_lifecycle_states
+- https://tests.semantius.app/domain_map/tools
+- https://tests.semantius.app/domain_map/domains
+
+No JWT-audience errors encountered during this run.

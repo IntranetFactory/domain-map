@@ -410,3 +410,88 @@ Lifecycle states (B1B-S3-LIFECYCLE), handoff FK patches (B1B-S4 / S5), per-modul
 ### JWT errors
 
 None.
+
+## 2026-06-06 - b1a execution
+
+Executed the five mechanical b1a items against the live `adenin` tenant (confirmed via `getCurrentUser`: `ma@adenin.com` / org `adenin` / `api_baseurl https://adenin.semantius.ai`). Loader: `c:/dev/domain-map/.tmp_deploy/fix_spend_mgmt_b1a_2026-06-06.ts` (idempotent, safe to re-run). No JWT errors. No `notes` column written anywhere. `record_status` omitted on every insert (DB default `new`).
+
+### B1A-SYSTEM-SKILLS - DONE
+
+Authored 3 module-level `skills` rows (one `skill_type='system'` per module, Rule #17):
+
+| skill id | skill_name | domain_module_id |
+|---|---|---|
+| 337 | spend_mgmt_cards_agent | 303 (SPEND-MGMT-CARDS) |
+| 338 | spend_mgmt_bill_pay_agent | 304 (SPEND-MGMT-BILL-PAY) |
+| 339 | spend_mgmt_policy_approval_agent | 305 (SPEND-MGMT-POLICY-APPROVAL) |
+
+Re-pointed the 8 existing `skill_tools` rows off legacy skill 107 (PATCH `skill_id`, preserving each row id and `requirement_level='required'`; no tool re-creation, no `notes`):
+
+- skill 337 (CARDS, 5 tools): 1004 query_corporate_card_accounts (744), 1005 query_card_authorizations (745), 830 query_corporate_cards (212, EXPENSE), 831 query_card_transactions (213, EXPENSE), 832 send_email. The 2 EXPENSE card tools + send_email attach here because card reconciliation reads `corporate_cards`/`card_transactions` and card-authorization decline/high-value events drive the email notifications (the workflow that consumes them).
+- skill 338 (BILL-PAY, 1 tool): 1006 query_vendor_payment_authorizations (746).
+- skill 339 (POLICY-APPROVAL, 2 tools): 829 query_spend_requests (240), 1007 query_spend_policies (747).
+
+Then DELETED legacy skill 107 (`spend-mgmt-system`, `domain_id=133`, `domain_module_id=null`) once its skill_tools were all migrated (F1 retirement). Prior values snapshotted in the 2026-05-31 / 2026-06-02 audit entries above and re-confirmed live before deletion: skill 107 = `{skill_name: "spend-mgmt-system", skill_type: "system", domain_id: 133, domain_module_id: null, record_status: "new"}`. Verified: each of 337/338/339 carries >=1 skill_tools; all operation_kind<->data_object_id invariants hold; 107 returns empty.
+
+### B1A-CATALOG-UX - DONE
+
+Empty-guard per field (Rule #20): all 8 target fields were empty (`record_status='new'` on each row), so wrote buyer-voice copy directly into each. 8 fields written, 0 guarded:
+
+- domain 133 (Corporate Spend Management): catalog_tagline + catalog_description.
+- module 303 (SPEND-MGMT-CARDS): catalog_tagline + catalog_description.
+- module 304 (SPEND-MGMT-BILL-PAY): catalog_tagline + catalog_description.
+- module 305 (SPEND-MGMT-POLICY-APPROVAL): catalog_tagline + catalog_description.
+
+Voice: workflow + value, no vendor/product names, no em-dashes, American English. Review signal carried by `record_status='new'` in the catalog UI; not parked in history.
+
+### B1A-LIFECYCLE-STATES - DONE for 4 of 5 masters (747 deferred)
+
+Rule #12 prereq: the 4 workflow-bearing masters were `entity_type='unclassified'`. Their workflows are explicit in the b1a action, so PATCHed each to `entity_type='operational_workflow'` (deterministic prerequisite for valid lifecycle states; prior value `unclassified` on all 4):
+
+- 240 spend_requests, 744 corporate_card_accounts, 745 card_authorizations, 746 vendor_payment_authorizations.
+
+Loaded 21 `data_object_lifecycle_states` rows (each with `domain_module_id` = realizing module, gate states `requires_permission=true` + `permission_verb_override`, `notes` empty):
+
+- spend_requests (240) -> module 305, 6 states: draft (initial) -> submitted (gate) -> approved (gate) / rejected (gate, terminal) -> spent (terminal) / cancelled (gate, terminal).
+- corporate_card_accounts (744) -> module 303, 4 states: application (initial) -> active (gate) -> frozen (gate) / closed (gate, terminal).
+- card_authorizations (745) -> module 303, 6 states: requested (initial) -> approved (gate) / declined (gate, terminal) -> posted -> reconciled (gate, terminal) / disputed (gate, terminal).
+- vendor_payment_authorizations (746) -> module 304, 5 states: requested (initial) -> approved (gate) / rejected (gate, terminal) -> released (gate, terminal) / held (gate).
+
+spend_policies (747) NOT loaded: gated on user_decision B2-S2 (config-shape vs workflow). 747 entity_type left `unclassified` pending that decision. Tracked as the trimmed b1a item B1A-LIFECYCLE-STATES-747 in state.yaml.
+
+### B1A-OUTBOUND-SOURCE-FK - DONE
+
+PATCHed `source_domain_module_id` on all 14 outbound handoffs (prior value NULL on every one):
+
+- -> 303 (SPEND-MGMT-CARDS): 165, 166, 173, 174, 557, 558, 600 (card_transaction / card_authorization payloads).
+- -> 304 (SPEND-MGMT-BILL-PAY): 167, 168, 556 (payment_runs / supplier_invoices / vendor_payment_authorizations payloads).
+- -> 305 (SPEND-MGMT-POLICY-APPROVAL): 169, 172, 559, 560 (spend_requests / spend_policies payloads).
+
+### B1A-INBOUND-TARGET-FK - DONE
+
+PATCHed `target_domain_module_id` on all 5 inbound handoffs (prior value NULL on every one):
+
+- -> 305 (SPEND-MGMT-POLICY-APPROVAL): 170, 171, 552, 555 (supplier-onboard + policy / policy-violation feeds).
+- -> 304 (SPEND-MGMT-BILL-PAY): 598 (three-way-match-passed releases the vendor payment authorization).
+
+### Rows written per table
+
+- skills: +3 inserted (337, 338, 339), -1 deleted (107). Net 3 SPEND-MGMT system skills, all module-anchored.
+- skill_tools: 8 PATCHed (skill_id re-pointed: 829/1007->339, 830/831/832/1004/1005->337, 1006->338). 0 inserted, 0 deleted.
+- domains: 1 PATCHed (133, catalog_tagline + catalog_description).
+- domain_modules: 3 PATCHed (303/304/305, catalog_tagline + catalog_description each).
+- data_objects: 4 PATCHed (240/744/745/746, entity_type -> operational_workflow).
+- data_object_lifecycle_states: 21 inserted (6+4+6+5).
+- handoffs: 19 PATCHed (14 outbound source_domain_module_id, 5 inbound target_domain_module_id).
+
+### Skipped / deferred
+
+- B1A-LIFECYCLE-STATES for spend_policies (747): SKIPPED, `blocked_by` user_decision B2-S2. The other 4 masters in that item were fully executed; only 747 remains, retained in state.yaml as B1A-LIFECYCLE-STATES-747.
+
+### next_action_by
+
+Recomputed to `user`: the only remaining b1a item (B1A-LIFECYCLE-STATES-747) is blocked on a user_decision (not agent-solvable), and b2 carries open user decisions (B2-S1..S6, B2-APQC).
+
+### JWT errors
+
+None.

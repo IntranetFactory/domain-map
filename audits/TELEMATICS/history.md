@@ -330,3 +330,46 @@ Everything outside modules + entity assignment stays open and is re-keyed in sta
 
 FLEET-MGMT, FLEET-MAINT, GRC, INS-CLAIMS, FMIS module-FK obligations on the 11 TELEMATICS-touching handoffs persist. The source-side FK is now derivable (TELEMATICS modules exist); the target-side stays NULL pending each neighbor's modularization.
 
+## 2026-06-06 - b1a execution
+
+Executed both pending b1a items against the live `domain_map` module for TELEMATICS (domain 148). Both are FULLY RESOLVED and removed from state.yaml.
+
+### B1A-F2-MODULE-SYSTEM-SKILLS - DONE
+
+Phase S, Rule #17. Authored one module-scoped system skill per module and retired the legacy domain-level skill.
+
+- `skills` inserts (record_status defaulted to `new`, omitted on insert):
+  - id **314** `telematics_fleet_tracking_agent` (skill_type=system, domain_id=148, domain_module_id=306)
+  - id **315** `telematics_compliance_safety_agent` (skill_type=system, domain_id=148, domain_module_id=307)
+- `skill_tools` re-link (PATCH `skill_id` only; row ids, tool_ids, requirement_level=`required` all preserved). The 8 platform-tier `query_*` tools (tool ids 717-720, 847-850) were re-pointed from legacy skill 112 to the module that masters each tool's data_object:
+  - st 864 (query_vehicle_trips, do 375): skill 112 -> 314
+  - st 1010 (query_geofence_events, do 733): skill 112 -> 314
+  - st 1011 (query_gps_waypoints, do 731): skill 112 -> 314
+  - st 1012 (query_idle_events, do 732): skill 112 -> 314
+  - st 865 (query_driver_behavior_events, do 376): skill 112 -> 315
+  - st 866 (query_eld_logs, do 377): skill 112 -> 315
+  - st 867 (query_dashcam_events, do 378): skill 112 -> 315
+  - st 1013 (query_driver_safety_scorecards, do 734): skill 112 -> 315
+  - Result: skill 314 holds 4 skill_tools (fleet-tracking masters), skill 315 holds 4 (compliance-safety masters). All 8 tools are `operation_kind=query` with non-null data_object_id and `coverage_tier=platform`, so F4 holds.
+- `skills` DELETE: legacy skill **112** `telematics-system` deleted after its skill_tools were re-linked (zero remaining). Prior values snapshotted for reversibility: `{id:112, skill_name:"telematics-system", skill_type:"system", domain_id:148, domain_module_id:null, record_status:"new", description:"System skill for Vehicle Telematics - runtime workflows over the domain's master data, derived from masters + cross-domain handoffs."}`.
+- Note on the task brief's `extra_tool_ids` / "skill_tools ids 717..850": those numbers are the `tools.id` values (one query tool per master), not the `skill_tools.id` values. The actual skill_tools rows on legacy skill 112 were ids 864-867 and 1010-1013; those are the rows that were PATCHed.
+- F1/F2/F3 now pass for TELEMATICS: legacy domain-level system skill gone, exactly one system skill per module, each with >=1 skill_tools.
+
+### B1A-M8-MODULE-CATALOG-UX - DONE
+
+Rule #20 (revised) / Rule #6 of the task brief: wrote buyer-voice copy directly into the EMPTY catalog fields with an empty-guard per field (write only where current value was empty). All three rows had both fields empty, so all six fields were written. record_status on each row carries the review signal; no draft parked in this file as a stand-in. PATCH (no prior non-empty value overwritten):
+
+- `domains` id 148: wrote `catalog_tagline` + `catalog_description` (was empty/empty).
+- `domain_modules` id 306 (TELEMATICS-FLEET-TRACKING): wrote `catalog_tagline` + `catalog_description` (was empty/empty).
+- `domain_modules` id 307 (TELEMATICS-COMPLIANCE-SAFETY): wrote `catalog_tagline` + `catalog_description` (was empty/empty).
+
+Copy is buyer voice (workflow + value), no vendor/product names, no em-dashes, American English.
+
+### Skipped / blocked
+
+Nothing in b1a was skipped (no `user_decision` blockers on the two b1a items). All b1b items remain blocked as previously keyed (relationship-authoring / alias / lifecycle passes out of scope, user-decision gates, neighbor modularization).
+
+### Post-execution next_action_by
+
+b1a is now empty; b2 carries open user-judgment items (B2-PERSONAL-CONTENT-SCOPE, B2-LIFECYCLE-EXEMPTIONS, B2-DVIR-OWNERSHIP, B2-NOTIFY-TEAM-COVERAGE-TIER, B2-EVENT-CATEGORY-CONFIRMATION, B2-FMIS-INBOUND-ROUTING, B2-HANDOFF-312-FATE). `next_action_by: user`.
+

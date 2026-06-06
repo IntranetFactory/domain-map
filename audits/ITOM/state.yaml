@@ -2,94 +2,29 @@ schema_version: 2
 domain: ITOM
 status: feedback_needed
 next_action_by: agent
-last_audit: "2026-06-02"
+last_audit: "2026-06-06"
 
 b1a:
-  - id: B1A-SYS-SKILLS
-    summary: "3 ITOM modules (267, 268, 269) have zero per-module system skills; author one each (Rule #17 -> F2/F3) and retire legacy itom-system skill 74."
-    finding: >
-      Modularization on 2026-06-02 created ITOM-INFRA-MON (267), ITOM-CAPACITY-PLAN (268),
-      ITOM-OPS-AUTOMATION (269), all module_kind='full'. Rule #17 requires exactly one
-      skill_type='system' skill per domain_modules row, anchored on domain_module_id. None
-      exist yet (F2 fail: 0 per-module system skills, 1 misanchored legacy skill). The legacy
-      domain-level skill itom-system (skills.id=74, domain_module_id=null) with 6 skill_tools
-      rows (query_events, query_alerts, query_monitoring_policies, query_capacity_records,
-      send_email, post_chat_message) must retire (F1, B1B-S13) once the per-module skills exist,
-      and the channel primitives send_email (37) / post_chat_message (40) should be re-anchored
-      on notify_person / notify_team abstractions (F7, B1B-S14).
-    action: >
-      Author 3 skill_type='system' skills, one per module (267/268/269), each with the
-      query/notify tool set scoped to that module's data_objects (F3/F4 operation_kind <->
-      data_object_id invariant). Use notify_person / notify_team rather than send_email /
-      post_chat_message as defaults. Then DELETE legacy skills.id=74 and its 6 skill_tools rows.
-      Out of scope on the 2026-06-02 modularization pass (modules + entity assignment only).
-    affected_modules:
-      - 267
-      - 268
-      - 269
-
-  - id: B1A-HANDOFF-FK-BACKFILL
-    summary: "12 ITOM-side per-module handoff FKs still null; now backfillable since modules exist (was B1B-S9, M1-blocked)."
-    finding: >
-      The 4 outbound ITOM handoffs (28, 53, 619, 620) have source_domain_module_id=null and the
-      9 inbound handoffs (50, 54, 59, 605, 607, 673, 681, 755, 761) have target_domain_module_id=null
-      except handoff 28 (target=38 ITSM-INCIDENT-MGMT, correct on ITSM side). With ITOM modules now
-      authored, the ITOM-side FKs can be assigned: outbound monitoring/event handoffs (28, 53) ->
-      source_domain_module_id=267 (ITOM-INFRA-MON); outbound capacity handoffs (619, 620) ->
-      267 or 268 (capacity payload favors 268 ITOM-CAPACITY-PLAN); inbound monitoring/alert/event
-      handoffs (50, 54, 59, 605, 607, 755, 761, 673, 681) -> target_domain_module_id 267 (or 268
-      for the capacity-shaped ones).
-    action: >
-      PATCH source_domain_module_id / target_domain_module_id per handoff to the matching ITOM
-      module. Exact per-handoff mapping to confirm against payload-to-master alignment before write.
-    affected_handoffs:
-      - {handoff_id: 28, direction: outbound, source_domain: ITOM, target_domain: ITSM, trigger_event: monitoring_event.alert_triggered, payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 53, direction: outbound, source_domain: ITOM, target_domain: AIOPS, trigger_event: events.burst_detected, payload: event_correlations, null_field: source_domain_module_id}
-      - {handoff_id: 619, direction: outbound, source_domain: ITOM, target_domain: AIOPS, trigger_event: capacity_record.threshold_breached, payload: capacity_records, null_field: source_domain_module_id}
-      - {handoff_id: 620, direction: outbound, source_domain: ITOM, target_domain: SPM, trigger_event: capacity_record.forecast_exhaustion, payload: capacity_records, null_field: source_domain_module_id}
-      - {handoff_id: 50, direction: inbound, source_domain: DISCOVERY, target_domain: ITOM, trigger_event: monitoring_policy.coverage_requested, payload: monitoring_policies, null_field: target_domain_module_id}
-      - {handoff_id: 54, direction: inbound, source_domain: OBS, target_domain: ITOM, trigger_event: monitoring_alert.threshold_breached, payload: monitoring_alerts, null_field: target_domain_module_id}
-      - {handoff_id: 59, direction: inbound, source_domain: AIOPS, target_domain: ITOM, trigger_event: monitoring_event.suppression_applied, payload: monitoring_events, null_field: target_domain_module_id}
-      - {handoff_id: 605, direction: inbound, source_domain: AIOPS, target_domain: ITOM, trigger_event: predictive_signal.elevated, payload: predictive_signals, null_field: target_domain_module_id}
-      - {handoff_id: 607, direction: inbound, source_domain: AIOPS, target_domain: ITOM, trigger_event: alert_suppression_rule.activated, payload: alert_suppression_rules, null_field: target_domain_module_id}
-      - {handoff_id: 673, direction: inbound, source_domain: DCIM, target_domain: ITOM, trigger_event: dc_environmental_reading.threshold_breached, payload: dc_environmental_readings, null_field: target_domain_module_id}
-      - {handoff_id: 681, direction: inbound, source_domain: DCIM, target_domain: ITOM, trigger_event: dc_rack.capacity_threshold_breached, payload: dc_racks, null_field: target_domain_module_id}
-      - {handoff_id: 755, direction: inbound, source_domain: APP-PAAS, target_domain: ITOM, trigger_event: paas_runtime.scaled, payload: paas_runtime_instances, null_field: target_domain_module_id}
-      - {handoff_id: 761, direction: inbound, source_domain: KUBE-PLAT, target_domain: ITOM, trigger_event: cluster_node_pool.scaled, payload: cluster_node_pools, null_field: target_domain_module_id}
-
   - id: B1A-ROLE-MODULES
-    summary: "Zero role_modules for ITOM; now authorable since modules exist (was B1B-S12, M1-blocked)."
+    summary: "Zero role_modules for ITOM; SKIPPED 2026-06-06 (action's persona-to-module mapping violates the 2-module floor; full Phase E needs reach + lifecycle wiring)."
     finding: >
       No role_modules rows bundle a persona against any ITOM module. With ITOM-INFRA-MON (267),
       ITOM-CAPACITY-PLAN (268), ITOM-OPS-AUTOMATION (269) live, routine ITOM personas can be
-      bundled: NOC Engineer and Site Reliability Engineer against 267, Capacity Planner against
-      268, Automation / Ops Engineer against 269.
+      bundled. SKIPPED on the 2026-06-06 b1a pass: the action's literal mapping pins each persona
+      to a SINGLE module (NOC Engineer -> 267, SRE -> 267, Capacity Planner -> 268, Automation/Ops
+      -> 269), which violates the hard 2-module floor (E2: every domain_roles persona needs >=2
+      role_modules entries; a single-module persona is a permission tier, not a persona). Authoring
+      valid personas requires deciding each persona's full multi-module reach (primary/secondary)
+      plus process_raci responsibility and data_object_lifecycle_states.process_id wiring. ITOM has
+      ZERO lifecycle states (B1B-S11, user_decision-blocked), so no gated process exists for R/A
+      assignments to resolve against. This is a full Phase E authoring pass that needs judgment on
+      reach topology and depends on lifecycle authoring that is user-decision-gated. Per the b1a
+      contract (skip items needing judgment beyond their action text), deferred.
     action: >
-      Author role_modules rows for the standard ITOM personas against the three modules. Run
-      Phase P (personas, role_modules, process_raci, lifecycle.process_id) now that the domain
-      is multi-module. Out of scope on the modularization-only pass.
-
-  - id: B1A-CONSUMER-DMDO
-    summary: "Inbound foreign-mastered payloads lack consumer DMDO rows on ITOM modules; now authorable (was B1B-S18, M1-blocked)."
-    finding: >
-      8 inbound handoffs carry foreign-mastered payloads ITOM should hold as consumer DMDO rows:
-      service_maps (79), event_correlations (93), predictive_signals (96), alert_suppression_rules
-      (722), dc_environmental_readings (552), dc_racks (546), paas_runtime_instances (466),
-      cluster_node_pools (449). With modules now live, attach each as a consumer row on the matching
-      ITOM module (mostly 267 ITOM-INFRA-MON; capacity-shaped ones on 268).
-    action: >
-      Author consumer domain_module_data_objects rows for the 8 payloads on the appropriate ITOM
-      module. Reuse existing data_objects (no new entities). Out of scope on the modularization-only
-      pass (which deliberately created no consumer rows beyond the in-domain assignment).
-    affected_entities:
-      - service_maps
-      - event_correlations
-      - predictive_signals
-      - alert_suppression_rules
-      - dc_environmental_readings
-      - dc_racks
-      - paas_runtime_instances
-      - cluster_node_pools
+      Author personas (domain_roles, function-scoped naming) with >=2-module role_modules reach
+      each, then their process_raci assignments, once the persona reach topology is settled and the
+      lifecycle state machines (B1B-S11) land to provide gated processes. Needs a Phase E judgment
+      pass; not executable from the current action text without violating the 2-module floor.
 
 b1b:
   - id: B1B-S3

@@ -482,3 +482,120 @@ catalog_description) now applicable to the 3 new modules.
 ### JWT errors
 
 None.
+
+## 2026-06-06 - b1a execution
+
+Loader: [.tmp_deploy/fix_fsqm_b1a_2026_06_06.ts](../../.tmp_deploy/fix_fsqm_b1a_2026_06_06.ts).
+Run from project root, idempotent. No JWT errors. Tenant verified (adenin org, domain_map
+module 1001).
+
+### B1A-MODULE-CATALOG-UX (DONE)
+
+Revised Rule #20 empty-guard: every target field was empty, so buyer-voice copy was written
+straight into the column (record_status carries the review signal; not parked in history).
+
+- `domains` id 157 (FSQM): wrote `catalog_tagline` + `catalog_description`. Prior values both
+  `""`.
+- `domain_modules` id 259 (FSQM-HACCP-CCP): wrote `catalog_tagline` + `catalog_description`.
+  Prior values both `""`.
+- `domain_modules` id 263 (FSQM-HYGIENE-CONTROL): wrote `catalog_tagline` +
+  `catalog_description`. Prior values both `""`.
+- `domain_modules` id 264 (FSQM-AUDIT-SUPPLIER): wrote `catalog_tagline` +
+  `catalog_description`. Prior values both `""`.
+
+### B1A-LIFECYCLE-STATES (DONE)
+
+Prerequisite per Rule #12: lifecycle states are valid only on `entity_type='operational_workflow'`.
+All 7 masters were `entity_type='unclassified'` and carry genuine operational workflows, so each
+was PATCHed to `operational_workflow` before authoring states.
+
+- `data_objects` PATCH (prior value `unclassified` on each): 507, 508, 509, 510, 511, 512, 513
+  -> `entity_type='operational_workflow'`.
+- `data_object_lifecycle_states` INSERT: 34 rows.
+  - 507 haccp_plans (module 259): draft(i) -> reviewed(g) -> approved(g) -> in_effect(g) ->
+    superseded -> archived(t). 6 states.
+  - 508 critical_control_points (259): defined(i) -> active(g) -> deactivated(t,g). 3 states.
+  - 509 ccp_measurements (259): recorded(i) -> reviewed(g) -> in_deviation -> corrected(t,g).
+    4 states.
+  - 510 food_safety_incidents (259): opened(i) -> under_investigation(g) -> contained(g) ->
+    corrected(g) -> closed(t,g) -> escalated(t,g). 6 states.
+  - 511 allergen_programs (module 263): draft(i) -> approved(g) -> active(g) -> suspended(t,g).
+    4 states.
+  - 512 environmental_monitoring_samples (263): collected(i) -> in_lab -> result_received(g) ->
+    adverse -> re_sampled -> closed(t,g). 6 states.
+  - 513 sanitation_records (263): scheduled(i) -> in_progress -> completed(g) -> verified(t,g)
+    -> failed(t,g). 5 states.
+  - (i)=is_initial, (t)=is_terminal, (g)=requires_permission workflow gate. `domain_module_id`
+    set per realizing module (507-510 -> 259; 511-513 -> 263) per the b1a spec.
+
+### B1A-S7 (DONE)
+
+- `trigger_events` INSERT: 4 rows.
+  - 1521 `haccp_plan.due_for_review` (threshold, payload 507, module 259).
+  - 1522 `food_safety_incident.opened` (lifecycle, payload 510, module 259).
+  - 1523 `food_safety_incident.closed` (lifecycle, payload 510, module 259).
+  - 1524 `environmental_monitoring_sample.adverse_trend` (threshold, payload 512, module 263).
+- `handoffs` INSERT: 4 rows (one per new event), all `lifecycle_progression`.
+  - 1364: due_for_review, 157->157, src module 259 / tgt module 259, friction low.
+  - 1365: incident.opened, 157->157, src 259 / tgt 259, friction low.
+  - 1366: incident.closed, 157->157, src 259 / tgt 259, friction low.
+  - 1367: EMP.adverse_trend, 157->157, src 263 / tgt 259 (adverse trend escalates to incident
+    investigation in 259), friction medium.
+
+### B1A-HANDOFF-MODULE-FK (DONE)
+
+All 13 handoffs PATCHed. Prior value on each patched field was NULL.
+
+- Outbound `source_domain_module_id` NULL -> module: 356->259, 358->259, 975->259, 976->259,
+  977->263, 978->263, 979->263, 980->259.
+- Inbound `target_domain_module_id` NULL -> module: 352->259, 354->259, 355->259, 361->264,
+  971->259.
+- (Inbound 352/354/355 retain their existing source-side module FKs owned by the source domains:
+  253 FMIS, 229 / 227 DAIRY; FSQM only owns the target side.)
+
+### B1A-MODULE-SYSTEM-SKILLS (DONE)
+
+- `skills` INSERT (Rule #17, one system skill per module, channel abstractions instead of
+  send_email per F7):
+  - 383 `fsqm_haccp_ccp_agent` (skill_type=system, domain_module_id=259).
+  - 384 `fsqm_hygiene_control_agent` (system, 263).
+  - 385 `fsqm_audit_supplier_agent` (system, 264).
+- `skill_tools` INSERT: 21 rows total (all tools pre-existed catalog-wide; no new `tools`
+  created).
+  - skill 383 (6): query_haccp_plans 492, query_critical_control_points 493,
+    query_ccp_measurements 494, query_food_safety_incidents 495, notify_person 913 (required),
+    notify_team 914 (optional).
+  - skill 384 (5): query_allergen_programs 496, query_environmental_monitoring_samples 497,
+    query_sanitation_records 498, notify_person 913 (required), notify_team 914 (optional).
+  - skill 385 (10): query_supplier_certifications 489, query_suppliers 21,
+    query_compliance_obligations 85, query_recall_events 488, create_supplier_certification 1746
+    (optional), update_supplier_certification 1747 (optional), initiate_recall 1744 (required),
+    update_recall_event 1745 (optional), notify_person 913 (required), notify_team 914 (optional).
+- Legacy skill cleanup (F1): DELETE `skill_tools` skill_id=64 (8 rows: ids 573-580, tools 492,
+  493, 494, 495, 496, 497, 498, send_email 37) then DELETE `skills` id=64 (`fsqm-system`,
+  domain_id=157, domain_module_id=null). Prior row snapshot: skill 64 was the only legacy
+  domain-level system skill; its send_email link (F7) is retired in favor of notify_person /
+  notify_team on the per-module skills.
+
+### Skipped
+
+- **B1A-S3** (pattern-flag review on the 7 masters). The action text requires "Per-master PATCH
+  after user confirms each flag value per row" and explicitly frames the likely-true cases as
+  "proposed for user review, not auto-applied". Setting `has_personal_content` /
+  `has_submit_lock` / `has_single_approver` is a per-row master-data judgment gated on user
+  confirmation, so it is not agent-solvable. Left open in state.yaml. (Note: lifecycle states
+  for the workflow-gate transitions were authored, but the three boolean pattern flags remain at
+  their default `false` pending user sign-off.)
+
+### Verification (re-queried live)
+
+- 34 `data_object_lifecycle_states` rows on masters 507-513 with correct per-module FKs.
+- 3 system skills on modules 259/263/264; legacy skill 64 absent.
+- 21 `skill_tools` rows across skills 383/384/385.
+- 4 new `trigger_events` (1521-1524) + 4 new `handoffs` (1364-1367).
+- 13 backfilled handoffs carry their FSQM-side module FK; new intra-domain handoffs carry both.
+- catalog_tagline populated on domain 157 and modules 259/263/264.
+
+### JWT errors
+
+None.

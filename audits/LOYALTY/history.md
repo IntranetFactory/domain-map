@@ -405,3 +405,109 @@ M1 now passes, which unblocks the module-dependent items previously parked behin
 ### Deferred (out of scope for this pass)
 
 All non-module work remains for later passes: per-module system skills + legacy skill 81 retirement (F2/F3/F1, was B1B-S2/S3), lifecycle states (B1B-S4), aliases (B1B-S5), intra/cross-domain and users relationships (B1B-S6/S7/S8), handoff source-module backfill (B1B-S9, now unblocked), catalog UX (A4, B1B-S10), capability ownership overrides (C2, B1B-S11), and the five missing-master candidates (B1B-M1..M5). B1B-M4 (`promotion_campaigns`) is now the natural master for LOYALTY-ENGAGEMENT (id 274), which currently has no in-domain master; flagged as the priority missing-master for this domain.
+
+## 2026-06-06 - b1a execution
+
+### Scope
+
+Executed the agent-solvable `b1a` task list for LOYALTY against the live `domain_map` module (adenin org, module 1001). Three of four `b1a` items fully resolved; one skipped (user-decision gated). No new data_objects, capabilities, relationships, lifecycle states, aliases, or handoffs created (those remain in `b1b`). Loader: `c:/dev/domain-map/.tmp_deploy/loyalty_system_skills_2026-06-06.ts`.
+
+### B1A-S12 - DONE (PATCH trigger_events)
+
+Set `event_category='lifecycle'` on three trigger_events that carried `event_category=''` (Rule #13 enum: lifecycle, state_change, threshold, signal).
+
+| trigger_event id | event_name | prior event_category | new event_category |
+|---|---|---|---|
+| 497 | loyalty_transaction.posted | "" | lifecycle |
+| 498 | redemption_reward.published | "" | lifecycle |
+| 499 | redemption_transaction.completed | "" | lifecycle |
+
+### B1A-S9 - DONE (PATCH handoffs.source_domain_module_id)
+
+B10b backfill on the 4 outbound LOYALTY handoffs. Derivation: source module = the LOYALTY module that masters `trigger_events.data_object_id` with the strongest role (verified against `domain_module_data_objects` master rows: 263->272, 264->273, 265->272, 717->273, 718->273).
+
+| handoff id | trigger_event | event data_object | prior source_domain_module_id | new source_domain_module_id |
+|---|---|---|---|---|
+| 231 | tier.upgraded (204) | loyalty_tiers (265) | NULL | 272 |
+| 232 | member.lapsed (205) | loyalty_members (263) | NULL | 272 |
+| 497 | loyalty_transaction.posted (497) | loyalty_transactions (264) | NULL | 273 |
+| 498 | redemption_transaction.completed (499) | redemption_transactions (718) | NULL | 273 |
+
+`target_domain_module_id` remains NULL on handoffs 497 (ERP-FIN) and 498 (B2C-COMM); those are the target domains' B10b (report-only, owed by ERP-FIN and B2C-COMM), not LOYALTY's to resolve. Handoffs 231 (target 46 CRM-ACCT-MGT) and 232 (target 198 MA) already carried target module FKs.
+
+### B1A-SYSTEM-SKILLS - DONE (skills + skill_tools inserts, legacy DELETE)
+
+Authored one `skill_type='system'` skill per LOYALTY module (Rule #17 / F2), each with >=1 reused platform-covered `query` tool (F3), then retired legacy skill 81 (F1) strictly AFTER the module skills + tools were verified live. All inserts omitted `record_status` (DB default `new`); `skill_tools.notes` left empty (Rule #15). No new `tools` rows created (reused existing catalog-wide query tools; dedup by tool_name).
+
+New skills:
+
+| skill id | skill_name | domain_module_id | record_status |
+|---|---|---|---|
+| 365 | loyalty_program_core_agent | 272 | new |
+| 366 | loyalty_points_rewards_agent | 273 | new |
+| 367 | loyalty_engagement_agent | 274 | new |
+
+New skill_tools (6 rows, all `requirement_level=required`, `record_status=new`):
+
+| skill_tools id | skill_id | tool_id | tool_name |
+|---|---|---|---|
+| 3070 | 365 | 571 | query_loyalty_members |
+| 3071 | 365 | 573 | query_loyalty_tiers |
+| 3072 | 366 | 572 | query_loyalty_transactions |
+| 3073 | 366 | 826 | query_redemption_rewards |
+| 3074 | 366 | 827 | query_redemption_transactions |
+| 3075 | 367 | 571 | query_loyalty_members (consumer read; module 274 has no in-domain master) |
+
+Legacy DELETEs (prior values snapshotted for reversibility):
+
+- DELETE skill 81: `{id:81, skill_name:"loyalty-system", skill_type:"system", domain_id:78, domain_module_id:NULL}`.
+- DELETE 6 skill_tools on skill 81: id 666 (tool 571 query_loyalty_members), 667 (572 query_loyalty_transactions), 668 (573 query_loyalty_tiers), 669 (37 send_email, side_effect), 988 (826 query_redemption_rewards), 989 (827 query_redemption_transactions). All were `requirement_level=required`.
+
+F7 / B2-SEND-EMAIL resolution: the `send_email` (tool 37) channel-primitive link (skill_tools 669) was the F7 violation on skill 81. It dissolved with the legacy skill delete; no new module skill carries `send_email` (channel-vs-capability default is `notify_person`/`notify_team`, and no LOYALTY module workflow requires the email channel specifically). B2-SEND-EMAIL is therefore moot; left in `b2` for the record but no separate fix needed.
+
+Post-load verification (live): module 272 -> 1 system skill / 2 skill_tools; 273 -> 1 / 3; 274 -> 1 / 1. Legacy domain-level system skills for domain 78 with `domain_module_id IS NULL` = 0 (F1 pass). F2 (exactly one system skill per module) and F3 (>=1 skill_tools per skill) pass on all three modules.
+
+### B1A-M8-MODULE-UX - SKIPPED (blocked_by user_decision)
+
+The item carries `blocked_by: {type: user_decision, ref: B2-CATALOG-UX}`. Per the execution contract, any `b1a` item whose `blocked_by` contains a `user_decision` is skipped, not executed. The three modules (272/273/274) and the LOYALTY domain row do have empty `catalog_tagline` / `catalog_description`, and the revised Rule #20 would normally have empty catalog UX fields written straight into the column. The two directives conflict for this specific row: the item is explicitly gated by a `user_decision` blocker AND its own `action` text (written under the prior Rule #20) says to surface drafts via B2-CATALOG-UX rather than auto-write. Resolving conservatively on load-bearing master data, the `user_decision`-gated skip takes precedence: the empty catalog UX fields were left untouched and the item remains in `b1a`. Flag for the user: confirm whether the agent should write buyer-voice taglines/descriptions for modules 272/273/274 and the LOYALTY domain row directly into the empty fields (revised Rule #20 backfill), which would resolve B1A-M8-MODULE-UX and supersede the B2-CATALOG-UX gate.
+
+### State changes
+
+- Removed resolved items from `state.yaml` `b1a`: B1A-S12, B1A-S9, B1A-SYSTEM-SKILLS. Kept B1A-M8-MODULE-UX (skipped).
+- `next_action_by`: agent -> user. The sole remaining `b1a` item is gated on a `user_decision` (B2-CATALOG-UX) and `b2` has open items, so the next actionable step is the user's.
+- `last_audit`: "2026-06-06".
+
+### UI
+
+- https://tests.semantius.app/domain_map/skills
+- https://tests.semantius.app/domain_map/skill_tools
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/handoffs
+
+### B1A-M8-MODULE-UX - DONE (follow-up, catalog UX backfill written)
+
+Superseded the earlier SKIP above. Under the REVISED Rule #20 (and the batch-policy correction), an EMPTY `catalog_tagline` / `catalog_description` is WRITTEN directly with buyer-voice copy; the row's `record_status` (`new`) carries the review signal. The stale `blocked_by: user_decision B2-CATALOG-UX` annotation was written under the OLD Rule #20 and is moot for EMPTY fields. Executed the write now. Loader: `c:/dev/domain-map/.tmp_deploy/loyalty_catalog_ux_2026-06-06.ts` (re-reads each live row, per-field empty-guard, omits `record_status`, refuses any em-dash, idempotent on re-run).
+
+Re-read confirmed all 8 fields (2 columns x 4 rows) were empty strings immediately before the PATCH; all four rows carried `record_status='new'`. Prior values snapshotted for reversibility (all empty):
+
+| table | row id | code | catalog_tagline (prior) | catalog_description (prior) |
+|---|---|---|---|---|
+| domains | 78 | LOYALTY | "" | "" |
+| domain_modules | 272 | LOYALTY-PROGRAM-CORE | "" | "" |
+| domain_modules | 273 | LOYALTY-POINTS-REWARDS | "" | "" |
+| domain_modules | 274 | LOYALTY-ENGAGEMENT | "" | "" |
+
+Fields written (buyer voice: workflow + value; no vendor/product names; no em-dashes; American English). Both columns written on all four rows (every prior value was empty, so the empty-guard wrote each one; zero non-empty values overwritten):
+
+- domains 78 (LOYALTY): tagline "Reward repeat customers with points, tiers, and personalized perks that grow customer lifetime value." + 3-paragraph description (enrollment/profiles/tiers; accrual rules/rewards catalog/redemption/coalitions; member portal/analytics/integration).
+- domain_modules 272 (LOYALTY-PROGRAM-CORE): tagline "Enroll members, keep their profiles current, and move them up tiers as they engage." + 2-paragraph description (member profiles + enrollment; tier design + automatic progression).
+- domain_modules 273 (LOYALTY-POINTS-REWARDS): tagline "Track every point earned and spent, and let members redeem rewards from a catalog you control." + 2-paragraph description (points ledger + accrual rules; rewards catalog lifecycle + redemption fulfillment).
+- domain_modules 274 (LOYALTY-ENGAGEMENT): tagline "Run bonus campaigns, partner offers, and a self-service member portal that keeps people coming back." + 2-paragraph description (promotions + partner coalitions; member portal + ongoing engagement).
+
+`record_status` left as-is (`new`) on every row; nothing approved/pending/rejected. No column named `notes` touched.
+
+### State changes (follow-up)
+
+- Removed B1A-M8-MODULE-UX from `state.yaml` `b1a` (resolved by writing the fields; the stale `user_decision` block was moot for empty fields under revised Rule #20). `b1a` is now empty.
+- Recomputed `next_action_by`: b1a empty -> b2 non-empty -> `user`. (Precedence: agent if b1a non-empty > user if b2 > research if b3 > blocked if b1b.) Unchanged at `user`, now justified by open `b2` items rather than the (removed) gated `b1a` item.
+- `last_audit`: "2026-06-06".

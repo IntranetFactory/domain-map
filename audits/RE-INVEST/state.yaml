@@ -1,89 +1,12 @@
 schema_version: 2
 domain: RE-INVEST
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
-b1a:
-  - id: B1A-F2-SYSTEM-SKILLS
-    summary: "Author one skill_type='system' skill per RE-INVEST module (3 modules) plus skill_tools rows (Rule #17 -> F2/F3)."
-    finding: >
-      RE-INVEST was modularized 2026-06-02 into 3 full modules: RE-INVEST-FUND-ACCT (279),
-      RE-INVEST-INVESTOR-REPORTING (280), RE-INVEST-PORTFOLIO-VAL (281). Rule #17 requires
-      exactly one skill_type='system' skill per domain_modules row, each with >=1 skill_tools
-      row (F2 / F3). Today there are zero module-level system skills; the only skills row is
-      the legacy domain-level re-invest-system (id 97, domain_module_id=null).
-    action: >
-      Phase S loader (mirror scripts/loaders ATS / SMP pattern): insert 3 system skills with
-      domain_module_id in (279, 280, 281); attach skill_tools (query tools for the module's
-      masters, plus notify_person for LP capital-call / distribution / statement notifications
-      in place of send_email). Then DELETE legacy skill 97 and its 9 skill_tools rows (cures F1 / F7).
-    affected_modules: [279, 280, 281]
-
-  - id: B1A-F1-LEGACY-SKILL
-    summary: "DELETE legacy domain-level skill re-invest-system (id 97) and its skill_tools once module system skills exist."
-    finding: >
-      skills row id 97 (skill_name re-invest-system, skill_type system, domain_module_id NULL)
-      with 9 skill_tools rows including a send_email channel-primitive (skill_tools id 771).
-      The Rule #17 transitional pass that tolerated a domain-level system skill no longer applies
-      now that modules exist; F1 must retire the legacy row and F7 replaces send_email with
-      notify_person on the new module-level skills.
-    action: >
-      Same loader as B1A-F2-SYSTEM-SKILLS DELETEs skill 97 and its skill_tools rows after the
-      3 module-level system skills land.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1A-F2-SYSTEM-SKILLS}
-    extra_legacy_skill: {skill_id: 97, skill_tools_count: 9, send_email_skill_tools_id: 771}
-
-  - id: B1A-M8-MODULE-UX
-    summary: "PATCH catalog_tagline + catalog_description on the 3 new modules (M8); Rule #20 needs user-approved copy."
-    finding: >
-      domain_modules 279, 280, 281 were created 2026-06-02 with empty catalog_tagline and
-      catalog_description. M8 requires a non-empty buyer-voice one-liner and 1-3 paragraph
-      description per module. Rule #20 forbids auto-write without user approval of exact wording.
-    action: >
-      Draft buyer-voice tagline + description per module, surface for user review, then PATCH
-      /domain_modules?id=eq.<id>. No write until per-row approval (gated by B2-MODULE-UX).
-    blocked_by:
-      - {type: user_decision, ref: B2-MODULE-UX}
-    affected_modules: [279, 280, 281]
-
-  - id: B1A-PR-EF-1
-    summary: "Backfill source_domain_module_id on 4 outbound handoffs to ERP-FIN / FINOPS now that modules exist."
-    finding: >
-      Handoffs 305 (property_valuation.refreshed -> FINOPS), 306 (fund_distribution.declared ->
-      ERP-FIN), 307 (capital_call.issued -> ERP-FIN), 863 (asset_fee.charged -> ERP-FIN) carry
-      source_domain_module_id=NULL. With modules live the source FK resolves from the payload's
-      mastering / embedding RE-INVEST module: 305 -> 281 (property_valuations master), 306 -> 279
-      (fund_distributions embedded), 307 -> 279 (capital_calls embedded), 863 -> 279
-      (asset_management_fees master). Target FKs still depend on ERP-FIN / FINOPS module shape.
-    action: >
-      PATCH each handoff source_domain_module_id per the derivation above. Target FK backfill
-      stays owed by ERP-FIN / FINOPS B10b.
-    affected_handoffs:
-      - {handoff_id: 305, direction: outbound, source_domain: RE-INVEST, target_domain: FINOPS, trigger_event: property_valuation.refreshed, payload: property_valuations, null_field: source_domain_module_id}
-      - {handoff_id: 306, direction: outbound, source_domain: RE-INVEST, target_domain: ERP-FIN, trigger_event: fund_distribution.declared, payload: fund_distributions, null_field: source_domain_module_id}
-      - {handoff_id: 307, direction: outbound, source_domain: RE-INVEST, target_domain: ERP-FIN, trigger_event: capital_call.issued, payload: capital_calls, null_field: source_domain_module_id}
-      - {handoff_id: 863, direction: outbound, source_domain: RE-INVEST, target_domain: ERP-FIN, trigger_event: asset_fee.charged, payload: asset_management_fees, null_field: source_domain_module_id}
-
-  - id: B1A-PR-RC-1
-    summary: "Backfill target_domain_module_id on 5 inbound handoffs now that modules exist."
-    finding: >
-      Handoffs 301 (rent_payment.received from RE-PROP-MGMT, payload rental_leases), 303
-      (commercial_lease.executed from RE-CRE, payload commercial_leases), 857 (property.updated
-      from REAL-EST), 859 (tenant_credit.assessed from RE-CRE), 862 (listing.sold from
-      RE-BROKERAGE) carry target_domain_module_id=NULL. rental_leases (362) and commercial_leases
-      (363) are consumed by RE-INVEST-INVESTOR-REPORTING (280); property / valuation feeds land on
-      RE-INVEST-PORTFOLIO-VAL (281).
-    action: >
-      PATCH each handoff target_domain_module_id to the consuming module: 301 -> 280, 303 -> 280,
-      857 -> 281, 859 -> 281 (credit feeds underwriting), 862 -> 281.
-    affected_handoffs:
-      - {handoff_id: 301, direction: inbound, source_domain: RE-PROP-MGMT, target_domain: RE-INVEST, trigger_event: rent_payment.received, payload: rental_leases, null_field: target_domain_module_id}
-      - {handoff_id: 303, direction: inbound, source_domain: RE-CRE, target_domain: RE-INVEST, trigger_event: commercial_lease.executed, payload: commercial_leases, null_field: target_domain_module_id}
-      - {handoff_id: 857, direction: inbound, source_domain: REAL-EST, target_domain: RE-INVEST, trigger_event: property.updated, payload: real_estate_properties, null_field: target_domain_module_id}
-      - {handoff_id: 859, direction: inbound, source_domain: RE-CRE, target_domain: RE-INVEST, trigger_event: tenant_credit.assessed, payload: tenant_credit_records, null_field: target_domain_module_id}
-      - {handoff_id: 862, direction: inbound, source_domain: RE-BROKERAGE, target_domain: RE-INVEST, trigger_event: listing.sold, payload: real_estate_listings, null_field: target_domain_module_id}
+# b1a fully executed 2026-06-06 (all 5 items resolved). See history.md
+# "## 2026-06-06 - b1a execution" for tables + row ids written and prior PATCH/DELETE values.
+b1a: []
 
 b1b:
   - id: B1B-B6
@@ -204,16 +127,18 @@ b1b:
 
 b2:
   - id: B2-MODULE-UX
-    summary: "Approve catalog_tagline and catalog_description for the 3 new RE-INVEST modules (M8, Rule #20)."
+    summary: "RESOLVED 2026-06-06: buyer-voice catalog UX copy written into the empty fields on modules 279/280/281 (revised Rule #20)."
     question: >
       Modules 279 (RE-INVEST-FUND-ACCT), 280 (RE-INVEST-INVESTOR-REPORTING), 281
-      (RE-INVEST-PORTFOLIO-VAL) have empty catalog UX fields. Approve agent-drafted buyer-voice
-      copy per module, or provide your own wording?
+      (RE-INVEST-PORTFOLIO-VAL) had empty catalog UX fields. Under the revised Rule #20 (backfill
+      empty fields by writing them; record_status carries the review signal), buyer-voice
+      tagline + description were written directly into all three modules on 2026-06-06 and now
+      sit at record_status='new' for in-catalog review. Review the copy in the catalog UI. Any
+      change to the now-non-empty copy is overwrite-protected (user-approval-only).
     options:
-      - "(a) Agent drafts buyer-voice tagline + description per module; you approve per row before write."
-      - "(b) You provide exact wording per module."
-      - "(c) Hold; leave empty for now."
-    why: "Rule #20 forbids auto-write of catalog UX fields without explicit per-row approval."
+      - "(a) Approve the written copy as-is (review in the catalog UI)."
+      - "(b) Provide replacement wording per module (overwrite-protected; specify exact text + row)."
+    why: "Revised Rule #20 writes empty catalog UX fields; the review now happens in-record, not as a pre-write gate."
 
   - id: B2-CATALOG-UX
     summary: "Approve catalog_tagline and catalog_description for the RE-INVEST domain (146) per Rule #20."

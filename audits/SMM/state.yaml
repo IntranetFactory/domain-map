@@ -1,8 +1,8 @@
 schema_version: 2
 domain: SMM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
 # 2026-06-02 modularization built the 4-module shape (path a): SMM-PUBLISHING (299),
 # SMM-ENGAGEMENT (300), SMM-LISTENING (301), SMM-INFLUENCER (302). All M-band structural
@@ -10,139 +10,10 @@ last_audit: "2026-06-02"
 # the build; cascade items below lose their B2-MODULE-SHAPE gate but keep independent blockers.
 
 # b1a: agent-solvable; no other blocker; ready for next-pass technical action
-b1a:
-  - id: B1A-F2-PER-MODULE-SKILLS
-    summary: Retire legacy skill smm-system (id 18) and author 4 per-module system skills (Rule #17 -> F2/F3); redistribute its 12 skill_tools.
-    finding: >-
-      skills.id=18 smm-system carries skill_type=system with domain_module_id=null
-      (F1 transitional state), acceptable only until module-level system skills exist.
-      As of 2026-06-02 the 4 SMM modules exist (SMM-PUBLISHING 299, SMM-ENGAGEMENT 300,
-      SMM-LISTENING 301, SMM-INFLUENCER 302), so the transitional state is now a defect.
-      12 skill_tools hang off skill 18 (8 platform query/mutate, 4 external compute/side_effect:
-      post_social_message, detect_sentiment, generate_image, generate_text).
-    action: >-
-      Author 4 skills rows (skill_type=system, domain_module_id set to 299/300/301/302)
-      e.g. smm_publishing_agent / smm_engagement_agent / smm_listening_agent /
-      smm_influencer_agent; redistribute the 12 skill_tools per module scope (publishing:
-      generate_image, generate_text, post; engagement: post_social_message, detect_sentiment;
-      listening: detect_sentiment; etc.); then DELETE skill 18. Resolve B2-NOTES-SKILLTOOLS
-      (carry-forward vs strip notes) before writing the new skill_tools rows.
-    affected_modules: [299, 300, 301, 302]
-    extra_origin_id: B1-S2 (was B1B-F1-LEGACY-SKILL; unblocked by 2026-06-02 build)
-    extra_first_seen: "2026-05-30"
-
-  - id: B1A-A4-CATALOG-UX
-    summary: Draft and surface domains.catalog_tagline + catalog_description for SMM (M8/A4, Rule #20).
-    finding: >-
-      domains.catalog_tagline and catalog_description are both empty string on the
-      SMM row (id 106). Rule #20 backfill obligation; A4 / M8 hard fail. domains.description
-      already carries analyst copy (workflow + disambiguation against MA / CDP /
-      SALES-ENG); the buyer-voice copy on catalog_tagline / catalog_description is
-      separate and must be drafted afresh.
-    action: >-
-      Draft buyer-voice tagline (one sentence, workflow + value) + buyer-voice
-      description (1-3 paragraphs covering what the buyer can do, NOT market
-      taxonomy). Surface to user for review BEFORE writing. Once non-empty, never
-      overwrite without per-row approval per Rule #20.
-    extra_origin_id: B1-2026-05-31-A
-    extra_first_seen: "2026-05-31"
-
-  - id: B1A-B7-USERS-EDGES
-    summary: Author 6-10 users-edge data_object_relationships rows across SMM masters per Rule #10.
-    finding: >-
-      Zero data_object_relationships rows between users (id 748, kind=platform_builtin)
-      and any of the 6 SMM masters (social_posts 125, social_accounts 126,
-      social_messages 127, social_mentions 128, social_listening_topics 129,
-      influencers 130). Rule #10 requires explicit edges for every user-typed actor.
-    action: >-
-      Load 6-10 rows with verb + inverse_verb + relationship_type + relationship_kind
-      + is_required + owner_side. Covers authors_social_post, schedules_social_post,
-      approves_social_post, responds_to_social_message, owns_social_account,
-      manages_influencer_relationship, owns_social_listening_topic and inverses
-      where cardinality warrants.
-    affected_masters:
-      - {data_object_id: 125, name: social_posts, target_module_id: 299, workflow: author/scheduler/approver}
-      - {data_object_id: 126, name: social_accounts, target_module_id: 299, workflow: owner}
-      - {data_object_id: 127, name: social_messages, target_module_id: 300, workflow: assignee/resolver}
-      - {data_object_id: 128, name: social_mentions, target_module_id: 301, workflow: assignee}
-      - {data_object_id: 129, name: social_listening_topics, target_module_id: 301, workflow: owner}
-      - {data_object_id: 130, name: influencers, target_module_id: 302, workflow: relationship_manager/contract_signer}
-    extra_origin_id: B1-S4
-    extra_first_seen: "2026-05-30"
-
-  - id: B1A-B6-INTRA-RELS
-    summary: Author 4 intra-domain data_object_relationships rows for SMM master chains.
-    finding: >-
-      Zero intra-domain edges among the 6 SMM masters. Expected per audit
-      observation: social_accounts publishes social_posts (1:N);
-      influencers authors social_posts (1:N, for contracted creators);
-      social_listening_topics matches social_mentions (1:N);
-      social_accounts receives social_messages (1:N).
-    action: >-
-      Load 4 rows with verb + inverse_verb + cardinality + relationship_kind +
-      is_required + owner_side. Surface mermaid in draft pre-load.
-    affected_masters:
-      - {data_object_id: 126, name: social_accounts, target_module_id: 299, workflow: publisher/receiver}
-      - {data_object_id: 125, name: social_posts, target_module_id: 299, workflow: published_by_account / authored_by_influencer}
-      - {data_object_id: 130, name: influencers, target_module_id: 302, workflow: authors_post}
-      - {data_object_id: 129, name: social_listening_topics, target_module_id: 301, workflow: matches_mention}
-      - {data_object_id: 128, name: social_mentions, target_module_id: 301, workflow: matched_by_topic}
-      - {data_object_id: 127, name: social_messages, target_module_id: 300, workflow: received_by_account}
-    extra_origin_id: B1-S5
-    extra_first_seen: "2026-05-30"
-
-  - id: B1A-B11-ALIASES
-    summary: Author ~12-18 data_object_aliases rows across the 6 SMM masters.
-    finding: >-
-      Zero alias rows across all 6 SMM masters. Vendor-synonym surface enumerated
-      in 2026-05-30 audit (Conversations, Cases, Inbox Threads for messages;
-      Brand Mentions, Buzz Items for mentions; Updates, Drafts, Scheduled Posts
-      for posts; Profiles, Connected Channels for accounts; Queries, Smart Folders,
-      Themes for listening topics; Creators, Talent for influencers).
-    action: >-
-      Author rows with alias_type=vendor_specific for tool-shaped synonyms and
-      alias_type=industry_synonym for broadly understood market terms.
-    affected_masters:
-      - {data_object_id: 127, name: social_messages, target_module_id: 300, workflow: vendor synonyms}
-      - {data_object_id: 128, name: social_mentions, target_module_id: 301, workflow: vendor synonyms}
-      - {data_object_id: 125, name: social_posts, target_module_id: 299, workflow: vendor synonyms}
-      - {data_object_id: 126, name: social_accounts, target_module_id: 299, workflow: vendor synonyms}
-      - {data_object_id: 129, name: social_listening_topics, target_module_id: 301, workflow: vendor synonyms}
-      - {data_object_id: 130, name: influencers, target_module_id: 302, workflow: vendor synonyms}
-    vendor_evidence:
-      - Sprout Social
-      - Sprinklr Social
-      - Hootsuite
-      - Brandwatch
-      - Meltwater
-      - Talkwalker
-      - Buffer
-      - Aspire
-      - CreatorIQ
-      - Mavrck
-    extra_origin_id: B1-S11
-    extra_first_seen: "2026-05-30"
-
-  - id: B1A-H1-PCF-RELOOKUP
-    summary: Re-lookup APQC PCF for handoffs 90 (influencer_campaign.completed -> MA) and 91 (social_post.published -> MA); tag or defer to Discover Pass 3.
-    finding: >-
-      6/8 cross-domain SMM handoffs carry handoff_processes (record_status=new,
-      proposal_source=agent_curated). 2/8 still untagged: handoff 90 payload
-      marketing_campaigns trigger influencer_campaign.completed; handoff 91 payload
-      marketing_campaigns trigger social_post.published. Prior audit deferred for
-      PCF re-lookup against L4 children of Develop and manage brands (11445 L3)
-      and Manage advertising and customer communications family.
-    action: >-
-      Search PCF for paid-amplification / brand-campaign-completion / channel-execution
-      L4 nodes. If confident L4 match found, INSERT handoff_processes row
-      (proposal_source=agent_curated, record_status=new). If no clean PCF match,
-      record explicit defer-to-Discover-Pass-3 entry in next audit; do not silently
-      leave untagged.
-    affected_handoffs:
-      - {handoff_id: 90, direction: outbound, source_domain: SMM, target_domain: MA, trigger_event: influencer_campaign.completed, payload: marketing_campaigns, null_field: handoff_processes}
-      - {handoff_id: 91, direction: outbound, source_domain: SMM, target_domain: MA, trigger_event: social_post.published, payload: marketing_campaigns, null_field: handoff_processes}
-    extra_origin_id: B1-2026-05-31-B
-    extra_first_seen: "2026-05-31"
+# All six b1a items executed 2026-06-06 (see history.md "2026-06-06 - b1a execution"):
+#   B1A-A4-CATALOG-UX, B1A-B7-USERS-EDGES, B1A-B6-INTRA-RELS, B1A-B11-ALIASES,
+#   B1A-F2-PER-MODULE-SKILLS, B1A-H1-PCF-RELOOKUP -- all DONE, removed from the list.
+b1a: []
 
 # b1b: blocked on a prior item or on a separate domain audit
 b1b:

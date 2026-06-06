@@ -485,3 +485,52 @@ No borrowed master was promoted. Legacy roles preserved.
 ### Deferred gaps (flagged, not filled)
 
 Per scope, no entities were created. The b3 vendor-research candidates (chart_of_accounts_segments, journal_entry_lines, currencies/exchange_rates, allocations, revaluation_runs, consolidation_units/elimination_entries, revenue_contracts/performance_obligations, tax_codes) remain open and would land in GL-CLOSE / CASH-BANKING / REVENUE-RECOGNITION once vetted.
+
+## 2026-06-06 - b1a execution
+
+Executed the agent-solvable b1a items against the live `domain_map` module for ERP-FIN (domain 65). Loader: `c:/tmp/erp_fin_b1a_2026_06_06.ts` (one-off, gitignored tmp). All inserts omitted `record_status` (DB default `new`); no `notes` columns written.
+
+### B1A-SYSTEM-SKILLS (Phase S) - DONE
+
+- **skills**: created 4 module-anchored system skills. Each carries `domain_id=65` AND `domain_module_id` set (the live rule `domain_required_when_skill_type_is_system` still requires `domain_id`; `domain_module_id` makes them F2-compliant and not F1 rows):
+  - id 298 `erp_fin_gl_close_agent` -> module 245
+  - id 299 `erp_fin_fixed_assets_agent` -> module 246
+  - id 300 `erp_fin_cash_banking_agent` -> module 247
+  - id 301 `erp_fin_revenue_recognition_agent` -> module 248
+- **tools**: created 10 workflow-bearing tools, all `operation_kind=mutate`, `coverage_tier=platform` (platform enforces `coverage_tier='platform'` for query/mutate via validation rule), each with the correct `data_object_id` (F4): `post_journal_entry`(194), `reverse_journal_entry`(194), `close_accounting_period`(198), `reopen_accounting_period`(198), `match_intercompany_transactions`(203) on 245; `capitalize_fixed_asset`(201), `dispose_fixed_asset`(201), `run_depreciation`(202) on 246; `reconcile_bank_statement`(200) on 247; `recognize_revenue`(109) on 248. No name collisions (re-checked live immediately before create).
+- **skill_tools**: created 25 rows. Migrated the 11 `query_*` tools from old skill 56 to the matching module skill by entity mastership/holding (GL: query je/gl/cc/le/periods/ic; FA: query fixed_assets/deprec_schedules; CB: query bank_accounts/cash_transactions; RR: query revenue_recognition_records). Added the 10 workflow tools (required, except `reopen_accounting_period` optional). The 12th legacy row (`send_email`) was migrated to the channel-abstraction `notify_person` (tool 913, existing catalog-wide row) per the channel-vs-capability rule, linked `optional` on all 4 module skills (accounting notifications are generic, not email-specific). Per-skill skill_tools counts: GL=12, FA=6, CB=4, RR=3 (all >=1, F3 pass).
+- **DELETE skill 56** (`erp-fin-system`, legacy domain-anchored, F1 row). Prior values snapshotted here for reversibility: `{id:56, skill_name:"erp-fin-system", skill_type:"system", domain_id:65, domain_module_id:null, record_status:"new", description:"System skill for Core ERP Financial Management - runtime workflows over the domain's master data, derived from masters + cross-domain handoffs."}`. Its 12 `skill_tools` rows (ids 515-526, tools 25/446-455 query_* + 37 send_email) were cascade-deleted by the skill DELETE; their content is the migration source above. Verified: 0 skill 56 rows, 0 orphan skill_tools.
+
+### B1A-CATALOG-UX (Rule #20) - DONE
+
+Wrote buyer-voice `catalog_tagline` + `catalog_description` directly into the EMPTY fields (empty-guard: all 5 rows were confirmed empty before write; no non-empty value overwritten). All land on `record_status='new'` (review signal in-record). No vendor names, no em-dashes, American English.
+- domain 65 (Core ERP Financial Management): tagline + description.
+- module 245 ERP-FIN-GL-CLOSE, 246 ERP-FIN-FIXED-ASSETS, 247 ERP-FIN-CASH-BANKING, 248 ERP-FIN-REVENUE-RECOGNITION: tagline + description each.
+- Note (not part of this item): `domains.business_logic` on row 65 still carries an em-dash; that wording change is gated on user approval under b2 item B2-S6 and was left untouched.
+
+### B1A-HANDOFF-MODULE-FK (B10b) - DONE (deterministic subset) + reported remainder
+
+Applied the documented B10b derivation (the prompt directs B9/B10b for handoffs). Each PATCH used an `is.null` empty-guard so no non-null FK was overwritten; prior values were all NULL on the patched columns.
+- **Outbound (16/16)**: set `source_domain_module_id` = the ERP-FIN module mastering the trigger event's data_object. 124/133/189/190/531/532/533/534/535/536/541 -> 245 (GL); 537/538/597 -> 247 (CB); 539/540 -> 246 (FA). (Outbound `target_domain_module_id` points at the partner domain's module and is owned by that domain's B10b - report-only, not set here.)
+- **Inbound (8 resolvable)**: set `target_domain_module_id` = the ERP-FIN module holding the payload. payload 145 (payroll_journal_entries, consumer@245) -> 245 on handoffs 99/109/1151/1152; payload 210 (expense_reports, consumer@245) -> 245 on 129/1128; payload 109 (revenue_recognition_records, embedded_master@248) -> 248 on 131/197.
+- **Inbound no-candidate (89 rows, REPORTED not patched)**: their payloads (crm_opportunities, claim_payments, customer_invoices, msp_invoices, time_entries, etc.) are NOT modeled by any ERP-FIN module DMDO row, so the B10b rule yields no candidate module. Per B10b "no-candidate" handling this requires a per-handoff decision (load a `consumer` DMDO row on the receiving module, then re-derive) which is master-data judgment beyond the item's action text; left for a follow-up. The b1a item's "up to 113" was an upper bound; the deterministic-resolvable set is 24 (16 outbound + 8 inbound).
+
+### B1A-S7 (H1 APQC tagging) pass (a) - DONE; pass (b) SKIPPED (user-only)
+
+- **pass (a)**: inserted 40 `handoff_processes` rows (`role='implements'`, `proposal_source='agent_curated'`, `record_status` default `new`) on the previously-untagged handoffs via PCF cross-industry lookup. Live state had 43 untagged at execution time (down from the audit's 47 as tags landed since). 40 tagged to PCF activities (Process journal entries 1379, Process payments 1438, Process AP 315, Process AP+expense 59, Invoice customer 302, Post AR to GL 1359, Perform revenue accounting 55, Record project-related transactions 1409, Perform cost accounting 298, Perform inventory accounting 1326, Reconcile fixed-asset ledger 1393, Perform general accounting and reporting 56, Perform general accounting 307, Manage and reconcile cash positions 1461). Dedup on composed key `(handoff_id, process_id)`.
+- **3 deferred (no clean cross-industry PCF match)**: handoffs 946 (`pet_owner.registered`, VET-PRACT-MGMT), 956 (`lactation_record.opened`, DAIRY-MGMT), 958 (`feed_ration.changed`, DAIRY-MGMT) - industry-operational events, not financial-accounting activities at the source-event grain. Become custom-process candidates for Discover Pass 3.
+- Result: 110/113 ERP-FIN cross-domain handoffs now carry a `handoff_processes` row; agent_curated count = 97 (above the H1 band floor 57-90 for N=113). **pass (b)** (user-only `record_status` flip to approved on reviewed tagged rows) was NOT executed - that is a Rule #1 user-only action.
+
+### Skipped (user_decision blocked - prompt rule #7)
+
+- **B1A-MASTER-MASTER-EDGES**: `blocked_by: user_decision` (verb and owner_side authoring per edge). Not executed.
+- **B1A-S3** (business_function_domains Finance/FP&A/Tax/Treasury): `blocked_by: user_decision` (business_function name targets). Not executed.
+- **B1A-S4** (data_object_aliases ~25 rows): `blocked_by: user_decision` (alias_type + solution_id arbitration, Rule #18). Not executed.
+
+### Verification counts (post-load)
+
+- skills domain 65: 4 (all system, all `domain_module_id` set; skill 56 gone). F2 PASS, F1 PASS.
+- skill_tools on 298/299/300/301: 12/6/4/3. F3 PASS, F4 PASS.
+- handoffs source_domain_id=65 with NULL source_domain_module_id: 0 (was 16).
+- handoffs target_domain_id=65 with non-NULL target_domain_module_id: 8 (was 0); 89 remain NULL (no-candidate, reported).
+- handoff_processes coverage on the 113 ERP-FIN handoffs: 110 distinct tagged; provenance agent_curated 97 / discovery_substring 11 / discovery_override 2.

@@ -555,3 +555,56 @@ Loader: `c:/dev/domain-map/.tmp_deploy/modularize_dairy_mgmt_2026-06-02.ts`, ide
 - B2-1 (module shape) resolved as **option (a) 4-module split** per the standing Pass-2 recommendation in this domain's prior audits. REPRODUCTION and HERD-HEALTH fold into HERD rather than standing alone; revisit only if Phase-0 candidate masters (heat_detections, pregnancy_checks) land and inflate the HERD data-object count enough to justify a REPRODUCTION split.
 - industry_id set to 26 (Dairy) on all 4 modules: single unambiguous industry row, consistent with the domain's own description ("workflows are fundamentally different from beef / swine").
 
+## 2026-06-05 - b1a execution
+
+Executed the agent-solvable b1a items against the live `domain_map` module (1001). All inserts landed with `record_status` defaulted to `new`; no `notes` columns written.
+
+### B1A-SKILLS - DONE
+
+Authored one `system` skill per module, redistributed the 8 existing query tools to the owning module's skill, added module-scoped mutate / side_effect / fetch tools, and retired the legacy domain-level skill.
+
+- `skills` (4 inserted): `dairy_mgmt_herd_agent` id=274 (module 227), `dairy_mgmt_parlor_agent` id=275 (module 228), `dairy_mgmt_milk_quality_agent` id=276 (module 229), `dairy_mgmt_feed_agent` id=277 (module 230).
+- `tools` (5 inserted, deduped by tool_name catalog-wide; none pre-existed): `cull_dairy_cow` (mutate, do_id=499, platform), `close_lactation` (mutate, do_id=500, platform), `complete_milking` (mutate, do_id=501, platform), `dispatch_bulk_milk_shipment` (side_effect, do_id=NULL, external), `fetch_dhia_test_result` (fetch, do_id=NULL, external). The 8 existing query tools (ids 372-379) were reused, not re-created.
+- `skill_tools` (13 inserted): HERD id=274 -> query_dairy_cows, query_lactation_records, query_breeding_events, query_cow_health_events, cull_dairy_cow, close_lactation (6). PARLOR id=275 -> query_milkings, query_bulk_milk_shipments, complete_milking, dispatch_bulk_milk_shipment (4). MILK-QUALITY id=276 -> query_milk_quality_tests, fetch_dhia_test_result (2). FEED id=277 -> query_feed_rations (1). All `requirement_level=required`.
+- DELETE (snapshot before delete): legacy `skill_tools` rows 435-442 (skill_id=43, all `requirement_level=required`, linking tools 372-379) DELETEd, then legacy `skills` row id=43 (`skill_name=dairy-mgmt-system`, `skill_type=system`, `domain_id=156`, `domain_module_id=NULL`) DELETEd. The 8 `tools` rows themselves were preserved (only the junction rows and the skill were removed).
+- Result: F2 passes (exactly 1 system skill per module 227-230), F3 passes (>=1 skill_tool each), F4 holds (operation_kind <-> data_object_id invariant), F1 passes (legacy domain-level system skill gone).
+- Note: FEED skill carries only `query_feed_rations` (1 tool). The action scoped new mutates to cull/close_lactation/complete_milking and did not specify a feed mutate; feed_rations' write-shape is still an open user-judgment (B2-5 config-shape exemption), so no un-asked-for feed mutate was authored. Satisfies the F3 floor (>=1).
+- Loader: `.tmp_deploy/dairy_mgmt_b1a_skills_2026_06_05.ts` (gitignored).
+
+### B1A-B10B - DONE
+
+PATCHed `source_domain_module_id` on all 8 outbound handoffs. Prior value on every row: `source_domain_module_id=NULL`. Derivation per B10b = module mastering the trigger_event's data_object (strongest role = master); matches the action mapping exactly.
+
+- 353 (bulk_milk_shipment.dispatched, event do_id=506): NULL -> 228 (PARLOR).
+- 955 (milking.completed, event do_id=501): NULL -> 228 (PARLOR).
+- 354 (milk_quality_test.failed, event do_id=502): NULL -> 229 (MILK-QUALITY).
+- 355 (cow_health_event.treatment_administered, event do_id=504): NULL -> 227 (HERD).
+- 956 (lactation_record.opened, event do_id=500): NULL -> 227 (HERD).
+- 957 (breeding_event.recorded, event do_id=503): NULL -> 227 (HERD).
+- 958 (feed_ration.changed, event do_id=505): NULL -> 230 (FEED).
+- 959 (feed_ration.changed, event do_id=505): NULL -> 230 (FEED).
+- `target_domain_module_id` left NULL on all 8 (owed by each neighbor's B10b - FOOD-TRACE / FSQM / ERP-FIN / GRC - not this domain's scope). No `handoffs.notes` written. Verify: `/handoffs?source_domain_id=eq.156&source_domain_module_id=is.null` returns zero rows.
+
+### B1A-S7 - DONE
+
+Inserted 13 `data_object_aliases` rows (all `alias_type=synonym`, `record_status=new`, `is_preferred=false`, `notes` empty, no industry_id/solution_id). Ids 1085-1097.
+
+- dairy_cows (499): "cow" (1085), "animal" (1086).
+- lactation_records (500): "lactation cycle" (1087), "DIM record" (1088).
+- milkings (501): "parlor session" (1089), "milk event" (1090).
+- milk_quality_tests (502): "DHIA test" (1091), "milk test" (1092).
+- breeding_events (503): "insemination" (1093).
+- cow_health_events (504): "treatment record" (1094).
+- feed_rations (505): "TMR ration" (1095).
+- bulk_milk_shipments (506): "milk pickup" (1096), "tanker load" (1097).
+- All 10 action-named tuples loaded, plus 3 standard industry synonyms (milk test, treatment record, TMR ration) to reach the 10-15 target and give every master >=1 alias. DHIA / DIM are industry-standard initialisms, not vendor trademarks, so classified `synonym` (the `industry_term` type requires an `industry_id` FK with no clean target). B11 now passes.
+- Loader: `.tmp_deploy/dairy_mgmt_b1a_aliases_2026_06_05.ts` (gitignored).
+
+### B1A-S11 - SKIPPED
+
+`lactation_records` (500) users-edge. The action is explicitly conditional on a user decision ("Surface proposed verb ... If user approves, INSERT ... If user declines, document"), and the finding itself states no clean single-actor verb exists (choice between `is recorded by` vs `is opened by` / system-attribution). This is master-data judgment beyond the action text; skipped per the conservative-on-master-data rule. lactation_records remains the only DAIRY-MGMT master without a `users` many_to_many edge (the other 7 carry rows 1775-1781). Kept as open b1a for an explicit user verb decision.
+
+### Not in scope this pass
+
+- Catalog UX (A4 / M8) `catalog_tagline` / `catalog_description` remain empty on the domain and all 4 modules. This is tracked under b1b B1B-S2, blocked by user_decision B2-2; not a b1a item, so not written here.
+

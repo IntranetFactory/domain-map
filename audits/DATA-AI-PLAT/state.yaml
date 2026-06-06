@@ -1,70 +1,22 @@
 schema_version: 2
 domain: DATA-AI-PLAT
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-05"
 
-b1a:
-  - id: B1A-SYSTEM-SKILLS
-    summary: "Per-module system skills now owed: 4 full modules live (223 LAKEHOUSE, 224 SEMANTIC-CATALOG, 225 ML, 226 AI-AGENTS), but only 1 system skill exists (skill 45, domain_module_id IS NULL)."
-    finding: "The 2026-06-02 modularization landed 4 module_kind='full' rows (DATA-AI-PLAT-LAKEHOUSE 223, DATA-AI-PLAT-SEMANTIC-CATALOG 224, DATA-AI-PLAT-ML 225, DATA-AI-PLAT-AI-AGENTS 226). Rule #17 mandates exactly one system skill per full module (F2), each with >=1 skill_tools (F3). Today there is a single domain-level system skill 45 (data-ai-plat-system) with domain_module_id IS NULL and 9 skill_tools rows (all operation_kind='query' with valid data_object_id, so F4 invariants pass on the current shape). One module is unassigned at minimum; three modules have no system skill at all. This supersedes the now-resolved gated portion of former B2-S4 (the module split it waited on has landed)."
-    action: "Re-target skill 45 to one module (recommend 224 DATA-AI-PLAT-SEMANTIC-CATALOG, where the bulk of the query tools sit) and author 3 additional system skills, one per remaining full module (223, 225, 226), each with >=1 query skill_tools over that module's masters. Run Phase S then Phase P (personas, role_modules, process_raci, lifecycle.process_id) for the now-multi-module domain."
-    affected_modules: [223, 224, 225, 226]
-  - id: B1A-CATALOG-UX
-    summary: "M8/A4 buyer-copy gap: all 4 new modules ship with empty catalog_tagline and catalog_description."
-    finding: "The 2026-06-02 modularization deliberately omitted buyer-facing copy. Modules 223, 224, 225, 226 each carry catalog_tagline='' and catalog_description=''. M8/A4 expect populated buyer copy per full module."
-    action: "Author catalog_tagline and catalog_description per module describing the capability shape (no vendor/product names, Rule #18; no em-dashes). Source from the module descriptions already loaded."
-    affected_modules: [223, 224, 225, 226]
-  - id: B1A-H1R
-    summary: "APQC PCF tagging remainder: 9 untagged cross-domain handoffs (155, 156, 683, 684, 685, 221, 693, 697, 715) plus optional REPLACE of weak discovery_substring on 219."
-    finding: "12 of 20 cross-domain handoffs are APQC-tagged (11 agent_curated from the 2026-05-31 continuation loader, plus 1 legacy discovery_substring on handoff 219 pointing at process 505 Establish baseline metrics L4, weak). Untagged remainder: 155 (DATA-AI-PLAT -> MDM, golden_record.synced, payload data_products), 156 (DATA-AI-PLAT -> DQ, quality_check.failed, payload lakehouse_tables), 683 (DATA-AI-PLAT -> DCG, ml_model.deployed, payload ml_models), 684 (DATA-AI-PLAT -> DQ, feature_set.staleness_breached, payload feature_sets), 685 (DATA-AI-PLAT -> DCG, feature_set.published, payload feature_sets), 221 (KGP -> DATA-AI-PLAT, ontology.published, payload ontologies), 693 (METRICS-LAYER -> DATA-AI-PLAT, metric_materialization.refreshed, payload metric_materializations), 697 (KGP -> DATA-AI-PLAT, kgp_ontology.imported, payload kgp_ontologies), 715 (DQ -> DATA-AI-PLAT, dq_dimension.threshold_breached, payload dq_dimensions; defer to DQ audit's authoring). Independent of the module split; unchanged by the 2026-06-02 modularization."
-    action: "Per-handoff PCF lookup at fix time. INSERT into handoff_processes with proposal_source='agent_curated', record_status='new', role='implements'. Defer modern-AI events (ml_model.deployed, feature_set.published, feature_set.staleness_breached) to Discover Pass 3 custom processes if no clean L2/L3 cross-industry PCF anchor exists. Optionally REPLACE handoff 219's discovery_substring row with a stronger agent_curated row."
-    affected_handoffs:
-      - {handoff_id: 155, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: MDM, trigger_event: "golden_record.synced", payload: "data_products"}
-      - {handoff_id: 156, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: DQ, trigger_event: "quality_check.failed", payload: "lakehouse_tables"}
-      - {handoff_id: 683, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: DCG, trigger_event: "ml_model.deployed", payload: "ml_models"}
-      - {handoff_id: 684, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: DQ, trigger_event: "feature_set.staleness_breached", payload: "feature_sets"}
-      - {handoff_id: 685, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: DCG, trigger_event: "feature_set.published", payload: "feature_sets"}
-      - {handoff_id: 221, direction: inbound, source_domain: KGP, target_domain: DATA-AI-PLAT, trigger_event: "ontology.published", payload: "ontologies"}
-      - {handoff_id: 693, direction: inbound, source_domain: METRICS-LAYER, target_domain: DATA-AI-PLAT, trigger_event: "metric_materialization.refreshed", payload: "metric_materializations"}
-      - {handoff_id: 697, direction: inbound, source_domain: KGP, target_domain: DATA-AI-PLAT, trigger_event: "kgp_ontology.imported", payload: "kgp_ontologies"}
-      - {handoff_id: 715, direction: inbound, source_domain: DQ, target_domain: DATA-AI-PLAT, trigger_event: "dq_dimension.threshold_breached", payload: "dq_dimensions"}
-    extra_optional_replace_handoff: 219
-  - id: B1A-S2-OUTBOUND-FK
-    summary: "Own-side: populate source_domain_module_id on 11 outbound cross-domain handoffs now that the DATA-AI-PLAT module split has landed (223/224/225/226)."
-    finding: "All 11 outbound handoffs carry NULL on source_domain_module_id. This was gated on B2-S1 (module split), which landed 2026-06-02. The source FK is now populatable by mapping each payload master to its owning module: data_products (232)->224, lakehouse_tables (226)->223, ml_models (228)->225, feature_sets (229)->225, semantic_metrics (230)->224, ai_agents (231)->226, data_pipelines (227)->223. The target-side target_domain_module_id is still owed by each receiving domain's own b1 audit (BI, DCG, CONV-AI, AIOPS, MDM, DQ, ITSM), except 682 and 686 which already carry target_domain_module_id=38 (ITSM module). Out of scope for the 2026-06-02 modularization-only pass; flagged as the next agent action."
-    action: "PATCH source_domain_module_id per handoff by payload master->module: 151 semantic_metrics->224; 152 data_products->224; 153 ai_agents->226; 154 data_pipelines->223; 155 data_products->224; 156 lakehouse_tables->223; 682 ml_models->225; 683 ml_models->225; 684 feature_sets->225; 685 feature_sets->225; 686 ml_models->225."
-    affected_handoffs:
-      - {handoff_id: 151, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: BI, trigger_event: "semantic_metric.published", payload: "semantic_metrics", null_field: "source_domain_module_id"}
-      - {handoff_id: 152, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: DCG, trigger_event: "data_product.published", payload: "data_products", null_field: "source_domain_module_id"}
-      - {handoff_id: 153, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: CONV-AI, trigger_event: "ai_agent.deployed", payload: "ai_agents", null_field: "source_domain_module_id"}
-      - {handoff_id: 154, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: AIOPS, trigger_event: "pipeline_run.failed", payload: "data_pipelines", null_field: "source_domain_module_id"}
-      - {handoff_id: 155, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: MDM, trigger_event: "golden_record.synced", payload: "data_products", null_field: "source_domain_module_id"}
-      - {handoff_id: 156, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: DQ, trigger_event: "quality_check.failed", payload: "lakehouse_tables", null_field: "source_domain_module_id"}
-      - {handoff_id: 682, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: ITSM, trigger_event: "ml_model.drift_detected", payload: "service_incidents", null_field: "source_domain_module_id"}
-      - {handoff_id: 683, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: DCG, trigger_event: "ml_model.deployed", payload: "ml_models", null_field: "source_domain_module_id"}
-      - {handoff_id: 684, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: DQ, trigger_event: "feature_set.staleness_breached", payload: "feature_sets", null_field: "source_domain_module_id"}
-      - {handoff_id: 685, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: DCG, trigger_event: "feature_set.published", payload: "feature_sets", null_field: "source_domain_module_id"}
-      - {handoff_id: 686, direction: outbound, source_domain: DATA-AI-PLAT, target_domain: ITSM, trigger_event: "ml_model.evaluation_failed", payload: "service_incidents", null_field: "source_domain_module_id"}
-  - id: B1A-S3-INBOUND-FK
-    summary: "Own-side: populate target_domain_module_id on 9 inbound cross-domain handoffs now that the DATA-AI-PLAT module split has landed."
-    finding: "All 9 inbound handoffs carry NULL on target_domain_module_id. This was gated on B2-S1, which landed 2026-06-02. The target FK is now populatable by mapping each payload to the consuming DATA-AI-PLAT module: lakehouse_tables (226)->223, metric_definitions (252)->224, ontologies (254)->224, pipeline_runs/data_pipelines->223, schema_registries (lakehouse engineering)->223, metric_materializations->224 (semantic), kgp_ontologies->224, dq_dimensions->224 (or 223 per DQ semantics). Source side (source_domain_module_id) is still owed by each source domain's audit (DI, DCG, METRICS-LAYER, KGP, DQ). Out of scope for the modularization-only pass."
-    action: "PATCH target_domain_module_id per handoff by payload->consuming module: 157 lakehouse_tables->223; 158 lakehouse_tables->223; 219 metric_definitions->224; 221 ontologies->224; 693 metric_materializations->224; 697 kgp_ontologies->224; 715 dq_dimensions->224; 725 pipeline_runs->223; 731 schema_registries->223. Confirm 715 (dq_dimensions) module placement against DQ semantics before patching."
-    affected_handoffs:
-      - {handoff_id: 157, direction: inbound, source_domain: DI, target_domain: DATA-AI-PLAT, trigger_event: "replication_load.completed", payload: "lakehouse_tables", null_field: "target_domain_module_id"}
-      - {handoff_id: 158, direction: inbound, source_domain: DCG, target_domain: DATA-AI-PLAT, trigger_event: "access_policy.updated", payload: "lakehouse_tables", null_field: "target_domain_module_id"}
-      - {handoff_id: 219, direction: inbound, source_domain: METRICS-LAYER, target_domain: DATA-AI-PLAT, trigger_event: "metric.certified", payload: "metric_definitions", null_field: "target_domain_module_id"}
-      - {handoff_id: 221, direction: inbound, source_domain: KGP, target_domain: DATA-AI-PLAT, trigger_event: "ontology.published", payload: "ontologies", null_field: "target_domain_module_id"}
-      - {handoff_id: 693, direction: inbound, source_domain: METRICS-LAYER, target_domain: DATA-AI-PLAT, trigger_event: "metric_materialization.refreshed", payload: "metric_materializations", null_field: "target_domain_module_id"}
-      - {handoff_id: 697, direction: inbound, source_domain: KGP, target_domain: DATA-AI-PLAT, trigger_event: "kgp_ontology.imported", payload: "kgp_ontologies", null_field: "target_domain_module_id"}
-      - {handoff_id: 715, direction: inbound, source_domain: DQ, target_domain: DATA-AI-PLAT, trigger_event: "dq_dimension.threshold_breached", payload: "dq_dimensions", null_field: "target_domain_module_id"}
-      - {handoff_id: 725, direction: inbound, source_domain: DI, target_domain: DATA-AI-PLAT, trigger_event: "pipeline_run.completed", payload: "pipeline_runs", null_field: "target_domain_module_id"}
-      - {handoff_id: 731, direction: inbound, source_domain: DI, target_domain: DATA-AI-PLAT, trigger_event: "schema_registry.schema_evolved", payload: "schema_registries", null_field: "target_domain_module_id"}
+b1a: []
 
 b1b:
+  - id: B1B-S-PHASE-P
+    summary: "Phase P (personas, role_modules, process_raci, lifecycle.process_id) for the now-multi-module domain; residual of B1A-SYSTEM-SKILLS after Phase S landed."
+    finding: "Phase S landed 2026-06-05 (one system skill per full module: 223->skill 271, 224->skill 45, 225->skill 272, 226->skill 273, each with >=1 query skill_tools). The Phase-P half cannot be authored: process_raci gated assignments (E4) and data_object_lifecycle_states.process_id wiring (E6) both depend on lifecycle states, and lifecycle authoring is blocked by user_decision B2-LIFECYCLE-SHAPE (see B1B-S2-LIFECYCLE). Separately, all 9 own masters are still entity_type='unclassified' (B13 fail), which gates whether lifecycle is even required, and which permission verbs the gates derive. Personas (domain_roles) also need >=2 module reach (E2) which is now structurally possible (4 modules) but the RACI/gate layer they tie to is absent."
+    blocked_by:
+      - {type: user_decision, ref: B2-LIFECYCLE-SHAPE, reason: "lifecycle states must be authored (or config-shape-exempted) before process_raci gates and lifecycle.process_id can be wired; entity_type classification on the 9 masters is the upstream precondition"}
+    affected_modules: [223, 224, 225, 226]
+
   - id: B1B-S2-LIFECYCLE
     summary: "C1: author lifecycle states for the 9 own masters; module ids now available to anchor domain_module_id."
-    finding: "0 data_object_lifecycle_states on any of the 9 own masters. This was gated on B2-S1 (module split) for the per-state domain_module_id anchor, which landed 2026-06-02 (masters now map: lakehouse_tables 226->223, data_pipelines 227->223, ml_models 228->225, feature_sets 229->225, semantic_metrics 230->224, ai_agents 231->226, data_products 232->224, ontologies 254->224, knowledge_graph_entities 255->224). Per-master workflow-shape vs config-shape decision (former B2-S2) is still a user judgment call and remains parked under B2-LIFECYCLE-SHAPE; authoring is out of scope for the modularization-only pass."
+    finding: "0 data_object_lifecycle_states on any of the 9 own masters. This was gated on B2-S1 (module split) for the per-state domain_module_id anchor, which landed 2026-06-02 (masters now map: lakehouse_tables 226->223, data_pipelines 227->223, ml_models 228->225, feature_sets 229->225, semantic_metrics 230->224, ai_agents 231->226, data_products 232->224, ontologies 254->224, knowledge_graph_entities 255->224). All 9 masters are still entity_type='unclassified' (B13); classification is the upstream gate (Rule #12 decides whether lifecycle is required). Per-master workflow-shape vs config-shape decision (former B2-S2) is still a user judgment call and remains parked under B2-LIFECYCLE-SHAPE; authoring is out of scope for the modularization-only pass."
     blocked_by:
       - {type: user_decision, ref: B2-LIFECYCLE-SHAPE, reason: "per-master workflow-shape vs config-shape decision must land before lifecycle states are authored"}
     affected_masters:
@@ -81,12 +33,12 @@ b1b:
 b2:
   - id: B2-LIFECYCLE-SHAPE
     summary: "C1: per-master lifecycle authoring decision (workflow-shape vs documented config-shape exemption) for the 9 own masters."
-    question: "Per-master decision on the lifecycle state machine. Workflow-shape masters: ml_models (registered -> staging -> production -> archived); data_pipelines (active / paused vs running / failed / succeeded); ai_agents (draft -> published -> deployed -> retired); data_products (proposed -> in_development -> published -> deprecated); semantic_metrics (proposed -> certified -> deprecated); ontologies (draft -> released -> deprecated); feature_sets (registered -> online -> stale -> archived). Plausibly config-shape: lakehouse_tables, knowledge_graph_entities."
+    question: "Per-master decision on the lifecycle state machine. Workflow-shape masters: ml_models (registered -> staging -> production -> archived); data_pipelines (active / paused vs running / failed / succeeded); ai_agents (draft -> published -> deployed -> retired); data_products (proposed -> in_development -> published -> deprecated); semantic_metrics (proposed -> certified -> deprecated); ontologies (draft -> released -> deprecated); feature_sets (registered -> online -> stale -> archived). Plausibly config-shape: lakehouse_tables, knowledge_graph_entities. Note: entity_type on all 9 masters is still 'unclassified' (B13); classifying entity_type is the deterministic upstream step that decides which masters require lifecycle at all."
     options:
       - "(a) author the proposed default state machine"
       - "(b) document config-shape exemption (lakehouse_tables, knowledge_graph_entities plausibly)"
       - "(c) skip authoring this round, re-surface at next audit"
-    why: "Rule #12 requires per-master positive consideration. Rule #15 forbids auto-populating data_objects.notes for the exemption justification; exemption decisions land in history.md instead. The module-split blocker on this item (former B2-S2 dependency on B2-S1) is now cleared: target_module_id per master is resolved (see B1B-S2-LIFECYCLE)."
+    why: "Rule #12 requires per-master positive consideration. Rule #15 forbids auto-populating data_objects.notes for the exemption justification; exemption decisions land in history.md instead. The module-split blocker on this item (former B2-S2 dependency on B2-S1) is now cleared: target_module_id per master is resolved (see B1B-S2-LIFECYCLE). This decision also unblocks Phase P (B1B-S-PHASE-P): personas, process_raci, and lifecycle.process_id wiring."
     affected_masters:
       - {data_object_id: 226, name: "lakehouse_tables", target_module_id: 223, workflow: "config-shape candidate"}
       - {data_object_id: 227, name: "data_pipelines", target_module_id: 223, workflow: "active / paused vs running / failed / succeeded"}
@@ -118,6 +70,16 @@ b2:
       - {data_object_id: 255, name: "knowledge_graph_entities", target_module_id: 224, workflow: "alias candidates: Entities, Nodes, Vertices"}
 
 b3:
+  - id: B3-INBOUND-DMDO
+    candidate: "consumer domain_module_data_objects rows for 5 inbound handoff payloads, then target_domain_module_id backfill"
+    rationale: "Residual of B1A-S3-INBOUND-FK. 5 inbound cross-domain handoffs carry payloads that DATA-AI-PLAT does not declare any role on (no domain_module_data_objects and no legacy domain_data_objects row), so the B10b target-module derivation yields no candidate and the target_domain_module_id stays NULL: 693 metric_materializations (709) <- METRICS-LAYER; 697 kgp_ontologies (742) <- KGP; 715 dq_dimensions (312) <- DQ; 725 pipeline_runs (434) <- DI; 731 schema_registries (438) <- DI. Whether DATA-AI-PLAT should consume each payload (and on which module) is a Phase-B modeling decision: if yes, author a consumer DMDO row (likely 693->224, 697->224, 715->224 or 223, 725->223, 731->223) then re-run the B10b backfill to set target_domain_module_id; if no, accept the handoff as a domain-level signal with no module owner. 219 and 221 already resolved (their payloads metric_definitions / ontologies are declared on module 224); 157/158 resolved (lakehouse_tables on 223)."
+    proposed_module: "DATA-AI-PLAT-SEMANTIC-CATALOG (224) or DATA-AI-PLAT-LAKEHOUSE (223) per payload"
+
+  - id: B3-H1R-DEFERRED
+    candidate: "custom-process APQC tags for 4 deferred cross-domain handoffs"
+    rationale: "Residual of B1A-H1R. 4 handoffs deferred at fix time with no clean APQC PCF cross-industry anchor: 683 ml_model.deployed, 684 feature_set.staleness_breached, 685 feature_set.published (modern-AI / MLOps events the PCF cross-industry framework predates; route to Discover Pass 3 custom processes); 715 dq_dimension.threshold_breached (DQ owns the L3 anchor it ladders to; defer to the DQ domain's own audit authoring). The other 6 untagged handoffs from the prior B1A-H1R list (155, 156, 221, 693, 697 + the 219 replace) were tagged 2026-06-05."
+    proposed_module: null
+
   - id: B3-MISSING-MASTER-NOTEBOOKS
     candidate: "notebooks (missing master backing NOTEBOOK-ANALYTICS capability 202)"
     rationale: "NOTEBOOK-ANALYTICS (202) was placed in DATA-AI-PLAT-LAKEHOUSE 223 to satisfy M4, but the capability has NO backing master. The module is non-empty on lakehouse_tables / data_pipelines, but the capability itself is entity-orphaned. Add notebooks (Databricks Notebooks, Hex, Foundry Code Workbook, Snowflake Notebooks, Vertex Workbench all model the notebook as a first-class master with versioning, schedule, parameter binding) or retire the dangling capability. Missing-master candidate surfaced by the 2026-06-02 modularization."

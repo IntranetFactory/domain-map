@@ -1,162 +1,10 @@
 schema_version: 2
 domain: VMS
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
-b1a:
-  - id: B1A-B5
-    summary: PATCH event_category to state_change on 6 VMS trigger events with empty category.
-    finding: |
-      6 of 8 VMS trigger_events carry empty event_category: 595 staffing_supplier.activated,
-      596 rate_card.published, 597 contingent_timesheet.approved, 598 contingent_timesheet.rejected,
-      599 contingent_invoice.received, 600 contingent_invoice.matched. All 6 are state_change
-      per the SKILL.md catalog enum (lifecycle / state_change / threshold / signal); each fires
-      on a master transitioning to a new state. Events 146 (pm_work_order.invoiced) and 147
-      (worker.tenure_threshold) are correctly populated.
-    action: |
-      Direct PATCH on each of the 6 rows: event_category=state_change. No gating; ships
-      standalone.
-    affected_events:
-      - {id: 595, event_name: staffing_supplier.activated, current_category: "", proposed_category: state_change}
-      - {id: 596, event_name: rate_card.published, current_category: "", proposed_category: state_change}
-      - {id: 597, event_name: contingent_timesheet.approved, current_category: "", proposed_category: state_change}
-      - {id: 598, event_name: contingent_timesheet.rejected, current_category: "", proposed_category: state_change}
-      - {id: 599, event_name: contingent_invoice.received, current_category: "", proposed_category: state_change}
-      - {id: 600, event_name: contingent_invoice.matched, current_category: "", proposed_category: state_change}
-
-  - id: B1A-B2
-    summary: INSERT one data_object_relationships row, contingent_workers converts_to employees.
-    finding: |
-      Handoff 118 (VMS to HCM on worker.tenure_threshold, manual_handoff, high friction)
-      has no forward conversion data_object_relationships row from contingent_workers (186)
-      to employees (31). Existing row 541 is contingent_workers reviewed_against employees
-      (owner_side=target), wrong direction for the conversion. Verb selection is judgment;
-      proposed verb converts_to follows the existing handoff verb space.
-    action: |
-      INSERT data_object_relationships row: data_object_id=186, related_data_object_id=31,
-      relationship_verb=converts_to, is_required=false, owner_side=source. Ships standalone;
-      not strictly gated on the modules.
-    affected_entities: [contingent_workers, employees]
-
-  - id: B1A-B10b
-    summary: Backfill source_domain_module_id on 7 VMS outbound handoffs now that modules exist.
-    finding: |
-      All 7 outbound VMS handoffs carried source_domain_module_id IS NULL because VMS had
-      no modules. Modularization (2026-06-02) created VMS-WORKER-SOURCING (id 315) and
-      VMS-TIME-INVOICING (id 316). Attribute each row to the module that masters the trigger
-      event's data_object_id: staffing_suppliers (188) + rate_cards (189) + pm_work_orders (187)
-      + contingent_workers (186) -> 315; contingent_timesheets (190) + contingent_invoices (191)
-      -> 316.
-    action: |
-      PATCH source_domain_module_id on each handoff per the mastering module: 591
-      (staffing_suppliers) -> 315; 117 + 590 + 587 (map by payload) -> 315 / 316; 588 + 589
-      (contingent_invoices) -> 316; 118 (contingent_workers) -> 315.
-    affected_handoffs:
-      - {handoff_id: 117, direction: outbound, source_domain: VMS, target_domain: S2P, trigger_event: pm_work_order.invoiced, payload: contingent_invoices, null_field: source_domain_module_id}
-      - {handoff_id: 118, direction: outbound, source_domain: VMS, target_domain: HCM, trigger_event: worker.tenure_threshold, payload: contingent_workers, null_field: source_domain_module_id}
-      - {handoff_id: 587, direction: outbound, source_domain: VMS, target_domain: PSA, trigger_event: contingent_timesheet.approved, payload: contingent_timesheets, null_field: source_domain_module_id}
-      - {handoff_id: 588, direction: outbound, source_domain: VMS, target_domain: AP-AUTO, trigger_event: contingent_invoice.received, payload: contingent_invoices, null_field: source_domain_module_id}
-      - {handoff_id: 589, direction: outbound, source_domain: VMS, target_domain: ERP-FIN, trigger_event: contingent_invoice.matched, payload: contingent_invoices, null_field: source_domain_module_id}
-      - {handoff_id: 590, direction: outbound, source_domain: VMS, target_domain: PAYROLL, trigger_event: contingent_timesheet.approved, payload: contingent_timesheets, null_field: source_domain_module_id}
-      - {handoff_id: 591, direction: outbound, source_domain: VMS, target_domain: SUP-LIFE, trigger_event: staffing_supplier.activated, payload: staffing_suppliers, null_field: source_domain_module_id}
-    affected_modules: [315, 316]
-
-  - id: B1A-B9
-    summary: INSERT 2 handoffs for rate_card.published (event 596) to PSA + ERP-FIN.
-    finding: |
-      Trigger event 596 (rate_card.published) has zero downstream handoffs rows. The event
-      implies a PSA bill-rate refresh + an ERP-FIN cost-accrual refresh. Two handoff rows
-      missing: VMS to PSA on rate_cards (batch_sync) and VMS to ERP-FIN on rate_cards
-      (batch_sync). source_domain_module_id resolves to VMS-WORKER-SOURCING (315, which
-      masters rate_cards 189).
-    action: |
-      INSERT 2 handoffs (source_domain_id=64, source_domain_module_id=315, data_object 189,
-      trigger_event=rate_card.published, integration_pattern=batch_sync), one to PSA and one
-      to ERP-FIN. notes empty.
-    affected_modules: [315]
-
-  - id: B1A-B9b
-    summary: INSERT intra-domain lifecycle_progression handoffs across the 315/316 boundary.
-    finding: |
-      Intra-domain progression staffing_supplier.activated -> rate_card.published ->
-      contingent_timesheet.approved -> contingent_invoice.received -> contingent_invoice.matched
-      crosses the module boundary on contingent_timesheet.approved: VMS-WORKER-SOURCING (315)
-      produces the requisition / worker / rate basis, VMS-TIME-INVOICING (316) executes time
-      and invoicing. The modules now exist, so the cross-module row can be authored.
-    action: |
-      INSERT intra-domain handoff(s) with integration_pattern=lifecycle_progression spanning
-      source_domain_module_id=315 to target_domain_module_id=316 on the time-approval seam.
-    affected_modules: [315, 316]
-
-  - id: B1A-B12
-    summary: INSERT lifecycle_states + workflow-gate permissions for the 6 masters.
-    finding: |
-      Zero lifecycle states on any of the 6 masters. None qualifies for the config-shape
-      exemption (each is workflow-bearing). State-set sketches per master:
-      contingent_workers (active, on_assignment, tenure_threshold_reached, terminated),
-      staffing_suppliers (draft, activated, suspended, terminated), rate_cards (draft,
-      published, superseded, retired), contingent_timesheets (drafted, submitted, approved,
-      rejected, billed), contingent_invoices (received, matched, disputed, paid). Attach each
-      state set's domain_module_id to the mastering module (186/187/188/189 -> 315; 190/191 ->
-      316). pm_work_orders (187) states gated on B2-1 (entity identity).
-    action: |
-      INSERT data_object_lifecycle_states per sketch with domain_module_id set, plus
-      workflow-gate permissions for state transitions requiring authorization.
-    extra_partial_gate: "187 state set gated on B2-1; the other 5 masters ship now."
-    affected_masters:
-      - {data_object_id: 186, name: contingent_workers, target_module_id: 315, workflow: tenure_progression}
-      - {data_object_id: 187, name: pm_work_orders, target_module_id: 315, workflow: pending_B2_1}
-      - {data_object_id: 188, name: staffing_suppliers, target_module_id: 315, workflow: supplier_lifecycle}
-      - {data_object_id: 189, name: rate_cards, target_module_id: 315, workflow: publish_supersede}
-      - {data_object_id: 190, name: contingent_timesheets, target_module_id: 316, workflow: submit_approve_bill}
-      - {data_object_id: 191, name: contingent_invoices, target_module_id: 316, workflow: receive_match_pay}
-
-  - id: B1A-F2-F3-SYSTEM-SKILLS
-    summary: Retire legacy skill 118 (vms-system); author 1 system skill per module (Rule #17 -> F2) and redistribute 8 skill_tools (F3).
-    finding: |
-      Legacy skills.id=118 (vms-system, kebab-cased, domain_module_id=NULL) violates Rule #17:
-      after modularization each module needs exactly one system skill bound to its
-      domain_module_id. The 2 new modules (VMS-WORKER-SOURCING 315, VMS-TIME-INVOICING 316)
-      have zero system skills (F2 gap). Skill 118 carries 8 skill_tools rows: 6 query tools
-      (query_contingent_workers 757, query_work_orders 758, query_staffing_suppliers 759,
-      query_rate_cards 760, query_contingent_timesheets 761, query_contingent_invoices 762),
-      send_email (37, side_effect), sign_document (42, side_effect).
-    action: |
-      INSERT 2 system skills, one per module (domain_module_id 315 and 316). Redistribute the
-      8 skill_tools by data_object_id: query_contingent_workers / work_orders / staffing_suppliers /
-      rate_cards + sign_document (SOW signing) -> 315 skill; query_contingent_timesheets /
-      invoices -> 316 skill; send_email on both. Then DELETE skill 118. Operation_kind
-      invariants (Rule #17) pass on all 8 tools.
-    affected_modules: [315, 316]
-
-  - id: B1A-E1-E2-ROLES
-    summary: INSERT >=3 VMS roles + role_modules; PATCH HIRING-MANAGER secondary on VMS-WORKER-SOURCING.
-    finding: |
-      Zero roles authored under Indirect Procurement (business_function_id=68) and zero
-      role_modules touching the new VMS modules. Need at minimum a program manager, a supplier
-      manager, and a contingent-labor coordinator. HIRING-MANAGER (10007) is bound only to
-      ATS-* and ONB-* modules; hiring managers approve contingent worker requests, so a
-      secondary binding on VMS-WORKER-SOURCING (315) is missing.
-    action: |
-      INSERT >=3 roles against business_function_id=68; INSERT role_modules binding them to
-      315 / 316 per responsibility; INSERT a HIRING-MANAGER (10007) role_module secondary on 315.
-    affected_modules: [315, 316]
-
-  - id: B1A-A4-M8-CATALOG-UX
-    summary: PATCH domain catalog_tagline + catalog_description (A4) once approved; author module-level catalog UX (M8) for 315 + 316.
-    finding: |
-      domains.catalog_tagline and catalog_description are both empty (A4 fail). The 2 new
-      modules (315, 316) were inserted with catalog_tagline / catalog_description omitted per
-      the insert shape, so module-level catalog UX (M8) is unset on both. Rule #20 forbids
-      PATCHing catalog UX text without explicit user approval of the exact wording (domain
-      drafts are in B2-2; module drafts not yet authored).
-    action: |
-      After B2-2 approval, PATCH domains.catalog_tagline + catalog_description, and author +
-      PATCH module-level catalog_tagline + catalog_description for 315 and 316 (same Rule #20
-      approval required).
-    extra_partial_gate: "domain text gated on B2-2; module text needs fresh drafts + approval."
-    affected_modules: [315, 316]
+b1a: []
 
 b1b:
   - id: B1B-A5
@@ -178,6 +26,17 @@ b1b:
     blocked_by:
       - {type: user_decision, ref: B2-1}
 
+  - id: B1B-A4-DOMAIN-CATALOG-UX
+    summary: PATCH domains.catalog_tagline + catalog_description with user-approved wording (B2-2).
+    finding: |
+      domains.catalog_tagline and catalog_description on VMS (64) are both empty (A4 fail).
+      Module-level catalog UX (M8) for VMS-WORKER-SOURCING (315) and VMS-TIME-INVOICING (316)
+      was authored and written on 2026-06-06 (both modules now carry buyer-voice tagline +
+      description). The domain-grain copy still needs explicit exact-wording approval per
+      Rule #20; drafts are in B2-2.
+    blocked_by:
+      - {type: user_decision, ref: B2-2}
+
 b2:
   - id: B2-1
     summary: Entity 187 (pm_work_orders) identity, Preventive Maintenance vs staffing requisition / SOW.
@@ -194,23 +53,23 @@ b2:
       Description + workflow + handoff 117 + trigger event 146 + relationship rows point to
       staffing requisition / SOW. Name + labels + aliases point to Preventive Maintenance.
       Only the user can pick. The modularization placed 187 as master in 315 per its
-      description; this does not pre-judge the rename. Gates B1B-B1, the 187 portion of
-      B1A-B12, and all Bucket 3.
+      description; this does not pre-judge the rename. Gates B1B-B1 and the 187 lifecycle-state
+      portion of the (now-resolved) B12 work, plus all Bucket 3.
 
   - id: B2-2
-    summary: Approve catalog_tagline + catalog_description wording for the VMS domain row (and seed module-level UX).
+    summary: Approve catalog_tagline + catalog_description wording for the VMS domain row.
     question: |
-      Per Rule #20, catalog UX text on domains needs explicit user approval of the exact
-      string before PATCH. Drafts:
+      Per Rule #20, catalog UX text on the DOMAIN row needs explicit user approval of the exact
+      string before PATCH. The MODULE-level catalog UX (315/316) was authored and written on
+      2026-06-06 (empty-guard path, no pre-write gate). Only the domain-grain copy remains.
+      Drafts:
       - tagline: "Source contingent workers through approved staffing suppliers, manage rate cards, and reconcile timesheets and invoices end-to-end."
       - description (3 sentences): "Manage the full contingent-workforce cycle, requisitions, supplier distribution, candidate submissions, worker assignments, timesheets, and invoices, in one system. Approve rate cards by role and region; classify each worker against IR35, California AB5, and EU Platform Work rules; and feed approved timesheets to payroll and project accounting automatically. Procurement and HR run it jointly: procurement governs the supplier panel, HR governs the worker classification."
-      Module-level catalog UX (M8) for VMS-WORKER-SOURCING (315) and VMS-TIME-INVOICING (316)
-      also needs drafts + approval (feeds B1A-A4-M8-CATALOG-UX).
     options:
-      - "Approve domain drafts as-written; supply or request module-level drafts."
+      - "Approve domain drafts as-written."
       - "Rewrite, supply exact wording."
       - "Defer."
-    why: Rule #20 hard rule; agent cannot PATCH catalog UX on its own.
+    why: Rule #20 hard rule; agent cannot PATCH domain-level catalog UX on its own. Feeds B1B-A4-DOMAIN-CATALOG-UX.
 
   - id: B2-3
     summary: Decide pattern flags (has_personal_content / has_submit_lock / has_single_approver) on the 6 masters.
@@ -239,9 +98,8 @@ b2:
       - "Re-split to 3-way (requires a follow-up migration of caps + masters)."
       - "Rename codes (load-bearing in URLs / permission prefixes / handoff backfills)."
     why: |
-      Module codes are load-bearing. The default is already built; changing it now is a
-      migration, not a fresh build. Confirm or request the re-split before B1A handoff /
-      role / skill work attaches to 315 / 316.
+      Module codes are load-bearing. The default is already built and now has handoffs, roles,
+      and system skills attached to 315 / 316; changing it now is a migration, not a fresh build.
 
   - id: B2-5
     summary: Approve business_logic wording on the VMS domain row.

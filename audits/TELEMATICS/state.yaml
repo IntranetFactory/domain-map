@@ -1,27 +1,10 @@
 schema_version: 2
 domain: TELEMATICS
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
-b1a:
-  - id: B1A-F2-MODULE-SYSTEM-SKILLS
-    summary: Author two module-scoped system skills (one per new module, Rule #17 -> F2/F3) and retire legacy telematics-system skill 112.
-    finding: |
-      TELEMATICS now has two full modules (TELEMATICS-FLEET-TRACKING id 306, TELEMATICS-COMPLIANCE-SAFETY id 307) but zero module-scoped system skills. F2 fails: Rule #17 requires exactly one `<module_code_lower>_agent` system skill per module. F1 fails: the legacy domain-level system skill `telematics-system` (id 112, domain_id=148, domain_module_id=NULL, kebab + `-system` suffix) still carries the 8 platform-tier query tools. F3 (tool re-link) is owed once the new skills exist.
-    action: |
-      Author `telematics_fleet_tracking_agent` (domain_module_id 306) and `telematics_compliance_safety_agent` (domain_module_id 307). Re-link the 8 existing platform-tier query tools (skill_tools ids 717, 718, 719, 720, 847, 848, 849, 850) to the correct new module's skill by which module masters the tool's data_object, then DELETE legacy skill 112.
-    extra_tool_ids: [717, 718, 719, 720, 847, 848, 849, 850]
-    extra_legacy_skill_id: 112
-    affected_modules: [306, 307]
-  - id: B1A-M8-MODULE-CATALOG-UX
-    summary: Draft buyer-voice catalog_tagline + catalog_description on both new module rows (M8) and surface to user before write (Rule #20).
-    finding: |
-      Both new modules were created with empty `catalog_tagline` / `catalog_description` (omitted on insert per the modularization scope). M8 requires module-level buyer-voice landing copy on every `full` module. The domain-level A4 fields on `/domains?id=eq.148` also remain empty (catalog_tagline="" / catalog_description="").
-    action: |
-      Draft a one-sentence buyer-voice tagline + 1-3 paragraph description per module (TELEMATICS-FLEET-TRACKING 306, TELEMATICS-COMPLIANCE-SAFETY 307) and for the domain row, surface to user for review, PATCH only the approved text. Do NOT overwrite without per-row approval; the columns are buyer-shaped.
-    affected_modules: [306, 307]
-    extra_fix_surface: surgical PATCH on /domain_modules?id=in.(306,307) and /domains?id=eq.148 after user-approved wording
+b1a: []
 
 b1b:
   - id: B1B-S4-INTRA-DOMAIN-EDGES

@@ -1,112 +1,15 @@
 schema_version: 2
 domain: REAL-EST
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
-b1a:
-  - id: B1A-S3
-    summary: "Author 8 intra-domain master-to-master `data_object_relationships` rows (B6 fix)."
-    finding: >-
-      0 intra-domain `data_object_relationships` between REAL-EST's 8 masters
-      (real_estate_properties 344, property_leases 345, floor_plans 346,
-      property_spaces 347, occupancy_records 348, facility_work_orders 349,
-      utility_meter_readings 350, capital_projects 351). Only 1 cross-domain
-      relationship exists (351 commissions industrial_assets 475). Modules now
-      exist (288-291) so module context is available, but these edges are not
-      module-gated.
-    action: >-
-      Author 8 rows: (a) real_estate_properties has_many floor_plans; (b)
-      floor_plans has_many property_spaces; (c) property_spaces has_many
-      occupancy_records; (d) real_estate_properties has_many property_leases;
-      (e) real_estate_properties has_many utility_meter_readings;
-      (f) real_estate_properties has_many facility_work_orders;
-      (g) real_estate_properties has_many capital_projects;
-      (h) property_spaces has_many facility_work_orders.
-      Each row carries verb / inverse_verb / relationship_type=one_to_many /
-      relationship_kind=reference / is_required / owner_side='source'.
-    affected_masters:
-      - {data_object_id: 344, name: real_estate_properties}
-      - {data_object_id: 345, name: property_leases}
-      - {data_object_id: 346, name: floor_plans}
-      - {data_object_id: 347, name: property_spaces}
-      - {data_object_id: 348, name: occupancy_records}
-      - {data_object_id: 349, name: facility_work_orders}
-      - {data_object_id: 350, name: utility_meter_readings}
-      - {data_object_id: 351, name: capital_projects}
-
-  - id: B1A-SYS-SKILLS
-    summary: >-
-      Author 4 per-module `skill_type='system'` skills (Rule #17 -> F2/F3),
-      rebind 10 legacy skill_tools, then retire legacy domain-level skill 99 (F1).
-    finding: >-
-      Modularization landed 4 full modules (288 REAL-EST-PORTFOLIO, 289
-      REAL-EST-SPACE-OPS, 290 REAL-EST-FACILITY-OPS, 291 REAL-EST-CAPITAL-PROJECTS).
-      The legacy `real-est-system` skill (id 99, domain_id=141,
-      domain_module_id=null) with 10 skill_tools rows is now an F1 failure: a
-      module-level system skill is owed per module (Rule #17), after which the
-      domain-level row must retire. F7 also owed: legacy skill 99 links
-      `send_email` (id 37, channel primitive) which should rebind to
-      `notify_person`/`notify_team` per channel-vs-capability rule.
-    action: >-
-      Author 4 module-level `skill_type='system'` skills (one per module
-      288-291), split/rebind the 10 legacy skill_tools across them (rebinding
-      send_email -> notify_person), then DELETE legacy skill 99. Out of the
-      modules+entities scope of the 2026-06-02 run; next pass.
-    affected_modules: [288, 289, 290, 291]
-
-  - id: B1A-LIFECYCLE
-    summary: "Author `data_object_lifecycle_states` for 7 of 8 masters (B12 hard fail), now module-anchored."
-    finding: >-
-      0 `data_object_lifecycle_states` on any of the 8 masters. With modules
-      288-291 in place, each state machine can now carry a `domain_module_id` for
-      the workflow-gate prefix. occupancy_records (348) is a config-shape
-      exemption candidate (surface to user).
-    action: >-
-      Author state machines: real_estate_properties 344 (in_portfolio -> active
-      -> divested) module 288; property_leases 345 (draft -> active ->
-      renewal_pending -> renewed/expired/terminated) module 288; floor_plans 346
-      (draft -> published -> superseded) module 288; property_spaces 347
-      (available -> allocated -> released) module 289; facility_work_orders 349
-      (created -> assigned -> dispatched -> in_progress -> completed -> closed)
-      module 290; utility_meter_readings 350 (recorded -> validated -> published)
-      module 290; capital_projects 351 (planning -> approved -> in_progress ->
-      completed/cancelled) module 291. Set is_initial/is_terminal/
-      requires_permission/permission_verb_override per state.
-    affected_masters:
-      - {data_object_id: 344, name: real_estate_properties, target_module_id: 288, workflow: in_portfolio -> active -> divested}
-      - {data_object_id: 345, name: property_leases, target_module_id: 288, workflow: draft -> active -> renewal_pending -> renewed/expired/terminated}
-      - {data_object_id: 346, name: floor_plans, target_module_id: 288, workflow: draft -> published -> superseded}
-      - {data_object_id: 347, name: property_spaces, target_module_id: 289, workflow: available -> allocated -> released}
-      - {data_object_id: 348, name: occupancy_records, target_module_id: 289, workflow: config-shape exemption candidate}
-      - {data_object_id: 349, name: facility_work_orders, target_module_id: 290, workflow: created -> assigned -> dispatched -> in_progress -> completed -> closed}
-      - {data_object_id: 350, name: utility_meter_readings, target_module_id: 290, workflow: recorded -> validated -> published}
-      - {data_object_id: 351, name: capital_projects, target_module_id: 291, workflow: planning -> approved -> in_progress -> completed/cancelled}
-
-  - id: B1A-HANDOFF-FK
-    summary: "PATCH NULL module FKs on REAL-EST outbound + inbound handoffs (B10b), now derivable from modules 288-291."
-    finding: >-
-      NULL `source_domain_module_id` on outbound handoffs 291, 293, 294, 295,
-      856, 857, 858; NULL `target_domain_module_id` on inbound 292 and 870. With
-      the 4 modules in place, the source module derives from the module mastering
-      the trigger event's payload: facility_work_orders/utility_meter_readings ->
-      290; capital_projects -> 291; property_spaces -> 289; real_estate_properties/
-      floor_plans -> 288. Inbound 292 (facility_work_orders) -> target 290.
-    action: >-
-      PATCH source_domain_module_id on 291->290, 293->290, 294->291, 295->289,
-      856->288, 857->288, 858->288; PATCH target_domain_module_id on 292->290.
-      Handoff 870 (space_utilization_reports, IWMS-mastered) still needs a
-      consumer DMDO decision on a REAL-EST module (B2-S5/design); surface separately.
-    affected_handoffs:
-      - {handoff_id: 291, direction: outbound, source_domain: REAL-EST, target_domain: FSM, trigger_event: facility_work_order.created, payload: facility_work_orders, null_field: source_domain_module_id}
-      - {handoff_id: 292, direction: inbound, source_domain: FSM, target_domain: REAL-EST, trigger_event: facility_work_order.completed, payload: facility_work_orders, null_field: target_domain_module_id}
-      - {handoff_id: 293, direction: outbound, source_domain: REAL-EST, target_domain: ESG, trigger_event: utility_meter_reading.published, payload: utility_meter_readings, null_field: source_domain_module_id}
-      - {handoff_id: 294, direction: outbound, source_domain: REAL-EST, target_domain: EAM, trigger_event: capital_project.completed, payload: capital_projects, null_field: source_domain_module_id}
-      - {handoff_id: 295, direction: outbound, source_domain: REAL-EST, target_domain: HCM, trigger_event: property_space.allocated, payload: property_spaces, null_field: source_domain_module_id}
-      - {handoff_id: 856, direction: outbound, source_domain: REAL-EST, target_domain: RE-CRE, trigger_event: property.listed, payload: real_estate_properties, null_field: source_domain_module_id}
-      - {handoff_id: 857, direction: outbound, source_domain: REAL-EST, target_domain: RE-INVEST, trigger_event: property.updated, payload: real_estate_properties, null_field: source_domain_module_id}
-      - {handoff_id: 858, direction: outbound, source_domain: REAL-EST, target_domain: IWMS, trigger_event: floor_plan.updated, payload: floor_plans, null_field: source_domain_module_id}
-      - {handoff_id: 870, direction: inbound, source_domain: IWMS, target_domain: REAL-EST, trigger_event: space_utilization.measured, payload: space_utilization_reports, null_field: target_domain_module_id}
+# b1a fully executed 2026-06-06 (see history.md "2026-06-06 - b1a execution"):
+#   B1A-S3 (8 intra-domain relationships, ids 2056-2063),
+#   B1A-LIFECYCLE (entity_type classify on 7 masters + 29 lifecycle states; occupancy_records 348 left config-shape, user decision),
+#   B1A-HANDOFF-FK (8 handoff module FKs patched; 870 target still user-design-gated),
+#   B1A-SYS-SKILLS (4 module system skills 329-332 + 13 skill_tools, send_email->notify_person, legacy skill 99 retired).
+b1a: []
 
 b1b:
   - id: B1B-S2

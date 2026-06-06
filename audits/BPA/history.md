@@ -507,3 +507,86 @@ All three modules `module_kind='full'`, `record_status='new'`. `catalog_tagline`
 - **Downstream M-band fixes now unblocked.** B1B-M2 (already satisfied for 247/249/250 by the new master rows), B1B-M4 (relocate lifecycle states 673/674/675 to BPA-221, gated on capmap-owner), B1B-M5 (capability links, now landed for the BPA side), B1B-S3/S4 (handoff source/target module FK backfill, now derivable), B1B-S5 (intra-domain handoffs), B1B-B4 (lifecycle states on 247/249/250). These remain in the b1b queue: they require entity creation or PATCHes outside this modules-and-assignment-only scope.
 
 JWT errors: none.
+
+## 2026-06-05 - b1a execution
+
+Executed b1a item **B1A-SKILLS** (Phase S system skills + tools + skill_tools per Rule #17, plus legacy retirement). Catalog-UX clause (B2-CATALOG-UX) NOT executed: Rule #20 buyer copy is drafted for the user and left OPEN. Loader: `c:/dev/domain-map/.tmp_deploy/bpa_b1a_skills_2026-06-05.ts` (idempotent; re-reads live state before each write; dedupes tools by tool_name, skills by skill_name, skill_tools by (skill_id, tool_id)). Run from `c:/dev/domain-map` with `bun run ... --apply`.
+
+### Three-source derivation (Rule #17)
+
+- **Source 1 (masters -> query + representative mutate + workflow gate):** each module's master(s) keep their existing `query_<entity>` tool and gain `create`/`update` plus a publish/run gate keyed to the master's published trigger_event (`process_model.published` -> `publish_business_process_model`; `capability_map.updated` -> `publish_business_capability_map`; `process_simulation_run.completed` -> `run_process_simulation_run`).
+- **Source 2 (consumer/contributor reads):** BPA modules hold no consumer/contributor DMDO rows yet (deferred B1B-S4), so no cross-domain query tools were required.
+- **Source 3 (outbound handoffs -> mutate on receiving side):** all 8 BPA outbound handoffs (180/181/182/184/783/784/785/786) publish BPA's OWN masters as the event payload (publish/run gates on 247/249/250), already covered by Source 1. No foreign-domain mutate tool required.
+- **Channel rule:** `notify_person` (abstraction, coverage_tier=platform) linked OPTIONAL on each skill; the workflow needs no specific channel, so no channel primitive and not required.
+
+### Tools created (9 new, dedup by tool_name)
+
+All `operation_kind='mutate'`, `coverage_tier='platform'`, `data_object_id` set, `record_status` omitted (default new). Domain-specific mutates on BPA masters (Rule #9):
+
+| id | tool_name | data_object_id |
+|---|---|---|
+| 1579 | create_business_process_model | 247 |
+| 1580 | update_business_process_model | 247 |
+| 1581 | publish_business_process_model | 247 |
+| 1582 | create_business_capability_map | 248 |
+| 1583 | publish_business_capability_map | 248 |
+| 1584 | create_value_stream | 249 |
+| 1585 | update_value_stream | 249 |
+| 1586 | create_process_simulation_run | 250 |
+| 1587 | run_process_simulation_run | 250 |
+
+Reused existing tools (no insert): 332 `query_business_process_models`, 65 `query_business_capability_maps`, 333 `query_value_streams`, 334 `query_process_simulation_runs`, 892 `update_business_capability_map`, 913 `notify_person`.
+
+### Skills created (3 new, one system skill per module)
+
+`skill_type='system'`, `domain_id=136` (required by platform rule `domain_required_when_skill_type_is_system`), `domain_module_id` set as the canonical anchor, `record_status` omitted.
+
+| id | skill_name | domain_module_id |
+|---|---|---|
+| 261 | bpa_process_repo_agent | 220 (BPA-PROCESS-REPO) |
+| 262 | bpa_capability_map_agent | 221 (BPA-CAPABILITY-MAP) |
+| 263 | bpa_value_stream_agent | 222 (BPA-VALUE-STREAM) |
+
+### skill_tools created (17 rows, ids 2638-2654)
+
+- Skill 261: 4 required (332 query, 1579 create, 1580 update, 1581 publish) + 1 optional (913 notify_person). 4/4 required platform => 100% Semantius.
+- Skill 262: 4 required (65 query, 1582 create, 892 update, 1583 publish) + 1 optional (913). 4/4 platform => 100%.
+- Skill 263: 6 required (333 query, 1584 create, 1585 update, 334 query, 1586 create, 1587 run) + 1 optional (913). 6/6 platform => 100%.
+
+`notes=''` on all (Rule #15). F2 (one system skill per module), F3 (>=1 skill_tools each), F4 (operation_kind <-> data_object_id invariant), F5 (per-module Semantius score 100% strict) now pass for all 3 BPA modules.
+
+### Legacy retirement (DELETE, snapshots captured)
+
+- DELETE `skills` id 34 (`bpa-system`). Prior row: `{skill_name:'bpa-system', skill_type:'system', domain_id:136, domain_module_id:null, process_id:null, role_id:null, record_status:'new', description:'System skill for Business Process Architecture (em-dash) runtime workflows over the domain master data, derived from masters + cross-domain handoffs.'}`.
+- DELETE 4 `skill_tools` rows on skill 34 (ids 373/374/375/376, all `requirement_level='required'`, `record_status='new'`, `notes=''`): 373->tool 332, 374->tool 65, 375->tool 333, 376->tool 334. (state.yaml's `extra_legacy_skill_tools_ids: [332,65,333,334]` had listed the tool_ids, not the skill_tools row ids; the actual deleted skill_tools rows were 373-376.) The 4 underlying query tools (332/65/333/334) were left in place and are now reused by the new per-module skills.
+
+F1 (legacy `domain_module_id=null` system skill present) now passes: no legacy BPA system skill remains.
+
+### Verification counts (re-queried post-apply)
+
+- `skills` where `domain_id=136`: 3 (261/262/263), each `skill_type='system'`, distinct `domain_module_id` in {220,221,222}. Legacy skill 34 absent.
+- `skill_tools` on skills 261/262/263: 17 (5 + 5 + 7). skill_tools 373-376 absent.
+- `tools` for BPA masters: 6 query/mutate pre-existing + 9 new = 15 BPA-master tools, all `coverage_tier='platform'`.
+
+### Drafted for user (B2-CATALOG-UX, Rule #20 - NOT written)
+
+Catalog UX backfill (A4 on domain row 136, M8 on module rows 220/221/222) is buyer-shaped copy; Rule #20 forbids writing it without explicit per-row user approval. Left OPEN under b1a B1A-SKILLS (catalog-UX clause) and b2 B2-CATALOG-UX. Proposed drafts (buyer voice, workflow + value; no vendor names; no em-dashes):
+
+- **Domain 136 (BPA)**
+  - `catalog_tagline`: "Design, document, and publish how your business actually runs."
+  - `catalog_description`: "Map your end-to-end processes, capabilities, and value streams in one connected workspace. Author process models, keep a single source of truth for how work flows, and publish approved versions your teams can trust. Simulate changes before you commit to them and hand insights off to the teams that execute, improve, and govern the work."
+- **Module 220 (BPA-PROCESS-REPO)**
+  - `catalog_tagline`: "Author, review, and publish your process models from one repository."
+  - `catalog_description`: "Build and maintain a governed library of business process models. Draft new versions, route them for review, and publish the approved model so every team works from the same picture. Notify stakeholders automatically when a process is published."
+- **Module 221 (BPA-CAPABILITY-MAP)**
+  - `catalog_tagline`: "See what your business can do, and where to invest next."
+  - `catalog_description`: "Build capability maps that show what your organization does, independent of how it is structured today. Anchor them to reference frameworks, keep them current as the business evolves, and publish a shared view that planning, architecture, and leadership can align around."
+- **Module 222 (BPA-VALUE-STREAM)**
+  - `catalog_tagline`: "Model your value streams and test changes before you make them."
+  - `catalog_description`: "Map how value flows to your customers, spot the bottlenecks that slow delivery, and model improvements with simulation before you roll them out. Run what-if scenarios, compare outcomes, and share the results with the teams that act on them."
+
+JWT errors: none.
+
+### 2026-06-05 catalog UX written (supersedes the "drafted, left open" note above)
+
+The empty `catalog_tagline` / `catalog_description` on the BPA domain row and modules 220, 221, 222 were WRITTEN (not parked). Loader: `.tmp_deploy/backfill_catalog_ux_2026_06_05.ts` (empty-guard: only empty fields written, no overwrite). record_status on these rows is `new`, so the copy is reviewed in-record per the revised Rule #20. The prior note in this date section that left the UX "open" is superseded; the UX-only state.yaml items were removed.

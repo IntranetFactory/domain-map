@@ -306,3 +306,75 @@ None. All 8 intended masters were unclaimed catalog-wide.
 ### Deferred / unchanged this pass (carried into state.yaml)
 
 Out of modularization scope per the job: B1A-S3 (8 intra-domain master-to-master relationships, ungated, now loadable), lifecycle states (B12, now have a `domain_module_id` to anchor), per-module system skills + legacy skill 99 retirement (F1/F2/F3, Rule #17), catalog UX copy (A4 / M8 catalog_tagline + catalog_description), aliases (B11), pattern-flag positive review (B4), business_function_domains (C1), NULL handoff module FKs (B10b, now derivable from the 4 module ids), H1 substring-row cleanup, and the 7 Phase-0 vendor candidates (b3). The B2 architectural questions B2-S1/B2-S2 are now resolved by this build; B2-S4 (CAFM), B2-S5 (real_estate_properties vs locations collision), B2-S6 (cross-domain target masters), B2-S7 (H1 cleanup) remain user-owned.
+
+## 2026-06-06 - b1a execution
+
+Loader: `.tmp_deploy/fix_real_est_b1a_2026-06-06.ts` (idempotent, safe to re-run). Tenant verified `ma@adenin.com` / org `adenin`, module 1001 in scope, no JWT errors. record_status omitted on every insert (DB default `new`, Rule #1). No `notes` column written anywhere (Rule #15). No vendor/product names in any authored field (Rule #18).
+
+### B1A-S3 (B6) - DONE
+
+INSERT 8 intra-domain master-to-master `data_object_relationships` rows (ids 2056-2063). All `relationship_type=one_to_many`, `relationship_kind=reference`, `owner_side=source`, `is_required=false`, with verb/inverse_verb:
+
+| id | edge | verb / inverse |
+|---|---|---|
+| 2056 | real_estate_properties 344 -> floor_plans 346 | has / belongs to |
+| 2057 | floor_plans 346 -> property_spaces 347 | subdivides into / is part of |
+| 2058 | property_spaces 347 -> occupancy_records 348 | has / records occupancy for |
+| 2059 | real_estate_properties 344 -> property_leases 345 | is leased under / covers |
+| 2060 | real_estate_properties 344 -> utility_meter_readings 350 | is metered by / meters |
+| 2061 | real_estate_properties 344 -> facility_work_orders 349 | has / is raised against |
+| 2062 | real_estate_properties 344 -> capital_projects 351 | undergoes / is performed on |
+| 2063 | property_spaces 347 -> facility_work_orders 349 | has / is located in |
+
+### B1A-LIFECYCLE (B12) - DONE (7 of 8 masters; occupancy_records surfaced)
+
+Prerequisite PATCH (Rule #12 / B13): `data_objects.entity_type` was `unclassified` on all 8 masters; lifecycle states are only coherent on `operational_workflow` entities, so the 7 workflow masters were classified first. PATCH `entity_type` `unclassified` -> `operational_workflow` on 344, 345, 346, 347, 349, 350, 351 (prior value on each: `unclassified`). occupancy_records (348) left `unclassified` (config-shape exemption candidate, user decision per the b1a finding) and given no lifecycle states.
+
+INSERT 29 `data_object_lifecycle_states` rows, module-anchored per the action:
+
+- real_estate_properties 344 (module 288): in_portfolio(initial) -> active -> divested(terminal, gate `divest_property`).
+- property_leases 345 (module 288): draft(initial) -> active(gate `activate_lease`) -> renewal_pending -> renewed(terminal, gate `renew_lease`) / expired(terminal) / terminated(terminal, gate `terminate_lease`).
+- floor_plans 346 (module 288): draft(initial) -> published(gate `publish_floor_plan`) -> superseded(terminal).
+- property_spaces 347 (module 289): available(initial) -> allocated(gate `allocate_space`) -> released(terminal, gate `release_space`).
+- facility_work_orders 349 (module 290): created(initial) -> assigned -> dispatched(gate `dispatch_work_order`) -> in_progress -> completed(gate `complete_work_order`) -> closed(terminal).
+- utility_meter_readings 350 (module 290): recorded(initial) -> validated -> published(terminal, gate `publish_meter_reading`).
+- capital_projects 351 (module 291): planning(initial) -> approved(gate `approve_capital_project`) -> in_progress -> completed(terminal, gate `complete_capital_project`) / cancelled(terminal).
+
+Each machine has exactly one initial, >=1 terminal, monotonic unique state_order (M4 shape pass). `description` populated factually (not a `notes` column).
+
+### B1A-HANDOFF-FK (B10b) - DONE (8 patched; 870 skipped)
+
+All prior values were NULL on the patched side (snapshot from pre-run query). PATCH `source_domain_module_id`: 291->290, 293->290, 294->291, 295->289, 856->288, 857->288, 858->288. PATCH `target_domain_module_id`: 292->290. Handoff 870 (IWMS -> REAL-EST, payload `space_utilization_reports` 593) SKIPPED: needs a consumer-DMDO design decision on a REAL-EST module (B2-S5 / design), per the b1a finding. Remaining NULL `target_domain_module_id` on 293/294/295/856 are the target domains' (ESG/EAM/HCM/RE-CRE) B10b responsibility (report-only, B10b asymmetry), not REAL-EST's.
+
+### B1A-SYS-SKILLS (F1/F2/F3/F7) - DONE
+
+INSERT 4 module-level `skill_type='system'` skills (one per module, `domain_module_id` set; `domain_id=141` also set to satisfy the live `domain_required_when_skill_type_is_system` check constraint, which still requires `domain_id` on system skills):
+
+| skill id | skill_name | module |
+|---|---|---|
+| 329 | real_est_portfolio_agent | 288 |
+| 330 | real_est_space_ops_agent | 289 |
+| 331 | real_est_facility_ops_agent | 290 |
+| 332 | real_est_capital_projects_agent | 291 |
+
+INSERT 13 `skill_tools` rows distributing the legacy 10 tools across the 4 module skills by mastered entity, with `send_email` (37) rebound to `notify_person` (913) per F7 / channel-vs-capability rule (all `required`):
+- 329 portfolio: query_real_estate_properties(664), query_leases(665), query_floor_plans(666), sign_document(42), notify_person(913).
+- 330 space-ops: query_spaces(667), query_occupancy_records(668), notify_person(913).
+- 331 facility-ops: query_facility_work_orders(669), query_utility_meter_readings(670), notify_person(913).
+- 332 capital-projects: query_capital_projects(671), notify_person(913).
+
+DELETE legacy domain-level system skill 99 (`real-est-system`, `domain_id=141`, `domain_module_id=null`) and its 10 `skill_tools` rows (prior ids 781-790, linking tools 664-671 + send_email 37 + sign_document 42, all `required`). The shared catalog `tools` rows (including send_email 37, sign_document 42) were NOT deleted; only the skill_tools links and the skill row were removed.
+
+### Verification (live re-query)
+
+- `data_object_relationships` intra-domain: 8 rows (2056-2063).
+- `data_object_lifecycle_states` on masters: 29 rows; each of the 7 machines has exactly one initial and >=1 terminal.
+- `data_objects.entity_type`: 7 masters `operational_workflow`, occupancy_records (348) `unclassified`.
+- `skills` for REAL-EST: 4 module system skills (329-332); legacy skill 99 gone.
+- `skill_tools` on 329-332: 13 rows; notify_person present, send_email absent, F4 invariant holds.
+- `handoffs` module FKs: 291/293/294/295/856/857/858 source set, 292 target set, 870 still NULL on target (intentional skip).
+
+### Skipped / not executed
+
+- Handoff 870 target module FK: user design decision (consumer DMDO on a REAL-EST module).
+- All b1b items (B1B-S2 catalog UX, B1B-S5 aliases, B1B-S7 pattern flags, B1B-S8 business_function_domains, B1B-S9 H1 cleanup): each carries a `blocked_by: user_decision`; not executed (out of scope for this b1a run). No empty catalog UX field appeared in a b1a item, so revised Rule #20 backfill did not apply this run.

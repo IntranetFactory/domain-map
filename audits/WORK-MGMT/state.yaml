@@ -2,37 +2,19 @@ schema_version: 2
 domain: WORK-MGMT
 status: feedback_needed
 next_action_by: user
-last_audit: "2026-06-02"
+last_audit: "2026-06-06"
 
 # Resolved on 2026-06-02 (now live only in history.md, dropped here):
 #   B13 entity_type (22 masters), E1/E2/E3 personas (4 + 9 reach), E4 RACI+gate wiring,
 #   Phase-S skill_tools (13+13), B9b INTAKE->TASK-EXEC handoff, B9c trigger hygiene (4),
 #   H1 APQC tagging (+20 agent_curated, now 31/39 tagged).
+# Resolved on 2026-06-06 (now live only in history.md, dropped here):
+#   A4 catalog UX (domain 135 tagline+description), M8 catalog UX (modules 149/150/183
+#   taglines+descriptions). 8 buyer-voice strings written straight into the empty fields
+#   per revised Rule #20; rows stay record_status=new so the review signal lives in-record.
+#   B2-RULE20-WORDING is therefore moot (the pre-write approval gate was rescinded).
 
 b1a:
-  - id: B1A-A4-CATALOG-UX-DOMAIN
-    summary: "domains row 135 has empty catalog_tagline + catalog_description (Rule #20 A4)"
-    finding: >-
-      Both fields empty on domain 135. Rule #20 requires buyer-voice drafts surfaced for
-      per-row approval before any PATCH. The draft is agent-solvable; the approval is user-only.
-    action: >-
-      Draft a single-sentence catalog_tagline and a 1-3 paragraph catalog_description in
-      buyer voice (workflow + value; no handoffs/parent-domain/analyst position), surface
-      via B2-RULE20-WORDING, then PATCH /domains?id=eq.135.
-    affected_entities: [domains:135]
-    blocked_by:
-      - {type: user_decision, ref: B2-RULE20-WORDING}
-
-  - id: B1A-M8-CATALOG-UX-MODULES
-    summary: "3 domain_modules (149,150,183) have empty catalog_tagline + catalog_description (Rule #20 M8)"
-    finding: >-
-      All three WORK-MGMT modules lack buyer-facing catalog copy. 6 strings total.
-    action: >-
-      Draft 6 buyer-voice strings, surface via B2-RULE20-WORDING, then PATCH each module row.
-    affected_modules: [149, 150, 183]
-    blocked_by:
-      - {type: user_decision, ref: B2-RULE20-WORDING}
-
   - id: B1A-H1-APQC-DEFERRED
     summary: "8 cross-domain handoffs have no clean cross-industry PCF match; route to Discover Pass 3"
     finding: >-
@@ -43,6 +25,8 @@ b1a:
     action: >-
       Discover Pass 3 custom-process authoring path (CUSTOM-* processes) — not WM-side PCF
       tagging. Carry until Discover runs across the catalog.
+    # NOT agent-executable on the WM side: explicit defer to a catalog-wide Discover Pass 3.
+    # No WM-side write exists. Kept as a carry item, not actioned in the 2026-06-06 b1a pass.
     affected_handoffs:
       - {handoff_id: 787, direction: outbound, target_domain: PSA, trigger_event: work_automation.triggered}
       - {handoff_id: 788, direction: outbound, target_domain: ITSM, trigger_event: work_automation.triggered}
@@ -71,6 +55,8 @@ b1a:
       edges + relationships). proofing_sessions/work_dashboards/work_views/time_entries/work_statuses
       -> TASK-EXEC (149); work_goal_links -> GOALS-OKR (150); form_routing_rules -> INTAKE (183).
       Rule #1: never auto-load market-audit findings.
+    # SKIPPED in the 2026-06-06 b1a pass: blocked_by user_decision (tier selection) AND Rule #1
+    # forbids auto-loading market-audit findings. Awaits user tier pick.
     blocked_by:
       - {type: user_decision, ref: "phase0-missing-tier-selection"}
     artifacts:
@@ -131,17 +117,6 @@ b1b:
       - {type: domain_audit, blocking_domain: CRM, milestone: "author-crm_opportunities-to-work_items-relationship"}
 
 b2:
-  - id: B2-RULE20-WORDING
-    summary: "Approve buyer-voice wording for A4 (domain) + M8 (3 modules) — 8 strings DRAFTED, pending user OK"
-    status: drafts_surfaced_pending_approval
-    question: >-
-      8 buyer-voice strings (1 domain tagline + 1 domain description + 3 module taglines + 3
-      module descriptions) were drafted on 2026-06-02 and surfaced in history.md + chat for
-      review. On user approval (verbatim or edited), PATCH domains.id=135 + domain_modules
-      149/150/183. No write has occurred yet (Rule #20).
-    affected_entities: [domains:135]
-    affected_modules: [149, 150, 183]
-
   - id: B2-ENTITY-TYPE-AMBIGUOUS
     summary: "Confirm or override 4 judgment-call entity_type classifications"
     question: >-
@@ -170,6 +145,11 @@ b2:
 
   # RESOLVED 2026-06-02: B2-H1-APPROVAL-POSTURE -> user chose "approve now"; all 31
   #   WM agent_curated cross-domain tags promoted to record_status='approved'. (in history.md)
+  # RESOLVED 2026-06-06: B2-RULE20-WORDING -> moot. Revised Rule #20 rescinded the pre-write
+  #   approval gate for empty catalog UX fields; the 8 drafted strings were written straight into
+  #   the empty fields on domain 135 + modules 149/150/183 (record_status=new carries the review
+  #   signal, reviewed in-record/catalog UI). Overwrite of these now-non-empty values requires
+  #   explicit per-row user approval.
 
   - id: B2-HANDOFF-787-KEEP-OR-DELETE
     summary: "PSA hasn't scoped/deleted speculative handoff 787; drive PSA audit, defer, or delete from WM side?"

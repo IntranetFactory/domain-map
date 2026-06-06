@@ -335,3 +335,68 @@ Loader: .tmp_deploy/modularize_hcms_2026-06-02.ts (idempotent, safe to re-run).
 ### Deferred (unchanged, now actionable post-modularization)
 
 The system-skill reparent/split (B1B-S3), mutate-tool authoring (B1B-S4), lifecycle-states authoring (B2-S1), pattern-flag re-evaluation (B2-S2), and the 3 candidate handoffs (B1B-S7) all had B1B-S1 (modules exist) as their gate. That gate is now closed; these become agent-actionable on the next pass and are recorded in state.yaml. The B3 entity / domain candidates and the APQC handoff-tag work (B1A-H1) are out of scope for this modularization pass and carried forward.
+
+## 2026-06-06 - b1a execution
+
+Executed the three agent-solvable b1a items against the live `domain_map` module. Loader: `c:/tmp/hcms_b1a_2026-06-06.ts` (idempotent, re-read live state before every write). All inserts omit `record_status` (DB default `new`); no `notes` column written anywhere.
+
+### B1A-SKILL-SPLIT - DONE
+
+Prior state (snapshot for reversibility):
+- skills.id=67 `hcms-system` (skill_type='system', domain_id=93, domain_module_id=NULL, record_status='new', description "System skill for Headless Content Management - runtime workflows over the domain's master data, derived from masters + cross-domain handoffs.").
+- 6 skill_tools on skill 67 (all requirement_level='required'): id 590->tool 506, 591->507, 592->508, 593->509, 594->510, 595->511.
+
+Changes:
+- DELETED skills.id=67. Its 6 skill_tools rows (590-595) cascade-deleted automatically (`skill_tools.skill_id` reference_delete_mode='cascade'). The 6 query `tools` rows (506-511) were NOT touched (only the junction cascades).
+- INSERTED 3 system skills, one per module:
+  - id 351 `hcms_modeling_agent` -> module 260 (HCMS-MODELING)
+  - id 352 `hcms_authoring_agent` -> module 261 (HCMS-AUTHORING)
+  - id 353 `hcms_delivery_agent` -> module 262 (HCMS-DELIVERY)
+- RE-LINKED the 6 existing query tools to the new skills by mastering module (skill_tools, requirement_level='required'):
+  - skill 351 (MODELING): query_content_types 506, query_content_environments 511
+  - skill 352 (AUTHORING): query_content_entries 507, query_editorial_workflows 509, query_content_locales 510
+  - skill 353 (DELIVERY): query_content_releases 508
+- F2 now satisfied: each of modules 260/261/262 has exactly one system skill. Gate B1B-S1 confirmed closed.
+
+### B1A-MUTATE-TOOLS - DONE
+
+Pre-flight: re-read `/tools` by tool_name for all 10 proposed names; none existed (no catalog-wide collision). INSERTED 10 mutate `tools` rows (operation_kind='mutate', coverage_tier='platform', data_object_id=target master, record_status omitted):
+
+| tool id | tool_name | data_object_id (master) | skill (module) |
+|---|---|---|---|
+| 1723 | deprecate_content_type | 131 content_types | 351 (260 MODELING) |
+| 1724 | promote_environment | 136 content_environments | 351 (260 MODELING) |
+| 1725 | create_content_entry | 132 content_entries | 352 (261 AUTHORING) |
+| 1726 | request_review | 132 content_entries | 352 (261 AUTHORING) |
+| 1727 | publish_content_entry | 132 content_entries | 352 (261 AUTHORING) |
+| 1728 | schedule_content_entry | 132 content_entries | 352 (261 AUTHORING) |
+| 1729 | unpublish_content_entry | 132 content_entries | 352 (261 AUTHORING) |
+| 1730 | add_locale | 135 content_locales | 352 (261 AUTHORING) |
+| 1731 | create_content_release | 133 content_releases | 353 (262 DELIVERY) |
+| 1732 | schedule_content_release | 133 content_releases | 353 (262 DELIVERY) |
+
+INSERTED 10 matching skill_tools rows (requirement_level='required'), one per mutate tool, attached to the per-module skill above. `request_review` (the editorial_workflow.review_required transition) targets content_entries 132 as its master since review is requested on an entry; F4 invariant (mutate => data_object_id set) verified on all 10. Sequenced after B1A-SKILL-SPLIT as required.
+
+Post-state: 16 skill_tools total across the 3 skills (351: 4 tools; 352: 9 tools; 353: 3 tools). F3 satisfied. F5 Semantius score now computable (all linked tools coverage_tier='platform' => strict_score = 1.0 for each module).
+
+### B1A-CATALOG-UX - DONE
+
+PATCHed catalog_tagline + catalog_description on modules 260/261/262, empty-guarded (prior values were empty strings on all three; verified live immediately before write). Buyer voice (workflow + value), no vendor/product names, no em-dashes, American English. Prior values: all three `catalog_tagline=""` and `catalog_description=""`.
+
+- 260 (MODELING) tagline: "Shape your content structure and ship schema changes safely"
+- 261 (AUTHORING) tagline: "Write, review, translate, and publish content without code"
+- 262 (DELIVERY) tagline: "Deliver content everywhere and trigger downstream actions"
+
+Descriptions: 2-sentence buyer-voice paragraphs (lengths 267 / 273 / 252 chars). record_status carries the review signal (rows remain `new`).
+
+### Skipped / out of scope
+
+- b1b items (B1B-S5, B1B-S6, B1B-S7, B1B-H1, B1B-REG): not executed (blocked on neighbor-domain audits, handoff-tagging pass, or regulations-master confirmation). Carried forward unchanged.
+- b2 / b3 items: user decisions / research candidates, untouched.
+
+### Verification (live, post-load)
+
+- system skills on 260/261/262: 3 (one each), skill 67 absent.
+- mutate tools 1723-1732: all operation_kind='mutate', data_object_id set, coverage_tier='platform', record_status='new'.
+- skill_tools: 16 rows across skills 351/352/353.
+- catalog UX: all 3 modules have non-empty tagline + description.

@@ -680,3 +680,70 @@ MISSING entities, by confidence tier (AI-derived — NOT auto-loaded, Rule #1 + 
 
 Pre-flagged verdicts: proofing slice JUSTIFIED (as TASK-EXEC masters, not a new module); work_views IS a persisted entity; time_entries belongs to WM for non-billable only; add `work_goal_links` to GOALS-OKR.
 
+---
+
+## 2026-06-06 - b1a execution
+
+Executed the agent-solvable pending actions from `state.yaml` `b1a`. Loader: [.tmp_deploy/fix_work_mgmt_catalog_ux_2026_06_06.ts](../../.tmp_deploy/fix_work_mgmt_catalog_ux_2026_06_06.ts).
+
+### B1A-A4-CATALOG-UX-DOMAIN - DONE
+
+Revised Rule #20 rescinded the pre-write approval gate for EMPTY catalog UX fields: empty fields are written directly, and the row's `record_status` (still `new`) carries the review signal for in-record / catalog-UI review. The old `blocked_by: user_decision (B2-RULE20-WORDING)` reflected the pre-revision posture and no longer gates the write.
+
+Per-field empty-guard applied (re-read live value immediately before PATCH; write only when empty). Both fields on domain 135 were empty before the write.
+
+| Table | Row id | Field | Prior value | New value |
+| --- | --- | --- | --- | --- |
+| `domains` | 135 | `catalog_tagline` | `""` (empty) | "Run every team's projects, tasks, and goals in one place, from first request to finished work." |
+| `domains` | 135 | `catalog_description` | `""` (empty) | 3-paragraph buyer-voice copy (drafted 2026-06-02, see that section above) |
+
+`record_status` unchanged (`new`).
+
+### B1A-M8-CATALOG-UX-MODULES - DONE
+
+Same revised-Rule-#20 treatment; per-field empty-guard applied. All six fields (tagline + description on each of modules 149/150/183) were empty before the write.
+
+| Table | Row id (module) | Fields written | Prior values |
+| --- | --- | --- | --- |
+| `domain_modules` | 149 (WORK-MGMT-TASK-EXEC) | `catalog_tagline`, `catalog_description` | both `""` (empty) |
+| `domain_modules` | 150 (WORK-MGMT-GOALS-OKR) | `catalog_tagline`, `catalog_description` | both `""` (empty) |
+| `domain_modules` | 183 (WORK-MGMT-INTAKE) | `catalog_tagline`, `catalog_description` | both `""` (empty) |
+
+Copy is the verbatim 2026-06-02 drafted strings (workflow + value buyer voice; no vendor/product names; no parent-domain/handoff narration; no em-dashes; American English). `//` paragraph markers from the draft rendered as real `\n\n` breaks. `record_status` unchanged (`new`) on all three rows.
+
+### B1A-H1-APQC-DEFERRED - SKIPPED (not WM-side actionable)
+
+The item's `action` is explicit: "Discover Pass 3 custom-process authoring path (CUSTOM-* processes), not WM-side PCF tagging. Carry until Discover runs across the catalog." There is no WM-side write to make: the 8 handoffs (787/788/789/790/791/1253 work_automation.*, 700 nocode_automation.triggered, 742 business_rule_extracted.identified) have no clean cross-industry PCF analog and are deferred to a catalog-wide Discover pass. Kept in `b1a` as a carry item; no rows written.
+
+### B1A-PHASE0-MISSING - SKIPPED (user_decision blocker + Rule #1)
+
+`blocked_by: {type: user_decision, ref: phase0-missing-tier-selection}`. The 12 MISSING entities are AI-derived market-audit findings; Rule #1 forbids auto-loading them and the tier selection is a user pick. Kept in `b1a`; no rows written.
+
+### Writes summary
+
+| Table | Rows PATCHed | Fields written |
+| --- | --- | --- |
+| `domains` | 1 (id 135) | 2 (`catalog_tagline`, `catalog_description`) |
+| `domain_modules` | 3 (ids 149, 150, 183) | 6 (tagline + description each) |
+
+Total: 4 rows, 8 fields. No DELETEs. No `notes` columns written. No `record_status` changes (all stayed `new`). No em-dashes in any written value (loader asserts this pre-write).
+
+### Post-write verification (live)
+
+| Row | catalog_tagline | catalog_description | record_status |
+| --- | --- | --- | --- |
+| domain 135 | set | set | new |
+| module 149 | set | set | new |
+| module 150 | set | set | new |
+| module 183 | set | set | new |
+
+### state.yaml changes
+
+- Removed B1A-A4-CATALOG-UX-DOMAIN and B1A-M8-CATALOG-UX-MODULES from `b1a` (fully resolved by writing the fields).
+- Kept B1A-H1-APQC-DEFERRED (carry) and B1A-PHASE0-MISSING (user-blocked) in `b1a`.
+- Marked B2-RULE20-WORDING resolved/moot (the pre-write approval gate it represented was rescinded by revised Rule #20).
+- `next_action_by: user` (remaining b1a items are both non-agent-actionable; open b2 user questions remain: entity_type calls, legacy DDO rollup drift, capability near-dup, handoff 787).
+- `last_audit: "2026-06-06"`.
+
+UI for spot-check: https://tests.semantius.app/domain_map/domains?id=eq.135 and https://tests.semantius.app/domain_map/domain_modules
+

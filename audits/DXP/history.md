@@ -389,3 +389,89 @@ UI:
 - https://tests.semantius.app/domain_map/domain_modules?domain_id=eq.77
 - https://tests.semantius.app/domain_map/domain_module_data_objects
 - https://tests.semantius.app/domain_map/domain_module_capabilities
+
+## 2026-06-05 - b1a execution
+
+Executed every agent-solvable b1a item against the live module. All inserts ran via idempotent TypeScript loaders (`.tmp_deploy/dxp_b1a_*_2026_06_05.ts`). `record_status` omitted on every insert (DB default `new`, Rule #1). No `notes` column written anywhere (Rule #15).
+
+### B1A-LIFECYCLE-STATES - DONE
+
+- **`data_objects` (PATCH):** classified all 7 masters (ids 441-447) `entity_type` from `unclassified` to `operational_workflow`. Prior value on every row: `entity_type='unclassified'`. This gates lifecycle states under Rule #12; the b1a ladders are all workflow ladders.
+- **`data_object_lifecycle_states` (INSERT 27):** authored the ladders per the b1a action.
+  - web_pages (441, module 236): draft / in_review / approved / published / unpublished / archived (6).
+  - content_components (442, module 236): draft / published / deprecated (3).
+  - digital_experiences (443, module 236): planned / active / ended (3).
+  - personalization_rules (444, module 237): draft / active / paused / retired (4).
+  - ab_tests (445, module 237): configured / running / completed / archived (4).
+  - segments_dxp (446, module 237): draft / published / retired (3).
+  - journey_steps (447, module 238): defined / entered / exited / abandoned (4).
+  - `requires_permission=true` on every workflow gate (approve/publish/unpublish/archive/deprecate/activate/end/pause/retire/start/complete) with a `permission_verb_override` (e.g. `publish_web_page`, `activate_personalization_rule`, `start_ab_test`). `domain_module_id` set per the b1a module map. One `is_initial` per master; terminal states marked. journey_steps has two terminal states (exited, abandoned).
+
+### B1A-SYSTEM-SKILLS - DONE
+
+- **`tools` (INSERT 11):** ids 1605-1615. Mutates (`coverage_tier='platform'`): create_web_page, publish_web_page, update_content_component, activate_personalization_rule, start_ab_test, publish_segment_dxp, create_journey_step, update_journey_step. Side effects (`coverage_tier='external'`): purge_cdn_cache, invalidate_render_cache. Inbound (`coverage_tier='platform'`): receive_cdp_segment_update. Dedup pre-check against `/tools` returned empty for all 11. Existing query tools reused (426-432).
+  - Note: the `tools` table carries a `coverage_tier` check constraint (`platform` required when `operation_kind in (query,mutate)`); set explicitly.
+- **`skills` (INSERT 3):** dxp_authoring_agent (id 282, module 236), dxp_experience_personalization_agent (id 283, module 237), dxp_portal_journeys_agent (id 284, module 238). `skill_type='system'`, `domain_module_id` set. `domain_id=77` also set because the legacy `domain_required_when_skill_type_is_system` validation rule still keys on it.
+- **`skill_tools` (INSERT 19):** module 236 skill = 8 tools (3 query + 3 mutate + 2 side_effect), module 237 = 6 (3 query + 3 mutate), module 238 = 5 (2 query + 2 mutate + 1 inbound). Each module skill has >=1 skill_tools.
+- **`skills` / `skill_tools` (DELETE):** legacy domain-level skill `dxp-system` (id 52, domain_id 77, domain_module_id null) deleted AFTER all 3 module skills shipped with skill_tools (F1). Snapshot of deleted rows:
+  - skill 52: `{id:52, skill_name:"dxp-system", skill_type:"system", domain_id:77, domain_module_id:null, record_status:"new", description:"System skill for Digital Experience Platform ..."}`.
+  - 7 skill_tools (all `requirement_level='required'`, `record_status='new'`): id 492 -> tool 426 (query_web_pages), 493 -> 427 (query_content_components), 494 -> 428 (query_experiences), 495 -> 429 (query_personalization_rules), 496 -> 430 (query_ab_tests), 497 -> 431 (query_segments_dxp), 498 -> 432 (query_journey_steps).
+
+### B1A-INTRA-RELATIONSHIPS - DONE
+
+- **`data_object_relationships` (INSERT 7):** intra-domain master-to-master edges. web_pages embeds content_components (one_to_many, composition, owner_side source); digital_experiences spans web_pages (one_to_many, reference, source); personalization_rules targets segments_dxp (many_to_many, reference, source); ab_tests runs on web_pages (many_to_many, reference, owner_side target); ab_tests evaluates personalization_rules (one_to_many, reference, source); journey_steps composes digital_experiences (one_to_many, composition, owner_side target = parent is the experience); journey_steps references web_pages (many_to_many, reference, source). Every row has a non-empty inverse_verb. is_required=false on all.
+
+### B1A-ALIASES - DONE
+
+- **`data_object_aliases` (INSERT 18):** `alias_type='synonym'` (no per-vendor solution_id, so synonym is the correct flavor). web_pages: Page / Content Item / Node. content_components: Experience Fragment / Rendering / Content Block. digital_experiences: Campaign / Experience. personalization_rules: Activity / Personalization / Experience Targeting. ab_tests: Experiment / A/B/n Test / Optimization Test. segments_dxp: Audience / Visitor Profile. journey_steps: Journey Stage / Flow Step.
+
+### B1A-WORKFLOW-EVENTS - DONE
+
+- **`trigger_events` (INSERT 7):** `event_category='state_change'`, data_object_id at the publishing master. web_page.archived (441), web_page.draft (441), ab_test.archived (445), personalization_rule.paused (444), personalization_rule.retired (444), segment_dxp.retired (446), digital_experience.ended (443). The other proposed events from the prior pass already existed (published/unpublished/completed/started/activated/abandoned/entered/updated).
+
+### B1A-S9 - DONE (loadable subset = 4)
+
+- **`data_object_relationships` (INSERT 4):** outbound cross-domain edges where the target master already exists in the catalog. relationship_type=many_to_many, relationship_kind=reference, is_required=false, owner_side=source on all. digital_experiences -> marketing_campaigns (116, MA; handoff 808); segments_dxp -> audience_segments (113, CDP; handoff 809); journey_steps -> audience_segments (113, CDP; handoff 810); ab_tests -> product_features (403, mastered in PM-ROADMAP-DELIVERY; handoff 813).
+- Deferred (target master not in catalog by any name): web_pages -> page_audits / web_lifecycle_plans (handoffs 814 / 838, WEB-CONTOPS); journey_steps -> audience_segments for the 811 abandonment handoff is already covered by the 810 edge; personalization_rules -> B2C-COMM target (812) has no clean target master. customer_profiles, experiment_results, page_audits, web_lifecycle_plans do not exist as data_objects.
+
+### B1A-S11 - DONE (11 tagged, 4 deferred)
+
+- **`handoff_processes` (INSERT 11):** `proposal_source='agent_curated'`, `role='implements'`, record_status omitted (new).
+  - 808 -> process 665 (Execute promotional activities, 10169).
+  - 812 -> process 677 (Develop business rules to provide personalized offers, 16616).
+  - 813 -> process 1822 (Carry out post launch analytics to test the acceptability in the market, 19646).
+  - 814 -> process 1763 (Publish approved content, 21681).
+  - 838 -> process 428 (Develop and manage content, 21670).
+  - 92 -> process 1763 (Publish approved content).
+  - 95 -> process 428 (Develop and manage content).
+  - 803 -> process 1763 (Publish approved content).
+  - 804 -> process 428 (Develop and manage content).
+  - 805 -> process 428 (Develop and manage content).
+  - 1001 -> process 538 (Develop plan for new product/service development and introduction/launch, 16824).
+- Already tagged before this pass (not re-tagged): 809 (process 100), 810 (process 100), 1009 (process 1262), 1011 (process 625). The state.yaml `extra_already_tagged: [1009, 1011]` was stale; 809 / 810 had been tagged since.
+- Deferred to Discover Pass 3 (no clean PCF match, modern digital concepts): 97 (content_type.changed), 815 (accessibility_finding.detected), 820 (seo_finding.created) per `extra_defer_candidates`, plus 811 (journey_step.abandoned -> MA): abandonment re-engagement has no confident L2/L3 PCF activity; deferred conservatively rather than forcing a weak match.
+
+### B1A-CATALOG-UX - DONE
+
+- **`domains` (PATCH id 77):** wrote `catalog_tagline` + `catalog_description` (both were empty). Buyer voice, no vendor/product names, American English, no em-dashes.
+- **`domain_modules` (PATCH ids 236, 237, 238):** wrote `catalog_tagline` + `catalog_description` on each (all six fields were empty). Empty-guard applied per field; no non-empty value overwritten. Per revised Rule #20 the copy is written straight into the empty columns and `record_status` carries the review signal (reviewed in the catalog UI, not parked in this file).
+
+### Verification (re-queried after load)
+
+- data_object_lifecycle_states on 441-447: 27. trigger_events on 441-447: 17 (10 prior + 7 new). data_object_aliases on 441-447: 18.
+- intra-domain master-master data_object_relationships: 7. cross-domain S9 edges (441/443/445/446/447 -> 113/116/403): 4.
+- system skills on modules 236/237/238: 3 (one each). skill_tools on 282/283/284: 19. legacy skill 52: 0 rows.
+- handoff_processes across the 19 DXP cross-domain handoffs: 15 (4 prior + 11 new). entity_type=unclassified on masters: 0.
+
+### Skipped / not executed
+
+- No b1a item was skipped. (b1b B1B-S3 stays blocked on user_decision B2-2; b2 B2-2 / B2-3 / B2-4 and b3 items are user/research scope, not executed.)
+
+UI:
+- https://tests.semantius.app/domain_map/data_object_lifecycle_states
+- https://tests.semantius.app/domain_map/skills
+- https://tests.semantius.app/domain_map/skill_tools
+- https://tests.semantius.app/domain_map/data_object_relationships
+- https://tests.semantius.app/domain_map/data_object_aliases
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/handoff_processes

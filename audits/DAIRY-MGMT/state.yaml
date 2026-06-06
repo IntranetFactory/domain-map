@@ -2,83 +2,9 @@ schema_version: 2
 domain: DAIRY-MGMT
 status: feedback_needed
 next_action_by: agent
-last_audit: "2026-06-02"
+last_audit: "2026-06-05"
 
 b1a:
-  - id: B1A-SKILLS
-    summary: 4 new DAIRY-MGMT modules have zero module-level system skills (Rule #17 -> F2/F3)
-    finding: >-
-      As of 2026-06-02 DAIRY-MGMT is modularized into 4 full modules
-      (DAIRY-MGMT-HERD id=227, DAIRY-MGMT-PARLOR id=228,
-      DAIRY-MGMT-MILK-QUALITY id=229, DAIRY-MGMT-FEED id=230). None has a
-      module-level `skills` row. The legacy `dairy-mgmt-system` skill (id=43,
-      domain_module_id=null) and its 8 `query`-only `skill_tools` are now an
-      orphaned pre-modular artifact. Rule #17 requires exactly one system skill
-      per module; F2 fails (zero module skills) and F3 fails (tool set is
-      query-only, no mutate / workflow-gate / side_effect / fetch).
-    action: >-
-      Author one `<module_code_lower>_agent` system skill per module
-      (dairy_mgmt_herd_agent, dairy_mgmt_parlor_agent,
-      dairy_mgmt_milk_quality_agent, dairy_mgmt_feed_agent), redistribute the 8
-      existing query tools to the owning module's skill, extend with
-      module-scoped mutate (cull, close_lactation, complete_milking),
-      side_effect (dispatch_bulk_milk_shipment), and fetch (dhia_test_result)
-      tools, then DELETE the legacy id=43 row. Out of scope for the
-      modularization pass; this is the next agent action.
-    affected_modules: [227, 228, 229, 230]
-
-  - id: B1A-B10B
-    summary: All 8 outbound handoffs still have source_domain_module_id NULL; routing now determinable
-    finding: >-
-      The 8 outbound `handoffs` (353, 354, 355, 955, 956, 957, 958, 959) carry
-      source_domain_module_id=NULL. Before 2026-06-02 this was gated on module
-      shape; the 4-module split now makes the source-side routing
-      deterministic.
-    action: >-
-      PATCH source_domain_module_id on each handoff to its master's module:
-      955 (milking.completed) + 353 (bulk_milk_shipment.dispatched) ->
-      DAIRY-MGMT-PARLOR (228); 354 (milk_quality_test.failed) ->
-      DAIRY-MGMT-MILK-QUALITY (229); 958 + 959 (feed_ration.changed) ->
-      DAIRY-MGMT-FEED (230); 956 (lactation_record.opened) + 957
-      (breeding_event.recorded) + 355 (cow_health_event.treatment_administered)
-      -> DAIRY-MGMT-HERD (227). Target-side FK still owed by each neighbor.
-    affected_modules: [227, 228, 229, 230]
-    affected_handoffs:
-      - {handoff_id: 353, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FOOD-TRACE, trigger_event: bulk_milk_shipment.dispatched, payload: bulk_milk_shipments, null_field: source_domain_module_id}
-      - {handoff_id: 354, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FSQM, trigger_event: milk_quality_test.failed, payload: milk_quality_tests, null_field: source_domain_module_id}
-      - {handoff_id: 355, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FSQM, trigger_event: cow_health_event.treatment_administered, payload: cow_health_events, null_field: source_domain_module_id}
-      - {handoff_id: 955, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FOOD-TRACE, trigger_event: milking.completed, payload: milkings, null_field: source_domain_module_id}
-      - {handoff_id: 956, direction: outbound, source_domain: DAIRY-MGMT, target_domain: ERP-FIN, trigger_event: lactation_record.opened, payload: lactation_records, null_field: source_domain_module_id}
-      - {handoff_id: 957, direction: outbound, source_domain: DAIRY-MGMT, target_domain: GRC, trigger_event: breeding_event.recorded, payload: breeding_events, null_field: source_domain_module_id}
-      - {handoff_id: 958, direction: outbound, source_domain: DAIRY-MGMT, target_domain: ERP-FIN, trigger_event: feed_ration.changed, payload: feed_rations, null_field: source_domain_module_id}
-      - {handoff_id: 959, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FOOD-TRACE, trigger_event: feed_ration.changed, payload: feed_rations, null_field: source_domain_module_id}
-
-  - id: B1A-S7
-    summary: Zero `data_object_aliases` rows across 8 DAIRY-MGMT masters
-    finding: >-
-      The 8 DAIRY-MGMT masters (dairy_cows, lactation_records, milkings,
-      milk_quality_tests, breeding_events, cow_health_events, feed_rations,
-      bulk_milk_shipments) have zero `data_object_aliases` rows. B11 fails.
-      Cross-vendor synonyms are well-defined in the dairy market (DHIA, parlor
-      session, lactation cycle, tanker load, insemination).
-    action: >-
-      Draft ~10-15 alias rows (executable now; not gated on module shape). Surface
-      proposed tuples to user before insert. Examples: dairy_cows alias `cow`,
-      dairy_cows alias `animal`, milkings alias `parlor session`,
-      milkings alias `milk event`, lactation_records alias `lactation cycle`,
-      lactation_records alias `DIM record`, milk_quality_tests alias `DHIA test`,
-      bulk_milk_shipments alias `milk pickup`, bulk_milk_shipments alias `tanker load`,
-      breeding_events alias `insemination`.
-    affected_masters:
-      - {data_object_id: 499, name: dairy_cows, target_module_id: 227, workflow: alias_load}
-      - {data_object_id: 500, name: lactation_records, target_module_id: 227, workflow: alias_load}
-      - {data_object_id: 501, name: milkings, target_module_id: 228, workflow: alias_load}
-      - {data_object_id: 502, name: milk_quality_tests, target_module_id: 229, workflow: alias_load}
-      - {data_object_id: 503, name: breeding_events, target_module_id: 227, workflow: alias_load}
-      - {data_object_id: 504, name: cow_health_events, target_module_id: 227, workflow: alias_load}
-      - {data_object_id: 505, name: feed_rations, target_module_id: 230, workflow: alias_load}
-      - {data_object_id: 506, name: bulk_milk_shipments, target_module_id: 228, workflow: alias_load}
-
   - id: B1A-S11
     summary: lactation_records (id=500) lacks the `users` many_to_many edge that the other 7 DAIRY-MGMT masters carry
     finding: >-
@@ -94,6 +20,12 @@ b1a:
       `data_object_relationships` row (data_object_id=500, related_data_object_id=748,
       relationship_type=many_to_many, relationship_kind=reference). If user
       declines, document the deliberate omission in this state.yaml as resolved.
+    skipped_reason: >-
+      2026-06-05 b1a pass SKIPPED this item: the action is explicitly conditional
+      on a user decision (which verb framing, or whether to author at all), and
+      the finding states no clean single-actor verb exists. This is master-data
+      judgment beyond the action text. Awaiting an explicit user verb decision;
+      effectively a user-judgment item despite living in b1a.
     affected_masters:
       - {data_object_id: 500, name: lactation_records, target_module_id: 227, workflow: user_edge}
 
@@ -122,19 +54,24 @@ b1b:
       dairy_cows->breeding_events (intra HERD 227),
       dairy_cows->cow_health_events (intra HERD 227),
       feed_rations->dairy_cows via group (FEED 230 -> HERD 227),
-      breeding_events->lactation_records (intra HERD 227). Out of scope for the
-      modularization pass (relationship authoring not included).
+      breeding_events->lactation_records (intra HERD 227). Prerequisite
+      B1A-SKILLS is now satisfied (per-module system skills authored 2026-06-05);
+      relationship authoring was not part of the b1a scope and is the next
+      substrate-pass action.
     blocked_by:
-      - {type: depends_on, ref: B1A-SKILLS, reason: relationship_authoring_deferred_to_substrate_pass_after_modularization}
+      - {type: depends_on, ref: B1A-SKILLS, reason: prerequisite_satisfied_2026_06_05_relationship_authoring_is_next_substrate_pass}
 
   - id: B1B-S6
     summary: dairy_cow.lifecycle_changed (trigger_event id=1099) has zero `handoffs` rows
     finding: >-
       ERP-FIN fixed-asset valuation depends on cow lifecycle transitions per
       the event's own description. Missing handoff row from DAIRY-MGMT to
-      ERP-FIN. Source module is now determinable (DAIRY-MGMT-HERD id=227).
+      ERP-FIN. Source module is DAIRY-MGMT-HERD id=227. Prerequisite B1A-B10B is
+      now satisfied (the other 8 outbound handoffs carry source_domain_module_id
+      as of 2026-06-05); authoring this missing handoff with source_domain_module_id=227
+      is the next action (not in the b1a scope this pass).
     blocked_by:
-      - {type: depends_on, ref: B1A-B10B, reason: author_with_source_module_FK_populated}
+      - {type: depends_on, ref: B1A-B10B, reason: prerequisite_satisfied_2026_06_05_author_handoff_with_source_module_227}
     affected_events:
       - {id: 1099, event_name: dairy_cow.lifecycle_changed, current_category: lifecycle, proposed_category: lifecycle}
 
@@ -145,7 +82,9 @@ b1b:
       lactation_records, milkings, milk_quality_tests, breeding_events,
       cow_health_events, bulk_milk_shipments). feed_rations may qualify for
       the Rule #12 config-shape exemption (formulated / active / superseded).
-      Target modules now resolved per the 4-module split.
+      Target modules now resolved per the 4-module split. All 8 masters are
+      still `entity_type=unclassified` (B13 also owed); classify before loading
+      lifecycle states.
     blocked_by:
       - {type: user_decision, ref: B2-5, reason: feed_rations_config_shape_exemption}
     affected_masters:
@@ -156,15 +95,6 @@ b1b:
       - {data_object_id: 503, name: breeding_events, target_module_id: 227, workflow: lifecycle_state_load}
       - {data_object_id: 504, name: cow_health_events, target_module_id: 227, workflow: lifecycle_state_load}
       - {data_object_id: 506, name: bulk_milk_shipments, target_module_id: 228, workflow: lifecycle_state_load}
-
-  - id: B1B-S9
-    summary: F1 legacy `dairy-mgmt-system` skill (id=43, domain_module_id=null) retire
-    finding: >-
-      The legacy skill was acceptable transitional only while M1 failed. M1 is
-      now cured (4 modules). The legacy row must be DELETEd once the per-module
-      replacement skills exist.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1A-SKILLS, reason: replacement_module_skills_must_exist_first}
 
   - id: B1B-B2
     summary: B8 FOOD-TRACE outbound `data_object_relationships` mirror rows
@@ -269,7 +199,8 @@ b2:
       Per Rule #15 the agent cannot auto-populate `notes` to document the
       exemption. Decision: (a) load lifecycle states anyway, or (b) record the
       config-shape exemption out-of-band (gap report). Gates B1B-S8 for that
-      one master only.
+      one master only. Note: feed_agent skill carries only query_feed_rations
+      (no mutate authored 2026-06-05) pending this shape decision.
     options: [load_states, exempt_config_shape]
 
   - id: B2-6

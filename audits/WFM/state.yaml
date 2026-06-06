@@ -1,14 +1,18 @@
 schema_version: 2
 domain: WFM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
 # 2026-06-02 modularization pass: WFM now has 3 full domain_modules
 #   194 WFM-TIME-ATTENDANCE, 195 WFM-SCHEDULING, 196 WFM-ABSENCE.
 # Resolved this pass (live in history.md 2026-06-02 section):
 #   B1B-S1 (module split + DMDO remap), B1A-BUILD (unbuilt domain), B2-S1 (module-shape
 #   decision: 3-module shape adopted). M1 hard-fail cleared.
+# 2026-06-06 b1a execution: resolved B1A-CATALOG-COPY (6 catalog fields written on
+#   modules 194/195/196) and B1A-S8-A (users->work_shifts edge id 2083). The only
+#   remaining b1a item (B1A-MODULE-SKILLS) is blocked by user_decision B2-S5, so the
+#   next action pivots to the user (resolve B2-S5 / the rest of the b2 queue).
 
 b1a:
   - id: B1A-MODULE-SKILLS
@@ -32,39 +36,6 @@ b1a:
     blocked_by:
       - {type: user_decision, ref: B2-S5}
     affected_modules: [194, 195, 196]
-
-  - id: B1A-CATALOG-COPY
-    summary: "Backfill catalog_tagline + catalog_description on the 3 WFM modules (M8/A4 buyer copy)."
-    finding: >-
-      All 3 WFM modules (194 WFM-TIME-ATTENDANCE, 195 WFM-SCHEDULING, 196 WFM-ABSENCE)
-      were created with empty catalog_tagline and catalog_description. The 2026-06-02
-      modularization pass deliberately did NOT invent buyer-facing copy, leaving an
-      M8/A4 gap on every module.
-    action: >-
-      Author catalog_tagline + catalog_description per module (capability-shape language,
-      no vendor/product names per Rule #18; no em-dash; American English). PATCH the 3
-      domain_modules rows. Omit notes (Rule #15).
-    affected_modules: [194, 195, 196]
-
-  - id: B1A-S8-A
-    summary: "Insert missing users -> work_shifts edge in data_object_relationships (B7 residual from 2026-05-31 Continuation)."
-    finding: >-
-      The 7 WFM masters are work_schedules (160), work_shifts (161), time_entries (162),
-      absence_requests (163), absence_balances (164), time_off_policies (165),
-      meal_break_records (166). Six of the seven now carry a users (data_object 748) edge
-      in data_object_relationships (rows 1672 work_schedules, 1673 absence_balances,
-      1674 time_off_policies, 1675 meal_break_records, 20 absence_requests, 1183
-      time_entries via logs_as_timekeeper). Only work_shifts (161) is still missing a
-      users edge. The 2026-05-31 Continuation's B1-S8a inserted four user edges but
-      omitted work_shifts. work_shifts now lives on module 195 (WFM-SCHEDULING).
-    action: >-
-      INSERT one data_object_relationships row: data_object_id=748 (users),
-      related_data_object_id=161 (work_shifts), owner_side='source',
-      relationship_type='one_to_many', relationship_kind='reference',
-      relationship_verb='assigned_to_shift', inverse_verb='shift_assignee',
-      is_required=true. Omit record_status (Rule #1 default 'new') and notes (Rule #15).
-    affected_masters:
-      - {data_object_id: 161, name: work_shifts, target_module_id: 195, workflow: shift_assignment_users_edge}
 
 b1b:
   - id: B1B-S2

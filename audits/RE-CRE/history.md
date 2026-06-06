@@ -357,3 +357,44 @@ All 6 in-domain masters (363, 364, 365, 719, 720, 721) were queried against `dom
 - Workflow substrate: B6 intra-domain relationships, B11 aliases, B12 lifecycle states (now have realizing modules for the gate states), B4 pattern flags.
 - Handoff module-FK backfill (B10b) and cross-domain relationships (B8) now have source-side module ids available.
 - Missing-master candidates (B3): rent_rolls, tenant_improvement_allowances, percentage_rent_calculations, lease_abstracts, market_comparables, letters_of_intent - all deferred to vendor-research / user decision.
+
+## 2026-06-06 - b1a execution
+
+Loader: [.tmp_deploy/fix_re_cre_b1a_2026-06-06.ts](../.tmp_deploy/fix_re_cre_b1a_2026-06-06.ts) (idempotent; skills deduped by skill_name, skill_tools by skill_id+tool_id, catalog PATCH empty-guarded). No JWT-audience errors. CLI tenant confirmed (semantius_org=adenin) via getCurrentUser before any write.
+
+### B1A-SYS-SKILLS - DONE
+
+Authored 3 module-level `skill_type='system'` skills (Rule #17, one per module), bound their tools per Phase-S three-source derivation, and retired the legacy domain-level skill.
+
+- INSERT `skills` x3 (record_status omitted -> default `new`, skill_type=`system`, domain_id=145):
+  - id **288** `re_cre_leasing_agent` -> module 278 (RE-CRE-LEASING).
+  - id **289** `re_cre_cam_ops_agent` -> module 292 (RE-CRE-CAM-OPS).
+  - id **290** `re_cre_space_market_agent` -> module 293 (RE-CRE-SPACE-MARKET).
+- INSERT `skill_tools` x11 (all `requirement_level='required'`, notes omitted per Rule #15, record_status omitted -> default `new`); tools split by master ownership; all linked tools pre-existing in the catalog-wide `tools` table (no new tool rows created):
+  - skill 288: query_commercial_leases (651), query_tenant_credit_records (836), query_sublease_transactions (837), query_investment_properties (654, contributor read), notify_person (913), sign_document (42).
+  - skill 289: query_cam_charges (653), notify_person (913).
+  - skill 290: query_stacking_plans (652), query_building_certifications (838), notify_person (913).
+- F7 channel-vs-capability applied: the legacy skill's `send_email` (37) was NOT carried; the abstraction `notify_person` (913) is linked instead on all 3 skills. `sign_document` (42) kept on the leasing skill (lease-execution e-signature).
+- DELETE `skills` id **96** (`re-cre-system`, domain_id=145, domain_module_id=null). Prior values snapshotted: skill_name=`re-cre-system`, skill_type=`system`, domain_id=145, domain_module_id=null, record_status=`new`, description="System skill for Commercial Real Estate Operations ... derived from masters + cross-domain handoffs." Its 8 `skill_tools` rows (ids 762,763,764,765,766,998,999,1000 -> tools 651,652,653,37,42,836,837,838) cascade-deleted via the `skill_tools.skill_id` cascade FK. Verified: `/skills?id=eq.96` and `/skill_tools?skill_id=eq.96` both return empty.
+- Verify: each new skill has >=1 skill_tools (288:6, 289:2, 290:3); exactly one system skill per module 278/292/293 (F2 satisfied); legacy domain-level row gone (F1 satisfied).
+
+### B1A-CATALOG-UX - DONE
+
+PATCH `/domains?id=eq.145` (Rule #20 backfill; empty-guard confirmed both fields were `''` before write; row record_status stays `new` as the review signal). Buyer voice (workflow + value), no vendor/product names, no em-dashes, American English.
+
+- `catalog_tagline` (was empty): "Manage commercial leases, CAM reconciliations, rent escalations, and stacking plans across office, retail, and industrial portfolios."
+- `catalog_description` (was empty): 3 buyer-voice paragraphs - (1) leasing pipeline LOI -> negotiation -> executed lease with tenant-credit underwriting and sublease/assignment tracking; (2) CAM reconciliation with expense pools, gross-ups, audit caps, and recurring escalations; (3) stacking plans, building certifications / green ratings, and market context for renewals and tenant relationships.
+
+### Skipped
+
+None. Both b1a items fully resolved. The b1b / b2 / b3 items were context-only and not executed (out of this pass's scope).
+
+### Counts after
+
+- `/skills?domain_id=eq.145&skill_type=eq.system`: 3 rows (288/289/290), each anchored to a distinct module; legacy 96 absent.
+- `/skill_tools` on 288/289/290: 11 rows total (6/2/3).
+- `/domains?id=eq.145`: catalog_tagline len 133, catalog_description len 861, record_status `new`.
+
+### next_action_by
+
+Recomputed: b1a now empty, b2 non-empty (B2-S2..S7 user decisions) -> `next_action_by: user`.

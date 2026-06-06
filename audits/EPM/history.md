@@ -338,3 +338,68 @@ Modules were created without `catalog_tagline` / `catalog_description` per the i
 
 No lifecycle states, aliases, relationships, skills, tools, handoffs, regulations, or trigger_event PATCHes were issued. Genuine gaps (cost_allocations B3-S1, headcount_plans B3-S2, the 4th consol/disclosure module B3-S3) remain flagged in b3, unfilled.
 
+## 2026-06-06 - b1a execution
+
+Scope: executed the agent-solvable b1a items from state.yaml against the live `domain_map` module. Tenant confirmed `adenin` / `ma@adenin.com` before any write. Loader: [.tmp_deploy/epm_b1a_2026_06_06.ts](../../.tmp_deploy/epm_b1a_2026_06_06.ts), run from project root. All inserts omit `record_status` (DB default `new`); no `notes` columns written (Rule #15); no em-dashes.
+
+### B1A-SYSTEM-SKILLS - DONE (Rule #17, F1/F2/F3)
+
+Authored one `skill_type='system'` skill per EPM module, anchored on `domain_module_id`:
+
+| skill id | skill_name | domain_module_id | skill_tools (tool_id : requirement_level) |
+|---|---|---|---|
+| 302 | epm_plan_budget_agent | 239 | 134 query_financial_plans:required, 139 query_budgets:required, 182 update_budget:required, 49 generate_text:optional |
+| 303 | epm_forecast_scenario_agent | 240 | 99 query_forecasts:required, 78 query_financial_scenarios:required, 183 update_forecast:required, 49 generate_text:optional |
+| 304 | epm_variance_report_agent | 241 | 140 query_variance_analyses:required, 25 query_journal_entries:required, 49 generate_text:optional |
+
+The 9 legacy `skill_tools` were redistributed to the matching per-module skill (plan/budget tools -> 239, forecast/scenario tools -> 240, variance + journal_entries query -> 241), with `generate_text` (tool 49) replicated to all three modules. No new `tools` rows were minted; every linked tool already existed in the catalog-wide `tools` table. F4 invariant verified on all 11 new `skill_tools` (query/mutate carry `data_object_id`; the compute `generate_text` carries NULL).
+
+Then retired the legacy domain-scoped skill (F1). **Prior values snapshotted before DELETE (reversible):**
+- `skills` id=4: `{skill_name:"epm-system", skill_type:"system", domain_id:66, domain_module_id:null, description:"System skill for Enterprise Performance Management <emdash> budgeting, rolling forecasts, variance analysis, scenario modeling.", record_status:"new"}`. (The prior description carried an em-dash; the row is now deleted.)
+- `skill_tools` on skill 4 (9 rows DELETED): st 20 -> tool 134 (required), st 21 -> tool 139 (required), st 22 -> tool 99 (required), st 23 -> tool 140 (required), st 24 -> tool 78 (required), st 25 -> tool 182 (required), st 26 -> tool 183 (required), st 27 -> tool 25 (required), st 28 -> tool 49 (optional). Two of these carried `notes` text (st 27 "Consumer from ERP-FIN <emdash> variance reporting input", st 28 "Variance commentary / narrative generation"); the notes were NOT carried forward onto the new rows (Rule #15: new skill_tools rows have empty notes).
+
+DELETE order: `skill_tools` for skill 4 first, then `skills` id=4. Both happened only after the three per-module skills existed.
+
+### B1A-CATALOG-UX - DONE (Rule #20, M8/A4)
+
+PATCHed the empty `catalog_tagline` + `catalog_description` on modules 239/240/241 with buyer-voice copy (workflow + value; no vendor/product names; no em-dashes; American English). Empty-guard applied per field; all six fields were empty before the write (prior value `""` on each), so all six were written. No non-empty value was overwritten.
+
+- 239 EPM-PLAN-BUDGET: tagline "Build the annual operating plan and approve the budget that sets each team's spend for the year." + 2-paragraph description.
+- 240 EPM-FORECAST-SCENARIO: tagline "Refresh the outlook with rolling forecasts and stress-test the plan with what-if scenarios." + 2-paragraph description.
+- 241 EPM-VARIANCE-REPORT: tagline "Reconcile actuals against plan, explain the variance, and report the results to leadership." + 2-paragraph description.
+
+### B1A-S9 - DONE (B10b source side)
+
+PATCHed `source_domain_module_id` (prior value NULL on all 8) on the 8 outbound EPM handoffs, derived by the module that masters the trigger_event's data_object:
+
+| handoff | trigger_event | event data_object | source_domain_module_id (NULL ->) |
+|---|---|---|---|
+| 10 | financial_budget.cycle_started | 38 financial_budgets | 239 |
+| 561 | financial_plan.approved | 37 financial_plans | 239 |
+| 601 | financial_plan.approved | 37 financial_plans | 239 |
+| 27 | financial_forecast.refreshed | 39 financial_forecasts | 240 |
+| 199 | financial_forecast.refreshed | 39 financial_forecasts | 240 |
+| 562 | financial_scenario.modeled | 40 financial_scenarios | 240 |
+| 563 | variance_analysis.material_variance | 41 variance_analyses | 241 |
+| 564 | variance_analysis.material_variance | 41 variance_analyses | 241 |
+
+Post-write: 0 outbound EPM handoffs with NULL `source_domain_module_id`. The `target_domain_module_id` NULLs on these rows belong to each target domain's own B10b (report-only, unchanged).
+
+### B1A-S10 - PARTIAL (B9b; 2 of 3 inserted, 1 skipped)
+
+INSERTed 2 intra-domain `lifecycle_progression` handoffs (`friction_level=low`, `source_domain_id=target_domain_id=66`, `record_status` omitted, `notes` empty):
+- id 1354: 239 -> 240 on `financial_plan.published` (trigger_event 583, payload financial_plans 37).
+- id 1355: 240 -> 241 on `financial_forecast.refreshed` (trigger_event 58, payload financial_forecasts 39).
+
+**SKIPPED the third row** (239 -> 241 on `financial_budget.approved`): no `financial_budget.approved` trigger_event exists in the catalog (the only `financial_budget.*` event is id 13 `financial_budget.cycle_started`). Authoring a new `trigger_events` master-data row is beyond the b1a action text ("INSERT 3 handoffs rows"), so per non-negotiable rule #12 (do not guess on master data) the handoff was not created. This is surfaced as a residual b1b item (B1B-S10b) so the user can decide whether to author the missing event.
+
+### B1A-S7b - SKIPPED (blocked by user_decision)
+
+`blocked_by` carries `type: user_decision, ref: B2-S7b` (threshold vs state_change for trigger_event 587 `variance_analysis.material_variance`, which still carries `event_category=''`). Per non-negotiable rule #7, not executed. Left in b1a as blocked.
+
+### Verification (live, post-write)
+
+- `skills` system on 239/240/241: 3 (302/303/304). `skill_tools`: 4/4/3. Legacy skill 4 + its 9 skill_tools: 0 rows. F1 cured, F2/F3 pass.
+- `domain_modules` 239/240/241: `catalog_tagline` + `catalog_description` both set on all 3.
+- `handoffs` outbound from EPM with NULL `source_domain_module_id`: 0. Intra-domain EPM handoffs: 2 (1354, 1355).
+

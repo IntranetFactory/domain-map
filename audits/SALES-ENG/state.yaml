@@ -1,61 +1,28 @@
 schema_version: 2
 domain: SALES-ENG
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
 # 2026-06-02: domain modularized into 3 full modules (entity-only reuse pass).
 #   296 SALES-ENG-CADENCE-OUTREACH      master sales_cadences (121); contributor crm_contacts (98)
 #   297 SALES-ENG-EMAIL-SCHEDULING      master sales_emails (123);   contributor crm_contacts (98)
 #   298 SALES-ENG-CONVERSATION-COACHING master call_recordings (122); embedded_master conversation_intelligence_records (124)
-# Resolved this pass (now in history.md): B1A-BUILD, B1B-M-AUTH-MODULES, and the
-# B2-MODULE-SHAPE decision (3-module split chosen). The b1a items below are the
-# module-dependent follow-ups whose target-module FKs are now derivable; they were
-# previously gated on B1B-M-AUTH-MODULES (modules) and are unblocked on that axis.
-# next_action_by = agent (b1a non-empty).
+# 2026-06-06: b1a execution pass. B1A-F-PER-MODULE-SKILLS RESOLVED (now in history.md):
+#   legacy skill 104 + its 5 skill_tools deleted; 3 per-module system skills authored
+#   (380 -> 296, 381 -> 297, 382 -> 298) with 16 skill_tools and 7 new tools (1778-1784).
+#   F1/F2/F3/F4 cleared.
+# 2026-06-06: B1A-A-CATALOG-UX RESOLVED (now in history.md). Under the revised Rule #20 an
+#   empty catalog_tagline/catalog_description is written directly (record_status carries the
+#   review signal); the stale `blocked_by: user_decision B2-CATALOG-COPY` annotation applied
+#   only to the old pre-write gate and was moot for empty fields. All 8 fields (domain 95 +
+#   modules 296/297/298, tagline + description each) were EMPTY and are now written with
+#   buyer-voice copy. b1a is now empty.
+# next_action_by = user (b1a empty; b2 carries the open user decisions; b3 research-pending;
+#   b1b blocked). The B2-CATALOG-COPY decision is now a no-op for the written fields (kept in
+#   b2 only as the overwrite/approval gate for any future rewrite of the now-non-empty copy).
 
-b1a:
-  - id: B1A-F-PER-MODULE-SKILLS
-    summary: "Retire legacy domain-level skill 104; author 3 per-module system skills (Rule #17 -> F2/F3)."
-    finding: >-
-      Skill id 104 `sales-eng-system` has `domain_module_id` NULL and `domain_id=95`. Under
-      Rule #14 / #17 every `full` module ships exactly one `system` skill mirroring the module,
-      and once any module-level system skill exists the legacy domain-level row is obsolete (F1).
-      SALES-ENG now has 3 full modules (296 SALES-ENG-CADENCE-OUTREACH, 297 SALES-ENG-EMAIL-SCHEDULING,
-      298 SALES-ENG-CONVERSATION-COACHING) and zero module-level skills. The prior 2026-05-31 plan
-      assumed a 2-module split (cadence + conv-intel); the realized shape is 3 modules, so the skill
-      authoring must produce 3 rows, not 2, and the legacy tool split is re-keyed accordingly.
-    action: >-
-      DELETE skill 104 + its 5 `skill_tools` rows. INSERT 3 `system` skills with `domain_module_id`
-      set: one on 296 (cadence enrollment + dialler), one on 297 (sales email + meeting scheduling),
-      one on 298 (conversation intelligence + coaching). Then INSERT per-module `skill_tools` splits
-      and any workflow-gate tools. F7 channel-link justification on the cadence-step `send_email`
-      tool still needs user-supplied `notes` wording (see B2-CHANNEL-NOTES).
-    affected_modules: [296, 297, 298]
-    extra_legacy_skill_id: 104
-    extra_legacy_skill_tools_count: 5
-    extra_skill_module_map:
-      - {module_id: 296, code: SALES-ENG-CADENCE-OUTREACH, scope: "cadence enrollment, dialler, intent-triggered start"}
-      - {module_id: 297, code: SALES-ENG-EMAIL-SCHEDULING, scope: "tracked sales email, AI drafting, meeting booking"}
-      - {module_id: 298, code: SALES-ENG-CONVERSATION-COACHING, scope: "call recording, conversation intelligence, coaching"}
-
-  - id: B1A-A-CATALOG-UX
-    summary: "Draft buyer-voice catalog copy for the SALES-ENG domain and 3 new modules (M8 / A4 / Rule #20)."
-    finding: >-
-      `domains.catalog_tagline` and `domains.catalog_description` are empty on id 95. The 3 new
-      modules (296, 297, 298) were inserted with `domain_module_name` + `description` but no
-      `catalog_tagline` / `catalog_description` (both omitted per the modularization insert shape).
-      Per Rule #20 / M8, the domain card needs a single-sentence buyer-facing tagline and a 1-3
-      paragraph buyer-facing description, and each module card needs buyer-voice catalog copy.
-    action: >-
-      Draft buyer-voice `catalog_tagline` + `catalog_description` for domain 95 and for each of
-      modules 296, 297, 298 in workflow + value voice (no vendor/product names, no em-dashes).
-      Surface drafts to the user for review BEFORE writing (Rule #20 requires review even on
-      empty fields). Gated on B2-CATALOG-COPY.
-    blocked_by:
-      - {type: user_decision, ref: B2-CATALOG-COPY}
-    affected_modules: [296, 297, 298]
-    affected_entities: [SALES-ENG]
+b1a: []
 
 b1b:
   - id: B1B-S-RETARGET-EVENTS
@@ -226,10 +193,11 @@ b2:
     why: "Per Rule #12 every master MUST be positively re-evaluated even when defaults are false. Per Rule #15 rationale lives in audit conversation, not in `notes`."
 
   - id: B2-CATALOG-COPY
-    summary: "Approve agent-drafted catalog copy for the SALES-ENG domain and 3 modules."
-    question: "Per Rule #20, agent will draft buyer-voice tagline + description for `domains.catalog_tagline`/`catalog_description` on id 95 and for modules 296, 297, 298. Approve the drafts before they get written?"
-    options: [request_draft_review_first, supply_exact_text]
-    why: "Rule #20 forbids overwriting non-empty values without approval and requires user-review-before-write even on empty fields. All target fields are currently empty."
+    summary: "Review the now-written buyer-voice catalog copy for the SALES-ENG domain and 3 modules (in-record, record_status='new')."
+    question: "The buyer-voice `catalog_tagline`/`catalog_description` on domain 95 and modules 296, 297, 298 were EMPTY and are now written (revised Rule #20: empty catalog UX fields are written directly; record_status carries the review signal). Review the copy in-record / in the catalog UI. Any rewrite of a now-non-empty value needs explicit per-row approval (specific text + specific row)."
+    options: [accept_as_written, supply_exact_replacement_text_per_row]
+    why: "Revised Rule #20: empty fields are written directly and reviewed in-record (state 'new'); only NON-empty values are overwrite-protected and require explicit per-row approval to change."
+    status_note: "Resolved as a pre-write gate (the fields are written; see history.md 2026-06-06 follow-up). Retained only as the overwrite/approval gate for any future rewrite."
 
   - id: B2-RETARGET-OR-MOVE
     summary: "Resolve B9 attribution defect on 3 SE-outbound handoffs."

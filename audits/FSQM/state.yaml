@@ -1,81 +1,27 @@
 schema_version: 2
 domain: FSQM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
 b1a:
-  - id: B1A-MODULE-SYSTEM-SKILLS
-    summary: "Rule #17 per-module system skills missing on all 3 new FSQM modules; legacy domain-level skill 64 must then be retired (F1/F7)"
-    finding: >
-      FSQM now has 3 module_kind=full modules (FSQM-HACCP-CCP 259, FSQM-HYGIENE-CONTROL 263,
-      FSQM-AUDIT-SUPPLIER 264) but zero module-anchored system skills. Rule #17 requires one
-      system skill per domain_module (F2/F3). Legacy skills.id=64 (fsqm-system) remains at
-      domain_id=157, domain_module_id=null with 8 skill_tools (7 query_* + 1 send_email); per
-      F1 it is obsolete once module-level system skills exist. F7 sub-finding: the send_email
-      tool link is unjustified channel-pinning for generic notification flows (incident
-      escalation, deviation alert, sample-positive page-out should use notify_person /
-      notify_team unless a workflow-specific email-only justification applies).
-    action: >
-      Sequenced: (1) author one module-level system skill per module 259/263/264 (Rule #17),
-      (2) link channel abstractions (notify_person / notify_team) instead of send_email where
-      generic, (3) DELETE legacy skill 64 and its 8 skill_tools. M1 is now cured so all three
-      steps are unblocked.
-    affected_modules: [259, 263, 264]
-    affected_entities: [skills(64), skill_tools(skill_id=64; 8 rows)]
-
-  - id: B1A-MODULE-CATALOG-UX
-    summary: "M8/A4 catalog UX empty on the 3 new modules and on the FSQM domain row (catalog_tagline + catalog_description)"
-    finding: >
-      The 3 new domain_modules (259/263/264) were inserted with catalog_tagline and
-      catalog_description omitted (empty), and domains.id=157 still carries empty
-      catalog_tagline + catalog_description (A4 carried from prior audits). Rule #20 requires
-      non-empty buyer-voice tagline (one-liner) and 1-3 paragraph buyer-facing
-      catalog_description on the domain; M8 wants the same buyer UX on each catalog-surfaced
-      module.
-    action: >
-      Draft buyer-voice catalog_tagline + catalog_description for the FSQM domain row and for
-      each of modules 259/263/264, surface drafts to user before writing (Rule #20 explicit
-      user-approval gate).
-    affected_modules: [259, 263, 264]
-
-  - id: B1A-LIFECYCLE-STATES
-    summary: "B12: 0 data_object_lifecycle_states on all 7 FSQM masters; per-state domain_module_id now resolvable post-M1"
-    finding: >
-      data_object_lifecycle_states returns 0 rows for masters 507, 508, 509, 510, 511, 512,
-      513. Every master carries a real workflow. With M1 cured, per-state domain_module_id can
-      now be attributed (507/508/509/510 to module 259; 511/512/513 to module 263).
-    action: >
-      Author state machines per master and set domain_module_id per realizing module. Proposed
-      shapes: haccp_plans draft->reviewed->approved->in_effect->superseded->archived;
-      critical_control_points defined->active->deactivated; ccp_measurements
-      recorded->reviewed->in_deviation->corrected; food_safety_incidents
-      opened->under_investigation->contained->corrected->closed (escalated branch);
-      allergen_programs draft->approved->active->suspended; environmental_monitoring_samples
-      collected->in_lab->result_received->adverse->re_sampled->closed; sanitation_records
-      scheduled->in_progress->completed->verified->failed. Mark workflow-gate states
-      requires_permission=true.
-    affected_masters:
-      - {data_object_id: 507, name: haccp_plans, target_module_id: 259, workflow: "draft->reviewed->approved->in_effect->superseded->archived"}
-      - {data_object_id: 508, name: critical_control_points, target_module_id: 259, workflow: "defined->active->deactivated"}
-      - {data_object_id: 509, name: ccp_measurements, target_module_id: 259, workflow: "recorded->reviewed->in_deviation->corrected"}
-      - {data_object_id: 510, name: food_safety_incidents, target_module_id: 259, workflow: "opened->under_investigation->contained->corrected->closed; escalated branch to recall"}
-      - {data_object_id: 511, name: allergen_programs, target_module_id: 263, workflow: "draft->approved->active->suspended"}
-      - {data_object_id: 512, name: environmental_monitoring_samples, target_module_id: 263, workflow: "collected->in_lab->result_received->adverse->re_sampled->closed"}
-      - {data_object_id: 513, name: sanitation_records, target_module_id: 263, workflow: "scheduled->in_progress->completed->verified->failed"}
-
   - id: B1A-S3
     summary: "B4 pattern-flag review on 7 FSQM masters (has_personal_content / has_submit_lock / has_single_approver all default false)"
     finding: >
       All 7 FSQM masters (507, 508, 509, 510, 511, 512, 513) carry all three pattern flags as
       default false. Rule #12 requires positive consideration per master; default false is not
       an audited answer. Rule #15 forbids notes annotation, so the audit pass itself is the
-      only record of consideration.
+      only record of consideration. NOTE (2026-06-06): the masters were classified
+      entity_type=operational_workflow and lifecycle states (incl. requires_permission workflow
+      gates) were authored during b1a execution, but the three boolean pattern flags remain at
+      default false pending per-row user sign-off.
     action: >
       Per-master PATCH after user confirms each flag value per row. Likely true cases (proposed
       for user review, not auto-applied): haccp_plans.has_submit_lock=true + has_single_approver=true
       (PCQI signs and locks on activation), food_safety_incidents.has_submit_lock=true (lock on
       close), allergen_programs.has_single_approver=true (QA manager signs).
+    blocked_by:
+      - {type: user_decision, ref: B2-PATTERN-FLAGS, reason: "per-row boolean pattern-flag values require explicit user confirmation; not agent-solvable on master data"}
     affected_masters:
       - {data_object_id: 507, name: haccp_plans, target_module_id: 259, workflow: "PCQI authors, plant manager signs, locks on activation"}
       - {data_object_id: 508, name: critical_control_points, target_module_id: 259, workflow: "defined by HACCP plan, deviation events"}
@@ -84,52 +30,6 @@ b1a:
       - {data_object_id: 511, name: allergen_programs, target_module_id: 263, workflow: "QA owns, single approver"}
       - {data_object_id: 512, name: environmental_monitoring_samples, target_module_id: 263, workflow: "collected, in_lab, result_received, adverse, re-sampled"}
       - {data_object_id: 513, name: sanitation_records, target_module_id: 263, workflow: "scheduled, in_progress, completed, verified"}
-
-  - id: B1A-S7
-    summary: "B9 missing normal-path trigger_events on FSQM masters; intra-domain handoff candidates now attributable post-M1"
-    finding: >
-      7 trigger_events published (one per master, all deviation / approval / completion shape).
-      Missing normal-lifecycle events: haccp_plan.due_for_review (FSMA annual review cycle),
-      food_safety_incident.opened, food_safety_incident.closed,
-      environmental_monitoring_sample.adverse_trend (3 positives in 60 days at the same zone).
-    action: >
-      Author 4 new trigger_events rows + at least one corresponding handoff row per event.
-      incident.opened and incident.closed are intra-domain candidates now attributable to module
-      259. Set source_domain_module_id on the new handoffs.
-    affected_events:
-      - {id: null, event_name: haccp_plan.due_for_review, current_category: null, proposed_category: threshold}
-      - {id: null, event_name: food_safety_incident.opened, current_category: null, proposed_category: lifecycle}
-      - {id: null, event_name: food_safety_incident.closed, current_category: null, proposed_category: lifecycle}
-      - {id: null, event_name: environmental_monitoring_sample.adverse_trend, current_category: null, proposed_category: threshold}
-
-  - id: B1A-HANDOFF-MODULE-FK
-    summary: "B10b: backfill source_domain_module_id on FSQM-owned outbound handoffs now that modules exist"
-    finding: >
-      All 8 outbound FSQM handoffs carry NULL source_domain_module_id (cascade of the prior M1
-      fail). With modules live the FSQM source side can now be attributed.
-    action: >
-      PATCH source_domain_module_id per outbound handoff to its realizing module:
-      356 (incident.escalated) -> 259; 358/975/976 (ccp / critical_control_point.deviation) ->
-      259; 977 (allergen_program.violation_detected) -> 263; 978 (EMP sample.positive) -> 263;
-      979 (sanitation_record.completed) -> 263; 980 (haccp_plan.approved) -> 259. Inbound
-      target_domain_module_id: 352/354/355/361 -> 259 or 263 per payload (FMIS field_application
-      and DAIRY milk/cow events route to 259; supplier_certification.expired 361 routes to 264;
-      traceability_lot.created 971 routes to 259). Confirm payload->module mapping before PATCH.
-    affected_modules: [259, 263, 264]
-    affected_handoffs:
-      - {handoff_id: 356, direction: outbound, source_domain: FSQM, target_domain: FOOD-TRACE, trigger_event: food_safety_incident.escalated, payload: recall_events, null_field: source_domain_module_id}
-      - {handoff_id: 358, direction: outbound, source_domain: FSQM, target_domain: GRC, trigger_event: ccp_measurement.deviation, payload: ccp_measurements, null_field: source_domain_module_id}
-      - {handoff_id: 975, direction: outbound, source_domain: FSQM, target_domain: MFG-OPS, trigger_event: critical_control_point.deviation, payload: critical_control_points, null_field: source_domain_module_id}
-      - {handoff_id: 976, direction: outbound, source_domain: FSQM, target_domain: FOOD-TRACE, trigger_event: critical_control_point.deviation, payload: critical_control_points, null_field: source_domain_module_id}
-      - {handoff_id: 977, direction: outbound, source_domain: FSQM, target_domain: GRC, trigger_event: allergen_program.violation_detected, payload: allergen_programs, null_field: source_domain_module_id}
-      - {handoff_id: 978, direction: outbound, source_domain: FSQM, target_domain: FOOD-TRACE, trigger_event: environmental_monitoring_sample.positive, payload: environmental_monitoring_samples, null_field: source_domain_module_id}
-      - {handoff_id: 979, direction: outbound, source_domain: FSQM, target_domain: MFG-OPS, trigger_event: sanitation_record.completed, payload: sanitation_records, null_field: source_domain_module_id}
-      - {handoff_id: 980, direction: outbound, source_domain: FSQM, target_domain: AUDIT, trigger_event: haccp_plan.approved, payload: haccp_plans, null_field: source_domain_module_id}
-      - {handoff_id: 352, direction: inbound, source_domain: FMIS, target_domain: FSQM, trigger_event: field_application.recorded, payload: field_applications, null_field: target_domain_module_id}
-      - {handoff_id: 354, direction: inbound, source_domain: DAIRY-MGMT, target_domain: FSQM, trigger_event: milk_quality_test.failed, payload: milk_quality_tests, null_field: target_domain_module_id}
-      - {handoff_id: 355, direction: inbound, source_domain: DAIRY-MGMT, target_domain: FSQM, trigger_event: cow_health_event.treatment_administered, payload: cow_health_events, null_field: target_domain_module_id}
-      - {handoff_id: 361, direction: inbound, source_domain: FOOD-TRACE, target_domain: FSQM, trigger_event: supplier_certification.expired, payload: supplier_certifications, null_field: target_domain_module_id}
-      - {handoff_id: 971, direction: inbound, source_domain: FOOD-TRACE, target_domain: FSQM, trigger_event: traceability_lot.created, payload: traceability_lots, null_field: target_domain_module_id}
 
 b1b:
   - id: B1B-S9
@@ -212,6 +112,19 @@ b2:
       - "Yes, override to QUALITY sub-function under Business Operations"
       - "No, leave on GRC default"
     why: "Audit prep arguably maps better to a GRC-Audit or Operations-Quality sub-function than to the broad GRC compliance owner of FSQM."
+
+  - id: B2-PATTERN-FLAGS
+    summary: "Per-master pattern-flag (has_personal_content / has_submit_lock / has_single_approver) values for the 7 FSQM masters (gates B1A-S3)"
+    question: "Per master, which of the three pattern flags should be true?"
+    options:
+      - "Apply the audit's likely-true proposals: haccp_plans.has_submit_lock + has_single_approver; food_safety_incidents.has_submit_lock; allergen_programs.has_single_approver; leave the rest false"
+      - "Author a different per-master set (user specifies)"
+      - "Leave all three flags false on all 7 masters"
+    why: >
+      Rule #12 requires positive consideration of pattern flags on operational_workflow masters;
+      Rule #15 forbids notes annotation; the flag values are master-data judgment that must not
+      be auto-applied. Lifecycle states and workflow gates already authored (2026-06-06); only
+      the three booleans remain.
 
   - id: B2-ALIAS-ARBITRATION
     summary: "Per-alias alias_type and solution_id arbitration for B11 cluster"
@@ -327,3 +240,12 @@ extra_modularization:
   industry_id: 24
   module_shape: "3-module (FSQM-HACCP-CCP, FSQM-HYGIENE-CONTROL, FSQM-AUDIT-SUPPLIER); supersedes prior B2-MODULE-SHAPE which is now closed"
   m1_cured: true
+
+b1a_resolved_2026_06_06:
+  note: "Resolved during 2026-06-06 b1a execution; detail in history.md. Listed here for traceability only."
+  items:
+    - {id: B1A-MODULE-SYSTEM-SKILLS, result: "3 system skills 383/384/385 on modules 259/263/264 + 21 skill_tools (channel abstractions instead of send_email); legacy skill 64 + 8 skill_tools deleted"}
+    - {id: B1A-MODULE-CATALOG-UX, result: "catalog_tagline + catalog_description written into empty fields on domain 157 and modules 259/263/264"}
+    - {id: B1A-LIFECYCLE-STATES, result: "entity_type set to operational_workflow on 7 masters; 34 lifecycle states authored with per-module FKs (507-510 -> 259, 511-513 -> 263)"}
+    - {id: B1A-S7, result: "4 trigger_events (1521-1524) + 4 intra-domain handoffs (1364-1367) authored with module FKs"}
+    - {id: B1A-HANDOFF-MODULE-FK, result: "source_domain_module_id backfilled on 8 outbound; target_domain_module_id backfilled on 5 inbound handoffs"}

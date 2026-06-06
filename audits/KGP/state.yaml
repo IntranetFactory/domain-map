@@ -1,98 +1,10 @@
 schema_version: 2
 domain: KGP
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
-b1a:
-  - id: B1A-SYSTEM-SKILLS
-    summary: "2 full modules now live (270 KGP-ONTOLOGY-ENGINE, 271 KGP-GRAPH-QUERY-APPS) but each lacks its Rule #17 system skill; legacy skill 76 still detached, and both modules carry empty catalog buyer-copy (M8)."
-    finding: >-
-      Modularization landed 2026-06-02: KGP now carries 2 full modules
-      (270 KGP-ONTOLOGY-ENGINE masters kgp_ontologies 742; 271 KGP-GRAPH-QUERY-APPS masters
-      kgp_knowledge_graph_entities 743). Rule #17 requires exactly one system skill per
-      module. skills.id=76 'kgp-system' (skill_type='system', domain_id=138) still carries
-      domain_module_id IS NULL (F1 fail) and is NOT attached to either module (F2 fail on
-      both 270 and 271, so F3 tool-floor fails too). Its 4 skill_tools are all query tools
-      that split cleanly by module: query_ontologies (tool 111, data_object 254) +
-      query_kgp_ontologies (820, 742) belong to 270; query_knowledge_graph_entities
-      (386, 255) + query_kgp_knowledge_graph_entities (821, 743) belong to 271.
-      Additionally both modules carry empty domain_module catalog_tagline +
-      catalog_description (M8 buyer-copy gap; modularization deliberately left buyer copy
-      blank per Rule #20), and the domain row 138 still has empty catalog_tagline /
-      catalog_description (A4, see B2-S5 for wording approval).
-    action: >-
-      Author 2 module-scoped system skills (e.g. kgp_ontology_engine_agent on 270,
-      kgp_graph_query_apps_agent on 271) and re-allocate skill 76's 4 query tools by module
-      (111 + 820 -> 270 skill; 386 + 821 -> 271 skill), then add the mutate / transition /
-      side_effect tool floor per master. After the per-module system skills exist, retire
-      legacy skill 76 (DELETE the row once its skill_tools are repointed; F1). Then author
-      each module's catalog_tagline + catalog_description (M8). Domain-level A4 wording stays
-      gated on B2-S5.
-    affected_modules: [270, 271]
-
-  - id: B1A-EVENT-MODULE-FK
-    summary: "4 KGP trigger_events carry NULL domain_module_id; now unblocked (modules exist), single deterministic backfill by publishing master."
-    finding: >-
-      4 trigger_events (720 kgp_ontology.imported, 721 kgp_ontology.validation_failed,
-      722 kgp_knowledge_graph_entity.merged, 723 kgp_knowledge_graph_entity.created) all
-      carry domain_module_id IS NULL. event_category was already fixed 2026-05-31
-      (720 lifecycle, 721 state_change, 722 state_change, 723 lifecycle). With modules now
-      live the publishing-master -> module map is concrete: events on data_object 742
-      (720, 721) -> 270 KGP-ONTOLOGY-ENGINE; events on data_object 743 (722, 723) ->
-      271 KGP-GRAPH-QUERY-APPS.
-    action: >-
-      PATCH each event's domain_module_id per the master -> module map (720, 721 -> 270;
-      722, 723 -> 271). Mechanical backfill, no longer gated.
-    affected_events:
-      - {id: 720, event_name: kgp_ontology.imported, current_category: lifecycle, proposed_category: lifecycle}
-      - {id: 721, event_name: kgp_ontology.validation_failed, current_category: state_change, proposed_category: state_change}
-      - {id: 722, event_name: kgp_knowledge_graph_entity.merged, current_category: state_change, proposed_category: state_change}
-      - {id: 723, event_name: kgp_knowledge_graph_entity.created, current_category: lifecycle, proposed_category: lifecycle}
-    extra_module_map: "742 -> 270; 743 -> 271"
-
-  - id: B1A-B10B-HANDOFF-FK
-    summary: "4 KGP-outbound handoffs carry NULL on the KGP-side module FK; now unblocked (modules exist), mechanical PATCH per payload master."
-    finding: >-
-      Handoffs 221 (KGP->DATA-AI-PLAT, ontology.published, payload ontologies 254),
-      697 (KGP->DATA-AI-PLAT, kgp_ontology.imported, payload kgp_ontologies 742),
-      698 (KGP->DCG, kgp_knowledge_graph_entity.merged, payload kgp_knowledge_graph_entities 743),
-      699 (KGP->DCG, kgp_knowledge_graph_entity.created, payload kgp_knowledge_graph_entities 743)
-      carry NULL source_domain_module_id. KGP-side module FK is now resolvable: ontology
-      payloads (221 on 254, 697 on 742) -> 270 KGP-ONTOLOGY-ENGINE; KG-entity payloads
-      (698, 699 on 743) -> 271 KGP-GRAPH-QUERY-APPS. The cross-side target_domain_module_id
-      on these remains owed by DATA-AI-PLAT / DCG (B10b asymmetry, tracked under
-      B1B-B10B-CROSS-SIDE). Inbound handoffs 222 (MDM->KGP, payload knowledge_graph_entities 255),
-      223 + 265 (DCG->KGP) carry NULL target_domain_module_id; 222 -> 271, 223 (ontology.published)
-      -> 270, 265 (glossary_term.published, payload glossary_terms 302) has no KGP master so
-      its KGP-side module FK is ambiguous (route to the consuming module 270 if backfilled).
-    action: >-
-      PATCH source_domain_module_id on the 4 outbound rows (221, 697 -> 270; 698, 699 -> 271)
-      and target_domain_module_id on the resolvable inbound rows (222 -> 271; 223 -> 270).
-      Mechanical, no longer gated on the KGP side.
-    affected_handoffs:
-      - {handoff_id: 221, direction: outbound, source_domain: KGP, target_domain: DATA-AI-PLAT, trigger_event: ontology.published, payload: ontologies, null_field: source_domain_module_id}
-      - {handoff_id: 697, direction: outbound, source_domain: KGP, target_domain: DATA-AI-PLAT, trigger_event: kgp_ontology.imported, payload: kgp_ontologies, null_field: source_domain_module_id}
-      - {handoff_id: 698, direction: outbound, source_domain: KGP, target_domain: DCG, trigger_event: kgp_knowledge_graph_entity.merged, payload: kgp_knowledge_graph_entities, null_field: source_domain_module_id}
-      - {handoff_id: 699, direction: outbound, source_domain: KGP, target_domain: DCG, trigger_event: kgp_knowledge_graph_entity.created, payload: kgp_knowledge_graph_entities, null_field: source_domain_module_id}
-      - {handoff_id: 222, direction: inbound, source_domain: MDM, target_domain: KGP, trigger_event: kg_entity.linked, payload: knowledge_graph_entities, null_field: target_domain_module_id}
-      - {handoff_id: 223, direction: inbound, source_domain: DCG, target_domain: KGP, trigger_event: ontology.published, payload: ontologies, null_field: target_domain_module_id}
-
-  - id: B1A-APQC-H221
-    summary: "Tag handoff 221 (KGP->DATA-AI-PLAT, ontology.published, payload ontologies 254) with APQC process 275, mirroring the already-tagged sibling h.223."
-    finding: >-
-      Handoff 221 publishes payload data_object 254 (ontologies) from KGP (138) to
-      DATA-AI-PLAT (129) on trigger ontology.published, identical in shape to handoff 223
-      (DCG->KGP same trigger) which already carries a handoff_processes row pointing at
-      process 275 ('Define and maintain business information architecture', external_id
-      20770, agent_curated/new). 221 has zero handoff_processes rows.
-    action: >-
-      INSERT one handoff_processes row (handoff_id=221, process_id=275,
-      proposal_source='agent_curated', role='implements'; record_status omitted -> new),
-      mirroring the h.223 row.
-    affected_handoffs:
-      - {handoff_id: 221, direction: outbound, source_domain: KGP, target_domain: DATA-AI-PLAT, trigger_event: ontology.published, payload: ontologies, null_field: handoff_processes}
-    extra_pcf_target: "process_id=275 external_id=20770 Define and maintain business information architecture"
+b1a: []
 
 b1b:
   - id: B1B-B12-LIFECYCLE
@@ -134,15 +46,16 @@ b1b:
     finding: >-
       The non-KGP side of every KGP-touching handoff carries NULL module FK because the
       neighbor domains are themselves pre-modular: target_domain_module_id on outbound
-      221/697 (DATA-AI-PLAT) and 698/699 (DCG); source_domain_module_id on inbound
-      222 (MDM), 223/265 (DCG). The KGP side is handled under B1A-B10B-HANDOFF-FK; this row
-      tracks the cross-side owed by neighbors.
+      697 (DATA-AI-PLAT) and 698/699 (DCG); source_domain_module_id on inbound
+      222 (MDM), 265 (DCG). (221 already carried target_domain_module_id=224 from a prior
+      pass; 223 KGP-side target_domain_module_id was backfilled to 270 under B1A-B10B-HANDOFF-FK.)
+      The KGP side is handled under the (now resolved) B1A-B10B-HANDOFF-FK; this row tracks
+      the cross-side owed by neighbors.
     blocked_by:
       - {type: domain_audit, blocking_domain: DATA-AI-PLAT, milestone: M1}
       - {type: domain_audit, blocking_domain: DCG, milestone: M1}
       - {type: domain_audit, blocking_domain: MDM, milestone: M1}
     affected_handoffs:
-      - {handoff_id: 221, direction: outbound, source_domain: KGP, target_domain: DATA-AI-PLAT, trigger_event: ontology.published, payload: ontologies, null_field: target_domain_module_id}
       - {handoff_id: 697, direction: outbound, source_domain: KGP, target_domain: DATA-AI-PLAT, trigger_event: kgp_ontology.imported, payload: kgp_ontologies, null_field: target_domain_module_id}
       - {handoff_id: 698, direction: outbound, source_domain: KGP, target_domain: DCG, trigger_event: kgp_knowledge_graph_entity.merged, payload: kgp_knowledge_graph_entities, null_field: target_domain_module_id}
       - {handoff_id: 699, direction: outbound, source_domain: KGP, target_domain: DCG, trigger_event: kgp_knowledge_graph_entity.created, payload: kgp_knowledge_graph_entities, null_field: target_domain_module_id}
@@ -152,8 +65,8 @@ b1b:
   - id: B1B-APQC-H222-H697-H698-H699
     summary: "Tag 4 remaining KGP-touching handoffs with APQC PCF processes once a confirmed PCF is identified."
     finding: >-
-      Of 7 KGP handoffs, only h.223 + h.265 are tagged (both -> process 275, agent_curated/new);
-      h.221 is the easy addition under B1A-APQC-H221. The other 4 (222 MDM->KGP kg_entity.linked
+      Of 7 KGP handoffs, h.221 + h.223 + h.265 are tagged (all -> process 275, agent_curated/new;
+      h.221 resolved under B1A-APQC-H221). The other 4 (222 MDM->KGP kg_entity.linked
       payload knowledge_graph_entities; 697 kgp_ontology.imported; 698 kgp_knowledge_graph_entity.merged;
       699 kgp_knowledge_graph_entity.created) lack tags. The 2026-05-30 audit cited PCF
       external_ids 10563 / 10564 / 10571 / 10568; the 2026-05-31 fix pass found no live
@@ -183,16 +96,19 @@ b1b:
 
 b2:
   - id: B2-S5
-    summary: "Approve catalog tagline + description wording for KGP A4 PATCH and the 2 new modules' M8 buyer-copy."
+    summary: "Approve catalog tagline + description wording. Module M8 copy (270 + 271) is now WRITTEN (review in-place per revised Rule #20); only domain-level A4 (138) remains open."
     question: >-
-      Author catalog_tagline + catalog_description on domain 138 (A4) and on modules 270
-      KGP-ONTOLOGY-ENGINE + 271 KGP-GRAPH-QUERY-APPS (M8). Rule #20 forbids agent-authored
-      writes; user supplies / approves the exact text.
+      Module-grain M8 buyer copy on 270 KGP-ONTOLOGY-ENGINE and 271 KGP-GRAPH-QUERY-APPS was
+      authored straight into the empty catalog_tagline + catalog_description fields on
+      2026-06-06 (revised Rule #20: the row record_status='new' carries the review signal;
+      review in the catalog UI). Remaining open item: catalog_tagline + catalog_description on
+      domain 138 (A4). Author the domain-level (market-grain) buyer copy, or skip.
     options:
-      - "(a) Approve 2026-05-30 domain draft tagline ('Build the unified semantic substrate that powers your AI agents, operational apps, and complex analytical queries on top of your enterprise data.') plus agent-drafted per-module taglines for 270 / 271"
-      - "(b) Rewrite (supply exact text)"
-      - "(c) Skip (leave all 3 rows' UX fields empty)"
-    why: "Rule #20 hard rule; buyer-voice wording is editorial."
+      - "(a) Approve 2026-05-30 domain draft tagline ('Build the unified semantic substrate that powers your AI agents, operational apps, and complex analytical queries on top of your enterprise data.') for domain 138"
+      - "(b) Rewrite domain 138 copy (supply exact text)"
+      - "(c) Skip (leave domain 138 UX fields empty)"
+      - "(review) Review the written module 270/271 copy in the catalog UI; request changes if the wording needs editing (overwrite is per-row user-approval-only)"
+    why: "Domain-grain A4 wording is editorial. Module M8 already written per revised Rule #20."
 
   - id: B2-S6
     summary: "Lifecycle-state config-shape exemption test for the 2 masters."
@@ -249,8 +165,8 @@ b2:
   - id: B2-APQC-APPROVAL
     summary: "Batch-approve the agent_curated APQC handoff_processes rows (record_status flip is Rule #1-governed)."
     question: >-
-      h.223 and h.265 already carry agent_curated handoff_processes rows -> process 275 at
-      record_status='new', and B1A-APQC-H221 will add h.221 the same way. Approve the batch
+      h.221, h.223 and h.265 carry agent_curated handoff_processes rows -> process 275 at
+      record_status='new' (h.221 resolved under B1A-APQC-H221 this pass). Approve the batch
       (flip to approved) or request a different PCF anchor?
     options:
       - "(a) Approve the batch at process 275 (Define and maintain business information architecture)"

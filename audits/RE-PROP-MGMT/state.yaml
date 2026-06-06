@@ -1,111 +1,45 @@
 schema_version: 2
 domain: RE-PROP-MGMT
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
+# next_action_by=user: both remaining b1a items are user-gated (B1A-REL-473 blocked_by
+# user_decision; B1A-HANDOFF-296-TARGET needs a consume-vs-react modeling call), and b2
+# carries open user questions. No autonomously agent-solvable b1a work remains.
 
 b1a:
-  - id: B1A-SYSTEM-SKILLS
-    summary: "3 new modules (285 RE-PROP-MGMT-LEASING, 286 RE-PROP-MGMT-OPERATIONS, 287 RE-PROP-MGMT-FINANCIALS) carry zero module-level system skills; legacy domain-level skill 98 must retire after replacements land (Rule #17 -> F2/F3)."
+  - id: B1A-HANDOFF-296-TARGET
+    summary: "Inbound handoff 296 still carries target_domain_module_id=null; the prescribed value (285) is not catalog-derivable because no RE-PROP-MGMT module declares any role on the payload real_estate_transactions (353)."
     finding: >
-      Modularization landed 2026-06-02 (0 -> 3 full domain_modules). Each module now needs a
-      per-module system skill (skill_type=system, domain_module_id set) so the F2/F3 band passes.
-      Legacy domain-level skill re-prop-mgmt-system (id 98, domain_id=144, domain_module_id=null)
-      with 8 skill_tools rows stays only as a transitional artifact and must be DELETEd once the
-      three per-module replacements exist; its query_* tool coverage redistributes by module
-      (screening/leasing tools -> 285, units/maintenance tools -> 286, payments/accounting tools -> 287).
+      The 2026-06-06 b1a pass set source_domain_module_id on all 7 outbound handoffs (298->287,
+      299->286, 300->285, 301->287, 310->285, 864->287, 865->286) per the B10b event-data_object
+      rule. The inbound 296 target was NOT set: B10b derives target_domain_module_id from the module
+      in the target domain that holds the handoff payload (353 real_estate_transactions); no
+      RE-PROP-MGMT module holds 353 in any role, so the item's prescribed 285 would point the FK at a
+      module that does not consume the payload. Per B10b "no candidate", the fix is upstream: first
+      load a consumer domain_module_data_objects row for 353 on the leasing module (285), then attribute.
     action: >
-      Run Phase S: author one system skill per module (285, 286, 287) with redistributed skill_tools,
-      then DELETE legacy skill 98. Out of scope for the modularization pass (no skills/tools created here).
-    affected_modules: [285, 286, 287]
-    extra_legacy_skill_id: 98
-
-  - id: B1A-CATALOG-UX
-    summary: "domains row 144 catalog_tagline / catalog_description still empty (A4); module-grain catalog UX (M8) also empty on 285/286/287."
-    finding: >
-      A4 still fails on the domain row; draft wording sits in B2-CATALOG-WORDING awaiting Rule #20
-      per-row approval. M8 newly applies now that modules exist: domain_modules 285/286/287 carry empty
-      catalog_tagline / catalog_description. Domain-row wording was drafted 2026-05-30; module-grain
-      taglines are not yet drafted.
-    action: >
-      On user approval of B2-CATALOG-WORDING, PATCH domains.144 catalog_tagline + catalog_description,
-      then draft and (after approval) write per-module catalog_tagline / catalog_description on 285/286/287.
-    affected_modules: [285, 286, 287]
-
-  - id: B1A-LIFECYCLE-STATES
-    summary: "Zero data_object_lifecycle_states on the 6 masters; per-state domain_module_id is now resolvable since modules exist."
-    finding: >
-      B12 still fails. Expected workflows (2026-05-30 narrative): rental_units vacant->listed->applied
-      ->approved->occupied->vacating->vacant (module 286); rental_applications draft->submitted->screening
-      ->approved/declined->withdrawn (285); rental_leases drafted->sent->signed->active->ending->terminated
-      ->renewed (285); rent_payments due->received->late->delinquent->in_collections (287); property_tenants
-      prospective->current->notice_given->moved_out->evicted (285); tenant_maintenance_requests submitted
-      ->triaged->assigned->in_progress->resolved->closed (286). The M-band gate that previously blocked
-      per-state domain_module_id is now cleared.
-    action: >
-      Draft and load data_object_lifecycle_states with state_order / is_initial / is_terminal /
-      requires_permission / domain_module_id per the mapping above. Out of scope for the modularization pass.
-    affected_masters:
-      - {data_object_id: 357, name: rental_units, target_module_id: 286, workflow: vacant_to_occupied_cycle}
-      - {data_object_id: 358, name: property_tenants, target_module_id: 285, workflow: prospective_to_moved_out}
-      - {data_object_id: 359, name: rental_applications, target_module_id: 285, workflow: draft_to_approved_declined}
-      - {data_object_id: 360, name: rent_payments, target_module_id: 287, workflow: due_to_in_collections}
-      - {data_object_id: 361, name: tenant_maintenance_requests, target_module_id: 286, workflow: submitted_to_closed}
-      - {data_object_id: 362, name: rental_leases, target_module_id: 285, workflow: drafted_to_renewed}
-
-  - id: B1A-HANDOFF-SOURCE-FK
-    summary: "All 7 outbound handoffs carry source_domain_module_id=null; source side is now derivable from the new modules."
-    finding: >
-      B10b / B1 boundary. Source module derives from the module mastering each payload's data_object:
-      298 rent_payments -> 287; 299 tenant_maintenance_requests -> 286; 300 property_tenants -> 285;
-      301 rental_leases -> 285; 310 property_tenants -> 285; 864 rental_leases -> 285; 865 rental_units -> 286.
-      Inbound 296 (real_estate_transactions payload) target resolves to the leasing module 285. Target-side
-      FKs on outbound rows remain blocked on partner-domain modularization (see B1B-PARTNER-MODULES).
-    action: >
-      PATCH source_domain_module_id on handoffs 298->287, 299->286, 300->285, 301->285, 310->285,
-      864->285, 865->286; PATCH target_domain_module_id=285 on inbound 296. Out of scope for the
-      modularization pass.
+      Decide whether RE-PROP-MGMT-LEASING (285) should consume real_estate_transactions (353): if yes,
+      INSERT a consumer DMDO row on 285 for 353, then PATCH handoffs.296 target_domain_module_id=285.
+      Needs a modeling decision (does the leasing pipeline read the closed-sale record, or only react to
+      the event without persisting the upstream object?), so SKIPPED on the 2026-06-06 pass.
     affected_handoffs:
-      - {handoff_id: 298, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: AP-AUTO, trigger_event: rent_payment.received, payload: rent_payments, null_field: source_domain_module_id}
-      - {handoff_id: 299, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: FSM, trigger_event: tenant_maintenance_request.created, payload: tenant_maintenance_requests, null_field: source_domain_module_id}
-      - {handoff_id: 300, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: LSD, trigger_event: property_tenant.evicted, payload: property_tenants, null_field: source_domain_module_id}
-      - {handoff_id: 301, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: RE-INVEST, trigger_event: rent_payment.received, payload: rental_leases, null_field: source_domain_module_id}
-      - {handoff_id: 310, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: GRC, trigger_event: rental_application.approved, payload: property_tenants, null_field: source_domain_module_id}
-      - {handoff_id: 864, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: ERP-FIN, trigger_event: rent_payment.received, payload: rental_leases, null_field: source_domain_module_id}
-      - {handoff_id: 865, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: CSM, trigger_event: rental_unit.vacant, payload: rental_units, null_field: source_domain_module_id}
       - {handoff_id: 296, direction: inbound, source_domain: RE-BROKERAGE, target_domain: RE-PROP-MGMT, trigger_event: real_estate_transaction.closed, payload: real_estate_transactions, null_field: target_domain_module_id}
 
-  - id: B1A-INTRA-DOMAIN-RELS
-    summary: "Zero intra-domain data_object_relationships among the 6 masters; module homes now fixed, so per-edge owner_side judgment is unblocked."
+  - id: B1A-REL-473
+    summary: "Existing data_object_relationships row 473 (rental_units 357 opens customer_cases 103) looks mis-pointed; target should likely be real_estate_transactions (353). PATCH-vs-DELETE is a user decision."
     finding: >
-      B6. Expected edges: rental_units has-many rental_leases; rental_leases covers rental_units;
-      rental_applications results-in rental_leases; property_tenants signs rental_leases; rental_leases
-      generates rent_payments; rental_units receives tenant_maintenance_requests; property_tenants submits
-      tenant_maintenance_requests. Each needs owner_side / relationship_type / relationship_kind / is_required.
-      Also B1A-REL-473: existing row 473 (rental_units opens customer_cases 103) looks mis-pointed; target
-      should be real_estate_transactions (353). User confirms PATCH-to-353 vs DELETE.
+      Row 473 reads rental_units(357) opens customer_cases(103) / inverse opened_from. The 2026-05-31
+      audit (B1-S14) flagged the target as wrong: a unit comes under management from a closed sale, so the
+      intended target is real_estate_transactions(353), not customer_cases(103). Whether to PATCH
+      related_data_object_id to 353 or DELETE the row is a judgment call (depends on whether RE-PROP-MGMT
+      intends to keep a property-handover edge at all). The 7 net-new intra-domain edges among the 6 masters
+      were loaded 2026-06-06; row 473 was left untouched pending this decision.
     action: >
-      Draft 7 in-domain edges and load via the relationship loader idiom; PATCH/DELETE row 473 per
-      user decision. Out of scope for the modularization pass (no relationships created here).
-    affected_masters:
-      - {data_object_id: 357, name: rental_units, target_module_id: 286, workflow: lifecycle}
-      - {data_object_id: 358, name: property_tenants, target_module_id: 285, workflow: lifecycle}
-      - {data_object_id: 359, name: rental_applications, target_module_id: 285, workflow: screening}
-      - {data_object_id: 360, name: rent_payments, target_module_id: 287, workflow: collection}
-      - {data_object_id: 361, name: tenant_maintenance_requests, target_module_id: 286, workflow: maintenance}
-      - {data_object_id: 362, name: rental_leases, target_module_id: 285, workflow: leasing}
-
-  - id: B1A-S11B-ALIASES
-    summary: "Two masters (rent_payments 360, tenant_maintenance_requests 361) still carry zero data_object_aliases."
-    finding: >
-      B11 sub-gap unchanged from 2026-05-31. The other four masters carry 10 alias rows total.
-      Candidates: rent_payments (Rent Charge, Payment, Receipt); tenant_maintenance_requests
-      (Work Order, Maintenance Ticket, Service Request).
-    action: >
-      INSERT data_object_aliases for 360 and 361; notes empty (Rule #15). Independent of the module set.
-    affected_masters:
-      - {data_object_id: 360, name: rent_payments, target_module_id: 287, workflow: collection}
-      - {data_object_id: 361, name: tenant_maintenance_requests, target_module_id: 286, workflow: maintenance}
+      User decides: PATCH data_object_relationships.473 related_data_object_id=353 (keep as property
+      handover from a closed sale) OR DELETE row 473. Snapshot the prior values before either write.
+    blocked_by:
+      - {type: user_decision, ref: B1A-REL-473, reason: "PATCH-to-353 vs DELETE on a master-data relationship row needs human sign-off"}
 
 b1b:
   - id: B1B-REG-CODES-EMPTY
@@ -124,10 +58,10 @@ b1b:
     summary: "5 trigger events (289 rent_payment.delinquent, 957 rental_unit.listed, 958 rental_unit.occupied, 960 rental_lease.executed, 961 rental_lease.renewed) have zero subscriber handoffs."
     finding: >
       B9 sub-gap. New handoff candidates: delinquent -> CSM/collections, listed -> CSM/CDP/vacancy syndication,
-      executed -> RE-INVEST, renewed -> RE-INVEST. Source side now attributable (modules exist) but each row needs
-      a viable target_domain_module_id, which is blocked by partner-domain modularization.
+      executed -> RE-INVEST, renewed -> RE-INVEST. Source side is now attributable (per-module source FKs set
+      on existing handoffs 2026-06-06) but each NEW row also needs a viable target_domain_module_id, which is
+      blocked by partner-domain modularization.
     blocked_by:
-      - {type: depends_on, ref: B1A-HANDOFF-SOURCE-FK, reason: "author source-side attribution alongside the new handoffs"}
       - {type: domain_audit, blocking_domain: CSM, milestone: modules-lifecycle-cluster}
       - {type: domain_audit, blocking_domain: RE-INVEST, milestone: rent-roll-or-owner-distribution-module}
     affected_events:
@@ -140,22 +74,20 @@ b1b:
   - id: B1B-PARTNER-MODULES
     summary: "Outbound handoff target_domain_module_id values blocked on partner-domain modularization."
     finding: >
-      Even after B1A-HANDOFF-SOURCE-FK fills the source side, target_domain_module_id stays null on rows whose
-      partner domain has no modules: AP-AUTO (29), LSD (25), RE-INVEST (146), GRC (15), ERP-FIN (65) each have zero
-      domain_modules. CSM (modules 112-114) and FSM (modules 161-163) exist but do not yet hold the RE-PROP-MGMT
-      payloads via domain_module_data_objects (handoff 299 target_domain_module_id=161 was set pre-audit and remains).
+      Source side is now filled (2026-06-06). target_domain_module_id stays null on rows whose partner domain
+      has no consuming module: AP-AUTO (29), LSD (25), GRC (15), ERP-FIN (65) each have zero domain_modules;
+      CSM (modules 112-114) exists but does not yet hold the rental_units payload via domain_module_data_objects.
+      Handoff 299 (FSM, target_domain_module_id=161) and 301 (RE-INVEST, target_domain_module_id=280) were set
+      pre-audit and remain.
     blocked_by:
       - {type: domain_audit, blocking_domain: AP-AUTO, milestone: any-modules}
       - {type: domain_audit, blocking_domain: LSD, milestone: any-modules}
-      - {type: domain_audit, blocking_domain: RE-INVEST, milestone: any-modules}
       - {type: domain_audit, blocking_domain: GRC, milestone: any-modules}
       - {type: domain_audit, blocking_domain: ERP-FIN, milestone: any-modules}
       - {type: domain_audit, blocking_domain: CSM, milestone: payload-consumer-dmdo}
-      - {type: domain_audit, blocking_domain: FSM, milestone: payload-consumer-dmdo}
     affected_handoffs:
       - {handoff_id: 298, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: AP-AUTO, trigger_event: rent_payment.received, payload: rent_payments, null_field: target_domain_module_id}
       - {handoff_id: 300, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: LSD, trigger_event: property_tenant.evicted, payload: property_tenants, null_field: target_domain_module_id}
-      - {handoff_id: 301, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: RE-INVEST, trigger_event: rent_payment.received, payload: rental_leases, null_field: target_domain_module_id}
       - {handoff_id: 310, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: GRC, trigger_event: rental_application.approved, payload: property_tenants, null_field: target_domain_module_id}
       - {handoff_id: 864, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: ERP-FIN, trigger_event: rent_payment.received, payload: rental_leases, null_field: target_domain_module_id}
       - {handoff_id: 865, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: CSM, trigger_event: rental_unit.vacant, payload: rental_units, null_field: target_domain_module_id}
@@ -176,24 +108,21 @@ b1b:
     affected_handoffs:
       - {handoff_id: 865, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: CSM, trigger_event: rental_unit.vacant, payload: rental_units, null_field: handoff_processes}
 
-b2:
-  - id: B2-CATALOG-WORDING
-    summary: "Approve / edit / rewrite the catalog UX wording (A4 domain row + M8 module rows) per Rule #20."
-    question: >
-      Draft domain catalog_tagline: "Collect rent, screen tenants, dispatch maintenance, and account for each
-      property, all in one residential-management platform." Draft catalog_description: "Run a residential
-      portfolio (single-family rentals, multifamily buildings, condo associations) end to end. Market vacant
-      units to listing sites, screen applicants against credit, criminal, and eviction history, draft and sign
-      leases, collect rent (with prorations, late fees, and security-deposit accounting), and handle maintenance
-      requests with vendor or in-house teams. Per-property general ledger feeds owner distributions and investor
-      reporting, with built-in compliance for the Fair Housing Act, FCRA-regulated screening, and state-by-state
-      landlord-tenant statutes." Approve, edit, or rewrite? Then approve per-module taglines for 285/286/287.
-    options:
-      - "(a) approve domain wording as drafted; agent drafts the 3 module taglines for a follow-up approval"
-      - "(b) edit (supply revised wording)"
-      - "(c) rewrite entirely (supply alternative)"
-    why: "Rule #20 requires per-row user approval before writing catalog_tagline / catalog_description. Gates B1A-CATALOG-UX."
+  - id: B1B-ENTITY-TYPE-UNCLASSIFIED
+    summary: "All 6 masters carry entity_type='unclassified' (B13). Lifecycle states were loaded 2026-06-06 but B12 will not read them and B13 fails until entity_type is classified."
+    finding: >
+      rental_units (357), property_tenants (358), rental_applications (359), rent_payments (360),
+      tenant_maintenance_requests (361), rental_leases (362) all have entity_type='unclassified'. Each
+      now carries a full operational workflow lifecycle (loaded 2026-06-06), so all 6 are clearly
+      operational_workflow. The 2026-06-06 b1a list did not include an entity_type classification action,
+      so the masters were left unclassified (master-data classification needs explicit authorization).
+    action: >
+      PATCH data_objects entity_type='operational_workflow' on 357/358/359/360/361/362 so B12 reads the
+      loaded lifecycle states and B13 passes. Surface for user confirmation before the write (master data).
+    blocked_by:
+      - {type: user_decision, ref: B1B-ENTITY-TYPE-UNCLASSIFIED, reason: "entity_type is load-bearing master-data classification; confirm operational_workflow for all 6 before PATCH"}
 
+b2:
   - id: B2-FHA-APPLICABILITY
     summary: "Fair Housing Act domain_regulations.applicability value (mandatory vs mandatory_with_exemptions)."
     question: >

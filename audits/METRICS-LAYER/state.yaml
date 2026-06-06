@@ -1,86 +1,10 @@
 schema_version: 2
 domain: METRICS-LAYER
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
 b1a:
-  - id: B1A-F2
-    summary: zero module-anchored system skills; modules now exist (275, 276, 277) so Rule #17 is authorable
-    finding: >
-      The domain now has 3 full modules (METRICS-LAYER-DEFINITIONS 275, METRICS-LAYER-COMPUTE 276,
-      METRICS-LAYER-DELIVERY 277) but zero skill_type=system skills with domain_module_id set.
-      Rule #17 (F2/F3) requires exactly one system skill per domain_modules row with >=1 skill_tools row.
-      The only system skill today is the legacy domain-level metrics-layer-system (id 83, domain_module_id=NULL,
-      5 query-only tools). Authoring floors carried from the 2026-05-30 B1-S10:
-      metrics_layer_definitions_agent (query/create/certify/deprecate metric_definitions, publish dimensional_model,
-      validate_metric_compilation compute, translate_question_to_metric compute);
-      metrics_layer_compute_agent (query metric_materializations + query_lineage_records, schedule_materialization_refresh,
-      refresh_materialization_now side_effect, capture_query_lineage, analyze_query_cost compute);
-      metrics_layer_delivery_agent (query/create/activate metric_access_policy, deliver_metric_query compute,
-      serve_metric_via_sql_endpoint side_effect, serve_metric_via_rest_endpoint side_effect).
-    action: >
-      Author 3 system skills (one per module, domain_module_id set) plus their skill_tools rows per the floors above.
-      Then DELETE legacy skill id 83 (B1A-F1).
-    affected_modules: [275, 276, 277]
-    affected_masters:
-      - {data_object_id: 252, name: metric_definitions, target_module_id: 275, workflow: definition}
-      - {data_object_id: 253, name: dimensional_models, target_module_id: 275, workflow: model-publication}
-      - {data_object_id: 709, name: metric_materializations, target_module_id: 276, workflow: materialization-refresh}
-      - {data_object_id: 710, name: query_lineage_records, target_module_id: 276, workflow: lineage-capture}
-      - {data_object_id: 711, name: metric_access_policies, target_module_id: 277, workflow: policy-lifecycle}
-
-  - id: B1A-F1
-    summary: legacy domain-level skill metrics-layer-system (id 83) must be deleted once module-anchored skills land
-    finding: >
-      skills.id=83, skill_name=metrics-layer-system, skill_type=system, domain_id=137, domain_module_id=NULL,
-      holds 5 query-only skill_tools at coverage_tier=platform. F1 requires DELETE once any module-anchored
-      system skill exists for the domain.
-    action: DELETE /skills?id=eq.83 after B1A-F2 lands the per-module system skills.
-    affected_entities: [skills:metrics-layer-system]
-    extra_gated_by: [B1A-F2]
-
-  - id: B1A-B12
-    summary: zero data_object_lifecycle_states across all 5 masters; module attribution now possible
-    finding: >
-      Modules now exist so domain_module_id attribution is unblocked. Each master carries a workflow shape from
-      flagship vendor docs. metric_definitions (252): draft / in_review / certified / deprecated / retired.
-      dimensional_models (253): draft / published / deprecated / retired.
-      metric_materializations (709): scheduled / refreshing / refreshed / stale / failed.
-      query_lineage_records (710): captured / processed / archived (borderline config-shape).
-      metric_access_policies (711): draft / active / superseded / retired. requires_permission flips on
-      certification / deprecation / retirement / activate / supersede transitions.
-    action: >
-      Author lifecycle state rows for the 5 masters; set requires_permission on the gated transitions;
-      set domain_module_id to the realizing module (252/253 -> 275, 709/710 -> 276, 711 -> 277).
-    affected_masters:
-      - {data_object_id: 252, name: metric_definitions, target_module_id: 275, workflow: draft-in_review-certified-deprecated-retired}
-      - {data_object_id: 253, name: dimensional_models, target_module_id: 275, workflow: draft-published-deprecated-retired}
-      - {data_object_id: 709, name: metric_materializations, target_module_id: 276, workflow: scheduled-refreshing-refreshed-stale-failed}
-      - {data_object_id: 710, name: query_lineage_records, target_module_id: 276, workflow: captured-processed-archived}
-      - {data_object_id: 711, name: metric_access_policies, target_module_id: 277, workflow: draft-active-superseded-retired}
-
-  - id: B1A-B10b
-    summary: 8 cross-domain handoffs have NULL METRICS-LAYER-side module FK; now derivable from master attribution
-    finding: >
-      The B10b derivation maps each handoff to the METRICS-LAYER module that masters the trigger event's
-      data_object (source side) or the payload (target side). Modules now exist:
-      252/253 -> 275 (DEFINITIONS), 709/710 -> 276 (COMPUTE), 711 -> 277 (DELIVERY). The 7 outbound handoffs
-      get source_domain_module_id; the 1 inbound (220, DCG -> METRICS-LAYER on metric.deprecated, payload
-      metric_definitions) gets target_domain_module_id=275.
-    action: >
-      Backfill source_domain_module_id / target_domain_module_id per the master-resolution rule using the
-      scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts pattern.
-    affected_handoffs:
-      - {handoff_id: 218, direction: outbound, source_domain: METRICS-LAYER, target_domain: BI, trigger_event: metric.certified, payload: metric_definitions, null_field: source_domain_module_id}
-      - {handoff_id: 219, direction: outbound, source_domain: METRICS-LAYER, target_domain: DATA-AI-PLAT, trigger_event: metric.certified, payload: metric_definitions, null_field: source_domain_module_id}
-      - {handoff_id: 220, direction: inbound, source_domain: DCG, target_domain: METRICS-LAYER, trigger_event: metric.deprecated, payload: metric_definitions, null_field: target_domain_module_id}
-      - {handoff_id: 692, direction: outbound, source_domain: METRICS-LAYER, target_domain: BI, trigger_event: dimensional_model.published, payload: dimensional_models, null_field: source_domain_module_id}
-      - {handoff_id: 693, direction: outbound, source_domain: METRICS-LAYER, target_domain: DATA-AI-PLAT, trigger_event: metric_materialization.refreshed, payload: metric_materializations, null_field: source_domain_module_id}
-      - {handoff_id: 694, direction: outbound, source_domain: METRICS-LAYER, target_domain: DCG, trigger_event: query_lineage.captured, payload: query_lineage_records, null_field: source_domain_module_id}
-      - {handoff_id: 695, direction: outbound, source_domain: METRICS-LAYER, target_domain: BI, trigger_event: metric_access_policy.changed, payload: metric_access_policies, null_field: source_domain_module_id}
-      - {handoff_id: 696, direction: outbound, source_domain: METRICS-LAYER, target_domain: BI, trigger_event: metric_materialization.refresh_failed, payload: metric_materializations, null_field: source_domain_module_id}
-
   - id: B1A-EMBED-SHELLS
     summary: cross-module embedded_master / consumer shell rows from the B1-S1 spec were not authored (modules-only pass)
     finding: >
@@ -89,6 +13,12 @@ b1a:
       DELIVERY (277); metric_access_policies (711) as consumer on DEFINITIONS (275) and COMPUTE (276). This
       modularization pass assigned only the canonical master rows (job scope was reuse-existing-roles, and no
       embedded_master/consumer rows existed to preserve). Shell rows are a design addition, not a reuse.
+      The 2026-06-06 b1a pass SKIPPED this item: the action conditions execution on confirming the exact shell
+      set against current emitter behavior, which is a design judgment on load-bearing master data beyond the
+      deterministic action text. Structural note from that pass: the newly authored B6 edge
+      metric_materializations precomputes metric_definitions (is_required=true) crosses module boundaries
+      (709 on 276 -> 252 on 275), so the spec'd 252-embedded_master-on-276 shell would resolve a real M9
+      self-containment finding; the 252-on-277 and 711-consumer-on-275/276 shells remain design choices.
     action: >
       Author the embedded_master / consumer shell DMDO rows per the B1-S1 spec (252 embedded_master on 276 + 277;
       711 consumer on 275 + 276). Confirm the exact shell set against the current emitter behavior before writing.
@@ -96,80 +26,8 @@ b1a:
     affected_masters:
       - {data_object_id: 252, name: metric_definitions, target_module_id: 275, workflow: definition}
       - {data_object_id: 711, name: metric_access_policies, target_module_id: 277, workflow: policy-lifecycle}
-
-  - id: B1A-M8
-    summary: per-module catalog UX fields (catalog_tagline / catalog_description) empty on the 3 new modules
-    finding: >
-      The 3 new modules (275, 276, 277) were created with catalog_tagline and catalog_description omitted per the
-      insert shape. M8 / A4 catalog-UX coverage extends to per-module buyer-facing text once modules exist.
-      Rule #20 governs the wording-approval gate.
-    action: >
-      Draft per-module catalog_tagline + catalog_description in buyer voice; surface for user approval before
-      writing (Rule #20), alongside the domain-level A4 text in B1A-A4.
-    affected_modules: [275, 276, 277]
-    extra_gated_by: [B2-CATALOG-UX]
-
-  - id: B1A-A4
-    summary: domains.catalog_tagline and catalog_description empty on the METRICS-LAYER row; A4 hard fail under Rule #20
-    finding: >
-      domains.id=137 has empty catalog_tagline and empty catalog_description. A4 requires a single buyer-facing
-      tagline plus a 1-3 paragraph buyer-facing description. Rule #20 forbids agent writes without explicit
-      per-row wording approval.
-    action: Draft both fields in buyer voice (workflow + value, not analyst voice); surface drafts for user approval before writing.
-    affected_entities: [domains:METRICS-LAYER]
-    extra_gated_by: [B2-CATALOG-UX]
-
-  - id: B1A-B6
-    summary: zero intra-domain master-to-master data_object_relationships; six expected edges absent
-    finding: >
-      Query /data_object_relationships?and=(data_object_id.in.(252,253,709,710,711),related_data_object_id.in.(252,253,709,710,711))
-      returns empty. Flagship vendor schemas (Cube, dbt MetricFlow, AtScale) carry these edges as first-class
-      relationships.
-    action: >
-      Author 6 intra-domain relationship rows with relationship_verb / inverse_verb / relationship_type /
-      relationship_kind / is_required / owner_side.
-    affected_entities:
-      - "metric_definitions belongs_to dimensional_models"
-      - "metric_materializations precomputes metric_definitions"
-      - "query_lineage_records traces metric_definitions"
-      - "query_lineage_records traces dimensional_models"
-      - "metric_access_policies governs metric_definitions"
-      - "metric_access_policies governs dimensional_models"
-
-  - id: B1A-B11
-    summary: zero data_object_aliases across all 5 METRICS-LAYER masters
-    finding: >
-      Query /data_object_aliases?data_object_id=in.(252,253,709,710,711) returns empty. Flagship vendors use
-      sharply different terminology the architect view cannot render. metric_definitions (Measure / Metric / KPI /
-      Calculation), dimensional_models (Cube / Semantic Model / Logical Data Model / Universe / Explore),
-      metric_materializations (Pre-Aggregation / Aggregate / Materialized View / Cache), query_lineage_records
-      (Query Log / Audit Record / Query History), metric_access_policies (Row-Level Security Policy /
-      Cell-Level Policy / Access Grant / Data Permission).
-    action: Author 18 to 25 alias rows; alias_type per the catalog enum.
-    affected_masters:
-      - {data_object_id: 252, name: metric_definitions, target_module_id: 275, workflow: definition}
-      - {data_object_id: 253, name: dimensional_models, target_module_id: 275, workflow: model-publication}
-      - {data_object_id: 709, name: metric_materializations, target_module_id: 276, workflow: materialization-refresh}
-      - {data_object_id: 710, name: query_lineage_records, target_module_id: 276, workflow: lineage-capture}
-      - {data_object_id: 711, name: metric_access_policies, target_module_id: 277, workflow: policy-lifecycle}
-    vendor_evidence: [Cube Cloud, AtScale, dbt Semantic Layer, Lightdash, GoodData.CN, Honeydew, Looker]
-
-  - id: B1A-H1
-    summary: 2 handoffs carry false-positive discovery_substring tags; 2 carry zero tags
-    finding: >
-      Handoffs 219 and 220 carry discovery_substring rows pointing at process 505 Establish baseline metrics
-      (false positive on the word "metric"). Handoffs 693 and 695 carry zero tags. 218, 692, 694, 696 carry
-      agent_curated rows.
-    action: >
-      For 219, author agent_curated row matching handoff 218's process 277 Manage business information.
-      For 220, surface as B2-DCG-INBOUND-TAG (Rule #1 forbids record_status flip without explicit user instruction).
-      For 693 (metric_materialization.refreshed) and 695 (metric_access_policy.changed), both are Discover Pass 3
-      candidates (no clean PCF for cache refresh signal or policy change broadcast).
-    affected_handoffs:
-      - {handoff_id: 219, direction: outbound, source_domain: METRICS-LAYER, target_domain: DATA-AI-PLAT, trigger_event: metric.certified, payload: metric_definitions, null_field: agent_curated_tag}
-      - {handoff_id: 220, direction: inbound, source_domain: DCG, target_domain: METRICS-LAYER, trigger_event: metric.deprecated, payload: metric_definitions, null_field: agent_curated_tag}
-      - {handoff_id: 693, direction: outbound, source_domain: METRICS-LAYER, target_domain: DATA-AI-PLAT, trigger_event: metric_materialization.refreshed, payload: metric_materializations, null_field: agent_curated_tag}
-      - {handoff_id: 695, direction: outbound, source_domain: METRICS-LAYER, target_domain: BI, trigger_event: metric_access_policy.changed, payload: metric_access_policies, null_field: agent_curated_tag}
+    blocked_by:
+      - {type: user_decision, scope: domain_module_data_objects, trigger: "exact embedded_master/consumer shell set must be confirmed against current emitter behavior before writing; design addition, not a deterministic derivation"}
 
 b1b:
   - id: B1B-B8
@@ -212,17 +70,18 @@ b2:
       - {data_object_id: 711, name: metric_access_policies, target_module_id: 277, workflow: policy-lifecycle}
 
   - id: B2-CATALOG-UX
-    summary: A4 catalog_tagline and catalog_description wording for the METRICS-LAYER domain row plus the 3 new modules (Rule #20)
+    summary: A4 catalog_tagline and catalog_description were WRITTEN on the domain row and 3 modules per revised Rule #20; user reviews in-record
     question: >
-      Approve wording for the A4 catalog_tagline + catalog_description on domains.id=137 and per-module catalog text
-      on modules 275 / 276 / 277? Recommended domain tagline (carry from 2026-05-30 B2-3): "Define your business
-      metrics once and serve them to every dashboard, agent, and app." Recommended domain description is 3 paragraphs
-      (problem of metric drift, the metrics-layer surface, buyer value).
+      The buyer-voice catalog_tagline + catalog_description were written straight into the empty fields on
+      domains.id=137 and modules 275 / 276 / 277 (revised Rule #20; record_status=new carries the review signal).
+      Review the written copy in the catalog UI. Domain tagline: "Define your business metrics once and serve them
+      to every dashboard, agent, and app." Edit any wording in-record, or approve as is. Overwrite by the agent is
+      now forbidden without explicit per-row instruction.
     options:
-      - Approve the recommended draft as is
-      - Approve with edits (user supplies revised wording)
-      - Defer indefinitely (A4 / M8 stay failing)
-    why: Rule #20 forbids the agent writing catalog_tagline or catalog_description without explicit per-row user approval; once a value exists, never overwrite without per-row approval.
+      - Approve the written copy as is (mark records reviewed)
+      - Edit specific rows in the catalog UI
+      - Instruct the agent to rewrite a specific row with supplied wording
+    why: Under revised Rule #20 the agent writes empty catalog UX fields directly and the user reviews in-record; once a value is non-empty it is overwrite-protected.
     affected_entities: [domains:METRICS-LAYER]
     affected_modules: [275, 276, 277]
 

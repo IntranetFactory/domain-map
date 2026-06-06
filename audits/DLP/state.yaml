@@ -1,18 +1,21 @@
 schema_version: 2
 domain: DLP
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-05"
+
+# next_action_by rationale: the 2026-06-05 b1a execution resolved every
+# agent-solvable item that was not gated on a user decision (per-module skills,
+# outbound handoff module-FK backfill, catalog UX copy, intra-domain B6 edges,
+# outbound B8 cross-domain edges). The b1a items that remain are ALL blocked on
+# a b2 user_decision (B2-S3 / B2-S4 / B2-S5) or on an upstream DMDO load (the
+# inbound half of B1A-S11). None can move without user input, so the ball is
+# with the user (answer B2-S3/S4/S5), not the agent.
 
 b1a:
-  - id: B1A-MOD-BUILT
-    summary: "DLP modularized 2026-06-02; 2 full modules now live (231 POLICY-CONTROL, 232 ENFORCEMENT-RUNTIME). No-op marker; drop next pass."
-    finding: "M1 cured. domain_modules 231 (DLP-POLICY-CONTROL) and 232 (DLP-ENFORCEMENT-RUNTIME), both module_kind=full. 8 domain_module_capabilities (3 on 231, 5 on 232; all 8 caps placed). 8 domain_module_data_objects (6 master + 1 contributor data_classifications + 1 consumer employees). Each master mastered exactly once in-domain and catalog-wide. Verified live."
-    action: "No further action; drop from state.yaml next pass if no regression."
-
   - id: B1A-S6-B12-LIFECYCLE-STATES
     summary: "B12 hard fail; 0 data_object_lifecycle_states for any DLP master. Module-id realization column now resolvable (231/232 exist)."
-    finding: "Per Rule #12 every workflow-bearing master needs a state machine; workflow-gate permissions materialize from gated states. Expected machines: dlp_incidents (detected -> triaged -> investigated -> remediated -> closed) realized on 232; dlp_policies (draft -> in_review -> approved -> active -> retired) realized on 231; dlp_quarantine_items (held -> reviewed -> released | destroyed) realized on 232; dlp_exceptions (requested -> approved | denied -> active -> expired) realized on 231. data_exfiltration_attempts and dlp_user_activity_logs may qualify for the config-shape exemption (B2-S3)."
+    finding: "Per Rule #12 every workflow-bearing master needs a state machine; workflow-gate permissions materialize from gated states. Expected machines: dlp_incidents (detected -> triaged -> investigated -> remediated -> closed) realized on 232; dlp_policies (draft -> in_review -> approved -> active -> retired) realized on 231; dlp_quarantine_items (held -> reviewed -> released | destroyed) realized on 232; dlp_exceptions (requested -> approved | denied -> active -> expired) realized on 231. data_exfiltration_attempts and dlp_user_activity_logs may qualify for the config-shape exemption (B2-S3). NOTE: all 6 DLP masters are still entity_type=unclassified (B13) - classify entity_type before/with the lifecycle pass."
     action: "Draft state machines per master; set domain_module_id to 231 (policy masters) or 232 (runtime masters) on each gated state. Workflow-gate permissions then materialize per the per-module derivation rule. Gated on B2-S3 for the 2 transient masters."
     blocked_by:
       - {type: user_decision, ref: B2-S3}
@@ -24,31 +27,18 @@ b1a:
       - {data_object_id: 332, name: data_exfiltration_attempts, target_module_id: 232, workflow: "transient event, possible config-shape exemption"}
       - {data_object_id: 335, name: dlp_user_activity_logs, target_module_id: 232, workflow: "append-only audit, possible config-shape exemption"}
 
-  - id: B1A-S9-S10-PER-MODULE-SKILLS
-    summary: "Rule #17 -> F2/F3: legacy domain-level skill 50 must be retired for one system skill per module (231, 232), each with skill_tools."
-    finding: "Skill 50 (dlp-system, domain_module_id=NULL) is the legacy domain-level system skill with 6 query tools (412-417). Now that modules 231/232 exist, F1 mandates per-module system skills. F3/F4/F7: each module's skill needs >=1 skill_tools with a required+optional mix; today's surface is 100% query."
-    action: "Author dlp_policy_control_agent (skill_type=system, domain_module_id=231) and dlp_enforcement_runtime_agent (skill_type=system, domain_module_id=232). Split the 6 query tools by data_object_id across them (331/334 -> 231; 330/332/333/335 -> 232). Add >=1 mutate per master (update_dlp_incident_status, approve_dlp_exception, release_dlp_quarantine_item), >=1 side_effect per module (prefer notify_person / notify_team per Rule #17), >=1 inbound (receive_dlp_alert_webhook). F4 invariant: query/mutate set data_object_id; side_effect/compute NULL; inbound optional. Then DELETE skill 50 and its 6 skill_tools rows."
-    affected_modules: [231, 232]
-
   - id: B1A-S11-HANDOFF-MODULE-FKS
-    summary: "B10b; handoff module FKs now backfillable (8 outbound + 10 inbound) since modules 231/232 exist."
-    finding: "8 outbound handoffs had source_domain_module_id=NULL; 10 inbound had target_domain_module_id=NULL because DLP had 0 modules. Both now resolvable."
-    action: "Deterministic backfill: source_domain_module_id (outbound) = module mastering trigger_events.data_object_id (incidents/exfiltration/quarantine/activity -> 232; policy/exception -> 231); target_domain_module_id (inbound) = module holding handoff payload with strongest role. Most inbound payloads (data_assets, content_documents, chat_messages, etc.) land where DLP scans them; map to 231 (policy authoring trigger) or 232 (runtime ingest) per payload semantics."
-    affected_modules: [231, 232]
+    summary: "B10b INBOUND remainder only. Outbound 8 backfilled 2026-06-05 (source_domain_module_id=232). 10 inbound still NULL target_domain_module_id - no DLP-held payload (B10b no-candidate sub-case 2)."
+    finding: "Outbound side fully resolved 2026-06-05: all 8 outbound handoffs (280, 281, 282, 283, 284, 843, 844, 845) now carry source_domain_module_id=232 (every outbound event fires on a 232-mastered object). The 10 inbound handoffs (260, 264, 690, 702, 709, 730, 821, 822, 832, 847) cannot be deterministically backfilled: DLP has ZERO domain_module_data_objects rows on any of their payloads (data_assets, data_access_policies, bi_dashboards, nocode_views, data_domains, sink_connectors, content_documents, document_classifications, chat_messages, data_warehouses), so the strongest-role rule yields no candidate. The b1a 'map to 231/232 per payload semantics' is judgment beyond a deterministic derivation."
+    action: "Upstream fix (not a blind module-FK guess): decide which DLP module ingests each external payload and load a consumer DMDO row on that module (231 for classification/policy-authoring triggers; 232 for runtime egress/scan triggers), THEN re-run the deterministic B10b backfill so target_domain_module_id resolves. Needs a per-payload routing decision (user-shape product call), so deferred."
 
   - id: B1A-S14-E-BAND-ROLES
-    summary: "E1/E2/E4; 0 roles touching DLP modules, 0 role_modules, 0 role_permissions. Now authorable since 2 modules exist."
-    finding: "E1 mandates >=3 distinct roles touching both modules. Likely DLP-ADMIN (policy authoring + approval, spans 231 + 232), DLP-INCIDENT-RESPONDER (incident triage + remediation, 232 primary, 231 secondary), SECURITY-ANALYST (cross-cutting investigator, secondary on both)."
-    action: "Author roles + role_modules (231, 232) + role_permissions; function-scoped naming; explicit interaction_level per E3. Business-function ownership still gated on B2-S4."
+    summary: "E1/E2/E4; 0 roles touching DLP modules, 0 role_modules, 0 role_permissions. Authorable since 2 modules exist."
+    finding: "E1 mandates >=3 distinct roles touching both modules. Likely DLP-ADMIN (policy authoring + approval, spans 231 + 232), DLP-INCIDENT-RESPONDER (incident triage + remediation, 232 primary, 231 secondary), SECURITY-ANALYST (cross-cutting investigator, secondary on both). Per Plan 3 the persona bundle is DERIVED (domain_roles reach + process_raci), not a stored role_permissions list."
+    action: "Author domain_roles (function-scoped naming) + role_modules (231, 232) + process_raci; explicit interaction_level per E3. Business-function ownership still gated on B2-S4."
     affected_modules: [231, 232]
     blocked_by:
       - {type: user_decision, ref: B2-S4}
-
-  - id: B1A-S17-A4-M8-CATALOG-UX
-    summary: "A4/M8: domains.catalog_tagline + catalog_description empty on DLP; both module-grain taglines/descriptions empty on 231/232 (Rule #20)."
-    finding: "GET /domains?id=eq.139 returns catalog_tagline='' and catalog_description=''. Modules 231/232 carry a description but no buyer-facing catalog tagline/description. Rule #20 requires non-empty buyer-voice copy (workflow + value, not analyst voice)."
-    action: "Draft domain + 2 module catalog tagline/description per Rule #20 voice rule; surface drafts to user for review BEFORE writing. Once a non-empty value exists, never overwrite without explicit per-row user approval."
-    affected_modules: [231, 232]
 
   - id: B1A-S16-APQC-MISSING-7
     summary: "7 of 18 cross-domain handoffs touching DLP still carry no handoff_processes tag."
@@ -64,23 +54,6 @@ b1a:
       - {handoff_id: 847, direction: in, source_domain: DSPM, target_domain: DLP, trigger_event: data_warehouse.classified, payload: data_warehouses}
     blocked_by:
       - {type: user_decision, ref: B2-S5}
-
-  - id: B1A-S4-B6-INTRA-MASTER-RELS
-    summary: "B6 hard fail; 0 intra-domain data_object_relationships among the 6 DLP masters."
-    finding: "Live query returns only cross-domain rows (ECM inbound + 3 user-edges + WSC chat_messages). No intra-domain master-to-master edges. Workflow demands: data_exfiltration_attempt -> dlp_incident, dlp_policy -> dlp_incident, dlp_incident -> dlp_quarantine_item, dlp_exception -> dlp_policy, dlp_user_activity_log records dlp_incident."
-    action: "Draft 5-6 data_object_relationships rows with verb + inverse_verb + relationship_type + relationship_kind + is_required + owner_side; surface mermaid block before insert per Phase B contract. Independent of the build."
-    affected_masters:
-      - {data_object_id: 330, name: dlp_incidents, target_module_id: 232, workflow: "produces dlp_quarantine_items; recorded in dlp_user_activity_logs; triggered by dlp_policies and data_exfiltration_attempts"}
-      - {data_object_id: 331, name: dlp_policies, target_module_id: 231, workflow: "evaluates_against dlp_incidents; overridden by dlp_exceptions"}
-      - {data_object_id: 332, name: data_exfiltration_attempts, target_module_id: 232, workflow: "triggers dlp_incident"}
-      - {data_object_id: 333, name: dlp_quarantine_items, target_module_id: 232, workflow: "produced by dlp_incident"}
-      - {data_object_id: 334, name: dlp_exceptions, target_module_id: 231, workflow: "overrides dlp_policies"}
-      - {data_object_id: 335, name: dlp_user_activity_logs, target_module_id: 232, workflow: "records dlp_incidents"}
-
-  - id: B1A-S15-B8-OUTBOUND-CROSS-RELS
-    summary: "B8 hard fail on outbound side; 8 outbound handoffs but 0 outbound data_object_relationships from DLP masters to other-domain masters."
-    finding: "Outbound handoffs imply edges DLP-master -> partner-master (dlp_incidents -> service_incidents for SECOPS/ITSM, dlp_incidents -> data_subject_requests for PRIV-MGMT, dlp_incidents -> IGA-side entity, dlp_user_activity_logs -> SoD review). None exist."
-    action: "Draft 4-5 cross-domain data_object_relationships rows (verbs e.g. informs_security_incident, triggers_privacy_review, escalates_to_iga_review, feeds_sod_review)."
 
 b1b:
   - id: B1B-S2-C1-BFD

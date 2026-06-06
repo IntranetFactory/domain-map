@@ -235,6 +235,92 @@ H1 stays in the audit transcript but is no longer a Bucket 1 fix item, 8 of 10 t
 ### Bucket 2, Surface-for-user, unchanged from prior audit
 
 - **B2-S1**, Rule #15 notes-pollution on 8 `domain_data_objects` rows (`"Geographic field boundary records..."` etc.). Pending user call on auto-population vs approval at original load time. PATCH to empty string if auto-written.
+
+## 2026-06-06 - b1a execution
+
+Executed the agent-solvable `b1a` band against the live domain_map module (tenant adenin, domain_map id 1001), FMIS domain 154. All inserts omitted `record_status` (DB default `new`); no `notes` column written anywhere; no em-dashes; American English.
+
+### B1A-B10B-BACKFILL - DONE
+
+PATCHed `source_domain_module_id` on all 10 outbound FMIS handoffs (deterministic: module that masters the trigger_event's data_object). Prior value on every row was NULL.
+
+| handoff_id | trigger_event | event data_object | source_domain_module_id (NULL -> set) |
+|---|---|---|---|
+| 349 | harvest_record.created | harvest_records (490) | NULL -> 253 |
+| 350 | harvest_record.created | harvest_records (490) | NULL -> 253 |
+| 351 | field_application.recorded | field_applications (489) | NULL -> 253 |
+| 352 | field_application.recorded | field_applications (489) | NULL -> 253 |
+| 965 | planting_record.completed | planting_records (488) | NULL -> 253 |
+| 966 | variable_rate_prescription.published | variable_rate_prescriptions (492) | NULL -> 254 |
+| 967 | ag_input_inventory.low | ag_input_inventory (491) | NULL -> 255 |
+| 968 | machinery_telemetry_record.captured | machinery_telemetry_records (493) | NULL -> 254 |
+| 969 | farm_field.boundary_updated | farm_fields (486) | NULL -> 252 |
+| 970 | crop_plan.committed | crop_plans (487) | NULL -> 252 |
+
+Verification: `/handoffs?source_domain_id=eq.154&source_domain_module_id=is.null` returns 0 rows. `target_domain_module_id` left as-is (target-side B10b for the receiving domains; out of scope).
+
+### B1A-S7 - DONE
+
+Inserted 15 intra-domain `data_object_relationships` rows among the 8 FMIS masters (rows 2041-2055). Every row normalized parent-first: `relationship_type=one_to_many`, `relationship_kind=reference`, `owner_side=source` (parent), `is_required=true`, non-empty `inverse_verb`. The action's "11 expected edges" expands to 15 because three lines each name three children (farm_fields scopes field_applications / planting_records / harvest_records; machinery_telemetry_records documents planting_records / field_applications / harvest_records). N:1 edges in the action (vrp targets farm_fields, field_applications/planting_records consumes_from ag_input_inventory, telemetry scoped_to farm_fields) were authored parent-first per B6b m5.
+
+| id | edge |
+|---|---|
+| 2041 | farm_fields contains crop_plans |
+| 2042 | crop_plans produces planting_records |
+| 2043 | crop_plans drives field_applications |
+| 2044 | crop_plans produces harvest_records |
+| 2045 | farm_fields scopes field_applications |
+| 2046 | farm_fields scopes planting_records |
+| 2047 | farm_fields scopes harvest_records |
+| 2048 | farm_fields is targeted by variable_rate_prescriptions |
+| 2049 | variable_rate_prescriptions drives field_applications |
+| 2050 | ag_input_inventory supplies field_applications |
+| 2051 | ag_input_inventory supplies planting_records |
+| 2052 | farm_fields scopes machinery_telemetry_records |
+| 2053 | machinery_telemetry_records documents planting_records |
+| 2054 | machinery_telemetry_records documents field_applications |
+| 2055 | machinery_telemetry_records documents harvest_records |
+
+Pre-existing user-edge rows (1567-1575, B7) and the inbound FDS row (1106) were left untouched. No master-master edge pre-existed, so 0 skipped.
+
+### B1A-SYSTEM-SKILLS - DONE
+
+Authored one `skill_type='system'` skill per module (Rule #17), each anchored via `domain_module_id`, each with >=1 `skill_tools` row:
+
+| skill id | skill_name | module |
+|---|---|---|
+| 324 | fmis_field_crop_planning_agent | 252 |
+| 325 | fmis_field_ops_records_agent | 253 |
+| 326 | fmis_precision_ag_agent | 254 |
+| 327 | fmis_input_inventory_analytics_agent | 255 |
+
+Created 16 new catalog-wide `mutate` tools (ids 1670-1685), `coverage_tier=platform`, one `create_<stem>` + one `update_<stem>` per master, stems mirroring the existing query tool names (`fields`, `crop_plans`, `planting_records`, `field_applications`, `harvest_records`, `ag_input_inventory`, `variable_rate_prescriptions`, `machinery_telemetry_records`). Confirmed catalog-wide before insert that none of the 16 names existed.
+
+Bound 24 `skill_tools` rows: each module skill gets query + create + update for each master it owns (252: farm_fields, crop_plans; 253: planting_records, field_applications, harvest_records; 254: variable_rate_prescriptions, machinery_telemetry_records; 255: ag_input_inventory). The 8 pre-existing platform query tools (477-484) were rebound onto the new module skills via these rows.
+
+DELETE (snapshot first, reversible):
+- `skills.id=61` (`fmis-system`, `skill_type=system`, `domain_id=154`, `domain_module_id=null`). Prior row snapshot: `{"id":61,"skill_name":"fmis-system","skill_type":"system","domain_id":154,"domain_module_id":null,"description":"System skill for Farm Management Information System ... runtime workflows over the domain's master data, derived from masters + cross-domain handoffs."}`
+- `skill_tools` where `skill_id=61` (8 rows, ids 555-562, all `requirement_level=required`): (555,tool 477),(556,478),(557,479),(558,480),(559,481),(560,482),(561,483),(562,484).
+
+Deletion guarded: ran only after confirming all 4 module skills exist and each has >=1 skill_tool. The 8 query tools themselves (477-484) were NOT deleted; only the legacy skill_tools links to skill 61 were removed, and the tools are now linked to the new module skills.
+
+### B1A-CATALOG-UX - DONE
+
+Per revised Rule #20, wrote buyer-voice `catalog_tagline` + `catalog_description` directly into the EMPTY fields (empty-guard applied per field; all 5 rows had both fields empty). Buyer voice (workflow + value), no vendor/product names, no em-dashes. PATCHed: domain 154, modules 252, 253, 254, 255. `record_status` on these rows unchanged (PATCH on existing rows); it carries the review signal.
+
+### B1A-S4 - SKIPPED (user-approval gate in its own action)
+
+Aliases NOT written. The item's `action` explicitly requires "Draft per-master alias rows (alias_name + alias_type), surface to user for approval per Rule #1, then load." The exact alias_name + alias_type tuples are not drafted in the finding, and Rule #1 master-data approval is a prerequisite the action embeds. Authoring and loading AI-drafted aliases without that approval would violate the action and Rule #1, so this is left open for user review (per task SKIP rules 7/12). `/data_object_aliases` for masters 486-493 remains 0 rows.
+
+### Post-execution verification
+
+- handoffs: 0/10 outbound with NULL source_domain_module_id (was 10/10).
+- data_object_relationships (master-master, intra-FMIS): 15 (was 0).
+- skills on domain 154: 4, all module-anchored (was 1 domain-level legacy).
+- skill_tools on skills 324-327: 24 total (each skill >=1).
+- tools (mutate, FMIS masters): 16 new.
+- catalog UX: domain + 4 modules tagline + description populated (was empty).
+- aliases: 0 (B1A-S4 skipped).
 - **B2-S2**, Rule #15 notes on handoffs 349 and 350 (`"Cross-vendor stack..."`). Substantive editorial commentary; may survive Rule #15 if user approved wording.
 - **B2-S3**, Rule #18 forbidden-zone prose in `domains.description` and `domains.business_logic` (both reference "John Deere Operations Center API"). Needs user-approved rewrite stripping the vendor reference.
 - **B2-S4**, pattern flag re-evaluation per Rule #12. Candidates: `field_applications.has_submit_lock=true`, `harvest_records.has_submit_lock=true`, `crop_plans.has_single_approver=true`. Per-flag yes/no from user.

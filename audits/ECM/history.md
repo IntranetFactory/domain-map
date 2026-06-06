@@ -550,3 +550,104 @@ invocation and aborts if a foreign master ever appears.
 
 None encountered during this pass.
 
+## 2026-06-06 - b1a execution
+
+Executed the three agent-solvable b1a items from `state.yaml` against the live `domain_map`
+module (domain 91, ECM). Loader: `.tmp_deploy/ecm_b1a_2026_06_06.ts` (idempotent; re-run prints
+zero new writes). All inserts omit `record_status` (DB default `new`); no `notes` column written
+on any row; no em-dashes; American English.
+
+### B1A-S9 - trigger_events.event_category backfill (DONE)
+
+PATCHed 6 `trigger_events` rows from `event_category=""` to `"state_change"`. Prior value on all
+6 was the empty string `""` (reversible). Event 900 was already `state_change` from a prior pass
+and was not touched.
+
+| id | event_name | prior event_category | new event_category |
+| --- | --- | --- | --- |
+| 895 | content_document.uploaded | "" | state_change |
+| 896 | document.version_published | "" | state_change |
+| 897 | document.classified | "" | state_change |
+| 898 | content_document.checked_out | "" | state_change |
+| 899 | document.retention_expired | "" | state_change |
+| 901 | document_folder.permissions_changed | "" | state_change |
+
+Verification: `/trigger_events?id=in.(895,896,897,898,899,901)&event_category=neq.state_change`
+returns 0 rows.
+
+### B1A-F2-SYSTEM-SKILLS - Phase S system skills + tools + skill_tools (DONE)
+
+Authored one `skill_type='system'` skill per ECM module (Rule #17), each with `domain_id=91` and
+`domain_module_id` set, plus the supporting mutate tools and skill_tools. No prior values (all
+inserts; nothing PATCHed/DELETEd).
+
+INSERTED `tools` (7 new, `operation_kind='mutate'`, `coverage_tier='platform'`, dedup by
+`tool_name`; no collision found pre-insert):
+
+| tool id | tool_name | data_object_id |
+| --- | --- | --- |
+| 1788 | update_content_document | 429 |
+| 1789 | classify_content_document | 432 |
+| 1790 | publish_document_version | 430 |
+| 1791 | update_records_retention_policy | 433 |
+| 1792 | dispose_content_document | 429 |
+| 1793 | route_content_document | 429 |
+| 1794 | approve_content_document | 429 |
+
+INSERTED `skills` (3 new system skills):
+
+| skill id | skill_name | domain_module_id | masters / consumes |
+| --- | --- | --- | --- |
+| 389 | ecm_repository_agent | 242 ECM-REPOSITORY | masters 429,430,431,432 |
+| 390 | ecm_records_gov_agent | 243 ECM-RECORDS-GOV | masters 433; consumes 429 |
+| 391 | ecm_workflow_agent | 244 ECM-WORKFLOW | consumes 429 (req), 430 (opt) |
+
+INSERTED `skill_tools` (16 new rows; reused the 5 existing platform query tools 436-440 and the
+existing `notify_person` abstraction tool 913 rather than minting duplicates):
+
+- ecm_repository_agent (389): query_documents (req), query_document_versions (req),
+  query_document_folders (req), query_document_classifications (req), update_content_document (req),
+  classify_content_document (req), publish_document_version (req). [7 tools]
+- ecm_records_gov_agent (390): query_records_retention_policies (req), query_documents (req),
+  update_records_retention_policy (req), dispose_content_document (req). [4 tools]
+- ecm_workflow_agent (391): query_documents (req), query_document_versions (opt),
+  route_content_document (req), approve_content_document (req), notify_person (req). [5 tools]
+
+Channel-vs-capability: ECM-WORKFLOW links the `notify_person` abstraction (channel rule default),
+not a channel primitive. F4 invariant (operation_kind <-> data_object_id) verified clean across all
+16 linked tools (0 violations). Each module skill clears the F3 >=3-required floor with >=1 query
+and >=1 mutate.
+
+Legacy skill `ecm-system` (id 54) was left in place (its retirement is B1B-F1, blocked behind this
+item and now unblocked for a future pass; not in this b1a scope).
+
+### B1A-M8-MODULE-UX - module catalog UX backfill (DONE)
+
+PATCHed `catalog_tagline` + `catalog_description` on the 3 modules per revised Rule #20. Empty-guard
+applied per field: all 6 fields were empty (`""`) before the write, so all 6 were written; no
+non-empty value was overwritten. Buyer-voice (workflow + value), no vendor/product names, no
+em-dashes. Prior value on every field: `""` (reversible). The rows' `record_status` carries the
+review signal; the drafts are NOT parked here.
+
+- 242 ECM-REPOSITORY tagline: "Capture every document, find it instantly, and keep one trusted
+  version under control."
+- 243 ECM-RECORDS-GOV tagline: "Keep what you must, dispose of what you can, and prove it whenever
+  you are asked."
+- 244 ECM-WORKFLOW tagline: "Route documents to the right people and capture every approval on the
+  record."
+
+(Full `catalog_description` text lives on the live rows; see
+`/domain_modules?id=in.(242,243,244)`.)
+
+Note: the domain-level catalog UX (A4 / B2-CATALOG-UX) remains a user decision and is NOT covered
+by this b1a item; only the 3 modules were in M8 scope.
+
+### Skipped / not executed
+
+- No b1a item was skipped or blocked. All three resolved fully.
+- b1b and b2 items remain untouched (out of scope for this pass).
+
+### JWT errors (b1a pass)
+
+None encountered during this pass.
+

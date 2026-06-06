@@ -1,55 +1,16 @@
 schema_version: 2
 domain: HCMS
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
-b1a:
-  - id: B1A-SKILL-SPLIT
-    summary: "Reparent or split orphan system skill 67 (hcms-system) across the 3 new HCMS modules per Rule #17 (F2)."
-    finding: >
-      skills.id=67 (skill_type='system', domain_module_id=NULL) carries 6 query skill_tools
-      (query_content_types 506, query_content_entries 507, query_content_releases 508,
-      query_editorial_workflows 509, query_content_locales 510, query_content_environments 511,
-      all operation_kind='query', requirement_level='required'). Rule #17 requires exactly one
-      system skill per domain_modules row. As of 2026-06-02 HCMS has 3 modules
-      (HCMS-MODELING 260, HCMS-AUTHORING 261, HCMS-DELIVERY 262) so a single orphan skill now
-      under-fills: F2 needs one system skill per module. The 6 query tools partition cleanly by
-      the module that masters each entity.
-    action: >
-      DELETE skills.id=67 and INSERT 3 system skills, one per module (260, 261, 262), then
-      repartition the 6 query skill_tools by mastering module: content_types 506 + content_environments 511
-      -> HCMS-MODELING 260; content_entries 507 + editorial_workflows 509 + content_locales 510
-      -> HCMS-AUTHORING 261; content_releases 508 -> HCMS-DELIVERY 262. (Alternatively PATCH 67 onto
-      one module and add 2 more system skills.) Gate B1B-S1 is now closed.
-    affected_modules: [260, 261, 262]
-    affected_entities: [hcms-system]
-  - id: B1A-MUTATE-TOOLS
-    summary: "Add mutate primitives to the per-module HCMS system skills (Rule #17 F3 / F5); current 6 tools are all query."
-    finding: >
-      The 6 existing skill_tools on skill 67 are all query primitives. Module deployability (F3/F5)
-      needs mutate primitives matching the lifecycle transitions implied by existing HCMS events:
-      create_content_entry, publish_content_entry, schedule_content_entry, unpublish_content_entry,
-      create_content_release, schedule_content_release, add_locale, request_review,
-      promote_environment, deprecate_content_type. Rule #17 requires data_object_id populated on
-      operation_kind='mutate'. F5 Semantius score is uncomputable until mutates land.
-    action: >
-      INSERT ~10 tools rows + matching skill_tools rows under the per-module system skills from
-      B1A-SKILL-SPLIT, each mutate carrying data_object_id of its target master. Sequenced after
-      B1A-SKILL-SPLIT (needs the per-module skill rows to attach to).
-    affected_modules: [260, 261, 262]
-    extra_sequencing: "after B1A-SKILL-SPLIT"
-  - id: B1A-CATALOG-UX
-    summary: "Author catalog UX (catalog_tagline / catalog_description) on the 3 new HCMS modules (M8 / A4)."
-    finding: >
-      Modules 260 (HCMS-MODELING), 261 (HCMS-AUTHORING), 262 (HCMS-DELIVERY) were inserted
-      2026-06-02 with catalog_tagline and catalog_description omitted per the modularization
-      insert shape. M8 / A4 want a short buyer-facing tagline plus description per module for the
-      catalog surface. No vendor/product names (R18); no em-dashes.
-    action: >
-      PATCH each of /domain_modules?id=eq.260, eq.261, eq.262 with a catalog_tagline (about 60 chars)
-      and catalog_description (2-3 sentences, American English).
-    affected_modules: [260, 261, 262]
+# b1a fully resolved 2026-06-06 (see history.md "2026-06-06 - b1a execution"):
+#   B1A-SKILL-SPLIT  - DONE: deleted orphan skill 67; created 3 per-module system
+#                      skills 351/352/353; re-linked 6 query tools by mastering module.
+#   B1A-MUTATE-TOOLS - DONE: created 10 mutate tools 1723-1732 (coverage_tier=platform,
+#                      data_object_id set) + 10 skill_tools; 16 skill_tools total.
+#   B1A-CATALOG-UX   - DONE: wrote catalog_tagline + catalog_description on 260/261/262.
+b1a: []
 
 b1b:
   - id: B1B-S5

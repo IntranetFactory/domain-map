@@ -2,51 +2,13 @@ schema_version: 2
 domain: REMOTE-ACCESS
 status: feedback_needed
 next_action_by: agent
-last_audit: "2026-06-02"
+last_audit: "2026-06-06"
 
+# 2026-06-06 b1a execution: B1A-SYSTEM-SKILLS, B1A-CATALOG-UX, B1A-B10b, and
+# B1A-B9-EVENT-CATEGORY (no-op, already correct live) were FULLY RESOLVED and removed.
+# B1A-B6 and B1A-B11 remain: both gate their INSERT on a user pick (cardinality /
+# exact alias strings) that is beyond the action text, so they were skipped this run.
 b1a:
-  - id: B1A-SYSTEM-SKILLS
-    summary: "Author 1 system skill per new module (294, 295) per Rule #17; retire legacy domain-level skill 100 after."
-    finding: >
-      The 2026-06-02 modularization created modules REMOTE-ACCESS-SESSION (294) and
-      REMOTE-ACCESS-RECORDING-AUDIT (295) but no per-module system skills (F2 still
-      fails: 1-system-skill-per-module unmet). The only system skill on REMOTE-ACCESS
-      is the legacy domain-level skill id=100 (remote-access-system, domain_module_id=null)
-      with 4 skill_tools rows (791 query_remote_sessions, 792 query_session_recordings,
-      793 send_email, 794 post_chat_message). Per Rule #17 each module needs its own
-      system skill scoped to that module's masters; per the Channel-vs-capability rule
-      the channel primitives send_email + post_chat_message (F3/F7) should be replaced
-      with notify_person (or notify_team for broadcast).
-    action: >
-      Author 1 system skill for module 294 (scoped to remote_sessions 238, reading
-      rmm_agents 223 + service_incidents 47) and 1 for module 295 (scoped to
-      session_recordings 239), each with notify_person in place of raw channel tools.
-      After both per-module skills exist, DELETE legacy skill 100 + its 4 skill_tools
-      (791-794). Supersedes B1B-F-RETIRE now that modules exist.
-    affected_modules: [294, 295]
-    affected_entities: ["skills.id=100", "skill_tools.id=791-794"]
-    extra_rule: 17
-    extra_replace_channel_tools_with: notify_person
-  - id: B1A-CATALOG-UX
-    summary: "Draft + (on approval) PATCH catalog_tagline + catalog_description on domain 132 and both modules 294, 295 (M8 / A4, Rule #20)."
-    finding: >
-      A4 / M8 fail. domains row 132 (REMOTE-ACCESS) has empty catalog_tagline and empty
-      catalog_description. The 2 new modules REMOTE-ACCESS-SESSION (294) and
-      REMOTE-ACCESS-RECORDING-AUDIT (295) were authored with catalog_tagline /
-      catalog_description omitted (per insert rule), so both lack buyer-voice UX copy.
-      Rule #20 forbids auto-writing catalog UX copy; the agent must draft and surface
-      for user wording approval before any PATCH.
-    action: >
-      Draft a one-sentence buyer-voice catalog_tagline + 1-3 paragraph catalog_description
-      for: (1) domain 132 anchored to attended + unattended remote control, recording,
-      file transfer, privilege elevation, NAT-traversal relay; (2) module 294 anchored to
-      live remote-session control; (3) module 295 anchored to session recording + audit +
-      retention. Surface drafts; on approval PATCH /domains?id=eq.132,
-      /domain_modules?id=eq.294, /domain_modules?id=eq.295.
-    affected_modules: [294, 295]
-    affected_entities: [domains]
-    extra_target_domain_row_id: 132
-    extra_rule: 20
   - id: B1A-B6
     summary: "Author intra-domain relationship remote_sessions produces session_recordings."
     finding: >
@@ -55,12 +17,15 @@ b1a:
       produces / produced_during is absent. Cardinality (1:0..1 single recording per
       session, or 1:N segmented recordings per session) is a user pick. Both masters now
       live in separate modules (238 in 294, 239 in 295), so this is a cross-module
-      intra-domain edge.
+      intra-domain edge. 2026-06-06: confirmed still absent; the only edges on 238/239
+      are the users (748) actor edges 1613-1616.
     action: >
       Surface the cardinality question. On user pick, INSERT one data_object_relationships
       row: data_object_id=238, related_data_object_id=239, relationship_verb='produces',
       inverse_verb='produced_during', relationship_type=<pick>, relationship_kind='reference',
       is_required=false, owner_side='source'.
+    blocked_by:
+      - {type: user_decision, reason: "cardinality pick (1:0..1 vs 1:N) needed before write; skipped 2026-06-06"}
     affected_entities: [remote_sessions, session_recordings]
     affected_modules: [294, 295]
     extra_proposed_verb: produces
@@ -73,50 +38,15 @@ b1a:
       remote_sessions -> 'support sessions' / 'attended sessions' / 'unattended sessions' /
       'remote control sessions'; session_recordings -> 'support recordings' /
       'compliance recordings' / 'audit recordings' / 'session capture'.
+      2026-06-06: confirmed still zero aliases on 238/239.
     action: >
       Surface the candidate tuple set; on user confirmation of exact strings, INSERT
       data_object_aliases rows. Per Rule #15, alias_name is commerce-shaped but tuple
       choice needs explicit per-row user approval before write.
+    blocked_by:
+      - {type: user_decision, reason: "exact alias strings need per-row user approval before write; skipped 2026-06-06"}
     affected_entities: [remote_sessions, session_recordings]
     extra_candidate_count: 8
-  - id: B1A-B10b
-    summary: "Backfill module FKs on 6 outbound + 1 inbound handoffs now that modules 294/295 exist."
-    finding: >
-      All 6 outbound handoffs (162, 163, 164, 646, 647, 648) carry NULL source_domain_module_id;
-      inbound handoff 160 (from MSP-PSA-FIELD-SVC 137) carries NULL target_domain_module_id.
-      Standard B10b own-side backfill, now unblocked: the source/target module derives from
-      which module holds the event's payload master. Events on remote_sessions (238) ->
-      module 294 (REMOTE-ACCESS-SESSION); event session.recorded on session_recordings (239)
-      -> module 295 (REMOTE-ACCESS-RECORDING-AUDIT). Handoffs 164 + 648 additionally carry
-      NULL target_domain_module_id - that side is GRC's own B10b, not ours.
-    action: >
-      PATCH source_domain_module_id: 162 -> 294, 163 -> 294, 646 -> 294, 647 -> 294,
-      648 -> 294 (remote_sessions payload), 164 -> 295 (session_recordings payload).
-      PATCH target_domain_module_id on inbound 160 -> 294 (msp_ticket.escalated lands a
-      new attended session).
-    affected_modules: [294, 295]
-    affected_handoffs:
-      - {handoff_id: 162, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: ITSM, trigger_event: support_session.completed, payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 163, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: MSP-PSA, trigger_event: msp_session.completed, payload: msp_time_entries, null_field: source_domain_module_id}
-      - {handoff_id: 164, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: GRC, trigger_event: session.recorded, payload: session_recordings, null_field: source_domain_module_id}
-      - {handoff_id: 646, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: ITSM, trigger_event: remote_session.ended, payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 647, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: MSP-PSA, trigger_event: remote_session.ended, payload: remote_sessions, null_field: source_domain_module_id}
-      - {handoff_id: 648, direction: outbound, source_domain: REMOTE-ACCESS, target_domain: GRC, trigger_event: remote_session.unauthorized_access_attempt, payload: remote_sessions, null_field: source_domain_module_id}
-      - {handoff_id: 160, direction: inbound, source_domain: MSP-PSA, target_domain: REMOTE-ACCESS, trigger_event: msp_ticket.escalated, payload: msp_tickets, null_field: target_domain_module_id}
-  - id: B1A-B9-EVENT-CATEGORY
-    summary: "PATCH empty event_category on 3 trigger_events (653, 654, 655) per Rule #13."
-    finding: >
-      3 trigger_events on REMOTE-ACCESS masters carry empty event_category (Rule #13 enum
-      violation): 653 remote_session.started, 654 remote_session.ended,
-      655 remote_session.unauthorized_access_attempt. The 4th event 113 session.recorded
-      is already 'signal' (valid). Not gated on modules; independently fixable.
-    action: >
-      PATCH 653 -> state_change, 654 -> state_change, 655 -> signal (matches the existing
-      113 signal pattern for security-signal events).
-    affected_events:
-      - {id: 653, event_name: remote_session.started, current_category: "", proposed_category: state_change}
-      - {id: 654, event_name: remote_session.ended, current_category: "", proposed_category: state_change}
-      - {id: 655, event_name: remote_session.unauthorized_access_attempt, current_category: "", proposed_category: signal}
 
 b1b:
   - id: B1B-B4

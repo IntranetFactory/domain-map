@@ -503,3 +503,134 @@ None. One transient `SERVER_CONNECTION_FAILED` (500 from the MCP endpoint) on th
 
 ### Loader
 `c:/dev/domain-map/.tmp_deploy/modularize_itom_2026-06-02.ts`
+
+## 2026-06-06 - b1a execution
+
+Executed the agent-solvable b1a items against the live `domain_map` module. Loader:
+`.tmp_deploy/fix_itom_b1a_2026-06-06.ts` (idempotent, TS + Bun, run from project root;
+verified no-op on second run). One loader resolves three items in dependency order
+(consumer DMDO first so the inbound-payload handoff FKs resolve to a module). All writes
+omit `record_status` (DB default `new`); no `notes` columns written.
+
+### B1A-CONSUMER-DMDO - DONE
+
+INSERT 8 `domain_module_data_objects` consumer rows on module 267 (ITOM-INFRA-MON), all
+`role='consumer'`, `necessity='optional'` (Rule #16-A: foreign-mastered enrichment reads;
+ITOM's core monitoring workflow runs without them; required-only-when-present per the
+necessity/is_required orthogonality). All 8 payloads are monitoring/event/infra-shaped, so
+all landed on 267 (none capacity-shaped):
+
+- service_maps (79), event_correlations (93), predictive_signals (96),
+  alert_suppression_rules (722), dc_environmental_readings (552), dc_racks (546),
+  paas_runtime_instances (466), cluster_node_pools (449).
+
+Reused existing data_objects (no new entities). Each was a foreign master with no
+catalog-wide master conflict.
+
+### B1A-SYS-SKILLS - DONE
+
+Authored one `skill_type='system'` skill per module (Rule #17 -> F2), each with its tool set
+(F3/F4 operation_kind <-> data_object_id invariant holds on every row), then retired the
+legacy domain-level skill.
+
+New `skills` rows:
+- id 294 `itom_infra_mon_agent` (module 267), 10 skill_tools.
+- id 295 `itom_capacity_plan_agent` (module 268), 4 skill_tools.
+- id 296 `itom_ops_automation_agent` (module 269), 4 skill_tools.
+
+New `tools` rows (catalog-wide dedup by tool_name immediately before create; none existed
+on ITOM masters 84/85/86/87 - the existing `acknowledge_alert`/`resolve_alert`/etc. point at
+`smp_alerts` (987), a different domain, so were NOT reused):
+- 1628 `acknowledge_monitoring_alert` (mutate, 85, platform)
+- 1629 `resolve_monitoring_alert` (mutate, 85, platform)
+- 1630 `create_monitoring_policy` (mutate, 86, platform)
+- 1631 `activate_monitoring_policy` (mutate, 86, platform)
+- 1632 `create_capacity_record` (mutate, 87, platform)
+- 1633 `update_capacity_record` (mutate, 87, platform)
+
+Reused existing tools: query_events (541), query_alerts (542), query_monitoring_policies
+(543), query_capacity_records (544), create_incident (30, the outbound ITOM->ITSM mutate per
+three-source derivation source 3 / handoff 28), notify_person (913), notify_team (914).
+
+skill_tools by skill:
+- 294 (267): query_events, query_alerts, query_monitoring_policies, create_monitoring_policy,
+  activate_monitoring_policy, acknowledge_monitoring_alert, resolve_monitoring_alert,
+  create_incident, notify_person (all required); notify_team (optional).
+- 295 (268): query_capacity_records, create_capacity_record, update_capacity_record,
+  notify_person (all required).
+- 296 (269): query_alerts, resolve_monitoring_alert, notify_person (required); notify_team
+  (optional). 269 embeds monitoring_alerts; automation reads alerts and drives resolution.
+
+Channel-vs-capability (F7): used `notify_person` / `notify_team` as the notification defaults,
+not `send_email` / `post_chat_message`.
+
+DELETE (legacy retirement, F1 / B1B-S13): deleted `skills.id=74` (`itom-system`,
+domain_module_id=null) and its 6 skill_tools rows (ids 629, 630, 631, 632, 633, 634; tool_ids
+541, 542, 543, 544, 37 send_email, 40 post_chat_message). The legacy skill itself was not
+re-anchored (B1B-S14 send_email/post_chat_message re-anchor is moot now that the legacy skill
+is gone and the new per-module skills use the notify_* abstractions). Precondition checked in
+the loader: refuses to delete unless all 3 module system skills exist.
+
+Prior values of deleted rows (for reversibility):
+- skills.id=74: skill_name='itom-system', skill_type='system', domain_id=2,
+  domain_module_id=null, record_status='new', description='System skill for IT Operations
+  Management ... derived from masters + cross-domain handoffs.' (description contained a
+  U+2014 em-dash; not reused).
+- skill_tools 629 (tool 541 query_events, required), 630 (542 query_alerts, required),
+  631 (543 query_monitoring_policies, required), 632 (544 query_capacity_records, required),
+  633 (37 send_email, required), 634 (40 post_chat_message, required), all skill_id=74,
+  notes='', record_status='new'.
+
+### B1A-HANDOFF-FK-BACKFILL - DONE
+
+PATCH per-module FK on 13 handoffs, deterministically derived from the live module-junction
+(B10b: source = ITOM module holding the trigger event's data_object at strongest role;
+target = ITOM module holding the payload at strongest role). Prior value on every patched FK
+was `null`.
+
+Outbound `source_domain_module_id`:
+- 28 (trigger event data_object 84 monitoring_events, master on 267) -> 267
+- 53 (trigger event data_object 84, master on 267) -> 267
+- 619 (trigger event data_object 87 capacity_records, master on 268) -> 268
+- 620 (trigger event data_object 87, master on 268) -> 268
+
+Inbound `target_domain_module_id` (all -> 267):
+- 50 (payload 86 monitoring_policies, master), 54 (payload 85 monitoring_alerts, master),
+  59 (payload 84 monitoring_events, master), 605 (payload 96 predictive_signals, consumer),
+  607 (payload 722 alert_suppression_rules, consumer), 673 (payload 552
+  dc_environmental_readings, consumer), 681 (payload 546 dc_racks, consumer), 755 (payload 466
+  paas_runtime_instances, consumer), 761 (payload 449 cluster_node_pools, consumer).
+
+The 6 consumer-payload inbound handoffs (605/607/673/681/755/761) resolved only because
+B1A-CONSUMER-DMDO ran first (B10b "no candidate" -> load consumer row, then re-run). All 13
+ITOM-side FKs are now set. Remaining nulls on these handoffs are the opposite domain's B10b
+(handoff 28 target=38 ITSM-INCIDENT-MGMT was already correct; 50 source is DISCOVERY's; 53/619
+target is AIOPS's; 620 target is SPM's). Out of ITOM scope - not touched.
+
+### B1A-ROLE-MODULES - SKIPPED
+
+Did not author. The action's persona-to-module mapping pins each persona to a SINGLE module
+(NOC Engineer -> 267, SRE -> 267, Capacity Planner -> 268, Automation/Ops -> 269), which
+violates the hard 2-module floor (roles.md / E2: every `domain_roles` persona needs >=2
+`role_modules` entries; a single-module persona is a permission tier, not a persona). A valid
+Phase E pass requires deciding each persona's full multi-module reach plus `process_raci`
+responsibility and `data_object_lifecycle_states.process_id` wiring; ITOM has zero lifecycle
+states (B1B-S11 is user_decision-blocked), so no gated process exists for R/A assignments to
+resolve against. This is judgment beyond the action text, so it is skipped per the b1a
+contract and retained in b1a with the skip rationale recorded.
+
+### Verification (live, post-load)
+
+- F2: exactly one system skill per module (294/267, 295/268, 296/269).
+- F3: skill_tools present (10 / 4 / 4).
+- F4: every query/mutate tool carries data_object_id; every notify side_effect is data_object_id null.
+- F1: legacy skill 74 and its skill_tools deleted (both queries return empty).
+- Consumer DMDO: 8 rows on 267, all consumer/optional.
+- Handoff FKs: 4 outbound source FKs (267/267/268/268) + 9 inbound target FKs (all 267) set.
+- Idempotent: second loader run produced zero writes.
+
+### JWT errors
+None.
+
+### Loader
+`c:/dev/domain-map/.tmp_deploy/fix_itom_b1a_2026-06-06.ts`

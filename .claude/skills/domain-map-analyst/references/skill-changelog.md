@@ -683,3 +683,15 @@ Both are the same entity-follows-the-unit principle plan-4 established for gates
 - fix applied: (1) the 116 artifacts were moved to the Windows Recycle Bin (recoverable), leaving the user's other 850 loose files and 116 folders untouched. (2) every forward-looking `c:/tmp/` write path in SKILL.md, references/vendor-research-protocol.md, references/domain-audit-procedure.md, references/discover-cross-domain-processes.md, and README.md was redirected to the repo's existing gitignored `.tmp_deploy/`. The "gitignored, ephemeral" claim is now accurate. Historical `c:/tmp/` mentions in `audits/**/history.md`, prior changelog entries, and unrelated build scripts were left as-is: they are append-only factual records of past runs, not forward instructions.
 - revert: none (no catalog writes). The Recycle Bin holds the moved files if recovery is ever needed.
 - standing rule for future runs: scratch / working artifacts (Phase 0 reports, market-surface JSON, reconcile drafts, subagent dumps, verification scripts) go to `.tmp_deploy/` (gitignored, in-repo), NEVER to `c:/tmp/` or any absolute path outside the repo. Durable audit content still lands in `audits/<DOMAIN>/`.
+
+## 2026-06-05 - Rule #20 catalog UX: empty fields are written, not parked in history
+
+**Context.** During a batch b1a-clearing run across 5 domains (ACCT-PRACT-MGMT, AGENCY-MGMT, B2C-COMM, BPA, CDP), each subagent followed the prior Rule #20 ("draft both fields, surface to the user for review BEFORE writing") and left the empty `catalog_tagline` / `catalog_description` on the domain + module rows empty, parking the buyer-voice drafts in `history.md`. The user pushed back: empty fields must be written, and review happens on the record (state `new`) in the catalog UI, not on text buried in an audit log. The "draft and hold" loop was inconsistent with Rule #1, which writes fresh research as `record_status='new'` and reviews it in-record rather than via a pre-write chat gate.
+
+**Decision.** Rule #20's backfill clause is rewritten: an EMPTY catalog UX field is WRITTEN directly with the buyer-voice copy (empty-guard per field; never overwrite a non-empty value). The row's `record_status` carries the review signal, the same in-record review model as Rule #1. Parking the draft in `history.md` (or a chat message) while the column stays empty is now an explicit forbidden pattern. Subagent prompts must instruct "write the empty field," never "draft and leave open."
+
+**Scope.** SKILL.md Rule #20 (backfill clause + forbidden-patterns list), and the A4 + M8 per-domain-checklist fix actions. The non-empty overwrite protection is unchanged.
+
+**Fix applied to live state.** The 5 domains' empty UX fields (5 domain rows + 16 module rows = 21 row-pairs) were backfilled via `.tmp_deploy/backfill_catalog_ux_2026_06_05.ts` (all `record_status='new'`, all previously empty, 0 overwrites). The UX-only items were removed from those 5 state.yaml files; a correction note was appended to each history.md superseding the "drafted, left open" entry.
+
+**Status.** Active. No further migration pending.

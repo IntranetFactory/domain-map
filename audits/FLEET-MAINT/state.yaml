@@ -1,53 +1,23 @@
 schema_version: 2
 domain: FLEET-MAINT
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
-b1a:
-  - id: B1A-SYSTEM-SKILLS
-    summary: "3 new modules each need a <module_code_lower>_agent system skill; legacy domain-scoped skill 59 must retire (Rule #17 -> F2/F3)."
-    finding: >-
-      The 2026-06-02 modularization created 3 full modules
-      (FLEET-MAINT-WORK-ORDER id 249, FLEET-MAINT-PM id 250, FLEET-MAINT-PARTS id
-      251) with zero module-scoped system skills. Rule #17 (F2) requires exactly
-      one <module_code_lower>_agent system skill per module; F3 requires >=1
-      skill_tools row each. Legacy domain-scoped skill fleet-maint-system (id 59,
-      domain_id=149, domain_module_id=NULL) remains with 6 skill_tools (rows 544,
-      545, 546, 547, 969, 970): 4 query_* covering the 4 masters (470
-      vehicle_work_orders, 471 preventive_maintenance_schedules, 807
-      vehicle_parts_inventory, 808 maintenance_defects), plus send_email (id 37,
-      channel primitive, see B1B-S14) and sign_document (id 42, external
-      side_effect, see B2-6 for the workflow rationale). The module-split
-      prerequisite (formerly B1B-S1) is satisfied as of 2026-06-02.
-    action: >-
-      Author 3 system skills (fleet_maint_work_order_agent on 249,
-      fleet_maint_pm_agent on 250, fleet_maint_parts_agent on 251). Redistribute
-      the 4 query_* tools by mastered entity (vehicle_work_orders +
-      maintenance_defects -> 249; preventive_maintenance_schedules -> 250;
-      vehicle_parts_inventory -> 251). Resolve send_email per B1B-S14 (substitute
-      notify_person) and sign_document per B2-6, then DELETE skill 59 and its 6
-      skill_tools last.
-    affected_modules: [249, 250, 251]
-    extra_legacy_skill_id: 59
-    extra_legacy_skill_tool_ids: [544, 545, 546, 547, 969, 970]
-
-  - id: B1A-CATALOG-UX-COPY
-    summary: "domains row 149 + the 3 new modules carry empty catalog_tagline / catalog_description (M8 / A4 backfill)."
-    finding: >-
-      domains.catalog_tagline and catalog_description on FLEET-MAINT (id 149) are
-      both empty (A4 fail, open since 2026-05-30). As of 2026-06-02 the 3 new
-      modules (249, 250, 251) were also created with empty catalog copy
-      (buyer-facing wording deliberately left empty in the modularization pass).
-      Rule #20 gates these writes on user-approved buyer-voice text.
-    action: >-
-      After the user supplies / approves buyer-voice wording (the domain-level
-      string rides B2-CATALOG-COPY), PATCH catalog_tagline + catalog_description
-      on the domains row (149) and on modules 249, 250, 251. Per-module copy
-      describes each module's workflow + value (shop-floor work-order execution
-      and defect triage; preventive-maintenance planning and trigger-driven
-      work-order generation; parts stock plus OEM warranty and recall coverage).
-    affected_modules: [249, 250, 251]
+# b1a empty as of the 2026-06-06 b1a execution pass:
+#   - B1A-CATALOG-UX-COPY: FULLY RESOLVED. Buyer-voice catalog_tagline +
+#     catalog_description written into the empty fields on domains#149 and
+#     domain_modules#249/250/251 (Rule #20 empty-field backfill). See history.md
+#     "2026-06-06 - b1a execution".
+#   - B1A-SYSTEM-SKILLS: agent-solvable portion DONE (3 module system skills
+#     #291/#292/#293 + 7 skill_tools authored; query_* redistributed; notify_person
+#     substituted for send_email per B1B-S14). The residual (resolve sign_document
+#     row 547 per B2-6, then DELETE legacy skill 59 + its 6 skill_tools "last") is
+#     BLOCKED on user_decision B2-6 and now lives in B1B-S15 (prerequisite
+#     B1A-SYSTEM-SKILLS satisfied; remaining gate is B2-6 only). F1 transitional
+#     condition (legacy domain-level skill 59 coexists with module skills) clears
+#     when B2-6 lands and skill 59 is deleted.
+b1a: []
 
 b1b:
   - id: B1B-S3
@@ -125,20 +95,21 @@ b1b:
       - {data_object_id: 380, name: preventive_maintenance_schedules, target_module_id: 250, workflow: pm_state_machine_optional}
       - {data_object_id: 702, name: vehicle_parts_inventory, target_module_id: 251, workflow: config_shape_exemption}
   - id: B1B-S15
-    summary: After Bucket 2 #6 resolves, either redistribute or DELETE skill_tools row 547 (sign_document tool 42); folds into B1A-SYSTEM-SKILLS.
+    summary: After Bucket 2 #6 resolves, either redistribute sign_document (tool 42) to a new module skill or DELETE skill_tools row 547. Also carries the now-only-B2-6-gated DELETE of legacy skill 59 + its 6 skill_tools.
     finding: |
-      skill_tools row 547 links legacy skill 59 to sign_document (tool id 42, operation_kind=side_effect, coverage_tier=external, data_object_id=NULL). Operation_kind invariant ticks. Workflow rationale unclear: customer signature on shop completion, OEM warranty attestation, owner-paid-repair authorization, or vestigial. Redistribution target (if kept): FLEET-MAINT-WORK-ORDER 249 (customer signature) or FLEET-MAINT-PARTS 251 (warranty attestation).
+      skill_tools row 547 links legacy skill 59 to sign_document (tool id 42, operation_kind=side_effect, coverage_tier=external, data_object_id=NULL). Operation_kind invariant ticks. Workflow rationale unclear: customer signature on shop completion, OEM warranty attestation, owner-paid-repair authorization, or vestigial. Redistribution target (if kept): FLEET-MAINT-WORK-ORDER 249 system skill #291 (customer signature) or FLEET-MAINT-PARTS 251 system skill #293 (warranty attestation). The B1A-SYSTEM-SKILLS prerequisite is now SATISFIED: 3 module system skills exist (#291/#292/#293) with query_* + notify_person linked (2026-06-06). The ONLY remaining gate is B2-6. Once B2-6 lands: redistribute-or-delete row 547, then DELETE legacy skill 59 (id 59, domain_module_id NULL) and ALL 6 of its skill_tools (544, 545, 546, 547, 969, 970) last. Deleting skill 59 also clears the open F1 condition (legacy domain-level system skill coexisting with module-level skills). Snapshot the skill 59 row + the 6 skill_tools rows into history.md before the DELETE (reversibility).
     blocked_by:
       - {type: user_decision, ref: B2-6}
-      - {type: prerequisite_entity, ref: B1A-SYSTEM-SKILLS}
     extra_skill_tool_id: 547
     extra_current_tool_id: 42
+    extra_legacy_skill_id: 59
+    extra_legacy_skill_tool_ids: [544, 545, 546, 547, 969, 970]
   - id: B1B-S14
-    summary: PATCH skill_tools row 546 (send_email channel primitive) to notify_person, or DELETE row 546 if the new module-scoped skills already link notify_person; folds into B1A-SYSTEM-SKILLS.
+    summary: send_email substitution DONE on the new module skills (notify_person linked); residual is the legacy row 546 DELETE which rides the skill-59 DELETE in B1B-S15.
     finding: |
-      skill_tools row 546 links legacy skill 59 to send_email (tool id 37) without justification. send_email is a channel primitive; workflow default is notify_person so deployment can substitute channel. FLEET-MAINT email use is generic operational notification (PM-due reminders, defect alerts, work-order-completion, parts-low alerts), not channel-bound.
+      send_email substitution is RESOLVED on the new module skills: notify_person (tool 913) is now linked to all 3 module system skills (skill_tools #2781/#2783/#2785) as the generic operational-notification capability (PM-due reminders, defect alerts, work-order-completion, parts-low alerts). The legacy skill_tools row 546 (skill 59 -> send_email tool 37) is NOT separately patched: it is deleted as part of the legacy skill-59 cleanup in B1B-S15, which is gated only on B2-6. No standalone action remains here.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1A-SYSTEM-SKILLS}
+      - {type: depends_on, ref: B1B-S15, reason: "row 546 is deleted with the rest of skill 59's skill_tools once B2-6 resolves"}
     extra_skill_tool_id: 546
     extra_current_tool_id: 37
     extra_proposed_tool_name: notify_person
@@ -284,18 +255,18 @@ b2:
       - (c) Abandon the edge
     why: 2026-05-30 audit specified many_to_one, which is not a valid relationship_type value. Decision unblocks B1B-S4-R5.
   - id: B2-CATALOG-COPY
-    summary: catalog_tagline and catalog_description on the domains row (149) and now the 3 modules - buyer-voice text needed.
+    summary: REVIEW (no longer a blocking gate) - buyer-voice catalog_tagline + catalog_description are now written into the previously-empty fields on domains#149 and modules 249/250/251; review the copy in the catalog UI.
     question: >-
-      domains.catalog_tagline and catalog_description on FLEET-MAINT (149) are
-      both empty (A4 fail), and as of 2026-06-02 the 3 new modules (249, 250,
-      251) also have empty catalog copy. Rule #20 forbids writes without
-      user-approved buyer-voice text. Supply the exact strings (domain-level +
-      per-module).
+      The revised Rule #20 backfills empty catalog UX fields by writing them
+      directly (no pre-write approval gate); the row's record_status=new carries
+      the review signal. The agent wrote buyer-voice copy into domains#149 and
+      modules 249/250/251 on 2026-06-06 (see history.md). Review the written copy
+      in-record; request a specific rewrite if any string needs adjustment.
+      Overwrite is now per-row-approval-only (the empty-field write is spent).
     options:
-      - approve a recommended tagline shape ("Keep every vehicle on the road. Schedule preventive maintenance from telematics, dispatch mechanics to defects, and track parts cost-per-mile in one place.") plus a buyer-voice description authored by the user
-      - supply different text
-      - defer
-    why: Rule #20 hard-gates the write; the agent cannot author either string without user-approved wording. The write itself is queued as B1A-CATALOG-UX-COPY.
+      - accept the written copy as-is (mark records approved in the UI when reviewed)
+      - request a specific rewrite per row ("rewrite catalog_tagline for <row> to <text>")
+    why: Rule #20 (revised) directs empty-field backfill without a pre-write gate; the write is DONE (B1A-CATALOG-UX-COPY resolved). This entry is now a review pointer, not a blocker.
 
 b3:
   - id: B3-M1

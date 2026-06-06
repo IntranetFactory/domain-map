@@ -468,3 +468,78 @@ Roles + necessity preserved verbatim from `domain_data_objects`: all 6 masters w
 - **Missing-master candidates (B3):** the modules are thin on owned masters for INGEST (no data_sources), ACTIVATION (no event_sinks / activation_runs), CONSENT-PRIV (no consent_records / data_subject_requests), PREDICTIVE (no predictive_models / model_predictions). Carried as b3 missing-master candidates; these are the entities that would justify the 6-module split and a CDP-CONSENT-PRIV / CDP-PREDICTIVE promotion.
 - **B10b CDP-side FKs (B1B-S3):** 9 outbound + 13 inbound handoffs still carry NULL CDP-side `domain_module_id`. Modules now exist to point at, but FK attribution is out of this pass's scope (modules + entity assignment only). Unblocked for a future B10b pass.
 - **Lifecycle states (B1B-S5), users edges (B1B-S8):** still owed; out of this pass's scope (no lifecycle/relationship writes).
+
+## 2026-06-05 — b1a execution
+
+Subagent run scoped to the two agent-solvable b1a items (B1A-SYS-SKILLS system-skills portion + B1A-S10 APQC tagging). Tenant confirmed (adenin, ma@adenin.com) via `getCurrentUser`; no JWT-audience error on any call. Loaders: [.tmp_deploy/fix_cdp_b1a_sys_skills_2026-06-05.ts](../../.tmp_deploy/fix_cdp_b1a_sys_skills_2026-06-05.ts) and [.tmp_deploy/fix_cdp_b1a_s10_apqc_2026-06-05.ts](../../.tmp_deploy/fix_cdp_b1a_s10_apqc_2026-06-05.ts). Both idempotent. `record_status` omitted on every insert (DB default `new`); no `notes` written (Rule #15); no `catalog_tagline`/`catalog_description` written (Rule #20).
+
+### B1A-SYS-SKILLS (Rule #17 -> F2/F3): system-skills portion DONE; UX copy DRAFTED, item kept open
+
+Authored one `skill_type='system'` skill per CDP module, each with >=1 `skill_tools` row. Tools reused live by name (the six CDP-master `query_*` tools and the `notify_*`/inbound abstractions already exist catalog-wide and were re-read, never recreated). Three CDP-specific mutate tools were created (no prior rows existed for these data_objects).
+
+**Tools created (3) in `tools`:**
+
+| tool_name | id | operation_kind | data_object_id | coverage_tier |
+|---|---|---|---|---|
+| resolve_identity | 1592 | mutate | 112 (identity_graphs) | platform |
+| create_audience_segment | 1593 | mutate | 113 (audience_segments) | platform |
+| activate_audience_segment | 1594 | mutate | 113 (audience_segments) | platform |
+
+(coverage_tier='platform' is mandatory for query/mutate per the live check constraint `coverage_tier must be 'platform' when operation_kind is query or mutate`.)
+
+**Skills created (4) in `skills`:** all `skill_type='system'`, `domain_id=72`, `record_status` omitted.
+
+| skill_id | skill_name | domain_module_id | skill_tools (required / total) | strict_score |
+|---|---|---|---|---|
+| 267 | cdp_ingest_identity_agent | 216 | 5 / 6 | 80% |
+| 268 | cdp_unified_profile_agent | 217 | 4 / 5 | 100% |
+| 269 | cdp_segmentation_activation_agent | 218 | 4 / 6 | 100% |
+| 270 | cdp_journeys_360_agent | 219 | 3 / 4 | 100% |
+
+**skill_tools rows (21):** module 216: query_customer_events, query_identity_graphs, resolve_identity, ingest_event_stream, query_crm_contacts (required), receive_webhook (optional). Module 217: query_customers, update_customer, query_customer_attributes, query_lead_scores (required), notify_person (optional). Module 218: query_audience_segments, create_audience_segment, activate_audience_segment, query_campaigns (required), query_sales_emails + notify_team (optional). Module 219: query_customer_journeys, query_customers, query_customer_events (required), notify_person (optional). Channel-vs-capability rule applied: `notify_person`/`notify_team` abstractions linked for generic notifications, no channel primitives. Module 216 sits at 80% strict because `ingest_event_stream` is genuinely `external` (event ingestion from outside sources).
+
+The legacy domain-level `cdp-system` skill (id 35, `domain_module_id=null`) was left in place (F1 migration target; not deleted, no b1a action instructed deletion).
+
+**M8 / A4 catalog UX copy: NOT written.** Rule #20 + Rule #6 (task) require explicit per-row user approval (blocked on B2-S9). Buyer-voice drafts were surfaced to the user for approval; the B1A-SYS-SKILLS item is kept OPEN pending that approval (only its system-skills sub-part is resolved). No write to `domains.catalog_tagline/catalog_description` (id 72) or `domain_modules.catalog_tagline/catalog_description` (216-219).
+
+### B1A-S10 (H1 APQC tagging): DONE
+
+All 23 cross-domain CDP handoffs now carry a `handoff_processes` tag. The audit's proposed PCF external_ids were stale; PCF process ids were re-resolved live against the actual catalog (best-fit L2/L3 `apqc_pcf_cross_industry` activities). Net: 5 REPLACE (PATCH in place) + 1 FLIP + 16 INSERT + 1 NO-OP. All authored/updated rows: `role='implements'`, `proposal_source='agent_curated'`, `record_status='new'`.
+
+**REPLACE (5) — PATCH `handoff_processes` in place; prior values for reversibility:**
+
+| row_id | handoff | prior (process_id / name / source) | new process_id / name (L) |
+|---|---|---|---|
+| 73 | 68 | 797 / Analyze organization's spend profile (10285, L4) / discovery_substring | 148 / Manage customers and accounts (10183, L3) |
+| 81 | 78 | 133 / Establish goals, objectives, and measures ... by channel/segment (10148, L3) / discovery_substring | 132 / Design and manage customer loyalty program (18924, L3) |
+| 82 | 80 | 133 / (same as above) / discovery_substring | 136 / Develop and manage promotional activities (20010, L3) |
+| 83 | 478 | 133 / (same as above) / discovery_substring | 132 / Design and manage customer loyalty program (18924, L3) |
+| 148 | 480 | 1814 / Create customer journey maps (19965, L5) / discovery_substring | 100 / Develop customer experience strategy (19959, L3) |
+
+**FLIP (1):** row 76, handoff 77: `proposal_source` discovery_override -> agent_curated; process_id 196 (Manage customer service problems, requests, and inquiries / 10388 / L3) kept unchanged.
+
+**NO-OP (1):** handoff 89, row 568: already process 138 (Analyze and respond to customer insight / 16613 / L3) at agent_curated; untouched.
+
+**INSERT (16) new `handoff_processes` rows** (process ids in parens): 79->25 (Develop and manage sales plans, L2), 479->196 (Manage customer service problems, L3), 481->115 (Manage product and service master data, L3), 529->100 (cx strategy, L3), 69->136 (promotional, L3), 74->136, 75->100, 76->150 (Manage sales orders, L3), 997->20 (Develop products and services, L2), 508->136, 504->100, 717->115, 809->100, 810->100, 272->115, 1004->20.
+
+**Concurrent-write collision noted (not mine to remove):** handoff 504 now carries TWO tags. Row id 952 (504->100, cx strategy) is the one I authored per the b1a action. Row id 932 (504->115, Manage product and service master data, agent_curated, created 21:38 UTC, before my INSERT at 21:41) was authored by a concurrent subagent (likely the MDM audit — 504's payload is `commerce_products` published into CDP, overlapping master-data semantics). The composed key differs (115 vs 100) so it is not a duplicate of my row; left in place per task rule #8 (DELETE only on explicit b1a instruction). Surfaced for user adjudication if a single tag is preferred on 504.
+
+**Final H1 state:** 24 `handoff_processes` rows across the 23 cross-domain handoffs (504 = 2 tags); all 24 `agent_curated`, all `record_status='new'`. Coverage 23/23. Zero `approved` (correct per Rule #1 — awaits review).
+
+### Verification
+
+- `/skills?domain_module_id=in.(216,217,218,219)&skill_type=eq.system` -> 4 rows (267-270), one per module. F2 passes.
+- `/skill_tools?skill_id=in.(267,268,269,270)` -> 21 rows; every skill has >=1. F3 passes.
+- `/tools?tool_name=in.(resolve_identity,create_audience_segment,activate_audience_segment)` -> 3 rows.
+- `/handoff_processes` over the 23 CDP cross-domain handoff ids -> 24 rows, 23/23 distinct handoffs covered, all agent_curated.
+
+### UI spot-check links
+
+- https://tests.semantius.app/domain_map/skills
+- https://tests.semantius.app/domain_map/skill_tools
+- https://tests.semantius.app/domain_map/tools
+- https://tests.semantius.app/domain_map/handoff_processes
+
+### 2026-06-05 catalog UX written (supersedes the "drafted, left open" note above)
+
+The empty `catalog_tagline` / `catalog_description` on the CDP domain row and modules 216, 217, 218, 219 were WRITTEN (not parked). Loader: `.tmp_deploy/backfill_catalog_ux_2026_06_05.ts` (empty-guard: only empty fields written, no overwrite). record_status on these rows is `new`, so the copy is reviewed in-record per the revised Rule #20. The prior note in this date section that left the UX "open" is superseded; the UX-only state.yaml items were removed.

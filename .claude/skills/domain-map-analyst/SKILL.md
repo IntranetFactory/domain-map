@@ -502,7 +502,7 @@ A third surface, `domain_aliases` (separate table), feeds both the catalog's sea
 
 **Voice rule.** Buyer voice (workflow + value): *"Track candidates from first contact through hire. Manage requisitions, interviews, and offers in one place, with seamless handoff to onboarding."* Analyst voice (what `domains.description` and `domain_modules.description` carry): *"Software market for recruiting, sourcing, evaluating, and hiring candidates. Anchors the candidate-to-employee transition handoff to HCM and Onboarding."* The two are not interchangeable; do not paste one into the other column.
 
-**Backfill is allowed (with surface).** On any domain audit where A4 fails (empty `domains.catalog_tagline` / `domains.catalog_description`) or M8 fails (empty `domain_modules.catalog_tagline` / `domain_modules.catalog_description`), draft both fields per the voice rule, surface to the user for review BEFORE writing. The draft, review, write loop matches Rule #1's discipline for fresh research.
+**Backfill empty fields by writing them (no pre-write gate).** On any domain audit where A4 fails (empty `domains.catalog_tagline` / `domains.catalog_description`) or M8 fails (empty `domain_modules.catalog_tagline` / `domain_modules.catalog_description`), author the buyer-voice copy and **write it straight into the empty column**. The row's `record_status` carries the review signal: freshly written copy lands on a `new` (or otherwise unreviewed) record and the user reviews it **in the record / catalog UI**, exactly as Rule #1 handles fresh research. Do **not** pre-surface the draft to chat for approval, and do **not** park the draft in `history.md` (or any audit file) as a stand-in for writing the column. An empty field with its copy hidden in history is the exact bug this rule exists to prevent: the user reviews text stored in records (state `new`), never text buried in an audit log. Apply an empty-guard per field: write a column only when its current value is empty; a non-empty column is governed by the overwrite rule below. This applies to subagents too, never instruct a subagent to "draft and leave open" an empty catalog UX field; instruct it to write the field.
 
 **Overwrite is forbidden without explicit per-row user approval.** Once a non-empty value exists in either column on either table, do NOT regenerate, "improve", normalize, or rewrite it, even when the existing value reads like a draft. Marketing routinely fine-tunes the original; an unapproved overwrite destroys their edits. The acceptable forms of human approval:
 
@@ -513,6 +513,7 @@ Forbidden patterns:
 - Auto-overwriting on every audit pass because the existing value "doesn't match the current template."
 - Bulk-regenerating during an unrelated load.
 - "Cleaning up" wording during a different fix-loop.
+- Leaving an empty `catalog_tagline` / `catalog_description` empty while parking the drafted copy in `history.md` or a chat message. Empty fields are written (see the backfill rule above); only non-empty values are overwrite-protected.
 
 **Why.** Marketing copy is the buyer-facing surface and ages on a different cycle than the analyst-facing catalog. The catalog tables can be re-derived from live state; marketing voice cannot. Treating these four columns (two each on `domains` and `domain_modules`) with the same overwrite-on-emit habit as analyst columns erases human work that's not visible in the agent's draft.
 
@@ -798,7 +799,7 @@ For every `master + required` data_object in this domain, count `data_object_lif
 **A4. Catalog UX fields populated.** (Rule #20.)
 - Query: `/domains?id=eq.<id>&select=catalog_tagline,catalog_description`
 - Pass: `catalog_tagline` is a non-empty single-sentence buyer-facing one-liner; `catalog_description` is a non-empty 1-3 paragraph buyer-facing long-form description. Both are written in buyer voice (workflow + value), NOT analyst voice (market position + handoffs).
-- Fix: draft both fields per Rule #20, surface to the user for review BEFORE writing. Once a non-empty value exists, never overwrite without explicit per-row user approval; marketing may have fine-tuned the original.
+- Fix: author the buyer-voice copy and write it straight into the empty field(s) per Rule #20. The row's `record_status` carries the review signal (the user reviews the written copy in-record / in the catalog UI), so do NOT pre-surface to chat as a gate and do NOT park the draft in `history.md`. Once a non-empty value exists, never overwrite without explicit per-row user approval; marketing may have fine-tuned the original.
 
 **A5. Vendor records reflect current legal ownership.** *(Opt-in only — not part of the routine audit pass.)*
 
@@ -869,7 +870,7 @@ Modules within a domain are **autonomous deployable units** (per § "The module 
 **M8. Module-level catalog UX fields populated on every `domain_modules` row hosted on this domain.** (Rule #20.)
 - Module set query: `/domain_modules?domain_id=eq.<id>&select=id,domain_module_code,catalog_tagline,catalog_description` UNION `/domain_module_host_domains?domain_id=eq.<id>&select=domain_module:domain_modules(id,domain_module_code,catalog_tagline,catalog_description)` (covers cross-cutting modules hosted here).
 - Pass: every module's `catalog_tagline` is a non-empty single-sentence buyer-facing one-liner; every module's `catalog_description` is a non-empty 1-3 paragraph buyer-facing long-form description. Both are written in buyer voice (workflow + value), NOT analyst voice. A4 is the equivalent check at the domain grain; M8 is the per-module rollup.
-- Fix: draft both fields per Rule #20, surface to the user for review BEFORE writing. Once a non-empty value exists, never overwrite without explicit per-row user approval; marketing may have fine-tuned the original.
+- Fix: author the buyer-voice copy and write it straight into the empty field(s) per Rule #20. The row's `record_status` carries the review signal (the user reviews the written copy in-record / in the catalog UI), so do NOT pre-surface to chat as a gate and do NOT park the draft in `history.md`. Once a non-empty value exists, never overwrite without explicit per-row user approval; marketing may have fine-tuned the original.
 
 **M9. Module self-containment — every module is independently deployable (no hard prerequisites).**
 - The invariant: a module deploys standalone. Every data_object it touches must be `master` (it owns), `embedded_master` (it carries a local shell, so the canonical owner is NOT required, it defers to it only if installed; see [references/modules.md](references/modules.md#5-embedded-shell-contracts-live-at-deploy-time-not-in-the-catalog)), `necessity=optional` (degrades gracefully, Rule #16), or a `consumer` of a platform built-in / shared master that is always present (`users`, master-data). Self-containment has TWO layers; M9 audits both.

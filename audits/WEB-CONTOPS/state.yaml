@@ -1,74 +1,15 @@
 schema_version: 2
 domain: WEB-CONTOPS
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
-b1a:
-  - id: B1A-SKILLS
-    summary: "Author one skill_type='system' skill per WEB-CONTOPS module (4 modules) with domain_module_id set + 4-to-8 mixed tools each; DELETE legacy domain-level skill 120 (Rule #17 -> F2/F3)."
-    finding: |
-      F1 / F2 / F3 still fail. The 4 new modules (317 WEB-CONTOPS-AUDIT-INVENTORY,
-      318 WEB-CONTOPS-EDITORIAL-PLANNING, 319 WEB-CONTOPS-QUALITY-ACCESS,
-      320 WEB-CONTOPS-SEO-LINKS) now exist but carry no module-anchored system skill.
-      Per Rule #17 every domain_modules row needs exactly one skill_type='system' skill
-      with domain_module_id set and >=1 skill_tools row. The only skill today is the legacy
-      domain-level web-contops-system (id 120, domain_module_id=NULL) with 7 query_* tools
-      (ids 771-777, all coverage_tier='platform', operation_kind='query'), which is the
-      migration target, not the target state. Mutate / workflow-gate / side_effect / fetch /
-      inbound tools all missing.
-    action: |
-      Author one skill_type='system' skill per module with domain_module_id set and 4-to-8
-      mixed tools covering query, mutate (create_content_audit, resolve_accessibility_finding,
-      dismiss_brand_violation, retire_inventory_record, retire_content_lifecycle_plan,
-      resolve_broken_link_finding, resolve_technical_seo_finding), side_effect
-      (trigger_external_a11y_rescan, submit_redirect_request), fetch (fetch_wcag_rules,
-      fetch_seo_serp_data), and inbound (receive_scanner_callback, receive_crawler_completion).
-      Reuse the existing query_* tools (771-777) where the same primitive applies to a new
-      module's masters. Once module-anchored skills ship, DELETE legacy skills row 120 + its
-      skill_tools (F1 cleanup).
-    affected_modules: [317, 318, 319, 320]
-    extra_legacy_skill_id: 120
-    extra_legacy_tool_ids: [771, 772, 773, 774, 775, 776, 777]
-
-  - id: B1A-CATALOG-UX
-    summary: "Draft + surface catalog_tagline / catalog_description for the domain (A4) and each of the 4 modules (M8) in buyer voice; PATCH after user approval (Rule #20)."
-    finding: |
-      A4 still fails: domains.catalog_tagline and catalog_description for WEB-CONTOPS are both
-      empty. M8 now has 4 targets that did not exist before this pass: modules 317, 318, 319,
-      320 each have empty catalog_tagline / catalog_description. Rule #20 requires both fields
-      drafted in buyer voice (workflow + value) and surfaced for user approval BEFORE any PATCH;
-      once a non-empty value exists, overwrites are forbidden without per-row user approval.
-    action: |
-      Draft domain-level and per-module catalog_tagline + catalog_description in marketing /
-      buyer voice; surface the wording in chat for approval; PATCH the approved text. No
-      em-dashes; American English.
-    affected_modules: [317, 318, 319, 320]
-
-  - id: B1A-LIFECYCLE
-    summary: "Author data_object_lifecycle_states for the 7 masters (B12), now that each has a realizing module to set domain_module_id."
-    finding: |
-      B12 still fails. Zero data_object_lifecycle_states for the 7 masters. State machines
-      pre-specified in 2026-05-30 audit and now mappable to a realizing module:
-      content_audits (684, module 317) scheduled -> running -> completed -> archived;
-      web_content_inventory_records (685, module 317) discovered -> classified -> in_review -> retained -> retired;
-      accessibility_scan_findings (686, module 319) detected -> triaged -> in_remediation -> resolved -> wont_fix -> verified;
-      broken_link_findings (687, module 320) detected -> in_remediation -> resolved -> ignored;
-      technical_seo_findings (688, module 320) detected -> triaged -> in_remediation -> resolved -> wont_fix;
-      brand_voice_violations (689, module 319) detected -> in_review -> accepted -> dismissed;
-      content_lifecycle_plans (690, module 318) draft -> active -> review_due -> revised -> retired.
-    action: |
-      Insert data_object_lifecycle_states rows with state_order, is_initial / is_terminal,
-      requires_permission=true on transition states (resolve, retain, retire, dismiss, verify,
-      ignore), and domain_module_id set to the realizing module. notes='' per Rule #15.
-    affected_masters:
-      - {data_object_id: 684, name: content_audits, target_module_id: 317, workflow: "scheduled -> running -> completed -> archived"}
-      - {data_object_id: 685, name: web_content_inventory_records, target_module_id: 317, workflow: "discovered -> classified -> in_review -> retained -> retired"}
-      - {data_object_id: 686, name: accessibility_scan_findings, target_module_id: 319, workflow: "detected -> triaged -> in_remediation -> resolved -> wont_fix -> verified"}
-      - {data_object_id: 687, name: broken_link_findings, target_module_id: 320, workflow: "detected -> in_remediation -> resolved -> ignored"}
-      - {data_object_id: 688, name: technical_seo_findings, target_module_id: 320, workflow: "detected -> triaged -> in_remediation -> resolved -> wont_fix"}
-      - {data_object_id: 689, name: brand_voice_violations, target_module_id: 319, workflow: "detected -> in_review -> accepted -> dismissed"}
-      - {data_object_id: 690, name: content_lifecycle_plans, target_module_id: 318, workflow: "draft -> active -> review_due -> revised -> retired"}
+# b1a fully resolved on 2026-06-06 (see history.md "2026-06-06 - b1a execution"):
+#   B1A-LIFECYCLE  -> 33 data_object_lifecycle_states rows (ids 1778-1810) for masters 684-690.
+#   B1A-SKILLS     -> 4 system skills (376-379, one per module 317-320) + 13 new tools (1765-1777)
+#                     + 22 skill_tools; legacy skill 120 and its skill_tools (925-931) deleted.
+#   B1A-CATALOG-UX -> catalog_tagline + catalog_description written on domain 128 and modules 317-320.
+b1a: []
 
 b1b:
   - id: B1B-S5

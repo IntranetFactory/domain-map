@@ -1,9 +1,17 @@
 schema_version: 2
 domain: LMS
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
+# 2026-06-06 b1a execution: both agent-solvable b1a items DONE + verified (see history.md
+# "2026-06-06 - b1a execution"). B1A-SELF-CONTAIN flipped the 3 M9 consumer+required rows
+# (onboarding_tasks/performance_goals/skills_gap_analyses) to necessity=optional. B1A-PHASE-P
+# authored 5 new personas (+1 reused: LEGAL-COMPLIANCE-SPECIALIST) + 27 role_modules reach
+# rows + 16 lifecycle process_id wirings + 21 process_raci rows; E1 now passes. b1a is empty,
+# so next action is the user's (b2 refactor / judgment decisions remain). Loader:
+# .tmp_deploy/lms_b1a_2026-06-06.ts.
+#
 # 2026-06-02 second pass: user said "do B2-REFACTOR-B now, postpone other B2, do b1a".
 # EXECUTED + verified: B13 entity_type (64 masters), B12 (resolved as a consequence), DDO rollup
 # (12->77), H1 APQC (+18 agent_curated; 26/31 tagged), peer-B10b report. See history.md.
@@ -13,21 +21,7 @@ last_audit: "2026-06-02"
 # Remaining work is all user-gated (refactor decisions + judgment calls). Refactor plan:
 # plans/lms-refactor-2026-06-02.md
 
-b1a:
-  - id: B1A-PHASE-P
-    summary: "Multi-module (8 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 8 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 8 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-SELF-CONTAIN
-    summary: "3 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
-    finding: "Live triage 2026-06-02: 3 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
-    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
-    extra_m9_shapes:
-      - {entity: onboarding_tasks, module: LMS-COMPLIANCE-TRAINING, role: consumer, master_domain: ONBOARDING}
-      - {entity: performance_goals, module: LMS-PATHS, role: consumer, master_domain: TALENT-MGMT}
-      - {entity: skills_gap_analyses, module: LMS-PATHS, role: consumer, master_domain: SWP}
-    extra_phase_p_triage: "2026-06-02"
+b1a: []
 
 b1b:
   - id: B1B-A4-M8-CATALOG-COPY

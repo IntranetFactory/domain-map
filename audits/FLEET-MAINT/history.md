@@ -378,3 +378,71 @@ None.
 - `audits/FLEET-MAINT/state.yaml` (rewrite to v2; module FKs filled in on affected_masters, B1B-S1 resolved into history, new b1a system-skill + catalog-UX items added)
 - `.tmp_deploy/modularize_fleet_maint_2026-06-02.ts` (idempotent loader)
 
+## 2026-06-06 - b1a execution
+
+Executed the agent-solvable b1a items for FLEET-MAINT (domain 149). Loader: `.tmp_deploy/fleet_maint_b1a.ts` (idempotent). No DELETE or PATCH of pre-existing rows beyond writing into empty fields; no prior values overwritten.
+
+### B1A-SYSTEM-SKILLS - PARTIAL (agent-solvable portion DONE; remainder deferred, see below)
+
+Authored 3 module-scoped `skill_type='system'` skills (Rule #17 F2), each `domain_id=149`, `record_status` defaulted to `new`:
+
+- `skills` #291 `fleet_maint_work_order_agent` (domain_module_id 249)
+- `skills` #292 `fleet_maint_pm_agent` (domain_module_id 250)
+- `skills` #293 `fleet_maint_parts_agent` (domain_module_id 251)
+
+Redistributed the 4 existing catalog-wide `query_*` tools plus `notify_person` via new `skill_tools` rows (Rule #17 F3/F4; `notes` left empty per Rule #15; `record_status` defaulted to `new`). Tools were reused, NOT re-created (all already existed: 470, 471, 807, 808, 913):
+
+- `skill_tools` #2779 skill 291 -> tool 470 query_vehicle_work_orders (required)
+- `skill_tools` #2780 skill 291 -> tool 808 query_maintenance_defects (required)
+- `skill_tools` #2781 skill 291 -> tool 913 notify_person (optional)
+- `skill_tools` #2782 skill 292 -> tool 471 query_preventive_maintenance_schedules (required)
+- `skill_tools` #2783 skill 292 -> tool 913 notify_person (optional)
+- `skill_tools` #2784 skill 293 -> tool 807 query_vehicle_parts_inventory (required)
+- `skill_tools` #2785 skill 293 -> tool 913 notify_person (optional)
+
+`notify_person` (tool 913, channel abstraction) substitutes the legacy `send_email` link (B1B-S14) per the channel-vs-capability rule: FLEET-MAINT email use is generic operational notification (PM-due reminders, defect alerts, work-order-completion, parts-low), distributed to the owning module skill.
+
+DEFERRED (blocked, NOT executed):
+
+- `sign_document` (skill_tools row 547, tool 42) resolution is blocked on user_decision B2-6 (per B1B-S15). Rule #7 forbids executing user_decision-gated work.
+- DELETE of legacy skill 59 (`fleet-maint-system`, domain_module_id NULL) and its 6 skill_tools (544, 545, 546, 547, 969, 970) is gated by the b1a action on resolving send_email AND sign_document "last". Since sign_document is blocked on B2-6, the DELETE cannot proceed without pre-empting that user decision. Legacy skill 59 and its 6 skill_tools remain UNCHANGED. (This leaves an F1 transitional condition open: a `domain_id`-only legacy system skill coexists with the new module-level skills; it resolves when B2-6 lands and skill 59 is deleted.)
+
+No prior row values changed for skill 59 or row 547; nothing to snapshot for reversal (no DELETE/PATCH performed on them).
+
+### B1A-CATALOG-UX-COPY - DONE (Rule #20 empty-field backfill)
+
+All 4 target catalog UX fields were empty before this pass (verified). Wrote buyer-voice copy (workflow + value; no vendor/product names; no em-dashes; American English) straight into the empty fields per the revised Rule #20 / Rule #6 of the task; empty-guard applied per field (write only when empty); no non-empty value overwritten. Rows carry their existing `record_status` as the review signal.
+
+PATCH `domains` #149 (prior values: `catalog_tagline=""`, `catalog_description=""`):
+- catalog_tagline: "Keep every vehicle on the road and control what each mile costs to maintain."
+- catalog_description: "Run your whole maintenance operation from one place. ... See cost per mile and uptime by vehicle so you know when to keep fixing and when to replace."
+
+PATCH `domain_modules` #249 (prior: both ""):
+- catalog_tagline: "Turn every defect, fault, and driver report into a tracked repair from intake to sign-off."
+- catalog_description: shop-floor work-order intake (inspection/telematics/driver), labor+parts lines, mechanic/shop assignment, defect triage, completion sign-off + quality check.
+
+PATCH `domain_modules` #250 (prior: both ""):
+- catalog_tagline: "Service every vehicle on time by mileage, hours, or calendar, and let the work orders write themselves."
+- catalog_description: PM plans per vehicle class with mileage/engine-hour/calendar/fault-code triggers, auto-generated work orders, deferred-maintenance tracking.
+
+PATCH `domain_modules` #251 (prior: both ""):
+- catalog_tagline: "Keep the right parts on hand and claim every warranty and recall dollar you are owed."
+- catalog_description: parts stock + reorder points by location, consumption tied to work orders, OEM-warranty eligibility, recall ingestion + completion tracking across the fleet.
+
+### Verification (re-queried)
+
+- `/skills?domain_module_id=in.(249,250,251)&skill_type=eq.system` -> 3 rows (F2 pass: exactly one per module).
+- `/skill_tools?skill_id=in.(291,292,293)` -> 7 rows; F4 invariant holds (query tools carry data_object_id; notify_person has data_object_id NULL); all `notes=""`.
+- `/domains?id=eq.149` and `/domain_modules?id=in.(249,250,251)` -> all 4 catalog_tagline + catalog_description now non-empty.
+- Legacy skill 59: still present with 6 skill_tools (unchanged), as expected.
+
+### JWT errors
+
+None.
+
+### Files written
+
+- `audits/FLEET-MAINT/history.md` (this append)
+- `audits/FLEET-MAINT/state.yaml` (rewrite: B1A-CATALOG-UX-COPY removed/resolved; B1A-SYSTEM-SKILLS kept with remaining-scope narrowed to the B2-6-blocked sign_document + skill-59 DELETE; `last_audit` 2026-06-06; `next_action_by` recomputed)
+- `.tmp_deploy/fleet_maint_b1a.ts` (idempotent loader)
+

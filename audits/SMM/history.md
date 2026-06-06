@@ -378,3 +378,108 @@ The module ids now exist, so the cascade items that were `blocked_by: B2-MODULE-
 - Per-module system skills (Rule #17 -> F2/F3): legacy skill `smm-system` (id 18, domain_module_id=null) still carries all 12 skill_tools. Now that 4 module anchors exist, it should be retired and split into per-module system skills. Tracked b1a (B1A-F2-PER-MODULE-SKILLS).
 - Catalog UX (M8/A4): `domains.catalog_tagline` + `catalog_description` still empty on row 106. Tracked b1a (B1A-A4-CATALOG-UX), surface-before-write.
 - Missing-master research (b3): the 4 substrate / candidate-domain questions above remain Phase-0 research.
+
+## 2026-06-06 - b1a execution
+
+Executed all 6 `b1a` items against the live `domain_map` module for SMM (domain 106). All writes
+landed `record_status='new'` (omitted on insert) and every `notes` column left empty per Rule #15.
+Loaders: [.tmp_deploy/fix_smm_b1a_2026_06_06.ts](../.tmp_deploy/fix_smm_b1a_2026_06_06.ts) (B6/B7/B11),
+[.tmp_deploy/fix_smm_f2_skills_2026_06_06.ts](../.tmp_deploy/fix_smm_f2_skills_2026_06_06.ts) (F2).
+
+### B1A-A4-CATALOG-UX — DONE (Rule #20 revised: write empty fields directly)
+
+PATCH `domains` id 106. Both `catalog_tagline` and `catalog_description` were empty (empty-guard
+passed); wrote buyer-voice copy (workflow + value, no vendor/product names, no em-dashes) directly
+into the empty columns. `record_status` stayed `new` (carries the review signal; reviewed in the
+catalog UI, not parked in this file). `domains.description` (analyst voice) left untouched.
+
+### B1A-B7-USERS-EDGES — DONE (Rule #10)
+
+INSERT 8 `data_object_relationships` rows, `users` (748) -> SMM masters, all
+`relationship_kind=reference`, `relationship_type=one_to_many`, `owner_side=source`, `is_required=false`:
+- 2075 users authors social_posts (125); 2076 users schedules social_posts; 2077 users approves social_posts
+- 2078 users responds_to social_messages (127); 2079 users owns social_accounts (126)
+- 2080 users manages_relationship_with influencers (130); 2081 users owns social_listening_topics (129)
+- 2082 users is_assigned social_mentions (128)
+
+### B1A-B6-INTRA-RELS — DONE
+
+INSERT 4 intra-domain `data_object_relationships` rows (all `reference`, `one_to_many`,
+`owner_side=source`, `is_required=false`):
+- 2071 social_accounts (126) publishes social_posts (125)
+- 2072 influencers (130) authors social_posts (125)
+- 2073 social_listening_topics (129) matches social_mentions (128)
+- 2074 social_accounts (126) receives social_messages (127)
+
+### B1A-B11-ALIASES — DONE
+
+INSERT 15 `data_object_aliases` rows, `alias_type='synonym'`, `is_preferred=false` (the live enum is
+`synonym` / `industry_term` / `solution_term`; the state.yaml `vendor_specific` / `industry_synonym`
+labels are stale; mapped to `synonym` since no concrete `solution_id` was pinned per alias):
+- social_messages (127): 1124 Conversations, 1125 Inbox Threads, 1126 Cases
+- social_mentions (128): 1127 Brand Mentions, 1128 Buzz Items
+- social_posts (125): 1129 Updates, 1130 Drafts, 1131 Scheduled Posts
+- social_accounts (126): 1132 Profiles, 1133 Connected Channels
+- social_listening_topics (129): 1134 Queries, 1135 Smart Folders, 1136 Themes
+- influencers (130): 1137 Creators, 1138 Talent
+
+### B1A-F2-PER-MODULE-SKILLS — DONE (Rule #17)
+
+INSERT 4 `skills` rows (`skill_type='system'`, `domain_id=106`, `domain_module_id` per module).
+NOTE: the platform rule `domain_required_when_skill_type_is_system` forced `domain_id` to be set on
+each system skill even though `domain_module_id` is the new anchor; set both.
+- 358 smm_publishing_agent (module 299); 359 smm_engagement_agent (module 300)
+- 360 smm_listening_agent (module 301); 361 smm_influencer_agent (module 302)
+
+INSERT 14 `skill_tools` rows, redistributing the 12 existing `tools` (reused, no new tools authored)
+plus `query_social_accounts` and `detect_sentiment` linked to two skills each. All `notes` empty
+(B2-NOTES-SKILLTOOLS resolved the Rule-#15-compliant way: new rows ship with empty notes; the prose
+on legacy tools 267/55/48/49 was not carried forward):
+- 358 publishing: query_social_posts, create_social_post, query_social_accounts, post_social_message
+  (all required) + generate_image, generate_text (optional)
+- 359 engagement: query_social_messages, query_social_accounts, detect_sentiment (all required)
+- 360 listening: query_social_mentions, respond_to_social_mention, query_social_listening_topics,
+  detect_sentiment (all required)
+- 361 influencer: query_influencers (required)
+
+DELETE legacy skill 18 (`smm-system`) and its 12 skill_tools. Prior values snapshotted here for
+reversibility:
+- skills row 18: `skill_name=smm-system`, `skill_type=system`, `domain_id=106`, `domain_module_id=null`,
+  `record_status=new`, description "System skill for Social Media Management - post scheduling,
+  listening, response workflows; posts published to external social platforms; mention sentiment
+  scored via compute."
+- skill_tools (id -> tool_id, requirement, notes): 228->228 query_social_posts req ""; 229->229
+  query_social_messages req ""; 230->230 query_social_mentions req ""; 231->231 query_social_accounts
+  req ""; 232->232 query_influencers req ""; 233->233 query_social_listening_topics req ""; 234->259
+  create_social_post req ""; 235->260 respond_to_social_mention req ""; 236->267 post_social_message
+  req "Posts published externally to social network destinations"; 237->55 detect_sentiment req
+  "Mention sentiment is core SMM analytics"; 238->48 generate_image opt "AI-generated post imagery";
+  239->49 generate_text opt "AI-generated post copy".
+
+### B1A-H1-PCF-RELOOKUP — DONE (re-point, not insert)
+
+Re-lookup finding: handoffs 90 and 91 were NOT untagged as the prior audit recorded. Both already
+carried `handoff_processes` rows pointing at process 23 ("Develop and manage marketing plans", PCF
+20008, L2) - a coarse L2 tag. PCF re-search of the advertising / brand / promotion family found a
+confident L4 match for both paid-amplification / channel-execution handoffs: process 665 "Execute
+promotional activities" (PCF 10169, L4) under "Develop and manage promotional activities" (20010 L3).
+PATCH both rows from process 23 -> 665, keeping `proposal_source=agent_curated`, `record_status=new`,
+`role=implements`, notes empty:
+- handoff_processes 1030 (handoff 90 influencer_campaign.completed -> MA): process 23 -> 665
+- handoff_processes 1031 (handoff 91 social_post.published -> MA): process 23 -> 665
+
+All 8 SMM cross-domain handoffs now carry a `handoff_processes` row (6 at L4/L3 from the 2026-05-31
+pass, 2 re-pointed to L4 this pass). H1 quality measure (approved) stays 0/8 by design (Rule #1).
+
+### Skipped / blocked
+
+None. All 6 b1a items fully resolved. (b1b items remain blocked on their `user_decision` /
+`depends_on` gates; b2 user-judgment and b3 vendor-research items untouched.)
+
+### Verified live counts (post-load)
+
+- `data_object_relationships` touching SMM masters/users: 690 (was 678; +12 = 4 intra + 8 users).
+- `data_object_aliases` on the 6 SMM masters: 15 (was 0).
+- `skills` with `domain_module_id in (299,300,301,302)`: 4 system skills, each with >=1 skill_tools
+  (6/3/4/1). Legacy skill 18 gone.
+- `handoff_processes` for handoffs 90/91: 2 rows, both -> process 665.

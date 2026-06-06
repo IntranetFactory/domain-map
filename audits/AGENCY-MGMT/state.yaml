@@ -1,8 +1,8 @@
 schema_version: 2
 domain: AGENCY-MGMT
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-05"
 
 b1a:
   - id: B1A-SYSTEM-SKILLS
@@ -27,112 +27,17 @@ b1a:
       catalog_tagline + catalog_description. Tool floor (mutate/transition/side_effect/compute)
       per B1B-AS6-TOOL-FLOOR follows.
     affected_modules: [210, 211, 212]
-
-  - id: B1A-AS1-EVENT-MODULE-FK
-    summary: "11 AGENCY-MGMT trigger_events have NULL domain_module_id; now unblocked (modules exist), single deterministic backfill."
-    finding: >-
-      11 trigger_events (ids 338 estimate.approved, 339 deliverable.approved,
-      340 agency_invoice.issued, 341 media_costs.posted, 342 vendor_invoice.received,
-      525 agency_time_entry.submitted, 526 agency_retainer.threshold_reached,
-      527 agency_retainer.depleted, 528 media_plan.approved, 529 media_plan.executed,
-      530 creative_brief.approved) all carry domain_module_id IS NULL. With modules now
-      live, the publishing-master->module map is concrete:
-      agency_jobs/agency_time_entries/agency_estimates/agency_retainers -> 210 (JOB-TRAFFIC);
-      media_plans/insertion_orders -> 211 (MEDIA-BUY);
-      creative_briefs/creative_deliverables -> 212 (CREATIVE-OPS).
-    action: >-
-      PATCH each event's domain_module_id per the master->module map. Mechanical backfill,
-      no longer gated.
-    affected_events:
-      - {id: 338, event_name: estimate.approved, current_category: lifecycle, proposed_category: lifecycle}
-      - {id: 339, event_name: deliverable.approved, current_category: lifecycle, proposed_category: lifecycle}
-      - {id: 340, event_name: agency_invoice.issued, current_category: state_change, proposed_category: state_change}
-      - {id: 341, event_name: media_costs.posted, current_category: state_change, proposed_category: state_change}
-      - {id: 342, event_name: vendor_invoice.received, current_category: state_change, proposed_category: state_change}
-      - {id: 525, event_name: agency_time_entry.submitted, current_category: state_change, proposed_category: state_change}
-      - {id: 526, event_name: agency_retainer.threshold_reached, current_category: threshold, proposed_category: threshold}
-      - {id: 527, event_name: agency_retainer.depleted, current_category: threshold, proposed_category: threshold}
-      - {id: 528, event_name: media_plan.approved, current_category: state_change, proposed_category: state_change}
-      - {id: 529, event_name: media_plan.executed, current_category: state_change, proposed_category: state_change}
-      - {id: 530, event_name: creative_brief.approved, current_category: state_change, proposed_category: state_change}
-    extra_module_map: "478/479/480/485 -> 210; 481/482 -> 211; 483/484 -> 212"
-
-  - id: B1A-AS3-HANDOFF-CASCADE
-    summary: "All 12 cross-domain handoffs carry NULL on the AGENCY-MGMT-side module FK; now unblocked (modules exist), mechanical PATCH per handoff."
-    finding: >-
-      8 outbound handoffs (344, 345, 346, 343, 514, 515, 516, 513) carry NULL
-      source_domain_module_id; 4 inbound handoffs (342, 347, 341, 348) carry NULL
-      target_domain_module_id. Modules now exist; payload->module mapping is concrete
-      (same map as B1A-AS1-EVENT-MODULE-FK).
-    action: >-
-      PATCH each handoff's AGENCY-MGMT-side module FK by payload->module:
-      agency_jobs (345, 342, 341) -> 210; agency_time_entries (513, 348) -> 210;
-      agency_estimates/legal_contracts (343) -> 210; agency_retainers (514) -> 210;
-      media_plans (516) -> 211; insertion_orders (346, 347) -> 211;
-      creative_briefs (515) -> 212; creative_deliverables (344) -> 212.
-    affected_handoffs:
-      - {handoff_id: 344, direction: outbound, source_domain: AGENCY-MGMT, target_domain: DAM, trigger_event: deliverable.approved, payload: creative_deliverables, null_field: source_domain_module_id}
-      - {handoff_id: 345, direction: outbound, source_domain: AGENCY-MGMT, target_domain: ERP-FIN, trigger_event: agency_invoice.issued, payload: agency_jobs, null_field: source_domain_module_id}
-      - {handoff_id: 346, direction: outbound, source_domain: AGENCY-MGMT, target_domain: ERP-FIN, trigger_event: media_costs.posted, payload: insertion_orders, null_field: source_domain_module_id}
-      - {handoff_id: 343, direction: outbound, source_domain: AGENCY-MGMT, target_domain: CLM, trigger_event: estimate.approved, payload: legal_contracts, null_field: source_domain_module_id}
-      - {handoff_id: 514, direction: outbound, source_domain: AGENCY-MGMT, target_domain: CRM, trigger_event: agency_retainer.depleted, payload: agency_retainers, null_field: source_domain_module_id}
-      - {handoff_id: 515, direction: outbound, source_domain: AGENCY-MGMT, target_domain: PSA, trigger_event: creative_brief.approved, payload: creative_briefs, null_field: source_domain_module_id}
-      - {handoff_id: 516, direction: outbound, source_domain: AGENCY-MGMT, target_domain: ERP-FIN, trigger_event: media_plan.executed, payload: media_plans, null_field: source_domain_module_id}
-      - {handoff_id: 513, direction: outbound, source_domain: AGENCY-MGMT, target_domain: PSA, trigger_event: agency_time_entry.submitted, payload: agency_time_entries, null_field: source_domain_module_id}
-      - {handoff_id: 342, direction: inbound, source_domain: CLM, target_domain: AGENCY-MGMT, trigger_event: legal_contract.signed, payload: agency_jobs, null_field: target_domain_module_id}
-      - {handoff_id: 347, direction: inbound, source_domain: S2P, target_domain: AGENCY-MGMT, trigger_event: vendor_invoice.received, payload: insertion_orders, null_field: target_domain_module_id}
-      - {handoff_id: 341, direction: inbound, source_domain: CRM, target_domain: AGENCY-MGMT, trigger_event: crm_opportunity.won, payload: agency_jobs, null_field: target_domain_module_id}
-      - {handoff_id: 348, direction: inbound, source_domain: HCM, target_domain: AGENCY-MGMT, trigger_event: employee.terminated, payload: agency_time_entries, null_field: target_domain_module_id}
-
-  - id: B1A-H1-APQC-REMAINDER
-    summary: "5 of 12 cross-domain handoffs still untagged; agent can propose single-confident PCF rows after a focused lookup."
-    finding: >-
-      Handoffs 341 (CRM->AGENCY, crm_opportunity.won -> agency_jobs),
-      346 (AGENCY->ERP-FIN, media_costs.posted -> insertion_orders),
-      513 (AGENCY->PSA, agency_time_entry.submitted -> agency_time_entries),
-      514 (AGENCY->CRM, agency_retainer.depleted -> agency_retainers),
-      516 (AGENCY->ERP-FIN, media_plan.executed -> media_plans)
-      carry zero handoff_processes rows. With PCF candidate lookups in hand the agent can
-      propose single confident agent_curated rows.
-    action: >-
-      INSERT 5 handoff_processes rows after running
-      /processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry
-      per handoff term. proposal_source='agent_curated', record_status omitted (defaults new),
-      role defaults to 'implements'.
-    affected_handoffs:
-      - {handoff_id: 341, direction: inbound, source_domain: CRM, target_domain: AGENCY-MGMT, trigger_event: crm_opportunity.won, payload: agency_jobs, null_field: handoff_processes}
-      - {handoff_id: 346, direction: outbound, source_domain: AGENCY-MGMT, target_domain: ERP-FIN, trigger_event: media_costs.posted, payload: insertion_orders, null_field: handoff_processes}
-      - {handoff_id: 513, direction: outbound, source_domain: AGENCY-MGMT, target_domain: PSA, trigger_event: agency_time_entry.submitted, payload: agency_time_entries, null_field: handoff_processes}
-      - {handoff_id: 514, direction: outbound, source_domain: AGENCY-MGMT, target_domain: CRM, trigger_event: agency_retainer.depleted, payload: agency_retainers, null_field: handoff_processes}
-      - {handoff_id: 516, direction: outbound, source_domain: AGENCY-MGMT, target_domain: ERP-FIN, trigger_event: media_plan.executed, payload: media_plans, null_field: handoff_processes}
-
-  - id: B1A-H1-REPLACE-348
-    summary: "Handoff 348 carries a wrong discovery_override APQC tag (onboarding instead of exit); propose REPLACE with the correct exit-processing PCF activity."
-    finding: >-
-      Handoff 348 (HCM->AGENCY-MGMT, employee.terminated -> agency_time_entries) has a
-      handoff_processes row pointing at process 41 'Manage employee onboarding, training,
-      and development' (L2) with proposal_source='discovery_override'. The handoff is about
-      terminating an employee's time entries on separation, not onboarding. The override
-      target is mismatched.
-    action: >-
-      Run /processes?process_name=ilike.*exit*&source_framework=eq.apqc_pcf_cross_industry
-      (and 'separation', 'Manage employee information' cluster). Choose the highest-confidence
-      L3 match; DELETE the discovery_override row; INSERT a new agent_curated row at
-      record_status='new'.
-    affected_handoffs:
-      - {handoff_id: 348, direction: inbound, source_domain: HCM, target_domain: AGENCY-MGMT, trigger_event: employee.terminated, payload: agency_time_entries, null_field: handoff_processes_correct_pcf}
-
-  - id: B1A-AS2-REG-ASC606
-    summary: "Link ASC 606 (regulation id 57) to AGENCY-MGMT via domain_regulations; the domain.business_logic already cites ASC 606."
-    finding: >-
-      domains.business_logic on AGENCY-MGMT (id 153) cites ASC 606
-      ('project-based revenue recognition under ASC 606'). regulations.id=57
-      'ASC 606 Revenue Recognition' exists in the catalog. No domain_regulations row
-      links the two; A4 regulation linkage band fails.
-    action: >-
-      INSERT one domain_regulations row {domain_id: 153, regulation_id: 57,
-      applicability: 'mandatory'}. Confirm applicability enum value via
-      /fields?table_name=eq.domain_regulations&field_name=eq.applicability before insert.
+    blocked_by:
+      - {type: user_decision, ref: B2-S2}
+    status_note: >-
+      2026-06-05 b1a pass: NOT executed. The skill-split shape (delete skill 26 + author 3
+      fresh vs rename skill 26 + author 2 siblings) is a B2-S2 user decision that affects
+      skill_id continuity for downstream agent references; skipped per the skip-on-user_decision
+      rule. The catalog buyer-copy half (M8/A4 catalog_tagline + catalog_description on the 3
+      modules) is forbidden to auto-write per Rule #20; drafts surfaced in the 2026-06-05
+      history.md section for marketing review, item left OPEN. Once B2-S2 lands, the system
+      skills + per-module tool floor (B1B-AS5 / B1B-AS6) and the approved catalog copy load
+      together.
 
 b1b:
   - id: B1B-AS2-LIFECYCLE

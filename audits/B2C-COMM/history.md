@@ -384,3 +384,71 @@ This resolves the structural blocker B1B-S2-MODULES that gated B1B-S3 / S4 / S6 
 - https://tests.semantius.app/domain_map/domain_modules
 - https://tests.semantius.app/domain_map/domain_module_capabilities
 - https://tests.semantius.app/domain_map/domain_module_data_objects
+
+## 2026-06-05 — b1a execution
+
+Executed the two agent-solvable b1a items via `.tmp_deploy/fix_b2c_comm_b1a_2026_06_05.ts` (idempotent; dry-run validated before apply). Scope: the skills/tools half of B1A-MODULE-SKILLS-UX (Rule #17 / F1 / F2 / F3 / F7) and all of B1A-H1-CORE (H1). The catalog-UX half of B1A-MODULE-SKILLS-UX (M8 / A4 buyer-voice copy on modules 213 / 214 / 215) is Rule #20 user-gated: DRAFTED for the user and left OPEN (not written).
+
+### B1A-MODULE-SKILLS-UX (skills/tools half) — DONE
+
+**3 module-level system skills created** (`skill_type='system'`, `domain_id=71`, `domain_module_id` set, `record_status` default 'new'):
+
+| skill_name | domain_module_id |
+|---|---|
+| b2c-comm-catalog-merch-system | 213 |
+| b2c-comm-order-capture-system | 214 |
+| b2c-comm-fulfill-ship-system | 215 |
+
+**23 skill_tools rows authored**, redistributing the legacy skill-24 tool surface per the B1B-S10 partition (requirement_level preserved; `query_customer_subscriptions` stays `optional`):
+
+- 213 catalog-merch (6, all required): query_products (271), query_storefronts (272), query_coupons (277), create_product (283), update_product (284), create_coupon (286).
+- 214 order-capture (14): query_orders (268), query_order_lines (269), query_carts (270), query_checkouts (273), query_payment_transactions (274), query_customers (9), query_customer_subscriptions (24, optional), create_order (278), update_order_status (279), refund_order (280), create_cart (281), create_checkout (282), execute_payment (43), **notify_person (913)** — all required except the one noted. **B1B-S11 applied: `send_email` (tool 37) was NOT carried over; `notify_person` (tool 913, coverage_tier=platform) was linked in its place** for the generic order / cart / payment notification surface (channel-vs-capability default, F7).
+- 215 fulfill-ship (3, all required): query_fulfillments (275), query_shipments (276), create_shipment (285).
+
+**Legacy skill 24 retired (F1) — prior values snapshotted for reversibility:**
+
+- `skills` row 24: `skill_name='b2c-comm-system'`, `skill_type='system'`, `domain_id=71`, `domain_module_id=NULL`, `description='System skill for Digital Commerce — storefront, product, cart, checkout, order, payment, fulfillment, shipment workflows. Payment captures executed externally; order-confirmation + cart-abandonment cascades via email.'`. DELETED.
+- Its 23 `skill_tools` rows (ids 295-317), all `notes=''`, DELETED. Prior (id, tool_id, tool_name, requirement_level): 316/9/query_customers/required; 317/24/query_customer_subscriptions/optional; 315/37/send_email/required; 314/43/execute_payment/required; 295/268/query_orders/required; 296/269/query_order_lines/required; 297/270/query_carts/required; 298/271/query_products/required; 299/272/query_storefronts/required; 300/273/query_checkouts/required; 301/274/query_payment_transactions/required; 302/275/query_fulfillments/required; 303/276/query_shipments/required; 304/277/query_coupons/required; 305/278/create_order/required; 306/279/update_order_status/required; 307/280/refund_order/required; 308/281/create_cart/required; 309/282/create_checkout/required; 310/283/create_product/required; 311/284/update_product/required; 312/285/create_shipment/required; 313/286/create_coupon/required. (To reverse: re-insert skill 24 with the above shape, then re-link these tool_ids; send_email/37 was on it pre-retire.)
+
+### B1A-H1-CORE — DONE
+
+6 `handoff_processes` rows INSERTed (`role='implements'`, `proposal_source='agent_curated'`, `record_status` default 'new'; idempotent on natural key (handoff_id, process_id); no prior rows existed on any of these 6 handoffs):
+
+| handoff_id | direction | process_id | process_name |
+|---|---|---|---|
+| 326 | outbound (B2C-COMM -> ERP-FIN, commerce_order.refunded) | 1422 | Process and distribute payments |
+| 331 | outbound (B2C-COMM -> SUB-MGMT, commerce_order.placed) | 150 | Manage sales orders |
+| 504 | outbound (B2C-COMM -> CDP, commerce_product.published) | 115 | Manage product and service master data |
+| 93 | inbound (HCMS -> B2C-COMM, content_entry.published) | 115 | Manage product and service master data |
+| 96 | inbound (HCMS -> B2C-COMM, content_release.published) | 113 | Manage product and service life cycle |
+| 492 | inbound (SUB-MGMT -> B2C-COMM, customer_invoice.issued) | 1422 | Process and distribute payments |
+
+### B1A-MODULE-SKILLS-UX (catalog-UX half) — DRAFTED FOR USER, OPEN
+
+Rule #20 / B2-S7 wording gate: the following `catalog_tagline` (one buyer-voice sentence) + `catalog_description` (buyer voice, workflow + value) drafts are surfaced for verbatim approval. NOT written. The item stays in b1a until the user approves wording.
+
+- **213 B2C-COMM-CATALOG-MERCH** — tagline: "Build your product catalog and run the storefront that shoppers browse and buy from." description: "Create and publish products, organize them into a storefront customers can browse, and launch the promotions that move them. Set up catalog content, configure how products appear across your sites, and run coupons and discount campaigns from one place. Keep the catalog accurate and the storefront ready to sell."
+- **214 B2C-COMM-ORDER-CAPTURE** — tagline: "Turn carts into paid orders and keep every checkout moving." description: "Guide shoppers from cart to confirmed order: capture the cart, run checkout, take payment, and create the order with its line items. Track each order through its lifecycle, handle refunds when they are needed, and keep payment status in view. Reads the shared customer record so every order ties back to the right shopper."
+- **215 B2C-COMM-FULFILL-SHIP** — tagline: "Get paid orders picked, packed, and out the door to your customers." description: "Take confirmed orders through fulfillment and shipping. Create fulfillments from order lines, assign them to a location, and generate shipments with carrier and tracking so customers know their package is on the way. Keep delivery status current from pick to doorstep."
+
+(The domain-grain `domains.id=71` catalog copy in B2-S7 is a separate b2 user item, not part of b1a; not drafted here.)
+
+### Verification (post-apply live counts)
+
+- `/skills?domain_id=eq.71&skill_type=eq.system`: 3 rows, all `domain_module_id` set (213/214/215), legacy skill 24 absent (F1 / F2 pass).
+- `/skill_tools` across the 3 new skills: 23 rows (6 + 14 + 3); `send_email` not present, `notify_person` linked on order-capture.
+- `/handoff_processes` on the 6 handoffs: 6 `agent_curated` rows, all `record_status='new'`.
+
+### Loader
+
+`c:/dev/domain-map/.tmp_deploy/fix_b2c_comm_b1a_2026_06_05.ts`. Idempotent: skills keyed on `skill_name`, skill_tools on (skill_id, tool_id), handoff_processes on (handoff_id, process_id); legacy-skill teardown guarded on existence. Re-run is a no-op once applied.
+
+### UI spot-check links
+
+- https://tests.semantius.app/domain_map/skills
+- https://tests.semantius.app/domain_map/skill_tools
+- https://tests.semantius.app/domain_map/handoff_processes
+
+### 2026-06-05 catalog UX written (supersedes the "drafted, left open" note above)
+
+The empty `catalog_tagline` / `catalog_description` on the B2C-COMM domain row and modules 213, 214, 215 were WRITTEN (not parked). Loader: `.tmp_deploy/backfill_catalog_ux_2026_06_05.ts` (empty-guard: only empty fields written, no overwrite). record_status on these rows is `new`, so the copy is reviewed in-record per the revised Rule #20. The prior note in this date section that left the UX "open" is superseded; the UX-only state.yaml items were removed.

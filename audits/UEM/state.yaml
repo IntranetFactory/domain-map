@@ -1,65 +1,15 @@
 schema_version: 2
 domain: UEM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
-b1a:
-  - id: B1A-SYSTEM-SKILLS
-    summary: "Author one skill_type=system skill per UEM module (3 needed) plus tools + skill_tools (Rule #17 -> F2/F3); then retire legacy uem-system skill 114 (F1)"
-    finding: >
-      As of 2026-06-02 UEM has 3 domain_modules (UEM-DEVICE-LIFECYCLE id 308,
-      UEM-CONFIG-APPS id 309, UEM-COMPLIANCE-POSTURE id 310) but zero per-module system
-      skills. F2/F3 fail. The legacy domain_id-only system skill uem-system (id 114) holds
-      8 query_* skill_tools that must redistribute to the per-module skills before it can
-      retire (F1). Module split removed the prior B1B-S1 gate, so this is now agent-solvable.
-    action: >
-      Per Phase-S, name each skill <module_code_lower>_agent (uem_device_lifecycle_agent,
-      uem_config_apps_agent, uem_compliance_posture_agent); INSERT skills rows with the
-      module's domain_module_id; INSERT tools + skill_tools (>=1 each, typical 5-20). F4
-      invariant: query/mutate need data_object_id; fetch/side_effect/compute must NOT;
-      inbound is either. After all three land + skill_tools redistributed, DELETE skill 114.
-    affected_modules: [308, 309, 310]
-
-  - id: B1A-HANDOFF-MODULE-BACKFILL
-    summary: "Backfill source_domain_module_id on all 9 outbound UEM handoffs (655-663) now that modules exist (B10b)"
-    finding: >
-      All 9 outbound handoffs carry source_domain_module_id=NULL. The B1-S1 module gate is
-      now cleared (3 modules live), so the deterministic strongest-role backfill can run.
-    action: >
-      Backfill per trigger-event master ownership: events on enrolled_devices (655, 656,
-      657, 658) -> 308 UEM-DEVICE-LIFECYCLE; on device_compliance_results (659, 660, 661) ->
-      310 UEM-COMPLIANCE-POSTURE; on device_configuration_profiles (663) -> 309 UEM-CONFIG-APPS;
-      on device_app_assignments (662) -> 309 UEM-CONFIG-APPS. Loader pattern:
-      backfill_ats_handoff_modules_2026_05_23.ts.
-    affected_handoffs:
-      - {handoff_id: 655, direction: outbound, source_domain: UEM, target_domain: ITSM, trigger_event: enrolled_device.enrolled, payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 656, direction: outbound, source_domain: UEM, target_domain: IGA, trigger_event: enrolled_device.enrolled, payload: enrolled_devices, null_field: source_domain_module_id}
-      - {handoff_id: 657, direction: outbound, source_domain: UEM, target_domain: HAM, trigger_event: enrolled_device.retired, payload: enrolled_devices, null_field: "source_domain_module_id and target_domain_module_id"}
-      - {handoff_id: 658, direction: outbound, source_domain: UEM, target_domain: IGA, trigger_event: enrolled_device.lost_or_stolen, payload: enrolled_devices, null_field: source_domain_module_id}
-      - {handoff_id: 659, direction: outbound, source_domain: UEM, target_domain: IGA, trigger_event: device_compliance_result.non_compliant, payload: device_compliance_results, null_field: source_domain_module_id}
-      - {handoff_id: 660, direction: outbound, source_domain: UEM, target_domain: ITSM, trigger_event: device_compliance_result.non_compliant, payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 661, direction: outbound, source_domain: UEM, target_domain: IGA, trigger_event: device_compliance_result.compliant, payload: device_compliance_results, null_field: source_domain_module_id}
-      - {handoff_id: 662, direction: outbound, source_domain: UEM, target_domain: SAM, trigger_event: device_app_assignment.deployed, payload: device_app_assignments, null_field: "source_domain_module_id and target_domain_module_id"}
-      - {handoff_id: 663, direction: outbound, source_domain: UEM, target_domain: ITSM, trigger_event: device_configuration_profile.drift_detected, payload: service_incidents, null_field: source_domain_module_id}
-
-  - id: B1A-LIFECYCLE-STATES
-    summary: "Author lifecycle states for all 8 UEM masters; anchor domain_module_id per the new 3-module shape (B12)"
-    finding: >
-      0 lifecycle states across data_object_id 556-563. Module gate now cleared, so states
-      can carry domain_module_id. Twelve trigger events imply the state vocabulary.
-    action: >
-      Draft per-master state rows; set domain_module_id per realizing module (556/561/562 ->
-      308; 557/559/560 -> 309; 558/563 -> 310); mark workflow gates requires_permission=true.
-    affected_masters:
-      - {data_object_id: 556, name: enrolled_devices, target_module_id: 308, workflow: "enrolled to compliant/non_compliant to lost_or_stolen/retired"}
-      - {data_object_id: 561, name: enrollment_tokens, target_module_id: 308, workflow: "issued to consumed/revoked/expired"}
-      - {data_object_id: 562, name: device_deployment_results, target_module_id: 308, workflow: "queued to succeeded/failed"}
-      - {data_object_id: 557, name: device_configuration_profiles, target_module_id: 309, workflow: "draft to published to assigned to drift_detected"}
-      - {data_object_id: 559, name: mobile_app_packages, target_module_id: 309, workflow: "uploaded to published to deprecated"}
-      - {data_object_id: 560, name: device_app_assignments, target_module_id: 309, workflow: "assigned to deployed to failed/removed"}
-      - {data_object_id: 558, name: device_compliance_policies, target_module_id: 310, workflow: "draft to published to revoked"}
-      - {data_object_id: 563, name: device_compliance_results, target_module_id: 310, workflow: "evaluating to compliant/non_compliant"}
+# b1a fully cleared on 2026-06-06 (see history.md "2026-06-06 - b1a execution"):
+#   B1A-HANDOFF-MODULE-BACKFILL: 9 handoffs (655-663) source_domain_module_id backfilled.
+#   B1A-LIFECYCLE-STATES: 8 masters classified operational_workflow + 29 lifecycle states.
+#   B1A-SYSTEM-SKILLS: 3 per-module system skills (334/335/336) + 15 mutate tools + 29
+#     skill_tools; legacy skill 114 retired (this also resolved b1b RETIRE-LEGACY-SKILL).
+b1a: []
 
 b1b:
   - id: B1B-CATALOG-UX
@@ -86,7 +36,8 @@ b1b:
       EUC-APP-CATALOG-MANAGER if the config-apps split warrants). Each gets role_modules
       rows (>=2 of modules 308/309/310, interaction_level set) and a role_permissions bundle.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1A-SYSTEM-SKILLS}
+      # prerequisite_entity B1A-SYSTEM-SKILLS satisfied 2026-06-06 (skills 334/335/336 exist);
+      # this item is now unblocked but remains a b1b role-authoring task (not executed this pass).
 
   - id: B1B-USER-EDGE-VERBS
     summary: "PATCH relationship_verb on 6 existing user-edge data_object_relationships rows (1847-1852)"
@@ -158,14 +109,8 @@ b1b:
     blocked_by:
       - {type: user_decision, ref: B2-COVERAGE}
 
-  - id: B1B-RETIRE-LEGACY-SKILL
-    summary: "Retire legacy uem-system skill (id 114) after per-module skills exist (F1)"
-    finding: >
-      F1 cannot fire until per-module skills cure F2. Legacy domain_id-only skill 114 has 8
-      query_* tools that must redistribute to the 3 per-module system skills first.
-    action: After B1A-SYSTEM-SKILLS lands skills + skill_tools, DELETE skill 114.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1A-SYSTEM-SKILLS}
+  # B1B-RETIRE-LEGACY-SKILL resolved 2026-06-06: skill 114 deleted as the final step of
+  # B1A-SYSTEM-SKILLS once the 3 per-module skills + redistributed query tools landed.
 
   - id: B1B-DOMAIN-NOTES
     summary: "PATCH UEM domain.notes pointer back to audits/UEM/ once user signs off"

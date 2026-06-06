@@ -1,50 +1,17 @@
 schema_version: 2
 domain: VET-PRACT-MGMT
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
-b1a:
-  - id: B1A-MODULE-SYSTEM-SKILLS
-    summary: "3 new full modules (321/322/323) have zero system skills; Rule #17 requires exactly one skill_type=system skill per module."
-    finding: >
-      Modularization on 2026-06-02 created VET-PRACT-MGMT-CLINICAL-CARE (321),
-      VET-PRACT-MGMT-FRONT-OFFICE (322), VET-PRACT-MGMT-PHARMACY-RX (323), all module_kind=full.
-      None has a domain_module-scoped system skill yet. A legacy domain-level skill (id 116,
-      domain_module_id=null) with 6 thin tools still exists and must be retired once per-module
-      skills land. F2/F3 substrate: redistribute the 5 legacy query tools (744-748) by entity
-      ownership across the 3 modules; add per-module mutate tools (mutate_animal_patient_status
-      and mutate_veterinary_lab_result_review on 321; mutate_controlled_substance_ledger_dispense
-      DEA-attributed on 323).
-    action: >
-      Author exactly one skill_type=system skill per module (321/322/323) per Rule #17 (F2/F3).
-      Redistribute legacy tools 744-748 + 37 by module entity ownership; add the per-module mutate
-      tools; then retire legacy skill id 116. fetch_idexx_vetconnect_lab_result /
-      fetch_antech_lab_result / inbound lab-result + payment-settlement webhooks attach to 321/322
-      and depend on the B3 lab-order / invoice entities (defer those tool legs).
-    affected_modules: [321, 322, 323]
-    extra_legacy_skill_id: 116
-    extra_legacy_tool_ids: [744, 745, 746, 747, 748, 37]
-
-  - id: B1A-MODULE-CATALOG-UX
-    summary: "3 new modules have empty catalog_tagline + catalog_description (M8); domain-grain A4 copy also empty."
-    finding: >
-      Modules 321/322/323 were inserted with name + description only; their catalog_tagline and
-      catalog_description (M8 per-module buyer-voice UX fields) are empty. The domains row (id 151)
-      also still has empty catalog_tagline + catalog_description (A4). Rule #20 requires
-      user-approved buyer-voice copy and forbids overwriting non-empty values without per-row
-      approval, but a first-fill draft is authorable now that the modules exist.
-    action: >
-      Draft per-module catalog_tagline (one sentence) + catalog_description (1-3 short paragraphs,
-      buyer voice: workflow + value) for 321/322/323 and the domain-grain A4 copy for domains id 151.
-      Surface drafts for user approval before PATCH per Rule #20 (links to B2-CATALOG-COPY for the
-      domain-grain trigger choice).
-    affected_modules: [321, 322, 323]
-    extra_target_columns:
-      - domain_modules.catalog_tagline
-      - domain_modules.catalog_description
-      - domains.catalog_tagline
-      - domains.catalog_description
+# b1a fully executed 2026-06-06 (see history.md "## 2026-06-06 - b1a execution").
+# Both items resolved:
+#   - B1A-MODULE-SYSTEM-SKILLS: skills 386/387/388 authored (one per module 321/322/323),
+#     legacy query tools 744-748 redistributed by master ownership, mutate tools 1785/1786/1787
+#     added, skill_tools 3177-3186 linked, legacy skill 116 + its skill_tools deleted (F1).
+#   - B1A-MODULE-CATALOG-UX: catalog_tagline + catalog_description written into the empty fields
+#     on modules 321/322/323 and domain 151 (Rule #20 empty-guard, no overwrites).
+b1a: []
 
 b1b:
   - id: B1B-B12-LIFECYCLE-STATES

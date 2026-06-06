@@ -1,37 +1,10 @@
 schema_version: 2
 domain: RE-CRE
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
-b1a:
-  - id: B1A-SYS-SKILLS
-    summary: "Author per-module system skills for the 3 RE-CRE modules and retire legacy domain-level skill 96 (Rule #17 -> F2/F3)."
-    finding: >
-      Legacy domain-level skill 96 (re-cre-system, domain_id=145, domain_module_id=null) is the
-      only RE-CRE skill row; 0 module-level skill_type=system rows. Rule #17 requires exactly one
-      system skill per module. The 3 modules now exist (RE-CRE-LEASING 278, RE-CRE-CAM-OPS 292,
-      RE-CRE-SPACE-MARKET 293), so this is now agent-actionable. F7 channel-vs-capability: the
-      legacy skill links send_email instead of the notify_person abstraction.
-    action: >
-      Author 3 module-level system skills (one per module, e.g. re_cre_leasing_agent on 278,
-      re_cre_cam_ops_agent on 292, re_cre_space_market_agent on 293); rebind / split the 8 legacy
-      skill_tools rows per master ownership; switch send_email to notify_person; DELETE legacy
-      skill 96 once its tool bindings are migrated.
-    affected_modules: [278, 292, 293]
-
-  - id: B1A-CATALOG-UX
-    summary: "PATCH domains row 145 catalog_tagline + catalog_description (M8 / A4, Rule #20)."
-    finding: >
-      domains.catalog_tagline and catalog_description are both empty on row 145. Now that the
-      domain is built (3 modules), catalog UX should be authored. Working tagline draft: Manage
-      commercial leases, CAM reconciliations, rent escalations, and stacking plans across office,
-      retail, and industrial portfolios. Working description: 3-paragraph buyer-voice covering the
-      leasing pipeline (LOI to executed lease with tenant-credit underwriting and subleases), CAM
-      reconciliation + rent escalations, and space inventory + market comps + tenant relations.
-    action: >
-      Run the Rule #20 draft + review + write loop, then PATCH /domains?id=eq.145 with the
-      approved catalog_tagline and catalog_description. No em-dashes.
+b1a: []
 
 b1b:
   - id: B1B-B6

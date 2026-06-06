@@ -342,3 +342,102 @@ KGP-touching handoffs, F1 legacy skill (76) retirement, and APQC handoff tagging
 open. Several were gated on M1 and are now UNBLOCKED by this build (skills, lifecycle,
 B10b backfill, F1 retirement) and move to b1a; the rest stay b1b/b3. See state.yaml.
 
+## 2026-06-06 - b1a execution
+
+Loader: [.tmp_deploy/fix_kgp_b1a_2026_06_06.ts](../.tmp_deploy/fix_kgp_b1a_2026_06_06.ts). Ran
+from project root (`c:/dev/domain-map`). Tenant confirmed (`adenin`,
+`api_baseurl=https://adenin.semantius.ai`). No JWT-audience errors. All inserts omitted
+`record_status` (DB default `new`); no `notes` columns written.
+
+### B1A-SYSTEM-SKILLS - DONE
+
+Authored the 2 module-scoped system skills (Rule #17), re-allocated skill 76's 4 query tools
+by module, added the mutate + side_effect tool floor per master, wrote module M8 catalog copy,
+and retired legacy skill 76.
+
+| Table | Action | Row id(s) | Prior value (for DELETE) |
+|---|---|---|---|
+| `tools` | INSERT `publish_ontology` (mutate, data_object_id=742, coverage_tier=platform) | 1668 | n/a (new) |
+| `tools` | INSERT `merge_kg_entity` (mutate, data_object_id=743, coverage_tier=platform) | 1669 | n/a (new) |
+| `skills` | INSERT `kgp_ontology_engine_agent` (system, domain_id=138, domain_module_id=270) | 322 | n/a (new) |
+| `skills` | INSERT `kgp_graph_query_apps_agent` (system, domain_id=138, domain_module_id=271) | 323 | n/a (new) |
+| `skill_tools` | INSERT skill 322 -> tools 111 (req), 820 (req), 1668 (req), 913 notify_person (opt) | 2910, 2911, 2912, 2913 | n/a (new) |
+| `skill_tools` | INSERT skill 323 -> tools 386 (req), 821 (req), 1669 (req), 913 notify_person (opt) | 2914, 2915, 2916, 2917 | n/a (new) |
+| `skill_tools` | DELETE skill 76's 4 rows (tools repointed to new skills) | 641 (tool 111), 642 (tool 386), 982 (tool 820), 983 (tool 821) | skill_id=76, requirement_level=required, record_status=new |
+| `skills` | DELETE legacy skill 76 `kgp-system` (F1) | 76 | skill_name='kgp-system', skill_type='system', domain_id=138, domain_module_id=NULL, record_status='new', description='System skill for Knowledge Graph Platform — runtime workflows over the domain's master data, derived from masters + cross-domain handoffs.' |
+| `domain_modules` | PATCH 270 catalog_tagline + catalog_description (M8, empty-guard; both were empty) | 270 | catalog_tagline='', catalog_description='' |
+| `domain_modules` | PATCH 271 catalog_tagline + catalog_description (M8, empty-guard; both were empty) | 271 | catalog_tagline='', catalog_description='' |
+
+Tool-floor note: lifecycle states / workflow-gate (transition) tools were NOT authored
+because B12 lifecycle modeling is gated on the user_decision B2-S6 (b1b). The floor shipped is
+query (re-allocated) + a representative mutate per master + the `notify_person` side_effect
+abstraction (channel-vs-capability default). Both new mutate tools are domain-specific
+(`publish_ontology`, `merge_kg_entity`), deduped by `tool_name` against live `/tools` before
+insert (neither existed). `notify_person` (913, platform) re-used, not re-created.
+
+Both system skills score strict 100% / operational 100% (every linked tool is
+`coverage_tier='platform'`). F1/F2/F3/F4/F5 now pass for KGP modules 270 and 271.
+
+Module-grain M8 catalog copy written straight into the empty fields per revised Rule #20
+(buyer voice, no vendor/product names, no em-dashes). The row `record_status='new'` carries the
+review signal. Domain-level A4 (`domains` 138 catalog_tagline/description) was NOT written: it
+stays gated on the user decision B2-S5 (b2). A typo in module 270's just-authored
+`catalog_description` ("trust what published") was corrected in-pass to "trust what gets
+published" (same-pass draft fix, not a Rule #20 overwrite of approved copy).
+
+### B1A-EVENT-MODULE-FK - DONE
+
+PATCH `trigger_events.domain_module_id` (all 4 were NULL; event_category unchanged, already
+correct):
+
+| id | event_name | prior domain_module_id | new domain_module_id |
+|---|---|---|---|
+| 720 | kgp_ontology.imported | NULL | 270 |
+| 721 | kgp_ontology.validation_failed | NULL | 270 |
+| 722 | kgp_knowledge_graph_entity.merged | NULL | 271 |
+| 723 | kgp_knowledge_graph_entity.created | NULL | 271 |
+
+### B1A-B10B-HANDOFF-FK - DONE
+
+PATCH the resolvable KGP-side module FKs (all were NULL before). Cross-side FKs remain NULL by
+design (owed by neighbor domains per b1b B1B-B10B-CROSS-SIDE).
+
+| handoff_id | direction | column patched | prior value | new value |
+|---|---|---|---|---|
+| 221 | outbound (KGP->DATA-AI-PLAT) | source_domain_module_id | NULL | 270 |
+| 697 | outbound (KGP->DATA-AI-PLAT) | source_domain_module_id | NULL | 270 |
+| 698 | outbound (KGP->DCG) | source_domain_module_id | NULL | 271 |
+| 699 | outbound (KGP->DCG) | source_domain_module_id | NULL | 271 |
+| 222 | inbound (MDM->KGP) | target_domain_module_id | NULL | 271 |
+| 223 | inbound (DCG->KGP) | target_domain_module_id | NULL | 270 |
+
+Mapping followed the b1a action text (publishing/consuming master -> module map: ontology
+payloads -> 270; KG-entity payloads -> 271). Handoff 265 (DCG glossary_term.published into KGP,
+payload glossary_terms 302) was intentionally NOT patched: it is listed under b1b
+B1B-B10B-CROSS-SIDE / has no clean KGP master, and the b1a action did not include it.
+
+### B1A-APQC-H221 - DONE (already satisfied)
+
+`handoff_processes` row for handoff 221 -> process 275 (Define and maintain business
+information architecture, external_id 20770), proposal_source=agent_curated, role=implements,
+record_status=new already existed as id 971 (created in a prior pass). Idempotent check matched
+it; no duplicate inserted. Item is resolved.
+
+### Verification (live, post-load)
+
+- `skills` for domain 138: exactly 2 system skills, both module-anchored (322->270, 323->271);
+  legacy skill 76 absent (F1 pass, F2 pass).
+- `skill_tools` for 322/323: 4 each; F3 pass. F4 invariant holds (query/mutate carry
+  data_object_id, notify_person side_effect carries NULL).
+- `trigger_events` 720/721 -> module 270; 722/723 -> module 271.
+- `handoffs` KGP-side module FKs set as tabled above; cross-side still NULL (report-only).
+- `domain_modules` 270/271 catalog_tagline + catalog_description now non-empty (record_status
+  carries review signal).
+- `handoff_processes` h.221 row 971 present.
+
+### Skipped / not executed this pass
+
+- Domain-level A4 catalog copy on `domains` 138 — gated on user decision B2-S5 (b2); left empty.
+- All b1b items (B1B-B12-LIFECYCLE gated on B2-S6, B1B-B8-OUTBOUND-EDGES, B1B-B10B-CROSS-SIDE,
+  B1B-APQC-H222-H697-H698-H699, B1B-APQC-H265-NOTE) and b3 candidates — out of this pass's scope.
+

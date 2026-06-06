@@ -355,3 +355,47 @@ Master-to-module mapping (each master in exactly one module, in-domain and catal
 ### Out of scope this pass (deferred, see state.yaml)
 
 Per-module system skills + skill_tools (Rule #17 / F2-F3), catalog UX taglines and descriptions (M8 / A4), lifecycle states on workflow-bearing masters (B11), pattern-flag re-evaluation, business_function ownership, regulations, handoff direction fixes, and DSPM-owed source_domain_module_id back-fill on the 10 outbound handoffs all remain open. The B3 vendor-research candidates (data_access_paths, remediation_playbooks, data_perimeters, toxic_combinations) carry forward unchanged.
+
+## 2026-06-05 - b1a execution
+
+Executed both b1a items in `state.yaml` (Phase S / Rule #17 and catalog UX / Rule #20). Tenant confirmed `adenin` / module 1001 before any write. Both items FULLY RESOLVED and removed from `b1a` (now empty). No JWT-audience errors; no ambiguity skips.
+
+### B1A-SKILLS-PER-MODULE (DONE)
+
+Loader: `.tmp_deploy/fix_dspm_skills.ts` (idempotent; dedup by natural key). Note: the `state.yaml` finding said orphan skill 51 carried "0 skill_tools"; live state showed it carried 8 (ids 484-491). Snapshotted below before delete.
+
+**DELETE (snapshot for reversibility):**
+
+- `skills` id=51: `{skill_name: "dspm-system", skill_type: "system", domain_id: 140, domain_module_id: null, role_id: null, process_id: null, record_status: "new", description: "System skill for Data Security Posture Management — runtime workflows over the domain's master data, derived from masters + cross-domain handoffs."}` (deleted per b1a action + B2-SKILL-ORPHAN recommendation (a)).
+- `skill_tools` ids 484-491 (all `skill_id=51`, `requirement_level=required`, `notes=""`, `record_status=new`): tool_id 418 (query_cloud_storage_buckets), 419 (query_cloud_databases), 420 (query_data_warehouses), 421 (query_saas_app_instances), 422 (query_iam_access_policies), 423 (query_sensitive_data_incidents), 424 (query_data_risk_scores), 425 (query_shadow_data_findings). Deleted ahead of the skill row. The 8 `tools` rows themselves were NOT deleted (catalog-wide, reused below).
+
+**INSERT `tools` (12 new domain-specific mutate / workflow-gate primitives, all `coverage_tier=platform`, `record_status=new`):** ids 1616 update_cloud_storage_bucket (336), 1617 update_cloud_database (337), 1618 update_data_warehouse (338), 1619 update_saas_app_instance (339), 1620 triage_shadow_data_finding (343), 1621 assign_shadow_data_finding (343), 1622 flag_iam_access_policy (340), 1623 remediate_iam_access_policy (340), 1624 recalculate_data_risk_score (342), 1625 triage_sensitive_data_incident (341), 1626 contain_sensitive_data_incident (341), 1627 resolve_sensitive_data_incident (341). Existing generic tools reused, not recreated: query_* 100/101/103/418-425, mutates 171 classify_data_asset / 172 certify_data_asset, abstraction 913 notify_person.
+
+**INSERT `skills` (3 system skills, `skill_type=system`, `domain_id=140`, `record_status=new`):** id 285 dspm_discovery_classification_agent -> module 233; id 286 dspm_access_risk_agent -> module 234; id 287 dspm_incident_remediation_agent -> module 235.
+
+**INSERT `skill_tools` (34 rows, `record_status=new`, `notes=""`):** skill 285 = 17 rows (10 required, 7 optional); skill 286 = 9 rows (5 required, 4 optional); skill 287 = 8 rows (6 required, 2 optional). Each skill carries at least one query, one mutate, and one workflow gate of its module's own masters; optional rows cover cross-module reads. Only the `notify_person` abstraction is linked (no channel primitives), so F7 needs no channel-justification notes.
+
+**Verification:** F2 every module 233/234/235 has exactly one system skill; F3 every skill >=1 skill_tools; F4 invariant holds (all query/mutate tools have data_object_id set, notify_person side_effect has data_object_id null); F1 orphan check `/skills?domain_id=eq.140&skill_type=eq.system&domain_module_id=is.null` returns 0.
+
+### B1A-CATALOG-UX (DONE)
+
+Loader: `.tmp_deploy/fix_dspm_catalog_ux.ts` (empty-guard per field; writes only where current value is empty; never overwrites). All three modules had empty `catalog_tagline` and `catalog_description` before this pass.
+
+**PATCH `domain_modules` (buyer-voice copy written straight into the empty fields per revised Rule #20; record_status carries the review signal; no vendor names, no em-dashes, American English):**
+
+- 233 DSPM-DISCOVERY-CLASSIFICATION: catalog_tagline (80 chars) + catalog_description (581 chars).
+- 234 DSPM-ACCESS-RISK: catalog_tagline (80 chars) + catalog_description (559 chars).
+- 235 DSPM-INCIDENT-REMEDIATION: catalog_tagline (92 chars) + catalog_description (559 chars).
+
+No prior values overwritten (all fields were empty). Em-dash scan on the written copy: clean.
+
+### State change
+
+`b1a` is now empty (both items fully resolved). `next_action_by` recomputed to `user` (b1a empty; b2 non-empty with `user_decision` items B2-MODULE-SPLIT-NOTE / B2-SKILL-ORPHAN / B2-S2..S7). `last_audit` set to 2026-06-05. `b1b` items (lifecycle states, business_function_domains, handoff direction/module-FK back-fill, residual H1 tagging) remain blocked on their respective `user_decision` refs and were not executed.
+
+### UI spot-checks
+
+- https://tests.semantius.app/domain_map/skills (ids 285, 286, 287)
+- https://tests.semantius.app/domain_map/skill_tools (skill_id in 285, 286, 287)
+- https://tests.semantius.app/domain_map/tools (ids 1616-1627)
+- https://tests.semantius.app/domain_map/domain_modules (ids 233, 234, 235; catalog_tagline / catalog_description)

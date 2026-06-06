@@ -427,3 +427,48 @@ Each master is mastered in exactly one module (M7 satisfied).
 ### JWT errors
 
 None.
+
+## 2026-06-06 - b1a execution
+
+Executed the 3 agent-solvable pending actions (`b1a`) against the live `domain_map` module. Loader: [.tmp_deploy/fix_expense_b1a_2026_06_06.ts](../../.tmp_deploy/fix_expense_b1a_2026_06_06.ts) (idempotent; empty-guarded on every catalog UX field; dedups skill / skill_tools by natural key). `record_status` omitted on every insert (R1, all landed `new`). No `notes` writes (R15). No em-dashes; American English.
+
+### B1A-S4 - DONE (split orphan system skill 57 into 3 module-bound system skills + redistribute 7 skill_tools)
+
+- **`skills` PATCH (1 row):** skill 57 `expense-system` rebound from `domain_module_id=NULL` to `domain_module_id=191`, and its `description` rewritten to drop the forbidden em-dash and become module-scoped.
+  - PRIOR: `domain_module_id=null`; `description="System skill for Expense Management — runtime workflows over the domain's master data, derived from masters + cross-domain handoffs."` (contained an em-dash; this also clears the B2-EM em-dash item on the skill-description side).
+  - NEW: `domain_module_id=191`; `description="System skill for the Expense Capture and Reporting module. Runs agent workflows over expense reports, expense lines, and expense policies: querying report and line state, checking lines against active policy, and notifying submitters and approvers as reports move through the approval lifecycle."`
+- **`skills` INSERT (2 rows):** id 312 `expense_corp_card_recon_agent` (`domain_module_id=192`), id 313 `expense_travel_and_per_diem_agent` (`domain_module_id=193`). Both `skill_type='system'`, `domain_id=67`, `record_status='new'`.
+- **`skill_tools` DELETE (3 rows):** removed the corp-card + travel tool links that moved off skill 57 (now module 191). PRIOR rows (skill 57): id 530 (tool 458 `query_travel_bookings`), id 531 (tool 459 `query_corporate_cards`), id 532 (tool 460 `query_card_transactions`). Snapshot of skill 57's full prior link set before delete: tool ids 26, 456, 457, 458, 459, 460, 37 (rows 527-533).
+- **`skill_tools` INSERT (5 rows):** redistributed by master ownership, reusing existing catalog-wide `tools` rows (no new `tools` created):
+  - 192 (skill 312): tool 459 `query_corporate_cards` (do 212), tool 460 `query_card_transactions` (do 213), tool 37 `send_email` (channel primitive).
+  - 193 (skill 313): tool 458 `query_travel_bookings` (do 215), tool 37 `send_email`.
+- **Final distribution (verified):** skill 57/191 -> query_expense_reports, query_expense_lines, query_expense_policies, send_email (4); skill 312/192 -> query_corporate_cards, query_card_transactions, send_email (3); skill 313/193 -> query_travel_bookings, send_email (2). F2 (one system skill per module), F3 (>=1 skill_tools each), F4 (operation_kind <-> data_object_id pairing) all satisfied.
+
+### B1A-M8 - DONE (module catalog UX backfill, buyer voice)
+
+`domain_modules` PATCH (3 rows): wrote `catalog_tagline` + `catalog_description` into the empty fields on 191, 192, 193 per revised Rule #20 (write straight into empty fields; review signal carried by `record_status='new'`; not pre-surfaced to chat, not parked in history). Empty-guard confirmed all 6 fields empty pre-write. Buyer voice (workflow + value); no vendor/product names; no em-dashes.
+
+### B1A-A4 - DONE (domain catalog UX backfill, buyer voice)
+
+`domains` PATCH (1 row): wrote `catalog_tagline` + `catalog_description` into the empty fields on domain 67 (EXPENSE) per revised Rule #20. Empty-guard confirmed both fields empty pre-write.
+
+### Counts written
+
+| Table | Operation | Rows |
+|---|---|---|
+| skills | PATCH | 1 (id 57) |
+| skills | INSERT | 2 (id 312, 313) |
+| skill_tools | DELETE | 3 (id 530, 531, 532) |
+| skill_tools | INSERT | 5 |
+| domain_modules | PATCH | 3 (id 191, 192, 193; catalog UX) |
+| domains | PATCH | 1 (id 67; catalog UX) |
+
+### Skipped / not executed
+
+- None of the `b1a` items were skipped; all 3 fully resolved.
+- `b1b` (B1B-S3 lifecycle states, B1B-S6 handoff module FKs, B1B-H1 APQC tagging, B1B-S5 pattern flags) and all `b2` / `b3` items left untouched per scope. B1B-S3 / B1B-S6 list a `prerequisite_entity` / `depends_on` ref to B1A-S4 (now satisfied: each module has a system skill), but they are `b1b` tier, not `b1a`, so out of scope for this pass. B1B-H1 and B1B-S5 carry `user_decision` `blocked_by` refs (B2-EM / B2-S4) and remain blocked.
+- B2-EM: the skill-description half of the em-dash item is now resolved (skill 57 description rewritten as part of B1A-S4). The `domains.business_logic` em-dash on row 67 remains a `b2` `user_decision` item and was NOT touched (non-empty descriptive prose, overwrite is user-approval-only).
+
+### JWT errors
+
+None.

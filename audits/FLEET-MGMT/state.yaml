@@ -1,12 +1,12 @@
 schema_version: 2
 domain: FLEET-MGMT
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
 b1a:
   - id: B1A-SYSTEM-SKILLS
-    summary: "3 new modules each need a <module_code_lower>_agent system skill; legacy domain-scoped skill 60 must retire (Rule #17 -> F2/F3)."
+    summary: "3 new modules each need a <module_code_lower>_agent system skill; legacy domain-scoped skill 60 must retire (Rule #17 -> F2/F3). BLOCKED: the DELETE-skill-60 tail is gated on B2-SIGN-DOCUMENT (user_decision)."
     finding: >-
       The 2026-06-02 modularization created 3 full modules
       (FLEET-MGMT-VEHICLE-LIFECYCLE id 204, FLEET-MGMT-DRIVER-OPS id 205,
@@ -16,7 +16,14 @@ b1a:
       skill fleet-mgmt-system (id 60, domain_id=147, domain_module_id=NULL)
       remains and carries 7 skill_tools (5 query_* covering all 5 masters, plus
       send_email and sign_document). The module-split prerequisite that
-      previously blocked this (B1B-MODULES-PENDING) is now satisfied.
+      previously blocked this (B1B-MODULES-PENDING) is now satisfied. The 2026-06-06
+      b1a pass HELD this item: its action is an atomic sequence ending in
+      "DELETE skill 60", and that DELETE is gated on resolving sign_document per
+      B2-SIGN-DOCUMENT, a user_decision. Executing only the head (author 3 skills,
+      redistribute query_* tools, substitute send_email -> notify_person) while
+      leaving skill 60 undeleted would create a worse transient state (two parallel
+      system-skill sets, F1 + F2 failing in new ways, orphaned sign_document link),
+      so the whole item is held until the user decides sign_document's disposition.
     action: >-
       Author 3 system skills (fleet_mgmt_vehicle_lifecycle_agent on 204,
       fleet_mgmt_driver_ops_agent on 205, fleet_mgmt_fuel_compliance_agent on
@@ -24,21 +31,8 @@ b1a:
       204; drivers/assignments/inspections -> 205; fuel -> 206). Resolve
       send_email per B1B-CHANNEL-PRIMITIVE (substitute notify_person) and
       sign_document per B2-SIGN-DOCUMENT, then DELETE skill 60.
-    affected_modules: [204, 205, 206]
-
-  - id: B1A-CATALOG-UX-COPY
-    summary: "All 3 new modules + the domains row carry empty catalog_tagline / catalog_description (M8 / A4 backfill)."
-    finding: >-
-      The 3 new modules (204, 205, 206) were created with empty catalog_tagline
-      and catalog_description (buyer-facing copy deliberately left empty in the
-      modularization pass). The domains row (147) also still has both empty (A4
-      fail). Rule #20 gates these writes on user-approved buyer-voice text.
-    action: >-
-      After the user supplies / approves buyer-voice wording (the domain-level
-      wording rides B2-CATALOG-COPY), PATCH catalog_tagline + catalog_description
-      on modules 204, 205, 206 and on domains id=147. Per-module copy describes
-      each module's workflow + value (vehicle-as-asset lifecycle; driver ops +
-      dispatch + inspections; fuel cost + DOT/IFTA compliance).
+    blocked_by:
+      - {type: user_decision, ref: B2-SIGN-DOCUMENT, reason: "the DELETE-skill-60 tail requires sign_document's disposition (keep on which module's skill vs drop as vestigial); cannot retire skill 60 or fully redistribute its tools until decided"}
     affected_modules: [204, 205, 206]
 
 b1b:

@@ -1,21 +1,10 @@
 schema_version: 2
 domain: DSPM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-05"
 
-b1a:
-  - id: B1A-SKILLS-PER-MODULE
-    summary: "Rule #17: each of the 3 new DSPM modules (233, 234, 235) needs exactly one system skill with >=1 skill_tools row; today 0 system skills are bound and orphan skill id=51 remains."
-    finding: "DSPM modularized on 2026-06-02 into 3 full modules: DSPM-DISCOVERY-CLASSIFICATION (233), DSPM-ACCESS-RISK (234), DSPM-INCIDENT-REMEDIATION (235). Rule #17 (F2/F3) requires exactly one skills.skill_type='system' skill per domain_modules row, each carrying >=1 skill_tools row. Currently 0 of 3 modules carry a bound system skill, and the pre-existing orphan skill id=51 ('dspm-system', domain_module_id=NULL, 0 skill_tools) cannot satisfy the rule across 3 modules. The Semantius score (F5) is uncomputable until F2-F4 are satisfied."
-    action: "Run a .tmp_deploy/fix_dspm_skills.ts loader: DELETE orphan skill id=51 (or repurpose-bind it to one of 233/234/235 per B2-SKILL-ORPHAN), INSERT one system skill per module (233/234/235), then INSERT skill_tools rows per skill (5-20 each, required and optional). Each skill's domain_module_id references its module."
-    affected_modules: [233, 234, 235]
-    affected_entities: [dspm-system]
-  - id: B1A-CATALOG-UX
-    summary: "M8/A4: the 3 new DSPM modules have no catalog_tagline / catalog_description for the marketplace UX surface."
-    finding: "Modules 233, 234, 235 were inserted with name + description + module_kind only; catalog_tagline and catalog_description were deliberately omitted per the modularization scope. M8 (catalog UX) and A4 expect a short tagline and a buyer-facing catalog_description on each full module for the marketplace surface."
-    action: "PATCH each of /domain_modules?id=in.(233,234,235) with a catalog_tagline (<=1 line) and a catalog_description (buyer-facing, no vendor names per Rule #18, no em-dashes). Author from the module descriptions already loaded."
-    affected_modules: [233, 234, 235]
+b1a: []
 
 b1b:
   - id: B1B-S3

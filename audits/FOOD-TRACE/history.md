@@ -525,3 +525,79 @@ M1 is now satisfied, so the following prerequisite-gated items move from b1b to 
 ### Status frontmatter
 
 `feedback_needed`. `next_action_by: agent` (b1a now holds the per-module system skill build plus the still-open catalog UX draft).
+
+## 2026-06-06 - b1a execution
+
+Executed all 5 `b1a` items against live `domain_map` (domain 155, modules 256/257/258, masters 494-498). All loaders idempotent, run from project root via `bun run`, record_status omitted (default `new`) on every insert, no `notes` columns written (Rule #15). Loaders in `.tmp_deploy/food_trace_*_2026_06_06.ts`.
+
+### B1A-CATALOG-UX (DONE) - Rule #20 buyer-voice copy written into EMPTY catalog fields
+
+Empty-guard confirmed all 8 fields were `""` before write; none overwritten. PATCHed:
+- `domains` id 155: `catalog_tagline` + `catalog_description`.
+- `domain_modules` id 256 (FOOD-TRACE-TRACEABILITY-EVENTS): `catalog_tagline` + `catalog_description`.
+- `domain_modules` id 257 (FOOD-TRACE-RECALL-MGMT): `catalog_tagline` + `catalog_description`.
+- `domain_modules` id 258 (FOOD-TRACE-SUPPLIER-PROVENANCE): `catalog_tagline` + `catalog_description`.
+
+Buyer voice (workflow + value), no vendor/product names, anchored on FSMA-204 readiness, recall execution, lot genealogy, supplier-document ingest, provenance verification. Review signal carried by each row's `record_status`.
+
+### B1A-S8 (DONE) - 16 trigger_events inserted on the 5 masters
+
+All `event_category=lifecycle` (every name is a state verb; the only threshold-shaped event, `supplier_certification.expired`, already existed). `domain_module_id` set to the realizing module. New ids 1505-1520:
+- recall_events (497, mod 257): 1505 `recall_event.classified`, 1506 `.notification_sent`, 1507 `.consolidated`, 1508 `.reconciled`, 1509 `.effectiveness_verified`, 1510 `.terminated`.
+- traceability_lots (494, mod 256): 1511 `.split`, 1512 `.merged`, 1513 `.transformed`, 1514 `.consumed`.
+- critical_tracking_events (495, mod 256): 1515 `.amended`.
+- key_data_elements (496, mod 256): 1516 `.validated`, 1517 `.flagged_for_review`.
+- supplier_certifications (498, mod 258): 1518 `.uploaded`, 1519 `.renewed`, 1520 `.revoked`.
+
+trigger_events on FOOD-TRACE masters: 5 -> 21.
+
+### B1A-S5 (DONE) - 5 intra-domain data_object_relationships (ids 2084-2088)
+
+One row per verb plus inverse; `owner_side=source` on all; `relationship_kind=reference` for the 1:N master-to-master links (independent lifecycles; no cascade composition asserted on masters), `association` for the m2m links.
+- 2084 `traceability_lots originates critical_tracking_events` (one_to_many, is_required=true).
+- 2085 `critical_tracking_events carries key_data_elements` (one_to_many, is_required=true).
+- 2086 `recall_events targets traceability_lots` (many_to_many, is_required=false).
+- 2087 `supplier_certifications authorizes traceability_lots` (many_to_many, is_required=false, provenance basis).
+- 2088 `traceability_lots derived_from traceability_lots` (many_to_many self-edge, is_required=false, split/merge/transform genealogy).
+
+intra-domain DOR (both ends in masters): 0 -> 5.
+
+### B1A-S10 (DONE) - entity_type classification + 30 lifecycle states
+
+Prerequisite per Rule #12: PATCHed `data_objects.entity_type` on all 5 masters from `unclassified` -> `operational_workflow` (prior value `unclassified` on 494/495/496/497/498; all carry real workflows per the action and module descriptions). Without this the lifecycle states would be orphaned by the entity_type gate (B12/B13).
+
+30 `data_object_lifecycle_states` rows authored; each master has exactly one `is_initial`, one `is_terminal`, unique monotonic `state_order`, and `domain_module_id` = realizing module. Workflow-gate states marked `requires_permission=true`:
+- traceability_lots (494, mod 256): 8 states created/active/split/merged/transformed/recalled/consumed/archived; gates split, merged, transformed, recalled (`permission_verb_override=recall_lot`).
+- critical_tracking_events (495, mod 256): 4 states recorded/validated/amended/closed; gates validated, amended.
+- key_data_elements (496, mod 256): 4 states captured/validated/flagged/resolved; gates validated, resolved.
+- recall_events (497, mod 257): 7 states initiated/classified/notification_sent/consolidating/reconciling/effectiveness_verified/terminated; gates initiated, classified, effectiveness_verified (`permission_verb_override=verify_effectiveness`), terminated. The Class I/II/III branches are captured as the `classified` state plus a record-level discriminator, not as three parallel lifecycle states (keeps single-initial / single-terminal / monotonic shape).
+- supplier_certifications (498, mod 258): 7 states uploaded/verified/active/expiring/expired/renewed/revoked; gates verified, revoked.
+
+lifecycle states on masters: 0 -> 30.
+
+### B1A-SYS-SKILLS (DONE) - 3 per-module system skills, tools, skill_tools; legacy skill 62 retired
+
+Re-read `tools` by natural key before creating (Rule #9, catalog-wide shared table). Reused existing rows: query_traceability_lots (485), query_critical_tracking_events (486), query_key_data_elements (487), query_recall_events (488), query_supplier_certifications (489), notify_person (913), notify_team (914), receive_webhook (896).
+
+Created 7 new domain-specific `mutate` tools (`operation_kind=mutate`, `data_object_id` set, `coverage_tier=platform`): create_traceability_lot, record_critical_tracking_event, capture_key_data_element, initiate_recall, update_recall_event, create_supplier_certification, update_supplier_certification.
+
+Created 3 `skill_type=system` skills (each `domain_id=155` per the `system` check constraint + matching the catalog-wide ATS pattern, plus `domain_module_id`):
+- 369 `food_trace_traceability_events_agent` (mod 256): 7 tools (6 required), strict_score 0.86.
+- 370 `food_trace_recall_mgmt_agent` (mod 257): 7 tools (5 required), strict_score 0.86.
+- 371 `food_trace_supplier_provenance_agent` (mod 258): 4 tools (4 required), strict_score 1.00.
+
+18 `skill_tools` rows. Per F7 / Channel-vs-capability rule, notifications link `notify_person` / `notify_team` abstractions only; NO `send_email` linked anywhere.
+
+Then DELETEd legacy skill 62 (`food-trace-system`, `domain_id=155`, `domain_module_id=null`) and its 6 `skill_tools` rows (ids 563-568), only after confirming the 3 module system skills existed. Prior skill-62 tool links snapshot: query_traceability_lots(485), query_critical_tracking_events(486), query_key_data_elements(487), query_recall_events(488), query_supplier_certifications(489), send_email(37) - all `required`. F1 now passes (no `domain_id`-only system skill remains); F2 passes (exactly one system skill per module).
+
+### Skipped / not executed
+
+None of the 5 b1a items were skipped. b1b items (B1B-S3, B1B-S4, B1B-S7, B1B-S9, B1B-S12, B1B-B10b) and b2 items were left untouched per the rubric. The b2 `user_decision` items remain open and now drive `next_action_by: user`.
+
+### Verification (live re-query)
+
+trigger_events on masters: 21. lifecycle_states on masters: 30. intra-domain DOR: 5. masters with entity_type=operational_workflow: 5. FOOD-TRACE system skills: 3 (369/370/371, all module-anchored). Legacy skill 62: gone (0 rows).
+
+### Status frontmatter
+
+`feedback_needed`. `next_action_by: user` (b1a fully resolved and removed; b2 user-decision items B2-2/B2-3/B2-4/B2-5 are the highest open priority).

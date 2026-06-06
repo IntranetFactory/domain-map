@@ -353,3 +353,69 @@ The modularization unblocks but does not execute the following carried-forward i
 - **Missing-master candidates** (b3, carried forward from prior audit): nocode_sync_connections, nocode_share_links, nocode_record_comments, nocode_templates, nocode_ai_field_outputs, nocode_revision_history, nocode_workspace_members.
 
 No JWT errors. No `notes` writes. No `record_status` writes. No vendor names in any non-commerce text. No em-dashes.
+
+
+## 2026-06-06 - b1a execution
+
+Executed the two agent-solvable b1a items against the live `domain_map` module (id 1001) for NCDB (domain 134). semantius CLI only; no MCP calls. No JWT errors. No `notes` writes. No `record_status` writes (every insert omitted it; DB default `new`). No vendor / product names in any non-commerce text. No em-dashes. American English.
+
+### B1A-MOD-SKILLS - DONE
+
+Authored 3 module-anchored system skills (one per module per Rule #17), migrated the 5 existing query `skill_tools`, added domain-specific mutate tools plus reusable side_effect/abstraction links to clear the floor, then retired legacy domain-anchored skill 86.
+
+System skills created (`skills`, `skill_type=system`, `domain_id=134`):
+
+| Skill id | skill_name | domain_module_id |
+|---|---|---|
+| 354 | ncdb_schema_builder_agent | 282 |
+| 355 | ncdb_views_forms_agent | 283 |
+| 356 | ncdb_automation_sync_agent | 284 |
+
+New domain-specific tools created (`tools`, all `coverage_tier=platform`, `operation_kind=mutate`):
+
+| Tool id | tool_name | data_object_id |
+|---|---|---|
+| 1733 | create_nocode_base | 241 |
+| 1734 | create_nocode_record_definition | 242 |
+| 1735 | update_nocode_record_definition | 242 |
+| 1736 | create_nocode_view | 713 |
+| 1737 | create_nocode_form | 712 |
+| 1738 | publish_nocode_form | 712 |
+| 1739 | create_nocode_automation | 714 |
+| 1740 | update_nocode_automation | 714 |
+
+Reusable catalog-wide tools LINKED (not created), re-read by tool_name immediately before linking per scope rule: `notify_person` (913, side_effect, platform), `invoke_webhook` (46, side_effect, external).
+
+`skill_tools` result (16 rows across the 3 skills):
+- Skill 354 (module 282): query_nocode_bases (595, req), query_nocode_record_definitions (596, req), create_nocode_base (1733, req), create_nocode_record_definition (1734, req), update_nocode_record_definition (1735, req). 5 tools.
+- Skill 355 (module 283): query_nocode_forms (831, req), query_nocode_views (832, req), create_nocode_view (1736, req), create_nocode_form (1737, req), publish_nocode_form (1738, req), notify_person (913, opt). 6 tools.
+- Skill 356 (module 284): query_nocode_automations (833, req), create_nocode_automation (1739, req), update_nocode_automation (1740, req), invoke_webhook (46, req), notify_person (913, opt). 5 tools.
+
+Migration mechanics: the 5 existing query `skill_tools` rows were re-pointed by PATCH `skill_id` (preserving the rows), not deleted/recreated:
+- skill_tool 696 (tool 595 query_nocode_bases): skill_id 86 -> 354.
+- skill_tool 697 (tool 596 query_nocode_record_definitions): skill_id 86 -> 354.
+- skill_tool 993 (tool 831 query_nocode_forms): skill_id 86 -> 355.
+- skill_tool 994 (tool 832 query_nocode_views): skill_id 86 -> 355.
+- skill_tool 995 (tool 833 query_nocode_automations): skill_id 86 -> 356.
+
+Legacy skill 86 DELETED after its skill_tools were re-pointed away (zero remaining at delete time). Prior row snapshot (reversibility):
+- `skills` id 86: skill_name `ncdb-system`, skill_type `system`, domain_id 134, domain_module_id NULL, process_id NULL, role_id NULL, record_status `new`, description "System skill for No-Code Database - runtime workflows over the domain's master data, derived from masters + cross-domain handoffs.", created_at 2026-05-22T16:38:14Z.
+
+Verification: F2 = 3 system skills (one per module 282/283/284); F1 = 0 legacy `domain_id`-anchored system skills remaining; F3 = every skill >=1 skill_tool (5/6/5); F4 invariant holds (every query/mutate carries data_object_id, every side_effect carries NULL). Semantius scores now computable for all 3 modules.
+
+### B1A-CATALOG-UX - DONE
+
+Per revised Rule #20 (write buyer-voice copy straight into EMPTY catalog fields; record_status carries the review signal; do not park drafts in history; empty-guard per field), wrote `catalog_tagline` + `catalog_description` into the empty fields on the domain row and all 3 modules. All 4 rows / 8 fields were confirmed empty before write (empty-guard applied; no non-empty value was overwritten). record_status left at `new` on every row.
+
+| Row | catalog_tagline written | catalog_description written |
+|---|---|---|
+| domains 134 (NCDB) | yes | yes (3 paragraphs) |
+| domain_modules 282 (NCDB-SCHEMA-BUILDER) | yes | yes (2 paragraphs) |
+| domain_modules 283 (NCDB-VIEWS-FORMS) | yes | yes (2 paragraphs) |
+| domain_modules 284 (NCDB-AUTOMATION-SYNC) | yes | yes (2 paragraphs) |
+
+Domain tagline written: "Build a database without code. Model your data, capture it through forms, view it your way, and automate the rest." (the audit-proposed candidate; buyer voice, no vendor names, no em-dashes). All copy in buyer voice (workflow + value), not analyst voice.
+
+### Nothing skipped in b1a
+
+Both b1a items fully resolved. The b1b / b2 / b3 items remain blocked / user-judgment / research-pending and were not touched this pass (out of scope: blocked by user_decision or by other domains' audits). B1B-S6 (lifecycle states) remains blocked-on-dependency in state.yaml; note it was previously sequenced behind the system-skill pass (now done) but its own gating note in state.yaml keeps it in b1b, so it was not executed here.

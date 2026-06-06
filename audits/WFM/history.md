@@ -398,3 +398,44 @@ Loader: [.tmp_deploy/modularize_wfm_2026-06-02.ts](../../.tmp_deploy/modularize_
 
 None observed during the run.
 
+## 2026-06-06 — b1a execution
+
+### Scope
+
+Executed the two agent-solvable b1a items for WFM. Skipped the one item blocked by a user decision. No full audit, no fact-sheet emission. Tenant confirmed `adenin` / `adenin.semantius.ai` before any write.
+
+Loader: [.tmp_deploy/wfm_b1a_2026-06-06.ts](../../.tmp_deploy/wfm_b1a_2026-06-06.ts) (idempotent; per-field empty-guard on the catalog copy, dedup pre-flight on the relationship edge).
+
+### B1A-CATALOG-COPY — DONE
+
+Backfilled empty `catalog_tagline` + `catalog_description` on all 3 WFM modules. Per the revised Rule #20 empty-guard: every field was empty before the write (no overwrite occurred, 0 fields guarded). Buyer-voice copy (workflow + value), no vendor/product names (Rule #18), no em-dash, American English. `record_status` left at existing `new`.
+
+| Module (id) | Field | Action |
+|---|---|---|
+| WFM-TIME-ATTENDANCE (194) | catalog_tagline | written (prior value: empty) |
+| WFM-TIME-ATTENDANCE (194) | catalog_description | written (prior value: empty) |
+| WFM-SCHEDULING (195) | catalog_tagline | written (prior value: empty) |
+| WFM-SCHEDULING (195) | catalog_description | written (prior value: empty) |
+| WFM-ABSENCE (196) | catalog_tagline | written (prior value: empty) |
+| WFM-ABSENCE (196) | catalog_description | written (prior value: empty) |
+
+Table written: `domain_modules` (3 rows PATCHed, 6 fields total).
+
+### B1A-S8-A — DONE
+
+Inserted the missing `users` (data_object 748) -> `work_shifts` (data_object 161) edge into `data_object_relationships`. Dedup pre-flight confirmed no existing (748,161) row. New row **id 2083**: `owner_side='source'`, `relationship_type='one_to_many'`, `relationship_kind='reference'`, `relationship_verb='assigned_to_shift'`, `inverse_verb='shift_assignee'`, `is_required=true`. `record_status` omitted (DB default `new`); `notes` left empty (Rule #15). Shape taken verbatim from the b1a action text; note `is_required=true` per that action, vs the sibling users->work_schedules edge (id 1672) which carries `is_required=false`.
+
+Table written: `data_object_relationships` (1 row inserted, id 2083). All 7 WFM masters now carry a `users` edge.
+
+### Skipped
+
+- **B1A-MODULE-SKILLS — SKIPPED.** `blocked_by` is `{type: user_decision, ref: B2-S5}` (retire skill 121 vs rehome it as one of the 3 module-level system skills). Per the task's Rule #7 (skip any b1a blocked by a user_decision) and the finding's own statement that the agent cannot prefer route (a) over (b) without architectural intent, this item is left open in `b1a` for the user to resolve via B2-S5.
+
+### next_action_by
+
+Recomputed to `user`. The only remaining `b1a` item (B1A-MODULE-SKILLS) is blocked by user_decision B2-S5, so it is not agent-actionable; the `b2` queue (B2-S5 plus B2-S2/S3/S4/S6/S7) is the effective next step and is owned by the user.
+
+### JWT errors
+
+None observed during the run.
+

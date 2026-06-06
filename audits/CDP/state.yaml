@@ -1,61 +1,9 @@
 schema_version: 2
 domain: CDP
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
-
-b1a:
-  - id: B1A-SYS-SKILLS
-    summary: "4 new CDP modules (216-219) owe per-module system skills (Rule #17 -> F2/F3) and catalog UX copy (M8); domain-row A4 copy also empty"
-    finding: >
-      Modularization landed 2026-06-02: CDP now has 4 module_kind=full modules
-      (CDP-INGEST-IDENTITY 216, CDP-UNIFIED-PROFILE 217, CDP-SEGMENTATION-ACTIVATION 218,
-      CDP-JOURNEYS-360 219). Each carries zero skill_type=system skills; the legacy
-      domain-level cdp-system skill (id 35, domain_module_id null) does not satisfy the
-      per-module Rule #17 requirement, so F2/F3 fail on all 4 modules. Separately, all 4
-      modules shipped with empty catalog_tagline / catalog_description (deliberate per the
-      modularization insert shape -> M8 gap), and the domains-row A4 copy on CDP id 72 is
-      still empty (carry-forward B1B-S9 / B2-S9).
-    action: >
-      Author one skill_type=system skill per module (4 total) with >=1 skill_tools row each
-      (Phase F load), record_status omitted (DB default new). For the M8/A4 catalog UX copy,
-      draft buyer-voice catalog_tagline + catalog_description per module and for the domains
-      row, then obtain explicit per-row user approval before writing (Rule #20); do not write
-      unapproved copy.
-    affected_modules: [216, 217, 218, 219]
-
-  - id: B1A-S10
-    summary: "APQC tagging on 23 cross-domain CDP handoffs (4 REPLACE + 1 FLIP + 17 INSERT + 1 NO-OP), all rows ship proposal_source=agent_curated record_status=new"
-    finding: "23 cross-domain handoffs (9 outbound + 14 inbound); 7 carry a handoff_processes row of which 4 substring rows point at wrong PCF activities (68 -> Analyze spend profile L4; 78/80/478 -> Establish goals/objectives L3; 480 -> Create customer journey maps L5 narrower than L3 parent), 1 discovery_override row is correct (77 -> Manage customer service problems L3), 1 agent_curated row is correct (89 -> Analyze and respond to customer insight L3). 16 handoffs untagged. Zero rows at record_status=approved. H1 volume target 12-18 NEW agent_curated proposals; current load delivered 1. Note: now that modules exist (216-219) the APQC tags can also carry module attribution, but the tagging itself routes by trigger_event semantics and is independent of module ids."
-    action: "Author a small focused loader. Per-row actions (handoff_id, action, PCF target): 68 REPLACE Manage customer accounts and relationships L3; 78 REPLACE Develop and manage customer loyalty programs L3; 79 INSERT Develop sales strategy/Sell products and services L3 medium; 80 REPLACE Manage commerce experience digital storefronts L3; 478 REPLACE Develop and manage customer loyalty programs L3; 479 INSERT Manage customer service requests/Service quality L3 medium; 480 REPLACE L5 1814 with Manage customer experience L3; 481 INSERT Manage master data L2/Manage data integrity L3; 529 INSERT Manage customer experience L3 medium; 69 INSERT Develop and manage marketing campaigns L3; 74 INSERT Develop and manage marketing campaigns L3; 75 INSERT Manage commerce experience L3; 76 INSERT Manage sales orders/Pipeline management L3; 77 FLIP discovery_override to agent_curated; 89 NO-OP; 997 INSERT Develop products and services L2/product launch L3 medium; 508 INSERT Develop and manage marketing campaigns L3; 504 INSERT Manage commerce experience L3 medium; 717 INSERT Manage master data L2; 809 INSERT Manage customer experience L3; 810 INSERT Manage customer experience L3; 272 INSERT Manage master data L2; 1004 INSERT Develop products and services L2/product adoption L3 medium. Composed key (handoff_id, process_id) prevents duplicates."
-    affected_handoffs:
-      - {handoff_id: 68, direction: outbound, source_domain: CDP, target_domain: CRM, trigger_event: profile.lifecycle_changed, payload: customers, null_field: source_domain_module_id}
-      - {handoff_id: 78, direction: outbound, source_domain: CDP, target_domain: LOYALTY, trigger_event: segment.activated, payload: audience_segments, null_field: source_domain_module_id}
-      - {handoff_id: 79, direction: outbound, source_domain: CDP, target_domain: SALES-ENG, trigger_event: high_intent_signal.detected, payload: sales_cadences, null_field: source_domain_module_id}
-      - {handoff_id: 80, direction: outbound, source_domain: CDP, target_domain: B2C-COMM, trigger_event: segment.activated, payload: customers, null_field: source_domain_module_id}
-      - {handoff_id: 478, direction: outbound, source_domain: CDP, target_domain: LOYALTY, trigger_event: segment.activated, payload: audience_segments, null_field: source_domain_module_id}
-      - {handoff_id: 479, direction: outbound, source_domain: CDP, target_domain: CSM, trigger_event: customer_attributes.refreshed, payload: customer_attributes, null_field: source_domain_module_id}
-      - {handoff_id: 480, direction: outbound, source_domain: CDP, target_domain: B2C-COMM, trigger_event: customer_journey.stage_entered, payload: customer_journeys, null_field: source_domain_module_id}
-      - {handoff_id: 481, direction: outbound, source_domain: CDP, target_domain: MDM, trigger_event: identity_graph.updated, payload: identity_graphs, null_field: source_domain_module_id}
-      - {handoff_id: 529, direction: outbound, source_domain: CDP, target_domain: B2C-COMM, trigger_event: customer_attributes.refreshed, payload: customer_attributes, null_field: source_domain_module_id}
-      - {handoff_id: 69, direction: inbound, source_domain: MA, target_domain: CDP, trigger_event: marketing_campaign.engagement_recorded, payload: customers, null_field: target_domain_module_id}
-      - {handoff_id: 74, direction: inbound, source_domain: MA, target_domain: CDP, trigger_event: marketing_campaign.event_recorded, payload: customer_events, null_field: target_domain_module_id}
-      - {handoff_id: 75, direction: inbound, source_domain: B2C-COMM, target_domain: CDP, trigger_event: storefront.interaction, payload: customer_events, null_field: target_domain_module_id}
-      - {handoff_id: 76, direction: inbound, source_domain: CRM, target_domain: CDP, trigger_event: crm_opportunity.stage_changed, payload: customer_events, null_field: target_domain_module_id}
-      - {handoff_id: 77, direction: inbound, source_domain: CSM, target_domain: CDP, trigger_event: case.created, payload: customer_events, null_field: none}
-      - {handoff_id: 89, direction: inbound, source_domain: SMM, target_domain: CDP, trigger_event: social_engagement.recorded, payload: customers, null_field: target_domain_module_id}
-      - {handoff_id: 997, direction: inbound, source_domain: PROD-MGMT, target_domain: CDP, trigger_event: beta_program.launched, payload: beta_programs, null_field: target_domain_module_id}
-      - {handoff_id: 508, direction: inbound, source_domain: MA, target_domain: CDP, trigger_event: marketing_form.submitted, payload: crm_leads, null_field: target_domain_module_id}
-      - {handoff_id: 504, direction: inbound, source_domain: B2C-COMM, target_domain: CDP, trigger_event: commerce_product.published, payload: commerce_products, null_field: target_domain_module_id}
-      - {handoff_id: 717, direction: inbound, source_domain: MDM, target_domain: CDP, trigger_event: source_record.merged_to_golden, payload: source_records, null_field: target_domain_module_id}
-      - {handoff_id: 809, direction: inbound, source_domain: DXP, target_domain: CDP, trigger_event: segment_dxp.published, payload: segments_dxp, null_field: target_domain_module_id}
-      - {handoff_id: 810, direction: inbound, source_domain: DXP, target_domain: CDP, trigger_event: journey_step.entered, payload: journey_steps, null_field: target_domain_module_id}
-      - {handoff_id: 272, direction: inbound, source_domain: MDM, target_domain: CDP, trigger_event: customer_golden_record.updated, payload: customers, null_field: target_domain_module_id}
-      - {handoff_id: 1004, direction: inbound, source_domain: PROD-MGMT, target_domain: CDP, trigger_event: product_feature.adoption_threshold_reached, payload: product_features, null_field: target_domain_module_id}
-    vendor_evidence: [Twilio Segment, Tealium AudienceStream, mParticle, Treasure Data CDP, Salesforce Data Cloud, Adobe Real-Time CDP, Hightouch]
-    extra_loader_group: apqc_tagging
-    extra_sequencing: "independent of module attribution; APQC tags route by trigger_event semantics"
-
+next_action_by: user
+last_audit: "2026-06-05"
+b1a: []
 b1b:
   - id: B1B-S3
     summary: "B10b CDP-side: 9 outbound + 13 inbound handoffs carry NULL CDP-side domain_module_id; modules now exist (216-219) but FK attribution was out of the modularization pass scope"
@@ -85,7 +33,6 @@ b1b:
       - {handoff_id: 810, direction: inbound, source_domain: DXP, target_domain: CDP, trigger_event: journey_step.entered, payload: journey_steps, null_field: target_domain_module_id}
       - {handoff_id: 272, direction: inbound, source_domain: MDM, target_domain: CDP, trigger_event: customer_golden_record.updated, payload: customers, null_field: target_domain_module_id}
       - {handoff_id: 1004, direction: inbound, source_domain: PROD-MGMT, target_domain: CDP, trigger_event: product_feature.adoption_threshold_reached, payload: product_features, null_field: target_domain_module_id}
-
   - id: B1B-S4
     summary: "B10b owed by partner domains: 9 inbound NULL source_domain_module_id (MA, B2C-COMM, SMM, MDM, DXP) plus 2 outbound NULL targets (LOYALTY, SALES-ENG)"
     finding: "Inbound NULL source_domain_module_id: 69, 74, 508 (MA); 75, 504 (B2C-COMM); 89 (SMM); 717, 272 (MDM); 809, 810 (DXP). Outbound NULL target_domain_module_id owed by partner: 78 (LOYALTY), 79 (SALES-ENG). Already-correct partner-side FKs: 68 CRM-target=46; 76 CRM-source=48; 77 CSM-source=112; 997 / 1004 PROD-MGMT-source=131."
@@ -113,7 +60,6 @@ b1b:
       - {handoff_id: 478, direction: outbound, source_domain: CDP, target_domain: LOYALTY, trigger_event: segment.activated, payload: audience_segments, null_field: target_domain_module_id}
       - {handoff_id: 79, direction: outbound, source_domain: CDP, target_domain: SALES-ENG, trigger_event: high_intent_signal.detected, payload: sales_cadences, null_field: target_domain_module_id}
       - {handoff_id: 479, direction: outbound, source_domain: CDP, target_domain: CSM, trigger_event: customer_attributes.refreshed, payload: customer_attributes, null_field: target_domain_module_id}
-
   - id: B1B-S5
     summary: "Lifecycle states gap on 5 of 6 CDP masters; module attribution now available (216-219), still gated on user split decision (B2-S3)"
     finding: "customer_events, identity_graphs, audience_segments, customer_attributes, customer_journeys carry zero data_object_lifecycle_states. Module homes now exist: customer_events + identity_graphs -> CDP-INGEST-IDENTITY 216; customer_attributes -> CDP-UNIFIED-PROFILE 217; audience_segments -> CDP-SEGMENTATION-ACTIVATION 218; customer_journeys -> CDP-JOURNEYS-360 219. Proposal: author for audience_segments (draft/active/paused/archived) + customer_journeys (active/completed/abandoned); exempt customer_events (append-only stream), customer_attributes (derived materialization), identity_graphs (resolution overlay) under Rule #12 config-shape carve-out. Rule #15 forbids auto-annotating the exemption in notes; surface decision in chat per audit. Out of the 2026-06-02 modularization pass scope (no lifecycle writes)."
@@ -125,14 +71,12 @@ b1b:
       - {data_object_id: 111, name: customer_events, target_module_id: 216, workflow: config-shape-exempt-candidate}
       - {data_object_id: 114, name: customer_attributes, target_module_id: 217, workflow: config-shape-exempt-candidate}
       - {data_object_id: 112, name: identity_graphs, target_module_id: 216, workflow: config-shape-exempt-candidate}
-
   - id: B1B-S6
     summary: "domain_regulations partial: 4 linked (GDPR, CCPA, EU-AI-ACT, COPPA), 4 candidates pending user scope decision and 4 missing rows in regulations table"
     finding: "Currently linked: regulation_id 1 (GDPR), 3 (CCPA/CPRA), 33 (EU-AI-ACT), 55 (COPPA). Missing per vendor surface: LGPD (Brazil), IAB TCF v2 (ad-tech consent framework), Quebec Law 25, POPIA (South Africa). The 4 missing rows are not present in the regulations master table yet; creating master regulation rows is itself a judgment call deferred to B2-S4."
     blocked_by:
       - {type: user_decision, ref: B2-S4}
       - {type: catalog_addition, scope: domains, trigger: "create regulations master rows for LGPD, IAB TCF v2, Quebec Law 25, POPIA"}
-
   - id: B1B-S7
     summary: "customers lifecycle state_order collisions (engagement vs billing collapsed onto one master)"
     finding: "6 customers lifecycle states show duplicate state_order: state_order=3 on both inactive and past_due; state_order=4 on both churned and cancelled. Two parallel state machines collapsed onto the customers master without disambiguation. Engagement axis: prospect (1) -> active (2) -> inactive (3) -> churned (4). Billing axis: prospect (1) -> active (2) -> past_due (3) -> cancelled (4)."
@@ -140,7 +84,6 @@ b1b:
       - {type: user_decision, ref: B2-S8}
     affected_masters:
       - {data_object_id: 97, name: customers, target_module_id: 217, workflow: dual-state-machine}
-
   - id: B1B-S8
     summary: "Rule #10 users edges missing on all 6 CDP masters; module homes now exist (216-219)"
     finding: "Zero data_object_relationships rows linking any CDP master (97, 111, 112, 113, 114, 115) to the users platform-builtin row. Per Rule #10, every master with a user-typed actor (segment author, journey definer, audience owner, attribute owner, event recorder) needs at least one edge to users. Out of the 2026-06-02 modularization pass scope (no relationship writes); deferred to a future Phase B relationship-authoring pass alongside lifecycle states."
@@ -153,13 +96,6 @@ b1b:
       - {data_object_id: 113, name: audience_segments, target_module_id: 218, workflow: needs-users-edge}
       - {data_object_id: 114, name: customer_attributes, target_module_id: 217, workflow: needs-users-edge}
       - {data_object_id: 115, name: customer_journeys, target_module_id: 219, workflow: needs-users-edge}
-
-  - id: B1B-S9
-    summary: "A4 catalog UX empty on domains row; Rule #20 requires explicit user approval (also tracked alongside M8 module copy in B1A-SYS-SKILLS)"
-    finding: "domains.catalog_tagline and catalog_description are both empty strings on CDP id 72. Rule #20 forbids drafting and writing without explicit per-row user approval of buyer-voice copy. Now joined by 4 modules (216-219) shipped with empty M8 catalog copy."
-    blocked_by:
-      - {type: user_decision, ref: B2-S9}
-
 b2:
   - id: B2-S2
     summary: "Pattern flag re-evaluation per Rule #12 on the 5 non-customers masters"
@@ -167,7 +103,6 @@ b2:
     options:
       - "Per-flag yes/no across 5 masters"
     why: "Pattern flags are workflow-shape judgments the user owns. Recommendation: true on customer_events (IPs, device fingerprints, email opens), identity_graphs (email-to-device-to-cookie map), customer_journeys (per-customer traces). Borderline on customer_attributes (LTV/churn at per-customer grain) and audience_segments (segment membership rosters are personal)."
-
   - id: B2-S3
     summary: "Lifecycle state split decision (author vs Rule #12 config-shape exemption)"
     question: "Confirm the split: author lifecycle states for audience_segments + customer_journeys; exempt customer_events, customer_attributes, identity_graphs?"
@@ -176,14 +111,12 @@ b2:
       - "Different split (specify which masters get lifecycles)"
       - "All 5 get lifecycles (specify state lists)"
     why: "Workflow-shape decision. Rule #12 exemption requires user acknowledgement per Rule #15 (no auto-populate notes). Module homes now resolved (B1B-S5)."
-
   - id: B2-S4
     summary: "domain_regulations scope: which of LGPD, IAB TCF v2, Quebec Law 25, POPIA to link"
     question: "For each of LGPD, IAB TCF v2, Quebec Law 25, POPIA: link to CDP or skip?"
     options:
       - "Per-regulation yes/no"
     why: "Regulatory scope is jurisdictional + product-strategy specific. Creating the 4 missing regulations master rows is itself a judgment call (none currently exist in the regulations table)."
-
   - id: B2-S5
     summary: "customers multi-master architecture decision (not pre-empted by 2026-06-02 modularization; customers kept single-master in CDP-UNIFIED-PROFILE 217)"
     question: "Should customers stay single-master in CDP, get promoted to a platform-builtin-like master, or follow explicit multi-master decomposition?"
@@ -192,7 +125,6 @@ b2:
       - "Promote customers to a master in a CDP-UNIFIED-PROFILE module and let CRM/CSM/SUB-MGMT embed via embedded_master"
       - "Adopt explicit multi-master decomposition the description hints at"
     why: "Architectural choice the audit cannot make alone. The 2026-06-02 modularization placed customers as master in CDP-UNIFIED-PROFILE 217 per the existing live single-master state; this did not resolve the multi-master question, which still stands."
-
   - id: B2-S6
     summary: "Composable CDP / Reverse-ETL classification (capability vs module vs separate domain)"
     question: "Should CDP-COMPOSABLE-WH stay a CDP capability, become a separate CDP module, or split into a new REVERSE-ETL domain?"
@@ -201,7 +133,6 @@ b2:
       - "Split into a REVERSE-ETL domain (Hightouch, Census, RudderStack, Polytomic, Grouparoo pass the 3-vendor test)"
       - "Treat as a CDP module (CDP-COMPOSABLE) but not a separate domain"
     why: "Rule #2 (point-solution-market test) judgment. The 3-vendor test passes for Reverse-ETL specifically. 2026-06-02 modularization folded CDP-COMPOSABLE-WH into CDP-SEGMENTATION-ACTIVATION as a capability link; promotion to its own module/domain remains open."
-
   - id: B2-S7
     summary: "trigger_event 473 customer_journey.exited event_category semantics"
     question: "Keep customer_journey.exited as lifecycle (current) or flip to state_change?"
@@ -209,7 +140,6 @@ b2:
       - "Keep lifecycle (journey ends, irreversible)"
       - "Flip to state_change (just another step transition)"
     why: "Vendor-semantic judgment. Adobe and Tealium model journey end as state termination; Segment models as lifecycle off-ramp tied to goal-attainment."
-
   - id: B2-S8
     summary: "customers lifecycle state_order collisions resolution (B1B-S7 dependency)"
     question: "How should the dual state machine on customers (engagement vs billing) be untangled?"
@@ -218,119 +148,92 @@ b2:
       - "Split into two state machines on the same master (engagement axis vs billing axis)"
       - "Move billing states (past_due, cancelled) to SUB-MGMT-mastered entity (subscriptions or customer_billing_status); leave engagement states on customers"
     why: "Domain decomposition choice. Engagement and billing lifecycles are conceptually independent; collapsing them lost the disambiguation."
-
-  - id: B2-S9
-    summary: "A4 catalog UX copy approval for domains row and per-module copy at M8 (now 4 modules)"
-    question: "Draft catalog_tagline + catalog_description for the CDP domains row and each of the 4 modules (216-219) for explicit approval, defer, or skip?"
-    options:
-      - "Draft now and approve verbatim before write"
-      - "Defer (joint draft of A4 + M8 copy)"
-      - "Skip the audit on these fields"
-    why: "Rule #20 forbids unapproved writes to catalog_tagline / catalog_description. Per project rule, the agent surfaces drafts and waits for the exact wording from the user. Modules now exist so M8 copy is concretely owed on 4 rows."
-
 b3:
   - id: B3-DATA-SOURCES
     candidate: data_sources
     rationale: "First-class sources catalog (a web SDK, a mobile SDK, a Kafka topic, a Snowflake table, a Stripe webhook). Currently no entity. Would become a master in CDP-INGEST-IDENTITY 216 and justify splitting INGEST back out from IDENTITY."
     vendor_evidence: [Twilio Segment Sources, mParticle Inputs, Tealium Tag Configurations, Treasure Data Connectors]
     proposed_module: CDP-INGEST-IDENTITY
-
   - id: B3-EVENT-SINKS
     candidate: event_sinks
     rationale: "Downstream activation targets (Mailchimp, Facebook Ads, Salesforce campaigns, Slack webhooks). Naming alternate: destinations. CDP-SEGMENTATION-ACTIVATION 218 currently owns activation as a capability but has no activation-specific master; this entity (plus activation_runs) would justify splitting ACTIVATION back out."
     vendor_evidence: [Twilio Segment Destinations, mParticle Outputs, Hightouch Destinations, Twilio Engage activations]
     proposed_module: CDP-SEGMENTATION-ACTIVATION
-
   - id: B3-ACTIVATION-RUNS
     candidate: activation_runs
     rationale: "Per-run status / throughput / error log of a destination sync. Operational backbone of activation. Master candidate for CDP-SEGMENTATION-ACTIVATION 218."
     vendor_evidence: [Hightouch Syncs, Census Sync runs]
     proposed_module: CDP-SEGMENTATION-ACTIVATION
-
   - id: B3-IDENTITY-RULES
     candidate: identity_rules
     rationale: "Configuration that drives identity_graph stitching (which IDs are deterministic, which probabilistic, which blocked). Master candidate for CDP-INGEST-IDENTITY 216."
     vendor_evidence: [Tealium ID merge rules, Twilio Segment Identity Resolution Settings, mParticle Identity Strategy]
     proposed_module: CDP-INGEST-IDENTITY
-
   - id: B3-MERGE-DECISIONS
     candidate: merge_decisions
     rationale: "Audit trail of identity stitches (which two records merged, when, by which rule, with what confidence). Compliance-relevant for GDPR Article 17. Master candidate for CDP-INGEST-IDENTITY 216."
     vendor_evidence: [Tealium Merge Audit Log, mParticle Identity History]
     proposed_module: CDP-INGEST-IDENTITY
-
   - id: B3-CONSENT-RECORDS
     candidate: consent_records
     rationale: "Per-data-subject consent state with grant/revoke timestamps and per-purpose scoping (IAB TCF v2 purposes 1-10). Currently the CDP-CONSENT-PRIV capability is folded into CDP-UNIFIED-PROFILE 217 with no master of its own; this entity would justify promoting a CDP-CONSENT-PRIV module (B3-MOD-CONSENT-PRIV)."
     vendor_evidence: [OneTrust, Adobe Real-Time CDP Consent and Preferences, Tealium Consent Management]
     proposed_module: CDP-UNIFIED-PROFILE
-
   - id: B3-DATA-SUBJECT-REQUESTS
     candidate: data_subject_requests
     rationale: "GDPR Article 15/17/20 request records. Compliance-mandatory. Master candidate that would anchor a promoted CDP-CONSENT-PRIV module."
     vendor_evidence: [Salesforce Data Cloud Consumer Data Requests, Adobe Real-Time CDP Privacy Service Requests, mParticle DSR Workbench]
     proposed_module: CDP-UNIFIED-PROFILE
-
   - id: B3-SEGMENT-DEFINITIONS
     candidate: segment_definitions
     rationale: "Distinct from audience_segments (materialized roster) vs the query / rule that defines the segment. May collapse with audience_segments per vendor model. Master candidate for CDP-SEGMENTATION-ACTIVATION 218."
     vendor_evidence: [Twilio Segment Audience SQL, BlueConic Segments, Treasure Data Audience definitions]
     proposed_module: CDP-SEGMENTATION-ACTIVATION
-
   - id: B3-PREDICTIVE-MODELS
     candidate: predictive_models
     rationale: "Per-model definitions (LTV, churn-risk, propensity-to-buy). The CDP-PREDICTIVE capability is currently folded into CDP-UNIFIED-PROFILE 217 with no master; this entity would justify a CDP-PREDICTIVE module split (B3-MOD-PREDICTIVE)."
     vendor_evidence: [Adobe Real-Time CDP AI Service models, Salesforce Data Cloud Einstein Models, BlueConic AI Workbench, Lytics ML scoring]
     proposed_module: CDP-UNIFIED-PROFILE
-
   - id: B3-MODEL-PREDICTIONS
     candidate: model_predictions
     rationale: "Per-customer per-model output, often updated daily. Master candidate for a promoted CDP-PREDICTIVE module."
     vendor_evidence: [Salesforce Data Cloud Predictions, Adobe Real-Time CDP AI Scores]
     proposed_module: CDP-UNIFIED-PROFILE
-
   - id: B3-JOURNEY-DEFINITIONS
     candidate: journey_definitions
     rationale: "Distinct from customer_journeys (observed) vs the configured definition of journey stages. Master candidate for CDP-JOURNEYS-360 219."
     vendor_evidence: [Adobe Journey Optimizer Journeys, Salesforce Marketing Cloud Journey Builder canvases]
     proposed_module: CDP-JOURNEYS-360
-
   - id: B3-MISSING-MASTER-INGEST
     candidate: "missing-master CDP-INGEST-IDENTITY (216)"
     rationale: "Module 216 currently owns customer_events + identity_graphs as masters but lacks the config-grain masters that vendors ship (data_sources, identity_rules, merge_decisions). These are the entities that would let INGEST and IDENTITY split into two modules per the prior B2-S1 6-module proposal."
     vendor_evidence: [Twilio Segment, Tealium, mParticle, Treasure Data]
     proposed_module: CDP-INGEST-IDENTITY
-
   - id: B3-MISSING-MASTER-ACTIVATION
     candidate: "missing-master CDP-SEGMENTATION-ACTIVATION (218)"
     rationale: "Module 218 owns audience_segments as its only master and links the CDP-ACTIVATION + CDP-COMPOSABLE-WH capabilities with no activation-specific master. event_sinks + activation_runs would give ACTIVATION a master and justify splitting it back out from SEGMENTATION."
     vendor_evidence: [Hightouch, Census, Twilio Segment, mParticle]
     proposed_module: CDP-SEGMENTATION-ACTIVATION
-
   - id: B3-MISSING-MASTER-CONSENT
     candidate: "missing-master CDP-CONSENT-PRIV (capability in 217)"
     rationale: "CDP-CONSENT-PRIV is a capability folded into CDP-UNIFIED-PROFILE 217 with no master. consent_records + data_subject_requests would anchor a promoted CDP-CONSENT-PRIV module (B3-MOD-CONSENT-PRIV)."
     vendor_evidence: [OneTrust, Adobe Real-Time CDP, Tealium, Salesforce Data Cloud]
     proposed_module: CDP-UNIFIED-PROFILE
-
   - id: B3-MISSING-MASTER-PREDICTIVE
     candidate: "missing-master CDP-PREDICTIVE (capability in 217)"
     rationale: "CDP-PREDICTIVE is a capability folded into CDP-UNIFIED-PROFILE 217 with no master. predictive_models + model_predictions would anchor a promoted CDP-PREDICTIVE module (B3-MOD-PREDICTIVE)."
     vendor_evidence: [Adobe Sensei, Salesforce Einstein, Lytics, BlueConic AI Workbench]
     proposed_module: CDP-UNIFIED-PROFILE
-
   - id: B3-MOD-CONSENT-PRIV
     candidate: "module promotion CDP-CONSENT-PRIV"
     rationale: "Currently a capability folded into CDP-UNIFIED-PROFILE 217; consent + DSR + privacy artifacts justify a separate module once consent_records / data_subject_requests exist. Promote to module-kind=full."
     vendor_evidence: [OneTrust, Adobe Real-Time CDP, Tealium, Salesforce Data Cloud]
     proposed_module: CDP-UNIFIED-PROFILE
-
   - id: B3-MOD-PREDICTIVE
     candidate: "module split CDP-PREDICTIVE"
     rationale: "Currently a capability folded into CDP-UNIFIED-PROFILE 217. Vendors with significant AI/ML positioning ship distinct UX surfaces and roles. Warranted once predictive_models + model_predictions become entities."
     vendor_evidence: [Adobe Sensei, Salesforce Einstein, Lytics, BlueConic AI Workbench]
     proposed_module: CDP-UNIFIED-PROFILE
-
   - id: B3-DOM-REVERSE-ETL
     candidate: "candidate-domain REVERSE-ETL"
     rationale: "Reverse-ETL / Warehouse-Activation. Passes 3-vendor test. Adjacent to CDP, DBT-like tooling, activation half of CDP. CDP-COMPOSABLE-WH currently a capability in CDP-SEGMENTATION-ACTIVATION 218."

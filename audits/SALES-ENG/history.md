@@ -348,3 +348,83 @@ Post-write verification confirmed each of 121, 122, 123 appears as `master` in e
 ### Deferred / unchanged
 
 Out of scope for this pass (entity-only reuse): per-module system skills (B1B-F-RETIRE-LEGACY-SKILL, legacy skill 104), catalog UX copy (B1B-A-CATALOG-UX), lifecycle states (B1B-B-LIFECYCLE), intra/cross-domain relationships (B1B-B-INTRA-RELS, B1B-B-CROSS-RELS), aliases (B1B-B-ALIASES), handoff module-FK backfills (B1B-S-OUT-SRC-MODFK, B1B-S-IN-TGT-MODFK), event retargeting (B1B-S-RETARGET-EVENTS), and APQC tagging (B1B-H-APQC-TAGGING). These now have concrete target module ids and are re-expressed in state.yaml with the module mapping resolved where it was previously NULL. No master-less capability gaps: all 8 capabilities are backed by an in-domain master or a borrowed master in their module.
+
+## 2026-06-06 - b1a execution
+
+Technical b1a execution pass against live state. Scope: the two `b1a` items in `state.yaml`. One executed (B1A-F-PER-MODULE-SKILLS), one skipped (B1A-A-CATALOG-UX, blocked by a `user_decision`). No JWT-audience errors. `record_status` omitted on every insert (defaults to `new`, Rule #1/#4). No `notes` written on any row (Rule #15). No vendor/product names in any text field (Rule #18). All writes via the `semantius` CLI; no MCP tools (Rule #0).
+
+### B1A-F-PER-MODULE-SKILLS — DONE
+
+Retired the legacy domain-level system skill and authored one `skill_type='system'` skill per full module (296/297/298) with a per-module tool split, satisfying Rule #17 / F1 / F2 / F3 / F4.
+
+**DELETE (prior values snapshotted below for reversibility):**
+
+- `skills` id 104 `sales-eng-system` — prior values: `skill_type='system'`, `domain_id=95`, `domain_module_id=NULL`, `role_id=NULL`, `process_id=NULL`, `record_status='new'`, `description="System skill for Sales Engagement — runtime workflows over the domain's master data, derived from masters + cross-domain handoffs."`
+- `skill_tools` 5 rows on `skill_id=104` (all `requirement_level='required'`, `notes=''`, `record_status='new'`): id 815 -> tool 690 `query_cadences`; id 816 -> tool 691 `query_call_recordings`; id 817 -> tool 692 `query_sales_emails`; id 818 -> tool 693 `query_conversation_intelligence_records`; id 819 -> tool 37 `send_email`. (The four `query_*` tool rows 690-693 and `send_email` 37 themselves were NOT deleted; they are catalog-wide shared `tools` rows, re-linked into the new per-module skills below.)
+
+**INSERT `skills` (3 rows, `skill_type='system'`, `domain_id=95`, `record_status` omitted):**
+
+| id | skill_name | domain_module_id |
+|---|---|---|
+| 380 | sales_eng_cadence_outreach_agent | 296 |
+| 381 | sales_eng_email_scheduling_agent | 297 |
+| 382 | sales_eng_conversation_coaching_agent | 298 |
+
+**INSERT `tools` (7 new catalog rows; `record_status` omitted):**
+
+| id | tool_name | operation_kind | data_object_id | coverage_tier |
+|---|---|---|---|---|
+| 1778 | create_sales_cadence | mutate | 121 | platform |
+| 1779 | enroll_prospect_in_cadence | mutate | 121 | platform |
+| 1780 | create_sales_email | mutate | 123 | platform |
+| 1781 | draft_sales_email | compute | NULL | external |
+| 1782 | create_call_recording | mutate | 122 | platform |
+| 1783 | analyze_conversation | compute | NULL | external |
+| 1784 | publish_conversation_insight | mutate | 124 | platform |
+
+Reused existing catalog tools (Rule #9, dedup by `tool_name`, no duplicates created): `query_cadences` (690), `query_call_recordings` (691), `query_sales_emails` (692), `query_conversation_intelligence_records` (693), `send_email` (37), `make_phone_call` (39), `notify_person` (913).
+
+**INSERT `skill_tools` (16 rows; `notes=''`, `record_status` omitted):**
+
+- Skill 380 (module 296, cadence/outreach): `query_cadences` (req), `create_sales_cadence` (req), `enroll_prospect_in_cadence` (req, the active-state workflow action), `make_phone_call` (req, channel-required: voice IS the dialler workflow per F7), `notify_person` (opt).
+- Skill 381 (module 297, email/scheduling): `query_sales_emails` (req), `create_sales_email` (req), `send_email` (req, channel-required: the cadence-step tracked send IS the workflow; `skill_tools.notes` wording remains the deferred user item B2-CHANNEL-NOTES, left empty per Rule #15), `draft_sales_email` (opt, AI drafting), `notify_person` (opt).
+- Skill 382 (module 298, conversation/coaching): `query_call_recordings` (req), `query_conversation_intelligence_records` (req), `create_call_recording` (req), `analyze_conversation` (req, conversation intelligence compute), `publish_conversation_insight` (req, the analyzed -> published workflow gate), `notify_person` (opt).
+
+**Verification (re-queried live):** skill 104 absent; exactly 3 `skill_type='system'` skills on modules 296/297/298 (F2 OK); each skill has >=3 `required` tools (F3 OK: 4/3/5 required respectively); every linked tool's `operation_kind` <-> `data_object_id` pairing valid (F4 OK). Loader is idempotent (second run inserted 0). F1 cleared (no legacy `domain_module_id=NULL` system skill remains).
+
+**Residual follow-up (not a b1a item):** F7 still wants a workflow-specific `skill_tools.notes` justification on the `send_email` row (skill 381). That wording is user-supplied per Rule #15 and tracked as B2-CHANNEL-NOTES; the channel link itself is correct and in place.
+
+### B1A-A-CATALOG-UX: SKIPPED (superseded; see follow-up below)
+
+Blocked by `{type: user_decision, ref: B2-CATALOG-COPY}`. Per the execution mandate, b1a items whose `blocked_by` contains a `user_decision` are not executed. The target fields (`domains.catalog_tagline`/`catalog_description` on id 95 and `catalog_tagline`/`catalog_description` on modules 296/297/298) remain empty; no write performed. Kept in `state.yaml`.
+
+This skip was made under the OLD Rule #20, which required a pre-write user gate even for empty catalog UX fields. See the follow-up below: under the revised Rule #20 an empty field is written directly (the row's `record_status` carries the review signal), so the stale `blocked_by` annotation was moot and the fields were written.
+
+### Loader
+
+`.tmp_deploy/sales_eng_b1a_per_module_skills_2026_06_06.ts` (gitignored, one-off). Idempotent (skills keyed on `skill_name`, tools on `tool_name`, skill_tools on `(skill_id, tool_id)`). Invoked from project root `c:/dev/domain-map` per Rule #6. UI spot-check: https://tests.semantius.app/domain_map/skills , https://tests.semantius.app/domain_map/skill_tools , https://tests.semantius.app/domain_map/tools .
+
+### B1A-A-CATALOG-UX follow-up: RESOLVED (catalog UX fields written)
+
+Under the revised Rule #20 and the batch-policy correction, an EMPTY `catalog_tagline` / `catalog_description` is written directly with buyer-voice copy; the row's `record_status` (these rows are all `new`) carries the review signal. The stale `blocked_by: user_decision B2-CATALOG-COPY` annotation applied only to the OLD pre-write gate and is moot for empty fields, so this item was executed.
+
+Re-read confirmed all 8 target fields were EMPTY (`""`) immediately before the write. Per-field empty-guard applied (write only where empty; never overwrite a non-empty value).
+
+**Prior values snapshotted for reversibility (all empty strings `""` before the PATCH):**
+
+| table | row id | field | prior value | written? |
+|---|---|---|---|---|
+| domains | 95 | catalog_tagline | `""` | yes |
+| domains | 95 | catalog_description | `""` | yes |
+| domain_modules | 296 | catalog_tagline | `""` | yes |
+| domain_modules | 296 | catalog_description | `""` | yes |
+| domain_modules | 297 | catalog_tagline | `""` | yes |
+| domain_modules | 297 | catalog_description | `""` | yes |
+| domain_modules | 298 | catalog_tagline | `""` | yes |
+| domain_modules | 298 | catalog_description | `""` | yes |
+
+To revert: PATCH each of the 8 fields back to `""` on the rows above.
+
+Copy is buyer-voice (workflow + value, "what the buyer can do"), distinct from the analyst-voice `description` column on each row. No vendor/product names, no handoff/parent-domain/taxonomy enumeration, no em-dashes, American English. `record_status` was OMITTED on every PATCH (rows stay `new`); no `notes` column touched. All writes via the `semantius` CLI; no MCP tools (Rule #0). No JWT-audience errors.
+
+**Loader:** `.tmp_deploy/sales_eng_b1a_catalog_ux_2026_06_06.ts` (gitignored, one-off). Idempotent: re-reads live state per field; once a field is non-empty the empty-guard skips it. Invoked from project root `c:/dev/domain-map` per Rule #6. UI spot-check: https://tests.semantius.app/domain_map/domains , https://tests.semantius.app/domain_map/domain_modules .

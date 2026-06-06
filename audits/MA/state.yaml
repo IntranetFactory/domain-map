@@ -1,120 +1,14 @@
 schema_version: 2
 domain: MA
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
-b1a:
-  - id: B1A-M-SYSTEM-SKILLS
-    summary: "Author one system skill (>=1 skill_tools row) per new MA module (4 modules) and retire the legacy domain-anchored ma-system skill (id 17)."
-    finding: "Phase M landed 4 module_kind=full modules (MA-CAMPAIGN-AUTHORING 197, MA-JOURNEY-ORCH 198, MA-LEAD-SCORING 199, MA-LANDING-FORMS 200). Per Rule #17 each module requires exactly one skills.skill_type=system row with >=1 skill_tools row; F2/F3 now hard-fail because zero per-module system skills exist. The legacy domain_id-anchored ma-system skill (id 17, domain_module_id=null) with 12 skill_tools rows (5 query, 4 mutate, 2 compute, 1 side_effect) is the seed. F1 now hard-fails (was a transitional pass only while no module-level skill existed); the legacy row must be replaced, not kept. This supersedes the prior B1B-F1-LEGACY-SKILL and is no longer blocked (its dependency on Phase M is satisfied)."
-    action: "Author 4 per-module system skills, redistribute the 12 legacy skill_tools rows by data_object_id to the owning module's skill (query/mutate rows route to the master's module; compute/side_effect rows route per channel/primitive), then DELETE the legacy ma-system row (id 17). Audit F4 invariant on every new skill_tools placement."
-    extra_legacy_skill_id: 17
-    extra_legacy_skill_tool_count: 12
-    affected_modules: [197, 198, 199, 200]
-
-  - id: B1A-M8-MODULE-UX
-    summary: "Backfill catalog_tagline + catalog_description on the 4 new MA modules (M8) and on domains.MA (A4) per Rule #20 after user approves the draft."
-    finding: "M8 + A4 fail. All 4 new modules (197, 198, 199, 200) ship with empty catalog_tagline and catalog_description; domains.MA.catalog_tagline + catalog_description also remain empty. Per Rule #20 backfill is allowed but the buyer-voice draft must be surfaced and approved before write. Module-grain copy (M8) is the buyer surface a deploy chooser renders and should drive the domain-grain copy (A4). Draft skeletons by module: 197 campaign authoring + send + A/B + GenAI content + attribution; 198 cross-channel nurture journeys across email/push/in-app/SMS; 199 behavioral + demographic lead scoring with nurture triggers; 200 hosted landing pages + lead-capture forms with progressive profiling."
-    action: "Draft per-module buyer-voice tagline + 1-3 paragraph catalog_description for 197/198/199/200, surface as a B2 question, then write to domain_modules.catalog_tagline + catalog_description (and domains.MA) only on explicit user approval. No vendor/product names (Rule #18)."
-    affected_modules: [197, 198, 199, 200]
-
-  - id: B1A-B10b-OUTBOUND
-    summary: "PATCH source_domain_module_id on 8 outbound MA handoffs (module FK targets now exist)."
-    finding: "B10b. All 8 outbound MA handoffs (60, 69, 74, 84, 507, 508, 509, 510) carry NULL source_domain_module_id. The dependency on Phase M is now satisfied (modules 197-200 exist), so the FK targets are available. Final-split routing: 60 / 84 / 507 / 509 / 510 to MA-LEAD-SCORING (199); 69 / 74 to MA-JOURNEY-ORCH (198); 508 to MA-LANDING-FORMS (200, the final name for the provisional MA-LANDING-PAGES)."
-    action: "PATCH source_domain_module_id on the 8 outbound handoffs to the routed module id."
-    affected_handoffs:
-      - {handoff_id: 60,  direction: outbound, source_domain: MA, target_domain: CRM,       trigger_event: "crm_lead.qualified",                    payload: "crm_leads",        null_field: source_domain_module_id}
-      - {handoff_id: 69,  direction: outbound, source_domain: MA, target_domain: CDP,       trigger_event: "marketing_campaign.engagement_recorded", payload: "customers",        null_field: source_domain_module_id}
-      - {handoff_id: 74,  direction: outbound, source_domain: MA, target_domain: CDP,       trigger_event: "marketing_campaign.event_recorded",      payload: "customer_events",  null_field: source_domain_module_id}
-      - {handoff_id: 84,  direction: outbound, source_domain: MA, target_domain: CRM,       trigger_event: "nurture.completed",                      payload: "crm_leads",        null_field: source_domain_module_id}
-      - {handoff_id: 507, direction: outbound, source_domain: MA, target_domain: CRM,       trigger_event: "crm_lead.scored_above_threshold",        payload: "crm_leads",        null_field: source_domain_module_id}
-      - {handoff_id: 508, direction: outbound, source_domain: MA, target_domain: CDP,       trigger_event: "marketing_form.submitted",               payload: "crm_leads",        null_field: source_domain_module_id}
-      - {handoff_id: 509, direction: outbound, source_domain: MA, target_domain: CRM,       trigger_event: "nurture_journey.completed",              payload: "crm_leads",        null_field: source_domain_module_id}
-      - {handoff_id: 510, direction: outbound, source_domain: MA, target_domain: SALES-ENG, trigger_event: "lead_score.recomputed",                  payload: "lead_scores",      null_field: source_domain_module_id}
-    extra_routing:
-      - {handoff_id: 60,  module_id: 199, module_code: MA-LEAD-SCORING}
-      - {handoff_id: 84,  module_id: 199, module_code: MA-LEAD-SCORING}
-      - {handoff_id: 507, module_id: 199, module_code: MA-LEAD-SCORING}
-      - {handoff_id: 509, module_id: 199, module_code: MA-LEAD-SCORING}
-      - {handoff_id: 510, module_id: 199, module_code: MA-LEAD-SCORING}
-      - {handoff_id: 69,  module_id: 198, module_code: MA-JOURNEY-ORCH}
-      - {handoff_id: 74,  module_id: 198, module_code: MA-JOURNEY-ORCH}
-      - {handoff_id: 508, module_id: 200, module_code: MA-LANDING-FORMS}
-
-  - id: B1A-B10b-INBOUND
-    summary: "PATCH target_domain_module_id on 11 inbound MA handoffs (module FK targets now exist)."
-    finding: "B10b. All 11 inbound MA handoffs (78, 85, 90, 91, 94, 232, 327, 328, 506, 808, 811) carry NULL target_domain_module_id. The dependency on Phase M is now satisfied. Final-split routing (attribution folded into 197, landing into 200): 78 to MA-JOURNEY-ORCH (198); 85 / 90 / 91 / 94 to MA-CAMPAIGN-AUTHORING (197); 232 / 327 / 328 to MA-JOURNEY-ORCH (198); 506 to MA-CAMPAIGN-AUTHORING (197, since MA-ATTRIBUTION folded into 197); 808 / 811 to MA-JOURNEY-ORCH (198)."
-    action: "PATCH target_domain_module_id on the 11 inbound handoffs to the routed module id."
-    affected_handoffs:
-      - {handoff_id: 78,  direction: inbound, source_domain: CDP,      target_domain: MA, trigger_event: "segment.activated",            payload: "audience_segments",   null_field: target_domain_module_id}
-      - {handoff_id: 85,  direction: inbound, source_domain: CRM,      target_domain: MA, trigger_event: "crm_contact.synced",           payload: "crm_contacts",        null_field: target_domain_module_id}
-      - {handoff_id: 90,  direction: inbound, source_domain: SMM,      target_domain: MA, trigger_event: "influencer_campaign.completed", payload: "marketing_campaigns", null_field: target_domain_module_id}
-      - {handoff_id: 91,  direction: inbound, source_domain: SMM,      target_domain: MA, trigger_event: "social_post.published",        payload: "marketing_campaigns", null_field: target_domain_module_id}
-      - {handoff_id: 94,  direction: inbound, source_domain: HCMS,     target_domain: MA, trigger_event: "content_entry.published",      payload: "content_entries",     null_field: target_domain_module_id}
-      - {handoff_id: 232, direction: inbound, source_domain: LOYALTY,  target_domain: MA, trigger_event: "member.lapsed",                payload: "loyalty_members",     null_field: target_domain_module_id}
-      - {handoff_id: 327, direction: inbound, source_domain: B2C-COMM, target_domain: MA, trigger_event: "cart.abandoned",               payload: "shopping_carts",      null_field: target_domain_module_id}
-      - {handoff_id: 328, direction: inbound, source_domain: B2C-COMM, target_domain: MA, trigger_event: "checkout.started",             payload: "checkout_sessions",   null_field: target_domain_module_id}
-      - {handoff_id: 506, direction: inbound, source_domain: B2C-COMM, target_domain: MA, trigger_event: "coupon.redeemed",              payload: "coupon_redemptions",  null_field: target_domain_module_id}
-      - {handoff_id: 808, direction: inbound, source_domain: DXP,      target_domain: MA, trigger_event: "digital_experience.activated",  payload: "digital_experiences", null_field: target_domain_module_id}
-      - {handoff_id: 811, direction: inbound, source_domain: DXP,      target_domain: MA, trigger_event: "journey_step.abandoned",        payload: "journey_steps",       null_field: target_domain_module_id}
-    extra_routing:
-      - {handoff_id: 78,  module_id: 198, module_code: MA-JOURNEY-ORCH}
-      - {handoff_id: 85,  module_id: 197, module_code: MA-CAMPAIGN-AUTHORING}
-      - {handoff_id: 90,  module_id: 197, module_code: MA-CAMPAIGN-AUTHORING}
-      - {handoff_id: 91,  module_id: 197, module_code: MA-CAMPAIGN-AUTHORING}
-      - {handoff_id: 94,  module_id: 197, module_code: MA-CAMPAIGN-AUTHORING}
-      - {handoff_id: 232, module_id: 198, module_code: MA-JOURNEY-ORCH}
-      - {handoff_id: 327, module_id: 198, module_code: MA-JOURNEY-ORCH}
-      - {handoff_id: 328, module_id: 198, module_code: MA-JOURNEY-ORCH}
-      - {handoff_id: 506, module_id: 197, module_code: MA-CAMPAIGN-AUTHORING}
-      - {handoff_id: 808, module_id: 198, module_code: MA-JOURNEY-ORCH}
-      - {handoff_id: 811, module_id: 198, module_code: MA-JOURNEY-ORCH}
-
-  - id: B1A-H1-APQC-TAGGING
-    summary: "Tag 17 untagged + REPLACE 2 discovery_substring cross-domain handoffs with agent_curated handoff_processes rows."
-    finding: "H1 hard-fails. 2 of 19 cross-domain handoffs carry handoff_processes rows (78 to process 133 L3 `Establish goals, objectives, and measures for products/services by channel/segment`, discovery_substring, record_status=new; 232 to process 641 L4 `Acquire members to customer loyalty program`, discovery_substring, record_status=new). Zero agent_curated. Zero approved. Volume target per SKILL H1: 10 to 15 agent_curated rows. PCF id resolutions confirmed live for 22 (`Develop marketing strategy` L2), 23 (`Develop and manage marketing plans` L2), 147 (`Manage leads/opportunities` L3), 708 (`Identify/receive leads/opportunities` L4), 709 (`Validate and qualify leads/opportunities` L4), 1862 (`Collect and merge internal and third-party customer information` L5). Independent of Phase M; can load now."
-    action: "INSERT 17 + REPLACE 2 handoff_processes rows, all proposal_source=agent_curated, all record_status=new. Composed key (handoff_id, process_id) prevents duplicates."
-    affected_handoffs:
-      - {handoff_id: 60,  direction: outbound, source_domain: MA, target_domain: CRM,       trigger_event: "crm_lead.qualified",                     payload: "crm_leads",            null_field: source_domain_module_id}
-      - {handoff_id: 69,  direction: outbound, source_domain: MA, target_domain: CDP,       trigger_event: "marketing_campaign.engagement_recorded", payload: "customers",            null_field: source_domain_module_id}
-      - {handoff_id: 74,  direction: outbound, source_domain: MA, target_domain: CDP,       trigger_event: "marketing_campaign.event_recorded",      payload: "customer_events",      null_field: source_domain_module_id}
-      - {handoff_id: 84,  direction: outbound, source_domain: MA, target_domain: CRM,       trigger_event: "nurture.completed",                      payload: "crm_leads",            null_field: source_domain_module_id}
-      - {handoff_id: 507, direction: outbound, source_domain: MA, target_domain: CRM,       trigger_event: "crm_lead.scored_above_threshold",        payload: "crm_leads",            null_field: source_domain_module_id}
-      - {handoff_id: 508, direction: outbound, source_domain: MA, target_domain: CDP,       trigger_event: "marketing_form.submitted",               payload: "crm_leads",            null_field: source_domain_module_id}
-      - {handoff_id: 509, direction: outbound, source_domain: MA, target_domain: CRM,       trigger_event: "nurture_journey.completed",              payload: "crm_leads",            null_field: source_domain_module_id}
-      - {handoff_id: 510, direction: outbound, source_domain: MA, target_domain: SALES-ENG, trigger_event: "lead_score.recomputed",                  payload: "lead_scores",          null_field: source_domain_module_id}
-      - {handoff_id: 78,  direction: inbound,  source_domain: CDP,       target_domain: MA, trigger_event: "segment.activated",                      payload: "audience_segments",    null_field: target_domain_module_id}
-      - {handoff_id: 85,  direction: inbound,  source_domain: CRM,       target_domain: MA, trigger_event: "crm_contact.synced",                     payload: "crm_contacts",         null_field: target_domain_module_id}
-      - {handoff_id: 90,  direction: inbound,  source_domain: SMM,       target_domain: MA, trigger_event: "influencer_campaign.completed",          payload: "marketing_campaigns",  null_field: target_domain_module_id}
-      - {handoff_id: 91,  direction: inbound,  source_domain: SMM,       target_domain: MA, trigger_event: "social_post.published",                  payload: "marketing_campaigns",  null_field: target_domain_module_id}
-      - {handoff_id: 94,  direction: inbound,  source_domain: HCMS,      target_domain: MA, trigger_event: "content_entry.published",                payload: "content_entries",      null_field: target_domain_module_id}
-      - {handoff_id: 232, direction: inbound,  source_domain: LOYALTY,   target_domain: MA, trigger_event: "member.lapsed",                          payload: "loyalty_members",      null_field: target_domain_module_id}
-      - {handoff_id: 327, direction: inbound,  source_domain: B2C-COMM,  target_domain: MA, trigger_event: "cart.abandoned",                         payload: "shopping_carts",       null_field: target_domain_module_id}
-      - {handoff_id: 328, direction: inbound,  source_domain: B2C-COMM,  target_domain: MA, trigger_event: "checkout.started",                       payload: "checkout_sessions",    null_field: target_domain_module_id}
-      - {handoff_id: 506, direction: inbound,  source_domain: B2C-COMM,  target_domain: MA, trigger_event: "coupon.redeemed",                        payload: "coupon_redemptions",   null_field: target_domain_module_id}
-      - {handoff_id: 808, direction: inbound,  source_domain: DXP,       target_domain: MA, trigger_event: "digital_experience.activated",           payload: "digital_experiences",  null_field: target_domain_module_id}
-      - {handoff_id: 811, direction: inbound,  source_domain: DXP,       target_domain: MA, trigger_event: "journey_step.abandoned",                 payload: "journey_steps",        null_field: target_domain_module_id}
-    extra_proposed_pcf_tags:
-      - {handoff_id: 60,  process_id: 709,  action: insert,  confidence: confident_L4}
-      - {handoff_id: 84,  process_id: 147,  action: insert,  confidence: confident_L3}
-      - {handoff_id: 507, process_id: 709,  action: insert,  confidence: confident_L4}
-      - {handoff_id: 509, process_id: 147,  action: insert,  confidence: confident_L3}
-      - {handoff_id: 69,  process_id: 23,   action: insert,  confidence: confident_L2}
-      - {handoff_id: 74,  process_id: 23,   action: insert,  confidence: confident_L2}
-      - {handoff_id: 508, process_id: 708,  action: insert,  confidence: confident_L4}
-      - {handoff_id: 510, process_id: 147,  action: insert,  confidence: confident_L3}
-      - {handoff_id: 85,  process_id: 1862, action: insert,  confidence: confident_L5}
-      - {handoff_id: 90,  process_id: 23,   action: insert,  confidence: confident_L2}
-      - {handoff_id: 91,  process_id: 23,   action: insert,  confidence: confident_L2}
-      - {handoff_id: 94,  process_id: 23,   action: insert,  confidence: confident_L2}
-      - {handoff_id: 327, process_id: 23,   action: insert,  confidence: confident_L2}
-      - {handoff_id: 328, process_id: 23,   action: insert,  confidence: confident_L2}
-      - {handoff_id: 506, process_id: 23,   action: insert,  confidence: confident_L2}
-      - {handoff_id: 808, process_id: 23,   action: insert,  confidence: confident_L2}
-      - {handoff_id: 811, process_id: 23,   action: insert,  confidence: confident_L2}
-      - {handoff_id: 78,  process_id: 23,   action: replace, existing_process_id: 133, confidence: confident_L2}
-      - {handoff_id: 232, process_id: 23,   action: replace, existing_process_id: 641, confidence: confident_L2}
+# All 2026-06-06 b1a items executed (see history.md "## 2026-06-06 - b1a execution").
+# B1A-B10b-OUTBOUND, B1A-B10b-INBOUND, B1A-H1-APQC-TAGGING, B1A-M-SYSTEM-SKILLS,
+# B1A-M8-MODULE-UX all DONE and removed. One sub-action (handoff 78 APQC replace) was
+# skipped on a stale premise and carried into b2 as B2-H1-78-FOLLOWUP.
+b1a: []
 
 b1b:
   - id: B1B-B12-LIFECYCLE-STATES
@@ -193,14 +87,23 @@ b1b:
       - {type: user_decision, ref: B2-B4}
 
 b2:
-  - id: B2-A4
-    summary: "Approve buyer-voice catalog copy for the 4 MA modules (M8) and domains.MA (A4)."
-    question: "Approve the per-module + domain catalog_tagline / catalog_description draft, rewrite, or stage it (modules first, then domain)?"
+  - id: B2-A4-REVIEW
+    summary: "Review (in-record) the buyer-voice catalog copy written 2026-06-06 on the 4 MA modules (M8) and domains.MA (A4)."
+    question: "Review the written catalog_tagline / catalog_description on modules 197-200 and domains.MA in the catalog UI; approve, or request specific rewrites per surface."
     options:
-      - "Approve drafts. Per-module taglines + 1-3 paragraph descriptions for MA-CAMPAIGN-AUTHORING (197), MA-JOURNEY-ORCH (198), MA-LEAD-SCORING (199), MA-LANDING-FORMS (200); domain tagline `Orchestrate marketing emails, nurture journeys, and lead-scoring across email, SMS, push, and the web.` + 3-paragraph domain description."
-      - "Rewrite (specify per surface)."
-      - "Stage: approve the 4 module copies first (M8), then let module-grain copy drive the domain-grain copy (A4)."
-    why: "Marketing voice ages on a different cycle from analyst voice; Rule #20 forbids overwriting once non-empty. User owns wording before first write. Drives B1A-M8-MODULE-UX."
+      - "Approve as written (flip record_status to approved per Rule #1 when satisfied)."
+      - "Rewrite a specific surface (specify exact text + which module/domain row)."
+    note: "Superseded B2-A4. Per revised Rule #20 the copy was written straight into the empty fields (all 10 were empty) and now lives at record_status=new for in-record review; it was NOT gated on pre-write approval. Overwrite of these non-empty values now requires explicit per-row user approval."
+    why: "Marketing voice ages on a different cycle from analyst voice; the written copy carries the review signal in-record (record_status=new), exactly as Rule #1 handles fresh research."
+
+  - id: B2-H1-78-FOLLOWUP
+    summary: "Decide the APQC tag for inbound handoff 78 (CDP segment.activated -> MA)."
+    question: "Handoff 78 already carries handoff_processes id=81 -> process 132 (Design and manage customer loyalty program, L3, agent_curated). The 2026-06-06 b1a finding asked to replace a process-133/discovery_substring tag with process 23, but that 133/discovery_substring row never existed (stale premise), so no write was made. Keep the existing 132 tag, retarget it to 23 (Develop and manage marketing plans, L2), or add 23 as a second tag?"
+    options:
+      - "Keep existing 78 -> 132 tag as-is (no change)."
+      - "Retarget: replace 78 -> 132 with 78 -> 23 (snapshot the deleted row)."
+      - "Add 78 -> 23 as a second tag alongside 132."
+    why: "78's existing agent_curated tag points at a loyalty-program process, which looks mis-matched for a CDP-segment-activation handoff into MA, but retargeting/deleting an existing agent_curated tag on a falsified premise is a user call (master data; SKILL Rule #1, prompt Rule #12)."
 
   - id: B2-B12
     summary: "Approve per-master lifecycle state-machine names + verbs for the 5 MA masters (Rule #12)."
@@ -246,13 +149,14 @@ b2:
       - "lead_scores.has_personal_content remains false (proposed): confirm."
     why: "Workflow-shape judgment the user owns."
 
-  - id: B2-SYSTEM-SKILL-SPLIT
-    summary: "Confirm how the 12 legacy ma-system skill_tools rows redistribute across the 4 new per-module system skills."
-    question: "Approve the proposed tool-to-module mapping, or adjust before the legacy ma-system skill (id 17) is retired?"
+  - id: B2-SYSTEM-SKILL-SPLIT-REVIEW
+    summary: "Review (post-hoc) the executed redistribution of the 12 legacy ma-system skill_tools across the 4 new per-module system skills."
+    question: "The 2026-06-06 b1a pass executed the proposed mapping and retired legacy skill 17. Review the live placement (skills 343=197, 344=198, 345=199, 346=200) and the 12 re-pointed skill_tools; approve, or request a specific channel-primitive re-routing."
     options:
-      - "Approve: route each of the 12 skill_tools rows to the module that masters its data_object (campaigns/emails -> 197, journeys -> 198, lead_scores -> 199, forms -> 200); place the 2 compute and 1 side_effect rows on the module whose workflow they serve."
-      - "Adjust the mapping (specify per tool)."
-    why: "F4 invariant must hold per placement; the user may want a specific channel-primitive routing. Informs B1A-M-SYSTEM-SKILLS."
+      - "Approve as executed: query/mutate rows on the module mastering the data_object (campaigns/emails -> 343/197, journeys -> 344/198, lead_scores -> 345/199, forms -> 346/200); send_email + generate_text on 343/197, classify_text on 345/199."
+      - "Re-route a specific tool (specify per tool)."
+    note: "Resolved/executed in the 2026-06-06 b1a pass (B1A-M-SYSTEM-SKILLS). F4 invariant verified on every placement. Kept as a review item because the channel-primitive routing (send_email/generate_text/classify_text) was an agent decision the user may want to adjust."
+    why: "F4 invariant holds per placement; the user may still prefer a specific channel-primitive routing."
 
 b3:
   - id: B3-MARKETING-EMAIL-SENDS

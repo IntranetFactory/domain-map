@@ -1,45 +1,13 @@
 schema_version: 2
 domain: NCDB
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
-b1a:
-  - id: B1A-MOD-SKILLS
-    summary: "Author 3 module-anchored system skills (one per NCDB module) and retire legacy domain-anchored skill 86."
-    finding: >
-      Modularization landed 3 full modules on 2026-06-02 (282 NCDB-SCHEMA-BUILDER, 283
-      NCDB-VIEWS-FORMS, 284 NCDB-AUTOMATION-SYNC). Rule #17 (-> F2/F3) requires exactly one
-      `domain_module_id`-anchored system skill per `domain_modules` row, each with >=1
-      `skill_tools` row (typical floor 5-20). NCDB still has only the legacy
-      `domain_id`-anchored skill 86 (`ncdb-system`) with 5 query-only `skill_tools`
-      (595, 596, 831, 832, 833). F1 now hard-fails once any module-level system skill exists,
-      so the legacy row must be retired in the same pass.
-    action: >
-      Author 3 `domain_module_id`-anchored system skills (e.g. one per module 282 / 283 / 284),
-      migrate the 5 existing `skill_tools` to the new skills per the audit-proposed split
-      (query_nocode_bases + query_nocode_record_definitions -> 282; query_nocode_forms +
-      query_nocode_views -> 283; query_nocode_automations -> 284), add `mutate_*` + `side_effect`
-      tools per Rule #17 to clear the 5-tool floor, then DELETE legacy skill 86 (cascade
-      `skill_tools` cleanup first).
-    extra_skill_id_to_retire: 86
-    extra_tool_ids_to_migrate: [595, 596, 831, 832, 833]
-    affected_modules: [282, 283, 284]
-  - id: B1A-CATALOG-UX
-    summary: "Draft and (after user approval) PATCH NCDB catalog_tagline + catalog_description (M8 / A4, Rule #20)."
-    finding: >
-      A4 / M8 hard-fail. `domains.catalog_tagline` and `domains.catalog_description` are both
-      empty strings. Rule #20 requires both in buyer voice (workflow + value), not analyst
-      voice, AND user review BEFORE writing. The 2026-05-30 audit drafted candidate wording
-      (tagline "Build a database without code. Model your data, capture it through forms,
-      view it your way, and automate the rest.", 3-paragraph description) but never surfaced
-      it for approval. Now that 3 modules exist, the per-module catalog surfaces also want
-      taglines / descriptions for M8 scoring.
-    action: >
-      Surface the drafted `catalog_tagline` + `catalog_description` (and per-module catalog
-      copy) to the user for review; PATCH /domains?id=eq.134 only after approval. No overwrite
-      of a non-empty field without explicit per-row user approval.
-    extra_proposed_tagline: "Build a database without code. Model your data, capture it through forms, view it your way, and automate the rest."
+# b1a empty: both prior b1a items (B1A-MOD-SKILLS, B1A-CATALOG-UX) FULLY RESOLVED on
+# 2026-06-06; see history.md "## 2026-06-06 - b1a execution".
+
+b1a: []
 
 b1b:
   - id: B1B-S2

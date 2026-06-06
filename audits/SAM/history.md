@@ -450,3 +450,59 @@ Master -> module mapping (M7 single-master, each mastered in exactly one module)
 ### Next action
 
 `agent` (b1a non-empty: B1-S14 mechanical PATCH still pending from prior pass; B1A-SYSSKILL-MODULES + B1A-CATALOG-COPY + B1A-LEGACY-SKILL-RETIRE are the new module-downstream agent tasks).
+
+## 2026-06-06 - b1a execution
+
+Executed all 4 `b1a` items (none blocked by `user_decision`; all fully resolved). Live writes via `semantius` CLI only (Rule #0); multi-row writes through a Bun/TypeScript loader (Rule #4b). Loader: `c:/dev/domain-map/.tmp_deploy/sam_phase_s_2026-06-06.ts` (idempotent, run from project root). No `record_status` overrides (Rule #1; all new rows take DB default `new`). No `notes` writes (Rule #15). No vendor/product names in non-commerce fields (Rule #18). No em-dashes; American English. JWT-audience errors: 0.
+
+### B1A-S14 - DONE (American English PATCH)
+
+- `domains` id 52: PATCH `description`.
+  - Prior value: `Discovery, normalisation, entitlement reconciliation, and audit defence for software licences.`
+  - New value: `Discovery, normalization, entitlement reconciliation, and audit defense for software licenses.`
+- Verified: column re-read shows the American spellings; 0 em-dashes. UI: https://tests.semantius.app/domain_map/domains
+
+### B1A-SYSSKILL-MODULES - DONE (Phase-S, Rule #17 three-source derivation)
+
+Authored exactly one `skill_type='system'` skill per module with `domain_module_id` set and >=1 `skill_tools` row each.
+
+- `skills` inserted (3): id 340 `sam_catalog_discovery_agent` (module 201), id 341 `sam_entitlement_mgmt_agent` (module 202), id 342 `sam_audit_defense_agent` (module 203).
+- `tools` inserted (7, all domain-specific mutate, `operation_kind='mutate'`, `coverage_tier='platform'`, `data_object_id` set): `create_software_title` (do 57), `update_software_title` (do 57), `update_software_installation` (do 59), `create_software_license` (do 58), `update_software_license` (do 58), `create_license_audit` (do 60), `update_license_audit` (do 60). Generic/reusable tools were deduped against existing rows and linked, NOT re-created: `notify_team` 914, `notify_person` 913, `receive_webhook` 896, `send_email` 37, `sign_document` 42, plus the 4 existing query tools (67, 695, 694, 696).
+- `skill_tools` inserted (16):
+  - skill 340 (module 201): query_software_titles (67, required), query_software_installations (695, required), create_software_title (required), update_software_title (required), update_software_installation (required), receive_webhook (896, required), notify_team (914, optional). strict 6/6.
+  - skill 341 (module 202): query_software_licenses (694, required), create_software_license (required), update_software_license (required), notify_person (913, required). strict 4/4.
+  - skill 342 (module 203): query_license_audits (696, required), create_license_audit (required), update_license_audit (required), send_email (37, required), sign_document (42, required). strict 4/5 (the one non-platform required tool is `sign_document`, external; expected for the audit-defense external-channel sink).
+- F2/F3 now hold for all 3 modules; per-module Semantius score is computable.
+
+### B1A-LEGACY-SKILL-RETIRE - DONE (F1 retirement path)
+
+The 4 legacy `query_*` tools were folded into the module skills under B1A-SYSSKILL-MODULES (67+695 -> skill 340, 694 -> skill 341, 696 -> skill 342). The tool rows themselves stay in the catalog-wide `tools` table; only the legacy skill + its links were removed. No `process_raci` rows reference skill 105 (checked before delete).
+
+- `skill_tools` DELETED (4) - prior values: id 820 (skill 105, tool 67, required), id 821 (skill 105, tool 694, required), id 822 (skill 105, tool 695, required), id 823 (skill 105, tool 696, required).
+- `skills` DELETED (1) - prior values: id 105 `sam-system`, skill_type=system, domain_id=52, domain_module_id=NULL, process_id=NULL, role_id=NULL, record_status=new, description=`System skill for Software Asset Management: runtime workflows over the domain's master data, derived from masters + cross-domain handoffs.`
+- Post-state: SAM has exactly 3 `skill_type='system'` skills (340/341/342), one per module, zero `domain_module_id=NULL` orphan system skills.
+
+### B1A-CATALOG-COPY - DONE (M8 buyer-copy backfill; Rule #20 empty-guard)
+
+Empty-guard confirmed before each write: all 3 modules had `catalog_tagline=''` and `catalog_description=''`. Wrote buyer-voice copy (workflow + value; no vendor/product names; American English; no em-dashes) directly into the empty fields per Rule #20 (review signal carried by `record_status='new'`; not parked in history). No non-empty value was overwritten.
+
+- `domain_modules` id 201: `catalog_tagline` + `catalog_description` written (prior: both empty).
+- `domain_modules` id 202: `catalog_tagline` + `catalog_description` written (prior: both empty).
+- `domain_modules` id 203: `catalog_tagline` + `catalog_description` written (prior: both empty).
+- UI: https://tests.semantius.app/domain_map/domain_modules
+- Note: `domains` id 52 `catalog_tagline` / `catalog_description` remain empty; B1A-CATALOG-COPY scoped to the 3 modules only (A4 domain-grain copy is not a b1a item).
+
+### Skipped / blocked
+
+- None. All 4 b1a items were fully resolved. (No b1a item carried a `user_decision` blocker.)
+
+### Post-execution verification
+
+- `skills` where domain_id=52: 3 (all system, module FK set). `skill_tools` across skills 340/341/342: 16. New `tools` rows: 7.
+- Legacy skill 105 + its 4 skill_tools: gone (0 rows).
+- `domain_modules` 201/202/203: `catalog_tagline` + `catalog_description` non-empty on all 3.
+- `domains` id 52 description: American English, 0 em-dashes.
+
+### Next action
+
+`user` (b1a now empty; b2 carries B2-S1..B2-S8 user-decision items, which gate the remaining b1b structural work: lifecycle states, trigger_event dedup/lifecycle events, relationships, aliases, DMDO consumer rows, intra-domain + CLM handoffs, and APQC tagging).

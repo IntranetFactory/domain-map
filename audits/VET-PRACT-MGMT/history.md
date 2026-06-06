@@ -603,3 +603,50 @@ The B1B prerequisite gate on M1-MODULES is now cleared, so the following become 
 ### next_action_by
 
 `agent` - new b1a items are now technically actionable post-M1 (per-module system skills F2/F3, per-module catalog UX M8/A4). Several still funnel into existing b2 user-decision gates, but the skill + catalog-UX scaffolding can proceed.
+
+## 2026-06-06 - b1a execution
+
+Executed both b1a items against the live `domain_map` module. Loaders: `.tmp_deploy/vet_phase_s.ts` and `.tmp_deploy/vet_catalog_ux.ts` (both idempotent, dedup by natural key, empty-guarded).
+
+### B1A-MODULE-SYSTEM-SKILLS - DONE (Phase S, Rule #17)
+
+Authored exactly one `skill_type='system'` skill per module, redistributed the 5 legacy query tools by master ownership, added the per-module mutate tools, linked skill_tools, and retired the legacy domain-level skill.
+
+- `tools` (INSERT, 3 new domain-specific mutate rows; coverage_tier=platform, operation_kind=mutate, data_object_id set per F4):
+  - id 1785 `mutate_animal_patient_status` (data_object 395)
+  - id 1786 `mutate_veterinary_lab_result_review` (data_object 398)
+  - id 1787 `mutate_controlled_substance_ledger_dispense` (data_object 399, DEA-attributed)
+- `skills` (INSERT, 3 module-scoped system skills, record_status omitted = `new`):
+  - id 386 `vet_pract_mgmt_clinical_care_agent` (domain_module_id 321)
+  - id 387 `vet_pract_mgmt_front_office_agent` (domain_module_id 322)
+  - id 388 `vet_pract_mgmt_pharmacy_rx_agent` (domain_module_id 323)
+- `skill_tools` (INSERT, 10 rows, ids 3177-3186, all requirement_level=required):
+  - skill 386 (321, masters animal_patients/vaccinations/lab_results): query 744, 746, 747; mutate 1785, 1786; notify_person 913.
+  - skill 387 (322, masters pet_owners): query 745; notify_person 913.
+  - skill 388 (323, masters controlled_substance_ledger_entries): query 748; mutate 1787.
+  - Channel-vs-capability rule applied: the legacy `send_email` (tool 37) reminder/outreach leg was replaced by the `notify_person` (913) abstraction on the two modules whose workflow needs notification (321 recall outreach, 322 client comms). `send_email` was NOT linked directly anywhere (no workflow requires the email channel specifically).
+  - Deferred (per action text): `fetch_idexx_vetconnect_lab_result` / `fetch_antech_lab_result` and inbound lab-result + payment-settlement webhooks depend on the B3 lab-order / invoice entities; not authored.
+  - No mutate authored for 322: the action text enumerates per-module mutates only for 321 and 323; staying within action scope (no guessing on master data). Skill 387 still passes F3 (>=1 skill_tools).
+- Legacy retirement (DELETE, F1):
+  - DELETE `skill_tools` ids 893-898 (skill 116 children). Prior values snapshotted below.
+  - DELETE `skills` id 116. Prior row: `skill_name='vet-pract-mgmt-system'`, skill_type=system, domain_id=151, domain_module_id=NULL, description="System skill for Veterinary Practice Management - runtime workflows over the domain's master data, derived from masters + cross-domain handoffs.", record_status=new.
+  - Snapshot of deleted skill_tools (id | tool_id | tool | requirement_level): 893|744|query_animal_patients|required; 894|745|query_pet_owners|required; 895|746|query_veterinary_vaccinations|required; 896|747|query_veterinary_lab_results|required; 897|748|query_controlled_substance_ledger_entries|required; 898|37|send_email|required.
+
+Post-state verification: F1 (`/skills?domain_id=eq.151&skill_type=eq.system&domain_module_id=is.null`) returns []; F2 each of 321/322/323 has exactly one system skill; F3 each skill has >=1 skill_tools; F4 invariant holds (every query/mutate carries data_object_id, notify_person side_effect is null).
+
+### B1A-MODULE-CATALOG-UX - DONE (Rule #20 / revised UX rule)
+
+All 4 target rows had empty `catalog_tagline` + `catalog_description` (confirmed pre-write). Wrote buyer-voice copy (workflow + value, no vendor/product names, no em-dashes, American English) straight into the empty fields with a per-field empty-guard (no overwrites; none was non-empty). record_status carries the review signal (`new`); copy NOT parked in history per the revised rule.
+
+- `domain_modules` 321 (CLINICAL-CARE): wrote catalog_tagline (129c) + catalog_description (424c).
+- `domain_modules` 322 (FRONT-OFFICE): wrote catalog_tagline (111c) + catalog_description (431c).
+- `domain_modules` 323 (PHARMACY-RX): wrote catalog_tagline (92c) + catalog_description (388c).
+- `domains` 151 (A4 domain-grain): wrote catalog_tagline (115c) + catalog_description (558c).
+
+### Skipped
+
+None. Both b1a items fully resolved. (The b1b items remain blocked on their `user_decision` / partner-domain gates and were not touched.)
+
+### next_action_by (post-execution)
+
+`user` - b1a is now empty; b2 carries open user-decision items (config-shape confirmation, Client alias posture, vaccination-admin pattern, ERP-FIN APQC, pet-owner PII / submit-lock flags, module reshape). next_action_by = user.

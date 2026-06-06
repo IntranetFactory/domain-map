@@ -383,3 +383,92 @@ Ran the mandatory catalog-wide pre-check on all 8 masters (556-563) before writi
 - Loader: [.tmp_deploy/modularize_uem_2026-06-02.ts](../../.tmp_deploy/modularize_uem_2026-06-02.ts).
 - UI: https://tests.semantius.app/domain_map/domain_modules?domain_id=eq.86 , https://tests.semantius.app/domain_map/domain_module_data_objects .
 
+
+## 2026-06-06 - b1a execution
+
+Executed all three `b1a` items against the live `domain_map` module (id 1001, adenin org). All writes via `semantius call crud postgrestRequest` (Rule #0); zero MCP calls. TypeScript-on-Bun loaders by absolute path from project root (Rule #4b / #6). No JWT-audience errors. `record_status` omitted on every insert (Rule #1). No `notes` column written anywhere (Rule #15).
+
+### B1A-HANDOFF-MODULE-BACKFILL - DONE
+
+PATCHed `source_domain_module_id` on all 9 outbound UEM handoffs (655-663). Prior value on every one of the 9: `source_domain_module_id = NULL` (snapshot for reversibility). Deterministic strongest-role derivation (B10b) on the trigger-event's `data_object_id`:
+
+| handoff | trigger_event | event data_object | new source_domain_module_id |
+|---|---|---|---|
+| 655 | enrolled_device.enrolled | enrolled_devices (556) | 308 UEM-DEVICE-LIFECYCLE |
+| 656 | enrolled_device.enrolled | enrolled_devices (556) | 308 |
+| 657 | enrolled_device.retired | enrolled_devices (556) | 308 |
+| 658 | enrolled_device.lost_or_stolen | enrolled_devices (556) | 308 |
+| 659 | device_compliance_result.non_compliant | device_compliance_results (563) | 310 UEM-COMPLIANCE-POSTURE |
+| 660 | device_compliance_result.non_compliant | device_compliance_results (563) | 310 |
+| 661 | device_compliance_result.compliant | device_compliance_results (563) | 310 |
+| 662 | device_app_assignment.deployed | device_app_assignments (560) | 309 UEM-CONFIG-APPS |
+| 663 | device_configuration_profile.drift_detected | device_configuration_profiles (557) | 309 |
+
+0 ambiguous, 0 UEM-side null remaining. Rows 657 (target HAM) and 662 (target SAM) still carry `target_domain_module_id = NULL`; that is the TARGET domain's B10b, left untouched (asymmetry rule). Loader: [.tmp_deploy/backfill_uem_handoff_modules_2026_06_06.ts](../../.tmp_deploy/backfill_uem_handoff_modules_2026_06_06.ts).
+
+### B1A-LIFECYCLE-STATES - DONE
+
+Two-part load. Loader: [.tmp_deploy/load_uem_lifecycle_states_2026_06_06.ts](../../.tmp_deploy/load_uem_lifecycle_states_2026_06_06.ts).
+
+Part 1 (Rule #12 / B13 prerequisite): PATCHed `entity_type` on all 8 masters from `unclassified` -> `operational_workflow` (556-563). Each has a real device-management workflow per the b1a action text and the 12 live trigger events; classification is deterministic, not a guess. Prior value on all 8: `entity_type = 'unclassified'`.
+
+Part 2 (B12): INSERTed 29 `data_object_lifecycle_states` rows, anchored to the realizing module via `domain_module_id`. M4 shape validated per master (exactly one is_initial, >=1 is_terminal, monotonic state_order in steps of 10). Workflow gates (`requires_permission=true`) in brackets:
+
+| master | module | states (in order) | gates |
+|---|---|---|---|
+| enrolled_devices (556) | 308 | enrolled*, compliant, non_compliant, lost_or_stolen!, retired! | lost_or_stolen, retired (verb override retire_device) |
+| enrollment_tokens (561) | 308 | issued*, consumed!, revoked!, expired! | revoked |
+| device_deployment_results (562) | 308 | queued*, succeeded!, failed! | none |
+| device_configuration_profiles (557) | 309 | draft*, published, assigned, drift_detected! | published |
+| mobile_app_packages (559) | 309 | uploaded*, published, deprecated! | published, deprecated |
+| device_app_assignments (560) | 309 | assigned*, deployed, failed!, removed! | deployed |
+| device_compliance_policies (558) | 310 | draft*, published, revoked! | published, revoked |
+| device_compliance_results (563) | 310 | evaluating*, compliant!, non_compliant! | none |
+
+(* = is_initial, ! = is_terminal.) All `notes` empty (Rule #15); `record_status` omitted.
+
+### B1A-SYSTEM-SKILLS - DONE
+
+Loader: [.tmp_deploy/load_uem_system_skills_2026_06_06.ts](../../.tmp_deploy/load_uem_system_skills_2026_06_06.ts). Phase-S three-source derivation (Rule #17).
+
+INSERTed 3 `skill_type='system'` skills, one per module (F2):
+
+| skill_id | skill_name | domain_id | domain_module_id | tools (required) |
+|---|---|---|---|---|
+| 334 | uem_device_lifecycle_agent | 86 | 308 | 11 (10) |
+| 335 | uem_config_apps_agent | 86 | 309 | 11 (10) |
+| 336 | uem_compliance_posture_agent | 86 | 310 | 7 (6) |
+
+(System skills require `domain_id` AND `domain_module_id` per a DB check constraint - matches the ATS per-module skill shape; not an em-dash issue.)
+
+INSERTed 15 new `mutate` tools (ids 1686-1700), all `coverage_tier='platform'`, F4 invariant verified (query/mutate carry data_object_id; fetch/side_effect/compute would be NULL): enroll_device, retire_device, mark_device_lost_or_stolen, issue_enrollment_token, revoke_enrollment_token, record_device_deployment_result (556/561/562); publish_configuration_profile, assign_configuration_profile, publish_mobile_app_package, deprecate_mobile_app_package, assign_mobile_app, deploy_mobile_app (557/559/560); publish_compliance_policy, revoke_compliance_policy, evaluate_device_compliance (558/563). No duplicate tool_name existed catalog-wide (pre-checked).
+
+Reused shared catalog-wide tools (no new rows, re-read by name immediately before linking per Rule #9): the 8 existing query_* tools (728-735), create_incident (30, -> service_incidents 47), notify_person (913), notify_team (914).
+
+INSERTed 29 `skill_tools` links (11 + 11 + 7), each skill >=1 (F3). Source-3 handoff coverage: create_incident linked required on device-lifecycle (handoff 655 enrolled), config-apps (663 config drift), and compliance (660 non-compliant) - the three UEM events that create ITSM service_incidents. notify_person/notify_team linked optional (channel-vs-capability abstraction default). The IGA/HAM/SAM handoffs are consuming-side query/sync (no UEM-owned mutate), so they add no required tool (anti-pattern: do not add a tool per consumer relationship).
+
+The 8 query_* tools (728-735) were redistributed from legacy skill 114 onto the per-module skills by their master's owning module (728/733/734 -> 334; 729/731/732 -> 335; 730/735 -> 336).
+
+DELETEd legacy skill 114 (`uem-system`, was: skill_type=system, domain_id=86, domain_module_id=NULL, record_status=new, description "System skill for Unified Endpoint Management ... derived from masters + cross-domain handoffs.", 8 skill_tools 876-883 -> tools 728-735, all required). Its 8 skill_tools cascaded on delete (skill_id is a parent FK); the 8 query tools themselves survive in the catalog-wide `tools` table and are now linked to the per-module skills. Pre-delete guard confirmed all 3 per-module skills have >=1 skill_tools and all 8 query tools are redistributed. This also resolves the dependent b1b item B1B-RETIRE-LEGACY-SKILL (F1).
+
+### Skipped
+
+None of the 3 b1a items were skipped. (b1b CATALOG-UX for the 3 module rows and the domain row is a b1b item blocked by `user_decision` B2-CATALOG-UX, not a b1a item, so it was not written this pass per the skip-on-user_decision rule.)
+
+### Verification (live, post-load)
+
+- handoffs 655-663: source_domain_module_id = {308 x4, 310 x3, 309 x2}; 0 UEM-side NULL remaining.
+- data_object_lifecycle_states on 556-563: 29 rows (5/4/3/3/4/4/3/3).
+- data_objects 556-563: 0 rows with entity_type != operational_workflow.
+- skills on modules 308/309/310: exactly 3 system skills (334/335/336); skill 114 gone.
+- skill_tools: 29 across the 3 skills; all 8 query tools (728-735) re-linked.
+
+### next_action_by
+
+`b1a` now empty -> `next_action_by: user` (b2 non-empty: catalog UX, verbs, pattern flags, coverage, regulations, config-apps split).
+
+### UI
+
+- https://tests.semantius.app/domain_map/skills
+- https://tests.semantius.app/domain_map/data_object_lifecycle_states
+- https://tests.semantius.app/domain_map/handoffs

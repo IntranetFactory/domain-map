@@ -541,3 +541,98 @@ These remain out of this pass's scope (modules + entity assignment only) but are
 - JWT errors: none.
 - No `record_status` writes; no `notes` writes; no new entities/relationships/skills/handoffs.
 - Module-to-master mapping written to `domain_module_data_objects` (module grain), not the deprecated `domain_data_objects` rollup. The legacy rollup still lists the 6 as domain-grain masters; it is a derived view and was not hand-edited.
+
+## 2026-06-06 - b1a execution
+
+Executed the agent-solvable `b1a` items against the live `domain_map` module (tenant `adenin`, module 1001) for VMS (domain 64). All inserts shipped with `record_status` omitted (DB default `new`); no `notes` columns written.
+
+### B1A-B5 - DONE (trigger_events)
+
+PATCH `event_category=state_change` on 6 trigger events. Prior value on all 6: empty string `""`.
+- 595 staffing_supplier.activated, 596 rate_card.published, 597 contingent_timesheet.approved, 598 contingent_timesheet.rejected, 599 contingent_invoice.received, 600 contingent_invoice.matched.
+
+### B1A-B2 - DONE (data_object_relationships)
+
+INSERT 1 row: `data_object_relationships` id **2070** - contingent_workers (186) `converts_to` employees (31), inverse `converts from`, one_to_one / reference, is_required=false, owner_side=source. Distinct from existing row 541 (186 reviewed_against 31, owner_side=target), which was left untouched.
+
+### B1A-B10b - DONE (handoffs PATCH)
+
+PATCH `source_domain_module_id` on 7 outbound handoffs. Prior value on all 7: NULL. Attribution by the trigger event's data_object mastering module (strongest role; no ties):
+- 117 (event 146 / do187 pm_work_orders) -> 315
+- 118 (event 147 / do186 contingent_workers) -> 315
+- 591 (event 595 / do188 staffing_suppliers) -> 315
+- 587 (event 597 / do190 contingent_timesheets) -> 316
+- 590 (event 597 / do190 contingent_timesheets) -> 316
+- 588 (event 599 / do191 contingent_invoices) -> 316
+- 589 (event 600 / do191 contingent_invoices) -> 316
+
+Note: handoff 590 carries a pre-existing Rule-#15-violating `notes` annotation ("target_domain_module_id left NULL...") that predates this run; not in any b1a scope, left as-is and flagged for follow-up.
+
+### B1A-B9 - DONE (handoffs INSERT)
+
+INSERT 2 handoffs on rate_card.published (event 596, payload rate_cards do189, source_domain_module_id=315, batch_sync, friction medium):
+- id **1361** VMS -> PSA (target 68), target_domain_module_id NULL.
+- id **1362** VMS -> ERP-FIN (target 65), target_domain_module_id NULL.
+
+`target_domain_module_id` left NULL on both because no PSA or ERP-FIN module declares any role on the payload `rate_cards` (189). Both target domains ARE modularized but do not model rate_cards (the B10b "no-role row" sub-case). Authoring a consumer DMDO row on a PSA/ERP-FIN module is out of VMS scope. Surfaced as a report-only follow-up (PSA / ERP-FIN owe a consumer row on rate_cards if they want module-grain attribution).
+
+### B1A-B9b - DONE (handoffs INSERT, intra-domain)
+
+INSERT 1 intra-domain handoff id **1363** VMS -> VMS, source_domain_module_id=315, target_domain_module_id=316, payload rate_cards (189, consumed by 316), trigger event 596 (rate_card.published), integration_pattern=lifecycle_progression, friction low. Models the 315 -> 316 seam: Worker Sourcing publishes the rate basis that Time-and-Invoicing reads to price timesheets and compute invoices. Zero intra-domain handoffs existed before.
+
+### B1A-B12 - DONE (data_object_lifecycle_states; 187 skipped per B2-1)
+
+INSERT 21 lifecycle states (ids **1702-1722**) across 5 masters, each with exactly 1 initial + 1 terminal, monotonic state_order, `domain_module_id` set to the mastering module, and `requires_permission=true` on gated transitions (these ARE the workflow gates; derived RBAC per Plan 3 - no permission rows authored). pm_work_orders (187) skipped: gated on B2-1.
+- contingent_workers (186 -> 315): active(init), on_assignment[gate], tenure_threshold_reached, terminated(term)[gate].
+- staffing_suppliers (188 -> 315): draft(init), activated[gate], suspended[gate], terminated(term)[gate].
+- rate_cards (189 -> 315): draft(init), published[gate], superseded, retired(term)[gate].
+- contingent_timesheets (190 -> 316): drafted(init), submitted, approved[gate], rejected[gate], billed(term)[gate].
+- contingent_invoices (191 -> 316): received(init), matched[gate], disputed[gate], paid(term)[gate].
+
+Note: the 5 masters carry `entity_type='unclassified'`; the b1a action did not instruct a B13 reclassification, so entity_type was left as-is (B13 not in the b1a list). Lifecycle states were inserted per the finding's explicit "each is workflow-bearing" determination.
+
+### B1A-F2-F3-SYSTEM-SKILLS - DONE (skills / skill_tools; DELETE skill 118)
+
+- INSERT skill id **363** `vms_worker_sourcing_agent` (skill_type=system, domain_module_id=315, domain_id=64).
+- INSERT skill id **364** `vms_time_invoicing_agent` (skill_type=system, domain_module_id=316, domain_id=64).
+  (`domain_id=64` is required by the platform's legacy `domain_required_when_skill_type_is_system` rule even though `domain_module_id` is the Rule #17 anchor.)
+- Redistributed 8 skill_tools (9 rows; send_email on both):
+  - 363 (315): query_contingent_workers(757), query_work_orders(758), query_staffing_suppliers(759), query_rate_cards(760), sign_document(42) - all required; send_email(37) - optional.
+  - 364 (316): query_contingent_timesheets(761), query_contingent_invoices(762) - required; send_email(37) - optional.
+- DELETE legacy skill **118** (vms-system, domain_module_id NULL) and its 8 skill_tools (ids 909-916, cascade). Prior skill-118 row snapshot: skill_name=vms-system, skill_type=system, domain_id=64, domain_module_id=NULL, record_status=new. Prior skill_tools on 118: 909(tool757), 910(758), 911(759), 912(760), 913(761), 914(762), 915(37 send_email), 916(42 sign_document), all required.
+
+F4 invariant holds: all query tools carry data_object_id; both side_effect tools (37/42) carry NULL data_object_id.
+
+### B1A-E1-E2-ROLES - DONE (domain_roles / role_modules)
+
+- INSERT 3 personas under business_function_id=68 (Indirect Procurement):
+  - id **19** INDIRECT-PROCUREMENT-PROGRAM-MANAGER
+  - id **20** INDIRECT-PROCUREMENT-SUPPLIER-MANAGER
+  - id **21** INDIRECT-PROCUREMENT-CONTINGENT-LABOR-COORDINATOR
+- INSERT 7 role_modules (ids **460-466**), 2-module floor satisfied on each new persona:
+  - 19: 315 primary (460), 316 primary (461)
+  - 20: 315 primary (462), 316 secondary (463)
+  - 21: 315 primary (464), 316 primary (465)
+  - HIRING-MANAGER 315 secondary (466)
+- HIRING-MANAGER secondary on 315: the live persona is `role_code=HIRING-MANAGER` **id 10** (the b1a finding's "10007" was stale; resolved by natural key per Rule #4). Reach accreted to its existing rows on modules 1/4/5/6.
+
+Permission bundles NOT authored (DERIVED per Plan 3 / roles.md); reach only.
+
+### B1A-A4-M8-CATALOG-UX - PARTIAL (M8 DONE; A4 blocked on B2-2)
+
+- **M8 (module-level) DONE.** Both modules had empty `catalog_tagline` + `catalog_description`; wrote fresh buyer-voice copy straight into the empty fields per revised Rule #20 (empty-guard passed, record_status stays `new` for in-record review). Modules 315 and 316 PATCHed (2 fields each).
+- **A4 (domain-level) NOT written.** `domains.catalog_tagline` / `catalog_description` on VMS (64) remain empty: the domain copy is gated on user decision **B2-2** (exact-wording approval). Left for the user.
+
+### Items skipped / not in b1a
+
+- B1A-A4 domain portion: blocked on B2-2 (user_decision). The item stays open in state.yaml.
+- entity_type (B13) on the 6 masters: not a b1a item; left `unclassified`.
+- handoff 590 notes pollution: pre-existing, out of scope.
+
+### Report-only follow-ups (owed by other domains)
+
+- PSA (68) and ERP-FIN (65): no module declares a role on `rate_cards` (189). To attribute the new handoffs 1361/1362 at module grain, those domains would each load a `consumer` DMDO row on rate_cards. Their B10b backfill leaves `target_domain_module_id` NULL until then.
+
+### JWT / blockers
+
+- JWT errors: none.

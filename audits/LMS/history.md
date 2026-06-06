@@ -386,3 +386,80 @@ User (2026-06-02, second pass): **"do B2-REFACTOR-B now, postpone other B2, do b
 UI spot-check: https://tests.semantius.app/domain_map/data_objects ,
 https://tests.semantius.app/domain_map/handoff_processes ,
 https://tests.semantius.app/domain_map/domain_data_objects
+
+## 2026-06-06 - b1a execution
+
+Executed the two agent-solvable b1a items against the live `domain_map` master module
+(domain 57, LMS). Loader: `.tmp_deploy/lms_b1a_2026-06-06.ts` (idempotent, read-before-create).
+
+### B1A-SELF-CONTAIN (M9 part 1) - DONE
+
+Flipped the 3 enumerated consumer+required cross-domain DMDO rows to `necessity=optional`
+(presence-conditional fix per Rule #16 / M9; the consuming module degrades gracefully without
+the external master). Table `domain_module_data_objects`, 3 PATCH rows.
+
+| module | data_object_id | entity | prior | new |
+|---|---|---|---|---|
+| 33 LMS-COMPLIANCE-TRAINING | 18 | onboarding_tasks (mastered by ONBOARDING) | role=consumer, necessity=required | role=consumer, necessity=**optional** |
+| 34 LMS-PATHS | 175 | performance_goals (mastered by TALENT-MGMT) | role=consumer, necessity=required | role=consumer, necessity=**optional** |
+| 34 LMS-PATHS | 26 | skills_gap_analyses (mastered by SWP) | role=consumer, necessity=required | role=consumer, necessity=**optional** |
+
+Scope note: `policy_attestations` (286, consumer+required on module 33) was NOT touched - it is
+in b1b (B1B-M9-SELF-CONTAINMENT, gated on user_decision B2-M9-DECISION), not in the b1a
+`extra_m9_shapes` list. Left as a user-gated item.
+
+### B1A-PHASE-P (Phase E personas + RACI) - DONE
+
+Authored the LMS persona / RACI layer (function-anchored per roles.md sec 7; ATS pilot was the
+reference). All personas `record_status='new'` (DB default, Rule #1). No `_core` RBAC tables
+written; the permission bundle is derived, not stored.
+
+**`domain_roles` - 5 new personas** (1 existing persona reused by accretion, not recreated):
+
+| id | role_code | role_name | business_function |
+|---|---|---|---|
+| 22 | LD-LEARNING-ADMIN | Learning Administrator | 11 Learning and Development |
+| 23 | LD-INSTRUCTIONAL-DESIGNER | Instructional Designer | 11 Learning and Development |
+| 24 | LD-INSTRUCTOR | Instructor | 11 Learning and Development |
+| 25 | GRC-COMPLIANCE-TRAINING-MANAGER | Compliance Training Manager | 31 Governance, Risk and Compliance |
+| 26 | PEOPLE-MANAGER | People Manager | NULL (cross-functional) |
+| 11 | LEGAL-COMPLIANCE-SPECIALIST | Compliance Specialist | 7 Legal (REUSED - existing ATS persona, reach extended) |
+
+**`role_modules` - 27 reach rows** (25 new + the 2 on the reused persona 11). Every persona meets
+the 2-module floor: 22 -> 7 modules, 23 -> 4, 24 -> 3, 25 -> 5, 26 -> 4, 11 -> 2 (modules 180
+primary, 33 secondary - covers learner-data-privacy DSAR handling).
+
+**`data_object_lifecycle_states.process_id` - 16 gates wired** (all were `process_id=null`; PATCH
+sets the process-to-permission edge):
+
+| process_id | APQC process | wired gates (data_object.state) |
+|---|---|---|
+| 1039 | Develop, conduct, and manage employee training programs | courses.published, course_enrollments.completed |
+| 899 | Evaluate training effectiveness | course_assessments.published, assessment_attempts.graded |
+| 1037 | Align learning programs with competencies and skills | learning_paths.published, learning_path_assignments.completed |
+| 1032 | Develop employee career plans and career paths | learning_plans.active |
+| 1829 | Train employees on appropriate regulatory requirements | compliance_assignments.completed, compliance_training_campaigns.scheduled, training_evidence_records.submitted, regulator_filing_exports.filed |
+| 895 | Manage training schedule | course_offerings.open_for_enrollment, course_sessions.completed |
+| 1040 | Manage examinations and certifications | learner_certifications.issued, ceu_records.filed, certification_definitions.published |
+
+**`process_raci` - 21 new rows** across the 7 wired processes. Each gated process carries >=1
+Responsible and >=1 Accountable (E4):
+
+- 1039: R=Instructional Designer, A=Learning Admin, C=Instructor, I=People Manager
+- 899: R=Instructional Designer, A=Learning Admin, C=Instructor
+- 1037: R=Learning Admin, A=People Manager, C=Instructional Designer
+- 1032: R=People Manager, A=Learning Admin
+- 1829: R=Compliance Training Manager, A=Compliance Training Manager, C=People Manager, I=Legal-Compliance Specialist
+- 895: R=Instructor, A=Learning Admin
+- 1040: R=Learning Admin, A=Compliance Training Manager, C=Instructor
+
+### Verification
+
+Re-queried post-write: M9 rows now consumer/optional (3/3); role_modules 27 rows reaching LMS
+modules; lifecycle states 16 with process_id set; process_raci 21 rows. E1 now passes (6 personas
+reach the 8-module domain where 0 existed). E2 2-module floor holds for every persona.
+
+UI spot-check: https://tests.semantius.app/domain_map/domain_roles ,
+https://tests.semantius.app/domain_map/role_modules ,
+https://tests.semantius.app/domain_map/process_raci ,
+https://tests.semantius.app/domain_map/domain_module_data_objects

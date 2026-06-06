@@ -364,3 +364,92 @@ All 5 masters (220, 221, 222, 715, 716) queried before write: zero pre-existing 
 ### Module-code -> capability/master mapping note for downstream backfill
 
 Per B1B-S12, source-module resolution after this build: handoffs 704 (lcap_app.published) and 706 (lcap_app.deployment_failed) and 707 (lcap_business_object.schema_changed) -> LCAP-VISUAL-COMPOSITION (265); 705 (lcap_workflow.published) -> LCAP-RUNTIME-LIFECYCLE (266).
+
+## 2026-06-06 - b1a execution
+
+Executed all 6 `b1a` pending technical-fix items against the live `domain_map` master module for LCAP (domain 37). All loaders are gitignored one-offs in `.tmp_deploy/`. record_status omitted on every insert (DB default `new`, Rule #1); no `notes` column written anywhere (Rule #15); no em-dashes; American English.
+
+### B1A-HANDOFF-SOURCE-MODULES (DONE)
+
+PATCHed `source_domain_module_id` on 4 outbound LCAP handoffs (B10b derivation: module mastering the trigger_event's data_object, strongest role).
+
+| handoff | trigger_event | event data_object | source_domain_module_id (was -> now) |
+|---|---|---|---|
+| 704 | lcap_app.published | 220 lcap_apps | NULL -> 265 |
+| 705 | lcap_workflow.published | 222 lcap_workflows | NULL -> 266 |
+| 706 | lcap_app.deployment_failed | 220 lcap_apps | NULL -> 265 |
+| 707 | lcap_business_object.schema_changed | 221 lcap_business_objects | NULL -> 265 |
+
+`target_domain_module_id` NOT touched (706 keeps 38 ITSM; 704/705/707 stay NULL pending counterparty audits, B1B-S14-OTHERS). Loader: `.tmp_deploy/lcap_b1a_handoff_source_modules_2026_06_06.ts`.
+
+### B1A-LIFECYCLE-STATES (DONE)
+
+First classified all 5 masters `entity_type='operational_workflow'` (prior value `unclassified` on every master; each has an obvious state machine per the finding, which is exactly the operational_workflow shape under Rule #12). Then INSERTed 25 `data_object_lifecycle_states` (5 masters x 5 states). `notes=''`, `domain_module_id` per M5 (220/221/715 -> 265, 222 -> 266, 716 -> 265).
+
+| master (id, module) | states | requires_permission gates (verb_override) |
+|---|---|---|
+| lcap_apps (220, 265) | draft -> validated -> published -> deprecated -> retired | published(publish), deprecated(deprecate), retired(retire) |
+| lcap_business_objects (221, 265) | draft -> validated -> published -> deprecated -> retired | published(publish), deprecated(deprecate), retired(retire) |
+| lcap_pages (715, 265) | draft -> validated -> published -> deprecated -> retired | published(publish), deprecated(deprecate), retired(retire) |
+| lcap_workflows (222, 266) | draft -> validated -> published -> deprecated -> retired | published(publish), deprecated(deprecate), retired(retire) |
+| lcap_data_sources (716, 265) | configured -> tested -> active -> degraded -> retired | active(activate), retired(retire) |
+
+Each machine has exactly one `is_initial` and one `is_terminal` with monotonic `state_order` (B12 shape passes). Prior `entity_type` value (all `unclassified`) snapshotted here. Loader: `.tmp_deploy/lcap_b1a_lifecycle_states_2026_06_06.ts`.
+
+### B1A-S5 + B1A-S14-ITSM (DONE, bundled)
+
+INSERTed 9 `data_object_relationships` (8 intra-domain B1A-S5 + 1 cross-domain B1A-S14-ITSM, per the action's "bundle if running together"). `is_required=false` (presence-conditional), `notes=''`.
+
+| id | edge | type / kind / owner_side |
+|---|---|---|
+| 2089 | lcap_apps contains_pages lcap_pages | one_to_many / composition / source |
+| 2090 | lcap_apps contains_workflows lcap_workflows | one_to_many / composition / source |
+| 2091 | lcap_apps defines lcap_business_objects | one_to_many / composition / source |
+| 2092 | lcap_apps binds_to lcap_data_sources | many_to_many / association / source |
+| 2093 | lcap_pages displays lcap_business_objects | many_to_many / association / source |
+| 2094 | lcap_workflows operates_on lcap_business_objects | many_to_many / association / source |
+| 2095 | lcap_workflows triggers_from lcap_pages | many_to_many / association / source |
+| 2096 | lcap_business_objects sources_from lcap_data_sources | many_to_many / association / source |
+| 2097 | lcap_apps opens service_incidents (47, ITSM master) | many_to_many / association / source |
+
+Loader: `.tmp_deploy/lcap_b1a_intra_relationships_2026_06_06.ts`.
+
+### B1A-S8 (DONE)
+
+INSERTed 21 `data_object_aliases` (4-5 vendor synonyms per master; `alias_type='synonym'`, solution_id resolution deferred per established cluster-drafts behavior; `is_preferred=false`, `notes=''`). Vendor / product names are allowed on `data_object_aliases` per Rule #18.
+
+| master | aliases |
+|---|---|
+| lcap_apps (220) | Application, App, Canvas App, Model-Driven App |
+| lcap_business_objects (221) | Entity, Domain Entity, Table, Record Type, Case Type |
+| lcap_workflows (222) | Microflow, Cloud Flow, Process Model, Flow |
+| lcap_pages (715) | Screen, Page, Interface, View |
+| lcap_data_sources (716) | Integration, Connector, Connected System, Data Page |
+
+Loader: `.tmp_deploy/lcap_b1a_aliases_2026_06_06.ts`.
+
+### B1A-SYSTEM-SKILLS (DONE)
+
+1. **Renamed 5 legacy tools** (PATCH `tool_name` + `description`, removing the `extend` product brand): 564 query_extend_apps -> query_lcap_apps, 565 query_extend_business_objects -> query_lcap_business_objects, 566 query_extend_workflows -> query_lcap_workflows, 822 query_extend_pages -> query_lcap_pages, 823 query_extend_data_sources -> query_lcap_data_sources.
+2. **Created 17 new tools** (ids 1748-1764): CRUD mutates (create_/update_ for apps/pages/business_objects/data_sources/workflows) + workflow-gate mutates (publish_lcap_app/page/business_object, activate_lcap_data_source, publish_/deprecate_/retire_lcap_workflow). All `coverage_tier='platform'`, `operation_kind='mutate'`, `data_object_id` set (F4 pairing valid).
+3. **Created 2 system skills**: 373 `lcap_visual_composition_agent` (module 265) and 374 `lcap_runtime_lifecycle_agent` (module 266). Both set `domain_id=37` (required by the platform `domain_required_when_skill_type_is_system` constraint) AND `domain_module_id` (Rule #17 anchor).
+4. **Linked 24 skill_tools** (17 on skill 373, 7 on skill 374; both within the Rule #17 5-20 floor with >=1 query, >=1 mutate, >=1 gate; `notify_person` (913) reused as the optional notification abstraction). `notes` not written (Rule #15). Both modules: strict_score 1.00 (all tools platform-covered), F5 computable.
+5. **Deleted legacy skill 79** (`lcap-system`). Prior row snapshot: `{id:79, skill_name:"lcap-system", skill_type:"system", domain_id:37, domain_module_id:null}`. Its 5 skill_tools (657->564, 658->565, 659->566, 984->822, 985->823, all `required`) were deleted with it. The renamed query tools are now linked from the new per-module skills instead.
+
+Curing F1 (legacy domain-only skill retired), F2 (exactly one system skill per module), F3 (>=1 skill_tools each), F4 (operation_kind/data_object_id pairing valid), F5 (score computable). Loader: `.tmp_deploy/lcap_b1a_system_skills_2026_06_06.ts`.
+
+### Not touched / out of scope
+
+- Catalog UX (`catalog_tagline` / `catalog_description` empty on domain 37 + modules 265/266) is the **b2** item B2-MODULE-CATALOG-UX, not a b1a item, so it was NOT written this pass (directive scope is b1a only; the revised-Rule-#20 backfill in the directive applies only when a b1a item covers the empty field, which none did).
+- b1b items (B1B-S13, B1B-S14-OTHERS, B1B-H1-NCDB) remain blocked per their `blocked_by`.
+- b2 / b3 untouched.
+
+### Post-load verification (live re-query)
+
+- handoffs 704/705/706/707 `source_domain_module_id` = 265/266/265/265.
+- 25 `data_object_lifecycle_states` across the 5 masters; all 5 masters `entity_type=operational_workflow`.
+- 9 `data_object_relationships` forward from LCAP masters (8 intra + 1 ITSM); 21 `data_object_aliases`.
+- skill 79 absent; zero orphan skill_tools on 79; zero `*extend*` tools remaining.
+- system skills 373 (module 265, 17 tools) + 374 (module 266, 7 tools) live.
+
+UI links: https://tests.semantius.app/domain_map/handoffs, https://tests.semantius.app/domain_map/data_object_lifecycle_states, https://tests.semantius.app/domain_map/data_object_relationships, https://tests.semantius.app/domain_map/data_object_aliases, https://tests.semantius.app/domain_map/skills, https://tests.semantius.app/domain_map/tools, https://tests.semantius.app/domain_map/skill_tools.

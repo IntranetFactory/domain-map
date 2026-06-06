@@ -1,65 +1,16 @@
 schema_version: 2
 domain: ECM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-02"
+next_action_by: user
+last_audit: "2026-06-06"
 
-b1a:
-  - id: B1A-S9
-    summary: "Backfill `trigger_events.event_category` enum on 6 ECM events (currently empty string)."
-    finding: >-
-      `trigger_events.event_category` is empty string on 6 of 7 ECM-attributed events:
-      895 (`content_document.uploaded`), 896 (`document.version_published`),
-      897 (`document.classified`), 898 (`content_document.checked_out`),
-      899 (`document.retention_expired`), 901 (`document_folder.permissions_changed`).
-      Per Rule #13 the allowed values are `lifecycle`, `state_change`, `threshold`, `signal`.
-      Event 900 (`content_document.legal_hold_applied`) was set to `state_change` in the
-      2026-05-31 continuation; the other 6 were missed.
-    action: >-
-      PATCH each of the 6 trigger_events rows to set `event_category='state_change'`. Each
-      models a master row transitioning state on `content_documents` /
-      `document_versions` / `document_folders` / `document_classifications` /
-      `records_retention_policies`. Use `/trigger_events?id=eq.<id>` with the
-      PATCH body `{"event_category":"state_change"}`.
-    affected_events:
-      - {id: 895, event_name: "content_document.uploaded", current_category: "", proposed_category: "state_change"}
-      - {id: 896, event_name: "document.version_published", current_category: "", proposed_category: "state_change"}
-      - {id: 897, event_name: "document.classified", current_category: "", proposed_category: "state_change"}
-      - {id: 898, event_name: "content_document.checked_out", current_category: "", proposed_category: "state_change"}
-      - {id: 899, event_name: "document.retention_expired", current_category: "", proposed_category: "state_change"}
-      - {id: 901, event_name: "document_folder.permissions_changed", current_category: "", proposed_category: "state_change"}
-
-  - id: B1A-F2-SYSTEM-SKILLS
-    summary: "Author one `skill_type='system'` skill per ECM module (F2, Rule #17): 3 modules now exist, 0 module-level system skills."
-    finding: >-
-      The 2026-06-02 modularization landed 3 `full` modules: ECM-REPOSITORY (id 242),
-      ECM-RECORDS-GOV (id 243), ECM-WORKFLOW (id 244). Per Rule #17 every `domain_modules`
-      row needs exactly one `skill_type='system'` skill with `domain_module_id` set. None of
-      the 3 modules has one today, so F2 fails 3 times. A legacy domain-level system skill
-      `ecm-system` (id 54, `domain_module_id=null`) still exists and is acceptable only until
-      module-level skills land (F1).
-    action: >-
-      Run Phase S against domain 91. INSERT one system skill per module:
-      `ecm_repository_agent` (domain_module_id=242), `ecm_records_gov_agent` (243),
-      `ecm_workflow_agent` (244), each with `skill_type='system'` and `domain_id=91`. Then
-      INSERT >=1 `skill_tools` row per skill (F3) using query_/mutate_ tools whose
-      `operation_kind` matches the module's `data_object_id` set (F4). Mirror the ATS / SMP
-      Phase-S loader shape. After these exist, retire legacy skill id 54 per B1B-F1.
-    affected_modules: [242, 243, 244]
-
-  - id: B1A-M8-MODULE-UX
-    summary: "Draft + load module-level `catalog_tagline` + `catalog_description` on the 3 new ECM modules (M8, Rule #20)."
-    finding: >-
-      The 3 modules were inserted with `catalog_tagline` / `catalog_description` omitted
-      (per the modularization insert shape), so both are empty on ECM-REPOSITORY (242),
-      ECM-RECORDS-GOV (243), and ECM-WORKFLOW (244). M8 fails on each. Rule #20 forbids any
-      write without explicit user-approved exact buyer-voice text.
-    action: >-
-      Draft a one-sentence buyer-voice tagline and a 1-3 paragraph buyer-voice description
-      for each of the 3 modules per Rule #20, surface to the user for review, then PATCH the
-      approved exact text onto `/domain_modules?id=eq.<242|243|244>`. Pairs with the
-      domain-level A4 backfill (B2-CATALOG-UX).
-    affected_modules: [242, 243, 244]
+# b1a fully cleared on 2026-06-06 (see history.md "2026-06-06 - b1a execution"):
+#   B1A-S9               DONE - 6 trigger_events.event_category "" -> state_change (895-899, 901).
+#   B1A-F2-SYSTEM-SKILLS DONE - 3 module system skills (389/390/391) + 7 mutate tools (1788-1794)
+#                               + 16 skill_tools; reused query tools 436-440 and notify_person 913.
+#   B1A-M8-MODULE-UX     DONE - catalog_tagline + catalog_description written on 242/243/244
+#                               (empty-guard; all 6 fields were empty).
+b1a: []
 
 b1b:
   - id: B1B-L1

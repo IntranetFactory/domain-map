@@ -434,3 +434,73 @@ Now that modules exist, the following previously M1-gated items move from b1b to
 - No vendor / product names in module name or description (Rule #18).
 - No em-dashes; American English.
 - No JWT errors during the run.
+
+## 2026-06-06 - b1a execution
+
+Executed all 5 `b1a` items against the live `domain_map` module (slug `domain_map`, id 1001) for RE-INVEST (domain 146). Loaders: `c:/tmp/re_invest_b1a_phase_s.ts`, `c:/tmp/re_invest_b1a_handoffs.ts`, `c:/tmp/re_invest_b1a_module_ux.ts` (all TypeScript on Bun, via `semantius` CLI from project root).
+
+### B1A-F2-SYSTEM-SKILLS - DONE
+
+Phase S. Inserted 3 `skill_type='system'` skills (record_status default `new`), one per module, each with `domain_id=146`:
+
+- skill **305** `re_invest_fund_acct_agent` -> module 279.
+- skill **306** `re_invest_investor_reporting_agent` -> module 280.
+- skill **307** `re_invest_portfolio_val_agent` -> module 281.
+
+Inserted 11 `skill_tools` rows (ids 2840-2850), all `requirement_level='required'`, linking only pre-existing reusable tools (no new `tools` rows created):
+
+- 305 (FUND-ACCT): query_investment_funds (839), query_asset_management_fees (841), query_capital_calls (655), query_fund_distributions (656), notify_person (913).
+- 306 (INVESTOR-REPORTING): query_limited_partners (840), query_capital_calls (655), query_fund_distributions (656), notify_person (913).
+- 307 (PORTFOLIO-VAL): query_investment_properties (654), query_property_valuations (657).
+
+`notify_person` (913) replaces the legacy `send_email` channel primitive per the channel-vs-capability rule (F7). Module 281 carries no notification tool (valuation/underwriting has no LP-notification step in its workflow; outbound 305 is a system handoff to FINOPS).
+
+### B1A-F1-LEGACY-SKILL - DONE
+
+DELETEd legacy domain-level system skill **97** (`re-invest-system`, `domain_module_id=null`) and its 9 `skill_tools` rows, after the 3 module-level skills landed.
+
+Prior values (snapshot before DELETE):
+- skills.97: `{id:97, skill_name:"re-invest-system", skill_type:"system", domain_id:146, domain_module_id:null, record_status:"new", description:"System skill for Real Estate Investment Management ... derived from masters + cross-domain handoffs."}`
+- skill_tools on 97 (id -> tool_id, all requirement_level=required): 767->654, 768->655, 769->656, 770->657, 771->37 (send_email), 772->42 (sign_document), 1001->839, 1002->840, 1003->841.
+
+F1 verified clean (no `domain_id=146 & skill_type=system & domain_module_id is null` rows remain).
+
+### B1A-PR-EF-1 - DONE
+
+B10b outbound. PATCHed `source_domain_module_id` (prior value NULL on all four):
+- handoff **305** (property_valuation.refreshed -> FINOPS): NULL -> **281**.
+- handoff **306** (fund_distribution.declared -> ERP-FIN): NULL -> **279**.
+- handoff **307** (capital_call.issued -> ERP-FIN): NULL -> **279**.
+- handoff **863** (asset_fee.charged -> ERP-FIN): NULL -> **279**.
+
+For 306/307 the event's data_object (368/367) is `embedded_master` in both 279 and 280; the audit pre-resolved the tie to 279 (fund accounting) in the b1a `action`/`finding`, which this pass executed as directed. Target-side module FKs remain NULL (owed by ERP-FIN / FINOPS B10b).
+
+### B1A-PR-RC-1 - DONE
+
+B10b inbound. PATCHed `target_domain_module_id` (prior value NULL on all five):
+- handoff **301** (rent_payment.received from RE-PROP-MGMT, payload rental_leases 362): NULL -> **280**.
+- handoff **303** (commercial_lease.executed from RE-CRE, payload commercial_leases 363): NULL -> **280**.
+- handoff **857** (property.updated from REAL-EST, payload real_estate_properties 344): NULL -> **281**.
+- handoff **859** (tenant_credit.assessed from RE-CRE, payload tenant_credit_records 719): NULL -> **281**.
+- handoff **862** (listing.sold from RE-BROKERAGE, payload real_estate_listings 352): NULL -> **281**.
+
+301/303 are clean strict-B10b derivations (payload is `consumer` on 280). For 857/859/862 the payload is not modeled by any RE-INVEST module (no role row); the audit explicitly resolved these to 281 (PORTFOLIO-VAL) in the b1a `action`, executed as directed. Source-side module FKs on these inbound rows remain NULL (owed by the source domains' B10b). 862 retained its existing `source_domain_module_id=151` (untouched).
+
+### B1A-M8-MODULE-UX - DONE (revised Rule #20)
+
+Wrote buyer-voice `catalog_tagline` + `catalog_description` directly into the EMPTY fields on modules 279/280/281 (all four fields were empty pre-write; empty-guard applied per field). `record_status` stays `new` (the review signal; user reviews in the catalog UI). Buyer voice, no vendor/product names, no em-dashes, American English.
+
+The state.yaml `blocked_by: user_decision B2-MODULE-UX` annotation predates the revised Rule #20 (SKILL.md line 505: "Backfill empty fields by writing them, no pre-write gate"). Task rule #6 explicitly directs writing empty catalog UX fields directly. This pass followed the revised Rule #20 / task rule #6 for M8 rather than the stale `user_decision` block. B2-MODULE-UX is now moot for the empty-field case; any future change to this copy is overwrite-protected (user-approval-only).
+
+### Skipped / not executed
+
+None of the 5 b1a items were skipped. (b1b / b2 / b3 left untouched, out of scope.)
+
+### Verification (live, post-load)
+
+- F2: `/skills?domain_module_id=in.(279,280,281)&skill_type=eq.system` -> exactly 3 rows (305/306/307), one per module.
+- F3: `/skill_tools?skill_id=in.(305,306,307)` -> 11 rows (5/4/2).
+- F1: `/skills?domain_id=eq.146&skill_type=eq.system&domain_module_id=is.null` -> 0 rows.
+- B10b outbound: `/handoffs?source_domain_id=eq.146&source_domain_module_id=is.null` -> 0 rows.
+- B10b inbound: `/handoffs?target_domain_id=eq.146&target_domain_module_id=is.null` -> 0 rows.
+- M8: `/domain_modules?id=in.(279,280,281)` -> all 3 carry non-empty `catalog_tagline` + `catalog_description`, record_status `new`.

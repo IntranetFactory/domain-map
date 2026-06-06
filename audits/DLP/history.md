@@ -358,3 +358,60 @@ The 2026-05-31 audit's downstream items are now unblocked by the existence of mo
 
 None encountered during this run.
 
+## 2026-06-05 - b1a execution
+
+Executed the agent-solvable b1a items against the live `domain_map` module (DLP, domains.id=139, modules 231 DLP-POLICY-CONTROL / 232 DLP-ENFORCEMENT-RUNTIME). Loader: `.tmp_deploy/dlp_b1a_exec_2026_06_05.ts` (idempotent by natural key; `record_status` omitted on every insert; no `notes` column written with content). No JWT errors.
+
+### DONE
+
+- **B1A-MOD-BUILT** - no-op marker. Dropped from state.yaml. No regression (modules 231/232 live, 8 DMDO, 8 capabilities all intact).
+- **B1A-S9-S10-PER-MODULE-SKILLS** (Phase S, Rule #17, F1/F2/F3/F4/F7).
+  - tools: created 4 mutate tools (`operation_kind=mutate`, `coverage_tier=platform`): `update_dlp_policy` (data_object_id=331), `approve_dlp_exception` (334), `update_dlp_incident_status` (330), `release_dlp_quarantine_item` (333).
+  - skills: created 2 system skills - `dlp_policy_control_agent` (id 279, domain_id=139, domain_module_id=231), `dlp_enforcement_runtime_agent` (id 280, domain_id=139, domain_module_id=232). NOTE: platform still enforces `domain_id` NOT NULL on `skill_type=system` (legacy `domain_required_when_skill_type_is_system` rule) - both `domain_id` and `domain_module_id` must be set on a per-module system skill; setting only `domain_module_id` fails with `(23514) A domain_id is required when skill_type is system.`
+  - skill_tools: 16 rows. Skill 279 (7): query_dlp_policies(req), query_dlp_exceptions(req), update_dlp_policy(req), approve_dlp_exception(req), query_data_classifications(opt), notify_team(opt), receive_webhook(opt). Skill 280 (9): query_dlp_incidents(req), query_data_exfiltration_attempts(req), query_dlp_quarantine_items(req), query_dlp_user_activity_logs(req), update_dlp_incident_status(req), release_dlp_quarantine_item(req), notify_team(req), receive_webhook(req), query_employees(opt). F4 verified: query/mutate carry data_object_id, side_effect/inbound carry NULL. F7: used the `notify_team` abstraction (id 914), not a channel primitive; reused generic `receive_webhook` (id 896) rather than minting a DLP-specific clone (Rule #9 dedup / channel-vs-capability).
+  - DELETE (snapshot for reversibility): legacy domain-level system skill **50** (`dlp-system`, skill_type=system, domain_id=139, domain_module_id=NULL) and its 6 skill_tools rows (ids 478-483 -> tools 412 query_dlp_incidents, 413 query_dlp_policies, 414 query_data_exfiltration_attempts, 415 query_dlp_quarantine_items, 416 query_dlp_exceptions, 417 query_dlp_user_activity_logs, all requirement_level=required). The 6 query tools themselves were NOT deleted (catalog-wide, re-linked on the new module skills). F1 now passes (no legacy domain-level system skill remains).
+- **B1A-S11-HANDOFF-MODULE-FKS** (B10b) - PARTIAL (outbound done; inbound has no candidate).
+  - Outbound: PATCH `source_domain_module_id=232` on all 8 outbound handoffs (ids 280, 281, 282, 283, 284, 843, 844, 845; prior value NULL on all). Deterministic: every outbound DLP event fires on a master held by module 232 (dlp_incidents 330, data_exfiltration_attempts 332, dlp_user_activity_logs 335). No outbound event fires on a 231-mastered object, so none resolve to 231.
+  - Inbound (10 handoffs: 260, 264, 690, 702, 709, 730, 821, 822, 832, 847): `target_domain_module_id` left NULL. The deterministic B10b rule is "module holding the payload with strongest role", and DLP models NONE of the 10 inbound payloads (data_assets, data_access_policies, bi_dashboards, nocode_views, data_domains, sink_connectors, content_documents, document_classifications, chat_messages, data_warehouses) - zero `domain_module_data_objects` rows on any of them. This is B10b "no candidate" sub-case 2. The b1a action's softer "map to 231/232 per payload semantics" requires inventing a semantic classification per payload, which is judgment beyond a deterministic derivation; per the no-guessing-on-master-data rule the inbound side is left NULL and reported as a gap (upstream fix: load `consumer` DMDO rows on the receiving module, then re-run the backfill). Kept open in state.yaml as B1A-S11 (inbound only).
+- **B1A-S17-A4-M8-CATALOG-UX** (Rule #20) - wrote buyer-voice copy straight into the EMPTY fields (empty-guard per field; no overwrite of non-empty values; not parked in history). All three rows previously had `catalog_tagline=''` and `catalog_description=''`.
+  - domains 139: catalog_tagline + catalog_description written.
+  - domain_modules 231: catalog_tagline + catalog_description written.
+  - domain_modules 232: catalog_tagline + catalog_description written.
+  - The full copy lives in the records (state `new`; the user reviews in the catalog UI per Rule #20).
+- **B1A-S4-B6-INTRA-MASTER-RELS** (B6) - inserted 5 intra-domain `data_object_relationships` (record_status=new):
+  - 2027: data_exfiltration_attempts(332) `triggers` / `is_triggered_by` dlp_incidents(330), one_to_many reference, owner_side=source.
+  - 2028: dlp_policies(331) `evaluates_against` / `is_raised_by` dlp_incidents(330), one_to_many reference, owner_side=source.
+  - 2029: dlp_incidents(330) `produces` / `is_produced_by` dlp_quarantine_items(333), one_to_many composition, owner_side=source (incident owns the held artifact).
+  - 2030: dlp_exceptions(334) `overrides` / `is_overridden_by` dlp_policies(331), one_to_many reference, owner_side=target (policy is the parent).
+  - 2031: dlp_user_activity_logs(335) `records` / `is_recorded_in` dlp_incidents(330), many_to_many reference, owner_side=source.
+- **B1A-S15-B8-OUTBOUND-CROSS-RELS** (B8 outbound) - inserted 2 cross-domain `data_object_relationships` (record_status=new):
+  - 2032: dlp_incidents(330) `informs_security_incident` / `is_informed_by_dlp_incident` service_incidents(47, ITSM/SECOPS), one_to_many reference, owner_side=source.
+  - 2033: dlp_incidents(330) `triggers_privacy_review` / `is_triggered_by_dlp_incident` data_subject_requests(901, PRIV-MGMT), one_to_many reference, owner_side=source.
+  - The b1a finding also named `escalates_to_iga_review` (-> an IGA-side entity implied by the IGA consumer DMDO) and `dlp_user_activity_logs feeds_sod_review` (-> IGA-SOD-MGMT). Both lack a concrete, named target master in the action text (IGA entity unidentified), so they were NOT authored to avoid guessing the target data_object. The B8 item is resolved for the two clean, named edges; the two IGA-side edges are dropped from the actionable list pending a named target (no deterministic target exists).
+
+### SKIPPED (blocked by user_decision)
+
+- **B1A-S6-B12-LIFECYCLE-STATES** - blocked_by user_decision B2-S3 (config-shape exemption for data_exfiltration_attempts / dlp_user_activity_logs). Not executed.
+- **B1A-S14-E-BAND-ROLES** - blocked_by user_decision B2-S4 (business-function ownership: single owner vs split with Privacy Office). Not executed.
+- **B1A-S16-APQC-MISSING-7** - blocked_by user_decision B2-S5 (APQC bulk approval / L3-vs-L4 anchor choice for the 7 remaining handoff_processes proposals). Not executed.
+
+### Prior values snapshot (for the DELETE / PATCH reversibility)
+
+- skill 50: `{id:50, skill_name:"dlp-system", skill_type:"system", domain_id:139, domain_module_id:null}`; skill_tools 478->412, 479->413, 480->414, 481->415, 482->416, 483->417 (all requirement_level=required). All deleted.
+- handoffs 280/281/282/283/284/843/844/845: `source_domain_module_id` was NULL on all 8 before PATCH (now 232). `target_domain_module_id` untouched (281=148, 843=38, 845=146 were already set by other domains; 280/282/283/284/844 remain NULL = those target domains' B10b).
+- domains 139 / domain_modules 231 / domain_modules 232: `catalog_tagline=''` and `catalog_description=''` before the write.
+
+### Verification (re-queried post-load)
+
+- system skills on 231/232: exactly 2 (279 on 231, 280 on 232). F2 satisfied.
+- skill_tools on the 2 skills: 16. F3 satisfied (required floor query+mutate+side_effect+inbound met).
+- legacy skill 50 remaining: 0. F1 satisfied.
+- outbound handoffs with NULL source module: 0 (was 8).
+- inbound handoffs with NULL target module: 10 (unchanged - no DLP-held payload; gap report).
+- data_object_relationships touching DLP masters: 13 total (was 6: 304, 595, 596, 1786, 1787, 1788; +7 new 2027-2033).
+- catalog UX non-empty: domains 139 (tagline+desc), modules 231 + 232 (tagline+desc each).
+
+### JWT errors (b1a execution)
+
+None encountered during this run.
+

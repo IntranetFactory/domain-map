@@ -472,3 +472,52 @@ Most prior open items are downstream of M1 and were blocked on it; they are NOT 
 ### Master-less capabilities (b3 flags this run)
 
 All 6 capabilities now have a realizing module AND a backing master in that module, so no capability is master-less at the module level. The genuine vendor-surface gaps (governance/compliance entities the flagship products master but the catalog does not) remain the existing B3-S1..S9 set and are not refiled.
+
+## 2026-06-06 - b1a execution
+
+Executed the agent-solvable b1a items via loader `.tmp_deploy/remote_access_b1a_2026_06_06.ts`.
+
+### B1A-SYSTEM-SKILLS - DONE
+
+Authored 1 `skill_type='system'` skill per module (Rule #17), then retired the legacy domain-level skill.
+
+- `skills` INSERT: id **316** `remote_access_session_agent` (skill_type=system, domain_id=132, domain_module_id=294, record_status defaulted to new).
+- `skills` INSERT: id **317** `remote_access_recording_audit_agent` (skill_type=system, domain_id=132, domain_module_id=295, record_status defaulted to new).
+- `skill_tools` INSERT for skill 316: ids **2882** (tool 672 query_remote_sessions, required), **2883** (tool 680 query_rmm_agents, required), **2884** (tool 16 query_incidents / service_incidents, optional), **2885** (tool 913 notify_person, optional). No new `tools` rows created; all four reused existing catalog-wide tools. `notify_person` (913) used in place of the legacy channel primitives per the channel-vs-capability rule.
+- `skill_tools` INSERT for skill 317: ids **2886** (tool 673 query_session_recordings, required), **2887** (tool 913 notify_person, optional).
+- All linked tools are `coverage_tier='platform'`, so strict_score = 100% for both module 294 and module 295.
+
+DELETE (legacy retirement, executed only after both per-module skills confirmed present). Prior values snapshotted here:
+
+- `skill_tools` DELETED: id 791 (skill 100 -> tool 672 query_remote_sessions, required), id 792 (skill 100 -> tool 673 query_session_recordings, required), id 793 (skill 100 -> tool 37 send_email, required), id 794 (skill 100 -> tool 40 post_chat_message, required).
+- `skills` DELETED: id 100 `remote-access-system` (skill_type=system, domain_id=132, domain_module_id=null, record_status=new, description="System skill for Remote Access and Support [...] runtime workflows over the domain's master data, derived from masters + cross-domain handoffs."). Supersedes B1B-F-RETIRE.
+
+### B1A-CATALOG-UX - DONE
+
+All six target fields were EMPTY before this run (empty-guard satisfied; no non-empty value overwritten). Buyer-voice copy written straight into the empty columns per revised Rule #20; the `record_status='new'` on each row carries the review signal. Prior value for every field below was `""`.
+
+- `domains` id 132: PATCH `catalog_tagline` (122 chars) + `catalog_description` (605 chars).
+- `domain_modules` id 294: PATCH `catalog_tagline` (139 chars) + `catalog_description` (507 chars).
+- `domain_modules` id 295: PATCH `catalog_tagline` (96 chars) + `catalog_description` (424 chars).
+
+### B1A-B10b - DONE
+
+Backfilled own-side module FKs on handoffs. Every patched column held `NULL` before (prior value snapshot). Derivation: source module = the source-domain module holding the event's payload master (294 masters remote_sessions 238; 295 masters session_recordings 239; 294 is the only RA module operating the session workflow and holds service_incidents 47 + rmm_agents 223 as consumers).
+
+- `handoffs` 162: PATCH `source_domain_module_id` NULL -> 294.
+- `handoffs` 163: PATCH `source_domain_module_id` NULL -> 294.
+- `handoffs` 646: PATCH `source_domain_module_id` NULL -> 294.
+- `handoffs` 647: PATCH `source_domain_module_id` NULL -> 294.
+- `handoffs` 648: PATCH `source_domain_module_id` NULL -> 294.
+- `handoffs` 164: PATCH `source_domain_module_id` NULL -> 295 (payload session_recordings 239).
+- `handoffs` 160 (inbound): PATCH `target_domain_module_id` NULL -> 294 (msp_ticket.escalated lands a new attended session).
+- Out of scope and left NULL by design: `target_domain_module_id` on outbound 164 and 648 (those land in GRC and are GRC's own B10b).
+
+### B1A-B9-EVENT-CATEGORY - DONE (no-op, already correct live)
+
+Re-query of live state showed the three events already carry the proposed categories: 653 `remote_session.started`=`state_change`, 654 `remote_session.ended`=`state_change`, 655 `remote_session.unauthorized_access_attempt`=`signal` (and 113 `session.recorded`=`signal`). The empty-category condition the finding described no longer holds; no PATCH was needed. Item resolved.
+
+### Skipped
+
+- **B1A-B6** - SKIPPED. The `action` text gates the INSERT on a user pick of cardinality (1:0..1 single recording per session vs 1:N segmented recordings), confirmed by `extra_open_question`. Master-data cardinality is a judgment call beyond the action text (non-negotiable rule #12); kept open, re-pointed at the same masters. The 238<->239 direct edge does not yet exist (the only edges on 238/239 are `users` (748) actor edges 1613-1616).
+- **B1A-B11** - SKIPPED. The `action` text requires explicit per-row user confirmation of the exact alias strings before write (Rule #15: alias tuple choice is user-approval-only). Kept open. Zero aliases on 238/239 confirmed.
