@@ -406,17 +406,19 @@ For non-master rows on infrastructure masters, rule A still applies.
 - The genuine "this entity must always be present wherever the source is installed" case is expressed by the TARGET's own `necessity=required` in that scope, NOT by the edge. A required edge is about FK shape; a required install is about `necessity`.
 - The emitter renders this in §5: a required cross-scope edge shows `none (required-if-present)` (reference / association) or a `⚠ audit` finding (composition); the M9 relationship-layer band (M9 in the per-domain checklist) flags required edges whose other endpoint is out of scope so the author picks embed-vs-optional-vs-target-required. Full delete-mode table in [references/module-shape.md](references/module-shape.md); deploy semantics in [references/modules.md](references/modules.md) §4 / §5.
 
-### 17. Every `domain_modules` row has exactly one `skill_type='system'` skill, and that skill has ≥1 `skill_tools` row.
+### 17. Every domain with masters has exactly one `skill_type='system'` skill, anchored at the domain grain, with ≥1 `skill_tools` row.
 
-A `domain_modules` row defines a deployable unit; a `system` skill defines what an agent can do against that unit. The two are 1:1 (mirroring `domain_modules` exactly, per the transitional-note in the at-a-glance table). Without the skill, the module exists in the catalog but has no agent surface, and the Semantius score, the metric the entire tools/skills layer exists to compute, is uncomputable for that module.
+A domain's `system` skill is the single self-contained agent surface for that domain. It is anchored at the **domain** grain, not the module grain: one `skills` row with `skill_type='system'`, `domain_id=<id>`, and `domain_module_id` NULL (convention `skill_name='<domain_code_lower>-system'`, e.g. `grc-system`, `itsm-system`). The skill carries the **union** of the domain's tools (each master's query / mutate, the lifecycle-gate mutations, the `notify_person` / `notify_team` abstractions, the handoff-fired cross-domain tools) and **discovers at runtime** which of the domain's modules and tools are installed in the deploying tenant, scoping itself to that subset. Without the skill the domain has no agent surface, and the Semantius score, the metric the entire tools/skills layer exists to compute, is uncomputable for that domain.
 
-- **One `system` skill per `domain_modules` row.** `skills.skill_type='system'` AND `skills.domain_module_id=<module_id>`. Authoring more than one system skill per module is a rule violation: if the module's surface needs two distinct skills, the module itself needs to be split.
-- **That skill has ≥1 `skill_tools` row.** Typical shape is 5–20 tools per module (required + optional). Required tools are the irreducible set the agent needs to perform the module's primary workflow; optional tools cover degraded modes (lower-tier ML, alternate channels).
+The module decomposition (`domain_modules`, Rule #14) stays the deployable / marketing / coverage unit; the skill is **not** sharded to mirror it. One coherent domain agent reasons across the domain's modules (e.g. account -> pipeline -> quote) without inter-skill handoffs. Per-module Semantius coverage remains computable as a rollup over each module's required tools (a property of `module -> its tools`), so the per-deployable-unit coverage distinction survives without a skill row per module.
+
+- **One `system` skill per domain.** `skills.skill_type='system'` AND `skills.domain_id=<id>` AND `skills.domain_module_id IS NULL`. Authoring more than one system skill for a domain, or anchoring a system skill to a `domain_module_id`, is a rule violation (the latter is the deprecated per-module grain; F1 cleans it up).
+- **That skill has ≥1 `skill_tools` row.** Typical shape is 8–40 tools (the union across the domain's modules; required + optional). Required tools are the irreducible set the agent needs for the domain's primary workflows; optional tools cover degraded modes (lower-tier ML, alternate channels). The practical `required` floor is ≥1 `query`, ≥1 `mutate`, and ≥1 workflow gate.
 - **Tool `operation_kind` invariants** (enforced platform-side via JsonLogic `input_type_rule` on `fields.tools.data_object_id`; loader pre-flight mirrors): `query` and `mutate` REQUIRE `data_object_id`; `fetch`, `side_effect`, and `compute` REQUIRE `data_object_id` to be NULL; `inbound` makes `data_object_id` OPTIONAL. `fetch` is the read-side counterpart of `side_effect`: agent calls an external vendor API and gets data back (hotel offers, currency rates, stock quotes, web search results) where Semantius doesn't own the source schema.
 
-**This is a Phase-A obligation, not Phase E**, parallel to Rule #14. When loading a new market, system skills + tools + skill_tools ship in the same load as `domains` + `capabilities` + `domain_modules` + `solutions`. The Phase-S step in the workflow (§ "Workflow for any research task") is the canonical authoring procedure.
+**This is a Phase-A obligation, not Phase E**, parallel to Rule #14. When loading a new market, the domain's system skill + tools + skill_tools ship in the same load as `domains` + `capabilities` + `domain_modules` + `solutions`. The Phase-S step in the workflow (§ "Workflow for any research task") is the canonical authoring procedure.
 
-**Audit blockers.** A `domain_modules` row with zero or >1 system skills fails F2; a system skill with zero `skill_tools` fails F3; a tool with an invalid `operation_kind` ↔ `data_object_id` pairing fails F4; an uncomputable Semantius score is the F5 rollup. Each blocks the per-domain audit until cured. See F2–F5 in the per-domain completeness checklist.
+**Audit blockers.** A domain with zero or >1 domain-level system skills fails F2; any system skill anchored to a `domain_module_id` fails F1; a system skill with zero `skill_tools` fails F3; a tool with an invalid `operation_kind` ↔ `data_object_id` pairing fails F4; an uncomputable Semantius score is the F5 rollup. Each blocks the per-domain audit until cured. See F1–F5 in the per-domain completeness checklist.
 
 **Why this rule exists:** before F2-F5 became positive-existence checks, the per-domain audit could tick green on a domain with zero system skills (the F-band only carried a legacy-cleanup check). The Semantius score was then uncomputable but the gap went silent. F2-F5 close that.
 
@@ -1089,22 +1091,21 @@ Personas (`domain_roles`) capture the job-shaped workflows that span a domain's 
 
 ### F. Skill-layer integrity
 
-The `skills` table sits next to `roles` but represents agent skills, not user roles. The F-band enforces Rule #17's positive-existence requirement (one `system` skill per `domain_modules` row, with ≥1 `skill_tools` row) as well as a legacy-cleanup check (F1).
+The `skills` table sits next to `roles` but represents agent skills, not user roles. The F-band enforces Rule #17's positive-existence requirement (one `system` skill per domain, anchored at the domain grain, with ≥1 `skill_tools` row) as well as a grain-cleanup check (F1).
 
-**F1. No legacy domain-level system skills remain once module-level skills exist.**
+**F1. No module-anchored system skills remain; the domain's system skill is anchored at the domain grain.**
+- Query: `/skills?domain_id=eq.<id>&skill_type=eq.system&domain_module_id=not.is.null&select=id,skill_name,domain_module_id`.
+- Pass: empty result. A `skill_type='system'` row with a non-null `domain_module_id` is the deprecated per-module grain (Rule #17): the domain's agent surface is a single domain-level skill, not one per module.
+- Fix: consolidate the module-anchored system skills into the domain's `<domain_code_lower>-system` skill (union their `skill_tools` onto it, dedup by `tool_id`, `required` wins over `optional`), then DELETE the module-anchored rows. The shared `tools` rows are catalog-wide and are never deleted, only relinked.
+
+**F2. The domain has exactly one `skill_type='system'` skill, anchored to the domain.** (Rule #17.)
 - Query: `/skills?domain_id=eq.<id>&skill_type=eq.system&domain_module_id=is.null&select=id,skill_name`.
-- Pass: empty result. Acceptable transitional state ONLY when no module-level system skill has been authored for this domain yet — once any `domain_module_id`-anchored system skill exists for the domain, every remaining `domain_id`-only legacy row is obsolete.
-- Fix: retire the legacy row (DELETE). Only convert if a genuine domain-level need is distinct from the per-module skills, which is rare — the per-module skills are the catalog's target state per Rule #14.
+- Pass: exactly one row. Zero is a Phase-S gap; >1 is a rule violation (keep one, union the others' `skill_tools` onto it, delete the extras).
+- Fix: author the missing domain system skill per Phase S in the workflow. Use `skill_name='<domain_code_lower>-system'` (e.g. `grc-system`), `domain_id=<id>`, `domain_module_id` NULL; load alongside the domain's tools and `skill_tools` in the same loader.
 
-**F2. Every `domain_modules` row for this domain has exactly one `skill_type='system'` skill.** (Rule #17.)
-- Module set: `/domain_modules?domain_id=eq.<id>&select=id,domain_module_code` UNION `/domain_module_host_domains?domain_id=eq.<id>&select=domain_module:domain_modules(id,domain_module_code)` (covers cross-cutting modules hosted here).
-- Skill set query: `/skills?domain_module_id=in.(<modIds>)&skill_type=eq.system&select=domain_module_id,id,skill_name`.
-- Pass: every module id from the module set appears **exactly once** in the skill set. Zero is a Phase-S gap; >1 is a rule violation (split the module instead of stacking system skills).
-- Fix: author the missing system skill per Phase S in the workflow. Use `skill_name='<module_code_lower>_agent'` (e.g. `crm_acct_mgt_agent`); load alongside the module's tools and `skill_tools` in the same loader.
-
-**F3. Every module-level system skill has ≥1 `skill_tools` row.** (Rule #17.)
-- Query: for the skill ids from F2, `/skill_tools?skill_id=in.(<skillIds>)&select=skill_id,tool_id,requirement_level`.
-- Pass: every skill returns ≥1 row. Typical shape is 5–20 tools (mix of `required` + `optional`).
+**F3. The domain's system skill has ≥1 `skill_tools` row.** (Rule #17.)
+- Query: for the skill id from F2, `/skill_tools?skill_id=eq.<skillId>&select=skill_id,tool_id,requirement_level`.
+- Pass: ≥1 row. Typical shape is 8–40 tools (the union across the domain's modules; mix of `required` + `optional`).
 - Fix: extend the Phase-S loader to author the missing tools + `skill_tools` rows. A `required` floor of ≥3 tools is the practical minimum: at least one `query`, one `mutate`, one workflow gate.
 
 **F4. Tool `operation_kind` ↔ `data_object_id` invariant holds on every linked tool.** (Rule #17 sub-invariant.)
@@ -1112,9 +1113,9 @@ The `skills` table sits next to `roles` but represents agent skills, not user ro
 - Pass: for every tool, `operation_kind ∈ {query, mutate}` implies `data_object_id` set; `operation_kind ∈ {fetch, side_effect, compute}` implies `data_object_id` is null; `operation_kind = inbound` allows either (NULL or set). Any row that violates this pairing is a tool-row defect. The constraint is enforced platform-side via JsonLogic on `fields.tools.data_object_id`, but the F4 audit verifies on the read path in case a row got in before the rule was installed.
 - Fix: PATCH the offending `tools` row (either set / clear `data_object_id`, or correct the `operation_kind`). Re-PATCH the catalog, not the junction.
 
-**F5. Semantius score is computable for every module of this domain.**
-- Derivation: per the formulas in § "Semantius score", `strict_score(skill) = count(skill_tools WHERE tools.coverage_tier='platform') / count(skill_tools)` and `operational_score(skill) = count(WHERE tools.coverage_tier IN ('platform','integration')) / count(skill_tools)`, joined via `skills.domain_module_id`. Per-domain: union the numerators and denominators across all system skills for modules hosted here, then divide. Do not average per-module scores (see the convention in the at-a-glance section).
-- Pass: every module returns both scores (numbers in [0, 1], including 0 if every linked tool is `external`). The metric must be computable, not high. A low score is information about the gap, not a failure.
+**F5. Semantius score is computable for this domain.**
+- Derivation: per the formulas in § "Semantius score", `strict_score(skill) = count(skill_tools WHERE tools.coverage_tier='platform') / count(skill_tools)` and `operational_score(skill) = count(WHERE tools.coverage_tier IN ('platform','integration')) / count(skill_tools)`, on the domain's single system skill. A per-module coverage view (which deployable modules are 100% platform-covered) is a separate rollup over each module's required tools, computed from `module -> its tools` independently of the skill grain.
+- Pass: the domain returns both scores (numbers in [0, 1], including 0 if every linked tool is `external`). The metric must be computable, not high. A low score is information about the gap, not a failure.
 - Fix: F5 cannot fail independently. F2 + F3 + F4 cure every F5 failure. The check is here as a rollup so the audit gap report leads with the score (or the literal "uncomputable, see F2/F3").
 
 **F6. (Future) The `tools` catalog is deduplicated.** *(reserved — not part of routine audit.)* A tool with the same `tool_name` and `operation_kind` and `data_object_id` linked from multiple skills is the same primitive and should be a single `tools` row. The deduplication pass runs catalog-wide, not per-domain; F6 reserves the ID for when it ships.
