@@ -63,8 +63,16 @@ The subagent produces `.tmp_deploy/<DOMAIN>-market-surface-<YYYY-MM-DD>.json` wi
 | Bucket | What's in it | What the user does |
 |---|---|---|
 | **1. In-scope confirmed gaps** | Structurally-confirmed findings the agent can fix directly: MISSING entities the market audit verified, WRONG-OWNERSHIP rows with a clear target module, SCOPE-CREEP rows with no downstream blockers, structural band failures (S/A/M/B/C/E/F) with documented fixes, BOUNDARY findings with deterministic patches. | Approve all / approve some / decline. Agent applies fixes immediately on approval. |
-| **2. Surface-for-user (judgment calls)** | Items needing user judgment, not vetted vendor research: Rule #15 notes wording, policy decisions (is this regulation correctly scoped?), architectural intent questions (is this `master + embedded_master` pattern the deployability intent or a redundancy bug?), reverts of legacy pollution. | Answer per item. Each answer may unblock a Bucket 1 fix or change a Bucket 2 row's resolution. |
+| **2. Surface-for-user (judgment calls)** | Items needing user judgment, not vetted vendor research: Rule #15 notes wording, policy decisions (is this regulation correctly scoped?), reverts of legacy pollution. **A `master + embedded_master` pair is NOT in this bucket: see the guard below the table.** | Answer per item. Each answer may unblock a Bucket 1 fix or change a Bucket 2 row's resolution. |
 | **3. Phase 0 pending** | Speculative findings the market-audit pass produced from vendor knowledge but which weren't anchored to a formal Phase 0 vendor-surface document. These are candidate gaps, not vetted gaps. | Choose: (a) **vetted route** — agent runs focused Phase 0 vendor research on this domain, produces a confirmed gap list, survivors become Bucket 1 items in a follow-up pass; (b) **eyeball route** — user names which candidates ring true; named candidates become Bucket 1 items immediately. |
+
+> **GUARD: never surface a `master + embedded_master` pair as a question.** A data_object with `role='master'` in one module and `role='embedded_master'` in another is the **correct, by-design shape** under autonomous-deployable-units. It is a settled **PASS** (Rule #19; SKILL.md B1a self-containment check; M7 was rewritten on 2026-05-28 to drop the bogus soft-fail). This holds whether the `embedded_master` lives on a **starter** (`module_kind='starter'`, e.g. `REAL-ESTATE-AGENT` embedding `legal_contracts`) or on a standalone full module. Do **NOT**:
+> - put it in Bucket 2 as an "architectural intent" or "intent vs redundancy bug" judgment call;
+> - author a `q-` question asking whether to "keep the lite path vs. refactor the starter to consume the full module." That fork is false: the `embedded_master` role **already is** the lite-path-when-standalone, and co-deployment **automatically** demotes the shell to a consumer of the canonical master (Rule #19 "Upgrade behavior"). "Refactor a starter to consume" is not even legal: starter invariant #1 forbids `consumer + domain_owned` and the platform `starter_no_master` validation_rule plus the loader pre-flight reject it.
+>
+> The decision shape does not exist, so there is no question to ask. The user has asked for this to stop being raised more than once; if you are tempted to surface it, re-read this guard instead.
+>
+> **The only master/embedded_master findings that reach the user are genuine structural fails**, and they belong to the structural band checks (M7 / B5), NOT Bucket 2: (a) **two `role='master'` rows** for the same `data_object_id` anywhere in the catalog (M7 catalog-wide single-master hard fail, surface the demotion decision), or (b) an `embedded_master` / `contributor` / `consumer` with **NO canonical `master` anywhere** and not a platform built-in (B5 orphan: add the master or drop the orphan). Neither of those is "is this pattern intentional?"; both have deterministic fixes with their own checks.
 
 #### Explicit-prompt discipline
 
@@ -190,7 +198,9 @@ Numbered list. Each item carries:
 
 ### Decisions
 Per-bucket user choices, captured as the user makes them. Example:
-> *"Bucket 1: approved 1, 3, 5; declined 2, 4. Bucket 2: FERPA removed, 4 legacy notes reverted, master+embedded_master confirmed as architectural intent (Rule #19 deployability). Bucket 3: eyeball — outreach_sequences and video_interview_recordings ring true; rest defer to formal Phase 0."*
+> *"Bucket 1: approved 1, 3, 5; declined 2, 4. Bucket 2: FERPA removed, 4 legacy notes reverted. Bucket 3: eyeball — outreach_sequences and video_interview_recordings ring true; rest defer to formal Phase 0."*
+
+(Note: `master + embedded_master` is deliberately absent from this Bucket 2 example. It is never a Bucket 2 item, per the guard under "The three buckets".)
 
 ### Fixes applied
 Per-fix log: loader script path (or surgical CLI block), row counts, timestamps. References the commit hash if the loader was committed.

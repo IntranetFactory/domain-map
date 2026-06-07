@@ -739,3 +739,18 @@ Both are the same entity-follows-the-unit principle plan-4 established for gates
 **Fix applied to live state.** The 5 domains' empty UX fields (5 domain rows + 16 module rows = 21 row-pairs) were backfilled via `.tmp_deploy/backfill_catalog_ux_2026_06_05.ts` (all `record_status='new'`, all previously empty, 0 overwrites). The UX-only items were removed from those 5 state.yaml files; a correction note was appended to each history.md superseding the "drafted, left open" entry.
 
 **Status.** Active. No further migration pending.
+
+## 2026-06-07 - master+embedded_master kept resurfacing as an audit question (incomplete 2026-05-28 fix)
+
+**Context.** Reviewing `audits/CLM/q-CLM.md`, the user (for at least the third time) flagged that the audit had again surfaced a `master + embedded_master` pair as a blocking decision. q1 asked whether the `REAL-ESTATE-AGENT` starter (`module_kind='starter'`, `domain_id=null`) should "keep its lite path or be refactored to consume the full CLM repository." The starter embeds `legal_contracts` (id 66) as `role='embedded_master'`; `CLM-REPOSITORY` (module 127) masters it as `role='master'`. That is the textbook autonomous-deployable-units shape, a settled PASS under Rule #19 and the B1a self-containment check. (Minor data slip in the question text too: it claimed the starter also embeds a signature shell; the starter carries no `signature_records` row at all.)
+
+**Root cause.** The 2026-05-28 "M7 rewritten" decision correctly declared this pattern a PASS with "no surface-for-review", but its **Scope line said "SKILL.md § M7 only."** The bogus framing survived untouched in `references/domain-audit-procedure.md`: the Bucket 2 ("Surface-for-user / judgment calls") definition at line 66 explicitly listed *"architectural intent questions (is this `master + embedded_master` pattern the deployability intent or a redundancy bug?)"*, and the example transcript modeled surfacing it. The audit's question-authoring path reads the bucket definitions, not the M7 check, so it kept manufacturing the question the M7 rewrite thought it had killed. Option (b) of the question ("refactor the starter to consume the full module") is not merely unnecessary, it is illegal: starter invariant #1 forbids `consumer + domain_owned`, enforced by the `starter_no_master` validation_rule and the loader pre-flight; co-deployment already auto-demotes the shell (Rule #19 "Upgrade behavior").
+
+**Decision / fix applied.** `references/domain-audit-procedure.md` only:
+1. Removed `master + embedded_master` from the Bucket 2 judgment-call list (line 66) and replaced it with a pointer to a new guard.
+2. Added a blockquote **GUARD** under "The three buckets": a `master + embedded_master` pair (starter or standalone full module) is a Rule #19 / B1a / 2026-05-28-M7 PASS, never a Bucket 2 item and never a `q-` question; the "lite vs. consume" fork is false (the role IS the lite path, co-deploy demotes automatically, "consume" is forbidden by starter invariant #1). The only master/embedded_master items that reach the user are genuine structural fails owned by M7 (two `master` rows) or B5 (orphan with no canonical master), neither of which is an "is this intentional?" judgment call.
+3. Fixed the example transcript (line ~201) to drop the master+embedded_master Bucket 2 resolution, with an inline note that its absence is deliberate.
+
+**Scope.** `references/domain-audit-procedure.md` only. SKILL.md B1a check and Rule #19 already said PASS; M7 already said PASS. This entry closes the one remaining surface (the Bucket 2 definition) that the 2026-05-28 fix did not reach. No catalog writes. `q-CLM.md` was left unchanged per the user's instruction.
+
+**Status.** Active. No further migration pending.

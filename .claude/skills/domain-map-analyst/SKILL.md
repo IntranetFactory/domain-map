@@ -547,6 +547,38 @@ A request to **report / check / "check only"** means read-only: diagnose, surfac
 
 **"Finished" = `b1a` executed AND no open `b2` AND no pending destructive approval.** Open `b3` never blocks it.
 
+### 22. Human-in-the-loop via `q-`/`a-` companion files
+
+`state.yaml` is the machine source of truth, but it is unreadable for a human reviewer. Every domain that ends an audit waiting on the user therefore carries a plain-language companion file, and the user answers by renaming it. `state.yaml` stays canonical; the companion file is only its human-readable projection and never replaces it.
+
+**When `status: feedback_needed` (equivalently `next_action_by: user`), a `q-<DOMAIN_CODE>.md` MUST exist** at `audits/<DOMAIN_CODE>/q-<DOMAIN_CODE>.md`. Generating or refreshing it is part of ending an audit in `feedback_needed`: a `feedback_needed` state with no current `q-` file is an incomplete audit. When the domain leaves `feedback_needed` (everything resolved), delete the stale `q-` file.
+
+**What goes in the `q-` file.** Only items that need the user: every `b2` decision, every pending destructive approval (Rule #21), and every `record_status` approval gate (Rule #1). Open `b3` ideas go last under an "Optional (will not hold up the build)" heading. Nothing else (no `b1a`, no `b1b`).
+
+**Format (exact).**
+- Title: `# <Domain name> (<CODE>): questions waiting for you`.
+- `## What this domain is`: the domain's `catalog_tagline` + `catalog_description` when present; otherwise a 2-3 sentence plain summary of what the domain is for.
+- `---`, then one block per question. Each block, in order, with a blank line between every part:
+  - `q<N>: <plain-language question>`. No internal IDs (no `B2-S1`), no `§`. Mark the single gate question (the one everything else depends on) with `(answer this first)`.
+  - Every question is **yes/no** or **pick-one-from-a-list**. Split multi-part approvals into separate yes/no questions. Append `(yes/no)` to yes/no questions.
+  - For a list question: each option on its own line as a markdown list item (`- a) ...`), so it renders one per line.
+  - `Recommended: <answer>. <one-line reason>` on its own line.
+  - `a<N>:` (empty, for the user) on its own line.
+  - `---` divider before the next block.
+- A final HTML comment mapping each `q<N>` to its `state.yaml` decision ID plus the `domain_id`, e.g. `<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 ... | domain_id=79 -->`. This is how answers map back; keep it accurate. Live examples of the shape were `q-APIM.md` / `q-KMS.md`.
+
+**The `a-` file is the go signal.** When `audits/<DOMAIN_CODE>/a-<DOMAIN_CODE>.md` exists, the user has answered and the domain is `next_action_by: agent`. On seeing it the agent MUST, in order:
+
+1. Read every `a<N>:`. Empty or `recommended` = take the recommendation; a letter / `yes` / `no` / free-text wording = that decision; **a question or request is NOT a decision** (see below).
+2. Map each answer to its decision ID via the footer, then execute under Rule #21: additive/corrective decisions applied at `record_status='new'` without asking; destructive decisions performed because this file IS the approval; approval gates flipped only where the user said yes.
+3. Update `state.yaml` (move resolved items to `history.md`, recompute `status` / `next_action_by`).
+4. **Delete the `a-` file and the now-stale `q-` file.**
+5. Then either generate a fresh `q-<DOMAIN_CODE>.md` if anything is still open (an unanswered `a#:`, an item a question/request re-opened, or a new decision the processing surfaced) and leave the domain `feedback_needed`; **or** continue the build if nothing is open.
+
+**A question or request in an `a#:` keeps that item open.** Do not execute it. Answer the question or do the request, leave that decision unresolved, and carry it into the regenerated `q-` file (fold the answer into the question text). Partial answers are fine: apply the decided items, loop the rest back. Never treat a renamed `a-` file as blanket approval for items the user turned into questions.
+
+**Location.** Both files live in the domain's audit directory, alongside `state.yaml` and `history.md`. Catalog-wide flat files at the `audits/` root are unaffected.
+
 ---
 
 ## The module at a glance

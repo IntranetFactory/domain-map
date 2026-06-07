@@ -6,6 +6,8 @@ Each domain has its own directory:
 audits/<DOMAIN_CODE>/
   history.md      append-only audit narrative (dated sections, verbatim)
   state.yaml      current open items, schema_version: 2
+  q-<CODE>.md     human-readable open decisions; present iff status: feedback_needed
+  a-<CODE>.md     the user's answers (a rename of q-); its presence flips next_action_by to agent
 ```
 
 Catalog-wide artifacts stay flat at the audits/ root: `README.md`, `_apqc-in-use.md`, `_discover.md`, `_missing-domains.md`, `_validate-cross-domain.md`.
@@ -56,6 +58,14 @@ b3:    # vendor research pending (Phase 0): discretionary ADDITIVE entities that
 `next_action_by` derives by priority: agent (b1a non-empty) > user (b2) > research (b3) > blocked (only b1b) > done.
 
 **Execution contract (SKILL.md Rule #21).** A *review / audit / validate / finish* run EXECUTES all additive/corrective `b1a` inline (`record_status='new'`), so a properly-run review leaves `b1a` empty and the domain ends `next_action_by: user` (an open `b2` or a destructive step needs approval), `blocked` (only `b1b` remains), or `done`. `b3` is non-blocking and never sets `next_action_by` on its own; it parks in the ideas backlog. Only a *report / check* run is read-only and may leave `b1a` populated.
+
+### Human-readable decision files (`q-` / `a-`)
+
+`state.yaml` is the machine source of truth; humans review through a plain-language companion file. Full contract: **SKILL.md Rule #22**. In short:
+
+- A domain at `status: feedback_needed` (i.e. `next_action_by: user`) MUST have a `q-<CODE>.md` in its audit directory, listing every open `b2` decision, pending destructive approval, and `record_status` approval gate as yes/no or pick-one questions, each with a recommendation. Open `b3` ideas go in an "Optional" section. A `feedback_needed` state with no current `q-` file is an incomplete audit.
+- The user answers in the `a#:` lines and renames the file to `a-<CODE>.md`. That rename flips the domain to `next_action_by: agent`.
+- On seeing an `a-` file the agent reads and processes the answers (decisions applied under Rule #21; a question/request in an `a#:` keeps that item open), updates `state.yaml`, **deletes both the `a-` and the stale `q-` file**, then either regenerates a fresh `q-` file (if anything is still open) or continues the build.
 
 ### Standard optional fields (use these exact names; no invented variants)
 
