@@ -355,3 +355,41 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+State-driven Validate pass (SKILL.md Rule #21). Worked only the open items in `audits/PA/state.yaml`; no fresh from-scratch audit. Live confirmed against `domain_code=eq.PA` (domain_id 63; modules 81/82/83/84; masters 42/43/44/45/46). Loader: `c:/dev/domain-map/.tmp_deploy/fix_pa_state_execute_2026_06_07.ts` (idempotent, re-run inserts 0; exit 0).
+
+### Summary
+
+The big shift since the 2026-05-31 audit: the APQC additive slice and the catalog UX layer are now real, every PA master carries a typed `entity_type`, and all 5 masters have generic-synonym aliases. The B-band hard fails that the additive pass owns (B11 aliases, B13 entity_type, A4/M8 catalog UX) are cleared. What remains is genuinely user-gated: new-entity authoring (lifecycle states, intra-PA relationships, personas), destructive rewrites (M9 self-containment, APQC REPLACE, pattern flags), and judgment calls (DEI master shape, scope split, naming). `next_action_by` flips to `user`.
+
+Note: classifying attrition_forecasts / people_kpis / workforce_segments as `computed` narrows B12 (lifecycle states) to the two `operational_workflow` masters only (engagement_surveys 45, predictive_models 46).
+
+### Executed (record_status='new', idempotent)
+
+- **B1A-ENTITY-TYPE (B13)** — 5 PATCH on `data_objects.entity_type` (was `unclassified`): attrition_forecasts 42 -> `computed`, people_kpis 43 -> `computed`, workforce_segments 44 -> `computed`, engagement_surveys 45 -> `operational_workflow`, predictive_models 46 -> `operational_workflow`.
+- **Catalog UX (Rule #20 / A4 / M8)** — wrote buyer-voice `catalog_tagline` + `catalog_description` into the empty domain row (63) and all 4 module rows (81/82/83/84). 5 rows, 10 fields. No non-empty value overwritten.
+- **B1A-APQC-TAGGING (H1) additive slice** — 8 INSERT on `handoff_processes` (`proposal_source='agent_curated'`, `role='implements'`, record_status omitted) for the 8 PA cross-domain handoffs that had ZERO tags and a clean live PCF match: 26 -> 982 (PCF 10426 Develop succession plan); 450 -> 235 (PCF 21439 Manage employee assistance and retention); 452 -> 980 (PCF 21693 Perform strategic workforce planning); 453 -> 220 (PCF 10440 Recruit/Source candidates); 1105 -> 984 (PCF 10427 Develop diversity, equity, and inclusion plan); 1110 -> 235; 1112 -> 980; 1113 -> 982. All process_ids resolved live against `apqc_pcf_cross_industry` (the 2026-05-31 continuation's unresolved external_ids were re-resolved by live name match).
+- **B1A-ALIASES (B11)** — 16 INSERT on `data_object_aliases` (`alias_type='synonym'`, no industry_id, no vendor/product names per Rule #18): attrition_forecasts (Turnover Forecast, Attrition Prediction, Flight Risk Forecast); people_kpis (HR Metric, Workforce KPI, People Metric, Headcount Metric); workforce_segments (Employee Cohort, Workforce Cohort, People Segment); engagement_surveys (Pulse Survey, Employee Survey, Engagement Pulse); predictive_models (People Model, Workforce Model, HR Predictive Model).
+
+Counts: entity_type 5, catalog UX 5 rows / 10 fields, APQC 8, aliases 16. Total 34 rows written. C1 `business_function_domains` confirmed already complete (owner People Analytics bf 80 + contributor Data and Analytics bf 29) — nothing to write.
+
+### Surfaced (NOT written; user decision)
+
+- **b2 (7):** B2-MODULE-84-MASTER (DEI module masters zero entities: add pay_equity_analyses / dei_cohorts / confirm derived-only); B2-EVENT-ATTRIBUTION-DEFECT (events 10/11 fire on non-PA-mastered data_objects); B2-PATTERN-FLAGS (proposed has_personal_content / has_submit_lock / has_single_approver flips on 3 masters); B2-ENGAGEMENT-SCOPE-SPLIT (module 82 vs EMP-EXP); B2-CROSS-DOMAIN-CONSUMERS (module 81/84 consume cross-domain entities with no inbound handoff); B2-CUSTOMERS-FEEDS-KPI (relationship 832); B2-PA-NAMING (unified vs People Listening split).
+- **Destructive (recommended fix only):** B1A-SELF-CONTAIN / M9 (rewrite role/necessity on 5 existing DMDO rows — embed or relax); B1A-APQC-REPLACE (REPLACE 6-7 discovery_substring tags in the wrong PCF family: handoffs 13/451 currently on 671 customer-attrition CRM family; 23 on 219; 1107/1108/1109 on 250 — recommended clean PCF targets noted in state.yaml).
+- **Personas/RACI (B1A-PHASE-P):** DEFERRED, not authored. Candidate personas: PA-ANALYST (multi-module read + dashboard authoring), PA-LEAD (model deployment approver + DEI sign-off), PA-DATA-SCIENTIST (predictive model author + DEI cohort analysis).
+- **New-entity authoring kept open:** B1A-LIFECYCLE-STATES (state machines for the 2 operational_workflow masters; per-row authoring needs approval); B1A-INTRA-PA-RELATIONSHIPS (3-4 master-to-master edges; verbs not pre-specified).
+
+### Left (untouched)
+
+- **RETIRED / superseded (2026-06-06 per-domain-skill restoration / Plan 3):** B1A-SYSTEM-SKILLS, B1A-ROLES, B1A-PERMISSIONS — reframed as superseded notes in state.yaml; supersession header retained. Per-module tool re-authoring tracked in audits/_modularization-backlog.md.
+- **b3 backlog (9):** pay_equity_analyses, dei_cohorts, attrition_risk_assessments, dashboards, data_quality_audits, benchmark_datasets, employee_listening_cycles, TALENT-INTEL-PLATFORM, EMP-LISTENING. All non-blocking ideas.
+- **Report-only (owed by other domains):** 5 PA-outbound handoffs with NULL target_domain_module_id (1104 EPM, 1105 COMP-MGMT, 1107 EMP-EXP, 1111 HCM, 450 TALENT-MGMT); B8 outbound relationship rows owed by PAYROLL / PSA / COMP-MGMT / ATS feeding people_kpis. Not PA blockers.
+
+### JWT errors
+
+None.

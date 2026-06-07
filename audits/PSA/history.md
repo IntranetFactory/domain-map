@@ -422,3 +422,120 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-06 - Audit (state-driven execute)
+
+State-driven Validate-mode execute pass per SKILL.md Rule #21. Worked ONLY the open
+items in `audits/PSA/state.yaml` (snapshot from 2026-05-31), re-verifying each against
+live state before acting. No fresh from-scratch audit. Everything additive/corrective the
+agent could do landed at `record_status='new'` (or as field PATCHes on existing rows where
+the column carries no `record_status`). Destructive work (DELETE / overwrite a non-empty
+value / restructure) was surfaced, not executed.
+
+### Summary
+
+PSA had 5 executable b1a items and a set of surfaced b2 / destructive items. All 5 b1a
+items executed cleanly. Two formerly-open b2 items closed by current rules (B2-NEW2 catalog
+copy resolved by Rule #20 in-record review; B2-NEW1 config-shape exemption resolved by
+Rule #12 `entity_type='catalog'`). The H1 picture had shifted materially since the snapshot:
+many handoffs the snapshot listed as untagged were ALREADY tagged `agent_curated` (some
+`approved`) from prior passes, so the net-new volume was 18 rows (not 31). `next_action_by`
+moves to `user`: every remaining b1a is destructive-awaiting-approval or gated on a b2.
+
+### Executed (additive/corrective, all at record_status='new' or field PATCH)
+
+- **B1A-A4 (domain catalog copy, Rule #20):** PATCHed `domains` row 68 `catalog_tagline` +
+  `catalog_description` (both were empty). Buyer voice, no vendor names, American English,
+  no em-dash. PATCH-empty-only (verified empty live first). 1 row.
+- **B1A-M8 (module catalog copy, Rule #20):** PATCHed all 4 PSA modules (86/87/88/89)
+  `catalog_tagline` + `catalog_description` (all empty). Buyer voice per module. 4 rows.
+- **B1A-ENTITY-TYPE (Rule #12):** classified `entity_type` on the 6 masters (all were
+  `unclassified`). `service_projects` 216, `project_tasks` 217, `project_assignments` 218,
+  `project_billing_milestones` 219, `project_resource_allocations` 726 ->
+  `operational_workflow` (each carries a workflow lifecycle, confirmed live).
+  `resource_skill_inventories` 725 -> `catalog` (skills taxonomy / config-shape, no
+  lifecycle; this also structurally records the config-shape exemption per Rule #12,
+  superseding the old `data_objects.notes` mechanism). 6 rows.
+- **B1A-H1 (APQC tags, NET-NEW only):** INSERTed 18 `handoff_processes` rows,
+  `proposal_source='agent_curated'`, `role='implements'`, `record_status` omitted (default
+  `new`). Idempotent on (handoff_id, process_id); checked existing first and inserted only
+  where no row existed for the pair. PCF mappings (handoff -> process):
+  1130->1417 (Analyze and report employee utilization), 1016->240 + 1022->240 (Relocate
+  employees and manage assignments), 1021->1325 (Perform variance analysis against forecasts
+  and budgets), 1026->1036 (Define employees competencies and skills), 1018->980 (Perform
+  strategic workforce planning), 1027->887 (Define and manage skills taxonomy), 137->147
+  (Manage leads/opportunities), 1129->148 (Manage customers and accounts; the better
+  agent_curated tag alongside the weak 569 row), 1218->224 (Manage employee onboarding),
+  1219->226 (Manage employee career development), 1220->1059 + 1222->1059 (Manage
+  offboarding), 1221->247 (Develop workforce analytics), 1223/1224/1225/1226->995 (Develop
+  and maintain job descriptions). SKIPPED 787 (defer to Discover, no clean PCF). Did NOT
+  re-tag 132 (already carries agent_curated process 808 from a prior pass alongside its weak
+  569 row). Net cross-domain handoff tagging is now ~31 agent_curated rows, within the
+  19-30 net-new band relative to the snapshot's untagged set.
+- **B1A-PHASE-P (personas / RACI, E1 fail):** authored a tight function-anchored persona set
+  for the 4-module domain (PSA owned by Business Operations bf 34; Finance bf 4 contributes).
+  - 4 `domain_roles` (flat, no parent, function-scoped), all `record_status='new'`:
+    `BUSINESS-OPS-DELIVERY-MANAGER` (#27), `BUSINESS-OPS-RESOURCE-MANAGER` (#28),
+    `BUSINESS-OPS-CONSULTANT` (#29), `FINANCE-PROJECT-CONTROLLER` (#30).
+  - 13 `role_modules` reach rows (each persona >=2 modules; primary/secondary).
+  - 8 `data_object_lifecycle_states.process_id` wirings (the process-to-permission edge):
+    216 staffing_required->179, 216 delivery_complete->52, 216 closed->52, 217 completed->52,
+    218 confirmed->180, 726 committed->180, 219 reached->302, 219 invoiced->302.
+  - 10 `process_raci` rows across processes 179 / 180 / 52 / 302 (exactly one actor per row;
+    every R/A process has a `process_id`-wired gate, so no dangling grant).
+  - Did NOT author any `_core` roles / permissions / role_permissions / permission_hierarchy
+    (the bundle is DERIVED; only reach + RACI authored).
+
+Loaders (re-runnable, `.tmp_deploy/`):
+`psa_audit_2026_06_06_copy_entitytype.ts`, `psa_audit_2026_06_06_h1_apqc.ts`,
+`psa_audit_2026_06_06_personas.ts`.
+
+### Surfaced (NOT executed; user decides)
+
+- **B1A-H1-REPLACE deletions (destructive):** recommend DELETE the 2 weak
+  `discovery_substring` `handoff_processes` rows (process 569) on handoffs 132 + 1129. Both
+  now carry a stronger agent_curated tag, so the weak rows are redundant. DELETE is
+  destructive -> sign-off.
+- **B1A-B10B-IN / B2-S4:** handoffs 787 (work_automations) + 515 (creative_briefs) NULL
+  target_module + no PSA DMDO. Fork: (a) insert consumer+optional DMDO on module 86 + PATCH
+  handoffs, vs (b) DELETE as mis-modeled.
+- **B1A-S1 / B1A-S8 / B2-S3:** `revenue_recognition_records` (109, SUB-MGMT-mastered)
+  lifecycle state 403 anchored to PSA module 89 + tool 1035 mutate boundary. Architectural
+  fork; all options overwrite existing rows.
+- **B1A-S7 / B2-S1:** Rule #15 notes-pollution sweep (~20 rows). Reverting non-empty notes
+  to '' is a destructive overwrite -> needs confirmation the notes were auto-populated.
+- **B1A-SELF-CONTAIN (M9):** 7 contributor/required-consumer DMDO rows (crm_opportunities,
+  employees x2, job_profiles x2, legal_contracts, revenue_recognition_records). Converting
+  role consumer->embedded_master or necessity required->optional rewrites existing rows =
+  destructive. Per-row recommendations recorded in state.yaml.
+- **B2-S2:** pattern-flag positive re-evaluation on the operational_workflow masters
+  (per-flag user decision).
+- **B2-S5:** CRM renewal inbound (same shape as 137 vs distinct handoff).
+- **B2-NEW2:** RESOLVED-BY-RULE (Rule #20 in-record review; copy written this pass).
+- **B2-NEW1:** RESOLVED-BY-RULE (Rule #12 `entity_type='catalog'` on 725 replaces the
+  notes-based config-shape exemption).
+- **American-English corrective overwrites (low priority, destructive):** capability
+  "Utilisation Tracking" -> "Utilization Tracking"; domain 68 + several master descriptions
+  use "utilisation"; trigger_event "revenue.recognised" (handoff 131) uses "recognised".
+  Overwriting non-empty values needs sign-off. Newly authored 2026-06-06 copy is already
+  American-English.
+
+### Left (report-only / backlog, untouched)
+
+- **b1b:** B1B-S5 (9 outbound NULL target_module owed by ERP-FIN/PA/HCM/S2P/EPM), B1B-S6
+  (5 inbound NULL source_module owed by WFM/EXPENSE/VMS/AGENCY-MGMT), B1B-SUB-MGMT-REVREC
+  (conditional on B2-S3). Report-only follow-ups owed by other domains' B10b passes.
+- **b3:** all 17 backlog candidates (12 entities + 2 modularization + 3 regulations) carry
+  forward unchanged.
+
+### JWT errors
+
+None encountered.
+
+### Frontmatter
+
+Status `feedback_needed`, `next_action_by: user`, `last_audit: "2026-06-06"`. Every remaining
+b1a item is destructive-awaiting-approval or gated on a b2 decision; the agent has executed
+all additive/corrective work it can.

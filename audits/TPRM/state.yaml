@@ -10,135 +10,141 @@
 # === end supersession note ===
 schema_version: 2
 domain: TPRM
-status: audit_stale
-next_action_by: agent
-last_audit: "2026-05-31"
+status: unbuilt_pending_build_decision
+next_action_by: user
+last_audit: "2026-06-07"
+
+# UNBUILT domain: 0 domain_modules, 0 capability_domains, 0 mastered data_objects, 0 skills
+# (verified live 2026-06-07). The entire b1b cascade is gated on the B2-1 module-shape
+# decision; nothing below the M-band is auditable until the build lands. Per Rule #21 the
+# build is surfaced (it is a user decision, B2-1), not scaffolded. The only agent-executable
+# additive item this pass was the empty-domain-row catalog UX copy (executed; see history).
 
 b1a:
-  - id: B1A-RECLASS
-    summary: "Leadership-tier zero-master exemption rescinded 2026-06-02; re-run Validate treating TPRM as master-bearing (overlay test). Build needed, not an exemption."
-    finding: >
-      SKILL.md's fixed leadership-tier exemption was rescinded (references/skill-changelog.md
-      2026-06-02). Under the overlay test TPRM is master-bearing: masters third-party risk assessments and due-diligence records (crud_percentage 92; OneTrust / ProcessUnity / Prevalent class). The prior audit's
-      "keep leadership-tier / ship an empty landing module" option is no longer valid. Live state
-      2026-06-02: 0 domain_modules (M1 fail), so the domain is not deployable today.
-    action: >
-      Re-run the full 4-pass Validate under the corrected rule. The module-shape, promote-scope,
-      and catalog-UX decisions already in b2 still apply and re-surface after the re-audit; this
-      item records only that the classification is settled (master-bearing) and the domain needs
-      a build, not an exemption.
-    extra_reclassified: "2026-06-02 skill-changelog"
-  - id: B1A-H3
-    summary: DELETE redundant L4 APQC tag on handoff 278 (process_id 815) to keep the cleaner L3 framing on PCF 167 "Manage suppliers".
-    finding: |
-      Handoff 278 (ESG to TPRM, `supplier_esg_assessment.score_updated`, payload `supplier_esg_assessments`) currently carries two `agent_curated` rows: PCF 167 ("Manage suppliers", L3, external_id 10280) and PCF 815 ("Monitor/Manage supplier information", L4, external_id 10299). The 2026-05-31 continuation logged inserting only the L3 row (process_id 167). The L4 row's provenance is unknown; no other TPRM audit session has been logged since. SKILL.md domain-audit-procedure.md guidance prefers the L2/L3 parent for clustering quality when an L4/L5 child has an obvious parent. The cleaner shape is a single L3 row per handoff.
-    action: |
-      DELETE the `handoff_processes` row joining handoff_id=278 and process_id=815. Surgical CLI is sufficient (the row's PostgREST id needs to be read first via `/handoff_processes?handoff_id=eq.278&process_id=eq.815&select=id`). Per Rule #1 do NOT change `record_status` on any surviving row in the same touch.
-    blocked_by:
-      - {type: user_decision, ref: B2-H1}
-    affected_handoffs:
-      - {handoff_id: 278, direction: inbound, source_domain: ESG, target_domain: TPRM, trigger_event: supplier_esg_assessment.score_updated, payload: supplier_esg_assessments, null_field: null}
-    extra_band: H1
-    extra_finding_type: APQC_TAGGING_CLEANUP
   - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
-    extra_phase_p_triage: "2026-06-02"
+    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities. Needs a build, not an exemption. Build shape = B2-1 (user decision)."
+    finding: >
+      Live triage 2026-06-07: TPRM (domain id 19) has 0 domain_modules rows (M1 fail) and
+      0 capability_domains rows. The leadership-tier zero-master exemption was rescinded
+      2026-06-02 (references/skill-changelog.md); under the overlay test TPRM is master-bearing
+      (third-party risk assessments and due-diligence records are real records, crud_percentage 92).
+      So the domain must be built before any persona / RACI / handoff-FK / skill work applies.
+      The build is gated on the B2-1 single-vs-split module-shape decision and the B2-2..B2-7
+      ownership-boundary decisions against SUP-LIFE / GRC / AUDIT.
+    action: >
+      User picks B2-1 (single TPRM-VENDOR-RISK-MGMT vs split TPRM-VENDOR-DUE-DILIGENCE +
+      TPRM-VENDOR-ONGOING-MONITORING) and the ownership-boundary calls B2-2..B2-7. Then run
+      Phase A then M then B then S to author modules, capabilities, masters, and the single
+      domain-grain system skill (per the 2026-06-06 supersession: ONE domain-grain system skill,
+      tools live on domain_module_tools, no per-module skills). If multi-module, run Phase P after.
+    extra_reclassified: "2026-06-02 skill-changelog (leadership-tier exemption rescinded)"
 
 b1b:
+  # All b1b items are blocked: every one is gated on the B2-1 module-shape decision or on
+  # B1B-S1 (the build) landing first. UNBUILT => do not scaffold; leave the cascade.
   - id: B1B-S1
-    summary: Author at minimum 1 `module_kind='full'` `domain_modules` row for TPRM so the M-band cascade unblocks (single-module or 2-module shape pending Bucket 2 #1).
+    summary: Author at minimum 1 `module_kind='full'` `domain_modules` row for TPRM so the M-band cascade unblocks (single-module or 2-module shape pending B2-1).
     finding: |
-      TPRM has 0 `domain_modules` rows. Per Rule #14 this is an audit blocker for every band below M (A2 capabilities, F2 system skill, F3 skill_tools, F5 Semantius score, B10b target_domain_module_id PATCHes on inbound handoffs 258 and 278). The fix shape (1 module vs 2) cannot be picked without the user's Bucket 2 #1 decision.
+      TPRM has 0 `domain_modules` rows. Per Rule #14 this is an audit blocker for every band below M
+      (A2 capabilities, domain-grain system skill, Semantius score, B10b target_domain_module_id
+      PATCHes on inbound handoffs 258 and 278). The fix shape (1 module vs 2) cannot be picked
+      without the user's B2-1 decision.
     action: |
-      Once Bucket 2 #1 lands: author the chosen module set (single `TPRM-VENDOR-RISK-MGMT`, or split into `TPRM-VENDOR-DUE-DILIGENCE` + `TPRM-VENDOR-ONGOING-MONITORING`). Ship Rule #20 catalog UX fields, exactly one `skill_type='system'` skill per module (Rule #17), and the first `skill_tools` rows in the same load.
+      Once B2-1 lands: author the chosen module set, ship Rule #20 catalog UX fields on each module,
+      and the single domain-grain `skill_type='system'` skill (domain_id=19, domain_module_id=null)
+      that derives its toolset from `domain_module_tools` (per the 2026-06-06 supersession). Apply
+      module-grain catalog UX copy in the same load.
     blocked_by:
       - {type: user_decision, ref: B2-1}
     affected_modules: []
     extra_band: M1
-    extra_cascade_to: [A2, B10b, F2, F3, F5]
+    extra_cascade_to: [A2, B10b]
 
   - id: B1B-A2
     summary: Author the TPRM capability set after the module shape lands (capability count drives Rule #14 2-module floor).
     finding: |
-      `capability_domains` count for TPRM is 0; A2 fails. The conservative baseline capability set is `vendor-onboarding`, `vendor-due-diligence`, `vendor-tier-classification`, `continuous-monitoring`, `vendor-issue-management`; >=3 capabilities triggers the 2-module floor per Rule #14, so the actual shape depends on Bucket 2 #1.
+      `capability_domains` count for TPRM is 0; A2 fails. Conservative baseline capability set:
+      `vendor-onboarding`, `vendor-due-diligence`, `vendor-tier-classification`,
+      `continuous-monitoring`, `vendor-issue-management`; >=3 capabilities triggers the 2-module
+      floor per Rule #14, so the actual shape depends on B2-1.
     action: |
-      Author 5 to 8 capabilities; link via `capability_domains` (domain_id=19); add `domain_module_capabilities` per module. Apply the Cross-cutting capability convention for any capability spanning >=3 domains.
+      Author 5 to 8 capabilities; link via `capability_domains` (domain_id=19); add
+      `domain_module_capabilities` per module. Apply the cross-cutting capability convention for
+      any capability spanning >=3 domains.
     blocked_by:
       - {type: user_decision, ref: B2-1}
       - {type: prerequisite_entity, ref: B1B-S1}
     extra_band: A2
 
-  - id: B1B-F2
-    summary: Author one `skill_type='system'` skill per TPRM `domain_modules` row plus initial `skill_tools` rows (Rule #17).
-    finding: |
-      F2 / F3 / F5 fail trivially because 0 modules exist. Once M1 lands, every new `domain_modules` row requires exactly one `system` skill with >=1 `skill_tools` row in the same load.
-    action: |
-      In the M1 load-bearing loader: insert one `skills` row per module (`skill_type='system'`, `domain_module_id=<mid>`, `skill_name=<module_code_lower>_agent`); attach the irreducible required tool floor (>=1 `query`, >=1 `mutate`, >=1 workflow gate) via `skill_tools`.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-    extra_band: F2
-
   - id: B1B-B10b-258
     summary: PATCH handoff 258 `target_domain_module_id` to the TPRM module that consumes audit findings, once M1 lands.
     finding: |
-      Handoff 258 (AUDIT to TPRM, trigger_event `finding.remediated`, payload `audit_findings` id 294) carries `target_domain_module_id=NULL`. The cure is mechanical PATCH once a TPRM module exists.
+      Handoff 258 (AUDIT to TPRM, payload `audit_findings` id 294) carries
+      `target_domain_module_id=NULL` (verified live 2026-06-07). The cure is mechanical PATCH once
+      a TPRM module exists and the B2-7 routing decision lands.
     action: |
-      After M1: PATCH `handoffs.id=258` setting `target_domain_module_id` to the TPRM module that consumes `audit_findings` per Bucket 2 #7 routing decision.
+      After M1: PATCH `handoffs.id=258` setting `target_domain_module_id` to the TPRM module that
+      consumes `audit_findings` per the B2-7 routing decision.
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
       - {type: user_decision, ref: B2-7}
     affected_handoffs:
-      - {handoff_id: 258, direction: inbound, source_domain: AUDIT, target_domain: TPRM, trigger_event: finding.remediated, payload: audit_findings, null_field: target_domain_module_id}
+      - {handoff_id: 258, direction: inbound, source_domain: AUDIT, target_domain: TPRM, payload: audit_findings, null_field: target_domain_module_id}
     extra_band: B10b
 
   - id: B1B-B10b-278
     summary: PATCH handoff 278 `target_domain_module_id` to the TPRM ongoing-monitoring module, once M1 lands.
     finding: |
-      Handoff 278 (ESG to TPRM, trigger_event `supplier_esg_assessment.score_updated`, payload `supplier_esg_assessments` id 327) carries `target_domain_module_id=NULL`, friction_level=high.
+      Handoff 278 (ESG to TPRM, payload `supplier_esg_assessments` id 327) carries
+      `target_domain_module_id=NULL`, friction_level=high (verified live 2026-06-07).
     action: |
-      After M1: PATCH `handoffs.id=278` setting `target_domain_module_id` to the TPRM ongoing-monitoring module (or the single TPRM module under the single-module path).
+      After M1: PATCH `handoffs.id=278` setting `target_domain_module_id` to the TPRM
+      ongoing-monitoring module (or the single TPRM module under the single-module path).
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
       - {type: user_decision, ref: B2-1}
     affected_handoffs:
-      - {handoff_id: 278, direction: inbound, source_domain: ESG, target_domain: TPRM, trigger_event: supplier_esg_assessment.score_updated, payload: supplier_esg_assessments, null_field: target_domain_module_id}
+      - {handoff_id: 278, direction: inbound, source_domain: ESG, target_domain: TPRM, payload: supplier_esg_assessments, null_field: target_domain_module_id}
     extra_band: B10b
 
 b2:
   - id: B2-1
-    summary: TPRM modularization shape — single `TPRM-VENDOR-RISK-MGMT` or split into `TPRM-VENDOR-DUE-DILIGENCE` + `TPRM-VENDOR-ONGOING-MONITORING`.
+    summary: TPRM modularization shape (load-bearing) - single `TPRM-VENDOR-RISK-MGMT` or split into `TPRM-VENDOR-DUE-DILIGENCE` + `TPRM-VENDOR-ONGOING-MONITORING`.
     question: |
-      Flagship pure-plays (OneTrust TPRM, ProcessUnity, Prevalent) expose an Onboarding-vs-Continuous-Monitoring product split, satisfying Rule #14's 2-module floor pre-emptively. Single-module is simpler and defers split until capability count forces it.
+      Flagship pure-plays expose an Onboarding-vs-Continuous-Monitoring product split, satisfying
+      Rule #14's 2-module floor pre-emptively. Single-module is simpler and defers the split until
+      capability count forces it. This decision gates the entire build and every b1b cure.
     options:
       - {key: a, label: "Single module TPRM-VENDOR-RISK-MGMT covering the full lifecycle"}
       - {key: b, label: "Split into TPRM-VENDOR-DUE-DILIGENCE + TPRM-VENDOR-ONGOING-MONITORING (mirrors pure-play product lines, satisfies Rule #14 2-module floor)"}
     why: |
-      Load-bearing for B1B-S1, B1B-A2, B1B-F2, both B1B-B10b cures, B2-A4 catalog UX wording, and routing for every Bucket 3 candidate entity.
+      Load-bearing for B1B-S1, B1B-A2, both B1B-B10b cures, the build, and routing for every b3 candidate.
 
   - id: B2-2
     summary: GRC `risk_assessments` (291) vs TPRM vendor-risk boundary.
     question: |
-      GRC currently masters `risk_assessments`. Vendor risk has distinct inputs (questionnaires + security ratings) and reviewers (procurement / infosec) vs internal control testing.
+      GRC currently masters `risk_assessments`. Vendor risk has distinct inputs (questionnaires +
+      security ratings) and reviewers (procurement / infosec) vs internal control testing.
     options:
       - {key: a, label: "TPRM masters a new `vendor_risk_assessments` entity, distinct from GRC's `risk_assessments`"}
       - {key: b, label: "TPRM consumes GRC's `risk_assessments` with a `subject_type='vendor'` discriminator"}
       - {key: c, label: "TPRM consumes SUP-LIFE's `supplier_risk_assessments` (730) and the TPRM domain is folded into SUP-LIFE entirely"}
     why: |
-      Routes the canonical home for vendor risk; all of Bucket 3 candidate mastery hinges off this answer in combination with B2-3 to B2-5.
+      Routes the canonical home for vendor risk; all of b3 candidate mastery hinges off this in combination with B2-3..B2-5.
 
   - id: B2-3
     summary: "`suppliers` (206, alias `vendor`) vs separate `third_parties` or MDM-tier `counterparties` (Rule #9 naming collision)."
     question: |
-      SUP-LIFE masters `suppliers` with alias "vendor". TPRM specialists operate on a "vendor" master that includes non-supplier counterparties. Any proposal of `vendors` or `third_parties` triggers Rule #9 naming arbitration.
+      SUP-LIFE masters `suppliers` with alias "vendor". TPRM specialists operate on a "vendor"
+      master that includes non-supplier counterparties. Any proposal of `vendors` or `third_parties`
+      triggers Rule #9 naming arbitration.
     options:
       - {key: a, label: "TPRM consumes SUP-LIFE's `suppliers` (single master across the org)"}
       - {key: b, label: "TPRM masters a separate `third_parties` entity scoped to risk-managed counterparties only"}
       - {key: c, label: "Introduce a new MDM-tier `counterparties` master that both SUP-LIFE and TPRM consume"}
 
   - id: B2-4
-    summary: "`supplier_risk_assessments` (730, aliases TPRM assessment / due diligence review) — TPRM canonical or SUP-LIFE canonical?"
+    summary: "`supplier_risk_assessments` (730, aliases TPRM assessment / due diligence review) - TPRM canonical or SUP-LIFE canonical?"
     question: |
       The aliases on this entity are TPRM-coded yet the master is on SUP-LIFE.
     options:
@@ -147,9 +153,11 @@ b2:
       - {key: c, label: "Rename to `vendor_risk_assessments`, move mastery to TPRM, optionally leave SUP-LIFE with a vendor-risk-aware variant"}
 
   - id: B2-5
-    summary: TPRM scope vs SUP-LIFE broadly — overlay or peer-master.
+    summary: TPRM scope vs SUP-LIFE broadly - overlay or peer-master.
     question: |
-      SUP-LIFE masters `supplier_onboardings`, `supplier_qualifications`, `supplier_certifications`, `supplier_scorecards`. TPRM specialists' "vendor onboarding", "questionnaires", "certification tracking" overlap each.
+      SUP-LIFE masters `supplier_onboardings`, `supplier_qualifications`, `supplier_certifications`,
+      `supplier_scorecards`. TPRM specialists' "vendor onboarding", "questionnaires", "certification
+      tracking" overlap each.
     options:
       - {key: a, label: "Preserve SUP-LIFE mastery, TPRM consumes everything (TPRM is a thin overlay / analytics layer)"}
       - {key: b, label: "TPRM masters its own assessment + remediation entities; consumes SUP-LIFE masters as kind=consumer only"}
@@ -158,24 +166,27 @@ b2:
   - id: B2-6
     summary: "`compliance_risks` (282) vs vendor-risk overlap with GRC."
     question: |
-      GRC's `compliance_risks` is general regulatory exposure; vendor risks are a distinct subtype with vendor-FK shape.
+      GRC's `compliance_risks` is general regulatory exposure; vendor risks are a distinct subtype
+      with vendor-FK shape.
     options:
       - {key: a, label: "Vendor risk gets its own master (`vendor_risk_findings`)"}
       - {key: b, label: "TPRM consumes GRC's `compliance_risks` with a vendor discriminator"}
 
   - id: B2-7
-    summary: "`audit_findings` (294) consumed by TPRM — confirm scope and routing."
+    summary: "`audit_findings` (294) consumed by TPRM - confirm scope and routing (gates B1B-B10b-258)."
     question: |
-      AUDIT publishes `finding.remediated` (handoff 258) to TPRM. There is no model today for what TPRM does on receipt.
+      AUDIT publishes `finding.remediated` (handoff 258) to TPRM. There is no model today for what
+      TPRM does on receipt.
     options:
       - {key: a, label: "TPRM consumes `audit_findings` (role=consumer, necessity=optional per Rule #16) and ties to its vendor-remediation entity"}
       - {key: b, label: "Handoff is mis-routed; should target GRC (15) or AUDIT (16) itself"}
       - {key: c, label: "Handoff is correct; TPRM masters a distinct `vendor_audit_findings` master"}
 
   - id: B2-8
-    summary: DORA scope coverage — author DORA-specific entities, drop the regulation link, or defer to a dedicated DORA audit.
+    summary: DORA scope coverage - author DORA-specific entities, drop the regulation link, or defer to a dedicated DORA audit.
     question: |
-      DORA introduces TPRM-side artifacts (ICT third-party register, ICT-risk concentration analyses, sub-contractor mapping per Art. 28). None have entity shape today.
+      DORA introduces TPRM-side artifacts (ICT third-party register, ICT-risk concentration analyses,
+      sub-contractor mapping per Art. 28). None have entity shape today.
     options:
       - {key: a, label: "Add `ict_third_party_registers`, `ict_concentration_assessments`, `subcontractor_chains` as MISSING in a follow-up audit's Bucket 1 once modules exist"}
       - {key: b, label: "Treat DORA as scope-creep and remove the `domain_regulations` link"}
@@ -191,96 +202,69 @@ b2:
       - {key: c, label: "Keep both with a documented `consumer` role on the TPRM side"}
 
   - id: B2-H1
-    summary: Handoff 278 carries an unexplained second `agent_curated` APQC tag (PCF 815, L4) on top of the documented L3 tag (PCF 167).
+    summary: "Handoff 278 carries an unexplained second `agent_curated` APQC tag (PCF 815, L4, hp id 705) on top of the documented L3 tag (PCF 167, hp id 254). DESTRUCTIVE resolution if (b)."
     question: |
-      Provenance of the L4 row is unknown; no history.md continuation logs it. SKILL.md prefers the L2/L3 parent for clustering quality.
+      Provenance of the L4 row is unknown; no history.md continuation logs it. SKILL.md prefers the
+      L2/L3 parent for clustering quality. Verified live 2026-06-07: both rows present, both
+      record_status='new'.
     options:
       - {key: a, label: "Keep both rows (L3 parent and L4 child are mutually consistent)"}
-      - {key: b, label: "DELETE the L4 row (process_id 815) to keep the cleaner L3 framing — unblocks B1A-H3"}
-      - {key: c, label: "Approve both rows and bump `record_status='approved'` on the L3 pair; decide L4 status separately (per Rule #1, explicit per-row confirmation required)"}
+      - {key: b, label: "DELETE the L4 row (handoff_processes id 705, process_id 815) to keep the cleaner L3 framing"}
+      - {key: c, label: "Approve both rows and bump `record_status='approved'` on the L3 pair; decide L4 status separately (Rule #1 needs explicit per-row confirmation)"}
     why: |
-      Independent of all other Bucket 2 items. Resolves quickly. (b) is the SKILL-preferred shape but the row's surprise provenance is worth surfacing rather than silently deleting.
-
-  - id: B2-A4
-    summary: Author `catalog_tagline` and `catalog_description` for the TPRM domain row (Rule #20 forbids auto-draft).
-    question: |
-      Both fields are empty. Rule #20 requires the user to either supply the wording verbatim or explicitly approve a draft before any PATCH.
-    options:
-      - {key: a, label: "User supplies the exact wording for both fields"}
-      - {key: b, label: "Agent drafts a buyer-voice proposal and surfaces for user approval before any PATCH"}
-      - {key: c, label: "Defer until Bucket 2 #1 lands so the tagline can name the module split correctly"}
-    why: |
-      Soft dependency on B2-1: the tagline shape differs between single-module and 2-module paths.
+      Independent of all other b2 items. (b) is the SKILL-preferred shape but is destructive and the
+      row's surprise provenance is worth surfacing rather than silently deleting. This subsumes the
+      former B1A-H3 (the DELETE action), which is destructive and therefore never executed unapproved.
 
 b3:
+  # Phase 0 backlog. All blocked on B2-1 (module shape) and the B2-2..B2-5 ownership boundary.
+  # Non-blocking ideas; never gate "finished".
   - id: B3-1
     candidate: vendor_questionnaires
     rationale: |
-      Universal across all flagship pure-plays. SIG / SIG-Lite / CAIQ / VSAQ instances are first-class entities in OneTrust TPRM, ProcessUnity, Prevalent, Whistic, Venminder, CyberGRX, Aravo. Distinct from the questionnaire response artifact (B3-2).
-    vendor_evidence:
-      - {vendor: OneTrust Third-Party Risk, evidence: 1st_class}
-      - {vendor: ProcessUnity Vendor Risk, evidence: 1st_class}
-      - {vendor: Prevalent TPRM, evidence: 1st_class}
-      - {vendor: Whistic, evidence: 1st_class}
+      Universal across all flagship pure-plays (SIG / SIG-Lite / CAIQ / VSAQ instances). Distinct
+      from the response artifact (B3-2).
     proposed_module: TPRM-VENDOR-RISK-MGMT
     extra_blocked_on: [B2-1, B2-4, B2-5]
 
   - id: B3-2
     candidate: vendor_questionnaire_responses
     rationale: |
-      Universal response artifact distinct from the template (B3-1). Required for any audit / re-assessment cadence; the per-respondent record carries the answers, attachments, attestation timestamps, and the link to the version of the questionnaire used.
-    vendor_evidence:
-      - {vendor: OneTrust Third-Party Risk, evidence: 1st_class}
-      - {vendor: ProcessUnity Vendor Risk, evidence: 1st_class}
-      - {vendor: Prevalent TPRM, evidence: 1st_class}
-      - {vendor: Whistic, evidence: 1st_class}
+      Universal response artifact distinct from the template (B3-1). Carries answers, attachments,
+      attestation timestamps, and the link to the questionnaire version used.
     proposed_module: TPRM-VENDOR-RISK-MGMT
     extra_blocked_on: [B2-1, B2-4, B2-5]
 
   - id: B3-3
     candidate: vendor_tier_classifications
     rationale: |
-      Critical / high / moderate / low tier drives re-assessment cadence and required-control depth. Universal across pure-plays.
-    vendor_evidence:
-      - {vendor: OneTrust Third-Party Risk, evidence: 1st_class}
-      - {vendor: ProcessUnity Vendor Risk, evidence: 1st_class}
-      - {vendor: Prevalent TPRM, evidence: 1st_class}
-      - {vendor: Aravo, evidence: 1st_class}
+      Critical / high / moderate / low tier drives re-assessment cadence and required-control depth.
+      Universal across pure-plays.
     proposed_module: TPRM-VENDOR-RISK-MGMT
     extra_blocked_on: [B2-1, B2-3, B2-5]
 
   - id: B3-4
     candidate: vendor_remediations
     rationale: |
-      Distinct from GRC's `remediation_plans` (general regulatory remediation): vendor remediation is vendor-scoped, often time-boxed to contract renewal or to the next questionnaire cycle. Universal across pure-plays. Also drives the AUDIT B9 symmetric back-channel `vendor_remediation.completed` (report-only follow-up on AUDIT side).
-    vendor_evidence:
-      - {vendor: OneTrust Third-Party Risk, evidence: 1st_class}
-      - {vendor: ProcessUnity Vendor Risk, evidence: 1st_class}
-      - {vendor: Prevalent TPRM, evidence: 1st_class}
-      - {vendor: Venminder, evidence: 1st_class}
+      Distinct from GRC's `remediation_plans`: vendor-scoped, often time-boxed to contract renewal or
+      to the next questionnaire cycle. Drives the AUDIT B9 symmetric back-channel
+      `vendor_remediation.completed` (report-only on AUDIT side).
     proposed_module: TPRM-VENDOR-RISK-MGMT
     extra_blocked_on: [B2-1, B2-6]
 
   - id: B3-5
     candidate: subprocessors
     rationale: |
-      Specialist but DORA-mandated (Art. 28 sub-contractor chain disclosure). Also surfaced by OneTrust and Prevalent. Candidate sibling entity `subprocessor_chains` for DORA-grade chain depth. Hinges on B2-8 (whether DORA-specific entities land in TPRM or in a dedicated DORA audit).
-    vendor_evidence:
-      - {vendor: OneTrust Third-Party Risk, evidence: 1st_class}
-      - {vendor: Prevalent TPRM, evidence: 1st_class}
-      - {vendor: ProcessUnity Vendor Risk, evidence: secondary}
+      Specialist but DORA-mandated (Art. 28 sub-contractor chain disclosure). Candidate sibling
+      `subprocessor_chains` for DORA-grade chain depth. Hinges on B2-8.
     proposed_module: TPRM-VENDOR-RISK-MGMT
     extra_blocked_on: [B2-1, B2-8]
 
   - id: B3-6
     candidate: vendor_security_ratings_snapshots
     rationale: |
-      Specialist consumer-side entity that lands a security-rating delta onto the TPRM vendor record. Distinct from the SEC-RATINGS candidate domain (queued in `audits/_missing-domains.md`): SEC-RATINGS would master the ratings; TPRM consumes them as point-in-time snapshots tied to a vendor.
-    vendor_evidence:
-      - {vendor: OneTrust Third-Party Risk, evidence: 1st_class}
-      - {vendor: ProcessUnity Vendor Risk, evidence: 1st_class}
-      - {vendor: BitSight, evidence: secondary}
-      - {vendor: SecurityScorecard, evidence: secondary}
-      - {vendor: UpGuard, evidence: secondary}
+      Consumer-side entity that lands a security-rating delta onto the TPRM vendor record. Distinct
+      from the SEC-RATINGS candidate domain (queued in audits/_missing-domains.md): SEC-RATINGS would
+      master the ratings; TPRM consumes point-in-time snapshots tied to a vendor.
     proposed_module: TPRM-VENDOR-RISK-MGMT
     extra_blocked_on: [B2-1, B2-3]

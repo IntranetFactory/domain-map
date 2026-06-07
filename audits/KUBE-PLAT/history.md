@@ -566,3 +566,53 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate run (SKILL.md Rule #21) against `audits/KUBE-PLAT/state.yaml`. Worked only the open state items; classified each into EXECUTE / SURFACE / LEAVE. Domain id 81 (parent 76 APP-PAAS) confirmed live. KUBE-PLAT remains UNBUILT: 0 domain_modules, 0 capability_domains, 0 solution_domains. C1 was found already satisfied live (business_function_domains: owner = Platform Engineering bf 60, contributor = IT Operations bf 27); no C1 write needed. All executed work landed `record_status='new'`; no `approved` stamps, no `notes` writes (Rule #15), no vendor/product names in description/tagline/synonym text (Rule #18), no em-dash, American English. Loader: `.tmp_deploy/2026-06-07_kube_plat_state_driven_execute.ts`.
+
+### Executed (counts)
+
+- **entity_type classification (8):** all 8 masters (448-455) PATCHed from `unclassified` to `operational_workflow`. Each carries a real workflow (the B1B-S9 drafted state machines), including `container_workloads` as the running runtime object (pending->running->degraded->failed->succeeded). This makes B12 lifecycle states REQUIRED on all 8 (folded into the still-blocked B1B-S9).
+- **B1A-EV1 event_category (11):** all 11 trigger_events (825-835) PATCHed from `""` to the Rule #13 enum per the deterministic state mapping: 7 lifecycle (825, 826, 829, 830, 832, 833, 834), 1 threshold (827 cluster_node_pool.scaled), 2 state_change (828 container_workload.degraded, 831 service_mesh.policy_updated), 1 signal (835 container_image.vulnerable).
+- **Catalog UX, domain grain (1):** empty `catalog_tagline` + `catalog_description` on domain 81 authored in buyer voice and written straight in (Rule #20 backfill-empty, no pre-write gate; ignored the stale B2-CATALOG-UX surface-before-write gate). No module-grain copy written: 0 modules exist.
+- **B11 aliases (12):** inserted 12 clearly-generic, non-vendor technology synonyms (`alias_type='synonym'`): kubernetes_clusters (k8s cluster, control plane); container_workloads (Pod, Deployment, StatefulSet, DaemonSet, Job); helm_releases (Helm chart release); operator_installations (Kubernetes Operator, OperatorHub install); container_registries (OCI registry, image registry).
+
+### Surfaced (to user)
+
+- **B2-MODULARIZATION** (1 vs 2 modules) - gates the entire unbuilt build (B1B-S1) and the module-dependent cascade (B1B-S7 source FKs, B1B-S9 lifecycle domain_module_id, B1B-S8 solution_term aliases, E1 role floor).
+- **B1B-S1 / B1A-BUILD (unbuilt)** - 0 modules / 0 capabilities / 0 solutions. Per build-policy the agent does not scaffold an unbuilt domain; the build is surfaced and the cascade left, gated on B2-MODULARIZATION.
+- **B2-EDGE-TUPLES** - verb/cardinality/owner_side tuples for the 7 intra-domain edges (B1B-S4) and the 1 clean cross-domain edge container_workloads->service_incidents for handoff 763 (B1B-S6) need approval before write (Rule #1).
+- **B2-ALIAS-TUPLES** - remaining vendor-brand / solution_term aliases (B1B-S8) need exact tuples + solution ids (solutions do not exist yet).
+- **B2-REGULATIONS, B2-CONSUMER-DMDOS, B2-ROLES-SCOPE, B2-PARENT-DOMAIN** - carried-forward judgment calls.
+- **B2-APQC-APPROVAL** - 8 agent_curated handoff_processes (ids 288-295) at `record_status='new'`; user opt-in to approve (Rule #1, agent never self-approves).
+- **B2-CATALOG-UX-REVIEW** - the freshly authored copy is now non-empty and in the catalog UI for in-record review; any overwrite needs explicit per-row approval (Rule #20).
+- **B2-PROMOTE-SERVICE-MESH, B2-PROMOTE-CONT-REG (DESTRUCTIVE)** - promotion requires DELETE of a master row; surfaced, never executed unapproved.
+- **B2-LEGACY-SKILL-NAMING (DESTRUCTIVE)** - skill 78 (`kube-plat-system`, system, domain_id=81, domain_module_id=null) is now the CANONICAL single domain-grain system skill under the per-domain-skill model. The old "retire/DELETE legacy domain-level skill" item (B1B-S10) is RETIRED by the supersession. The only residual is the kebab name; renaming is a destructive overwrite of an existing non-empty value (surfaced, not done).
+- **Personas / RACI (Phase P):** deferred (domain is unbuilt; no modules). Candidate personas if/when built: cluster_admin, platform_engineer, namespace_owner.
+
+### Left (untouched)
+
+- **b1b blocked:** B1B-S4, B1B-S6 (on B2-EDGE-TUPLES); B1B-S7, B1B-S9 (on B1B-S1 modules); B1B-S8 vendor-brand aliases (on B2-ALIAS-TUPLES + Phase A solutions).
+- **b3 backlog:** 10 speculative entity candidates (cluster_namespaces, cluster_rbac_policies, cluster_network_policies, cluster_resource_quotas, cluster_addons, cluster_upgrade_plans, cluster_etcd_backups, cluster_audit_logs, cluster_storage_classes, cluster_custom_resource_definitions) pending Phase 0.
+- **Superseded:** B1B-S10-LEGACY-SKILL / per-module skill-grain items, retired per the 2026-06-06 per-domain-skill restoration header (kept atop state.yaml).
+
+### Report-only owed by other domains (unchanged)
+
+APP-PAAS B10b (source FK on 753); OBS/VSDP/GRC/ITOM B10b (target FKs on 760/762/764/761); ITAM/APP-PAAS/ITSM B8 mirror edges; VULN-MGMT B9 scan-result-back candidate.
+
+### Notes on this audit
+
+- Writes verified live: 8 masters `operational_workflow`; 11 event_category set to the enum; domain 81 catalog UX populated (`record_status='new'`); 12 aliases (`alias_type='synonym'`, `record_status='new'`).
+- No JWT errors. No `notes` writes (Rule #15). No vendor/product names in description/tagline/synonym text (Rule #18). No em-dash; American English.
+
+### UI links (tables written)
+
+- https://tests.semantius.app/domain_map/data_objects?id=in.(448,449,450,451,452,453,454,455)
+- https://tests.semantius.app/domain_map/trigger_events?data_object_id=in.(448,449,450,451,452,453,454,455)
+- https://tests.semantius.app/domain_map/domains?id=eq.81
+- https://tests.semantius.app/domain_map/data_object_aliases?data_object_id=in.(448,449,450,451,452,453,454,455)

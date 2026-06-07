@@ -282,3 +282,52 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21) over the open items in `audits/PS-LIC/state.yaml`.
+Re-confirmed live that PS-LIC is still UNBUILT: `/domain_modules?domain_id=eq.46` and
+`/capability_domains?domain_id=eq.46` both empty (domain id 46). Per UNBUILT discipline the agent
+did NOT scaffold the module/capability build; that remains a user decision (B2-1 + B2-2) and its
+whole cascade (B1B-M1, B1B-B12, B1B-B10b-RESIDUAL, B1B-B9-MISSING) stays parked. Three open items
+were build-independent additive/corrective fixes and were executed at `record_status='new'`. C1
+(business_function_domains owner = Business Operations, id 259) and B11 (11 alias rows across the 6
+masters) were already satisfied live, so no insert was owed there. B1B-F2 remains RETIRED per the
+2026-06-06 supersession (no per-module skill split owed). No JWT errors. No `notes` writes (Rule #15).
+Loader: [.tmp_deploy/ps_lic_state_execute_2026_06_07.ts](../../.tmp_deploy/ps_lic_state_execute_2026_06_07.ts).
+
+### Executed (3 write types, 16 rows)
+
+- **B13 entity_type (6 PATCHes):** all 6 PS-LIC masters were `entity_type='unclassified'`. Each carries
+  published-verb workflow trigger events implying workflow gates, so all 6 classified to
+  `operational_workflow` (data_objects 641 permit_applications, 642 license_records, 643 permit_inspections,
+  644 license_renewals, 645 code_violations, 646 regulatory_fees). Side effect: B12 lifecycle states are now
+  REQUIRED (hard fail) on all 6, and pattern flags (B2-3) are now formally in scope. Both stay parked behind
+  the M1 build.
+- **event_category backfill (8 PATCHes):** all 8 trigger events on the masters had empty `event_category`.
+  Backfilled to `lifecycle` for the 7 state-machine transitions (1052 permit_application.submitted, 1053
+  permit_application.approved, 1054 license.issued, 1056 permit_inspection.scheduled, 1057
+  permit_inspection.failed, 1058 code_violation.issued, 1059 regulatory_fee.assessed) and `threshold` for the
+  one time-based event (1055 license_renewal.due).
+- **A4 / Rule #20 catalog UX (1 PATCH, 2 fields):** `domains.catalog_tagline` and `domains.catalog_description`
+  were both empty on domain 46. Authored buyer-voice copy (workflow + value, no vendor names, no em-dash,
+  American English) and wrote both. No modules exist, so no module-level taglines were owed. The stale B2-5
+  "surface-before-write" gate is superseded by the Rule #20 execute rule; B2-5 is resolved.
+
+### Surfaced (user decisions, not executed)
+
+- **B2-1** (modularization shape) and **B2-2** (capability set): the UNBUILT build. Pick both to unblock the
+  entire b1b cascade.
+- **B2-3** (pattern flag PATCHes per master): now in scope after B13; flipping any flag is a judgment write,
+  surfaced not auto-executed. Recommended set carried forward.
+- **B2-4** (FedRAMP / CMMC / StateRAMP / Section 508 mandatory-scoping) and **B2-6** (cost band / TAM refresh):
+  independent judgment calls, unchanged.
+
+### Left
+
+- **b1b cascade** (B1B-M1, B1B-B12, B1B-B10b-RESIDUAL, B1B-B9-MISSING): all gate on the user build (B2-1 / B2-2)
+  and, for B10b target FKs, on GRC M1 + ERP-FIN M1. No agent action until the build lands.
+- **B1B-F2**: RETIRED per the 2026-06-06 supersession (per-module skill grain canceled). No action.
+- **b3** (B3-1 through B3-10): Phase-0 speculative entity backlog, non-blocking, untouched.

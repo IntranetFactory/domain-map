@@ -398,3 +398,36 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate execute pass (SKILL.md Rule #21) over PROD-MGMT (domain 101, modules PM-DISCOVERY 130 + PM-ROADMAP-DELIVERY 131). Worked only the open state.yaml items, classified into EXECUTE / SURFACE / LEAVE per the orchestrator contract. Live re-verification first: domain id and module ids confirmed, all 8 masters live-confirmed `unclassified`, all 6 residual trigger_events live-confirmed empty `event_category`, all three catalog UX fields (domain + both modules) live-confirmed empty. The APQC snapshot was stale: of the 16 handoffs the snapshot listed as untagged, 10 already carry agent_curated `handoff_processes` rows on live. Loader: `.tmp_deploy/fix_prod_mgmt_state_driven_2026_06_07.ts` (idempotent; reads live, inserts only missing, never overwrites a non-empty value).
+
+### Executed (additive/corrective, record_status='new')
+
+- **B1A-ENTITY-TYPE:** PATCHed `data_objects.entity_type` on all 8 masters (was `unclassified`). 402 product_lines, 403 product_features, 404 product_releases, 405 product_roadmaps, 406 feature_requests, 407 customer_feedback_items, 409 beta_programs -> `operational_workflow` (each carries a requires_permission lifecycle state machine). 408 product_metrics -> `computed` (time-series KPI projection of upstream usage/quality data; no workflow). This typed column now carries the config-shape signal previously parked in `data_objects.notes` (see open b2 B2-31-2). 8 rows.
+- **B1A-EVENT-CATEGORY-RESIDUAL:** PATCHed empty `event_category` on 6 PROD-MGMT-owned trigger_events. 1139 beta_program.feedback_collected -> signal; 1140 beta_program.closed -> lifecycle; 1141 customer_feedback_item.received -> lifecycle; 1143 feature_request.submitted -> lifecycle; 1150 product_line.retired -> lifecycle; 1152 product_metric.refreshed -> signal. 6 rows.
+- **B1A-INTRA-DOMAIN-HANDOFFS:** Created 1 trigger_event `feature_request.accepted` (id 1550; data_object 406, event_category state_change, to_state accepted, from_state prioritized, domain_module 130). INSERTed 3 intra-domain handoffs (source=target=101, integration_pattern lifecycle_progression, friction low): 130->131 product_features on feature_request.accepted (id 1389); 130->131 product_features on customer_feedback_item.linked_to_feature 1142 (id 1390); 131->130 feature_requests on product_feature.released 1146 (id 1391). 1 event + 3 handoffs.
+- **Catalog UX (Rule #20):** authored and wrote buyer-voice catalog_tagline + catalog_description into the 3 empty rows: domain 101 (PROD-MGMT), module 130 (PM-DISCOVERY), module 131 (PM-ROADMAP-DELIVERY). Empty-guarded per field; no non-empty value overwritten. 3 rows (6 fields).
+- **B1A-APQC-TAGGING (partial):** INSERTed 1 agent_curated `handoff_processes` row for the single untagged handoff with a clean L4 PCF match: handoff 1002 (product_feature.released -> CRM) -> PCF 1350 "Maintain customer/product master files" (external_id 10794, hierarchy_level 4). proposal_source agent_curated, role implements, record_status defaulted to new. 1 row.
+
+### Surfaced (returned to user; NOT executed)
+
+- **b2 decisions (7):** B2-31-1 (PMM capability split), B2-31-2 (product_metrics.notes Rule #15 revert - now also redundant since entity_type='computed'), B2-31-3 (4 pattern-flag re-evaluations), B2-31-4 (roadmap_items orphan: SPM-master vs DELETE+recast), B2-31-5 (notify_team external vs platform; may be mooted by skill_tools retirement), B2-31-6 (8 users built-in edge verbs), B2-31-7 (9 domain_data_objects.notes Rule #15 revert - rows slated for deletion under ddo retirement anyway).
+- **Destructive (surfaced):** the record_status='approved' reviewer pass on the agent_curated handoff_processes rows still at 'new' (new b1a B1A-APQC-APPROVAL-PASS); plus the destructive halves embedded in b2 items 2, 4, 5, 7 (notes overwrites, the roadmap_items DELETE+recast, the notify_team replace/promote).
+- **Personas deferred (B1A-PHASE-P):** persona/RACI layer (domain_roles + role_modules reach + process_raci + lifecycle.process_id) NOT authored, per orchestrator deferral. Candidate personas noted: PRODUCT-MANAGER, HEAD-OF-PRODUCT, PRODUCT-OPS-ANALYST, ENGINEERING-LEAD.
+- **APQC defer-to-Discover:** 5 untagged handoffs (996, 1005, 1007, 791, 1253) had no clean L4 PCF match on live; deferred to a PCF-research/Discover pass rather than forced onto a loose L3/medium match (new b1a B1A-APQC-DISCOVER-RESIDUAL).
+
+### Left (not touched)
+
+- **B1A-PHASE-E-BOOTSTRAP -> RETIRED:** reframed as B1A-PHASE-E-RBAC-RETIRED. The 4-roles + 6-role_modules + 6-baseline-permissions + 14-workflow-gate-permissions + permission_hierarchy bootstrap targets the catalog RBAC store Plan 3 (2026-06-02) DELETED. The catalog now stores no derived permissions and no permission_hierarchy; the emitter derives them from entity_type + requires_permission lifecycle states + domain_roles/process_raci, and the deployer materializes them. Authoring those rows would re-introduce the deleted `_core` pollution. Successor is B1A-PHASE-P (deferred). The 14 requires_permission lifecycle states already carry domain_module_id (130/131), so gate derivation has its inputs.
+- **b1b (3 items):** report-only B10b NULL-FK asymmetries + downstream consumer DMDOs, blocked on neighbor audits (CSM, CDP, DXP, ERP-FIN, BPA, SPM, VSDP, TEST-MGMT). Clear automatically as those domains are finished.
+- **b3 (8 candidates) + candidate domains/regulations:** discretionary backlog, untouched.
+
+### Decisions
+
+_(none yet; b2 forks + destructive steps awaiting user)_

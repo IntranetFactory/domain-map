@@ -366,3 +366,69 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass over the open items in audits/THREAT-INTEL/state.yaml; no fresh
+from-scratch audit. Live confirmed THREAT-INTEL (domain_id=14, sub-domain under SECOPS id 11)
+is still UNBUILT: 0 domain_modules (M1 fail), 0 capability_domains (A2 fail), 0 masters of its
+own, 0 DMDOs, 0 skills, 0 roles, 0 handoffs. Per the UNBUILT rule the build and its whole
+B/F/E cascade are SURFACED, not scaffolded. Two build-independent EXECUTE-class items were
+applied (catalog UX, C1 contributor/consumer). Everything else is gated on the user's b2
+module-split decision and the dependent picks, so next_action_by flips to `user`.
+
+### Executed (counts)
+
+- **Catalog UX (A4, Rule #20, B1B-T3 / B2-T2): 1 domain row.** Authored buyer-voice
+  `catalog_tagline` + `catalog_description` into the EMPTY fields on domains.id=14
+  (record_status='new'). Buyer voice, workflow + value, no vendor/product names, no em-dash,
+  American English ("normalize"). The prompt's EXECUTE rule overrode the stale Rule #20
+  surface-before-write gate (B2-T2). No non-empty value was overwritten. No modules exist, so
+  there was no module-level catalog UX to write.
+- **C1 business_function_domains (B1B-T5): 2 rows.** Inserted Security (fn 28) as
+  `contributor` and Governance, Risk and Compliance (fn 31) as `consumer`, both
+  record_status='new'. The existing owner row (Security Operations Center fn 64) was left
+  untouched. Idempotent against (domain_id, business_function_id).
+
+Loader: `.tmp_deploy/2026-06-07_threat_intel_state_driven_execute.ts` (bun run, idempotent).
+
+### Surfaced (not written)
+
+- **B1A-T14 (DESTRUCTIVE overwrite):** domains.id=14.description still reads British
+  "operationalisation". Fix is a single-row overwrite of a NON-EMPTY value -> destructive,
+  surfaced for approval. Recommended PATCH: description ->
+  "Collection, curation, and operationalization of indicators and adversary intelligence."
+  (business_logic was already cleaned in a prior pass; only description remains.)
+- **B2-T1 (module split topology):** (a) CURATION + OPERATIONALIZATION [recommended] vs
+  (b) four lifecycle-stage modules vs (c) single PLATFORM + LITE starter. Gates the whole build.
+- **B2-T2 (catalog UX wording):** approve the copy written 2026-06-07 as-is, or supply edits
+  (an edit is a non-empty overwrite, so it needs your text).
+- **B2-T3 (lifecycle exemptions):** workflow vs config-shape for threat_actors,
+  threat_campaigns, malware_families, attack_techniques.
+- **B2-T4 (cross-cutting capability promotion):** TI-ENRICHMENT / TI-COLLABORATION-SHARING
+  domain-prefixed vs promoted domain-neutral.
+- **B2-T5 (MITRE-ATTACK master architecture):** THREAT-INTEL masters attack_techniques vs a
+  promoted SECURITY-FRAMEWORKS master domain vs platform_builtin.
+- **Personas / RACI (Phase P): DEFERRED.** Domain is pre-build; not authored. Candidate
+  personas once built: CTI analyst, threat hunter, CTI manager, incident-responder consumer.
+
+### Left
+
+- **Build cascade (B1A-BUILD + B1B-T1/T2/T6/T7/T8/T9/T10/T12):** SURFACED, not scaffolded
+  per the UNBUILT rule; all gated on B2-T1 and the dependent b2 picks. T10
+  (data_object_aliases) additionally has nothing to anchor to until T6 masters land.
+- **B1B-T13 (domain_aliases):** agent-DEFER carve-out (needs per-row user approval), not in
+  the EXECUTE bucket; left.
+- **Former B1B-T11 (per-module system skills + skill_tools):** RETIRED by the 2026-06-06
+  supersession; folded into the B1A-BUILD Phase-S step (one domain-grain system skill).
+- **b3 (12 candidates):** backlog (indicator_sightings, tip_feeds, feed_subscriptions,
+  indicator_blocklists, enrichment_records, intel_consumers, intel_collection_plans,
+  tlp_classifications, the 2-module split proposal, 3 regulation candidates). Untouched.
+
+### JWT errors
+
+None.

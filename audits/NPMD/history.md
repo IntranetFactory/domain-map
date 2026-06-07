@@ -555,3 +555,109 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+State-driven Validate execute pass against `audits/NPMD/state.yaml`. Worked only the open
+state items; classified each into EXECUTE / SURFACE / LEAVE per SKILL.md Rule #21. Live state
+re-verified before every write (snapshot held). Loaders:
+`.tmp_deploy/npmd_state_execute_2026_06_07.ts` and `.tmp_deploy/npmd_alert_lifecycle_2026_06_07.ts`.
+All writes idempotent, all new rows at `record_status='new'`. No DELETE, no overwrite of a
+non-empty value, no `approved` flip.
+
+### Summary
+
+NPMD remains UNBUILT (0 domain_modules, 0 capabilities, 0 solutions). The module build is a
+single user decision (B2-MOD-SPLIT) and was deliberately NOT scaffolded piecemeal (UNBUILT rule:
+surface the build, leave the cascade). Everything module-independent on the 8 existing masters and
+9 trigger events was executed: every master is now typed, every event categorized, the catalog
+copy is live, the intra-domain relationship graph and the cross-domain alert/path/flapping handoffs
+are authored, generic aliases are in, and the one workflow master (network_performance_alerts) now
+carries its full lifecycle. All five b1a items closed plus the entity_type (B13) and lifecycle (B12)
+obligations. What remains is user-owned (b2) or gated on the build (b1b) or RETIRED (skills).
+
+### Executed (counts)
+
+- **entity_type PATCH (B13, Rule #12): 8 masters** classified from unclassified. 538/539/540/542/544
+  `operational_record` (write-once observation / config records), 541 `operational_workflow`
+  (the alert), 543 `operational_record` (synthetic/RUM samples), 545 `computed` (derived baseline
+  profile). This also resolves the B12 config-shape exemption for the 7 non-workflow masters
+  structurally (Rule #12 RESCINDED the notes-based exemption; the typed column is the surface), so
+  the former B2-LIFECYCLE-EXEMPT question is closed.
+- **event_category backfill (B1A-EVT, Rule #13): 9 trigger_events** patched from empty. 656 `signal`;
+  658 `threshold`; 659 `lifecycle`; 657/660/661/662/663/664 `state_change`. 0 remain empty.
+- **Catalog UX (B1B-A4 / B2-CATALOG-VOICE, Rule #20): 2 fields** on the domain row (catalog_tagline +
+  3-paragraph catalog_description), buyer voice, no vendor names, no em-dash, American English. The
+  stale surface-before-write gate was overridden per the execute contract; both fields were empty.
+  No module copy (0 modules).
+- **Intra-domain relationships (B1A-B6): 6 rows** between masters. network_paths traverses
+  network_interfaces (M:N); network_performance_metrics raises network_performance_alerts (1:M);
+  network_flow_records feeds network_performance_metrics (1:M); network_performance_metrics
+  is_baselined_by network_baseline_thresholds (1:1); network_topology_snapshots contains
+  network_interfaces (M:N); saas_application_performance correlated_with network_paths (M:N). The
+  three child->parent edges were oriented parent-first to honor the catalog cardinality convention
+  (enum admits only one_to_one / one_to_many / many_to_many; no many_to_one).
+- **Missing handoffs (B1A-B9): 3 rows.** 657 network_path.degraded -> AIOPS (event_stream, payload
+  network_paths) and -> ITSM (api_call, payload service_incidents); 661 network_interface.flapping
+  -> ITSM (api_call, payload service_incidents). source_domain_module_id NULL (NPMD unbuilt). NPMD now
+  has 9 outbound handoffs (ids 649-654, 1394-1396). Every NPMD trigger event now drives a handoff
+  except 664 network_baseline_threshold.recalculated (accepted leaf).
+- **Aliases (B1B-B11 / B2-ALIASES): 15 rows** of generic / open-standard synonyms across 6 masters
+  (network_flow_records: Flow Records, NetFlow Records, IPFIX Records, sFlow Samples; network_paths:
+  Network Paths, Path Traces, Hop Traces; network_performance_metrics: Network Telemetry, Network
+  KPIs; saas_application_performance: SaaS Performance, Internet Performance; network_topology_snapshots:
+  Network Maps, Topology Maps; network_baseline_thresholds: Performance Baselines, Dynamic Thresholds).
+  NetFlow / IPFIX / sFlow are open IETF/industry standards, not vendor products (Rule #18 OK).
+- **Alert lifecycle (B1B-B12): 4 states** for network_performance_alerts (541): open (initial) ->
+  acknowledged (gate) -> resolved (gate) -> closed (terminal), state_order 10/20/30/40,
+  requires_permission on acknowledge and resolve, permission_verb_override acknowledge/resolve.
+  domain_module_id NULL (NPMD unbuilt; NULL-module lifecycle states are an established pattern). M4
+  state-machine shape passes (one initial, one terminal, monotonic order). These reattach to the
+  realizing module when B1B-M1 lands.
+
+### Surfaced (for the user)
+
+- **B2-MOD-SPLIT** (gating decision): 4-module split (NPMD-FLOW-ANALYSIS / NPMD-PATH-TRACING /
+  NPMD-METRICS-ALERTS / NPMD-SAAS-INTERNET-PERF) vs 2-module merge (NPMD-CORE + NPMD-SAAS-INTERNET-PERF).
+  This one decision unblocks the entire build cascade (A2 capabilities, A3 vendors/solutions, B10b
+  source-module backfill on 9 handoffs, roles, domain_module_tools, module-anchoring the alert lifecycle).
+- **B2-SAAS-VS-DEM**: where saas_application_performance masters (keep in NPMD / move to DEM / split).
+  Gates the B1B-B8 SaaS-degradation cross-domain edge target.
+- **B2-NETWORK-DEVICES**: how NPMD models network devices (master / embedded_master / consume CMDB CIs).
+- **B2-NAMING-ARBIT** (B1B-B3): naming arbitration for network_interfaces (bare-word "interfaces") and
+  saas_application_performance (overlaps APM "application_performance"). is_canonical_bare_word /
+  naming_authority_rationale are freeform-judgment stamps, surfaced not auto-written.
+- **B2-REGULATIONS**: intentional zero domain_regulations vs add PCI-DSS / FedRAMP scope-of-monitoring.
+- **B2-FUNCTIONAL-RACI**: owner (IT Infrastructure, fn 58) already recorded; add IT Operations/NOC
+  contributor and/or Security consumer? Resolve the exact NOC / Security business_function_id before write.
+- **Personas / RACI (Phase P)**: DEFERRED, not authored. NPMD is unbuilt, so persona/role_modules/
+  process_raci work does not apply until the module set ships. Candidate personas once built:
+  Network Operations / NOC Engineer, Network Architect.
+
+### Left (untouched)
+
+- **B1B-M1 build cascade** (UNBUILT): modules + A2 capabilities + A3 vendors/solutions/solution_domains
+  + B10b backfill + roles + domain_module_tools, all gated on B2-MOD-SPLIT. Surfaced as the build, not
+  scaffolded.
+- **B1B-B8** cross-domain outbound relationships: blocked on B2-SAAS-VS-DEM and on existence of target
+  masters (aiops_signals, telemetry_streams, digital_experience_sessions) owed by AIOPS / OBS / DEM.
+- **B1B-SKILL-TOOLS (former F1/F2)**: RETIRED under the 2026-06-06 per-domain-skill supersession.
+  npmd-system (id 87) is now the correct single domain-grain system skill; no DELETE owed; per-module
+  tool re-authoring tracked in audits/_modularization-backlog.md and lands via domain_module_tools.
+- **b3 backlog** (7 candidate entities: synthetic_tests, synthetic_test_runs, bgp_route_observations,
+  packet_captures, network_probes, traffic_classifications, network_kpi_definitions): Phase 0 vetting
+  pending; non-blocking.
+
+### Report-only follow-ups owed by other domains (carried)
+
+- AIOPS / OBS / DEM each owe a domain_modules row + target_domain_module_id backfill on their NPMD
+  inbound handoffs (649/1394, 651, 653) and the symmetric B8 relationship rows once NPMD authors B8.
+- CMDB owes a configuration_items reconciled_by network_topology_snapshots row (654 target module set).
+- ITSM owes symmetric service_incidents relationship rows for 650 / 652 / 1395 / 1396 (target module 38 set).
+
+### Post-fix status
+
+next_action_by=user. All b1a closed; status feedback_needed pending the b2 decisions, chiefly
+B2-MOD-SPLIT which gates the build.

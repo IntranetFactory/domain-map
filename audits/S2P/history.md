@@ -367,3 +367,72 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+Loader: [`.tmp_deploy/fix_s2p_state_execute_2026_06_07.ts`](../../.tmp_deploy/fix_s2p_state_execute_2026_06_07.ts).
+
+### Summary
+
+State-driven Validate (Rule #21) over the open S2P `state.yaml` items only; no fresh from-scratch
+audit. Each recorded item was re-verified live, then classified EXECUTE / SURFACE / LEAVE.
+Tenant `ma@adenin.com` throughout; no JWT-audience errors. All writes landed at
+`record_status='new'`; idempotent re-run skipped every row (0 across the board). The domain
+remains UNBUILT (0 `domain_modules`); the build itself is the b2 module-split decision and was
+not scaffolded.
+
+### Executed (36 writes)
+
+- **entity_type (B13 / Rule #12), 5 PATCH** on `data_objects`: all 5 masters `unclassified` ->
+  `operational_workflow` (each carries a multi-state lifecycle, so the classification is
+  deterministic). ids 71 sourcing_events, 72 purchase_requisitions, 73 purchase_orders,
+  74 goods_receipts, 75 supplier_invoices.
+- **Catalog UX (Rule #20), 2 fields** on `domains` id 27: authored `catalog_tagline` +
+  `catalog_description` (both were empty) in buyer voice, workflow + value, no vendor/product names
+  (Rule #18), American English, no em-dash. This resolves and retires the stale B1B-CATALOG-UX /
+  B2-CATALOG-UX surface-before-write gate.
+- **Aliases (B1A-ALIASES / B11), 16 INSERT** into `data_object_aliases` (`alias_type='synonym'`),
+  generic procurement terms + standard abbreviations only (RFP/RFI/RFQ/Reverse Auction/Sourcing
+  Event on 71; PR/Purchase Request/Requisition on 72; PO/Purchase Order on 73; GR/Goods Receipt
+  Note/GRN on 74; Supplier Invoice/Vendor Invoice/AP Invoice on 75). No vendor product names used
+  as alias values.
+- **trigger_event category backfill, 7 PATCH** on `trigger_events` (filled EMPTY `event_category`
+  on S2P-owned events): 588 sourcing_event.launched, 589 sourcing_event.awarded, 590
+  purchase_order.issued, 591 purchase_order.changed, 592 purchase_order.closed, 593
+  goods_receipt.posted -> `state_change`; 594 goods_receipt.quantity_variance -> `signal`.
+- **B1A-PR-EVENTS, 4 INSERT** into `trigger_events` (data_object_id=72): purchase_requisition
+  .submitted / .approved / .po_created / .rejected, all `event_category='state_change'`.
+- **B1A-PR-PO-RELATION + B1A-GR-INV-RELATION, 2 INSERT** into `data_object_relationships`:
+  purchase_requisitions `becomes` purchase_orders (72->73, id 2107) and goods_receipts `confirms`
+  supplier_invoices (74->75, id 2108); both one_to_many, owner_side=source, is_required=false.
+
+### Surfaced (no write; returned to user)
+
+- **B2-MODULE-SPLIT** (headline; UNBUILT domain build decision; gates the whole b1b cascade).
+- **B2-JAGGAER** (destructive DELETE of duplicate Jaggaer ONE solutions row 129 vs 518).
+- **B2-PATTERN-FLAGS** (was B1A-PATTERN-FLAGS): flip `has_submit_lock=true` on purchase_orders 73
+  and sourcing_events 71 is a judgment flip of an already-set boolean, surfaced not auto-applied.
+- **B2-SEND-EMAIL** (F7 channel decision, gated on the split).
+- **B2-EINVOICE-PII** (tax-personal-data flag on supplier_invoices).
+- **B2-PAIRWISE-TIMING** (when to run pairwise reconciliation vs the >=3-weight neighbors).
+- **B2-H1-APPROVAL** (approve agent_curated handoff_processes; flipping to approved is destructive).
+- Personas / RACI: deferred (B1A-PHASE-P not authored). Candidate personas would map to the
+  Procurement function roles once modules exist; cannot be authored on an unbuilt domain.
+
+### Left (untouched)
+
+- **b1b** all blocked on B2-MODULE-SPLIT (B1B-S2P-MODULE-SPLIT, B1B-A2-CAPABILITIES) or B2-JAGGAER
+  (B1B-JAGGAER-DEDUP). B1B-CATALOG-UX dropped (executed above).
+- **b3** B3-CATALOGS (procurement_catalogs + catalog_items) parked, gated on the split.
+- **Skill-grain items** governed by the 2026-06-06 supersession header (per-module system skill /
+  skill_tools / legacy skill 22 retirement): reframed as a note; no skill_tools work owed.
+- **H1 coverage**: 29/29 cross-domain handoffs already tagged (36 handoff_processes rows live); no
+  untagged handoff with a clean PCF remained, so no new agent_curated inserts were owed this pass.
+- **business_function_domains (C1)**: already satisfied (owner Procurement fn 19, contributor
+  Finance fn 4); no write needed.
+
+### Post-fix status
+
+`next_action_by: user`. All agent-doable additive/corrective work is executed at
+`record_status='new'`. S2P is now waiting on the user for the module-split build decision plus the
+surfaced judgment / destructive items above.

@@ -11,41 +11,21 @@
 schema_version: 2
 domain: VIS-MGMT
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
-  - id: B1A-S3
-    summary: "Draft catalog_tagline + catalog_description for domains.id=24 in buyer voice (Rule #20)."
-    finding: "VIS-MGMT domain row (id 24) has empty catalog_tagline and empty catalog_description. Rule #20 requires both fields populated in buyer voice (workflow + value), not analyst voice. A4 fails."
-    action: "Draft both fields per Rule #20 voice rule, surface to user for review BEFORE writing (Rule #1 + Rule #20). On user approval, PATCH /domains?id=eq.24 with both fields. Independent of module split decision (Bucket 2 #1)."
-    affected_entities: ["domains.id=24"]
-
-  - id: B1A-S5
-    summary: "PATCH event_category on all 10 VIS-MGMT trigger_events (currently empty string)."
-    finding: "All 10 trigger_events on VIS-MGMT masters (ids 975..984) have event_category=''. Per Rule #13 allowed values are lifecycle, state_change, threshold, signal. Empty string is not a valid enum entry; rows fail B9 schema expectations."
-    action: "PATCH event_category per row. Proposed values: 975 visitor_registration.submitted lifecycle; 976 visitor_check_in.completed lifecycle; 977 visitor_badge.issued lifecycle; 978 visitor_badge.returned lifecycle; 979 host_assignment.created lifecycle; 980 host_notification.sent signal; 981 evacuation_list.updated state_change; 982 visitor_nda.acknowledged lifecycle; 983 visitor_watchlist.screened state_change; 984 visitor_audit_log.sealed lifecycle."
-    affected_events:
-      - {id: 975, event_name: "visitor_registration.submitted", current_category: "", proposed_category: "lifecycle"}
-      - {id: 976, event_name: "visitor_check_in.completed", current_category: "", proposed_category: "lifecycle"}
-      - {id: 977, event_name: "visitor_badge.issued", current_category: "", proposed_category: "lifecycle"}
-      - {id: 978, event_name: "visitor_badge.returned", current_category: "", proposed_category: "lifecycle"}
-      - {id: 979, event_name: "host_assignment.created", current_category: "", proposed_category: "lifecycle"}
-      - {id: 980, event_name: "host_notification.sent", current_category: "", proposed_category: "signal"}
-      - {id: 981, event_name: "evacuation_list.updated", current_category: "", proposed_category: "state_change"}
-      - {id: 982, event_name: "visitor_nda.acknowledged", current_category: "", proposed_category: "lifecycle"}
-      - {id: 983, event_name: "visitor_watchlist.screened", current_category: "", proposed_category: "state_change"}
-      - {id: 984, event_name: "visitor_audit_log.sealed", current_category: "", proposed_category: "lifecycle"}
   - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
-    extra_phase_p_triage: "2026-06-02"
+    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capability_domains awaiting a build."
+    finding: "Live 2026-06-07: this domain still has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any module-attribution fix (B1A-S1/S2/S4/S6/B1) or persona / RACI work applies. Per Rule #21 (UNBUILT), the agent does NOT scaffold the build and LEAVES the cascade; it surfaces the build decision to the user. The 8 masters now carry typed entity_type (6 operational_workflow, 2 operational_record), so B12 lifecycle states are a confirmed requirement on the 6 workflow masters once modules land."
+    action: "User to decide B2-MODULE-SPLIT (2 vs 3 modules); then run Phase A then M then B then S to author the module set, capabilities, masters, and the single domain-grain system skill. If multi-module, run Phase P afterward."
+    blocked_by:
+      - {type: user_decision, ref: B2-MODULE-SPLIT}
 
 b1b:
   - id: B1A-S1
     summary: "Author domain_modules (2-module or 3-module split) plus capabilities + domain_module_capabilities for VIS-MGMT."
-    finding: "Zero domain_modules rows for domain 24. Domain holds 8 master data_objects (668..675) in legacy domain_data_objects but no module hosts them. Rule #14 mandates >=1 module. Module set authoritatively decides downstream module attribution for B12 lifecycle states (M5), F2 system skills, B10b backfill, B9b intra-domain handoffs, and E-band roles."
+    finding: "Zero domain_modules rows for domain 24. Domain holds 8 master data_objects (668..675) in legacy domain_data_objects but no module hosts them. Rule #14 mandates >=1 module. Module set authoritatively decides downstream module attribution for B12 lifecycle states (M5), B10b backfill, and E-band roles. Part of the UNBUILT build cascade (B1A-BUILD); agent LEAVES per Rule #21."
     blocked_by:
       - {type: user_decision, ref: B2-MODULE-SPLIT}
     affected_modules: []
@@ -61,7 +41,7 @@ b1b:
 
   - id: B1A-S2
     summary: "Author capability_domains + domain_module_capabilities (>=3 capabilities, mapped to modules from B1A-S1)."
-    finding: "Zero capability_domains rows for domain 24. A2 fails. M4 + M6 cannot be evaluated until both capabilities and modules exist."
+    finding: "Zero capability_domains rows for domain 24 (confirmed live 2026-06-07). A2 fails. M4 + M6 cannot be evaluated until both capabilities and modules exist. Part of the UNBUILT build cascade; agent LEAVES per Rule #21."
     action: "Author >=3 capabilities (recommended: VISITOR-PREREG, VISITOR-CHECKIN, VISITOR-COMPLIANCE, EMERGENCY-ROSTER, HOST-MANAGEMENT). Link via capability_domains, then domain_module_capabilities once module set is decided."
     blocked_by:
       - {type: depends_on, ref: B1A-S1, reason: "domain_module_capabilities needs module ids"}
@@ -69,37 +49,22 @@ b1b:
 
   - id: B1A-S4
     summary: "PATCH has_personal_content + has_submit_lock on PII-bearing and lock-bearing masters."
-    finding: "All 8 masters have has_personal_content=false, has_submit_lock=false, has_single_approver=false. Six masters carry direct visitor PII (name, ID, photo, signature): visitor_registrations 668, visitor_check_ins 669, visitor_badges 670, visitor_nda_acknowledgements 673, visitor_watchlist_screenings 674, visitor_audit_logs 675. visitor_audit_logs 675 has a one-way sealing transition (has_submit_lock candidate). host_assignments 671 + visitor_evacuation_lists 672 are surfaced to user (Bucket 2 #2)."
+    finding: "All 8 masters have has_personal_content=false, has_submit_lock=false, has_single_approver=false (confirmed live 2026-06-07). Six masters carry direct visitor PII (name, ID, photo, signature): visitor_registrations 668, visitor_check_ins 669, visitor_badges 670, visitor_nda_acknowledgements 673, visitor_watchlist_screenings 674, visitor_audit_logs 675. visitor_audit_logs 675 has a one-way sealing transition (has_submit_lock candidate). host_assignments 671 + visitor_evacuation_lists 672 are surfaced to user (B2-PII-INDIRECT). Per Rule #12 pattern-flag note, flag reasoning is judgment, not a deterministic null backfill; the whole item is gated on a user decision, so the agent surfaces rather than writes."
     action: "PATCH has_personal_content=true on 668, 669, 670, 673, 674, 675. PATCH has_submit_lock=true on 675. Defer 671 + 672 to user judgment per B2-PII-INDIRECT."
     blocked_by:
       - {type: user_decision, ref: B2-PII-INDIRECT}
     affected_entities: ["visitor_registrations", "visitor_check_ins", "visitor_badges", "visitor_nda_acknowledgements", "visitor_watchlist_screenings", "visitor_audit_logs", "host_assignments", "visitor_evacuation_lists"]
 
   - id: B1A-S6
-    summary: "Author data_object_lifecycle_states across all 8 masters with domain_module_id set."
-    finding: "Zero data_object_lifecycle_states rows on any VIS-MGMT master. B12 fails. M5 cannot be evaluated. Workflow-gate permission materialization (Rule #12) is uncomputable. Workflows per master enumerated under affected_masters of B1A-S1."
+    summary: "Author data_object_lifecycle_states across the 6 operational_workflow masters with domain_module_id set."
+    finding: "Zero data_object_lifecycle_states rows on any VIS-MGMT master. With entity_type now classified (2026-06-07), B12 is a confirmed requirement on the 6 operational_workflow masters (668, 669, 670, 671, 672, 674); the 2 operational_record masters (673 visitor_nda_acknowledgements, 675 visitor_audit_logs) pass B12 regardless. M5 cannot be evaluated until modules exist. Workflows per master enumerated under B1A-S1. Part of the UNBUILT build cascade; agent LEAVES per Rule #21."
     blocked_by:
       - {type: depends_on, ref: B1A-S1, reason: "lifecycle states need domain_module_id per Rule #12 + M5"}
       - {type: user_decision, ref: B2-MODULE-SPLIT}
 
-  - id: B1A-S7
-    summary: "DELETE legacy domain-level system skill (id 117) after per-module skills land."
-    finding: "F1 fails. skills.id=117 (vis-mgmt-system, skill_type=system, domain_id=24, domain_module_id=null) is the legacy pre-modular row. Rule #17 + F2 require one skill_type=system per domain_modules row, never a domain-level rollup."
-    action: "After B1A-S1 lands modules and Phase S per-module skills are authored, DELETE skill 117. Migrate its 10 skill_tools rows: 8 query_* tools split across the new modules along their masters' module assignment; send_email + send_sms routed to B1A-S8."
-    blocked_by:
-      - {type: depends_on, ref: B1A-S1, reason: "per-module skills authored first"}
-      - {type: prerequisite_entity, ref: B1A-S1}
-
-  - id: B1A-S8
-    summary: "Replace skill 117 send_email + send_sms skill_tools with notify_person + notify_team abstractions."
-    finding: "F7 fails. skill 117 links send_email (tool 37, side_effect, platform) and send_sms (tool 38, side_effect, external) as required with empty notes. Host notification + evacuation broadcast are exactly the substitutable-channel shape (notify_person for single-recipient host alert, notify_team for evacuation broadcast)."
-    action: "After per-module skills land (B1A-S7), DELETE the send_email + send_sms rows; INSERT skill_tools linking notify_person on the registration-module skill and notify_team on the compliance-module (or emergency-module) skill."
-    blocked_by:
-      - {type: depends_on, ref: B1A-S7, reason: "per-module skills must exist before channel-primitive replacement"}
-
   - id: B1A-B1
     summary: "Backfill source_domain_module_id on outbound handoffs 871, 872, 873 once modules land."
-    finding: "B10b. All 3 outbound cross-domain handoffs have source_domain_module_id=NULL because no modules exist (legit by Rule B10b at insert time). Per-master deterministic backfill possible once B1A-S1 lands. target_domain_module_id NULL on 872 + 873 is owed by GRC + HCM respectively, surfaced as report-only."
+    finding: "B10b. All 3 outbound cross-domain handoffs have source_domain_module_id=NULL because no modules exist (legit by Rule B10b at insert time). Per-master deterministic backfill possible once B1A-S1 lands. target_domain_module_id NULL on 872 + 873 is owed by GRC + HCM respectively, surfaced as report-only. Part of the UNBUILT build cascade; agent LEAVES per Rule #21."
     action: "After B1A-S1, derive source_domain_module_id per Rule B10b (strongest role per master): handoff 871 (payload visitor_registrations 668) to VIS-MGMT-REGISTRATION; handoff 872 (payload visitor_audit_logs 675) to VIS-MGMT-COMPLIANCE; handoff 873 (payload host_assignments 671) to VIS-MGMT-REGISTRATION."
     blocked_by:
       - {type: depends_on, ref: B1A-S1, reason: "module ids required for backfill"}
@@ -109,18 +74,29 @@ b1b:
       - {handoff_id: 872, direction: outbound, source_domain: VIS-MGMT, target_domain: GRC, trigger_event: "visitor_audit_log.sealed", payload: "visitor_audit_logs", null_field: "source_domain_module_id"}
       - {handoff_id: 873, direction: outbound, source_domain: VIS-MGMT, target_domain: HCM, trigger_event: "host_notification.sent", payload: "host_assignments", null_field: "source_domain_module_id"}
 
+  # --- RETIRED per supersession header (per-module skill grain / skill_tools), reframed as note ---
+  - id: B1A-S7
+    summary: "[RETIRED 2026-06-06] Was: DELETE legacy domain-level system skill (id 117) after per-module skills land."
+    finding: "SUPERSEDED. The per-module system-skill grain is retired (see header). VIS-MGMT keeps exactly ONE domain-grain system skill; skill 117 (vis-mgmt-system, domain_id=24, domain_module_id=null) is now the CORRECT shape, not a row to retire. The old plan to split it per module and migrate 10 skill_tools rows is CANCELED. skill_tools is dropped; per-module tool authoring (onto domain_module_tools) is tracked in audits/_modularization-backlog.md once the domain is built. No action in this domain's queue."
+    status: retired
+
+  - id: B1A-S8
+    summary: "[RETIRED 2026-06-06] Was: replace skill 117 send_email + send_sms skill_tools with notify_person + notify_team."
+    finding: "SUPERSEDED. skill_tools is dropped (see header). Channel-primitive vs notify-abstraction modeling now belongs on domain_module_tools / process_tools, authored when the domain is built and modularized, tracked in audits/_modularization-backlog.md. No skill_tools edit in this domain's queue."
+    status: retired
+
 b2:
   - id: B2-MODULE-SPLIT
     summary: "Decide 2-module vs 3-module split for VIS-MGMT."
     question: "How should the 8 VIS-MGMT masters be partitioned across domain_modules?"
     options:
       - "2-module: VIS-MGMT-REGISTRATION (visitor_registrations 668, visitor_check_ins 669, visitor_badges 670, host_assignments 671) + VIS-MGMT-COMPLIANCE (visitor_nda_acknowledgements 673, visitor_watchlist_screenings 674, visitor_audit_logs 675, visitor_evacuation_lists 672)."
-      - "3-module: VIS-MGMT-REGISTRATION (668, 669, 670, 671) + VIS-MGMT-COMPLIANCE (673, 674, 675) + VIS-MGMT-EMERGENCY (672). Matches Envoy's product split and aligns with future EHS-MGMT landing."
-    why: "Gates every Bucket 1 fix that carries module attribution (B1A-S1, S2, S6, S7, S8, B1-B1). Affects all 5 flagships (Envoy, Proxyclick, SwipedOn, iLobby, Sign In Solutions) which all separate emergency-roster surface; 3-module split is more faithful to vendor practice."
+      - "3-module: VIS-MGMT-REGISTRATION (668, 669, 670, 671) + VIS-MGMT-COMPLIANCE (673, 674, 675) + VIS-MGMT-EMERGENCY (672). Matches the flagship vendors' product split and aligns with future EHS-MGMT landing."
+    why: "Gates the entire UNBUILT build cascade (B1A-BUILD, B1A-S1, S2, S4, S6, B1A-B1). All flagship products separate the emergency-roster surface; 3-module split is more faithful to vendor practice. This is the single decision that unblocks the build."
 
   - id: B2-PII-INDIRECT
     summary: "Set has_personal_content on host_assignments 671 and visitor_evacuation_lists 672?"
-    question: "Both reference visitor PII indirectly (FK to host employee, list of present-visitor names). Treat as PII-containing for DSAR / retention?"
+    question: "Both reference visitor PII indirectly (FK to host employee, list of present-visitor names). Treat as PII-containing for DSAR / retention? (Note: the 6 directly-PII-bearing masters and the has_submit_lock=true on visitor_audit_logs 675 in B1A-S4 are agent-recommended but gated on this same decision; confirm the whole set at once.)"
     options:
       - "Flip has_personal_content=true on both (DSAR + retention scoped uniformly)."
       - "Leave false on both (PII lives one hop away)."
@@ -157,7 +133,7 @@ b2:
 
   - id: B2-LOGGED-IN-VERB
     summary: "Rewrite relationship_verb on rows 416 + 417 (currently logged_in)."
-    question: "Both rows use verb logged_in which is sentence-incomplete and not the catalog audit-log idiom (catalog elsewhere uses audits / logs / records / appears_in). User picks exact verb wording."
+    question: "Both rows use verb logged_in which is sentence-incomplete and not the catalog audit-log idiom (catalog elsewhere uses audits / logs / records / appears_in). DESTRUCTIVE: overwrites a non-empty relationship_verb + inverse_verb, so agent surfaces rather than writes. User picks exact verb wording."
     options:
       - "audited_in (inverse: audits)"
       - "records_event_in (inverse: records)"

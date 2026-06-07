@@ -289,3 +289,66 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+State-driven Validate pass (SKILL.md Rule #21) over the open items in
+`audits/ITAM/state.yaml`. Worked the open items only; no fresh from-scratch audit.
+Single loader: [.tmp_deploy/fix_itam_state_driven_2026_06_07.ts](../../.tmp_deploy/fix_itam_state_driven_2026_06_07.ts),
+run from project root. Domain id 3; ITAM is the cross-asset umbrella over HAM / SAM /
+SMP / FINOPS / EAM and masters only the two substrate entities (`asset_contracts` id 54,
+`asset_lifecycle_events` id 55); the sub-domains master their own asset-type entities.
+
+### Summary
+
+Cleared the three agent-doable additive/corrective state items (entity_type
+classification, event_category backfill, Rule #20 catalog UX backfill). Everything
+remaining is user-gated: the destructive notes wipes, the M9 DMDO rewrite, the
+business_logic em-dash fix, the deferred persona/RACI layer, two b1b handoffs blocked
+on other domains, and the b3 backlog. `next_action_by` flips to `user`.
+
+### Executed (all record_status='new', idempotent, verified live)
+
+| State item | Type | Rows | Detail |
+|---|---|---|---|
+| B1A-ENTITY-TYPE | PATCH data_objects.entity_type | 2 | 54 `asset_contracts` -> `operational_workflow` (5 lifecycle states + submit_lock + single_approver); 55 `asset_lifecycle_events` -> `operational_record` (append-only cross-cutting audit log, zero lifecycle states is the structural config-shape per Rule #12). |
+| B1A-E1 | PATCH trigger_events.event_category | 4 | 613, 614, 615, 616 empty -> `state_change` (Rule #13 enum; all four are state changes on their master). 1209 already `state_change`. |
+| B1B-S1 | PATCH catalog_tagline + catalog_description | 5 | Rule #20 buyer-voice copy written into the empty domain row (3) + all 4 modules (57, 58, 59, 60). The prior "surface-before-write" gate is rescinded by Rule #20 / Rule #21: empty catalog UX fields are written, not surfaced. No vendor names, no em-dash, American English. Empty-guard per field; no non-empty value overwritten. |
+
+Pre-existing carry-forward confirmed clean this pass: `data_objects` 54/55 `notes`
+already empty (reverted 2026-05-31); skill_tools repointing is moot under the
+per-domain-skill model (skill_tools dropped, see 2026-06-06 supersession header).
+
+### Surfaced (user decisions / destructive, not executed)
+
+- **B2-CONFIRM-N-FIXES (destructive):** wipe forbidden Rule #15 `handoffs.notes` on 12 rows (cross-domain 462, 632, 633, 634, 635, 645, 799, 853; intra-domain 1083, 1084, 1085, 1086). All still carry the forbidden strings. PATCH notes='' overwrites a non-empty value -> needs sign-off.
+- **B1A-SELF-CONTAIN (M9, destructive):** DMDO id=224 on module 60, `saas_applications` (61, SMP-mastered) is consumer/required. Recommend set necessity='optional' (or embedded_master). Rewrite of an existing DMDO row -> needs sign-off.
+- **B1B-S4 (destructive):** `domains.business_logic` on row 3 still has the U+2014 em-dash and British "Normalisation". Recommended ASCII / American replacement is in state.yaml; overwrite of a non-empty value -> needs wording confirmation.
+- **B1A-PHASE-P (deferred):** persona / RACI layer not authored (dedicated worked pass). Candidate personas: Asset Manager, Contract/Renewal Administrator, Asset Data Steward.
+- **b2 forks:** B2-MOD57 (module 57 masters nothing, 2 inbound handoffs), B2-MOD60 (portfolio_snapshots master?), B2-S2P-PO (purchase_orders 73 master gap owed by S2P), B2-GDPR (conditional vs mandatory), B2-CROSS-CUT-CAPS (rename 533/537 cross-cutting), B2-LIFECYCLE-EXEMPT (confirm the operational_record framing now in place).
+
+### Left
+
+- **b1b blocked:** B1B-H8 (handoff 31 ITSM PCF, Discover Pass 3), B1B-H9 (handoff 799 KUBE-PLAT scope).
+- **b3 backlog (7, non-blocking):** asset_assignments, asset_audits, normalization_rules/asset_taxonomies, portfolio_snapshots, cost_allocations, contract_renewal_events, usage_metrics.
+- **Superseded:** per-module skill-grain / skill_tools items remain retired per the 2026-06-06 supersession header above; not re-opened.
+
+### Report-only follow-ups (owed by other domains, carried)
+
+- ERP-FIN B8: consumer DMDO + relationship mirror for `asset_contracts` / `asset_lifecycle_events` into the fixed-asset register (reflects outbound handoffs 632, 635).
+- GRC B8: consumer DMDO + relationship mirror for `asset_contracts` (outbound 634 `asset_contract.expired`).
+- HAM B8 / B10: consumer DMDO on `asset_lifecycle_events` for the disposal route (outbound 633).
+- S2P B5: modularize `purchase_orders` (73) master into a `domain_module_data_objects` row (B2-S2P-PO).
+- KUBE-PLAT B5 / APM routing: inbound handoffs to module 57 await B2-MOD57.
+
+### Verification
+
+- data_objects 54 -> `operational_workflow`, 55 -> `operational_record` (record_status='new').
+- trigger_events 613-616 -> `event_category='state_change'`.
+- domains.id=3 + domain_modules 57-60 catalog_tagline + catalog_description populated, record_status='new'.
+- UI: https://tests.semantius.app/domain_map/data_objects?id=in.(54,55) ,
+  https://tests.semantius.app/domain_map/trigger_events ,
+  https://tests.semantius.app/domain_map/domains?id=eq.3 ,
+  https://tests.semantius.app/domain_map/domain_modules?domain_id=eq.3

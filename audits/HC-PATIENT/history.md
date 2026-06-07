@@ -312,3 +312,44 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate execute pass over the open items in `audits/HC-PATIENT/state.yaml` (NOT a fresh from-scratch audit). Domain id 45 confirmed live (domain_code HC-PATIENT, "Healthcare Patient Operations"). Owner function confirmed live: business_function_domains rows 255 (owner = Business Operations, fn 34) + 256 (contributor = Finance, fn 4), so C1 already satisfied (no INSERT owed; the owner-semantic is the open B2-2 judgment call). The snapshot was stale on H1: live read showed 4 of the candidate `handoff_processes` rows already loaded (899 -> process 196, 900 -> 302, 902 -> 196, 903 -> 302, all proposal_source=agent_curated, role=implements), so H1 is now largely closed. Domain remains UNBUILT (0 domain_modules, 0 capability_domains confirmed live), so the build and every module-gated item stay blocked on B2-1.
+
+Loader: `.tmp_deploy/fix_hc_patient_state_driven_2026_06_07.ts`, run from project root via `bun run`. Idempotent (read-live-then-insert-missing, never overwrite a non-empty value). No JWT-audience errors.
+
+### Executed (additive/corrective, record_status=new where applicable)
+
+- **B13 entity_type (6 PATCH).** All 6 masters were `entity_type='unclassified'` (audit failure per Rule #12). PATCHed 617-622 to `operational_workflow` (each description carries an explicit multi-state status workflow; deterministic classification). This also makes B12 lifecycle states required.
+- **A4 Catalog UX (2 fields).** `domains.catalog_tagline` and `domains.catalog_description` on domain 45 were both empty. Authored buyer-voice copy (workflow + value, HIPAA framing allowed per Rule #18, no vendor names, no em-dash, American English) and wrote both. Idempotent guard would skip a non-empty value.
+- **B11 aliases (19 INSERT).** Zero aliases existed for the 6 masters. Inserted generic cross-vendor / cross-industry synonyms (`alias_type='synonym'`, no industry_id available, record_status omitted -> defaulted to new): patient_appointments (Visit, Appointment Slot, Patient Visit Booking); clinical_encounters (Encounter, Episode of Care, Patient Visit Event); care_plans (Treatment Plan, Plan of Care, Care Pathway); patient_referrals (Consult, Specialist Referral, Consultation Request); clinical_orders (Order, CPOE Order, Provider Order Entry); clinical_notes (Chart Note, Progress Note, SOAP Note, Encounter Note).
+- **B12 lifecycle states (32 INSERT).** Zero lifecycle rows existed. Loaded the audit's pre-specified state shapes for all 6 masters with `domain_module_id=null` (no modules yet; PATCH onto the realizing module at build time). M4 shape verified clean per master: exactly one `is_initial=true`, at least one `is_terminal=true`, unique monotonic `state_order`. `requires_permission=true` set on the workflow gates (appointment cancelled; encounter signed + locked; care_plan withdrawn; order cancelled + discontinued; note signed + addended + amended). record_status defaulted to new.
+
+### Surfaced (returned to user; not written)
+
+- **B1A-B7-USER-EDGES.** 6 `users`-edge `data_object_relationships` (Rule #10) not authored: the audit lists actor roles per master but not concrete verb / inverse_verb tuples, so the row shapes are not fully specified. Needs user-reviewed tuples before insert.
+- **B1A-B4-PATTERN-FLAGS.** Recommended deterministic flips surfaced (overwrite of an existing boolean value, not an empty fill): all 6 masters `has_personal_content=true`; clinical_orders (621) + clinical_notes (622) `has_submit_lock=true`; clinical_notes (622) `has_single_approver=true`. Consistent with the 2026-05-31 pass deferring B1-S4.
+- **B2-1 through B2-7.** All seven judgment calls remain open; B2-1 (module split) is the critical gate.
+- **B1A-B9-ORPHAN-EVENT.** Event 1022 (patient_appointment.scheduled) still has zero handoffs (confirmed live). Fix = author a target handoff (blocked on Phase 0 TELEHEALTH/EHR) OR DELETE the event row (destructive, needs sign-off).
+- **B1A-B8-CROSS-DOMAIN-RELS.** Handoffs 900/903 payload-target rows still need a named ERP-FIN / HC-RCM target master (blocked); 901 deferred to B2-3.
+
+### Left (untouched)
+
+- **Module-gated b1a:** B1A-BUILD, B1A-B10b-SOURCE-MODULES, B1A-B10b-TARGET-MODULES blocked on B2-1 / the build. UNBUILT domain - not scaffolded; the cascade is left for the build pass.
+- **RETIRED per the 2026-06-06 supersession:** former B1A-S1-MODULES (per-module system skills + skill_tools), B1A-F1-LEGACY-SKILL, B1A-F7-CHANNEL-ABSTRACTION reframed as a note (per-module skill grain + skill_tools dropped; one domain-grain system skill derived from domain_module_tools, handled inside B1A-BUILD).
+- **H1 defers:** handoff 896 (device_recall.issued, consume-side - no clean cross-industry PCF; the clean recall PCF hits describe the issuer process), 897 (sterilization_cycle.failed, industry-specific), 901 (B2-3 suspect) deferred to Discover Pass 3.
+- **b3 backlog:** 15 entity candidates (B3-E1..E15), 2 modularization candidates (B3-M1, B3-M2), 3 regulation candidates (B3-R1..R3) - all Phase 0 pending.
+
+### Verification
+
+Re-read live confirmed: all 6 masters `entity_type='operational_workflow'`; domain 45 both catalog fields non-empty; 19 aliases present (all record_status=new); 32 lifecycle states present with correct initial/terminal/gate flags and clean M4 shape. No JWT-audience errors during the run.
+
+### UI links (tables written)
+
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/domains
+- https://tests.semantius.app/domain_map/data_object_aliases
+- https://tests.semantius.app/domain_map/data_object_lifecycle_states

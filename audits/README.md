@@ -45,7 +45,7 @@ b2:    # user judgment required
     options: [...]
     why: ...                       # optional
 
-b3:    # vendor research pending (Phase 0)
+b3:    # vendor research pending (Phase 0): discretionary ADDITIVE entities that fit the existing module shape. NEVER a split (a new/split module, split/new domain, or moving a master between domains is a b2). Non-blocking: never gates "finished".
   - id: B3-<TAG>
     candidate: <entity name>
     rationale: <full text>
@@ -54,6 +54,8 @@ b3:    # vendor research pending (Phase 0)
 ```
 
 `next_action_by` derives by priority: agent (b1a non-empty) > user (b2) > research (b3) > blocked (only b1b) > done.
+
+**Execution contract (SKILL.md Rule #21).** A *review / audit / validate / finish* run EXECUTES all additive/corrective `b1a` inline (`record_status='new'`), so a properly-run review leaves `b1a` empty and the domain ends `next_action_by: user` (an open `b2` or a destructive step needs approval), `blocked` (only `b1b` remains), or `done`. `b3` is non-blocking and never sets `next_action_by` on its own; it parks in the ideas backlog. Only a *report / check* run is read-only and may leave `b1a` populated.
 
 ### Standard optional fields (use these exact names; no invented variants)
 

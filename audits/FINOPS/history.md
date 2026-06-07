@@ -291,3 +291,70 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (Rule #21), working only the open items in state.yaml. Live
+verification (2026-06-07) confirmed the snapshot exactly: FINOPS (domain id=41) is UNBUILT,
+0 domain_modules, 0 domain_module_host_domains, 0 capability_domains, 0 master data_objects
+(only 1 legacy consumer on supplier_invoices id 75), 5 solutions (A3 passes). Per Rule #21 /
+SKILL.md line 1498, an UNBUILT domain is NOT scaffolded by an audit pass: the build is a user
+decision. The only cascade-independent, agent-doable additive item was the A4 catalog UX
+backfill, which was executed. The whole module + capability + master + DMDO + skill + FK
+cascade stays surfaced as the post-build work plan and clears once the build lands.
+
+Loader: [.tmp_deploy/finops_state_execute_2026_06_07.ts](../../.tmp_deploy/finops_state_execute_2026_06_07.ts)
+(run from project root via `bun run`; idempotent, re-run skips both fields).
+
+### Executed (counts)
+
+| Item | Op | Detail |
+|---|---|---|
+| B1A-A4 / B2-A4-COPY | PATCH | domains id=41 catalog_tagline + catalog_description (both were empty). Authored buyer-voice copy (workflow + value, no vendor/product names per Rule #18, no em-dash, American English) and written straight in at record_status='new' per the revised Rule #20 backfill rule (the prior "surface-before-write" b2 gate is obsolete). 2 columns. |
+
+Totals: 1 PATCH op (2 columns) on `domains`. No new entities, modules, capabilities,
+masters, DMDOs, skills, handoffs, or handoff_processes created. No `notes` column written.
+No `record_status` flipped to approved. No JWT errors.
+
+Vacuous (nothing to do):
+- entity_type (Rule #12): FINOPS masters nothing; 0 owned data_objects.
+- APQC H1: all 9 cross-domain handoffs already carry handoff_processes rows.
+- event_category (Rule #13): the only related trigger_event (158) is mis-attributed to
+  supplier_invoices (a b2 fork) and already carries event_category='threshold'.
+- module-level catalog copy: no modules exist.
+
+### Surfaced (carried to state.yaml as b2 / build)
+
+- B2-BUILD: FINOPS is UNBUILT; decide module shape (2 modules / 1 module / defer). Gates the
+  entire b1a cascade (B1A-M1, B1A-A2, B1A-B-DMDO, B1A-DOMAIN-SKILL, B1A-B10B-*, B1A-PHASE-P).
+- B2-C1-OWNER: owner=Cloud Financial Operations (id 83) under Finance (id 4), spine-aligned;
+  accept as-is vs add a second owner row on Finance / IT Operations.
+- B2-CLOUD-COST-MASTER: does FINOPS master cloud_cost_records and re-point trigger_event 158?
+  Option (c) deprecation is destructive.
+- B2-FOCUS-REG: add the FinOps cost-data interchange spec as an industry_standard regulation?
+- B2-HANDOFF-305 (DESTRUCTIVE): delete handoff 305 + handoff_processes id 755 (-> process 1390),
+  keep + add a consumer DMDO, or re-route to IWMS / RE-CRE.
+- B2-A3-WIDEN: optional widening of the solutions surface.
+- Personas / RACI (B1A-PHASE-P): DEFERRED (does not apply to an UNBUILT domain). Candidate
+  personas noted for after the build: FinOps Practitioner / Cloud Cost Analyst (owner),
+  Engineering Cost Owner (contributor), Finance / FP&A Reviewer (commitment approver).
+
+### Left (untouched)
+
+- b1a cascade (B1A-M1, B1A-A2, B1A-B-DMDO, B1A-DOMAIN-SKILL, B1A-B10B-OUTBOUND/INBOUND,
+  B1A-PHASE-P): all blocked on B2-BUILD; retained as the post-build work plan.
+- b1b B1B-A3-SOLUTIONS: optional, blocked on B2-A3-WIDEN.
+- b3 (6 entries): vendor-research masters backlog (cloud_cost_records, commitment_recommendations,
+  cost_anomalies, cloud_cost_budgets, unit_cost_definitions, kubernetes_cost_allocations).
+- Superseded per-module-skill / skill_tools model: retired per the 2026-06-06 supersession
+  header; the F-band item was reshaped into B1A-DOMAIN-SKILL (one domain-grain system skill).
+
+### Post-fix status
+
+next_action_by: user (UNBUILT; the build is a b2 decision plus 5 other open b2 forks, one of
+which is destructive). No b1a item is currently agent-actionable: every one is blocked on
+B2-BUILD or another b2.

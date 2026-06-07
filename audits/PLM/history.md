@@ -343,3 +343,82 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate execute pass (SKILL.md Rule #21). Worked only the open
+items in `audits/PLM/state.yaml`; no fresh from-scratch audit. Domain id 165
+confirmed live (domain_code=PLM, "Product Lifecycle Management"; owner function
+Research and Development, already wired in `business_function_domains`). Module
+ids 66-70 confirmed. Loader:
+`c:/dev/domain-map/.tmp_deploy/2026-06-07_plm_state_driven_execute.ts`
+(idempotent; re-run confirmed 0 further writes). All writes land
+`record_status='new'`. Post-pass `next_action_by=user`: every remaining open
+item is a user judgment call, a blocked b1b owed by a neighbor domain, or the b3
+backlog candidate.
+
+### Executed (additive / corrective, record_status='new')
+
+| Item | Action | Count |
+|---|---|---|
+| B1A-ENTITY-TYPE (B13) | PATCH `data_objects.entity_type` from `unclassified` to the Rule #12 enum on 9 of 12 masters: 6 workflow-bearing -> `operational_workflow` (engineering_parts, engineering_revisions, engineering_change_orders, manufacturing_boms, product_compliance_declarations, engineering_requirements); engineering_bom_items -> `junction`; plm_product_variants, regulated_substances -> `catalog`. | 9 rows |
+| B2-CATALOG-COPY (A4 + M8 / Rule #20) | Authored buyer-voice `catalog_tagline` + `catalog_description` (workflow + value, no vendor names, no em-dash, American English) on the domain row (165) and all 5 module rows (66-70). Wrote only empty fields; never overwrote a non-empty value. The state's stale "surface-before-write" gate was ignored per the execute contract. | 6 rows (1 domain + 5 modules) |
+| B1A-B9B-INTRA-DOMAIN (B9b) | INSERT 6 intra-domain handoffs (`source_domain_id=target_domain_id=165`, `integration_pattern='lifecycle_progression'`), each with a one-sentence buyer-neutral `description` and `friction_level`: 66->67 (engineering_part.released, low), 66->68 (engineering_change_order.released, low), 66->69 (engineering_part.released, low), 66->70 (engineering_part.released, low), 67->68 (cad_drawing.released, low), 69->66 (product_compliance_declaration.expired, medium). New handoff ids 1397-1402. Trigger events resolved live (1211, 1210, 1215, 1474). `notes` left empty per Rule #15. | 6 rows |
+
+H1 APQC: no execute. All 11 cross-domain handoffs already carry
+`handoff_processes` tags (16 rows total, all `agent_curated`, all
+`record_status='new'`); no untagged cross-domain handoff with a clean PCF match
+remains. The open lift is reviewer approval (Rule #1, user-only) -> surfaced as
+B2-H1-APPROVE-TAGS.
+
+C1 (`business_function_domains`): no execute. Already complete live: Research and
+Development (owner), Supply Chain (contributor), Procurement (contributor),
+Customer Service (consumer). B11 aliases also already PASS (28 rows); no missing
+generic synonym worth adding this pass.
+
+### Surfaced (user-owned; not written)
+
+- **B2-LIFECYCLE-STATES-6-MASTERS (b2 + residual B13):** cad_models (800),
+  cad_drawings (801), manufacturing_routings (803) were deliberately LEFT
+  `entity_type='unclassified'`. Their classification is exactly the b2 judgment
+  (workflow-bearing -> author a state machine, vs catalog config-shape).
+  cad_drawings is the canary: it has `cad_drawing.released` (event 1215) and is
+  the publish-side of intra-domain handoff 1401 and cross-domain handoff 1094,
+  yet has no state machine.
+- **B2-E6-RBAC-CONVENTION (b2):** only 1 of 17 workflow-gate permissions is
+  granted to any role; `permission_hierarchy` is empty for PLM (no auto-rollup).
+  Choice: (b) add 16 explicit gate grants across the 4 roles, or (c) treat the
+  lone `plm-mfg-process:release_mbom` grant as a deliberate convention. Adding
+  grants increases role power -> not done unapproved.
+- **B2-H1-APPROVE-TAGS (record_status flip, user-only):** 16 `agent_curated`
+  handoff_processes at `record_status='new'`, 0 approved. Rule #1 reserves the
+  approve flip to the user.
+- **B1A-PHASE-P personas / RACI: DEFERRED.** Not auto-authored. Candidate
+  function-anchored personas: Design Engineer, CAD / PDM Librarian,
+  Manufacturing Engineer, Engineering Change Manager / CAB Chair, Regulatory
+  Affairs Specialist, Requirements Engineer.
+
+### Left
+
+- **B1B-B10B-TARGET-MODULE-FKS:** 8 outbound handoffs (1087-1094) carry NULL
+  `target_domain_module_id`; symmetric side owed by MFG-OPS / ERP-FIN / S2P /
+  FSM audits.
+- **B1B-SUPPLIERS-UNOWNED-MASTER:** `suppliers` (206) is a `contributor` in
+  PLM-COMPLIANCE with no catalog-wide `master`; owed by S2P / a supplier-master
+  domain. Not a hard Rule #11 fail (only fires on `embedded_master`).
+- **B1A-F2-SYSTEM-SKILLS + B2-F2-SCOPE: RETIRED** per the 2026-06-06
+  per-domain-skill restoration (supersession header). Per-module
+  `skill_type='system'` skills and `skill_tools` are canceled; reframed as a
+  note in state.yaml. Per-module tool re-authoring is tracked in
+  `audits/_modularization-backlog.md`.
+- **B3-PLM-PORTFOLIO:** backlog candidate (6th module for program / portfolio
+  surface); needs Phase 0 vendor research; never gates "finished".
+
+### Post-state UI links (tables written this pass)
+
+- `data_objects` (entity_type): `https://tests.semantius.app/domain_map/data_objects?id=in.(796,797,798,799,800,801,802,803,804,805,806,807)`
+- Domain catalog copy: `https://tests.semantius.app/domain_map/domains?id=eq.165`
+- Module catalog copy: `https://tests.semantius.app/domain_map/domain_modules?domain_id=eq.165`
+- Intra-domain handoffs (1397-1402): `https://tests.semantius.app/domain_map/handoffs?source_domain_id=eq.165&target_domain_id=eq.165`

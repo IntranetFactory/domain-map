@@ -11,32 +11,18 @@
 schema_version: 2
 domain: INV-MGMT
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
-  - id: B1A-S3
-    summary: "Author 4-5 intra-domain handoffs across INV's 3 modules (B9b hard fail, zero intra-domain handoffs today)."
-    finding: "INV-MGMT has 3 full modules (INV-CORE-STOCK 61, INV-REPLENISHMENT 62, INV-KITTING 63) but zero handoffs with source_domain_id=target_domain_id=164. The master relationship graph and lifecycle state machine imply at least 4 cross-module flows are missing."
-    action: "Author 4-5 handoff rows with source_domain_id=164, target_domain_id=164, integration_pattern='lifecycle_progression', friction_level='low'. Candidates: (a) 62 to 61 on inv_stock_movement.posted (1478) propagating receipt posting; (b) 61 to 62 on inv_stock_item.below_reorder_point (1199); (c) 61 to 62 on inv_stock_balance.on_hand_changed (1200); (d) 63 to 61 on a new inv_kit.assembled trigger_event so component-consumption movements post; (e) 61 to 63 on inv_stock_balance.allocated (1201) for kit reservations. Step (d) requires loading the new trigger_event first."
-    affected_modules:
-      - 61
-      - 62
-      - 63
-    extra_new_trigger_events:
-      - event_name: "inv_kit.assembled"
-        publishing_master: 794
-        event_category: "lifecycle"
   - id: B1A-PHASE-P
-    summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 3 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED (personas not authored by state-driven execute)."
+    finding: "Live triage 2026-06-02: 3 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Personas/RACI is a Phase-P author task that the state-driven execute pass defers to the user; not authored autonomously."
     action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "10 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 10 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [inv_cycle_counts, inv_inventory_lots, inv_kit_definitions, inv_reorder_rules, inv_serialized_units, inv_stock_balances, inv_stock_items, inv_stock_locations, inv_stock_movements, inv_stock_transfers]
+    candidate_personas:
+      - "WAREHOUSE-INVENTORY-MANAGER (CORE-STOCK primary, REPLENISHMENT primary, KITTING secondary)"
+      - "SUPPLY-CHAIN-INVENTORY-PLANNER (REPLENISHMENT primary, CORE-STOCK secondary)"
+      - "FINANCE-INVENTORY-ACCOUNTANT (CORE-STOCK secondary, REPLENISHMENT secondary)"
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
@@ -84,37 +70,27 @@ b1b:
       - {handoff_id: 1057, direction: outbound, source_domain: INV-MGMT, target_domain: GRC, trigger_event: "inv_inventory_lot.recall_initiated", payload: "inv_inventory_lots", null_field: target_domain_module_id}
       - {handoff_id: 1058, direction: outbound, source_domain: INV-MGMT, target_domain: CSM, trigger_event: "inv_serialized_unit.warranty_activated", payload: "inv_serialized_units", null_field: target_domain_module_id}
       - {handoff_id: 1059, direction: outbound, source_domain: INV-MGMT, target_domain: B2C-COMM, trigger_event: "inv_stock_item.created", payload: "commerce_products", null_field: target_domain_module_id}
-  - id: B1B-S5
-    summary: "F2/F3/F5 hard fail: zero skill_type='system' rows on any of the 3 INV modules; Rule #17 requires exactly one per module with >= 1 skill_tools. Phase-S workload, not a single PATCH."
-    finding: "Zero system skills exist for modules 61, 62, 63. Semantius score uncomputable. Author inv_core_stock_agent on 61, inv_replenishment_agent on 62, inv_kitting_agent on 63, each with 5-20 skill_tools rows covering query/mutate/workflow-gate primitives for that module's masters."
-    blocked_by:
-      - {type: user_decision, ref: B2-Phase-S-scope-and-timing}
-    affected_modules:
-      - 61
-      - 62
-      - 63
+  # B1B-S5 (per-module system skills + skill_tools) is RETIRED per the supersession header above
+  # (Plan 3 / per-domain-skill-restoration). No per-module system skill is authored. Domain-grain
+  # toolset work is tracked in audits/_modularization-backlog.md, not here. Item removed as active.
   - id: B1B-H1
-    summary: "3 cross-domain handoffs untagged (multi-PCF candidates per audit); user pick required."
-    finding: "Following the 2026-05-31 continuation, 9 of 11 cross-domain handoffs carry handoff_processes rows. Remaining 3 handoffs each have 2 confident PCF candidates the audit could not pick alone: 1054 INV to ERP-FIN on inv_stock_transfer.received (PCF 859 Manage warehouse transfers OR 1326 Perform inventory accounting); 1055 INV to CSM on inv_inventory_lot.expiry_warning (PCF 206 Manage recall related communications OR 37 Manage product recalls and regulatory audits, medium confidence); 1058 INV to CSM on inv_serialized_unit.warranty_activated (PCF 201 Process warranty claims OR 122 Define warranty claims)."
+    summary: "1 residual cross-domain handoff untagged (multi-PCF candidate); user pick required."
+    finding: "Re-verified live 2026-06-07: handoffs 1054 and 1058 now each carry a handoff_processes row (1054 -> PCF 1326 Perform inventory accounting; 1058 -> PCF 200), so 10 of 11 cross-domain handoffs are tagged. The remaining 1 (1055 INV to CSM on inv_inventory_lot.expiry_warning) still has 2 confident PCF candidates the audit could not pick alone: PCF 206 Manage recall related communications OR 37 Manage product recalls and regulatory audits (medium confidence). No clean single match, so it is deferred to the user rather than written."
     blocked_by:
       - {type: user_decision, ref: B1-H1-PCF-picks}
     affected_handoffs:
-      - {handoff_id: 1054, direction: outbound, source_domain: INV-MGMT, target_domain: ERP-FIN, trigger_event: "inv_stock_transfer.received", payload: "inv_stock_transfers", null_field: handoff_processes}
       - {handoff_id: 1055, direction: outbound, source_domain: INV-MGMT, target_domain: CSM, trigger_event: "inv_inventory_lot.expiry_warning", payload: "inv_inventory_lots", null_field: handoff_processes}
-      - {handoff_id: 1058, direction: outbound, source_domain: INV-MGMT, target_domain: CSM, trigger_event: "inv_serialized_unit.warranty_activated", payload: "inv_serialized_units", null_field: handoff_processes}
     extra_pcf_options:
-      - {handoff_id: 1054, options: [859, 1326]}
       - {handoff_id: 1055, options: [206, 37]}
-      - {handoff_id: 1058, options: [201, 122]}
 
 b2:
   - id: B2-S1
-    summary: "Rule #15 notes-pollution on 7 data_objects (785, 786, 787, 788, 790, 793, 794): config-shape exemption commentary and pattern-flag context."
+    summary: "Rule #15 notes-pollution on 7 data_objects (785, 786, 787, 788, 790, 793, 794): config-shape exemption commentary and pattern-flag context. DESTRUCTIVE revert needs user sign-off."
     question: "Were the existing notes on these 7 rows user-approved at load time, or auto-populated by an earlier loader?"
     options:
       - "User-approved at load time, leave in place."
       - "Auto-populated, PATCH all 7 rows' notes to empty string and log a Rule #15 incident in references/skill-changelog.md."
-    why: "Rule #15 RESCINDED the prior license for config-shape and pattern-flag annotations in data_objects.notes. The audit cannot tell from live state whether the load-time approval happened."
+    why: "Rule #15 RESCINDED the prior license for config-shape and pattern-flag annotations in data_objects.notes. The audit cannot tell from live state whether the load-time approval happened. Reverting a non-empty notes value is destructive and never done unapproved."
     affected_entities:
       - inv_stock_items
       - inv_stock_locations
@@ -124,7 +100,7 @@ b2:
       - inv_reorder_rules
       - inv_kit_definitions
   - id: B2-S2
-    summary: "B4 pattern-flag re-evaluation: candidate flips on stock_transfers, inventory_lots, serialized_units, serialized_units personal-content."
+    summary: "B4 pattern-flag re-evaluation: candidate flips on stock_transfers, inventory_lots, serialized_units, serialized_units personal-content. Overwrites existing non-empty flag values, so user-owned."
     question: "Should has_submit_lock be set true on inv_stock_transfers (lines immutable post-receipt), inv_inventory_lots (append-only after recall), and inv_serialized_units (immutable post-scrap)? Should has_personal_content be true on inv_serialized_units when warranty-customer registration captures PII?"
     options:
       - "Per-flag yes/no from user; agent loads only approved flips."
@@ -167,7 +143,7 @@ b2:
       - "DELETE all 4 sibling consumer rows (rows 251, 252, 258, 259); REPLENISHMENT and KITTING read items/balances by reference."
       - "PROMOTE all 4 to embedded_master so REPLENISHMENT and KITTING are standalone-deployable."
       - "Mixed: specify per row."
-    why: "Default per audit procedure is DELETE; market shape (reorder_rules and kit_definitions plausibly need a local item/balance shell) suggests PROMOTE may be more market-aligned for INV than the CLM precedent."
+    why: "Default per audit procedure is DELETE; market shape (reorder_rules and kit_definitions plausibly need a local item/balance shell) suggests PROMOTE may be more market-aligned for INV than the CLM precedent. DELETE / overwrite of existing DMDO rows is destructive, so this is a user decision."
 
 b3:
   - id: B3-MISSING-DEMAND-FORECASTS

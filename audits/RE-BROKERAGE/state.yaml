@@ -1,29 +1,16 @@
 schema_version: 2
 domain: RE-BROKERAGE
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
   - id: B1A-PHASE-P
-    summary: "Multi-module (2 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 2 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 2 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "5 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 5 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [commission_splits, disclosure_documents, real_estate_listings, real_estate_transactions, tour_appointments]
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-SELF-CONTAIN
-    summary: "2 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
-    finding: "Live triage 2026-06-02: 2 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
-    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
-    extra_m9_shapes:
-      - {entity: crm_contacts, module: RE-BROK-AGENT-OPS, role: contributor, master_domain: CRM}
-      - {entity: crm_leads, module: RE-BROK-AGENT-OPS, role: contributor, master_domain: CRM}
-    extra_phase_p_triage: "2026-06-02"
+    summary: "Multi-module (2 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED this pass."
+    finding: "Live 2026-06-07: 2 domain_modules hosted on 143 (151 RE-BROK-AGENT-OPS, 152 RE-BROK-BROKERAGE-OPS; 153 REAL-ESTATE-AGENT is now a cross-cutting starter with domain_id=null, hosted on 143 via domain_module_host_domains alongside CRM 69 and CLM 26) and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    status: deferred
+    deferred_note: "Persona / RACI authoring is deferred per the Phase-P discipline (do not author personas in a state-driven execute pass). Candidate operational personas for RE-BROKERAGE: Listing Agent, Buyer Agent, Transaction Coordinator, Designated Broker (the four roles that existed pre-Plan-3). Bring to a dedicated Phase-P run."
 
 b1b:
   - id: B1B-CRM-INBOUND
@@ -39,7 +26,7 @@ b1b:
     blocked_by:
       - {type: domain_audit, blocking_domain: CRM, milestone: B9_outbound_to_RE-BROKERAGE}
     affected_entities: [crm_contacts, crm_leads]
-    affected_modules: [151, 153]
+    affected_modules: [151]
   - id: B1B-RE-PROP-MGMT-B10B
     summary: RE-PROP-MGMT owes target_domain_module_id PATCH on inbound handoff 296.
     finding: >-
@@ -89,26 +76,28 @@ b1b:
       - {handoff_id: 862, direction: outbound, source_domain: RE-BROKERAGE, target_domain: RE-INVEST, trigger_event: listing.sold, payload: real_estate_listings, null_field: target_domain_module_id}
 
 b2:
-  - id: B2-CATALOG-UX
-    summary: Catalog UX fields empty on RE-BROKERAGE domain and all 3 modules.
+  - id: B1A-SELF-CONTAIN
+    summary: "2 contributor/required-consumer rows break module self-containment (M9): embed or relax each. DESTRUCTIVE (rewrites role/necessity on existing rows) - surfaced, not applied."
     question: >-
-      Should the agent draft catalog_tagline and catalog_description in buyer
-      voice for the RE-BROKERAGE domain (143) and each of its three modules
-      (151 RE-BROK-AGENT-OPS, 152 RE-BROK-BROKERAGE-OPS, 153 REAL-ESTATE-AGENT)
-      for review? Rule #20 forbids loader-side authoring without explicit
-      approval, and once a value is non-empty it cannot be overwritten without
-      per-row approval, so the draft pass must precede any write.
+      Each fix overwrites role/necessity on an existing DMDO row, which is a
+      destructive edit the agent does not apply unapproved. Per row, should the
+      agent convert role to embedded_master (carry a local shell of the
+      CRM-mastered entity inside RE-BROK-AGENT-OPS) OR set necessity to optional
+      (presence-conditional)? references/modules.md section 5 + SKILL.md M9.
+    finding: >-
+      Live 2026-06-07: 2 domain_module_data_objects rows on module 151
+      (RE-BROK-AGENT-OPS) are role=contributor with necessity=required, pointing
+      at entities mastered by CRM (domain 69) and not embedded_master here:
+      DMDO 777 = crm_contacts (98), DMDO 776 = crm_leads (99). Each is an M9
+      self-containment violation.
     options:
-      - agent_drafts_all_four_rows_in_buyer_voice_for_review
-      - user_authors_manually
-      - defer_until_catalog_ux_rollout
-    why: >-
-      Both A4 (domain row) and M8 (module rows) fail. The columns serve the
-      public catalog and the site generator. Drafts must be surfaced before any
-      PATCH per Rule #20.
-    affected_entities: [domains.143, domain_modules.151, domain_modules.152, domain_modules.153]
+      - per_row_convert_to_embedded_master
+      - per_row_set_necessity_optional
+    extra_m9_shapes:
+      - {dmdo_id: 777, entity: crm_contacts, module: RE-BROK-AGENT-OPS, role: contributor, necessity: required, master_domain: CRM}
+      - {dmdo_id: 776, entity: crm_leads, module: RE-BROK-AGENT-OPS, role: contributor, necessity: required, master_domain: CRM}
   - id: B2-H1-APPROVAL
-    summary: 7 handoff_processes rows loaded 2026-05-29 still sit at record_status='new'.
+    summary: 7 handoff_processes rows still sit at record_status='new'.
     question: >-
       Should the user approve the 7 agent_curated APQC tags on the 6
       cross-domain handoffs published by RE-BROKERAGE? Rule #1 forbids the
@@ -119,16 +108,17 @@ b2:
       - defer_review
     why: >-
       The H1 coverage check passes (every cross-domain handoff has at least
-      one tag) but the catalog-quality headline (approved count) is still 0
-      of 7 because Rule #1 requires explicit user sign-off on each tag.
+      one tag, verified live 2026-06-07) but the catalog-quality headline
+      (approved count) is still 0 of 7 because Rule #1 requires explicit user
+      sign-off on each tag.
     extra_pcf_assignments:
-      - {handoff_id: 296, pcf_external_id: "10192", pcf_name: "Close the sale"}
-      - {handoff_id: 297, pcf_external_id: "10192", pcf_name: "Close the sale"}
-      - {handoff_id: 297, pcf_external_id: "11052", pcf_name: "Negotiate and document agreements/contracts"}
-      - {handoff_id: 308, pcf_external_id: "18115", pcf_name: "Validate and qualify leads/opportunities"}
-      - {handoff_id: 311, pcf_external_id: "20114", pcf_name: "Submit regulatory reports"}
-      - {handoff_id: 861, pcf_external_id: "10192", pcf_name: "Close the sale"}
-      - {handoff_id: 862, pcf_external_id: "10192", pcf_name: "Close the sale"}
+      - {handoff_process_id: 187, handoff_id: 296, pcf_external_id: "10192", pcf_name: "Close the sale"}
+      - {handoff_process_id: 188, handoff_id: 297, pcf_external_id: "10192", pcf_name: "Close the sale"}
+      - {handoff_process_id: 457, handoff_id: 297, pcf_external_id: "11052", pcf_name: "Negotiate and document agreements/contracts"}
+      - {handoff_process_id: 189, handoff_id: 308, pcf_external_id: "18115", pcf_name: "Validate and qualify leads/opportunities"}
+      - {handoff_process_id: 190, handoff_id: 311, pcf_external_id: "20114", pcf_name: "Submit regulatory reports"}
+      - {handoff_process_id: 191, handoff_id: 861, pcf_external_id: "10192", pcf_name: "Close the sale"}
+      - {handoff_process_id: 192, handoff_id: 862, pcf_external_id: "10192", pcf_name: "Close the sale"}
 
 b3:
   - id: B3-PHASE0-MARKET-GAPS
@@ -142,23 +132,14 @@ b3:
       Five compliance-cluster entities (listing_agreements,
       buyer_representation_agreements, compliance_checklists,
       referral_agreements, escrow_accounts plus escrow_deposits) are carried
-      by the back-office vendors (Lone Wolf Foundation, Dotloop, SkySlope)
-      and absent from the catalog. Without compliance_checklists, the
-      RE-BROK-BROKERAGE-OPS module is structurally a commission calculator
-      without the differentiator the transaction-management category exists
-      for. buyer_representation_agreements is the highest-urgency candidate:
-      legally mandatory in most US states post-NAR-settlement (August 2024).
-      CRM-vendor cluster entities (open_houses, agent_pipelines,
-      mls_syndication_logs, mls_feeds) are carried by kvCORE, Follow Up Boss,
-      BoomTown and back the RE-BROK-MLS-SYNDICATION capability that
-      currently has no backing entity.
-    vendor_evidence:
-      - {vendor: "Lone Wolf Foundation", evidence: 1st_class}
-      - {vendor: "Dotloop", evidence: 1st_class}
-      - {vendor: "SkySlope", evidence: 1st_class}
-      - {vendor: "kvCORE", evidence: 1st_class}
-      - {vendor: "Follow Up Boss", evidence: 1st_class}
-      - {vendor: "BoomTown", evidence: 1st_class}
+      by the back-office vendors and absent from the catalog. Without
+      compliance_checklists, the RE-BROK-BROKERAGE-OPS module is structurally a
+      commission calculator without the differentiator the transaction-management
+      category exists for. buyer_representation_agreements is the highest-urgency
+      candidate: legally mandatory in most US states post-NAR-settlement
+      (August 2024). CRM-vendor cluster entities (open_houses, agent_pipelines,
+      mls_syndication_logs, mls_feeds) back the RE-BROK-MLS-SYNDICATION
+      capability that currently has no backing entity.
     proposed_module: >-
       compliance cluster -> RE-BROK-BROKERAGE-OPS (152) primarily, with
       embedded shells on RE-BROK-AGENT-OPS (151) where the agent originates

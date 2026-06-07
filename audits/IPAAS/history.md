@@ -282,3 +282,78 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass over the open items in `audits/IPAAS/state.yaml`. No fresh from-scratch
+audit. IPAAS (domain id 36) confirmed UNBUILT live: 0 `domain_modules` (M1 fail), 0
+`capability_domains`. Per the unbuilt rule the BUILD was SURFACED (B1A-BUILD / B1B-S1), not
+scaffolded, and the entire M1-gated cascade was LEFT. Executed only the additive/corrective items
+that stand independent of modules existing. All writes idempotent (verify-live-then-write), all
+landed at `record_status='new'` (Rule #1). No DELETE, no overwrite of a non-empty value, no
+record_status flip. Loader: `.tmp_deploy/ipaas_state_execute_2026_06_07.ts`.
+
+### Executed (counts)
+
+- **entity_type PATCH (B13): 6 masters.** 469 integration_recipes, 470 integration_runs, 471
+  integration_connectors, 472 webhook_subscriptions, 474 integration_data_mappings ->
+  `operational_workflow`; 473 integration_triggers -> `catalog` (config-shape event source:
+  scheduled / webhook / db-change / queue with polling/push config; no workflow, Rule #12 structural
+  exemption). All 6 were `unclassified` before. This resolves the B2-S4 trigger-lifecycle
+  sub-question (triggers are config-shape, no lifecycle) and narrows B2-S4 to the webhook
+  subtype-vs-sibling decision only.
+- **Catalog UX (A4 / Rule #20): 2 fields on domains id=36.** `catalog_tagline` +
+  `catalog_description` authored in buyer voice (workflow + value, no vendor/product names, no
+  em-dash, American English, no handoffs/market-position language) and written straight into the
+  empty fields. The stale "surface-before-write" gate (old B1B-S2 / B2-S2) was overridden per the
+  run contract and Rule #20 A4; copy sits at `record_status='new'` for in-record review. B1B-S2
+  dropped; B2-S2 retired as moot.
+- **Aliases (B11 partial): 12 rows.** Generic-synonym aliases across the 6 masters
+  (`alias_type='synonym'`, `record_status` defaulted to `new`): Integration Flows / Integration
+  Workflows (469); Integration Jobs / Integration Executions (470); Connectors / Application
+  Connectors (471); Event Subscriptions / Webhooks (472); Triggers / Event Triggers (473); Field
+  Mappings / Data Transformations (474). Vendor product terms (Boomi atom/process, Workato
+  recipe/job, MuleSoft flow/DataWeave, ServiceNow spoke, Zapier Zap, Make.com scenario, SnapLogic
+  Snap) were NOT written: Rule #18 forbids vendor/product names in alias text without an
+  `industry_id`. Those stay deferred under the slimmed B1B-S6.
+
+### Surfaced (return-to-user, self-contained)
+
+- **B1A-BUILD / B1B-S1 (the build, gated on B2-S1):** IPAAS has 0 modules + 0 capabilities. Not
+  scaffolded. Proposed 2-module split RECIPE-DESIGN (469,471,472,473,474) + RUNTIME (470) with 6
+  capabilities. Awaiting the B2-S1 split decision before the cascade can run.
+- **B2-S1** module-split decision (gates the build).
+- **B2-S3** B4 pattern-flag flips on 469/470/471/474 + connection-vault split (destructive shape
+  change on existing rows; judgment).
+- **B2-S4** webhook subtype-vs-sibling (trigger lifecycle sub-question now resolved by the
+  entity_type=catalog classification).
+- **B2-S5** inbound consumer-DMDO design (LCAP extend_workflows 222, APIM api_specifications 457).
+- **B2-S6** cross-cutting LCAP-INTEGRATION-CONNECTORS rename / parallel / wait.
+- **B2-S7** IT Infrastructure (id 58) vs IT Operations (id 27) owner spine (re-link is destructive
+  re-attribution of bfd row id 84).
+- **B2-S8** which of 8 additional iPaaS vendors to add as solutions.
+- **Personas / RACI:** DEFERRED (domain is unbuilt; Phase P does not apply until the build lands).
+  No candidate personas authored.
+
+### Left
+
+- **B1B-S3, S4, S7, S9, S10, S11:** M1-gated cascade (need modules/capabilities from B1B-S1). Not
+  touched.
+- **B1B-S6:** vendor-keyed aliases deferred (Rule #18 industry_id requirement); generic surface done.
+- **B1B-S8:** RETIRED per the 2026-06-06 supersession. The legacy domain-grain system skill 72
+  (`ipaas-system`) is now the CORRECT shape under the new model (one domain-grain system skill that
+  derives its toolset). No per-module skills authored, no skill_tools moved. Per-module tool
+  re-authoring tracked in audits/_modularization-backlog.md once the build lands.
+- **b3 (5 candidates):** integration_connections, integration_run_logs, integration_environments,
+  integration_error_records, integration_schedule_policies. Backlog; not auto-executed.
+- **Report-only owed-by-others:** OBS/APIM/TEST-MGMT/VSDP/LCAP B10b + B8 mirrors; pre-existing
+  em-dash in domains.business_logic (catalog-wide sweep).
+
+### next_action_by
+
+`user`: every remaining b1 item is gated on B2-S1 (the module-split decision) or another b2
+judgment call. Nothing in b1a/b1b can fire until the user supplies the module split.

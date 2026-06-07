@@ -1,78 +1,37 @@
 schema_version: 2
 domain: PROD-MGMT
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
-  - id: B1A-EVENT-CATEGORY-RESIDUAL
-    summary: "PATCH 6 PROD-MGMT-owned trigger_events to populate empty event_category"
-    finding: "B9 partial-fail residual. After the 2026-05-31 continuation patched 14 of 20 PROD-MGMT-owned trigger_events, 6 events still carry empty event_category: 1139 beta_program.feedback_collected, 1140 beta_program.closed, 1141 customer_feedback_item.received, 1143 feature_request.submitted, 1150 product_line.retired, 1152 product_metric.refreshed. Rule #13 enum allows lifecycle, state_change, threshold, signal."
-    action: "PATCH 6 trigger_events rows. Proposed categories: 1139 signal (feedback collection is observational with no state transition on the program itself), 1140 lifecycle (program closes = terminal), 1141 lifecycle (item created), 1143 lifecycle (request created), 1150 lifecycle (line retires = terminal), 1152 signal (metric refresh is data observation)."
-    affected_events:
-      - {id: 1139, event_name: "beta_program.feedback_collected", current_category: "", proposed_category: "signal"}
-      - {id: 1140, event_name: "beta_program.closed", current_category: "", proposed_category: "lifecycle"}
-      - {id: 1141, event_name: "customer_feedback_item.received", current_category: "", proposed_category: "lifecycle"}
-      - {id: 1143, event_name: "feature_request.submitted", current_category: "", proposed_category: "lifecycle"}
-      - {id: 1150, event_name: "product_line.retired", current_category: "", proposed_category: "lifecycle"}
-      - {id: 1152, event_name: "product_metric.refreshed", current_category: "", proposed_category: "signal"}
-
-  - id: B1A-INTRA-DOMAIN-HANDOFFS
-    summary: "Author 1 trigger_event (feature_request.accepted) + 3 intra-domain DISCOVERY <-> ROADMAP-DELIVERY handoffs"
-    finding: "B9b hard-fail carry-over. The DISCOVERY (130) -> ROADMAP-DELIVERY (131) pipeline is the single most important workflow in PROD-MGMT (feedback / requests triaged in DISCOVERY, accepted ones flow into the roadmap and become product_features in ROADMAP-DELIVERY) and the catalog has zero intra-domain handoff rows wiring it. State 4 of feature_requests (406) is 'accepted' with requires_permission=true but no event row currently exists for that transition."
-    action: "INSERT 1 trigger_events row (feature_request.accepted, data_object_id=406, event_category='state_change'). INSERT 3 handoffs rows with source_domain_id=target_domain_id=101, integration_pattern='lifecycle_progression', friction_level='low': (a) 130 -> 131 on feature_request.accepted (new event), payload product_features (403); (b) 130 -> 131 on customer_feedback_item.linked (1142), payload product_features (403) or product_roadmaps (405); (c) 131 -> 130 on product_feature.released (1146), payload feature_requests (406)."
-    affected_modules: [130, 131]
-    affected_masters:
-      - {data_object_id: 406, name: "feature_requests", target_module_id: 130, workflow: "accepted state has requires_permission but no trigger_event"}
-      - {data_object_id: 403, name: "product_features", target_module_id: 131, workflow: "draft created from accepted feature_request"}
-      - {data_object_id: 407, name: "customer_feedback_items", target_module_id: 130, workflow: "linked feedback triggers roadmap update downstream"}
-
-  - id: B1A-PHASE-E-BOOTSTRAP
-    summary: "Phase-E RBAC bootstrap: 4 roles + 6 role_modules + 6 baseline permissions + 14 workflow-gate permissions + permission_hierarchy edges"
-    finding: "E1-E5 hard-fail carry-over. Zero roles, zero role_modules, zero permissions on modules 130 / 131, zero permission_hierarchy edges. 14 lifecycle states across the 8 masters carry requires_permission=true (product_lines active/sunset/retired, product_features released/deprecated, product_releases shipped/rolled_back/cancelled, product_roadmaps published, feature_requests accepted/rejected, beta_programs active/closed/cancelled). Under Rule #14 each requires_permission state materializes one workflow-gate permission scoped to the realizing module."
-    action: "Author Phase-E loader (ts on bun, per Rule #4b). 4 roles: PRODUCT-MANAGER, HEAD-OF-PRODUCT, PRODUCT-OPS-ANALYST, ENGINEERING-LEAD. 6 role_modules (3 pairs, one per role on each of 130 / 131; HEAD-OF-PRODUCT admin on both, PRODUCT-MANAGER admin/manage, PRODUCT-OPS-ANALYST manage/read, ENGINEERING-LEAD read/manage). 6 baseline permissions (3 per module: PM-DISCOVERY:read, PM-DISCOVERY:manage, PM-DISCOVERY:admin and same for PM-ROADMAP-DELIVERY). 14 workflow-gate permissions per the lifecycle states + permission_hierarchy edges (admin > manage > workflow-gate > read per the standard derivation)."
-    affected_modules: [130, 131]
-    affected_masters:
-      - {data_object_id: 402, name: "product_lines", target_module_id: 131, workflow: "active/sunset/retired"}
-      - {data_object_id: 403, name: "product_features", target_module_id: 131, workflow: "released/deprecated"}
-      - {data_object_id: 404, name: "product_releases", target_module_id: 131, workflow: "shipped/rolled_back/cancelled"}
-      - {data_object_id: 405, name: "product_roadmaps", target_module_id: 131, workflow: "published"}
-      - {data_object_id: 406, name: "feature_requests", target_module_id: 130, workflow: "accepted/rejected"}
-      - {data_object_id: 409, name: "beta_programs", target_module_id: 131, workflow: "active/closed/cancelled"}
-
-  - id: B1A-APQC-TAGGING-RESIDUAL
-    summary: "INSERT 16 agent_curated handoff_processes rows + plan reviewer-approval pass on the 16 already-tagged rows"
-    finding: "H1 process side-bar: 15 of 31 cross-domain handoffs are tagged (16 handoff_processes rows; handoff 775 has 2 candidate PCFs). 16 handoffs remain untagged. H1 catalog-quality headline (record_status='approved' count): 0 of 31, none of the 16 existing rows have been approved by a reviewer. Volume target per SKILL H1 is 0.5N to 0.8N agent_curated for N=31 = 16 to 25, the residual closes this floor."
-    action: "INSERT 16 handoff_processes rows for the residual handoffs (996, 997, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1012, 791, 813, 1253, 1323, 1324) per the audit table; proposal_source='agent_curated', role='implements', record_status omitted (defaults to 'new' per Rule #1). PCF lookups required for the rows marked 'needs lookup'. Separately surface the 16 existing tags for user review/approval pass."
+  - id: B1A-APQC-TAGGING-DISCOVER-RESIDUAL
+    summary: "5 untagged cross-domain handoffs have no clean L4 PCF match: defer to a Discover/PCF-research pass"
+    finding: "2026-06-07 live recheck: of the 16 handoffs the prior snapshot listed as untagged, 10 are already tagged with agent_curated handoff_processes rows (813, 997, 1001, 1003, 1004, 1006, 1008, 1012, 1323, 1324). 1 more (1002) was tagged this pass with a clean L4 match (PCF 1350, Maintain customer/product master files, external_id 10794). The remaining 5 have no clean L4 PCF match on live and cannot be machine-tagged confidently."
+    action: "Run a Discover/PCF-research pass (or eyeball-confirm a PCF id) for the 5 residual handoffs, then INSERT agent_curated handoff_processes rows. Do NOT force a loose L3 / medium match."
     affected_handoffs:
-      - {handoff_id: 996, direction: outbound, source_domain: PROD-MGMT, target_domain: CSM, trigger_event: "beta_program.launched", payload: "beta_programs", null_field: target_domain_module_id}
-      - {handoff_id: 997, direction: outbound, source_domain: PROD-MGMT, target_domain: CDP, trigger_event: "beta_program.launched", payload: "beta_programs", null_field: target_domain_module_id}
-      - {handoff_id: 1001, direction: outbound, source_domain: PROD-MGMT, target_domain: DXP, trigger_event: "product_feature.released", payload: "product_features", null_field: target_domain_module_id}
-      - {handoff_id: 1002, direction: outbound, source_domain: PROD-MGMT, target_domain: CRM, trigger_event: "product_feature.released", payload: "product_features", null_field: none}
-      - {handoff_id: 1003, direction: outbound, source_domain: PROD-MGMT, target_domain: CSM, trigger_event: "product_feature.deprecated", payload: "product_features", null_field: target_domain_module_id}
-      - {handoff_id: 1004, direction: outbound, source_domain: PROD-MGMT, target_domain: CDP, trigger_event: "product_feature.adoption_threshold_reached", payload: "product_features", null_field: target_domain_module_id}
-      - {handoff_id: 1005, direction: outbound, source_domain: PROD-MGMT, target_domain: CRM, trigger_event: "product_line.launched", payload: "product_lines", null_field: none}
-      - {handoff_id: 1006, direction: outbound, source_domain: PROD-MGMT, target_domain: ERP-FIN, trigger_event: "product_line.launched", payload: "product_lines", null_field: target_domain_module_id}
-      - {handoff_id: 1007, direction: outbound, source_domain: PROD-MGMT, target_domain: CSM, trigger_event: "product_metric.threshold_breached", payload: "product_metrics", null_field: target_domain_module_id}
-      - {handoff_id: 1008, direction: outbound, source_domain: PROD-MGMT, target_domain: WORK-MGMT, trigger_event: "product_release.planned", payload: "product_releases", null_field: none}
-      - {handoff_id: 1012, direction: outbound, source_domain: PROD-MGMT, target_domain: WORK-MGMT, trigger_event: "product_roadmap.item_promoted", payload: "product_roadmaps", null_field: none}
-      - {handoff_id: 791, direction: inbound, source_domain: WORK-MGMT, target_domain: PROD-MGMT, trigger_event: "work_automation.triggered", payload: "work_automations", null_field: none}
-      - {handoff_id: 813, direction: inbound, source_domain: DXP, target_domain: PROD-MGMT, trigger_event: "ab_test.completed", payload: "ab_tests", null_field: source_domain_module_id}
-      - {handoff_id: 1253, direction: inbound, source_domain: WORK-MGMT, target_domain: PROD-MGMT, trigger_event: "work_automation.disabled", payload: "work_automations", null_field: none}
-      - {handoff_id: 1323, direction: inbound, source_domain: WORK-MGMT, target_domain: PROD-MGMT, trigger_event: "okr_objective.committed", payload: "okr_objectives", null_field: none}
-      - {handoff_id: 1324, direction: inbound, source_domain: WORK-MGMT, target_domain: PROD-MGMT, trigger_event: "okr_objective.scored", payload: "okr_objectives", null_field: none}
-    extra_existing_agent_curated_pending_approval: 16
+      - {handoff_id: 996, direction: outbound, source_domain: PROD-MGMT, target_domain: CSM, trigger_event: "beta_program.launched", payload: "beta_programs", note: "proposed 'pilot production' returns no PCF on live"}
+      - {handoff_id: 1005, direction: outbound, source_domain: PROD-MGMT, target_domain: CRM, trigger_event: "product_line.launched", payload: "product_lines", note: "proposed 'sales account relationships' returns no PCF on live"}
+      - {handoff_id: 1007, direction: outbound, source_domain: PROD-MGMT, target_domain: CSM, trigger_event: "product_metric.threshold_breached", payload: "product_metrics", note: "internal monitoring signal; the customer-service-problems L3 (196) and its L4 children are inbound-customer-contact, not a clean fit"}
+      - {handoff_id: 791, direction: inbound, source_domain: WORK-MGMT, target_domain: PROD-MGMT, trigger_event: "work_automation.triggered", payload: "work_automations", note: "only 'workflow' PCF on live is deployment-procedure (8.6.1.3), not generic automation"}
+      - {handoff_id: 1253, direction: inbound, source_domain: WORK-MGMT, target_domain: PROD-MGMT, trigger_event: "work_automation.disabled", payload: "work_automations", note: "same as 791"}
+
+  - id: B1A-APQC-APPROVAL-PASS
+    summary: "DESTRUCTIVE (surfaced): 11 agent_curated handoff_processes rows still at record_status='new' need a reviewer approval pass"
+    finding: "H1 catalog-quality headline (record_status='approved' count). After this pass, 12 of the cross-domain handoffs carry agent_curated tags; 5 are already 'approved' (1008, 1012, 1323, 1324, plus pre-existing approvals) and the rest sit at 'new'. Flipping record_status to 'approved' is a Rule #1 / destructive action the agent never performs."
+    action: "User reviews the agent_curated handoff_processes rows in the catalog UI and approves the correct ones. Agent will not flip record_status."
+
   - id: B1A-PHASE-P
-    summary: "Multi-module (2 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 2 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 2 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    summary: "Personas / RACI layer for the 2-module domain (DEFERRED, not authored this pass)"
+    finding: "Live triage: 2 domain_modules (130, 131), 0 domain_roles reaching this domain via role_modules. Plan 3 (2026-06-02) deleted the old _core personas and re-homed the persona/RACI layer onto domain_roles + process_raci; the zero-persona coverage check fires on this multi-module domain."
+    action: "Author domain_roles (operational personas, function-anchored per references/roles.md), wire role_modules reach across modules 130 / 131, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). DEFERRED per orchestrator: personas are not auto-authored in a state-driven execute pass."
+    candidate_personas: [PRODUCT-MANAGER, HEAD-OF-PRODUCT, PRODUCT-OPS-ANALYST, ENGINEERING-LEAD]
     extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "8 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 8 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [beta_programs, customer_feedback_items, feature_requests, product_features, product_lines, product_metrics, product_releases, product_roadmaps]
-    extra_phase_p_triage: "2026-06-02"
+
+  - id: B1A-PHASE-E-RBAC-RETIRED
+    summary: "RETIRED (Plan 3, 2026-06-02): the old roles / role_modules-into-_core / baseline + workflow-gate permissions / permission_hierarchy bootstrap is no longer authored"
+    finding: "The former B1A-PHASE-E-BOOTSTRAP item (4 roles + 6 role_modules + 6 baseline permissions + 14 workflow-gate permissions + permission_hierarchy edges) targets the catalog RBAC store that Plan 3 DELETED. The catalog now stores no derived permissions and no permission_hierarchy: the emitter DERIVES baseline roles + permission hierarchy + workflow gates from entity_type, requires_permission lifecycle states, and domain_roles/process_raci; the deployer materializes them. Authoring those rows would re-introduce the deleted _core pollution."
+    action: "Do NOT author roles / role_modules-into-_core / baseline-or-gate permissions / permission_hierarchy. The successor work is B1A-PHASE-P (personas + RACI via domain_roles / process_raci). The 14 requires_permission lifecycle states already carry domain_module_id (130/131), so gate derivation has its inputs."
 
 b1b:
   - id: B1B-NEIGHBOR-NULL-OUTBOUND
@@ -135,17 +94,18 @@ b2:
 
   - id: B2-31-2
     summary: "Rule #15 violation on data_objects.notes for product_metrics (408) - approve or revert?"
-    question: "product_metrics (408) data_objects.notes is populated with 'Config-shaped; no workflow. Time-series measurement records (adoption, usage, quality, business KPIs) linked to features and releases. Status is derivable from threshold breaches via computed_fields; no per-state permissions needed.' Rule #12's config-shape exemption license for data_objects.notes is RESCINDED per Rule #15. Was this wording user-approved at original load?"
+    question: "product_metrics (408) data_objects.notes is populated with 'Config-shaped; no workflow. Time-series measurement records (adoption, usage, quality, business KPIs) linked to features and releases. Status is derivable from threshold breaches via computed_fields; no per-state permissions needed.' Rule #12's config-shape exemption license for data_objects.notes is RESCINDED per Rule #15 (the classification is now the entity_type column, set to 'computed' on 2026-06-07). Was this wording user-approved at original load?"
     options:
       - "(a) Confirm user-approved at load, leave wording in place."
       - "(b) Confirm auto-populated, PATCH notes to '' and append Rule #15 incident entry to skill-changelog.md."
+    note: "DESTRUCTIVE (overwrite of a non-empty notes value) - surfaced, not executed. entity_type='computed' was set this pass, so the config-shape signal now lives in the typed column regardless of the notes decision."
 
   - id: B2-31-3
     summary: "B4 pattern-flag re-evaluation across 4 PROD-MGMT masters"
     question: "Which of the following pattern flags should be set true? (a) feature_requests.has_personal_content (submitter contact + verbatim quotes carry PII), (b) product_releases.has_submit_lock (state 3 'shipped' is terminal with requires_permission, no silent post-ship mutation), (c) product_roadmaps.has_submit_lock (state 2 'published' is an external-facing commitment), (d) product_lines.has_submit_lock (likely false, long-lived strategic asset)."
     options:
       - "Per-flag yes/no decision."
-    why: "Workflow-shape judgment; Rule #12 + Rule #15 mean auto-flipping flags without surfacing them violates the notes-pollution backstop."
+    why: "Workflow-shape judgment; Rule #12 + Rule #15 mean auto-flipping flags without surfacing them violates the notes-pollution backstop. All four masters are entity_type='operational_workflow' as of 2026-06-07, so the flags are in scope."
 
   - id: B2-31-4
     summary: "roadmap_items (275) orphan: SPM should master, or DELETE + recast handoff payload?"
@@ -153,6 +113,7 @@ b2:
     options:
       - "(a) Schedule SPM b1 audit, let SPM master roadmap_items."
       - "(b) DELETE the (131, 275) consumer DMDO + PATCH handoff 243 data_object_id from 275 to 405."
+    note: "Option (b) is DESTRUCTIVE (DELETE + payload re-attribution) - surfaced, not executed."
 
   - id: B2-31-5
     summary: "F5 Semantius score gap: notify_team (914) external on skill 202 vs notify_person (913) platform on skill 201"
@@ -161,6 +122,7 @@ b2:
       - "(a) Replace notify_team with notify_person on skill 202 (drop the divergent tool, reach 100% platform)."
       - "(b) Promote notify_team to coverage_tier='platform' (keep the naming distinction)."
       - "(c) Leave as-is and accept the 95% Semantius score."
+    note: "Options (a) and (b) are DESTRUCTIVE (overwrite/replace existing rows) - surfaced, not executed. Note: skill_tools is being retired per Plan 3 / per-domain-skill restoration; confirm whether this even survives the skill-grain migration before acting."
 
   - id: B2-31-6
     summary: "Rule #10 users edges: approve 8 default platform-builtin verbs?"
@@ -168,6 +130,7 @@ b2:
     options:
       - "(a) Approve 8 default edges with the proposed verbs."
       - "(b) Specify per-row verb overrides (list which)."
+    note: "Additive once the verb is chosen, but the per-row verb is an editorial pick the agent cannot make alone - surfaced for the verb decision."
 
   - id: B2-31-7
     summary: "Rule #15 pollution on domain_data_objects.notes across 9 PROD-MGMT rows - revert + log incident?"
@@ -176,6 +139,7 @@ b2:
       - "(a) PATCH 9 domain_data_objects.notes to '' and append Rule #15 incident entry to skill-changelog.md."
       - "(b) Approve current wording (would require explicit Rule #15 carve-out justification per row)."
     why: "Same-class violation triggered Rule #15's audit obligation in the prior skill incident log; this audit found it on legacy rows the 2026-05-30 audit did not flag."
+    note: "DESTRUCTIVE (overwrite of non-empty notes values) - surfaced, not executed. Also: domain_data_objects is a deprecated rollup being retired (2026-06-02 changelog); for a modularized domain these rows are slated for deletion anyway, which may moot the notes question."
 
 b3:
   - id: B3-PROD-OPPORTUNITIES
@@ -266,5 +230,5 @@ extra_candidate_regulations:
   - {regulation: "CPRA", applicability: "customer_feedback_items personal_content handling"}
   - {regulation: "Section 508 / ADA / EAA", applicability: "product roadmap planning accessibility checkpoints"}
 
-extra_h1_pending_review_count: 16
+extra_h1_pending_review_count: 11
 extra_phase_e_lifecycle_states_with_requires_permission: 14

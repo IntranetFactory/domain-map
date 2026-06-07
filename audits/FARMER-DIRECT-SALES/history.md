@@ -344,3 +344,42 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate execute pass (SKILL.md Rule #21) against the open items in state.yaml; no fresh from-scratch audit. Resolved domain id 158 and the 8 modules (118-124 full, 172 starter) live. Two EXECUTE-class items were fully applied and dropped; the remaining open items are user-judgment (b2), blocked-by-other-domains (b1b), deferred personas (B1A-PHASE-P), or speculative backlog (b3). Loader: `c:/dev/domain-map/.tmp_deploy/fix_farmer_direct_sales_state_driven_2026_06_07.ts` (idempotent; reads live then PATCHes only unclassified entity_types and only empty catalog fields). Confirmed the `skill_tools` table no longer exists in the live schema (PGRST205), so the former B1B-S4 / B2-S2 (skill_tools.notes Rule #15 revert) are moot under the 2026-06-06 per-domain-skill restoration and closed.
+
+### Executed
+
+| Item | Type | Action | Rows |
+|---|---|---|---|
+| B1A-ENTITY-TYPE | entity_type classification (Rule #12 / B13) | PATCH data_objects.entity_type from `unclassified`. 514 csa_memberships, 515 csa_share_packs, 516 farmers_market_sales, 517 wholesale_orders, 518 delivery_routes, 520 butcher_orders, 521 harvest_forecasts -> `operational_workflow`; 519 pickup_locations, 522 farm_storefronts -> `catalog`. | 9 PATCHes (0 remain unclassified) |
+| Rule #20 / A4 | Domain catalog UX | Authored buyer-voice catalog_tagline + catalog_description on domain 158 (was empty). | 1 row (2 fields) |
+| Rule #20 / M8 | Module catalog UX | Authored buyer-voice catalog_tagline + catalog_description on all 8 modules (118 FDS-CSA-MGMT, 119 FDS-ONLINE-STORE, 120 FDS-DELIVERY-OPS, 121 FDS-MARKET-POS, 122 FDS-WHOLESALE, 123 FDS-BUTCHER, 124 FDS-HARVEST-PLANNING, 172 CSA-STARTER), all previously empty. No vendor names; American English; no em-dash. | 8 rows (16 fields) |
+
+Verification (from loader): masters still unclassified = 0; domain empty-tagline rows = 0; module empty-tagline rows = 0.
+
+UI:
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/domains
+- https://tests.semantius.app/domain_map/domain_modules
+
+### Surfaced (no write; user judgment / destructive)
+
+- **B2-S1** (M7): keep / DELETE / promote the 5 sibling-consumer DMDO rows. Option (b) DELETE is destructive, not applied.
+- **B2-S3**: rename FDS-DELIVERY-OPS to FDS-FULFILLMENT + add domain_module_host_domains junctions, vs leave as-is, vs split. Rename is restructuring, not applied.
+- **B2-S4**: should CRM seed a crm_opportunity.closed_won inbound to FDS-ONLINE-STORE 119 (payload customers)? Gates B1B-S5.
+- **B2-S5**: are handoffs 365/962/964 correctly targeting CRM-PIPELINE-MGT 46, or should they retarget? Retarget is a destructive overwrite of a populated FK; gates 3 of 4 B1B-H1 tags.
+- **B2-S6**: confirm permission_hierarchy expands the 24 workflow-gate permissions vs add explicit grants on FDS roles.
+- **B2-S7**: add delivery_routes 518 and/or harvest_forecasts 521 as embedded_master on CSA-STARTER 172, or leave minimal at 4 embeds.
+- **B1A-PHASE-P (personas/RACI)**: DEFERRED per Phase-P. 0 personas reach this 8-module domain via role_modules. Candidate personas noted: Farm Operator, CSA Manager, Wholesale / Food-Hub Manager, Delivery Coordinator, Market Cashier, Butcher / Processing Coordinator, Harvest Planner.
+
+### Left
+
+- **B1B-S1 / B1B-S2** (B10b NULL FK backfills): blocked by ERP-FIN, FOOD-TRACE, FMIS b1 audits; not derivable on the FDS side.
+- **B1B-S5**: gated on B2-S4 user decision.
+- **B1B-H1**: 365/962/964 gated on B2-S5; 963 has no clean PCF cross-industry match (defer to Discover Pass 3). Verified live 2026-06-07 that all 4 still carry 0 handoff_processes rows and no clean independent match exists while CRM-target is open.
+- **b3 backlog** (7 items): share_swaps, farmers_market_events, producer_payouts, producers, cottage_food_disclosures, FDS-COMPLIANCE module, domain_regulations seed. Untouched.
+- **Former B1B-S4 / B2-S2** (skill_tools.notes Rule #15 revert): RETIRED / moot. `skill_tools` table dropped (PGRST205 live); per-module system skills retired by the 2026-06-06 supersession. Closed.

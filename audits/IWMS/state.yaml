@@ -11,85 +11,90 @@
 schema_version: 2
 domain: IWMS
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
+
+# Open b1a items remaining are all gated on a user decision or are destructive; surfaced, not
+# auto-executed. The 2026-06-07 state-driven pass executed entity_type classification (6 masters)
+# and Rule #20 catalog UX copy (domain 23 + 5 modules). See history.md.
 
 b1a:
   - id: B1A-N15
     summary: PATCH notes="" on handoffs 1165 and 1166 to revert Rule #15 forbidden "target NULL until X is modularized" annotations
+    classification: destructive_surface  # overwrites a non-empty notes value; recommended fix only, needs user sign-off
     finding: |
       handoffs.notes on row 1165 carries "target NULL until IGA is modularized" and row 1166 carries
-      "target NULL until ERP-FIN is modularized". Both match the rescinded "until X is modularized"
-      pattern explicitly listed as forbidden in Rule #15. Audit-revert is permitted since this audit
-      names the row IDs and the prior license has been rescinded.
+      "target NULL until ERP-FIN is modularized" (both confirmed still present live 2026-06-07). Both
+      match the rescinded "until X is modularized" pattern explicitly listed as forbidden in Rule #15.
+      Reverting a non-empty notes value is a destructive write under the Rule #21 contract, so it is
+      surfaced for user approval rather than executed.
     action: |
-      semantius call crud postgrestRequest with PATCH /handoffs?id=eq.1165 body {"notes":""} and
-      PATCH /handoffs?id=eq.1166 body {"notes":""}. No loader needed; two surgical CLI calls.
+      On approval: PATCH /handoffs?id=eq.1165 body {"notes":""} and PATCH /handoffs?id=eq.1166 body
+      {"notes":""}. Two surgical CLI calls; no loader needed.
     affected_handoffs:
       - {handoff_id: 1165, direction: outbound, source_domain: IWMS, target_domain: IGA, trigger_event: desk_booking.checked_in, payload: desk_bookings, null_field: none}
       - {handoff_id: 1166, direction: outbound, source_domain: IWMS, target_domain: ERP-FIN, trigger_event: workplace_service_request.resolved, payload: workplace_service_requests, null_field: target_domain_module_id}
 
   - id: B1A-M6
     summary: INSERT domain_module_capabilities (100, 374) to cure M6 capability-orphan on IWMS-ROOM-RESERVATION
+    classification: gated_on_b2  # blocked on B2-CAP capability-granularity decision
     finding: |
-      Module 100 IWMS-ROOM-RESERVATION still has zero rows in domain_module_capabilities. Every
-      other IWMS module realizes at least one capability. Audit-default fix links to existing
-      REAL-SPACE-OPTIM (374) since space-optimization is the closest match and already realized by
-      IWMS-DESK-RESERVATION (99) and IWMS-SPACE-ANALYTICS (102).
+      Module 100 IWMS-ROOM-RESERVATION still has zero rows in domain_module_capabilities (confirmed
+      via prior audits; unchanged). Audit-default fix links to existing REAL-SPACE-OPTIM (374). Held
+      because B2-CAP option (b) would author a new REAL-MEETING-MGMT capability instead, which would
+      orphan a 374 insert.
     action: |
-      semantius call crud postgrestRequest with POST /domain_module_capabilities body
-      [{"domain_module_id":100,"capability_id":374}]. Skip if B2-CAP option (b) picked
-      (then blocked on new REAL-MEETING-MGMT capability authoring).
+      If B2-CAP picks (a): POST /domain_module_capabilities [{"domain_module_id":100,"capability_id":374}].
+      If (b): author new capability first, then link.
     blocked_by:
       - {type: user_decision, ref: B2-CAP}
     affected_modules: [100]
 
-  - id: B1A-F2
-    summary: Author 5 system skills (one per module) + 5 to 12 skill_tools per skill to cure F2/F3/F5/F7
-    finding: |
-      /skills?domain_module_id=in.(98,99,100,101,102)&skill_type=eq.system returns []. Rule #17 is
-      a Phase-A obligation: one system skill per domain_modules row, each with at least one
-      skill_tools row. Semantius score uncomputable until this is cured. Module count is 5 if
-      DESK/ROOM split is kept, 4 if merged.
-    action: |
-      Author 5 skills (iwms_location_master_agent, iwms_desk_reservation_agent,
-      iwms_room_reservation_agent, iwms_workplace_service_desk_agent, iwms_space_analytics_agent),
-      each anchored on its matching domain_module_id with skill_type='system'. Bundle 5 to 12
-      skill_tools per skill mixing query / mutate / workflow-gate. WSD includes
-      triage_service_request and resolve_service_request workflow-gate tools. Loader pattern in
-      scripts/loaders/load_research.ts.
-    blocked_by:
-      - {type: user_decision, ref: B2-SPLIT}
-    affected_modules: [98, 99, 100, 101, 102]
-
   - id: B1A-B4
     summary: PATCH pattern flags (has_submit_lock / has_single_approver) on workflow-bearing masters per Rule #12 positive re-evaluation
+    classification: gated_on_b2  # overwrites existing false values; workflow-shape judgment the user owns (B2-FLAGS)
     finding: |
-      Every workflow-bearing master has has_submit_lock=false and has_single_approver=false.
-      Re-evaluation candidates per Rule #12: desk_bookings.has_submit_lock=true once checked_in
-      (Robin, Eptura, Tactic all enforce edit-lock after check-in), room_reservations.has_submit_lock=true
-      once checked_in, workplace_service_requests.has_single_approver=true given the
-      triaged -> resolved single-approver path.
+      Every workflow-bearing master has has_submit_lock=false and has_single_approver=false (live
+      2026-06-07). Re-evaluation candidates per Rule #12: desk_bookings.has_submit_lock=true once
+      checked_in, room_reservations.has_submit_lock=true once checked_in,
+      workplace_service_requests.has_single_approver=true given the triaged -> resolved path.
     action: |
-      PATCH /data_objects?id=eq.<id> per flag the user approves in B2-FLAGS. Three candidate
-      patches: id 590 has_submit_lock=true, id 591 has_submit_lock=true, id 592
-      has_single_approver=true.
+      PATCH /data_objects?id=eq.<id> per flag the user approves in B2-FLAGS. Candidate patches:
+      id 590 has_submit_lock=true, id 591 has_submit_lock=true, id 592 has_single_approver=true.
     blocked_by:
       - {type: user_decision, ref: B2-FLAGS}
     affected_masters:
       - {data_object_id: 590, name: desk_bookings, target_module_id: 99, workflow: booking_lifecycle}
       - {data_object_id: 591, name: room_reservations, target_module_id: 100, workflow: reservation_lifecycle}
       - {data_object_id: 592, name: workplace_service_requests, target_module_id: 101, workflow: request_triage_resolve}
+
+  - id: B1A-F2
+    summary: "[SUPERSEDED 2026-06-06] Per-module system skills + skill_tools — CANCELED by per-domain-skill restoration"
+    classification: superseded  # see supersession header; do NOT author per-module skills
+    finding: |
+      The original F2 obligation (one system skill per domain_modules row, each with skill_tools)
+      is retired. Under the new model FULL modules carry no skill, the domain gets exactly one
+      domain-grain system skill that derives its toolset, and per-module tool requirements live on
+      domain_module_tools. Per-module tool re-authoring for IWMS is tracked in
+      audits/_modularization-backlog.md, not here. No action in this audit.
+
   - id: B1A-PHASE-P
-    summary: "Multi-module (5 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 5 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 5 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "6 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 6 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [desk_bookings, locations, room_reservations, space_utilization_reports, workplace_experience_feedback, workplace_service_requests]
+    summary: "Multi-module (5 modules) with 0 personas post-Plan-3 (E1 fail): persona / RACI layer — DEFERRED."
+    classification: deferred_personas  # B1A-PHASE-P: author later; not auto-authored this pass
+    finding: |
+      Live triage carried from 2026-06-02: 5 domain_modules and 0 domain_roles reaching this domain
+      via role_modules after Plan 3 deleted the old _core personas. Persona / RACI authoring is
+      explicitly deferred per the Rule #21 contract (personas are not auto-authored).
+    candidate_personas:
+      - Workplace Manager (Facilities and Real Estate)
+      - Space Planner (Facilities and Real Estate)
+      - Workplace Coordinator (Facilities and Real Estate)
+      - Employee Workplace User (consumer-grain)
+    action: |
+      When scheduled: author domain_roles (function-anchored per references/roles.md section 7),
+      wire role_modules reach across the 5 modules, add process_raci rows, wire
+      data_object_lifecycle_states.process_id. ATS is the worked reference
+      (scripts/loaders/load_ats_personas_pilot.ts).
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
@@ -183,8 +188,8 @@ b2:
       - (b) author new REAL-MEETING-MGMT capability and link it; more granular; may force the same split on DESK
       - (c) mixed (specify per module)
     why: |
-      Capability granularity decision; some flagships (Robin, Tactic) market desk + room as one
-      workflow while others (Condeco, Spacewell) treat them as distinct.
+      Capability granularity decision; some flagships market desk + room as one workflow while others
+      treat them as distinct.
 
   - id: B2-FLAGS
     summary: B4 pattern-flag positive re-evaluation per Rule #12
@@ -195,17 +200,18 @@ b2:
       - per-flag yes / no answer; capture decisions for B1A-B4 PATCH
     why: |
       Pattern flags are workflow-shape judgments the user owns. Vendor evidence supports
-      submit-lock on check-in (Robin, Eptura, Tactic) and single-approver on triage -> resolve.
+      submit-lock on check-in and single-approver on triage -> resolve. PATCHing overwrites the
+      existing false value, so it is a sign-off item, not auto-applied.
 
   - id: B2-SPLIT
     summary: Keep DESK + ROOM split or merge to single IWMS-RESERVATIONS module
     question: Maintain the two-module split for desk and room reservations, or merge?
     options:
-      - (a) keep split, current default; works for customers buying Robin Desk vs Robin Rooms separately
+      - (a) keep split, current default; works for customers buying desk and room booking separately
       - (b) merge to single IWMS-RESERVATIONS, simpler agent surface, mirrors pure-plays selling both
     why: |
-      Decision drives B1A-F2 skill count (4 vs 5) and B1B-B9b intra-domain handoff shape.
-      B3 candidates (parking_reservations, move_orders) may argue against merge.
+      Decision drives B1B-B9b intra-domain handoff shape. B3 candidates (parking_reservations,
+      move_orders) may argue against merge.
 
   - id: B2-FLOOR
     summary: Floor-plan trigger events 940 / 941 audit-perimeter ownership

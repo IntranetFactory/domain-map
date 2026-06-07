@@ -297,3 +297,53 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21) over the open items in `state.yaml`. Worked only
+the recorded items, refreshed against live first. Domain 163 (EM-FUND-PLATFORM), 4 FULL modules
+(26 EM-FUND-FORMATION, 27 EM-FUND-SPV, 28 EM-FUND-OPS-LITE, 29 EM-FUND-CAPTABLE-LITE).
+Masters fund_formations(781)@26, spvs(782)@27, spv_subscriptions(783)@27. All additive/corrective
+work landed at `record_status='new'`; loader is fully idempotent (verified by a clean second run,
+all skips). Loader:
+[.tmp_deploy/2026-06-07_em_fund_platform_state_driven_execute.ts](../../.tmp_deploy/2026-06-07_em_fund_platform_state_driven_execute.ts).
+
+### Executed
+
+| State item | Fix type | Target | Count |
+|---|---|---|---|
+| B1A-ENTITY-TYPE | PATCH `data_objects.entity_type` unclassified -> `operational_workflow` | fund_formations(781), spvs(782), spv_subscriptions(783) | 3 |
+| B1B-S1 (A4 + M8) | Author + write empty `catalog_tagline` + `catalog_description` (Rule #20 backfill; stale surface-before-write gate ignored) | domain 163 + modules 26/27/28/29 | 5 rows |
+| B1A-B6 | INSERT intra-domain `data_object_relationships` (composition) | fund_formations spawns spvs (2199); fund_formations spawns cap_tables (2200) | 2 |
+| B1A-B9b | INSERT intra-domain `handoffs` on `fund_formation.operational` (event 1192), pattern=lifecycle_progression, friction=low | 26->28 (1423); 26->29 (1424); 26->27 (1425) | 3 |
+| B1A-S5 (B11) | INSERT `data_object_aliases` (alias_type=synonym) | fund_formations(781) x3; spv_subscriptions(783) x3 | 6 |
+
+Total: 19 writes (3 PATCH entity_type + 5 catalog UX field-pairs + 2 relationships + 3 handoffs + 6 aliases).
+
+### Surfaced (for the user)
+
+- **b2 (decisions, agent cannot pick):** B2-2 collapse EM-FUND-CAPTABLE-LITE(29) into EM-FUND-FORMATION(26)? (affects B1A-W5 destination). B2-3 promote 3 of 4 modules to `module_kind='starter'`? (blocks B1B-L1/L2/L3, B1B-S6, B1B-S7). B2-4 pattern-flag confirmations (has_submit_lock / has_single_approver on spv_subscriptions, fund_formations, spvs). B2-5 pairwise reconciliation depth for FUND-ADMIN + CAP-TABLE neighbors. B2-1 (catalog UX direction) is now RESOLVED-by-execute: copy was written; user may request a rewrite under the Rule #20 overwrite rule.
+- **Personas / RACI (B1A-PHASE-P, B1B-S7):** DEFERRED, not authored. Candidate personas: solo GP / general partner, fund operations lead, LP-portal-only viewer.
+- **Destructive steps:** none required this pass.
+
+### Left
+
+- **B1A-W1/W2/W4/W5** new master entities (entity_filings, banking_onboardings, spv_kyc_records, templated_documents): new-entity authoring, not in the mechanical-execute allow-list; W5 blocked on B2-2.
+- **B1A-W3** lp_kyc_records embedded shell: canonical master (data_object 1022) CONFIRMED live, so this is a clean single embedded_master DMDO insert next pass; left only because it pairs with the W-entity tranche.
+- **B1A-B9b residual** 4th intra-domain handoff (27->28 on spv.active): blocked on B1B-L2 (spv.active trigger_event does not exist).
+- **B1B-L1/L2/L3, B1B-S6, B1B-S7** lifecycle events + lifecycle states + domain-grain system skill + personas: blocked on B2-3 (starter decision) and lifecycle deps. B1B-S6 reframed to the post-2026-06-06 grain (one domain-grain system skill + `domain_module_tools`; per-module skills RETIRED).
+- **B1B-S2/S3** pattern-flag flips + user-verb user edges: b2 / user pick.
+- **B1B-S5 residual** capital_calls aliases (0): capital_calls is an embedded shell here; alias gap likely belongs to its canonical-master domain.
+- **B1B-H1a** cross-domain handoff 1046 -> FUND-ADMIN: defer-to-Discover Pass 3 (no clean PCF match); intentional deferral, not an execute.
+- **b3 backlog (6):** rolling_fund_periods, gp_management_fees, spv_carry_distributions, lp_communication_log, regulatory_filings, fund_class_terms.
+
+UI: https://tests.semantius.app/domain_map/data_objects?id=in.(781,782,783)
+UI: https://tests.semantius.app/domain_map/domains?id=eq.163
+UI: https://tests.semantius.app/domain_map/domain_modules?domain_id=eq.163
+UI: https://tests.semantius.app/domain_map/data_object_relationships
+UI: https://tests.semantius.app/domain_map/handoffs?source_domain_id=eq.163
+UI: https://tests.semantius.app/domain_map/data_object_aliases?data_object_id=in.(781,783)

@@ -236,3 +236,47 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21) over the open items in `audits/CAFM/state.yaml`. No fresh from-scratch audit. Live state re-verified and matches the snapshot with no drift: CAFM (id 142, parent REAL-EST 141) still has **0 domain_modules (M1 fail), 3 capability_domains (374/376/377, all shared with IWMS + REAL-EST), 0 domain_data_objects, 0 business_function_domains, 0 handoffs, 0 skills, 0 roles**. Domain metadata is populated (`certification_required=false`, `min_org_size='20 s <500'`, `cost_band='$$'`, `usa_market_size_usd_m=400`); both catalog fields were empty.
+
+CAFM is an **UNBUILT** domain whose entire build cascade is gated on the open b2 existential decision **B2-FOLD-VS-DISTINCT** (keep distinct vs fold into IWMS). Per the UNBUILT clause the agent did NOT scaffold modules/masters/roles/skills; it surfaced the build and left the cascade. The only viable additive item was the catalog UX copy on the empty domain row (Rule #20), which was executed. Cross-check context confirmed live: IWMS (id 23) is the enterprise tier (`min_org_size='30 m <2500'`, `cost_band='$$$'`, market 1500 USDM), so the SMB-vs-enterprise asymmetry behind B2-MIN-ORG-SIZE-CROSSCHECK / B2-COST-BAND-CROSSCHECK is real.
+
+### Executed (record_status='new', additive, idempotent)
+
+| Item | Action | Count |
+|---|---|---|
+| B1B-S2 (Catalog UX, Rule #20) | PATCH empty `domains.catalog_tagline` + `catalog_description` on CAFM (id 142) with buyer-voice copy (no vendor names, no em-dash, American English). Stale "surface-before-write" gate ignored per Rule #21. No non-empty value overwritten. Module-grain N/A (0 modules). | 1 domain row |
+
+Loader: `.tmp_deploy/2026-06-07_cafm_state_driven_execute.ts` (run with `bun run`). UI: https://tests.semantius.app/domain_map/domains?id=eq.142
+
+### Surfaced (user decision / destructive; NOT written)
+
+- **B2-FOLD-VS-DISTINCT** (gate): keep CAFM distinct + modularize (a), fold into IWMS as an SMB tier + queue for retirement (b), or keep both + split capabilities domain-neutral (c). This gates the entire build cascade (B1A-BUILD, B1B-S1, S3, S4, M1).
+- **B2-CAPABILITY-RENAME**: rename shared capabilities 374/376/377 to domain-neutral codes (they span >=3 domains). Renaming an existing `capability_code` is a destructive overwrite, so surfaced regardless of B2-FOLD-VS-DISTINCT.
+- **B2-CERT-REQUIRED**: confirm `certification_required=false` (live value confirmed false).
+- **B2-MIN-ORG-SIZE-CROSSCHECK** / **B2-COST-BAND-CROSSCHECK**: confirm the SMB-vs-enterprise asymmetry vs IWMS (both confirmed present live).
+- **B2-LEASE-UTIL-OWNERSHIP**: where lease accounting / utility tracking live if CAFM stays distinct (LEASE-ACCT candidate, ENERGY-MGMT candidate, or embed UTIL-OPS utility_meters 661).
+- **Build (B1A-BUILD)**: CAFM is unbuilt; the agent does not scaffold. Build runs only after B2-FOLD-VS-DISTINCT resolves to keep-distinct.
+- **Personas / RACI (Phase P)**: deferred (no modules exist; not applicable until built). No candidates authored.
+
+### Left (untouched)
+
+- **b1b blocked**: B1B-S1, S3, S4, S5, S6, S7, S8, M1 all remain blocked on B2-FOLD-VS-DISTINCT and/or on B1B-S1 (modules must exist first).
+- **B1B-S5 retired-model reframe**: the old "one system skill per domain_modules row + skill_tools" framing is CANCELED (superseded 2026-06-06). Reframed as a note: once built, CAFM gets exactly ONE domain-grain system skill; `skill_tools` is dropped. Not executed.
+- **b3 backlog**: B3-DESK-CHECKINS, B3-SPACE-CATEGORIES (Phase 0 vendor-surface vetting; IWMS-canonical, embedded in CAFM only if kept distinct).
+
+### Master-ownership note (per scope discipline)
+
+CAFM overlaps IWMS on facility/space mastery, but no master-ownership conflict is actionable today: CAFM masters nothing (0 DMDOs). The ownership question is exactly what B2-FOLD-VS-DISTINCT resolves. Surfaced, not silently decided.
+
+### JWT errors
+
+None.
+
+### Post-fix status
+
+`next_action_by: user`. Catalog copy is live (record_status='new', awaiting approval). Everything else is gated on the B2-FOLD-VS-DISTINCT decision.

@@ -11,66 +11,45 @@
 schema_version: 2
 domain: MSP-PSA
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
-# Audit run 2026-05-31. Bucket 1 H1 has agent-actionable PCF tag candidates
-# ready to load on user approval (next_action_by: agent). All other Bucket 1
-# items are blocked on Bucket 2 prompts or report-only to neighbor audits.
+# Audit run 2026-06-07 (state-driven execute, bulk batch). Executed all agent-actionable
+# additive/corrective items: entity_type classification on the 5 masters, catalog UX copy
+# on the domain row + 4 modules, and the remaining 5 APQC handoff tags (H1 now fully closed,
+# all 14 handoffs tagged). What remains is user-judgment (b2), destructive remediation
+# (M9 self-containment), deferred personas (Phase P), and items blocked on other domains'
+# audits (b1b) or the retired per-module-skill model (b1b S8/S9). next_action_by: user.
 
 b1a:
-  - id: B1A-H1-TAGS
-    summary: Approve and load 10 APQC handoff_processes rows on the untagged MSP-PSA handoffs
-    finding: >-
-      Of 14 MSP-PSA handoffs (10 cross-domain + 4 intra-domain), 4 carry handoff_processes
-      tags (160, 163, 647 to Operate IT user support 20921; 835 to Manage customer service
-      problems, requests, and inquiries 10388). 10 remain untagged. The PCF candidate id
-      for each is pre-specified in the audit table; loader can run on user approval.
-    action: >-
-      INSERT 10 handoff_processes rows (proposal_source=agent_curated, role=implements,
-      record_status omitted to default to new):
-      (159, 295), (161, 1312), (523, 196), (524, 302), (525, 196), (526, 1094),
-      (1244, 295), (1245, 312), (1246, 1094), (1247, 1094).
-    affected_handoffs:
-      - {handoff_id: 159, direction: inbound, source_domain: RMM, target_domain: MSP-PSA, trigger_event: monitoring_alert.threshold_breached, payload: msp_tickets, null_field: null}
-      - {handoff_id: 161, direction: outbound, source_domain: MSP-PSA, target_domain: HAM, trigger_event: ticket.created, payload: hardware_assets, null_field: null}
-      - {handoff_id: 523, direction: outbound, source_domain: MSP-PSA, target_domain: CSM, trigger_event: msp_ticket.escalated, payload: msp_tickets, null_field: null}
-      - {handoff_id: 524, direction: outbound, source_domain: MSP-PSA, target_domain: ERP-FIN, trigger_event: msp_invoice.issued, payload: msp_invoices, null_field: null}
-      - {handoff_id: 525, direction: outbound, source_domain: MSP-PSA, target_domain: CSM, trigger_event: msp_contract.renewal_due, payload: msp_contracts, null_field: null}
-      - {handoff_id: 526, direction: outbound, source_domain: MSP-PSA, target_domain: ERP-FIN, trigger_event: msp_contract.activated, payload: msp_contracts, null_field: null}
-      - {handoff_id: 1244, direction: intra, source_domain: MSP-PSA, target_domain: MSP-PSA, trigger_event: msp_ticket.created, payload: msp_tickets, null_field: null}
-      - {handoff_id: 1245, direction: intra, source_domain: MSP-PSA, target_domain: MSP-PSA, trigger_event: msp_time_entry.approved, payload: msp_time_entries, null_field: null}
-      - {handoff_id: 1246, direction: intra, source_domain: MSP-PSA, target_domain: MSP-PSA, trigger_event: msp_contract.activated, payload: msp_contracts, null_field: null}
-      - {handoff_id: 1247, direction: intra, source_domain: MSP-PSA, target_domain: MSP-PSA, trigger_event: msp_contract.suspended, payload: msp_contracts, null_field: null}
-    extra_pcf_pairs:
-      - {handoff_id: 159, process_id: 295, process_name: "Operate IT user support", external_id: "20921", confidence: confident_L3}
-      - {handoff_id: 161, process_id: 1312, process_name: "Maintain IT asset records", external_id: "20918", confidence: confident_L4}
-      - {handoff_id: 523, process_id: 196, process_name: "Manage customer service problems, requests, and inquiries", external_id: "10388", confidence: confident_L3}
-      - {handoff_id: 524, process_id: 302, process_name: "Invoice customer", external_id: "10743", confidence: confident_L3}
-      - {handoff_id: 525, process_id: 196, process_name: "Manage customer service problems, requests, and inquiries", external_id: "10388", confidence: medium_L3}
-      - {handoff_id: 526, process_id: 1094, process_name: "Maintain IT customer contracts", external_id: "20637", confidence: confident_L4}
-      - {handoff_id: 1244, process_id: 295, process_name: "Operate IT user support", external_id: "20921", confidence: confident_L3}
-      - {handoff_id: 1245, process_id: 312, process_name: "Report time", external_id: "10753", confidence: confident_L3}
-      - {handoff_id: 1246, process_id: 1094, process_name: "Maintain IT customer contracts", external_id: "20637", confidence: confident_L4}
-      - {handoff_id: 1247, process_id: 1094, process_name: "Maintain IT customer contracts", external_id: "20637", confidence: confident_L4}
-  - id: B1A-PHASE-P
-    summary: "Multi-module (4 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 4 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "5 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 5 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [msp_clients, msp_contracts, msp_invoices, msp_tickets, msp_time_entries]
-    extra_phase_p_triage: "2026-06-02"
   - id: B1A-SELF-CONTAIN
-    summary: "2 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
-    finding: "Live triage 2026-06-02: 2 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
-    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
+    summary: "1 required-consumer DMDO row breaks module self-containment (M9): embed or relax. DESTRUCTIVE, surfaced."
+    finding: >-
+      Live 2026-06-07: of the 2 M9 shapes recorded in the prior snapshot, only 1 remains
+      a violation. domain_module_data_objects id 686 on MSP-PSA-SVC-DESK (137) is
+      role=consumer, necessity=required on hardware_assets (data_object 56, mastered by HAM).
+      The second recorded shape, service_incidents (data_object 47) on SVC-DESK 137
+      (id 687), is already role=contributor, necessity=optional, so it no longer trips M9.
+    action: >-
+      DESTRUCTIVE (rewrites role/necessity on an existing DMDO row), so SURFACED not executed.
+      Recommended fix for id 686: either convert to role=embedded_master (carry a local
+      hardware_assets shell in SVC-DESK for standalone deployment) or set necessity=optional
+      (presence-conditional), per references/modules.md section 5 and SKILL.md M9. User picks.
     extra_m9_shapes:
-      - {entity: hardware_assets, module: MSP-PSA-SVC-DESK, role: consumer, master_domain: HAM}
-      - {entity: service_incidents, module: MSP-PSA-SVC-DESK, role: contributor, master_domain: ITSM}
+      - {dmdo_id: 686, entity: hardware_assets, data_object_id: 56, module: MSP-PSA-SVC-DESK, module_id: 137, role: consumer, necessity: required, master_domain: HAM, status: open_violation}
+      - {dmdo_id: 687, entity: service_incidents, data_object_id: 47, module: MSP-PSA-SVC-DESK, module_id: 137, role: contributor, necessity: optional, master_domain: ITSM, status: resolved_now_optional}
+
+  - id: B1A-PHASE-P
+    summary: "Multi-module (4 modules) with 0 personas post-Plan-3 (E1 fail): persona / RACI layer. DEFERRED."
+    finding: "4 domain_modules and 0 domain_roles reach this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    action: >-
+      DEFERRED per Rule #21 (personas/RACI authoring is not auto-run). Candidate operational
+      personas to consider when the user opens Phase P: MSP-TECHNICIAN (SVC-DESK/TIME-BILLING/
+      DISPATCH), MSP-DISPATCHER (DISPATCH), MSP-ACCOUNT-MANAGER (CONTRACTS), MSP-BILLING-ADMIN
+      (TIME-BILLING/CONTRACTS), MSP-CSAT-ANALYST (SVC-DESK). Wire role_modules reach across the
+      4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id.
+      ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). This overlaps the
+      role-list decision tracked in b2 B2-S5; confirm that list before authoring.
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
@@ -163,35 +142,27 @@ b1b:
     extra_workflow_gate_count: 16
 
   - id: B1B-S8
-    summary: F2 hard-fail (4 module-bound system skills missing); blocked on retire-vs-repurpose of skill 85
+    summary: "RETIRED (superseded 2026-06-06): per-module system skills on the 4 modules"
     finding: >-
-      Rule #17: each domain_modules row needs exactly one skill_type=system skill with
-      domain_module_id set. Catalog state is 1 skill (msp-psa-system, id 85) bound to
-      domain_id=131 only. Each of SVC-DESK 137, CONTRACTS 138, TIME-BILLING 139,
-      DISPATCH 140 needs its own module-bound system skill.
+      CANCELED by the per-domain-skill-restoration supersession (see header). The old
+      Rule #17 invariant "one system skill per domain_modules row" is retired. FULL
+      modules carry no skill; the domain has exactly ONE domain-grain system skill (id 85,
+      domain_id=131, domain_module_id null) that derives its toolset. Per-module tool
+      re-authoring (now on domain_module_tools) is tracked in audits/_modularization-backlog.md.
+      No action here; do NOT author per-module skills.
     blocked_by:
-      - {type: user_decision, ref: B2-S4}
+      - {type: superseded, ref: per-domain-skill-restoration, date: "2026-06-06"}
     affected_modules: [137, 138, 139, 140]
-    extra_skill_to_resolve: 85
 
   - id: B1B-S9
-    summary: F3 (reassign skill 85's 6 skill_tools to the 4 new module skills)
+    summary: "RETIRED (superseded 2026-06-06): skill_tools reassignment off skill 85"
     finding: >-
-      Existing skill_tools on skill 85 (query_msp_tickets 689, query_msp_contracts 690,
-      query_msp_time_entries 691, query_msp_invoices 692, query_msp_clients 693,
-      notify_person 694) need to be repointed onto the 4 module-bound skills authored by
-      B1B-S8.
+      CANCELED by the same supersession. skill_tools is dropped from the model; there is
+      no per-module skill to repoint tools onto. Tool requirements live on
+      domain_module_tools (author tools onto modules), tracked in
+      audits/_modularization-backlog.md. No action here.
     blocked_by:
-      - {type: depends_on, ref: B1B-S8, reason: module skills must exist before tool reassignment}
-      - {type: user_decision, ref: B2-S4}
-    extra_skill_tools: [689, 690, 691, 692, 693, 694]
-    extra_proposed_mapping:
-      - {tool: query_msp_tickets, target_module_skill: msp-psa-svc-desk-system}
-      - {tool: query_msp_contracts, target_module_skill: msp-psa-contracts-system}
-      - {tool: query_msp_clients, target_module_skill: msp-psa-contracts-system}
-      - {tool: query_msp_time_entries, target_module_skill: msp-psa-time-billing-system}
-      - {tool: query_msp_invoices, target_module_skill: msp-psa-time-billing-system}
-      - {tool: notify_person, target_module_skill: msp-psa-svc-desk-system, also: msp-psa-dispatch-system}
+      - {type: superseded, ref: per-domain-skill-restoration, date: "2026-06-06"}
 
   - id: B1B-S10
     summary: M1 SOFT-FAIL on DISPATCH 140 (hosts zero role=master DMDOs); blocked on B2-S7
@@ -235,12 +206,6 @@ b2:
     options: ["approve_in_place", "revert", "defer_to_wsc_audit"]
     why: Cross-domain ownership; chat_messages is WSC-mastered. MSP-PSA does not write the row but surfaces the pollution as part of its handoff 835 audit.
 
-  - id: B2-S4
-    summary: F2 cure strategy for skill 85
-    question: RETIRE skill 85 and port its tools to 4 new module skills, or REPURPOSE skill 85 as a cross-module role/process skill and author 4 fresh module skills with new tools?
-    options: ["retire_skill_85", "repurpose_skill_85"]
-    why: Editorial decision about whether skill 85 has a second-life shape after the F2 fix.
-
   - id: B2-S5
     summary: Phase E role list confirmation
     question: >-
@@ -249,7 +214,7 @@ b2:
       cross-module admin, MSP-CLIENT-LEAD as per-client lead), or defer Phase E authoring
       to a separate pass?
     options: ["approve_5_roles", "substitute_or_add", "defer_phase_e"]
-    why: Org-shape authoring intent is the user's call.
+    why: Org-shape authoring intent is the user's call. Gates both B1B-S6 (roles) and B1A-PHASE-P (personas).
 
   - id: B2-S6
     summary: MSP-PSA -> ITSM boundary
@@ -269,6 +234,10 @@ b2:
       msp_time_entries, (c) ACCEPT DISPATCH 140 as a contributor-only module and waive M1.
     options: ["promote_msp_dispatch_schedules_master", "demote_dispatch_to_starter", "waive_m1"]
     why: Architectural intent + Phase 0 verification choice. Flagship vendor evidence (ConnectWise Dispatch, Autotask LiveLinks, Halo Dispatch) supports (a) but the user owns the call.
+
+# NOTE on B2-S4: RETIRED. The skill 85 retire-vs-repurpose question is moot under the
+# 2026-06-06 per-domain-skill-restoration model (FULL modules carry no skill; domain keeps
+# exactly one domain-grain system skill, which skill 85 already is). No decision needed.
 
 b3:
   - id: B3-BLOCK-HOURS

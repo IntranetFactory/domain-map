@@ -345,3 +345,40 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass against `audits/SUP-LIFE/state.yaml` (schema_version 2, supersession header preserved). Confirmed live: SUP-LIFE (domain_id=28) remains an **UNBUILT** domain — 0 `domain_modules`, 0 `capability_domains` (M1 hard fail). Per the unbuilt-domain rule the agent does not scaffold the module/capability/lifecycle/RBAC cascade unprompted; it surfaces the build (gated on B2-S1) and leaves the cascade. Only the two build-independent corrective items were executed. Loader: `.tmp_deploy/fix_sup_life_state_2026_06_07.ts`. No JWT errors.
+
+### Executed (2 write types)
+
+- **B13 entity_type (5 rows PATCHed).** The 5 SUP-LIFE masters still carrying `entity_type='unclassified'` were PATCHed to `operational_workflow`: 206 suppliers, 207 supplier_onboardings, 208 supplier_qualifications, 209 supplier_scorecards, 730 supplier_risk_assessments. Each ships a documented state machine (state.yaml B1B-B12), matching 498 supplier_certifications which was already `operational_workflow`. All 6 masters are now classified. Consequence: B12 lifecycle states are now REQUIRED on all 6 once a module exists to anchor them. UI: https://tests.semantius.app/domain_map/data_objects?id=in.(206,207,208,209,730)
+- **A4 catalog UX (1 domain row PATCHed, Rule #20).** Both `catalog_tagline` and `catalog_description` were empty live, so buyer-voice copy was authored and written (workflow + value, no vendor names, no em-dash, American English). The stale B2-S3 "surface-before-write" gate was intentionally ignored per the catalog-UX execute rule; never overwrote a non-empty value. No module-level UX written (0 modules exist). Tagline: "Onboard new suppliers, qualify them against your standards, and monitor performance and risk on one supplier record." UI: https://tests.semantius.app/domain_map/domains?domain_code=eq.SUP-LIFE
+
+No DELETE, no overwrite of any non-empty value, nothing stamped approved (Rule #1). All writes at `record_status='new'` / default.
+
+### Surfaced (user judgment, not applied)
+
+- **B2-S1** module split granularity (3 / 4 / 5 / custom). Gates B1A-BUILD and the entire b1b cascade.
+- **B2-S2** per-flag confirmation of the 5 proposed B4 pattern-flag flips (workflow-shape judgment; Rule #15 forbids agent auto-notes).
+- **B2-S4** SCRM as a separate domain (promote / fold into SUP-LIFE-RISK / fold into TPRM / reject).
+- **B2-H1** APQC parent-vs-child reconciliation on 8 already-tagged handoffs. DESTRUCTIVE (replace = overwrite existing rows; augment = add alongside). All 18 cross-domain handoffs already carry a tag; no clean-INSERT opportunity remains (the 10 untagged were shipped 2026-05-31, ids 738-747). Surfaced only.
+- **Personas / RACI (Phase P): DEFERRED.** Domain is unbuilt; no personas authored. Candidate roles on record under B1B-E (PROCUREMENT-SUPPLIER-RM, PROCUREMENT-SUPPLIER-ONBOARDING-SPEC, GRC-SUPPLIER-RISK-ANALYST, COMPLIANCE-SUPPLIER-DUE-DILIGENCE) apply only after the build.
+
+### Left
+
+- **Unbuilt-domain cascade (b1b: B1B-M1, B1B-A2, B1B-B12, B1B-B4, B1B-B10b, B1B-E)** — all gated on the build (B1B-M1), itself gated on B2-S1. Not scaffolded per the unbuilt-domain rule.
+- **B1B-F1 + B2-S5 — SUPERSEDED 2026-06-06** (per-domain-skill restoration). The per-module system-skill grain and `skill_tools` are retired; legacy skill 109 (domain_module_id=null) is now the CORRECT one-domain-grain-skill shape, not an anti-pattern. No skill DELETE, no per-module skill authoring. Reframed in state.yaml; supersession header preserved. Per-module tool re-authoring tracked in audits/_modularization-backlog.md.
+- **B3 backlog (5 entity candidates)** — supplier_contacts, supplier_questionnaires, supplier_sanctions_screenings, supplier_diversity_classifications, supplier_audits. Defer until B1B-M1 lands so they anchor at insert time.
+
+### Post-fix status
+
+`next_action_by: user` — the B2-S1 module-count decision unblocks the build and the entire b1b cascade. `last_audit: 2026-06-07`.
+
+### JWT errors
+
+None.

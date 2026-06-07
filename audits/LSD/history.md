@@ -568,3 +568,48 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (Rule #21) working only the open items in `state.yaml`; no fresh from-scratch audit. Live confirmed LSD is an UNBUILT domain: domain_id=25, 0 `domain_modules` rows (M1 fail), 2 cross-cutting `capability_domains` (KNOWLEDGE-MGMT 187, SELF-SERVICE-PORTAL 188), no legal-specific capabilities. Per Validate-mode policy for unbuilt domains, the build is SURFACED and the structural cascade is LEFT in place; the agent did not scaffold the module set. Only module-independent additive/corrective work was executed.
+
+Tenant confirmed `ma@adenin.com` / org `adenin` (domain_map id 1001) via `getCurrentUser` before any write. Loader: [.tmp_deploy/fix_lsd_state_driven_2026_06_07.ts](../../.tmp_deploy/fix_lsd_state_driven_2026_06_07.ts).
+
+### Executed
+
+| Type | Action | Result |
+|---|---|---|
+| PATCH `data_objects.entity_type` (Rule #12) | All 8 LSD masters (633-640) were `entity_type='unclassified'` (a Rule #12 audit failure). Each carries an observable state machine, so all 8 classified as `operational_workflow`: in_house_legal_matters, legal_intake_requests, legal_holds, ediscovery_requests, outside_counsel_engagements, legal_advice_records, regulatory_inquiries, legal_case_dockets. | 8 patched, 0 already classified. Verified live: all 8 now `operational_workflow`. This makes B1B-S1 lifecycle states firmly REQUIRED (still blocked on M1). |
+| PATCH `domains` catalog UX (Rule #20 / B1A-S3) | `catalog_tagline` and `catalog_description` on the LSD domain row (id 25) were both empty. Authored buyer-voice copy (workflow + value, no vendor names per Rule #18, no em-dash, American English) and wrote both. Stale "surface-before-write" gate ignored per the Validate brief. | tagline (121 chars) + description (1301 chars) written. Both were empty before; never overwrote. |
+
+### Surfaced (for user)
+
+- **B2-MODULE-SHAPE** (gating): LSD is UNBUILT (0 modules). Pick (a) 5 modules / (b) 4 / (c) 6 with KNOWLEDGE / (d) single LSD-FULL. Blocks B1B-M1, B1B-M2, B1B-S1, B1B-B1. Agent does not scaffold until resolved.
+- **B2-LEGAL-CONTRACTS-NECESSITY** (destructive): keep legal_contracts (id 66) consumer necessity=required, or demote to optional per Rule #16. Demotion overwrites a non-empty value.
+- **B2-KNOWLEDGE-SURFACE**: realize KNOWLEDGE-MGMT via (a) legal-specific master / (b) consume cross-cutting knowledge_articles / (c) drop the link.
+- **B2-PATTERN-FLAGS** (destructive): approve `legal_advice_records.has_personal_content=true` and/or `outside_counsel_engagements.has_single_approver=true` (flips on live master rows). `legal_holds.has_submit_lock` already true.
+- **B2-SUSPICIOUS-INBOUNDS** (destructive): handoffs 300 (RE-PROP-MGMT, payload property_tenants) and 807 (HCMS, payload editorial_workflows) carry source-mastered payloads; per row reroute / repaint to legal_intake_requests / delete. B1B-H1-807 closes when this resolves.
+- **B2-OUTSIDE-COUNSEL-FANOUT**: trigger_event 1045 outside_counsel.engaged has zero subscribers; pick fan-out targets among SPEND-MGMT / CLM / GRC for the agent to author handoffs after M1.
+- **B2-PAIRWISE-DEPTH**: rerun pairwise after M1 vs accept abbreviated.
+- **Personas / RACI**: DEFERRED. LSD is unbuilt, so no personas authored. Candidate in-house persona set once modules exist: LEGAL-INTAKE-COORDINATOR (intake portal), IN-HOUSE-COUNSEL / LEGAL-OPS-MGR (matters, advice, holds), LITIGATION-PARALEGAL (ediscovery, case dockets), GENERAL-COUNSEL (engagement sign-off). Owning function: Legal.
+
+### Left (untouched)
+
+- **b1b blocked on M1**: B1B-M1, B1B-M2, B1B-S1 (lifecycle states), B1B-B1 (handoff module-FK backfill) all cascade from the unbuilt module set; B1B-H1-807 blocked on B2-SUSPICIOUS-INBOUNDS routing.
+- **B1B-S5-RETIRED**: superseded by the 2026-06-06 per-domain-skill restoration. The existing lsd-system skill (id 82, domain-grain, domain_module_id=null) is already the correct shape; no per-module skill authoring, no skill_tools work. Per-module tool re-authoring (domain_module_tools) tracked in audits/_modularization-backlog.md after M1.
+- **b3 backlog**: B3-MATTER-ASSIGNMENTS, B3-ENGAGEMENT-LETTERS, B3-REGULATORY-INQUIRY-RESPONSES, B3-EDISCOVERY-PRODUCED-AUDIT, B3-GRC-INBOUND-COMPLIANCE-OBLIGATION.
+- **C1 / B11**: business_function_domains already carries owner (Legal, fn 7) + contributor (IT Operations, fn 27); aliases pass (16 rows). Nothing to add.
+- **H1 (handoff 807)**: no clean cross-industry PCF match while payload is source-mastered; defers to the routing decision rather than an agent tag now.
+
+### UI links (tables written)
+
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/domains
+
+### Post-fix status
+
+`next_action_by: user`. The gating decision is B2-MODULE-SHAPE; every remaining structural fix cascades from the unbuilt module set. The two module-independent wins (entity_type classification + catalog UX) shipped this pass.

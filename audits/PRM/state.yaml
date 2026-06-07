@@ -1,33 +1,32 @@
 schema_version: 2
 domain: PRM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
-# Structural Validate b1 audit ran 2026-05-31. M-band fails catastrophically
-# (zero modules on a non-leadership-tier sub-domain of CRM), which gates B / E / F.
-# All 12 prior Bucket 1 items are blocked on either user-approved wording
-# (Rule #20 / Rule #8) or on the four Bucket 2 carve-out decisions. b1a is empty.
-# See history.md sections 2026-05-30, 2026-05-31 Continuation, 2026-05-31 Audit.
+# State-driven Validate execute ran 2026-06-07 (Rule #21, bulk batch). PRM is UNBUILT:
+# 0 domain_modules (M1 hard fail), 0 capability_domains, 0 masters, 0 solution_domains.
+# Per the UNBUILT clause the build is surfaced, not scaffolded; the M/B/E/F cascade is left.
+# EXECUTED this pass: domain-level catalog UX (Rule #20 / A4), the one EXECUTE-classified
+# item (was B1B-A1; its blocked_by:user_decision was the stale surface-before-write gate).
+# CLOSED-as-already-done: B1B-APQC-211-212 (handoff_processes already carries (211,151) and
+# (212,151), agent_curated, record_status='new'; no clean additive PCF match remains).
+# Everything else stays: the build (b1a), the blocked b1b cascade, 6 b2 decisions, 4 b3.
+# See history.md sections 2026-05-30, 2026-05-31 (x2), 2026-06-07.
 
 b1a:
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    finding: "Live re-verify 2026-06-07: domain 96 has 0 domain_modules rows (M1 fail), 0 capability_domains, 0 masters, 0 solution_domains, so it is not deployable today. It must be built before any persona / RACI work applies. The catalog UX fields (tagline + description) are now populated; business_logic and the whole structural surface remain unbuilt."
+    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward. Shape gated on b2 (B2-M1 module count + the four carve-out calls B2-T1 / B2-T2 / B2-S1 / B2-S2)."
+    blocked_by:
+      - {type: user_decision, ref: B2-M1}
+      - {type: user_decision, ref: B2-T1}
+      - {type: user_decision, ref: B2-S1}
+      - {type: user_decision, ref: B2-S2}
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
-  - id: B1B-A1
-    summary: "PATCH domains.id=96 catalog_tagline and catalog_description with user-approved buyer-voice wording."
-    finding: "A4 FAIL. /domains?id=eq.96 returns catalog_tagline='' and catalog_description=''. Rule #20 forbids writing these fields without user-approved wording per row; the audit drafted buyer-voice candidates but they are surface-for-user, not auto-load."
-    action: "Surface the two drafts from history.md 2026-05-30 B1-A1 section to the user, capture approved or rewritten text, then PATCH /domains?id=eq.96 with both fields. Never auto-write."
-    blocked_by:
-      - {type: user_decision, ref: B1-A1-wording, reason: "Rule #20 requires user-approved wording per row"}
-    affected_entities:
-      - domains
-    extra_band: A4
-
   - id: B1B-A2
     summary: "PATCH domains.id=96 business_logic with user-approved wording covering deal-protection conflict resolution and partner-scorecard composite scoring."
     finding: "A1 FAIL on Rule #8. crud_percentage=92 (< 95 threshold) and business_logic=''. The non-JsonLogic-expressible slice is real: deal-protection tie-break logic combining first-to-register / partner tier / CAM judgment, partner-scorecard composite weighting of revenue / growth / MDF utilization / certification compliance against tier-specific thresholds."
@@ -186,17 +185,6 @@ b1b:
     affected_handoffs:
       - {handoff_id: 212, direction: outbound, source_domain: PRM, target_domain: CRM, trigger_event: "partner_referral.qualified", payload: crm_leads, null_field: source_domain_module_id}
     extra_band: B10b
-
-  - id: B1B-APQC-211-212
-    summary: "Author 2 handoff_processes rows tagging handoffs 211 and 212 against APQC PCF cross-industry processes, after user approves the PCF cite."
-    finding: "H1 partial. 2 cross-domain handoffs (211, 212), 0 tagged. Catalog quality 0 of 2 approved (0%), 0 agent_curated rows exist. Live APQC lookup returns L3 candidates: process 147 (Manage leads/opportunities, ext 10182), process 151 (Manage sales partners and alliances, ext 10187), process 143 (Develop sales partner/alliance relationships, ext 10130), L4 712 (Manage opportunity pipeline, ext 20011). Best L3 fit for 211: 147 (parent of opportunity pipeline) with 151 secondary (partner-anchored framing). Best L3 fit for 212: 147 (lead intake) with 151 secondary. Confidence medium for both; the partner-anchored fork is real but the cross-industry PCF aggregates everything into 147."
-    action: "Surface the proposed (handoff_id, process_id, proposal_source='agent_curated', record_status='new') pairs to the user for the PCF cite call: (211, 147), (212, 147) as the L3-parent default, or (211, 151) and (212, 151) for the partner-anchored framing. After user approval, INSERT 2 handoff_processes rows. Per Rule #1, never write proposal_source='human_curated' here; the agent authored these, not the user verbatim."
-    blocked_by:
-      - {type: user_decision, ref: APQC-PCF-cite-resolution-for-211-212}
-    affected_handoffs:
-      - {handoff_id: 211, direction: outbound, source_domain: PRM, target_domain: CRM, trigger_event: "co_sell.opportunity_created", payload: crm_opportunities, null_field: handoff_processes}
-      - {handoff_id: 212, direction: outbound, source_domain: PRM, target_domain: CRM, trigger_event: "partner_referral.qualified", payload: crm_leads, null_field: handoff_processes}
-    extra_band: H1
 
 b2:
   - id: B2-M1

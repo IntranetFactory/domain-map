@@ -521,3 +521,71 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate (Rule #21) working only the open items in state.yaml; no fresh
+from-scratch audit. Live verification confirmed the snapshot: domain id 102, 0
+domain_modules (M1 fail), 0 masters (domain_data_objects = 0, domain_module_data_objects =
+0), 8 capability_domains (ids 89-96), catalog_tagline + catalog_description both empty before
+this pass. SALES-PERF is UNBUILT (modules), so the build-vs-scaffold rule applies: the agent
+executed the one independent additive item (domain-row catalog UX) and did NOT scaffold the
+module/master cascade, which is surfaced and gated on the user's B2-M1 module-shape decision.
+Overlay test confirms SALES-PERF is master-bearing (quotas, commissions, attainment are real
+records). next_action_by flips back to user (B2-M1 is the load-bearing open item).
+
+### Executed (1 write type, 1 row)
+
+- B1B-A1, catalog UX on the SALES-PERF domains row (id 102). PATCHed catalog_tagline and
+  catalog_description (both previously empty strings, A4 fail). Buyer-voice copy
+  (workflow + value), no vendor names, no em-dash, American English. record_status
+  unchanged (stays 'new'); notes untouched. Per the brief's Rule #20 execute clause this
+  overrides the prior stale "surface-before-write / user-approval" gate (formerly b1b
+  B1B-A1, now retired). The wording is the vetted 2026-05-30 draft, consolidated.
+  Loader: .tmp_deploy/fix_sales_perf_catalog_ux_2026_06_07.ts (idempotent: only writes a
+  field that is currently empty; never overwrites a non-empty value).
+  UI: https://tests.semantius.app/domain_map/domains?id=eq.102
+  - Module-level catalog UX (M8) is vacuous: SALES-PERF has 0 modules, so there are no
+    module rows to author taglines on.
+- APQC tags (H1): no work. All 3 inbound handoffs (202, 203, 208) already carry the
+  agent_curated process-713 tag (B1-H1 landed 2026-05-31). H1 coverage passes; no untagged
+  cross-domain handoff remains, so there is no INSERT.
+- entity_type patch (M-band): vacuous. SALES-PERF owns 0 data_objects. The one candidate
+  master that already exists in the catalog (compensation_plans id 153) is owned by domain
+  60 and already classified (entity_type operational_workflow); not a SALES-PERF row, not
+  touched.
+
+### Surfaced (no writes; require user decision or are destructive)
+
+- B1A-BUILD (the build itself). UNBUILT domain: 0 modules, 8 capabilities, master-bearing.
+  Agent does not scaffold; the full Phase A/M/B/S(/P) build is surfaced and gated on B2-M1.
+  Build note: data_object compensation_plans (id 153) already exists, mastered by domain 60
+  (module 78); the build must arbitrate co-mastership vs reuse rather than minting a new
+  master (this is the same SALES-PERF / COMP-MGMT overlap B2-C1 raises).
+- B2-M1 (module shape, 8 / 5 / 3). The single load-bearing open item; rewrites B1A-BUILD,
+  B1B-V1..V7 module targets, and the B1B-S1 backfill mapping.
+- B2-C1 (capability-level RACI override on INCENTIVE-COMP-MGMT: add Compensation Management
+  as contributor / leave as-is / add Finance as co-owner).
+- B2-R1 (regulation coverage: ASC 606-21 only, +SOX, +GDPR, +Reg BI/FINRA full set, or defer).
+- B2-H1 (DESTRUCTIVE). discovery_substring handoff_processes row 106 (handoff 203 ->
+  process 54, record_status='new') is an incorrect substring match; the correct agent_curated
+  row (203 -> 713, id 410) already exists. User picks: reject row 106 / delete row 106 / keep.
+  Agent will not destructively reject or delete an existing row unapproved.
+- B2-P1 (pairwise reconciliation timing once the build lands: both / defer / CRM-only).
+
+### Left (untouched)
+
+- B1B-S1 (B10b target_domain_module_id backfill on handoffs 202/203/208): blocked on
+  B1A-BUILD (no modules to attribute to). Kept. Note: handoff 208's source_domain_module_id
+  is now 187 (REV-INTEL has modularized since the 2026-05-30 snapshot), so the prior
+  report-only "owed by REV-INTEL on the 208 source side" item is resolved.
+- B1B-V1..V7 (7 vendor-surface master placeholders): all blocked on B1A-BUILD + B2-M1. Kept.
+- B3-CompExpense, B3-CreditingRules, B3-Overlay, B3-CapacityCarveout: Phase-0-pending
+  backlog. Kept, not vetted this pass.
+- Personas / RACI (Phase P): deferred by construction (domain has 0 modules; Phase P only
+  applies once a multi-module build lands). No personas authored. Candidate personas when
+  the build lands: Sales Comp Analyst, Sales Operations Manager, RevOps Strategy Lead,
+  Commissions Finance Partner, Sales Rep (payee, statement-consumer).
+- No JWT errors. No notes writes. No record_status overrides. No mcp__* tool use. No cd.

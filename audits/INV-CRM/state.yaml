@@ -11,123 +11,95 @@
 schema_version: 2
 domain: INV-CRM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
   - id: B1A-M1
     summary: Missing master data_subject_requests for GDPR personal-data handling on INV-CRM-RELATIONSHIP-GRAPH
     finding: INV-CRM holds personal data on founders, executives, and LPs across all 3 modules but has zero data_subject_requests master. GDPR Articles 15-22 (right of access, rectification, erasure, restriction, portability, objection) require a structured request log. Affinity and Attio both ship this entity in their VC templates. No equivalent entity exists anywhere in the INV-CRM footprint.
-    action: Author master domain_owned data_object data_subject_requests under module 10 (INV-CRM-RELATIONSHIP-GRAPH). Populate has_personal_content=true. Add domain_module_data_objects row with role=master, necessity=required. Author lifecycle states (received, in_review, fulfilled, rejected) with requires_permission on the fulfilled / rejected transitions. Author 2-3 trigger_events (data_subject_request.received, data_subject_request.fulfilled).
+    action: Author master domain_owned data_object data_subject_requests under module 10 (INV-CRM-RELATIONSHIP-GRAPH). Populate has_personal_content=true. Add domain_module_data_objects row with role=master, necessity=required. Author lifecycle states (received, in_review, fulfilled, rejected) with requires_permission on the fulfilled / rejected transitions. Author 2-3 trigger_events (data_subject_request.received, data_subject_request.fulfilled). Classify entity_type=operational_workflow.
+    note: "Net-new master authoring (data_object + DMDO + lifecycle + trigger_events + relationships). Research-grade entity design, not a mechanical backfill; carried out of the 2026-06-07 mechanical execute batch."
     affected_modules: [10]
     affected_entities: [data_subject_requests]
     vendor_evidence: [Affinity, Attio for VC]
   - id: B1A-M2
     summary: Missing master meeting_records under INV-CRM-RELATIONSHIP-GRAPH
     finding: Calendar-derived meeting / interaction log is the primitive underlying relationship_records (the synthesized strength score). All 4 flagship specialists (Affinity, DealCloud, 4Degrees, Attio for VC) expose this as a first-class master. Absence means relationship score has no auditable substrate.
-    action: Author master domain_owned data_object meeting_records under module 10. Pattern flags has_personal_content=true. DMDO row role=master, necessity=required. Author data_object_relationships meeting_records ↔ investor_contacts (many_to_many, association) and meeting_records → relationship_records (composition or reference, source-side).
+    action: Author master domain_owned data_object meeting_records under module 10. Pattern flags has_personal_content=true. DMDO row role=master, necessity=required. Author data_object_relationships meeting_records <-> investor_contacts (many_to_many, association) and meeting_records -> relationship_records (composition or reference, source-side). Classify entity_type (operational_record likely).
+    note: "Net-new master authoring; carried out of the 2026-06-07 mechanical execute batch."
     affected_modules: [10]
     affected_entities: [meeting_records]
     vendor_evidence: [Affinity, DealCloud, 4Degrees, Attio for VC]
   - id: B1A-M3
     summary: Missing master introduction_requests; capability INVCRM-INTRODUCTION-ROUTING has zero entity backing
     finding: Capability INVCRM-INTRODUCTION-ROUTING (id 490) is linked to module 10 but has no entity behind it. Affinity Paths, 4Degrees Intros, and DealCloud Intros all model a warm-introduction request as a first-class master with requestor, target, intermediary, status, and reciprocity tracking.
-    action: Author master domain_owned data_object introduction_requests under module 10. has_personal_content=true. DMDO role=master necessity=required. Author lifecycle states (requested, routed, accepted, declined, completed) and trigger events for routing / completion. Link to investor_contacts via many participant references.
+    action: Author master domain_owned data_object introduction_requests under module 10. has_personal_content=true. DMDO role=master necessity=required. Author lifecycle states (requested, routed, accepted, declined, completed) and trigger events for routing / completion. Link to investor_contacts via many participant references. Classify entity_type=operational_workflow.
+    note: "Net-new master authoring; carried out of the 2026-06-07 mechanical execute batch."
     affected_modules: [10]
     affected_entities: [introduction_requests]
     vendor_evidence: [Affinity, 4Degrees, DealCloud]
   - id: B1A-M4
     summary: Missing master deal_team_assignments for per-deal role-scoped staffing on INV-CRM-DEAL-PIPELINE
     finding: Per-deal staffing (deal lead, sponsor, associate, observer) cannot be expressed via global RBAC because the assignment is deal-scoped, not module-scoped. DealCloud, Affinity Lists, and Attio all model this as a junction master between vc_deals and users. The ATS hiring-team pattern is the catalog precedent.
-    action: Author master domain_owned data_object deal_team_assignments under module 9. DMDO role=master necessity=required. Author junction shape (vc_deal_id, user_id, deal_role enum). Add data_object_relationships entries linking deal_team_assignments → vc_deals (composition) and deal_team_assignments → users (reference, owner_side=target).
+    action: Author master domain_owned data_object deal_team_assignments under module 9. DMDO role=master necessity=required. Author junction shape (vc_deal_id, user_id, deal_role enum). Add data_object_relationships entries linking deal_team_assignments -> vc_deals (composition) and deal_team_assignments -> users (reference, owner_side=target). Classify entity_type=junction.
+    note: "Net-new master authoring (junction); carried out of the 2026-06-07 mechanical execute batch."
     affected_modules: [9]
     affected_entities: [deal_team_assignments]
     vendor_evidence: [DealCloud, Affinity, Attio for VC]
   - id: B1A-M5
     summary: Missing config master pipeline_stages on INV-CRM-DEAL-PIPELINE
     finding: Per-firm or per-fund stage configurations are user-configurable in all 4 flagship products. Current INV-CRM catalog hard-codes the stage taxonomy as vc_deals lifecycle states (sourced / in_diligence / ic_review / term_sheet / closed / declined). Vendors expose this as a tenant-configurable master.
-    action: Author config-shaped master pipeline_stages under module 9. has_personal_content=false. DMDO role=master necessity=required. Take the config-shape exemption per Rule #12 (no workflow states needed). Author trigger_events.pipeline_stage.created / .archived if desired. Link via data_object_relationships pipeline_stages → vc_deals (one_to_many, owner_side=source).
+    action: Author config-shaped master pipeline_stages under module 9. has_personal_content=false. DMDO role=master necessity=required. Classify entity_type=catalog (config-shape, no workflow states needed). Author trigger_events.pipeline_stage.created / .archived if desired. Link via data_object_relationships pipeline_stages -> vc_deals (one_to_many, owner_side=source).
+    note: "Net-new master authoring (config/catalog); carried out of the 2026-06-07 mechanical execute batch."
     affected_modules: [9]
     affected_entities: [pipeline_stages]
     vendor_evidence: [Affinity, DealCloud, 4Degrees]
   - id: B1A-M6
     summary: Missing master co_investor_firms for syndication and conflict checks on INV-CRM-DEAL-PIPELINE
     finding: Competing and co-investing VC / PE firms encountered during diligence are tracked as a master in DealCloud Firms and Affinity Organizations. Used for syndication invitations, conflict checks, and round-by-round attribution.
-    action: Author master domain_owned data_object co_investor_firms under module 9. DMDO role=master necessity=required. Author data_object_relationships co_investor_firms ↔ vc_deals (many_to_many, association) and optionally co_investor_firms → investor_contacts for firm-side primary contacts.
+    action: Author master domain_owned data_object co_investor_firms under module 9. DMDO role=master necessity=required. Author data_object_relationships co_investor_firms <-> vc_deals (many_to_many, association) and optionally co_investor_firms -> investor_contacts for firm-side primary contacts. Classify entity_type (operational_record or catalog).
+    note: "Net-new master authoring; carried out of the 2026-06-07 mechanical execute batch."
     affected_modules: [9]
     affected_entities: [co_investor_firms]
     vendor_evidence: [DealCloud, Affinity]
-  - id: B1A-S3
-    summary: B9 trigger events nearly empty; 1 published event across 5 masters
-    finding: Only vc_deal.closed (id 1184, event_category state_change) is published. Three workflow-gate lifecycle states on vc_deals (ic_review id 445, term_sheet id 446, closed id 447) have requires_permission=true. Two further vc_deals transitions (sourced id 443, in_diligence id 444, declined id 448) lack events. investment_memos has has_submit_lock=true and has_single_approver=true (clear submit / approve workflow) with zero events. lp_prospects has an evident commit / close workflow with zero events.
-    action: Author 7 trigger_events with event_category enum per Rule #13. Required tuple list, all event_category state_change unless noted - vc_deal.ic_review_requested, vc_deal.term_sheet_issued, vc_deal.declined (data_object_id 750), investment_memo.submitted, investment_memo.approved (data_object_id 751), lp_prospect.committed, lp_prospect.declined (data_object_id 754).
-    affected_masters:
-      - {data_object_id: 750, name: vc_deals, target_module_id: 9, workflow: ic_review / term_sheet / declined transitions}
-      - {data_object_id: 751, name: investment_memos, target_module_id: 9, workflow: submit / approve}
-      - {data_object_id: 754, name: lp_prospects, target_module_id: 11, workflow: commit / decline}
-  - id: B1A-S4
-    summary: Lifecycle states absent on 4 of 5 masters
-    finding: investment_memos (751) and lp_prospects (754) have zero data_object_lifecycle_states despite clear workflows. relationship_records (752) and investor_contacts (753) plausibly take the config-shape exemption (workflow-less directory / synthesized score). Only vc_deals (750) has 6 states authored.
-    action: Author state machine on investment_memos (draft / in_review / approved / published; requires_permission on the in_review and published transitions, domain_module_id=9). Author state machine on lp_prospects (researching / contacted / in_meeting / soft_circled / committed / declined; requires_permission on committed and declined, domain_module_id=11). Then resolve Bucket-2 exemption for 752 and 753.
+  - id: B1A-S4-CONFIG-SHAPE
+    summary: Optional directory lifecycle states for relationship_records (752) and investor_contacts (753)
+    finding: "As of 2026-06-07 the two unambiguous workflow masters (investment_memos 751, lp_prospects 754) have full lifecycle states; vc_deals (750) already had 6. relationship_records (752) is now entity_type=computed and investor_contacts (753) is entity_type=operational_record, so neither REQUIRES lifecycle states (B12 passes structurally via Rule #12). The only open question is whether either should also get OPTIONAL minimal directory states (active / archived / merged)."
+    action: "Resolve B2-CONFIG-SHAPE. If the user wants optional directory states on investor_contacts (and/or relationship_records), author active / archived / merged. Otherwise no action; the entity_type classification is the exemption of record."
     blocked_by:
-      - {type: depends_on, ref: B1A-S3, reason: trigger events feed the workflow-gate state derivations}
       - {type: user_decision, ref: B2-CONFIG-SHAPE}
     affected_masters:
-      - {data_object_id: 751, name: investment_memos, target_module_id: 9, workflow: draft / in_review / approved / published}
-      - {data_object_id: 754, name: lp_prospects, target_module_id: 11, workflow: researching / contacted / in_meeting / soft_circled / committed / declined}
-      - {data_object_id: 752, name: relationship_records, target_module_id: 10, workflow: pending Bucket-2 exemption}
-      - {data_object_id: 753, name: investor_contacts, target_module_id: 10, workflow: pending Bucket-2 exemption}
+      - {data_object_id: 752, name: relationship_records, target_module_id: 10, workflow: config-shape (computed); optional states only}
+      - {data_object_id: 753, name: investor_contacts, target_module_id: 10, workflow: directory record (operational_record); optional states only}
   - id: B1A-S6
     summary: E-band fails completely; zero roles, zero role_modules, zero role_permissions across all 3 modules
-    finding: A 3-module, 7-capability domain needs the role layer. Path A (roles → role_modules → domain_modules.domain_id) and Path B (roles → role_permissions → permissions.domain_module_id → domain_modules.domain_id) are both empty. Tier-rollup permissions on modules 9, 10, 11 are also empty (zero permissions rows scoped to these module ids).
-    action: Author 4 roles per the prior audit's proposal subject to Bucket-2 naming approval - INV-DEAL-PARTNER, INV-ASSOCIATE, INV-IR-LEAD, INV-PLATFORM-ADMIN. Each gets role_modules rows on ≥2 modules per Rule #14's floor (cross-functional flat shape). Author 9 baseline permissions first (3 modules x 3 tiers each baseline-read / baseline-manage / baseline-admin) then any workflow-gate permissions surfaced by B1A-S3 / B1A-S4. Author role_permissions bundle per role (typical 4-8 rows).
+    finding: A 3-module, 7-capability domain needs the role / persona layer. Path A (roles -> role_modules -> domain_modules.domain_id) and Path B (roles -> role_permissions -> permissions.domain_module_id -> domain_modules.domain_id) are both empty. Tier-rollup permissions on modules 9, 10, 11 are also empty.
+    finding_note: "Largely subsumed by B1A-PHASE-P under the post-Plan-3 persona model; the old 4-role naming proposal is the legacy framing. The persona layer (domain_roles + role_modules + process_raci) is the canonical fix. Gated on B2-ROLE-NAMING and on the Phase-P persona authoring decision (DEFERRED)."
     blocked_by:
       - {type: user_decision, ref: B2-ROLE-NAMING}
-      - {type: depends_on, ref: B1A-S4, reason: workflow-gate permission materialization needs lifecycle states with requires_permission=true}
+      - {type: depends_on, ref: B1A-PHASE-P, reason: persona model supersedes the standalone role proposal}
     affected_modules: [9, 10, 11]
   - id: B1A-S7
-    summary: F-band fails completely; zero system skills, zero skill_tools across all 3 modules
-    finding: Rule #17 requires exactly one skill_type=system skill per domain_modules row with ≥1 skill_tools row. All 3 INV-CRM modules have zero such skills. Semantius score is therefore uncomputable for the domain and per-module. There is no agent entry-point for any INV-CRM workflow.
-    action: Author 3 system skills (inv_crm_deal_pipeline_agent for module 9, inv_crm_relationship_graph_agent for module 10, inv_crm_lp_crm_agent for module 11). Each skill carries query / mutate tools per master plus workflow-gate tools matching the requires_permission lifecycle states once B1A-S3 / B1A-S4 land. Use abstraction tools notify_person / notify_team for generic notifications (channel vs capability rule). Build skill_tools rows with requirement_level required for the irreducible workflow set, optional for degraded modes.
-    blocked_by:
-      - {type: depends_on, ref: B1A-S3, reason: workflow-gate tools reference trigger events}
-      - {type: depends_on, ref: B1A-S4, reason: workflow-gate tools reference lifecycle states}
+    summary: "RETIRED (superseded 2026-06-06): per-module system skills + skill_tools across all 3 modules"
+    finding: "Original item asked to author 3 per-module system skills (one per domain_modules row) with skill_tools. The per-module system-skill grain and skill_tools are RETIRED per the supersession header above (per-domain-skill-restoration). New model: tool requirements live on domain_module_tools; the domain carries exactly ONE domain-grain system skill that derives its toolset; FULL modules carry no skill. Per-module tool re-authoring is tracked in audits/_modularization-backlog.md."
+    action: "Do NOT author per-module skills. Superseded; reframed as a note. The domain-grain skill + domain_module_tools authoring is a separate modularization-backlog concern, not this domain's audit obligation."
+    superseded: "2026-06-06 per-domain-skill-restoration"
     affected_modules: [9, 10, 11]
-  - id: B1A-S9
-    summary: Aliases missing on relationship_records, investor_contacts, lp_prospects
-    finding: vc_deals has 2 aliases (investment opportunities, pipeline opportunities); investment_memos has 1 alias (IC memos). 3 masters with cross-vendor synonym overlap have zero aliases - relationship_records (synonyms relationship strength, network signals), investor_contacts (synonyms people, contacts, founders), lp_prospects (synonyms LPs, limited partners, fund investors).
-    action: Author 6-8 data_object_aliases rows with alias_type=synonym; industry_id and solution_id NULL for generic synonyms. Per-master tuples - 752 (relationship strength, network signals); 753 (people, contacts, founders); 754 (LPs, limited partners, fund investors).
-    affected_masters:
-      - {data_object_id: 752, name: relationship_records, target_module_id: 10, workflow: alias authoring}
-      - {data_object_id: 753, name: investor_contacts, target_module_id: 10, workflow: alias authoring}
-      - {data_object_id: 754, name: lp_prospects, target_module_id: 11, workflow: alias authoring}
   - id: B1A-PHASE-P
     summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
     finding: "Live triage 2026-06-02: 3 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
     action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "5 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 5 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [investment_memos, investor_contacts, lp_prospects, relationship_records, vc_deals]
+    status_note: "DEFERRED per the 2026-06-07 run instructions (personas are not auto-authored). Candidate personas: Deal Partner (deal lead, modules 9+10), Investment Associate (diligence support, modules 9+10), IR Lead (LP fundraising, module 11), Platform Admin (cross-module). Function anchor: Investment Management (function 85, already the domain owner)."
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-B1
-    summary: Zero intra-domain handoffs across the 3-module domain; blocked on trigger-event landing
-    finding: B9b - 3 modules but zero intra-domain handoffs rows. Expected pairs (4) - RELATIONSHIP-GRAPH → DEAL-PIPELINE on a warm-introduction signal, DEAL-PIPELINE → RELATIONSHIP-GRAPH on deal-closure decay, RELATIONSHIP-GRAPH → LP-CRM on relationship-signal-informs-LP outreach, DEAL-PIPELINE → LP-CRM on closed-deal portfolio-awareness enrichment. Pass 4 reconciliation also identified a 5th candidate INV-CRM → FUND-ADMIN on lp_prospect.committed (payload lp_commitments) once B1A-S3 lands the event.
-    blocked_by:
-      - {type: depends_on, ref: B1A-S3, reason: handoffs.trigger_event_id requires the lp_prospect.committed and equivalent events to exist first}
+    summary: Zero intra-domain handoffs across the 3-module domain; trigger-event dependency now satisfied
+    finding: B9b - 3 modules but zero intra-domain handoffs rows. Expected pairs (4) - RELATIONSHIP-GRAPH -> DEAL-PIPELINE on a warm-introduction signal, DEAL-PIPELINE -> RELATIONSHIP-GRAPH on deal-closure decay, RELATIONSHIP-GRAPH -> LP-CRM on relationship-signal-informs-LP outreach, DEAL-PIPELINE -> LP-CRM on closed-deal portfolio-awareness enrichment. Pass 4 reconciliation also identified a 5th candidate INV-CRM -> FUND-ADMIN on lp_prospect.committed (payload lp_commitments).
+    blocked_by_resolved: "B1A-S3 trigger events landed 2026-06-07 (lp_prospect.committed, vc_deal.* events now exist), so the handoffs.trigger_event_id dependency is satisfied. Remaining blocker: the 5 handoffs are still only source-count-only; each needs an exact (source_module, target_module, data_object, trigger_event, integration_pattern, friction_level) tuple before insert. Not yet a fully-specified mechanical list."
     affected_handoffs:
-      - {count: 5, scope_note: "4 intra-domain plus 1 cross-domain INV-CRM → FUND-ADMIN on lp_prospect.committed", enumeration_status: source_count_only}
-  - id: B1B-S1
-    summary: catalog UX fields empty on domain row and all 3 module rows; blocked on user wording approval
-    finding: A4 fails on domain 159 (catalog_tagline and catalog_description both empty strings). M8 fails on every module hosted by this domain - modules 9, 10, 11 all have catalog_tagline and catalog_description empty. Rule #20 forbids writing these without per-row user approval.
-    blocked_by:
-      - {type: user_decision, ref: B2-CATALOG-UX-WORDING}
-    affected_modules: [9, 10, 11]
-    affected_entities: [domains, domain_modules]
+      - {count: 5, scope_note: "4 intra-domain plus 1 cross-domain INV-CRM -> FUND-ADMIN on lp_prospect.committed", enumeration_status: source_count_only}
   - id: B1B-S8
     summary: GDPR / CCPA / SEC Investment Advisers Act not yet in /regulations and not yet linked; blocked on user scoping
     finding: CAN-SPAM was linked (regulation_id 59, applicability conditional) in the 2026-05-31 continuation. GDPR, CCPA, and SEC Investment Advisers Act (Rule 204-2) are not in the regulations catalog and require both base-row authoring and a scoping decision before any domain_regulations row lands.
@@ -137,22 +109,14 @@ b1b:
     affected_entities: [regulations, domain_regulations]
 
 b2:
-  - id: B2-CATALOG-UX-WORDING
-    summary: Approve catalog_tagline / catalog_description wording for 1 domain row + 3 module rows
-    question: Approve, rewrite, or skip the drafted buyer-voice tagline and 1-3 paragraph description for the INV-CRM domain row (159) and each module (9 INV-CRM-DEAL-PIPELINE, 10 INV-CRM-RELATIONSHIP-GRAPH, 11 INV-CRM-LP-CRM). Total - 4 taglines + 4 descriptions. Rule #20 forbids the writes without per-row approval.
-    options:
-      - Approve drafted domain-grain wording from prior audit; have the agent draft 3 fresh per-module variants for review.
-      - Provide custom wording per row.
-      - Skip the whole A4 / M8 surface this run.
-    why: Marketing copy ages independently of the analyst catalog; an unapproved write may overwrite human-edited prose.
   - id: B2-CONFIG-SHAPE
-    summary: Decide config-shape exemption for relationship_records and investor_contacts
-    question: Should relationship_records (752) and investor_contacts (753) take the Rule #12 config-shape lifecycle-states exemption (workflow-less synthesized score / directory record), or should they get minimal directory state machines (active / archived / merged)?
+    summary: Decide optional directory lifecycle states for relationship_records and investor_contacts
+    question: "As of 2026-06-07, relationship_records (752) is entity_type=computed and investor_contacts (753) is entity_type=operational_record, so neither requires lifecycle states (Rule #12 exemption is in place at the typed-column layer). Should either ALSO get minimal directory state machines (active / archived / merged)?"
     options:
-      - Confirm both as config-shape; no lifecycle states authored on either.
+      - Confirm both as config-shape; no lifecycle states authored on either (current state).
       - Author minimal directory states (active / archived / merged) on investor_contacts only; relationship_records stays config-shape.
       - Author minimal directory states on both.
-    why: Rule #15 forbids documenting the exemption via data_objects.notes; the decision needs to live in the audit trail instead.
+    why: The structural exemption is now recorded via entity_type (Rule #12 / #15). The remaining call is purely whether optional directory states add value; it is no longer a B12 failure.
   - id: B2-REGULATION-SCOPE
     summary: Decide which of GDPR / CCPA / SEC Investment Advisers Act / CAN-SPAM are in scope for INV-CRM
     question: CAN-SPAM is already linked (applicability conditional). Which of GDPR, CCPA, and SEC Investment Advisers Act (Rule 204-2) should be added to the regulations catalog and linked via domain_regulations? Scoping decision drives B1B-S8.
@@ -162,14 +126,14 @@ b2:
       - Drop firm-level privacy (GDPR / CCPA) as out of scope of the CRM product itself; keep CAN-SPAM and SEC IAA.
       - Keep only CAN-SPAM (current state).
   - id: B2-ROLE-NAMING
-    summary: Approve role naming convention before any role loader runs
-    question: Confirm or rename the 4-role proposal - INV-DEAL-PARTNER, INV-ASSOCIATE, INV-IR-LEAD, INV-PLATFORM-ADMIN. Variants to consider - INV-PARTNER vs INV-DEAL-PARTNER (partner is the canonical VC title), INV-PRINCIPAL between Partner and Associate, INV-IR-PARTNER for IR head.
+    summary: Approve role / persona naming convention before any persona loader runs
+    question: Confirm or rename the 4-persona proposal - Deal Partner, Investment Associate, IR Lead, Platform Admin. Variants to consider - Partner vs Deal Partner (partner is the canonical VC title), a Principal tier between Partner and Associate, IR Partner for IR head.
     options:
-      - Approve the 4-role list as proposed.
-      - Approve with the INV-PARTNER rename (drop DEAL prefix).
-      - Add INV-PRINCIPAL between Partner and Associate.
-      - Provide a custom role list.
-    why: The role layer is empty; naming is wide-open and gates B1A-S6.
+      - Approve the 4-persona list as proposed.
+      - Approve with the Partner rename (drop Deal prefix).
+      - Add a Principal persona between Partner and Associate.
+      - Provide a custom persona list.
+    why: The persona / role layer is empty; naming is wide-open and gates B1A-S6 / B1A-PHASE-P.
   - id: B2-MODULARIZATION-STABILITY
     summary: Decide IDENTITY-RECON and PORTFOLIO-AWARENESS module splits
     question: (a) Should capability INVCRM-IDENTITY-RESOLUTION (linked to module 10) split into its own module INV-CRM-IDENTITY-RECON? (b) Should portfolio-awareness on the LP-CRM side (which embeds portfolio_companies from PORT-MONIT) split off as INV-CRM-PORTFOLIO-AWARENESS?

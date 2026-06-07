@@ -204,7 +204,7 @@ Applied the strict technical subset of Bucket 1 via loader `.tmp_deploy/fix_port
 
 ### Deferred (16) and why
 
-- **B1-S1 (A4 catalog_tagline / catalog_description):** Rule #20 prose — author-then-confirm with the user.
+- **B1-S1 (A4 catalog_tagline / catalog_description):** Rule #20 prose, author-then-confirm with the user.
 - **B1-S2 (F2/F3/F4/F5 system skills + tools):** new entities; skill/tool authoring is judgment-heavy (which tools, how many, naming, `operation_kind`).
 - **B1-S3 (E1–E6 roles):** new entities; role bundling spans modules and needs user input on scope.
 - **B1-S4 (regulations) and B1-M3/M4/M5 (compliance entities):** audit itself gates these on Bucket 2 #1 (regulation-scoping choice).
@@ -216,7 +216,7 @@ Applied the strict technical subset of Bucket 1 via loader `.tmp_deploy/fix_port
 
 ### Open follow-ups for user
 
-1. Handoff 1039 PCF tag (409 vs 491 vs both) — see B1-H1 above.
+1. Handoff 1039 PCF tag (409 vs 491 vs both): see B1-H1 above.
 2. Verb correctness on rels 1831–1835 (and existing 885 + 886, already in Bucket 2 #2).
 3. All other Bucket 1 items above marked Deferred remain queued for the user-judgment pass.
 
@@ -338,3 +338,78 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate execute (Rule #21) over the open items in audits/PORT-MONIT/state.yaml.
+Worked only the non-blocked additive/corrective items; no fresh from-scratch audit. Domain id 161
+confirmed live (4 full modules 16-19; 7 domain-owned masters 763-769; owning function Investment
+Management, fn 85, already wired as owner in business_function_domains). Loader:
+.tmp_deploy/port_monit_state_execute_2026_06_07.ts (idempotent; re-run wrote 0).
+
+### Executed
+
+- **B1A-ENTITY-TYPE (B13 / Rule #12): 7 masters PATCHed** from `unclassified` to a typed value.
+  Per-master classification from descriptions + pattern flags: 763 portfolio_companies,
+  764 portco_kpi_periods, 765 portco_esg_records, 766 portco_valuations (has_submit_lock +
+  has_single_approver), 769 lp_quarterly_reports -> `operational_workflow`; 767 fund_position_returns
+  and 768 fund_performance_periods -> `computed` (per-position / fund-level IRR/MOIC/TVPI/DPI
+  derived projections). Consequence: 767/768 no longer require lifecycle states (Rule #12), so they
+  drop from B1A-S7 scope; B1A-S7 now covers only the 4 workflow masters (764, 765, 766, 769).
+- **Catalog UX (Rule #20): 10 fields written.** domain 161 catalog_tagline + catalog_description
+  (both were empty) plus catalog_tagline + catalog_description on all 4 modules (16, 17, 18, 19),
+  all previously empty. Buyer-voice copy, workflow + value, no vendor/product names, American
+  English, no em-dash. This closes the old B1-S1 (A4) item and the "surface-before-write" gate is
+  ignored per Rule #21.
+- **B1A-S6-ALIASES (B11): 11 data_object_aliases rows inserted** (alias_type='synonym', no
+  industry_id since the masters carry none). portco_kpi_periods (portco_metrics, kpi_packets),
+  portco_esg_records (esg_packets, sustainability_reports), portco_valuations (fair_value_marks,
+  quarterly_marks), fund_position_returns (position_returns, position_irr_records),
+  fund_performance_periods (fund_quarterly_metrics), lp_quarterly_reports (lp_quarterly_packets,
+  gp_reports). Generic synonyms only (Rule #18). portfolio_companies already had 2 (portcos,
+  investments); now all 7 masters are aliased.
+- **trigger_event 1188 NULL module-FK backfill (B1B-S8 extra_followup):** portco_valuation.final
+  domain_module_id PATCHed NULL -> 17 (deterministic; master 766 portco_valuations is mastered in
+  module 17). This was the one mechanical piece of B1B-S8 that did not depend on lifecycle states.
+
+### Surfaced (for user)
+
+- **b2 (8 open judgment calls):** B2-1 regulations scope; B2-2 verb correctness on 7 user-edges
+  (destructive overwrite); B2-3 funds embedding shape (destructive M9 if downgraded); B2-4
+  LP-REPORTING modularization (destructive restructure if split/migrate); B2-5 ESG-DIVERSITY
+  cross-cutting promotion (destructive rename); B2-6 applicability wording (Rule #15);
+  B2-7 handoff 1039 PCF arbitration 409 vs 491 (destructive replace); B2-8 handoffs 1042/1043
+  multi-tag review (destructive demote). All verified live this pass.
+- **Personas / RACI deferred (B1A-PHASE-P + B1A-S3-ROLES):** 4-module domain with 0 domain_roles
+  reaching it; persona/RACI layer DEFERRED per Rule #21 (not agent-authored). Candidate personas:
+  INVESTMENT-PORTFOLIO-ANALYST, INVESTMENT-FUND-CONTROLLER, INVESTMENT-INVESTOR-RELATIONS.
+
+### Left
+
+- **b1b blocked:** B1B-S4 regulations + B1B-M3/M4/M5 (SFDR/AIFMD/Form PF) blocked on B2-1 scope +
+  B2-6 wording; B1B-S8 trigger events blocked on B1A-S7 lifecycle states; B1B-S9 intra-domain
+  handoffs blocked on B1B-S8.
+- **b1a not in execute set:** B1A-S7 lifecycle states (state-machine judgment; now 4 workflow
+  masters); B1A-M1/M2/M6/M7/M8 (5 universal-vendor entity gaps, new data_objects + DMDOs).
+- **Superseded:** B1A-S2-SKILLS retired per the 2026-06-06 per-domain-skill restoration header
+  (no per-module skills / skill_tools); reframed as a domain-grain tooling note routed to
+  audits/_modularization-backlog.md.
+- **b3 backlog (7):** co_investment_positions, peer_benchmarks, gp_attribution_analyses,
+  valuation_committee_meetings, portco_management_metrics, lp_capital_call_notices cross-ref,
+  currency_fx_rates (catalog-wide).
+
+### UI links
+
+- https://tests.semantius.app/domain_map/data_objects?id=in.(763,764,765,766,767,768,769)
+- https://tests.semantius.app/domain_map/domains?id=eq.161
+- https://tests.semantius.app/domain_map/domain_modules?domain_id=eq.161
+- https://tests.semantius.app/domain_map/data_object_aliases?data_object_id=in.(764,765,766,767,768,769)
+- https://tests.semantius.app/domain_map/trigger_events?id=eq.1188
+
+### JWT errors
+
+None during this run.

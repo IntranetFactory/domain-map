@@ -1,157 +1,71 @@
 schema_version: 2
 domain: LIB-MGMT
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
-  - id: B1A-S3
-    summary: Backfill ~25 lifecycle-anchored trigger_events for 7 LIB-MGMT masters
-    finding: |
-      Lifecycle states marked requires_permission=true on 7 masters lack matching trigger_events
-      (B6 + B9 partial-fail). Existing trigger_events: 9 rows (bibliographic_record.published,
-      library_item.received/.activated, library_hold.placed/.ready, library_fine.assessed,
-      library_patron.suspended, library_acquisition_order.received, interlibrary_loan_request.received).
-      Missing event_name -> (data_object_id, realizing domain_module_id, state_order):
-      library_item.available (824, 155, 40), library_item.withdrawn (824, 155, 80),
-      library_authority.established (825, 155, 20),
-      library_loan.renewed (827, 156, 20), library_loan.returned (827, 156, 40), library_loan.lost (827, 156, 50),
-      library_hold.trapped (828, 156, 20), library_hold.fulfilled (828, 156, 50), library_hold.cancelled (828, 156, 70),
-      library_fine.paid (829, 156, 30), library_fine.waived (829, 156, 40), library_fine.sent_to_collections (829, 156, 50),
-      library_patron.activated (831, 157, 20), library_patron.archived (831, 157, 50),
-      library_acquisition_order.submitted (833, 158, 20), library_acquisition_order.cancelled (833, 158, 90),
-      library_serial_subscription.renewed (835, 158, 20), library_serial_subscription.cancelled (835, 158, 30),
-      library_eresource_license.activated (836, 158, 20), library_eresource_license.renewed (836, 158, 30),
-      library_eresource_license.terminated (836, 158, 60),
-      interlibrary_loan_request.routed (838, 160, 20), interlibrary_loan_request.accepted (838, 160, 30),
-      interlibrary_loan_request.shipped (838, 160, 40), interlibrary_loan_request.completed (838, 160, 70),
-      interlibrary_loan_request.cancelled (838, 160, 90).
-      Each row: event_category='state_change', description noun + verb sentence.
-    action: |
-      Phase-B trigger_events INSERT loader. Roughly 25 rows. record_status defaults to 'new'.
-      Most are intra-domain signal-only; .submitted / .activated / .renewed / .terminated are
-      source events for B1B-S5 cross-domain handoffs.
-    affected_masters:
-      - {data_object_id: 824, name: library_items, target_module_id: 155, workflow: cataloging}
-      - {data_object_id: 824, name: library_items, target_module_id: 155, workflow: withdrawal}
-      - {data_object_id: 825, name: library_authorities, target_module_id: 155, workflow: cataloging}
-      - {data_object_id: 827, name: library_loans, target_module_id: 156, workflow: circulation}
-      - {data_object_id: 828, name: library_holds, target_module_id: 156, workflow: circulation}
-      - {data_object_id: 829, name: library_fines, target_module_id: 156, workflow: circulation}
-      - {data_object_id: 831, name: library_patrons, target_module_id: 157, workflow: patron_lifecycle}
-      - {data_object_id: 833, name: library_acquisition_orders, target_module_id: 158, workflow: acquisitions}
-      - {data_object_id: 835, name: library_serial_subscriptions, target_module_id: 158, workflow: serials}
-      - {data_object_id: 836, name: library_eresource_licenses, target_module_id: 158, workflow: eresource}
-      - {data_object_id: 838, name: interlibrary_loan_requests, target_module_id: 160, workflow: ill}
-    affected_events:
-      - {id: null, event_name: library_item.available, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: library_item.withdrawn, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: library_authority.established, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: library_loan.renewed, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: library_loan.returned, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: library_loan.lost, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: library_hold.trapped, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: library_hold.fulfilled, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: library_hold.cancelled, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: library_fine.paid, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: library_fine.waived, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: library_fine.sent_to_collections, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: library_patron.activated, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: library_patron.archived, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: library_acquisition_order.submitted, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: library_acquisition_order.cancelled, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: library_serial_subscription.renewed, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: library_serial_subscription.cancelled, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: library_eresource_license.activated, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: library_eresource_license.renewed, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: library_eresource_license.terminated, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: interlibrary_loan_request.routed, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: interlibrary_loan_request.accepted, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: interlibrary_loan_request.shipped, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: interlibrary_loan_request.completed, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: interlibrary_loan_request.cancelled, current_category: null, proposed_category: state_change}
   - id: B1A-PHASE-P
     summary: "Multi-module (6 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 6 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    finding: "Live triage 2026-06-02: 6 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. DEFERRED per audit policy: personas/RACI are not authored unattended (B1A-PHASE-P)."
     action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 6 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    deferred: persona_layer
+    candidate_personas: [cataloger, circulation_clerk, acquisitions_librarian, reference_librarian, library_director]
     extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "17 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 17 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [bibliographic_records, interlibrary_loan_requests, library_acquisition_orders, library_authorities, library_circulation_policies, library_eresource_licenses, library_fines, library_holdings, library_holds, library_items, library_loans, library_patron_categories, library_patrons, library_saved_searches, library_serial_subscriptions, library_sharing_partners, library_vendor_accounts]
-    extra_phase_p_triage: "2026-06-02"
+  - id: B1A-ENTITY-TYPE-826
+    summary: "1 master (library_holdings 826) remains entity_type=unclassified, coupled to B2-S2."
+    finding: |
+      2026-06-07: 16 of 17 LIB-MGMT masters classified (823/824/825/827/828/829/831/833/835/836/838
+      = operational_workflow; 830/832/834/839 = catalog; 837 = operational_record). Only
+      library_holdings (826) is left unclassified because its config-vs-workflow shape IS the
+      open B2-S2 decision. Classifying it (catalog vs operational_workflow) pre-empts that call.
+    action: "Resolve together with B2-S2. If holdings is workflow (Alma-shaped) -> entity_type=operational_workflow + author the lifecycle (B1B-S6). If config (Koha-shaped) -> entity_type=catalog, no lifecycle."
+    blocked_by:
+      - {type: user_decision, ref: B2-S2}
+    affected_entities: [library_holdings]
 
 b1b:
-  - id: B1B-S1
-    summary: A4 catalog_tagline / catalog_description backfill on domain 168 (LIB-MGMT)
-    finding: |
-      domains.id=168 carries empty catalog_tagline and catalog_description. Rule #20 surface,
-      backfill is permitted but never auto-written; user owns wording per row.
-    blocked_by:
-      - {type: user_decision, ref: B2-S1}
-    affected_modules: []
-    affected_entities: [domains]
-  - id: B1B-S2
-    summary: M8 catalog_tagline / catalog_description backfill on all 6 LIB-MGMT domain_modules
-    finding: |
-      All 6 domain_modules rows (LIB-CATALOG 155, LIB-CIRCULATION 156, LIB-PATRON 157,
-      LIB-ACQUISITIONS 158, LIB-DISCOVERY 159, LIB-ILL 160) carry empty catalog_tagline
-      and catalog_description. Rule #20 surface, per-module per-row approval required.
-    blocked_by:
-      - {type: user_decision, ref: B2-S1}
-    affected_modules: [155, 156, 157, 158, 159, 160]
-    affected_entities: [domain_modules]
   - id: B1B-S4
     summary: Author 6 outbound cross-domain data_object_relationships from LIB-MGMT masters
     finding: |
       B8 fail. Catalog records 22 intra-domain master-to-master relationships + 8 users
       user-edges per Rule #10 + 1 reverse library_patrons linked_to_user users, total 31.
-      Zero outbound cross-domain. Missing edges to existing counterparty masters:
-      (1) library_acquisition_orders (833) -> ap_invoices (AP-AUTO) on invoiced;
-      (2) library_acquisition_orders (833) -> ERP-FIN encumbrance object on ordered/received;
-      (3) library_serial_subscriptions (835) -> AP-AUTO recurring invoice on renewal;
-      (4) library_eresource_licenses (836) -> CLM contracts master on activation/renewal/termination;
-      (5) library_patrons (831) -> IGA iam_users for SSO-backed registration;
-      (6) library_patrons (831) -> HCM hcm_employees (54) when staff are also patrons.
-      Each row needs relationship_verb, inverse_verb, relationship_type, relationship_kind,
-      is_required, owner_side. Edges 2 and 5 require lookup of the counterparty
-      canonical master id; edge 6 lookup confirms HCM employees id=54.
+      Zero outbound cross-domain. 2026-06-07 counterparty re-check: the canonical counterparty
+      ids assumed by the prior snapshot are STALE / wrong. There is no single ap_invoices,
+      no iam_users, no bare contracts, and HCM employees is id 31 (NOT 54; id 54 is
+      asset_contracts). The CLM contract surface is split (legal_contracts 66, asset_contracts 54,
+      service_contracts 741, msp_contracts 234, employment_contracts 35). AP invoice surface is
+      split (supplier_invoices 75, customer_invoices 107, msp_invoices 236, client_invoices 739).
+      Identity surface is identity_graphs 112 / employee_golden_records 317, not iam_users.
+      Selecting the right canonical counterparty per edge is cross-domain judgment, not a
+      deterministic THIS-domain backfill, so this stays user/neighbor-gated.
+      Edges still wanted (verb/inverse/type/kind/is_required/owner_side each):
+      (1) library_acquisition_orders (833) -> AP invoice master on invoiced;
+      (2) library_acquisition_orders (833) -> ERP-FIN encumbrance master on ordered/received (no encumbrance master exists in catalog today);
+      (3) library_serial_subscriptions (835) -> AP invoice master on renewal;
+      (4) library_eresource_licenses (836) -> CLM contract master on activation/renewal/termination;
+      (5) library_patrons (831) -> IGA identity master for SSO-backed registration;
+      (6) library_patrons (831) -> HCM employees (31) when staff are also patrons.
     blocked_by:
-      - {type: depends_on, ref: B1A-S3, reason: trigger_events for .invoiced .submitted .activated .renewed .terminated .activated_patron are prerequisites for the corresponding handoff loads after relationships land}
-      - {type: catalog_addition, scope: domains, trigger: confirm AP-AUTO ap_invoices id, ERP-FIN encumbrance master id, CLM contracts master id, IGA iam_users id}
-    affected_masters:
-      - {data_object_id: 833, name: library_acquisition_orders, target_module_id: 158, workflow: AP-AUTO invoiced}
-      - {data_object_id: 833, name: library_acquisition_orders, target_module_id: 158, workflow: ERP-FIN encumbrance}
-      - {data_object_id: 835, name: library_serial_subscriptions, target_module_id: 158, workflow: AP-AUTO recurring}
-      - {data_object_id: 836, name: library_eresource_licenses, target_module_id: 158, workflow: CLM contracts}
-      - {data_object_id: 831, name: library_patrons, target_module_id: 157, workflow: IGA identity}
-      - {data_object_id: 831, name: library_patrons, target_module_id: 157, workflow: HCM staff-as-patron}
+      - {type: user_decision, reason: "select the canonical AP-invoice / ERP-encumbrance / CLM-contract / IGA-identity counterparty master per edge; prior snapshot ids were wrong"}
+      - {type: depends_on, ref: B1A-S3, reason: "RESOLVED 2026-06-07 - the source trigger_events (.submitted .invoiced .activated .renewed .terminated etc.) now exist"}
     affected_entities: [data_object_relationships]
   - id: B1B-S5
     summary: Author ~6 outbound cross-domain handoffs from LIB-MGMT
     finding: |
       B9 fail. Zero outbound cross-domain handoffs today (all 9 handoffs are intra-domain on
-      source_domain_id = target_domain_id = 168). Each row needs trigger_event_id (from B1A-S3),
-      source_domain_id=168, target_domain_id=<neighbor>, source_domain_module_id, target_domain_module_id,
-      data_object_id (payload), integration_pattern, friction_level. Pairs:
+      source_domain_id = target_domain_id = 168). Source trigger_events now exist (B1A-S3 landed
+      2026-06-07). Each row needs trigger_event_id, source_domain_id=168, target_domain_id=<neighbor>,
+      source_domain_module_id, target_domain_module_id, data_object_id (payload), integration_pattern,
+      friction_level. Pairs:
       (a) library_acquisition_order.invoiced LIB-ACQUISITIONS -> AP-AUTO;
       (b) library_acquisition_order.submitted LIB-ACQUISITIONS -> ERP-FIN encumbrance;
       (c) library_serial_subscription.renewed LIB-ACQUISITIONS -> AP-AUTO;
       (d) library_eresource_license.activated / .renewed / .terminated LIB-ACQUISITIONS -> CLM (3 handoffs);
       (e) library_patron.activated LIB-PATRON -> IGA.
-      The HCM staff-as-patron edge is REPORT-ONLY (HCM owes hcm_employee.hired outbound).
+      The HCM staff-as-patron edge is REPORT-ONLY (HCM owes hcm employee.hired outbound).
     blocked_by:
-      - {type: depends_on, ref: B1A-S3, reason: trigger_events for the source events must exist first}
-      - {type: depends_on, ref: B1B-S4, reason: corresponding cross-domain data_object_relationships should land in the same Phase-B extension before handoffs}
-    affected_handoffs:
-      - {handoff_id: null, direction: outbound, source_domain: LIB-MGMT, target_domain: AP-AUTO, trigger_event: library_acquisition_order.invoiced, payload: library_acquisition_orders, null_field: null}
-      - {handoff_id: null, direction: outbound, source_domain: LIB-MGMT, target_domain: ERP-FIN, trigger_event: library_acquisition_order.submitted, payload: library_acquisition_orders, null_field: null}
-      - {handoff_id: null, direction: outbound, source_domain: LIB-MGMT, target_domain: AP-AUTO, trigger_event: library_serial_subscription.renewed, payload: library_serial_subscriptions, null_field: null}
-      - {handoff_id: null, direction: outbound, source_domain: LIB-MGMT, target_domain: CLM, trigger_event: library_eresource_license.activated, payload: library_eresource_licenses, null_field: null}
-      - {handoff_id: null, direction: outbound, source_domain: LIB-MGMT, target_domain: CLM, trigger_event: library_eresource_license.renewed, payload: library_eresource_licenses, null_field: null}
-      - {handoff_id: null, direction: outbound, source_domain: LIB-MGMT, target_domain: CLM, trigger_event: library_eresource_license.terminated, payload: library_eresource_licenses, null_field: null}
-      - {handoff_id: null, direction: outbound, source_domain: LIB-MGMT, target_domain: IGA, trigger_event: library_patron.activated, payload: library_patrons, null_field: null}
+      - {type: depends_on, ref: B1B-S4, reason: "corresponding cross-domain data_object_relationships should land first, and the counterparty target_domain selection is the same gated decision"}
     affected_modules: [157, 158]
   - id: B1B-S6
     summary: Author library_holdings 3-state lifecycle on data_object 826
@@ -161,7 +75,9 @@ b1b:
       requires_permission=true, permission_verb_override='link_library_holdings',
       domain_module_id=155) -> withdrawn (state_order 30, is_terminal=true,
       requires_permission=true, permission_verb_override='withdraw_library_holdings',
-      domain_module_id=155). Alma-shaped richer 5-state machine is a B2-S2 option.
+      domain_module_id=155). Alma-shaped richer 5-state machine is a B2-S2 option. Loading any
+      lifecycle requires entity_type=operational_workflow on 826 (B1A-ENTITY-TYPE-826), so the
+      two are decided together.
     blocked_by:
       - {type: user_decision, ref: B2-S2}
     affected_masters:
@@ -170,9 +86,9 @@ b1b:
     summary: Author ~6 handoff_processes APQC tags for new cross-domain handoffs
     finding: |
       H1 vacuous today (zero cross-domain handoffs). Once B1B-S5 lands the 6-7 outbound
-      cross-domain handoffs, each needs handoff_processes row with proposal_source='agent_curated',
-      record_status='new'. Provisional PCF candidates (confirm process_id at load time via
-      /processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry):
+      cross-domain handoffs, each needs a handoff_processes row with proposal_source='agent_curated',
+      record_status omitted (defaults new). Provisional PCF candidates (confirm process_id at load
+      time via /processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry):
       (i) library_acquisition_order.invoiced -> AP-AUTO ~ "Process accounts payable (AP)" (10750);
       (ii) library_acquisition_order.submitted -> ERP-FIN ~ "Manage and process budget" (10737);
       (iii) library_serial_subscription.renewed -> AP-AUTO ~ same as (i);
@@ -180,75 +96,54 @@ b1b:
       (v) library_patron.activated -> IGA ~ "Manage IT user identity and authorization" (20756).
     blocked_by:
       - {type: depends_on, ref: B1B-S5, reason: handoff_id values do not exist until cross-domain handoffs land}
-    affected_handoffs:
-      - {handoff_id: null, direction: outbound, source_domain: LIB-MGMT, target_domain: AP-AUTO, trigger_event: library_acquisition_order.invoiced, payload: library_acquisition_orders, null_field: null}
-      - {handoff_id: null, direction: outbound, source_domain: LIB-MGMT, target_domain: ERP-FIN, trigger_event: library_acquisition_order.submitted, payload: library_acquisition_orders, null_field: null}
-      - {handoff_id: null, direction: outbound, source_domain: LIB-MGMT, target_domain: AP-AUTO, trigger_event: library_serial_subscription.renewed, payload: library_serial_subscriptions, null_field: null}
-      - {handoff_id: null, direction: outbound, source_domain: LIB-MGMT, target_domain: CLM, trigger_event: library_eresource_license.activated, payload: library_eresource_licenses, null_field: null}
-      - {handoff_id: null, direction: outbound, source_domain: LIB-MGMT, target_domain: CLM, trigger_event: library_eresource_license.renewed, payload: library_eresource_licenses, null_field: null}
-      - {handoff_id: null, direction: outbound, source_domain: LIB-MGMT, target_domain: CLM, trigger_event: library_eresource_license.terminated, payload: library_eresource_licenses, null_field: null}
-      - {handoff_id: null, direction: outbound, source_domain: LIB-MGMT, target_domain: IGA, trigger_event: library_patron.activated, payload: library_patrons, null_field: null}
 
 b2:
-  - id: B2-S1
-    summary: A4 / M8 catalog_tagline + catalog_description wording for domain 168 and modules 155-160
-    question: |
-      Per Rule #20 user reviews wording BEFORE PATCH. Domain (A4) and 6 modules (M8) each
-      need their own buyer-voice tagline + 1-3 paragraph description. Generate drafts and
-      surface per row, or defer to a marketing pass?
-    options:
-      - generate_drafts_and_surface_per_row
-      - defer_to_marketing_pass
-      - user_supplies_wording_directly
-    why: |
-      Rule #20 forbids auto-overwrite of these four columns; even on backfill the wording
-      requires explicit per-row approval. The agent can draft but never load without sign-off.
   - id: B2-S2
-    summary: B12 lifecycle decision for 6 zero-state masters
+    summary: B12 lifecycle + entity_type decision for library_holdings (826) and exemption confirmation for the config-shape masters
     question: |
-      Per master: config-shape exemption (no lifecycle states), or author lifecycle states?
-      Exemption decision is recorded here in the audit per Rule #15, NOT in data_objects.notes.
-      Masters: library_holdings (826), library_circulation_policies (830),
-      library_patron_categories (832), library_vendor_accounts (834),
-      library_saved_searches (837), library_sharing_partners (839).
-      For 826 specifically B1B-S6 proposes a 3-state lifecycle; richer Alma-shaped 5-state
-      is an option for Alma-style deployments.
+      For library_holdings (826): config-shape (entity_type=catalog, no lifecycle) or workflow
+      (entity_type=operational_workflow + author lifecycle per B1B-S6, 3-state or richer Alma 5-state)?
+      The agent classified the other config masters on 2026-06-07 (library_circulation_policies 830,
+      library_patron_categories 832, library_vendor_accounts 834, library_sharing_partners 839 =
+      catalog; library_saved_searches 837 = operational_record), which structurally records the
+      exemption per Rule #12 (no notes write). Confirm those are right and decide 826.
     options:
-      - exempt_all_six_as_config_shape
-      - exempt_5_and_author_826_3_state
-      - exempt_5_and_author_826_5_state
-      - per_master_decision
+      - holdings_is_catalog_no_lifecycle
+      - holdings_is_workflow_author_826_3_state
+      - holdings_is_workflow_author_826_5_state
     why: |
-      library_circulation_policies / library_patron_categories / library_vendor_accounts /
-      library_saved_searches / library_sharing_partners are plausibly config-shape (author once,
-      edit occasionally). library_holdings is the ambiguous one: Alma treats it as workflow,
-      Koha treats it as config. User owns the per-deployment-shape decision.
+      library_holdings is the ambiguous one: Alma treats it as workflow, Koha treats it as config.
+      Its entity_type was deliberately left unclassified pending this call (B1A-ENTITY-TYPE-826).
   - id: B2-S3
     summary: C1 functional ownership shape for LIB-MGMT
     question: |
-      Should LIB-MGMT keep "Research and Development" as sole owner with "Learning and
-      Development" as contributor, or elevate Operations (technical services) or
-      Customer Service (public services)?
+      The agent added Business Operations (technical services) and Customer Service (public
+      services) as CONTRIBUTORS on 2026-06-07 (clearly-correct, additive). The OWNER is still
+      Research and Development (academic-first bias). Keep R&D as owner, or flip ownership to
+      Business Operations / Customer Service (public-library-first), or split into a dedicated
+      library-services function? Flipping the owner is a destructive overwrite of the existing
+      owner row, so it is surfaced not executed.
     options:
-      - keep_rd_owner_add_ops_and_cs_contributors
-      - flip_to_operations_owner_demote_rd
+      - keep_rd_owner_with_ops_and_cs_contributors
+      - flip_owner_to_business_operations_demote_rd
+      - flip_owner_to_customer_service_demote_rd
       - split_into_dedicated_library_services_function
     why: |
-      Public-library deployments map cleanly to Operations + Customer Service. Academic
-      deployments map to R&D. Today only R&D + L&D are loaded; the current C1 row biases
-      toward an academic-first view.
+      Public-library deployments map cleanly to Business Operations + Customer Service.
+      Academic deployments map to R&D. Current owner biases toward an academic-first view.
   - id: B2-S4
-    summary: E1 / E2 role-naming convention for 5 LIB-MGMT roles
+    summary: E1 / E2 role-naming convention for LIB-MGMT roles (depends on B2-S3 + B1A-PHASE-P)
     question: |
-      All 5 roles prefixed RESEARCH-DEV- (because business_function_id=35). If B2-S3
-      changes the function, role codes should rename. Choose strategy.
+      Roles are prefixed RESEARCH-DEV- (because business_function_id=35). If B2-S3 changes the
+      owning function, role codes should rename. (Note: post-Plan-3 the persona layer is currently
+      empty per B1A-PHASE-P; this convention applies when personas are authored.)
     options:
       - leave_as_research_dev_prefix
       - rename_consistent_with_b2_s3_outcome
       - drop_function_prefix
     why: |
-      Function-scoped naming under § "Role layer" hard invariants makes the prefix
-      mechanically follow business_function_id. B2-S3 outcome drives B2-S4.
+      Function-scoped naming makes the prefix mechanically follow business_function_id.
+      B2-S3 outcome drives B2-S4.
   - id: B2-S5
     summary: Discovery scope, OPAC-only vs full discovery layer
     question: |
@@ -282,66 +177,33 @@ b3:
     rationale: |
       Multi-branch / multi-location library systems. Every public library system above
       ~3 branches, every academic library with subject libraries, and every consortial
-      deployment masters a branches / locations object (Alma "library", Sierra "branch",
-      FOLIO "library" within institution). The current footprint scopes holdings, items,
-      circulation rules, and staff users to a single implicit location, which collapses
-      on any real-world multi-branch deployment.
-    vendor_evidence:
-      - {vendor: "Ex Libris Alma", evidence: 1st_class}
-      - {vendor: "FOLIO (EBSCO)", evidence: 1st_class}
-      - {vendor: "OCLC WorldShare Management Services", evidence: 1st_class}
-      - {vendor: "SirsiDynix BLUEcloud LSP", evidence: 1st_class}
+      deployment masters a branches / locations object. The current footprint scopes holdings,
+      items, circulation rules, and staff users to a single implicit location.
     proposed_module: LIB-CATALOG
   - id: B3-S2
     candidate: library_digital_loans
     rationale: |
       DRM-limited concurrent-use e-book + audiobook lending. Structurally distinct from
-      physical loans (no physical item, DRM-enforced expiry, simultaneous-use license caps,
-      no fines). Alma Digital and FOLIO ERM model this as a separate flow. May belong as
-      a sibling master to library_loans in LIB-MGMT OR may belong in a new DIGITAL-LENDING
-      domain (queued as candidate domain).
-    vendor_evidence:
-      - {vendor: "OverDrive Libby", evidence: 1st_class}
-      - {vendor: "Hoopla", evidence: 1st_class}
-      - {vendor: "Axis 360", evidence: 1st_class}
-      - {vendor: "cloudLibrary", evidence: 1st_class}
+      physical loans. May belong as a sibling master to library_loans in LIB-MGMT OR may belong
+      in a new DIGITAL-LENDING domain (queued as candidate domain).
     proposed_module: LIB-CIRCULATION
   - id: B3-S3
     candidate: library_program_events
     rationale: |
       Library programming (story time, author talks, ESL classes, workshops, summer reading).
-      Distinct lifecycle (scheduled -> registration_open -> registration_full -> held ->
-      attended) and ties to patron registration. May fit in a new LIB-PROGRAMS module of
-      LIB-MGMT OR be consolidated under a candidate SPACE-BOOKING domain.
-    vendor_evidence:
-      - {vendor: "Springshare LibCal", evidence: 1st_class}
-      - {vendor: "Communico Events", evidence: 1st_class}
-      - {vendor: "Demco Niche Academy", evidence: secondary}
+      May fit a new LIB-PROGRAMS module of LIB-MGMT OR be consolidated under a candidate
+      SPACE-BOOKING domain.
     proposed_module: null
   - id: B3-S4
     candidate: library_course_reserves
     rationale: |
-      Academic course reading lists. Two distinct objects: the reading list (per course per
-      term, instructor-authored) and reserve items (physical short-loans plus licensed-reading
-      links). Distinct vendor market with leader-tier specialists. May belong in a new
-      LIB-COURSE-RESERVES module of LIB-MGMT OR a new ACADEMIC-COURSE-RESERVES domain.
-    vendor_evidence:
-      - {vendor: "Ex Libris Leganto", evidence: 1st_class}
-      - {vendor: "Atlas Systems Ares", evidence: 1st_class}
-      - {vendor: "Talis Aspire", evidence: 1st_class}
-      - {vendor: "Rialto", evidence: 1st_class}
+      Academic course reading lists. May belong in a new LIB-COURSE-RESERVES module of LIB-MGMT
+      OR a new ACADEMIC-COURSE-RESERVES domain.
     proposed_module: null
   - id: B3-S5
     candidate: library_patron_identities
     rationale: |
-      Patron-SSO master surface (SAML/CAS/OAuth integration with campus IDP or municipal
-      SSO). Every academic-library deployment integrates with the campus IDP via Shibboleth /
-      SAML / CAS; many public libraries integrate with municipal SSO. The current
-      library_patrons.linked_to_user single edge does not carry IDP profile, attribute-release
-      contract, or identity-binding lifecycle. Likely consumer/embedded_master in LIB-PATRON,
-      canonical master in IGA (which currently lacks the patron-IDP shape).
-    vendor_evidence:
-      - {vendor: "OCLC EZproxy", evidence: 1st_class}
-      - {vendor: "Shibboleth IDP", evidence: 1st_class}
-      - {vendor: "OpenAthens", evidence: 1st_class}
+      Patron-SSO master surface (SAML/CAS/OAuth integration with campus IDP or municipal SSO).
+      Likely consumer/embedded_master in LIB-PATRON, canonical master in IGA (which currently
+      lacks the patron-IDP shape).
     proposed_module: LIB-PATRON

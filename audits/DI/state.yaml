@@ -11,29 +11,35 @@
 schema_version: 2
 domain: DI
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
+
+# UNBUILT domain: 0 domain_modules, 0 capabilities (confirmed live 2026-06-07). The entire
+# M-band cascade below is gated on the user picking the module split topology (B2-S1). The agent
+# does NOT scaffold modules/capabilities unprompted; B1A-BUILD surfaces the build for the user.
 
 b1a:
   - id: B1A-EMDASH-BL
-    summary: "Replace one em-dash with a comma in domains.business_logic on DI id=89 to comply with the project no-em-dashes rule."
-    finding: "domains.business_logic on DI id=89 contains one em-dash character in the sentence 'Streaming and ELT runtimes, change-data-capture engines, and schema-evolution handling [em-dash] the platform IS the kernel.' Project rule (CLAUDE.md No em-dashes) forbids em-dashes in any catalog text. domains.description is clean."
-    action: "Surgical PATCH on /domains?id=eq.89 replacing the em-dash character with a comma followed by a space. One field, one row. No notes touched. No other column touched. record_status untouched per Rule #1."
+    summary: "DESTRUCTIVE (surface only): replace one em-dash in domains.business_logic on DI id=89 with a comma to comply with the project no-em-dashes rule."
+    finding: "domains.business_logic on DI id=89 contains one em-dash character: 'Streaming and ELT runtimes, change-data-capture engines, and schema-evolution handling [em-dash] the platform IS the kernel.' Project rule (CLAUDE.md No em-dashes) forbids em-dashes in any catalog text. domains.description, catalog_tagline, catalog_description are all clean (catalog copy authored 2026-06-07 is em-dash free)."
+    action: "Surgical PATCH on /domains?id=eq.89 replacing the em-dash with ', the platform IS the kernel.' This OVERWRITES a non-empty value (destructive class per Rule #21), so it is surfaced for approval rather than executed. One field, one row, no notes, no other column, record_status untouched."
+    classification: destructive-overwrite-surface
     affected_entities:
       - domains.id=89.business_logic
+
   - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
-    extra_phase_p_triage: "2026-06-02"
+    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities. Surface the build; agent does not scaffold unprompted."
+    finding: "Live triage 2026-06-07: DI has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI / role / lifecycle / skill work applies."
+    action: "On user go-ahead (and a B2-S1 split decision), run Phase A then M then B then S to author the module set, capabilities, masters-to-modules, lifecycle states, and the single domain-grain system skill. If multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward. Personas/RACI are DEFERRED until modules exist."
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
 
 b1b:
   - id: B1B-M1-MODULES
-    summary: "Load 2 domain_modules rows for DI per Rule #14 (DI has 7 masters + 8 proposed capabilities; M2 mandates >=2 full modules at the chosen split). Gated on B2-S1 module split topology user decision."
-    finding: "DI has zero domain_modules rows. Every downstream concern (DMDO attribution, lifecycle-state realization, workflow-gate permissions, system-skill scope, role bundles, handoff source_domain_module_id, intra-domain handoffs) is gated on M-band. Capability count is currently 0 (see B1B-A2-CAPABILITIES). Default recommendation: (a) DI-INGEST-CDC masters source_connectors, change_data_capture_streams, pipeline_runs; (b) DI-TRANSFORM-DELIVER masters transformation_jobs, sink_connectors, schema_registries, integration_flows. Both modules consume the DATA-AI-PLAT-mastered lakehouse_tables and data_pipelines."
+    summary: "Load >=2 domain_modules rows for DI per Rule #14. Gated on B2-S1 module split topology user decision."
+    finding: "DI has zero domain_modules rows. Every downstream concern (DMDO attribution, lifecycle-state realization, workflow-gate permissions, system-skill scope, role bundles, handoff source_domain_module_id, intra-domain handoffs) is gated on M-band. Default recommendation: (a) DI-INGEST-CDC masters source_connectors, change_data_capture_streams, pipeline_runs; (b) DI-TRANSFORM-DELIVER masters transformation_jobs, sink_connectors, schema_registries, integration_flows. Both modules consume the DATA-AI-PLAT-mastered lakehouse_tables and data_pipelines."
     blocked_by:
       - {type: user_decision, ref: B2-S1}
-    affected_modules: []
     affected_masters:
       - {data_object_id: 434, name: pipeline_runs, target_module_id: null, workflow: ingest-or-transform-runtime}
       - {data_object_id: 435, name: source_connectors, target_module_id: null, workflow: ingest-runtime}
@@ -44,16 +50,16 @@ b1b:
       - {data_object_id: 440, name: integration_flows, target_module_id: null, workflow: orchestration}
 
   - id: B1B-A2-CAPABILITIES
-    summary: "Load 8 capabilities + 8 capability_domains rows + 8 domain_module_capabilities rows for DI. Gated on B1B-M1-MODULES (capability-to-module mapping requires the module split decision)."
-    finding: "DI has zero capability_domains rows. Per Rule #14, a domain with DI's 7 masters and 9 outbound handoffs should have 5 to 8 capabilities. Proposed set (8): DI-INGEST-BATCH (Fivetran / Airbyte / Stitch batch ELT), DI-INGEST-CDC (Debezium / Striim / Qlik Replicate change-data-capture), DI-STREAMING-INGEST (Kafka Connect / Confluent / Estuary Flow), DI-TRANSFORM-ELT (dbt / Matillion in-warehouse transformation), DI-SCHEMA-EVOLUTION (Schema Registry / Iceberg schema management), DI-PIPELINE-ORCH (Airflow / Prefect / Dagster orchestration), DI-LINEAGE-EMIT (OpenLineage emit to DCG / DATA-AI-PLAT), DI-CONNECTOR-LIBRARY (the catalog of pre-built source / sink connectors)."
+    summary: "Load 8 capabilities + 8 capability_domains + 8 domain_module_capabilities for DI. Gated on B1B-M1-MODULES (capability-to-module mapping requires the module split decision)."
+    finding: "DI has zero capability_domains rows. Per Rule #14, a domain with DI's 7 masters and 9 outbound handoffs should have 5 to 8 capabilities. Proposed set (8): DI-INGEST-BATCH, DI-INGEST-CDC, DI-STREAMING-INGEST, DI-TRANSFORM-ELT, DI-SCHEMA-EVOLUTION, DI-PIPELINE-ORCH, DI-LINEAGE-EMIT, DI-CONNECTOR-LIBRARY."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1-MODULES}
       - {type: user_decision, ref: B2-S1}
     extra_capability_count: 8
 
   - id: B1B-A3-PRIMARY-SOLUTIONS
-    summary: "Load missing pure-play DI flagship solutions (Fivetran, Airbyte, dbt Labs, Confluent Platform, Striim, Qlik Replicate, Matillion, Informatica IDMC) with coverage_level=primary and re-evaluate the 10 existing suite-level rows (most drop to coverage_level=partial)."
-    finding: "10 solution_domains rows but 0 carry coverage_level=primary and 9 of 10 are secondary. The flagship pure-play DI vendors are NOT in solution_domains at all; the 10 rows are diversified data-AI suites (Foundry, Databricks, Snowflake, Fabric, watsonx, Cloudera, SAP BDC, Dataiku, GCP Data and AI, SageMaker Unified Studio). Per A3 floor: every domain needs >=1 primary solution."
+    summary: "Load missing pure-play DI flagship solutions with coverage_level=primary and re-evaluate the 10 existing suite-level rows (most drop to coverage_level=partial). Requires new solutions rows + per-solution coverage judgment."
+    finding: "10 solution_domains rows but 0 carry coverage_level=primary and 9 of 10 are secondary. The flagship pure-play DI vendors are NOT in solution_domains at all; the 10 rows are diversified data-AI suites. Per A3 floor: every domain needs >=1 primary solution. Out of THIS pass's scope (creating new solutions/vendors is Phase-A market-shape work, not authorized by an open state item) and gated on per-solution coverage judgment (destructive re-rating of the existing 10 rows)."
     blocked_by:
       - {type: user_decision, ref: per-solution-coverage-level-judgment}
       - {type: catalog_addition, scope: solutions, trigger: missing-pure-play-vendor-rows}
@@ -69,14 +75,8 @@ b1b:
       - {name: "Cloudera Data Platform", current_coverage: secondary}
       - {name: "Dataiku", current_coverage: partial}
 
-  - id: B1B-A4-CATALOG-UX
-    summary: "Draft and load domains.catalog_tagline and domains.catalog_description for DI per Rule #20 buyer voice. Gated on B2-S6 user approval of the draft text."
-    finding: "domains.catalog_tagline and domains.catalog_description are both empty strings on DI id=89. Rule #20 mandates non-empty values in buyer voice (workflow + value, not analyst voice). Backfill is allowed when both are empty; overwrite is forbidden without explicit per-row user approval."
-    blocked_by:
-      - {type: user_decision, ref: B2-S6}
-
   - id: B1B-B6-INTRA-DI-RELS
-    summary: "Load 7 to 8 intra-DI data_object_relationships rows among the 7 masters with exact verb, cardinality, is_required, and owner_side tuples (cluster-drafts review required)."
+    summary: "Load 7 to 8 intra-DI data_object_relationships rows among the 7 masters with exact verb, cardinality, is_required, owner_side tuples (cluster-drafts review required)."
     finding: "Zero intra-domain data_object_relationships rows among the 7 DI masters. Workflow demands: transformation_job materialized_by pipeline_run; source_connector feeds pipeline_run; sink_connector receives pipeline_run; change_data_capture_stream produces pipeline_run; schema_registry validates transformation_job; schema_registry governs sink_connector; integration_flow orchestrates pipeline_run; integration_flow chains transformation_job."
     blocked_by:
       - {type: user_decision, ref: cluster-drafts-review-pending}
@@ -106,29 +106,29 @@ b1b:
       - {handoff_id: 259, direction: out, source_domain: DI, target_domain: DCG, trigger_event: "data_asset.discovered", payload: data_assets, null_field: relationship_row}
 
   - id: B1B-B9-MISSING-HANDOFFS
-    summary: "Author missing cross-domain handoff rows for 5 trigger_events that lack a handoff target. Gated on B1B-M1-MODULES (both module FKs required at insert time per write-time policy)."
-    finding: "14 trigger_events exist but only 9 have handoffs rows pointing at a cross-domain target. Untargeted events: source_connector.disconnected (id 764, candidate fan-out to ITSM and OBS); transformation_job.failed (id 768, candidate to ITSM and DQ); transformation_job.published (id 769, candidate to DCG for lineage); schema_registry.breaking_change_attempted (id 771, candidate to DCG and DQ and GRC); change_data_capture_stream.lag_threshold_breached (id 772, candidate to OBS and DQ); change_data_capture_stream.paused (id 773, candidate to ITSM and OBS); integration_flow.activated (id 774, candidate to DCG for lineage); integration_flow.error_burst (id 775, candidate to OBS and ITSM)."
+    summary: "Author missing cross-domain handoff rows for 8 trigger_events that lack a handoff target. Gated on B1B-M1-MODULES (both module FKs required at insert time per write-time policy)."
+    finding: "14 trigger_events exist but only 9 have handoffs rows pointing at a cross-domain target. Untargeted events: source_connector.disconnected (id 764, candidate fan-out to ITSM and OBS); transformation_job.failed (id 768, candidate to ITSM and DQ); transformation_job.published (id 769, candidate to DCG for lineage); schema_registry.breaking_change_attempted (id 771, candidate to DCG and DQ and GRC); change_data_capture_stream.lag_threshold_breached (id 772, candidate to OBS and DQ); change_data_capture_stream.paused (id 773, candidate to ITSM and OBS); integration_flow.activated (id 774, candidate to DCG for lineage); integration_flow.error_burst (id 775, candidate to OBS and ITSM). event_category already backfilled on all 14 (S4, 2026-05-31)."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1-MODULES}
     affected_events:
-      - {id: 764, event_name: "source_connector.disconnected", current_category: state_change, proposed_category: state_change}
-      - {id: 768, event_name: "transformation_job.failed", current_category: state_change, proposed_category: state_change}
-      - {id: 769, event_name: "transformation_job.published", current_category: lifecycle, proposed_category: lifecycle}
-      - {id: 771, event_name: "schema_registry.breaking_change_attempted", current_category: signal, proposed_category: signal}
-      - {id: 772, event_name: "change_data_capture_stream.lag_threshold_breached", current_category: threshold, proposed_category: threshold}
-      - {id: 773, event_name: "change_data_capture_stream.paused", current_category: state_change, proposed_category: state_change}
-      - {id: 774, event_name: "integration_flow.activated", current_category: lifecycle, proposed_category: lifecycle}
-      - {id: 775, event_name: "integration_flow.error_burst", current_category: threshold, proposed_category: threshold}
+      - {id: 764, event_name: "source_connector.disconnected", current_category: state_change}
+      - {id: 768, event_name: "transformation_job.failed", current_category: state_change}
+      - {id: 769, event_name: "transformation_job.published", current_category: lifecycle}
+      - {id: 771, event_name: "schema_registry.breaking_change_attempted", current_category: signal}
+      - {id: 772, event_name: "change_data_capture_stream.lag_threshold_breached", current_category: threshold}
+      - {id: 773, event_name: "change_data_capture_stream.paused", current_category: state_change}
+      - {id: 774, event_name: "integration_flow.activated", current_category: lifecycle}
+      - {id: 775, event_name: "integration_flow.error_burst", current_category: threshold}
 
   - id: B1B-B9B-INTRA-DOMAIN-HANDOFFS
     summary: "Author 4+ intra-domain cross-module handoffs once DI has 2+ modules. Pattern lifecycle_progression, friction_level low. Gated on B1B-M1-MODULES."
-    finding: "With 0 modules today, no intra-domain cross-module handoffs are modellable. Expected pairs once split (a) lands: DI-INGEST-CDC to DI-TRANSFORM-DELIVER on source_connector.added (registers upstream feed) and change_data_capture_stream.paused (downstream transformation sees stale data); DI-TRANSFORM-DELIVER to DI-INGEST-CDC on schema_registry.schema_evolved (source-side schema reconciliation) and transformation_job.published (downstream may need new column ingest)."
+    finding: "With 0 modules today, no intra-domain cross-module handoffs are modellable. Expected pairs once split (a) lands: DI-INGEST-CDC to DI-TRANSFORM-DELIVER on source_connector.added and change_data_capture_stream.paused; DI-TRANSFORM-DELIVER to DI-INGEST-CDC on schema_registry.schema_evolved and transformation_job.published."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1-MODULES}
 
   - id: B1B-B10B-SOURCE-MODULE-FK
     summary: "Backfill handoffs.source_domain_module_id on all 9 outbound DI handoffs once DI modules exist. Deterministic derivation from trigger_event.data_object_id mastered-by lookup."
-    finding: "All 9 outbound handoffs carry source_domain_module_id=NULL because DI has zero modules (gated on B1B-M1-MODULES). 8 of 9 also carry target_domain_module_id=NULL (target-side B10b owed by other domains, listed under report-only). After B1B-M1-MODULES, the source-side backfill is deterministic: handoff 725 / 726 / 728 fire on pipeline_runs => DI-INGEST-CDC; handoff 731 fires on schema_registries => DI-TRANSFORM-DELIVER; handoff 729 fires on source_connectors => DI-INGEST-CDC; handoff 730 fires on sink_connectors => DI-TRANSFORM-DELIVER; handoff 727 fires on event 96 which references data_pipelines (227, DATA-AI-PLAT-mastered) which is the B9 attribution defect noted in B2-S3."
+    finding: "All 9 outbound handoffs carry source_domain_module_id=NULL because DI has zero modules (gated on B1B-M1-MODULES). 8 of 9 also carry target_domain_module_id=NULL (target-side B10b owed by other domains). After B1B-M1-MODULES the source-side backfill is deterministic: handoff 725 / 726 / 728 fire on pipeline_runs => DI-INGEST-CDC; handoff 731 fires on schema_registries => DI-TRANSFORM-DELIVER; handoff 729 fires on source_connectors => DI-INGEST-CDC; handoff 730 fires on sink_connectors => DI-TRANSFORM-DELIVER; handoff 727 fires on event 96 which references data_pipelines (227, DATA-AI-PLAT-mastered) which is the B9 attribution defect noted in B2-S3."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1-MODULES}
     affected_handoffs:
@@ -142,41 +142,17 @@ b1b:
       - {handoff_id: 730, direction: out, source_domain: DI, target_domain: DLP, trigger_event: "sink_connector.added", payload: sink_connectors, null_field: source_domain_module_id}
       - {handoff_id: 731, direction: out, source_domain: DI, target_domain: DATA-AI-PLAT, trigger_event: "schema_registry.schema_evolved", payload: schema_registries, null_field: source_domain_module_id}
 
-  - id: B1B-B11-ALIASES
-    summary: "Load 12 to 18 data_object_aliases rows (2 to 3 per master) capturing vendor synonyms. Gated on cluster-drafts review of exact tuples."
-    finding: "Zero data_object_aliases rows for any DI master. Cross-vendor terminology is fragmented (Fivetran 'Connectors' and 'Connector Runs'; Airbyte 'Sources', 'Destinations', 'Sync Jobs'; dbt 'Models', 'Runs'; Confluent 'Connectors', 'Tasks'; Striim 'Replication Streams'; Qlik 'Source Endpoints', 'Target Endpoints'). Candidate equivalents: pipeline_runs to sync_jobs and connector_runs; source_connectors to sources and source_endpoints; sink_connectors to destinations and target_endpoints; transformation_jobs to dbt_models and ksql_queries; change_data_capture_streams to replication_streams and change_streams."
-    blocked_by:
-      - {type: user_decision, ref: cluster-drafts-review-pending}
-
   - id: B1B-B12-LIFECYCLE-STATES
     summary: "Load 7 lifecycle state machines, one per master, with the appropriate domain_module_id realizing column once modules exist. Gated on B1B-M1-MODULES (domain_module_id assignment needs module ids)."
-    finding: "Zero data_object_lifecycle_states rows for any DI master. Per Rule #12 every workflow-bearing master needs a state machine; workflow-gate permissions materialize from those states. Expected machines: pipeline_runs (queued -> running -> succeeded | failed); source_connectors (configured -> active -> paused -> retired); sink_connectors (configured -> active -> paused -> retired); transformation_jobs (draft -> in_review -> approved -> published -> retired); schema_registries (registered -> versioned -> evolved -> deprecated); change_data_capture_streams (initializing -> active -> paused -> stopped); integration_flows (draft -> active -> error_burst -> paused -> retired)."
+    finding: "Zero data_object_lifecycle_states rows for any DI master. entity_type now classified operational_workflow on all 7 masters (2026-06-07), so B12 is REQUIRED for all 7. Workflow-gate permissions materialize from these states. Expected machines: pipeline_runs (queued -> running -> succeeded | failed); source_connectors (configured -> active -> paused -> retired); sink_connectors (configured -> active -> paused -> retired); transformation_jobs (draft -> in_review -> approved -> published -> retired); schema_registries (registered -> versioned -> evolved -> deprecated); change_data_capture_streams (initializing -> active -> paused -> stopped); integration_flows (draft -> active -> error_burst -> paused -> retired)."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1-MODULES}
 
   - id: B1B-B4-PATTERN-FLAGS
     summary: "PATCH 3 candidate pattern flags (transformation_jobs.has_submit_lock, transformation_jobs.has_single_approver, schema_registries.has_submit_lock) after B2-S2 per-flag yes/no decision."
-    finding: "Pattern flags on all 7 masters are false by default; no positive audit pass recorded. Candidates per audit reasoning: transformation_jobs.has_submit_lock=true (published transformation jobs typically freeze at published so dependent consumers have a stable surface); transformation_jobs.has_single_approver=true (single-approver workflow is common in dbt / Matillion governance); schema_registries.has_submit_lock=true (schemas freeze at versioned state; evolution authors a NEW version rather than mutating the prior)."
+    finding: "Pattern flags on all 7 masters are false by default; no positive audit pass recorded. Candidates per audit reasoning: transformation_jobs.has_submit_lock=true (published jobs freeze at published so dependent consumers have a stable surface); transformation_jobs.has_single_approver=true (single-approver workflow common in ELT governance); schema_registries.has_submit_lock=true (schemas freeze at versioned; evolution authors a NEW version)."
     blocked_by:
       - {type: user_decision, ref: B2-S2}
-
-  - id: B1B-F1-LEGACY-SKILL
-    summary: "DELETE legacy domain-level skill 48 (di-system) and its 7 skill_tools rows once per-module system skills exist. Gated on B1B-F2-MODULE-SKILLS."
-    finding: "Skill 48 (di-system, skill_type=system, domain_module_id=NULL) is a legacy domain-level system skill. Once B1B-F2-MODULE-SKILLS lands, F1 mandates retiring this legacy row in favor of per-module system skills (one per module per Rule #17). The legacy skill carries 7 query tools (query_pipeline_runs, query_source_connectors, query_sink_connectors, query_transformation_jobs, query_schema_registries, query_change_data_capture_streams, query_integration_flows); the tools rows stay in the catalog, the junctions move."
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-F2-MODULE-SKILLS}
-
-  - id: B1B-F2-MODULE-SKILLS
-    summary: "Author one skill_type=system skill per DI module (e.g. di_ingest_cdc_agent and di_transform_deliver_agent) once modules exist."
-    finding: "Zero module-level system skills (F2 hard fail). Once B1B-M1-MODULES lands, each new module needs exactly one skill_type=system row with domain_module_id set."
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
-
-  - id: B1B-F3-F4-F7-SKILL-TOOLS
-    summary: "Author >=1 skill_tools row per new module-level system skill with a mix of required and optional, including at least one mutate per master, one side_effect per module, one inbound primitive, and one fetch. Channels via notify_person / notify_team per F7."
-    finding: "Today's surface on legacy skill 48 is 100% query operations; strict_score and operational_score are uncomputable per module (F5 rollup). Phase-S floor per Rule #17: at least one mutate per master (update_pipeline_run_status, pause_change_data_capture_stream, publish_transformation_job, version_schema_registry); at least one side_effect per module (trigger_pipeline_run, roll_back_transformation_job); at least one inbound primitive (receive_cdc_event_webhook); at least one fetch (fetch_source_schema_from_external_api). Channel primitives via notify_person and notify_team per F7."
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-F2-MODULE-SKILLS}
 
   - id: B1B-E-BAND-ROLES
     summary: "Author >=3 roles touching both DI modules with function-scoped naming once modules exist. Includes role_modules, role_permissions, interaction_level, and Path A and Path B agreement."
@@ -184,10 +160,16 @@ b1b:
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1-MODULES}
 
+  - id: B1B-F-SKILL-LAYER-RETIRED
+    summary: "RETIRED note (supersession 2026-06-06): the former F1/F2/F3-F4-F7 per-module system-skill items are CANCELED."
+    finding: "The legacy domain-level skill 48 (di-system) and the per-module-system-skill model are superseded. Under the new model DI gets exactly ONE domain-grain system skill (domain_id=89, domain_module_id=null) that DERIVES its toolset from domain_module_tools; FULL modules carry no skill; skill_tools is dropped. Per-module tool re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills or skill_tools. This entry is a marker so future passes do not re-open the retired items."
+    blocked_by:
+      - {type: superseded, ref: per-domain-skill-restoration-2026-06-06}
+
 b2:
   - id: B2-S1
     summary: "Pick the DI module split topology before any M-band cascade lands."
-    question: "Which DI module split do you want? (a) DI-INGEST-CDC + DI-TRANSFORM-DELIVER, 2 full modules (recommended for vendor neutrality); (b) per-runtime split DI-BATCH-ELT + DI-STREAMING + DI-CDC + DI-TRANSFORM, 4 full modules; (c) per-vendor-cluster split, 3 full modules; (d) hybrid 2 full modules + DI-LITE starter for SMB Fivetran-only deployments."
+    question: "Which DI module split do you want? (a) DI-INGEST-CDC + DI-TRANSFORM-DELIVER, 2 full modules (recommended for vendor neutrality); (b) per-runtime split DI-BATCH-ELT + DI-STREAMING + DI-CDC + DI-TRANSFORM, 4 full modules; (c) per-vendor-cluster split, 3 full modules; (d) hybrid 2 full modules + DI-LITE starter for SMB single-connector deployments."
     options: [a, b, c, d]
     why: "Modularization design choice with downstream effects on capability assignment, role bundles, lifecycle-state realization, and Phase-B / Phase-S load shape. Cannot be auto-derived; user owns the architectural intent."
 
@@ -213,18 +195,12 @@ b2:
     summary: "Resolve handoff 157 attribution defect on event 105 replication_load.completed."
     question: "trigger_event 105 (replication_load.completed) references lakehouse_tables (226, mastered by DATA-AI-PLAT) but DI publishes the event. (a) keep DATA-AI-PLAT attribution and document DI as contributor on event 105; (b) author a parallel DI-side event pipeline_run.completed_load with data_object_id=434; (c) replace event 105 entirely with a DI-side event pointing at pipeline_runs."
     options: [a, b, c]
-    why: "Same attribution-defect shape as B2-S3 but on a different handoff. Flagship vendor behavior varies (Snowpipe fires on TABLE; Fivetran fires on CONNECTOR-RUN). Decision changes who owns the event's lifecycle state and which side's B9b coverage it counts toward."
-
-  - id: B2-S6
-    summary: "Approve a buyer-voice draft for domains.catalog_tagline and domains.catalog_description on DI per Rule #20."
-    question: "Both fields are empty on DI. Should I draft a one-sentence tagline + 1 to 3 paragraph description in buyer voice (workflow + value, not market position) and surface for your approval BEFORE writing? Rule #20 forbids overwrite without explicit per-row approval, even on empty backfill."
-    options: [draft-and-surface, skip]
-    why: "Buyer-facing copy is marketing surface; agent must surface the draft before writing per Rule #20. Backfill on empty is allowed but still draft-then-approve."
+    why: "Same attribution-defect shape as B2-S3 but on a different handoff. Flagship behavior varies (some runtimes fire on TABLE; others on CONNECTOR-RUN). Decision changes who owns the event's lifecycle state and which side's B9b coverage it counts toward."
 
 b3:
   - id: B3-CONNECTOR-TASKS
     candidate: connector_tasks
-    rationale: "Per-execution work unit below a connector. Today pipeline_runs aggregates these but flagships expose per-task granularity (Fivetran Sync Tasks, Airbyte Job Attempts, Confluent Connect Task Instances). Strong-signal candidate per agent eyeball pass."
+    rationale: "Per-execution work unit below a connector. Today pipeline_runs aggregates these but flagships expose per-task granularity. Strong-signal candidate per agent eyeball pass."
     vendor_evidence:
       - Fivetran
       - Airbyte
@@ -233,7 +209,7 @@ b3:
 
   - id: B3-DATA-LINEAGE-EVENTS
     candidate: data_lineage_events
-    rationale: "First-class lineage emit log distinct from data_pipelines itself. OpenLineage RunEvents, Marquez events, dbt Cloud lineage log, Atlan / DataHub lineage emitter. Strong-signal candidate per agent eyeball pass."
+    rationale: "First-class lineage emit log distinct from data_pipelines itself. Strong-signal candidate per agent eyeball pass."
     vendor_evidence:
       - OpenLineage
       - Marquez
@@ -244,7 +220,7 @@ b3:
 
   - id: B3-DATA-CONTRACTS
     candidate: data_contracts
-    rationale: "Distinct from schema_registries: a contract is a producer-consumer agreement (schema + SLA + ownership + tests + breaking-change policy); a registry holds schemas only. Gable.ai is the clearest pure-play."
+    rationale: "Distinct from schema_registries: a contract is a producer-consumer agreement (schema + SLA + ownership + tests + breaking-change policy); a registry holds schemas only."
     vendor_evidence:
       - Gable.ai
       - PayPal data-contract-cli

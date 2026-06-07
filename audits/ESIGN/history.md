@@ -365,3 +365,58 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+Loader: [.tmp_deploy/esign_state_execute_2026_06_07.ts](../../.tmp_deploy/esign_state_execute_2026_06_07.ts). Run from project root `c:/dev/domain-map`. Idempotent verify-then-write; all writes landed clean on first run, no JWT-audience errors.
+
+### Summary
+
+State-driven Validate pass over the open items in `audits/ESIGN/state.yaml`. No fresh from-scratch audit. ESIGN is confirmed UNBUILT live (0 `domain_modules`, 0 `capability_domains`, 0 `solution_domains`), so the module/capability/permission/skill cascade was LEFT (surface the build, do not scaffold). Executed only the data-object-grain and domain-grain mechanical items that do not depend on the build. The per-module system-skill / `skill_tools` items (former B1A-S7, B1A-S8, B2-S3) were treated as RETIRED per the 2026-06-06 per-domain-skill supersession header and reframed as a note in state.yaml.
+
+### Executed (record_status='new' / corrective; idempotent)
+
+- **entity_type PATCH (Rule #12)** [1 row]. `envelopes` (251) was `entity_type='unclassified'`. It is an e-signature transaction with a full lifecycle (draft -> sent -> ... -> completed/declined/voided/expired) and workflow gates (sent + voided `requires_permission=true`). PATCHed to `operational_workflow`.
+- **business_logic em-dash strip (B1A-S4)** [1 row]. `domains.id=94 business_logic` still carried a live U+2014 em-dash (the prior 2026-05-31 pass had recorded it as fixed but the glyph was live again / never applied). Rule-enforced corrective: replaced only the em-dash with a comma, wording otherwise verbatim. New value: "PKI and crypto kernel for signature creation, timestamping, and validation, small in surface area but irreducible and regulated."
+- **Catalog UX domain grain (Rule #20 / A4 / former B2-S1)** [2 fields]. `domains.id=94 catalog_tagline` + `catalog_description` were both empty. Authored buyer-voice copy (workflow + value, no vendor product names, statutory frameworks ESIGN Act / UETA / eIDAS allowed, no em-dash, American English) and wrote both. The stale "surface-before-write" gate (former B2-S1) was ignored per Rule #20.
+- **Aliases (B1A-S6 / B11)** [3 rows]. `data_object_aliases` on `envelopes` (251): `agreement`, `signing session`, `transaction`, all `alias_type='synonym'`, vendor-neutral generic synonyms.
+
+C1 (`business_function_domains`) verified already complete (5 rows: owner Contract Operations 74; contributors Sales 21, Human Resources 3, Procurement 19; consumer Customer Success 23). No insert.
+
+H1: the single cross-domain handoff (217 ESIGN to CLM on envelope.completed) already carries a clean `handoff_processes` tag (process 398 "Negotiate and document agreements/contracts" L3, `agent_curated`, role `implements`, `record_status=new`). No new tag needed; the approval flip is surfaced as B2-S6.
+
+### Surfaced (user decisions; not written)
+
+- **B2-S2** (module split: single ESIGN-SIGNATURE-OPS vs two-module ESIGN-AUTHORING + ESIGN-COMPLETION). Gates the entire build.
+- **B2-S4** (B12 lifecycle gate scope: also gate declined 440 and/or expired 442 beyond sent + voided).
+- **B2-S5** (B7 user-edge scope: add witness / cc_viewer / verifier beyond sender + signer).
+- **B2-S6** (DESTRUCTIVE: flip `handoff_processes.id=204` `record_status` to approved/rejected; recommend approve, but Rule #1 needs explicit user sign-off).
+- **B1A-BUILD** (UNBUILT domain: 0 modules / 0 capabilities / 0 solution_domains). Surface the build; the b1b cascade (B1A-S1/S2/S3/S5/S9/S10/S11/S12) lands as part of it.
+
+Personas/RACI (Phase P): not applicable yet (domain unbuilt). Candidate personas would be authored only after the multi-module build, if any.
+
+### Left
+
+- **b1b** (B1A-S1, S2, S3, S5, S9, S10, S11, S12): all blocked on the build, which is gated on B2-S2. Not scaffolded.
+- **Retired** (former B1A-S7, B1A-S8, B2-S3): per-module system skill / skill_tools model, superseded 2026-06-06. Reframed as a note in state.yaml; legacy skill 20 stays as the single domain-grain system skill, not re-anchored.
+- **b3** (B3-S1..S6): backlog (signature_certificates, envelope_templates, identity_verifications, ESIGN-NOTARY, ESIGN Act/UETA regulations, inbound cross-domain handoffs owed by other domains' B8/B9).
+
+### Live state after run
+
+- `data_objects` 251 `entity_type`: `operational_workflow`.
+- `domains` 94: `business_logic` em-dash-free; `catalog_tagline` + `catalog_description` populated.
+- `data_object_aliases` on 251: 3 (`agreement`, `signing session`, `transaction`), all synonym, `record_status='new'`.
+
+### Errors
+
+None. No JWT-audience errors.
+
+### Spot-check URLs
+
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/domains
+- https://tests.semantius.app/domain_map/data_object_aliases
+
+### Post-fix status
+
+`next_action_by: user` (B2-S2 module-shape decision unblocks the build; B2-S6 approval flip).

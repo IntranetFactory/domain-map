@@ -11,34 +11,26 @@
 schema_version: 2
 domain: UTIL-OPS
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
-# Bucket 1 agent-fixable (b1a). Only the H1 deferral entry is ungated this audit;
-# every other technical fix is gated on B1B-S1 (modules) or a Bucket-2 user
-# decision and lives in b1b.
+# UNBUILT domain: 0 domain_modules (M1 fail), 0 capability_domains. Every module-grain
+# fix (relationships, users edges, lifecycle states, intra-domain handoffs, source-side
+# handoff FK patches) is blocked on the build (B1B-S1) which is in turn gated on the
+# structural Bucket-2 decision B2-5 (umbrella vs. promote). The 2026-06-07 state-driven
+# pass executed every additive/corrective item that is NOT module-gated:
+#   - entity_type on all 8 masters: unclassified -> operational_workflow (B13 / Rule #12)
+#   - catalog_tagline + catalog_description on the domain row (A4 / Rule #20)
+#   - 4 business_function_domains RACI rows (C1) on clean 20-function-spine matches
+#   - 32 data_object_aliases industry_term synonyms across the 8 masters (B11)
+# B1A-H1DEF is now MOOT: all 7 outbound cross-domain handoffs (939-945) already carry
+# agent_curated handoff_processes rows live (the prior snapshot was stale). No H1 work owed.
 
-b1a:
-  - id: B1A-H1DEF
-    summary: "Record explicit H1 deferral for handoffs 944 + 945 (no clean APQC PCF cross-industry match)."
-    finding: "Handoffs 944 (meter_read.captured to ERP-FIN, payload meter_reads) and 945 (meter_read.anomalous to FSM, payload meter_reads) carry zero handoff_processes rows. The 2026-05-30 audit deferred both with the reason 'no clean APQC PCF cross-industry match' (raw AMI ingestion and VEE-flagged anomalous-read triage are utility-industry-specific). The H1 coverage gate is satisfied either by (a) a handoff_processes row or (b) an explicit deferral entry in the audit. Recording the deferral here completes (b) for both handoffs and routes them to Discover Pass 3's custom-process authoring path."
-    action: "No catalog write. The history.md entry for this audit carries the deferral; Discover Pass 3 picks them up from there. If the user wants the deferral persisted as catalog rows, surface (handoff 944 + 945) for human_curated tagging once a custom utility-process node exists."
-    affected_handoffs:
-      - {handoff_id: 944, direction: outbound, source_domain: UTIL-OPS, target_domain: ERP-FIN, trigger_event: "meter_read.captured", payload: "meter_reads", null_field: handoff_processes}
-      - {handoff_id: 945, direction: outbound, source_domain: UTIL-OPS, target_domain: FSM, trigger_event: "meter_read.anomalous", payload: "meter_reads", null_field: handoff_processes}
-
-# Bucket 1 blocked (b1b). 14 items, every one of them gated. IDs preserved from
-# the 2026-05-30 audit so the next pass keeps a stable handle.
-  - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
-    extra_phase_p_triage: "2026-06-02"
-
+# Bucket 1 blocked (b1b). Every item gated on B1B-S1 (the build) or a Bucket-2 decision.
 b1b:
   - id: B1B-S1
-    summary: "Author UTIL-OPS modules (4 proposed under umbrella option, or migrate masters to promoted domains under demote option)."
-    finding: "Zero domain_modules rows for UTIL-OPS. The 8 masters span 4 distinct workflow clusters (CIS / billing, AMI / metering, asset and work mgmt, outage mgmt) but ship no deployable units. Every downstream B / E / F band is blocked. Default proposal under Bucket 2 #5 option (a) is 4 full modules: UTIL-METER-TO-CASH (utility_customer_accounts + utility_meters + meter_reads + service_connections + utility_bills), UTIL-OUTAGE-MGMT (outage_events), UTIL-WORK-ASSET-MGMT (utility_assets + utility_service_orders), optional UTIL-AMI-OPS (meter_reads event flow). Under option (b) UTIL-OPS becomes leadership-tier with a single landing module and every master migrates to its new home domain."
+    summary: "BUILD UTIL-OPS: author module set (4 proposed under umbrella) or migrate masters to promoted domains (demote option). Gates 9+ downstream items."
+    finding: "Zero domain_modules rows. The 8 masters span 4 workflow clusters (CIS/billing, AMI/metering, asset+work mgmt, outage mgmt). Default umbrella proposal: UTIL-METER-TO-CASH (660+661+662+663+667), UTIL-OUTAGE-MGMT (665), UTIL-WORK-ASSET-MGMT (664+666), optional UTIL-AMI-OPS. Under demote, UTIL-OPS becomes leadership-tier and every master migrates to its new home domain. The agent does NOT scaffold an unbuilt domain; the build is surfaced and runs only after the B2-5 structural call."
     blocked_by:
       - {type: user_decision, ref: B2-5}
     affected_masters:
@@ -52,138 +44,87 @@ b1b:
       - {data_object_id: 667, name: utility_bills, target_module_id: null, workflow: meter_to_cash}
 
   - id: B1B-S2
-    summary: "Author 7 capabilities + capability_domains rows alongside modules."
-    finding: "Zero capabilities linked. Phase A floor is at least 3 capabilities (typical 5 to 8). Audit proposal: METER-TO-CASH, METER-DATA-MGMT, OUTAGE-MGMT, NETWORK-ASSET-MGMT, FIELD-WORK-EXECUTION, REGULATORY-REPORTING, GRID-RELIABILITY-MONITORING. Capability set drives domain_module_capabilities once modules land."
+    summary: "Author 7 capabilities + capability_domains rows alongside the module build."
+    finding: "Zero capabilities linked (A2 hard fail). Phase A floor is >=3. Proposal: METER-TO-CASH, METER-DATA-MGMT, OUTAGE-MGMT, NETWORK-ASSET-MGMT, FIELD-WORK-EXECUTION, REGULATORY-REPORTING, GRID-RELIABILITY-MONITORING. Loads alongside modules per Phase A; module assignment shifts if B2-5 lands on demote."
     blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: "capabilities load alongside modules per Phase A; module assignment changes if B2-5 lands on demote"}
-    extra_proposed_capabilities:
-      - METER-TO-CASH
-      - METER-DATA-MGMT
-      - OUTAGE-MGMT
-      - NETWORK-ASSET-MGMT
-      - FIELD-WORK-EXECUTION
-      - REGULATORY-REPORTING
-      - GRID-RELIABILITY-MONITORING
-
-  - id: B1B-S3
-    summary: "Draft + load A4 catalog_tagline + catalog_description for UTIL-OPS."
-    finding: "domains.catalog_tagline and domains.catalog_description both empty on UTIL-OPS. Rule #20 requires buyer-voice copy (workflow + value, not analyst voice) and explicit user review of the exact wording BEFORE write."
-    blocked_by:
-      - {type: user_decision, ref: B2-3-COPY, reason: "Rule #20 forbids agent-authored draft from being written without user approval of the exact text"}
-
-  - id: B1B-S4
-    summary: "PATCH has_personal_content on 4-of-8 (or all 8) UTIL-OPS masters."
-    finding: "All 8 masters carry has_personal_content=false at schema default with no positive re-evaluation. utility_customer_accounts (name, service address, SSN-last-4), meter_reads (identified by meter + premises, personal-by-association under EU smart-meter case law), service_connections (premises to customer), utility_bills (identifying info + consumption) clearly carry personal content. Audit proposal: PATCH 660 + 662 + 663 + 667 to true; conservative reading flips all 8."
-    blocked_by:
-      - {type: user_decision, ref: B2-1}
+      - {type: depends_on, ref: B1B-S1}
 
   - id: B1B-S5
-    summary: "Author 8 intra-domain data_object_relationships baseline rows (B1-R1 to R8 from 2026-05-30 narrative)."
-    finding: "Only 1 data_object_relationships row touches UTIL-OPS masters (470, cross-domain into CSM). Zero intra-domain edges across 8 masters. The 2026-05-30 audit pre-specified 8 edges: utility_customer_accounts holds service_connections, service_connections metered_by utility_meters, utility_meters produces meter_reads, service_connections billed_via utility_bills, meter_reads feeds utility_bills, utility_assets triggers outage_events, outage_events spawns utility_service_orders, utility_meters serviced_by utility_service_orders."
+    summary: "Author 8 intra-domain data_object_relationships baseline rows (B1-R1 to R8)."
+    finding: "Only 1 data_object_relationships row touches UTIL-OPS masters (470, cross-domain into CSM). Zero intra-domain edges. Pre-specified 8 edges: utility_customer_accounts holds service_connections; service_connections metered_by utility_meters; utility_meters produces meter_reads; service_connections billed_via utility_bills; meter_reads feeds utility_bills; utility_assets triggers outage_events; outage_events spawns utility_service_orders; utility_meters serviced_by utility_service_orders. Grouped under post-build for module attribution."
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1, reason: "audit text groups intra-domain rels under post-modularization for module attribution"}
+      - {type: prerequisite_entity, ref: B1B-S1}
 
   - id: B1B-S6
-    summary: "Author 5 users edges (Rule #10, B1-U1 to U5 from 2026-05-30 narrative)."
-    finding: "Zero edges from UTIL-OPS masters to platform built-in users (id 748). Audit pre-specifies 5 tuples: users created utility_customer_accounts (CSR), users dispatched utility_service_orders (dispatcher), users declared outage_events (operator), users issued utility_bills (billing analyst), users collected meter_reads (manual meter reader; AMI reads are system-collected)."
+    summary: "Author 5 users edges (Rule #10, B1-U1 to U5)."
+    finding: "Zero edges from UTIL-OPS masters to platform users (id 748). Pre-specified: users created utility_customer_accounts (CSR); dispatched utility_service_orders (dispatcher); declared outage_events (operator); issued utility_bills (billing analyst); collected meter_reads (manual reader; AMI reads system-collected). Grouped with post-build load by 2026-05-30 sequencing."
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1, reason: "Rule #10 author grouped with post-modularization load by 2026-05-30 audit sequencing"}
+      - {type: prerequisite_entity, ref: B1B-S1}
 
   - id: B1B-S7
     summary: "Author 4 outbound cross-domain data_object_relationships (B1-X1 to X4)."
-    finding: "Only 1 outbound cross-domain data_object_relationships row exists (470 into CSM). The 7 outbound handoffs each imply a payload-to-target relationship: utility_bills posts_as revenue (ERP-FIN, needs entity confirmation), utility_service_orders triggers field-work-orders (FSM, needs master confirmation), utility_assets escalates_to service_incidents (ITSM), outage_events opens customer_cases (CSM, already in 470). Two of the four targets need entity confirmation on the receiving domain."
+    finding: "Only 1 outbound cross-domain rel exists (470 into CSM). The 7 outbound handoffs imply payload-to-target rels: utility_bills posts_as revenue (ERP-FIN, needs entity confirmation); utility_service_orders triggers field-work-orders (FSM, needs master confirmation); utility_assets escalates_to service_incidents (ITSM); outage_events opens customer_cases (CSM, already row 470). Two targets need receiving-domain entity confirmation."
     blocked_by:
       - {type: catalog_addition, scope: domains, trigger: "ERP-FIN entity confirmation, FSM master confirmation"}
       - {type: prerequisite_entity, ref: B1B-S1}
 
   - id: B1B-S8
-    summary: "Author intra-domain handoffs across module pairs (estimated 4 to 6 rows)."
-    finding: "B9 ticks for all 10 events on the single-no-module shape, but on multi-module UTIL-OPS (post B1B-S1) the rule needs intra-domain handoffs with integration_pattern lifecycle_progression for utility_customer_account.opened, utility_meter.installed (METER-TO-CASH chain), outage_event.declared to service-order creation in WORK-ASSET-MGMT, outage_event.restored to work-order closure. Also new terminal trigger events (utility_bill.posted, utility_bill.paid, utility_service_order.completed, outage_event.cause_classified) needed."
+    summary: "Author intra-domain handoffs across module pairs (est. 4 to 6 rows) + new terminal trigger events."
+    finding: "On multi-module UTIL-OPS, B9b needs intra-domain handoffs with integration_pattern lifecycle_progression for utility_customer_account.opened, utility_meter.installed, outage_event.declared->service-order creation, outage_event.restored->work-order closure. New terminal events needed: utility_bill.posted, utility_bill.paid, utility_service_order.completed, outage_event.cause_classified. Derivable only from module pairs."
     blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: "derivable only from module pairs"}
+      - {type: depends_on, ref: B1B-S1}
 
   - id: B1B-S9
-    summary: "PATCH source_domain_module_id on all 7 outbound handoffs once UTIL-OPS modules exist."
-    finding: "All 7 outbound handoffs carry NULL on source_domain_module_id (B10b source-side fail). Target-side state: 940 + 941 + 945 already attribute target_domain_module_id=161 (FSM-DISPATCH-OPS), 943 attributes 38 (ITSM-INCIDENT-MGMT); 939 + 944 + 942 are target-NULL (B10 report-only on ERP-FIN and CSM)."
+    summary: "PATCH source_domain_module_id on all 7 outbound handoffs once modules exist."
+    finding: "All 7 outbound handoffs carry NULL on source_domain_module_id (B10b source-side fail). Target-side (live): 940 + 941 + 945 attribute target_domain_module_id=161 (FSM-DISPATCH-OPS), 943 attributes 38 (ITSM-INCIDENT-MGMT); 939 + 944 + 942 are target-NULL (report-only on ERP-FIN and CSM)."
     blocked_by:
       - {type: depends_on, ref: B1B-S1}
     affected_handoffs:
-      - {handoff_id: 939, direction: outbound, source_domain: UTIL-OPS, target_domain: ERP-FIN, trigger_event: "utility_bill.issued", payload: "utility_bills", null_field: source_domain_module_id}
-      - {handoff_id: 940, direction: outbound, source_domain: UTIL-OPS, target_domain: FSM, trigger_event: "utility_service_order.dispatched", payload: "utility_service_orders", null_field: source_domain_module_id}
-      - {handoff_id: 941, direction: outbound, source_domain: UTIL-OPS, target_domain: FSM, trigger_event: "utility_asset.failed", payload: "utility_assets", null_field: source_domain_module_id}
-      - {handoff_id: 942, direction: outbound, source_domain: UTIL-OPS, target_domain: CSM, trigger_event: "outage_event.declared", payload: "outage_events", null_field: source_domain_module_id}
-      - {handoff_id: 943, direction: outbound, source_domain: UTIL-OPS, target_domain: ITSM, trigger_event: "utility_asset.failed", payload: "service_incidents", null_field: source_domain_module_id}
-      - {handoff_id: 944, direction: outbound, source_domain: UTIL-OPS, target_domain: ERP-FIN, trigger_event: "meter_read.captured", payload: "meter_reads", null_field: source_domain_module_id}
-      - {handoff_id: 945, direction: outbound, source_domain: UTIL-OPS, target_domain: FSM, trigger_event: "meter_read.anomalous", payload: "meter_reads", null_field: source_domain_module_id}
-
-  - id: B1B-S10
-    summary: "Author 16 to 24 data_object_aliases rows from the vendor lexicon enumerated 2026-05-30."
-    finding: "Zero data_object_aliases rows on all 8 masters. Vendor lexicon already enumerated (Service Agreement / Premises Account, Smart Meter / Endpoint, Interval Read / VEE Reading, Service Point / POD, Network Asset / Plant, Trouble Ticket, Field Activity / FA, Statement / Bill Determinant Result, etc.). Bundle with cluster-drafts loader."
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: "groups with cluster-drafts loader by audit sequencing"}
-    affected_masters:
-      - {data_object_id: 660, name: utility_customer_accounts, target_module_id: null, workflow: meter_to_cash}
-      - {data_object_id: 661, name: utility_meters, target_module_id: null, workflow: ami_metering}
-      - {data_object_id: 662, name: meter_reads, target_module_id: null, workflow: ami_metering}
-      - {data_object_id: 663, name: service_connections, target_module_id: null, workflow: meter_to_cash}
-      - {data_object_id: 664, name: utility_assets, target_module_id: null, workflow: work_asset_mgmt}
-      - {data_object_id: 665, name: outage_events, target_module_id: null, workflow: outage_mgmt}
-      - {data_object_id: 666, name: utility_service_orders, target_module_id: null, workflow: work_asset_mgmt}
-      - {data_object_id: 667, name: utility_bills, target_module_id: null, workflow: meter_to_cash}
+      - {handoff_id: 939, target_domain: ERP-FIN, trigger_event: "utility_bill.issued", payload: "utility_bills", null_field: source_domain_module_id}
+      - {handoff_id: 940, target_domain: FSM, trigger_event: "utility_service_order.dispatched", payload: "utility_service_orders", null_field: source_domain_module_id}
+      - {handoff_id: 941, target_domain: FSM, trigger_event: "utility_asset.failed", payload: "utility_assets", null_field: source_domain_module_id}
+      - {handoff_id: 942, target_domain: CSM, trigger_event: "outage_event.declared", payload: "outage_events", null_field: source_domain_module_id}
+      - {handoff_id: 943, target_domain: ITSM, trigger_event: "utility_asset.failed", payload: "service_incidents", null_field: source_domain_module_id}
+      - {handoff_id: 944, target_domain: ERP-FIN, trigger_event: "meter_read.captured", payload: "meter_reads", null_field: source_domain_module_id}
+      - {handoff_id: 945, target_domain: FSM, trigger_event: "meter_read.anomalous", payload: "meter_reads", null_field: source_domain_module_id}
 
   - id: B1B-S11
     summary: "Author data_object_lifecycle_states on all 8 workflow-bearing masters."
-    finding: "Zero data_object_lifecycle_states rows. All 8 are workflow-bearing; none qualify for the config-shape exemption. Each state machine needs domain_module_id attribution (M5) per realizing module. Workflow-gate states (utility_bill.posted/paid, outage_event.declared/restored, utility_service_order.completed/cancelled) need requires_permission=true with permission_verb_override where the auto-derivation produces awkward verbs."
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: "lifecycle states need domain_module_id per M5"}
-    affected_masters:
-      - {data_object_id: 660, name: utility_customer_accounts, target_module_id: null, workflow: "prospective -> active -> moved_out -> closed"}
-      - {data_object_id: 661, name: utility_meters, target_module_id: null, workflow: "in_stock -> installed -> active -> removed -> retired"}
-      - {data_object_id: 662, name: meter_reads, target_module_id: null, workflow: "raw -> validated -> estimated -> billed"}
-      - {data_object_id: 663, name: service_connections, target_module_id: null, workflow: "pending_connect -> active -> disconnected -> retired"}
-      - {data_object_id: 664, name: utility_assets, target_module_id: null, workflow: "acquired -> in_service -> derated -> failed -> retired"}
-      - {data_object_id: 665, name: outage_events, target_module_id: null, workflow: "reported -> declared -> dispatched -> restored -> cause_classified -> closed"}
-      - {data_object_id: 666, name: utility_service_orders, target_module_id: null, workflow: "created -> scheduled -> dispatched -> in_progress -> completed -> cancelled"}
-      - {data_object_id: 667, name: utility_bills, target_module_id: null, workflow: "draft -> posted -> issued -> paid -> overdue -> cancelled"}
-
-  - id: B1B-S12
-    summary: "Author 4 to 5 new business_function_domains RACI rows (Field Service Operations contributor, Customer Service contributor, Engineering contributor, Finance consumer, Compliance consumer)."
-    finding: "Only 1 business_function_domains row (Business Operations owner). Canonical RACI for an operational utility domain expects 2 to 4 more rows. Out of license per technical-fix discipline ('subject to function-spine existence; verify before authoring')."
-    blocked_by:
-      - {type: user_decision, ref: B2-RACI-AUTHORIZE, reason: "function-spine verification + per-row authorization needed"}
-
-  - id: B1B-S13
-    summary: "Author module-scoped system skills + redistributed tools, then DELETE legacy skill 115."
-    finding: "F1 fails: legacy domain-scoped util-ops-system skill (id 115, domain_module_id=null) still present, no module-scoped skills. F2 vacuous on zero modules. Each new module needs exactly one <module_code_lower>_agent skill with redistributed query_* tools by mastered entity, plus new workflow-gate tools (post_bill, restore_outage, dispatch_service_order, complete_service_order, validate_meter_read, issue_bill)."
+    finding: "Zero data_object_lifecycle_states rows. entity_type is now operational_workflow on all 8 (set 2026-06-07), so B12 expects >=1 state row each. Each state machine needs domain_module_id attribution per M5, so the load is gated on the build. Workflow-gate states (utility_bill.posted/paid, outage_event.declared/restored, utility_service_order.completed/cancelled) need requires_permission=true with permission_verb_override where auto-derivation is awkward."
     blocked_by:
       - {type: depends_on, ref: B1B-S1}
-    affected_modules: []
-    extra_legacy_skill_id: 115
-    extra_legacy_skill_tool_count: 9
+    affected_masters:
+      - {data_object_id: 660, name: utility_customer_accounts, workflow: "prospective -> active -> moved_out -> closed"}
+      - {data_object_id: 661, name: utility_meters, workflow: "in_stock -> installed -> active -> removed -> retired"}
+      - {data_object_id: 662, name: meter_reads, workflow: "raw -> validated -> estimated -> billed"}
+      - {data_object_id: 663, name: service_connections, workflow: "pending_connect -> active -> disconnected -> retired"}
+      - {data_object_id: 664, name: utility_assets, workflow: "acquired -> in_service -> derated -> failed -> retired"}
+      - {data_object_id: 665, name: outage_events, workflow: "reported -> declared -> dispatched -> restored -> cause_classified -> closed"}
+      - {data_object_id: 666, name: utility_service_orders, workflow: "created -> scheduled -> dispatched -> in_progress -> completed -> cancelled"}
+      - {data_object_id: 667, name: utility_bills, workflow: "draft -> posted -> issued -> paid -> overdue -> cancelled"}
 
-  - id: B1B-S15
-    summary: "PATCH send_email link on the new module-scoped skills to notify_person (or DELETE the row)."
-    finding: "F7 fails: skill 115 links send_email (channel primitive, tool id 37, coverage_tier=platform) with no skill_tools.notes workflow justification. Utility customer notifications are largely generic; the catalog default is notify_person. Exception: regulatory mass-notification (emergency CPNI / IVR / SMS mass dispatch) IS channel-specific."
+  - id: B1B-S12-PARTIAL
+    summary: "Remaining RACI: Engineering / Asset Management contributor (no clean 20-function-spine match)."
+    finding: "C1 RACI executed 2026-06-07 for the 4 clean spine matches (Field Service Operations 51 contributor, Customer Service 24 contributor, Finance 4 consumer, Governance Risk and Compliance 31 consumer). The 2026-05-30 proposal also named an Engineering / Asset Management contributor for network-model + asset-health work, but the spine has no generic Engineering function (Software Engineering id 26 is the wrong OT context) and no Asset Management function. Surfaced for a user mapping decision; not authored."
     blocked_by:
-      - {type: depends_on, ref: B1B-S13, reason: "the new module-scoped skills inherit the link decision; PATCH cannot be applied to legacy skill 115 which is itself slated for DELETE"}
-      - {type: user_decision, ref: B2-6}
+      - {type: user_decision, ref: B2-RACI-ENG, reason: "no clean function-spine match for Engineering / Asset Management; user names the function or skips"}
 
 # Bucket 2, user judgment required.
 b2:
   - id: B2-1
     summary: "Which UTIL-OPS masters carry personal data (B4 pattern flag flips)?"
-    question: "PATCH has_personal_content=true on which subset of {660, 661, 662, 663, 664, 665, 666, 667}?"
+    question: "PATCH has_personal_content=true on which subset of {660, 661, 662, 663, 664, 665, 666, 667}? (DESTRUCTIVE flag flip on a populated default; surfaced, not executed.)"
     options:
       - "(a) audit-proposed 4 of 8: 660 utility_customer_accounts + 662 meter_reads + 663 service_connections + 667 utility_bills"
-      - "(b) conservative reading: all 8 (utility_meters identified by serial-by-premises is personal-by-association under EU smart-meter case law; utility_assets carries crew names; outage_events carries affected-customer lists; utility_service_orders carries customer identifiers)"
+      - "(b) conservative reading: all 8 (utility_meters serial-by-premises is personal-by-association under EU smart-meter case law; utility_assets crew names; outage_events affected-customer lists; utility_service_orders customer identifiers)"
       - "(c) different subset specified by user"
-    why: "Audit cannot decide unilaterally between literalist (4) and conservative (8); both readings are defensible per Rule #12 / Rule #18."
+    why: "Both the literalist (4) and conservative (8) readings are defensible per Rule #12 / Rule #18; the audit cannot decide unilaterally."
 
   - id: B2-2
     summary: "Outage handoff 942 payload mismatch with relationship row 470."
     question: "Handoff 942 carries payload outage_events; relationship row 470 maps outage_events opens customer_cases. Which shape do we keep?"
     options:
-      - "(a) keep handoff 942 payload as outage_events (CSM consumes outage record), CSM authors its own intra-domain customer_case creation"
+      - "(a) keep handoff 942 payload as outage_events (CSM consumes the outage record), CSM authors its own intra-domain customer_case creation"
       - "(b) repoint handoff 942 payload to customer_cases (id 103)"
       - "(c) author a second handoff so both shapes coexist"
 
@@ -191,120 +132,85 @@ b2:
     summary: "Does UTIL-OPS publish raw meter reads to ERP-FIN (handoff 944), or only billed amounts (handoff 939)?"
     question: "Handoff 944 implies raw AMI data goes to finance, which contradicts flagship architectures where raw reads flow into the MDM layer + billing engine and ERP-FIN receives only the posted bill."
     options:
-      - "(a) DELETE handoff 944"
-      - "(b) repoint target to a future UTIL-AMI-MDMS domain when promoted from queue"
-      - "(c) keep with notes (requires user-approved wording per Rule #15)"
+      - "(a) DELETE handoff 944 (DESTRUCTIVE; surfaced, not executed)"
+      - "(b) repoint target to a future UTIL-AMI-MDMS domain when promoted from the queue"
+      - "(c) keep with notes (NOTE: notes write forbidden by Rule #15; would need a non-notes mechanism)"
     why: "Depends on Bucket 3 #2 (UTIL-AMI-MDMS promotion). If demote-and-promote lands, option (b); otherwise option (a) is cleaner."
 
   - id: B2-4
     summary: "Asset-failure fan-out: ITSM service_incident OR FSM service_order?"
     question: "Trigger utility_asset.failed fires handoff 941 (FSM, payload utility_assets) AND handoff 943 (ITSM, payload service_incidents). Is this real OT/IT fan-out, or cross-wiring?"
     options:
-      - "(a) keep both, declare it real fan-out"
-      - "(b) remove handoff 943, route asset failure only to FSM (OT path)"
-      - "(c) split the trigger into utility_asset.failed_ot and it_asset.failed (recommended)"
+      - "(a) keep both, declare it real OT/IT fan-out"
+      - "(b) remove handoff 943, route asset failure only to FSM (OT path) (DESTRUCTIVE)"
+      - "(c) split the trigger into utility_asset.failed_ot and it_asset.failed (recommended; touches an existing trigger event, surfaced)"
 
   - id: B2-5
-    summary: "Is UTIL-OPS the right umbrella, or should the queued candidates absorb the masters? (drives all of Bucket 3)"
+    summary: "Is UTIL-OPS the right umbrella, or should the queued candidates absorb the masters? (the structural decision; gates the build and all of Bucket 3)"
     question: "Bucket 3 candidates split the 8 masters cleanly across CIS-UTIL, UTIL-AMI-MDMS, UTIL-OMS, UTIL-WAM. UTIL-OPS as an umbrella may not pass the point-solution-market test (Rule #2). Which path?"
     options:
-      - "(a) keep UTIL-OPS as umbrella, modularize into 4 modules per B1B-S1 proposal"
+      - "(a) keep UTIL-OPS as umbrella, build into 4 modules per the B1B-S1 proposal"
       - "(b) demote UTIL-OPS to leadership-tier landing domain (no masters, derived-signals module only), promote CIS-UTIL + UTIL-AMI-MDMS + UTIL-OMS + UTIL-WAM as separate domains, migrate every master"
       - "(c) hybrid: keep UTIL-OPS but pull only CIS-UTIL out as a separate domain"
-    why: "This is the structural decision. Every b1b item that references modules depends on this answer."
+    why: "Every b1b item that references modules depends on this answer; the build cannot proceed without it."
 
-  - id: B2-6
-    summary: "Channel primitive policy for UTIL-OPS notifications (F7 fix)."
-    question: "PATCH send_email to notify_person on new module-scoped skills, keep send_email with workflow justification, or layer both?"
+  - id: B2-RACI-ENG
+    summary: "Map the Engineering / Asset Management RACI contributor to a function-spine row, or skip."
+    question: "The 4 clean RACI rows are authored. The proposed Engineering / Asset Management contributor (network model + asset health) has no clean 20-function-spine match (Software Engineering id 26 is the wrong OT context; there is no Asset Management function). Name the function or skip?"
     options:
-      - "(a) PATCH to notify_person on new module-scoped skills once they exist (folds into B1B-S13 / S15)"
-      - "(b) keep send_email and author workflow justification per F7 (requires user-approved skill_tools.notes wording per Rule #15)"
-      - "(c) author both notify_person for generic + send_sms/make_phone_call on a future outage-mgmt skill specifically for emergency mass notification"
+      - "(a) map to a specific existing function the user names"
+      - "(b) skip; leave the RACI at 5 rows (owner + 2 contributors + 2 consumers)"
 
-  - id: B2-3-COPY
-    summary: "Author A4 catalog_tagline + catalog_description wording for UTIL-OPS (Rule #20)."
-    question: "Both fields are empty on domain 49. Rule #20 forbids writing agent-authored copy without per-row user approval of the exact text. What wording (or 'I will draft, please review')?"
-    options:
-      - "(a) user supplies exact tagline + description text"
-      - "(b) agent drafts buyer-voice copy, surfaces for review, writes only on user approval of the exact string"
+b1a: []
 
-  - id: B2-RACI-AUTHORIZE
-    summary: "Authorize B1B-S12 author of 4 to 5 new business_function_domains rows."
-    question: "Audit proposes Field Service Operations contributor, Customer Service contributor, Engineering or Asset Mgmt contributor, Finance consumer, Compliance consumer. Pre-flight: confirm those 4 to 5 function rows exist on the function spine. Proceed with all, subset, or skip?"
-    options:
-      - "(a) author all 4 to 5 once function-spine pre-flight passes"
-      - "(b) author a subset (user names which)"
-      - "(c) skip and leave the under-floor RACI for a future pass"
-
-# Bucket 3, Phase 0 pending speculative.
+# Bucket 3, Phase 0 pending speculative. Non-blocking; never gates 'finished'.
 b3:
   - id: B3-CIS-UTIL
     candidate: CIS-UTIL
-    rationale: "Customer Information System for Utilities. The CIS market is large and distinct (Gartner publishes a separate Magic Quadrant for utility CIS). Promotion moves utility_customer_accounts + utility_bills and possibly service_connections out of UTIL-OPS."
-    vendor_evidence:
-      - Oracle CC&B
-      - SAP IS-U
-      - Itineris UMAX
-      - Gentrack Velocity
-      - Hansen CC&B
+    rationale: "Customer Information System for Utilities. Large, distinct market (Gartner publishes a separate Utility CIS MQ). Promotion moves utility_customer_accounts + utility_bills and possibly service_connections."
+    vendor_evidence: [Oracle CC&B, SAP IS-U, Itineris UMAX, Gentrack Velocity, Hansen CC&B]
     proposed_module: CIS-UTIL-METER-TO-CASH
 
   - id: B3-UTIL-AMI-MDMS
     candidate: UTIL-AMI-MDMS
-    rationale: "Advanced Metering Infrastructure + Meter Data Management. AMI head-end and MDM are routinely separate from CIS in IOU deployments. Promotion moves utility_meters + meter_reads out of UTIL-OPS. Drives Bucket 2 #3 (handoff 944 raw-reads-to-ERP-FIN)."
-    vendor_evidence:
-      - Itron OpenWay
-      - Landis+Gyr Gridstream
-      - Sensus FlexNet
-      - Aclara
-      - Siemens EnergyIP MDM
+    rationale: "Advanced Metering Infrastructure + Meter Data Management. AMI head-end and MDM are routinely separate from CIS in IOU deployments. Promotion moves utility_meters + meter_reads. Drives Bucket 2 #3 (handoff 944)."
+    vendor_evidence: [Itron OpenWay, Landis+Gyr Gridstream, Sensus FlexNet, Aclara, Siemens EnergyIP MDM]
     proposed_module: UTIL-AMI-MDMS-CORE
 
   - id: B3-UTIL-OMS
     candidate: UTIL-OMS
-    rationale: "Outage Management System. OMS is a distinct procurement (often coupled with DMS in ADMS suites). Promotion moves outage_events out of UTIL-OPS."
-    vendor_evidence:
-      - Oracle NMS
-      - GE Digital PowerOn Restore
-      - Schneider ADMS
-      - Survalent SCADA OMS
-      - OATI webSmartEnergy
+    rationale: "Outage Management System. Distinct procurement (often coupled with DMS in ADMS suites). Promotion moves outage_events."
+    vendor_evidence: [Oracle NMS, GE Digital PowerOn Restore, Schneider ADMS, Survalent SCADA OMS, OATI webSmartEnergy]
     proposed_module: UTIL-OMS-CORE
 
   - id: B3-UTIL-WAM
     candidate: UTIL-WAM
-    rationale: "Utility Work and Asset Management. Strong overlap with horizontal EAM domain if one exists (none currently in catalog). Promotion moves utility_assets + utility_service_orders out of UTIL-OPS."
-    vendor_evidence:
-      - Oracle WAM
-      - IBM Maximo for Utilities
-      - Cityworks
-      - ABB Ellipse
-      - Hexagon EAM Utilities
+    rationale: "Utility Work and Asset Management. Strong overlap with a horizontal EAM domain (none currently in catalog). Promotion moves utility_assets + utility_service_orders."
+    vendor_evidence: [Oracle WAM, IBM Maximo for Utilities, Cityworks, ABB Ellipse, Hexagon EAM Utilities]
     proposed_module: UTIL-WAM-CORE
 
   - id: B3-UTIL-DERMS
     candidate: UTIL-DERMS
-    rationale: "Distributed Energy Resource Management. New market driven by grid-edge solar + storage + EV adoption. Green-field domain, not currently in UTIL-OPS scope; promotion creates a new domain."
-    vendor_evidence:
-      - Generac Concerto
-      - AutoGrid Flex
-      - Smarter Grid Solutions ANM
-      - Itron IntelliFLEX
-      - Bidgely UtilityAI
+    rationale: "Distributed Energy Resource Management. New market driven by grid-edge solar + storage + EV adoption. Green-field domain; promotion creates a new domain."
+    vendor_evidence: [Generac Concerto, AutoGrid Flex, Smarter Grid Solutions ANM, Itron IntelliFLEX, Bidgely UtilityAI]
 
   - id: B3-UTIL-GIS
     candidate: UTIL-GIS
-    rationale: "Utility Geographic Information System. The network connectivity model that OMS and DMS consume. Possibly a sub-domain of a future GIS leadership tier."
-    vendor_evidence:
-      - Esri ArcGIS Utility Network
-      - Schneider ArcFM
-      - Hexagon G/Technology
-      - Bentley OpenUtilities
-      - GE Digital Smallworld
+    rationale: "Utility Geographic Information System. The network connectivity model OMS and DMS consume. Possibly a sub-domain of a future GIS leadership tier."
+    vendor_evidence: [Esri ArcGIS Utility Network, Schneider ArcFM, Hexagon G/Technology, Bentley OpenUtilities, GE Digital Smallworld]
 
   - id: B3-UTIL-OPS-LEADERSHIP
     candidate: "UTIL-OPS leadership-tier landing domain"
-    rationale: "If Bucket 2 #5 lands on (b), UTIL-OPS becomes a leadership-tier domain (no masters, derived-signals module only) for cross-domain utility KPIs (SAIDI, SAIFI, CAIDI, Bad Debt percentage, Unaccounted-for Energy percentage, Meter Read Success Rate). Verification: which IOU procurement category does 'utility operations' describe today? Phase 0 against Gartner Utility CIS / OMS / DERMS / WAM market guides."
+    rationale: "If Bucket 2 #5 lands on (b), UTIL-OPS becomes leadership-tier (no masters, derived-signals module only) for cross-domain utility KPIs (SAIDI, SAIFI, CAIDI, Bad Debt percentage, Unaccounted-for Energy percentage, Meter Read Success Rate). Phase 0 against Gartner Utility CIS / OMS / DERMS / WAM market guides."
     vendor_evidence:
       - {vendor: "Gartner Utility CIS MQ", evidence: secondary}
       - {vendor: "Gartner Utility OMS market guide", evidence: secondary}
+
+# RETIRED items (superseded 2026-06-06 / per-domain-skill restoration). Do NOT re-open.
+#   B1B-S13 (module-scoped system skills + redistributed skill_tools, DELETE legacy skill 115)
+#   B1B-S15 / B2-6 (F7 send_email channel-primitive PATCH on per-module skills)
+# The per-module skill grain and skill_tools are dropped. Tool requirements now live on
+# domain_module_tools (authored onto modules during/after the build); the domain gets exactly
+# ONE domain-grain system skill that derives its toolset. Legacy skill 115 disposition and the
+# channel-primitive policy fold into the build under the new model, not these old items.
+# Per-module tool re-authoring is tracked in audits/_modularization-backlog.md.

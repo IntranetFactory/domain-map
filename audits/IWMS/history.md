@@ -389,3 +389,90 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+State-driven Validate pass (SKILL.md Rule #21) over the open items in `state.yaml`. No fresh
+from-scratch audit. Writes applied via `.tmp_deploy/fix_iwms_state_driven_2026_06_07.ts`
+(`bun run` from project root); all verified live post-load. No JWT errors.
+
+### Summary
+
+Domain 23 (Workplace and Space Management / IWMS), 5 full modules (98-102), 6 masters
+(590, 591, 592, 593, 594, 795). Live re-verification confirmed all 6 masters still carried
+`entity_type='unclassified'` and the domain plus all 5 modules had empty `catalog_tagline` /
+`catalog_description`. Both gaps executed this pass. All other open items are either gated on a
+user decision, destructive, deferred (personas), blocked on a neighbor audit, superseded, or
+backlog, and were surfaced or left rather than executed.
+
+### Executed (additive / corrective, record_status untouched on existing rows; PATCH only)
+
+- **B1A-ENTITY-TYPE (6 PATCHes).** Classified `data_objects.entity_type` per Rule #12 from live
+  shape (lifecycle states + description): 590 desk_bookings -> `operational_workflow`,
+  591 room_reservations -> `operational_workflow`, 592 workplace_service_requests ->
+  `operational_workflow`, 593 space_utilization_reports -> `computed`, 594
+  workplace_experience_feedback -> `operational_record`, 795 locations -> `catalog`. Loader
+  skipped any row already typed (idempotent); all 6 were unclassified, all 6 PATCHed. Cures B13.
+- **Catalog UX, Rule #20 (6 rows, 12 field writes).** Authored buyer-voice copy (workflow + value,
+  no vendor names, no em-dash, American English) into the empty `catalog_tagline` +
+  `catalog_description` on domain 23 and all 5 modules (98 LOCATION-MASTER, 99 DESK-RESERVATION,
+  100 ROOM-RESERVATION, 101 WORKPLACE-SERVICE-DESK, 102 SPACE-ANALYTICS). Write-into-empty only;
+  no non-empty value was overwritten. Cures A4 + M8.
+
+### Surfaced (no write; user decision, destructive, or deferred)
+
+- **B1A-N15 (destructive, surfaced not executed).** handoffs.notes on 1165 ("target NULL until
+  IGA is modularized") and 1166 ("target NULL until ERP-FIN is modularized") still carry the
+  rescinded Rule #15 pattern (confirmed live). Reverting a non-empty notes value is destructive
+  under Rule #21, so the `notes=""` PATCH is a sign-off item, not auto-applied.
+- **B2-CAP.** Capability for IWMS-ROOM-RESERVATION (100, zero realized capabilities). Default:
+  link existing REAL-SPACE-OPTIM (374). Alt: author REAL-MEETING-MGMT. Held; B1A-M6 insert waits
+  on this.
+- **B2-FLAGS / B1A-B4.** has_submit_lock on desk_bookings (590) and room_reservations (591),
+  has_single_approver on workplace_service_requests (592). PATCH overwrites the existing false
+  value; workflow-shape judgment the user owns.
+- **B2-SPLIT.** Keep DESK + ROOM split or merge to single IWMS-RESERVATIONS. Drives B1B-B9b shape.
+- **B2-FLOOR.** Floor-plan events 940 / 941 (mastered by REAL-EST) audit-perimeter ownership;
+  tracking decision, no PATCH either way.
+- **B1A-PHASE-P (personas deferred).** 5 modules, 0 domain_roles post-Plan-3. Persona / RACI layer
+  NOT authored (Rule #21 defers personas). Candidate personas: Workplace Manager, Space Planner,
+  Workplace Coordinator (all Facilities and Real Estate), Employee Workplace User (consumer).
+
+### Left
+
+- **b1b (blocked on neighbor audits / B2-SPLIT):** B1B-B10b-OUT (target FK owed by HCM, REAL-EST,
+  ERP-FIN), B1B-B10b-IN (source FK owed by REAL-EST on 858), B1B-DMDO (consumer DMDOs owed by HCM,
+  REAL-EST, ERP-FIN, IGA), B1B-B8 (4 cross-domain relationship edges, depends on B1B-DMDO master
+  FKs), B1B-B9b (intra-domain handoffs + new events, gated on B2-SPLIT).
+- **B1A-F2 (superseded 2026-06-06):** per-module system skills + skill_tools CANCELED by the
+  per-domain-skill restoration; per-module tool re-authoring tracked in
+  audits/_modularization-backlog.md. No action.
+- **b3 backlog (7):** move_orders, parking_reservations, wayfinding_signals,
+  occupancy_sensor_readings, IWMS-MOVE-MGMT / IWMS-PARKING modularization, compliance regulations,
+  BMS candidate domain. Speculative; require Phase 0.
+
+### Note (verified, no action)
+
+H1 / APQC tagging is fully covered: all 8 IWMS-touching handoffs (6, 858, 869, 870, 1165, 1166,
+1167, 1168) already carry a handoff_processes tag (7 agent_curated + 1 discovery_override). B11
+aliases pass (14). C1 business_function_domains already has owner (Facilities and Real Estate) +
+contributor (Human Resources). No additive APQC / alias / C1 work pending.
+
+### Counts
+
+| Type | Applied | Surfaced | Left |
+| --- | --- | --- | --- |
+| entity_type PATCH (B1A-ENTITY-TYPE) | 6 | 0 | 0 |
+| Catalog UX PATCH (Rule #20, A4 + M8) | 6 rows / 12 fields | 0 | 0 |
+| Destructive notes revert (B1A-N15) | 0 | 1 | 0 |
+| b2 decisions | 0 | 4 | 0 |
+| Personas / RACI (B1A-PHASE-P) | 0 | 1 (deferred) | 0 |
+| b1b (neighbor / split gated) | 0 | 0 | 5 |
+| Superseded (B1A-F2) | 0 | 0 | 1 |
+| b3 backlog | 0 | 0 | 7 |
+
+### JWT errors
+
+None.

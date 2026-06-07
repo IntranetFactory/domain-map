@@ -328,3 +328,70 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21) over DI's open state.yaml items only; no fresh
+from-scratch audit. DI confirmed still UNBUILT live (0 domain_modules, 0 capability_domains on
+domain_id=89), so the entire M-band cascade remains user-gated on B2-S1. Three additive/corrective
+items were executable without a decision and were applied; everything destructive or judgment-bound
+was surfaced. Status stays `feedback_needed`; `next_action_by` moves to `user` (the agent has done
+every fix it can without a decision).
+
+### Executed (record_status='new'; idempotent; verified live)
+
+- **entity_type (Rule #12 / B13).** PATCHed all 7 DI masters from `unclassified` to
+  `operational_workflow` (ids 434 pipeline_runs, 435 source_connectors, 436 sink_connectors,
+  437 transformation_jobs, 438 schema_registries, 439 change_data_capture_streams,
+  440 integration_flows). All 7 are workflow-bearing (each carries a clear lifecycle state machine
+  per B1B-B12), so the classification is deterministic. This makes B12 lifecycle states REQUIRED on
+  all 7 once modules exist (recorded on B1B-B12-LIFECYCLE-STATES).
+- **Catalog UX (Rule #20, was B1B-A4-CATALOG-UX / B2-S6).** Both `catalog_tagline` and
+  `catalog_description` were empty on DI id=89. Authored buyer-voice copy (workflow + value, no
+  vendor/product names, no em-dash, American English) and wrote it in. The stale surface-before-write
+  gate (B2-S6) was overridden per the execute directive; B2-S6 is now resolved by execution and
+  dropped from b2. No non-empty value was overwritten.
+- **Aliases (B11, was B1B-B11-ALIASES).** Inserted 9 generic cross-vendor synonyms across 5 masters,
+  all `alias_type='synonym'`, `record_status='new'`: pipeline_runs -> sync_jobs, connector_runs;
+  source_connectors -> sources, source_endpoints; sink_connectors -> destinations, target_endpoints;
+  transformation_jobs -> transformation_runs; change_data_capture_streams -> replication_streams,
+  change_streams. Vendor-product candidates from the prior finding (dbt_models, ksql_queries) were
+  dropped per Rule #18 (no product names in alias text). schema_registries and integration_flows got
+  no aliases this pass (no clean generic synonym was enumerated). The stale cluster-drafts gate was
+  overridden per the execute directive for clearly-enumerated generic synonyms.
+
+Loader: `c:/dev/domain-map/.tmp_deploy/fix_di_state_driven_2026_06_07.ts`
+
+### Surfaced for user (no write)
+
+- **B1A-EMDASH-BL (now reclassified DESTRUCTIVE).** `domains.business_logic` on id=89 still contains
+  one em-dash. Fixing it overwrites a non-empty value, which is a destructive class per Rule #21, so
+  it is surfaced for approval rather than executed. (catalog_tagline/catalog_description authored this
+  pass are em-dash clean; description is also clean.)
+- **B1A-BUILD.** DI is unbuilt (0 modules, 0 capabilities). The build is surfaced, not scaffolded;
+  the cascade is left. Personas/RACI are DEFERRED until modules exist (no candidate personas authored).
+- **b2 decisions (carried, none executed except B2-S6):** B2-S1 module split topology (a/b/c/d);
+  B2-S2 three pattern-flag yes/no; B2-S3 handoff 727 / event 96 attribution defect (a/b);
+  B2-S4 regulatory scope (a/b/c); B2-S5 handoff 157 / event 105 attribution defect (a/b/c).
+
+### Left (untouched)
+
+- All blocked b1b gated on B1B-M1-MODULES / B2-S1: A2 capabilities, A3 primary-solutions, B6
+  intra-DI rels, B8 outbound cross-domain rels, B9 missing handoffs, B9b intra-domain handoffs,
+  B10b source-module-FK backfill, B12 lifecycle states, B4 pattern flags, E-band roles.
+- F-band skill-layer items: RETIRED per the 2026-06-06 supersession header (per-module system skills
+  / skill_tools canceled). Reframed as a single non-actionable marker (B1B-F-SKILL-LAYER-RETIRED) so
+  future passes do not re-open them.
+- b3 backlog (10 entity candidates + 1 modularization proposal + 3 regulation candidates): unchanged.
+- APQC tagging (H1): already cured (S17, 10 handoff_processes rows cover all 9 outbound handoffs);
+  no untagged cross-domain handoffs remain. Nothing to do.
+- C1 (business_function_domains): already PASS (owner Data Engineering id=65 + contributor Software
+  Engineering id=26); not an open item; left untouched.
+
+### UI links (tables written this pass)
+
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/domains?id=eq.89
+- https://tests.semantius.app/domain_map/data_object_aliases

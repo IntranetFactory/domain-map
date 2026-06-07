@@ -423,3 +423,90 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-06 - Audit (state-driven execute)
+
+### Summary
+
+State-driven Validate execute (SKILL.md Rule #21): worked ONLY the open items in `audits/CLM/state.yaml`,
+verified each against live before acting. CLM footprint unchanged: 5 full modules (CLM-AUTHORING 125,
+CLM-NEGOTIATION 126, CLM-REPOSITORY 127, CLM-OBLIGATION-MGMT 128, CLM-RENEWAL 129) + 1 starter
+(REAL-ESTATE-AGENT 153); 5 masters (66/67/68/69/70). All three agent-actionable b1a items addressed; the
+one destructive b1a item (M9) reclassified to awaiting-approval. Loader:
+[.tmp_deploy/fix_clm_2026_06_06.ts](../../.tmp_deploy/fix_clm_2026_06_06.ts) (idempotent; re-run = 0 writes).
+Everything landed at `record_status='new'`.
+
+### Executed (all `record_status='new'`)
+
+- **B1A-ENTITY-TYPE (B13):** verified all 5 masters were `entity_type='unclassified'`, then PATCHed
+  `data_objects.entity_type`: legal_contracts (66) -> `operational_workflow`, contract_obligations (67) ->
+  `operational_workflow`, contract_clauses (68) -> `catalog` (reusable clause library / reference language),
+  contract_templates (69) -> `catalog` (pre-approved templates with a publish flow; Rule #12 templates-are-catalog),
+  signature_records (70) -> `operational_workflow` (e-signature envelope state machine). 5 PATCHes.
+- **B1A-PHASE-P (E1):** verified live that 0 personas reached the 5 CLM modules via `role_modules`, then authored
+  the missing persona/RACI layer FRESH under the DERIVED (Plan 3) model (reach + RACI only; no _core
+  roles/permissions/role_permissions/permission_hierarchy):
+  - **4 `domain_roles` personas** (function-anchored on the owner/contributor functions that touch CLM):
+    CONTRACT-OPS-MANAGER (#31, fn 74 Contract Operations), CONTRACT-OPS-SPECIALIST (#32, fn 74),
+    LEGAL-COUNSEL (#33, fn 7 Legal), PROCUREMENT-CONTRACT-LIAISON (#34, fn 19 Procurement).
+  - **15 `role_modules` reach rows** (each persona >=2 modules; primary/secondary mix): manager reaches all 5
+    (REPOSITORY/OBLIGATION/RENEWAL primary, AUTHORING/NEGOTIATION secondary); specialist 4 (all primary);
+    counsel 3 (AUTHORING/NEGOTIATION primary, REPOSITORY secondary); liaison 3 (all secondary). Every CLM
+    module now has >=1 persona -> E1 passes.
+  - **12 `data_object_lifecycle_states.process_id` wirings** on the gated transitions that cleanly map to a PCF
+    process: 398 "Negotiate and document agreements/contracts" -> legal_contracts.approved; 807 "Manage contracts"
+    -> legal_contracts.signed/terminated/renewed + signature_records.voided; 397 "Provide legal advice/counseling"
+    -> contract_clauses.approved/deprecated + contract_templates.approved/deprecated; 1163 "Evaluate enterprise
+    regulatory and compliance obligations" -> contract_obligations.satisfied/breached/waived.
+  - **13 `process_raci` rows** across those 4 processes (exactly one actor each): R = LEGAL-COUNSEL on the two
+    legal processes, CONTRACT-OPS-SPECIALIST on manage-contracts + obligations; A = CONTRACT-OPS-MANAGER on all
+    four; plus C (PROCUREMENT-CONTRACT-LIAISON / LEGAL-COUNSEL) and I rows. Every R/A row resolves to a
+    `process_id`-wired gate (no grant-from-nowhere; no R/A row without a wired gate). Reach-vs-derived
+    reconciliation (roles.md section 8) holds.
+- **Catalog UX (Rule #20, A4 + M8):** verified domain 26 and all 5 modules carried empty
+  `catalog_tagline`/`catalog_description`, then authored buyer-voice copy (workflow + value, no vendor names,
+  no em-dash, American English) and PATCHed straight in. 6 rows (1 domain + 5 modules), 12 fields. Empty-guarded
+  per field; no non-empty value overwritten.
+
+### Surfaced (no write; for user)
+
+- **B1A-SELF-CONTAIN (M9, destructive):** the 1 row saas_subscriptions (SMP-mastered) as
+  role=contributor/necessity=required on CLM-REPOSITORY. Converting role->embedded_master or
+  necessity->optional rewrites an existing non-empty row (destructive), so left for approval. Recommended:
+  set necessity=optional (lighter, truer than carrying a local SaaS-subscription shell). Moved to
+  `b1a_destructive_awaiting_approval` in state.yaml.
+- **B2-S2:** Rule #15 notes-pollution on the 5 masters (66/67/68/69/70 carry templated submit-lock /
+  multi-approver notes). Reverting is a destructive overwrite; needs user confirm the notes were
+  auto-populated at load (not user-approved).
+- **B2-S3 (REFRAMED):** F7 sign_document justification. The old surface (skill_tools.notes on per-module
+  skills 198/220) is RETIRED; under the current model it would live on `domain_module_tools.notes`
+  (CLM-REPOSITORY 127 + the REAL-ESTATE-AGENT starter 153, the only CLM unit that still carries a skill).
+  Rule #15 still forbids auto-authoring it. Question stands as (a) supply wording / (b) F7 satisfied via audit.
+- **B2-S4:** pattern-flag re-evaluation per flag: legal_contracts.has_personal_content (counterparty +
+  signatory PII), signature_records.has_personal_content (signer names / IP / signature images),
+  contract_obligations.has_single_approver. Per-flag yes/no from user.
+- **B2-S5 (SUPERSEDED -> closed):** permission-bundle drift referenced the retired _core stored bundle.
+  Under Plan 3 the bundle is DERIVED, so there is nothing stored to drift; the personas authored in
+  B1A-PHASE-P use the derived model. No action; closed as superseded.
+- **B2-S6:** REAL-ESTATE-AGENT starter (153) intent: intentional lite path (embedded_master) vs refactor to
+  consume full CLM-REPOSITORY when both deploy together.
+
+### Left (report-only / backlog, not CLM's load)
+
+- **b1b (report-only, owed by other domains):** B1B-S10-EVENT-CAT (event 589 owned by S2P),
+  B1B-B10B-OUTBOUND (8 outbound NULL target FKs owed by target domains), B1B-B10B-INBOUND (5 inbound NULL
+  source FKs owed by source domains; 309/469 CLM-side target gated on the source audits), B1B-CONSUMER-DMDO
+  (7 downstream consumer DMDOs). All scheduled via the prior D8 wave; no CLM-side write.
+- **b3 (15 backlog candidates):** entity candidates (contract_amendments, contract_renewal_records,
+  clause_libraries, playbooks, risk_assessments, counterparties, contract_milestones, data_protection_addenda,
+  contract_negotiation_threads), 4 regulation candidates (GDPR DPA, HIPAA BAA, SOX, FAR/DFARS), 2
+  modularization candidates (CLM-COMPLIANCE, CLM-NEGOTIATION split). Await Phase 0 vetting / eyeball-mode.
+
+### Result
+
+3 of 3 agent-actionable b1a items executed (entity_type, persona layer, catalog UX); 1 destructive b1a
+(M9) and 4 open b2 surfaced for the user (B2-S5 closed as superseded). `next_action_by` rolls to `user`:
+b1a is empty and the remaining work is judgment-routed (destructive M9 + b2) or owed by other domains (b1b)
+or research-routed (b3).

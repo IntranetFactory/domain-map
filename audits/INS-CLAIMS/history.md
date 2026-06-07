@@ -452,3 +452,60 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21) working only the open items in
+audits/INS-CLAIMS/state.yaml; no fresh from-scratch audit. Live re-confirmed against domain
+id 44: still UNBUILT (0 domain_modules, M1 hard fail; 0 capability_domains), 10 masters
+(623 to 632) all `entity_type='unclassified'` going in, domain `catalog_tagline` and
+`catalog_description` both empty strings, BFD owner (Business Operations 34) + contributor
+(Finance 4) already present. Per the UNBUILT clause the module/capability/lifecycle/skill build
+is surfaced, not scaffolded. Only the two build-independent fixes were executed. Loader:
+[.tmp_deploy/2026-06-07_ins_claims_state_driven_execute.ts](../../.tmp_deploy/2026-06-07_ins_claims_state_driven_execute.ts).
+Idempotent (re-run is a clean no-op). No JWT errors.
+
+### Executed
+
+| Item | Band | Action | Result |
+|---|---|---|---|
+| entity_type | B13 / Rule #12 | PATCH all 10 masters from `unclassified` to the typed enum. | 10 rows. operational_workflow: insurance_claims (623), insurance_policies (624), claim_settlements (628), claim_payments (629), subrogation_cases (631), siu_cases (632). operational_record: loss_incidents (626), claim_adjuster_assignments (627), salvage_recovery_records (630). catalog: policy_coverages (625). |
+| Catalog UX | A4 / Rule #20 | PATCH empty `catalog_tagline` + `catalog_description` on domain 44 with buyer-voice copy (workflow + value, no vendor names, no em-dash, American English). Stale "surface-before-write" gate (B1A-A4 / B2-A4-COPY) ignored per the execute contract. Module-grain N/A (0 modules). | 1 domain row (both fields). |
+
+The entity_type classification implements the DEFAULT config-shape assumption for B2-LFC-EXEMPT
+(option a): loss_incidents and claim_adjuster_assignments classified non-workflow. The user can
+still revise via B2-LFC-EXEMPT option (b); re-classifying an already-set entity_type is an
+overwrite and stays a user decision.
+
+### Surfaced (returned to user; not written)
+
+- **B2-MOD-SPLIT** (4 vs 5 vs 5-with-compliance module split): gates the entire build.
+- **B2-POLICY-ADMIN-SCOPE** (insurance_policies / policy_coverages interim ownership).
+- **B2-FUNC-RACI** (add Risk-and-Compliance contributor + Customer Service consumer, or decompose to Claims Operations sub-function).
+- **B2-REG-SCOPE** (add NAIC Model #900; optionally prune SFDR / eIDAS / FATCA).
+- **B2-APQC-STRATEGY** (weak PCF cross-industry coverage; only handoff 907 siu_case.opened is a clean match).
+- **B2-LFC-EXEMPT** (confirm / revise the config-shape classification just applied).
+- **B2-B12-VERBS** (verb overrides for close_claim / approve_settlement / issue_payment / substantiate_siu_case).
+- **B2-B11-TUPLES** (one-pass vs per-master alias-tuple review).
+- **B1A-BUILD** (unbuilt domain: build the modules + capabilities + lifecycle + single domain-grain skill; surfaced, not scaffolded).
+- Destructive: **B1B-B4-PATTERN-FLAGS** (flipping has_personal_content / has_single_approver / has_submit_lock overwrites a populated default boolean; gated on B2-LFC-EXEMPT, surfaced not applied).
+- Personas / RACI (Phase P): DEFERRED (deferred until the domain is multi-module built; no personas authored). Candidate personas once built: Claims Intake Agent, Claims Adjuster, Claims Examiner / Approver, SIU Investigator, Recovery / Subrogation Specialist.
+
+### Left
+
+- **b1b** (all blocked on the build B1A-BUILD or owed by other domains): B1B-A2-CAPABILITIES, B1B-M1-MODULES, B1B-B10-DASHCAM-CONSUMER, B1B-B10b-HANDOFF-MODULE-FKS (also owed by CSM / ERP-FIN / GRC / TELEMATICS), B1B-B11-ALIASES (gated on B2-B11-TUPLES), B1B-B12-LIFECYCLE (gated on build + B2-LFC-EXEMPT + B2-B12-VERBS), B1B-H1-APQC-TAGS (gated on B2-APQC-STRATEGY).
+- **Retired / superseded** (reframed as note, not authored): B1B-SKILL-RETIRED (former B1B-F1-F7) per the 2026-06-06 per-domain-skill supersession; legacy skill 71, per-module `<module>_agent` skills, skill_tools re-authoring, and the send_email -> notify_person rewire are CANCELED.
+- **b3** (backlog, cascade after B2-MOD-SPLIT): 12 candidate masters (claim_reserves, claim_exposures, claim_activities, coverage_decisions, denial_letters, claim_notes, loss_estimates, claim_documents, claim_parties, regulatory_claim_reports, litigation_files, recovery_disbursements).
+
+### UI links (tables written)
+
+- https://tests.semantius.app/domain_map/data_objects?id=in.(623,624,625,626,627,628,629,630,631,632)
+- https://tests.semantius.app/domain_map/domains?id=eq.44
+
+### JWT errors
+
+None.

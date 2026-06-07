@@ -475,3 +475,45 @@ None encountered this pass.
 
 - Appended this section to `audits/PRM/history.md`.
 - Rewrote `audits/PRM/state.yaml` in `schema_version: 2` (PENDING only; resolved items live only here).
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate execute per SKILL.md Rule #21. Worked only the open items in `audits/PRM/state.yaml`; no fresh from-scratch audit. Domain id 96 resolved and re-verified live against the state snapshot (`/domains?domain_code=eq.PRM` -> id 96, parent_domain_id 69 = CRM). Overlay test confirms PRM is master-bearing (partner deal registrations, MDF requests / claims, partner scorecards are real persisted records), but the domain is UNBUILT: live re-verify returned 0 `domain_modules` (M1 hard fail), 0 `capability_domains`, 0 `domain_data_objects` masters, 0 `solution_domains`. Only structure present: the domain row, 2 `business_function_domains` rows (owner Channel Sales / business_function_id 53, contributor Marketing / business_function_id 22, both already present), and 2 outbound handoffs (211, 212) to CRM with `source_domain_module_id` NULL.
+
+Per the UNBUILT clause (do not scaffold; surface the build; leave the cascade), the only EXECUTE-classified item was the domain-level catalog UX. Everything structural is left for the build, which is gated on the six b2 decisions.
+
+Notable live finding: **B1B-APQC-211-212 is already done.** `handoff_processes` already carries (211, 151) and (212, 151), both `proposal_source='agent_curated'`, `record_status='new'` (the partner-anchored framing, process 151 "Manage sales partners and alliances", L3, ext 10187). The state's alternative "default 147" was never the loaded value. There is no clean additive PCF match remaining (the 147-vs-151 fork is a genuine judgment call, and 151 already covers both handoffs well), so nothing to insert. This item is closed as already-done and dropped from `state.yaml`.
+
+### Executed (counts)
+
+- **Catalog UX (Rule #20 / A4): 1 PATCH.** `domains.id=96` `catalog_tagline` + `catalog_description` authored in buyer voice (workflow + value; no vendor names; no em-dash; American English) and written into the two empty fields. Row stays `record_status='new'`. This was state item B1B-A1, whose `blocked_by: user_decision` was exactly the stale surface-before-write gate that Rule #20 / Rule #21 / the execute charter direct us to ignore. Module-grain catalog UX (M8) is N/A (0 modules). Loader: `.tmp_deploy/2026-06-07_prm_state_driven_execute.ts`.
+
+No other writes. `business_logic` (B1B-A2) was deliberately NOT written: it is a Rule #8 description-class field, not a Rule #20 catalog UX field, and stays user-wording-gated as part of the build cascade.
+
+### Surfaced (no write; for the user)
+
+- **B1A-BUILD (the build).** PRM is unbuilt (0 modules / 0 caps / 0 masters / 0 solutions). Build Phase A -> M -> B -> S, shape gated on b2. Not scaffolded per the UNBUILT clause.
+- **6 b2 decisions, all open:** B2-M1 (4 to 7 module shape), B2-R1 (regulation scope), B2-T1 (partner training / certification ownership: PRM-mastered vs LMS-mastered), B2-T2 (partner-channel commission ownership: PRM vs SALES-PERF vs split), B2-S1 (promote TCMA out of PRM), B2-S2 (promote ECOSYSTEM-LED-GROWTH out of PRM). B2-S1 / B2-S2 jointly rewrite the module set and are splits, not b3.
+- **B1B-A2 (business_logic):** Rule #8 description-class field, empty while crud_percentage=92 (< 95). User-approved wording required before PATCH; draft is in the 2026-05-30 B1-A2 section.
+
+### Left (untouched)
+
+- **Blocked b1b cascade (9 items):** B1B-A2 (user wording), B1B-A3 (caps) / B1B-A4 (solutions, Phase-A market shape) / B1B-M1 (modules) all blocked on the build + b2 carve-outs; B1B-V1..V4 (masters) blocked on B1B-M1; B1B-H1 / B1B-H2 (source_domain_module_id backfill on handoffs 211 / 212) unresolvable because the target PRM module does not exist (0 modules). These clear as the build lands.
+- **b3 backlog (4 candidates):** B3-1 (TCMA), B3-2 (ECOSYSTEM-LED-GROWTH), B3-3 (AFFILIATE-MGMT), B3-4 (partner-marketplace ops). Non-blocking ideas; B3-1 / B3-2 / B3-3 are also queued in `audits/_missing-domains.md`.
+- **B1B-APQC-211-212:** closed as already-done (see Summary); dropped from state.
+
+### JWT errors
+
+None encountered this pass.
+
+### Files written
+
+- `.tmp_deploy/2026-06-07_prm_state_driven_execute.ts` (the execute loader; 1 catalog-UX PATCH).
+- Appended this section to `audits/PRM/history.md`.
+- Rewrote `audits/PRM/state.yaml` (schema_version 2): dropped executed B1B-A1 and closed B1B-APQC-211-212; kept B1A-BUILD, the 9-item blocked b1b cascade, 6 b2, 4 b3; set `last_audit` 2026-06-07, `next_action_by` user.
+
+### UI links (tables written)
+
+- https://tests.semantius.app/domain_map/domains?id=eq.96

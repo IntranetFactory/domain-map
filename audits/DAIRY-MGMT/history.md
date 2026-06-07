@@ -620,3 +620,71 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (Rule #21) over DAIRY-MGMT's open state.yaml items. Worked only the
+open items, classified each EXECUTE / SURFACE / LEAVE, and ran every additive/corrective fix the
+agent can do. All writes landed `record_status='new'`; no `notes` column written; no existing
+non-empty value overwritten; no `approved` stamped. The stale "surface-before-write" gate on the
+catalog UX item (B1B-S2 / B2-2) was ignored per the Rule #20 catalog-UX execute instruction.
+Loader: `.tmp_deploy/2026-06-07_dairy_mgmt_state_driven_execute.ts` (gitignored), idempotent.
+
+### Executed
+
+- **entity_type classification (Rule #12, 8 PATCH).** All 8 masters were `unclassified`. Set
+  dairy_cows (499), lactation_records (500), milkings (501), milk_quality_tests (502),
+  breeding_events (503), cow_health_events (504), bulk_milk_shipments (506) ->
+  `operational_workflow` (each has an observable state machine, B12). feed_rations (505) ->
+  `catalog` (author-once-and-supersede TMR config shape). This settles the B2-5 config-shape
+  question structurally via the typed column (Rule #12: the notes-based exemption is rescinded;
+  classify and move on). B13 now passes.
+- **Catalog UX (Rule #20, 5 PATCH).** catalog_tagline + catalog_description were EMPTY on the
+  domain row (156) and all 4 modules (227-230). Authored buyer-voice copy (workflow + value, no
+  vendor/product names, no em-dash, American English) and wrote it into all five. This clears the
+  prior B1B-S2 / A4 / M8 gap.
+- **B1B-S6 missing handoff (1 INSERT).** `dairy_cow.lifecycle_changed` (trigger_event 1099,
+  data_object 499) had zero `handoffs` rows despite the event's own description mandating an
+  ERP-FIN fixed-asset-valuation dependency. Inserted handoff id=1403: source 156 / module 227
+  (HERD), target 65 (ERP-FIN), integration_pattern=batch_sync, friction_level=low (mirrors
+  sibling lifecycle handoff 956). target_domain_module_id left NULL (owed by ERP-FIN's B10b).
+  DAIRY-MGMT now has 9 outbound handoffs; every one carries source_domain_module_id.
+
+### Surfaced (user decisions / non-empty-value or approval judgments; not written)
+
+- **B1A-S11** lactation_records (500) users-edge: still the only DAIRY-MGMT master without a
+  `users` many_to_many edge. No clean single-actor verb; needs a user verb decision
+  (`is recorded by` vs `is opened by` / system-attribution) or an explicit "accept absence".
+- **B2-3** milkings `naming_authority_rationale` is empty on a row flagged
+  `is_canonical_bare_word=true`; authoring rationale is a non-empty-value judgment.
+- **B2-4** cow_health_events `has_personal_content` flag (vet-PII adjacency under FDA AMDUCA).
+- **B2-6** DAIRY-MGMT-MILK-QUALITY business-function override (Quality/Compliance vs Operations).
+- **B2-7** load FDA Grade A PMO / FARM / DHIA / state dairy `regulations` + `domain_regulations`
+  (new-row authoring, currently zero; deferred as a discretionary catalog expansion).
+- **B2-8 / B1B-H2** reviewer approval of the 6 `agent_curated` handoff_processes (573-578); only
+  the user can flip `record_status` to `approved` (Rule #1).
+
+### Left (blocked / not in execute allow-list / backlog)
+
+- **B1B-S3** intra-domain `data_object_relationships`: relationship-verb / cardinality / owner_side
+  judgment with a required mermaid preview; not a mechanical execute. Next substrate pass.
+- **B1B-S8** lifecycle states for the 7 `operational_workflow` masters: state-machine design
+  (initial/terminal/order + gates), not in the execute allow-list. feed_rations is now exempt
+  (entity_type=catalog).
+- **B1B-B2..B5** cross-domain `data_object_relationships` mirrors: blocked on each neighbor's
+  payload-master identification (FOOD-TRACE, FSQM, ERP-FIN, GRC). The new handoff 1403 adds a
+  third ERP-FIN mirror owed under B1B-B4.
+- **b3 backlog** (B3-1..B3-8): Phase-0 missing-master candidates + 2 ERP-FIN custom-process APQC
+  items (now joined by the new 1403, same no-clean-PCF profile).
+- **Superseded per-module skill-grain / skill_tools items**: retired per the 2026-06-06
+  supersession header; not reworked.
+
+### Post-fix status
+
+next_action_by: **user** (all remaining open items are user decisions, neighbor-blocked, or
+backlog). Aliases (B1A-S7) and source_domain_module_id (B1A-B10B) were already complete from the
+2026-06-05 pass and were not re-touched.

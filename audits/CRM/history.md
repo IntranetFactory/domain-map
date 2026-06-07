@@ -451,3 +451,91 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21) over the open items in `audits/CRM/state.yaml`. Worked the recorded items only; no fresh from-scratch audit. Domain id 69 confirmed live; 5 full modules (CRM-ACCT-MGT 46, CRM-LEAD-MGT 47, CRM-PIPELINE-MGT 48, CRM-ACTIVITY 49, CRM-AI-COPILOT 50); 6 masters (97-102). The 2026-05-31 snapshot was stale on H1: 21 of the 36 "residual untagged" handoffs already carried `agent_curated` rows. Loader: `.tmp_deploy/crm_state_execute_2026_06_07.ts`. Every write landed at `record_status='new'`; no DELETE, no overwrite of a non-empty value, no `approved` stamp.
+
+### Executed
+
+- **B1A-ENTITY-TYPE (6 PATCH).** Classified all 6 masters' `data_objects.entity_type` (Rule #12 enum), all previously `unclassified`: `customers` (97) operational_workflow, `crm_contacts` (98) operational_record, `crm_leads` (99) operational_workflow, `crm_opportunities` (100) operational_workflow, `pipeline_stages` (101) catalog, `sales_activities` (102) operational_workflow. The `pipeline_stages` catalog classification makes the B12 exemption structural (relevant to B2-S2); `sales_activities` as operational_workflow is consistent with its 5 loaded lifecycle states.
+- **A4 + M8 catalog UX (6 rows, 12 fields).** Authored buyer-voice `catalog_tagline` + `catalog_description` into the empty fields on domain 69 and all 5 modules (46/47/48/49/50). Empty-guarded per field; no non-empty value touched. No vendor/product names, no em-dashes, American English.
+- **B1A-H1-RESIDUAL (9 INSERT handoff_processes, agent_curated / implements).** Net-new clean PCF L3 tags: 81→147, 83→147, 200→147, 205→147 (Manage leads/opportunities 3.5.1); 211→151, 212→151 (Manage sales partners and alliances 3.5.5); 474→147, 475→147 (sales activity on opportunity); 1261→148 (Manage customers and accounts 3.5.2, account-manager escalation). After this batch, 30 of the 36 residual handoffs carry tags; the residual-set tagged count rose from 21 to 30.
+- **C1 business_function_domains: no-op (already complete).** CRM already carries owner=Sales (bf 21), contributor=Marketing (bf 22), contributor=Customer Success (bf 23). 0 rows inserted.
+
+### Surfaced (returned to user; not executed)
+
+- **B2-S1** (M7 architectural choice: DELETE vs PROMOTE the 6 CRM-AI-COPILOT contributor rows): gates B1B-S1 (destructive DELETE).
+- **B2-S2** (pipeline_stages 101 `notes` revert): now redundant given the `catalog` entity_type; revert is destructive (overwrites a non-empty value), needs sign-off.
+- **B2-S4** (pattern-flag re-eval on opportunities/leads/activities): overwrites existing non-empty flag values, user decision.
+- **B2-S5** (E6 permission-bundle drift on CRM roles).
+- **B2-S6** (REAL-ESTATE-AGENT / HVAC-SVC-MGMT starter embed vs full-module consume).
+- **B2-S7** (CUSTOMER-360 310 cross-cutting promotion).
+- **B2-CRM-S3-EVENT-PICK** (lead-to-activity intra-domain handoff event: 70 vs 160): gates the whole 5-row B1B-S3 intra-domain handoff batch.
+- **B2-CRM-C1-CS-RESPONSIBILITY** (new): Customer Success is `contributor` on CRM; C1 expectation was `consumer`. Re-label is an overwrite (destructive); surfaced for the user to decide. CS row left as-is.
+- **B1B-S1** (DELETE 6 AI-COPILOT contributor DMDO rows): destructive, blocked on B2-S1.
+- **B1B-S3** (author 5 intra-domain handoffs): blocked on B2-CRM-S3-EVENT-PICK event-pick.
+- **B1A-PHASE-P personas/RACI**: DEFERRED per phase-P policy; not authored. Candidate personas: SALES-AE, SALES-SDR, SALES-MGR, SALES-OPS.
+
+### Deferred to Discover (no clean cross-industry PCF L3 match)
+
+5 untagged handoffs have no clean PCF activity and were not tagged: 365 (FARMER-DIRECT csa_share_pack.delivered, churn signal), 962 (FARMER-DIRECT delivery_route.dispatched, ETA comms), 964 (FARMER-DIRECT harvest_forecast.updated, availability comms), 1002 (PROD-MGMT product_feature.released, sales enablement), 1005 (PROD-MGMT product_line.launched). Snapshot also listed handoff 528, which has no live row (stale entry, dropped).
+
+### Left (untouched)
+
+- **B1B-S9 retired** (F7 `skill_tools` channel-primitive justification): superseded 2026-06-06; `skill_tools` and per-module skills are dropped. Reframed as a note in state.yaml (B1B-S9-RETIRED); the matching B2-S3 is mooted. Tracked in `audits/_modularization-backlog.md`.
+- **b3 backlog** (13 discretionary entity / module / regulation candidates): non-blocking, untouched.
+
+Live PostgREST queries succeeded throughout. No JWT-audience errors observed.
+
+## 2026-06-07 - Execute B1B-S1 + B1B-S3 (user decisions resolved)
+
+### Summary
+
+Follow-up execution pass after the user resolved the two gating decisions from the 2026-06-07 state-driven audit. B2-S1 answered OVERLAY (delete the 6 contributor rows) and B2-CRM-S3-EVENT-PICK answered event 70 (crm_lead.qualified). Both now-unblocked items executed against domain 69. Loader: `.tmp_deploy/crm_b1bS1_b1bS3_execute_2026_06_07.ts`. One destructive DELETE (user-approved) plus 5 additive INSERTs; the inserts land at `record_status='new'`.
+
+### Executed
+
+- **B1B-S1 (DELETE 6 contributor DMDO rows, M7 hard-fail cured).** User chose the overlay model for CRM-AI-COPILOT (B2-S1 = delete_all_6_contributor_rows). Deleted `domain_module_data_objects` ids 539-544 on (domain_module_id=50, role='contributor'): customers (97), crm_contacts (98), crm_leads (99), crm_opportunities (100), pipeline_stages (101), sales_activities (102). Pre-flight confirmed those 6 ids were exactly the contributor rows on module 50; post-check confirmed 0 contributor rows remain. The M7 within-domain incoherence (master in sibling module coexisting with contributor on AI-COPILOT) is resolved; AI-COPILOT is now a pure overlay tier that reads the canonical masters at runtime.
+- **B1B-S3 (author 5 intra-domain handoffs, B9b under-modeling cured).** Event-pick resolved to event 70 (crm_lead.qualified) for row (b). Inserted 5 rows, all `source_domain_id=target_domain_id=69`, `friction_level='low'`, `notes` empty (Rule #15):
+  - id 1374: CRM-PIPELINE-MGT (48) -> CRM-ACTIVITY (49), `crm_opportunity.created` (event 162), payload crm_opportunities (100), lifecycle_progression.
+  - id 1375: CRM-LEAD-MGT (47) -> CRM-ACTIVITY (49), `crm_lead.qualified` (event 70), payload crm_leads (99), lifecycle_progression.
+  - id 1376: CRM-PIPELINE-MGT (48) -> CRM-ACCT-MGT (46), `crm_opportunity.stage_changed` (event 86), payload crm_opportunities (100), lifecycle_progression.
+  - id 1377: CRM-PIPELINE-MGT (48) -> CRM-ACTIVITY (49), `crm_opportunity.requires_quote` (event 85), payload crm_opportunities (100), event_stream.
+  - id 1378: CRM-ACTIVITY (49) -> CRM-PIPELINE-MGT (48), `meeting.no_show` (event 166), payload sales_activities (102), event_stream.
+  - Intra-domain handoff count on CRM rose from 4 to 9. CRM-AI-COPILOT intentionally excluded (AI overlay subscribes to module events rather than firing its own).
+
+### state.yaml changes
+
+- Removed B1B-S1 and B1B-S3 from b1b (executed; b1b now carries only the B1B-S9-RETIRED tombstone note).
+- Removed B2-S1 and B2-CRM-S3-EVENT-PICK from b2 (decided + executed).
+- Status stays `feedback_needed`: open b2 decisions remain (B2-S2, B2-S4, B2-S5, B2-S6, B2-S7, B2-CRM-C1-CS-RESPONSIBILITY), all destructive-overwrite or judgment calls; plus the deferred B1A-PHASE-P personas and the b3 backlog.
+
+Live PostgREST queries succeeded throughout. No JWT-audience errors observed.
+
+## 2026-06-07 - Resolve all 6 open b2 decisions
+
+### Summary
+
+User answered every open b2 decision in one pass. Three required DB writes (one destructive note revert, four destructive flag flips, two additive capability_domains rows); three were confirm-only (no write). After this pass `b2` is empty; the only remaining open item is the program-deferred B1A-PHASE-P persona layer (held catalog-wide under the phase-P policy) plus the non-blocking b3 backlog. Status moves to `next_action_by: agent` (B1A-PHASE-P is the sole remaining b1a, executable when phase-P opens). Loader: `.tmp_deploy/crm_b2_decisions_execute_2026_06_07.ts`. All inserts land at `record_status='new'`.
+
+### Decisions + execution
+
+- **B2-S2 = revert (option b).** User confirmed the pipeline_stages (101) `data_objects.notes` was auto-populated. Reverted to empty string (DESTRUCTIVE, user-approved). The B12 config-shape exemption is now carried structurally by `entity_type='catalog'`, so the prose note was redundant per Rule #15.
+- **B2-S4 = all yes.** Flipped four pattern flags to true (DESTRUCTIVE false->true, user-approved): crm_opportunities (100) `has_personal_content` + `has_single_approver`; sales_activities (102) `has_personal_content`; crm_leads (99) `has_submit_lock` (`has_personal_content` was already true). Opportunities now flag deal-specific sensitive content + single-approver close; activities flag call-recording / email content; leads lock on conversion.
+- **B2-S5 = option a (confirm, no write).** Permission-bundle pattern accepted as-is: workflow gates expand implicitly via permission_hierarchy from `:admin`; bundles stay derived (reach + RACI + tier) rather than enumerating explicit gate grants per role.
+- **B2-S6 = option a (confirm, no write).** Starter kits REAL-ESTATE-AGENT (153) + HVAC-SVC-MGMT (171) keep the `embedded_master` path; demotion activates when CRM-ACCT-MGT co-installs. Embedding is the mandated starter shape (Rule #19); consuming the full module would violate the starter contract.
+- **B2-S7 = option a (additive).** Promoted CUSTOMER-360 (capability 310) to cross-cutting: added the 2 missing `capability_domains` rows (ids 708, 709) linking it to CSM (30) and MA (70). It now spans 5 domains: CRM (69), CSM (30), CDP (72), MDM (87), MA (70). Matches the cross-cutting capability convention (it is a named example in SKILL.md).
+- **B2-CRM-C1-CS-RESPONSIBILITY = keep (option b).** Customer Success stays `contributor` on CRM (business_function_domains row 125). CS writes health / expansion / renewal signals back into CRM accounts in modern stacks (Gainsight, ChurnZero), so contributor is the accurate model; no overwrite.
+
+### state.yaml changes
+
+- Removed all 6 b2 items (decided + executed/confirmed); `b2` is now empty.
+- `next_action_by` changed from `user` to `agent` (no open user decisions; B1A-PHASE-P is the sole remaining b1a, deferred under phase-P policy).
+- Status stays `feedback_needed` (not `passed`: the E1 persona gap is open, just program-deferred).
+
+Live PostgREST queries succeeded throughout. No JWT-audience errors observed.

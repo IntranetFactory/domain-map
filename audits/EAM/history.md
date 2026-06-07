@@ -320,3 +320,49 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass over the open items in `audits/EAM/state.yaml`. EAM remains UNBUILT (live re-confirmed 2026-06-07: 0 `domain_modules`, 0 `capability_domains` for domain_id=53), so the whole b1b band stays cascade-blocked on the B2-MODSPLIT decision and the build was surfaced, not scaffolded. Three agent-fixable items executed (all `record_status='new'`); the rest were surfaced or left. `business_function_domains` (C1) was already satisfied live (owner row to function 30 Supply Chain, contributor to function 27 IT Operations), so no C1 write was needed. Aliases (B11) already present on all 3 masters (3/3/2), no write needed.
+
+### Executed (record_status='new', idempotent, verified live)
+
+| Item | Table | Action | Rows |
+|---|---|---|---|
+| entity_type (Rule #12) | data_objects | PATCH unclassified -> typed: industrial_assets (475) operational_workflow, eam_work_orders (476) operational_workflow, equipment_pm_schedules (477) catalog | 3 |
+| B1A-S3 / Rule #20 catalog UX | domains | PATCH empty catalog_tagline + catalog_description on domain_id=53 with buyer-voice copy (no vendor names, no em-dash, American English) | 2 fields |
+| B1A-H1 / H1 APQC tag | handoff_processes | INSERT handoff 953 (MFG-OPS production_schedule.published -> EAM) -> PCF process 1549 "Schedule maintenance work" (ext 19246, L4), proposal_source='agent_curated', role='implements' (row id 1196) | 1 |
+
+Classifying `equipment_pm_schedules` (477) as `catalog` structurally resolves the old B2-PM-EXEMPTION question per Rule #12 ("the exemption is structural now, not prose; there is no notes-based exemption surface"), so that b2 item is closed. Handoff 953 now carries both a discovery_substring tag (process 158) and the new agent_curated tag (process 1549), so H1 (every cross-domain handoff carries agent_curated/human_curated) is fully satisfied across all 8 EAM cross-domain handoffs.
+
+Loader: `c:/dev/domain-map/.tmp_deploy/fix_eam_state_2026_06_07.ts`.
+
+### Surfaced (for user; no write applied)
+
+- **B2-MODSPLIT** (load-bearing): 2-module (EAM-ASSETS + EAM-MAINTENANCE-OPS) vs 3-module (add EAM-PM-PLANNING). Gates the entire b1b band and the build.
+- **B2-M7-ESCALATES** (DESTRUCTIVE options): keep / downgrade / delete rel 636 (eam_work_orders escalates_to service_incidents). Downgrade or delete need sign-off; not applied.
+- **B2-WORK-ORDERS-BARE**: Rule #9 bare-word arbitration for `work_orders` across EAM / FLEET-MAINT / REAL-EST / FSM. Catalog-wide, safe to defer.
+- **B2-FIXED-ASSETS**: embedding direction for `fixed_assets` (embedded_master in EAM-ASSETS vs decoupled to ERP-FIN). Catalog-wide, safe to defer.
+- **B2-DOMAIN-CANDIDATES**: promote vs fold APM-RELIABILITY / IIOT-PLATFORM / PTW-LOTO. Non-blocking idea.
+- **B2-REG-SCOPE**: industry scope for EAM regulations (feeds B1B-S4).
+- **B2-USERS-EDGES**: actor verbs for Rule #10 users edges (feeds B1B-S7-users).
+- **B1A-PHASE-P personas/RACI DEFERRED**: no modules to anchor to. Candidate personas noted: Maintenance Planner/Scheduler, Reliability Engineer, Maintenance Technician, Maintenance Supervisor, Asset Manager, Storeroom/MRO Coordinator.
+
+### Left (untouched)
+
+- **B1A-BUILD**: UNBUILT surface. Per Validate rules, do not scaffold a 0-module/0-capability domain; the build is surfaced and gated on B2-MODSPLIT.
+- **b1b band (B1B-S1, S2, S4, S6, S7-events, S7-users, B1, B2)**: all cascade-blocked on M1 (no modules) and/or a b2 decision. entity_type classification (done) re-confirms B1B-S6 now requires lifecycle states on the 2 operational_workflow masters once modules ship; 477 is exempt as `catalog`.
+- **B3-MARKET-ENTITIES**: Phase 0 backlog, unchanged.
+- **Superseded**: per-module system-skill / skill_tools items (legacy B1B-S5) remain CANCELED under the 2026-06-06 supersession header; not re-listed.
+
+### JWT errors
+
+None.
+
+### UI
+
+- https://tests.semantius.app/domain_map/data_objects?id=in.(475,476,477)
+- https://tests.semantius.app/domain_map/domains?id=eq.53
+- https://tests.semantius.app/domain_map/handoff_processes?handoff_id=eq.953

@@ -11,56 +11,47 @@
 schema_version: 2
 domain: CLIN-DEV
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
+
+# NOTE: CLIN-DEV (domain id 50) is UNBUILT: 0 domain_modules, 0 capability_domains. The build
+# (B1A-BUILD) is gated on the B2-S2 module-split decision. Per the UNBUILT rule the build is
+# surfaced, not scaffolded, and the entire b1b cascade stays blocked until modules ship.
+# 2026-06-07 state-driven execute closed the two module-independent EXECUTE items:
+#   - B13 entity_type: 7 masters classified (610/612/613/614/615/616 operational_workflow;
+#     611 device_maintenance_logs operational_record). All at record_status='new'.
+#   - A4 / Rule #20: domains.catalog_tagline + catalog_description authored on domain 50 (were empty).
 
 b1a:
-  - id: B1A-S3
-    summary: "A3 partial fail: only 2 solutions linked, both ServiceNow, 1 primary. Phase A floor is 3+ solutions, 1+ primary, 2+ vendors."
-    finding: "solution_domains has 2 rows for domain_id=50: ServiceNow Clinical Device Management (id 38, primary) and ServiceNow Healthcare and Life Sciences (id 34, secondary), both vendor_id=1 (ServiceNow Inc). Phase A floor requires 3+ solutions, 1+ primary, 2+ vendors. Pure-play coverage missing."
-    action: "Insert 3 to 5 additional solutions + vendors + solution_domains rows. Candidates: Nuvolo Connected Workplace for Healthcare (primary, ServiceNow-native specialist); AIMS by Phoenix Data Systems (primary, pure-play CMMS for healthcare); EQ2 HEMS (primary); Connectiv (secondary); GE HealthCare Mark VR Service (secondary)."
-    vendor_evidence:
-      - Nuvolo Connected Workplace for Healthcare
-      - AIMS by Phoenix Data Systems
-      - EQ2 HEMS
-      - Connectiv Software
-      - GE HealthCare Mark VR Service
-
-  - id: B1A-S4
-    summary: "A4 fail (Rule #20): domains.catalog_tagline and catalog_description empty."
-    finding: "domains.id=50: catalog_tagline='' and catalog_description=''. Rule #20 requires both buyer-facing fields populated. Draft per Rule #20 voice rule, surface to user for review before write."
-    action: "Draft buyer-voice single-sentence catalog_tagline (workflow + value) and 1 to 3 paragraph catalog_description. Surface to user for explicit per-row approval before PATCH. Do NOT auto-write per Rule #20."
-
   - id: B1A-S5b
-    summary: "B7 partial fail: zero master-to-users relationship edges in symmetric direction."
-    finding: "8 users-to-master data_object_relationships rows (ids 653 to 660) now use snake_case verbs after the 2026-05-31 continuation pass. The symmetric master-to-users direction (master records carrying assignee / owner / technician / reporter user FKs) has zero rows."
-    action: "Identify per-master concrete (data_object, role_verb) tuples for user FKs on the master side: clinical_engineering_work_orders (assignee, opener), device_maintenance_logs (technician), device_calibration_records (technician), device_incident_reports (reporter), device_recalls (coordinator), sterilization_cycles (operator), medical_devices (owner). Surface concrete tuples to user before INSERT (no enumeration was pre-spec'd by prior audit)."
+    summary: "B7 partial: master-to-users relationship edges in the symmetric direction. SURFACED (not auto-executed): inverse_verb already models the master-side view."
+    finding: "The 8 users-to-master data_object_relationships rows (ids 653 to 660) each already carry an inverse_verb (is_owned_by, is_performed_by, is_operated_by, is_reported_by, is_managed_by, is_assigned_to, is_created_by) and owner_side='source', so the master-side view of the same FK is ALREADY modeled on the existing row. Inserting separate master->users rows would double-count the same FK edge. Whether the catalog wants a second set of unidirectional rows or treats inverse_verb as sufficient is a modeling judgment, not a mechanical additive fix; state never pre-spec'd concrete reverse tuples for a reason. Surface to user."
     affected_masters:
-      - {data_object_id: 610, name: medical_devices, target_module_id: null, workflow: owner}
-      - {data_object_id: 611, name: device_maintenance_logs, target_module_id: null, workflow: technician}
-      - {data_object_id: 612, name: device_recalls, target_module_id: null, workflow: coordinator}
-      - {data_object_id: 613, name: clinical_engineering_work_orders, target_module_id: null, workflow: assignee_opener}
-      - {data_object_id: 614, name: device_calibration_records, target_module_id: null, workflow: technician}
-      - {data_object_id: 615, name: device_incident_reports, target_module_id: null, workflow: reporter}
-      - {data_object_id: 616, name: sterilization_cycles, target_module_id: null, workflow: operator}
+      - {data_object_id: 610, name: medical_devices, existing_inverse_verb: is_owned_by, proposed_role: owner}
+      - {data_object_id: 611, name: device_maintenance_logs, existing_inverse_verb: is_performed_by, proposed_role: technician}
+      - {data_object_id: 612, name: device_recalls, existing_inverse_verb: is_managed_by, proposed_role: coordinator}
+      - {data_object_id: 613, name: clinical_engineering_work_orders, existing_inverse_verb: is_assigned_to / is_created_by, proposed_role: assignee_opener}
+      - {data_object_id: 614, name: device_calibration_records, existing_inverse_verb: is_performed_by, proposed_role: technician}
+      - {data_object_id: 615, name: device_incident_reports, existing_inverse_verb: is_reported_by, proposed_role: reporter}
+      - {data_object_id: 616, name: sterilization_cycles, existing_inverse_verb: is_operated_by, proposed_role: operator}
 
   - id: B1A-S11c
-    summary: "H1 partial: handoffs 896 and 897 (CLIN-DEV to HC-PATIENT) untagged. Audit explicitly deferred these to Discover."
-    finding: "handoff_processes has 3 rows for the 6 CLIN-DEV cross-domain handoffs (893, 895, 898 tagged via 2026-05-31 continuation). Handoffs 896 (device_recall.issued to HC-PATIENT, payload device_recalls) and 897 (sterilization_cycle.failed to HC-PATIENT, payload sterilization_cycles) were deferred by the 2026-05-30 audit as no clean cross-industry PCF anchor. Leave untagged for Discover Pass 3 custom-process surface, or revisit with user."
-    action: "Leave untagged for Discover Pass 3 custom-process authoring path. No agent_curated insert this pass. Track in audit narrative only."
+    summary: "H1: handoffs 896 and 897 (CLIN-DEV to HC-PATIENT) untagged. No clean cross-industry PCF anchor; defer to Discover (report-only)."
+    finding: "handoff_processes covers 3 of 6 CLIN-DEV outbound handoffs (893->353, 895->199, 898->1556). Handoffs 896 (device_recall.issued to HC-PATIENT, payload device_recalls) and 897 (sterilization_cycle.failed to HC-PATIENT, payload sterilization_cycles) have no clean cross-industry PCF: the patient-impact-assessment / sterilization-hold flows are healthcare-clinical workflows belonging to Discover Pass 3 custom-process authoring. No agent_curated insert. (Handoff 894 PCF pick is B2-S11b.)"
     affected_handoffs:
       - {handoff_id: 896, direction: outbound, source_domain: CLIN-DEV, target_domain: HC-PATIENT, trigger_event: device_recall.issued, payload: device_recalls, null_field: process_tag}
       - {handoff_id: 897, direction: outbound, source_domain: CLIN-DEV, target_domain: HC-PATIENT, trigger_event: sterilization_cycle.failed, payload: sterilization_cycles, null_field: process_tag}
+
   - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
-    extra_phase_p_triage: "2026-06-02"
+    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capability_domains. SURFACED as a build, gated on B2-S2. Not scaffolded."
+    finding: "Live 2026-06-07: domain 50 has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable. The build (Phase A solutions floor + Phase M modules + capabilities + masters-into-domain_module_data_objects + ONE domain-grain system skill deriving its toolset + lifecycle states + per-module catalog UX) is gated on the B2-S2 module-split decision. Per the UNBUILT rule the build is surfaced, not auto-scaffolded; the whole b1b cascade below stays blocked until modules ship. If the result is multi-module, run Phase P (personas, role_modules, process_raci) afterward."
+    blocked_by:
+      - {type: user_decision, ref: B2-S2}
 
 b1b:
   - id: B1B-S1
-    summary: "M1 hard fail: zero domain_modules rows for domain_id=50. Root structural blocker for 6 other items."
-    finding: "domain_modules query for domain_id=50 returns empty; domain_module_host_domains for domain_id=50 also empty. The 7 masters sit only in legacy domain_data_objects. Rule #14 mandates 1+ full domain_modules row per domains row. Without modules, no DMDOs, no module-level skills, no module-prefix permission materialization, no source_domain_module_id derivation on outbound handoffs, no domain_module_id on lifecycle state rows."
+    summary: "M1 hard fail: zero domain_modules rows for domain_id=50. Root structural blocker for the items below."
+    finding: "domain_modules query for domain_id=50 returns empty; domain_module_host_domains for domain_id=50 also empty. The 7 masters sit only in legacy domain_data_objects. Rule #14 mandates 1+ full domain_modules row per domains row. Without modules: no DMDOs, no domain-grain system-skill toolset derivation, no module-prefix permission materialization, no source_domain_module_id derivation on outbound handoffs, no domain_module_id on lifecycle state rows."
     blocked_by:
       - {type: user_decision, ref: B2-S2}
     affected_modules: []
@@ -91,44 +82,43 @@ b1b:
       - {handoff_id: 898, direction: outbound, source_domain: CLIN-DEV, target_domain: ITSM, trigger_event: device_calibration.due, payload: service_incidents, null_field: source_domain_module_id}
 
   - id: B1B-S9
-    summary: "B12 hard fail: zero data_object_lifecycle_states across all 7 masters."
-    finding: "data_object_lifecycle_states for data_object_id in (610, 611, 612, 613, 614, 615, 616) returns 0 rows. Every master is master+required and at least one published state-transition trigger_event references it, so none qualifies for the config-shape exemption. Proposed minimum machines: medical_devices (received, commissioned, in_service, out_of_service_calibration, sunsetting, decommissioned); device_recalls (issued, assessing, isolating, remediating, closed); device_incident_reports (drafted, reported_internal, reported_to_regulator, investigating, resolved); clinical_engineering_work_orders (open, dispatched, in_progress, completed, closed); device_calibration_records (scheduled, performed, passed, failed, filed); sterilization_cycles (queued, running, completed, validated, failed, released); device_maintenance_logs (logged, optional state machine)."
+    summary: "B12: lifecycle states needed on the 6 operational_workflow masters once modules exist (device_maintenance_logs is operational_record, exempt)."
+    finding: "entity_type is now classified (2026-06-07). 6 of 7 masters are operational_workflow and require data_object_lifecycle_states; device_maintenance_logs (611) is operational_record and is EXEMPT from B12. State rows still need domain_module_id per M5, so they remain blocked on the build. Proposed minimum machines: medical_devices (received, commissioned, in_service, out_of_service_calibration, sunsetting, decommissioned); device_recalls (issued, assessing, isolating, remediating, closed); device_incident_reports (drafted, reported_internal, reported_to_regulator, investigating, resolved); clinical_engineering_work_orders (open, dispatched, in_progress, completed, closed); device_calibration_records (scheduled, performed, passed, failed, filed); sterilization_cycles (queued, running, completed, validated, failed, released)."
     blocked_by:
       - {type: depends_on, ref: B1B-S1, reason: lifecycle state rows need domain_module_id per M5}
     affected_masters:
-      - {data_object_id: 610, name: medical_devices, target_module_id: null, workflow: commissioned_sunsetting_gates}
-      - {data_object_id: 611, name: device_maintenance_logs, target_module_id: null, workflow: ledger_or_scheduled_performed}
-      - {data_object_id: 612, name: device_recalls, target_module_id: null, workflow: issued_isolating_closed_gates}
-      - {data_object_id: 613, name: clinical_engineering_work_orders, target_module_id: null, workflow: dispatched_closed_gates}
-      - {data_object_id: 614, name: device_calibration_records, target_module_id: null, workflow: performed_filed_gates}
-      - {data_object_id: 615, name: device_incident_reports, target_module_id: null, workflow: reported_internal_to_regulator_gates}
-      - {data_object_id: 616, name: sterilization_cycles, target_module_id: null, workflow: validated_released_gates}
+      - {data_object_id: 610, name: medical_devices, entity_type: operational_workflow, workflow: commissioned_sunsetting_gates}
+      - {data_object_id: 612, name: device_recalls, entity_type: operational_workflow, workflow: issued_isolating_closed_gates}
+      - {data_object_id: 613, name: clinical_engineering_work_orders, entity_type: operational_workflow, workflow: dispatched_closed_gates}
+      - {data_object_id: 614, name: device_calibration_records, entity_type: operational_workflow, workflow: performed_filed_gates}
+      - {data_object_id: 615, name: device_incident_reports, entity_type: operational_workflow, workflow: reported_internal_to_regulator_gates}
+      - {data_object_id: 616, name: sterilization_cycles, entity_type: operational_workflow, workflow: validated_released_gates}
 
   - id: B1B-S10
-    summary: "F1 hard fail: legacy domain-level skill clin-dev-system (id 36) with domain_module_id=NULL."
-    finding: "skills.id=36 (skill_name=clin-dev-system, skill_type=system, domain_id=50, domain_module_id=NULL) carries 8 skill_tools rows: 7 query_<entity> tools (ids 340 to 346, coverage_tier=platform) plus 1 send_email (tool id 37, side_effect, coverage_tier=platform). Per Rule #14, the legacy skill is obsolete the moment any module-level system skill ships. The send_email row also fails F7 (channel primitive without workflow-specific justification per § channel-vs-capability)."
+    summary: "F1: legacy domain-level skill clin-dev-system (id 36, domain_module_id=NULL). Reframed under the per-domain-skill model (see supersession header)."
+    finding: "skills.id=36 (skill_name=clin-dev-system, skill_type=system, domain_id=50, domain_module_id=NULL) is the domain-grain system skill. Under the RETIRED per-module skill grain this was slated for replacement by per-module skills; that path is CANCELED (supersession header). New model: keep ONE domain-grain system skill per domain that DERIVES its toolset from the domain's domain_module_tools once modules ship. skill_tools is dropped. The 8 legacy skill_tools rows on skill 36 are handled by the platform-wide skill_tools retirement / domain_module_tools migration tracked in audits/_modularization-backlog.md, NOT by this domain's audit. No per-module skill authoring."
     blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: per-module system skill replacement must ship first}
+      - {type: depends_on, ref: B1B-S1, reason: domain-grain skill toolset derivation needs domain_module_tools, which need modules}
 
   - id: B1B-M8
     summary: "M8 vacuously skipped: no domain_modules rows means no module-level catalog UX fields to check."
-    finding: "Rule #20 module-grain copy (catalog_tagline + catalog_description per domain_modules row) cannot be checked or drafted until modules exist."
+    finding: "Rule #20 module-grain copy (catalog_tagline + catalog_description per domain_modules row) cannot be checked or drafted until modules exist. Domain-grain catalog UX was authored 2026-06-07; module-grain follows the build."
     blocked_by:
       - {type: depends_on, ref: B1B-S1, reason: module rows must exist first}
 
 b2:
   - id: B2-S1
-    summary: "Em-dash pollution on domains.business_logic for domain_id=50."
-    question: "Should the audit revert the U+2014 character in domains.business_logic (between 'devices' and 'mostly') to a comma, colon, or sentence break? The CLAUDE.md project rule forbids em-dashes everywhere."
+    summary: "Em-dash pollution on domains.business_logic for domain_id=50 (DESTRUCTIVE overwrite, surfaced)."
+    question: "domains.business_logic carries a U+2014 em-dash between 'devices' and 'mostly': 'Preventive-maintenance schedules and recall propagation for medical devices [U+2014] mostly declarative rules over inventory.' CLAUDE.md forbids em-dashes everywhere. Overwriting a non-empty core field is destructive and needs sign-off."
     options:
-      - "PATCH business_logic, replace em-dash with comma"
-      - "Leave as-is, backfill later as catalog-wide em-dash sweep"
+      - "PATCH business_logic, replace the em-dash with a comma: '...for medical devices, mostly declarative rules over inventory.'"
+      - "Leave as-is, fold into a catalog-wide em-dash sweep"
       - "User supplies exact replacement wording"
-    why: "Original wording predates the em-dash ban; PATCH is a content edit on a domains core field, surface for explicit per-row approval."
+    why: "Original wording predates the em-dash ban; the fix is a destructive overwrite of a non-empty domains core field."
 
   - id: B2-S2
-    summary: "CLIN-DEV module split decision (Phase M precursor)."
-    question: "How should the CLIN-DEV market be modularized into domain_modules rows? This decision gates B1B-S1 and 5 other b1b items."
+    summary: "CLIN-DEV module split decision (Phase M precursor). Gates B1A-BUILD and all b1b."
+    question: "How should the CLIN-DEV market be modularized into domain_modules rows?"
     options:
       - "Two-module: CLIN-DEV-INVENTORY (medical_devices, device_maintenance_logs, device_calibration_records, sterilization_cycles, clinical_engineering_work_orders) + CLIN-DEV-SAFETY-VIGILANCE (device_recalls, device_incident_reports)"
       - "Single CLIN-DEV-CORE module covering all 7 masters"
@@ -136,52 +126,52 @@ b2:
     why: "Right split depends on buyer persona: hospital Clinical Engineering only, or also Sterile Processing Department as a separate budget owner."
 
   - id: B2-S3
-    summary: "Business-function owner for CLIN-DEV."
-    question: "The current business_function_domains row points to Research and Development as owner. Clinical Device Management in hospitals is typically owned by Information Technology (CE under IT), Operations (CE under Facilities), or Compliance (recall and adverse-event surface). R&D reads like a category miss carried over from medical-device manufacturer mental model."
+    summary: "Business-function owner for CLIN-DEV (DESTRUCTIVE repoint of existing owner row 257, surfaced)."
+    question: "business_function_domains id 257 sets Research and Development (function 35) as owner of domain 50. Hospital Clinical Device Management is typically owned by IT (CE under IT), Operations/Facilities, or Compliance (recall and adverse-event surface). R&D reads like a manufacturer-mental-model carryover. Re-pointing the existing non-empty owner row is destructive."
     options:
-      - "Repoint owner to Information Technology"
-      - "Repoint owner to Operations"
-      - "Add Compliance as additional owner or contributor for recall/adverse-event surface"
+      - "Repoint owner to IT Operations (function 27) or a hospital-CE function"
+      - "Repoint owner to Business Operations (34) / Facilities and Real Estate (33)"
+      - "Add Governance, Risk and Compliance (31) as additional owner or contributor for recall/adverse-event surface"
       - "Leave R&D, re-scope catalog row to medical-device manufacturers"
-    why: "Buyer persona ambiguous between hospital CE operations and medical-device-manufacturer R&D."
+    why: "Buyer persona ambiguous between hospital CE operations and medical-device-manufacturer R&D; re-pointing the existing row is a destructive overwrite."
 
   - id: B2-S4
-    summary: "Pattern-flag positive re-evaluation per Rule #12."
-    question: "All 7 masters carry has_personal_content=false, has_submit_lock=false, has_single_approver=false. Likely positives need yes/no per flag."
+    summary: "Pattern-flag positive re-evaluation per Rule #12 (overwrite of existing false flags, surfaced)."
+    question: "All 7 masters carry has_personal_content=false, has_submit_lock=false, has_single_approver=false. Likely positives need yes/no per flag; toggling an existing flag is an overwrite and a workflow-shape judgment."
     options:
       - "device_incident_reports.has_personal_content=true (patient identifier in adverse-event report)"
       - "device_incident_reports.has_submit_lock=true (immutable after regulator filing)"
       - "device_calibration_records.has_submit_lock=true (21 CFR Part 11 audit-trail integrity)"
       - "device_recalls.has_single_approver=true (recall coordinator approves issuance)"
-    why: "Pattern flags are workflow-shape judgments. Rule #15 forbids parking reasoning in notes."
+    why: "Pattern flags are workflow-shape judgments on now-operational_workflow masters; Rule #15 forbids parking reasoning in notes."
 
   - id: B2-S5
-    summary: "Manufacturer-vs-hospital scope: should manufacturer-only regulations move to queued MED-DEVICE-QMS candidate?"
+    summary: "Manufacturer-vs-hospital scope: should manufacturer-only regulations move to a queued MED-DEVICE-QMS candidate?"
     question: "Current footprint mixes hospital clinical engineering (PM scheduling, recall response, incident reporting) and medical-device-manufacturer post-market surveillance (FDA eMDR, 510(k), 21 CFR 820). Masters fit hospital-side; regulations lean manufacturer-side."
     options:
-      - "Leave CLIN-DEV as hospital-side, remove manufacturer-only regulations (510(k), QSR 820) from domain_regulations"
+      - "Leave CLIN-DEV as hospital-side, remove manufacturer-only regulations (510(k), QSR 820) from domain_regulations (destructive delete)"
       - "Keep all 7 regulations, clarify scope in catalog_description"
       - "Wait for MED-DEVICE-QMS Phase 0 promotion, then re-scope"
-    why: "Regulatory list ambiguous; underlying masters look hospital-side only."
+    why: "Regulatory list ambiguous; underlying masters look hospital-side only. Removing regulations is destructive."
 
   - id: B2-S6
-    summary: "ITSM payload mismatch on handoffs 893 and 898."
-    question: "Handoffs 893 (work_order.opened to ITSM) and 898 (calibration.due to ITSM) carry payload service_incidents (data_object id 47, target_domain_module_id=38 ITSM-INCIDENT-MGMT). Cross-domain relationships 661 (clinical_engineering_work_orders surfaces_in service_requests, id 48) and 662 (device_calibration_records schedules_in service_requests) point at service_requests instead. Either the handoff payload or the relationship target is wrong."
+    summary: "ITSM payload mismatch on handoffs 893 and 898 (re-target existing rows, destructive)."
+    question: "Handoffs 893 (work_order.opened to ITSM) and 898 (calibration.due to ITSM) carry payload service_incidents (data_object 47, target_domain_module_id=38 ITSM-INCIDENT-MGMT). Cross-domain relationships 661 (clinical_engineering_work_orders surfaces_in service_requests, id 48) and 662 (device_calibration_records schedules_in service_requests) point at service_requests instead. Either the handoff payload or the relationship target is wrong; both fixes overwrite existing rows."
     options:
       - "Re-target the 2 handoff rows to service_requests + target_domain_module_id=39"
       - "Re-target the 2 relationship rows to service_incidents"
       - "Split: register-event handoff to service_requests, calibration-overdue handoff to service_incidents (the time-critical bit)"
-    why: "Workflow-shape decision: clinical-engineering work arriving in ITSM as service request the desk picks up, or as on-call incident."
+    why: "Workflow-shape decision and a destructive re-target of existing rows."
 
   - id: B2-S11b
-    summary: "APQC tag for handoff 894 (CLIN-DEV to GRC, device_recall.issued)."
-    question: "2026-05-30 audit proposed PCF 37 (Manage product recalls and regulatory audits L2) or PCF 204 (Initiate recall L3). User pick."
+    summary: "APQC tag for handoff 894 (CLIN-DEV to GRC, device_recall.issued). No single clean PCF; user pick."
+    question: "2026-05-30 audit proposed PCF 37 (Manage product recalls and regulatory audits, L2) or PCF 204 (Initiate recall, L3) for handoff 894. Two candidates means no single clean match, so it is a user pick rather than an agent-curated insert."
     options:
-      - "Tag with PCF 37, L2"
-      - "Tag with PCF 204, L3"
+      - "Tag with PCF 37 (L2)"
+      - "Tag with PCF 204 (L3)"
       - "Tag both"
-      - "Defer"
-    why: "Audit offered two candidates without picking."
+      - "Defer to Discover"
+    why: "Audit offered two PCF candidates without picking one; agent does not pick between two viable APQC tags."
 
 b3:
   - id: B3-DEVICE-MODELS

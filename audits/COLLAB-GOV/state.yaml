@@ -10,101 +10,88 @@
 # === end supersession note ===
 schema_version: 2
 domain: COLLAB-GOV
-status: audit_stale
-next_action_by: agent
-last_audit: "2026-05-31"
+status: blocked_on_user
+next_action_by: user
+last_audit: "2026-06-07"
+
+# 2026-06-07 state-driven execute: catalog UX text (domain row, both empty fields) WRITTEN
+# (record_status='new'); 3 generic non-vendor domain_aliases INSERTED. B1B-S1 / B2-2 retired
+# (the "surface-before-write" gate was stale; B1A-RECLASS settled the domain master-bearing,
+# so the real-market buyer voice is correct and the leadership-tier "signal layer" pivot is moot).
+# Everything substantive remains UNBUILT and gated on B2-1; the build is surfaced, not scaffolded.
 
 b1a:
   - id: B1A-RECLASS
-    summary: "Leadership-tier zero-master exemption rescinded 2026-06-02; re-run Validate treating COLLAB-GOV as master-bearing (overlay test). Build needed, not an exemption."
+    summary: "Leadership-tier zero-master exemption rescinded 2026-06-02; COLLAB-GOV is master-bearing under the overlay test. Settled note; build needed, not an exemption."
     finding: >
       SKILL.md's fixed leadership-tier exemption was rescinded (references/skill-changelog.md
-      2026-06-02). Under the overlay test COLLAB-GOV is master-bearing: masters workspace inventory, ownership/lifecycle policies, permission-audit and remediation records (crud_percentage 80; AvePoint / ShareGate class). The prior audit's
-      "keep leadership-tier / ship an empty landing module" option is no longer valid. Live state
-      2026-06-02: 0 domain_modules (M1 fail), so the domain is not deployable today.
+      2026-06-02). Under the overlay test COLLAB-GOV is master-bearing: masters workspace inventory,
+      ownership/lifecycle policies, permission-audit and remediation records (crud_percentage 80;
+      AvePoint / ShareGate class). The prior audit's "keep leadership-tier / ship an empty landing
+      module" option is no longer valid. Live state 2026-06-07: 0 domain_modules (M1 fail), so the
+      domain is not deployable today.
     action: >
-      Re-run the full 4-pass Validate under the corrected rule. The module-shape, promote-scope,
-      and catalog-UX decisions already in b2 still apply and re-surface after the re-audit; this
-      item records only that the classification is settled (master-bearing) and the domain needs
-      a build, not an exemption.
+      Classification is settled (master-bearing). The module-shape, promote-scope, and the BF /
+      regulation / alias-subset / split decisions still in b2 re-surface; this item only records
+      that the domain needs a build, not an exemption.
     extra_reclassified: "2026-06-02 skill-changelog"
+
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 7 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 7 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
-    extra_phase_p_triage: "2026-06-02"
+    finding: "Live triage 2026-06-07: this domain has 0 domain_modules rows (M1 fail) and 7 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies. Per the UNBUILT clause the build is surfaced, not scaffolded by the agent."
+    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the domain-grain system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward. Gated on B2-1 module/split shape."
 
 b1b:
-  - id: B1B-S1
-    summary: "Catalog UX text drafts (catalog_tagline + catalog_description) drafted; Rule #20 requires explicit user approval before write."
-    finding: "domains row id 127 has catalog_tagline='' and catalog_description='' (A4 fail). Drafts proposed 2026-05-30 in history.md B1-S1: catalog_tagline = 'Inventory every workspace, enforce sharing policies, and clean up sprawl across your collaboration tenant.' catalog_description = 'Discover every team site, channel, file-sync drive, and group container in your collaboration tenant. Run permission audits and external-share reviews on a schedule, archive workspaces that have gone stale, and automate provisioning so new workspaces ship with the right ownership and retention policy from day one. Catch oversharing before it becomes a data incident, surface broken or duplicated permission inheritance, and give business owners a path to attest to access without an IT ticket.' If Bucket 2 item 1 picks leadership-tier (route a), the buyer voice should pivot from 'M365 governance product' to 'collaboration-governance signal layer' and the drafts need to be rewritten before write."
-    blocked_by:
-      - {type: user_decision, ref: B2-1}
-      - {type: user_decision, ref: B2-2}
-
   - id: B1B-M1
-    summary: "M1 fix shape (landing module vs full module split) is gated on the leadership-tier vs real-market classification."
-    finding: "domains row id 127 has zero domain_modules rows. Rule #14 says every domains row MUST have >=1 domain_modules row with module_kind='full'. SKILL.md line 797 lists COLLAB-GOV in the leadership-tier exception set (B1 expected zero masters). The two readings (line 243 vs line 797) diverge: line 243 says one landing module is the floor for leadership-tier; line 797 implies the whole module / master / skill stack can be absent. With 7 capability_domains rows, the real-market route would also require >=2 modules per Rule #14 M2. Resolving B2-1 picks one of three fix shapes: (a) 1 landing module (leadership-tier), (b) >=4 full modules per the COLLAB-GOV-INVENTORY / -LIFECYCLE / -PERMS / -STALE split (real-market route), (c) 1 landing module + 1 starter (hybrid)."
+    summary: "M1 fix shape (module split) is gated on the module-split decision B2-5 (and B2-1 confirms master-bearing)."
+    finding: "domains row id 127 has zero domain_modules rows. Rule #14 says every domains row MUST have >=1 domain_modules row with module_kind='full'. With 7 capability_domains rows, Rule #14 M2 requires >=2 full modules. B2-5 picks the split (default 4-module: COLLAB-GOV-INVENTORY / -LIFECYCLE / -PERMS / -STALE)."
     blocked_by:
-      - {type: user_decision, ref: B2-1}
+      - {type: user_decision, ref: B2-5}
     affected_modules: []
     extra_capability_count: 7
 
   - id: B1B-B-BAND
-    summary: "B-band (B1 through B12) entirely gated on leadership-tier vs real-market classification."
-    finding: "domains row id 127 has zero domain_data_objects rows. On the leadership-tier route, B1 passes by exception (per SKILL.md line 797). On the real-market route, the 8 candidate master groups from Bucket 3 (history.md B3-1 through B3-8) need Phase 0 vendor research, then Phase B loads. B5 / B7 / B11 / B12 are downstream of the master loads. B9 / B9b / B10b depend on the module split landing first."
+    summary: "B-band (B1 through B12) gated on the module split landing."
+    finding: "domains row id 127 has zero domain_data_objects / domain_module_data_objects rows. The 8 candidate master groups from b3 (B3-1 through B3-8) need Phase 0 vendor research, then Phase B loads into domain_module_data_objects keyed on the realizing module. B5 / B7 / B11 / B12 are downstream of the master loads. B9 / B9b / B10b depend on the module split landing first."
     blocked_by:
-      - {type: user_decision, ref: B2-1}
       - {type: depends_on, ref: B1B-M1, reason: "needs modules to host masters and trigger_events"}
       - {type: catalog_addition, scope: domains, trigger: "SAAS-BACKUP and TENANT-MIGRATION promotion decisions affect B3-6 and B3-7"}
 
   - id: B1B-E-BAND
     summary: "Role bundling (E1-E5) gated on M-band landing."
-    finding: "domains row id 127 has zero modules; no role_modules surface to build. On leadership-tier route, E1-E5 vacuously pass. On real-market route, E-band is a Phase E load after M-band lands."
+    finding: "domains row id 127 has zero modules; no role_modules surface to build. E-band is a Phase E load after the module split lands."
     blocked_by:
       - {type: depends_on, ref: B1B-M1, reason: "needs >=1 module to bundle roles against"}
 
   - id: B1B-F-BAND
-    summary: "Skill layer (F1-F5) gated on M-band landing."
-    finding: "zero skills rows. F2 (one skill_type='system' per domain_modules row) is mechanically uncomputable without modules. On leadership-tier route SKILL.md line 1583 waives system-skill creation entirely. On real-market route, every loaded module needs exactly one system skill with >=1 skill_tools row, per Rule #17."
+    summary: "Skill layer gated on M-band landing. NOTE: per-module system-skill model RETIRED (superseded 2026-06-06)."
+    finding: "zero skills rows. Under the superseded per-module model F2 wanted one system skill per domain_modules row; that grain is RETIRED (supersession header). The current model: after the build lands, COLLAB-GOV gets exactly ONE domain-grain system skill (domain_id set, domain_module_id null) that DERIVES its toolset; FULL modules carry no skill; tool requirements live on domain_module_tools. Mechanically uncomputable until the module split lands."
     blocked_by:
-      - {type: depends_on, ref: B1B-M1, reason: "needs modules to host system skills"}
-      - {type: user_decision, ref: B2-1}
+      - {type: depends_on, ref: B1B-M1, reason: "needs the built module set + masters to derive the domain-grain skill toolset"}
 
 b2:
   - id: B2-1
-    summary: "Classify COLLAB-GOV: leadership-tier (current SKILL.md state) vs real point-solution market (vendor surface evidence)."
-    question: "SKILL.md line 797 lists COLLAB-GOV in the leadership-tier exception set (expected zero masters, no system skill). The 11 linked solutions (AvePoint Confidence Platform, ShareGate, Syskit Point, Rencore Governance, Quest On Demand for Microsoft 365, CoreView, ENow Application Insights, Orchestry, ProvisionPoint 365, Microsoft Syntex, Microsoft Purview Information Protection) are pure-play M365 / Google Workspace governance specialists with their own commerce, which is a real point-solution market signature. Which classification holds?"
+    summary: "Classification confirmed master-bearing (B1A-RECLASS settled). Remaining b2 question reframed: confirm the real-market BUILD scope (which capabilities stay vs promote out)."
+    question: "B1A-RECLASS already settled COLLAB-GOV as master-bearing (leadership-tier exemption rescinded 2026-06-02). The 11 linked solutions (AvePoint Confidence Platform, ShareGate, Syskit Point, Rencore Governance, Quest On Demand for Microsoft 365, CoreView, ENow Application Insights, Orchestry, ProvisionPoint 365, Microsoft Syntex, Microsoft Purview Information Protection) are pure-play collaboration-suite governance specialists with their own commerce. The open decision is the BUILD SHAPE, not whether to build."
     options:
-      - "(a) confirm leadership-tier: add 1 landing module to satisfy Rule #14 M1, B / E / F / H pass by exception, drop all 8 Bucket 3 items."
-      - "(b) flip to real point-solution market: run Phase 0 vendor research from Bucket 3 candidates, then load Phase A / M / B / C / E / F / H for the proposed 4-module split (COLLAB-GOV-INVENTORY, COLLAB-GOV-LIFECYCLE, COLLAB-GOV-PERMS, COLLAB-GOV-STALE) plus optionally COLLAB-GOV-BACKUP / COLLAB-GOV-MIGRATE depending on items 6 and 7."
-      - "(c) hybrid: 1 leadership-tier landing module + 1 starter (module_kind='starter') covering the inventory + permissions-audit minimum surface."
-    why: "Gates Bucket 3 entirely, gates Bucket 2 item 5 (modularization), and shapes the B1B-M1 / B1B-B-BAND / B1B-E-BAND / B1B-F-BAND fixes. Independent of items 2, 3, 4, 6, 7, 8."
-    extra_skill_md_line_ref: 797
+      - "(a) build the full real-market stack: Phase 0 vendor research from b3 candidates, then load Phase A / M / B / C / E / F / H for the module split chosen in B2-5."
+      - "(b) build a minimal starter first (1 full inventory module + 1 starter perms-audit), defer LIFECYCLE / STALE / EXTSHARE to a later pass."
+    why: "Gates b3 entirely, gates B2-5 modularization, and shapes B1B-M1 / B1B-B-BAND / B1B-E-BAND / B1B-F-BAND. Independent of B2-3, B2-4, B2-6, B2-7, B2-8."
     extra_sibling_with_same_question: INTRANET
 
-  - id: B2-2
-    summary: "Approve / edit / reject catalog_tagline + catalog_description drafts from history.md B1-S1."
-    question: "Rule #20 requires explicit per-row approval of catalog UX text before any write. The drafts proposed 2026-05-30 are still pending."
-    options:
-      - "approve as drafted"
-      - "rewrite (supply exact text)"
-      - "wait until B2-1 settles (voice depends on classification per B1B-S1 finding)"
-    why: "Independent of B2-1 unless leadership-tier is picked, in which case the drafts need to be rewritten in 'signal layer' voice rather than 'product' voice."
-
   - id: B2-3
-    summary: "Business-function ownership: End-User Computing as owner vs Security as owner."
-    question: "business_function_domains has 1 owner (End-User Computing, id 59) and 1 contributor (Security, id 28). Three of the seven capabilities (COLLAB-GOV-PERMS, COLLAB-GOV-EXTSHARE, and arguably COLLAB-GOV-STALE) are typically Security-owned in regulated orgs."
+    summary: "Business-function ownership: flip Security to owner vs keep End-User Computing (DESTRUCTIVE: overwrites an existing responsibility_type)."
+    question: "business_function_domains has 1 owner (End-User Computing, business_function_id 59) and 1 contributor (Security, business_function_id 28). Three of the seven capabilities (COLLAB-GOV-PERMS, COLLAB-GOV-EXTSHARE, and arguably COLLAB-GOV-STALE) are typically Security-owned in regulated orgs. Flipping owner/contributor overwrites a non-empty value (Rule #1: never agent-applied)."
     options:
-      - "(a) flip Security to owner, End-User Computing to contributor"
-      - "(b) keep End-User Computing as owner, add business_function_capabilities overrides for the three Security-leaning capabilities"
+      - "(a) flip Security to owner, End-User Computing to contributor (DESTRUCTIVE)"
+      - "(b) keep End-User Computing as owner, add business_function_capabilities overrides for the three Security-leaning capabilities (additive; loadable once user picks it)"
       - "(c) leave as is"
     why: "Independent of B2-1, but interacts with B2-5 modularization (which BF anchors module-level roles)."
     affected_entities: [COLLAB-GOV-PERMS, COLLAB-GOV-EXTSHARE, COLLAB-GOV-STALE]
 
   - id: B2-4
-    summary: "Regulations scope: domain_regulations is empty; which (GDPR, CCPA, SOX, HIPAA, eDiscovery / FRCP) to attach?"
-    question: "domain_regulations has zero rows. None of the candidates trip certification_required (which stays false), so the question is which to attach at applicability='mandatory' vs 'recommended' vs not at all."
+    summary: "Regulations scope: domain_regulations is empty; which (GDPR, CCPA, SOX, HIPAA, eDiscovery / FRCP) to attach and at what applicability?"
+    question: "domain_regulations has zero rows. None of the candidates trip certification_required (which stays false), so the question is which to attach at applicability='mandatory' vs 'recommended' vs not at all. Judgment call, not a deterministic set."
     options:
       - "GDPR (Articles 5 / 30 / 32 data-protection accountability)"
       - "CCPA (consumer data inventory and access controls)"
@@ -115,8 +102,8 @@ b2:
     why: "Independent of B2-1."
 
   - id: B2-5
-    summary: "Modularization shape (only loadable on B2-1 real-market or hybrid route)."
-    question: "If B2-1 picks (b) or (c), what module split applies? Default proposal: 4-module split COLLAB-GOV-INVENTORY (inventory + ownership inference), COLLAB-GOV-LIFECYCLE (provisioning + archive + retention policy), COLLAB-GOV-PERMS (permission audit + access reviews + external-sharing controls), COLLAB-GOV-STALE (stale content detection + remediation). COLLAB-GOV-BACKUP and COLLAB-GOV-MIGRATE either fold into LIFECYCLE or get promoted out per items 6 and 7."
+    summary: "Modularization shape (loadable once B2-1 build scope is picked)."
+    question: "What module split applies? Default proposal: 4-module split COLLAB-GOV-INVENTORY (inventory + ownership inference), COLLAB-GOV-LIFECYCLE (provisioning + archive + retention policy), COLLAB-GOV-PERMS (permission audit + access reviews + external-sharing controls), COLLAB-GOV-STALE (stale content detection + remediation). COLLAB-GOV-BACKUP and COLLAB-GOV-MIGRATE either fold into LIFECYCLE or get promoted out per B2-6 and B2-7."
     options:
       - "approve the 4-module default split"
       - "use 7-module split mirroring capabilities one-for-one"
@@ -132,7 +119,7 @@ b2:
       - "promote SAAS-BACKUP to a domain, move COLLAB-GOV-BACKUP capability to it"
       - "keep COLLAB-GOV-BACKUP under COLLAB-GOV"
       - "promote SAAS-BACKUP but keep COLLAB-GOV-BACKUP as a partial-overlap link"
-    why: "Depends on B2-1 (real-market route) and the SAAS-BACKUP triage in _missing-domains.md."
+    why: "Depends on B2-1 (build scope) and the SAAS-BACKUP triage in _missing-domains.md."
     extra_candidate_domain: SAAS-BACKUP
     extra_candidate_mention_count: 1
 
@@ -148,14 +135,15 @@ b2:
     extra_candidate_mention_count: 1
 
   - id: B2-8
-    summary: "domain_aliases empty; load any of 7 alias candidates?"
-    question: "domain_aliases has zero rows. Candidates: microsoft 365 governance, m365 management, sharepoint governance, teams governance, tenant administration, workspace governance, collaboration sprawl management. Aliases feed catalog search and per-domain skill runtime trigger phrases."
+    summary: "domain_aliases: 3 generic synonyms LOADED 2026-06-07; 4 vendor/product-named candidates remain (load them?)."
+    question: "Loaded 2026-06-07 (record_status='new'): 'tenant administration', 'workspace governance', 'collaboration sprawl management'. The remaining 4 candidates carry vendor/product names, so under Rule #18 caution they were NOT auto-loaded: 'microsoft 365 governance', 'm365 management', 'sharepoint governance', 'teams governance'. These are the literal market search phrases buyers use; aliases feed catalog search and per-domain skill trigger phrases, so loading them is reasonable but needs an explicit OK because of the product names."
     options:
-      - "approve all 7"
+      - "approve all 4 product-named aliases"
       - "approve a subset (specify)"
       - "skip"
     why: "Independent of B2-1."
-    extra_candidates: ["microsoft 365 governance", "m365 management", "sharepoint governance", "teams governance", "tenant administration", "workspace governance", "collaboration sprawl management"]
+    extra_loaded: ["tenant administration", "workspace governance", "collaboration sprawl management"]
+    extra_remaining_vendor_named: ["microsoft 365 governance", "m365 management", "sharepoint governance", "teams governance"]
 
 b3:
   - id: B3-1

@@ -11,39 +11,26 @@
 schema_version: 2
 domain: LSD
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
-b1a:
-  - id: B1A-S3
-    summary: "Author catalog_tagline and catalog_description on domains row (id 25)"
-    finding: "domains.catalog_tagline and domains.catalog_description on the LSD row (id 25) are both empty. A4 + Rule #20 require non-empty buyer-voice values."
-    action: "Draft catalog_tagline (single buyer-facing one-liner) and catalog_description (1-3 paragraph buyer-facing long-form) per Rule #20. Surface drafts to user for approval BEFORE writing; never overwrite once non-empty."
-    affected_entities: ["domains row id=25 LSD"]
+# NOTE: LSD is an UNBUILT domain (0 domain_modules, 0 legal-specific capabilities; M1 fail
+# confirmed live 2026-06-07). Per Validate-mode policy, the build is SURFACED (see b2 B2-MODULE-SHAPE)
+# and the structural cascade is LEFT in place; the agent does NOT scaffold the module set.
+# Module-INDEPENDENT additive/corrective work executed 2026-06-07:
+#   - data_objects.entity_type backfilled 'unclassified' -> 'operational_workflow' on all 8
+#     LSD masters (633-640). Rule #12 fail cleared. This makes B1B-S1 lifecycle states firmly
+#     REQUIRED (still blocked on M1).
+#   - B1A-S3 catalog UX (catalog_tagline + catalog_description on domains row id=25) authored
+#     and written. Both fields now non-empty; never overwrite.
 
-  - id: B1A-B2
-    summary: "Trigger event outside_counsel.engaged (id 1045) has zero subscribers; fan-out needed"
-    finding: "trigger_events.id=1045 (outside_counsel.engaged) on data_object 637 (outside_counsel_engagements) has zero handoffs rows pointing at it. Likely real B9 gap; flagship vendors fan this out to spend, contracts, and conflict-check workflows."
-    action: "Propose handoffs rows for each candidate target the user picks. Pre-flight: confirm trigger_event remains valid; resolve target domain ids; populate target_domain_module_id when known."
-    vendor_evidence:
-      - {vendor: "Onit", evidence: 1st_class}
-      - {vendor: "Litera", evidence: 1st_class}
-      - {vendor: "LawVu", evidence: 1st_class}
-    extra_candidate_targets:
-      - {target_domain_code: "SPEND-MGMT", reason: "accrual + engagement-letter spend tracking"}
-      - {target_domain_code: "CLM", reason: "engagement letter as a contract"}
-      - {target_domain_code: "GRC", reason: "conflict-check obligations"}
-  - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 2 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 2 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
-    extra_phase_p_triage: "2026-06-02"
+b1a: []
 
 b1b:
   - id: B1B-M1
     summary: "Author the LSD module set (default 5 modules); blocks every downstream STRUCTURAL fix"
-    finding: "Zero domain_modules rows for LSD (domain_id=25); zero rows in domain_module_host_domains for this domain. M1 fail. Cascades into M2 / M4 / M6, B10b, B12, F2, E1, B9b."
-    action: "Once Bucket 2 #1 (module shape) resolves, author the chosen module set with full Rule #14 + Rule #17 contracts. Default recommendation is 5 modules: LSD-INTAKE-PORTAL, LSD-MATTER-MGMT, LSD-LEGAL-HOLD, LSD-OUTSIDE-COUNSEL, LSD-REGULATORY-RESPONSE."
+    finding: "Zero domain_modules rows for LSD (domain_id=25, confirmed live 2026-06-07); zero rows in domain_module_host_domains for this domain. M1 fail. Cascades into M2 / M4 / M6, B10b, B12, F2, E1, B9b. UNBUILT domain: surface the build, do not scaffold."
+    action: "Once B2-MODULE-SHAPE resolves, author the chosen module set with full Rule #14 + Rule #17 contracts. Default recommendation is 5 modules: LSD-INTAKE-PORTAL, LSD-MATTER-MGMT, LSD-LEGAL-HOLD, LSD-OUTSIDE-COUNSEL, LSD-REGULATORY-RESPONSE."
     blocked_by:
       - {type: user_decision, ref: B2-MODULE-SHAPE}
     affected_modules: []
@@ -53,7 +40,7 @@ b1b:
 
   - id: B1B-M2
     summary: "Author legal-specific capabilities once module shape resolves (default 6 + 2 existing = 8)"
-    finding: "Only 2 capability_domains rows for LSD (KNOWLEDGE-MGMT id 187, SELF-SERVICE-PORTAL id 188); both cross-cutting. Below the typical 5-8 floor. A2 partial; M2 vacuously passes only because cap_count=2."
+    finding: "Only 2 capability_domains rows for LSD (KNOWLEDGE-MGMT id 187, SELF-SERVICE-PORTAL id 188, confirmed live 2026-06-07); both cross-cutting. Below the typical 5-8 floor. A2 partial; M2 vacuously passes only because cap_count=2."
     action: "Author legal-specific capabilities aligned to chosen module shape. Default proposal: LEGAL-INTAKE-TRIAGE, LEGAL-MATTER-MGMT, LEGAL-HOLD-MGMT, LEGAL-EDISCOVERY, OUTSIDE-COUNSEL-MGMT, REGULATORY-RESPONSE. Keep existing 2."
     blocked_by:
       - {type: user_decision, ref: B2-MODULE-SHAPE}
@@ -64,7 +51,7 @@ b1b:
 
   - id: B1B-S1
     summary: "Author data_object_lifecycle_states for 8 LSD masters; blocked on M1"
-    finding: "Zero rows in data_object_lifecycle_states for any of the 8 LSD masters (data_object_ids 633-640). B12 fail. All 8 masters carry observable transitions; none are config-shape exempt."
+    finding: "Zero rows in data_object_lifecycle_states for any of the 8 LSD masters (data_object_ids 633-640). B12 fail. All 8 masters now classified entity_type='operational_workflow' (set 2026-06-07), so lifecycle states are firmly REQUIRED. Anchoring needs domain_module_id per Rule #14, which requires M1."
     action: "Author state machines per master (matters: submitted -> triaged -> opened -> active -> on_hold -> closed; intake: submitted -> triaged -> approved/rejected/routed; holds: drafted -> issued -> acknowledged -> released; ediscovery: created -> collecting -> processing -> reviewing -> produced -> closed; engagements: proposed -> active -> completed; advice: drafted -> issued; inquiries: received -> acknowledged -> responding -> responded -> closed; dockets: open -> updated -> closed). Set domain_module_id per Rule #14."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1}
@@ -100,19 +87,16 @@ b1b:
       - {handoff_id: 807, direction: inbound, source_domain: HCMS, target_domain: LSD, trigger_event: "editorial_workflow.review_required", payload: "editorial_workflows", null_field: "target_domain_module_id"}
       - {handoff_id: 824, direction: inbound, source_domain: ECM, target_domain: LSD, trigger_event: "content_document.legal_hold_applied", payload: "content_documents", null_field: "target_domain_module_id"}
 
-  - id: B1B-S5
-    summary: "Retire legacy domain-level lsd-system skill (id 82) and author per-module system skills; blocked on M1"
-    finding: "skills.id=82 'lsd-system' (skill_type='system', domain_id=25, domain_module_id=null) is the legacy domain-level skill with 10 skill_tools (8 query_* tools at platform tier; send_email side_effect platform; sign_document side_effect external). F1 partial. Once LSD modules exist, this row must retire."
-    action: "After M1: author one '<module_code_lower>_agent' skill per LSD module (5 expected for default shape) per Rule #17; migrate 10 skill_tools to the appropriate per-module skills; DELETE skill 82."
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1}
+  - id: B1B-S5-RETIRED
+    summary: "RETIRED (per-module skill grain superseded 2026-06-06): legacy lsd-system skill 82 handling"
+    finding: "SUPERSEDED. The former action ('author one <module>_agent skill per LSD module + migrate 10 skill_tools + DELETE skill 82') is CANCELED by the per-domain-skill restoration (see supersession header). The new model keeps exactly ONE domain-grain system skill per domain (domain_id set, domain_module_id null) that DERIVES its toolset from domain_module_tools; skill_tools is dropped. The existing lsd-system skill (id 82, domain_id=25, domain_module_id=null) is ALREADY the correct domain-grain shape, so no retirement is owed once LSD is built. Per-module tool re-authoring (onto domain_module_tools) is tracked in audits/_modularization-backlog.md after M1."
+    action: "No per-module skill work. After M1: author domain_module_tools per module (backlog), and let the single domain-grain lsd-system skill derive its toolset. Do NOT author per-module system skills."
     extra_legacy_skill_id: 82
-    extra_legacy_skill_tools_count: 10
 
   - id: B1B-H1-807
-    summary: "Tag handoff 807 (HCMS to LSD on editorial_workflow.review_required) with handoff_processes row; blocked on Bucket 2 #5 routing decision"
-    finding: "13 of 14 cross-domain handoffs touching LSD carry an agent_curated handoff_processes row at record_status='new' (92.9% process-health). Only handoff 807 remains untagged. Source payload (editorial_workflows) is HCMS-mastered; suspicious inbound shape (Bucket 2 #5). Tag depends on whether routing fix repaints payload, reroutes target, or deletes."
-    action: "After Bucket 2 #5 routing decision lands, author handoff_processes row with proposal_source='agent_curated', record_status='new', role='implements'. Or if handoff is deleted, this item closes without insert."
+    summary: "Tag handoff 807 (HCMS to LSD on editorial_workflow.review_required) with handoff_processes row; blocked on B2-SUSPICIOUS-INBOUNDS routing decision"
+    finding: "13 of 14 cross-domain handoffs touching LSD carry an agent_curated handoff_processes row at record_status='new' (92.9% process-health). Only handoff 807 remains untagged. Source payload (editorial_workflows) is HCMS-mastered; suspicious inbound shape (B2-SUSPICIOUS-INBOUNDS). No clean cross-industry PCF match while payload is source-mastered, so this defers to the routing decision rather than receiving an agent tag now."
+    action: "After B2-SUSPICIOUS-INBOUNDS routing decision lands: if the payload is repainted to legal_intake_requests, author handoff_processes row (proposal_source='agent_curated', record_status='new', role='implements') against the matching legal-intake PCF; if the handoff is rerouted or deleted, this item closes without insert."
     blocked_by:
       - {type: user_decision, ref: B2-SUSPICIOUS-INBOUNDS}
     affected_handoffs:
@@ -120,14 +104,14 @@ b1b:
 
 b2:
   - id: B2-MODULE-SHAPE
-    summary: "Pick LSD module shape (gating decision for entire audit)"
-    question: "Which module shape to author for LSD: (a) 5 modules (LSD-INTAKE-PORTAL, LSD-MATTER-MGMT, LSD-LEGAL-HOLD, LSD-OUTSIDE-COUNSEL, LSD-REGULATORY-RESPONSE), (b) 4 modules (collapse INTAKE into MATTER), (c) 6 modules (add LSD-KNOWLEDGE), or (d) LSD-FULL single module (only viable if legal-specific capabilities also stay below 3)?"
+    summary: "Pick LSD module shape (gating decision for the entire build; LSD is UNBUILT)"
+    question: "LSD has 0 domain_modules today (UNBUILT). Which module shape to author: (a) 5 modules (LSD-INTAKE-PORTAL, LSD-MATTER-MGMT, LSD-LEGAL-HOLD, LSD-OUTSIDE-COUNSEL, LSD-REGULATORY-RESPONSE), (b) 4 modules (collapse INTAKE into MATTER), (c) 6 modules (add LSD-KNOWLEDGE), or (d) LSD-FULL single module (only viable if legal-specific capabilities also stay below 3)?"
     options: ["a_5_modules_default", "b_4_modules", "c_6_modules_with_knowledge", "d_single_module"]
-    why: "Every downstream Bucket 1 STRUCTURAL fix (B1B-M1, B1B-M2, B1B-S1 lifecycle states, B1B-B1 handoff module FK backfill, B1B-S5 skill migration) depends on this choice. The default recommendation is (a) 5 modules based on flagship vendor surface mapping."
+    why: "Every downstream STRUCTURAL fix (B1B-M1, B1B-M2, B1B-S1 lifecycle states, B1B-B1 handoff module FK backfill) depends on this choice. The default recommendation is (a) 5 modules based on flagship vendor surface mapping. The agent does NOT scaffold until this resolves."
 
   - id: B2-LEGAL-CONTRACTS-NECESSITY
     summary: "Keep legal_contracts as required consumer on LSD or demote to optional?"
-    question: "domain_data_objects row for legal_contracts (data_object_id=66) on LSD has role=consumer, necessity=required, pointing at CLM-REPOSITORY canonical master. Per Rule #16: are contracts infrastructure (demote to optional) or workflow-bearing (keep required)? Reading: contracts carry workflow so required likely stands, but a matter can plausibly reference an unsigned-contract concept without CLM master being deployed."
+    question: "domain_data_objects row for legal_contracts (data_object_id=66) on LSD has role=consumer, necessity=required, pointing at CLM-REPOSITORY canonical master. Per Rule #16: are contracts infrastructure (demote to optional) or workflow-bearing (keep required)? Reading: contracts carry workflow so required likely stands, but a matter can plausibly reference an unsigned-contract concept without CLM master being deployed. Demotion would OVERWRITE a non-empty necessity value, so it is a destructive change requiring sign-off."
     options: ["keep_required", "demote_to_optional"]
     why: "Rule #16 calls for explicit consideration on every non-master row consuming an external master."
 
@@ -135,26 +119,32 @@ b2:
     summary: "How to realize KNOWLEDGE-MGMT capability on LSD"
     question: "KNOWLEDGE-MGMT capability is linked to LSD but no realizing module exists. Options: (a) author legal-specific legal_knowledge_articles master in a new LSD-KNOWLEDGE module; (b) consume cross-cutting knowledge_articles master (ITSM-KNOWLEDGE-anchored) as a consumer row in LSD-MATTER-MGMT; (c) drop the capability link as not load-bearing."
     options: ["a_legal_specific_master", "b_consumer_of_cross_cutting", "c_drop_capability"]
-    why: "Vendor evidence: LawVu carries Knowledge distinctly; ServiceNow LSD reuses Now Knowledge with legal-scoped article types. Both (a) and (b) have vendor backing. Choice affects whether B2-MODULE-SHAPE (c) 6-module path is viable."
+    why: "Vendor evidence: in-house legal platforms carry Knowledge distinctly; service-delivery suites reuse a shared knowledge base with legal-scoped article types. Both (a) and (b) have vendor backing. Choice affects whether B2-MODULE-SHAPE (c) 6-module path is viable."
 
   - id: B2-PATTERN-FLAGS
-    summary: "Approve 2 remaining pattern-flag patches on LSD masters"
-    question: "Proposed flips remain on: legal_advice_records.has_personal_content=true (privilege content); outside_counsel_engagements.has_single_approver=true (GC sign-off). Approve, edit, or decline each? legal_holds.has_submit_lock=true is already set."
+    summary: "Approve 2 remaining pattern-flag patches on LSD masters (DESTRUCTIVE: flips existing rows)"
+    question: "Proposed flips remain on: legal_advice_records.has_personal_content=true (privilege content); outside_counsel_engagements.has_single_approver=true (GC sign-off). Approve, edit, or decline each? legal_holds.has_submit_lock=true is already set. These overwrite existing flag values on live master rows, so they need sign-off."
     options: ["approve_both", "approve_advice_only", "approve_engagement_only", "decline_both"]
     why: "B4 requires positive consideration. False-by-default is not the same as false-after-review."
 
   - id: B2-SUSPICIOUS-INBOUNDS
-    summary: "Route or delete 2 suspicious inbound handoffs (300, 807)"
-    question: "Handoff 300 (RE-PROP-MGMT to LSD on property_tenant.evicted payload property_tenants) and 807 (HCMS to LSD on editorial_workflow.review_required payload editorial_workflows) both carry source-mastered payload, wrong shape for intake-creation. Per row, pick: (i) reroute target to RE-PROP-MGMT or HCMS internal-legal module if those will be authored; (ii) repaint payload as legal_intake_requests once LSD-INTAKE-PORTAL exists; (iii) delete as misrouted."
+    summary: "Route or delete 2 suspicious inbound handoffs (300, 807) (DESTRUCTIVE: reroute/repaint/delete)"
+    question: "Handoff 300 (RE-PROP-MGMT to LSD on property_tenant.evicted payload property_tenants) and 807 (HCMS to LSD on editorial_workflow.review_required payload editorial_workflows) both carry source-mastered payload, wrong shape for intake-creation. Per row, pick: (i) reroute target to RE-PROP-MGMT or HCMS internal-legal module if those will be authored; (ii) repaint payload as legal_intake_requests once LSD-INTAKE-PORTAL exists; (iii) delete as misrouted. Each option mutates or deletes a live handoff, so it needs sign-off."
     options: ["i_reroute_target", "ii_repaint_payload", "iii_delete"]
     why: "Both inbounds have correct intent (route into legal intake) but wrong shape. (ii) is the cleanest fix once LSD-INTAKE-PORTAL exists. B1B-H1-807 closes when this resolves."
     affected_handoffs:
       - {handoff_id: 300, direction: inbound, source_domain: RE-PROP-MGMT, target_domain: LSD, trigger_event: "property_tenant.evicted", payload: "property_tenants", null_field: null}
       - {handoff_id: 807, direction: inbound, source_domain: HCMS, target_domain: LSD, trigger_event: "editorial_workflow.review_required", payload: "editorial_workflows", null_field: null}
 
+  - id: B2-OUTSIDE-COUNSEL-FANOUT
+    summary: "Pick fan-out targets for trigger_event 1045 outside_counsel.engaged (zero subscribers)"
+    question: "trigger_events.id=1045 (outside_counsel.engaged) on data_object 637 (outside_counsel_engagements) has zero handoffs pointing at it. Likely real B9 gap. Which target domains should subscribe? Candidates: SPEND-MGMT (accrual + engagement-letter spend tracking), CLM (engagement letter as a contract), GRC (conflict-check obligations). Agent will author handoffs rows for each target you pick (idempotent, record_status='new') after M1 so source_domain_module_id can be set."
+    options: ["spend_mgmt", "clm", "grc", "multi_select", "none"]
+    why: "Multi-target fan-out needs a human pick before insert; vendor evidence supports all three candidate targets."
+
   - id: B2-PAIRWISE-DEPTH
     summary: "Re-run pairwise reconciliation after B1B-M1 lands, or accept abbreviated form now?"
-    question: "Pass 4 pairwise reconciliation for the 4 neighbors at edge weight >=3 (ECM, AUDIT, HCM, GRC) ran abbreviated this audit because every LSD-side module FK is NULL. Should the agent rerun pairwise after B1B-M1 lands, or accept the abbreviated form?"
+    question: "Pass 4 pairwise reconciliation for the 4 neighbors at edge weight >=3 (ECM, AUDIT, HCM, GRC) ran abbreviated because every LSD-side module FK is NULL. Should the agent rerun pairwise after B1B-M1 lands, or accept the abbreviated form?"
     options: ["rerun_after_m1", "accept_abbreviated"]
     why: "Rerun is recommended because every row gets concrete fix targets once LSD modules exist."
 
@@ -176,11 +166,6 @@ b3:
     rationale: "Typed response packages per inquiry (interrogatory answer set, document production, witness statement). Currently implicit on regulatory_inquiries row; separation allows multi-response matter chains."
     vendor_evidence: ["LawVu (Inquiry Responses)", "Onit (Regulator Response Packages)"]
     proposed_module: "LSD-REGULATORY-RESPONSE"
-
-  - id: B3-OUTSIDE-COUNSEL-FANOUT
-    candidate: "B9 fan-out for trigger_event 1045 outside_counsel.engaged"
-    rationale: "Trigger event exists but has zero subscribers. Likely fan-out to SPEND-MGMT (accruals), CLM (engagement letter as contract), GRC (conflict-check obligations)."
-    vendor_evidence: ["Onit", "Litera", "LawVu"]
 
   - id: B3-EDISCOVERY-PRODUCED-AUDIT
     candidate: "B9 handoff ediscovery_request.produced to AUDIT"

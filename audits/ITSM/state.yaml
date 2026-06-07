@@ -11,55 +11,49 @@
 schema_version: 2
 domain: ITSM
 status: feedback_needed
-next_action_by: agent
-last_audit: 2026-05-31
+next_action_by: user
+last_audit: 2026-06-07
 
 b1a:
-  - id: B1A-H1-UNTAGGED
-    summary: 16 cross-domain ITSM handoffs lack handoff_processes rows; per-handoff PCF lookup needed
-    finding: H1 returned 65 of 80 ITSM cross-domain handoffs tagged (81%); 16 handoff ids carry zero handoff_processes rows. Each is a single PostgREST PCF lookup once the trigger_event, payload data_object, and source/target domain are read. Pattern, most will collapse to "Triage IT service delivery incidents" (PCF id 1299, external_id 20903), with a small minority deferring to Discover Pass 3 when no clean PCF exists (likely candidates dq_sla_definition.breached, dlp_incident.blocked, ml_model.drift_detected variants).
-    action: Author a per-handoff loader that emits handoff_processes rows with proposal_source='agent_curated', record_status='new'. Composed key (handoff_id, process_id) prevents duplicates; deferrals stay out of the catalog and get listed under the audit's Discover-Pass-3 follow-ups.
+  - id: B1A-H1-DISCOVER-DEFER
+    summary: 2 cross-domain inbound ITSM handoffs have no clean PCF match; defer to Discover Pass 3
+    finding: >
+      H1 execute pass 2026-06-07 tagged 9 of the 11 genuinely-untagged ITSM cross-domain handoffs
+      (the prior 16-id snapshot was stale: handoff 9 is a non-ITSM Onboarding->HRSD edge already
+      tagged, and 140/177/642/644 were already tagged). The remaining 2 have no clean PCF match and
+      are scope-creep candidates, not mechanical lookups:
+        - handoff 843 (Data Loss Prevention -> ITSM-INCIDENT-MGMT, trigger dlp_incident.blocked):
+          a DLP block is a security control event, not an IT service incident; flagged as a misfit
+          across multiple prior audits. No clean PCF.
+        - handoff 901 (Healthcare Patient Operations -> ITSM-INCIDENT-MGMT, trigger
+          clinical_order.placed): a clinical order placement is not an IT incident; the handoff
+          target/payload (service_incidents) reads as scope creep from the source domain.
+      Both publish payload service_incidents (47) onto module 38 after the 2026-05-29 backfill.
+    action: >
+      Do NOT bulk-assign PCF 1299. Defer both to Discover Pass 3 / source-domain scope review (DLP
+      and Healthcare Patient Operations own whether the edge belongs to ITSM at all). If the edges
+      survive scope review, tag at that point.
     affected_handoffs:
-      - {handoff_id: 9, direction: unknown, scope_note: candidate, enumeration_status: id_only}
-      - {handoff_id: 31, direction: outbound, source_domain: ITSM, target_domain: ITAM, trigger_event: service_incident.asset_failure, payload: asset_lifecycle_events, scope_note: prior B1-S7 still standing}
-      - {handoff_id: 37, direction: unknown, scope_note: candidate, enumeration_status: id_only}
-      - {handoff_id: 140, direction: unknown, scope_note: candidate, enumeration_status: id_only}
-      - {handoff_id: 177, direction: unknown, scope_note: candidate, enumeration_status: id_only}
-      - {handoff_id: 239, direction: unknown, scope_note: candidate, enumeration_status: id_only}
-      - {handoff_id: 461, direction: unknown, scope_note: candidate, enumeration_status: id_only}
-      - {handoff_id: 463, direction: unknown, scope_note: candidate, enumeration_status: id_only}
-      - {handoff_id: 614, direction: unknown, scope_note: candidate, enumeration_status: id_only}
-      - {handoff_id: 615, direction: unknown, scope_note: candidate, enumeration_status: id_only}
-      - {handoff_id: 642, direction: unknown, scope_note: candidate, enumeration_status: id_only}
-      - {handoff_id: 644, direction: unknown, scope_note: candidate, enumeration_status: id_only}
-      - {handoff_id: 788, direction: unknown, scope_note: candidate, enumeration_status: id_only}
-      - {handoff_id: 843, direction: unknown, scope_note: candidate, enumeration_status: id_only}
-      - {handoff_id: 878, direction: unknown, scope_note: candidate, enumeration_status: id_only}
-      - {handoff_id: 901, direction: unknown, scope_note: candidate, enumeration_status: id_only}
-  - id: B1A-PHASE-P
-    summary: "Multi-module (8 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 8 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 8 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "7 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 7 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [knowledge_articles, service_catalog_items, service_changes, service_incidents, service_problems, service_requests, service_slas]
-    extra_phase_p_triage: "2026-06-02"
+      - {handoff_id: 843, source_domain: DLP, target_domain: ITSM, trigger_event: dlp_incident.blocked}
+      - {handoff_id: 901, source_domain: HEALTHCARE-PATIENT-OPS, target_domain: ITSM, trigger_event: clinical_order.placed}
+
   - id: B1A-SELF-CONTAIN
-    summary: "2 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
-    finding: "Live triage 2026-06-02: 2 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
-    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
+    summary: "2 contributor/required-consumer rows break module self-containment (M9): embed or relax each. DESTRUCTIVE (rewrites role/necessity on existing DMDO rows) - surfaced, not auto-applied."
+    finding: "Live triage: 2 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here. Each is an M9 self-containment violation. Fixing rewrites an existing non-empty row, so it is destructive and requires sign-off."
+    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Surfaced for user approval; not auto-applied."
     extra_m9_shapes:
       - {entity: asset_lifecycle_events, module: ITSM-INCIDENT-MGMT, role: contributor, master_domain: ITAM}
       - {entity: onboarding_tasks, module: ITSM-SERVICE-REQUEST, role: consumer, master_domain: ONBOARDING}
-    extra_phase_p_triage: "2026-06-02"
+
+  - id: B1A-PHASE-P
+    summary: "Multi-module (8 modules) with 0 personas post-Plan-3 (E1 fail): persona / RACI layer. DEFERRED (personas not auto-authored)."
+    finding: "8 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. NOTE: the 2026-05-31 audit recorded 4 roles (IT-SERVICE-DESK-AGENT, IT-SERVICE-DESK-MANAGER, IT-CHANGE-MANAGER, IT-KNOWLEDGE-AUTHOR) with 19 role_modules; reconcile whether Plan 3 deleted these or whether this finding is stale before authoring."
+    action: "DEFERRED per audit contract (personas/RACI are not auto-authored). Candidate personas if/when authored: IT-SERVICE-DESK-AGENT, IT-SERVICE-DESK-MANAGER, IT-CHANGE-MANAGER, IT-PROBLEM-MANAGER, IT-KNOWLEDGE-AUTHOR, END-USER-REQUESTER. Wire role_modules across the 8 modules + process_raci rows. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
 
 b1b:
   - id: B1B-B9b
     summary: B9b intra-domain cross-module handoff rows absent for ITSM; new trigger_events required for each edge
-    finding: ITSM has 8 modules but zero rows in handoffs with source_domain_id=target_domain_id=1. Eight expected intra-domain edges named in the 2026-05-29 audit (incident->problem, problem->change, change->configuration_items, request->incident, sla->incident, sla->request, incident->knowledge, problem->knowledge). Each needs a new trigger_events row authored with event_name, event_category, payload data_object_id, and condition; this is editorial choice not mechanical. The prior 2026-05-31 continuation classified B1-S5 as DEFER for the same reason.
+    finding: ITSM has 8 modules but zero rows in handoffs with source_domain_id=target_domain_id=1. Eight expected intra-domain edges (incident->problem, problem->change, change->configuration_items, request->incident, sla->incident, sla->request, incident->knowledge, problem->knowledge). Each needs a new trigger_events row authored with event_name, event_category, payload data_object_id, and condition; this is editorial choice not mechanical.
     blocked_by:
       - {type: depends_on, ref: trigger-event-authoring-session, reason: creative pass; eight intra-domain trigger events need event_name + payload + condition editorial choice}
 
@@ -72,7 +66,7 @@ b1b:
 
   - id: B1B-ASSET-FAILURE
     summary: event 65 service_incident.asset_failure cross-domain attribution question (carry from 2026-05-29 B1-S7)
-    finding: trigger_events.id=65 service_incident.asset_failure publishes on data_object_id=47 (service_incidents); handoff 31 attributes source_domain=1 ITSM -> ITAM. Open question whether the event correctly originates in ITSM or whether ITAM should author asset.failed as the publisher with ITSM as subscriber. Cross-domain ownership question; ITAM owns the resolution.
+    finding: trigger_events.id=65 service_incident.asset_failure publishes on data_object_id=47 (service_incidents); handoff 31 attributes source_domain=1 ITSM -> ITAM. Open question whether the event correctly originates in ITSM or whether ITAM should author asset.failed as the publisher with ITSM as subscriber. Cross-domain ownership question; ITAM owns the resolution. NOTE 2026-06-07 handoff 31 was tagged to PCF 1312 "Maintain IT asset records" (additive, independent of the attribution decision); the attribution question itself stays blocked on ITAM.
     blocked_by:
       - {type: domain_audit, blocking_domain: ITAM, milestone: asset-failure-publisher-decision}
     affected_handoffs:
@@ -81,17 +75,6 @@ b1b:
       - {id: 65, event_name: service_incident.asset_failure, current_category: state_change, proposed_category: state_change}
 
 b2:
-  - id: B2-CATALOG-UX
-    summary: Rule #20 catalog_tagline and catalog_description empty on the ITSM domain row and all 8 modules
-    question: Author catalog_tagline (single buyer-facing sentence) and catalog_description (1-3 buyer-facing paragraphs) for the ITSM domain row and each of the 8 modules? Rule #20 requires explicit user approval of the wording before any write.
-    options:
-      - Draft a full set agent-side and surface for approval line-by-line
-      - User supplies the wording row-by-row
-      - Defer indefinitely (rows remain empty; A4 and M8 stay failing)
-    why: A4 and M8 fail when these fields are empty. Rule #20 forbids the agent writing these without explicit per-row user approval; the audit cannot self-resolve.
-    affected_entities: [domains:ITSM, ITSM-INCIDENT-MGMT, ITSM-SERVICE-REQUEST, ITSM-PROBLEM-MGMT, ITSM-CHANGE-MGMT, ITSM-EVENT-MGMT, ITSM-KNOWLEDGE, ITSM-AGENT-WORKSPACE, ITSM-SLA-MGMT]
-    affected_modules: [38, 39, 40, 41, 42, 43, 44, 45]
-
   - id: B2-PATTERN-FLAGS
     summary: pattern flag positive re-evaluation on 3 masters (carry from 2026-05-29 B2-S2)
     question: Per Rule #12 / B4 positive re-evaluation, should service_incidents.has_personal_content=true (incident descriptions routinely carry user PII)? knowledge_articles.has_personal_content=true (some KB articles reference customer cases)? service_changes.has_submit_lock=true (freeze change payload at CAB submission)?
@@ -99,7 +82,7 @@ b2:
       - Approve all three flips
       - Approve a subset
       - Decline all (flags stay false)
-    why: Pattern flags are workflow-shape judgments the user owns; defaults to false do not establish review. Recording the consideration in notes is forbidden by Rule #15, so the answer lives only in the audit decisions.
+    why: Pattern flags are workflow-shape judgments the user owns; defaults to false do not establish review. Recording the consideration in notes is forbidden by Rule #15, so the answer lives only in the audit decisions. All three masters are now classified entity_type=operational_workflow (2026-06-07), so flag consideration is in scope.
     affected_masters:
       - {data_object_id: 47, name: service_incidents, target_module_id: 38, workflow: incident}
       - {data_object_id: 50, name: service_changes, target_module_id: 41, workflow: change}
@@ -107,62 +90,53 @@ b2:
 
   - id: B2-SLA-LIFECYCLE
     summary: service_slas (id 53) has zero lifecycle states (carry from 2026-05-29 B2-S1)
-    question: Apply the Rule #12 config-shape exemption (no notes write per Rule #15; decision lives in the audit file), or author a state machine (e.g. draft, published, active, expired, archived)?
+    question: service_slas is now classified entity_type=catalog (2026-06-07), under which lifecycle states are permitted but not required (Rule #12), so B12 no longer fails on it. Leave it stateless (config-shape), or author a state machine (e.g. draft, published, active, expired, archived)?
     options:
-      - Confirm config-shape exemption; track in this audit file only
+      - Accept config-shape (catalog) classification; no state machine; B12 passes
       - Author a state machine; surface proposed states for approval
-    why: B12 partial because service_slas master has no states. SLAs read as author-once / occasionally-edit (config shape) but a published SLA does have an effective period (active vs expired) worth modeling as state if the workflow demands it. Either choice is defensible; the user owns the call.
+    why: B12 is satisfied by the catalog classification, but a published SLA does have an effective period (active vs expired) worth modeling as state if the workflow demands it. Either choice is defensible; the user owns the call.
     affected_masters:
       - {data_object_id: 53, name: service_slas, target_module_id: 45, workflow: sla-config}
 
   - id: B2-SKILL-NAMING
-    summary: ITSM system skills use kebab itsm-<module>-system, SKILL convention is snake <module_code_lower>_agent (carry from 2026-05-29 B2-S4)
-    question: Rename catalog-wide to the snake-agent convention, or accept the kebab shape and update SKILL.md to allow both?
+    summary: "RETIRED 2026-06-06 (per-domain-skill restoration). Originally: ITSM system skills used kebab itsm-<module>-system vs SKILL snake <module_code_lower>_agent."
+    question: "SUPERSEDED. The per-module system-skill grain is retired (see header). The 8 kebab itsm-<module>-system skills are no longer the model; each domain now carries exactly ONE domain-grain system skill. Re-frame: confirm the ITSM domain-grain skill exists and the legacy per-module skills are dispositioned per audits/_modularization-backlog.md. No naming-convention decision is owed under the new model."
     options:
-      - Rename all 8 ITSM system skills via a focused loader; align catalog with SKILL.md
-      - Update SKILL.md to allow both naming shapes; ITSM and other earlier loads keep current names
-    why: Editorial / naming-policy call. Pure relabel; skill_tools FKs unaffected. ATS audit raised the same drift; a decision here likely cascades to ATS and other early-modular loads.
-    affected_entities: [itsm-incident-mgmt-system, itsm-service-request-system, itsm-problem-mgmt-system, itsm-change-mgmt-system, itsm-event-mgmt-system, itsm-knowledge-system, itsm-agent-workspace-system, itsm-sla-mgmt-system]
+      - No action under the new model; track per-module skill disposition in audits/_modularization-backlog.md
+    why: Retired item kept as a note so the supersession is traceable; not an open editorial decision.
 
 b3:
   - id: B3-SERVICE-OUTAGES
     candidate: service_outages
-    rationale: ServiceNow Major Incident Management and Atlassian Statuspage both model a customer-facing outage record distinct from the internal incident. Catalog likely needs the split.
-    vendor_evidence: [ServiceNow, Atlassian Statuspage]
+    rationale: Flagship major-incident and status-page products model a customer-facing outage record distinct from the internal incident. Catalog likely needs the split.
     proposed_module: ITSM-INCIDENT-MGMT
 
   - id: B3-CHANGE-COLLISIONS
     candidate: change_collisions
-    rationale: ServiceNow Change Advisory detects overlapping change windows and blackout periods; modeled as a first-class catalog entity in flagship vendors.
-    vendor_evidence: [ServiceNow]
+    rationale: Change advisory tooling detects overlapping change windows and blackout periods; modeled as a first-class catalog entity in flagship products.
     proposed_module: ITSM-CHANGE-MGMT
 
   - id: B3-CAB-MEETINGS
     candidate: cab_meetings
-    rationale: Change Advisory Board agenda and minutes are modeled as a first-class entity by ServiceNow and BMC Helix.
-    vendor_evidence: [ServiceNow, BMC Helix]
+    rationale: Change Advisory Board agenda and minutes are modeled as a first-class entity by flagship change products.
     proposed_module: ITSM-CHANGE-MGMT
 
   - id: B3-SERVICE-OFFERINGS-SPLIT
     candidate: service_offerings
-    rationale: ServiceNow distinguishes the service definition (offering) from its catalog presentation (catalog_item); current model collapses both onto service_catalog_items.
-    vendor_evidence: [ServiceNow]
+    rationale: Flagship products distinguish the service definition (offering) from its catalog presentation (catalog_item); current model collapses both onto service_catalog_items.
     proposed_module: ITSM-SERVICE-REQUEST
 
   - id: B3-WALKUP-VISITS
     candidate: walkup_visits
     rationale: ITSM-WALKUP capability realizes in ITSM-AGENT-WORKSPACE but no walkup_visits or walkup_kiosks master exists; capability-orphan finding from prior audit.
-    vendor_evidence: [ServiceNow]
     proposed_module: ITSM-AGENT-WORKSPACE
 
   - id: B3-VIRTUAL-AGENT-CONVERSATIONS
     candidate: virtual_agent_conversations
     rationale: ITSM-VIRTUAL-AGENT capability has no virtual_agent_conversations or chatbot_sessions master; capability-orphan finding from prior audit.
-    vendor_evidence: [ServiceNow, Atlassian]
     proposed_module: ITSM-AGENT-WORKSPACE
 
   - id: B3-CHARGEBACK-INVOICES
     candidate: chargeback_invoices
     rationale: ITSM-CHARGEBACK capability has no chargeback_invoices or service_cost_records master; capability-orphan finding from prior audit.
-    vendor_evidence: [ServiceNow Financial Management]
     proposed_module: ITSM-SLA-MGMT

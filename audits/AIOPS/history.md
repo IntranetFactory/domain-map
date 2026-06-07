@@ -427,3 +427,42 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate execute pass over the open items in audits/AIOPS/state.yaml. AIOPS remains an UNBUILT domain: live re-check confirmed 0 domain_modules (M1 fail) and 0 capability_domains. No build was scaffolded (the build is surfaced, not executed). Worked only the additive/corrective items not gated on M1 or a b2 user decision. Loader: [.tmp_deploy/aiops_state_execute_2026_06_07.ts](../../.tmp_deploy/aiops_state_execute_2026_06_07.ts), run with `bun run` from project root. No JWT errors. All writes idempotent, record_status='new' by omission (Rule #1), no DELETE, no overwrite of a non-empty value, no record_status flip, no notes writes (Rule #15), no vendor names in catalog copy (Rule #18), no em-dash (American English).
+
+### Executed
+
+| Item | Action | Rows |
+| --- | --- | --- |
+| entity_type (B13 / Rule #12) | PATCH 7 AIOPS masters from `unclassified` to typed. AIOPS is analytics-heavy: 93 event_correlations -> `computed`, 94 anomaly_detections -> `computed`, 95 root_cause_analyses -> `operational_workflow`, 96 predictive_signals -> `computed`, 722 alert_suppression_rules -> `catalog`, 723 ml_model_training_records -> `operational_record`, 724 incident_predictions -> `computed`. Only root_cause_analyses now carries a B12 lifecycle obligation. | 7 |
+| B1A-B9-CATEGORY | PATCH `event_category` on 6 trigger_events from `""` to the enum: 645 root_cause_analysis.published -> state_change, 646 predictive_signal.elevated -> threshold, 647 alert_suppression_rule.activated -> state_change, 648 ml_model_training_record.completed -> lifecycle, 649 ml_model_training_record.drift_detected -> signal, 650 incident_prediction.high_confidence -> signal. | 6 |
+| B1B-A4 / Catalog UX (Rule #20) | Author + write buyer-voice `catalog_tagline` and `catalog_description` on domains row id 6 (both previously empty). No module copy (0 modules). Stale "surface-before-write" gate (B2-TAGLINE-APPROVAL) superseded per run prompt; copy lands at record_status='new' for in-record review. | 2 |
+| H1 (APQC) | INSERT 1 `handoff_processes` row tagging the one untagged AIOPS cross-domain handoff, 1394 (NPMD network_path.degraded -> AIOPS, payload network_paths), with the clean L4 PCF match process 1128 "Monitor and report IT performance" (the same process every other inbound performance signal to AIOPS uses). proposal_source='agent_curated', role='implements', record_status omitted. | 1 |
+
+Total writes: 16 rows across 4 tables (15 PATCH on data_objects + trigger_events + domains, 1 INSERT on handoff_processes).
+
+### Surfaced (for the user; not written)
+
+- **B2-MODULE-SPLIT**: pick (a) 2-module, (b) 3-module + AIOPS-SERVICE-HEALTH, or (c) 4-module isolating AIOPS-ML-MODEL-OPS. Gates the entire build and every per-module FK / lifecycle owner / capability count.
+- **B2-TRIGGER-143** (DESTRUCTIVE): trigger 143 topology.published is mis-anchored on event_correlations. Options: DELETE (no handoff uses it), PATCH data_object_id=79 to CMDB service_maps, or keep and rewrite description. Not auto-applied.
+- **B2-MLOPS**: keep ml_model_training_records as AIOPS master with MLOPS embedded_master, or move canonical master to MLOPS. Gates split option (c).
+- **B2-PATTERN-FLAGS** (DESTRUCTIVE, overwrites non-empty boolean): confirm has_submit_lock=true on ml_model_training_records, root_cause_analyses, alert_suppression_rules. Not auto-applied.
+- **B2-CHANNEL-SWAP**: are send_email / post_chat_message generic notifications (swap to notify_person / notify_team on future domain_module_tools) or workflow-specific? Reframed from the retired skill_tools finding.
+- **B2-H1B-PROMOTION-OR-RECONCILE** (DESTRUCTIVE: record_status flip + PCF re-attribution): promote the 3 discovery_substring tags (handoffs 53, 58, 603) to approved? Reconcile handoff 154 PCF as process 272 (L3 IT resilience) or 1302 (L4 batch monitor)? Not auto-applied.
+- **Personas / RACI (Phase P)**: DEFERRED, not authored (domain is unbuilt; Phase P only runs after a multi-module build). Candidate personas once built: incident analyst (RCA author/reviewer), ML engineer (training-record owner), SRE / on-call responder (correlation + prediction consumer), reliability lead (suppression-rule approver).
+
+### Left (untouched)
+
+- **B1A-BUILD / B1B-M1 / B1B-A2 / B1B-B6 / B1B-B8 / B1B-B9-NEW-EVENTS / B1B-B10b / B1B-B12**: all blocked on the unbuilt-domain build (M1) or B2-MODULE-SPLIT. UNBUILT rule honored: no scaffold, build surfaced, cascade left. B1B-B12 reduced to a single obligation (root_cause_analyses lifecycle) now that entity_type is classified.
+- **B1B-F1 / B1B-F7**: SUPERSEDED (per-domain-skill restoration, 2026-06-06). skill_tools dropped, per-module skills retired. Reframed as no-op notes; supersession header preserved.
+- **B3-MARKET-SURFACE / B3-AIOPS-TO-OBS-FEEDBACK / B3-AIOPS-TO-SOAR-OR-ITPA**: b3 backlog, non-blocking, untouched.
+
+### Post-fix status
+
+next_action_by: user (decisions owed: B2-MODULE-SPLIT and the rest of the b2 surface; the build and all M1-gated items follow the split pick).

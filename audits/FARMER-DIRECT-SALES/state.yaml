@@ -11,20 +11,26 @@
 schema_version: 2
 domain: FARMER-DIRECT-SALES
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
+
+# NOTE 2026-06-07 (state-driven execute): EXECUTED and dropped from open items:
+#   - B1A-ENTITY-TYPE: all 9 FDS masters classified (514/515/516/517/518/520/521 operational_workflow;
+#     519 pickup_locations and 522 farm_storefronts classified catalog). 0 remain unclassified.
+#   - Catalog UX (Rule #20 / A4 / M8): authored buyer-voice catalog_tagline + catalog_description on the
+#     domain row (158) and all 8 modules (118-124 full, 172 starter), all previously empty.
+# RETIRED / superseded by the 2026-06-06 per-domain-skill restoration (do NOT re-open):
+#   - former B1B-S4 (19 skill_tools.notes rows violating Rule #15) and former B2-S2 (revert authorization):
+#     the `skill_tools` table is dropped (live PGRST205 confirms it no longer exists). Per-module system
+#     skills are retired; there is nothing to revert. Closed as moot.
 
 b1a:
   - id: B1A-PHASE-P
-    summary: "Multi-module (8 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 8 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    summary: "Multi-module (8 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED (Phase-P)."
+    status: deferred
+    finding: "Live triage 2026-06-02 (still current 2026-06-07): 8 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Per state-driven Validate contract personas/RACI are deferred (Phase-P), not authored in a bulk execute pass."
     action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 8 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "9 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 9 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [butcher_orders, csa_memberships, csa_share_packs, delivery_routes, farm_storefronts, farmers_market_sales, harvest_forecasts, pickup_locations, wholesale_orders]
+    candidate_personas: "Farm Operator (owner-operator), CSA Manager, Wholesale / Food-Hub Manager, Delivery Coordinator, Market Cashier, Butcher / Processing Coordinator, Harvest Planner. (FDS already has 6 FDS-specific RBAC roles named in history; persona layer should align to those plus a harvest planner.)"
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
@@ -50,14 +56,6 @@ b1b:
     affected_handoffs:
       - {handoff_id: 350, direction: inbound, source_domain: FMIS, target_domain: FDS, trigger_event: harvest_record.created, payload: harvest_records, null_field: source_domain_module_id}
 
-  - id: B1B-S4
-    summary: 19 skill_tools.notes rows violate Rule #15; revert authorization gated on B2-S2.
-    finding: >-
-      F7/Rule #15 mechanical revert pending user authorization. 19 skill_tools rows across all 7 FDS full-module system skills carry workflow-context, channel-justification, or read-purpose prose forbidden by Rule #15. Rows by skill_id: skill 189 (fds_csa_mgmt_agent) ids 1760, 1761, 1762, 1766, 1767; skill 190 (fds_online_store_agent) ids 1773, 1774, 1775; skill 191 (fds_delivery_ops_agent) ids 1777, 1779, 1782; skill 192 (fds_market_pos_agent) ids 1785, 1786, 1787; skill 193 (fds_wholesale_agent) ids 1789, 1792; skill 194 (fds_butcher_agent) ids 1797, 1798; skill 195 (fds_harvest_planning_agent) id 1801. Each text restates routing or channel intent (e.g. "Pickup reminders, swap-deadline nudges, billing receipts.", "Inbound channel for storefront payment-gateway callbacks.", "Buyer (chef / restaurant / food-hub) account read."), which Rule #15 explicitly forbids.
-    blocked_by:
-      - {type: user_decision, ref: B2-S2}
-    extra_affected_skill_tools_ids: [1760, 1761, 1762, 1766, 1767, 1773, 1774, 1775, 1777, 1779, 1782, 1785, 1786, 1787, 1789, 1792, 1797, 1798, 1801]
-
   - id: B1B-S5
     summary: Candidate missing inbound CRM-to-FDS-ONLINE-STORE handoff; gated on B2-S4.
     finding: >-
@@ -68,7 +66,7 @@ b1b:
   - id: B1B-H1
     summary: 4 cross-domain handoffs still untagged for APQC PCF; 3 gated on B2-S5 target-module correctness, 1 has no clean PCF match.
     finding: >-
-      Residual H1 APQC tagging gap. 10 of 14 cross-domain handoffs already carry handoff_processes rows (350 pre-existing process_id=171, plus 363/364/960/961/1213/1214/1215/1216/1217 added in 2026-05-31 continuation, all proposal_source=agent_curated, record_status=new). 4 remain untagged: 365 (FDS-CSA-MGMT to CRM, csa_share_pack.delivered, payload csa_share_packs), 962 (FDS-DELIVERY-OPS to CRM, delivery_route.dispatched, payload delivery_routes), 964 (FDS-HARVEST-PLANNING to CRM, harvest_forecast.updated, payload harvest_forecasts) all currently target CRM-PIPELINE-MGT 46 (probably wrong, B2-S5); 963 (FDS-BUTCHER to FOOD-TRACE, butcher_order.ready, payload butcher_orders) has no clean PCF match in 16448 family (resolved to risk-management, unrelated), defer to Discover Pass 3 custom-process authoring path.
+      Residual H1 APQC tagging gap (verified live 2026-06-07: 0 handoff_processes rows on 365/962/963/964). 10 of 14 cross-domain handoffs already carry handoff_processes rows (350 pre-existing process_id=171, plus 363/364/960/961/1213/1214/1215/1216/1217 added in 2026-05-31 continuation, all proposal_source=agent_curated, record_status=new). 4 remain untagged: 365 (FDS-CSA-MGMT to CRM, csa_share_pack.delivered, payload csa_share_packs), 962 (FDS-DELIVERY-OPS to CRM, delivery_route.dispatched, payload delivery_routes), 964 (FDS-HARVEST-PLANNING to CRM, harvest_forecast.updated, payload harvest_forecasts) all currently target CRM-PIPELINE-MGT 46 (probably wrong, B2-S5); 963 (FDS-BUTCHER to FOOD-TRACE, butcher_order.ready, payload butcher_orders) has no clean PCF match in 16448 family (resolved to risk-management, unrelated), defer to Discover Pass 3 custom-process authoring path. No clean independent PCF match exists for any of the 4 while the CRM-target question is open, so all 4 stay deferred.
     blocked_by:
       - {type: user_decision, ref: B2-S5}
       - {type: depends_on, ref: discover-pass-3, reason: 963 has no clean PCF cross-industry match; needs custom-process authoring}
@@ -87,7 +85,7 @@ b2:
       - "(a) KEEP all 5 consumer rows as accurate runtime cross-module read declarations and mark M7 as satisfied by-design for this domain."
       - "(b) DELETE all 5 sibling consumer DMDO rows and rely solely on master plus handoff."
       - "(c) PROMOTE specific rows to embedded_master if certain modules should be standalone-deployable (e.g. FDS-DELIVERY-OPS without FDS-CSA-MGMT, FDS-WHOLESALE, or FDS-BUTCHER)."
-    why: Architectural intent and deployability strategy decision; agent cannot decide whether the modules are meant to be independently deployable or whether the consumer rows are residual redundancy.
+    why: Architectural intent and deployability strategy decision; agent cannot decide whether the modules are meant to be independently deployable or whether the consumer rows are residual redundancy. Note option (b) is DESTRUCTIVE (DELETE); requires explicit user approval.
     extra_affected_dmdo:
       - {domain_module_id: 120, module_code: FDS-DELIVERY-OPS, data_object_id: 515, data_object_name: csa_share_packs, role: consumer, mastered_by_module_id: 118}
       - {domain_module_id: 120, module_code: FDS-DELIVERY-OPS, data_object_id: 517, data_object_name: wholesale_orders, role: consumer, mastered_by_module_id: 122}
@@ -95,16 +93,6 @@ b2:
       - {domain_module_id: 122, module_code: FDS-WHOLESALE, data_object_id: 518, data_object_name: delivery_routes, role: consumer, mastered_by_module_id: 120}
       - {domain_module_id: 118, module_code: FDS-CSA-MGMT, data_object_id: 519, data_object_name: pickup_locations, role: consumer, mastered_by_module_id: 119}
       - {domain_module_id: 120, module_code: FDS-DELIVERY-OPS, data_object_id: 520, data_object_name: butcher_orders, role: consumer, mastered_by_module_id: 123}
-
-  - id: B2-S2
-    summary: Rule #15 revert authorization for 19 polluted skill_tools.notes rows.
-    question: >-
-      Authorize revert of the 19 polluted skill_tools.notes rows (B1B-S4), or approve per-row exact wording, or mixed?
-    options:
-      - "(a) REVERT all 19 polluted rows to empty string and append incident to references/skill-changelog.md."
-      - "(b) APPROVE existing text per row (user supplies exact wording confirmation for each)."
-      - "(c) MIXED: revert some, approve others (user names which)."
-    why: Per Rule #15 the agent must not write the notes column without explicit user authorization of exact wording; mechanical revert is the default but requires user sign-off.
 
   - id: B2-S3
     summary: FDS-DELIVERY-OPS as cross-cutting fulfillment module candidate.
@@ -114,7 +102,7 @@ b2:
       - "(a) Leave as-is (lifecycle handoffs adequately represent the dependency)."
       - "(b) Rename to FDS-FULFILLMENT and add explicit domain_module_host_domains junctions to FDS-CSA-MGMT 118, FDS-WHOLESALE 122, FDS-BUTCHER 123."
       - "(c) Split delivery into per-channel modules (probably overkill for the small-farm operator)."
-    why: Module refactor judgment; FDS-DELIVERY-OPS only masters delivery_routes but is destination of 4 cross-module lifecycle handoffs and consumes 4 sibling masters.
+    why: Module refactor judgment (a rename is destructive/restructuring); FDS-DELIVERY-OPS only masters delivery_routes but is destination of 4 cross-module lifecycle handoffs and consumes 4 sibling masters.
     extra_affected_module_id: 120
 
   - id: B2-S4
@@ -125,7 +113,7 @@ b2:
       - "(a) Author the inbound CRM to FDS-ONLINE-STORE handoff."
       - "(b) Skip (storefront-as-CRM is the small-farm reality)."
       - "(c) Defer to Bucket 3 vendor research."
-    why: Market-shape judgment on small-farm CRM adoption; agent does not have authoritative evidence.
+    why: Market-shape judgment on small-farm CRM adoption; agent does not have authoritative evidence. Gates B1B-S5.
 
   - id: B2-S5
     summary: CRM target-module accuracy on 3 outbound handoffs currently pointing at CRM-PIPELINE-MGT.
@@ -135,7 +123,7 @@ b2:
       - "(a) Confirm CRM-PIPELINE-MGT is correct (small-farm CRM uses pipeline-mgmt as catch-all)."
       - "(b) Retarget per the upcoming CRM b1 audit to a different CRM module."
       - "(c) Retarget away from CRM entirely toward a marketing-automation or notification domain (currently not loaded)."
-    why: CRM module shape question; depends on how CRM models customer marketing vs pipeline management.
+    why: CRM module shape question; depends on how CRM models customer marketing vs pipeline management. Gates 3 of the 4 B1B-H1 APQC tags. Retargeting an existing populated target_domain_module_id is a destructive overwrite (needs approval).
     extra_affected_handoff_ids: [365, 962, 964]
 
   - id: B2-S6

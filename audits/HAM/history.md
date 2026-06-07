@@ -267,3 +267,85 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07: Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate run (SKILL.md Rule #21) against `audits/HAM/state.yaml` open items only; no
+fresh from-scratch audit. Domain id 51, modules HAM-ASSET-REGISTRY (169) + HAM-WARRANTY-PARTS (170),
+5 masters (56/695/696/697/698) confirmed live. Each recorded item was re-verified against PostgREST
+before acting (snapshot drift since 2026-05-31 was incremental, no regressions). Executed every
+additive/corrective item the agent owns at `record_status='new'`; surfaced destructive steps and
+b2 decisions; left blocked-on-other-domain, deferred, and superseded items. No JWT-audience errors.
+
+Drift observed vs snapshot: APQC partially drained further (handoff 144->1312, 670->1393, 633->1389
+already landed; 150 already carries 355; the discovery_substring row on handoff 150 is already gone,
+leaving only id 99 on handoff 633). business_function_domains (C1) already complete (owner = IT Asset
+Management bf 84, contributors Procurement bf 19 + Finance bf 4; live owner differs from the task's
+"IT Operations" suggestion but is non-empty and sensible, not overwritten). Aliases (B11) already
+complete (10 generic synonyms across all 5 masters, no vendor names). Both C1 and B11 had nothing
+clean to add.
+
+### Executed (record_status='new', additive/corrective; via .tmp_deploy/2026-06-07_ham_state_driven_execute.ts)
+
+- **entity_type classification (B1A-ENTITY-TYPE): 5 PATCHes.** hardware_assets (56) ->
+  operational_workflow; hardware_models (695) -> catalog; hardware_warranties (696) ->
+  operational_record; hardware_disposal_records (697) -> operational_workflow; spare_parts_inventory
+  (698) -> operational_record. (All were `unclassified`.) Note: M5 now flags 56 + 697 as
+  operational_workflow-without-states until B1A-S1 authors lifecycle states.
+- **Catalog UX (Rule #20): 3 PATCHes** (all fields were empty; no overwrite). Domain 51 +
+  module 169 + module 170 each got buyer-voice catalog_tagline + catalog_description (workflow +
+  value, no vendor names, no em-dash, American English).
+- **event_category (B1A-S4): 6 PATCHes** filling empty enum (Rule #13). 682 hardware_model.added
+  -> lifecycle; 683 hardware_model.eol_announced -> state_change; 684 hardware_warranty.expiring ->
+  threshold; 685 hardware_warranty.expired -> state_change; 686 hardware_disposal_record.completed
+  -> state_change; 687 spare_parts_inventory.low_threshold -> threshold.
+- **APQC handoff_processes (B1A-H1): 2 INSERTs** (agent_curated, role=implements, record_status new).
+  handoff 671 (HAM->GRC, disposal completed) -> process 1573 (Manage disposition, disposal,
+  reprocessing activities, L4); handoff 672 (HAM->SPM, model eol_announced) -> process 1561 (Monitor
+  useful life of assets, L4). These were the only clean PCF matches still missing; 144/670/671/672
+  are now all landed.
+- **source_domain_module_id backfill (B1B-S8): 5 PATCHes** (deterministic, HAM-owned). 668->170,
+  669->170, 670->170, 671->170, 672->169. (Handoff 150 left NULL, depends on B1A-S9.)
+- **target_domain_module_id backfill (B1B-S10): 2 PATCHes** (deterministic). 32->169, 144->169.
+  (161/633/622/657 left NULL, depend on user decisions / MSP-PSA audit.)
+
+Total executed: 5 + 3 + 6 + 2 + 5 + 2 = 23 writes (21 PATCH + 2 INSERT).
+
+### Surfaced (not executed; destructive or user-owned)
+
+- **B2-S1..S7** (7 user decisions): pattern flags; handoff 622 routing; handoff 657 direction;
+  users-edge 256/257 collapse; asset_lifecycle_events consumer DMDO; domain_regulations scope;
+  APQC 668/669 routing (process 808 vs 826/201; option c is additive-stackable).
+- **B1A-S6** (DESTRUCTIVE): merge duplicate trigger events 44 + 60 (DELETE event 60, overwrite
+  event 44 category, re-point handoff 144). Surfaced, not applied.
+- **B1A-S9** (DESTRUCTIVE re-attribution): handoff 150 wired to RMM-owned event 9; author new
+  hardware_asset.retired (data_object 56) + re-point handoff 150. Surfaced.
+- **B1A-S12** (DESTRUCTIVE overwrite): revert Rule #15 violating notes on handoff 633
+  ("target NULL until HAM is modularized") + changelog Incident entry. Surfaced.
+- **B1A-H1-RESIDUAL** (DESTRUCTIVE delete): remove stale discovery_substring row (handoff_processes
+  id 99, handoff 633 -> process 10 L1 root; agent_curated 1389 already covers it). Surfaced.
+- **B1B-S11** (DESTRUCTIVE overwrite): rewrite 6 users-edge relationship_verb values to verb-shape;
+  shape depends on B2-S4. Surfaced.
+- **Personas / RACI (B1A-PHASE-P) + roles (B1B-S13): DEFERRED** per batch instruction. Candidate
+  personas noted: IT-ITAM-ASSET-MANAGER, IT-ITAM-DISPOSAL-COORDINATOR, PROCUREMENT-HARDWARE-BUYER,
+  FINANCE-FIXED-ASSET-ACCOUNTANT.
+
+### Left (untouched)
+
+- **B1A-S1** (lifecycle states): additive but held; its requires_permission gate shape is
+  entangled with the B2-S1 pattern-flag decision and it is upstream of the deferred persona layer.
+  Resolve B2-S1 first.
+- **Blocked on other domains:** B1B-S5 (MSP-PSA canonical ticket.created); B1B-S10-RESIDUAL rows
+  for 161 (MSP-PSA), 622/657 (B2-S2/S3), 633 (B2-S5); B1B-S8-RESIDUAL row for 150 (B1A-S9);
+  B1B-S7 intra-domain handoffs (depend on B1A-S1).
+- **b3 backlog:** 10 candidate MISSING entities + ITAD domain-promotion candidate. Unchanged.
+- **Superseded (2026-06-06 / Plan 3):** per-module system skills, skill_tools, _core roles model.
+  Header retained; reframed as a note. Not re-authored.
+
+### Decisions / Incidents
+
+None stamped approved (Rule #1). No notes-column writes (Rule #15). No JWT-audience errors.

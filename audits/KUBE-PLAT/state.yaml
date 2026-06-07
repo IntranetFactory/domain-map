@@ -11,59 +11,22 @@
 schema_version: 2
 domain: KUBE-PLAT
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
-b1a:
-  - id: B1A-EV1
-    summary: "Backfill empty event_category on all 11 KUBE-PLAT trigger_events to the Rule #13 enum."
-    finding: |
-      All 11 trigger_events on KUBE-PLAT masters (ids 825-835) carry event_category=""
-      (empty string). Rule #13 enumerates the allowed values as lifecycle | state_change |
-      threshold | signal. The current empty value passes the platform check constraint
-      only because the constraint admits empty (legacy). Auditors and downstream signal
-      filters rely on the discriminator; leaving it blank silently breaks the threshold
-      and signal cohorts of the catalog-wide event_category-based queries.
-    action: |
-      PATCH each trigger_events row with the proposed category from the audit table.
-      Mapping (no judgment required): kubernetes_cluster.provisioned (825) ->
-      lifecycle; kubernetes_cluster.decommissioned (826) -> lifecycle;
-      cluster_node_pool.scaled (827) -> threshold; container_workload.degraded (828)
-      -> state_change; helm_release.deployed (829) -> lifecycle;
-      helm_release.rolled_back (830) -> lifecycle; service_mesh.policy_updated (831)
-      -> state_change; operator.installed (832) -> lifecycle;
-      platform_pipeline.completed (833) -> lifecycle;
-      container_registry.image_pushed (834) -> lifecycle;
-      container_image.vulnerable (835) -> signal.
-    affected_events:
-      - {id: 825, event_name: "kubernetes_cluster.provisioned", current_category: "", proposed_category: "lifecycle"}
-      - {id: 826, event_name: "kubernetes_cluster.decommissioned", current_category: "", proposed_category: "lifecycle"}
-      - {id: 827, event_name: "cluster_node_pool.scaled", current_category: "", proposed_category: "threshold"}
-      - {id: 828, event_name: "container_workload.degraded", current_category: "", proposed_category: "state_change"}
-      - {id: 829, event_name: "helm_release.deployed", current_category: "", proposed_category: "lifecycle"}
-      - {id: 830, event_name: "helm_release.rolled_back", current_category: "", proposed_category: "lifecycle"}
-      - {id: 831, event_name: "service_mesh.policy_updated", current_category: "", proposed_category: "state_change"}
-      - {id: 832, event_name: "operator.installed", current_category: "", proposed_category: "lifecycle"}
-      - {id: 833, event_name: "platform_pipeline.completed", current_category: "", proposed_category: "lifecycle"}
-      - {id: 834, event_name: "container_registry.image_pushed", current_category: "", proposed_category: "lifecycle"}
-      - {id: 835, event_name: "container_image.vulnerable", current_category: "", proposed_category: "signal"}
-  - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
-    extra_phase_p_triage: "2026-06-02"
+b1a: []
 
 b1b:
   - id: B1B-S1-MODULES
     summary: "Author Phase A and Phase M shape (modules, capabilities, solutions) once user picks 1 vs 2 modules."
     finding: |
       KUBE-PLAT has 0 domain_modules, 0 capability_domains, 0 solution_domains. M1 / A2
-      / A3 all fail. Default proposal: 2 modules (KUBE-PLAT-DISTRIBUTION-OPS, covering
-      cluster, node-pools, addons, upgrades, registries; KUBE-PLAT-WORKLOAD-OPS,
-      covering workloads, helm-releases, operators, service-meshes, pipelines), 5-7
-      capabilities, >=3 solutions with >=1 primary (Red Hat OpenShift, Rancher, VMware
-      Tanzu as primaries; Mirantis Kubernetes Engine and hyperscaler managed K8s as
-      secondaries).
+      / A3 all fail. The domain is UNBUILT: no deployable unit exists. Per the audit
+      build-policy, the agent does not scaffold an unbuilt domain on its own; the build
+      is surfaced and the downstream cascade is left. Default proposal: 2 modules
+      (KUBE-PLAT-DISTRIBUTION-OPS, covering cluster, node-pools, addons, upgrades,
+      registries; KUBE-PLAT-WORKLOAD-OPS, covering workloads, helm-releases, operators,
+      service-meshes, pipelines), 5-7 capabilities, >=3 solutions with >=1 primary.
     blocked_by:
       - {type: user_decision, ref: B2-MODULARIZATION, reason: "user must decide 1 vs 2 modules before Phase-A capability codes can be authored"}
     affected_entities:
@@ -74,18 +37,6 @@ b1b:
       - "Rancher (SUSE)"
       - "VMware Tanzu"
       - "Mirantis Kubernetes Engine"
-
-  - id: B1B-S2-CATALOG-UX
-    summary: "Author catalog_tagline and catalog_description on KUBE-PLAT in buyer voice."
-    finding: |
-      KUBE-PLAT.catalog_tagline and catalog_description are both empty strings. Per
-      Rule #20 these must be drafted in buyer voice (workflow + value), surfaced to
-      user, then written. Rule #20 forbids overwriting non-empty values without
-      explicit per-row approval, but the empty starting state means a first write is
-      allowed once user approves wording.
-    blocked_by:
-      - {type: user_decision, ref: B2-CATALOG-UX, reason: "Rule #20 author-then-confirm; wording also depends on B2-MODULARIZATION outcome"}
-      - {type: depends_on, ref: B2-MODULARIZATION, reason: "description should reflect 1-vs-2 module narrative"}
 
   - id: B1B-S4-INTRA-DOMAIN-RELATIONSHIPS
     summary: "Load 7 intra-domain data_object_relationships among the 8 KUBE-PLAT masters."
@@ -118,103 +69,102 @@ b1b:
     blocked_by:
       - {type: user_decision, ref: B2-EDGE-TUPLES, reason: "cross-domain verb/cardinality/owner_side tuples need surfacing per Rule #1"}
     affected_handoffs:
-      - {handoff_id: 763, direction: outbound, source_domain: KUBE-PLAT, target_domain: ITSM, trigger_event: "container_workload.degraded", payload: "service_incidents", null_field: null}
+      - {handoff_id: 763, direction: outbound, source_domain: KUBE-PLAT, target_domain: ITSM, trigger_event: "container_workload.degraded", payload: "service_incidents"}
 
   - id: B1B-S7-B10B-SOURCE-FK
-    summary: "PATCH source_domain_module_id on all 7 outbound handoffs once modules exist."
+    summary: "PATCH source_domain_module_id on all 7 outbound handoffs (and target on inbound 753) once modules exist."
     finding: |
       All 7 outbound handoffs (759, 760, 761, 762, 763, 764, 799) have
-      source_domain_module_id=null because KUBE-PLAT has zero modules. The B10b
-      derivation rule (source_domain_module_id = the module in source_domain_id
-      that holds trigger_events.data_object_id with the strongest role) is
-      undefined until M1 lands.
+      source_domain_module_id=null because KUBE-PLAT has zero modules. Inbound handoff
+      753 has target_domain_module_id=null (KUBE-PLAT side). The B10b derivation
+      (source = the module that holds the trigger_event's data_object with the
+      strongest role) is undefined until M1 lands.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1-MODULES, reason: "no KUBE-PLAT modules exist to resolve source_domain_module_id to"}
+      - {type: prerequisite_entity, ref: B1B-S1-MODULES, reason: "no KUBE-PLAT modules exist to resolve source/target_domain_module_id to"}
     affected_handoffs:
-      - {handoff_id: 759, direction: outbound, source_domain: KUBE-PLAT, target_domain: APP-PAAS, trigger_event: "container_workload.degraded", payload: "container_workloads", null_field: "source_domain_module_id"}
-      - {handoff_id: 760, direction: outbound, source_domain: KUBE-PLAT, target_domain: OBS, trigger_event: "kubernetes_cluster.provisioned", payload: "kubernetes_clusters", null_field: "source_domain_module_id"}
-      - {handoff_id: 761, direction: outbound, source_domain: KUBE-PLAT, target_domain: ITOM, trigger_event: "cluster_node_pool.scaled", payload: "cluster_node_pools", null_field: "source_domain_module_id"}
-      - {handoff_id: 762, direction: outbound, source_domain: KUBE-PLAT, target_domain: VSDP, trigger_event: "helm_release.deployed", payload: "helm_releases", null_field: "source_domain_module_id"}
-      - {handoff_id: 763, direction: outbound, source_domain: KUBE-PLAT, target_domain: ITSM, trigger_event: "container_workload.degraded", payload: "service_incidents", null_field: "source_domain_module_id"}
-      - {handoff_id: 764, direction: outbound, source_domain: KUBE-PLAT, target_domain: GRC, trigger_event: "container_image.vulnerable", payload: "container_registries", null_field: "source_domain_module_id"}
-      - {handoff_id: 799, direction: outbound, source_domain: KUBE-PLAT, target_domain: ITAM, trigger_event: "kubernetes_cluster.provisioned", payload: "kubernetes_clusters", null_field: "source_domain_module_id"}
-      - {handoff_id: 753, direction: inbound, source_domain: APP-PAAS, target_domain: KUBE-PLAT, trigger_event: "paas_deployment.succeeded", payload: "paas_deployments", null_field: "target_domain_module_id"}
+      - {handoff_id: 759, direction: outbound, target_domain: APP-PAAS, trigger_event: "container_workload.degraded", payload: "container_workloads", null_field: "source_domain_module_id"}
+      - {handoff_id: 760, direction: outbound, target_domain: OBS, trigger_event: "kubernetes_cluster.provisioned", payload: "kubernetes_clusters", null_field: "source_domain_module_id"}
+      - {handoff_id: 761, direction: outbound, target_domain: ITOM, trigger_event: "cluster_node_pool.scaled", payload: "cluster_node_pools", null_field: "source_domain_module_id"}
+      - {handoff_id: 762, direction: outbound, target_domain: VSDP, trigger_event: "helm_release.deployed", payload: "helm_releases", null_field: "source_domain_module_id"}
+      - {handoff_id: 763, direction: outbound, target_domain: ITSM, trigger_event: "container_workload.degraded", payload: "service_incidents", null_field: "source_domain_module_id"}
+      - {handoff_id: 764, direction: outbound, target_domain: GRC, trigger_event: "container_image.vulnerable", payload: "container_registries", null_field: "source_domain_module_id"}
+      - {handoff_id: 799, direction: outbound, target_domain: ITAM, trigger_event: "kubernetes_cluster.provisioned", payload: "kubernetes_clusters", null_field: "source_domain_module_id"}
+      - {handoff_id: 753, direction: inbound, source_domain: APP-PAAS, trigger_event: "paas_deployment.succeeded", payload: "paas_deployments", null_field: "target_domain_module_id"}
 
-  - id: B1B-S8-ALIASES
-    summary: "Load ~12 data_object_aliases rows for KUBE-PLAT masters with cross-vendor synonyms."
+  - id: B1B-S8-ALIASES-VENDOR
+    summary: "Load remaining vendor-brand / solution_term aliases for KUBE-PLAT masters (exact tuples + solution ids needed)."
     finding: |
-      Zero alias rows on the 8 masters. Candidate synonyms: kubernetes_clusters
-      ("k8s cluster", "control plane", "OpenShift cluster", "Rancher cluster",
-      "Tanzu cluster"); container_workloads ("Pod", "Deployment", "StatefulSet",
-      "DaemonSet", "Job"); helm_releases ("Helm chart release"); operator_installations
-      ("Kubernetes Operator", "OperatorHub install"); container_registries
-      ("OCI registry", "image registry"). data_object_aliases is a Rule #18 allowed
-      commerce-shaped site so vendor brand names on alias_name are valid, but the
-      audit does not pre-specify exact (data_object_id, alias_name, alias_type) tuples.
+      The clearly-generic synonyms were loaded 2026-06-07 (12 alias_type='synonym'
+      rows: k8s cluster, control plane, Pod, Deployment, StatefulSet, DaemonSet, Job,
+      Helm chart release, Kubernetes Operator, OperatorHub install, OCI registry,
+      image registry). What remains are vendor-brand cluster variants
+      (distribution-specific cluster names) and any other solution_term-shaped aliases.
+      Those are alias_type='solution_term' and need a solution_id, which requires the
+      solutions to exist first (Phase A, gated on B2-MODULARIZATION), plus exact
+      (data_object_id, alias_name, solution_id) tuples.
     blocked_by:
-      - {type: user_decision, ref: B2-ALIAS-TUPLES, reason: "audit lists approximate candidate strings; bulk alias insert needs user-approved exact tuples per loader idiom"}
+      - {type: user_decision, ref: B2-ALIAS-TUPLES, reason: "vendor-brand/solution_term alias tuples need user-approved exact tuples + solution ids per loader idiom"}
+      - {type: prerequisite_entity, ref: B1B-S1-MODULES, reason: "solution_term aliases need solution rows that do not exist until Phase A runs"}
 
   - id: B1B-S9-LIFECYCLE-STATES
     summary: "Author lifecycle states for all 8 KUBE-PLAT masters (~30 state rows total)."
     finding: |
-      Zero data_object_lifecycle_states across all 8 masters. Drafted state machines
-      (from 2026-05-30 audit): kubernetes_clusters (planned, provisioning, available,
-      upgrading, draining, decommissioned); helm_releases (planned, deploying,
-      deployed, upgrading, rolling_back, uninstalled); container_workloads (pending,
-      running, degraded, failed, succeeded); operator_installations (installing,
-      installed, upgrading, uninstalled); platform_pipelines (queued, running,
-      succeeded, failed); service_meshes (planned, installed, updating);
-      container_registries (registered, scanning, available); cluster_node_pools
-      (planned, scaling, available, draining, removed).
+      Zero data_object_lifecycle_states across all 8 masters. All 8 are now classified
+      entity_type='operational_workflow' (PATCHed 2026-06-07), so lifecycle states are
+      REQUIRED (Rule #12 / B12). Drafted state machines (from 2026-05-30 audit):
+      kubernetes_clusters (planned, provisioning, available, upgrading, draining,
+      decommissioned); helm_releases (planned, deploying, deployed, upgrading,
+      rolling_back, uninstalled); container_workloads (pending, running, degraded,
+      failed, succeeded); operator_installations (installing, installed, upgrading,
+      uninstalled); platform_pipelines (queued, running, succeeded, failed);
+      service_meshes (planned, installed, updating); container_registries (registered,
+      scanning, available); cluster_node_pools (planned, scaling, available, draining,
+      removed).
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1-MODULES, reason: "every requires_permission=true state needs domain_module_id per M5"}
     affected_masters:
-      - {data_object_id: 448, name: "kubernetes_clusters", target_module_id: null, workflow: "planned -> provisioning -> available -> upgrading -> draining -> decommissioned"}
-      - {data_object_id: 449, name: "cluster_node_pools", target_module_id: null, workflow: "planned -> scaling -> available -> draining -> removed"}
-      - {data_object_id: 450, name: "container_workloads", target_module_id: null, workflow: "pending -> running -> degraded -> failed -> succeeded"}
-      - {data_object_id: 451, name: "helm_releases", target_module_id: null, workflow: "planned -> deploying -> deployed -> upgrading -> rolling_back -> uninstalled"}
-      - {data_object_id: 452, name: "service_meshes", target_module_id: null, workflow: "planned -> installed -> updating"}
-      - {data_object_id: 453, name: "operator_installations", target_module_id: null, workflow: "installing -> installed -> upgrading -> uninstalled"}
-      - {data_object_id: 454, name: "platform_pipelines", target_module_id: null, workflow: "queued -> running -> succeeded -> failed"}
-      - {data_object_id: 455, name: "container_registries", target_module_id: null, workflow: "registered -> scanning -> available"}
-
-  - id: B1B-S10-LEGACY-SKILL
-    summary: "Retire (or rename) legacy domain-level system skill id 78 once module-level system skills are authored."
-    finding: |
-      Skill id 78 kube-plat-system is a legacy domain-level system skill
-      (skill_type='system', domain_id=81, domain_module_id=null, naming convention
-      <domain-code>-system instead of Rule #17's <module_code_lower>_agent). Carries
-      8 platform-tier query tools (556-563) correctly typed. F1 explicitly permits
-      this transitional state until any module-level system skill is authored for
-      this domain, after which it must be DELETEd or repointed.
-    blocked_by:
-      - {type: user_decision, ref: B2-LEGACY-SKILL, reason: "user picks leave / rename / DELETE"}
-      - {type: prerequisite_entity, ref: B1B-S1-MODULES, reason: "DELETE only safe once module-level system skill exists per F1"}
+      - {data_object_id: 448, name: "kubernetes_clusters", workflow: "planned -> provisioning -> available -> upgrading -> draining -> decommissioned"}
+      - {data_object_id: 449, name: "cluster_node_pools", workflow: "planned -> scaling -> available -> draining -> removed"}
+      - {data_object_id: 450, name: "container_workloads", workflow: "pending -> running -> degraded -> failed -> succeeded"}
+      - {data_object_id: 451, name: "helm_releases", workflow: "planned -> deploying -> deployed -> upgrading -> rolling_back -> uninstalled"}
+      - {data_object_id: 452, name: "service_meshes", workflow: "planned -> installed -> updating"}
+      - {data_object_id: 453, name: "operator_installations", workflow: "installing -> installed -> upgrading -> uninstalled"}
+      - {data_object_id: 454, name: "platform_pipelines", workflow: "queued -> running -> succeeded -> failed"}
+      - {data_object_id: 455, name: "container_registries", workflow: "registered -> scanning -> available"}
 
 b2:
-  - id: B2-CATALOG-UX
-    summary: "Approve catalog_tagline and catalog_description wording for KUBE-PLAT (Rule #20)."
-    question: |
-      Both KUBE-PLAT.catalog_tagline and KUBE-PLAT.catalog_description are empty.
-      What wording should the agent write?
-    options:
-      - "(a) approve the 2026-05-30 draft tagline ('Production Kubernetes distributions with day-2 operations and multi-cluster management.') and ask agent to draft a 2-3 paragraph catalog_description in buyer voice"
-      - "(b) supply exact wording verbatim"
-      - "(c) defer until B2-MODULARIZATION resolves so the description reflects the chosen module shape"
-    why: |
-      Rule #20 requires explicit per-row user approval of wording before any write.
-      The agent never auto-writes catalog UX copy. Also informed by B2-MODULARIZATION.
-
   - id: B2-MODULARIZATION
-    summary: "Choose 1-module vs 2-module shape for KUBE-PLAT."
+    summary: "Choose 1-module vs 2-module shape for KUBE-PLAT (gates the entire unbuilt build)."
     question: |
       KUBE-PLAT has zero modules. Should we author 1 module or 2?
     options:
       - "(a) 2 modules: KUBE-PLAT-DISTRIBUTION-OPS (cluster, node-pools, addons, upgrades, registries) + KUBE-PLAT-WORKLOAD-OPS (workloads, helm-releases, operators, service-meshes, pipelines). Mirrors the natural cluster-vs-workload split most vendors use."
       - "(b) 1 module: KUBE-PLAT-DISTRIBUTION covering the whole 8-master surface. Simpler but unstable since capability count will land at 5-7 and trigger Rule #14's >=2-modules-for->=3-capabilities rule anyway."
     why: |
-      M1 is a structural gate that blocks every downstream concern (B10b source FKs,
-      B12 lifecycle state domain_module_id, F2 per-module system skills, E1 role floor).
+      M1 is a structural gate that blocks every downstream concern (B1B-S1 build,
+      B1B-S7 source FKs, B1B-S9 lifecycle state domain_module_id, B1B-S8 solution_term
+      aliases, E1 role floor).
+
+  - id: B2-EDGE-TUPLES
+    summary: "Approve the verb / cardinality / owner_side tuples for the intra-domain (B1B-S4) and cross-domain (B1B-S6) data_object_relationships."
+    question: |
+      The 7 intra-domain edges and 1 cross-domain edge are enumerated (see B1B-S4,
+      B1B-S6) but each needs an exact (relationship_type, relationship_kind,
+      owner_side, is_required) tuple before write per Rule #1. Approve the proposed
+      tuples or adjust?
+    options:
+      - "(a) approve the audit-proposed tuples (parent for clusters->node_pools; reference for the rest; owner_side per the directional verb)"
+      - "(b) supply exact tuples per edge"
+
+  - id: B2-ALIAS-TUPLES
+    summary: "Approve the remaining vendor-brand / solution_term alias tuples (B1B-S8)."
+    question: |
+      Generic synonyms are loaded. Should we also load vendor-brand cluster variants
+      and other solution_term-shaped aliases once solutions exist, and with which
+      exact (data_object_id, alias_name, solution_id) tuples?
+    options:
+      - "(a) load vendor-brand cluster variants as solution_term once Phase A solutions exist"
+      - "(b) skip vendor-brand aliases; generic synonyms are sufficient"
 
   - id: B2-REGULATIONS
     summary: "Decide whether KUBE-PLAT carries domain_regulations rows."
@@ -262,7 +212,8 @@ b2:
       - "(b) keep service_meshes mastered in KUBE-PLAT, ship embedded_master shells in SERVICE-MESH later"
       - "(c) defer until SERVICE-MESH is itself loaded"
     why: |
-      Queued candidate in audits/_missing-domains.md.
+      Queued candidate in audits/_missing-domains.md. Promotion is DESTRUCTIVE (DELETE
+      master row); never executed unapproved.
 
   - id: B2-PROMOTE-CONT-REG
     summary: "Promote CONT-REG to its own domain (queued candidate)?"
@@ -273,16 +224,6 @@ b2:
       - "(a) promote: DELETE container_registries master row from KUBE-PLAT, add to CONT-REG after Phase 0 vets the domain"
       - "(b) keep container_registries mastered in KUBE-PLAT, ship embedded_master shells in CONT-REG later"
       - "(c) defer until CONT-REG is itself loaded"
-
-  - id: B2-LEGACY-SKILL
-    summary: "Choose handling for legacy domain-level system skill id 78 (kube-plat-system)."
-    question: |
-      F1 transitional state still permits this row, but Rule #17 naming convention is
-      <module_code_lower>_agent not <domain-code>-system. What action?
-    options:
-      - "(a) leave alone until module-level skills are authored (default; aligns with F1 timing)"
-      - "(b) rename now to kube_plat_agent (cosmetic; naming convention only)"
-      - "(c) DELETE now (creates temporary regression on the 8 platform query tools 556-563)"
 
   - id: B2-PARENT-DOMAIN
     summary: "Confirm KUBE-PLAT.parent_domain_id=76 (APP-PAAS) is intentional."
@@ -306,6 +247,34 @@ b2:
       - "(c) leave as 'new' until manual per-tag review"
     why: |
       Rule #1 forbids agent self-approval; user must opt in per load.
+
+  - id: B2-CATALOG-UX-REVIEW
+    summary: "Review the freshly authored KUBE-PLAT catalog_tagline + catalog_description (record_status='new')."
+    question: |
+      Per Rule #20 the empty catalog UX fields on domain 81 were authored and written
+      straight into the record (lands at record_status='new' for in-record review).
+      The wording is in the catalog UI now. Approve, edit in place, or request a
+      rewrite? (Overwrite of the now-non-empty value requires explicit per-row
+      approval per Rule #20.)
+    options:
+      - "(a) approve the authored copy as-is"
+      - "(b) supply replacement wording (explicit overwrite authorization)"
+
+  - id: B2-LEGACY-SKILL-NAMING
+    summary: "Skill 78 naming: rename kebab 'kube-plat-system' to snake form (cosmetic, destructive overwrite)?"
+    question: |
+      Under the per-domain-skill model, skill id 78 (skill_type='system', domain_id=81,
+      domain_module_id=null) is now the CANONICAL single domain-grain system skill for
+      KUBE-PLAT, not a legacy to delete. The only residual is the kebab naming
+      convention ('kube-plat-system'). Rename it to a snake form?
+    options:
+      - "(a) leave the name as-is (no destructive overwrite; default)"
+      - "(b) rename to kube_plat_agent / kube_plat_system (overwrite of an existing non-empty value; needs approval)"
+    why: |
+      B1B-S10 (retire/DELETE the legacy domain-level skill) is RETIRED by the
+      per-domain-skill supersession: a domain-grain system skill is now correct. A
+      rename is a destructive overwrite of an existing non-empty value; surfaced, never
+      executed unapproved.
 
 b3:
   - id: B3-CLUSTER-NAMESPACES

@@ -365,3 +365,49 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (Rule #21) over the open items in `audits/INV-MGMT/state.yaml`. Resolved domain 164 + modules INV-CORE-STOCK 61, INV-REPLENISHMENT 62, INV-KITTING 63 against live. Executed every EXECUTE-classified item (entity_type classification, Catalog UX copy, intra-domain handoffs + the prerequisite new trigger_event), surfaced all judgment / destructive / persona items, and left blocked-by-other-domain and backlog items in place. All writes `record_status='new'`; loader re-run confirmed idempotent. No JWT errors. Loader: `.tmp_deploy/fix_inv_mgmt_state_driven_2026_06_07.ts`.
+
+Two live deltas vs the recorded snapshot were picked up on refresh: (1) handoffs 1054 and 1058 now already carry `handoff_processes` rows (1054 -> PCF 1326, 1058 -> PCF 200), so H1 shrank from 3 untagged to 1 (only 1055 remains, a 2-candidate medium-confidence pick); (2) C1 `business_function_domains` is already fully populated (owner Supply Chain 379, contributors Warehouse Ops 380 + Finance 381, consumer Sales Ops 382), so no C1 write was owed.
+
+### Executed (counts)
+
+| Item | Action | Count | Result |
+|---|---|---|---|
+| B1A-ENTITY-TYPE | PATCH `data_objects.entity_type` from `unclassified` to the Rule #12 enum | 10 | 785/786/793/794 -> `catalog`; 787 -> `computed`; 788/789/790 -> `operational_workflow`; 791/792 -> `operational_record` |
+| Catalog UX (Rule #20) | PATCH empty `catalog_tagline` + `catalog_description` (buyer-voice, no vendor names) | 4 rows (1 domain + 3 modules) | domain 164; modules 61, 62, 63 |
+| B1A-S3 (new event) | INSERT `trigger_events` row `inv_kit.assembled` (data_object 794, `event_category='lifecycle'`, module 63) | 1 | new id 1549 |
+| B1A-S3 (handoffs) | INSERT intra-domain `handoffs` (`source=target=164`, `integration_pattern='lifecycle_progression'`, `friction_level='low'`) | 5 | new ids 1384 (62->61 movement.posted 1478), 1385 (61->62 below_reorder_point 1199), 1386 (61->62 on_hand_changed 1200), 1387 (63->61 kit.assembled 1549), 1388 (61->63 balance.allocated 1201) |
+
+Closes B9b (intra-domain handoff hard fail) and B13 (entity_type) for INV-MGMT.
+
+### Surfaced (user decision / destructive / deferred)
+
+- **B2-S1** (destructive): Rule #15 notes-pollution on 7 `data_objects` (785, 786, 787, 788, 790, 793, 794). Confirm load-time approval (leave) or auto-populated (revert to empty + log incident). Not reverted unapproved.
+- **B2-S2** (destructive): pattern-flag flips overwriting non-empty values: `has_submit_lock` on stock_transfers / inventory_lots / serialized_units; `has_personal_content` on serialized_units. Per-flag yes/no.
+- **B2-S3**: M5 lifecycle-state `domain_module_id` NULL vs pin-per-state.
+- **B2-S4**: E4 permission-bundle drift, implicit-grant vs enumerate gate permissions.
+- **B2-S5**: B11 aliases on inv_stock_locations (786, zero aliases) load vs accept-as-self-explanatory.
+- **B2-S6** (destructive, gates B1B-S1-M7): DELETE vs PROMOTE the 4 sibling consumer DMDO rows (251, 252, 258, 259).
+- **B1B-H1** (user pick): 1 residual untagged handoff 1055 (INV -> CSM on `inv_inventory_lot.expiry_warning`), 2 PCF candidates 206 vs 37, medium confidence, no clean single match.
+- **B1A-PHASE-P** (deferred): personas / RACI not authored by state-driven execute. Candidate personas recorded in state.yaml (WAREHOUSE-INVENTORY-MANAGER, SUPPLY-CHAIN-INVENTORY-PLANNER, FINANCE-INVENTORY-ACCOUNTANT).
+
+### Left
+
+- **B1B-S1-M7** (blocked on B2-S6 user pick), **B1B-S1-B5** (blocked on B2C-COMM + OMS DMDO-master declarations), **B1B-S4-B10b** (10 outbound NULL `target_domain_module_id` owed by S2P / OMS / ERP-FIN / CSM / GRC / B2C-COMM audits): all unchanged.
+- **B1B-S5** (per-module system skills + skill_tools): RETIRED per the supersession header (Plan 3). Reframed as a note; removed as an active item. Domain-grain toolset work tracked in `audits/_modularization-backlog.md`.
+- **b3** backlog (6 candidates: inv_demand_forecasts, inv_landed_costs, inv_consignment_stock, compliance regulations, INV-FORECASTING / INV-POS-STARTER modularization, WMS / SCP candidate domains): unchanged, non-blocking.
+
+### JWT errors
+
+None.
+
+### Fixes applied
+
+entity_type (10 PATCH), Catalog UX (4 PATCH), 1 trigger_event + 5 intra-domain handoffs inserted. All `record_status='new'`.

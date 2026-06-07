@@ -414,3 +414,41 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-06 - Audit (state-driven execute)
+
+State-driven Validate execute pass over SUB-MGMT (domain 97) open state.yaml items. Worked only the open worklist, no fresh from-scratch audit. Loader: `c:/dev/domain-map/.tmp_deploy/sub_mgmt_validate_2026_06_06.ts` (run from project root; idempotent, verified no-op on re-run). All writes landed at `record_status='new'`; no `notes` column written anywhere. No JWT errors.
+
+### Summary
+
+Re-verified every state.yaml item against live state before acting (the 2026-05-31 snapshot was stale on B1B-H1: six handoffs listed there as "untagged" already carried agent_curated tags). Executed all five open EXECUTE b1a items plus the two additive b1b items (B1B-S5 aliases, B1B-H1 net-new tags). Surfaced the destructive and decision-gated work. Left the blocked b1b item and the b3 backlog.
+
+### Executed (all record_status='new')
+
+| Item | Table | Count | Detail |
+|---|---|---|---|
+| B1A-S3 | handoffs | 6 inserted | Intra-domain cross-module rows (source=target=97, integration_pattern='lifecycle_progression', friction_level='low'), ids 1368-1373. Routing a-f exactly per state.yaml: (a) 168->167 te494 do106; (b) 168->167 te493 do106; (c) 167->168 te129 do107; (d) 167->168 te156 do107; (e) 168->167 te155 do106; (f) 167->168 te496 do108. Reused existing trigger_events; none pre-existed. |
+| B1A-S8 | data_object_lifecycle_states | 1 patched | State 381 (customer_invoices.issued) domain_module_id NULL -> 168 (SUB-MGMT-BILLING, canonical master of customer_invoices). Verified NULL before patch. |
+| B1A-S7-PRIME | domains + domain_modules | 3 patched (6 fields) | Buyer-voice catalog_tagline + catalog_description authored for domain 97 and modules 167, 168. All six fields were empty; patched empty-only (no overwrite). No vendor names, no em-dash, American English. Current Rule #20 empty-field author path used (record_status carries the review signal); the old surface-before-write gate in the state was stale. |
+| B1A-ENTITY-TYPE | data_objects | 5 patched | 106 customer_subscriptions -> operational_workflow; 107 customer_invoices -> operational_workflow; 108 usage_records -> operational_record; 109 revenue_recognition_records -> operational_workflow; 110 dunning_events -> operational_workflow. All were 'unclassified'. 108 classified operational_record (append-only metered event log) is decision-neutral: B12 passes either way and B2-S1 stays open (option a would re-classify to operational_workflow). |
+| B1B-S5 | data_object_aliases | 15 inserted | Net-new generic synonyms (alias_type='synonym'), full candidate set: customer_subscriptions {subscriptions, recurring_charges, subscription_records}; customer_invoices {invoices, bills, customer_bills}; usage_records {usage_events, metered_events, meter_readings}; revenue_recognition_records {revrec_records, deferred_revenue_schedules, performance_obligation_records}; dunning_events {dunning_notices, collections_events, payment_recovery_events}. No aliases pre-existed. No brand names. |
+| B1B-H1 (net-new) | handoff_processes | 13 inserted | agent_curated, role='implements', on the genuinely-untagged cross-domain handoffs. PCF processes resolved live this pass (apqc_pcf_cross_industry): 148 Manage customers and accounts (10183) -> handoffs 64,195,196,490,224,234,471,489; 196 Manage customer service problems/requests/inquiries (10388) -> 65,494; 304 Manage and process collections (10745) -> 194,493; 719 Manage customer master data (14208) -> 271. Six handoffs the snapshot called untagged (331,491,492,495,687,750) were already agent_curated live and were skipped (net-new only). |
+
+### Surfaced (no write; user-gated)
+
+- B1A-S9 (em-dash, DESTRUCTIVE): domains.id=97 business_logic contains a U+2014 em-dash ("tax determination - regulated and irreducible"). Drafted colon replacement: "Revenue recognition under ASC 606/IFRS 15, proration, dunning logic, usage rating, and tax determination: regulated and irreducible." Not patched (overwrites a non-empty value).
+- B1A-PHASE-P (personas, DEFERRED): 2-module domain, 0 personas (E1 fail). Authoring is entangled with the open B2-S5 module-split decision; recommend authoring after B2-S5 resolves. Candidate personas: BILLING-OPS-MANAGER, SUBSCRIPTION-OPERATOR, REVENUE-RECOGNITION-ANALYST, DUNNING-COLLECTIONS-SPECIALIST.
+- B1B-H1 RESIDUAL: 4 REPLACE (destructive delete+insert) handoffs 72 (1422->196), 73 (196->304), 233 (6->148), 519 (166->148); 4 CONFIRM (record_status flip, Rule #1 user-only) handoffs 63, 67, 197, 485. None touched.
+- B1B-S-TOOLS-MIGRATION (superseded reframe): B1B-S6/B1B-S7 are SUPERSEDED (retired per-module skill grain). Did NOT delete skill 108. The real follow-up is a later Phase-S migration of skill 108's legacy skill_tools onto domain_module_tools for modules 167/168 so F3/F5 evaluate.
+- All open b2 (B2-S1 usage_records lifecycle, B2-S2 pattern flags, B2-S3 certification_required, B2-S4 domain_regulations, B2-S5 module split / spin-out, B2-S6 HVAC starter hosting): restated with options.
+
+### Left
+
+- B1B-S4: blocked on B2-S1. Note: 108 now operational_record, so B12 already passes; B1B-S4 is now purely the "add a lifecycle?" architectural question, not a structural gap.
+- All b3 (entity candidates, modularization splits, candidate domains, regulation joins): backlog, unchanged.
+
+### State
+
+next_action_by flipped agent -> user (all agent-executable additive/corrective work is done; remaining items are destructive-awaiting-approval, decision-gated, or scheduled for a later phase).

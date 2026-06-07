@@ -11,8 +11,8 @@
 schema_version: 2
 domain: DAIRY-MGMT
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-05"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
   - id: B1A-S11
@@ -31,27 +31,14 @@ b1a:
       relationship_type=many_to_many, relationship_kind=reference). If user
       declines, document the deliberate omission in this state.yaml as resolved.
     skipped_reason: >-
-      2026-06-05 b1a pass SKIPPED this item: the action is explicitly conditional
-      on a user decision (which verb framing, or whether to author at all), and
-      the finding states no clean single-actor verb exists. This is master-data
-      judgment beyond the action text. Awaiting an explicit user verb decision;
-      effectively a user-judgment item despite living in b1a.
+      Conditional on a user verb decision; the finding states no clean
+      single-actor verb exists. Master-data judgment beyond the action text.
+      Effectively a user-judgment item despite living in b1a; awaiting an
+      explicit verb decision.
     affected_masters:
       - {data_object_id: 500, name: lactation_records, target_module_id: 227, workflow: user_edge}
 
 b1b:
-  - id: B1B-S2
-    summary: A4 / M8 catalog_tagline and catalog_description empty on all 4 modules and the domain
-    finding: >-
-      All 4 DAIRY-MGMT modules (227-230) were authored with empty
-      `catalog_tagline` and `catalog_description` per instructions, and the
-      domain row's A4 copy is also empty. Rule #20 requires user-authored
-      buyer-voice wording before write. The gap is now owed at per-module grain
-      (M8) in addition to the domain grain (A4).
-    blocked_by:
-      - {type: user_decision, ref: B2-2}
-    affected_modules: [227, 228, 229, 230]
-
   - id: B1B-S3
     summary: B6 zero intra-domain `data_object_relationships`
     finding: >-
@@ -64,47 +51,36 @@ b1b:
       dairy_cows->breeding_events (intra HERD 227),
       dairy_cows->cow_health_events (intra HERD 227),
       feed_rations->dairy_cows via group (FEED 230 -> HERD 227),
-      breeding_events->lactation_records (intra HERD 227). Prerequisite
-      B1A-SKILLS is now satisfied (per-module system skills authored 2026-06-05);
-      relationship authoring was not part of the b1a scope and is the next
-      substrate-pass action.
+      breeding_events->lactation_records (intra HERD 227). NOT executed this
+      pass: relationship authoring carries verb / inverse_verb / cardinality /
+      owner_side judgment and is outside the state-driven execute allow-list.
+      Next substrate pass should draft these with a mermaid preview per
+      SKILL.md before loading.
     blocked_by:
-      - {type: depends_on, ref: B1A-SKILLS, reason: prerequisite_satisfied_2026_06_05_relationship_authoring_is_next_substrate_pass}
-
-  - id: B1B-S6
-    summary: dairy_cow.lifecycle_changed (trigger_event id=1099) has zero `handoffs` rows
-    finding: >-
-      ERP-FIN fixed-asset valuation depends on cow lifecycle transitions per
-      the event's own description. Missing handoff row from DAIRY-MGMT to
-      ERP-FIN. Source module is DAIRY-MGMT-HERD id=227. Prerequisite B1A-B10B is
-      now satisfied (the other 8 outbound handoffs carry source_domain_module_id
-      as of 2026-06-05); authoring this missing handoff with source_domain_module_id=227
-      is the next action (not in the b1a scope this pass).
-    blocked_by:
-      - {type: depends_on, ref: B1A-B10B, reason: prerequisite_satisfied_2026_06_05_author_handoff_with_source_module_227}
-    affected_events:
-      - {id: 1099, event_name: dairy_cow.lifecycle_changed, current_category: lifecycle, proposed_category: lifecycle}
+      - {type: needs_authoring, reason: relationship_verb_cardinality_judgment_with_mermaid_preview}
 
   - id: B1B-S8
-    summary: B12 zero `data_object_lifecycle_states` across all 8 DAIRY-MGMT masters
+    summary: B12 zero `data_object_lifecycle_states` across the 7 workflow masters
     finding: >-
-      Seven of eight masters have observable state machines (dairy_cows,
-      lactation_records, milkings, milk_quality_tests, breeding_events,
-      cow_health_events, bulk_milk_shipments). feed_rations may qualify for
-      the Rule #12 config-shape exemption (formulated / active / superseded).
-      Target modules now resolved per the 4-module split. All 8 masters are
-      still `entity_type=unclassified` (B13 also owed); classify before loading
-      lifecycle states.
+      As of 2026-06-07 entity_type is classified on all 8 masters. The 7
+      `operational_workflow` masters (dairy_cows, lactation_records, milkings,
+      milk_quality_tests, breeding_events, cow_health_events,
+      bulk_milk_shipments) REQUIRE lifecycle states per Rule #12 and still have
+      zero. feed_rations is now `entity_type=catalog` (config shape, lifecycle
+      NOT required), which resolves the B2-5 config-shape question via the typed
+      column. NOT executed this pass: lifecycle-state authoring is state-machine
+      design (initial/terminal/order + workflow gates) outside the execute
+      allow-list; draft per master in a dedicated substrate pass.
     blocked_by:
-      - {type: user_decision, ref: B2-5, reason: feed_rations_config_shape_exemption}
+      - {type: needs_authoring, reason: state_machine_design_initial_terminal_order_and_gates}
     affected_masters:
-      - {data_object_id: 499, name: dairy_cows, target_module_id: 227, workflow: lifecycle_state_load}
-      - {data_object_id: 500, name: lactation_records, target_module_id: 227, workflow: lifecycle_state_load}
-      - {data_object_id: 501, name: milkings, target_module_id: 228, workflow: lifecycle_state_load}
-      - {data_object_id: 502, name: milk_quality_tests, target_module_id: 229, workflow: lifecycle_state_load}
-      - {data_object_id: 503, name: breeding_events, target_module_id: 227, workflow: lifecycle_state_load}
-      - {data_object_id: 504, name: cow_health_events, target_module_id: 227, workflow: lifecycle_state_load}
-      - {data_object_id: 506, name: bulk_milk_shipments, target_module_id: 228, workflow: lifecycle_state_load}
+      - {data_object_id: 499, name: dairy_cows, target_module_id: 227, entity_type: operational_workflow}
+      - {data_object_id: 500, name: lactation_records, target_module_id: 227, entity_type: operational_workflow}
+      - {data_object_id: 501, name: milkings, target_module_id: 228, entity_type: operational_workflow}
+      - {data_object_id: 502, name: milk_quality_tests, target_module_id: 229, entity_type: operational_workflow}
+      - {data_object_id: 503, name: breeding_events, target_module_id: 227, entity_type: operational_workflow}
+      - {data_object_id: 504, name: cow_health_events, target_module_id: 227, entity_type: operational_workflow}
+      - {data_object_id: 506, name: bulk_milk_shipments, target_module_id: 228, entity_type: operational_workflow}
 
   - id: B1B-B2
     summary: B8 FOOD-TRACE outbound `data_object_relationships` mirror rows
@@ -135,7 +111,8 @@ b1b:
   - id: B1B-B4
     summary: B8 ERP-FIN outbound `data_object_relationships` mirror rows
     finding: >-
-      Two outbound handoffs target ERP-FIN (956, 958). ERP-FIN-side payload
+      Three outbound handoffs now target ERP-FIN (956, 958, and the new 1403
+      dairy_cow.lifecycle_changed authored 2026-06-07). ERP-FIN-side payload
       masters (fixed_assets for dairy_cows as productive assets,
       cost_centers or similar) need identification on ERP-FIN's own audit.
     blocked_by:
@@ -143,6 +120,7 @@ b1b:
     affected_handoffs:
       - {handoff_id: 956, direction: outbound, source_domain: DAIRY-MGMT, target_domain: ERP-FIN, trigger_event: lactation_record.opened, payload: lactation_records, null_field: cross_domain_relationship_mirror}
       - {handoff_id: 958, direction: outbound, source_domain: DAIRY-MGMT, target_domain: ERP-FIN, trigger_event: feed_ration.changed, payload: feed_rations, null_field: cross_domain_relationship_mirror}
+      - {handoff_id: 1403, direction: outbound, source_domain: DAIRY-MGMT, target_domain: ERP-FIN, trigger_event: dairy_cow.lifecycle_changed, payload: dairy_cows, null_field: cross_domain_relationship_mirror}
 
   - id: B1B-B5
     summary: B8 GRC outbound `data_object_relationships` mirror row
@@ -160,64 +138,46 @@ b1b:
       handoff_processes ids 573-578 (loaded 2026-05-31, all
       proposal_source=agent_curated) cover handoffs 353, 354, 355, 955, 957,
       959. None have been reviewed and approved. Catalog-quality headline is
-      0 of 8 approved (0%); process-health side-bar is 6 of 8 agent_curated
-      (75%). Path from 0% quality to 75% quality is reviewer approval, which
-      is a user judgment per Rule #1.
+      0 of 9 approved (0%); process-health side-bar is 6 of 9 agent_curated.
+      Path from 0% quality to approved is reviewer approval, which is a user
+      judgment per Rule #1. (The 2 ERP-FIN handoffs 956/958 plus the new 1403
+      have no clean PCF tag yet; see b3 B3-7/B3-8 + custom-process authoring.)
     blocked_by:
       - {type: user_decision, ref: B2-8}
     affected_handoffs:
-      - {handoff_id: 353, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FOOD-TRACE, trigger_event: bulk_milk_shipment.dispatched, payload: bulk_milk_shipments, null_field: handoff_process_record_status_approved}
-      - {handoff_id: 354, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FSQM, trigger_event: milk_quality_test.failed, payload: milk_quality_tests, null_field: handoff_process_record_status_approved}
-      - {handoff_id: 355, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FSQM, trigger_event: cow_health_event.treatment_administered, payload: cow_health_events, null_field: handoff_process_record_status_approved}
-      - {handoff_id: 955, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FOOD-TRACE, trigger_event: milking.completed, payload: milkings, null_field: handoff_process_record_status_approved}
-      - {handoff_id: 957, direction: outbound, source_domain: DAIRY-MGMT, target_domain: GRC, trigger_event: breeding_event.recorded, payload: breeding_events, null_field: handoff_process_record_status_approved}
-      - {handoff_id: 959, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FOOD-TRACE, trigger_event: feed_ration.changed, payload: feed_rations, null_field: handoff_process_record_status_approved}
+      - {handoff_id: 353, target_domain: FOOD-TRACE, trigger_event: bulk_milk_shipment.dispatched, null_field: handoff_process_record_status_approved}
+      - {handoff_id: 354, target_domain: FSQM, trigger_event: milk_quality_test.failed, null_field: handoff_process_record_status_approved}
+      - {handoff_id: 355, target_domain: FSQM, trigger_event: cow_health_event.treatment_administered, null_field: handoff_process_record_status_approved}
+      - {handoff_id: 955, target_domain: FOOD-TRACE, trigger_event: milking.completed, null_field: handoff_process_record_status_approved}
+      - {handoff_id: 957, target_domain: GRC, trigger_event: breeding_event.recorded, null_field: handoff_process_record_status_approved}
+      - {handoff_id: 959, target_domain: FOOD-TRACE, trigger_event: feed_ration.changed, null_field: handoff_process_record_status_approved}
 
 b2:
-  - id: B2-2
-    summary: A4 / M8 catalog_tagline and catalog_description buyer-voice wording (domain + 4 modules)
-    question: >-
-      Provide exact tagline and description text for the domain row and each of
-      the 4 modules (DAIRY-MGMT-HERD, DAIRY-MGMT-PARLOR, DAIRY-MGMT-MILK-QUALITY,
-      DAIRY-MGMT-FEED). Rule #20 requires user authorship or explicit approval
-      before write. Agent can propose drafts but cannot load without your wording.
-    options: [user_authors, agent_drafts_user_approves, defer]
-
   - id: B2-3
     summary: milkings canonical-bare-word rationale
     question: >-
-      `milkings.is_canonical_bare_word=true` is set. The
-      `naming_authority_rationale` value was not pulled in this audit; if
-      empty, what rationale should be written? (Or claim canonical authority
-      for DAIRY-MGMT, now anchored in DAIRY-MGMT-PARLOR id=228.)
+      `milkings.is_canonical_bare_word=true` is set but
+      `naming_authority_rationale` is empty. What rationale should be written?
+      (Or claim canonical authority for DAIRY-MGMT, anchored in
+      DAIRY-MGMT-PARLOR id=228.) Authoring rationale into an existing flagged
+      row is a non-empty-value judgment; surfaced, not auto-written.
     options: [user_authors_rationale, defer]
 
   - id: B2-4
     summary: cow_health_events pattern flags
     question: >-
-      cow_health_events includes drug-withdrawal-period data potentially
-      regulated under FDA AMDUCA / state veterinary practice acts. Should
-      `has_personal_content=true` be set? Strictly cows are not persons but
-      the data is veterinary-PII-adjacent.
+      cow_health_events (now entity_type=operational_workflow) includes
+      drug-withdrawal-period data potentially regulated under FDA AMDUCA / state
+      veterinary practice acts. Should `has_personal_content=true` be set?
+      Strictly cows are not persons but the data is veterinary-PII-adjacent.
+      Pattern flags on operational_workflow masters are user judgment (Rule #12).
     options: [keep_false, set_true]
-
-  - id: B2-5
-    summary: feed_rations Rule #12 lifecycle config-shape exemption
-    question: >-
-      feed_rations (now in DAIRY-MGMT-FEED id=230) may be
-      author-once-and-supersede records (formulated / active / superseded).
-      Per Rule #15 the agent cannot auto-populate `notes` to document the
-      exemption. Decision: (a) load lifecycle states anyway, or (b) record the
-      config-shape exemption out-of-band (gap report). Gates B1B-S8 for that
-      one master only. Note: feed_agent skill carries only query_feed_rations
-      (no mutate authored 2026-06-05) pending this shape decision.
-    options: [load_states, exempt_config_shape]
 
   - id: B2-6
     summary: DAIRY-MGMT-MILK-QUALITY business-function override
     question: >-
       C2 plausible override: Quality / Compliance owns the milk-quality
-      capability (now realized in DAIRY-MGMT-MILK-QUALITY id=229) instead of
+      capability (realized in DAIRY-MGMT-MILK-QUALITY id=229) instead of
       Business Operations. Decision: load override
       `business_function_capabilities` row, or accept Operations as canonical
       for the capability.
@@ -228,7 +188,8 @@ b2:
     question: >-
       Zero `domain_regulations` rows for DAIRY-MGMT. FDA Grade A Pasteurized
       Milk Ordinance, FARM Animal Care program, DHIA testing standards, and
-      state Dept of Agriculture dairy inspection rules are all in-scope.
+      state Dept of Agriculture dairy inspection rules are all in-scope. None
+      exist in the `regulations` catalog yet, so this is new-row authoring.
       Decision: (a) load new `regulations` rows + `domain_regulations` links,
       or (b) defer until a specific capability needs them. Informed by B3-3
       (bulk_tanks) and B3-5 (somatic_cell_counts) if those candidates land.
@@ -241,9 +202,9 @@ b2:
       `proposal_source=agent_curated`. Per Rule #1, only the user can flip
       `record_status` to `approved`. Decision: approve all six, approve a
       subset, or decline. The 6 PCF mappings are: 354 -> Perform quality
-      testing (PCF 10369), 355 -> Manage compliance (PCF 17467), 353 + 955
-      -> Maintain production records and manage lot traceability (PCF
-      10370), 957 + 959 -> Manage traceability data (PCF 11749).
+      testing (process 170), 355 -> Manage compliance (process 70), 353 + 955
+      -> Maintain production records and manage lot traceability (process 171),
+      957 + 959 -> Manage traceability data (process 556).
     options: [approve_all, approve_subset, decline]
     why: >-
       Gates B1B-H2. Catalog-quality headline on H1 is the `approved` count,
@@ -255,7 +216,7 @@ b3:
     rationale: >-
       Vendor-near-universal first-class entity for pen / group management.
       Phase 0 verification: confirm cow_group is a first-class entity vs an
-      attribute on dairy_cows. Now has a concrete target module.
+      attribute on dairy_cows. Has a concrete target module.
     vendor_evidence: [DairyComp 305, AfiMilk AfiFarm, Lely Horizon]
     proposed_module: DAIRY-MGMT-HERD
 
@@ -273,7 +234,7 @@ b3:
     candidate: bulk_tanks_and_milk_meter_readings
     rationale: >-
       Parlor-physical-asset entities; bulk_tanks is FDA Grade A regulated
-      (temperature logs). Informs Bucket 2.7 (regulations).
+      (temperature logs). Informs B2-7 (regulations).
     vendor_evidence: [DeLaval DelPro, Lely Horizon, AfiMilk AfiFarm]
     proposed_module: DAIRY-MGMT-PARLOR
 
@@ -289,7 +250,7 @@ b3:
     candidate: somatic_cell_counts_and_withdrawal_period_holds
     rationale: >-
       SCC is the dominant milk-quality KPI; withdrawal holds gate milk
-      shipment under FDA AMDUCA. Informs Bucket 2.7 (regulations).
+      shipment under FDA AMDUCA. Informs B2-7 (regulations).
     vendor_evidence: [DairyComp 305, Allflex Livestock Intelligence]
     proposed_module: DAIRY-MGMT-MILK-QUALITY
 
@@ -317,7 +278,9 @@ b3:
     rationale: >-
       handoff_id=958 (feed_ration.changed -> ERP-FIN) has no clean
       cross-industry PCF match. Feed-cost-per-litre is a dairy-specific KPI;
-      custom-process authoring in Discover Pass 3.
+      custom-process authoring in Discover Pass 3. The new dairy_cow.lifecycle_changed
+      -> ERP-FIN handoff (1403, authored 2026-06-07) shares the same
+      no-clean-PCF profile and rolls into this custom-process bundle.
     vendor_evidence:
       - {vendor: DairyComp 305, evidence: 1st_class}
       - {vendor: AfiMilk AfiFarm, evidence: secondary}

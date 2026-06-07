@@ -1,45 +1,36 @@
 schema_version: 2
 domain: BEN-ADMIN
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
-  - id: B1A-S11
-    summary: "Author 3 business_function_domains rows for BEN-ADMIN (HR contributor, Payroll contributor, Finance consumer)."
-    finding: "C1 narrow. Only 1 business_function_domains row (id 8, business_function 39 Benefits Administration, responsibility_type=owner). The HR contributor, Payroll contributor, Finance consumer slots from 2026-05-30 B1-S11 are still unauthored; the 2026-05-31 continuation explicitly deferred the inserts. Flagship benefits-administration vendors all model HR as contributor (employee maintenance), Payroll as contributor (deduction maintenance), Finance / Accounting as consumer (GL impact and ACA penalty exposure)."
-    action: "INSERT 3 business_function_domains rows on domain_id=61, responsibility_type values contributor / contributor / consumer for the resolved business_function ids matching Human Resources, Payroll, Finance. Resolve target ids by looking up /business_functions?business_function_name=in.(...) first; do not hard-code numeric ids."
-    affected_entities:
-      - business_function_domains
-    extra_band: C1
-
   - id: B1A-RULE15-598
     summary: "Revert Rule #15 notes pollution on DMDO 598 (hr_cases consumer on BEN-ENROLLMENT)."
-    finding: "domain_module_data_objects.id=598 (hr_cases 192, consumer + required on BEN-ENROLLMENT 72) carries an unapproved notes value ('BEN-ENROLLMENT consumes hr_cases when HRSD escalates a benefits question (escalated_to_benefits). Receiving side of handoff 1119.'). The 2026-05-31 continuation flagged this as a Rule #15 violation but did not revert. Independent of the row-level B1B-S4 question on dependency strength."
-    action: "PATCH /domain_module_data_objects?id=eq.598 with body {\"notes\": \"\"}. No other changes."
+    finding: "domain_module_data_objects.id=598 (hr_cases 192, consumer + required on BEN-ENROLLMENT 72) carries an unapproved notes value ('BEN-ENROLLMENT consumes hr_cases when HRSD escalates a benefits question (escalated_to_benefits). Receiving side of handoff 1119.'). DESTRUCTIVE: reverting overwrites a non-empty notes value AND writes the 'notes' column (Rule #15 forbids any write to a column named exactly notes). Surfaced for user approval; not executed. Independent of the row-level B1B-S4 question on dependency strength."
+    action: "User-approved only: PATCH /domain_module_data_objects?id=eq.598 with body {\"notes\": \"\"}. No other changes."
     affected_entities:
       - domain_module_data_objects
     extra_rule: "rule_15"
+    surfaced: destructive
+
   - id: B1A-PHASE-P
     summary: "Multi-module (4 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 4 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    finding: "Live triage 2026-06-02: 4 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. DEFERRED per Phase-P discipline: personas/RACI are not auto-authored during a state-driven execute pass."
+    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: Benefits Administrator, Enrollment Specialist, Plan Manager, Compliance Analyst (mirrors the retired _core role set; the four legacy roles 10065-10068 still exist as the permission-bundle layer and anchor the persona shape)."
     extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "7 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 7 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [benefit_carriers, benefit_dependents, benefit_enrollments, benefit_open_enrollments, benefit_plans, carrier_feeds, life_events]
-    extra_phase_p_triage: "2026-06-02"
+    surfaced: personas_deferred
+
   - id: B1A-SELF-CONTAIN
     summary: "3 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
-    finding: "Live triage 2026-06-02: 3 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
-    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
+    finding: "Live triage 2026-06-02: 3 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation. DESTRUCTIVE: the fix rewrites role/necessity on an existing DMDO row (convert to embedded_master with a local shell, or relax necessity to optional). Surfaced for user approval; not executed."
+    action: "User-approved only, per row: convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency. NOTE: the deduction_codes and hr_cases rows interact with B1B-S4 / B2-S1 (hr_cases) and the PAYROLL boundary; resolve B2-S1 first for the hr_cases row."
     extra_m9_shapes:
       - {entity: deduction_codes, module: BEN-PLAN-DESIGN, role: contributor, master_domain: PAYROLL}
       - {entity: employment_events, module: BEN-ENROLLMENT, role: consumer, master_domain: HCM}
       - {entity: hr_cases, module: BEN-ENROLLMENT, role: consumer, master_domain: HRSD}
     extra_phase_p_triage: "2026-06-02"
+    surfaced: destructive
 
 b1b:
   - id: B1B-S4
@@ -63,7 +54,7 @@ b1b:
 
   - id: B1B-S10
     summary: "Apply B2-S4 decision on BEN-ACA-COMPLIANCE master surface: author aca_filings + affordability_snapshots, or treat as derived-signals only, or defer to Phase 0."
-    finding: "BEN-ACA-COMPLIANCE 74 masters zero entities. The module consumes employees (31), legal_entities (197), pay_slips (139), receives benefit_enrollments (intra-domain handoff 1100), and produces compute / side_effect artifacts (generate_1094c_form, generate_1095c_form, file_aca_returns). Flagship ACA specialists (Health-e(fx), Trusaic, ADP Health Compliance, Workday ACA, bswift ACA) uniformly master aca_filings (1094-C / 1095-C transmittal with lifecycle draft / validated / submitted / accepted / rejected / corrected) and affordability_snapshots (monthly per-employee with lifecycle draft / finalized / superseded) as first-class records."
+    finding: "BEN-ACA-COMPLIANCE 74 masters zero entities. The module consumes employees (31), legal_entities (197), pay_slips (139), receives benefit_enrollments (intra-domain handoff 1100), and produces compute / side_effect artifacts (generate_1094c_form, generate_1095c_form, file_aca_returns). Flagship ACA specialists uniformly master aca_filings (1094-C / 1095-C transmittal with lifecycle draft / validated / submitted / accepted / rejected / corrected) and affordability_snapshots (monthly per-employee with lifecycle draft / finalized / superseded) as first-class records."
     action: "After user resolves B2-S4: (a) author both masters with lifecycle states, trigger_events (aca_filing.submitted / .accepted / .rejected / .corrected, affordability_snapshot.finalized / .superseded), 3 workflow-gate permissions (validate_aca_filing, submit_aca_filing, correct_aca_filing), and role bundles; (b) document derived-signals designation in module description; (c) defer to formal Phase 0 vendor verification."
     blocked_by:
       - {type: user_decision, ref: B2-S4}

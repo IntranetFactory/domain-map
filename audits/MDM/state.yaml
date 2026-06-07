@@ -11,65 +11,33 @@
 schema_version: 2
 domain: MDM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-06"
 
-# Bucket 1 is dominated by items gated on Bucket 2 user decisions
-# (B2-S1 architectural path, B2-S2 module split, B2-S3 wording,
-# B2-S5 lifecycle state names, B2-S6 role catalog, B2-S8 naming arbitration,
-# B2-A4 buyer copy). Per next_action_by priority: user > research > blocked.
+# MDM is an UNBUILT domain (0 domain_modules, 2 capabilities). Per the unbuilt-domain
+# discipline the agent does NOT scaffold a build; the build (module split + masters +
+# capabilities cascade) is a user decision surfaced as B2-S2 (+ B2-S1 master path).
+# Almost every open b1b item is transitively gated on B1B-S1 (module authoring), which is
+# itself gated on the B2-S2 user split decision. next_action_by=user: the domain cannot
+# advance until B2-S1 (master reconciliation path) and B2-S2 (module split) are decided.
+# All agent-doable, genuinely-unblocked items were executed 2026-06-06 (see history.md):
+# entity_type classification on all 6 masters, 5 APQC handoff tags (H1 now 12/13), and the
+# Rule #20 catalog UX backfill on the domain row.
 
-b1a:
-  - id: B1A-H1
-    summary: "11 of 13 MDM cross-domain handoffs still missing handoff_processes APQC tags"
-    finding: >-
-      After 2026-05-31 audit, only 2 of 13 cross-domain handoffs carry
-      handoff_processes rows. Handoff 273 (MDM, SUP-LIFE supplier_golden_record.updated)
-      tagged to PCF process 815 (Monitor/Manage supplier information, ext_id 10299, L4,
-      agent_curated, new). Handoff 719 (MDM, DCG merge_rule.published) tagged to PCF
-      process 115 (Manage product and service master data, ext_id 11740, L3,
-      agent_curated, new). Both record_status='new', awaiting reviewer sign-off.
-      Remaining 11 handoffs (155, 222, 269, 270, 271, 272, 274, 481, 716, 717, 718)
-      require per-handoff PCF lookup at fix time. Volume expectation per H1 is
-      0.5N to 0.8N of 13 = 7 to 11 tags; current state 2 leaves 5 to 9 short of floor.
-    action: >-
-      Per-handoff PCF lookup via /processes?process_name=ilike.*<term>*
-      &source_framework=eq.apqc_pcf_cross_industry. Insert handoff_processes rows
-      with proposal_source='agent_curated' and record_status='new'. Defer 4
-      handoffs to Discover Pass 3 (handoffs 155, 716, 717 for data-and-information
-      cross-cutting; the 4th defer slot was 719, now resolved). Expected new tags
-      this pass: 7 confident or medium (handoffs 269, 270, 271, 272, 274, 481, 718).
-    affected_handoffs:
-      - {handoff_id: 155, direction: inbound, source_domain: DATA-AI-PLAT, target_domain: MDM, trigger_event: "golden_record.synced", payload: "data_products", null_field: "handoff_processes"}
-      - {handoff_id: 222, direction: outbound, source_domain: MDM, target_domain: KGP, trigger_event: "kg_entity.linked", payload: "knowledge_graph_entities", null_field: "handoff_processes"}
-      - {handoff_id: 269, direction: outbound, source_domain: MDM, target_domain: CRM, trigger_event: "customer_golden_record.created", payload: "customers", null_field: "handoff_processes"}
-      - {handoff_id: 270, direction: outbound, source_domain: MDM, target_domain: CSM, trigger_event: "customer_golden_record.created", payload: "customers", null_field: "handoff_processes"}
-      - {handoff_id: 271, direction: outbound, source_domain: MDM, target_domain: SUB-MGMT, trigger_event: "customer_golden_record.created", payload: "customers", null_field: "handoff_processes"}
-      - {handoff_id: 272, direction: outbound, source_domain: MDM, target_domain: CDP, trigger_event: "customer_golden_record.updated", payload: "customers", null_field: "handoff_processes"}
-      - {handoff_id: 274, direction: outbound, source_domain: MDM, target_domain: HCM, trigger_event: "employee_golden_record.created", payload: "employees", null_field: "handoff_processes"}
-      - {handoff_id: 481, direction: inbound, source_domain: CDP, target_domain: MDM, trigger_event: "identity_graph.updated", payload: "identity_graphs", null_field: "handoff_processes"}
-      - {handoff_id: 716, direction: outbound, source_domain: MDM, target_domain: CRM, trigger_event: "merge_rule.published", payload: "merge_rules", null_field: "handoff_processes"}
-      - {handoff_id: 717, direction: outbound, source_domain: MDM, target_domain: CDP, trigger_event: "source_record.merged_to_golden", payload: "source_records", null_field: "handoff_processes"}
-      - {handoff_id: 718, direction: outbound, source_domain: MDM, target_domain: HCM, trigger_event: "source_record.merged_to_golden", payload: "source_records", null_field: "handoff_processes"}
-    extra_pcf_lookup_hints: "269/270/271 customer-account L3 PCF candidates: 10402 family; 272 customer master sibling of 10402; 274/718 employee master 10527 family; 222 knowledge management 10566 family; 716/717/155 data and information management deferred to Discover Pass 3."
-  - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 2 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 2 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
-    extra_phase_p_triage: "2026-06-02"
+b1a: []
 
 b1b:
   - id: B1B-S1
     summary: "M1 hard-fail: zero domain_modules rows; must author at least 1 module_kind=full row"
     finding: >-
-      domain_id=87 has zero domain_modules rows. Rule #14 requires at least 1
-      module_kind='full' row. With 2 capabilities (IDENTITY-RESOLUTION 255,
-      CUSTOMER-360 310) below the 3-capability threshold for forced split, floor
-      is exactly 1 module. Recommended candidate codes: MDM-GOLDEN-RECORD-MGMT
-      (single-module path) or MDM-GOLDEN-RECORDS + MDM-MATCH-MERGE-ENGINE
-      (two-module path). Blocks every downstream concern (M4, M6, M7 path-b cure,
-      B7, B8, B9b, B10b own outbound, B12, C1 via Rule #10, E1-E6, F2-F5, S1 module
-      backfill, S6).
+      domain_id=87 has zero domain_modules rows (re-confirmed live 2026-06-06). Rule #14
+      requires at least 1 module_kind='full' row. With 2 capabilities (IDENTITY-RESOLUTION 255,
+      CUSTOMER-360 310) below the 3-capability threshold for forced split, floor is exactly
+      1 module. Recommended candidate codes: MDM-GOLDEN-RECORD-MGMT (single-module path) or
+      MDM-GOLDEN-RECORDS + MDM-MATCH-MERGE-ENGINE (two-module path). This is the unbuilt-domain
+      build: the agent does NOT scaffold it; it is surfaced as a user decision. Blocks every
+      downstream concern (M4, M6, B7 user-edges, B10b own outbound, B12 lifecycle states,
+      C1 via Rule #10, intra-domain handoffs, master reconciliation realization).
     blocked_by:
       - {type: user_decision, ref: B2-S2}
     affected_entities: [domain_modules, domain_module_data_objects, domain_module_capabilities, domain_module_host_domains]
@@ -77,15 +45,15 @@ b1b:
   - id: B1B-S2
     summary: "M7 multi-master: customers/employees claimed master by both legacy MDM rollup and CRM/HCM modules; suppliers sole-master under MDM only"
     finding: >-
-      domain_module_data_objects has master+required on customers (97) in
-      CRM-ACCT-MGT (module 46, CRM domain 69) and on employees (31) in
-      HCM-CORE-WORKER (module 54, HCM domain 54). The legacy domain_data_objects
-      rollup also claims master+required on (87, 97), (87, 206), (87, 31). Rule
-      M7 forbids 2 role='master' rows for the same data_object_id across the
-      catalog. suppliers (206) has no role='master' row anywhere in
-      domain_module_data_objects; only the MDM legacy rollup claims it.
-      Recommended path-b (MDM consumer of canonical masters, master only of
-      golden_records / source_records / match_rules / merge_rules).
+      domain_module_data_objects has master+required on customers (97) in CRM-ACCT-MGT
+      (module 46, CRM domain 69) and on employees (31) in HCM-CORE-WORKER (module 54, HCM
+      domain 54). The legacy domain_data_objects rollup also claims master+required on
+      (87, 97), (87, 206), (87, 31). Rule M7 forbids 2 role='master' rows for the same
+      data_object_id across the catalog. suppliers (206) has no role='master' row anywhere in
+      domain_module_data_objects; only the MDM legacy rollup claims it. Recommended path-b
+      (MDM consumer of canonical masters, master only of golden_records / source_records /
+      match_rules / merge_rules). Realizing the chosen path is DESTRUCTIVE (DELETE/demote the
+      legacy rollup master rows) and awaits B2-S1.
     blocked_by:
       - {type: user_decision, ref: B2-S1}
     affected_masters:
@@ -96,9 +64,9 @@ b1b:
   - id: B1B-S4
     summary: "B10b own outbound NULL source_domain_module_id on all 11 outbound MDM handoffs"
     finding: >-
-      All 11 outbound MDM handoffs (222, 269, 270, 271, 272, 273, 274, 716, 717,
-      718, 719) carry NULL source_domain_module_id. Cannot attribute without a
-      MDM module row.
+      All 11 outbound MDM handoffs (222, 269, 270, 271, 272, 273, 274, 716, 717, 718, 719)
+      carry NULL source_domain_module_id. Cannot attribute without a MDM module row (B1B-S1).
+      Mechanical PATCH wave once a module exists.
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
     affected_handoffs:
@@ -117,10 +85,10 @@ b1b:
   - id: B1B-S5
     summary: "B10b report-only: inbound handoffs 155 + 481 NULL source_domain_module_id (owed by DATA-AI-PLAT and CDP)"
     finding: >-
-      Inbound handoff 155 (golden_record.synced from DATA-AI-PLAT, payload
-      data_products) carries NULL source_domain_module_id. Inbound 481
-      (identity_graph.updated from CDP, payload identity_graphs) carries NULL
-      source_domain_module_id. Both are owed by the source domain's b1 audit.
+      Inbound handoff 155 (golden_record.synced from DATA-AI-PLAT, payload data_products)
+      carries NULL source_domain_module_id. Inbound 481 (identity_graph.updated from CDP,
+      payload identity_graphs) carries NULL source_domain_module_id. Both owed by the source
+      domain's b1 audit. (APQC tags on 155 + 481 already present.)
     blocked_by:
       - {type: domain_audit, blocking_domain: DATA-AI-PLAT, milestone: "B10b backfill on handoff 155"}
       - {type: domain_audit, blocking_domain: CDP, milestone: "B10b backfill on handoff 481"}
@@ -129,13 +97,12 @@ b1b:
       - {handoff_id: 481, direction: inbound, source_domain: CDP, target_domain: MDM, trigger_event: "identity_graph.updated", payload: "identity_graphs", null_field: "source_domain_module_id"}
 
   - id: B1B-S6
-    summary: "B10b report-only target_domain_module_id NULL on 9 of 11 outbound MDM handoffs (owed by partner domains)"
+    summary: "B10b report-only target_domain_module_id NULL on outbound MDM handoffs (owed by partner domains)"
     finding: >-
-      9 of 11 outbound MDM handoffs carry NULL target_domain_module_id. 269 and
-      716 already have target=46 (CRM-ACCT-MGT) populated; 274 has target=54
-      (HCM-CORE-WORKER). Remaining 9 need partner-domain b1 audits to populate.
+      Several outbound MDM handoffs carry NULL target_domain_module_id. 269/716 already have
+      target=46 (CRM-ACCT-MGT); 274 has target=54 (HCM-CORE-WORKER); 222 has target=271 (KGP).
+      Remaining (270, 271, 272, 273, 717, 718, 719) need partner-domain b1 audits to populate.
     blocked_by:
-      - {type: domain_audit, blocking_domain: KGP, milestone: "B10b on handoff 222"}
       - {type: domain_audit, blocking_domain: SUP-LIFE, milestone: "B10b on handoff 273"}
       - {type: domain_audit, blocking_domain: CSM, milestone: "B10b on handoff 270"}
       - {type: domain_audit, blocking_domain: CDP, milestone: "B10b on handoffs 272 + 717"}
@@ -143,7 +110,6 @@ b1b:
       - {type: domain_audit, blocking_domain: DCG, milestone: "B10b on handoff 719"}
       - {type: domain_audit, blocking_domain: SUB-MGMT, milestone: "B10b on handoff 271"}
     affected_handoffs:
-      - {handoff_id: 222, direction: outbound, source_domain: MDM, target_domain: KGP, trigger_event: "kg_entity.linked", payload: "knowledge_graph_entities", null_field: "target_domain_module_id"}
       - {handoff_id: 270, direction: outbound, source_domain: MDM, target_domain: CSM, trigger_event: "customer_golden_record.created", payload: "customers", null_field: "target_domain_module_id"}
       - {handoff_id: 271, direction: outbound, source_domain: MDM, target_domain: SUB-MGMT, trigger_event: "customer_golden_record.created", payload: "customers", null_field: "target_domain_module_id"}
       - {handoff_id: 272, direction: outbound, source_domain: MDM, target_domain: CDP, trigger_event: "customer_golden_record.updated", payload: "customers", null_field: "target_domain_module_id"}
@@ -155,12 +121,11 @@ b1b:
   - id: B1B-S7
     summary: "C1/Rule #10 users-relationship edges: 1 of expected ~12 to 18 present (employees 31 -> users 748)"
     finding: >-
-      Only 1 data_object_relationships row connects an MDM-claimed master to
-      users (748): employees 31 is_linked_to users. The 6 MDM-owned masters
-      (315, 316, 317, 318, 319, 320) carry zero edges to users. Per Rule #10
-      each must have steward/approver/author/ingester edges. Estimated 11 to 17
-      missing rows. Cannot author without role catalog (B2-S6) and module
-      attribution (B1B-S1).
+      Only 1 data_object_relationships row connects an MDM-claimed master to users (748):
+      employees 31 is_linked_to users. The 6 MDM-owned masters (315, 316, 317, 318, 319, 320)
+      carry zero edges to users. Per Rule #10 each must have steward/approver/author/ingester
+      edges. Estimated 11 to 17 missing rows. Cannot author without the role/persona shape
+      (B2-S6) and module attribution (B1B-S1).
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
       - {type: user_decision, ref: B2-S6}
@@ -177,11 +142,10 @@ b1b:
     finding: >-
       9 candidate workflow-gate events still missing on MDM masters:
       customer_golden_record.merged, supplier_golden_record.deduplicated,
-      employee_golden_record.merged_from_source, match_rule.disabled,
-      match_rule.deprecated, source_record.rejected, source_record.quarantined,
-      source_record.steward_approved, plus golden_record.deleted for erasure
-      cascade. Three are state-change; six are lifecycle. Cannot insert without
-      lifecycle states (B2-S5) authored against modules (B1B-S1).
+      employee_golden_record.merged_from_source, match_rule.disabled, match_rule.deprecated,
+      source_record.rejected, source_record.quarantined, source_record.steward_approved,
+      plus golden_record.deleted for erasure cascade. Three state-change, six lifecycle.
+      Cannot insert without lifecycle states (B2-S5) authored against modules (B1B-S1).
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
       - {type: user_decision, ref: B2-S5}
@@ -197,88 +161,37 @@ b1b:
       - {id: null, event_name: "source_record.steward_approved", current_category: null, proposed_category: "lifecycle"}
 
   - id: B1B-S9
-    summary: "Rule #9 em-dash in domains.business_logic for MDM (U+2014)"
+    summary: "Rule #9 em-dash in domains.business_logic for MDM (U+2014), DESTRUCTIVE (overwrite non-empty), awaiting B2-S3 wording"
     finding: >-
-      Live re-scan confirms em-dash (U+2014) present in domains.business_logic
-      for domain_id=87. Project Rule #9 forbids em-dash. The catch-all fact
-      sheet emitter sanitizes at render time but does not patch the source row.
-      Wording proposal pending user approval per B2-S3.
+      Live re-scan 2026-06-06 confirms em-dash (U+2014) still present in domains.business_logic
+      for domain_id=87. Project Rule #9 forbids em-dash. Patching the field is a DESTRUCTIVE
+      overwrite of a non-empty value, and per Rule #15 the exact wording is the user's call.
+      The fact sheet emitter sanitizes at render time but does not patch the source row.
+      Proposed replacement carried as B2-S3. Awaiting user wording approval.
     blocked_by:
       - {type: user_decision, ref: B2-S3}
-
-  - id: B1B-S10
-    summary: "F-band system skill + skill_tools authoring for MDM modules"
-    finding: >-
-      Per Rule #17 every domain_modules row needs exactly 1 skill_type='system'
-      skill with at least 1 skill_tools row. No MDM module exists, so cannot
-      author. Floor proposal: query_customer_golden_record,
-      query_supplier_golden_record, query_employee_golden_record,
-      merge_source_records, propose_match, approve_merge, route_to_steward,
-      publish_match_rule, publish_merge_rule, plus notify_data_steward via the
-      notify_person abstraction.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-
-  - id: B1B-S11
-    summary: "E-band roles + role_modules + role_permissions for MDM"
-    finding: >-
-      No MDM-owned roles, no role_modules, no MDM-prefixed permissions. Per
-      Rule #14 + Rule #20 module-prefix derivation, baseline three roles
-      (admin/manage/read) per module + workflow-specific roles
-      (data_steward, match_curator, merge_approver, mdm_admin) once module
-      shape lands. Cannot author without module set (B1B-S1) and role catalog
-      decision (B2-S6).
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-      - {type: user_decision, ref: B2-S6}
-
-  - id: B1B-S12
-    summary: "F1 legacy domain-level system skill retirement (skills.id=12 mdm-system)"
-    finding: >-
-      Row skills.id=12 ('mdm-system', skill_type='system', domain_id=87,
-      domain_module_id=NULL) has 12 attached skill_tools rows. F1 makes this
-      transitional-acceptable only while no module-level system skill exists
-      for the domain. Once B1B-S10 lands the module-level replacement(s), the
-      legacy row must be retired (DELETE) and the 12 skill_tools must be
-      re-pointed to the new skill or rebuilt against the new tool catalog.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-      - {type: prerequisite_entity, ref: B1B-S10}
-    extra_legacy_skill_tool_ids: [9, 13, 21, 50, 118, 119, 120, 121, 122, 123, 176, 177]
-
-  - id: B1B-A4
-    summary: "A4 hard-fail: domains.catalog_tagline and catalog_description empty for MDM (Rule #20)"
-    finding: >-
-      domains.catalog_tagline='' and catalog_description='' on the MDM row.
-      Per Rule #20 the agent drafts buyer-voice copy and surfaces to user
-      before writing. Module-grain M8 equivalents will surface as soon as
-      B1B-S1 lands domain_modules rows.
-    blocked_by:
-      - {type: user_decision, ref: B2-A4}
 
   - id: B1B-B6
     summary: "B6 weak intra-master data_object_relationships: 2 cross-domain resolves_to edges only; missing employee_golden_records -> employees, missing rules and source_records edges"
     finding: >-
-      Only 2 data_object_relationships rows present on MDM masters:
-      customer_golden_records (315) resolves_to customers (97); supplier_
-      golden_records (316) resolves_to suppliers (206). Missing
-      employee_golden_records (317) resolves_to employees (31). Missing
-      match_rules <-> source_records (matched_by), merge_rules <->
-      customer_golden_records (merges_into), source_records <->
-      customer_golden_records (consolidated_into), and the parallel rule
-      relationships for supplier and employee golden records.
+      Only 2 data_object_relationships rows present on MDM masters: customer_golden_records
+      (315) resolves_to customers (97); supplier_golden_records (316) resolves_to suppliers
+      (206). Missing employee_golden_records (317) resolves_to employees (31). Missing
+      match_rules <-> source_records (matched_by), merge_rules <-> customer_golden_records
+      (merges_into), source_records <-> customer_golden_records (consolidated_into), and the
+      parallel rule relationships for supplier and employee golden records. Gated on B1B-S1.
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
 
   - id: B1B-B12
-    summary: "B12 hard-fail: 0 data_object_lifecycle_states rows on any of the 6 MDM-owned masters"
+    summary: "B12 hard-fail: 0 data_object_lifecycle_states rows on the workflow-bearing MDM masters"
     finding: >-
-      data_object_lifecycle_states query against the 6 MDM-owned master IDs
-      (315, 316, 317, 318, 319, 320) returns zero rows. Per Rule #12 every
-      master+required workflow-bearing data_object MUST have a state machine.
-      Five of six have observable transitions; only match_rules/merge_rules
-      might be config-shaped, and even those carry a draft/active/disabled
-      lifecycle in flagship MDM products.
+      entity_type is now classified (executed 2026-06-06): golden_records 315/316/317 and
+      source_records 320 = operational_workflow (lifecycle states REQUIRED per Rule #12);
+      match_rules 318 + merge_rules 319 = catalog (lifecycle not required, pass). The 4
+      operational_workflow masters have zero data_object_lifecycle_states rows. Authoring the
+      state machines needs the realizing module (B1B-S1) and user-confirmed state names
+      (B2-S5).
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
       - {type: user_decision, ref: B2-S5}
@@ -286,133 +199,144 @@ b1b:
       - {data_object_id: 315, name: customer_golden_records, target_module_id: null, workflow: "proposed candidate / pending_steward / merged / golden / retired"}
       - {data_object_id: 316, name: supplier_golden_records, target_module_id: null, workflow: "proposed candidate / pending_steward / merged / golden / retired"}
       - {data_object_id: 317, name: employee_golden_records, target_module_id: null, workflow: "proposed candidate / pending_steward / merged / golden / retired"}
-      - {data_object_id: 318, name: match_rules, target_module_id: null, workflow: "proposed draft / active / disabled / deprecated"}
-      - {data_object_id: 319, name: merge_rules, target_module_id: null, workflow: "proposed draft / active / disabled / deprecated"}
       - {data_object_id: 320, name: source_records, target_module_id: null, workflow: "proposed ingested / matched / merged_to_golden / quarantined / rejected"}
+
+  - id: B1B-PERSONAS
+    summary: "Personas / RACI (domain_roles, role_modules, process_raci) deferred to a focused persona pass"
+    finding: >-
+      No MDM-owned domain_roles, role_modules, or process_raci. Candidate personas surfaced:
+      data_steward, match_curator, merge_approver, mdm_admin (shape gated on B2-S6). Per the
+      Validate-mode persona policy these are NOT authored in a bulk state-driven pass; they
+      are deferred to a dedicated persona pass that runs AFTER the domain is built (B1B-S1).
+      The retired _core roles/role_permissions/permission model does not apply.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
+      - {type: user_decision, ref: B2-S6}
+
+  - id: B1B-SKILL-NOTE
+    summary: "NOTE (superseded grain): F-band per-module system skill + skill_tools + legacy skills.id=12 retirement"
+    finding: >-
+      CANCELED / reframed as a note per the 2026-06-06 supersession header. The prior items
+      B1B-S10 (per-module system skill + skill_tools) and B1B-S12 (retire legacy domain-level
+      skills.id=12 'mdm-system' + re-point its 12 skill_tools) reference the RETIRED per-module
+      system-skill grain and the dropped skill_tools table. New model: tool requirements live
+      on domain_module_tools (authored onto modules once B1B-S1 builds them); the domain has
+      exactly ONE domain-grain system skill (domain_id set, domain_module_id null) that DERIVES
+      its toolset. The legacy domain-grain skills.id=12 row is now consistent with the
+      domain-grain model and needs no retirement. Per-module tool re-authoring is tracked in
+      audits/_modularization-backlog.md. Do NOT author per-module skills or skill_tools.
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1}
 
 b2:
   - id: B2-S1
     summary: "M7 multi-master reconciliation path for customers (97), employees (31), suppliers (206)"
     question: >-
-      The legacy domain_data_objects rollup claims MDM as master+required on
-      customers, employees, suppliers. The catalog has CRM-ACCT-MGT mastering
-      customers and HCM-CORE-WORKER mastering employees in
-      domain_module_data_objects. suppliers has no DMDO master row anywhere.
-      Path (a) MDM canonical, demote CRM and HCM to embedded_master; (b) MDM
-      consumes customers / employees / suppliers as consumer+required and
-      masters only the golden_record / source_record / match_rules /
-      merge_rules entities (RECOMMENDED, matches actual MDM market shape);
-      (c) Mixed (specify per entity).
+      The legacy domain_data_objects rollup claims MDM as master+required on customers,
+      employees, suppliers. The catalog has CRM-ACCT-MGT mastering customers and
+      HCM-CORE-WORKER mastering employees in domain_module_data_objects. suppliers has no
+      DMDO master row anywhere. Path (a) MDM canonical, demote CRM and HCM to embedded_master;
+      (b) MDM consumes customers / employees / suppliers as consumer+required and masters only
+      the golden_record / source_record / match_rules / merge_rules entities (RECOMMENDED,
+      matches actual MDM market shape); (c) Mixed (specify per entity). Realizing the choice
+      is a DESTRUCTIVE DELETE/demote of the legacy rollup master rows; awaits this decision.
     options: ["a-mdm-canonical", "b-mdm-consumer", "c-mixed"]
     why: >-
-      Architectural intent and catalog-wide canonical mastering strategy. Path
-      (b) matches Informatica/Reltio/Profisee/Stibo/Semarchy market shape
-      (sit alongside, not replace, the source-of-record systems).
+      Architectural intent and catalog-wide canonical mastering strategy. Path (b) matches
+      Informatica/Reltio/Profisee/Stibo/Semarchy market shape (sit alongside, not replace, the
+      source-of-record systems).
 
   - id: B2-S2
-    summary: "MDM module split (1 vs 2 vs more)"
+    summary: "MDM module split (1 vs 2 vs more): the unbuilt-domain build decision"
     question: >-
-      B1B-S1 needs at least one module_kind='full' row. Two plausible splits:
-      (1) single MDM-GOLDEN-RECORD-MGMT mastering all 6 MDM-owned entities;
-      (2) MDM-GOLDEN-RECORDS (315/316/317/320) + MDM-MATCH-MERGE-ENGINE
-      (318/319 plus stewardship workflow). Rule #14 allows (1) because MDM has
-      2 capabilities (below the 3-capability split threshold). Recommend (1)
-      initially, split later if stewardship workflow differentiates from
-      match/merge engine.
+      B1B-S1 needs at least one module_kind='full' row. Two plausible splits: (1) single
+      MDM-GOLDEN-RECORD-MGMT mastering all 6 MDM-owned entities; (2) MDM-GOLDEN-RECORDS
+      (315/316/317/320) + MDM-MATCH-MERGE-ENGINE (318/319 plus stewardship workflow). Rule #14
+      allows (1) because MDM has 2 capabilities (below the 3-capability split threshold).
+      Recommend (1) initially, split later if stewardship workflow differentiates from
+      match/merge engine. The agent will NOT scaffold the build until this is decided.
     options: ["a-single-mdm-golden-record-mgmt", "b-two-modules-records-and-engine", "c-larger-split"]
-    why: "Modularization shape gates every downstream Bucket-1 item except B1A-H1 and the user-wording items."
+    why: "Modularization shape gates every downstream Bucket-1 item (B1B-S1 cascade)."
 
   - id: B2-S3
     summary: "domains.business_logic em-dash replacement wording (Rule #9 + Rule #15 boundary)"
     question: >-
-      Current business_logic text contains U+2014 em-dash. Proposed wording:
-      'Matching and survivorship algorithms (deterministic + probabilistic),
-      hierarchy management, and stewardship workflows, the irreducible kernel
-      beneath any MDM hub.' (comma replaces em-dash). Per Rule #15 wording
-      boundary, user owns exact text.
+      Current business_logic text contains U+2014 em-dash. Proposed wording: 'Matching and
+      survivorship algorithms (deterministic + probabilistic), hierarchy management, and
+      stewardship workflows, the irreducible kernel beneath any MDM hub.' (comma replaces
+      em-dash). This is a DESTRUCTIVE overwrite of a non-empty value; per Rule #15 the user
+      owns the exact text.
     options: ["a-approve-proposed", "b-supply-alternative"]
     why: "Project Rule #9 forbids em-dash; Rule #15 forbids agent-authored wording for sensitive prose columns."
 
   - id: B2-S4
     summary: "CUSTOMER-360 vs IDENTITY-RESOLUTION capability scope between MDM and CDP"
     question: >-
-      Both capabilities (255 IDENTITY-RESOLUTION and 310 CUSTOMER-360) live
-      under MDM. CDP (domain 72) also touches both functionally (CDP profiles +
-      identity graphs). Is the dual-ownership intentional (MDM masters,
-      CDP operationalizes) or should one capability move? Bucket-3 RDM
-      candidate is independent.
+      Both capabilities (255 IDENTITY-RESOLUTION and 310 CUSTOMER-360) live under MDM. CDP
+      (domain 72) also touches both functionally (CDP profiles + identity graphs). Is the
+      dual-ownership intentional (MDM masters, CDP operationalizes) or should one capability
+      move? Bucket-3 RDM candidate is independent.
     options: ["a-both-stay-mdm", "b-identity-resolution-to-cdp", "c-customer-360-to-cdp", "d-dual-host"]
     why: "Capability scope decision; informs Bucket-3 modularization candidate and CDP-MDM boundary pass."
 
   - id: B2-S5
     summary: "Lifecycle state machine names per MDM master"
     question: >-
-      Once B1B-S1 lands modules, per Rule #12 each master+required workflow
-      data_object needs lifecycle states. Proposed shapes carried as
-      affected_masters on B1B-B12. Confirm names or supply alternatives.
+      Once B1B-S1 lands modules, per Rule #12 each operational_workflow master needs lifecycle
+      states. Proposed shapes carried as affected_masters on B1B-B12. Confirm names or supply
+      alternatives.
     options: ["per-master yes/no with optional alternate names"]
     why: "Lifecycle states are the source of workflow-gate permissions; permission_verb_override needs user input on non-obvious verbs."
 
   - id: B2-S6
-    summary: "Stewardship role catalog shape"
+    summary: "Stewardship persona catalog shape"
     question: >-
-      The three baseline roles (admin/manage/read) per module are mechanical,
-      but workflow-specific MDM roles need user input. (a) Single data_steward
-      role + match_curator + merge_approver + mdm_admin (recommend);
-      (b) Per-master stewards (3 roles); (c) Different shape.
+      The baseline read/manage/admin pattern is mechanical, but workflow-specific MDM personas
+      need user input. (a) Single data_steward persona + match_curator + merge_approver +
+      mdm_admin (recommend); (b) Per-master stewards (3 personas); (c) Different shape.
+      Drives the persona pass (B1B-PERSONAS) and the user-edge shape (B1B-S7).
     options: ["a-unified-steward", "b-per-master-stewards", "c-other"]
-    why: "Role design owns the cross-module permission bundle pattern that downstream RBAC enforcement reads."
+    why: "Persona design owns the cross-module bundle pattern that downstream RACI + user-edge authoring reads."
 
   - id: B2-S7
     summary: "Compliance regulation linkage (GDPR / CCPA / KYC-AML / DCAM)"
     question: >-
-      Zero domain_regulations rows for MDM. GDPR (right-to-erasure cascading
-      from golden record), CCPA (consumer data subject rights), KYC-AML
-      (financial-services customer mastering), DCAM (DAMA-DMBOK data
-      management standards body) are strong candidates. Approve set, subset,
-      or defer to dedicated compliance audit pass.
+      Zero domain_regulations rows for MDM. GDPR (right-to-erasure cascading from golden
+      record), CCPA (consumer data subject rights), KYC-AML (financial-services customer
+      mastering), DCAM (DAMA-DMBOK data management standards body) are strong candidates.
+      Approve set, subset, or defer to dedicated compliance audit pass.
     options: ["a-load-all-four", "b-subset", "c-defer"]
     why: "Compliance basis informs whether right-to-erasure events (B1B-S8 candidate set) are required vs optional."
 
   - id: B2-S8
     summary: "B3 bare-word naming arbitration for match_rules / merge_rules / source_records"
     question: >-
-      Three MDM-owned masters use bare-word snake_case names (match_rules,
-      merge_rules, source_records). Per Rule #9 bare-words require either
-      is_canonical_bare_word=true + naming_authority_rationale, OR rename to
-      domain-prefixed mdm_* form. MDM is the natural canonical authority for
-      match / merge / survivorship terminology, but source_records collides
-      semantically with system-of-record terminology used elsewhere.
+      Three MDM-owned masters use bare-word snake_case names (match_rules, merge_rules,
+      source_records). Per Rule #9 bare-words require either is_canonical_bare_word=true +
+      naming_authority_rationale, OR rename to domain-prefixed mdm_* form (a rename is a
+      DESTRUCTIVE restructure). MDM is the natural canonical authority for match / merge /
+      survivorship terminology, but source_records collides semantically with
+      system-of-record terminology used elsewhere.
     options: ["a-claim-canonical-all-three", "b-rename-all-three-with-mdm-prefix", "c-mixed-keep-match-merge-rename-source"]
     why: "Naming arbitration is a per-row decision; Rule #9 forbids silent collision-prone inserts."
 
-  - id: B2-A4
-    summary: "A4 Rule #20 buyer-voice copy for domains.catalog_tagline and catalog_description"
-    question: >-
-      MDM domain row has empty catalog_tagline and catalog_description. Per
-      Rule #20 the agent drafts buyer-voice copy (workflow + value) and
-      surfaces to user for review BEFORE writing. Should the agent produce a
-      draft now (next pass), or defer until module set lands?
-    options: ["a-draft-now", "b-defer-until-modules-land", "c-supply-direct-wording"]
-    why: "Rule #20 overwrite-without-approval forbidden once non-empty; backfill drafts require user approval before write."
-
   - id: B2-B11
-    summary: "B11 vendor-specific aliases on MDM-owned masters (low priority)"
+    summary: "B11 vendor-specific aliases on MDM-owned masters (editorial, low priority)"
     question: >-
-      MDM-owned masters (315/316/317/318/319/320) carry zero aliases. Vendor
-      synonyms ('Best Record' from Informatica, 'Master Object' from Stibo)
-      would add cross-vendor mapping. Or skip as self-explanatory.
+      MDM-owned masters (315/316/317/318/319/320) carry zero aliases. Vendor synonyms
+      ('Best Record', 'Master Object', 'Golden Record') would add cross-vendor mapping but are
+      vendor-specific editorial choices, and these masters are largely self-explanatory.
+      Load a small generic synonym set per master, or skip as self-explanatory.
     options: ["a-load-1-or-2-aliases-per-master", "b-skip-self-explanatory"]
-    why: "B11 exemption is acceptable for self-explanatory masters; vendor synonyms are an editorial decision."
+    why: "B11 exemption is acceptable for self-explanatory masters; synonyms are an editorial decision."
 
 b3:
   - id: B3-E1
     candidate: match_candidates
     rationale: >-
-      Unresolved match-pair candidates distinct from source_records, modeled as
-      first-class entities by Informatica, Reltio, Semarchy. Stewardship UIs
-      show match candidates as a queue. Phase 0 verification would confirm
-      catalog shape across all 4 to 5 flagship vendors.
+      Unresolved match-pair candidates distinct from source_records, modeled as first-class
+      entities by Informatica, Reltio, Semarchy. Stewardship UIs show match candidates as a
+      queue. Phase 0 verification would confirm catalog shape across all 4 to 5 flagship vendors.
     vendor_evidence:
       - {vendor: Informatica, evidence: 1st_class}
       - {vendor: Reltio, evidence: 1st_class}
@@ -424,9 +348,8 @@ b3:
   - id: B3-E2
     candidate: stewardship_tasks
     rationale: >-
-      First-class steward task queue (assigned/in_progress/resolved/escalated)
-      modeled by Informatica, Reltio, Profisee, Stibo. Currently no master in
-      MDM catalog.
+      First-class steward task queue (assigned/in_progress/resolved/escalated) modeled by
+      Informatica, Reltio, Profisee, Stibo. Currently no master in MDM catalog.
     vendor_evidence:
       - {vendor: Informatica, evidence: 1st_class}
       - {vendor: Reltio, evidence: 1st_class}
@@ -437,9 +360,8 @@ b3:
   - id: B3-E3
     candidate: survivorship_rules
     rationale: >-
-      Per-attribute best-of engine (latest/oldest/longest/weighted) distinct
-      from match_rules + merge_rules in Informatica, Reltio, Profisee.
-      Survivorship is not the same as merge (which records which goldens win).
+      Per-attribute best-of engine (latest/oldest/longest/weighted) distinct from match_rules
+      + merge_rules in Informatica, Reltio, Profisee. Survivorship is not the same as merge.
     vendor_evidence:
       - {vendor: Informatica, evidence: 1st_class}
       - {vendor: Reltio, evidence: 1st_class}
@@ -449,9 +371,9 @@ b3:
   - id: B3-E4
     candidate: data_quality_rules
     rationale: >-
-      Validation + completeness + uniqueness rules as a first-class entity in
-      Ataccama ONE, Informatica IDQ, Trillium. Often a separate product but
-      MDM hubs typically embed at least validation rules.
+      Validation + completeness + uniqueness rules as a first-class entity in Ataccama ONE,
+      Informatica IDQ, Trillium. Often a separate product but MDM hubs typically embed at least
+      validation rules.
     vendor_evidence:
       - {vendor: Ataccama, evidence: 1st_class}
       - {vendor: Informatica, evidence: 1st_class}
@@ -461,9 +383,9 @@ b3:
   - id: B3-E5
     candidate: golden_record_hierarchies
     rationale: >-
-      Parent-child hierarchies (parent customer -> subsidiary; parent supplier
-      -> branch) as first-class entities in Stibo, Informatica MDM, Reltio,
-      often with versioning. No master currently.
+      Parent-child hierarchies (parent customer -> subsidiary; parent supplier -> branch) as
+      first-class entities in Stibo, Informatica MDM, Reltio, often with versioning. No master
+      currently.
     vendor_evidence:
       - {vendor: Stibo, evidence: 1st_class}
       - {vendor: Informatica, evidence: 1st_class}
@@ -515,12 +437,10 @@ b3:
   - id: B3-D1
     candidate: RDM (Reference Data Management) as a domain candidate
     rationale: >-
-      Distinct from MDM: code list management (currency / country / GL
-      accounts), hierarchy management for reference data, cross-reference
-      mapping. Pure-play vendors include Semarchy xDM RDM mode, TIBCO EBX RDM,
-      Stibo Reference Data, Collibra Reference Data Manager, Informatica
-      Reference Data Management. Passes the point-solution-market test (>=3
-      independent flagships with RDM-named offerings). Queue for
-      audits/_missing-domains.md.
+      Distinct from MDM: code list management (currency / country / GL accounts), hierarchy
+      management for reference data, cross-reference mapping. Pure-play vendors include
+      Semarchy xDM RDM mode, TIBCO EBX RDM, Stibo Reference Data, Collibra Reference Data
+      Manager, Informatica Reference Data Management. Passes the point-solution-market test
+      (>=3 independent flagships with RDM-named offerings). Queue for audits/_missing-domains.md.
     vendor_evidence: [Semarchy, TIBCO EBX, Stibo, Collibra, Informatica]
     proposed_module: null

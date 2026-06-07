@@ -10,67 +10,69 @@
 # === end supersession note ===
 schema_version: 2
 domain: GTM-PLAN
-status: audit_stale
-next_action_by: agent
-last_audit: "2026-05-31"
+status: awaiting_build
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
   - id: B1A-RECLASS
-    summary: "Leadership-tier zero-master exemption rescinded 2026-06-02; re-run Validate treating GTM-PLAN as master-bearing (overlay test). Build needed, not an exemption."
-    finding: >
+    summary: "Leadership-tier zero-master exemption rescinded 2026-06-02; classification settled as master-bearing under the overlay test. Build needed, not an exemption."
+    finding: >-
       SKILL.md's fixed leadership-tier exemption was rescinded (references/skill-changelog.md
-      2026-06-02). Under the overlay test GTM-PLAN is master-bearing: masters gtm_plans, capacity_models, ideal_customer_profiles, target_account_lists (4 of 4 sales-planning flagships). The prior audit's
-      "keep leadership-tier / ship an empty landing module" option is no longer valid. Live state
-      2026-06-02: 0 domain_modules (M1 fail), so the domain is not deployable today.
-    action: >
-      Re-run the full 4-pass Validate under the corrected rule. The module-shape, promote-scope,
-      and catalog-UX decisions already in b2 still apply and re-surface after the re-audit; this
-      item records only that the classification is settled (master-bearing) and the domain needs
-      a build, not an exemption.
+      2026-06-02). Under the overlay test GTM-PLAN is master-bearing: GTM plans, territories,
+      quotas, capacity models, ICPs, and target account lists are real records, so the masters
+      gtm_plans, capacity_models, ideal_customer_profiles, target_account_lists are expected. The
+      prior "keep leadership-tier / ship an empty landing module" option is no longer valid.
+      Live re-verify 2026-06-07: 0 domain_modules (M1 fail), 0 masters in either
+      domain_module_data_objects or domain_data_objects, so the domain is not deployable today.
+    action: >-
+      Classification is settled (master-bearing) and recorded here only. The actual build is
+      B1A-BUILD; it cannot proceed until the b2 module-shape and promotion decisions land.
     extra_reclassified: "2026-06-02 skill-changelog"
+
   - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 8 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 8 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 8 capabilities awaiting a build. Surface only; do not scaffold."
+    finding: >-
+      Live re-verify 2026-06-07: GTM-PLAN (id 104) has 0 domain_modules rows (M1 fail), 8
+      capability_domains rows (capability ids 104-111), 0 masters, 0 handoffs in either direction,
+      0 skills, 0 domain_regulations, 0 domain_aliases. business_function_domains (C1) is already
+      complete: owner Sales Operations (bf 52), contributors Marketing (bf 22) and Product
+      Management (bf 25). The domain is a known-empty leadership-tier planning shell awaiting a
+      full build, not a scaffold.
+    action: >-
+      Run Phase A then M then B then S to author the module set, capabilities-to-modules,
+      masters, and the single domain-grain system skill. If the result is multi-module, run Phase P
+      (personas, role_modules, process_raci, lifecycle.process_id) afterward. The module set and
+      master placement are gated on B2-M1 (module shape), B2-S1 (PMM promotion), B2-S2 (ABM-PLATFORM
+      promotion), and Bucket 3 candidates 1, 2, 3, any of which shrinks or relocates modules. Do
+      NOT scaffold an interim module set ahead of those decisions.
+    blocked_by:
+      - {type: user_decision, ref: B2-M1}
+      - {type: user_decision, ref: B2-S1}
+      - {type: user_decision, ref: B2-S2}
+      - {type: depends_on, ref: B3-PMM}
+      - {type: depends_on, ref: B3-ABM-PLATFORM}
+      - {type: depends_on, ref: B3-SALES-PLANNING-PLATFORM}
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
-  - id: B1B-A1
-    summary: Empty catalog_tagline and catalog_description on GTM-PLAN; drafts authored 2026-05-30 pending user approval before PATCH.
-    finding: >-
-      A4 fails. `domains.catalog_tagline` and `domains.catalog_description` are both empty strings on
-      GTM-PLAN (id 104). Drafts were authored on 2026-05-30 per Rule #20 voice rule (buyer voice,
-      workflow plus value). The catalog_tagline draft is "Plan your year. Decide where to play, how
-      much capacity to invest, and which segments to lead with, then push the locked plan to Sales,
-      Marketing, and Finance." The catalog_description draft is the three-paragraph block in the
-      2026-05-30 history.md section under B1-A1. Per Rule #20, PATCH requires explicit user approval
-      of the wording before any write.
-    action: >-
-      Surface the two drafts to the user verbatim; on per-string approval, PATCH /domains?id=eq.104
-      with the approved catalog_tagline and catalog_description.
-    blocked_by:
-      - {type: user_decision, ref: B1B-A1}
-    extra_drafts_authored: "2026-05-30"
-
   - id: B1B-M1
-    summary: Zero domain_modules on a leadership-tier planning domain with 8 capabilities; Rule #14 requires at least 2 full modules.
+    summary: Zero domain_modules on a master-bearing planning domain with 8 capabilities; Rule #14 requires at least 2 full modules. Part of the B1A-BUILD; surface only.
     finding: >-
-      M1 / M2 / M4 fail. GTM-PLAN (id 104) has zero `domain_modules` rows. Per Rule #14 every
-      `domains` row must have at least 1 `module_kind='full'` row; domains with 3 or more
-      capabilities (GTM-PLAN has 8: MARKET-SEGMENTATION, TERRITORY-CARVING-PLAN, ACCOUNT-SCORING,
+      M1 / M2 / M4 fail. GTM-PLAN (id 104) has zero domain_modules rows. Per Rule #14 every
+      domains row must have at least 1 module_kind='full' row; domains with 3 or more capabilities
+      (GTM-PLAN has 8: MARKET-SEGMENTATION, TERRITORY-CARVING-PLAN, ACCOUNT-SCORING,
       GTM-CAPACITY-PLANNING, CHANNEL-MIX-PLANNING, LAUNCH-ORCHESTRATION, GTM-SCENARIO-MODELING,
-      PLAN-TO-EXECUTION-HANDOFF) require at least 2 full modules. The leadership-tier exemption
-      applies to B1 (zero masters acceptable) but not to M1. Pass 2 of the 2026-05-30 audit
-      proposed an 8-module shape (one per capability): GTM-PLAN-ICP-SEGMENT,
-      GTM-PLAN-ACCOUNT-TARGETING, GTM-PLAN-TERRITORY, GTM-PLAN-CAPACITY, GTM-PLAN-CHANNEL-MIX,
-      GTM-PLAN-LAUNCH-ORCH, GTM-PLAN-SCENARIO, GTM-PLAN-EXEC-HANDOFF. Alternative 5-module and
-      3-module shapes are listed under B2-M1.
+      PLAN-TO-EXECUTION-HANDOFF) require at least 2 full modules. Pass 2 of the 2026-05-30 audit
+      proposed an 8-module shape (one per capability); alternative 5-module and 3-module shapes
+      are under B2-M1. This is the load-bearing build step and is part of B1A-BUILD.
     action: >-
       Once B2-M1 (module shape), B2-S1 (PMM promotion), B2-S2 (ABM-PLATFORM promotion), and Bucket
-      3 candidates 1, 2, 3 are resolved, author the surviving `domain_modules` rows plus the
-      corresponding `domain_module_capabilities` rows so every capability has at least one
-      realizing module. Each new module needs `module_kind='full'` and at least one
-      `skill_type='system'` skill with at least one `skill_tools` row (Rule #17).
+      3 candidates 1, 2, 3 are resolved, author the surviving domain_modules rows plus the
+      corresponding domain_module_capabilities rows so every capability has at least one realizing
+      module. Each FULL module ships no per-module skill (per the 2026-06-06 supersession); the
+      domain gets exactly one domain-grain system skill (domain_id set, domain_module_id null) that
+      derives its toolset.
     blocked_by:
       - {type: user_decision, ref: B2-M1}
       - {type: user_decision, ref: B2-S1}
@@ -90,14 +92,14 @@ b1b:
       - {code: GTM-PLAN-EXEC-HANDOFF, scope: plan approvals, plan-to-execution lock, downstream push, capability: PLAN-TO-EXECUTION-HANDOFF}
 
   - id: B1B-V1
-    summary: gtm_plans master missing; the parent artifact across all 4 pure-play planning vendors.
+    summary: gtm_plans master missing; the parent artifact across all 4 pure-play planning vendors. Blocked on the build.
     finding: >-
-      Vendor surface gap. `gtm_plans` is mastered by 4 of 4 pure-play planning vendors (Anaplan
+      Vendor surface gap. gtm_plans is mastered by 4 of 4 pure-play planning vendors (Anaplan
       Sales Planning, Pigment, Fullcast, Salesforce Sales Planning); no row exists in the catalog
-      today. Proposed canonical master: GTM-PLAN-EXEC-HANDOFF (or a dedicated GTM-PLAN-CORE).
+      today. Proposed canonical master module: GTM-PLAN-EXEC-HANDOFF (or a dedicated GTM-PLAN-CORE).
     action: >-
-      After B1B-M1 lands the modules, insert `data_objects.gtm_plans` plus the canonical
-      `domain_module_data_objects` row with role='master', necessity='required'. Author the
+      After B1B-M1 lands the modules, insert data_objects.gtm_plans plus the canonical
+      domain_module_data_objects row with role='master', necessity='required'. Author the
       lifecycle states (draft, in_review, approved, locked, archived) and the corresponding
       workflow-gate permissions via Rule #12.
     blocked_by:
@@ -111,17 +113,17 @@ b1b:
     extra_proposed_module: GTM-PLAN-EXEC-HANDOFF
 
   - id: B1B-V2
-    summary: ideal_customer_profiles master missing; canonical ABM-platform entity, also surfaced by sales-planning vendors.
+    summary: ideal_customer_profiles master missing; canonical ABM-platform entity, also surfaced by sales-planning vendors. Blocked on the build.
     finding: >-
-      Vendor surface gap. `ideal_customer_profiles` is the canonical ABM-platform master across
+      Vendor surface gap. ideal_customer_profiles is the canonical ABM-platform master across
       Demandbase, 6sense, and RollWorks; the sales-planning vendors surface it as the entry point
       to segmentation. Module assignment depends on whether ABM-PLATFORM is promoted as its own
       domain (B2-S2 / B3-ABM-PLATFORM); the defensible cut is GTM-PLAN authors ICPs, ABM-PLATFORM
       ingests them for engagement.
     action: >-
       After B1B-M1 lands and B2-S2 / B3-ABM-PLATFORM are resolved, insert
-      `data_objects.ideal_customer_profiles` plus the canonical `domain_module_data_objects` row
-      in either GTM-PLAN-ICP-SEGMENT (if ABM stays embedded) or in the new ABM-PLATFORM domain.
+      data_objects.ideal_customer_profiles plus the canonical domain_module_data_objects row in
+      either GTM-PLAN-ICP-SEGMENT (if ABM stays embedded) or in the new ABM-PLATFORM domain.
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1}
       - {type: user_decision, ref: B2-S2}
@@ -133,16 +135,15 @@ b1b:
     extra_proposed_module: GTM-PLAN-ICP-SEGMENT
 
   - id: B1B-V3
-    summary: target_account_lists master missing; the headline ABM artifact across the ABM tier.
+    summary: target_account_lists master missing; the headline ABM artifact across the ABM tier. Blocked on the build.
     finding: >-
-      Vendor surface gap. `target_account_lists` is the headline ABM artifact across Demandbase,
+      Vendor surface gap. target_account_lists is the headline ABM artifact across Demandbase,
       6sense, Madison Logic, and RollWorks. As with ICPs, module assignment depends on the
       ABM-PLATFORM promotion call.
     action: >-
       After B1B-M1 lands and B2-S2 / B3-ABM-PLATFORM are resolved, insert
-      `data_objects.target_account_lists` plus the canonical `domain_module_data_objects` row in
-      either GTM-PLAN-ACCOUNT-TARGETING (if ABM stays embedded) or in the new ABM-PLATFORM
-      domain.
+      data_objects.target_account_lists plus the canonical domain_module_data_objects row in
+      either GTM-PLAN-ACCOUNT-TARGETING (if ABM stays embedded) or in the new ABM-PLATFORM domain.
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1}
       - {type: user_decision, ref: B2-S2}
@@ -155,16 +156,16 @@ b1b:
     extra_proposed_module: GTM-PLAN-ACCOUNT-TARGETING
 
   - id: B1B-V4
-    summary: capacity_models master missing; capacity-to-coverage is the planning-vendor headline.
+    summary: capacity_models master missing; capacity-to-coverage is the planning-vendor headline. Blocked on the build.
     finding: >-
-      Vendor surface gap. `capacity_models` is the planning-vendor headline (heads per segment,
+      Vendor surface gap. capacity_models is the planning-vendor headline (heads per segment,
       heads per region, capacity-to-revenue math) across Anaplan Sales Planning, Pigment, and
       Fullcast. Module assignment depends on whether SALES-PLANNING-PLATFORM is promoted as its
       own domain.
     action: >-
       After B1B-M1 lands and B3-SALES-PLANNING-PLATFORM is resolved, insert
-      `data_objects.capacity_models` plus the canonical `domain_module_data_objects` row in
-      either GTM-PLAN-CAPACITY (if the planning-platform stays embedded) or in the new
+      data_objects.capacity_models plus the canonical domain_module_data_objects row in either
+      GTM-PLAN-CAPACITY (if the planning-platform stays embedded) or in the new
       SALES-PLANNING-PLATFORM domain.
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1}
@@ -196,7 +197,7 @@ b2:
   - id: B2-C1
     summary: Add capability-level RACI overrides for LAUNCH-ORCHESTRATION (PMM) and CHANNEL-MIX-PLANNING (Marketing).
     question: >-
-      Should LAUNCH-ORCHESTRATION and CHANNEL-MIX-PLANNING carry `business_function_capabilities`
+      Should LAUNCH-ORCHESTRATION and CHANNEL-MIX-PLANNING carry business_function_capabilities
       overrides? LAUNCH-ORCH is more naturally PMM-owned; CHANNEL-MIX is more naturally
       Marketing-Ops-owned. Inherited owner today is Sales Operations.
     options:
@@ -212,7 +213,7 @@ b2:
   - id: B2-R1
     summary: Decide regulation coverage for GTM-PLAN, none vs GDPR-only vs GDPR plus CCPA vs full conservative set.
     question: >-
-      Should GTM-PLAN carry any `domain_regulations` rows? Currently zero. GDPR may apply if
+      Should GTM-PLAN carry any domain_regulations rows? Currently zero. GDPR may apply if
       account_scores includes EU-resident contact-level intent data; CCPA / CPRA for the US
       consumer-facing case; SOX rarely applies unless gtm_plans feeds revenue disclosures.
     options:
@@ -230,8 +231,7 @@ b2:
     question: >-
       Should PMM (Product Marketing Management) be promoted as a separate domain, taking
       GTM-PLAN's LAUNCH-ORCHESTRATION capability and the proposed GTM-PLAN-LAUNCH-ORCH module
-      with it? PMM is queued in `_missing-domains.md` at mention count 2 (PROD-MGMT plus
-      GTM-PLAN).
+      with it? PMM is queued in _missing-domains.md at mention count 2 (PROD-MGMT plus GTM-PLAN).
     options:
       - Promote PMM and relocate LAUNCH-ORCH (cleanest market shape, matches Klue / Crayon / Aha! Roadmaps Create vendor boundary)
       - Keep LAUNCH-ORCH in GTM-PLAN and let PMM be the launch-readiness consumer downstream

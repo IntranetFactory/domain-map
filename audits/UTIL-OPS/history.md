@@ -323,3 +323,65 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21) against the open items in state.yaml. UTIL-OPS
+is an UNBUILT domain (0 domain_modules, 0 capability_domains), so per the unbuilt rule the agent
+does NOT scaffold: the build (B1B-S1) is surfaced and stays gated on the structural Bucket-2
+decision B2-5, and the whole module-grain cascade is LEFT. The pass executed every additive /
+corrective item that is NOT module-gated. Loader: `.tmp_deploy/util_ops_state_execute_2026_06_07.ts`
+(idempotent; re-run wrote 0 rows). JWT errors: 0.
+
+Live-state correction: the snapshot's B1A-H1DEF item is now MOOT. All 7 outbound cross-domain
+handoffs (939-945) already carry agent_curated `handoff_processes` rows at record_status='new'
+(944 -> process 302, 945 -> process 828). The prior snapshot recorded zero rows for 944 + 945;
+that was stale. No H1 work owed; no deferral entry needed.
+
+### Executed (all record_status='new'; no approved stamping)
+
+| Item | Band | Action | Rows |
+|---|---|---|---|
+| B13 / Rule #12 | entity_type | PATCH all 8 masters `unclassified` -> `operational_workflow` (deterministic from descriptions + the B1B-S11 state machines: every master is workflow-bearing). | 8 PATCH on data_objects (660-667) |
+| A4 / Rule #20 | Catalog UX | Wrote buyer-voice `catalog_tagline` + `catalog_description` on domain 49 (both were empty). The stale "surface-before-write" gate (old B1B-S3 / B2-3-COPY) was ignored per the bulk-batch contract; never overwrites a non-empty value. No modules exist, so domain row only. | 2 fields on domains (49) |
+| C1 | business_function_domains | INSERT 4 RACI rows on clean 20-function-spine matches: Field Service Operations (51) contributor, Customer Service (24) contributor, Finance (4) consumer, Governance Risk and Compliance (31) consumer. Owner (Business Operations 34) pre-existed. | 4 INSERT on business_function_domains |
+| B11 | data_object_aliases | INSERT 32 `industry_term` generic synonyms across the 8 masters with `industry_id=7` (Utilities). No vendor/product names (Rule #18): Service Agreement / Premises Account; Smart Meter / Endpoint; Interval Read / VEE Reading; Service Point / Point of Delivery; Network Asset / Compatible Unit; Trouble Ticket / Outage Case; Field Order / Field Activity; Statement / Bill Determinant Result; and similar. | 32 INSERT on data_object_aliases |
+
+Total rows written: 46 (8 PATCH data_objects, 1 PATCH domains touching 2 fields, 4 INSERT business_function_domains, 32 INSERT data_object_aliases).
+
+### Surfaced (user decision or destructive; not executed)
+
+- **B2-1** Pattern flags: which of the 8 masters flip `has_personal_content=true` (literalist 4 of 8 vs conservative all 8 vs user subset). Flipping a populated default is a destructive overwrite; surfaced.
+- **B2-2** Outage handoff 942 payload (`outage_events`) vs relationship row 470 (`outage_events opens customer_cases`): keep / repoint / dual-shape.
+- **B2-3** Raw meter reads to ERP-FIN (handoff 944): DELETE (destructive) / repoint to a future UTIL-AMI-MDMS / keep. Depends on Bucket 3 #2.
+- **B2-4** Asset-failure fan-out (`utility_asset.failed` -> both FSM 941 and ITSM 943): keep both / remove 943 (destructive) / split the trigger (recommended).
+- **B2-5** Umbrella vs promote (the structural decision): build 4 modules under UTIL-OPS / demote and promote CIS-UTIL + UTIL-AMI-MDMS + UTIL-OMS + UTIL-WAM / hybrid. Gates the build and all of Bucket 3.
+- **B2-RACI-ENG** Engineering / Asset Management RACI contributor: no clean 20-function-spine match (Software Engineering id 26 is the wrong OT context; there is no Asset Management function). Map to a user-named function or skip. The 4 clean RACI rows were authored; this 5th proposed row was not.
+- **Personas / RACI (Phase P):** DEFERRED. Not authored. The domain is unbuilt; persona / role_modules / process_raci work applies only after the multi-module build. Candidate personas once built: Meter-to-Cash Billing Analyst, AMI / Meter Data Operator, Outage Operator / Dispatcher, Field Work Coordinator, Network Asset Engineer.
+
+### Left (not touched)
+
+- **B1B-S1 (the build) + the module-grain cascade:** B1B-S2 (capabilities), B1B-S5 (intra-domain relationships), B1B-S6 (users edges), B1B-S7 (outbound cross-domain relationships), B1B-S8 (intra-domain handoffs + terminal trigger events), B1B-S9 (source-side handoff FK patches), B1B-S11 (lifecycle states). All blocked on the build, which is gated on B2-5. The agent does not scaffold an unbuilt domain.
+- **B1A-H1DEF:** moot (all 7 handoffs already tagged live, see Summary).
+- **RETIRED (superseded 2026-06-06 / per-domain-skill restoration):** B1B-S13 (module-scoped skills + skill_tools + DELETE legacy skill 115), B1B-S15 / B2-6 (F7 send_email channel-primitive PATCH). The per-module skill grain and skill_tools are dropped; tool requirements move to domain_module_tools during/after the build. Reframed as a note in state.yaml; supersession header retained.
+- **b3 backlog:** 7 missing-domain candidates (CIS-UTIL, UTIL-AMI-MDMS, UTIL-OMS, UTIL-WAM, UTIL-DERMS, UTIL-GIS, UTIL-OPS-leadership). Non-blocking; resolution flows from B2-5.
+
+### Counts
+
+- Executed: 4 write types, 46 rows.
+- Surfaced: 5 open b2 + 1 new RACI-mapping decision + personas deferral.
+- Left (blocked b1b): 8 (build + 7 module-grain dependents) + 1 partial RACI.
+- Retired: B1B-S13, B1B-S15, B2-6.
+- b3: 7 candidates.
+- JWT errors: 0.
+
+### UI links (tables written)
+
+- https://tests.semantius.app/domain_map/data_objects?id=in.(660,661,662,663,664,665,666,667)
+- https://tests.semantius.app/domain_map/domains?id=eq.49
+- https://tests.semantius.app/domain_map/business_function_domains?domain_id=eq.49
+- https://tests.semantius.app/domain_map/data_object_aliases?data_object_id=in.(660,661,662,663,664,665,666,667)

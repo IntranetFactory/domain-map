@@ -264,3 +264,39 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass over the open items in `audits/DCIM/state.yaml` (no fresh from-scratch audit). DCIM remains an UNBUILT domain: live reconfirmed 0 `domain_modules`, 0 `capability_domains`, 0 `solution_domains` on domain id 84. The build and its entire downstream cascade are gated on the user's `B2-MODULE-SPLIT` decision, so they were NOT scaffolded. The pass executed the three build-independent additive/corrective items, surfaced the build and the remaining judgment calls, and left the gated cascade and the speculative backlog in place. Writes landed via [.tmp_deploy/dcim_state_execute_2026_06_07.ts](../../.tmp_deploy/dcim_state_execute_2026_06_07.ts) (run from project root), idempotent, all at `record_status='new'` (Rule #1). No DELETE, no overwrite of a non-empty value, no `record_status` flip.
+
+### Executed
+
+- **entity_type (B13 / Rule #12), 10 PATCHes.** All 10 DCIM masters were `entity_type='unclassified'`. Classified deterministically from the description: `operational_workflow` x3 (dc_racks 546, dc_power_circuits 549, dc_capacity_plans 553, the masters with explicit state machines), `operational_record` x7 (dc_cabinets 547, dc_power_distribution_units 548, dc_uninterruptible_power_supplies 550, dc_cooling_units 551, dc_environmental_readings 552, dc_port_connections 554, dc_cable_connections 555). 0 remain unclassified. The three sensor/topology-shape masters (552, 554, 555) classified `operational_record` IS the new structural config-shape lifecycle exemption per Rule #12; this resolves and retires the old `B2-LIFECYCLE-EXEMPTION` judgment call (no `data_objects.notes` write, Rule #15 honored).
+- **Catalog UX (Rule #20), 2 fields written.** `catalog_tagline` and `catalog_description` on domain row 84 were both empty strings; authored buyer-voice copy (workflow + value, no vendor names, no em-dash, American English) and wrote it in. The stale "surface-before-write / user approval first" gate on the old B1B-S4 item was overridden per the state-driven execute contract. B1B-S4 dropped from state (executed).
+- **data_object_relationships (B1A-T5b), 11 INSERTs (rows 2142 to 2152).** The 9 intra-domain master-to-master edges (dc_racks contains dc_cabinets; dc_cabinets contains dc_power_distribution_units; dc_power_distribution_units feeds dc_power_circuits; dc_power_circuits powers dc_cabinets; dc_uninterruptible_power_supplies backs dc_power_distribution_units; dc_cooling_units serves dc_cabinets; dc_environmental_readings sampled_at dc_cabinets; dc_capacity_plans plans dc_racks; dc_port_connections connects dc_cable_connections) plus the 2 cross-domain edges (dc_port_connections updates configuration_items 76 / CMDB; dc_capacity_plans informs financial_plans 37 / SPM). `data_object_relationships` has NO module FK column, so the state.yaml `blocked_by` on these was a round-trip-optimization gate, not a data dependency; executed now. Shape matches the existing user-edges (1782 to 1785): `relationship_type=one_to_many`, `owner_side=source`, `is_required=false`; `relationship_kind` = composition for the structural "contains" edges, association for functional topology edges, reference for cross-domain. The 4 user-edges were left untouched. B1A-T5b dropped from state (executed).
+
+### Surfaced (for the user, no write made)
+
+- **B2-MODULE-SPLIT (b2, gating).** Pick the DCIM module split: (a) 3-module (DCIM-ASSET-CAPACITY + DCIM-POWER-COOLING + optional DCIM-FLOORPLAN-SITE), (b) 2-module (DCIM-PHYSICAL + DCIM-POWER-COOLING), (c) 1 full + 1 starter (DCIM-CORE + DCIM-LITE), (d) other. Gates the entire build and every remaining b1 item.
+- **B2-CAPABILITY-SET (b2).** Which of the 7 proposed capability codes land, and whether DCIM-CAPACITY-PLAN folds into the existing cross-cutting ITOM-CAPACITY (227) via a capability_domains link rather than a new code.
+- **B2-ENV-READING-FAN-OUT (b2).** Should dc_environmental_reading.threshold_breached (event 694) fan out a second outbound to ITSM-INCIDENT-MGMT (major-incident trigger), or leave it to ITOM to correlate and re-publish?
+- **B1A-BUILD (the unbuilt-domain build).** DCIM has masters but no modules/capabilities/solutions. Run Phase A then M then B then S to build (and Phase P if multi-module). Blocked on B2-MODULE-SPLIT.
+
+### Left (untouched)
+
+- **b1a B1A-T2** (new handoff for dc_power_circuit.overload event 691) and **B1A-B1** (PATCH source_domain_module_id on the 9 outbound handoffs): both need a `source_domain_module_id`, which requires modules. Gated on B1B-S1 / B2-MODULE-SPLIT.
+- **b1b B1B-S1, S2, S3, S6, T7**: the structural build cascade (modules, capabilities, solutions, roles, lifecycle states), all blocked on B2-MODULE-SPLIT and/or modules.
+- **b1b B1B-S5**: SUPERSEDED per the 2026-06-06 per-domain-skill restoration; reframed as a note only (one domain-grain system skill derived from domain_module_tools; no per-module skills, no skill_tools). Resolution folds into the build.
+- **b3 backlog (6 candidates)**: dc_floor_plans, dc_sites, dc_change_requests, dc_power_reservations, dc_audit_trails, dc_discovery_scans. Non-blocking Phase 0 vetting ideas.
+
+### Decisions
+
+`B2-LIFECYCLE-EXEMPTION` (was a b2 judgment call) is resolved and retired: under Rule #12 the config-shape exemption for the sensor/topology masters is the `entity_type='operational_record'` classification itself, written this pass. No notes wording is needed.
+
+### UI links (tables written)
+
+- `https://tests.semantius.app/domain_map/data_objects` (entity_type)
+- `https://tests.semantius.app/domain_map/domains?id=eq.84` (catalog UX)
+- `https://tests.semantius.app/domain_map/data_object_relationships` (11 new edges)

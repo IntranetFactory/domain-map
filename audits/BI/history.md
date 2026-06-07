@@ -321,3 +321,61 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate execute pass over the open items in `audits/BI/state.yaml`
+(no fresh from-scratch audit). Domain id 74, masters 230/691/692/693/694
+re-confirmed live before any write. All writes via the `semantius` CLI through
+[.tmp_deploy/bi_state_execute_2026_06_07.ts](../../.tmp_deploy/bi_state_execute_2026_06_07.ts),
+idempotent, landing at `record_status='new'`. No DELETE, no overwrite of a
+non-empty value, no `record_status` flip. No em-dash in any authored content.
+
+### Executed (additive/corrective; record_status='new')
+
+| Item | Action | Count |
+|---|---|---|
+| Rule #12 entity_type | PATCH 5 masters off `unclassified`: semantic_metrics (230) -> `computed`; bi_reports (691), bi_dashboards (692), bi_subscriptions (694) -> `operational_workflow`; bi_queries (693) -> `catalog` | 5 |
+| B2-S5 / A4 catalog UX (Rule #20) | PATCH BI domain row (74): authored buyer-voice `catalog_tagline` + `catalog_description` (both were empty; stale surface-before-write gate ignored per Rule #21) | 2 fields |
+| B1A-S4 / B6 intra-domain relationships | INSERT 6 `data_object_relationships` among the 5 masters (new ids 2136-2141): bi_queries feeds bi_reports; bi_queries feeds bi_dashboards; bi_reports is_delivered_by bi_subscriptions; bi_dashboards is_delivered_by bi_subscriptions; semantic_metrics is_referenced_by bi_queries; semantic_metrics is_rendered_on bi_dashboards | 6 |
+| B1A-S8 / B11 aliases | INSERT 12 generic-synonym `data_object_aliases` (alias_type='synonym'): bi_reports (Reports, Analytical Reports); bi_dashboards (Dashboards, Analytics Dashboards); bi_queries (Saved Queries, Analytical Queries); bi_subscriptions (Subscriptions, Report Subscriptions); semantic_metrics (Metrics, Business Metrics, Measures, KPIs) | 12 |
+
+### Resolved-without-write
+
+- **B1A-H1 (APQC tag on handoff 1341):** already tagged live with process 277 "Manage business information" (external_id 20779, L3), `proposal_source='agent_curated'`, `record_status='new'`. No action needed. Handoffs 690 (BI->DLP, `bi_dashboard.shared_externally`) and 695 (METRICS-LAYER->BI, `metric_access_policy.changed`) stay as Discover Pass 3 custom-process candidates (no clean cross-industry PCF). APQC coverage now 10 of 12 cross-domain handoffs.
+
+### Surfaced (no write; user decision or destructive)
+
+- **B2-S1 (module cut):** 2-module vs 3-module vs other. Editorial; gates B1A-BUILD + B1B-S1.
+- **B2-S3 (B4 pattern flags):** per-flag yes/no on has_personal_content / has_submit_lock / has_single_approver across the 5 masters. Now sharper since 3 masters are typed `operational_workflow`.
+- **B2-S4 (legacy system skill id 33) reframed:** under the 2026-06-06 per-domain-skill supersession, id 33 (`domain_id=74`, `domain_module_id=NULL`) is now the CANONICAL domain-grain system skill, not migration debt; the "plan-delete-after-module-skills" framing is RETIRED. Residual destructive item only: id 33's `description` carries a forbidden em-dash (U+2014). Overwriting a non-empty value needs sign-off; a clean ASCII replacement is proposed in state.yaml. Not applied.
+- **B1A-BUILD (unbuilt domain):** 0 modules / 0 capabilities. Build is gated on B2-S1; not scaffolded (UNBUILT discipline).
+
+### Left (blocked / backlog / superseded)
+
+- **b1b S1, S6, S7, S9, N1, N2:** all blocked on B1B-S1 / B2-S1 (need BI modules + per-module DMDOs) or on a target-side master not yet identified. B1B-S9 note refreshed: lifecycle now REQUIRED only for the 3 `operational_workflow` masters.
+- **b1b N3:** report-only, owed by ITSM / SUB-MGMT / DCG / DLP / FINOPS audits (consumer DMDOs on BI masters).
+- **b3 (B3-1 .. B3-7):** discretionary entity-candidate backlog; non-blocking; pending Phase 0.
+- **Aliases vendor-product residual:** vendor-specific labels (Look, Liveboard, Paginated Report, Master Item, App, Page, Explore, Story, View, Answer) NOT inserted (Rule #18 product names); deferred as a `solution_term` backlog note tied to matching solutions.
+- **Per-domain-skill supersession header:** preserved.
+
+### Loader
+
+[.tmp_deploy/bi_state_execute_2026_06_07.ts](../../.tmp_deploy/bi_state_execute_2026_06_07.ts)
+
+### UI links
+
+- https://tests.semantius.app/domain_map/data_objects?id=in.(230,691,692,693,694)
+- https://tests.semantius.app/domain_map/domains?id=eq.74
+- https://tests.semantius.app/domain_map/data_object_relationships
+- https://tests.semantius.app/domain_map/data_object_aliases?data_object_id=in.(230,691,692,693,694)
+
+### JWT errors
+
+None encountered during this pass.
+
+### Post-fix status
+
+next_action_by: user (B2-S1 module cut is the keystone decision; B2-S3 and B2-S4 are independent).

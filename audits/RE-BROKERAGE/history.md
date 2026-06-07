@@ -180,3 +180,67 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate execute pass over RE-BROKERAGE (domain 143). Worked only the open
+items in state.yaml; no fresh from-scratch audit. Live footprint reconfirmed: 2 modules
+hosted on 143 (151 RE-BROK-AGENT-OPS full, 152 RE-BROK-BROKERAGE-OPS full). Module 153
+REAL-ESTATE-AGENT is now a cross-cutting starter (`domain_id=null`) hosted on 143 via
+`domain_module_host_domains` alongside CRM (69) and CLM (26); it is still one of this
+domain's catalog surfaces. C1 (business_function_domains) was already satisfied (owner Sales
+21, contributor Marketing 22, consumer Accounting 42, all `record_status='new'`); no C1 work
+needed. Two additive/corrective item families executed; three families surfaced for the user;
+b1b and b3 left as-is.
+
+### Executed (additive/corrective, record_status untouched -> rows stay 'new')
+
+- **B1A-ENTITY-TYPE (B13): 5 masters PATCHed `entity_type` unclassified -> `operational_workflow`.**
+  real_estate_listings (352), real_estate_transactions (353), commission_splits (354),
+  tour_appointments (355), disclosure_documents (356). Each already carries a lifecycle-state
+  set (4 to 8 states, verified live), so operational_workflow is the deterministic
+  classification; no audit-fail risk. This was a fill of the unclassified audit-failure
+  default, not an overwrite of a real value.
+- **B2-CATALOG-UX (A4 + M8): 4 rows backfilled with buyer-voice catalog_tagline + catalog_description.**
+  Domain 143 (1 row), modules 151, 152, and 153 (3 rows). All eight columns were empty;
+  written per Rule #20 revised (write empty fields straight in, never overwrite a non-empty
+  value). Module 153 copy is domain-neutral because it is cross-cutting across three host
+  domains. No vendor names, no em-dash, American English.
+
+### Surfaced (returned to user; not applied)
+
+- **B1A-SELF-CONTAIN (M9) -> reclassified to b2 (DESTRUCTIVE).** DMDO 777 (crm_contacts) and
+  DMDO 776 (crm_leads) on module 151 are role=contributor / necessity=required against
+  CRM-mastered entities. Fixing either by converting to embedded_master or relaxing necessity
+  overwrites the role/necessity on an existing row, which is a destructive edit the agent does
+  not apply unapproved. Surfaced as a per-row decision.
+- **B2-H1-APPROVAL.** 7 `handoff_processes` tags (ids 187-192, 457) confirmed live, all
+  `proposal_source='agent_curated'`, all `record_status='new'`, PCF mappings match the recorded
+  assignments exactly. H1 coverage passes; approved count is 0/7 only because Rule #1 forbids
+  the agent stamping `approved`. Surfaced for user sign-off.
+- **B1A-PHASE-P (Personas / RACI) DEFERRED.** Not authored this pass (Phase-P discipline).
+  Candidate operational personas: Listing Agent, Buyer Agent, Transaction Coordinator,
+  Designated Broker. Bring to a dedicated Phase-P run.
+
+### Left (untouched)
+
+- **b1b (5 items): blocked on other domains.** B1B-CRM-INBOUND (CRM B9 owes inbound handoffs
+  on contact/lead events); B1B-RE-PROP-MGMT-B10B (handoff 296 target NULL); B1B-RE-CRE-B10B
+  (297, 861); B1B-GRC-B10B (311); B1B-RE-INVEST-B10B (862). All clear when the named neighbor
+  domain finishes its B9 / B10b sweep.
+- **b3: B3-PHASE0-MARKET-GAPS.** 10 candidate entities (compliance + MLS clusters) carried in
+  the ideas backlog; non-blocking, never gates "finished".
+
+### Fixes applied / files
+
+- Loader: `.tmp_deploy/2026-06-07_re_brokerage_state_execute.ts` (idempotent, verify-live-then-write).
+- DB writes verified post-run (entity_type and catalog UX both confirmed landed).
+
+### Post-fix status
+
+`next_action_by: user`. All agent-doable additive/corrective work is done. Remaining open items
+are user decisions (b2 + destructive M9 + persona Phase-P) or blocked on neighbor audits (b1b).

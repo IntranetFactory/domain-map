@@ -11,85 +11,27 @@
 schema_version: 2
 domain: TALENT-MGMT
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
+
+# B1A items are all EXECUTED as of 2026-06-07 (entity_type classify, A4/M8 catalog UX,
+# B1A-S5 trigger_events, H1 APQC tagging). B1A-PHASE-P (personas/RACI) is DEFERRED per the
+# E1 persona policy (not auto-authored). Remaining open work is all user-gated (b2 + destructive)
+# or backlog (b3).
 
 b1a:
-  - id: B1A-S2
-    summary: "Draft + surface buyer-voice catalog_tagline and catalog_description for domain row 58 (A4 backfill); load only after user review per Rule #20."
-    finding: "A4 fails: domains.id=58 (TALENT-MGMT) has empty catalog_tagline and empty catalog_description. Rule #20 allows backfill of empty values but requires draft + surface to user BEFORE write."
-    action: "Draft a single-sentence buyer-voice tagline + 1-3 paragraph workflow-value description for the TALENT-MGMT market, surface to user, on per-row approval PATCH /domains?id=eq.58 with the approved text."
-    affected_entities:
-      - "domains/58 (TALENT-MGMT)"
-
-  - id: B1A-S3
-    summary: "Draft + surface buyer-voice catalog_tagline and catalog_description for all 3 TALENT-MGMT modules (M8 backfill); load only after per-row user approval."
-    finding: "M8 fails: domain_modules 51 (TALENT-PERFORMANCE-MGMT), 52 (TALENT-SUCCESSION-CAREER), 53 (TALENT-CONTINUOUS-FEEDBACK) all have empty catalog_tagline and catalog_description. Rule #20 applies at module grain too."
-    action: "Draft per-module buyer-voice tagline + 1-3 paragraph description for each of the 3 modules; surface as a per-row table; PATCH each domain_modules row only on explicit per-row approval."
-    affected_modules: [51, 52, 53]
-
-  - id: B1A-S5
-    summary: "INSERT 11 missing trigger_events for workflow-gate lifecycle states across 5 masters; seeds B1A-S4 intra-domain handoffs."
-    finding: "B9 secondary check: 11 lifecycle states with requires_permission=true on TALENT-MGMT masters lack matching trigger_events rows. States: 525 (174.self_assessment), 526 (174.manager_assessment), 527 (174.submitted), 528 (174.calibrated), 529 (174.published), 533 (175.approved), 536 (175.cancelled), 544 (177.ratings_locked), 545 (177.published), 547 (176.reviewed), 549 (176.archived), 552 (178.confirmed), 559 (180.shared). State 535 (175.completed) already maps to event 444; state 548 (176.published) maps to 445. Net 11 new events."
-    action: "INSERT 11 trigger_events rows. event_category='state_change' for the terminal/gate states; 'lifecycle' for entry-shaped states. data_object_id on the publishing master. Three of these (performance_review.published on 174, feedback_record.shared on 180, nine_box_placement.confirmed on 178) are referenced by B1A-S4 handoffs."
-    affected_masters:
-      - {data_object_id: 174, name: performance_reviews, target_module_id: 51, workflow: "review cycle"}
-      - {data_object_id: 175, name: performance_goals, target_module_id: 51, workflow: "goal lifecycle"}
-      - {data_object_id: 176, name: succession_plans, target_module_id: 52, workflow: "succession plan publishing"}
-      - {data_object_id: 177, name: talent_calibrations, target_module_id: 51, workflow: "calibration session"}
-      - {data_object_id: 178, name: nine_box_placements, target_module_id: 52, workflow: "9-box confirmation"}
-      - {data_object_id: 180, name: feedback_records, target_module_id: 53, workflow: "feedback sharing"}
-
-  - id: B1A-S7
-    summary: "Author 16 NEW + REPLACE 4 weak handoff_processes rows on TALENT-MGMT cross-domain handoffs; H1 floor still unmet."
-    finding: "H1 fails: 7 of 23 cross-domain handoffs carry handoff_processes rows (3 agent_curated on 432, 440, 443; 2 discovery_substring on 1108, 437; 2 discovery_override on 22, 376). Zero record_status='approved'. H1 floor 0.5N for N=23 is 12 agent_curated rows; current 3. 16 cross-domain handoffs still untagged: 113, 438, 439, 441, 793, 26, 1110, 1113, 430, 450, 111, 1306, 421, 1320, 1321, 1034. 4 weak rows warrant agent_curated upgrade."
-    action: "Run /processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry per handoff using the candidate matrix preserved in 2026-05-30 history.md Bucket-1 APQC table. INSERT 16 + REPLACE 4 = 20 rows with proposal_source='agent_curated', record_status='new'. Defer Discover-pass-3-only candidates (no clean PCF match) with explicit reason; do NOT bulk-tag without per-handoff resolution."
-    affected_handoffs:
-      - {handoff_id: 113, direction: outbound, source_domain: TALENT-MGMT, target_domain: COMP-MGMT, trigger_event: "calibration.complete", payload: performance_reviews, null_field: null}
-      - {handoff_id: 438, direction: outbound, source_domain: TALENT-MGMT, target_domain: HCM, trigger_event: "performance_goal.completed", payload: performance_goals, null_field: null}
-      - {handoff_id: 439, direction: outbound, source_domain: TALENT-MGMT, target_domain: COMP-MGMT, trigger_event: "nine_box_placement.updated", payload: nine_box_placements, null_field: null}
-      - {handoff_id: 441, direction: outbound, source_domain: TALENT-MGMT, target_domain: HCM, trigger_event: "high_potential.identified", payload: workforce_segments, null_field: target_domain_module_id}
-      - {handoff_id: 793, direction: inbound, source_domain: SPM, target_domain: TALENT-MGMT, trigger_event: "business_value_assessment.completed", payload: business_value_assessments, null_field: source_domain_module_id}
-      - {handoff_id: 26, direction: inbound, source_domain: PA, target_domain: TALENT-MGMT, trigger_event: "high_potential.identified", payload: workforce_segments, null_field: null}
-      - {handoff_id: 1110, direction: inbound, source_domain: PA, target_domain: TALENT-MGMT, trigger_event: "attrition_risk.elevated", payload: attrition_forecasts, null_field: null}
-      - {handoff_id: 1113, direction: inbound, source_domain: PA, target_domain: TALENT-MGMT, trigger_event: "predictive_model.deployed", payload: predictive_models, null_field: null}
-      - {handoff_id: 430, direction: inbound, source_domain: LMS, target_domain: TALENT-MGMT, trigger_event: "course_enrollment.completed", payload: course_enrollments, null_field: null}
-      - {handoff_id: 450, direction: inbound, source_domain: PA, target_domain: TALENT-MGMT, trigger_event: "attrition_risk.high", payload: employees, null_field: target_domain_module_id}
-      - {handoff_id: 111, direction: inbound, source_domain: LMS, target_domain: TALENT-MGMT, trigger_event: "learner_certification.earned", payload: skill_profiles, null_field: null}
-      - {handoff_id: 1306, direction: inbound, source_domain: LMS, target_domain: TALENT-MGMT, trigger_event: "learner_badge.earned", payload: learner_badges, null_field: null}
-      - {handoff_id: 421, direction: inbound, source_domain: COMP-MGMT, target_domain: TALENT-MGMT, trigger_event: "merit_cycle.closed", payload: merit_cycles, null_field: null}
-      - {handoff_id: 1320, direction: inbound, source_domain: WORK-MGMT, target_domain: TALENT-MGMT, trigger_event: "okr_objective.committed", payload: okr_objectives, null_field: null}
-      - {handoff_id: 1321, direction: inbound, source_domain: WORK-MGMT, target_domain: TALENT-MGMT, trigger_event: "okr_objective.scored", payload: okr_objectives, null_field: null}
-      - {handoff_id: 1034, direction: inbound, source_domain: ATS, target_domain: TALENT-MGMT, trigger_event: "candidate_assessment.passed", payload: candidate_assessments, null_field: null}
-      - {handoff_id: 1108, direction: inbound, source_domain: PA, target_domain: TALENT-MGMT, trigger_event: "engagement.declining", payload: engagement_surveys, null_field: null}
-      - {handoff_id: 437, direction: outbound, source_domain: TALENT-MGMT, target_domain: HCM, trigger_event: "succession_plan.published", payload: succession_plans, null_field: target_domain_module_id}
-      - {handoff_id: 22, direction: inbound, source_domain: HCM, target_domain: TALENT-MGMT, trigger_event: "employee.created", payload: employees, null_field: null}
-      - {handoff_id: 376, direction: inbound, source_domain: HCM, target_domain: TALENT-MGMT, trigger_event: "employee.promoted", payload: employees, null_field: null}
   - id: B1A-PHASE-P
-    summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
+    summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED 2026-06-07 (personas are not auto-authored)."
     finding: "Live triage 2026-06-02: 3 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "7 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 7 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [career_aspirations, feedback_records, nine_box_placements, performance_goals, performance_reviews, succession_plans, talent_calibrations]
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-SELF-CONTAIN
-    summary: "2 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
-    finding: "Live triage 2026-06-02: 2 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
-    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
-    extra_m9_shapes:
-      - {entity: job_profiles, module: TALENT-SUCCESSION-CAREER, role: contributor, master_domain: HCM}
-      - {entity: skill_profiles, module: TALENT-PERFORMANCE-MGMT, role: contributor, master_domain: SKILLS-MGMT}
+    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: HR Business Partner, People Manager, Talent Development / Talent Manager (the 3 role bundles already reaching these modules via role_permissions)."
+    status: deferred
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-S1
-    summary: "DELETE 3 sibling consumer DMDOs (52,174), (53,174), (52,177) OR PROMOTE each to embedded_master; M7 hard-fail persists."
+    summary: "DELETE 3 sibling consumer DMDOs (52,174), (53,174), (52,177) OR PROMOTE each to embedded_master; M7 hard-fail persists. DESTRUCTIVE; gated on B2-S1."
     finding: "M7 within-domain incoherence: performance_reviews (174) is role='master' in module 51 AND role='consumer' in modules 52 (required) and 53 (optional). talent_calibrations (177) is role='master' in 51 AND role='consumer' in 52 (required). M7 rejects master + consumer in sibling modules of the same domain."
-    action: "On user decision (B2-S1): DELETE the 3 consumer DMDO rows via /domain_module_data_objects DELETE; OR PROMOTE each to role='embedded_master' with appropriate necessity. The DELETE route makes 52/53 read 174/177 through the canonical master on 51; the PROMOTE route ships standalone-deployable shells per module."
+    action: "On user decision (B2-S1): DELETE the 3 consumer DMDO rows via /domain_module_data_objects DELETE; OR PROMOTE each to role='embedded_master' with appropriate necessity. The DELETE route makes 52/53 read 174/177 through the canonical master on 51; the PROMOTE route ships standalone-deployable shells per module. NOT executed: destructive, never done unapproved (Rule #21)."
     blocked_by:
       - {type: user_decision, ref: B2-S1}
     affected_entities:
@@ -97,23 +39,10 @@ b1b:
       - "domain_module_data_objects/(53,174,consumer)"
       - "domain_module_data_objects/(52,177,consumer)"
 
-  - id: B1B-S4
-    summary: "Author 5 intra-domain handoffs covering 51↔52, 51↔52, 53→51, 51→52, 52→52; B9b hard-fail persists."
-    finding: "B9b hard fail: 0 intra-domain handoff rows on a 3-module domain whose state machines clearly fan out across modules. Expected pairs from relationship graph + multi-module workflow-gate states: 51→52 on talent_calibration.completed (446); 51→52 on performance_review.published (new from B1A-S5); 53→51 on feedback_record.shared (new); 51→52 on performance_goal.completed (444); 52→52 on nine_box_placement.confirmed (new)."
-    action: "Author 5 handoffs rows with source_domain_id=target_domain_id=58, integration_pattern='lifecycle_progression', friction_level='low'. trigger_event_id wiring requires B1A-S5 events to exist."
-    blocked_by:
-      - {type: depends_on, ref: B1A-S5, reason: "3 of the 5 handoffs reference new trigger_events authored in B1A-S5 (performance_review.published, feedback_record.shared, nine_box_placement.confirmed)"}
-    affected_handoffs:
-      - {handoff_id: null, direction: intra, source_domain: TALENT-MGMT, target_domain: TALENT-MGMT, trigger_event: "talent_calibration.completed", payload: performance_reviews, null_field: null, scope_note: "51 → 52, calibrated review feeds 9-box derivation"}
-      - {handoff_id: null, direction: intra, source_domain: TALENT-MGMT, target_domain: TALENT-MGMT, trigger_event: "performance_review.published", payload: performance_reviews, null_field: null, scope_note: "51 → 52, published review unlocks successor-readiness reassessment"}
-      - {handoff_id: null, direction: intra, source_domain: TALENT-MGMT, target_domain: TALENT-MGMT, trigger_event: "feedback_record.shared", payload: feedback_records, null_field: null, scope_note: "53 → 51, shared feedback feeds the next review cycle"}
-      - {handoff_id: null, direction: intra, source_domain: TALENT-MGMT, target_domain: TALENT-MGMT, trigger_event: "performance_goal.completed", payload: performance_goals, null_field: null, scope_note: "51 → 52, completed goal signals career-development progress"}
-      - {handoff_id: null, direction: intra, source_domain: TALENT-MGMT, target_domain: TALENT-MGMT, trigger_event: "nine_box_placement.confirmed", payload: nine_box_placements, null_field: null, scope_note: "52 → 52, confirmed placement triggers succession_plan revision"}
-
   - id: B1B-S6
     summary: "PATCH handoff 450 target_domain_module_id; gated on B2-S5 tie resolution (employees embedded_master in all 3 TALENT modules)."
-    finding: "B10b in-scope: handoff 450 (PA → TALENT-MGMT, attrition_risk.high, payload employees) has NULL target_domain_module_id. DMDO master-rule yields a tie (employees=31 is embedded_master in 51, 52, 53 at equal strongest role); B10b prescribes NULL until disambiguation."
-    action: "On user choice (B2-S5): PATCH handoffs.id=450 set target_domain_module_id=<chosen module>. Plausible target is 52 (SUCCESSION-CAREER) since attrition risk drives successor-readiness reassessment."
+    finding: "B10b in-scope: handoff 450 (PA -> TALENT-MGMT, attrition_risk.high, payload employees) has NULL target_domain_module_id. DMDO master-rule yields a tie (employees=31 is embedded_master in 51, 52, 53 at equal strongest role); B10b prescribes NULL until disambiguation."
+    action: "On user choice (B2-S5): PATCH handoffs.id=450 set target_domain_module_id=<chosen module>. Plausible target is 52 (SUCCESSION-CAREER) since attrition risk drives successor-readiness reassessment. NOT executed: blocked on the B2-S5 tie decision."
     blocked_by:
       - {type: user_decision, ref: B2-S5}
     affected_handoffs:
@@ -127,18 +56,18 @@ b2:
       - "(a) DELETE all 3 (52,174), (53,174), (52,177)"
       - "(b) PROMOTE all 3 to embedded_master"
       - "(c) Mixed (specify per row)"
-    why: "Standalone SUCCESSION-CAREER without PERFORMANCE-MGMT has no calibrated review to derive a 9-box from; standalone CONTINUOUS-FEEDBACK without PERFORMANCE-MGMT has no review cycle to feed. The embedded path looks weak; DELETE is the cleaner architectural fit but locks the modules together at deploy time."
+    why: "Standalone SUCCESSION-CAREER without PERFORMANCE-MGMT has no calibrated review to derive a 9-box from; standalone CONTINUOUS-FEEDBACK without PERFORMANCE-MGMT has no review cycle to feed. The embedded path looks weak; DELETE is the cleaner architectural fit but locks the modules together at deploy time. Agent recommendation: DELETE all 3."
 
   - id: B2-S2
-    summary: "Rule #15 notes-pollution status on 14 skill_tools rows under skills 137/138/139; revert or confirm user-approved."
-    question: "Were the populated notes on skill_tools rows 1305-1318 user-approved at load time, or auto-populated by the loader?"
+    summary: "Rule #15 notes-pollution status on 14 skill_tools rows under skills 137/138/139; revert or confirm user-approved. NOTE: per-module system skills + skill_tools are RETIRED (supersession header); this item is a residual cleanup decision only."
+    question: "Were the populated notes on skill_tools rows 1305-1318 user-approved at load time, or auto-populated by the loader? (skill_tools is a dropped table under Plan 3; if these rows still exist they are legacy.)"
     options:
-      - "(a) User-approved at load time; leave in place"
+      - "(a) User-approved at load time; leave in place / leave to skill_tools retirement"
       - "(b) Auto-populated; PATCH all 14 to empty string and log Rule #15 incident in references/skill-changelog.md"
     why: "Per Rule #15 the default is empty notes. The notes column is forbidden unless the exact wording was surfaced and approved per row. Audit alone cannot tell which path produced these strings."
 
   - id: B2-S3
-    summary: "F7 channel-primitive justification on sign_document (skill_tool 1310); coupled to B2-S2 outcome."
+    summary: "F7 channel-primitive justification on sign_document (skill_tool 1310); coupled to B2-S2 outcome. Also residual under skill_tools retirement."
     question: "Is sign_document on TALENT-PERFORMANCE-MGMT system skill (137) the actual workflow for regulated industries, or should the row be cleaned or removed?"
     options:
       - "(a) Supply user-approved notes wording explaining the regulated-signing workflow"
@@ -147,19 +76,19 @@ b2:
     why: "Rule #15 vs F7 boundary; resolution depends on B2-S2 outcome (if all skill_tools notes get reverted under B2-S2 option b, B2-S3 collapses to option b/c)."
 
   - id: B2-S4
-    summary: "B4 pattern-flag re-evaluation; 5 candidate flips across 4 masters."
+    summary: "B4 pattern-flag re-evaluation; 5 candidate flips across 4 masters. Each flip overwrites an existing boolean -> surfaced, not auto-applied."
     question: "Per-flag yes/no on the following candidate pattern-flag flips on TALENT-MGMT masters."
     options:
-      - "(a) nine_box_placements (178).has_submit_lock = true"
-      - "(b) career_aspirations (179).has_submit_lock = true"
-      - "(c) feedback_records (180).has_submit_lock = true"
-      - "(d) succession_plans (176).has_single_approver = true"
+      - "(a) nine_box_placements (178).has_submit_lock = true (terminal 'confirmed' gate)"
+      - "(b) career_aspirations (179).has_submit_lock = true (terminal 'fulfilled'/'withdrawn')"
+      - "(c) feedback_records (180).has_submit_lock = true (terminal 'acknowledged' locks edits)"
+      - "(d) succession_plans (176).has_single_approver = true (CHRO / BU-head sign-off)"
       - "(e) talent_calibrations (177).has_single_approver remains false (multi-approver pattern; confirm)"
     why: "Pattern flags are workflow-shape judgments not derivable from structural state."
 
   - id: B2-S5
-    summary: "Handoff 450 target module assignment; DMDO tie on employees across 51/52/53."
-    question: "Which TALENT-MGMT module is the right target for inbound handoff 450 (PA → TALENT, attrition_risk.high, payload employees)?"
+    summary: "Handoff 450 target module assignment; DMDO tie on employees across 51/52/53. Gates B1B-S6."
+    question: "Which TALENT-MGMT module is the right target for inbound handoff 450 (PA -> TALENT, attrition_risk.high, payload employees)?"
     options:
       - "(a) 52 TALENT-SUCCESSION-CAREER (attrition risk drives successor readiness)"
       - "(b) 51 TALENT-PERFORMANCE-MGMT"
@@ -176,6 +105,11 @@ b2:
       - "(c) Upgrade HRBP from :read to :manage on module 53"
     why: "Workflow-intent decision the analyst cannot make from structural state alone."
 
+# Defer-to-Discover (report-only; no clean PCF match): handoff 793 (SPM business_value_assessment.completed
+# -> TALENT) carries no handoff_processes row. Searched apqc_pcf_cross_industry: no clean match for the
+# portfolio-value-to-individual-performance crossing. All other 22 cross-domain handoffs ARE tagged
+# (mostly agent_curated, well above the H1 0.5N floor). 793 deferred to a Discover pass.
+
 b3:
   - id: B3-COMPETENCIES
     candidate: competencies
@@ -190,7 +124,7 @@ b3:
 
   - id: B3-PEER-REVIEW-INVITATIONS
     candidate: peer_review_invitations
-    rationale: "Lattice, Leapsome, Workday, 15Five model multi-rater orchestration as distinct from the review record (invitations have their own lifecycle: sent → received → completed → expired). Current catalog folds peer review under feedback_records."
+    rationale: "Lattice, Leapsome, Workday, 15Five model multi-rater orchestration as distinct from the review record (invitations have their own lifecycle: sent -> received -> completed -> expired). Current catalog folds peer review under feedback_records."
     vendor_evidence:
       - {vendor: Lattice, evidence: 1st_class}
       - {vendor: Leapsome, evidence: 1st_class}

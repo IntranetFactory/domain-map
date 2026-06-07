@@ -1,16 +1,10 @@
 schema_version: 2
 domain: DCG
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-06"
 
 b1a:
-  - id: B1A-H1
-    summary: Tag handoff 1341 (BI -> DCG bi_dashboard.published) with PCF process 277 "Manage business information" as agent_curated.
-    finding: Of 30 cross-domain handoffs touching DCG, 25 carry a handoff_processes row. Handoff 1341 (source_domain BI, target DCG, trigger_event bi_dashboard.published, payload bi_dashboards 692) is untagged. The sibling handoff 688 (bi_report.published) was tagged with process_id 277 "Manage business information" (L3, external_id 20779) as agent_curated; 1341 fits the same pattern with confident L3 confidence. The 4 other untagged handoffs (683 ml_model.deployed, 685 feature_set.published, 698 / 699 KGP entity events) stay deferred to Discover Pass 3 per the 2026-05-30 audit licensing.
-    action: INSERT 1 row into handoff_processes with handoff_id=1341, process_id=277, proposal_source='agent_curated', role='implements'. record_status defaulted to 'new' per Rule #1. notes omitted per Rule #15. Single surgical CLI POST; idempotent on the natural (handoff_id, process_id) key.
-    affected_handoffs:
-      - {handoff_id: 1341, direction: inbound, source_domain: BI, target_domain: DCG, trigger_event: bi_dashboard.published, payload: bi_dashboards, null_field: handoff_processes}
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
     finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."

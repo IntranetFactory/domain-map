@@ -385,3 +385,53 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate-mode pass against the open items in `audits/FSM/state.yaml` (no fresh from-scratch audit). Domain id=31; modules FSM-DISPATCH-OPS (161), FSM-INSTALLED-BASE (162), FSM-SERVICE-CONTRACTS (163), starter HVAC-SVC-MGMT (171). Each open state item was re-verified live, then classified EXECUTE / SURFACE / LEAVE per the current contract. Loader: `.tmp_deploy/fix_fsm_state_driven_2026_06_07.ts`, run with `bun run`. All writes idempotent (read-live-then-write), no overwrite of non-empty values, `record_status` omitted (defaults to `new`), `notes` never written. No JWT errors.
+
+### Executed (counts)
+
+| State item | Action | Rows |
+|---|---|---|
+| B1A-ENTITY-TYPE | PATCH `data_objects.entity_type` -> `operational_workflow` | 7 (740 service_work_orders, 261 field_visits, 262 dispatch_records, 741 service_contracts, 819 installed_equipment, 820 service_pm_schedules, 821 customer_sites). All carried real multi-state lifecycles, so the classification was unambiguous. |
+| B1B-A4 / B2-A4 (Catalog UX, Rule #20) | PATCH `domains.catalog_tagline` + `catalog_description` on id=31 | 1 domain row. Buyer-voice copy, no vendor names, no em-dash, American English. Was empty; not an overwrite. The stale "surface-before-write" gate was ignored per the current execute contract. |
+| B1B-M8 / B2-M8 (Catalog UX, Rule #20) | PATCH `domain_modules.catalog_tagline` + `catalog_description` | 4 modules (161, 162, 163, 171). All were empty; buyer-voice copy. |
+| B1A-V2 | INSERT `domain_module_data_objects` consumer rows on FSM-DISPATCH-OPS (161) for UTIL-OPS payloads | 3 (data_object_id 666 utility_service_orders, 664 utility_assets, 662 meter_reads; role=consumer, necessity=optional). New row ids 1571/1572/1573. |
+| B1A-V3 (residual) | INSERT `handoff_processes` APQC tag | 1 (handoff 945 meter_read.anomalous -> process 828 "Report maintenance issues" 10319 L4, proposal_source=agent_curated). Clean, sibling-consistent PCF match (sibling 941 utility_asset.failed already carries 828). Handoff 1261 was found already tagged (-> process 148, agent_curated, new), so nothing was owed there. |
+
+Total: 7 PATCH (entity_type) + 5 PATCH (catalog UX) + 3 INSERT (DMDO) + 1 INSERT (handoff_processes) = 16 writes, all verified live afterward.
+
+### Surfaced (NOT written; awaiting user)
+
+- **B1A-V4 (destructive REPLACE on handoff 230).** Handoff 230 (FSM-DISPATCH-OPS -> CSM, dispatch.failed, payload dispatch_records) still carries the `discovery_substring` row id 128 -> process 777 "Calculate and optimize destination dispatch plan" (10258 L4, FSM-side dispatch-planning verb). Better CSM-side fit is process 196 "Manage customer service problems, requests, and inquiries" (10388 L3). Recommended fix: DELETE handoff_processes id=128, INSERT (230, 196, agent_curated). Destructive (DELETE + overwrite of meaning); not executed unapproved.
+- **B2-M7 (M7 architectural choice).** 4 sibling consumer DMDOs (834, 835, 836, 837) on installed_equipment/customer_sites in FSM-DISPATCH-OPS + FSM-SERVICE-CONTRACTS violate M7 (master + consumer in sibling modules). DELETE (read masters by reference) vs PROMOTE to embedded_master (standalone-deployable shells). Agent default DELETE. Both are destructive on existing rows; user's call. Gates B1B-M7.
+- **B2-FLAGS (pattern-flag re-evaluation).** 6 candidates: service_work_orders.has_submit_lock, field_visits.has_personal_content, dispatch_records.has_submit_lock, installed_equipment.has_personal_content, service_contracts.has_submit_lock, service_pm_schedules.has_submit_lock. Now that all 7 masters are operational_workflow, flags are in scope. Setting a flag overwrites the current value, so per-flag yes/no is owed by the user.
+- **B2-CROSS-DOMAIN-ROLE.** Add an FSM-CUSTOMER-SUCCESS / FSM-OPERATIONS-MANAGER cross-domain role bridging FSM-DISPATCH-OPS + CSM CSM-CASE-MGMT for the failure-escalation workflow, or leave CSM to own its roles. RBAC architecture call.
+- **B2-MOBILE-TECH-SPLIT.** Split FSM-DISPATCH-OPS into dispatcher-side + FSM-MOBILE-TECH (offline sync, route-of-day, signature capture). Pairs with B3-V2 / B3-V6.
+- **B2-STARTER-HOST-SCOPE.** Add CRM / CPQ / ERP-FIN rows to HVAC-SVC-MGMT (171) domain_module_host_domains since it embeds their shells, or keep FSM-only.
+- **H1-review.** All 17 FSM cross-domain handoffs now carry agent_curated handoff_processes rows at record_status='new'; the approved count stays 0 until a reviewer signs off (Rule #1 forbids agent self-approval). Approve in bulk / per row / defer.
+- **B1A-PHASE-P (personas / RACI), DEFERRED.** Multi-module domain with 0 operational personas (E1) after Plan 3 deleted the old _core personas. Per the current contract, personas are not auto-authored. Candidate operational personas to author on user go-ahead: Field Service Dispatcher (FSM-DISPATCH-OPS), Field Service Technician (FSM-DISPATCH-OPS + FSM-INSTALLED-BASE), Field Service Manager (all 3 full modules), Service Contract Administrator (FSM-SERVICE-CONTRACTS).
+
+### Left
+
+- **B1A-V1, OBSOLETE (not executed).** It asked to hand-write 3 rows into `domain_data_objects`, the deprecated derived rollup. For a modularized domain the rollup must not be hand-written; the authoritative module-grain `domain_module_data_objects` already carries all 7 FSM masters with role='master' on their owning modules (740/261/262 -> 161; 819/820/821 -> 162; 741 -> 163). Rollup is derived from that junction; nothing owed. Dropped from state.
+- **B1B blocked items kept:** B1B-M7 (gated on B2-M7), B1B-H1-APPROVED (gated on H1-review), and the report-only pairwise FK items owed by other domains' audits: B1B-CSM-PAIRWISE, B1B-FLEET-PAIRWISE, B1B-ERP-FIN-PAIRWISE, B1B-EAM-PAIRWISE, B1B-REAL-EST-PAIRWISE, B1B-RE-PROP-MGMT-PAIRWISE, B1B-RE-CRE-PAIRWISE, B1B-UTIL-OPS-PAIRWISE (FSM side of the UTIL-OPS pairwise is now fully complete: target FKs on 940/941/945 = 161 and consumer DMDOs 666/664/662 present; only the UTIL-OPS source FK remains owed by UTIL-OPS).
+- **RETIRED / superseded:** B2-STARTER-SCOPE (starter skill_tools scope) is canceled under the per-domain-skill-restoration supersession (skill_tools dropped; per-module tool re-authoring tracked in audits/_modularization-backlog.md as domain_module_tools work).
+- **b3 backlog untouched:** B3-V1..B3-V10 (entity clusters, two module splits, two regulation rows, TRADES-SVC domain candidate).
+
+### Spot-check links
+
+- entity_type: https://tests.semantius.app/domain_map/data_objects?id=in.(261,262,740,741,819,820,821)
+- catalog UX (domain): https://tests.semantius.app/domain_map/domains?id=eq.31
+- catalog UX (modules): https://tests.semantius.app/domain_map/domain_modules?id=in.(161,162,163,171)
+- consumer DMDOs (B1A-V2): https://tests.semantius.app/domain_map/domain_module_data_objects?domain_module_id=eq.161&data_object_id=in.(662,664,666)
+- handoff_processes (B1A-V3): https://tests.semantius.app/domain_map/handoff_processes?handoff_id=eq.945
+
+### Post-fix status
+
+`next_action_by: user`. Open decisions: B2-M7, B2-FLAGS, B2-CROSS-DOMAIN-ROLE, B2-MOBILE-TECH-SPLIT, B2-STARTER-HOST-SCOPE, H1-review, plus the destructive B1A-V4 replace and the deferred B1A-PHASE-P personas. All blocked b1b items wait on those decisions or on neighbor-domain audits.

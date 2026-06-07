@@ -11,40 +11,34 @@
 schema_version: 2
 domain: DQ
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
+
+# DQ is UNBUILT: 0 domain_modules (M1 fail), 0 capability_domains. Per the overlay test it is
+# master-bearing, not a derive/overlay domain (7 real masters persisted), so it needs a real
+# Phase A/M/B/S build, not a synthetic scaffold. The build is gated on the module-split and
+# anomaly-owner decisions below. The agent does NOT scaffold an unbuilt domain; the M / F /
+# B10b / lifecycle cascade is left until modules exist. Everything actionable now is either
+# already executed (see history 2026-06-07) or gated on a user decision.
 
 b1a:
-  - id: B1A-NEW1
-    summary: "4 trigger_events on DQ masters carry empty event_category; PATCH to the Rule #13 enum."
-    finding: |
-      Trigger events with empty event_category (Rule #13 enum is lifecycle | state_change | threshold | signal):
-      745 dq_dimension.threshold_breached, 746 dq_dimension.recovered, 747 dq_sla_definition.breached,
-      748 dq_sla_definition.published. The 3 DQ events with non-empty categories already follow the pattern
-      (243 quality_rule.breach=state_change, 246 dq_scorecard.breached=threshold, 244 quality_incident.raised=lifecycle).
-    action: |
-      PATCH each of the 4 trigger_events rows: 745 to threshold, 746 to state_change, 747 to threshold,
-      748 to lifecycle. Pure mechanical PATCH via semantius CLI; no user judgment beyond enum mapping.
-    affected_events:
-      - {id: 745, event_name: "dq_dimension.threshold_breached", current_category: "", proposed_category: "threshold"}
-      - {id: 746, event_name: "dq_dimension.recovered", current_category: "", proposed_category: "state_change"}
-      - {id: 747, event_name: "dq_sla_definition.breached", current_category: "", proposed_category: "threshold"}
-      - {id: 748, event_name: "dq_sla_definition.published", current_category: "", proposed_category: "lifecycle"}
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
-    extra_phase_p_triage: "2026-06-02"
+    finding: "Live (2026-06-07): still 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies. Build shape is gated on B2-MOD-SPLIT (modules) and B2-ANOMALY-OWNER (the contested anomaly_detections master)."
+    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the single domain-grain system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    blocked_by:
+      - {type: user_decision, ref: B2-MOD-SPLIT, reason: "module count and code mapping is gated on module-split shape decision"}
+      - {type: user_decision, ref: B2-ANOMALY-OWNER, reason: "the contested anomaly_detections master must be resolved before the monitoring module can claim it"}
 
 b1b:
   - id: B1B-S1
-    summary: "Author 2-3 modules per the vendor-cohort split; blocked on Bucket 2 #2 (module split shape)."
+    summary: "Author 2-3 modules per the vendor-cohort split; blocked on B2-MOD-SPLIT (module split shape)."
     finding: |
       DQ has 0 domain_modules rows. M1 fails outright; cascades into M2, M4, M5, M6, M8 at the module layer
-      and F2, F3, F5 at the skill layer. Without modules the catalog cannot compute module-level Semantius
-      scores and B9b is vacuous. Vendor cohort suggests a 3-way split: DQ-RULES (masters quality_rules +
-      profile_results), DQ-INCIDENT-MGMT (masters quality_incidents + dq_sla_definitions),
-      DQ-MONITORING (masters dq_dimensions + dq_scorecards + anomaly_detections).
+      and the skill layer. Without modules the catalog cannot compute module-level Semantius scores and B9b
+      is vacuous. Vendor cohort suggests a 3-way split: DQ-RULES (masters quality_rules + profile_results),
+      DQ-INCIDENT-MGMT (masters quality_incidents + dq_sla_definitions), DQ-MONITORING (masters dq_dimensions
+      + dq_scorecards + anomaly_detections).
     blocked_by:
       - {type: user_decision, ref: B2-MOD-SPLIT, reason: "module count and code mapping is gated on module-split shape decision"}
     affected_masters:
@@ -61,9 +55,10 @@ b1b:
       Live state: domain_data_objects has role=master rows for data_object_id=94 in both DQ (domain_id=90)
       and AIOPS (domain_id=6). Catalog-wide single-master violation. DMDO layer is empty for this
       data_object today (both domains pre-modular), so the conflict has not yet propagated forward, but
-      modularization will reproduce it. Options: (a) split into data_anomalies (DQ) + event_anomalies
-      (AIOPS) with distinct data_object rows, (b) keep canonical in DQ + demote AIOPS to consumer,
-      (c) keep canonical in AIOPS + demote DQ to consumer.
+      modularization will reproduce it. NOTE: entity_type on 94 is already 'computed'; lifecycle states are
+      not required regardless of owner, so the classification is non-blocking. Options: (a) split into
+      data_anomalies (DQ) + event_anomalies (AIOPS) with distinct data_object rows, (b) keep canonical in DQ
+      + demote AIOPS to consumer, (c) keep canonical in AIOPS + demote DQ to consumer.
     blocked_by:
       - {type: user_decision, ref: B2-ANOMALY-OWNER, reason: "canonical owner decision required before either domain can modularize this entity"}
     affected_entities: [anomaly_detections]
@@ -79,109 +74,97 @@ b1b:
   - id: B1B-S4
     summary: "Add primary-coverage rows for pure-play DQ flagships; current 10 solutions are 0 primary / 2 secondary / 8 partial."
     finding: |
-      solution_domains has 10 rows linked to domain_id=90. All 10 are platform-shaped solutions (Palantir
-      Foundry, Databricks, Snowflake, Microsoft Fabric, Google Cloud Data and AI, Amazon SageMaker, IBM
-      watsonx, SAP Business Data Cloud, Cloudera, Dataiku) with coverage_level in {secondary, partial}.
-      No pure-play DQ specialists are loaded as solutions (Informatica IDQ, Ataccama ONE, Collibra DQ,
-      Monte Carlo, Bigeye, Soda all absent). A3 requires >=1 primary solution. This blocks B1-S10
-      vendor-specific aliases (6 aliases gated on solution rows existing for alias_type=solution_term).
+      solution_domains has 10 rows linked to domain_id=90, all platform-shaped with coverage_level in
+      {secondary, partial}. No pure-play DQ specialists are loaded as solutions. A3 requires >=1 primary
+      solution. This blocks the 7 vendor-specific aliases below (each needs alias_type='solution_term' with
+      a non-null solution_id, which requires the vendor solution rows to exist).
     blocked_by:
       - {type: user_decision, ref: B2-COVERAGE, reason: "scope decision: add pure-play DQ flagships or accept current platform-coverage set"}
-    affected_entities: [Informatica IDQ, Ataccama ONE, Collibra DQ, Monte Carlo, Bigeye, Soda]
-    extra_blocks_aliases: ["expectation on quality_rules", "check on quality_rules", "monitor on quality_rules", "profiling output on profile_results", "profile on profile_results", "incident on quality_incidents", "issue on quality_incidents"]
-  - id: B1B-S6
-    summary: "Draft catalog_tagline + catalog_description per Rule #20; surface to user before write."
-    finding: |
-      domains row 90 has catalog_tagline='' and catalog_description=''. Rule #20 requires buyer-voice
-      single-sentence tagline + 1-3 paragraph description; no auto-write without user-approved wording.
-    blocked_by:
-      - {type: user_decision, ref: B2-CATALOG-UX, reason: "Rule #20 forbids any catalog_tagline / catalog_description write without explicit user-approved wording"}
+    affected_entities: [pure-play DQ flagship solutions]
+    extra_blocks_aliases:
+      - "'expectation' / 'check' / 'monitor' on quality_rules (309)"
+      - "'profiling output' / 'profile' on profile_results (311)"
+      - "'incident' on quality_incidents (310)"
+      - "'issue' on quality_incidents (310)"
+    note: "The one clean generic synonym ('anomaly' on anomaly_detections, 94) was loaded 2026-05-31. The 7 listed here are vendor-anchored terms that the platform check-constraint forces under alias_type='solution_term' + a solution context, so they stay gated on B2-COVERAGE."
   - id: B1B-S7
-    summary: "Retire legacy domain-level system skill dq-system (id 11); blocked on per-module system skills existing."
+    summary: "SUPERSEDED (2026-06-06 per-domain-skill restoration): retire legacy dq-system (id 11)."
     finding: |
-      skills row id=11 (skill_name='dq-system', skill_type='system', domain_id=90, domain_module_id=null)
-      carries 11 skill_tools rows, all coverage_tier='platform'. F1 fails until module-level system skills
-      are authored under Phase S. Tools migrate to the new module-level skills following the module split.
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: "module-level system skills must exist before legacy domain-level row can be retired"}
+      RETIRED ITEM. The original action ("retire dq-system once per-module system skills are authored under
+      Phase S") is canceled by the per-domain-skill restoration (see supersession header). The new model is
+      exactly ONE domain-grain system skill per domain (domain_id set, domain_module_id null) that DERIVES
+      its toolset from domain_module_tools; there are no per-module system skills to author. dq-system (id 11)
+      is the domain-grain skill and should NOT be retired; its 11 legacy skill_tools migrate to
+      domain_module_tools when DQ is modularized (tracked in audits/_modularization-backlog.md). No action.
+    status: superseded
   - id: B1B-S8
     summary: "Author 6 intra-domain master edges (data_object_relationships) with verbs, inverse_verbs, cardinality, owner_side."
     finding: |
       Zero intra-domain data_object_relationships exist between DQ's 7 masters. Expected edges:
-      quality_rules -> quality_incidents (rule breach spawns incident), quality_rules -> profile_results
-      (rule generates results), profile_results -> dq_dimensions (results feed dimension scoring),
-      dq_dimensions -> dq_scorecards (dimensions roll up to scorecard), dq_scorecards -> dq_sla_definitions
-      (scorecard measured against SLA), anomaly_detections -> quality_incidents (anomaly spawns incident).
-    action: |
-      Draft 6 edges with verbs, inverse_verbs, cardinalities, owner_side per cluster-drafts pattern;
-      load via load_cluster_drafts.ts.
+      quality_rules -> quality_incidents, quality_rules -> profile_results, profile_results -> dq_dimensions,
+      dq_dimensions -> dq_scorecards, dq_scorecards -> dq_sla_definitions, anomaly_detections ->
+      quality_incidents. Verbs/cardinalities not yet pre-specified row-by-row; draft via cluster-drafts.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1, reason: "cluster-draft authoring is more useful with modules in place; the 6 edges themselves are not strictly module-gated but the catalog convention is to draft them in the same load"}
+      - {type: prerequisite_entity, ref: B1B-S1, reason: "catalog convention drafts these edges in the same load as the modules; the 6 edges themselves are not strictly module-gated but are deferred to the build load"}
   - id: B1B-S11
-    summary: "Author lifecycle states for 4 workflow-bearing masters; surface config-shape exemption for 3 others."
+    summary: "Author lifecycle states for the 2 operational_workflow masters; record-shape masters now exempt by entity_type."
     finding: |
-      data_object_lifecycle_states is empty for all 7 DQ masters. quality_incidents (raised, acknowledged,
-      investigating, remediating, resolved, closed), quality_rules (draft, published, deprecated),
-      dq_sla_definitions (draft, published, breached, suspended, archived), anomaly_detections (triage
-      states) have clear workflows. dq_scorecards, dq_dimensions, profile_results are likely config-shape
-      (continuous score, no workflow). Rule #15 forbids notes annotation; surface config-shape exemption
-      to user.
+      data_object_lifecycle_states is empty for all 7 DQ masters. entity_type is now classified (2026-06-07):
+      quality_incidents (310) and dq_sla_definitions (314) are operational_workflow and REQUIRE lifecycle
+      states (B12). quality_rules (309) and dq_dimensions (312) are catalog, profile_results (311) and
+      dq_scorecards (313) are computed, anomaly_detections (94) is computed: all five pass B12 with no
+      lifecycle rows, so the old "surface config-shape exemption" sub-task is now resolved structurally by
+      the typed column (Rule #12) and is dropped. quality_incidents: raised, acknowledged, investigating,
+      remediating, resolved, closed. dq_sla_definitions: draft, published, breached, suspended, archived.
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1, reason: "domain_module_id anchor on requires_permission states needs modules to exist"}
   - id: B1B-S12
     summary: "Author 4 outbound cross-domain data_object_relationships matching the 4 outbound DQ handoffs with clean payload mappings."
     finding: |
-      Zero outbound cross-domain data_object_relationships exist for DQ masters. Expected (matching
-      existing handoffs): quality_incidents -> service_incidents (mirroring handoffs 266 / 267 / 714 to
-      ITSM), profile_results -> data_assets (mirroring handoff 268 to DCG), dq_dimensions -> data_assets
-      (mirroring handoff 713 to DCG), dq_dimensions -> lakehouse_tables (mirroring handoff 715 to
-      DATA-AI-PLAT).
-    action: |
-      Author 4 cross-domain edges (verb, inverse_verb, cardinality, owner_side=source) and load via the
-      cluster-drafts loader pattern.
+      Zero outbound cross-domain data_object_relationships exist for DQ masters. Expected (matching existing
+      handoffs): quality_incidents -> service_incidents (266/267/714 to ITSM), profile_results -> data_assets
+      (268 to DCG), dq_dimensions -> data_assets (713 to DCG), dq_dimensions -> lakehouse_tables (715 to
+      DATA-AI-PLAT). Verbs/cardinalities/owner_side not yet pre-specified per row; draft via cluster-drafts.
     affected_handoffs:
-      - {handoff_id: 266, direction: outbound, source_domain: DQ, target_domain: ITSM, trigger_event: "quality_rule.breach", payload: service_incidents, null_field: null}
-      - {handoff_id: 267, direction: outbound, source_domain: DQ, target_domain: ITSM, trigger_event: "dq_scorecard.breached", payload: service_incidents, null_field: null}
-      - {handoff_id: 268, direction: outbound, source_domain: DQ, target_domain: DCG, trigger_event: "profile_result.updated", payload: data_assets, null_field: null}
-      - {handoff_id: 713, direction: outbound, source_domain: DQ, target_domain: DCG, trigger_event: "dq_dimension.threshold_breached", payload: data_assets, null_field: null}
-      - {handoff_id: 714, direction: outbound, source_domain: DQ, target_domain: ITSM, trigger_event: "dq_sla_definition.breached", payload: service_incidents, null_field: null}
-      - {handoff_id: 715, direction: outbound, source_domain: DQ, target_domain: DATA-AI-PLAT, trigger_event: "dq_dimension.threshold_breached", payload: dq_dimensions, null_field: null}
+      - {handoff_id: 266, direction: outbound, target_domain: ITSM, trigger_event: "quality_rule.breach", payload: service_incidents}
+      - {handoff_id: 267, direction: outbound, target_domain: ITSM, trigger_event: "dq_scorecard.breached", payload: service_incidents}
+      - {handoff_id: 268, direction: outbound, target_domain: DCG, trigger_event: "profile_result.updated", payload: data_assets}
+      - {handoff_id: 713, direction: outbound, target_domain: DCG, trigger_event: "dq_dimension.threshold_breached", payload: data_assets}
+      - {handoff_id: 714, direction: outbound, target_domain: ITSM, trigger_event: "dq_sla_definition.breached", payload: service_incidents}
+      - {handoff_id: 715, direction: outbound, target_domain: DATA-AI-PLAT, trigger_event: "dq_dimension.threshold_breached", payload: dq_dimensions}
   - id: B1B-S13
     summary: "Backfill source_domain_module_id on all 6 outbound DQ handoffs; deterministic once modules exist."
     finding: |
-      All 6 outbound handoffs (266, 267, 268, 713, 714, 715) have source_domain_module_id=NULL. Backfill
-      is mechanical: source_domain_module_id derives from the module that masters trigger_events.data_object_id
-      with the strongest role per Rule B10b.
-    action: |
-      Run B10b backfill loader after modules and DMDOs land; pattern from
-      scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts.
+      All 6 outbound handoffs (266, 267, 268, 713, 714, 715) have source_domain_module_id=NULL. Backfill is
+      mechanical: source_domain_module_id derives from the module that masters trigger_events.data_object_id
+      with the strongest role per Rule B10b. Run the B10b backfill loader after modules and DMDOs land.
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1, reason: "backfill requires modules + DMDO rows to derive source module attribution"}
     affected_handoffs:
-      - {handoff_id: 266, direction: outbound, source_domain: DQ, target_domain: ITSM, trigger_event: "quality_rule.breach", payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 267, direction: outbound, source_domain: DQ, target_domain: ITSM, trigger_event: "dq_scorecard.breached", payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 268, direction: outbound, source_domain: DQ, target_domain: DCG, trigger_event: "profile_result.updated", payload: data_assets, null_field: source_domain_module_id}
-      - {handoff_id: 713, direction: outbound, source_domain: DQ, target_domain: DCG, trigger_event: "dq_dimension.threshold_breached", payload: data_assets, null_field: source_domain_module_id}
-      - {handoff_id: 714, direction: outbound, source_domain: DQ, target_domain: ITSM, trigger_event: "dq_sla_definition.breached", payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 715, direction: outbound, source_domain: DQ, target_domain: DATA-AI-PLAT, trigger_event: "dq_dimension.threshold_breached", payload: dq_dimensions, null_field: source_domain_module_id}
+      - {handoff_id: 266, null_field: source_domain_module_id}
+      - {handoff_id: 267, null_field: source_domain_module_id}
+      - {handoff_id: 268, null_field: source_domain_module_id}
+      - {handoff_id: 713, null_field: source_domain_module_id}
+      - {handoff_id: 714, null_field: source_domain_module_id}
+      - {handoff_id: 715, null_field: source_domain_module_id}
 
 b2:
   - id: B2-ANOMALY-OWNER
     summary: "anomaly_detections (94) catalog-wide single-master conflict: DQ vs AIOPS canonical owner."
     question: "Which domain canonically masters anomaly_detections (94), and what shape does the demotion take?"
     options:
-      - "(a) Split into two data_objects: data_anomalies (DQ canonical) + event_anomalies (AIOPS canonical). Verbs and lifecycle states diverge; recommendation."
+      - "(a) Split into two data_objects: data_anomalies (DQ canonical) + event_anomalies (AIOPS canonical). Verbs and lifecycle diverge; recommendation."
       - "(b) Keep anomaly_detections canonical in DQ; AIOPS demotes to consumer."
       - "(c) Keep anomaly_detections canonical in AIOPS; DQ demotes to consumer."
-    why: "Catalog-wide single-master rule (M7) requires exactly one role=master row per data_object_id. Both domains currently claim it on the legacy DDO layer; this will reproduce on the DMDO layer once either modularizes. Lifecycle states cannot be authored on either side until the canonical owner is decided."
+    why: "Catalog-wide single-master rule (M7) requires exactly one role=master row per data_object_id. Both domains currently claim it on the legacy DDO layer; this reproduces on the DMDO layer once either modularizes. Gates B1A-BUILD and B1B-S1/S2 on the DQ-MONITORING module side."
   - id: B2-MOD-SPLIT
-    summary: "DQ module split shape (gates B1B-S1, B1B-S3, B1B-S7, B1B-S11, B1B-S13)."
+    summary: "DQ module split shape (gates B1A-BUILD, B1B-S1, B1B-S3, B1B-S11, B1B-S13)."
     question: "Which module split is correct for DQ?"
     options:
-      - "(a) 3-way: DQ-RULES + DQ-INCIDENT-MGMT + DQ-MONITORING (mirrors vendor cohort split between legacy DQ tools and observability vendors); recommendation."
+      - "(a) 3-way: DQ-RULES + DQ-INCIDENT-MGMT + DQ-MONITORING (mirrors vendor cohort split); recommendation."
       - "(b) 2-way: DQ-RULES + DQ-OBSERVABILITY (fold incident-mgmt into observability)."
       - "(c) 1-way: single DQ module; non-viable once 5-7 capabilities load per Rule #14."
-    why: "Module split shape gates module authoring, capability-to-module mapping, legacy skill retirement, lifecycle state anchoring, and source module attribution backfill."
+    why: "Module split shape gates the build, module authoring, capability-to-module mapping, lifecycle state anchoring, and source module attribution backfill."
   - id: B2-XCUT-CAP
     summary: "DATA-OBSERVABILITY-MONITORING capability: domain-prefixed vs domain-neutral."
     question: "Should DATA-OBSERVABILITY-MONITORING be authored as a domain-neutral cross-cutting capability now (spanning DQ + DCG + DATA-AI-PLAT + OBS), or as domain-prefixed DQ-MONITORING pending the DATA-OBSERVABILITY missing-domain decision?"
@@ -192,18 +175,11 @@ b2:
     why: "Cross-cutting capability convention requires >=3 domains; DATA-OBSERVABILITY domain candidate is queued at mention_count 4 in _missing-domains.md."
   - id: B2-COVERAGE
     summary: "Solution coverage scope: add DQ pure-plays or keep current platform-coverage."
-    question: "Add primary-coverage rows for pure-play DQ flagships (Informatica IDQ, Ataccama ONE, Collibra DQ, Monte Carlo, Bigeye, Soda), or accept current 10 platform-coverage solutions and audit Phase A solutions separately?"
+    question: "Add primary-coverage rows for pure-play DQ flagships, or accept current 10 platform-coverage solutions and audit Phase A solutions separately?"
     options:
-      - "(a) Add 4-6 pure-play primary rows; unblocks 6 vendor-specific aliases queued under B1B-S4."
+      - "(a) Add 4-6 pure-play primary rows; unblocks the 7 vendor-specific aliases queued under B1B-S4."
       - "(b) Accept current solution set as platform-coverage only; audit Phase A solutions separately."
-    why: "Current solution list reads like a data-and-AI-platforms set rather than a DQ specialist set. 6 vendor-specific aliases (expectation, check, monitor, profiling output, profile, incident, issue) require alias_type=solution_term with a non-null solution_id."
-  - id: B2-CATALOG-UX
-    summary: "catalog_tagline + catalog_description wording per Rule #20; user-approved text required."
-    question: "Supply or approve buyer-voice catalog_tagline (single sentence) and catalog_description (1-3 paragraphs) for DQ."
-    options:
-      - "(a) User supplies exact text."
-      - "(b) Agent drafts; user approves verbatim before write."
-    why: "Rule #20 forbids writing these columns without explicit per-row user approval; marketing may fine-tune later and bulk-overwrite is forbidden."
+    why: "Current solution list reads like a data-and-AI-platforms set rather than a DQ specialist set. The 7 vendor-specific aliases require alias_type=solution_term with a non-null solution_id."
 
 b3:
   - id: B3-DATA-CONTRACTS
@@ -212,19 +188,16 @@ b3:
       Declarative contract between data producer and consumer covering schema, freshness, completeness.
       Adjacent to dq_sla_definitions but contract is bilateral; SLA is one-sided. Whether this is a
       vendor-specific pattern or a universal entity needs Phase 0 vetting.
-    vendor_evidence: [Soda, Monte Carlo, Acceldata]
     proposed_module: DQ-RULES
   - id: B3-SURVIVORSHIP-RULES
     candidate: survivorship_rules
     rationale: |
       Universal in legacy DQ for golden-record formation, but likely belongs in MDM rather than DQ.
       Phase 0 vetting needed alongside merge_decisions to decide MDM-vs-DQ canonical home.
-    vendor_evidence: [Informatica IDQ, Ataccama ONE]
     proposed_module: DQ-RULES
   - id: B3-MERGE-DECISIONS
     candidate: merge_decisions
     rationale: |
       Dedup workflow lives in both legacy DQ tools and MDM platforms; canonical home is contested. Phase 0
       vetting needed alongside survivorship_rules.
-    vendor_evidence: [Informatica IDQ, Ataccama ONE, Talend]
     proposed_module: DQ-RULES

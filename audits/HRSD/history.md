@@ -494,3 +494,50 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+State-driven Validate pass (Rule #21) over the open items in `audits/HRSD/state.yaml`. No fresh from-scratch audit; live queries used only to verify/refresh each recorded item before acting. Domain id 22; modules 75 (HRSD-CASE-MGMT) / 76 (HRSD-EMPLOYEE-PORTAL) / 77 (HRSD-KNOWLEDGE); masters `hr_cases` (192) / `case_categories` (193).
+
+### Summary
+
+Executed 3 additive/corrective `b1a` items (entity_type classification + domain/module catalog UX). Everything else was surfaced (b2 forks, destructive b1b APQC swaps, M9 DMDO rewrites, personas deferred) or left (b3 backlog, retired skill-grain header preserved). After this pass all remaining open items require the user, so `next_action_by` flips to `user`.
+
+### Executed
+
+Loader: [.tmp_deploy/fix_hrsd_state_execute_2026_06_07.ts](../../.tmp_deploy/fix_hrsd_state_execute_2026_06_07.ts)
+
+| State item | Action | Row count |
+|---|---|---|
+| B1A-ENTITY-TYPE | PATCH `data_objects.entity_type`: `hr_cases` (192) `unclassified` -> `operational_workflow` (8-state machine, `requires_permission` gates); `case_categories` (193) `unclassified` -> `catalog` (config-shape taxonomy). | 2 masters |
+| B1A-A4 | Wrote empty `domains.catalog_tagline` + `catalog_description` on HRSD (22) in buyer voice (Rule #20 backfill-empty; record_status carries the review signal). | 2 fields |
+| B1A-M8 | Wrote empty `catalog_tagline` + `catalog_description` on modules 75 / 76 / 77 in buyer voice (Rule #20 backfill-empty). | 6 fields (3 modules x 2) |
+
+All writes empty-guarded (no non-empty value overwritten), no `record_status` stamped (Rule #1), no `notes` column touched (Rule #15), American English, no em-dashes, no vendor/product names in copy (Rule #18).
+
+UI links written:
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/domains
+- https://tests.semantius.app/domain_map/domain_modules
+
+### Surfaced (returned to user, not applied)
+
+- **B1B-APQC-REPLACE** (destructive DELETE+INSERT): handoffs 119 (hp.id=78, -> IGA) and 446 (hp.id=79, -> HCM) both carry stale `discovery_override` rows at PCF 196 (10388 'Manage customer service problems...'). Prescribed agent_curated swaps: 119 -> PCF 10523 L3; 446 -> PCF 17056 L2. Live state matches the record; not applied (overwriting a pre-existing tag is destructive, Rule #21).
+- **B1B-APQC-KEEP-OR-UPGRADE** (destructive per-row): handoff 369 (hp.id=36) at discovery_override PCF 20599 L2, optional upgrade to 10523 L3; handoff 1109 (hp.id=88) at discovery_substring PCF 16944 L3, optional replace with 21439 L3. User picks per row.
+- **B2-1** notes pollution review on 27 rows (15 handoffs, 10 DMDO on module 75, 2 `data_objects.notes`): clearing is a destructive overwrite, surfaced.
+- **B2-2** `hr_cases` pattern-flag positive re-eval (`has_submit_lock`, `has_single_approver`): workflow judgment fork.
+- **B2-3** trigger event 21 `case.access_required` semantics (leave / rename / re-key derived signal): rename/re-key is destructive.
+- **B2-4** role naming `HRSD-` prefix on 10069 / 10070 / 10071: function-scoped-vs-domain-prefix fork.
+- **B2-5** per-row `record_status='approved'` flips on 24 handoff_processes rows: Rule #1, never auto.
+- **B1A-PHASE-P** personas/RACI: DEFERRED (not authored this pass per audit scope). Candidate personas: HR case agent, HR service manager, HR knowledge manager.
+- **B1A-SELF-CONTAIN (M9)**: 5 consumer+required DMDO rows on modules 75/76/77 (employees x2 -> HCM; knowledge_articles x2 -> ITSM; service_requests -> ITSM). Fix requires rewriting role/necessity on existing non-empty rows = destructive, surfaced for user choice (embedded_master vs necessity=optional).
+
+### Left
+
+- **b3 backlog** (B3-1 employee_journeys + HRSD-JOURNEY-MGMT; B3-2 hr_documents consumer footprint; B3-3 whistleblower/ETHICS-INTAKE): non-blocking ideas. B3-1 and B3-3 are structural (new module/domain or split) so if pursued they reclassify to a b2 decision, never auto-executed.
+- **Retired per-module skill-grain header** (2026-06-06 supersession) preserved verbatim; no skill_tools / per-module skill work done.
+
+### Verified-already-satisfied (no action needed)
+
+- C1 `business_function_domains`: HRSD already has owner (HR Service Delivery, fn 76) + contributor (IT Operations, fn 27). Nothing to add.
+- B11 aliases: `hr_cases` (192) has 3 synonyms, `case_categories` (193) has 2. Nothing to add.

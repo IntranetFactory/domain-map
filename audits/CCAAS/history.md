@@ -328,3 +328,48 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate execute pass (SKILL.md Rule #21), working only the open items in state.yaml against refreshed live state. CCAAS is still UNBUILT (live 2026-06-07: 0 `domain_modules`, 1 `capability_domains` = SLA-MGMT only), so the entire b1b cascade and the persona/RACI work stay parked on the build, which is surfaced (B1A-BUILD), not scaffolded, per the orchestrator UNBUILT rule. Executed only the additive/corrective items that do not depend on modules; surfaced every destructive step and every judgment call.
+
+Loaders (dated one-offs, project root): `.tmp_deploy/fix_ccaas_state_2026_06_07.ts` (event_category + entity_type + aliases) and `.tmp_deploy/fix_ccaas_catalog_ux_2026_06_07.ts` (A4 catalog UX). All writes `record_status='new'` by default; `notes` never written (Rule #15); no em-dashes; American English; no vendor names in alias/catalog text (Rule #18).
+
+### Executed (additive/corrective; all idempotent, verified live)
+
+- **B1A-B9b-EVENT-CAT (trigger_events.event_category):** 6 PATCH. 500 contact_record.captured -> lifecycle, 501 queue_statistics.threshold_breached -> threshold, 502 ccaas_call_recording.captured -> lifecycle, 503 agent_state.changed -> state_change, 504 agent_state.aux_threshold_exceeded -> threshold, 505 disposition_code.applied -> state_change. Item dropped from state.
+- **entity_type (Rule #12 / B13, standing EXECUTE directive; was not a discrete state item):** 6 PATCH from `unclassified`. 256 support_sessions -> operational_workflow, 257 contact_records -> operational_record, 258 queue_statistics -> computed, 735 ccaas_call_recordings -> operational_workflow, 736 agent_states -> operational_workflow, 737 disposition_codes -> catalog. Classifications deterministic from descriptions. This also narrows B1B-B12-LIFECYCLE: only the 3 operational_workflow masters now need lifecycle states; the record/computed/catalog three pass B12 regardless (state finding updated).
+- **B1B-B11-ALIASES (data_object_aliases):** 12 INSERT (2 per master), alias_type='synonym', industry_id null, record_status omitted, no `notes`. Generic, vendor-free industry synonyms: support_sessions {Interaction, Customer Contact}, contact_records {Unified Customer Profile, Customer Identity Record}, queue_statistics {Queue Metrics, Service Level Statistics}, ccaas_call_recordings {Interaction Recording, Call Recording}, agent_states {Agent Presence, Agent Status}, disposition_codes {Wrap-Up Codes, Reason Codes}. Concept synonyms are independent of the unresolved naming arbitration (B2-NAMING-ARBITRATION), so the stale module-gate on this item was not honored. Item dropped from state.
+- **B1B-A4-CATALOG-UX (domains row, A4 / Rule #20):** PATCH the two EMPTY catalog columns on domains id=98 with buyer-voice copy (catalog_tagline + 2-paragraph catalog_description). The stale "surface-before-write" gate (B2-CATALOG-UX-WORDING) was ignored per Rule #20 / orchestrator directive: empty fields are written, not gated. Non-empty `description`/`business_logic` were NOT touched. No module-grain (M8) copy authored: 0 modules exist, do not scaffold. Item dropped from state; B2-CATALOG-UX-WORDING removed.
+
+### Surfaced (NOT written; awaiting user)
+
+- **B1A-DESC-EMDASH (destructive overwrite of non-empty value):** business_logic has a confirmed U+2014 em-dash (CLAUDE.md violation); description uses British "centres" (American-English violation). Both columns are non-empty, so the rewrite is destructive. Recommended minimal rewrites surfaced; not applied. NOTE: the stale 2026-05-31 finding claimed an em-dash in `description` too; live shows the description em-dash is gone, only "centres" remains.
+- **B2-H722-DEDUPE-DELETE (was B1A-H722-DEDUPE; destructive DELETE):** handoff 722 carries two agent_curated tags (id 238 PCF 21679 stale, id 753 PCF 20898 correct). Recommended DELETE id 238; surfaced, not applied.
+- **B2-H743-746-RETAG (was B1A-H743 / B1A-H746; destructive DELETE + judgment):** handoff_processes id 810 (743 -> PCF 10395) and id 812 (746 -> PCF 20824) auto-tagged after both were originally deferred-to-Discover. Keep or DELETE; surfaced, not applied.
+- **B1A-BUILD + 6 carried b2 module/boundary decisions (B2-MODULE-SHAPE, B2-WEM-SCOPE, B2-CONV-INTEL-RELATIONSHIP, B2-CALL-RECORDINGS-SPLIT, B2-CONTACT-RECORDS-CRM-CONSUMER, B2-NAMING-ARBITRATION, B2-INTENT-IDENTIFIED-OWNERSHIP):** the build and its gating decisions. CCAAS cannot author modules/capabilities/solutions/regulations/masters/lifecycle/roles until the module shape and WEM scope are decided.
+- **Personas / RACI (B1A-PHASE-P):** deferred (UNBUILT; nothing to anchor personas to until modules land). Candidate personas once built: contact-center agent, supervisor / team lead, QA evaluator, WFM/RTA analyst, dialer/campaign admin.
+
+### Left (untouched)
+
+- **b1b (12 items):** all blocked on B1B-M1-MODULES (the build) or a b2 decision. Cannot be authored in a CCAAS-only pass without modules.
+- **b3 (7 items):** Phase 0 candidate masters, backlog (agent_skill_assignments, wrap_up_reasons, agent_scorecards, speech_analytics_categories, outbound_campaigns, callback_requests, ivr_languages).
+- **B1B-F1-F2-LEGACY-SKILL:** reframed against the 2026-06-06 supersession (skill id 19 is already the correct domain-grain; per-module skill / skill_tools redistribution is RETIRED). Kept as a module-gated re-derivation note, supersession header preserved.
+
+### JWT errors
+
+None encountered.
+
+### Files written (DB + repo)
+
+- DB: trigger_events (6 PATCH), data_objects (6 PATCH), data_object_aliases (12 INSERT), domains id=98 (catalog_tagline + catalog_description PATCH).
+- Repo: this history section; state.yaml rewritten (schema_version 2; supersession header kept; last_audit 2026-06-07; next_action_by user).
+
+### UI links
+
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/data_object_aliases
+- https://tests.semantius.app/domain_map/domains?id=eq.98

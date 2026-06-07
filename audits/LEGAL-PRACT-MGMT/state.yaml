@@ -11,38 +11,29 @@
 schema_version: 2
 domain: LEGAL-PRACT-MGMT
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
+
+# Open b1a items remaining are destructive (M9) or deferred (personas); both surface to the
+# user rather than execute. The additive/corrective b1a items (entity_type classification,
+# H1 APQC tagging, A4/M8 catalog UX) were executed on 2026-06-07; see history.md.
 
 b1a:
-  - id: B1A-H1-TAIL
-    summary: "Two cross-domain handoffs (333, 918) still untagged; load proposed L3 PCFs to complete H1 coverage."
-    finding: "5 of 7 LEGAL-PRACT-MGMT cross-domain handoffs carry handoff_processes rows (332 to 76, 334 to 919, 917 to 302, 919 to 429, 920 to 1616). Handoffs 333 (trust_account.exception to GRC, payload trust_accounts) and 918 (client_invoice.paid to ERP-FIN, payload client_invoices) remain uncovered. 2026-05-30 audit proposed L3 PCFs that were deferred in the 2026-05-31 continuation because of L3/L4 alternative-shape language; both proposed targets are stable L3 parents."
-    action: "Insert 2 handoff_processes rows via direct CLI: (handoff_id=333, process_id=325, role=implements, proposal_source=agent_curated, record_status default new) and (handoff_id=918, process_id=303, role=implements, proposal_source=agent_curated, record_status default new). Composed key (handoff_id, process_id) prevents duplicates."
-    affected_handoffs:
-      - {handoff_id: 333, direction: outbound, source_domain: LEGAL-PRACT-MGMT, target_domain: GRC, trigger_event: trust_account.exception, payload: trust_accounts, null_field: handoff_processes}
-      - {handoff_id: 918, direction: outbound, source_domain: LEGAL-PRACT-MGMT, target_domain: ERP-FIN, trigger_event: client_invoice.paid, payload: client_invoices, null_field: handoff_processes}
-    extra_proposed_pcf:
-      - {handoff_id: 333, process_id: 325, process_name: "Operate controls and monitor compliance with internal controls policies and procedures", external_id: "21574", hierarchy_level: 3}
-      - {handoff_id: 918, process_id: 303, process_name: "Process accounts receivable (AR)", external_id: "10744", hierarchy_level: 3}
-  - id: B1A-PHASE-P
-    summary: "Multi-module (5 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 5 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 5 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "6 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 6 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [client_invoices, conflict_checks, engagement_letters, external_court_filings, legal_matters, trust_accounts]
-    extra_phase_p_triage: "2026-06-02"
   - id: B1A-SELF-CONTAIN
-    summary: "2 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
-    finding: "Live triage 2026-06-02: 2 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
-    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
+    summary: "DESTRUCTIVE (M9): 2 contributor crm_contacts rows on LEGAL modules break module self-containment. Each fix rewrites role/necessity on an existing DMDO row -> surface, do not apply."
+    finding: "Live 2026-06-02: 2 domain_module_data_objects rows on this domain's modules are role=contributor (necessity inherited) on crm_contacts, mastered by CRM and not embedded_master here. Each is an M9 self-containment violation. Both fixes rewrite a non-empty role on an existing row, which is destructive and requires user approval."
+    action: "SURFACE recommended fix per row: convert to embedded_master (carry a local crm_contacts shell) OR set necessity=optional (presence-conditional). Per references/modules.md section 5 and SKILL.md M9. Do not document the dependency. Agent does NOT apply (overwrite of an existing non-empty value)."
     extra_m9_shapes:
       - {entity: crm_contacts, module: LEGAL-INTAKE-CONFLICT, role: contributor, master_domain: CRM}
       - {entity: crm_contacts, module: LEGAL-MATTER-MGMT, role: contributor, master_domain: CRM}
+    blocked_by:
+      - {type: user_decision, ref: embedded_master-vs-optional-on-crm_contacts}
+
+  - id: B1A-PHASE-P
+    summary: "DEFERRED (personas/RACI): multi-module (5 modules) with 0 personas post-Plan-3 (E1 fail). Persona/RACI authoring is deferred per the persona-layer policy; agent does NOT author."
+    finding: "Live triage 2026-06-02: 5 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Per current policy the persona/RACI layer is a deferred (B1A-PHASE-P) workstream the agent does not author autonomously."
+    action: "DEFER. Author domain_roles (operational personas), wire role_modules reach across the 5 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id only on an explicit persona-layer pass. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    candidate_personas: ["Attorney", "Paralegal", "Conflicts Partner", "Office Manager / Billing Coordinator", "Legal Bookkeeper / Trust Administrator"]
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
@@ -128,43 +119,26 @@ b1b:
       - {data_object_id: 739, name: client_invoices, target_module_id: null, workflow: ar-cash-application}
 
 b2:
-  - id: B2-A4
-    summary: "A4 fail: domains.catalog_tagline and catalog_description both empty on LEGAL-PRACT-MGMT; Rule #20 requires user-approved wording before any write."
-    question: "Provide exact catalog_tagline (single sentence, buyer voice) and catalog_description (1-3 paragraphs, buyer voice) for LEGAL-PRACT-MGMT, or instruct the agent to draft and review before write?"
-    options: ["supply_wording", "draft_and_review", "defer_pending_marketing"]
-    why: "The existing description column is analyst voice (substrate definition); A4 wants buyer voice (workflow + value). Rule #20 forbids autonomous writes on catalog_tagline / catalog_description."
-
-  - id: B2-M8
-    summary: "M8 fail: catalog_tagline and catalog_description empty on all 5 LEGAL modules (132 through 136)."
-    question: "Provide exact catalog_tagline and catalog_description per module (132 LEGAL-MATTER-MGMT, 133 LEGAL-INTAKE-CONFLICT, 134 LEGAL-TIME-BILLING, 135 LEGAL-TRUST-ACCT, 136 LEGAL-COURT-DOCKETING), or instruct the agent to draft and review before write?"
-    options: ["supply_wording_per_module", "draft_and_review", "defer_pending_marketing"]
-    why: "Same Rule #20 constraint as B2-A4, applied per module."
-    affected_modules: [132, 133, 134, 135, 136]
-
   - id: B2-S1
     summary: "B4 positive re-eval: should conflict_checks.has_personal_content=true and external_court_filings.has_single_approver=true?"
     question: "Per-flag yes/no: (a) conflict_checks.has_personal_content (stores adversary names, parties' personal identifiers, ethics-wall annotations); (b) external_court_filings.has_single_approver (court filings typically signed by a single attorney of record)."
     options: ["yes_both", "yes_a_only", "yes_b_only", "no_both"]
-    why: "False-by-default is not the same as false-after-review. Rule #12 mandates positive re-evaluation; Rule #15 forbids notes annotation, so the consideration must be captured in the audit conversation."
-
-  - id: B2-S2
-    summary: "Rule #15 notes-pollution on 14 of 47 skill_tools rows."
-    question: "Were the populated notes strings on 14 skill_tools rows for LEGAL's 5 system skills user-approved at Phase-S load time, or auto-populated by the loader?"
-    options: ["user_approved_leave_in_place", "auto_populated_revert_and_log_incident"]
-    why: "Cannot tell from audit alone. If auto, Rule #15 mandates revert + Incidents log entry in references/skill-changelog.md."
-    extra_affected_skill_tools_count: 14
+    why: "False-by-default is not the same as false-after-review. Rule #12 mandates positive re-evaluation; Rule #15 forbids notes annotation, so the consideration must be captured in the audit conversation. Both flags are an overwrite of an existing non-empty boolean, so they are user-decision gated regardless of the answer."
 
   - id: B2-S3
     summary: "M7 architectural intent: are sibling LEGAL modules standalone-deployable or co-installed with LEGAL-MATTER-MGMT and LEGAL-TIME-BILLING?"
     question: "Pick architectural product shape: (a) standalone-deployable (promote 4 consumer DMDOs on legal_matters / client_invoices to embedded_master); (b) co-installed (DELETE the 4 consumer DMDOs since the master in 132 / 134 is authoritative)."
     options: ["promote_to_embedded_master", "delete_consumer_rows"]
-    why: "Market read favors (b): every flagship vendor (Clio, MyCase, Filevine, Aderant) bundles matters + billing + trust + docketing as a single SKU. The choice cascades into B1B-M7-LEGAL-MATTERS, B1B-M7-CLIENT-INVOICES, and B1B-B9B-INTRA-DOMAIN-HANDOFFS shapes."
+    why: "Market read favors (b): every flagship vendor bundles matters + billing + trust + docketing as a single SKU. The choice cascades into B1B-M7-LEGAL-MATTERS, B1B-M7-CLIENT-INVOICES, and B1B-B9B-INTRA-DOMAIN-HANDOFFS shapes. Both options are destructive (DELETE rows, or overwrite role on existing rows), so this is the gating user decision."
 
   - id: B2-S4
     summary: "B11 alias disambiguation: legal_matters to Engagement alias collides semantically with engagement_letters (Letter of Engagement)."
     question: "Keep both aliases, drop the matter-side, or rename?"
     options: ["keep_both", "drop_matter_engagement_alias", "rename_matter_alias"]
-    why: "Editorial / disambiguation call. The catalog supports multiple aliases per master with no priority axis, so both can coexist if intentional."
+    why: "Editorial / disambiguation call. The catalog supports multiple aliases per master with no priority axis, so both can coexist if intentional. Drop / rename is an overwrite or delete of an existing row, so it is user-decision gated."
+
+# B2-S2 (Rule #15 notes-pollution on 14 skill_tools rows) is SUPERSEDED 2026-06-06:
+# skill_tools is dropped under the per-domain-skill restoration. No action; not carried as open.
 
 b3:
   - id: B3-1

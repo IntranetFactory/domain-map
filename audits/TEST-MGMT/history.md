@@ -317,3 +317,40 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21) over the open items in `state.yaml`, not a fresh from-scratch audit. Live triage re-confirmed TEST-MGMT (domain 8) is UNBUILT: 0 `domain_modules` (M1 hard-fail), 0 `capability_domains`. Per the LEAVE rule for unbuilt domains, the build (`B1A-BUILD`) and its whole cascade are surfaced, not scaffolded. Only the two build-independent additive/corrective items were executed. Loader: `.tmp_deploy/2026-06-07_test_mgmt_state_driven_execute.ts`, run from project root; idempotent (re-run skips all). No JWT errors, no writes to any `notes` column, no `record_status` overrides, no vendor names in any text field, no em-dashes.
+
+### Executed (additive / corrective, record_status='new')
+
+- **entity_type classification (B13 / Rule #12, 8 PATCHes)**: all 8 masters were `unclassified`; classified deterministically from descriptions + trigger events. `operational_record` (2): test_cases (572), test_suites (573). `operational_workflow` (4): test_plans (574), test_runs (575), test_defects (576), automation_scripts (225). `catalog` (1): test_environments (577, the config-shape master). `junction` (1): requirements_to_test_traceability (578). Consequence: B12 lifecycle states are now OWED only on the 4 `operational_workflow` masters (folded into B1B-S4); the other 4 PASS B12 without lifecycle rows. automation_scripts (225) was classified despite the open M7/B2-2 mastery question, since entity_type is a property of the data_object itself, not a mastery claim.
+- **Catalog UX (Rule #20, 1 PATCH on the domain row)**: `catalog_tagline` and `catalog_description` were both empty on domain 8; authored buyer-voice copy (workflow + value, no vendor names, American English). This closes the former `B1B-S2-CATALOG-UX` item at the domain grain. Module-level catalog UX is authored at build time (B1A-BUILD / B1B-M1), since no `domain_modules` exist yet. The stale "surface-before-write" gate on the old item was intentionally ignored per the execute contract.
+
+### Surfaced (no write; user judgment / destructive / deferred)
+
+- **B2-1** module split shape (a single / b two-module recommended / c four-module). Gates the entire build.
+- **B2-2** automation_scripts (id 225) M7 mastery: rename which side (a TEST-MGMT->qa_automation_scripts recommended / b RMM / c embedded_master demotion). DESTRUCTIVE (rename / demote of an existing master) -> approval required.
+- **B2-3** modularize VSDP alongside TEST-MGMT's build, or accept the B10b backlog.
+- **B2-4** flip `has_personal_content` on test_defects (576) to true, or keep false. (576 is now operational_workflow, so pattern-flag review applies.)
+- **B1B-M4** the M7 rename itself is destructive; surfaced, not applied.
+- Personas / RACI (Phase P): DEFER. Not authored. Phase P does not apply until the domain is built and proves multi-module; candidate personas (QA Lead / Test Engineer / Automation Engineer / Release Manager) noted for the build.
+
+### Left (untouched)
+
+- **B1A-BUILD** unbuilt domain: build and full cascade (B1A-S1 capabilities, B1B-M1 modules, B1B-M2 B10b FK backfill, B1B-M3 DMDO migration, B1B-S4 module-anchored lifecycle states, domain-grain system skill) all blocked on the B2-1 / B2-2 decisions. Surfaced, not scaffolded.
+- **B1B-S5-F1-SKILL-RETIRE** (prior item) CANCELED by the 2026-06-06 per-domain-skill supersession header; reframed as a note, no per-module skill work.
+- **b1b blocked-by-other-domains**: B1B-M2 target-FK legs owed by VSDP / GRC / APIM / IPAAS audits; source-FK legs owed by TEST-MGMT's own M1.
+- **b3 backlog** (B3-1 .. B3-7): Phase 0 speculative candidates and the two queued candidate domains (TEST-AUTOMATION-PLATFORM, API-TESTING); untouched.
+- Already-PASS bands re-confirmed live, nothing owed: C1 owner BFD (Quality Engineering / Test Management, fn 62), B11 aliases (2 per master), B6 intra-domain relationships, A3 solutions (5, all primary), H1 handoff_processes (all 9 tagged), B-events event_category (all 12 populated).
+
+### Verification
+
+- 8/8 entity_type PATCHes stuck; 1/1 catalog UX PATCH stuck; re-run is fully idempotent (0 writes second pass). record_status remains 'new' on all touched rows (no approval stamped).
+
+### UI links
+
+- https://tests.semantius.app/domain_map/data_objects?id=in.(572,573,574,575,576,577,578,225)
+- https://tests.semantius.app/domain_map/domains?id=eq.8

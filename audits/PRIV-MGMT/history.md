@@ -274,3 +274,64 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate (SKILL.md Rule #21). Worked only the open items in state.yaml; no
+fresh from-scratch audit. Live re-verified against domain id 20 (parent 15 = GRC). Overlay
+test confirms master-bearing (DSARs, consent records, ROPA, privacy assessments are real
+records), but the domain is UNBUILT: 0 domain_modules (M1 fail), 0 capability_domains,
+0 PRIV-MGMT-owned masters (neither domain_data_objects nor domain_module_data_objects). Per
+the UNBUILT clause no modules/masters/capabilities/skills were scaffolded; the build cascade
+is surfaced, not executed. Loader: `.tmp_deploy/2026-06-07_priv_mgmt_state_driven_execute.ts`,
+run from project root with `bun run`.
+
+### Executed (1 write)
+
+- **Catalog UX (Rule #20), 1 PATCH.** Domain 20 `catalog_tagline` and `catalog_description`
+  were both empty; authored buyer-voice copy (workflow + value, no vendor/product names, GDPR
+  and CCPA/CPRA statutory references allowed per Rule #18, no em-dash, American English) and
+  PATCHed both. The stale "surface-before-write" B2-3 gate was overridden per the run
+  instruction; B2-3 is therefore dropped from the open b2 set. Verified live. This resolves
+  the former b1b sub-item B1-S3. Tagline: "Handle data-subject requests, capture consent, and
+  keep your processing inventory audit-ready."
+
+### Surfaced (no write; user decision or destructive)
+
+- **B1A-BUILD (UNBUILT).** 0 modules, 0 capabilities, 0 owned masters. Build needs B2-1 +
+  B2-2 (+ B3-3) decided first, then Phase A/B/C/E and the single domain-grain system skill +
+  domain_module_tools. Not scaffolded.
+- **B2-1 (re-home 4 masters).** data_subject_requests (901, ATS-CANDIDATE-CRM), gdpr_consent_records
+  (950) / subject_access_requests (951) / data_deletion_requests (952) (LMS-CT-GDPR) into
+  PRIV-MGMT modules: (a) all four, (b) keep current, (c) LMS triplet only. Keystone decision.
+- **B2-2 (module split).** 4 / 3 / 2 / other module shape.
+- **B2-4 (config-shape exemption).** Rule #12 lifecycle-state exemption tracking on
+  processing_activities + personal_data_assets if they become masters; Rule #15 forbids
+  auto-notes. Fires only if B2-1 + B3-3 land.
+- **B2-5 + B1A-APQC-HANDOFF-288 (DESTRUCTIVE/JUDGMENT overlay).** Handoff 288 (DSPM ->
+  PRIV-MGMT, payload data_assets) is untagged. PCF 20735 fits, but trigger_event 273 carries
+  data_object_id=303 (data_classifications) while the handoff payload is data_object_id=300
+  (data_assets), confirmed live. Loading the agent_curated handoff_processes(288, 270,
+  role='implements') tag now binds it to the drifted shape; held until B2-5 picks (a) load now,
+  (b) wait for DSPM B9 fix, (c) skip. Not written.
+
+### Left (untouched)
+
+- **B1A-RECLASS:** settled note (master-bearing); no action.
+- **B1B-S1-CLUSTER:** blocked on B2-1 / B2-2 / B3-1 / B3-3. B1-S12's per-module-skill framing
+  is RETIRED (2026-06-06 supersession above) and reframed in state to one domain-grain system
+  skill + domain_module_tools.
+- **B3-1 / B3-2 / B3-3:** backlog (DataGrail/Transcend solutions; PIPEDA/LGPD/PIPL/POPIA/HIPAA
+  regulations; 7 master-entity candidates). All gated on Phase 0 vetting.
+- **C1 already satisfied live:** business_function_domains owner Privacy Office (bf 72) +
+  contributors Legal (bf 7) and Security (bf 28). No insert. entity_type PATCH N/A (0 masters).
+  data_object_aliases (B1-S10) N/A (no owned masters to attach to). Handoff 283 APQC tag
+  (row 492) confirmed still present.
+
+### JWT-audience errors
+
+None.

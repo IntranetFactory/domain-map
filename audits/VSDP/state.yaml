@@ -11,39 +11,37 @@
 schema_version: 2
 domain: VSDP
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
+
+# VSDP is UNBUILT: 0 domain_modules, 0 capability_domains. The entire downstream
+# M/B-per-module/E/F substrate is gated on the BUILD, which is gated on the B2-1
+# module-shape user decision. The 2026-06-07 state-driven pass executed every
+# additive/corrective item that does NOT require modules (entity_type, catalog UX,
+# generic-synonym aliases, business_function_domains contributors/consumers). What
+# remains below is: (a) the build itself and everything cascading from it (b1b),
+# and (b) the user-decision queue (b2) that must be answered before the build can run.
 
 b1a:
   - id: B1A-S2
     summary: "Author 3 to 5 capabilities and link via capability_domains."
-    finding: "Zero capability_domains rows on VSDP (domain_id=80). Independent of module-shape gate; capabilities can land before modules and inform the module-shape decision."
+    finding: "Zero capability_domains rows on VSDP (domain_id=80). Capabilities can land before modules and inform the module-shape decision, but the canonical capability set the catalog draws follows the chosen module shape, so this rides with the build."
     action: "Draft 3 to 5 capabilities (source-control + collaboration, CI/CD pipeline orchestration, build and artifact management, release and deployment orchestration, value-stream analytics) and load capabilities + capability_domains rows via the Phase A loader pattern."
+    blocked_by:
+      - {type: user_decision, ref: B2-1, reason: module shape determines the canonical capability slicing}
     affected_entities: [capabilities, capability_domains]
 
-  - id: B1A-A4
-    summary: "Draft and surface domains.catalog_tagline + catalog_description per Rule #20."
-    finding: "VSDP domain id 80 has empty catalog_tagline and catalog_description. Rule #20 requires buyer-voice copy on every domain; the M8 module rollup will inherit once modules land."
-    action: "Draft buyer-voice catalog_tagline (one sentence) + catalog_description (1 to 3 paragraphs) per Rule #20 voice rule, surface to user for review BEFORE writing. Never overwrite a non-empty value without explicit per-row user approval."
-    affected_entities: [domains]
-
-  - id: B1A-B5
-    summary: "Surface pattern flag candidates on build_artifacts and software_deployments to user for explicit confirmation."
-    finding: "B4 audit identifies build_artifacts (immutability post-publish, SLSA-provenance lock semantics) as a has_submit_lock candidate and software_deployments (single change approver in SOX/GxP-grade change windows) as a has_single_approver candidate. Audit narrative records the consideration per Rule #15 (no notes annotation); structured-column PATCH requires user confirmation."
-    action: "Surface candidate flips in chat. PATCH only on user confirmation per master."
-    affected_masters:
-      - {data_object_id: 681, name: build_artifacts, target_module_id: null, workflow: post_publish_immutability}
-      - {data_object_id: 682, name: software_deployments, target_module_id: null, workflow: regulated_change_approval}
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
-    extra_phase_p_triage: "2026-06-02"
+    finding: "Live 2026-06-07: still 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so the domain is not deployable. It must be built before any persona / RACI / per-module work applies. Per Validate-mode UNBUILT handling, the agent does NOT scaffold the module set unprompted; it surfaces the build and leaves the cascade. The build is gated on the B2-1 module-shape decision."
+    action: "After B2-1 is decided: run Phase A then M then B then C then S to author the module set, capabilities, masters' per-module attribution, and the single domain-grain system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    blocked_by:
+      - {type: user_decision, ref: B2-1, reason: module shape sets the module roster the Phase A loader writes}
 
 b1b:
   - id: B1B-S1
-    summary: "0 domain_modules rows on VSDP; Rule #14 floor violation."
-    finding: "VSDP (domain_id=80) carries zero domain_modules rows. Rule #14 requires at least 1 module_kind='full' row per domains row; ≥2 once capabilities reach 3+. Blocks every downstream M, B (per-module attribution), E, F band."
+    summary: "0 domain_modules rows on VSDP; Rule #14 floor violation. THE BUILD GATE."
+    finding: "VSDP (domain_id=80) carries zero domain_modules rows. Rule #14 requires at least 1 module_kind='full' row per domains row; >=2 once capabilities reach 3+. This is the single gate every downstream M, B (per-module attribution), E, F band, and every b1b item below depends on."
     blocked_by:
       - {type: user_decision, ref: B2-1}
     affected_modules: []
@@ -51,9 +49,9 @@ b1b:
 
   - id: B1B-S3
     summary: "0 intra-VSDP entity edges + 0 users edges (Rule #10)."
-    finding: "Zero data_object_relationships rows between the 8 VSDP masters and zero edges from any VSDP master to users (id 748). Tuple authoring (verb, inverse_verb, relationship_type, relationship_kind, is_required, owner_side) still owed; the prior audit named candidate pairs but did not pre-specify tuples."
+    finding: "Zero data_object_relationships rows between the 8 VSDP masters and zero edges from any VSDP master to users (id 748). Tuple authoring (verb, inverse_verb, relationship_type, relationship_kind, is_required, owner_side) still owed."
     blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: lifecycle states needed before some edges are stable}
+      - {type: prerequisite_entity, ref: B1B-S1, reason: lifecycle states needed before some edges are stable}
       - {type: user_decision, ref: B2-3, reason: TEST-MGMT boundary affects related_data_object_id selection for test_runs/ci_pipeline_runs edges}
       - {type: user_decision, ref: B2-4, reason: KUBE-PLAT + APP-PAAS boundary affects software_deployments to platform-specific realization edges}
     affected_masters:
@@ -68,34 +66,26 @@ b1b:
 
   - id: B1B-S4
     summary: "0 VSDP roles, Phase E gap."
-    finding: "Zero roles tied to VSDP modules (no modules to tie to) and zero roles under business_function_id=60 (Platform Engineering). Multi-module-domain qualifier per E1 requires ≥3 distinct roles once modules land."
+    finding: "Zero roles tied to VSDP modules (no modules to tie to) and zero roles under business_function_id=60 (Platform Engineering). Multi-module-domain qualifier per E1 requires >=3 distinct roles once modules land."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1, reason: roles need at least 2 modules per E2 floor}
     affected_entities: [roles, role_modules, role_permissions]
 
   - id: B1B-S5
-    summary: "Retire legacy vsdp-system skill and reauthor module-level system skill(s)."
-    finding: "Skill id 119 vsdp-system carries domain_id=80, domain_module_id=NULL, kebab-cased name (Rule #17 requires module-level with snake_case <module_code>_agent). Eight skill_tools rows of operation_kind='query' all platform-tier."
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-      - {type: user_decision, ref: B2-1, reason: module shape determines how many system skills to author and which tools migrate where}
-    affected_entities: [skills, skill_tools]
+    summary: "SUPERSEDED: legacy vsdp-system skill grain item."
+    finding: "RETIRED per the 2026-06-06 per-domain-skill restoration (see supersession header). The original item (retire kebab vsdp-system, reauthor one system skill per module, migrate skill_tools) is CANCELED. Under the new model VSDP carries exactly ONE domain-grain system skill (domain_id=80, domain_module_id=null) that DERIVES its toolset from domain_module_tools; FULL modules carry no skill; skill_tools is dropped. Skill id 119 vsdp-system already matches the domain-grain shape (domain_id=80, domain_module_id=NULL); only the kebab name vs snake convention and the legacy skill_tools rows remain, both folded into the modularization-backlog, not a VSDP audit item."
+    status: superseded
+    superseded_by: "plans/per-domain-skill-restoration.md (2026-06-06); audits/_modularization-backlog.md"
 
   - id: B1B-S7
     summary: "0 lifecycle states across all 8 VSDP masters."
-    finding: "Zero data_object_lifecycle_states rows for any VSDP master. Workflow-bearing masters that MUST have lifecycle states: pull_requests, ci_pipeline_runs, software_deployments. Config-shape exemption candidates per Rule #12: value_stream_metrics (derived), source_repositories (created/archived only), build_artifacts (publish-once immutable), ci_pipelines (configuration entity, runs are the workflow surface), code_commits (event entity, not a workflow). Exemption requires user surface per Rule #15 (no notes annotation)."
+    finding: "Zero data_object_lifecycle_states rows for any VSDP master. entity_type now classified (2026-06-07): operational_workflow masters that MUST have lifecycle states are pull_requests (678), ci_pipeline_runs (680), software_deployments (682). The other five are now typed non-workflow and pass B12 by exemption: source_repositories+code_commits+build_artifacts=operational_record, ci_pipelines=catalog, value_stream_metrics=computed. The Rule #15 surface for the config-shape exemption is now resolved structurally by the entity_type classification, so B2-7's exemption-confirmation leg is informational."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1, reason: domain_module_id attribution per M5 requires modules}
-      - {type: user_decision, ref: B2-7, reason: config-shape exemption candidates need explicit user decision per master}
     affected_masters:
       - {data_object_id: 678, name: pull_requests, target_module_id: null, workflow: draft_to_open_to_review_to_approved_to_merged_or_closed}
       - {data_object_id: 680, name: ci_pipeline_runs, target_module_id: null, workflow: queued_to_running_to_succeeded_or_failed_or_cancelled}
       - {data_object_id: 682, name: software_deployments, target_module_id: null, workflow: pending_to_running_to_succeeded_or_failed_with_rollback}
-      - {data_object_id: 676, name: source_repositories, target_module_id: null, workflow: config_shape_exemption_candidate}
-      - {data_object_id: 677, name: code_commits, target_module_id: null, workflow: event_only_no_workflow}
-      - {data_object_id: 679, name: ci_pipelines, target_module_id: null, workflow: config_shape_exemption_candidate}
-      - {data_object_id: 681, name: build_artifacts, target_module_id: null, workflow: publish_once_immutable}
-      - {data_object_id: 683, name: value_stream_metrics, target_module_id: null, workflow: derived_no_workflow}
 
   - id: B1B-B1
     summary: "9 outbound handoffs carry source_domain_module_id=NULL on VSDP side."
@@ -131,19 +121,14 @@ b1b:
       - {handoff_id: 801, direction: inbound, source_domain: IPAAS, target_domain: VSDP, trigger_event: integration_recipe.published, payload: integration_recipes, null_field: target_domain_module_id}
 
   - id: B1B-B3
-    summary: "0 data_object_aliases rows on the 8 VSDP masters."
-    finding: "Zero aliases despite obvious industry-synonym candidates (pull_requests to merge_requests in GitLab; ci_pipelines to pipelines/workflows/builds; value_stream_metrics to dora_metrics/flow_metrics). Self-explanatory exemption candidates per master to be surfaced; Rule #15 forbids notes annotation."
+    summary: "Vendor-terminology alias subset on VSDP masters (generic synonyms done 2026-06-07)."
+    finding: "The 2026-06-07 pass inserted 11 generic-synonym aliases (alias_type='synonym', no vendor product names): source_repositories (Code Repositories, Repositories), pull_requests (Merge Requests, Change Requests), ci_pipelines (Pipelines, Build Pipelines), ci_pipeline_runs (Pipeline Runs, Build Runs), build_artifacts (Artifacts), value_stream_metrics (DORA Metrics, Flow Metrics). What REMAINS is the vendor-terminology alias subset (alias_type='solution_term' keyed to a solution_id), which must align with the solutions inventory authored under B2-2 and is therefore blocked on it."
     blocked_by:
-      - {type: user_decision, ref: B2-2, reason: "vendor-terminology aliases align with the solutions inventory authored in Bucket 2 item 2 (GitLab merge_requests, Azure DevOps workflows, etc.)"}
+      - {type: user_decision, ref: B2-2, reason: "solution_term aliases require the GitLab / Azure DevOps / etc. solution rows authored in B2-2 before they can carry a solution_id"}
     affected_masters:
-      - {data_object_id: 678, name: pull_requests, target_module_id: null, workflow: industry_synonym_merge_requests}
-      - {data_object_id: 679, name: ci_pipelines, target_module_id: null, workflow: industry_synonym_pipelines_workflows_builds}
-      - {data_object_id: 683, name: value_stream_metrics, target_module_id: null, workflow: industry_synonym_dora_metrics_flow_metrics}
-      - {data_object_id: 676, name: source_repositories, target_module_id: null, workflow: alias_candidate_repos}
-      - {data_object_id: 680, name: ci_pipeline_runs, target_module_id: null, workflow: alias_candidate_workflow_runs_builds}
-      - {data_object_id: 681, name: build_artifacts, target_module_id: null, workflow: alias_candidate_packages_container_images}
-      - {data_object_id: 677, name: code_commits, target_module_id: null, workflow: self_explanatory_exemption_candidate}
-      - {data_object_id: 682, name: software_deployments, target_module_id: null, workflow: self_explanatory_exemption_candidate}
+      - {data_object_id: 678, name: pull_requests, target_module_id: null, workflow: vendor_term_merge_requests_pending_solution_id}
+      - {data_object_id: 679, name: ci_pipelines, target_module_id: null, workflow: vendor_term_workflows_actions_pending_solution_id}
+      - {data_object_id: 683, name: value_stream_metrics, target_module_id: null, workflow: vendor_term_pending_solution_id}
 
   - id: B1B-B4
     summary: "0 outbound cross-domain data_object_relationships from VSDP masters."
@@ -164,18 +149,18 @@ b1b:
 
 b2:
   - id: B2-1
-    summary: "Module shape decision for VSDP."
+    summary: "Module shape decision for VSDP. THE BUILD-GATING DECISION."
     question: "One consolidated VSDP-PLATFORM module, a 2-split (VSDP-DEV-PIPELINE + VSDP-DELIVERY-AND-VSM), a 4-split (SOURCE-CONTROL + CICD + DEPLOYMENT-MGMT + VALUE-STREAM-ANALYTICS), or a monolith plus VSDP-STARTER kit for SMB buyers?"
     options:
       - one consolidated VSDP-PLATFORM full module
       - 2-split VSDP-DEV-PIPELINE + VSDP-DELIVERY-AND-VSM
       - 4-split source-control + CICD + deployment-mgmt + value-stream-analytics
       - VSDP-PLATFORM monolith plus VSDP-STARTER (module_kind=starter)
-    why: "Rule #14 requires ≥2 modules once capabilities reach ≥3. Bucket 3 candidate-queue domains (GITOPS-DELIVERY, ARTIFACT-REGISTRY, APPSEC-ORCH, SUPPLY-CHAIN-SEC) may carve out scope from the 4-split option if promoted."
+    why: "Rule #14 requires >=2 modules once capabilities reach >=3. Bucket 3 candidate-queue domains (GITOPS-DELIVERY, ARTIFACT-REGISTRY, APPSEC-ORCH, SUPPLY-CHAIN-SEC) may carve out scope from the 4-split option if promoted. This decision gates B1A-S2, B1A-BUILD, and every b1b item."
 
   - id: B2-2
     summary: "Solutions inventory for VSDP."
-    question: "Which flagship vendors to author as solutions, at what coverage_level (primary vs secondary), and whether to roll up add-ons or treat as separate solutions?"
+    question: "Which flagship vendors to author as solutions, at what coverage_level (primary vs secondary), and whether to roll up add-ons or treat as separate solutions? Also gates the solution_term alias subset (B1B-B3 remainder)."
     options:
       - GitLab Ultimate (primary)
       - GitHub Enterprise rolled up with Actions + Advanced Security (primary or separate rows)
@@ -217,14 +202,13 @@ b2:
       - attach all four to VSDP
 
   - id: B2-7
-    summary: "Pattern flag flips on build_artifacts and software_deployments."
-    question: "Confirm or reject the immutability flag (has_submit_lock) on build_artifacts (post-publish, SLSA-provenance-lock semantics) and the single-approver flag (has_single_approver) on software_deployments (regulated SOX/GxP change windows)? Also, confirm the config-shape lifecycle exemption (Rule #12) for source_repositories, build_artifacts, ci_pipelines, code_commits, value_stream_metrics."
+    summary: "Pattern flag flips on build_artifacts and software_deployments (DESTRUCTIVE structured-column write)."
+    question: "Confirm or reject the immutability flag (has_submit_lock) on build_artifacts (post-publish, SLSA-provenance-lock semantics) and the single-approver flag (has_single_approver) on software_deployments (regulated SOX/GxP change windows)? Note: the config-shape lifecycle exemption leg of this item is now resolved structurally by the 2026-06-07 entity_type classification (build_artifacts=operational_record, ci_pipelines=catalog, code_commits+source_repositories=operational_record, value_stream_metrics=computed), so only the two pattern-flag flips remain open here."
     options:
       - flip build_artifacts.has_submit_lock=true
       - flip software_deployments.has_single_approver=true
       - both
       - neither
-      - per-master decision: exemption confirmations for the five config-shape candidates listed in finding text
 
 b3:
   - id: B3-1

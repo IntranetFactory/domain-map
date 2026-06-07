@@ -11,21 +11,23 @@
 schema_version: 2
 domain: DEM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
+
+# DEM is UNBUILT: 0 domain_modules (M1 fail, blocking), 0 capability_domains, 0 solution_domains.
+# Per Rule #21 the agent does NOT scaffold an unbuilt domain; the build is surfaced (b1a-A2/A3/BUILD)
+# and the M1-gated cascade is left. The 2026-06-07 pass executed only the additive/corrective items
+# that stand independent of the module set (entity_type classification, Rule #20 catalog text,
+# event_category backfill, intra-domain master-to-master relationships).
 
 b1a:
   - id: B1A-A2
     summary: Author 5-7 DEM capabilities and link via capability_domains.
     finding: >-
-      DEM has 0 capability_domains rows. Vendor surface implies 5-7 capabilities.
-      Proposed codes: DEM-ENDPOINT-EXPERIENCE-SCORING, DEM-SYNTHETIC-MONITORING,
-      DEM-REAL-USER-MONITORING, DEM-DIGITAL-FRICTION-DETECTION,
-      DEM-ENDPOINT-ANOMALY-DETECTION, DEM-SAAS-REACHABILITY-MONITORING.
-    action: >-
-      Insert capabilities rows for each proposed code with description, then
-      insert capability_domains rows linking each to domain_id=83.
-    extra_proposed_capability_codes:
+      DEM has 0 capability_domains rows (verified live 2026-06-07). Vendor surface implies 5-7
+      capabilities. SURFACED, not executed: this is part of the unbuilt-domain BUILD (see B1A-BUILD),
+      and authoring capabilities pre-decides the module split (B2-MODULE-SPLIT). Hold until the build.
+    proposed_capability_codes:
       - DEM-ENDPOINT-EXPERIENCE-SCORING
       - DEM-SYNTHETIC-MONITORING
       - DEM-REAL-USER-MONITORING
@@ -36,13 +38,10 @@ b1a:
   - id: B1A-A3
     summary: Author flagship solutions and solution_domains links for DEM.
     finding: >-
-      DEM has 0 solution_domains rows. Flagship vendors per 2026-05-30 vendor
-      surface are not linked. Reuse existing vendors rows where the company is
-      already in the catalog; create new vendors rows otherwise.
-    action: >-
-      For each solution insert (or upsert by solution_name) the solutions row
-      with vendor_id resolved, then insert solution_domains rows with
-      coverage_level per the list.
+      DEM has 0 solution_domains rows (verified live 2026-06-07). SURFACED, not executed: creating
+      solutions/vendors is Phase-A market-shape work that scope discipline forbids absent an explicit
+      go, and it is part of the unbuilt-domain BUILD. Reuse existing vendors where the company is in
+      the catalog; new vendors only on explicit approval.
     vendor_evidence:
       - {vendor: Catchpoint, evidence: 1st_class}
       - {vendor: ThousandEyes, evidence: 1st_class}
@@ -54,241 +53,179 @@ b1a:
       - {vendor: AppNeta, evidence: secondary}
       - {vendor: Riverbed Aternity, evidence: secondary}
 
-  - id: B1A-B6
-    summary: Author 4 intra-domain master-to-master data_object_relationships.
-    finding: >-
-      DEM has 0 intra-domain relationships among its 5 masters. Plausible edges
-      missing: digital_friction_events contributes_to endpoint_experience_scores;
-      real_user_sessions contributes_to endpoint_experience_scores;
-      synthetic_monitoring_results contributes_to endpoint_experience_scores;
-      endpoint_anomaly_findings correlates_with digital_friction_events.
-    action: >-
-      Insert 4 data_object_relationships rows using data_object_id (source) and
-      related_data_object_id (target), relationship_type=many_to_one or
-      one_to_many as appropriate, relationship_kind=association,
-      relationship_verb=contributes_to or correlates_with, owner_side=source.
-    affected_masters:
-      - {data_object_id: 588, name: digital_friction_events, target_module_id: null, workflow: contributes_to_585}
-      - {data_object_id: 587, name: real_user_sessions, target_module_id: null, workflow: contributes_to_585}
-      - {data_object_id: 586, name: synthetic_monitoring_results, target_module_id: null, workflow: contributes_to_585}
-      - {data_object_id: 589, name: endpoint_anomaly_findings, target_module_id: null, workflow: correlates_with_588}
-
   - id: B1A-B8
     summary: Author 4 cross-domain mirror data_object_relationships for outbound handoffs.
     finding: >-
-      Each of the 4 outbound DEM handoffs (664 DEM->ITSM service_incidents, 665
-      DEM->AIOPS endpoint_anomaly_findings, 666 DEM->OBS
-      synthetic_monitoring_results, 667 DEM->AIOPS real_user_sessions) needs a
-      mirror data_object_relationships row capturing the cross-domain semantic.
-    action: >-
-      Insert 4 data_object_relationships rows: endpoint_experience_scores
-      triggers service_incidents (585->47); endpoint_anomaly_findings
-      published_to endpoint_anomaly_findings on AIOPS side (asymmetric consumer
-      DMDO once AIOPS lands modules; record relationship only here);
-      real_user_sessions flagged_to anomaly_detections;
-      synthetic_monitoring_results published_to synthetic_monitoring_results on
-      OBS side.
+      The 4 outbound DEM handoffs (664 DEM->ITSM service_incidents, 665 DEM->AIOPS
+      endpoint_anomaly_findings, 666 DEM->OBS synthetic_monitoring_results, 667 DEM->AIOPS
+      real_user_sessions) still have no mirror data_object_relationships. SURFACED, not executed:
+      three of the four target the neighbor's own (as-yet-unbuilt) module surface and the state's
+      own action text reads "record relationship only here once AIOPS/OBS lands modules" (asymmetric,
+      part of the neighbor cascade). The lone clean edge (585 endpoint_experience_scores triggers
+      47 service_incidents into the already-built ITSM) can be authored without neighbor gating if
+      desired; the AIOPS/OBS edges should wait for those audits.
     affected_handoffs:
-      - {handoff_id: 664, direction: outbound, source_domain: DEM, target_domain: ITSM, trigger_event: endpoint_experience_score.degraded, payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 665, direction: outbound, source_domain: DEM, target_domain: AIOPS, trigger_event: endpoint_anomaly_finding.published, payload: endpoint_anomaly_findings, null_field: source_and_target_domain_module_id}
-      - {handoff_id: 666, direction: outbound, source_domain: DEM, target_domain: OBS, trigger_event: synthetic_monitoring_result.failed, payload: synthetic_monitoring_results, null_field: source_and_target_domain_module_id}
-      - {handoff_id: 667, direction: outbound, source_domain: DEM, target_domain: AIOPS, trigger_event: real_user_session.poor_experience, payload: real_user_sessions, null_field: source_and_target_domain_module_id}
+      - {handoff_id: 664, source_domain: DEM, target_domain: ITSM, payload: service_incidents, edge: "585 triggers 47", neighbor_built: true}
+      - {handoff_id: 665, source_domain: DEM, target_domain: AIOPS, payload: endpoint_anomaly_findings, edge: "589 published_to AIOPS-side", neighbor_built: false}
+      - {handoff_id: 666, source_domain: DEM, target_domain: OBS, payload: synthetic_monitoring_results, edge: "586 published_to OBS-side", neighbor_built: false}
+      - {handoff_id: 667, source_domain: DEM, target_domain: AIOPS, payload: real_user_sessions, edge: "587 flagged_to 94 anomaly_detections", neighbor_built: false}
 
   - id: B1A-B9-ORPHAN
     summary: Resolve trigger event 680 (digital_friction_event.recorded) orphan.
     finding: >-
-      Trigger event 680 has 0 handoffs anywhere. Either the event is not actually
-      published (DELETE) or the missing handoff (most plausibly DEM->ITSM
-      proactive ticket creation) needs to be authored.
-    action: >-
-      User picks DELETE vs AUTHOR. If AUTHOR: insert handoffs row source=DEM,
-      target=ITSM, trigger_event_id=680, data_object_id=47 (service_incidents),
-      integration_pattern=event_stream, friction_level=low. If DELETE: DELETE
-      /trigger_events?id=eq.680.
+      Trigger event 680 has 0 handoffs anywhere (still true 2026-06-07; its event_category was
+      backfilled to 'signal' this pass). SURFACED as a user decision: this is either a DELETE (event
+      not actually published) or an AUTHOR (most plausibly a DEM->ITSM proactive ticket on
+      service_incidents). DELETE is destructive (never done unapproved); authoring a new handoff into
+      ITSM is the additive alternative. User picks.
     affected_events:
-      - {id: 680, event_name: digital_friction_event.recorded, current_category: "", proposed_category: lifecycle}
+      - {id: 680, event_name: digital_friction_event.recorded, event_category: signal}
 
   - id: B1A-B9-EVENTS
     summary: Author plausible state-transition events for DEM masters.
     finding: >-
-      Missing rows per the 2026-05-30 enumeration: endpoint_experience_score.recovered,
+      Missing recovery/resolution events: endpoint_experience_score.recovered,
       synthetic_monitoring_result.recovered, endpoint_anomaly_finding.resolved,
-      endpoint_anomaly_finding.suppressed. Approx 4-5 new event rows.
-    action: >-
-      Insert trigger_events rows with event_category=state_change for the
-      recovery / resolution events; do NOT auto-populate notes (Rule #15).
+      endpoint_anomaly_finding.suppressed (~4 rows, event_category=state_change). SURFACED, not
+      executed: these are speculative additions to an unbuilt domain with 0 lifecycle states; they
+      are best authored alongside the BUILD and the endpoint_anomaly_findings lifecycle (B1B-B12),
+      so their resolution/suppression states have something to anchor to.
     affected_events:
-      - {id: null, event_name: endpoint_experience_score.recovered, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: synthetic_monitoring_result.recovered, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: endpoint_anomaly_finding.resolved, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: endpoint_anomaly_finding.suppressed, current_category: null, proposed_category: state_change}
+      - {event_name: endpoint_experience_score.recovered, proposed_category: state_change}
+      - {event_name: synthetic_monitoring_result.recovered, proposed_category: state_change}
+      - {event_name: endpoint_anomaly_finding.resolved, proposed_category: state_change}
+      - {event_name: endpoint_anomaly_finding.suppressed, proposed_category: state_change}
+
   - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
-    extra_phase_p_triage: "2026-06-02"
+    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities, 0 solutions awaiting a build."
+    finding: >-
+      Live triage re-confirmed 2026-06-07: 0 domain_modules (M1 fail), 0 capability_domains, 0
+      solution_domains. Not deployable today. Per Rule #21 the agent does NOT scaffold an unbuilt
+      domain; the build is surfaced here. The build shape is itself a user decision (B2-MODULE-SPLIT
+      and B2-DEX-BOUNDARY decide the module set before any modules/capabilities/solutions land).
+    action: >-
+      On a user go: run Phase A (capabilities, solutions/solution_domains) then M (modules per the
+      chosen split) then B (masters into domain_module_data_objects, lifecycle, cross-domain rels)
+      then the ONE domain-grain system skill (Rule #17, post-supersession). If multi-module, run
+      Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward.
 
 b1b:
-  - id: B1B-A4
-    summary: Author Rule #20 catalog_tagline and catalog_description for DEM.
-    finding: >-
-      domains.id=83 catalog_tagline and catalog_description are both empty.
-      Rule #20 requires user-approved buyer-voice wording before write.
-    blocked_by:
-      - {type: user_decision, ref: B2-A4-DRAFT}
-
   - id: B1B-M1
-    summary: BLOCKING. Author at least one full domain_modules row for DEM.
+    summary: BLOCKING. Author the DEM domain_modules row set.
     finding: >-
-      DEM has 0 domain_modules. Every M-band, every module-anchored B-band fix,
-      every E-band fix, and F2 are blocked. Module split shape is a user
-      decision (Bucket 2 #1).
+      DEM has 0 domain_modules (verified live 2026-06-07). Every M-band, every module-anchored
+      B-band / E-band fix, the FK backfills, and the lifecycle domain_module_id are blocked. The
+      split shape is a user decision (B2-MODULE-SPLIT) interacting with B2-DEX-BOUNDARY.
     blocked_by:
       - {type: user_decision, ref: B2-MODULE-SPLIT}
+      - {type: user_decision, ref: B2-DEX-BOUNDARY}
 
   - id: B1B-B4
-    summary: Re-evaluate pattern flags on all 5 DEM masters.
+    summary: Re-evaluate pattern flags on the 3 personal-content DEM masters.
     finding: >-
-      Proposed by 2026-05-30 audit: has_personal_content=true on
-      real_user_sessions, digital_friction_events, endpoint_experience_scores;
-      has_submit_lock and has_single_approver remain false across DEM.
-      Pattern-flag re-evaluation per Rule #12 needs explicit per-row user
-      confirmation; no notes-column writes.
+      Proposed has_personal_content=true on real_user_sessions, digital_friction_events,
+      endpoint_experience_scores; has_submit_lock and has_single_approver stay false across DEM.
+      Flipping pattern flags is forbidden without explicit per-row user confirmation (Rule #12);
+      no notes-column writes (Rule #15). Surfaced as B2-PATTERN-FLAGS.
     blocked_by:
       - {type: user_decision, ref: B2-PATTERN-FLAGS}
 
   - id: B1B-B10b
     summary: Backfill domain_module_id FKs on the 5 DEM handoffs after M1 lands.
     finding: >-
-      4 outbound handoffs (664, 665, 666, 667) have source_domain_module_id=null;
-      1 inbound (653) has target_domain_module_id=null on the DEM side. 3 of the
-      4 outbound also have target_domain_module_id=null pending AIOPS / OBS M1.
+      4 outbound handoffs (664, 665, 666, 667) have source_domain_module_id=null; 1 inbound (653)
+      has target_domain_module_id=null on the DEM side. 3 of the 4 outbound also have
+      target_domain_module_id=null pending AIOPS / OBS M1. Blocked on DEM M1 and the neighbors' M1.
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1}
       - {type: domain_audit, blocking_domain: AIOPS, milestone: M1}
       - {type: domain_audit, blocking_domain: OBS, milestone: M1}
       - {type: domain_audit, blocking_domain: NPMD, milestone: M1}
     affected_handoffs:
-      - {handoff_id: 653, direction: inbound, source_domain: NPMD, target_domain: DEM, trigger_event: saas_application_performance.degraded, payload: saas_application_performance, null_field: target_domain_module_id_DEM_side}
-      - {handoff_id: 664, direction: outbound, source_domain: DEM, target_domain: ITSM, trigger_event: endpoint_experience_score.degraded, payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 665, direction: outbound, source_domain: DEM, target_domain: AIOPS, trigger_event: endpoint_anomaly_finding.published, payload: endpoint_anomaly_findings, null_field: source_and_target_domain_module_id}
-      - {handoff_id: 666, direction: outbound, source_domain: DEM, target_domain: OBS, trigger_event: synthetic_monitoring_result.failed, payload: synthetic_monitoring_results, null_field: source_and_target_domain_module_id}
-      - {handoff_id: 667, direction: outbound, source_domain: DEM, target_domain: AIOPS, trigger_event: real_user_session.poor_experience, payload: real_user_sessions, null_field: source_and_target_domain_module_id}
+      - {handoff_id: 653, direction: inbound, source_domain: NPMD, target_domain: DEM, null_field: target_domain_module_id_DEM_side}
+      - {handoff_id: 664, direction: outbound, source_domain: DEM, target_domain: ITSM, null_field: source_domain_module_id}
+      - {handoff_id: 665, direction: outbound, source_domain: DEM, target_domain: AIOPS, null_field: source_and_target_domain_module_id}
+      - {handoff_id: 666, direction: outbound, source_domain: DEM, target_domain: OBS, null_field: source_and_target_domain_module_id}
+      - {handoff_id: 667, direction: outbound, source_domain: DEM, target_domain: AIOPS, null_field: source_and_target_domain_module_id}
 
   - id: B1B-B12
-    summary: Author data_object_lifecycle_states after M1 lands; scope decided by B2-LIFECYCLE.
+    summary: Author data_object_lifecycle_states for endpoint_anomaly_findings after M1 lands.
     finding: >-
-      All 5 DEM masters have 0 lifecycle states. endpoint_anomaly_findings has a
-      real publish / acknowledge / resolve workflow and must carry states. The
-      other 4 are plausibly config-shape (Bucket 2 #4 confirms exemption).
+      entity_type is now classified (2026-06-07): endpoint_anomaly_findings (589) =
+      operational_workflow (needs lifecycle states detected/acknowledged/resolved/suppressed);
+      endpoint_experience_scores (585) = computed; synthetic_monitoring_results (586),
+      real_user_sessions (587), digital_friction_events (588) = operational_record. Per Rule #12
+      only the operational_workflow master requires lifecycle states; the others are structurally
+      exempt by their entity_type (no notes-based exemption). Lifecycle authoring needs
+      domain_module_id, so it is blocked on M1. B2-LIFECYCLE's config-shape question is now ANSWERED
+      by the entity_type classification and no longer needs a separate user decision.
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1}
-      - {type: user_decision, ref: B2-LIFECYCLE}
     affected_masters:
-      - {data_object_id: 589, name: endpoint_anomaly_findings, target_module_id: null, workflow: detected_acknowledged_resolved_suppressed}
-      - {data_object_id: 585, name: endpoint_experience_scores, target_module_id: null, workflow: config_shape_pending_exemption}
-      - {data_object_id: 586, name: synthetic_monitoring_results, target_module_id: null, workflow: config_shape_pending_exemption}
-      - {data_object_id: 587, name: real_user_sessions, target_module_id: null, workflow: config_shape_pending_exemption}
-      - {data_object_id: 588, name: digital_friction_events, target_module_id: null, workflow: config_shape_pending_exemption}
+      - {data_object_id: 589, name: endpoint_anomaly_findings, entity_type: operational_workflow, workflow: detected_acknowledged_resolved_suppressed}
 
-  - id: B1B-F1
-    summary: Retire the legacy domain-level dem-system skill after F2 lands.
-    finding: >-
-      skills.id=47 dem-system has domain_module_id=null; 5 skill_tools rows
-      (463-467) transfer cleanly to per-module skills.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1}
-      - {type: prerequisite_entity, ref: B1B-F2}
-
-  - id: B1B-F2
-    summary: Author one system skill per domain_modules row plus skill_tools.
-    finding: >-
-      Rule #17 requires one skill_type=system per domain_modules row with >=1
-      skill_tools row. Once the module split decision lands, author
-      dem_endpoint_experience_agent, dem_web_experience_agent, optionally
-      dem_saas_reachability_agent.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1}
+  # B1B-F1 / B1B-F2 (per-module system skills + skill_tools) are RETIRED by the supersession header
+  # above (2026-06-06 / per-domain-skill-restoration). The new model is ONE domain-grain system
+  # skill that derives its toolset, authored as part of B1A-BUILD; tools live on domain_module_tools.
+  # The legacy domain-level dem-system skill (skills.id=47) is the correct grain under the new model;
+  # no retirement is owed. Per-module tool re-authoring is tracked in audits/_modularization-backlog.md.
 
 b2:
   - id: B2-MODULE-SPLIT
-    summary: Pick the DEM module split shape.
+    summary: Pick the DEM module split shape (gates B1A-BUILD / B1B-M1).
     question: How should DEM be split into modules?
     options:
       - "(a) 2-module: DEM-ENDPOINT-EXPERIENCE (endpoint_experience_scores, endpoint_anomaly_findings, digital_friction_events) + DEM-WEB-EXPERIENCE (synthetic_monitoring_results, real_user_sessions)"
       - "(b) 3-module: add DEM-SAAS-REACHABILITY once sla_compliance_records / application_response_traces land"
       - "(c) single-module: DEM as one module while capability_count is 0 (Rule #14 floor not yet binding)"
     why: >-
-      Decision shapes B1B-M1, B1B-B10b, B1B-B12, B1B-F1, B1B-F2. Each option
-      produces a different module set and a different downstream loader plan.
+      Decision shapes B1A-BUILD, B1B-M1, B1B-B10b, B1B-B12. Each option produces a different module
+      set and a different downstream loader plan.
 
   - id: B2-DEX-BOUNDARY
     summary: Decide the DEX-PLATFORM boundary versus DEM.
-    question: How to handle the DEX (Nexthink, 1E, ControlUp Edge DX, Lakeside SysTrack, HappySignals) overlap?
+    question: How to handle the Digital Employee Experience (Nexthink, 1E, ControlUp Edge DX, Lakeside SysTrack, HappySignals) overlap?
     options:
       - "(i) absorb DEX into DEM and reject the DEX-PLATFORM candidate"
       - "(ii) promote DEX-PLATFORM and migrate endpoint_experience_scores + endpoint_anomaly_findings + digital_friction_events to it"
       - "(iii) keep both with overlap, express via solution_domains for dual-coverage vendors"
     why: >-
-      Interacts with Bucket 3 #1 ownership of device_health_summaries and
-      possibly of digital_friction_events / endpoint_anomaly_findings ownership
-      migration from DEM. Affects the right module set for B2-MODULE-SPLIT.
+      Interacts with B3-MARKET-ENTITIES ownership of device_health_summaries and possibly the
+      migration of digital_friction_events / endpoint_anomaly_findings out of DEM. Affects the right
+      module set for B2-MODULE-SPLIT.
 
   - id: B2-PATTERN-FLAGS
     summary: Confirm per-master pattern flag flips (B1B-B4).
     question: Confirm has_personal_content=true on real_user_sessions, digital_friction_events, endpoint_experience_scores?
     options:
-      - "confirm all three flips, has_submit_lock and has_single_approver remain false across DEM"
+      - "confirm all three flips; has_submit_lock and has_single_approver remain false across DEM"
       - "confirm a subset (specify which)"
       - "reject (justify in chat, no notes write per Rule #15)"
     why: >-
-      Pattern flags drive the deployer and the architect's downstream
-      derivations. Auto-flipping is forbidden; user must confirm per row.
-
-  - id: B2-LIFECYCLE
-    summary: Confirm config-shape exemption for 4 DEM masters.
-    question: Confirm 4-of-5 masters are config-shape exempt from data_object_lifecycle_states?
-    options:
-      - "confirm exemption for endpoint_experience_scores, synthetic_monitoring_results, real_user_sessions, digital_friction_events; author states only for endpoint_anomaly_findings"
-      - "reject exemption for one or more (author states for those too, specify which)"
-    why: >-
-      Reduces B1B-B12 authoring surface from 5 masters to 1. No notes column
-      writes per Rule #15; exemption is tracked in the audit record only.
-
-  - id: B2-A4-DRAFT
-    summary: Provide Rule #20 catalog_tagline and catalog_description for DEM.
-    question: User-approved wording for domains.id=83 catalog_tagline and catalog_description?
-    options:
-      - "supply both verbatim strings"
-      - "agent drafts both for explicit user approval before write"
-      - "leave empty for now"
-    why: >-
-      Rule #20 forbids agent-authored catalog text without explicit user
-      approval. Blocks B1B-A4.
+      Pattern flags drive the deployer and downstream derivations. Auto-flipping is forbidden; user
+      confirms per row.
 
 b3:
   - id: B3-MARKET-ENTITIES
     candidate: synthetic_monitors, monitoring_locations, page_load_events, web_vitals, performance_baselines, sla_compliance_records, device_health_summaries, application_response_traces
     rationale: >-
-      Vendor surface union across the flagship DEM set implies these 8
-      entities. Two (device_health_summaries, application_response_traces)
-      straddle DEX and APM boundaries respectively and should not be loaded
-      until B2-DEX-BOUNDARY and B3-APM-MONITORING land.
+      Vendor-surface union across the flagship DEM set implies these 8 entities. Two
+      (device_health_summaries, application_response_traces) straddle DEX and APM boundaries and
+      should not be loaded until B2-DEX-BOUNDARY and B3-APM-MONITORING land.
     vendor_evidence: [Catchpoint, ThousandEyes, Dynatrace DEM, New Relic Browser + Synthetic, Datadog RUM + Synthetic, Splunk Synthetics, Akamai mPulse, AppNeta, Riverbed Aternity]
     proposed_module: depends_on_B2-MODULE-SPLIT
 
   - id: B3-DEX-PLATFORM
     candidate: DEX-PLATFORM (new domain)
     rationale: >-
-      Queued in audits/_missing-domains.md (mention_count 1). Gates B2-DEX-BOUNDARY
-      and ownership of device_health_summaries from B3-MARKET-ENTITIES.
+      Queued in audits/_missing-domains.md (mention_count 1). Gates B2-DEX-BOUNDARY and ownership of
+      device_health_summaries from B3-MARKET-ENTITIES.
     vendor_evidence: [Nexthink, 1E, ControlUp Edge DX, Lakeside SysTrack, HappySignals]
 
   - id: B3-APM-MONITORING
     candidate: APM-MONITORING (new domain, distinct from existing APM=Application Portfolio Management)
     rationale: >-
       Queued in audits/_missing-domains.md (mention_count 1). Gates ownership of
-      application_response_traces from B3-MARKET-ENTITIES. The existing APM
-      domain code is Application Portfolio Management (LeanIX, Ardoq), a
-      different market.
+      application_response_traces from B3-MARKET-ENTITIES. The existing APM domain code is
+      Application Portfolio Management (LeanIX, Ardoq), a different market.
     vendor_evidence: [Datadog APM, Dynatrace APM, New Relic APM, AppDynamics, Elastic APM, Honeycomb, Instana]

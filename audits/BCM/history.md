@@ -281,3 +281,53 @@ UI spot-checks:
 - https://tests.semantius.app/domain_map/capability_domains?domain_id=17
 - https://tests.semantius.app/domain_map/handoffs?id=253
 - https://tests.semantius.app/domain_map/handoff_processes?handoff_id=253
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate execute (SKILL.md Rule #21) over the open items in `state.yaml`. No fresh from-scratch audit. Live state re-verified against the snapshot and matches with zero drift: BCM is domain 17, a leadership-tier sub-domain under GRC (`parent_domain_id=15`), and is **UNBUILT** (0 `domain_modules`, 0 `capability_domains`, 0 `skills`, 0 DMDOs). BCM masters **zero** `data_objects` of its own. `business_function_domains` already populated (owner Governance Risk and Compliance fn 31, contributor IT Operations fn 27), so C1 needs nothing. The only data_object on BCM's boundary, `compliance_risks` (id 282), is mastered by GRC and already carries `entity_type='operational_workflow'`, so no entity_type PATCH, no alias work, and no intra-domain relationship/handoff work is owed by BCM.
+
+Per the UNBUILT rule the build (B1A-BUILD, B1B-S1 modules, B1B-S2 capabilities, B1B-S4 domain-grain skill, B1B-S6 consumer DMDOs) and its M / F / B10b cascade are SURFACED, not scaffolded. The build is gated on the keystone B2-1 decision (leadership-tier vs promote vs hybrid). The single EXECUTE item available without a build was the catalog UX copy.
+
+### Executed (counts)
+
+| Write type | Table | Rows | record_status |
+|---|---|---|---|
+| A4 catalog UX (Rule #20, B1B-S3 / B2-4) | `domains` (id 17) | 1 PATCH (`catalog_tagline` + `catalog_description`, both previously empty) | new |
+
+The prompt's EXECUTE rule overrode the stale Rule #20 "surface-before-write" gate and the B2-4 "which flow" question; both authored fields were empty (no non-empty value overwritten). Buyer voice, workflow + value, no vendor/product names; ISO 22301, DORA, NIS2 named only as statutory frameworks in description text (allowed). No em-dash; American English. No modules exist, so there is no module-level catalog UX to write. Loader: `.tmp_deploy/2026-06-07_bcm_state_driven_execute.ts`.
+
+### Surfaced (for user)
+
+- **B2-1 (keystone):** leadership-tier vs promote vs hybrid. Gates the entire build. (a) keep leadership-tier, BCM-LANDING only; (b) promote, BCM-PLANNING + BCM-EXERCISE-AND-CRISIS with masters per the b3 list; (c) hybrid, thin landing now plus deferred master-bearing modules.
+- **B2-2:** DRP, separate domain or BCM sub-module (vendor split). Depends on B2-1.
+- **B2-3:** DORA/NIS2 ICT third-party register ownership (BCM hosts embedded from TPRM / consumes from TPRM / shared OP-RES module). Independent of B2-1.
+- **B1B-S5 (DESTRUCTIVE, surface only):** repointing handoff 253 `trigger_event_id` off the defective trigger 227 (`assessment.completed`, keyed on `risk_assessments` not the payload `compliance_risks`) re-attributes an existing trigger_event and is also blocked on GRC B9 (non-defective trigger on `compliance_risks`) and GRC B10b (GRC has 0 modules). Not applied; recommended fix recorded.
+- **Personas / RACI (Phase P):** deferred (not authored). Candidate personas: BCM Manager / Business Continuity Coordinator, Crisis/Incident Commander, BIA / Service Owner, Recovery Lead, Resilience Auditor. Applies only after the build (B2-1 -> multi-module).
+
+### Left
+
+- **b1b foreign/build-blocked:** B1B-S1, S2, S4, S6 (build steps, gated on B2-1, UNBUILT cascade left); B1B-S5 source-side module FK backfill (GRC B10b owed); B1B-A1 (agent_curated process 269 tag, blocked behind B1B-S5 so the trigger does not mis-express the publisher).
+- **b3:** 12 candidate masters, all gated on B2-1 (B3-BCP, B3-BIA, B3-BSVC, B3-DEPMAP, B3-RECSTRAT, B3-DRP, B3-EXERCISE, B3-EXFINDINGS, B3-CRISIS, B3-CRISCOMM, B3-EMERGCONTACT, B3-DORAREG).
+- **Superseded:** per-module system skill grain / skill_tools retired (supersession header kept; B1B-S4 reframed to the one-domain-grain-skill + `domain_module_tools` model).
+
+### Report-only follow-ups (owed by other domains)
+
+- GRC B9: non-defective `trigger_event` keyed on `compliance_risks` (defective trigger 227 also surfaced on ATS rows 1180/1181 per SKILL.md).
+- GRC B10b: `source_domain_module_id` on handoffs 253 and 252 (blocked on GRC M-band; GRC has 0 modules).
+- TPRM (conditional on B2-3 = register in TPRM): master DMDO on `dora_third_party_register_entries`.
+- OP-RES (conditional on B2-3 = shared DORA module): `domain_module_host_domains` row linking the cross-cutting module.
+
+### JWT errors
+
+None.
+
+### Files written
+
+- `domains` (id 17) catalog UX, live.
+- `audits/BCM/state.yaml` rewritten (schema_version 2, supersession header kept; executed B1B-S3/B2-4 dropped; `last_audit` 2026-06-07; `status: awaiting_user_decision`; `next_action_by: user`).
+- `audits/BCM/history.md` (this section).
+
+UI spot-checks:
+- https://tests.semantius.app/domain_map/domains?id=eq.17

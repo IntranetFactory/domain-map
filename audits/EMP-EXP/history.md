@@ -281,3 +281,41 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass against the open EMP-EXP state.yaml items (no fresh from-scratch audit). Domain 62 confirmed live (parent_domain_id=54, crud_percentage=95). 2 full modules (64 CONTINUOUS-LISTEN, 65 ACTION-PLANNING); 5 masters (survey_campaigns 181, survey_responses 182, engagement_drivers 183, action_plans 184, pulse_questions 185). Every open item classified EXECUTE / SURFACE / LEAVE per Rule #21. Loader: [.tmp_deploy/emp_exp_state_execute_2026_06_07.ts](../../.tmp_deploy/emp_exp_state_execute_2026_06_07.ts), run from project root. No JWT-audience errors.
+
+Re-check note: handoff 116 (attrition_risk.high -> HCM), previously flagged untagged under B1A-S13-RES, is now tagged (handoff_processes id 1112, proposal_source='agent_curated', record_status='new') by a post-2026-05-31 pass. All 13 cross-domain EMP-EXP handoffs now carry a handoff_processes row.
+
+### Executed (all writes record_status='new' / DB default per Rule #1)
+
+- **B1A-ENTITY-TYPE (B13)** - PATCH entity_type on all 5 masters (all were 'unclassified'): survey_campaigns 181 -> operational_workflow, survey_responses 182 -> operational_record, engagement_drivers 183 -> computed, action_plans 184 -> operational_workflow, pulse_questions 185 -> catalog. 5 rows.
+- **Catalog UX (Rule #20, A4 + M8)** - authored and wrote buyer-voice catalog_tagline + catalog_description (both were empty) on the domain row (62) and both modules (64, 65). 3 taglines + 3 descriptions = 6 column writes across 3 rows. No vendor names, no em-dashes, American English; empty-guard applied (only empty columns written).
+- **B1A-S6 (B9)** - INSERT trigger_events survey_campaign.closed (event_category='state_change', data_object_id=181) -> new id 1551. Backs the close-survey gate on lifecycle state 585.
+- **B1A-S9 (B9b)** - INSERT new threshold event engagement_driver.flagged (data_object_id=183) -> id 1552; plus 2 intra-domain handoffs 64 -> 65 (source_domain_id=target_domain_id=62, integration_pattern='lifecycle_progression', friction_level='low'): handoff 1404 on survey_campaign.closed (1551), handoff 1405 on engagement_driver.flagged (1552). Closes the B9b zero-intra-domain-handoff hard-fail. 1 event + 2 handoffs.
+- **B1A-C (C-band)** - INSERT 5 business_function_capabilities rows (caps 45-49 owner of business_function_id=79 Employee Experience) -> ids 7-11. Closes the C-band owner-attribution hard-fail. (business_function_domains already carries owner 79 + consumer 32, so C1 needed no work. notes column omitted per Rule #15.)
+
+Aliases (B11): no work - all 5 masters already carry 2 synonym aliases each (10 rows total). business_function_domains (C1): no work - owner + consumer already present.
+
+### Surfaced (NOT written - destructive or judgment; user decision required)
+
+- **B1A-S7 (DESTRUCTIVE)** - re-point handoffs 442 and 115 from wrong-attribution event 134 (survey.cycle_closed, keyed at engagement_drivers) to the new survey_campaign.closed (id 1551), then DELETE/rename event 134. Overwrites non-null trigger_event_id on existing rows + DELETE = needs sign-off.
+- **B1A-S13-RES** - 12 agent_curated handoff_processes rows on the EMP-EXP surface remain record_status='new'; H1 headline 0% until reviewer promotes to 'approved'. Rule #1 forbids the agent promoting.
+- **B1A-SELF-CONTAIN (M9, DESTRUCTIVE)** - DMDO row 293 (module 64, consumer/required on onboarding_journeys id 16, mastered by ONBOARDING) violates self-containment. Fix is embed-as-embedded_master OR set necessity='optional'; rewrites role/necessity on an existing row = needs sign-off.
+- **B1A-PHASE-P (DEFER)** - 0 personas on a 2-module domain (E1 fail). Personas deferred per Rule #21. Candidate personas: EMPLOYEE-EXPERIENCE-PROGRAM-MANAGER, HR-BUSINESS-PARTNER, PEOPLE-MANAGER.
+- **B2-S1** - pattern-flag positive re-eval (5 candidates). engagement_drivers is now 'computed' and pulse_questions 'catalog', so flags primarily matter on survey_campaigns 181 + action_plans 184.
+- **B2-S2** - Rule #15 notes on data_objects 183, 185 (config-shape exemption prose; intent now structural via entity_type). user-approved vs PATCH-to-empty (destructive).
+- **B2-S3** - Rule #15 notes on handoffs 116, 1231. user-approved vs PATCH-to-empty (destructive).
+- **B2-S4** - reclassify handoff 116 attrition_risk.high (event keyed at HCM-mastered employees). Architectural intent; no longer gates 116 tagging.
+- **B2-S5** - duplicate user-edges data_object_relationships 151 (owns) + 152 (creates) on (users, survey_campaigns). DELETE/rename is destructive.
+
+### Left (no action)
+
+- **b1b**: B1B-S1 (3 roles + role_modules + role_permissions) blocked on user role-design direction; B1B-S11-RES (handoff 1077 target module) blocked on PA audit declaring a consumer DMDO on action_plans.
+- **Superseded (per-domain-skill restoration 2026-06-06)**: original B1B-S2/S3/S4 (per-module system skill for module 65 + skill 55 rename/split + skill_tools) and B2-S6 (skill 55 rename/split) are CANCELED under the new ONE-domain-grain-system-skill model. Per-module tool re-authoring tracked in audits/_modularization-backlog.md. Kept only as supersession markers.
+- **b3 backlog**: B3-S1 through B3-S9 (survey_templates, engagement_themes, survey_invitations, sentiment_topics, manager_action_recommendations, 360_review_cycles, recognition_events, pulse_cohorts, engagement_score_snapshots). Strongest signals remain B3-S3 and B3-S9. B3-S7 depends on the PEER-RECOGNITION promote-vs-fold decision.

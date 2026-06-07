@@ -520,6 +520,33 @@ Forbidden patterns:
 
 **Why.** Marketing copy is the buyer-facing surface and ages on a different cycle than the analyst-facing catalog. The catalog tables can be re-derived from live state; marketing voice cannot. Treating these four columns (two each on `domains` and `domain_modules`) with the same overwrite-on-emit habit as analyst columns erases human work that's not visible in the agent's draft.
 
+### 21. Review/audit EXECUTES the fix. Only report/check is read-only.
+
+A request to **review / audit / validate / finish** a domain (or the catalog) means: run the completeness checklist AND immediately execute every fix the agent can do, in the same pass. A reviewed domain ends in exactly one of two states: **agent-finished** (all agent-doable work done, every touched row at `record_status='new'` awaiting only the user's approval) or **waiting on the user** (a real decision or a destructive step needs sign-off). A review NEVER ends by handing back a `b1a` to-do list or a "plan." If the agent could do it, the agent did it.
+
+A request to **report / check / "check only"** means read-only: diagnose, surface findings, change nothing. That is the only mode that produces a gap report without executing.
+
+**This rule overrides every "the audit is read-only by construction", "never auto-load fixes", "the audit produces a triage list; the user decides", and "surface the gap report before authoring any fixes" passage elsewhere in this file and in `references/`.** Those now describe report/check mode only. When Rule #21 contradicts them, Rule #21 wins.
+
+**Additive/destructive boundary (the safety line, applies to every table equally):**
+
+- **Additive / corrective work the agent executes without asking:** insert rows, fill an empty field, classify `entity_type`, author `record_status='new'` content (catalog text per Rule #20, aliases, lifecycle states, trigger_events, personas + RACI, APQC tags), backfill module FKs. Everything lands at `record_status='new'`; the user reviews the result in the records, never via a chat gate. Rule #1 still holds: never stamp `approved`.
+- **Destructive work the agent NEVER does unapproved:** DELETE a row, overwrite an existing non-empty value, replace or restructure existing rows. The table does not matter (skills are not special; the prohibition is about the *action*). Each destructive step is surfaced to the user as an approval, not executed. If a `b1a` item bundles an additive and a destructive step (e.g. "insert the replacement tags, then DELETE the 4 stale ones"), run the additive half and surface the deletion.
+
+**A review returns to the user only these (never a `b1a` list):**
+
+1. `b2` decisions (a fork the agent cannot pick).
+2. Destructive steps awaiting approval.
+3. "Blocked on another domain" (a third outcome that clears automatically as those domains are finished).
+
+**`b3` and new-domain candidates are non-blocking and never gate "finished":**
+
+- `b3` is reserved for **discretionary additive entities that fit the existing module shape** (vendor-research "flagship vendors also model X"). Park it in the ideas backlog; surface once; never auto-execute; never require it to call a domain finished.
+- **`b3` is never a split.** Any structural change, a new or split module, a split or new domain, or moving a master between domains, is a `b2` decision (it blocks "finished" and comes to the user), NOT a `b3`. Reclassify any split-shaped `b3` as `b2`.
+- A genuinely *required* missing entity is `b1a` (load it) or `b2` (decide it), never `b3`.
+
+**"Finished" = `b1a` executed AND no open `b2` AND no pending destructive approval.** Open `b3` never blocks it.
+
 ---
 
 ## The module at a glance
@@ -1160,6 +1187,7 @@ A `discovery_substring` row that the reviewer approves IS high-quality (column 1
 
 > **This is one of four passes in the Validate mode** (see [README.md](../../../README.md) § "Validate a domain"). When a user says *"validate / audit / review / verify `<DOMAIN>`"* or *"is `<DOMAIN>` fully loaded"* or *"what's missing for `<DOMAIN>`"*, you run all four passes: market audit (§ below), this structural pass, neighbor discovery (auto-derive related domains from `handoffs` + cross-domain DMDO rows), and pairwise reconciliation against each neighbor (§ "Pairwise handoff reconciliation" further below). Running just one pass is the failure pattern that lets gaps fall through — structural says "every junction has its qualifier" while semantic gaps go undetected, market audit says "you're missing FCRA disclosures" while internal inconsistencies go undetected, and skipping neighbor reconciliation leaves cross-domain edges half-wired. The triggers route to ALL four passes; never to one alone.
 
+0. **Read `audits/<DOMAIN_CODE>/state.yaml` FIRST** (and skim `history.md`) before issuing any live query. This committed file is the audit's memory: the prior pass already triaged this domain into `b1a` / `b1b` / `b2` / `b3`. A review CONTINUES from that worklist; live PostgREST queries come next, only to verify/refresh the recorded items against current state. Jumping straight to live band queries is a re-audit-from-zero that duplicates the triage and risks re-opening settled `b2` decisions. The ONLY mode that skips state is an explicitly-requested "fresh audit" (regenerate state from scratch). When state exists, drive execution from its worklist.
 1. Resolve `<DOMAIN_CODE>` to `<id>` and `<masters>` once at the start. Cache for reuse across queries.
 2. **Run the S-band sweep first** (S1 + S2 + S3). It produces the coverage tables the gap report leads with and surfaces zero-row anomalies the band checks may not specifically test.
 3. Run every **in-scope** band check (A / M / B / C / D / E / F / **H**) in order. Skip A5 unless the user has explicitly asked for a vendor-ownership refresh. **H1 is NOT optional** — audits that skip the H-band are incomplete; do not surface the gap report until H1 has been worked.

@@ -11,30 +11,25 @@
 schema_version: 2
 domain: PS-LIC
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
-b1a:
-  - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
-    extra_phase_p_triage: "2026-06-02"
+b1a: []
 
 b1b:
   - id: B1B-M1
-    summary: "PS-LIC has zero domain_modules; all M-band checks (M1, M2, M4, M5, M6, M8) and every downstream B/E/F surface gate on this."
+    summary: "PS-LIC has zero domain_modules; all M-band checks (M1, M2, M4, M5, M6, M8) and every downstream B/E/F surface gate on this. UNBUILT domain: the build itself is a user decision (B2-1 + B2-2), not an agent-scaffold task."
     finding: >-
-      `/domain_modules?domain_id=eq.46` returns empty and `/domain_module_host_domains?domain_id=eq.46` returns empty.
+      `/domain_modules?domain_id=eq.46` returns empty and `/capability_domains?domain_id=eq.46` returns empty (re-confirmed live 2026-06-07).
       Rule #14 mandates every domain has >=1 `module_kind='full'` row; with three or more capabilities (recommended 8) the floor is >=2.
-      Until M1 cures, M2, M4, M5, M6, M8 cascade vacuous-fail, the F2 module-level system-skill requirement cannot land, the B10b
-      `source_domain_module_id` PATCH cannot be derived, B12 module-anchored lifecycle permissions cannot be authored, and the
-      B9 missing-handoff drafts (events 1052, 1053, 1056) cannot populate per-module FKs at write time.
+      Until M1 cures, M2, M4, M5, M6, M8 cascade vacuous-fail, the B10b `source_domain_module_id` PATCH cannot be derived,
+      B12 module-anchored lifecycle permissions cannot be authored, and the B9 missing-handoff drafts (events 1052, 1053, 1056)
+      cannot populate per-module FKs at write time. Per UNBUILT discipline the agent does NOT scaffold the module set; it surfaces the build.
     action: >-
       Wait on Bucket 2 #1 (module-shape pick) and Bucket 2 #2 (capability-set pick). Once both land, ship a single Phase A loader
       adding `domain_modules` + `capabilities` + `capability_domains` + `domain_module_capabilities` + `domain_module_data_objects`
-      + re-anchored module-level system skills with `skill_tools`, then a Phase B loader for lifecycle states, pattern-flag
-      PATCHes, B10b source/target PATCHes, and the three missing-handoff drafts.
+      + the single domain-grain `system` skill (deriving its toolset from `domain_module_tools`), then a Phase B loader for lifecycle
+      states, pattern-flag PATCHes, B10b source/target PATCHes, and the three missing-handoff drafts.
     blocked_by:
       - {type: user_decision, ref: B2-1}
       - {type: user_decision, ref: B2-2}
@@ -53,13 +48,13 @@ b1b:
       - PS-LIC-FEES
 
   - id: B1B-B12
-    summary: "Zero data_object_lifecycle_states across all 6 PS-LIC masters; the workflow-gate permission layer is empty."
+    summary: "Zero data_object_lifecycle_states across all 6 PS-LIC masters; the workflow-gate permission layer is empty. All 6 masters are now classified entity_type='operational_workflow' (B13 cured 2026-06-07), so lifecycle states are now REQUIRED, not optional."
     finding: >-
       `/data_object_lifecycle_states?data_object_id=in.(641,642,643,644,645,646)` returns empty. Every published-verb trigger
       event (`permit_application.approved`, `license.issued`, `license_renewal.due`, `permit_inspection.failed`,
       `code_violation.issued`, `regulatory_fee.assessed`) implies a workflow gate the catalog is not yet expressing, so no
-      module-prefixed `<module>:<verb>_<entity>` permissions can be derived. Rule #12 is unsatisfied for all 6 `master +
-      required` data_objects.
+      module-prefixed `<module>:<verb>_<entity>` permissions can be derived. With all 6 masters now `operational_workflow`,
+      B12 is a hard fail until states are authored. The domain_module_id anchor on each state requires the M1 cure first.
     action: >-
       Once B1B-M1 cures, author lifecycle states per master. Suggested initial-and-published-state pairs:
       permit_applications (`submitted` initial, `approved` / `denied` / `withdrawn` terminal); license_records (`issued`
@@ -104,13 +99,14 @@ b1b:
       - {handoff_id: 926, direction: outbound, source_domain: PS-LIC, target_domain: GRC, trigger_event: permit_inspection.failed, payload: permit_inspections, null_field: both}
 
   - id: B1B-B9-MISSING
-    summary: "Three PS-LIC trigger events have zero handoff rows; subscriber drafts gate on per-module FK derivation."
+    summary: "Three PS-LIC trigger events have zero handoff rows; subscriber drafts gate on per-module FK derivation. (event_category on all 8 events backfilled 2026-06-07.)"
     finding: >-
       `/trigger_events?data_object_id=in.(641,642,643,644,645,646)` returns 8 events; `/handoffs?source_domain_id=eq.46`
       returns 6 outbound rows. Events `permit_application.submitted` (id 1052), `permit_application.approved` (id 1053), and
       `permit_inspection.scheduled` (id 1056) each have zero subscribers. All three are valid published verbs that should
       have at least one cross-domain subscriber (CSM constituent acknowledgement, ERP-FIN fee intake, dispatch via FSM or
-      CCAAS).
+      CCAAS). The events now carry `event_category` (1052/1053/1056 = lifecycle), but the missing-subscriber drafts still
+      gate on per-module FK derivation.
     action: >-
       Once B1B-M1 cures, draft handoff rows per the Authoring rule. Minimal proposed set: `permit_application.submitted` to
       CSM (acknowledgement case) and ERP-FIN (fee intake); `permit_application.approved` to CSM (approval notification);
@@ -119,37 +115,26 @@ b1b:
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1}
     affected_events:
-      - {id: 1052, event_name: permit_application.submitted, current_category: null, proposed_category: null}
-      - {id: 1053, event_name: permit_application.approved, current_category: null, proposed_category: null}
-      - {id: 1056, event_name: permit_inspection.scheduled, current_category: null, proposed_category: null}
+      - {id: 1052, event_name: permit_application.submitted, event_category: lifecycle}
+      - {id: 1053, event_name: permit_application.approved, event_category: lifecycle}
+      - {id: 1056, event_name: permit_inspection.scheduled, event_category: lifecycle}
 
-  - id: B1B-F2
-    summary: "Module-level system skills cannot be authored until M1 cures; legacy domain-level ps-lic-system (id 93) is the only skill."
-    finding: >-
-      `/skills?domain_id=eq.46&skill_type=eq.system` returns 1 row (`ps-lic-system`, id 93, `domain_module_id=null`). Rule
-      #17 requires exactly one `skill_type='system'` skill per `domain_modules` row anchored via `domain_module_id`. With
-      zero modules, F2 is vacuously failed and F1 stays in transitional-pass mode (legacy row remains acceptable only while
-      no module-level system skills exist).
-    action: >-
-      Once B1B-M1 cures, split the existing 8-tool legacy skill into N per-module skills (one per module from the M1 cure).
-      Recommended naming `<module_code_lower>_agent` (e.g. `ps_lic_application_intake_agent`). Re-attach `skill_tools` rows
-      per module. DELETE the legacy row (id 93) only once every module has its own system skill. Validate F4 invariant on
-      every linked tool post-write.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1}
-    extra_legacy_skill_id: 93
-    extra_legacy_skill_tool_count: 8
+# B1B-F2 (module-level system skills) RETIRED 2026-06-06 per the supersession header above:
+# the per-module `system` skill grain is canceled. The legacy domain-level ps-lic-system
+# (id 93) is now the correct single domain-grain skill; once modules land it derives its
+# toolset from domain_module_tools. No per-module skill split is owed. Tracked, if needed,
+# in audits/_modularization-backlog.md. No agent action.
 
 b2:
   - id: B2-1
-    summary: "Modularization shape for PS-LIC; pick before any M-band cure or downstream b1b unblock."
+    summary: "Modularization shape for PS-LIC; pick before any M-band cure or downstream b1b unblock. UNBUILT domain: this is the build decision."
     question: "How should PS-LIC modularize? Recommended baseline is a 4-module split aligned to lifecycle phases."
     options:
       - "(a) 4-module split: PS-LIC-APPLICATION-INTAKE (permit_applications), PS-LIC-ISSUANCE-AND-RENEWAL (license_records + license_renewals), PS-LIC-INSPECTION-AND-ENFORCEMENT (permit_inspections + code_violations), PS-LIC-FEES (regulatory_fees)"
       - "(b) 2-module collapse: PS-LIC-APPLICATIONS-AND-LICENSING (applications + licenses + renewals), PS-LIC-FIELD-OPS (inspections + violations + fees)"
       - "(c) 3-module split: PS-LIC-INTAKE, PS-LIC-COMPLIANCE, PS-LIC-BILLING"
       - "(d) single full module PS-LIC-CORE plus a module_kind='starter' lite variant for SMB / county-tier deployments"
-    why: "Rule #14 requires >=1 full module; once A2 lands >=3 capabilities, >=2 modules required. The pick determines every downstream b1b cure (B12 lifecycle anchoring, B10b source FK derivation, B9 missing-handoff drafts, F2 module-level system skills)."
+    why: "Rule #14 requires >=1 full module; once A2 lands >=3 capabilities, >=2 modules required. The pick determines every downstream b1b cure (B12 lifecycle anchoring, B10b source FK derivation, B9 missing-handoff drafts)."
 
   - id: B2-2
     summary: "Capability set for PS-LIC; pick alongside B2-1 to satisfy A2 and M4 / M6 bipartite coverage."
@@ -161,13 +146,13 @@ b2:
     why: "A2 fails with zero capabilities; M2 needs >=3 capabilities to require >=2 modules; M4 / M6 close the bipartite loop only with at least one realization per capability per module."
 
   - id: B2-3
-    summary: "Pattern flag judgment per master (B4) on the 6 PS-LIC masters."
+    summary: "Pattern flag judgment per master (B4) on the 6 PS-LIC masters. (All 6 now entity_type='operational_workflow', so pattern flags are now in scope per Rule #12.)"
     question: "Which pattern flag PATCHes should land on the 6 masters?"
     options:
       - "Recommended PATCHes: permit_applications.has_personal_content=true + has_submit_lock=true; license_records.has_personal_content=true; license_renewals.has_personal_content=true; code_violations.has_personal_content=true; code_violations.has_single_approver = jurisdiction-dependent (single hearing officer vs panel); all other flags stay false."
       - "(alt) keep all flags false; record consideration outside notes (Rule #15)"
       - "(alt) other per-flag judgment supplied by user"
-    why: "B4 needs positive re-evaluation, not false-by-default. Several masters carry constituent PII (applicant, licensee, cited-party) that argues for `has_personal_content=true`. Independent of B2-1 and B3."
+    why: "B4 needs positive re-evaluation, not false-by-default. Several masters carry constituent PII (applicant, licensee, cited-party) that argues for `has_personal_content=true`. Independent of B2-1. Flipping any flag is a judgment write, surfaced not auto-executed."
 
   - id: B2-4
     summary: "Regulation scoping on the 4 currently-mandatory regulations (FedRAMP, CMMC, StateRAMP, Section 508)."
@@ -179,15 +164,6 @@ b2:
       - "(d) consider NIST SP 800-53, IRS Pub 1075 (revenue-touching license types), HIPAA (regulated occupations)"
     why: "Currently every PS-LIC tenant inherits 4 federal-cloud regulations; if a small county deploys PS-LIC for occupational licensing they may not carry FedRAMP / CMMC obligations. The scoping pick may also surface additional Bucket 3 entities (NIST control assessments, IRS Pub 1075 attestations)."
 
-  - id: B2-5
-    summary: "Catalog UX wording for A4 (Rule #20)."
-    question: "Both `domains.catalog_tagline` and `domains.catalog_description` are empty. Rule #20 requires user-approved buyer-voice copy before any write."
-    options:
-      - "(a) supply tagline + description text now"
-      - "(b) approve an agent-drafted tagline and description, surfaced in chat before write"
-      - "(c) defer A4 until module-level taglines (M8) are also being drafted"
-    why: "Buyer-facing catalog has no copy for the PS-LIC card or detail page. Rule #20 is non-negotiable; the agent cannot self-author. Independent of B2-1, B2-2, B3."
-
   - id: B2-6
     summary: "Cost band and market-size refresh."
     question: "`cost_band='$$$'` (annual TCO $100k to $500k for 500-user org) and `usa_market_size_usd_m=1000` ($1B TAM) anchored to 2025. Confirm scope and refresh source."
@@ -196,6 +172,10 @@ b2:
       - "(b) widen scope to all civic permitting + licensing software; refresh TAM upward"
       - "(c) cite a specific Gartner / IDC / Forrester source year"
     why: "Public-sector permitting TAM is volatile post-ARPA. $1B reads low if the comparator is the broad civic-tech market; reasonable if scoped to pure-play permitting. Independent of every other bucket."
+
+# B2-5 (catalog UX wording) RESOLVED 2026-06-07: domains.catalog_tagline and
+# catalog_description were authored in buyer voice and written. The stale "surface
+# before write" gate is superseded by Rule #20 execute. No longer a pending decision.
 
 b3:
   - id: B3-1

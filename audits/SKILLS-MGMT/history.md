@@ -382,3 +382,52 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass over the open SKILLS-MGMT items only (no fresh from-scratch audit). Domain 169; modules SKILLS-MGMT-TAXONOMY (173, full) and SKILLS-MGMT-PROFILE (174, full); both confirmed live. Executed every agent-fixable additive/corrective item; surfaced the destructive and judgment items; left the blocked and superseded ones. Loader: [.tmp_deploy/skills_mgmt_state_execute_2026_06_07.ts](../../.tmp_deploy/skills_mgmt_state_execute_2026_06_07.ts), run from project root. No JWT errors.
+
+### Executed (12 writes, all record_status='new' or empty-guarded PATCH)
+
+| Item | Type | Count | Detail |
+|---|---|---|---|
+| B1A-ENTITY-TYPE | PATCH data_objects.entity_type (Rule #12) | 7 | All 7 masters were `unclassified`. Set: skill_taxonomies (852), skills (854), competency_models (857) -> `catalog`; skill_profiles (172), skill_assessments (855), skill_endorsements (856), skill_inference_runs (858) -> `operational_workflow`. Note: classifying skill_endorsements + skill_inference_runs as operational_workflow makes B12 FAIL for both (zero lifecycle states), which keeps B1A-S4 open and correct |
+| B2-1 (A4) | PATCH domains.catalog_tagline + catalog_description (Rule #20) | 1 | Domain 169 buyer-voice copy authored and written (both fields were empty). No vendor names, American English, no em-dash. Stale "surface-before-write" gate ignored per Rule #21 |
+| B2-1 (M8) | PATCH domain_modules catalog_tagline + catalog_description (Rule #20) | 2 | Modules 173 + 174 buyer-voice copy authored and written (all four fields were empty) |
+| B2-6 (B11) | INSERT data_object_aliases (clearly-enumerated generic synonyms) | 2 | skill_taxonomies (852) -> "skills ontology", "competency framework" (alias_type=synonym, ids 1497-1498). The remaining 4 masters stay a user-judgment question (reduced B2-6) |
+
+UI link (entity_type): https://tests.semantius.app/domain_map/data_objects?id=in.(172,852,854,855,856,857,858)
+UI link (catalog UX): https://tests.semantius.app/domain_map/domains?id=eq.169 and https://tests.semantius.app/domain_map/domain_modules?domain_id=eq.169
+UI link (aliases): https://tests.semantius.app/domain_map/data_object_aliases?data_object_id=eq.852
+
+### Not executed (already satisfied live)
+
+- **C1 business_function_domains:** already 4 rows on domain 169 (owner=Talent Development fn 77; contributors=L&D fn 11, Recruiting fn 37; consumer=HRSD fn 76). No insert needed.
+- **H1 APQC tags:** 9 of 12 cross-domain handoffs already carry agent_curated handoff_processes (ids 331-339). The 3 remaining have no clean new PCF match to add additively: 1287 / 1315 are deferred-to-Discover (content-publication, no L3/L4 cross-industry home), 1307 is destructive-dependent (see B2-3).
+- **B1A-S2 trigger_events:** authoring 7 NEW trigger_events is judgment-shaped new-entity authoring (not a derivable PATCH/backfill); left to user direction, which keeps B1B-S3 and B1B-TLNTINTEL-FANOUT blocked on it.
+
+### Surfaced (destructive or judgment; not applied)
+
+- **B2-2 (DESTRUCTIVE rename):** module 174 permissions use the `skills-mgmt:*` prefix instead of `skills-mgmt-profile:*` (ids 10201, 10202 gates; 10629-10631 baseline). Renaming overwrites non-empty values + the Administrator bundle. Recommend rename; awaiting approval.
+- **B2-3 (DESTRUCTIVE DELETE):** handoff 1307 (LMS -> SKILLS-MGMT, learner_badge.earned, NULL target_module) is a near-duplicate of 1295. Recommend (a) DELETE; awaiting approval.
+- **B2-4 (flip to approved, forbidden by Rule #1):** the 9 agent_curated handoff_processes (ids 331-339) sit at record_status='new'; H1 catalog-quality headline is 0 approved. User decides which to approve.
+- **B2-5 (b2 entity + split decision):** approve B1A-M1 (skill_proficiency_levels) + B1A-M2 (skill_relationships) into TAXONOMY, and decide on a possible 3rd sub-module. Has a Bucket-3 dependency.
+- **B2-6 (residual):** the remaining 4 masters (skills, skill_assessments, skill_endorsements, skill_inference_runs) un-aliased; user decides whether any need synonyms.
+- **B1A-PHASE-P (personas/RACI DEFERRED):** 2 modules, 0 personas. Not agent-authored in a state-execute pass. Candidate personas recorded in state.yaml: TALENT-DEV-SKILL-ARCHITECT, TALENT-DEV-SKILL-ANALYST, MANAGER.
+
+### Left (blocked / superseded)
+
+- **B1A-S4** (lifecycle states + workflow-gate permissions for skill_endorsements + skill_inference_runs): blocked on B2-2 (gate prefix). Now correctly FAILS B12 after the entity_type classification.
+- **B1A-S5** (3 catalog roles, E1-E5): blocked on B1A-S4 + B2-2.
+- **B1B-S3** (4 intra-domain handoffs 173<->174) and **B1B-TLNTINTEL-FANOUT** (3-4 outbound to TLNT-INTEL): blocked on B1A-S2 (events do not exist yet).
+- **B1A-M1 / B1A-M2** (MISSING masters): blocked on B2-5.
+- **b3 backlog (B3-1 .. B3-8):** Phase 0 vetting, non-blocking; untouched.
+- **Superseded (2026-06-06 / Plan 3):** per-module system-skill / skill_tools items remain retired; the supersession header is preserved above.
+
+### Post-fix status
+
+next_action_by: user (all remaining open items are user-decision b2, destructive, persona-deferred, or blocked on those).

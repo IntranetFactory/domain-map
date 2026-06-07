@@ -354,3 +354,80 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass over the open items in RET-STORE/state.yaml. RET-STORE
+(domain id 48) is still an UNBUILT domain: 0 domain_modules (M1 hard fail), 1
+capability (WORKFORCE-SCHEDULING id 312, cross-domain shared). Per the
+unbuilt-domain rule the agent does NOT scaffold the module set; the build is left
+to the user (B1A-BUILD). Live state confirmed the snapshot: 6 masters still
+present, catalog_tagline/catalog_description both empty, all 6 masters
+entity_type='unclassified', trigger_events event_category clean (fixed
+2026-05-31), all 5 outbound handoff_processes present (agent_curated, fixed
+2026-05-31), aliases and business_function_domains already covered. Only two
+build-independent additive/corrective writes were available and were executed.
+
+### Executed
+
+| Item | Action | Count |
+|---|---|---|
+| entity_type (Rule #12 / B13) | PATCH data_objects.entity_type unclassified -> operational_workflow on store_tasks (647), retail_labour_schedules (648), store_audits (649), mystery_shopper_records (650), planogram_compliance_records (651), store_associate_checklists (652). All 6 are workflow-bearing masters with obvious state machines; classification deterministic from descriptions. | 6 rows |
+| Catalog UX (Rule #20 / B1B-CATALOG-UX) | WRITE catalog_tagline + catalog_description on the RET-STORE domains row (both were empty). Buyer-voice copy, workflow + value, no vendor/product names, no em-dash, American English. Stale "surface-before-write" gate (B2-3) ignored per the execute directive; B2-3 dropped from state as resolved. Never overwrote a non-empty value. | 2 fields (1 domains row) |
+
+Loader: `.tmp_deploy/fix_ret_store_state_driven_2026_06_07.ts`, run via `bun run`
+from project root. Idempotent (re-run wrote 0 rows; catalog fields skipped as
+already-populated, no overwrite). All content at record_status='new' (DB default);
+nothing stamped approved.
+
+UI links:
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/domains
+
+### Surfaced (user decision / destructive, not executed)
+
+- B1A-BUILD: the module build itself. RET-STORE has 0 modules; per the
+  unbuilt-domain rule the agent does not scaffold. User decides whether/when to
+  run Phase A->M->B->S (and Phase P if multi-module). Module shape gated on B2-1.
+- B2-1: module split shape (3 modules vs 2) and placement of
+  store_associate_checklists (RET-STORE-TASK-EXEC vs RET-STORE-LABOR-SCHED).
+- B2-2: pattern-flag re-evaluation (4 candidates: mystery_shopper_records and
+  planogram_compliance_records has_personal_content; store_audits
+  has_single_approver + has_submit_lock) plus per-state requires_permission
+  decisions for the proposed lifecycle state machines. Flipping false -> true is a
+  workflow-shape overwrite (B1B-PATTERN-FLAGS), so it is not executed.
+- B2-4: legacy ret-store-system skill id 101 disposition. Under the post-2026-06-06
+  model RET-STORE gets one domain-grain system skill; the remaining choice is
+  rehome legacy 101 vs DELETE it. Destructive, surfaced.
+- B2-5: embedded-master inventory (whether to also embed locations / employees
+  beyond the users + WFM/CSM/HCM default).
+- B2-VERB: verb form for the 5 publisher-side user-edge relationships (696-700);
+  the rename overwrites a non-empty relationship_verb (destructive,
+  B1B-VERB-RENAME). The 2 trivial edges (694, 695) also wait on this since the
+  rename is a non-empty overwrite.
+- Personas / RACI (Phase P): DEFERRED, not authored. Domain is unbuilt and
+  multi-module shape is unresolved (B2-1), so no role_modules / process_raci /
+  persona surface can be authored yet. Candidate personas once built: Store
+  Associate, Store Manager, District / Regional Manager, Mystery-Shop Coordinator.
+
+### Left
+
+- b1b cascade behind the build: B1B-M1, B1B-CAPS, B1B-B10B-SOURCE, B1B-LIFECYCLE,
+  B1B-EMBED all blocked_by B1A-BUILD / B1B-M1 (need realizing modules). Left
+  untouched. entity_type classification done now means B1B-LIFECYCLE is no longer
+  blocked on B13, only on the module build + B2-2.
+- Superseded: the per-module system-skill / skill_tools grain (B1B-SKILLS,
+  original per-module clause of B1B-M1) is CANCELED per the 2026-06-06
+  per-domain-skill restoration. Reframed as notes; supersession header kept.
+  Disposition of legacy skill 101 tracked as B2-4.
+- b3 backlog (B3-1..B3-6: store_visit_logs, safety_incidents, store_huddle_logs,
+  loss_prevention_alerts, store_promotions_execution_records, shift_handover_logs)
+  left as candidate entities; non-blocking.
+
+### JWT errors
+
+None.

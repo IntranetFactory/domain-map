@@ -11,124 +11,89 @@
 schema_version: 2
 domain: ESIGN
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
+
+# ESIGN is UNBUILT: 0 domain_modules, 0 capabilities, 0 solution_domains (live 2026-06-07).
+# The data-object-grain and domain-grain mechanical items are executed (see history.md
+# 2026-06-07). What remains is the BUILD itself plus its dependent cascade (left, not
+# scaffolded) and the user-judgment b2 questions. Resolving B2-S2 (module shape) unblocks
+# the whole b1b chain.
 
 b1a:
-  - id: B1A-S3
-    summary: "Link DocuSign eSignature (638) + Adobe Acrobat Sign (639) to ESIGN with coverage_level=primary"
-    finding: "A3 hard fail: 0 solution_domains rows for ESIGN (94). DocuSign eSignature (638) and Adobe Acrobat Sign (639) both exist as solutions in the catalog with the correct vendor parents (DocuSign 75, Adobe 195) but are not linked to ESIGN. Additional flagship solutions (Dropbox Sign, PandaDoc, SignNow, OneSpan Sign) are not yet loaded and remain user-judgment (B2)."
-    action: "Insert two solution_domains rows: (94, 638, primary) and (94, 639, primary). Single CLI call or short loader."
-    affected_entities: ["DocuSign eSignature", "Adobe Acrobat Sign"]
-    vendor_evidence: ["DocuSign", "Adobe"]
-  - id: B1A-S4
-    summary: "PATCH domains.id=94 business_logic to remove em-dash"
-    finding: "Project CLAUDE.md forbids em-dashes catalog-wide. Live domains.business_logic on row 94 contains a U+2014 em-dash glyph before 'small'. Rule-enforced rewrite, no user judgment."
-    action: "PATCH /domains?id=eq.94 with body {\"business_logic\":\"PKI and crypto kernel for signature creation, timestamping, and validation, small in surface area but irreducible and regulated.\"}"
-    extra_loader_group: "rule_enforced_em_dash_strip"
-  - id: B1A-S6
-    summary: "Insert 3 data_object_aliases for envelopes (agreement, signing_session, transaction)"
-    finding: "B11 hard fail: 0 data_object_aliases on master data_object envelopes (251). Cross-vendor synonyms agreement (Adobe Acrobat Sign), signing_session (in-person flows), transaction (SignNow) are catalog-wide synonyms; envelopes is canonical bare-word but Rule #B11 still expects the vendor-neutral synonym rows."
-    action: "Read /fields?table_name=eq.data_object_aliases&field_name=eq.alias_type for the enum, then POST three rows on data_object_id=251 with alias_name in {agreement, signing_session, transaction} and the matching alias_type for each."
-    affected_entities: ["envelopes"]
-    vendor_evidence: ["Adobe Acrobat Sign", "SignNow", "in-person signing flows"]
   - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
-    extra_phase_p_triage: "2026-06-02"
+    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capability_domains, 0 solution_domains awaiting a build."
+    finding: "Live 2026-06-07: ESIGN has 0 domain_modules (M1 fail), 0 capability_domains (A2 fail), 0 solution_domains (A3 fail). The domains row is fully populated (Rule #8 metadata, em-dash now stripped, catalog UX authored) and the single master (envelopes 251, now entity_type=operational_workflow) carries 8 lifecycle states + 2 gates + 3 aliases, but the domain is not deployable. It must be built before any module/capability/permission/skill/persona work applies."
+    action: "Run Phase A then M then B then S to author the module set, capabilities, solution links, and the ONE domain-grain system skill (domain_id=94, domain_module_id=null) deriving its toolset from domain_module_tools. Module shape is gated on B2-S2. If multi-module, run Phase P afterward. The whole cascade below (b1b) lands as part of this build."
 
 b1b:
   - id: B1A-S1
-    summary: "Author ESIGN-SIGNATURE-OPS full module + master DMDO (M1 cure)"
-    finding: "M1 hard fail: ESIGN has 0 domain_modules rows. Domain exists with Rule #8 metadata but is not deployable. Capability count is 0 (A2 fail) so the M2 floor is vacuous; M1 ≥1 full module is still required."
+    summary: "Author ESIGN module(s) + master DMDO (M1 cure)"
+    finding: "M1 hard fail: ESIGN has 0 domain_modules rows. Domain exists with full metadata but is not deployable."
     blocked_by:
       - {type: user_decision, ref: B2-S2}
-    action: "Once B2-S2 resolves: POST domain_modules (domain_module_code='ESIGN-SIGNATURE-OPS', domain_id=94, module_kind='full', domain_module_name='E-Signature Operations', description=analyst-voice). Same load: POST domain_module_data_objects (domain_module_id=<new>, data_object_id=251, role='master', necessity='required')."
-    affected_modules: []
+    action: "Once B2-S2 resolves: POST domain_modules (single ESIGN-SIGNATURE-OPS or the two-module split), domain_id=94, module_kind='full', analyst-voice description. Same load: POST domain_module_data_objects (domain_module_id=<new>, data_object_id=251, role='master', necessity='required')."
     affected_masters:
       - {data_object_id: 251, name: envelopes, target_module_id: null, workflow: "envelope draft to completion with operator gates on sent + voided"}
   - id: B1A-S2
     summary: "Author 4 capabilities + capability_domains + domain_module_capabilities"
-    finding: "A2 hard fail: 0 capability_domains rows. Author ESIGN-ENVELOPE-PREP, ESIGN-IDENTITY-VERIFY, ESIGN-AUDIT-TRAIL, ESIGN-SIGNING-WORKFLOW."
+    finding: "A2 hard fail: 0 capability_domains rows. Candidates: ESIGN-ENVELOPE-PREP, ESIGN-IDENTITY-VERIFY, ESIGN-AUDIT-TRAIL, ESIGN-SIGNING-WORKFLOW."
     blocked_by:
       - {type: prerequisite_entity, ref: B1A-S1}
-    action: "POST 4 capabilities, 4 capability_domains rows linking each to ESIGN (94), and 4 domain_module_capabilities rows linking each to the new module. Closes M4 + M6."
+    action: "POST 4 capabilities, 4 capability_domains rows linking each to ESIGN (94), 4 domain_module_capabilities rows linking each to the new module. Closes M4 + M6."
+  - id: B1A-S3
+    summary: "Link DocuSign eSignature (638) + Adobe Acrobat Sign (639) to ESIGN with coverage_level=primary"
+    finding: "A3 hard fail: 0 solution_domains rows for ESIGN (94). Solutions 638 (vendor 75) and 639 (vendor 195) exist in the catalog but are not linked. This is a Phase-A market-shape link; surface alongside the build rather than auto-executing the link without the module substrate. Additional flagship solutions (Dropbox Sign, PandaDoc, SignNow, OneSpan Sign) remain user-judgment (see B2)."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1A-S1}
+    action: "Insert two solution_domains rows: (94, 638, primary) and (94, 639, primary), as part of the build's Phase A. Decide on the additional flagship solutions then."
+    affected_entities: ["DocuSign eSignature", "Adobe Acrobat Sign"]
   - id: B1A-S5
     summary: "PATCH handoff 217 source_domain_module_id to new ESIGN module id"
     finding: "B10b hard fail: handoff 217 (ESIGN to CLM-REPOSITORY 127 on envelope.completed) carries source_domain_module_id=NULL. Target side is already 127."
     blocked_by:
       - {type: prerequisite_entity, ref: B1A-S1}
-    action: "Single PATCH on /handoffs?id=eq.217 once the ESIGN-SIGNATURE-OPS module id is known."
+    action: "Single PATCH on /handoffs?id=eq.217 once the ESIGN module id is known."
     affected_handoffs:
       - {handoff_id: 217, direction: outbound, source_domain: ESIGN, target_domain: CLM, trigger_event: "envelope.completed", payload: envelopes, null_field: source_domain_module_id}
-  - id: B1A-S7
-    summary: "PATCH skill_tools.id 254 + 255 notes to empty string"
-    finding: "F7 hard fail + Rule #15 violation: skill_tools row 254 (skill 20, tool 42 sign_document) carries notes that contain a U+2014 em-dash plus channel-justification prose; row 255 (skill 20, tool 37 send_email) carries an auto-populated workflow-context trailer. Both auto-populated, neither user-approved."
-    blocked_by:
-      - {type: user_decision, ref: B2-S3}
-    action: "Default path: PATCH /skill_tools?id=in.(254,255) notes=''. Alternate path: replace one or both with notify_person abstraction (deferred to a later F7-scope conversation)."
-    affected_entities: ["sign_document skill_tools row 254", "send_email skill_tools row 255"]
-  - id: B1A-S8
-    summary: "Re-anchor legacy skill 20 to new module + rename esign_signature_ops_agent"
-    finding: "F1 transitional pass while no module-level system skill exists. Once B1A-S1 lands, legacy skill 20 (domain_id=94, skill_type=system, domain_module_id=null) flips to outright F1 fail unless re-anchored."
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1A-S1}
-    action: "PATCH /skills?id=eq.20 with body {\"domain_module_id\": <new>, \"skill_name\": \"esign_signature_ops_agent\"}. Preserves the 6 skill_tools rows; F2 + F3 + F4 + F5 then become computable."
   - id: B1A-S9
-    summary: "M4 + M6 closure: every new capability has ≥1 realizing module, every module realizes ≥1 capability"
-    finding: "Mechanical follow-up to B1A-S1 + B1A-S2. Until the four new capabilities are linked to ESIGN-SIGNATURE-OPS via domain_module_capabilities, M4 and M6 cannot pass."
+    summary: "M4 + M6 closure: every new capability has >=1 realizing module, every module realizes >=1 capability"
+    finding: "Mechanical follow-up to B1A-S1 + B1A-S2."
     blocked_by:
       - {type: prerequisite_entity, ref: B1A-S1}
       - {type: prerequisite_entity, ref: B1A-S2}
-    action: "Already covered as part of B1A-S2's loader; tracked separately so the closure check is explicit in the audit trail."
+    action: "Covered as part of B1A-S2's loader; tracked separately so the closure check is explicit."
   - id: B1A-S10
     summary: "M5 closure: PATCH every envelopes lifecycle state with domain_module_id=<new>"
-    finding: "All 8 envelope lifecycle states (435 draft, 436 sent, 437 delivered, 438 partially_signed, 439 completed, 440 declined, 441 voided, 442 expired) carry domain_module_id=NULL. With one module, NULL would be defensible (state always reachable when master is installed); however M5's pass criterion prefers explicit FK for permission materialization prefixing of the workflow-gate states (436 sent, 441 voided)."
+    finding: "All 8 envelope lifecycle states (435-442) carry domain_module_id=NULL. M5 prefers explicit FK for permission materialization, especially the gate states (436 sent, 441 voided)."
     blocked_by:
       - {type: prerequisite_entity, ref: B1A-S1}
-    action: "PATCH /data_object_lifecycle_states?id=in.(435,436,437,438,439,440,441,442) domain_module_id=<new>. Optional scope: limit to 436 + 441 (the gate states). Default scope: all 8."
+    action: "PATCH /data_object_lifecycle_states?id=in.(435,436,437,438,439,440,441,442) domain_module_id=<new>. Default scope: all 8; optional minimum: 436 + 441."
   - id: B1A-S11
-    summary: "Materialize 5 permissions for ESIGN-SIGNATURE-OPS"
-    finding: "0 esign permissions exist. Rule #14 permission materialization derives baseline-read / -manage / -admin plus one workflow-gate per requires_permission=true state."
+    summary: "Materialize permissions for the ESIGN module"
+    finding: "0 esign permissions exist. Rule #14 materialization derives baseline read/manage/admin plus one workflow-gate per requires_permission=true state (sent, voided)."
     blocked_by:
       - {type: prerequisite_entity, ref: B1A-S1}
       - {type: prerequisite_entity, ref: B1A-S10}
-    action: "POST 5 permissions: esign-signature-ops:read (baseline-read), :manage (baseline-manage), :admin (baseline-admin), :send_envelope (workflow-gate), :void_envelope (workflow-gate). All with domain_module_id=<new>."
+    action: "POST baseline read/manage/admin + workflow-gate :send_envelope + :void_envelope permissions on the new module."
   - id: B1A-S12
-    summary: "M8 catalog UX: draft + obtain approval + PATCH module catalog_tagline + catalog_description"
-    finding: "M8 hard fail by construction (module does not yet exist; once created its catalog_tagline + catalog_description default empty). Rule #20 buyer voice; user must approve wording before write."
+    summary: "M8 module catalog UX: draft + obtain approval + PATCH module catalog_tagline + catalog_description"
+    finding: "Domain-grain catalog UX is now authored (A4 done 2026-06-07). The MODULE-grain catalog_tagline + catalog_description will default empty once the module is created (M8)."
     blocked_by:
       - {type: prerequisite_entity, ref: B1A-S1}
-      - {type: user_decision, ref: B2-S1}
-    action: "After B1A-S1 lands, draft tagline + 1-3 paragraph description in buyer voice, surface in chat for user approval, then PATCH /domain_modules?id=eq.<new>."
+    action: "After B1A-S1 lands, author module-grain tagline + 1-3 paragraph description in buyer voice (Rule #20), write it in. (Domain row already done.)"
 
 b2:
-  - id: B2-S1
-    summary: "A4 catalog UX wording (domain grain)"
-    question: "domains.id=94 catalog_tagline + catalog_description are empty. Supply text or ask the agent to draft for approval?"
-    options:
-      - "User supplies tagline (single sentence) and description (1-3 paragraphs)"
-      - "Ask agent to draft both in buyer voice; user approves verbatim before write"
-    why: "Rule #20 requires editorial buyer-voice copy and explicit user approval before any write."
   - id: B2-S2
     summary: "ESIGN module split: single module or two-module"
     question: "Author one ESIGN-SIGNATURE-OPS full module covering the whole surface, or split into ESIGN-AUTHORING + ESIGN-COMPLETION?"
     options:
       - "Single ESIGN-SIGNATURE-OPS (recommended; point-solution market, single product per flagship vendor)"
-      - "Two modules ESIGN-AUTHORING + ESIGN-COMPLETION (unlocks E1 role floor at the cost of authoring 2 system skills + 2 sets of permissions)"
+      - "Two modules ESIGN-AUTHORING + ESIGN-COMPLETION (unlocks E1 role floor at the cost of authoring 2 sets of permissions + module tooling)"
     why: "Module-shape design call. Gates B1A-S1 and every downstream M / F / E item."
-  - id: B2-S3
-    summary: "F7 / Rule #15 disposition on skill_tools.id 254 + 255 notes"
-    question: "Both rows carry auto-populated notes; 254 also contains a U+2014 em-dash. What's the resolution?"
-    options:
-      - "Revert both rows' notes to empty string; treat F7 satisfied via this audit conversation (default)"
-      - "Supply user-approved wording for each row (must not contain em-dash)"
-      - "Replace sign_document (42) and / or send_email (37) with notify_person abstraction (deferred to a later F7-scope conversation)"
-    why: "Rule #15 forbids notes without per-row user-approved wording; F7 requires per-row workflow-context if the channel primitive is kept."
   - id: B2-S4
     summary: "B12 lifecycle gate scope on declined / expired"
-    question: "voided (441) is already a gate. Should declined (440) and / or expired (442) also carry requires_permission=true?"
+    question: "voided (441) and sent (436) are already gates. Should declined (440) and / or expired (442) also carry requires_permission=true?"
     options:
       - "Gate only voided and sent (status quo; agent recommendation)"
       - "Also gate declined (operator-decline scenario)"
@@ -148,15 +113,23 @@ b2:
       - "Combination (specify)"
     why: "Workflow-shape judgment."
   - id: B2-S6
-    summary: "H1 approval flip on handoff_processes.id=204"
-    question: "Process 398 (Negotiate and document agreements/contracts L3, external_id 11052) is a confident match for envelope.completed. Tag is agent_curated + record_status=new. Approve, keep, or reject?"
+    summary: "H1 approval flip on handoff_processes.id=204 (DESTRUCTIVE: record_status flip)"
+    question: "Process 398 (Negotiate and document agreements/contracts L3, external_id 11052) is a confident match for envelope.completed. Tag is agent_curated + role=implements + record_status=new. Approve, keep, or reject?"
     options:
       - "Approve row 204 (PATCH record_status='approved')"
       - "Keep at new"
       - "Reject (PATCH record_status='rejected')"
-    why: "Rule #1 forbids the agent from setting record_status=approved without explicit user confirmation."
+    why: "Rule #1 forbids the agent from setting record_status=approved without explicit user confirmation. The tag itself is already in place and correct; only the approval flip is a user call."
     affected_handoffs:
       - {handoff_id: 217, direction: outbound, source_domain: ESIGN, target_domain: CLM, trigger_event: "envelope.completed", payload: envelopes, null_field: none}
+
+# RETIRED 2026-06-06 (per-domain-skill restoration / Plan 3): the former B1A-S7
+# (PATCH skill_tools 254/255 notes), B1A-S8 (re-anchor legacy skill 20 to a module +
+# rename esign_signature_ops_agent), and B2-S3 (F7/Rule #15 skill_tools notes disposition)
+# are CANCELED. skill_tools is dropped; per-module system skills are retired. Tool
+# requirements now live on domain_module_tools (authored at build time). Legacy skill 20
+# (esign-system, domain_id=94, domain_module_id=null) is now the single domain-grain
+# system skill shape; it derives its toolset and is NOT re-anchored to a module.
 
 b3:
   - id: B3-S1
@@ -182,7 +155,7 @@ b3:
     extra_class: "capability_or_candidate_domain"
   - id: B3-S5
     candidate: "ESIGN Act and UETA regulations"
-    rationale: "Not yet in catalog. US statutory anchors for legal-binding e-signature in non-EU jurisdictions (federal ESIGN Act 2000 / 15 USC ch. 96; state-level UETA 1999). FDA 21 CFR Part 11 covers life sciences; eIDAS covers EU; ESIGN Act + UETA cover everything else in the US."
+    rationale: "Not yet in catalog as regulations rows. US statutory anchors for legal-binding e-signature in non-EU jurisdictions (federal ESIGN Act 2000 / 15 USC ch. 96; state-level UETA 1999). FDA 21 CFR Part 11 + eIDAS already linked via domain_regulations; ESIGN Act + UETA cover the rest of the US."
     vendor_evidence: ["statutory"]
     proposed_module: "regulations master (then link to ESIGN via domain_regulations)"
   - id: B3-S6

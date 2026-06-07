@@ -1,8 +1,8 @@
 schema_version: 2
 domain: ITOM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-06"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
   - id: B1A-ROLE-MODULES
@@ -27,16 +27,6 @@ b1a:
       pass; not executable from the current action text without violating the 2-module floor.
 
 b1b:
-  - id: B1B-S3
-    summary: "A4 catalog_tagline and catalog_description empty on ITOM domain row (M8 / A4 catalog UX)."
-    finding: >
-      domains.catalog_tagline and domains.catalog_description are both empty strings on ITOM
-      (id 2). Per Rule #20, populating either field without explicit user-approved buyer-voice
-      wording is forbidden. This is the domain-level catalog UX surface; with 3 modules now live
-      the catalog listing is otherwise renderable.
-    blocked_by:
-      - {type: user_decision, ref: rule_20_user_approved_wording}
-
   - id: B1B-S2-RMM-ROLLUP
     summary: "Legacy domain_data_objects rollup still lists RMM (id 130) as master on monitoring_alerts (85) and monitoring_policies (86); RMM owes demotion (depends on B2-S1)."
     finding: >

@@ -292,3 +292,52 @@ Same set as 2026-05-30 (DLP, DSPM, IGA, ECM, WSC, UEM, SECOPS, ITSM). All condit
 
 None.
 
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate execute over the open items in `state.yaml` (no fresh from-scratch audit). Live re-verification confirmed the snapshot: COLLAB-GOV `domains` row id 127 (parent 91 = ECM, `record_status='new'`) with `catalog_tagline=''` and `catalog_description=''`, 0 `domain_modules` (M1 hard fail, UNBUILT), 7 `capability_domains`, 0 masters, 0 `domain_aliases`, 0 `domain_regulations`, and 2 `business_function_domains` rows (owner = End-User Computing `business_function_id` 59, contributor = Security `business_function_id` 28). The domain `description` is an unambiguous real-market buyer voice ("Buyer is the collaboration-platform administrator (IT operations)"), and B1A-RECLASS already settled (2026-06-02) that the leadership-tier zero-master exemption was rescinded and the domain is master-bearing. That makes the catalog UX "surface-before-write" gate (B1B-S1 / B2-2) stale and the leadership-tier "signal layer" voice pivot moot, so the catalog text was written this pass.
+
+Because the domain is UNBUILT (0 modules / 0 masters), the build cascade is surfaced, not scaffolded: no modules, masters, roles, or skills were authored.
+
+### Executed (record_status='new'; idempotent; verified live)
+
+- **Catalog UX (Rule #20)** - 1 `domains` row PATCHed (id 127): `catalog_tagline` and `catalog_description` written from the history.md B1-S1 drafts (buyer voice, workflow + value, no vendor names, no em-dash, American English). Empty-only write; no non-empty value overwritten. Retires B1B-S1 / B2-2.
+- **Aliases (B11)** - 3 `domain_aliases` rows INSERTED (`alias_type='synonym'`, `record_status='new'`): "tenant administration", "workspace governance", "collaboration sprawl management". Only the clearly-generic, non-vendor candidates were loaded; the 4 product-named B2-8 candidates were held back under Rule #18 and surfaced for explicit approval.
+
+Loader: `.tmp_deploy/2026-06-07_collab_gov_state_driven_execute.ts`.
+
+### Surfaced (for user; not written)
+
+- **B2-1 (build scope, reframed):** classification already settled master-bearing; open decision is the BUILD shape: (a) full real-market stack (Phase 0 + Phase A/M/B/C/E/F/H), or (b) minimal starter first. Gates b3 and B2-5.
+- **B2-3 (DESTRUCTIVE):** flip Security to owner / End-User Computing to contributor on `business_function_domains` overwrites a non-empty `responsibility_type`. Recommended only; not applied. Additive alternative (b) = `business_function_capabilities` overrides for COLLAB-GOV-PERMS / -EXTSHARE / -STALE, loadable once the user picks it.
+- **B2-4 (regulations):** `domain_regulations` empty; which of GDPR / CCPA / SOX / HIPAA / eDiscovery-FRCP at which applicability. `certification_required` stays false. Judgment call.
+- **B2-5 (modularization):** default 4-module split (COLLAB-GOV-INVENTORY / -LIFECYCLE / -PERMS / -STALE) vs 5/7-module alternatives. Gated on B2-1.
+- **B2-6 (SAAS-BACKUP collision):** promote SAAS-BACKUP and move/demote COLLAB-GOV-BACKUP capability, or keep it under COLLAB-GOV.
+- **B2-7 (TENANT-MIGRATION collision):** promote TENANT-MIGRATION and move/demote COLLAB-GOV-MIGRATE capability, or keep it.
+- **B2-8 (remaining aliases):** load the 4 vendor/product-named search aliases (microsoft 365 governance, m365 management, sharepoint governance, teams governance)? Held back under Rule #18.
+
+### Left (untouched)
+
+- **b1a / b1b build cascade:** B1A-BUILD + B1B-M1 / B1B-B-BAND / B1B-E-BAND / B1B-F-BAND all blocked on the build (0 modules) and on user decisions B2-1 / B2-5. UNBUILT clause: do not scaffold; surface the build; leave the cascade.
+- **B1B-F-BAND reframed as a note:** the per-module system-skill grain is RETIRED (superseded 2026-06-06). The current model gives COLLAB-GOV exactly ONE domain-grain `system` skill after the build, deriving its toolset; FULL modules carry no skill; tool requirements live on `domain_module_tools`. No per-module skill work.
+- **b3 (B3-1 .. B3-8):** all 8 candidate master groups remain backlog, gated on the B2-1 real-market build route. Not authored.
+- **entity_type / APQC H1 / C1:** N/A this pass (0 masters to classify, 0 handoffs to tag, business_function_domains owner+contributor already present).
+
+### Decisions
+
+None this run beyond confirming B1A-RECLASS settled (master-bearing).
+
+### Fixes applied
+
+Catalog UX text (1 PATCH) + 3 generic aliases (see Executed).
+
+### UI links (tables written)
+
+- https://tests.semantius.app/domain_map/domains?id=eq.127
+- https://tests.semantius.app/domain_map/domain_aliases?domain_id=eq.127
+
+### JWT-audience errors
+
+None.
+

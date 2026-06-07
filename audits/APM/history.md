@@ -293,3 +293,45 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate run (SKILL.md Rule #21) working only the open items in `state.yaml`. Domain id=10; modules 103 (APM-PORTFOLIO-REGISTRY) + 104 (APM-RATIONALIZATION); 7 masters (248, 267, 268, 269, 270, 271, 272). All recorded snapshot items reverified live before any write; every snapshot item was still open. Executed all additive/corrective items; surfaced all destructive halves + b2 judgment calls; deferred personas; left b1b cross-domain blockers and the b3 market surface untouched. Loader: `.tmp_deploy/fix_apm_state_2026_06_07.ts` (chunked insert idiom). No JWT errors.
+
+### Executed (additive/corrective, all record_status='new')
+
+| Item | Type | Operation | Rows |
+|---|---|---|---|
+| B1A-ENTITY-TYPE | PATCH | `data_objects.entity_type` classified (Rule #12): 248/267/269/270/271 -> `operational_workflow` (all carry permission-gated state machines), 268/272 -> `operational_record` (time-series snapshots, no lifecycle). | 7 |
+| B1A-A4 + B1A-M8 | PATCH (backfill empty) | Buyer-voice `catalog_tagline` + `catalog_description` written into empty fields on domains.id=10 and domain_modules 103 + 104 (Rule #20 backfill-no-gate; the stale "surface-before-write" gate in the b1a items was ignored). | 3 rows / 6 fields |
+| B1A-B9 (additive half) | INSERT | 7 `trigger_events` for permission-gate states, `event_category='state_change'`, `domain_module_id` set to the owning module, `to_state` set: business_capability_map.published (1529), enterprise_application.sunsetting (1530), technology_platform.declining (1531), technology_platform.retired (1532), technology_fit.approved (1533), application_interface.deprecated (1534), application_interface.retired (1535). | 7 |
+| B1A-H1-REPLACE (additive half) | INSERT | 4 `handoff_processes` agent_curated tags on the previously-untagged cross-domain handoffs with clean PCF matches: 855 -> 1156 (Identify and evaluate IT risk, 20713); 1195 -> 1170 (Conduct IT risk and threat assessments, 20728); 1197 -> 1132 (Monitor and analyze IT financial performance, 20686, matching sibling 1196); 1198 -> 1139 (Quantify value of IT service and project portfolio investments, 20695). role='implements', proposal_source='agent_curated'. | 4 |
+
+Total writes: 7 PATCH (entity_type) + 3 PATCH (catalog UX) + 7 INSERT (trigger_events) + 4 INSERT (handoff_processes) = 21 row-writes.
+
+### Surfaced (destructive + judgment; NOT executed)
+
+- **B2-M7-OPTION** (b1b B1B-M7): DELETE the two consumer-required DMDO rows in module 104 (data_object 267 + 269) vs. promote to embedded_master. User decision; both options destructive.
+- **B2-NOTES-POLLUTION**: 20 skill_tools notes + data_objects 268/272 notes carry prose; Rule #15 needs load-time-approval confirmation before any revert. (entity_type now carries the config-shape exemption structurally, so the 268/272 prose is redundant; skill_tools is retired regardless.)
+- **B2-PATTERN-FLAGS**: per-flag yes/no on business_capability_maps.has_submit_lock, application_value_scores.has_submit_lock, enterprise_applications.has_personal_content.
+- **B2-B9-RETARGET** (B1A-B9 destructive half): re-point handoffs 237 + 238 trigger_event_id 209 -> new 1530 (enterprise_application.sunsetting). Re-attribution of an existing FK; destructive.
+- **B2-H1-DELETE-STALE** (B1A-H1-REPLACE destructive half): DELETE the 4 stale discovery_substring handoff_processes rows (ids 7/8/9/10, handoffs 235/236/237/238 -> process 1180) and replace with focused agent_curated rows. DELETE is destructive.
+- **B1A-PHASE-P (personas/RACI)**: DEFERRED per audit policy, not authored. Candidate personas map to the 3 existing RBAC roles (ENTERPRISE-ARCHITECT, IT-INFRA-APPLICATION-OWNER, IT-INFRA-PORTFOLIO-MANAGER).
+
+### Left (untouched)
+
+- **b1b** (5): B1B-M7 (user decision), B1B-B9b (depends on M7), B1B-B10b-OUT (SAM/GRC/FINOPS/EPM/SPM own the target backfill), B1B-B10b-IN (BPA owns), B1B-S9 (8 partner domains own consumer DMDOs). All blocked on other domains' audits or on the M7 decision.
+- **b3** B3-APM-MARKET-SURFACE: market-expansion backlog (technology-layer split + APM-TECH-RISK module). Non-blocking.
+- Superseded per-module skill-grain items: kept under the 2026-06-06 supersession header; not reopened.
+
+### UI links (tables written)
+
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/domains
+- https://tests.semantius.app/domain_map/domain_modules
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/handoff_processes

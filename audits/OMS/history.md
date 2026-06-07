@@ -359,3 +359,43 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21) over the open items in `audits/OMS/state.yaml`. No fresh from-scratch audit. Live confirmed OMS is still an UNBUILT domain: 0 `domain_modules` (M1 hard fail), 0 `capability_domains` (A2 hard fail) on domain_id=32. Per the unbuilt rule, the build itself (modules + capabilities) is SURFACED, not scaffolded; only the additive/corrective items that operate on `data_objects` / the domain row directly (module-independent) were executed. All writes idempotent and verified live; re-run is a clean no-op. Loader: [.tmp_deploy/2026-06-07_oms_state_driven_execute.ts](../../.tmp_deploy/2026-06-07_oms_state_driven_execute.ts).
+
+### Executed (record_status='new' or PATCH of empty/NULL only)
+
+- **entity_type classification (Rule #12), 5 masters PATCHed** from `unclassified` to the enum: `order_allocations` (424) -> operational_workflow; `inventory_locations` (425) -> catalog; `sourcing_decisions` (426) -> operational_workflow; `return_authorizations` (427) -> operational_workflow; `store_pickup_orders` (428) -> operational_workflow. The `catalog` classification on `inventory_locations` is the typed-column exemption that replaces the rescinded notes-based config-shape exemption (resolves the structural part of B2-S5).
+- **Catalog UX (Rule #20), domain 32 PATCHed.** Authored buyer-voice `catalog_tagline` + `catalog_description` (both previously empty strings). Workflow + value voice, no vendor names, American English, no em-dashes. No modules exist, so no module-grain catalog copy was authored. The state's "surface-before-write" gate (old B1A-S3) was the stale gate the execute mode ignores; non-empty values are now protected from overwrite. Resolves B1A-S3 / A4.
+- **data_object_aliases (B1A-S6 / B11), 20 rows INSERTed** at `alias_type='synonym'`, `record_status` omitted (defaults to new). order_allocations: Order Reservation, Inventory Reservation, Commitment, Allocation Line. inventory_locations: Node, Network Node, Facility, Fulfillment Node, Dark Store. sourcing_decisions: Routing Decision, Allocation Plan, Fulfillment Plan, Sourcing Trail. return_authorizations: RMA, RA, Return Order. store_pickup_orders: BOPIS Order, Click and Collect, Curbside Order, In-Store Pickup. All generic category nouns; no vendor/product names (Rule #18). Resolves B1A-S6 / B11.
+
+### Surfaced (no write; user decision or destructive)
+
+- **B2-S4 (gates the build):** capability-count / module-count call. (a) 5-8 caps + 4-module split (default), (b) 3 caps + 2 modules, (c) 8+ caps + 4-5 modules. This single decision gates the entire B1A-S1 / B1A-S2 / B1A-BUILD cascade.
+- **B2-S1 (partially superseded):** legacy `oms-system` skill (id 89) disposition at build time. Reframed against the 2026-06-06 supersession (per-module skill grain retired; one domain-grain system skill). (a) re-use 89 as the domain-grain skill, (b) DELETE + re-author, (c) decide at Phase-S. DELETE is destructive, not applied.
+- **B2-S2 (destructive):** B4 pattern-flag positive re-evaluation (5 candidates: submit-lock on return_authorizations/order_allocations/sourcing_decisions; personal-content on order_allocations/return_authorizations). Flipping an existing false flag is an overwrite; needs per-flag sign-off.
+- **B2-S3 (destructive):** `return_authorizations.plural_label='Return Authorization (RMA)s'` naming nit; the RMA synonym now lives in aliases, so the long-form can drop the inline acronym. Overwriting a non-empty label needs sign-off.
+- **B2-S5:** config-shape confirmation for `inventory_locations`; the structural part is resolved by the entity_type='catalog' classification, the intent confirmation remains a user call.
+- **B2-S6:** long-term canonical mastery of `inventory_locations` (OMS vs WMS vs IWMS).
+- **B2-LANG (new, destructive):** British spellings in the non-empty `domains.id=32` description ('fulfilment') and business_logic ('fulfilment rules', 'split-shipment optimisation') against the American-English project rule. Correcting them overwrites non-empty values; recommended fix supplied, not applied.
+
+### Left (untouched)
+
+- **The BUILD (B1A-S1 modules, B1A-S2 capabilities, B1A-BUILD):** surfaced, not scaffolded (unbuilt-domain rule); gated on B2-S4. Cascade (B1A-S8 lifecycle domain_module_id PATCH; per-master DMDO master rows; module-grain catalog copy; system skill) left until modules exist.
+- **B1A-S4 / B1A-S5 (`data_object_relationships` intra + cross-domain + users edges):** not in the state-driven execute allow-list (data_object_relationships table; full per-row tuples / verb tuples not pre-specified) and dependency-gated; carried for the build/fix-loop.
+- **B1A-S9 (skill_tools PATCH):** RETIRED per the 2026-06-06 supersession; reframed as a note, no action.
+- **B1A-S10 (B10 / B10b / B5 FK gaps):** report-only, owed by B2C-COMM / ERP-FIN / CSM audits; INV-MGMT B5 resolves once OMS builds.
+- **b3 backlog:** 4 missing-entity candidates, 5 regulation gaps, 2 modularization candidates, 4 candidate-domain queue entries; unchanged.
+
+### Verification
+
+- entity_type re-read: all 5 masters carry the assigned enum value.
+- aliases re-read: 20 rows present, all `alias_type='synonym'`, `record_status='new'`.
+- domain 32 re-read: catalog_tagline + catalog_description non-empty with the authored buyer-voice copy.
+- Loader re-run: clean no-op (entity_type 0, catalog_ux 0, aliases 0), confirming idempotency.
+- No JWT-audience errors occurred during this pass.

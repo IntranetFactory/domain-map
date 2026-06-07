@@ -388,3 +388,93 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate (Rule #21) over the open MFG-OPS items. The domain is still
+UNBUILT (0 `domain_modules`, M1 fail), so the module-anchored cascade was left in place
+and not scaffolded. Worked only the additive/corrective items independent of the
+B2-MODULE-SPLIT decision; everything landed at `record_status='new'`. Loader:
+[.tmp_deploy/mfg_ops_state_execute_2026_06_07.ts](../../.tmp_deploy/mfg_ops_state_execute_2026_06_07.ts)
+(idempotent, re-run clean).
+
+### Executed
+
+- **entity_type (B13).** PATCHed all 7 masters off `unclassified`: 595 production_orders,
+  596 work_instructions, 597 production_schedules, 600 production_quality_inspections,
+  601 shop_floor_cases -> `operational_workflow`; 598 produced_units, 599
+  production_downtime_events -> `operational_record`. Classification deterministic from
+  each master's live description.
+- **Catalog UX (A4 / Rule #20).** Authored `catalog_tagline` + `catalog_description` on
+  domain 47 (both were empty). Buyer-voice, no vendor names, no em-dash. Module-level M8
+  not applicable (0 modules); it stays parked under B1B-S3 blocked by B1B-S1.
+- **Aliases (B11).** Inserted 23 generic industry synonyms (`alias_type='synonym'`,
+  no `industry_id`) across the 7 masters (e.g. production_orders: Work Order /
+  Manufacturing Order / MO / WO; work_instructions: SOP / Build Instruction / Routing Step;
+  shop_floor_cases: Andon Event / Floor Escalation / Escalation Ticket). Closes
+  B1B-S4 / B2-ALIAS-TUPLES authoring.
+- **Intra-domain edges (B1A-S10).** Inserted 5 `data_object_relationships` (ids 2122-2126):
+  production_orders executes work_instructions; produces produced_units; raises
+  shop_floor_cases; production_schedules sequences production_orders; produced_units is
+  inspected by production_quality_inspections. Cardinality coerced to the valid enum
+  (`one_to_one` / `one_to_many` / `many_to_many`); many-to-one intent expressed by
+  anchoring the "one" side with `one_to_many` + `owner_side='target'`.
+- **users edges (B1A-S11).** Inserted 9 `data_object_relationships` to users (748)
+  (ids 2127-2135) following the canonical convention (master = `data_object_id`,
+  users = related, `relationship_type='many_to_many'`, `owner_side='source'`): production_orders
+  released by; work_instructions authored by + approved by; production_schedules planned by;
+  produced_units operated by; production_downtime_events recorded by;
+  production_quality_inspections inspected by; shop_floor_cases opened by + assigned to.
+
+Counts: entity_type 7 PATCH, catalog_ux 2 fields, aliases 23 INSERT, intra_edges 5 INSERT,
+user_edges 9 INSERT.
+
+### Surfaced (no write; user decision owed)
+
+- **B1A-S12 (B8 outbound mirror).** Underspecified for additive write: for handoffs 950
+  (ERP-FIN), 951 (GRC), 954 (FOOD-TRACE) the payload IS the MFG-OPS master itself and the
+  consuming-side target `data_object` is not enumerated; authoring would require other-domains'
+  consuming masters (scope-creep, unseen ids). The one concrete row (952: shop_floor_cases 601 ->
+  service_incidents 47) is gated on B2-SHOP-FLOOR-CASES-ITSM. User must name the consuming-side
+  data objects or confirm no mirror is warranted.
+- **B1A-S13 (B4 pattern flags).** Proposed PATCHes (value change, surfaced not executed):
+  production_orders.has_single_approver=true (595), work_instructions.has_submit_lock=true (596).
+- **All Bucket 2** carries forward: B2-MODULE-SPLIT (load-bearing), B2-WORKFORCE-SCHEDULING,
+  B2-SALESFORCE-MFG-CLOUD, B2-HONEYWELL-FORGE-VARIANT, B2-ADJACENT-MES-VENDORS,
+  B2-PRODUCED-UNITS-MASTER, B2-SHOP-FLOOR-CASES-ITSM, B2-REGULATIONS-RESCOPE (option b is
+  destructive). B2-ALIAS-TUPLES is now resolved (aliases authored); kept as a review marker.
+- **Personas / RACI (Phase P).** Deferred per Rule #21 (unbuilt domain). Candidate personas
+  noted on B1A-BUILD: Plant Manager, Shift Supervisor, Production Operator, Quality Inspector,
+  Maintenance Lead.
+
+### Left
+
+- **b1b blocked:** B1B-S1 (M1, blocked by B2-MODULE-SPLIT), B1B-S2 (capabilities), B1B-S3
+  (M8 remnant), B1B-S5 (lifecycle states), B1B-S7 (roles) all blocked on B1B-S1 / the module
+  split. B1B-INV-MGMT-HANDOFF owed by INV-MGMT's next Validate.
+- **Superseded:** B1B-S8 / B1B-S9 (per-module system-skill split + kebab->snake rename)
+  retired by the per-domain-skill restoration header; skill 84 is already the correct
+  domain-grain shape (domain_module_id=NULL). Per-module tool re-authoring tracked in
+  audits/_modularization-backlog.md.
+- **b3 backlog:** 7 Phase-0 candidates unchanged (work_centers, production_material_consumption,
+  production_oee_records, production_genealogy, production_scrap_records, production_holds,
+  production_andon_signals).
+- **APQC (H1):** all 12 cross-domain handoffs already carry >=1 `handoff_processes` row at
+  `record_status='new'`; coverage complete, nothing to execute (flip to approved is a user action).
+- **UNBUILT cascade:** 0 modules; build not scaffolded per Rule #21.
+
+### Verification
+
+- Re-ran the loader: second pass wrote 0 rows in every section (idempotent).
+- `GET /data_objects?id=in.(595..601)` -> all 7 carry the new `entity_type`.
+- `GET /data_object_relationships` new rows 2122-2135 present at `record_status='new'`.
+- No JWT-audience errors. Loader run from project root.
+
+### UI links
+
+- https://tests.semantius.app/domain_map/data_objects?id=in.(595,596,597,598,599,600,601)
+- https://tests.semantius.app/domain_map/domains?id=eq.47
+- https://tests.semantius.app/domain_map/data_object_aliases?data_object_id=in.(595,596,597,598,599,600,601)
+- https://tests.semantius.app/domain_map/data_object_relationships?data_object_id=in.(595,596,597,598,599,600,601)

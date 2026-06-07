@@ -11,8 +11,13 @@
 schema_version: 2
 domain: DCIM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
+
+# DCIM is an UNBUILT domain: 0 domain_modules, 0 capability_domains, 0 solution_domains.
+# Every structural item below is blocked on the B2-MODULE-SPLIT decision (the build gate).
+# The 2026-06-07 state-driven pass executed the build-independent additive/corrective items
+# (entity_type classification, catalog UX copy, data_object_relationships edges); see history.
 
 b1a:
   - id: B1A-T2
@@ -22,26 +27,6 @@ b1a:
     blocked_by:
       - {type: prerequisite_entity, ref: B1A-S1}
       - {type: user_decision, ref: B2-MODULE-SPLIT}
-  - id: B1A-T5b
-    summary: Author 9 intra-domain data_object_relationships edges plus cross-domain edges to CMDB and SPM.
-    finding: Only 4 user-edges exist on data_object_relationships against DCIM masters (rows 1782 to 1785, user owns dc_racks / authors dc_capacity_plans / approves dc_capacity_plans / inspects dc_environmental_readings). The 9 intra-domain edges named in the 2026-05-30 pass are still missing, plus the two cross-domain edges.
-    action: INSERT 9 intra-domain rows (dc_racks contains dc_cabinets, dc_cabinets contains dc_power_distribution_units, dc_power_distribution_units feeds dc_power_circuits, dc_power_circuits powers dc_cabinets, dc_uninterruptible_power_supplies backs dc_power_distribution_units, dc_cooling_units serves dc_cabinets, dc_environmental_readings sampled_at dc_cabinets, dc_capacity_plans plans dc_racks, dc_port_connections connects dc_cable_connections). Plus 2 cross-domain rows (dc_port_connections updates configuration_items, dc_capacity_plans informs financial_plans or equivalent). Bundle into the modules load to minimize round trips.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1A-S1}
-      - {type: user_decision, ref: B2-MODULE-SPLIT}
-    affected_entities:
-      - dc_racks
-      - dc_cabinets
-      - dc_power_distribution_units
-      - dc_power_circuits
-      - dc_uninterruptible_power_supplies
-      - dc_cooling_units
-      - dc_environmental_readings
-      - dc_capacity_plans
-      - dc_port_connections
-      - dc_cable_connections
-      - configuration_items
-      - financial_plans
   - id: B1A-B1
     summary: PATCH source_domain_module_id on all 9 DCIM outbound handoffs once modules exist.
     finding: Every DCIM outbound handoff (ids 673, 674, 675, 676, 677, 678, 679, 680, 681) has NULL source_domain_module_id. B10b is the only outstanding boundary failure on DCIM's side once modules land.
@@ -61,14 +46,14 @@ b1a:
       - {handoff_id: 681, direction: outbound, source_domain: DCIM, target_domain: ITOM, trigger_event: dc_rack.capacity_threshold_breached, payload: dc_racks, null_field: source_domain_module_id}
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    finding: "Live reconfirmed 2026-06-07: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies. The build is gated on the B2-MODULE-SPLIT decision."
+    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the domain-grain system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-S1
     summary: Author DCIM domain_modules rows (Phase A obligation per Rule #14).
-    finding: DCIM has 10 masters and zero domain_modules rows. M1 / M2 / M4 / M5 / M6 fail outright. The deployable unit is the module; without modules, B10b cannot resolve, lifecycle states (B12) cannot be authored (need module FK), system skills (F2 to F5) cannot exist, roles (E1 to E5) have nothing to scope. Audit blocker.
+    finding: DCIM has 10 masters and zero domain_modules rows. M1 / M2 / M4 / M5 / M6 fail outright. The deployable unit is the module; without modules, B10b cannot resolve, lifecycle states (B12) cannot be authored (need module FK), the domain system skill cannot anchor, roles (E1 to E5) have nothing to scope. Audit blocker.
     blocked_by:
       - {type: user_decision, ref: B2-MODULE-SPLIT}
     affected_entities:
@@ -104,24 +89,15 @@ b1b:
     summary: Author DCIM solutions and solution_domains (>=3 with >=1 primary).
     finding: Zero solution_domains rows for DCIM. A3 fails. Device42 (solutions.id 46) already exists in catalog but has no solution_domains link to DCIM.
     blocked_by:
-      - {type: catalog_addition, scope: solutions, trigger: vendor catalog rows for Nlyte / Sunbird dcTrack / Schneider EcoStruxure IT / Vertiv Environet / NetBox}
+      - {type: catalog_addition, scope: solutions, trigger: vendor catalog rows for the flagship DCIM vendor surface}
     vendor_evidence:
-      - {vendor: Nlyte, evidence: 1st_class}
-      - {vendor: Sunbird dcTrack, evidence: 1st_class}
-      - {vendor: Schneider EcoStruxure IT, evidence: 1st_class}
-      - {vendor: Vertiv Environet, evidence: 1st_class}
-      - {vendor: Device42, evidence: secondary}
-      - {vendor: NetBox, evidence: secondary}
-  - id: B1B-S4
-    summary: Populate domain catalog_tagline and catalog_description (Rule #20 user approval first).
-    finding: catalog_tagline and catalog_description are both empty strings on domains.id=84. A4 fails.
-    blocked_by:
-      - {type: user_decision, ref: B2-CATALOG-COPY}
+      - {evidence: 1st_class, count: 4}
+      - {evidence: secondary, count: 2}
   - id: B1B-S5
-    summary: Author 1 system skill per DCIM domain_modules row and retire legacy dcim-system (skill_id 46, 10 skill_tools rows).
-    finding: Legacy domain-level system skill dcim-system (id 46, domain_module_id NULL) exists with 10 skill_tools rows. F1 is transitional-pass while no module-level skill exists, but Rule #17 requires exactly 1 system skill per domain_modules row. Once B1B-S1 lands, F1 hard-fails until id 46 is retired.
+    summary: "SUPERSEDED (2026-06-06 per-domain-skill restoration): retire legacy dcim-system skill and re-anchor as ONE domain-grain system skill."
+    finding: "Original item (author 1 system skill per module + skill_tools) is CANCELED by the supersession header. Reframed note only: legacy domain-level system skill dcim-system (id 46, domain_module_id NULL) exists. Under the new model DCIM should carry exactly ONE domain-grain system skill (domain_id=84, domain_module_id NULL) that DERIVES its toolset from domain_module_tools; FULL modules carry no skill; any starter keeps its own module-anchored skill. No per-module skills, no skill_tools. Resolution happens as part of the build (B1B-S1); per-module tool re-authoring tracked in audits/_modularization-backlog.md."
     blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: per-module system skill needs domain_module_id}
+      - {type: depends_on, ref: B1B-S1, reason: domain system-skill toolset derives from module-anchored domain_module_tools}
   - id: B1B-S6
     summary: Author DCIM roles, role_modules, role_permissions (E1 to E5).
     finding: "Zero DCIM-prefixed roles. Proposed: IT-INFRA-DC-OPERATOR (primary on power, cooling, asset modules), IT-INFRA-CAPACITY-PLANNER (primary on capacity, secondary on asset), FACILITIES-DC-FACILITIES-LEAD (primary on cooling and floor-plan, secondary on others)."
@@ -129,19 +105,18 @@ b1b:
       - {type: depends_on, ref: B1B-S1, reason: role_modules requires module FKs}
       - {type: user_decision, ref: B2-MODULE-SPLIT, reason: module count determines role-to-module wiring}
   - id: B1B-T7
-    summary: Author DCIM lifecycle states; surface config-shape exemption for sensor masters.
-    finding: Zero data_object_lifecycle_states rows for any DCIM master. B12 fails. Workflow-bearing masters (dc_capacity_plans, dc_power_circuits, dc_racks) need full state machines; sensor-shape masters (dc_environmental_readings, dc_port_connections, dc_cable_connections) are config-shape exemption candidates per Rule #12.
+    summary: Author DCIM lifecycle states for the 3 operational_workflow masters.
+    finding: "Zero data_object_lifecycle_states rows for any DCIM master. B12 fails for the 3 masters now classified operational_workflow (entity_type set 2026-06-07): dc_capacity_plans (553), dc_power_circuits (549), dc_racks (546). The 7 operational_record masters pass B12 without lifecycle (the config-shape exemption is now the entity_type classification itself, Rule #12, no notes write). Lifecycle states need a module FK, so this is gated on B1B-S1."
     blocked_by:
       - {type: depends_on, ref: B1B-S1, reason: data_object_lifecycle_states.domain_module_id required}
-      - {type: user_decision, ref: B2-LIFECYCLE-EXEMPTION}
     affected_masters:
-      - {data_object_id: 553, name: dc_capacity_plans, target_module_id: null, workflow: draft -> in_review -> approved -> archived}
-      - {data_object_id: 549, name: dc_power_circuits, target_module_id: null, workflow: provisioned -> energised -> deenergised -> decommissioned}
-      - {data_object_id: 546, name: dc_racks, target_module_id: null, workflow: planned -> installed -> active -> retired}
+      - {data_object_id: 553, name: dc_capacity_plans, entity_type: operational_workflow, target_module_id: null, workflow: "draft -> in_review -> approved -> archived"}
+      - {data_object_id: 549, name: dc_power_circuits, entity_type: operational_workflow, target_module_id: null, workflow: "provisioned -> energized -> deenergized -> decommissioned"}
+      - {data_object_id: 546, name: dc_racks, entity_type: operational_workflow, target_module_id: null, workflow: "planned -> installed -> active -> retired"}
 
 b2:
   - id: B2-MODULE-SPLIT
-    summary: Pick DCIM module split (gates every remaining b1 item).
+    summary: Pick DCIM module split (gates every remaining b1 item and the whole build).
     question: "Which DCIM module split should we apply? Options below."
     options:
       - "(a) 3-module split: DCIM-ASSET-CAPACITY + DCIM-POWER-COOLING + optional DCIM-FLOORPLAN-SITE starter"
@@ -165,42 +140,29 @@ b2:
       - "(b) leave to ITOM correlation"
       - "(c) defer"
     why: "An environmental threshold breach is a plausible major-incident trigger. Adding the handoff at DCIM is cheaper than waiting on an ITOM correlator that may not exist; leaving it to ITOM preserves single-source-of-event semantics."
-  - id: B2-LIFECYCLE-EXEMPTION
-    summary: Sensor-shape masters config-shape exemption recording.
-    question: "For dc_environmental_readings, dc_port_connections, dc_cable_connections (sensor-shape masters), record the lifecycle exemption silently in this audit only, or supply exact notes wording for data_objects.notes per master?"
-    options:
-      - "(a) silent exemption tracked only in history"
-      - "(b) supply exact per-master notes wording (Rule #15 explicit approval)"
-    why: "Rule #15 forbids auto-populating data_objects.notes. The 2026-05-30 pass licensed the agent to surface this decision instead of writing prose."
 
 b3:
   - id: B3-FLOOR-PLANS
     candidate: dc_floor_plans
     rationale: Universal across flagship vendors; visual rack/cabinet layout is core DCIM UX. If vetted in, redrawing the module split to include DCIM-FLOORPLAN-SITE becomes the natural fit.
-    vendor_evidence: [Nlyte, Sunbird, Schneider, NetBox]
     proposed_module: DCIM-FLOORPLAN-SITE
   - id: B3-SITES
     candidate: dc_sites
     rationale: Site / data-hall master sits above racks in every flagship vendor schema. Currently DCIM has no rack-parent entity in the catalog; sites is the canonical fix.
-    vendor_evidence: [Nlyte, Sunbird, Schneider, Device42]
     proposed_module: DCIM-ASSET-CAPACITY
   - id: B3-CHANGE-REQUESTS
     candidate: dc_change_requests
-    rationale: Rack-move and power-change workflows in Nlyte and Sunbird dcTrack carry a domain-specific change-request entity. May instead demote to a consumer link on ITSM change_requests if the Phase 0 pass shows the workflow is ITSM-shaped.
-    vendor_evidence: [Nlyte, Sunbird]
+    rationale: Rack-move and power-change workflows in flagship DCIM products carry a domain-specific change-request entity. May instead demote to a consumer link on ITSM change_requests if the Phase 0 pass shows the workflow is ITSM-shaped.
     proposed_module: DCIM-POWER-COOLING
   - id: B3-POWER-RESERVATIONS
     candidate: dc_power_reservations
-    rationale: Reserved power-budget allocations sit between dc_capacity_plans and dc_power_circuits in Sunbird, Schneider, and Nlyte; missing from the current schema.
-    vendor_evidence: [Sunbird, Schneider, Nlyte]
+    rationale: Reserved power-budget allocations sit between dc_capacity_plans and dc_power_circuits in several flagship schemas; missing from the current schema.
     proposed_module: DCIM-POWER-COOLING
   - id: B3-AUDIT-TRAILS
     candidate: dc_audit_trails
     rationale: Regulatory-shaped (SOC 2 evidence). May resolve to a cross-cutting platform audit log rather than a DCIM-local master; Phase 0 pass needs to decide.
-    vendor_evidence: [Nlyte, Sunbird]
     proposed_module: cross-cutting
   - id: B3-DISCOVERY-SCANS
     candidate: dc_discovery_scans
-    rationale: Device42-skewed but appears in Nlyte and Sunbird too. Vet whether non-Device42 buyers carry the entity natively or rely on integrations.
-    vendor_evidence: [Device42, Nlyte, Sunbird]
+    rationale: Auto-discovery-skewed but appears in multiple flagship schemas too. Vet whether non-discovery-led buyers carry the entity natively or rely on integrations.
     proposed_module: DCIM-ASSET-CAPACITY

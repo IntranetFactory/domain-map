@@ -11,41 +11,28 @@
 schema_version: 2
 domain: HCM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-06"
 
 b1a:
-  - id: B1A-S7
-    summary: "INSERT 3 consumer + optional DMDO rows on HCM-CORE-WORKER (54) for PSA-mastered data_objects (project_assignments 218, project_resource_allocations 726, resource_skill_inventories 725)."
-    finding: "Handoffs 1016 (project_assignment.confirmed), 1022 (project_resource_allocation.committed), 1026 (resource_skill_inventory.updated) land on HCM with no domain_module_data_objects row declaring the consumer dependency. Pairwise-pass Section 4 finding from the 2026-05-30 audit; still open at 2026-05-31."
-    action: "Loader: insert 3 domain_module_data_objects rows (domain_module_id=54, data_object_id in (218,726,725), role='consumer', necessity='optional')."
-    affected_modules: [54]
-    affected_entities: ["project_assignments", "project_resource_allocations", "resource_skill_inventories"]
-    affected_handoffs:
-      - {handoff_id: 1016, direction: inbound, source_domain: PSA, target_domain: HCM, trigger_event: "project_assignment.confirmed", payload: "project_assignments", null_field: target_domain_module_id}
-      - {handoff_id: 1022, direction: inbound, source_domain: PSA, target_domain: HCM, trigger_event: "project_resource_allocation.committed", payload: "project_resource_allocations", null_field: target_domain_module_id}
-      - {handoff_id: 1026, direction: inbound, source_domain: PSA, target_domain: HCM, trigger_event: "resource_skill_inventory.updated", payload: "resource_skill_inventories", null_field: target_domain_module_id}
-
   - id: B1A-S6
-    summary: "Author ~78 agent_curated handoff_processes rows to close the H1 hard-fail volume gap on HCM (target 62 to 98 per Rule from procedure file; currently 17 of 78-98)."
-    finding: "Of 123 cross-and-intra-domain handoffs touching HCM, 45 carry handoff_processes rows; only 17 are proposal_source='agent_curated' record_status='new' (5 outbound: 19 122 371 379 388; 12 inbound: 118 295 427 442 448 601 869 873 913 935 1032 1078). Zero rows at record_status='approved' (catalog quality headline). The 2026-05-30 audit listed ~68 candidate rows; ~78 remain to author. The Continuation note warns the audit's external_id hints fail to resolve in live state; each row needs per-row PCF name lookup at write time."
-    action: "Loader: per-row PCF lookup via /processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry; insert (handoff_id, process_id, proposal_source='agent_curated', record_status='new', role='implements'). Candidate handoff IDs from the 2026-05-30 H1 sub-table (outbound 3, 17, 18, 20, 21, 22, 34, 122, 123, 134, 185, 186, 348, 366, 367, 369, 372, 373, 374, 375, 376, 377, 378, 380, 381, 382, 383, 385, 386, 387, 388, 389, 390, 391, 392, 393, 396, 468, 1176-1190, 1218-1226; inbound 17, 393, 1037, 396, 399, 406, 1033, 1035, 410, 412, 1154, 106, 422, 1125, 418, 135, 431, 1047, 1311, 1313, 1314, 437, 438, 441, 116, 449, 451, 1111, 1103, 446, 448, 454, 457, 459, 15, 274, 718, 1016, 1022, 1026, 842)."
-    vendor_evidence: []
+    summary: "H1 residual: 2 HCM->IGA handoffs deferred-to-Discover (no clean HR-vocabulary PCF) + ~9 REPLACE candidates (destructive). 29 clean-match agent_curated tags were authored 2026-06-06."
+    finding: "The 2026-06-06 execute pass authored 29 agent_curated handoff_processes (record_status='new') across the clean-match untagged HCM cross-domain handoffs (payroll 377/380/383/412/1154 -> PCF 236; comp 381/385/387/106/422 -> 1046; org-design 389/391/392/459 -> 97; workforce analytics 21/449/1103/1111 -> 247; assistance 116 -> 235; performance 438 -> 225; career 441 -> 226; onboarding 410 -> 222; benefits 418 -> 1052; SWP 15/454/457 -> 980; MDM 274/718 -> 771; GRC 842 -> 369). Residual gap is non-mechanical: (a) handoffs 378 (HCM->IGA employment_event.recorded) and 382 (HCM->IGA employment_contract.expired) have no clean PCF in the HR vocabulary for access provisioning/deprovisioning - their siblings 19/185/375 carry only coarse discovery_override at PCF 41; (b) ~9 REPLACE candidates where an existing discovery_* row is weak or wrong (17/393 candidate.hired at 220; 399 requisition.filled at 219; 135 absence.approved at 1058; 437 succession_plan.published at 982; 446 case.access_required at 196 'Manage customer service problems' is wrong for HR cases; 451 attrition.forecast_updated at 671; 1125 compensation_plan.published at 1049). REPLACE is destructive (overwrites/retires an existing tag), surfaced not executed."
+    action: "(a) Defer 378/382 to a Discover pass that mints an IGA access-management PCF mapping. (b) For the ~9 REPLACE candidates, surface each to the user; do not overwrite a non-empty discovery_* tag without approval (Rule #21 destructive)."
+    disposition: report_and_surface
+
   - id: B1A-PHASE-P
     summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
     finding: "Live triage 2026-06-02: 3 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    action: "DEFERRED per Rule #21 persona policy (B1A-PHASE-P): do NOT author personas/RACI in a bulk execute pass. Candidate operational personas (function-anchored, references/roles.md s7): HR-HRIS-ADMIN, HR-PEOPLE-OPS-SPECIALIST, HR-BUSINESS-PARTNER, HR-ORG-DESIGN-ANALYST, PEOPLE-MANAGER (the 5 HCM-scoped roles that pre-dated Plan 3). Wiring: role_modules reach across modules 54/55/56, process_raci responsibility rows, data_object_lifecycle_states.process_id. ATS worked reference: scripts/loaders/load_ats_personas_pilot.ts."
+    disposition: deferred
     extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "6 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 6 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [employees, employment_contracts, employment_events, hcm_positions, job_profiles, org_units]
-    extra_phase_p_triage: "2026-06-02"
+
   - id: B1A-SELF-CONTAIN
-    summary: "7 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
-    finding: "Live triage 2026-06-02: 7 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
-    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
+    summary: "7 contributor/required-consumer rows break module self-containment (M9): embed or relax each. DESTRUCTIVE (rewrites role/necessity on existing DMDO rows) - surfaced, not executed."
+    finding: "Live triage 2026-06-02: 7 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation. Rewriting role/necessity on an existing row is a destructive change under Rule #21."
+    action: "Per row, the recommended fix is: convert to embedded_master (carry a local shell) OR set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. SURFACE for user approval; do not apply (destructive overwrite of an existing non-empty role/necessity)."
+    disposition: surface_destructive
     extra_m9_shapes:
       - {entity: asset_lifecycle_events, module: HCM-LIFECYCLE-WORKFLOWS, role: contributor, master_domain: ITAM}
       - {entity: candidate_assessments, module: HCM-LIFECYCLE-WORKFLOWS, role: consumer, master_domain: ATS}
@@ -67,9 +54,8 @@ b1b:
 
   - id: B1B-S2
     summary: "PATCH 31 inbound handoffs' target_domain_module_id (B10b in-scope). Not mechanically derivable: 27 of 31 payloads have no HCM DDO or DMDO so the 54-vs-56 choice is judgment."
-    finding: "31 inbound cross-domain handoffs into HCM carry NULL target_domain_module_id. The 2026-05-31 Continuation deferred this because foreign payloads (legal_holds, hr_cases, store_audits, host_assignments, life_events, etc.) lack HCM-side rollup or module-level DMDO rows so the target-module choice cannot be derived from existing rollup tables alone."
+    finding: "31 inbound cross-domain handoffs into HCM carry NULL target_domain_module_id. The 2026-05-31 Continuation deferred this because foreign payloads (legal_holds, hr_cases, store_audits, host_assignments, life_events, etc.) lack HCM-side rollup or module-level DMDO rows so the target-module choice cannot be derived from existing rollup tables alone. NOTE: the 3 PSA consumer DMDOs (B1A-S7) were added 2026-06-06, which now anchors the target-module for inbound 1016/1022/1026 to module 54."
     blocked_by:
-      - {type: depends_on, ref: B1A-S7, reason: "HCM-side consumer DMDO decisions resolve the target-module mapping for some inbound payloads."}
       - {type: user_decision, ref: B2-S5r}
     affected_handoffs:
       - {handoff_id: 1111, direction: inbound, source_domain: PA, target_domain: HCM, trigger_event: "attrition_risk.elevated", payload: "people_kpis", null_field: target_domain_module_id}
@@ -101,16 +87,11 @@ b1b:
       - {handoff_id: 1026, direction: inbound, source_domain: PSA, target_domain: HCM, trigger_event: "resource_skill_inventory.updated", payload: "resource_skill_inventories", null_field: target_domain_module_id}
       - {handoff_id: 1032, direction: inbound, source_domain: LSD, target_domain: HCM, trigger_event: "legal_advice_record.employee_related", payload: "legal_advice_records", null_field: target_domain_module_id}
       - {handoff_id: 1047, direction: inbound, source_domain: LMS, target_domain: HCM, trigger_event: "compliance_assignment.due", payload: "compliance_assignments", null_field: target_domain_module_id}
-      - {handoff_id: 1111, direction: inbound, source_domain: PA, target_domain: HCM, trigger_event: "attrition_risk.elevated", payload: "people_kpis", null_field: target_domain_module_id}
-      - {handoff_id: 1125, direction: inbound, source_domain: COMP-MGMT, target_domain: HCM, trigger_event: "compensation_plan.published", payload: "compensation_plans", null_field: target_domain_module_id}
 
-  - id: B1B-N1
-    summary: "Revert (or per-row approve) 25 HCM skill_tools.notes populated against Rule #15. Scope expanded vs prior B2-S3 (2 rows) to the full HCM system-skill surface."
-    finding: "All 25 rows on skills 169 hcm_core_worker_agent (7), 170 hcm_org_positions_agent (7), 171 hcm_lifecycle_workflows_agent (11) carry restated-purpose prose in notes. Per Rule #15 the default is empty; no per-row approval is recorded for the wording. Examples: 1535 'Read the core worker record.'; 1547 'Cross-domain read into ATS to correlate open positions with active requisitions (consumer + required on DMDO).'; 1540 'E-signature is the workflow for employment_contracts.signed.'; 1559 'Broadcast joiner / leaver announcements to the receiving team channel.'."
-    blocked_by:
-      - {type: user_decision, ref: B2-S3r}
-    affected_modules: [54, 55, 56]
-    extra_skill_tool_ids: [1535, 1536, 1537, 1538, 1539, 1540, 1541, 1542, 1543, 1544, 1545, 1546, 1547, 1548, 1549, 1550, 1551, 1552, 1553, 1554, 1555, 1556, 1557, 1558, 1559]
+  - id: B1B-N1-SUPERSEDED
+    summary: "RETIRED 2026-06-06 (per-domain-skill restoration / Plan 3): the 25 HCM skill_tools.notes item is moot - the per-module `system` skill grain and skill_tools table are dropped. Kept as a note only."
+    finding: "Prior B1B-N1 proposed reverting 25 skill_tools.notes on skills 169/170/171 against Rule #15. Per the supersession header, `skill_tools` is dropped and the per-module skills (169 hcm_core_worker_agent, 170 hcm_org_positions_agent, 171 hcm_lifecycle_workflows_agent) are retired. No action: do not author or PATCH per-module skill_tools. Per-module tool re-authoring (onto domain_module_tools) is tracked in audits/_modularization-backlog.md."
+    disposition: superseded
 
 b2:
   - id: B2-S1r
@@ -124,14 +105,9 @@ b2:
     question: "Confirm the revert applied at the 2026-05-31 Continuation (PATCH notes='') is acceptable as the safe-by-default Rule #15 default, or specify per-row wording to restore?"
     options: ["confirm_revert", "restore_specific_wording"]
 
-  - id: B2-S3r
-    summary: "Decide how to handle 25 populated HCM skill_tools.notes (Rule #15 default vs F7 justification overlap; gates B1B-N1)."
-    question: "All 25 HCM skill_tools rows carry populated notes (restated-purpose prose, plus the two F7 candidates sign_document and notify_team). Per Rule #15 the catalog default is empty notes with per-row user approval required to populate. Options: (a) confirm user-approved at load time and leave all 25 in place; (b) PATCH notes='' on all 25 and log a Rule #15 incident in references/skill-changelog.md; (c) approve per-row wording for a subset (the discussion-shape) and revert the rest."
-    options: ["confirm_user_approved_all", "revert_all_and_log_incident", "per_row_approval"]
-
   - id: B2-S4r
     summary: "Pattern-flag re-evaluation on employment_contracts.has_personal_content and employment_events.has_personal_content."
-    question: "Current flags: employment_contracts.has_personal_content=false (contracts carry compensation, signatory names, jurisdiction); employment_events.has_personal_content=false (transfers / leaves may carry FMLA or health data). Should each flip to true?"
+    question: "Current flags: employment_contracts.has_personal_content=false (contracts carry compensation, signatory names, jurisdiction); employment_events.has_personal_content=false (transfers / leaves may carry FMLA or health data). Should each flip to true? NOTE: both data_objects were classified entity_type='operational_workflow' on 2026-06-06, so their pattern flags are now in-scope per Rule #12."
     options: ["both_true", "contracts_true_only", "events_true_only", "leave_both_false"]
 
   - id: B2-S5r
@@ -141,13 +117,18 @@ b2:
 
   - id: B2-S6r
     summary: "Author missing internal-mobility handoff HCM-CORE-WORKER -> ATS on employee.transferred -> candidates?"
-    question: "Workday HCM and SAP SuccessFactors auto-create a candidate record from an existing employee when the employee applies for an internal posting. No handoff today on employee.transferred to candidates; the existing query_candidates tool on skill 171 may already cover the cross-domain read. Author the handoff or skip?"
+    question: "Workday HCM and SAP SuccessFactors auto-create a candidate record from an existing employee when the employee applies for an internal posting. No handoff today on employee.transferred to candidates; the existing query_candidates tool may already cover the cross-domain read. Author the handoff or skip? Authoring requires a NEW trigger_event (employee.transferred)."
     options: ["skip", "author_handoff_requires_new_trigger_event"]
 
   - id: B2-S7r
     summary: "WFM absence_requests DMDO mirror on HCM-LIFECYCLE-WORKFLOWS (56)."
     question: "DDO 371 declares HCM consumer + optional on absence_requests at the domain-level rollup; handoff 135 (WFM -> HCM absence.approved) targets module 56. Confirm DMDO row 228 covers the module-level dependency, or add a mirror?"
     options: ["confirm_dmdo_228_covers", "add_mirror_dmdo_row"]
+
+  - id: B2-S8r
+    summary: "H1 REPLACE candidates: ~9 inbound handoffs carry a weak or wrong existing discovery_* tag. Overwriting is destructive (Rule #21)."
+    question: "Replace the existing weak/wrong discovery_* handoff_processes tags on these handoffs with agent_curated rows? Each is a destructive overwrite of an existing non-empty tag. Candidates and the wrong-mapping cases: 17 & 393 candidate.hired (currently discovery_substring at PCF 220 Recruit/Source candidates - arguably should be 222 Manage new hire/re-hire or 1019 Hire candidate); 399 requisition.filled (discovery_substring at 219 Manage employee requisitions - reasonable, confirm); 135 absence.approved (discovery_substring at 1058 Manage leave of absence - reasonable, confirm); 437 succession_plan.published (discovery_substring at 982 - confirm vs career-development PCF); 446 case.access_required (discovery_override at 196 'Manage customer service problems' - WRONG for HR cases, should map to HR service delivery / employee inquiries); 451 attrition.forecast_updated (discovery_substring at 671 - likely WRONG, should be 247 Develop workforce analytics); 1125 compensation_plan.published (discovery_substring at 1049 Review compensation plan - reasonable, confirm)."
+    options: ["replace_all_with_agent_curated", "replace_wrong_only_446_451", "leave_all_as_is", "per_row"]
 
 b3:
   - id: B3-EMP-DEPENDENTS

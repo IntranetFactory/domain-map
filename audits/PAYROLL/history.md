@@ -477,3 +477,112 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-06 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate-mode pass (SKILL.md Rule #21) against the open items in `state.yaml`.
+No fresh from-scratch audit. Every recorded item was re-verified live before acting (the
+snapshot was partly stale: many APQC handoffs had been tagged `agent_curated` since the
+state file was written). Domain 55 (PAYROLL), modules 90/91/92/93, masters 138..145
+confirmed against live. Loader:
+[`.tmp_deploy/fix_payroll_state_2026_06_07.ts`](../../.tmp_deploy/fix_payroll_state_2026_06_07.ts).
+
+### Executed (additive/corrective; all at record_status default `new`)
+
+- **B1A-ENTITY-TYPE** — PATCH `entity_type` on all 8 masters (were `unclassified`):
+  `operational_workflow` for pay_runs (138), pay_slips (139), tax_filings (143),
+  garnishment_orders (144), payroll_journal_entries (145) (each carries a live lifecycle
+  state machine); `catalog` for earning_codes (140), deduction_codes (141),
+  tax_authorities (142) (config/reference tables, 0 lifecycle states). 8 rows.
+- **A4 + M8 (Rule #20 catalog UX)** — authored buyer-voice `catalog_tagline` +
+  `catalog_description` and wrote straight into the empty fields on domain 55 and all 4
+  modules (90/91/92/93). 5 rows, 10 fields. No vendor names, no em-dash, American English.
+  Empty-guard enforced (no non-empty value overwritten).
+- **B1A-S11** — INSERT 26 `data_object_aliases` (`alias_type='synonym'`, no industry_id
+  available) across the 8 masters: payroll runs/pay cycles; paystubs/payslips/wage
+  statements; pay codes/earnings types; pre-/post-tax deductions; taxing authorities/tax
+  jurisdictions; statutory filings/RTI submissions; wage garnishments/attachment of earnings
+  orders; payroll journals/GL entries/postings.
+- **B1A-S12 (partial)** — INSERT 1 `business_function_domains` row: Human Resources
+  (business_function 3) as `contributor`. The proposed Information Technology consumer row
+  was NOT written: the function spine has no "Information Technology" node, only
+  sub-functions (IT Operations 27, IT Service Desk 57, IT Infrastructure 58). Surfaced as
+  B1A-S12-IT for a user pick.
+- **B1A-S13** — INSERT 4 `domain_module_data_objects` rows: users (748) `consumer`+`required`
+  on modules 90/91/92/93 (Rule #10 edge-and-DMDO pairing; `notes` omitted).
+- **B1A-S6r** — PATCH handoff 414 `source_domain_module_id=90` (was NULL; pay_run.disbursed
+  on PAYROLL-RUN is the proximate origin of payment_run.executed). `notes` left untouched.
+  ERP-FIN-side `target_domain_module_id` remains ERP-FIN's debt.
+- **B1A-S4** — INSERT 8 intra-PAYROLL master-to-master `data_object_relationships`
+  (`relationship_kind='reference'`, owner_side=source): pay_runs produces pay_slips (1:N req);
+  pay_runs books payroll_journal_entries (1:N req); pay_runs feeds tax_filings (1:N req);
+  tax_authorities scopes tax_filings (1:N req); earning_codes contributes_to pay_slips (M:N req);
+  deduction_codes contributes_to pay_slips (M:N req); garnishment_orders deducts_via pay_runs
+  (1:N req); pay_slips evidences payroll_journal_entries (1:1 opt).
+- **B1A-H1** — INSERT `handoff_processes` (`proposal_source='agent_curated'`, role='implements')
+  for the 17 cleanly-untagged cross-domain handoffs, PCF ids resolved LIVE this pass (the
+  prior audit's external_id labels were stale). 12 new rows inserted; the other 5 of the 17
+  targets already carried an agent_curated row. Verified all 17 now tagged. Clean PCF nodes
+  used: 224 Manage employee onboarding (411); 236 Administer Payroll (377/380/383/412/1154);
+  1046 Administer compensation and rewards (105/187/1140/423); 248 Implement workforce
+  analytics (25/102/1155); 316 Process expense reimbursements (1157); 1430 File regulatory
+  payroll tax forms (415); 1420 Maintain and administer applicable deductions (1153); 1052
+  Administer benefit enrollment (413).
+
+Total writes: 8 entity_type + 5 catalog + 26 aliases + 1 bfd + 4 DMDO + 1 handoff FK +
+8 relationships + 12 handoff_processes = **65 writes**.
+
+### Surfaced (NOT written; user decision or destructive)
+
+- **B1A-S12-IT** — which IT sub-function (IT Operations / IT Service Desk / IT Infrastructure)
+  consumes PAYROLL; then a single consumer row can be inserted.
+- **B1A-H1-REVIEW** — 6 weak existing APQC tags (handoffs 7, 18, 366, 374, 101, 1126) where
+  the fix is a REPLACE/FLIP of a non-empty `handoff_processes` row (destructive). Recommended
+  nodes recorded in state.yaml; not applied.
+- **B1A-SELF-CONTAIN (M9)** — 8 consumer+required DMDO rows on PAYROLL modules pointing at
+  out-of-domain masters. Fixing each overwrites role/necessity on an existing row (destructive).
+  Recommended: embed a local shell or relax necessity to optional, per row.
+- **B1A-PHASE-P** — personas / RACI layer DEFERRED (Rule #21). Candidate personas noted:
+  PAYROLL-ADMINISTRATOR, PAYROLL-MANAGER, TAX-COMPLIANCE-OFFICER, GARNISHMENT-SPECIALIST,
+  HR-PARTNER. Not authored.
+- **b2 (B2-S1..B2-S8)** — all carried unchanged: M7 deployability (S1), pattern flags (S2),
+  regulation breadth (S3), year_end_statements (S4), jurisdiction_tax_configs (S5), notes
+  pointer (S6), config-shape lifecycle (S7), role-list scope (S8).
+- **B1B-S2** (M7 DELETE/PROMOTE of 8 sibling consumer rows) remains blocked on B2-S1
+  (destructive).
+
+### Left
+
+- **B1B-S9** (E-band roles + permissions) — blocked on B2-S8 + B1A-PHASE-P; non-trivial Phase E.
+- **B1B-S10** — RETIRED (superseded 2026-06-06 / Plan 3): per-module system skills + skill_tools.
+  Reframed as a note; do not author. Tracked in audits/_modularization-backlog.md.
+- **B1B-S14** — now structurally passes B12 (the 3 masters are `entity_type='catalog'`); the
+  explicit-lifecycle-vs-exemption decision stays open as B2-S7.
+- **b3** backlog (year_end_statements, retro_pay_adjustments, jurisdiction_tax_configs,
+  bank_payment_files, 2 candidate modules, 6 regulation candidates) — unchanged.
+
+### JWT errors
+
+None. Every `semantius call crud postgrestRequest` returned cleanly.
+
+### UI links (tables written this pass)
+
+- https://tests.semantius.app/domain_map/data_objects?id=in.(138,139,140,141,142,143,144,145)
+- https://tests.semantius.app/domain_map/domains?id=eq.55
+- https://tests.semantius.app/domain_map/domain_modules?domain_id=eq.55
+- https://tests.semantius.app/domain_map/data_object_aliases?data_object_id=in.(138,139,140,141,142,143,144,145)
+- https://tests.semantius.app/domain_map/business_function_domains?domain_id=eq.55
+- https://tests.semantius.app/domain_map/domain_module_data_objects?data_object_id=eq.748
+- https://tests.semantius.app/domain_map/handoffs?id=eq.414
+- https://tests.semantius.app/domain_map/data_object_relationships
+- https://tests.semantius.app/domain_map/handoff_processes
+
+### Post-fix status
+
+`next_action_by: user` — all remaining open items are user decisions (b2), destructive steps
+needing sign-off (B1A-H1-REVIEW, B1A-SELF-CONTAIN, B1B-S2), a deferred persona phase
+(B1A-PHASE-P), blocked/retired b1b, or b3 backlog.

@@ -431,3 +431,65 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-06 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass against MDM's open state.yaml items (no fresh from-scratch
+audit). Live re-verification confirmed domain_id=87 is still an UNBUILT domain (0
+domain_modules, 2 capabilities), so per the unbuilt-domain discipline the build itself was
+NOT scaffolded; it stays a user decision (B2-S2 module split + B2-S1 master path). The
+state snapshot (last_audit 2026-05-31) was stale on two items: 5 additional APQC handoff
+tags had landed since (H1 was at 7/13 live, not 2/13), and all 6 masters were still
+`entity_type='unclassified'`. Every genuinely-unblocked, agent-doable item was executed;
+everything else is blocked on B1B-S1 (module authoring) or a user decision. next_action_by
+flips to **user** (the domain cannot advance without the B2-S1 + B2-S2 decisions).
+
+### Executed (record_status='new', idempotent, verify-live-then-write)
+
+| Fix | Type | Rows |
+|---|---|---|
+| entity_type classification (Rule #12) | PATCH `data_objects` | 6: golden_records 315/316/317 + source_records 320 -> `operational_workflow`; match_rules 318 + merge_rules 319 -> `catalog` |
+| APQC handoff tags (H1) | INSERT `handoff_processes` (proposal_source='agent_curated', role='implements') | 5: 269->719 + 270->719 (Manage customer master data, L4); 716->771 (Maintain master data, L4); 274->243 + 718->243 (Manage and maintain employee data, L3) |
+| Catalog UX backfill (Rule #20) | PATCH `domains` (empty-guarded) | 2 fields on domain 87: `catalog_tagline` + `catalog_description` (buyer-voice, no vendor names, no em-dash) |
+
+H1 result: cross-domain handoff_processes coverage now **12 of 13** (only 222 MDM->KGP
+`kg_entity.linked` remains untagged, correctly deferred to Discover: no clean cross-industry
+PCF master-data row for knowledge-graph entity linking). Above the 7-11 floor.
+
+Loader: `c:/dev/domain-map/.tmp_deploy/fix_mdm_state_driven_2026_06_06.ts`. Idempotent
+(reads live before every write, skips already-classified/already-tagged/non-empty), runs
+from project-root cwd. Post-flight verified: all touched rows carry `record_status='new'`;
+no row stamped approved.
+
+UI links:
+- https://tests.semantius.app/domain_map/data_objects?id=in.(315,316,317,318,319,320)
+- https://tests.semantius.app/domain_map/handoff_processes?handoff_id=in.(269,270,274,716,718)
+- https://tests.semantius.app/domain_map/domains?id=eq.87
+
+### Surfaced (no write: user decision or destructive)
+
+- **B2-S1** master reconciliation path (a-mdm-canonical / b-mdm-consumer [recommended] / c-mixed). Realizing it is a DESTRUCTIVE DELETE/demote of the legacy rollup master rows on customers/employees/suppliers.
+- **B2-S2** module split, the unbuilt-domain build (a-single MDM-GOLDEN-RECORD-MGMT [recommended] / b-two-modules / c-larger). Gates the entire B1B-S1 cascade.
+- **B2-S3** business_logic em-dash replacement wording (DESTRUCTIVE overwrite of a non-empty value; Rule #15 user-owns-wording). Proposed comma replacement carried.
+- **B2-S4** CUSTOMER-360 vs IDENTITY-RESOLUTION capability scope between MDM and CDP.
+- **B2-S5** lifecycle state names per operational_workflow master (315/316/317/320).
+- **B2-S6** stewardship persona catalog shape (unified data_steward + match_curator + merge_approver + mdm_admin [recommended] / per-master / other).
+- **B2-S7** compliance regulation linkage (GDPR / CCPA / KYC-AML / DCAM; load all / subset / defer).
+- **B2-S8** bare-word naming arbitration for match_rules / merge_rules / source_records (claim canonical / rename mdm_* [DESTRUCTIVE restructure] / mixed).
+- **B2-B11** vendor/generic aliases on MDM-owned masters (editorial: load small synonym set vs skip self-explanatory).
+- **Personas/RACI (B1B-PERSONAS)** deferred to a focused persona pass that runs AFTER the domain is built; candidate personas: data_steward, match_curator, merge_approver, mdm_admin.
+
+### Left (not actionable this pass)
+
+- **b1b blocked on B1B-S1 (module authoring) / user decisions:** B1B-S1, S2, S4, S6, S7, S8, B6, B12 (lifecycle states; entity_type now classified). B1B-S9 (em-dash) is destructive + B2-S3-gated.
+- **b1b report-only owed by other domains:** B1B-S5 (inbound 155 source owed by DATA-AI-PLAT, 481 by CDP); B1B-S6 (outbound target_domain_module_id owed by SUP-LIFE/CSM/CDP/HCM/DCG/SUB-MGMT).
+- **Superseded grain (reframed as note, B1B-SKILL-NOTE):** former B1B-S10 (per-module system skill + skill_tools) and B1B-S12 (legacy skills.id=12 retirement) are CANCELED per the 2026-06-06 per-domain-skill restoration; tool requirements move to domain_module_tools once built, the domain-grain skills.id=12 needs no retirement.
+- **b3 backlog:** 5 entity candidates, 3 modularization candidates, 4 regulation candidates, 1 RDM domain candidate. Unchanged.
+
+### JWT errors
+
+None encountered this pass.

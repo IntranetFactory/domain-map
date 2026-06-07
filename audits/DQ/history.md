@@ -333,3 +333,81 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass over the open items in `audits/DQ/state.yaml` (no fresh from-scratch
+audit). DQ is still UNBUILT (live 2026-06-07: 0 `domain_modules`, 0 `capability_domains`), so the
+build (B1A-BUILD) is SURFACED, not scaffolded, and the whole M / F / B10b / lifecycle cascade is
+left until modules exist. Every fully-specified, unblocked EXECUTE-class item was executed at
+`record_status='new'`; everything else is gated on a user decision (module split, anomaly owner,
+coverage) and is surfaced. Domain owner row (C1, business_function_id=65, responsibility_type=
+'owner') already exists; no C1 work. H1 is now 9 of 11 handoffs tagged (156 picked up a tag since
+the last audit); the 2 remaining (684, 715) are DATA-AI-PLAT counterparties with no clean PCF
+substrate-feed match and stay defer-to-Discover, so no H1 write this pass. No JWT errors.
+
+Loader: `.tmp_deploy/2026-06-07_dq_state_driven_execute.ts` (gitignored; idempotent, verified by a
+clean second run that wrote 0 rows).
+
+### Executed (all additive/corrective, record_status='new')
+
+- **B1A-NEW1 (B9): 4 `trigger_events` event_category fills.** PATCHed the 4 DQ-master events that
+  carried '' to the Rule #13 enum: 745 dq_dimension.threshold_breached -> `threshold`, 746
+  dq_dimension.recovered -> `state_change`, 747 dq_sla_definition.breached -> `threshold`, 748
+  dq_sla_definition.published -> `lifecycle`. All 10 DQ events now categorized.
+- **B13 / Rule #12: 6 `data_objects.entity_type` classifications.** PATCHed off `unclassified`:
+  309 quality_rules -> `catalog` (rule/definition reference data), 310 quality_incidents ->
+  `operational_workflow`, 311 profile_results -> `computed`, 312 dq_dimensions -> `catalog`
+  (canonical DAMA/ISO dimensions), 313 dq_scorecards -> `computed`, 314 dq_sla_definitions ->
+  `operational_workflow`. 94 anomaly_detections was already `computed` and is the contested
+  cross-domain master, so it was left untouched. This resolves B13 for all 7 DQ masters and
+  collapses the old B1B-S11 "surface config-shape exemption" sub-task: profile_results,
+  dq_scorecards, dq_dimensions, quality_rules now pass B12 structurally via the typed column.
+- **A4 catalog UX (Rule #20; closes B1B-S6, B2-CATALOG-UX): 1 `domains` row.** Authored a
+  buyer-voice `catalog_tagline` + 3-paragraph `catalog_description` into the EMPTY fields on domain
+  90 (workflow + value framing; no vendor names per Rule #18; no em-dash; American English). The
+  stale "surface-before-write" gate (old B1-S6 / B2-CATALOG-UX) was intentionally ignored per the
+  current additive-execute contract; the empty-guard means a non-empty value is never overwritten.
+  No module-level catalog UX exists to write (0 modules).
+
+### Surfaced (user decision / blocked, NOT executed)
+
+- **B2-MOD-SPLIT** (most load-bearing): DQ module split shape. (a) 3-way DQ-RULES +
+  DQ-INCIDENT-MGMT + DQ-MONITORING [recommended]; (b) 2-way DQ-RULES + DQ-OBSERVABILITY; (c) 1-way
+  (non-viable once 5-7 capabilities load per Rule #14). Gates B1A-BUILD, B1B-S1/S3/S11/S13.
+- **B2-ANOMALY-OWNER**: anomaly_detections (94) is mastered in both DQ (90) and AIOPS (6) on the
+  legacy DDO layer (M7 catalog-wide single-master conflict). (a) split into data_anomalies +
+  event_anomalies [recommended]; (b) DQ canonical, AIOPS demotes; (c) AIOPS canonical, DQ demotes.
+  Gates the DQ-MONITORING module's claim on 94.
+- **B2-COVERAGE**: add 4-6 pure-play DQ flagship solutions as primary coverage (unblocks the 7
+  vendor-specific aliases under B1B-S4), or accept the current 10 platform-coverage solutions and
+  audit Phase A solutions separately. A3 currently has 0 primary solutions.
+- **B2-XCUT-CAP**: author DATA-OBSERVABILITY-MONITORING as a domain-neutral cross-cutting
+  capability now, vs domain-prefixed DQ-MONITORING, vs wait for the DATA-OBSERVABILITY
+  missing-domain decision (candidate at mention_count 4).
+- **B1A-BUILD**: the domain itself is unbuilt; building it is gated on B2-MOD-SPLIT +
+  B2-ANOMALY-OWNER. No scaffold authored (Rule: surface the build, leave the cascade).
+- **Personas / RACI (Phase P)**: DEFERRED, not authored. Not applicable until the domain is built
+  and multi-module; candidate personas (data steward, data quality engineer, data quality analyst)
+  noted for the eventual build.
+
+### Left (untouched)
+
+- **B1B-S1, S3, S11, S12, S13**: blocked on B1B-S1 modules existing and/or the B2 split decision.
+- **B1B-S2, S4**: blocked on B2-ANOMALY-OWNER and B2-COVERAGE respectively. The 7 vendor-specific
+  aliases on quality_rules / profile_results / quality_incidents stay gated (platform forces
+  alias_type='solution_term' + a solution context). The one clean generic alias ('anomaly' on 94)
+  was already loaded 2026-05-31.
+- **B1B-S7**: SUPERSEDED by the 2026-06-06 per-domain-skill restoration. dq-system (id 11) is the
+  domain-grain system skill and is NOT retired; its 11 legacy skill_tools migrate to
+  domain_module_tools at modularization (audits/_modularization-backlog.md). Reframed as a note.
+- **B3 backlog**: data_contracts, survivorship_rules, merge_decisions remain Phase 0 candidates.
+- **Owed-by-others** (report-only, carried): AIOPS B1-S2 anomaly mirror; DCG/DATA-AI-PLAT/DI B5 +
+  B10b counterpart-module-FK and consumer-row gaps; DCG/DAP B9 candidate handoffs. Surface when
+  those domains are next validated.
+
+### JWT errors
+
+None.

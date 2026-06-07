@@ -1,16 +1,16 @@
 schema_version: 2
 domain: SKILLS-MGMT
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
   - id: B1A-M1
     summary: Add skill_proficiency_levels master to SKILLS-MGMT-TAXONOMY (proficiency-scale vocabulary).
     finding: |
-      Vendor-confirmed across all 5 pure-plays (Lightcast Open Skills, TechWolf Skills Engine, SkyHive Quantum Labor Market, Reejig Workforce Intelligence, 365Talents Skills Platform). Today skill_assessments carries a numeric rating with no row table to anchor the scale or per-taxonomy override. Universal pure-play entity. Carried forward from 2026-05-30 audit; no Phase 0 confirmation since.
+      Vendor-confirmed across all 5 pure-plays (Lightcast Open Skills, TechWolf Skills Engine, SkyHive Quantum Labor Market, Reejig Workforce Intelligence, 365Talents Skills Platform). Today skill_assessments carries a numeric rating with no row table to anchor the scale or per-taxonomy override. Universal pure-play entity. Carried forward; no Phase 0 confirmation since.
     action: |
-      Phase-B insert: new data_objects row (singular_label=Skill Proficiency Level, plural_label=Skill Proficiency Levels, kind=domain_owned), domain_module_data_objects row on module 173 (role=master, necessity=required), trigger_events / lifecycle states only if a workflow exists (likely config-shaped). Apply Rule #9 naming check before insert.
+      Phase-B insert: new data_objects row (singular_label=Skill Proficiency Level, plural_label=Skill Proficiency Levels, kind=domain_owned, entity_type=catalog), domain_module_data_objects row on module 173 (role=master, necessity=required). Config-shaped; lifecycle states only if a workflow exists. Apply Rule #9 naming check before insert.
     blocked_by:
       - {type: user_decision, ref: B2-5}
     vendor_evidence:
@@ -26,7 +26,7 @@ b1a:
     finding: |
       Edge table on the skills ontology (parent / child / related / equivalent / merged-into). Today data_object_relationships carries intra-row schema-layer edges between skills / skill_assessments / skill_endorsements but no per-row taxonomy edges. Vendor-confirmed across all 5 pure-plays. Universal pure-play entity; the ontology cannot be navigated without it.
     action: |
-      Phase-B insert: new data_objects row (skill_relationships, kind=domain_owned), domain_module_data_objects row on module 173 (role=master, necessity=required). Likely config-shaped; consider exempting from lifecycle states.
+      Phase-B insert: new data_objects row (skill_relationships, kind=domain_owned, entity_type=junction), domain_module_data_objects row on module 173 (role=master, necessity=required). Config-shaped; consider exempting from lifecycle states.
     blocked_by:
       - {type: user_decision, ref: B2-5}
     vendor_evidence:
@@ -40,17 +40,9 @@ b1a:
   - id: B1A-S2
     summary: Load 7 missing trigger_events for SKILLS-MGMT lifecycle states (B9 / B12).
     finding: |
-      Six published / workflow-bearing lifecycle states have NO matching trigger_events row. State ids and event names to author: state 1144 skill_taxonomies.active -> skill_taxonomy.activated; state 1145 skill_taxonomies.deprecated -> skill_taxonomy.deprecated; state 1141 competency_models.published -> competency_model.published; state 1142 competency_models.archived -> competency_model.archived; state 186 skill_profiles.validated -> skill_profile.validated; state 187 skill_profiles.inactive -> skill_profile.deactivated; state 1138 skill_assessments.completed -> skill_assessment.completed (terminal, needs publishing event for downstream consumers). Today only skill_profile.updated (id 440) exists for the whole domain.
+      Six published / workflow-bearing lifecycle states have NO matching trigger_events row, plus the skill_assessments terminal. State ids and event names to author: state 1144 skill_taxonomies.active -> skill_taxonomy.activated; state 1145 skill_taxonomies.deprecated -> skill_taxonomy.deprecated; state 1141 competency_models.published -> competency_model.published; state 1142 competency_models.archived -> competency_model.archived; state 186 skill_profiles.validated -> skill_profile.validated; state 187 skill_profiles.inactive -> skill_profile.deactivated; state 1138 skill_assessments.completed -> skill_assessment.completed. Today only skill_profile.updated (id 440) exists for the whole domain. New-event authoring is judgment-shaped (not a derivable PATCH); deferred to user direction.
     action: |
       Insert 7 trigger_events rows, all event_category=state_change (per Rule #13's enum). data_object_id per the master that publishes each event. record_status default new.
-    affected_events:
-      - {id: null, event_name: "skill_taxonomy.activated", current_category: null, proposed_category: "state_change"}
-      - {id: null, event_name: "skill_taxonomy.deprecated", current_category: null, proposed_category: "state_change"}
-      - {id: null, event_name: "competency_model.published", current_category: null, proposed_category: "state_change"}
-      - {id: null, event_name: "competency_model.archived", current_category: null, proposed_category: "state_change"}
-      - {id: null, event_name: "skill_profile.validated", current_category: null, proposed_category: "state_change"}
-      - {id: null, event_name: "skill_profile.deactivated", current_category: null, proposed_category: "state_change"}
-      - {id: null, event_name: "skill_assessment.completed", current_category: null, proposed_category: "state_change"}
     affected_masters:
       - {data_object_id: 852, name: "skill_taxonomies", target_module_id: 173, workflow: "draft -> active -> deprecated"}
       - {data_object_id: 857, name: "competency_models", target_module_id: 173, workflow: "draft -> published -> archived"}
@@ -60,9 +52,9 @@ b1a:
   - id: B1A-S4
     summary: Author lifecycle states + workflow-gate permissions for skill_endorsements + skill_inference_runs (B12).
     finding: |
-      Two master + required data_objects still have ZERO lifecycle states: skill_endorsements (data_object_id 856, master on SKILLS-MGMT-PROFILE) and skill_inference_runs (data_object_id 858, master on SKILLS-MGMT-PROFILE). Endorsements have a real workflow (requested -> issued -> revoked); inference runs have a job-execution workflow (queued -> running -> completed / failed). Neither is config-shaped.
+      Both are now classified entity_type=operational_workflow (set 2026-06-07) and have ZERO lifecycle states: skill_endorsements (data_object_id 856, master on SKILLS-MGMT-PROFILE) and skill_inference_runs (data_object_id 858, master on SKILLS-MGMT-PROFILE). Endorsements have a real workflow (requested -> issued -> revoked); inference runs have a job-execution workflow (queued -> running -> completed / failed). B12 now FAILS for both (workflow type requires states). State-machine authoring + workflow-gate permission minting is judgment-shaped and the gate prefix depends on the B2-2 decision.
     action: |
-      Insert states: skill_endorsements -> requested (initial) / issued (workflow-gate endorse_skill) / revoked (workflow-gate revoke_endorsement, terminal). skill_inference_runs -> queued (initial) / running / completed (terminal) / failed (terminal). All states carry domain_module_id=174. Materialize workflow-gate permissions skills-mgmt-profile:endorse_skill, skills-mgmt-profile:revoke_endorsement per Rule #14 prefix.
+      Insert states: skill_endorsements -> requested (initial) / issued (workflow-gate endorse_skill) / revoked (workflow-gate revoke_endorsement, terminal). skill_inference_runs -> queued (initial) / running / completed (terminal) / failed (terminal). All states carry domain_module_id=174. Materialize workflow-gate permissions per Rule #14 prefix (prefix gated on B2-2).
     blocked_by:
       - {type: user_decision, ref: B2-2}
     affected_masters:
@@ -79,68 +71,41 @@ b1a:
       - {type: depends_on, ref: B1A-S4, reason: "role bundles reference workflow-gate permissions materialized from B1A-S4 lifecycle states"}
       - {type: user_decision, ref: B2-2, reason: "permission prefix rename cascades into role bundles"}
     affected_modules: [173, 174]
+
   - id: B1A-PHASE-P
     summary: "Multi-module (2 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 2 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    finding: "Live triage 2026-06-02: 2 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. DEFERRED per Rule #21 (personas/RACI are not agent-authored in a state-execute pass)."
     action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 2 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
     extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "7 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 7 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [competency_models, skill_assessments, skill_endorsements, skill_inference_runs, skill_profiles, skill_taxonomies, skills]
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-SELF-CONTAIN
-    summary: "4 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
-    finding: "Live triage 2026-06-02: 4 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
-    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
-    extra_m9_shapes:
-      - {entity: course_enrollments, module: SKILLS-MGMT-PROFILE, role: contributor, master_domain: LMS}
-      - {entity: learner_certifications, module: SKILLS-MGMT-PROFILE, role: contributor, master_domain: LMS}
-      - {entity: performance_goals, module: SKILLS-MGMT-PROFILE, role: contributor, master_domain: TALENT-MGMT}
-      - {entity: skills_gap_analyses, module: SKILLS-MGMT-PROFILE, role: contributor, master_domain: SWP}
-    extra_phase_p_triage: "2026-06-02"
+    candidate_personas:
+      - "TALENT-DEV-SKILL-ARCHITECT (ontology + competency-model authoring on 173)"
+      - "TALENT-DEV-SKILL-ANALYST (inference + gap analytics on 174)"
+      - "MANAGER (validate skill-profile gate on 174)"
 
 b1b:
   - id: B1B-S3
     summary: Load 4 intra-domain handoffs between modules 173 and 174 (B9b).
     finding: |
-      Zero intra-domain handoffs rows between SKILLS-MGMT-TAXONOMY (173) and SKILLS-MGMT-PROFILE (174), despite the cross-module relationship row 1275 (skill_profiles assessed against competency_models) and the PROFILE module's consumer rows on skill_taxonomies, skills, competency_models. When TAXONOMY publishes a new active taxonomy or competency-model version, PROFILE has no event signaling re-inference / revalidation.
+      Zero intra-domain handoffs rows between SKILLS-MGMT-TAXONOMY (173) and SKILLS-MGMT-PROFILE (174), despite the cross-module relationship row 1275 (skill_profiles assessed against competency_models) and the PROFILE module's consumer rows on skill_taxonomies, skills, competency_models. When TAXONOMY publishes a new active taxonomy or competency-model version, PROFILE has no event signaling re-inference / revalidation. Blocked: the 4 taxonomy / competency trigger events do not yet exist (B1A-S2).
     action: |
       Insert 4 handoffs: trigger_event skill_taxonomy.activated (173 -> 174), trigger_event skill_taxonomy.deprecated (173 -> 174), trigger_event competency_model.published (173 -> 174), trigger_event competency_model.archived (173 -> 174). All integration_pattern=lifecycle_progression, friction_level=low, source_domain_id=target_domain_id=169.
     blocked_by:
       - {type: prerequisite_entity, ref: B1A-S2, reason: "intra-domain handoffs reference the 4 missing taxonomy / competency events"}
-    affected_handoffs:
-      - {handoff_id: null, direction: "intra-domain", source_domain: "SKILLS-MGMT", target_domain: "SKILLS-MGMT", trigger_event: "skill_taxonomy.activated", payload: "skill_taxonomies", null_field: null}
-      - {handoff_id: null, direction: "intra-domain", source_domain: "SKILLS-MGMT", target_domain: "SKILLS-MGMT", trigger_event: "skill_taxonomy.deprecated", payload: "skill_taxonomies", null_field: null}
-      - {handoff_id: null, direction: "intra-domain", source_domain: "SKILLS-MGMT", target_domain: "SKILLS-MGMT", trigger_event: "competency_model.published", payload: "competency_models", null_field: null}
-      - {handoff_id: null, direction: "intra-domain", source_domain: "SKILLS-MGMT", target_domain: "SKILLS-MGMT", trigger_event: "competency_model.archived", payload: "competency_models", null_field: null}
 
   - id: B1B-TLNTINTEL-FANOUT
     summary: Add outbound handoffs from SKILLS-MGMT to TLNT-INTEL-MOBILITY on taxonomy / competency-model events.
     finding: |
-      Zero handoffs SKILLS-MGMT -> TLNT-INTEL despite TLNT-INTEL holding three consumer + required DMDOs on skill_profiles / competency_models / skill_taxonomies. Missing outbound chain: skill_profile.validated -> TLNT-INTEL-MOBILITY (stronger fit-score signal); competency_model.published -> TLNT-INTEL-MOBILITY / -INSIGHTS (recompute fit_scores against the new role profile); skill_taxonomy.activated -> TLNT-INTEL-MOBILITY (re-key inferences against the new taxonomy). Captured in 2026-05-30 Pass-4 as a follow-up but not separately loaded; folds into B1A-S2 + B1A-S3 outbound fan-out.
+      Zero handoffs SKILLS-MGMT -> TLNT-INTEL despite TLNT-INTEL holding three consumer + required DMDOs on skill_profiles / competency_models / skill_taxonomies. Missing outbound chain: skill_profile.validated -> TLNT-INTEL-MOBILITY; competency_model.published -> TLNT-INTEL-MOBILITY / -INSIGHTS; skill_taxonomy.activated -> TLNT-INTEL-MOBILITY. Blocked: events do not yet exist (B1A-S2).
     action: |
       Once B1A-S2 trigger_events ship, insert 3-4 outbound handoffs to TLNT-INTEL: skill_profile.validated 174 -> TLNT-INTEL-MOBILITY; competency_model.published 173 -> TLNT-INTEL-MOBILITY; skill_taxonomy.activated 173 -> TLNT-INTEL-MOBILITY. integration_pattern=event_stream, friction_level=low.
     blocked_by:
       - {type: prerequisite_entity, ref: B1A-S2, reason: "outbound handoffs reference the 4 missing TAXONOMY events"}
 
 b2:
-  - id: B2-1
-    summary: Approve A4 / M8 catalog UX wording for domain 169 + modules 173 + 174.
-    question: |
-      Per Rule #20, the catalog_tagline and catalog_description columns are buyer-shaped and need explicit user-approved text before write. catalog_tagline + catalog_description are EMPTY on the domain row AND on both modules. Please provide exact buyer-voice wording, OR direct the agent to draft and surface for approval before write.
-    options:
-      - "Provide exact text for all 6 values (domain tagline + description, module 173 tagline + description, module 174 tagline + description)"
-      - "Direct agent to draft per Rule #20 buyer-voice template and surface drafts for per-row approval before PATCH"
-      - "Defer (leave empty until marketing authors)"
-    why: |
-      Rule #20 forbids agent-authored writes to these columns without explicit per-row user approval. Three rows are empty (A4 + M8 fail for the same root cause).
-
   - id: B2-2
     summary: Rename permissions on module 174 to skills-mgmt-profile:* prefix or accept the asymmetry?
     question: |
-      Module 174 (SKILLS-MGMT-PROFILE) has six permissions using the domain code skills-mgmt:* as prefix instead of the module code skills-mgmt-profile:* per Rule #14. Module 173 correctly uses skills-mgmt-taxonomy:*. Affected permissions on 174 ids 10201 / 10202 (workflow-gate validate_skill_profile, deactivate_skill_profile) and 10629 / 10630 / 10631 (baseline read / manage / admin).
+      Module 174 (SKILLS-MGMT-PROFILE) has six permissions using the domain code skills-mgmt:* as prefix instead of the module code skills-mgmt-profile:* per Rule #14. Module 173 correctly uses skills-mgmt-taxonomy:*. Affected permissions on 174 ids 10201 / 10202 (workflow-gate validate_skill_profile, deactivate_skill_profile) and 10629 / 10630 / 10631 (baseline read / manage / admin). DESTRUCTIVE: renaming overwrites existing non-empty permission_code values and updates the Administrator role bundle; agent will not apply unapproved.
     options:
       - "Rename all 5 permissions on 174 to skills-mgmt-profile:* and update Administrator role bundle"
       - "Rename only the workflow-gate permissions (10201, 10202); leave baseline tier as-is"
@@ -151,7 +116,7 @@ b2:
   - id: B2-3
     summary: Handoff 1307 disposition (DELETE vs PATCH-and-keep)?
     question: |
-      Handoff 1307 (LMS -> SKILLS-MGMT on learner_badge.earned, payload learner_badges 934) has target_domain_module_id=NULL. Row 1295 carries the same source / payload / trigger event 1334 with target_domain_module_id=174; the only differences are integration_pattern (1307 event_stream vs 1295 lifecycle_progression) and the NULL target_module. Strong evidence of duplicate from pre-modularization era.
+      Handoff 1307 (LMS -> SKILLS-MGMT on learner_badge.earned, payload learner_badges 934) has target_domain_module_id=NULL. Row 1295 carries the same source / payload / trigger event 1334 with target_domain_module_id=174; the only differences are integration_pattern (1307 event_stream vs 1295 lifecycle_progression) and the NULL target_module. Strong evidence of duplicate from pre-modularization era. DESTRUCTIVE: option (a) is a DELETE; agent will not apply unapproved.
     options:
       - "(a) DELETE 1307 as duplicate of 1295"
       - "(b) Load a consumer DMDO on learner_badges for module 174, then PATCH 1307.target_domain_module_id=174 and resolve integration_pattern disagreement"
@@ -161,7 +126,7 @@ b2:
   - id: B2-4
     summary: Approve the 9 agent_curated handoff_processes rows (H1 catalog quality).
     question: |
-      9 handoff_processes proposals were loaded 2026-05-31 with proposal_source=agent_curated, record_status=new (handoff_processes ids 331-339, covering handoffs 388 / 432 / 440 / 456 / 1079 / 1080 / 1106 / 1288 / 1295 mapped to PCF process ids 1036 / 1033 / 226 / 1038 / 1033 / 1873 / 1038 / 1033 / 1873). Catalog quality headline is 0 approved. Review and decide which to flip to record_status=approved per Rule #1.
+      9 handoff_processes proposals were loaded 2026-05-31 with proposal_source=agent_curated, record_status=new (handoff_processes ids 331-339, covering handoffs 388 / 432 / 440 / 456 / 1079 / 1080 / 1106 / 1288 / 1295 mapped to PCF process ids 1036 / 1033 / 226 / 1038 / 1033 / 1873 / 1038 / 1033 / 1873). Catalog quality headline is 0 approved. Decide which to flip to record_status=approved per Rule #1 (agent never flips new -> approved unprompted).
     options:
       - "Approve all 9"
       - "Approve specific handoff_process ids (name them)"
@@ -181,15 +146,14 @@ b2:
       The split decision is informed by which speculative entities land. Has a Bucket 3 dependency.
 
   - id: B2-6
-    summary: Alias gap on bare-ontology masters.
+    summary: Alias gap on the remaining 4 bare-ontology masters.
     question: |
-      Five masters carry no data_object_aliases rows: skill_taxonomies, skills, skill_assessments, skill_endorsements, skill_inference_runs. The bare-noun ones (skills) and assessment-shaped ones are reasonably self-explanatory; skill_taxonomies has industry synonyms (skills ontology, competency framework).
+      skill_taxonomies was aliased on 2026-06-07 with generic synonyms "skills ontology" and "competency framework" (alias rows 1497, 1498, record_status=new). Four masters remain un-aliased: skills, skill_assessments, skill_endorsements, skill_inference_runs. These bare-noun / assessment-shaped masters are reasonably self-explanatory; user decides whether any need synonyms.
     options:
-      - "Add skill_taxonomies -> 'skills ontology' (alias_type synonym); leave the other 4 un-aliased"
-      - "Add aliases for all 5 (provide list)"
-      - "Leave all 5 un-aliased (recorded exemption)"
+      - "Leave the remaining 4 un-aliased (recorded exemption)"
+      - "Add aliases for one or more (provide list)"
     why: |
-      B11 audits aliases as a non-self-explanatory check; the user decides which masters need them.
+      B11 audits aliases as a non-self-explanatory check; the user decides which masters need them. The clearly-correct skill_taxonomies synonyms were already loaded.
 
 b3:
   - id: B3-1

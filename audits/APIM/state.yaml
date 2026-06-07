@@ -11,65 +11,22 @@
 schema_version: 2
 domain: APIM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
-  - id: B1A-S3
-    summary: "Link APIM solutions via solution_domains (0 rows today; flagship vendor list unlinked)."
-    finding: "solution_domains?domain_id=eq.79 returns 0 rows. APIM has well-known flagship vendors (Apigee, Kong, MuleSoft Anypoint, Azure API Management, AWS API Gateway, IBM API Connect, Tyk, WSO2 API Manager, Postman API Platform) but none are linked. A3 fails."
-    action: "Add solutions rows where missing and solution_domains rows with coverage_level (primary for the flagships above). Reuse existing vendors rows by vendor_name per Rule #4. Independent of M1; can ship in parallel."
-    vendor_evidence:
-      - Apigee
-      - Kong Konnect
-      - MuleSoft Anypoint
-      - Azure API Management
-      - AWS API Gateway
-      - IBM API Connect
-      - Tyk
-      - WSO2 API Manager
-      - Postman API Platform
-  - id: B1A-S4
-    summary: "Draft and load catalog_tagline + catalog_description for APIM (both empty)."
-    finding: "domains row 79 has catalog_tagline='' and catalog_description=''. Rule #20 / A4 fail."
-    action: "Draft a single-sentence buyer-voice tagline and a 1 to 3 paragraph catalog_description covering design, publish, secure, and monetize APIs through gateways with policy enforcement, rate limits, consumer-level analytics. Surface to user BEFORE writing per Rule #20."
-  - id: B1A-S6
-    summary: "Load 6 to 8 intra-domain data_object_relationships edges (0 today)."
-    finding: "data_object_relationships between APIM masters (456, 457, 458, 459, 460, 461, 462) is empty. B6 fails. Expected edges: api_versions belongs_to api_specifications, api_deployments runs api_versions, api_deployments targets api_gateways, api_policies applies_to api_deployments, api_usage_metrics measures api_deployments, api_consumers consumes api_deployments, api_consumers attributed_to api_usage_metrics."
-    action: "Draft verb + inverse_verb + relationship_type + relationship_kind + is_required + owner_side for each edge. Load via cluster-drafts pattern. Independent of M1."
-    affected_entities:
-      - api_versions
-      - api_specifications
-      - api_deployments
-      - api_policies
-      - api_usage_metrics
-      - api_gateways
-      - api_consumers
-  - id: B1A-S9
-    summary: "Load 8 to 12 data_object_aliases rows for APIM masters (0 today)."
-    finding: "data_object_aliases for masters 456, 457, 458, 459, 460, 461, 462 is empty. B11 fails. Vendor synonyms available for api_specifications (Apigee API Proxy, Kong Service+Route, MuleSoft API Asset, Azure APIM API), api_consumers (Apigee App+Developer, Kong Consumer, Azure APIM Subscription Owner), api_deployments (Apigee Revision+Environment, Kong Workspace, Azure APIM API Version Set deployment), api_gateways (Kong Gateway, AWS API Gateway, Apigee Runtime), api_policies (Apigee Policy, Kong Plugin, Azure APIM Policy)."
-    action: "Draft 8 to 12 alias rows and load via cluster-drafts pattern. Independent of M1."
-    affected_entities:
-      - api_specifications
-      - api_consumers
-      - api_deployments
-      - api_gateways
-      - api_policies
-  - id: B1A-S14
-    summary: "Insert Information Security business_function_domains contributor row (carryover from prior B1-S15 INSERT half)."
-    finding: "C1 carries an owner (Platform Engineering, id 91) and a consumer (IT Operations, id 92, post-2026-05-31 flip). The Information Security contributor INSERT half of the prior 2026-05-30 B1-S15 finding was deferred and remains owed."
-    action: "Insert business_function_domains row: business_function = Information Security, responsibility_type = contributor. Scope: policy authoring and consumer access governance."
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
-    extra_phase_p_triage: "2026-06-02"
+    finding: "Live re-verify 2026-06-07: domain 79 still has 0 domain_modules rows (M1 hard fail) and 0 capability_domains rows, so it is not deployable. The 7 masters live in the legacy domain_data_objects rollup but no module owns them. Per the state-driven contract, the build is SURFACED, not scaffolded; its cascade (capabilities, module-grain lifecycle states, module FK backfills, the domain-grain system skill's derived toolset) stays blocked behind the module set landing."
+    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the single domain-grain system skill (per the 2026-06-06 supersession: ONE domain-grain skill that derives its toolset; no per-module skills). Module shape is gated on B2-S1. If multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
 
 b1b:
   - id: B1B-S1
     summary: "Author APIM domain_modules row set per user-chosen module shape (M1 hard fail)."
     finding: "APIM has 0 domain_modules rows (neither domain_id=79 primary host nor via domain_module_host_domains). Rule #14 makes this an audit blocker. The legacy domain_data_objects rollup carries 7 masters but no module owns them. IGA-AUTO-PROVISIONING (148) already declares api_consumers as a consumer DMDO; APIM owes the canonical module set."
-    action: "Hand-author the APIM module set per B2-S1 user decision. Each module needs a domain_module_code, domain_module_name, module_kind='full', catalog_tagline, catalog_description, and DMDO rows declaring master roles on the 7 APIM data_objects."
+    action: "Hand-author the APIM module set per B2-S1 user decision. Each module needs a domain_module_code, domain_module_name, module_kind, catalog_tagline, catalog_description, and DMDO rows declaring master roles on the 7 APIM data_objects (entity_type now classified: 456/457/458/459/462 operational_workflow, 460 computed, 461 catalog)."
     blocked_by:
       - {type: user_decision, ref: B2-S1}
     affected_entities:
@@ -89,7 +46,7 @@ b1b:
       - {type: user_decision, ref: B2-S1}
   - id: B1B-S8
     summary: "Draft 6 outbound cross-domain data_object_relationships edges mirroring published handoffs."
-    finding: "7 outbound + 1 inbound cross-domain handoffs; only 1 cross-domain rel edge exists (inbound test_cases is_triggered_by api_specifications, id 572 to 457). Missing outbound payload-target edges: api_specifications informs contract_tests (IPAAS / TEST-MGMT), api_deployments triggers releases (VSDP), api_gateways feeds telemetry_streams (OBS), api_usage_metrics feeds subscription_meters (SUB-MGMT), api_consumers governs identity_grants (IGA), api_policies aligns_with control_policies (GRC). Some rows depend on target-domain master ownership confirmation (B3-S1 vendor research may shift TEST-MGMT contract_tests and OBS telemetry_streams masters)."
+    finding: "7 outbound + 1 inbound cross-domain handoffs; only 1 cross-domain rel edge exists (inbound test_cases is_triggered_by api_specifications, id 408 to 457). The 7 intra-domain edges were loaded 2026-06-07; the cross-domain payload-target mirrors are still missing: api_specifications informs contract_tests (IPAAS / TEST-MGMT), api_deployments triggers releases (VSDP), api_gateways feeds telemetry_streams (OBS), api_usage_metrics feeds subscription_meters (SUB-MGMT), api_consumers governs identity_grants (IGA), api_policies aligns_with control_policies (GRC). Some rows depend on target-domain master ownership confirmation (B3-S1 vendor research may shift TEST-MGMT contract_tests and OBS telemetry_streams masters). Reminder: relationship_kind enum is (association, composition, reference); relationship_type enum is (one_to_one, one_to_many, many_to_many)."
     action: "Draft 6 outbound cross-domain edges; load via cluster-drafts pattern. Defer specific rows where the target master is still under research."
     blocked_by:
       - {type: depends_on, ref: B3-S1, reason: "target-domain master ownership may shift for TEST-MGMT and OBS"}
@@ -102,9 +59,9 @@ b1b:
       - {handoff_id: 752, direction: outbound, source_domain: APIM, target_domain: TEST-MGMT, trigger_event: api_specification.updated, payload: api_specifications}
       - {handoff_id: 797, direction: outbound, source_domain: APIM, target_domain: GRC, trigger_event: api_policy.updated, payload: api_policies}
   - id: B1B-S10
-    summary: "Author data_object_lifecycle_states for 5 workflow-bearing APIM masters (0 today)."
-    finding: "data_object_lifecycle_states for masters 456, 457, 458, 459, 460, 461, 462 is empty. B12 fails. Workflow-bearing masters and proposed state machines: api_versions (draft, published, deprecated, retired), api_deployments (pending, published, rolled_back), api_specifications (draft, reviewed, approved, published), api_consumers (pending, onboarded, revoked), api_policies (draft, active, superseded). api_usage_metrics and api_gateways are config / telemetry shape and are candidate Rule #12 config-shape exemptions (surface to user via B2 follow-up; do NOT auto-populate data_objects.notes per Rule #15)."
-    action: "After B1B-S1 lands, author state machines per realizing module with domain_module_id set per M5. For the 2 config-shape candidates, surface the exemption to the user for tracking outside the notes column."
+    summary: "Author data_object_lifecycle_states for the 5 operational_workflow APIM masters (0 today)."
+    finding: "entity_type was classified 2026-06-07: 456 api_versions, 457 api_specifications, 458 api_deployments, 459 api_policies, 462 api_consumers are operational_workflow (lifecycle required per Rule #12 / B12); 460 api_usage_metrics is computed and 461 api_gateways is catalog (lifecycle not required, B12 passes for them, no notes write per Rule #15). data_object_lifecycle_states is still empty. Proposed state machines: api_versions (draft, published, deprecated, retired), api_deployments (pending, published, rolled_back), api_specifications (draft, reviewed, approved, published), api_consumers (pending, onboarded, revoked), api_policies (draft, active, superseded)."
+    action: "After B1B-S1 lands, author state machines per realizing module with domain_module_id set per M5, workflow gates on requires_permission transitions."
     blocked_by:
       - {type: depends_on, ref: B1B-S1, reason: "lifecycle states need domain_module_id on the realizing module"}
       - {type: user_decision, ref: B2-S2, reason: "pattern flags inform some state machines (submit_lock and single_approver)"}
@@ -114,31 +71,27 @@ b1b:
       - {data_object_id: 458, name: api_deployments, target_module_id: null, workflow: "pending to published to rolled_back"}
       - {data_object_id: 459, name: api_policies, target_module_id: null, workflow: "draft to active to superseded"}
       - {data_object_id: 462, name: api_consumers, target_module_id: null, workflow: "pending to onboarded to revoked"}
-  - id: B1B-S12
-    summary: "Migrate legacy domain-level system skill (29) to one per-module skill per Rule #17 / F1."
-    finding: "Skill 29 (apim-system) carries domain_id=79, domain_module_id=NULL. F1 is acceptable transitional until any per-module system skill exists for APIM; once one does, the legacy row is obsolete. Rule #17 names the skill <module_code_lower>_agent."
-    action: "After B1B-S1: author one skill per domain_modules row with skill_name='<module_code_lower>_agent', re-link the 7 existing skill_tools query rows (query_api_versions / query_api_specifications to APIM-DESIGN-LIFECYCLE, query_api_deployments / query_api_policies / query_api_gateways to APIM-GATEWAY-RUNTIME, query_api_consumers / query_api_usage_metrics to APIM-CONSUMER-MGMT), then DELETE skill 29."
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: "per-module skills need domain_module_id"}
-  - id: B1B-S13
-    summary: "Author mutate + side_effect tools and notification abstractions per Phase-S floor (F3)."
-    finding: "Skill 29 only links 7 query tools at coverage_tier=platform. No mutate / side_effect / compute primitives, no notify_person / notify_team. Required floor per Rule #17 is at least 1 query + 1 mutate + 1 workflow gate per module skill."
-    action: "After B1B-S1 + B1B-S12: author per-module mutate tools (create_api_version, publish_api_deployment, update_api_policy, onboard_api_consumer, revoke_api_consumer) and notify_person / notify_team abstractions for breaking-change and quota-breach broadcasts. Link with requirement_level=required for workflow-gate tools and optional for notifications."
-    blocked_by:
-      - {type: depends_on, ref: B1B-S12, reason: "tools link to per-module skills"}
+
+# RETIRED 2026-06-06 (per-domain-skill restoration; see supersession header):
+#   B1B-S12 (migrate legacy domain-level system skill 29 to per-module skills) and
+#   B1B-S13 (author per-module mutate/side_effect tools + skill_tools floor) are CANCELED.
+#   New model: skill 29 stays as the single domain-grain system skill (domain_id=79,
+#   domain_module_id=null) and DERIVES its toolset; tool requirements live on
+#   domain_module_tools once modules exist; skill_tools is dropped. Per-module tool
+#   re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
 
 b2:
   - id: B2-S1
     summary: "Decide APIM module split shape (2 / 3 / 4 modules)."
-    question: "Which module split should APIM use? (a) 4 modules: APIM-DESIGN-LIFECYCLE (api_versions, api_specifications), APIM-GATEWAY-RUNTIME (api_gateways, api_deployments, api_policies), APIM-CONSUMER-MGMT (api_consumers, api_usage_metrics), APIM-DEVELOPER-PORTAL (developer_portals, api_documentation, api_products if Phase 0 promotes them). (b) 3 modules: collapse design + portal into APIM-DESIGN-AND-PORTAL, keep gateway-runtime and consumer-mgmt distinct. (c) 2 modules: APIM-CONTROL-PLANE vs APIM-DATA-PLANE. With 6 to 8 capabilities expected (B1B-S2), M2 requires at least 2 full modules under any shape; (a) mirrors how Apigee, Kong Konnect, and Azure APIM market their product surfaces."
+    question: "Which module split should APIM use? (a) 4 modules: APIM-DESIGN-LIFECYCLE (api_versions, api_specifications), APIM-GATEWAY-RUNTIME (api_gateways, api_deployments, api_policies), APIM-CONSUMER-MGMT (api_consumers, api_usage_metrics), APIM-DEVELOPER-PORTAL (developer_portals, api_documentation, api_products if Phase 0 promotes them). (b) 3 modules: collapse design + portal into APIM-DESIGN-AND-PORTAL, keep gateway-runtime and consumer-mgmt distinct. (c) 2 modules: APIM-CONTROL-PLANE vs APIM-DATA-PLANE. With 6 to 8 capabilities expected (B1B-S2), M2 requires at least 2 full modules under any shape; (a) mirrors how flagship API management products market their surfaces."
     options:
       - "(a) 4 modules"
       - "(b) 3 modules"
       - "(c) 2 modules"
-    why: "Editorial / product-shape decision; informs B1B-S1 module set, B1B-S2 capability attachments, B1B-S10 lifecycle-state realizing modules, B1B-S12 per-module skills, B1B-S13 tools."
+    why: "Editorial / product-shape decision; informs B1B-S1 module set, B1B-S2 capability attachments, B1B-S10 lifecycle-state realizing modules, and the domain-grain system skill's derived toolset."
   - id: B2-S2
     summary: "Re-evaluate B4 pattern flags on 4 APIM masters (Rule #12)."
-    question: "Approve or reject each proposed positive flip? (1) api_specifications.has_submit_lock=true (published specs freeze so contract tests pin to immutable revision); (2) api_specifications.has_single_approver=true (one API product owner approves the breaking-change checklist); (3) api_policies.has_single_approver=true (one platform-engineering reviewer per policy); (4) api_consumers.has_personal_content=true (developer contact details are personal data subject to GDPR). api_versions, api_deployments, api_usage_metrics, api_gateways stay false."
+    question: "Approve or reject each proposed positive flip? (1) api_specifications.has_submit_lock=true (published specs freeze so contract tests pin to immutable revision); (2) api_specifications.has_single_approver=true (one API product owner approves the breaking-change checklist); (3) api_policies.has_single_approver=true (one platform-engineering reviewer per policy); (4) api_consumers.has_personal_content=true (developer contact details are personal data subject to GDPR). api_versions, api_deployments, api_usage_metrics, api_gateways stay false. NOTE: these PATCH non-default values onto existing master rows and are workflow-shape judgments; they are surfaced, not auto-applied. All 4 masters are now entity_type=operational_workflow, so pattern flags are in scope per Rule #12."
     options:
       - "Approve all 4"
       - "Approve subset (specify)"
@@ -157,7 +110,7 @@ b3:
   - id: B3-S1
     summary: "Phase 0 vendor research: confirm missing APIM substrate entities (api_products, api_subscriptions, oauth_clients, developer_portals, api_audit_logs, api_rate_limits, api_quotas, backends, api_change_proposals)."
     candidate: "Missing APIM substrate entities"
-    rationale: "The 7 currently-loaded masters (api_versions, api_specifications, api_deployments, api_policies, api_usage_metrics, api_gateways, api_consumers) are the headline-noun set. Flagship vendors uniformly model a workflow substrate beneath: api_products (developer-facing SKU bundling specs under one consumption contract; Apigee API Product, Kong Service-bundle, Azure APIM Product, IBM Product, MuleSoft API Group), api_subscriptions + api_plans (pairs consumer to product with rate plan; Apigee API Plan, Azure APIM Subscription, IBM Plan, MuleSoft Contract), api_keys (universal; distinct from broader oauth_clients), oauth_clients (Apigee Developer App, Kong OAuth2 Plugin app, Azure APIM AAD-app), developer_portals (configured portal instance per environment), api_documentation (rendered docs and SDKs; some vendors keep separate from spec), api_audit_logs (gateway access + admin events; regulation-load-bearing), api_rate_limits + api_quotas (separable config from broader api_policies), backends / upstream_services (origin services the gateway routes to; Kong Service, Apigee Target Server, Azure APIM Backend), api_categories / api_taxonomies (portal-side discoverability), api_change_proposals (governed change-management for breaking changes; Apigee Hub, Postman API Network)."
+    rationale: "The 7 currently-loaded masters (api_versions, api_specifications, api_deployments, api_policies, api_usage_metrics, api_gateways, api_consumers) are the headline-noun set. Flagship vendors uniformly model a workflow substrate beneath: api_products (developer-facing SKU bundling specs under one consumption contract), api_subscriptions + api_plans (pairs consumer to product with rate plan), api_keys (universal; distinct from broader oauth_clients), oauth_clients, developer_portals (configured portal instance per environment), api_documentation (rendered docs and SDKs), api_audit_logs (gateway access + admin events; regulation-load-bearing), api_rate_limits + api_quotas (separable config from broader api_policies), backends / upstream_services (origin services the gateway routes to), api_categories / api_taxonomies (portal-side discoverability), api_change_proposals (governed change-management for breaking changes)."
     vendor_evidence:
       - Apigee
       - Kong Konnect

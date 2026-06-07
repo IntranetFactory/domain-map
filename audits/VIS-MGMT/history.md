@@ -294,3 +294,43 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (Rule #21). Worked only the open items in state.yaml; no fresh from-scratch audit. Live re-verification confirmed VIS-MGMT (domain id 24) is still UNBUILT: 0 `domain_modules` (M1 fail), 0 `capability_domains` (A2 fail), empty `business_logic`. Per Rule #21's UNBUILT clause the agent did NOT scaffold the build and LEFT the entire module-attribution cascade; it executed only the cascade-independent, mechanical, additive/corrective items that touch rows already in the catalog.
+
+### Executed (record_status untouched, all additive/corrective)
+
+- **entity_type classification (B13 / Rule #12): 8 masters** patched from `unclassified` to typed enum. 6 -> `operational_workflow` (visitor_registrations 668, visitor_check_ins 669, visitor_badges 670, host_assignments 671, visitor_evacuation_lists 672, visitor_watchlist_screenings 674); 2 -> `operational_record` (visitor_nda_acknowledgements 673 per-visit ack artifact, visitor_audit_logs 675 append-only trail). Consequence: B12 lifecycle states are now a confirmed requirement on the 6 workflow masters once modules land (B1A-S6).
+- **Catalog UX (B1A-S3 / Rule #20): domain row 24** catalog_tagline + catalog_description authored in buyer voice (workflow + value, no vendor names, no em-dash, American English) and written. The stale "surface-before-write" gate was ignored per Rule #21. No modules exist, so no module-level catalog copy applies.
+- **event_category backfill (B1A-S5 / Rule #13): 10 trigger_events** (975..984) patched from `''` to enum: 7 `lifecycle` (975, 976, 977, 978, 979, 982, 984), 1 `signal` (980 host_notification.sent), 2 `state_change` (981 evacuation_list.updated, 983 visitor_watchlist.screened).
+
+Loader: [.tmp_deploy/vis_mgmt_state_execute_2026_06_07.ts](../../.tmp_deploy/vis_mgmt_state_execute_2026_06_07.ts). Idempotent; re-running writes nothing.
+
+### Surfaced (user decisions / destructive, not written)
+
+- **B2-MODULE-SPLIT** (gates the whole build): 2-module vs 3-module partition of the 8 masters.
+- **B2-PII-INDIRECT** + the B1A-S4 flag set: agent-recommended has_personal_content=true on the 6 directly-PII-bearing masters and has_submit_lock=true on visitor_audit_logs 675, plus the host_assignments 671 / visitor_evacuation_lists 672 judgment call. Whole set gated on this user decision (pattern flags are judgment, not deterministic backfill per Rule #12 note).
+- **B2-GDPR-CCPA**, **B2-OSHA**: regulation load + linkage scope (domain_regulations empty).
+- **B2-NDA-OWNERSHIP**: keep visitor_nda_acknowledgements in VIS-MGMT vs promote to CLM.
+- **B2-WATCHLIST-ROUTING**: filter visitor_watchlist.screened on flagged/blocked vs split events.
+- **B2-LOGGED-IN-VERB** (DESTRUCTIVE): rows 416 + 417 use relationship_verb `logged_in` / inverse `logs`. Recommend `audited_in`/`audits` or `records_event_in`/`records`. Overwrites a non-empty value, so not applied; user picks wording.
+
+### Left (untouched)
+
+- **B1A-BUILD** + build cascade **B1A-S1, S2, S4, S6, B1A-B1**: all carry module attribution and wait on B2-MODULE-SPLIT; LEFT per Rule #21 UNBUILT (do not scaffold, leave the cascade).
+- **B1A-S7, B1A-S8**: RETIRED per the 2026-06-06 supersession header (per-module skill grain / `skill_tools` dropped). Reframed as notes in state.yaml with status: retired; skill 117 is now the correct one-per-domain shape. Per-module tool authoring tracked in audits/_modularization-backlog.md.
+- **b3 backlog (7 candidates)**: visitor_invitation_links, visitor_health_screenings, visitor_id_verifications, visitor_pre_arrival_documents, visitor_groups, visitor_types, delivery_check_ins. Non-blocking ideas.
+- **business_function_domains (C1)**: already satisfied (Facilities and Real Estate owner id 235, Security contributor id 236); not an open item.
+
+### Post-fix status
+
+next_action_by = user (the build is gated on B2-MODULE-SPLIT, the single decision that unblocks B1A-BUILD).
+
+### UI spot-check
+
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/domains
+- https://tests.semantius.app/domain_map/trigger_events

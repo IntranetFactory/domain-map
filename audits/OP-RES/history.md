@@ -403,3 +403,51 @@ No writes. Reviewers can confirm unchanged state at:
 - **b3** (research pending): 11 candidate masters.
 
 `next_action_by = user` (b1a empty, b2 non-empty; user must resolve B2-1 before any structural progress).
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate execute pass against the open items in `audits/OP-RES/state.yaml` (no fresh from-scratch audit). Live state re-confirmed 2026-06-07: OP-RES (domain 18, parent_domain_id 15 / GRC) is still UNBUILT (0 `domain_modules`, 0 `capability_domains`, 0 module DMDOs, 0 skills) and masters zero data_objects of its own. Per the prompt's LEAVE rule for UNBUILT domains, the build is SURFACED, not scaffolded, and its M / F / B-band cascade is left. The single EXECUTE-class item available without a build was the A4 catalog UX backfill, which was authored and written.
+
+Per the 2026-06-06 supersession header, the per-module system skill item (B1B-S4 / former B1-S4) is RETIRED: tool requirements now live on `domain_module_tools` and a domain gets exactly one domain-grain `system` skill that derives its toolset. It is reframed as a note, not authored.
+
+### Executed (1 write type, 1 row)
+
+- **A4 catalog UX (Rule #20, was B1B-S3 / gated by B2-4):** authored buyer-voice `catalog_tagline` + `catalog_description` and PATCHed them into the EMPTY fields on `domains` id 18 (1 row, `record_status='new'`). Workflow + value voice, no vendor/product names; DORA and NIS2 referenced as statutory frameworks per Rule #18. The prompt's EXECUTE directive overrode the stale Rule #20 "surface-before-write" gate and the B2-4 wording-flow question (both now retired). No modules exist, so there was no module-grain catalog UX (M8) to write. Idempotent: skips if a non-empty value is already present.
+
+### Surfaced (not written, owed to the user)
+
+- **B2-1** (keystone): keep OP-RES leadership-tier vs promote to master-bearing. B1A-RECLASS records the classification as settled "master-bearing, needs a build", but the module-shape options (a) landing-only / (b) OP-RES-MAPPING + OP-RES-TESTING-AND-INCIDENT / (c) hybrid still need the user's call. Couple with the BCM B2-1.
+- **B2-2**: Important Business Service register ownership: OP-RES master vs CMDB consumer overlay vs shared cross-cutting host. Depends on B2-1.
+- **B2-3**: DORA / NIS2 substrate ownership across OP-RES, BCM, TPRM, SECOPS (split by artifact / single shared DORA-COMPLIANCE module / defer). Independent of B2-1; couple with BCM B2-3.
+- **B1B-S5 (DESTRUCTIVE, also foreign-blocked):** repointing handoff 252 off the defective `trigger_event` 227 re-attributes a trigger_event (destructive) and is owed by GRC first (GRC B9 owes a non-defective trigger keyed to an OP-RES-consumable payload; GRC B5 owes a canonical master on `risk_assessments` id 291). Recommended fix recorded, not applied.
+- **Personas / RACI (Phase P):** deferred. Not authored. Candidate personas once OP-RES is built and B2-1 resolves: a resilience / operational-risk owner, an important-business-service owner, and a regulator-reporting / compliance liaison.
+
+### Left (untouched)
+
+- **Build cascade (B1A-BUILD, B1B-S1 modules, B1B-S2 capabilities, B1B-S6 consumer DMDOs):** UNBUILT domain; surfaced, not scaffolded. Gated on B2-1.
+- **B1B-S4** (per-module system skill): RETIRED per the 2026-06-06 supersession header; reframed as a note, not authored.
+- **B1B-A1** (agent_curated `handoff_processes` row on handoff 252, process 272): blocked behind B1B-S5 (do not re-tag a relationship the defective trigger does not correctly express). Left.
+- **b3** (11 candidate masters: important_business_services, impact_tolerances, service_dependency_maps, resilience_scenarios, resilience_tests, resilience_incidents, resilience_remediation_actions, ict_third_party_register_entries, dora_major_incident_reports, dora_threat_led_pen_tests, nis2_significant_incident_reports): backlog, all gated on B2-1.
+
+### Not owed (checked, nothing to do)
+
+- **C1 business_function_domains:** already complete (owner = Governance, Risk and Compliance id 31; contributors IT Operations id 27 + Security id 28). No insert owed.
+- **entity_type PATCH / aliases / intra-domain handoffs / event_category backfill:** OP-RES masters zero data_objects, so none apply. Trigger 227 already carries `event_category='lifecycle'` (and is GRC-owned in any case).
+
+### JWT errors
+
+None. All verification reads succeeded.
+
+### Loader path
+
+`.tmp_deploy/2026-06-07_op_res_state_driven_execute.ts` (idempotent; one PATCH).
+
+### UI spot-check
+
+- https://tests.semantius.app/domain_map/domains?id=eq.18 (catalog_tagline + catalog_description now populated, `record_status='new'`)
+
+### Post-fix status
+
+`next_action_by = user`. The build and the entire b1b / b3 cascade remain gated on the keystone B2-1 decision (leadership-tier vs promote), best resolved jointly with the BCM B2-1.

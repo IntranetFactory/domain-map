@@ -326,3 +326,44 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07, Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate execute (SKILL.md Rule #21) over the open TALENT-MGMT state items.
+Domain 58, modules 51 (PERFORMANCE-MGMT) / 52 (SUCCESSION-CAREER) / 53 (CONTINUOUS-FEEDBACK),
+7 masters 174-180. Live re-check showed the H1 APQC tagging snapshot in state.yaml was stale:
+22 of 23 cross-domain handoffs already carry `handoff_processes` rows (mostly `agent_curated`,
+well above the H1 0.5N floor of 12), so no APQC INSERTs were needed this pass. The remaining
+additive/corrective items (entity_type, catalog UX, workflow-gate trigger_events, intra-domain
+handoffs) were all executed. All writes land at `record_status='new'`; no `approved` stamped;
+no destructive action taken. Loader `.tmp_deploy/talent_mgmt_state_execute_2026_06_07.ts`,
+idempotent, run twice (second run skipped everything already written and added the 2 final
+handoffs whose events pre-existed). No JWT errors.
+
+### Executed (counts)
+
+- **B1A-ENTITY-TYPE (7 PATCHes):** all 7 masters were `entity_type='unclassified'` -> `operational_workflow`. Each carries a multi-state lifecycle with workflow-gate (`requires_permission=true`) transitions, so `operational_workflow` is the deterministic Rule #12 classification. 174 performance_reviews, 175 performance_goals, 176 succession_plans, 177 talent_calibrations, 178 nine_box_placements, 179 career_aspirations, 180 feedback_records. Clears B13; B12 already satisfied (lifecycle states present on all).
+- **B1A-S5 (13 INSERTs into trigger_events):** workflow-gate states that lacked a matching event. 174: self_assessment_started (lifecycle), manager_assessment_started (lifecycle), submitted, calibrated, published (state_change). 175: approved, cancelled (state_change). 177: ratings_locked, published (state_change). 176: reviewed, archived (state_change). 178: confirmed (state_change). 180: shared (state_change). Each row `data_object_id` on the publishing master, `domain_module_id` = realizing module, `from_state`/`to_state` empty, no `notes` column on this table. (state.yaml said "net 11"; live had 0 of the 13 by name, so all 13 were authored.)
+- **B1B-S4 (5 INSERTs into handoffs, intra-domain):** all `source_domain_id=target_domain_id=58`, `integration_pattern='lifecycle_progression'`, `friction_level='low'`, `notes=''`. 51->52 on talent_calibration.completed (446, payload performance_reviews); 51->52 on performance_review.published (new 1540, payload performance_reviews); 53->51 on feedback_record.shared (new 1548, payload feedback_records); 51->52 on performance_goal.completed (444, payload performance_goals); 52->52 on nine_box_placement.confirmed (new 1547, payload nine_box_placements). New handoff ids 1379-1383. Clears B9b. (Dependency on B1A-S5 self-cleared since both ran in this pass.)
+- **B1A-S2 (1 PATCH, domain 58 catalog UX):** wrote `catalog_tagline` + `catalog_description` (both were empty). Buyer-voice, no vendor names, no em-dash, American English. Empty-guarded. Clears A4.
+- **B1A-S3 (3 PATCHes, module catalog UX):** wrote `catalog_tagline` + `catalog_description` on modules 51, 52, 53 (all empty). Empty-guarded. Clears M8.
+
+### Surfaced (user-gated, not executed)
+
+- **B2-S1** (M7 architectural choice): DELETE vs PROMOTE vs mixed for the 3 sibling consumer DMDOs (52,174)/(53,174)/(52,177). Recommendation: DELETE all 3. Destructive; gates B1B-S1.
+- **B2-S2 / B2-S3** (Rule #15 notes on 14 skill_tools rows; F7 sign_document): residual under the skill_tools-retirement supersession; revert-or-confirm decision.
+- **B2-S4** (5 pattern-flag flips on 176/177/178/179/180): overwrites existing booleans -> surfaced, not auto-applied.
+- **B2-S5** (handoff 450 target module tie: employees embedded_master in all 3 modules): pick 52 / 51 / 53 / leave NULL. Gates B1B-S6.
+- **B2-S6** (E6 permission-bundle drift; HRBP read-only on module 53; implicit gate-grant pattern).
+- **B1B-S1** (DESTRUCTIVE: DELETE/PROMOTE 3 sibling consumer DMDOs): gated on B2-S1; never done unapproved.
+- **B1B-S6** (PATCH handoff 450 target FK): gated on the B2-S5 tie decision.
+- **B1A-PHASE-P** (personas / RACI on a 3-module domain, E1): DEFERRED, personas are not auto-authored. Candidate personas: HR Business Partner, People Manager, Talent Development / Talent Manager (the 3 role bundles already reaching the modules via role_permissions).
+
+### Left
+
+- **B1A-S7 / H1:** effectively complete in live (22/23 cross-domain handoffs tagged). Residual: handoff 793 (SPM business_value_assessment.completed -> TALENT) has no clean `apqc_pcf_cross_industry` match for the portfolio-value-to-individual-performance crossing -> defer-to-Discover (report only, no write).
+- **C1 (business_function_domains):** already satisfied (owner Talent Development; contributors Human Resources + Compensation; consumer Executive). No additive insert; changing the owner would be a non-empty overwrite (out of scope).
+- **b3 backlog (17 items):** 10 entity candidates, 5 regulation candidates, 2 candidate domains. Unchanged; never gates "finished".
+- Supersession header (per-domain-skill restoration, 2026-06-06) retained: no per-module skills / skill_tools authored.

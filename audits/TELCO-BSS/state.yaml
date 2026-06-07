@@ -11,51 +11,42 @@
 schema_version: 2
 domain: TELCO-BSS
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
+
+# UNBUILT domain: 0 domain_modules, 0 capability_domains (confirmed live 2026-06-07).
+# Per Validate Rule #21 the build cascade is LEFT (do not scaffold). The 2026-06-07 pass
+# executed only the module-independent additive/corrective items (entity_type, catalog UX,
+# domain_aliases, data_object_aliases). Everything below is surfaced (b2 / build / sign-off)
+# or blocked on the build (b1b) or backlog (b3).
 
 b1a:
-  - id: B1A-S5
-    summary: "Draft `domains.catalog_tagline` + `catalog_description` for TELCO-BSS, surface to user before writing (Rule #20)."
-    finding: "A4 fails: both `catalog_tagline` and `catalog_description` are empty strings on `domains.id=42` (TELCO-BSS). Rule #20 requires non-empty buyer-voice fields and forbids auto-writing without explicit per-row user approval of exact wording."
-    action: "Agent drafts a single-sentence buyer-voice tagline and a 1-3 paragraph buyer-voice description in chat, surfaces to user for review BEFORE any PATCH. On approval, PATCH `/domains?id=eq.42` with the approved text."
-    affected_entities: [domains.id=42]
-
-  - id: B1A-S12
-    summary: "Author 3-5 `domain_aliases` rows for TELCO-BSS (catalog search + agent trigger phrases)."
-    finding: "Zero `domain_aliases` rows exist on `domain_id=42`. Catalog search and agent triggering rely on alias coverage for non-self-explanatory codes like `TELCO-BSS`."
-    action: "Surface candidate alias strings (`telco BSS`, `telecom billing systems`, `OSS BSS`, `communications service provider platform`, `convergent charging`) to user for approval; INSERT approved rows with `alias_type` per the field's enum and `record_status` omitted (default `new`)."
-    extra_proposed_aliases:
-      - "telco BSS"
-      - "telecom billing systems"
-      - "OSS BSS"
-      - "communications service provider platform"
-      - "convergent charging"
-
   - id: B1A-H2
-    summary: "Surface the 7 `handoff_processes` rows (B1-H1 from 2026-05-31 continuation) for reviewer sign-off."
-    finding: "All 7 `handoff_processes` rows on TELCO-BSS outbound handoffs (ids 458-464; handoffs 927-933) carry `proposal_source='agent_curated'`, `record_status='new'`. H1 coverage = 7/7 = 100% (rows exist). Catalog-quality side-bar (`record_status='approved'` count) = 0 until reviewer signs off. Rule #1 forbids agent-side bulk-approve."
-    action: "Surface the 7 `(handoff_id, process_name, external_id, hierarchy_level)` tuples to user; PATCH `record_status='approved'` per row only after explicit per-row user approval."
+    summary: "Surface the 7 `handoff_processes` rows for reviewer sign-off (destructive: flip record_status to approved)."
+    finding: "All 7 `handoff_processes` rows on TELCO-BSS outbound handoffs (ids 458-464; handoffs 927-933) carry `proposal_source='agent_curated'`, `record_status='new'` (confirmed live 2026-06-07). H1 coverage = 7/7 = 100%. Catalog-quality side-bar (`record_status='approved'` count) = 0 until reviewer signs off. Rule #1 forbids agent-side approve; this is a destructive PATCH that only the user may authorize."
+    action: "Surface the 7 `(handoff_id, process_id)` tuples to user; PATCH `record_status='approved'` per row only after explicit per-row user approval. AGENT MUST NOT APPLY."
     affected_handoffs:
-      - {handoff_id: 927, direction: outbound, source_domain: TELCO-BSS, target_domain: ITSM, trigger_event: service_trouble_ticket.opened, payload: service_incidents, null_field: null}
-      - {handoff_id: 928, direction: outbound, source_domain: TELCO-BSS, target_domain: ITSM, trigger_event: service_provisioning.failed, payload: service_incidents, null_field: null}
-      - {handoff_id: 929, direction: outbound, source_domain: TELCO-BSS, target_domain: ERP-FIN, trigger_event: telco_customer_bill.issued, payload: telco_customer_bills, null_field: null}
-      - {handoff_id: 930, direction: outbound, source_domain: TELCO-BSS, target_domain: CSM, trigger_event: telco_subscription.suspended, payload: telco_subscriptions, null_field: null}
-      - {handoff_id: 931, direction: outbound, source_domain: TELCO-BSS, target_domain: CSM, trigger_event: telco_service_order.completed, payload: telco_service_orders, null_field: null}
-      - {handoff_id: 932, direction: outbound, source_domain: TELCO-BSS, target_domain: ITSM, trigger_event: network_inventory.updated, payload: service_incidents, null_field: null}
-      - {handoff_id: 933, direction: outbound, source_domain: TELCO-BSS, target_domain: ERP-FIN, trigger_event: telco_subscription.activated, payload: telco_subscriptions, null_field: null}
+      - {handoff_id: 927, process_id: 1299, target_domain: ITSM, trigger_event: service_trouble_ticket.opened}
+      - {handoff_id: 928, process_id: 1299, target_domain: ITSM, trigger_event: service_provisioning.failed}
+      - {handoff_id: 929, process_id: 302, target_domain: ERP-FIN, trigger_event: telco_customer_bill.issued}
+      - {handoff_id: 930, process_id: 196, target_domain: CSM, trigger_event: telco_subscription.suspended}
+      - {handoff_id: 931, process_id: 740, target_domain: CSM, trigger_event: telco_service_order.completed}
+      - {handoff_id: 932, process_id: 1312, target_domain: ITSM, trigger_event: network_inventory.updated}
+      - {handoff_id: 933, process_id: 1351, target_domain: ERP-FIN, trigger_event: telco_subscription.activated}
+
   - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
-    extra_phase_p_triage: "2026-06-02"
+    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capability_domains awaiting a build."
+    finding: "Live triage 2026-06-07 (re-confirmed): this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI / lifecycle / module-FK work applies. The build itself is a user decision (modularization shape, B2-2)."
+    action: "On B2-2 decision, run Phase A then M then B then (per the post-2026-06-06 skill model) ONE domain-grain system skill that derives its toolset from `domain_module_tools`. If multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward. The 7 masters now carry `entity_type` (2026-06-07), so B12 lifecycle authoring is ready to ride the build for the 6 `operational_workflow` masters."
+    blocked_by:
+      - {type: user_decision, ref: B2-2}
 
 b1b:
   - id: B1B-S1
     summary: "Author 5-8 `capability_domains` rows aligned to TM Forum eTOM Level 2."
     finding: "A2 fails: 0 `capability_domains` rows on `domain_id=42`. Required floor is >=3."
     blocked_by:
-      - {type: user_decision, ref: B2-MODULARIZATION-SHAPE}
+      - {type: user_decision, ref: B2-2}
     extra_proposed_capabilities:
       - TELCO-ORDER-MGMT
       - TELCO-CATALOG-MGMT
@@ -67,9 +58,9 @@ b1b:
 
   - id: B1B-S2
     summary: "Author 5-7 full `domain_modules` rows per the chosen modularization shape."
-    finding: "M1 HARD FAIL: 0 `domain_modules` rows on `domain_id=42`. Cascades into M2, M4, M5, M6, M8, B9b, B10b source side, E1-E5, F2, F3."
+    finding: "M1 HARD FAIL: 0 `domain_modules` rows on `domain_id=42`. Cascades into M2, M4, M5, M6, M8, B9b, B10b source side, E1-E5, F2, F3, B12 module-FK attribution."
     blocked_by:
-      - {type: user_decision, ref: B2-MODULARIZATION-SHAPE}
+      - {type: user_decision, ref: B2-2}
     affected_entities:
       - telco_service_catalog
       - telco_service_orders
@@ -80,85 +71,69 @@ b1b:
       - service_trouble_tickets
 
   - id: B1B-S3
-    summary: "Author one `skill_type='system'` skill per `domain_modules` row (Rule #17) with 5-12 `skill_tools`."
-    finding: "F2/F3 fail: zero module-level system skills exist. Required by Rule #17."
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S2}
+    summary: "SUPERSEDED 2026-06-06: per-module `system` skills + `skill_tools` are RETIRED."
+    finding: "Original item asked for one `skill_type='system'` skill per `domain_modules` row with 5-12 `skill_tools`. Under the post-2026-06-06 model this is CANCELED: tool requirements live on `domain_module_tools`, and the domain has exactly ONE domain-grain `system` skill that derives its toolset. Reframed as a note; no per-module skill authoring."
+    note: "On build, author module tools onto `domain_module_tools`; the single domain-grain skill derives from them. Do NOT author per-module skills."
 
   - id: B1B-S4
-    summary: "Retire legacy `skills` row id 111 (`telco-bss-system`, kebab, `domain_module_id=NULL`)."
-    finding: "F1 fails: legacy domain-level system skill remains. Cannot delete before B1B-S3 because deleting the only system skill before per-module skills land hollows the F-band entirely."
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S3}
+    summary: "SUPERSEDED 2026-06-06: legacy domain-grain skill 111 is now the CORRECT shape."
+    finding: "Original item asked to RETIRE `skills` row id 111 (`telco-bss-system`, `domain_id=42`, `domain_module_id=NULL`) once per-module skills landed. Under the new model the ONE domain-grain `system` skill (domain_id set, domain_module_id null) is exactly the target shape. Row 111 already matches it. The only remaining cosmetic item is naming (kebab `telco-bss-system` vs snake convention); that is a non-blocking rename, NOT a retirement. No deletion."
+    note: "Do NOT delete skill 111. Optional cosmetic rename only; surface if marketing cares."
 
   - id: B1B-S6
-    summary: "Author `data_object_lifecycle_states` for the 7 masters + flip Rule #12 pattern flags per B2-5 decision."
-    finding: "B12 HARD FAIL: zero lifecycle states on the 7 masters. Each is workflow-bearing (orders accepted/provisioned/completed, subscriptions activated/suspended/cancelled, bills issued/paid/disputed, tickets opened/triaged/resolved/closed, etc.). Config-shape exemption does not apply."
+    summary: "Author `data_object_lifecycle_states` for the 6 `operational_workflow` masters (B12)."
+    finding: "B12 HARD FAIL: zero lifecycle states on the workflow-bearing masters. entity_type is now classified (2026-06-07): 6 are `operational_workflow` (B12 applies), `telco_service_catalog` is `catalog` (B12 not required). Lifecycle states need `domain_module_id` per Rule #14, so this rides the build."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S2, reason: "lifecycle states need `domain_module_id` per Rule #14 permission materialization"}
       - {type: user_decision, ref: B2-5, reason: "pattern flag flips ride the same load"}
     affected_masters:
-      - {data_object_id: 653, name: telco_service_catalog, target_module_id: null, workflow: "draft -> published -> retired"}
-      - {data_object_id: 654, name: telco_service_orders, target_module_id: null, workflow: "submitted -> validated -> in_provisioning -> completed | cancelled"}
-      - {data_object_id: 655, name: telco_subscriptions, target_module_id: null, workflow: "pending -> active -> suspended -> cancelled"}
-      - {data_object_id: 656, name: service_provisioning_workflows, target_module_id: null, workflow: "queued -> executing -> completed | failed"}
-      - {data_object_id: 657, name: network_inventory_records, target_module_id: null, workflow: "planned -> deployed -> decommissioned"}
-      - {data_object_id: 658, name: telco_customer_bills, target_module_id: null, workflow: "draft -> issued -> paid | disputed | written_off"}
-      - {data_object_id: 659, name: service_trouble_tickets, target_module_id: null, workflow: "opened -> triaged -> in_repair -> resolved -> closed"}
+      - {data_object_id: 654, name: telco_service_orders, entity_type: operational_workflow, workflow: "submitted -> validated -> in_provisioning -> completed | cancelled"}
+      - {data_object_id: 655, name: telco_subscriptions, entity_type: operational_workflow, workflow: "pending -> active -> suspended -> cancelled"}
+      - {data_object_id: 656, name: service_provisioning_workflows, entity_type: operational_workflow, workflow: "queued -> executing -> completed | failed"}
+      - {data_object_id: 657, name: network_inventory_records, entity_type: operational_workflow, workflow: "planned -> deployed -> decommissioned"}
+      - {data_object_id: 658, name: telco_customer_bills, entity_type: operational_workflow, workflow: "draft -> issued -> paid | disputed | written_off"}
+      - {data_object_id: 659, name: service_trouble_tickets, entity_type: operational_workflow, workflow: "opened -> triaged -> in_repair -> resolved -> closed"}
 
   - id: B1B-S7
     summary: "Author 7 intra-domain `data_object_relationships` edges between the 7 masters (B6)."
     finding: "B6 fails: zero intra-domain master-to-master edges. Expected: `telco_service_orders fulfills_via service_provisioning_workflows`, `telco_subscriptions provisioned_by service_provisioning_workflows`, `telco_service_orders results_in telco_subscriptions`, `telco_subscriptions billed_by telco_customer_bills`, `telco_subscriptions occupies network_inventory_records`, `service_trouble_tickets references telco_subscriptions`, `telco_service_catalog defines telco_service_orders`."
     blocked_by:
-      - {type: user_decision, ref: B2-MODULARIZATION-SHAPE, reason: "verb tuples (verb, inverse_verb, type, kind, owner_side, is_required) are not pre-specified in the audit; need user confirmation before bulk load"}
+      - {type: user_decision, ref: B2-2, reason: "verb tuples (verb, inverse_verb, type, kind, owner_side, is_required) are not pre-specified in the audit; confirm before bulk load"}
 
   - id: B1B-S8
     summary: "Author 7 `users` edges to the 7 masters (Rule #10, B7)."
     finding: "B7 fails: zero `users` (id 748) edges on any of the 7 masters. Each carries at least one user-typed actor: order agent, billing specialist, network engineer, care agent, provisioning specialist, catalog manager, network inventory custodian."
     blocked_by:
-      - {type: user_decision, ref: B2-MODULARIZATION-SHAPE, reason: "exact `(verb, inverse_verb, type, kind, owner_side, is_required)` per master not pre-specified; needs confirmation"}
-
-  - id: B1B-S9
-    summary: "Author 5-7 `data_object_aliases` rows for the 7 masters (B11)."
-    finding: "B11 fails: zero aliases on any master. TM Forum SID labels are the candidate set."
-    blocked_by:
-      - {type: user_decision, ref: B2-6, reason: "wording approval required before insert"}
+      - {type: user_decision, ref: B2-2, reason: "exact `(verb, inverse_verb, type, kind, owner_side, is_required)` per master not pre-specified; needs confirmation"}
 
   - id: B1B-S10
     summary: "Backfill `handoffs.source_domain_module_id` on all 7 outbound rows (B10b)."
-    finding: "B10b fails on the source side: 7 of 7 outbound handoffs (927, 928, 929, 930, 931, 932, 933) have `source_domain_module_id=NULL`. Target side: 3 ITSM rows correctly carry `target_domain_module_id=38`; 4 (2 CSM, 2 ERP-FIN) carry NULL target FK (those are owed by CSM/ERP-FIN audits, not this domain's fix)."
+    finding: "B10b fails on the source side: 7 of 7 outbound handoffs (927-933) have `source_domain_module_id=NULL`. Target side: 3 ITSM rows correctly carry `target_domain_module_id=38`; 4 (2 CSM, 2 ERP-FIN) carry NULL target FK (owed by CSM/ERP-FIN audits, not this domain's fix)."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S2, reason: "no source module exists to attribute to until B1B-S2 lands"}
-    affected_handoffs:
-      - {handoff_id: 927, direction: outbound, source_domain: TELCO-BSS, target_domain: ITSM, trigger_event: service_trouble_ticket.opened, payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 928, direction: outbound, source_domain: TELCO-BSS, target_domain: ITSM, trigger_event: service_provisioning.failed, payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 929, direction: outbound, source_domain: TELCO-BSS, target_domain: ERP-FIN, trigger_event: telco_customer_bill.issued, payload: telco_customer_bills, null_field: source_domain_module_id}
-      - {handoff_id: 930, direction: outbound, source_domain: TELCO-BSS, target_domain: CSM, trigger_event: telco_subscription.suspended, payload: telco_subscriptions, null_field: source_domain_module_id}
-      - {handoff_id: 931, direction: outbound, source_domain: TELCO-BSS, target_domain: CSM, trigger_event: telco_service_order.completed, payload: telco_service_orders, null_field: source_domain_module_id}
-      - {handoff_id: 932, direction: outbound, source_domain: TELCO-BSS, target_domain: ITSM, trigger_event: network_inventory.updated, payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 933, direction: outbound, source_domain: TELCO-BSS, target_domain: ERP-FIN, trigger_event: telco_subscription.activated, payload: telco_subscriptions, null_field: source_domain_module_id}
 
   - id: B1B-S11a
     summary: "Resolve 2 trigger_events with no `handoffs` row: 1060 `telco_service_order.submitted`, 1068 `telco_service_catalog.updated`."
-    finding: "B9 partial: events 1060 and 1068 have zero handoffs. Either treat as leaf and justify (e.g. `order.submitted` plausibly fires only the internal provisioning workflow) or author cross-domain handoff(s) (CSM agent-training, CRM offer-sync for catalog updates)."
+    finding: "B9 partial: events 1060 and 1068 have zero handoffs. Either treat as leaf and justify (e.g. `order.submitted` plausibly fires only the internal provisioning workflow) or author cross-domain handoff(s) (CSM agent-training, CRM offer-sync for catalog updates). This is B2-7 (leaf-vs-new is a user judgment)."
     blocked_by:
-      - {type: user_decision, ref: B2-7-NEW-OR-LEAF, reason: "decide leaf vs new cross-domain rows; cross-domain rows also need B2-2 modularization to set `source_domain_module_id`"}
+      - {type: user_decision, ref: B2-7, reason: "decide leaf vs new cross-domain rows; cross-domain rows also need B2-2 modularization to set `source_domain_module_id`"}
     affected_events:
-      - {id: 1060, event_name: telco_service_order.submitted, current_category: state_change, proposed_category: state_change}
-      - {id: 1068, event_name: telco_service_catalog.updated, current_category: state_change, proposed_category: state_change}
+      - {id: 1060, event_name: telco_service_order.submitted, current_category: state_change}
+      - {id: 1068, event_name: telco_service_catalog.updated, current_category: state_change}
 
 b2:
   - id: B2-1
-    summary: "Em-dash present in `domains.business_logic` for TELCO-BSS (project rule forbids em-dashes)."
+    summary: "Em-dash present in `domains.business_logic` for TELCO-BSS (project rule forbids em-dashes). Destructive: overwriting a non-empty value."
     question: "Supply replacement wording for `business_logic`, or approve agent to draft and review per row?"
     options:
       - "User supplies exact replacement string"
       - "Agent drafts; user reviews and approves before PATCH"
-    why: "Project rule forbids em-dashes; current value contains U+2014 in `business_logic`. `description` is currently clean."
+    why: "Project rule forbids em-dashes; current value contains U+2014 in `business_logic`. `description` is clean. Overwriting a populated field is destructive and needs sign-off."
     extra_current_value: "Rating engine and online charging system — high-throughput algorithmic kernel; the rest is catalog, order, and customer records."
+    proposed_replacement: "Rating engine and online charging system: a high-throughput algorithmic kernel; the rest is catalog, order, and customer records."
 
   - id: B2-2
-    summary: "Modularization shape for TELCO-BSS (gates B1B-S2, B1B-S3, B1B-S6, B1B-S7, B1B-S8, B1B-S10, B1B-S11a)."
+    summary: "Modularization shape for TELCO-BSS (gates the entire build: B1A-BUILD, B1B-S1, B1B-S2, B1B-S6, B1B-S7, B1B-S8, B1B-S10, B1B-S11a)."
     question: "Pick one of three candidate module splits, or propose another. Also decide whether to rename the domain (OSS scope) or promote candidate TELCO-NMS separately."
     options:
       - "eTOM-aligned 7-module: TELCO-BSS-ORDER-MGMT, TELCO-BSS-CATALOG, TELCO-BSS-PROVISIONING, TELCO-BSS-INVENTORY, TELCO-BSS-BILLING, TELCO-BSS-ASSURANCE, TELCO-BSS-SUBSCRIPTIONS"
@@ -173,11 +148,11 @@ b2:
       - "Add all 6 as mandatory `domain_regulations` rows"
       - "Add CPNI + STIR/SHAKEN + CALEA mandatory, LNP + TCPA + SOX advisory"
       - "Skip; current EU-leaning set is sufficient"
-    why: "Pure-play US telco vendors universally surface these; current catalog leans EU."
+    why: "Pure-play US telco vendors universally surface these; current catalog leans EU. New `regulations` rows are a Phase-A market-shape addition the agent will not create unprompted (scope discipline)."
 
   - id: B2-4
-    summary: "Role personas to author with B1B-S2."
-    question: "Confirm subset of 6 candidate personas to author."
+    summary: "Role personas (B1A-PHASE-P): DEFERRED. Persona/RACI authoring is not done by the agent; this records candidates only."
+    question: "Confirm subset of 6 candidate personas to author when the build lands (multi-module only)."
     options:
       - "OPERATIONS-ORDER-MANAGER"
       - "OPERATIONS-NETWORK-ENGINEER"
@@ -185,112 +160,88 @@ b2:
       - "FINANCE-BILLING-SPECIALIST"
       - "MARKETING-CATALOG-MANAGER"
       - "OPERATIONS-PROVISIONING-SPECIALIST"
-    why: "E1 vacuous until M1 lands; persona set rides the B1B-S2 load."
+    why: "E1 vacuous until M1 lands; persona set rides the build. DEFERRED per Validate persona rule."
 
   - id: B2-5
-    summary: "Pattern-flag re-evaluation on the 7 masters (Rule #12 B4)."
-    question: "Which of 3 candidate flags to flip during the B1B-S6 load?"
+    summary: "Pattern-flag re-evaluation on the workflow masters (Rule #12 B4). Destructive: flips a default-false flag on a populated row."
+    question: "Which of 3 candidate flags to flip during the B1B-S6 build load?"
     options:
       - "telco_customer_bills.has_submit_lock=true (issued bill immutable)"
       - "service_trouble_tickets.has_personal_content=true (customer narratives)"
       - "telco_service_orders.has_submit_lock=true (submitted order locks before provisioning)"
-    why: "B4 audit must positively re-evaluate; default-false is not the same as false-after-review."
+    why: "B4 audit must positively re-evaluate; default-false is not the same as false-after-review. Flag flips are surfaced (judgment), not auto-applied."
 
-  - id: B2-6
-    summary: "Approve alias strings for B1B-S9 (B11 `data_object_aliases`)."
-    question: "Confirm or rewrite the 5 proposed alias rows."
-    options:
-      - "Product Offering Catalog (TM Forum SID) for telco_service_catalog"
-      - "Service Instance (TM Forum SID) for telco_subscriptions"
-      - "Customer Invoice for telco_customer_bills"
-      - "Trouble Report for service_trouble_tickets"
-      - "Resource Inventory for network_inventory_records"
-    why: "Aliases are buyer-facing; marketing may have wording preferences."
-
-  - id: B2-7-NEW-OR-LEAF
-    summary: "Decide whether events 1060 / 1068 are leaf or need new cross-domain handoffs."
+  - id: B2-7
+    summary: "Decide whether events 1060 / 1068 are leaf or need new cross-domain handoffs (= B1B-S11a)."
     question: "For trigger_event 1060 (`telco_service_order.submitted`) and 1068 (`telco_service_catalog.updated`), justify as leaf or author new cross-domain handoffs?"
     options:
       - "1060 leaf (fires only intra-domain provisioning); 1068 needs CSM + CRM cross-domain handoffs"
       - "Both leaf with explicit justification"
       - "Both need new cross-domain handoffs"
-    why: "B9 partial: 2 of 9 events have no handoff. Leaf classification needs explicit per-event justification."
+    why: "B9 partial: 2 of 9 events have no handoff. Leaf classification needs explicit per-event justification; new handoffs also need B2-2 modularization to set source_domain_module_id."
 
 b3:
   - id: B3-1
     candidate: usage_event_records
     rationale: "CDR / EDR / IPDR records produced by mediation and consumed by rating engines. The domain's `business_logic` names rating/charging as the substrate; the entities are absent."
-    vendor_evidence: [Amdocs CES, Ericsson Charging, Optiva]
     proposed_module: TELCO-BSS-BILLING
 
   - id: B3-2
     candidate: convergent_charging_sessions
     rationale: "Online-charging-system session state for real-time rating. Standard across mobile / convergent BSS."
-    vendor_evidence: [Ericsson OCS, Huawei OCS, Mavenir Charging]
     proposed_module: TELCO-BSS-BILLING
 
   - id: B3-3
     candidate: mediation_records
     rationale: "Network-to-billing data normalization records."
-    vendor_evidence: [DigitalRoute, Amdocs Mediation, Comarch]
     proposed_module: TELCO-BSS-BILLING
 
   - id: B3-4
     candidate: product_offering_bundles
     rationale: "TM Forum SID Product Offering split from Product Specification. Current `telco_service_catalog` collapses these."
-    vendor_evidence: [TM Forum SID, Amdocs Catalog, Netcracker Catalog]
     proposed_module: TELCO-BSS-CATALOG
 
   - id: B3-5
     candidate: tariff_plans
     rationale: "Distinct from catalog: pricing tier definitions referenced by subscriptions."
-    vendor_evidence: [Amdocs CES, Netcracker, Comarch, Blue Planet]
     proposed_module: TELCO-BSS-CATALOG
 
   - id: B3-6
     candidate: customer_quotes
     rationale: "Pre-order pricing artifact; bridges CPQ-like surface and order entry."
-    vendor_evidence: [Amdocs Order Care, Netcracker]
     proposed_module: TELCO-BSS-ORDER-MGMT
 
   - id: B3-7
     candidate: msisdn_inventories
     rationale: "Number inventory for any mobile or convergent operator."
-    vendor_evidence: [Amdocs, Netcracker, Comarch]
     proposed_module: TELCO-BSS-INVENTORY
 
   - id: B3-8
     candidate: sim_inventories
     rationale: "SIM + eSIM profile inventory for mobile operators."
-    vendor_evidence: [Amdocs, Netcracker, Truphone, Thales eSIM]
     proposed_module: TELCO-BSS-INVENTORY
 
   - id: B3-9
     candidate: port_in_requests
     rationale: "Local Number Portability workflow."
-    vendor_evidence: [iconectiv, TransUnion LNP admin, Amdocs, Netcracker]
     proposed_module: TELCO-BSS-ORDER-MGMT
 
   - id: B3-10
     candidate: equipment_swap_requests
     rationale: "Device upgrade workflow standard at mobile operators."
-    vendor_evidence: [Amdocs, Comarch]
     proposed_module: TELCO-BSS-ORDER-MGMT
 
   - id: B3-11
     candidate: dunning_cases
     rationale: "Collections and payment-arrangement workflow."
-    vendor_evidence: [Amdocs Collections, Netcracker, Comarch]
     proposed_module: TELCO-BSS-BILLING
 
   - id: B3-12
     candidate: qos_kpi_records
     rationale: "QoS / SLA-credit telemetry for assurance."
-    vendor_evidence: [Blue Planet, Cisco Crosswork, Nokia NSP]
     proposed_module: TELCO-BSS-ASSURANCE
 
   - id: B3-13
     candidate: revenue_assurance_alerts
     rationale: "Revenue assurance + fraud cases. May route to a queued TELCO-RAFM domain if user promotes it."
-    vendor_evidence: [Subex HyperSense, Mobileum WeDo, Araxxe, Neural Technologies]
     proposed_module: TELCO-BSS-ASSURANCE

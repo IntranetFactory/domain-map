@@ -291,3 +291,34 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate (Rule #21) over the open items in CLIN-DEV/state.yaml. CLIN-DEV (domain id 50) is UNBUILT: 0 domain_modules, 0 capability_domains. Per the UNBUILT rule the build (B1A-BUILD, gated on the B2-S2 module-split decision) is surfaced, not scaffolded, and the b1b cascade stays blocked. Two module-independent EXECUTE items were closed: B13 entity_type classification on all 7 masters, and the empty domain-grain catalog UX copy (Rule #20). Loader: [.tmp_deploy/2026-06-07_clin_dev_state_driven_execute.ts](../../.tmp_deploy/2026-06-07_clin_dev_state_driven_execute.ts). No JWT-audience errors.
+
+### Executed (counts)
+
+- **B13 entity_type (7 PATCHes):** data_objects.entity_type from 'unclassified' to Rule #12 enum. 610 medical_devices, 612 device_recalls, 613 clinical_engineering_work_orders, 614 device_calibration_records, 615 device_incident_reports, 616 sterilization_cycles -> `operational_workflow`; 611 device_maintenance_logs -> `operational_record` (per-PM maintenance records / regulatory audit trail; B12-exempt). All landed; record_status unchanged on the data_object rows (PATCH of a default-valued column).
+- **Catalog UX / A4 (Rule #20) (1 PATCH):** domains.id=50 catalog_tagline + catalog_description authored into the empty fields (buyer voice, no vendor names, no em-dash, American English). Row at record_status='new' for in-UI review. Module-grain catalog UX (B1B-M8) is N/A: 0 modules.
+
+### Surfaced (to user, returned this pass)
+
+- **B2-S1** (destructive): em-dash in domains.business_logic; replace with a comma or run a catalog-wide sweep; user picks wording.
+- **B2-S2**: module split (two-module INVENTORY + SAFETY-VIGILANCE / single CLIN-DEV-CORE / three-module incl. STERILE-PROCESSING). Gates B1A-BUILD and all b1b.
+- **B2-S3** (destructive): re-point business_function_domains owner row 257 off Research and Development to a hospital-side function, or re-scope to manufacturers.
+- **B2-S4** (overwrite of existing flags): pattern-flag positives on device_incident_reports / device_calibration_records / device_recalls; per-flag yes/no.
+- **B2-S5** (destructive option): manufacturer-vs-hospital scope; whether to remove manufacturer-only regulations.
+- **B2-S6** (destructive re-target): ITSM payload mismatch on handoffs 893 / 898 (service_incidents vs service_requests).
+- **B2-S11b**: APQC tag for handoff 894; PCF 37 (L2) vs 204 (L3); user pick (two candidates = no single clean match).
+- **B1A-S5b**: master-to-users symmetric edges NOT auto-inserted: the existing 8 users-to-master rows (653-660) already carry inverse_verb modeling the master-side view; separate reverse rows would double-count the same FK. Modeling judgment surfaced.
+- **B1A-BUILD**: the unbuilt-domain build, surfaced (gated on B2-S2), not scaffolded.
+
+### Left (not touched)
+
+- **b1b (B1B-S1, S2, S7, S8, S9, S10, M8):** all blocked on the B1B-S1 module build (which is gated on B2-S2). B1B-S9 narrowed: only the 6 operational_workflow masters need lifecycle states; device_maintenance_logs is now operational_record and B12-exempt.
+- **B1A-S11c (handoffs 896/897):** no clean cross-industry PCF anchor; deferred to Discover Pass 3 custom-process authoring (report-only).
+- **B1A-S3 (Phase A solutions/vendors floor):** part of the build of an unbuilt domain; surfaced with the build, not auto-loaded (SCOPE DISCIPLINE: no new vendors/solutions this pass).
+- **B1B-S10 skill grain:** per-module skill authoring is RETIRED (supersession header / Plan 3); reframed as the single domain-grain system skill deriving its toolset once modules ship; skill_tools migration tracked in audits/_modularization-backlog.md.
+- **b3 (B3-DEVICE-MODELS, B3-DEVICE-LOCATIONS, B3-DEVICE-SERVICE-CONTRACTS, B3-RECALL-EFFECTIVENESS):** discretionary additive backlog; never gates finished.

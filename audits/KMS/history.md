@@ -441,3 +441,48 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass over the open items in `audits/KMS/state.yaml`; no fresh from-scratch audit. KMS remains UNBUILT (0 `domain_modules`, 1 capability), so the module build (B1A-BUILD / B1B-S1) was surfaced not scaffolded and the M/F/B10b cascade was left. All EXECUTE-class additive/corrective items were run idempotently (verify-live-then-write); destructive and judgment items were surfaced. Loader: [.tmp_deploy/2026-06-07_kms_state_driven_execute.ts](../../.tmp_deploy/2026-06-07_kms_state_driven_execute.ts).
+
+### Executed (counts)
+
+| Item | Action | Rows |
+|---|---|---|
+| B1A-S6 | Corrective normalization on `domains` row 33: replaced the U+2014 em-dash in `business_logic` ("corpus, vector embeddings") with a comma; fixed British "organisational" -> "organizational" in `description`. Meaning preserved; not a content overwrite. | 1 PATCH (2 fields) |
+| B1A-S7 | PATCH `event_category` on the 8 KMS-master-source `trigger_events`: 754, 755, 756, 757, 758, 761 -> `lifecycle`; 759 (`article_feedback.negative`) and 760 (`knowledge_search_query.no_result`) -> `signal`. | 8 PATCHes |
+| B1B-B11 | INSERT generic-synonym `data_object_aliases` on the 6 masters (alias_type='synonym', record_status omitted -> 'new'): 410 KB Article / Support Article / Help Center Article / Wiki Page; 411 KB Taxonomy / Category / Topic; 412 Article Version / Draft / Edit History; 413 Article Rating / Helpfulness Vote; 414 KB Search / Help Search Query / Knowledge Lookup; 415 KB Space / Playbook / Knowledge Pack. | 18 INSERTs |
+| B12 / Rule #12 | PATCH `data_objects.entity_type` off `unclassified`: 410 -> operational_workflow (full lifecycle), 413 -> operational_workflow (submitted/triaged/closed), 411 -> catalog (taxonomy), 415 -> catalog (curated grouping), 412 -> operational_record (version trail), 414 -> operational_record (append-only search stream). None now require lifecycle states they lack, so B2-7 stays an optional user call. | 6 PATCHes |
+| A4 / Rule #20 | Backfilled empty `catalog_tagline` + `catalog_description` on `domains` row 33 with neutral buyer-voice copy (workflow + value, no vendor names, no em-dash, American English). Corpus-neutral, does not pre-commit the B2-1 routing. No module-level UX exists (0 modules). | 1 PATCH (2 fields) |
+
+All inserts use `record_status` omitted (default 'new', Rule #1). No `notes` written (Rule #15). No flip to approved.
+
+### Surfaced (for user)
+
+- **B2-1** (b2): canonical ownership of the knowledge-article concept, KMS canonical (a) vs per-domain canonical (b) vs hybrid two-tier (c). Gates the module build and the M7-dual resolution.
+- **B2-2** (b2): catalog UX copy is now WRITTEN (corpus-neutral). A re-pivot to an analytics-layer voice if B2-1 routes to (b) is an overwrite of a non-empty value and needs approval.
+- **B2-3** (b2): capability expansion, pick 5-8 of 8 KM-* codes.
+- **B2-4** (b2): regulations scope, ISO 30401 (recommended) / GDPR / HIPAA / SEC 17a-4 / FERPA.
+- **B2-5** (b2, destructive): APQC tag override on handoff 826, retire the discovery_substring PCF-14095 row (flip to rejected) or leave both pending review.
+- **B2-6** (b2, destructive flag): flip `knowledge_search_queries.has_personal_content` false -> true (Rule #15, never auto-flipped).
+- **B2-7** (b2): optional lifecycle states on `article_revisions` and `knowledge_collections` now that entity_type is classified (states no longer required, user owns whether to add).
+- **B1B-M7-DUAL** (destructive): id 51 (ITSM-KNOWLEDGE) vs id 410 (KMS) dual canonical masters of the same concept; resolution (DELETE a master / rename / re-point handoffs) gated on B2-1, not executed.
+- **B1B-H1-APPROVE** (destructive): 17 `handoff_processes` rows across the 13 KMS-touching handoffs sit at record_status='new'; approval flip is the user's per-row call (Rule #1).
+- **B1A-BUILD / B1B-S1** (build): KMS is UNBUILT; the module build is gated on B2-1 and surfaced per the UNBUILT discipline, not scaffolded.
+- **Personas / RACI (Phase P)**: DEFERRED. Not authored. Candidate personas once built and if multi-module: Knowledge Author, Knowledge Steward / SME, Knowledge Manager (a cross-domain enterprise-knowledge persona is currently missing across the ITSM / HRSD / CSM knowledge modules).
+
+### Left (untouched)
+
+- **B1B-S4-CCAAS** (b1b blocked): outbound edge knowledge_base_articles -> assists -> contact_center_agents waits on CCAAS enumerating the `contact_center_agents` master.
+- **B1B-S1 affected handoffs/masters** (cascade): all 13 KMS-side handoff B10b NULL FKs and the 6 masters' module FKs resolve only when the module build lands (gated on B2-1).
+- **B3-1 .. B3-4** (b3 backlog): knowledge_owners, knowledge_subscriptions, article_verification_cycles, search_synonyms / search_dictionaries; vendor-vetting + B2-1 gated. B3-4 also gated on the ENTERPRISE-SEARCH candidate triage in `audits/_missing-domains.md`.
+
+### UI links (tables written)
+
+- https://tests.semantius.app/domain_map/domains
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/data_object_aliases

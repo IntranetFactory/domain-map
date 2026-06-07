@@ -350,3 +350,83 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21) over the open items in
+`audits/ONBOARDING/state.yaml`. No fresh from-scratch audit. Each recorded item
+was refreshed against live before acting (domain id 99; masters 15-22; modules
+35 / 36 / 37). The snapshot was materially stale on APQC coverage: 6 of the 10
+handoffs the 2026-05-31 snapshot listed as untagged / mis-tagged already carry
+clean `agent_curated` rows (handoffs 2, 410, 411, 1074, 1231), so the APQC item
+collapsed to one clean INSERT plus four destructive REPLACEs. C1
+(business_function_domains owner + contributor) and B11 (16 aliases on 8 masters)
+were verified already satisfied; no work needed.
+
+Loader: `.tmp_deploy/2026-06-07_onboarding_state_execute.ts` (run via `bun run`,
+idempotent, re-run confirmed 0 writes). All new content at `record_status='new'`.
+
+### Executed (additive / corrective, record_status='new')
+
+| Item | Action | Rows |
+|---|---|---|
+| B1A-ENTITY-TYPE | PATCH 8 masters `entity_type` unclassified -> `operational_workflow` (Rule #12; every master carries a multi-state lifecycle with active transition states) | 8 |
+| B2-CATALOG-UX (domain, Rule #20) | PATCH domain 99 `catalog_tagline` + `catalog_description` (buyer-voice, no vendor names) | 1 |
+| B2-CATALOG-UX (modules, Rule #20) | PATCH modules 35 / 36 / 37 `catalog_tagline` + `catalog_description` | 3 |
+| B1A-APQC (clean INSERT) | INSERT `handoff_processes` handoff 1233 (ONB cohort.activated -> LMS) -> PCF 1039 "Develop, conduct, and manage employee training programs" (10493), `agent_curated` / `implements` | 1 |
+
+Total: 13 writes (12 PATCH + 1 INSERT).
+
+### Surfaced (user decision / destructive; NOT applied)
+
+- **B1A-APQC-REPLACE (destructive).** 4 handoffs carry wrong / coarse APQC tags;
+  correcting them overwrites a non-empty `handoff_processes` row (REPLACE):
+  handoff 3 (HCM->ONB employee.created) row 34 -> PCF 41 L2 coarse;
+  handoff 7 (ONB->PAYROLL journey.day_one_reached) row 149 -> PCF 1814 "Create
+  customer journey maps" (CRM, wrong);
+  handoff 8 (ONB->LMS task.compliance_training_required) row 17 -> PCF 224 coarse
+  (recommended PCF 1039 to match the 1233 tag);
+  handoff 394 (ATS->ONB candidate.hired) row 68 -> PCF 220 "Recruit/Source
+  candidates" (wrong side). Recommended replacements noted in state.yaml; user
+  sign-off required.
+- **B2-NOTES-POLLUTION (destructive revert).** 31 rows carry populated `notes`
+  (6 deprecated `domain_data_objects`, the retired `skill_tools` subset, 9
+  `handoffs`). Reverting to empty is destructive; user picks leave / revert /
+  per-row. The `skill_tools` subset is retired under the 2026-06-06 supersession.
+- **B2-PATTERN-FLAGS (b2 judgment).** 3 proposed flips (journeys
+  has_submit_lock / has_single_approver, tasks has_submit_lock) overwrite
+  existing `false` values; workflow-shape judgments the user owns.
+- **B2-WORKFLOW-GATE-VERBS (b2 judgment).** Per-state verbs for 22 lifecycle
+  states; authoring from state_name alone reproduces the ATS B12 bug.
+- **B1A-SELF-CONTAIN / M9 (destructive role/necessity rewrite).** 4 DMDO rows on
+  ONB-JOURNEY-MGMT (asset_lifecycle_events, candidates, hardware_assets,
+  service_requests) break self-containment; rewriting role/necessity is
+  destructive; surfaced.
+- **B1A-PHASE-P (personas DEFERRED).** Multi-module domain with 0 post-Plan-3
+  personas. Not agent-authored. Candidate personas: Onboarding Coordinator,
+  Onboarding HR Partner, Onboarding Program Manager, Hiring Manager.
+
+### Left (untouched)
+
+- **b1b blocked:** B1B-WORKFLOW-GATE-PERMISSIONS (blocked by
+  B2-WORKFLOW-GATE-VERBS), B1B-DOWNSTREAM-CONSUMER-DMDOS (owed by ITSM / IGA /
+  HRSD / IWMS / LMS / PAYROLL / EMP-EXP audits, report-only).
+- **b3 backlog:** B3-PRIOR (7 unvetted entity candidates + 3 regulation
+  candidates).
+- **Superseded:** per-module skill-grain / `skill_tools` items remain CANCELED
+  under the 2026-06-06 supersession header; reframed as notes, not reopened.
+
+### JWT errors
+
+None.
+
+### UI links (tables written)
+
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/domains
+- https://tests.semantius.app/domain_map/domain_modules
+- https://tests.semantius.app/domain_map/handoff_processes

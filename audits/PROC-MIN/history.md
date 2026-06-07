@@ -253,3 +253,41 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+Loader: [.tmp_deploy/fix_proc_min_audit_2026_06_07.ts](../../.tmp_deploy/fix_proc_min_audit_2026_06_07.ts). Run from project root `c:/dev/domain-map`. Idempotent, additive/corrective only, everything at `record_status='new'` (or omitted to take DB default). State-driven pass over the open items in state.yaml; no fresh from-scratch audit.
+
+### Summary
+
+PROC-MIN is still pre-modular (0 `domain_modules`, 0 `capability_domains`) and master-bearing (6 real domain-owned masters; overlay test: it persists records no other domain masters, so it is unbuilt, not derive/overlay). Per Rule #21 the cascade was left and the build surfaced, NOT scaffolded. Three EXECUTE write-types landed; the rest of the backlog is either user-gated (b2), blocked on the Phase-A build (b1b), destructive (surfaced), or retired by the 2026-06-06 supersession.
+
+### Executed (additive/corrective, record_status='new')
+
+- **B13 / Rule #12 entity_type classification (6 PATCHes).** All 6 masters were `unclassified`. Classified deterministically from description + drafted lifecycle: event_logs (579) -> `operational_workflow`; discovered_process_models (580) -> `computed`; process_conformance_results (581) -> `computed`; process_variants (582) -> `computed`; process_bottleneck_findings (583) -> `operational_workflow`; business_rules_extracted (584) -> `operational_workflow`. Side effect: B12 now hard-requires lifecycle states on the 3 operational_workflow masters, and the 3 computed masters now PASS B12 without states (this resolves the old B2-VARIANT-CONFIG question in favor of no-lifecycle for process_variants via the typed column). Verified live.
+- **A4 / M8 / Rule #20 catalog UX (2 fields on domain row 40).** `catalog_tagline` and `catalog_description` were both empty. Authored buyer-voice copy (workflow + value, no vendor names, no em-dash, American English) and wrote it in per the Rule #21 catalog-UX EXECUTE policy (the stale surface-before-write gate ignored; non-empty values are never overwritten). Verified live.
+- **B11 data_object_aliases (13 inserts, alias_type='synonym', industry_id null).** Zero aliases existed; inserted clearly-enumerated generic synonyms (no vendor product names, Rule #18): event_logs (Activity Log, Event Stream, Process Case Log); discovered_process_models (As-Is Process Model, Mined Process Model); process_conformance_results (Conformance Check, Conformance Diagnostic); process_variants (Case Variant, Execution Path Variant); process_bottleneck_findings (Bottleneck Insight, Process Bottleneck); business_rules_extracted (Mined Business Rule, Inferred Business Rule). All at record_status='new'. Verified live.
+
+### Surfaced (returned to user, not executed)
+
+- **B1A-H1-742 (APQC tag for handoff 742).** Live PCF search 2026-06-07 reconfirmed no clean L3 match for business-rule extraction. Per the Rule #21 EXECUTE policy (no clean match -> defer-to-Discover), the agent did not force a weak tag. User picks: leave untagged + route to Discover, or assign a best-effort agent_curated row -> process 78 to match the 4 sibling PROC-MIN->BPA handoffs.
+- **B1A-BUILD (unbuilt domain).** Phase-A build owed (modules + capabilities). Cascade left intact; not scaffolded.
+- **B2-MODULARIZATION / B2-CAPABILITIES / B2-NAMING-RULES / B2-PATTERN-FLAGS / B2-EM-DASHES.** All user-judgment decisions carried forward.
+- **Destructive items (user-gated):** B2-PATTERN-FLAGS flips (overwrite existing false booleans), B2-EM-DASHES (overwrite non-empty business_logic / description cells). Recommended fixes recorded; not applied.
+- **Personas / RACI (Phase P).** Deferred; not authorable until the multi-module build lands. Candidate roles noted: process-mining-analyst, process-improvement-lead, conformance-analyst, ingestion-engineer.
+
+### Left (untouched)
+
+- **b1b items blocked on the Phase-A build:** S-band, A2-capabilities, M-band, B6 intra-rels, B8 cross-rels, B10b backfill (also owed-by-BPA), B12 lifecycle (now required for the 3 operational_workflow masters but blocked on module attribution), C1 contributor/consumer expansion (editorial), E-band roles.
+- **B1B-F-BAND-SUPERSEDED:** the old F1/F2/F3/F5 per-module system-skill items are RETIRED by the 2026-06-06 supersession; skill 91 (domain_id=40, domain_module_id=NULL) is the correct ONE domain-grain system skill under the new model, not a transitional artifact to delete. Reframed as a note; supersession header preserved.
+- **b3 backlog:** 8 candidate entities (data_source_connections, event_log_extractions, event_log_quality_findings, process_kpis, improvement_opportunities, process_automations, compliance_controls_evaluations, process_benchmarks) plus the TASK-MINING candidate. Speculative, Phase-0 vetting owed.
+
+### UI links (tables written)
+
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/domains
+- https://tests.semantius.app/domain_map/data_object_aliases
+
+### Post-fix status
+
+`next_action_by: user` (the remaining backlog is gated on the B2 modularization/capability decisions and the Phase-A build; no further unblocked agent-executable additive work remains this pass).

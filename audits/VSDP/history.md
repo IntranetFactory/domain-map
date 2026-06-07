@@ -446,3 +446,47 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass over the open items in `state.yaml` (no fresh from-scratch audit). VSDP confirmed still UNBUILT: domain id 80, 0 `domain_modules`, 0 `capability_domains`. Per Validate-mode UNBUILT handling, the agent executed every additive/corrective item that does NOT depend on modules, surfaced the build + user-decision queue, and left the module-gated cascade in place. Loader: [.tmp_deploy/vsdp_state_execute_2026_06_07.ts](../../.tmp_deploy/vsdp_state_execute_2026_06_07.ts). All writes landed at `record_status='new'`; no DELETE, no overwrite of a non-empty value, no `approved` flip.
+
+### Executed (counts)
+
+| Item | Action | Count | Detail |
+|---|---|---|---|
+| entity_type (B13, Rule #12) | PATCH `data_objects.entity_type` unclassified -> enum | 8 | 676 source_repositories=operational_record, 677 code_commits=operational_record, 678 pull_requests=operational_workflow, 679 ci_pipelines=catalog, 680 ci_pipeline_runs=operational_workflow, 681 build_artifacts=operational_record, 682 software_deployments=operational_workflow, 683 value_stream_metrics=computed. Resolves the config-shape lifecycle-exemption surface (B1B-S7 / B2-7 leg) structurally. |
+| Catalog UX (B1A-A4, Rule #20) | PATCH `domains` catalog_tagline + catalog_description | 2 | Buyer-voice copy authored on the VSDP domain row (both were empty). No module copy: 0 modules. No vendor names, no em-dash, American English. |
+| Aliases (B1B-B3 generic subset, B11) | INSERT `data_object_aliases` (alias_type='synonym') | 11 | source_repositories (Code Repositories, Repositories), pull_requests (Merge Requests, Change Requests), ci_pipelines (Pipelines, Build Pipelines), ci_pipeline_runs (Pipeline Runs, Build Runs), build_artifacts (Artifacts), value_stream_metrics (DORA Metrics, Flow Metrics). Vendor-keyed `solution_term` aliases deferred to B2-2 (need solution_id). |
+| business_function_domains (C1) | INSERT additive rows on the 20-function spine | 3 | Software Engineering (id 26, contributor), Security (id 28, contributor), Product Management (id 25, consumer). Existing owner Platform Engineering (id 60, sub-function of Software Engineering) left untouched. Total bfd rows on VSDP now 4. |
+
+APQC (H1): no new VSDP-owed work. The 9 outbound `handoff_processes` rows were authored 2026-05-31; the 10 inbound tags are owed by the source domains (OBS, APIM, APP-PAAS, KUBE-PLAT, TEST-MGMT, SPM, IPAAS) per report-only routing, and are also module-gated on the VSDP target FK side (B1B-B2).
+
+### Surfaced (user-decision / destructive — written verbatim into state.yaml b2)
+
+- **B2-1 module shape (THE BUILD GATE):** monolith VSDP-PLATFORM vs 2-split vs 4-split vs monolith+starter. Gates B1A-S2, B1A-BUILD, and every b1b item.
+- **B2-2 solutions inventory:** which flagship vendors, coverage_level, roll-up vs separate. Also gates the deferred `solution_term` alias subset (B1B-B3 remainder).
+- **B2-3 TEST-MGMT boundary** (test_runs mastery + row-409 owner_side).
+- **B2-4 KUBE-PLAT/APP-PAAS boundary** (software_deployments role=master vs derived).
+- **B2-5 Bitbucket/Bamboo same-load** addition.
+- **B2-6 regulations scope** on VSDP.
+- **B2-7 pattern-flag flips (DESTRUCTIVE structured-column write):** build_artifacts.has_submit_lock and software_deployments.has_single_approver. Recommended, NOT applied. The config-shape lifecycle-exemption leg of B2-7 is now resolved structurally by the entity_type classification above.
+- **Personas / RACI (Phase P):** DEFERRED. Not authored. Candidate personas once built (multi-module path): Developer (IC), Release Manager, Platform/DevOps Engineer, Site Reliability Engineer (read), Security Reviewer.
+
+### Left (untouched)
+
+- **b1b cascade (B1B-S1/S3/S4/S7/B1/B2/B4):** all blocked on B1B-S1 (the build), which is gated on B2-1. Per UNBUILT handling the build was surfaced, not scaffolded.
+- **B1B-S5:** SUPERSEDED by the 2026-06-06 per-domain-skill restoration (reframed as a note in state.yaml; supersession header retained). Skill id 119 vsdp-system already matches the domain-grain shape; residual kebab-name/skill_tools cleanup tracked in `audits/_modularization-backlog.md`, not a VSDP audit item.
+- **b3 backlog (B3-1..B3-15):** 15 discretionary entity candidates, several gated on candidate-queue domain promotions (FEATURE-FLAGGING, ARTIFACT-REGISTRY, APPSEC-ORCH, SUPPLY-CHAIN-SEC). Non-blocking ideas.
+
+### Post-fix status
+
+`next_action_by: user` (was `agent`). The agent-executable additive/corrective surface is now exhausted; everything remaining is the B2-1 build decision and its cascade. `last_audit: 2026-06-07`.
+
+UI links for tables written:
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/domains
+- https://tests.semantius.app/domain_map/data_object_aliases
+- https://tests.semantius.app/domain_map/business_function_domains

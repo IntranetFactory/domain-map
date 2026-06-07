@@ -392,6 +392,34 @@ The two changes are paired, not independent: Phase 0 prevents the failure at loa
 
 ---
 
+## 2026-06-06 — Review/audit executes fixes; only report/check is read-only (Rule #21)
+
+**Context.** The Validate mode was defined as read-only: an audit wrote agent-solvable items into `b1a` and stopped, so reviewed domains came back as to-do lists nobody executed. A catalog-wide check found ~118 of 151 domains sitting on un-run `b1a` (most created by the late-May / early-June per-domain audits and never executed). The user pushed back hard: requesting a "review" or "audit" changed nothing.
+
+**Decision.** Added SKILL.md Rule #21. "review / audit / validate / finish X" now EXECUTES every additive/corrective fix (`b1a`) in the same pass, landing rows at `record_status='new'`; a reviewed domain ends either agent-finished or waiting-on-user. "report / check / check only" is the only read-only mode. Destructive steps (DELETE, overwrite a non-empty value, replace/restructure) are never executed unapproved on ANY table (skills are not special; the action is what matters, not the table). `b3` and new-domain candidates are non-blocking ideas that never gate "finished"; `b3` is never a split (a new/split module, split/new domain, or moving a master between domains is a `b2`). "Finished" = `b1a` done AND no open `b2` AND no pending destructive approval.
+
+**Reasoning.** The defect was a definition, not a one-off: diagnosis and execution were split and only diagnosis ran. Rule #1 (never stamp `approved`) is preserved by leaving fixes at `record_status='new'`, so the user still reviews the result in-record; the chat-gate on agent-solvable work was needless friction. The additive/destructive boundary replaces the earlier ad-hoc "be careful with skills" framing surfaced during this session: an unapproved destructive action is the violation regardless of table.
+
+**Scope.** Catalog-wide; changes the Validate-mode contract. Rule #21 explicitly overrides every "audit is read-only / never auto-load / triage-list / surface before fixing" passage in SKILL.md and `references/` (those now describe report/check only). Mirrored in `CLAUDE.md` and `audits/README.md` (b3 reclassification + `next_action_by` execution contract).
+
+**Status.** active.
+
+---
+
+## 2026-06-06 — Read `state.yaml` FIRST on any review; live queries never lead
+
+**Context.** On a "review DCG, PSA, SUB-MGMT" request the agent's first action was live PostgREST band queries (a fresh from-scratch audit) instead of opening each `audits/<DOMAIN>/state.yaml`. The three domains already had a full 2026-05-31 triage committed (open `b1a`/`b1b`/`b2`/`b3`). The user pushed back hard: the whole point of `state.yaml` is that a review continues from it, not re-derives the audit from zero. Damage was limited to wasted reads this time, but the general failure mode is duplicated triage and re-opening settled `b2` decisions.
+
+**Decision.** Added a Step 0 to the Validate "Audit recipe — structural pass": for any review / audit / validate / finish of an EXISTING domain, the first action is to read `audits/<DOMAIN_CODE>/state.yaml` (and skim `history.md`) BEFORE any live query. Live queries come next, only to verify/refresh the recorded worklist items against current state. When state exists, drive execution from its worklist. The only mode that skips state is an explicitly-requested "fresh audit" (regenerate state from scratch).
+
+**Reasoning.** The defect was a sequencing/precedence error rooted in conflating "read the existing state" (the committed worklist) with "query live." The audit recipe started at "Resolve DOMAIN_CODE to id" with no read-state step, so nothing forced the right order. The committed worklist is the cheap, authoritative entry point; live PostgREST is for verification, not discovery, when a prior triage exists.
+
+**Scope.** Catalog-wide; Validate-mode entry sequencing. Complements the README `state.yaml` execution contract and Rule #21 (review executes fixes) — Step 0 governs where a review STARTS; Rule #21 governs what it DOES.
+
+**Status.** active.
+
+---
+
 # Incidents
 
 Append one entry per occurrence. Used by SKILL.md Rule #15 — the agent MUST log here when notes have been written without user approval, AND revert the writes, AND propose a SKILL.md edit that removes whatever passage rationalized the violation.

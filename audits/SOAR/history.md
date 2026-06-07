@@ -290,3 +290,78 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate (SKILL.md Rule #21), working only the open items in
+`audits/SOAR/state.yaml`. No fresh from-scratch audit. Resolved domain id 12
+(parent SECOPS id 11) and re-verified every recorded item against live before
+acting. Overlay test confirms SOAR is master-bearing (playbooks, automation
+runs, security cases are real records), but the domain is UNBUILT: live
+2026-06-07 reads show 0 domain_modules (M1 fail), 0 capability_domains,
+0 skills, 0 domain_data_objects, 0 handoffs (in/out), 0 trigger_events, and it
+masters ZERO data_objects of its own (security_playbooks / automation_runs /
+security_cases / security_incidents do not exist). Owning function is Security
+Operations Center (business_functions id 64 = "Security"); the owner
+business_function_domains row (id 94, role 'owner') already exists, so the C1
+owner row is a no-op. Per the UNBUILT rule the build is SURFACED, not
+scaffolded, and the M/B/F/H cascade is LEFT.
+
+### Executed (additive/corrective, record_status='new')
+
+- **B1-S2 / A4 catalog UX (Rule #20):** authored buyer-voice `catalog_tagline`
+  + `catalog_description` into the two EMPTY fields on domains id 12 (workflow +
+  value, no vendor/product names per Rule #18, no em-dash, American English).
+  The prompt's EXECUTE rule overrode the stale surface-before-write gate (B2-S4)
+  and Rule #20's per-row-approval gate. 1 domain row patched (empty fields only;
+  no non-empty value overwritten). B2-S4 is thereby resolved and dropped.
+- **B1-S3 / B11 domain_aliases:** inserted 8 vendor-neutral synonym rows on
+  domain_id=12 (security orchestration; security automation; playbook
+  automation; SOC automation; hyperautomation for SOC; security orchestration
+  automation and response; incident response automation; playbook orchestration),
+  `alias_type='synonym'`, `record_status='new'` (ids 24-31). Idempotent on
+  (domain_id, alias); 0 existed.
+
+Loader: `.tmp_deploy/2026-06-07_soar_state_driven_execute.ts` (Rule #4b,
+chunked insert + stdin idiom).
+
+### Surfaced (NOT written; need user decision or sign-off)
+
+- **B1A-RULE-EMDASH (DESTRUCTIVE):** `domains.business_logic` for id 12 still
+  contains a U+2014 em-dash. Recommended fix (apply on approval): PATCH to
+  "Playbook DSL runtime that executes orchestrated steps across security tools.
+  The engine IS the product, even if individual steps are declarative." Overwrites
+  a non-empty value, so not auto-applied.
+- **B2-S1:** C1 ownership: add Risk and Compliance contributor and/or IT
+  Operations consumer beyond the sole SOC owner? (a/b/c/d).
+- **B2-S2:** record SEC 8-K cyber-incident disclosure + state breach-notification
+  statutes as domain_regulations on SOAR? (a/b/c/d).
+- **B2-S3 (keystone):** Phase 0 vendor research vs eyeball-mode before the
+  Phase-A build? (a/b/c). Gates the whole build cascade.
+- **B1A-BUILD / B1A-RECLASS:** SOAR is master-bearing and UNBUILT; the Phase A->M->B->S
+  build is surfaced (precision gated on B2-S3), not scaffolded this pass.
+- **Personas / RACI (Phase P):** deferred (UNBUILT; only applies after a
+  multi-module build lands). Candidate personas not authored.
+
+### Left (untouched)
+
+- **b1b cascaded on the build:** B1-S1 (modules + capabilities, gated on B2-S3),
+  B1-S4 (trigger_events), B1-S7 (lifecycle states), B1-S8 (APQC handoff_processes,
+  vacuous: 0 handoffs).
+- **b1b owed by other domains:** B1-S5 publisher-side fan-out of handoffs
+  280/282/284 (DLP) and 287/290 (DATA-SEC) into SOAR modules once they exist.
+- **Superseded:** B1-S6 reframed from per-module system skills to the ONE
+  domain-grain system skill + domain_module_tools model (supersession header
+  retained). No per-module skills authored.
+- **Meta:** B1-S9 record_status discipline reminder (no live target). b3 empty.
+
+### UI links (tables written)
+
+- https://tests.semantius.app/domain_map/domains?id=eq.12
+- https://tests.semantius.app/domain_map/domain_aliases?domain_id=eq.12
+
+### JWT errors
+
+None this pass.

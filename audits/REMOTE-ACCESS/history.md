@@ -534,3 +534,82 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate over REMOTE-ACCESS's open state.yaml items only (no fresh from-scratch
+audit). Resolved domain id 132, modules REMOTE-ACCESS-SESSION (294) + REMOTE-ACCESS-RECORDING-AUDIT
+(295), masters remote_sessions (238) + session_recordings (239) against live before any write.
+Owning function confirmed: IT Operations (owner) per the domain description and existing
+business_function_domains rows. Two additive/corrective EXECUTE items landed; everything else is
+blocked on a user decision (b2) or another domain (B1B-B8 GRC masters) or is b3 backlog.
+
+Loader: `.tmp_deploy/remote_access_state_audit_2026_06_07.ts` (run from project root via `bun run`,
+idempotent, re-run is a clean no-op).
+
+### Executed (2 write types, 10 rows)
+
+- **entity_type classify (Rule #12 / B13), 2 PATCH.** Both masters were `unclassified`; both are
+  live operational-workflow records (sessions: requested -> ... -> ended; recordings: recording ->
+  ... -> expired). PATCHed 238 + 239 `unclassified` -> `operational_workflow`. Prior value
+  `unclassified` on each. This is an additive/corrective classify (null/unclassified -> enum), not a
+  destructive overwrite. Consequence: B12 (lifecycle states) and B4 (pattern-flag re-eval) are now
+  HARD obligations on both masters, but each still gates on a user pick (B2-S2 / B2-S3), so they
+  stay open as B1B-B12 / B1B-B4.
+- **data_object_aliases (B1A-B11), 8 INSERT.** Reclassified from the prior "surface-before-write"
+  gate to EXECUTE per Rule #21's additive boundary (aliases are agent-executable additive work) and
+  the run's B11 directive (insert clearly-enumerated generic synonyms). All vendor-neutral
+  (Rule #18 OK), `alias_type='synonym'`, `is_preferred=false`, `record_status` defaulted to `new`,
+  `notes` never written (Rule #15). New ids:
+  - remote_sessions (238): 1598 "support sessions", 1599 "attended sessions",
+    1600 "unattended sessions", 1601 "remote control sessions".
+  - session_recordings (239): 1602 "support recordings", 1603 "compliance recordings",
+    1604 "audit recordings", 1605 "session capture".
+
+### Confirmed already-done (no write needed)
+
+- **Catalog UX (Rule #20):** `catalog_tagline` + `catalog_description` non-empty on the domain row
+  (132) AND on both modules (294, 295), filled 2026-06-06. Empty-guard not satisfied; no overwrite.
+- **C1 business_function_domains:** populated (272 IT Operations owner, 273 Customer Service
+  contributor, 274 Security contributor).
+- **H1 handoff_processes:** all 7 cross-domain handoffs already tagged (ids 186/403/404/405/406/407/408,
+  proposal_source='agent_curated', role='implements', record_status='new'). No untagged handoff with
+  a clean PCF match remained to insert. Approving them to flip the quality headline is B2-H1 (a
+  flip-to-approved, Rule #1 -> surfaced, not executed).
+- **B9 event_category:** verified valid (653/654 state_change, 655/113 signal). No-op.
+
+### Surfaced (decision or destructive; NOT written)
+
+- **B1A-B6** (intra-domain rel remote_sessions produces session_recordings): blocked on cardinality
+  pick (one_to_one for 1:0..1 vs one_to_many for 1:N segmented recordings). One INSERT on user pick.
+- **B2-S1** master split (one master + session_mode vs attended/unattended split).
+- **B2-S2** lifecycle-state shape + per-gate (now unblocks a REQUIRED B12 write on answer).
+- **B2-S3** pattern-flag positive re-eval (drives B1B-B4).
+- **B2-S4** regulation scoping HIPAA / PCI-DSS / SOX (drives B1B-REG).
+- **B2-H1** approve the 7 agent_curated handoff_processes rows (flip to approved; Rule #1).
+- **Personas / RACI (Phase P):** none authored this run (Validate mode defers Phase P). Candidate
+  personas if/when authored: remote-support technician, unattended-access administrator, compliance /
+  recording auditor, security reviewer.
+
+### Left
+
+- **B1B-B4 / B1B-B12 / B1B-REG** blocked on user decisions B2-S3 / B2-S2 / B2-S4.
+- **B1B-B8** cross-domain rels: ITSM/MSP-PSA edges authorable but the GRC-targeted edges block on
+  B3 GRC target masters (Phase 0 pending); kept whole as one blocked item.
+- **B3-S1..S9** Phase-0 vendor-research candidate masters (endpoint_devices, endpoint_groups,
+  access_policies, privilege_elevations, file_transfers, consent_records, mfa_challenges, relay_nodes,
+  recording_retention_policies): backlog, non-blocking.
+- No per-module skill / skill_tools items touched (RETIRED per the 2026-06-06 supersession header
+  above; the supersession header is preserved).
+
+### UI links (tables written this run)
+
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/data_object_aliases?data_object_id=in.(238,239)
+
+### Post-fix status
+
+next_action_by: user (every remaining open item gates on a b2 decision, another domain, or is b3
+backlog). status: feedback_needed.

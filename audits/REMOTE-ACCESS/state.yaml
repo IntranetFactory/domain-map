@@ -1,13 +1,18 @@
 schema_version: 2
 domain: REMOTE-ACCESS
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-06"
+next_action_by: user
+last_audit: "2026-06-07"
 
-# 2026-06-06 b1a execution: B1A-SYSTEM-SKILLS, B1A-CATALOG-UX, B1A-B10b, and
-# B1A-B9-EVENT-CATEGORY (no-op, already correct live) were FULLY RESOLVED and removed.
-# B1A-B6 and B1A-B11 remain: both gate their INSERT on a user pick (cardinality /
-# exact alias strings) that is beyond the action text, so they were skipped this run.
+# 2026-06-07 state-driven audit: EXECUTED entity_type classify (238 + 239 ->
+# operational_workflow, Rule #12 / B13) and B1A-B11 (8 vendor-neutral synonym aliases
+# on 238/239; reclassified to EXECUTE per Rule #21 additive boundary). Both removed.
+# Catalog UX (domain 132 + modules 294/295) confirmed non-empty live (filled 2026-06-06);
+# C1 business_function_domains confirmed populated (owner IT Operations + 2 contributors);
+# H1 handoff_processes confirmed all 7 present (record_status='new'). No new EXECUTE items.
+# Now that both masters are operational_workflow, B1B-B12 (lifecycle states) and B1B-B4
+# (pattern flags) are REQUIRED (not optional), but both still gate on a user pick (B2-S2 /
+# B2-S3) so they remain open + blocked.
 b1a:
   - id: B1A-B6
     summary: "Author intra-domain relationship remote_sessions produces session_recordings."
@@ -15,38 +20,22 @@ b1a:
       Zero intra-domain data_object_relationships between the two REMOTE-ACCESS masters.
       The natural edge remote_sessions (238) -> session_recordings (239) with verb
       produces / produced_during is absent. Cardinality (1:0..1 single recording per
-      session, or 1:N segmented recordings per session) is a user pick. Both masters now
-      live in separate modules (238 in 294, 239 in 295), so this is a cross-module
-      intra-domain edge. 2026-06-06: confirmed still absent; the only edges on 238/239
-      are the users (748) actor edges 1613-1616.
+      session = one_to_one, or 1:N segmented recordings per session = one_to_many) is a
+      user pick. Both masters live in separate modules (238 in 294, 239 in 295), so this
+      is a cross-module intra-domain edge. 2026-06-07: re-confirmed still absent; the only
+      edges on 238/239 are the users (748) actor edges 1613-1616.
     action: >
       Surface the cardinality question. On user pick, INSERT one data_object_relationships
       row: data_object_id=238, related_data_object_id=239, relationship_verb='produces',
-      inverse_verb='produced_during', relationship_type=<pick>, relationship_kind='reference',
-      is_required=false, owner_side='source'.
+      inverse_verb='produced_during', relationship_type=<one_to_one|one_to_many>,
+      relationship_kind='reference', is_required=false, owner_side='source'.
     blocked_by:
-      - {type: user_decision, reason: "cardinality pick (1:0..1 vs 1:N) needed before write; skipped 2026-06-06"}
+      - {type: user_decision, reason: "cardinality pick (one_to_one vs one_to_many) needed before write; surfaced 2026-06-07"}
     affected_entities: [remote_sessions, session_recordings]
     affected_modules: [294, 295]
     extra_proposed_verb: produces
     extra_proposed_inverse_verb: produced_during
-    extra_open_question: "1:0..1 vs 1:N cardinality"
-  - id: B1A-B11
-    summary: "Author 6-8 data_object_aliases rows on remote_sessions + session_recordings; user picks tuples."
-    finding: >
-      Zero data_object_aliases on either REMOTE-ACCESS master. Common cross-vendor synonyms:
-      remote_sessions -> 'support sessions' / 'attended sessions' / 'unattended sessions' /
-      'remote control sessions'; session_recordings -> 'support recordings' /
-      'compliance recordings' / 'audit recordings' / 'session capture'.
-      2026-06-06: confirmed still zero aliases on 238/239.
-    action: >
-      Surface the candidate tuple set; on user confirmation of exact strings, INSERT
-      data_object_aliases rows. Per Rule #15, alias_name is commerce-shaped but tuple
-      choice needs explicit per-row user approval before write.
-    blocked_by:
-      - {type: user_decision, reason: "exact alias strings need per-row user approval before write; skipped 2026-06-06"}
-    affected_entities: [remote_sessions, session_recordings]
-    extra_candidate_count: 8
+    extra_open_question: "one_to_one (1:0..1) vs one_to_many (1:N) cardinality"
 
 b1b:
   - id: B1B-B4
@@ -54,7 +43,9 @@ b1b:
     finding: >
       Both masters carry has_personal_content=false, has_submit_lock=false,
       has_single_approver=false. Per Rule #12 an audit MUST positively re-evaluate;
-      false-by-default is not false-after-review. Candidates:
+      false-by-default is not false-after-review. Now that both masters are
+      entity_type='operational_workflow' (set 2026-06-07), the pattern-flag re-eval is
+      a live obligation, not optional. Candidates:
       session_recordings.has_personal_content=true (recording IS the personal content),
       session_recordings.has_submit_lock=true (finalized recording immutable for retention),
       remote_sessions.has_personal_content=true (screen content carries PII / PHI),
@@ -67,11 +58,12 @@ b1b:
   - id: B1B-B12
     summary: "Author lifecycle states on 238 (module 294) + 239 (module 295) after B2-S2."
     finding: >
-      Zero data_object_lifecycle_states on either REMOTE-ACCESS master. remote_sessions
-      and session_recordings both carry workflows. Per Rule #14 workflow-gate permissions
-      use the realizing module's domain_module_code as prefix: remote_sessions ->
-      REMOTE-ACCESS-SESSION (294), session_recordings -> REMOTE-ACCESS-RECORDING-AUDIT (295).
-      Module prefix now exists (M1 resolved); only the per-state user pick remains.
+      Zero data_object_lifecycle_states on either REMOTE-ACCESS master. Both are now
+      entity_type='operational_workflow' (set 2026-06-07), so per Rule #12 lifecycle
+      states are REQUIRED (B12 hard obligation, not optional). Per Rule #14 workflow-gate
+      permissions use the realizing module's domain_module_code as prefix: remote_sessions
+      -> REMOTE-ACCESS-SESSION (294), session_recordings -> REMOTE-ACCESS-RECORDING-AUDIT
+      (295). Module prefix exists; only the per-state user pick remains.
     blocked_by:
       - {type: user_decision, ref: B2-S2, reason: "state-list + per-gate user picks"}
     affected_masters:
@@ -128,10 +120,12 @@ b2:
       connected -> privileged -> ended with gates on privileged (elevate_remote_session) and
       ended (end_remote_session); session_recordings = recording -> archived -> retention_lock
       -> expired with gates on retention_lock (lock_session_recording) and expired
-      (purge_session_recording)? Prefixes now resolve to REMOTE-ACCESS-SESSION (294) and
-      REMOTE-ACCESS-RECORDING-AUDIT (295).
+      (purge_session_recording)? Prefixes resolve to REMOTE-ACCESS-SESSION (294) and
+      REMOTE-ACCESS-RECORDING-AUDIT (295). NOTE: both masters are now
+      entity_type='operational_workflow' (set 2026-06-07), so lifecycle states are now
+      REQUIRED; answering this unblocks the B1B-B12 write immediately.
     options: ["accept proposed shape", "alter per-state list (specify)", "alter per-gate requires_permission (specify)", "defer"]
-    why: "Workflow shape decisions; per-vendor practice varies. Drives B1B-B12."
+    why: "Workflow shape decisions; per-vendor practice varies. Drives B1B-B12 (now a hard B12 obligation)."
   - id: B2-S3
     summary: "Pattern flag positive re-eval (Rule #12) on remote_sessions + session_recordings."
     question: >
@@ -154,7 +148,9 @@ b2:
     question: >
       Approve the 7 existing agent_curated handoff_processes rows on handoffs
       162 / 163 / 164 / 646 / 647 / 648 / 160? Approval moves the H1 headline from
-      '0 approved' to '7 approved'.
+      '0 approved' to '7 approved'. (Live ids: 186 h.162, 403 h.163, 404 h.164, 405 h.646,
+      406 h.647, 407 h.648, 408 h.160 - all proposal_source='agent_curated', role='implements',
+      record_status='new'.)
     options: ["approve all 7", "approve subset (specify by handoff_id)", "decline / re-tag"]
     why: "Approving handoff_processes shifts record_status to 'approved'; requires explicit per-load user confirmation per Rule #1."
 

@@ -11,31 +11,43 @@
 schema_version: 2
 domain: RET-STORE
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
   - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 1 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 1 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 1 capability. Awaits a build."
+    finding: >-
+      Live 2026-06-07: RET-STORE (domain id 48) still has 0 domain_modules rows (M1 hard fail) and only
+      1 capability_domains row (WORKFORCE-SCHEDULING id 312, cross-domain shared). It is not deployable
+      today. Per the unbuilt-domain rule the agent does NOT scaffold the module set; the build is a user
+      decision. Every module-grain b1b item below cascades behind this build. The 6 masters are now
+      entity_type-classified (operational_workflow) and the domain catalog UX is authored, so the
+      pre-build additive surface is clean.
+    action: >-
+      Run Phase A then M then B then S to author the module set, capabilities, masters mapping, and the
+      single domain-grain system skill. If the result is multi-module, run Phase P (personas, role_modules,
+      process_raci, lifecycle.process_id) afterward. Module-shape choice gated on B2-1.
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-M1
-    summary: "Phase A fix-load: 3 domain_modules + remap 6 DMDOs + 5-6 capabilities + per-module system skills"
+    summary: "Phase A fix-load: 3 domain_modules + remap 6 DMDOs + 5-6 capabilities (single domain-grain skill, NOT per-module)"
     finding: >-
       RET-STORE has zero domain_modules rows. Rule #14 requires >=1 module_kind='full'.
       Proposed 3-module split: RET-STORE-TASK-EXEC (masters store_tasks 647, store_associate_checklists 652),
-      RET-STORE-LABOR-SCHED (masters retail_labour_schedules 648), RET-STORE-AUDIT-EXEC (masters store_audits 649,
-      mystery_shopper_records 650, planogram_compliance_records 651). Each module gets one skill_type='system' skill
-      per Rule #17. Embedded_master shells per Rule #16. Final shape pending B2-1.
+      RET-STORE-LABOR-SCHED (master retail_labour_schedules 648), RET-STORE-AUDIT-EXEC (masters store_audits 649,
+      mystery_shopper_records 650, planogram_compliance_records 651). Embedded_master shells per Rule #16.
+      Final shape pending B2-1. NOTE (supersession 2026-06-06): the per-module skill_type='system' clause from the
+      original item is CANCELED; the modularized domain gets exactly ONE domain-grain system skill that derives its
+      toolset, and per-module tool requirements live on domain_module_tools.
     action: >-
-      After B2-1 lands the module-shape decision: INSERT 3 domain_modules rows, remap the 6 legacy domain_data_objects
-      rows into domain_module_data_objects on the right module, INSERT 5-6 capabilities + capability_domains rows
-      (gated on B1B-CAPS), INSERT domain_module_capabilities per module-capability pair, INSERT per-module
-      skill_type='system' skills + skill_tools migration (B1B-SKILLS), then unblock B1B-B10B-SOURCE / B1B-LIFECYCLE / B1B-EMBED.
+      After B2-1 lands the module-shape decision (and the B1A-BUILD go-ahead): INSERT 3 domain_modules rows, remap the
+      6 legacy domain_data_objects rows into domain_module_data_objects on the right module, INSERT 5-6 capabilities +
+      capability_domains rows (gated on B1B-CAPS), INSERT domain_module_capabilities per module-capability pair, author
+      ONE domain-grain system skill, then unblock B1B-B10B-SOURCE / B1B-LIFECYCLE / B1B-EMBED.
     blocked_by:
+      - {type: prerequisite_entity, ref: B1A-BUILD}
       - {type: user_decision, ref: B2-1}
     affected_masters:
       - {data_object_id: 647, name: "store_tasks", target_module_id: null, workflow: "task_management"}
@@ -98,8 +110,9 @@ b1b:
   - id: B1B-LIFECYCLE
     summary: "INSERT ~25 data_object_lifecycle_states rows across 6 masters with realizing domain_module_id"
     finding: >-
-      Zero data_object_lifecycle_states on any of the 6 RET-STORE masters. Per Rule #12 lifecycle states are
-      non-deferrable and must be loaded with domain_module_id set per Rule #14. Proposed state machines:
+      Zero data_object_lifecycle_states on any of the 6 RET-STORE masters. All 6 are now entity_type='operational_workflow'
+      (classified 2026-06-07), so lifecycle states are non-deferrable per Rule #12 and must be loaded with domain_module_id
+      set per Rule #14. Proposed state machines:
       store_tasks (assigned -> acknowledged -> in_progress -> completed/cancelled/overdue);
       retail_labour_schedules (draft -> published -> in_progress -> closed);
       store_audits (scheduled -> in_progress -> conducted -> failed/passed -> remediated -> closed);
@@ -120,29 +133,12 @@ b1b:
       - {data_object_id: 651, name: "planogram_compliance_records", target_module_id: null, workflow: "scheduled -> photographed -> scored -> remediated -> closed"}
       - {data_object_id: 652, name: "store_associate_checklists", target_module_id: null, workflow: "assigned -> in_progress -> completed/overdue"}
 
-  - id: B1B-SKILLS
-    summary: "Retire / rehome legacy domain-level system skill 101 in favor of 3 module-level system skills"
-    finding: >-
-      Legacy ret-store-system skill (id 101, domain_module_id=NULL, 6 skill_tools rows) is the F1 anti-pattern.
-      Rule #17 requires one skill_type='system' skill per domain_modules row + >=1 skill_tools row each. Tool partition:
-      query_store_tasks (674) + query_store_associate_checklists (679) -> RET-STORE-TASK-EXEC;
-      query_retail_labour_schedules (675) -> RET-STORE-LABOR-SCHED;
-      query_store_audits (676) + query_mystery_shopper_records (677) + query_planogram_compliance_records (678) ->
-      RET-STORE-AUDIT-EXEC. Each module-level skill also needs >=1 mutate and >=1 side_effect to clear F3's practical floor.
-    action: >-
-      After B1B-M1 AND B2-4 (retire-vs-rehome): INSERT 3 module-level skills rows; re-anchor or migrate the 6
-      skill_tools rows; DELETE or rehome skill id 101.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1}
-      - {type: user_decision, ref: B2-4}
-    affected_modules: []
-    extra_skill_tools:
-      - {tool_id: 674, tool_name: "query_store_tasks", target_module: "RET-STORE-TASK-EXEC"}
-      - {tool_id: 675, tool_name: "query_retail_labour_schedules", target_module: "RET-STORE-LABOR-SCHED"}
-      - {tool_id: 676, tool_name: "query_store_audits", target_module: "RET-STORE-AUDIT-EXEC"}
-      - {tool_id: 677, tool_name: "query_mystery_shopper_records", target_module: "RET-STORE-AUDIT-EXEC"}
-      - {tool_id: 678, tool_name: "query_planogram_compliance_records", target_module: "RET-STORE-AUDIT-EXEC"}
-      - {tool_id: 679, tool_name: "query_store_associate_checklists", target_module: "RET-STORE-TASK-EXEC"}
+  # B1B-SKILLS RETIRED 2026-06-06 (per-domain-skill restoration / Plan 3). The original item asked to
+  # split legacy skill 101 into 3 per-module system skills; that grain is canceled. Under the new model
+  # RET-STORE gets exactly ONE domain-grain system skill (folded into B1B-M1) and per-module tool
+  # requirements live on domain_module_tools. Disposition of legacy skill 101 (rehome to the domain-grain
+  # skill vs delete) is tracked as B2-4 (a destructive/editorial user decision) and in
+  # audits/_modularization-backlog.md. No per-module skill authoring.
 
   - id: B1B-EMBED
     summary: "INSERT embedded_master / consumer DMDO rows for users + WFM/CSM/HCM masters per module"
@@ -166,13 +162,14 @@ b1b:
       - "employment_events"
 
   - id: B1B-PATTERN-FLAGS
-    summary: "PATCH 4 candidate pattern flags after B2-2 confirmation"
+    summary: "PATCH 4 candidate pattern flags after B2-2 confirmation (DESTRUCTIVE: overwrite false defaults)"
     finding: >-
       All 6 masters carry the false-by-default trio. Per Rule #12 positive re-evaluation required. Candidates:
       mystery_shopper_records.has_personal_content=true (shopper PII / named-employee scoring);
       store_audits.has_single_approver=true (district manager signature);
       store_audits.has_submit_lock=true (immutable after close);
       planogram_compliance_records.has_personal_content=true (photos may capture employees / shoppers).
+      Flipping false -> true is a workflow-shape judgment overwrite, so it is surfaced for user sign-off, not executed.
     action: PATCH the user-confirmed subset of the 4 candidate flags to true. Do NOT use notes (Rule #15).
     blocked_by:
       - {type: user_decision, ref: B2-2}
@@ -181,28 +178,20 @@ b1b:
       - {data_object_id: 649, name: "store_audits", target_module_id: null, workflow: "has_single_approver + has_submit_lock candidate"}
       - {data_object_id: 651, name: "planogram_compliance_records", target_module_id: null, workflow: "has_personal_content candidate"}
 
-  - id: B1B-CATALOG-UX
-    summary: "WRITE domains.catalog_tagline + catalog_description after B2-3 supplies wording"
-    finding: >-
-      Both catalog_tagline and catalog_description are empty strings on the RET-STORE domains row. Rule #20 demands
-      buyer-shaped one-liner + 1-3 paragraph description. Rule #20 forbids autonomous writes to these columns even
-      from empty; the user supplies the wording.
-    action: "After B2-3: write the user-approved tagline and description verbatim. Single PATCH on the domains row."
-    blocked_by:
-      - {type: user_decision, ref: B2-3}
-
   - id: B1B-VERB-RENAME
-    summary: "Rename 7 user-edge data_object_relationships to snake_case verb-shape"
+    summary: "Rename 7 user-edge data_object_relationships to snake_case verb-shape (DESTRUCTIVE: overwrites non-empty verbs)"
     finding: >-
       Relationships 694-700 use noun-phrase verbs (assigned tasks, created tasks, assigned checklists,
       publishes schedules, conducted audits, verified planogram, submitted mystery shop) instead of snake_case
       verb-shape. Legacy WFM / ATS anti-pattern. The 2 task-assignment edges can default to assigned_to_user /
-      created_by_user; the other 5 publisher-side verbs need user input on the exact verb form.
+      created_by_user; the other 5 publisher-side verbs need user input on the exact verb form. All 7 renames overwrite
+      a non-empty relationship_verb, so this is surfaced (destructive), not executed.
     action: >-
-      Bundle the 2 trivial renames (694, 695) with B1B-LIFECYCLE work; surface the other 5 (696-700) for per-row
-      verb-form approval in the next pass.
+      Bundle the 2 trivial renames (694, 695) with B1B-LIFECYCLE work after user sign-off; surface the other 5 (696-700)
+      for per-row verb-form approval.
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1}
+      - {type: user_decision, ref: B2-VERB}
     extra_relationships:
       - {id: 694, current: "assigned tasks", proposed: "assigned_to_user"}
       - {id: 695, current: "created tasks", proposed: "created_by_user"}
@@ -247,30 +236,20 @@ b2:
       Pattern flags and workflow-gate decisions are workflow-shape judgments the user owns. The false-by-default does
       not confirm review. Per Rule #15 the rationale must NOT land in notes.
 
-  - id: B2-3
-    summary: "Catalog UX wording: tagline + description per Rule #20"
-    question: >-
-      What buyer-shaped tagline (one-liner) and long-form description (1-3 paragraphs) should land on the RET-STORE
-      domains row? Rule #20 requires the user to supply or approve the exact wording before any write.
-    options:
-      - "User supplies tagline + description text"
-      - "User defers; A4 stays open"
-    why: >-
-      Marketing voice and product framing are owned by the user; Rule #20 forbids autonomous writes to catalog_tagline /
-      catalog_description even when the current value is empty.
-
   - id: B2-4
-    summary: "Legacy ret-store-system skill (id 101): retire after migration vs. rehome as one of the 3 module skills"
+    summary: "Legacy ret-store-system skill (id 101): rehome to the single domain-grain skill vs DELETE (DESTRUCTIVE)"
     question: >-
-      For B1B-SKILLS, should the agent (a) DELETE the legacy ret-store-system skill (id 101) after re-anchoring its 6
-      skill_tools rows to 3 new module-level skills, or (b) repurpose the legacy as one of the 3 module skills (rename
-      and re-target domain_module_id) and only INSERT 2 new module-level skills?
+      Under the post-2026-06-06 model RET-STORE gets exactly ONE domain-grain system skill (authored as part of B1B-M1).
+      For the legacy domain-level skill id 101 (domain_module_id NULL, 6 legacy skill_tools rows), should the agent
+      (a) rehome it (rename / keep as the single domain-grain skill, drop the dropped skill_tools surface in favor of
+      domain_module_tools), or (b) DELETE id 101 outright and author a fresh domain-grain skill? Both touch a non-new
+      existing row, so this is a destructive sign-off.
     options:
-      - "(a) Retire legacy after migration"
-      - "(b) Rehome legacy as one of the 3 module skills"
+      - "(a) Rehome legacy 101 as the single domain-grain system skill"
+      - "(b) DELETE legacy 101 and author fresh"
     why: >-
-      Editorial; the agent cannot prefer (a) over (b) without architectural intent. Route (a) is cleaner against F1 but
-      higher churn; route (b) minimizes churn.
+      Editorial + destructive. The per-module-skill route from the original audit is canceled; the remaining choice is
+      rehome-vs-delete of one legacy row, which the agent never does unapproved.
 
   - id: B2-5
     summary: "Embedded master inventory: locations / employees in addition to users + WFM/CSM/HCM masters"
@@ -286,6 +265,18 @@ b2:
     why: >-
       Rule #16 says infrastructure masters are always necessity=optional on non-master rows; the deployability story
       varies per module. Several plausible shapes.
+
+  - id: B2-VERB
+    summary: "Verb form for 5 publisher-side user-edge relationships (696-700)"
+    question: >-
+      For B1B-VERB-RENAME, what snake_case verb form should rows 696-700 take? 696 assigned checklists,
+      697 publishes schedules, 698 conducted audits, 699 verified planogram, 700 submitted mystery shop. The 2 trivial
+      task edges (694 -> assigned_to_user, 695 -> created_by_user) can default; these 5 need the exact verb.
+    options:
+      - "User supplies the 5 verb forms"
+      - "User accepts agent suggestions (e.g. assigned_checklist_to_user / published_by_user / conducted_by_user / verified_by_user / submitted_by_user)"
+    why: >-
+      Verb shape is editorial and the rename overwrites a non-empty value (destructive); the user owns the exact form.
 
 b3:
   - id: B3-1

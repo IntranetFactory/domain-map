@@ -291,3 +291,43 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass against `audits/ITSM/state.yaml`. Resolved domain id 1, 8 full modules (38-45), 7 masters (47-53). Worked only the open state items, classifying each EXECUTE / SURFACE / LEAVE. Loader: `.tmp_deploy/fix_itsm_audit_2026_06_07.ts` (idempotent, read-live-then-write, all new rows `record_status='new'`). Snapshot was partly stale: the recorded 16-id H1 set had collapsed to 11 genuinely-untagged handoffs (handoff 9 is a non-ITSM Onboarding->HRSD edge already tagged; 140/177/642/644 already tagged; new handoff 1200 already tagged).
+
+### Executed (additive/corrective, all `record_status='new'`)
+
+| Item | Write | Count | Detail |
+|---|---|---|---|
+| B1A-ENTITY-TYPE | PATCH `data_objects.entity_type` | 7 | `service_incidents`/`service_requests`/`service_problems`/`service_changes`/`knowledge_articles` -> `operational_workflow` (all carry 4-8 lifecycle states); `service_catalog_items`/`service_slas` -> `catalog` (config-shape; catalog permits-but-not-requires lifecycle per Rule #12). |
+| B2-CATALOG-UX (A4 + M8) | PATCH `domains` + `domain_modules` catalog_tagline/catalog_description | 9 | ITSM domain row + all 8 modules. Buyer-voice copy, no vendor/product names (Rule #18), no em-dash, American English. Only empty fields written; non-empty values never overwritten. Stale "surface-before-write" gate ignored per Rule #20/#21. |
+| B1A-H1-UNTAGGED | INSERT `handoff_processes` (agent_curated, role=implements) | 9 | Clean-PCF matches only: 239/461/463/788/878/614/615 -> PCF 1299 "Triage IT service delivery incidents" (alert/event/SLO-breach -> incident triage; 614/615 follow the 55/57 precedent); 31 -> PCF 1312 "Maintain IT asset records"; 37 -> PCF 1313 "Administer IT licenses/user agreements". Idempotent on (handoff_id, process_id). 2 deferred to Discover (see below). |
+| B11 aliases | INSERT `data_object_aliases` (synonym) | 5 | `problem ticket` (49), `change request` (50), `knowledge base article` (51), `catalog item` (52), `SLA` (53). Generic vendor-neutral synonyms not already present. |
+| C1 | INSERT `business_function_domains` (contributor) | 1 | IT Operations (fn 27) as contributor. Owner (IT Service Desk fn 57) + Security contributor + HR/Finance consumers already present; the more-specific live owner was kept (no competing "IT Operations" owner authored). |
+
+Total executed: 31 writes across 5 tables.
+
+### Surfaced (NOT written; user decision / sign-off owed)
+
+- **B2-PATTERN-FLAGS (b2):** flip `service_incidents.has_personal_content`, `knowledge_articles.has_personal_content`, `service_changes.has_submit_lock` to true? Workflow-shape judgment; user owns it.
+- **B2-SLA-LIFECYCLE (b2):** `service_slas` now `entity_type=catalog` so B12 passes stateless; accept config-shape or author a state machine (draft/published/active/expired/archived)?
+- **B1A-SELF-CONTAIN (M9, DESTRUCTIVE):** 2 DMDO rows (`asset_lifecycle_events` contributor on ITSM-INCIDENT-MGMT; `onboarding_tasks` required-consumer on ITSM-SERVICE-REQUEST) break self-containment. Fix rewrites existing non-empty rows (embed as embedded_master OR relax necessity=optional); needs approval, not auto-applied.
+- **B1A-PHASE-P (personas/RACI):** DEFERRED, not authored. Candidate personas: IT-SERVICE-DESK-AGENT, IT-SERVICE-DESK-MANAGER, IT-CHANGE-MANAGER, IT-PROBLEM-MANAGER, IT-KNOWLEDGE-AUTHOR, END-USER-REQUESTER. Reconcile against the 4 roles the 2026-05-31 audit recorded before authoring (finding may be partly stale post-Plan-3).
+
+### Left
+
+- **b1b (blocked on partner work):** B1B-B9b (8 intra-domain handoffs need a creative trigger-event authoring session), B1B-M7-MONITORING-ALERTS (ITOM + RMM canonical-owner), B1B-ASSET-FAILURE (ITAM publisher decision; handoff 31 was tagged additively this pass, attribution still blocked).
+- **B1A-H1 Discover deferrals:** handoff 843 (`dlp_incident.blocked`) and 901 (`clinical_order.placed`) have no clean PCF and read as source-domain scope creep; deferred to Discover Pass 3 / source-domain scope review rather than force-fit to PCF 1299.
+- **B2-SKILL-NAMING:** RETIRED per the 2026-06-06 per-domain-skill supersession; re-framed as a note, no decision owed.
+- **b3 (backlog, non-blocking):** 7 candidate entities (service_outages, change_collisions, cab_meetings, service_offerings split, walkup_visits, virtual_agent_conversations, chargeback_invoices). Phase 0 not run.
+
+### UI spot-checks
+
+- `https://tests.semantius.app/domain_map/data_objects` (filter entity_type per master)
+- `https://tests.semantius.app/domain_map/domains` (ITSM row catalog copy) and `/domain_modules` (8 modules)
+- `https://tests.semantius.app/domain_map/handoff_processes` (filter handoff_id in 31,37,239,461,463,614,615,788,878 -> 9 agent_curated/new rows)
+- `https://tests.semantius.app/domain_map/data_object_aliases` (5 new synonyms)
+- `https://tests.semantius.app/domain_map/business_function_domains` (filter domain_id=1 -> 5 rows incl. IT Operations contributor)

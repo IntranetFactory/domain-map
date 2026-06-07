@@ -11,26 +11,27 @@
 schema_version: 2
 domain: PROC-MIN
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
   - id: B1A-H1-742
-    summary: Handoff 742 (business_rule_extracted.identified -> WORK-MGMT) untagged in handoff_processes; carry-over Discover Pass 3 deferral
-    finding: H1 coverage stands at 5 of 6 cross-domain handoffs tagged (4 agent_curated rows on handoffs 180, 740, 741, 783 against PCF process 78 Manage business processes; 1 discovery_substring row on handoff 183 against PCF process 414 Manage non-conformance). Handoff 742 is the residual untagged row; the 2026-05-30 audit recommended Discover Pass 3 routing because no clean APQC PCF L3 match exists for business-rule extraction.
-    action: Surface the routing decision (defer to Discover Pass 3 vs assign a best-effort agent_curated row pointing at the Manage business rules family if loaded). On user confirmation, either insert a single handoff_processes row with proposal_source='agent_curated' and record_status='new', or leave the handoff intentionally untagged and document the deferral.
+    summary: Handoff 742 (business_rule_extracted.identified -> WORK-MGMT) untagged in handoff_processes; no clean APQC PCF match, defer to Discover
+    finding: "H1 coverage stands at 5 of 6 cross-domain handoffs tagged (180/740/741/783 agent_curated -> process 78 Manage business processes L2; 183 discovery_substring -> process 414 Manage non-conformance L3). Handoff 742 is the residual untagged row. 2026-06-07 live PCF search confirmed no clean L3 match for business-rule extraction (only unrelated rule processes exist, e.g. 1896 Establish engagement rules, 593 warranty rules/claim codes, 677 develop business rules to provide personalized offers). Per Rule #21 EXECUTE policy this is a no-clean-match -> defer-to-Discover, NOT a forced best-effort tag."
+    action: User decision. Either (a) leave 742 intentionally untagged and route to a Discover pass for a custom-process candidate, or (b) assign a best-effort agent_curated row pointing at process 78 "Manage business processes" to match its 4 sibling PROC-MIN->BPA handoffs. Agent will not auto-insert a weak tag.
     affected_handoffs:
       - {handoff_id: 742, direction: outbound, source_domain: PROC-MIN, target_domain: WORK-MGMT, trigger_event: business_rule_extracted.identified, payload: business_rules_extracted}
+
   - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capability_domains. PROC-MIN is master-bearing (6 real domain-owned masters), not an overlay; it needs a Phase-A build, not synthetic scaffolding."
+    finding: "Live triage 2026-06-07: still 0 domain_modules and 0 capability_domains. Overlay test: PROC-MIN persists 6 first-class domain-owned masters (event_logs, discovered_process_models, process_conformance_results, process_variants, process_bottleneck_findings, business_rules_extracted) that no other domain masters, so it is master-bearing and unbuilt, not derive/overlay. The whole S-band / M-band / E-band cascade and the module-attributed B10b/B12 work are downstream of the build."
+    action: "Run Phase A (modules + capabilities per B2-MODULARIZATION + B2-CAPABILITIES) then the per-module B-band substrate, then C/E. Do NOT scaffold synthetic masters; the 6 real masters already exist. If the result is multi-module, run Phase P (personas, role_modules, process_raci) afterward. NOTE per supersession header: do NOT author per-module system skills; tools go on domain_module_tools and ONE domain-grain system skill derives the toolset."
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-S-BAND
     summary: S1 / S2 / S3 sweeps blocked on Phase-A modularization; cannot run per-module coverage without modules
-    finding: "S2 (per-module DMDO + DMC coverage) and S3 (per-master indirect-table coverage routed through realizing modules) require domain_modules rows. S1 surfaces zero-row anomalies that route into the owning band, and currently every band the sweep would route into (M-band, B6, B8, B11, B12, F-band) is itself blocked on modularization. Concrete failures the sweep would have flagged: zero capability_domains rows, zero domain_modules rows, zero domain_module_capabilities rows, zero domain_module_data_objects rows, zero data_object_lifecycle_states, zero data_object_aliases, zero intra-domain data_object_relationships."
+    finding: "S2 (per-module DMDO + DMC coverage) and S3 (per-master indirect-table coverage routed through realizing modules) require domain_modules rows. S1 surfaces zero-row anomalies that route into the owning band, and currently every band the sweep routes into (M-band, B6, B8, B12, F-band) is itself blocked on modularization. Concrete failures: zero capability_domains, zero domain_modules, zero domain_module_capabilities, zero domain_module_data_objects, zero data_object_lifecycle_states, zero intra-domain data_object_relationships. (B11 aliases now non-zero as of 2026-06-07.)"
     blocked_by:
       - {type: user_decision, ref: B2-MODULARIZATION}
     affected_modules: []
@@ -42,41 +43,32 @@ b1b:
     blocked_by:
       - {type: user_decision, ref: B2-CAPABILITIES}
 
-  - id: B1B-A4-CATALOG-UX
-    summary: domains.catalog_tagline and catalog_description empty; A4 fails until Rule #20 wording is approved
-    finding: domains row 40 has empty catalog_tagline and empty catalog_description. A4 requires both populated in buyer voice. Rule #20 forbids agent-authored writes without explicit user approval of wording.
-    blocked_by:
-      - {type: user_decision, ref: B2-CATALOG-UX}
-
   - id: B1B-M-BAND
     summary: M1 / M2 / M4 / M5 / M6 / M8 hard-fail; PROC-MIN has zero domain_modules
-    finding: M1 (>=1 domain_modules row), M2 (>=2 modules when >=3 capabilities), M4 (every capability has a realizing module), M5 (workflow-gate states have domain_module_id), M6 (every module realizes >=1 capability), M8 (module-level catalog UX fields). Every one of these requires the module set to exist. M7 (single-master integrity) is currently vacuous because no DMDO rows exist for PROC-MIN masters; the legacy DDO single-master is intact.
+    finding: M1 (>=1 domain_modules row), M2 (>=2 modules when >=3 capabilities), M4 (every capability has a realizing module), M5 (workflow-gate states have domain_module_id), M6 (every module realizes >=1 capability), M8 (module-level catalog UX fields). Every one requires the module set. M7 (single-master integrity) is currently vacuous because no DMDO rows exist for PROC-MIN masters; the legacy DDO single-master is intact.
     blocked_by:
       - {type: user_decision, ref: B2-MODULARIZATION}
       - {type: user_decision, ref: B2-CAPABILITIES}
 
   - id: B1B-B4-PATTERN-FLAGS
-    summary: B4 positive re-evaluation pending on 6 masters; carry-over from 2026-05-30 B2-4
-    finding: All 6 PROC-MIN masters (event_logs, discovered_process_models, process_conformance_results, process_variants, process_bottleneck_findings, business_rules_extracted) carry has_personal_content=false, has_submit_lock=false, has_single_approver=false. B4 requires a positive re-evaluation per Rule #12; no per-flag audit decision has been recorded yet. Candidate flips: event_logs.has_personal_content (PII in user IDs / emails), discovered_process_models.has_submit_lock (immutability for downstream conformance), process_conformance_results.has_submit_lock (audit-style snapshots).
+    summary: B4 positive re-evaluation pending; 3 candidate flips on masters now typed operational_workflow / computed
+    finding: All 6 PROC-MIN masters carry has_personal_content=false, has_submit_lock=false, has_single_approver=false. As of 2026-06-07 entity_type is classified (event_logs / process_bottleneck_findings / business_rules_extracted = operational_workflow; discovered_process_models / process_conformance_results / process_variants = computed); Rule #12 ties pattern-flag consideration most strongly to operational_workflow masters. Candidate flips (all destructive overwrites of an existing flag value, so user-gated): event_logs.has_personal_content=true (PII in user IDs / emails), discovered_process_models.has_submit_lock=true (immutability for downstream conformance), process_conformance_results.has_submit_lock=true (audit-style snapshots). Decision recorded only in the audit per Rule #15 (no notes write).
     blocked_by:
       - {type: user_decision, ref: B2-PATTERN-FLAGS}
     affected_masters:
-      - {data_object_id: 579, name: event_logs, target_module_id: null, workflow: ingestion}
-      - {data_object_id: 580, name: discovered_process_models, target_module_id: null, workflow: discovery}
-      - {data_object_id: 581, name: process_conformance_results, target_module_id: null, workflow: conformance}
-      - {data_object_id: 582, name: process_variants, target_module_id: null, workflow: variant-analysis}
-      - {data_object_id: 583, name: process_bottleneck_findings, target_module_id: null, workflow: bottleneck-analysis}
-      - {data_object_id: 584, name: business_rules_extracted, target_module_id: null, workflow: rule-mining}
+      - {data_object_id: 579, name: event_logs, entity_type: operational_workflow, workflow: ingestion}
+      - {data_object_id: 580, name: discovered_process_models, entity_type: computed, workflow: discovery}
+      - {data_object_id: 581, name: process_conformance_results, entity_type: computed, workflow: conformance}
 
   - id: B1B-B6-INTRA-RELS
     summary: B6 intra-domain data_object_relationships pending; 6 edge candidates need verb / cardinality / kind authoring
-    finding: Zero intra-domain data_object_relationships between PROC-MIN masters. The 2026-05-30 audit named 6 candidate edges (event_logs -> discovered_process_models, event_logs -> process_variants, discovered_process_models -> process_conformance_results, discovered_process_models -> process_variants, process_conformance_results -> process_bottleneck_findings, event_logs -> business_rules_extracted). Each requires relationship_verb, inverse_verb, relationship_type (cardinality), relationship_kind, is_required, owner_side and is not mechanical.
+    finding: Zero intra-domain data_object_relationships between PROC-MIN masters. 6 candidate edges named (event_logs -> discovered_process_models, event_logs -> process_variants, discovered_process_models -> process_conformance_results, discovered_process_models -> process_variants, process_conformance_results -> process_bottleneck_findings, event_logs -> business_rules_extracted). Each requires relationship_verb, inverse_verb, relationship_type (cardinality), relationship_kind, is_required, owner_side; not mechanical.
     blocked_by:
       - {type: depends_on, ref: cluster-drafts-authoring-session, reason: per-edge verb + cardinality + kind editorial choice}
 
   - id: B1B-B8-CROSS-RELS
     summary: B8 outbound cross-domain data_object_relationships pending for all 4 outbound handoffs
-    finding: PROC-MIN publishes 4 cross-domain handoffs (183 -> BPA via conformance.deviation_detected payload business_process_models; 740 -> BPA via discovered_process_model.published payload discovered_process_models; 741 -> BPA via process_variant.identified payload process_variants; 742 -> WORK-MGMT via business_rule_extracted.identified payload business_rules_extracted). None of these is mirrored by a data_object_relationships row in the outbound (payload -> target) direction. B8 covers outbound only; inbound mirror edges from BPA are owed by BPA's B8.
+    finding: PROC-MIN publishes 4 cross-domain handoffs (183 -> BPA via conformance.deviation_detected payload business_process_models; 740 -> BPA via discovered_process_model.published payload discovered_process_models; 741 -> BPA via process_variant.identified payload process_variants; 742 -> WORK-MGMT via business_rule_extracted.identified payload business_rules_extracted). None mirrored by a data_object_relationships row in the outbound (payload -> target) direction. B8 covers outbound only; inbound mirror edges from BPA are owed by BPA's B8.
     blocked_by:
       - {type: depends_on, ref: cluster-drafts-authoring-session, reason: per-edge verb / cardinality authoring with cross-domain target masters}
     affected_handoffs:
@@ -99,31 +91,27 @@ b1b:
       - {handoff_id: 742, direction: outbound, source_domain: PROC-MIN, target_domain: WORK-MGMT, trigger_event: business_rule_extracted.identified, payload: business_rules_extracted, null_field: source_domain_module_id}
       - {handoff_id: 783, direction: inbound, source_domain: BPA, target_domain: PROC-MIN, trigger_event: process_simulation_run.completed, payload: process_simulation_runs, null_field: both}
 
-  - id: B1B-B11-ALIASES
-    summary: B11 data_object_aliases pending; vendor-flavored synonyms drafted but per-row tuples not specified
-    finding: Zero data_object_aliases rows on any PROC-MIN master. The 2026-05-30 audit named alias themes (event_logs Activity Tables / Process Cases / Event Streams; discovered_process_models As-Is Models; process_conformance_results Conformance Checks; process_variants Case Variants; process_bottleneck_findings Bottleneck Insights; business_rules_extracted Mined Business Rules) but did not pre-specify the exact (alias_name, locale, vendor_solution_id) tuples needed for a deterministic insert. Naming-rules decision B2-NAMING-RULES also informs the alias for the rules master.
+  - id: B1B-B11-ALIASES-RESIDUAL
+    summary: B11 core generic synonyms LANDED 2026-06-07; only locale-specific / vendor-keyed tuples remain (optional)
+    finding: "13 generic synonyms inserted 2026-06-07 (alias_type='synonym', record_status='new'): event_logs (Activity Log, Event Stream, Process Case Log); discovered_process_models (As-Is Process Model, Mined Process Model); process_conformance_results (Conformance Check, Conformance Diagnostic); process_variants (Case Variant, Execution Path Variant); process_bottleneck_findings (Bottleneck Insight, Process Bottleneck); business_rules_extracted (Mined Business Rule, Inferred Business Rule). Residual is OPTIONAL: any locale-specific (industry_id-keyed) or vendor-solution-keyed (solution_id) aliases need the per-row tuple (locale + optional id) authored, and the business-rules-master alias set may shift if B2-NAMING-RULES renames the master. Not blocking; the master alias coverage requirement is met."
     blocked_by:
-      - {type: depends_on, ref: cluster-drafts-authoring-session, reason: per-alias tuple authoring with locale + optional vendor_solution_id}
+      - {type: depends_on, ref: cluster-drafts-authoring-session, reason: optional locale/vendor-keyed alias tuples}
       - {type: user_decision, ref: B2-NAMING-RULES}
-    affected_entities: [event_logs, discovered_process_models, process_conformance_results, process_variants, process_bottleneck_findings, business_rules_extracted]
+    affected_entities: [business_rules_extracted]
 
   - id: B1B-B12-LIFECYCLE
-    summary: B12 data_object_lifecycle_states pending; 5 state machines drafted but blocked on modularization + variants config-shape call
-    finding: "Zero rows in data_object_lifecycle_states for any of the 6 master + required masters. Drafted machines (2026-05-30 B1-S6): event_logs uploaded -> ingested -> validated -> available -> archived; discovered_process_models running -> discovered -> published -> superseded; process_conformance_results pending -> running -> completed -> reviewed; process_bottleneck_findings open -> acknowledged -> in_progress -> resolved -> dismissed; business_rules_extracted extracted -> reviewed -> codified -> rejected. process_variants is a config-shape candidate. domain_module_id on workflow-gate rows requires the module set."
+    summary: B12 data_object_lifecycle_states pending; required now for the 3 operational_workflow masters, blocked on modularization (+ variants now passes B12 as computed)
+    finding: "Zero rows in data_object_lifecycle_states for any master. After the 2026-06-07 entity_type classification: event_logs (579), process_bottleneck_findings (583), business_rules_extracted (584) are operational_workflow, so B12 now HARD-REQUIRES lifecycle states on these three. discovered_process_models (580), process_conformance_results (581), process_variants (582) are computed and PASS B12 without states (this resolves B2-VARIANT-CONFIG in favor of the config-shape/no-lifecycle outcome via the typed column). Drafted machines: event_logs uploaded -> ingested -> validated -> available -> archived; process_bottleneck_findings open -> acknowledged -> in_progress -> resolved -> dismissed; business_rules_extracted extracted -> reviewed -> codified -> rejected. domain_module_id on workflow-gate rows requires the module set."
     blocked_by:
       - {type: user_decision, ref: B2-MODULARIZATION}
-      - {type: user_decision, ref: B2-VARIANT-CONFIG}
     affected_masters:
-      - {data_object_id: 579, name: event_logs, target_module_id: null, workflow: ingestion}
-      - {data_object_id: 580, name: discovered_process_models, target_module_id: null, workflow: discovery}
-      - {data_object_id: 581, name: process_conformance_results, target_module_id: null, workflow: conformance}
-      - {data_object_id: 582, name: process_variants, target_module_id: null, workflow: variant-analysis-or-config}
-      - {data_object_id: 583, name: process_bottleneck_findings, target_module_id: null, workflow: bottleneck-analysis}
-      - {data_object_id: 584, name: business_rules_extracted, target_module_id: null, workflow: rule-mining}
+      - {data_object_id: 579, name: event_logs, entity_type: operational_workflow, workflow: ingestion}
+      - {data_object_id: 583, name: process_bottleneck_findings, entity_type: operational_workflow, workflow: bottleneck-analysis}
+      - {data_object_id: 584, name: business_rules_extracted, entity_type: operational_workflow, workflow: rule-mining}
 
   - id: B1B-C1-EXPANSION
-    summary: C1 partial-pass; contributor / consumer business_function_domains rows pending
-    finding: "business_function_domains has 1 owner row (Business Operations, function id 34). Most domains also need 1 to 2 contributors or consumers. Candidates for PROC-MIN: IT (consumer for ITOM observability data), Finance (consumer for SOX 404 / segregation-of-duties insights via Celonis Audit family). Decision lives at editorial level; user owns the call."
+    summary: C1 partial-pass; contributor / consumer business_function_domains rows pending (editorial judgment)
+    finding: "business_function_domains has 1 owner row (Business Operations, business_function_id 34, responsibility_type='owner', id 246) confirmed live 2026-06-07. Most domains also need 1 to 2 contributors or consumers. Candidates for PROC-MIN: IT Operations (id 27) as consumer (ITOM observability process data) and Finance / Internal Audit (id 4 / 46) as consumer (SOX 404, segregation-of-duties insights). The contributor/consumer scope is user judgment, not mechanical; the owner row is already in place."
     blocked_by:
       - {type: depends_on, ref: editorial-RACI-decision, reason: contributor / consumer scope is user judgment, not mechanical}
 
@@ -134,19 +122,10 @@ b1b:
       - {type: user_decision, ref: B2-MODULARIZATION}
       - {type: user_decision, ref: B2-CAPABILITIES}
 
-  - id: B1B-F1-LEGACY-SKILL
-    summary: F1 legacy domain-anchored system skill 91 still present; deletion blocked on per-module system skills existing
-    finding: skill 91 proc-min-system anchored on domain_id=40 with domain_module_id=NULL carries 6 platform-tier query_* tools. Under Rule #14 / #17 the target state is one system skill per module. Removing skill 91 before per-module skills exist would leave PROC-MIN with zero system skills and an uncomputable Semantius score.
-    blocked_by:
-      - {type: user_decision, ref: B2-MODULARIZATION}
-      - {type: prerequisite_entity, ref: B1B-M-BAND}
-
-  - id: B1B-F2-F3-F5
-    summary: F2 / F3 / F5 vacuous until per-module system skills exist
-    finding: F2 (one system skill per module), F3 (>=1 skill_tools per system skill), F5 (computable Semantius score per module) all need the module set. F4 currently passes on skill 91's 6 tools. Skill 91 is a transitional artifact (see B1B-F1-LEGACY-SKILL).
-    blocked_by:
-      - {type: user_decision, ref: B2-MODULARIZATION}
-      - {type: prerequisite_entity, ref: B1B-M-BAND}
+  - id: B1B-F-BAND-SUPERSEDED
+    summary: "RETIRED (2026-06-06 supersession): legacy skill 91 + per-module system skill items (was F1 / F2 / F3 / F5)"
+    finding: "Per the supersession header, the per-module system-skill grain is canceled. The old items B1B-F1-LEGACY-SKILL (delete legacy domain-anchored skill 91 once per-module skills exist) and B1B-F2-F3-F5 (one system skill per module, skill_tools per skill, per-module Semantius score) no longer apply. New model: ONE domain-grain system skill per domain (skill 91 IS that domain-grain skill: domain_id=40, domain_module_id=NULL), tools live on domain_module_tools, full modules carry no skill. Skill 91 is therefore the correct domain-grain artifact, NOT a transitional one to delete. F-band re-evaluation under the new model happens after the Phase-A build (per-module tool authoring tracked in audits/_modularization-backlog.md)."
+    superseded: "2026-06-06 per-domain-skill restoration"
 
 b2:
   - id: B2-MODULARIZATION
@@ -157,7 +136,7 @@ b2:
       - Adopt the 5-module split (above + ACTION)
       - Collapse INGESTION + DISCOVERY into PROC-MIN-MINING core module (3 modules)
       - Defer until Bucket 3 vendor research lands
-    why: This is the single highest-leverage decision in the audit. The S-band, M-band, B10b backfill, B12 module attribution, E-band, and F-band per-module work are all blocked on it. Rule #14 mandates >=2 full modules once >=3 capabilities exist; the capability set in B2-CAPABILITIES proposes 7 capabilities, so >=2 modules is non-negotiable.
+    why: This is the single highest-leverage decision in the audit. The S-band, M-band, B10b backfill, B12 module attribution, E-band, and F-band per-module tool work are all blocked on it. Rule #14 mandates >=2 full modules once >=3 capabilities exist; the capability set in B2-CAPABILITIES proposes 7 capabilities, so >=2 modules is non-negotiable.
 
   - id: B2-CAPABILITIES
     summary: Phase-A capability authoring; 7 proposed capabilities awaiting user sign-off
@@ -167,7 +146,7 @@ b2:
       - Adopt all 7 plus task-mining
       - Drop task-mining (route to TASK-MINING candidate domain or PROC-MIN-TASK-MINING sub-module)
       - Rename to align with APQC PCF Process Improvement (10047 / 10048 / 10049)
-    why: Capability vocabulary is editorial. Rule #14 ties module count to capability count, so the capability list informs B2-MODULARIZATION; the two should resolve together. Carry from 2026-05-30 B2-2.
+    why: Capability vocabulary is editorial. Rule #14 ties module count to capability count, so the capability list informs B2-MODULARIZATION; the two should resolve together.
 
   - id: B2-NAMING-RULES
     summary: business_rules_extracted naming arbitration; only adjective-trailing master in the catalog
@@ -176,59 +155,38 @@ b2:
       - Rename to extracted_business_rules
       - Leave business_rules_extracted as is
       - Other (mined_business_rules / inferred_business_rules / etc.)
-    why: The form is anomalous in the catalog (every other master is noun-phrase-plural). No Rule #9 collision exists today, but the rename cascades through aliases (B11), trigger event 801 event_name, the legacy skill's tool 628, and any future Phase-B references. Decide here so downstream loads stay consistent. Carry from 2026-05-30 B2-3.
+    why: The data_object_name reads adjective-trailing while every other master is noun-phrase-plural. (Note the display labels are already "Extracted Business Rule" / "Extracted Business Rules".) No Rule #9 collision exists today, but a rename of data_object_name would cascade through the 2026-06-07 aliases (Mined Business Rule, Inferred Business Rule), trigger event 801 event_name, and any future Phase-B references. Decide here so downstream loads stay consistent.
     affected_masters:
-      - {data_object_id: 584, name: business_rules_extracted, target_module_id: null, workflow: rule-mining}
+      - {data_object_id: 584, name: business_rules_extracted, entity_type: operational_workflow, workflow: rule-mining}
     affected_events:
-      - {id: 801, event_name: business_rule_extracted.identified, current_category: signal, proposed_category: signal}
+      - {id: 801, event_name: business_rule_extracted.identified, current_category: signal}
 
   - id: B2-PATTERN-FLAGS
-    summary: B4 positive re-evaluation of pattern flags on 3 candidate flips
+    summary: B4 positive re-evaluation of pattern flags on 3 candidate flips (destructive overwrites of existing flag values)
     question: Should event_logs.has_personal_content=true (PII in user IDs / emails)? Should discovered_process_models.has_submit_lock=true (immutability for downstream conformance)? Should process_conformance_results.has_submit_lock=true (audit-style snapshots)?
     options:
       - Approve all three flips
       - Approve a subset (specify which)
       - Decline all (flags stay false; record the consideration in the audit only, no notes write per Rule #15)
-    why: Pattern flags are workflow-shape judgments the user owns; defaults to false do not establish review per Rule #12. Recording the consideration in notes is forbidden by Rule #15, so the answer lives only in the audit decisions. Carry from 2026-05-30 B2-4.
+    why: Pattern flags are workflow-shape judgments the user owns; defaults to false do not establish review per Rule #12. Each flip overwrites an existing non-empty boolean, so it is user-gated (destructive). Recording the consideration in notes is forbidden by Rule #15, so the answer lives only in the audit decisions.
     affected_masters:
-      - {data_object_id: 579, name: event_logs, target_module_id: null, workflow: ingestion}
-      - {data_object_id: 580, name: discovered_process_models, target_module_id: null, workflow: discovery}
-      - {data_object_id: 581, name: process_conformance_results, target_module_id: null, workflow: conformance}
-
-  - id: B2-VARIANT-CONFIG
-    summary: process_variants config-shape exemption vs 4-state machine
-    question: Apply the Rule #12 config-shape exemption to process_variants (append-only finding-shaped, no lifecycle), or author a 4-state machine (surfaced -> acknowledged -> accepted_as_new_normal / marked_as_deviation)?
-    options:
-      - Confirm config-shape exemption (no lifecycle states; track decision in audit per Rule #15)
-      - Author the 4-state machine
-    why: B12 partial-fails on this master either way. SLAs-style append-only finding records ship without lifecycle in some vendors (Celonis variant explorer), while others (Signavio Process Intelligence) treat variants as catalog rows with curation status. Either choice is defensible. Carry from 2026-05-30 B2-5.
-    affected_masters:
-      - {data_object_id: 582, name: process_variants, target_module_id: null, workflow: variant-analysis-or-config}
+      - {data_object_id: 579, name: event_logs, entity_type: operational_workflow, workflow: ingestion}
+      - {data_object_id: 580, name: discovered_process_models, entity_type: computed, workflow: discovery}
+      - {data_object_id: 581, name: process_conformance_results, entity_type: computed, workflow: conformance}
 
   - id: B2-EM-DASHES
-    summary: 4 description / business_logic cells contain U+2014 em-dashes (project CLAUDE.md rule)
-    question: Rewrite the 4 affected cells this audit cycle, defer to a cross-domain em-dash audit pass, or leave (relying on the fact_sheet emitter's render-time sanitizer)?
+    summary: 4 description / business_logic cells contain U+2014 em-dashes (project CLAUDE.md rule); rewriting them is a destructive overwrite of non-empty copy
+    question: Rewrite the 4 affected cells this cycle, defer to a cross-domain em-dash audit pass, or leave (relying on the fact_sheet emitter's render-time sanitizer)?
     options:
       - Rewrite all 4 cells this cycle (user supplies wording or approves agent drafts row-by-row)
       - Defer to a cross-domain em-dash audit pass
       - Leave (fact_sheet emitter sanitizes at render time as a safety net)
-    why: CLAUDE.md forbids em-dashes everywhere, but Rule #20 / Rule #15 forbid agent-authored description / business_logic rewrites unilaterally. The decision is whether to surface drafts for this domain or wait for a batch sweep. Carry from 2026-05-30 B2-6.
+    why: "CLAUDE.md forbids em-dashes everywhere, but each rewrite overwrites a non-empty description / business_logic value, which is destructive and user-gated. Confirmed live 2026-06-07 that domains.id=40 business_logic still contains the trailing clause academic algorithms made commercial preceded by an em-dash."
     affected_entities:
       - {table: domains, id: 40, field: business_logic}
       - {table: trigger_events, id: 358, field: description}
       - {table: trigger_events, id: 798, field: description}
       - {table: skills, id: 91, field: description}
-
-  - id: B2-CATALOG-UX
-    summary: Rule #20 catalog_tagline + catalog_description empty on the PROC-MIN domain row (M8 also fails once modules exist)
-    question: Author catalog_tagline (single buyer-facing sentence) and catalog_description (1 to 3 buyer-facing paragraphs) for the PROC-MIN domain row? Rule #20 requires explicit user approval of the wording before any write.
-    options:
-      - Draft a full set agent-side and surface for line-by-line approval
-      - User supplies the wording row-by-row
-      - Defer (rows remain empty; A4 stays failing, M8 stays vacuous until modules exist)
-    why: A4 fails when these fields are empty. Once modules ship per B2-MODULARIZATION, M8 will fail per module unless catalog_tagline / catalog_description are populated on each. Rule #20 forbids agent-authored writes without explicit per-row user approval.
-    affected_entities:
-      - {table: domains, id: 40, fields: [catalog_tagline, catalog_description]}
 
 b3:
   - id: B3-DATA-SOURCE-CONNECTIONS
@@ -239,42 +197,42 @@ b3:
 
   - id: B3-EVENT-LOG-EXTRACTIONS
     candidate: event_log_extractions
-    rationale: Run records of the ETL pipeline that produces an event-log. Distinct from event_logs (the artifact). Vendor evidence -Celonis Extractors, Signavio Data Pipelines, UiPath Extract activities. Alternative name data_extraction_jobs.
+    rationale: Run records of the ETL pipeline that produces an event-log. Distinct from event_logs (the artifact). Alternative name data_extraction_jobs.
     vendor_evidence: [Celonis Extractors, SAP Signavio Data Pipelines, UiPath Extract activities]
     proposed_module: PROC-MIN-INGESTION
 
   - id: B3-EVENT-LOG-QUALITY
     candidate: event_log_quality_findings
-    rationale: Data-quality flags surfaced during ingestion (missing case_ids, timestamp anomalies, attribute skew). Vendor evidence -Celonis Data Health, Signavio Data Quality. Alternative name data_quality_issues.
+    rationale: Data-quality flags surfaced during ingestion (missing case_ids, timestamp anomalies, attribute skew). Alternative name data_quality_issues.
     vendor_evidence: [Celonis Data Health, SAP Signavio Process Intelligence Data Quality]
     proposed_module: PROC-MIN-INGESTION
 
   - id: B3-PROCESS-KPIS
     candidate: process_kpis
-    rationale: Named configurable measures that hang off process executions and feed dashboards. Vendor evidence -Celonis KPI Library, Signavio Metrics. Alternative name process_metrics.
+    rationale: Named configurable measures that hang off process executions and feed dashboards. Alternative name process_metrics.
     vendor_evidence: [Celonis KPI Library, SAP Signavio Process Intelligence Metrics]
     proposed_module: PROC-MIN-INSIGHTS
 
   - id: B3-IMPROVEMENT-OPPORTUNITIES
     candidate: improvement_opportunities
-    rationale: Quantified opportunity records (dollar value, frequency) that bridge a finding to an action. Vendor evidence -Celonis Value Realization, Signavio Improvement. Alternative name value_opportunities.
+    rationale: Quantified opportunity records (dollar value, frequency) that bridge a finding to an action. Alternative name value_opportunities.
     vendor_evidence: [Celonis Value Realization, SAP Signavio Process Intelligence Improvement]
     proposed_module: PROC-MIN-INSIGHTS
 
   - id: B3-PROCESS-AUTOMATIONS
     candidate: process_automations
-    rationale: Automation hop that fires from a mining finding. Borderline cross-cutting with RPA / IPAAS; Phase 0 vendor research should check whether the row belongs in PROC-MIN-ACTION or routes to RPA. Vendor evidence -Celonis Action Flows, Signavio Action SDK, UiPath RPA integration. Alternative name action_flows.
+    rationale: Automation hop that fires from a mining finding. Borderline cross-cutting with RPA / IPAAS; Phase 0 vendor research should check whether the row belongs in PROC-MIN-ACTION or routes to RPA. Alternative name action_flows.
     vendor_evidence: [Celonis Action Flows, SAP Signavio Action SDK, UiPath]
     proposed_module: PROC-MIN-ACTION
 
   - id: B3-COMPLIANCE-CONTROLS-EVALUATIONS
     candidate: compliance_controls_evaluations
-    rationale: Control-by-control conformance runs (segregation of duties, four-eye violations). Could overlap with GRC; Phase 0 must check whether GRC already masters this. Vendor evidence -Celonis Compliance, Celonis Audit, ServiceNow Process Mining (SOX 404 use cases). Alternative name process_control_runs.
+    rationale: Control-by-control conformance runs (segregation of duties, four-eye violations). Could overlap with GRC; Phase 0 must check whether GRC already masters this. Alternative name process_control_runs.
     vendor_evidence: [Celonis Compliance, Celonis Audit, ServiceNow Process Mining]
     proposed_module: PROC-MIN-CONFORMANCE
 
   - id: B3-PROCESS-BENCHMARKS
     candidate: process_benchmarks
-    rationale: Anonymized comparative data so users can position cycle-time / first-pass yield against industry medians. Vendor evidence -Celonis Benchmarks, Signavio Benchmarks. Alternative name industry_benchmarks.
+    rationale: Anonymized comparative data so users can position cycle-time / first-pass yield against industry medians. Alternative name industry_benchmarks.
     vendor_evidence: [Celonis Benchmarks, SAP Signavio Process Intelligence Benchmarks]
     proposed_module: PROC-MIN-INSIGHTS

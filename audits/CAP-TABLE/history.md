@@ -386,3 +386,89 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass working only the open items in `state.yaml`. Confirmed against live
+(domain 162; modules 20-25; 12 masters). The stale in-state snapshot was refreshed: APQC tags
+(H1), the 14 lifecycle-realization PATCHes (B1-S5), business_function_domains (C1: Finance owner,
+Legal + Investment Management contributor, HR consumer), and aliases were already complete from
+prior passes and required no work. Loader:
+`.tmp_deploy/fix_cap_table_state_driven_2026_06_07.ts` (idempotent; re-run inserts 0).
+
+### Executed (all rows record_status='new'; notes never written; no em-dash; American English)
+
+- **B1A-ENTITY-TYPE (Rule #12):** classified 11 unclassified masters. operational_workflow:
+  cap_tables, option_pools, valuations_409a, asc718_expense_periods, exit_scenarios,
+  employee_equity_accounts, secondary_transactions. catalog: security_classes, vesting_schedules.
+  operational_record: shareholder_records. computed: exit_waterfall_calculations.
+  (equity_grants was already operational_workflow.) This also RESOLVES B2-S6 structurally: the
+  config-shape exemption is now a typed column, not a notes decision.
+- **Catalog UX (Rule #20):** authored buyer-voice catalog_tagline + catalog_description on the
+  empty domain row (162) and all 6 modules (7 rows x 2 fields = 14 field writes). Empty-guarded;
+  no non-empty value overwritten.
+- **B1A-S3:** inserted 6 trigger_events (cap_table.exit_initiated, exit_scenario.committed,
+  secondary_transaction.approved, equity_grant.exercised, secondary_transaction.settled =
+  state_change; option_pool.refreshed = lifecycle). data_object FKs verified live.
+- **B1A-S6 (gated by entity_type per Rule #12):** authored lifecycle states for the 3 masters now
+  classified operational_workflow that carried zero states: option_pools (5: proposed,
+  board_approved*, active, exhausted, refreshed* @ module 21), employee_equity_accounts (4:
+  provisioned, active, terminated*, offboarded @ module 24), asc718_expense_periods (2: open,
+  closed* @ module 22). 11 states total (* = requires_permission gate). shareholder_records
+  (operational_record) and exit_waterfall_calculations (computed) are exempt by classification, so
+  B1A-S6's 4-master list is fully discharged (2 authored under B1A-S6 scope + asc718 +
+  2 exempt-by-type).
+- **B1B-S2:** inserted 10 intra-domain handoffs (source=target=162, integration_pattern=
+  lifecycle_progression, friction_level=low). The 4 that depended on B1A-S3's new events were
+  unblocked in the same run.
+- **B1B-S9b:** authored 6 regulations (IRC-409A, ASC-718, SEC-RULE-701, SEC-REG-D, IRS-FORM-3921,
+  IRS-FORM-3922; jurisdiction USA=3; statutory issuing bodies allowed under Rule #18) and attached
+  all 6 to CAP-TABLE via domain_regulations (409A/ASC718/Rule701/3921 mandatory; Reg D/3922
+  conditional). SOX (id 5) was already attached.
+
+### Surfaced for user (not written)
+
+- **B2-S1 + M7 integrity defect:** equity_grants (158) carries TWO role='master' DMDO rows
+  (module 21 id 66 AND module 79 id 399). Single-master violation. The fix (demote one master,
+  relocate the 7 lifecycle states) is the B2-S1 architectural decision and is DESTRUCTIVE; the M7
+  auto-fix exception does not apply because B2-S1 is what picks the canonical master. Surfaced, not
+  applied. Blocks B1B-S4.
+- **B2-S2 / B2-S3 / B2-S4 / B2-S5 / B2-S7:** unchanged user decisions (handoff event source;
+  notes-pollution confirm; 6 pattern-flag flips; permission-bundle drift policy; description
+  Rule #18 rewrite). B2-S3 and B2-S7 entail destructive overwrites.
+- **B2-S6:** resolved structurally via entity_type (asc718 -> operational_workflow with
+  open->closed lifecycle). Surfaced for confirmation only; reversing would be destructive.
+- **B1B-S11:** notes='' revert on 12 domain_data_objects rows is destructive, gated on B2-S3.
+- **B1B-S10:** 2 COMP-MGMT <-> CAP-TABLE inter-domain handoffs; part (b) anchor event
+  (equity_grant.exercised) now exists, but both remain gated on B2-S1/B2-S2.
+
+### Personas deferred
+
+- **B1A-PHASE-P:** persona / RACI layer (6 candidate roles) DEFERRED per audit policy; not
+  agent-authored without user direction. B1B-S7 (Phase E roles + permissions) stays blocked behind
+  it plus B1B-S4 + B2-S5.
+
+### Left
+
+- **B1B-S8:** RETIRED by the per-domain-skill supersession (no per-module system skills /
+  skill_tools); reframed as a note in state.yaml.
+- **b3:** 12 entity/handoff candidates + 5 modularization candidates + 6 regulation candidates +
+  2 domain candidates carried forward unchanged (non-blocking backlog).
+
+### Post-fix status
+
+next_action_by: user (open b2 decisions + destructive approvals + deferred personas). All agent-
+doable additive/corrective work is executed at record_status='new'.
+
+### Spot-check links
+
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/domain_modules?domain_id=eq.162
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/data_object_lifecycle_states
+- https://tests.semantius.app/domain_map/handoffs?source_domain_id=eq.162
+- https://tests.semantius.app/domain_map/domain_regulations?domain_id=eq.162

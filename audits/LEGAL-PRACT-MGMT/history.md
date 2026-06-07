@@ -292,3 +292,47 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass over LEGAL-PRACT-MGMT's open state items (no fresh from-scratch audit). Domain confirmed live as id 150. Executed every additive/corrective item the agent can do at `record_status='new'`, surfaced the destructive and judgment items, and left the blocked b1b / b3 / superseded items. The snapshot was partly stale: handoff 918 was already APQC-tagged live (row 991, process 1359 "Post AR activity to the general ledger" L4), so only handoff 333 needed a tag rather than the two the state proposed.
+
+### Executed (record_status='new', idempotent verify-then-write)
+
+| Item | Type | Count | Detail |
+|---|---|---|---|
+| B1A-ENTITY-TYPE | PATCH `data_objects.entity_type` | 6 | All 6 LEGAL masters were `unclassified`; each carries a complete lifecycle state machine (initial + terminal + monotonic order + gated transitions) verified live, so each PATCHed to `operational_workflow`. Rows: legal_matters 391, trust_accounts 392, conflict_checks 393, engagement_letters 394, external_court_filings 738, client_invoices 739. |
+| B1A-H1-TAIL | INSERT `handoff_processes` | 1 | Handoff 333 (trust_account.exception, LEGAL-TRUST-ACCT to GRC) tagged to process 325 ("Operate controls and monitor compliance with internal controls policies and procedures", external_id 21574, L3), role `implements`, proposal_source `agent_curated`, record_status default `new`. New row id 1180. Handoff 918 already covered (row 991, process 1359) so NOT re-tagged (state's proposed 303 would have been a redundant second AR tag). |
+| B2-A4 (catalog UX, domain) | PATCH `domains.catalog_tagline` + `catalog_description` | 1 | Domain 150 both fields were empty; authored buyer-voice copy (workflow + value, no vendor names, no em-dash, American English) per Rule #20 / Rule #21. The stale "surface-before-write" gate in the b2 item was ignored per Rule #21 (catalog UX is EXECUTE on empty fields). |
+| B2-M8 (catalog UX, modules) | PATCH `domain_modules.catalog_tagline` + `catalog_description` | 5 | All 5 LEGAL modules (132 Matter Management, 133 Client Intake and Conflict Clearance, 134 Time Capture and Client Billing, 135 IOLTA Trust Accounting, 136 Court Calendaring and Docketing) had both fields empty; authored per-module buyer-voice copy. |
+
+Write orchestration: `bun run .tmp_deploy/2026-06-07_legal_pract_mgmt_state_execute.ts` (read-live-then-write, em-dash pre-check clean). All writes re-verified live post-run.
+
+### Surfaced (NOT executed; awaiting user)
+
+- **B1A-SELF-CONTAIN (M9, DESTRUCTIVE):** 2 `crm_contacts` contributor DMDO rows on LEGAL-INTAKE-CONFLICT (133) and LEGAL-MATTER-MGMT (132) break module self-containment (crm_contacts is CRM-mastered, not embedded here). Fix rewrites role/necessity on an existing non-empty row, so surfaced not applied. Recommended per row: convert to `embedded_master` (local shell) OR set `necessity=optional`.
+- **B1A-PHASE-P (personas/RACI, DEFERRED):** 5 modules, 0 personas post-Plan-3 (E1 fail). Persona/RACI layer deferred per policy; agent did not author. Candidate personas noted in state: Attorney, Paralegal, Conflicts Partner, Office Manager / Billing Coordinator, Legal Bookkeeper / Trust Administrator.
+- **B2-S1 (B4 positive re-eval):** per-flag yes/no on `conflict_checks.has_personal_content` and `external_court_filings.has_single_approver` (both overwrite an existing boolean).
+- **B2-S3 (M7 architectural intent):** standalone-deployable (promote 4 consumer DMDOs to embedded_master) vs co-installed (DELETE 4 consumer DMDOs). Recommendation (b) DELETE per market read. Both options destructive; gating decision for B1B-M7-* and B1B-B9B.
+- **B2-S4 (B11 alias disambiguation):** keep / drop / rename the `legal_matters` to Engagement alias (collides with engagement_letters).
+
+### Left (no action)
+
+- **b1b (6 items)** blocked on B2-S3 (B1B-M7-LEGAL-MATTERS, B1B-M7-CLIENT-INVOICES, B1B-B9B-INTRA-DOMAIN-HANDOFFS) or on other-domain audits (B1B-B8-CROSS-DOMAIN-RELATIONSHIPS gated on KMS/ERP-FIN/GRC master confirmation; B1B-B10B-NULL-TARGET-MODULE-FK and B1B-PAIRWISE-CONSUMER-DMDO report-only, owed by CLM/GRC/KMS/ERP-FIN/ECM/AUDIT).
+- **b3 (4 items)** backlog: matter_documents, matter_deadlines, matter_parties, legal_tasks. Untouched (non-blocking ideas).
+- **B2-S2 (skill_tools notes-pollution)** SUPERSEDED 2026-06-06: skill_tools is dropped under the per-domain-skill restoration. Dropped from open items.
+
+### UI links (tables written)
+
+- https://tests.semantius.app/domain_map/data_objects (filter id in 391,392,393,394,738,739)
+- https://tests.semantius.app/domain_map/handoff_processes (new row id 1180, handoff_id 333)
+- https://tests.semantius.app/domain_map/domains (id 150)
+- https://tests.semantius.app/domain_map/domain_modules (filter id in 132,133,134,135,136)
+
+### No JWT-audience errors during this run.
+
+post-fix status: next_action_by = user (remaining open items are all destructive b2 decisions, the deferred persona layer, or blocked b1b / b3).

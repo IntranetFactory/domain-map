@@ -11,35 +11,37 @@
 schema_version: 2
 domain: CAFM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
+
+# UNBUILT domain (0 domain_modules, M1 hard fail; 3 shared capabilities; 0 masters/BFDs/
+# handoffs/skills/roles). The entire build cascade is gated on the open b2 existential decision
+# B2-FOLD-VS-DISTINCT (keep CAFM distinct vs fold into IWMS). Per the UNBUILT clause the agent
+# does NOT scaffold; it surfaces the build and leaves the cascade. The 2026-06-07 audit executed
+# the one viable additive item (catalog UX copy on the empty domain row, Rule #20). Everything
+# below is surfaced to the user or blocked.
 
 b1a:
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 3 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 3 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    finding: "Live triage 2026-06-07 (no drift): CAFM (id 142) has 0 domain_modules rows (M1 fail) and 3 capability_domains rows (374/376/377), so it is not deployable today. It must be built before any persona / RACI work applies. SURFACED, not executed (UNBUILT clause): the agent does not scaffold an unbuilt domain."
+    action: "Resolve b2 B2-FOLD-VS-DISTINCT first. If the answer is keep-distinct (a/c): run Phase A then M then B then S to author the module set, capabilities, masters, and the ONE domain-grain system skill (per the 2026-06-06 supersession: NOT per-module skills). If multi-module, run Phase P afterward. If fold-into-IWMS (b): this build is moot and CAFM is queued for retirement."
+    blocked_by:
+      - {type: user_decision, ref: B2-FOLD-VS-DISTINCT}
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-S1
     summary: "Zero domain_modules rows for CAFM (M1 fail); domain not deployable."
     finding: "CAFM (id 142) has zero domain_modules rows. M1 gate blocks every downstream band (B, C, E, F, H). With 3 capabilities (REAL-SPACE-OPTIM 374, REAL-MAINTENANCE 376, REAL-OCCUPANCY-ANALYTICS 377) CAFM sits at the M2 boundary; the choice is 1 full module (CAFM-FACILITY-OPS) or 2 full modules (CAFM-SPACE-OPS + CAFM-MAINTENANCE-OPS)."
-    action: "Author 1 or 2 module_kind='full' rows depending on Bucket 2 #1 resolution. If user picks fold-into-IWMS, this fix is moot."
+    action: "Author 1 or 2 module_kind='full' rows depending on B2-FOLD-VS-DISTINCT resolution. If user picks fold-into-IWMS, this fix is moot."
     blocked_by:
       - {type: user_decision, ref: B2-FOLD-VS-DISTINCT}
     affected_modules: []
-  - id: B1B-S2
-    summary: "catalog_tagline and catalog_description empty (A4 fail); buyer-facing copy required by Rule #20."
-    finding: "CAFM (id 142) catalog_tagline='' and catalog_description=''. Rule #20 requires both populated in buyer voice."
-    action: "Draft both per Rule #20 and surface to user for approval before writing. Conditional on B1B-S1 (no point drafting buyer copy for a domain that may be dissolved)."
-    blocked_by:
-      - {type: user_decision, ref: B2-FOLD-VS-DISTINCT}
-      - {type: depends_on, ref: B1B-S1, reason: "module identity informs tagline scope"}
   - id: B1B-S3
     summary: "Zero business_function_domains rows for CAFM (C1 fail); no recorded owner function."
-    finding: "CAFM (id 142) has zero business_function_domains rows. Owner candidate: FACILITIES (responsibility_type=owner). Contributors: IT, HR."
-    action: "Insert FACILITIES owner row, plus IT and HR contributor rows. Independent of B1B-S1 module shape but conditional on Bucket 2 #1 (if folded into IWMS, IWMS owns the BFD)."
+    finding: "CAFM (id 142) has zero business_function_domains rows. Owner candidate: Facilities and Real Estate (responsibility_type=owner). Contributors: IT, HR. Blocked: if CAFM is folded into IWMS, IWMS owns the BFD, so the owner attribution depends on the b2 decision."
+    action: "When B2-FOLD-VS-DISTINCT resolves to keep-distinct, insert Facilities and Real Estate owner row, plus IT and HR contributor rows. If folded, do not insert (IWMS owns it)."
     blocked_by:
       - {type: user_decision, ref: B2-FOLD-VS-DISTINCT}
   - id: B1B-S4
@@ -58,20 +60,20 @@ b1b:
       - visitor_registrations
   - id: B1B-S5
     summary: "Zero skills rows touching CAFM (F2 fail); Semantius score uncomputable."
-    finding: "CAFM has zero skills rows. Rule #17 requires exactly one skill_type='system' per domain_modules row with >=1 skill_tools row each."
-    action: "Conditional on B1B-S1: when modules ship, author one system skill per module with skill_name=<module_code_lower>_agent and >=1 skill_tools rows."
+    finding: "CAFM has zero skills rows. RETIRED MODEL NOTE (superseded 2026-06-06): the original 'one system skill per domain_modules row with skill_tools' framing is CANCELED. Under the current model CAFM, once built, gets exactly ONE domain-grain system skill (domain_id set, domain_module_id null) that derives its toolset from domain_module_tools; full modules carry no skill. Per-module tool authoring is tracked in audits/_modularization-backlog.md."
+    action: "Conditional on B1B-S1: when the domain is built, author the single domain-grain system skill (NOT per-module). Do not author skill_tools (dropped)."
     blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: "system skill is per-module"}
+      - {type: depends_on, ref: B1B-S1, reason: "system skill follows the build"}
   - id: B1B-S6
     summary: "Zero roles touching any CAFM module (E1 conditional)."
-    finding: "Zero roles in the catalog touch CAFM. E1 vacuously passes for a single-module domain but if user picks the 2-module split (Bucket 2 #1 option a-multi or option c) the E-band needs >=3 distinct roles."
+    finding: "Zero roles in the catalog touch CAFM. E1 vacuously passes for a single-module domain but if user picks the 2-module split (B2-FOLD-VS-DISTINCT option a-multi or option c) the E-band needs >=3 distinct roles."
     action: "Conditional on B1B-S1 multi-module resolution. Candidate roles: FACILITY-COORDINATOR, FACILITIES-MANAGER, WORKPLACE-USER."
     blocked_by:
       - {type: depends_on, ref: B1B-S1, reason: "role count depends on module count"}
   - id: B1B-S7
     summary: "domain_module_capabilities cannot be populated (M4 fail by virtue of M1 fail)."
     finding: "The three CAFM capabilities (374, 376, 377) are not linked to any module because no module exists. Catalog cannot answer 'which CAFM module realizes Space Optimization'."
-    action: "After B1B-S1 lands modules, populate domain_module_capabilities for each capability-to-realizing-module pair. Capability renames are Bucket 2 #2 (user judgment)."
+    action: "After B1B-S1 lands modules, populate domain_module_capabilities for each capability-to-realizing-module pair. Capability renames are b2 B2-CAPABILITY-RENAME (user judgment)."
     blocked_by:
       - {type: depends_on, ref: B1B-S1, reason: "modules must exist before capability junctions"}
       - {type: user_decision, ref: B2-CAPABILITY-RENAME}
@@ -83,8 +85,8 @@ b1b:
       - {type: depends_on, ref: B1B-S4, reason: "handoffs require mastered data_objects with lifecycle states"}
   - id: B1B-M1
     summary: "Missing entity facility_service_requests (SMB-tier light work request)."
-    finding: "Vendor surface (Archibus Service Request, FMX Maintenance Request, Officespace Service Tickets) carries an SMB-tier work request entity lighter than IWMS workplace_service_requests. Distinct from IWMS only if CAFM stays separate; if folded into IWMS, the entity is the IWMS-mastered one."
-    action: "Insert facility_service_requests as a CAFM-mastered data_object with DMDO role=master / necessity=required, lifecycle states, pattern flags. Conditional on B1B-S1 (module must exist) and Bucket 2 #1."
+    finding: "Vendor surface (1st-class on three flagship CAFM products) carries an SMB-tier work request entity lighter than IWMS workplace_service_requests. Distinct from IWMS only if CAFM stays separate; if folded into IWMS, the entity is the IWMS-mastered one."
+    action: "Insert facility_service_requests as a CAFM-mastered data_object with DMDO role=master / necessity=required, lifecycle states, pattern flags. Conditional on B1B-S1 (module must exist) and B2-FOLD-VS-DISTINCT."
     blocked_by:
       - {type: user_decision, ref: B2-FOLD-VS-DISTINCT}
       - {type: depends_on, ref: B1B-S1, reason: "needs a host module"}
@@ -101,7 +103,7 @@ b2:
       - "(a) Keep CAFM, modularize it (1 or 2 modules per B1B-S1)."
       - "(b) Fold CAFM into IWMS as an SMB deployment tier; queue CAFM domain row for retirement (record_status='rejected' only with explicit user approval per Rule #1)."
       - "(c) Keep both but split capabilities (rename shared capabilities to domain-neutral, then load each domain's tier-specific masters)."
-    why: "Evidence for fold: shared capabilities 374/376/377, vendor overlap (Archibus, Nuvolo, Eptura via REAL-EST link, Officespace, Accruent), overlapping market scope per the two description columns, zero distinct masters loaded for CAFM. Evidence for keep-distinct: CAFM min_org_size='20 s <500' vs IWMS '30 m <2500'; CAFM cost_band='$$' vs IWMS '$$$'; CAFM market 400 USDM vs IWMS 1500 USDM; pure-play SMB-tier vendors (FMX, Officespace, Tango) target the smaller buyer. Question is independent of Bucket 3 (vendor research would not change the answer)."
+    why: "Evidence for fold: shared capabilities 374/376/377, vendor overlap, overlapping market scope per the two description columns, zero distinct masters loaded for CAFM. Evidence for keep-distinct: CAFM min_org_size='20 s <500' vs IWMS '30 m <2500' (confirmed live 2026-06-07); CAFM cost_band='$$' vs IWMS '$$$' (confirmed live); CAFM market 400 USDM vs IWMS 1500 USDM (confirmed live); pure-play SMB-tier vendors target the smaller buyer. Question is independent of b3 (vendor research would not change the answer). This is the GATE for the entire build cascade."
     extra_independent_of: [b3]
   - id: B2-CAPABILITY-RENAME
     summary: "Promote shared capabilities to domain-neutral?"
@@ -109,7 +111,7 @@ b2:
     options:
       - "Rename to domain-neutral codes (only meaningful if B2-FOLD-VS-DISTINCT resolves to (a) or (c))."
       - "Leave as-is (only consistent if B2-FOLD-VS-DISTINCT resolves to (b), since then capabilities span only REAL-EST + IWMS = 2 domains)."
-    why: "Per the SKILL.md cross-cutting capability convention, capabilities spanning >=3 domains warrant a domain-neutral code (no REAL- prefix)."
+    why: "Per the SKILL.md cross-cutting capability convention, capabilities spanning >=3 domains warrant a domain-neutral code (no REAL- prefix). Renaming an existing capability_code is a destructive overwrite, so it is surfaced regardless of the B2-FOLD-VS-DISTINCT outcome."
     extra_depends_on_decision: B2-FOLD-VS-DISTINCT
   - id: B2-CERT-REQUIRED
     summary: "Confirm certification_required=false for CAFM."
@@ -117,21 +119,21 @@ b2:
     options:
       - "Keep false (recommended: SMB CAFM market is not vendor-certified; OSHA / ADA / EHS overlays are jurisdictional, not product certification)."
       - "Flip to true (only if user has evidence of a CAFM-specific product or implementer certification regime)."
-    why: "Quick confirmation to close the A-band metadata sweep."
+    why: "Quick confirmation to close the A-band metadata sweep. Live value confirmed false on 2026-06-07."
   - id: B2-MIN-ORG-SIZE-CROSSCHECK
     summary: "Cross-check CAFM min_org_size against IWMS asymmetry."
     question: "CAFM min_org_size='20 s <500' vs IWMS min_org_size='30 m <2500'. Confirm the SMB-vs-enterprise tier asymmetry is real and intentional?"
     options:
       - "Keep current values (the asymmetry justifies keep-distinct in B2-FOLD-VS-DISTINCT)."
       - "Adjust if user has different intent."
-    why: "Inspection task; informs B2-FOLD-VS-DISTINCT."
+    why: "Inspection task; informs B2-FOLD-VS-DISTINCT. Both live values confirmed on 2026-06-07; asymmetry is present."
   - id: B2-COST-BAND-CROSSCHECK
     summary: "Cross-check CAFM cost_band against IWMS asymmetry."
     question: "CAFM cost_band='$$' (25k to 100k) vs IWMS cost_band='$$$' (100k to 500k). Confirm the buyer-tier asymmetry is real?"
     options:
       - "Keep current values (asymmetry reinforces keep-distinct in B2-FOLD-VS-DISTINCT)."
       - "Adjust if user has different intent."
-    why: "Inspection task; informs B2-FOLD-VS-DISTINCT."
+    why: "Inspection task; informs B2-FOLD-VS-DISTINCT. Both live values confirmed on 2026-06-07; asymmetry is present."
   - id: B2-LEASE-UTIL-OWNERSHIP
     summary: "Lease accounting and utility tracking ownership when CAFM stays distinct."
     question: "If CAFM stays distinct, where do lease accounting and utility tracking live? Queued LEASE-ACCT candidate, new ENERGY-MGMT candidate, or embedded_master + optional in CAFM from UTIL-OPS?"
@@ -139,7 +141,7 @@ b2:
       - "Route lease accounting to queued LEASE-ACCT candidate domain."
       - "Route utility tracking to queued ENERGY-MGMT candidate domain."
       - "Embed UTIL-OPS utility_meters (id 661) as embedded_master + optional in CAFM."
-    why: "CAFM description explicitly excludes both. Has a Bucket 3 dependency: a Phase 0 utility-tracking pass could surface whether utility_meter_readings (UTIL-OPS handoff 293 payload) should be embedded_master + optional in CAFM."
+    why: "CAFM description explicitly excludes both. Has a b3 dependency: a Phase 0 utility-tracking pass could surface whether utility_meter_readings (UTIL-OPS handoff 293 payload) should be embedded_master + optional in CAFM."
     extra_depends_on_decision: B2-FOLD-VS-DISTINCT
     extra_bucket3_dependency: true
 

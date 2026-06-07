@@ -355,3 +355,34 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass over the open items in `state.yaml` (Rule #21), not a fresh from-scratch audit. Live re-confirmed AUDIT (domain id 16, parent_domain_id 15 under GRC) is still UNBUILT: 0 `domain_modules`, 0 `capability_domains`. Per the unbuilt rule the build cascade is left untouched (no scaffold). Executed the three additive/corrective items that are independent of the build: `entity_type` classification on the 8 masters, `event_category` backfill on 3 trigger events, and the domain-grain catalog UX copy (A4). Loader: [.tmp_deploy/fix_audit_state_driven_2026_06_07.ts](../../.tmp_deploy/fix_audit_state_driven_2026_06_07.ts). All writes verified at `record_status='new'`; no `notes` writes, no em-dashes, American English.
+
+Two prior open items were found ALREADY DONE on live (snapshot stale) and dropped: B1A-H1 (all 4 ERP-FIN inbound handoffs 189/531/536/538 already carry `agent_curated` `handoff_processes` rows, all `record_status='new'`, so H1 sits at 40/40 = 100%; the rows point at different `process_id`s than the state proposal, but re-pointing an existing agent-curated tag would be a destructive REPLACE, so left as-is) and C1 (`business_function_domains` already has an `owner` row on function 46 Internal Audit + a `contributor` row on function 4 Finance). B11 aliases also already cover all 8 masters; not an open item, no write.
+
+### Executed
+
+- **entity_type (B13 / Rule #12): 8 PATCHes.** `data_objects` 292-299 unclassified -> `operational_workflow` (all 8 are real-world business objects with documented workflows per B1B-B12). This now makes B1B-B12 a hard requirement (every operational_workflow master needs lifecycle states), still blocked on the build for `domain_module_id`.
+- **event_category backfill (part of B1A-B9): 3 PATCHes.** trigger_events 602 (`audit_plan.updated`) -> `lifecycle`, 603 (`control_test.executed`) -> `state_change`, 605 (`work_paper.completed`) -> `lifecycle`. Events 228 and 232 were already `lifecycle`.
+- **Catalog UX (A4 / Rule #20): 2 fields written** on domain row 16 (`catalog_tagline` + `catalog_description`), both previously empty. Buyer-voice copy (workflow + value), no vendor names. Stale "surface-before-write" B2-CATALOG-UX gate ignored per Rule #20; that item is dropped from state. Module-grain catalog UX (M8) remains vacuous until the build lands.
+
+### Surfaced (no write; user decision or destructive)
+
+- **B1A-B9 handoff-draft half:** 5 events publish nothing (228, 232, 602, 603, 605). 232 -> GRC + ERP-FIN + EPM fan-out is the obvious miss; deferred because source_domain_module_id cannot be derived on an unbuilt domain and leaf-vs-publish is a Rule #1 judgment.
+- **b2 (8 open):** B2-MOD-SHAPE (2 vs 3 modules, gates the whole build), B2-AUDIT-VS-GRC (entity placement), B2-NOROLE-PAYLOADS (13 consumer DMDOs vs signal), B2-B3-NAMING (work_papers/control_tests canonical-claim vs rename), B2-PATTERN-FLAGS (flag positive-consideration, now mandatory since all 8 are operational_workflow), B2-DOMAIN-PEER (peer vs sub-domain of GRC).
+- **Destructive (recommended only, never applied):** B2-BAD-TAGS (DELETE substring tags on handoffs 256, 825), B2-SELF-LOOP (DELETE or verb-overwrite on data_object_relationships id 356).
+- **Personas / RACI (Phase P):** N/A — domain unbuilt; deferred with the build. No candidate personas authored.
+
+### Left (untouched)
+
+- **B1A-BUILD + all b1b** (B1B-MOD1, B1B-A2, B1B-B12, B1B-B10b-OUT, B1B-B10b-IN): blocked on the build, which is gated on B2-MOD-SHAPE.
+- **Former B1B-F1** (DELETE legacy domain-level skill once per-module skills land): RETIRED under the 2026-06-06 per-domain-skill supersession (header kept); reframed as a note in state.yaml. No per-module skill authoring.
+- **b3 (17 candidates):** speculative entity backlog; non-blocking, untouched.
+
+### Post-fix status
+
+`next_action_by: user`. Everything the agent can do without the build or a user decision is done. The single unblocking gate is B2-MOD-SHAPE (module count), which releases B1A-BUILD and the entire b1b cascade.

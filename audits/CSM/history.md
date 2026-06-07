@@ -332,3 +332,75 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-06 - Audit (state-driven execute)
+
+### Summary
+
+State-driven Validate pass per SKILL.md Rule #21. Worked only the open items in
+`state.yaml` against live; no fresh from-scratch audit. Executed every additive/corrective
+fix the agent could land (all at `record_status='new'`); surfaced the b2 decisions,
+destructive-awaiting-approval items, and the deferred persona layer; left the b1b items that
+are gated on open b2 decisions. The stale B2-CATALOG-UX gate is now resolved by Rule #20
+(in-record review). Loader:
+[.tmp_deploy/csm_state_execute_2026_06_06.ts](../../.tmp_deploy/csm_state_execute_2026_06_06.ts).
+
+Live verification at start refreshed the snapshot: customer_subscriptions (106) already
+carried 3 aliases (none of them the enumerated synonyms, so the 2 new ones are still
+net-new); all 4 entity_types were still `unclassified`; domain 30 + all 3 modules still had
+empty catalog fields; the canonical IT business function is `IT Operations` (id 27), there is
+no `Information Technology` row.
+
+### Executed (all record_status='new')
+
+| Item | Action | Count | UI |
+|---|---|---|---|
+| B1A-ENTITY-TYPE | PATCH `data_objects.entity_type`: customer_cases 103 → `operational_workflow`; customer_entitlements 104 → `catalog`; csat_responses 105 → `operational_record`; customer_events 111 → `operational_record` | 4 | https://tests.semantius.app/domain_map/data_objects |
+| B1A-H1 | INSERT `handoff_processes` (agent_curated / implements) on net-new clean PCF matches | 17 | https://tests.semantius.app/domain_map/handoff_processes |
+| B1B-S1 + B1B-M8 | PATCH empty `catalog_tagline` + `catalog_description` on domain 30 and modules 112/113/114 (buyer voice, no vendor names) | 4 rows × 2 fields | https://tests.semantius.app/domain_map/domains , https://tests.semantius.app/domain_map/domain_modules |
+| B1B-S3 | INSERT `data_object_aliases` synonyms: 106 `service contract`, `support entitlement contract`; 111 `case timeline event`, `interaction event` | 4 | https://tests.semantius.app/domain_map/data_object_aliases |
+| B1B-S5 | INSERT `business_function_domains`: IT Operations (27) contributor, Customer Success (23) consumer | 2 | https://tests.semantius.app/domain_map/business_function_domains |
+
+APQC handoff tagging detail (B1A-H1): 17 net-new tags landed; coverage rose from 42/63 to
+**59/63 (94%)**. Anchors: `196` (Manage customer service problems/requests/inquiries, 6.2.2)
+for the 'opens case' / routing rows (330, 470, 496, 523, 865, 899, 902, 904, 908, 910, 1003);
+`6` (Manage Customer Service, 6.0) for entitlement/support-contract rows (71, 525); `148`
+(Manage customers and accounts, 3.5.2) for the customers-payload health/expansion rows (209,
+486, 488), matching the existing curated convention on sibling rows 224/234; `200` (Register
+products, 6.3.1) for warranty activation (1058). The `industry_term` alias_type was rejected
+by a check constraint (`industry_id` required); the generic synonyms loaded as `synonym`,
+matching the existing aliases on 106.
+
+Note on B1B-S2: customer_entitlements (104) is now classified `entity_type='catalog'`
+(config-shape support tier / SLA definition). The proposed `has_single_approver=true` flip
+still rides B2-PATTERN-FLAGS as an overwrite on a non-empty boolean.
+
+### Surfaced (no write; for the user)
+
+- **B1A-PHASE-P (personas, DEFERRED).** 3-module domain, 0 personas (E1 fail). Authoring is
+  entangled with the open B2-CSM-KNOWLEDGE-MASTER (a demote-to-starter reshapes persona reach)
+  and B2-CAPABILITY-SHAPE. Recommend authoring after those resolve. Candidate personas noted:
+  SUPPORT-AGENT, SUPPORT-TEAM-LEAD, ENTITLEMENT-MANAGER.
+- **B1A-SELF-CONTAIN (M9, destructive).** 6 contributor/required-consumer rows; converting
+  role→embedded_master or necessity→optional rewrites existing rows. Each surfaced with a
+  recommended per-row fix in state.yaml.
+- **B1B-B1.** trigger_event 94 (payment.failed) mis-attributed to customer_cases; a corrective
+  overwrite gated on B2-CUSTOMERS-AMBIGUITY.
+- **B1B-B10B-CLASS-A** (10 NULL module-FK ties) and **B1B-B10B-CLASS-B** (49 rows, B5 boundary,
+  no consumer DMDO). Both gated on B2-CUSTOMERS-AMBIGUITY / B2-CROSS-DOMAIN-INTEGRITY.
+- **Open b2:** B2-CUSTOMERS-AMBIGUITY, B2-CROSS-DOMAIN-INTEGRITY, B2-CAPABILITY-SHAPE,
+  B2-APQC-SCOPE (17 tagged, 4 residual deferred-to-Discover: 270, 996, 1007, 1055),
+  B2-CSM-KNOWLEDGE-MASTER, B2-PATTERN-FLAGS, B2-PAIRWISE-SCHEDULING. **B2-CATALOG-UX resolved
+  by Rule #20.**
+
+### Left (gated / backlog)
+
+- b1b gated on open b2: B1B-S2 (B2-PATTERN-FLAGS), B1B-B1 (B2-CUSTOMERS-AMBIGUITY),
+  B1B-B10B-CLASS-A (B2-CUSTOMERS-AMBIGUITY), B1B-B10B-CLASS-B (B2-CROSS-DOMAIN-INTEGRITY).
+- All b3 (11 candidate entities) untouched.
+
+### JWT errors
+
+None.

@@ -370,3 +370,88 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+State-driven Validate pass (SKILL.md Rule #21) working only the open items in
+`audits/BEN-ADMIN/state.yaml`. Loader: [.tmp_deploy/fix_ben_admin_state_driven_2026_06_07.ts](../../.tmp_deploy/fix_ben_admin_state_driven_2026_06_07.ts).
+Idempotent (re-reads live before each write); ran from project root. All writes land at
+`record_status='new'` (Rule #1). No `notes` writes (Rule #15). No vendor/product names in
+catalog copy (Rule #18). No em-dash; American English (CLAUDE.md).
+
+### Summary
+
+Two agent-executable state items closed (B1A-ENTITY-TYPE, B1A-S11) plus the standing Rule #20
+catalog-UX gap (domain + 4 modules had empty `catalog_tagline` / `catalog_description`).
+Everything else was destructive (surfaced), blocked on a b2 user decision, deferred (personas),
+or report-only owed by another domain. No fresh from-scratch audit was run.
+
+### Executed
+
+- **B1A-ENTITY-TYPE** (7 PATCHes, `data_objects.entity_type`, unclassified -> Rule #12 enum):
+  `benefit_plans` 146 -> `catalog` (plan-offering catalog; `has_personal_content=false`; simple
+  activate/deactivate publication lifecycle). `benefit_open_enrollments` 150, `benefit_enrollments`
+  147, `benefit_dependents` 148, `life_events` 149, `benefit_carriers` 151, `carrier_feeds` 152
+  -> `operational_workflow` (each carries a multi-state lifecycle with `requires_permission=true`
+  gated transitions, confirmed live). Classification deterministic from description + live
+  lifecycle shape. B13 now passes (zero unclassified BEN-ADMIN masters).
+- **Catalog UX (Rule #20)** (10 field PATCHes across 5 rows, empty fields only, never overwrites):
+  authored buyer-voice `catalog_tagline` + `catalog_description` on the BEN-ADMIN domain row (61)
+  and all 4 modules (BEN-PLAN-DESIGN 71, BEN-ENROLLMENT 72, BEN-CARRIER-INTEG 73,
+  BEN-ACA-COMPLIANCE 74). Workflow + value framing, no vendor names.
+- **B1A-S11** (C1, 3 INSERTs into `business_function_domains` on domain_id=61): Human Resources
+  (3) -> contributor, Payroll (38) -> contributor, Finance (4) -> consumer. Ids resolved live;
+  idempotent on `(domain_id, business_function_id)`. Rows 420/421/422 created at
+  `record_status='new'`; `business_function_domain_label` composed as "<Function> / Benefits
+  Administration"; no `notes` write. business_function_domains now carries 4 rows
+  (owner + 2 contributors + 1 consumer).
+
+### Surfaced (for user; not executed)
+
+- **B1A-RULE15-598** (DESTRUCTIVE / Rule #15): revert the unapproved `notes` string on DMDO 598
+  (`hr_cases` consumer on BEN-ENROLLMENT 72). Reverting overwrites a non-empty value AND writes
+  the `notes` column; both forbidden without sign-off. Recommended: `PATCH
+  /domain_module_data_objects?id=eq.598 {"notes":""}`. Interacts with B1B-S4 / B2-S1.
+- **B1A-SELF-CONTAIN** (M9, DESTRUCTIVE): 3 DMDO rows rewrite role/necessity on existing rows
+  (`deduction_codes` contributor on BEN-PLAN-DESIGN from PAYROLL; `employment_events` consumer on
+  BEN-ENROLLMENT from HCM; `hr_cases` consumer on BEN-ENROLLMENT from HRSD). Per row: convert to
+  `embedded_master` (local shell) or relax necessity to `optional`. The `hr_cases` row depends on
+  B2-S1.
+- **B2-S1** (`hr_cases` dependency strength on BEN-ENROLLMENT DMDO 598): (a) PATCH
+  necessity=optional, (b) DELETE the row, or (c) keep consumer + required and document the in-flow
+  read.
+- **B2-S2** (pattern flags): (a) set `benefit_enrollments.has_single_approver` = true?
+  (b) set `benefit_dependents.has_submit_lock` = true? Both currently false.
+- **B2-S3** (regulation scope, current set ACA/ERISA/HIPAA/COBRA/GINA): (a) add Section 125 +
+  Form 5500 + ADA + FMLA + USERRA + state paid-leave now; (b) defer to Bucket 3; (c) federal core
+  only.
+- **B2-S4** (BEN-ACA-COMPLIANCE masters zero entities): (a) author `aca_filings` +
+  `affordability_snapshots` masters with lifecycle/triggers/gates/bundles; (b) redesignate as
+  derived-signals only; (c) defer to Phase 0.
+- **B2-S5** (workflow-gate bundling): (a) add all 7 enrollment gates to 10067 + all 5 plan-design
+  gates to 10066; (b) targeted subset; (c) keep admin-escalation pattern.
+- **B2-S6** (`domains.notes` pointer): supply user-approved wording, or skip (Rule #15).
+- **Personas/RACI deferred (B1A-PHASE-P):** not authored this pass (Phase-P discipline). The
+  domain has 4 full modules and 0 personas reaching it post-Plan-3 (E1 fires). Candidate
+  personas: Benefits Administrator, Enrollment Specialist, Plan Manager, Compliance Analyst
+  (mirror the four legacy permission-bundle roles 10065-10068).
+
+### Left
+
+- **b1b blocked:** B1B-S4 (gated on B2-S1), B1B-S9 (gated on B2-S5), B1B-S10 (gated on B2-S4).
+- **b1b report-only (owed by others):** B1B-RPT-ERPFIN-MASTER (`legal_entities` 197 module-master,
+  ERP-FIN), B1B-RPT-B10B-NULL (handoffs 109/419 ERP-FIN, 418 HCM), B1B-RPT-APQC-HOLDBACK
+  (handoffs 413/418 PCF cites unresolved).
+- **b3 backlog:** 8 entity candidates + 3 modularization candidates + 5 regulation candidates,
+  unchanged.
+- **Superseded:** the 2026-06-06 per-domain-skill-restoration header (per-module `system` skill /
+  `skill_tools` model) stays retired; no skill-grain items were touched.
+
+### UI spot-check (tables written this pass)
+
+- https://tests.semantius.app/domain_map/data_objects (entity_type)
+- https://tests.semantius.app/domain_map/domains (catalog UX)
+- https://tests.semantius.app/domain_map/domain_modules (catalog UX)
+- https://tests.semantius.app/domain_map/business_function_domains (B1A-S11)

@@ -397,3 +397,74 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21): worked only the open items in IGA's
+state.yaml, classified each into EXECUTE / SURFACE / LEAVE, then executed the additive /
+corrective subset. Domain id 35 confirmed live; 5 modules (144-148), 6 masters
+(704, 705, 706, 707, 708, 964) re-verified. No fresh from-scratch audit. No JWT-audience
+errors. Loader: `c:/dev/domain-map/.tmp_deploy/fix_iga_state_driven_2026_06_07.ts`
+(idempotent; re-ran clean, 0 writes on the second pass). All writes `record_status='new'`.
+
+### Executed (counts)
+
+| State item | Operation | Rows | Outcome |
+|---|---|---|---|
+| B1A-ENTITY-TYPE | PATCH `data_objects.entity_type` (was all `unclassified`) | 6 | 704 / 705 / 707 / 964 -> `operational_workflow`; 706 -> `catalog` (config-shape draft->published->retired); 708 -> `operational_record` (append-only execution event log) |
+| B1A-B6 | INSERT `data_object_relationships` 964 -> 707 (`implicated_in_sod_violation` / `implicates_entitlement`, many_to_many, association, owner_side=source) | 1 | id 2106; SoD-violation subject edge now renders |
+| Catalog UX (Rule #20) | PATCH `catalog_tagline` + `catalog_description` on the domain row (35) and 5 modules where empty | 12 fields (2 domain + 10 module) | Buyer-voice, vendor-name-free, em-dash-free, American English; never overwrote a non-empty value (all 6 rows were empty) |
+| B1A-APQC (clean subset) | INSERT `handoff_processes` (proposal_source=`agent_curated`, role=`implements`) | 3 | 286 -> 273 and 289 -> 273 (Manage IT user identity and authorization, the established IGA-access PCF); 378 -> 224 (Manage employee onboarding). 389/391/392 were already tagged (process 97) by a prior pass. |
+
+Totals: 6 PATCH (entity_type) + 12 PATCH-fields (catalog UX across 6 rows) + 1 INSERT
+(relationship) + 3 INSERT (handoff_processes).
+
+C1 (business_function_domains) checked live and already complete: IGA owner =
+"Identity and Access Management" (business_function_id 63), contributor = "IT Operations"
+(business_function_id 27). No additive C1 row needed (the prompt's generic "owner is Security"
+guidance does not apply: a non-conflicting owner already exists). No new rows authored.
+
+### Surfaced (for user; not written)
+
+- **B2-M7-DECIDE** (destructive): PROMOTE the 8 within-domain sibling-consumer DMDO rows to
+  `embedded_master`, or DELETE them? Blocks B1B-B9b (7 intra-domain handoffs).
+- **B2-S1-CARRY / B2-S2-CARRY / B2-S3-CARRY** (destructive notes overwrites): confirm whether
+  the config-shape exemption note on 706, the 14 handoff boilerplate notes, and the 20 DMDO
+  restatement notes (789-808) were user-approved or auto-written. Approval unlocks the
+  matching B1A-NOTES-* PATCH-to-empty (overwrites of non-empty values; never run unapproved).
+- **B2-S4-CARRY**: pattern-flag decisions on `iga_access_certifications.has_submit_lock`,
+  `iga_user_entitlements.has_submit_lock`, `iga_user_entitlements.has_single_approver`. Now
+  in-scope for all four operational_workflow masters per Rule #12.
+- **B2-S5-CARRY**: permission_hierarchy `<module>:admin` gate-inheritance semantics (platform
+  introspection needed; references retired IAM roles).
+- **B2-PCF-SUBSTITUTE**: substitute or backfill PCF rows for handoffs 461 / 463 / 462 (10568),
+  465 (10708), 185 (10470 / 10473) whose external_ids are absent from `/processes`.
+- **B1A-SELF-CONTAIN** (destructive, M9): 4 `employees` consumer+required DMDO rows on IGA
+  modules need embed-or-relax; rewriting an existing row's role/necessity needs sign-off.
+- **B1A-PHASE-P (personas/RACI): DEFERRED, not authored.** 5 modules, 0 personas post-Plan-3
+  (E1 fail). Candidate personas: IDENTITY-ADMIN (all 5), ACCESS-REQUEST-APPROVER (144),
+  ACCESS-CERTIFIER (145), SOD-ANALYST (146), entitlement-catalog owner (147), provisioning
+  operator (148). Author via references/roles.md section 7 when commissioned.
+
+### Left
+
+- **b1b blocked / owed by others:** B1B-M7-SIBLING-CONSUMERS (user decision B2-M7-DECIDE),
+  B1B-B9b (depends on M7), B1B-B10b-GRC-OUTBOUND (GRC owes 464/465), B1B-S8-PCF-MISSING
+  (PCF backfill / substitution).
+- **Defer-to-Discover (B1A-APQC-REMAINDER):** 281 (dlp_incident.escalated) and 845
+  (dlp_user_activity.flagged) plus other modern security primitives have no clean
+  apqc_pcf_cross_industry home (data-loss search returns 0 rows; 363 "Perform abandonment"
+  unrelated; 365 too coarse). No tag authored.
+- **b3 backlog (unchanged):** B3-RULESETS, B3-CERT-LINES, B3-ROLE-MINING, B3-CONNECTORS,
+  B3-BREAK-GLASS, B3-PAM-DOMAIN. PAM-as-separate-domain decision still gates the 5 MISSING
+  entries.
+
+### UI spot-check links
+
+- `https://tests.semantius.app/domain_map/data_objects`
+- `https://tests.semantius.app/domain_map/data_object_relationships`
+- `https://tests.semantius.app/domain_map/domains`
+- `https://tests.semantius.app/domain_map/domain_modules`
+- `https://tests.semantius.app/domain_map/handoff_processes`

@@ -326,3 +326,46 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass over the open items in `audits/DAM/state.yaml` (no fresh from-scratch audit). Live re-pull confirmed the prior snapshot: DAM is still an UNBUILT domain (0 `domain_modules`, 1 capability CREATIVE-REVIEW 446, 1 master `digital_assets` 137). The only DMDO touching `digital_assets` is HCMS-AUTHORING's contributor row (DMDO 1394, module 261, domain 93), not a DAM master, so the unbuilt posture holds. Per the brief's UNBUILT rule, the build itself and the entire b1b cascade are surfaced, not scaffolded; only the genuinely mechanical agent-fixable items were executed. Three writes landed and verified; all open b2 / destructive / persona items surfaced for the user.
+
+### Executed (3 write types, all verified, no record_status flips)
+
+- entity_type (Rule #12): 1 PATCH. `data_objects` 137 (`digital_assets`) `unclassified` -> `operational_workflow` (it carries the `digital_asset.published` trigger 46 and an upload/review/approve/publish/archive lifecycle). This makes B1B-S8 lifecycle-state authoring a true requirement once modules exist.
+- Em-dash sanitization (B1A-S12, CLAUDE.md policy): 1 PATCH. `domains` 92 `business_logic` U+2014 -> comma. New text: "Image and video transforms (resize, format conversion, watermark), irreducible but commodified by cloud media services." Meaning preserved; no vendor names (Rule #18 not implicated). B1A-S12 is now cleared.
+- Catalog UX (Rule #20, supersedes the stale B2-S4 surface-before-write gate): 1 PATCH writing 2 fields. `domains` 92 `catalog_tagline` + `catalog_description` (both were empty) authored in buyer voice, no vendor names, no em-dash, American English. No module copy: DAM has 0 modules. B2-S4 is retired by this execute.
+
+Loader: `c:/dev/domain-map/.tmp_deploy/dam_state_execute_2026_06_07.ts` (idempotent: reads live before each write; skips already-correct / non-empty values; defensive em-dash guard on authored copy).
+
+### Surfaced (user decisions, destructive, deferred)
+
+- B2-1 (LOAD-BEARING): the DAM module split (2 / 3 / 4 modules). Gates the entire b1b build cascade (B1B-S1 modules, B1B-S3 capability bind, B1B-S8 lifecycle states, B1B-B1/B2/B3 handoff FKs, B1B-M1..M8 routing). DAM stays unbuilt until decided.
+- B2-2 (DAM/PIM master-ownership overlap): `pim_digital_assets` (816, PIM module 142) vs `digital_assets` (137) seam. Surfaced, not resolved, per the digital-asset-mastery overlap rule.
+- B2-3 / B2-4 / B2-5 / B2-7: creative_briefs/deliverables placement; regulations to attach; capability cross-cutting scope (also clears A2); exact tuples for the 3 outbound `digital_assets -> users` edges (gates B1B-S7).
+- B2-S9 (DESTRUCTIVE): flip pattern flags on `digital_assets` (has_personal_content / has_submit_lock / has_single_approver). Agent will not flip without approval.
+- B2-H1 (DESTRUCTIVE / Rule #1): promote 4 existing `handoff_processes` rows (709, 255, 710, 711, all record_status=new, agent_curated) to approved. Tag rows already exist; only the approval flip is owed.
+- B2-6 / Phase P personas: DEFERRED (Brand and Creative function 55 roles). Owner + contributor `business_function_domains` rows already exist (function 55 owner id 147, function 25 contributor id 148), so C1 is satisfied; roles/personas await modules.
+- B1B-BUILD: UNBUILT domain. Build surfaced; cascade left (do not scaffold).
+
+### Left
+
+- All b1b items (B1B-M1..M8, B1B-S1/S3/S7/S8, B1B-B1/B2/B3): blocked on the B2-1 module-split decision / unbuilt-domain build cascade. Not agent-actionable until modules exist.
+- b3 backlog (B3-1..B3-7): speculative candidate entities, non-blocking.
+- Per-module system skill / `skill_tools` items (former B1B-S10 / B1B-S11): RETIRED per the 2026-06-06 supersession header (per-domain-skill restoration). Reframed: the single domain-grain skill + `domain_module_tools` are authored during the B1B-S1 build, not as per-module skills.
+- C1 (business_function_domains): already satisfied (owner function 55, contributor function 25). No insert.
+- Aliases (B11): 3 already present (asset, creative asset, brand asset). No open enumerated-synonym item; left.
+
+### Idempotency / JWT
+
+Re-running the loader is a no-op (all three writes guard on current state). No JWT audience errors.
+
+### UI links (tables written)
+
+- https://tests.semantius.app/domain_map/data_objects?id=eq.137
+- https://tests.semantius.app/domain_map/domains?id=eq.92

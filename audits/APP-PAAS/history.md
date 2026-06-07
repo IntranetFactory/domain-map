@@ -304,3 +304,85 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21) over the open items in
+audits/APP-PAAS/state.yaml. Worked only the recorded items; no fresh from-scratch
+audit. Live re-verification confirmed the snapshot: domain id 76, 6 masters
+(463-468), still 0 domain_modules / 0 capabilities (UNBUILT), 7 trigger_events
+(818-824) all empty event_category, all 6 masters entity_type='unclassified',
+catalog_tagline/catalog_description both empty, 0 data_object_aliases, handoff 753
+carrying a single agent_curated tag (1311). Cleared every build-independent
+additive/corrective item; surfaced the destructive and judgment items; left the
+module-gated cascade and the retired skill item. Per the UNBUILT posture the
+module/capability build itself is surfaced, not scaffolded.
+
+Loader: .tmp_deploy/2026-06-07_app_paas_state_driven_execute.ts (idempotent;
+re-run wrote 0 rows on the second pass).
+
+### Executed (record_status='new' / empty-field PATCH only)
+
+| Item | Write | Rows |
+|---|---|---|
+| B13 / entity_type | PATCH data_objects.entity_type 'unclassified' -> 'operational_workflow' on all 6 masters (463-468) | 6 |
+| B1A-S13-EVT-CATEGORIES | PATCH trigger_events.event_category on 818-824 per the recorded mapping (818/823 lifecycle; 819/820/821/822/824 state_change). All were empty, no overwrite. | 7 |
+| B1B-S2 / Catalog UX (Rule #20) | PATCH domains.catalog_tagline + catalog_description on domain 76 (both empty). Buyer voice, no vendor names, American English, no em-dash. Domain grain only (0 modules). | 1 |
+| B1B-S6 / aliases (B11) | INSERT 17 clearly-generic cross-PaaS synonyms (alias_type='synonym') across all 6 masters: app/project/service/site (463), deploy/release/rollout (464), environment/deployment stage (465), instance/runtime/worker (466), add-on/managed service/plugin (467), build/build job (468). | 17 |
+
+C1 (business_function_domains) was already satisfied and needed no write: owner =
+Platform Engineering (function 60), contributor = IT Operations (function 27), both
+canonical 20-spine names, both pre-existing.
+
+### Surfaced (NOT written; user decision / destructive)
+
+- **B2-S1** (master gate): approve the 2-module split APP-PAAS-RUNTIME (463/465/466/467)
+  + APP-PAAS-DELIVERY (464/468); link capability to existing LCAP-MANAGED-RUNTIME (333)
+  vs author parallel APP-PAAS-MANAGED-RUNTIME vs rename 333; fold ADDON-MARKETPLACE into
+  ENV-MGMT or keep top-level. B1B-S1/S4/S7/S9/S10/S11 all cascade from this.
+- **B2-S3** (destructive flag flips): confirm/decline paas_deployments.has_submit_lock=true,
+  paas_build_records.has_submit_lock=true, paas_addons.has_personal_content=true. Overwrites
+  non-empty boolean defaults, so user sign-off required.
+- **B2-S4**: paas_runtime_instances (466) is now classified operational_workflow. Decide
+  (a) author the 5-state autoscaler workflow, or (b) reclassify operational_record
+  (config-shape exemption). Gates B1B-S7 for that one master only.
+- **B2-S5**: declare LCAP lcap_apps (220) / KUBE-PLAT container_workloads (450) / VSDP
+  software_deployments (682) as consumer+optional DMDO on the receiving APP-PAAS module,
+  or accept domain-level only. Depends on B2-S1.
+- **B2-H1** (destructive replace/co-tag): handoff 753 carries agent_curated tag 1311
+  (handoff_processes 295); the 2026-05-30 audit proposed 52 instead. Keep 1311, replace
+  with 52 (DELETE 295 + insert), or co-tag both.
+- **Personas / RACI (Phase P)**: deferred (domain is UNBUILT; Phase P applies only after
+  a multi-module build lands). No personas authored. Candidate personas when built:
+  platform engineer (owns the runtime), application developer (deploys), site reliability /
+  on-call (reacts to failed deploys + scaling), release manager (promotes environments).
+
+### Left (no action)
+
+- **B1A-BUILD / B1B-S1** UNBUILT build (0 modules, 0 capabilities): surfaced, not
+  scaffolded; gated on B2-S1.
+- **B1B-S4 / S7 / S9 / S10 / S11** module-gated cascade: blocked behind B1B-S1 (need
+  module attribution for owner_side, domain_module_id on lifecycle rows, source module FK
+  on handoffs). Left.
+- **B1B-S6 residual** vendor-brand alias tuples (dyno / config vars / machine / version /
+  deployment slot): need pre-specified (master, solution_id, alias_name) tuples; reframed
+  to B1B-S6-ALIASES-VENDOR-TUPLES, blocked on B2-ALIASES. Left.
+- **B1B-S8 legacy skill retirement**: RETIRED per the per-domain-skill supersession
+  (2026-06-06). Skill 30 (app-paas-system, domain_id=76, domain_module_id=null) is now the
+  canonical domain-grain system skill; the split/skill_tools plan is canceled. Left as a note.
+- **b3 backlog** (paas_release_versions, paas_secrets, paas_log_streams, paas_custom_domains):
+  discretionary, non-blocking. Left.
+
+### UI spot-checks
+
+- https://tests.semantius.app/domain_map/data_objects?id=in.(463,464,465,466,467,468)
+- https://tests.semantius.app/domain_map/trigger_events?data_object_id=in.(463,464,465,466,467,468)
+- https://tests.semantius.app/domain_map/domains?id=eq.76
+- https://tests.semantius.app/domain_map/data_object_aliases?data_object_id=in.(463,464,465,466,467,468)
+
+### Post-fix status
+
+next_action_by: user (B2-S1 module split is the master gate; B2-S3 / B2-S4 / B2-S5 /
+B2-H1 await decisions). All executed writes are at record_status='new' awaiting review.

@@ -352,3 +352,55 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass over the open items in state.yaml; no fresh from-scratch audit.
+Live re-verification confirmed VULN-MGMT (domain 13, sub-domain of SECOPS 11) is still UNBUILT:
+0 domain_modules, 0 domain_module_host_domains, 0 capability_domains, 0 self-mastered
+data_objects. Under the overlay test it is master-bearing (vulnerabilities, scan results,
+remediation tickets are real records; leadership-tier zero-master exemption rescinded
+2026-06-02), so the answer is a BUILD, not an exemption. Per the UNBUILT LEAVE rule the build
+and its M / F / B10b cascade were SURFACED/LEFT, not scaffolded. Three build-independent
+EXECUTE items were completed. business_function_domains C1 confirmed already satisfied
+(owner Security Operations Center / business_function 64, plus IT Operations and Software
+Engineering contributors), so no owner/contributor inserts were owed. No entity_type PATCH
+owed (domain masters no data_objects of its own).
+
+### Executed (counts)
+
+| Item | Action | Count |
+|---|---|---|
+| A4 catalog UX (B1B-V2 / B2-V5, Rule #20) | PATCH domain 13 empty catalog_tagline + catalog_description with buyer-voice copy (no vendor names, American English, no em-dash). Stale "surface-before-write" gate ignored per the EXECUTE rule. | 1 domain row (2 fields) |
+| H1 APQC tag (B1A-V6) | INSERT handoff_processes for inbound cross-domain handoff 36 (SAM 52 -> VULN-MGMT 13, trigger software_install.detected, payload software_installations). Clean cross-industry PCF L4 match resolved live: process id 1312 "Maintain IT asset records" (code 8.7.7.4, external_id 20918), under 8.0 Manage IT > 8.7 > 8.7.7. proposal_source='agent_curated', role='implements', record_status='new'. | 1 handoff_processes |
+| B11 aliases (B1B-V7) | INSERT 4 unambiguous generic synonyms into domain_aliases (alias_type='synonym' to match live convention): "risk-based vulnerability management"/RBVM, "threat and vulnerability management"/TVM, "vulnerability response", "vuln management". record_status='new'. | 4 domain_aliases |
+
+All writes verified via read-back; all new rows at record_status='new'. Loader:
+.tmp_deploy/2026-06-07_vuln_mgmt_state_driven_execute.ts (idempotent; bun run).
+
+UI links:
+- https://tests.semantius.app/domain_map/domains?id=eq.13
+- https://tests.semantius.app/domain_map/handoff_processes?handoff_id=eq.36
+- https://tests.semantius.app/domain_map/domain_aliases?domain_id=eq.13
+
+### Surfaced (user decision required; nothing written)
+
+- B2-V1: build scope under the now-master-bearing classification (full ~8-master 4-module build vs lean caps+modules-only vs defer). Keystone; gates B1B-V1 and all of b3.
+- B2-V2: module split shape (4-module as drafted / alt-a 3-module collapse / alt-b 5-module split DISCOVERY from SCANNING / alt-c 5-module add VULN-COMPLIANCE-REPORTING / defer for Phase 0).
+- B2-V3: capability cross-cutting promotion (all 7 prefixed vs promote VULN-RISK-SCORING + VULN-THREAT-CONTEXT to cross-cutting / defer).
+- B2-V4: optional full Phase 0 description rewrite vs leave current text (non-blocking editorial).
+- B2-V6: extend the alias slate with debatable synonyms (VRM / TEM / weakness management / bare RBVM/TVM) vs leave the 4 loaded; false-positive-match risk is the user's call.
+- BUILD (B1A-RECLASS / B1B-V1): the 4-module + 7-capability + ~8-master build is surfaced, not scaffolded (UNBUILT domain LEAVE rule). Gated on B2-V1 + B2-V2 + B2-V3.
+- Personas / RACI (Phase P): DEFERRED. Not authored. Only applies after the build lands and the domain is confirmed multi-module. Candidate personas at that point: vulnerability analyst, remediation owner / asset owner, security operations lead, risk-acceptance approver.
+
+### Left
+
+- B1B-V5 (B10b target_domain_module_id on handoff 36): LEFT, prerequisite-blocked behind the build (no VULN-MGMT module exists to point the FK at). source_domain_module_id on 36 is SAM-owed (report-only).
+- b3 backlog: 8 entity candidates (vulnerability_scans, vulnerability_findings, cve_records, vulnerability_risk_scores, kev_advisories, remediation_tickets, exception_records, scan_targets) + 5 regulation candidates (PCI-DSS 4.0, HIPAA, FedRAMP/NIST 800-53, SOX 404 ITGC, GDPR Art 32) + 2 modularization candidates (EXPOSURE-MGMT promotion, split DISCOVERY from SCANNING). All gated on B2-V1; untouched.
+- Superseded 2026-06-06 per-module skill-grain / skill_tools model retirement: kept as the supersession header above; no action.
+
+### JWT errors
+
+None encountered.

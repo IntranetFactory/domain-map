@@ -647,3 +647,70 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+State-driven Validate pass (Rule #21). Worked only the open state.yaml items, verified each
+against live before writing. Loader: `.tmp_deploy/fix_itom_state_driven_2026-06-07.ts`
+(idempotent TS + Bun, run from project root; verified no-op on second run). All writes are
+additive/corrective fills (entity_type backfill on unclassified masters; empty catalog UX
+fields), each guarded to skip any non-empty value. No record_status touched (stays at DB
+default `new`); no `notes` column written; no em-dashes; American English.
+
+### Summary
+ITOM is agent-finished for the additive/corrective surface. Two execute items landed
+(entity_type + catalog UX). Everything else open is either a `b2` judgment call, a
+destructive/ratification step needing user sign-off, a `b1b` blocked on a user decision or
+another domain's audit, or `b3` backlog. `next_action_by` flips to `user`.
+
+### Executed (record_status='new')
+- **entity_type backfill** (Rule #12): PATCHed 4 ITOM masters from `unclassified` to the enum:
+  monitoring_events (84) -> `operational_workflow`, monitoring_alerts (85) ->
+  `operational_workflow`, monitoring_policies (86) -> `operational_workflow` (true
+  activation/deprecation workflow per B12), capacity_records (87) -> `operational_record`
+  (read-mostly utilization datapoints). Was not an explicit state item; surfaced live and
+  covered by the prompt's entity_type EXECUTE directive.
+- **Catalog UX** (Rule #20, B1B-S3 + module extension): authored buyer-voice
+  `catalog_tagline` + `catalog_description` on the ITOM domain row (id 2) and all 3 modules
+  (ITOM-INFRA-MON 267, ITOM-CAPACITY-PLAN 268, ITOM-OPS-AUTOMATION 269), all of which were
+  empty strings live. Stale "surface-before-write" gate on B1B-S3 ignored per the run
+  directive; only empty fields were written, no non-empty value overwritten. B1B-S3 dropped
+  from state.yaml as executed.
+
+### Verified-already-done (no write)
+- **H1 / handoff_processes**: all 13 ITOM-touching cross-domain handoffs already carry
+  `handoff_processes` rows at `record_status='new'` (loaded 2026-05-31 + b1a). Nothing to
+  insert. The only open H1 work is ratification/approval -> B2-S6 + B2-S7 (surfaced).
+- **B11 aliases**: 16 alias rows already present across the 4 masters (4/4/5/3); no
+  clearly-missing enumerable synonym worth a marginal insert.
+- **C1 business_function_domains**: ITOM already has owner (IT Infrastructure, bf 58,
+  responsibility_type=owner) + contributor (Software Engineering, bf 26). The prompt hint
+  "owner IT Operations" does not match the live owner; no competing/duplicate owner added.
+
+### Surfaced (returned to user, not written)
+- All open `b2`: B2-S1 (RMM M7 canonical-owner), B2-S2 (pattern flags per master), B2-S3
+  (OBS handoff 54 trigger 6 re-anchor), B2-S3a (trigger 78 -> AIOPS master re-anchor),
+  B2-S4 (event_correlation_rules vs AIOPS correlation_rules), B2-S5 (promote ITPA /
+  WORKLOAD-AUTO out of 269), B2-S6 (ratify 6 divergent PCF mappings), B2-S7-APQC-APPROVAL
+  (approve 13 handoff_processes to record_status='approved'). B2-S6 + B2-S7 are the
+  destructive/ratification path on the already-loaded H1 tags.
+- **Personas/RACI (B1A-ROLE-MODULES)**: DEFERRED (not authored). Phase E judgment + blocked
+  on lifecycle states (B1B-S11). Candidate personas: NOC Engineer, Site Reliability
+  Engineer, Capacity Planner, Operations Automation Engineer (each needs >=2-module reach to
+  satisfy the 2-module floor; reach topology + process_raci unresolved).
+
+### Left (untouched)
+- **b1b blocked**: B1B-S2-RMM-ROLLUP (depends on B2-S1 + RMM audit), B1B-S5 (intra-domain
+  master-master relationship tuples, ratification-gated), B1B-S7 (outbound cross-domain
+  mirror relationships, ratification-gated), B1B-S11 (lifecycle state machines, ratification-
+  gated), B1B-S15 (state-change trigger_events, subsumed under B1B-S11).
+- **b3 backlog**: B3-S1, B3-S2, B3-S3, B3-S4, B3-S5, B3-MISSING-ENTITIES (discretionary
+  vendor-surface entities; non-blocking).
+
+### JWT errors
+None.
+
+### Loader
+`c:/dev/domain-map/.tmp_deploy/fix_itom_state_driven_2026-06-07.ts`

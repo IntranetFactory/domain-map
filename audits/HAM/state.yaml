@@ -11,25 +11,34 @@
 schema_version: 2
 domain: HAM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
+# ------------------------------------------------------------------
+# b1a: agent-authorable additive work still OPEN.
+# Only B1A-S1 remains. It is additive (lifecycle-state authoring) but the
+# 2026-06-07 batch held it back: its requires_permission gate shape is
+# entangled with the B2-S1 pattern-flag decision (has_submit_lock /
+# has_single_approver drive whether a gate needs a permission) and it is the
+# upstream of the DEFERRED persona/RACI layer (B1A-PHASE-P) and the blocked
+# roles/skills items. Resolve B2-S1 first, then author states.
+# ------------------------------------------------------------------
 b1a:
   - id: B1A-S1
     summary: Author lifecycle states across all 5 HAM masters; B12 hard-fails today
     finding: |
       Zero rows in `data_object_lifecycle_states` for any of the 5 HAM masters
       (hardware_assets id 56, hardware_models id 695, hardware_warranties id 696,
-      hardware_disposal_records id 697, spare_parts_inventory id 698). Per Rule #12
-      every master+required data_object must have a state machine or the
-      config-shape exemption. None of the five are config-shaped: each carries
-      workflow transitions (asset procured/received/deployed/in_use/in_repair/
-      retired/disposed; model drafted/active/eol_announced/retired; warranty
-      active/expiring/expired/renewed; disposal initiated/sanitized/certified/
-      completed; parts in_stock/low_threshold/reordered/received/consumed).
-      Without states the workflow-gate permissions cannot be materialized and
-      modules 169 / 170 ship with only baseline tiers, hollowing the entire
-      Phase E layer.
+      hardware_disposal_records id 697, spare_parts_inventory id 698). Confirmed
+      live 2026-06-07: query returns []. Per Rule #12 every master+required
+      data_object must have a state machine or the config-shape exemption. None
+      of the five are config-shaped; each carries workflow transitions (asset
+      procured/received/deployed/in_use/in_repair/retired/disposed; model
+      drafted/active/eol_announced/retired; warranty active/expiring/expired/
+      renewed; disposal initiated/sanitized/certified/completed; parts
+      in_stock/low_threshold/reordered/received/consumed). The entity_type
+      classification landed 2026-06-07 (56 + 697 = operational_workflow), so M5
+      now flags both as operational_workflow-without-states until this lands.
     action: |
       Author per-master state machines with requires_permission=true on the
       gates (deploy, retire, dispose, certify_sanitization, approve_renewal,
@@ -37,6 +46,8 @@ b1a:
       domain_module_id=170 for states on 696/697/698. Use permission_verb_override
       on non-obvious verbs. Load via a focused TypeScript loader; pattern from
       any ATS or ITSM lifecycle loader.
+    blocked_by:
+      - {type: user_decision, ref: B2-S1, reason: pattern_flag_decision_drives_which_gates_require_permission}
     affected_masters:
       - {data_object_id: 56, name: hardware_assets, target_module_id: 169, workflow: procured_received_deployed_in_use_in_repair_retired_disposed}
       - {data_object_id: 695, name: hardware_models, target_module_id: 169, workflow: drafted_active_eol_announced_retired}
@@ -45,176 +56,113 @@ b1a:
       - {data_object_id: 698, name: spare_parts_inventory, target_module_id: 170, workflow: in_stock_low_threshold_reordered_received_consumed}
     extra_band: B12
 
-  - id: B1A-S4
-    summary: PATCH event_category on 6 HAM trigger events (Rule #13 enum)
-    finding: |
-      Six trigger_events on HAM masters carry empty event_category. Rule #13
-      requires one of `lifecycle`, `state_change`, `threshold`, `signal`.
-    action: |
-      Six PATCHes against /trigger_events?id=eq.<id>, body {event_category:<value>}.
-    affected_events:
-      - {id: 682, event_name: hardware_model.added, current_category: "", proposed_category: lifecycle}
-      - {id: 683, event_name: hardware_model.eol_announced, current_category: "", proposed_category: state_change}
-      - {id: 684, event_name: hardware_warranty.expiring, current_category: "", proposed_category: threshold}
-      - {id: 685, event_name: hardware_warranty.expired, current_category: "", proposed_category: state_change}
-      - {id: 686, event_name: hardware_disposal_record.completed, current_category: "", proposed_category: state_change}
-      - {id: 687, event_name: spare_parts_inventory.low_threshold, current_category: "", proposed_category: threshold}
-    extra_band: B9
+  - id: B1A-PHASE-P
+    summary: "Multi-module (2 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED."
+    finding: "Live triage: 2 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Per the 2026-06-07 batch instruction, personas/RACI are DEFERRED (not authored)."
+    action: "DEFERRED. When resumed: author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 2 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. Depends on B1A-S1 (lifecycle states / permissions). ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: IT-ITAM-ASSET-MANAGER (169+170), IT-ITAM-DISPOSAL-COORDINATOR (170+GRC/ERP-FIN), PROCUREMENT-HARDWARE-BUYER (170+S2P), FINANCE-FIXED-ASSET-ACCOUNTANT (170+ERP-FIN)."
+    status: deferred
+    extra_phase_p_triage: "2026-06-02"
 
+# ------------------------------------------------------------------
+# b1b: blocked on another domain's audit, a user decision, or a
+# destructive step. Carried forward.
+# ------------------------------------------------------------------
+b1b:
   - id: B1A-S6
-    summary: Merge duplicate trigger events 44 device.discovered + 60 hardware_endpoint.discovered
+    summary: Merge duplicate trigger events 44 device.discovered + 60 hardware_endpoint.discovered (DESTRUCTIVE, surfaced)
     finding: |
       Trigger events 44 (`device.discovered`, event_category=signal) and 60
       (`hardware_endpoint.discovered`, event_category=signal) both carry
-      data_object_id=56 with identical description text. They are duplicates.
-      Also: event_category=signal is wrong for a discovery event that
-      materializes a new asset (state_change is correct).
-    action: |
+      data_object_id=56 with identical description text. Confirmed live
+      2026-06-07: both still present. They are duplicates; event_category=signal
+      is also wrong for a discovery event that materializes a new asset
+      (state_change is correct). The merge requires re-pointing handoffs and
+      DELETING event 60, destructive, so surfaced rather than executed.
+    recommended_fix: |
       Pick 44 (`device.discovered`) as canonical. Re-point inbound handoffs 32
-      (DISCOVERY -> HAM) and 144 (RMM -> HAM) at it. PATCH event 44
-      event_category=state_change. DELETE event 60.
+      (DISCOVERY -> HAM, trigger_event_id currently 44, already canonical) and
+      144 (RMM -> HAM, trigger_event_id 60) at event 44. PATCH event 44
+      event_category=signal -> state_change (overwrite of a non-empty value).
+      DELETE event 60.
+    blocked_by:
+      - {type: destructive_approval, reason: delete_event_60_and_overwrite_event_44_category}
     affected_events:
       - {id: 44, event_name: device.discovered, current_category: signal, proposed_category: state_change}
       - {id: 60, event_name: hardware_endpoint.discovered, current_category: signal, proposed_category: DELETE}
-    affected_handoffs:
-      - {handoff_id: 32, direction: inbound, source_domain: DISCOVERY, target_domain: HAM, trigger_event: device.discovered, payload: hardware_assets, null_field: trigger_event_id_repoint}
-      - {handoff_id: 144, direction: inbound, source_domain: RMM, target_domain: HAM, trigger_event: hardware_endpoint.discovered, payload: hardware_assets, null_field: trigger_event_id_repoint}
     extra_band: B9
 
   - id: B1A-S9
-    summary: Fix handoff 150 structural defect; create new event hardware_asset.retired keyed on data_object 56
+    summary: Fix handoff 150 structural defect; create new event hardware_asset.retired keyed on data_object 56 (DESTRUCTIVE re-attribution, surfaced)
     finding: |
-      Handoff 150 (HAM -> RMM, friction=high) currently wires to trigger event 9
-      (`asset.retired`, data_object_id=223 -> rmm_agents). HAM does not master
-      rmm_agents; the source attribution defaults to RMM. The intent is the
-      HAM-owned asset retirement event. Today the handoff is mis-attributed at
-      source.
-    action: |
+      Handoff 150 (HAM -> RMM) currently wires to trigger event 9 (`asset.retired`,
+      event_category=lifecycle, data_object_id=223 -> rmm_agents). Confirmed live
+      2026-06-07. HAM does not master rmm_agents; the source attribution defaults
+      to RMM. The intent is the HAM-owned asset retirement event. Re-attributing a
+      trigger_event is destructive, so surfaced.
+    recommended_fix: |
       Author a new trigger_events row event_name='hardware_asset.retired',
-      data_object_id=56, event_category=state_change. Re-point handoff 150
-      trigger_event_id to the new event. After B1A-S1 lands, that event also
-      becomes the binding for the asset retired/disposed lifecycle gate.
+      data_object_id=56, event_category=state_change (additive). Then re-point
+      handoff 150 trigger_event_id from 9 to the new event (re-attribution,
+      destructive). After re-point, handoff 150 source_domain_module_id can be set
+      to 169 (B1B-S8 remainder) and its APQC tag (currently 355) re-evaluated.
+    blocked_by:
+      - {type: destructive_approval, reason: re_attribute_handoff_150_trigger_event}
     affected_handoffs:
-      - {handoff_id: 150, direction: outbound, source_domain: HAM, target_domain: RMM, trigger_event: asset.retired, payload: rmm_agents, null_field: trigger_event_id_repoint}
+      - {handoff_id: 150, direction: outbound, source_domain: HAM, target_domain: RMM, trigger_event: asset.retired, payload: rmm_agents}
     extra_band: B9
 
   - id: B1A-S12
-    summary: Revert Rule #15 violating note on handoff 633 (ITAM -> HAM)
+    summary: Revert Rule #15 violating note on handoff 633 (ITAM -> HAM) (DESTRUCTIVE overwrite, surfaced)
     finding: |
-      Handoff 633 carries notes='target NULL until HAM is modularized'. HAM is
-      now modularized (modules 169 and 170 exist); the note's stated condition
-      is satisfied. The rescinded write-time license that produced this string
-      is exactly the forbidden pattern in Rule #15. Audit obligation: revert the
-      polluting write and append an entry to references/skill-changelog.md
-      Incidents.
-    action: |
+      Handoff 633 carries notes='target NULL until HAM is modularized'. Confirmed
+      live 2026-06-07. HAM is now modularized (modules 169/170 exist). Reverting an
+      existing non-empty notes value is destructive, so surfaced rather than
+      executed (the 2026-06-07 batch executes only additive/corrective work).
+    recommended_fix: |
       PATCH /handoffs?id=eq.633 with body {"notes":""}. Append a one-line entry
       to references/skill-changelog.md Incidents naming row id 633, column
       handoffs.notes, original text, and the rescinded passage that licensed it.
+    blocked_by:
+      - {type: destructive_approval, reason: overwrite_nonempty_handoffs_notes}
     affected_handoffs:
-      - {handoff_id: 633, direction: inbound, source_domain: ITAM, target_domain: HAM, trigger_event: asset.retired_for_disposal, payload: asset_lifecycle_events, null_field: notes_revert}
+      - {handoff_id: 633, direction: inbound, source_domain: ITAM, target_domain: HAM, trigger_event: asset.retired_for_disposal, payload: asset_lifecycle_events}
     extra_band: Rule_15
 
-  - id: B1A-H1
-    summary: Land remaining APQC tags on HAM cross-domain handoffs and replace 2 discovery_substring legacy rows
+  - id: B1A-H1-RESIDUAL
+    summary: Replace stale discovery_substring APQC row on handoff 633 (DESTRUCTIVE delete, surfaced); handoff 150 retag awaits B1A-S9
     finding: |
-      Six of ten confident agent_curated proposals from 2026-05-30 audit have
-      landed (handoffs 32, 622, 633, 657, 668, 669). Four confident proposals
-      remain unloaded (handoffs 144, 670, 671, 672) plus the structurally
-      blocked handoff 150 (depends on B1A-S9). Two discovery_substring legacy
-      rows pointing at process 10 (L1 root) still exist on handoffs 150 and 633
-      and should be replaced per Discover Pass 1.5 override convention. Two
-      deferrals stand (handoff 161 depends on B1A-S5; handoff 657 verification
-      depends on B2-S3 outcome, though the agent_curated row for 657 already
-      landed).
-    action: |
-      Insert 4 handoff_processes rows (agent_curated, record_status=new):
-      handoff 144 -> process 1312 (Maintain IT asset records, L4);
-      handoff 670 -> process 1389 (Process and record fixed-asset additions
-        and retires, L4);
-      handoff 671 -> process 1573 (Manage disposition, disposal, reprocessing
-        activities, L4);
-      handoff 672 -> process 1561 (Monitor useful life of assets, L4).
-      After B1A-S9 lands: insert handoff 150 -> process 68 (Manage asset
-        end-of-life, L2). DELETE the 2 discovery_substring rows on handoffs 150
-      and 633 (both pointing at process 10).
-    affected_handoffs:
-      - {handoff_id: 144, direction: inbound, source_domain: RMM, target_domain: HAM, trigger_event: hardware_endpoint.discovered, payload: hardware_assets, null_field: handoff_processes_insert}
-      - {handoff_id: 670, direction: outbound, source_domain: HAM, target_domain: ERP-FIN, trigger_event: hardware_disposal_record.completed, payload: hardware_disposal_records, null_field: handoff_processes_insert}
-      - {handoff_id: 671, direction: outbound, source_domain: HAM, target_domain: GRC, trigger_event: hardware_disposal_record.completed, payload: hardware_disposal_records, null_field: handoff_processes_insert}
-      - {handoff_id: 672, direction: outbound, source_domain: HAM, target_domain: SPM, trigger_event: hardware_model.eol_announced, payload: hardware_models, null_field: handoff_processes_insert}
-      - {handoff_id: 150, direction: outbound, source_domain: HAM, target_domain: RMM, trigger_event: asset.retired, payload: rmm_agents, null_field: handoff_processes_insert_after_S9}
-      - {handoff_id: 633, direction: inbound, source_domain: ITAM, target_domain: HAM, trigger_event: asset.retired_for_disposal, payload: asset_lifecycle_events, null_field: discovery_substring_delete}
+      2026-06-07: the four clean agent_curated APQC tags are now all landed
+      (144->1312, 670->1393, 671->1573 [new], 672->1561 [new]). One stale
+      discovery_substring row remains: handoff_processes id 99 on handoff 633
+      pointing at process 10 (L1 root `Acquire, Construct, and Manage Assets`).
+      The 150 discovery_substring row is already gone. Handoff 633 already carries
+      a clean agent_curated row (381 -> 1389). Removing the L1-root placeholder is
+      a DELETE, so surfaced.
+    recommended_fix: |
+      DELETE /handoff_processes?id=eq.99 (the discovery_substring L1-root row on
+      handoff 633; the agent_curated 1389 row already covers it). Separately, after
+      B1A-S9 re-keys handoff 150 to hardware_asset.retired, re-evaluate its APQC
+      tag (currently agent_curated -> 355 Decommission productive assets; the
+      audit's prior pick was process 68 Manage asset end-of-life L2).
+    blocked_by:
+      - {type: destructive_approval, reason: delete_stale_discovery_substring_row}
+      - {type: depends_on, ref: B1A-S9, reason: handoff_150_retag_needs_event_re_attribution}
     extra_band: H1
-  - id: B1A-PHASE-P
-    summary: "Multi-module (2 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 2 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 2 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "5 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 5 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [hardware_assets, hardware_disposal_records, hardware_models, hardware_warranties, spare_parts_inventory]
-    extra_phase_p_triage: "2026-06-02"
-
-b1b:
-  - id: B1B-S2
-    summary: Author module-level system skills on HAM-ASSET-REGISTRY (169) and HAM-WARRANTY-PARTS (170); blocked on lifecycle states
-    finding: |
-      Modules 169 and 170 carry zero skill_type='system' skills. Rule #17
-      requires exactly one system skill per domain_modules row with >=1
-      skill_tools row. The legacy domain-level skill ham-system (id 65,
-      domain_module_id=null, 5 platform-tier query tools 499/811/812/813/814)
-      does not satisfy F2. F5 (Semantius score) is uncomputable for both modules
-      until F2 cures. Cannot bind workflow-gate tools without B1A-S1 lifecycle
-      states authored first (workflow verbs are derived from state transitions).
-    blocked_by:
-      - {type: depends_on, ref: B1A-S1, reason: workflow_gate_tools_need_state_machine}
-    affected_modules: [169, 170]
-    extra_fix: |
-      After B1A-S1 lands, author 2 system skills:
-      ham_asset_registry_agent (domain_module_id=169) over hardware_assets +
-      hardware_models discovery/lifecycle/financial workflow.
-      ham_warranty_parts_agent (domain_module_id=170) over hardware_warranties +
-      hardware_disposal_records + spare_parts_inventory workflow.
-      Each gets >=3 skill_tools (query + mutate + workflow-gate floor). Reuse
-      existing platform-tier query/create/update tools; add workflow-gate
-      mutates (deploy_hardware_asset, retire_hardware_asset,
-      dispose_hardware_asset, certify_disposal_sanitization,
-      approve_warranty_renewal, acknowledge_low_stock_threshold).
-    extra_band: F2
-
-  - id: B1B-S3
-    summary: DELETE legacy domain-level skill ham-system (id 65) after module-level skills land
-    finding: |
-      Skill 65 (`ham-system`, domain_id=51, domain_module_id=null) is the
-      pre-modular shell. F1 tolerates it only while modules carry no system
-      skill of their own. The 5 attached skill_tools rows (tool ids 499, 811,
-      812, 813, 814, all requirement_level=required, all platform-tier query
-      tools) must also be deleted to keep the catalog consistent.
-    blocked_by:
-      - {type: depends_on, ref: B1B-S2, reason: never_delete_legacy_before_module_skills_exist}
-    extra_fix: |
-      DELETE /skill_tools?skill_id=eq.65. Then DELETE /skills?id=eq.65.
-      Sequencing matters: never delete the legacy first (zero-skill window).
-    extra_band: F1
 
   - id: B1B-S5
     summary: Resolve mis-attributed trigger_event 140 (ticket.created); blocked on MSP-PSA b1 audit
     finding: |
-      trigger_event 140 (event_name=ticket.created) carries data_object_id=56
-      (hardware_assets) but conceptually belongs on a MSP-PSA service ticket
-      master. Inbound handoff 161 (MSP-PSA -> HAM) references this event with
-      payload=hardware_assets. Either (a) rename the event and re-key against
-      the correct source (MSP-PSA service_tickets master) with handoff 161
-      re-pointed, or (b) the event is a duplicate of an MSP-PSA-owned event and
-      should be deleted with handoff 161 re-pointed at the canonical row. Both
-      paths need MSP-PSA to identify the canonical event first.
+      trigger_event 140 (event_name=ticket.created, event_category=lifecycle)
+      carries data_object_id=56 (hardware_assets). Confirmed live 2026-06-07. It
+      conceptually belongs on a MSP-PSA service ticket master. Inbound handoff 161
+      (MSP-PSA -> HAM) references this event with payload=hardware_assets. Either
+      rename/re-key against the MSP-PSA service_tickets master with handoff 161
+      re-pointed, or delete as a duplicate with 161 re-pointed at the canonical
+      row. Both paths need MSP-PSA to identify the canonical event first.
     blocked_by:
       - {type: domain_audit, blocking_domain: MSP-PSA, milestone: surface_canonical_ticket_created_event}
     affected_handoffs:
-      - {handoff_id: 161, direction: inbound, source_domain: MSP-PSA, target_domain: HAM, trigger_event: ticket.created, payload: hardware_assets, null_field: trigger_event_id_repoint_pending}
+      - {handoff_id: 161, direction: inbound, source_domain: MSP-PSA, target_domain: HAM, trigger_event: ticket.created, payload: hardware_assets}
     affected_events:
       - {id: 140, event_name: ticket.created, current_category: lifecycle, proposed_category: rekey_or_delete}
     extra_band: B9
@@ -223,18 +171,12 @@ b1b:
     summary: Author 4 intra-domain cross-module handoffs (B9b); blocked on lifecycle states for event names
     finding: |
       Zero intra-domain cross-module handoffs exist for HAM despite 2 full
-      modules with obvious cross-module lifecycle progressions. Expected
-      intra-domain pairs from cross-module data_object_relationships:
-      hardware_assets (169) -> hardware_warranties (170) on
-      hardware_asset.deployed (warranty registration);
-      hardware_assets (169) -> hardware_disposal_records (170) on
-      hardware_asset.retired (disposal initiation);
-      spare_parts_inventory (170) -> hardware_models (169) on
-      spare_parts_inventory.low_threshold (model-level supply visibility for
-      refresh planning); hardware_models (169) -> spare_parts_inventory (170)
-      on hardware_model.eol_announced (parts stockpile decision).
+      modules with obvious cross-module lifecycle progressions. The proposed
+      triggers (hardware_asset.deployed, hardware_asset.retired) only exist once
+      B1A-S1 authors the state machines; spare_parts_inventory.low_threshold (687)
+      and hardware_model.eol_announced (683) already exist.
     blocked_by:
-      - {type: depends_on, ref: B1A-S1, reason: trigger_events_for_hardware_asset_deployed_and_hardware_asset_retired_only_exist_after_state_machines_authored}
+      - {type: depends_on, ref: B1A-S1, reason: deployed_and_retired_trigger_events_only_exist_after_state_machines}
     affected_handoffs:
       - {handoff_id: null, direction: intra-domain, source_domain: HAM, target_domain: HAM, trigger_event: hardware_asset.deployed, payload: hardware_warranties, null_field: row_insert_169_to_170}
       - {handoff_id: null, direction: intra-domain, source_domain: HAM, target_domain: HAM, trigger_event: hardware_asset.retired, payload: hardware_disposal_records, null_field: row_insert_169_to_170}
@@ -244,97 +186,73 @@ b1b:
     extra_integration_pattern: lifecycle_progression
     extra_friction_level: low
 
-  - id: B1B-S8
-    summary: Backfill source_domain_module_id on 6 HAM outbound handoffs; handoff 150 blocked on B1A-S9
+  - id: B1B-S8-RESIDUAL
+    summary: Backfill source_domain_module_id on handoff 150 (1 row remaining); blocked on B1A-S9
     finding: |
-      All 6 outbound handoffs from HAM carry NULL source_domain_module_id. The
-      per-handoff source-side derivation reads: handoff 668 -> 170
-      (spare_parts_inventory.low_threshold publisher = HAM-WARRANTY-PARTS);
-      handoff 669 -> 170 (hardware_warranty.expiring publisher = same);
-      handoff 670 -> 170 (hardware_disposal_record.completed publisher = same);
-      handoff 671 -> 170 (same payload publisher);
-      handoff 672 -> 169 (hardware_model.eol_announced publisher
-      = HAM-ASSET-REGISTRY); handoff 150 -> 169 (after B1A-S9 re-keys the
-      trigger event to hardware_asset.retired keyed on data_object 56). 5/6
-      can be PATCHed now; handoff 150 depends on B1A-S9.
+      2026-06-07: 5 of 6 outbound source FKs backfilled (668->170, 669->170,
+      670->170, 671->170, 672->169). Handoff 150 remains NULL because its source
+      module is only derivable after B1A-S9 re-keys the trigger event to
+      hardware_asset.retired (data_object 56, mastered by module 169).
     blocked_by:
-      - {type: depends_on, ref: B1A-S9, reason: handoff_150_source_module_only_derivable_after_event_re-attribution}
+      - {type: depends_on, ref: B1A-S9, reason: handoff_150_source_module_only_derivable_after_event_re_attribution}
     affected_handoffs:
-      - {handoff_id: 668, direction: outbound, source_domain: HAM, target_domain: S2P, trigger_event: spare_parts_inventory.low_threshold, payload: spare_parts_inventory, null_field: source_domain_module_id}
-      - {handoff_id: 669, direction: outbound, source_domain: HAM, target_domain: S2P, trigger_event: hardware_warranty.expiring, payload: hardware_warranties, null_field: source_domain_module_id}
-      - {handoff_id: 670, direction: outbound, source_domain: HAM, target_domain: ERP-FIN, trigger_event: hardware_disposal_record.completed, payload: hardware_disposal_records, null_field: source_domain_module_id}
-      - {handoff_id: 671, direction: outbound, source_domain: HAM, target_domain: GRC, trigger_event: hardware_disposal_record.completed, payload: hardware_disposal_records, null_field: source_domain_module_id}
-      - {handoff_id: 672, direction: outbound, source_domain: HAM, target_domain: SPM, trigger_event: hardware_model.eol_announced, payload: hardware_models, null_field: source_domain_module_id}
-      - {handoff_id: 150, direction: outbound, source_domain: HAM, target_domain: RMM, trigger_event: asset.retired, payload: rmm_agents, null_field: source_domain_module_id_pending_S9}
+      - {handoff_id: 150, direction: outbound, source_domain: HAM, target_domain: RMM, trigger_event: asset.retired, payload: rmm_agents, proposed_source_module: 169}
     extra_band: B10b
-    extra_proposed_source_module_map: "668->170, 669->170, 670->170, 671->170, 672->169, 150->169"
 
-  - id: B1B-S10
-    summary: Backfill target_domain_module_id on 6 HAM inbound handoffs; 3 blocked on judgment calls and B1A-S5
+  - id: B1B-S10-RESIDUAL
+    summary: Backfill target_domain_module_id on 4 inbound handoffs; blocked on user decisions and MSP-PSA audit
     finding: |
-      All 6 inbound handoffs to HAM carry NULL target_domain_module_id. The
-      per-handoff target-side derivation reads:
-      handoff 32 (DISCOVERY->HAM, payload=hardware_assets) -> 169;
-      handoff 144 (RMM->HAM, payload=hardware_assets) -> 169;
-      handoff 161 (MSP-PSA->HAM, payload=hardware_assets) -> 169 (also blocked
-        on B1B-S5);
-      handoff 633 (ITAM->HAM, payload=asset_lifecycle_events) -> 170 if user
-        accepts the asset_lifecycle_events consumer DMDO; otherwise blocked on
-        B2-S5;
-      handoff 622 (DISCOVERY->HAM, payload=discovery_scans) -> blocked on
-        B2-S2 (delete vs add consumer DMDO);
-      handoff 657 (UEM->HAM, payload=enrolled_devices) -> blocked on B2-S3
-        (keep / delete / flip direction). 3 PATCHes can fire now (32, 144, and
-      conditionally 633); the other 3 await user decision or partner audit.
+      2026-06-07: 2 of 6 inbound target FKs backfilled (32->169, 144->169). Four
+      remain NULL pending decisions:
+      handoff 161 (MSP-PSA->HAM, hardware_assets) -> 169 but blocked on B1B-S5;
+      handoff 633 (ITAM->HAM, asset_lifecycle_events) -> 170 only if B2-S5 accepts
+        the consumer DMDO;
+      handoff 622 (DISCOVERY->HAM, discovery_scans) -> blocked on B2-S2;
+      handoff 657 (UEM->HAM, enrolled_devices) -> blocked on B2-S3.
     blocked_by:
       - {type: user_decision, ref: B2-S2}
       - {type: user_decision, ref: B2-S3}
       - {type: user_decision, ref: B2-S5}
       - {type: domain_audit, blocking_domain: MSP-PSA, milestone: surface_canonical_ticket_created_event}
     affected_handoffs:
-      - {handoff_id: 32, direction: inbound, source_domain: DISCOVERY, target_domain: HAM, trigger_event: device.discovered, payload: hardware_assets, null_field: target_domain_module_id}
-      - {handoff_id: 144, direction: inbound, source_domain: RMM, target_domain: HAM, trigger_event: hardware_endpoint.discovered, payload: hardware_assets, null_field: target_domain_module_id}
-      - {handoff_id: 161, direction: inbound, source_domain: MSP-PSA, target_domain: HAM, trigger_event: ticket.created, payload: hardware_assets, null_field: target_domain_module_id_pending_S5}
-      - {handoff_id: 633, direction: inbound, source_domain: ITAM, target_domain: HAM, trigger_event: asset.retired_for_disposal, payload: asset_lifecycle_events, null_field: target_domain_module_id_pending_B2_S5}
-      - {handoff_id: 622, direction: inbound, source_domain: DISCOVERY, target_domain: HAM, trigger_event: discovery_scan.completed, payload: discovery_scans, null_field: target_domain_module_id_pending_B2_S2}
-      - {handoff_id: 657, direction: inbound, source_domain: UEM, target_domain: HAM, trigger_event: enrolled_device.retired, payload: enrolled_devices, null_field: target_domain_module_id_pending_B2_S3}
+      - {handoff_id: 161, direction: inbound, source_domain: MSP-PSA, target_domain: HAM, payload: hardware_assets, proposed_target_module: 169, gate: B1B-S5}
+      - {handoff_id: 633, direction: inbound, source_domain: ITAM, target_domain: HAM, payload: asset_lifecycle_events, proposed_target_module: 170, gate: B2-S5}
+      - {handoff_id: 622, direction: inbound, source_domain: DISCOVERY, target_domain: HAM, payload: discovery_scans, gate: B2-S2}
+      - {handoff_id: 657, direction: inbound, source_domain: UEM, target_domain: HAM, payload: enrolled_devices, gate: B2-S3}
     extra_band: B10b
 
   - id: B1B-S11
-    summary: Rewrite 6 users-edge relationship_verb values to verb-shape; blocked on B2-S4 collapse decision
+    summary: Rewrite 6 users-edge relationship_verb values to verb-shape (DESTRUCTIVE overwrite, surfaced); shape depends on B2-S4
     finding: |
       All 6 data_object_relationships rows joining users (data_object_id=748)
       to HAM masters carry noun-phrase verbs ("assigned hardware", "custodian
       of assets", "recorded disposals", "manages warranties", "manages stock",
-      "curates models"). Catalog convention per the APM audit's B7 fix is
-      verb-shape (e.g. is_assigned_to_hardware_asset). Rows 256 and 257 are
-      functionally on the same pair (users -> hardware_assets); B2-S4 asks
-      whether they should collapse to a single owns_hardware_asset.
+      "curates models"). Catalog convention is verb-shape. Rows 256 and 257 are
+      functionally on the same pair (users -> hardware_assets); B2-S4 asks whether
+      they collapse. Rewriting an existing non-empty verb is destructive.
+    recommended_fix: "PATCH relationship_verb to verb-shape: 256 -> is_assigned_to_hardware_asset; 257 -> is_custodian_of_hardware_asset (or collapse with 256 per B2-S4); 258 -> records_hardware_disposal_record; 259 -> manages_hardware_warranty; 260 -> manages_spare_parts_inventory; 261 -> curates_hardware_model."
     blocked_by:
       - {type: user_decision, ref: B2-S4}
+      - {type: destructive_approval, reason: overwrite_nonempty_relationship_verb}
     affected_entities: [data_object_relationships_256, data_object_relationships_257, data_object_relationships_258, data_object_relationships_259, data_object_relationships_260, data_object_relationships_261]
     extra_band: B7
-    extra_proposed_verbs: "256 -> is_assigned_to_hardware_asset; 257 -> is_custodian_of_hardware_asset (or collapse with 256); 258 -> records_hardware_disposal_record; 259 -> manages_hardware_warranty; 260 -> manages_spare_parts_inventory; 261 -> curates_hardware_model"
 
   - id: B1B-S13
-    summary: Author 3-5 cross-module roles touching HAM-ASSET-REGISTRY and HAM-WARRANTY-PARTS; blocked on lifecycle states and system skills
+    summary: Author 3-5 cross-module roles touching 169 + 170; blocked on lifecycle states and persona deferral
     finding: |
       Zero roles touch modules 169 or 170. Multi-module domain requires >=3
-      roles by E1. Candidate role list from market practice:
-      IT-ITAM-ASSET-MANAGER (touches 169 + 170, primary);
-      IT-ITAM-ASSET-OWNER (touches 169 + relevant FSM/ITSM consumer modules);
-      IT-ITAM-DISPOSAL-COORDINATOR (touches 170 + GRC + ERP-FIN consumer
-      modules); PROCUREMENT-HARDWARE-BUYER (touches 170 + S2P modules);
-      FINANCE-FIXED-ASSET-ACCOUNTANT (touches 170 + ERP-FIN modules). Each
-      authored function-scoped under the role-naming rule. Workflow-gate
-      role_permissions cannot bundle until permissions exist
-      (derived from lifecycle states).
+      roles by E1. Workflow-gate role_permissions cannot bundle until permissions
+      exist (derived from lifecycle states, B1A-S1). Role authoring is part of the
+      DEFERRED persona/RACI layer (B1A-PHASE-P).
     blocked_by:
       - {type: depends_on, ref: B1A-S1, reason: workflow_gate_permissions_derive_from_lifecycle_states}
-      - {type: depends_on, ref: B1B-S2, reason: system_skills_and_their_tools_inform_role_module_interaction_levels}
+      - {type: deferred, ref: B1A-PHASE-P, reason: persona_layer_deferred}
     affected_modules: [169, 170]
     extra_band: E1
 
+# ------------------------------------------------------------------
+# b2: user decisions (forks the agent cannot pick). All carried forward.
+# ------------------------------------------------------------------
 b2:
   - id: B2-S1
     summary: Pattern flags positive re-evaluation across all 5 HAM masters
@@ -350,7 +268,9 @@ b2:
       hardware_assets.has_personal_content=true (assignment carries employee
         identity / location of last custodian);
       hardware_warranties.has_submit_lock=true (signed warranty contract).
-      Other masters likely stay false.
+      Other masters likely stay false. Note: this decision also shapes B1A-S1's
+      gate authoring (single_approver / submit_lock drive which transitions
+      require a permission).
     options: [per_flag_per_master_yes_or_no, accept_all_recommendations, reject_all_keep_false]
     why: Workflow-shape judgment the user owns; Rule #15 forbids documenting the rationale in notes column.
 
@@ -358,11 +278,10 @@ b2:
     summary: Handoff 622 (DISCOVERY -> HAM, payload discovery_scans) mis-routing
     question: |
       HAM does not model discovery_scans as a DMDO consumer. Either (a) add a
-      consumer + necessity=optional DMDO row on 169 for discovery_scans so the
-      consumption is structurally captured; (b) accept the handoff is
-      mis-routed (the per-asset device.discovered event is the downstream
-      consumer, not the scan record itself) and DELETE handoff 622; or
-      (c) keep as-is and defer to a Phase 0 follow-up.
+      consumer + necessity=optional DMDO row on 169 for discovery_scans; (b)
+      accept the handoff is mis-routed (the per-asset device.discovered event is
+      the downstream consumer, not the scan record) and DELETE handoff 622; or
+      (c) keep as-is and defer. Resolves B1B-S10-RESIDUAL row for handoff 622.
     options: [a_add_consumer_dmdo, b_delete_handoff, c_defer]
     why: Modeling decision (is the scan record itself a HAM concept) the user owns.
 
@@ -371,23 +290,21 @@ b2:
     question: |
       UEM masters enrolled_devices; HAM masters hardware_assets. The handoff
       implies UEM retirement triggers HAM asset retirement, but the canonical
-      direction in the IT-ops cluster is the opposite (HAM owns asset
-      lifecycle, UEM follows). Either (a) accept the bidirectional pattern
-      (UEM retirement is the trigger when the asset was UEM-only-managed),
-      (b) DELETE the handoff as mis-routed, or (c) FLIP the direction (HAM ->
-      UEM on hardware_asset.retired).
+      direction is the opposite (HAM owns asset lifecycle, UEM follows). Either
+      (a) accept the bidirectional pattern, (b) DELETE the handoff as mis-routed,
+      or (c) FLIP the direction (HAM -> UEM on hardware_asset.retired). Resolves
+      B1B-S10-RESIDUAL row for handoff 657.
     options: [a_keep, b_delete, c_flip_direction_and_author_HAM_to_UEM_handoff]
     why: IT-ops cluster modeling decision touching the larger HAM/UEM/MDM-EMM reconciliation conversation.
 
   - id: B2-S4
     summary: Users-edges 256 (assigned hardware) + 257 (custodian of assets) collapse vs keep both
     question: |
-      Same pair (users -> hardware_assets) with two slightly different
-      semantics: assigned-to (current end-user holder) vs custodian (IT staff
-      member managing on behalf of an owner). Either (a) keep both, rewrite
-      both to verb-shape; (b) collapse to one owns_hardware_asset; or
-      (c) keep both AND add a third for is_approver_for_hardware_asset_disposal
-      (matches the disposal-officer role on disposal records).
+      Same pair (users -> hardware_assets) with two semantics: assigned-to
+      (current end-user holder) vs custodian (IT staff managing on behalf of an
+      owner). Either (a) keep both, rewrite both to verb-shape; (b) collapse to
+      one owns_hardware_asset; or (c) keep both AND add a third
+      is_approver_for_hardware_asset_disposal. Resolves B1B-S11 verb rewrite shape.
     options: [a_keep_both_verb_shape, b_collapse, c_keep_both_plus_disposal_approver]
     why: Naming and cardinality decision; resolves B1B-S11 verb rewrite shape.
 
@@ -397,42 +314,38 @@ b2:
       Handoff 633 (ITAM -> HAM) implies HAM consumes asset_lifecycle_events to
       trigger disposal flow. HAM has no DMDO on asset_lifecycle_events today.
       Either (a) add consumer + necessity=optional on 170 (captures the
-      dependency cleanly, mirrors B10b discovery procedure), or (b) accept
-      HAM's disposal trigger is internal (asset.retired self-triggers in 169
-      -> 170) and the ITAM handoff is a side-channel that doesn't warrant
-      DMDO modeling.
+      dependency; lets handoff 633 target FK resolve to 170), or (b) accept HAM's
+      disposal trigger is internal and the ITAM handoff is a side-channel.
     options: [a_add_consumer_dmdo, b_side_channel_only]
-    why: DMDO modeling decision affecting pairwise reconciliation cleanliness; resolves B1B-S10 row for handoff 633.
+    why: DMDO modeling decision; resolves B1B-S10-RESIDUAL row for handoff 633.
 
   - id: B2-S6
     summary: domain_regulations linkage scope for HAM (disposal compliance frameworks)
     question: |
-      domain_regulations is empty for HAM. Hardware disposal involves RoHS (EU
-      2011/65/EU), WEEE (EU 2012/19/EU), NIST SP 800-88 r1 sanitization
-      guidelines, GDPR Art 17 for retired devices that held PII, HIPAA where
-      retired devices held PHI, R2v3 and e-Stewards recycler certifications.
-      Either (a) conservative link to RoHS + WEEE + NIST 800-88 only as the
-      universally-applicable subset; (b) comprehensive link to all 6; or
-      (c) defer pending ITAD market candidate triage (if ITAD becomes its own
-      domain, these may equally land on ITAD).
+      domain_regulations is empty for HAM (confirmed live). Hardware disposal
+      involves RoHS (EU 2011/65/EU), WEEE (EU 2012/19/EU), NIST SP 800-88 r1,
+      GDPR Art 17, HIPAA, R2v3 and e-Stewards recycler certifications. Either
+      (a) conservative link to RoHS + WEEE + NIST 800-88 only; (b) comprehensive
+      link to all 6; or (c) defer pending ITAD market candidate triage.
     options: [a_conservative, b_comprehensive, c_defer_pending_ITAD]
     why: Compliance scoping is the user's call; cross-informed by B3 ITAD candidate.
 
   - id: B2-S7
     summary: APQC routing on handoffs 668 / 669 (current agent_curated rows point at process 808)
     question: |
-      The agent_curated rows that landed both point at process 808
-      (Process/Review requisitions, L4). This audit's prior recommendation was
-      process 826 (Manage raw material inventory) for handoff 668 and process
-      201 (Process warranty claims) for handoff 669. Both prior picks foreground
-      the distinct payload signal (low-stock vs warranty-expiring); the current
-      808 pick foregrounds the S2P requisition outcome they both feed. Either
-      (a) keep both at 808; (b) switch 668 -> 826 and 669 -> 201 to restore the
-      distinct-payload classification; or (c) keep 808 and stack additional
-      rows alongside (multi-process tags per handoff are allowed).
+      The agent_curated rows that landed both point at process 808 (Process/Review
+      requisitions, L4). The prior recommendation was process 826 (Manage raw
+      material inventory) for 668 and process 201 (Process warranty claims) for
+      669, foregrounding the distinct payload signal. Either (a) keep both at 808;
+      (b) switch 668 -> 826 and 669 -> 201 (each switch is a destructive replace
+      of an existing row); or (c) keep 808 and stack additional rows alongside
+      (additive, allowed). Option (c) is agent-executable; (a)/(b) need a decision.
     options: [a_keep_808, b_switch_to_826_and_201, c_keep_808_plus_stack_distinct_tags]
     why: APQC mapping judgment; affects review-triage quality of the H-band coverage.
 
+# ------------------------------------------------------------------
+# b3: discretionary additive entity candidates. Non-blocking backlog.
+# ------------------------------------------------------------------
 b3:
   - id: B3-S1
     candidate: asset_categories
@@ -522,8 +435,7 @@ b3:
     candidate: ITAD_domain_promotion
     rationale: |
       IT Asset Disposition is a real point-solution market with its own vendor
-      ecosystem (Iron Mountain ITAD, Sims Lifecycle Services, Wisetek, ERI
-      Direct, TES). Candidate capabilities: secure data sanitization, chain of
+      ecosystem. Candidate capabilities: secure data sanitization, chain of
       custody, e-waste recycling logistics, certificate of destruction
       generation, fair-market resale, regulatory disposal reporting. Queued in
       audits/_missing-domains.md.

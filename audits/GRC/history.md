@@ -279,3 +279,40 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+State-driven pass over the open items in `audits/GRC/state.yaml` (no fresh from-scratch audit). Live-verified each recorded item, then executed every additive/corrective item the agent can do. Loader: [.tmp_deploy/fix_grc_state_driven_2026_06_07.ts](../../.tmp_deploy/fix_grc_state_driven_2026_06_07.ts). Run from project root. All writes idempotent, all new rows `record_status='new'`.
+
+### Summary
+
+GRC remains **UNBUILT** (0 `domain_modules`, M1 hard fail; 1 `capability_domains` link). Per Validate-mode policy the build is surfaced, not scaffolded, and the whole dependent cascade (modules, lifecycle states, module tools/skill, persona roles, B10b backfill, outbound relationships) is left blocked behind modularization (B1B-S1), which is gated on the user decisions B2-5 (COMPLIANCE-TRAIN ownership) and B3-2 (split shape). Every currently-executable additive/corrective item has now landed. `next_action_by` flips to **user**.
+
+Stale-snapshot corrections found against live: handoff **842 is already tagged** (handoff_processes id 1122, process 369 agent_curated), so the only outstanding clean-match APQC insert was handoff **249** (not 249 + 842 as the snapshot recorded). C1 is **already satisfied** (business_function_domains id 104, owner, business_function_id=31) — no insert needed.
+
+### Executed
+
+- **entity_type (B13 / Rule #12): 10 PATCHes.** All 10 GRC masters (282-291) were `entity_type='unclassified'`; each is a stateful historized workflow record, so all classified to `operational_workflow`. This makes B12 (lifecycle states) now genuinely required on all 10 (still blocked on modules).
+- **Catalog UX (Rule #20): 1 domain row.** GRC domain (id 15) had empty `catalog_tagline` + `catalog_description`; authored buyer-voice copy for both (workflow + value, no vendor names, regulations SOX/ISO 27001/SOC 2/NIST CSF allowed per Rule #18, no em-dash, American English). No module rows to author (domain is unbuilt).
+- **APQC tag (B1A-APQC): 1 handoff_processes INSERT.** Handoff 249 (GRC -> LMS, `compliance_policy.updated`, payload `policy_attestations`) tagged to PCF process **1829 "Train employees on appropriate regulatory requirements"** (code 2.1.3.5.1, external_id 12772), a clean cross-industry L5 match for the policy-update-drives-compliance-training workflow. `proposal_source='agent_curated'`, `role='implements'`. New row id 1156. All 10 GRC outbound handoffs now carry exactly one tag.
+- **Aliases (B1A-S5 / B11): 30 data_object_aliases INSERTs** across the 10 masters, `alias_type='synonym'` (no industry_id), generic cross-vendor terminology only (e.g. audit_issues -> Finding/Observation/Deficiency/Gap; policy_attestations -> Acknowledgement/Sign-off/Affirmation; compliance_obligations -> Requirement/Regulatory Citation/Citation; remediation_plans -> Action Plan/Corrective Action/CAPA Plan). B11 hard-fail cleared.
+
+### Surfaced (not executed)
+
+- **B1A-APQC-PROMOTE (DESTRUCTIVE / Rule #1):** promoting the 10 existing new-state outbound APQC tags to `approved` is a user-curation step the agent never does. H1 headline remains 0 approved.
+- **B1A-S10 (B2 borderline, DESTRUCTIVE if renamed):** `compliance_evidence` plural_label `Compliance Evidences`. Default leave-as-is.
+- **B2-1 / B2-3 (Rule #15 notes revert, DESTRUCTIVE):** notes pollution on the 11 GRC `domain_data_objects` rows (auto-populated vs user-approved) and the 2 inbound-handoff "target NULL until GRC modularized" trailers (owed by ITAM/APM).
+- **B2-4 (B4 pattern flags):** per-flag yes/no on 12 candidate positions, now relevant since all 10 masters are `operational_workflow`.
+- **B2-5 (COMPLIANCE-TRAIN ownership), B3-2 (split shape):** the two gates on the build.
+- **B2-6 (compliance_risks multi-master), B2-7 (role tagging), B3-3 (audit_issues GRC vs AUDIT):** architectural / RBAC / cross-domain judgment calls.
+- **Personas/RACI (B1B-S13, Phase-P): DEFERRED, not authored.** Candidate personas noted: RISK-MANAGER, COMPLIANCE-OFFICER, POLICY-OWNER, CONTROL-OWNER, ATTESTATION-CAMPAIGN-MGR.
+
+### Left
+
+- **All b1b items** (B1B-S1, S2, S3, S8, S9, S12, S13): the unbuilt cascade, blocked on B1B-S1 modularization which is gated on B2-5 + B3-2. Not scaffolded.
+- **b3 backlog** (B3-1, B3-2, B3-3, B3-4): vendor-substrate masters, split shape, audit_issues mastery, 4 queued domain candidates.
+- **Retired per supersession:** B1B-S7 / B1B-S11 (legacy `grc-system` skill 8 + `skill_tools` retirement, F7 send_email) and B1B-S12 reframed from per-module system skills to `domain_module_tools` + one domain-grain skill under the 2026-06-06 model. B2-2 (skill_tools notes pollution) is moot under the retirement. The supersession header is preserved.
+
+### JWT errors
+
+None encountered.

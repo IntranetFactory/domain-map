@@ -370,3 +370,80 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate execute pass (no fresh from-scratch audit). Worked the open
+agent-executable items in state.yaml and verified each against live before writing.
+Three execute item-types ran clean and idempotent; the destructive M9 remediation and the
+deferred persona layer were surfaced; everything blocked on other domains or the retired
+per-module-skill model was left. Domain id 131; modules SVC-DESK 137, CONTRACTS 138,
+TIME-BILLING 139, DISPATCH 140; masters msp_tickets 233, msp_contracts 234,
+msp_time_entries 235, msp_invoices 236, msp_clients 237. Owning function confirmed already
+wired: business_function_domains carries owner=IT Operations (27), contributor=Finance (4),
+contributor=Business Operations (34); no C1 work needed. Aliases already populated (12 rows
+across the 5 masters); no B11 work needed. next_action_by flips to user.
+
+Notable live-vs-snapshot drift: the prior B1A-H1-TAGS snapshot proposed 10 handoff tags,
+but 5 of those handoffs (159, 523, 524, 525, 526) were already tagged live, so only 5 were
+actually missing. Two H1 PCF ids drifted from the snapshot (525 is live process_id 6, 526 is
+live process_id 55, not the 196/1094 the snapshot proposed), but those rows already existed so
+they were left untouched, not re-attributed (re-attribution is destructive). The B1A-SELF-CONTAIN
+M9 snapshot listed 2 violations; live shows only 1 remains (service_incidents on SVC-DESK is
+already necessity=optional).
+
+### Executed (record_status='new', idempotent, verified)
+
+- **B1A-ENTITY-TYPE (5 PATCHes):** classified all 5 masters off `entity_type='unclassified'`
+  per Rule #12. msp_tickets, msp_contracts, msp_time_entries, msp_invoices -> `operational_workflow`
+  (each carries a multi-state, permission-gated lifecycle). msp_clients -> `operational_record`
+  (customer/account roster other entities reference; light status lifecycle).
+- **Catalog UX, Rule #20 (5 PATCHes):** authored buyer-voice catalog_tagline + catalog_description
+  on the domain row (131, both were empty) and on all 4 modules (137/138/139/140, all empty).
+  Workflow+value framing, no vendor/product names, no em-dashes, American English. No non-empty
+  value was overwritten.
+- **B1A-H1-TAGS, H1 (5 INSERTs into handoff_processes):** tagged the 5 remaining untagged handoffs:
+  161 (MSP-PSA->HAM, hardware_assets) -> 1312 Maintain IT asset records; 1244 (intra, msp_ticket.created)
+  -> 295 Operate IT user support; 1245 (intra, msp_time_entry.approved) -> 312 Report time;
+  1246 (intra, msp_contract.activated) -> 1094 Maintain IT customer contracts; 1247 (intra,
+  msp_contract.suspended) -> 1094 Maintain IT customer contracts. All `proposal_source=agent_curated`,
+  `role=implements`, record_status defaulted to 'new'. All 4 PCF ids pre-verified live this run.
+  H1 hard-fail is now fully closed: all 14 MSP-PSA handoffs carry an APQC tag.
+
+### Surfaced (not written; require user decision or destructive sign-off)
+
+- **B1A-SELF-CONTAIN (M9, DESTRUCTIVE):** DMDO id 686 on SVC-DESK 137 is role=consumer,
+  necessity=required on hardware_assets (56, HAM-mastered). Recommended fix: convert to
+  embedded_master (local shell for standalone deployment) OR set necessity=optional. Rewriting an
+  existing DMDO row is destructive, so surfaced not executed. The second snapshot shape
+  (service_incidents 47) is already optional and no longer trips M9.
+- **B1A-PHASE-P (personas/RACI):** DEFERRED per Rule #21. Candidate personas: MSP-TECHNICIAN,
+  MSP-DISPATCHER, MSP-ACCOUNT-MANAGER, MSP-BILLING-ADMIN, MSP-CSAT-ANALYST. Overlaps the role-list
+  decision in B2-S5; confirm that list before any authoring.
+- **b2 decisions (6 open):** B2-S1 (M7 delete vs promote 3 msp_clients sibling consumers),
+  B2-S2 (B4 pattern flags on the 5 masters), B2-S3 (chat_messages 565 notes, WSC's call),
+  B2-S5 (Phase E role list), B2-S6 (MSP-PSA->ITSM in-house IT boundary), B2-S7 (DISPATCH 140 M1
+  cure). B2-S4 (skill 85 retire vs repurpose) is now RETIRED/moot under the per-domain-skill model.
+
+### Left (untouched)
+
+- **b1b blocked on other domains' audits:** B1B-S3 (HAM/CSM/ERP-FIN B10b target FK), B1B-S4
+  (RMM/REMOTE-ACCESS B10b source/target FK), B1B-S5 (CSM/ERP-FIN consumer DMDOs on MSP-PSA masters).
+- **b1b blocked on user decision:** B1B-S1 (M7, ref B2-S1), B1B-S6 (roles, ref B2-S5),
+  B1B-S7 (permissions, depends B1B-S6/B2-S5), B1B-S10 (DISPATCH M1, ref B2-S7).
+- **b1b RETIRED (superseded 2026-06-06):** B1B-S8 (per-module system skills), B1B-S9 (skill_tools
+  reassignment). Reframed as notes; no per-module skills authored.
+- **b3 backlog (11 candidates):** unchanged speculative Phase-0 items.
+
+### Loader
+
+`c:/dev/domain-map/.tmp_deploy/fix_msp_psa_state_2026_06_07.ts` (idempotent; second run wrote 0).
+
+### UI links
+
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/domains
+- https://tests.semantius.app/domain_map/domain_modules
+- https://tests.semantius.app/domain_map/handoff_processes

@@ -336,3 +336,67 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (Rule #21) over TPRM's open state items. No fresh from-scratch audit.
+Live verification 2026-06-07 (domain id 19) confirmed the snapshot: TPRM is still UNBUILT
+(0 `domain_modules`, 0 `capability_domains`, 0 TPRM-mastered `data_objects`, 0 `skills`). The only
+catalog footprint remains 2 inbound handoffs (258 AUDIT to TPRM, 278 ESG to TPRM, both still
+`target_domain_module_id=NULL`), each already carrying `agent_curated` APQC tags, plus the prior
+solutions / regulations / business-function rows. C1 is already satisfied (3
+`business_function_domains` rows: owner Governance/Risk/Compliance bf31, contributors Procurement
+bf19 and Security bf28), so no C1 insert was owed. Per the UNBUILT LEAVE rule the build is surfaced
+(it is the B2-1 user decision), not scaffolded, and the whole b1b M-band cascade is left blocked.
+
+### Executed (agent-finished, record_status preserved)
+
+| Type | Table | Count | Detail |
+|---|---|---|---|
+| Catalog UX (Rule #20, was B2-A4) | `domains` | 1 PATCH | Authored buyer-voice `catalog_tagline` + `catalog_description` on the empty TPRM domain row (id 19). Empty-guard + em-dash-guard in the loader; never overwrote a non-empty value. No vendor/product names (Rule #18); DORA referenced as an allowed statutory framework. `record_status='new'` unchanged. Loader: `.tmp_deploy/2026-06-07_tprm_catalog_ux.ts`. |
+
+The former B2-A4 "surface-before-write" gate was overridden per the Rule #21 catalog-UX directive
+(author and write empty catalog copy directly). No modules exist, so no module-grain catalog copy
+was owed.
+
+### Surfaced (not written; user decision or destructive)
+
+- **B2-1** (load-bearing): single `TPRM-VENDOR-RISK-MGMT` vs split into `TPRM-VENDOR-DUE-DILIGENCE`
+  + `TPRM-VENDOR-ONGOING-MONITORING`. Gates the whole build and every b1b cure.
+- **B2-2..B2-7**: ownership-boundary calls against GRC (`risk_assessments`, `compliance_risks`),
+  SUP-LIFE (`suppliers`, `supplier_risk_assessments`, broad overlap), and AUDIT (`audit_findings`
+  routing for handoff 258, which gates B1B-B10b-258).
+- **B2-8** (DORA scope), **B2-9** (`smp_vendor_risk_assessments` overlap): independent decisions.
+- **B2-H1 (DESTRUCTIVE)**: handoff 278 carries a second `agent_curated` APQC tag (PCF 815, L4,
+  `handoff_processes` id 705) on top of the documented L3 tag (PCF 167, id 254). Unknown provenance.
+  SKILL-preferred shape is to DELETE id 705 (keep the cleaner L3), but the DELETE is destructive and
+  the surprise provenance warrants explicit sign-off, so it was NOT executed. This subsumes the
+  former B1A-H3 (the DELETE action).
+- **Personas / RACI (Phase P)**: DEFERRED. UNBUILT (0 modules), so no module surface to author
+  against. Candidate personas once built: Vendor Risk Analyst, Third-Party Risk Manager,
+  Procurement Risk Reviewer, InfoSec Vendor Assessor.
+
+### Left (untouched)
+
+- **b1b** (S1 build, A2 capabilities, B10b-258, B10b-278): all blocked on B2-1 / on B1B-S1 landing
+  first. UNBUILT cascade left in place, not scaffolded.
+- **B1A-BUILD**: surfaced as the build decision (= B2-1 + ownership boundary); not auto-built.
+- **b3** (B3-1..B3-6 candidate entities): Phase 0 backlog, blocked on B2-1 and the ownership
+  boundary; non-blocking, never gates finished.
+- Supersession header (per-domain-skill restoration, 2026-06-06): preserved in both state.yaml and
+  this file. Retired skill-grain / `skill_tools` / per-module-skill items are not re-opened.
+
+### UI spot-checks
+
+- https://tests.semantius.app/domain_map/domains (id 19 - `catalog_tagline` + `catalog_description` now populated)
+- https://tests.semantius.app/domain_map/domain_modules (filter domain_id=19, still empty; build deferred to B2-1)
+- https://tests.semantius.app/domain_map/handoff_processes (filter handoff_id=278 to see PCF 167 id 254 + the surfaced PCF 815 id 705)
+- https://tests.semantius.app/domain_map/handoffs (rows 258, 278 still `target_domain_module_id=NULL`, expected until M1)
+
+### Post-fix status
+
+`next_action_by: user`. The agent has executed everything it can on an UNBUILT domain (catalog UX
+copy). All remaining progress is gated on the B2-1 module-shape decision and the B2-2..B2-7
+ownership-boundary calls; B2-H1 awaits a destructive-DELETE sign-off.

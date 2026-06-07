@@ -11,127 +11,90 @@
 schema_version: 2
 domain: PORT-MONIT
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
   - id: B1A-S2-SKILLS
-    summary: Author 4 system skills + tools + skill_tools across PORT-MONIT modules so Semantius score becomes computable.
+    summary: "RETIRED (superseded 2026-06-06). Per-module system skills + skill_tools are canceled; reframe as a domain-grain tooling note."
     finding: |
-      Zero system skills exist on any of the 4 modules. /skills?domain_module_id=in.(16,17,18,19) returns [].
-      /skills?domain_id=eq.161 returns []. Every module is therefore uncomputable for the Semantius score.
-      F2 fails (no system skill per module), F3 fails (no skill_tools), F4 cannot validate operation_kind
-      pairings, F5 rollup is uncomputable. Rule #17 requires exactly one skill_type='system' skill per
-      domain_modules row with >=1 skill_tools row.
+      Original item asked for 4 per-module system skills (port_monit_*_agent on modules 16-19)
+      plus tools + skill_tools. The per-module `system` skill grain is RETIRED (see supersession
+      header). The new model authors tool requirements onto `domain_module_tools` and gives the
+      domain exactly ONE domain-grain `system` skill that derives its toolset. `skill_tools` is
+      dropped. Do NOT author per-module skills.
     action: |
-      Phase-S load. Author 4 skills rows (port_monit_portco_data_agent on module 16,
-      port_monit_valuations_agent on module 17, port_monit_fund_perf_agent on module 18,
-      port_monit_lp_reporting_agent on module 19), each skill_type='system'. Author ~5-12 tools
-      and skill_tools rows per module: query / mutate per master plus compute primitives
-      (compute_irr_moic_tvpi_dpi on FUND-PERF, compute_fair_value_mark on VALUATIONS,
-      parse_kpi_packet and parse_esg_packet on PORTCO-DATA, render_lp_report on LP-REPORTING)
-      plus notify_person for share-with-LP intent. Validate operation_kind invariants
-      (query/mutate require data_object_id; fetch/side_effect/compute require NULL).
+      No per-module skill work. Per-module tool authoring (domain_module_tools across 16-19) is
+      tracked in audits/_modularization-backlog.md, not here. Leave for the modularization pass.
     affected_modules: [16, 17, 18, 19]
-    extra_band: F2,F3,F4,F5
+    status_note: superseded_skill_grain
 
   - id: B1A-S3-ROLES
-    summary: Author >=3 roles bundling PORT-MONIT modules so E1-E5 pass.
+    summary: Author >=3 roles bundling PORT-MONIT modules so E1-E5 pass. Subsumed by the persona/RACI pass (B1A-PHASE-P); DEFERRED, do not author this audit.
     finding: |
       /role_modules?domain_module_id=in.(16,17,18,19) returns []. The domain has 4 modules
-      (>=2 floor) but no roles touch any module, so E1 (role floor), E2 (role-module coverage),
-      E3 (role-permissions), E4 (permission tier coverage), E5 (role bundling sanity) all fail
-      together. Permissions table on the 4 modules is also empty
-      (/permissions?domain_module_id=in.(16,17,18,19) returns []), reflecting that the workflow-gate
-      permission cascade Rule #12 implies has not run.
+      (>=2 floor) but no roles touch any module, so E1-E5 fail together. Permissions on the 4
+      modules are also empty. Roles are the operational-persona layer, which the persona/RACI
+      pass (B1A-PHASE-P) owns. Per Rule #21 the persona/RACI layer is DEFERRED, not agent-authored.
     action: |
-      Author >=3 roles function-scoped to Investment Management:
-      INVESTMENT-PORTFOLIO-ANALYST (primary on 16 + 17, secondary on 18),
-      INVESTMENT-FUND-CONTROLLER (primary on 18 + 19, secondary on 17),
-      INVESTMENT-INVESTOR-RELATIONS (primary on 19, secondary on 18 + 16).
-      Each carries 4-8 role_permissions rows once the baseline + workflow-gate permission set
-      lands. Note: workflow-gate permissions depend on B1A-S7 lifecycle states landing first,
-      so authoring sequence is S7 -> permissions -> S3.
+      Candidate personas (function-scoped to Investment Management) when the persona pass runs:
+      INVESTMENT-PORTFOLIO-ANALYST (primary 16 + 17, secondary 18),
+      INVESTMENT-FUND-CONTROLLER (primary 18 + 19, secondary 17),
+      INVESTMENT-INVESTOR-RELATIONS (primary 19, secondary 18 + 16).
+      Workflow-gate permissions depend on B1A-S7 lifecycle states landing first.
     affected_modules: [16, 17, 18, 19]
     extra_band: E1,E2,E3,E4,E5
-
-  - id: B1A-S6-ALIASES
-    summary: Draft >=1 alias on each of the 6 non-aliased masters (queued; alias_name strings need user-supplied tuples per Rule #15).
-    finding: |
-      /data_object_aliases?data_object_id=in.(763,764,765,766,767,768,769) returns 2 rows,
-      both on portfolio_companies (portcos, investments). Six of seven masters have zero
-      aliases. The prior audit listed candidate alias bundles
-      (portco_kpi_periods -> portco_metrics OR kpi_packets, portco_esg_records -> esg_packets
-      OR sustainability_reports, portco_valuations -> fair_value_marks OR quarterly_marks,
-      fund_position_returns -> position_returns OR position_irr_records,
-      fund_performance_periods -> fund_quarterly_metrics, lp_quarterly_reports -> lp_quarterly_packets
-      OR gp_reports). Bulk inserting these without exact tuple confirmation violates the
-      author-then-confirm discipline for alias text.
-    action: |
-      Surface the candidate tuples per master to user. Once user picks exact alias_name strings
-      (one per row), insert 6 data_object_aliases rows (or 7-12 if user picks multiple per master).
-    affected_entities:
-      [portco_kpi_periods, portco_esg_records, portco_valuations, fund_position_returns, fund_performance_periods, lp_quarterly_reports]
-    extra_band: B11
+    status_note: deferred_with_personas
 
   - id: B1A-S7-LIFECYCLE
-    summary: Author lifecycle states + requires_permission flags on 6 of 7 masters; pre-condition for B1B-S8 trigger events and B1B-S9 intra-domain handoffs.
+    summary: Author lifecycle states on the 4 operational_workflow masters (764, 765, 766, 769). State-machine authoring deferred (per-master state-name + requires_permission judgment).
     finding: |
-      /data_object_lifecycle_states?data_object_id=in.(763,764,765,766,767,768,769) returns 3 rows,
-      all on portfolio_companies (active / exited / written_off, all requires_permission=false,
-      domain_module_id=16 per 2026-05-31 Continuation). Six masters have no state machine:
-      portco_kpi_periods, portco_esg_records, portco_valuations, fund_position_returns,
-      fund_performance_periods, lp_quarterly_reports. portco_valuations has
-      has_submit_lock=true AND has_single_approver=true so an explicit workflow with
-      requires_permission=true is implied. lp_quarterly_reports has has_submit_lock=true
-      so a published-gate transition is implied. Rule #12 forbids deferral.
+      entity_type is now classified (2026-06-07): 764 portco_kpi_periods, 765 portco_esg_records,
+      766 portco_valuations, 769 lp_quarterly_reports are operational_workflow and so REQUIRE
+      lifecycle states (B12). 767 fund_position_returns and 768 fund_performance_periods are now
+      `computed` and DO NOT require lifecycle states (Rule #12), so they drop from this item's
+      scope. portfolio_companies (763) already has active/exited/written_off on module 16.
+      portco_valuations (766) has has_submit_lock=true AND has_single_approver=true so an explicit
+      requires_permission workflow is implied. lp_quarterly_reports (769) has has_submit_lock=true
+      so a published gate is implied.
     action: |
-      Author lifecycle states (initial + workflow gates + terminal) on:
+      Author lifecycle states (initial + workflow gates + terminal) on the 4 workflow masters:
       portco_kpi_periods (draft / submitted / accepted),
       portco_esg_records (draft / submitted / accepted),
       portco_valuations (proposed / review / approved / locked),
-      fund_position_returns (computed / locked),
-      fund_performance_periods (computing / computed / locked),
       lp_quarterly_reports (draft / review / published / archived).
       Apply requires_permission=true to submitted / accepted / approved / locked / published states.
-      Set domain_module_id per master's home module (764 -> 16, 765 -> 16, 766 -> 17,
-      767 -> 18, 768 -> 18, 769 -> 19).
+      Set domain_module_id per master's home module (764 -> 16, 765 -> 16, 766 -> 17, 769 -> 19).
     affected_masters:
       - {data_object_id: 764, name: portco_kpi_periods, target_module_id: 16, workflow: "draft/submitted/accepted"}
       - {data_object_id: 765, name: portco_esg_records, target_module_id: 16, workflow: "draft/submitted/accepted"}
       - {data_object_id: 766, name: portco_valuations, target_module_id: 17, workflow: "proposed/review/approved/locked"}
-      - {data_object_id: 767, name: fund_position_returns, target_module_id: 18, workflow: "computed/locked"}
-      - {data_object_id: 768, name: fund_performance_periods, target_module_id: 18, workflow: "computing/computed/locked"}
       - {data_object_id: 769, name: lp_quarterly_reports, target_module_id: 19, workflow: "draft/review/published/archived"}
     extra_band: B12
 
   - id: B1A-M1-VALUATION-METHODOLOGIES
     summary: Add valuation_methodologies as a domain-owned master in PORT-MONIT-VALUATIONS (17). ASC 820 typing lookup.
     finding: |
-      Universal entity in PE/VC valuation tooling (Chronograph, Allvue, eFront, Vestberry).
-      ASC 820 fair-value methodology choice (DCF / public-comp / transaction-comp / option-pricing
-      / cost) needs to be tagged per portco_valuation; absence forces inlining methodology as
-      a text column on portco_valuations and prevents the methodology-tagged audit trail the
-      module's description claims.
+      Universal entity in PE/VC valuation tooling. ASC 820 fair-value methodology choice (DCF /
+      public-comp / transaction-comp / option-pricing / cost) needs to be tagged per
+      portco_valuation; absence forces inlining methodology as a text column on portco_valuations
+      and prevents the methodology-tagged audit trail the module's description claims.
     action: |
       Phase-B insert: data_objects row (kind=domain_owned), domain_module_data_objects row
       on module 17 (role=master, necessity=required), data_object_relationships row
       portco_valuations -> valuation_methodologies (reference, many_to_one).
     proposed_module: PORT-MONIT-VALUATIONS
-    vendor_evidence: [Chronograph, Allvue, eFront, Vestberry]
 
   - id: B1A-M2-KPI-DEFINITIONS
     summary: Add kpi_definitions as a domain-owned master in PORT-MONIT-PORTCO-DATA (16). Per-fund or per-thesis KPI template library.
     finding: |
-      Universal entity (Standard Metrics, Vestberry, Visible.vc, Chronograph). KPI templates
-      (revenue, gross margin, burn, runway, ARR, ACV, NDR) define the schema of what
-      portco_kpi_periods carries. Without it, KPI dimensions are implicit in the kpi_period payload
-      and cross-portco KPI comparison becomes impossible.
+      Universal entity. KPI templates (revenue, gross margin, burn, runway, ARR, ACV, NDR) define
+      the schema of what portco_kpi_periods carries. Without it, KPI dimensions are implicit in the
+      kpi_period payload and cross-portco KPI comparison becomes impossible.
     action: |
       Phase-B insert: data_objects row, DMDO on module 16 (master + required), relationship
       portco_kpi_periods -> kpi_definitions.
     proposed_module: PORT-MONIT-PORTCO-DATA
-    vendor_evidence: [Standard Metrics, Vestberry, Visible.vc, Chronograph]
 
   - id: B1A-M6-PORTCO-DOCUMENTS
     summary: Add portco_documents as a domain-owned master in PORT-MONIT-PORTCO-DATA (16). Document drops from portfolio companies.
@@ -144,44 +107,34 @@ b1a:
       Phase-B insert: data_objects row, DMDO on module 16 (master + required), relationship
       portfolio_companies -> portco_documents (composition).
     proposed_module: PORT-MONIT-PORTCO-DATA
-    vendor_evidence: [Chronograph, Allvue, Vestberry, Standard Metrics, Visible.vc]
 
   - id: B1A-M7-PME-BENCHMARKS
     summary: Add pme_benchmarks as a domain-owned master in PORT-MONIT-FUND-PERF (18). Public Market Equivalent benchmark series.
     finding: |
       Kaplan-Schoar / direct alpha PME benchmarking is referenced by the module description
-      and ILPA reporting standards but no data object stores the benchmark series. Vendor-bundled
-      by Chronograph and eFront.
+      and ILPA reporting standards but no data object stores the benchmark series.
     action: |
       Phase-B insert: data_objects row, DMDO on module 18 (master + required), relationship
       fund_performance_periods -> pme_benchmarks (reference, many_to_one).
     proposed_module: PORT-MONIT-FUND-PERF
-    vendor_evidence: [Chronograph, eFront]
 
   - id: B1A-M8-VAL-COMMITTEE-DECISIONS
     summary: Add valuation_committee_decisions as a domain-owned master in PORT-MONIT-VALUATIONS (17). Explains portco_valuations.has_single_approver=true.
     finding: |
       portco_valuations carries has_single_approver=true but no committee-decision record
-      captures the methodology override rationale per quarter. Vendor-supported by eFront,
-      Chronograph, Allvue. Without it the single-approver pattern flag has no entity to attach
-      its approval evidence to.
+      captures the methodology override rationale per quarter. Without it the single-approver
+      pattern flag has no entity to attach its approval evidence to.
     action: |
       Phase-B insert: data_objects row, DMDO on module 17 (master + required), relationship
       portco_valuations -> valuation_committee_decisions (composition, one_to_one or one_to_many
       per quarter).
     proposed_module: PORT-MONIT-VALUATIONS
-    vendor_evidence: [eFront, Chronograph, Allvue]
+
   - id: B1A-PHASE-P
-    summary: "Multi-module (4 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 4 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "7 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 7 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [fund_performance_periods, fund_position_returns, lp_quarterly_reports, portco_esg_records, portco_kpi_periods, portco_valuations, portfolio_companies]
-    extra_phase_p_triage: "2026-06-02"
+    summary: "Multi-module (4 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED per Rule #21 (do not author)."
+    finding: "Live triage: 4 domain_modules and 0 domain_roles reach this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Per Rule #21 the persona/RACI layer is deferred, not agent-authored."
+    action: "When the persona pass runs: author domain_roles (operational personas) function-anchored per references/roles.md section 7 (candidates listed in B1A-S3-ROLES), wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    status_note: deferred_personas
 
 b1b:
   - id: B1B-S4-REGULATIONS
@@ -201,13 +154,11 @@ b1b:
     summary: Add sfdr_disclosures master in PORT-MONIT-LP-REPORTING (19). Blocked on B1B-S4 scope.
     finding: |
       Article 8/9 fund classifications and Principal Adverse Impact indicators per fund.
-      Vendor-mandatory for EU under eFront and Allvue. Cannot ship without the SFDR
-      regulations row landing first.
+      Vendor-mandatory for EU. Cannot ship without the SFDR regulations row landing first.
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S4}
       - {type: user_decision, ref: B2-1}
     proposed_module: PORT-MONIT-LP-REPORTING
-    vendor_evidence: [eFront, Allvue]
 
   - id: B1B-M4-AIFMD-ANNEX-IV
     summary: Add aifmd_annex_iv_reports master in PORT-MONIT-LP-REPORTING (19). Blocked on B1B-S4 scope.
@@ -218,7 +169,6 @@ b1b:
       - {type: prerequisite_entity, ref: B1B-S4}
       - {type: user_decision, ref: B2-1}
     proposed_module: PORT-MONIT-LP-REPORTING
-    vendor_evidence: [eFront, Allvue]
 
   - id: B1B-M5-FORM-PF
     summary: Add form_pf_reports master in PORT-MONIT-LP-REPORTING (19). Blocked on B1B-S4 scope.
@@ -229,49 +179,33 @@ b1b:
       - {type: prerequisite_entity, ref: B1B-S4}
       - {type: user_decision, ref: B2-1}
     proposed_module: PORT-MONIT-LP-REPORTING
-    vendor_evidence: [Allvue, Standard Metrics, eFront]
 
   - id: B1B-S8-TRIGGER-EVENTS
-    summary: Author ~10 trigger_events rows after B1A-S7 lifecycle states land.
+    summary: Author trigger_events rows after B1A-S7 lifecycle states land.
     finding: |
-      /trigger_events?domain_module_id=in.(16,17,18,19) returns 0 rows. The catalog has 1
-      trigger event total for PORT-MONIT masters (portco_valuation.final, id 1188, module FK
-      NULL). Lifecycle states authored in B1A-S7 imply ~10 new events:
-      portco_kpi_period.submitted, portco_kpi_period.accepted, portco_esg_record.submitted,
-      portco_valuation.proposed, portco_valuation.approved, fund_performance_period.computed,
-      fund_performance_period.locked, lp_quarterly_report.published, portfolio_company.exited,
-      portfolio_company.written_off. Trigger event for portco_valuation.final should also have
-      domain_module_id PATCHed from NULL to 17.
+      /trigger_events?domain_module_id=in.(16,17,18,19) had only 1 PORT-MONIT event before this
+      audit. trigger_event 1188 (portco_valuation.final) had its domain_module_id backfilled NULL
+      -> 17 on 2026-06-07 (done). The remaining ~9 events depend on the B1A-S7 lifecycle states.
+      Note: 767/768 are now entity_type='computed', so fund_performance_period.computed /
+      .locked are no longer lifecycle-derived; if authored they would be state_change events on a
+      computed record (a judgment call, not a clean lifecycle derivation). The workflow-master
+      events remain: portco_kpi_period.submitted, portco_kpi_period.accepted,
+      portco_esg_record.submitted, portco_valuation.proposed, portco_valuation.approved,
+      lp_quarterly_report.published, portfolio_company.exited, portfolio_company.written_off.
     blocked_by:
       - {type: prerequisite_entity, ref: B1A-S7}
-    affected_events:
-      - {id: null, event_name: portco_kpi_period.submitted, current_category: null, proposed_category: lifecycle}
-      - {id: null, event_name: portco_kpi_period.accepted, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: portco_esg_record.submitted, current_category: null, proposed_category: lifecycle}
-      - {id: null, event_name: portco_valuation.proposed, current_category: null, proposed_category: lifecycle}
-      - {id: null, event_name: portco_valuation.approved, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: fund_performance_period.computed, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: fund_performance_period.locked, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: lp_quarterly_report.published, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: portfolio_company.exited, current_category: null, proposed_category: state_change}
-      - {id: null, event_name: portfolio_company.written_off, current_category: null, proposed_category: state_change}
-      - {id: 1188, event_name: portco_valuation.final, current_category: state_change, proposed_category: state_change}
     extra_band: B9
-    extra_followup: PATCH domain_module_id=17 on event 1188
 
   - id: B1B-S9-INTRA-HANDOFFS
-    summary: Author 4 intra-domain handoffs between PORT-MONIT modules once B1B-S8 events exist.
+    summary: Author intra-domain handoffs between PORT-MONIT modules once B1B-S8 events exist.
     finding: |
       /handoffs?and=(source_domain_id.eq.161,target_domain_id.eq.161) returns 0 rows. The 4-module
-      domain has zero intra-domain handoffs. Master-resolution implies 4 expected pairs derived
-      from the B1B-S8 events.
+      domain has zero intra-domain handoffs. Expected pairs derive from the B1B-S8 events; with
+      767/768 reclassified to computed, the re-aggregation pairs that targeted fund_position_returns
+      / fund_performance_periods are lifecycle_progression reads into computed records, so confirm
+      the intra-handoff set against the final B1B-S8 event list before authoring.
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S8}
-    affected_handoffs:
-      - {handoff_id: null, direction: intra, source_domain: PORT-MONIT, target_domain: PORT-MONIT, trigger_event: portco_valuation.final, payload: fund_position_returns, null_field: source_domain_module_id_17_target_18}
-      - {handoff_id: null, direction: intra, source_domain: PORT-MONIT, target_domain: PORT-MONIT, trigger_event: portco_kpi_period.accepted, payload: fund_performance_periods, null_field: source_16_target_18}
-      - {handoff_id: null, direction: intra, source_domain: PORT-MONIT, target_domain: PORT-MONIT, trigger_event: portco_esg_record.accepted, payload: lp_quarterly_reports, null_field: source_16_target_19}
-      - {handoff_id: null, direction: intra, source_domain: PORT-MONIT, target_domain: PORT-MONIT, trigger_event: fund_performance_period.locked, payload: lp_quarterly_reports, null_field: source_18_target_19}
     extra_band: B9b
 
 b2:
@@ -287,43 +221,40 @@ b2:
       any subset is the user's policy call; the audit cannot pick scope without that intent.
 
   - id: B2-2-VERB-CORRECTNESS
-    summary: PATCH the verb columns on the 7 users-edges (885, 886, 1831-1835) or keep as-is.
+    summary: PATCH the verb columns on the 7 users-edges (885, 886, 1831-1835) or keep as-is. DESTRUCTIVE (overwrite of non-empty values).
     question: |
       Continuation rels 1831-1835 inserted with relationship_kind=reference / owner_side=target;
-      the verb-style column (if it exists in your catalog model) reads as analyst-flavor
-      (submits, computes, owns, authors). Existing rels 885 (observes) and 886 (computes)
-      were flagged in the 2026-05-30 audit as analyst-side verbs that may not match catalog
-      convention. Pick: (a) keep all 7 verbs as-is; (b) PATCH to monitors / produces / manages
-      for symmetry with peer domains; (c) one-off PATCH per row with explicit wording.
+      existing rels 885 (observes) and 886 (computes) were flagged as analyst-side verbs that may
+      not match catalog convention. Pick: (a) keep all 7 verbs as-is; (b) PATCH to monitors /
+      produces / manages for symmetry with peer domains; (c) one-off PATCH per row.
     options: [keep, patch_uniform, patch_per_row]
 
   - id: B2-3-FUNDS-EMBEDDING
-    summary: funds embed shape across modules 18 and 19, plus FUND-ADMIN-FUND-LEDGER mastery.
+    summary: funds embed shape across modules 18 and 19, plus FUND-ADMIN-FUND-LEDGER mastery. DESTRUCTIVE if downgrading non-empty role/necessity (M9).
     question: |
       funds (755) mastered by FUND-ADMIN-FUND-LEDGER (12). PORT-MONIT-FUND-PERF (18) and
       PORT-MONIT-LP-REPORTING (19) embed it as embedded_master + required. Per Rule #16
-      infrastructure-master logic, downgrade non-master rows to optional or to consumer
-      when the workflow does not strictly halt without the master deployed?
+      infrastructure-master logic, downgrade non-master rows to optional or to consumer when the
+      workflow does not strictly halt without the master deployed?
       Options: (a) keep embedded_master + required; (b) downgrade both to consumer + required;
       (c) downgrade only 18 to consumer (LP-REPORTING ships as lite standalone);
       (d) flip necessity on both 18 and 19 to optional but keep embedded_master.
     options: [keep, both_consumer, partial_18_consumer, optional_necessity]
 
   - id: B2-4-LP-REPORTING-MODULARIZATION
-    summary: Stays in PORT-MONIT, splits to a new LP-side domain, or migrates to FUND-ADMIN.
+    summary: Stays in PORT-MONIT, splits to a new LP-side domain, or migrates to FUND-ADMIN. DESTRUCTIVE if split/migrate (restructure / re-master).
     question: |
-      Vendor practice diverges: Chronograph / Cobalt LP make LP-reporting an LP-side product;
-      Allvue / eFront bundle it GP-side. Pick: (a) keep lp_quarterly_reports in
-      PORT-MONIT-LP-REPORTING; (b) split LP-REPORTING into a new LP-ANALYTICS-PLATFORM domain
-      and queue via _missing-domains.md; (c) move lp_quarterly_reports mastery to
-      FUND-ADMIN-LP-COMMITMENTS.
+      Vendor practice diverges: some make LP-reporting an LP-side product; others bundle it
+      GP-side. Pick: (a) keep lp_quarterly_reports in PORT-MONIT-LP-REPORTING; (b) split
+      LP-REPORTING into a new LP-ANALYTICS-PLATFORM domain and queue via _missing-domains.md;
+      (c) move lp_quarterly_reports mastery to FUND-ADMIN-LP-COMMITMENTS.
     options: [keep, split_new_domain, move_to_fund_admin]
     why: |
       Has a Bucket 3 dependency: if option (b), b3 #6 (lp_capital_call_notices cross-reference)
       reshapes against the new domain.
 
   - id: B2-5-ESG-PROMOTION
-    summary: Promote PORTMONIT-ESG-DIVERSITY-TRACKING capability to a cross-cutting capability shared with ESG (21).
+    summary: Promote PORTMONIT-ESG-DIVERSITY-TRACKING capability to a cross-cutting capability shared with ESG (21). DESTRUCTIVE if rename (overwrite of capability code/name).
     question: |
       Capability 504 is currently single-domain. Promote to a domain-neutral
       ESG-METRIC-COLLECTION capability and add capability_domains row to ESG (21)?
@@ -339,53 +270,49 @@ b2:
     why: Rule #15.
 
   - id: B2-7-HANDOFF-1039-PCF
-    summary: Handoff 1039 (vc_deal.closed -> portfolio_companies) currently tagged with process 409 (Manage portfolio). 2026-05-30 audit proposed 491 (Develop merger/demerger/acquisition/exit strategy).
+    summary: Handoff 1039 (vc_deal.closed -> portfolio_companies) tagged with process 409 (Manage portfolio). 2026-05-30 audit proposed 491 (Develop merger/demerger/acquisition/exit strategy). DESTRUCTIVE if replace (overwrite of non-empty tag).
     question: |
       Replace 409 with 491, keep 409, or add 491 as a second tag (multi-tag shape).
     options: [replace_with_491, keep_409, add_491_as_second]
     why: |
       Carries over from the 2026-05-31 Continuation as the unsettled APQC arbitration on this
-      handoff.
+      handoff. Verified live 2026-06-07: handoff 1039 still carries only handoff_processes row 572
+      (process 409).
 
   - id: B2-8-HANDOFFS-1042-1043-MULTI-TAG
-    summary: Handoffs 1042 and 1043 each carry 2 handoff_processes rows post-Continuation. Is the multi-tag the curation intent or noise?
+    summary: Handoffs 1042 and 1043 each carry 2 handoff_processes rows. Is the multi-tag the curation intent or noise? DESTRUCTIVE if demote (delete a tag).
     question: |
       Handoff 1042 tagged with process 1401 (Produce quarterly/annual filings, L4) and 1422
       (Process and distribute payments, L4). Handoff 1043 tagged with process 1390
       (Process and record fixed-asset adjustments, L4) and 56 (Perform general accounting and
-      reporting, L2). Pick per handoff: (a) keep both tags as the desired multi-process
-      coverage; (b) demote one tag per handoff and explain why; (c) leave for Discover's
-      reviewer pass.
+      reporting, L2). Pick per handoff: (a) keep both tags; (b) demote one tag per handoff and
+      explain why; (c) leave for Discover's reviewer pass.
     options: [keep_both, demote_one, defer_to_discover]
     why: |
-      Multi-tagging a handoff is allowed but the catalog convention is to lead with the
-      single most-specific PCF; surplus tags should carry clear value or get demoted.
+      Verified live 2026-06-07: 1042 carries rows 634 (1401) + 762 (1422); 1043 carries rows
+      633 (1390) + 763 (56). Multi-tagging is allowed but convention leads with the single
+      most-specific PCF; surplus tags should carry clear value or get demoted.
 
 b3:
   - id: B3-1-CO-INVESTMENT-POSITIONS
     candidate: co_investment_positions
     rationale: |
-      Co-invest position tracking distinct from main fund position. Allvue and eFront model this
-      separately so fee/carry economics on co-invest sleeves stay distinct.
-    vendor_evidence: [Allvue, eFront]
+      Co-invest position tracking distinct from main fund position so fee/carry economics on
+      co-invest sleeves stay distinct.
     proposed_module: PORT-MONIT-FUND-PERF or FUND-ADMIN
-    extra_verification_path: Allvue and eFront schema docs; alternative is FUND-ADMIN authorship.
 
   - id: B3-2-PEER-BENCHMARKS
     candidate: peer_benchmarks / portco_peer_groups
     rationale: |
       Vendor-provided benchmark cohorts (revenue bands, sector, stage) used for portco
       relative-performance reporting.
-    vendor_evidence: [Vestberry, Standard Metrics, Chronograph]
     proposed_module: PORT-MONIT-FUND-PERF
-    extra_verification_path: Confirm whether vendors bundle the benchmark dataset as a service or as a catalog data object.
 
   - id: B3-3-GP-ATTRIBUTION-ANALYSES
     candidate: gp_attribution_analyses
     rationale: |
       Attribution decomposition (market alpha vs. operational alpha vs. leverage). May be
       tier-2 leaf rather than first-class master.
-    vendor_evidence: [eFront, Chronograph]
     proposed_module: PORT-MONIT-FUND-PERF
 
   - id: B3-4-VAL-COMMITTEE-MEETINGS
@@ -393,7 +320,6 @@ b3:
     rationale: |
       Full meeting record vs. the per-quarter valuation_committee_decisions in B1A-M8. May be
       two entities or one with role flag.
-    vendor_evidence: [eFront, Allvue]
     proposed_module: PORT-MONIT-VALUATIONS
 
   - id: B3-5-PORTCO-MANAGEMENT-METRICS
@@ -402,7 +328,6 @@ b3:
       Executive performance metrics tracked alongside financial KPIs (NPS, employee count,
       ESG scoring of management practices). Separate from portco_kpi_periods if vendors
       model it as its own stream.
-    vendor_evidence: [Visible.vc, Standard Metrics]
     proposed_module: PORT-MONIT-PORTCO-DATA
 
   - id: B3-6-LP-CAPITAL-CALL-CROSSREF
@@ -411,7 +336,6 @@ b3:
       LP-side composited report references the capital-call notice. Mastered in
       FUND-ADMIN-CAPITAL-CALLS. May warrant a consumer DMDO on PORT-MONIT-LP-REPORTING or
       a runtime cross-reference only.
-    vendor_evidence: [Cobalt LP]
     proposed_module: PORT-MONIT-LP-REPORTING
     blocked_by:
       - {type: user_decision, ref: B2-4}
@@ -421,5 +345,4 @@ b3:
     rationale: |
       Multi-currency normalization for global PE funds. Catalog-wide master-promotion
       conversation; affects FUND-ADMIN, INV-CRM, ESG, CAP-TABLE, PORT-MONIT.
-    vendor_evidence: [Allvue, eFront, Chronograph, Vestberry, Standard Metrics, Visible.vc]
     proposed_module: shared_master_out_of_PORT-MONIT

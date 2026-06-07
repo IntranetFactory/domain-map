@@ -361,3 +361,35 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21) over the open items in `audits/APIM/state.yaml`. APIM (domain 79) is still UNBUILT (0 `domain_modules`, 0 `capability_domains`); per the state-driven contract the build (B1A-BUILD) and its cascade are SURFACED, not scaffolded. Only build-independent additive/corrective items were executed. All writes landed `record_status='new'`; nothing was approved. One loader, idempotent, run from project root via `bun run`: [.tmp_deploy/2026-06-07_apim_state_driven_execute.ts](../../.tmp_deploy/2026-06-07_apim_state_driven_execute.ts). No JWT errors.
+
+### Executed (28 writes total)
+
+- **entity_type classification (Rule #12), 7 PATCHes.** All 7 masters were `unclassified`. Set deterministically from descriptions + the state file's workflow analysis: 456 api_versions, 457 api_specifications, 458 api_deployments, 459 api_policies, 462 api_consumers → `operational_workflow`; 460 api_usage_metrics → `computed` (aggregate call counts / latency / error rates); 461 api_gateways → `catalog` (gateway infra config). Closes the B13 gap and reframes B1B-S10 (only the 5 workflow masters owe lifecycle states; 460/461 pass B12 with no notes write).
+- **Catalog UX (Rule #20 / A4), 1 PATCH.** Domain 79 had empty `catalog_tagline` and `catalog_description`; authored buyer-voice copy (workflow + value, no vendor names, no em-dash, American English) straight into the empty fields. No `domain_modules` exist, so module-level catalog UX (M8) is N/A this pass. Closes B1A-S4.
+- **business_function_domains (C1), 1 INSERT.** Added the Information Security contributor row owed since the 2026-05-30 B1-S15 split. Canonical 20-function-spine name is **Security** (function id 28; description covers InfoSec policy, security operations, IAM). Row: `domain_id=79, business_function_id=28, responsibility_type=contributor`. Closes B1A-S14. APIM now has owner (Platform Engineering 91), consumer (IT Operations 92), contributor (Security 419).
+- **data_object_aliases (B11), 11 INSERTs.** Generic cross-vendor synonyms (`alias_type='synonym'`, no `industry_id` available): api_specifications (API Proxy, API Definition, API Contract); api_consumers (API Subscriber, API Client App); api_deployments (API Revision, API Environment Deployment); api_gateways (API Runtime, API Proxy Gateway); api_policies (Gateway Plugin, Traffic Policy). Closes B1A-S9.
+- **data_object_relationships intra-domain (B6), 7 INSERTs.** Edges between the 7 masters (valid enums: `relationship_kind` ∈ association/composition/reference, `relationship_type` ∈ one_to_one/one_to_many/many_to_many): api_specifications has versions api_versions (composition, one_to_many); api_versions is run by api_deployments; api_gateways hosts api_deployments; api_policies applies to api_deployments (many_to_many); api_deployments is measured by api_usage_metrics; api_deployments is consumed by api_consumers (many_to_many); api_consumers attributed to api_usage_metrics. Closes B1A-S6.
+- **solutions + solution_domains (A3), 1 vendor + 8 solutions + 9 links.** Created WSO2 vendor (731). Created 8 flagship solutions reusing existing vendors by name: Apigee (Google), Kong Konnect (Kong), Azure API Management (Microsoft), Amazon API Gateway (AWS), IBM API Connect (IBM), Tyk, WSO2 API Manager, Postman API Platform; MuleSoft Anypoint Platform (173) already existed. Linked all 9 to domain 79 via `solution_domains` at `coverage_level='primary'`. Solution descriptions carry no em-dashes; descriptions are factual market positioning. Closes B1A-S3.
+
+### Surfaced (not written; user decisions / destructive)
+
+- **B2-S1** module split shape (2 / 3 / 4 modules): editorial, gates B1A-BUILD + B1B-S1/S2/S10.
+- **B2-S2** B4 pattern-flag positive flips on 4 masters (api_specifications.has_submit_lock, api_specifications.has_single_approver, api_policies.has_single_approver, api_consumers.has_personal_content): these PATCH non-default values onto existing master rows; workflow-shape judgments, surfaced not applied.
+- **B2-S3** regulation set for APIM (GDPR+SOX+PCI-DSS / GDPR only / leave empty).
+
+### Left (blocked / superseded / backlog)
+
+- **B1A-BUILD + B1B-S1/S2/S10** blocked on B2-S1 (module shape) and the unbuilt status; build is surfaced, the cascade is left.
+- **B1B-S8** outbound cross-domain relationship mirrors: blocked on B3-S1 vendor research (TEST-MGMT, OBS target masters may shift).
+- **B1B-S12 / B1B-S13** (per-module system skill migration + per-module tools floor): RETIRED per the 2026-06-06 per-domain-skill supersession; reframed as a note in state.yaml, not carried as open items.
+- **B3-S1** Phase 0 substrate-entity research: backlog idea, non-blocking.
+
+### Personas / RACI
+
+Phase P is deferred (B1A-PHASE-P): no personas authored. Candidate personas once the module set lands: API Product Owner (owns specs + breaking-change approval), Platform Engineer (gateway + policy operator), Developer-Portal Manager (consumer onboarding + portal publishing), API Consumer / Subscriber (external developer). Not written this pass.

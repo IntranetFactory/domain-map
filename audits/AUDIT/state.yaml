@@ -11,66 +11,48 @@
 schema_version: 2
 domain: AUDIT
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
-  - id: B1A-H1
-    summary: "4 untagged inbound ERP-FIN handoffs: insert 4 handoff_processes rows."
+  - id: B1A-B9-HANDOFFS
+    summary: "5 AUDIT trigger events have zero handoffs: 228, 232, 602, 603, 605 (event_category half DONE 2026-06-07)."
     finding: |
-      4 inbound handoffs from ERP-FIN remain untagged after the 2026-05-31 residual pass.
-      Coverage is 36/40 (90%) cross-domain. Inserting these 4 takes AUDIT to 40/40 (100%).
-      All 4 have clean APQC PCF anchors; proposals listed in affected_handoffs[].
-      Per Rule #1 all rows insert with proposal_source='agent_curated', record_status='new'.
+      The event_category half is EXECUTED (2026-06-07): 602 (audit_plan.updated) -> lifecycle,
+      603 (control_test.executed) -> state_change, 605 (work_paper.completed) -> lifecycle. 228 and
+      232 were already 'lifecycle'. Remaining open: the handoff-draft half. These 5 events publish
+      nothing today. 232 (audit_report.issued) fanning out to GRC, ERP-FIN, EPM (report distribution)
+      is the most obvious miss; 228/602/603 likely publish to GRC; 605 is plausibly leaf.
+      SURFACE-only: AUDIT is unbuilt (0 modules), so source_domain_module_id cannot be derived for
+      any new handoff, and leaf-vs-publish per event is a Rule #1 judgment the user confirms.
     action: |
-      INSERT 4 rows into handoff_processes via semantius CLI or a focused loader.
-      Proposed pairings per row in affected_handoffs[]. Surface the 4-row draft table
-      to the user before insert per Rule #1; user confirms PCF choice per handoff.
-    affected_handoffs:
-      - {handoff_id: 189, direction: inbound, source_domain: ERP-FIN, target_domain: AUDIT, trigger_event: journal_entry.posted, payload: journal_entries, null_field: null}
-      - {handoff_id: 531, direction: inbound, source_domain: ERP-FIN, target_domain: AUDIT, trigger_event: accounting_period.closed, payload: accounting_periods, null_field: null}
-      - {handoff_id: 536, direction: inbound, source_domain: ERP-FIN, target_domain: AUDIT, trigger_event: legal_entity.created, payload: legal_entities, null_field: null}
-      - {handoff_id: 538, direction: inbound, source_domain: ERP-FIN, target_domain: AUDIT, trigger_event: cash_transaction.unmatched, payload: cash_transactions, null_field: null}
-    extra_proposed_pcf:
-      - {handoff_id: 189, process_id: 1433, process_name: "Audit invoices and key data in AP system", confidence: likely_L4}
-      - {handoff_id: 531, process_id: 1187, process_name: "Support external audits and reports", confidence: confident_L4}
-      - {handoff_id: 536, process_id: 326, process_name: "Report on internal controls compliance", confidence: likely_L3}
-      - {handoff_id: 538, process_id: 1433, process_name: "Audit invoices and key data in AP system", confidence: likely_L4}
-
-  - id: B1A-B9
-    summary: "5 AUDIT trigger events have zero handoffs: 228, 232, 602, 603, 605."
-    finding: |
-      Trigger events without handoffs: 228 (audit_engagement.created), 232 (audit_report.issued),
-      602 (audit_plan.updated), 603 (control_test.executed), 605 (work_paper.completed).
-      232 publishing to GRC, ERP-FIN, EPM (audit-report distribution) is the most obvious miss.
-      228 and 602 likely publish to GRC; 603 to GRC. 605 is plausibly leaf (engagement-internal).
-      All 5 also have empty event_category (lifecycle vs state_change vs threshold vs signal)
-      and would need that filled at insert time.
-    action: |
-      Draft handoff rows or confirm leaf status per event. Default proposal: 228 -> GRC,
-      232 -> GRC + ERP-FIN + EPM (3 rows fan-out), 602 -> GRC, 603 -> GRC, 605 keep leaf.
-      Surface drafts to user per Rule #1 before insert. Also patch event_category on
-      601-606 to 'lifecycle' (audit_plan/work_paper) or 'state_change' (control_test).
+      Defer until B2-MOD-SHAPE resolves and the build lands (source FK derivation needs the module
+      set). Then draft handoff rows or confirm leaf status per event. Default proposal:
+      228 -> GRC, 232 -> GRC + ERP-FIN + EPM (3-row fan-out), 602 -> GRC, 603 -> GRC, 605 keep leaf.
+      Surface drafts to user per Rule #1 before insert.
     affected_events:
-      - {id: 228, event_name: audit_engagement.created, current_category: lifecycle, proposed_category: lifecycle}
-      - {id: 232, event_name: audit_report.issued, current_category: lifecycle, proposed_category: lifecycle}
-      - {id: 602, event_name: audit_plan.updated, current_category: "", proposed_category: lifecycle}
-      - {id: 603, event_name: control_test.executed, current_category: "", proposed_category: state_change}
-      - {id: 605, event_name: work_paper.completed, current_category: "", proposed_category: lifecycle}
+      - {id: 228, event_name: audit_engagement.created, current_category: lifecycle, proposed_publish: GRC}
+      - {id: 232, event_name: audit_report.issued, current_category: lifecycle, proposed_publish: "GRC + ERP-FIN + EPM"}
+      - {id: 602, event_name: audit_plan.updated, current_category: lifecycle, proposed_publish: GRC}
+      - {id: 603, event_name: control_test.executed, current_category: state_change, proposed_publish: GRC}
+      - {id: 605, event_name: work_paper.completed, current_category: lifecycle, proposed_publish: "leaf (default)"}
+
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
-    extra_phase_p_triage: "2026-06-02"
+    finding: "Live triage re-confirmed 2026-06-07: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies. Build is gated on B2-MOD-SHAPE (module count) and B2-AUDIT-VS-GRC (entity placement)."
+    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the domain-grain system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward. Per the retired per-module-skill model (see header) author tools onto modules via domain_module_tools, NOT per-module skills."
+    blocked_by:
+      - {type: user_decision, ref: B2-MOD-SHAPE}
 
 b1b:
   - id: B1B-MOD1
     summary: "M1 hard fail: zero domain_modules rows. Blocks A2, M2/4/5/6/8, B10b, B12, all E and F bands."
     finding: |
       M1 hard fail. Vacuously fails M2, M4, M5, M6, M8 (no module copy fields to populate),
-      blocks E1-E6 (no role authoring possible), blocks F2-F5 + F7 (no per-module system skill
-      anchor), blocks B10b backfill on 40 cross-domain handoffs, blocks B12 lifecycle-state
-      domain_module_id population, blocks per-module fact-sheet emission.
+      blocks E1-E6 (no role authoring possible), blocks B10b backfill on 40 cross-domain handoffs,
+      blocks B12 lifecycle-state domain_module_id population, blocks per-module fact-sheet emission.
+      Module-grain catalog UX (M8) is vacuous until modules exist; the domain-grain A4 copy is DONE
+      (written 2026-06-07).
       Prior-audit recommendation: 2-module split AUDIT-PLAN-ENGAGE + AUDIT-FINDINGS-REPORTING.
       Bucket 2 item B2-MOD-SHAPE upstream and pending user input.
     blocked_by:
@@ -80,7 +62,7 @@ b1b:
     summary: "Zero capability_domains. Capabilities must link to realizing modules per M4."
     finding: |
       A2 fails. 0 capability_domains rows. Domain has 8 masters and a vendor-confirmed
-      multi-pillar surface (AuditBoard, TeamMate+, Workiva). Expected 5-8 capabilities.
+      multi-pillar surface. Expected 5-8 capabilities.
       Proposed: AUDIT-UNIVERSE-MGMT, AUDIT-PLAN-RISK-ASSESS, AUDIT-FIELDWORK-EXEC,
       AUDIT-EVIDENCE-MGMT, AUDIT-CONTROLS-TESTING, AUDIT-FINDINGS-MGMT,
       AUDIT-RECOMMENDATIONS-FOLLOWUP, AUDIT-REPORTING-COMMITTEE.
@@ -88,12 +70,11 @@ b1b:
       - {type: depends_on, ref: B1B-MOD1, reason: "M4 requires every capability to link to >=1 realizing module"}
 
   - id: B1B-B12
-    summary: "Zero data_object_lifecycle_states across 8 masters. Workflow-bearing; not config-shape."
+    summary: "Zero data_object_lifecycle_states across 8 masters. All 8 now classified operational_workflow."
     finding: |
-      Every AUDIT master has a real workflow (plan -> engage -> work paper -> control test ->
-      finding -> recommendation -> report -> follow-up). None are config-shaped, so the
-      Rule #12 exemption does not apply. Without lifecycle states the workflow-gate
-      permission derivation has nothing to generate.
+      All 8 AUDIT masters are now entity_type='operational_workflow' (PATCHed 2026-06-07), so each
+      REQUIRES lifecycle states per Rule #12 (the config-shape exemption does not apply). Without
+      lifecycle states the workflow-gate permission derivation has nothing to generate.
       State rows need domain_module_id per the realizing module (Rule #14 module-prefix
       permission materialization); blocked on B1B-MOD1.
     blocked_by:
@@ -136,29 +117,25 @@ b1b:
       does not currently model as DMDO, B2-NOROLE-PAYLOADS decides per-row whether to
       load a consumer DMDO or accept as domain-level signal.
       Source-side counter-fixes owed by other domains are tracked under their respective
-      audits (see prior-audit Report-only follow-ups in this file).
+      audits (see prior-audit Report-only follow-ups in history.md).
     blocked_by:
       - {type: depends_on, ref: B1B-MOD1, reason: "target FK is the AUDIT module holding the payload"}
       - {type: user_decision, ref: B2-NOROLE-PAYLOADS, reason: "13 of 31 payloads have no AUDIT DMDO row yet"}
     affected_handoffs:
       - {count: 31, scope_note: "All inbound handoffs to AUDIT with NULL target_domain_module_id; full id list in 2026-05-30 audit B1-B2 plus handoff 920 added since", enumeration_status: source_count_only}
 
-  - id: B1B-F1
-    summary: "Legacy domain-level system skill audit-system (id 9) blocks F1 once per-module skills land."
-    finding: |
-      F1 currently passes vacuously: legacy skill id 9 (audit-system, domain_module_id NULL)
-      is acceptable while no module-level system skill exists. The moment B1B-MOD1 lands
-      and per-module skills are authored, F1 demands DELETE of skill 9. The 18 existing
-      skill_tools rows on skill 9 partition cleanly between the proposed 2 modules.
-    blocked_by:
-      - {type: depends_on, ref: B1B-MOD1, reason: "per-module skills must exist before legacy skill is obsolete"}
+  # NOTE (superseded 2026-06-06, see header): the legacy domain-level system skill item (formerly
+  # B1B-F1: DELETE skill 9 once per-module skills land) is RETIRED. The per-module `system` skill
+  # grain no longer exists. Under the new model AUDIT keeps exactly ONE domain-grain `system` skill;
+  # tool requirements move to domain_module_tools when the build lands. No per-module skill authoring,
+  # no skill_tools. Per-module tool re-authoring tracked in audits/_modularization-backlog.md.
 
 b2:
   - id: B2-MOD-SHAPE
     summary: "2-module versus 3-module split for AUDIT."
     question: "AUDIT-PLAN-ENGAGE + AUDIT-FINDINGS-REPORTING (default), or AUDIT-UNIVERSE-RISK + AUDIT-FIELDWORK + AUDIT-ISSUES-REPORTING (cleaner role separation, more cross-module handoffs)?"
     options: ["2-module (recommended, lighter)", "3-module (cleaner role separation, ~8 B9b handoffs)"]
-    why: "Upstream of every B1B-* item; shapes each MISSING entity host and capability realization."
+    why: "Upstream of every B1B-* item and B1A-BUILD; shapes each MISSING entity host and capability realization."
 
   - id: B2-AUDIT-VS-GRC
     summary: "Scope of audit versus GRC for management_responses, audit_committee_meetings, risk_assessments (audit-scoped)."
@@ -173,12 +150,6 @@ b2:
     why: "Decides per-row resolution path for B1B-B10b-IN backfill."
     affected_entities: [building_certifications, card_authorizations, data_lineage_relationships, rpa_executions, rpa_activity_logs, cloud_databases, external_court_filings, emissions_records, esg_disclosures, key_data_elements, critical_tracking_events, haccp_plans, supplier_risk_assessments]
 
-  - id: B2-CATALOG-UX
-    summary: "Draft catalog_tagline + catalog_description for AUDIT (A4) per Rule #20 buyer voice."
-    question: "Approve drafts for the two A4 fields? Rule #20 requires user review of buyer-voice copy before write."
-    options: ["Approve drafts", "Rewrite to user-supplied text", "Defer"]
-    why: "A4 hard fails; both fields empty. Buyer voice (workflow + value) versus analyst voice (market position)."
-
   - id: B2-B3-NAMING
     summary: "work_papers and control_tests bare-word naming-authority claim or rename."
     question: "Claim canonical bare-word (is_canonical_bare_word=true + rationale) or rename to audit_work_papers / audit_control_tests?"
@@ -189,19 +160,19 @@ b2:
     summary: "Pattern flags positive consideration on 8 masters (Rule #12)."
     question: "PATCH has_single_approver=true on audit_reports, has_submit_lock=true on work_papers + audit_findings, plus has_submit_lock on audit_engagements (split AuditBoard vs TeamMate+)?"
     options: ["Apply default proposal", "Apply subset (per row)", "Defer all"]
-    why: "Rule #12 requires positive consideration during audit; false-by-default not equivalent to false-after-review."
+    why: "Rule #12 requires positive consideration; now all 8 masters are operational_workflow so pattern flags must be considered. PATCHing a flag on a master is non-destructive only where the flag is false today; surfaced because it's a vendor-split judgment."
 
   - id: B2-BAD-TAGS
     summary: "Discovery-substring tags on handoffs 256 and 825 look semantically wrong."
     question: "DELETE the 2 bad tags and surface to Discover Pass 3 re-tagging, or leave for human reviewer at approval time?"
     options: ["DELETE (default)", "Leave for human reviewer"]
-    why: "Handoff 256 tagged 'Provide warranty-related recommendations'; handoff 825 tagged 'Document trade'."
+    why: "Handoff 256 tagged 'Provide warranty-related recommendations'; handoff 825 tagged 'Document trade'. DELETE is destructive; never run unapproved."
 
   - id: B2-SELF-LOOP
     summary: "data_object_relationships id=356 self-loop on audit_findings with verb 'imports'."
     question: "DELETE (default) or PATCH verb to a documented concept like carries_forward_from?"
     options: ["DELETE", "PATCH verb"]
-    why: "Verb non-obvious, row invisible to downstream tooling."
+    why: "Verb non-obvious, row invisible to downstream tooling. Both options are destructive (DELETE or verb overwrite); never run unapproved."
 
   - id: B2-PAIRWISE
     summary: "Defer pairwise reconciliation for 5 heavy neighbors (GRC, ERP-FIN, EPM, ESG, LSD) or run inline?"
@@ -211,9 +182,9 @@ b2:
 
   - id: B2-DOMAIN-PEER
     summary: "Confirm AUDIT remains as peer domain or fold into GRC."
-    question: "Peer domain (default; pure-plays AuditBoard / TeamMate+ / Workiva keep it first-class) or fold into GRC?"
+    question: "Peer domain (default; pure-plays keep it first-class) or fold into GRC?"
     options: ["Peer domain (recommended, Rule #2 satisfied)", "Fold into GRC"]
-    why: "Archer and ServiceNow IRM treat audit as a GRC sub-module; pure-plays disagree."
+    why: "Some suite competitors treat audit as a GRC sub-module; pure-plays disagree. AUDIT is currently parent_domain_id=15 (under GRC); decide whether that stays a sub-domain or becomes a peer."
 
 b3:
   - id: B3-AUDIT-UNIVERSE-ENTITIES

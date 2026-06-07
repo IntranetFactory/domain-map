@@ -408,3 +408,56 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate (Rule #21) over GTM-PLAN's open state items only; no fresh from-scratch
+audit. Live re-verify (`/domains?domain_code=eq.GTM-PLAN`, `/domain_modules?domain_id=eq.104`,
+`/capability_domains?domain_id=eq.104`, `/domain_module_data_objects`, `/domain_data_objects`,
+`/business_function_domains?domain_id=eq.104`, `/handoffs?or=(...)`, `/domain_regulations`,
+`/domain_aliases`, `/skills`) confirms GTM-PLAN (id 104) is still fully UNBUILT: 0 domain_modules,
+0 masters in either junction, 0 handoffs in either direction, 0 trigger_events, 0 skills,
+0 domain_regulations, 0 domain_aliases, 8 capability_domains (capability ids 104-111).
+business_function_domains (C1) is already complete: owner Sales Operations (bf 52), contributors
+Marketing (bf 22) and Product Management (bf 25), all at record_status='new'. The overlay test
+holds (B1A-RECLASS): GTM-PLAN is master-bearing and needs a full build, not a scaffold. Per the
+unbuilt-domain rule, the build is surfaced and the cascade left; no interim module set was
+scaffolded ahead of the b2 / b3 shape and promotion decisions.
+
+### Executed
+
+| Item | Action | Rows |
+|---|---|---|
+| B1B-A1 (catalog UX) | PATCH `/domains?id=eq.104`: backfilled the two empty fields `catalog_tagline` and `catalog_description` with buyer-voice copy (workflow plus value, no vendor names, no em-dash, American English). The "surface-before-write" gate was the stale Rule #20 gate the state-driven contract instructs to ignore for empty fields. record_status stayed 'new'; no non-empty value overwritten. | 1 PATCH |
+
+No other executable surface existed: entity_type PATCH (0 masters), APQC handoff tags (0 handoffs),
+aliases (0 masters, none enumerated), business_function_domains (already complete), intra-domain
+handoffs / NULL module-FK backfills / event_category backfills (no module or trigger rows) all N/A
+on an unbuilt domain.
+
+Loader: `.tmp_deploy/2026-06-07_gtm_plan_catalog_ux.ts` (idempotent: GETs the row, PATCHes only
+empty fields, guards against em-dash).
+
+### Surfaced (for user; not written)
+
+- **B2-M1** (module shape: 8 per-capability vs 5-module consolidation vs 3-module collapse). Gates the build.
+- **B2-C1** (capability RACI overrides: LAUNCH-ORCH to Product Management, CHANNEL-MIX to Marketing, vs leave inherited under Sales Ops).
+- **B2-R1** (regulations: none vs GDPR vs GDPR+CCPA vs GDPR+CCPA+SOX).
+- **B2-S1** (promote PMM, relocate LAUNCH-ORCH).
+- **B2-S2** (promote ABM-PLATFORM, relocate ICP-SEGMENT and ACCOUNT-TARGETING).
+- **B2-D1** (rewrite domains.description, deferred until B2-S1 / B2-S2 settle).
+- **B2-P1** (pairwise reconciliation timing).
+- **B1A-BUILD / B1B-M1** (the full build itself): unbuilt domain, surfaced not scaffolded; blocked on the b2 / b3 decisions above.
+- Personas / RACI (Phase P): deferred, not authored. Candidate personas once the domain is built: Head of Sales Ops, Head of RevOps, Marketing Ops Lead, PMM Lead, Finance Partner.
+
+### Left
+
+- **B1B-V1 through B1B-V4** (gtm_plans, ideal_customer_profiles, target_account_lists, capacity_models masters): blocked on B1B-M1 (the build) plus their respective b2 / b3 promotion outcomes.
+- **B3-PMM, B3-ABM-PLATFORM, B3-SALES-PLANNING-PLATFORM, B3-CHANNEL-MIX-SCOPE**: backlog candidates (Phase 0 pending), non-blocking ideas.
+- Supersession header (2026-06-06 per-domain-skill restoration) preserved: no per-module skill authoring; the future build gives GTM-PLAN exactly one domain-grain system skill and no per-FULL-module skills.
+
+### UI links
+
+- https://tests.semantius.app/domain_map/domains (the PATCHed catalog UX row, id 104)

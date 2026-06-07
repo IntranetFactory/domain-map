@@ -11,71 +11,60 @@
 schema_version: 2
 domain: ONBOARDING
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
-  - id: B1A-APQC-COVERAGE
-    summary: "10 ONBOARDING cross-domain handoffs need APQC tagging (6 INSERT + 4 REPLACE)"
+  - id: B1A-APQC-REPLACE
+    summary: "4 ONBOARDING cross-domain handoffs carry wrong/coarse APQC tags; REPLACE is destructive (surface only)"
     finding: >
-      H1 hard-fail. Of 17 cross-domain handoffs only 11 carry handoff_processes
-      rows; 0 are record_status='approved'; 2 are agent_curated (handoffs 5 and
-      409, both -> PCF 224 "Manage employee onboarding" 10469). 6 handoffs are
-      untagged: 2 (ATS->ONB job_offer.accepted), 410 (ONB->HCM
-      doc_collection.completed), 411 (ONB->PAYROLL doc_collection.completed),
-      1074 (ATS->ONB job_offer.rescinded), 1231 (ONB->EMP-EXP stage.completed),
-      1233 (ONB->LMS cohort.activated). 4 handoffs carry wrong / coarse tags:
-      handoff 7 (ONB->PAYROLL journey.day_one_reached) mapped to PCF 1814
-      "Create customer journey maps" L5 19965 (CRM mapping, substring matcher
-      caught "journey"); handoff 3 (HCM->ONB employee.created) mapped to PCF 41
-      L2 20599 instead of L3/L4 receiving-side onboarding; handoff 394
-      (ATS->ONB candidate.hired) mapped to "Recruit/Source candidates" PCF 220
-      10440 (upstream sourcing, wrong side); handoff 8 (ONB->LMS
-      task.compliance_training_required) currently mapped to PCF 224 via
-      discovery_override but the proper L3/L4 is in the LMS training-delivery
-      branch (PCF 1039 "Develop, conduct, and manage employee training
-      programs"). Target PCFs to investigate at fix time: 224 / 10469 Manage
-      employee onboarding, 345 Provide workspace and facilities, 273 Manage IT
-      user identity and authorization, 1039 Develop conduct and manage
-      employee training programs, 236 Administer Payroll, 250 Conduct employee
-      engagement surveys, 242 / 10523 Manage employee inquiry process. Per H1
-      volume target (0.5N-0.8N for N=17), reaching ~12 agent_curated tags is
-      the goal.
+      H1 partial. 2026-06-07 live re-check: the APQC coverage gap is mostly
+      closed. Of the 10 handoffs the 2026-05-31 snapshot listed as untagged or
+      mis-tagged, 6 now carry clean agent_curated rows (handoff 2 -> PCF 224,
+      handoff 410 -> PCF 222, handoff 411 -> PCF 224, handoff 1074 -> PCF 222,
+      handoff 1231 -> PCF 224) and handoff 1233 (ONB->LMS cohort.activated) was
+      tagged this pass to PCF 1039 "Develop, conduct, and manage employee
+      training programs" (external_id 10493). The remaining 4 handoffs carry
+      EXISTING discovery_* or coarse rows whose correction is a REPLACE
+      (overwrite of a non-empty handoff_processes row), which is destructive and
+      is surfaced, not applied:
+        - handoff 3  (HCM->ONB employee.created): row 34 maps to PCF 41 L2
+          (external_id 20599, "Manage employee onboarding, training, and
+          development"). Coarse. Recommended tighter target: PCF 224 "Manage
+          employee onboarding" (10469), or the L4 receiving-side onboarding child.
+        - handoff 7  (ONB->PAYROLL journey.day_one_reached): row 149 maps to PCF
+          1814 "Create customer journey maps" L5 (19965), a CRM process the
+          substring matcher caught on "journey". Wrong. Recommended: an
+          APQC payroll-administration process (e.g. "Administer Payroll" 236).
+        - handoff 8  (ONB->LMS task.compliance_training_required): row 17 maps to
+          PCF 224 "Manage employee onboarding" via discovery_override. Coarse for
+          a training-delivery handoff. Recommended: PCF 1039 (10493), matching
+          the handoff 1233 tag applied this pass.
+        - handoff 394 (ATS->ONB candidate.hired): row 68 maps to PCF 220
+          "Recruit/Source candidates" (10440), the upstream sourcing side. Wrong
+          side. Recommended: the receiving-side onboarding L4 under PCF 224.
     action: >
-      Per-handoff PCF classification pass. INSERT 6 new agent_curated rows for
-      untagged handoffs; REPLACE 4 rows (h3, h7, h8 wrong/coarse, h394
-      wrong-side). Use composed (handoff_id, process_id) natural key for
-      idempotency. Lookup process_id at fix time via
-      /processes?source_framework=eq.apqc_pcf_cross_industry&process_name=ilike.*<term>*.
-      Each new row: proposal_source='agent_curated', record_status='new',
-      role='implements'.
+      Each correction overwrites a non-empty handoff_processes row (DELETE old +
+      INSERT agent_curated, or PATCH process_id). Destructive per Rule #21;
+      requires user sign-off. Resolve the replacement PCF id live at fix time.
     affected_handoffs:
-      - {handoff_id: 2, direction: inbound, source_domain: ATS, target_domain: ONBOARDING, trigger_event: "job_offer.accepted", payload: "onboarding_journeys", null_field: handoff_processes}
-      - {handoff_id: 3, direction: inbound, source_domain: HCM, target_domain: ONBOARDING, trigger_event: "employee.created", payload: "onboarding_journeys", null_field: "coarse_pcf_L2"}
-      - {handoff_id: 7, direction: outbound, source_domain: ONBOARDING, target_domain: PAYROLL, trigger_event: "journey.day_one_reached", payload: "onboarding_journeys", null_field: "wrong_pcf"}
-      - {handoff_id: 8, direction: outbound, source_domain: ONBOARDING, target_domain: LMS, trigger_event: "task.compliance_training_required", payload: "onboarding_tasks", null_field: "coarse_pcf"}
-      - {handoff_id: 394, direction: inbound, source_domain: ATS, target_domain: ONBOARDING, trigger_event: "candidate.hired", payload: "candidates", null_field: "wrong_side_pcf"}
-      - {handoff_id: 410, direction: outbound, source_domain: ONBOARDING, target_domain: HCM, trigger_event: "onboarding_document_collection.completed", payload: "onboarding_document_collections", null_field: handoff_processes}
-      - {handoff_id: 411, direction: outbound, source_domain: ONBOARDING, target_domain: PAYROLL, trigger_event: "onboarding_document_collection.completed", payload: "onboarding_document_collections", null_field: handoff_processes}
-      - {handoff_id: 1074, direction: inbound, source_domain: ATS, target_domain: ONBOARDING, trigger_event: "job_offer.rescinded", payload: "onboarding_journeys", null_field: handoff_processes}
-      - {handoff_id: 1231, direction: outbound, source_domain: ONBOARDING, target_domain: EMP-EXP, trigger_event: "onboarding_stage.completed", payload: "onboarding_journeys", null_field: handoff_processes}
-      - {handoff_id: 1233, direction: outbound, source_domain: ONBOARDING, target_domain: LMS, trigger_event: "onboarding_cohort.activated", payload: "onboarding_cohorts", null_field: handoff_processes}
-    vendor_evidence: []
+      - {handoff_id: 3, hp_row: 34, current_process_id: 41, current_source: discovery_override, issue: coarse_L2}
+      - {handoff_id: 7, hp_row: 149, current_process_id: 1814, current_source: discovery_substring, issue: wrong_crm_journey}
+      - {handoff_id: 8, hp_row: 17, current_process_id: 224, current_source: discovery_override, issue: coarse_for_training}
+      - {handoff_id: 394, hp_row: 68, current_process_id: 220, current_source: discovery_substring, issue: wrong_side_sourcing}
+
   - id: B1A-PHASE-P
-    summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 3 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED."
+    finding: "Live triage 2026-06-02: 3 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. (Note: 5 legacy roles still attach via role_modules per the 2026-05-31 audit; the E1 fail is about the post-Plan-3 domain_roles persona layer.)"
+    action: "DEFERRED per Rule #21 (B1A-PHASE-P personas/RACI are not agent-authored). Candidate operational personas (function-anchored, Human Resources owner): Onboarding Coordinator, Onboarding HR Partner, Onboarding Program Manager, Hiring Manager. Author domain_roles, wire role_modules reach across the 3 modules, add process_raci rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    deferred: true
     extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "8 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 8 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [buddy_assignments, onboarding_cohorts, onboarding_document_collections, onboarding_journeys, onboarding_plans, onboarding_stages, onboarding_tasks, welcome_communications]
-    extra_phase_p_triage: "2026-06-02"
+
   - id: B1A-SELF-CONTAIN
-    summary: "4 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
-    finding: "Live triage 2026-06-02: 4 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
-    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
+    summary: "4 contributor/required-consumer rows break module self-containment (M9): destructive role/necessity rewrite (surface only)."
+    finding: "Live triage 2026-06-02: 4 domain_module_data_objects rows on ONB-JOURNEY-MGMT are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here. Each is an M9 self-containment violation."
+    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Rewriting role/necessity on an existing DMDO row is destructive (M9) per Rule #21; surfaced for user sign-off, not applied."
+    destructive: true
     extra_m9_shapes:
       - {entity: asset_lifecycle_events, module: ONB-JOURNEY-MGMT, role: contributor, master_domain: ITAM}
       - {entity: candidates, module: ONB-JOURNEY-MGMT, role: consumer, master_domain: ATS}
@@ -85,7 +74,7 @@ b1a:
 
 b1b:
   - id: B1B-WORKFLOW-GATE-PERMISSIONS
-    summary: "22 ONBOARDING lifecycle states need workflow-gate permissions; blocked by B2-S3 verb authoring"
+    summary: "22 ONBOARDING lifecycle states need workflow-gate permissions; blocked by B2-WORKFLOW-GATE-VERBS verb authoring"
     finding: >
       B12 + E6 hard-fail. 22 of 36 lifecycle states across all 8 ONBOARDING
       masters carry requires_permission=true with empty permission_verb_override.
@@ -94,28 +83,25 @@ b1b:
       requires_permission=true state warrants a <module_code>:<verb>_<entity>
       permission realized on the state's domain_module_id. State distribution:
       ONB-JOURNEY-MGMT (mod 35) realizes 12 states across onboarding_plans
-      (approved 87, active 88, retired 89), onboarding_journeys (completed 84,
-      cancelled 85), onboarding_stages (completed 92, skipped 93),
-      onboarding_tasks (completed 96, skipped 97, cancelled 98),
-      onboarding_cohorts (active 71, completed 72, cancelled 73);
+      (approved, active, retired), onboarding_journeys (completed, cancelled),
+      onboarding_stages (completed, skipped), onboarding_tasks (completed,
+      skipped, cancelled), onboarding_cohorts (active, completed, cancelled);
       ONB-DOCUMENT-INTAKE (mod 36) realizes 4 states on
-      onboarding_document_collections (submitted 76, approved 77, rejected 78,
-      archived 79); ONB-WELCOME-EXPERIENCE (mod 37) realizes 7 states across
-      buddy_assignments (active 67, completed 68, cancelled 69) and
-      welcome_communications (sent 101, delivered 102, failed 103, cancelled
-      104). Total 23 states across modules. Plus role_permission mappings:
-      Onboarding HR Partner (10012) -> approve / reject document_collection,
-      activate / retire plan, complete / cancel journey; Onboarding Coordinator
-      (10011) -> complete stage, complete task; Onboarding Program Manager
-      (10013) -> admin tier across all three modules; Hiring Manager (10007)
-      -> read on multiple modules. Authoring per-state verbs without B2-S3
-      guidance reproduces the ATS B12 stale-permission-name bug.
+      onboarding_document_collections (submitted, approved, rejected, archived);
+      ONB-WELCOME-EXPERIENCE (mod 37) realizes 7 states across buddy_assignments
+      (active, completed, cancelled) and welcome_communications (sent, delivered,
+      failed, cancelled). Plus role_permission mappings: Onboarding HR Partner
+      (10012) -> approve / reject document_collection, activate / retire plan,
+      complete / cancel journey; Onboarding Coordinator (10011) -> complete stage,
+      complete task; Onboarding Program Manager (10013) -> admin tier across all
+      three modules; Hiring Manager (10007) -> read on multiple modules.
+      Authoring per-state verbs without verb guidance reproduces the ATS B12
+      stale-permission-name bug.
     action: >
-      Once B2-S3 verb authoring lands, INSERT 22-23 workflow-gate permissions
-      with tier=workflow-gate, prefixed by domain_module_code:lower.
+      Once B2-WORKFLOW-GATE-VERBS verb authoring lands, INSERT 22-23 workflow-gate
+      permissions with tier=workflow-gate, prefixed by domain_module_code:lower.
       INSERT role_permissions rows mapping each gate to the appropriate role
-      bundle. Use a focused loader following the canonical Rule #12 pattern;
-      pre-flight check that permission_verb_override is non-empty on every
+      bundle. Pre-flight check that permission_verb_override is non-empty on every
       lifecycle state before deriving the permission_name.
     affected_masters:
       - {data_object_id: 15, name: "onboarding_plans", target_module_id: 35, workflow: "draft -> approved -> active -> retired"}
@@ -128,7 +114,7 @@ b1b:
       - {data_object_id: 22, name: "onboarding_document_collections", target_module_id: 36, workflow: "pending -> in_progress -> submitted -> approved | rejected -> archived"}
     affected_modules: [35, 36, 37]
     blocked_by:
-      - {type: user_decision, ref: B2-S3}
+      - {type: user_decision, ref: B2-WORKFLOW-GATE-VERBS}
 
   - id: B1B-DOWNSTREAM-CONSUMER-DMDOS
     summary: "Consumer DMDOs owed by ITSM / IGA / HRSD / IWMS / LMS / PAYROLL / EMP-EXP for inbound ONBOARDING handoffs"
@@ -176,7 +162,7 @@ b1b:
 
 b2:
   - id: B2-NOTES-POLLUTION
-    summary: "Rule #15 notes pollution on 31 rows across domain_data_objects, skill_tools, handoffs; pre-existing carry-over"
+    summary: "Rule #15 notes pollution on 31 rows across domain_data_objects, skill_tools, handoffs; pre-existing carry-over (DESTRUCTIVE to revert)"
     question: >
       Were these 31 populated notes user-approved at load time, or
       auto-populated by prior loaders before Rule #15 was tightened? The 6
@@ -186,18 +172,20 @@ b2:
       "B10b resolved 2026-05-26..." on row 9, "cross | ATS->ONBOARDING | ..."
       cluster-draft prefix on row 1074, and sentence-shaped commentary on
       intra-domain rows 1227, 1228, 1229, 1230, 1231, 1232, 1233.
+      NOTE: skill_tools is a RETIRED table under the 2026-06-06 supersession;
+      that subset folds into the per-module tool re-authoring backlog and is no
+      longer a live ONBOARDING fix surface.
     options:
       - "(a) Confirm user-approved at load time; leave in place."
-      - "(b) Confirm auto-populated; PATCH all 31 rows notes to empty string and log a Rule #15 incident entry in references/skill-changelog.md."
+      - "(b) Confirm auto-populated; PATCH the live (non-retired) rows' notes to empty string and log a Rule #15 incident entry in references/skill-changelog.md."
       - "(c) Per-row decision; agent surfaces each row's text for individual approval."
     why: >
       Rule #15 forbids populating any notes column without explicit per-row
-      user approval. Carry-over from 2026-05-30 audit B2-S1 and B2-S2; the
-      2026-05-31 Continuation deferred resolution back to the user. The
-      handoffs subset is newly enumerated in this audit.
+      user approval. Reverting a non-empty notes value is destructive (Rule #21);
+      requires user sign-off. Carry-over from 2026-05-30 audit B2-S1 and B2-S2.
     affected_entities:
-      - "domain_data_objects: 51, 92, 98, 879, 880, 881"
-      - "skill_tools: 1876, 1877, 1878, 1879, 1884, 1885, 1887, 1890, 1891, 1892, 1895, 1896, 1899, 1900, 1901, plus one more from skill 204 channel justification"
+      - "domain_data_objects: 51, 92, 98, 879, 880, 881 (deprecated rollup table)"
+      - "skill_tools: RETIRED table (folds to per-module tool backlog)"
       - "handoffs: 9, 1074, 1227, 1228, 1229, 1230, 1231, 1232, 1233"
 
   - id: B2-PATTERN-FLAGS
@@ -209,6 +197,9 @@ b2:
       onboarding_journeys.has_single_approver=true (final completion gate
       signed off by Onboarding HR Partner or Coordinator), (3)
       onboarding_tasks.has_submit_lock=true (completed terminal, append-only).
+      Live 2026-06-07: current flags are journeys has_submit_lock=false /
+      has_single_approver=false; tasks has_submit_lock=false. The flips would
+      overwrite the existing false values (a workflow-shape judgment the user owns).
     options:
       - "(a) Approve all 3 flips."
       - "(b) Approve a subset; name which."
@@ -239,8 +230,7 @@ b2:
       (4) submit_onboarding_document_collection,
       approve_onboarding_document_collection,
       reject_onboarding_document_collection,
-      archive_onboarding_document_collection. Re-counts to 23-24 once
-      mark_welcome_sent split is decided.
+      archive_onboarding_document_collection.
     options:
       - "(a) Materialize all 22-24 explicit verbs."
       - "(b) Collapse subset to baseline-manage / baseline-admin; only approval gates (plan.approved, document_collection.approved / rejected, journey.completed) get explicit verbs (~6 verbs)."
@@ -250,22 +240,6 @@ b2:
       stale-permission-name bug (state_name="approved" -> permission
       "submitted_interview_scorecard" diverging from the intended verb). The
       audit must NOT invent verbs.
-    affected_modules: [35, 36, 37]
-
-  - id: B2-CATALOG-UX-FIELDS
-    summary: "M8 / Rule #20: catalog_tagline + catalog_description empty on all 3 ONBOARDING modules"
-    question: >
-      Modules 35 (ONB-JOURNEY-MGMT), 36 (ONB-DOCUMENT-INTAKE), 37
-      (ONB-WELCOME-EXPERIENCE) all carry empty catalog_tagline and empty
-      catalog_description. Per Rule #20 these must NOT be authored without
-      explicit user-approved wording. Should the user supply wording now, or
-      defer to a marketing copy pass?
-    options:
-      - "(a) User supplies one-line tagline + 1-3 paragraph description per module; agent loads after approval."
-      - "(b) Defer to marketing pass; M8 stays open across the catalog."
-    why: >
-      Rule #20 expressly forbids agent-authored marketing copy. The fields are
-      buyer-facing and outside the agent's voice.
     affected_modules: [35, 36, 37]
 
 b3:

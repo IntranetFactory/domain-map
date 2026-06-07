@@ -290,3 +290,52 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate run (SKILL.md Rule #21), not a from-scratch re-audit. Worked the open items in `state.yaml`, classified each into EXECUTE / SURFACE / LEAVE, and shipped every mechanical additive/corrective fix in one idempotent loader: [.tmp_deploy/2026-06-07_inv_crm_state_driven_execute.ts](../../.tmp_deploy/2026-06-07_inv_crm_state_driven_execute.ts). All writes land `record_status='new'`; re-run confirms full idempotency (0 rows on second pass). Domain id 159; modules 9 (DEAL-PIPELINE), 10 (RELATIONSHIP-GRAPH), 11 (LP-CRM), all full. Owning function: Investment Management (function 85, already the C1 owner; Executive is the consumer). No JWT / schema errors.
+
+### Executed (counts)
+
+| Item | Action | Rows |
+|---|---|---|
+| B1A-ENTITY-TYPE | PATCH `data_objects.entity_type` (was all 5 `unclassified`): 750 vc_deals -> operational_workflow, 751 investment_memos -> operational_workflow, 752 relationship_records -> computed, 753 investor_contacts -> operational_record, 754 lp_prospects -> operational_workflow | 5 PATCH |
+| B1B-S1 / B2-CATALOG-UX-WORDING | Author empty `catalog_tagline` + `catalog_description` on domain 159 and modules 9 / 10 / 11 (buyer-voice, no vendor names, no em-dash, American English). Per the run instructions the stale surface-before-write gate was overridden; only empty fields written, never overwrites. | 4 rows (8 fields) PATCH |
+| B1A-S9 | INSERT `data_object_aliases` (alias_type=synonym): 752 (relationship strength, network signals); 753 (people, contacts, founders); 754 (LPs, limited partners, fund investors). | 8 INSERT |
+| B1A-S3 | INSERT 7 `trigger_events` (event_category=state_change): vc_deal.ic_review_requested / .term_sheet_issued / .declined (750, mod 9); investment_memo.submitted / .approved (751, mod 9); lp_prospect.committed / .declined (754, mod 11). vc_deals now has 4 events; the catalog total across the 5 masters is 8. | 7 INSERT |
+| B1A-S4 (partial) | INSERT `data_object_lifecycle_states` on the two unambiguous workflow masters: investment_memos (751, mod 9) draft / in_review[gate submit_memo] / approved[gate approve_memo] / published[terminal]; lp_prospects (754, mod 11) researching / contacted / in_meeting / soft_circled / committed[gate record_commitment, terminal] / declined[gate record_decline, terminal]. M4 shape verified (one initial, terminal present, unique monotonic state_order). | 10 INSERT |
+
+Total: 34 row-level writes across 6 tables, all idempotent.
+
+### Surfaced (returned to user, not written)
+
+- **B2-CONFIG-SHAPE** (reframed): entity_type classification already grants the Rule #12 structural exemption for relationship_records (computed) and investor_contacts (operational_record), so this is no longer a B12 failure. Remaining call is purely whether to add OPTIONAL directory states (active / archived / merged) on either. Tracked as B1A-S4-CONFIG-SHAPE in state.yaml.
+- **B2-REGULATION-SCOPE** (B1B-S8): which of GDPR / CCPA / SEC Investment Advisers Act to add to /regulations and link (CAN-SPAM already linked). Base regulation rows must be authored before any domain_regulations link. No write without scoping.
+- **B2-ROLE-NAMING**: confirm the 4-persona naming (Deal Partner / Investment Associate / IR Lead / Platform Admin) before any persona loader runs.
+- **B2-MODULARIZATION-STABILITY**: IDENTITY-RECON and PORTFOLIO-AWARENESS split decisions (b2, judgment).
+- **B2-PAIRWISE-AUDIT-SCHEDULE**: schedule FUND-ADMIN (weight 3) and PORT-MONIT (weight 2) Validate runs.
+- **B1A-PHASE-P (personas / RACI): DEFERRED** per the run instructions, not authored. Candidate personas: Deal Partner (deal lead, modules 9+10), Investment Associate (diligence support, 9+10), IR Lead (LP fundraising, 11), Platform Admin (cross-module), function-anchored to Investment Management (85).
+
+### Left (untouched)
+
+- **B1A-M1..M6** (6 items): net-new master data_objects (data_subject_requests, meeting_records, introduction_requests, deal_team_assignments, pipeline_stages, co_investor_firms) with DMDO + lifecycle + relationships + trigger_events. Research-grade entity authoring, not a mechanical backfill; carried in b1a. entity_type targets noted on each for when they are authored.
+- **B1A-S6** (role layer): gated on B2-ROLE-NAMING and largely subsumed by the B1A-PHASE-P persona model (post-Plan-3).
+- **B1A-S7** (per-module system skills + skill_tools): RETIRED / superseded 2026-06-06 (per-domain-skill-restoration); reframed as a note. Do not author per-module skills; per-module tool re-authoring lives in audits/_modularization-backlog.md.
+- **B1B-B1** (intra-domain handoffs): trigger-event dependency now satisfied (B1A-S3 landed), but the 5 handoffs are still source-count-only, not a fully-specified mechanical tuple list; carried in b1b.
+- **B1B-S8** (GDPR / CCPA / SEC-IAA regulations): blocked on B2-REGULATION-SCOPE + base-row authoring.
+- **b3 backlog** (7 candidates): unchanged.
+
+### APQC / H1 status
+
+No action: all 4 cross-domain handoffs (1038, 1039, 1040, 1041) already carry `handoff_processes` rows (4 agent_curated + 1 discovery_substring). The one weak tag (handoff 1040, process 63, discovery_substring) is INBOUND from FUND-ADMIN and is that domain's H1 obligation; replacing it would be destructive. Left as-is.
+
+### Fixes-applied UI links
+
+- https://tests.semantius.app/domain_map/data_objects?id=in.(750,751,752,753,754)
+- https://tests.semantius.app/domain_map/domains?id=eq.159
+- https://tests.semantius.app/domain_map/domain_modules?id=in.(9,10,11)
+- https://tests.semantius.app/domain_map/data_object_aliases?data_object_id=in.(752,753,754)
+- https://tests.semantius.app/domain_map/trigger_events?data_object_id=in.(750,751,754)
+- https://tests.semantius.app/domain_map/data_object_lifecycle_states?data_object_id=in.(751,754)

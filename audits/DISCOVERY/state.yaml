@@ -11,65 +11,45 @@
 schema_version: 2
 domain: DISCOVERY
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
+
+# DISCOVERY is UNBUILT: 0 domain_modules (M1 hard fail), 0 capability_domains, 0 DMDO.
+# The 2026-06-07 state-driven pass executed every additive/corrective item that does NOT
+# depend on modules (entity_type classification on the 3 masters, event_category on the 4
+# lifecycle trigger events, domain catalog UX, and B11 aliases). Everything below is either
+# the build decision itself (b2), structural work blocked on the build (b1b), or backlog (b3).
+# Do NOT scaffold the build; the module shape is a user decision (B2-MOD-SHAPE).
 
 b1a:
   - id: B1A-CAPS
-    summary: "Author 5-7 capabilities for DISCOVERY and link via capability_domains (A2 fail; 0 rows today)."
-    finding: "A2 hard fail. capability_domains for domain_id=5 returns 0 rows. Domain has no defined capabilities, so M4/M6 cannot be evaluated and the system-skill derivation has no capability surface. Without capabilities the M2 ≥2-modules threshold (≥3 capabilities) is undetermined."
-    action: "Author capability set: network-asset-discovery, agentless-credentialed-scan, cloud-api-discovery, service-dependency-mapping, reconciliation-and-normalization, discovery-source-management, passive-network-discovery. Insert into capabilities + capability_domains. Cross-cutting capability convention applies for any capability shared with CMDB / CAASM."
-    affected_entities:
-      - network-asset-discovery
-      - agentless-credentialed-scan
-      - cloud-api-discovery
-      - service-dependency-mapping
-      - reconciliation-and-normalization
-      - discovery-source-management
-      - passive-network-discovery
+    summary: "Author 5-7 capabilities for DISCOVERY and link via capability_domains (A2 fail; 0 rows today). Part of the build; runs with the Phase A/M load once B2-MOD-SHAPE is chosen."
+    finding: "A2 hard fail. capability_domains for domain_id=5 returns 0 rows. Domain has no defined capabilities, so M4/M6 cannot be evaluated. Capability count drives the Rule #14 M2 module threshold, so this is part of the unbuilt-domain build, not a standalone additive fix."
+    action: "Author capability set (network-asset-discovery, agentless-credentialed-scan, cloud-api-discovery, service-dependency-mapping, reconciliation-and-normalization, discovery-source-management, passive-network-discovery) into capabilities + capability_domains as part of the Phase A/M build. Cross-cutting capability convention applies for anything shared with CMDB / CAASM."
+    blocked_by:
+      - {type: user_decision, ref: B2-MOD-SHAPE}
     extra_band: A2
 
   - id: B1A-SOLS
-    summary: "Backfill 2-4 flagship solutions (Tanium Asset, MS Defender Inventory, Qualys Asset Inventory, optional runZero) and solution_domains."
-    finding: "A3 warn. solution_domains for DISCOVERY: 4 rows (BMC Helix Discovery primary, Device42 primary, ServiceNow ITOM secondary, Lansweeper secondary). Meets ≥3 threshold but misses the inventory and CAASM-adjacent flagship vendors observed in the market surface."
-    action: "INSERT solutions + solution_domains for Tanium Asset (primary inventory leg), Microsoft Defender for Cloud Inventory (cloud-API leg), Qualys Asset Inventory (security-asset leg), and optionally runZero (passive network specialist). Use idempotent natural-key load via solution_name; assign coverage_level per pure-play vs adjacent positioning."
-    affected_entities:
-      - Tanium Asset
-      - Microsoft Defender for Cloud Inventory
-      - Qualys Asset Inventory
-      - runZero
+    summary: "Backfill 2-4 flagship solutions + solution_domains (inventory + cloud-API + security-asset legs). Part of the build surface."
+    finding: "A3 warn. solution_domains for DISCOVERY: 4 rows (meets >=3 threshold) but misses the inventory and CAASM-adjacent flagship vendors observed in the market surface."
+    action: "INSERT solutions + solution_domains for the inventory leg, cloud-API leg, security-asset leg, and optionally a passive-network specialist. Idempotent natural-key load via solution_name; assign coverage_level per pure-play vs adjacent positioning. Runs with the build."
+    blocked_by:
+      - {type: user_decision, ref: B2-MOD-SHAPE}
     extra_band: A3
 
-  - id: B1A-EVENT-CATEGORY
-    summary: "PATCH event_category on 4 lifecycle-shaped trigger_events that currently carry empty strings."
-    finding: "Trigger events 630 (discovery_scan.completed), 631 (discovery_scan.failed), 632 (discovery_source.connected), 633 (discovery_source.disconnected) have event_category set to '' instead of a Rule #13 enum value. Allowed values for trigger_events.event_category: lifecycle, state_change, threshold, signal. Event 77 (network_device.discovered) is correctly 'signal'."
-    action: "PATCH each event row: 630 and 631 → 'state_change' (terminal-state transitions on discovery_scans); 632 and 633 → 'state_change' (connection-state transitions on discovery_sources). One semantius call crud postgrestRequest PATCH per event id (or chunked PATCH)."
-    affected_events:
-      - {id: 630, event_name: "discovery_scan.completed", current_category: "", proposed_category: "state_change"}
-      - {id: 631, event_name: "discovery_scan.failed", current_category: "", proposed_category: "state_change"}
-      - {id: 632, event_name: "discovery_source.connected", current_category: "", proposed_category: "state_change"}
-      - {id: 633, event_name: "discovery_source.disconnected", current_category: "", proposed_category: "state_change"}
-    extra_band: B9
-
-  - id: B1A-ALIASES
-    summary: "Author data_object_aliases for 3 masters (discovery_scans, discovered_devices, discovery_sources); Rule #18 vendor-name risk on alias notes."
-    finding: "B11 fail. data_object_aliases for ids 81/82/83: 0 rows. The 3 masters are not self-explanatory in cross-vendor terminology: ServiceNow uses 'CI Candidate' for discovered_devices, BMC ADDM uses 'Topology Snapshot' for discovery_scans, Tanium and CAASM vendors use 'Asset Record' for discovered_devices, vendors use 'Discovery Connector' for discovery_sources."
-    action: "Draft alias rows: discovery_scans → topology_snapshot; discovered_devices → ci_candidate; discovered_devices → asset_record; discovery_sources → discovery_connector. Surface alias_name strings to user before insert; do NOT populate data_object_aliases.notes per Rule #15 (any vendor terminology context goes in chat for user wording sign-off)."
-    affected_masters:
-      - {data_object_id: 81, name: "discovery_scans", target_module_id: null, workflow: "scan lifecycle"}
-      - {data_object_id: 82, name: "discovered_devices", target_module_id: null, workflow: "device candidate reconciliation"}
-      - {data_object_id: 83, name: "discovery_sources", target_module_id: null, workflow: "connector lifecycle"}
-    extra_band: B11
   - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities. The whole Phase A/M/B/S build is gated on the B2-MOD-SHAPE decision."
+    finding: "Live 2026-06-07: 0 domain_modules rows (M1 fail), 0 capability_domains rows, 0 DMDO. Not deployable today. Must be built before persona / RACI work applies."
+    action: "Once B2-MOD-SHAPE is chosen, run Phase A then M then B then S to author the module set, capabilities, masters, and the single domain-grain system skill. If multi-module, run Phase P afterward. Do NOT scaffold before the shape is chosen."
+    blocked_by:
+      - {type: user_decision, ref: B2-MOD-SHAPE}
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-MODULES
     summary: "Create 1-4 domain_modules (shape per B2-MOD-SHAPE) plus domain_module_capabilities; cures M1 hard fail."
-    finding: "M1 hard fail. domain_modules where domain_id=5 returns 0 rows; domain_module_host_domains where domain_id=5 returns 0 rows. Cascades to M2, M4, M6, M8, B1 (DMDO migration), B10b (handoff module attribution on DISCOVERY side), B12 (lifecycle-state permission prefix), E1-E5 (roles need modules), F2-F5 (per-module system skills)."
+    finding: "M1 hard fail. domain_modules where domain_id=5 returns 0 rows. Cascades to M2, M4, M6, M8, B1 (DMDO migration), B10b (handoff module attribution on DISCOVERY side), B12 (lifecycle-state permission prefix), E1-E5."
     blocked_by:
       - {type: user_decision, ref: B2-MOD-SHAPE}
     affected_modules: []
@@ -77,102 +57,51 @@ b1b:
 
   - id: B1B-DMDO-MIGRATE
     summary: "Migrate legacy domain_data_objects to module-anchored DMDO for the 3 DISCOVERY masters + drop the now-orphan legacy rows."
-    finding: "B1 footprint sits in legacy domain_data_objects only (8 rows: 3 masters + 5 contributors). domain_module_data_objects for any domain_id=5 module is empty (no modules yet). Once Rule #14 modules exist, the rollup must come from DMDO, not the legacy table."
-    action: "Re-anchor discovery_scans (81), discovered_devices (82), discovery_sources (83) as role=master, necessity=required in domain_module_data_objects against the realizing modules from B1B-MODULES. Re-anchor 5 contributors (hardware_assets 56, software_installations 59, configuration_items 76, ci_relationships 77, monitoring_policies 86) with role=contributor (or consumer per the canonical owner). Delete the 8 legacy domain_data_objects rows once DMDO is the source of truth."
+    finding: "B1 footprint sits in legacy domain_data_objects only (3 masters + 5 contributors). domain_module_data_objects for any domain_id=5 module is empty (no modules yet)."
+    action: "Re-anchor discovery_scans (81), discovered_devices (82), discovery_sources (83) as role=master, necessity=required in domain_module_data_objects against the realizing modules from B1B-MODULES. Re-anchor 5 contributors (hardware_assets 56, software_installations 59, configuration_items 76, ci_relationships 77, monitoring_policies 86) with role=contributor (or consumer per canonical owner). DELETE the legacy domain_data_objects rows once DMDO is the source of truth (destructive: surface the delete)."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-MODULES}
-    affected_masters:
-      - {data_object_id: 81, name: "discovery_scans", target_module_id: null, workflow: "scan"}
-      - {data_object_id: 82, name: "discovered_devices", target_module_id: null, workflow: "candidate review"}
-      - {data_object_id: 83, name: "discovery_sources", target_module_id: null, workflow: "connector"}
-    affected_entities:
-      - hardware_assets
-      - software_installations
-      - configuration_items
-      - ci_relationships
-      - monitoring_policies
     extra_band: B1
 
   - id: B1B-INTRA-RELATIONSHIPS
     summary: "Author intra-domain data_object_relationships between the 3 DISCOVERY masters and to cross-domain consumers (configuration_items, hardware_assets)."
-    finding: "B6 fail. data_object_relationships touching ids 81/82/83 today: only the 3 Rule #10 user edges to data_object 748 (users). No edges between the 3 masters; no edges to configuration_items / hardware_assets that B8 outbound rows require."
-    action: "Author edges: discovery_sources → discovery_scans (drives, one_to_many, composition); discovery_scans → discovered_devices (emits, one_to_many, composition); discovered_devices → configuration_items (promotes_to, one_to_one, reference, owner_side=source, is_required=false); discovered_devices → hardware_assets (links_to, many_to_many, reference). B8 outbound mirrors the cross-domain pieces."
+    finding: "B6 fail. data_object_relationships touching ids 81/82/83 today: only the 3 Rule #10 user edges to data_object 748 (users). No edges between the 3 masters."
+    action: "Author edges: discovery_sources -> discovery_scans (drives, one_to_many, composition); discovery_scans -> discovered_devices (emits, one_to_many, composition); discovered_devices -> configuration_items (promotes_to, one_to_one, reference, owner_side=source, is_required=false); discovered_devices -> hardware_assets (links_to, many_to_many, reference). The discovered_devices -> service_maps edge depends on B2-SVC-MAPS."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-MODULES}
-      - {type: depends_on, ref: B2-SVC-MAPS, reason: "service_maps direction informs whether discovered_devices → service_maps edge belongs here"}
-    affected_masters:
-      - {data_object_id: 81, name: "discovery_scans", target_module_id: null, workflow: "scan to candidate"}
-      - {data_object_id: 82, name: "discovered_devices", target_module_id: null, workflow: "candidate to CI"}
-      - {data_object_id: 83, name: "discovery_sources", target_module_id: null, workflow: "connector to scan"}
+      - {type: depends_on, ref: B2-SVC-MAPS, reason: "service_maps direction informs whether discovered_devices -> service_maps edge belongs here"}
     extra_band: B6
 
   - id: B1B-LIFECYCLE-STATES
-    summary: "Author lifecycle states for the 3 masters with workflow-gate permissions prefixed by the realizing module's domain_module_code."
-    finding: "B12 fail. data_object_lifecycle_states for ids 81/82/83: 0 rows. discovery_scans clearly carries queued/running/completed/failed; discovered_devices carries raw/normalized/reconciled/excluded; discovery_sources carries configured/connected/disconnected. None are config-shape; the Rule #12 exemption does not apply. permission_prefix needs realizing module's domain_module_code, so this is blocked on B1B-MODULES."
-    action: "Author state rows per master with is_initial / is_terminal / requires_permission / permission_verb_override / domain_module_id set per the post-B1B-MODULES shape. Consider pattern flags on data_objects (has_personal_content, has_submit_lock, has_single_approver) and surface non-obvious flag decisions to the user without writing data_objects.notes (Rule #15)."
+    summary: "Author lifecycle states for the 3 masters (now entity_type=operational_workflow) with workflow-gate permissions prefixed by the realizing module's domain_module_code."
+    finding: "B12 fail. All 3 masters are now classified operational_workflow (patched 2026-06-07), so lifecycle states are required. data_object_lifecycle_states for ids 81/82/83: 0 rows. discovery_scans queued/running/completed/failed; discovered_devices raw/normalized/reconciled/excluded; discovery_sources configured/connected/disconnected. permission_prefix needs the realizing module's domain_module_code, so blocked on B1B-MODULES."
+    action: "Author state rows per master with is_initial / is_terminal / requires_permission / permission_verb_override / domain_module_id set per the post-B1B-MODULES shape. Consider pattern flags (has_personal_content, has_submit_lock, has_single_approver); surface non-obvious flag decisions to the user without writing data_objects.notes (Rule #15)."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-MODULES}
-    affected_masters:
-      - {data_object_id: 81, name: "discovery_scans", target_module_id: null, workflow: "queued → running → completed | failed"}
-      - {data_object_id: 82, name: "discovered_devices", target_module_id: null, workflow: "raw → normalized → reconciled | excluded"}
-      - {data_object_id: 83, name: "discovery_sources", target_module_id: null, workflow: "configured → connected | disconnected"}
     extra_band: B12
 
   - id: B1B-HANDOFF-ATTRIB
     summary: "Backfill source_domain_module_id on all 12 outbound DISCOVERY handoffs; target_domain_module_id on the 2 inbound DISCOVERY handoffs."
-    finding: "B10b fail on the DISCOVERY side. All 14 handoffs touching DISCOVERY have NULL on the DISCOVERY-side per-module FK. Outbound NULLs: handoffs 32, 33, 47, 48, 49, 50, 621, 622, 623, 624, 625, 626 (source_domain_module_id). Inbound NULLs: 147 (target_domain_module_id), 1199 (target_domain_module_id). Opposite-side NULLs on counterparties are other-domain B10b concerns."
-    action: "After B1B-MODULES + B1B-DMDO-MIGRATE, run the deterministic backfill: for each handoff, set source_domain_module_id (outbound) = module in DISCOVERY mastering trigger_events.data_object_id with strongest role; target_domain_module_id (inbound) = module in DISCOVERY holding handoffs.data_object_id with strongest role. Tie → leave NULL and surface."
+    finding: "B10b fail on the DISCOVERY side. All 14 handoffs touching DISCOVERY have NULL on the DISCOVERY-side per-module FK. Outbound: 32, 33, 47, 48, 49, 50, 621, 622, 623, 624, 625, 626. Inbound: 147, 1199. Opposite-side NULLs on counterparties are other-domain B10b concerns."
+    action: "After B1B-MODULES + B1B-DMDO-MIGRATE, run the deterministic backfill: outbound source_domain_module_id = module mastering trigger_events.data_object_id with strongest role; inbound target_domain_module_id = module holding handoffs.data_object_id with strongest role. Tie -> leave NULL and surface. Handoff 47 attribution depends on B2-SHADOW-IT."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-MODULES}
       - {type: prerequisite_entity, ref: B1B-DMDO-MIGRATE}
-    affected_handoffs:
-      - {handoff_id: 32, direction: outbound, source_domain: DISCOVERY, target_domain: HAM, trigger_event: "device.discovered", payload: "hardware_assets", null_field: source_domain_module_id}
-      - {handoff_id: 33, direction: outbound, source_domain: DISCOVERY, target_domain: SAM, trigger_event: "software.discovered", payload: "software_installations", null_field: source_domain_module_id}
-      - {handoff_id: 47, direction: outbound, source_domain: DISCOVERY, target_domain: SMP, trigger_event: "sso_login.unsanctioned_app", payload: "shadow_it_apps", null_field: source_domain_module_id}
-      - {handoff_id: 48, direction: outbound, source_domain: DISCOVERY, target_domain: CMDB, trigger_event: "ci.discovered", payload: "configuration_items", null_field: source_domain_module_id}
-      - {handoff_id: 49, direction: outbound, source_domain: DISCOVERY, target_domain: CMDB, trigger_event: "relationship.discovered", payload: "ci_relationships", null_field: source_domain_module_id}
-      - {handoff_id: 50, direction: outbound, source_domain: DISCOVERY, target_domain: ITOM, trigger_event: "monitoring_policy.coverage_requested", payload: "monitoring_policies", null_field: source_domain_module_id}
-      - {handoff_id: 621, direction: outbound, source_domain: DISCOVERY, target_domain: CMDB, trigger_event: "discovery_scan.completed", payload: "discovery_scans", null_field: source_domain_module_id}
-      - {handoff_id: 622, direction: outbound, source_domain: DISCOVERY, target_domain: HAM, trigger_event: "discovery_scan.completed", payload: "discovery_scans", null_field: source_domain_module_id}
-      - {handoff_id: 623, direction: outbound, source_domain: DISCOVERY, target_domain: SAM, trigger_event: "discovery_scan.completed", payload: "discovery_scans", null_field: source_domain_module_id}
-      - {handoff_id: 624, direction: outbound, source_domain: DISCOVERY, target_domain: ITSM, trigger_event: "discovery_scan.failed", payload: "service_incidents", null_field: source_domain_module_id}
-      - {handoff_id: 625, direction: outbound, source_domain: DISCOVERY, target_domain: CMDB, trigger_event: "discovery_source.connected", payload: "discovery_sources", null_field: source_domain_module_id}
-      - {handoff_id: 626, direction: outbound, source_domain: DISCOVERY, target_domain: ITSM, trigger_event: "discovery_source.disconnected", payload: "service_incidents", null_field: source_domain_module_id}
-      - {handoff_id: 147, direction: inbound, source_domain: RMM, target_domain: DISCOVERY, trigger_event: "network_device.discovered", payload: "discovered_devices", null_field: target_domain_module_id}
-      - {handoff_id: 1199, direction: inbound, source_domain: CMDB, target_domain: DISCOVERY, trigger_event: "ci_class.published", payload: "ci_classes", null_field: target_domain_module_id}
     extra_band: B10b
-
-  - id: B1B-SYSTEM-SKILLS
-    summary: "Author one skill_type=system skill per DISCOVERY module (<module_code_lower>_agent) with ≥1 skill_tools; re-anchor tools 409/410/411."
-    finding: "F2/F3 cascade fail. Today there is 1 legacy system skill (id 49, discovery-system, domain_module_id=NULL) with 3 query_* tools. Rule #17 requires exactly one skill_type=system per domain_modules row, anchored via domain_module_id. The 3 existing skill_tools rows (409, 410, 411 → tools query_discovery_scans / query_discovered_devices / query_discovery_sources) are sound primitives but mis-anchored."
-    action: "After B1B-MODULES + B1B-DMDO-MIGRATE: INSERT one <module_code_lower>_agent system skill per DISCOVERY module with domain_module_id set. Re-anchor each existing skill_tools row 409/410/411 to the realizing module's skill. Add mutate and workflow-gate tools per module from the lifecycle states B1B-LIFECYCLE-STATES emits. Tool operation_kind ↔ data_object_id invariants (F4) hold automatically on query_* rows."
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-MODULES}
-      - {type: prerequisite_entity, ref: B1B-DMDO-MIGRATE}
-      - {type: prerequisite_entity, ref: B1B-LIFECYCLE-STATES}
-    extra_band: F2
-
-  - id: B1B-SKILL-LEGACY
-    summary: "DELETE legacy domain-level system skill discovery-system (id 49) once per-module system skills exist."
-    finding: "F1 fail (transitional). skills row id=49 has skill_type=system, domain_id=5, domain_module_id=NULL. This is acceptable only while no module-level system skill exists; once F2 cure inserts per-module skills, F1 demands the legacy row be removed."
-    action: "After B1B-SYSTEM-SKILLS has inserted per-module system skills (and the 3 skill_tools rows have been re-anchored), DELETE skills id=49 via semantius call crud postgrestRequest."
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-SYSTEM-SKILLS}
-    extra_band: F1
 
   - id: B1B-ROLES
     summary: "Author DISCOVERY-scoped roles + role_modules + role_permissions once modules exist."
-    finding: "E1-E5 cascade fail. business_function_id=58 (IT Infrastructure) carries 5 roles (10050-10054), none of which point at any DISCOVERY module via role_modules (all 11 role_modules rows point at APM modules 103/104 and CMDB modules 108/109/110). On a multi-module DISCOVERY domain, ≥3 distinct roles are expected; on a single-module shape, E1 vacuously passes."
-    action: "After B1B-MODULES selects shape: if multi-module, author Discovery Operator, Discovery Engineer, and Discovery Admin (or similar function-scoped names) under business_function_id=58, with role_modules rows on ≥2 DISCOVERY modules each (E2 floor) and interaction_level set (E3). Bundle role_permissions per Rule #14 permission materialization."
+    finding: "E1-E5 cascade fail. business_function_id=58 (IT Infrastructure) carries 5 roles (10050-10054), none pointing at any DISCOVERY module via role_modules (all 11 role_modules rows point at APM/CMDB modules). On a multi-module DISCOVERY domain, >=3 distinct roles are expected; on a single-module shape, E1 vacuously passes."
+    action: "After B1B-MODULES selects shape: if multi-module, author function-scoped roles under business_function_id=58 with role_modules on >=2 DISCOVERY modules each (E2) and interaction_level set (E3). Bundle role_permissions per Rule #14."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-MODULES}
       - {type: prerequisite_entity, ref: B1B-LIFECYCLE-STATES}
     extra_band: E1
 
   - id: B1B-DMC
-    summary: "Author domain_module_capabilities linking each capability to ≥1 realizing module and vice versa."
-    finding: "M4 and M6 cascade fail. With 0 capabilities and 0 modules, the bipartite coverage loop is undefined. Once A2 + M1 cure, every capability needs ≥1 realizing module and every module needs ≥1 realized capability."
-    action: "After B1A-CAPS + B1B-MODULES: INSERT domain_module_capabilities for every (capability, realizing module) pair per the modularization shape chosen in B2-MOD-SHAPE."
+    summary: "Author domain_module_capabilities linking each capability to >=1 realizing module and vice versa."
+    finding: "M4 and M6 cascade fail. With 0 capabilities and 0 modules, the bipartite coverage loop is undefined. Once A2 + M1 cure, every capability needs >=1 realizing module and every module needs >=1 realized capability."
+    action: "After B1A-CAPS + B1B-MODULES: INSERT domain_module_capabilities for every (capability, realizing module) pair per the shape chosen in B2-MOD-SHAPE."
     blocked_by:
       - {type: prerequisite_entity, ref: B1A-CAPS}
       - {type: prerequisite_entity, ref: B1B-MODULES}
@@ -180,119 +109,92 @@ b1b:
 
   - id: B1B-MODULE-UX
     summary: "Author catalog_tagline + catalog_description per Rule #20 on each new domain_modules row at insert time."
-    finding: "M8 cascade fail. With 0 modules there's nothing to evaluate; once B1B-MODULES inserts rows the buyer-voice tagline + description must be authored per Rule #20."
-    action: "Draft tagline + description per module, surface to user before INSERT (Rule #20). Never overwrite non-empty values without explicit per-row user approval."
+    finding: "M8 cascade fail. With 0 modules there's nothing to evaluate; once B1B-MODULES inserts rows the buyer-voice tagline + description must be authored per Rule #20 (the domain-row catalog UX was authored 2026-06-07)."
+    action: "Author tagline + description per module at insert time (Rule #20). Never overwrite non-empty values without explicit per-row approval."
     blocked_by:
       - {type: user_decision, ref: B2-MOD-SHAPE}
       - {type: prerequisite_entity, ref: B1B-MODULES}
     extra_band: M8
 
+  - id: B1B-SYSTEM-SKILL
+    summary: "RETIRED-AND-REFRAMED (supersession 2026-06-06): after the build, author exactly ONE domain-grain system skill (domain_id=5, domain_module_id=null) that DERIVES its toolset; retire legacy discovery-system (id 49) if it does not already match that grain. Per-module skills are CANCELED."
+    finding: "Today: 1 legacy system skill (id 49, discovery-system, domain_module_id=NULL) with 3 query_* skill_tools. Under the new model the per-module skill grain and skill_tools are dropped; tool requirements live on domain_module_tools (per-module) and the domain carries one domain-grain system skill. Per-module tool re-authoring is tracked in audits/_modularization-backlog.md."
+    action: "After the build: confirm the single domain-grain system skill exists (id 49 may already serve as the domain-grain skill since domain_module_id is null); author domain_module_tools onto the new modules; do NOT author per-module system skills or skill_tools. The legacy-skill DELETE is destructive and only applies if a duplicate domain-grain skill is created; surface before any delete."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-MODULES}
+    extra_band: F1
+
 b2:
   - id: B2-MOD-SHAPE
-    summary: "DISCOVERY modularization shape: 1, 2, 3, or 4 modules; choice gates the largest cluster of Bucket 1 items."
+    summary: "DISCOVERY modularization shape: 1, 2, 3, or 4 modules; choice gates the entire build and every per-module b1b item."
     question: "Which module set should DISCOVERY take?"
     options:
-      - "(a) Single-module DISCOVERY-ENGINE (viable only if capability count stays ≤2 per Rule #14 M2)"
+      - "(a) Single-module DISCOVERY-ENGINE (viable only if capability count stays <=2 per Rule #14 M2)"
       - "(b) Two modules: DISCOVERY-NETWORK-SCAN + DISCOVERY-CLOUD-INVENTORY"
       - "(c) Three modules: DISCOVERY-NETWORK-SCAN + DISCOVERY-CLOUD-INVENTORY + DISCOVERY-SERVICE-MAPPING (recommended default; triangulates against CMDB-SERVICE-MAPPING)"
       - "(d) Four modules: above + DISCOVERY-RECONCILIATION"
-    why: "Rule #14 M1 + M2 hard fail; cascades to every per-module band (M4, M6, M8, B12 prefix, E1-E5, F2-F5, B10b backfill, DMDO migration). Recommendation: (c) but the design decision is the user's."
+    why: "Rule #14 M1 + M2 hard fail; cascades to every per-module band (M4, M6, M8, B12 prefix, E1-E5, B10b backfill, DMDO migration, capability authoring). Recommendation: (c) but the design decision is the user's."
 
   - id: B2-MON-POLICIES
     summary: "monitoring_policies (86) canonical master: ITOM or RMM (DISCOVERY contributes only)."
     question: "Which domain canonically masters monitoring_policies once DMDO replaces legacy domain_data_objects?"
     options: ["ITOM (operations-platform centric)", "RMM (remote-management centric)"]
-    why: "Legacy domain_data_objects has both ITOM and RMM mastering id 86. DMDO is empty for id 86 today. M7 catalog-wide single-master will hard-fail once both modularize. DISCOVERY contributes via legacy rollup only; the call belongs to ITOM's and RMM's next audits, not DISCOVERY's, but the decision affects how DISCOVERY's contributor row in B1B-DMDO-MIGRATE is shaped."
+    why: "Legacy domain_data_objects has both ITOM and RMM mastering id 86. DMDO is empty for id 86 today. M7 catalog-wide single-master will hard-fail once both modularize. The call belongs to ITOM's and RMM's next audits, not DISCOVERY's, but it affects how DISCOVERY's contributor row in B1B-DMDO-MIGRATE is shaped."
 
   - id: B2-SVC-MAPS
     summary: "service_maps (79) canonical ownership: DISCOVERY vs CMDB."
-    question: "Does DISCOVERY canonically master service_maps (option a), or does CMDB-SERVICE-MAPPING continue to canonically master with DISCOVERY publishing scan-completed events (option b, default)?"
+    question: "Does DISCOVERY canonically master service_maps (option a), or does CMDB-SERVICE-MAPPING continue to master with DISCOVERY publishing scan-completed events (option b, default)?"
     options:
       - "(a) Move master to a DISCOVERY-SERVICE-MAPPING module (requires B2-MOD-SHAPE option c or d); CMDB demotes to embedded_master or consumer"
       - "(b) Keep CMDB-SERVICE-MAPPING as canonical master (recommended); DISCOVERY publishes discovery_scan.completed already. No further action."
-    why: "Legacy domain_data_objects rollup had DISCOVERY listed as contributor on service_maps; that legacy row was deleted in the prior continuation. The audit recommendation is (b) but confirm before authoring B1B-INTRA-RELATIONSHIPS edges around discovered_devices → service_maps."
+    why: "Confirm before authoring B1B-INTRA-RELATIONSHIPS edges around discovered_devices -> service_maps."
 
   - id: B2-SHADOW-IT
     summary: "shadow_it_apps handoff 47: re-source from SMP or keep on DISCOVERY?"
-    question: "Handoff 47 publishes sso_login.unsanctioned_app → SMP with payload shadow_it_apps. The trigger event is IdP-fed, which is SMP's native channel, not a discovery scan."
+    question: "Handoff 47 publishes sso_login.unsanctioned_app -> SMP with payload shadow_it_apps. The trigger event is IdP-fed, which is SMP's native channel, not a discovery scan."
     options:
       - "(a) Keep handoff 47 outbound from DISCOVERY (current shape; DISCOVERY detects shadow IT via network/DNS scanning)"
       - "(b) Re-source the handoff to SMP; SMP authors its own outbound (DISCOVERY's outbound set drops handoff 47)"
       - "(c) Re-trigger DISCOVERY side with a discovery-scan-native event (e.g. shadow_app.discovered_via_network_scan); keep handoff 47 but rebind to a new trigger_event"
-    why: "Affects B1B-HANDOFF-ATTRIB handoff 47 row, the APQC tag on handoff 47 (currently PCF 294), and whether SMP's next audit owes an outbound on this event."
+    why: "Affects B1B-HANDOFF-ATTRIB handoff 47 row, the APQC tag on handoff 47 (currently PCF 294), and whether SMP's next audit owes an outbound on this event. (b)/(c) are destructive re-attributions: surface, do not apply."
 
 b3:
   - id: B3-DISCOVERY-PATTERNS
     candidate: discovery_patterns
     rationale: "Configuration-shaped entity defining how a scan classifies a device. Universal in agentless discovery products. Phase 0 vetting recommended due to vendor variation in pattern modeling."
-    vendor_evidence:
-      - ServiceNow Discovery (Patterns)
-      - BMC Helix Discovery (ADDM Patterns)
-      - Device42 (Auto-Discovery Rules)
     proposed_module: DISCOVERY-NETWORK-SCAN
 
   - id: B3-DISCOVERY-CREDENTIALS
     candidate: discovery_credentials
-    rationale: "Credential profiles (SNMP, SSH, WinRM, AWS access keys, K8s tokens) drive scans. Distinct from discovery_sources; one source uses one or more credentials. Sensitive entity (Vault / KMS-backed in every flagship)."
-    vendor_evidence:
-      - ServiceNow Discovery
-      - BMC Helix Discovery
-      - Device42
-      - Lansweeper
-      - Tanium
+    rationale: "Credential profiles (SNMP, SSH, WinRM, cloud access keys, K8s tokens) drive scans. Distinct from discovery_sources; one source uses one or more credentials. Sensitive entity (Vault / KMS-backed in every flagship)."
     proposed_module: DISCOVERY-NETWORK-SCAN
 
   - id: B3-DISCOVERY-SCHEDULES
     candidate: discovery_schedules
     rationale: "Cron-shaped recurrence per scan. Universal scheduling abstraction across flagship products."
-    vendor_evidence:
-      - ServiceNow Discovery Schedules
-      - BMC Helix Discovery Schedules
-      - Lansweeper Scanning Schedules
     proposed_module: per realizing module
 
   - id: B3-RECONCILIATION-RULES
     candidate: reconciliation_rules
-    rationale: "Logic that maps a discovered_device into a configuration_item. Heavy in CMDB-anchored vendors. Phase 0 vetting recommended due to vendor variation in rule modeling and overlap with CMDB-side normalization."
-    vendor_evidence:
-      - ServiceNow IRE Rules
-      - BMC ADDM Normalization
-      - Device42 Reconciliation
+    rationale: "Logic that maps a discovered_device into a configuration_item. Heavy in CMDB-anchored vendors. Phase 0 vetting recommended due to vendor variation and overlap with CMDB-side normalization."
     proposed_module: DISCOVERY-RECONCILIATION
 
   - id: B3-DISCOVERY-EXCLUSIONS
     candidate: discovery_exclusions
     rationale: "Scope exclusions (subnet ranges, IP exclusions, OU exclusions). Operational hygiene entity present in every flagship."
-    vendor_evidence:
-      - ServiceNow Discovery
-      - BMC Helix Discovery
-      - Lansweeper
     proposed_module: per realizing module
 
   - id: B3-NETWORK-SEGMENTS
     candidate: network_segments
     rationale: "Subnets and CIDR ranges plus IPAM-adjacent classification. May belong in a future IPAM domain rather than DISCOVERY; flag during Phase 0 vetting."
-    vendor_evidence:
-      - ServiceNow Discovery
-      - runZero
-      - BMC Helix Discovery
     proposed_module: DISCOVERY-NETWORK-SCAN
 
   - id: B3-CLOUD-ACCOUNTS
     candidate: cloud_accounts
-    rationale: "Cloud subscription / account boundary entity. Almost certainly belongs in a cross-cutting cloud_resources master in CSPM / CNAPP territory; DISCOVERY would consumer or embedded_master rather than master."
-    vendor_evidence:
-      - ServiceNow Cloud Discovery
-      - Device42
-      - Microsoft Defender for Cloud Inventory
+    rationale: "Cloud subscription / account boundary entity. Almost certainly belongs in a cross-cutting cloud_resources master in CSPM / CNAPP territory; DISCOVERY would be consumer or embedded_master rather than master."
     proposed_module: DISCOVERY-CLOUD-INVENTORY
 
   - id: B3-ASSET-TAGS
     candidate: asset_tags
     rationale: "Universal labeling axis (environment=prod, owner=team-x). Could be a cross-cutting concern shared with ITAM rather than a DISCOVERY-owned master."
-    vendor_evidence:
-      - ServiceNow Discovery
-      - Axonius
-      - JupiterOne
-      - Device42
     proposed_module: DISCOVERY-RECONCILIATION

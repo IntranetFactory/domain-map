@@ -1,69 +1,20 @@
 schema_version: 2
 domain: TLNT-INTEL
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
-  - id: B1A-S1
-    summary: B9 hard fail, zero trigger_events across all 7 TLNT-INTEL masters despite 7 workflow-gate lifecycle states.
-    finding: |
-      Zero trigger_events rows exist for any of TLNT-INTEL's 7 masters (859 internal_opportunities, 860 opportunity_applications, 861 mobility_recommendations, 862 fit_scores, 863 career_path_suggestions, 864 mentorship_engagements, 865 match_inference_runs), despite 14 published lifecycle states across masters 859, 860, 864 where 7 states are requires_permission=true (open, closed, cancelled on 859; under_review, accepted, rejected on 860; active on 864) and read like published verbs. Each gated state is an emitter by construction, lifecycle is documented but the event substrate is missing.
-    action: |
-      Insert 10-12 trigger_events rows. event_category='state_change' for terminal/transition states (opportunity.opened, opportunity.closed, opportunity.cancelled, opportunity_application.under_review, opportunity_application.accepted, opportunity_application.rejected, mentorship.activated, mentorship.completed). event_category='lifecycle' for inference-generated outputs (fit_score.computed, mobility_recommendation.produced, career_path.projected, match_inference_run.completed). Each data_object_id points at the publishing master.
-    affected_masters:
-      - {data_object_id: 859, name: internal_opportunities, target_module_id: 175, workflow: opened_closed_cancelled_lifecycle}
-      - {data_object_id: 860, name: opportunity_applications, target_module_id: 175, workflow: under_review_accepted_rejected_lifecycle}
-      - {data_object_id: 861, name: mobility_recommendations, target_module_id: 176, workflow: inference_output_lifecycle}
-      - {data_object_id: 862, name: fit_scores, target_module_id: 176, workflow: inference_output_lifecycle}
-      - {data_object_id: 863, name: career_path_suggestions, target_module_id: 176, workflow: inference_output_lifecycle}
-      - {data_object_id: 864, name: mentorship_engagements, target_module_id: 175, workflow: proposed_active_completed_cancelled_lifecycle}
-      - {data_object_id: 865, name: match_inference_runs, target_module_id: 176, workflow: model_run_completion_lifecycle}
-
-  - id: B1A-S6
-    summary: B11 partial fail, 5 of 7 masters carry zero aliases.
-    finding: |
-      Aliases exist on 859 internal_opportunities (4: gigs, projects, opportunities, internal jobs) and 861 mobility_recommendations (2: career suggestions, next move recommendations; arguably mis-attributed and may belong on 863 career_path_suggestions). 5 masters carry zero aliases: 860 opportunity_applications, 862 fit_scores, 863 career_path_suggestions, 864 mentorship_engagements, 865 match_inference_runs. Each has at least one well-known cross-vendor synonym.
-    action: |
-      Author 10-15 alias rows (2-3 per master). Decide on the 863-vs-861 placement question first ('career suggestions' and 'next move recommendations' currently sit on 861; the analyst recommendation is they belong on 863). Proposed aliases: 860 to 'applications' / 'internal applications' / 'expressions of interest'; 862 to 'match scores' / 'talent scores' / 'fit ratings'; 863 to 'career suggestions' / 'next move recommendations' (after move from 861); 864 to 'mentoring pairs' / 'mentorship sessions' / 'mentor matches'; 865 to 'inference jobs' / 'model runs' / 'scoring batches'.
-    affected_masters:
-      - {data_object_id: 860, name: opportunity_applications, target_module_id: 175, workflow: alias_backfill}
-      - {data_object_id: 862, name: fit_scores, target_module_id: 176, workflow: alias_backfill}
-      - {data_object_id: 863, name: career_path_suggestions, target_module_id: 176, workflow: alias_backfill}
-      - {data_object_id: 864, name: mentorship_engagements, target_module_id: 175, workflow: alias_backfill}
-      - {data_object_id: 865, name: match_inference_runs, target_module_id: 176, workflow: alias_backfill}
-
-  - id: B1A-S10
-    summary: A4 hard fail, domains.catalog_tagline and catalog_description both empty on TLNT-INTEL (id 170).
-    finding: |
-      domains row id 170 carries empty catalog_tagline and empty catalog_description. Rule #20 buyer-voice copy missing for the domain landing page.
-    action: |
-      Draft both fields per Rule #20 voice rule (buyer-shaped: workflow + value, NOT analyst voice). Surface to the user for review BEFORE writing. Rule #20 forbids overwriting non-empty values without explicit per-row approval; these are empty, so the draft-then-approve path applies.
-    affected_entities: [domains]
-    extra_target_row: {table: domains, id: 170, fields: [catalog_tagline, catalog_description]}
-
-  - id: B1A-S11
-    summary: M8 hard fail, all 3 modules have empty catalog_tagline and catalog_description.
-    finding: |
-      domain_modules 175 (TLNT-INTEL-MARKETPLACE), 176 (TLNT-INTEL-MOBILITY), 177 (TLNT-INTEL-INSIGHTS) all carry empty catalog_tagline and empty catalog_description. Module-grain buyer-voice copy missing across the board.
-    action: |
-      Draft both fields per Rule #20 voice rule per module. Surface drafts to user for review BEFORE writing. Same Rule #20 discipline as S10.
-    affected_modules: [175, 176, 177]
   - id: B1A-PHASE-P
     summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
     finding: "Live triage 2026-06-02: 3 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    action: "DEFERRED (personas/RACI, B1A-PHASE-P): not auto-authored. Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: Talent Manager, Hiring Manager (cross-functional, missing today), Marketplace Ops (see B2-T2), HR Business Partner consumer."
     extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "7 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 7 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [career_path_suggestions, fit_scores, internal_opportunities, match_inference_runs, mentorship_engagements, mobility_recommendations, opportunity_applications]
-    extra_phase_p_triage: "2026-06-02"
+
   - id: B1A-SELF-CONTAIN
     summary: "11 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
     finding: "Live triage 2026-06-02: 11 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
-    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
+    action: "DESTRUCTIVE (rewrites role/necessity on existing DMDO rows): surfaced, not applied. Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
     extra_m9_shapes:
       - {entity: career_aspirations, module: TLNT-INTEL-MOBILITY, role: consumer, master_domain: TALENT-MGMT}
       - {entity: competency_models, module: TLNT-INTEL-INSIGHTS, role: consumer, master_domain: SKILLS-MGMT}
@@ -82,9 +33,8 @@ b1b:
   - id: B1B-S2
     summary: B9 hard fail (outbound), zero outbound handoffs from TLNT-INTEL despite 7-master publishing surface.
     finding: |
-      Zero outbound handoffs rows from TLNT-INTEL. Expected 5-6 outbound handoffs once events exist: (a) TLNT-INTEL-MARKETPLACE to ATS-RECRUITMENT-PIPELINE on opportunity_application.accepted (payload opportunity_applications); (b) TLNT-INTEL-MARKETPLACE to HCM-CORE-WORKER on opportunity_application.accepted (payload opportunity_applications); (c) TLNT-INTEL-MOBILITY to ATS-RECRUITMENT-PIPELINE on mobility_recommendation.produced (payload mobility_recommendations); (d) TLNT-INTEL-MOBILITY to TALENT-SUCCESSION-CAREER on fit_score.computed (payload fit_scores); (e) TLNT-INTEL-MOBILITY to TALENT-SUCCESSION-CAREER on career_path.projected (payload career_path_suggestions); (f) TLNT-INTEL-INSIGHTS to SWP-DEMAND-FORECAST on workforce-skills-heatmap recalculation.
+      Zero outbound handoffs rows from TLNT-INTEL. The trigger_events substrate now exists (B1A-S1 landed 2026-06-07: 13 events including opportunity_application.accepted, mobility_recommendation.produced, fit_score.computed, career_path.projected). Expected 5-6 outbound handoffs: (a) TLNT-INTEL-MARKETPLACE to ATS-RECRUITMENT-PIPELINE on opportunity_application.accepted (payload opportunity_applications); (b) TLNT-INTEL-MARKETPLACE to HCM-CORE-WORKER on opportunity_application.accepted (payload opportunity_applications); (c) TLNT-INTEL-MOBILITY to ATS-RECRUITMENT-PIPELINE on mobility_recommendation.produced (payload mobility_recommendations); (d) TLNT-INTEL-MOBILITY to TALENT-SUCCESSION-CAREER on fit_score.computed (payload fit_scores); (e) TLNT-INTEL-MOBILITY to TALENT-SUCCESSION-CAREER on career_path.projected (payload career_path_suggestions); (f) TLNT-INTEL-INSIGHTS to SWP-DEMAND-FORECAST on workforce-skills-heatmap recalculation.
     blocked_by:
-      - {type: depends_on, ref: B1A-S1, reason: outbound_handoffs_cite_trigger_event_id}
       - {type: user_decision, ref: B2-T3, reason: integration_pattern_choice_is_user_judgment}
     affected_handoffs:
       - {direction: outbound, source_domain: TLNT-INTEL, target_domain: ATS, trigger_event: opportunity_application.accepted, payload: opportunity_applications, null_field: row_does_not_exist}
@@ -94,21 +44,10 @@ b1b:
       - {direction: outbound, source_domain: TLNT-INTEL, target_domain: TALENT-MGMT, trigger_event: career_path.projected, payload: career_path_suggestions, null_field: row_does_not_exist}
       - {direction: outbound, source_domain: TLNT-INTEL, target_domain: SWP, trigger_event: workforce_skills_heatmap.recalculated, payload: pending_b3_skill_inferences_or_aggregate, null_field: row_does_not_exist}
 
-  - id: B1B-S3
-    summary: B9b vacuous-but-real, zero intra-domain cross-module handoffs even though relationship graph shows 175 vs 176 traffic.
-    finding: |
-      Zero intra-domain cross-module handoffs. The cross-module relationship graph shows match_inference_runs (mastered by 176) produces to fit_scores and produces to mobility_recommendations; internal_opportunities (mastered by 175) is consumer on module 176; fit_scores (mastered by 176) is consumer on module 175. At least three intra-domain handoffs are implied: (a) 175 to 176 on opportunity.opened so MOBILITY recomputes match inferences, (b) 176 to 175 on fit_score.computed so MARKETPLACE can rank applications, (c) 175 to 176 on opportunity_application.submitted so MOBILITY can score the applicant against the role.
-    blocked_by:
-      - {type: depends_on, ref: B1A-S1, reason: intra_domain_handoffs_cite_trigger_event_id}
-    affected_handoffs:
-      - {direction: intra_domain, source_domain: TLNT-INTEL, target_domain: TLNT-INTEL, trigger_event: opportunity.opened, payload: internal_opportunities, null_field: row_does_not_exist}
-      - {direction: intra_domain, source_domain: TLNT-INTEL, target_domain: TLNT-INTEL, trigger_event: fit_score.computed, payload: fit_scores, null_field: row_does_not_exist}
-      - {direction: intra_domain, source_domain: TLNT-INTEL, target_domain: TLNT-INTEL, trigger_event: opportunity_application.submitted, payload: opportunity_applications, null_field: row_does_not_exist}
-
   - id: B1B-S4
     summary: B7 partial fail, master 865 match_inference_runs has zero users edges; default recommendation is leave-as-is pending user confirmation.
     finding: |
-      data_object_relationships from users (id 748) cover 6 of 7 TLNT-INTEL masters: users posts internal_opportunities (859), submits opportunity_applications (860), targeted by mobility_recommendations (861), scored as fit_scores (862), follows career_path_suggestions (863), participates in mentorship_engagements (864). Zero edges to/from match_inference_runs (865). Match runs are typically model-derived without a human actor.
+      data_object_relationships from users (id 748) cover 6 of 7 TLNT-INTEL masters: users posts internal_opportunities (859), submits opportunity_applications (860), targeted by mobility_recommendations (861), scored as fit_scores (862), follows career_path_suggestions (863), participates in mentorship_engagements (864). Zero edges to/from match_inference_runs (865). Match runs are typically model-derived without a human actor. (865 is now classified entity_type='operational_record', consistent with a system-initiated append-only audit run with no human actor.)
     blocked_by:
       - {type: user_decision, ref: B2-default-no-confirmation, reason: audit_explicitly_recommends_leave_as_is_not_a_pre_specified_rule_10_edge}
     affected_masters:
@@ -124,46 +63,45 @@ b1b:
     affected_entities: [opportunity_applications, mobility_recommendations, job_applications, hcm_worker_assignments, job_requisitions]
 
   - id: B1B-S7
-    summary: B12 partial fail, 4 of 7 masters carry zero lifecycle states; config-shape exemption vs author-states decision pending.
+    summary: B12 partial fail, lifecycle states on the inference-output masters; config-shape exemption vs author-states decision pending.
     finding: |
-      Lifecycle states exist on 859 internal_opportunities (5 states), 860 opportunity_applications (5 states), 864 mentorship_engagements (4 states). Zero states on 861 mobility_recommendations, 862 fit_scores, 863 career_path_suggestions, 865 match_inference_runs. These are inference outputs (config-shape with record_status) and may legitimately be exempt under Rule #12. Rule #15 rescinds the prior data_objects.notes annotation license; audit conversation is the approved persistence surface.
+      Lifecycle states exist on 859 internal_opportunities (5 states), 860 opportunity_applications (5 states), 864 mentorship_engagements (4 states). Zero states on 861 mobility_recommendations, 862 fit_scores, 863 career_path_suggestions, 865 match_inference_runs. As of 2026-06-07 these four are now typed: 861/862/863 entity_type='computed' and 865 entity_type='operational_record', so under SKILL.md Rule #12 B12 they PASS without lifecycle states (the structural exemption is now the typed column, not prose). The open decision is editorial: whether 861 mobility_recommendations should nonetheless carry a real proposed -> dismissed | pursued | expired user flow (Eightfold/Gloat ship it), which would re-type it to operational_workflow and require states. Defer to B2-T1.
     blocked_by:
-      - {type: user_decision, ref: B2-T1, reason: per_master_config_shape_exemption_is_editorial_judgment}
+      - {type: user_decision, ref: B2-T1, reason: per_master_lifecycle_vs_computed_typing_is_editorial_judgment}
     affected_masters:
       - {data_object_id: 861, name: mobility_recommendations, target_module_id: 176, workflow: proposed_dismissed_pursued_expired_candidate_flow}
-      - {data_object_id: 862, name: fit_scores, target_module_id: 176, workflow: pure_inference_output_candidate_exemption}
-      - {data_object_id: 863, name: career_path_suggestions, target_module_id: 176, workflow: pure_inference_output_candidate_exemption}
-      - {data_object_id: 865, name: match_inference_runs, target_module_id: 176, workflow: pure_inference_output_candidate_exemption}
+      - {data_object_id: 862, name: fit_scores, target_module_id: 176, workflow: computed_no_user_state}
+      - {data_object_id: 863, name: career_path_suggestions, target_module_id: 176, workflow: computed_no_user_state}
+      - {data_object_id: 865, name: match_inference_runs, target_module_id: 176, workflow: operational_record_no_user_state}
 
   - id: B1B-S8
-    summary: H1 vacuously hard fail, zero cross-domain handoffs so 0 of 0 APQC-tagged; PCF mapping pre-specified for follow-up batch.
+    summary: H1, APQC tags on the outbound cross-domain handoffs; pre-specified PCF mapping for the follow-up batch once S2 lands.
     finding: |
-      Zero cross-domain handoffs implies 0 of 0 carry APQC tags via handoff_processes. The volume expectation 0.5N-0.8N is unmeasurable at N=0. PCF mapping pre-specified for the eventual outbound handoffs: opportunity_application.accepted to ATS to Recruit/Source candidates (10440 L3) or parent Recruit, source, and select employees (10410 L2); opportunity_application.accepted to HCM to Redeploy and retire employees (10413 L2); fit_score.computed to TALENT-SUCCESSION to Develop and implement individual succession plans (21704 L5) or parent Establish succession plans (21701 L4); career_path.projected to TALENT-SUCCESSION to Develop employee career plans and career paths (10488 L4); workforce-skills-heatmap to SWP to Perform strategic workforce planning (21693 L4); intra-domain opportunity.opened to mobility recompute to Maintain talent capabilities and competencies (17507 L5).
+      The intra-domain handoffs (B1B-S3) landed 2026-06-07 but are intra-domain (not cross-domain), so they are outside H1 scope. Zero cross-domain handoffs still exist (S2 blocked on B2-T3), so 0 of 0 carry APQC tags via handoff_processes. PCF mapping pre-specified for the eventual outbound handoffs: opportunity_application.accepted to ATS to Recruit/Source candidates (10440 L3) or parent Recruit, source, and select employees (10410 L2); opportunity_application.accepted to HCM to Redeploy and retire employees (10413 L2); fit_score.computed to TALENT-SUCCESSION to Develop and implement individual succession plans (21704 L5) or parent Establish succession plans (21701 L4); career_path.projected to TALENT-SUCCESSION to Develop employee career plans and career paths (10488 L4); workforce-skills-heatmap to SWP to Perform strategic workforce planning (21693 L4). Resolve PCF ids live at fix time.
     blocked_by:
-      - {type: depends_on, ref: B1A-S1, reason: trigger_events_must_exist}
-      - {type: depends_on, ref: B1B-S2, reason: handoffs_rows_must_exist_before_tagging}
+      - {type: depends_on, ref: B1B-S2, reason: cross_domain_handoffs_rows_must_exist_before_tagging}
     affected_entities: [handoff_processes]
 
   - id: B1B-S9
     summary: E1-E5 hard fail, zero catalog roles touch any TLNT-INTEL module; only built-in Administrator role_id=2 holds the 16 permissions.
     finding: |
-      role_modules query for domain_module_id in (175, 176, 177) returns 0 rows. role_permissions for the 16 TLNT-INTEL permissions (10632 through 10647, 9 baseline + 7 workflow-gate) shows only role_id=2 (Semantius built-in Administrator). Existing function-scoped roles that should plausibly touch TLNT-INTEL: TALENT-DEVELOPMENT-TALENT-MANAGER, HR-BUSINESS-PARTNER, HR-HRIS-ADMIN, RECRUITING-RECRUITER, RECRUITING-MANAGER, plus a missing cross-functional HIRING-MANAGER.
+      role_modules query for domain_module_id in (175, 176, 177) returns 0 rows. role_permissions for the 16 TLNT-INTEL permissions (10632 through 10647, 9 baseline + 7 workflow-gate) shows only role_id=2 (Semantius built-in Administrator). Existing function-scoped roles that should plausibly touch TLNT-INTEL: TALENT-DEVELOPMENT-TALENT-MANAGER, HR-BUSINESS-PARTNER, HR-HRIS-ADMIN, RECRUITING-RECRUITER, RECRUITING-MANAGER, plus a missing cross-functional HIRING-MANAGER. (Overlaps with B1A-PHASE-P persona authoring.)
     blocked_by:
       - {type: user_decision, ref: B2-T2, reason: marketplace_ops_role_add_or_absorb_shapes_row_count}
     affected_modules: [175, 176, 177]
 
 b2:
   - id: B2-T1
-    summary: Rule #12 config-shape exemption per master, which of the 4 inference-output masters get a lifecycle, which are pure config-shape.
+    summary: Rule #12 lifecycle vs computed typing per inference-output master; which (if any) get a real user-facing lifecycle.
     question: |
-      For masters 861 mobility_recommendations, 862 fit_scores, 863 career_path_suggestions, 865 match_inference_runs: which get a lifecycle state machine authored under B1B-S7, and which are confirmed config-shape exempt (record_status flow only) per Rule #12? Also feeds the pattern-flag positive re-eval: should match_inference_runs.has_submit_lock=true (immutable model output), mobility_recommendations.has_submit_lock=true once dismissed/pursued, career_path_suggestions.has_submit_lock=true once published?
+      As of 2026-06-07, 861 mobility_recommendations, 862 fit_scores, 863 career_path_suggestions are typed entity_type='computed' and 865 match_inference_runs is 'operational_record', so all four PASS B12 with no lifecycle states. The remaining editorial call: should 861 mobility_recommendations instead carry a real proposed -> dismissed | pursued | expired user flow (which re-types it to operational_workflow and requires authored states)? Also feeds the pattern-flag positive re-eval: should match_inference_runs.has_submit_lock=true (immutable model output), mobility_recommendations.has_submit_lock=true once dismissed/pursued, career_path_suggestions.has_submit_lock=true once published?
     options:
-      - lifecycle_on_mobility_recommendations_only_three_state_proposed_dismissed_pursued_expired_other_three_config_shape_exemption_analyst_recommendation
-      - lifecycle_on_all_four_masters
-      - config_shape_exemption_on_all_four_masters
+      - keep_all_four_as_typed_no_lifecycle_analyst_recommendation_was_lifecycle_on_mobility_only
+      - author_lifecycle_on_mobility_recommendations_only_retype_to_operational_workflow
+      - author_lifecycle_on_more_than_one_specify
       - other_per_master_mix_specify
     why: |
-      Editorial judgment on whether the master has user-facing state transitions or is a pure inference output with no user state. Rule #15 forbids auto-writing the exemption to data_objects.notes; the audit conversation IS the approved persistence surface.
+      Editorial judgment on whether the master has user-facing state transitions or is a pure inference output with no user state. The typed-column exemption already resolves the structural B12 fail; this is whether to add a real workflow on top.
 
   - id: B2-T2
     summary: Role authoring scope, add TALENT-DEVELOPMENT-MARKETPLACE-OPS or absorb into Talent Manager.
@@ -174,7 +112,7 @@ b2:
       - add_new_talent_development_marketplace_ops_role
       - defer_marketplace_ops_role_until_customer_asks
     why: |
-      Role-shape decision the user owns; depends on whether the deployment shape includes a dedicated marketplace operations function. Eightfold and Gloat both ship such an admin persona in their RBAC, but the catalog default has historically absorbed admin-ops into the broader function-manager role.
+      Role-shape decision the user owns; depends on whether the deployment shape includes a dedicated marketplace operations function. Eightfold and Gloat both ship such an admin persona in their RBAC, but the catalog default has historically absorbed admin-ops into the broader function-manager role. Shapes both B1B-S9 and B1A-PHASE-P.
 
   - id: B2-T3
     summary: Inference-output handoff integration_pattern, event_stream vs api_call vs mix.
@@ -185,7 +123,7 @@ b2:
       - mix_event_stream_for_broadcast_signals_api_call_for_synchronous_reads_accepted_application_worker_move
       - other_specify
     why: |
-      Catalog-modeling judgment; both readings are defensible. Other domains in the neighborhood use event_stream for fire-and-forget signals and api_call for orchestrated reads.
+      Catalog-modeling judgment; both readings are defensible. Other domains in the neighborhood use event_stream for fire-and-forget signals and api_call for orchestrated reads. Blocks B1B-S2.
 
 b3:
   - id: B3-T1

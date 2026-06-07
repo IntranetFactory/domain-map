@@ -11,83 +11,23 @@
 schema_version: 2
 domain: PLM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
-# Fresh Validate b1 structural audit on 2026-05-31. M7, Rule-#15 noise, and B9
-# (11 missing events) were cured in the 2026-05-31 Continuation. F2 remains the
-# largest open structural gate; B9b, A4/M8, B12, E6 are the secondary gaps.
-# next_action_by=agent because b1a has 2 entries (B9b is unblocked; F2 stays in
-# b1a but is gated on b2 BUCK2-F2-SCOPE which the user owns).
+# 2026-06-07 state-driven execute pass. EXECUTED this pass: B13 entity_type
+# (9 of 12 masters classified; the residual 3 are folded into the b2 below),
+# Rule #20 catalog UX (domain + all 5 modules), B9b (6 intra-domain handoffs).
+# All open items are now user-owned: 4 b2 judgment calls, personas deferred,
+# 2 b1b blocked on neighbor audits, 1 b3 backlog candidate. The retired per-
+# module system-skill items (F2) are reframed as notes per the supersession
+# header. next_action_by=user.
 
 b1a:
-  - id: B1A-B9B-INTRA-DOMAIN
-    summary: "Zero intra-domain PLM handoffs; at least 6 cross-module flows implied by data_object_relationships."
-    finding: |
-      `/handoffs?source_domain_id=eq.165&target_domain_id=eq.165` returns []. The PLM
-      modules 66 (PLM-ENG-CORE), 67 (PLM-CAD-PDM), 68 (PLM-MFG-PROCESS), 69
-      (PLM-COMPLIANCE), 70 (PLM-REQUIREMENTS) have implied cross-module flows from
-      26 intra-PLM data_object_relationships rows. B9b is a hard fail on every
-      domain with >=2 modules. Same finding as 2026-05-30 B1-S3, marked Deferred in
-      the 2026-05-31 Continuation because per-row description + friction_level
-      judgments were outside the technical-fix scope.
-    action: |
-      Author 6 handoffs rows with `source_domain_id=target_domain_id=165`,
-      `integration_pattern='lifecycle_progression'`, `friction_level='low'` default
-      (medium for COMPLIANCE->ENG-CORE expiry), and the 11 new state_change events
-      from the 2026-05-31 continuation as `trigger_event_id` (rather than the
-      generic lifecycle events). Per Rule #15 `notes` stays empty unless the user
-      supplies wording. Loader scaffold draft was inlined in 2026-05-30 audit text.
-    affected_modules: [66, 67, 68, 69, 70]
-    affected_entities:
-      - engineering_parts
-      - engineering_revisions
-      - engineering_change_orders
-      - cad_drawings
-      - manufacturing_boms
-      - product_compliance_declarations
-    extra_proposed_handoff_pairs:
-      - {source_module: 66, target_module: 67, trigger_event_id: null, event_name: "engineering_part.released", proposed_friction: low}
-      - {source_module: 66, target_module: 68, trigger_event_id: null, event_name: "engineering_change_order.released", proposed_friction: low}
-      - {source_module: 66, target_module: 69, trigger_event_id: null, event_name: "engineering_part.released", proposed_friction: low}
-      - {source_module: 66, target_module: 70, trigger_event_id: null, event_name: "engineering_part.released", proposed_friction: low}
-      - {source_module: 67, target_module: 68, trigger_event_id: 1215, event_name: "cad_drawing.released", proposed_friction: low}
-      - {source_module: 69, target_module: 66, trigger_event_id: 1474, event_name: "product_compliance_declaration.expired", proposed_friction: medium}
-    vendor_evidence: [Teamcenter, Windchill, "3DEXPERIENCE ENOVIA", "Aras Innovator"]
-
-  - id: B1A-F2-SYSTEM-SKILLS
-    summary: "Zero skill_type='system' skills exist for any of the 5 PLM modules; Rule #17 hard fail."
-    finding: |
-      `/skills?domain_module_id=in.(66,67,68,69,70)&skill_type=eq.system` returns
-      []. The entire skill/tool/Semantius-score surface is missing for all 5 PLM
-      modules. F3, F4, F5, F7 cascade to N/A until F2 resolves. Same finding as
-      2026-05-30 B1-S4. Deferred in 2026-05-31 Continuation because gated on
-      Bucket 2 user pick (B2-S3 → B2-4 this audit).
-    action: |
-      Author 5 `skills` rows (one per module) with `skill_type='system'`,
-      `domain_module_id` set, `skill_name='<module_code_lower>_agent'`, then load
-      5 skill_tools sets (typical 5-20 tools each: `query_<entity>` floor per
-      master + workflow-gate mutates aligned to the 17 permissions + 1-2 compute /
-      side_effect tools per module). Re-run F3 / F4 / F5 / F7 after load.
-    blocked_by:
-      - {type: user_decision, ref: B2-F2-SCOPE, reason: "scope of system-skill authoring per module not yet decided"}
-    affected_modules: [66, 67, 68, 69, 70]
-    extra_default_skill_names:
-      - {module: PLM-ENG-CORE, proposed_skill: plm_eng_core_agent}
-      - {module: PLM-CAD-PDM, proposed_skill: plm_cad_pdm_agent}
-      - {module: PLM-MFG-PROCESS, proposed_skill: plm_mfg_process_agent}
-      - {module: PLM-COMPLIANCE, proposed_skill: plm_compliance_agent}
-      - {module: PLM-REQUIREMENTS, proposed_skill: plm_requirements_agent}
   - id: B1A-PHASE-P
-    summary: "Multi-module (5 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 5 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    summary: "Multi-module (5 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED this pass (personas are not auto-authored)."
+    finding: "Live triage 2026-06-02: 5 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. (4 RBAC roles exist as `roles`, but no operational `domain_roles` personas.)"
     action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 5 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "12 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 12 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [cad_drawings, cad_models, engineering_bom_items, engineering_change_orders, engineering_parts, engineering_requirements, engineering_revisions, manufacturing_boms, manufacturing_routings, plm_product_variants, product_compliance_declarations, regulated_substances]
+    deferred_reason: "Persona / RACI authoring is held for a dedicated persona pass (not part of the bulk state-driven execute). Candidate personas (function-anchored under R&D / Product Engineering): Design Engineer, CAD / PDM Librarian, Manufacturing Engineer, Engineering Change Manager / CAB Chair, Regulatory Affairs Specialist, Requirements Engineer."
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
@@ -131,69 +71,52 @@ b1b:
     affected_modules: [69]
 
 b2:
-  - id: B2-CATALOG-COPY
-    summary: "domains.catalog_tagline + catalog_description empty (A4 fail) AND all 5 modules have empty catalog_tagline + catalog_description (M8 fail)."
-    question: |
-      Rule #20 requires buyer-voice (workflow + value) catalog copy on both
-      `domains` (catalog landing) and `domain_modules` (per-module cards). PLM is
-      missing both on the domain row and on all 5 module rows. Per Rule #20 these
-      drafts MUST be surfaced for user review BEFORE writing; once a non-empty
-      value exists it is NEVER overwritten without explicit per-row approval. Do
-      you want me to:
-    options:
-      - "(a) draft all 6 (1 domain + 5 modules) catalog_tagline + catalog_description pairs now and surface for review"
-      - "(b) defer to a dedicated catalog-copy pass (separate session)"
-      - "(c) skip until marketing supplies copy directly (the catalog ships these surfaces empty)"
-    why: |
-      Rule #20 is the buyer-side surface, distinct from `domains.description` /
-      `domain_modules.description` (analyst voice). The audit cannot self-author
-      without showing a draft.
-    affected_modules: [66, 67, 68, 69, 70]
-
   - id: B2-LIFECYCLE-STATES-6-MASTERS
-    summary: "6 of 12 PLM masters carry zero lifecycle states (B12)."
+    summary: "3 PLM masters carry zero lifecycle states AND remain entity_type='unclassified' (B12 + residual B13). Their classification IS this decision."
     question: |
-      Per-master judgment: are these genuinely config-shape masters (Rule #12
-      exemption, but per Rule #15 the exemption can no longer be recorded in
-      `data_objects.notes`), or do they need state machines authored? The
-      `cad_drawings` case is the canary: it has a `cad_drawing.released` event
-      (id 1215) and is the publish-side of cross-domain handoff 1094, but no state
-      machine, which is internally inconsistent. Decide per-master:
+      The 2026-06-07 pass classified entity_type on 9 of 12 masters. The other 3
+      (cad_models 800, cad_drawings 801, manufacturing_routings 803) were LEFT
+      unclassified on purpose: each is the canary the prior audits flagged as
+      possibly workflow-bearing, so its classification is exactly the judgment this
+      b2 turns on. The `cad_drawings` case is the strongest: it has a
+      `cad_drawing.released` event (id 1215), is the publish-side of intra-domain
+      handoff 1401 (CAD-PDM -> MFG-PROCESS) and cross-domain handoff 1094, yet has
+      no state machine. Decide per-master (each decision sets BOTH entity_type and
+      whether a state machine is authored):
     options:
-      - "engineering_bom_items (799): config-shape (follows parent part) | draft state machine | defer"
-      - "cad_models (800): workflow-bearing (check-in / check-out / release) | config-shape | defer"
-      - "cad_drawings (801): workflow-bearing (released event already exists) | config-shape | defer"
-      - "manufacturing_routings (803): workflow-bearing (released event exists) | config-shape | defer"
-      - "plm_product_variants (804): config-shape (resolved at order time) | workflow-bearing | defer"
-      - "regulated_substances (806): config-shape (reference data) | workflow-bearing | defer"
+      - "cad_models (800): operational_workflow (author check_in / check_out / released state machine) | catalog (vault config, no workflow) | defer"
+      - "cad_drawings (801): operational_workflow (released event already exists -> author draft / in_review / released / obsolete) | catalog | defer"
+      - "manufacturing_routings (803): operational_workflow (released event 1213 exists -> author draft / released / superseded) | catalog | defer"
     why: |
-      Without lifecycle states the workflow-gate permission derivation has no
-      catalog ground truth; Rule #15 forbids re-adding the prior `notes` config-
-      shape annotation, so the exemption must be surfaced to the user instead of
-      embedded in the row.
-    affected_entities: [engineering_bom_items, cad_models, cad_drawings, manufacturing_routings, plm_product_variants, regulated_substances]
+      Classifying these 3 as operational_workflow makes B12 require a state machine
+      (a workflow-design judgment the user owns); classifying them as catalog clears
+      B12/B13 but asserts they are config-shape. Rule #15 forbids re-adding the prior
+      notes-based config-shape annotation, so the exemption (or the workflow choice)
+      must be surfaced, not embedded.
+    affected_entities: [cad_models, cad_drawings, manufacturing_routings]
     affected_masters:
-      - {data_object_id: 799, name: engineering_bom_items, target_module_id: 66, workflow: "BOM line follows parent part lifecycle"}
       - {data_object_id: 800, name: cad_models, target_module_id: 67, workflow: "vault check-in / check-out / release"}
-      - {data_object_id: 801, name: cad_drawings, target_module_id: 67, workflow: "released event already published"}
-      - {data_object_id: 803, name: manufacturing_routings, target_module_id: 68, workflow: "released event already published"}
-      - {data_object_id: 804, name: plm_product_variants, target_module_id: 68, workflow: "configurator resolution at order time"}
-      - {data_object_id: 806, name: regulated_substances, target_module_id: 69, workflow: "regulator reference data"}
+      - {data_object_id: 801, name: cad_drawings, target_module_id: 67, workflow: "released event 1215 already published; publish-side of handoffs 1401 + 1094"}
+      - {data_object_id: 803, name: manufacturing_routings, target_module_id: 68, workflow: "released event 1213 already published"}
+    note_already_classified: |
+      Classified this pass (no longer open): engineering_parts, engineering_revisions,
+      engineering_change_orders, manufacturing_boms, product_compliance_declarations,
+      engineering_requirements -> operational_workflow; engineering_bom_items -> junction;
+      plm_product_variants, regulated_substances -> catalog.
 
   - id: B2-E6-RBAC-CONVENTION
     summary: "Only 1 of 17 workflow-gate permissions granted to any role; permission_hierarchy is empty for PLM, so auto-rollup is not the convention."
     question: |
       `/permission_hierarchy?or=(including_permission_id.in.(15 baseline ids),included_permission_id.in.(17 workflow-gate ids))` returns 0 rows.
-      That removes option (a) of the 2026-05-30 B2-S2 question (hierarchy auto-
-      rollup). The two remaining choices:
+      That removes the hierarchy auto-rollup option. The two remaining choices:
     options:
-      - "(b) add 16 explicit workflow-gate grants across the 4 PLM roles per the audit's role-to-gate mapping (see audit body for the full mapping)"
+      - "(b) add 16 explicit workflow-gate grants across the 4 PLM roles per the audit's role-to-gate mapping (Design Engineer -> submit_part_review, release_part, obsolete_part, release_revision, submit_change_assessment, submit_requirement_review, approve_requirement, verify_requirement, obsolete_requirement; Engineering Change Manager -> submit_to_cab, approve_change_order, release_change_order, close_change_order; Regulatory Affairs Specialist -> log_supplier_declaration, approve_compliance_declaration, expire_compliance_declaration)"
       - "(c) treat the lone plm-mfg-process:release_mbom grant as a deliberate exception convention; leave the other 16 workflow gates unassigned"
     why: |
       The bundles silently grant baseline-manage / baseline-admin tiers but the
       workflow-gate permissions are not reachable via hierarchy expansion. Either
-      the bundles need explicit gate grants, or the convention is that workflow
-      gates are out-of-bundle by design.
+      the bundles need explicit gate grants (destructive-adjacent: adds role-power),
+      or the convention is that workflow gates are out-of-bundle by design.
     affected_modules: [66, 67, 68, 69, 70]
     extra_unassigned_workflow_gates:
       - submit_part_review
@@ -214,28 +137,12 @@ b2:
       - obsolete_requirement
     extra_only_granted_gate: plm-mfg-process:release_mbom
 
-  - id: B2-F2-SCOPE
-    summary: "F2 system-skill authoring scope: default 5-skill shape, custom scope, or staged."
-    question: |
-      Per Rule #17, every domain_modules row needs exactly one skill_type='system'
-      skill with >=1 skill_tools row. PLM has zero. Bucket 1a B1A-F2-SYSTEM-SKILLS
-      cannot run without this choice. Options:
-    options:
-      - "(a) default 5-skill shape: plm_eng_core_agent (CRUD + 9 ENG-CORE workflow gates), plm_cad_pdm_agent (CAD model/drawing CRUD + check-in/check-out + viewable generation), plm_mfg_process_agent (mBOM + routing CRUD + release_mbom gate + configurator compute), plm_compliance_agent (substance/declaration CRUD + 3 gates + roll-up compute), plm_requirements_agent (requirement CRUD + decomposition + traceability + 4 gates)"
-      - "(b) user supplies a custom per-module skill / tool surface"
-      - "(c) stage the F2 fix-load as a separate concern after Bucket 1a B9b lands"
-    why: |
-      Authoring system skills is irreversible without a DELETE pass; the user owns
-      the scope decision per Rule #17. Same as 2026-05-30 B2-S3, unchanged.
-    affected_modules: [66, 67, 68, 69, 70]
-
   - id: B2-H1-APPROVE-TAGS
-    summary: "16 agent_curated handoff_processes rows at record_status='new'; reviewer approval is the open lift."
+    summary: "16 agent_curated handoff_processes rows at record_status='new'; reviewer approval is the open lift (Rule #1: user-only)."
     question: |
       `/handoff_processes?handoff_id=in.(1087-1094, 1241-1243)&proposal_source=eq.agent_curated&record_status=eq.new`
-      returns 16 rows. Per Rule #1 only the user can flip to `approved`. The 2026-
-      05-31 Continuation loaded 10 of these; subsequent passes brought the total
-      to 16. Headline catalog-quality count today is 0 approved. Options:
+      returns 16 rows. Per Rule #1 only the user can flip to `approved`. Headline
+      catalog-quality count today is 0 approved. Options:
     options:
       - "(a) approve all 16"
       - "(b) approve a named subset (list the handoff ids or process external_ids)"
@@ -244,32 +151,39 @@ b2:
       Rule #1 reserves record_status writes (other than 'new') to explicit user
       sign-off. The audit cannot self-approve.
     affected_handoffs:
-      - {handoff_id: 1087, direction: outbound, source_domain: PLM, target_domain: MFG-OPS, trigger_event: "engineering_change_order.released", payload: manufacturing_boms, null_field: ""}
-      - {handoff_id: 1088, direction: outbound, source_domain: PLM, target_domain: ERP-FIN, trigger_event: "engineering_change_order.released", payload: engineering_parts, null_field: ""}
-      - {handoff_id: 1089, direction: outbound, source_domain: PLM, target_domain: S2P, trigger_event: "engineering_change_order.released", payload: engineering_parts, null_field: ""}
-      - {handoff_id: 1090, direction: outbound, source_domain: PLM, target_domain: ERP-FIN, trigger_event: "engineering_part.released", payload: engineering_parts, null_field: ""}
-      - {handoff_id: 1091, direction: outbound, source_domain: PLM, target_domain: MFG-OPS, trigger_event: "manufacturing_bom.released", payload: manufacturing_boms, null_field: ""}
-      - {handoff_id: 1092, direction: outbound, source_domain: PLM, target_domain: MFG-OPS, trigger_event: "manufacturing_routing.released", payload: manufacturing_routings, null_field: ""}
-      - {handoff_id: 1093, direction: outbound, source_domain: PLM, target_domain: ERP-FIN, trigger_event: "product_compliance_declaration.approved", payload: engineering_parts, null_field: ""}
-      - {handoff_id: 1094, direction: outbound, source_domain: PLM, target_domain: FSM, trigger_event: "cad_drawing.released", payload: cad_drawings, null_field: ""}
-      - {handoff_id: 1241, direction: outbound, source_domain: PLM, target_domain: PIM, trigger_event: "engineering_change_order.released", payload: pim_products, null_field: ""}
-      - {handoff_id: 1242, direction: outbound, source_domain: PLM, target_domain: PIM, trigger_event: "engineering_part.released", payload: pim_products, null_field: ""}
-      - {handoff_id: 1243, direction: outbound, source_domain: PLM, target_domain: PIM, trigger_event: "product_compliance_declaration.approved", payload: pim_products, null_field: ""}
+      - {handoff_id: 1087, source_domain: PLM, target_domain: MFG-OPS, trigger_event: "engineering_change_order.released", payload: manufacturing_boms}
+      - {handoff_id: 1088, source_domain: PLM, target_domain: ERP-FIN, trigger_event: "engineering_change_order.released", payload: engineering_parts}
+      - {handoff_id: 1089, source_domain: PLM, target_domain: S2P, trigger_event: "engineering_change_order.released", payload: engineering_parts}
+      - {handoff_id: 1090, source_domain: PLM, target_domain: ERP-FIN, trigger_event: "engineering_part.released", payload: engineering_parts}
+      - {handoff_id: 1091, source_domain: PLM, target_domain: MFG-OPS, trigger_event: "manufacturing_bom.released", payload: manufacturing_boms}
+      - {handoff_id: 1092, source_domain: PLM, target_domain: MFG-OPS, trigger_event: "manufacturing_routing.released", payload: manufacturing_routings}
+      - {handoff_id: 1093, source_domain: PLM, target_domain: ERP-FIN, trigger_event: "product_compliance_declaration.approved", payload: engineering_parts}
+      - {handoff_id: 1094, source_domain: PLM, target_domain: FSM, trigger_event: "cad_drawing.released", payload: cad_drawings}
+      - {handoff_id: 1241, source_domain: PLM, target_domain: PIM, trigger_event: "engineering_change_order.released", payload: pim_products}
+      - {handoff_id: 1242, source_domain: PLM, target_domain: PIM, trigger_event: "engineering_part.released", payload: pim_products}
+      - {handoff_id: 1243, source_domain: PLM, target_domain: PIM, trigger_event: "product_compliance_declaration.approved", payload: pim_products}
     extra_tag_count: 16
     extra_approved_count: 0
+
+# === RETIRED (superseded 2026-06-06; reframed as note, do NOT execute) ===
+# B1A-F2-SYSTEM-SKILLS and B2-F2-SCOPE asked for 5 per-module skill_type='system'
+# skills (plm_eng_core_agent ... plm_requirements_agent) plus per-module skill_tools.
+# This model is CANCELED by the per-domain-skill restoration (see supersession header).
+# The new model: PLM gets at most ONE domain-grain system skill that DERIVES its toolset;
+# per-module tool requirements move to domain_module_tools, tracked in
+# audits/_modularization-backlog.md. No per-module skill authoring is owed here.
 
 b3:
   - id: B3-PLM-PORTFOLIO
     candidate: "PLM-PORTFOLIO module covering engineering program / portfolio surface (engineering_projects, engineering_deliverables, program_milestones)."
     rationale: |
-      All 4 PLM flagships ship a program-planning surface above engineering-core:
-      Teamcenter Program Planning, Windchill Project Link, ENOVIA Project
-      Management, Aras Innovator Program Management. Currently the PLM domain has
-      no such module. Could be a deliberate scope decision (PLM-as-engineering-
-      substrate, leaving program-management to SPM / PROD-MGMT), but every flagship
-      treats it as in-scope. If included, this justifies a 6th module
-      PLM-PORTFOLIO with ~3-5 entities. Carries over from 2026-05-30 B3-1; no
-      Phase 0 subagent run this pass.
+      All 4 PLM flagships ship a program-planning surface above engineering-core
+      (Program Planning / Project Link / Project Management / Program Management).
+      Currently the PLM domain has no such module. Could be a deliberate scope
+      decision (PLM-as-engineering-substrate, leaving program-management to SPM /
+      PROD-MGMT), but every flagship treats it as in-scope. If included, this
+      justifies a 6th module PLM-PORTFOLIO with ~3-5 entities. Carries over from
+      2026-05-30 B3-1; no Phase 0 subagent run this pass.
     vendor_evidence:
       - {vendor: Teamcenter, evidence: 1st_class}
       - {vendor: Windchill, evidence: 1st_class}

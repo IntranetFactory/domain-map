@@ -377,3 +377,50 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate execute (SKILL.md Rule #21) against PIM's open state.yaml items, not a from-scratch audit. Domain 167; 3 full modules (141 PIM-PRODUCT-CONTENT, 142 PIM-DIGITAL-ASSETS, 143 PIM-SYNDICATION); 8 PIM-owned masters (811-818). Live confirm: skill grain migration is complete (PIM now carries ONE domain-grain system skill id 453 `pim-system`, domain_id 167, domain_module_id null; the old 3 per-module skills + 41 skill_tools are gone), which moots the two skill_tools-based b2 items. Two additive/corrective items executed; the rest are user decisions, blocked on other domains, deferred personas, superseded, or backlog. Loader: [.tmp_deploy/2026-06-07_pim_state_driven_execute.ts](../../.tmp_deploy/2026-06-07_pim_state_driven_execute.ts). Idempotent (re-run = 0 writes).
+
+### Executed
+
+- **B1A-ENTITY-TYPE (B13, Rule #12): 8 `data_objects.entity_type` PATCH** from `unclassified` to the typed enum. Classification confirmed deterministically against live `data_object_lifecycle_states`:
+  - `operational_workflow` (5, carry lifecycle state machines): pim_products 811 (7 states), pim_variants 813 (3), pim_translations 815 (4), pim_digital_assets 816 (5), pim_syndication_jobs 818 (5).
+  - `catalog` (3, zero lifecycle states, definition/config-shaped): pim_attributes 812 (attribute definitions / validation rules), pim_categories 814 (taxonomy nodes), pim_syndication_channels 817 (channel config: mapping rules, credentials).
+- **B2-S8 / A4 / M8 (catalog UX, Rule #20): 4 rows PATCHed** with buyer-voice copy into previously-empty `catalog_tagline` + `catalog_description` (the stale surface-before-write gate was ignored per Rule #20 / Rule #21): domain 167 + all 3 modules (141, 142, 143). No non-empty value overwritten.
+
+Executed counts: entity_type 8; catalog UX 4 rows (8 fields). All writes land `record_status='new'`; verified persisted live; second loader run skipped all (idempotent).
+
+### No-op (verified already complete live, nothing to write)
+
+- **C1 business_function_domains**: 5 coherent rows already present (owner Marketing 396; contributors Product Management 397 / Supply Chain 398 / Procurement 399; consumer Sales 400).
+- **H1 handoff_processes**: all 7 cross-domain handoffs (1234, 1235, 1236, 1237, 1241, 1242, 1243) already carry `agent_curated` tags (10 rows total). 100% coverage from the 2026-05-31 continuation; nothing untagged.
+- **B11 aliases**: every one of the 8 masters carries >=1 synonym alias (13 total). No open alias state item for PIM masters.
+
+### Surfaced (returned to user; not executed)
+
+- **B2-S1** M7 architectural choice (DELETE the 4 sibling consumer DMDOs 709/712/713/714, or PROMOTE each to embedded_master). DESTRUCTIVE; gates B1B-M7-DELETE-SIBLINGS.
+- **B2-S2** DAM (domain 92, zero modules) overlap with PIM-DIGITAL-ASSETS module 142 hosting pim_digital_assets: keep / move-to-DAM / coexist.
+- **B2-S4** pattern-flag re-evaluation on pim_digital_assets (`has_personal_content`, `has_single_approver`): both are overwrites of an existing non-empty boolean.
+- **B2-S6** regulation ownership PIM vs PLM-COMPLIANCE for REACH / RoHS / Prop 65 / GS1 GDSN / EU GPSR / FDA / EU DPP; gates B1B-B11-REGULATIONS.
+- **B2-S7** add PIM-PRODUCT-CONTENT to PLM handoff on pim_product.discontinued (trigger_event 1276 exists; handoff row does not); gates B1B-PLM-DISCONTINUED-HANDOFF.
+- **B2-S9** C2 capability ownership override for PIM-PRODUCT-COMPLIANCE (601): Quality/Compliance vs leave-under-Marketing vs Product Management.
+- **B1A-PHASE-P personas/RACI: DEFERRED** (not auto-authored). Candidate operational personas recorded in state.yaml for a future persona pass.
+
+### Left
+
+- **b1b blocked**: B1B-M7-DELETE-SIBLINGS (B2-S1), B1B-B11-REGULATIONS (B2-S6), B1B-PLM-DISCONTINUED-HANDOFF (B2-S7), B1B-B10B-TARGET-NULLS-B2C (B2C-COMM audit), B1B-B10B-CONSUMER-DMDOS-DOWNSTREAM (B2C-COMM / CPQ / INV-MGMT audits).
+- **Superseded** (retired skill_tools model, 2026-06-06): B2-S3 (F7 skill_tools.notes) and B2-S5 (F5 coverage_tier vs requirement_level) are moot; reframed as a note in state.yaml. Confirmed live: PIM has no skill_tools rows; single domain-grain skill id 453.
+- **b3 backlog** unchanged: 4 entity candidates (pim_publish_records, pim_attribute_groups, pim_supplier_imports, pim_translation_memory), 7 regulation anchors, MARKETPLACE-OPS candidate domain.
+
+### Post-fix status
+
+next_action_by: user. All remaining open items are user decisions (B2-S1/S2/S4/S6/S7/S9), blocked on other domains' audits (B1B-B10B-*), deferred personas (B1A-PHASE-P), superseded, or backlog.
+
+### UI spot-check
+
+- https://tests.semantius.app/domain_map/data_objects?id=in.(811,812,813,814,815,816,817,818)
+- https://tests.semantius.app/domain_map/domains?id=eq.167
+- https://tests.semantius.app/domain_map/domain_modules?domain_id=eq.167

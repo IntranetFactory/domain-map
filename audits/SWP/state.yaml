@@ -11,94 +11,40 @@
 schema_version: 2
 domain: SWP
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
+
+# 2026-06-07 state-driven execute pass cleared the additive/corrective EXECUTE items:
+#   - B1A-ENTITY-TYPE (8 masters classified per Rule #12)
+#   - B1A-M7-DDO31-ROLLUP (DDO 31 demoted master -> contributor; ATS now sole master of job_requisitions)
+#   - B1A-H1-APQC-TAGGING (the 2 remaining untagged handoffs 11, 16 tagged agent_curated; the rest
+#     were already tagged since the snapshot; the 3 mis-tagged discovery_substring rows are now b2-S6)
+#   - Catalog UX (Rule #20): domain 100 + modules 94/95/96/97 catalog_tagline/description authored
+#   - B11 aliases (12 generic synonyms across masters 23/24/27/28)
+#   - B1A-RULE15-SKILL-TOOLS-NOTES: RETIRED (skill_tools dropped per 2026-06-06 supersession; no action)
+# business_function_domains (C1 owner/contributor) verified already populated live (Workforce Planning
+# owner, FP&A + Finance contributors) - nothing to do.
+# Remaining open items below are DESTRUCTIVE (need approval), JUDGMENT (b2), BLOCKED (b1b), or BACKLOG (b3).
 
 b1a:
-  - id: B1A-M7-DDO31-ROLLUP
-    summary: PATCH DDO 31 role from master to contributor to resolve M7 single-master conflict with ATS on job_requisitions
-    finding: |
-      domain_data_objects id=31 (SWP, data_object_id=1 job_requisitions) carries role='master' + necessity='required' at the
-      domain-rollup layer. ATS DDO 1 also carries role='master' + necessity='required' on the same data_object. Module-level
-      DMDO 422 (SWP-DEMAND-FORECAST) correctly shows role='contributor', and ATS DMDO 9 (ATS-RECRUITMENT-PIPELINE) correctly
-      shows role='master'. The rollup row is the defect: only one domain may carry role='master' for a given data_object_id
-      catalog-wide. Signal-1 co-mastering is expressed at the module level (SWP contributor, ATS master), not by duplicating
-      master at the rollup.
-    action: |
-      PATCH /domain_data_objects?id=eq.31 { "role": "contributor" }. Keep necessity='required'. One row, surgical CLI.
-    affected_masters:
-      - {data_object_id: 1, name: job_requisitions, target_module_id: 4, workflow: ats_recruitment_pipeline}
-
-  - id: B1A-RULE15-SKILL-TOOLS-NOTES
-    summary: Revert Rule #15 pollution on 4 skill_tools rows under legacy swp-system skill
-    finding: |
-      Live state shows 4 skill_tools rows carrying populated notes under skill_id=7 (swp-system, domain_module_id=NULL):
-      row 70 query_job_requisitions notes='Co-master with ATS'; row 73 create_candidate notes='Fires on headcount.approved
-      -> ATS handoff'; row 74 query_people_kpis notes='Consumer from PA, attrition / fill-rate inputs'; row 75 web_scrape
-      notes='Labor-market data ingestion fallback when no external_connector exists'. All 4 are provenance / context
-      narration that Rule #15 forbids without explicit user approval at load time. No prior user approval is on record.
-    action: |
-      PATCH /skill_tools?id=in.(70,73,74,75) { "notes": "" }. Append a Rule #15 incident entry to
-      .claude/skills/domain-map-analyst/references/skill-changelog.md documenting which rows were polluted and the
-      cleanup. Surgical CLI; no loader.
-    extra_table: skill_tools
-    extra_row_ids: [70, 73, 74, 75]
-
-  - id: B1A-H1-APQC-TAGGING
-    summary: INSERT agent_curated handoff_processes for 18 untagged SWP cross-domain handoffs and REPLACE-CORRECT 3 mis-tagged discovery_substring rows
-    finding: |
-      10 of 28 SWP cross-domain handoffs carry handoff_processes rows; 0 are record_status='approved'. 7 agent_curated
-      rows already exist (48 on handoff 12, 49 on 400, 115 on 27, 334 on 456, 486 on 136, 771 on 10, 780 on 458). 3
-      discovery_substring rows are mis-tagged: 101 (handoff 13 PA->SWP attrition.forecast_updated -> 10175 "Analyze
-      customer attrition" is wrong context); 130 (handoff 241 SPM->SWP initiative.kickoff -> 10016 "Develop and measure
-      strategic initiatives" is L2 over-coarse); 132 (handoff 242 SPM->SWP resource_allocation.committed -> 10209
-      "Determine sales resource allocation" is wrong context). 18 cross-domain handoffs remain untagged: 11, 13 (after
-      replace), 14, 15, 16, 241 (after replace), 242 (after replace), 452, 454, 455, 457, 459, 460, 1018, 1027, 1112,
-      1138, 62-context (intra-domain rows 1146-1149 excluded by convention).
-    action: |
-      Per-handoff PCF lookup via /processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry.
-      Author rows (handoff_id, process_id, proposal_source='agent_curated', record_status='new', role='implements')
-      for the 18 untagged. REPLACE the 3 discovery_substring rows (delete + re-insert with agent_curated source and
-      correct process_id, or PATCH process_id + proposal_source). Volume target per H1: 14-22 agent_curated rows
-      for N=28; this audit owns 18 INSERT + 3 REPLACE-CORRECT. Per the 2026-05-31 continuation, audit-pre-specified
-      external_ids did not resolve cleanly in live /processes; require per-handoff lookup at fix time.
-    affected_handoffs:
-      - {handoff_id: 11, direction: in, source_domain: HCM, target_domain: SWP, trigger_event: headcount.actuals_updated, payload: headcount_plans, null_field: ""}
-      - {handoff_id: 13, direction: in, source_domain: PA, target_domain: SWP, trigger_event: attrition.forecast_updated, payload: workforce_plans, null_field: ""}
-      - {handoff_id: 14, direction: out, source_domain: SWP, target_domain: ATS, trigger_event: headcount.approved, payload: job_requisitions, null_field: ""}
-      - {handoff_id: 15, direction: out, source_domain: SWP, target_domain: HCM, trigger_event: hcm_position.approved_for_creation, payload: org_designs, null_field: ""}
-      - {handoff_id: 16, direction: out, source_domain: SWP, target_domain: EPM, trigger_event: cost_projection.approved, payload: workforce_cost_projections, null_field: target_domain_module_id}
-      - {handoff_id: 241, direction: in, source_domain: SPM, target_domain: SWP, trigger_event: initiative.kickoff, payload: strategic_initiatives, null_field: source_domain_module_id}
-      - {handoff_id: 242, direction: in, source_domain: SPM, target_domain: SWP, trigger_event: resource_allocation.committed, payload: resource_allocations, null_field: source_domain_module_id}
-      - {handoff_id: 452, direction: in, source_domain: PA, target_domain: SWP, trigger_event: attrition_forecast.published, payload: attrition_forecasts, null_field: ""}
-      - {handoff_id: 454, direction: out, source_domain: SWP, target_domain: HCM, trigger_event: position_demand_forecast.updated, payload: position_demand_forecasts, null_field: ""}
-      - {handoff_id: 455, direction: out, source_domain: SWP, target_domain: ATS, trigger_event: position_demand_forecast.updated, payload: position_demand_forecasts, null_field: ""}
-      - {handoff_id: 457, direction: out, source_domain: SWP, target_domain: HCM, trigger_event: workforce_scenario.approved, payload: workforce_scenarios, null_field: ""}
-      - {handoff_id: 459, direction: out, source_domain: SWP, target_domain: HCM, trigger_event: org_design.published, payload: org_designs, null_field: ""}
-      - {handoff_id: 460, direction: out, source_domain: SWP, target_domain: COMP-MGMT, trigger_event: labor_market_benchmark.refreshed, payload: labor_market_benchmarks, null_field: ""}
-      - {handoff_id: 1018, direction: in, source_domain: PSA, target_domain: SWP, trigger_event: project_assignment.released, payload: project_assignments, null_field: ""}
-      - {handoff_id: 1027, direction: in, source_domain: PSA, target_domain: SWP, trigger_event: resource_skill_inventory.gap_identified, payload: resource_skill_inventories, null_field: ""}
-      - {handoff_id: 1112, direction: in, source_domain: PA, target_domain: SWP, trigger_event: workforce_segment.composition_changed, payload: workforce_segments, null_field: ""}
-      - {handoff_id: 1138, direction: in, source_domain: COMP-MGMT, target_domain: SWP, trigger_event: compensation_benchmark.refreshed, payload: compensation_benchmarks, null_field: ""}
-    extra_replace_targets:
-      - {existing_handoff_processes_id: 101, handoff_id: 13, current_process_external_id: "10175", current_process_name: "Analyze customer attrition and retention rates", reason: wrong_context_customer_vs_workforce}
-      - {existing_handoff_processes_id: 130, handoff_id: 241, current_process_external_id: "10016", current_process_name: "Develop and measure strategic initiatives", reason: L2_too_coarse}
-      - {existing_handoff_processes_id: 132, handoff_id: 242, current_process_external_id: "10209", current_process_name: "Determine sales resource allocation", reason: wrong_context_sales_vs_workforce}
   - id: B1A-PHASE-P
     summary: "Multi-module (4 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
     finding: "Live triage 2026-06-02: 4 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    action: "DEFERRED per parent-task Rule (personas/RACI are not auto-authored). Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: Workforce Planner, Workforce Planning Lead, FP&A Workforce Partner, Workforce Leadership Sponsor, and (pending B2-S4) Org Design Practitioner."
+    status: deferred
     extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "8 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 8 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [headcount_plans, labor_market_benchmarks, org_designs, position_demand_forecasts, skills_gap_analyses, workforce_cost_projections, workforce_plans, workforce_scenarios]
-    extra_phase_p_triage: "2026-06-02"
+
   - id: B1A-SELF-CONTAIN
-    summary: "12 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
-    finding: "Live triage 2026-06-02: 12 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
-    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
+    summary: "12 contributor/required-consumer rows break module self-containment (M9): embed or relax each. DESTRUCTIVE (rewrites role/necessity on existing DMDO rows) -> needs approval."
+    finding: |
+      Live triage 2026-06-02: 12 domain_module_data_objects rows on this domain's modules are role=contributor
+      or role=consumer with necessity=required, pointing at an entity mastered by another domain and not
+      embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation.
+    action: |
+      SURFACED (not executed): each row needs either convert-to-embedded_master (carry a local shell) or
+      set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9.
+      Both shapes overwrite an existing non-empty role/necessity value, which is destructive and gated on user sign-off.
+    status: surfaced_destructive
     extra_m9_shapes:
       - {entity: attrition_forecasts, module: SWP-DEMAND-FORECAST, role: consumer, master_domain: PA}
       - {entity: attrition_forecasts, module: SWP-SUPPLY-PLANNING, role: consumer, master_domain: PA}
@@ -112,38 +58,17 @@ b1a:
       - {entity: job_profiles, module: SWP-SCENARIO-MODELING, role: consumer, master_domain: HCM}
       - {entity: job_profiles, module: SWP-SUPPLY-PLANNING, role: consumer, master_domain: HCM}
       - {entity: job_requisitions, module: SWP-DEMAND-FORECAST, role: contributor, master_domain: ATS}
-    extra_phase_p_triage: "2026-06-02"
 
 b1b:
-  - id: B1B-F1-F2-MODULE-SKILLS
-    summary: Author 4 module-level system skills + relocate 14 skill_tools + DELETE legacy swp-system skill 7
-    finding: |
-      Legacy skill `swp-system` id=7 sits at domain_module_id=NULL with 14 skill_tools rows. Per Rule #17 every
-      domain_modules row needs exactly one skill_type='system' skill. SWP's 4 modules (94 SWP-DEMAND-FORECAST,
-      95 SWP-SUPPLY-PLANNING, 96 SWP-SCENARIO-MODELING, 97 SWP-COST-PROJECTIONS) have 0 module-level system skills.
-      F2 fails on every module; F1 will fail once module skills exist alongside the legacy. F5 (Semantius score) is
-      uncomputable per-module. The 14 skill_tools rows split naturally by master each tool reads / writes: workforce_plans
-      (23), workforce_scenarios (27), org_designs (28), labor_market_benchmarks (29) -> module 96; headcount_plans (24),
-      position_demand_forecasts (25), skills_gap_analyses (26), job_requisitions (1), people_kpis (43), create_candidate
-      mutate -> module 94; supply-side queries -> module 95; workforce_cost_projections (30) + web_scrape compute -> module 97.
-    blocked_by:
-      - {type: user_decision, ref: B2-S2}
-      - {type: user_decision, ref: B2-S4}
-    affected_modules: [94, 95, 96, 97]
-    affected_entities: [swp-system, swp_demand_forecast_agent, swp_supply_planning_agent, swp_scenario_modeling_agent, swp_cost_projections_agent]
-    extra_loader_group: f1_f2_skills_refactor
-    extra_existing_skill_tools_ids: [62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75]
-
   - id: B1B-C1-BFC-ANCHORING
     summary: INSERT business_function_capabilities rows for SWP's 8 capabilities
     finding: |
       /business_function_capabilities?capability_id=in.(554,555,556,557,558,559,560,561) returns 0 rows. SWP capabilities
-      are not anchored to any business function. The prior 2026-05-30 audit logged C1 / C2 as pass with Workforce Planning
-      as owner and FP&A / Finance as contributors; those rows are not present in live state. Either the prior audit
-      mis-reported, or the rows were dropped.
+      are not anchored to any business function. The owner-exists precondition is now SATISFIED: business_function_domains
+      already carries Workforce Planning (id 81) as owner, FP&A (43) + Finance (4) as contributors. The remaining blocker is
+      the per-capability owner/contributor split decision (B2-S5).
     blocked_by:
       - {type: user_decision, ref: B2-S5}
-      - {type: catalog_addition, scope: business_functions, trigger: confirm_owner_workforce_planning_exists}
     affected_entities:
       - SWP-DEMAND-PLANNING
       - SWP-SUPPLY-MODELING
@@ -157,7 +82,7 @@ b1b:
   - id: B1B-B9-EVENT388-CATEGORY
     summary: PATCH trigger_event 388 labor_market_benchmark.refreshed event_category once convention picked
     finding: |
-      trigger_event id=388 still has empty event_category (deferred from 2026-05-31 continuation). Default proposal
+      trigger_event id=388 still has empty event_category (deferred since 2026-05-31). Default proposal
       state_change (mirrors 384-387, 40, 62, 11, 61, 106 SWP-published events); alternative threshold (treating refresh
       as external-signal arrival).
     blocked_by:
@@ -198,7 +123,7 @@ b2:
       Unblocks B1B-B9-EVENT388-CATEGORY.
 
   - id: B2-S2
-    summary: Pattern-flag re-evaluation per Rule #12 on 4 SWP masters
+    summary: Pattern-flag re-evaluation per Rule #12 on 4 SWP masters (has_personal_content)
     question: |
       Should has_personal_content flip to true on workforce_scenarios (27), org_designs (28), workforce_cost_projections
       (30), and skills_gap_analyses (26)? RIF / restructure scenarios identify reduction candidates by name;
@@ -210,8 +135,8 @@ b2:
       - keep all false (workflow shape does not warrant PII flag)
       - per-flag yes/no
     why: |
-      Pattern flags govern PII access control. Rule #12 requires positive re-evaluation, not false-by-default. Unblocks
-      a downstream PATCH; informs B1B-F1-F2-MODULE-SKILLS tool slate choice for masters carrying PII.
+      Pattern flags govern PII access control. Rule #12 requires positive re-evaluation, not false-by-default. Flipping
+      a non-empty flag value is a write the user owns.
 
   - id: B2-S3
     summary: Signal-1 attribution on event 62 headcount.approved
@@ -224,14 +149,15 @@ b2:
       - keep as-is, formalize Signal-1 exception in audit notes
       - re-anchor source_domain_module_id on handoffs 14 + 1149 to ATS-RECRUITMENT-PIPELINE (id=4)
     why: |
-      Architectural intent on the Signal-1 contract; user owns the call. Mechanical PATCH either way.
+      Architectural intent on the Signal-1 contract; user owns the call. Mechanical PATCH either way (re-anchor would
+      overwrite a non-empty FK).
 
   - id: B2-S4
     summary: Role count drift, fifth role ORG-DESIGN-PRACTITIONER absent
     question: |
       Prior audit listed 5 SWP-scoped roles including ORG-DESIGN-PRACTITIONER. Live state shows 4 (Workforce Planner,
       Workforce Planning Lead, FP&A Workforce Partner, Workforce Leadership Sponsor). Was the role intentionally dropped,
-      or did it never deploy?
+      or did it never deploy? (Personas overall are deferred under B1A-PHASE-P, but this drift question is the editorial input.)
     options:
       - confirm 4-role posture is intentional (close drift)
       - re-author ORG-DESIGN-PRACTITIONER per prior design (with role_modules on 95 + 96 primary, 97 secondary)
@@ -240,17 +166,36 @@ b2:
       10228 publish_org_design) plausibly want a dedicated role.
 
   - id: B2-S5
-    summary: C1 business function anchoring choice
+    summary: C1 business function anchoring choice (per-capability owner/contributor split)
     question: |
-      Which business_functions should anchor each of the 8 SWP capabilities? Prior audit named Workforce Planning as
-      owner with FP&A / Finance as contributors. business_function_capabilities is empty in live state. Confirm the
-      owner / contributor split per capability.
+      Which business_functions should anchor each of the 8 SWP capabilities? business_function_domains already names
+      Workforce Planning as domain owner with FP&A + Finance as contributors. business_function_capabilities is empty.
+      Confirm the owner / contributor split per capability.
     options:
       - Workforce Planning (owner) for all 8; FP&A (contributor) for SWP-WORKFORCE-COSTING + SWP-PLAN-RECONCILIATION; Finance (contributor) for SWP-WORKFORCE-COSTING
       - Workforce Planning owner only; no contributors
       - user-specified mapping
     why: |
       C1 / C2 derivation depends on user-confirmed BF assignments. Unblocks B1B-C1-BFC-ANCHORING.
+
+  - id: B2-S6
+    summary: REPLACE-CORRECT 3 mis-tagged discovery_substring handoff_processes rows (DESTRUCTIVE)
+    question: |
+      Three SWP handoff_processes rows are still proposal_source='discovery_substring' with wrong-context PCF links and
+      should be REPLACE-CORRECTED to agent_curated with the right process. This overwrites existing non-empty rows
+      (destructive), so it is gated on approval:
+        - row 101 (handoff 13, PA->SWP attrition.forecast_updated): currently process_id=671. Recommend process_id=980
+          "Perform strategic workforce planning" (the established SWP workforce tag), as the payload is workforce planning, not customer attrition.
+        - row 130 (handoff 241, SPM->SWP initiative.kickoff): currently process_id=16 (L2, over-coarse). Recommend a tighter
+          L3/L4 strategy-or-workforce-planning process resolved at fix time.
+        - row 132 (handoff 242, SPM->SWP resource_allocation.committed): currently process_id=713 (sales-resource context, wrong).
+          Recommend process_id=980 "Perform strategic workforce planning".
+    options:
+      - approve REPLACE-CORRECT all 3 (PATCH process_id + proposal_source='agent_curated')
+      - approve a subset
+      - leave as discovery_substring
+    why: |
+      REPLACE/overwrite of a non-empty handoff_processes row is destructive; SKILL.md Rule #21 forbids unapproved overwrite.
 
 b3:
   - id: B3-S1

@@ -422,3 +422,54 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-06 - Audit (state-driven execute)
+
+### Summary
+
+State-driven Validate pass per SKILL.md Rule #21. Worked only the open items in DCG's
+state.yaml (no fresh from-scratch audit). Live re-verification confirmed the 2026-05-31
+snapshot still holds: DCG remains unbuilt with 0 `domain_modules` rows (M1 hard-fail) and
+0 `capability_domains` rows (A2 hard-fail) for domain_id=88. PCF process 277 ("Manage
+business information", process_code 8.4.4, external_id 20779, hierarchy_level 3) verified
+present. Exactly one Bucket 1 item was executable this pass (B1A-H1); everything else is
+gated on user decisions B2-S1 / B2-S2 or on the unbuilt-domain prerequisite.
+
+### Executed
+
+| ID | Fix type | Detail | Verified |
+| --- | --- | --- | --- |
+| B1A-H1 | INSERT handoff_processes | Handoff 1341 (BI -> DCG, trigger_event `bi_dashboard.published`, payload `bi_dashboards` 692) was untagged (live `GET /handoff_processes?handoff_id=eq.1341` returned `[]`). Inserted 1 row: id 1040, handoff_id=1341, process_id=277, role='implements', proposal_source='agent_curated', record_status defaulted to 'new' per Rule #1, key auto-generated '1341.277'. `label` / `notes` omitted per Rule #15. Pattern mirrors sibling row 281 (handoff 688 BI -> DCG `bi_report.published`, same process 277). | Re-query returns exactly one row (id 1040) with proposal_source=agent_curated, record_status=new. UI: https://tests.semantius.app/domain_map/handoff_processes |
+
+### Surfaced (no write; awaiting user)
+
+- **B1A-BUILD**: DCG is unbuilt. Live re-verification this pass: 0 `domain_modules` and 0
+  `capability_domains` for domain_id=88. The entire build (modules, capabilities, masters'
+  lifecycle states, 29 cross-domain handoff DCG-side module FKs, personas, regulations,
+  domain-grain system skill toolset) is gated on B2-S1 (module split) and B2-S2 (capability
+  list). Cannot execute without those decisions.
+- **B2 decision set** (all carryover, unchanged): B2-S1 (module split: 6-module agent
+  recommendation vs 3 / 4 / 7-module alternatives), B2-S2 (capability enumeration: all 10 vs
+  tighter list), B2-S3 (Rule #18 wording on handoffs 158 / 223 / 265), B2-S4 (Rule #12
+  config-shape exemption per master: data_domains 304, glossary_terms 302, data_usage_metrics
+  308), B2-S5 (pattern-flag flips on data_access_policies 307, data_stewardship_assignments
+  305, data_certifications 306, data_classifications 303), B2-S6 (regulation scoping: all 9 vs
+  subset vs none vs defer).
+- **A4 copy** (catalog_tagline / catalog_description empty on `domains` row 88): NOT authored
+  this pass. Premature for an unbuilt domain (buyer-voice copy describes deployable modules,
+  which do not exist yet). Blocked behind B2-S1.
+
+### Left untouched
+
+- **b1b** (6 items: B1B-S1, S2, S4, S6, S7, S9): all blocked, mostly on B2-S1 (modules must
+  exist before lifecycle states, handoff FKs, and consumer-DMDO routing can land). B1B-S7
+  additionally gated on B2-S3 wording.
+- **b3** (4 backlog items: B3-ENTITIES, B3-MODULARIZATION, B3-REGULATIONS, B3-CANDIDATE-DOMAINS):
+  Phase 0 speculative; non-blocking.
+
+### Post-fix status
+
+`next_action_by: user` (b2 decision set is non-empty). B1A-H1 resolved and removed from
+state.yaml (recorded here in history only). All remaining open work waits on the user.
+
+JWT errors: none encountered.

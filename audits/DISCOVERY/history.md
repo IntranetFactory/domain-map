@@ -257,3 +257,35 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21). Worked only the open state.yaml items, no fresh from-scratch audit. DISCOVERY (id 5) confirmed UNBUILT live: 0 `domain_modules`, 0 `capability_domains`, 0 DMDO. Per the unbuilt-domain rule, the build was NOT scaffolded and the whole module cascade was left for the user's `B2-MOD-SHAPE` decision. Every additive/corrective item that does NOT depend on modules was executed. Loader: `.tmp_deploy/fix_discovery_state_driven_2026_06_07.ts` (run from project root with `bun run`). No JWT errors.
+
+### Executed (4 write types)
+
+- **entity_type (B13 / Rule #12):** PATCHed all 3 masters from `unclassified` -> `operational_workflow`: `discovery_scans` (81, queued/running/completed/failed), `discovered_devices` (82, raw/normalized/reconciled/excluded), `discovery_sources` (83, configured/connected/disconnected). 3 rows. This makes B12 lifecycle states required, but they stay blocked on B1B-MODULES (permission prefix needs the realizing module code).
+- **event_category (B1A-EVENT-CATEGORY / B9):** PATCHed 4 lifecycle trigger events from empty string -> `state_change`: 630 (discovery_scan.completed), 631 (discovery_scan.failed), 632 (discovery_source.connected), 633 (discovery_source.disconnected). 4 rows. Event 77 (network_device.discovered) already correctly `signal`.
+- **Catalog UX (A4 / Rule #20):** authored `catalog_tagline` + `catalog_description` on the DISCOVERY domain row (both were empty). Buyer voice, no vendor names, no em-dash, American English. 1 row (2 fields). No modules exist, so the per-module catalog UX (B1B-MODULE-UX) stays open. Did not overwrite any non-empty value.
+- **Aliases (B1A-ALIASES / B11):** INSERTed 5 generic cross-vendor synonyms (`alias_type='synonym'`, no `industry_id`, `record_status='new'`, no notes written per Rule #15, no vendor/product names per Rule #18): discovery_scans -> "Topology Snapshot", "Scan Run"; discovered_devices -> "CI Candidate", "Asset Record"; discovery_sources -> "Discovery Connector". The stale "surface-before-insert" gate in the prior state was ignored per the Rule #21 execute directive.
+
+### Surfaced (for user)
+
+- **b2 decisions (4):** B2-MOD-SHAPE (modularization shape a/b/c/d; gates the entire build), B2-MON-POLICIES (monitoring_policies ITOM vs RMM owner; ITOM/RMM concern), B2-SVC-MAPS (service_maps DISCOVERY vs CMDB owner; default b), B2-SHADOW-IT (handoff 47 re-source).
+- **Destructive (deferred, recommended only):** the legacy `domain_data_objects` deletes inside B1B-DMDO-MIGRATE; any re-attribution of handoff 47's trigger event (B2-SHADOW-IT options b/c); the legacy `discovery-system` skill (id 49) delete (only if a duplicate domain-grain skill is later created). None applied.
+- **Personas/RACI (Phase P):** DEFERRED, not authored. Candidate personas if the domain becomes multi-module: Discovery Operator, Discovery Engineer, Discovery Admin under business_function_id=58 (IT Infrastructure).
+
+### Left
+
+- **b1b (8 items):** all blocked on B1B-MODULES, itself blocked on the B2-MOD-SHAPE user decision (unbuilt cascade). Includes DMDO migration, intra-domain relationships, lifecycle states, handoff attribution, roles, domain_module_capabilities, per-module catalog UX.
+- **b1a build items (3):** B1A-CAPS, B1A-SOLS, B1A-BUILD reframed as part of the gated Phase A/M/B/S build; not standalone additive work for an unbuilt domain.
+- **b3 (8):** speculative entity backlog, untouched.
+- **Superseded:** the per-module system-skill / skill_tools work (2026-06-06 supersession header retained); B1B-SYSTEM-SKILL reframed to the one-domain-grain-skill model, no per-module skills authored.
+- **C1 / business_function_domains:** already satisfied (owner row id 61, IT Infrastructure / function 58); not touched (no empty row to fill, no overwrite).
+- **H1 / APQC tags:** 14/14 handoffs already tagged from prior passes; no untagged clean-match handoff to add. The 3 weak-tag replacements proposed in the 2026-05-30 audit (handoffs 50, 621, 625) remain destructive REPLACEs and are also module-attribution gated; not applied.
+
+### JWT errors
+
+None.

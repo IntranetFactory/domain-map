@@ -11,72 +11,53 @@
 schema_version: 2
 domain: EAM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
-  - id: B1A-S3
-    summary: "Draft Rule #20 buyer-voice catalog_tagline + catalog_description for EAM and surface to user for approval before write."
-    finding: "A4 fail. domains.id=53 has empty catalog_tagline and catalog_description. Both must be non-empty buyer-voice strings per Rule #20."
-    action: "Draft tagline (single-sentence buyer-facing) + description (1-3 paragraphs, workflow + value). Surface text to user. Write via PATCH only after explicit approval. Sample tagline from 2026-05-30 audit, 'Keep plant and equipment running. Plan preventive maintenance, dispatch work orders, and track every asset from commissioning to retirement.'"
-    extra_rule_ref: "Rule #20 buyer-voice authoring; never overwrite without per-row approval."
-
-  - id: B1A-H1
-    summary: "Author one agent_curated handoff_processes row for handoff 953 (MFG-OPS production_schedule.published to EAM) so every cross-domain handoff carries either agent_curated or human_curated context."
-    finding: "H1 partial pass. 7 of 8 cross-domain handoffs on EAM now carry an agent_curated tag. Handoff 953 only carries discovery_substring to process 158 (Create and manage master production schedule, L3)."
-    action: "Identify the best APQC PCF activity for PM-schedule reschedule prompted by production schedule republish (likely an L4 under Plan asset maintenance or under Schedule production orders and create lots). Insert one row (handoff_id=953, process_id=<chosen>, proposal_source='agent_curated', record_status='new'). Composite-key dedupe before insert."
-    affected_handoffs:
-      - {handoff_id: 953, direction: inbound, source_domain: MFG-OPS, target_domain: EAM, trigger_event: production_schedule.published, payload: production_schedules, null_field: agent_curated_apqc_tag}
   - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build. Surface only; do NOT scaffold until the B2-MODSPLIT shape is chosen."
+    finding: "Live re-confirmed 2026-06-07: domain_id=53 has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI / module-skill work applies. The whole b1b band below cascades from this single gate."
+    action: "User picks the B2-MODSPLIT shape (2-module vs 3-module), then the agent runs Phase A then M then B then S to author the module set, capabilities, masters, the domain-grain system skill, and domain_module_tools. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward. Personas/RACI are deferred until modules exist (B1A-PHASE-P)."
+    blocked_by:
+      - {type: user_decision, ref: B2-MODSPLIT, reason: "2-module vs 3-module shape decides the Rule 14 floor, the DMDO layout, and every downstream b1b PATCH."}
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-S1
-    summary: "Author 2 full domain_modules rows (recommended EAM-ASSETS + EAM-MAINTENANCE-OPS) to satisfy M1, M2 (assuming the 6-capability B1B-S2 load), Rule #14."
+    summary: "Author full domain_modules rows (recommended EAM-ASSETS + EAM-MAINTENANCE-OPS) to satisfy M1, M2, Rule #14."
     finding: "M1 fail (catastrophic structural gate). Zero domain_modules rows for domain_id=53. Every downstream B / E / F band is blocked until M1 resolves."
     blocked_by:
-      - {type: user_decision, ref: B2-MODSPLIT, reason: "2-module vs 3-module shape decides Rule 14 floor and module-skill authoring."}
+      - {type: user_decision, ref: B2-MODSPLIT, reason: "2-module vs 3-module shape decides Rule 14 floor and module DMDO layout."}
     affected_entities: [industrial_assets, eam_work_orders, equipment_pm_schedules]
 
   - id: B1B-S2
     summary: "Load 6 EAM capabilities and link to realizing modules."
-    finding: "A2 fail. Zero capability_domains rows. Proposed capabilities, asset register management, preventive-maintenance scheduling, work-order execution, maintenance planning and resourcing, asset-lifecycle tracking, meter and condition data ingestion."
+    finding: "A2 fail. Zero capability_domains rows. Proposed capabilities: asset register management, preventive-maintenance scheduling, work-order execution, maintenance planning and resourcing, asset-lifecycle tracking, meter and condition data ingestion."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
     affected_modules: []
 
   - id: B1B-S4
     summary: "Add 3-4 EAM regulations (ISO 55000, OSHA 29 CFR 1910.147 LOTO, OSHA PSM, optionally FDA 21 CFR Part 11) plus domain_regulations links."
-    finding: "A1 / regulations fail. Zero domain_regulations rows for EAM. ISO 55000 and OSHA-LOTO are universal; OSHA-PSM and FDA Part 11 depend on industry scope."
+    finding: "A1 / regulations fail. Zero domain_regulations rows for EAM (only FDA 21 CFR Part 11, id 22, exists in the catalog). ISO 55000 and OSHA-LOTO are universal; OSHA-PSM and FDA Part 11 depend on industry scope."
     blocked_by:
-      - {type: user_decision, ref: B2-REG-SCOPE, reason: "Industry-scope judgment, pharma/biotech vs chemical-plant vs general-manufacturing."}
+      - {type: user_decision, ref: B2-REG-SCOPE, reason: "Industry-scope judgment: pharma/biotech vs chemical-plant vs general-manufacturing."}
       - {type: catalog_addition, scope: regulations, trigger: "ISO 55000, OSHA-LOTO, OSHA-PSM are not currently in the regulations catalog."}
 
-  - id: B1B-S5
-    summary: "Replace legacy domain-level system skill eam-system (id 53) with one system skill per module per Rule #17, re-anchor the 4 existing skill_tools rows."
-    finding: "F1 fail. Legacy skills.id=53 is skill_type='system', domain_module_id=null. F2 (one system skill per domain_modules row) is fully blocked by M1."
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-    affected_entities: [eam-system]
-    extra_existing_skill_tools: 4
-
   - id: B1B-S6
-    summary: "Author data_object_lifecycle_states for eam_work_orders and industrial_assets; surface Rule #12 config-shape exemption for equipment_pm_schedules to user."
-    finding: "B12 fail. Zero data_object_lifecycle_states rows on the 3 EAM masters. eam_work_orders and industrial_assets both have observable workflow; equipment_pm_schedules is a config-shape candidate."
+    summary: "Author data_object_lifecycle_states for eam_work_orders and industrial_assets once modules ship (both now classified operational_workflow). equipment_pm_schedules is classified 'catalog' (Rule #12 structural exemption, no lifecycle required)."
+    finding: "B12 fail. Zero data_object_lifecycle_states rows on the 2 operational_workflow masters. entity_type was classified 2026-06-07 (475/476 operational_workflow, 477 catalog), so the workflow masters now require lifecycle states. state.domain_module_id (M5) requires modules first."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1, reason: "state.domain_module_id (M5) requires modules."}
-      - {type: user_decision, ref: B2-PM-EXEMPTION, reason: "Rule 12 exemption for PM schedules requires user judgment; Rule 15 forbids notes auto-write."}
     affected_masters:
-      - {data_object_id: 475, name: industrial_assets, target_module_id: null, workflow: "commissioned -> in_service -> out_of_service -> retired"}
-      - {data_object_id: 476, name: eam_work_orders, target_module_id: null, workflow: "draft -> scheduled -> assigned -> in_progress -> completed_pending_review -> closed"}
-      - {data_object_id: 477, name: equipment_pm_schedules, target_module_id: null, workflow: "config-shape exemption candidate"}
+      - {data_object_id: 475, name: industrial_assets, entity_type: operational_workflow, workflow: "commissioned -> in_service -> out_of_service -> retired"}
+      - {data_object_id: 476, name: eam_work_orders, entity_type: operational_workflow, workflow: "draft -> scheduled -> assigned -> in_progress -> completed_pending_review -> closed"}
+      - {data_object_id: 477, name: equipment_pm_schedules, entity_type: catalog, workflow: "Rule #12 structural exemption (config-shape, no lifecycle)"}
 
   - id: B1B-S7-events
     summary: "Author 4 cross-domain handoffs for the 2 untagged asset events (industrial_asset.commissioned, industrial_asset.retired); defer equipment_pm_schedule.updated as intra-domain B9b once modules ship."
-    finding: "B9 partial. 3 of 6 EAM trigger_events have no handoffs row, 962 industrial_asset.commissioned, 963 industrial_asset.retired, 966 equipment_pm_schedule.updated."
+    finding: "B9 partial. 3 of 6 EAM trigger_events have no handoffs row: 962 industrial_asset.commissioned, 963 industrial_asset.retired, 966 equipment_pm_schedule.updated."
     blocked_by:
       - {type: domain_audit, blocking_domain: ERP-FIN, milestone: "confirm fixed_assets is the inbound payload mastered by ERP-FIN-FA module."}
       - {type: catalog_addition, scope: solutions, trigger: "confirm GRC compliance_obligations is the right inbound target for asset retirement."}
@@ -91,13 +72,13 @@ b1b:
     blocked_by:
       - {type: user_decision, ref: B2-USERS-EDGES, reason: "Which actor verbs to author (owner / assignee / maintainer / commissioner) requires user confirmation."}
     affected_masters:
-      - {data_object_id: 475, name: industrial_assets, target_module_id: null, workflow: "owner / commissioner edges"}
-      - {data_object_id: 476, name: eam_work_orders, target_module_id: null, workflow: "assignee / created_by edges"}
-      - {data_object_id: 477, name: equipment_pm_schedules, target_module_id: null, workflow: "maintainer edge"}
+      - {data_object_id: 475, name: industrial_assets, workflow: "owner / commissioner edges"}
+      - {data_object_id: 476, name: eam_work_orders, workflow: "assignee / created_by edges"}
+      - {data_object_id: 477, name: equipment_pm_schedules, workflow: "maintainer edge"}
 
   - id: B1B-B1
     summary: "PATCH source_domain_module_id on outbound handoffs 866, 867, 868 once EAM modules exist."
-    finding: "B10b fail. All 3 outbound EAM handoffs have NULL source_domain_module_id. Cause, M1."
+    finding: "B10b fail. All 3 outbound EAM handoffs have NULL source_domain_module_id. Cause: M1."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
     affected_handoffs:
@@ -107,7 +88,7 @@ b1b:
 
   - id: B1B-B2
     summary: "PATCH target_domain_module_id on the 5 inbound EAM handoffs after authoring the consumer DMDO rows on the right modules."
-    finding: "B10b fail. 5 inbound EAM handoffs have NULL target_domain_module_id. Cause, M1 plus missing consumer DMDO rows on capital_projects, vehicle_work_orders, production_downtime_events, production_schedules, installed_equipment."
+    finding: "B10b fail. 5 inbound EAM handoffs have NULL target_domain_module_id. Cause: M1 plus missing consumer DMDO rows on capital_projects, vehicle_work_orders, production_downtime_events, production_schedules, installed_equipment."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
       - {type: prerequisite_entity, ref: B1B-S2}
@@ -120,34 +101,34 @@ b1b:
 
 b2:
   - id: B2-MODSPLIT
-    summary: "Module split shape, 2-module vs 3-module."
+    summary: "Module split shape: 2-module vs 3-module. LOAD-BEARING for the entire b1b band and B1A-BUILD."
     question: "Should EAM ship as 2 full modules (EAM-ASSETS + EAM-MAINTENANCE-OPS) or 3 full modules (add EAM-PM-PLANNING as a separate planning surface)?"
     options: ["2-module split", "3-module split", "other (user proposes shape)"]
-    why: "Decision gates the Rule 14 floor (>=2 for 6 capabilities), the system-skill authoring shape (F2), the DMDO layout for masters, and the source_domain_module_id / target_domain_module_id PATCHes on every EAM handoff (B1B-B1 / B1B-B2)."
+    why: "Decision gates the Rule 14 floor (>=2 for 6 capabilities), the DMDO layout for masters, the domain-grain system skill toolset, and the source_domain_module_id / target_domain_module_id PATCHes on every EAM handoff (B1B-B1 / B1B-B2)."
 
   - id: B2-M7-ESCALATES
-    summary: "eam_work_orders escalates_to service_incidents (relationship id 636), keep or downgrade?"
+    summary: "eam_work_orders escalates_to service_incidents (relationship id 636): keep or downgrade?"
     question: "Is the rel 636 edge to ITSM service_incidents (id 47) intended as a first-class escalation path in plant-OT, or a soft pointer that should not survive M7 audit?"
     options: ["keep as-is (escalation is real)", "downgrade to consumer DMDO", "delete (drift from earlier modeling)"]
-    why: "M7 catches catalog-wide single-master inconsistencies. Handoff 866 currently has data_object_id=47 (service_incidents), and rel 636 mirrors that edge. The architectural intent vs drift question is user-decision."
+    why: "M7 catches catalog-wide single-master inconsistencies. Handoff 866 currently has data_object_id=47 (service_incidents), and rel 636 mirrors that edge. The architectural intent vs drift question is user-decision. DESTRUCTIVE (downgrade/delete) options need sign-off; do not apply unprompted."
 
   - id: B2-WORK-ORDERS-BARE
     summary: "Bare-word claim on work_orders."
     question: "Does EAM, FLEET-MAINT, REAL-EST, or FSM own the unprefixed work_orders name catalog-wide per Rule #9, or do all stay prefixed?"
     options: ["EAM owns", "FLEET-MAINT owns", "REAL-EST owns", "FSM owns", "all stay prefixed forever"]
-    why: "Rule 9 naming arbitration. Affects future loads (a generic work_orders for HRSD ticketing could collide)."
+    why: "Rule 9 naming arbitration. Affects future loads (a generic work_orders for HRSD ticketing could collide). Catalog-wide; safe to defer."
 
   - id: B2-FIXED-ASSETS
     summary: "fixed_assets embedding direction."
     question: "Should EAM-ASSETS embedded_master fixed_assets (so a smaller deployment can capitalize without ERP-FIN), or stay decoupled (ERP-FIN hard dependency)?"
     options: ["embedded_master in EAM-ASSETS", "consumer of ERP-FIN fixed_assets", "two separate entities with relationship"]
-    why: "The same physical asset has an operational view (EAM) and a financial view (ERP-FIN). Modeling decision is one entity with two roles vs two entities with a relationship."
+    why: "The same physical asset has an operational view (EAM) and a financial view (ERP-FIN). Modeling decision is one entity with two roles vs two entities with a relationship. Catalog-wide; safe to defer."
 
   - id: B2-DOMAIN-CANDIDATES
-    summary: "Three queued candidate domains, promote vs fold."
+    summary: "Three queued candidate domains: promote vs fold."
     question: "Promote APM-RELIABILITY / IIOT-PLATFORM / PTW-LOTO to sibling domains, or fold into EAM as capabilities?"
     options: ["APM-RELIABILITY promote", "APM-RELIABILITY fold", "IIOT-PLATFORM promote", "IIOT-PLATFORM fold", "PTW-LOTO promote", "PTW-LOTO fold"]
-    why: "Each meets the Rule 2 point-solution test independently (>=3 flagship vendors). Promotion changes safety_permits_to_work ownership and the meter-readings substrate location."
+    why: "Each meets the Rule 2 point-solution test independently (>=3 flagship vendors). Promotion changes safety_permits_to_work ownership and the meter-readings substrate location. Non-blocking idea, never gates 'finished'."
 
   - id: B2-REG-SCOPE
     summary: "Industry scope for EAM regulations."
@@ -155,26 +136,27 @@ b2:
     options: ["pharma/biotech in scope", "chemical-plant in scope", "general manufacturing only", "all of the above"]
     why: "B1B-S4 needs the scope to decide which regulations land."
 
-  - id: B2-PM-EXEMPTION
-    summary: "Rule 12 config-shape exemption for equipment_pm_schedules."
-    question: "Confirm equipment_pm_schedules qualifies for the Rule 12 config-shape exemption (no lifecycle states, just record_status), or does the user want a state machine authored anyway?"
-    options: ["confirm exemption", "author state machine (specify states)"]
-    why: "PM schedules are templates that drive PM job generation; the templates themselves rarely have a stateful workflow. Rule 15 forbids notes auto-write so the exemption decision needs surfacing."
-
   - id: B2-USERS-EDGES
     summary: "Confirm actor verbs for users edges on EAM masters (Rule #10)."
     question: "Which actor verbs to author from users to each EAM master (industrial_assets owner / commissioner / decommissioner; eam_work_orders assignee / created_by / completed_by; equipment_pm_schedules maintainer)?"
     options: ["use proposed verb set", "user specifies verbs"]
     why: "B7 fail. Rule 10 requires explicit user edges; verb naming is non-mechanical."
 
+b1a-phase-p:
+  - id: B1A-PHASE-P
+    summary: "Personas + RACI deferred until EAM is built (multi-module)."
+    finding: "Deferred. With 0 modules there is nothing to anchor role_modules / process_raci to. Candidate personas surfaced for when modules ship: Maintenance Planner/Scheduler, Reliability Engineer, Maintenance Technician/Craftsperson, Maintenance Supervisor, Asset Manager, Storeroom/MRO Coordinator."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S1, reason: "personas/RACI require modules to anchor to."}
+
 b3:
   - id: B3-MARKET-ENTITIES
-    candidate: "16-entity consolidated list, condition_monitoring_readings, failure_codes, failure_modes_effects, asset_warranties, vendor_service_contracts, technician_certifications, crews, inspection_checklists, oil_samples, regulatory_compliance_logs, as_built_drawings, asset_meter_groups, pm_task_libraries, failure_root_causes, mro_parts, tool_crib_inventory."
-    rationale: "Cross-vendor recall from 2026-05-30 semantic pass without formal Phase 0 vendor-surface document. Each candidate would refine the B1B-S2 capability list, the master/embedded_master DMDO layout, and (where regulated) the regulations link."
+    candidate: "16-entity consolidated list: condition_monitoring_readings, failure_codes, failure_modes_effects, asset_warranties, vendor_service_contracts, technician_certifications, crews, inspection_checklists, oil_samples, regulatory_compliance_logs, as_built_drawings, asset_meter_groups, pm_task_libraries, failure_root_causes, mro_parts, tool_crib_inventory."
+    rationale: "Cross-vendor recall from 2026-05-30 semantic pass without formal Phase 0 vendor-surface document. Each candidate would refine the B1B-S2 capability list, the master/embedded_master DMDO layout, and (where regulated) the regulations link. mro_parts is the INV-MGMT boundary."
     vendor_evidence:
-      - {vendor: "IBM Maximo", evidence: 1st_class}
-      - {vendor: "Hexagon EAM", evidence: 1st_class}
-      - {vendor: "IFS Cloud EAM", evidence: 1st_class}
-      - {vendor: "SAP S/4HANA Asset Management", evidence: secondary}
-      - {vendor: "AVEVA APM", evidence: 1st_class}
-    proposed_module: "split between EAM-ASSETS and EAM-MAINTENANCE-OPS per Bucket 2 #1 module shape; mro_parts is INV-MGMT boundary."
+      - {vendor: "asset-intensive flagship CMMS", evidence: 1st_class}
+      - {vendor: "plant EAM specialist", evidence: 1st_class}
+      - {vendor: "regulated-industry EAM cloud", evidence: 1st_class}
+      - {vendor: "suite-aligned plant maintenance", evidence: secondary}
+      - {vendor: "predictive APM platform", evidence: 1st_class}
+    proposed_module: "split between EAM-ASSETS and EAM-MAINTENANCE-OPS per the B2-MODSPLIT shape; mro_parts is the INV-MGMT boundary."

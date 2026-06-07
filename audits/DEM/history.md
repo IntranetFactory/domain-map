@@ -348,3 +348,72 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (Rule #21) against DEM's state.yaml; not a from-scratch audit. Live
+re-confirmed DEM is UNBUILT (domains.id=83; 0 domain_modules, 0 capability_domains, 0
+solution_domains). Per Rule #21 the agent does not scaffold an unbuilt domain: the BUILD is
+surfaced (B1A-A2 capabilities, B1A-A3 solutions, B1A-BUILD modules) and the M1-gated cascade is
+left. Only the additive/corrective items that stand independent of the module set were executed.
+Loader: `.tmp_deploy/fix_dem_state_driven_2026_06_07.ts`, run from project root via bun. All new
+rows default `record_status='new'` (Rule #1); no `notes`-column writes (Rule #15); no em-dashes.
+
+### Executed
+
+- **entity_type classification (B13 / Rule #12), 5 PATCHes** on the DEM masters, all previously
+  `unclassified`:
+  - 585 endpoint_experience_scores -> `computed` (rolling aggregated quality-of-experience metric)
+  - 586 synthetic_monitoring_results -> `operational_record` (append-only probe-run results)
+  - 587 real_user_sessions -> `operational_record` (append-only RUM session telemetry)
+  - 588 digital_friction_events -> `operational_record` (append-only detected friction events)
+  - 589 endpoint_anomaly_findings -> `operational_workflow` (detect/acknowledge/resolve/suppress)
+
+  This also resolves the B2-LIFECYCLE config-shape question structurally: only 589 requires
+  lifecycle states (B1B-B12, still M1-gated); the other four are exempt by entity_type.
+
+- **Rule #20 catalog text (B1B-A4), 2 fields written** on domains.id=83 (both were empty). Stale
+  "surface-before-write" gate (B2-A4-DRAFT) ignored per the execute directive. Buyer-voice,
+  no vendor names, no em-dash, American English. catalog_tagline + catalog_description.
+
+- **event_category backfill (B9 partial), 5 PATCHes** on the empty trigger_events 677-681, grounded
+  in catalog precedent for each event suffix: 677 endpoint_experience_score.degraded -> state_change;
+  678 synthetic_monitoring_result.failed -> state_change; 679 real_user_session.poor_experience ->
+  signal; 680 digital_friction_event.recorded -> signal; 681 endpoint_anomaly_finding.published ->
+  lifecycle.
+
+- **Intra-domain master-to-master data_object_relationships (B1A-B6), 4 INSERTs**, ids 2174-2177,
+  owner_side=source, kind=association, record_status=new:
+  - 2174 digital_friction_events contributes_to endpoint_experience_scores (many_to_many)
+  - 2175 real_user_sessions contributes_to endpoint_experience_scores (many_to_many)
+  - 2176 synthetic_monitoring_results contributes_to endpoint_experience_scores (many_to_many)
+  - 2177 endpoint_anomaly_findings correlates_with digital_friction_events (many_to_many)
+
+### Surfaced (no write; user/decision or destructive)
+
+- **B2-MODULE-SPLIT** (a/b/c) and **B2-DEX-BOUNDARY** (i/ii/iii): together gate the BUILD and B1B-M1.
+- **B2-PATTERN-FLAGS**: confirm has_personal_content=true on 585/587/588 (B1B-B4); no auto-flip.
+- **B1A-A2 / B1A-A3 / B1A-BUILD**: surfaced as the unbuilt-domain build; scope discipline forbids
+  authoring capabilities/solutions/vendors/modules absent an explicit go.
+- **B1A-B8** cross-domain mirror relationships: the ITSM edge (585 triggers 47) is cleanly authorable
+  now; the three AIOPS/OBS edges are part of the neighbor cascade (targets in as-yet-unbuilt modules)
+  and were left.
+- **B1A-B9-ORPHAN** (event 680, zero handoffs): user picks DELETE (destructive) vs AUTHOR a
+  DEM->ITSM proactive-ticket handoff (additive). Not applied.
+
+### Left
+
+- M1-gated b1b: B1B-M1 (blocked on B2 split + DEX boundary), B1B-B10b (also blocked on AIOPS/OBS/NPMD
+  M1), B1B-B12 (lifecycle for 589, needs domain_module_id), B1A-B9-EVENTS (speculative recovery
+  events, best authored with the build + 589 lifecycle).
+- b3 backlog: B3-MARKET-ENTITIES (8 entities), B3-DEX-PLATFORM, B3-APM-MONITORING.
+- RETIRED per supersession (2026-06-06): B1B-F1 / B1B-F2 per-module system skills + skill_tools. New
+  model = one domain-grain system skill (derives toolset) authored with the build; tools on
+  domain_module_tools; the legacy domain-level dem-system skill (id 47) is the correct grain. No
+  retirement owed.
+
+### JWT errors
+
+None.

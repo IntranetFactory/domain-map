@@ -339,3 +339,92 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+State-driven Validate run (SKILL.md Rule #21) working ONLY the open items in
+audits/CMDB/state.yaml. Domain confirmed live: CMDB = domains.id=4; modules CMDB-CORE 108,
+CMDB-SERVICE-MAPPING 109, CMDB-BASELINES-DRIFT 110 (all module_kind=full). Loader:
+`.tmp_deploy/cmdb_state_execute_2026_06_07.ts` (idempotent; re-run writes nothing).
+
+### Summary
+
+All agent-fixable additive/corrective items that were fully specified and mechanical were
+executed at `record_status='new'`. New-master builds (M1/M2/M4) were kept in b1a as remaining
+additive Phase-B builds (not mechanical patches; carry proposed lifecycle to land with the
+entity). Destructive steps (the APQC DELETE+REPLACE and the M9 role/necessity rewrites) and all
+open b2 judgment calls were surfaced, not applied. Personas/RACI (B1A-PHASE-P) deferred. The
+former B1A-S3 (per-module workflow-gate `permissions` + `permission_hierarchy`) is RETIRED under
+Plan 3 (those catalog tables were deleted 2026-06-02; gates are now emitter-derived).
+
+### Executed (record_status='new', idempotent verify-then-write)
+
+| Item | Type | Action | Result |
+|---|---|---|---|
+| B1A-ENTITY-TYPE | PATCH data_objects.entity_type | 5 masters classified off `unclassified`: configuration_items (76) -> operational_workflow; ci_relationships (77) -> junction; ci_classes (78) -> catalog; service_maps (79) -> operational_workflow; ci_baselines (80) -> operational_workflow | 5 rows PATCHed |
+| B2-8 / Rule #20 Catalog UX | PATCH catalog_tagline + catalog_description (only when empty) | Authored buyer-voice copy for the CMDB domain row (4) and all 3 modules (108/109/110); all 8 fields were empty and were filled | domain: 2 fields; modules: 6 fields (8 total) |
+| B1A-M7 | INSERT regulations + domain_regulations | New `regulations` row ISO/IEC 19770-1 (code ISO-19770-1, type industry_standard, jurisdiction_id=1 International, issuing_body ISO/IEC) id 87; `domain_regulations` link CMDB(4) -> 87 applicability=mandatory id 274 | 1 reg + 1 link |
+| B1A-Pair-ITSM-1 | INSERT data_object_relationships | service_changes (50) -references-> ci_baselines (80), inverse=referenced_by_change, many_to_many, kind=reference, is_required=false, owner_side=target. Mirrors handoff 1200's change-control read-of-baseline contract | id 2109 |
+
+entity_type classification reasoning: configuration_items / service_maps / ci_baselines are
+real-world objects that move through a publishable/captured workflow (operational_workflow);
+ci_relationships is the N:M graph edge between CIs (junction; lifecycle permitted, still
+proposed under B1B-S2); ci_classes is class taxonomy / rule-shape (catalog -> Rule #12
+lifecycle-exempt, which structurally resolves the old B2-1 exemption without any notes write).
+
+### Surfaced (NOT written; recommended fix only, awaiting user)
+
+- **B2-1** ci_classes lifecycle exemption: now structural via entity_type=catalog; confirm
+  accept-as-is (default) vs author a minimal `defined/active/deprecated` lifecycle. Gates the
+  rest of B1B-S2-lifecycles.
+- **B2-2** configuration_items.has_submit_lock flip (destructive overwrite).
+- **B2-3** service_maps ownership boundary with DISCOVERY (master move = b2; depends on B3-D4).
+- **B2-4** relationship row 220 vs 232 duplication (collapse/drop = destructive).
+- **B2-5** CMDB role naming `IT-INFRA-CMDB-` infix vs `IT-INFRA-` (rename/demote = destructive;
+  also confirm grain post-Plan-3: personas now live in `domain_roles`).
+- **B2-6** B9 fan-out for `ci.unauthorized_change_detected` to GRC/SECOPS (gates B1B-S4).
+- **B2-7** pairwise reconciliation scope (ITSM-only vs all 3 neighbors vs defer).
+- **B2-DESTRUCTIVE-H1** (was B1A-H1): DELETE handoff_processes id IN (7, 9, 52) + INSERT
+  agent_curated replacements (236 -> 1312 Maintain IT asset records 20918; 237 -> 1312;
+  51 -> 1299 Triage IT service delivery incidents 20903). All 3 verified live as
+  proposal_source=discovery_substring, record_status=new. DESTRUCTIVE (DELETE + replace weak
+  tags); not auto-applied.
+- **B2-DESTRUCTIVE-M9** (was B1A-SELF-CONTAIN): rewrite role/necessity on dmdo id 549
+  (hardware_assets 56, HAM-mastered, contributor/required, module 108) and dmdo id 548
+  (service_changes 50, ITSM-mastered, contributor/required, module 108). Recommended: set each
+  to necessity=optional (or embedded_master). DESTRUCTIVE rewrite on existing DMDO rows; not
+  auto-applied.
+- **B1A-PHASE-P** personas/RACI: DEFERRED, not authored. Candidate personas noted in state.yaml
+  (IT-INFRA-CONFIG-MANAGER, IT-INFRA-CONFIG-DATA-STEWARD, IT-INFRA-SERVICE-MAP-OWNER,
+  IT-INFRA-BASELINE-ANALYST). Resolve B2-5 role grain first.
+
+### Left (untouched)
+
+- **b1a M1/M2/M4** (ci_reconciliation_rules, ci_attestations, ci_audit_log): remaining additive
+  master builds; full Phase-B entity creation with proposed lifecycle, out of the mechanical
+  bulk-batch scope. Kept in b1a for a dedicated build pass.
+- **b1b** (8 items): all blocked on neighbor modularization (DISCOVERY M1, AIOPS, RMM, NPMD,
+  DCIM) or user decisions (B2-1 gates B1B-S2 lifecycles; B2-6 gates B1B-S4 fanout). B1B-M3
+  discovery_credentials waits on DISCOVERY.
+- **b3** (12 candidates): entity (E1-E8) and domain (D1-D4) backlog; non-blocking.
+- **RETIRED B1A-S3**: per-module workflow-gate `permissions` + `permission_hierarchy` are no
+  longer catalog-stored (Plan 3 deleted them 2026-06-02). Gates are derived by the emitter from
+  `data_object_lifecycle_states.requires_permission` (configuration_items states 272/274/275
+  already carry requires_permission=true) + entity_type. Nothing to write.
+
+### UI links (tables written)
+
+- https://tests.semantius.app/domain_map/data_objects (entity_type)
+- https://tests.semantius.app/domain_map/domains?id=eq.4 (domain catalog copy)
+- https://tests.semantius.app/domain_map/domain_modules?domain_id=eq.4 (module catalog copy)
+- https://tests.semantius.app/domain_map/regulations?regulation_code=eq.ISO-19770-1
+- https://tests.semantius.app/domain_map/data_object_relationships (id 2109)
+
+### JWT errors
+
+None.
+
+### Post-fix status
+
+next_action_by: user (open b2 decisions + two destructive steps awaiting sign-off; personas
+deferred). b1a retains the 3 additive master builds (M1/M2/M4) for a dedicated pass.

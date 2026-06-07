@@ -1,65 +1,52 @@
 schema_version: 2
 domain: INTRANET
-status: audit_stale
-next_action_by: agent
-last_audit: "2026-05-31"
+status: unbuilt_awaiting_classification
+next_action_by: user
+last_audit: "2026-06-07"
+
+# 2026-06-07 state-driven execute: catalog UX copy written (override of the stale
+# surface-before-write gate), and 5 generic domain_aliases inserted (B11). The domain
+# remains UNBUILT (0 domain_modules, 0 masters); the build and its whole cascade are
+# left, because the classification (leadership-tier vs real point-solution market vs
+# hybrid) is still an open user decision (B2-CLASSIFICATION). Per Rule #21 UNBUILT
+# clause: do not scaffold; surface the build; leave the cascade.
 
 b1a:
   - id: B1A-RECLASS
-    summary: "Leadership-tier zero-master exemption rescinded 2026-06-02; re-run Validate treating INTRANET as master-bearing (overlay test). Build needed, not an exemption."
+    summary: "Leadership-tier zero-master exemption rescinded 2026-06-02; under the overlay test INTRANET is master-bearing. Build needed, not an exemption. SURFACED, not executed (gated on B2-CLASSIFICATION + UNBUILT-do-not-scaffold)."
     finding: >
       SKILL.md's fixed leadership-tier exemption was rescinded (references/skill-changelog.md
-      2026-06-02). Under the overlay test INTRANET is master-bearing: masters intranet pages, news/announcements, targeted communications, journeys (crud_percentage 88; Simpplr / Staffbase / Firstup class). The prior audit's
-      "keep leadership-tier / ship an empty landing module" option is no longer valid. Live state
-      2026-06-02: 0 domain_modules (M1 fail), so the domain is not deployable today.
+      2026-06-02). Under the overlay test INTRANET is master-bearing: masters intranet pages,
+      news/announcements, targeted communications, journeys (crud_percentage 88; Simpplr /
+      Staffbase / Firstup class). The prior audit's "keep leadership-tier / ship an empty
+      landing module" option is no longer valid. Live state 2026-06-07: 0 domain_modules
+      (M1 fail), so the domain is not deployable today.
     action: >
-      Re-run the full 4-pass Validate under the corrected rule. The module-shape, promote-scope,
-      and catalog-UX decisions already in b2 still apply and re-surface after the re-audit; this
-      item records only that the classification is settled (master-bearing) and the domain needs
-      a build, not an exemption.
+      The classification is settled to master-bearing. The actual build (Phase A then M then
+      B then S, then Phase P if multi-module) is a user-gated decision recorded in
+      B2-CLASSIFICATION (route a/b/c). The agent does NOT scaffold an UNBUILT domain; once the
+      user picks the route the build runs.
     extra_reclassified: "2026-06-02 skill-changelog"
   - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 8 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 8 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 8 capabilities awaiting a build. SURFACED: needs a build, gated on classification route."
+    finding: "Live triage 2026-06-07: this domain has 0 domain_modules rows (M1 fail) and 8 capability_domains rows (ids 140-147), so it is not deployable today. It must be built before any persona / RACI work applies."
+    action: "On the chosen B2-CLASSIFICATION route, run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
-  - id: B1B-A4-UX
-    summary: A4 catalog UX text drafts pending user approval per Rule #20; blocked on Bucket 2 item 1 classification (buyer voice depends on it).
-    finding: |
-      A4 FAIL on the INTRANET domains row (id 126): catalog_tagline and
-      catalog_description are both empty. Rule #20 requires both fields written in
-      buyer voice (workflow + value), not analyst voice. Drafts were proposed in the
-      2026-05-30 audit:
-        catalog_tagline = "Reach every employee, from HQ to the shop floor, with one connected internal communications platform."
-        catalog_description = "Publish company news, target announcements by department or location, and reach desk-based and frontline workers across web and mobile. Track readership, manage editorial calendars, and run multi-step journeys for onboarding, change initiatives, and policy rollouts. Connect employee directories, surface knowledge across collaboration tools, and let teams amplify approved content on social channels."
-      Per Rule #20 the agent cannot write without explicit per-row user approval.
-    action: |
-      Surface drafts again on next prompt; wait for explicit per-row approval from
-      user. PATCH /domains?id=eq.126 with the user-approved strings only. If the user
-      first picks Bucket 2 item 1 option (a) leadership-tier, redraft the buyer voice
-      from "modern intranet product" to "internal-comms governance layer" before
-      surfacing again.
-    blocked_by:
-      - {type: user_decision, ref: B2-CLASSIFICATION}
-      - {type: user_decision, ref: B2-CATALOG-UX-APPROVAL}
-
   - id: B1B-M1
-    summary: Zero domain_modules rows for INTRANET; M1 FAIL under strict Rule #14; fix shape depends on classification.
+    summary: Zero domain_modules rows for INTRANET; M1 FAIL under strict Rule #14; fix shape depends on classification route.
     finding: |
-      Live query /domain_modules?domain_id=eq.126 returns zero rows. Rule #14
-      requires every domains row to have at least one full domain_modules row
-      (including leadership-tier landing modules). Sibling COLLAB-GOV is in the
-      same state which suggests the leadership-tier waiver has been applied
-      catalog-wide; the strict reading of Rule #14 still fails. The fix shape
-      depends on Bucket 2 item 1: option (a) leadership-tier => one landing
-      module, option (b) real market => 5 to 8 modules, option (c) hybrid =>
-      landing plus a starter.
+      Live query /domain_modules?domain_id=eq.126 returns zero rows (re-confirmed
+      2026-06-07). Rule #14 requires every domains row to have at least one full
+      domain_modules row (including leadership-tier landing modules). The fix shape
+      depends on B2-CLASSIFICATION: option (a) leadership-tier => one landing module,
+      option (b) real market => 5 to 8 modules, option (c) hybrid => landing plus a
+      starter. UNBUILT: do not scaffold; left for the build.
     action: |
-      Wait on Bucket 2 item 1. Then author the appropriate module set via a
-      TypeScript loader following the Phase A pattern. M2 / M4 / M5 / M6 / M7 / M8
-      all unblock as a consequence.
+      Wait on B2-CLASSIFICATION. Then author the appropriate module set via a TypeScript
+      loader following the Phase A pattern. M2 / M4 / M5 / M6 / M7 / M8 all unblock as a
+      consequence.
     affected_modules: []
     blocked_by:
       - {type: user_decision, ref: B2-CLASSIFICATION}
@@ -67,11 +54,11 @@ b1b:
   - id: B1B-M2-M4
     summary: M2 and M4 fail because zero modules exist; 8 capabilities are orphan; resolution gated by M1.
     finding: |
-      M2 FAIL: 8 capabilities (above the 3-capability threshold) without the
-      required >=2 module count. M4 FAIL: every one of the 8 capabilities
-      (INTRANET-PUBLISH, INTRANET-NEWS, INTRANET-ANALYTICS, INTRANET-MOBILE,
-      INTRANET-SEARCH, INTRANET-JOURNEY, INTRANET-FRONTLINE, INTRANET-ADVOCACY)
-      has zero realizing modules. Both findings unblock the moment M1 is fixed.
+      M2 FAIL: 8 capabilities (above the 3-capability threshold) without the required
+      >=2 module count. M4 FAIL: every one of the 8 capabilities (INTRANET-PUBLISH,
+      INTRANET-NEWS, INTRANET-ANALYTICS, INTRANET-MOBILE, INTRANET-SEARCH, INTRANET-JOURNEY,
+      INTRANET-FRONTLINE, INTRANET-ADVOCACY) has zero realizing modules. Both findings
+      unblock the moment M1 is fixed.
     action: |
       Loader-time: link each capability to the appropriate domain_module via
       domain_module_capabilities once the module set lands.
@@ -89,71 +76,74 @@ b1b:
 
 b2:
   - id: B2-CLASSIFICATION
-    summary: Is INTRANET a leadership-tier aggregator or a real point-solution market?
+    summary: Is INTRANET a leadership-tier aggregator or a real point-solution market? Gates the entire build.
     question: |
-      SKILL.md leadership-tier list includes INTRANET (zero masters expected). The
-      vendor surface (Staffbase, Simpplr, Firstup, LumApps, Unily, Workvivo,
-      Microsoft Viva Connections, Akumina, Igloo, Workgrid, Sociabble, Haiilo,
-      Interact Intranet, Happeo, Poppulo Harmony, ContactMonkey, Workshop) is a
-      real software market customers buy as system of record. Decide the route.
+      SKILL.md leadership-tier list includes INTRANET (zero masters expected). The vendor
+      surface (a real software market customers buy as system of record for internal
+      communications) plus the rescinded leadership-tier exemption (skill-changelog
+      2026-06-02) point to master-bearing. Decide the build route.
     options:
       - {key: a, label: "Confirm leadership-tier: M1 fix = one landing module, no Phase B; B / E / F / H pass by exception."}
-      - {key: b, label: "Flip to real point-solution market: run Phase 0 vendor research from Bucket 3 candidates; load Phase A / M / B / C / E / F / H; expected 5 to 8 modules per the proposed split."}
+      - {key: b, label: "Flip to real point-solution market: run Phase 0 vendor research from the b3 candidates; load Phase A / M / B / C / E / F / H; expected 5 to 8 modules per the proposed split (see B2-MODULARIZATION)."}
       - {key: c, label: "Hybrid: leadership-tier landing module plus a module_kind='starter' for the publish-and-news minimum surface."}
     why: |
-      Every other open item on this domain is gated by this answer. Bucket 1 UX
-      copy voice changes by route; Bucket 3 candidate set drops entirely on route
-      (a); modularization shape is only defined on routes (b) or (c).
+      Every remaining build item (B1A-RECLASS, B1A-BUILD, B1B-M1, B1B-M2-M4) and the b3
+      candidate set are gated by this answer. UNBUILT: the agent will not scaffold until the
+      route is chosen.
 
-  - id: B2-CATALOG-UX-APPROVAL
-    summary: Approve, edit, or reject the proposed catalog_tagline + catalog_description text per Rule #20.
+  - id: B2-CATALOG-UX-REVIEW
+    summary: Review the catalog_tagline + catalog_description written 2026-06-07 (record_status='new', awaiting approval).
     question: |
-      Approve the proposed buyer-voice tagline and description drafted in 2026-05-30
-      Bucket 1, or supply replacement wording. Per Rule #20 the agent cannot write
-      without explicit per-row approval; the user has the final wording.
+      On 2026-06-07 the agent wrote buyer-voice catalog copy to domains.id=126 (the empty
+      A4 fields), overriding the prior stale surface-before-write gate per the run order.
+      Written text:
+        catalog_tagline = "Reach every employee, from HQ to the shop floor, with one connected internal communications platform."
+        catalog_description = "Publish company news, target announcements by department or location, and reach desk-based and frontline workers across web and mobile. Track readership, manage editorial calendars, and run multi-step journeys for onboarding, change initiatives, and policy rollouts. Connect employee directories, surface knowledge across collaboration tools, and let teams amplify approved content on social channels."
+      Both are at record_status='new'.
     options:
-      - {key: approve, label: "Approve the proposed drafts as-is."}
-      - {key: rewrite, label: "Supply replacement text for either or both columns."}
-      - {key: hold, label: "Hold until Bucket 2 item 1 (classification) is settled, since the buyer voice depends on the route."}
+      - {key: keep, label: "Keep as written (approve on your normal approval pass)."}
+      - {key: rewrite, label: "Supply replacement text for either or both columns (overwrite of a now-non-empty value is destructive: agent will not apply without sign-off)."}
+      - {key: revoice, label: "If you later pick leadership-tier on B2-CLASSIFICATION, repivot the voice from 'modern intranet product' to 'internal-comms governance layer'."}
     why: |
-      Same decision as B1B-A4-UX viewed from the approval angle; resolving either
-      resolves the other. Drafts are recorded in B1B-A4-UX.
+      The A4 fail is fixed; this item now records the written copy for your review rather
+      than gating the write. Any rewrite is a destructive overwrite and needs your sign-off.
 
   - id: B2-CAPABILITY-OWNERSHIP
     summary: Add business_function_capabilities overrides for INTRANET-MOBILE, INTRANET-SEARCH, INTRANET-FRONTLINE?
     question: |
-      C2 currently passes by allowance (zero overrides loaded). Three of the eight
-      capabilities (INTRANET-MOBILE, INTRANET-SEARCH, INTRANET-FRONTLINE) are
-      plausibly IT-Operations- or HR-led rather than Marketing-Communications-led.
-      Decide whether to load business_function_capabilities override rows.
+      C1 passes (domain-level owner Marketing Communications + HR / Executive contributors
+      + IT Operations consumer, 4 rows live). C2 currently passes by allowance (zero
+      capability-grain overrides loaded). Three of the eight capabilities (INTRANET-MOBILE,
+      INTRANET-SEARCH, INTRANET-FRONTLINE) are plausibly IT-Operations- or HR-led rather
+      than Marketing-Communications-led. Decide whether to load business_function_capabilities
+      override rows.
     options:
       - {key: load, label: "Load overrides: typical pattern is INTRANET-MOBILE owner=IT-Operations, INTRANET-SEARCH owner=IT-Operations, INTRANET-FRONTLINE owner=HR."}
       - {key: none, label: "No overrides; Marketing Communications owns all eight."}
       - {key: partial, label: "Specify which subset of the three to override and to which function."}
     why: |
-      Buyer-persona filtering and RACI overlays depend on getting the function
-      ownership right when capability-level RACI diverges from domain-level RACI.
+      Buyer-persona filtering and RACI overlays depend on getting capability-level function
+      ownership right when it diverges from domain-level RACI.
 
   - id: B2-REGULATIONS
     summary: Attach GDPR / CCPA / EU-Whistleblower-Directive (or works-council frameworks) to INTRANET?
     question: |
-      domain_regulations is empty. No FCRA / HIPAA / SOX / FDA direct regulation
-      applies to internal communications. GDPR Articles 13-14 (information
-      notices) and Articles 21-22 (profiling pushback) intersect personalized
-      audience targeting and read-receipt tracking. CCPA, EU Whistleblower
-      Directive, German BetrVG, and French CSE intersect specific publish
-      workflows.
+      domain_regulations is empty (re-confirmed 2026-06-07). No FCRA / HIPAA / SOX / FDA
+      direct regulation applies to internal communications. GDPR Articles 13-14 (information
+      notices) and Articles 21-22 (profiling pushback) intersect personalized audience
+      targeting and read-receipt tracking. CCPA, EU Whistleblower Directive, German BetrVG,
+      and French CSE intersect specific publish workflows.
     options:
       - {key: gdpr-ccpa, label: "Attach GDPR + CCPA at applicability='mandatory' (most defensible minimum)."}
       - {key: gdpr-ccpa-wbd, label: "Above plus EU Whistleblower Directive at applicability='recommended'."}
       - {key: full, label: "Above plus BetrVG / CSE works-council frameworks at applicability='recommended' (regional)."}
       - {key: none, label: "Leave empty (treat regulation exposure as out-of-scope for the catalog row)."}
     why: |
-      Compliance-axis filtering and downstream lifecycle gates (mandatory
-      acknowledgement) read from domain_regulations.
+      Compliance-axis filtering and downstream lifecycle gates (mandatory acknowledgement)
+      read from domain_regulations.
 
   - id: B2-MODULARIZATION
-    summary: If route (b) or (c) on Bucket 2 item 1, which module split?
+    summary: If route (b) or (c) on B2-CLASSIFICATION, which module split?
     question: |
       Proposed 5-module split (only relevant on routes b or c):
         INTRANET-PUBLISH (publishing + spaces + governance)
@@ -161,9 +151,9 @@ b2:
         INTRANET-JOURNEY (journey definitions + steps + employee journeys)
         INTRANET-FRONTLINE (frontline shoutouts + push messaging + read receipts)
         INTRANET-SEARCH (federated indices + employee directory)
-      INTRANET-MOBILE folds into INTRANET-PUBLISH (delivery axis). INTRANET-ANALYTICS
-      is cross-cutting, not a module. INTRANET-ADVOCACY likely drops if EMP-ADVOCACY
-      promotes (Bucket 2 item 6).
+      INTRANET-MOBILE folds into INTRANET-PUBLISH (delivery axis). INTRANET-ANALYTICS is
+      cross-cutting, not a module. INTRANET-ADVOCACY likely drops if EMP-ADVOCACY promotes
+      (B2-ADVOCACY-COLLISION).
     options:
       - {key: 5-module, label: "Adopt the 5-module split as proposed."}
       - {key: 8-module, label: "1:1 with capabilities (8 modules; heavy)."}
@@ -176,53 +166,25 @@ b2:
   - id: B2-ADVOCACY-COLLISION
     summary: INTRANET-ADVOCACY capability vs EMP-ADVOCACY domain candidate (mention_count=4).
     question: |
-      EMP-ADVOCACY is at mention_count=4 in audits/_missing-domains.md (past
-      typical promotion threshold; surfaced by SMM, EMP-EXP, INTRANET). The
-      INTRANET-ADVOCACY capability + future INTRANET-ADVOCACY module overlap.
-      Decide before loading Phase A.
+      EMP-ADVOCACY is at mention_count=4 in audits/_missing-domains.md (past typical
+      promotion threshold; surfaced by SMM, EMP-EXP, INTRANET). The INTRANET-ADVOCACY
+      capability + future INTRANET-ADVOCACY module overlap. Decide before loading Phase A.
     options:
       - {key: promote-emp-advocacy, label: "Promote EMP-ADVOCACY; demote INTRANET-ADVOCACY capability + drop INTRANET-ADVOCACY module from the split."}
       - {key: keep-both, label: "Keep INTRANET-ADVOCACY as a capability/module, reject EMP-ADVOCACY promotion."}
       - {key: partial-overlap, label: "Promote EMP-ADVOCACY and keep INTRANET-ADVOCACY as a thin capability for the read-side (advocacy-feed embed inside INTRANET-NEWS)."}
     why: |
-      Determines whether B3-8 (advocacy candidate masters) routes to INTRANET or
-      to EMP-ADVOCACY on the follow-up audit.
+      Determines whether B3-ADVOCACY-TRIPLET routes to INTRANET or to EMP-ADVOCACY on the
+      follow-up audit.
     blocked_by:
       - {type: user_decision, ref: B2-CLASSIFICATION}
-
-  - id: B2-ALIASES
-    summary: Load 5 candidate domain_aliases for INTRANET?
-    question: |
-      domain_aliases is empty. Common synonyms for the intranet market:
-        - "internal communications"
-        - "employee comms platform"
-        - "digital workplace platform"
-        - "employee app"
-        - "social intranet"
-      Aliases feed catalog search and the per-domain skill's runtime trigger
-      phrases.
-    options:
-      - {key: all, label: "Load all 5 (alias_type per the catalog's existing convention)."}
-      - {key: subset, label: "Specify which subset to load."}
-      - {key: none, label: "Skip aliases."}
-    why: |
-      Independent of every other Bucket 2 item; can be resolved at any time.
 
 b3:
   - id: B3-INTRANET-SPACES
     candidate: intranet_spaces
     rationale: |
-      Universal master across modern intranets (Staffbase spaces, Simpplr
-      communities, Firstup spaces, LumApps communities, Unily sites, Viva
-      Connections sites). Containers for pages / posts with owner / audience /
-      membership attributes.
-    vendor_evidence:
-      - Staffbase
-      - Simpplr
-      - Firstup
-      - LumApps
-      - Unily
-      - Microsoft Viva Connections
+      Universal master across modern intranets (spaces / communities / sites). Containers
+      for pages / posts with owner / audience / membership attributes.
     proposed_module: INTRANET-PUBLISH
     blocked_by:
       - {type: user_decision, ref: B2-CLASSIFICATION}
@@ -230,14 +192,9 @@ b3:
   - id: B3-INTRANET-PAGES-POSTS
     candidate: intranet_pages OR intranet_posts (single vs split)
     rationale: |
-      Universal authoring entity. Most vendors split static pages (long-lived
-      policy / org content) and posts (timeline / activity-feed entries); pick
-      single or split per vendor walk.
-    vendor_evidence:
-      - Staffbase
-      - Workvivo
-      - LumApps
-      - Microsoft Viva Connections
+      Universal authoring entity. Most vendors split static pages (long-lived policy / org
+      content) and posts (timeline / activity-feed entries); pick single or split per
+      vendor walk.
     proposed_module: INTRANET-PUBLISH
     blocked_by:
       - {type: user_decision, ref: B2-CLASSIFICATION}
@@ -245,14 +202,9 @@ b3:
   - id: B3-ANNOUNCEMENTS-TRIPLET
     candidate: announcements + announcement_targeting_rules + announcement_acknowledgements
     rationale: |
-      Read-receipt and mandatory-acknowledge flows are the differentiating
-      workflow vs plain publishing. Lifecycle gates: published,
-      mandatory_acknowledge_required, acknowledged, archived.
-    vendor_evidence:
-      - Staffbase
-      - Firstup
-      - Workvivo
-      - Microsoft Viva Connections
+      Read-receipt and mandatory-acknowledge flows are the differentiating workflow vs
+      plain publishing. Lifecycle gates: published, mandatory_acknowledge_required,
+      acknowledged, archived.
     proposed_module: INTRANET-NEWS
     blocked_by:
       - {type: user_decision, ref: B2-CLASSIFICATION}
@@ -260,13 +212,8 @@ b3:
   - id: B3-NEWSLETTER-TRIPLET
     candidate: internal_newsletters + newsletter_editions + newsletter_subscriptions
     rationale: |
-      Specialist anchor entities. Editorial-calendar + recipient-tracking shape
-      common to dedicated internal-newsletter products.
-    vendor_evidence:
-      - ContactMonkey
-      - Workshop
-      - Poppulo Harmony
-      - Staffbase
+      Specialist anchor entities. Editorial-calendar + recipient-tracking shape common to
+      dedicated internal-newsletter products.
     proposed_module: INTRANET-NEWS
     blocked_by:
       - {type: user_decision, ref: B2-CLASSIFICATION}
@@ -274,15 +221,9 @@ b3:
   - id: B3-EMPLOYEE-DIRECTORY
     candidate: employee_directory_entries (embedded shell on HCM employees)
     rationale: |
-      Federated employee search ranks across HCM directory plus advocacy +
-      content. The intranet's directory entry often carries fields the HCM
-      directory does not (intranet profile photo, status message, kudos count).
-      Likely embedded_master not new master.
-    vendor_evidence:
-      - Staffbase
-      - Simpplr
-      - LumApps
-      - Microsoft Viva Connections
+      Federated employee search ranks across HCM directory plus advocacy + content. The
+      intranet's directory entry often carries fields the HCM directory does not (intranet
+      profile photo, status message, kudos count). Likely embedded_master not new master.
     proposed_module: INTRANET-SEARCH
     blocked_by:
       - {type: user_decision, ref: B2-CLASSIFICATION}
@@ -290,16 +231,9 @@ b3:
   - id: B3-JOURNEY-TRIPLET
     candidate: journey_definitions + employee_journeys + journey_steps
     rationale: |
-      Trigger-driven multi-channel workflows. Lifecycle gates: draft, active,
-      paused, archived; per-step pending, delivered, completed, skipped. Hard
-      collision with the EMP-JOURNEY-ORCH candidate (mention_count=1).
-    vendor_evidence:
-      - Staffbase
-      - Firstup
-      - LumApps
-      - Simpplr
-      - Enboarder
-      - ChangeEngine
+      Trigger-driven multi-channel workflows. Lifecycle gates: draft, active, paused,
+      archived; per-step pending, delivered, completed, skipped. Hard collision with the
+      EMP-JOURNEY-ORCH candidate (mention_count=1).
     proposed_module: INTRANET-JOURNEY
     blocked_by:
       - {type: user_decision, ref: B2-CLASSIFICATION}
@@ -308,18 +242,10 @@ b3:
   - id: B3-FRONTLINE-TRIPLET
     candidate: frontline_shoutouts + mobile_push_messages + read_receipts
     rationale: |
-      Distinct shape from headquarter announcements because frontline workers
-      consume on personal mobile devices outside the corporate identity
-      boundary. Lifecycle: queued, delivered, read, acknowledged. Hard collision
-      with the FRONTLINE-COMMS candidate (mention_count=3, bumped by RET-STORE
-      since prior audit).
-    vendor_evidence:
-      - WorkJam
-      - Beekeeper
-      - Crew
-      - Yoobic
-      - Firstup
-      - Staffbase
+      Distinct shape from headquarter announcements because frontline workers consume on
+      personal mobile devices outside the corporate identity boundary. Lifecycle: queued,
+      delivered, read, acknowledged. Hard collision with the FRONTLINE-COMMS candidate
+      (mention_count=3).
     proposed_module: INTRANET-FRONTLINE
     blocked_by:
       - {type: user_decision, ref: B2-CLASSIFICATION}
@@ -331,12 +257,6 @@ b3:
       Specialist advocacy workflow. Hard collision with EMP-ADVOCACY candidate
       (mention_count=4); if EMP-ADVOCACY promotes, the triplet moves there and
       INTRANET-ADVOCACY capability + module demote.
-    vendor_evidence:
-      - Hootsuite Amplify
-      - Sprinklr Advocacy
-      - Sociabble
-      - GaggleAMP
-      - EveryoneSocial
     proposed_module: INTRANET-ADVOCACY (only on hybrid route)
     blocked_by:
       - {type: user_decision, ref: B2-CLASSIFICATION}

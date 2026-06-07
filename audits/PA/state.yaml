@@ -11,63 +11,26 @@
 schema_version: 2
 domain: PA
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
   - id: B1A-LIFECYCLE-STATES
-    summary: Zero data_object_lifecycle_states on any of the 5 PA masters (attrition_forecasts 42, people_kpis 43, workforce_segments 44, engagement_surveys 45, predictive_models 46); B12 hard fail.
+    summary: Two operational_workflow PA masters (engagement_surveys 45, predictive_models 46) have a real workflow but zero data_object_lifecycle_states; B12 fail. (Post 2026-06-07 entity_type classification, attrition_forecasts 42 / people_kpis 43 / workforce_segments 44 are now `computed`, so B12 no longer requires lifecycle states for them.)
     finding: |
-      All 5 PA masters have a real workflow but zero rows in data_object_lifecycle_states. Existing trigger_events imply the state machines:
+      After the 2026-06-07 classification: engagement_surveys (45) and predictive_models (46) are entity_type=operational_workflow and so DO require lifecycle states; attrition_forecasts (42), people_kpis (43), workforce_segments (44) are entity_type=computed and are B12-exempt. Existing trigger_events imply the two remaining state machines:
       engagement_surveys 45 (events 398 launched lifecycle, 399 closed state_change): draft -> launched -> closing -> closed -> results_published -> archived;
-      attrition_forecasts 42 (event 397 published state_change, 1221 attrition_risk.elevated threshold): draft -> published -> superseded;
-      predictive_models 46 (events 400 deployed state_change, 401 scored signal): training -> validated -> deployed -> retired;
-      people_kpis 43 (event 1219 snapshot_published lifecycle): draft -> snapshot_published -> archived;
-      workforce_segments 44 (events 64 high_potential.identified signal, 1220 composition_changed state_change, 1223 pay_equity.gap_detected threshold, 1224 skill_gap.identified signal): draft -> composition_baseline -> composition_changed -> archived.
+      predictive_models 46 (events 400 deployed state_change, 401 scored signal): training -> validated -> deployed -> retired.
     action: |
-      Draft state rows per the implied state machines above. Mark requires_permission=true on gated transitions (engagement_survey.launched, predictive_model.deployed, attrition_forecast.published). Set domain_module_id to the master's home module (engagement_surveys -> 82, predictive_models -> 83, attrition_forecasts -> 83, people_kpis -> 81, workforce_segments -> 81). New entity inserts: per-row authoring needs user approval before load.
+      Draft state rows for the two operational_workflow masters per the implied state machines above. Mark requires_permission=true on gated transitions (engagement_survey.launched, predictive_model.deployed). Set domain_module_id to the master's home module (engagement_surveys -> 82, predictive_models -> 83). New entity inserts: per-row state authoring needs user approval before load (state.yaml gate retained).
     affected_masters:
-      - {data_object_id: 42, name: attrition_forecasts, target_module_id: 83, workflow: "draft -> published -> superseded"}
-      - {data_object_id: 43, name: people_kpis, target_module_id: 81, workflow: "draft -> snapshot_published -> archived"}
-      - {data_object_id: 44, name: workforce_segments, target_module_id: 81, workflow: "draft -> composition_baseline -> composition_changed -> archived"}
       - {data_object_id: 45, name: engagement_surveys, target_module_id: 82, workflow: "draft -> launched -> closing -> closed -> results_published -> archived"}
       - {data_object_id: 46, name: predictive_models, target_module_id: 83, workflow: "training -> validated -> deployed -> retired"}
-
-  - id: B1A-SYSTEM-SKILLS
-    summary: Zero module-level skill_type=system skills on any of the 4 PA modules; legacy pa-system (id 5, domain_module_id NULL) still present. F2 / F3 / F5 hard fail, F1 transitional.
-    finding: |
-      Rule #17 requires exactly one system skill per domain_modules row with >=1 skill_tools row each. PA has 4 full modules (81 PA-WORKFORCE-METRICS, 82 PA-ENGAGEMENT-SURVEYS, 83 PA-PREDICTIVE-MODELS, 84 PA-DEI-ANALYTICS), expected 4 module-level system skills, observed 0. Legacy skill id=5 'pa-system' carries domain_module_id=NULL and 0 skill_tools rows. Semantius score F5 is uncomputable until module-level skills land.
-    action: |
-      Author 4 module-level system skills (one per module): pa_workforce_metrics_agent (81), pa_engagement_surveys_agent (82), pa_predictive_models_agent (83), pa_dei_analytics_agent (84). Each gets >=5 skill_tools rows per Phase-S authoring procedure (query_<master>, mutate_<master> per gated transition, notify_person, compute_* primitives). After F2 lands, DELETE legacy skill id=5 per F1 transitional cleanup.
-    affected_modules: [81, 82, 83, 84]
-    blocked_by:
-      - {type: depends_on, ref: B1A-LIFECYCLE-STATES, reason: "workflow-gate mutate tools per skill_tools derive from lifecycle states' requires_permission=true transitions"}
-
-  - id: B1A-ROLES
-    summary: Zero PA-scoped roles, zero role_modules rows touching PA modules. E1 hard fail (4-module domain needs >=3 roles).
-    finding: |
-      /role_modules?domain_module_id=in.(81,82,83,84) returns empty. No PA-scoped role_codes present. PA has 4 full modules requiring at least 3 roles per E1 with the 2-module floor per E2.
-    action: |
-      Author 3-5 PA-scoped roles bundled under People Analytics business function: proposed PA-ANALYST (multi-module read + dashboard authoring), PA-LEAD (model deployment approver, DEI sign-off), PA-DATA-SCIENTIST (predictive model author, DEI cohort analysis). Each role gets >=2 role_modules rows with interaction_level populated and a role_permissions bundle. New entity inserts: per-role bundle authoring needs user approval.
-    affected_modules: [81, 82, 83, 84]
-    blocked_by:
-      - {type: depends_on, ref: B1A-PERMISSIONS, reason: "role_permissions cannot be authored before permission rows exist"}
-
-  - id: B1A-PERMISSIONS
-    summary: Zero permissions rows with domain_module_id in (81,82,83,84). Rule #14 baseline derivation hard fail.
-    finding: |
-      /permissions?domain_module_id=in.(81,82,83,84) returns empty. Rule #14 implies >=12 baseline rows expected (3 per module: <module_code>:read, <module_code>:manage, <module_code>:admin) plus workflow-gate rows from lifecycle states with requires_permission=true.
-    action: |
-      Author 12 baseline permissions across the 4 modules (3 each, tiers baseline-read / baseline-manage / baseline-admin). Workflow-gate permissions are derived from B1A-LIFECYCLE-STATES (1 per gated state). Baseline slice is unblocked; workflow-gate slice depends on B1A-LIFECYCLE-STATES.
-    affected_modules: [81, 82, 83, 84]
-    extra_baseline_slice_unblocked: true
-    blocked_by:
-      - {type: depends_on, ref: B1A-LIFECYCLE-STATES, reason: "workflow-gate permissions per Rule #12 derive from lifecycle states (baseline 12 rows are unblocked)"}
 
   - id: B1A-INTRA-PA-RELATIONSHIPS
     summary: Intra-PA master-to-master data_object_relationships missing. B6 partial fail.
     finding: |
-      Among the 5 PA masters (42, 43, 44, 45, 46), no direct master-to-master relationships exist. Observed rows: 5 user-edges (1595-1599, Rule #10) plus derivation feeds (rows 13 org_units measures people_kpis, 46 employment_events feeds people_kpis, 113 learning_records feeds people_kpis, 161 engagement_drivers feeds people_kpis, 162 survey_responses feeds people_kpis, 832 customers feeds people_kpis). Missing master-to-master edges: predictive_models scores attrition_forecasts (46 -> 42), predictive_models scores workforce_segments (46 -> 44), attrition_forecasts segments workforce_segments (42 -> 44).
+      Among the 5 PA masters (42, 43, 44, 45, 46), no direct master-to-master relationships exist. Observed rows: 5 user-edges (1595-1599, Rule #10) plus derivation feeds (org_units / employment_events / learning_records / engagement_drivers / survey_responses / customers all feed people_kpis). Missing master-to-master edges: predictive_models scores attrition_forecasts (46 -> 42), predictive_models scores workforce_segments (46 -> 44), attrition_forecasts segments workforce_segments (42 -> 44).
     action: |
       Draft 3-4 intra-PA data_object_relationships rows. Each row needs relationship_verb + inverse_verb + relationship_type + relationship_kind + is_required + owner_side. Verb proposals not pre-specified by audit; user authoring required.
     affected_masters:
@@ -75,78 +38,45 @@ b1a:
       - {data_object_id: 44, name: workforce_segments, target_module_id: 81, workflow: pair_with_46_42}
       - {data_object_id: 46, name: predictive_models, target_module_id: 83, workflow: pair_with_42_44}
 
-  - id: B1A-ALIASES
-    summary: Zero data_object_aliases on any of the 5 PA masters. B11 hard fail.
-    finding: |
-      /data_object_aliases?data_object_id=in.(42,43,44,45,46) returns empty. PA is a strong-vendor-terminology market (industry terms like Headcount, FTE, Span of Control, Pulse Survey, Flight Risk Score; vendor terms differ per platform).
-    action: |
-      Draft 2-4 aliases per master with alias_type populated (industry / vendor / regulatory). Exact alias names and types not pre-specified by audit; user authoring required.
-    affected_masters:
-      - {data_object_id: 42, name: attrition_forecasts, target_module_id: 83, workflow: alias_proposals_needed}
-      - {data_object_id: 43, name: people_kpis, target_module_id: 81, workflow: alias_proposals_needed}
-      - {data_object_id: 44, name: workforce_segments, target_module_id: 81, workflow: alias_proposals_needed}
-      - {data_object_id: 45, name: engagement_surveys, target_module_id: 82, workflow: alias_proposals_needed}
-      - {data_object_id: 46, name: predictive_models, target_module_id: 83, workflow: alias_proposals_needed}
-
-  - id: B1A-APQC-TAGGING
-    summary: 8 existing handoff_processes rows all discovery_substring / record_status=new, 0 agent_curated, 0 approved. 30+ candidate tags identified, blocked by unresolved PCF external_ids.
-    finding: |
-      PA cross-domain handoffs (18 outbound + 12 inbound + 4 intra-PA) cluster into APQC PCF families for workforce metrics, employee engagement, talent intelligence, DEI/pay-equity. The 2026-05-30 audit proposed ~30 agent_curated rows, but the 2026-05-31 Continuation verified that audit-proposed external_ids (10544, 10545, 10547, 10548, 10550, 10539) do NOT resolve in the live processes table. The 8 already-resolved external_ids (10532, 10018, 10175, 16944, 21698, 10773, 10511, 16437) carry semantic mismatches with the audit prose for several rows.
-    action: |
-      Re-resolve PCF candidate activities against live /processes?source_framework=eq.apqc_pcf_cross_industry before any INSERT. Group lookups by family: workforce-metrics, employee-engagement, talent-intelligence, DEI-ethics. Once verified IDs land, draft handoff_processes inserts: (handoff_id, process_id, proposal_source='agent_curated', record_status='new'). Includes REPLACE for handoffs 451, 13, 115 where existing tags are in the wrong PCF family.
-    affected_handoffs:
-      - {handoff_id: 26, direction: outbound, source_domain: PA, target_domain: TALENT-MGMT, trigger_event: high_potential.identified, payload: workforce_segments, null_field: process_id_unresolved}
-      - {handoff_id: 1104, direction: outbound, source_domain: PA, target_domain: EPM, trigger_event: people_kpi.snapshot_published, payload: people_kpis, null_field: process_id_unresolved}
-      - {handoff_id: 1105, direction: outbound, source_domain: PA, target_domain: COMP-MGMT, trigger_event: pay_equity.gap_detected, payload: workforce_segments, null_field: process_id_unresolved}
-      - {handoff_id: 1107, direction: outbound, source_domain: PA, target_domain: EMP-EXP, trigger_event: engagement.declining, payload: engagement_surveys, null_field: process_id_unresolved}
-      - {handoff_id: 1106, direction: outbound, source_domain: PA, target_domain: SKILLS-MGMT, trigger_event: skill_gap.identified, payload: workforce_segments, null_field: process_id_unresolved}
-      - {handoff_id: 1108, direction: outbound, source_domain: PA, target_domain: TALENT-MGMT, trigger_event: engagement.declining, payload: engagement_surveys, null_field: process_id_unresolved}
-      - {handoff_id: 1109, direction: outbound, source_domain: PA, target_domain: HRSD, trigger_event: engagement.declining, payload: engagement_surveys, null_field: process_id_unresolved}
-      - {handoff_id: 1110, direction: outbound, source_domain: PA, target_domain: TALENT-MGMT, trigger_event: attrition_risk.elevated, payload: attrition_forecasts, null_field: process_id_unresolved}
-      - {handoff_id: 1111, direction: outbound, source_domain: PA, target_domain: HCM, trigger_event: attrition_risk.elevated, payload: attrition_forecasts, null_field: process_id_unresolved}
-      - {handoff_id: 1112, direction: outbound, source_domain: PA, target_domain: SWP, trigger_event: workforce_segment.composition_changed, payload: workforce_segments, null_field: process_id_unresolved}
-      - {handoff_id: 1113, direction: outbound, source_domain: PA, target_domain: TALENT-MGMT, trigger_event: predictive_model.deployed, payload: predictive_models, null_field: process_id_unresolved}
-      - {handoff_id: 451, direction: outbound, source_domain: PA, target_domain: HCM, trigger_event: attrition.forecast_updated, payload: workforce_plans, null_field: replace_existing_10175}
-      - {handoff_id: 13, direction: outbound, source_domain: PA, target_domain: SWP, trigger_event: attrition.forecast_updated, payload: workforce_plans, null_field: replace_existing_10175}
-      - {handoff_id: 449, direction: outbound, source_domain: PA, target_domain: HCM, trigger_event: attrition_risk.high, payload: employees, null_field: process_id_unresolved}
-      - {handoff_id: 450, direction: outbound, source_domain: PA, target_domain: TALENT-MGMT, trigger_event: attrition_risk.high, payload: employees, null_field: process_id_unresolved}
-      - {handoff_id: 452, direction: outbound, source_domain: PA, target_domain: SWP, trigger_event: attrition_forecast.published, payload: attrition_forecasts, null_field: process_id_unresolved}
-      - {handoff_id: 453, direction: outbound, source_domain: PA, target_domain: ATS, trigger_event: predictive_model.scored, payload: predictive_models, null_field: process_id_unresolved}
-      - {handoff_id: 1103, direction: outbound, source_domain: PA, target_domain: HCM, trigger_event: people_kpi.snapshot_published, payload: people_kpis, null_field: process_id_unresolved}
-      - {handoff_id: 25, direction: inbound, source_domain: PAYROLL, target_domain: PA, trigger_event: pay_cycle.closed, payload: people_kpis, null_field: process_id_unresolved}
-      - {handoff_id: 23, direction: inbound, source_domain: ATS, target_domain: PA, trigger_event: requisition.filled, payload: people_kpis, null_field: confirm_or_replace_21698}
-      - {handoff_id: 21, direction: inbound, source_domain: HCM, target_domain: PA, trigger_event: employment_event.recorded, payload: employment_events, null_field: process_id_unresolved}
-      - {handoff_id: 102, direction: inbound, source_domain: PAYROLL, target_domain: PA, trigger_event: pay_cycle.closed, payload: pay_slips, null_field: process_id_unresolved}
-      - {handoff_id: 1077, direction: inbound, source_domain: EMP-EXP, target_domain: PA, trigger_event: action_plan.completed, payload: action_plans, null_field: process_id_unresolved}
-      - {handoff_id: 1130, direction: inbound, source_domain: PSA, target_domain: PA, trigger_event: project_assignment.utilization_low, payload: project_assignments, null_field: process_id_unresolved}
-      - {handoff_id: 403, direction: inbound, source_domain: ATS, target_domain: PA, trigger_event: recruitment_source.attributed, payload: recruitment_sources, null_field: process_id_unresolved}
-      - {handoff_id: 444, direction: inbound, source_domain: EMP-EXP, target_domain: PA, trigger_event: survey_response.received, payload: survey_responses, null_field: process_id_unresolved}
-      - {handoff_id: 1155, direction: inbound, source_domain: PAYROLL, target_domain: PA, trigger_event: pay_run.disbursed, payload: pay_runs, null_field: process_id_unresolved}
-      - {handoff_id: 107, direction: inbound, source_domain: COMP-MGMT, target_domain: PA, trigger_event: merit_cycle.closed, payload: compensation_statements, null_field: process_id_unresolved}
-      - {handoff_id: 115, direction: inbound, source_domain: EMP-EXP, target_domain: PA, trigger_event: survey.cycle_closed, payload: engagement_drivers, null_field: replace_existing_10018}
-      - {handoff_id: 1281, direction: inbound, source_domain: ATS, target_domain: PA, trigger_event: interview_scorecard.submitted, payload: interview_scorecards, null_field: process_id_unresolved}
-  - id: B1A-PHASE-P
-    summary: "Multi-module (4 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 4 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "5 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 5 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [attrition_forecasts, engagement_surveys, people_kpis, predictive_models, workforce_segments]
-    extra_phase_p_triage: "2026-06-02"
   - id: B1A-SELF-CONTAIN
-    summary: "5 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
-    finding: "Live triage 2026-06-02: 5 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
-    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
+    summary: "5 contributor/required-consumer rows break module self-containment (M9): embed or relax each. DESTRUCTIVE (rewrites role/necessity on existing DMDO rows) -> needs user sign-off."
+    finding: "5 domain_module_data_objects rows on PA modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation. Resolving rewrites a non-empty role/necessity on an existing row, which is a destructive change."
+    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency. Requires user approval (overwrite of an existing non-empty value)."
     extra_m9_shapes:
       - {entity: hcm_positions, module: PA-DEI-ANALYTICS, role: consumer, master_domain: HCM}
       - {entity: hcm_positions, module: PA-PREDICTIVE-MODELS, role: consumer, master_domain: HCM}
       - {entity: hcm_positions, module: PA-WORKFORCE-METRICS, role: consumer, master_domain: HCM}
       - {entity: recruitment_sources, module: PA-WORKFORCE-METRICS, role: consumer, master_domain: ATS}
       - {entity: survey_responses, module: PA-ENGAGEMENT-SURVEYS, role: consumer, master_domain: EMP-EXP}
+
+  - id: B1A-APQC-REPLACE
+    summary: "DESTRUCTIVE slice of APQC tagging: 6-7 existing discovery_substring handoff_processes rows sit in the wrong PCF family and the audit recommends REPLACE. Overwriting an existing tag is destructive -> needs user sign-off."
+    finding: |
+      The additive APQC slice (8 untagged PA handoffs with clean PCF matches) was executed 2026-06-07. The remaining APQC work is REPLACE of existing discovery_substring rows whose process_id is in the wrong family:
+      handoff 13  (PA->SWP attrition.forecast_updated) tag process_id=671 "Analyze customer attrition and retention rates" (CRM family, wrong) -> recommend 980 "Perform strategic workforce planning" (PCF 21693);
+      handoff 451 (PA->HCM attrition.forecast_updated) tag process_id=671 (same wrong CRM family) -> recommend 247 "Develop workforce analytics" (PCF 21441) or 248 "Implement workforce analytics" (PCF 21447);
+      handoff 23  (ATS->PA requisition.filled) tag process_id=219 "Manage employee requisitions" (PCF 21698) -> reviewer choice: confirm as agent_curated or raise to 247/248 workforce-analytics family;
+      handoffs 1107/1108/1109 (engagement.declining to EMP-EXP / TALENT-MGMT / HRSD) tag process_id=250 "Conduct employee engagement surveys" (defensible but discovery_substring) -> reviewer choice: confirm or repoint 1048 "Review engagement and retention indicators".
+    action: "User decision per row: REPLACE the discovery_substring process_id with the recommended clean PCF match (then re-mark proposal_source='agent_curated'), or confirm the existing tag. Agent will not overwrite an existing non-empty tag without sign-off."
+
+  - id: B1A-PHASE-P
+    summary: "Multi-module (4 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED (do not author)."
+    finding: "4 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
+    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: PA-ANALYST (multi-module read + dashboard authoring), PA-LEAD (model deployment approver, DEI sign-off), PA-DATA-SCIENTIST (predictive model author, DEI cohort analysis). DEFERRED per parent-task B1A-PHASE-P rule; awaiting user."
     extra_phase_p_triage: "2026-06-02"
+
+  # --- RETIRED 2026-06-06 (per-domain-skill restoration / Plan 3) ---
+  # The following items are superseded by the supersession header above and are NOT actionable
+  # under the current model. Kept for provenance only.
+  - id: B1A-SYSTEM-SKILLS
+    superseded: "2026-06-06 per-domain-skill restoration"
+    summary: "RETIRED. Was: author 4 module-level system skills (one per PA module) + skill_tools. The per-module `system` skill grain and `skill_tools` are dropped. Per-module tool re-authoring now tracked in audits/_modularization-backlog.md."
+  - id: B1A-ROLES
+    superseded: "2026-06-06 per-domain-skill restoration / Plan 3"
+    summary: "RETIRED. Was: author 3-5 PA-scoped _core roles + role_modules + role_permissions. The _core roles-permissions model item is superseded; operational personas are tracked under B1A-PHASE-P (domain_roles / role_modules / process_raci), which is DEFERRED."
+  - id: B1A-PERMISSIONS
+    superseded: "2026-06-06 per-domain-skill restoration / Plan 3"
+    summary: "RETIRED. Was: author 12 baseline _core permissions across 4 modules + workflow-gate permissions. The _core roles-permissions baseline-derivation model item is superseded; write tiers are now derived at emit time from entity_type (Rule #12) and lifecycle-state requires_permission gates."
 
 b1b: []
 
@@ -154,13 +84,13 @@ b2:
   - id: B2-MODULE-84-MASTER
     summary: Module 84 (PA-DEI-ANALYTICS) masters zero data_objects; intentional derived-only design or missing master?
     question: |
-      PA-DEI-ANALYTICS module 84 carries only consumer + derived DMDO rows (hcm_positions, org_units, compensation_plans, merit_recommendations as consumers; employees as derived) and 1 capability (DEI-ANALYTICS). Vendor analogs (Trusaic / Syndio / Visier Pay Equity / Diversio) master pay-equity analyses or DEI cohorts as first-class entities with their own lifecycle. Was this intentional?
+      PA-DEI-ANALYTICS module 84 carries only consumer + derived DMDO rows (hcm_positions, org_units, compensation_plans, merit_recommendations as consumers; employees as derived) and 1 capability (DEI-ANALYTICS). Vendor analogs master pay-equity analyses or DEI cohorts as first-class entities with their own lifecycle. Was this intentional?
     options:
       - "(a) ADD pay_equity_analyses master to module 84"
       - "(b) ADD dei_cohorts master to module 84"
       - "(c) confirm derived-only intentional design"
     why: |
-      Vendor-research findings (B3-PAY-EQUITY-ANALYSES / B3-DEI-COHORTS) could inform which entity to master. If user picks (c), Bucket 3 work on B3-PAY-EQUITY-ANALYSES / B3-DEI-COHORTS may be moot.
+      Vendor-research findings (B3-PAY-EQUITY-ANALYSES / B3-DEI-COHORTS) could inform which entity to master. If user picks (c), Bucket 3 work on B3-PAY-EQUITY-ANALYSES / B3-DEI-COHORTS may be moot. Note: module 84 now masters zero entities and is entity_type-agnostic; the overlay/derive test would permit (c).
 
   - id: B2-EVENT-ATTRIBUTION-DEFECT
     summary: Trigger_events 10 (attrition_risk.high, data_object_id=31 employees) and 11 (attrition.forecast_updated, data_object_id=23 workforce_plans) are non-PA-mastered but used by PA-published handoffs 449/450/13/451.
@@ -177,24 +107,24 @@ b2:
       - {id: 11, event_name: "attrition.forecast_updated", current_category: "state_change", proposed_category: "retire_or_repoint"}
 
   - id: B2-PATTERN-FLAGS
-    summary: 2026-05-30 audit proposed pattern-flag flips on 3 PA masters; B4 re-evaluation pending user confirm.
+    summary: "2026-05-30 audit proposed pattern-flag flips on 3 PA masters; B4 re-evaluation pending user confirm. (Note: only operational_workflow masters carry pattern-flag meaning; engagement_surveys + predictive_models are now operational_workflow, attrition_forecasts is now computed.)"
     question: |
-      Proposed flips: engagement_surveys.has_personal_content=true (GDPR Art. 9 special categories likely), engagement_surveys.has_submit_lock=true (closed cycle locks response window); predictive_models.has_single_approver=true (EU AI Act Art. 14 single accountable human), predictive_models.has_personal_content=true (per-employee scoring is personal data); attrition_forecasts.has_personal_content=true (individual-level scores are personal data per GDPR + EU AI Act profiling). Confirm or modify per row?
+      Proposed flips: engagement_surveys.has_personal_content=true (GDPR Art. 9 special categories likely), engagement_surveys.has_submit_lock=true (closed cycle locks response window); predictive_models.has_single_approver=true (EU AI Act Art. 14 single accountable human), predictive_models.has_personal_content=true (per-employee scoring is personal data); attrition_forecasts.has_personal_content=true (individual-level scores are personal data; note attrition_forecasts is now classified computed so the flag has weaker materializer effect). Confirm or modify per row?
     options:
       - "(a) apply all 5 flips as proposed"
       - "(b) apply some (specify which)"
       - "(c) decline all"
     why: |
-      Flags drive downstream materializer behavior (RBAC, audit-trail emission). Independent decision.
+      Flags drive downstream materializer behavior (RBAC, audit-trail emission). Independent decision. Overwrites existing non-empty boolean values -> needs sign-off.
     affected_masters:
-      - {data_object_id: 42, name: attrition_forecasts, target_module_id: 83, workflow: "has_personal_content -> true"}
+      - {data_object_id: 42, name: attrition_forecasts, target_module_id: 83, workflow: "has_personal_content -> true (computed)"}
       - {data_object_id: 45, name: engagement_surveys, target_module_id: 82, workflow: "has_personal_content -> true; has_submit_lock -> true"}
       - {data_object_id: 46, name: predictive_models, target_module_id: 83, workflow: "has_personal_content -> true; has_single_approver -> true"}
 
   - id: B2-ENGAGEMENT-SCOPE-SPLIT
     summary: PA-ENGAGEMENT-SURVEYS (module 82) vs EMP-EXP scope ambiguity; duplicate or distinct?
     question: |
-      EMP-EXP masters survey_responses (182) and engagement_drivers (183) and publishes survey.cycle_closed / survey_response.received / action_plan.completed INTO PA. PA-ENGAGEMENT-SURVEYS module 82 also masters engagement_surveys (45) and publishes engagement_survey.closed / launched / engagement.declining. Pure-play vendors (Culture Amp / Lattice / Peakon) typically classify under EMP-EXP. Resolve?
+      EMP-EXP masters survey_responses (182) and engagement_drivers (183) and publishes survey.cycle_closed / survey_response.received / action_plan.completed INTO PA. PA-ENGAGEMENT-SURVEYS module 82 also masters engagement_surveys (45) and publishes engagement_survey.closed / launched / engagement.declining. Pure-play vendors typically classify under EMP-EXP. Resolve?
     options:
       - "(a) keep both, clarify boundary (EMP-EXP runs surveys, PA scores/aggregates)"
       - "(b) MOVE engagement_surveys to EMP-EXP, demote module 82 to derived/consumer only"
@@ -221,12 +151,12 @@ b2:
       - "(a) keep, intentional revenue-per-employee KPI feed"
       - "(b) drop the row"
     why: |
-      Standalone decision. No cross-domain coordination needed.
+      Standalone decision. No cross-domain coordination needed. Dropping is destructive -> needs sign-off.
 
   - id: B2-PA-NAMING
     summary: PA domain naming / market split. People Analytics unified vs split into Workforce Analytics + People Listening.
     question: |
-      Visier / OneModel position as broad people-analytics platforms. Culture Amp / Glint / Peakon / Lattice position as employee-listening platforms. Two distinct buyer profiles (HRBP / People Ops vs People Analytics teams). Resolve?
+      Broad people-analytics platforms position differently from employee-listening platforms. Two distinct buyer profiles (HRBP / People Ops vs People Analytics teams). Resolve?
     options:
       - "(a) keep PA unified (current state)"
       - "(b) PROMOTE People Listening to separate domain (queued as B3-EMP-LISTENING-DOMAIN in _missing-domains.md)"

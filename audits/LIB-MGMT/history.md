@@ -295,3 +295,78 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass over the open LIB-MGMT (domain 168) state.yaml items. Worked
+only the open items; no fresh from-scratch audit. Confirmed live: domain 168, 6 modules
+(155-160), 17 masters (823-839). Four additive/corrective item types executed in one loader
+(.tmp_deploy/2026-06-07_lib_mgmt_state_audit.ts); all new rows record_status=new. The
+cross-domain extension chain (B1B-S4/S5/S7) and the holdings lifecycle (B1B-S6 / B1A-ENTITY-TYPE-826)
+stay user/neighbor-gated. Personas (B1A-PHASE-P) deferred per policy. last_audit set 2026-06-07;
+next_action_by flipped to user.
+
+### Executed
+
+- **B1A-ENTITY-TYPE (16 of 17 masters):** PATCH data_objects.entity_type off unclassified.
+  operational_workflow: bibliographic_records 823, library_items 824, library_authorities 825,
+  library_loans 827, library_holds 828, library_fines 829, library_patrons 831,
+  library_acquisition_orders 833, library_serial_subscriptions 835, library_eresource_licenses 836,
+  interlibrary_loan_requests 838. catalog: library_circulation_policies 830,
+  library_patron_categories 832, library_vendor_accounts 834, library_sharing_partners 839.
+  operational_record: library_saved_searches 837. library_holdings 826 deliberately LEFT
+  unclassified (its config-vs-workflow shape is the open B2-S2 call; classifying pre-empts it).
+- **Catalog UX (Rule #20), 7 rows:** PATCH catalog_tagline + catalog_description on the empty
+  domain 168 row and all 6 modules (155-160). Buyer-voice, no vendor names, no em-dash,
+  American English. Only wrote where the existing value was empty; ignored the stale
+  surface-before-write gate per the execute directive. B2-S1 (the old wording-gate item) is
+  therefore resolved and dropped.
+- **B1A-S3 trigger_events, 26 inserted** (9 pre-existing, 35 total now): all
+  event_category=state_change, from_state="" per the live convention. Covers library_item.available/
+  .withdrawn, library_authority.established, library_loan.renewed/.returned/.lost,
+  library_hold.trapped/.fulfilled/.cancelled, library_fine.paid/.waived/.sent_to_collections,
+  library_patron.activated/.archived, library_acquisition_order.submitted/.cancelled,
+  library_serial_subscription.renewed/.cancelled, library_eresource_license.activated/.renewed/
+  .terminated, interlibrary_loan_request.routed/.accepted/.shipped/.completed/.cancelled.
+- **C1 business_function_domains, 2 contributor rows inserted:** Business Operations (34) and
+  Customer Service (24) as contributors. Additive only; the existing R&D (35) owner row and L&D
+  (11) contributor row were NOT touched (the owner-flip is the destructive B2-S3 decision).
+
+### Surfaced (user owns; not written)
+
+- **B2-S2 (holdings shape + entity_type for 826):** config (catalog, no lifecycle) vs workflow
+  (operational_workflow + author B1B-S6 lifecycle, 3-state or Alma 5-state). 826 entity_type left
+  unclassified pending this. Also confirm the four config + one record classifications applied today.
+- **B2-S3 (functional ownership, DESTRUCTIVE owner-flip):** keep R&D owner (contributors now added)
+  vs flip owner to Business Operations / Customer Service vs split into a dedicated library-services
+  function. Flipping overwrites the existing owner row, so it is not executed.
+- **B2-S4 (role naming), B2-S5 (Discovery OPAC vs full layer), B2-S6 (domain_regulations):** carried.
+- **B1B-S4 / B1B-S5 / B1B-S7 (cross-domain relationships + handoffs + APQC):** the source
+  trigger_events now exist (B1A-S3 resolved that dependency), but the prior snapshot counterparty
+  ids are STALE: there is no ap_invoices / iam_users / bare contracts master; HCM employees is id 31
+  (NOT 54, which is asset_contracts); AP invoices and CLM contracts are each split across several
+  masters. Selecting the canonical counterparty per edge is cross-domain judgment, so these stay
+  user/neighbor-gated, not mechanical THIS-domain backfill.
+- **B1A-PHASE-P (personas/RACI):** DEFERRED per audit policy (not authored unattended). Candidate
+  personas: cataloger, circulation_clerk, acquisitions_librarian, reference_librarian, library_director.
+
+### Left
+
+- b1b cross-domain chain (S4/S5/S7) and holdings lifecycle (S6) blocked on the above decisions.
+- b3 backlog (S1 library_branches, S2 library_digital_loans, S3 library_program_events,
+  S4 library_course_reserves, S5 library_patron_identities) untouched.
+- Aliases (B11): not an open state item; 24 synonyms already cover the masters well. No write.
+
+### UI links (tables written)
+
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/domains
+- https://tests.semantius.app/domain_map/domain_modules
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/business_function_domains
+
+### JWT-audience errors
+
+None encountered.

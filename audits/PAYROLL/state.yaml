@@ -11,163 +11,51 @@
 schema_version: 2
 domain: PAYROLL
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-06"
+
+# b1a executed in the 2026-06-06 state-driven pass and dropped:
+#   B1A-ENTITY-TYPE (8 masters classified), A4/M8 catalog UX (5 rows), B1A-S11 (26 aliases),
+#   B1A-S12 HR contributor, B1A-S13 (4 users DMDO), B1A-S6r (handoff 414 source FK),
+#   B1A-S4 (8 intra-domain relationships), B1A-H1 (17 handoffs now agent_curated).
+# Remaining open b1a items are SURFACE-only (destructive) or DEFERRED (personas).
 
 b1a:
-  - id: B1A-S4
-    summary: Author 8 intra-PAYROLL data_object_relationships edges to model the PAYROLL master-to-master spine
+  - id: B1A-S12-IT
+    summary: business_function_domains -- Information Technology consumer row (function-spine name decision)
     finding: >-
-      Only 2 data_object_relationships rows tie PAYROLL masters together (121
-      garnishment_orders deducts_via deduction_codes, 140 benefit_enrollments posts_to
-      payroll_journal_entries; the second is BEN-ADMIN owned). The intra-PAYROLL spine
-      is essentially un-modeled.
+      HR (business_function 3) was added as contributor in the 2026-06-06 pass. The audit also
+      proposed Information Technology as a consumer, but the canonical function spine has no
+      "Information Technology" row. The candidate IT sub-functions are IT Operations (27),
+      IT Service Desk (57), IT Infrastructure (58). Picking one is a function-spine judgment,
+      not a clean mechanical insert, so it is surfaced rather than guessed.
     action: >-
-      Author 8 rows: pay_runs (138) produces pay_slips (139) one_to_many required;
-      pay_runs books payroll_journal_entries (145) one_to_many required; pay_runs feeds
-      tax_filings (143) one_to_many required; tax_authorities (142) scopes tax_filings
-      (143) one_to_many required; earning_codes (140) contributes_to pay_slips (139)
-      many_to_many required; deduction_codes (141) contributes_to pay_slips (139)
-      many_to_many required; garnishment_orders (144) deducts_via pay_runs (138)
-      one_to_many required; pay_slips evidences payroll_journal_entries one_to_one
-      optional.
-    affected_masters:
-      - {data_object_id: 138, name: pay_runs, target_module_id: 90, workflow: gross_to_net}
-      - {data_object_id: 139, name: pay_slips, target_module_id: 93, workflow: pay_statement_publish}
-      - {data_object_id: 140, name: earning_codes, target_module_id: 92, workflow: earnings_catalog}
-      - {data_object_id: 141, name: deduction_codes, target_module_id: 92, workflow: deductions_catalog}
-      - {data_object_id: 142, name: tax_authorities, target_module_id: 91, workflow: tax_jurisdiction}
-      - {data_object_id: 143, name: tax_filings, target_module_id: 91, workflow: statutory_filing}
-      - {data_object_id: 144, name: garnishment_orders, target_module_id: 92, workflow: garnishment_processing}
-      - {data_object_id: 145, name: payroll_journal_entries, target_module_id: 90, workflow: gl_post}
+      User picks which IT sub-function consumes PAYROLL (integration ownership), then INSERT one
+      business_function_domains row (domain_id=55, business_function_id=<pick>, responsibility_type=consumer).
+    surfaced: true
 
-  - id: B1A-S6r
-    summary: PATCH outbound handoff 414 source_domain_module_id to PAYROLL-RUN (90)
+  - id: B1A-H1-REVIEW
+    summary: APQC review-flips (REPLACE / FLIP weak tags) -- destructive, surface only
     finding: >-
-      Outbound handoff 414 (payment_run.executed -> ERP-FIN, payload payment_runs) has
-      both source_domain_module_id and target_domain_module_id NULL. Source side is
-      PAYROLL's debt. pay_run.disbursed (405) on PAYROLL-RUN is the proximate
-      lifecycle origin of payment_run.executed.
-    action: PATCH handoffs.id=414 set source_domain_module_id=90.
+      The 17 cleanly-untagged cross-domain handoffs were tagged agent_curated in the 2026-06-06
+      pass. The remaining H1 work is REPLACE/FLIP of weak existing rows, each of which overwrites
+      a non-empty handoff_processes row and is therefore destructive (Rule #21 surface).
     affected_handoffs:
-      - {handoff_id: 414, direction: outbound, source_domain: PAYROLL, target_domain: ERP-FIN, trigger_event: payment_run.executed, payload: payment_runs, null_field: source_domain_module_id}
+      - {handoff_id: 7, current: "discovery_substring process 1814 (Create customer journey maps, L5 mis-match)", recommend: "REPLACE with process 224 Manage employee onboarding"}
+      - {handoff_id: 18, current: "discovery_override process 41 (Manage employee onboarding, L2)", recommend: "FLIP to agent_curated, or narrow to 236 Administer Payroll"}
+      - {handoff_id: 366, current: "discovery_override process 41 (L2)", recommend: "FLIP to agent_curated, or REPLACE with a termination-specific node"}
+      - {handoff_id: 374, current: "discovery_override process 41 (L2)", recommend: "FLIP to agent_curated, or REPLACE with 1046 Administer compensation and rewards"}
+      - {handoff_id: 101, current: "discovery_substring process 59 (Process AP and expense reimbursements, L2)", recommend: "FLIP to agent_curated or REPLACE with 316 Process expense reimbursements"}
+      - {handoff_id: 1126, current: "discovery_substring process 1049 (Review compensation plan, L4)", recommend: "REPLACE with 1046 Administer compensation and rewards"}
+    surfaced: true
 
-  - id: B1A-S11
-    summary: Author ~24 data_object_aliases rows for the 8 PAYROLL masters
-    finding: >-
-      All 8 PAYROLL-owned masters carry zero rows in data_object_aliases. Vendor and
-      regional terminology surfaces are well-defined and ready to ship.
-    action: >-
-      Author rows via aliases loader. pay_runs (payroll runs, pay cycles, payroll
-      cycles); pay_slips (paystubs, pay statements, paychecks, wage statements, UK
-      payslips); earning_codes (pay codes, earnings types); deduction_codes (benefit
-      deduction codes, pre-tax deductions, post-tax deductions); tax_authorities
-      (taxing authorities, tax jurisdictions, revenue agencies); tax_filings
-      (statutory filings, 941, W2, 1099, T4, RTI submissions); garnishment_orders
-      (wage garnishments, wage attachments, court orders, UK attachment of earnings
-      orders); payroll_journal_entries (payroll journals, payroll GL entries, payroll
-      postings).
-    affected_masters:
-      - {data_object_id: 138, name: pay_runs, target_module_id: 90, workflow: alias_vendor_terminology}
-      - {data_object_id: 139, name: pay_slips, target_module_id: 93, workflow: alias_vendor_terminology}
-      - {data_object_id: 140, name: earning_codes, target_module_id: 92, workflow: alias_vendor_terminology}
-      - {data_object_id: 141, name: deduction_codes, target_module_id: 92, workflow: alias_vendor_terminology}
-      - {data_object_id: 142, name: tax_authorities, target_module_id: 91, workflow: alias_vendor_terminology}
-      - {data_object_id: 143, name: tax_filings, target_module_id: 91, workflow: alias_vendor_terminology}
-      - {data_object_id: 144, name: garnishment_orders, target_module_id: 92, workflow: alias_vendor_terminology}
-      - {data_object_id: 145, name: payroll_journal_entries, target_module_id: 90, workflow: alias_vendor_terminology}
-
-  - id: B1A-S12
-    summary: Add Human Resources (contributor) and Information Technology (consumer) on business_function_domains for PAYROLL
-    finding: >-
-      business_function_domains for domain 55 has 3 rows (Payroll owner id=38,
-      Accounting contributor id=42, Finance contributor id=4). Flagship vendor surface
-      models Human Resources as contributor (HR maintains employee and comp data
-      driving pay) and Information Technology as consumer (integration ownership). The
-      current spine is too narrow.
-    action: >-
-      INSERT 2 business_function_domains rows for domain 55: (business_function=Human
-      Resources, responsibility_type=contributor) and (business_function=Information
-      Technology, responsibility_type=consumer).
-
-  - id: B1A-S13
-    summary: INSERT 4 users (748) DMDO rows on PAYROLL modules to pair with the existing user-edge relationships
-    finding: >-
-      The 7 user-edge data_object_relationships (ids 1879..1885) exist (Rule #10), but
-      users (748, kind=platform_builtin) has no domain_module_data_objects row on any
-      of PAYROLL-RUN (90), PAYROLL-TAX-COMPLIANCE (91), PAYROLL-EARNINGS-DEDUCTIONS
-      (92), PAYROLL-EMPLOYEE-PAY-STATEMENTS (93). Rule #10 expects both the edge and
-      the consumer DMDO so the platform-builtin master is reachable from each module's
-      deploy surface and visible to per-module agent tools.
-    action: >-
-      INSERT 4 domain_module_data_objects rows: (90, 748, consumer, required), (91,
-      748, consumer, required), (92, 748, consumer, required), (93, 748, consumer,
-      required). record_status omitted (DB default new).
-    affected_modules: [90, 91, 92, 93]
-
-  - id: B1A-H1
-    summary: Author APQC handoff_processes rows for the 22 untagged + 3 review-flip cross-domain handoffs
-    finding: >-
-      17 of 41 PAYROLL cross-domain handoffs carry handoff_processes rows. 11 are
-      agent_curated (100, 108, 110, 188, 417, 1156, 103, 416, 426, 590, 1118), 5 are
-      discovery_substring or discovery_override (374, 18, 366 at L2; 1126 at L4; 7 at
-      L5 mis-match Create customer journey maps; 101 at L2). Zero rows at
-      record_status=approved. 22 cross-domain handoffs remain completely untagged.
-      Volume target per H1 (0.5N to 0.8N for N=41) = 21 to 33 agent_curated rows.
-      Currently 11 agent_curated, gap of 10 to 22 rows.
-    action: >-
-      Run a focused PCF lookup pass against /processes (search by process_name=ilike.*
-      <term>* and source_framework=eq.apqc_pcf_cross_industry) for each of the 22
-      untagged handoffs plus the 3 weakly-tagged review flips (7 L5 mis-match REPLACE;
-      18, 366, 374 at L2 discovery_override consider FLIP to agent_curated or narrow
-      to L3 children). Chunked INSERT or single-row UPSERT via composed natural key
-      (handoff_id, process_id). Confidence per row in the history.md APQC table.
-    affected_handoffs:
-      - {handoff_id: 7, direction: inbound, source_domain: ONBOARDING, target_domain: PAYROLL, trigger_event: journey.day_one_reached, payload: onboarding_journeys, null_field: weak_l5_replace}
-      - {handoff_id: 411, direction: inbound, source_domain: ONBOARDING, target_domain: PAYROLL, trigger_event: onboarding_document_collection.completed, payload: onboarding_document_collections, null_field: untagged}
-      - {handoff_id: 377, direction: inbound, source_domain: HCM, target_domain: PAYROLL, trigger_event: employment_event.recorded, payload: employment_events, null_field: untagged}
-      - {handoff_id: 380, direction: inbound, source_domain: HCM, target_domain: PAYROLL, trigger_event: employment_contract.executed, payload: employment_contracts, null_field: untagged}
-      - {handoff_id: 383, direction: inbound, source_domain: HCM, target_domain: PAYROLL, trigger_event: employment_contract.expired, payload: employment_contracts, null_field: untagged}
-      - {handoff_id: 401, direction: inbound, source_domain: ATS, target_domain: PAYROLL, trigger_event: background_check.cleared, payload: background_checks, null_field: untagged}
-      - {handoff_id: 404, direction: inbound, source_domain: ATS, target_domain: PAYROLL, trigger_event: candidate_referral.bonus_earned, payload: candidate_referrals, null_field: untagged}
-      - {handoff_id: 105, direction: inbound, source_domain: COMP-MGMT, target_domain: PAYROLL, trigger_event: merit_cycle.approved, payload: merit_recommendations, null_field: untagged}
-      - {handoff_id: 187, direction: inbound, source_domain: COMP-MGMT, target_domain: PAYROLL, trigger_event: merit_cycle.approved, payload: pay_slips, null_field: untagged}
-      - {handoff_id: 1126, direction: inbound, source_domain: COMP-MGMT, target_domain: PAYROLL, trigger_event: compensation_plan.published, payload: compensation_plans, null_field: discovery_substring_replace}
-      - {handoff_id: 1140, direction: inbound, source_domain: COMP-MGMT, target_domain: PAYROLL, trigger_event: earning_code.created, payload: earning_codes, null_field: untagged}
-      - {handoff_id: 423, direction: inbound, source_domain: COMP-MGMT, target_domain: PAYROLL, trigger_event: equity_grant.vested, payload: equity_grants, null_field: untagged}
-      - {handoff_id: 25, direction: outbound, source_domain: PAYROLL, target_domain: PA, trigger_event: pay_cycle.closed, payload: people_kpis, null_field: untagged}
-      - {handoff_id: 102, direction: outbound, source_domain: PAYROLL, target_domain: PA, trigger_event: pay_cycle.closed, payload: pay_slips, null_field: untagged}
-      - {handoff_id: 1155, direction: outbound, source_domain: PAYROLL, target_domain: PA, trigger_event: pay_run.disbursed, payload: pay_runs, null_field: untagged}
-      - {handoff_id: 99, direction: outbound, source_domain: PAYROLL, target_domain: ERP-FIN, trigger_event: pay_cycle.posted, payload: payroll_journal_entries, null_field: untagged}
-      - {handoff_id: 1151, direction: outbound, source_domain: PAYROLL, target_domain: ERP-FIN, trigger_event: pay_run.disbursed, payload: payroll_journal_entries, null_field: untagged}
-      - {handoff_id: 1152, direction: outbound, source_domain: PAYROLL, target_domain: ERP-FIN, trigger_event: payroll_journal.reversed, payload: payroll_journal_entries, null_field: untagged}
-      - {handoff_id: 414, direction: outbound, source_domain: PAYROLL, target_domain: ERP-FIN, trigger_event: payment_run.executed, payload: payment_runs, null_field: untagged}
-      - {handoff_id: 1157, direction: outbound, source_domain: PAYROLL, target_domain: EXPENSE, trigger_event: pay_run.disbursed, payload: expense_reports, null_field: untagged}
-      - {handoff_id: 1153, direction: outbound, source_domain: PAYROLL, target_domain: GRC, trigger_event: garnishment_order.received, payload: garnishment_orders, null_field: untagged}
-      - {handoff_id: 415, direction: outbound, source_domain: PAYROLL, target_domain: GRC, trigger_event: tax_filing.submitted, payload: tax_filings, null_field: untagged}
-      - {handoff_id: 412, direction: outbound, source_domain: PAYROLL, target_domain: HCM, trigger_event: pay_cycle.closed, payload: pay_slips, null_field: untagged}
-      - {handoff_id: 1154, direction: outbound, source_domain: PAYROLL, target_domain: HCM, trigger_event: pay_slip.published, payload: pay_slips, null_field: untagged}
-      - {handoff_id: 413, direction: outbound, source_domain: PAYROLL, target_domain: BEN-ADMIN, trigger_event: pay_cycle.closed, payload: pay_slips, null_field: untagged}
-      - {handoff_id: 18, direction: inbound, source_domain: HCM, target_domain: PAYROLL, trigger_event: employee.created, payload: employees, null_field: discovery_override_review}
-      - {handoff_id: 366, direction: inbound, source_domain: HCM, target_domain: PAYROLL, trigger_event: employee.terminated, payload: employees, null_field: discovery_override_review}
-      - {handoff_id: 374, direction: inbound, source_domain: HCM, target_domain: PAYROLL, trigger_event: employee.promoted, payload: employees, null_field: discovery_override_review}
-      - {handoff_id: 101, direction: outbound, source_domain: PAYROLL, target_domain: EXPENSE, trigger_event: expense.reimbursable, payload: pay_slips, null_field: discovery_substring_review}
-    extra_pcf_lookup_required: true
-  - id: B1A-PHASE-P
-    summary: "Multi-module (4 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 4 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "8 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 8 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [deduction_codes, earning_codes, garnishment_orders, pay_runs, pay_slips, payroll_journal_entries, tax_authorities, tax_filings]
-    extra_phase_p_triage: "2026-06-02"
   - id: B1A-SELF-CONTAIN
-    summary: "8 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
-    finding: "Live triage 2026-06-02: 8 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
-    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
+    summary: "8 contributor/required-consumer DMDO rows break module self-containment (M9): destructive, surface only."
+    finding: >-
+      8 domain_module_data_objects rows on PAYROLL modules are role=consumer with necessity=required,
+      pointing at an entity mastered by another domain and not embedded_master here. Each is an M9
+      self-containment violation. Fixing each (convert to embedded_master, or relax necessity to
+      optional) OVERWRITES role/necessity on an existing row, which is destructive (Rule #21 surface).
     extra_m9_shapes:
       - {entity: background_checks, module: PAYROLL-RUN, role: consumer, master_domain: ATS}
       - {entity: benefit_enrollments, module: PAYROLL-EARNINGS-DEDUCTIONS, role: consumer, master_domain: BEN-ADMIN}
@@ -177,7 +65,16 @@ b1a:
       - {entity: employment_events, module: PAYROLL-RUN, role: consumer, master_domain: HCM}
       - {entity: onboarding_document_collections, module: PAYROLL-RUN, role: consumer, master_domain: ONBOARDING}
       - {entity: onboarding_journeys, module: PAYROLL-RUN, role: consumer, master_domain: ONBOARDING}
-    extra_phase_p_triage: "2026-06-02"
+    surfaced: true
+
+  - id: B1A-PHASE-P
+    summary: "Multi-module (4 modules) with 0 personas post-Plan-3 (E1 fail): the persona / RACI layer is DEFERRED."
+    finding: >-
+      4 domain_modules and 0 domain_roles reach this domain via role_modules. Plan 3 deleted the old
+      _core personas, so E1 fires on this multi-module domain. Personas/RACI are not authored in a
+      state-driven execute pass (Rule #21 defer); reported for a dedicated persona phase.
+    candidate_personas: [PAYROLL-ADMINISTRATOR, PAYROLL-MANAGER, TAX-COMPLIANCE-OFFICER, GARNISHMENT-SPECIALIST, HR-PARTNER]
+    deferred: true
 
 b1b:
   - id: B1B-S2
@@ -189,7 +86,7 @@ b1b:
       PAYROLL-RUN; 470 (91,138 pay_runs), 471 (91,145 payroll_journal_entries) on
       PAYROLL-TAX-COMPLIANCE; 482 (93,138 pay_runs) on PAYROLL-EMPLOYEE-PAY-STATEMENTS.
       5 PAYROLL-RUN-side rows route to clean DELETE. 3 borderline rows (470, 471, 482)
-      raise the standalone-deployability question.
+      raise the standalone-deployability question. DELETE is destructive (Rule #21 surface).
     blocked_by:
       - {type: user_decision, ref: B2-S1}
     affected_entities:
@@ -203,43 +100,38 @@ b1b:
       - {dmdo_id: 482, domain_module_id: 93, data_object: pay_runs, action: DELETE_or_PROMOTE}
 
   - id: B1B-S9
-    summary: E-band Phase E load (5 roles, 12 baseline permissions, ~17 workflow-gate permissions, role_modules, role_permissions)
+    summary: E-band Phase E load (roles, baseline + workflow-gate permissions, role_modules, role_permissions)
     finding: >-
       0 PAYROLL-prefixed roles, 0 role_modules on 90..93, 0 permissions on 90..93. 21
-      lifecycle states carry requires_permission=true so workflow-gate permissions
-      will materialize per Rule #14's module-permission derivation. The non-trivial
-      load was explicitly deferred from prior audit's technical fix pass.
+      lifecycle states carry requires_permission=true so workflow-gate permissions will
+      materialize per Rule #14's module-permission derivation. Non-trivial Phase E load,
+      gated on the role-list scope decision (B2-S8) and the persona phase (B1A-PHASE-P).
     blocked_by:
       - {type: user_decision, ref: B2-S8}
-      - {type: prerequisite_entity, ref: B1A-S10}
+      - {type: prerequisite_entity, ref: B1A-PHASE-P}
     affected_modules: [90, 91, 92, 93]
     extra_workflow_gate_count: 17
 
-  - id: B1B-S10
-    summary: F-band Phase S load - 4 per-module system skills + ~30-40 skill_tools, sunset legacy skill 21
+  - id: B1B-S10-RETIRED
+    summary: "RETIRED (superseded 2026-06-06 / Plan 3): per-module system skills + skill_tools."
     finding: >-
-      1 legacy payroll-system skill (id 21, skill_type=system, domain_module_id=null)
-      with 14 skill_tools survives from pre-modular era. Rule #17 requires exactly one
-      skill_type=system skill per domain_modules row, so PAYROLL needs 4 per-module
-      skills. F4 invariants (operation_kind <-> data_object_id) check on the existing
-      14 rows; redistribution to per-module skills is straightforward. F5 score
-      uncomputable until F2 and F3 land.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1A-S4}
-      - {type: prerequisite_entity, ref: B1A-S13}
-    affected_modules: [90, 91, 92, 93]
+      Originally: author 4 per-module system skills + ~30-40 skill_tools and sunset legacy
+      skill 21. The per-module `system` skill grain is RETIRED. New model: ONE domain-grain
+      system skill that derives its toolset; tool requirements live on domain_module_tools;
+      skill_tools is dropped. Per-module tool re-authoring is tracked in
+      audits/_modularization-backlog.md. Do NOT author per-module skills. Legacy skill 21
+      sunset and the domain-grain skill stand-up are out of scope for this state-driven pass.
+    retired: true
     extra_legacy_skill_id: 21
-    extra_legacy_skill_tools_count: 14
 
   - id: B1B-S14
     summary: B12 lifecycle states for earning_codes / deduction_codes / tax_authorities, or accept Rule #12 config-shape exemption
     finding: >-
-      3 PAYROLL-owned masters have no lifecycle states (140 earning_codes, 141
-      deduction_codes, 142 tax_authorities). Rule #12 config-shape exemption applies
-      to author-once / occasionally-edit reference tables, but trigger events 1247
-      earning_code.deactivated and 1248 deduction_code.deactivated imply at minimum
-      an active -> deactivated arc. Rule #15 forbids notes auto-population for the
-      exemption rationale, so the decision must be surfaced.
+      earning_codes (140), deduction_codes (141), tax_authorities (142) now carry
+      entity_type='catalog' (classified 2026-06-06), so the Rule #12 config-shape exemption
+      formally applies and B12 passes structurally. Trigger events 1247 earning_code.deactivated
+      and 1248 deduction_code.deactivated still imply at minimum an active -> deactivated arc, so
+      whether to author an explicit lifecycle remains a user decision (B2-S7).
     blocked_by:
       - {type: user_decision, ref: B2-S7}
     affected_masters:
@@ -317,9 +209,10 @@ b2:
   - id: B2-S7
     summary: Config-shape lifecycle decision for earning_codes / deduction_codes / tax_authorities
     question: >-
-      Author 3-state lifecycle (draft -> active -> deactivated) on each of
-      earning_codes, deduction_codes, tax_authorities, or accept Rule #12 config-shape
-      exemption and rely on record_status?
+      earning_codes / deduction_codes / tax_authorities are now entity_type='catalog'
+      (exemption applies). Still author a 3-state lifecycle (draft -> active -> deactivated)
+      on each given the 1247/1248 deactivation triggers, or accept the config-shape exemption
+      and rely on record_status?
     options:
       - Author 3-state lifecycle on all 3
       - Accept config-shape exemption (no lifecycle states authored)
@@ -340,11 +233,10 @@ b3:
   - id: B3-YEAR-END-STATEMENTS
     candidate: year_end_statements
     rationale: >-
-      Flagship vendors (ADP, Paychex, Workday, Gusto, Paylocity) model W2 / W2c / 1099
-      / 1099-NEC / T4 / P60 / Lohnsteuerbescheinigung / Form 16 as a distinct entity
-      from pay_slips. Different lifecycle (generated -> furnished -> corrected ->
-      filed), different statutory rules, separate distribution channel.
-    vendor_evidence: [ADP Workforce Now, Paychex Flex, Workday Payroll, Gusto, Paylocity]
+      Flagship vendors model W2 / W2c / 1099 / 1099-NEC / T4 / P60 /
+      Lohnsteuerbescheinigung / Form 16 as a distinct entity from pay_slips. Different
+      lifecycle (generated -> furnished -> corrected -> filed), different statutory
+      rules, separate distribution channel.
     proposed_module: PAYROLL-EMPLOYEE-PAY-STATEMENTS or new PAYROLL-YEAR-END
 
   - id: B3-RETRO-PAY-ADJUSTMENTS
@@ -353,17 +245,14 @@ b3:
       Every flagship US vendor models retroactive pay corrections as a structured
       record (effective-date-back-dated change that produces a delta on the next
       pay_run). Catalog has no entity today.
-    vendor_evidence: [ADP Workforce Now, Paychex Flex, Workday Payroll, Gusto, Paylocity, UKG Pro, Dayforce]
     proposed_module: PAYROLL-RUN or PAYROLL-EARNINGS-DEDUCTIONS
 
   - id: B3-JURISDICTION-TAX-CONFIGS
     candidate: jurisdiction_tax_configs
     rationale: >-
-      CloudPay, Papaya Global, ADP GlobalView, Deel, Remote model per-country
-      statutory kernels as first-class records (rate tables, calendar rules,
-      statutory-filing schemas). PAYROLL-GLOBAL capability has no entity-level
-      representation.
-    vendor_evidence: [CloudPay, Papaya Global, ADP GlobalView Payroll, Deel, Remote]
+      Global payroll vendors model per-country statutory kernels as first-class records
+      (rate tables, calendar rules, statutory-filing schemas). PAYROLL-GLOBAL capability
+      has no entity-level representation.
     proposed_module: PAYROLL-TAX-COMPLIANCE or new PAYROLL-GLOBAL
 
   - id: B3-BANK-PAYMENT-FILES
@@ -372,7 +261,6 @@ b3:
       NACHA / ACH file generation (US), BACS / Faster Payments (UK), SEPA (EU) is a
       first-class artifact in every flagship vendor. Currently pay_run.disbursed event
       implies the file exists but no entity captures it.
-    vendor_evidence: [ADP Workforce Now, Paychex Flex, Workday Payroll, Gusto, CloudPay]
     proposed_module: PAYROLL-RUN
 
   - id: B3-PAYROLL-YEAR-END-MODULE
@@ -381,7 +269,6 @@ b3:
       If year_end_statements is loaded as a master, it warrants its own module
       (distinct lifecycle, distinct compliance windows, distinct employee-facing UX).
       Would push PAYROLL from 4 to 5 modules.
-    vendor_evidence: [ADP Workforce Now, Workday Payroll, Gusto]
     proposed_module: new PAYROLL-YEAR-END
 
   - id: B3-PAYROLL-GLOBAL-MODULE
@@ -390,35 +277,28 @@ b3:
       If jurisdiction_tax_configs is loaded, the multi-country capability could be a
       separate module mastering the country-engine catalog and embedding pay_runs /
       tax_filings. Would push PAYROLL to 5-6 modules.
-    vendor_evidence: [CloudPay, Papaya Global, ADP GlobalView Payroll, Deel, Remote]
     proposed_module: new PAYROLL-GLOBAL
 
   - id: B3-REG-FICA-SECA
     candidate: Federal Insurance Contributions Act / Self-Employment Contributions Act
     rationale: US federal social-insurance payroll tax; mandatory for US payroll.
-    vendor_evidence: [ADP Workforce Now, Paychex Flex, Gusto]
 
   - id: B3-REG-FUTA-SUTA
     candidate: Federal Unemployment Tax Act / State Unemployment Tax Act
     rationale: US federal and state unemployment tax; mandatory for US payroll.
-    vendor_evidence: [ADP Workforce Now, Paychex Flex, Gusto, Paylocity]
 
   - id: B3-REG-IRC-SUBC
     candidate: Internal Revenue Code Subtitle C
     rationale: US federal payroll tax statutory framework; mandatory for US payroll.
-    vendor_evidence: [ADP Workforce Now, Workday Payroll]
 
   - id: B3-REG-HMRC-RTI
     candidate: HMRC Real-Time Information
     rationale: UK payroll filing framework; mandatory for UK payroll.
-    vendor_evidence: [CloudPay, Iris Cascade, Sage Payroll, Zellis]
 
   - id: B3-REG-CRA-T4
     candidate: CRA T4 reporting
     rationale: Canadian year-end payroll reporting; mandatory for Canadian payroll.
-    vendor_evidence: [CloudPay, ADP GlobalView Payroll]
 
   - id: B3-REG-DSGVO-GOBD
     candidate: DSGVO / GoBD
     rationale: German payroll storage and audit framework; mandatory for German payroll.
-    vendor_evidence: [DATEV Lohn, ADP GlobalView Payroll, SAP SuccessFactors Employee Central Payroll]

@@ -393,3 +393,47 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (Rule #21), working only the open items in state.yaml. No fresh from-scratch audit. Live verification 2026-06-07 against domain id 11:
+
+- SECOPS is still UNBUILT: 0 domain_modules (M1 fail), 0 capability_domains (A2 fail), 0 skills (F2 fail), 0 mastered data_objects. 2 solutions, both coverage_level='secondary' (A3 fail).
+- Overlay test: SECOPS is the umbrella over its already-wired children SOAR (id 12), VULN-MGMT (id 13), THREAT-INTEL (id 14, all parent_domain_id=11). Owning function is Security (Security Operations Center, business_function_id 64). The pure-overlay vs master-bearing call is the open B2-1 fork; the empty stub is invalid either way and the whole build is gated on B2-1.
+- Refreshes since the snapshot: handoffs 280/282/284 now carry source_domain_module_id=232 (DLP backfilled its side); all 5 inbound handoffs (280, 282, 284, 287, 290) still carry target_domain_module_id=NULL (SECOPS side, blocked on the build). DSPM-side source (287/290) remains report-only owed by DSPM.
+
+### Executed
+
+| Item | Type | Action | Result |
+| --- | --- | --- | --- |
+| B1B-S4 / B2-4 (Catalog UX, Rule #20) | PATCH empty-field backfill on domains id 11 | Authored buyer-voice catalog_tagline + catalog_description and wrote them straight into the two empty columns (workflow-plus-value voice: see, run, close the loop / triage, investigate, contain, recover, regulator clock). No vendor names, no em-dash, American English. record_status stays 'new' (user reviews in the record). | 1 row PATCHed (domains id 11). Both columns now populated. B1B-S4 retired and the gating B2-4 dropped: Rule #20's write-straight-into-empty policy supersedes the old "approve the flow first" gate. |
+
+No loader required (single deterministic PATCH via semantius CLI). No JWT-audience errors. Already-satisfied items confirmed not re-touched: H1 APQC tagging is 5/5 (handoff_processes ids 248-252, all agent_curated), C1 owner row exists (business_function_domains id 93). entity_type / aliases / intra-domain handoffs: not applicable (0 masters, 0 modules, no open item).
+
+### Surfaced (returned to user, not written)
+
+- B1A-D1 (DESTRUCTIVE: overwrites a non-empty value). domains.business_logic on id 11 still contains a U+2014 em-dash before 'the SIEM/EDR core.', violating the CLAUDE.md ban. Single-character hygiene fix, but it overwrites a non-empty analyst value, so under Rule #21 line 534 it is surfaced for approval, not applied. Recommended replacement: '...high-volume log analytics, the SIEM/EDR core.' The fact sheet emitter sanitizes em-dashes at render time, so the rendered artifact is clean in the interim.
+- B1A-BUILD (the build). UNBUILT domain; per the UNBUILT rule the agent does not scaffold modules/capabilities/masters/skill before the shape decision. Gated on B2-1.
+- b2 decisions B2-1 (classification: overlay vs master-bearing umbrella vs hybrid; gates the whole build), B2-2 (detection-vertical sibling modeling), B2-3 (SOAR vs SECOPS-RESPONSE-OPS scope overlap; option c is destructive), B2-5 (reconcile existing parent_domain_id wiring with B2-1/B2-2). B2-4 dropped (executed via Rule #20 backfill).
+- Personas / RACI (Phase P): deferred and not authored (correct: domain is multi-module-undecided and unbuilt). No candidate personas authored.
+
+### Left (untouched)
+
+- b1b build cascade (B1B-S1 modules, B1B-S2 capabilities, B1B-S3 solutions, B1B-S5 the single domain-grain system skill, B1B-S6 consumer DMDOs, B1B-B10B-TARGET): all blocked on B2-1 (build) or on B1B-S1 (a module must exist first). Left in state.yaml.
+- b3: 14 discretionary master candidates, all gated on B2-1. Backlog, never gates finished.
+- Superseded per-module skill-grain / skill_tools model: B1B-S5 reframed to the post-supersession single domain-grain system skill (domain_id set, domain_module_id null) deriving from domain_module_tools. Supersession header retained verbatim.
+
+### Report-only owed by other domains
+
+- DSPM B10b owes source_domain_module_id on handoffs 287, 290 (still NULL). DLP already backfilled 280/282/284 (source_domain_module_id=232).
+- ITOM B5 owes a domain_module_data_objects role='master' row on monitoring_events (id 84).
+- ITSM B8 inbound mirror owed once SECOPS masters security_incidents (b3 candidate).
+
+### UI spot-checks
+
+- domains (catalog copy written): <https://tests.semantius.app/domain_map/domains> (row id 11)
+- handoffs (target FKs remain NULL pending the build): <https://tests.semantius.app/domain_map/handoffs> (rows 280, 282, 284, 287, 290)

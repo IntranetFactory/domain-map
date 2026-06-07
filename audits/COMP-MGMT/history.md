@@ -338,3 +338,52 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass against the open items in `audits/COMP-MGMT/state.yaml`. The snapshot (last_audit 2026-05-31) was stale: H1 had already advanced from 6/29 to 22/29 cross-domain tagged via prior agent_curated work, and the 7 masters were all still `entity_type='unclassified'`. Re-verified every recorded item live (domain 60; modules 78/79/80/85; masters 153-159) before writing. Executed the agent-solvable additive/corrective items; surfaced every destructive step and judgment call; left the superseded skill-grain item and the b3 backlog. Loader: `.tmp_deploy/comp_mgmt_b1a_2026-06-07.ts` (run via `bun run`, idempotent, re-run clean).
+
+C1 note: `business_function_domains` for domain 60 already carries an owner (function 78 Compensation) plus two contributors (FP&A 43, Finance 4). C1 PASSES; no owner row was added (the generic "owner = Human Resources" template did not apply, the live owner is the Compensation function and adding a second owner would have been wrong).
+
+### Executed (record_status='new', verified live)
+
+- **B1A-ENTITY-TYPE (7 rows PATCHed):** classified all 7 masters off their lifecycle evidence. `operational_workflow`: compensation_plans (153), merit_cycles (155), merit_recommendations (156), compensation_statements (157), equity_grants (158). `catalog`: salary_bands (154), compensation_benchmarks (159) — both carry zero lifecycle states and are config / reference shaped (this also resolves the structural side of B2-S5).
+- **B1A-A4 (2 fields):** domain 60 `catalog_tagline` + `catalog_description` backfilled in buyer voice (workflow + value, no vendor names, no em-dash, American English). Per-field empty-guard; nothing overwritten.
+- **B1A-M8 (8 fields):** all 4 modules (78 COMP-PLANNING, 79 COMP-INCENTIVES, 80 COMP-BENCHMARKING, 85 COMP-STATEMENTS) `catalog_tagline` + `catalog_description` backfilled in buyer voice. Per-field empty-guard.
+- **B1A-B11 (14 rows):** `data_object_aliases` inserted across the 7 masters (alias_type='synonym', industry_id null, notes omitted). compensation_plans→comp_plans; salary_bands→pay_bands, grade_bands; merit_cycles→comp_cycles, planning_cycles; merit_recommendations→comp_recommendations, pay_increases; compensation_statements→total_rewards_statements, trs; equity_grants→stock_grants, rsu_grants, option_grants; compensation_benchmarks→market_benchmarks, comp_market_data.
+- **B1A-B8 (3 rows):** outbound payload-target `data_object_relationships` inserted to employees (31): `merit_recommendations applies to employees` (one_to_one, mirrors handoff 106/422), `equity_grants granted to employees` (one_to_one, mirrors handoff 423), `compensation_statements issued to employees` (one_to_one, mirrors handoff 1136). owner_side='source', is_required=false, notes omitted.
+- **B1A-S9 insert side (6 rows):** `handoff_processes` agent_curated (role='implements') for the 6 untagged cross-domain handoffs with a clean PCF match, resolved by live name lookup: 107→1046 (Administer compensation and rewards to employees, L4), 113→1028 (Review employee performance, L4), 421→1046, 439→225 (Manage employee performance, L3), 460→216 (Develop and implement workforce planning, policies, and strategies, L3), 1138→216. **H1 now 28/29 cross-domain tagged.**
+
+### Surfaced (NOT written; user decision or destructive)
+
+- **B2-S1** (M7 equity_grants dual-master: CAP-TABLE-GRANTS 21 vs COMP-INCENTIVES 79). Gates B1B-M7 + B1B-E1.
+- **B2-S2** (Rule #15 notes-pollution on 10 rows; PATCH-to-empty is destructive).
+- **B2-S3** (Sequoia One 502 scope-creep; deletion destructive).
+- **B2-S4** (beqom 3-row duplication 259/414/497; deletion destructive).
+- **B2-S5** (salary_bands + compensation_benchmarks now classified `catalog`; confirm no lifecycle states needed — option (a) is the classification-consistent default).
+- **B2-S6** (PAY-EQUITY capability also on COMP-PLANNING 78; editorial placement call).
+- **B2-S7** (3 pattern-flag flips on compensation_plans / equity_grants / compensation_statements; each overwrites an existing flag value, destructive).
+- **B1A-S9-RESIDUAL destructive:** 4 REPLACE candidates that overwrite existing handoff_processes rows — 123 + 372 (currently process 41 / L2 20599 onboarding, recommend 1046 / L4 comp-admin), 1125 + 1126 (currently process 1049 / L4 Review compensation plan via discovery_substring, recommend 1046 / L4 Administer compensation and rewards). Recommended only; not applied.
+- **B1A-SELF-CONTAIN (M9):** 3 required cross-domain consumer/contributor DMDO rows break standalone self-containment (374 earning_codes contributor/required; 588 consumer/required; 516 job_offers consumer/required). Fix rewrites role/necessity on an existing row (destructive). Recommended: embedded_master or necessity=optional per row.
+- **B1A-PHASE-P (personas/RACI):** DEFERRED per Rule #21 (personas not authored in state-driven execute). Candidate personas: HR-COMPENSATION-ANALYST, HR-COMPENSATION-PARTNER, HR-EQUITY-ADMIN, HR-COMP-BENCHMARK-ANALYST.
+
+### Left (untouched)
+
+- **B1A-S9 1105** (PA pay_equity.gap_detected → COMP-BENCHMARKING): no clean APQC PCF match (PCF cross-industry has no pay-equity / workforce-metric L3/L4 process) → deferred to a Discover pass.
+- **B1A-S8** report-only: schedule b1 audits on PA, HCM, EMP-EXP, ERP-FIN to declare consumer DMDOs (422, 424, 1125, 1136, 1141 outbound + 1105 inbound NULL target_domain_module_id). Not COMP-MGMT's fix.
+- **B1B-M7 / B1B-E1** blocked (B2-S1 + persona layer).
+- **B1B-F2 RETIRED** (per-module system-skill grain superseded 2026-06-06 / Plan 3; tracked in audits/_modularization-backlog.md).
+- **b3 backlog** (6 entity candidates + ICM split + 5 compliance regs) carries forward.
+
+### Spot-check links
+
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/domains
+- https://tests.semantius.app/domain_map/domain_modules
+- https://tests.semantius.app/domain_map/data_object_aliases
+- https://tests.semantius.app/domain_map/data_object_relationships
+- https://tests.semantius.app/domain_map/handoff_processes

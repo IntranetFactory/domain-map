@@ -11,86 +11,32 @@
 schema_version: 2
 domain: APM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
-  - id: B1A-A4
-    summary: APM domain catalog_tagline and catalog_description are empty; draft buyer-voice copy and surface to user before PATCH (Rule #20 backfill-with-surface).
-    finding: |
-      A4 band check fails on domains.id=10 (APM). Both catalog_tagline and catalog_description are empty strings. Rule #20 allows backfill, but mandates draft + user review BEFORE writing, and forbids overwrite of any non-empty value without explicit per-row approval. Since both fields are currently empty, the backfill path applies.
-    action: |
-      Draft a one-sentence buyer-voice catalog_tagline plus a 1-3 paragraph buyer-voice catalog_description (workflow + value framing, not analyst voice). Surface in chat for user review. After approval, PATCH /domains?id=eq.10 with the approved strings.
-    affected_entities:
-      - domains.id=10 (APM)
-
-  - id: B1A-M8
-    summary: Both APM modules carry empty catalog_tagline + catalog_description; draft per module and surface to user before PATCH (Rule #20).
-    finding: |
-      M8 band check fails on both APM modules. APM-PORTFOLIO-REGISTRY (id=103) and APM-RATIONALIZATION (id=104) each have empty catalog_tagline and catalog_description. Per Rule #20, draft both fields per module in buyer voice (workflow + value), surface to user for review BEFORE writing.
-    action: |
-      Draft two pairs of (catalog_tagline, catalog_description) , one for module 103, one for module 104. Surface both drafts to user. After approval, PATCH /domain_modules?id=eq.103 and /domain_modules?id=eq.104.
-    affected_modules: [103, 104]
-
-  - id: B1A-B9
-    summary: Insert 7 missing trigger_events rows for permission-required lifecycle states (capability_map.published, enterprise_application.sunsetting, technology_platform.declining/retired, technology_fit.approved, application_interface.deprecated/retired) and re-target handoffs 237/238 to the focused sunsetting event.
-    finding: |
-      B9 partial-fail. 6 lifecycle states carry requires_permission=true but no matching trigger_events row, plus a 7th gap where a generic event (application.lifecycle_state_changed id=209) is being reused for the focused enterprise_application.sunsetting transition. Missing events: business_capability_map.published (state 674 on 248), enterprise_application.sunsetting (state 667 on 267), technology_platform.declining (state 671 on 269), technology_platform.retired (state 672 on 269), technology_fit.approved (state 681 on 270), application_interface.deprecated (state 677 on 271), application_interface.retired (state 678 on 271).
-    action: |
-      Insert 7 trigger_events rows, each with event_category='state_change' and data_object_id pointing at the publishing master. Then re-target handoffs 237 (APM-PORTFOLIO-REGISTRY → CMDB) and 238 (APM-PORTFOLIO-REGISTRY → SAM) currently consuming the generic event 209 to consume the new focused enterprise_application.sunsetting event. Verify event_category enum (lifecycle/state_change/threshold/signal) before insert.
-    affected_masters:
-      - {data_object_id: 248, name: business_capability_maps, target_module_id: 103, workflow: published}
-      - {data_object_id: 267, name: enterprise_applications, target_module_id: 103, workflow: sunsetting}
-      - {data_object_id: 269, name: technology_platforms, target_module_id: 103, workflow: declining}
-      - {data_object_id: 269, name: technology_platforms, target_module_id: 103, workflow: retired}
-      - {data_object_id: 270, name: technology_fit_assessments, target_module_id: 104, workflow: approved}
-      - {data_object_id: 271, name: application_interfaces, target_module_id: 103, workflow: deprecated}
-      - {data_object_id: 271, name: application_interfaces, target_module_id: 103, workflow: retired}
-
-  - id: B1A-H1-REPLACE
-    summary: Replace 4 stale discovery_substring handoff_processes rows (handoffs 235/236/237/238 → PCF 20740 "Review and monitor application security controls", wrong fit for portfolio-onboarding events) with focused agent_curated rows and add agent_curated tags for the 5 currently-untagged handoffs (239, 855, 1195, 1197, 1198).
-    finding: |
-      H1 partial. 9/14 cross-domain handoffs carry handoff_processes rows. 4 of those 9 are stale discovery_substring tags pointing at PCF 20740 (a security-controls leaf) for portfolio-onboarding events on enterprise_applications (handoffs 235→SAM, 236→CMDB, 237→CMDB, 238→SAM). 5 handoffs untagged: 239 (interface broken → ITSM), 855 (technology_platform.sunset → GRC), 1195 (technology_fit.assessment_completed → GRC), 1197 (application_cost.updated → EPM), 1198 (application_value.recalculated → SPM). Continuation deferred this work because earlier audit pre-specified external_ids 10006/10566/10567/10568/10570 that do not resolve in live processes table; this audit reverifies and proceeds with available PCFs.
-    action: |
-      Per-handoff PCF lookup via /processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry. For onboarding/lifecycle events, candidate parents: "Manage business processes" (1132 family already in use for 1196), or look up "Manage IT change" / "Maintain IT asset records" family. Per H1 Discover Pass 1.5 procedure: human-curated / agent-curated rows override discovery_substring; DELETE the 4 stale rows after inserting the focused replacements. Author all new rows as record_status='new', proposal_source='agent_curated'.
-    affected_handoffs:
-      - {handoff_id: 235, direction: outbound, source_domain: APM, target_domain: SAM, trigger_event: application.onboarded, payload: enterprise_applications, null_field: target_domain_module_id}
-      - {handoff_id: 236, direction: outbound, source_domain: APM, target_domain: CMDB, trigger_event: application.onboarded, payload: enterprise_applications, null_field: null}
-      - {handoff_id: 237, direction: outbound, source_domain: APM, target_domain: CMDB, trigger_event: application.lifecycle_state_changed, payload: enterprise_applications, null_field: null}
-      - {handoff_id: 238, direction: outbound, source_domain: APM, target_domain: SAM, trigger_event: application.lifecycle_state_changed, payload: enterprise_applications, null_field: target_domain_module_id}
-      - {handoff_id: 239, direction: outbound, source_domain: APM, target_domain: ITSM, trigger_event: application_interface.broken, payload: service_incidents, null_field: null}
-      - {handoff_id: 855, direction: outbound, source_domain: APM, target_domain: GRC, trigger_event: technology_platform.sunset, payload: technology_platforms, null_field: target_domain_module_id}
-      - {handoff_id: 1195, direction: outbound, source_domain: APM, target_domain: GRC, trigger_event: technology_fit.assessment_completed, payload: technology_fit_assessments, null_field: target_domain_module_id}
-      - {handoff_id: 1197, direction: outbound, source_domain: APM, target_domain: EPM, trigger_event: application_cost.updated, payload: application_costs, null_field: target_domain_module_id}
-      - {handoff_id: 1198, direction: outbound, source_domain: APM, target_domain: SPM, trigger_event: application_value.recalculated, payload: application_value_scores, null_field: target_domain_module_id}
   - id: B1A-PHASE-P
-    summary: "Multi-module (2 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 2 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 2 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "7 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 7 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [application_costs, application_interfaces, application_value_scores, business_capability_maps, enterprise_applications, technology_fit_assessments, technology_platforms]
+    summary: "Multi-module (2 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED per current audit policy (do not author personas)."
+    finding: "Live triage 2026-06-02: 2 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. 2026-06-07: personas/RACI authoring is deferred by audit policy; not executed."
+    action: "DEFER. Do NOT author. When picked up: author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 2 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: Enterprise Architect, Application Owner, Portfolio Manager (3 domain_roles already exist as RBAC roles: ENTERPRISE-ARCHITECT, IT-INFRA-APPLICATION-OWNER, IT-INFRA-PORTFOLIO-MANAGER and can anchor the persona layer)."
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-M7
     summary: M7 within-domain incoherence on data_objects 267 (enterprise_applications) + 269 (technology_platforms) carrying master in module 103 AND consumer-required in module 104; awaits user pick on DELETE vs. promote-to-embedded_master before any write.
     finding: |
-      M7 within-domain hard fail (carry from 2026-05-29 B1-S1). Both 267 (enterprise_applications) and 269 (technology_platforms) hold role='master', necessity='required' in domain_module_id=103 AND role='consumer', necessity='required' in domain_module_id=104. The M7 rule rejects this: same data_object_id with role='master' in module A AND role IN ('consumer','contributor') in module B of the same domain is incoherent ("you don't consume what you also master in the same scope"). The catalog-wide single-master check passes; this is the within-domain branch.
+      M7 within-domain hard fail (carry from 2026-05-29 B1-S1; reconfirmed live 2026-06-07). Both 267 (enterprise_applications) and 269 (technology_platforms) hold role='master', necessity='required' in domain_module_id=103 AND role='consumer', necessity='required' in domain_module_id=104. The M7 rule rejects this: same data_object_id with role='master' in module A AND role IN ('consumer','contributor') in module B of the same domain is incoherent ("you don't consume what you also master in the same scope"). The catalog-wide single-master check passes; this is the within-domain branch.
     blocked_by:
       - {type: user_decision, ref: B2-M7-OPTION}
     affected_modules: [103, 104]
     affected_entities: [enterprise_applications, technology_platforms]
     extra_recommended_resolution: |
-      DELETE the two consumer DMDO rows in module 104 (data_object_id 267 and 269). Rationalization's whole purpose is to score what Registry inventories; standalone Rationalization without Registry has nothing to score, so promote-to-embedded_master is unnecessary.
+      DELETE the two consumer DMDO rows in module 104 (data_object_id 267 and 269). Rationalization's whole purpose is to score what Registry inventories; standalone Rationalization without Registry has nothing to score, so promote-to-embedded_master is unnecessary. (DESTRUCTIVE; never executed unapproved.)
 
   - id: B1B-B9b
     summary: Zero intra-domain handoffs between APM-PORTFOLIO-REGISTRY (103) and APM-RATIONALIZATION (104); 4 expected lifecycle_progression edges (2 each direction) are blocked on B1B-M7 resolution.
     finding: |
-      B9b hard fail (carry from 2026-05-29 B1-S5). No handoffs row with source_domain_id=target_domain_id=10 exists. Four expected intra-domain edges: 103→104 on enterprise_application.onboarded so Rationalization picks up new apps to score; 103→104 on technology_platform.registered so Rationalization picks up new platforms to fit-assess; 104→103 on application_value.recalculated so Registry can drive sunset decisions; 104→103 on technology_fit.assessment_completed so Registry can drive decline/retire on platforms.
+      B9b hard fail (carry from 2026-05-29 B1-S5; reconfirmed live 2026-06-07: zero rows with source_domain_id=target_domain_id=10). Four expected intra-domain edges: 103->104 on enterprise_application.onboarded so Rationalization picks up new apps to score; 103->104 on technology_platform.registered so Rationalization picks up new platforms to fit-assess; 104->103 on application_value.recalculated so Registry can drive sunset decisions; 104->103 on technology_fit.assessment_completed so Registry can drive decline/retire on platforms.
     blocked_by:
       - {type: depends_on, ref: B1B-M7, reason: M7 outcome shapes whether Rationalization references Registry's masters via consumer DMDOs or embedded_master shells; handoff shape and source/target module IDs follow that decision.}
     affected_modules: [103, 104]
@@ -101,9 +47,9 @@ b1b:
       - {id: 936, event_name: technology_platform.registered, current_category: lifecycle, proposed_category: lifecycle}
 
   - id: B1B-B10b-OUT
-    summary: 7 outbound APM handoffs (235→SAM, 238→SAM, 855→GRC, 1195→GRC, 1196→FINOPS, 1197→EPM, 1198→SPM) carry NULL target_domain_module_id; each is the target-domain b1 audit's fix, not APM's.
+    summary: 7 outbound APM handoffs (235->SAM, 238->SAM, 855->GRC, 1195->GRC, 1196->FINOPS, 1197->EPM, 1198->SPM) carry NULL target_domain_module_id; each is the target-domain b1 audit's fix, not APM's.
     finding: |
-      B10b report-only (carry from 2026-05-29 B1-S7). APM's source_domain_module_id is populated on every outbound row. The asymmetry rule says NULL target_domain_module_id is the target domain's B10b. SAM, GRC, FINOPS, EPM, SPM b1 audits each own a subset of this fix.
+      B10b report-only (carry from 2026-05-29 B1-S7; reconfirmed live 2026-06-07). APM's source_domain_module_id is populated on every outbound row. The asymmetry rule says NULL target_domain_module_id is the target domain's B10b. SAM, GRC, FINOPS, EPM, SPM b1 audits each own a subset of this fix.
     blocked_by:
       - {type: domain_audit, blocking_domain: SAM, milestone: b1_b10b_target_backfill}
       - {type: domain_audit, blocking_domain: GRC, milestone: b1_b10b_target_backfill}
@@ -122,7 +68,7 @@ b1b:
   - id: B1B-B10b-IN
     summary: 2 inbound handoffs from BPA (181 capability_map.updated, 182 process_model.published) carry NULL source_domain_module_id; BPA b1 audit owns the fix.
     finding: |
-      B10b report-only (carry from 2026-05-29 B1-S8). APM's target_domain_module_id is populated on both rows (both → 103). Per the asymmetry rule, NULL source_domain_module_id is BPA's B10b to fix.
+      B10b report-only (carry from 2026-05-29 B1-S8; reconfirmed live 2026-06-07). APM's target_domain_module_id is populated on both rows (both -> 103). Per the asymmetry rule, NULL source_domain_module_id is BPA's B10b to fix.
     blocked_by:
       - {type: domain_audit, blocking_domain: BPA, milestone: b1_b10b_source_backfill}
     affected_handoffs:
@@ -153,33 +99,53 @@ b1b:
 
 b2:
   - id: B2-M7-OPTION
-    summary: M7 within-domain incoherence on 267 + 269 , pick DELETE the consumer-required DMDOs in module 104, or promote them to embedded_master.
+    summary: M7 within-domain incoherence on 267 + 269. Pick DELETE the consumer-required DMDOs in module 104, or promote them to embedded_master.
     question: |
       Module 104 (APM-RATIONALIZATION) carries role='consumer', necessity='required' on data_object_id 267 (enterprise_applications) and 269 (technology_platforms). These same data_objects are already mastered in sibling module 103 (APM-PORTFOLIO-REGISTRY). M7 within-domain coherence rejects this combination. Two valid resolutions exist with different deployability semantics. Which?
     options:
-      - DELETE-consumer-rows , Rationalization always co-installs with Portfolio Registry. The master row in 103 is authoritative for the whole domain; the consumer rows in 104 are redundant. (2026-05-29 audit recommendation.)
-      - Promote-to-embedded_master , Rationalization is meant to be standalone-deployable. 104 ships its own shells of enterprise_applications + technology_platforms; runtime demotion (embedded_master → consumer of 103's master) kicks in when 103 is co-deployed.
+      - DELETE-consumer-rows. Rationalization always co-installs with Portfolio Registry. The master row in 103 is authoritative for the whole domain; the consumer rows in 104 are redundant. (2026-05-29 audit recommendation.)
+      - Promote-to-embedded_master. Rationalization is meant to be standalone-deployable. 104 ships its own shells of enterprise_applications + technology_platforms; runtime demotion (embedded_master -> consumer of 103's master) kicks in when 103 is co-deployed.
     why: |
-      Cannot be resolved by the agent: the deployability intent for module 104 is a design call, not a structural fact derivable from the catalog. Once chosen, B1B-B9b (intra-domain handoffs) can be authored against the chosen shape.
+      Cannot be resolved by the agent: the deployability intent for module 104 is a design call, not a structural fact derivable from the catalog. Once chosen, B1B-B9b (intra-domain handoffs) can be authored against the chosen shape. Both options are DESTRUCTIVE (DELETE or restructure existing non-empty DMDO rows); never executed unapproved.
 
   - id: B2-NOTES-POLLUTION
     summary: All 20 skill_tools rows on skills 155 + 156 carry populated notes prose, and data_objects 268 + 272 carry Rule #12 config-shape exemption text in notes; Rule #15 requires per-row user approval of any notes content. Were these strings explicitly approved at load time, or auto-populated?
     question: |
-      Per Rule #15, every notes column must be empty by default and only ever populated with explicit per-row user-approved wording. The 2026-05-29 audit (B2-S1 and B2-S2) surfaced this and the question was never answered. State today: 20 skill_tools rows carry workflow narration like "Maintain interface records; drive deprecated/retired transitions." and "Architect-of-record approval workflow gate."; data_objects 268 + 272 carry text like "Config-shape master: time-series cost snapshots, no per-state permissions needed... Lifecycle states intentionally omitted per Rule #12 exemption." Rule #15 specifically RESCINDED the prior Rule #12 license to write the config-shape exemption to notes. Audit obligation when Rule #15 has been violated is to revert + append Incident entry to references/skill-changelog.md.
+      Per Rule #15, every notes column must be empty by default and only ever populated with explicit per-row user-approved wording. The 2026-05-29 audit surfaced this and the question was never answered. State today: 20 skill_tools rows carry workflow narration; data_objects 268 + 272 carry the config-shape exemption text. Rule #15 RESCINDED the prior Rule #12 license to write the config-shape exemption to notes. NOTE: entity_type on 268 + 272 was set to operational_record on 2026-06-07, so the structural exemption is now carried by the typed column and the prose in notes is fully redundant. Audit obligation when Rule #15 has been violated is to revert + append Incident entry to references/skill-changelog.md. The skill_tools table itself is RETIRED per the per-domain-skill supersession (header), so those 20 rows are slated for removal regardless; only the user can confirm whether their notes were approved before any revert.
     options:
-      - "(a) Confirm strings were user-approved at the original load , leave in place."
-      - "(b) Confirm auto-populated , PATCH all 22 rows (20 skill_tools + 2 data_objects) to empty string and append Incident entry to references/skill-changelog.md."
+      - "(a) Confirm strings were user-approved at the original load: leave in place."
+      - "(b) Confirm auto-populated: PATCH the affected rows (skill_tools rows still extant + data_objects 268 + 272) to empty string and append Incident entry to references/skill-changelog.md."
     why: |
-      The audit cannot determine load-time approval status from catalog state. Only the user knows whether they approved the wording.
+      The audit cannot determine load-time approval status from catalog state. Only the user knows whether they approved the wording. Reverting non-empty notes is DESTRUCTIVE; never executed unapproved.
 
   - id: B2-PATTERN-FLAGS
-    summary: Rule #12 positive re-evaluation of pattern flags on APM masters , should business_capability_maps.has_submit_lock, application_value_scores.has_submit_lock, and enterprise_applications.has_personal_content be flipped true?
+    summary: Rule #12 positive re-evaluation of pattern flags on APM masters. Should business_capability_maps.has_submit_lock, application_value_scores.has_submit_lock, and enterprise_applications.has_personal_content be flipped true?
     question: |
-      Currently every APM master has all three pattern flags false except technology_fit_assessments which has has_single_approver=true. The Rule #12 default-false does not establish review; positive consideration is required per audit. Candidate flips: business_capability_maps.has_submit_lock=true (maps freeze at published so dependents have a stable surface), application_value_scores.has_submit_lock=true (quarterly score snapshot immutable once recorded), enterprise_applications.has_personal_content=true (application records often carry technical-owner contact info). Per Rule #15, recording the reasoning in notes is forbidden.
+      Currently every APM master has all three pattern flags false except technology_fit_assessments which has has_single_approver=true (confirmed live 2026-06-07). Candidate flips: business_capability_maps.has_submit_lock=true (maps freeze at published so dependents have a stable surface), application_value_scores.has_submit_lock=true (quarterly score snapshot immutable once recorded), enterprise_applications.has_personal_content=true (application records often carry technical-owner contact info). Per Rule #15, recording the reasoning in notes is forbidden.
     options:
       - "Per-flag yes/no answer from user; agent PATCHes the data_objects row(s) accordingly."
     why: |
       Pattern-flag judgments are workflow-shape decisions only the user can make for this domain. The audit cannot determine intent.
+
+  - id: B2-B9-RETARGET
+    summary: Re-target handoffs 237 + 238 from the generic application.lifecycle_state_changed (209) to the new focused enterprise_application.sunsetting (1530). DESTRUCTIVE trigger_event re-attribution; not executed.
+    question: |
+      The focused event enterprise_application.sunsetting (trigger_events id=1530) was authored on 2026-06-07 (B1A-B9 additive half). Handoffs 237 (APM-PORTFOLIO-REGISTRY -> CMDB) and 238 (APM-PORTFOLIO-REGISTRY -> SAM) currently consume the generic event 209 (application.lifecycle_state_changed). Re-pointing them to 1530 sharpens the semantics, but it re-attributes an existing handoff's trigger_event, which is a destructive overwrite of a non-empty FK.
+    options:
+      - "Approve: PATCH handoffs 237 + 238 trigger_event_id 209 -> 1530."
+      - "Leave: 237/238 keep the generic application.lifecycle_state_changed event."
+    why: |
+      Re-attributing an existing handoff's trigger_event is DESTRUCTIVE (overwrites a non-empty FK); never executed unapproved.
+
+  - id: B2-H1-DELETE-STALE
+    summary: DELETE 4 stale discovery_substring handoff_processes rows (handoff_processes ids 7/8/9/10 on handoffs 236/235/237/238 -> process 1180 "Review and monitor application security controls") that are a wrong-PCF fit for portfolio-onboarding/lifecycle events; replace with focused agent_curated rows. DESTRUCTIVE; not executed.
+    question: |
+      Handoffs 235, 236, 237, 238 each carry a discovery_substring handoff_processes row pointing at process 1180 (PCF 20740 "Review and monitor application security controls"), a security-controls leaf that is a poor fit for application onboarding / lifecycle-state-change events on enterprise_applications. Per the Discover Pass 1.5 procedure, human/agent-curated rows override discovery_substring and the stale rows should be DELETED after a focused replacement is inserted. Candidate focused PCFs: onboarding (235/236, application.onboarded) -> "Manage IT change" family or "Maintain IT asset records" (1312, already used for 853/854); lifecycle_state_changed (237/238) -> the new enterprise_application.sunsetting event plus an IT-change PCF. Exact replacement PCF should be confirmed at apply time.
+    options:
+      - "Approve: INSERT focused agent_curated handoff_processes rows for 235/236/237/238, then DELETE handoff_processes ids 7, 8, 9, 10."
+      - "Leave: keep the 4 discovery_substring rows as-is."
+    why: |
+      DELETE of existing rows is DESTRUCTIVE; never executed unapproved. The additive replacement is paired with the delete and is surfaced together so the swap is reviewed as one decision.
 
 b3:
   - id: B3-APM-MARKET-SURFACE

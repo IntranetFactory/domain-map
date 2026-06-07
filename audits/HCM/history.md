@@ -502,3 +502,45 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-06 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (Rule #21). Worked only the open items in state.yaml; no fresh from-scratch audit. Domain id 54 (HCM), modules 54 HCM-CORE-WORKER / 55 HCM-ORG-POSITIONS / 56 HCM-LIFECYCLE-WORKFLOWS, 6 masters (employees 31, hcm_positions 32, job_profiles 33, org_units 34, employment_contracts 35, employment_events 36). All writes idempotent, record_status omitted (defaults 'new'), no value overwritten. Loader: .tmp_deploy/fix_hcm_state_driven_2026_06_06.ts (gitignored).
+
+### Executed (additive/corrective, record_status='new')
+
+- **B1A-ENTITY-TYPE (6 PATCH):** all 6 masters were entity_type='unclassified'. Classified per Rule #12: employees 31, hcm_positions 32, org_units 34, employment_contracts 35, employment_events 36 -> `operational_workflow` (each has a genuine lifecycle/approval state machine); job_profiles 33 -> `catalog` (job-catalog definition that positions/requisitions reference; its draft/approved/active/retired flow is a permitted catalog publishing flow). Lifecycle states confirmed present on all 6 before classifying the workflow ones.
+- **Rule #20 catalog UX (4 PATCH):** the HCM domain row (54) and all 3 modules had empty catalog_tagline AND catalog_description. Authored buyer-voice copy (workflow + value, no vendor names, no em-dash, American English) and wrote it directly into the empty fields. Non-empty values would have been left untouched (none were non-empty).
+- **B1A-S7 (3 INSERT):** 3 consumer + optional domain_module_data_objects rows on HCM-CORE-WORKER (54) for PSA-mastered project_assignments (218), project_resource_allocations (726), resource_skill_inventories (725). Closes the Section-4 pairwise gap behind inbound handoffs 1016/1022/1026.
+- **B1A-S6 / H1 (29 INSERT agent_curated handoff_processes, role='implements'):** clean-match PCF tags on previously-untagged HCM cross-domain handoffs. PCF process_ids resolved live by name against source_framework=apqc_pcf_cross_industry, anchored on the convention already established by tagged sibling handoffs:
+  - Payroll feed -> 236 Administer Payroll: 377, 380, 383, 412, 1154.
+  - Compensation/rewards -> 1046 Administer compensation and rewards to employees: 381, 385, 387, 106, 422.
+  - Org design -> 97 Create organizational design (matches the 1177-1190 org_unit convention): 389, 391, 392, 459.
+  - Workforce analytics -> 247 Develop workforce analytics (established PA sibling tag): 21, 449, 1103, 1111.
+  - Employee assistance & retention -> 235 (established EMP-EXP sibling tag): 116.
+  - Performance -> 225 Manage employee performance: 438. Career -> 226 Manage employee career development: 441.
+  - Onboarding -> 222 Manage new hire/re-hire (sibling 1037): 410.
+  - Benefits -> 1052 Administer benefit enrollment (siblings 122/379): 418.
+  - Strategic workforce planning -> 980 Perform strategic workforce planning: 15, 454, 457.
+  - Master data -> 771 Maintain master data: 274, 718.
+  - Regulatory compliance -> 369 Manage regulatory compliance (siblings 1047/1313/1314): 842.
+  - No duplicate trigger_events created. HCM remains a high-fan-out publisher; only the clean cross-domain matches were tagged.
+
+### Surfaced (not written; returned to user)
+
+- **b2:** B2-S1r (event_category for org_unit.created 391), B2-S2r (ratify the 2026-05-31 notes revert), B2-S4r (pattern flags on employment_contracts/employment_events has_personal_content, now in-scope since both are operational_workflow), B2-S5r (module 56 baseline-only permission shape), B2-S6r (internal-mobility handoff, needs new trigger_event), B2-S7r (WFM absence_requests DMDO mirror), and NEW B2-S8r (~9 H1 REPLACE candidates including the wrong-mapped 446 and 451 - destructive overwrite, not applied).
+- **Destructive (surfaced, not applied):** B1A-SELF-CONTAIN (M9) 7 contributor/required-consumer rows on modules 54/55/56 (recommended fix per row: embedded_master shell or relax to necessity=optional); B1B-S1 (PATCH event 391, blocked by B2-S1r); B1B-S2 (31 inbound NULL target_domain_module_id, blocked by B2-S5r; the 3 PSA DMDOs now anchor 1016/1022/1026 to module 54); the H1 REPLACE set (B2-S8r).
+- **Personas/RACI deferred (B1A-PHASE-P):** not authored in a bulk pass per Rule #21. Candidate operational personas: HR-HRIS-ADMIN, HR-PEOPLE-OPS-SPECIALIST, HR-BUSINESS-PARTNER, HR-ORG-DESIGN-ANALYST, PEOPLE-MANAGER.
+- **H1 deferred-to-Discover:** handoffs 378 and 382 (HCM -> IGA, employment_event.recorded / employment_contract.expired) have no clean HR-vocabulary PCF for access provisioning/deprovisioning; left untagged for a Discover pass.
+
+### Left
+
+- **b3 backlog:** 9 entity candidates + 4 regulation candidates + 2 modularization candidates, unchanged.
+- **B1B-N1 superseded:** the 25 skill_tools.notes revert is moot - skill_tools dropped and per-module skills retired per the 2026-06-06 per-domain-skill restoration. Reframed as a note; supersession header retained.
+- **b1b owed-by-others:** source_domain_module_id backfills on inbound handoffs are other domains' audits (B1-S3 routing table from 2026-05-30 stands).
+
+### JWT errors
+
+None.

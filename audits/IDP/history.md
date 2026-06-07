@@ -256,3 +256,72 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21) over the open items in `state.yaml`, not a fresh
+audit. Confirmed live: IDP (domain_id=39) is still UNBUILT (0 `domain_modules`, 0 `capability_domains`),
+so the module-split decision (B2-IDP-MODULE-SPLIT) still gates the whole build cascade. Per the
+unbuilt-domain rule the cascade was LEFT in place, not scaffolded. Executed only the three
+state items that are independent of the module split. Loader:
+[.tmp_deploy/fix_idp_state_2026_06_07.ts](../../.tmp_deploy/fix_idp_state_2026_06_07.ts), run from
+project root. No JWT-audience errors.
+
+### Executed (3 write types)
+
+- **entity_type classification (B13).** PATCHed all 8 IDP masters off `unclassified` to the Rule #12
+  enum, deterministic from each description: `capture_batches` (530), `idp_extraction_models` (531),
+  `extracted_records` (533), `idp_validation_results` (534), `training_datasets` (537) ->
+  `operational_workflow`; `extracted_fields` (532) and `document_classification_results` (535) ->
+  `computed` (machine output + confidence score, no workflow); `idp_extraction_templates` (536) ->
+  `catalog` (reusable config definition). 0 masters remain unclassified post-load. Side effect: this
+  RESOLVES the long-standing idp_extraction_templates config-shape lifecycle-exemption question
+  (B2 item retired) and scopes B12 to exactly the 5 operational_workflow masters.
+- **Catalog UX (A4 / Rule #20).** PATCHed `domains` row 39, authoring buyer-voice `catalog_tagline` and
+  `catalog_description` (workflow + value, no vendor/product names, American English, no em-dash) into
+  the two previously-empty fields. Did not touch any module (none exist). Verified no em-dash in the
+  written copy.
+- **Aliases (B11).** INSERTed 14 generic vendor-neutral `data_object_aliases` rows (`alias_type=synonym`,
+  `record_status=new`), across 6 masters: capture_batches (Document Batch / Processing Case / Document
+  Queue), extracted_records (Extraction / Processed Document / Analysis Result), extracted_fields
+  (Extracted Value / Detected Entity), idp_extraction_models (Document Processor / Custom Extraction
+  Model), idp_validation_results (Validation Case / Review Item), document_classification_results
+  (Classification Result / Document Classification). No vendor names used (Rule #18).
+
+All writes at `record_status='new'` (Rule #1 honored; nothing stamped approved).
+
+### Surfaced (user decisions + destructive, not executed)
+
+- **b2 (user decisions):** B2-IDP-MODULE-SPLIT (the build gate; 2 / 3 / 1 modules, audit recommends 3),
+  B2-IDP-INTRA-VERBS (7 intra-domain edge verbs for B1B-S8), B2-IDP-PATTERN-FLAGS (has_personal_content
+  / has_submit_lock / has_single_approver on the workflow masters), B2-IDP-MLOPS-BOUNDARY (informational),
+  B2-IDP-HIPAA-FERPA (regulation scope), B2-IDP-CROSS-DOMAIN-VERBS (rows 585/586 verb rewrite).
+  B2-IDP-CATALOG-UX-TEXT is RETIRED (executed under the new Rule #20 EXECUTE policy).
+- **Destructive (recommended fix only, not applied):** B1B-S14 cross-domain verb rewrite on existing
+  non-empty rows 585 (`is_stored_as` -> `derives_from`) and 586 (`dispositions` -> `applies`); any
+  DELETE of legacy skill 69 (which now actually matches the required single domain-grain shape, so
+  retirement is reframed, not actioned).
+- **Personas / RACI (Phase P):** DEFERRED, not authored. Candidate personas carried forward in
+  B1B-S13: IDP-VALIDATOR (HITL queue worker), IDP-MODEL-OWNER (data scientist / ML engineer),
+  IDP-PROCESS-OWNER (business owner). They only apply once modules land.
+
+### Left (untouched)
+
+- **Unbuilt-cascade b1b (blocked on the build):** B1B-S1-MODULES (M1), B1B-S3-CAPABILITIES (A2),
+  B1B-S4-DMDO (B1), B1B-S6-HANDOFF-MODULE-FKS (B10b, also blocked on ECM + AP-AUTO modules),
+  B1B-S12-LIFECYCLE-STATES (B12, now scoped to 5 workflow masters), B1B-S13-ROLES (E1). Not
+  scaffolded per the unbuilt-domain rule.
+- **B1B-S10-LEGACY-SKILL-RETIRE:** reframed as a note under the 2026-06-06 per-domain-skill
+  supersession (per-module skills RETIRED; skill 69 kept as the single domain-grain skill).
+- **b3 backlog (7):** human_review_tasks, idp_extraction_corrections, document_layouts,
+  confidence_thresholds, ocr_results, redaction_results, extraction_validation_rules. Phase 0 pending.
+- **H1 APQC tags:** already satisfied (handoff_processes 644/645/825/826, all agent_curated + new);
+  no work owed.
+
+### UI links (tables written)
+
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/domains
+- https://tests.semantius.app/domain_map/data_object_aliases

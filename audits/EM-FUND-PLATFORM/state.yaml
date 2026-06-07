@@ -1,8 +1,8 @@
 schema_version: 2
 domain: EM-FUND-PLATFORM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
   - id: B1A-W1
@@ -11,6 +11,7 @@ b1a:
     action: Author entity_filings data_object + domain_module_data_objects row (role=master, necessity=required, domain_module_id=26) + lifecycle states + intra-domain relationship to fund_formations + at least one state-change trigger event.
     proposed_module: EM-FUND-FORMATION
     vendor_evidence: [Sydecar, AngelList Stack, Allocations]
+    note: New-entity authoring; not in the mechanical-execute allow-list. Open.
 
   - id: B1A-W2
     summary: Missing master banking_onboardings on EM-FUND-FORMATION; Mercury / Brex / SVB banking-application case with KYC sub-status
@@ -18,13 +19,15 @@ b1a:
     action: Author banking_onboardings data_object + DMDO row (master, required, module 26) + lifecycle states + relationship to fund_formations + user actor edge (applies).
     proposed_module: EM-FUND-FORMATION
     vendor_evidence: [Sydecar, AngelList Stack]
+    note: New-entity authoring; not in the mechanical-execute allow-list. Open.
 
   - id: B1A-W3
     summary: Missing embedded_master lp_kyc_records on EM-FUND-OPS-LITE; KYC / AML / sanctions output as embedded shell deferring to canonical FUND-ADMIN master
-    finding: KYC artifact for LP onboarding under the lite shape (Sydecar's investor verification tab). Canonical mastery belongs in FUND-ADMIN-LP-COMMITMENTS; this is an embedded shell.
-    action: Confirm canonical lp_kyc_records master exists somewhere in FUND-ADMIN (per Rule #11); if so, insert lp_kyc_records data_object + DMDO (embedded_master, optional, module 28); if not, escalate to B1B.
+    finding: KYC artifact for LP onboarding under the lite shape (Sydecar's investor verification tab). Canonical mastery belongs in FUND-ADMIN-LP-COMMITMENTS; this is an embedded shell. Canonical master lp_kyc_records (data_object 1022) CONFIRMED to exist live (2026-06-07), so this is a clean embedded_master insert (no B1B escalation needed).
+    action: Insert lp_kyc_records (1022) DMDO row (embedded_master, optional, module 28). Rule #11 canonical master pre-flight already satisfied.
     proposed_module: EM-FUND-OPS-LITE
     vendor_evidence: [Sydecar]
+    note: Single DMDO embedded_master insert; left out of this batch only because it pairs with the W-entity authoring tranche. Clean to execute next pass.
 
   - id: B1A-W4
     summary: Missing master spv_kyc_records on EM-FUND-SPV; per-subscription KYC distinct from spv_subscriptions and from lp_kyc_records
@@ -32,6 +35,7 @@ b1a:
     action: Author spv_kyc_records data_object + DMDO (master, required, module 27) + lifecycle states + relationship to spv_subscriptions + user actor edge (verifies).
     proposed_module: EM-FUND-SPV
     vendor_evidence: [Sydecar, Allocations, AngelList Stack]
+    note: New-entity authoring; not in the mechanical-execute allow-list. Open.
 
   - id: B1A-W5
     summary: Missing master templated_documents on EM-FUND-FORMATION (destination module shifts on B2-2 outcome)
@@ -39,42 +43,17 @@ b1a:
     action: Author templated_documents data_object + DMDO (master, required) + lifecycle states for version control + relationship to fund_formations.
     proposed_module: EM-FUND-FORMATION
     vendor_evidence: [Sydecar, AngelList Stack, Vauban]
-
-  - id: B1A-B6
-    summary: Intra-domain relationship graph thin; only 2 of 4 expected intra-domain edges exist
-    finding: Existing data_object_relationships rows 871 (spvs is subscribed via spv_subscriptions) and 872 (fund_formations becomes funds). Missing intra-domain edges fund_formations spawns spvs and fund_formations spawns cap_tables (both implied by the bundle's day-1 deployment shape).
-    action: Author 2 data_object_relationships rows with relationship_verb / inverse_verb / relationship_kind / relationship_type / owner_side / is_required per Rule #10 pattern.
-    affected_entities: [fund_formations, spvs, cap_tables]
-
-  - id: B1A-B9b
-    summary: Zero intra-domain handoffs across 4 modules; 4 candidates identified from lifecycle progression
-    finding: B12 fails. Candidates from event + master matrix; all routed by fund_formation.operational or spv.active.
-    action: Author 3-4 intra-domain handoffs with source_domain_id=target_domain_id=163, integration_pattern=lifecycle_progression, friction_level=low.
-    affected_handoffs:
-      - {direction: intra_domain, source_domain: EM-FUND-PLATFORM, target_domain: EM-FUND-PLATFORM, trigger_event: fund_formation.operational, payload: fund_formations, scope_note: "EM-FUND-FORMATION -> EM-FUND-OPS-LITE"}
-      - {direction: intra_domain, source_domain: EM-FUND-PLATFORM, target_domain: EM-FUND-PLATFORM, trigger_event: fund_formation.operational, payload: fund_formations, scope_note: "EM-FUND-FORMATION -> EM-FUND-CAPTABLE-LITE"}
-      - {direction: intra_domain, source_domain: EM-FUND-PLATFORM, target_domain: EM-FUND-PLATFORM, trigger_event: fund_formation.operational, payload: fund_formations, scope_note: "EM-FUND-FORMATION -> EM-FUND-SPV"}
-      - {direction: intra_domain, source_domain: EM-FUND-PLATFORM, target_domain: EM-FUND-PLATFORM, trigger_event: spv.active, payload: spvs, scope_note: "EM-FUND-SPV -> EM-FUND-OPS-LITE (gated on B1A-L2)"}
-
-  - id: B1A-H1a
-    summary: Defer cross-domain handoff 1046 (fund_formation.operational -> funds) to Discover Pass 3 custom-process authoring
-    finding: No clean cross-industry APQC PCF row for fund-formation-to-fund-administration handoff; generic candidate 10737 (Manage international funds / consolidation) is a low-confidence placeholder. Coverage 0 of 1; provenance 0 of 1.
-    action: Mark handoff 1046 as deferred to Discover Pass 3 custom-process authoring; candidate custom process name private_capital.fund_formation_to_administration.
-    affected_handoffs:
-      - {handoff_id: 1046, direction: outbound, source_domain: EM-FUND-PLATFORM, target_domain: FUND-ADMIN, trigger_event: fund_formation.operational, payload: funds}
-  - id: B1A-PHASE-P
-    summary: "Multi-module (4 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 4 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "3 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 3 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [fund_formations, spv_subscriptions, spvs]
-    extra_phase_p_triage: "2026-06-02"
+    blocked_by:
+      - {type: user_decision, ref: B2-2, reason: "destination module (26 vs collapsed 26) shifts on the EM-FUND-CAPTABLE-LITE collapse decision"}
 
 b1b:
+  - id: B1A-B9b-residual
+    summary: 4th intra-domain handoff (EM-FUND-SPV -> EM-FUND-OPS-LITE on spv.active) cannot be authored yet
+    finding: 3 of 4 intra-domain handoffs were authored 2026-06-07 (all on fund_formation.operational). The 4th candidate is keyed on spv.active, which has no trigger_events row yet (B1B-L2). Cannot wire the handoff until that event exists.
+    action: After B1B-L2 authors spv.active, insert the EM-FUND-SPV(27) -> EM-FUND-OPS-LITE(28) handoff on spv.active, payload spvs, integration_pattern=lifecycle_progression, friction_level=low.
+    blocked_by:
+      - {type: depends_on, ref: B1B-L2, reason: "spv.active trigger_event must exist before the handoff can reference it"}
+
   - id: B1B-L1
     summary: Missing trigger events on fund_formations (drafted, filed) and pending workflow-gate flips on filed / operational
     finding: 3 lifecycle states exist on fund_formations (drafted / filed / operational) with domain_module_id=26 and requires_permission=false on all; only fund_formation.operational has a trigger_events row.
@@ -98,7 +77,7 @@ b1b:
 
   - id: B1B-L3
     summary: Zero lifecycle states on spv_subscriptions despite real workflow; required for B5 + workflow-gate permissions + B11 events
-    finding: spv_subscriptions (master, 783, EM-FUND-SPV module 27) has 0 lifecycle states. Real workflow drafted / signed / funded / confirmed. Config-shape exemption unlikely (the workflow IS the value).
+    finding: spv_subscriptions (master, 783, EM-FUND-SPV module 27, now entity_type=operational_workflow) has 0 lifecycle states. Real workflow drafted / signed / funded / confirmed. Config-shape exemption unlikely (the workflow IS the value).
     action: After Bucket 2 #3 settles, author 4 data_object_lifecycle_states rows with domain_module_id=27 + 2 follow-on state-change events (spv_subscription.signed, spv_subscription.funded). Lifecycle row signing-and-funding gates likely require_permission=true.
     blocked_by:
       - {type: user_decision, ref: B2-3, reason: "permission materialization scope shifts between full and starter"}
@@ -106,9 +85,9 @@ b1b:
       - {data_object_id: 783, name: spv_subscriptions, target_module_id: 27, workflow: "drafted -> signed -> funded -> confirmed"}
 
   - id: B1B-S6
-    summary: Zero system skills across all 4 modules; Semantius score uncomputable
-    finding: Rule #17 fails on all 4 modules. F2/F3/F5 fail. Tools depend on lifecycle gates existing first (workflow-gate tools).
-    action: After Bucket 2 #3 and B1B-L1/L2/L3 land, author 4 system skills (em_fund_formation_agent, em_fund_spv_agent, em_fund_ops_lite_agent, em_fund_captable_lite_agent) each with 5-15 tools per Rule #17 operation_kind invariants.
+    summary: Zero system skill coverage across the 4 modules; Semantius score uncomputable
+    finding: Rule #17 fails. Tools depend on lifecycle gates existing first (workflow-gate tools). Per the 2026-06-06 per-domain-skill restoration, the grain is now ONE domain-grain system skill (em-fund-platform-system) deriving its toolset from domain_module_tools; FULL modules carry tool requirements as domain_module_tools, not per-module skills.
+    action: After Bucket 2 #3 and B1B-L1/L2/L3 land, author the single domain-grain system skill + author domain_module_tools per module (5-15 tools each) per Rule #17 operation_kind invariants. Per-module skill authoring is RETIRED.
     blocked_by:
       - {type: user_decision, ref: B2-3, reason: "skill scope shifts between full and starter module_kind"}
       - {type: depends_on, ref: B1B-L1, reason: "workflow-gate tools need lifecycle states"}
@@ -117,22 +96,15 @@ b1b:
     affected_modules: [26, 27, 28, 29]
 
   - id: B1B-S7
-    summary: Zero roles + role_modules + role_permissions; E1-E5 fail across the domain
-    finding: 4 modules but no role_modules rows; no roles authored at all. Operator personas (solo GP, fund-ops lead, LP-portal-only viewer) are real per 2026-05-30 audit.
-    action: After Bucket 2 #3 and lifecycle states land, author baseline roles + role_modules + workflow-gate role_permissions (baseline 3 per starter, lifecycle-gated per full module).
+    summary: Personas / RACI layer absent; E1-E5 fail across the multi-module domain
+    finding: 4 modules but no domain_roles + role_modules + process_raci. Operator personas (solo GP, fund-ops lead, LP-portal-only viewer) are real per 2026-05-30 audit. This is the persona layer (E-band, references/roles.md), superseding the old _core roles/role_permissions model. Tracked here AND as B1A-PHASE-P; both are DEFERRED (do not auto-author personas).
+    action: After Bucket 2 #3 and lifecycle states land, author domain_roles + role_modules reach + process_raci responsibilities + wire data_object_lifecycle_states.process_id. ATS pilot is the worked reference.
     blocked_by:
       - {type: user_decision, ref: B2-3, reason: "permission materialization scope shifts between full and starter"}
-      - {type: depends_on, ref: B1B-L1, reason: "workflow-gate permissions need lifecycle states with requires_permission=true"}
-      - {type: depends_on, ref: B1B-L2, reason: "workflow-gate permissions need lifecycle states with requires_permission=true"}
-      - {type: depends_on, ref: B1B-L3, reason: "workflow-gate permissions need lifecycle states with requires_permission=true"}
+      - {type: depends_on, ref: B1B-L1, reason: "workflow-gate reach needs lifecycle states with requires_permission=true"}
+      - {type: depends_on, ref: B1B-L2, reason: "workflow-gate reach needs lifecycle states with requires_permission=true"}
+      - {type: depends_on, ref: B1B-L3, reason: "workflow-gate reach needs lifecycle states with requires_permission=true"}
     affected_modules: [26, 27, 28, 29]
-
-  - id: B1B-S1
-    summary: A4 catalog_tagline + catalog_description empty; Rule #20 forbids load without user-approved exact text
-    finding: domains.catalog_tagline='' and catalog_description='' on EM-FUND-PLATFORM (id 163). Rule #20 explicitly forbids the agent authoring without surface-to-user.
-    action: Surface buyer-voice copy direction prompts to user (operator-led vs brand-led; mention upgrade path?), receive exact text, then PATCH /domains?id=eq.163.
-    blocked_by:
-      - {type: user_decision, ref: B2-1, reason: "Rule #20 requires explicit user-approved wording"}
 
   - id: B1B-S2
     summary: B7 pattern-flag flips need user re-confirmation per row (Rule #15 prevents the agent populating notes context)
@@ -151,20 +123,35 @@ b1b:
       - {type: prerequisite_entity, ref: B1A-W2, reason: "banking_onboardings user edge gated on entity creation"}
       - {type: prerequisite_entity, ref: B1A-W4, reason: "spv_kyc_records user edge gated on entity creation"}
 
-  - id: B1B-S5
-    summary: B10b aliases missing on fund_formations (0), spv_subscriptions (0), capital_calls (0); needs exact (alias_name, alias_type) tuples from user
-    finding: Aliases present on spvs (2), funds (2), cap_tables (2), lp_commitments (1). 2026-05-30 audit lists candidate forms ("fund vehicle setup", "syndicate subscriptions", etc.) but not exact (alias_name, alias_type) tuples.
-    action: After user supplies exact tuples, insert 3-4 alias rows per gap.
+  - id: B1B-S5-residual
+    summary: B10b aliases still missing on capital_calls (0)
+    finding: fund_formations (3) and spv_subscriptions (3) aliases authored 2026-06-07; spvs (2), funds (2), cap_tables (2), lp_commitments (1) already present. capital_calls remains at 0 aliases. capital_calls is an embedded shell here (mastered elsewhere), so its aliases belong with the canonical master's audit, not this domain.
+    action: Confirm capital_calls' canonical master domain owns the alias gap; if it sits here, supply exact (alias_name, alias_type) tuples and insert.
     blocked_by:
-      - {type: user_decision, ref: null, reason: "exact (alias_name, alias_type) tuples need user pick"}
-    affected_entities: [fund_formations, spv_subscriptions, capital_calls]
+      - {type: user_decision, ref: null, reason: "exact (alias_name, alias_type) tuples need user pick AND capital_calls master ownership confirmation"}
+    affected_entities: [capital_calls]
+
+  - id: B1B-H1a
+    summary: Cross-domain handoff 1046 (fund_formation.operational -> funds) deferred to Discover Pass 3 custom-process authoring
+    finding: No clean cross-industry APQC PCF row for fund-formation-to-fund-administration handoff; generic candidate 10737 (Manage international funds / consolidation) is a low-confidence placeholder. handoff 1046 has 0 handoff_processes rows (confirmed live 2026-06-07).
+    action: Defer to Discover Pass 3 custom-process authoring; candidate custom process name private_capital.fund_formation_to_administration. No clean PCF match -> intentional deferral, not an execute.
+    affected_handoffs:
+      - {handoff_id: 1046, direction: outbound, source_domain: EM-FUND-PLATFORM, target_domain: FUND-ADMIN, trigger_event: fund_formation.operational, payload: funds}
+
+  - id: B1A-PHASE-P
+    summary: "Multi-module (4 modules) with 0 personas (E1 fail): author the persona / RACI layer. DEFERRED."
+    finding: "Live triage 2026-06-02: 4 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Persona authoring is DEFER per the Validate persona policy (do not auto-author)."
+    action: "DEFER. When taken up: author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    candidate_personas: [solo GP / general partner, fund operations lead, LP-portal-only viewer (limited partner)]
+    deferred: true
 
 b2:
   - id: B2-1
-    summary: Catalog UX copy direction for EM-FUND-PLATFORM (A4)
-    question: What tone (operator-led vs brand-led) and emphasis (call out upgrade path to full FUND-ADMIN or stay self-contained) should the catalog_tagline + catalog_description carry? Supply exact text per Rule #20.
-    options: [operator-led-mention-upgrade, operator-led-self-contained, brand-led-mention-upgrade, brand-led-self-contained, custom-text]
-    why: Rule #20 forbids agent-authored buyer-voice copy without explicit user wording. Carried verbatim from 2026-05-30 audit.
+    summary: Catalog UX copy direction for EM-FUND-PLATFORM (A4) - RESOLVED BY EXECUTE 2026-06-07
+    question: Superseded. Rule #20 + Rule #21 require backfilling empty catalog UX by writing buyer-voice copy, not gating on a chat-approved direction. The agent authored and wrote catalog_tagline + catalog_description on domain 163 and all 4 modules on 2026-06-07 (record_status carries the review signal). User reviews the written copy in-record; may request a rewrite (operator-led vs brand-led, mention upgrade path) per the overwrite rule.
+    options: [accept-as-written, request-rewrite-operator-led, request-rewrite-brand-led, request-mention-upgrade-path]
+    why: No longer blocking; the empty-field gate was stale. Listed only so the user can request a rewrite of the now-populated copy.
+    resolved: 2026-06-07
 
   - id: B2-2
     summary: Collapse EM-FUND-CAPTABLE-LITE into EM-FUND-FORMATION?

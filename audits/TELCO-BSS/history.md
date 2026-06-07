@@ -571,3 +571,48 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate (Rule #21) of TELCO-BSS (domain id 42). Worked only the open state.yaml items; no fresh from-scratch audit. Live re-confirmed the domain is UNBUILT: 0 `domain_modules` (M1 hard fail), 0 `capability_domains` (A2 hard fail). Per the Validate unbuilt rule the build cascade is LEFT (not scaffolded); the build is a user decision gated on the B2-2 modularization shape. Executed only the module-independent additive/corrective items. handoff_processes (7/7) and trigger_events.event_category (all `state_change`) were already applied in the 2026-05-31 continuation and re-verified present, so nothing re-written there.
+
+Loader: [.tmp_deploy/fix_telco_bss_state_2026_06_07.ts](../../.tmp_deploy/fix_telco_bss_state_2026_06_07.ts). Idempotent; run from project root.
+
+### Executed (record_status='new' throughout)
+
+- **entity_type (B13 / Rule #12)**: PATCHed all 7 masters from `unclassified` to the enum. `telco_service_catalog` (653) -> `catalog`; the other 6 (`telco_service_orders` 654, `telco_subscriptions` 655, `service_provisioning_workflows` 656, `network_inventory_records` 657, `telco_customer_bills` 658, `service_trouble_tickets` 659) -> `operational_workflow`. This unblocks B12 lifecycle authoring to ride the eventual build for the 6 workflow masters. 7 PATCHes.
+- **Catalog UX (A4 / Rule #20)**: authored buyer-voice `catalog_tagline` (1 sentence) + `catalog_description` (3 paragraphs) and wrote them straight into the empty fields on `domains.id=42`. Ignored the stale B1A-S5 "surface-before-write" gate per Rule #21. No vendor names, no em-dash, American English. 1 PATCH (2 fields). Retires B1A-S5.
+- **domain_aliases (B1A-S12 / B11 domain grain)**: INSERTed 5 generic synonyms (`telco BSS`, `telecom billing systems`, `OSS BSS`, `communications service provider platform`, `convergent charging`), `alias_type='synonym'`. 5 INSERTs. Retires B1A-S12.
+- **data_object_aliases (B1B-S9 / B11)**: INSERTed 5 generic TM Forum SID synonyms, `alias_type='synonym'`, `is_preferred=false`: `Product Offering Catalog` (653), `Service Instance` (655), `Resource Inventory` (657), `Customer Invoice` (658), `Trouble Report` (659). These are standards-body labels, not vendor/product names (Rule #18 ok). Ignored the stale B2-6 wording-approval gate per Rule #21; the rows land at `record_status='new'` for in-record review. 5 INSERTs. Retires B1B-S9 and folds B2-6 (no longer a blocker).
+
+Total writes: 8 PATCHes + 10 INSERTs = 18 rows touched. No JWT errors.
+
+### Surfaced (user decision / destructive / deferred)
+
+- **B1A-H2 (destructive: approve)**: 7 `handoff_processes` rows (458-464) sit at `record_status='new'`. Flipping to `approved` is a destructive PATCH only the user may authorize per row. Not applied.
+- **B1A-BUILD / B2-2 (build)**: the modularization shape is the gating decision; 3 candidate splits (7-module eTOM, 5-module, 3-module starter). The build, capabilities (B1B-S1), modules (B1B-S2), lifecycle states (B1B-S6), intra-domain DOR (B1B-S7), users edges (B1B-S8), source-module backfill (B1B-S10) all wait on it.
+- **B2-1 (destructive: overwrite non-empty)**: em-dash (U+2014) in `domains.business_logic`. Recommended replacement supplied in state.yaml (colon for the em-dash); overwriting a populated field needs sign-off, not applied.
+- **B2-3**: US-side regulations (FCC CPNI, FCC LNP, STIR/SHAKEN, CALEA, TCPA, SOX); new `regulations` rows are Phase-A market-shape additions, not created unprompted (scope discipline).
+- **B2-5 (destructive: flag flip)**: 3 candidate pattern-flag flips on populated workflow masters (bills `has_submit_lock`, tickets `has_personal_content`, orders `has_submit_lock`). Judgment; not auto-applied.
+- **B2-7 / B1B-S11a**: events 1060 / 1068 leaf-vs-new-handoff judgment.
+- **B2-4 personas (DEFERRED)**: persona/RACI not authored by the agent. Candidate set recorded (6 personas). Defers until a multi-module build lands.
+
+### Left
+
+- **b1b blocked on the build**: B1B-S1, S2, S6, S7, S8, S10, S11a all gated on B2-2 (modules must land first; lifecycle/DOR/users/source-FK need the module surface).
+- **Superseded (skill grain, 2026-06-06)**: B1B-S3 (per-module system skills + skill_tools) is CANCELED. B1B-S4 (retire legacy skill 111) is moot: skill 111 is a domain-grain `system` skill (domain_id=42, domain_module_id=NULL), which IS the correct post-supersession shape; do NOT delete it (optional cosmetic rename only). Both reframed as notes; supersession header kept.
+- **b3 backlog**: 13 candidate entities (B3-1..B3-13) carried; speculative, route per the chosen module shape.
+- **Report-only owed by other domains**: CSM / ERP-FIN target-FK backfills, and inbound handoffs owed by CSM / ITSM / ERP-FIN / HCM / CRM / GRC (unchanged).
+
+### UI links (tables written)
+
+- https://tests.semantius.app/domain_map/data_objects?id=in.(653,654,655,656,657,658,659)
+- https://tests.semantius.app/domain_map/domains?id=eq.42
+- https://tests.semantius.app/domain_map/domain_aliases?domain_id=eq.42
+- https://tests.semantius.app/domain_map/data_object_aliases?data_object_id=in.(653,655,657,658,659)
+
+### No JWT errors observed.

@@ -1,5 +1,49 @@
 # ACCT-PLAN audit history
 
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21) over the open items in `audits/ACCT-PLAN/state.yaml`. No fresh from-scratch audit. Live verification (domain id 105, adenin tenant): 0 `domain_modules` (M1 hard fail), 7 `capability_domains`, 0 masters, both `catalog_tagline` and `catalog_description` empty, 0 `domain_aliases`, 1 `business_function_domains` owner row (Sales, id 21). Overlay test: ACCT-PLAN persists real records (account_plans, mutual_action_plans, relationship_maps, white_space_maps), so it is master-bearing, not overlay. It is UNBUILT, so per the UNBUILT clause the build cascade is surfaced, not scaffolded; only the two build-independent additive items were executed.
+
+Notable live delta vs the snapshot: handoff 209 now already carries an `agent_curated` APQC tag (handoff_processes id 1073, process 148 "Manage customers and accounts", L3, record_status new), added since the last audit. The H1 gap on handoff 209 is therefore already closed (cross-domain handoff coverage is 2 of 2). The state's proposed sharper tag (process 717 "Manage sales/key account plan", L4) would REPLACE the existing non-empty tag, which is destructive and gated on B2-T1; it is reframed as a surfaced item (B1B-H1-209-REFINE), not executed.
+
+### Executed (counts)
+
+| Item | Action | Count |
+|---|---|---|
+| Catalog UX (Rule #20, was B1B-A1-PATCH) | PATCH `/domains?id=eq.105`: authored buyer-voice `catalog_tagline` + `catalog_description` into the two empty fields. No vendor names, no em-dash, American English. record_status stays 'new'. | 1 domain row (2 fields) |
+| Aliases (B11 / B2-A1) | INSERT 4 generic synonyms into `domain_aliases` (KAM, key account management, strategic account management, account planning); `alias_type='synonym'`, record_status default 'new', `notes` not written (Rule #15). | 4 rows |
+
+Loader: [.tmp_deploy/2026-06-07_acct_plan_state_driven_execute.ts](../../.tmp_deploy/2026-06-07_acct_plan_state_driven_execute.ts). Run from project root. Idempotent (re-reads live, skips done work). Both writes verified live after the run.
+
+UI links:
+- https://tests.semantius.app/domain_map/domains?id=eq.105
+- https://tests.semantius.app/domain_map/domain_aliases?domain_id=eq.105
+
+### Surfaced (no write; user decision / destructive)
+
+- **B1A-BUILD (the build):** ACCT-PLAN is UNBUILT (0 modules, 0 masters). The full build (modules, masters B1B-V1..V7, roles, system skills) is gated on B2-L1 + B2-M1 + B2-K1 + B2-T1 and is the headline next step. Not scaffolded per the UNBUILT clause.
+- **B2-L1** (leadership-tier classification: reclassify normal Phase-B / keep overlay / hybrid). Classification is effectively settled toward master-bearing (B1A-RECLASS); user confirms (a) vs (c).
+- **B2-M1** (module shape: 6 / 4 / 3).
+- **B2-T1** (trigger-event publisher attribution for events 169, 170: move to ACCT-PLAN masters / keep on CRM customers / derived-signal events).
+- **B2-D1** (duplicate event 197 health_score.declined vs 169 account_health.declined: consolidate+DELETE / distinguish / accept). Option (a) is destructive and CRM-owned.
+- **B2-K1** (key_accounts shape: separate master / enum on customers / junction).
+- **B2-C1** (function-spine contributors: add Customer Success + Sales Operations / only CS / leave). b2 judgment; not auto-added.
+- **B2-E1** (KAM roles: 4 / 2 / defer; gated on the build).
+- **B2-V1** (Salesforce Industries Cloud positioning: add secondary solution / keep pure-play / industry-conditional). Market-shape write left to user.
+- **B1B-H1-209-REFINE (destructive):** handoff 209 already tagged (id 1073, process 148, L3). Refining to process 717 (L4) means replacing a non-empty tag; gated on B2-T1. Recommended fix surfaced, not applied.
+
+### Left (untouched)
+
+- **b1b blocked on the build / user decisions:** B1B-M1-MODULES, B1B-S1-B10B-BACKFILL, B1B-V1..V7 (all gated on B1B-M1 + B2-M1, several also on B2-K1 / B2-T1).
+- **b3 backlog (7):** ABM-Planning surface, sales-methodology overlays, digital sales rooms, tier-promotion lifecycle, team-assignment shape, QBR-ownership boundary, predictive whitespace.
+- **Report-only owed by other domains** (unchanged): CRM B9 enum hygiene / attribution (events 169, 197), CRM B8 cross-domain data_object_relationships (after masters land), CSM B10 inbound DMDO (handoff 209), SALES-ENG B10 inbound DMDO (handoff 210), FARMER-DIRECT-SALES + FINOPS event-197 receipt.
+
+### Post-fix status
+
+`next_action_by: user` (the build is the gating next step; all remaining items are b2 judgment, destructive, blocked on the build, or b3 backlog). `last_audit: 2026-06-07`.
+
 ## 2026-05-30, Validate b1 (full 4-pass)
 
 ### Summary

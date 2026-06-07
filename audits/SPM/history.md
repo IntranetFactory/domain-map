@@ -323,3 +323,70 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass over SPM (domain_id 9). Worked only the open state.yaml items.
+SPM remains UNBUILT (live: 0 domain_modules, M1 hard fail), so the M / B / E / F module
+cascade was LEFT untouched per the unbuilt rule (do not scaffold; surface the build). Every
+master-level / domain-level corrective item that survives any B2-S1 (SPM vs SEM duplication)
+resolution was executed additively at record_status=new. The remaining open items are all
+gated on the user decision B2-S1, three pattern-flag / config-shape b2 questions, or the b3
+backlog, so next_action_by flips to `user`.
+
+Loader: .tmp_deploy/fix_spm_state_driven_2026_06_07.ts (read-live-then-write, idempotent,
+record_status omitted on inserts, never wrote any `notes` column).
+
+### Executed (all record_status=new / corrective)
+
+- **entity_type (B13), 8 masters PATCHed unclassified -> operational_workflow:** 273
+  strategic_portfolios, 274 strategic_initiatives, 275 roadmap_items, 276
+  business_value_assessments, 277 resource_allocations, 278 demand_intake_requests, 279
+  scenario_plans, 281 benefits_tracking_records. 280 dependency_chains intentionally LEFT
+  unclassified (its value is the answer to open b2 B2-S3).
+- **Catalog UX (Rule #20), 2 fields on the domain row:** authored buyer-voice
+  catalog_tagline + catalog_description (both were empty; only-empty guard enforced; no
+  vendor names; no em-dash; American English). 0 module catalog copy (0 modules).
+- **Aliases (B11), 21 data_object_aliases inserted (alias_type=synonym):** 2-3 generic
+  synonyms per master across all 9 masters (273-281). Previously zero aliases on every
+  master.
+- **APQC tagging (H1), 7 agent_curated handoff_processes inserted (role=implements):**
+  - new clean-match outbound: 792 -> process 1133 (Monitor and analyze IT value and
+    benefits, L4), 793 -> 517 (Determine business value for each strategic priority, L4),
+    794 -> 1135 (Manage IT projects and services interdependencies, L4), 795 -> 1133.
+  - precise children alongside the substring-only parents (parents not deleted): 241 -> 106
+    (Execute strategic initiatives, L3), 245 -> 107 (Review execution of strategic
+    initiatives, L3), 242 -> 905 (Identify, select, and assign resources, L4).
+  - Note: 240, 244, 796 were already agent_curated + approved on live (process 409) before
+    this pass, so they were left untouched.
+
+### Surfaced (no write; needs user)
+
+- **B2-S1** (open): SPM vs SEM domain duplication decision. Options (a) merge SPM into SEM,
+  (b) merge SEM into SPM, (c) keep split + finish SPM module shape (recommended default).
+  Gates the whole module cascade and every b3 candidate.
+- **B2-S2** (open): per-flag yes/no on 6 B4 pattern-flag candidates (value-assessment
+  submit_lock + single_approver, scenario submit_lock, demand single_approver, allocation
+  single_approver, initiative single_approver).
+- **B2-S3** (open): dependency_chains (280) config-shape exemption. The master's entity_type
+  is held at `unclassified` because the answer picks the value (operational_record for
+  config-shape vs operational_workflow for a state machine).
+- **B2-APQC-DELETE (new, destructive):** 3 substring-only handoff_processes parents are now
+  superseded by the precise agent_curated children above. DELETE of handoff_processes id=130
+  (241->16), id=131 (245->16), id=132 (242->713 wrong-fit sales-bound) needs sign-off. The
+  catalog is already correct via the additive children; the parents are redundant.
+- **Personas / RACI (Phase P):** deferred. SPM is unbuilt (0 modules), so no persona /
+  process_raci work applies until the build lands. No personas authored.
+
+### Left (untouched)
+
+- **Build cascade (B1A-BUILD, B1B-S1, S3, S5, S6, S7, S8, S9):** all blocked on B2-S1 (and
+  S6 additionally on B2-S3). Did not scaffold modules; surfaced the build only.
+- **B1B-S5** reframed as a note: the legacy domain-grain spm-system skill (id 6) is now the
+  CORRECT grain under the 2026-06-06 per-domain-skill supersession; per-module skill / skill_tools
+  asks are CANCELED. Per-module tool re-authoring tracked in audits/_modularization-backlog.md.
+- **b3 backlog (9 candidates):** speculative, gated on B2-S1, untouched.
+- **Report-only owed-by-others** (inbound APQC, target-side module FK NULLs on EPM/VSDP, etc.):
+  not in scope for SPM's audit per the asymmetry rule.

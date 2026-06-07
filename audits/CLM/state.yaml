@@ -11,28 +11,32 @@
 schema_version: 2
 domain: CLM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-06"
 
-b1a:
-  - id: B1A-PHASE-P
-    summary: "Multi-module (5 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 5 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 5 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "5 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 5 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [contract_clauses, contract_obligations, contract_templates, legal_contracts, signature_records]
-    extra_phase_p_triage: "2026-06-02"
+# b1a (agent-actionable) fully executed 2026-06-06; see history.md 2026-06-06 entry.
+#   B1A-ENTITY-TYPE  : EXECUTED. 5 masters classified (66/67/70 operational_workflow,
+#                      68/69 catalog). All record_status='new'.
+#   B1A-PHASE-P      : EXECUTED. 4 personas authored (CONTRACT-OPS-MANAGER 31,
+#                      CONTRACT-OPS-SPECIALIST 32, LEGAL-COUNSEL 33,
+#                      PROCUREMENT-CONTRACT-LIAISON 34) + 15 role_modules reach rows +
+#                      13 process_raci rows + 12 lifecycle process_id wirings. E1 now passes.
+#   B1A-SELF-CONTAIN : NOT executed (destructive). Converting the saas_subscriptions
+#                      contributor row to embedded_master or necessity=optional rewrites an
+#                      existing non-empty row -> moved to the destructive-awaiting-approval list.
+b1a: []
+
+b1a_destructive_awaiting_approval:
   - id: B1A-SELF-CONTAIN
-    summary: "1 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
-    finding: "Live triage 2026-06-02: 1 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
-    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
+    summary: "1 contributor row breaks module self-containment (M9): converting it is destructive, needs user approval."
+    finding: "Live 2026-06-06: domain_module_data_objects on CLM-REPOSITORY (127) carries saas_subscriptions (mastered by SMP) as role=contributor, necessity=required, not embedded_master here. M9 self-containment violation."
+    why: "The fix (role contributor -> embedded_master, or necessity required -> optional) rewrites an existing non-empty row. Destructive overwrite per CLAUSE 'Review/audit means fix it' + SKILL.md Rule #21; never done unapproved."
+    options:
+      - "a: convert to embedded_master (CLM-REPOSITORY carries a local saas_subscriptions shell, standalone-deployable)"
+      - "b: set necessity=optional (presence-conditional; the row stays a contributor but is no longer a hard dependency)"
+    recommended: "b (set necessity=optional). CLM-REPOSITORY mastering a SaaS-subscription shell has no real deployment story; the SMP linkage is contextual, not a hard requirement, so relaxing necessity is the lighter, truer fix."
     extra_m9_shapes:
       - {entity: saas_subscriptions, module: CLM-REPOSITORY, role: contributor, master_domain: SMP}
-    extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-S10-EVENT-CAT
@@ -132,13 +136,19 @@ b2:
       - contract_templates
       - signature_records
   - id: B2-S3
-    summary: F7 channel-primitive justification for sign_document on CLM-REPOSITORY and REAL-ESTATE-AGENT skills.
+    summary: "F7 channel-primitive justification for sign_document (REFRAMED 2026-06-06: skill_tools surface RETIRED)."
+    reframed: >
+      The original surface (skill_tools.notes on per-module system skills 198 / 220) is RETIRED under the per-domain-skill
+      restoration: skill_tools is dropped and FULL modules carry no skill. Under the current model the sign_document tool
+      requirement lives on domain_module_tools (authored onto the module), and the channel-primitive justification, if recorded,
+      would live on domain_module_tools.notes. Rule #15 still forbids the agent auto-authoring that notes wording.
     question: >
-      sign_document (tool 42, side_effect, external) is linked on skill 198 (CLM-REPOSITORY) and skill 220 (REAL-ESTATE-AGENT)
-      with empty skill_tools.notes. F7 wants the channel-primitive linkage justified in skill_tools.notes; Rule #15 wants the agent
-      not to author the wording. Two routes.
+      Should the sign_document channel-primitive linkage be justified in domain_module_tools.notes (CLM-REPOSITORY 127, and the
+      REAL-ESTATE-AGENT starter 153 which keeps its module-anchored skill), or is F7 satisfied via this audit conversation with
+      notes left empty? The starter is the only CLM unit that still carries its own skill; the FULL repository module's tools roll
+      up into the single CLM domain-grain skill.
     options:
-      - "a: supply user-approved wording for the 2 skill_tools rows"
+      - "a: supply user-approved wording for the domain_module_tools.notes row(s)"
       - "b: treat F7 as satisfied via this audit conversation, leave notes empty"
   - id: B2-S4
     summary: Pattern flag re-evaluation per Rule #12 on legal_contracts, signature_records, contract_obligations.
@@ -150,17 +160,15 @@ b2:
     options:
       - "a/b/c per flag: yes/no"
   - id: B2-S5
-    summary: E6 permission-bundle drift; implicit hierarchy vs explicit gate grants.
-    question: >
-      CONTRACT-OPS-MANAGER has clm-repository:admin / clm-obligation-mgmt:admin / clm-renewal:admin and clm-authoring:manage /
-      clm-negotiation:manage. LEGAL-COUNSEL has clm-authoring:admin / clm-negotiation:admin and clm-repository:manage. The
-      workflow-gate permissions (approve_legal_contract, execute_legal_contract, amend_legal_contract, terminate_legal_contract,
-      renew_legal_contract, approve_contract_clause / contract_template, close_contract_obligation, etc.) are not explicitly granted;
-      the bundles rely on permission_hierarchy to expand :manage / :admin to include gates.
-    options:
-      - "a: confirm hierarchy expands gates, leave bundles as-is"
-      - "b: add explicit gate grants for LEGAL-COUNSEL on approve_* gates"
-      - "c: leave drift; expectation is permission_hierarchy covers everything catalog-wide"
+    summary: "E6 permission-bundle drift (SUPERSEDED 2026-06-06: bundle is DERIVED, not stored)."
+    superseded: >
+      This item referenced the retired _core model (stored role_permissions, permission_hierarchy, explicit gate grants). Under
+      Plan 3 the permission bundle is DERIVED at emit time from a persona's role_modules reach + process_raci R/A gates + the
+      entity-type write-tier policy; the catalog stores no bundle. There is therefore no stored bundle to drift. The CONTRACT-OPS-MANAGER /
+      LEGAL-COUNSEL personas referenced here did not exist post-Plan-3 (the old _core roles were deleted); they were re-authored fresh
+      in B1A-PHASE-P (2026-06-06) under the DERIVED model. The former "implicit hierarchy vs explicit gate grants" question no longer
+      applies: gates flow into the derived bundle automatically for any persona Responsible/Accountable on the gate's process.
+    resolution: "No action. The 2026-06-06 personas use the derived model; nothing to grant or reconcile by hand. Closed as superseded."
   - id: B2-S6
     summary: REAL-ESTATE-AGENT starter intent; lite-flow or refactor to consume full CLM-REPOSITORY.
     question: >

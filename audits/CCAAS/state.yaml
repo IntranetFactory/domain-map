@@ -11,68 +11,55 @@
 schema_version: 2
 domain: CCAAS
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
   - id: B1A-DESC-EMDASH
-    summary: domains.description and domains.business_logic on CCAAS contain U+2014 em-dashes, banned project-wide by CLAUDE.md.
+    summary: domains.business_logic on CCAAS contains a U+2014 em-dash (banned project-wide by CLAUDE.md) and domains.description uses British "centres" (American-English-only rule). Both are non-empty values, so the rewrite is a destructive overwrite that needs user sign-off.
     finding: |
-      Row /domains?id=eq.98 carries em-dashes in two text columns. `description` ends "Distinct from CSM (case-management business app)." preceded by an em-dash; `business_logic` reads "ACD/routing engine, IVR runtime, real-time analytics, and workforce engagement (recording, QM, WFM) [em-dash] the platform IS the engine." Per CLAUDE.md the em-dash character is forbidden everywhere including catalog data written via semantius.
+      Live 2026-06-07: business_logic reads "ACD/routing engine, IVR runtime, real-time analytics, and workforce engagement (recording, QM, WFM) [U+2014] the platform IS the engine." (em-dash confirmed at codepoint U+2014). description reads "Cloud telephony, omnichannel routing, IVR, workforce engagement management, and AI agent assist for contact centres. Distinct from CSM (case-management business app)." (British "centres"; no em-dash, contrary to the stale 2026-05-31 finding). Both columns are non-empty.
     action: |
-      Surface the proposed rewrites and PATCH /domains?id=eq.98 in a single call. Proposed text: description -> "Cloud telephony, omnichannel routing, IVR, workforce engagement management, and AI agent assist for contact centers. Distinct from CSM, which is the case-management business app." business_logic -> "ACD/routing engine, IVR runtime, real-time analytics, and workforce engagement (recording, QM, WFM): the platform IS the engine."
-
-  - id: B1A-B9b-EVENT-CAT
-    summary: 6 trigger_events on CCAAS masters have empty event_category; Rule #13 enforces the {lifecycle, state_change, threshold, signal} enum.
-    finding: |
-      trigger_events with empty event_category: 500 contact_record.captured, 501 queue_statistics.threshold_breached, 502 ccaas_call_recording.captured, 503 agent_state.changed, 504 agent_state.aux_threshold_exceeded, 505 disposition_code.applied. Trigger events 198 and 199 are correctly categorized (state_change, signal).
-    action: |
-      PATCH each row: 500 -> lifecycle, 501 -> threshold, 502 -> lifecycle, 503 -> state_change, 504 -> threshold, 505 -> state_change.
-    affected_events:
-      - {id: 500, event_name: "contact_record.captured", current_category: "", proposed_category: "lifecycle"}
-      - {id: 501, event_name: "queue_statistics.threshold_breached", current_category: "", proposed_category: "threshold"}
-      - {id: 502, event_name: "ccaas_call_recording.captured", current_category: "", proposed_category: "lifecycle"}
-      - {id: 503, event_name: "agent_state.changed", current_category: "", proposed_category: "state_change"}
-      - {id: 504, event_name: "agent_state.aux_threshold_exceeded", current_category: "", proposed_category: "threshold"}
-      - {id: 505, event_name: "disposition_code.applied", current_category: "", proposed_category: "state_change"}
+      Surface only (destructive overwrite of a non-empty value; not auto-applied). Proposed minimal rewrites: business_logic -> "ACD/routing engine, IVR runtime, real-time analytics, and workforce engagement (recording, QM, WFM): the platform IS the engine." (swap em-dash for a colon). description -> "Cloud telephony, omnichannel routing, IVR, workforce engagement management, and AI agent assist for contact centers. Distinct from CSM (case-management business app)." (centres -> centers). PATCH /domains?id=eq.98 in one call once approved.
 
   - id: B1A-H722-DEDUPE
-    summary: Handoff 722 (KMS->CCAAS knowledge_base_article.updated) carries 2 agent_curated handoff_processes rows; the 2026-05-30 audit identified PCF 20898 as the correct tag and the older row 238 (PCF 21679 Deliver approved content) is the stale duplicate.
+    summary: Handoff 722 (KMS->CCAAS knowledge_base_article.updated) carries 2 agent_curated handoff_processes rows; the 2026-05-30 audit identified PCF 20898 (process 1293, row 753) as correct and PCF 21679 "Deliver approved content" (process 429, row 238) as the stale duplicate. DELETE is destructive -> surface only.
     finding: |
-      handoff_processes rows on handoff 722: id 238 -> process 429 (PCF 21679 Deliver approved content), id 753 -> process 1293 (PCF 20898 Maintain service support knowledge repository). Audit B1-H8 specified PCF 20898 as the correct mapping. The KMS knowledge-update event is not a "deliver approved content" PCF activity.
+      Live 2026-06-07: handoff_processes on handoff 722 are id 238 -> process 429 (PCF 21679 Deliver approved content) and id 753 -> process 1293 (PCF 20898 Maintain service support knowledge repository). The KMS knowledge-update event is not a "deliver approved content" PCF activity.
     action: |
-      DELETE /handoff_processes?id=eq.238.
+      Surface only. Recommended: DELETE /handoff_processes?id=eq.238 (keep row 753). No write without user approval (Rule #1: destructive).
     affected_handoffs:
       - {handoff_id: 722, direction: inbound, source_domain: KMS, target_domain: CCAAS, trigger_event: "knowledge_base_article.updated", payload: "knowledge_base_articles", null_field: null}
 
   - id: B1A-H743-RETAG-DECISION
-    summary: Handoff 743 (CONV-AI->CCAAS conversation_flow.fallback_triggered) was deferred-to-Discover in the 2026-05-30 audit but now carries an agent_curated tag for PCF 10395; user must confirm or revoke.
+    summary: Handoff 743 (CONV-AI->CCAAS conversation_flow.fallback_triggered) was deferred-to-Discover in the 2026-05-30 audit but now carries an agent_curated tag (row 810, process 927, PCF 10395); user must confirm or revoke.
     finding: |
-      Original audit (B1-H10) classified 743 as "no clean PCF cross-industry match, candidate for custom process." A subsequent load tagged it process 927 (PCF 10395 Resolve customer problems, requests, and inquiries). PCF 10395 is workable but generic and conflicts with the original judgment that fallback engineering needs a custom process.
+      Original audit (B1-H10) classified 743 as "no clean PCF cross-industry match, candidate for custom process." A later load tagged it process 927 (PCF 10395 Resolve customer problems, requests, and inquiries). Workable but generic; conflicts with the original judgment that fallback engineering needs a custom process.
     action: |
-      Surface to user; either keep the existing handoff_processes row or DELETE it and let Discover Pass 3 author a custom process. No write without user confirmation.
+      Surface only. Either keep handoff_processes id 810 or DELETE it and let Discover Pass 3 author a custom process. No write without confirmation (destructive).
     affected_handoffs:
       - {handoff_id: 743, direction: inbound, source_domain: CONV-AI, target_domain: CCAAS, trigger_event: "conversation_flow.fallback_triggered", payload: "conversation_flows", null_field: null}
 
   - id: B1A-H746-RETAG-DECISION
-    summary: Handoff 746 (CONV-AI->CCAAS bot_definition.published) was deferred-to-Discover in the 2026-05-30 audit but now carries an agent_curated tag for PCF 20824; user must confirm or revoke.
+    summary: Handoff 746 (CONV-AI->CCAAS bot_definition.published) was deferred-to-Discover in the 2026-05-30 audit but now carries an agent_curated tag (row 812, process 52, PCF 20824); user must confirm or revoke.
     finding: |
-      Original audit (B1-H11) classified 746 as "bot deployment is build-side, outside PCF cross-industry, candidate for custom process." A subsequent load tagged it process 52 (PCF 20824 Deploy services/solutions). PCF 20824 is too generic for bot-runtime publication; the original judgment likely still holds.
+      Original audit (B1-H11) classified 746 as "bot deployment is build-side, outside PCF cross-industry, candidate for custom process." A later load tagged it process 52 (PCF 20824 Deploy services/solutions). Too generic for bot-runtime publication; the original judgment likely still holds.
     action: |
-      Surface to user; either keep or DELETE the row. No write without confirmation.
+      Surface only. Either keep handoff_processes id 812 or DELETE it. No write without confirmation (destructive).
     affected_handoffs:
       - {handoff_id: 746, direction: inbound, source_domain: CONV-AI, target_domain: CCAAS, trigger_event: "bot_definition.published", payload: "bot_definitions", null_field: null}
+
   - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 1 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 1 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 1 capability_domains. Surfaced as a build, not scaffolded (orchestrator UNBUILT rule)."
+    finding: "Live 2026-06-07: 0 domain_modules rows (M1 fail) and 1 capability_domains row (SLA-MGMT). Not deployable today. Must be built (Phase A/M/B/S) before any persona/RACI work applies. The whole b1b cascade is gated on this build landing."
+    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the domain-grain system skill, AFTER the module-shape (B2-MODULE-SHAPE) and WEM-scope (B2-WEM-SCOPE) decisions are made. If multi-module, run Phase P afterward. Personas/RACI deferred until then."
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-M1-MODULES
     summary: Author at least 2 full domain_modules per Rule #14 (CCAAS has >3 capabilities once A2 is fixed) plus optional starter; blocks every B / C / E / F band downstream.
     finding: |
-      domain_modules and domain_module_host_domains both return zero rows for CCAAS. Six masters sit on the legacy domain_data_objects rollup only. M1 is a hard fail and M2 / M4 / M5 / M6 / M7 / M8 are vacuously unmet. F2 (one system skill per module) is unreachable. B10b (handoff source_domain_module_id NULL on all 11 cross-domain handoffs) is unreachable. The 2026-05-30 audit proposed CCAAS-ROUTING-ENGINE, CCAAS-INTERACTION-CAPTURE, CCAAS-WORKFORCE-ENGAGEMENT, CCAAS-DIALER as a 4-module shape; alternatives in B2-MODULE-SHAPE.
+      domain_modules and domain_module_host_domains both return zero rows for CCAAS (live 2026-06-07). Six masters sit on the legacy domain_data_objects rollup only. M1 is a hard fail and M2 / M4 / M5 / M6 / M7 / M8 are vacuously unmet. B10b (handoff source/target_domain_module_id NULL on all CCAAS-side handoffs) is unreachable. The 2026-05-30 audit proposed CCAAS-ROUTING-ENGINE, CCAAS-INTERACTION-CAPTURE, CCAAS-WORKFORCE-ENGAGEMENT, CCAAS-DIALER; alternatives in B2-MODULE-SHAPE.
     blocked_by:
       - {type: user_decision, ref: B2-MODULE-SHAPE}
       - {type: user_decision, ref: B2-WEM-SCOPE}
@@ -80,14 +67,14 @@ b1b:
   - id: B1B-A2-CAPABILITIES
     summary: Author 6 to 8 CCAAS capabilities; only the cross-cutting SLA-MGMT is currently linked, well below the A2 floor.
     finding: |
-      capability_domains has 1 row (SLA-MGMT, id 185). The 2026-05-30 audit proposed CCAAS-ACD, CCAAS-IVR, CCAAS-OMNICHANNEL-ROUTING, CCAAS-RECORDING, CCAAS-QUALITY-MGMT, CCAAS-SPEECH-ANALYTICS, CCAAS-OUTBOUND-DIALER, CCAAS-REAL-TIME-MONITORING. Final list depends on module shape (each capability needs a realizing module per M4/M6).
+      capability_domains has 1 row (SLA-MGMT). The 2026-05-30 audit proposed CCAAS-ACD, CCAAS-IVR, CCAAS-OMNICHANNEL-ROUTING, CCAAS-RECORDING, CCAAS-QUALITY-MGMT, CCAAS-SPEECH-ANALYTICS, CCAAS-OUTBOUND-DIALER, CCAAS-REAL-TIME-MONITORING. Final list depends on module shape (each capability needs a realizing module per M4/M6).
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1-MODULES}
 
   - id: B1B-A3-SOLUTIONS
     summary: Load solution_domains rows for the 10 flagship CCaaS / WEM vendors enumerated in the 2026-05-30 vendor surface; A3 requires >=3 solutions with >=1 primary.
     finding: |
-      solution_domains returns zero rows. Vendor surface basis (flagships, vendor names licensed on commerce-shaped entities only per Rule #18): Genesys Cloud CX, NICE CXone, Five9, Talkdesk, Amazon Connect (primary, pure-play CCaaS); Twilio Flex, Cisco Webex Contact Center, Avaya Experience Platform (secondary); Verint Open Platform, Calabrio ONE (primary on WEM scope).
+      solution_domains returns zero rows. Vendor surface basis (vendor names licensed on commerce-shaped entities only per Rule #18): Genesys Cloud CX, NICE CXone, Five9, Talkdesk, Amazon Connect (primary, pure-play CCaaS); Twilio Flex, Cisco Webex Contact Center, Avaya Experience Platform (secondary); Verint Open Platform, Calabrio ONE (primary on WEM scope).
     vendor_evidence:
       - Genesys Cloud CX
       - NICE CXone
@@ -111,24 +98,17 @@ b1b:
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1-MODULES}
 
-  - id: B1B-A4-CATALOG-UX
-    summary: Backfill catalog_tagline and catalog_description on CCAAS per Rule #20; both empty.
-    finding: |
-      Rule #20 requires drafting in buyer voice (workflow + value), surfacing for review, then writing. Cannot bulk-load without explicit per-row user approval.
-    blocked_by:
-      - {type: user_decision, ref: B2-CATALOG-UX-WORDING}
-
   - id: B1B-F1-F2-LEGACY-SKILL
-    summary: Delete or re-anchor legacy domain-level skill ccaas-system (id 19, domain_module_id NULL); F2 requires exactly one system skill per module.
+    summary: Resolve the legacy domain-level skill ccaas-system (id 19) against the post-2026-06-06 single-domain-grain-skill model once modules ship.
     finding: |
-      skills row id 19 has skill_type=system, domain_id=98, domain_module_id=NULL. After modules ship, this row is obsolete; the path forward is either DELETE or PATCH domain_module_id to whichever new module best matches, plus author one <module>_agent skill per module per Phase S. 13 skill_tools rows hang off it and need redistribution.
+      skills row id 19 has skill_type=system, domain_id=98, domain_module_id=NULL. Per the 2026-06-06 supersession, the new model is exactly ONE domain-grain system skill per domain (domain_id set, domain_module_id null) that DERIVES its toolset; FULL modules carry no skill; per-module skills are RETIRED. So id 19 is ALREADY the correct grain (domain-grain). What remains once modules land: re-derive its toolset from domain_module_tools, and confirm no per-module skills get authored. The legacy skill_tools redistribution framing in the 2026-05-31 audit is superseded.
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1-MODULES}
 
   - id: B1B-B3-NAMING-ARBITRATION
     summary: Apply Rule #9 to 5 collision-prone CCAAS masters (support_sessions, contact_records, queue_statistics, agent_states, disposition_codes).
     finding: |
-      Five masters use bare-word names without is_canonical_bare_word=true and without a domain prefix. ccaas_call_recordings is correctly prefixed. Each bare-word name collides with potential CSM / CRM / WFM / CONV-AI / ATS entities per the 2026-05-30 audit's enumeration.
+      Five masters use bare-word names without is_canonical_bare_word=true and without a domain prefix. ccaas_call_recordings is correctly prefixed. Each bare-word name collides with potential CSM / CRM / WFM / CONV-AI / ATS entities per the 2026-05-30 audit's enumeration. (Concept-level aliases were authored 2026-06-07 and are unaffected by the final table name.)
     blocked_by:
       - {type: user_decision, ref: B2-NAMING-ARBITRATION}
     affected_masters:
@@ -172,34 +152,18 @@ b1b:
       - {type: user_decision, ref: B2-NAMING-ARBITRATION}
 
   - id: B1B-B12-LIFECYCLE
-    summary: Author lifecycle states for every master + required data_object per Rule #12.
+    summary: Author lifecycle states for the operational_workflow masters per Rule #12 (entity_type classified 2026-06-07).
     finding: |
-      data_object_lifecycle_states returns zero rows for the 6 masters. Required per Rule #12 since none is a config-shape master. Workflow-gate permissions materialize from these rows prefixed with the realizing module's code; until M1 lands the prefix is unknown.
+      data_object_lifecycle_states returns zero rows for the 6 masters. As of the 2026-06-07 entity_type classification, the masters requiring lifecycle states (entity_type='operational_workflow') are support_sessions (256), ccaas_call_recordings (735), agent_states (736). contact_records (257, operational_record), queue_statistics (258, computed) and disposition_codes (737, catalog) do NOT require lifecycle states (B12 passes for them). Workflow-gate permissions materialize from these rows prefixed with the realizing module's code; until M1 lands the prefix is unknown.
     affected_masters:
-      - {data_object_id: 256, name: support_sessions, target_module_id: null, workflow: open->routing->active->wrap_up->closed}
-      - {data_object_id: 257, name: contact_records, target_module_id: null, workflow: created->logged}
-      - {data_object_id: 258, name: queue_statistics, target_module_id: null, workflow: config-shape candidate}
-      - {data_object_id: 735, name: ccaas_call_recordings, target_module_id: null, workflow: captured->indexed->evaluated->signed_off}
-      - {data_object_id: 736, name: agent_states, target_module_id: null, workflow: available->busy->aux->offline}
-      - {data_object_id: 737, name: disposition_codes, target_module_id: null, workflow: config-shape candidate}
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
-
-  - id: B1B-B11-ALIASES
-    summary: Author >=1 alias per non-self-explanatory CCAAS master.
-    finding: |
-      data_object_aliases returns zero rows for the 6 masters. Per Phase B deliverable 5, every non-self-explanatory master needs at least one alias (industry synonym or vendor-specific label).
-    affected_masters:
-      - {data_object_id: 256, name: support_sessions, target_module_id: null, workflow: tbd}
-      - {data_object_id: 257, name: contact_records, target_module_id: null, workflow: tbd}
-      - {data_object_id: 735, name: ccaas_call_recordings, target_module_id: null, workflow: tbd}
-      - {data_object_id: 736, name: agent_states, target_module_id: null, workflow: tbd}
-      - {data_object_id: 737, name: disposition_codes, target_module_id: null, workflow: tbd}
+      - {data_object_id: 256, name: support_sessions, entity_type: operational_workflow, target_module_id: null, workflow: "open->routing->active->wrap_up->closed"}
+      - {data_object_id: 735, name: ccaas_call_recordings, entity_type: operational_workflow, target_module_id: null, workflow: "captured->indexed->evaluated->signed_off"}
+      - {data_object_id: 736, name: agent_states, entity_type: operational_workflow, target_module_id: null, workflow: "available->busy->aux->offline"}
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1-MODULES}
 
   - id: B1B-B10b-HANDOFF-MODULE-FK
-    summary: PATCH source_domain_module_id on all 6 outbound and target_domain_module_id on all 11 CCAAS-side handoffs once modules land.
+    summary: PATCH source_domain_module_id on all 6 outbound and target_domain_module_id on all 5 CCAAS-side inbound handoffs once modules land.
     finding: |
       All 6 outbound handoffs (225, 226, 499, 500, 501, 530) have source_domain_module_id NULL. All 5 inbound (228, 722, 743, 746, 833) have target_domain_module_id NULL. Handoffs 501 and 530 do have target_domain_module_id=46 on the CRM side. Unreachable until M1 resolves.
     affected_handoffs:
@@ -220,11 +184,11 @@ b1b:
   - id: B1B-B9-ORPHAN-EVENTS
     summary: Author handoffs (or document as intra-domain only) for 3 orphan trigger events on CCAAS masters.
     finding: |
-      trigger_events with no handoff row: 502 ccaas_call_recording.captured (QM evaluation handoff intra-CCAAS once authored, plus optional CSM coaching attach), 504 agent_state.aux_threshold_exceeded (WFM adherence flag outbound), 505 disposition_code.applied (CRM lead/opportunity outcome plus CSM case-resolution attach). Each needs a handoff row pointing at the appropriate target module.
+      trigger_events with no handoff row: 502 ccaas_call_recording.captured (QM evaluation handoff intra-CCAAS once authored, plus optional CSM coaching attach), 504 agent_state.aux_threshold_exceeded (WFM adherence flag outbound), 505 disposition_code.applied (CRM lead/opportunity outcome plus CSM case-resolution attach). Each needs a handoff row pointing at the appropriate target module. (event_category for all three backfilled 2026-06-07.)
     affected_events:
-      - {id: 502, event_name: "ccaas_call_recording.captured", current_category: "", proposed_category: "lifecycle"}
-      - {id: 504, event_name: "agent_state.aux_threshold_exceeded", current_category: "", proposed_category: "threshold"}
-      - {id: 505, event_name: "disposition_code.applied", current_category: "", proposed_category: "state_change"}
+      - {id: 502, event_name: "ccaas_call_recording.captured", event_category: "lifecycle"}
+      - {id: 504, event_name: "agent_state.aux_threshold_exceeded", event_category: "threshold"}
+      - {id: 505, event_name: "disposition_code.applied", event_category: "state_change"}
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1-MODULES}
 
@@ -247,7 +211,7 @@ b2:
     summary: Pick the CCAAS module split shape; gates almost every b1b item.
     question: Which of the 2026-05-30 audit's four proposed shapes do you want? (a) 4 modules CCAAS-ROUTING-ENGINE / CCAAS-INTERACTION-CAPTURE / CCAAS-WORKFORCE-ENGAGEMENT / CCAAS-DIALER (audit recommendation), (b) 2 modules CCAAS-CORE + CCAAS-WEM, (c) 3 modules collapsing Dialer into Routing, (d) 5 modules splitting Speech Analytics out of WEM.
     options: [a, b, c, d]
-    why: Capability authoring (B1B-A2), masters routing (B1B-COMPLIANCE-MASTERS, B1B-UNIVERSAL-MASTERS), skill authoring (B1B-F1-F2-LEGACY-SKILL), and lifecycle module FKs (B1B-B12-LIFECYCLE) all depend on the module codes.
+    why: Capability authoring (B1B-A2), masters routing (B1B-COMPLIANCE-MASTERS, B1B-UNIVERSAL-MASTERS), skill re-derivation (B1B-F1-F2-LEGACY-SKILL), and lifecycle module FKs (B1B-B12-LIFECYCLE) all depend on the module codes.
 
   - id: B2-WEM-SCOPE
     summary: Decide whether WEM stays a CCAAS module or is promoted to its own domain.
@@ -263,7 +227,7 @@ b2:
 
   - id: B2-CALL-RECORDINGS-SPLIT
     summary: Confirm or merge the two call-recording masters in the catalog.
-    question: Keep both call_recordings (id 122, SALES-ENG-owned, Gong/Chorus rep recordings) and ccaas_call_recordings (id 735, CCAAS-owned, contact-center recordings), or merge under a canonical-bare-word claim?
+    question: Keep both call_recordings (id 122, SALES-ENG-owned, rep recordings) and ccaas_call_recordings (id 735, CCAAS-owned, contact-center recordings), or merge under a canonical-bare-word claim?
     options: [keep-both, merge-canonical]
     why: Lifecycle, regulation, retention, redaction profiles differ between the two. Audit recommendation is keep-both with documented split.
 
@@ -283,13 +247,19 @@ b2:
     summary: Decide who publishes the intent.identified event (handoff 530).
     question: (a) DELETE handoff 530 and let CONV-AI author the equivalent outbound, or (b) PATCH trigger_event 200 to data_object_id 257 if CCAAS genuinely publishes this?
     options: [reassign-to-conv-ai, patch-trigger-event]
-    why: Mis-attribution per B5 / B10b. Audit recommends (a).
+    why: Mis-attribution per B5 / B10b. Audit recommends (a). Resolving this unblocks B1B-B1-INTENT-IDENTIFIED-SOURCING.
 
-  - id: B2-CATALOG-UX-WORDING
-    summary: Approve catalog_tagline and catalog_description wording for CCAAS before write (Rule #20).
-    question: Draft and approve the buyer-voice tagline + 1-3 paragraph description, then write.
-    options: [draft-and-write, skip-for-now]
-    why: Rule #20 forbids overwrite without approval and requires drafting in buyer voice (workflow + value).
+  - id: B2-H722-DEDUPE-DELETE
+    summary: Approve the destructive dedupe DELETE on handoff 722's stale APQC tag (was B1A-H722-DEDUPE).
+    question: DELETE handoff_processes id 238 (PCF 21679 Deliver approved content) on handoff 722, keeping id 753 (PCF 20898 Maintain service support knowledge repository)?
+    options: [delete-238, keep-both]
+    why: Two agent_curated tags on one handoff; the 2026-05-30 audit confirmed PCF 20898 as the correct mapping and 21679 as the duplicate. DELETE is destructive, needs sign-off.
+
+  - id: B2-H743-746-RETAG
+    summary: Confirm or revoke the two retag rows on the originally-deferred CONV-AI->CCAAS handoffs (was B1A-H743 / B1A-H746).
+    question: Keep handoff_processes id 810 (743 -> PCF 10395) and id 812 (746 -> PCF 20824), or DELETE them and let Discover Pass 3 author custom processes?
+    options: [keep-both, delete-both, mixed]
+    why: Both were deferred-to-Discover in the original audit as having no clean PCF cross-industry match; the later auto-tags are generic and conflict with that judgment. DELETE is destructive, needs sign-off.
 
 b3:
   - id: B3-AGENT-SKILL-ASSIGNMENTS

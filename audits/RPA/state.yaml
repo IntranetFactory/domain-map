@@ -11,218 +11,103 @@
 schema_version: 2
 domain: RPA
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
+
+# UNBUILT domain: 0 domain_modules (M1 fail), 0 capability_domains, confirmed live 2026-06-07.
+# Per Rule #21 the build itself (B1A-S1 / B1A-BUILD) is surfaced, not scaffolded. The module-FK
+# cascade (B1B-S7 source_domain_module_id backfill, B1B-S9 lifecycle states) is left blocked
+# behind it. The 2026-06-07 state-driven pass executed every additive item that does NOT need
+# the module layer: entity_type classification (7 masters), catalog UX (domain row),
+# intra-domain data_object_relationships (7 edges), data_object_aliases (17 clean synonyms).
 
 b1a:
   - id: B1A-S1
-    summary: "Author Phase A (5-7 capabilities, 2-3 full modules, capability_domains, domain_module_capabilities, domain_module_data_objects migration of 7 masters) for RPA"
+    summary: "BUILD (surfaced, not executed): author Phase A for RPA (5-7 capabilities, 2-3 full modules, capability_domains, domain_module_capabilities, migrate 7 masters to domain_module_data_objects)"
     finding: |
-      Zero `domain_modules` rows AND zero `capability_domains` rows for RPA (domain_id=38).
-      Per Rule #14, every `domains` row must have at least one `module_kind='full'` `domain_modules`
-      row; per A2, ≥3 capabilities (typical 5-8). The 7 loaded masters cluster naturally into
-      module-shaped surfaces matching flagship-vendor packaging:
+      Live 2026-06-07: zero `domain_modules` rows (M1 fail) AND zero `capability_domains` rows for
+      RPA (domain_id=38). Per Rule #21 an unbuilt domain is surfaced for build, never auto-scaffolded.
+      The 7 loaded masters cluster naturally into module-shaped surfaces matching flagship-vendor
+      packaging:
         (a) RPA-BOT-AUTHORING (rpa_bots, rpa_activities, rpa_deployment_packages)
         (b) RPA-ORCHESTRATION (rpa_executions, rpa_schedules, rpa_activity_logs)
         (c) RPA-BOT-IDENTITY (rpa_bot_credentials) OR fold into RPA-ORCHESTRATION per B2-S1.
       Proposed capabilities (5-7): BOT-DESIGN, BOT-DEPLOYMENT, BOT-EXECUTION-ORCH, BOT-SCHEDULING,
       EXECUTION-AUDIT-TRAIL, BOT-CREDENTIAL-MGMT, RPA-CENTER-OF-EXCELLENCE.
-      This finding gates B1A-S7, B1A-S9, B1A-S10, B1A-S11 (5 of the 10 Bucket 1 items).
+      This build gates B1B-S7 and B1B-S9 (the module-FK cascade) and the eventual Phase P.
     action: |
-      Author Phase A loader inserting capabilities + capability_domains + 2-3 domain_modules (full)
-      + domain_module_capabilities + back-fill domain_module_data_objects migrating the 7 legacy
-      domain_data_objects rows (ids 523-529). Final module count depends on B2-S1 resolution
-      (2 modules if credentials fold, 3 modules if split). Default to 3 modules unless B2-S1
-      picks option (b).
-    affected_masters:
-      - {data_object_id: 523, name: rpa_bots, target_module_id: null, workflow: design-time / studio surface}
-      - {data_object_id: 524, name: rpa_executions, target_module_id: null, workflow: runtime / orchestrator}
-      - {data_object_id: 525, name: rpa_schedules, target_module_id: null, workflow: runtime / orchestrator}
-      - {data_object_id: 526, name: rpa_activities, target_module_id: null, workflow: design-time / studio surface}
-      - {data_object_id: 527, name: rpa_activity_logs, target_module_id: null, workflow: runtime audit trail}
-      - {data_object_id: 528, name: rpa_bot_credentials, target_module_id: null, workflow: credential vault (B2-S1 split decision)}
-      - {data_object_id: 529, name: rpa_deployment_packages, target_module_id: null, workflow: design-time package release}
-    vendor_evidence:
-      - UiPath Business Automation Platform
-      - Automation Anywhere 360
-      - SS&C Blue Prism
-      - ServiceNow RPA Hub
-      - Microsoft Power Platform
+      USER DECISION REQUIRED before build: resolve B2-S1 (module shape, 2 vs 3 modules). Then a
+      Phase-A loader inserts capabilities + capability_domains + 2-3 domain_modules (full) +
+      domain_module_capabilities + back-fills domain_module_data_objects migrating the 7 masters
+      (ids 523-529). entity_type already classified (2026-06-07) so the master shapes are ready.
     extra_module_shape_pending: B2-S1
     extra_capability_count_target: 5-7
 
-  - id: B1A-S2
-    summary: "Draft `domains.catalog_tagline` + `catalog_description` for RPA (Rule #20: surface to user BEFORE writing)"
-    finding: |
-      `domains.catalog_tagline` and `domains.catalog_description` for domain_id=38 are both empty
-      strings (A4 hard-fail). Rule #20 mandates buyer voice (workflow + value), not analyst voice,
-      and explicit user review before any PATCH.
-    action: |
-      Draft a single-sentence tagline plus a 1-3 paragraph buyer-facing description (workflow + value).
-      No vendor names per Rule #18; no analyst voice. Surface drafts to user; await per-row approval;
-      then PATCH `domains` row id=38.
-
   - id: B1A-S4
-    summary: "Surface candidate handoff destinations for 3 published events with no handoffs row, then author rows once approved"
+    summary: "Author handoffs rows for 3 published events with no downstream handoff (needs target-domain confirmation)"
     finding: |
       Three lifecycle/state trigger_events rows have no handoffs row downstream, so the events are
       published nowhere despite existing as catalog vocabulary:
         - trigger_event 787 `rpa_bot.deployed` (data_object_id=523 rpa_bots; lifecycle)
         - trigger_event 788 `rpa_bot.disabled` (data_object_id=523 rpa_bots; state_change)
         - trigger_event 796 `rpa_deployment_package.released` (data_object_id=529 rpa_deployment_packages; lifecycle)
-      Plausible destinations per the 2026-05-30 audit: AUDIT (deployment trail, release trail),
-      ITSM (incident on dependent automations after disable), IGA (bot identity provisioning),
-      CMDB / APM (CI registration of the deployed package).
+      Plausible destinations: AUDIT (deployment/release trail), ITSM (incident on dependent
+      automations after disable), IGA (bot identity provisioning), CMDB/APM (CI registration).
+      Held: each candidate target needs user confirmation (cross-domain destination is a judgment,
+      not a clean enumeration), and source_domain_module_id derivation depends on B1A-S1 modules.
     action: |
-      Surface the candidate destinations to user, get target_domain confirmation per event, then
-      author handoffs rows with the deterministic source_domain_module_id derivation once B1A-S1
-      (Phase A modules) has landed. If B1A-S1 hasn't landed yet, the handoffs rows can still be
-      authored with source_domain_module_id NULL and back-filled in B1A-S7.
+      Surface candidate destinations; get per-event target_domain confirmation; then author handoffs
+      rows (source_domain_module_id NULL until B1A-S1 lands, back-fill in B1B-S7).
     affected_events:
-      - {id: 787, event_name: "rpa_bot.deployed", current_category: lifecycle, proposed_category: lifecycle}
-      - {id: 788, event_name: "rpa_bot.disabled", current_category: state_change, proposed_category: state_change}
-      - {id: 796, event_name: "rpa_deployment_package.released", current_category: lifecycle, proposed_category: lifecycle}
+      - {id: 787, event_name: "rpa_bot.deployed", current_category: lifecycle}
+      - {id: 788, event_name: "rpa_bot.disabled", current_category: state_change}
+      - {id: 796, event_name: "rpa_deployment_package.released", current_category: lifecycle}
     extra_candidate_targets:
       "rpa_bot.deployed": [AUDIT, IGA]
       "rpa_bot.disabled": [AUDIT, ITSM]
       "rpa_deployment_package.released": [AUDIT, CMDB, APM]
-
-  - id: B1A-S5
-    summary: "Author 6-8 intra-domain `data_object_relationships` among RPA's 7 masters (B6)"
-    finding: |
-      Zero intra-domain data_object_relationships among RPA's 7 masters (B6 hard fail). Every
-      flagship vendor models at least:
-        - rpa_bots has many rpa_schedules
-        - rpa_bots has many rpa_executions
-        - rpa_bots composed of rpa_activities
-        - rpa_executions has many rpa_activity_logs
-        - rpa_bots packaged into rpa_deployment_packages
-        - rpa_bots uses rpa_bot_credentials (M:N)
-    action: |
-      Draft 6-8 relationship rows (verb + inverse_verb + relationship_type cardinality + relationship_kind
-      + is_required + owner_side); surface mermaid block for review; load via standard relationship loader.
-    affected_masters:
-      - {data_object_id: 523, name: rpa_bots, target_module_id: null, workflow: hub master for 5 outbound edges}
-      - {data_object_id: 524, name: rpa_executions, target_module_id: null, workflow: inbound from rpa_bots + outbound to rpa_activity_logs}
-      - {data_object_id: 525, name: rpa_schedules, target_module_id: null, workflow: inbound from rpa_bots}
-      - {data_object_id: 526, name: rpa_activities, target_module_id: null, workflow: composed-into relation with rpa_bots}
-      - {data_object_id: 527, name: rpa_activity_logs, target_module_id: null, workflow: inbound from rpa_executions}
-      - {data_object_id: 528, name: rpa_bot_credentials, target_module_id: null, workflow: M:N junction with rpa_bots}
-      - {data_object_id: 529, name: rpa_deployment_packages, target_module_id: null, workflow: packaged-from relation with rpa_bots}
-  - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
-    extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-S7
     summary: "Backfill `source_domain_module_id` on 4 outbound handoffs after Phase A modules land"
     finding: |
       All 4 outbound handoffs from RPA carry NULL source_domain_module_id (B10b hard fail):
-        - handoff 736 `rpa_execution.failed` → ITSM (target_module_id=38)
-        - handoff 737 `rpa_execution.completed` → AUDIT (target_module_id NULL — AUDIT's B10b problem)
-        - handoff 738 `rpa_activity_log.exception_captured` → AUDIT (target_module_id NULL — AUDIT's B10b problem)
-        - handoff 739 `rpa_bot_credentials.expiring` → ITSM (target_module_id=38)
+        - handoff 736 `rpa_execution.failed` -> ITSM (target_module_id=38)
+        - handoff 737 `rpa_execution.completed` -> AUDIT (target_module_id NULL, AUDIT's B10b problem)
+        - handoff 738 `rpa_activity_log.exception_captured` -> AUDIT (target_module_id NULL, AUDIT's B10b problem)
+        - handoff 739 `rpa_bot_credentials.expiring` -> ITSM (target_module_id=38)
       Cannot derive source_domain_module_id until RPA `domain_modules` rows exist. After Phase A:
-      events on rpa_executions and rpa_activity_logs → RPA-ORCHESTRATION;
-      event on rpa_bot_credentials → RPA-BOT-IDENTITY (or RPA-ORCHESTRATION per B2-S1).
+      events on rpa_executions and rpa_activity_logs -> RPA-ORCHESTRATION;
+      event on rpa_bot_credentials -> RPA-BOT-IDENTITY (or RPA-ORCHESTRATION per B2-S1).
     blocked_by:
       - {type: depends_on, ref: B1A-S1, reason: "RPA `domain_modules` rows must exist before source_domain_module_id can be derived"}
     affected_handoffs:
-      - {handoff_id: 736, direction: outbound, source_domain: RPA, target_domain: ITSM, trigger_event: "rpa_execution.failed", payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 737, direction: outbound, source_domain: RPA, target_domain: AUDIT, trigger_event: "rpa_execution.completed", payload: rpa_executions, null_field: source_domain_module_id}
-      - {handoff_id: 738, direction: outbound, source_domain: RPA, target_domain: AUDIT, trigger_event: "rpa_activity_log.exception_captured", payload: rpa_activity_logs, null_field: source_domain_module_id}
-      - {handoff_id: 739, direction: outbound, source_domain: RPA, target_domain: ITSM, trigger_event: "rpa_bot_credentials.expiring", payload: service_incidents, null_field: source_domain_module_id}
-
-  - id: B1B-S8
-    summary: "Author `data_object_aliases` for the 7 RPA masters once B2-S2 collision resolved"
-    finding: |
-      Zero data_object_aliases rows for any of the 7 RPA masters (B11 hard fail). Vendor synonyms
-      documented in the 2026-05-30 audit (rpa_bots → digital worker / software robot; rpa_executions →
-      bot run / job run / process instance; rpa_schedules → trigger / job schedule / queue trigger;
-      rpa_activities → action / step / workflow component / automation snippet; rpa_activity_logs →
-      execution log / audit trail / trace; rpa_bot_credentials → asset / vault entry / robot credential;
-      rpa_deployment_packages → package / process package). The proposed "audit trail" alias for
-      rpa_activity_logs collides with AUDIT's `audit_findings`.
-    blocked_by:
-      - {type: user_decision, ref: B2-S2}
-    affected_masters:
-      - {data_object_id: 523, name: rpa_bots, target_module_id: null, workflow: "digital worker / software robot / attended bot / unattended bot / process automation"}
-      - {data_object_id: 524, name: rpa_executions, target_module_id: null, workflow: "bot run / job run / process instance"}
-      - {data_object_id: 525, name: rpa_schedules, target_module_id: null, workflow: "trigger / job schedule / queue trigger"}
-      - {data_object_id: 526, name: rpa_activities, target_module_id: null, workflow: "action / step / workflow component / automation snippet"}
-      - {data_object_id: 527, name: rpa_activity_logs, target_module_id: null, workflow: "execution log / bot trace; audit trail collision pending B2-S2"}
-      - {data_object_id: 528, name: rpa_bot_credentials, target_module_id: null, workflow: "asset / vault entry / robot credential"}
-      - {data_object_id: 529, name: rpa_deployment_packages, target_module_id: null, workflow: "package / process package"}
+      - {handoff_id: 736, direction: outbound, target_domain: ITSM, trigger_event: "rpa_execution.failed", null_field: source_domain_module_id}
+      - {handoff_id: 737, direction: outbound, target_domain: AUDIT, trigger_event: "rpa_execution.completed", null_field: source_domain_module_id}
+      - {handoff_id: 738, direction: outbound, target_domain: AUDIT, trigger_event: "rpa_activity_log.exception_captured", null_field: source_domain_module_id}
+      - {handoff_id: 739, direction: outbound, target_domain: ITSM, trigger_event: "rpa_bot_credentials.expiring", null_field: source_domain_module_id}
 
   - id: B1B-S9
-    summary: "Author lifecycle states + requires_permission flags + permission_verb_override per master after Phase A modules land"
+    summary: "Author lifecycle states + requires_permission flags + permission_verb_override per workflow master after Phase A modules land"
     finding: |
-      Zero data_object_lifecycle_states for any of the 7 RPA masters (B12 hard fail) despite obvious
-      state machines. Per M5 the `domain_module_id` must point at the realizing module, so authoring
-      is blocked on Phase A.
-        - rpa_bots: draft → in_review → approved → deployed → active → disabled → retired
-        - rpa_executions: queued → running → completed | failed | cancelled | timed_out
-        - rpa_deployment_packages: built → in_test → released → promoted → archived
-        - rpa_bot_credentials: issued → active → rotating → expired → revoked
-        - rpa_schedules: inactive → active → paused → ended
-      rpa_activities and rpa_activity_logs are likely Rule #12-exempt config / append-only shapes.
+      Zero data_object_lifecycle_states for any of the RPA masters (B12 hard fail) despite obvious
+      state machines on the 5 masters now classified entity_type='operational_workflow' (2026-06-07).
+      Per M5 the `domain_module_id` must point at the realizing module, so authoring is blocked on
+      Phase A (B1A-S1). The 2 masters classified entity_type='operational_record' (rpa_activities 526,
+      rpa_activity_logs 527) are Rule #12-exempt; no lifecycle states required.
+        - rpa_bots (523): draft -> in_review -> approved -> deployed -> active -> disabled -> retired
+        - rpa_executions (524): queued -> running -> completed | failed | cancelled | timed_out
+        - rpa_schedules (525): inactive -> active -> paused -> ended
+        - rpa_bot_credentials (528): issued -> active -> rotating -> expired -> revoked
+        - rpa_deployment_packages (529): built -> in_test -> released -> promoted -> archived
     blocked_by:
       - {type: depends_on, ref: B1A-S1, reason: "M5 requires domain_module_id to point at the realizing module"}
     affected_masters:
-      - {data_object_id: 523, name: rpa_bots, target_module_id: null, workflow: "draft → in_review → approved → deployed → active → disabled → retired"}
-      - {data_object_id: 524, name: rpa_executions, target_module_id: null, workflow: "queued → running → completed | failed | cancelled | timed_out"}
-      - {data_object_id: 525, name: rpa_schedules, target_module_id: null, workflow: "inactive → active → paused → ended"}
-      - {data_object_id: 528, name: rpa_bot_credentials, target_module_id: null, workflow: "issued → active → rotating → expired → revoked"}
-      - {data_object_id: 529, name: rpa_deployment_packages, target_module_id: null, workflow: "built → in_test → released → promoted → archived"}
-
-  - id: B1B-S10
-    summary: "Migrate legacy `rpa-system` skill (id 103) into per-module system skills + retire legacy row"
-    finding: |
-      Legacy domain-level skill_type='system' skill rpa-system (id 103) with domain_module_id NULL
-      exists (F1 hard fail). Rule #17 target is per-module. Today the 7 query_* skill_tools rows are
-      all linked to id 103.
-    blocked_by:
-      - {type: depends_on, ref: B1A-S1, reason: "per-module system skills require RPA `domain_modules` rows to exist first"}
-    affected_masters:
-      - {data_object_id: 523, name: rpa_bots, target_module_id: null, workflow: "tool query_rpa_bots (id 683) migrates to BOT-AUTHORING skill"}
-      - {data_object_id: 524, name: rpa_executions, target_module_id: null, workflow: "tool query_rpa_executions (id 684) migrates to ORCHESTRATION skill"}
-      - {data_object_id: 525, name: rpa_schedules, target_module_id: null, workflow: "tool query_rpa_schedules (id 685) migrates to ORCHESTRATION skill"}
-      - {data_object_id: 526, name: rpa_activities, target_module_id: null, workflow: "tool query_rpa_activities (id 686) migrates to BOT-AUTHORING skill"}
-      - {data_object_id: 527, name: rpa_activity_logs, target_module_id: null, workflow: "tool query_rpa_activity_logs (id 687) migrates to ORCHESTRATION skill"}
-      - {data_object_id: 528, name: rpa_bot_credentials, target_module_id: null, workflow: "tool query_rpa_bot_credentials (id 688) migrates to BOT-IDENTITY skill (B2-S1 split decision)"}
-      - {data_object_id: 529, name: rpa_deployment_packages, target_module_id: null, workflow: "tool query_rpa_deployment_packages (id 689) migrates to BOT-AUTHORING skill"}
-
-  - id: B1B-S11
-    summary: "Add `mutate` / `side_effect` / workflow-gate tools per module to meet Rule #17 floor (one mutate per module)"
-    finding: |
-      The 7 existing skill_tools rows are all operation_kind='query' (F3 floor / Rule #17 violation).
-      Rule #17's practical floor calls for at least one `query`, one `mutate`, one workflow-gate per
-      module. Candidate `mutate` / `side_effect` tools: deploy_rpa_bot, disable_rpa_bot,
-      schedule_rpa_bot, cancel_rpa_execution, rotate_rpa_bot_credential, promote_rpa_deployment_package.
-      Workflow-gate tools materialized from B1B-S9 lifecycle states.
-    blocked_by:
-      - {type: depends_on, ref: B1A-S1, reason: "per-module system skills must exist first"}
-      - {type: depends_on, ref: B1B-S9, reason: "workflow-gate tools materialize from authored lifecycle states"}
-
-  - id: B1B-S12
-    summary: "Apply per-flag B4 pattern-flag decisions (has_personal_content, has_submit_lock, has_single_approver) on 3 masters per B2-S3 user decisions"
-    finding: |
-      B4 hard-fail: every pattern flag false on every master; no positive re-evaluation recorded.
-      Candidates surfaced as user judgments (Rule #15 forbids `notes`-based rationale carve-out):
-        - rpa_bot_credentials.has_personal_content=true (credential content is secret + PII-adjacent
-          in user-impersonation scenarios)
-        - rpa_deployment_packages.has_submit_lock=true (released packages should freeze for
-          promotion-chain integrity)
-        - rpa_bots.has_single_approver=true (per-bot deploy approval; most vendors model a single
-          technical owner who signs off)
-    blocked_by:
-      - {type: user_decision, ref: B2-S3}
-    affected_masters:
-      - {data_object_id: 523, name: rpa_bots, target_module_id: null, workflow: "has_single_approver decision (per-bot deploy approval)"}
-      - {data_object_id: 528, name: rpa_bot_credentials, target_module_id: null, workflow: "has_personal_content decision (secret + PII-adjacent)"}
-      - {data_object_id: 529, name: rpa_deployment_packages, target_module_id: null, workflow: "has_submit_lock decision (promotion-chain integrity)"}
+      - {data_object_id: 523, name: rpa_bots, workflow: "draft -> in_review -> approved -> deployed -> active -> disabled -> retired"}
+      - {data_object_id: 524, name: rpa_executions, workflow: "queued -> running -> completed | failed | cancelled | timed_out"}
+      - {data_object_id: 525, name: rpa_schedules, workflow: "inactive -> active -> paused -> ended"}
+      - {data_object_id: 528, name: rpa_bot_credentials, workflow: "issued -> active -> rotating -> expired -> revoked"}
+      - {data_object_id: 529, name: rpa_deployment_packages, workflow: "built -> in_test -> released -> promoted -> archived"}
 
 b2:
   - id: B2-S1
@@ -234,33 +119,34 @@ b2:
         (c) RPA-BOT-IDENTITY (rpa_bot_credentials alone), OR fold credentials into RPA-ORCHESTRATION
       Which option (a) 3 modules / (b) 2 modules / (c) defer to Phase 0 vendor research?
     options:
-      - "(a) Split credentials into a dedicated RPA-BOT-IDENTITY module — 3 modules total"
-      - "(b) Fold credentials into RPA-ORCHESTRATION as a fourth master — 2 modules total"
+      - "(a) Split credentials into a dedicated RPA-BOT-IDENTITY module: 3 modules total"
+      - "(b) Fold credentials into RPA-ORCHESTRATION as a fourth master: 2 modules total"
       - "(c) Defer to a Phase 0 vendor-research pass before deciding (Bucket 3 dependency on B3-S1/S2)"
     why: |
-      Vendor practice diverges: UiPath separates Assets (credentials) from Orchestrator; Automation
-      Anywhere keeps credentials inside Control Room (orchestration). Both shapes are valid.
-      Folding keeps the module count at 2 (still satisfies the M2 ≥2 floor); splitting is closer
-      to security-conscious deployments. Choice may be informed by whether SECRETS-MGMT (B3-S2)
-      gets promoted as a sibling domain.
+      Vendor practice diverges on whether credential/asset storage is a dedicated surface or part
+      of the orchestrator. Both shapes are valid. Folding keeps the module count at 2 (still
+      satisfies the M2 >=2 floor); splitting is closer to security-conscious deployments. Choice may
+      be informed by whether SECRETS-MGMT (B3-S2) gets promoted as a sibling domain.
 
   - id: B2-S2
     summary: "Resolve `rpa_activity_logs` alias collision with AUDIT's `audit_findings`"
     question: |
-      B1B-S8 proposes "audit trail" as an alias for rpa_activity_logs. AUDIT canonically masters
-      audit findings / trails. Which resolution?
+      B11 proposes "audit trail" as an alias for rpa_activity_logs. AUDIT canonically masters audit
+      findings / trails. The clean non-colliding aliases ("execution log", "bot trace") were loaded
+      2026-06-07; only the "audit trail" term is held pending this decision. Which resolution?
     options:
-      - "(a) Drop `audit trail`; use `execution trail` / `bot trace` only"
-      - "(b) Keep `audit trail` with a data_object_aliases.alias_type qualifier distinguishing industry synonym from vendor-canonical"
-      - "(c) Surface to user as documentation; no alias loaded"
+      - "(a) Drop `audit trail`; keep only `execution log` / `bot trace` (already loaded)"
+      - "(b) Add `audit trail` with an alias_type qualifier distinguishing industry synonym from vendor-canonical"
+      - "(c) Document only; no additional alias loaded"
     why: |
-      Editorial / vocabulary decision. Could resolve by aliasing differently, or by accepting that
-      AUDIT consumes the RPA log (which handoff 738 already implies).
+      Editorial / vocabulary decision. Could resolve by accepting that AUDIT consumes the RPA log
+      (which handoff 738 already implies).
 
   - id: B2-S3
     summary: "Per-flag yes/no on 3 B4 pattern-flag re-evaluations (rpa_bot_credentials.has_personal_content, rpa_deployment_packages.has_submit_lock, rpa_bots.has_single_approver)"
     question: |
-      B4 pattern-flag positive re-evaluation per Rule #12. Per-flag yes/no for:
+      B4 pattern-flag positive re-evaluation per Rule #12, on the masters now classified
+      entity_type='operational_workflow'. Per-flag yes/no for:
         - rpa_bot_credentials.has_personal_content (credential content is secret + PII-adjacent in
           user-impersonation scenarios)
         - rpa_deployment_packages.has_submit_lock (released packages should freeze for promotion-chain integrity)
@@ -269,13 +155,14 @@ b2:
       - "Per-flag: y / n / surface-to-user-for-prose-decision"
     why: |
       Pattern flags are workflow-shape judgments the user owns; per Rule #15 the rationale cannot
-      live in `notes` (the prior config-shape exemption carve-out is RESCINDED).
+      live in `notes`. Once decided, the true flags are PATCHed onto the masters (additive once
+      the y/n is named).
 
   - id: B2-S4
     summary: "Phase 0 vendor research vs eyeball-mode for Bucket 3 candidates"
     question: |
       Bucket 3 items (B3-S1 / B3-S2 / B3-S3 / B3-S4) are speculative agent-knowledge proposals;
-      the market subagent was not spawned for this audit. How should they be vetted?
+      the market subagent was not spawned. How should they be vetted?
     options:
       - "(a) Vetted route: spawn a Phase 0 subagent with UiPath / Automation Anywhere / Blue Prism / Power Automate surface matrix"
       - "(b) Eyeball route: user names which of the 4 to treat as confirmed (B3-S1 entities, B3-S2 sibling domains, B3-S3 regulations, B3-S4 starter)"
@@ -289,17 +176,13 @@ b3:
     rationale: |
       Six candidate masters absent from the 7-master footprint, surfaced from flagship vendor
       product knowledge:
-        - rpa_queues (work queues / transaction queues — UiPath Queues, Automation Anywhere Work
-          Queues, Blue Prism Work Queues)
+        - rpa_queues (work queues / transaction queues)
         - rpa_queue_items (individual transactions in a queue)
-        - rpa_assets (UiPath term for shared bot configuration including credentials but broader;
-          overlaps with RPA-BOT-IDENTITY if B2-S1 picks option (a))
-        - rpa_actions (Automation Anywhere terminology for the leaf-level step, lower-granularity
-          than rpa_activities)
-        - rpa_machine_pools / rpa_runners (the unattended-bot host registry — UiPath Machines,
-          Automation Anywhere Bot Runners, Blue Prism Resources)
-        - rpa_orchestration_tenants / rpa_folders (multi-tenant / multi-folder organization in
-          the orchestrator — UiPath Tenants + Folders)
+        - rpa_assets (shared bot configuration including credentials but broader; overlaps with
+          RPA-BOT-IDENTITY if B2-S1 picks option (a))
+        - rpa_actions (leaf-level step, lower-granularity than rpa_activities)
+        - rpa_machine_pools / rpa_runners (the unattended-bot host registry)
+        - rpa_orchestration_tenants / rpa_folders (multi-tenant / multi-folder organization)
     vendor_evidence:
       - UiPath Business Automation Platform
       - Automation Anywhere 360
@@ -309,25 +192,16 @@ b3:
   - id: B3-S2
     candidate: "Four adjacent automation markets queued in `_missing-domains.md`: IPA, TASK-MIN, PROCESS-ORCH, SECRETS-MGMT"
     rationale: |
-      Four sibling automation markets absent from the catalog, queued in `audits/_missing-domains.md`
-      during the 2026-05-30 audit. Each would carry handoffs into/out of RPA:
-        - IPA (Intelligent Process Automation; AI-augmented RPA) — UiPath AI Center, Automation
-          Anywhere AARI, Power Automate AI Builder, Blue Prism Decipher.
-          Edge: RPA → IPA (AI-skill invocation).
-        - TASK-MIN (Task Mining) — UiPath Task Mining, Power Automate Process Advisor, Soroco Scout,
-          Kryon, ABBYY Timeline.
-          Edge: TASK-MIN → RPA (automation-candidate handoff).
-        - PROCESS-ORCH (Process Orchestration / BPMN engine) — Camunda, Bizagi, Pega, IBM BAW,
-          Workato, Tray.ai, Appian, Power Automate Cloud Flows.
-          Edge: bidirectional with RPA.
-        - SECRETS-MGMT (Secrets Management) — HashiCorp Vault, CyberArk Conjur, AWS Secrets Manager,
-          Doppler, 1Password Secrets Automation, Akeyless.
-          Edge: SECRETS-MGMT → RPA (credential issuance / rotation; may replace or wrap embedded
-          rpa_bot_credentials master).
+      Four sibling automation markets absent from the catalog, queued in `audits/_missing-domains.md`.
+      Each would carry handoffs into/out of RPA:
+        - IPA (Intelligent Process Automation; AI-augmented RPA). Edge: RPA -> IPA.
+        - TASK-MIN (Task Mining). Edge: TASK-MIN -> RPA (automation-candidate handoff).
+        - PROCESS-ORCH (Process Orchestration / BPMN engine). Edge: bidirectional with RPA.
+        - SECRETS-MGMT (Secrets Management). Edge: SECRETS-MGMT -> RPA (credential issuance /
+          rotation; may replace or wrap embedded rpa_bot_credentials master).
     vendor_evidence:
       - UiPath AI Center
       - Automation Anywhere AARI
-      - Power Automate AI Builder
       - Camunda
       - HashiCorp Vault
       - CyberArk Conjur
@@ -336,26 +210,29 @@ b3:
   - id: B3-S3
     candidate: "Missing `domain_regulations` rows for RPA: SOX, HIPAA, PCI-DSS, GxP / 21 CFR Part 11, GDPR"
     rationale: |
-      Zero domain_regulations rows for RPA. Bot-driven access to regulated systems implicates SOX
-      (segregation of duties on bot identity for financial-data-touching bots), HIPAA (PHI-touching
-      bots), PCI-DSS (card-data-touching bots), GxP / FDA 21 CFR Part 11 (pharma / clinical-data-
-      touching bots; bot validation, electronic-records integrity), GDPR (bot-driven personal-data
-      processing — Article 22 automated-decision-making implications). All inherited via the
+      Zero domain_regulations rows for RPA. Bot-driven access to regulated systems implicates SOX,
+      HIPAA, PCI-DSS, GxP / FDA 21 CFR Part 11, and GDPR (Article 22), all inherited via the
       consumer-system data path rather than RPA-as-a-market regimes. Editorial call whether to
-      record the applicability on the RPA domains row as a Phase-C signal for buyers.
+      record applicability on the RPA domains row as a Phase-C buyer signal.
     vendor_evidence: []
     proposed_module: "n/a (records on RPA `domains` row via `domain_regulations`)"
 
   - id: B3-S4
     candidate: "MODULARIZATION starter `RPA-LITE` (`module_kind='starter'`)"
     rationale: |
-      Once B1A-S1 lands the 2-or-3-module split, evaluate whether to also create a starter kit
-      `RPA-LITE` covering the minimal attended-bot path for SMB-RPA scenarios where the orchestrator
-      overhead isn't justified. Would embedded-master rpa_bots from RPA-BOT-AUTHORING and offer a
-      query_rpa_bots + simple-trigger surface without the full orchestration / scheduling /
-      credential-vault baggage. Aligns with the SMB-buyer story behind Power Automate Desktop's
-      success. Worth deferring until after full modules land; the starter is a marketing-shape
-      decision, not a structural gate.
+      Once B1A-S1 lands the 2-or-3-module split, evaluate a starter kit `RPA-LITE` covering the
+      minimal attended-bot path for SMB-RPA scenarios where the orchestrator overhead isn't justified.
+      Would embedded-master rpa_bots from RPA-BOT-AUTHORING. A marketing-shape decision, not a
+      structural gate; defer until after full modules land.
     vendor_evidence:
       - Microsoft Power Automate Desktop
     proposed_module: "RPA-LITE (new starter, dependent on B1A-S1)"
+
+# === RETIRED (superseded 2026-06-06; see header) ===
+# B1B-S10 (migrate legacy `rpa-system` skill 103 into per-module system skills) and
+# B1B-S11 (per-module mutate / workflow-gate skill_tools to meet the Rule #17 floor) are
+# CANCELED by the per-domain-skill restoration. The per-module `system` skill grain and the
+# `skill_tools` table are dropped. The single domain-grain `system` skill (rpa-system, id 103)
+# is now correct-by-construction (one domain = one system skill that DERIVES its toolset).
+# Per-module tool re-authoring onto `domain_module_tools` is tracked in
+# audits/_modularization-backlog.md, not here. Do NOT author per-module skills.

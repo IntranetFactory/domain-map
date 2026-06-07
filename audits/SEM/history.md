@@ -387,3 +387,47 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21) working only the open items in `audits/SEM/state.yaml`. No fresh from-scratch audit. Live-verified each recorded item against PostgREST (snapshot was partly stale). Domain confirmed: 166 SEM (Strategy Execution Management); 3 full modules 105 STRATEGY-DEFINITION / 106 EXECUTION-TRACKING / 107 OPERATING-RHYTHM; owning function Executive (business_function_domains already complete: owner Executive 32, contributor Business Operations 34, consumer Finance 4). SEM and SPM are modeled as distinct markets; no SEM-vs-SPM merge surfaced this pass (the SEM/SPM edges are outbound handoffs 1205-1208, not a duplicate-master collision). Loader: [.tmp_deploy/2026-06-07_sem_state_driven_execute.ts](../../.tmp_deploy/2026-06-07_sem_state_driven_execute.ts).
+
+Stale-snapshot correction: B1A-ENTITY-TYPE listed 4 unclassified masters including `strategic_initiatives` (274), but 274 was already `operational_workflow` live. Only 3 were actually unclassified (808 / 809 / 810).
+
+### Executed (all record_status='new', additive/corrective)
+
+- **B1A-ENTITY-TYPE (3 PATCHes):** classified the 3 unclassified masters per Rule #12 enum:
+  - `strategy_maps` (808) -> `catalog` (configured once per planning horizon, no lifecycle states).
+  - `operating_reviews` (809) -> `operational_workflow` (scheduled/in_progress/completed states, locked when closed).
+  - `strategy_decisions` (810) -> `operational_workflow` (proposed/decided/deferred/withdrawn states, locked once decided).
+- **B1A-S3 (2 trigger_events INSERTed):** `okr_objective.deprecated` (1574, state_change, data_object 245); `strategic_initiative.benefits_realized` (1575, state_change, data_object 274).
+- **B1A-S2 (2 intra-domain handoffs INSERTed):** handoff 1421 (106 -> 105, trigger 1375 okr_objective.scored, okr_objectives 245, lifecycle_progression, low); handoff 1422 (107 -> 105, trigger 1266 strategic_initiative.completed, strategic_initiatives 274, lifecycle_progression, low). Both key-deduped against the existing 1201-1204 set; neither pre-existed.
+- **B1B-A4 (8 catalog UX fields written, Rule #20):** authored buyer-voice `catalog_tagline` + `catalog_description` on the SEM domain (166) and all 3 modules (105/106/107), all previously empty. Wrote directly into empty fields per Rule #20 (ignored the stale B2-A4 surface-before-write gate). No non-empty value overwritten. This resolves both B1B-A4 and B2-A4.
+
+UI links for written tables:
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/handoffs
+- https://tests.semantius.app/domain_map/domains
+- https://tests.semantius.app/domain_map/domain_modules
+
+### Surfaced (not executed)
+
+- **B1A-S8 (reclassified to b2, DESTRUCTIVE):** PATCH trigger_events 1264 `strategic_objective.cascaded` event_category lifecycle -> state_change. Overwrites a non-empty enum value; both readings defensible; surfaced for confirm rather than auto-executed.
+- **B2-S1 (DESTRUCTIVE, gated):** notes-pollution provenance + revert. Re-scoped: the original 27 skill_tools.notes rows are moot (skill_tools retired by Plan 3). Surviving live candidates (data_objects 808, domain_data_objects on 166, any remaining role_modules/role_permissions) need re-verification before any revert. Revert is non-empty -> empty (destructive), so gated.
+- **B2-S2 / B2-S5 (judgment):** inbound-handoff authoring scope and integrated-vs-write-mostly SEM intent (the latter also folds the strategic_initiatives.has_submit_lock terminal-state flip, a destructive structural change). Both gate B1B-S1.
+- **B1A-PHASE-P (personas/RACI): DEFERRED.** Not authored this pass per the bulk-batch persona-defer policy. E1 fires: 3 modules, 0 domain_roles (Plan 3 deleted the old _core personas). Candidate operational personas: Chief of Staff, Strategy Office Analyst, Head of Department (formerly roles 10055/10056/10057).
+
+### Left
+
+- **b1b blocked on other domains:** B1B-S1 (gated on user decisions B2-S2/B2-S5), B1B-S4 (SPM+EPM Phase B), B1B-S5 (WORK-MGMT+SPM), B1B-S6 (SPM/EPM/ERP-FIN/HCM Phase B), B1B-S7 (gated on B2-S1, re-scope after Plan 3).
+- **b3 backlog (7):** kpis, strategic_themes, okr_check_in_summaries, strategy_health_signals, benefits_tracking_records (consumer), SEM-KPI-MGMT module, Hoshin Pillars capability. Non-blocking ideas; carried forward.
+- **Superseded:** per-module skill-grain / skill_tools items remain CANCELED per the 2026-06-06 supersession header (kept at top of state.yaml).
+
+### JWT errors
+
+None.

@@ -11,189 +11,60 @@
 schema_version: 2
 domain: CAP-TABLE
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
-  - id: B1A-S3
-    summary: Author 6 missing trigger_events for workflow-gate states + intra-domain handoffs.
-    finding: >-
-      Six lifecycle workflow-gate states and intra-domain handoffs require trigger_events that
-      do not exist in the catalog: cap_table.exit_initiated (gates cap_tables state 468 'exit'),
-      exit_scenario.committed (gates exit_scenarios state 470 'committed'),
-      secondary_transaction.approved (gates secondary_transactions state 473 'approved'),
-      equity_grant.exercised (needed for GRANTS->LEDGER intra-domain handoff in B1A-S2),
-      secondary_transaction.settled (needed for SECONDARY->LEDGER and SECONDARY->GRANTS
-      intra-domain handoffs in B1A-S2), option_pool.refreshed (needed for GRANTS<->LEDGER
-      pool-refresh handoff in B1A-S2). Five existing CAP-TABLE master trigger_events
-      (426 equity_grant.granted, 427 equity_grant.vested, 1189 valuation_409a.final,
-      1190 exit_scenario.executed, 1191 secondary_transaction.executed, 1238
-      equity_grant.approved, 1239 equity_grant.forfeited) all now carry valid event_category
-      values per the prior B1-S1 PATCH.
-    action: >-
-      INSERT 6 trigger_events rows. event_category mapping: option_pool.refreshed='lifecycle';
-      the other 5 = 'state_change'. data_object_id maps to the publishing master
-      (cap_tables=770, exit_scenarios=777, secondary_transactions=780, equity_grants=158,
-      option_pools=773). Omit record_status (Rule #1) and notes (Rule #15).
-    affected_events:
-      - {event_name: cap_table.exit_initiated, current_category: null, proposed_category: state_change}
-      - {event_name: exit_scenario.committed, current_category: null, proposed_category: state_change}
-      - {event_name: secondary_transaction.approved, current_category: null, proposed_category: state_change}
-      - {event_name: equity_grant.exercised, current_category: null, proposed_category: state_change}
-      - {event_name: secondary_transaction.settled, current_category: null, proposed_category: state_change}
-      - {event_name: option_pool.refreshed, current_category: null, proposed_category: lifecycle}
-
-  - id: B1A-S6
-    summary: Author lifecycle states on 4 workflow-bearing CAP-TABLE masters with no current state machine.
-    finding: >-
-      Seven of 12 CAP-TABLE masters carry zero data_object_lifecycle_states rows:
-      security_classes (771), shareholder_records (772), option_pools (773),
-      vesting_schedules (774), asc718_expense_periods (776), exit_waterfall_calculations
-      (778), employee_equity_accounts (779). Rule #12 requires workflow-bearing masters to
-      carry lifecycle states or claim the config-shape exemption. Three (security_classes,
-      vesting_schedules, asc718_expense_periods) are plausible config-shape exemptions and
-      route to B2-S6 user decision. Four are workflow-bearing and need state machines
-      authored: option_pools (proposed -> board_approved -> active -> exhausted / refreshed),
-      shareholder_records (registered -> certificated -> transferred / lapsed),
-      exit_waterfall_calculations (computed -> committed, tied to exit_scenario state),
-      employee_equity_accounts (provisioned -> active -> terminated / offboarded).
-    action: >-
-      INSERT data_object_lifecycle_states rows on the 4 workflow-bearing masters with
-      domain_module_id set to the realizing CAP-TABLE module per Rule #14 (option_pools ->
-      module 21, shareholder_records -> module 20, exit_waterfall_calculations -> module 23,
-      employee_equity_accounts -> module 24). requires_permission=true on the gates
-      (board_approved, certificated, terminated, exit_committed). Omit notes (Rule #15);
-      surface to user before committing per Rule #12. Defer the 3 config-shape candidates to
-      B2-S6.
-    affected_masters:
-      - {data_object_id: 773, name: option_pools, target_module_id: 21, workflow: proposed->board_approved->active->exhausted|refreshed}
-      - {data_object_id: 772, name: shareholder_records, target_module_id: 20, workflow: registered->certificated->transferred|lapsed}
-      - {data_object_id: 778, name: exit_waterfall_calculations, target_module_id: 23, workflow: computed->committed}
-      - {data_object_id: 779, name: employee_equity_accounts, target_module_id: 24, workflow: provisioned->active->terminated|offboarded}
-    extra_dependent_on: B2-S6
-    extra_dependent_on_reason: >-
-      Three additional masters (security_classes, vesting_schedules, asc718_expense_periods)
-      are config-shape candidates routed to B2-S6; the user's call on those 3 may add up to 3
-      more masters to this loader's scope.
   - id: B1A-PHASE-P
     summary: "Multi-module (6 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 6 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 6 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "12 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 12 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [asc718_expense_periods, cap_tables, employee_equity_accounts, equity_grants, exit_scenarios, exit_waterfall_calculations, option_pools, secondary_transactions, security_classes, shareholder_records, valuations_409a, vesting_schedules]
-    extra_phase_p_triage: "2026-06-02"
+    finding: "6 domain_modules and 0 domain_roles reach this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. business_function_domains C1 wiring is already in place (Finance owner; Legal + Investment Management contributor; HR consumer)."
+    action: "DEFERRED per audit policy (personas/RACI are not agent-authored without user direction). Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 6 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    candidate_personas: [CAP-TABLE-ADMIN, CFO-OPERATOR, EQUITY-ADMIN, VALUATION-ANALYST, BOARD-DIRECTOR, EMPLOYEE-EQUITY-VIEWER]
+    status: deferred
 
 b1b:
-  - id: B1B-S2
-    summary: Author 10 intra-domain cross-module handoff rows wiring the 6 CAP-TABLE modules.
-    finding: >-
-      Zero intra-domain handoff rows exist on a 6-module domain. Ten intra-domain handoffs
-      are implied by the master relationship graph and lifecycle state machines: (1)
-      equity_grant.approved (1238) GRANTS->EMPLOYEE-PORTAL expose grant; (2)
-      equity_grant.granted (426) GRANTS->EMPLOYEE-PORTAL open acceptance; (3)
-      equity_grant.vested (427) GRANTS->EMPLOYEE-PORTAL refresh balance; (4)
-      valuation_409a.final (1189) VALUATIONS->GRANTS refresh strike floor; (5)
-      valuation_409a.final (1189) VALUATIONS->LEDGER cap-table FMV refresh; (6)
-      exit_scenario.executed (1190) EXIT-MODELING->LEDGER apply scenario as actual; (7)
-      equity_grant.exercised GRANTS->LEDGER issuance of shares; (8)
-      secondary_transaction.settled SECONDARY->LEDGER transfer shares between holders; (9)
-      secondary_transaction.settled SECONDARY->GRANTS cancel exercised-but-unsettled lines;
-      (10) option_pool.refreshed LEDGER->GRANTS pool-reserve adjustments. Handoffs 7, 8, 9,
-      10 reference trigger_events authored by B1A-S3.
-    blocked_by:
-      - {type: depends_on, ref: B1A-S3, reason: 4 of 10 handoffs reference equity_grant.exercised / secondary_transaction.settled / option_pool.refreshed events that B1A-S3 inserts.}
-    affected_handoffs:
-      - {direction: intra-domain, source_domain: CAP-TABLE-GRANTS, target_domain: CAP-TABLE-EMPLOYEE-PORTAL, trigger_event: equity_grant.approved, payload: equity_grants}
-      - {direction: intra-domain, source_domain: CAP-TABLE-GRANTS, target_domain: CAP-TABLE-EMPLOYEE-PORTAL, trigger_event: equity_grant.granted, payload: equity_grants}
-      - {direction: intra-domain, source_domain: CAP-TABLE-GRANTS, target_domain: CAP-TABLE-EMPLOYEE-PORTAL, trigger_event: equity_grant.vested, payload: equity_grants}
-      - {direction: intra-domain, source_domain: CAP-TABLE-VALUATIONS, target_domain: CAP-TABLE-GRANTS, trigger_event: valuation_409a.final, payload: equity_grants}
-      - {direction: intra-domain, source_domain: CAP-TABLE-VALUATIONS, target_domain: CAP-TABLE-LEDGER, trigger_event: valuation_409a.final, payload: cap_tables}
-      - {direction: intra-domain, source_domain: CAP-TABLE-EXIT-MODELING, target_domain: CAP-TABLE-LEDGER, trigger_event: exit_scenario.executed, payload: cap_tables}
-      - {direction: intra-domain, source_domain: CAP-TABLE-GRANTS, target_domain: CAP-TABLE-LEDGER, trigger_event: equity_grant.exercised, payload: shareholder_records}
-      - {direction: intra-domain, source_domain: CAP-TABLE-SECONDARY, target_domain: CAP-TABLE-LEDGER, trigger_event: secondary_transaction.settled, payload: shareholder_records}
-      - {direction: intra-domain, source_domain: CAP-TABLE-SECONDARY, target_domain: CAP-TABLE-GRANTS, trigger_event: secondary_transaction.settled, payload: equity_grants}
-      - {direction: intra-domain, source_domain: CAP-TABLE-LEDGER, target_domain: CAP-TABLE-GRANTS, trigger_event: option_pool.refreshed, payload: option_pools}
-
   - id: B1B-S4
     summary: Resolve equity_grants lifecycle realization module after B2-S1 architectural choice.
     finding: >-
       Seven equity_grants lifecycle states (rows 112-118) carry domain_module_id=79
       (COMP-INCENTIVES, under COMP-MGMT domain 60), not domain_module_id=21
-      (CAP-TABLE-GRANTS). CAP-TABLE-GRANTS is master+required on equity_grants but realizes
-      zero workflow-gate permissions for the entity. Multi-master overlap with
-      COMP-INCENTIVES; only one module currently realizes the lifecycle. Three options live
-      in B2-S1.
+      (CAP-TABLE-GRANTS). This is part of the multi-master overlap surfaced in B2-S1: equity_grants
+      (158) carries TWO role='master' DMDO rows (module 79 COMP-INCENTIVES id 399 AND module 21
+      CAP-TABLE-GRANTS id 66), a single-master-per-data_object violation. CAP-TABLE-GRANTS is
+      master+required on equity_grants but realizes zero workflow-gate permissions for the entity.
+      Resolution depends on the B2-S1 decision (PATCH realization to 21, DUPLICATE, or keep-as-is)
+      and which master row survives the integrity fix.
     blocked_by:
       - {type: user_decision, ref: B2-S1}
     affected_masters:
       - {data_object_id: 158, name: equity_grants, target_module_id: 21, workflow: proposed->approved->granted->vesting->exercised|forfeited|expired}
 
   - id: B1B-S7
-    summary: Phase E load - 6 roles, 36 role_modules bundles, baseline + workflow-gate permissions.
+    summary: Phase E load - 6 roles, role_modules bundles, baseline + workflow-gate permissions.
     finding: >-
       Zero permissions rows on any CAP-TABLE module (modules 20-25); zero role_modules
-      bundles. Expected role set: CAP-TABLE-ADMIN, CFO-OPERATOR, EQUITY-ADMIN,
-      VALUATION-ANALYST, BOARD-DIRECTOR, EMPLOYEE-EQUITY-VIEWER. Baseline permission tiers
-      (baseline-read / baseline-manage / baseline-admin) and workflow-gate permissions
-      (e.g. cap-table-grants:approve_equity_grant, cap-table-valuations:finalize_valuation_409a,
-      cap-table-secondary:approve_secondary_transaction) materialize from the realizing
-      module's domain_module_code per Rule #14. Sequenced after B1A-S6 (more lifecycle
-      states will produce more workflow-gate permissions) and B1B-S4 (lifecycle realization
-      module for equity_grants determines whether the 7 workflow-gates land on module 21 or
-      module 79).
+      bundles. Workflow-gate permissions now materialize from a larger lifecycle surface after
+      the 2026-06-07 pass added gated states on option_pools (board_approved, refreshed),
+      employee_equity_accounts (terminated), and asc718_expense_periods (closed). Expected role
+      set: CAP-TABLE-ADMIN, CFO-OPERATOR, EQUITY-ADMIN, VALUATION-ANALYST, BOARD-DIRECTOR,
+      EMPLOYEE-EQUITY-VIEWER. Sequenced after B1A-PHASE-P (personas), B1B-S4 (equity_grants
+      realization module) and B2-S5 (bundle drift policy).
     blocked_by:
-      - {type: depends_on, ref: B1A-S6, reason: New lifecycle states from B1A-S6 produce new workflow-gate permissions, so Phase E must run after.}
-      - {type: depends_on, ref: B1B-S4, reason: Equity_grants lifecycle realization module determines whether 7 workflow-gates attach to module 21 or stay on module 79.}
+      - {type: depends_on, ref: B1A-PHASE-P, reason: Phase E roles are the persona layer; deferred until personas are authored.}
+      - {type: depends_on, ref: B1B-S4, reason: Equity_grants lifecycle realization module determines whether the 7 workflow-gates attach to module 21 or stay on module 79.}
       - {type: user_decision, ref: B2-S5, reason: Permission-bundle drift policy (enumerate gates vs rely on hierarchy expansion) shapes role_permissions row count.}
     affected_modules: [20, 21, 22, 23, 24, 25]
-    extra_role_set: [CAP-TABLE-ADMIN, CFO-OPERATOR, EQUITY-ADMIN, VALUATION-ANALYST, BOARD-DIRECTOR, EMPLOYEE-EQUITY-VIEWER]
 
   - id: B1B-S8
-    summary: Phase F load - 6 system skills + ~30 skill_tools rows.
+    summary: "RETIRED (superseded 2026-06-06): per-module system skills + skill_tools."
     finding: >-
-      Zero skills rows with skill_type='system' on any CAP-TABLE module. Rule #17 requires
-      exactly one system skill per full module with >=1 skill_tools row. Expected tool floors
-      per module: LEDGER (query_cap_tables, query_shareholder_records, query_security_classes,
-      create_cap_table, update_shareholder_record, transfer_shares); GRANTS (query_equity_grants,
-      query_option_pools, query_vesting_schedules, create_equity_grant, approve_equity_grant,
-      forfeit_equity_grant, extend_option_pool); VALUATIONS (query_valuations_409a,
-      compute_valuation_409a [compute], query_asc718_expense_periods, compute_asc718_expense
-      [compute], finalize_valuation_409a); EXIT-MODELING (query_exit_scenarios,
-      compute_exit_waterfall [compute], commit_exit_scenario); EMPLOYEE-PORTAL
-      (query_employee_equity_accounts, accept_equity_grant, exercise_equity_grant,
-      view_vesting_schedule); SECONDARY (query_secondary_transactions, create_secondary_transaction,
-      approve_secondary_transaction, settle_secondary_transaction). Compute tools require
-      data_object_id=NULL per F4.
-    blocked_by:
-      - {type: depends_on, ref: B1A-S6, reason: New lifecycle states from B1A-S6 add workflow-gate tools (e.g. board-approve option_pool, certify shareholder_record) that should ship in the same Phase F load.}
-    affected_modules: [20, 21, 22, 23, 24, 25]
-
-  - id: B1B-S9b
-    summary: Author 6 missing regulations rows then attach 6 domain_regulations rows to CAP-TABLE.
-    finding: >-
-      Only 1 of 7 audit-required regulations is currently attached to CAP-TABLE
-      (domain_regulations row 267 attaching Sarbanes-Oxley Act, regulation id 5,
-      applicability='conditional'). The other 6 regulation entities themselves do not exist
-      in the catalog (verified via /regulations?regulation_name=ilike.* queries on 409A, ASC
-      718, Rule 701, Reg D, Form 3921, Form 3922 - all return empty). The 6 missing entities
-      must be authored as regulations rows first, then attached via domain_regulations.
-    action: >-
-      Step 1, INSERT 6 regulations rows (IRS 409A, ASC 718 / IFRS 2, SEC Rule 701, SEC Reg D
-      / Form D, IRS Form 3921, IRS Form 3922) with regulation_code, regulation_name,
-      jurisdiction, issuing_body, description populated per Rule #18 (statutory body names
-      allowed). Step 2, INSERT 6 domain_regulations rows attaching them to CAP-TABLE (162)
-      with appropriate applicability per regulation reach (409A / ASC 718 / Rule 701 /
-      Reg D / Form 3921 / Form 3922 all mandatory for US private companies with equity comp).
-      Omit record_status (Rule #1) and notes (Rule #15).
-    affected_entities: [IRS 409A, ASC 718 / IFRS 2, SEC Rule 701, SEC Reg D / Form D, IRS Form 3921, IRS Form 3922]
-    extra_scope_change: >-
-      Renamed from B1-S9 (7 attachments) since the 2026-05-31 Continuation attached SOX as
-      the 7th and only existing entity. Scope reduced to 6 regulations to author + 6
-      attachments.
+      Originally "author 6 system skills + ~30 skill_tools rows, one system skill per full
+      module". The per-module system-skill grain is RETIRED per the supersession header above
+      (plans/per-domain-skill-restoration.md). FULL modules carry no skill; the domain gets
+      exactly one domain-grain system skill that DERIVES its toolset from domain_module_tools;
+      skill_tools is dropped. Per-module tool re-authoring onto domain_module_tools is tracked
+      in audits/_modularization-backlog.md, not here. No action under this item.
+    status: superseded
 
   - id: B1B-S10
     summary: Author 2 inter-domain handoffs wiring the COMP-MGMT multi-master overlap on equity_grants.
@@ -201,15 +72,15 @@ b1b:
       Zero handoff rows exist between COMP-MGMT (60) and CAP-TABLE (162) despite the
       multi-master DMDO arrangement on equity_grants (COMP-INCENTIVES module 79
       master+required; COMP-STATEMENTS module 85 contributor+optional; CAP-TABLE-GRANTS
-      module 21 master+required). The implicit wiring (relationship row 1332
-      offer_versions proposes equity_grants) does not let the deployer or the architect
-      agent reason about who reads from whom. Two implied handoffs: (a) COMP-INCENTIVES
-      (79) -> CAP-TABLE-GRANTS (21) on a grant-proposal event (source event gated on B2-S2);
+      module 21 master+required). Two implied handoffs: (a) COMP-INCENTIVES (79) ->
+      CAP-TABLE-GRANTS (21) on a grant-proposal event (source event gated on B2-S2);
       (b) CAP-TABLE-GRANTS (21) -> COMP-STATEMENTS (85) on equity_grant.exercised for ASC
-      718 / W-2 income surface (depends on B1A-S3 inserting equity_grant.exercised).
+      718 / W-2 income surface. The equity_grant.exercised event NOW EXISTS (authored
+      2026-06-07), so part (b) is unblocked once part (a)'s source event is chosen; both
+      remain cross-domain handoffs entangled with the B2-S1 multi-master decision.
     blocked_by:
       - {type: user_decision, ref: B2-S2, reason: Source event for COMP-INCENTIVES -> CAP-TABLE-GRANTS handoff (reuse offer.accepted, author new event, or no handoff) is the user's call.}
-      - {type: depends_on, ref: B1A-S3, reason: The reverse handoff CAP-TABLE-GRANTS -> COMP-STATEMENTS on equity_grant.exercised depends on B1A-S3 authoring the equity_grant.exercised event.}
+      - {type: user_decision, ref: B2-S1, reason: The multi-master ownership decision shapes whether and how the COMP <-> CAP-TABLE handoffs are wired.}
     affected_handoffs:
       - {direction: outbound, source_domain: COMP-MGMT, target_domain: CAP-TABLE, trigger_event: gated_on_B2-S2, payload: equity_grants}
       - {direction: outbound, source_domain: CAP-TABLE, target_domain: COMP-MGMT, trigger_event: equity_grant.exercised, payload: equity_grants}
@@ -218,14 +89,10 @@ b1b:
     summary: Revert 12 polluted domain_data_objects.notes to empty if B2-S3 confirms auto-populated.
     finding: >-
       All 12 CAP-TABLE rows in domain_data_objects (ids 1084-1095) carry populated notes
-      text (e.g. cap_tables 'Issuer-side authoritative shareholder ledger.'; equity_grants
-      'Cap-table-side record of truth for grants: integrates with vesting schedules, ASC 718
-      expense, and exit waterfalls. COMP-MGMT canonically masters from the
-      compensation-policy slice ... Multi-master with COMP-MGMT.'). Rule #15 forbids
-      auto-populated notes; the prior slice-decomposition prose carve-out was rescinded.
-      Status (user-approved at load time vs auto-populated by loader) is unknown from audit
-      alone. The 22 domain_module_data_objects rows for CAP-TABLE modules carry empty notes
-      (clean) so this concern is scoped to the DDO rollup only.
+      text. Rule #15 forbids auto-populated notes. DESTRUCTIVE (overwrite of a non-empty value)
+      and gated on B2-S3: status (user-approved at load time vs auto-populated by loader) is
+      unknown from audit alone. The 22 domain_module_data_objects rows for CAP-TABLE modules
+      carry empty notes (clean) so this is scoped to the DDO rollup only.
     blocked_by:
       - type: user_decision
         ref: B2-S3
@@ -248,20 +115,22 @@ b1b:
 
 b2:
   - id: B2-S1
-    summary: Multi-master lifecycle realization for equity_grants.
+    summary: Multi-master lifecycle realization for equity_grants (and the single-master integrity fix).
     question: >-
-      Equity_grants is master+required on both CAP-TABLE-GRANTS (module 21) and
-      COMP-INCENTIVES (module 79). Seven lifecycle states (rows 112-118) currently realize
-      only on module 79. Which architectural option for the lifecycle and the
-      workflow-gate permissions?
+      equity_grants (158) carries TWO role='master' DMDO rows: module 21 CAP-TABLE-GRANTS
+      (id 66) AND module 79 COMP-INCENTIVES (id 399). This violates single-master-per-data_object.
+      The 7 lifecycle states (rows 112-118) currently realize only on module 79. Which
+      architectural option for the lifecycle, the workflow-gate permissions, and which master
+      row survives?
     options:
-      - PATCH the 7 lifecycle states to domain_module_id=21 so CAP-TABLE owns the workflow (COMP becomes contributor on the compensation-policy slice only).
-      - DUPLICATE the 7 lifecycle states so both modules realize the same states with module-prefixed permissions (comp-incentives:approve_equity_grant AND cap-table-grants:approve_equity_grant). Doubles the permission surface.
-      - Keep as-is (COMP owns lifecycle), accept CAP-TABLE-GRANTS has no workflow-gate permissions for its master.
+      - PATCH the 7 lifecycle states to domain_module_id=21 and demote COMP-INCENTIVES (id 399) to role=contributor so CAP-TABLE owns the workflow (the integrity fix is DESTRUCTIVE - demote a non-empty master row - so it needs your sign-off).
+      - DUPLICATE the 7 lifecycle states so both modules realize the same states with module-prefixed permissions; still requires resolving which DMDO row is the canonical master.
+      - Keep as-is (COMP owns lifecycle), accept CAP-TABLE-GRANTS is view+reconcile only, and decide separately how to resolve the dual-master row.
     why: >-
       Flagship vendors (Carta, Pulley, Shareworks) treat the cap-table side as source of
-      truth for grant lifecycle; option (a) matches that. (b) is most flexible but doubles
-      permission surface. (c) means CAP-TABLE-GRANTS is view+reconcile only for its master.
+      truth for grant lifecycle; option (a) matches that. The dual-master row is a real
+      integrity defect; the demotion is destructive and the M7 exception does not apply
+      because the canonical master is exactly what this decision picks.
 
   - id: B2-S2
     summary: Inter-domain handoff event source for COMP-INCENTIVES -> CAP-TABLE-GRANTS grant proposal.
@@ -283,15 +152,17 @@ b2:
       Were these user-approved at load time, or auto-populated by the loader?
     options:
       - Confirm user-approved at load time, leave in place.
-      - Confirm auto-populated, PATCH all 12 rows to notes='' and log a Rule #15 incident in references/skill-changelog.md.
+      - Confirm auto-populated, PATCH all 12 rows to notes='' (DESTRUCTIVE) and log a Rule #15 incident in references/skill-changelog.md.
     why: >-
       Load-time approval status cannot be derived from current audit state alone; only the
-      original load author knows.
+      original load author knows. The PATCH-to-empty is destructive (gates B1B-S11).
 
   - id: B2-S4
     summary: Pattern-flag positive re-evaluation on 6 candidate flags.
     question: >-
-      Which of the following pattern-flag candidates should flip to true?
+      Which of the following pattern-flag candidates should flip to true? (All 12 masters are
+      now entity_type-classified as of 2026-06-07; the operational_workflow ones below carry
+      the pattern-flag review surface.)
     options:
       - cap_tables.has_personal_content=true (ledger embeds shareholder names + holdings, GDPR / CCPA in scope).
       - option_pools.has_submit_lock=true (board-approval gate, pool size locks until explicit refresh).
@@ -306,42 +177,45 @@ b2:
   - id: B2-S5
     summary: Permission-bundle drift policy for Phase E (B1B-S7).
     question: >-
-      When B1B-S7 lands the 6 roles + 36 role_modules bundles, should the role_permissions
+      When B1B-S7 lands the 6 roles + role_modules bundles, should the role_permissions
       enumerate workflow-gate permissions explicitly or rely on permission_hierarchy to
       expand baseline tiers into workflow-gates?
     options:
       - Confirm hierarchy expands gates catalog-wide, leave bundles tier-only.
-      - Add explicit gate grants for sensitive verbs (approve_equity_grant, finalize_valuation_409a, approve_secondary_transaction, transfer_shares, void).
+      - Add explicit gate grants for sensitive verbs (approve_equity_grant, finalize_valuation_409a, approve_secondary_transaction, transfer_shares, board_approve_option_pool, close_asc718_period, void).
       - Defer until Phase E runs, audit again post-load.
     why: >-
       The permission_hierarchy seeding state cannot be introspected confidently from this
       audit; the user owns the catalog-wide hierarchy expansion policy.
 
   - id: B2-S6
-    summary: Config-shape exemptions on 3 lifecycle-state-free CAP-TABLE masters.
+    summary: "Config-shape exemptions on 3 masters (RESOLVED structurally 2026-06-07 via entity_type)."
     question: >-
-      Per Rule #12 + Rule #15 the config-shape exemption must be surfaced for user
-      decision. Which of these 3 masters take the exemption (no lifecycle states) vs
-      authoring lifecycle states in B1A-S6?
+      Per Rule #12 the config-shape exemption is now STRUCTURAL via entity_type, not a notes
+      decision. Resolved this pass: security_classes -> catalog (exempt), vesting_schedules ->
+      catalog (exempt), asc718_expense_periods -> operational_workflow (NOT exempt; open->closed
+      lifecycle authored). Confirm the asc718 call (workflow vs catalog) if you disagree.
     options:
-      - security_classes (author-once, occasional edits when a new series is created) - exempt or author?
-      - vesting_schedules (template-shaped, applied to grants) - exempt or author?
-      - asc718_expense_periods (period-shaped, opened and closed by a calendar trigger) - exempt or author?
+      - Accept the classification (security_classes + vesting_schedules exempt as catalog; asc718_expense_periods workflow with open->closed states).
+      - Reclassify asc718_expense_periods to catalog (would require removing its 2 new lifecycle states - DESTRUCTIVE).
     why: >-
-      Config-shape vs workflow-shape is the user's call; the audit recommends but does not
-      commit.
+      Config-shape vs workflow-shape is now a typed entity_type column; the agent classified it,
+      the user can override. asc718 carries a real closed-period lock so it was classified workflow.
+    status: resolved_pending_confirmation
 
   - id: B2-S7
     summary: Domain description Rule #18 cleanliness review.
     question: >-
       Current domains.description ends with 'Primary buyer is the portfolio-company CFO,
       not the VC firm.' which somewhat reads as lifted marketing copy. min_org_size and
-      cost_band carry buyer-signal structurally. Keep or drop?
+      cost_band carry buyer-signal structurally. Keep or drop? (Note: catalog_tagline +
+      catalog_description were authored 2026-06-07; this question is about the analyst-grain
+      domains.description only.)
     options:
       - Leave as-is.
-      - PATCH description to drop the buyer sentence (replace with 'Shareholder ledger, option-pool management, 409A valuations, RSU/option grant workflows, exit waterfall modeling, and ASC 718 stock-based compensation accounting.').
+      - PATCH description (DESTRUCTIVE - overwrite non-empty) to drop the buyer sentence (replace with 'Shareholder ledger, option-pool management, 409A valuations, RSU/option grant workflows, exit waterfall modeling, and ASC 718 stock-based compensation accounting.').
     why: >-
-      Editorial / Rule #18 boundary judgment.
+      Editorial / Rule #18 boundary judgment; the rewrite overwrites a non-empty value.
 
 b3:
   - id: B3-CAND-01
@@ -377,7 +251,8 @@ b3:
     rationale: >-
       Carta, Shareworks both generate Form 3921 (ISO exercise) and Form 3922 (ESPP
       purchase) annually, plus Form 1099-B / 1099-NEC for NQSO cash exercises. Currently no
-      tax-form record entity, the annual-filing surface is opaque.
+      tax-form record entity, the annual-filing surface is opaque. (Form 3921 / 3922
+      regulations themselves are now attached as of 2026-06-07.)
     vendor_evidence: [Carta, Shareworks]
     proposed_module: new master in CAP-TABLE-VALUATIONS or new module CAP-TABLE-TAX-REPORTING
 
@@ -415,7 +290,8 @@ b3:
     rationale: >-
       Carta and Pulley both push monthly stock-based-comp expense to the general ledger;
       absent from current handoff set. Implied outbound CAP-TABLE -> ERP-FIN handoff on
-      asc718_expense_period.closed.
+      asc718_expense_period.closed (the asc718_expense_periods 'closed' lifecycle state now
+      exists as of 2026-06-07, so the source-side anchor is present).
     vendor_evidence: [Carta, Pulley]
     proposed_module: inserted as a handoff, not a new entity
 

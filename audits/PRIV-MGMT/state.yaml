@@ -1,37 +1,35 @@
 schema_version: 2
 domain: PRIV-MGMT
 status: audit_stale
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
   - id: B1A-RECLASS
-    summary: "Leadership-tier zero-master exemption rescinded 2026-06-02; re-run Validate treating PRIV-MGMT as master-bearing (overlay test). Build needed, not an exemption."
+    summary: "Leadership-tier zero-master exemption rescinded 2026-06-02; classification settled: PRIV-MGMT is master-bearing (overlay test). Needs a BUILD, not an exemption."
     finding: >
       SKILL.md's fixed leadership-tier exemption was rescinded (references/skill-changelog.md
-      2026-06-02). Under the overlay test PRIV-MGMT is master-bearing: masters data_subject_requests, consent_records, processing inventory (ROPA), privacy assessments (crud_percentage 88; OneTrust class). The prior audit's
-      "keep leadership-tier / ship an empty landing module" option is no longer valid. Live state
-      2026-06-02: 0 domain_modules (M1 fail), so the domain is not deployable today.
-    action: >
-      Re-run the full 4-pass Validate under the corrected rule. The module-shape, promote-scope,
-      and catalog-UX decisions already in b2 still apply and re-surface after the re-audit; this
-      item records only that the classification is settled (master-bearing) and the domain needs
-      a build, not an exemption.
+      2026-06-02). Under the overlay test PRIV-MGMT is master-bearing: masters data_subject_requests,
+      consent_records, processing inventory (ROPA), privacy assessments (crud_percentage 88;
+      OneTrust class). Live 2026-06-07: 0 domain_modules (M1 fail), so the domain is not deployable
+      today. This item records only that the classification is settled (master-bearing); the
+      module-shape, promote-scope, and re-homing decisions live in b2.
     extra_reclassified: "2026-06-02 skill-changelog"
   - id: B1A-APQC-HANDOFF-288
     summary: "Load handoff_processes row for inbound handoff 288 (DSPM data_classification.sensitivity_elevated -> PRIV-MGMT) once B2-5 timing is decided."
     finding: >-
-      H1 partial. 2 cross-domain handoffs into PRIV-MGMT (283 from DLP on dlp_incidents,
-      288 from DSPM on data_assets). Handoff 283 already tagged (handoff_processes row id 492,
-      process_id 270 = PCF 20735 statutory privacy + data-protection L3, agent_curated, new).
-      Handoff 288 still untagged. PCF 20735 fits handoff 288 the same way it fits 283;
-      the only reason this row is not loaded is the B2-5 overlay on the DSPM-side B9
-      attribution mismatch between trigger event 273 (data_object_id=303 data_classifications)
-      and handoff payload (data_object_id=300 data_assets).
+      H1 partial (confirmed live 2026-06-07). 2 cross-domain handoffs into PRIV-MGMT (283 from DLP
+      on dlp_incidents, 288 from DSPM on data_assets). Handoff 283 already tagged (handoff_processes
+      row 492, process_id 270 = PCF 20735 statutory privacy + data-protection L3, agent_curated, new).
+      Handoff 288 still untagged. PCF 20735 fits handoff 288 the same way it fits 283; the only
+      reason this row is not loaded is the B2-5 overlay on the DSPM-side B9 attribution mismatch
+      between trigger_event 273 (data_object_id=303 data_classifications) and handoff 288 payload
+      (data_object_id=300 data_assets). Both confirmed live 2026-06-07.
     action: >-
       INSERT handoff_processes(handoff_id=288, process_id=270, proposal_source='agent_curated',
-      role='implements', record_status='new'). Composed key (handoff_id, process_id) prevents
-      duplicates. Surgical CLI is sufficient; no loader needed.
+      role='implements', record_status omitted). Composed key (handoff_id, process_id) prevents
+      duplicates. Surgical CLI is sufficient; no loader needed. DESTRUCTIVE/JUDGMENT overlay:
+      held until B2-5 is decided (loading now ties the tag to the drifted shape).
     blocked_by:
       - {type: user_decision, ref: B2-5}
     affected_handoffs:
@@ -42,40 +40,34 @@ b1a:
         trigger_event: data_classification.sensitivity_elevated
         payload: data_assets
         null_field: target_domain_module_id
-    vendor_evidence:
-      - {vendor: OneTrust Privacy, evidence: 1st_class}
-      - {vendor: TrustArc, evidence: 1st_class}
-      - {vendor: Securiti Data Command Center, evidence: 1st_class}
   - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    summary: "UNBUILT domain: 0 domain_modules (M1 fail), 0 capability_domains. Surface the build; cascade left until the build lands."
+    finding: "Live triage 2026-06-07: 0 domain_modules rows (M1 fail), 0 capability_domains rows, 0 PRIV-MGMT-owned masters (neither domain_data_objects nor domain_module_data_objects). Not deployable today. Per the UNBUILT clause the agent does NOT scaffold; the build is surfaced for the user, and the gated cascade is left in place."
+    action: "Build needs a user decision on B2-1 (which masters re-home) + B2-2 (module split) + B3-3 (additional master candidates) first. Once those land: Phase A (modules + capabilities + masters) then B (relationships, aliases, lifecycle) then C/E then the single domain-grain system skill + domain_module_tools (per-module skills are RETIRED, see 2026-06-06 supersession in history.md). If multi-module, run Phase P (personas, role_modules, process_raci) afterward."
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-S1-CLUSTER
-    summary: "Module + capability + UX + relationship + lifecycle + skill cluster (10 sub-items from 2026-05-30 audit), all gated on B2-1 re-homing decision."
+    summary: "Module + capability + relationship + lifecycle + tool cluster (sub-items from 2026-05-30 audit), all gated on the B2-1 re-homing decision."
     finding: >-
-      Of the 13 Bucket 1 items from the 2026-05-30 audit, 2 resolved (B1-S6 CPRA link,
-      B1-S13 row 1 handoff 283 APQC) and 11 remain pending: B1-S1 (modules; 0 domain_modules
-      rows hosted on PRIV-MGMT), B1-S2 (capabilities; 0 capability_domains rows),
-      B1-S3 (Rule #20 catalog_tagline + catalog_description on the domains row, both empty),
-      B1-S4 (two flagship privacy specialists missing from solutions),
-      B1-S7 (B10b PATCH on handoffs 283 + 288 target_domain_module_id),
+      Of the 13 Bucket 1 items from the 2026-05-30 audit, 3 now resolved (B1-S6 CPRA link,
+      B1-S13 row 1 handoff 283 APQC, B1-S3 catalog_tagline + catalog_description authored
+      2026-06-07) and the rest remain pending: B1-S1 (modules; 0 domain_modules rows),
+      B1-S2 (capabilities; 0 capability_domains rows),
+      B1-S4 (two flagship privacy specialists missing from solutions; gated on B3-1 vetting),
+      B1-S7 (B10b PATCH on handoffs 283 + 288 target_domain_module_id; gated on B1-S1),
       B1-S8 (B7 users edges on prospective PRIV-MGMT masters),
       B1-S9 (B6 intra-domain relationships among prospective masters),
-      B1-S10 (B11 aliases on prospective masters),
+      B1-S10 (B11 data_object_aliases on prospective masters),
       B1-S11 (B12 lifecycle states on prospective masters),
-      B1-S12 (F2 / F3 / F4 / F7 system skills + tools per Rule #17).
+      B1-S12 (system skill + tools; NOTE the per-module skill grain is RETIRED 2026-06-06 ->
+      reframed as one domain-grain system skill + domain_module_tools once modules exist).
       Every sub-item depends on the B2-1 re-homing decision (which masters land in PRIV-MGMT)
-      and on B2-2 (module-split shape). B1-S3 additionally needs B2-3 (Rule #20 wording).
-      B1-S4 additionally needs Bucket 3 vetting on flagship privacy specialist additions.
-      Collapsed into one b1b row because every sub-item shares the same gating decision
-      and the same fix shape (Phase A / B / C / E / F load chained off B2-1's answer).
+      and on B2-2 (module-split shape). Collapsed into one b1b row because every sub-item shares
+      the same gating decision and the same fix shape (Phase A / B / C / E load chained off B2-1).
     blocked_by:
       - {type: user_decision, ref: B2-1}
       - {type: user_decision, ref: B2-2}
-      - {type: user_decision, ref: B2-3}
       - {type: depends_on, ref: B3-1, reason: "Bucket 3 vetting on flagship privacy specialist additions blocks B1-S4 sub-item"}
       - {type: depends_on, ref: B3-3, reason: "Bucket 3 entity vetting blocks B1-S2 capabilities and B1-S11 lifecycle states for prospective non-re-homed masters"}
     affected_modules: []
@@ -92,8 +84,7 @@ b1b:
       - PRIV-DSR-MGMT
       - PRIV-CONSENT
       - PRIV-ASSESSMENTS
-    extra_sub_items_pending: 10
-    extra_sub_items_resolved_since_2026_05_30: [B1-S6, B1-S13-row1]
+    extra_sub_items_resolved_since_2026_05_30: [B1-S6, B1-S13-row1, B1-S3]
 
 b2:
   - id: B2-1
@@ -103,14 +94,13 @@ b2:
       gdpr_consent_records (id 950, in LMS-CT-GDPR module id 180),
       subject_access_requests (id 951, in LMS-CT-GDPR module id 180),
       data_deletion_requests (id 952, in LMS-CT-GDPR module id 180). All five flagship
-      privacy vendors (OneTrust Privacy, TrustArc, Securiti Data Command Center, DataGrail,
-      Transcend) ship these as masters in their flagship privacy product. PRIV-MGMT currently
-      masters none of them.
+      privacy vendors ship these as masters in their flagship privacy product. PRIV-MGMT
+      currently masters none of them.
     options:
       - "(a) re-home all four masters into the proposed PRIV-MGMT modules (PRIV-DSR-MGMT for 901 / 951 / 952; PRIV-CONSENT for 950); originating modules add embedded_master or consumer rows per Rule #11 so they remain standalone-deployable"
-      - "(b) keep current ownership and have PRIV-MGMT consume via cross-domain handoffs only (preserves leadership-tier B1 exception but contradicts flagship-vendor practice)"
+      - "(b) keep current ownership and have PRIV-MGMT consume via cross-domain handoffs only (contradicts flagship-vendor practice and the settled master-bearing classification)"
       - "(c) re-home only the LMS triplet and leave the ATS-CANDIDATE-CRM master for data_subject_requests in place if there is a defensible candidate-specific shape"
-    why: "B1-S1-cluster cannot be authored until this is decided. Every sub-item's master set, module set, and permission shape derives from this answer."
+    why: "B1B-S1-CLUSTER cannot be authored until this is decided. Every sub-item's master set, module set, and permission shape derives from this answer. Gates B1A-BUILD."
 
   - id: B2-2
     summary: "Approve the proposed 4-module split (PRIV-DATA-INVENTORY, PRIV-DSR-MGMT, PRIV-CONSENT, PRIV-ASSESSMENTS) or collapse?"
@@ -125,17 +115,7 @@ b2:
       - "(b) 3 modules: collapse PRIV-ASSESSMENTS into PRIV-DATA-INVENTORY"
       - "(c) 2 modules: PRIV-DSR-MGMT + PRIV-CONSENT (the only modules covered by B2-1 re-homed masters if Bucket 3 is deferred)"
       - "(d) other: name the modules and their data_object scope"
-    why: "Drives B1-S1-cluster's module-split shape. Coupled with B2-1 and Bucket 3 entity vetting."
-
-  - id: B2-3
-    summary: "Rule #20 buyer-voice wording for catalog_tagline + catalog_description on the PRIV-MGMT domains row."
-    question: >-
-      A4 hard fail: both fields empty. Rule #20 forbids agent auto-write. User picks how to
-      supply the wording.
-    options:
-      - "(a) user supplies exact tagline + description text"
-      - "(b) agent drafts a buyer-voice tagline + description and user approves or rewrites exact final text before write"
-    why: "A4 hard fail until wording lands. Independent of B2-1 / B2-2; this can resolve in parallel with the re-homing decision."
+    why: "Drives B1B-S1-CLUSTER's module-split shape. Coupled with B2-1 and Bucket 3 entity vetting. Gates B1A-BUILD."
 
   - id: B2-4
     summary: "Track Rule #12 config-shape lifecycle-state exemption on processing_activities + personal_data_assets if those become PRIV-MGMT masters."
@@ -147,20 +127,20 @@ b2:
     options:
       - "(a) track outside the catalog (gap report or commit message)"
       - "(b) user supplies exact notes wording per Rule #15 and agent writes it"
-    why: "Only fires if B2-1 + Bucket 3 land prospective masters. Independent of B2-2 / B2-3 / B2-5."
+    why: "Only fires if B2-1 + Bucket 3 land prospective masters. Independent of B2-2 / B2-5."
 
   - id: B2-5
     summary: "Load APQC tag for handoff 288 against current shape, or wait for DSPM-side B9 attribution fix?"
     question: >-
-      Handoff 288 trigger event 273 carries data_object_id=303 (data_classifications) but
-      handoff payload is data_object_id=300 (data_assets). DSPM-side B9 bug. PCF 20735 fits
-      either framing. Loading the tag now ties it to the current (drifted) shape; waiting
-      ties it to whatever DSPM produces after its B9 fix.
+      Confirmed live 2026-06-07: handoff 288 trigger_event 273 carries data_object_id=303
+      (data_classifications) but handoff payload is data_object_id=300 (data_assets). DSPM-side
+      B9 bug. PCF 20735 fits either framing. Loading the tag now ties it to the current (drifted)
+      shape; waiting ties it to whatever DSPM produces after its B9 fix.
     options:
       - "(a) load against current shape now (clears B1A-APQC-HANDOFF-288 immediately)"
       - "(b) wait for DSPM B9 fix, then load against the corrected shape"
       - "(c) skip indefinitely"
-    why: "Independent of B2-1 / B2-2 / B2-3 / B2-4. Only gates B1A-APQC-HANDOFF-288."
+    why: "Independent of B2-1 / B2-2 / B2-4. Only gates B1A-APQC-HANDOFF-288."
 
 b3:
   - id: B3-1
@@ -169,7 +149,7 @@ b3:
       A3 currently passes (3 primary + 1 secondary solutions). Two flagship privacy specialists
       routinely cited in Gartner / Forrester privacy management coverage are not yet linked.
       Adding them would harden the vendor-evidence basis for the modularization split in
-      B1-S1-cluster but requires Phase 0 vetting per Rule #18 boundary (the agent does not
+      B1B-S1-CLUSTER but requires Phase 0 vetting per Rule #18 boundary (the agent does not
       load vendor names into solutions outside an audited Phase 0 vendor surface).
     vendor_evidence:
       - DataGrail

@@ -324,3 +324,42 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass over CONV-AI (domain_id=34). Worked only the open items in state.yaml; no fresh from-scratch audit. Live re-confirmed the snapshot: CONV-AI remains an UNBUILT domain (0 domain_modules, 0 capability_domains), so the build cascade and every module-dependent item stays blocked on the B2-MOD modularization decision. Only the module-independent additive/corrective items were executable; both were executed at record_status='new'. business_function_domains (C1) already complete (owner Contact Center Operations bf 70 + contributor Software Engineering bf 26); APQC H1 coverage already complete (all 9 cross-domain handoffs carry exactly one agent_curated handoff_processes row each), so neither needed any write this pass. Loader: [`.tmp_deploy/fix_conv_ai_state_execute_2026_06_07.ts`](../../.tmp_deploy/fix_conv_ai_state_execute_2026_06_07.ts).
+
+### Executed (additive/corrective, record_status='new')
+
+- **entity_type classification (Rule #12 / B13): 5 PATCH.** All 5 CONV-AI masters were entity_type='unclassified'. Classified deterministically from descriptions: bot_definitions (699), intent_definitions (700), conversation_flows (701) -> `operational_workflow` (authored, publish-locked masters with a real publish/disable lifecycle); conversation_transcripts (259), intent_detections (260) -> `operational_record` (runtime log / NLU-output records, no authored workflow). intent_detections' operational_record choice is the deterministic default and does not foreclose B2-DETECT-LIFECYCLE (which now reduces to: keep operational_record vs upgrade to an authored detected -> routed -> consumed workflow).
+- **Catalog UX (Rule #20 / A4): 1 PATCH (2 fields).** domains row 34 had empty catalog_tagline and catalog_description; both written with buyer-voice copy (workflow + value, no vendor/product names, no em-dash, American English). The stale "surface-before-write" gate on B1B-S3 was ignored per the empty-field-first-write rule. Module-grain catalog copy is N/A (zero modules exist).
+
+### Surfaced (no write; need user)
+
+- **b2 (8 open decisions):** B2-MOD (modularization shape, the gating decision for the whole build), B2-CAP (capability set), B2-FLAGS (publish-lock has_submit_lock on 699/700/701), B2-DETECT-LIFECYCLE (keep intent_detections as operational_record vs upgrade to workflow), B2-AI-AGENTS-MODULE (which module consumes ai_agents), B2-PCF-228 (APQC override on handoff 228), B2-E911-SCOPE (E911 mandatory vs applicable_when_voice), B2-ALIAS-WORDING (per-row alias tuples for B1B-S11).
+- **Destructive (recommended fix only, not applied):** B1B-H2 / B2-PCF-228 - handoff 228 carries handoff_processes id 752 -> PCF 928; changing to PCF 1318 / L2 196 (or DELETE to defer) overwrites a non-empty process_id. B2-E911-SCOPE PATCH would overwrite a non-empty applicability. Skill-39 kebab->snake rename (conv-ai-system) overwrites a non-empty value.
+- **Personas/RACI:** none authored (DEFER per Phase-P rule; domain is unbuilt, so persona work does not apply until modules land).
+
+### Left (untouched)
+
+- **UNBUILT build cascade:** B1A-BUILD and the module-dependent b1b items (B1B-S1 modules, S2 capabilities, S10 handoff FK backfill, S12 lifecycle states, S13 business_function_capabilities, S14 roles, B1B-MISSING 7 entities) - all blocked on B2-MOD / module existence. Did NOT scaffold modules or capabilities; surfaced the build.
+- **B1B-S4 (RETIRED-MODEL):** original per-module-skill split + skill_tools re-link + delete-skill-39 is CANCELED per the 2026-06-06 supersession header. Live skill 39 (domain_id=34, domain_module_id NULL) already matches the retained one-domain-grain-skill model; its toolset will derive from domain_module_tools once modules land (tracked in audits/_modularization-backlog.md). Kept the supersession header.
+- **b3 backlog (7 speculative candidates):** prompt_templates, agent_personas, function_tools, evaluation_runs, redaction_policies, conversation_topics, voice_biometric_profiles - untouched, Phase-0 pending.
+
+### Owed by other domains (report-only, unchanged)
+
+CCAAS owes target-side module FK on handoffs 228/743/746; KMS owes target-side on 745 and source-side on 723/724; CSM owes target-side on 744. (DATA-AI-PLAT source-side on 153 is already resolved: source_domain_module_id=226.)
+
+### Note (pre-existing, not authored this pass)
+
+The domains row 34 `business_logic` field contains a literal em-dash (the phrase "orchestration, [em-dash], the model is the product"). It is a pre-existing non-empty value; overwriting it is destructive and was not touched. Flag for a future approved cleanup so the forbidden character is removed from source data.
+
+### JWT errors
+
+None during this pass.
+
+### Post-fix status
+
+next_action_by: user (the build is gated on B2-MOD + B2-CAP; all remaining b1b items are module-dependent or b2-gated).

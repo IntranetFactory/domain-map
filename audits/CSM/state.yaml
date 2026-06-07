@@ -1,335 +1,259 @@
 schema_version: 2
 domain: CSM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-06"
 
+# EXECUTED 2026-06-06 (state-driven), dropped from worklist:
+#   B1A-ENTITY-TYPE  : 103 operational_workflow, 104 catalog, 105 + 111 operational_record
+#   B1A-H1           : 17 net-new handoff_processes rows; APQC coverage 59/63 (94%);
+#                      4 residual deferred-to-Discover (270, 996, 1007, 1055) -> B2-APQC-SCOPE
+#   B1B-S1 + B1B-M8  : catalog_tagline + catalog_description on domain 30 + modules 112/113/114
+#   B1B-S3           : 4 generic-synonym aliases (106 service contract / support entitlement
+#                      contract; 111 case timeline event / interaction event)
+#   B1B-S5           : business_function_domains contributor (IT Operations 27) + consumer
+#                      (Customer Success 23)
+
+# SURFACED-FOR-USER 2026-06-06 (no write; carried as b1a-deferred / destructive-awaiting-approval):
 b1a:
-  - id: B1A-H1
-    summary: Author handoff_processes rows for the 30 untagged CSM cross-domain handoffs, or mark each defer-to-Discover.
-    finding: >-
-      33 of 63 CSM cross-domain handoffs carry handoff_processes rows
-      (52% coverage; 25 agent_curated, 6 discovery_override, 2 discovery_substring,
-      0 approved). Volume target 0.5N to 0.8N (32 to 50 of 63) met at the low end
-      but coverage incomplete. 30 cross-domain handoffs remain untagged.
-    action: >-
-      Author agent_curated handoff_processes rows on the remaining 30 handoffs
-      using the per-row procedure in references/domain-audit-procedure.md
-      (Step 3 APQC TAGGING). Default PCF anchor: process_id=196
-      (Manage customer service problems, requests, and inquiries, L3) for
-      case-routing rows; process_id=6 (Manage Customer Service, L1) or its
-      L3 children for entitlement and health-decline rows. Where no clean
-      PCF match exists, record an explicit defer-to-Discover reason.
-    affected_handoffs:
-      - {count: 30, scope_note: "Untagged CSM cross-domain handoffs (10 outbound + 53 inbound minus 33 already-tagged); IDs not enumerated in source; pulled from /handoffs vs /handoff_processes set difference", enumeration_status: source_count_only}
-    vendor_evidence: []
-    extra_blocked_by_decision: B2-APQC-SCOPE
   - id: B1A-PHASE-P
     summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 3 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "3 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 3 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [csat_responses, customer_cases, customer_entitlements]
-    extra_phase_p_triage: "2026-06-02"
+    status: deferred
+    finding: "3 domain_modules and 0 domain_roles reaching this domain via role_modules. E1 fires on this multi-module domain."
+    defer_reason: >-
+      Persona authoring is entangled with the OPEN B2-CSM-KNOWLEDGE-MASTER decision
+      (CSM-KNOWLEDGE may demote to starter, which reshapes persona reach) and
+      B2-CAPABILITY-SHAPE. Author after those resolve.
+    candidate_personas: [SUPPORT-AGENT, SUPPORT-TEAM-LEAD, ENTITLEMENT-MANAGER]
+
   - id: B1A-SELF-CONTAIN
     summary: "6 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
-    finding: "Live triage 2026-06-02: 6 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
-    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
+    status: surfaced_destructive
+    finding: >-
+      6 domain_module_data_objects rows on CSM modules are role=contributor or
+      role=consumer+necessity=required, pointing at an entity mastered by another
+      domain and not embedded_master here. Converting role->embedded_master or
+      necessity->optional rewrites existing rows (destructive); awaiting approval.
     extra_m9_shapes:
-      - {entity: customer_subscriptions, module: CSM-ENTITLEMENTS, role: consumer, master_domain: SUB-MGMT}
-      - {entity: customers, module: CSM-CASE-MGMT, role: consumer, master_domain: CRM}
-      - {entity: customers, module: CSM-ENTITLEMENTS, role: consumer, master_domain: CRM}
-      - {entity: knowledge_articles, module: CSM-CASE-MGMT, role: contributor, master_domain: ITSM}
-      - {entity: knowledge_articles, module: CSM-KNOWLEDGE, role: contributor, master_domain: ITSM}
-      - {entity: legal_contracts, module: CSM-ENTITLEMENTS, role: contributor, master_domain: CLM}
-    extra_phase_p_triage: "2026-06-02"
+      - {entity: customer_subscriptions, module: CSM-ENTITLEMENTS, role: consumer, master_domain: SUB-MGMT, recommended_fix: "necessity->optional (presence-conditional)"}
+      - {entity: customers, module: CSM-CASE-MGMT, role: consumer, master_domain: CRM, recommended_fix: "embedded_master (carry local shell)"}
+      - {entity: customers, module: CSM-ENTITLEMENTS, role: consumer, master_domain: CRM, recommended_fix: "embedded_master (carry local shell)"}
+      - {entity: knowledge_articles, module: CSM-CASE-MGMT, role: contributor, master_domain: ITSM, recommended_fix: "necessity->optional"}
+      - {entity: knowledge_articles, module: CSM-KNOWLEDGE, role: contributor, master_domain: ITSM, recommended_fix: "embedded_master (audience-filtered local view) or necessity->optional"}
+      - {entity: legal_contracts, module: CSM-ENTITLEMENTS, role: contributor, master_domain: CLM, recommended_fix: "necessity->optional"}
 
 b1b:
-  - id: B1B-S1
-    summary: Backfill empty catalog_tagline + catalog_description on domains row 30 (CSM).
-    finding: >-
-      A4 fails. The CSM domain row (id 30) has empty catalog_tagline and
-      catalog_description. Rule #20 requires buyer voice (workflow + value).
-    blocked_by:
-      - {type: user_decision, ref: B2-CATALOG-UX, reason: "Rule #20: surface drafts to user BEFORE writing; never auto-write."}
-    extra_fix: >-
-      Draft single-sentence tagline plus 1 to 3 buyer-facing paragraphs
-      covering case capture, omnichannel triage, knowledge-assisted resolution,
-      and entitlement-bound SLA. Surface in chat. PATCH after explicit approval.
-
-  - id: B1B-M8
-    summary: Backfill empty catalog_tagline + catalog_description on all 3 CSM modules.
-    finding: >-
-      M8 fails. All three CSM modules (CSM-CASE-MGMT 112, CSM-ENTITLEMENTS 113,
-      CSM-KNOWLEDGE 114) have empty catalog_tagline and catalog_description.
-    blocked_by:
-      - {type: user_decision, ref: B2-CATALOG-UX, reason: "Rule #20: per-module buyer-voice copy needs user approval before write."}
-    affected_modules: [112, 113, 114]
-    extra_fix: >-
-      Draft three module-grain tagline + description pairs (one per module),
-      surface together with the A4 domain copy for review, PATCH after approval.
-
   - id: B1B-S2
     summary: Pattern-flag re-evaluation owed on customer_entitlements (104), csat_responses (105), customer_events (111).
+    status: blocked
     finding: >-
-      B4 open. customer_entitlements 104 has all three flags false; csat_responses 105
-      has only has_personal_content=true; customer_events 111 has all three false.
-      Audit reasoning suggests likely flips on 104 (has_single_approver=true for
-      activation / suspension) and 105 (has_submit_lock=true once captured).
+      B4 open. 104 has all three flags false; 105 has only has_personal_content=true;
+      111 has all three false. Proposed flips ride B2-PATTERN-FLAGS.
     blocked_by:
-      - {type: user_decision, ref: B2-PATTERN-FLAGS, reason: "Bucket 2 #6 owns the per-flag decision."}
+      - {type: user_decision, ref: B2-PATTERN-FLAGS, reason: "Bucket 2 #6 owns the per-flag decision; flag flips on a non-empty value are an overwrite."}
     affected_masters:
-      - {data_object_id: 104, name: customer_entitlements, target_module_id: 113, workflow: "activation/suspension/expiry"}
-      - {data_object_id: 105, name: csat_responses, target_module_id: 112, workflow: "captured-once / immutable"}
-      - {data_object_id: 111, name: customer_events, target_module_id: 112, workflow: "append-only event log"}
-
-  - id: B1B-S3
-    summary: Author missing vendor aliases for customer_subscriptions (106) and customer_events (111).
-    finding: >-
-      B11 open. Both data_objects have zero alias rows despite known
-      vendor synonyms (customer_subscriptions: service contract,
-      support entitlement contract; customer_events: case timeline event,
-      interaction event).
-    blocked_by:
-      - {type: user_decision, ref: B2-PATTERN-FLAGS, reason: "Bundle alias load with the B4 audit decisions so a single focused loader covers all carryover B1-S items."}
-    affected_entities: [customer_subscriptions, customer_events]
-    extra_proposed_alias_count: 4
-
-  - id: B1B-S5
-    summary: Add missing business_function_domains contributor and consumer rows for CSM.
-    finding: >-
-      C1 fails. Only 1 row exists (Customer Service / owner). Heavy
-      cross-functional touch points are unrepresented: IT owns platform and
-      knowledge-authoring tooling (contributor); Sales / Customer Success
-      consumes case-health signals and entitlement metadata (consumer).
-    blocked_by:
-      - {type: user_decision, ref: B2-CAPABILITY-SHAPE, reason: "Bucket 2 #3 capability decisions may inform the contributor / consumer set; resolve together."}
-    extra_proposed_rows:
-      - {function: "Information Technology", responsibility_type: contributor}
-      - {function: "Customer Success", responsibility_type: consumer}
+      - {data_object_id: 104, name: customer_entitlements, target_module_id: 113, workflow: "activation/suspension/expiry", note: "entity_type now 'catalog'; has_single_approver=true still proposed for activation signoff"}
+      - {data_object_id: 105, name: csat_responses, target_module_id: 112, workflow: "captured-once / immutable", note: "has_submit_lock=true proposed"}
+      - {data_object_id: 111, name: customer_events, target_module_id: 112, workflow: "append-only event log", note: "all three flags stay false proposed"}
 
   - id: B1B-B1
     summary: Resolve mis-attributed trigger_event 94 (payment.failed bound to customer_cases).
+    status: blocked
     finding: >-
       B9 open. trigger_event 94 has data_object_id=103 (customer_cases) but
-      event_name 'payment.failed' is keyed against a payment / invoice publisher
-      on SUB-MGMT (customer_invoices 107 or a payment-specific master).
-      Symptomatic handoff: row 72 (SUB-MGMT to CSM, payload customer_cases).
+      event_name 'payment.failed' is keyed against a payment/invoice publisher on
+      SUB-MGMT. Symptomatic handoff: row 72 (SUB-MGMT to CSM, payload customer_cases).
+      PATCHing data_object_id is a corrective overwrite.
     blocked_by:
-      - {type: user_decision, ref: B2-CUSTOMERS-AMBIGUITY, reason: "Bucket 2 #1 option (c) (introduce customer_health_signals) may also reshape this event."}
+      - {type: user_decision, ref: B2-CUSTOMERS-AMBIGUITY, reason: "option (c) (introduce customer_health_signals) may also reshape this event."}
     extra_options:
       - "(a) PATCH trigger_events.data_object_id to point at the publisher master (customer_invoices id 107 on SUB-MGMT) and rename for clarity"
       - "(b) split into publisher event (customer_invoice.payment_failed) plus optionally a CSM-side customer_case.payment_dispute_opened"
 
   - id: B1B-B10B-CLASS-A
-    summary: Resolve 6 outbound B10b ties on customers-payload handoffs (CSM consumes customers in two modules).
+    summary: Resolve 10 NULL module-FK ties on customers / customer_subscriptions payloads.
+    status: blocked
     finding: >-
-      6 outbound handoff rows have NULL source_domain_module_id because the
-      trigger_event keys on customers (DO 97), which CSM consumes in both
-      CSM-CASE-MGMT and CSM-ENTITLEMENTS; the strongest-role tie breaks NULL
-      per the B10b spec. 2 inbound rows have the same tie on customers payload;
-      2 more inbound tie on customer_subscriptions (DO 106). Total 10 NULL
-      ties of Class A.
+      10 NULL ties: 6 outbound (70, 224, 233, 234, 486, 488) + 2 inbound (209, 270)
+      on customers (DO 97), CSM consumes in two modules; 2 inbound (195, 494) on
+      customer_subscriptions (DO 106). Strongest-role tie breaks NULL.
     blocked_by:
-      - {type: user_decision, ref: B2-CUSTOMERS-AMBIGUITY, reason: "Bucket 2 #1 owns the (a) leave NULL / (b) CSM-CASE-MGMT canonical / (c) introduce customer_health_signals decision."}
-    affected_handoffs:
-      - {handoff_id: 70, direction: outbound, source_domain: CSM, target_domain: SMM, trigger_event: case.critical_health_drop, payload: customers, null_field: source_domain_module_id}
-      - {handoff_id: 224, direction: outbound, source_domain: CSM, target_domain: CRM, trigger_event: health_score.declined, payload: customers, null_field: source_domain_module_id}
-      - {handoff_id: 233, direction: outbound, source_domain: CSM, target_domain: CRM, trigger_event: customer.churn_confirmed, payload: customers, null_field: source_domain_module_id}
-      - {handoff_id: 234, direction: outbound, source_domain: CSM, target_domain: CRM, trigger_event: subscription.expansion_requested, payload: customers, null_field: source_domain_module_id}
-      - {handoff_id: 486, direction: outbound, source_domain: CSM, target_domain: SMM, trigger_event: health_score.declined, payload: customers, null_field: source_domain_module_id}
-      - {handoff_id: 488, direction: outbound, source_domain: CSM, target_domain: SMM, trigger_event: subscription.expansion_requested, payload: customers, null_field: source_domain_module_id}
-      - {handoff_id: 209, direction: inbound, source_domain: CRM, target_domain: CSM, payload: customers, null_field: target_domain_module_id}
-      - {handoff_id: 270, direction: inbound, source_domain: CRM, target_domain: CSM, payload: customers, null_field: target_domain_module_id}
-      - {handoff_id: 195, direction: inbound, source_domain: SUB-MGMT, target_domain: CSM, payload: customer_subscriptions, null_field: target_domain_module_id}
-      - {handoff_id: 494, direction: inbound, source_domain: SUB-MGMT, target_domain: CSM, payload: customer_subscriptions, null_field: target_domain_module_id}
+      - {type: user_decision, ref: B2-CUSTOMERS-AMBIGUITY, reason: "Bucket 2 #1 owns (a) leave NULL / (b) CSM-CASE-MGMT canonical / (c) introduce customer_health_signals."}
+    affected_handoffs: [70, 224, 233, 234, 486, 488, 209, 270, 195, 494]
 
   - id: B1B-B10B-CLASS-B
-    summary: Resolve B5 boundary integrity for 48 inbound + 1 outbound handoff rows whose payload is not held in any CSM DMDO.
+    summary: Resolve B5 boundary integrity for 49 handoffs whose payload is held in no CSM DMDO.
+    status: blocked
     finding: >-
-      B10b open. CSM has no consumer DMDO for the payload referenced by 48
-      inbound handoffs (vertical-industry rows opening customer_cases, plus
-      handoff 470 on crm_opportunities, 226 on support_sessions, 5 PROD-MGMT
-      rows). Outbound row 73 has the same shape: keyed on dunning_events
-      (DO 110) which CSM does not consume. Per B10b sub-case 2 the rows
-      need either authored consumer DMDOs on the receiving CSM module or
-      re-keying of the handoff to a CSM-mastered payload.
+      48 inbound rows whose payload is the source domain's own master with no CSM
+      consumer DMDO (vertical-industry 'opens case' rows + 470 crm_opportunities +
+      226 support_sessions + PROD-MGMT rows), plus outbound 73 (dunning_events 110).
     blocked_by:
-      - {type: user_decision, ref: B2-CROSS-DOMAIN-INTEGRITY, reason: "Bucket 2 #2 owns the per-cluster decision (author consumer DMDO vs move target vs drop handoff)."}
-      - {type: catalog_addition, scope: domains, trigger: "Bucket 3 #11 (omnichannel_sessions consumer DMDO) closes handoff 226 if it lands."}
+      - {type: user_decision, ref: B2-CROSS-DOMAIN-INTEGRITY, reason: "Bucket 2 #2 owns author-DMDO vs move-target vs drop."}
+      - {type: catalog_addition, scope: domains, trigger: "B3-OMNICHANNEL-SESSIONS closes handoff 226 if it lands."}
     affected_handoffs:
-      - {count: 48, scope_note: "Inbound rows whose payload is the source domain's own master with no CSM consumer DMDO. Full ID list: 86, 87, 193, 194, 225, 226, 229, 230, 270 (partial: 270 also Class A), 330, 337, 470, 479, 493, 496, 511, 520, 523, 525, 720, 744, 865, 883, 890, 891, 899, 902, 904, 908, 910, 923, 924, 930, 931, 942, 947, 985, 987, 992, 996, 998, 1003, 1007, 1010, 1055, 1056, 1058. Plus outbound 73 (dunning_events).", enumeration_status: source_count_only}
+      - {count: 49, scope_note: "48 inbound (86, 87, 193, 194, 225, 226, 229, 230, 270 partial, 330, 337, 470, 479, 493, 496, 511, 520, 523, 525, 720, 744, 865, 883, 890, 891, 899, 902, 904, 908, 910, 923, 924, 930, 931, 942, 947, 985, 987, 992, 996, 998, 1003, 1007, 1010, 1055, 1056, 1058) plus outbound 73 (dunning_events).", enumeration_status: source_count_only}
 
 b2:
   - id: B2-CUSTOMERS-AMBIGUITY
-    summary: Decide source_module_id rule for CSM outbound handoffs keyed on customers (a payload CSM consumes in two modules but does not master).
+    summary: Decide source/target_module_id rule for CSM handoffs keyed on customers (consumed in two modules, not mastered).
     question: >-
-      Outbound rows 70, 224, 233, 234, 486, 488 and inbound rows 209, 270
-      tie on customers (DO 97). What should source / target_module_id be?
+      Outbound 70, 224, 233, 234, 486, 488 and inbound 209, 270 tie on customers (DO 97).
+      What should source/target_module_id be?
     options:
-      - "(a) leave NULL, accept that customer-keyed CSM outbound has no clean source attribution"
+      - "(a) leave NULL, accept no clean source attribution for customer-keyed CSM outbound"
       - "(b) pick CSM-CASE-MGMT as canonical source by convention (case-driven health signals)"
-      - "(c) introduce customer_health_signals as a new CSM-CASE-MGMT-mastered data_object and re-key the trigger events; reshapes Bucket 3 #11 and B1B-B1"
+      - "(c) introduce customer_health_signals as a new CSM-CASE-MGMT-mastered data_object and re-key the trigger events; reshapes B3-OMNICHANNEL-SESSIONS and B1B-B1"
     why: >-
-      Deterministic B10b derivation breaks on tie; CSM does not master customers
-      (CRM does). Option (c) is the most catalog-coherent fix but carries broader
-      modeling implications.
+      Deterministic B10b derivation breaks on tie; CSM does not master customers (CRM does).
+      Option (c) is the most catalog-coherent fix but carries broader modeling implications.
 
   - id: B2-CROSS-DOMAIN-INTEGRITY
-    summary: Decide per-cluster B5 fix for handoffs whose payload CSM does not declare a DMDO on (crm_opportunities, support_sessions, PROD-MGMT payloads, etc.).
+    summary: Decide per-cluster B5 fix for handoffs whose payload CSM declares no DMDO on.
     question: >-
-      48 inbound (plus outbound 73) handoff rows reference payloads CSM has no
-      consumer DMDO for. Author the missing consumer DMDO rows on the relevant
-      CSM module, move the handoff targets to other domains, or drop the handoffs?
+      49 handoff rows reference payloads CSM has no consumer DMDO for. Author the missing
+      consumer DMDOs on the relevant CSM module, move targets to other domains, or drop?
     options:
-      - "(a) author consumer DMDOs on CSM-CASE-MGMT for crm_opportunities, support_sessions, product_features, product_releases, beta_programs, customer_feedback_items, product_metrics, vertical-industry master payloads"
+      - "(a) author consumer DMDOs on CSM-CASE-MGMT for crm_opportunities, support_sessions, product_features/releases/beta_programs/feedback/metrics, vertical-industry master payloads"
       - "(b) move targets to CRM-internal or ACCT-PLAN where applicable"
-      - "(c) drop the handoffs that have no real CSM-side workflow effect"
+      - "(c) drop the handoffs with no real CSM-side workflow effect"
     why: >-
-      Each cluster has a different shape. crm_opportunities and support_sessions
-      are common subjects of CSM workflows; PROD-MGMT payloads are mostly
-      product-feedback signals into CSM; vertical-industry rows are
-      industry-specific 'opens case' handoffs that often deserve a consumer DMDO
-      on CSM-CASE-MGMT.
+      Each cluster differs. crm_opportunities and support_sessions are common CSM workflow
+      subjects; PROD-MGMT payloads are mostly product-feedback signals; vertical rows are
+      industry-specific 'opens case' handoffs that often deserve a CSM-CASE-MGMT consumer DMDO.
 
   - id: B2-CAPABILITY-SHAPE
-    summary: Decide whether to add CSM-specific or new cross-cutting capabilities (OMNICHANNEL-ENGAGEMENT, CSAT-NPS).
+    summary: Decide whether to add CSM-specific or new cross-cutting capabilities.
     question: >-
-      CSM has 3 cross-cutting capabilities (AI-TRIAGE, SLA-MGMT, KNOWLEDGE-MGMT)
-      and zero domain-specific. Add domain-prefixed capabilities, accept the
-      cross-cutting set, or introduce one or two new cross-cutting capabilities
-      that also light up CCAAS / CRM / marketing automation?
+      CSM has 3 cross-cutting capabilities (AI-TRIAGE, SLA-MGMT, KNOWLEDGE-MGMT) and zero
+      domain-specific. Add domain-prefixed, accept cross-cutting, or add new cross-cutting?
     options:
       - "(a) add CSM-CASE-MGMT-ROUTING, CSM-OMNICHANNEL-ENGAGEMENT, CSM-AGENT-ASSIST"
       - "(b) accept cross-cutting capabilities as the full surface"
       - "(c) introduce cross-cutting OMNICHANNEL-ENGAGEMENT and CSAT-NPS"
     why: >-
-      Choice drives B1B-S5 contributor / consumer business_function_domains set
-      and the M6 coverage profile across CSM modules.
+      Choice drives the contributor/consumer business_function_domains set and the M6
+      coverage profile across CSM modules; also gates B1A-PHASE-P persona reach.
 
   - id: B2-APQC-SCOPE
-    summary: Decide APQC tagging scope for the 30 remaining untagged CSM cross-domain handoffs.
+    summary: Decide disposition of the 4 residual untagged CSM cross-domain handoffs.
     question: >-
-      How many of the 30 untagged handoffs to tag in this audit loop?
+      17 clean PCF matches were tagged 2026-06-06 (coverage 59/63 = 94%). 4 rows have no
+      clean PCF match. Tag them with a forced anchor, or defer to Discover?
+    residual_no_match:
+      - {handoff_id: 270, shape: "MDM customer_golden_record.created (master-data sync, not customer service)"}
+      - {handoff_id: 996, shape: "PROD-MGMT beta_program.launched (product notification)"}
+      - {handoff_id: 1007, shape: "PROD-MGMT product_metric.threshold_breached (ops signal)"}
+      - {handoff_id: 1055, shape: "INV-MGMT inv_inventory_lot.expiry_warning (not a recall)"}
     options:
-      - "(a) tag the 30 remaining now (closes H1 fully)"
-      - "(b) tag just the SUB-MGMT and CRM pairs (heaviest neighbors)"
-      - "(c) defer the residual set to Discover"
+      - "(a) defer the 4 residual to Discover (recommended; no clean PCF L3/L4 fit)"
+      - "(b) force a generic anchor (process 6 Manage Customer Service) on all 4"
 
   - id: B2-CSM-KNOWLEDGE-MASTER
     summary: Decide whether CSM-KNOWLEDGE (114) needs a domain-owned master, demotion to starter, or accept as-is.
     question: >-
-      CSM-KNOWLEDGE holds knowledge_articles as contributor + required and
-      customer_cases as consumer + optional. No DMDO with role=master. Per
-      Rule #14 the module-without-master is allowed only for leadership-tier
-      domains, and CSM is not leadership-tier.
+      CSM-KNOWLEDGE holds knowledge_articles as contributor+required and customer_cases as
+      consumer+optional. No DMDO with role=master. Rule #14 allows module-without-master only
+      for leadership-tier domains; CSM is not leadership-tier.
     options:
-      - "(a) accept as-is and document the rationale (editorial / audience-filtered view onto ITSM-mastered knowledge_articles)"
+      - "(a) accept as-is and document the rationale (editorial/audience-filtered view onto ITSM-mastered knowledge_articles)"
       - "(b) demote CSM-KNOWLEDGE to module_kind=starter (lossy: KNOWLEDGE-MGMT capability loses sole realizing module)"
       - "(c) introduce customer_knowledge_articles as a CSM-specific master"
+    note: "Blocks B1A-PHASE-P persona authoring (demotion reshapes persona reach)."
 
   - id: B2-PATTERN-FLAGS
-    summary: Confirm pattern-flag re-evaluation outcomes on customer_entitlements (104), csat_responses (105), customer_events (111).
-    question: >-
-      Confirm proposed flips before B1B-S2 PATCH lands.
+    summary: Confirm pattern-flag re-evaluation outcomes on 104, 105, 111 (drives B1B-S2 PATCH).
+    question: Confirm proposed flips before B1B-S2 PATCH lands (each is an overwrite on a non-empty boolean).
     options:
-      - "104 has_single_approver = true (activation / upgrade signoff)"
+      - "104 has_single_approver = true (activation/upgrade signoff)"
       - "105 has_submit_lock = true (responses immutable once captured)"
       - "111 all three flags remain false (append-only event log)"
     why: >-
-      Reasoning is plausible but not certain; Rule #12 prohibits auto-populating
-      notes to explain flips, so the user needs to confirm directly.
-
-  - id: B2-CATALOG-UX
-    summary: Approve buyer-voice copy (domain-grain and module-grain) before A4 + M8 backfill.
-    question: >-
-      Supply approved tagline + description for CSM (id 30) and each of
-      CSM-CASE-MGMT (112), CSM-ENTITLEMENTS (113), CSM-KNOWLEDGE (114), or
-      approve agent-drafted versions before write.
-    options:
-      - "(a) provide exact wording for each of the 4 (tagline + description)"
-      - "(b) approve agent-drafted versions after review"
-    why: >-
-      Rule #20 forbids automatic writes to catalog_tagline / catalog_description;
-      surfaces drafts to user BEFORE writing.
+      Reasoning is plausible but not certain; Rule #12 prohibits auto-populating notes to
+      explain flips, so the user confirms directly.
 
   - id: B2-PAIRWISE-SCHEDULING
     summary: Decide whether to schedule full pairwise reconciliation passes against SUB-MGMT and CRM.
     question: >-
-      SUB-MGMT (edge weight 12) and CRM (edge weight 6) already got full
-      5-section diffs inline in the 2026-05-30 audit. Schedule them as separate
-      Validate runs on those domains for symmetric audit-section appends?
+      SUB-MGMT (edge weight 12) and CRM (edge weight 6) got full 5-section diffs inline in
+      the 2026-05-30 audit. Schedule them as separate Validate runs on those domains?
     options:
       - "(a) accept inline summaries, no further passes"
       - "(b) schedule full Validate runs on SUB-MGMT and CRM with audit appends on those files"
 
+  - id: B2-CATALOG-UX
+    summary: Catalog UX backfill (domain + modules).
+    status: resolved_by_rule
+    resolution: >-
+      RESOLVED 2026-06-06 by Rule #20 (in-record review). Current Rule #20 + A4/M8 fix text
+      direct authoring buyer-voice copy straight into empty fields; record_status carries the
+      review signal. The old surface-then-write gate is retired. catalog_tagline +
+      catalog_description written on domain 30 and modules 112/113/114 at record_status='new'.
+      User reviews in-record / in the catalog UI.
+
 b3:
   - id: B3-CASE-COMMENTS
     candidate: case_comments
-    rationale: Universal case-thread primitive across all five flagship vendors. Anchors every customer interaction inside a case.
+    rationale: Universal case-thread primitive across all five flagship vendors.
     vendor_evidence: [Zendesk, "Salesforce Service Cloud", "ServiceNow CSM", Freshdesk, Intercom]
     proposed_module: CSM-CASE-MGMT
 
   - id: B3-CASE-ATTACHMENTS
     candidate: case_attachments
-    rationale: Universal across all five flagship vendors. Files, screenshots, logs attached to cases for triage and evidence.
+    rationale: Universal across all five flagship vendors. Files, screenshots, logs attached to cases.
     vendor_evidence: [Zendesk, "Salesforce Service Cloud", "ServiceNow CSM", Freshdesk, Intercom]
     proposed_module: CSM-CASE-MGMT
 
   - id: B3-INSTALLED-PRODUCTS
     candidate: installed_products
-    rationale: Anchors product-specific entitlement scope and case routing. ServiceNow install_base, Salesforce Service Cloud assets.
+    rationale: Anchors product-specific entitlement scope and case routing.
     vendor_evidence: ["ServiceNow CSM", "Salesforce Service Cloud"]
     proposed_module: CSM-ENTITLEMENTS
 
   - id: B3-SERVICE-CONTRACTS
     candidate: service_contracts
-    rationale: A service contract aggregates many entitlements (distinct from customer_entitlements). May overlap legal_contracts already consumed; vetting needed.
+    rationale: A service contract aggregates many entitlements (distinct from customer_entitlements). May overlap legal_contracts; vetting needed.
     vendor_evidence: ["Salesforce Service Cloud", "ServiceNow CSM"]
     proposed_module: CSM-ENTITLEMENTS
 
   - id: B3-SLA-DEFINITIONS
     candidate: sla_definitions
-    rationale: SLA configuration is distinct from entitlement scope. SLA-MGMT capability currently has no first-class data_object. Pair with sla_milestones.
+    rationale: SLA configuration is distinct from entitlement scope. SLA-MGMT capability has no first-class data_object. Pair with sla_milestones.
     vendor_evidence: ["Salesforce Service Cloud", "ServiceNow CSM"]
     proposed_module: CSM-ENTITLEMENTS
 
   - id: B3-MACROS
     candidate: macros
-    rationale: Agent productivity primitive (canned responses, quick text). Zendesk macros, Salesforce quick_text, Intercom macros.
+    rationale: Agent productivity primitive (canned responses, quick text).
     vendor_evidence: [Zendesk, "Salesforce Service Cloud", Intercom]
     proposed_module: CSM-CASE-MGMT
 
   - id: B3-ESCALATION-RULES
     candidate: escalation_rules
-    rationale: Declarative routing primitive. Salesforce escalation_rules, ServiceNow escalation_definitions, Freshdesk SLA-based escalations.
+    rationale: Declarative routing primitive.
     vendor_evidence: ["Salesforce Service Cloud", "ServiceNow CSM", Freshdesk]
     proposed_module: CSM-CASE-MGMT
 
   - id: B3-SUPPORT-QUEUES
     candidate: support_queues
-    rationale: Universal queueing / agent-group primitive. Zendesk groups, Salesforce queues, ServiceNow assignment_groups, Freshdesk groups.
+    rationale: Universal queueing / agent-group primitive.
     vendor_evidence: [Zendesk, "Salesforce Service Cloud", "ServiceNow CSM", Freshdesk]
     proposed_module: CSM-CASE-MGMT
 
   - id: B3-SERVICE-CALENDARS
     candidate: service_calendars
-    rationale: Anchors SLA clock pause / resume across business hours. Universal across the flagship five.
+    rationale: Anchors SLA clock pause / resume across business hours.
     vendor_evidence: [Zendesk, "Salesforce Service Cloud", "ServiceNow CSM"]
     proposed_module: CSM-ENTITLEMENTS
 
   - id: B3-CSAT-SURVEYS
     candidate: csat_surveys
-    rationale: The survey config (template) is distinct from csat_responses (the run). Salesforce surveys, Zendesk satisfaction_surveys.
+    rationale: The survey config (template) is distinct from csat_responses (the run).
     vendor_evidence: ["Salesforce Service Cloud", Zendesk]
     proposed_module: CSM-CASE-MGMT
 
   - id: B3-OMNICHANNEL-SESSIONS
     candidate: omnichannel_sessions
-    rationale: CSM-side consumer of CCAAS-mastered support_sessions. Authoring this consumer DMDO closes B1B-B10B-CLASS-B handoff 226. Salesforce Service Cloud Voice / Digital Engagement, Zendesk Talk + Chat + Messaging, Intercom inbox.
+    rationale: CSM-side consumer of CCAAS-mastered support_sessions. Authoring this consumer DMDO closes B1B-B10B-CLASS-B handoff 226.
     vendor_evidence: ["Salesforce Service Cloud", Zendesk, Intercom]
     proposed_module: CSM-CASE-MGMT

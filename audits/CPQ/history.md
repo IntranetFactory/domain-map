@@ -347,3 +347,54 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21) over the open items in audits/CPQ/state.yaml. No fresh from-scratch audit. Each recorded item was re-verified live before action. Loader: [.tmp_deploy/fix_cpq_state_driven_2026_06_07.ts](../../.tmp_deploy/fix_cpq_state_driven_2026_06_07.ts), run from project root. All writes landed at `record_status='new'` (idempotent; re-running inserts/patches nothing).
+
+Live footprint confirmed unchanged: domain 73 (parent CRM 69), 3 full modules (164 CPQ-PRODUCT-CATALOG, 165 CPQ-QUOTE-BUILDER, 166 CPQ-APPROVALS-CONTRACTS), 8 masters (416-423).
+
+### Executed
+
+| Audit ID | Type | Volume | Result |
+|---|---|---|---|
+| B1A-ENTITY-TYPE | PATCH `data_objects.entity_type` (Rule #12 enum) on 8 unclassified masters | 8 PATCH | 416/417/418/420/421/423 -> `operational_workflow`; 419 (pricing_rules) + 422 (product_bundles) -> `catalog` (config shape, no Rule #12 gap when stateless). Verified all 8 reclassified. |
+| Catalog UX (Rule #20) | PATCH empty `catalog_tagline` + `catalog_description` on domain 73 + 3 modules | 1 domain + 3 module PATCH | Buyer-voice copy authored (workflow + value framing, no vendor names, no em-dash, American English). All 4 rows were empty pre-write; nothing overwritten. Verified landed. |
+| B1A-S4 (B11) | INSERT generic-synonym `data_object_aliases` (`alias_type='synonym'`) | 11 INSERT | proposals/bids (416), quote_items/line_items (417), configured_products (418), discount_schedules/price_books (419), discount_lines (420), approval_steps (421), bundle_offers (422), quote_contracts (423). Idempotent on (data_object_id, alias_name). |
+| B1A-S5 (C1) | INSERT `data_object_lifecycle_states` on product_configurations (418) + quote_lines (417) | 7 INSERT | 418: draft(initial) -> validating -> valid -> invalid(terminal). 417: draft(initial) -> locked -> cancelled(terminal). pricing_rules (419) + product_bundles (422) NOT authored: classified `catalog` (no gap) and gated on B2-S5. |
+
+Total writes: 12 PATCH + 18 INSERT = 30.
+
+C1 business_function_domains: no write owed. Domain 73 already carries owner = Sales Operations (52) and contributor = Finance (4). Sales Operations is the precise CPQ owner (deal desk); no duplicate/conflicting owner row added.
+
+### Surfaced (no write; user decision or destructive)
+
+- **B2-S1** Reframed under the per-domain-skill supersession: the old per-module Phase E+F load is CANCELED; surviving decision is whether to author the single domain-grain CPQ `system` skill + `domain_module_tools` now or hold for the modularization backlog batch.
+- **B2-S2** Add second handoff CPQ-APPROVALS-CONTRACTS -> CLM-AUTHORING on `discount_approval.granted`, or confirm `contract_draft.generated` is the post-approval signal (a/b/c).
+- **B2-S3** CRM telemetry handoffs on `sales_quote.sent` / `sales_quote.rejected` (a/b/c).
+- **B2-S4** Pattern-flag overwrites (DESTRUCTIVE, existing non-empty booleans): quote_discounts.has_submit_lock, contract_drafts.has_submit_lock, sales_quotes.has_personal_content.
+- **B2-S5** pricing_rules + product_bundles now `entity_type='catalog'` (audit-clean stateless); confirm no lifecycle states, or author an optional publishing lifecycle.
+- **B2-S6** HVAC-SVC-MGMT (171) starter host junction on CPQ (a/b/c).
+- **B2-H1r-204** (was B1A-H1r-204) DESTRUCTIVE: flip handoff_processes row id 57 (handoff 204) `proposal_source` discovery_substring -> agent_curated at unchanged PCF 149. Overwrite of a non-empty value on an existing row; surfaced not applied.
+- **B2-H1r-517 / 527 / 1236** APQC PCF retarget calls (medium confidence / fallback insert); user owns each.
+- **B1A-PHASE-P** Personas / RACI DEFERRED (Rule #21: do not author personas unprompted). Candidate personas: SALES-REP, DEAL-DESK-ANALYST, PRICING-MANAGER, CPQ-ADMIN.
+
+### Left
+
+- **B1B-S9** report-only; 4 outbound handoffs (484, 485, 1014, 1015) NULL target_domain_module_id, owed by ERP-FIN / SUB-MGMT / CLM audits.
+- **B1A-S2 / B1A-S3** CANCELED by the 2026-06-06 per-domain-skill supersession (per-module system skills + skill_tools, and the per-module/_core RBAC model are RETIRED). Re-authoring tracked in audits/_modularization-backlog.md; reframed as a note in state.yaml.
+- **B3-E1..E4** speculative entity candidates (guided_selling_questionnaires, proposal_templates, price_books, deal_scoring_records); Phase 0 pending. (price_books now also carried as a synonym alias on pricing_rules.)
+
+### JWT errors
+
+None.
+
+### UI spot-check links
+
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/domains
+- https://tests.semantius.app/domain_map/domain_modules
+- https://tests.semantius.app/domain_map/data_object_aliases
+- https://tests.semantius.app/domain_map/data_object_lifecycle_states

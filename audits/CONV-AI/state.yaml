@@ -11,20 +11,20 @@
 schema_version: 2
 domain: CONV-AI
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    finding: "Live triage 2026-06-07: domain 34 still has 0 domain_modules rows (M1 fail) and 0 capability_domains rows (A2 fail), so it is not deployable today. It must be built before any persona / RACI work applies. The build cannot start until the B2-MOD modularization shape is chosen (user decision)."
+    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the single domain-grain system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward. Gated on B2-MOD + B2-CAP."
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-S1
     summary: "Author CONV-AI modules; zero domain_modules rows currently exist."
-    finding: "Live query /domain_modules?domain_id=eq.34 returns 0 rows. Domain 34 (CONV-AI) is not deployable. Blocks M2..M8, F2..F5, B10b, B12 per-module FKs, E1..E5."
+    finding: "Live query /domain_modules?domain_id=eq.34 returns 0 rows (re-confirmed 2026-06-07). Domain 34 (CONV-AI) is not deployable. Blocks M2..M8, F2..F5, B10b, B12 per-module FKs, E1..E5."
     action: "Author the module split, recommended 2 modules CONV-AI-BOT-DESIGN (masters bot_definitions, intent_definitions, conversation_flows) plus CONV-AI-RUNTIME (masters conversation_transcripts, intent_detections). Confirm shape via B2-MOD before loading."
     blocked_by:
       - {type: user_decision, ref: B2-MOD}
@@ -38,29 +38,22 @@ b1b:
 
   - id: B1B-S2
     summary: "Author capabilities for CONV-AI; zero capability_domains rows exist."
-    finding: "Live query /capability_domains?domain_id=eq.34 returns 0 rows. A2 fails."
+    finding: "Live query /capability_domains?domain_id=eq.34 returns 0 rows (re-confirmed 2026-06-07). A2 fails."
     action: "Load 6 capabilities per the recommended floor (bot_authoring, nlu_training, dialog_management, channel_orchestration, conversation_analytics, human_handoff_orchestration), each with a capability_domains link plus a domain_module_capabilities link per Bucket 2 #1 modularization."
     blocked_by:
       - {type: user_decision, ref: B2-CAP}
       - {type: depends_on, ref: B1B-S1, reason: "modules must exist before domain_module_capabilities can be loaded"}
 
-  - id: B1B-S3
-    summary: "Draft and load CONV-AI catalog_tagline and catalog_description (A4)."
-    finding: "Both catalog_tagline and catalog_description are empty strings on domains row id 34. Rule #20 buyer-voice copy."
-    action: "Draft both fields per Rule #20 buyer voice, surface drafts to user for review before writing. Never overwrite once non-empty without per-row explicit approval."
-    blocked_by:
-      - {type: user_decision, ref: B2-CAT-COPY}
-
   - id: B1B-S4
-    summary: "Retire legacy domain-level system skill conv-ai-system (skill id 39)."
-    finding: "Skill 39 sits at skill_type=system, domain_id=34, domain_module_id IS NULL with kebab name conv-ai-system. Has 7 skill_tools (query_conversation_transcripts, query_intent_detections, transcribe_audio, generate_text, detect_sentiment, query_bot_definitions, query_intent_definitions). F1 fails."
-    action: "After Phase-S authors per-module system skills (one per CONV-AI module per Rule #17, named conv_ai_bot_design_agent and conv_ai_runtime_agent), re-link the 7 tools to the new skills then DELETE skill 39."
+    summary: "Legacy domain-level system skill conv-ai-system (skill id 39) RETIRED-MODEL note."
+    finding: "RETIRED per the 2026-06-06 supersession header. The original action (author per-module system skills conv_ai_bot_design_agent / conv_ai_runtime_agent, re-link 7 skill_tools, then DELETE skill 39) is CANCELED: per-module skill grain and skill_tools are dropped. Live 2026-06-07: skill 39 is skill_type=system, domain_id=34, domain_module_id IS NULL, which already matches the retained one-domain-grain-skill model; its toolset will DERIVE from domain_module_tools once modules land. Two residual non-blocking items: (a) the kebab name conv-ai-system vs the snake convention (renaming a non-empty value is a destructive overwrite, surface only); (b) re-authoring tool requirements onto modules under domain_module_tools, tracked in audits/_modularization-backlog.md."
+    action: "Do NOT author per-module skills. After B1B-S1 modules land, re-author tool requirements via domain_module_tools (backlog). Skill-39 kebab->snake rename is a surfaced destructive overwrite, not auto-applied."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
 
   - id: B1B-S6
     summary: "Confirm publish-lock pattern flag on bot_definitions, intent_definitions, conversation_flows."
-    finding: "All three masters carry has_submit_lock=false. Publish-then-version-lock is the dominant authoring pattern across Kore.ai, Cognigy, Ada, Yellow.ai, Boost.ai."
+    finding: "All three masters carry has_submit_lock=false (re-confirmed 2026-06-07). Publish-then-version-lock is the dominant authoring pattern across flagship vendors. entity_type on all three is now operational_workflow (set 2026-06-07), so the flip is the remaining gate-flag decision."
     action: "On user confirmation per master, PATCH has_submit_lock=true on data_objects ids 699, 700, 701."
     blocked_by:
       - {type: user_decision, ref: B2-FLAGS}
@@ -71,7 +64,7 @@ b1b:
 
   - id: B1B-S10
     summary: "Backfill handoff per-module FKs once CONV-AI is modularized."
-    finding: "6 outbound handoffs (ids 227, 228, 743, 744, 745, 746) carry source_domain_module_id=NULL because CONV-AI has no modules. 3 inbound handoffs (ids 153, 723, 724) carry target_domain_module_id=NULL for the same reason. Handoff 227 already has target_domain_module_id=47 (CRM-LEAD-MGT) resolved on the CRM side."
+    finding: "6 outbound handoffs (ids 227, 228, 743, 744, 745, 746) carry source_domain_module_id=NULL because CONV-AI has no modules. 3 inbound handoffs (ids 153, 723, 724) carry target_domain_module_id=NULL for the same reason. Handoff 227 already has target_domain_module_id=47 (CRM-LEAD-MGT); handoff 153 already has source_domain_module_id=226 (DATA-AI-PLAT side). Re-confirmed 2026-06-07."
     action: "After B1B-S1 modules land, run the standard B10b backfill loader: source FK resolves to the CONV-AI module mastering each event's data_object (strongest-role rule)."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
@@ -88,7 +81,7 @@ b1b:
 
   - id: B1B-S11
     summary: "Author data_object_aliases for 4 non-self-explanatory CONV-AI masters."
-    finding: "Zero alias rows for any of the 5 CONV-AI masters. Vendor-specific synonyms are universal in this market: bot_definitions aka assistants (Lex, Dialogflow CX) / agents (Cognigy) / virtual agents (ServiceNow); intent_definitions aka topics (Microsoft Copilot Studio) / flows (Yellow.ai); conversation_flows aka dialog scripts (Kore.ai); conversation_transcripts aka conversation logs (most vendors)."
+    finding: "Zero alias rows for any of the 5 CONV-AI masters (re-confirmed 2026-06-07). Vendor-specific synonyms are universal in this market: bot_definitions aka assistants / agents / virtual agents; intent_definitions aka topics / flows; conversation_flows aka dialog scripts; conversation_transcripts aka conversation logs."
     action: "Surface exact per-row alias tuples to user, get explicit approval per row, then INSERT. Aliases are commerce-shaped per Rule #18 so vendor names are allowed in alias_name."
     blocked_by:
       - {type: user_decision, ref: B2-ALIAS-WORDING}
@@ -99,17 +92,17 @@ b1b:
       - {data_object_id: 259, name: conversation_transcripts, target_module_id: null, workflow: aliases}
 
   - id: B1B-S12
-    summary: "Author lifecycle states for the 5 CONV-AI masters."
-    finding: "Zero data_object_lifecycle_states rows for any master. Bot authoring masters carry a draft -> reviewing -> published -> disabled -> archived lifecycle (every flagship vendor exposes publish + disable as separate states). conversation_transcripts is recording -> completed -> redacted -> archived. intent_detections is event-shaped, candidate for the Rule #12 config-shape exemption."
-    action: "After B1B-S1 modules land (state.domain_module_id requires the module FK), author per-master state machines with requires_permission=true on published and disabled gates. For intent_detections, await Bucket 2 #4 to decide between config-shape exemption (Rule #12) or authoring detected -> routed -> consumed states."
+    summary: "Author lifecycle states for the CONV-AI authoring masters."
+    finding: "Zero data_object_lifecycle_states rows for any master (re-confirmed 2026-06-07). The 3 authoring masters are now entity_type=operational_workflow (set 2026-06-07) so they REQUIRE lifecycle states (B12): draft -> reviewing -> published -> disabled -> archived. conversation_transcripts and intent_detections are now entity_type=operational_record (set 2026-06-07) so lifecycle states are NOT required for them; the open B2-DETECT-LIFECYCLE decision is only about whether to upgrade intent_detections to an authored detected -> routed -> consumed workflow (which would re-type it)."
+    action: "After B1B-S1 modules land (state.domain_module_id requires the module FK), author per-master state machines for the 3 operational_workflow masters with requires_permission=true on published and disabled gates. intent_detections lifecycle awaits B2-DETECT-LIFECYCLE."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
       - {type: user_decision, ref: B2-DETECT-LIFECYCLE}
 
   - id: B1B-S13
     summary: "Add business_function_capabilities override rows where CONV-AI capability ownership diverges from domain-level RACI."
-    finding: "Zero business_function_capabilities rows because A2 returns zero capabilities. C2 fails by construction."
-    action: "After B1B-S2 capabilities exist, evaluate each capability against domain RACI (owner Contact Center Operations, contributor Software Engineering). Author divergence rows only where the capability's owning function differs from the domain owner (e.g. bot_authoring may be Software Engineering rather than Contact Center Operations)."
+    finding: "Zero business_function_capabilities rows because A2 returns zero capabilities. C2 fails by construction. (Domain RACI already present: owner Contact Center Operations bf 70, contributor Software Engineering bf 26.)"
+    action: "After B1B-S2 capabilities exist, evaluate each capability against domain RACI. Author divergence rows only where the capability's owning function differs from the domain owner (e.g. bot_authoring may be Software Engineering rather than Contact Center Operations)."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S2}
 
@@ -144,9 +137,9 @@ b1b:
       - {vendor: Cresta, evidence: 1st_class}
 
   - id: B1B-H2
-    summary: "Reclassify APQC tag on handoff 228 (CONV-AI -> CCAAS escalation)."
-    finding: "Handoff 228 (conversation.escalated_to_human -> CCAAS, payload conversation_transcripts) currently carries handoff_processes row pointing at PCF 928 (Respond to customer problems, requests, and inquiries, external_id 10396, L4). 2026-05-30 audit flagged PCF 1318 as candidate (IT-flavored escalate) but borderline. Options on table: keep 928, change to 1318, change to L2 196 parent, or defer to Discover custom process."
-    action: "On user choice, PATCH handoff_processes for handoff_id=228 to the chosen process_id, or DELETE to defer."
+    summary: "Reclassify APQC tag on handoff 228 (CONV-AI -> CCAAS escalation). DESTRUCTIVE."
+    finding: "Handoff 228 (conversation.escalated_to_human -> CCAAS, payload conversation_transcripts) currently carries handoff_processes row id 752 pointing at PCF 928 (Respond to customer problems, requests, and inquiries). 2026-05-30 audit flagged PCF 1318 as candidate (IT-flavored escalate) but borderline. DESTRUCTIVE (overwrites a non-empty process_id, or DELETE to defer): never auto-applied. Re-confirmed 2026-06-07."
+    action: "On user choice, PATCH handoff_processes id 752 (handoff_id=228) to the chosen process_id, or DELETE to defer."
     blocked_by:
       - {type: user_decision, ref: B2-PCF-228}
     affected_handoffs:
@@ -161,7 +154,7 @@ b2:
       - "3 modules CONV-AI-AUTHORING + CONV-AI-RUNTIME + CONV-AI-ANALYTICS"
       - "3 modules including CONV-AI-LLM-AGENTS (depends on Bucket 3 #1, #3)"
       - "Other shape, please specify codes"
-    why: "Drives B1B-S1, F-band rebuild, every handoff per-module FK, all 7 MISSING entity placements, and the E-band role authoring."
+    why: "Drives B1A-BUILD, B1B-S1, F-band rebuild, every handoff per-module FK, all 7 MISSING entity placements, and the E-band role authoring. This is the gating decision for the whole build."
 
   - id: B2-CAP
     summary: "Confirm CONV-AI capability set."
@@ -171,31 +164,22 @@ b2:
       - "Add or remove specific capabilities (please list)"
     why: "Drives B1B-S2 and downstream B1B-S13 / B1B-S14."
 
-  - id: B2-CAT-COPY
-    summary: "Approve Rule #20 buyer-voice copy for CONV-AI domain catalog_tagline and catalog_description."
-    question: "Authorize the agent to draft a buyer-voice tagline (one sentence) and catalog_description (1 to 3 paragraphs) for review. Once drafted, please approve exact wording before write."
-    options:
-      - "Authorize draft, then approve wording per row"
-      - "Defer until modules land (then both grains can be drafted in one pass)"
-      - "Skip backfill for now"
-    why: "Rule #20 forbids overwriting non-empty catalog UX fields without explicit per-row approval; the column is empty so first write is allowed but the wording itself needs approval."
-
   - id: B2-FLAGS
     summary: "Confirm publish-lock pattern flag on 3 authoring masters."
-    question: "Set has_submit_lock=true on bot_definitions (id 699), intent_definitions (id 700), conversation_flows (id 701)? All 5 flagship vendors (Kore.ai, Cognigy, Ada, Yellow.ai, Boost.ai) implement publish-then-version-lock semantics on these three entities."
+    question: "Set has_submit_lock=true on bot_definitions (id 699), intent_definitions (id 700), conversation_flows (id 701)? All flagship vendors implement publish-then-version-lock semantics on these three entities. (All three are now entity_type=operational_workflow.)"
     options:
       - "Flip all 3"
       - "Flip a subset (please name)"
       - "Skip (false stays as the audit-of-record default)"
-    why: "Pattern flag changes downstream behavior: publish becomes a workflow-gate permission rather than a free mutate, which affects Phase-S tool authoring."
+    why: "Pattern flag changes downstream behavior: publish becomes a workflow-gate permission rather than a free mutate, which affects the workflow-gate derivation."
 
   - id: B2-DETECT-LIFECYCLE
     summary: "intent_detections lifecycle scope."
-    question: "intent_detections is event-shaped (one row per detected intent at runtime). Apply the Rule #12 config-shape exemption, or author detected -> routed -> consumed states?"
+    question: "intent_detections is now classified entity_type=operational_record (no lifecycle required). It is event-shaped (one row per detected intent at runtime). Keep it as operational_record, or re-type to operational_workflow and author detected -> routed -> consumed states?"
     options:
-      - "Config-shape exemption, surfaced here per Rule #15 (no notes write)"
-      - "Author detected -> routed -> consumed states"
-    why: "Per Rule #15 the exemption is not written to data_objects.notes; it lives only here in the audit state."
+      - "Keep operational_record (no lifecycle; classification already set 2026-06-07)"
+      - "Re-type to operational_workflow and author detected -> routed -> consumed states"
+    why: "The entity_type is already set to operational_record (the default config/record-shape outcome). Upgrading to an authored workflow is the only remaining choice and would re-type the row plus require lifecycle states."
 
   - id: B2-AI-AGENTS-MODULE
     summary: "Which CONV-AI module consumes ai_agents (DATA-AI-PLAT master)?"
@@ -207,31 +191,31 @@ b2:
     why: "Decision can only be made after B2-MOD lands."
 
   - id: B2-PCF-228
-    summary: "APQC handoff 228 PCF choice."
-    question: "Handoff 228 (CONV-AI -> CCAAS conversation.escalated_to_human) carries PCF 928 (Respond to customer problems...). 2026-05-30 audit recommended PCF 1318 (IT-flavored escalate) or L2 196. Pick one."
+    summary: "APQC handoff 228 PCF choice (DESTRUCTIVE override)."
+    question: "Handoff 228 (CONV-AI -> CCAAS conversation.escalated_to_human) carries handoff_processes id 752 -> PCF 928 (Respond to customer problems...). 2026-05-30 audit recommended PCF 1318 (IT-flavored escalate) or L2 196. Pick one."
     options:
       - "Keep PCF 928 (current)"
       - "Change to PCF 1318 (Escalate IT requests; IT-domain label on a CCAAS row)"
       - "Change to L2 PCF 196 (parent class, vendor-neutral)"
       - "Defer to Discover Pass 3 custom process"
-    why: "L2 196 keeps the catalog quality honest without forcing an IT-domain label. Direct fix when chosen."
+    why: "L2 196 keeps the catalog quality honest without forcing an IT-domain label. Any change overwrites a non-empty process_id, so it is surfaced, not auto-applied."
 
   - id: B2-E911-SCOPE
     summary: "E911 regulation applicability on CONV-AI."
-    question: "E911 currently mandatory. It applies only when CONV-AI routes voice traffic that may trigger emergency-services dispatch. Chat-only deployments (Ada chat, Intercom Fin) do not trigger E911. Keep mandatory or scope down?"
+    question: "E911 currently mandatory. It applies only when CONV-AI routes voice traffic that may trigger emergency-services dispatch. Chat-only deployments do not trigger E911. Keep mandatory or scope down?"
     options:
       - "Keep mandatory (presumes voice-bot inclusion)"
       - "Scope down to applicable_when_voice"
-    why: "If scoped, applicability column needs a PATCH on the domain_regulations row."
+    why: "If scoped, the applicability column needs a PATCH on the domain_regulations row (overwrites a non-empty value, so surfaced)."
 
   - id: B2-ALIAS-WORDING
     summary: "Approve per-row alias tuples for B1B-S11."
-    question: "Approve the exact (alias_name, alias_type) tuples per master before insert. Candidate aliases identified in 2026-05-30 audit: bot_definitions aka assistants / agents / virtual agents; intent_definitions aka topics / flows; conversation_flows aka dialog scripts."
+    question: "Approve the exact (alias_name, alias_type) tuples per master before insert. Candidate aliases: bot_definitions aka assistants / agents / virtual agents; intent_definitions aka topics / flows; conversation_flows aka dialog scripts; conversation_transcripts aka conversation logs."
     options:
       - "Authorize agent to draft full alias tuples, then approve per row"
       - "Specify alias_name and alias_type directly"
       - "Skip aliases"
-    why: "Aliases are commerce-shaped entities where vendor names are allowed (Rule #18), but the wording is non-obvious and worth user approval per Rule #15 spirit."
+    why: "Aliases are commerce-shaped entities where vendor names are allowed (Rule #18), but the wording is non-obvious and worth user approval."
 
 b3:
   - id: B3-PROMPT-TEMPLATES
@@ -265,7 +249,7 @@ b3:
 
   - id: B3-EVALUATION-RUNS
     candidate: evaluation_runs
-    rationale: "Bot-evaluation harness; Cresta, Cognigy, and Voiceflow ship this. Ties to AI Act conformance assessments (B1B-MISSING B1-M2 ai_act_risk_classifications)."
+    rationale: "Bot-evaluation harness; Cresta, Cognigy, and Voiceflow ship this. Ties to AI Act conformance assessments (B1B-MISSING ai_act_risk_classifications)."
     vendor_evidence:
       - Cresta
       - Cognigy

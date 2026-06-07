@@ -11,79 +11,22 @@
 schema_version: 2
 domain: CPQ
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
-  - id: B1A-S2
-    summary: "F2/F3/F5 hard fail; 0 system skills across CPQ-PRODUCT-CATALOG (164), CPQ-QUOTE-BUILDER (165), CPQ-APPROVALS-CONTRACTS (166); Semantius score uncomputable"
-    finding: "Live query /skills?domain_module_id=in.(164,165,166) returns []. Rule #17 requires exactly 1 skill_type='system' skill per full module with >=1 skill_tools row. The starter HVAC-SVC-MGMT (171) carries skill 236 but does not satisfy F2 for the host domain's full modules."
-    action: "Phase F load: author product_catalog_agent (164), quote_builder_agent (165), approvals_contracts_agent (166); each with 5-20 skill_tools rows. Floor per module: query_<entity> per master plus lifecycle-mutate tools for the 4 requires_permission=true states (sales_quote.submitted_for_approval, sales_quote.approved, quote_discount.approved, discount_approval.approved)."
-    affected_modules: [164, 165, 166]
-    affected_masters:
-      - {data_object_id: 416, name: sales_quotes, target_module_id: 165, workflow: lifecycle_workflow}
-      - {data_object_id: 417, name: quote_lines, target_module_id: 165, workflow: child_of_sales_quotes}
-      - {data_object_id: 418, name: product_configurations, target_module_id: 164, workflow: configuration_validation}
-      - {data_object_id: 419, name: pricing_rules, target_module_id: 164, workflow: config_shape}
-      - {data_object_id: 420, name: quote_discounts, target_module_id: 165, workflow: approval_workflow}
-      - {data_object_id: 421, name: discount_approvals, target_module_id: 166, workflow: approval_workflow}
-      - {data_object_id: 422, name: product_bundles, target_module_id: 164, workflow: config_shape}
-      - {data_object_id: 423, name: contract_drafts, target_module_id: 166, workflow: contract_lifecycle}
-    blocked_by:
-      - {type: user_decision, ref: B2-S1}
-    extra_sequencing: "B2-S1 picks single-batch vs Phase-E-first vs Phase-F-first"
+  # B1A-S2 (per-module system skills + skill_tools) and B1A-S3 (per-module RBAC permissions/
+  # roles/role_modules/role_permissions) are CANCELED by the 2026-06-06 supersession header.
+  # Per-module system-skill grain and the _core roles-permissions model are RETIRED (Plan 3 /
+  # per-domain-skill-restoration). Per-module tool re-authoring now lives on domain_module_tools
+  # and is tracked in audits/_modularization-backlog.md. Do not re-open these as per-module work.
 
-  - id: B1A-S3
-    summary: "E2/E3/E4/E5 hard fail; 0 permissions, 0 role_modules, 0 CPQ-named roles on full modules"
-    finding: "Live queries return []: /permissions?domain_module_id=in.(164,165,166), /role_modules?domain_module_id=in.(164,165,166). Baseline of 3 permissions per full module (Rule #14 module-permission derivation) requires 9 baseline rows minimum plus 4 workflow-gate permissions from lifecycle states with requires_permission=true."
-    action: "Phase E load: insert 9 baseline permissions (cpq-product-catalog:read/manage/admin, cpq-quote-builder:read/manage/admin, cpq-approvals-contracts:read/manage/admin) + 4 workflow-gate permissions + 3-5 CPQ roles (e.g. SALES-REP, DEAL-DESK-ANALYST, PRICING-MANAGER, CPQ-ADMIN) + role_modules and role_permissions junctions."
-    affected_modules: [164, 165, 166]
-    blocked_by:
-      - {type: depends_on, ref: B1A-S2, reason: "skill_tools rows bind to module permissions; deployer skill prefers atomic load"}
-      - {type: user_decision, ref: B2-S1}
-
-  - id: B1A-S4
-    summary: "B11 hard fail; 0 data_object_aliases rows on any of the 8 CPQ masters"
-    finding: "Live query /data_object_aliases?data_object_id=in.(416,417,418,419,420,421,422,423) returns []. Market terminology unmodelled across flagship vendors (Salesforce CPQ, Conga, Oracle CPQ, SAP CPQ, DealHub, HubSpot Quotes)."
-    action: "Phase B alias load: approximately 12-15 alias rows. proposals/bids for sales_quotes (416); quote_items/line_items for quote_lines (417); discount_schedules/price_books for pricing_rules (419); bundle_offers for product_bundles (422); configured_products for product_configurations (418); approval_steps for discount_approvals (421); quote_contracts for contract_drafts (423); discount_lines for quote_discounts (420)."
-    affected_masters:
-      - {data_object_id: 416, name: sales_quotes, target_module_id: 165, workflow: alias_only}
-      - {data_object_id: 417, name: quote_lines, target_module_id: 165, workflow: alias_only}
-      - {data_object_id: 418, name: product_configurations, target_module_id: 164, workflow: alias_only}
-      - {data_object_id: 419, name: pricing_rules, target_module_id: 164, workflow: alias_only}
-      - {data_object_id: 420, name: quote_discounts, target_module_id: 165, workflow: alias_only}
-      - {data_object_id: 421, name: discount_approvals, target_module_id: 166, workflow: alias_only}
-      - {data_object_id: 422, name: product_bundles, target_module_id: 164, workflow: alias_only}
-      - {data_object_id: 423, name: contract_drafts, target_module_id: 166, workflow: alias_only}
-
-  - id: B1A-S5
-    summary: "C1 partial; missing lifecycle states on product_configurations (418) and quote_lines (417); pricing_rules (419) and product_bundles (422) candidate for config-shape exemption"
-    finding: "Live query /data_object_lifecycle_states?data_object_id=in.(417,418,419,422) returns []. The other 4 CPQ masters (416, 420, 421, 423) carry valid state machines."
-    action: "Phase B lifecycle load: author state machines for product_configurations (draft -> validating -> valid -> invalid) and quote_lines (draft -> locked -> cancelled). Defer 419 and 422 to B2-S5 outcome (config-shape exemption vs author draft -> published -> deprecated)."
-    affected_masters:
-      - {data_object_id: 417, name: quote_lines, target_module_id: 165, workflow: child_of_sales_quotes}
-      - {data_object_id: 418, name: product_configurations, target_module_id: 164, workflow: configuration_validation}
-      - {data_object_id: 419, name: pricing_rules, target_module_id: 164, workflow: config_shape_pending_b2}
-      - {data_object_id: 422, name: product_bundles, target_module_id: 164, workflow: config_shape_pending_b2}
-    blocked_by:
-      - {type: user_decision, ref: B2-S5}
-
-  - id: B1A-H1r-204
-    summary: "APQC residue: handoff 204 carries record from discovery_substring; promote to agent_curated at same PCF row 149"
-    finding: "Live query confirms handoff_processes row {handoff_id: 204, process_id: 149, proposal_source: discovery_substring, record_status: new}. PCF 149 (Develop and manage sales proposals, bids, and quotes) is the correct target; only the proposal_source needs to flip to agent_curated to reflect the audit's confident endorsement."
-    action: "PATCH /handoff_processes?handoff_id=eq.204&process_id=eq.149 with body {proposal_source: 'agent_curated'}. Single mechanical row."
-    affected_handoffs:
-      - {handoff_id: 204, direction: outbound, source_domain: CPQ, target_domain: CRM, trigger_event: "quote.expired", payload: crm_opportunities, null_field: none}
   - id: B1A-PHASE-P
-    summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
+    summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED this pass."
     finding: "Live triage 2026-06-02: 3 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
     action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 3 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "8 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 8 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [contract_drafts, discount_approvals, pricing_rules, product_bundles, product_configurations, quote_discounts, quote_lines, sales_quotes]
+    status: deferred
+    deferral_reason: "Persona/RACI authoring is DEFERRED per Rule #21 (do not author personas unprompted). Candidate personas to confirm: SALES-REP, DEAL-DESK-ANALYST, PRICING-MANAGER, CPQ-ADMIN."
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
@@ -102,13 +45,12 @@ b1b:
 
 b2:
   - id: B2-S1
-    summary: "Phase E + Phase F sequencing for CPQ catch-up load"
-    question: "B1A-S2 (3 system skills with 15-45 tools) and B1A-S3 (9 baseline + 4 workflow-gate permissions, 3-5 roles, role_modules + role_permissions junctions) combine to a roughly 80-120 row load. Which sequencing do you want?"
+    summary: "Phase E + Phase F sequencing for CPQ catch-up load (now reframed: per-module RBAC + system skills are RETIRED; this question is mostly moot under the supersession, kept only for the surviving domain-grain skill + domain_module_tools authoring decision)"
+    question: "Under the per-domain-skill model the original Phase E (per-module permissions/roles) and Phase F (per-module system skills) shapes are CANCELED. The surviving decision is whether to author the single domain-grain `system` skill for CPQ now (deriving its toolset) and to populate `domain_module_tools` for the 3 modules. Authorize now or hold?"
     options:
-      - "a: Phase E first (roles + permissions), audit, then Phase F (skills + tools)"
-      - "b: Phase F first (skill_tools imply most workflow-gate permission needs), then E"
-      - "c: Single combined load (deployer preference for fewer round-trips)"
-    why: "Both staging shapes work; the deployer skill prefers c. The user owns sequencing because it affects review cadence."
+      - "a: Author domain-grain CPQ system skill + domain_module_tools now"
+      - "b: Hold until the modularization backlog batch picks it up"
+    why: "Per-domain-skill restoration changed the grain; the remaining authoring is a single skill plus module-tool rows, not the old 80-120 row Phase E+F load."
 
   - id: B2-S2
     summary: "Missing handoff CPQ-APPROVALS-CONTRACTS -> CLM on discount_approval.granted (484)"
@@ -135,16 +77,16 @@ b2:
       - "a: yes/no on quote_discounts.has_submit_lock"
       - "b: yes/no on contract_drafts.has_submit_lock"
       - "c: yes/no on sales_quotes.has_personal_content"
-    why: "Pattern flags drive downstream lockout and encryption behavior; user owns the call."
+    why: "Pattern flags drive downstream lockout and encryption behavior; user owns the call. These are overwrites of existing non-empty boolean values, so they are surfaced, not auto-applied."
 
   - id: B2-S5
     summary: "C1 config-shape exemption claim for pricing_rules (419) and product_bundles (422)"
-    question: "Per Rule #12 every master+required data_object needs lifecycle states unless explicitly exempted as config-shape. pricing_rules and product_bundles plausibly qualify (publish or deprecate is the only workflow). Confirm exemption, author states, or mixed."
+    question: "Both masters are now classified entity_type='catalog' (config shape), which under Rule #12 carries no lifecycle-state gap when stateless. Confirm they stay state-machine-free, or author a publishing lifecycle (draft -> published -> deprecated) for one or both anyway."
     options:
-      - "a: Confirm exemption for both pricing_rules and product_bundles"
+      - "a: Confirm exemption for both pricing_rules and product_bundles (no states)"
       - "b: Author lifecycle states (draft -> published -> deprecated) for both"
       - "c: Mixed (specify per master)"
-    why: "Rule #12 exemption requires user confirmation per data_object; silently exempting hollows the workflow-gate layer."
+    why: "entity_type='catalog' already satisfies the audit (only operational_workflow without states surfaces as a gap), but authoring an explicit publishing lifecycle is a discretionary editorial improvement the user owns."
 
   - id: B2-S6
     summary: "HVAC-SVC-MGMT (171) starter host junction on CPQ (73)"
@@ -154,6 +96,14 @@ b2:
       - "b: Remove and rely on starter's eventual primary host (FSM or AGENCY-MGMT)"
       - "c: Add a second cross-host on the more appropriate domain (FSM) instead"
     why: "Editorial product-discovery decision; the audit cannot tell whether the cross-host is intentional or stale."
+
+  - id: B2-H1r-204
+    summary: "APQC residue: handoff 204 carries handoff_processes row {id 57, process 149, proposal_source='discovery_substring'}; audit endorses flipping proposal_source to agent_curated at the same PCF row"
+    question: "PCF 149 (Develop and manage sales proposals, bids, and quotes) is the correct target; only the proposal_source needs to flip from discovery_substring to agent_curated. This overwrites a non-empty value on an existing row (destructive per Rule #21), so it is surfaced rather than auto-applied. Approve the flip?"
+    options:
+      - "a: PATCH /handoff_processes?id=eq.57 with {proposal_source: 'agent_curated'} (PCF unchanged at 149)"
+      - "b: Leave as discovery_substring"
+    why: "Overwriting a non-empty proposal_source / re-attributing a tag's provenance is a destructive edit on an existing row; user sign-off required."
 
   - id: B2-H1r-517
     summary: "APQC residue: handoff 517 currently agent_curated at process 927 (Resolve customer problems, requests, and inquiries L4); audit proposed retarget to 149 or sales-strategy alternative"
@@ -198,7 +148,7 @@ b3:
 
   - id: B3-E3
     candidate: price_books
-    rationale: "Salesforce CPQ Price Books, Oracle CPQ Price Lists, SAP CPQ Price Lists model price-book entities distinct from per-rule pricing logic. A price book is an environment grouping (geo, segment, channel) that wraps a set of pricing rules. Currently pricing_rules masters everything; the book or list grouping is folded in."
+    rationale: "Salesforce CPQ Price Books, Oracle CPQ Price Lists, SAP CPQ Price Lists model price-book entities distinct from per-rule pricing logic. A price book is an environment grouping (geo, segment, channel) that wraps a set of pricing rules. Currently pricing_rules masters everything; the book or list grouping is folded in. NOTE: price_books is now also carried as a generic synonym alias on pricing_rules (419)."
     vendor_evidence: [Salesforce CPQ, Oracle CPQ, SAP CPQ]
     proposed_module: CPQ-PRODUCT-CATALOG
 

@@ -11,81 +11,65 @@
 schema_version: 2
 domain: TEST-MGMT
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
+
+# UNBUILT domain: 0 domain_modules (M1 hard-fail), 0 capability_domains. The build (B1A-BUILD)
+# and its whole cascade are SURFACED, not executed (LEAVE rule for unbuilt domains). The 2026-06-07
+# state-driven pass executed only the two build-independent additive items:
+#   - entity_type classified on all 8 masters (was unclassified): test_cases / test_suites
+#     -> operational_record; test_plans / test_runs / test_defects / automation_scripts ->
+#     operational_workflow; test_environments -> catalog; requirements_to_test_traceability
+#     -> junction. The 4 operational_workflow masters now OWE lifecycle states once modules ship
+#     (folded into B1B-S4 below).
+#   - Catalog UX authored on the domain row (catalog_tagline + catalog_description, Rule #20);
+#     module-level UX is authored at build time (B1A-BUILD / B1B-M1).
 
 b1a:
   - id: B1A-S1-CAPABILITIES
     summary: Author 5 to 7 TEST-MGMT capabilities and capability_domains rows; zero exist today.
-    finding: A2 fails with zero capability_domains rows on TEST-MGMT (id 8). Market surface reads as 5 to 7 capabilities (test case authoring, test execution orchestration, defect lifecycle, automation script management, test environment management, traceability and coverage analytics, release-readiness gating). Cross-cutting convention check needed on TRACEABILITY and RELEASE-READINESS (>=3 domains ⇒ domain-neutral code).
-    action: Draft 5 to 7 capability rows + capability_domains rows in a single Phase A extension load; pair with B1A-M1 module split (Bucket 2 item B2-1) so realization links land together via domain_module_capabilities.
+    finding: A2 fails with zero capability_domains rows on TEST-MGMT (id 8). Market surface reads as 5 to 7 capabilities (test case authoring, test execution orchestration, defect lifecycle, automation script management, test environment management, traceability and coverage analytics, release-readiness gating). Cross-cutting convention check needed on TRACEABILITY and RELEASE-READINESS (>=3 domains => domain-neutral code).
+    action: Draft 5 to 7 capability rows + capability_domains rows in a single Phase A extension load; pair with B1B-M1 module split (B2-1 decision) so realization links land together via domain_module_capabilities.
+    blocked_by:
+      - {type: user_decision, ref: B2-1, reason: module split shape determines domain_module_capabilities realization links}
     affected_entities:
       - capabilities
       - capability_domains
       - domain_module_capabilities
 
-  - id: B1A-S3-PATTERN-FLAGS
-    summary: Re-evaluate has_personal_content / has_submit_lock / has_single_approver on each of the 8 masters.
-    finding: B4 fails. All 8 masters (test_cases 572, test_suites 573, test_plans 574, test_runs 575, test_defects 576, test_environments 577, requirements_to_test_traceability 578, automation_scripts 225) sit at default false across the three pattern flags with no positive consideration record. B2-4 specifically asks about has_personal_content on test_defects.
-    action: Positively re-evaluate each flag on each master in the next fix load; PATCH where applicable. Record the consideration in the audit; do NOT write to notes (Rule 15). B2-4 user judgment determines the test_defects.has_personal_content decision.
-    affected_masters:
-      - {data_object_id: 572, name: test_cases, target_module_id: null, workflow: review-pending}
-      - {data_object_id: 573, name: test_suites, target_module_id: null, workflow: review-pending}
-      - {data_object_id: 574, name: test_plans, target_module_id: null, workflow: review-pending}
-      - {data_object_id: 575, name: test_runs, target_module_id: null, workflow: review-pending}
-      - {data_object_id: 576, name: test_defects, target_module_id: null, workflow: pii-review-likely}
-      - {data_object_id: 577, name: test_environments, target_module_id: null, workflow: review-pending}
-      - {data_object_id: 578, name: requirements_to_test_traceability, target_module_id: null, workflow: review-pending}
-      - {data_object_id: 225, name: automation_scripts, target_module_id: null, workflow: review-pending}
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    finding: "Live triage 2026-06-07: this domain still has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI (Phase P) work applies."
+    action: "After B2-1 / B2-2 decisions, run Phase A then M then B then S to author the module set, capabilities, masters DMDO migration, and the ONE domain-grain system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    blocked_by:
+      - {type: user_decision, ref: B2-1, reason: module split shape (1 / 2 / 4 modules) is the user choice}
+      - {type: user_decision, ref: B2-2, reason: automation_scripts mastery (rename which side) shapes the DMDO migration}
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
-  - id: B1B-S2-CATALOG-UX
-    summary: Draft and load catalog_tagline + catalog_description on TEST-MGMT (A4).
-    finding: A4 fails. catalog_tagline='' and catalog_description='' on domains row id 8. Rule 20 requires buyer-voice (workflow + value) drafting and explicit user review BEFORE writing.
-    blocked_by:
-      - {type: user_decision, ref: B2-1}
-      - {type: depends_on, ref: B1A-S1-CAPABILITIES, reason: capability surface informs the catalog description scope}
-    action: After B2-1 module split decision and B1A-S1 capability load, draft both UX fields in buyer voice, surface to user for per-row approval, then PATCH.
-
   - id: B1B-S4-LIFECYCLE-STATES
-    summary: Author data_object_lifecycle_states for all 8 masters (B12).
-    finding: B12 fails. Zero data_object_lifecycle_states rows across all 8 TEST-MGMT masters. Trigger events imply at least 7 carry real workflows (test_case.created, test_suite.published, test_plan.approved, test_run.completed, test_run.failed, test_defect.created, test_defect.closed, requirements_to_test_traceability.linked, automation_script.executed, automation_script.failed). test_environments is the strongest config-shape exemption candidate. Lifecycle state rows need domain_module_id anchoring per M5.
+    summary: Author data_object_lifecycle_states for the operational_workflow masters (B12).
+    finding: B12 fails. Zero data_object_lifecycle_states rows across all 8 TEST-MGMT masters. After the 2026-06-07 entity_type pass, B12 is now scoped to the 4 masters classified operational_workflow (test_plans, test_runs, test_defects, automation_scripts). test_environments (catalog), requirements_to_test_traceability (junction), test_cases and test_suites (operational_record) PASS B12 without lifecycle rows. Lifecycle state rows need domain_module_id anchoring per M5.
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1-MODULES, reason: domain_module_id FK on data_object_lifecycle_states cannot resolve until modules ship}
       - {type: user_decision, ref: B2-1, reason: module split shape determines which states anchor to which module}
-    action: After M1, author per-master state machines (initial / workflow gates with requires_permission=true / terminal). Surface test_environments config-shape exemption to user during the fix load; do NOT auto-annotate notes (Rule 15).
+    action: After M1, author per-master state machines for the 4 operational_workflow masters (initial / workflow gates with requires_permission=true / terminal). test_plans (draft->approved with approver gate), test_runs (queued->running->completed|failed terminal), test_defects (created->triaged->in_progress->closed), automation_scripts (authored->executed->failed).
     affected_masters:
-      - {data_object_id: 572, name: test_cases, target_module_id: null, workflow: created->updated->published lifecycle}
-      - {data_object_id: 573, name: test_suites, target_module_id: null, workflow: published lifecycle}
-      - {data_object_id: 574, name: test_plans, target_module_id: null, workflow: draft->approved lifecycle with approver gate}
-      - {data_object_id: 575, name: test_runs, target_module_id: null, workflow: queued->running->completed|failed terminal}
-      - {data_object_id: 576, name: test_defects, target_module_id: null, workflow: created->triaged->in_progress->closed lifecycle}
-      - {data_object_id: 577, name: test_environments, target_module_id: null, workflow: config-shape candidate, possible exemption}
-      - {data_object_id: 578, name: requirements_to_test_traceability, target_module_id: null, workflow: created->linked->verified lifecycle}
-      - {data_object_id: 225, name: automation_scripts, target_module_id: null, workflow: authored->executed->failed cycle}
-
-  - id: B1B-S5-F1-SKILL-RETIRE
-    summary: Retire legacy domain-only skill 113 and re-anchor 8 query_* tools to per-module successor skills.
-    finding: F1 transitional pass today. skill 113 (test-mgmt-system) is the only system skill on TEST-MGMT, with 8 platform-covered query skill_tools rows (query_test_cases, query_test_suites, query_test_plans, query_test_runs, query_test_defects, query_test_environments, query_requirements_to_test_traceability, query_automation_scripts). Once Phase A modules ship, Rule 14 requires one skill_type='system' skill per module.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1-MODULES, reason: per-module successor skills cannot exist until modules ship}
-    action: After M1, DELETE skill 113, INSERT one skill_type='system' skill per module (skill_name=<module_code_lower>_agent), re-anchor each query_* skill_tools row to whichever module masters the underlying data_object, then add the missing mutate / side_effect tools per Rule 17.
+      - {data_object_id: 574, name: test_plans, entity_type: operational_workflow, workflow: draft->approved lifecycle with approver gate}
+      - {data_object_id: 575, name: test_runs, entity_type: operational_workflow, workflow: queued->running->completed|failed terminal}
+      - {data_object_id: 576, name: test_defects, entity_type: operational_workflow, workflow: created->triaged->in_progress->closed lifecycle}
+      - {data_object_id: 225, name: automation_scripts, entity_type: operational_workflow, workflow: authored->executed->failed cycle, blocked_by_b2_2: true}
 
   - id: B1B-M1-MODULES
     summary: Create domain_modules rows for TEST-MGMT (Rule 14 floor).
-    finding: M1 hard fails. Zero domain_modules rows on TEST-MGMT (id 8); zero domain_module_host_domains rows targeting it. Structural gate that blocks M2 to M8, B9b, B10b, B12 module anchoring, E1 to E5, F2 to F5.
+    finding: M1 hard fails. Zero domain_modules rows on TEST-MGMT (id 8); zero domain_module_host_domains rows targeting it. Structural gate that blocks M2 to M8, B9b, B10b, B12 module anchoring, E1 to E5, the domain-grain system skill, and module-level catalog UX.
     blocked_by:
       - {type: user_decision, ref: B2-1, reason: module split shape (1 / 2 / 4 modules) is the user choice; loader can only proceed after the shape is fixed}
-    action: "After B2-1 decision, INSERT domain_modules rows per the chosen split (recommended: TEST-MGMT-AUTHORING + TEST-MGMT-EXECUTION); populate catalog_tagline and catalog_description per Rule 20 (surface to user before writing)."
+    action: "After B2-1 decision, INSERT domain_modules rows per the chosen split (recommended: TEST-MGMT-AUTHORING + TEST-MGMT-EXECUTION); populate per-module catalog_tagline and catalog_description per Rule 20 at build time."
 
   - id: B1B-M2-B10B-BACKFILL
-    summary: Backfill source_domain_module_id (6 rows) and target_domain_module_id (3 inbound + 3 outbound) on TEST-MGMT handoffs.
-    finding: B10b fails on all 9 cross-domain handoffs. All 6 outbound rows have source_domain_module_id NULL; 3 inbound + 3 outbound have target_domain_module_id NULL. The 3 outbound rows whose target FK IS set (780→149 WORK-MGMT, 779→38 ITSM, 781→131 PROD-MGMT) only need the source FK once TEST-MGMT modularizes.
+    summary: Backfill source_domain_module_id (all 9) and target_domain_module_id on TEST-MGMT handoffs.
+    finding: B10b fails on all 9 cross-domain handoffs. All 9 rows have source_domain_module_id NULL (TEST-MGMT side, owed by this domain's M1). 3 outbound rows whose target FK IS set (780->149 WORK-MGMT, 779->38 ITSM, 781->131 PROD-MGMT) only need the source FK once TEST-MGMT modularizes; the other 6 (782/778 VSDP, 802 GRC, 752 APIM-source, 768 IPAAS-source, 771 VSDP-source) also owe a target/source FK from the partner side.
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1-MODULES, reason: source_domain_module_id derives from TEST-MGMT's own modules}
       - {type: domain_audit, blocking_domain: VSDP, milestone: M1-modularize}
@@ -111,21 +95,21 @@ b1b:
       - {type: user_decision, ref: B2-2, reason: automation_scripts (id 225) ownership decision affects this row}
     action: After M1 and the B2-2 automation_scripts decision, INSERT 8 domain_module_data_objects rows per the chosen split; if automation_scripts is renamed (B2-2 option a), rename via scripts/loaders/rename_data_object.ts before the DMDO load.
     affected_masters:
-      - {data_object_id: 572, name: test_cases, target_module_id: null, workflow: authoring-tier}
-      - {data_object_id: 573, name: test_suites, target_module_id: null, workflow: authoring-tier}
-      - {data_object_id: 574, name: test_plans, target_module_id: null, workflow: authoring-tier}
-      - {data_object_id: 575, name: test_runs, target_module_id: null, workflow: execution-tier}
-      - {data_object_id: 576, name: test_defects, target_module_id: null, workflow: execution-tier}
-      - {data_object_id: 577, name: test_environments, target_module_id: null, workflow: execution-tier}
-      - {data_object_id: 578, name: requirements_to_test_traceability, target_module_id: null, workflow: authoring-tier}
-      - {data_object_id: 225, name: automation_scripts, target_module_id: null, workflow: execution-tier, blocked_by_b2_2: true}
+      - {data_object_id: 572, name: test_cases, tier: authoring}
+      - {data_object_id: 573, name: test_suites, tier: authoring}
+      - {data_object_id: 574, name: test_plans, tier: authoring}
+      - {data_object_id: 575, name: test_runs, tier: execution}
+      - {data_object_id: 576, name: test_defects, tier: execution}
+      - {data_object_id: 577, name: test_environments, tier: execution}
+      - {data_object_id: 578, name: requirements_to_test_traceability, tier: authoring}
+      - {data_object_id: 225, name: automation_scripts, tier: execution, blocked_by_b2_2: true}
 
   - id: B1B-M4-AUTOMATION-SCRIPTS-M7
     summary: Resolve catalog-wide M7 collision on automation_scripts (id 225) between RMM and TEST-MGMT.
-    finding: Legacy domain_data_objects shows automation_scripts mastered by BOTH RMM (130) and TEST-MGMT (8). Architecturally distinct concepts (RMM endpoint scripts vs CI / QA automation). Once both sides modularize, catalog-wide single-master rule applies; one side must rename or demote.
+    finding: Legacy domain_data_objects shows automation_scripts mastered by BOTH RMM (130) and TEST-MGMT (8). Architecturally distinct concepts (RMM endpoint scripts vs CI / QA automation). The live data_object description (id 225) is purely RMM-shaped ("in the RMM tool's script library for remote execution against managed endpoints"). Once both sides modularize, catalog-wide single-master rule applies; one side must rename or demote. DESTRUCTIVE (rename / demote of an existing master) -> user approval required.
     blocked_by:
       - {type: user_decision, ref: B2-2, reason: rename-which-side decision is user judgment}
-    action: After B2-2 decision, execute the rename via scripts/loaders/rename_data_object.ts (preserves id, updates data_object_aliases rows 9 and 10 if TEST-MGMT side renames), then re-issue the DMDO row on the demoting / renaming side.
+    action: After B2-2 decision, execute the rename via scripts/loaders/rename_data_object.ts (preserves id, updates data_object_aliases rows for TEST-MGMT side if it renames), then re-issue the DMDO row on the demoting / renaming side.
     vendor_evidence: []
 
 b2:
@@ -133,18 +117,18 @@ b2:
     summary: Choose TEST-MGMT module split shape.
     question: "Which split shape: (a) single TEST-MGMT-PLATFORM module covering all 8 masters; (b) two-module split TEST-MGMT-AUTHORING (cases / suites / plans / traceability) + TEST-MGMT-EXECUTION (runs / defects / environments / automation_scripts); (c) four-module split (case-mgt / plan-mgt / execution / defects)?"
     options: ["a-single-module", "b-two-module-recommended", "c-four-module"]
-    why: M1 cannot proceed without the shape decision; the answer cascades into B1B-M1 / B1B-M2 / B1B-M3 / B1B-S4 / B1B-S5 module anchoring. Recommended (b) per 2026-05-30 audit (matches the authoring vs execution vendor surface).
+    why: M1 cannot proceed without the shape decision; the answer cascades into B1A-S1 / B1B-M1 / B1B-M2 / B1B-M3 / B1B-S4 module anchoring. Recommended (b) per prior audits (matches the authoring vs execution vendor surface).
 
   - id: B2-2
     summary: Resolve catalog-wide automation_scripts (id 225) M7 collision.
     question: Which side renames or demotes for automation_scripts? (a) rename TEST-MGMT side to qa_automation_scripts and let RMM keep canonical bare term; (b) rename RMM side to rmm_automation_scripts; (c) keep dual mastery via embedded_master demotion on one side.
     options: ["a-rename-test-mgmt-side-recommended", "b-rename-rmm-side", "c-embedded-master-demotion"]
-    why: Architecturally distinct concepts (CI / QA automation vs RMM endpoint scripts) collided on the data_object name. Required to unblock B1B-M3 and B1B-M4. Recommended (a) per 2026-05-30 audit (RMM's lower id 225 suggests it was loaded first; alphabetical and temporal precedent favors RMM keeping the bare term).
+    why: Architecturally distinct concepts (CI / QA automation vs RMM endpoint scripts) collided on the data_object name; the live id-225 description is RMM-shaped. Required to unblock B1B-M3 and B1B-M4. DESTRUCTIVE (rename / demote of an existing master). Recommended (a) per prior audits (RMM's lower id 225 suggests it was loaded first; alphabetical and temporal precedent favors RMM keeping the bare term).
     vendor_evidence: []
 
   - id: B2-3
-    summary: Should VSDP be modularized alongside TEST-MGMT's fix load?
-    question: Schedule VSDP's b1 audit + M1 alongside TEST-MGMT's M-band fix load (so the 3 VSDP-touching handoffs 782 / 778 / 771 can resolve target_domain_module_id in the same pass), or accept the B10b backlog item and defer VSDP?
+    summary: Should VSDP be modularized alongside TEST-MGMT's build?
+    question: Schedule VSDP's b1 audit + M1 alongside TEST-MGMT's build (so the 3 VSDP-touching handoffs 782 / 778 / 771 can resolve target_domain_module_id in the same pass), or accept the B10b backlog item and defer VSDP?
     options: ["pair-with-vsdp", "defer-vsdp-accept-backlog"]
     why: Pass 4 pairwise reconciliation cannot resolve target FK on the 3 VSDP-touching handoffs until VSDP itself modularizes. Independent of all other buckets.
 
@@ -152,7 +136,7 @@ b2:
     summary: Set has_personal_content on test_defects?
     question: Flip has_personal_content to true on test_defects (id 576), or keep false?
     options: ["flip-to-true", "keep-false"]
-    why: Defects routinely include screenshots, error logs, repro steps with customer data, console output. In regulated industries (healthcare, banking) defects can carry PII / PHI; in pure dev-tooling deployments customer data in defects is incidental rather than architectural. The pattern flag deserves a positive review either way.
+    why: Defects routinely include screenshots, error logs, repro steps with customer data, console output. In regulated industries (healthcare, banking) defects can carry PII / PHI; in pure dev-tooling deployments customer data in defects is incidental rather than architectural. The pattern flag deserves a positive review either way. (test_defects is now classified operational_workflow, so pattern-flag consideration applies.)
 
 b3:
   - id: B3-1
@@ -195,6 +179,7 @@ b3:
     rationale: "Pure-play API contract and functional testing vendors appear to constitute a distinct surface. Phase 0 decision needed: standalone domain, capability of APIM, or capability of TEST-MGMT? Queued via append_missing_domain.ts."
     vendor_evidence: []
 
-# next_action_by derivation: b1a non-empty (B1A-S1-CAPABILITIES, B1A-S3-PATTERN-FLAGS),
-# but those items themselves derive heavily from B2-1 / B2-2 decisions; the practical
-# next-action is the user judgment on B2-1 / B2-2 / B2-3 / B2-4. Setting next_action_by: user.
+# next_action_by derivation: every remaining b1a / b1b item is blocked on the build, which in
+# turn is gated on the user's B2-1 (module split) and B2-2 (automation_scripts mastery) decisions.
+# The practical next action is therefore the user judgment on B2-1 / B2-2 / B2-3 / B2-4.
+# Setting next_action_by: user.

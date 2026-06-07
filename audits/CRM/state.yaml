@@ -12,137 +12,22 @@ schema_version: 2
 domain: CRM
 status: feedback_needed
 next_action_by: agent
-last_audit: "2026-05-31"
+last_audit: "2026-06-07"
 
 b1a:
-  - id: B1A-H1-RESIDUAL
-    summary: "26 of 77 CRM cross-domain handoffs remain untagged; propose agent_curated APQC rows to hit 0.8N soft ceiling and unblock H1 quality progression."
-    finding: "40 of 77 cross-domain handoffs carry handoff_processes rows after the 2026-05-31 continuation (8 discovery_substring, 3 discovery_override, 29 agent_curated). The 0.5N raw volume floor (38.5) is just met, but the 0.8N soft ceiling (61.6) needs ~22 more tags. Separately, 0 rows are at record_status='approved', so the catalog-quality headline is still zero. The 2026-05-30 structural pass proposed PCF candidates for the 26 untagged handoffs; the deferral was on PCF id resolution per handoff."
-    action: "For each of the 26 untagged handoffs run /processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry, pick best L3 match, INSERT agent_curated rows. Reviewer-approval pass on the 40 existing rows is a separate user-driven step that flips H1 quality from 0 to >0."
-    affected_handoffs:
-      - {handoff_id: 60, direction: inbound, source_domain: MA, target_domain: CRM, trigger_event: nurture.completed, payload: crm_leads}
-      - {handoff_id: 64, direction: inbound, source_domain: SUB-MGMT, target_domain: CRM, trigger_event: subscription.activated, payload: customers}
-      - {handoff_id: 71, direction: outbound, source_domain: CRM, target_domain: CSM, trigger_event: crm_opportunity.closed_won, payload: customer_entitlements}
-      - {handoff_id: 76, direction: outbound, source_domain: CRM, target_domain: CDP, trigger_event: crm_opportunity.stage_changed, payload: customer_events}
-      - {handoff_id: 81, direction: outbound, source_domain: CRM, target_domain: SALES-ENG, trigger_event: crm_opportunity.assigned, payload: sales_cadences}
-      - {handoff_id: 83, direction: inbound, source_domain: SALES-ENG, target_domain: CRM, trigger_event: deal_insight.captured, payload: crm_opportunities}
-      - {handoff_id: 84, direction: inbound, source_domain: MA, target_domain: CRM, trigger_event: nurture.completed, payload: crm_leads}
-      - {handoff_id: 85, direction: outbound, source_domain: CRM, target_domain: MA, trigger_event: crm_contact.synced, payload: crm_contacts}
-      - {handoff_id: 137, direction: outbound, source_domain: CRM, target_domain: PSA, trigger_event: crm_opportunity.closed_won, payload: crm_opportunities}
-      - {handoff_id: 175, direction: outbound, source_domain: CRM, target_domain: WORK-MGMT, trigger_event: crm_opportunity.closed_won, payload: crm_opportunities}
-      - {handoff_id: 196, direction: inbound, source_domain: SUB-MGMT, target_domain: CRM, trigger_event: subscription.downgraded, payload: customer_subscriptions}
-      - {handoff_id: 200, direction: outbound, source_domain: CRM, target_domain: SALES-ENG, trigger_event: crm_lead.scored_above_threshold, payload: crm_leads}
-      - {handoff_id: 205, direction: inbound, source_domain: SALES-ENG, target_domain: CRM, trigger_event: sales_cadence.completed, payload: sales_cadences}
-      - {handoff_id: 211, direction: inbound, source_domain: PRM, target_domain: CRM, trigger_event: co_sell.opportunity_created, payload: crm_opportunities}
-      - {handoff_id: 212, direction: inbound, source_domain: PRM, target_domain: CRM, trigger_event: partner_referral.qualified, payload: crm_leads}
-      - {handoff_id: 269, direction: inbound, source_domain: MDM, target_domain: CRM, trigger_event: customer_golden_record.created, payload: customers}
-      - {handoff_id: 341, direction: outbound, source_domain: CRM, target_domain: AGENCY-MGMT, trigger_event: crm_opportunity.won, payload: agency_jobs}
-      - {handoff_id: 365, direction: inbound, source_domain: FARMER-DIRECT-SALES, target_domain: CRM, trigger_event: csa_share_pack.delivered, payload: csa_share_packs}
-      - {handoff_id: 470, direction: outbound, source_domain: CRM, target_domain: CSM, trigger_event: crm_opportunity.closed_won, payload: crm_opportunities}
-      - {handoff_id: 471, direction: outbound, source_domain: CRM, target_domain: SUB-MGMT, trigger_event: crm_opportunity.closed_won, payload: crm_opportunities}
-      - {handoff_id: 472, direction: outbound, source_domain: CRM, target_domain: ERP-FIN, trigger_event: crm_opportunity.closed_won, payload: crm_opportunities}
-      - {handoff_id: 474, direction: inbound, source_domain: SALES-ENG, target_domain: CRM, trigger_event: sales_email.replied, payload: sales_emails}
-      - {handoff_id: 475, direction: inbound, source_domain: SALES-ENG, target_domain: CRM, trigger_event: call_recording.transcribed, payload: call_recordings}
-      - {handoff_id: 486, direction: inbound, source_domain: CSM, target_domain: CRM, trigger_event: health_score.declined, payload: customers}
-      - {handoff_id: 488, direction: inbound, source_domain: CSM, target_domain: CRM, trigger_event: subscription.expansion_requested, payload: customers}
-      - {handoff_id: 490, direction: inbound, source_domain: SUB-MGMT, target_domain: CRM, trigger_event: subscription.upgraded, payload: customer_subscriptions}
-      - {handoff_id: 507, direction: inbound, source_domain: MA, target_domain: CRM, trigger_event: crm_lead.scored_above_threshold, payload: crm_leads}
-      - {handoff_id: 509, direction: inbound, source_domain: MA, target_domain: CRM, trigger_event: nurture_journey.completed, payload: crm_leads}
-      - {handoff_id: 514, direction: inbound, source_domain: AGENCY-MGMT, target_domain: CRM, trigger_event: agency_retainer.depleted, payload: agency_retainers}
-      - {handoff_id: 528, direction: outbound, source_domain: CRM, target_domain: REV-INTEL, trigger_event: deal_risk.escalated, payload: crm_opportunities}
-      - {handoff_id: 716, direction: inbound, source_domain: MDM, target_domain: CRM, trigger_event: merge_rule.published, payload: merge_rules}
-      - {handoff_id: 962, direction: inbound, source_domain: FARMER-DIRECT-SALES, target_domain: CRM, trigger_event: delivery_route.dispatched, payload: delivery_routes}
-      - {handoff_id: 964, direction: inbound, source_domain: FARMER-DIRECT-SALES, target_domain: CRM, trigger_event: harvest_forecast.updated, payload: harvest_forecasts}
-      - {handoff_id: 1002, direction: inbound, source_domain: PROD-MGMT, target_domain: CRM, trigger_event: product_feature.released, payload: product_features}
-      - {handoff_id: 1005, direction: inbound, source_domain: PROD-MGMT, target_domain: CRM, trigger_event: product_line.launched, payload: product_lines}
-      - {handoff_id: 1261, direction: inbound, source_domain: FSM, target_domain: CRM, trigger_event: service_pm_schedule.overdue, payload: customers}
-    extra_existing_tag_count: 40
-    extra_volume_floor_target: 39
-    extra_volume_ceiling_target: 62
   - id: B1A-PHASE-P
-    summary: "Multi-module (5 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 5 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 5 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "6 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 6 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [crm_contacts, crm_leads, crm_opportunities, customers, pipeline_stages, sales_activities]
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-SELF-CONTAIN
-    summary: "4 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
-    finding: "Live triage 2026-06-02: 4 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
-    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
-    extra_m9_shapes:
-      - {entity: conversation_intelligence_records, module: CRM-PIPELINE-MGT, role: consumer, master_domain: REV-INTEL}
-      - {entity: customer_cases, module: CRM-ACCT-MGT, role: consumer, master_domain: CSM}
-      - {entity: customer_invoices, module: CRM-ACCT-MGT, role: consumer, master_domain: SUB-MGMT}
-      - {entity: customer_subscriptions, module: CRM-ACCT-MGT, role: consumer, master_domain: SUB-MGMT}
+    summary: "Multi-module (5 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED per phase-P policy; not authored this pass."
+    finding: "Live triage 2026-06-02: 5 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Persona / RACI authoring is held under the phase-P deferral; the 2026-06-07 state-driven pass did NOT author personas."
+    action: "When phase-P opens: author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 5 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    candidate_personas: ["SALES-AE (account executive)", "SALES-SDR (sales development rep)", "SALES-MGR (sales manager)", "SALES-OPS (sales operations / pipeline admin)"]
     extra_phase_p_triage: "2026-06-02"
 
 b1b:
-  - id: B1B-S1
-    summary: "DELETE 6 contributor DMDO rows on CRM-AI-COPILOT (M7 hard-fail); blocked on B2-S1 architectural decision."
-    finding: "CRM-AI-COPILOT (module 50) declares role='contributor', necessity='required' on the 6 CRM masters that are mastered in sibling CRM modules: customers (97, master in 46), crm_contacts (98, master in 46), crm_leads (99, master in 47), crm_opportunities (100, master in 48), pipeline_stages (101, master in 48), sales_activities (102, master in 49). M7 within-domain incoherence: same data_object_id has role='master' in module A AND role IN ('consumer','contributor') in module B of this domain. The agent-default fix is DELETE; the alternative (PROMOTE to embedded_master) makes AI-COPILOT standalone-deployable. Market practice (Salesforce Einstein, HubSpot Breeze, Microsoft Copilot for Sales, Zoho Zia) ships AI as an overlay rather than a standalone offering, which argues for DELETE."
-    blocked_by:
-      - {type: user_decision, ref: B2-S1}
-    affected_entities: [customers, crm_contacts, crm_leads, crm_opportunities, pipeline_stages, sales_activities]
-    affected_modules: [50]
-  - id: B1B-S3
-    summary: "Author 5 new intra-domain cross-module handoffs (B9b under-modeling); blocked on user event-pick for row (b) and approval of the batch."
-    finding: "A 5-module domain has only 4 intra-domain handoffs loaded, and all 4 fire on `crm_lead.converted` (1191, 1192, 1193) and `crm_opportunity.closed_won` (1194). Expected additions: (a) CRM-PIPELINE-MGT -> CRM-ACTIVITY on `crm_opportunity.created` (162); (b) CRM-LEAD-MGT -> CRM-ACTIVITY on `crm_lead.qualified` (70) OR `crm_lead.scored_above_threshold` (160); (c) CRM-PIPELINE-MGT -> CRM-ACCT-MGT on `crm_opportunity.stage_changed` (86); (d) CRM-PIPELINE-MGT -> CRM-ACTIVITY on `crm_opportunity.requires_quote` (85); (e) CRM-ACTIVITY -> CRM-PIPELINE-MGT on `meeting.no_show` (166). CRM-AI-COPILOT intentionally excluded (AI overlay subscribes to module events rather than firing its own)."
-    blocked_by:
-      - {type: user_decision, ref: B2-CRM-S3-EVENT-PICK}
-    affected_handoffs:
-      - {direction: intra, source_domain: CRM, target_domain: CRM, trigger_event: crm_opportunity.created, payload: crm_opportunities, null_field: row_not_yet_loaded}
-      - {direction: intra, source_domain: CRM, target_domain: CRM, trigger_event: "crm_lead.qualified OR crm_lead.scored_above_threshold", payload: crm_leads, null_field: row_not_yet_loaded}
-      - {direction: intra, source_domain: CRM, target_domain: CRM, trigger_event: crm_opportunity.stage_changed, payload: crm_opportunities, null_field: row_not_yet_loaded}
-      - {direction: intra, source_domain: CRM, target_domain: CRM, trigger_event: crm_opportunity.requires_quote, payload: crm_opportunities, null_field: row_not_yet_loaded}
-      - {direction: intra, source_domain: CRM, target_domain: CRM, trigger_event: meeting.no_show, payload: sales_activities, null_field: row_not_yet_loaded}
-  - id: B1B-S9
-    summary: "F7 channel-primitive justification for CRM-ACTIVITY skill 160 (send_email + create_calendar_event); blocked on B2-S3 wording or notify_person PATCH."
-    finding: "skill_tools row 1465 (send_email tool 37 on CRM-ACTIVITY skill 160), row 1466 (create_calendar_event tool 41 on skill 160), row 1483 (send_email tool 37 on CRM-AI-COPILOT skill 161), and row 1482 (generate_text tool 49 on skill 161) all carry empty notes on `required` channel-primitive links. F7 requires per-row workflow justification or PATCH to notify_person. For CRM-ACTIVITY the email and the calendar event ARE the activity record's payload; for CRM-AI-COPILOT the channel is the agent's outbound surface. Two routes: (a) supply user-approved skill_tools.notes wording, (b) treat F7 as satisfied via the audit narrative and leave skill_tools clean."
-    blocked_by:
-      - {type: user_decision, ref: B2-S3}
-    affected_entities: []
-    extra_affected_skill_tools: [1465, 1466, 1483, 1482]
+  - id: B1B-S9-RETIRED
+    summary: "RETIRED (superseded 2026-06-06): F7 skill_tools channel-primitive justification on CRM-ACTIVITY / CRM-AI-COPILOT. skill_tools is dropped; per-module skills are retired."
+    finding: "Original item concerned empty notes on skill_tools rows 1465/1466/1483/1482 (send_email + create_calendar_event + generate_text channel-primitive links). Per the supersession header, the per-module `system` skill grain and `skill_tools` are RETIRED. Channel-primitive tool requirements now live on `domain_module_tools`; the F7 justification surface moves with them and is tracked in audits/_modularization-backlog.md, not here. The matching B2-S3 question is mooted alongside this item. No action on CRM's state.yaml."
 
-b2:
-  - id: B2-S1
-    summary: "AI-COPILOT M7 architectural choice: DELETE vs PROMOTE the 6 contributor DMDO rows."
-    question: "Should CRM-AI-COPILOT be a pure overlay tier on the host CRM modules (DELETE the 6 contributor rows; AI reads via canonical master refs at runtime) or a standalone-deployable AI copilot (PROMOTE each contributor to embedded_master so the module ships shells of customers/contacts/leads/opportunities/stages/activities)?"
-    options: ["delete_all_6_contributor_rows", "promote_all_6_to_embedded_master", "mixed_specify_per_row"]
-    why: "Market practice (Salesforce Einstein, HubSpot Breeze, Microsoft Copilot for Sales, Zoho Zia) ships AI as an overlay tier on host CRM modules, never as a standalone product, which argues for DELETE. Standalone embedded_master would let AI-COPILOT install without the rest of CRM but offers no workflow story without opportunities to act on. Architectural and product-intent decision, not a technical one."
-  - id: B2-S2
-    summary: "Rule #15 notes-pollution on pipeline_stages (101): user-approved at load time, or auto-populated and to revert?"
-    question: "data_objects.notes on row 101 carries 'Config-shaped; admin-edited stage definitions, no per-record workflow. Pattern flags considered false-by-default after audit; record_status is the only state worth tracking. B12 exemption per Rule #12.' Was this auto-populated by the loader, or did the user approve the exact wording at load time? Rule #15 says auto-populated notes must revert."
-    options: ["confirm_user_approved_at_load_time_keep", "confirm_auto_populated_revert_to_empty_and_record_b12_exemption_in_audit_history"]
-  - id: B2-S3
-    summary: "F7 channel-primitive justification for CRM-ACTIVITY and CRM-AI-COPILOT send_email + create_calendar_event + generate_text rows."
-    question: "send_email and create_calendar_event on CRM-ACTIVITY skill 160 (rows 1465, 1466), plus send_email and generate_text on CRM-AI-COPILOT skill 161 (rows 1483, 1482) all have empty skill_tools.notes. F7 wants either per-row workflow rationale OR a PATCH to notify_person. Decide which route, and if (a), supply the exact notes string per row."
-    options: ["supply_user_approved_notes_text_per_row", "patch_tool_id_to_notify_person", "treat_f7_satisfied_via_this_audit_leave_notes_empty"]
-  - id: B2-S4
-    summary: "Pattern-flag re-evaluation on CRM masters per Rule #12."
-    question: "Re-eval candidates from 2026-05-30: (a) crm_opportunities.has_personal_content should be true (deal-specific contact details, negotiation notes, sensitive correspondence)? (b) crm_opportunities.has_single_approver should be true for closed-won (one rep + one manager closes)? (c) sales_activities.has_personal_content should be true (call recordings, email content)? (d) crm_leads.has_submit_lock should be true on conversion?"
-    options: ["per_flag_yes_or_no_user_decides"]
-  - id: B2-S5
-    summary: "E6 permission-bundle drift on CRM roles."
-    question: "Current bundles look tier-coherent (SALES-MGR :admin on all 4 sales modules + :manage on AI-COPILOT, SALES-OPS :admin on CRM-ACCT-MGT + CRM-AI-COPILOT + :manage on PIPELINE/ACTIVITY/LEAD-MGT). 2 workflow-gate permissions (close_won, convert_lead) are explicit on SALES-AE / SALES-SDR. Is the implicit-grant pattern (gates expanded via permission_hierarchy from :admin) intentional, or should specific gates be enumerated on every role?"
-    options: ["confirm_hierarchy_expands_gates_leave_bundles_as_is", "add_explicit_gate_grants", "leave_drift_as_expectation_that_hierarchy_covers_everything"]
-  - id: B2-S6
-    summary: "Starter intent on CRM masters (REAL-ESTATE-AGENT and HVAC-SVC-MGMT)."
-    question: "REAL-ESTATE-AGENT (153) embeds crm_contacts and crm_leads; HVAC-SVC-MGMT (171) embeds customers and crm_contacts. Both invariants satisfied. Should the embedded path remain (Rule #19 standard, demotion activates when CRM-ACCT-MGT co-installs) or should the starters consume the full CRM-ACCT-MGT (refactor needed)?"
-    options: ["accept_embedded_path_demotion_activates_when_full_module_co_installs", "refactor_starters_to_consume_full_crm_acct_mgt"]
-  - id: B2-S7
-    summary: "CUSTOMER-360 (310) cross-cutting promotion."
-    question: "CUSTOMER-360 is loaded as a CRM capability but its semantic spans CRM + CSM + CDP + MDM + MA. Promote to cross-cutting (link 4-5 domains via capability_domains) or keep CRM-only (downstream domains author their own identity / resolution capability)?"
-    options: ["promote_to_cross_cutting_link_4_5_domains", "keep_crm_only_let_downstream_domains_author_their_own"]
-    why: "May be informed by B3 vendor research (sales_forecasts + sales_quotas + CRM-FORECAST modularization could reshape the CRM capability map)."
-  - id: B2-CRM-S3-EVENT-PICK
-    summary: "B1B-S3 event-pick for the lead-to-activity intra-domain handoff (row b)."
-    question: "Should the CRM-LEAD-MGT -> CRM-ACTIVITY intra-domain handoff fire on crm_lead.qualified (event 70) or crm_lead.scored_above_threshold (event 160)?"
-    options: ["event_70_crm_lead_qualified", "event_160_crm_lead_scored_above_threshold", "both_separate_rows"]
+b2: []
 
 b3:
   - id: B3-CRM-SALES-TERRITORIES

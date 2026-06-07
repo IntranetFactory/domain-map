@@ -10,9 +10,9 @@
 # === end supersession note ===
 schema_version: 2
 domain: OP-RES
-status: audit_stale
-next_action_by: agent
-last_audit: "2026-05-31"
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
   - id: B1A-RECLASS
@@ -51,13 +51,6 @@ b1b:
     blocked_by:
       - {type: user_decision, ref: B2-1, reason: "Capability scope and naming depend on whether OP-RES stays leadership-tier (lean set) or promotes (broader set)."}
     extra_naming_decision_required: true
-
-  - id: B1B-S3
-    summary: "Draft OP-RES domain `catalog_tagline` and `catalog_description` (A4, Rule #20)."
-    finding: "domain_id=18 has `catalog_tagline=''` and `catalog_description=''` (verified live on 2026-05-31). Rule #20 requires both fields populated in buyer voice (workflow + value), not analyst voice. A4 fails."
-    action: "Draft both fields per Rule #20, surface to the user for review BEFORE writing. Once approved, PATCH the domains row."
-    blocked_by:
-      - {type: user_decision, ref: B2-4, reason: "User must confirm whether agent drafts for review or supplies wording directly (Rule #20 user-approval gate)."}
 
   - id: B1B-S4
     summary: "Author one system skill on the new OP-RES landing module (F2, Rule #17)."
@@ -144,14 +137,6 @@ b2:
       - {vendor: "Castellan", evidence: "1st_class"}
       - {vendor: "Archer Suite", evidence: "secondary"}
     extra_coupled_with: "BCM B2-3 and TPRM B-band audit"
-
-  - id: B2-4
-    summary: "Catalog UX wording flow for B1B-S3 (Rule #20)."
-    question: "Rule #20 requires user approval on the exact `catalog_tagline` and `catalog_description` wording before write. Does the user want the agent to draft both fields in buyer voice (workflow + value) for review, or supply the wording directly?"
-    options:
-      - "(a) Agent drafts both fields in buyer voice; user reviews and approves before write."
-      - "(b) User supplies the wording directly."
-    why: "Independent of other items. Gates B1B-S3."
 
 b3:
   - id: B3-IBS

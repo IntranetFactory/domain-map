@@ -242,3 +242,36 @@ Unchanged from 2026-05-30: every cross-domain edge candidate (HCM, EMP-EXP, KM, 
 ### Candidate domains queued during this audit
 
 No new candidates surfaced in this run. Existing carried candidates (FRONTLINE-COMMS at 3, EMP-ADVOCACY at 4, EMP-LISTENING at 3, EMP-JOURNEY-ORCH at 1) remain pending human triage in `audits/_missing-domains.md`.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate (Rule #21), working only the open items in state.yaml; no fresh from-scratch audit. Live state re-confirmed against domain id 126: still UNBUILT (0 `domain_modules`), 8 capabilities (ids 140-147), 4 `business_function_domains` rows (owner Marketing Communications id 56, contributor HR id 3, contributor Executive id 32, consumer IT Operations id 27), empty `domain_aliases` / `domain_regulations` / `handoffs`, and empty `catalog_tagline` / `catalog_description`. The governing fact is that INTRANET is UNBUILT and its classification route (leadership-tier vs real point-solution market vs hybrid) is an open user decision, so per the Rule #21 UNBUILT clause the agent does not scaffold the build; it executed only the two mechanically-additive items that do not depend on the route, surfaced the rest, and left the cascade.
+
+### Executed (record_status='new', idempotent, verify-live-then-write)
+
+- **Catalog UX (B1B-A4-UX), 1 PATCH:** `domains.id=126` `catalog_tagline` and `catalog_description` were empty (A4 FAIL). Wrote the buyer-voice copy drafted in the 2026-05-30 audit, overriding the prior stale surface-before-write gate per the run order. Voice is route-agnostic internal-communications buyer voice; no vendor names, no em-dash, American English. Neither field overwrote a non-empty value.
+- **Aliases (B2-ALIASES / B11), 5 INSERT into `domain_aliases`:** `internal communications`, `employee comms platform`, `digital workplace platform`, `employee app`, `social intranet`. All `alias_type='synonym'`, `domain_id=126`; `record_status` omitted (defaults 'new'); no `notes` column written (Rule #15). Generic market synonyms only, no vendor/product names (Rule #18).
+
+Loader: `.tmp_deploy/2026-06-07_intranet_state_execute.ts` (`bun run`, Rule #4b).
+
+### Surfaced (user decisions; not written)
+
+- **B2-CLASSIFICATION** (gates the whole build): route (a) leadership-tier landing module / (b) real point-solution market 5-8 modules / (c) hybrid landing + starter. The build items (B1A-RECLASS, B1A-BUILD, B1B-M1, B1B-M2-M4) and all 8 b3 candidates remain gated on this.
+- **B2-CATALOG-UX-REVIEW** (reframed from the old approval gate): the catalog copy is now written at `record_status='new'`; review/keep, or supply a rewrite (a rewrite is a destructive overwrite, not applied without sign-off), or repivot the voice if route (a) is chosen.
+- **B2-CAPABILITY-OWNERSHIP**: whether to load `business_function_capabilities` overrides for INTRANET-MOBILE / INTRANET-SEARCH / INTRANET-FRONTLINE (judgment call; C1 already passes at domain grain).
+- **B2-REGULATIONS**: which of GDPR / CCPA / EU Whistleblower Directive / works-council frameworks to attach to the empty `domain_regulations`.
+- **B2-MODULARIZATION** (gated on classification): 5-module vs 8-module vs custom split.
+- **B2-ADVOCACY-COLLISION**: INTRANET-ADVOCACY capability vs the EMP-ADVOCACY domain candidate (mention_count=4).
+
+### Left
+
+- **The build / cascade (UNBUILT):** B1A-RECLASS, B1A-BUILD, B1B-M1, B1B-M2-M4 left for the build on the chosen route. Not scaffolded (Rule #21 UNBUILT clause).
+- **b3 backlog:** all 8 speculative master candidates (intranet_spaces, intranet_pages/posts, announcements triplet, newsletter triplet, employee_directory_entries, journey triplet, frontline triplet, advocacy triplet) carried; each blocked on B2-CLASSIFICATION (and the relevant `_missing-domains.md` triage for the journey / frontline / advocacy triplets).
+- No superseded skill-grain / skill_tools / _core items exist on this domain (no supersession header).
+
+### UI links
+
+- https://tests.semantius.app/domain_map/domains?id=eq.126
+- https://tests.semantius.app/domain_map/domain_aliases?domain_id=eq.126

@@ -334,3 +334,53 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate-mode pass over the open items in `audits/AP-AUTO/state.yaml` (not a fresh
+from-scratch audit). Live triage 2026-06-07 reconfirms AP-AUTO is an UNBUILT domain: 0
+`domain_modules.domain_id=29` rows (M1 hard fail, dominant blocker), 1 capability (id 311
+APPROVAL-WORKFLOW). The agent does not scaffold an unbuilt domain, so the whole b1b cascade
+stays gated on B2-MOD-SHAPE (user decision) and the B1B-S1 module build. Within those limits,
+three EXECUTE-classified items landed; the rest were surfaced or left.
+
+Loader: [c:/dev/domain-map/.tmp_deploy/fix_ap_auto_state_driven_2026_06_07.ts](../../.tmp_deploy/fix_ap_auto_state_driven_2026_06_07.ts).
+All writes idempotent (read-live-then-write), `record_status` defaulted to `new` (Rule #1),
+`notes=''` (Rule #15), American English, no U+2014, no vendor product names in aliases or copy.
+
+### Executed
+
+| Item | Type | Rows | Detail |
+|---|---|---|---|
+| B13 / Rule #12 | PATCH `data_objects.entity_type` (unclassified -> operational_workflow) | 2 | invoice_matches (204), payment_runs (205). Both are workflow-bearing masters with real state machines; classification deterministic from description. This unblocks the B12 lifecycle requirement framing in B1B-S3. |
+| B1B-S12 / A4 / Rule #20 | PATCH `domains.id=29` catalog_tagline + catalog_description (first-write; both were empty string) | 1 | Tagline 108 chars, description 685 chars. Buyer-voice, workflow + value, no vendor names. Per the run directive the stale "surface-before-write" gate was ignored for empty first-writes; non-empty values are never overwritten. |
+| B1B-S4 / B11 | INSERT `data_object_aliases` (alias_type=synonym) | 9 | invoice_matches: Match, Three-Way Match, PO Match, Reconciliation Outcome. payment_runs: Payment Batch, Bill Run, Pay Cycle, Payment Schedule, BACS Run. All generic industry / UK regional terminology (Rule #18 clean). Resolves B2-ALIAS-TUPLES. |
+
+UI links: `data_objects?id=in.(204,205)`, `domains?id=eq.29`, `data_object_aliases?data_object_id=in.(204,205)` (all under `https://tests.semantius.app/domain_map/`).
+
+### Surfaced (not written; need user)
+
+- **B1A-S14 (destructive, em-dash overwrite).** `domains.id=29 business_logic` still has one U+2014 in "and fraud rules <EMDASH> algorithm-heavy". This is an overwrite of a non-empty value, so surfaced not applied. Proposed replacement: "OCR/IDP for invoice capture, three-way match against PO and receipt, duplicate detection, and fraud rules. Algorithm-heavy at the front of the workflow."
+- **B2-MOD-SHAPE (b2).** Module split decision: (a) 2-module, (b) 3-module recommended (AP-AUTO-INVOICE-CAPTURE + AP-AUTO-MATCHING + AP-AUTO-PAYMENT-RUNS), (c) 4-module adding AP-AUTO-SUPPLIER-PORTAL. Gates the entire b1b build cascade.
+- **B2-PATTERN-FLAGS (b2, overwrite).** B4 flags both masters default false (confirmed live). Hypothesis: invoice_matches.has_submit_lock=true at released_for_payment; payment_runs.has_submit_lock=true at executed; payment_runs.has_single_approver org-policy-dependent. Setting them overwrites existing values, so surfaced.
+- **B2-EVENT-12 (b2, destructive).** trigger_event 12 bill_payment.completed (payment_runs, zero handoff refs, still live) DELETE / RENAME to payment_run.completed / investigate bill_payments as candidate master.
+- **Personas / RACI (Phase P).** Deferred. Domain is unbuilt (0 modules), so Phase P does not apply yet; no personas authored. Candidate persona surface once built: AP Clerk, AP Controller, Treasury Reviewer, Internal Auditor.
+
+### Left
+
+- **UNBUILT cascade (b1b):** B1A-BUILD, B1B-S1 (modules), S2 (capabilities), S3 (lifecycle states), S10 (30-handoff module-FK backfill), S11 (intra-domain handoffs), B1B-B1..B4 (BOUNDARY mirror cross-rels). All gated on B2-MOD-SHAPE + the module build; agent does not scaffold an unbuilt domain. The build itself is surfaced via B1A-BUILD / B2-MOD-SHAPE.
+- **Superseded (RETIRED 2026-06-06):** B1B-S9 (retire legacy skill 28, author per-module system skills) and B2-SEND-EMAIL (PATCH a send_email skill_tools row). Under the per-domain-skill model, skill 28 ap-auto-system is already the correct single domain-grain system skill and `skill_tools` is dropped, so neither item has any action. Supersession header retained in state.yaml.
+- **b3 backlog:** B3-INVOICE-CAPTURE-JOBS, B3-PAYMENT-METHODS, B3-PAYMENT-RUN-LINES, B3-UNNAMED-POOL. Phase 0 vetting, non-blocking.
+- **Note (not written): C1 Procurement contributor.** AP-AUTO already has its owner row (Accounts Payable, function 17, responsibility_type=owner). A Procurement (function 19) contributor row is plausible but only "likely", not clearly-correct, and is not an open state item; left to a future Phase-C pass.
+
+### JWT errors
+
+None during this run.
+
+### Post-fix status
+
+`next_action_by: user` (B2-MOD-SHAPE / B1A-S14 / B2-PATTERN-FLAGS / B2-EVENT-12 decisions, then the gated build cascade).

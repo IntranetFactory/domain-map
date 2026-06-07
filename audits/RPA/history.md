@@ -305,3 +305,76 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21) over the open items in `audits/RPA/state.yaml`.
+No fresh from-scratch audit. Domain confirmed live: RPA = domain_id 38, 7 masters (ids 523-529),
+still UNBUILT (0 `domain_modules`, 0 `capability_domains` confirmed live). Every additive /
+corrective item that does NOT require the (deferred, user-gated) Phase-A module layer was executed;
+the build itself and the module-FK cascade were surfaced/left per the unbuilt-domain rule.
+
+### Executed (all record_status='new', idempotent, verified live)
+
+- **entity_type classification (B13 / Rule #12), 7 masters PATCHed** from `unclassified` to the
+  Rule #12 enum: `operational_workflow` x5 (rpa_bots 523, rpa_executions 524, rpa_schedules 525,
+  rpa_bot_credentials 528, rpa_deployment_packages 529), `operational_record` x2 (rpa_activities 526,
+  rpa_activity_logs 527 - config-sequence and append-only trace, Rule #12-exempt from lifecycle).
+- **catalog UX (B1A-S2 / A4 / Rule #20), domain row 38**: authored buyer-voice `catalog_tagline` +
+  `catalog_description` (workflow + value, no vendor/product names per Rule #18, no em-dash,
+  American English) into the two empty fields. Stale "surface-before-write" gate ignored per Rule #21;
+  no non-empty value overwritten. 0 modules exist, so no module-level catalog UX to author.
+- **intra-domain data_object_relationships (B1A-S5 / B6), 7 edges inserted** among the masters:
+  rpa_bots has scheduled runs rpa_schedules; rpa_bots has executions rpa_executions; rpa_bots
+  composed of rpa_activities (composition); rpa_executions produces rpa_activity_logs (composition);
+  rpa_bots packaged into rpa_deployment_packages; rpa_bots uses credentials rpa_bot_credentials
+  (many_to_many); rpa_activities traced by rpa_activity_logs. (relationship_kind enum is
+  reference/composition/association; `parent` is not allowed - corrected mid-load.)
+- **data_object_aliases (B1B-S8 / B11), 17 clean generic synonyms inserted** (alias_type='synonym'):
+  rpa_bots (software robot, digital worker, attended bot, unattended bot); rpa_executions (bot run,
+  job run, process instance); rpa_schedules (job schedule, queue trigger); rpa_activities
+  (automation step, workflow component); rpa_activity_logs (execution log, bot trace);
+  rpa_bot_credentials (vault entry, robot credential); rpa_deployment_packages (process package,
+  automation package). The "audit trail" alias for rpa_activity_logs was deliberately HELD (open
+  collision B2-S2 with AUDIT's audit_findings).
+
+Loader: `c:/dev/domain-map/.tmp_deploy/fix_rpa_state_driven_2026_06_07.ts`. No `notes` columns
+written, no `record_status` stamped to approved, no JWT-audience errors.
+
+### Surfaced (user decision / destructive / build, NOT executed)
+
+- **B1A-S1 / BUILD**: RPA is unbuilt (0 modules, 0 capabilities). Per Rule #21 the build is
+  surfaced, not scaffolded. Resolve B2-S1 (module shape) first, then run Phase A.
+- **B2-S1**: module shape (2 modules with credentials folded into RPA-ORCHESTRATION, or 3 modules
+  with a dedicated RPA-BOT-IDENTITY). Gates the build.
+- **B2-S2**: `rpa_activity_logs` "audit trail" alias collision with AUDIT's audit_findings.
+  Clean aliases already loaded; only "audit trail" is held.
+- **B2-S3**: per-flag yes/no for 3 B4 pattern flags (rpa_bot_credentials.has_personal_content,
+  rpa_deployment_packages.has_submit_lock, rpa_bots.has_single_approver). Additive once the y/n
+  is named; Rule #15 forbids a `notes` rationale.
+- **B2-S4**: Bucket 3 vetting route (Phase 0 vendor research vs eyeball-mode).
+- **B1A-S4**: 3 published events (rpa_bot.deployed, rpa_bot.disabled, rpa_deployment_package.released)
+  have no downstream handoff. Held: each cross-domain target needs user confirmation, and
+  source_domain_module_id depends on the build.
+- Personas / RACI (Phase P): N/A - the domain is unbuilt; Phase P does not apply until modules exist.
+
+### Left (blocked / backlog / superseded)
+
+- **B1B-S7** (source_domain_module_id backfill on 4 outbound handoffs) - blocked on B1A-S1 (no modules).
+- **B1B-S9** (lifecycle states on the 5 operational_workflow masters) - blocked on B1A-S1 (M5 needs
+  domain_module_id). The 2 operational_record masters are Rule #12-exempt.
+- **B3-S1..S4** - Phase 0 backlog (entity gaps, sibling domains, regulations, RPA-LITE starter).
+- **B1B-S10 / B1B-S11** - RETIRED by the 2026-06-06 per-domain-skill restoration (per-module system
+  skills + skill_tools dropped). The single domain-grain rpa-system skill (id 103) is now correct
+  by construction. Per-module tool re-authoring tracked in audits/_modularization-backlog.md.
+
+### UI links (tables written this pass)
+
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/domains
+- https://tests.semantius.app/domain_map/data_object_relationships
+- https://tests.semantius.app/domain_map/data_object_aliases

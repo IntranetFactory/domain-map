@@ -11,75 +11,29 @@
 schema_version: 2
 domain: BI
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
-  - id: B1A-S4
-    summary: "Author 6 intra-domain data_object_relationships among BI's 5 masters (B6 hard-fail; 0 rows exist)."
-    finding: >-
-      Zero intra-domain data_object_relationships rows among BI's 5 masters
-      (semantic_metrics 230, bi_reports 691, bi_dashboards 692, bi_queries 693,
-      bi_subscriptions 694). Expected edges: bi_queries to bi_reports;
-      bi_queries to bi_dashboards; bi_reports to bi_subscriptions; bi_dashboards
-      to bi_subscriptions; semantic_metrics to bi_queries; semantic_metrics to
-      bi_dashboards.
-    action: >-
-      Author 6 data_object_relationships rows with verb, inverse_verb,
-      relationship_type, relationship_kind, is_required, owner_side and load
-      via focused loader. Independent of B1-S1; can run before modules exist.
-    affected_masters:
-      - {data_object_id: 230, name: semantic_metrics, target_module_id: null, workflow: intra-domain B6}
-      - {data_object_id: 691, name: bi_reports, target_module_id: null, workflow: intra-domain B6}
-      - {data_object_id: 692, name: bi_dashboards, target_module_id: null, workflow: intra-domain B6}
-      - {data_object_id: 693, name: bi_queries, target_module_id: null, workflow: intra-domain B6}
-      - {data_object_id: 694, name: bi_subscriptions, target_module_id: null, workflow: intra-domain B6}
-
-  - id: B1A-S8
-    summary: "Author 12-18 data_object_aliases on BI masters (B11 hard-fail; 0 rows exist)."
-    finding: >-
-      Zero data_object_aliases rows on any BI master. Universal vendor-specific
-      synonyms: bi_reports (Tableau "View" / "Story", Power BI "Paginated
-      Report", Looker "Look", Qlik "Story", ThoughtSpot "Liveboard" partial);
-      bi_dashboards ("Dashboard" universal, Qlik "App", ThoughtSpot
-      "Liveboard", Sigma "Page"); bi_queries (Tableau "Workbook query" /
-      "Custom SQL", Power BI "Dataset query", Looker "Explore", ThoughtSpot
-      "Answer" partial); bi_subscriptions ("Subscription" universal);
-      semantic_metrics (Tableau and Power BI "Measure", Looker LookML "Field",
-      Qlik "Master Item", ThoughtSpot "Formula" partial).
-    action: >-
-      Author 12-18 alias rows with alias_type='vendor_synonym'; bundle into a
-      focused loader. Independent of B1-S1.
-    affected_masters:
-      - {data_object_id: 230, name: semantic_metrics, target_module_id: null, workflow: B11 alias backfill}
-      - {data_object_id: 691, name: bi_reports, target_module_id: null, workflow: B11 alias backfill}
-      - {data_object_id: 692, name: bi_dashboards, target_module_id: null, workflow: B11 alias backfill}
-      - {data_object_id: 693, name: bi_queries, target_module_id: null, workflow: B11 alias backfill}
-      - {data_object_id: 694, name: bi_subscriptions, target_module_id: null, workflow: B11 alias backfill}
-
-  - id: B1A-H1
-    summary: "Re-attempt APQC PCF lookup on new handoff 1341 (bi_dashboard.published to DCG); confirm 690 and 695 stay as Discover Pass 3 deferrals."
-    finding: >-
-      3 of 12 cross-domain handoffs untagged after the 2026-05-31 Continuation
-      tagged 9. Untagged: handoff 690 (BI to DLP on bi_dashboard.shared_externally,
-      no clean PCF DLP activity); handoff 695 (METRICS-LAYER to BI on
-      metric_access_policy.changed, IAM-shape with no clean cross-industry PCF);
-      handoff 1341 (BI to DCG on bi_dashboard.published, newly inserted by
-      Continuation, not yet tagged).
-    action: >-
-      Tag handoff 1341 with process "Manage business information" external_id
-      20779 L3 (same as handoff 688 BI to DCG on bi_report.published) using
-      proposal_source='agent_curated', record_status='new'. Record 690 and 695
-      as Discover Pass 3 custom-process candidates.
-    affected_handoffs:
-      - {handoff_id: 1341, direction: outbound, source_domain: BI, target_domain: DCG, trigger_event: bi_dashboard.published, payload: bi_dashboards, null_field: null}
-      - {handoff_id: 690, direction: outbound, source_domain: BI, target_domain: DLP, trigger_event: bi_dashboard.shared_externally, payload: bi_dashboards, null_field: null}
-      - {handoff_id: 695, direction: inbound, source_domain: METRICS-LAYER, target_domain: BI, trigger_event: metric_access_policy.changed, payload: metric_access_policies, null_field: null}
   - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
+    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities. The build is gated on the B2-S1 module-cut decision; do not scaffold unasked."
+    finding: >-
+      Live 2026-06-07: BI has 0 domain_modules rows (M1 fail) and 0
+      capability_domains rows, so it is not deployable today. The 5 masters,
+      22+ solutions, 12 cross-domain handoffs, and full APQC tagging are in
+      place, but Phase A (capabilities + modules) was never run. The structural
+      build is the gate for B1B-S1, B1B-S6, B1B-S7, B1B-S9, B1B-N1, B1B-N2, and
+      module-level Phase B/E/F work. The build itself depends on the editorial
+      module-cut decision (B2-S1), so it cannot be executed without the user.
+    action: >-
+      After B2-S1 resolves, run Phase A then M then B then S to author the
+      module set, capabilities, masters-as-DMDOs, and the domain-grain system
+      skill (id 33 already serves this role; see B2-S4). If multi-module, run
+      Phase P (personas, role_modules, process_raci) afterward. SURFACE: blocked
+      on B2-S1.
     extra_phase_p_triage: "2026-06-02"
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
 
 b1b:
   - id: B1B-S1
@@ -92,9 +46,8 @@ b1b:
       published-and-shared lifecycle for dashboards and reports); (b) 3-module
       BI-SEMANTIC-MODELING (semantic_metrics + bi_queries) + BI-VISUALIZATION
       (bi_dashboards + bi_reports) + BI-DISTRIBUTION (bi_subscriptions + alerts
-      + delivery). Gates B1-S7 (B10b BI-side backfill), B1-S9 (lifecycle
-      states), B1-N1, B1-N2, B2-S4 retirement, and module-level Phase B/E/F
-      work.
+      + delivery). Gates B1B-S7 (B10b BI-side backfill), B1B-S9 (lifecycle
+      states), B1B-N1, B1B-N2, and module-level Phase B/E/F work.
     blocked_by:
       - {type: user_decision, ref: B2-S1}
 
@@ -120,7 +73,7 @@ b1b:
       6 outbound handoff rows (687, 688, 689, 690, 691, 1341) carry NULL
       source_domain_module_id. Deterministic B10b derivation: the BI module
       that masters the trigger_event's data_object_id with the strongest role.
-      Authorable only after B1-S1 lands.
+      Authorable only after B1B-S1 lands.
     blocked_by:
       - {type: depends_on, ref: B1B-S1, reason: "needs BI modules + per-module DMDO rows"}
     affected_handoffs:
@@ -132,29 +85,28 @@ b1b:
       - {handoff_id: 1341, direction: outbound, source_domain: BI, target_domain: DCG, trigger_event: bi_dashboard.published, payload: bi_dashboards, null_field: source_domain_module_id}
 
   - id: B1B-S9
-    summary: "Author data_object_lifecycle_states on the 5 BI masters (B12 hard-fail)."
+    summary: "Author data_object_lifecycle_states on the BI masters typed operational_workflow (B12 hard-fail)."
     finding: >-
-      Zero data_object_lifecycle_states on any BI master. Obvious state
-      machines: bi_reports (draft to published to deprecated to archived);
-      bi_dashboards (draft to published to shared_externally to archived);
-      bi_queries (saved to certified to deprecated); bi_subscriptions (active
-      to paused to failed to cancelled); semantic_metrics (draft to published
-      to certified to deprecated). Workflow gates need domain_module_id per
-      Rule #14 permission-prefix policy.
+      Zero data_object_lifecycle_states on any BI master. entity_type now set
+      (2026-06-07): bi_reports, bi_dashboards, bi_subscriptions are
+      operational_workflow (lifecycle REQUIRED); bi_queries is catalog and
+      semantic_metrics is computed (lifecycle not required). State machines:
+      bi_reports (draft to published to deprecated to archived); bi_dashboards
+      (draft to published to shared_externally to archived); bi_subscriptions
+      (active to paused to failed to cancelled). Workflow gates need
+      domain_module_id per Rule #14 permission-prefix policy.
     blocked_by:
       - {type: depends_on, ref: B1B-S1, reason: "states need domain_module_id; modules must exist first"}
     affected_masters:
-      - {data_object_id: 230, name: semantic_metrics, target_module_id: null, workflow: "draft, published, certified, deprecated"}
-      - {data_object_id: 691, name: bi_reports, target_module_id: null, workflow: "draft, published, deprecated, archived"}
-      - {data_object_id: 692, name: bi_dashboards, target_module_id: null, workflow: "draft, published, shared_externally, archived"}
-      - {data_object_id: 693, name: bi_queries, target_module_id: null, workflow: "saved, certified, deprecated"}
-      - {data_object_id: 694, name: bi_subscriptions, target_module_id: null, workflow: "active, paused, failed, cancelled"}
+      - {data_object_id: 691, name: bi_reports, entity_type: operational_workflow, target_module_id: null, workflow: "draft, published, deprecated, archived"}
+      - {data_object_id: 692, name: bi_dashboards, entity_type: operational_workflow, target_module_id: null, workflow: "draft, published, shared_externally, archived"}
+      - {data_object_id: 694, name: bi_subscriptions, entity_type: operational_workflow, target_module_id: null, workflow: "active, paused, failed, cancelled"}
 
   - id: B1B-N1
     summary: "Backfill target_domain_module_id on 5 METRICS-LAYER inbound handoffs into BI."
     finding: >-
       5 inbound METRICS-LAYER handoffs (151, 218, 692, 695, 696) carry NULL
-      target_domain_module_id on BI's side. Target module after B1-S1 will
+      target_domain_module_id on BI's side. Target module after B1B-S1 will
       depend on the chosen cut (BI-CONTENT-AUTHORING under 2-module cut, or
       BI-SEMANTIC-MODELING under 3-module cut for the semantic-metrics-shaped
       payloads). One chunked PATCH after modules exist. Source-side METRICS-LAYER
@@ -175,7 +127,7 @@ b1b:
       1341 (bi_dashboard.published to DCG) carry NULL source_domain_module_id;
       inbound handoff 711 (data_certification.revoked from DCG) carries NULL
       target_domain_module_id. Standard B10b derivation; authorable only after
-      B1-S1 lands.
+      B1B-S1 lands.
     blocked_by:
       - {type: depends_on, ref: B1B-S1, reason: "needs BI modules + per-module DMDO rows"}
     affected_handoffs:
@@ -206,7 +158,7 @@ b1b:
 
 b2:
   - id: B2-S1
-    summary: "Module cut for B1-S1: 2-module vs 3-module vs other."
+    summary: "Module cut for B1B-S1: 2-module vs 3-module vs other."
     question: >-
       Pick the module cut for BI's M1 + A2 fix. (a) 2-module:
       BI-CONTENT-AUTHORING (semantic_metrics + bi_queries + bi_dashboards +
@@ -218,10 +170,10 @@ b2:
     options: ["2-module", "3-module", "other"]
     why: >-
       Module shape is editorial; both cuts clear the Rule #14 floor. The
-      3-module cut maps better to ThoughtSpot / Looker LookML separation;
-      2-module maps better to Tableau / Power BI Creator-vs-Viewer personas.
-      Decision shapes B1B-S1.
-    extra_blocks: [B1B-S1]
+      3-module cut maps better to a LookML-style semantic/visualization
+      separation; 2-module maps better to a Creator-vs-Viewer persona split.
+      Decision shapes B1B-S1 and unblocks B1A-BUILD.
+    extra_blocks: [B1A-BUILD, B1B-S1]
     extra_cross_bucket_dependency: "B3-5 (embedded analytics) might shift the cut from 3 to 4 modules; revisit if Phase 0 confirms."
 
   - id: B2-S3
@@ -235,110 +187,98 @@ b2:
       semantic_metrics.has_single_approver=true (metric certification typically
       single-data-steward)?
     options: ["per-flag yes", "per-flag no"]
-    why: "Pattern flags are workflow-shape judgments the user owns. Default-false is valid but Rule #12 requires positive re-evaluation."
+    why: "Pattern flags are workflow-shape judgments the user owns. Default-false is valid but Rule #12 requires positive re-evaluation. Note: 3 masters are now typed operational_workflow (2026-06-07), so the flags apply to them per Rule #12."
 
   - id: B2-S4
-    summary: "F1 legacy domain-level system skill id 33 (bi-system): keep / plan-delete / delete-now."
+    summary: "F1 legacy domain-level system skill id 33 (bi-system): now the canonical domain-grain skill under the supersession; resolve the stale em-dash in its description."
     question: >-
-      skill_type='system' row id 33 (bi-system) with domain_id=74,
-      domain_module_id=NULL, 5 platform-tier query_* skill_tools. Acceptable
-      transitional state per F1 pass criterion only while no module-level
-      system skill exists. Once B1-S1 lands and BI's modules each ship a
-      module-level system skill, id 33 becomes obsolete and the 5 query tools
-      re-link to the module-level skills.
+      skill_type='system' row id 33 (bi-system) has domain_id=74,
+      domain_module_id=NULL. Under the 2026-06-06 per-domain-skill supersession
+      this domain-grain shape is now CANONICAL (one system skill per domain that
+      DERIVES its toolset from domain_module_tools), NOT migration debt. The old
+      "plan-delete-after-module-skills" framing is RETIRED (per-module system
+      skills are canceled). Residual: the description on id 33 contains a
+      forbidden em-dash (U+2014). Rewriting a non-empty value is destructive and
+      needs your sign-off. Proposed clean description ASCII-only is below.
     options:
-      - "keep as domain landing"
-      - "plan delete after module skills"
-      - "delete now and rebuild"
-    why: "SKILL canonical answer is plan-delete-after-module-skills. Editorial migration debt."
-    extra_blocks: [legacy-skill-retirement]
+      - "approve em-dash fix on id 33 description"
+      - "leave as-is"
+    proposed_description: >-
+      System skill for Business Intelligence and Analytics: runtime workflows
+      over the domain's master data, derived from masters and cross-domain
+      handoffs.
+    why: "Supersession reclassifies id 33 as canonical. The only open action is a destructive overwrite of a non-empty (em-dash-bearing) description, which requires approval per Rule #21."
 
-  - id: B2-S5
-    summary: "A4 catalog UX backfill: draft catalog_tagline and catalog_description for the BI domain row (Rule #20)."
-    question: >-
-      domains.catalog_tagline and catalog_description are both empty on the BI
-      row. Rule #20 permits backfill on audit when both empty, but requires
-      explicit per-row user approval BEFORE write. How would you like to
-      proceed? (a) agent drafts buyer-voice wording for user review then write
-      on approval, (b) user supplies wording directly, (c) defer.
-    options: ["agent drafts", "user supplies", "defer"]
-    why: "Buyer voice and exact wording are user-owned; marketing routinely fine-tunes; Rule #20 overwrite-without-approval is forbidden."
+# B2-S5 (catalog UX backfill) RESOLVED 2026-06-07: catalog_tagline +
+# catalog_description authored and written (Rule #20, both were empty).
+#
+# B1A-S8 NOTE (aliases): 12 generic synonyms inserted 2026-06-07 (alias_type
+# 'synonym'). Vendor-product labels (Look, Liveboard, Paginated Report, Master
+# Item, App, Page, Explore, Story, View, Workbook, Answer) were NOT inserted:
+# they are solution_term-shaped and map to specific vendor products (Rule #18).
+# If desired they can be loaded later as alias_type='solution_term' tied to the
+# matching solutions; left as a non-blocking backlog note, not an open item.
+#
+# B1A-H1 RESOLVED 2026-06-07: handoff 1341 (bi_dashboard.published to DCG) is
+# already tagged with process 277 "Manage business information" 20779 L3.
+# Handoffs 690 (BI->DLP) and 695 (METRICS-LAYER->BI) stay as Discover Pass 3
+# custom-process candidates (no clean cross-industry PCF match). APQC coverage:
+# 10 of 12 cross-domain handoffs tagged.
 
 b3:
   - id: B3-1
     candidate: bi_workspaces
     rationale: >-
       Universal container that owns RBAC scope, content versioning, and
-      content lifecycle. Tableau "Project", Power BI "Workspace", Looker
-      "Folder", Qlik "Space", ThoughtSpot "Worksheet group". Phase 0 confirms
-      whether this is a first-class master or a derived container (in some
-      vendors a permission scope only; in others a billing / capacity unit).
-      Likely master.
-    vendor_evidence: [Tableau, Power BI, Looker, Qlik, ThoughtSpot]
+      content lifecycle. Phase 0 confirms whether this is a first-class master
+      or a derived container. Likely master.
     proposed_module: "BI-CONTENT-AUTHORING (2-module) or BI-SEMANTIC-MODELING (3-module)"
 
   - id: B3-2
     candidate: bi_data_sources
     rationale: >-
-      Universal: Tableau "Data Source / Connection", Power BI "Dataset
-      connection", Looker "Connection", Qlik "Data connection", QuickSight
-      "Data source". The published, governed link to a warehouse / database /
-      SaaS source, distinct from semantic_metrics. Phase 0 verifies whether
-      this collapses into METRICS-LAYER's dimensional_models or is BI-owned at
-      the connection-pool layer. Probably BI-owned.
-    vendor_evidence: [Tableau, Power BI, Looker, Qlik, QuickSight]
+      Universal published, governed link to a warehouse / database / SaaS
+      source, distinct from semantic_metrics. Phase 0 verifies whether this
+      collapses into METRICS-LAYER's dimensional_models or is BI-owned at the
+      connection-pool layer. Probably BI-owned.
     proposed_module: "BI-CONTENT-AUTHORING (2-module) or BI-SEMANTIC-MODELING (3-module)"
 
   - id: B3-3
     candidate: bi_alerts
     rationale: >-
       Universal threshold-based push notification distinct from
-      bi_subscriptions (event-driven vs. recurring cadence). Tableau
-      Data-Driven Alerts, Power BI Alerts, Looker Alerts, Qlik Alerting,
-      ThoughtSpot Monitor, Sigma Alerts. Likely master with lifecycle (active,
-      paused, triggered, acknowledged).
-    vendor_evidence: [Tableau, Power BI, Looker, Qlik, ThoughtSpot, Sigma]
+      bi_subscriptions (event-driven vs. recurring cadence). Likely master with
+      lifecycle (active, paused, triggered, acknowledged).
     proposed_module: "BI-CONSUMPTION-DELIVERY (2-module) or BI-DISTRIBUTION (3-module)"
 
   - id: B3-4
     candidate: bi_calculated_fields
     rationale: >-
-      Tableau Calculated Field, Power BI Measure (in-report), Sigma Formula,
-      QuickSight Calculated Field. Local-to-report computation distinct from
-      semantic_metrics (centrally certified). Phase 0 confirms tighter scope
-      means BI-owned.
-    vendor_evidence: [Tableau, Power BI, Sigma, QuickSight]
+      Local-to-report computation distinct from semantic_metrics (centrally
+      certified). Phase 0 confirms tighter scope means BI-owned.
     proposed_module: "BI-CONTENT-AUTHORING (2-module) or BI-VISUALIZATION (3-module)"
 
   - id: B3-5
     candidate: bi_embed_artifacts
     rationale: >-
-      Universal embedded-analytics surface: Tableau Embedded Analytics, Power
-      BI Embedded, Looker Embed SDK, Sisense Embed, Qlik Embedded Analytics.
-      Distinct from a published dashboard (carries embed-token policy,
-      host-domain whitelist, branding overrides). Phase 0 confirms market
-      shape. Could justify own module BI-EMBEDDED-ANALYTICS rather than entity
+      Universal embedded-analytics surface distinct from a published dashboard
+      (carries embed-token policy, host-domain whitelist, branding overrides).
+      Could justify its own module BI-EMBEDDED-ANALYTICS rather than an entity
       in BI-DISTRIBUTION; would shift the 3-module cut to 4.
-    vendor_evidence: [Tableau, Power BI, Looker, Sisense, Qlik]
     proposed_module: "BI-EMBEDDED-ANALYTICS (new) or BI-DISTRIBUTION existing"
 
   - id: B3-6
     candidate: bi_search_artifacts
     rationale: >-
-      Search-first analytics: ThoughtSpot Answers, Sigma Ask, Power BI Q&A,
-      Tableau Ask Data. Natural-language-to-query persisted artifacts that are
+      Search-first / natural-language-to-query persisted artifacts that are
       neither dashboards nor reports. May be a sub-feature of bi_queries (NLQ
       provenance) rather than a separate master; medium-confidence candidate.
-    vendor_evidence: [ThoughtSpot, Sigma, Power BI, Tableau]
     proposed_module: "BI-CONTENT-AUTHORING (2-module) or BI-SEMANTIC-MODELING (3-module)"
 
   - id: B3-7
     candidate: bi_row_level_security_policies
     rationale: >-
-      Tableau Data Policies, Power BI Row-Level Security, Looker
-      access_filter, Sigma Workbook Data Permissions, QuickSight Row-Level
-      Security. Distinct from METRICS-LAYER's metric_access_policies
-      (metric-scoped); BI's RLS is content-scoped. Today flagship vendors
-      carry their own; likely BI-owned.
-    vendor_evidence: [Tableau, Power BI, Looker, Sigma, QuickSight]
+      Content-scoped row-level security distinct from METRICS-LAYER's
+      metric_access_policies (metric-scoped). Today flagship vendors carry their
+      own; likely BI-owned.
     proposed_module: "BI-CONTENT-AUTHORING (2-module) or BI-VISUALIZATION (3-module)"

@@ -11,411 +11,129 @@
 schema_version: 2
 domain: OBS
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
-# B1A items below are technically agent-solvable with no further user input.
-# Every other open structural fix (S1 module set, S4/S5 attribution decisions,
-# S13 pattern flags, S15 channel-vs-capability swap, the 3 untagged H1 PCFs)
-# blocks on Bucket 2 user decisions; therefore next_action_by = user.
-
-b1a:
-  - id: B1A-S6
-    summary: PATCH trigger_events.id=115 data_object_id 47 to 91 (slo.breached attributes to service_level_objectives, not service_incidents)
-    finding: |
-      Trigger event 115 `slo.breached` publishes via OBS handoff 55 with
-      `data_object_id=47` (service_incidents, ITSM-mastered on module 38
-      ITSM-INCIDENT-MGMT). The SLO breach is OBS-published; the event must
-      attribute to OBS master 91 (`service_level_objectives`). Handoff 55's
-      own payload (`data_object_id=47`) is correct for the target side, the
-      incident is what gets created on ITSM. Only the trigger_event needs the
-      PATCH.
-    action: |
-      semantius call crud postgrestRequest '{"method":"PATCH","path":"/trigger_events?id=eq.115","body":{"data_object_id":91}}'
-    affected_events:
-      - {id: 115, event_name: "slo.breached", current_category: "state_change", proposed_category: "state_change"}
-    extra_current_data_object_id: 47
-    extra_proposed_data_object_id: 91
-
-  - id: B1A-H1-S615
-    summary: INSERT handoff_processes row for handoff 615 (SLO budget exhausted) pointing at PCF 20903 (Triage IT service delivery incidents)
-    finding: |
-      Handoff 615 (OBS to ITSM, `service_level_objective.budget_exhausted`,
-      payload `service_level_objectives`) is one of 4 cross-domain handoffs
-      without an APQC tag (614, 615, 616, 617). Handoff 55 (also OBS to ITSM,
-      payload service_incidents) is already tagged process_id=1299 (PCF
-      20903 "Triage IT service delivery incidents"); 615 mirrors that
-      pattern (budget-exhausted alert spawns the same triage flow on ITSM).
-      Confident L4 by mirror.
-    action: |
-      semantius call crud postgrestRequest '{"method":"POST","path":"/handoff_processes","body":{"handoff_id":615,"process_id":1299,"proposal_source":"agent_curated","role":"implements"}}'
-    affected_handoffs:
-      - handoff_id: 615
-        direction: outbound
-        source_domain: OBS
-        target_domain: ITSM
-        trigger_event: "service_level_objective.budget_exhausted"
-        payload: "service_level_objectives"
-    extra_pcf_external_id: "20903"
-    extra_pcf_process_id: 1299
-    extra_pcf_hierarchy_level: 4
-  - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
-    extra_phase_p_triage: "2026-06-02"
-
-b1b:
-  - id: B1B-S1
-    summary: Author OBS domain_modules set (Rule #14 M1 blocker)
-    finding: |
-      OBS has 0 `domain_modules` rows (primary host + cross-host both empty).
-      Rule #14 makes this an audit blocker. Cascades to M2/M4/M5/M6/M8,
-      F2/F3/F5, E1 to E6, B9b, B10b-source side, B1-S7, B1-S12, B1-S14.
-      ITSM-INCIDENT-MGMT module 38 already declares OBS masters 91, 92 as
-      consumers, confirming the deploy contract is in use downstream.
-    blocked_by:
-      - {type: user_decision, ref: B2-S1}
-    affected_masters:
-      - {data_object_id: 88, name: "metric_series", target_module_id: null, workflow: "time-series telemetry"}
-      - {data_object_id: 89, name: "log_entries", target_module_id: null, workflow: "log indexing"}
-      - {data_object_id: 90, name: "distributed_traces", target_module_id: null, workflow: "trace storage and analysis"}
-      - {data_object_id: 91, name: "service_level_objectives", target_module_id: null, workflow: "SLO authoring + burn-rate tracking + lifecycle (draft / active / archived)"}
-      - {data_object_id: 92, name: "error_groups", target_module_id: null, workflow: "error tracking lifecycle (new / triaging / resolved / regressed)"}
-
-  - id: B1B-S2
-    summary: Capability_domains rows (5 to 7 capabilities; needs B1-S1 module set so each capability can be attached via domain_module_capabilities)
-    finding: |
-      `capability_domains` is empty for domain_id=7. Phase A expectation 5 to 8.
-      Each capability must attach to its realizing module via
-      `domain_module_capabilities` per M4 + M6 closure rules.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-      - {type: user_decision, ref: B2-S1}
-    extra_proposed_capabilities:
-      - OBS-METRIC-COLLECTION
-      - OBS-LOG-INDEXING
-      - OBS-DISTRIBUTED-TRACING
-      - OBS-SLO-TRACKING
-      - OBS-ERROR-TRACKING
-      - OBS-DASHBOARDING
-      - OBS-AUTO-INSTRUMENTATION
-
-  - id: B1B-S3
-    summary: Draft and load catalog_tagline + catalog_description on domains row (Rule #20 draft-then-surface)
-    finding: |
-      `domains.catalog_tagline = ""` and `domains.catalog_description = ""`.
-      A4 fails. Rule #20 requires buyer-voice draft, surfaced to user BEFORE
-      write.
-    blocked_by:
-      - {type: user_decision, ref: B2-COPY, reason: "user must approve exact tagline + description wording per Rule #20"}
-
-  - id: B1B-S4
-    summary: B9 attribution defect, handoff 54 (monitoring_alert.threshold_breached) source-not-OBS
-    finding: |
-      Handoff 54 (OBS to ITOM) carries trigger_event 6, which points at
-      `data_object_id=85` (monitoring_alerts). 85 is NOT mastered by OBS. The
-      handoff is mis-attributed at source: ITOM (which masters
-      monitoring_alerts) should be the publisher.
-    blocked_by:
-      - {type: user_decision, ref: B2-S2}
-    affected_handoffs:
-      - handoff_id: 54
-        direction: outbound
-        source_domain: OBS
-        target_domain: ITOM
-        trigger_event: "monitoring_alert.threshold_breached"
-        payload: "monitoring_alerts"
-        null_field: "source_domain_module_id"
-    affected_events:
-      - {id: 6, event_name: "monitoring_alert.threshold_breached", current_category: "threshold", proposed_category: "threshold"}
-
-  - id: B1B-S5
-    summary: B9 attribution defect, handoff 56 (anomaly_candidate.detected) source-not-OBS
-    finding: |
-      Handoff 56 (OBS to AIOPS) carries trigger_event 7, which points at
-      `data_object_id=94` (anomaly_detections, AIOPS-mastered). Mis-attributed
-      at source; AIOPS is the publisher.
-    blocked_by:
-      - {type: user_decision, ref: B2-S2}
-    affected_handoffs:
-      - handoff_id: 56
-        direction: outbound
-        source_domain: OBS
-        target_domain: AIOPS
-        trigger_event: "anomaly_candidate.detected"
-        payload: "anomaly_detections"
-        null_field: "source_domain_module_id"
-    affected_events:
-      - {id: 7, event_name: "anomaly_candidate.detected", current_category: "signal", proposed_category: "signal"}
-
-  - id: B1B-S7
-    summary: B10b backfill, populate source_domain_module_id on all 14 outbound + target_domain_module_id on all 8 inbound OBS cross-domain handoffs
-    finding: |
-      All 14 outbound cross-domain handoffs (54, 55, 56, 608 to 618 selected
-      ids) carry `source_domain_module_id=NULL` because OBS has no modules.
-      All 8 inbound cross-domain handoffs (606, 651, 666, 749, 756, 760, 766,
-      773) carry `target_domain_module_id=NULL` for the same reason. 9 of 14
-      outbound also carry NULL `target_domain_module_id` on the partner side,
-      those NULLs are owed by AIOPS / ITOM / VSDP B10b passes, not OBS.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-    affected_handoffs:
-      - {handoff_id: 54, direction: outbound, source_domain: OBS, target_domain: ITOM, trigger_event: "monitoring_alert.threshold_breached", payload: "monitoring_alerts", null_field: "source_domain_module_id"}
-      - {handoff_id: 55, direction: outbound, source_domain: OBS, target_domain: ITSM, trigger_event: "slo.breached", payload: "service_incidents", null_field: "source_domain_module_id"}
-      - {handoff_id: 56, direction: outbound, source_domain: OBS, target_domain: AIOPS, trigger_event: "anomaly_candidate.detected", payload: "anomaly_detections", null_field: "source_domain_module_id"}
-      - {handoff_id: 608, direction: outbound, source_domain: OBS, target_domain: AIOPS, trigger_event: "metric_series.threshold_breached", payload: "metric_series", null_field: "source_domain_module_id"}
-      - {handoff_id: 609, direction: outbound, source_domain: OBS, target_domain: AIOPS, trigger_event: "metric_series.anomaly_detected", payload: "metric_series", null_field: "source_domain_module_id"}
-      - {handoff_id: 610, direction: outbound, source_domain: OBS, target_domain: AIOPS, trigger_event: "log_entry.error_pattern_matched", payload: "log_entries", null_field: "source_domain_module_id"}
-      - {handoff_id: 611, direction: outbound, source_domain: OBS, target_domain: ITSM, trigger_event: "log_entry.error_pattern_matched", payload: "service_incidents", null_field: "source_domain_module_id"}
-      - {handoff_id: 612, direction: outbound, source_domain: OBS, target_domain: AIOPS, trigger_event: "distributed_trace.slow_path_detected", payload: "distributed_traces", null_field: "source_domain_module_id"}
-      - {handoff_id: 613, direction: outbound, source_domain: OBS, target_domain: AIOPS, trigger_event: "distributed_trace.error_spike", payload: "distributed_traces", null_field: "source_domain_module_id"}
-      - {handoff_id: 614, direction: outbound, source_domain: OBS, target_domain: ITSM, trigger_event: "service_level_objective.burn_rate_high", payload: "service_level_objectives", null_field: "source_domain_module_id"}
-      - {handoff_id: 615, direction: outbound, source_domain: OBS, target_domain: ITSM, trigger_event: "service_level_objective.budget_exhausted", payload: "service_level_objectives", null_field: "source_domain_module_id"}
-      - {handoff_id: 616, direction: outbound, source_domain: OBS, target_domain: VSDP, trigger_event: "error_group.new_signature", payload: "error_groups", null_field: "source_domain_module_id"}
-      - {handoff_id: 617, direction: outbound, source_domain: OBS, target_domain: VSDP, trigger_event: "error_group.regression_detected", payload: "error_groups", null_field: "source_domain_module_id"}
-      - {handoff_id: 618, direction: outbound, source_domain: OBS, target_domain: ITSM, trigger_event: "error_group.regression_detected", payload: "error_groups", null_field: "source_domain_module_id"}
-      - {handoff_id: 606, direction: inbound, source_domain: AIOPS, target_domain: OBS, trigger_event: "alert_suppression_rule.activated", payload: "alert_suppression_rules", null_field: "target_domain_module_id"}
-      - {handoff_id: 651, direction: inbound, source_domain: NPMD, target_domain: OBS, trigger_event: "network_performance_metric.threshold_breached", payload: "network_performance_metrics", null_field: "target_domain_module_id"}
-      - {handoff_id: 666, direction: inbound, source_domain: DEM, target_domain: OBS, trigger_event: "synthetic_monitoring_result.failed", payload: "synthetic_monitoring_results", null_field: "target_domain_module_id"}
-      - {handoff_id: 749, direction: inbound, source_domain: APIM, target_domain: OBS, trigger_event: "api_gateway.health_degraded", payload: "api_gateways", null_field: "target_domain_module_id"}
-      - {handoff_id: 756, direction: inbound, source_domain: APP-PAAS, target_domain: OBS, trigger_event: "paas_deployment.succeeded", payload: "paas_deployments", null_field: "target_domain_module_id"}
-      - {handoff_id: 760, direction: inbound, source_domain: KUBE-PLAT, target_domain: OBS, trigger_event: "kubernetes_cluster.provisioned", payload: "kubernetes_clusters", null_field: "target_domain_module_id"}
-      - {handoff_id: 766, direction: inbound, source_domain: IPAAS, target_domain: OBS, trigger_event: "integration_run.failed", payload: "integration_runs", null_field: "target_domain_module_id"}
-      - {handoff_id: 773, direction: inbound, source_domain: VSDP, target_domain: OBS, trigger_event: "software_deployment.completed", payload: "software_deployments", null_field: "target_domain_module_id"}
-
-  - id: B1B-S8
-    summary: Load 6 intra-domain data_object_relationships among OBS masters
-    finding: |
-      No edges among 88/89/90/91/92. Expected verb skeletons:
-      `metric_series correlates_to error_groups`, `distributed_traces
-      correlates_to error_groups`, `metric_series tracks
-      service_level_objectives`, `log_entries surfaces error_groups`,
-      `distributed_traces produces log_entries`, `metric_series feeds
-      service_level_objectives`. Full tuples (verb / inverse_verb /
-      relationship_type / relationship_kind / is_required / owner_side) not
-      pre-specified.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-      - {type: user_decision, ref: B2-EDGES, reason: "user must approve the 6 edge tuples before insert"}
-    affected_entities: [metric_series, log_entries, distributed_traces, service_level_objectives, error_groups]
-
-  - id: B1B-S9
-    summary: Load 5+ data_object_relationships rows linking OBS masters to users (Rule #10)
-    finding: |
-      No edges between 88/89/90/91/92 and `users` (id 748). Workflow-bearing
-      OBS masters carry user actors: SLO owner, error_group assignee,
-      dashboard / runbook / saved-search author. Full edge tuples not
-      pre-specified.
-    blocked_by:
-      - {type: user_decision, ref: B2-EDGES, reason: "user must approve user-edge tuples before insert"}
-    affected_entities: [service_level_objectives, error_groups, dashboards, runbooks]
-
-  - id: B1B-S10
-    summary: Load 6 outbound cross-domain data_object_relationships
-    finding: |
-      14 outbound cross-domain handoffs, 0 outbound `data_object_relationships`.
-      Candidate edges: `error_groups creates service_incidents` (handoffs 618,
-      611), `service_level_objectives spawns service_incidents` (614, 615,
-      55), `error_groups correlates_to releases` (616, 617 to VSDP),
-      `metric_series feeds anomaly_detections` (608, 609), `distributed_traces
-      feeds anomaly_detections` (612, 613). Some rows depend on the
-      LOG-MGMT / IRM / RUM promotion outcome (B3-S2).
-    blocked_by:
-      - {type: user_decision, ref: B2-EDGES}
-      - {type: depends_on, ref: B3-S2, reason: "LOG-MGMT / IRM / RUM promotions may move some target masters"}
-    affected_handoffs:
-      - {handoff_id: 55, direction: outbound, source_domain: OBS, target_domain: ITSM, trigger_event: "slo.breached", payload: "service_incidents"}
-      - {handoff_id: 608, direction: outbound, source_domain: OBS, target_domain: AIOPS, trigger_event: "metric_series.threshold_breached", payload: "metric_series"}
-      - {handoff_id: 609, direction: outbound, source_domain: OBS, target_domain: AIOPS, trigger_event: "metric_series.anomaly_detected", payload: "metric_series"}
-      - {handoff_id: 611, direction: outbound, source_domain: OBS, target_domain: ITSM, trigger_event: "log_entry.error_pattern_matched", payload: "service_incidents"}
-      - {handoff_id: 612, direction: outbound, source_domain: OBS, target_domain: AIOPS, trigger_event: "distributed_trace.slow_path_detected", payload: "distributed_traces"}
-      - {handoff_id: 613, direction: outbound, source_domain: OBS, target_domain: AIOPS, trigger_event: "distributed_trace.error_spike", payload: "distributed_traces"}
-      - {handoff_id: 614, direction: outbound, source_domain: OBS, target_domain: ITSM, trigger_event: "service_level_objective.burn_rate_high", payload: "service_level_objectives"}
-      - {handoff_id: 615, direction: outbound, source_domain: OBS, target_domain: ITSM, trigger_event: "service_level_objective.budget_exhausted", payload: "service_level_objectives"}
-      - {handoff_id: 616, direction: outbound, source_domain: OBS, target_domain: VSDP, trigger_event: "error_group.new_signature", payload: "error_groups"}
-      - {handoff_id: 617, direction: outbound, source_domain: OBS, target_domain: VSDP, trigger_event: "error_group.regression_detected", payload: "error_groups"}
-      - {handoff_id: 618, direction: outbound, source_domain: OBS, target_domain: ITSM, trigger_event: "error_group.regression_detected", payload: "error_groups"}
-
-  - id: B1B-S11
-    summary: Load 8 to 12 data_object_aliases rows on the 5 OBS masters
-    finding: |
-      None of the 5 OBS masters carry alias rows. Vendor synonyms:
-      `metric_series` to Datadog "metric" / Prometheus "time series" / New Relic
-      "metric event"; `log_entries` to Splunk "event" / Sumo "message";
-      `distributed_traces` to Honeycomb "event chain" / Datadog "trace span";
-      `service_level_objectives` to Honeycomb "SLO" / Nobl9 "SLI";
-      `error_groups` to Sentry "issue" / Rollbar "item" / Datadog "error issue".
-      Full row tuples (alias_name, alias_type, optional notes per Rule #15)
-      not pre-specified.
-    blocked_by:
-      - {type: user_decision, ref: B2-ALIASES, reason: "user must approve alias surface and any optional notes per Rule #15"}
-      - {type: depends_on, ref: B3-S2, reason: "log_entries aliases may migrate to LOG-MGMT; error_groups aliases to IRM"}
-    affected_entities: [metric_series, log_entries, distributed_traces, service_level_objectives, error_groups]
-
-  - id: B1B-S12
-    summary: Load data_object_lifecycle_states for service_level_objectives and error_groups; surface config-shape exemption for 3 telemetry masters
-    finding: |
-      None of the 5 OBS masters carry lifecycle states. Per Rule #12 a
-      positive decision is required per master: `service_level_objectives`
-      (draft to active to archived), `error_groups` (new to triaging to
-      resolved to regressed); `metric_series` / `log_entries` /
-      `distributed_traces` are config-shape time-series and exempt. The
-      exemption must be surfaced in this audit (Rule #15 forbids the
-      `data_objects.notes` annotation).
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1, reason: "lifecycle states need domain_module_id pointing at the realizing module"}
-      - {type: depends_on, ref: B3-S2, reason: "error_groups lifecycle may migrate to IRM"}
-    affected_masters:
-      - {data_object_id: 91, name: "service_level_objectives", target_module_id: null, workflow: "draft / active / archived; submit_lock on activation"}
-      - {data_object_id: 92, name: "error_groups", target_module_id: null, workflow: "new / triaging / resolved / regressed"}
-    extra_config_shape_exemption_candidates:
-      - {data_object_id: 88, name: "metric_series", reason: "time-series write-once telemetry; no workflow"}
-      - {data_object_id: 89, name: "log_entries", reason: "time-series write-once telemetry; no workflow"}
-      - {data_object_id: 90, name: "distributed_traces", reason: "time-series write-once telemetry; no workflow"}
-
-  - id: B1B-S13
-    summary: PATCH pattern flags per B2-S3 decisions
-    finding: |
-      All 5 masters currently `has_personal_content=false`,
-      `has_submit_lock=false`, `has_single_approver=false`. Proposals:
-      service_level_objectives: submit_lock=true + single_approver=true;
-      error_groups: single_approver=true. Open: log_entries.has_personal_content
-      if logs may carry user PII.
-    blocked_by:
-      - {type: user_decision, ref: B2-S3}
-    affected_masters:
-      - {data_object_id: 91, name: "service_level_objectives", target_module_id: null, workflow: "lifecycle freeze on activation"}
-      - {data_object_id: 92, name: "error_groups", target_module_id: null, workflow: "on-call ownership"}
-
-  - id: B1B-S14
-    summary: Retire legacy obs-system skill (id 88) and author per-module system skills (Rule #17)
-    finding: |
-      Skill 88 `obs-system` lives at `domain_id=7`, `domain_module_id=NULL`.
-      F1 transitional-acceptable only because no module-level system skill
-      exists yet. After B1-S1 modules land, the legacy skill is retired and
-      replaced with one `skill_type='system'` skill per `domain_modules` row
-      (skill_name=<module_code_lower>_agent), with the 7 existing
-      `skill_tools` rows re-linked to the appropriate module skills.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-S1}
-
-  - id: B1B-S15
-    summary: PATCH skill_tools for skill 88, replace send_email + post_chat_message with notify_person / notify_team
-    finding: |
-      `skill_tools` rows for skill 88 link `send_email` (tool 37, side_effect,
-      coverage_tier=platform) and `post_chat_message` (tool 40, side_effect,
-      coverage_tier=external) as `required` with empty notes. Per the
-      Channel-vs-capability authoring rule generic-notification cases
-      route to `notify_person` (single recipient, e.g. SLO owner alert) or
-      `notify_team` (broadcast on-call channel). Strict Semantius score drag
-      is entirely on `post_chat_message.coverage_tier=external`.
-    blocked_by:
-      - {type: user_decision, ref: B2-CHANNEL, reason: "user picks notify_person vs notify_team per row"}
-    extra_current_tools:
-      - {id: 37, tool_name: "send_email", coverage_tier: "platform"}
-      - {id: 40, tool_name: "post_chat_message", coverage_tier: "external"}
-    extra_candidate_replacements:
-      - {tool_name: "notify_person", purpose: "single-recipient targeted alert (SLO owner, error_group assignee)"}
-      - {tool_name: "notify_team", purpose: "broadcast (on-call channel, SRE team)"}
-
-  - id: B1B-H1
-    summary: APQC TAGGING for the remaining 3 untagged cross-domain handoffs (614, 616, 617); 615 is in b1a, these need user confirmation on the PCF choice
-    finding: |
-      18 of 22 OBS cross-domain handoffs are tagged `agent_curated, new`.
-      Untagged: 614 (SLO burn-rate high to ITSM), 615 (SLO budget exhausted to
-      ITSM, handled by B1A-H1-S615), 616 (error_group new signature to VSDP),
-      617 (error_group regression detected to VSDP). 614 / 616 / 617 carry
-      medium-confidence PCF proposals that need user confirmation.
-    blocked_by:
-      - {type: user_decision, ref: B2-APQC, reason: "user confirms PCF choice for 614 / 616 / 617"}
-    affected_handoffs:
-      - {handoff_id: 614, direction: outbound, source_domain: OBS, target_domain: ITSM, trigger_event: "service_level_objective.burn_rate_high", payload: "service_level_objectives"}
-      - {handoff_id: 616, direction: outbound, source_domain: OBS, target_domain: VSDP, trigger_event: "error_group.new_signature", payload: "error_groups"}
-      - {handoff_id: 617, direction: outbound, source_domain: OBS, target_domain: VSDP, trigger_event: "error_group.regression_detected", payload: "error_groups"}
-    extra_pcf_candidates:
-      - {handoff_id: 614, pcf_id: 1299, external_id: "20903", process_name: "Triage IT service delivery incidents", hierarchy_level: 4, note: "mirrors handoff 55 already tagged"}
-      - {handoff_id: 614, pcf_id: 256, external_id: "20632", process_name: "Develop and manage IT service levels", hierarchy_level: 3, note: "alternative if burn-rate is service-level review rather than incident triage"}
-      - {handoff_id: 616, pcf_id: 1262, external_id: "20853", process_name: "Implement software change/release", hierarchy_level: 4, note: "mirrors inbound 773 already tagged"}
-      - {handoff_id: 617, pcf_id: 1262, external_id: "20853", process_name: "Implement software change/release", hierarchy_level: 4, note: "regression triggers hotfix change/release"}
+# UNBUILT domain: 0 domain_modules (M1 hard fail), 0 capability_domains. Per the
+# Validate-mode unbuilt rule the agent does NOT scaffold the module set; the BUILD
+# is surfaced as a single user decision (B2-S1 IS the build's shape decision) and the
+# whole module-dependent cascade is LEFT until the build lands. Agent-doable
+# additive/corrective work that is NOT module-dependent was executed 2026-06-07
+# (entity_type on all 5 masters, catalog UX on the domains row, generic aliases on
+# the 3 OBS-stable masters). Everything still open is either a user decision (B2),
+# a destructive step needing sign-off, the unbuilt cascade, or backlog (b3).
+# Therefore next_action_by = user.
 
 b2:
   - id: B2-S1
-    summary: OBS module split shape
+    summary: BUILD OBS (module split shape) - unbuilt domain, this decision gates the entire build
     question: |
-      What is the right module split for OBS, given 5 to 7 capabilities are
-      expected and the flagship vendors market three distinct product pillars
-      (APM, log analytics, SLO + reliability)?
+      OBS is unbuilt: 0 domain_modules, 0 capability_domains. The agent will not
+      scaffold a module set without the shape decision. What is the right module
+      split, given 5 to 7 capabilities are expected and the flagship vendors market
+      three distinct product pillars (APM, log analytics, SLO + reliability)?
     options:
-      - "(a) 3 modules: OBS-APM (metrics + traces + dashboards), OBS-LOG-ANALYTICS (log_entries + saved searches + retention), OBS-SLO-RELIABILITY (SLOs + error tracking + on-call hooks), mirrors Datadog / Dynatrace / New Relic"
-      - "(b) 2 modules: OBS-TELEMETRY-PIPELINE (collection + indexing across metrics + logs + traces) + OBS-RELIABILITY-INSIGHTS (SLOs + error tracking + dashboards)"
-      - "(c) 1 module: OBS-PLATFORM bundles everything, likely M2 violation if capability_count >= 3"
+      - "(a) 3 modules: OBS-APM (metrics + traces + dashboards), OBS-LOG-ANALYTICS (log_entries + saved searches + retention), OBS-SLO-RELIABILITY (SLOs + error tracking + on-call hooks). Mirrors the flagship APM / logs / reliability split."
+      - "(b) 2 modules: OBS-TELEMETRY-PIPELINE (collection + indexing across metrics + logs + traces) + OBS-RELIABILITY-INSIGHTS (SLOs + error tracking + dashboards)."
+      - "(c) 1 module: OBS-PLATFORM bundles everything. Likely M2 violation if capability_count >= 3."
     why: |
-      Editorial / product-shape decision. Mode b1's structural pass cannot
-      decide between the three shapes; the answer cascades into B1-S2 (each
-      capability attaches to a realizing module), B1-S7 / B1-S10 / B1-S12 /
-      B1-S14, and B3-S2 (LOG-MGMT / IRM / RUM promotion may make (b) or (c)
-      more defensible if log analytics migrates out).
+      Editorial / product-shape decision and the gate for the entire build. The
+      answer cascades into the module set, capabilities, lifecycle states (need
+      domain_module_id), the B10b handoff-module backfill (22 cross-domain
+      handoffs carry NULL module FKs), intra/cross-domain relationships, the
+      domain-grain system skill toolset, and Phase P (personas + RACI) if the
+      result is multi-module. Cross-cuts B3-S2 (LOG-MGMT / IRM / RUM promotions
+      may make (b) or (c) more defensible if log analytics / IRM / RUM migrate out).
+    cascade_left_until_build:
+      - "capability_domains (5 to 7 capabilities) + domain_module_capabilities"
+      - "domain_module_data_objects master rows for the 5 masters (migrate off the legacy domain_data_objects rollup)"
+      - "data_object_lifecycle_states for service_level_objectives (draft/active/archived) and error_groups (new/triaging/resolved/regressed); the 3 telemetry masters are operational_record and exempt"
+      - "B10b backfill: source_domain_module_id on 14 outbound + target_domain_module_id on 8 inbound OBS cross-domain handoffs"
+      - "intra-domain + users + outbound cross-domain data_object_relationships"
+      - "domain-grain system skill toolset via domain_module_tools (NOT per-module skills; see supersession header)"
+      - "Phase P personas + role_modules + process_raci if multi-module (DEFERRED; do not author until build)"
+    extra_phase_p_triage: "2026-06-02"
 
   - id: B2-S2
-    summary: B9 attribution defects on events 6, 7, 115 and the handoffs they ride
+    summary: B9 attribution defects on events 6, 7, 115 (DESTRUCTIVE - DELETE handoffs / re-attribute trigger_event)
     question: |
-      How should the agent resolve the three trigger_events whose
-      `data_object_id` points at non-OBS masters but which sit on OBS-published
-      handoffs?
+      Three trigger_events whose data_object_id points at non-OBS masters sit on
+      OBS-published handoffs. All three resolutions are destructive (DELETE or
+      overwrite a non-empty value) and need sign-off.
+    live_state_2026_06_07:
+      - "event 6 (monitoring_alert.threshold_breached) data_object_id=85 monitoring_alerts (ITOM-mastered), rides OBS outbound handoff 54 -> ITOM"
+      - "event 7 (anomaly_candidate.detected) data_object_id=94 anomaly_detections (AIOPS-mastered), rides OBS outbound handoff 56 -> AIOPS"
+      - "event 115 (slo.breached) data_object_id=47 service_incidents (ITSM-mastered), rides OBS outbound handoff 55 -> ITSM"
     options:
-      - "(a) DELETE handoffs 54 (event 6, monitoring_alerts ITOM-owned) and 56 (event 7, anomaly_detections AIOPS-owned); for event 115 (slo.breached) PATCH data_object_id 47 to 91 and keep handoff 55 (payload is the resulting incident on ITSM). Recommended."
-      - "(b) OBS legitimately publishes derived alerts / anomalies; master monitoring_alerts and anomaly_detections locally on OBS and demote the canonical masters elsewhere to embedded_master. Less likely; AIOPS canonically owns anomaly detection."
-      - "(c) Leave events as-is; tolerate the attribution defect. NOT recommended (fails substrate sanity in mode b2)."
+      - "(a) DELETE handoffs 54 (event 6) and 56 (event 7); for event 115 PATCH trigger_events.id=115 data_object_id 47 -> 91 (service_level_objectives) and keep handoff 55 (payload is the resulting incident on ITSM). Recommended."
+      - "(b) OBS legitimately publishes derived alerts / anomalies: master monitoring_alerts and anomaly_detections locally on OBS and demote the canonical masters elsewhere to embedded_master. Less likely; AIOPS canonically owns anomaly detection."
+      - "(c) Leave as-is; tolerate the attribution defect. NOT recommended."
     why: |
-      Cannot resolve unilaterally, option (b) reshapes ITOM and AIOPS,
-      option (a) deletes structural rows. User authority required.
+      Option (a) DELETEs structural rows and re-attributes a trigger_event (both
+      destructive, never done unapproved). Option (b) reshapes ITOM and AIOPS.
+      User authority required.
+    affected_handoffs:
+      - {handoff_id: 54, event_id: 6, target_domain: ITOM, recommended: DELETE}
+      - {handoff_id: 56, event_id: 7, target_domain: AIOPS, recommended: DELETE}
+      - {handoff_id: 55, event_id: 115, target_domain: ITSM, recommended: "keep; PATCH event 115 data_object_id 47 -> 91"}
 
   - id: B2-S3
-    summary: Pattern flag positive re-evaluation per Rule #12
+    summary: Pattern flag positive re-evaluation per Rule #12 (DESTRUCTIVE - overwrite existing false values on workflow masters)
     question: |
-      Confirm or deny per-flag PATCH on the 5 OBS masters.
+      Confirm or deny per-flag PATCH on the OBS workflow masters. All 5 masters are
+      currently has_personal_content=false / has_submit_lock=false /
+      has_single_approver=false (live-confirmed 2026-06-07). entity_type is now set
+      (91, 92 = operational_workflow; 88, 89, 90 = operational_record), so the flag
+      consideration applies only to the two workflow masters.
     options:
-      - "service_level_objectives.has_submit_lock = true / false / defer"
-      - "service_level_objectives.has_single_approver = true / false / defer"
-      - "error_groups.has_single_approver = true / false / defer"
-      - "log_entries.has_personal_content = true / false / defer (open: depends on whether logs may carry user PII)"
-      - "metric_series + distributed_traces, confirm all three flags stay false (write-once telemetry)"
+      - "service_level_objectives (91).has_submit_lock = true / false / defer"
+      - "service_level_objectives (91).has_single_approver = true / false / defer"
+      - "error_groups (92).has_single_approver = true / false / defer"
+      - "log_entries (89).has_personal_content = true / false / defer (open: depends on whether logs may carry user PII)"
+      - "metric_series (88) + distributed_traces (90): confirm all flags stay false (write-once telemetry)"
     why: |
-      Pattern flags are workflow-shape decisions the user owns. Per Rule #15
-      the consideration cannot be recorded in `notes`; this audit IS the
-      approved persistence surface.
+      Pattern flags are workflow-shape decisions the user owns, and flipping a
+      flag overwrites an existing non-empty boolean. Per Rule #15 the reasoning
+      cannot be recorded in notes; this audit is the persistence surface.
 
-  - id: B2-S4
-    summary: Rule #15 baseline confirmation on skill_tools.notes
+  - id: B2-APQC-616-617
+    summary: APQC tag for the 2 still-untagged OBS cross-domain handoffs (616, 617 -> VSDP) - medium confidence, needs PCF confirmation
     question: |
-      Confirm the 7 existing skill_tools rows for skill 88 carry `notes=''`
-      (Rule #15 default) and no annotation is wanted, or surface specific
-      text per row for write.
+      Handoffs 616 (error_group.new_signature) and 617 (error_group.regression_detected),
+      both OBS -> VSDP, are the only 2 of 22 OBS cross-domain handoffs still without a
+      handoff_processes tag (614 and 615 were tagged since the last snapshot). The
+      candidate PCF is medium-confidence; the agent will not insert without your pick.
     options:
-      - "(a) Confirm, leave all 7 rows at notes=''. Default."
-      - "(b) Author specific wording per row (surface text for approval first)."
+      - "(a) Both -> PCF 1262 'Implement software change/release' (external_id 20853, L4): a new error signature / regression triggers a hotfix change-release on VSDP. Recommended."
+      - "(b) Defer both to Discover for a cleaner PCF match (no confident L4 child resolved)."
     why: |
-      Positive finding; mode b1 surfaces for explicit confirmation since
-      Rule #15 violations have repeated historically.
+      Medium confidence; the prompt's clean-match bar is not met (the state carried
+      this as B2-APQC). Insert is held for your PCF confirmation.
+    extra_pcf_candidate: {pcf_id: 1262, external_id: "20853", process_name: "Implement software change/release", hierarchy_level: 4}
+
+# --- RETIRED (superseded 2026-06-06 / Plan 3): per-module skill-grain + skill_tools model ---
+# B1B-S14 (retire obs-system skill 88 and author per-module system skills) and
+# B1B-S15 (PATCH skill_tools for skill 88, replace send_email + post_chat_message)
+# and B2-S4 (skill_tools.notes baseline confirmation) are CANCELED. skill_tools is
+# dropped; the domain keeps exactly one domain-grain system skill that derives its
+# toolset from domain_module_tools. Per-module tool re-authoring is tracked in
+# audits/_modularization-backlog.md. No action under this audit.
 
 b3:
   - id: B3-S1
     candidate: |
       Missing observability entities (vendor-surface candidates): `dashboards`,
       `monitors` (the configured rule, distinct from a fired alert),
-      `synthetic_tests`, `notification_policies`, `service_inventory` (Datadog
-      Service Catalog, distinct from CMDB service_maps), `runbooks`,
-      `obs_incidents`, `postmortems`, `correlation_groups`. The 5
-      currently-loaded masters are the telemetry + reliability headline-noun
-      set; the workflow substrate (configured rules, runbooks, incidents,
-      postmortems, notifications, dashboards) is largely absent.
+      `synthetic_tests`, `notification_policies`, `service_inventory` (the
+      registered service-side metadata, distinct from CMDB service_maps),
+      `runbooks`, `obs_incidents`, `postmortems`, `correlation_groups`. The 5
+      currently-loaded masters are the telemetry + reliability headline-noun set;
+      the workflow substrate (configured rules, runbooks, incidents, postmortems,
+      notifications, dashboards) is largely absent.
     rationale: |
-      Flagship observability vendors model these as first-class. The catalog
-      ships the headline nouns and skips the substrate, typical Phase-0-skipped
-      gap. Some candidates may route to LOG-MGMT / IRM / RUM if those promote
-      (B3-S2).
-    vendor_evidence: [Datadog Platform, Dynatrace Platform, New Relic One, Splunk Observability Cloud, Grafana Cloud, Honeycomb]
+      Flagship observability vendors model these as first-class. The catalog ships
+      the headline nouns and skips the substrate. Some candidates route to
+      LOG-MGMT / IRM / RUM if those promote (B3-S2). Non-blocking; surfaced once.
     proposed_module: null
     extra_route_dependencies:
       - {entity: "obs_incidents", routes_to_on_promotion: "IRM"}
@@ -428,16 +146,24 @@ b3:
       Modularization hypothesis: split log analytics into LOG-MGMT, on-call /
       incident response into IRM, real-user monitoring into RUM.
     rationale: |
-      Splunk Cloud Platform, Sumo Logic, Elastic, Graylog sell standalone log
-      management. PagerDuty, Opsgenie, incident.io sell on-call + IRM.
-      Datadog RUM, New Relic Browser, Akamai mPulse sell real-user
-      monitoring distinct from server-side APM. OBS currently risks bundling
-      3 to 4 markets.
-    vendor_evidence: [Splunk Cloud Platform, Sumo Logic, Elastic, Graylog, PagerDuty, Opsgenie, "incident.io", Datadog RUM, New Relic Browser, Akamai mPulse]
+      Standalone markets exist for log management, on-call / IRM, and real-user
+      monitoring distinct from server-side APM. OBS currently risks bundling 3 to 4
+      markets. NOTE: any structural split is a B2 decision, not a b3; kept here only
+      as the candidate rationale that informs B2-S1's shape. Surfaced once.
     proposed_module: null
     extra_promotion_targets: [LOG-MGMT, IRM, RUM]
     extra_repartition_plan: |
-      After promotion: log_entries master stays in OBS for tracing-attached
-      logs but log retention / SIEM-style indexing moves to LOG-MGMT;
-      incidents / postmortems / on-call_schedules / runbooks route to IRM;
-      session_replays / page_loads route to RUM.
+      After promotion: log_entries master stays in OBS for tracing-attached logs but
+      log retention / SIEM-style indexing moves to LOG-MGMT; incidents / postmortems
+      / on-call_schedules / runbooks route to IRM; session_replays / page_loads route
+      to RUM. Aliases on log_entries (89) and error_groups (92) were DEFERRED on
+      2026-06-07 for this reason (they may migrate to LOG-MGMT / IRM).
+
+# --- Report-only, owed by other domains (do not block OBS; clear as those domains finish) ---
+blocked_by_other_domains:
+  - {id: RO-1, owing: AIOPS, finding: "6 OBS->AIOPS handoffs (608,609,610,612,613) + inbound 606; AIOPS target_domain_module_id NULL", routed: "AIOPS b1 B10b target side"}
+  - {id: RO-2, owing: ITSM, finding: "5 OBS->ITSM handoffs (55,611,614,615,618); inbound rels 194/195 are ITSM's B8 outbound (already correct)", routed: "ITSM b1"}
+  - {id: RO-3, owing: VSDP, finding: "2 OBS->VSDP handoffs (616,617) + inbound 773; VSDP target_domain_module_id NULL", routed: "VSDP b1 B10b + B8"}
+  - {id: RO-4, owing: ITOM, finding: "OBS handoff 54 -> ITOM target FK NULL; OBS contributor edge on monitoring_events (ITOM-mastered)", routed: "ITOM b1 B10b + DMDO"}
+  - {id: RO-5, owing: "NPMD/DEM/APIM/APP-PAAS/KUBE-PLAT/IPAAS", finding: "each has 1 inbound handoff into OBS (651,666,749,756,760,766) with NULL source_domain_module_id", routed: "each domain's b1 B10b source side"}
+  - {id: RO-6, owing: CMDB, finding: "OBS consumes service_maps (CMDB-mastered); consumer row migrates to domain_module_data_objects once OBS modules exist", routed: "CMDB b1 M7 within-domain (informational)"}

@@ -1,50 +1,16 @@
 schema_version: 2
 domain: KMS
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
-  - id: B1A-S6
-    summary: domains.description and business_logic on row 33 contain U+2014 em-dashes, violating project no-em-dash rule
-    finding: >-
-      The KMS domains row (id 33) carries an em-dash in the trailing clause of
-      description ("internal and external audiences") and in business_logic
-      ("Search and RAG retrieval over the knowledge corpus  vector embeddings,
-      ranking, and relevance models"). Project rule forbids U+2014 anywhere in
-      catalog text.
-    action: >-
-      PATCH /domains?id=eq.33 to replace the em-dash with a comma in both
-      description and business_logic. Surgical PATCH, no Rule #20 user wording
-      approval needed (typography fix, not new buyer copy).
-    affected_entities:
-      - domains.id=33
-  - id: B1A-S7
-    summary: 8 KMS-master-source trigger_events rows have empty event_category
-    finding: >-
-      Trigger events 754, 755, 756, 757, 758, 759, 760, 761 (sourced from
-      data_objects 410-415) all have event_category=''. Enum requires one of
-      lifecycle | state_change | threshold | signal.
-    action: >-
-      PATCH events 754, 755, 756, 757, 758, 761 to event_category='lifecycle'
-      (lifecycle transitions on the master). PATCH events 759
-      (article_feedback.negative) and 760 (knowledge_search_query.no_result) to
-      event_category='signal' (quality/gap signals from the master). Surgical
-      PATCH per row.
-    affected_events:
-      - {id: 754, event_name: knowledge_base_article.published, current_category: "", proposed_category: lifecycle}
-      - {id: 755, event_name: knowledge_base_article.deprecated, current_category: "", proposed_category: lifecycle}
-      - {id: 756, event_name: knowledge_base_article.updated, current_category: "", proposed_category: lifecycle}
-      - {id: 757, event_name: knowledge_category.restructured, current_category: "", proposed_category: lifecycle}
-      - {id: 758, event_name: article_revision.approved, current_category: "", proposed_category: lifecycle}
-      - {id: 759, event_name: article_feedback.negative, current_category: "", proposed_category: signal}
-      - {id: 760, event_name: knowledge_search_query.no_result, current_category: "", proposed_category: signal}
-      - {id: 761, event_name: knowledge_collection.published, current_category: "", proposed_category: lifecycle}
   - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 1 capabilities awaiting a build."
-    finding: "Live triage 2026-06-02: this domain has 0 domain_modules rows (M1 fail) and 1 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
-    extra_phase_p_triage: "2026-06-02"
+    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 1 capability awaiting a build."
+    finding: "Live 2026-06-07: KMS still has 0 domain_modules rows (M1 fail) and 1 capability_domains row, so it is not deployable. The module build is gated on the B2-1 ownership decision; per the UNBUILT discipline the build is surfaced, not scaffolded, and the M/F/B10b cascade is left until the modules exist."
+    action: "Settle B2-1, then run Phase A then M then B then S to author the module set, capabilities, masters (move them from the legacy domain_data_objects rollup into domain_module_data_objects), and the single domain-grain system skill. If multi-module, run Phase P (personas, RACI) afterward. Do NOT scaffold before B2-1."
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
 
 b1b:
   - id: B1B-S1
@@ -52,11 +18,11 @@ b1b:
     finding: >-
       domains row 33 (KMS) has 0 domain_modules rows and 0
       domain_module_host_domains rows targeting KMS. Rule #14 requires at least
-      1 full module per domain. Every M-band failure, F1 (skill 77
-      domain_module_id=NULL), F2 (no module-level system skill), F5
-      (uncomputable Semantius score), M5 (state 286 published has
-      domain_module_id=NULL), and all 13 KMS-side handoff B10b NULL FKs roll up
-      to this single fix.
+      1 full module per domain. Every M-band failure, F1 (legacy domain-grain skill
+      kms-system has domain_module_id=NULL, now resolved by the per-domain-skill model:
+      one domain-grain system skill stands, no per-module skills), F5 (uncomputable
+      Semantius score), M5 (state 286 published has domain_module_id=NULL), and all 13
+      KMS-side handoff B10b NULL FKs roll up to this single fix.
     blocked_by:
       - {type: user_decision, ref: B2-1}
     affected_modules: []
@@ -81,18 +47,6 @@ b1b:
       - {data_object_id: 413, name: article_feedback, target_module_id: null, workflow: submit_triage_close}
       - {data_object_id: 414, name: knowledge_search_queries, target_module_id: null, workflow: event_stream}
       - {data_object_id: 415, name: knowledge_collections, target_module_id: null, workflow: draft_publish_archive}
-  - id: B1B-S2
-    summary: catalog_tagline and catalog_description empty on domains row 33, Rule #20 user-wording approval required
-    finding: >-
-      domains.id=33 catalog_tagline='' and catalog_description=''. Rule #20
-      forbids the agent from writing without explicit per-row user approval of
-      wording. Drafts surfaced in 2026-05-30 history (Bucket 1 B1-S2). Buyer
-      voice also depends on Bucket 2 item 1 routing decision: option (a) KMS
-      canonical reads "system of record", option (b) derived layer reads
-      "analytics on top of existing wikis".
-    blocked_by:
-      - {type: user_decision, ref: B2-1}
-      - {type: user_decision, ref: B2-2}
   - id: B1B-S4-CCAAS
     summary: One outbound cross-domain relationship deferred (knowledge_base_articles -> assists -> contact_center_agents) because CCAAS contact_center_agents master not yet enumerated in catalog
     finding: >-
@@ -110,30 +64,14 @@ b1b:
       knowledge_base_articles. Both are canonically mastered (id 51 by
       ITSM-KNOWLEDGE via domain_module_data_objects, id 410 by KMS via the
       legacy domain_data_objects). Two cross-domain data_object_relationships
-      rows (208 publishes_to, 477 sources) paper over the duplication.
+      rows (208 publishes_to, 477 sources) paper over the duplication. Resolution
+      is DESTRUCTIVE (DELETE a master row / rename / re-point handoffs) so it is
+      surfaced, never executed unapproved.
     blocked_by:
       - {type: user_decision, ref: B2-1}
     affected_masters:
       - {data_object_id: 51, name: knowledge_articles, target_module_id: 43, workflow: ITSM-KNOWLEDGE-mastered}
       - {data_object_id: 410, name: knowledge_base_articles, target_module_id: null, workflow: KMS-mastered-via-legacy-table}
-  - id: B1B-B11
-    summary: 0 data_object_aliases on any of the 6 KMS masters
-    finding: >-
-      Industry synonyms missing on all 6 masters. Minimum 1 alias per master
-      (some merit 2-3). Examples surfaced in 2026-05-30 audit: kb_articles ->
-      kb article / support article / help center article / wiki page;
-      knowledge_categories -> kb taxonomy / category / topic; article_revisions
-      -> article version / draft / edit history; knowledge_search_queries -> kb
-      search; knowledge_collections -> kb space / playbook.
-    blocked_by:
-      - {type: user_decision, ref: B2-1, reason: alias vocabulary depends on whether KMS or per-domain modules canonically master the article concept}
-    affected_masters:
-      - {data_object_id: 410, name: knowledge_base_articles, target_module_id: null, workflow: alias_set_5}
-      - {data_object_id: 411, name: knowledge_categories, target_module_id: null, workflow: alias_set_3}
-      - {data_object_id: 412, name: article_revisions, target_module_id: null, workflow: alias_set_3}
-      - {data_object_id: 413, name: article_feedback, target_module_id: null, workflow: alias_set_2}
-      - {data_object_id: 414, name: knowledge_search_queries, target_module_id: null, workflow: alias_set_3}
-      - {data_object_id: 415, name: knowledge_collections, target_module_id: null, workflow: alias_set_3}
   - id: B1B-H1-APPROVE
     summary: 17 handoff_processes rows on KMS-touching handoffs all sit at record_status=new; quality headline (approved count) is 0
     finding: >-
@@ -141,7 +79,7 @@ b1b:
       H1 quality headline (approved count) is 0. All 17 rows on handoffs 720,
       721, 722, 723, 724, 1120, 334, 745, 818, 819, 447, 630, 826 await
       reviewer approval. Rule #1 forbids the agent from flipping record_status
-      without explicit per-load user confirmation.
+      to approved. Surfaced for user approval; not executed.
     blocked_by:
       - {type: user_decision, ref: review_approval, reason: "Rule #1 requires explicit per-row user approval to flip record_status to approved"}
 
@@ -158,19 +96,23 @@ b2:
     options: [a_kms_canonical, b_per_domain_canonical, c_hybrid_two_tier]
     why: >-
       Gates the B1B-S1 module-shape decision (which modules KMS gets, what each
-      one masters/consumes), the B1B-S2 buyer voice, the Bucket 2 item 3
-      capability subset, and Bucket 3 items 1-3. Flagship vendors (ServiceNow,
-      Glean, Confluence, Notion) treat the knowledge corpus as a single
-      substrate that service-management embeds (favoring a), but the current
-      catalog has been built the other way (favoring b for migration cost).
+      one masters/consumes), the B1B-M7-DUAL resolution, the B2-3 capability
+      subset, and B3-1 through B3-3. Flagship vendors (ServiceNow, Glean,
+      Confluence, Notion) treat the knowledge corpus as a single substrate that
+      service-management embeds (favoring a), but the current catalog has been
+      built the other way (favoring b for migration cost).
   - id: B2-2
-    summary: Catalog UX text approval per Rule #20
+    summary: Catalog UX text now WRITTEN; only a re-pivot needs approval
     question: >-
-      Approve, edit, or reject the proposed catalog_tagline and
-      catalog_description drafts surfaced in 2026-05-30 history B1-S2. Wording
-      depends on Bucket 2 item 1 routing.
-    options: [approve_as_drafted, edit_wording, reject_redraft]
-    why: Rule #20 forbids the agent from writing tagline or description without explicit per-row user-approved text.
+      The empty catalog_tagline and catalog_description on domains row 33 were
+      backfilled with neutral buyer-voice copy on 2026-06-07 (Rule #20 backfill,
+      record_status carries the review signal). The copy is corpus-neutral and
+      does not lock into a "system of record" vs "analytics layer" framing. If
+      B2-1 routes to option (b) "derived analytics layer", do you want the copy
+      re-pivoted to an analytics-on-top-of-existing-wikis voice? A re-pivot is an
+      overwrite of a now-non-empty value and needs explicit approval.
+    options: [keep_as_written, repivot_to_analytics_voice]
+    why: Rule #20 forbids overwriting a non-empty catalog UX value without explicit per-row user approval.
   - id: B2-3
     summary: Capability expansion, pick 5-8 of 8 codes
     question: >-
@@ -178,14 +120,14 @@ b2:
       KM-VERIFICATION-CYCLES, KM-FEEDBACK-LOOP, KM-ANALYTICS, KM-GOVERNANCE,
       KM-AI-ASSIST to add as capability_domains rows?
     options: [authoring, taxonomy, publication_workflow, verification_cycles, feedback_loop, analytics, governance, ai_assist]
-    why: A2 fails on 1 capability. Subset depends on Bucket 2 item 1 routing.
+    why: A2 fails on 1 capability. Subset depends on B2-1 routing.
   - id: B2-4
     summary: Regulations scope expansion
     question: >-
       Beyond ISO/IEC 27001, attach ISO 30401 Knowledge Management Systems
       (recommended), GDPR, HIPAA, SEC 17a-4, FERPA, or any combination?
     options: [iso_30401, gdpr, hipaa, sec_17a_4, ferpa]
-    why: Independent of Bucket 2 item 1.
+    why: Independent of B2-1.
   - id: B2-5
     summary: APQC tag override on handoff 826
     question: >-
@@ -196,7 +138,7 @@ b2:
       approved content". Retire the substring row (mark rejected) or leave both
       and let the reviewer pick at approval time?
     options: [retire_substring_row, leave_both_pending_review]
-    why: Independent of Bucket 2 item 1.
+    why: Independent of B2-1. Retiring the substring row is destructive (flip to rejected); surfaced, not executed.
   - id: B2-6
     summary: Pattern flag knowledge_search_queries.has_personal_content
     question: >-
@@ -207,18 +149,18 @@ b2:
     options: [true_flip, false_keep]
     why: Rule #15 forbids auto-flipping pattern flags; surface for user decision.
   - id: B2-7
-    summary: Lifecycle states on 4 unstated KMS masters
+    summary: Optional lifecycle states on 4 masters (entity_type already classified)
     question: >-
-      article_revisions, knowledge_collections, knowledge_categories,
-      knowledge_search_queries currently have 0 lifecycle states. Proposed,
-      article_revisions, draft -> in_review -> approved
-      (requires_permission, verb approve_revision) -> published -> superseded;
-      knowledge_collections, draft -> published -> archived; knowledge_categories,
-      config-shape exemption (no states); knowledge_search_queries,
-      config-shape event-stream exemption (no states). Approve, edit, or
-      reject per master.
-    options: [approve_all, edit_per_master, reject_all]
-    why: Per Rule #12 lifecycle states are Phase-B obligations, but config-shape exemption can apply on the two configuration-like masters; user owns the call.
+      entity_type was classified on 2026-06-07: article_revisions and
+      knowledge_search_queries are operational_record, knowledge_categories and
+      knowledge_collections are catalog, so NONE of the four require lifecycle
+      states (B12 passes without them). Optionally you may still author states:
+      article_revisions, draft -> in_review -> approved (requires_permission,
+      verb approve_revision) -> published -> superseded;
+      knowledge_collections, draft -> published -> archived. Approve, edit, or
+      reject the optional state machines per master.
+    options: [approve_optional_states, edit_per_master, reject_leave_stateless]
+    why: With entity_type classified the states are now optional, not required; the user owns whether to add them.
 
 b3:
   - id: B3-1
@@ -226,8 +168,8 @@ b3:
     rationale: >-
       Per-article steward / SME assignment. Universal pattern across flagship
       KM vendors. Drives verification cycles and feedback escalation. On
-      Bucket 2 item 1 option (a) or (c), candidate KMS master; on option (b),
-      candidate on the per-domain modules.
+      B2-1 option (a) or (c), candidate KMS master; on option (b), candidate on
+      the per-domain modules.
     vendor_evidence:
       - {vendor: ServiceNow Knowledge Management, evidence: 1st_class}
       - {vendor: Document360, evidence: 1st_class}

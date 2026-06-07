@@ -1,33 +1,23 @@
 schema_version: 2
 domain: IGA
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-05-31"
+next_action_by: user
+last_audit: "2026-06-07"
 
 b1a:
-  - id: B1A-B6
-    summary: "Author missing intra-domain relationship row: iga_user_entitlements (964) -> iga_sod_violations (707) as many-to-many association."
-    finding: "Per B6, every IGA master in the SoD-detection workflow should have an edge to iga_sod_violations. iga_user_entitlements (964) currently has 0 rows in data_object_relationships connecting it to iga_sod_violations (707), so the relationship graph cannot render the actual subject of a violation. The 2026-05-30 audit listed this as B1-S5 with the exact insert payload; the 2026-05-31 Continuation deferred it on the grounds that the agent prompt restricted relationship inserts to Rule #10 user-edges only. This audit removes that restriction (the row is between two domain-owned IGA masters with deterministic verb / inverse_verb)."
-    action: "Insert one data_object_relationships row: (data_object_id=964, related_data_object_id=707, relationship_verb='implicated_in_sod_violation', inverse_verb='implicates_entitlement', relationship_type='many_to_many', relationship_kind='association', is_required=false, owner_side='source')."
-    affected_entities:
-      - iga_user_entitlements
-      - iga_sod_violations
-    affected_masters:
-      - {data_object_id: 964, name: iga_user_entitlements, target_module_id: 148, workflow: sod_detection}
-      - {data_object_id: 707, name: iga_sod_violations, target_module_id: 146, workflow: sod_detection}
   - id: B1A-NOTES-DMDO
-    summary: "PATCH notes='' on 20 IGA DMDO rows (ids 789-808) that restate role+necessity+target module (Rule #15 forbidden pattern); contingent on B2-S3-CARRY answer."
+    summary: "DESTRUCTIVE (overwrite non-empty notes): PATCH notes='' on 20 IGA DMDO rows (ids 789-808) that restate role+necessity+target module (Rule #15 forbidden pattern); contingent on B2-S3-CARRY answer. NOT applied by the 2026-06-07 pass (overwriting a non-empty value needs sign-off)."
     finding: "20 domain_module_data_objects rows on IGA modules carry notes that restate what role+necessity+target_module already communicate (e.g. 'Mover events trigger access-review requests in IGA.', 'Contract-end events auto-trigger access revocation via provisioning.', 'ITSM service-catalog publications spawn corresponding entitlement-catalog entries.'). Rule #15 explicitly bans this pattern. Affected ids: 789, 790, 791, 792, 793, 794, 795, 796, 797, 798, 799, 800, 801, 802, 803, 804, 805, 806, 807, 808."
-    action: "Once user confirms via B2-S3-CARRY that the wording was auto-populated, PATCH notes='' on all 20 rows via a single chunked POST."
+    action: "Once user confirms via B2-S3-CARRY that the wording was auto-populated, PATCH notes='' on all 20 rows via a single chunked POST. Destructive (non-empty -> empty); never run unapproved."
     blocked_by:
       - {type: user_decision, ref: B2-S3-CARRY}
     affected_entities:
       - domain_module_data_objects
     extra_dmdo_ids: [789, 790, 791, 792, 793, 794, 795, 796, 797, 798, 799, 800, 801, 802, 803, 804, 805, 806, 807, 808]
   - id: B1A-NOTES-HOFF
-    summary: "PATCH notes='' on 14 IGA-touching handoff rows that carry Rule #15-forbidden boilerplate; contingent on B2-S2-CARRY answer."
+    summary: "DESTRUCTIVE (overwrite non-empty notes): PATCH notes='' on 14 IGA-touching handoff rows that carry Rule #15-forbidden boilerplate; contingent on B2-S2-CARRY answer. NOT applied by the 2026-06-07 pass."
     finding: "14 handoffs.notes entries match the rescinded write-policy boilerplate: 'target NULL until IGA is modularized' / 'target_domain_module_id NULL until IGA is modularized (Phase-M gap on target domain; SKILL.md authoring rule).' / 'source NULL until IGA is modularized' / the 'B10b resolved 2026-05-26: ...' system-mutation-history annotation on 467 / the composite leaver-pattern note on 185. IDs: 19, 185, 375, 378, 382, 389, 391, 392, 462, 467, 830, 831, 836, 1165."
-    action: "Once user confirms via B2-S2-CARRY that the wording was auto-populated, PATCH notes='' on all 14 handoff rows via a single chunked POST."
+    action: "Once user confirms via B2-S2-CARRY that the wording was auto-populated, PATCH notes='' on all 14 handoff rows via a single chunked POST. Destructive (non-empty -> empty); never run unapproved."
     blocked_by:
       - {type: user_decision, ref: B2-S2-CARRY}
     affected_handoffs:
@@ -45,44 +35,32 @@ b1a:
       - {handoff_id: 831, direction: in, source_domain: WSC, target_domain: IGA, trigger_event: channel_member.added, payload: channel_members, null_field: none}
       - {handoff_id: 836, direction: in, source_domain: WSC, target_domain: IGA, trigger_event: external_guest_invitation.revoked, payload: external_guest_invitations, null_field: none}
       - {handoff_id: 1165, direction: in, source_domain: IWMS, target_domain: IGA, trigger_event: desk_booking.checked_in, payload: desk_bookings, null_field: none}
-  - id: B1A-APQC
-    summary: "Author 4-8 additional agent_curated handoff_processes rows on the high-confidence subset of 19 still-untagged cross-domain handoffs; defer the rest to Discover Pass 3."
-    finding: "H1 partial: 24 of 43 cross-domain handoffs (56%) have handoff_processes coverage; 21 are agent_curated, meeting the 0.5N volume floor (22) by one row. 19 handoffs remain untagged; high-confidence candidates exist for handoffs 286 (iam_access_policy.permission_escalation_detected -> Manage business risks 365), 289 (iam_access_policy.permission_change -> 365), 281 (dlp_incident.escalated -> 363 or 365), 845 (dlp_user_activity.flagged -> 365), plus a few employee mover variants from HCM (378 employment_event.recorded, 389/391/392 org_unit.* -> Manage employee onboarding 224)."
-    action: "Author up to 8 agent_curated handoff_processes rows for the high-confidence subset, then defer the remaining (~10-15 rows on modern security primitives without clean PCF homes) to Discover Pass 3."
+  - id: B1A-APQC-REMAINDER
+    summary: "Defer-to-Discover: the still-untagged cross-domain handoffs with no clean APQC PCF home. The clean-PCF subset was tagged on 2026-06-07 (286/289 -> 273 Manage IT user identity and authorization; 378 -> 224 Manage employee onboarding). 389/391/392 were already tagged (process 97) by a prior pass."
+    finding: "After the 2026-06-07 pass, the remaining untagged cross-domain handoffs sit on modern security primitives without a clean L2/L3 PCF home in apqc_pcf_cross_industry: notably 281 (dlp_incident.escalated) and 845 (dlp_user_activity.flagged) (a /processes search for data-loss returns 0 rows; 'Perform abandonment' 363 is unrelated and 'Establish the enterprise risk framework' 365 is too coarse for an operational DLP escalation), plus device_compliance_result.*, enrolled_device.*, channel_member.*, external_guest.*, desk_booking.*, visitor_registration.*, api_consumer.*, document_folder.* style events."
+    action: "Defer to Discover Pass 3 (custom-process candidates). No clean PCF match -> no agent_curated tag authored. Revisit if a catalog-wide PCF backfill lands or a security-primitive process taxonomy is added."
     affected_handoffs:
-      - {handoff_id: 286, direction: in, source_domain: DSPM, target_domain: IGA, trigger_event: iam_access_policy.permission_escalation_detected, payload: iam_access_policies, null_field: none}
-      - {handoff_id: 289, direction: in, source_domain: DSPM, target_domain: IGA, trigger_event: iam_access_policy.permission_change, payload: iam_access_policies, null_field: none}
       - {handoff_id: 281, direction: in, source_domain: DLP, target_domain: IGA, trigger_event: dlp_incident.escalated, payload: dlp_incidents, null_field: none}
       - {handoff_id: 845, direction: in, source_domain: DLP, target_domain: IGA, trigger_event: dlp_user_activity.flagged, payload: dlp_user_activity_logs, null_field: none}
-      - {handoff_id: 378, direction: in, source_domain: HCM, target_domain: IGA, trigger_event: employment_event.recorded, payload: employment_events, null_field: none}
-      - {handoff_id: 389, direction: in, source_domain: HCM, target_domain: IGA, trigger_event: org_unit.created, payload: org_units, null_field: none}
-      - {handoff_id: 391, direction: in, source_domain: HCM, target_domain: IGA, trigger_event: org_unit.changed, payload: org_units, null_field: none}
-      - {handoff_id: 392, direction: in, source_domain: HCM, target_domain: IGA, trigger_event: org_unit.dissolved, payload: org_units, null_field: none}
-  - id: B1A-PHASE-P
-    summary: "Multi-module (5 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
-    finding: "Live triage 2026-06-02: 5 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 5 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    extra_phase_p_triage: "2026-06-02"
-  - id: B1A-ENTITY-TYPE
-    summary: "6 masters carry entity_type unclassified/null (B13): classify them."
-    finding: "Live triage 2026-06-02: 6 data_objects mastered by this domain have entity_type null or 'unclassified' (enumerated in affected_entities). Unclassified entity_type degrades the per-entity write tier (plan-2-entity-type-tiers.md)."
-    action: "Classify each master's data_objects.entity_type (operational_workflow / operational_record / catalog / junction / computed) per plan-2-entity-type-tiers.md."
-    affected_entities: [iga_access_certifications, iga_access_requests, iga_entitlement_definitions, iga_provisioning_events, iga_sod_violations, iga_user_entitlements]
-    extra_phase_p_triage: "2026-06-02"
   - id: B1A-SELF-CONTAIN
-    summary: "4 contributor/required-consumer rows break module self-containment (M9): embed or relax each."
-    finding: "Live triage 2026-06-02: 4 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
-    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency."
+    summary: "DESTRUCTIVE (rewrite role/necessity on existing DMDO rows, M9): 4 contributor/required-consumer rows break module self-containment; embed or relax each. NOT applied by the 2026-06-07 pass (rewriting an existing DMDO row's role/necessity needs sign-off)."
+    finding: "Live triage 2026-06-02: 4 domain_module_data_objects rows on this domain's modules are role=consumer with necessity=required, pointing at an entity mastered by another domain (HCM employees) and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation."
+    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Both edits rewrite an existing non-default value -> surface for sign-off, do not apply. Do not document the dependency."
     extra_m9_shapes:
       - {entity: employees, module: IGA-ACCESS-CERTIFICATION, role: consumer, master_domain: HCM}
       - {entity: employees, module: IGA-ACCESS-REQUEST, role: consumer, master_domain: HCM}
       - {entity: employees, module: IGA-AUTO-PROVISIONING, role: consumer, master_domain: HCM}
       - {entity: employees, module: IGA-SOD-MGMT, role: consumer, master_domain: HCM}
     extra_phase_p_triage: "2026-06-02"
+  - id: B1A-PHASE-P
+    summary: "DEFER (personas/RACI not authored by audit): multi-module (5 modules) with 0 personas post-Plan-3 (E1 fail). Author the persona / RACI layer is a deferred, user-owned build, not an agent additive write."
+    finding: "Live triage 2026-06-02: 5 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Candidate personas suggested by the module surface and the 4 retired IAM roles: IAM-IDENTITY-ADMIN (admin across all 5 modules), IAM-ACCESS-REQUEST-APPROVER (144), IAM-ACCESS-CERTIFIER (145), IAM-SOD-ANALYST (146), plus an entitlement-catalog owner (147) and a provisioning operator (148)."
+    action: "DEFERRED per audit policy: do not author. When commissioned, author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 5 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-M7-SIBLING-CONSUMERS
-    summary: "8 sibling-consumer DMDO rows on IGA modules failing M7 within-domain; await user PROMOTE-vs-DELETE call from B1-S1-CARRY before fix."
+    summary: "8 sibling-consumer DMDO rows on IGA modules failing M7 within-domain; await user PROMOTE-vs-DELETE call from B2-M7-DECIDE before fix."
     finding: "M7 within-domain hard fail unresolved: 4 IGA masters carry role='master' in one IGA module AND role IN (consumer, contributor) in 1-4 sibling IGA modules. iga_access_requests (704) master in 144, consumer in 148. iga_entitlement_definitions (706) master in 147, consumer in 144, 145, 146, 148. iga_sod_violations (707) master in 146, consumer in 144. iga_provisioning_events (708) master in 148, consumer in 144, 145, 146. 8 sibling-consumer rows total. Per M7 the two valid resolutions are (a) PROMOTE every consumer row to embedded_master accepting runtime demotion when modules co-deploy, or (b) DELETE all 8 rows accepting always-co-installed semantics. Recommendation (a)."
     blocked_by:
       - {type: user_decision, ref: B2-M7-DECIDE}
@@ -126,14 +104,14 @@ b2:
     options:
       - "PROMOTE: PATCH 8 rows role='consumer' -> role='embedded_master' (audit recommendation; preserves standalone-deploy story for each module)"
       - "DELETE: DELETE the 8 rows; the 4 master rows remain authoritative for the whole domain"
-    why: "M7 rejects within-domain master+consumer coexistence. Either resolution is valid; the choice depends on whether IGA-AUTO-PROVISIONING (148) is meant to deploy standalone against an external identity store without IGA-ACCESS-REQUEST (144), etc."
+    why: "M7 rejects within-domain master+consumer coexistence. Either resolution is valid; the choice depends on whether IGA-AUTO-PROVISIONING (148) is meant to deploy standalone against an external identity store without IGA-ACCESS-REQUEST (144), etc. Both are destructive (rewrite or delete existing rows); never run unapproved."
   - id: B2-S1-CARRY
     summary: "iga_entitlement_definitions (706) notes carries the config-shape exemption wording. Approved at load time or auto-write?"
     question: "Was the wording 'Config-shape master: lightweight draft -> published -> deprecated -> retired lifecycle, no per-record approval workflow. Permission gates apply only on publish and retire.' user-approved when loaded, or auto-populated by the Phase-B loader?"
     options:
       - "Confirm user-approved at load time, leave as is."
       - "Confirm auto-write, PATCH the column to empty string and record the config-shape exemption only in this audit's history."
-    why: "Rule #15 RESCINDED the auto-write license for the config-shape exemption note; same shape as the APM B2-S2 finding."
+    why: "Rule #15 RESCINDED the auto-write license for the config-shape exemption note; same shape as the APM B2-S2 finding. The 2026-06-07 pass classified 706 entity_type='catalog' (the structural home for the config-shape exemption per Rule #12), so the typed classification now stands regardless of the notes decision; this carry only governs whether the prose notes line is overwritten."
   - id: B2-S2-CARRY
     summary: "14 IGA-touching handoffs.notes rows match the rescinded write-policy boilerplate. Approved at load time or auto-write?"
     question: "Are any of the 14 rows (19, 185, 375, 378, 382, 389, 391, 392, 462, 467, 830, 831, 836, 1165) carrying user-approved wording, or all auto-written by the prior policy?"
@@ -154,7 +132,7 @@ b2:
     options:
       - "Per-flag yes/no answers from the user."
       - "Leave all defaults; band passes vacuously."
-    why: "Pattern flags are workflow-shape judgments the user owns; false-by-default does not establish considered-and-rejected."
+    why: "Pattern flags are workflow-shape judgments the user owns; false-by-default does not establish considered-and-rejected. Note: 704, 705, 707, 964 were classified entity_type='operational_workflow' on 2026-06-07, so pattern-flag consideration is now in-scope for all four per Rule #12."
   - id: B2-S5-CARRY
     summary: "E6 permission-bundle drift: does the catalog permission_hierarchy auto-include workflow gates under <module>:admin?"
     question: "Is permission_hierarchy seeded such that IAM-IDENTITY-ADMIN's 5 :admin grants auto-include every module workflow gate? Or do the IC-tier roles enumerate gates because the hierarchy does NOT carry them?"
@@ -162,14 +140,7 @@ b2:
       - "Confirm :admin auto-includes -> drop the explicit gate grants on IC-tier roles as redundant."
       - "Confirm :admin does NOT auto-include -> enumerate the 14 workflow gates on IAM-IDENTITY-ADMIN explicitly."
       - "Leave as is (IC-tier explicit, admin-tier implicit)."
-    why: "The audit does not introspect permission_hierarchy rules; the consistency check needs platform-level confirmation."
-  - id: B2-S6
-    summary: "A4 + M8: catalog_tagline and catalog_description empty on the IGA domain row and all 5 module rows. Rule #20 requires user-approved wording."
-    question: "Please supply the buyer-voice catalog_tagline (single sentence) and catalog_description (1-3 paragraphs) for the IGA domain row and each of the 5 modules (144 IGA-ACCESS-REQUEST, 145 IGA-ACCESS-CERTIFICATION, 146 IGA-SOD-MGMT, 147 IGA-ENTITLEMENT-CATALOG, 148 IGA-AUTO-PROVISIONING)."
-    options:
-      - "User supplies all 12 strings (6 rows * 2 columns), agent PATCHes them."
-      - "Defer until a marketing pass."
-    why: "Rule #20 forbids agent-authored wording on these columns. Once non-empty wording exists, never overwrite without explicit per-row user approval."
+    why: "The audit does not introspect permission_hierarchy rules; the consistency check needs platform-level confirmation. (Note: the 4 IAM roles referenced were retired by Plan 3; this carry stands as a hierarchy-semantics question for whatever personas B1A-PHASE-P authors.)"
   - id: B2-PCF-SUBSTITUTE
     summary: "Substitute or load PCF entries for 5 deferred APQC tag candidates whose external_ids are absent from catalog."
     question: "For handoffs 461 / 463 / 462 (PCF external_id 10568 'Manage IT assets'), 465 (10708 'Establish internal controls, policies, and procedures'), and 185 (10470 / 10473 employee separation), should the agent (a) pick a present-in-catalog substitute PCF per handoff, (b) load the missing PCF rows catalog-wide, or (c) leave the tags pending until a catalog-wide PCF backfill?"
@@ -177,7 +148,7 @@ b2:
       - "Pick substitute PCFs from the present catalog (agent surfaces 1-2 candidates per handoff)."
       - "Load the missing PCFs into /processes (a catalog-wide change, outside IGA scope)."
       - "Defer until the catalog-wide PCF backfill."
-    why: "Without resolution these 5 high-confidence APQC tags stay deferred and the H1 process-health number stays at 21 instead of 26."
+    why: "Without resolution these 5 high-confidence APQC tags stay deferred and the H1 process-health number stays below target."
 
 b3:
   - id: B3-RULESETS

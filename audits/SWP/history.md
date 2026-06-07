@@ -431,3 +431,52 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07, Audit (state-driven execute, bulk batch)
+
+Loader: `.tmp_deploy/fix_swp_state_execute_2026_06_07.ts` (run from project root; idempotent, re-run prints 0 writes).
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21) against `audits/SWP/state.yaml`. Worked only the open state items, classified each into EXECUTE / SURFACE / LEAVE. All EXECUTE-class additive/corrective items written at `record_status='new'`. No fresh from-scratch audit. Note: several open H1 items had already been cleared in live state since the snapshot (16 of the 18 "untagged" handoffs now carry `agent_curated` rows), and `business_function_domains` is already populated, so the live verify-first pass narrowed the EXECUTE surface considerably.
+
+### Executed (additive / corrective; record_status='new')
+
+- **B1A-ENTITY-TYPE (8 masters):** PATCHed `data_objects.entity_type` from `unclassified` to the Rule #12 enum. `operational_workflow` x6 (workforce_plans 23, headcount_plans 24, skills_gap_analyses 26, workforce_scenarios 27, org_designs 28, workforce_cost_projections 30, each carries a lifecycle state machine); `computed` x1 (position_demand_forecasts 25, a stateless derived forecast); `catalog` x1 (labor_market_benchmarks 29, external reference/config data, 0 states). All six operational_workflow masters already have lifecycle states, so B12 stays clean.
+- **B1A-M7-DDO31-ROLLUP (1 row):** PATCHed `domain_data_objects` id=31 `role` master -> contributor (necessity stays required). Resolves the catalog-wide single-master conflict on `job_requisitions` (data_object_id=1): ATS is now sole `master` (module DMDO 9 / ATS-RECRUITMENT-PIPELINE), SWP is contributor at every layer. Pre-flight confirmed ATS still holds the module-level master before demoting, so 0 masters can never result. Corrective realignment of a derived rollup, not an editorial overwrite.
+- **Catalog UX / Rule #20 (5 rows):** authored buyer-voice `catalog_tagline` + `catalog_description` on the SWP domain row (100) and all four modules (94 SWP-DEMAND-FORECAST, 95 SWP-SUPPLY-PLANNING, 96 SWP-SCENARIO-MODELING, 97 SWP-COST-PROJECTIONS). All five were empty; no non-empty value overwritten. No vendor names (Rule #18), no em-dash, American English.
+- **B1A-H1-APQC-TAGGING (2 rows):** INSERTed `handoff_processes` (`proposal_source='agent_curated'`, `role='implements'`, record_status omitted->new) for the only two still-untagged SWP cross-domain handoffs: handoff 11 (HCM->SWP-DEMAND-FORECAST `headcount.actuals_updated`, plan-vs-actual reconciliation) -> PCF 980 "Perform strategic workforce planning" (21693, 7.1.2.1); handoff 16 (SWP-COST-PROJECTIONS->EPM `cost_projection.approved`) -> PCF 1322 "Prepare periodic budgets and plans" (10772, 9.1.2.2). PCF ids resolved live. The other 16 handoffs in the state's list were already `agent_curated` in live state.
+- **B11 aliases (12 rows):** INSERTed generic-synonym `data_object_aliases` (`alias_type='synonym'`, no industry_id) on the four masters lacking coverage: workforce_plans 23 (Strategic Workforce Plan, Workforce Plan, Multi-Year People Plan), headcount_plans 24 (Headcount Plan, Hiring Plan, Staffing Plan), workforce_scenarios 27 (What-If Scenario, Workforce Scenario, Planning Scenario), org_designs 28 (Organization Design, Org Structure Design, Reorg Design). Masters 25/26/29/30 already carry synonyms. No vendor/product names (Rule #18).
+
+### Surfaced (not written; user decision or sign-off required)
+
+- **b2-S1** event_category convention for trigger_event 388 `labor_market_benchmark.refreshed` (state_change vs threshold). Still empty; blocks B1B-B9.
+- **b2-S2** has_personal_content re-evaluation on workforce_scenarios 27, org_designs 28, workforce_cost_projections 30, skills_gap_analyses 26 (all currently false; RIF/restructure/named-person content). Flipping a flag = a write the user owns.
+- **b2-S3** Signal-1 attribution on event 62 `headcount.approved` (keep SWP source vs re-anchor handoffs 14+1149 to ATS-RECRUITMENT-PIPELINE).
+- **b2-S4** role-count drift: ORG-DESIGN-PRACTITIONER absent (4 vs prior 5 SWP-scoped roles). Editorial scope input for the deferred persona layer.
+- **b2-S5** C1 per-capability business_function owner/contributor split (BFC empty; owner-exists precondition now satisfied via business_function_domains). Blocks B1B-C1.
+- **b2-S6 (new, DESTRUCTIVE):** REPLACE-CORRECT 3 mis-tagged `discovery_substring` handoff_processes rows: id 101 (handoff 13 PA->SWP attrition.forecast_updated, currently process 671) -> recommend 980; id 130 (handoff 241 SPM->SWP initiative.kickoff, currently process 16 / L2 over-coarse) -> recommend tighter L3/L4; id 132 (handoff 242 SPM->SWP resource_allocation.committed, currently process 713 / sales context) -> recommend 980. Overwrite of non-empty rows -> gated on approval.
+- **B1A-SELF-CONTAIN / M9 (DESTRUCTIVE):** 12 contributor/required-consumer DMDO rows break module self-containment; the fix (embed-as-shell or relax necessity) overwrites existing role/necessity values -> surfaced, not executed.
+- **B1A-PHASE-P personas / RACI:** DEFERRED (not auto-authored). Candidate personas: Workforce Planner, Workforce Planning Lead, FP&A Workforce Partner, Workforce Leadership Sponsor, plus Org Design Practitioner pending B2-S4.
+
+### Left (untouched)
+
+- **b1b owed-by-others:** B1B-B9-EVENT388 (gated B2-S1), B1B-C1-BFC-ANCHORING (gated B2-S5), B1B-OTHER-DOMAIN-NULLS (7 NULL FKs owed by EPM/WFM/SPM modularizations).
+- **b3 backlog:** workforce_segments, succession_plans, internal_mobility_intents, domain_regulations linkages.
+- **RETIRED / superseded (2026-06-06):** B1A-RULE15-SKILL-TOOLS-NOTES and B1B-F1-F2-MODULE-SKILLS. `skill_tools` is dropped and per-module system skills are canceled under the per-domain-skill restoration supersession; reframed as a note only, no action. Per-module tool re-authoring tracked in `audits/_modularization-backlog.md`.
+
+### Verification (post-run)
+
+- `data_objects?id=in.(23..30)`: all 8 entity_type values match the table above; 0 `unclassified`.
+- `domain_data_objects?id=eq.31`: role=contributor, necessity=required.
+- `handoff_processes?handoff_id=in.(11,16)`: 2 rows, proposal_source=agent_curated, record_status=new.
+- `domains?id=eq.100` and all 4 modules: catalog_tagline/catalog_description non-empty.
+- Loader re-run: 0 patched / 0 inserted across every step (idempotent).
+
+UI spot-check entry points:
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/domains
+- https://tests.semantius.app/domain_map/domain_modules
+- https://tests.semantius.app/domain_map/domain_data_objects
+- https://tests.semantius.app/domain_map/handoff_processes
+- https://tests.semantius.app/domain_map/data_object_aliases

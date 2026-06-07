@@ -320,3 +320,44 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass over FUND-ADMIN (domain 160; modules 12 FUND-LEDGER, 13 LP-COMMITMENTS, 14 CAPITAL-CALLS, 15 DISTRIBUTIONS). Worked only the open state.yaml items. Executed all fully-specified additive/corrective work (entity_type classification, catalog UX, regulations, the 4 notice/KYC/doc masters, lifecycle states + trigger events, and the intra-domain handoff layer). Surfaced the destructive and judgment items. Deferred personas. Domain is now agent-finished on the additive bands; the remaining gate is the user's b2 decisions plus the Phase E/F role-and-skill layer that those decisions unblock.
+
+### Executed (record_status='new' throughout; no approvals stamped)
+
+| Item | Action | Rows |
+|---|---|---|
+| B1A-ENTITY-TYPE | PATCH data_objects.entity_type unclassified -> typed | 10 (9 operational_workflow; fund_ledger_entries 756 -> operational_record, which structurally resolves the B1B-L7 / B2-LEDGER-LIFECYCLE config-shape exemption per Rule 12, no notes write) |
+| Catalog UX (Rule 20) | PATCH empty catalog_tagline + catalog_description | 5 (domain 160 + modules 12/13/14/15); buyer-voice, no vendor names, no em-dash |
+| B1A-M1 | INSERT regulations + domain_regulations links to 160 | 4 regulations (SEC Marketing Rule 94, ILPA Reporting Standards 95, Common Reporting Standard 96, Cayman Mutual Funds Act 97) + 4 domain_regulations (FUND-ADMIN now links 6) |
+| B1A-W1..W4 | INSERT new master data_objects + DMDO master + relationships | 4 data_objects (subscription_documents 1021, lp_kyc_records 1022, distribution_notices 1023, capital_call_notices 1024); 4 DMDO master rows (13/13/15/14); 11 data_object_relationships (5 cross-master one_to_many references + 6 per-actor user-edges) |
+| B1A-L1..L6 + W1..W4 lifecycle | INSERT data_object_lifecycle_states (module-attributed, gate states requires_permission=true) | 39 states across lp_subscriptions, pcap_statements, capital_calls, fund_close_periods, capital_call_responses, waterfall_calculations + the 4 new masters |
+| B1A-L1..L6 events | INSERT trigger_events | 8 (lp_subscription.submitted, pcap_statement.published, capital_call.drafted, fund_close_period.locked, capital_call_response.paid/.defaulted, waterfall_calculation.approved, lp_commitment.committed). The 9th, lp_subscription.executed on 758, could NOT be created: name collides with pre-existing row 955 on limited_partners 728 (surfaced below). |
+| B1A-B9b | INSERT intra-domain handoffs (source=target=160, lifecycle_progression, low friction) | 5 wiring 12->13 (fund.final_close), 13->14 (lp_commitment.committed), 14->13 (capital_call.funded), 15->13 (fund_distribution.executed), 15->12 (GL posting) |
+
+Loaders: .tmp_deploy/fund_admin_catalog_ux_2026_06_07.ts, .tmp_deploy/fund_admin_additive_2026_06_07.ts (both idempotent).
+
+UI links: data_objects, data_object_lifecycle_states, trigger_events, handoffs, regulations, domains, domain_modules under https://tests.semantius.app/domain_map/<table>.
+
+### Surfaced for user (not executed)
+
+- B2-EVENT-955-REATTRIB (NEW, destructive): trigger_event 955 lp_subscription.executed is mis-attributed to limited_partners (728) with empty event_category/to_state, blocking the L1 .executed event on lp_subscriptions (758). Re-attribute / rename / leave.
+- B1A-H2 (destructive): flip 9 agent_curated handoff_processes rows new -> approved, per-row sign-off.
+- B1B-H1a / B1B-H1e (destructive): supersede/replace existing APQC tags on handoffs 1040 / 1044 (b2: B2-H1A-OVERRIDE, B2-H1E-OVERRIDE).
+- B1B-PATTERN-FLAGS (destructive): principally waterfall_calculations.has_single_approver=true (b2: B2-PATTERN-FLAGS).
+- b2 open: B2-CLOSE-MODULE, B2-LP-PORTAL, B2-PATTERN-FLAGS, B2-APPROVAL-WORKFLOW, B2-PAIRWISE-RECONCILIATION, B2-H1A-OVERRIDE, B2-H1E-OVERRIDE, B2-EVENT-955-REATTRIB.
+- B1A-PHASE-P (personas/RACI): DEFERRED per the bulk-batch instruction. Candidate personas noted in state.yaml.
+
+### Left
+
+- B1B-E-BAND / B1B-F-BAND: blocked downstream (E gated by B2-APPROVAL-WORKFLOW + deferred personas; F gated by E). Lifecycle prerequisites are now satisfied.
+- B1B-RE-INVEST-M7: blocked on the RE-INVEST audit (legacy domain_data_objects master rows 597/598).
+- B1B-H1g: depends on B3-PCF-FUND-LAUNCH (no clean PCF match for handoff 1046).
+- b3 backlog (6 candidate entities + the fund-launch PCF search): unchanged, non-blocking.
+- Per-module skill-grain items: retired per the 2026-06-06 supersession header (kept above).

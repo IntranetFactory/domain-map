@@ -387,3 +387,86 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate-mode pass over the OBS state.yaml open items only (no fresh
+from-scratch audit). Live re-verification (domain id=7) confirmed OBS is still
+UNBUILT: 0 `domain_modules` (M1 hard fail), 0 `capability_domains`. Per the unbuilt
+rule the agent did NOT scaffold the module set; the build is surfaced as B2-S1 and
+the entire module-dependent cascade is left until it lands. Agent-doable
+additive/corrective work that is NOT module-dependent was executed. The snapshot was
+stale on two counts, corrected here: handoffs 614 and 615 are now already tagged
+(`handoff_processes` rows 1152, 1153 -> PCF 1299), so B1A-H1-S615 and the 614 half of
+B1B-H1 are done; and `business_function_domains` already carries 2 rows (owner = Site
+Reliability Engineering bf 61, contributor = IT Operations bf 27), so C1 needs nothing.
+
+### Executed (additive/corrective, all rows record_status='new')
+
+- **entity_type classification (5 masters).** All 5 OBS masters were `unclassified`.
+  PATCHed per Rule #12 enum, deterministic from workflow shape: `metric_series` (88),
+  `log_entries` (89), `distributed_traces` (90) -> `operational_record` (append-only,
+  write-once time-series telemetry, no workflow); `service_level_objectives` (91),
+  `error_groups` (92) -> `operational_workflow` (real-world objects with lifecycles).
+  Loader: `.tmp_deploy/fix_obs_state_driven_2026_06_07.ts`.
+- **Catalog UX backfill (Rule #20), domains row.** `domains.catalog_tagline` and
+  `domains.catalog_description` were both empty; authored buyer-voice copy (workflow +
+  value, no vendor names, no em-dash, American English) and wrote both straight into
+  the empty columns. No module-grain catalog copy was written because OBS has 0
+  `domain_modules`. Same loader.
+- **Aliases / B11 (7 rows).** Inserted clearly-generic synonyms (`alias_type='synonym'`,
+  `notes` omitted per Rule #15, no vendor/product names per Rule #18) on the 3 masters
+  that stay in OBS regardless of the B3-S2 promotion outcome: `metric_series` 88
+  ("time series", "metric"); `distributed_traces` 90 ("trace", "span");
+  `service_level_objectives` 91 ("SLO", "service level indicator", "SLI"). Aliases on
+  `log_entries` (89, -> LOG-MGMT risk) and `error_groups` (92, -> IRM risk) were
+  DEFERRED because their B3-S2 migration dependency makes them potentially misplaced
+  work today. Loader: `.tmp_deploy/fix_obs_aliases_2026_06_07.ts`. New row ids 1528-1534.
+
+### Surfaced (returned to user; not executed)
+
+- **B2-S1 (BUILD / module split shape).** OBS is unbuilt; this decision gates the
+  whole build and its cascade (capabilities, lifecycle states, B10b backfill,
+  relationships, the domain-grain system skill toolset, Phase P personas + RACI).
+- **B2-S2 (B9 attribution defects, events 6 / 7 / 115).** DESTRUCTIVE: recommended fix
+  DELETEs handoffs 54 and 56 and re-attributes trigger_event 115 (`data_object_id`
+  47 -> 91). Recommended only; not applied.
+- **B2-S3 (pattern flags).** DESTRUCTIVE: flipping a flag overwrites an existing false
+  on the two workflow masters (91, 92). Recommended values surfaced; not applied.
+- **B2-APQC-616-617 (APQC tag for the last 2 untagged cross-domain handoffs).** 616 and
+  617 (both OBS -> VSDP) are the only 2 of 22 still untagged; candidate PCF 1262
+  "Implement software change/release" is medium-confidence, held for the user's PCF pick.
+- **Personas / RACI (Phase P).** DEFERRED; not authored. Folds into the B2-S1 build
+  (only applies if the build is multi-module). Candidate personas: SRE / on-call
+  engineer (SLO owner, error_group assignee), platform / observability engineer.
+
+### Left (untouched)
+
+- **Unbuilt cascade:** module set, capabilities, lifecycle states, B10b handoff-module
+  backfill, intra/cross-domain + users relationships, domain-grain system skill toolset.
+  All left until B2-S1 build lands (do-not-scaffold rule).
+- **B1B-S11 remainder:** `log_entries` (89) and `error_groups` (92) aliases deferred
+  pending B3-S2 (LOG-MGMT / IRM promotion may relocate them).
+- **Superseded (2026-06-06 / Plan 3):** B1B-S14, B1B-S15, B2-S4 (per-module skill grain
+  + `skill_tools` model). CANCELED; `skill_tools` is dropped. No action.
+- **b3 backlog:** B3-S1 (missing observability substrate entities), B3-S2
+  (modularization hypothesis; reclassified as informing the B2-S1 shape).
+- **Report-only owed by other domains:** RO-1..RO-6 (AIOPS, ITSM, VSDP, ITOM, the 6
+  inbound-source domains, CMDB). Do not block OBS.
+
+### Verification
+
+- `GET /data_objects?id=in.(88,89,90,91,92)`: all 5 `entity_type` populated as intended.
+- `GET /domains?id=eq.7`: `catalog_tagline` + `catalog_description` non-empty, `record_status='new'`.
+- `GET /data_object_aliases?data_object_id=in.(88,89,90,91,92)`: 7 rows, `alias_type='synonym'`, `record_status='new'`.
+
+No JWT errors during the run.
+
+UI spot-check:
+- https://tests.semantius.app/domain_map/data_objects (entity_type on the 5 OBS masters)
+- https://tests.semantius.app/domain_map/domains (OBS catalog_tagline + catalog_description)
+- https://tests.semantius.app/domain_map/data_object_aliases (7 new OBS synonym rows)

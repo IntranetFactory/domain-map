@@ -469,3 +469,77 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21) against ESG's open state.yaml items. ESG remains
+UNBUILT: live verification confirmed 0 `domain_modules` and 0 `capability_domains` rows (domain
+id 21, parent GRC id 15). Per the unbuilt LEAVE rule, the build (B1A-BUILD) and its whole cascade
+were surfaced, not scaffolded. Only build-independent additive/corrective items that operate on
+the 9 existing masters were executed. No JWT errors. No destructive action taken. Re-run of the
+loader confirmed full idempotency (0 rows on second pass).
+
+Loader: [.tmp_deploy/2026-06-07_esg_state_driven_execute.ts](../../.tmp_deploy/2026-06-07_esg_state_driven_execute.ts). Run from project root.
+
+### Executed (all record_status='new' or PATCH of empty/unclassified fields)
+
+- **entity_type (Rule #12 / B13)**: PATCHed all 9 masters from `unclassified` to a typed enum,
+  deterministic from each description: emissions_records=operational_record,
+  emission_factors=catalog, activity_data_records=operational_record, esg_targets=operational_workflow,
+  esg_metrics=computed, esg_disclosures=operational_workflow, supplier_esg_assessments=operational_workflow,
+  facility_emissions=operational_workflow, esg_initiatives=operational_workflow. (9 PATCHes.)
+- **Catalog UX (Rule #20)**: authored `catalog_tagline` + `catalog_description` on domain 21
+  (both were empty). Buyer voice, workflow + value; statutory frameworks (CSRD, ISSB, GHG Protocol)
+  named in-line per Rule #18; no vendor/product names; no em-dash; American English. (1 PATCH.)
+  No module-level UX written (no modules exist).
+- **B1A-S11 (B11 aliases)**: inserted 21 generic-synonym `data_object_aliases` rows across all 9
+  masters (alias_type='synonym', is_preferred=false). No vendor product names; framework terms
+  (GHG Records, CSRD Reports, Climate Disclosures, Net Zero Commitments) allowed. (21 INSERTs.)
+- **B1A-S6 (B6 intra-domain relationships)**: inserted 8 `data_object_relationships` edges between
+  ESG masters exactly per the S6 verbs: emission_factors applies_to emissions_records;
+  activity_data_records sources emissions_records; facility_emissions rolls_up emissions_records
+  (composition); esg_targets governs esg_metrics; esg_metrics summarizes emissions_records;
+  esg_disclosures reports esg_metrics; esg_disclosures reports facility_emissions; esg_initiatives
+  drives esg_targets. All one_to_many, owner_side=source. (8 INSERTs.) Pre-flight confirmed 0
+  existing intra-ESG edges (the 4 pre-existing edges touching ESG masters are all cross-domain).
+
+### Surfaced (no write; needs user decision or has a blocker)
+
+- **All b2 (B2-1..B2-6)**: capability split (B2-1), financial_plans consumer link (B2-2), pattern
+  flag review (B2-3), modularization shape (B2-4, the blocking build decision), handoff 851 target
+  (B2-5), emission_factors lifecycle (B2-6, now largely resolved toward config-shape by the
+  entity_type=catalog classification).
+- **B1A-S8 (cross-domain relationships)**: NOT executed. Three named target endpoints do not exist
+  in the catalog (`risk_registers`, `regulatory_policies`, `tprm_supplier_risk_records`) -> defer to
+  Discover. Only `audit_engagements` (293) exists; the three AUDIT edges are authorable but left with
+  the build/S7 modeling tier. The 851 edge is blocked on B2-5.
+- **B1B-S13 (DESTRUCTIVE)**: any DELETE of legacy esg-system skill id 13 / its skill_tools needs
+  approval and re-framing under the 2026-06-06 supersession (esg-system may BE the single domain-grain
+  skill, not a relic; skill_tools is what retires).
+- **B1B-B1 (DESTRUCTIVE)**: re-routing handoff 851 would overwrite/delete the non-empty
+  handoff_processes row 674 (851->1802); needs approval and B2-5.
+- **Personas / RACI (Phase P)**: deferred. ESG is unbuilt and single/multi-module shape is unknown,
+  so no personas authored. Candidate personas at build time: Sustainability Manager, ESG Disclosure
+  Lead, Carbon Accountant, Supplier Sustainability Analyst.
+
+### Left (untouched)
+
+- **B1A-S7 (users-edges, Rule #10)**: left with the build (modeling tier authored at build time
+  alongside the Phase-B preview). users data_object resolved live as id 748 (platform_builtin).
+- **B1A-M1..M5, B1A-U1..U4**: new entities routed to non-existent modules; part of the build, gated
+  on B2-4 / B1B-S4.
+- **B1B-S2 / S4 / S5 / S10 / S12**: blocked on B2 decisions and/or the build.
+- **b3 backlog (B3-1..B3-6)**: speculative candidates, non-blocking.
+- **Per-module skill-grain / skill_tools items**: RETIRED per the 2026-06-06 supersession header
+  (kept atop state.yaml).
+- **C1 (business_function_domains)**: already populated (owner 115 ESG and Sustainability, contributor
+  116 Finance); nothing to do.
+- **H1 (APQC handoff_processes)**: already fully tagged on all 9 ESG handoffs (closed 2026-05-31);
+  nothing to do.
+- **A3 (solution_domains)**: passes (7 solutions); SCOPE DISCIPLINE forbids new vendors/solutions.
+
+### JWT errors
+
+None.

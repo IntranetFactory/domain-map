@@ -297,3 +297,40 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21) working only the open items in audits/WSC/state.yaml. No fresh from-scratch audit. Resolved live: domain WSC = id 75, modules WSC-CHANNELS-CONVERSATIONS 115 / WSC-HUDDLES-VOICE 116 / WSC-EXTERNAL-COLLAB 117 (all FULL), 8 masters (564-571), owner business_function 'End-User Computing' (row 83). Loader: .tmp_deploy/2026-06-07_wsc_state_driven_execute.ts (idempotent; re-run is a clean no-op, verified). No JWT-audience errors. notes column never written (Rule #15); no record_status stamped approved (Rule #1).
+
+### Executed (additive/corrective, record_status='new')
+
+| State item | Operation | Rows | Outcome |
+|---|---|---|---|
+| B1A-ENTITY-TYPE | PATCH data_objects.entity_type (all 8 were 'unclassified') | 8 | chat_channels 564 -> operational_workflow; chat_messages 565 -> operational_record; chat_threads 566 -> operational_record; chat_huddles 567 -> operational_workflow; channel_members 568 -> junction; external_guest_invitations 569 -> operational_workflow; chat_message_attachments 570 -> operational_record; channel_file_shares 571 -> junction. The 3 operational_workflow masters all already carry valid lifecycle states (verified: 564 active->archived; 567 scheduled->live->ended; 569 invited->accepted/declined/revoked), so B12 stays consistent. |
+| B1A-A4 (catalog UX, Rule #20) | PATCH domains.catalog_tagline + catalog_description on row 75 (both empty) | 1 | Buyer-voice copy authored and written straight in (no pre-surface gate per Rule #20). |
+| B1A-M8 (catalog UX, Rule #20) | PATCH domain_modules.catalog_tagline + catalog_description on 115/116/117 (all empty) | 3 | Buyer-voice tagline + description per module (channels/threads; huddles; external guest collab). No vendor names, no em-dash. |
+| B1A-B9b | INSERT 2 intra-domain handoffs (source=target=75), integration_pattern='lifecycle_progression', friction_level='low', notes omitted | 2 | id 1392: 115->116 te=914 (chat_huddle.started) payload chat_huddles 567. id 1393: 115->117 te=916 (external_guest.invited) payload external_guest_invitations 569. Closes the B9b hard-fail (zero intra-domain handoffs) carried since 2026-05-30. record_status='new', notes='' (default, not authored). |
+
+Totals: 12 PATCHes + 2 INSERTs across data_objects, domains, domain_modules, handoffs.
+
+### Surfaced (no write; user decision or destructive)
+
+- B1A-PHASE-P: personas / RACI layer DEFERRED (not authored). Candidate personas recorded in state.yaml (end-user, channel owner/moderator, external-collab steward, workspace admin).
+- B2-S1: revert rescinded 'until X is modularized' provenance in handoffs.notes on 9 cross-domain rows + stale note on inbound 790. DESTRUCTIVE (overwrite non-empty notes); needs per-row user approval (Rule #15).
+- B2-S2: revert config-shape exemption text in data_objects.notes on 5 masters (565/566/568/570/571). Now structurally redundant since entity_type carries the exemption. DESTRUCTIVE; user approval.
+- B2-S4: pattern-flag flips on chat_channels (has_personal_content, has_submit_lock) and channel_members (has_personal_content). DESTRUCTIVE (flips existing flag); user judgment.
+- B2-S5: Microsoft Viva Connections (solution 466) partial link to WSC - DELETE vs leave. DESTRUCTIVE; user editorial call.
+- B2-S6: RBAC bundle drift (EMPLOYEE-COLLAB-USER missing wsc-external-collab grant; steward missing wsc-huddles-voice). User RBAC-design decision.
+- B2-NOTE-C1: owner business_function is 'End-User Computing', not the canonical spine name 'IT Operations'. C1 passes (one owner row exists), so non-blocking; re-pointing is a destructive FK overwrite, surfaced not executed.
+
+### Left
+
+- B1B-H790: inbound handoff 790 still has no handoff_processes row; blocked on Discover Pass 3 (no clean APQC PCF for the bot/automation chat-post workflow). Deferral re-confirmed.
+- B2-S3 (skill_tools notes): SUPERSEDED per the per-domain-skill restoration header. skill_tools is dropped; question moot. Moved to b2_superseded for provenance.
+- B3-S1..S4 (chat_reactions, direct_messages, huddle_recordings, chat_apps): Phase-0 backlog candidates; untouched.
+
+Aliases (B11) and the C1 owner row were verified already-present, so no additive work was due there.

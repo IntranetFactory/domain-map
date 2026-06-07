@@ -316,3 +316,50 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21). Worked only the open items in state.yaml; no fresh from-scratch audit. Confirmed TLNT-INTEL is master-bearing (domain 170, owns the marketplace, recommendation surfaces, and the inference audit trail; defers person/skill mastership to HCM and SKILLS-MGMT). Owning function: Human Resources (id 3, already the C1 owner; 3 contributors present). Footprint unchanged: 3 modules (175 MARKETPLACE, 176 MOBILITY, 177 INSIGHTS), 7 masters (859-865). Loader: `.tmp_deploy/tlnt_intel_state_execute_2026_06_07.ts` (idempotent, verified by clean re-run). All writes landed at `record_status='new'`.
+
+Note on schema vs loader-idiom doc: `handoffs` uses `trigger_event_id` (FK to trigger_events.id), NOT a free-text `trigger_event` column; `handoff_label`, `key`, and `search_vector` are DB-generated and must not be supplied. The intra-domain handoffs were chained off the trigger_events created earlier in the same run.
+
+### Executed (additive/corrective, record_status='new')
+
+- **B1A-ENTITY-TYPE (B13):** PATCHed all 7 masters from `unclassified` to a typed enum (deterministic from each description): 859 internal_opportunities, 860 opportunity_applications, 864 mentorship_engagements -> `operational_workflow`; 861 mobility_recommendations, 862 fit_scores, 863 career_path_suggestions -> `computed`; 865 match_inference_runs -> `operational_record`. (7 rows.)
+- **B1A-S1 (B9 trigger_events):** INSERTed 13 trigger_events. `state_change` for the 859/860/864 lifecycle transitions (opportunity.opened/closed/cancelled; opportunity_application.submitted/under_review/accepted/rejected; mentorship.activated/completed); `lifecycle` for the 4 inference outputs (fit_score.computed, mobility_recommendation.produced, career_path.projected, match_inference_run.completed). Each `domain_module_id` set to the realizing module. (13 rows.)
+- **B1B-S3 (B9b intra-domain handoffs):** INSERTed 3 intra-domain handoffs (source=target=170, `integration_pattern='lifecycle_progression'`, `friction_level='low'`): 175->176 on opportunity.opened (859), 176->175 on fit_score.computed (862), 175->176 on opportunity_application.submitted (860). Referencing the trigger_events created above. (3 rows.)
+- **B1A-S6 (B11 aliases):** INSERTed 14 synonym aliases (`alias_type='synonym'`, no industry) on the 5 empty masters: 860 (applications, internal applications, expressions of interest); 862 (match scores, talent scores, fit ratings); 863 (career path recommendations, growth paths); 864 (mentoring pairs, mentorship sessions, mentor matches); 865 (inference jobs, model runs, scoring batches). 859 (4 existing) and 861 (2 existing) untouched; the 863-vs-861 re-attribution question was NOT actioned (destructive on existing rows) and 863 received its own distinct synonyms instead. (14 rows.)
+- **B1A-S10 (A4 catalog UX, domain):** wrote buyer-voice `catalog_tagline` + `catalog_description` on domain 170 (was empty). (1 row.)
+- **B1A-S11 (M8 catalog UX, modules):** wrote buyer-voice `catalog_tagline` + `catalog_description` on all 3 modules 175/176/177 (all empty). (3 rows.)
+
+### Surfaced (NOT written; user decision / destructive)
+
+- **B2-T1:** mobility_recommendations (861) lifecycle vs computed. Now typed `computed` (passes B12); decide whether to add a real proposed -> dismissed | pursued | expired user flow (re-types to operational_workflow + requires states). Also feeds has_submit_lock pattern-flag positive re-eval on 861/863/865.
+- **B2-T2:** add a new TALENT-DEVELOPMENT-MARKETPLACE-OPS role, or absorb marketplace-ops into Talent Manager. Shapes B1B-S9 and B1A-PHASE-P.
+- **B2-T3:** integration_pattern for the inference-output outbound handoffs (event_stream vs api_call vs mix). Blocks B1B-S2.
+- **B1A-SELF-CONTAIN (M9, DESTRUCTIVE):** 11 contributor/required-consumer DMDO rows break module self-containment; recommended fix is per-row convert to embedded_master OR relax necessity to optional. Rewriting role/necessity on existing rows is destructive; surfaced, not applied. Rows enumerated in state.yaml extra_m9_shapes.
+- **B1B-S4 (B7, DEFAULT-NO):** master 865 match_inference_runs has no users edge. Audit default is leave-as-is (system-initiated, now typed operational_record); confirm or add a triggered_by_user edge.
+- **B1A-PHASE-P (personas/RACI): DEFERRED.** Not auto-authored. Candidate personas: Talent Manager, Hiring Manager (cross-functional, missing today), Marketplace Ops (per B2-T2), HR Business Partner consumer.
+
+### Left (blocked / backlog / superseded)
+
+- **Blocked b1b:** B1B-S2 (outbound handoffs, blocked on B2-T3); B1B-S5 (outbound cross-domain rels, blocked on B1B-S2 + ATS/HCM master id verification); B1B-S7 (lifecycle decision, blocked on B2-T1; structurally already passes B12 via typed columns); B1B-S8 (APQC tags, blocked on B1B-S2 cross-domain handoffs existing; the B1B-S3 intra-domain handoffs are outside H1 scope); B1B-S9 (roles, blocked on B2-T2).
+- **b3 backlog:** B3-T1 talent_pools, B3-T2 model_fairness_audits (AI-GOV boundary), B3-T3 skill_inferences (SKILLS-MGMT ownership).
+- **Superseded:** per-domain-skill / skill_tools items remain retired per the 2026-06-06 supersession header above; none were open in state.yaml.
+- **Report-only (owed by other domains):** consumer DMDOs + inbound handoffs owed by ATS / HCM / TALENT-MGMT / SWP / SKILLS-MGMT (unchanged from prior pass).
+
+### UI links (tables written this pass)
+
+- https://tests.semantius.app/domain_map/data_objects?id=in.(859,860,861,862,863,864,865)
+- https://tests.semantius.app/domain_map/trigger_events?data_object_id=in.(859,860,861,862,863,865)
+- https://tests.semantius.app/domain_map/handoffs?source_domain_id=eq.170
+- https://tests.semantius.app/domain_map/data_object_aliases?data_object_id=in.(860,862,863,864,865)
+- https://tests.semantius.app/domain_map/domain_modules?domain_id=eq.170
+
+### Post-fix status
+
+`status: feedback_needed`; `next_action_by: user` (B2-T1/T2/T3 decisions + B1A-SELF-CONTAIN destructive sign-off + B1B-S4 confirmation gate the remaining structural chain; B1A-PHASE-P personas deferred).

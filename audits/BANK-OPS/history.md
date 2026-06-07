@@ -427,3 +427,50 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - Audit (state-driven execute, bulk batch)
+
+### Summary
+
+State-driven Validate pass over the open BANK-OPS state items (no fresh from-scratch audit). Live re-verify on 2026-06-07 confirmed BANK-OPS is still UNBUILT: domain_id=43 has 0 domain_modules (M1 HARD FAIL) and 0 capability_domains (A2 FAIL). Per the build-leave discipline the agent did NOT scaffold modules / capabilities / lifecycle states; it surfaced the build and executed every open item that is independent of it. All writes landed at record_status='new'. Loader: `.tmp_deploy/fix_bank_ops_state_2026_06_07.ts` (idempotent), plus one direct INSERT for the GRC C-band row.
+
+Notable correction vs the stale snapshot: C1 already had 2 business_function_domains rows (owner Business Operations id 34, contributor Finance id 4) at the time of this pass, so the prior "1 owner + 1 contributor" baseline held; this pass added GRC as a third (contributor).
+
+### Executed (5 write types, 24 writes)
+
+- **entity_type classification (Rule #12 / band B13), 8 PATCH.** All 8 masters were `unclassified`. Classified deterministically from descriptions: loan_applications, account_applications, account_openings, banking_kyc_reviews, banking_cases, wire_transfers, loan_disbursements -> `operational_workflow` (each carries an approval/review/execution lifecycle); banking_transactions -> `operational_record` (append-only posted ledger entry with reconciliation status, no approval gate; lifecycle states not required, so B12 now passes for it regardless). This unblocks the write-tier derivation and removes the B13 fail.
+- **Catalog UX (Rule #20 / A4), 2 fields on domains.id=43.** Both `catalog_tagline` and `catalog_description` were empty, so buyer-voice copy was authored and written straight in (no chat gate, no overwrite of any non-empty value). Workflow + value voice, no vendor/product names, no em-dash, American English. This cures A4 and closes former B1B-S3 + B2-tagline-text.
+- **Intra-domain data_object_relationships (B1A-B1 / band B6), 7 INSERT.** Master-to-master edges, owner_side=source, relationship_kind=reference, idempotent on (data_object_id, related_data_object_id, relationship_verb): loan_applications spawns loan_disbursements (1:1, req); account_applications spawns account_openings (1:1, req); loan_applications requires banking_kyc_reviews (1:1, req); account_applications requires banking_kyc_reviews (1:1, req); wire_transfers logs banking_transactions (1:M, req); loan_disbursements logs banking_transactions (1:1, req); banking_cases references banking_transactions (M:M, optional). The two "requires banking_kyc_reviews" edges were modeled 1:1 because the relationship_type enum has no many_to_one (each application carries its own review); direction preserved via verb + owner_side.
+- **domain_aliases (B1B-B8), 6 INSERT.** Generic banking synonyms, alias_type=synonym: banking operations, retail banking ops, commercial banking ops, deposit operations, core banking ops, bank back-office. These are clearly-enumerated generic synonyms (the stale B2-aliases-text confirm gate was overridden per the execute contract); closes former B1B-B8 + B2-aliases-text.
+- **business_function_domains (C1 / former B2-6), 1 INSERT.** GRC (Governance, Risk and Compliance, business_function_id=31) added as a `contributor` on BANK-OPS (row id 427). Clearly-correct for a banking domain that performs KYC/AML, sanctions screening, and suspicious-activity detection and fires those signals to GRC. Resolves B2-6 by execution.
+
+### Surfaced (b2 + destructive + deferred, owed to user)
+
+- **B2-1 (module split, load-bearing).** Pick the BANK-OPS module shape (7-module / 5-module COMPLIANCE collapse / 6-module ONBOARDING collapse / defer KYC-AML to KYC-AML-PLATFORM / other). Gates the build (B1A-BUILD) and ~9 b1b items.
+- **B2-2 (banking_cases vs CSM customer_cases).** Rewrite the suspect 'opens' verb, demote banking_cases to embedded_master of customer_cases, or disambiguate. Options (a)/(b) overwrite/restructure existing rows (462/463) -> destructive, needs sign-off; not applied.
+- **B2-3 (banking_transactions lifecycle).** Now classified operational_record (states optional). Decide: full dispute/reverse machine, slim 3-state, or leave stateless.
+- **B2-5 (verb override wording).** Pick permission-code verbs for loan_applications.approved, wire_transfers.approved, banking_kyc_reviews.cleared, banking_cases.resolved (drives B1B-B6).
+- **B2-7 (GRC pairwise timing).** Defer until M1 cured, run lightweight GRC pairwise now, or run CSM + ERP-FIN too.
+- **B2-8 (H1 catalog-quality approvals), DESTRUCTIVE.** All 7 agent_curated handoff_processes rows (886/70, 887/70, 888/323, 889/1438, 890/196, 891/323, 892/1438) verified present at record_status='new'; coverage is complete. Stamping `approved` is a record_status flip the agent never does (Rule #1) -> user decision. Pair 890/196 carries a 'medium L3 confidence' note.
+- **Personas / RACI (Phase P).** DEFERRED: the domain is unbuilt (single-module-by-absence), so Phase P does not apply yet. No personas authored. Candidate personas once built and multi-module: Loan Officer, KYC/AML Analyst, Compliance Officer, Banking Operations Manager, Case Agent, Teller.
+
+### Left (untouched)
+
+- **B1A-BUILD + b1b (B1B-S1, B1B-S2, B1B-M1..M4, B1B-B6, B1B-B7).** Blocked on the build / on B2-1 (module split). B1B-B6 also gated on B2-3 + B2-5; B1B-B7 gated on B1B-B6. Not scaffolded per the unbuilt-leave rule.
+- **B1B-B3 (5 cross-domain mirror relationships).** Blocked on GRC compliance-alert master + ERP-FIN payment/journal master lookups (owed by those domains' audits).
+- **Former B1B-S4 + B2-4 (send_email -> notify_person on bank-ops-system skill_tools; channel fan-out pattern).** RETIRED by the 2026-06-06 per-domain-skill supersession (skill_tools / per-module-skill model dropped). Reframed as a note in the state header; not acted on.
+- **b3 (13 candidate masters).** Backlog; vendor-research vetting still open.
+
+### Errors
+
+None. No JWT-audience errors.
+
+### UI links (tables written)
+
+- https://tests.semantius.app/domain_map/data_objects?id=in.(602,603,604,605,606,607,608,609)
+- https://tests.semantius.app/domain_map/domains?id=eq.43
+- https://tests.semantius.app/domain_map/data_object_relationships
+- https://tests.semantius.app/domain_map/domain_aliases?domain_id=eq.43
+- https://tests.semantius.app/domain_map/business_function_domains?domain_id=eq.43
