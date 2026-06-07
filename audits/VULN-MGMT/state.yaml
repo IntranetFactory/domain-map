@@ -1,6 +1,6 @@
 schema_version: 2
 domain: VULN-MGMT
-status: surfaced_pending_user
+status: feedback_needed
 next_action_by: user
 last_audit: "2026-06-07"
 

@@ -1,6 +1,6 @@
 schema_version: 2
 domain: INTRANET
-status: unbuilt_awaiting_classification
+status: feedback_needed
 next_action_by: user
 last_audit: "2026-06-07"
 

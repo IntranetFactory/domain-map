@@ -10,7 +10,7 @@
 # === end supersession note ===
 schema_version: 2
 domain: FINOPS
-status: unbuilt_blocked
+status: feedback_needed
 next_action_by: user
 last_audit: "2026-06-07"
 
