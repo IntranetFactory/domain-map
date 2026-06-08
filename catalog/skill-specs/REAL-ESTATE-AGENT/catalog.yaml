@@ -1,0 +1,22 @@
+# Catalog UX data for the use-real-estate-agent skill.
+# SCAFFOLD emitted by emit_skill_spec.ts because no catalog.yaml existed.
+# Rule #20: buyer voice (workflow + value). Marketing edits these freely; AI loaders
+# must NOT regenerate without per-row review. The emitter never overwrites this file.
+
+domain_code: REAL-ESTATE-AGENT
+skill_name: use-real-estate-agent
+
+catalog_tagline: "TODO buyer-facing one-liner for Real Estate Agent (solo / small firm bundle)."
+
+catalog_description: |
+  TODO buyer-facing description.
+
+category: TODO
+
+search_keywords: []
+
+icon: ""
+
+depends_on_skills:
+  - use-semantius
+related_skills: []

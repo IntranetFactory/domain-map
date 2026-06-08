@@ -32,7 +32,8 @@
 
 export {};
 
-import { writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs";
+import { writeFileSync, mkdirSync, existsSync, readdirSync, rmSync, cpSync } from "node:fs";
+import { dirname } from "node:path";
 import { argv } from "node:process";
 import { pg } from "./lib/catalog";
 
@@ -44,6 +45,7 @@ function flagValue(name: string): string | null {
   return i >= 0 && i + 1 < args.length ? args[i + 1] : null;
 }
 const DOMAIN_ARG = flagValue("--domain");
+const BUNDLE_ARG = flagValue("--bundle");
 const ALL = args.includes("--all");
 const REGEN = args.includes("--regenerate");
 const YES = args.includes("--yes") || args.includes("--confirm");
@@ -52,14 +54,19 @@ const BATCH = ALL || REGEN;
 const FACTS_MAJOR = Number(flagValue("--major") ?? "1");
 const SNAPSHOT_OVERRIDE = flagValue("--snapshot");
 const SKILL_SPECS_DIR = flagValue("--out-dir") ?? "c:/dev/domain-map/catalog/skill-specs";
-const TEMPLATE_PATH = "c:/dev/domain-map/catalog/domain-skill-template/SKILL.md";
+const TEMPLATE_DIR = "c:/dev/domain-map/catalog/domain-skill-template";
+const TEMPLATE_PATH = `${TEMPLATE_DIR}/SKILL.md`;
+// Installable skills assemble next to the spec source: <skill-specs parent>/skills. With the
+// default skill-specs dir that is catalog/skills; with a temp --out-dir it stays a sibling.
+const SKILLS_DIR = flagValue("--skills-dir") ?? `${dirname(SKILL_SPECS_DIR)}/skills`;
 
-const modeCount = [ALL, REGEN, Boolean(DOMAIN_ARG)].filter(Boolean).length;
+const modeCount = [ALL, REGEN, Boolean(DOMAIN_ARG), Boolean(BUNDLE_ARG)].filter(Boolean).length;
 if (modeCount !== 1) {
   console.error("Pick exactly one mode:");
   console.error("  --domain <CODE>   generate one specific domain");
-  console.error("  --regenerate      regenerate only domains that already have a skill-specs/ folder");
-  console.error("  --all [--yes]     generate every catalog domain with modules (writing needs --yes)");
+  console.error("  --bundle <CODE>   generate one domain-less industry bundle (e.g. HVAC-SVC-MGMT)");
+  console.error("  --regenerate      regenerate only folders that already exist (domains + bundles)");
+  console.error("  --all [--yes]     generate every domain with modules + every domain-less bundle (writing needs --yes)");
   console.error("  shared: [--stdout] [--out-dir DIR] [--major N] [--snapshot S]");
   process.exit(2);
 }
@@ -113,6 +120,7 @@ const ENUM_SPEC: { key: string; table: string; field: string }[] = [
 type Lookups = {
   domainCodeById: Map<number, string>;
   moduleCodeById: Map<number, string>;
+  moduleDomainById: Map<number, number | null>;
   businessFunctionNameById: Map<number, string>;
   capabilityDomainCount: Map<number, number>;
   enumByKey: Map<string, string[]>;
@@ -122,7 +130,7 @@ type Lookups = {
 async function loadLookups(): Promise<Lookups> {
   const [domains, modules, bfs, capDomains, enumFields, org] = await Promise.all([
     get("/domains?select=id,domain_code&limit=10000"),
-    get("/domain_modules?select=id,domain_module_code&limit=10000"),
+    get("/domain_modules?select=id,domain_module_code,domain_id&limit=10000"),
     get("/business_functions?select=id,business_function_name&limit=10000"),
     get("/capability_domains?select=capability_id,domain_id&limit=20000"),
     get("/fields?format=eq.enum&select=table_name,field_name,enum_values&limit=20000"),
@@ -143,6 +151,7 @@ async function loadLookups(): Promise<Lookups> {
   return {
     domainCodeById: new Map(domains.map((d) => [d.id as number, d.domain_code as string])),
     moduleCodeById: new Map(modules.map((m) => [m.id as number, m.domain_module_code as string])),
+    moduleDomainById: new Map(modules.map((m) => [m.id as number, (m.domain_id as number | null) ?? null])),
     businessFunctionNameById: new Map(bfs.map((b) => [b.id as number, b.business_function_name as string])),
     capabilityDomainCount,
     enumByKey,
@@ -164,16 +173,23 @@ async function buildSpec(domainCode: string, lk: Lookups): Promise<{ spec: any; 
     get(`/domain_modules?domain_id=eq.${domainId}&select=id,domain_module_code,domain_module_name,module_kind,description&order=domain_module_code.asc`),
     get(`/domain_module_host_domains?domain_id=eq.${domainId}&select=domain_module_id`),
   ]);
-  const moduleIds = [...new Set([...primaryModules.map((m) => m.id as number), ...hostJunction.map((h) => h.domain_module_id as number)])];
+  const discoveredModuleIds = [...new Set([...primaryModules.map((m) => m.id as number), ...hostJunction.map((h) => h.domain_module_id as number)])];
   const moduleById = new Map<number, any>(primaryModules.map((m) => [m.id as number, m]));
   // Fetch any host-only modules not already in primaryModules.
-  const missingModuleIds = moduleIds.filter((id) => !moduleById.has(id));
+  const missingModuleIds = discoveredModuleIds.filter((id) => !moduleById.has(id));
   if (missingModuleIds.length > 0) {
     const extra = await get(`/domain_modules?id=in.${inList(missingModuleIds)}&select=id,domain_module_code,domain_module_name,module_kind,description`);
     for (const m of extra) moduleById.set(m.id as number, m);
   }
 
-  // Bulk per-domain reads. Each is scoped to this domain's modules / id.
+  // A per-domain spec covers only the domain's FULL modules. A starter (module_kind='starter')
+  // is just a packaged subset of the domain; the combination-agnostic skill already handles any
+  // subset via discovery, so starters are NOT enumerated here. This single filter also keeps a
+  // starter that only reaches this domain via the host junction (e.g. the domain-less HVAC bundle
+  // on FSM) out of the domain spec. Domain-less starters get their own bundle skill (see emitBundle).
+  const moduleIds = discoveredModuleIds.filter((id) => moduleById.get(id)?.module_kind === "full");
+
+  // Bulk per-domain reads. Each is scoped to this domain's FULL modules / id.
   const moduleIdList = inList(moduleIds.length ? moduleIds : [-1]);
   const [
     domainAliases,
@@ -192,7 +208,7 @@ async function buildSpec(domainCode: string, lk: Lookups): Promise<{ spec: any; 
     get(`/domain_module_capabilities?domain_module_id=in.${moduleIdList}&select=domain_module_id,capability_id,capabilities(capability_code)`),
     get(`/domain_module_data_objects?domain_module_id=in.${moduleIdList}&select=domain_module_id,data_object_id,role,necessity`),
     get(`/handoffs?source_domain_id=eq.${domainId}&target_domain_id=neq.${domainId}&select=integration_pattern,friction_level,source_domain_module_id,target_domain_id,target_domain_module_id,data_objects(data_object_name),trigger_events(event_name,event_category),handoff_processes(processes(external_id,process_name))&order=id.asc`),
-    get(`/skills?skill_type=eq.system&or=(domain_id.eq.${domainId},domain_module_id.in.${moduleIdList})&select=id,skill_name,domain_id,domain_module_id`),
+    get(`/skills?skill_type=eq.system&domain_id=eq.${domainId}&domain_module_id=is.null&select=id,skill_name,domain_id,domain_module_id`),
     get(`/domain_module_tools?domain_module_id=in.${moduleIdList}&select=domain_module_id,tool_id,requirement_level`),
     get(`/role_modules?domain_module_id=in.${moduleIdList}&select=role_id,domain_module_id,interaction_level`),
   ]);
@@ -317,15 +333,19 @@ async function buildSpec(domainCode: string, lk: Lookups): Promise<{ spec: any; 
     .map(([external_id, name]) => ({ external_id, name }))
     .sort((a, b) => a.external_id.localeCompare(b.external_id, undefined, { numeric: true }));
 
-  // ----- system skills (current grain: one per domain + one per starter module) -----
+  // ----- system skills (per-domain spec: the DOMAIN-GRAIN skill only) -----
+  // The catalog carries SYSTEM skills at two grains: domain (domain_id set, domain_module_id
+  // null) and starter (domain_module_id -> a module_kind='starter'). A per-domain spec emits
+  // ONLY the domain-grain skill: a starter is just a packaged subset the combination-agnostic
+  // skill already covers, so its skill is not surfaced here. The starter skill row ALSO carries
+  // domain_id, so the query pins domain_module_id IS NULL (not just domain_id). Domain-less
+  // starters get their own skill via emitBundle. PROCESS skills (process_id set) are out of
+  // scope. The domain skill's tools = union across the domain's FULL modules.
   const toolIds = [...new Set(moduleTools.map((r) => r.tool_id as number))];
   const toolRows = toolIds.length ? await get(`/tools?id=in.${inList(toolIds)}&select=id,tool_name,operation_kind`) : [];
   const toolById = new Map<number, any>(toolRows.map((t) => [t.id as number, t]));
   const moduleToolsByModule = groupBy(moduleTools, (r) => r.domain_module_id as number);
-  const fullModuleIds = modulesOut.filter((m) => m.kind === "full").map((m) => {
-    // reverse map code->id
-    return [...moduleById.values()].find((x) => x.domain_module_code === m.code)?.id as number;
-  });
+  const fullModuleIds = moduleIds; // moduleIds is already filtered to FULL modules above
   const systemSkillsOut = systemSkills
     .sort((a, b) => (a.skill_name as string).localeCompare(b.skill_name as string))
     .map((s) => {
@@ -346,9 +366,15 @@ async function buildSpec(domainCode: string, lk: Lookups): Promise<{ spec: any; 
         })
         .filter(Boolean)
         .sort((a: any, b: any) => a.name.localeCompare(b.name));
+      const grain =
+        s.domain_module_id == null
+          ? "domain"
+          : moduleById.get(s.domain_module_id as number)?.module_kind === "starter"
+            ? "starter"
+            : "module"; // "module" only if a system skill ever sits on a FULL module (a data anomaly)
       return {
         module_code: s.domain_module_id != null ? lk.moduleCodeById.get(s.domain_module_id as number) ?? null : null,
-        skill_grain: s.domain_module_id != null ? "module" : "domain",
+        skill_grain: grain,
         skill_name: s.skill_name,
         tools,
       };
@@ -455,18 +481,187 @@ function groupBy<T>(rows: T[], keyFn: (r: T) => number): Map<number, T[]> {
   return out;
 }
 
+// ---------- domain-less bundle spec build ----------
+
+// A domain-less starter (module_kind='starter', domain_id=null) is a cross-domain industry
+// bundle (e.g. HVAC-SVC-MGMT, REAL-ESTATE-AGENT). It masters nothing of its own; it COMPOSES
+// entities mastered by the domains it is hosted on, and carries its OWN system skill. There is
+// no domain skill to ride on, so it gets its own skill-spec folder. The spec is module-rooted.
+async function buildBundleSpec(
+  code: string,
+  lk: Lookups,
+): Promise<{ spec: any; entityPluralLabels: string[]; capNames: string[]; adjacentDomainCodes: string[] }> {
+  const [mod] = await get(
+    `/domain_modules?domain_module_code=eq.${code}&select=id,domain_module_code,domain_module_name,module_kind,description,catalog_tagline,domain_id&limit=1`,
+  );
+  if (!mod) throw new Error(`bundle module ${code} not found in /domain_modules`);
+  if (mod.module_kind !== "starter") throw new Error(`${code} is module_kind='${mod.module_kind}', not a starter bundle`);
+  const moduleId = mod.id as number;
+
+  const [hosts, dmdo, caps, skillRows, moduleTools, roleModules, outboundRaw] = await Promise.all([
+    get(`/domain_module_host_domains?domain_module_id=eq.${moduleId}&select=domain_id`),
+    get(`/domain_module_data_objects?domain_module_id=eq.${moduleId}&select=data_object_id,role,necessity`),
+    get(`/domain_module_capabilities?domain_module_id=eq.${moduleId}&select=capability_id,capabilities(capability_code,capability_name)`),
+    get(`/skills?skill_type=eq.system&domain_module_id=eq.${moduleId}&select=id,skill_name`),
+    get(`/domain_module_tools?domain_module_id=eq.${moduleId}&select=tool_id,requirement_level`),
+    get(`/role_modules?domain_module_id=eq.${moduleId}&select=role_id,interaction_level`),
+    get(`/handoffs?source_domain_module_id=eq.${moduleId}&select=integration_pattern,friction_level,target_domain_id,target_domain_module_id,data_objects(data_object_name),trigger_events(event_name),handoff_processes(processes(external_id,process_name))&order=id.asc`),
+  ]);
+
+  const hostDomainCodes = hosts
+    .map((h) => lk.domainCodeById.get(h.domain_id as number))
+    .filter((c): c is string => Boolean(c))
+    .sort();
+
+  // Composed entities (the bundle masters nothing): resolve names + the domain that masters each.
+  const entityIds = [...new Set(dmdo.map((r) => r.data_object_id as number))];
+  const doRows = entityIds.length
+    ? await get(`/data_objects?id=in.${inList(entityIds)}&select=id,data_object_name,singular_label,plural_label`)
+    : [];
+  const doById = new Map<number, any>(doRows.map((d) => [d.id as number, d]));
+  const masterDmdo = entityIds.length
+    ? await get(`/domain_module_data_objects?data_object_id=in.${inList(entityIds)}&role=eq.master&select=data_object_id,domain_module_id`)
+    : [];
+  const ownerDomainByDo = new Map<number, string | null>();
+  for (const r of masterDmdo) {
+    const did = r.data_object_id as number;
+    if (ownerDomainByDo.has(did)) continue;
+    const domId = lk.moduleDomainById.get(r.domain_module_id as number);
+    ownerDomainByDo.set(did, domId != null ? lk.domainCodeById.get(domId) ?? null : null);
+  }
+  const composes = dmdo
+    .map((r) => {
+      const d = doById.get(r.data_object_id as number);
+      if (!d) return null;
+      return {
+        name: d.data_object_name,
+        singular_label: d.singular_label,
+        plural_label: d.plural_label,
+        role: r.role,
+        owning_domain: ownerDomainByDo.get(r.data_object_id as number) ?? null,
+      };
+    })
+    .filter(Boolean)
+    .sort((a: any, b: any) => a.name.localeCompare(b.name));
+
+  const capabilities = caps
+    .map((r) => ({
+      code: r.capabilities?.capability_code,
+      name: r.capabilities?.capability_name,
+      cross_cutting: (lk.capabilityDomainCount.get(r.capability_id as number) ?? 1) > 1,
+    }))
+    .filter((c) => c.code)
+    .sort((a, b) => (a.code as string).localeCompare(b.code as string));
+
+  // The bundle's own system skill (one per starter; modeled singular).
+  const toolIds = [...new Set(moduleTools.map((r) => r.tool_id as number))];
+  const toolRows = toolIds.length ? await get(`/tools?id=in.${inList(toolIds)}&select=id,tool_name,operation_kind`) : [];
+  const toolById = new Map<number, any>(toolRows.map((t) => [t.id as number, t]));
+  const tools = moduleTools
+    .map((r) => {
+      const t = toolById.get(r.tool_id as number);
+      return t ? { name: t.tool_name, kind: t.operation_kind, required: r.requirement_level === "required" } : null;
+    })
+    .filter(Boolean)
+    .sort((a: any, b: any) => a.name.localeCompare(b.name));
+  const systemSkill = skillRows.length ? { skill_grain: "starter", skill_name: skillRows[0].skill_name, tools } : null;
+
+  // Outbound handoffs + APQC rollup.
+  const apqc = new Map<string, string>();
+  const outbound = outboundRaw.map((h) => {
+    const procs = (h.handoff_processes ?? [])
+      .map((hp: any) => hp.processes)
+      .filter(Boolean)
+      .map((p: any) => ({ external_id: p.external_id, name: clean(p.process_name) }));
+    for (const p of procs) apqc.set(String(p.external_id), p.name);
+    return {
+      trigger_event: h.trigger_events?.event_name ?? null,
+      payload: h.data_objects?.data_object_name ?? null,
+      target_domain: h.target_domain_id != null ? lk.domainCodeById.get(h.target_domain_id as number) ?? null : null,
+      target_module: h.target_domain_module_id != null ? lk.moduleCodeById.get(h.target_domain_module_id as number) ?? null : null,
+      integration_pattern: h.integration_pattern ?? null,
+      friction_level: h.friction_level ?? null,
+      apqc_processes: procs,
+    };
+  });
+  const apqcTouched = [...apqc.entries()]
+    .map(([external_id, name]) => ({ external_id, name }))
+    .sort((a, b) => a.external_id.localeCompare(b.external_id, undefined, { numeric: true }));
+
+  // Roles (personas) on the bundle module.
+  const roleIds = [...new Set(roleModules.map((r) => r.role_id as number))];
+  const roleRows = roleIds.length ? await get(`/domain_roles?id=in.${inList(roleIds)}&select=id,role_code,business_function_id`) : [];
+  const roleById = new Map<number, any>(roleRows.map((r) => [r.id as number, r]));
+  const roles = roleIds
+    .map((rid) => {
+      const role = roleById.get(rid);
+      if (!role) return null;
+      const rm = roleModules.find((x) => (x.role_id as number) === rid);
+      return {
+        code: role.role_code,
+        business_function: role.business_function_id != null ? lk.businessFunctionNameById.get(role.business_function_id as number) ?? null : null,
+        interaction: rm?.interaction_level ?? null,
+      };
+    })
+    .filter(Boolean)
+    .sort((a: any, b: any) => a.code.localeCompare(b.code));
+
+  const enums: Record<string, string[]> = {};
+  for (const e of ENUM_SPEC) enums[e.key] = lk.enumByKey.get(e.key) ?? [];
+
+  const spec = {
+    facts_major: FACTS_MAJOR,
+    emitted: todayIso(),
+    catalog_snapshot: lk.snapshot,
+
+    bundle: {
+      code: mod.domain_module_code,
+      name: mod.domain_module_name,
+      kind: "industry_starter",
+      domain_attached: false,
+      tagline: clean(mod.catalog_tagline ?? ""),
+      description: clean(mod.description ?? ""),
+      host_domains: hostDomainCodes,
+    },
+
+    capabilities,
+    composes,
+    handoffs: { outbound },
+    apqc_processes_touched: apqcTouched,
+    system_skill: systemSkill,
+    roles,
+    enums,
+  };
+
+  return {
+    spec,
+    entityPluralLabels: composes.map((c: any) => c.plural_label as string),
+    capNames: capabilities.map((c) => c.name as string),
+    adjacentDomainCodes: hostDomainCodes,
+  };
+}
+
 // ---------- SKILL.md rendering ----------
 
-function renderSkillMd(template: string, spec: any, ctx: { masters: any[]; capNames: string[]; adjacentDomainCodes: string[] }): string {
-  const code = spec.domain.code as string;
+type RenderCtx = {
+  code: string;
+  name: string;
+  aliases: string[];
+  entityPluralLabels: string[];
+  capNames: string[];
+  adjacentDomainCodes: string[];
+};
+
+function renderSkillMd(template: string, r: RenderCtx): string {
+  const code = r.code;
   const subs: Record<string, string> = {
     DOMAIN_CODE_LOWER: code.toLowerCase(),
     DOMAIN_CODE: code,
-    DOMAIN_NAME: spec.domain.name,
-    ALIASES_COMMA_LIST: spec.aliases.length ? spec.aliases.join(", ") : code.toLowerCase(),
-    ENTITY_NOUNS_COMMA_LIST: ctx.masters.map((m) => m.plural_label).join(", "),
-    CAPABILITY_NAMES_COMMA_LIST: ctx.capNames.join(", "),
-    ADJACENT_DOMAIN_SKILLS: ctx.adjacentDomainCodes.length ? ctx.adjacentDomainCodes.map((c) => `use-${c.toLowerCase()}`).join(", ") : "none",
+    DOMAIN_NAME: r.name,
+    ALIASES_COMMA_LIST: r.aliases.length ? r.aliases.join(", ") : code.toLowerCase(),
+    ENTITY_NOUNS_COMMA_LIST: r.entityPluralLabels.join(", "),
+    CAPABILITY_NAMES_COMMA_LIST: r.capNames.join(", "),
+    ADJACENT_DOMAIN_SKILLS: r.adjacentDomainCodes.length ? r.adjacentDomainCodes.map((c) => `use-${c.toLowerCase()}`).join(", ") : "none",
     MODULE_SLUG: code.toLowerCase(),
   };
   let out = template;
@@ -505,83 +700,150 @@ function catalogYamlScaffold(code: string, name: string): string {
   ].join("\n");
 }
 
+// ---------- writers ----------
+
+// Writes spec.json + SKILL.md into the folder; scaffolds catalog.yaml only when absent
+// (Rule #20: never overwrite buyer-facing marketing copy). Returns a one-line note.
+function writeFolder(code: string, name: string, specJson: string, skillMd: string): string {
+  const dir = `${SKILL_SPECS_DIR}/${code}`;
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(`${dir}/spec.json`, specJson, "utf8");
+  writeFileSync(`${dir}/SKILL.md`, skillMd, "utf8");
+  const catalogYamlPath = `${dir}/catalog.yaml`;
+  if (!existsSync(catalogYamlPath)) {
+    writeFileSync(catalogYamlPath, catalogYamlScaffold(code, name), "utf8");
+    return "scaffolded catalog.yaml (was missing; fill in the TODOs)";
+  }
+  return "kept existing catalog.yaml (Rule #20: never overwritten)";
+}
+
+// Assembles the INSTALLABLE skill folder <SKILLS_DIR>/use-<code>/ for local testing:
+//   (a) delete any existing folder of that name, (b) copy the generic domain-skill-template
+//   files (references/, scripts/, the template SKILL.md), (c) copy this entry's skill-specs
+//   files (spec.json, catalog.yaml, and the rendered SKILL.md, which overwrites the template's).
+// This duplicates what the catalog site generator will eventually do; for now both the spec
+// source and the ready-to-install skill are emitted side by side so we can test. Returns the
+// skill folder name (use-<code>).
+function assembleInstalledSkill(specCode: string): string {
+  const skillName = `use-${specCode.toLowerCase()}`;
+  const dest = `${SKILLS_DIR}/${skillName}`;
+  rmSync(dest, { recursive: true, force: true }); // (a)
+  mkdirSync(dest, { recursive: true });
+  cpSync(TEMPLATE_DIR, dest, { recursive: true }); // (b)
+  cpSync(`${SKILL_SPECS_DIR}/${specCode}`, dest, { recursive: true }); // (c) overwrites template SKILL.md
+  return skillName;
+}
+
 // ---------- driver ----------
 
 async function emitOne(code: string, lk: Lookups, template: string): Promise<void> {
   const { spec, masters, capNames, adjacentDomainCodes } = await buildSpec(code, lk);
   const specJson = JSON.stringify(spec, null, 2) + "\n";
-
   if (STDOUT) {
     process.stdout.write(specJson);
     return;
   }
-
-  const dir = `${SKILL_SPECS_DIR}/${code}`;
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(`${dir}/spec.json`, specJson, "utf8");
-
-  const skillMd = renderSkillMd(template, spec, { masters, capNames, adjacentDomainCodes });
-  writeFileSync(`${dir}/SKILL.md`, skillMd, "utf8");
-
-  const catalogYamlPath = `${dir}/catalog.yaml`;
-  let yamlNote = "kept existing catalog.yaml (Rule #20: never overwritten)";
-  if (!existsSync(catalogYamlPath)) {
-    writeFileSync(catalogYamlPath, catalogYamlScaffold(code, spec.domain.name), "utf8");
-    yamlNote = "scaffolded catalog.yaml (was missing; fill in the TODOs)";
-  }
-
+  const skillMd = renderSkillMd(template, {
+    code: spec.domain.code,
+    name: spec.domain.name,
+    aliases: spec.aliases,
+    entityPluralLabels: masters.map((m) => m.plural_label),
+    capNames,
+    adjacentDomainCodes,
+  });
+  const yamlNote = writeFolder(code, spec.domain.name, specJson, skillMd);
+  const skillName = assembleInstalledSkill(code);
   console.log(
-    `wrote ${dir}/spec.json + SKILL.md  (${spec.modules.length} modules, ${spec.data_objects.length} masters, ${spec.handoffs.outbound.length} outbound handoffs, ${spec.system_skills.length} system skills, ${spec.roles.length} roles); ${yamlNote}`,
+    `wrote ${SKILL_SPECS_DIR}/${code}/ [domain] ${spec.modules.length} modules, ${spec.data_objects.length} masters, ${spec.handoffs.outbound.length} handoffs, ${spec.system_skills.length} system skill, ${spec.roles.length} roles -> installed ${SKILLS_DIR}/${skillName}/; ${yamlNote}`,
+  );
+}
+
+async function emitBundle(code: string, lk: Lookups, template: string): Promise<void> {
+  const { spec, entityPluralLabels, capNames, adjacentDomainCodes } = await buildBundleSpec(code, lk);
+  const specJson = JSON.stringify(spec, null, 2) + "\n";
+  if (STDOUT) {
+    process.stdout.write(specJson);
+    return;
+  }
+  const skillMd = renderSkillMd(template, {
+    code: spec.bundle.code,
+    name: spec.bundle.name,
+    aliases: [],
+    entityPluralLabels,
+    capNames,
+    adjacentDomainCodes,
+  });
+  const yamlNote = writeFolder(code, spec.bundle.name, specJson, skillMd);
+  const skillName = assembleInstalledSkill(code);
+  console.log(
+    `wrote ${SKILL_SPECS_DIR}/${code}/ [bundle] ${spec.composes.length} composed entities, ${spec.system_skill ? spec.system_skill.tools.length : 0} tools, hosts: ${spec.bundle.host_domains.join("/") || "none"} -> installed ${SKILLS_DIR}/${skillName}/; ${yamlNote}`,
   );
 }
 
 const lk = await loadLookups();
 const template = await Bun.file(TEMPLATE_PATH).text();
 
-let domainCodes: string[];
-if (ALL) {
-  const withModules = await get("/domain_modules?select=domain_id&limit=20000");
-  const domainIdsWithModules = new Set(withModules.map((r) => r.domain_id as number));
-  const catalogDomains = await get("/domains?catalog=is.true&select=id,domain_code&limit=10000");
-  domainCodes = catalogDomains
-    .filter((d) => domainIdsWithModules.has(d.id as number))
-    .map((d) => d.domain_code as string)
-    .sort();
+type Task = { code: string; kind: "domain" | "bundle" };
 
+// "Generate all" domains = every domain with >=1 module (a deployable unit a per-domain skill
+// can cover). The domains.catalog flag is about site publication, not skill eligibility (ATS
+// is catalog=false), so it is NOT a filter here.
+async function domainCodesWithModules(): Promise<string[]> {
+  const withModules = await get("/domain_modules?select=domain_id&limit=20000");
+  const ids = new Set(withModules.map((r) => r.domain_id as number));
+  const allDomains = await get("/domains?select=id,domain_code&limit=10000");
+  return allDomains.filter((d) => ids.has(d.id as number)).map((d) => d.domain_code as string).sort();
+}
+async function domainLessBundleCodes(): Promise<string[]> {
+  const rows = await get("/domain_modules?module_kind=eq.starter&domain_id=is.null&select=domain_module_code");
+  return rows.map((r) => r.domain_module_code as string).sort();
+}
+
+let tasks: Task[];
+if (ALL) {
+  const [domainCodes, bundleCodes] = await Promise.all([domainCodesWithModules(), domainLessBundleCodes()]);
   // "generate all always requires a confirmation": without --yes (and not a read-only
   // --stdout run) list the targets and stop. Re-run with --yes to actually write.
   if (!STDOUT && !YES) {
-    console.error(`--all targets ${domainCodes.length} catalog domains with modules:`);
-    console.error("  " + domainCodes.join(", "));
-    console.error(`\nThis OVERWRITES spec.json + SKILL.md in ${domainCodes.length} folders under`);
+    console.error(`--all targets ${domainCodes.length} domains + ${bundleCodes.length} domain-less bundles:`);
+    console.error("  domains: " + domainCodes.join(", "));
+    console.error("  bundles: " + (bundleCodes.join(", ") || "(none)"));
+    console.error(`\nThis OVERWRITES spec.json + SKILL.md in ${domainCodes.length + bundleCodes.length} folders under`);
     console.error(`${SKILL_SPECS_DIR}. Nothing written yet. Re-run with --yes to proceed.`);
     process.exit(0);
   }
-  console.error(`--all: writing ${domainCodes.length} catalog domains with modules`);
+  tasks = [
+    ...domainCodes.map((code) => ({ code, kind: "domain" as const })),
+    ...bundleCodes.map((code) => ({ code, kind: "bundle" as const })),
+  ];
+  console.error(`--all: writing ${tasks.length} folders (${domainCodes.length} domains + ${bundleCodes.length} bundles)`);
 } else if (REGEN) {
-  domainCodes = existsSync(SKILL_SPECS_DIR)
-    ? readdirSync(SKILL_SPECS_DIR, { withFileTypes: true })
-        .filter((e) => e.isDirectory())
-        .map((e) => e.name)
-        .sort()
+  const folders = existsSync(SKILL_SPECS_DIR)
+    ? readdirSync(SKILL_SPECS_DIR, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name).sort()
     : [];
-  if (domainCodes.length === 0) {
+  if (folders.length === 0) {
     console.error(`--regenerate: no existing skill-spec folders under ${SKILL_SPECS_DIR}; nothing to do.`);
     process.exit(0);
   }
-  console.error(`--regenerate: ${domainCodes.length} existing folder(s): ${domainCodes.join(", ")}`);
+  // Each existing folder is either a domain or a domain-less bundle; dispatch by code.
+  const bundleSet = new Set(await domainLessBundleCodes());
+  tasks = folders.map((code) => ({ code, kind: bundleSet.has(code) ? "bundle" : "domain" }));
+  console.error(`--regenerate: ${folders.length} existing folder(s): ${folders.join(", ")}`);
+} else if (BUNDLE_ARG) {
+  tasks = [{ code: BUNDLE_ARG, kind: "bundle" }];
 } else {
-  domainCodes = [DOMAIN_ARG as string];
+  tasks = [{ code: DOMAIN_ARG as string, kind: "domain" }];
 }
 
 let failures = 0;
-for (const code of domainCodes) {
+for (const t of tasks) {
   try {
-    await emitOne(code, lk, template);
+    if (t.kind === "bundle") await emitBundle(t.code, lk, template);
+    else await emitOne(t.code, lk, template);
   } catch (e) {
     failures++;
-    console.error(`FAILED ${code}: ${(e as Error).message}`);
+    console.error(`FAILED ${t.code} [${t.kind}]: ${(e as Error).message}`);
     if (!BATCH) process.exit(1);
   }
 }
-if (BATCH) console.error(`done: ${domainCodes.length - failures}/${domainCodes.length} emitted${failures ? `, ${failures} failed` : ""}`);
+if (BATCH) console.error(`done: ${tasks.length - failures}/${tasks.length} emitted${failures ? `, ${failures} failed` : ""}`);

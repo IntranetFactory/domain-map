@@ -1,20 +1,20 @@
 ---
-name: use-ats
+name: use-real-estate-agent
 description: >-
-  Use this skill for any task involving the Applicant Tracking and Recruiting domain (ATS)
-  in this Semantius deployment. Trigger phrases: ats.
-  Entities covered: Adverse Action Notices, Applicant Flow Records, Application Dispositions, Application Screening Answers, Application Screening Questions, Application Stage Transitions, Application Stages, Background Check Adjudications, Background Check Components, Background Check Disputes, Background Check Packages, Background Checks, Candidate Assessment Templates, Assessments, Candidate Consents, Candidate Documents, Candidate Engagements, Candidate Notes, Candidate Nurture Campaigns, Referrals, Candidate Tag Assignments, Candidate Tags, Candidates, Data Subject Requests, EEO Responses, FCRA Disclosures, FCRA Summary of Rights Acknowledgements, Hiring Team Assignments, Interview Kits, Interview Panels, Interview Questions, Interview Scorecards, Interviewer Availability Slots, Interviews, Applications, Offers, Job Posting Distributions, Job Postings, Job Requisitions, OFCCP Audit Trails, Offer Approvals, Offer Letter Documents, Offer Letter Templates, Offer Versions, Pre-Adverse Action Notices, Pre-Employees, Recruiter Interactions, Recruiter Saved Searches, Recruiting Event Attendances, Recruitment Agencies, Recruitment Events, Recruitment Sources, Referral Campaigns, Referral Payouts, Referral Rewards, Requisition Approvals, Talent Pool Memberships, Talent Pools, Talent Segments, Voluntary Self-Identifications.
-  Workflows covered: AI-Driven Matching and Screening, Background Screening, Candidate Experience, Interview Management, Offer Management, Requisition Management, Candidate Sourcing.
-  Adjacent skills (use them instead for their own scope): use-ben-admin, use-comp-mgmt, use-hcm, use-hrsd, use-onboarding, use-pa, use-payroll, use-swp, use-talent-mgmt.
+  Use this skill for any task involving the Real Estate Agent (solo / small firm bundle) domain (REAL-ESTATE-AGENT)
+  in this Semantius deployment. Trigger phrases: real-estate-agent.
+  Entities covered: Contacts, Leads, Disclosure Documents, Contracts, Real Estate Listings, Real Estate Transactions, Tour Appointments, Users.
+  Workflows covered: Contract Repository, Account and Contact Management, Lead Management, Real Estate Agent CRM, Real Estate Lead Capture and Routing, MLS and Listing Syndication, Showing and Tour Scheduling, Real Estate Transaction Management.
+  Adjacent skills (use them instead for their own scope): use-clm, use-crm, use-re-brokerage.
   Covers entity discovery, lifecycle awareness, cross-domain handoffs, APQC
   process context, and deployment-specific renames or omissions. Loads the
   discovered state automatically; runs a discovery pass on first invocation. Pairs with
   `use-semantius` for CLI mechanics.
 ---
 
-# use-ats skill
+# use-real-estate-agent skill
 
-This skill knows the **Applicant Tracking and Recruiting** domain as shipped from the catalog at HQ and as discovered in this deployment. It avoids re-discovering the domain shape on every conversation by persisting deployment-specific findings to local state.
+This skill knows the **Real Estate Agent (solo / small firm bundle)** domain as shipped from the catalog at HQ and as discovered in this deployment. It avoids re-discovering the domain shape on every conversation by persisting deployment-specific findings to local state.
 
 For all Semantius CLI mechanics, PostgREST encoding, and cube DSL, defer to the `use-semantius` skill, which is expected to load alongside.
 
@@ -164,7 +164,7 @@ Full versions of these rules with rationale live in the catalog's [domain-map-an
 
 ## Quick reference
 
-UI base: `https://<org>.semantius.app/ats/<table>`
+UI base: `https://<org>.semantius.app/real-estate-agent/<table>`
 
 Spec file: [`spec.json`](./spec.json)
 
