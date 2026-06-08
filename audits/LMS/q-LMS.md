@@ -2,125 +2,107 @@
 
 ## What this domain is
 
-LMS runs corporate learning end to end: author and publish courses, deliver them online or in a classroom, track every enrollment and completion, and issue the certifications and badges that prove it. It also carries the compliance side, assigning mandatory training, capturing the evidence regulators ask for, and feeding completion signals out to HR, GRC, and identity systems.
+Train your whole workforce and prove it, from first enrollment to audit-ready completion records.
+
+Run corporate learning end to end. Author and publish courses, deliver them online or in the classroom, and track every enrollment through to completion. Issue the certifications and badges that show who is qualified, and keep the evidence auditors and regulators ask for. Assign mandatory training automatically, chase overdue learners without manual follow-up, and feed completion signals to the HR, compliance, and identity systems that depend on them.
+
+> Note on your last round: I already actioned three of your answers. **q3 (cross-domain items to optional): done** (all four are now optional). **The catalog copy you expected: done** (you were right, I should not have asked; under the current rules I just write empty catalog text, so I authored and wrote the tagline + description for the domain and all 8 modules). **Personas: already authored** in a prior pass (Learning Administrator, Instructional Designer, Instructor, Compliance Training Manager, People Manager, plus a reused Compliance Specialist), so there was no decision left to make there. The six questions below are the ones genuinely still waiting on you. All written rows are at `record_status='new'` for your review in the catalog UI.
 
 ---
 
-q1: (answer this first) Should the six per-regulation evidence tables (HIPAA, OSHA, SOX, FERPA, FDA Part 11, BSA/AML) be collapsed into one training-evidence table keyed by regulation type?
+q1: (answer this first) The compliance side currently has six separate per-regulation evidence tables (HIPAA, OSHA, SOX, FERPA, FDA Part 11, BSA/AML). You asked: would one table be sufficient and not bloated, and wouldn't optional entities make sense? Short answer: five of the six (HIPAA, OSHA, SOX, FERPA, BSA/AML) are near-identical "learner completed statute-X training" rows that differ only by which statute, so folding them into one `training_evidence_records` table keyed by a regulation-type field removes duplication rather than adding bloat. The one that is genuinely different is FDA Part 11 (a tamper-evident, retention-locked audit trail, not a completion record), so it is the one worth keeping on its own. How should I handle it?
 
-- a) Yes: drop the six separate tables, add a regulation-type field on the single evidence table, and recover per-statute install gating through a tenant "active regulations" setting.
-- b) Yes, but keep the FDA Part 11 audit-trail table separate as its own audit-log record.
-- c) No: keep the six separate tables, and instead just mark the FDA Part 11 and BSA/AML tables as optional rather than required.
+- a) Collapse all six into one evidence table keyed by regulation type; recover per-statute install gating with a tenant "active regulations" setting.
+- b) Collapse the five completion tables into the one evidence table, but keep the FDA Part 11 audit trail as its own separate table.
+- c) Keep all six tables; just mark the sector-bound ones (FDA Part 11, BSA/AML) optional. This is your "optional entities" idea: no deletes, keeps native per-statute install gating, but leaves five near-duplicate tables.
 
-Recommended: a. Flagship LMS products model one evidence table keyed by regulation, which is simpler to maintain; the only trade-off is losing per-statute install gating, recoverable via tenant config. This is a high-blast-radius structural change (it deletes tables) and several questions below depend on its shape, so settle it first. It needs your sign-off because it deletes existing tables.
+Recommended: b. It is the direct answer to both your questions: one table is sufficient and not bloated for the five identical tables, and the only structurally different entity (FDA Part 11) stays separate. Option c is the safe no-delete fallback. This is high blast radius (options a and b delete tables) and the missing-entity compliance group (q5) depends on its shape, so settle it first. It needs your sign-off because it deletes existing tables.
 
 a1:
 
 ---
 
-q2: Should learner-data privacy (data-subject requests and consent) be moved out of LMS and consolidated under a dedicated privacy domain shared with the recruiting domain?
+q2: Should learner-data privacy (data-subject requests and consent) stay mastered in LMS, or move to a shared privacy domain? You asked how other vendors handle it and whether an embedded master makes sense. How other vendors handle it: flagship LMS products rarely master privacy themselves; data-subject requests and consent are handled at the HR/identity-suite or tenant level, or deferred to a central privacy tool, with the LMS just exposing "delete my data" / "export my records" hooks. Your embedded-master instinct is the right target shape: LMS keeps a local privacy shell so a standalone LMS can still honor training-data erasure, but defers to a canonical privacy domain when one is present. The catch: the proper owner (a PRIV-MGMT domain) holds none of this data yet, so it has to be built first.
 
-- a) Defer: treat this as a separate cross-domain initiative and keep learner privacy in LMS for now.
-- b) Plan the privacy-domain build-out now as the prerequisite, then schedule LMS and recruiting to hand their privacy data over to it.
+- a) Defer to a focused cross-domain privacy initiative; keep learner privacy in LMS as interim scope for now.
+- b) Build the PRIV-MGMT canonical owner now, then demote LMS (and the recruiting domain) privacy records to embedded masters that defer to it.
 - c) Decline: keep learner-data privacy permanently mastered in LMS.
 
-Recommended: a. Privacy data is currently fragmented across LMS and recruiting, and the proper owner (a privacy domain) holds none of it yet; dissolving the LMS privacy module alone would strand training-data erasure. Defer it to a focused cross-domain effort rather than rushing it here. It is non-destructive as long as nothing is moved yet.
+Recommended: a. The embedded-master end state (option b) is correct, but it requires PRIV-MGMT to exist as the canonical owner first, and that is a separate cross-domain build (LMS plus recruiting both hand over). Dissolving the LMS privacy module before that owner exists would strand training-data erasure. This interacts with q6.
 
 a2:
 
 ---
 
-q3: Four cross-domain items that LMS modules pull from other domains (onboarding tasks, policy attestations, performance goals, skills-gap analyses) are currently marked required, which blocks LMS from deploying on its own. How should they be handled?
+q3: A learning-skills capability is linked to LMS but no LMS module actually delivers it. You asked me to explain both options.
 
-- a) Flip all four to optional so each module degrades gracefully when the external data is absent.
-- b) Convert them to embedded copies that LMS owns.
-- c) Decide each of the four separately.
+- a) Delete the LMS link to that capability. The capability only shows up on LMS because one module uses course tags for skill tagging, which is downstream consumption; the skills-management domain is the real owner and already realizes it there. Clean, no new entities, removes an orphan. (Removing the link needs your sign-off.)
+- b) Keep the link and make the learning-paths module realize it. This only becomes viable after the missing "skill targets" entity ships (a path step tied to a skill plus a proficiency threshold), then a realizing link is added. More work, and it couples to the missing-entity load in q5.
 
-Recommended: a. A required dependency on a table another domain owns breaks standalone deployability; making them optional is the standard fix and lets each module run without the external feed.
+Recommended: a. The skills-management domain owns this capability; deleting the link is the cleaner fix. It needs your sign-off because it removes an existing link.
 
 a3:
 
 ---
 
-q4: A learning-skills capability is linked to LMS but no LMS module actually delivers it. How should the orphan be resolved?
+q4: An inbound handoff from the HR service domain (an HR case-category change) has no LMS landing spot, and no LMS module currently claims the underlying data. You asked me to explain the options.
 
-- a) Delete the LMS link to that capability, since the skills-management domain is its real owner.
-- b) Add a realizing link from the LMS learning-paths module after the skill-target table ships.
+- a) Route it to the compliance-training module: the case category drives compliance-tag inheritance (for example, a "harassment complaint" case type auto-tags the mandatory harassment training). Pick this if the link is about which compliance training a case type triggers.
+- b) Route it to the learning-paths module: the case category drives learning-path assignment (a case type maps to a development path). Pick this if it is about remedial or developmental learning rather than compliance proof.
+- c) Mis-modeled: retire the handoff if the HR case taxonomy should not reach LMS at all. (Removing the handoff needs your sign-off.)
 
-Recommended: a. The skills-management domain owns this capability; the link appears on LMS only because LMS consumes skill tags downstream. Deleting the link is the cleaner fix. It needs your sign-off because it removes an existing link.
+Recommended: no preset. The endpoint is genuinely ambiguous (compliance-tag inheritance versus learning-path assignment) and no LMS module currently claims the underlying data, so this needs your read on what the handoff is really for.
 
 a4:
 
 ---
 
-q5: Should I draft buyer-voice catalog copy (tagline plus description) for the LMS domain and all eight modules?
+q5: The vendor-surface "missing" entities (a prior set of 19) are not yet loaded. You asked what the 19 are and whether "grouped by area" is just "grouped by module". You are right, they are the same thing: each loader group maps one-to-one to a target module. The 19, grouped by their module:
 
-- a) Draft all nine, surface them for your row-by-row review, and write them only after you approve.
-- b) Draft a single example first to set the voice, then do the rest.
-- c) Skip the catalog copy for now.
+- Course delivery: question banks, cmi5 assignable units, LRS statement endpoints, observation checklists, observation checklist results.
+- Classroom (ILT) delivery: training-room bookings, session rosters, session cancellations.
+- Learning paths: skill targets, learning recommendations.
+- Credentials: credential verifications, certification renewals.
+- Compliance training: GxP training sign-offs, phishing simulations, phishing simulation results.
+- Training-records starter: DPO training acknowledgements, PCI DSS awareness records.
+- GDPR privacy: data-retention policies (reconcile against the existing records-retention-policies entity).
+- Automation: reminder schedules.
 
-Recommended: a. Every one of the nine rows is currently empty, so backfill is permitted once you approve the drafts. Drafting all nine and reviewing together is the fastest path. Low stakes.
+How much should I ship?
+
+- a) Ship them by module group (course delivery, ILT, paths, credentials, compliance, starter, GDPR, automation).
+- b) Ship a subset only (tell me which module groups).
+- c) Defer the whole load.
+
+Recommended: a. These are anchored to flagship-vendor surfaces or specific regulations, so shipping them by module group is the clean path. Sequence the compliance group after q1 and the GDPR group after q2. (The four extra ideas you already said yes to in the optional section are additive on top of these 19.)
 
 a5:
 
 ---
 
-q6: Should I author the LMS personas and their responsibility assignments now, or schedule a dedicated session for it?
-
-- a) Author the Learning Admin, Compliance Training Manager, Instructor, and Learner personas now.
-- b) Schedule a separate session for the people-and-process layer, which also wires the lifecycle approval gates.
-- c) Author only the starter-module roles first.
-
-Recommended: b. The people-and-process layer is sizable and pairs naturally with wiring the lifecycle approval gates, so a focused session does it better than bolting it on here.
-
-a6:
-
----
-
-q7: An inbound handoff from the HR service domain (an HR case-category change) currently has no LMS landing spot. Which LMS module should receive it?
-
-- a) The compliance-training module, where the case category drives compliance-tag inheritance.
-- b) The learning-paths module, where the case category drives learning-path assignment.
-- c) Neither: the handoff is mis-modeled, so retire it.
-
-Recommended: no preset. The endpoint is genuinely ambiguous (compliance-tag inheritance versus learning-path assignment) and no LMS module currently claims the underlying data, so this needs your read on what the handoff is really for. If retiring it, that removes an existing handoff and needs your sign-off.
-
-a7:
-
----
-
-q8: The vendor-surface "missing" entities (the prior set of 19 plus newer market items) are not yet loaded. How much should I ship?
-
-- a) Ship them grouped by area: course delivery, classroom delivery, learning paths, credentials, compliance, privacy, automation, and evaluations.
-- b) Ship a subset only (tell me which groups).
-- c) Defer the whole load.
-
-Recommended: a. These are anchored to flagship-vendor surfaces or specific regulations, so shipping them by group is the clean path. Note the compliance group interacts with q1 and the privacy group with q2, so sequence those after their gates.
-
-a8:
-
----
-
-q9: The domain currently lists only FERPA as an in-scope regulation, but LMS has a privacy module and HIPAA, OSHA, and SOX evidence tables. Which regulations should be tagged onto LMS?
+q6: The domain currently lists only FERPA as an in-scope regulation, but LMS has a privacy module and HIPAA, OSHA, and SOX evidence tables. You asked why this is separate from q2. It is separate because q2 is a structural ownership decision (who masters the privacy records, which is expensive and deferred), while this is cheap, additive scope metadata (which statutes the LMS market touches, used for discoverability and filtering). The tags are true regardless of where the records live, so this can be answered yes today without waiting on q2. Which regulations should be tagged onto LMS?
 
 - a) Add GDPR plus HIPAA, OSHA, and SOX.
 - b) Add GDPR only.
 - c) Leave it as FERPA only.
 
-Recommended: a. The compliance and privacy modules already bring these statutes into scope, so the regulation list should reflect them. This interacts with the privacy decision in q2.
+Recommended: a. The compliance and privacy modules already bring these statutes into scope, so the regulation list should reflect them. Purely additive metadata, independent of the q2 structural move.
 
-a9:
+a6:
 
 ---
 
 ## Optional (will not hold up the build)
 
-q10: Several extra learning entities show up across the flagship LMS vendors (learning evaluations and training surveys for satisfaction and effectiveness scoring, self-service training requests with approvals, external/off-platform training records, and gamification points and leaderboards). Should I research and add the ones that hold up? (yes/no)
+q7: You already said yes to researching four extra learning entities (learning evaluations and training surveys for satisfaction and effectiveness scoring; self-service training requests with approvals; external/off-platform training records; gamification points and leaderboards). These are recorded as approved. They are additive and best done after the module shape (q1) settles, with a verification pass first. Nothing for you to do here unless you want to change the list.
 
-Recommended: yes, but additive and best done after the module shape is settled. Learning evaluations and training requests are the strongest candidates; all want a verification pass first.
+- a) Proceed with all four after q1 settles (current plan).
+- b) Drop or change one or more (tell me which).
 
-a10:
+Recommended: a. All four are anchored to flagship vendors; doing them additively after the module shape is settled keeps them low-risk.
+
+a7:
 
 ---
 
-<!-- agent map, ignore: q1=B2-REFACTOR-C q2=B2-REFACTOR-A q3=B2-M9-DECISION q4=B2-SKILLS-MGMT-ATTRIBUTION q5=B2-CATALOG-COPY q6=B2-PERSONAS q7=B2-1121-ROUTING q8=B2-MISSING-ROUTING q9=B2-DOMAIN-REGULATIONS q10=B3-LEARNING-EVALUATIONS+B3-TRAINING-REQUESTS+B3-EXTERNAL-TRAINING-RECORDS+B3-GAMIFICATION | domain_id=57 -->
+<!-- agent map, ignore: q1=B2-REFACTOR-C q2=B2-REFACTOR-A q3=B2-SKILLS-MGMT-ATTRIBUTION q4=B2-1121-ROUTING q5=B2-MISSING-ROUTING q6=B2-DOMAIN-REGULATIONS q7=B3-LEARNING-EVALUATIONS+B3-TRAINING-REQUESTS+B3-EXTERNAL-TRAINING-RECORDS+B3-GAMIFICATION | domain_id=57 -->

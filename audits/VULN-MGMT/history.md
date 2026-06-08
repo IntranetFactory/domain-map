@@ -404,3 +404,39 @@ UI links:
 ### JWT errors
 
 None encountered.
+
+## 2026-06-07, Build + Phase-B completion (record_status='new')
+
+VULN-MGMT was promoted from the prior UNBUILT/leadership-tier stub to a full master-bearing build. load_build.ts loaded the structural shape; this pass executed the remaining agent-solvable completion work and authored the audit files, leaving the domain at next_action_by: user with a grounded q-file. No destructive work was performed and nothing was stamped approved (Rule #1).
+
+### Build shape loaded (by load_build.ts, confirmed live this pass)
+
+- **8 capabilities** + capability_domains: VULN-MGMT-SCAN-DETECT, VULN-MGMT-CVE-CATALOG, VULN-MGMT-RISK-PRIORITIZE, VULN-MGMT-REMEDIATE-ORCH, VULN-MGMT-EXCEPTION-GOV, VULN-MGMT-VERIFY-CLOSE, VULN-MGMT-COMPLIANCE-EVIDENCE, VULN-MGMT-ASSESS-CAMPAIGN.
+- **3 full modules**: VULN-MGMT-DETECT (id 332, Scanning and Detection), VULN-MGMT-RISK (id 333, Prioritization and Risk), VULN-MGMT-REMEDIATE (id 334, Remediation and Governance), each with domain_module_capabilities.
+- **6 NEW masters** placed via domain_module_data_objects: vulnerabilities (1028, master in 332), vulnerability_scans (1029, master in 332), vulnerability_definitions (1030, catalog master in 332), vulnerability_remediations (1031, master in 334), vulnerability_exceptions (1032, master in 334; has_submit_lock=true + has_single_approver=true), vulnerability_assessments (1033, master in 333). Plus org_units (34) embedded-master and software_installations (59) consumer across the modules; vulnerabilities/definitions/scans also consumed cross-module where the lifecycle needs them.
+- **Lifecycle states** on the 5 operational_workflow masters (1028, 1029, 1031, 1032, 1033); vulnerability_definitions is a catalog, no lifecycle.
+- **System skill** vuln-mgmt-system + tools + domain_module_tools; **5 personas** (Vulnerability Analyst, VM Program Manager, Remediation Owner, Application Remediation Engineer, Risk and Compliance Approver) + role_modules.
+
+### Completion work executed this pass (idempotent, record_status + notes omitted)
+
+- **data_object_relationships: +11** (verified, second run inserted 0).
+  - B6 intra-domain (6): vulnerability_scans detects vulnerabilities (1029->1028); vulnerabilities classified_by vulnerability_definitions (1028->1030); vulnerabilities remediated_by vulnerability_remediations (1028->1031); vulnerabilities waived_by vulnerability_exceptions (1028->1032); vulnerability_assessments scopes vulnerability_scans (1033->1029); vulnerability_assessments groups vulnerabilities (1033->1028).
+  - B7 users edges (3, users id 748): users assesses vulnerability_assessments (->1033, assessor); users approves vulnerability_exceptions (->1032, single approver); users owns vulnerability_remediations (->1031, remediation owner).
+  - B8 cross-domain (2): vulnerabilities affects configuration_items (1028->76, CMDB asset the weakness sits on); vulnerability_remediations tracked_via service_changes (1031->50, ITSM change executing the fix). No edge to THREAT-INTEL: domain 14 currently masters no exploit/CVE-intel entity, so no clean target payload exists (parked as B3-VM-EXPLOIT-INTEL-HANDOFF).
+- **trigger_events: +15** lifecycle-cover events (verified): vulnerability.detected/triaged/remediating/resolved/verified/closed/reopened (1028); vulnerability_scan.completed/failed (1029); vulnerability_remediation.assigned/completed (1031); vulnerability_exception.requested/approved/expired (1032); vulnerability_assessment.completed (1033). event_category=state_change, attributed to the module that owns the transition (DETECT for scans + open; RISK for triage + assessment; REMEDIATE for the close-the-loop states).
+- **handoff module-FK backfill (B10b): 1**. Only one handoff touches VULN-MGMT: handoff 36 (inbound, SAM software_install.detected, payload software_installations 59). target_domain_module_id set to 332 (VULN-MGMT-DETECT, where software_installations is consumed). source_domain_module_id left NULL: that is SAM's owed work (report-only). The domain had almost no handoffs before (it was a stub), so B8/B10b is light by construction, as expected; the substantive relationship work this pass is the intra-domain B6 graph plus the two clean cross-domain edges.
+
+### Decisions surfaced to the user (state.yaml b2; q-VULN-MGMT.md, vendor-grounded)
+
+- **B2-VM-MODULE-SPLIT** (gating): confirm the built 3-module split vs 2-module collapse vs 4-module compliance split. Recommended a, grounded in Tenable / Qualys VMDR / Rapid7 InsightVM / Microsoft Defender VM / CrowdStrike Falcon Spotlight / Wiz all separating scanning from prioritization from remediation.
+- **B2-VM-REMEDIATION-OWNERSHIP**: master vulnerability_remediations here + outbound handoff to ITSM (built shape, a) vs ITSM-only vs no-integration. Recommended a, citing that Tenable/Qualys/Rapid7/Microsoft/CrowdStrike master their own remediation entity while integrating with ServiceNow, and ServiceNow Vulnerability Response is the inverse native-ITSM case. Real trade-off stated (security-owned posture/MTTR/verification vs one extra record to reconcile).
+- **B2-VM-CVE-INTEL-SOURCE**: master the definitions catalog here + consume live exploit intel from THREAT-INTEL (a), with handoff deferred until THREAT-INTEL builds an exploit entity. Recommended a, citing Tenable VPR / Qualys TruRisk ingesting EPSS+KEV as external enrichment.
+- **B2-VM-EXCEPTION-FREEZE**: approve has_submit_lock + has_single_approver on vulnerability_exceptions (already true; Rule #1 gate). Recommended yes, citing Qualys/Rapid7/ServiceNow/Tenable/Microsoft single-approver + expiry gating.
+
+### Phase 0 ideas parked (state.yaml b3; non-blocking)
+
+B3-VM-EXPLOIT-INTEL-HANDOFF (inbound THREAT-INTEL once it masters an exploit entity), B3-VM-REMEDIATION-ITSM-HANDOFF (formal outbound remediation handoff, gated on B2-VM-REMEDIATION-OWNERSHIP), B3-VM-CMDB-ASSET-HANDOFF (inbound asset-population events driving scan scope), B3-VM-MARKET-SURFACE (scan_policies/templates, exposure_cards, patches, asset_tags/scan_targets, compliance_checks), B3-VM-EXPOSURE-MGMT-PROMOTION (CTEM cross-cutting prioritization, flagged as a split-shaped idea = future b2, never auto-executed).
+
+### Result
+
+b1a empty; next_action_by: user; status feedback_needed. q-VULN-MGMT.md present with vendor-grounded recommendations (Tenable, Qualys VMDR, Rapid7 InsightVM, Microsoft Defender Vulnerability Management, CrowdStrike Falcon Spotlight, Wiz cited by name on every market-shape recommendation).

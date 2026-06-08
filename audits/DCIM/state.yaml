@@ -1,168 +1,85 @@
-# === SUPERSEDED 2026-06-06: per-domain-skill restoration ===
-# The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
-# Any open item that says "author/split a per-module system skill", "one system skill per
-# domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELED.
-# New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
-# domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
-# DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
-# cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
-# re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
-# === end supersession note ===
 schema_version: 2
 domain: DCIM
 status: feedback_needed
 next_action_by: user
 last_audit: "2026-06-07"
 
-# DCIM is an UNBUILT domain: 0 domain_modules, 0 capability_domains, 0 solution_domains.
-# Every structural item below is blocked on the B2-MODULE-SPLIT decision (the build gate).
-# The 2026-06-07 state-driven pass executed the build-independent additive/corrective items
-# (entity_type classification, catalog UX copy, data_object_relationships edges); see history.
+# All agent-solvable build work executed 2026-06-07 (record_status='new'):
+# Phase A: 7 capabilities (DCIM-ASSET-REG, DCIM-POWER-CHAIN, DCIM-THERMAL, DCIM-ENV-MON,
+#   DCIM-CAP-PLAN, DCIM-CONN-MAP, DCIM-MAC) + capability_domains.
+# Phase M: 3 full modules (326 DCIM-ASSET-SPACE, 327 DCIM-POWER-ENV, 328 DCIM-CAP-CONN)
+#   + domain_module_capabilities; all 10 existing masters assigned to modules; new master
+#   dc_change_requests (1025) authored + assigned to 326.
+# Phase B completion: lifecycle states for the 3 operational_workflow masters (dc_racks 546,
+#   dc_power_circuits 549, dc_capacity_plans 553); data_object_relationships +13 (intra-domain,
+#   users edges, cross-domain raises->service_incidents); +8 lifecycle-cover trigger_events;
+#   handoff module-FK backfill (9 outbound source_domain_module_id; 0 inbound handoffs exist).
+# Phase S: tools + domain_module_tools wired so dcim-system derives a non-empty toolset.
+# Phase E: 4 personas + role_modules.
+# Only user-judgment decisions remain.
 
-b1a:
-  - id: B1A-T2
-    summary: Author missing handoff for dc_power_circuit.overload (event 691) into ITSM-INCIDENT-MGMT and PCF-tag in the same load.
-    finding: trigger_event 691 (dc_power_circuit.overload) currently has zero handoff rows. It is the only DCIM event with no downstream subscriber. ITSM-INCIDENT-MGMT (domain_module_id 38) is the natural consumer with payload service_incidents (data_object_id 47), matching the pattern of handoffs 674, 675, 677, 678 (all DCIM to ITSM, payload 47, integration_pattern event_stream).
-    action: INSERT handoff(source_domain_id=84, source_domain_module_id=<DCIM-POWER-COOLING id>, target_domain_id=1, target_domain_module_id=38, trigger_event_id=691, data_object_id=47, integration_pattern='event_stream', friction_level='high'). Then INSERT handoff_processes(handoff_id=<new>, process_id=1299, proposal_source='agent_curated', role='implements'). Single small loader.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1A-S1}
-      - {type: user_decision, ref: B2-MODULE-SPLIT}
-  - id: B1A-B1
-    summary: PATCH source_domain_module_id on all 9 DCIM outbound handoffs once modules exist.
-    finding: Every DCIM outbound handoff (ids 673, 674, 675, 676, 677, 678, 679, 680, 681) has NULL source_domain_module_id. B10b is the only outstanding boundary failure on DCIM's side once modules land.
-    action: For each of the 9 handoffs, PATCH source_domain_module_id to the strongest-role module holding the source data_object (per Rule #14 derivation). Deterministic mapping the moment B1A-S1 lands.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1A-S1}
-      - {type: user_decision, ref: B2-MODULE-SPLIT}
-    affected_handoffs:
-      - {handoff_id: 673, direction: outbound, source_domain: DCIM, target_domain: ITOM, trigger_event: dc_environmental_reading.threshold_breached, payload: dc_environmental_readings, null_field: source_domain_module_id}
-      - {handoff_id: 674, direction: outbound, source_domain: DCIM, target_domain: ITSM, trigger_event: dc_cabinet.environmental_alert, payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 675, direction: outbound, source_domain: DCIM, target_domain: ITSM, trigger_event: dc_power_distribution_unit.failure, payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 676, direction: outbound, source_domain: DCIM, target_domain: AIOPS, trigger_event: dc_power_distribution_unit.failure, payload: dc_power_distribution_units, null_field: source_domain_module_id}
-      - {handoff_id: 677, direction: outbound, source_domain: DCIM, target_domain: ITSM, trigger_event: dc_uninterruptible_power_supply.failover, payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 678, direction: outbound, source_domain: DCIM, target_domain: ITSM, trigger_event: dc_cooling_unit.failure, payload: service_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 679, direction: outbound, source_domain: DCIM, target_domain: CMDB, trigger_event: dc_port_connection.changed, payload: dc_port_connections, null_field: source_domain_module_id}
-      - {handoff_id: 680, direction: outbound, source_domain: DCIM, target_domain: SPM, trigger_event: dc_capacity_plan.refreshed, payload: dc_capacity_plans, null_field: source_domain_module_id}
-      - {handoff_id: 681, direction: outbound, source_domain: DCIM, target_domain: ITOM, trigger_event: dc_rack.capacity_threshold_breached, payload: dc_racks, null_field: source_domain_module_id}
-  - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
-    finding: "Live reconfirmed 2026-06-07: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI work applies. The build is gated on the B2-MODULE-SPLIT decision."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the domain-grain system skill. If the result is multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward."
-    extra_phase_p_triage: "2026-06-02"
+b1a: []
 
-b1b:
-  - id: B1B-S1
-    summary: Author DCIM domain_modules rows (Phase A obligation per Rule #14).
-    finding: DCIM has 10 masters and zero domain_modules rows. M1 / M2 / M4 / M5 / M6 fail outright. The deployable unit is the module; without modules, B10b cannot resolve, lifecycle states (B12) cannot be authored (need module FK), the domain system skill cannot anchor, roles (E1 to E5) have nothing to scope. Audit blocker.
-    blocked_by:
-      - {type: user_decision, ref: B2-MODULE-SPLIT}
-    affected_entities:
-      - dc_racks
-      - dc_cabinets
-      - dc_power_distribution_units
-      - dc_power_circuits
-      - dc_uninterruptible_power_supplies
-      - dc_cooling_units
-      - dc_environmental_readings
-      - dc_capacity_plans
-      - dc_port_connections
-      - dc_cable_connections
-    extra_options:
-      - "(a) 3-module split: DCIM-ASSET-CAPACITY (racks, cabinets, port_connections, cable_connections, capacity_plans), DCIM-POWER-COOLING (PDUs, power_circuits, UPSes, cooling_units, environmental_readings), optional DCIM-FLOORPLAN-SITE"
-      - "(b) 2-module split: DCIM-PHYSICAL + DCIM-POWER-COOLING"
-      - "(c) 1 full + 1 starter: DCIM-CORE + DCIM-LITE"
-  - id: B1B-S2
-    summary: Author DCIM capabilities and capability_domains (>=3 floor, target 5-8).
-    finding: Zero capability_domains rows for DCIM. M4 fails; >=2 module floor (Rule #14) requires >=3 capabilities to apply.
-    blocked_by:
-      - {type: user_decision, ref: B2-CAPABILITY-SET}
-      - {type: depends_on, ref: B1B-S1, reason: capabilities wire to modules via domain_module_capabilities}
-    extra_proposed_codes:
-      - DCIM-ASSET-REGISTER
-      - DCIM-CAPACITY-PLAN
-      - DCIM-POWER-MGMT
-      - DCIM-COOLING-MGMT
-      - DCIM-CONNECTIVITY-MAP
-      - DCIM-ENV-MONITORING
-      - DCIM-FLOOR-PLAN
-  - id: B1B-S3
-    summary: Author DCIM solutions and solution_domains (>=3 with >=1 primary).
-    finding: Zero solution_domains rows for DCIM. A3 fails. Device42 (solutions.id 46) already exists in catalog but has no solution_domains link to DCIM.
-    blocked_by:
-      - {type: catalog_addition, scope: solutions, trigger: vendor catalog rows for the flagship DCIM vendor surface}
-    vendor_evidence:
-      - {evidence: 1st_class, count: 4}
-      - {evidence: secondary, count: 2}
-  - id: B1B-S5
-    summary: "SUPERSEDED (2026-06-06 per-domain-skill restoration): retire legacy dcim-system skill and re-anchor as ONE domain-grain system skill."
-    finding: "Original item (author 1 system skill per module + skill_tools) is CANCELED by the supersession header. Reframed note only: legacy domain-level system skill dcim-system (id 46, domain_module_id NULL) exists. Under the new model DCIM should carry exactly ONE domain-grain system skill (domain_id=84, domain_module_id NULL) that DERIVES its toolset from domain_module_tools; FULL modules carry no skill; any starter keeps its own module-anchored skill. No per-module skills, no skill_tools. Resolution happens as part of the build (B1B-S1); per-module tool re-authoring tracked in audits/_modularization-backlog.md."
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: domain system-skill toolset derives from module-anchored domain_module_tools}
-  - id: B1B-S6
-    summary: Author DCIM roles, role_modules, role_permissions (E1 to E5).
-    finding: "Zero DCIM-prefixed roles. Proposed: IT-INFRA-DC-OPERATOR (primary on power, cooling, asset modules), IT-INFRA-CAPACITY-PLANNER (primary on capacity, secondary on asset), FACILITIES-DC-FACILITIES-LEAD (primary on cooling and floor-plan, secondary on others)."
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: role_modules requires module FKs}
-      - {type: user_decision, ref: B2-MODULE-SPLIT, reason: module count determines role-to-module wiring}
-  - id: B1B-T7
-    summary: Author DCIM lifecycle states for the 3 operational_workflow masters.
-    finding: "Zero data_object_lifecycle_states rows for any DCIM master. B12 fails for the 3 masters now classified operational_workflow (entity_type set 2026-06-07): dc_capacity_plans (553), dc_power_circuits (549), dc_racks (546). The 7 operational_record masters pass B12 without lifecycle (the config-shape exemption is now the entity_type classification itself, Rule #12, no notes write). Lifecycle states need a module FK, so this is gated on B1B-S1."
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: data_object_lifecycle_states.domain_module_id required}
-    affected_masters:
-      - {data_object_id: 553, name: dc_capacity_plans, entity_type: operational_workflow, target_module_id: null, workflow: "draft -> in_review -> approved -> archived"}
-      - {data_object_id: 549, name: dc_power_circuits, entity_type: operational_workflow, target_module_id: null, workflow: "provisioned -> energized -> deenergized -> decommissioned"}
-      - {data_object_id: 546, name: dc_racks, entity_type: operational_workflow, target_module_id: null, workflow: "planned -> installed -> active -> retired"}
+b1b: []
 
 b2:
   - id: B2-MODULE-SPLIT
-    summary: Pick DCIM module split (gates every remaining b1 item and the whole build).
-    question: "Which DCIM module split should we apply? Options below."
-    options:
-      - "(a) 3-module split: DCIM-ASSET-CAPACITY + DCIM-POWER-COOLING + optional DCIM-FLOORPLAN-SITE starter"
-      - "(b) 2-module split: DCIM-PHYSICAL + DCIM-POWER-COOLING"
-      - "(c) 1 full + 1 starter: DCIM-CORE + DCIM-LITE"
-      - "(d) different split, please specify"
-    why: "Bucket 1 cannot fix any structural item without knowing how many modules to create and which masters land where. The 3-module split aligns with the Bucket 3 dc_floor_plans / dc_sites vetting outcome; the 2-module split is the safe fallback if Bucket 3 stays speculative."
-  - id: B2-CAPABILITY-SET
-    summary: Approve DCIM capability codes and decide on cross-cutting fold-ins.
-    question: "Which of the 7 proposed capability codes should land, and does DCIM-CAPACITY-PLAN fold into the existing cross-cutting ITOM-CAPACITY (id 227) via a capability_domains link rather than a new code?"
-    options:
-      - "all 7 new"
-      - "6 new + capacity folds to ITOM-CAPACITY 227"
-      - "fewer (specify which)"
-    why: "Phase A M4 floor is 3 capabilities; >=3 capabilities triggers Rule #14 >=2 modules floor. Cross-cutting fold-ins reduce churn but require explicit confirmation per skill convention."
+    summary: Confirm the DCIM module split (the 3-module split is already built as the recommended option).
+    question: "Keep the built 3-module split (Asset and Space Management: dc_racks, dc_cabinets, dc_change_requests; Power and Environmental Monitoring: PDUs, power_circuits, UPSes, cooling_units, environmental_readings; Capacity and Connectivity Planning: capacity_plans, port_connections, cable_connections), or restructure into 2 (fold connectivity into asset) or 4 (split connectivity into its own module)?"
+    options: [a-3-module-built, b-2-module-fold-connectivity, c-4-module-split-connectivity]
+    why: "Grounded in vendor packaging. The DCIM pure-plays converge on three product surfaces: an asset/space register, a power-and-cooling (critical-infrastructure) surface, and a capacity/connectivity planning surface. Sunbird sells dcTrack (asset, change, connectivity) alongside Power IQ (power and environmental monitoring); Schneider EcoStruxure IT splits IT Asset management from the Power/Cooling DCIM and a separate capacity/what-if modeling tier; Vertiv Environet separates asset/floor management from power-and-thermal monitoring from capacity planning; Nlyte separates its asset/DCIM register from energy/power monitoring and from capacity/what-if modeling. (b) collapses to two but no flagship merges connectivity into the asset register as the headline split. (c) over-fragments connectivity, which is small (2 masters); only FNT Command, a cabling/OSP specialist, treats connectivity as a standalone first-class surface, and it is the outlier in this set. The genuine open judgment is where the connectivity map sits: I put ports/cables with capacity planning (Sunbird and Nlyte keep connectivity inside the same dcTrack/asset suite as planning), but a connectivity-led shop following FNT could justify (c). Changing the split restructures the three built modules."
+
+  - id: B2-EAM-CMDB-OVERLAP
+    summary: Confirm DCIM owns all physical masters vs ceding connectivity/asset to CMDB or a future EAM.
+    question: "Keep all DCIM masters in DCIM (the dc_* scope keeps them distinct from CMDB configuration_items and any future EAM equipment register), or move dc_port_connections / dc_cable_connections to a CMDB-owned or cabling domain, or promote dc_racks / dc_cabinets to an EAM-owned physical-asset master DCIM consumes?"
+    options: [a-keep-all-in-dcim, b-move-connectivity-to-cmdb, c-promote-racks-cabinets-to-eam]
+    why: "Vendor practice: the DCIM flagships are the system of record for physical placement, power, and cooling and PUBLISH topology to the CMDB rather than ceding it. Device42 is the telling case: it ships both a CMDB/discovery product and a DCIM product, and its DCIM module owns racks, power units, and physical cabling while feeding the logical CI graph; the built dc_port_connection.changed / dc_cable_connection.added handoffs to CMDB (handoff 679) already model exactly this publish-not-own pattern. Sunbird, Schneider, Vertiv, and Nlyte all keep racks/cabinets and physical connectivity inside the DCIM register, not in a separate EAM. (b)/(c) would only fit an estate where an incumbent CMDB or EAM already double-registers physical hardware. Moving a master between domains is destructive restructuring, so it needs your call. Recommended: a."
+
+  - id: B2-CHANGE-REQUEST-FLAGS
+    summary: Pattern flags on the new dc_change_requests master (overwrite of default booleans).
+    question: "Set has_submit_lock=true and has_single_approver=true on dc_change_requests (a physical move/add/change locks on submit and routes to one critical-facilities approver), or allow a multi-approver CAB flow (has_single_approver=false), or keep it lighter and always-editable (has_submit_lock=false)?"
+    options: [a-submit-lock-single-approver, b-multi-approver-cab, c-no-submit-lock]
+    why: "Vendor practice: the moves-adds-changes workflow in Sunbird dcTrack, Nlyte (work items / projects), and Vertiv (moves/adds/changes) gates a physical install/decommission/relocation behind a facilities sign-off before equipment is energized or de-energized, and freezes the request once work is scheduled so the as-built record stays trustworthy. A single critical-facilities approver matches how these tools route a floor change (the heavyweight multi-approver change-advisory board belongs to ITSM, which already receives DCIM's major-incident handoffs 674-678). Each flag flip overwrites the master's current boolean, so it needs approval. Recommended: a."
+
+  - id: B2-DEVICE42-COVERAGE
+    summary: Coverage level for the Device42 DCIM solution given its existing CMDB-scoped solution row.
+    question: "Keep the Device42 DCIM solution at coverage_level='partial' (it models racks, power, and connectivity but leads with discovery/CMDB), raise it to 'secondary' (on par with the pure-plays), or drop the DCIM solution and keep only its CMDB row?"
+    options: [a-partial, b-secondary, c-drop-dcim-solution]
+    why: "Vendor positioning: Device42 markets primarily as agentless discovery and CMDB, with DCIM (racks, power units, cabling, impact charts) as an attached surface, whereas Sunbird, Schneider EcoStruxure IT, Vertiv, and Nlyte lead with DCIM as the flagship. 'partial' records that asymmetry honestly without overstating Device42's DCIM depth or erasing its real rack/power/connectivity modeling. Changing a published coverage_level overwrites a value, so it needs your call. Recommended: a."
+
   - id: B2-ENV-READING-FAN-OUT
-    summary: Should dc_environmental_reading.threshold_breached publish to ITSM as well as ITOM?
-    question: "Currently event 694 publishes only to ITOM (handoff 673). Add a second outbound to ITSM-INCIDENT-MGMT (module 38, payload service_incidents 47) for major-incident triggering, or leave it to ITOM to correlate and re-publish?"
-    options:
-      - "(a) fan out from DCIM, add new ITSM handoff"
-      - "(b) leave to ITOM correlation"
-      - "(c) defer"
-    why: "An environmental threshold breach is a plausible major-incident trigger. Adding the handoff at DCIM is cheaper than waiting on an ITOM correlator that may not exist; leaving it to ITOM preserves single-source-of-event semantics."
+    summary: Should dc_environmental_reading.threshold_breached also publish to ITSM, not only ITOM?
+    question: "Event 694 (dc_environmental_reading.threshold_breached) currently publishes only to ITOM (handoff 673). Add a second outbound to ITSM-INCIDENT-MGMT (module 38, payload service_incidents 47) so a sustained environmental breach can trigger a major incident directly, or leave it to ITOM to correlate and re-publish?"
+    options: [a-fan-out-add-itsm-handoff, b-leave-to-itom-correlation, c-defer]
+    why: "Vendor practice: Schneider EcoStruxure IT and Vertiv route sustained environmental-threshold alarms straight to an incident/ticketing workflow (EcoStruxure IT Expert opens service tickets on critical environmental alarms; Vertiv Environet Alert escalates thermal/leak alarms to on-call), not solely through a correlation layer, because a water-leak or over-temperature alarm is itself a candidate major incident. The cabinet-level environmental alert already fans out to ITSM (handoff 674); the sensor-reading event arguably should too. Leaving it to ITOM preserves single-source-of-event semantics but depends on an ITOM correlator existing. Adding the handoff is additive, but it creates a new cross-domain publish, so surface it rather than auto-author. Recommended: a."
 
 b3:
   - id: B3-FLOOR-PLANS
     candidate: dc_floor_plans
-    rationale: Universal across flagship vendors; visual rack/cabinet layout is core DCIM UX. If vetted in, redrawing the module split to include DCIM-FLOORPLAN-SITE becomes the natural fit.
-    proposed_module: DCIM-FLOORPLAN-SITE
+    rationale: "A visual floor/rack-layout master (2D/3D floor plan with cabinet placement) is core DCIM UX across the flagship set but is absent from the DCIM footprint. If vetted in, it lands naturally in DCIM-ASSET-SPACE. Additive; vet via a Phase 0 pass before loading."
+    vendor_evidence: [Sunbird dcTrack floor plans, Vertiv Environet floor_plans, Nlyte locations/floor views, Schneider EcoStruxure IT rooms layout]
+    proposed_module: DCIM-ASSET-SPACE
+
   - id: B3-SITES
     candidate: dc_sites
-    rationale: Site / data-hall master sits above racks in every flagship vendor schema. Currently DCIM has no rack-parent entity in the catalog; sites is the canonical fix.
-    proposed_module: DCIM-ASSET-CAPACITY
-  - id: B3-CHANGE-REQUESTS
-    candidate: dc_change_requests
-    rationale: Rack-move and power-change workflows in flagship DCIM products carry a domain-specific change-request entity. May instead demote to a consumer link on ITSM change_requests if the Phase 0 pass shows the workflow is ITSM-shaped.
-    proposed_module: DCIM-POWER-COOLING
+    rationale: "A site / data-hall master sits above racks and rooms in every flagship vendor schema; DCIM currently has no rack-parent location entity, so the space hierarchy is truncated at the rack/cabinet level. Additive; the canonical parent fix for the asset register."
+    vendor_evidence: [Sunbird sites/floors/rooms, Schneider EcoStruxure IT sites/rooms, Vertiv sites/floor_plans, Nlyte locations, Device42 buildings/rooms, FNT locations/rooms]
+    proposed_module: DCIM-ASSET-SPACE
+
   - id: B3-POWER-RESERVATIONS
     candidate: dc_power_reservations
-    rationale: Reserved power-budget allocations sit between dc_capacity_plans and dc_power_circuits in several flagship schemas; missing from the current schema.
-    proposed_module: DCIM-POWER-COOLING
+    rationale: "Reserved power-budget allocations sit between dc_capacity_plans and dc_power_circuits in several flagship schemas (a planner reserves kW headroom for a future install before the circuit is energized). Missing today. Additive; would land in DCIM-POWER-ENV or DCIM-CAP-CONN."
+    vendor_evidence: [Sunbird dcTrack power budgeting/reservations, Nlyte capacity reservations, Schneider EcoStruxure IT capacity what-if]
+    proposed_module: DCIM-POWER-ENV
+
   - id: B3-AUDIT-TRAILS
     candidate: dc_audit_trails
-    rationale: Regulatory-shaped (SOC 2 evidence). May resolve to a cross-cutting platform audit log rather than a DCIM-local master; Phase 0 pass needs to decide.
+    rationale: "Regulatory/SOC-2-shaped change-audit log for the physical estate. May resolve to a cross-cutting platform audit log rather than a DCIM-local master; a Phase 0 pass should decide ownership before loading."
+    vendor_evidence: [Nlyte audit_trails, Sunbird change history]
     proposed_module: cross-cutting
+
   - id: B3-DISCOVERY-SCANS
     candidate: dc_discovery_scans
-    rationale: Auto-discovery-skewed but appears in multiple flagship schemas too. Vet whether non-discovery-led buyers carry the entity natively or rely on integrations.
-    proposed_module: DCIM-ASSET-CAPACITY
+    rationale: "Auto-discovery / remote-collector scan records appear in discovery-led DCIM schemas. Vet whether non-discovery-led buyers carry the entity natively or rely on integrations before loading."
+    vendor_evidence: [Device42 remote_collectors/discovery, Nlyte energy metering/discovery]
+    proposed_module: DCIM-ASSET-SPACE

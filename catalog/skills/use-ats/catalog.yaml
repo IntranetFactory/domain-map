@@ -1,0 +1,59 @@
+# Catalog UX data for the use-ats skill.
+# Sole input to the catalog site generator. Read by the site builder to render
+# list cards, detail pages, search index. NEVER loaded by the skill at runtime.
+#
+# `catalog_tagline` and `catalog_description` are governed by Rule #20
+# (.claude/skills/domain-map-analyst/SKILL.md): buyer voice (workflow + value),
+# never overwrite a non-empty value without explicit per-row user approval.
+# Marketing can edit these freely; AI loaders must NOT regenerate without
+# review.
+
+domain_code: ATS
+skill_name: use-ats
+
+# Buyer-facing one-liner for catalog list cards. ~1 sentence.
+catalog_tagline: "Hire faster with a connected pipeline from sourcing through offer acceptance."
+
+# Buyer-facing 1-3 paragraph description for catalog detail page.
+# YAML `|` preserves newlines literally — keep each paragraph on ONE line, with
+# a blank line between paragraphs (parses to `\n\n` separators, the markdown-
+# rendering convention). Do NOT hard-wrap inside paragraphs; that becomes
+# visible mid-paragraph breaks in the rendered HTML.
+catalog_description: |
+  Track every candidate from first contact through hire. Manage job requisitions, posting distribution, application intake, interview scheduling, scorecard collection, and offer generation in one connected pipeline.
+
+  When a candidate accepts an offer, the workflow hands off cleanly to onboarding so your new hire's first day doesn't start from a blank page. Built-in support for EEOC-compliant funnel analytics, requisition approval routing, and offer-letter version control.
+
+# Category for catalog grouping / filter. Derived from
+# business_function_domains.responsibility_type='owner' on the live catalog.
+category: Recruiting
+
+# Search keywords for the catalog's search index. Curated for the catalog
+# (can differ from spec.aliases if the editor wants to add/remove terms
+# specifically for search vs. agent triggering).
+search_keywords:
+  - recruiting
+  - hiring
+  - talent acquisition
+  - applicant tracking
+  - candidate management
+  - hiring pipeline
+  - job requisition
+  - interview scheduling
+  - offer management
+  - background check
+  - EEOC compliance
+  - ATS
+
+# Optional icon hint for catalog UX (relative path or URL).
+icon: ""                          # TBD
+
+# Cross-link surfaces for the catalog (related/depends).
+# `depends_on_skills` are required by the skill itself; `related_skills` are
+# what the catalog suggests as "see also" next to this card.
+depends_on_skills:
+  - use-semantius
+related_skills:
+  - use-hcm
+  - use-onboarding
+  - use-bgc

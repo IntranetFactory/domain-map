@@ -497,7 +497,7 @@ Starter kits used to be an editorial junction (`domain_starter_modules`) recomme
 Two columns each on **both** `domains` and `domain_modules` serve the public catalog and the site generator, not the analyst surface:
 
 - `catalog_tagline` (string): one buyer-facing sentence for catalog list cards. Workflow-shaped, not market-shaped.
-- `catalog_description` (text): 1-3 buyer-facing paragraphs for the catalog detail page. Describes what the buyer can do; does not enumerate handoffs, parent domains, or position in the catalog taxonomy.
+- `catalog_description` (text): **1-2 short** buyer-facing paragraphs (~120 words) for the catalog detail page. Describes what the buyer can do; does not enumerate handoffs, parent domains, or position in the catalog taxonomy. 3+ paragraphs is too long: condense to 2.
 
 `domains` carries the market-grain copy (whole-domain landing pages). `domain_modules` carries the module-grain copy (per-module cards and detail pages). Buyers select modules in a deployment, not whole domains, so the module-grain copy is the surface a deploy chooser renders. Both grains follow the same rules.
 
@@ -557,12 +557,12 @@ A request to **report / check / "check only"** means read-only: diagnose, surfac
 
 **Format (exact).**
 - Title: `# <Domain name> (<CODE>): questions waiting for you`.
-- `## What this domain is`: the domain's `catalog_tagline` + `catalog_description` when present; otherwise a 2-3 sentence plain summary of what the domain is for.
+- `## What this domain is`: the domain's `catalog_tagline` + `catalog_description` when present; otherwise a 2-3 sentence plain summary of what the domain is for. Keep it to the tagline + **at most 2 short paragraphs** (if `catalog_description` runs to 3+ paragraphs, show its first 2). **NEVER append build/process commentary** (no "the build loaded N capabilities / modules / lifecycle states ..." paragraph): "What this domain is" describes the domain, not what the audit did.
 - `---`, then one block per question. Each block, in order, with a blank line between every part:
   - `q<N>: <plain-language question>`. No internal IDs (no `B2-S1`), no `§`. Mark the single gate question (the one everything else depends on) with `(answer this first)`.
   - Every question is **yes/no** or **pick-one-from-a-list**. Split multi-part approvals into separate yes/no questions. Append `(yes/no)` to yes/no questions.
   - For a list question: each option on its own line as a markdown list item (`- a) ...`), so it renders one per line.
-  - `Recommended: <answer>. <one-line reason>` on its own line.
+  - `Recommended: <answer>. <reason>` on its own line. **The reason must be grounded in evidence, not in build-convenience.** For any decision about market shape (module splits, scope, ownership, what entity belongs where), cite what flagship vendors actually do, by name: how specific vendors package the domain into products / editions, or which model the entity vs not (vendor names are allowed here; Rule #18 bars them only from catalog text fields, not audit files). Surface the genuine trade-off honestly. NEVER recommend from "the minimal shape", "what unblocks the build", or "what is already built": those are reasons about us, not the market, and are not acceptable rationale. A market-shape recommendation with no vendor/market evidence is an incomplete q-file.
   - `a<N>:` (empty, for the user) on its own line.
   - `---` divider before the next block.
 - A final HTML comment mapping each `q<N>` to its `state.yaml` decision ID plus the `domain_id`, e.g. `<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 ... | domain_id=79 -->`. This is how answers map back; keep it accurate. Live examples of the shape were `q-APIM.md` / `q-KMS.md`.
@@ -863,7 +863,7 @@ For every `master + required` data_object in this domain, count `data_object_lif
 
 **A4. Catalog UX fields populated.** (Rule #20.)
 - Query: `/domains?id=eq.<id>&select=catalog_tagline,catalog_description`
-- Pass: `catalog_tagline` is a non-empty single-sentence buyer-facing one-liner; `catalog_description` is a non-empty 1-3 paragraph buyer-facing long-form description. Both are written in buyer voice (workflow + value), NOT analyst voice (market position + handoffs).
+- Pass: `catalog_tagline` is a non-empty single-sentence buyer-facing one-liner; `catalog_description` is a non-empty 1-2 short-paragraph (~120 word) buyer-facing description. Both are written in buyer voice (workflow + value), NOT analyst voice (market position + handoffs).
 - Fix: author the buyer-voice copy and write it straight into the empty field(s) per Rule #20. The row's `record_status` carries the review signal (the user reviews the written copy in-record / in the catalog UI), so do NOT pre-surface to chat as a gate and do NOT park the draft in `history.md`. Once a non-empty value exists, never overwrite without explicit per-row user approval; marketing may have fine-tuned the original.
 
 **A5. Vendor records reflect current legal ownership.** *(Opt-in only — not part of the routine audit pass.)*
@@ -934,7 +934,7 @@ Modules within a domain are **autonomous deployable units** (per § "The module 
 
 **M8. Module-level catalog UX fields populated on every `domain_modules` row hosted on this domain.** (Rule #20.)
 - Module set query: `/domain_modules?domain_id=eq.<id>&select=id,domain_module_code,catalog_tagline,catalog_description` UNION `/domain_module_host_domains?domain_id=eq.<id>&select=domain_module:domain_modules(id,domain_module_code,catalog_tagline,catalog_description)` (covers cross-cutting modules hosted here).
-- Pass: every module's `catalog_tagline` is a non-empty single-sentence buyer-facing one-liner; every module's `catalog_description` is a non-empty 1-3 paragraph buyer-facing long-form description. Both are written in buyer voice (workflow + value), NOT analyst voice. A4 is the equivalent check at the domain grain; M8 is the per-module rollup.
+- Pass: every module's `catalog_tagline` is a non-empty single-sentence buyer-facing one-liner; every module's `catalog_description` is a non-empty 1-2 short-paragraph (~120 word) buyer-facing description. Both are written in buyer voice (workflow + value), NOT analyst voice. A4 is the equivalent check at the domain grain; M8 is the per-module rollup.
 - Fix: author the buyer-voice copy and write it straight into the empty field(s) per Rule #20. The row's `record_status` carries the review signal (the user reviews the written copy in-record / in the catalog UI), so do NOT pre-surface to chat as a gate and do NOT park the draft in `history.md`. Once a non-empty value exists, never overwrite without explicit per-row user approval; marketing may have fine-tuned the original.
 
 **M9. Module self-containment — every module is independently deployable (no hard prerequisites).**

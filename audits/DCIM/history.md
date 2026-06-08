@@ -300,3 +300,24 @@ State-driven Validate pass over the open items in `audits/DCIM/state.yaml` (no f
 - `https://tests.semantius.app/domain_map/data_objects` (entity_type)
 - `https://tests.semantius.app/domain_map/domains?id=eq.84` (catalog UX)
 - `https://tests.semantius.app/domain_map/data_object_relationships` (11 new edges)
+
+## 2026-06-07 - Build (grounded review)
+
+DCIM had its 10 masters, outbound handoffs, and a legacy domain-level system skill, but the prior pass left it as a feedback_needed stub with 0 capabilities, 0 modules, and a q-file whose recommendations were not grounded in vendor practice (rejected on that basis). This pass built the missing foundation and executed every agent-solvable item so the domain ends at next_action_by: user with a vendor-grounded q-file.
+
+Executed (all record_status=new):
+- Phase A: 7 capabilities (DCIM-ASSET-REG, DCIM-POWER-CHAIN, DCIM-THERMAL, DCIM-ENV-MON, DCIM-CAP-PLAN, DCIM-CONN-MAP, DCIM-MAC) + capability_domains.
+- Phase M: 3 full modules - DCIM-ASSET-SPACE (326), DCIM-POWER-ENV (327), DCIM-CAP-CONN (328) - + domain_module_capabilities; all 10 existing masters assigned to modules; new master dc_change_requests (1025, the moves-adds-changes entity) authored and assigned to 326.
+- Phase B completion (this run): lifecycle states for the 3 operational_workflow masters (dc_racks 546, dc_power_circuits 549, dc_capacity_plans 553); data_object_relationships +13 (intra-domain: cooling_unit emits_readings env_reading, capacity_plan projects power_circuit + cooling_unit, rack/cabinet changed_by change_request; users edges: submits change_request, operates PDU, maintains cooling_unit, documents port_connection; cross-domain outbound: dc_cabinets/PDUs/UPSes/cooling_units raise service_incidents 47, mirroring the published ITSM handoffs 674/675/677/678); +8 lifecycle-cover trigger_events covering the rack, power-circuit, and capacity-plan transitions that had no event (dc_rack.installed/activated/decommissioned, dc_power_circuit.energized/de_energized/decommissioned, dc_capacity_plan.published/superseded), each anchored to its mastering module; handoff module-FK backfill (B10b) - all 9 outbound handoffs (673-681) patched with source_domain_module_id derived from the module mastering each trigger_event data_object (673 327, 674 326, 675 327, 676 327, 677 327, 678 327, 679 328, 680 328, 681 326). DCIM has 0 inbound handoffs, so no consumer DMDO rows and no inbound target-module backfill were needed.
+- Phase S: tools + domain_module_tools wired so dcim-system derives a non-empty toolset.
+- Phase E: 4 personas (Data Center Manager, Critical Facilities Engineer, Capacity Planner, Data Center Technician) + role_modules.
+
+Note on relationship_type: the DB check constraint allows only one_to_many / one_to_one / many_to_many (not many_to_one), so child-to-parent edges were authored parent-side as one_to_many with owner_side=source.
+
+Left for the user (q-DCIM.md, all vendor-grounded): module-split confirmation (built as 3-module, grounded in Sunbird/Schneider/Vertiv/Nlyte product packaging); EAM/CMDB ownership of the physical masters (grounded in the Device42 publish-not-own pattern); the two dc_change_requests pattern-flag freezes (submit-lock + single-approver, grounded in Sunbird/Nlyte/Vertiv MAC workflows); Device42 DCIM coverage_level (partial, grounded in Device42 discovery/CMDB-led positioning); and the environmental-reading ITSM fan-out (grounded in EcoStruxure IT / Vertiv Environet alarm-to-ticket routing). B3 ideas (dc_floor_plans, dc_sites, dc_power_reservations, dc_audit_trails, dc_discovery_scans) parked as non-blocking Phase 0 vetting candidates.
+
+### UI links (tables written)
+
+- https://tests.semantius.app/domain_map/data_object_relationships (13 new edges)
+- https://tests.semantius.app/domain_map/trigger_events (8 new lifecycle-cover events)
+- https://tests.semantius.app/domain_map/handoffs?source_domain_id=eq.84 (9 source-module FK backfills)

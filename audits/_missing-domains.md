@@ -460,23 +460,6 @@ the bottom are the resolved history.
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
 
-### REVERSE-ETL — Reverse-ETL / Warehouse-Activation
-
-- **Mention count:** 4
-- **First surfaced:** 2026-05-30 (CDP audit 2026-05-30)
-- **Most recent:** 2026-05-30 (DI audit 2026-05-30)
-- **Surfaced by:**
-  - 2026-05-30 CDP audit 2026-05-30
-  - 2026-05-30 MA audit 2026-05-30
-  - 2026-05-30 METRICS-LAYER audit 2026-05-30
-  - 2026-05-30 DI audit 2026-05-30
-- **Vendor evidence:** Hightouch, Census, RudderStack Reverse-ETL, Polytomic, Grouparoo
-- **Adjacency:** CDP, B2C-COMM, MA
-- **Candidate capabilities:** warehouse-native activation, reverse-ETL sync, zero-copy CDP
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
-
 ### SMS-MARKETING — SMS Marketing Platform
 
 - **Mention count:** 1
@@ -3554,7 +3537,15 @@ _(none yet)_
 
 ## Folded
 
-_(none yet)_
+### REVERSE-ETL: Reverse-ETL / Warehouse-Activation
+
+- **Mention count:** 4
+- **Surfaced by:** CDP, MA, METRICS-LAYER, DI audits (2026-05-30)
+- **Vendor evidence:** Hightouch, Census, RudderStack Reverse-ETL, Polytomic, Grouparoo
+- **Point-solution-market test:** FAILS as a standalone market in 2026. Census was acquired by Fivetran (rebranded "Fivetran Activations", signed May 2025); Hightouch repositioned as a Composable CDP; Polytomic markets a unified ETL + reverse-ETL + CDC platform; Grouparoo is defunct (absorbed by Airbyte); RudderStack is a CDP with reverse-ETL as a feature. No independent vendor's flagship is standalone reverse ETL, and the category never had a dedicated Gartner MQ. It dissolved into Composable CDP and broader data movement.
+- **Decision:** fold-into-existing:CDP (2026-06-07)
+- **Rationale:** The activation half of the Composable CDP market is already first-class in CDP via capability CDP-ACTIVATION ("Push audiences and traits... via reverse-ETL"), capability CDP-COMPOSABLE-WH (warehouse-native, zero-copy ingestion and activation), and the CDP-SEGMENTATION-ACTIVATION module. Hightouch already links to CDP at coverage_level=primary. The inbound ELT/ETL/replication side stays in DI (id 89). Promoting a separate domain would overlap CDP's activation module and contend for Hightouch's home.
+- **Non-blocking follow-ups (b3, not executed):** (1) add Census/Fivetran Activations, Polytomic, and RudderStack as `solutions` linked to CDP (none are in the catalog yet; only Hightouch is). (2) Optionally broaden DI's inbound-only description to acknowledge the reverse-ETL "last mile" of data movement (Fivetran Activations, Polytomic); this edits a non-empty `domains.description` and needs explicit sign-off.
 
 ---
 

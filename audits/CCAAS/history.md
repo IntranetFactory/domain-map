@@ -373,3 +373,57 @@ None encountered.
 - https://tests.semantius.app/domain_map/data_objects
 - https://tests.semantius.app/domain_map/data_object_aliases
 - https://tests.semantius.app/domain_map/domains?id=eq.98
+
+
+## 2026-06-07 - Build (Phase A/M/B/S + Phase-B completion)
+
+### Summary
+
+CCAAS went from UNBUILT (0 domain_modules, 1 capability_domains) to a fully built, agent-finished domain in one pass. The build adopted the recommended 3-module split and authored capabilities, masters-into-modules, two new quality masters, lifecycle states, the system-skill toolset, personas, the relationship graph, lifecycle-cover events, and the handoff module-FK backfill. Everything landed at record_status='new'. The domain now ends next_action_by: user with 10 open b2 decisions (the module/scope/boundary judgment calls + 3 destructive handoff/description steps) surfaced in q-CCAAS.md, plus 2 b1b items parked behind regulation scope.
+
+### Module split (B2-MODULE-SPLIT, recommended option a)
+
+3 full modules, mirroring how Genesys Cloud CX, NICE CXone, Five9, Amazon Connect, and Talkdesk package CCaaS:
+
+- CCAAS-ROUTING (329) Routing and Queues: masters queue_statistics (258), disposition_codes (737); contributor contact_records (257); consumers customers (97), knowledge_base_articles (410), and (added this pass) conversation_flows (701), bot_definitions (699).
+- CCAAS-DESKTOP (330) Agent Desktop and Interactions: masters support_sessions (256), contact_records (257), agent_states (736); consumers disposition_codes (737), customers (97), and (added this pass) conversation_transcripts (259), chat_threads (566), work_schedules (160).
+- CCAAS-QUALITY (331) Quality and Analytics: masters ccaas_call_recordings (735), interaction_evaluations (1026, new), evaluation_forms (1027, new); consumers contact_records (257), support_sessions (256), queue_statistics (258).
+
+### Phase-B completion (this pass, idempotent, record_status='new', notes omitted)
+
+Executed via .tmp_deploy/ccaas_complete.ts:
+
+- Extra consumer DMDO rows (+5): conversation_transcripts (259) -> DESKTOP, conversation_flows (701) -> ROUTING, bot_definitions (699) -> ROUTING, chat_threads (566) -> DESKTOP (so the four inbound-handoff payloads no CCAAS module previously held now resolve their target module FK), plus work_schedules (160) -> DESKTOP. The work_schedules link resolves the agent_schedules consumer that an earlier load skipped: WFM (domain 59) masters work_schedules/work_shifts/time_entries, and there is NO agent_schedules data_object, so adherence compares agent_states against the real WFM master work_schedules instead. Decision recorded here; no further sign-off needed (additive).
+- data_object_relationships (+11): B6 intra-domain (6): support_sessions captures contact_records; contact_records produces ccaas_call_recordings; disposition_codes classifies contact_records; queue_statistics aggregates contact_records; ccaas_call_recordings reviewed_in interaction_evaluations; evaluation_forms scores interaction_evaluations. B7 users edges (2): users score interaction_evaluations, users author evaluation_forms (the other 5 master user-edges 1892-1896 already existed). B8 cross-domain outbound (3): contact_records enriches crm_contacts (98, CRM, handoffs 501/530); agent_states feeds time_entries (162, WFM, handoff 499); queue_statistics informs work_schedules (160, WFM, handoff 500). support_sessions->cases (rel 450) already covered the CSM escalation, so it was not duplicated.
+- trigger_events (+11), lifecycle-cover, deduped by event_name: support_session.wrap_up_started / .completed / .abandoned (256 @ DESKTOP); ccaas_call_recording.transcribed / .retained / .purged (735 @ QUALITY); agent_state.available / .logged_out (736 @ DESKTOP); interaction_evaluation.completed / .disputed / .calibrated (1026 @ QUALITY). Each carries from_state/to_state matching the loaded lifecycle states.
+- Handoff module-FK backfill (B10b): 6 outbound source_domain_module_id set to the module mastering the payload (225, 226, 501, 530, 499 -> DESKTOP 330; 500 -> ROUTING 329); 5 inbound target_domain_module_id set to the module holding the payload as consumer (228, 833 -> DESKTOP 330; 722, 743, 746 -> ROUTING 329). Verified: all 6 CCAAS-side outbound source_module FKs and all 5 inbound target_module FKs are now non-null (remaining nulls are on partner-domain sides: CSM/WFM target on outbound, CONV-AI/KMS source on inbound, which those domains' audits own).
+
+### Voice tools (Rule #17)
+
+make_phone_call and transcribe_audio are loaded as workflow-specific CCaaS tools, NOT the generic notify_person/notify_team abstraction: outbound voice and recording transcription are intrinsic contact-center steps (placing previews/callbacks within routing; transcription feeding quality scoring, analytics, and sentiment). No channel-swap question is raised because these are genuinely workflow-bound.
+
+### Surfaced (NOT written; awaiting user) - see q-CCAAS.md
+
+10 b2 decisions: B2-MODULE-SPLIT (confirm the built 3-way split vs 4 dialer/IVR vs 2 fold), B2-WEM-SCOPE (keep WEM in CCAAS vs promote to standalone, Verint/Calabrio precedent), B2-NAMING-ARBITRATION (5 bare-word masters; destructive rename), B2-DESC-EMDASH-BRITISH (destructive overwrite: em-dash in business_logic + "centres" in description), B2-INTENT-IDENTIFIED-OWNERSHIP (handoff 530 trigger_event 200 payload mis-attribution; destructive), B2-CONTACT-RECORDS-CRM-CONSUMER (501/530 payload contact_records vs crm_contacts), B2-CALL-RECORDINGS-SPLIT (keep both recording masters vs merge), B2-CONV-INTEL-RELATIONSHIP (Gong/Chorus positioning), B2-H722-DEDUPE-DELETE (destructive DELETE of stale APQC tag id 238), B2-H743-746-RETAG (destructive DELETE/keep of retag rows 810/812). Every recommendation cites flagship CCaaS vendors by name.
+
+### Left (parked)
+
+- b1b (2): B1B-S4-REGULATIONS (verify/insert TCPA, PCI-DSS, HIPAA, GDPR, CCPA parents + domain_regulations junctions) and B1B-COMPLIANCE-MASTERS (recording_consent_records, dnc_lists, tcpa_consent_records, pci_redaction_events), the latter depending on the regulation scope so it lands in the right module with the right applicability.
+- b3 (7): agent_skill_assignments, callback_requests, wrap_up_reasons, outbound_campaigns, agent_scorecards, speech_analytics_categories, ivr_languages. Phase 0 candidates; non-blocking.
+
+### JWT errors
+
+None encountered.
+
+### Files written (DB + repo)
+
+- DB: domain_module_data_objects (+5), data_object_relationships (+11), trigger_events (+11), handoffs (11 PATCH for module-FK backfill). All at record_status='new'; notes omitted.
+- Repo: this history section; state.yaml rewritten (b1a: []; status feedback_needed; next_action_by user; last_audit 2026-06-07); q-CCAAS.md regenerated (10 b2 + 1 optional b3 question, vendor-grounded recommendations).
+
+### UI links
+
+- https://tests.semantius.app/domain_map/domain_modules?domain_id=eq.98
+- https://tests.semantius.app/domain_map/domain_module_data_objects
+- https://tests.semantius.app/domain_map/data_object_relationships
+- https://tests.semantius.app/domain_map/trigger_events
+- https://tests.semantius.app/domain_map/handoffs

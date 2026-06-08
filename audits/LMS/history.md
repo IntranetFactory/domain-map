@@ -476,3 +476,75 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-07 - a-LMS.md processing
+
+User answered the 2026-06-06 `q-LMS.md` (renamed to `a-LMS.md`). Processed per Rule #22.
+Loader: `.tmp_deploy/lms_a_processing_2026-06-07.ts` (idempotent, read-before-write).
+
+### Decisions executed
+
+1. **a3 -> B2-M9-DECISION = "a" (DONE + verified).** Flipped the last remaining M9 consumer+required
+   cross-domain row, `policy_attestations` (DMDO id 295, module 33 LMS-COMPLIANCE-TRAINING, payload
+   mastered by GRC), to `necessity=optional`. The other 3 (onboarding_tasks 294, performance_goals
+   297, skills_gap_analyses 296) were already flipped in the 2026-06-06 b1a pass. All 4 cross-domain
+   consumer rows are now `consumer + optional`; **M9 part 1 is clean**. The a-file is the user
+   approval. Resolves B2-M9-DECISION + B1B-M9-SELF-CONTAINMENT.
+
+2. **a5 -> B2-CATALOG-COPY (DONE + verified).** The user pushed back ("why do you ask? I expected
+   this was already done"). They were right: the q-file's "draft, surface, write only on approval"
+   framing predates the current Rule #20/#21, under which **empty catalog UX fields are written
+   without a pre-write gate** (record_status=new carries the review signal; the user reviews in-record).
+   Confirmed all 9 rows empty live, then authored + wrote buyer-voice `catalog_tagline` +
+   `catalog_description` on domain 57 + all 8 modules (32/33/34/178/179/180/181/182). Empty-guard per
+   field (no overwrite). **A4 + M8 now pass.** Resolves B2-CATALOG-COPY + B1B-A4-M8-CATALOG-COPY.
+
+3. **a6 -> B2-PERSONAS (already DONE; conceptual question answered).** The personas were authored in
+   the 2026-06-06 b1a pass and verified live this pass: 6 personas (LD-LEARNING-ADMIN,
+   LD-INSTRUCTIONAL-DESIGNER, LD-INSTRUCTOR, GRC-COMPLIANCE-TRAINING-MANAGER, PEOPLE-MANAGER, +
+   reused LEGAL-COMPLIANCE-SPECIALIST) reach the 8 modules; 21 `process_raci` rows across the 7 gated
+   processes; E1/E4 pass. The user's "what are personas?" is conceptual, answered in chat (operational
+   job-shaped roles spanning >=2 modules; the permission bundle + RACI are derived from reach +
+   responsibility, not stored). Resolves B2-PERSONAS + B1B-E1-PERSONAS (stale leftovers cleaned).
+
+4. **a10 -> b3 ideas (user-approved, GATED).** User said "yes" to researching the 4 b3 candidates
+   (learning_evaluations/surveys, training_requests, external_training_records, gamification). Recorded
+   `user_approved: true` on each b3 item. Best done additively AFTER the module-shape decision (q1 /
+   Refactor C) settles; b3 never auto-executes and never blocks "finished".
+
+### Questions answered + carried forward (folded into the regenerated q-LMS.md)
+
+Each `a#` below was a question/request, not a decision, so the item stays open (Rule #22). Answers
+folded into the b2 entries (`agent_answer`) and the new q-file.
+
+- **a1 -> B2-REFACTOR-C** ("would one table be sufficient and not bloated? optional entities?").
+  Grounded in live descriptions: 944 HIPAA / 945 OSHA / 946 SOX / 947 FERPA / 949 BSA-AML are
+  near-identical "training documentation row" shapes (collapse-friendly, NOT bloat); only 948
+  fda_part11_audit_trails is structurally different (tamper-evident, retention-locked audit trail).
+  New recommended option (b): collapse the 5, keep 948 separate. "Optional entities" = option (c).
+- **a2 -> B2-REFACTOR-A** ("how do other vendors handle it? embedded master?"). Vendor norm: LMS
+  rarely masters privacy; it is a consumer of HR/identity-suite or central-privacy-tool machinery.
+  `embedded_master` is the right target shape (local shell for standalone erasure, defers to a
+  canonical PRIV-MGMT master when present) but PRIV-MGMT (domain 20) masters nothing today, so it
+  must be built first -> still defer (recommended a). Added option (b) = build PRIV-MGMT + demote.
+- **a4 -> B2-SKILLS-MGMT-ATTRIBUTION** ("explain both"). (a) delete the orphan link (clean; SKILLS-MGMT
+  owns it); (b) realize capability 20 in LMS-PATHS after skill_targets ships (couples to q8). Both
+  explained in the q-file.
+- **a7 -> B2-1121-ROUTING** ("explain the options"). (a) COMPLIANCE-TRAINING = compliance-tag
+  inheritance; (b) PATHS = learning-path assignment; (c) retire (mis-modeled). Explained in q-file.
+- **a8 -> B2-MISSING-ROUTING** ("what are the 19? by area vs by module?"). Confirmed "by area" == "by
+  module"; listed all 19 grouped by target module in the q-file.
+- **a9 -> B2-DOMAIN-REGULATIONS** ("why separate from q2?"). q2 = structural ownership of privacy
+  records (expensive, deferred); q9 = cheap additive scope metadata (which statutes the market
+  touches), true regardless of where records live. Can be answered yes today without waiting on q2.
+
+### State
+
+`b1a: []`. b1b reduced to 4 (B14-NECESSITY, M4-SKILLS-MGMT, MISSING-ENTITIES, B10b-INBOUND-1121),
+each gated on an open b2. b2 reduced to 6 open (Refactor C, Refactor A, skills-mgmt, 1121, missing,
+domain-regs). `status: feedback_needed`, `next_action_by: user`. Regenerated `q-LMS.md`; deleted
+`a-LMS.md`. UI spot-check: https://tests.semantius.app/domain_map/domain_modules ,
+https://tests.semantius.app/domain_map/domains ,
+https://tests.semantius.app/domain_map/domain_module_data_objects

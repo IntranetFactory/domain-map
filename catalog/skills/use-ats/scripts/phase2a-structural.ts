@@ -213,7 +213,7 @@ async function main() {
           kind: "missing_entity",
           module: mod.code,
           spec_name: expected,
-          reason: `Spec lists "${expected}" as a master/embedded_master in ${mod.code} but no matching live entity (or known alias) was found. Possible rename, omission, or the entity is named differently in this deployment.`,
+          reason: `Spec lists "${expected}" as a master/embedded_master in ${mod.code} but no matching live entity (or known alias) was found. Possible rename, omission, or the entity is named differently in this tenant.`,
         });
       }
     }

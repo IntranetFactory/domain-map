@@ -99,12 +99,12 @@ async function main() {
 
   if (!modules.ok) {
     halt(`Could not query /modules: ${modules.stderr}`,
-         "If this is a JWT error, surface verbatim. Otherwise check platform connectivity.");
+         "If this is a JWT error, surface verbatim. Otherwise check tenant connectivity.");
   }
 
   const present = (modules.data ?? []) as Array<{ id: number; module_slug: string; module_name: string }>;
   if (present.length === 0) {
-    halt(`No modules from the ${spec.domain.name} (${spec.domain.code}) spec are present in this deployment (${tenantOrg}).`,
+    halt(`No modules from the ${spec.domain.name} (${spec.domain.code}) spec are deployed in tenant ${tenantOrg}.`,
          `Deploy at least one of the domain modules: ${spec.modules.map((m) => m.code).join(", ")}. Blueprint: https://semantius.app/catalog/${spec.domain.code.toLowerCase()}/blueprint`);
   }
 

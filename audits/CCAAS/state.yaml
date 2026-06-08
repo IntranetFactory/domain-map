@@ -1,331 +1,175 @@
-# === SUPERSEDED 2026-06-06: per-domain-skill restoration ===
-# The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
-# Any open item that says "author/split a per-module system skill", "one system skill per
-# domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELED.
-# New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
-# domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
-# DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
-# cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
-# re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
-# === end supersession note ===
 schema_version: 2
 domain: CCAAS
 status: feedback_needed
 next_action_by: user
 last_audit: "2026-06-07"
 
-b1a:
-  - id: B1A-DESC-EMDASH
-    summary: domains.business_logic on CCAAS contains a U+2014 em-dash (banned project-wide by CLAUDE.md) and domains.description uses British "centres" (American-English-only rule). Both are non-empty values, so the rewrite is a destructive overwrite that needs user sign-off.
-    finding: |
-      Live 2026-06-07: business_logic reads "ACD/routing engine, IVR runtime, real-time analytics, and workforce engagement (recording, QM, WFM) [U+2014] the platform IS the engine." (em-dash confirmed at codepoint U+2014). description reads "Cloud telephony, omnichannel routing, IVR, workforce engagement management, and AI agent assist for contact centres. Distinct from CSM (case-management business app)." (British "centres"; no em-dash, contrary to the stale 2026-05-31 finding). Both columns are non-empty.
-    action: |
-      Surface only (destructive overwrite of a non-empty value; not auto-applied). Proposed minimal rewrites: business_logic -> "ACD/routing engine, IVR runtime, real-time analytics, and workforce engagement (recording, QM, WFM): the platform IS the engine." (swap em-dash for a colon). description -> "Cloud telephony, omnichannel routing, IVR, workforce engagement management, and AI agent assist for contact centers. Distinct from CSM (case-management business app)." (centres -> centers). PATCH /domains?id=eq.98 in one call once approved.
+# Build landed 2026-06-07. All agent-solvable work executed at record_status='new':
+# 7 capabilities (+ capability_domains), 3-module split (CCAAS-ROUTING 329, CCAAS-DESKTOP 330,
+# CCAAS-QUALITY 331) + domain_module_capabilities, masters-into-modules (domain_module_data_objects
+# incl. 5 consumer rows: conversation_transcripts/conversation_flows/bot_definitions/chat_threads
+# for inbound handoff payloads + work_schedules for WFM adherence), 2 new masters
+# (interaction_evaluations 1026, evaluation_forms 1027), lifecycle states (support_sessions,
+# ccaas_call_recordings, agent_states, interaction_evaluations), system-skill toolset (tools +
+# domain_module_tools incl. voice tools make_phone_call/transcribe_audio), 5 personas + role_modules,
+# 11 data_object_relationships (6 intra B6 + 2 users B7 + 3 cross-domain B8), 11 lifecycle-cover
+# trigger_events (B9), and the handoff module-FK backfill (B10b: 6 outbound source_module,
+# 5 inbound target_module). Only user-judgment + destructive steps remain.
+#
+# Resolved this pass (was b1b, now executed): B1B-M1-MODULES, B1B-A2-CAPABILITIES, B1B-A3-SOLUTIONS,
+# B1B-B6-INTRA-DOMAIN-EDGES, B1B-B12-LIFECYCLE, B1B-B10b-HANDOFF-MODULE-FK, B1B-UNIVERSAL-MASTERS
+# (interaction_evaluations + evaluation_forms; remaining universal masters parked as b3),
+# B1B-E-ROLES. The agent_schedules consumer link skipped earlier was resolved by linking the real
+# WFM master work_schedules (160) on CCAAS-DESKTOP instead (decision recorded in history).
 
-  - id: B1A-H722-DEDUPE
-    summary: Handoff 722 (KMS->CCAAS knowledge_base_article.updated) carries 2 agent_curated handoff_processes rows; the 2026-05-30 audit identified PCF 20898 (process 1293, row 753) as correct and PCF 21679 "Deliver approved content" (process 429, row 238) as the stale duplicate. DELETE is destructive -> surface only.
-    finding: |
-      Live 2026-06-07: handoff_processes on handoff 722 are id 238 -> process 429 (PCF 21679 Deliver approved content) and id 753 -> process 1293 (PCF 20898 Maintain service support knowledge repository). The KMS knowledge-update event is not a "deliver approved content" PCF activity.
-    action: |
-      Surface only. Recommended: DELETE /handoff_processes?id=eq.238 (keep row 753). No write without user approval (Rule #1: destructive).
-    affected_handoffs:
-      - {handoff_id: 722, direction: inbound, source_domain: KMS, target_domain: CCAAS, trigger_event: "knowledge_base_article.updated", payload: "knowledge_base_articles", null_field: null}
-
-  - id: B1A-H743-RETAG-DECISION
-    summary: Handoff 743 (CONV-AI->CCAAS conversation_flow.fallback_triggered) was deferred-to-Discover in the 2026-05-30 audit but now carries an agent_curated tag (row 810, process 927, PCF 10395); user must confirm or revoke.
-    finding: |
-      Original audit (B1-H10) classified 743 as "no clean PCF cross-industry match, candidate for custom process." A later load tagged it process 927 (PCF 10395 Resolve customer problems, requests, and inquiries). Workable but generic; conflicts with the original judgment that fallback engineering needs a custom process.
-    action: |
-      Surface only. Either keep handoff_processes id 810 or DELETE it and let Discover Pass 3 author a custom process. No write without confirmation (destructive).
-    affected_handoffs:
-      - {handoff_id: 743, direction: inbound, source_domain: CONV-AI, target_domain: CCAAS, trigger_event: "conversation_flow.fallback_triggered", payload: "conversation_flows", null_field: null}
-
-  - id: B1A-H746-RETAG-DECISION
-    summary: Handoff 746 (CONV-AI->CCAAS bot_definition.published) was deferred-to-Discover in the 2026-05-30 audit but now carries an agent_curated tag (row 812, process 52, PCF 20824); user must confirm or revoke.
-    finding: |
-      Original audit (B1-H11) classified 746 as "bot deployment is build-side, outside PCF cross-industry, candidate for custom process." A later load tagged it process 52 (PCF 20824 Deploy services/solutions). Too generic for bot-runtime publication; the original judgment likely still holds.
-    action: |
-      Surface only. Either keep handoff_processes id 812 or DELETE it. No write without confirmation (destructive).
-    affected_handoffs:
-      - {handoff_id: 746, direction: inbound, source_domain: CONV-AI, target_domain: CCAAS, trigger_event: "bot_definition.published", payload: "bot_definitions", null_field: null}
-
-  - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 1 capability_domains. Surfaced as a build, not scaffolded (orchestrator UNBUILT rule)."
-    finding: "Live 2026-06-07: 0 domain_modules rows (M1 fail) and 1 capability_domains row (SLA-MGMT). Not deployable today. Must be built (Phase A/M/B/S) before any persona/RACI work applies. The whole b1b cascade is gated on this build landing."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, masters, and the domain-grain system skill, AFTER the module-shape (B2-MODULE-SHAPE) and WEM-scope (B2-WEM-SCOPE) decisions are made. If multi-module, run Phase P afterward. Personas/RACI deferred until then."
-    extra_phase_p_triage: "2026-06-02"
+b1a: []
 
 b1b:
-  - id: B1B-M1-MODULES
-    summary: Author at least 2 full domain_modules per Rule #14 (CCAAS has >3 capabilities once A2 is fixed) plus optional starter; blocks every B / C / E / F band downstream.
-    finding: |
-      domain_modules and domain_module_host_domains both return zero rows for CCAAS (live 2026-06-07). Six masters sit on the legacy domain_data_objects rollup only. M1 is a hard fail and M2 / M4 / M5 / M6 / M7 / M8 are vacuously unmet. B10b (handoff source/target_domain_module_id NULL on all CCAAS-side handoffs) is unreachable. The 2026-05-30 audit proposed CCAAS-ROUTING-ENGINE, CCAAS-INTERACTION-CAPTURE, CCAAS-WORKFORCE-ENGAGEMENT, CCAAS-DIALER; alternatives in B2-MODULE-SHAPE.
-    blocked_by:
-      - {type: user_decision, ref: B2-MODULE-SHAPE}
-      - {type: user_decision, ref: B2-WEM-SCOPE}
-
-  - id: B1B-A2-CAPABILITIES
-    summary: Author 6 to 8 CCAAS capabilities; only the cross-cutting SLA-MGMT is currently linked, well below the A2 floor.
-    finding: |
-      capability_domains has 1 row (SLA-MGMT). The 2026-05-30 audit proposed CCAAS-ACD, CCAAS-IVR, CCAAS-OMNICHANNEL-ROUTING, CCAAS-RECORDING, CCAAS-QUALITY-MGMT, CCAAS-SPEECH-ANALYTICS, CCAAS-OUTBOUND-DIALER, CCAAS-REAL-TIME-MONITORING. Final list depends on module shape (each capability needs a realizing module per M4/M6).
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
-
-  - id: B1B-A3-SOLUTIONS
-    summary: Load solution_domains rows for the 10 flagship CCaaS / WEM vendors enumerated in the 2026-05-30 vendor surface; A3 requires >=3 solutions with >=1 primary.
-    finding: |
-      solution_domains returns zero rows. Vendor surface basis (vendor names licensed on commerce-shaped entities only per Rule #18): Genesys Cloud CX, NICE CXone, Five9, Talkdesk, Amazon Connect (primary, pure-play CCaaS); Twilio Flex, Cisco Webex Contact Center, Avaya Experience Platform (secondary); Verint Open Platform, Calabrio ONE (primary on WEM scope).
-    vendor_evidence:
-      - Genesys Cloud CX
-      - NICE CXone
-      - Five9
-      - Talkdesk
-      - Amazon Connect
-      - Twilio Flex
-      - Cisco Webex Contact Center
-      - Avaya Experience Platform
-      - Verint Open Platform
-      - Calabrio ONE
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
-
   - id: B1B-S4-REGULATIONS
     summary: Load 5 regulations rows (TCPA, PCI-DSS, HIPAA, GDPR, CCPA) and the matching domain_regulations junctions; both halves are missing.
     finding: |
-      domain_regulations returns zero rows. The underlying regulations rows for TCPA / PCI-DSS / HIPAA / GDPR / CCPA also need verification (some may exist from other domain loads). CCAAS is regulated by all five; one-party vs two-party consent state law is non-trivially scoped.
-    action: |
-      Verify which regulations rows already exist via /regulations?regulation_name=in.(...); INSERT missing parents first, then INSERT domain_regulations junctions with applicability set per regulation.
+      domain_regulations returns zero rows for CCAAS. The underlying regulations parents (TCPA, PCI-DSS, HIPAA, GDPR, CCPA) need verification; some exist from other domain loads. CCAAS is regulated by all five; one-party vs two-party recording consent is non-trivially scoped per US state and feeds B1B-COMPLIANCE-MASTERS.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
-
-  - id: B1B-F1-F2-LEGACY-SKILL
-    summary: Resolve the legacy domain-level skill ccaas-system (id 19) against the post-2026-06-06 single-domain-grain-skill model once modules ship.
-    finding: |
-      skills row id 19 has skill_type=system, domain_id=98, domain_module_id=NULL. Per the 2026-06-06 supersession, the new model is exactly ONE domain-grain system skill per domain (domain_id set, domain_module_id null) that DERIVES its toolset; FULL modules carry no skill; per-module skills are RETIRED. So id 19 is ALREADY the correct grain (domain-grain). What remains once modules land: re-derive its toolset from domain_module_tools, and confirm no per-module skills get authored. The legacy skill_tools redistribution framing in the 2026-05-31 audit is superseded.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
-
-  - id: B1B-B3-NAMING-ARBITRATION
-    summary: Apply Rule #9 to 5 collision-prone CCAAS masters (support_sessions, contact_records, queue_statistics, agent_states, disposition_codes).
-    finding: |
-      Five masters use bare-word names without is_canonical_bare_word=true and without a domain prefix. ccaas_call_recordings is correctly prefixed. Each bare-word name collides with potential CSM / CRM / WFM / CONV-AI / ATS entities per the 2026-05-30 audit's enumeration. (Concept-level aliases were authored 2026-06-07 and are unaffected by the final table name.)
-    blocked_by:
-      - {type: user_decision, ref: B2-NAMING-ARBITRATION}
-    affected_masters:
-      - {data_object_id: 256, name: support_sessions, target_module_id: null, workflow: tbd}
-      - {data_object_id: 257, name: contact_records, target_module_id: null, workflow: tbd}
-      - {data_object_id: 258, name: queue_statistics, target_module_id: null, workflow: tbd}
-      - {data_object_id: 736, name: agent_states, target_module_id: null, workflow: tbd}
-      - {data_object_id: 737, name: disposition_codes, target_module_id: null, workflow: tbd}
+      - {type: catalog_addition, scope: domains, trigger: "verify/insert regulations parents before domain_regulations junctions"}
 
   - id: B1B-COMPLIANCE-MASTERS
     summary: Load 4 compliance-mandated masters (recording_consent_records, dnc_lists, tcpa_consent_records, pci_redaction_events) and their DMDO rows + lifecycle states.
     finding: |
-      Per B1-M1 to B1-M4 in the 2026-05-30 audit. Each entity is vendor-universal AND legally required by TCPA / PCI-DSS / GDPR / CCPA; not speculative. Gated on modules because DMDO rows need a domain_module_id.
+      Each is vendor-universal AND legally required by TCPA / PCI-DSS / GDPR / CCPA, not speculative. recording_consent_records and pci_redaction_events sit in CCAAS-QUALITY (recording surface); dnc_lists and tcpa_consent_records sit in CCAAS-ROUTING (outbound/dialer eligibility). Parked until the regulation scope (B1B-S4) and the dialer/outbound decision (B3-OUTBOUND-CAMPAIGNS) are settled so they land in the right module with the right applicability.
     affected_entities:
       - recording_consent_records
       - dnc_lists
       - tcpa_consent_records
       - pci_redaction_events
     blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
-
-  - id: B1B-UNIVERSAL-MASTERS
-    summary: Load 5 universal-vendor masters (routing_strategies, ivr_flows, agent_skills, quality_evaluations, coaching_sessions).
-    finding: |
-      Per B1-U1 to B1-U5 in the 2026-05-30 audit. All 5 are present across all flagship vendors (Genesys, NICE, Five9, Talkdesk, Amazon Connect, plus Verint / Calabrio for the WEM pair). Gated on modules.
-    affected_entities:
-      - routing_strategies
-      - ivr_flows
-      - agent_skills
-      - quality_evaluations
-      - coaching_sessions
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
-
-  - id: B1B-B6-INTRA-DOMAIN-EDGES
-    summary: Author 5 to 7 intra-domain data_object_relationships among the 6 CCAAS masters.
-    finding: |
-      data_object_relationships currently carries 0 intra-domain edges between the 6 masters. 2 cross-domain edges (302 chat-thread escalation in, 450 support_session-to-case out) and 5 user-edges (1892 to 1896) exist. Candidate edges per the 2026-05-30 audit: contact_records produces ccaas_call_recordings; contact_records assigned_to agent_states; contact_records dispositioned_by disposition_codes; support_sessions composed_of contact_records; queue_statistics aggregates contact_records.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
-      - {type: user_decision, ref: B2-NAMING-ARBITRATION}
-
-  - id: B1B-B12-LIFECYCLE
-    summary: Author lifecycle states for the operational_workflow masters per Rule #12 (entity_type classified 2026-06-07).
-    finding: |
-      data_object_lifecycle_states returns zero rows for the 6 masters. As of the 2026-06-07 entity_type classification, the masters requiring lifecycle states (entity_type='operational_workflow') are support_sessions (256), ccaas_call_recordings (735), agent_states (736). contact_records (257, operational_record), queue_statistics (258, computed) and disposition_codes (737, catalog) do NOT require lifecycle states (B12 passes for them). Workflow-gate permissions materialize from these rows prefixed with the realizing module's code; until M1 lands the prefix is unknown.
-    affected_masters:
-      - {data_object_id: 256, name: support_sessions, entity_type: operational_workflow, target_module_id: null, workflow: "open->routing->active->wrap_up->closed"}
-      - {data_object_id: 735, name: ccaas_call_recordings, entity_type: operational_workflow, target_module_id: null, workflow: "captured->indexed->evaluated->signed_off"}
-      - {data_object_id: 736, name: agent_states, entity_type: operational_workflow, target_module_id: null, workflow: "available->busy->aux->offline"}
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
-
-  - id: B1B-B10b-HANDOFF-MODULE-FK
-    summary: PATCH source_domain_module_id on all 6 outbound and target_domain_module_id on all 5 CCAAS-side inbound handoffs once modules land.
-    finding: |
-      All 6 outbound handoffs (225, 226, 499, 500, 501, 530) have source_domain_module_id NULL. All 5 inbound (228, 722, 743, 746, 833) have target_domain_module_id NULL. Handoffs 501 and 530 do have target_domain_module_id=46 on the CRM side. Unreachable until M1 resolves.
-    affected_handoffs:
-      - {handoff_id: 225, direction: outbound, source_domain: CCAAS, target_domain: CSM, trigger_event: "call.escalated", payload: "support_sessions", null_field: source_domain_module_id}
-      - {handoff_id: 226, direction: outbound, source_domain: CCAAS, target_domain: CSM, trigger_event: "sentiment.negative", payload: "support_sessions", null_field: source_domain_module_id}
-      - {handoff_id: 499, direction: outbound, source_domain: CCAAS, target_domain: WFM, trigger_event: "agent_state.changed", payload: "agent_states", null_field: source_domain_module_id}
-      - {handoff_id: 500, direction: outbound, source_domain: CCAAS, target_domain: WFM, trigger_event: "queue_statistics.threshold_breached", payload: "queue_statistics", null_field: source_domain_module_id}
-      - {handoff_id: 501, direction: outbound, source_domain: CCAAS, target_domain: CRM, trigger_event: "contact_record.captured", payload: "contact_records", null_field: source_domain_module_id}
-      - {handoff_id: 530, direction: outbound, source_domain: CCAAS, target_domain: CRM, trigger_event: "intent.identified", payload: "contact_records", null_field: source_domain_module_id}
-      - {handoff_id: 228, direction: inbound, source_domain: CONV-AI, target_domain: CCAAS, trigger_event: "conversation.escalated_to_human", payload: "conversation_transcripts", null_field: target_domain_module_id}
-      - {handoff_id: 722, direction: inbound, source_domain: KMS, target_domain: CCAAS, trigger_event: "knowledge_base_article.updated", payload: "knowledge_base_articles", null_field: target_domain_module_id}
-      - {handoff_id: 743, direction: inbound, source_domain: CONV-AI, target_domain: CCAAS, trigger_event: "conversation_flow.fallback_triggered", payload: "conversation_flows", null_field: target_domain_module_id}
-      - {handoff_id: 746, direction: inbound, source_domain: CONV-AI, target_domain: CCAAS, trigger_event: "bot_definition.published", payload: "bot_definitions", null_field: target_domain_module_id}
-      - {handoff_id: 833, direction: inbound, source_domain: WSC, target_domain: CCAAS, trigger_event: "chat_thread.escalated_to_ticket", payload: "chat_threads", null_field: target_domain_module_id}
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
-
-  - id: B1B-B9-ORPHAN-EVENTS
-    summary: Author handoffs (or document as intra-domain only) for 3 orphan trigger events on CCAAS masters.
-    finding: |
-      trigger_events with no handoff row: 502 ccaas_call_recording.captured (QM evaluation handoff intra-CCAAS once authored, plus optional CSM coaching attach), 504 agent_state.aux_threshold_exceeded (WFM adherence flag outbound), 505 disposition_code.applied (CRM lead/opportunity outcome plus CSM case-resolution attach). Each needs a handoff row pointing at the appropriate target module. (event_category for all three backfilled 2026-06-07.)
-    affected_events:
-      - {id: 502, event_name: "ccaas_call_recording.captured", event_category: "lifecycle"}
-      - {id: 504, event_name: "agent_state.aux_threshold_exceeded", event_category: "threshold"}
-      - {id: 505, event_name: "disposition_code.applied", event_category: "state_change"}
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
-
-  - id: B1B-B1-INTENT-IDENTIFIED-SOURCING
-    summary: Resolve handoff 530 cross-domain payload mis-attribution; either re-source to CONV-AI or PATCH trigger_event 200 payload to contact_records.
-    finding: |
-      Handoff 530 (CCAAS->CRM, trigger_event 200 intent.identified) carries data_object_id 257 (contact_records, CCAAS-owned) while trigger_event 200 references data_object_id 260 (intent_detections, CONV-AI-owned). Mis-attribution per B5 / B10b sub-case 2. Two options: (a) DELETE 530 and let CONV-AI author the equivalent outbound, or (b) PATCH trigger_event 200 to data_object_id 257 if CCAAS is genuinely meant to publish the event. The 2026-05-30 audit recommends (a).
-    blocked_by:
-      - {type: user_decision, ref: B2-INTENT-IDENTIFIED-OWNERSHIP}
-
-  - id: B1B-E-ROLES
-    summary: Author role_modules + role_permissions per Phase E once modules exist.
-    finding: |
-      No role_modules rows reference CCAAS modules (none exist). Phase E is gated on M1.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-M1-MODULES}
+      - {type: depends_on, ref: B1B-S4-REGULATIONS, reason: "applicability + lifecycle depend on which regulations are in scope"}
 
 b2:
-  - id: B2-MODULE-SHAPE
-    summary: Pick the CCAAS module split shape; gates almost every b1b item.
-    question: Which of the 2026-05-30 audit's four proposed shapes do you want? (a) 4 modules CCAAS-ROUTING-ENGINE / CCAAS-INTERACTION-CAPTURE / CCAAS-WORKFORCE-ENGAGEMENT / CCAAS-DIALER (audit recommendation), (b) 2 modules CCAAS-CORE + CCAAS-WEM, (c) 3 modules collapsing Dialer into Routing, (d) 5 modules splitting Speech Analytics out of WEM.
-    options: [a, b, c, d]
-    why: Capability authoring (B1B-A2), masters routing (B1B-COMPLIANCE-MASTERS, B1B-UNIVERSAL-MASTERS), skill re-derivation (B1B-F1-F2-LEGACY-SKILL), and lifecycle module FKs (B1B-B12-LIFECYCLE) all depend on the module codes.
+  - id: B2-MODULE-SPLIT
+    summary: Confirm the built 3-module split (CCAAS-ROUTING + CCAAS-DESKTOP + CCAAS-QUALITY) or restructure.
+    question: "Keep the built 3-module split (CCAAS-ROUTING: queue_statistics, disposition_codes; CCAAS-DESKTOP: support_sessions, contact_records, agent_states; CCAAS-QUALITY: ccaas_call_recordings, interaction_evaluations, evaluation_forms), or restructure into 4 (split IVR/Self-Service out of Routing, or add a Dialer/Outbound module) or 2 (fold Routing into Desktop)?"
+    options: [a-3-module-built, b-4-module-split-ivr-or-dialer, c-2-module-fold-routing]
+    why: "Grounded in vendor packaging. Genesys Cloud CX, NICE CXone, Five9, Amazon Connect, Talkdesk all package CCaaS as a routing/ACD-and-flow engine, a live agent workspace, and a post-interaction quality/analytics tier, which is the built 3-way split. (b) is real where dialer is a separate product line: Five9 leads with outbound/dialer as a distinct surface, and Genesys/NICE sell outbound campaign management as a named add-on, so a 4th Dialer module is defensible if outbound is in scope (see B3-OUTBOUND-CAMPAIGNS). Genesys and NICE also expose IVR/flow design (Architect, Studio) as its own admin surface, so splitting IVR out is the other 4-module option. (c) under-splits: every flagship keeps routing/ACD separate from the agent desktop. Genuine open call: whether outbound/dialer warrants its own module now or stays a b3 idea."
 
   - id: B2-WEM-SCOPE
-    summary: Decide whether WEM stays a CCAAS module or is promoted to its own domain.
-    question: Should CCAAS-WORKFORCE-ENGAGEMENT be a CCAAS sub-module, or should WEM be promoted to a standalone domain (CCAAS-WEM is already queued in _missing-domains.md)?
-    options: [sub-module, standalone-domain]
-    why: Verint, Calabrio, NICE WEM, Genesys WEM are arguably point-solution vendors in their own right. Promoting WEM drops the CCAAS module count by one and frees the cleaner vendor surface to Calabrio + Verint.
-
-  - id: B2-CONV-INTEL-RELATIONSHIP
-    summary: Position Conversation Intelligence (Gong, Chorus, Refract) relative to CCAAS recordings.
-    question: Is Conv-Intel (a) downstream consumer of CCAAS recordings, (b) a separate vendor surface that overlaps CCAAS QM, or (c) a feature of SALES-ENG where call_recordings id 122 currently lives?
-    options: [downstream-consumer, separate-domain, feature-of-sales-eng]
-    why: Affects whether call_recordings (id 122) moves out of SALES-ENG and whether ccaas_call_recordings (id 735) absorbs it. Conv-Intel was already promoted to mention_count=2 in _missing-domains.md by the PA audit.
-
-  - id: B2-CALL-RECORDINGS-SPLIT
-    summary: Confirm or merge the two call-recording masters in the catalog.
-    question: Keep both call_recordings (id 122, SALES-ENG-owned, rep recordings) and ccaas_call_recordings (id 735, CCAAS-owned, contact-center recordings), or merge under a canonical-bare-word claim?
-    options: [keep-both, merge-canonical]
-    why: Lifecycle, regulation, retention, redaction profiles differ between the two. Audit recommendation is keep-both with documented split.
-
-  - id: B2-CONTACT-RECORDS-CRM-CONSUMER
-    summary: Verify whether CRM-ACCT-MGT (module 46) genuinely consumes contact_records (id 257) or this is a leftover from the pre-modular era.
-    question: Should CRM-ACCT-MGT consume contact_records (id 257) or crm_contacts (id 98) on handoffs 501 / 530?
-    options: [keep-contact-records, switch-to-crm-contacts]
-    why: B5 boundary check. The CRM team would more naturally read "Contact" as crm_contacts; the current consumer may be incorrect.
+    summary: Keep workforce-engagement (recording, QM, adherence) inside CCAAS, or promote WEM to its own domain.
+    question: "Should workforce engagement (the CCAAS-QUALITY recording/QM/coaching surface plus agent-state adherence) stay a CCAAS module, or be promoted to a standalone WEM domain (CCAAS-WEM is queued in _missing-domains.md)?"
+    options: [keep-in-ccaas, promote-wem-standalone]
+    why: "Vendor evidence cuts both ways. Genesys Cloud CX and NICE CXone bundle WEM (recording, QM, WFM, coaching) inside the suite as a licensed tier, supporting keep-in-ccaas. But Verint and Calabrio sell WEM as a standalone platform that overlays any ACD, and NICE markets its WEM as a separable product line, so WEM is a genuine point-solution market in its own right. Promoting it would move ccaas_call_recordings, interaction_evaluations, and evaluation_forms out of CCAAS and free the Verint/Calabrio vendor surface to that domain. Trade-off: a standalone WEM domain models the market more faithfully but fragments the contact-center build and duplicates the agent_states adherence link across two domains."
 
   - id: B2-NAMING-ARBITRATION
-    summary: Per Rule #9, decide per master whether to prefix to ccaas_<name> or claim canonical bare-word with rationale.
-    question: For each of support_sessions, contact_records, queue_statistics, agent_states, disposition_codes - prefix (default), claim canonical, or rename / abort?
+    summary: Per Rule #9, resolve the 5 bare-word CCAAS masters (prefix to ccaas_* or claim canonical bare-word). DESTRUCTIVE rename.
+    question: "support_sessions (256), contact_records (257), queue_statistics (258), agent_states (736), disposition_codes (737) use bare-word names without is_canonical_bare_word=true. Prefix each to ccaas_* (default), claim canonical bare-word per row, or a mix? (ccaas_call_recordings is already correctly prefixed.)"
     options: [prefix-all, claim-canonical-per-row, mixed]
-    why: Bare-word names collide with potential CSM / CRM / WFM / CONV-AI / ATS entities. Renaming after Phase B is more invasive.
+    why: "Bare-word names collide with potential CSM / CRM / WFM / CONV-AI / ATS entities. Vendor framing: Genesys, NICE, Five9, Amazon Connect, and Talkdesk all treat 'contact'/'interaction', 'queue', and 'agent state' as contact-center-scoped concepts, which argues for the ccaas_ prefix to avoid catalog-wide ambiguity; 'disposition code' and 'wrap-up' are likewise CCaaS-native terms across all five. Renaming after Phase B is invasive (cascades through DMDO, relationships, trigger_events, handoffs), so this is a destructive change needing sign-off."
+
+  - id: B2-DESC-EMDASH-BRITISH
+    summary: Fix domains.business_logic (em-dash, banned) and domains.description (British 'centres'). DESTRUCTIVE overwrite of non-empty values.
+    question: "business_logic contains a U+2014 em-dash (banned project-wide) and description uses British 'centres' (American-English-only rule). Apply the minimal rewrites (em-dash -> colon; centres -> centers)? (yes/no)"
+    options: [a-apply-both, b-apply-some, c-leave]
+    why: "CLAUDE.md forbids em-dashes everywhere and mandates American English. Proposed: business_logic -> 'ACD/routing engine, IVR runtime, real-time analytics, and workforce engagement (recording, QM, WFM): the platform IS the engine.' and description -> '...AI agent assist for contact centers. Distinct from CSM (case-management business app).' Both columns are non-empty, so the overwrite needs sign-off (Rule #21)."
 
   - id: B2-INTENT-IDENTIFIED-OWNERSHIP
-    summary: Decide who publishes the intent.identified event (handoff 530).
-    question: (a) DELETE handoff 530 and let CONV-AI author the equivalent outbound, or (b) PATCH trigger_event 200 to data_object_id 257 if CCAAS genuinely publishes this?
-    options: [reassign-to-conv-ai, patch-trigger-event]
-    why: Mis-attribution per B5 / B10b. Audit recommends (a). Resolving this unblocks B1B-B1-INTENT-IDENTIFIED-SOURCING.
+    summary: Resolve handoff 530 payload mis-attribution (trigger_event 200 intent.identified). DESTRUCTIVE.
+    question: "Handoff 530 (CCAAS->CRM) carries payload contact_records (257) but its trigger_event 200 'intent.identified' references intent_detections (260, CONV-AI-owned). Either DELETE handoff 530 and let CONV-AI author the equivalent outbound, or PATCH trigger_event 200 to contact_records (257) if CCAAS genuinely publishes this event?"
+    options: [a-delete-530-reassign-to-conv-ai, b-patch-trigger-event-to-contact-records]
+    why: "Intent detection is a CONV-AI concept across the conversational-AI vendor surface; the CCaaS flagships (Genesys, NICE, Five9, Amazon Connect, Talkdesk) consume detected intent from a bot/NLU layer rather than publishing it themselves. That argues for (a): let CONV-AI own the outbound. (b) is only right if CCAAS routing genuinely classifies and publishes intent. Either path is destructive (delete a handoff or overwrite a trigger_event payload), so it needs your call. The source_domain_module_id on 530 was backfilled to CCAAS-DESKTOP based on the contact_records payload regardless of which way this resolves."
+
+  - id: B2-CONTACT-RECORDS-CRM-CONSUMER
+    summary: Boundary check on handoffs 501/530 - does CRM consume contact_records or crm_contacts.
+    question: "Handoffs 501 (contact_record.captured) and 530 (intent.identified) hand contact_records (257) to CRM-ACCT-MGT (module 46). Should CRM consume contact_records (257), or crm_contacts (98) which CRM masters?"
+    options: [keep-contact-records, switch-to-crm-contacts]
+    why: "Across the vendor set, the CTI/CRM connector (Genesys for Salesforce, NICE CXone Agent for Salesforce, Amazon Connect CTI adapter, Talkdesk for Salesforce) pops and updates the CRM Contact/Account record, not a raw interaction log, on screen-pop and after-call. That argues for switch-to-crm-contacts as the cleaner consumer. Keep-contact-records is right only if CRM genuinely ingests the interaction record itself. Changing the handoff payload is a corrective overwrite, so surfaced for your call."
+
+  - id: B2-CALL-RECORDINGS-SPLIT
+    summary: Keep the two call-recording masters separate or merge under a canonical claim.
+    question: "Keep both call_recordings (122, SALES-ENG, sales-rep call recordings) and ccaas_call_recordings (735, CCAAS, contact-center recordings), or merge under a single canonical master?"
+    options: [keep-both, merge-canonical]
+    why: "The retention, consent, redaction, and QM-scoring profiles differ: CCaaS recordings (Genesys, NICE, Five9, Amazon Connect Contact Lens, Talkdesk) are governed by TCPA/PCI two-party-consent and contact-center retention policy and feed interaction_evaluations; sales-call recordings (the SALES-ENG / conversation-intelligence surface, e.g. Gong, Chorus) are governed by sales-coaching retention and feed deal intelligence. Keep-both with a documented split is recommended; merging would force one lifecycle/regulation profile onto two genuinely different recording markets. Interacts with B2-CONV-INTEL-RELATIONSHIP."
+
+  - id: B2-CONV-INTEL-RELATIONSHIP
+    summary: Position Conversation Intelligence (Gong, Chorus) relative to CCAAS recordings/QM.
+    question: "Is Conversation Intelligence (a) a downstream consumer of CCAAS recordings, (b) a separate vendor surface that overlaps CCAAS quality management, or (c) a feature of SALES-ENG where call_recordings (122) lives?"
+    options: [a-downstream-consumer, b-separate-domain, c-feature-of-sales-eng]
+    why: "Gong and Chorus are pure-play revenue-intelligence vendors that ingest recordings and produce deal/coaching insight, distinct from the CCaaS QM market (Genesys/NICE/Verint/Calabrio score contact-center interactions against evaluation forms). That argues Conv-Intel is its own surface (b), consuming recordings from both CCAAS and SALES-ENG rather than being a CCAAS feature. Conv-Intel is already at mention_count=2 in _missing-domains.md. Resolution affects whether call_recordings (122) stays in SALES-ENG and whether ccaas_call_recordings absorbs it (B2-CALL-RECORDINGS-SPLIT)."
 
   - id: B2-H722-DEDUPE-DELETE
-    summary: Approve the destructive dedupe DELETE on handoff 722's stale APQC tag (was B1A-H722-DEDUPE).
-    question: DELETE handoff_processes id 238 (PCF 21679 Deliver approved content) on handoff 722, keeping id 753 (PCF 20898 Maintain service support knowledge repository)?
-    options: [delete-238, keep-both]
-    why: Two agent_curated tags on one handoff; the 2026-05-30 audit confirmed PCF 20898 as the correct mapping and 21679 as the duplicate. DELETE is destructive, needs sign-off.
+    summary: Approve the destructive dedupe DELETE of handoff 722's stale APQC tag.
+    question: "Handoff 722 (KMS->CCAAS knowledge_base_article.updated) carries two agent_curated handoff_processes rows. DELETE id 238 (PCF 21679 'Deliver approved content') and keep id 753 (PCF 20898 'Maintain service support knowledge repository')? (yes/no)"
+    options: [a-delete-238, b-keep-both]
+    why: "A KMS knowledge-update event is a knowledge-repository maintenance activity, not a content-delivery activity; the 2026-05-30 audit confirmed PCF 20898 as correct and 21679 as the duplicate. DELETE is destructive, needs sign-off (Rule #1)."
 
   - id: B2-H743-746-RETAG
-    summary: Confirm or revoke the two retag rows on the originally-deferred CONV-AI->CCAAS handoffs (was B1A-H743 / B1A-H746).
-    question: Keep handoff_processes id 810 (743 -> PCF 10395) and id 812 (746 -> PCF 20824), or DELETE them and let Discover Pass 3 author custom processes?
-    options: [keep-both, delete-both, mixed]
-    why: Both were deferred-to-Discover in the original audit as having no clean PCF cross-industry match; the later auto-tags are generic and conflict with that judgment. DELETE is destructive, needs sign-off.
+    summary: Confirm or revoke the two retag rows on the originally-deferred CONV-AI->CCAAS handoffs.
+    question: "Handoffs 743 (conversation_flow.fallback_triggered, tagged PCF 10395 'Resolve customer problems') and 746 (bot_definition.published, tagged PCF 20824 'Deploy services/solutions') were originally deferred-to-Discover as having no clean PCF match. Keep both tags, delete both and let Discover author custom processes, or mixed?"
+    options: [a-keep-both, b-delete-both, c-mixed]
+    why: "Both auto-tags are generic and conflict with the original judgment that bot-fallback engineering and bot-runtime publication have no clean PCF cross-industry match. DELETE is destructive, needs sign-off (Rule #1)."
 
 b3:
   - id: B3-AGENT-SKILL-ASSIGNMENTS
     candidate: agent_skill_assignments
-    rationale: Universal across Genesys, NICE, Five9, Talkdesk, Amazon Connect. Junction of users x agent_skills; required for routing strategies to pick the right agent.
+    rationale: "Junction of users x agent skills (skill + proficiency), the input routing strategies use to pick the best-fit agent. First-class across the flagship vendor set; absent from the CCAAS footprint. Additive; vet via Phase 0 before loading."
     vendor_evidence:
       - {vendor: Genesys Cloud CX, evidence: 1st_class}
       - {vendor: NICE CXone, evidence: 1st_class}
       - {vendor: Five9, evidence: 1st_class}
       - {vendor: Talkdesk, evidence: 1st_class}
       - {vendor: Amazon Connect, evidence: 1st_class}
-    proposed_module: CCAAS-ROUTING-ENGINE
+    proposed_module: CCAAS-ROUTING
+
+  - id: B3-CALLBACK-REQUESTS
+    candidate: callback_requests
+    rationale: "Customer-initiated 'call me back' with a queued slot; distinct from contact_records (a callback is a queued intent, not yet a captured interaction). Universal across the flagship vendors. Additive."
+    vendor_evidence:
+      - {vendor: Genesys Cloud CX, evidence: 1st_class}
+      - {vendor: NICE CXone, evidence: 1st_class}
+      - {vendor: Five9, evidence: 1st_class}
+      - {vendor: Talkdesk, evidence: 1st_class}
+      - {vendor: Amazon Connect, evidence: 1st_class}
+    proposed_module: CCAAS-ROUTING
 
   - id: B3-WRAP-UP-REASONS
     candidate: wrap_up_reasons
-    rationale: After-call work classification distinct from disposition_codes; present in 4 of 5 flagship vendors. Worth keeping separate from disposition_codes because wrap-up is the agent's reason for time-off-queue, disposition is the call outcome.
+    rationale: "After-call-work classification (agent's reason for time off-queue) distinct from disposition_codes (the call outcome). Present across the flagship set as wrap-up codes / ACW reasons. Additive."
     vendor_evidence:
       - {vendor: Genesys Cloud CX, evidence: 1st_class}
       - {vendor: NICE CXone, evidence: 1st_class}
       - {vendor: Five9, evidence: 1st_class}
       - {vendor: Talkdesk, evidence: 1st_class}
       - {vendor: Amazon Connect, evidence: secondary}
-    proposed_module: CCAAS-INTERACTION-CAPTURE
-
-  - id: B3-AGENT-SCORECARDS
-    candidate: agent_scorecards
-    rationale: Verint / Calabrio / NICE WEM all expose rolled-up QM aggregate per agent per period. Distinct from per-recording quality_evaluations.
-    vendor_evidence:
-      - {vendor: Verint Open Platform, evidence: 1st_class}
-      - {vendor: Calabrio ONE, evidence: 1st_class}
-      - {vendor: NICE CXone WEM, evidence: 1st_class}
-    proposed_module: CCAAS-WORKFORCE-ENGAGEMENT
-
-  - id: B3-SPEECH-ANALYTICS-CATEGORIES
-    candidate: speech_analytics_categories
-    rationale: Verint / NICE WEM expose configurable keyword and phrase categorization for analytics. Distinct from quality_evaluations.
-    vendor_evidence:
-      - {vendor: Verint Open Platform, evidence: 1st_class}
-      - {vendor: NICE CXone WEM, evidence: 1st_class}
-      - {vendor: Calabrio ONE, evidence: secondary}
-    proposed_module: CCAAS-WORKFORCE-ENGAGEMENT
+    proposed_module: CCAAS-DESKTOP
 
   - id: B3-OUTBOUND-CAMPAIGNS
     candidate: outbound_campaigns
-    rationale: Five9 / NICE / Genesys all model dialer campaign definitions (predictive / preview / progressive). Central to the dialer module if the audit's 4-module shape is adopted.
+    rationale: "Predictive/preview/progressive dialer campaign definitions with contact lists and pacing. Central if a Dialer/Outbound module is adopted (B2-MODULE-SPLIT option b). Five9 leads with outbound; Genesys/NICE sell it as a named add-on. Additive; structurally interacts with the module-split decision."
     vendor_evidence:
       - {vendor: Five9, evidence: 1st_class}
       - {vendor: NICE CXone, evidence: 1st_class}
       - {vendor: Genesys Cloud CX, evidence: 1st_class}
-    proposed_module: CCAAS-DIALER
+    proposed_module: CCAAS-ROUTING
 
-  - id: B3-CALLBACK-REQUESTS
-    candidate: callback_requests
-    rationale: Universal across CCaaS vendors. Customer-initiated "call me back" with scheduled slot; a distinct entity from contact_records (the callback is a queued intent, not a captured call).
+  - id: B3-AGENT-SCORECARDS
+    candidate: agent_scorecards
+    rationale: "Rolled-up QM aggregate per agent per period, distinct from per-interaction interaction_evaluations. First-class in the WEM vendor surface; relevant only if WEM stays in CCAAS (B2-WEM-SCOPE)."
     vendor_evidence:
-      - {vendor: Genesys Cloud CX, evidence: 1st_class}
+      - {vendor: Verint Open Platform, evidence: 1st_class}
+      - {vendor: Calabrio ONE, evidence: 1st_class}
       - {vendor: NICE CXone, evidence: 1st_class}
-      - {vendor: Five9, evidence: 1st_class}
-      - {vendor: Talkdesk, evidence: 1st_class}
-      - {vendor: Amazon Connect, evidence: 1st_class}
-    proposed_module: CCAAS-ROUTING-ENGINE
+    proposed_module: CCAAS-QUALITY
+
+  - id: B3-SPEECH-ANALYTICS-CATEGORIES
+    candidate: speech_analytics_categories
+    rationale: "Configurable keyword/phrase categorization driving interaction analytics and auto-scoring; distinct from interaction_evaluations. WEM-surface vendor evidence; relevant if WEM stays in CCAAS."
+    vendor_evidence:
+      - {vendor: Verint Open Platform, evidence: 1st_class}
+      - {vendor: NICE CXone, evidence: 1st_class}
+      - {vendor: Calabrio ONE, evidence: secondary}
+    proposed_module: CCAAS-QUALITY
 
   - id: B3-IVR-LANGUAGES
     candidate: ivr_languages
-    rationale: Genesys / NICE expose localized prompt sets per supported language as a first-class entity. Borderline config vs entity; the multi-locale prompt-pack lifecycle is what makes it master-shaped.
+    rationale: "Localized prompt sets per supported language as a first-class, versioned prompt-pack. Borderline config vs entity; the multi-locale lifecycle is what makes it master-shaped. Genesys and NICE expose it first-class."
     vendor_evidence:
       - {vendor: Genesys Cloud CX, evidence: 1st_class}
       - {vendor: NICE CXone, evidence: 1st_class}
-    proposed_module: CCAAS-ROUTING-ENGINE
+    proposed_module: CCAAS-ROUTING

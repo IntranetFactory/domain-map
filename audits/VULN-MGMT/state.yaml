@@ -4,216 +4,70 @@ status: feedback_needed
 next_action_by: user
 last_audit: "2026-06-07"
 
-# 2026-06-07 state-driven execute: the 3 build-independent EXECUTE items landed
-# (A4 catalog UX on domain 13; H1 APQC tag on handoff 36 -> PCF 1312
-# "Maintain IT asset records"; 4 generic domain_aliases). VULN-MGMT remains UNBUILT
-# (0 domain_modules, 0 capability_domains, 0 self-mastered data_objects). Per the
-# UNBUILT LEAVE rule the build is SURFACED and its cascade LEFT, not scaffolded.
-# What remains is the user's call: the keystone leadership-tier/scope decision
-# (B2-V1) gates the whole build (B1B-V1) and all of b3.
+# All agent-solvable build + completion work executed 2026-06-07 (record_status='new'):
+# 8 capabilities + capability_domains, 3 full modules (VULN-MGMT-DETECT 332,
+# VULN-MGMT-RISK 333, VULN-MGMT-REMEDIATE 334) + domain_module_capabilities,
+# 6 NEW masters (vulnerabilities 1028, vulnerability_scans 1029, vulnerability_definitions 1030,
+# vulnerability_remediations 1031, vulnerability_exceptions 1032, vulnerability_assessments 1033)
+# placed into modules via domain_module_data_objects (+ org_units embedded, software_installations
+# consumed), lifecycle states on the 5 workflow masters, the vuln-mgmt-system skill + tools +
+# domain_module_tools, 5 personas + role_modules. This completion pass added:
+#  - 11 data_object_relationships: 6 intra-domain (B6), 3 users edges (B7), 2 cross-domain (B8)
+#  - 15 lifecycle-cover trigger_events (B9)
+#  - 1 handoff module-FK backfill (B10b): handoff 36 target -> VULN-MGMT-DETECT (332)
+# Only user-judgment decisions remain.
 
-b1a:
-  - id: B1A-RECLASS
-    summary: "Leadership-tier zero-master exemption rescinded 2026-06-02; classification settled as master-bearing (overlay test). Domain needs a BUILD, not an exemption. SURFACED."
-    finding: >
-      Under the overlay test VULN-MGMT is master-bearing: vulnerabilities, scan results,
-      and remediation records are real records. The prior "keep leadership-tier / ship an
-      empty landing module" option is no longer valid. Live 2026-06-07: still 0 domain_modules
-      (M1 fail), 0 capability_domains, 0 self-mastered data_objects, so the domain is not
-      deployable today and must be built.
-    action: >
-      The build itself is SURFACED (see B1B-V1 + B2-V1). This item records only that the
-      classification is settled. No agent action without the B2-V1 leadership-tier/scope
-      decision and B2-V2 module-split confirmation.
-    extra_reclassified: "2026-06-02 skill-changelog"
+b1a: []
 
-b1b:
-  - id: B1B-V1
-    summary: "BUILD: insert 4 full domain_modules + 7 capabilities + ~8 masters to cure M1 + A2 hard-fail. SURFACED (UNBUILT domain; gated on b2 keystone decisions)."
-    finding: |
-      Rule #14 M1 hard-fail: 0 domain_modules / 0 domain_module_host_domains for domain_id=13.
-      A2 hard-fail: 0 capability_domains. Vendor surface supports a 4-module Find/Prioritize/Fix
-      shape: VULN-DISCOVERY-SCANNING (caps VULN-ASSET-DISCOVERY, VULN-SCAN-ORCHESTRATION; masters
-      vulnerability_scans, scan_targets), VULN-FINDINGS-MANAGEMENT (cap VULN-FINDING-LIFECYCLE;
-      masters vulnerability_findings, cve_records), VULN-RISK-PRIORITIZATION (caps VULN-RISK-SCORING,
-      VULN-THREAT-CONTEXT; masters vulnerability_risk_scores, kev_advisories), VULN-REMEDIATION-TRACKING
-      (cap VULN-REMEDIATION-ROUTING; masters remediation_tickets, exception_records).
-      Per the UNBUILT LEAVE rule the build is SURFACED, not scaffolded; the agent does not author
-      modules/caps/masters without the user's scope decision.
-    blocked_by:
-      - {type: user_decision, ref: B2-V1, reason: "leadership-tier vs promote decides whether masters are in-scope"}
-      - {type: user_decision, ref: B2-V2, reason: "4-module split must be confirmed vs alt-a/alt-b/alt-c"}
-      - {type: user_decision, ref: B2-V3, reason: "capability cross-cutting promotion changes capability naming and capability_domains shape"}
-    extra_proposed_module_codes: ["VULN-DISCOVERY-SCANNING", "VULN-FINDINGS-MANAGEMENT", "VULN-RISK-PRIORITIZATION", "VULN-REMEDIATION-TRACKING"]
-    extra_proposed_capability_codes: ["VULN-ASSET-DISCOVERY", "VULN-SCAN-ORCHESTRATION", "VULN-FINDING-LIFECYCLE", "VULN-RISK-SCORING", "VULN-THREAT-CONTEXT", "VULN-REMEDIATION-ROUTING"]
-    vendor_evidence:
-      - "ServiceNow Vulnerability Response"
-      - "Tenable One"
-      - "Qualys VMDR"
-      - "Rapid7 InsightVM"
-      - "Wiz Cloud Security Platform"
-
-  - id: B1B-V5
-    summary: "PATCH handoffs.id=36 target_domain_module_id to VULN-DISCOVERY-SCANNING.id once B1B-V1 lands. LEFT (no module exists to point the FK at)."
-    finding: |
-      B10b: inbound handoff 36 (source_domain_id=52 SAM, target_domain_id=13 VULN-MGMT,
-      trigger software_install.detected, payload software_installations) has
-      target_domain_module_id=NULL. The target module would be VULN-DISCOVERY-SCANNING once
-      built. source_domain_module_id is also NULL but that is SAM's owed work (report-only here).
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1B-V1, reason: "no VULN-MGMT module exists yet to point the FK at"}
-    affected_handoffs:
-      - {handoff_id: 36, direction: inbound, source_domain: SAM, target_domain: VULN-MGMT, trigger_event: "software_install.detected", payload: "software_installations", null_field: "target_domain_module_id"}
+b1b: []
 
 b2:
-  - id: B2-V1
-    summary: "Leadership-tier inclusion was rescinded 2026-06-02; the live decision is the BUILD SCOPE under the now-master-bearing classification."
-    question: "Confirm scope of the VULN-MGMT build: full master-bearing 4-module + ~8-master shape, or a leaner caps+modules-only shape with remediation living in dependent domains?"
-    options:
-      - "full build: 4-module split with ~8-10 masters is the real shape (matches every flagship vendor)"
-      - "lean build: capabilities + modules with no masters; remediation lives in dependent domains"
-      - "defer to a separate scope-decision conversation"
-    why: "Every flagship vendor masters substantial workflow entities (scans, findings, remediation tickets, exceptions). The overlay test points to a full build; scope is the user's editorial/catalog call and gates B1B-V1 and all of b3."
+  - id: B2-VM-MODULE-SPLIT
+    summary: Confirm the VULN-MGMT module split (the 3-module split is already built as the recommended option).
+    question: "Keep the built 3-module split (Scanning and Detection: vulnerability_scans, vulnerabilities, vulnerability_definitions; Prioritization and Risk: vulnerability_assessments + ranking; Remediation and Governance: vulnerability_remediations, vulnerability_exceptions, verification, compliance), collapse detection and prioritization into one find-and-rank module, or split Compliance Evidence into its own fourth module?"
+    options: [a-3-module-built, b-2-module-collapse-find-and-rank, c-4-module-split-compliance]
+    why: "Grounded in how flagship VM vendors package the lifecycle. Every major suite separates the scanning/detection engine from the prioritization lens from the remediation loop: Tenable splits Nessus/Tenable Vulnerability Management (scanning) from Tenable One exposure scoring (prioritization) from its remediation workflow; Qualys VMDR literally names the stages V-M-D-R (Vulnerability, then Detection, then prioritization via TruRisk, then Response/Remediation); Rapid7 InsightVM ships scan engines/templates separately from Remediation Projects; Microsoft Defender Vulnerability Management separates Weaknesses/scanning from Security Recommendations (prioritization) from Remediation activities; CrowdStrike Falcon Spotlight feeds Falcon Fusion for remediation; Wiz separates finding scans from its prioritization graph from remediation steps. (b) collapsing find+rank has no flagship precedent as a single product surface; (c) compliance is reporting over remediation data (cadence, MTTR, exception approvals), not a standalone master, so no vendor ships it as a separate module. Changing the split restructures the three built modules."
 
-  - id: B2-V2
-    summary: "Confirm VULN-MGMT module split shape (4-module proposal vs alternatives)."
-    question: "Which module shape: (a) 4-module split as drafted, (b) alt-a collapse RISK-PRIORITIZATION into FINDINGS-MANAGEMENT, (c) alt-b split DISCOVERY from SCANNING, (d) alt-c add 5th VULN-COMPLIANCE-REPORTING module, (e) defer pending formal Phase 0 vendor research?"
-    options:
-      - "4-module split as drafted (VULN-DISCOVERY-SCANNING, VULN-FINDINGS-MANAGEMENT, VULN-RISK-PRIORITIZATION, VULN-REMEDIATION-TRACKING)"
-      - "alt-a 3-module collapse"
-      - "alt-b 5-module split DISCOVERY from SCANNING"
-      - "alt-c 5-module add VULN-COMPLIANCE-REPORTING"
-      - "defer pending formal Phase 0 vendor research"
-    why: "Vendor evidence supports a Find/Prioritize/Fix triad shape; architectural/deployability decision the user owns. Gates B1B-V1."
+  - id: B2-VM-REMEDIATION-OWNERSHIP
+    summary: Confirm that vulnerability_remediations is mastered in VULN-MGMT (built) and add the outbound handoff to ITSM, vs handing remediation entirely to ITSM.
+    question: "Keep vulnerability_remediations mastered in VULN-MGMT as the security-side workflow (built, with a cross-domain edge to ITSM service_changes already loaded), and add an outbound handoff vulnerability_remediation.assigned -> ITSM so fixes executed through the service desk are tracked there; or do not master remediation here at all and only create/consume ITSM tickets?"
+    options: [a-master-here-plus-handoff-to-itsm, b-itsm-only-consume-status-back, c-master-here-no-itsm-integration]
+    why: "Flagship VM vendors master their own remediation/response entity even when they integrate with ServiceNow. Tenable Vulnerability Management has its own remediation recommendations and a ServiceNow ticketing connector; Qualys VMDR ships Patch Management and its own remediation tickets while also pushing to ServiceNow; Rapid7 InsightVM owns Remediation Projects and tickets and syncs to ITSM; Microsoft Defender VM owns Remediation activities and hands the request to Intune/ServiceNow for execution; CrowdStrike Falcon Spotlight routes through Falcon Fusion. ServiceNow Vulnerability Response is the inverse case: it lives natively inside ITSM, so there the security view and the ticket are the same record. Real trade-off: mastering here gives the security team an SLA/MTTR view independent of whoever executes the patch (the prioritized queue and the close-the-loop verification stay security-owned), at the cost of a second record to reconcile with the ITSM change/incident; ITSM-only keeps one record but loses the security-side posture lens and verification re-scan linkage. The built shape (a) matches Tenable/Qualys/Rapid7/Microsoft/CrowdStrike; adding the outbound handoff is the only piece not yet loaded because the ITSM-side module FK and trigger event want your sign-off."
 
-  - id: B2-V3
-    summary: "Cross-cutting promotion of VULN-RISK-SCORING and VULN-THREAT-CONTEXT capabilities."
-    question: "Should all 7 capabilities ship domain-prefixed (VULN-...) or should VULN-RISK-SCORING and VULN-THREAT-CONTEXT be promoted cross-cutting (RISK-BASED-SCORING, THREAT-EXPLOITABILITY-CONTEXT) for reuse on CSPM / DSPM / APP-SEC / EASM?"
-    options:
-      - "all 7 prefixed (VULN-...)"
-      - "promote VULN-RISK-SCORING and VULN-THREAT-CONTEXT to cross-cutting (3+ domains)"
-      - "defer cross-cutting promotion to a separate pass once neighbor domains land"
-    why: "Cross-cutting capability convention applies when >=3 domains realize the same capability. CSPM / DSPM / APP-SEC / EASM share the risk-scoring + exploitability-context engine pattern. Feeds B1B-V1 load shape."
+  - id: B2-VM-CVE-INTEL-SOURCE
+    summary: Confirm vulnerability_definitions is mastered here (built as a catalog) while volatile exploit intel is consumed from THREAT-INTEL, and decide whether to add the inbound exploit-intel handoff now.
+    question: "Keep the static vulnerability_definitions catalog (CVE metadata, base CVSS severity, advisory/check references) mastered in VULN-MGMT (built), and consume fast-moving exploit-prediction and known-exploited signals from THREAT-INTEL via the fetch_exploit_intel tool; add the inbound THREAT-INTEL exploit-intel handoff now or defer it until THREAT-INTEL masters an exploit entity?"
+    options: [a-master-defs-here-consume-exploit-intel-defer-handoff, b-master-defs-here-add-inbound-handoff-now, c-master-all-cve-and-exploit-intel-here, d-consume-entire-catalog-from-threat-intel]
+    why: "Every flagship VM vendor maintains its own definitions/knowledge base used to match findings: Tenable ships plugins/CVE definitions, Qualys VMDR has the QID Knowledgebase mapped to CVE, Rapid7 has vulnerability checks/CVE references, Microsoft Defender VM has its CVE knowledge base, CrowdStrike Falcon Spotlight and Wiz carry their own CVE catalogs. So the matching catalog belongs here (rules out d). But live exploitability signals (EPSS, CISA KEV, exploit-in-the-wild) are a distinct fast-moving market: Tenable VPR and Qualys TruRisk both ingest EPSS/KEV as an external enrichment layer rather than authoring it, which is exactly the THREAT-INTEL boundary (rules out c). Trade-off on the handoff timing: THREAT-INTEL (domain 14) currently masters no exploit entity, so an inbound handoff today would point at a non-existent payload; recommend (a) consume via tool now and add the formal handoff when THREAT-INTEL is built. Mastering exploit intel here (c) would duplicate a neighbor market; this is the only genuinely structural call."
 
-  - id: B2-V4
-    summary: "Full Phase 0 description rewrite (optional; mechanical em-dash + spelling PATCHes already applied 2026-05-31; catalog UX authored 2026-06-07)."
-    question: "Now that the catalog_tagline / catalog_description are authored and the description is clean American English, do you want a full Phase 0 description rewrite anchored on vendor surface, or leave the current text?"
-    options:
-      - "full Phase 0 description rewrite anchored on vendor surface (Rule #18: no vendor names in description)"
-      - "leave it; current text plus the new catalog UX copy is sufficient"
-    why: "domains.description currently reads 'Identification, prioritization, and remediation of security vulnerabilities across endpoints, cloud, and applications.' Clean but thin. Non-blocking editorial call."
-
-  - id: B2-V6
-    summary: "domain_aliases slate EXTENSION (4 generic synonyms loaded 2026-06-07; extension is the remaining judgment)."
-    question: "4 unambiguous synonyms were loaded (risk-based vulnerability management/RBVM, threat and vulnerability management/TVM, vulnerability response, vuln management). Extend the slate with the debatable ones: VRM (vulnerability response management), TEM (threat exposure management), 'weakness management', bare acronyms RBVM/TVM as their own search strings?"
-    options:
-      - "no extension; the 4 loaded synonyms are enough"
-      - "add VRM, TEM, weakness management, and/or bare RBVM/TVM (specify which)"
-      - "defer extension"
-    why: "Bare-acronym and adjacent-category synonyms (VRM/TEM) risk false-positive catalog matches (TVM collides with Microsoft's framing, VRM with vendor-risk-management). Which to add is the user's call. The unambiguous slate is already live."
+  - id: B2-VM-EXCEPTION-FREEZE
+    summary: Approve the immutability + single-approver pattern flags already set on vulnerability_exceptions (has_submit_lock=true, has_single_approver=true).
+    question: "Confirm vulnerability_exceptions ships with has_submit_lock=true (a risk acceptance locks on submit; changes require a new exception) and has_single_approver=true (one accountable risk owner signs off), rather than a multi-approver committee or an editable-after-approval shape?"
+    options: [a-keep-submit-lock-and-single-approver, b-multi-approver-committee, c-no-submit-lock-editable]
+    why: "Risk acceptances are individually accountable, audit-bearing decisions, and the flagship suites gate them as single-owner sign-off with a locked record: Qualys VMDR exceptions require an approver and expire on a fixed date; Rapid7 InsightVM exceptions carry a reviewer and an expiry; ServiceNow Vulnerability Response deferrals route to a single risk approver with an expiry-driven re-review; Tenable and Microsoft Defender VM both gate exceptions/recommendation-exceptions on an approver with a time box. None of the flagships model exception approval as an editable-after-the-fact field, and committee sign-off is the exception, not the norm, for routine risk acceptance. These flags are already true on the entity; this item is the Rule #1 approval gate, not a change."
 
 b3:
-  - id: B3-V1
-    candidate: "vulnerability_scans"
-    rationale: "First-class master with state machine scheduled -> running -> completed / failed / cancelled. has_submit_lock=true once results are produced."
-    vendor_evidence: ["Tenable One", "Qualys VMDR", "Rapid7 InsightVM", "Wiz Cloud Security Platform"]
-    proposed_module: "VULN-DISCOVERY-SCANNING"
-    extra_gated_on: "B2-V1"
+  - id: B3-VM-EXPLOIT-INTEL-HANDOFF
+    candidate: "Inbound THREAT-INTEL -> VULN-MGMT exploit-intel handoff (EPSS / CISA KEV / exploit-in-the-wild feeding prioritization)"
+    rationale: "The risk-based prioritization layer (compute_vulnerability_priority, fetch_exploit_intel) depends on live exploitability signals that THREAT-INTEL owns. The tool path is built; the formal handoff is parked until THREAT-INTEL (domain 14) masters an exploit/KEV entity to point the payload FK at. Additive, non-blocking; gated on the THREAT-INTEL build (tracked under B2-VM-CVE-INTEL-SOURCE)."
+    vendor_evidence: ["Tenable One (VPR ingests EPSS/KEV)", "Qualys VMDR (TruRisk ingests EPSS/KEV)", "Rapid7 InsightVM (Active Risk)", "Microsoft Defender Vulnerability Management (threat analytics)", "CISA KEV (regulatory feed)"]
 
-  - id: B3-V2
-    candidate: "vulnerability_findings"
-    rationale: "Per-(asset, CVE) instance row. State machine open -> confirmed -> in_remediation -> resolved / false_positive / risk_accepted."
-    vendor_evidence: ["Tenable One", "Qualys VMDR", "Rapid7 InsightVM", "ServiceNow Vulnerability Response"]
-    proposed_module: "VULN-FINDINGS-MANAGEMENT"
-    extra_gated_on: "B2-V1"
+  - id: B3-VM-REMEDIATION-ITSM-HANDOFF
+    candidate: "Outbound vulnerability_remediation.assigned -> ITSM (service_changes / service_incidents) handoff"
+    rationale: "When a fix is executed through the service desk, the assigned remediation should open or link an ITSM change/incident. The cross-domain data_object_relationship vulnerability_remediations -> service_changes is loaded; the formal handoff row (with trigger event and module FKs) wants the B2-VM-REMEDIATION-OWNERSHIP decision first. Additive, non-blocking."
+    vendor_evidence: ["Tenable Vulnerability Management (ServiceNow connector)", "Qualys VMDR (ServiceNow ITSM integration)", "Rapid7 InsightVM (ITSM ticketing sync)", "Microsoft Defender Vulnerability Management (Intune / ServiceNow remediation)", "ServiceNow Vulnerability Response (native ITSM)"]
 
-  - id: B3-V3
-    candidate: "cve_records"
-    rationale: "Catalog enrichment of CVE / NVD entries. Config-shape master; static-shape exemption per Rule #12 likely applies."
-    vendor_evidence: ["Tenable One", "Qualys VMDR", "Rapid7 InsightVM"]
-    proposed_module: "VULN-FINDINGS-MANAGEMENT"
-    extra_gated_on: "B2-V1"
+  - id: B3-VM-CMDB-ASSET-HANDOFF
+    candidate: "Inbound CMDB/ITAM asset-population handoff (configuration_item.discovered / hardware_asset.onboarded feeding scan scope)"
+    rationale: "Scanning runs against an asset population that CMDB (configuration_items, loaded as a cross-domain edge) and ITAM/HAM (hardware_assets) master. A formal inbound handoff would let new-asset events trigger scan-scope updates. The affects edge to configuration_items is loaded; the handoff is additive and non-blocking."
+    vendor_evidence: ["Tenable One (asset inventory sync)", "Qualys VMDR (host asset / CMDB sync)", "Rapid7 InsightVM (asset groups)", "Wiz Cloud Security Platform (cloud resource graph)"]
 
-  - id: B3-V4
-    candidate: "vulnerability_risk_scores"
-    rationale: "EPSS, CVSS, vendor-proprietary risk scores. State machine pending -> current -> stale; recomputation automated."
-    vendor_evidence: ["Tenable One", "Qualys VMDR", "Rapid7 InsightVM", "Microsoft Defender Vulnerability Management"]
-    proposed_module: "VULN-RISK-PRIORITIZATION"
-    extra_gated_on: "B2-V1"
+  - id: B3-VM-MARKET-SURFACE
+    candidate: "scan_policies / scan_templates, exposure_cards (risk score snapshots), patches, asset_tags / scan_targets, compliance_checks"
+    rationale: "Common across the flagship VM vendor surface but absent from the current footprint. scan_policies/templates (Tenable scan policies, Qualys option profiles, Rapid7 scan templates) govern how a scan runs; exposure_cards/risk snapshots (Tenable exposure cards, Qualys TruRisk, Rapid7 Real Risk) are the prioritization output; patches (Qualys Patch Management); compliance_checks (Tenable/Qualys policy compliance). Additive; vet via a Phase 0 pass before loading."
+    vendor_evidence: ["Tenable One", "Qualys VMDR", "Rapid7 InsightVM", "Microsoft Defender Vulnerability Management", "Wiz Cloud Security Platform"]
 
-  - id: B3-V5
-    candidate: "kev_advisories"
-    rationale: "CISA Known Exploited Vulnerabilities catalog. Ingested feed; static-shape master."
-    vendor_evidence: ["CISA KEV (regulatory feed)", "Tenable One", "Rapid7 InsightVM"]
-    proposed_module: "VULN-RISK-PRIORITIZATION"
-    extra_gated_on: "B2-V1"
-
-  - id: B3-V6
-    candidate: "remediation_tickets"
-    rationale: "State machine proposed -> assigned -> in_progress -> verified -> closed / reopened. has_single_approver=true for risk-acceptance branch."
-    vendor_evidence: ["ServiceNow Vulnerability Response", "Tenable One", "Vulcan Cyber", "Brinqa"]
-    proposed_module: "VULN-REMEDIATION-TRACKING"
-    extra_gated_on: "B2-V1"
-
-  - id: B3-V7
-    candidate: "exception_records"
-    rationale: "Risk acceptance / exception requests. State machine requested -> under_review -> approved -> active -> expired / revoked. has_single_approver=true."
-    vendor_evidence: ["ServiceNow Vulnerability Response", "Tenable One", "Qualys VMDR", "Rapid7 InsightVM"]
-    proposed_module: "VULN-REMEDIATION-TRACKING"
-    extra_gated_on: "B2-V1"
-
-  - id: B3-V8
-    candidate: "scan_targets"
-    rationale: "Asset scope definitions (IP ranges, asset tags, cloud account/subscription scopes). Config-shape master; lifecycle defined -> active -> decommissioned."
-    vendor_evidence: ["Tenable One", "Qualys VMDR", "Rapid7 InsightVM", "Wiz Cloud Security Platform"]
-    proposed_module: "VULN-DISCOVERY-SCANNING"
-    extra_gated_on: "B2-V1"
-
-  - id: B3-R1
-    candidate: "PCI-DSS 4.0 (requirement 11.3 vulnerability scanning)"
-    rationale: "Mandatory for cardholder-data scope. Quarterly + on-change scanning cadence is a distinct compliance entity."
-    vendor_evidence: ["Qualys VMDR", "Tenable One", "Rapid7 InsightVM"]
-    extra_gated_on: "B2-V1"
-    extra_kind: "regulation"
-
-  - id: B3-R2
-    candidate: "HIPAA Security Rule 164.308(a)(1)(ii)(A) + 164.312(a)(1)"
-    rationale: "Mandatory for PHI environments; risk-analysis and vulnerability-scanning obligations."
-    vendor_evidence: ["Tenable One", "Qualys VMDR"]
-    extra_gated_on: "B2-V1"
-    extra_kind: "regulation"
-
-  - id: B3-R3
-    candidate: "FedRAMP / NIST 800-53 RA-5 + SI-2"
-    rationale: "Mandatory for federal cloud workloads; RA-5 vulnerability scanning, SI-2 flaw remediation."
-    vendor_evidence: ["Tenable One", "Qualys VMDR", "Rapid7 InsightVM"]
-    extra_gated_on: "B2-V1"
-    extra_kind: "regulation"
-
-  - id: B3-R4
-    candidate: "SOX 404 ITGC"
-    rationale: "Public-company IT environments where patch and vulnerability evidence is a control objective."
-    vendor_evidence: ["ServiceNow Vulnerability Response", "Qualys VMDR"]
-    extra_gated_on: "B2-V1"
-    extra_kind: "regulation"
-
-  - id: B3-R5
-    candidate: "GDPR Article 32"
-    rationale: "General security-of-processing obligation; specific anchor for vulnerability management evidence beyond the NIS2 row."
-    vendor_evidence: ["Tenable One", "Qualys VMDR"]
-    extra_gated_on: "B2-V1"
-    extra_kind: "regulation"
-
-  - id: B3-M1
-    candidate: "Promote VULN-RISK-PRIORITIZATION to a cross-cutting EXPOSURE-MGMT module"
-    rationale: "Tenable One, Wiz, Qualys all unify finding-prioritization across vulnerability + posture + attack-surface; the prioritization engine is the cross-domain layer (CTEM framing)."
-    vendor_evidence: ["Tenable One", "Wiz Cloud Security Platform", "Qualys VMDR"]
-    extra_gated_on: "B2-V1 + B2-V2"
-    extra_kind: "modularization"
-
-  - id: B3-M2
-    candidate: "Split DISCOVERY from SCANNING into two modules"
-    rationale: "Tenable Attack Surface Management's distinct UI surface warrants modular separation from the per-scanner engine; adds a 5th module VULN-ASSET-DISCOVERY."
-    vendor_evidence: ["Tenable One (Tenable Attack Surface Management)", "Tenable One (Tenable Nessus)"]
-    extra_gated_on: "B2-V1 + B2-V2"
-    extra_kind: "modularization"
+  - id: B3-VM-EXPOSURE-MGMT-PROMOTION
+    candidate: "Promote the prioritization layer toward a cross-cutting exposure-management (CTEM) surface shared with CSPM / DSPM / ASM"
+    rationale: "Tenable One, Wiz, and Qualys all unify finding-prioritization across vulnerabilities + cloud posture + attack surface under a continuous-threat-exposure-management (CTEM) framing. The risk-scoring + exploitability-context engine is the cross-domain layer. This is a structural reshaping (a split), so it is flagged as an idea only; if pursued it becomes a b2 module/domain decision, never auto-executed."
+    vendor_evidence: ["Tenable One (Exposure Management)", "Wiz Cloud Security Platform", "Qualys VMDR (TruRisk / Enterprise TruRisk)"]

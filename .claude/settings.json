@@ -23,7 +23,18 @@
       "Edit(/.claude/skills/domain-map-analyst/**)",
       "Bash(git -C C:/dev/domain-map ls-files .agents/skills/use-semantius/)",
       "Bash(git -C C:/dev/semantius-cli status -sb)",
-      "Bash(git -C C:/dev/semantius-cli log -3 --oneline)"
+      "Bash(git -C C:/dev/semantius-cli log -3 --oneline)",
+      "Bash(SEMANTIUS_ORG=tests semantius call crud postgrestRequest '{\"method\":\"GET\",\"path\":\"/domains?domain_code=eq.FRONTLINE-COMMS&select=id,domain_code,domain_name\"}')",
+      "Bash(SEMANTIUS_ORG=tests semantius call crud getCurrentUser '{}')",
+      "Bash(node -e \"const d=require\\('c:/dev/domain-map/.tmp_deploy/AIOPS-build.json'\\); console.log\\('VALID JSON'\\); console.log\\('capabilities:', d.capabilities.length\\); console.log\\('modules:', d.modules.map\\(m=>m.domain_module_code\\).join\\(', '\\)\\); console.log\\('lifecycle masters:', d.lifecycle_states.map\\(s=>s.data_object_name\\).join\\(', '\\)\\); console.log\\('tools total:', d.tools.length, '| new mutate:', d.tools.filter\\(t=>t.existing===false\\).length\\); console.log\\('module_tools:', d.module_tools.length\\); console.log\\('personas:', d.personas.length\\); console.log\\('decisions:', d.decisions.map\\(x=>x.id+\\(x.gating?'\\(GATING\\)':''\\)\\).join\\(', '\\)\\); console.log\\('new_data_objects:', d.new_data_objects.length, '| vendors_new:', d.vendors_new.length, '| solutions_new:', d.solutions_new.length\\);\")",
+      "Bash(node -e \"const d=require\\('c:/dev/domain-map/.tmp_deploy/CCAAS-build.json'\\); console.log\\('OK caps='+d.capabilities.length+' modules='+d.modules.length+' solutions='+d.solutions_new.length+' new_dos='+d.new_data_objects.length+' lifecycles='+d.lifecycle_states.length+' tools='+d.tools.length+' personas='+d.personas.length+' decisions='+d.decisions.length\\);\")",
+      "Bash(node -e \"const d=require\\('c:/dev/domain-map/.tmp_deploy/DCIM-build.json'\\); console.log\\('OK caps='+d.capabilities.length+' mods='+d.modules.length+' new_do='+d.new_data_objects.length+' lifecycle='+d.lifecycle_states.length+' tools='+d.tools.length+' module_tools='+d.module_tools.length+' personas='+d.personas.length+' solutions='+d.solutions_new.length+' decisions='+d.decisions.length\\);\")",
+      "Bash(node -e \"const d=require\\('c:/dev/domain-map/.tmp_deploy/VULN-MGMT-build.json'\\); console.log\\('OK parse'\\); console.log\\('capabilities',d.capabilities.length\\); console.log\\('modules',d.modules.length\\); console.log\\('new_data_objects',d.new_data_objects.map\\(o=>o.data_object_name\\).join\\(', '\\)\\); console.log\\('lifecycle sets',d.lifecycle_states.length\\); console.log\\('tools',d.tools.length\\); console.log\\('module_tools',d.module_tools.length\\); console.log\\('personas',d.personas.length\\); console.log\\('decisions',d.decisions.length\\);\")",
+      "Bash(node -e \"const fs=require\\('fs'\\);const t=fs.readFileSync\\('c:/dev/domain-map/.tmp_deploy/DCIM-build.md','utf8'\\);console.log\\('words='+t.split\\(/\\\\s+/\\).filter\\(Boolean\\).length\\);console.log\\('em-dash present='+t.includes\\('—'\\)\\);\")",
+      "Bash(node -e \"const fs=require\\('fs'\\);const t=fs.readFileSync\\('c:/dev/domain-map/.tmp_deploy/CCAAS-build.md','utf8'\\);console.log\\('words='+t.split\\(/\\\\s+/\\).filter\\(Boolean\\).length\\);console.log\\('em-dash present='+t.includes\\('—'\\)\\);\")",
+      "Bash(node -e \"const fs=require\\('fs'\\);const t=fs.readFileSync\\('c:/dev/domain-map/.tmp_deploy/VULN-MGMT-build.md','utf8'\\);console.log\\('words:',t.split\\(/\\\\s+/\\).filter\\(Boolean\\).length\\);console.log\\('em-dashes:',\\(t.match\\(/—/g\\)||[]\\).length\\);\")",
+      "Bash(git -C c:/dev/domain-map checkout -- audits/DCIM/history.md)",
+      "Bash(rg --no-ignore --hidden -l -e \"catalog/skills\" -e \"catalog/skill-specs\" -e \"catalog\\\\\\\\\\\\\\\\skills\" -g \"*.ts\" -g \"*.js\" -g \"*.mjs\" -g \"*.sh\")"
     ],
     "additionalDirectories": [
       "C:\\tmp",

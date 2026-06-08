@@ -466,3 +466,16 @@ Total writes: 16 rows across 4 tables (15 PATCH on data_objects + trigger_events
 ### Post-fix status
 
 next_action_by: user (decisions owed: B2-MODULE-SPLIT and the rest of the b2 surface; the build and all M1-gated items follow the split pick).
+
+## 2026-06-07 — Build (grounded review)
+
+AIOPS was a Phase-B-only stub (7 masters, handoffs, a system skill) with 0 capabilities and 0 modules — it carried a feedback_needed q-file with no market grounding. This pass built the missing foundation and executed every agent-solvable item so the domain ends at next_action_by: user.
+
+Executed (all record_status=new):
+- Phase A: 6 capabilities (Event Correlation, Anomaly Detection, Alert Noise Reduction, Root Cause Analysis, Predictive Insights, Detection Model Operations) + capability_domains.
+- Phase M: 2 full modules — AIOPS-EVENT-CORRELATION (324), AIOPS-PREDICTIVE-INTELLIGENCE (325) — + domain_module_capabilities; all 7 existing masters assigned to modules, plus 9 telemetry consumer rows on 324 (metric_series, log_entries, capacity_records, service_maps, network_flow_records, endpoint_anomaly_findings, real_user_sessions, dc_power_distribution_units, network_paths).
+- Phase B completion: root_cause_analyses lifecycle states (B12); intra-domain + users + cross-domain data_object_relationships (B6/B7/B8, 9 rows); 7 lifecycle-cover trigger_events (B9); handoff module-FK backfill (B10b) — 8 outbound source_domain_module_id, 16 inbound target_domain_module_id.
+- Phase S: tool rows + domain_module_tools wired so aiops-system derives a non-empty toolset.
+- Phase E: 4 personas + role_modules.
+
+Left for the user (q-AIOPS.md): module-split confirmation (built as 2-module), the destructive topology.published re-attribution, MLOps ownership, three pattern-flag freezes (overwrites), the channel-vs-abstraction swap, and APQC tag promotion / handoff-154 PCF reconcile. B3 ideas (market-surface objects, OBS feedback loop, SOAR/ITPA remediation) parked as non-blocking.

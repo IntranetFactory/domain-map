@@ -1,13 +1,13 @@
 # Discovery procedure
 
-Reconciles the HQ-emitted spec.json against what's actually deployed in this deployment. Runs in two modes:
+Reconciles the HQ-emitted spec.json against what's actually deployed in this tenant. Runs in two modes:
 
 - **Full discovery** (cold start, or `state.discovered_against_major < spec.facts_major`): every entity in the spec.json is verified against the live deployment.
 - **Incremental reconciliation** (`state.discovered_at < spec.emitted`, same major): diff spec against existing state; only verify what changed.
 
 Both modes share the same per-entity check; full discovery is just the incremental case with an empty starting state.
 
-Discovery is read-only against the deployment. It never inserts, updates, or deletes catalog data. Its output is `state.yaml`.
+Discovery is read-only against the tenant. It never inserts, updates, or deletes catalog data. Its output is `state.yaml`.
 
 ---
 
@@ -23,15 +23,15 @@ The module slug derives from the module code (lowercase, dashes -> underscores: 
 
 Record in `state.modules`:
 - `present: true` with the live `module_id` and `module_name`, OR
-- `present: false` with `reason: "not part of this deployment"`
+- `present: false` with `reason: "not deployed in this tenant"`
 
-A module being absent is not a failure; it's a deployment choice. Note it in state and skip its entities in subsequent passes.
+A module being absent is not a failure; it's tenant choice. Note it in state and skip its entities in subsequent passes.
 
 ---
 
 ## Pass 2: entity (data_object) discovery
 
-For each `data_objects` entry in the spec.json whose owning module is `present: true`, search the deployment's `entities` table by candidate names. The search order matters: catalog name first, then known aliases, then a fuzzy fallback if neither matches.
+For each `data_objects` entry in the spec.json whose owning module is `present: true`, search the tenant's `entities` table by candidate names. The search order matters: catalog name first, then known aliases, then a fuzzy fallback if neither matches.
 
 ```bash
 # Step 2a: exact match on the catalog name
@@ -65,14 +65,14 @@ semantius call crud postgrestRequest '{"method":"GET","path":"/fields?entity_id=
 
 Compare against `spec.data_objects.<name>.lifecycle_states` (which implies a `status` or `state` field exists). The skill cares about field-level shape mainly for:
 
-- Lifecycle fields the spec.json implies (`status`, `state`, or whatever this deployment named it). If absent, record in `state.field_omissions` and note the lifecycle states can't be tracked.
-- FK fields to other facts-listed entities. If this deployment dropped a FK (e.g. removed the `cost_center_id` link on `job_requisitions`), record the omission so the skill doesn't generate queries referencing it.
+- Lifecycle fields the spec.json implies (`status`, `state`, or whatever the tenant named it). If absent, record in `state.field_omissions` and note the lifecycle states can't be tracked.
+- FK fields to other facts-listed entities. If the tenant dropped a FK (e.g. removed the `cost_center_id` link on `job_requisitions`), record the omission so the skill doesn't generate queries referencing it.
 
 Field-by-field rename discovery is expensive and usually not worth it. Default behavior: trust catalog field names. Add a per-field reconciliation only if a later runtime call fails because of a missing field (the failure becomes a lesson, see [lessons-format.md](lessons-format.md)).
 
 ---
 
-## Pass 4: custom entities added in this deployment
+## Pass 4: custom entities the tenant added
 
 After Pass 2, query the module for any entities NOT in the facts list:
 
@@ -86,7 +86,7 @@ Record in `state.custom_entities`. Ask the user for each, substituting the confi
 
 ## Pass 5: relationship and handoff sanity
 
-The spec.json lists intra-domain relationships and outbound handoffs. The skill does not verify each one structurally during discovery; that's the catalog's job at emit time. The skill only flags relationships whose endpoints are missing from this deployment:
+The spec.json lists intra-domain relationships and outbound handoffs. The skill does not verify each one structurally during discovery; that's the catalog's job at emit time. The skill only flags relationships whose endpoints are missing from this tenant:
 
 - If a relationship references an omitted entity, suppress it from the live model.
 - If an outbound handoff's source module is absent, suppress the handoff.
@@ -176,7 +176,7 @@ Specifically:
 - **Fuzzy entity match** (Pass 2c): always ASK
 - **Custom entity found** (Pass 4): always ASK (to classify its role)
 - **Field omissions detected**: log to state, don't ASK upfront — let runtime failures drive it
-- **Module not deployed**: ASSUME deployment choice, don't ASK
+- **Module not deployed**: ASSUME tenant choice, don't ASK
 - **Exact-match entity**: ASSUME, don't ASK
 - **Alias match**: ASSUME (alias was authored at HQ, it's a known synonym), don't ASK
 

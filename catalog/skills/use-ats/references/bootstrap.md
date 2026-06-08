@@ -27,15 +27,15 @@ This skill delegates all CLI mechanics to `use-semantius`. Without it, the disco
 
 ---
 
-## Check 3: CLI can authenticate against the platform
+## Check 3: CLI can authenticate against the tenant
 
 **How to check:** run `semantius call crud getCurrentUser '{}'` from the project root (NOT from any subfolder; the CLI reads `.env` from cwd).
 
-- If the call returns a user object with `email` and `semantius_org`, the platform is reachable. Surface the org to the user so they can confirm they are connected to the right one.
+- If the call returns a user object with `email` and `semantius_org`, the tenant is reachable. Surface the org to the user so they can confirm the right tenant.
 - If the call returns a JWT-audience error (`required audience not found, received [...]`), halt and follow the [JWT-audience halt procedure in the parent SKILL.md](../SKILL.md#hard-rules-inherited-from-the-catalog). Surface the verbatim error.
 - If the call returns any other authentication error (401, expired token, missing `.env`), halt with:
 
-> The Semantius CLI could not authenticate against your Semantius platform. Configure your API key:
+> The Semantius CLI could not authenticate against the tenant. Configure your API key:
 >
 > 1. Place a `.env` file in your project root with `SEMANTIUS_API_KEY=<your-key>`
 > 2. Generate an API key from the Semantius UI: Settings > API Keys > New Key
@@ -45,9 +45,9 @@ This skill delegates all CLI mechanics to `use-semantius`. Without it, the disco
 
 ---
 
-## Check 4: target domain module is deployed in this platform
+## Check 4: target domain module is deployed in this tenant
 
-**How to check:** query the platform's `modules` table for the module slug recorded in `spec.json`'s `domain.code`:
+**How to check:** query the tenant's `modules` table for the module slug recorded in `spec.json`'s `domain.code`:
 
 ```bash
 semantius call crud postgrestRequest '{"method":"GET","path":"/modules?module_slug=eq.<slug>&select=id,module_slug,module_name"}'
@@ -58,7 +58,7 @@ The slug is derived from the domain code, lowercased and underscored (e.g. `ATS`
 - If the query returns one row, record `module_id` and `module_slug` in `state.yaml` under `deployment` and proceed.
 - If the query returns zero rows, halt with the error template below, substituting the configured domain at runtime:
 
-> The `<spec.domain.name>` domain is not deployed in your platform. Deploy the domain blueprint first:
+> The `<spec.domain.name>` domain is not deployed in this tenant. Deploy the domain blueprint first:
 >
 > 1. Pull the blueprint: `https://semantius.app/catalog/<spec.domain.code lowercase>/blueprint`
 > 2. Run the semantic-model-deployer skill against the blueprint
@@ -66,7 +66,7 @@ The slug is derived from the domain code, lowercased and underscored (e.g. `ATS`
 >
 > Re-run this skill once the module is live.
 
-- If the query returns multiple rows (shouldn't happen — `module_slug` is unique), surface all rows and halt with a "catalog integrity issue" message; the user investigates.
+- If the query returns multiple rows (shouldn't happen — `module_slug` is unique), surface all rows and halt with a "tenant catalog integrity issue" message; the user investigates.
 
 ---
 
@@ -78,7 +78,7 @@ Record the deployment metadata in `state.yaml`:
 deployment:
   module_slug: <from check 4>
   module_id: <from check 4>
-  org: <from check 3 getCurrentUser response>
+  tenant_org: <from check 3 getCurrentUser response>
   bootstrap_passed_at: <ISO timestamp>
 ```
 
