@@ -11,14 +11,37 @@
 schema_version: 2
 domain: DI
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-06-07"
+next_action_by: agent
+last_audit: "2026-06-08"
 
-# UNBUILT domain: 0 domain_modules, 0 capabilities (confirmed live 2026-06-07). The entire
-# M-band cascade below is gated on the user picking the module split topology (B2-S1). The agent
-# does NOT scaffold modules/capabilities unprompted; B1A-BUILD surfaces the build for the user.
+# UNBUILT domain: 0 domain_modules, 0 capabilities (confirmed live 2026-06-07, re-verified
+# 2026-06-08). The entire M-band cascade below is gated on the user picking the module split
+# topology (B2-S1). The agent does NOT scaffold modules/capabilities unprompted; B1A-BUILD
+# surfaces the build for the user.
+#
+# 2026-06-08 PHASE 0 ran (Rule #22 forcing step; the 2026-06-07 pass surfaced market-shape b2
+# calls WITHOUT a current Phase 0 report, leaning on generic "vendor-neutral" reasoning). Fresh
+# vendor-surface study of 7 flagships -> .tmp_deploy/DI-phase0-2026-06-08.md. Market confirmed
+# from the live domain row: Data Integration = ELT/ETL/CDC/replication for analytics, explicitly
+# "distinct from iPaaS". Flagships studied: Fivetran, Airbyte, dbt Labs, Confluent (Kafka Connect
+# + Schema Registry), Qlik Replicate / Striim (compliance-grade CDC), Informatica IDMC (CDIR +
+# CDI), Matillion Data Productivity Cloud. NO recommendations REVERSED: fresh evidence CONFIRMED
+# every prior call. The key new grounding is that the 2-module ingest/deliver split (B2-S1=a) is
+# how the packaging suites actually divide the surface (Informatica CDIR vs CDI ship as distinct
+# service modules; Matillion splits orchestration vs transformation pipelines), not merely a
+# "vendor-neutral" abstraction. q5 (B2-S3) and q6 (B2-S5) confirmed by run-centric failure/
+# completion events at Fivetran/Airbyte/Qlik/Striim (and the genuine Snowpipe-on-table vs
+# connector-run split that motivates the parallel-event hedge on q6). q2/q4 confirmed by dbt
+# model contracts + Confluent immutable schema versions; q3 (single-approver) re-grounded as the
+# lower-confidence flag (flagships gate review more than single named approver). q-DI.md
+# regenerated with named-vendor evidence inline. Still feedback_needed: 5 b2 open + 1 b1a
+# destructive-surface (em-dash) + b3, awaiting a-DI.md.
 
 b1a:
+  - id: B1A-B9D-VERIFY
+    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
+    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
+    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-EMDASH-BL
     summary: "DESTRUCTIVE (surface only): replace one em-dash in domains.business_logic on DI id=89 with a comma to comply with the project no-em-dashes rule."
     finding: "domains.business_logic on DI id=89 contains one em-dash character: 'Streaming and ELT runtimes, change-data-capture engines, and schema-evolution handling [em-dash] the platform IS the kernel.' Project rule (CLAUDE.md No em-dashes) forbids em-dashes in any catalog text. domains.description, catalog_tagline, catalog_description are all clean (catalog copy authored 2026-06-07 is em-dash free)."

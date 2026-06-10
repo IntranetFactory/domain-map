@@ -2,7 +2,13 @@ schema_version: 2
 domain: PSA
 status: feedback_needed
 next_action_by: user
-last_audit: "2026-06-06"
+last_audit: "2026-06-09"
+
+# b1a (agent-solvable open items): none. B1A-B9D-VERIFY resolved 2026-06-09 (B9d ran; see
+# history 2026-06-09 entry). B9d outcome: 5 RESOLVED, 12 ORPHAN owed by target domains
+# (B1B-B9D-ORPHANS below), 1 boundary tied to B2-S3, 1 new MIS-TAG (q12), 2 redundant weak
+# tags (already q7). The additive E4 RACI fix (3 process_raci rows on 52/180/302) executed.
+b1a: []
 
 # Open items after the 2026-06-06 state-driven Audit (execute pass). Resolved + executed
 # items live in history.md (2026-06-06 entry). next_action_by=user: every remaining b1a
@@ -17,6 +23,12 @@ b1a_destructive_awaiting_approval:
     finding: "Both handoffs now carry a better agent_curated tag (132 -> process 808 already present; 1129 -> process 148 inserted 2026-06-06). The weak discovery_substring rows (process 569 'Assign resources to product/service project') remain alongside and should be removed. 569 is a weak match: 132's target is procurement of contingent staff (S2P), 1129's target is the CRM renewal trigger, neither is internal resource assignment."
     action: "DELETE handoff_processes WHERE process_id=569 AND handoff_id IN (132, 1129). Destructive -> needs user sign-off."
     affected_handoffs: [132, 1129]
+
+  - id: B1A-B9D-MISTAG-1020
+    summary: "B9d MIS-TAG: re-tag handoff 1020 from process 1324 to 807 (or delete the wrong tag). Surfaced as q12."
+    finding: "Handoff 1020 (PSA-PROJECT-FINANCIALS -> CLM on project_billing_milestone.reached, payload 219, updates contract obligations) carries an agent_curated handoff_processes tag to process 1324 ('Prepare periodic financial forecasts', 9.1.2.4). That process does not match the work. The correct APQC home is CLM contract management, process 807 ('Manage contracts', 4.2.3.4), which CLM already realizes (gated + RACI in modules 127/129); re-pointing makes 1020 RESOLVED under B9d."
+    action: "Re-point handoff_processes.process_id 1324 -> 807 on handoff 1020 (overwrites an existing non-empty agent_curated tag = destructive), OR DELETE the 1324 row and INSERT an 807 row at record_status='new'. Either path needs user sign-off. Recommended: re-tag to 807."
+    affected_handoffs: [1020]
 
   - id: B1A-S7
     summary: "Rule #15 notes-pollution sweep (carry from 2026-05-30 B1-S7)."

@@ -386,3 +386,56 @@ Two prior open items were found ALREADY DONE on live (snapshot stale) and droppe
 ### Post-fix status
 
 `next_action_by: user`. Everything the agent can do without the build or a user decision is done. The single unblocking gate is B2-MOD-SHAPE (module count), which releases B1A-BUILD and the entire b1b cascade.
+
+## 2026-06-08: Phase 0 + q-file regeneration (Rule #22 remediation)
+
+### Why this pass ran
+
+The 2026-06-07 pass surfaced market-shape b2 calls (module count, AUDIT-vs-GRC entity placement, naming authority, peer-vs-sub-domain) but skipped Phase 0: the q-file recommendations rested on generic "matches how the vendors present their product" reasoning with no named-vendor specifics and no Phase 0 report. Rule #22's forcing step (skill-changelog 2026-06-08) requires every market-shape recommendation to be backed by a CURRENT Phase 0 vendor-surface report produced this pass, with named-vendor evidence embedded inline. This pass runs Phase 0, then regenerates the q-file from its evidence. Research + file-authoring only: no DB writes, the build stays gated on the user's answers.
+
+### Vendor study (Phase 0)
+
+Report saved to [.tmp_deploy/AUDIT-phase0-2026-06-08.md](../../.tmp_deploy/AUDIT-phase0-2026-06-08.md). Five flagships studied (2025-2026 product docs):
+
+- **AuditBoard** (rebranded "Optro" 2025): OpsAudit = full plan-to-report lifecycle (planning, fieldwork, version-controlled work papers, e-sign-offs, findings, reporting); SOXHUB = SOX control documentation/testing/walkthroughs; RiskOversight = the enterprise risk register the plan is built from. Modern internal-audit pure-play.
+- **Wolters Kluwer TeamMate+**: single end-to-end audit-workflow product (annual + multi-year planning, continuous risk assessment, electronic working papers, controls-framework management, 180+ test library, issue tracking, time/expense, follow-up). Big-4 fieldwork heritage. TeamMate Analytics is a companion.
+- **Workiva**: one connected platform, shared data layer, spanning internal audit + SOX/internal controls + ESG assurance + risk + policies; full audit trail granular to the narrative; findings aggregate up to the audit committee.
+- **Diligent HighBond** (formerly ACL Galvanize): app-decomposed into Projects (audit projects + work papers), Results (issue remediation + workflow), Frameworks (controls), Storyboards (committee/board reporting), ACL Analytics (data-driven testing). The one flagship that separates fieldwork from issue management at the product-surface level.
+- **ServiceNow IRM Audit Management**: the suite competitor; audit is one IRM workflow (plans group engagements; engagements carry tasks of type Activity / Control Test / Interview / Walkthrough, observations, evidence requests); controls and risks are mastered suite-wide, not by an audit-specific product.
+
+### Surface-matrix highlights
+
+- **Core masters confirmed across the flagships** (3+ vendors): audit_universe_entities, audit-scoped risk_assessments, audit_plans, audit_engagements, audit_programs, engagement_workflows, work_papers, audit_evidence + evidence_requests, control_tests, audit_samples, audit_walkthroughs, audit_findings, management_responses, audit_recommendations, follow_up_actions, audit_reports, internal_control_narratives. The current live footprint (8 masters) captures the headline arc but is missing the planning-input layer (universe + risk assessment + programs), the evidence layer (evidence + evidence requests + samples), and the response layer (management_responses).
+- **Workflow substrate beneath the headline masters**: annual/multi-year planning -> risk assessment per universe entity -> engagements (scope, team, phases) -> audit programs / engagement workflows -> work papers + control tests + walkthroughs drawing on samples and evidence raised via evidence requests -> findings -> management responses + recommendations -> follow-up/remediation to closure -> reports to leadership and the audit committee.
+- **Compliance entities (assurance market, load regardless of vendor presence)**: sox_audit_trails (immutable change log), sod_violations (segregation-of-duties), electronic_signature_records (work-paper sign-off). Add PCAOB AS 2201 + IIA Standards / Global Internal Audit Standards to domain_regulations alongside the existing SOX / ISO 27001 / SOC 2.
+- **Consumed, not mastered**: controls (control library) and risks (enterprise risk register) are GRC/IRM-owned across every flagship; AUDIT masters the audit-scoped assessment (per-engagement risk score, per-engagement control test), not the registers.
+- **Product-packaging signal for the module split**: only HighBond separates fieldwork (Projects) from issue management (Results); AuditBoard / TeamMate+ / Workiva / ServiceNow run the full lifecycle on one engagement surface. This is the named-vendor basis for the 2-module recommendation over 3.
+
+### Per-decision verdicts (grounded inline in q-AUDIT.md)
+
+| q | b2 id | verdict | named-vendor grounding |
+|---|---|---|---|
+| q1 | B2-MOD-SHAPE | a (2 modules) | 4 of 5 flagships run one lifecycle surface; only HighBond splits Projects/Results. Market-shape. |
+| q2 | B2-AUDIT-VS-GRC | a (AUDIT) | All 4 pure-plays master management_responses + committee packs + audit-scoped risk in their audit products; only suite ServiceNow IRM masters at suite level. Market-shape (where-mastered). |
+| q3 | B2-NOROLE-PAYLOADS | a (consumer DMDOs) | Flagships pull inbound auditable artifacts into the engagement as testable evidence; consumer records capture that. Workflow-shape. |
+| q4 | B2-B3-NAMING | c (claim work_papers, rename control_tests) | work_papers is audit-only across the surface; control_tests overlaps GRC's control library (ServiceNow IRM Control Test task type). Naming-shape. |
+| q5 | B2-PATTERN-FLAGS.reportapprover | yes (single approver) | AuditBoard OpsAudit e-sign-offs; report is the committee deliverable with an accountable owner. Workflow-shape. |
+| q6 | B2-PATTERN-FLAGS.workpaperlock | yes (submit-lock) | AuditBoard version-controlled work papers + e-sign-off, Workiva full audit trail, TeamMate+ controlled working papers. Workflow-shape. |
+| q7 | B2-PATTERN-FLAGS.findinglock | yes (submit-lock) | Issued finding drives management response + remediation across all 5 flagships. Workflow-shape. |
+| q8 | B2-PATTERN-FLAGS.engagementlock | yes (default; genuine split) | AuditBoard locks engagements post-completion; TeamMate+ keeps them editable. Genuine product-shape divergence surfaced honestly. Workflow-shape. |
+| q9 | B2-BAD-TAGS | a (delete) | Substring-mismatch tags carry no meaning; destructive, needs sign-off. Non-market. |
+| q10 | B2-SELF-LOOP | a (delete) | Undocumented self-loop verb; carry-forward is a real concept but the row encodes nothing. Destructive, needs sign-off. Non-market. |
+| q11 | B2-PAIRWISE | b (defer) | No modules yet, so cross-module reconciliation is empty-link noise today. Non-market. |
+| q12 | B2-DOMAIN-PEER | a (peer) | 4 independent pure-plays (AuditBoard, TeamMate+, Workiva, HighBond) clear Rule #2; only suites fold it. Market-shape (peer-vs-sub-domain). |
+| q13 | B3 | yes (additive, post-build) | Core entities close planning-input/evidence/response gaps; deeper Common candidates each want a verification pass. Optional. |
+
+### Reversals
+
+None. Unlike the PRM 2026-06-08 pass (which reversed two recommendations), the fresh named-vendor surface CONFIRMED every prior AUDIT recommendation. What changed is the grounding quality: each q-file recommendation now cites which flagship packages the surface which way, by name, rather than the prior generic "matches how the vendors present their product" reasoning. The trailing q-file comment records `reversed: none`.
+
+### Files written / edited
+
+- `.tmp_deploy/AUDIT-phase0-2026-06-08.md` (new Phase 0 report)
+- `audits/AUDIT/q-AUDIT.md` (regenerated with inline named-vendor grounding + Grounding block + phase0 path in the agent-map comment)
+- `audits/AUDIT/state.yaml` (added the dated 2026-06-08 Phase 0 note block after the supersession header; enriched the `why` framing on B2-MOD-SHAPE / B2-AUDIT-VS-GRC / B2-B3-NAMING / B2-DOMAIN-PEER with named-vendor evidence; set last_audit 2026-06-08; status stays feedback_needed / next_action_by user; no b1a/b1b/b2/b3 item deleted or restructured)
+- `audits/AUDIT/history.md` (this section)

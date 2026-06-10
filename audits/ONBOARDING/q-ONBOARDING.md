@@ -69,6 +69,16 @@ a7:
 
 ---
 
+q9: Applicant Tracking and Recruiting forwards onboarding journey to Employee Onboarding to manage employee onboarding, but Employee Onboarding does not yet have anyone assigned to manage employee onboarding, so this step has no owner. How should it be handled?
+- a) Record it now as work Employee Onboarding owns, and assign a named owner once Employee Onboarding sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Employee Onboarding decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a9:
+
+---
+
 ## Optional (will not hold up the build)
 
 q8: Flagship onboarding vendors surface deeper objects than the current model carries. Should I research and add the ones that hold up (per-document records, sub-typed IT / HR / compliance provisioning tasks, 30 / 60 / 90 check-ins, a manager-side action checklist, background-check records, day-one equipment orders, a program-level buddy configuration, plus the W-4 / W-2, OSHA new-hire safety, and US state new-hire-reporting regulations)? (yes/no)
@@ -79,4 +89,4 @@ a8:
 
 ---
 
-<!-- agent map, ignore: q1=B2-WORKFLOW-GATE-VERBS q2=B1A-APQC-REPLACE q3=B1A-SELF-CONTAIN q4=B2-NOTES-POLLUTION q5=B2-PATTERN-FLAGS.journeysubmitlock q6=B2-PATTERN-FLAGS.journeysingleapprover q7=B2-PATTERN-FLAGS.tasksubmitlock q8=B3-PRIOR | domain_id=99 -->
+<!-- agent map, ignore: q1=B2-WORKFLOW-GATE-VERBS q2=B1A-APQC-REPLACE q3=B1A-SELF-CONTAIN q4=B2-NOTES-POLLUTION q5=B2-PATTERN-FLAGS.journeysubmitlock q6=B2-PATTERN-FLAGS.journeysingleapprover q7=B2-PATTERN-FLAGS.tasksubmitlock q8=B3-PRIOR q9=B2-B9D-OWN-224 | domain_id=99 -->

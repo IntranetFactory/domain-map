@@ -8,13 +8,37 @@
 # cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 # re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
 # === end supersession note ===
+#
+# 2026-06-08 PHASE 0 ran (the Rule #22 forcing step the 2026-06-07 pass skipped before
+# surfacing market-shape b2 calls; see skill-changelog 2026-06-08 + SKILL.md Rule #22).
+# Fresh vendor study of 5 flagships -> .tmp_deploy/AUDIT-phase0-2026-06-08.md. Flagships:
+# AuditBoard (OpsAudit + SOXHUB + RiskOversight), Wolters Kluwer TeamMate+, Workiva,
+# Diligent HighBond (formerly ACL Galvanize), ServiceNow IRM Audit Management (suite peer).
+# NO recommendation REVERSED: the named-vendor surface CONFIRMED every prior call, but the
+# q-file grounding is upgraded from generic ("matches how vendors present their product") to
+# named-vendor specifics. Key verdicts now grounded inline: 2-module split (B2-MOD-SHAPE=a:
+# 4 of 5 flagships run one lifecycle surface; only HighBond separates Projects/Results);
+# management_responses + committee_meetings + audit-scoped risk_assessments stay in AUDIT
+# (B2-AUDIT-VS-GRC=a: all 4 pure-plays master them; only suite ServiceNow IRM masters at
+# suite level); work_papers canonical-claim + control_tests rename (B2-B3-NAMING=c:
+# work_papers is audit-only, control_tests overlaps GRC's control library); AUDIT stays a
+# peer domain (B2-DOMAIN-PEER=a: 4 independent pure-plays clear Rule #2; only suites fold it).
+# Compliance substrate (this is an assurance market): SOX audit trails, segregation-of-duties
+# records, and e-signed work papers are load-bearing entities; add PCAOB AS 2201 + IIA Standards
+# to domain_regulations. q-AUDIT.md regenerated with inline named-vendor evidence per recommendation.
+# Still feedback_needed: all 8 b2 open, awaiting a-AUDIT.md. Domain remains UNBUILT (0 modules);
+# the build cascade stays surfaced, not scaffolded, gated on B2-MOD-SHAPE.
 schema_version: 2
 domain: AUDIT
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-06-07"
+next_action_by: agent
+last_audit: "2026-06-08"
 
 b1a:
+  - id: B1A-B9D-VERIFY
+    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
+    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
+    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-B9-HANDOFFS
     summary: "5 AUDIT trigger events have zero handoffs: 228, 232, 602, 603, 605 (event_category half DONE 2026-06-07)."
     finding: |
@@ -135,13 +159,13 @@ b2:
     summary: "2-module versus 3-module split for AUDIT."
     question: "AUDIT-PLAN-ENGAGE + AUDIT-FINDINGS-REPORTING (default), or AUDIT-UNIVERSE-RISK + AUDIT-FIELDWORK + AUDIT-ISSUES-REPORTING (cleaner role separation, more cross-module handoffs)?"
     options: ["2-module (recommended, lighter)", "3-module (cleaner role separation, ~8 B9b handoffs)"]
-    why: "Upstream of every B1B-* item and B1A-BUILD; shapes each MISSING entity host and capability realization."
+    why: "Upstream of every B1B-* item and B1A-BUILD; shapes each MISSING entity host and capability realization. Phase 0 (2026-06-08) grounds 2-module as the vendor-majority cut: 4 of 5 flagships (AuditBoard OpsAudit, TeamMate+, Workiva, ServiceNow IRM) run the whole plan-to-report lifecycle on one engagement spine and split only at the planning-vs-issues seam; only Diligent HighBond separates fieldwork (Projects app) from issue management (Results app), which is the case for 3 modules. 3-module roughly doubles cross-module handoffs and no flagship except HighBond reinforces the universe/risk-vs-fieldwork seam."
 
   - id: B2-AUDIT-VS-GRC
     summary: "Scope of audit versus GRC for management_responses, audit_committee_meetings, risk_assessments (audit-scoped)."
     question: "Do these three entities belong in AUDIT or GRC?"
     options: ["AUDIT (vendor surface puts them in audit-focused products)", "GRC (enterprise-scale buyers often have GRC master them)", "Mixed per entity"]
-    why: "Upstream of prior-audit B1-M2, B1-M6, B1-M7 placement and Bucket 3 items 7-8."
+    why: "Upstream of prior-audit B1-M2, B1-M6, B1-M7 placement and Bucket 3 items 7-8. Phase 0 (2026-06-08) grounds AUDIT (option a): all 4 pure-plays master these in their audit products (AuditBoard + Workiva committee aggregation, HighBond Storyboards committee/board reporting; AuditBoard RiskOversight / TeamMate+ Continuous Risk Assessment / Workiva Risk score audit-scoped risk; management responses captured against findings everywhere). Only the suite competitor ServiceNow IRM masters them at the suite/IRM level, which is the GRC posture. AUDIT masters the audit-scoped risk assessment (per-engagement score), not the enterprise risk register (consumed from GRC regardless)."
 
   - id: B2-NOROLE-PAYLOADS
     summary: "13 inbound handoffs carry payloads AUDIT does not currently model as DMDO rows."
@@ -154,7 +178,7 @@ b2:
     summary: "work_papers and control_tests bare-word naming-authority claim or rename."
     question: "Claim canonical bare-word (is_canonical_bare_word=true + rationale) or rename to audit_work_papers / audit_control_tests?"
     options: ["Claim canonical (AUDIT owns both terms)", "Rename to prefixed forms", "Mixed"]
-    why: "Rule #9 wants the claim recorded. control_tests overlaps GRC's control-test concept; work_papers is largely AUDIT-only."
+    why: "Rule #9 wants the claim recorded. Phase 0 (2026-06-08) grounds Mixed (option c): work_papers is audit-specific across the whole flagship surface (AuditBoard OpsAudit, TeamMate+, Workiva, HighBond Projects all use the bare term, no adjacent domain competes), so AUDIT claims it canonical; control_tests overlaps GRC's control library, which the GRC/IRM suites own (ServiceNow IRM runs Control Test as one of four task types; AuditBoard/Workiva test against GRC-owned controls), so rename it prefixed to avoid the collision."
 
   - id: B2-PATTERN-FLAGS
     summary: "Pattern flags positive consideration on 8 masters (Rule #12)."
@@ -184,7 +208,7 @@ b2:
     summary: "Confirm AUDIT remains as peer domain or fold into GRC."
     question: "Peer domain (default; pure-plays keep it first-class) or fold into GRC?"
     options: ["Peer domain (recommended, Rule #2 satisfied)", "Fold into GRC"]
-    why: "Some suite competitors treat audit as a GRC sub-module; pure-plays disagree. AUDIT is currently parent_domain_id=15 (under GRC); decide whether that stays a sub-domain or becomes a peer."
+    why: "Some suite competitors treat audit as a GRC sub-module; pure-plays disagree. AUDIT is currently parent_domain_id=15 (under GRC); decide whether that stays a sub-domain or becomes a peer. Phase 0 (2026-06-08) grounds peer (option a): 4 independent pure-play vendors each sell a dedicated internal-audit product (AuditBoard, Wolters Kluwer TeamMate+, Workiva, Diligent HighBond), clearing the Rule #2 three-pure-play bar comfortably; only suite competitors fold it (ServiceNow IRM treats audit as one IRM workflow; Archer the same)."
 
 b3:
   - id: B3-AUDIT-UNIVERSE-ENTITIES

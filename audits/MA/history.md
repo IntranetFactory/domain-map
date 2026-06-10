@@ -532,3 +532,74 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-08 - Review (Rule #21 additive execution)
+
+Trigger: "review MA domain". Continued from `state.yaml` (status was `feedback_needed`). Confirmed
+tenant `adenin` (`getCurrentUser` -> `ma@adenin.com`). Loader: `.tmp_deploy/ma_review_2026_06_08.ts`
+(idempotent; re-run inserts 0). All inserts omit `record_status` (DB default `new`, Rule #1); all
+`notes` left empty (Rule #15); no vendor/product names outside `data_object_aliases.alias_name`
+(Rule #18); no em-dashes.
+
+### Reframing that drove this pass
+
+The 2026-05-30 / 05-31 / 06-02 audits parked B12 / B6 / B7 / B11 / B4 as `b1b` "blocked on user
+wording". That was the pre-Rule-#21 interpretation. Under **Rule #21 + the CLAUDE.md project rule**,
+lifecycle states, relationships, aliases, classification, and pattern flags are *additive/corrective*
+work the agent EXECUTES now at `record_status='new'` for in-record review, not a chat gate. So this
+review executed them rather than re-asking. Genuinely user-owned items (a destructive tag retarget)
+stay in the q-file.
+
+### Live-state reconciliation (F-band already migrated)
+
+The per-domain-skill migration ran catalog-wide since 06-06: MA's 4 per-module skills (343-346) are
+gone, replaced by ONE domain-grain skill `ma-system` (id 414, `domain_module_id=null`), and tools now
+live on `domain_module_tools` (12 rows: 197=6, 198=2, 199=3, 200=1). `skill_tools` table dropped.
+=> **F1/F2/F3/F4 now pass.** F5 Semantius score computable: **strict 10/12 = 0.83, operational 0.83**
+(gap = `generate_text` id 49 + `classify_text` id 53, both external AI compute; expected for a
+marketing domain). The state.yaml `B2-SYSTEM-SKILL-SPLIT-REVIEW` item is now stale (the 343-346 skills
+it referenced no longer exist) and is removed.
+
+### Executed this pass
+
+| Band | Action | Result |
+|---|---|---|
+| B13 | Classify `entity_type` on 5 masters | campaigns 116 / emails 117 / journeys 119 / forms 120 -> `operational_workflow`; lead_scores 118 -> `computed` (derived score; no lifecycle, B12-exempt). All were `unclassified`. |
+| B4 | Pattern-flag re-eval (PATCH default-false) | `has_submit_lock=true` on 116/117/119; `has_personal_content=true` on 120 (forms collect PII); 118 stays false (derived). |
+| B12 | Lifecycle states on the 4 operational_workflow masters | 13 rows. campaigns draft->active(gate `launch_campaign`)->completed; emails draft->scheduled(gate `send_marketing_email`)->sent; journeys draft->active(gate `activate_nurture_journey`)->paused->completed; forms draft->published(gate `publish_form`)->archived. Each: 1 initial, 1 terminal, monotonic order, gate states carry `domain_module_id` (M5). |
+| B6 | Intra-domain `data_object_relationships` | 5 rows: campaigns includes emails; campaigns includes journeys; journeys sends emails; forms feeds lead_scores; lead_scores triggers journeys. |
+| B7 | `users` (748) actor edges (Rule #10) | 5 rows: users owns campaigns / authors emails / owns journeys / owns forms / configures lead_scores. |
+| B11 | `data_object_aliases` | 12 rows, all `alias_type='synonym'` (cross-vendor terms, not tied to one `solution_id`; the `solution_term` type requires a Solution context per DB check). |
+| E1-E3 | Personas + reach | 2 `domain_roles` (bf 54 Demand Generation): `DEMAND-GEN-MARKETING-OPS` (id 61, reach 197/198/199/200 primary), `DEMAND-GEN-CAMPAIGN-MANAGER` (id 62, reach 197/198 primary + 200 secondary). Both >=2 modules (E2), interaction_level set (E3). |
+
+### Editorial deviation from the prior q-file recommendation
+
+marketing_emails lifecycle was authored `draft -> scheduled -> sent` (NOT the q-file's proposed
+`...-> sent -> unsubscribed`). "Unsubscribed" is a subscriber-consent action, captured by
+trigger_event 518 (`marketing_email.unsubscribed`), not a state of the email record. The user can ask
+to add it back; the rows are at `record_status='new'` for in-record review.
+
+### Band status after this pass
+
+A1-A4 pass (catalog copy written 06-06, `new`). M1-M8 pass (4 modules, caps mapped, copy written).
+B1-B14 pass (B12 satisfied; lead_scores computed-exempt; B14: no statute-prefixed masters, all 5 are
+vendor-universal -> stay `master+required`). C1-C2 pass. E1-E6 pass (E4 vacuous: no `process_id`-wired
+gates yet). F1-F5 pass, F7 soft note: `send_email` (37) on module 197 is workflow-justified (email
+delivery IS the marketing channel); per Rule #15 the justification is recorded here, not in `notes`.
+H1: 19/19 cross-domain handoffs tagged (06-06). B10b: 0 NULL module FKs on the MA side.
+
+### Open (waiting on user)
+
+1. **B2-H1-78-FOLLOWUP** (genuine b2 + destructive option): handoff 78 (CDP `segment.activated` -> MA)
+   carries `handoff_processes` id 81 -> process 132 (loyalty-program, agent_curated), which looks
+   mismatched for a segment-activation handoff. Keep / retarget to 23 (delete + reinsert, destructive)
+   / add 23 as a second tag. Surfaced in q-MA.md.
+2. All freshly-authored content sits at `record_status='new'` for in-record approval (Rule #1).
+3. b3 optional ideas unchanged (6 candidate entities, MA-COMPLIANCE module, 3 candidate domains, extra
+   regulations). Non-blocking; MA already meets the module floor.
+
+### UI spot-checks
+- https://adenin.semantius.ai/domain_map/data_object_lifecycle_states
+- https://adenin.semantius.ai/domain_map/data_object_relationships
+- https://adenin.semantius.ai/domain_map/data_object_aliases
+- https://adenin.semantius.ai/domain_map/domain_roles

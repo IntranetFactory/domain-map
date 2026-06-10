@@ -6,7 +6,7 @@ Train your whole workforce and prove it, from first enrollment to audit-ready co
 
 Run corporate learning end to end. Author and publish courses, deliver them online or in the classroom, and track every enrollment through to completion. Issue the certifications and badges that show who is qualified, and keep the evidence auditors and regulators ask for. Assign mandatory training automatically, chase overdue learners without manual follow-up, and feed completion signals to the HR, compliance, and identity systems that depend on them.
 
-> Note on your last round: I already actioned three of your answers. **q3 (cross-domain items to optional): done** (all four are now optional). **The catalog copy you expected: done** (you were right, I should not have asked; under the current rules I just write empty catalog text, so I authored and wrote the tagline + description for the domain and all 8 modules). **Personas: already authored** in a prior pass (Learning Administrator, Instructional Designer, Instructor, Compliance Training Manager, People Manager, plus a reused Compliance Specialist), so there was no decision left to make there. The six questions below are the ones genuinely still waiting on you. All written rows are at `record_status='new'` for your review in the catalog UI.
+> Done since last round (2026-06-10): I actioned your two answers. **The "monitor and evaluate learning programs" work now has an owner** (Instructional Designer runs it, Learning Administrator approves), as you chose. **The 15 mis-tagged process rows are re-pointed** to their correct codes, as you approved. The questions below are what is still waiting on you: q1 to q6 are unchanged from before, and q7 is the one privacy item that depends on your q2 answer. All written rows are at `record_status='new'` for your review in the catalog UI.
 
 ---
 
@@ -28,7 +28,7 @@ q2: Should learner-data privacy (data-subject requests and consent) stay mastere
 - b) Build the PRIV-MGMT canonical owner now, then demote LMS (and the recruiting domain) privacy records to embedded masters that defer to it.
 - c) Decline: keep learner-data privacy permanently mastered in LMS.
 
-Recommended: a. The embedded-master end state (option b) is correct, but it requires PRIV-MGMT to exist as the canonical owner first, and that is a separate cross-domain build (LMS plus recruiting both hand over). Dissolving the LMS privacy module before that owner exists would strand training-data erasure. This interacts with q6.
+Recommended: a. The embedded-master end state (option b) is correct, but it requires PRIV-MGMT to exist as the canonical owner first, and that is a separate cross-domain build (LMS plus recruiting both hand over). Dissolving the LMS privacy module before that owner exists would strand training-data erasure. This interacts with q6 and q7.
 
 a2:
 
@@ -92,17 +92,29 @@ a6:
 
 ---
 
+q7: Two LMS handoffs carry privacy records (a consent withdrawal and a data-deletion request, both going to Human Capital Management) but are tagged with a generic "manage regulatory compliance" process code that does not fit them. They are the leftover from the re-tagging you approved last round: I re-pointed the 15 training-related tags but deliberately held these two back, because privacy records are not training and where they belong depends on your q2 answer (who owns privacy). What should I do with them for now?
+
+- a) Leave them as-is and decide once q2 (privacy ownership) is settled.
+- b) Delete the two wrong tags now.
+- c) Re-point them to the training code along with the rest anyway.
+
+Recommended: a. These are privacy/data-subject records, so their correct process home follows your q2 decision; holding them until then avoids tagging privacy work as training. Any change here edits existing tag rows and needs your sign-off.
+
+a7:
+
+---
+
 ## Optional (will not hold up the build)
 
-q7: You already said yes to researching four extra learning entities (learning evaluations and training surveys for satisfaction and effectiveness scoring; self-service training requests with approvals; external/off-platform training records; gamification points and leaderboards). These are recorded as approved. They are additive and best done after the module shape (q1) settles, with a verification pass first. Nothing for you to do here unless you want to change the list.
+q8: You already said yes to researching four extra learning entities (learning evaluations and training surveys for satisfaction and effectiveness scoring; self-service training requests with approvals; external/off-platform training records; gamification points and leaderboards). These are recorded as approved. They are additive and best done after the module shape (q1) settles, with a verification pass first. Nothing for you to do here unless you want to change the list.
 
 - a) Proceed with all four after q1 settles (current plan).
 - b) Drop or change one or more (tell me which).
 
 Recommended: a. All four are anchored to flagship vendors; doing them additively after the module shape is settled keeps them low-risk.
 
-a7:
+a8:
 
 ---
 
-<!-- agent map, ignore: q1=B2-REFACTOR-C q2=B2-REFACTOR-A q3=B2-SKILLS-MGMT-ATTRIBUTION q4=B2-1121-ROUTING q5=B2-MISSING-ROUTING q6=B2-DOMAIN-REGULATIONS q7=B3-LEARNING-EVALUATIONS+B3-TRAINING-REQUESTS+B3-EXTERNAL-TRAINING-RECORDS+B3-GAMIFICATION | domain_id=57 -->
+<!-- agent map, ignore: q1=B2-REFACTOR-C q2=B2-REFACTOR-A q3=B2-SKILLS-MGMT-ATTRIBUTION q4=B2-1121-ROUTING q5=B2-MISSING-ROUTING q6=B2-DOMAIN-REGULATIONS q7=B2-B9D-MISTAG-PRIVACY q8=B3-LEARNING-EVALUATIONS+B3-TRAINING-REQUESTS+B3-EXTERNAL-TRAINING-RECORDS+B3-GAMIFICATION | domain_id=57 -->

@@ -1,10 +1,22 @@
 schema_version: 2
 domain: ITOM
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-06-07"
+next_action_by: agent
+last_audit: "2026-06-08"
+phase0_report: ".tmp_deploy/ITOM-phase0-2026-06-08.md"
+phase0_note: >
+  2026-06-08 review pass ran Phase 0 vendor-surface research to ground the five market-shape
+  b2 decisions (B2-S5, B2-S1, B2-S3, B2-S3a, B2-S4) per Rule #22, which the prior q-file
+  surfaced without a Phase 0 report. Two recommendations reversed on the fresh evidence:
+  B2-S5 (promote ONLY workload-automation out, keep runbook in ITOM; was "promote both") and
+  B2-S3 (leave OBS handoff as-is; was "re-anchor"). q-ITOM.md regenerated with named-vendor
+  evidence inline.
 
 b1a:
+  - id: B1A-B9D-VERIFY
+    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
+    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
+    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-ROLE-MODULES
     summary: "Zero role_modules for ITOM; SKIPPED 2026-06-06 (action's persona-to-module mapping violates the 2-module floor; full Phase E needs reach + lifecycle wiring)."
     finding: >
@@ -97,9 +109,15 @@ b2:
       ITOM now masters both cleanly (single master each catalog-wide); the rollup-level duplication
       remains. RMM has zero domain_modules. Who is canonical?
     options:
-      - "(a) ITOM canonical, RMM demotes both rollup rows to embedded_master"
+      - "(a) ITOM canonical, RMM demotes both rollup rows to embedded_master [RECOMMENDED per Phase 0]"
       - "(b) ITOM canonical, RMM demotes both rollup rows to consumer"
       - "(c) Split into ITOM-mastered general monitoring + RMM-mastered rmm_monitoring_alerts / rmm_monitoring_policies distinct shapes"
+    phase0_verdict: >
+      ITOM canonical + RMM embedded copy (option a). RMM vendors (NinjaOne, ConnectWise RMM, Datto RMM,
+      Kaseya VSA) model a policy as a device-agent config bundle (CPU/RAM/disk/SMART thresholds + patch/AV/
+      backup) and an alert as a per-device threshold breach (ConnectWise: 1100+ OOB conditions); ITOM
+      (ServiceNow event-to-alert, BMC Helix) correlates to service/CI impact via CMDB. Same record, different
+      scope, not a full split. See .tmp_deploy/ITOM-phase0-2026-06-08.md D2.
     why: >
       ITOM is the broader market, but RMM as a distinct point-solution market may want its own
       monitoring shapes long-term; the decision affects every future RMM audit and the rollup M7
@@ -125,9 +143,15 @@ b2:
       happens in OBS but the payload entity is ITOM's. Should trigger 6 re-anchor on an OBS-mastered
       entity instead?
     options:
-      - "(a) Leave as-is (OBS publishes into ITOM's alert master)"
+      - "(a) Leave as-is (OBS publishes into ITOM's alert master) [RECOMMENDED per Phase 0]"
       - "(b) Add obs_alerts / observability_alerts to OBS and re-anchor trigger 6"
       - "(c) Define OBS-published triggers as inbound-events on ITOM masters by exception"
+    phase0_verdict: >
+      Leave as-is (option a). Reverses the prior "re-anchor" recommendation. OBS vendors master their
+      alert-RULE DEFINITIONS (Datadog Monitors, Dynatrace Problems, Grafana alert rules, Prometheus
+      Alertmanager) in the OBS domain, but the breach INSTANCE crossing the handoff is correctly ITOM's
+      monitoring_alerts. Follow-up (OBS audit, not ITOM): ensure OBS masters its monitor/rule-definition
+      entity. See .tmp_deploy/ITOM-phase0-2026-06-08.md D3.
     why: "Boundary question between OBS and ITOM data ownership; routes to OBS audit."
 
   - id: B2-S3a
@@ -138,9 +162,14 @@ b2:
       AIOPS owns the suppression logic; ITOM consumes the decision. Which AIOPS master should anchor
       this trigger?
     options:
-      - "(a) Re-anchor to alert_suppression_rules (data_object_id 722)"
+      - "(a) Re-anchor to alert_suppression_rules (data_object_id 722) [RECOMMENDED per Phase 0]"
       - "(b) Leave on monitoring_events with a kind note that the event is AIOPS-published"
       - "(c) Defer until AIOPS audit produces its suppression entity decision"
+    phase0_verdict: >
+      Re-anchor to AIOPS alert_suppression_rules (722) (option a). Suppression rules are AIOps-owned
+      config objects: BigPanda maintenance plans, Moogsoft maintenance-window suppression, ServiceNow
+      Predictive AIOps + Dynatrace Davis maintenance windows. A "suppression applied" event is the
+      application of that AIOPS-owned rule. See .tmp_deploy/ITOM-phase0-2026-06-08.md D4.
     why: "Cross-domain ownership question; resolution affects handoff 59 payload mapping."
 
   - id: B2-S4
@@ -149,26 +178,42 @@ b2:
       ITOM event-management vendors ship author-time correlation rules; AIOPS's Bucket 3 candidate
       is correlation_rules (ML-driven). Are these distinct entities or two names for one concept?
     options:
-      - "(a) Distinct: ITOM-mastered event_correlation_rules (deterministic) + AIOPS-mastered correlation_rules (ML)"
+      - "(a) Distinct: ITOM-mastered event_correlation_rules (deterministic) + AIOPS-mastered correlation_rules (ML) [RECOMMENDED per Phase 0]"
       - "(b) Single AIOPS-mastered correlation_rules consumed by ITOM as embedded_master"
       - "(c) Single ITOM-mastered event_correlation_rules consumed by AIOPS"
+    phase0_verdict: >
+      Distinct (option a). ServiceNow ships BOTH as separate objects: Event Management deterministic
+      author-time correlation rules vs Predictive AIOps ML-learned grouping, the same vendor shipping
+      two objects proves two things not two names. BMC Helix event policies (deterministic) +
+      Moogsoft/BigPanda ML correlation confirm. ITOM owns deterministic event_correlation_rules (new,
+      module 267); AIOPS owns ML correlation (currently event_correlations 93). See
+      .tmp_deploy/ITOM-phase0-2026-06-08.md D5.
     why: "Concept overlap with AIOPS; routes via AIOPS Bucket 3."
 
   - id: B2-S5
-    summary: "Promote ITPA + WORKLOAD-AUTO from candidate domains, or keep as ITOM-OPS-AUTOMATION (269)?"
+    summary: "Split workload-automation out of ITOM, keep runbook in (Phase 0-grounded 2026-06-08)?"
     question: >
-      ITOM-RUNBOOK (capability 228) and ITOM-JOB-SCHED (capability 226) are point-solution markets in
-      their own right (Rundeck, Resolve, Stonebranch for runbook; Control-M, AutoSys, Stonebranch UAC
-      for workload-auto). The 2026-06-02 modularization grouped both into ITOM-OPS-AUTOMATION (269)
-      pending this decision. Rule #2 favors splitting them out. Promote both, one, or neither?
+      ITOM-RUNBOOK (capability 228) and ITOM-JOB-SCHED (capability 226) sit in ITOM-OPS-AUTOMATION
+      (269), which has no domain-owned master. The 2026-06-08 Phase 0 vendor surface separates the
+      two markets: workload automation is Gartner's standalone SOAP Magic Quadrant (BMC Control-M,
+      Stonebranch UAC, Redwood RunMyJobs, Broadcom AutoSys, Tidal), none a feature of an ITOM suite,
+      each mastering job_definitions (Control-M Job/Folder objects; AutoSys JIL). Runbook / IT-process
+      automation is bundled natively by ServiceNow and BMC Helix as event-attached remediation, so it
+      belongs in ITOM and gives 269 its missing master (runbook_definitions / runbook_executions /
+      automation_policies). How to shape it?
     options:
-      - "(a) Promote both ITPA + WORKLOAD-AUTO; migrate capabilities 228 + 226 out and retire module 269"
-      - "(b) Keep both as ITOM capabilities in ITOM-OPS-AUTOMATION (269) (optionally split 269 into two modules)"
-      - "(c) Promote one (ITPA from 228), keep the other (226 stays as an ITOM-JOB-SCHED module)"
+      - "(a) Promote workload-automation (cap 226) to its own SOAP-aligned domain; keep runbook (cap 228) in ITOM, rescope 269 to runbook/process automation with runbook_definitions as its master [RECOMMENDED per Phase 0]"
+      - "(b) Promote both 228 + 226 out and retire module 269"
+      - "(c) Keep both in ITOM-OPS-AUTOMATION (269) as today"
+      - "(d) Promote runbook out, keep job-scheduling in ITOM"
+    phase0_verdict: >
+      Split one out: promote workload-automation to its own domain, keep runbook in ITOM (option a).
+      See .tmp_deploy/ITOM-phase0-2026-06-08.md D1.
     why: >
-      Decision changes the ITOM module count and whether module 269 survives. Module 269 currently has
-      no domain-owned master (its data_object is an embedded_master reference to monitoring_alerts);
-      the runbook_definitions / job_definitions masters are unverified Bucket 3 candidates (B3-S1, B3-S2).
+      Decision changes the ITOM module count and whether module 269 survives with its own master.
+      Reverses the prior "promote both" recommendation on Phase 0 evidence (runbook IS natively
+      bundled by ITOM suites; workload-automation is not). runbook_definitions becomes a load-now
+      master (B3-S1) if option a; job_definitions (B3-S2) moves to the new workload-automation domain.
 
   - id: B2-S6
     summary: "Ratify the 6 handoff PCF mappings the Continuation applied that diverge from the audit table."

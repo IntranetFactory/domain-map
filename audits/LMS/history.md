@@ -548,3 +548,93 @@ domain-regs). `status: feedback_needed`, `next_action_by: user`. Regenerated `q-
 `a-LMS.md`. UI spot-check: https://tests.semantius.app/domain_map/domain_modules ,
 https://tests.semantius.app/domain_map/domains ,
 https://tests.semantius.app/domain_map/domain_module_data_objects
+
+## 2026-06-10 — Review (B9d handoff-payload realization)
+
+Triggered by "review LMS domain". Continued from the existing worklist: the only agent-doable
+item open was `B1A-B9D-VERIFY` (B9d had never run on this domain). All other open items are
+user-gated decisions sitting in `q-LMS.md`.
+
+### B9d run (scripts/analytics/b9d_resolver.ts LMS, both directions)
+
+28 boundary handoff tags; 14 distinct (process, owner) findings. Verdicts: **7 RESOLVED, 3 ORPHAN,
+4 MIS-TAG**.
+
+**RESOLVED (7)** — no action: 7.7.2 compliance_assignments (LMS→HRSD), 7.7.3 employees (HCM→LMS,
+inbound), 7.3.4.3 learner_badges (LMS→TALENT-MGMT), 7.3.4.5 case_categories (HRSD→LMS, inbound) +
+course_enrollments/completions (LMS→TALENT-MGMT/HCM) + onboarding_cohorts (ONBOARDING→LMS, inbound),
+2.1.3.5.1 policy_attestations (GRC→LMS, inbound, no-master).
+
+**ORPHAN (3)** — real missing work (process with no persona). Routed additively, `record_status`
+untouched, via the resolver's `--write`:
+- `B2-B9D-OWN-1041` 7.3.4.7 "Monitor and evaluate learning programs" (learning_records, handoff 431
+  LMS→HCM). Owner = **LMS** (built). Resolver auto-text named no persona ("a named owner" /
+  "HR Business Partner" placeholders); corrected from live RACI — the nearest realized LMS sibling
+  7.3.4.5 (pid 1039) is Instructional Designer (R) + Learning Administrator (A), so q7 mirrors that
+  pairing. Surfaced as q-LMS.md **q7**.
+- `B2-B9D-OWN-224` 7.3.1 "Manage employee onboarding" (onboarding_tasks, handoff 8 ONBOARDING→LMS).
+  Owner = **ONBOARDING** (unbuilt) → written to `audits/ONBOARDING/` backlog (state.yaml + q9).
+- `B2-B9D-OWN-1873` 3.5.5.1.2 "Manage certifications and skills" (skill_profiles, handoff 111
+  LMS→TALENT-MGMT). Owner = **SKILLS-MGMT** (unbuilt) → written to `audits/SKILLS-MGMT/` backlog
+  (state.yaml + q8).
+
+**MIS-TAG (4)** — wrong/unrealized APQC codes on LMS-source handoffs. Destructive sender edits
+(re-point or delete a `handoff_processes` row) → NOT applied; surfaced for sign-off. All 16 affected
+rows are `agent_curated` + `record_status='new'`. Re-point targets verified realized:
+- 9.8.2 → 2.1.3.5.1 on #1312 (training_evidence_records).
+- 11.2.2 → 2.1.3.5.1 on the 7 compliance_assignments handoffs #434,#435,#1047,#1049,#1308,#1309,#1310.
+- 7.3.3.3 → 7.3.4.5 on #1079,#1288 (course_enrollments/completions).
+- 3.5.5.1.2 → 7.3.4.6 on #1080,#1295,#1303,#1304,#1305 (learner_badges/certifications).
+Grouped into `B2-B9D-MISTAG-REPOINT` (the 16 clean re-points, q8). **Split out:** the 2 privacy
+handoffs originally lumped under 11.2.2 — #1313 (gdpr_consent_records, gdpr_consent_record.withdrawn,
+LMS→HCM) and #1314 (data_deletion_requests, data_deletion_request.fulfilled, LMS→HCM) — are NOT
+training and must not be re-pointed to 2.1.3.5.1; their correct process home depends on the q2 privacy
+ownership decision. Surfaced separately as `B2-B9D-MISTAG-PRIVACY` (q9, blocked_by B2-REFACTOR-A).
+
+### State
+
+`B1A-B9D-VERIFY` resolved → `b1a: []` (no agent-doable work left; everything remaining is user-gated).
+Added 3 new b2 items (B2-B9D-OWN-1041, B2-B9D-MISTAG-REPOINT, B2-B9D-MISTAG-PRIVACY); b2 now 9 open.
+b1b unchanged (4, each gated on an open b2). Rewrote `q-LMS.md` with clean numbering: q1–q6 unchanged,
+q7/q8/q9 added from the B9d findings, the b3 candidate set renumbered to optional q10. `status:
+feedback_needed`, `next_action_by: user`. No catalog writes, no `record_status` changes (Rule #1).
+
+## 2026-06-10 — a-LMS.md processing (2 of 9 answered)
+
+User answered q7 and q8 of the B9d round; q1–q6, q9 (privacy), q10 (optional) left blank → still open.
+
+- **q7 = a (B2-B9D-OWN-1041), additive, EXECUTED.** Authored `process_raci` on process 1041
+  "Monitor and evaluate learning programs": R = Instructional Designer (role 23), A = Learning
+  Administrator (role 22) — rows 145, 146, label auto-generated. Mirrors the realized sibling 7.3.4.5.
+  No `record_status` column on `process_raci`, so Rule #1 is moot here.
+  **Residual:** re-running B9d still lists 1041 as ORPHAN. Cause: the strict "realized = gated
+  lifecycle state + RACI" test fails because 1041 has no `data_object_lifecycle_states.process_id`
+  gate. "Monitor and evaluate learning programs" is a monitoring/analytical activity, not a
+  permissioned state transition, so it legitimately carries RACI (responsibility) without a gate.
+  Accepted as non-gated; the persona the question asked for is assigned. If we later want the resolver
+  fully green, wire `process_id=1041` onto a learning_records lifecycle state (a modeling call, not in
+  q7's scope). Decision executed → moved out of open state.
+
+- **q8 = a (B2-B9D-MISTAG-REPOINT), destructive structural — a-file is the sign-off, EXECUTED.**
+  Re-pointed 15 `handoff_processes` rows (NOT 16 — the round's q8 headline said "sixteen" but the
+  enumerated breakdown was 8+2+5=15; the count was an arithmetic slip, the row set was always the 15
+  enumerated). All stayed `record_status='new'` (PATCH of `process_id` only):
+    - 9.8.2 (325) → 2.1.3.5.1 (1829): handoff 1312 (training_evidence_records).
+    - 11.2.2 (369) → 2.1.3.5.1 (1829): handoffs 434, 435, 1047, 1049, 1308, 1309, 1310 (compliance_assignments).
+    - 7.3.3.3 (1033) → 7.3.4.5 (1039): handoffs 1079, 1288 (course_enrollments/completions).
+    - 3.5.5.1.2 (1873) → 7.3.4.6 (1040): handoffs 1080, 1295, 1303, 1304, 1305 (learner_badges/certifications).
+  Post-fix B9d verdicts: was {ORPHAN:3, MIS-TAG:4, RESOLVED:7} → now {ORPHAN:4, RESOLVED:9}. The 4
+  MIS-TAGs cleared; the privacy subset (1313, 1314, still at 11.2.2) re-classified from part-of-a-MIS-TAG
+  to a standalone ORPHAN owned by LMS — same 2 rows, still deferred under the privacy question.
+
+- **q9 (B2-B9D-MISTAG-PRIVACY) NOT answered** → stays open, gated on q2. Renumbered to q7 in the
+  regenerated q-file. The 2 privacy tags (1313 gdpr_consent_record.withdrawn, 1314
+  data_deletion_request.fulfilled, both LMS→HCM) remain at 11.2.2 untouched.
+
+### State
+
+Removed B2-B9D-OWN-1041 + B2-B9D-MISTAG-REPOINT from b2 (both resolved → history). b2 now 7 open
+(Refactor C, Refactor A, skills-mgmt, 1121, missing, domain-regs, privacy mis-tags). b1b unchanged (4).
+b3 unchanged (4). Deleted `a-LMS.md`; regenerated `q-LMS.md` (q1–q6 unchanged, q7 = privacy mis-tags,
+optional q8 = b3). `status: feedback_needed`, `next_action_by: user`. Catalog writes this pass: 2
+`process_raci` inserts + 15 `handoff_processes` re-points; no `record_status` changed.

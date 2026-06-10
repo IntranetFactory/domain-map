@@ -331,3 +331,40 @@ Total executed: 31 writes across 5 tables.
 - `https://tests.semantius.app/domain_map/handoff_processes` (filter handoff_id in 31,37,239,461,463,614,615,788,878 -> 9 agent_curated/new rows)
 - `https://tests.semantius.app/domain_map/data_object_aliases` (5 new synonyms)
 - `https://tests.semantius.app/domain_map/business_function_domains` (filter domain_id=1 -> 5 rows incl. IT Operations contributor)
+
+## 2026-06-08 - Phase 0 + market audit (semantic pass; first Phase 0 ever run for ITSM)
+
+### Scope
+
+Triggered by "research the ITSM domain". ITSM was already structurally complete (8 modules, 7 masters, 20 capabilities) and sitting in `feedback_needed` with an open `q-ITSM.md`. The one substantive research step never done was Phase 0 vendor-surface enumeration (prior audits explicitly recorded "no Phase 0 file in workspace"), which is also the Rule #22 forcing step needed to settle the `b3`/`q6` candidates with evidence rather than vendor-knowledge guesses. Ran the market-audit semantic pass: generated the ITSM vendor surface fresh (5 flagship vendors) and diffed it against the live footprint. READ-ONLY: no catalog rows written. Report: `.tmp_deploy/ITSM-phase0-2026-06-08.md`.
+
+### Flagship vendors (matrix columns)
+
+ServiceNow ITSM (suite leader; CSDM 5), Atlassian Jira Service Management + Statuspage (agile/mid), BMC Helix ITSM (classic enterprise), Freshservice (mid SaaS), ManageEngine ServiceDesk Plus (mid SaaS/on-prem). Ivanti Neurons used as a corroborating sixth source.
+
+### Diff vs live footprint
+
+- **SCOPE-CREEP: 0.** All 7 current masters (service_incidents, service_requests, service_catalog_items, service_problems, service_changes, knowledge_articles, service_slas) are validated as ITSM-owned by all five vendors. No current master is owned elsewhere.
+- **WRONG-OWNERSHIP: 2.** (a) chargeback/cost-charge records belong to IT Financial Management / SPM (ServiceNow ships it as Financial Charging in ITFM, billing a business service, not the ITSM ticket); ITSM-CHARGEBACK should stay a cross-domain capability link, not get an ITSM master. (b) Raw alert/monitoring stream leans ITOM, not ITSM (the event-to-incident bridge is ITSM; the alert master is the ITSM/ITOM seam).
+- **MISSING: 6 in-domain master candidates + 1 newly surfaced** (all CONFIRMED additive masters into existing modules - no module restructure, so they stay `b3`, not `b2`): service_outages, change_collisions, cab_meetings, service_offerings, virtual_agent_conversations, walkup_visits (RESHAPE: single master, no walkup_kiosks), plus newly-surfaced service_releases. Out-of-domain MISSING (NOT ITSM gaps): configuration_items (CMDB), service_assets / service_contracts / purchase_orders (ITAM/procurement), chargeback_records (ITFM/SPM).
+- **MODULARIZATION: 4 findings, no new module needed.** RELEASE folds into ITSM-CHANGE-MGMT (which also absorbs cab_meetings + change_collisions); MAJOR-INCIDENT stays a flag/parent on service_incidents, not a separate master; ITSM-AGENT-WORKSPACE (no master today) gains walkup_visits + virtual_agent_conversations, retiring 2 of 3 capability-orphans; ITSM-EVENT-MGMT is the weakest fit - keep it (it has a master, Rule #14) but narrow to the event-to-incident bridge and treat raw alert streams as an ITOM/OBS inbound handoff.
+
+### Verdicts on the prior 7 b3 candidates (named-vendor evidence in the Phase 0 report)
+
+| Candidate | Verdict | Deciding evidence |
+|---|---|---|
+| service_outages | CONFIRM (Core) | ServiceNow Outage records, Atlassian Statuspage, Freshstatus. No collision with outage_events id 665 (UTIL-OPS grid). |
+| change_collisions | CONFIRM (Common) | ServiceNow Collision Detector, BMC change conflict review. |
+| cab_meetings | CONFIRM (Core) | ServiceNow CAB Workbench, BMC, Freshservice. |
+| service_offerings | CONFIRM (Core) | ServiceNow CSDM offering-vs-catalog-item split (m:m), BMC, Freshservice. Entity-level split, not a module split. |
+| walkup_visits | CONFIRM / RESHAPE (Specialist) | ServiceNow Walk-Up Experience only; drop walkup_kiosks (config attribute). |
+| virtual_agent_conversations | CONFIRM (Core) | ServiceNow Interaction/Transcript, Freshservice Freddy, ManageEngine, Jira SM. |
+| chargeback_invoices | **REFUTE** | Every flagship that ships it places it in ITFM/SPM, not the ITSM ticket. Belongs to an ITFM/SPM domain. |
+
+Bonus: **service_releases CONFIRM** (newly added to b3, folds into ITSM-CHANGE-MGMT). **major_incidents REFUTE as a separate master** (flag/parent on service_incidents in every vendor).
+
+### State changes (audit trail only - no catalog writes)
+
+- `state.yaml`: `last_audit` -> 2026-06-08; `b3` block re-authored with Phase 0 verdicts; B3-CHARGEBACK-INVOICES removed (REFUTED, recorded here); B3-SERVICE-RELEASES added.
+- `q-ITSM.md` q6 refreshed to embed the named-vendor evidence inline (Rule #22). q1-q5 unchanged (Phase 0 does not bear on self-containment, pattern flags, or SLA lifecycle).
+- No `b1a`/`b2` escalation: every MISSING finding is additive and discretionary (b3). Domain stays `feedback_needed` on the pre-existing q1-q5 decisions.

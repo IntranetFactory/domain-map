@@ -55,12 +55,24 @@ a5:
 
 ## Optional (will not hold up the build)
 
-q6: Seven entities that flagship ITSM vendors model do not yet exist in the catalog: a customer-facing outage record (service_outages), overlapping-change detection (change_collisions), Change Advisory Board agenda and minutes (cab_meetings), a service-offering versus catalog-item split (service_offerings), walk-up support visits (walkup_visits), virtual-agent conversations (virtual_agent_conversations), and chargeback invoices (chargeback_invoices). Should I research and add the ones that hold up? (yes/no)
+q6: I have now run the vendor research (5 flagship ITSM products: ServiceNow, Jira Service Management + Statuspage, BMC Helix, Freshservice, ManageEngine). Seven new entities are confirmed as things real ITSM products model, and all are additive (a new record inside an existing module, no restructure). Should I add all seven? (yes/no)
 
-Recommended: yes, but additive and can happen after the open decisions above are settled. Several map to real flagship features and to capabilities that currently have no backing master, though they still want a verification pass first.
+The seven confirmed, each with the products that model it:
+
+- service_outages: a customer-facing outage / status record separate from the internal incident (ServiceNow Outage records, Atlassian Statuspage, Freshstatus). Goes in Incident Management. Does not collide with the existing utilities grid-outage entity.
+- service_releases: a release / deployment record separate from a single change (Freshservice, ManageEngine, BMC, ServiceNow, Ivanti). Goes in Change Management (no separate Release module needed).
+- cab_meetings: Change Advisory Board agenda and minutes (ServiceNow CAB Workbench, BMC, Freshservice). Change Management.
+- change_collisions: overlapping-change / blackout-window conflict detection (ServiceNow Collision Detector, BMC). Change Management.
+- service_offerings: the back-end service definition split from its catalog-item presentation (ServiceNow CSDM, BMC, Freshservice). Service Request.
+- virtual_agent_conversations: chatbot / virtual-agent transcripts (ServiceNow, Freshservice Freddy, ManageEngine, Jira SM). Agent Workspace; gives that module a master and backs the Virtual Agent capability.
+- walkup_visits: walk-up / onsite check-in record (ServiceNow Walk-Up Experience only, so a niche one). Agent Workspace; backs the Walk-Up capability. I would NOT add a separate walkup_kiosks entity (a kiosk is just a location attribute).
+
+One candidate from the earlier list was dropped: chargeback_invoices. Every product that ships chargeback puts it in IT Financial Management, billing a business service rather than the ticket, so it belongs to a finance domain, not ITSM. The Service-Cost-and-Chargeback capability stays as a cross-domain link.
+
+Recommended: yes, add all seven (or name a subset). They are additive and land at record_status=new for your review, and they fill three capabilities (Virtual Agent, Walk-Up, Release) that currently advertise scope with no backing entity. This is the only item here that touches catalog content, so it can happen independently of the decisions above. Reply "yes", "no", or a subset (e.g. "all but walkup_visits").
 
 a6:
 
 ---
 
-<!-- agent map, ignore: q1=B1A-SELF-CONTAIN q2=B2-PATTERN-FLAGS.incidentpii q3=B2-PATTERN-FLAGS.knowledgepii q4=B2-PATTERN-FLAGS.changelock q5=B2-SLA-LIFECYCLE q6=B3-SERVICE-OUTAGES+B3-CHANGE-COLLISIONS+B3-CAB-MEETINGS+B3-SERVICE-OFFERINGS-SPLIT+B3-WALKUP-VISITS+B3-VIRTUAL-AGENT-CONVERSATIONS+B3-CHARGEBACK-INVOICES | domain_id=1 -->
+<!-- agent map, ignore: q1=B1A-SELF-CONTAIN q2=B2-PATTERN-FLAGS.incidentpii q3=B2-PATTERN-FLAGS.knowledgepii q4=B2-PATTERN-FLAGS.changelock q5=B2-SLA-LIFECYCLE q6=B3-SERVICE-OUTAGES+B3-SERVICE-RELEASES+B3-CAB-MEETINGS+B3-CHANGE-COLLISIONS+B3-SERVICE-OFFERINGS-SPLIT+B3-VIRTUAL-AGENT-CONVERSATIONS+B3-WALKUP-VISITS | domain_id=1 -->

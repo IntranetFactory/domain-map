@@ -404,3 +404,53 @@ still rides B2-PATTERN-FLAGS as an overwrite on a non-empty boolean.
 ### JWT errors
 
 None.
+
+---
+
+## 2026-06-08 - Review (Phase 0 grounding of the open market-shape b2s)
+
+### Summary
+
+CSM was already `feedback_needed` with a current `q-CSM.md`; the 2026-06-06 pass had
+executed every ungated additive/corrective fix, leaving only b2 decisions, the M9
+destructive approval, and the deferred persona layer. This review found the forcing-step
+gap under Rule #22: four of the open b2 questions are MARKET-SHAPE decisions (knowledge
+mastery, customer_health_signals, capability shape, cross-domain consume subjects) and the
+q-file recommendations were grounded in build-convenience, not a current Phase 0 report.
+
+Ran Phase 0 vendor-surface research this pass (Zendesk, Salesforce Service Cloud,
+ServiceNow CSM, Freshdesk, Intercom) -> `.tmp_deploy/CSM-phase0-2026-06-08.md`. Re-grounded
+all four market-shape recommendations on named-vendor evidence and regenerated `q-CSM.md`
+with that evidence inline. No catalog writes this pass (all remaining items are gated on
+the user's b2 answers or are destructive and await sign-off).
+
+### Phase 0 verdicts and recommendation changes
+
+| q | Decision id | Prior rec | New rec | Basis |
+|---|---|---|---|---|
+| q1 | B2-CSM-KNOWLEDGE-MASTER | (a) accept as editorial view | **(c) own KB master** REVERSED | 4/5 flagships master a customer-facing KB (Zendesk Guide, Salesforce Knowledge, Freshdesk Solutions, Intercom Articles); only ServiceNow shares ITSM's table. Prefer audience-filtered embedded_master of knowledge_articles (id 51) over a duplicate entity. |
+| q2 | B2-CUSTOMERS-AMBIGUITY | (c) introduce customer_health_signals | **(b) attribute to CSM-CASE-MGMT** REVERSED | No support desk masters a health score; that is CS-platform territory (Gainsight/Totango/ChurnZero). customer_health_signals is over-modeling. |
+| q3 | B2-CROSS-DOMAIN-INTEGRITY | (a) per cluster | (a) per cluster, RE-GROUNDED | crm_opportunities + support_sessions become cases (genuine consume); product-feedback is thin consume / drop; vertical 'opens case' rows are genuine. |
+| q4 | B2-CAPABILITY-SHAPE | (a) add CSM-specific | (a), RE-GROUNDED | All 5 market routing/omnichannel/agent-assist/CSAT/knowledge as headline; omnichannel + CSAT/NPS are cross-cutting candidates. Live drift noted: CUSTOMER-360 is now a 4th cross-cutting capability (was 3). |
+
+q5 (APQC scope), q6-q8 (pattern flags), q9 (M9 destructive), q10 (pairwise scheduling),
+q11 (b3 entities) are not market-shape and were carried forward unchanged, except q9 now
+notes that q1(c) replaces the two knowledge_articles rows rather than relaxing them.
+
+### Live verification (no drift on the worklist except capabilities)
+
+- domain 30 catalog_tagline + catalog_description populated (2026-06-06 fix confirmed in place).
+- The 6 M9 self-containment DMDO rows confirmed live on modules 112/113/114 (q9 set intact).
+- entity_type classifications confirmed (103 operational_workflow, 104 catalog, 105/111
+  operational_record).
+- capability_domains now returns 4 (KNOWLEDGE-MGMT, AI-TRIAGE-CLASSIFICATION, SLA-MGMT,
+  CUSTOMER-360); state.yaml/q-file said 3. Corrected in q4.
+
+### Outcome
+
+Domain stays `feedback_needed` / `next_action_by: user`. Regenerated `q-CSM.md` (11
+questions) is the human-readable surface; answer by renaming to `a-CSM.md`.
+
+### JWT errors
+
+None.

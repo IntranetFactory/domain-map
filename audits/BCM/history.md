@@ -331,3 +331,56 @@ None.
 
 UI spot-checks:
 - https://tests.semantius.app/domain_map/domains?id=eq.17
+
+## 2026-06-08, Phase 0 + q-file regeneration (Rule #22 remediation)
+
+### Why this pass
+
+The 2026-06-07 pass (and the earlier audits) surfaced BCM's market-shape b2 decisions (B2-1 leadership-tier vs promote, B2-2 DRP placement, B2-3 DORA register ownership) to the user WITHOUT a current Phase 0 vendor-surface report; the recommendations leaned on generic "matches the vendors" / "point-solution-market test" reasoning with no named-vendor specifics. SKILL.md Rule #22 (the forcing step, skill-changelog 2026-06-08) requires every market-shape recommendation to be backed by a CURRENT Phase 0 report produced THIS pass, with named-vendor evidence embedded inline in the q-file. This pass runs that Phase 0, regenerates q-BCM.md from its evidence, and re-grounds the b2 framing. Research + file-authoring only: NO DB inserts / updates / deletes. BCM stays UNBUILT and feedback_needed (next_action_by: user); the build remains gated on the user's B2-1 answer.
+
+### Vendor study
+
+Flagship vendors studied (report at `.tmp_deploy/BCM-phase0-2026-06-08.md`):
+
+- **Fusion Framework System** (Fusion Risk Management): pure-play enterprise resilience / BCM. Deepest object model: BIA in the Business Function tab, dependency mapping (upstream/downstream), recovery strategies, plan exercising, crisis/incident management, ITDR, TPRM. DORA leader.
+- **Castellan** (Castellan Solutions, acquired by Riskonnect 2021): pure-play BCM SaaS. Integrated BIA, risk assessment, plan development, strategy identification, testing/exercising, crisis/incident, emergency notification in one platform.
+- **ServiceNow BCM**: suite (IRM-aligned) module. Draft/In Review/Approved lifecycle across BIA, continuity plans, recovery exercises, crisis events; pulls business services + dependencies from CMDB.
+- **Archer Resilience Management** (RSA/Archer): suite (IRM). "Business Continuity & IT Disaster Recovery Planning" use case: BIAs, distinct BC and DR plans, crisis events, dependency-on-enterprise-assets model.
+- **MetricStream BCM**: suite (GRC). BIA surveys with cumulative criticality scoring, template-driven continuity plans, crisis/incident workflow, call trees + emergency notification across 25+ channels.
+- **Everbridge** (CEM / BC in the Cloud): used only to settle the mass-notification boundary, not scored as a surface column.
+
+### Surface-matrix highlights
+
+- **Core masters present in all five vendors:** business_impact_analyses, business_continuity_plans, recovery_strategies, business_services, dependency_maps, continuity_exercises, crisis_events. Disaster_recovery_plans is Core but folded into BCM (see B2-2), not a separate market.
+- **business_services is embedded_master, not BCM-owned:** ServiceNow pulls it straight from the CMDB; the others consume from a service portfolio. BCM reads it for dependency sequencing.
+- **emergency_contacts is embedded_master from users/HCM:** the crisis call-tree / mass-notification roster references the user master rather than re-mastering people.
+- **exercise_findings / crisis_communications are Core-but-vendor-named-differently:** every vendor has the concept (gaps + action items fed back to plans; per-event outbound communications log), even where the table name varies.
+- **DORA register is NOT a BCM master:** Fusion routes the Register of Information through its TPRM offering. The register is a third-party-contract artifact, so it masters in TPRM and BCM consumes.
+
+### Per-decision verdicts
+
+- **B2-1 (leadership-tier vs promote): recommend PROMOTE (b).** Two flagship pure-plays (Fusion, Castellan) plus three suites each master first-class BCM records. Rule #2 point-solution-market test is met. Confirmed, not reversed; now grounded with named-vendor evidence.
+- **B2-2 (DRP placement): recommend DR INSIDE BCM (a).** Fusion, Riskonnect (Castellan's owner), and ServiceNow all fold IT disaster recovery into the resilience platform as an integrated component; Archer keeps distinct BC-plan and DR-plan types but under one use case. No flagship sells DRP as a domain independent of BCM. Confirmed, not reversed; strengthened by fresh evidence.
+- **B2-3 (DORA ICT register ownership): recommend REGISTER IN TPRM, BCM CONSUMES (b).** Fusion routes the DORA Register of Information through its TPRM offering; the register is a record of contractual arrangements with ICT third-party providers. No flagship BCM product masters it as a BCM record. Confirmed, not reversed.
+- **B1B-S5 (defective trigger 227 on handoff 253): recommend YES, surface only.** Workflow-wiring fix, not market-shape; destructive (re-attributes an existing trigger) and foreign-blocked on GRC B9 + GRC M-band. Recorded intent; not applied.
+- **Mass-notification boundary (framing only):** Everbridge inverts the stack (CEM/mass-notification is the platform, BCM is the acquired module); the BCM pure-plays embed emergency notification as a feature. BCM masters crisis_communications + emergency_contacts (log + roster); heavyweight dispatch is a tool/integration (notify_team), not a BCM master. No sub-market split out of BCM is warranted, and the q-file does not propose one, so no change.
+
+### Reversals
+
+None. All three market-shape recommendations (promote, DR-inside-BCM, register-in-TPRM) were confirmed by the fresh named-vendor evidence and re-grounded inline. The q-file map footer therefore carries no `reversed:` note.
+
+### Files written
+
+- `.tmp_deploy/BCM-phase0-2026-06-08.md` (Phase 0 report; research artifact, gitignored).
+- `audits/BCM/q-BCM.md` (regenerated: PRM-format, `> Grounding:` block citing the report, inline named-vendor evidence on every market-shape recommendation, catalog tagline + description kept verbatim as "What this domain is"). Map footer adds `phase0=...`.
+- `audits/BCM/state.yaml` (dated 2026-06-08 note block added after the supersession header; `last_audit` set to "2026-06-08"; status feedback_needed / next_action_by user unchanged; B2-1/B2-2/B2-3 `why` framing extended to cite the Phase 0 grounding; no items deleted or restructured; no question text changed).
+- `audits/BCM/history.md` (this section).
+
+### JWT errors
+
+None.
+
+UI spot-checks:
+- https://tests.semantius.app/domain_map/domains?id=eq.17
+- https://tests.semantius.app/domain_map/domain_modules?domain_id=17
+- https://tests.semantius.app/domain_map/handoffs?id=253

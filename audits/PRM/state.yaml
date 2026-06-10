@@ -1,8 +1,8 @@
 schema_version: 2
 domain: PRM
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-06-07"
+next_action_by: agent
+last_audit: "2026-06-08"
 
 # State-driven Validate execute ran 2026-06-07 (Rule #21, bulk batch). PRM is UNBUILT:
 # 0 domain_modules (M1 hard fail), 0 capability_domains, 0 masters, 0 solution_domains.
@@ -13,8 +13,24 @@ last_audit: "2026-06-07"
 # (212,151), agent_curated, record_status='new'; no clean additive PCF match remains).
 # Everything else stays: the build (b1a), the blocked b1b cascade, 6 b2 decisions, 4 b3.
 # See history.md sections 2026-05-30, 2026-05-31 (x2), 2026-06-07.
+#
+# 2026-06-08 PHASE 0 ran (the step the prior passes skipped before surfacing market-shape
+# b2 calls; see skill-changelog 2026-06-08 + SKILL.md Rule #22 forcing step). Fresh vendor
+# study of 18 flagships -> .tmp_deploy/PRM-phase0-2026-06-08.md. Two recommendations REVERSED
+# by named-vendor evidence: B2-T1 training a->b (PRM masters training/certs natively: Impartner,
+# Channeltivity, Allbound, Magentrix all ship native partner LMS; Impartner added SCORM ingest
+# 2025-04), B2-T2 commission b->a (PRM masters channel incentives: ZINFI INCENTIVIZE is the
+# partner-financial SSoT, Salesforce splits channel rebates [PRM] from rep comp [Spiff]).
+# Recommended module shape = 4 modules (partner_management, deal_and_pipeline, funds_and_incentives
+# [MDF+co-op+commissions/rebates/SPIFs], enablement_and_performance [training+certs+scorecards+QBR+JBP]);
+# TCMA / ECOSYSTEM-LED-GROWTH / AFFILIATE-MGMT promote to sibling domains (B2-S1/B2-S2/B3-3 = promote).
+# q-PRM.md regenerated with inline vendor evidence. Still feedback_needed: 6 b2 open, awaiting a-PRM.md.
 
 b1a:
+  - id: B1A-B9D-VERIFY
+    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
+    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
+    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
     finding: "Live re-verify 2026-06-07: domain 96 has 0 domain_modules rows (M1 fail), 0 capability_domains, 0 masters, 0 solution_domains, so it is not deployable today. It must be built before any persona / RACI work applies. The catalog UX fields (tagline + description) are now populated; business_logic and the whole structural surface remain unbuilt."
@@ -39,7 +55,7 @@ b1b:
 
   - id: B1B-A3
     summary: "Author 7 to 11 capabilities + capability_domains rows for PRM, shape conditional on Bucket 2 carve-out decisions."
-    finding: "A2 FAIL. /capability_domains?domain_id=eq.96 returns []. The realistic capability set is 7 to 11 depending on whether TCMA / ECOSYSTEM-LED-GROWTH / partner-training stay in PRM or relocate. Classic-PRM core (assuming all three carve-outs): PARTNER-ONBOARDING, PARTNER-PROGRAM-MGMT, PARTNER-PORTAL-RBAC, DEAL-REGISTRATION, DEAL-PROTECTION, MDF-MGMT, CO-OP-FUND-MGMT, PARTNER-TRAINING-ENROLLMENT (or LMS-consumed), PARTNER-CERTIFICATION-TRACKING, PARTNER-SCORECARDING, PARTNER-QBR, PARTNER-ANALYTICS."
+    finding: "A2 FAIL. /capability_domains?domain_id=eq.96 returns []. Phase 0 (2026-06-08) settles training + commission as PRM-owned, so the classic-PRM capability set (TCMA/ecosystem/affiliate promoted out) is ~10-12: PARTNER-ONBOARDING, PARTNER-PROGRAM-MGMT, PARTNER-PORTAL-RBAC, DEAL-REGISTRATION, DEAL-PROTECTION, MDF-MGMT, CO-OP-FUND-MGMT, PARTNER-INCENTIVE-MGMT (commissions/rebates/SPIFs, PRM-owned per B2-T2=a), PARTNER-TRAINING-ENROLLMENT, PARTNER-CERTIFICATION-TRACKING (both PRM-owned per B2-T1=b, consuming external SCORM content), PARTNER-SCORECARDING, PARTNER-QBR, PARTNER-ANALYTICS. Set grows only if a carve-out is overruled (B2-M1 b/c/d)."
     action: "After user resolves B2-M1 + B2-S1 + B2-S2 + B2-T1: INSERT 7 to 11 capabilities rows with PRM-prefixed codes plus matching capability_domains rows on domain_id=96."
     blocked_by:
       - {type: user_decision, ref: B2-M1}
@@ -68,7 +84,7 @@ b1b:
 
   - id: B1B-M1
     summary: "Author 4 to 7 domain_modules rows for PRM, shape conditional on Bucket 2 carve-out decisions. Load-bearing prerequisite for everything else."
-    finding: "M1 FAIL. /domain_modules?domain_id=eq.96 returns []. PRM is a sub-domain of CRM (parent_domain_id 69), not leadership-tier, so Rule #14 requires at least 1 full module. Modularization hypothesis depends on B2-M1 shape choice: 4 classic-PRM modules (PRM-PARTNER-PORTAL, PRM-DEAL-REGISTRATION, PRM-MDF-COOP, PRM-PARTNER-ANALYTICS), or 5 with PRM-PARTNER-TRAINING if B2-T1 = PRM-owned, or 6 with PRM-PARTNER-MARKETING if TCMA stays per B2-S1, or 7 with PRM-PARTNER-CO-SELL if ecosystem-led stays per B2-S2. Each module_kind='full'. Blocks B-band, E-band, F-band entirely; also gates the B10b source-side fix on handoffs 211 / 212 (B1B-H1 / B1B-H2)."
+    finding: "M1 FAIL. /domain_modules?domain_id=eq.96 returns []. PRM is a sub-domain of CRM (parent_domain_id 69), not leadership-tier, so Rule #14 requires at least 1 full module. Phase 0 (2026-06-08) recommends a 4-module shape and folds training + commissions INTO it (both stay in PRM per B2-T1=b / B2-T2=a): partner_management (master partner_accounts), deal_and_pipeline (master deal_registrations), funds_and_incentives (master mdf_funds; MDF + co-op + channel commissions/rebates/SPIFs/payouts), enablement_and_performance (master certifications/joint_business_plans; training enrollments + certs + scorecards + QBR + JBP). TCMA / ECOSYSTEM-LED-GROWTH / AFFILIATE-MGMT promote to sibling domains (B2-S1/B2-S2/B3-3), NOT PRM modules. Fallback 5/6/7-module shapes only if the user overrules a carve-out (B2-M1 b/c/d). Each module_kind='full'. Blocks B-band, E-band, F-band entirely; also gates the B10b source-side fix on handoffs 211 / 212 (B1B-H1 / B1B-H2)."
     action: "After user resolves B2-M1 + B2-T1 + B2-S1 + B2-S2: INSERT 4 to 7 domain_modules rows with module_kind='full'. Each row needs catalog_tagline + catalog_description per Rule #20 (also user-approved wording). Bundle with capabilities (B1B-A3) and domain_module_capabilities rows; then unblock B1B-V1 through V4 plus B1B-H1 / H2."
     blocked_by:
       - {type: user_decision, ref: B2-M1}

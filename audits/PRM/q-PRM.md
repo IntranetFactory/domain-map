@@ -1,51 +1,53 @@
 # Partner Relationship Management (PRM): questions waiting for you
 
 ## What this domain is
-Run your channel program end-to-end. Recruit and tier partners, register and protect joint deals, fund partner-led marketing through MDF, and score partner performance against revenue and growth targets.
+Run your channel program end to end: recruit and tier partners, register and protect joint deals, fund partner-led marketing, and score partner performance against revenue and growth targets.
 
-Partner Relationship Management runs the indirect-revenue motion. Onboard channel partners into tiered programs, give them a branded portal with role-based access, and operate the day-to-day workflows that hold the program together: deal registration with conflict resolution, MDF requests and claims with proof-of-spend, co-op fund accrual, partner training and certification enrollment, and joint business planning. Track every dollar of partner-influenced pipeline, score partners on revenue, growth, certification compliance, and MDF utilization, and surface co-sell signals from CRM when you and a partner overlap on the same prospect. Built for Channel Sales leaders and the channel-ops teams that run the program, with handoffs to Marketing for through-channel campaign syndication and Finance for MDF settlement and partner-channel commission accruals.
+Partner Relationship Management runs the indirect-revenue motion on one surface. Onboard channel partners into tiered programs, give them a branded portal with role-based access, and operate the day-to-day workflows that hold a channel program together. Register and protect joint deals with conflict resolution when two partners chase the same prospect. Fund partner-led marketing through market development requests and claims with proof of spend, plus co-op fund accrual. Enroll partners in training and track certifications so the right partners stay enabled. Score every partner each quarter on revenue, growth, certification compliance, and fund utilization, then run quarterly business reviews against a shared joint plan. Track partner-influenced pipeline and surface co-sell signals so the team knows where a partner already has the account. Built for channel and partner teams, with clean handoffs to marketing for through-channel campaigns, to finance for fund settlement and partner-channel commissions, and to your CRM for registered opportunities and qualified partner referrals.
+
+> Grounding: these recommendations are backed by a fresh vendor-surface study (18 flagship vendors, 2025-2026 product docs) saved at `.tmp_deploy/PRM-phase0-2026-06-08.md`. Two analyst signals frame the whole thing: Gartner renamed the category to "Partner and Ecosystem Relationship Management (PERM)" in Sept 2025 (PRM is absorbing co-sell), but Forrester still runs SEPARATE Waves for PRM Platforms (Q4 2025) and Through-Channel Marketing / PMAP (Q2 2025). Converging in name, not yet in product.
 
 ---
 
 q1: (answer this first) How should Partner Relationship Management be split into modules (the sub-areas of the product)?
 
-- a) 4 modules: Partner Portal (partner orgs, users, programs, tiers, agreements), Deal Registration (registrations and deal protection), MDF and Co-op (fund requests, claims, proof-of-spend), and Partner Analytics (scorecards, QBRs, indirect-revenue rollups). This is the cleanest shape and assumes training, through-channel marketing, and co-sell all move out of PRM (see q2, q3, q4).
+- a) 4 modules: Partner Management (partner orgs, contacts, types, tiers, programs, contracts, onboarding, portal), Deal & Pipeline (deal registrations, approvals, conflict resolution, partner leads, registered and influenced opportunities, referrals), Funds & Incentives (MDF requests/claims, co-op accruals, and channel commissions/rebates/SPIFs/payouts), and Enablement & Performance (training enrollments, certifications, scorecards, QBRs, joint business plans). Through-channel marketing, ecosystem co-sell, and affiliate all promote to their own sibling domains (see q2, q3, q7).
 
-- b) 5 modules: the four above plus a Partner Training module (only if training stays inside PRM, see q4).
+- b) 5 modules: the four above plus a Through-Channel Marketing module (only if TCMA stays inside PRM, see q2).
 
-- c) 6 modules: the four above plus a Partner Marketing module (only if through-channel marketing stays inside PRM, see q2).
+- c) 6 modules: the five above plus an Ecosystem & Co-Sell module (only if ecosystem-led growth stays inside PRM, see q3).
 
-- d) 7 modules: the four above plus Partner Training, Partner Marketing, and Partner Co-Sell (only if training, through-channel marketing, and co-sell all stay inside PRM, see q2, q3, q4).
+- d) 7 modules: the six above plus an Affiliate Partnerships module (only if affiliate stays inside PRM, see q7).
 
-Recommended: a. The four-workflow-pillar shape matches how flagship PRM vendors converge, and it is consistent with promoting through-channel marketing and co-sell out (q2, q3) and treating partner training as a consumed surface (q4). This choice gates the modules, capabilities, masters, and every link below it, so it unlocks the rest of the build.
+Recommended: a. The flagship classic-PRM platforms converge on these four workflow pillars: Oracle PRM and Channeltivity both ship partner-org + deal-registration + MDF + enablement as the core, and Impartner/Magentrix add scorecards/QBRs on top. Note this 4-module shape already INCLUDES partner training (in Enablement, see q4) and channel commissions (in Funds & Incentives, see q5) because the vendor evidence puts both inside PRM, not outside it. The b/c/d shapes only apply if you overrule the q2/q3/q7 carve-outs. This choice gates the modules, capabilities, masters, and every link below it.
 
 a1:
 
 ---
 
-q2: Should Through-Channel Marketing Automation (partner campaign templates, lead distribution to partners, co-branded assets) become its own domain instead of living inside PRM?
+q2: Should Through-Channel Marketing Automation (partner campaign templates, content syndication, co-branded assets, local campaign execution) become its own domain instead of living inside PRM?
 
-- a) Promote it to its own domain and move the through-channel marketing surface (and vendors like Sproutloud, Mindmatrix, Structured Web) out of PRM.
+- a) Promote it to its own sibling domain and move the through-channel marketing surface out of PRM. PRM keeps MDF/co-op funds as the system of record; campaign execution and asset syndication relocate.
 
-- b) Keep it inside PRM as a Partner Marketing module (matches organizations that have not separated channel marketing from channel ops).
+- b) Keep it inside PRM as a Through-Channel Marketing module.
 
 - c) Defer the decision until it comes up more often.
 
-Recommended: a. Through-channel marketing is a distinct market with a different buyer (a Channel Marketing Manager, not the Channel Chief), so promoting it keeps PRM focused. Picking (a) here is what makes the 4-module shape in q1 work.
+Recommended: a. The leader sells it separately: Impartner's own PRM page states TCMA "may be purchased without PRM" (a distinct SKU), and Forrester scores Partner Marketing Automation (where Structured/StructuredWeb and ZINFI are named Leaders, Q2 2025) as a separate market from PRM Platforms (Q4 2025). The pure-plays target a different buyer: SproutLoud sells brand-to-local distributed marketing to channel-marketing managers with no deal-registration surface at all. The only genuinely shared concept is MDF/co-op funds, which stays in PRM. Zift and Mindmatrix bundle TCMA into one platform, so (b) is defensible if you want that "all-in-one" posture, but it blurs the buyer story.
 
 a2:
 
 ---
 
-q3: Should ecosystem-led growth (partner account mapping and co-sell orchestration, the Crossbeam / Reveal / PartnerTap space) become its own domain instead of living inside PRM?
+q3: Should ecosystem-led growth (partner account mapping, overlap detection, co-sell orchestration, the Crossbeam / PartnerTap space) become its own domain instead of living inside PRM?
 
-- a) Promote it to its own domain and move the co-sell and account-mapping surface out of PRM.
+- a) Promote it to its own sibling domain and move the account-mapping/overlap surface out of PRM. PRM keeps a lightweight partner-influenced-opportunity signal record that the ecosystem domain feeds.
 
-- b) Keep it inside PRM as a Partner Co-Sell module (the bundled model used by Salesforce Partner Cloud and Oracle PRM).
+- b) Keep it inside PRM as an Ecosystem & Co-Sell module.
 
 - c) Defer the decision until it comes up more often.
 
-Recommended: a. The buyer is distinct (a partnerships or ecosystem lead), and account-mapping tools like Crossbeam and Reveal do not compete with classic PRM platforms. Note that (a) re-homes the existing co-sell handoff into CRM onto the new domain.
+Recommended: a. These are a different category that integrates WITH PRM, not a PRM feature: Crossbeam (merged with Reveal in 2024) is a cross-company account-mapping data network with no deal-registration, MDF, tiering, or training; PartnerTap explicitly "works alongside traditional PRM platforms rather than replacing them" and pushes mapped accounts INTO Impartner and Salesforce via native integrations. Even Salesforce sells co-sell as a separate Partner Ecosystem Management tier ($50/member) on top of base PRM ($25/member), not baked in. Account mapping fundamentally needs a second company's CRM and a privacy-preserving sharing model, which can't live inside one tenant's PRM. Picking (a) re-homes the existing co-sell handoff into CRM (handoff 211) onto the new domain.
 
 a3:
 
@@ -53,13 +55,13 @@ a3:
 
 q4: Where should partner training and certification be mastered?
 
-- a) Mastered in the LMS domain, with PRM consuming enrollments and certifications for scorecard inputs (architecturally cleanest; LMS already owns courses and enrollments).
+- a) Mastered in the LMS domain, with PRM consuming enrollments and certifications for scorecard inputs.
 
-- b) Mastered in PRM with its own Partner Training module (matches what Impartner, Zift, and ZINFI ship, but duplicates the LMS surface).
+- b) Mastered in PRM (PRM owns partner enrollments and certifications and consumes external course content via SCORM); training folds into the Enablement & Performance module.
 
-- c) Hybrid: PRM masters certifications, LMS masters training enrollments and course completions.
+- c) Hybrid: PRM masters certifications, LMS masters enrollments and course completions.
 
-Recommended: a. Partner training is essentially the LMS with an external-learner audience, so letting LMS own it avoids a duplicate training surface. This keeps PRM at the 4-module shape in q1 (it needs LMS to support an external-learner mode).
+Recommended: b. REVERSED from the prior recommendation after the vendor check. Classic-PRM platforms master partner training natively: Impartner ships a native Partner Training & Certification module and in April 2025 added SCORM ingestion so customers bring existing course content (the PRM is the enrollment/cert system of record, the LMS is an optional content source); Channeltivity released a native Training & Certification module (courses, certifications, in-person training credits, LinkedIn badges); Allbound and Magentrix both ship native learning management; Zift bundles Channel LMS into ZiftONE. The partner LMS needs different controls than the employee LMS (branded multi-tenant portal per partner org, cert-expiry-driven re-enablement), which is why the vendors build it in rather than defer to an external LMS.
 
 a4:
 
@@ -67,13 +69,13 @@ a4:
 
 q5: Where should partner-channel commissions (rebates, SPIFs, tiered margin) be mastered?
 
-- a) PRM-owned (the channel team operates commissions as a partner-program lever; matches the Impartner / ZINFI feature set).
+- a) PRM-owned: PRM masters commission structures, accruals, rebate programs, SPIFs, and partner payout records, and hands off only the final cash disbursement to a payments rail.
 
-- b) Owned by the sales-performance domain with PRM consuming them (cleaner; commission setup, accrual, and payout sit in one place across direct and partner sales).
+- b) Owned by the sales-performance domain, with PRM consuming the results.
 
 - c) Split: program-level rules and rebate accrual in PRM, individual payout settlement in the sales-performance domain.
 
-Recommended: b. Keeping all commission accrual and payout in the sales-performance domain avoids two places computing pay, and PRM just consumes the results for partner scorecards.
+Recommended: a. REVERSED from the prior recommendation after the vendor check. Channel incentives are mastered inside the PRM platform across the leaders: ZINFI's INCENTIVIZE zone consolidates Commissions, MDF, Rebates, and Payment and describes its Payment application as the "single source of truth for partner financial data"; Impartner natively automates commissions, rebates, and SPIFs with rule-based calculation and approval workflows. Critically, Salesforce splits the two motions ON PURPOSE: Channel Revenue Management (rebates, channel pricing) lives with Partner Cloud, while Salesforce Spiff handles DIRECT sales-rep comp. So channel/partner incentives belong in PRM; only individual sales-rep compensation is the separate sales-performance concern. That makes (b) the wrong cut for the channel side.
 
 a5:
 
@@ -89,7 +91,7 @@ q6: Which regulations should be tagged onto Partner Relationship Management?
 
 - d) None, defer to industry-specific overlays.
 
-Recommended: a. The baseline four cover partner contact data (GDPR, CCPA), anti-bribery on commission-eligible partners (FCPA), and the financial-statement impact of MDF and commission accruals (SOX). Add (b) or (c) only for specific channels. Low stakes, does not block the build.
+Recommended: a (lean toward b for any cross-border program). GDPR/CCPA cover partner-contact PII; SOX covers MDF and commission accruals that feed financial statements; FCPA is the heavy one for channels: roughly 90% of FCPA enforcement involves third-party intermediaries, so partner due-diligence and anti-corruption attestation records are genuinely load-bearing here (the build will author those entities regardless). Add the UK Bribery Act (b) if the program operates cross-border; keep ITAR/EAR and HIPAA (c) as industry-scoped overlays only for defense/dual-use or healthcare channels. Low stakes for the build sequence; does not block.
 
 a6:
 
@@ -97,12 +99,12 @@ a6:
 
 ## Optional (will not hold up the build)
 
-q7: Two further carve-outs sit outside classic PRM: affiliate management (publisher / influencer / affiliate-network mechanics, the Impact.com / PartnerStack space) and partner-marketplace operations (cloud-marketplace co-sell, the Tackle.io / AppDirect space). Should I research these and stand them up as their own domains where they hold up? (yes/no)
+q7: Two further carve-outs sit outside classic PRM: affiliate management (offers, tracking links, clicks, conversions, attribution, payouts, tax forms, the Impact.com / Everflow / Refersion / PartnerStack space) and partner-marketplace operations (cloud-marketplace co-sell, the Tackle.io / AppDirect space). Should I research these and stand them up as their own sibling domains where they hold up? (yes/no)
 
-Recommended: yes, but additive and can happen after the modules exist. Affiliate management is the cleanest carve-out (its entity surface does not belong in PRM under any scenario); partner-marketplace operations is the least urgent and can wait. PartnerStack is the one crossover case worth a closer look.
+Recommended: yes for affiliate, defer marketplace. The affiliate entity surface (offers, tracking links, clicks, conversions with attribution windows, creatives, data feeds, performance payouts, IRS tax forms) and its DTC performance-marketing buyer are foreign to B2B reseller PRM; CJ, Awin, Rakuten, Impact.com, Everflow, and Refersion are a self-contained market. PartnerStack is the one crossover (it unifies affiliate + reseller + referral), but it does so on a SHARED partner/commission spine, which argues for a future shared master, not for folding affiliate into PRM. Partner-marketplace ops (Tackle.io) is real but the least urgent and can wait several cycles. Both are additive and can happen after PRM's modules exist.
 
 a7:
 
 ---
 
-<!-- agent map, ignore: q1=B2-M1 q2=B2-S1 q3=B2-S2 q4=B2-T1 q5=B2-T2 q6=B2-R1 q7=B3-3+B3-4 | domain_id=96 -->
+<!-- agent map, ignore: q1=B2-M1 q2=B2-S1 q3=B2-S2 q4=B2-T1 q5=B2-T2 q6=B2-R1 q7=B3-3+B3-4 | domain_id=96 | phase0=.tmp_deploy/PRM-phase0-2026-06-08.md | reversed: B2-T1 a->b, B2-T2 b->a -->

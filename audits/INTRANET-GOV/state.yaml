@@ -1,0 +1,101 @@
+schema_version: 2
+domain: INTRANET-GOV
+status: feedback_needed
+next_action_by: user
+last_audit: 2026-06-10
+
+# No open b1a: all agent-doable additive fixes were executed this pass
+# (H1 APQC tag on handoff 1433; ADA + Section 508 domain_regulations). See history.md.
+
+b1b:
+  - id: B1B-EVENTS
+    summary: Complete the attestation event/handoff fabric (archived event + attestation-outcome feedback to the inventory record), but only after the engine-depth decision lands.
+    finding: >-
+      The intranet_content_attestations (1047) lifecycle has an archived gate state
+      (requires_permission, terminal) with no matching trigger_event, so B9 is one event
+      short. Separately, attestation outcomes (attested_current / flagged_stale / archived)
+      change the inventory record's (1043) governance status across the module boundary
+      (336 -> 335) with no intra-domain lifecycle_progression handoff capturing it, so B9b
+      flags the 336->335 pair. Both are minor and additive.
+    action: >-
+      Add trigger_event intranet_content_attestation.archived; add one or more 336->335
+      lifecycle_progression handoffs feeding attestation outcomes back to the inventory
+      record's governance status. Defer until B2-S1 is decided: if the policy+campaign+
+      findings engine lands, the event/handoff fabric is reworked there and these micro-fixes
+      would be churn; if the MVP stays as-is, execute these directly next pass.
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    affected_events:
+      - {id: null, event_name: intranet_content_attestation.archived, current_category: null, proposed_category: lifecycle}
+
+b2:
+  - id: B2-S1
+    summary: Add the recertification-campaign + governance-policy engine (the cadence driver) to the Governance module, or keep the thin MVP.
+    question: >-
+      The build shipped per-record attestations but no entity that drives recertification on
+      a cadence across many records. Every adjacent flagship runs attestation from a recurring
+      policy that spawns a batch of attestations (SharePoint "Site Attestation Policy", Orchestry
+      "Review Recurrence", Simpplr validation windows). Add a governance_policies master (cadence/
+      thresholds/scope/archive-action config) plus a recertification_campaigns master (the cadence-
+      driven batch that spawns attestations and rolls up completion)?
+    options:
+      - "a) Add both masters to the existing Governance module (336)"
+      - "b) Add both AND split Governance into a Policy & Campaign config module vs an Attestation & Remediation execution module"
+      - "c) Keep the thin MVP: per-record attestation only, no campaign/policy engine"
+    why: >-
+      This is the domain's stated value ("run recertification cycles") and gates B2-S2/B2-S3 and
+      B1B-EVENTS. The market is white-space (no pure-play; see build phase0), so the substrate is
+      borrowed from M365-bound neighbors - hence a depth choice rather than a forced add.
+    vendor_evidence:
+      - {vendor: Orchestry, evidence: 1st_class}
+      - {vendor: Microsoft SharePoint Advanced Management, evidence: 1st_class}
+      - {vendor: ShareGate, evidence: 1st_class}
+      - {vendor: Simpplr, evidence: secondary}
+  - id: B2-S2
+    summary: Add content_governance_findings as a first-class entity (orphaned/inactivity/stale/oversharing), distinct from the computed health score.
+    question: >-
+      Stale/orphan detection currently lives only as a derived intranet_content_health_scores value;
+      there is no durable finding row (type, severity, target, status, resolution) the workflow can
+      route or remediate. Add content_governance_findings, with the health score recomputed as a
+      rollup over findings?
+    options:
+      - "a) Add content_governance_findings (stale/orphan/inactivity), health score aggregates it"
+      - "b) Add it and also include permissions/oversharing findings"
+      - "c) Keep score-only (no findings entity)"
+    why: 5 of 6 surveyed vendors model findings first-class; depends on B2-S1 (findings are policy-generated).
+    vendor_evidence:
+      - {vendor: Orchestry, evidence: 1st_class}
+      - {vendor: Microsoft SharePoint Advanced Management, evidence: 1st_class}
+      - {vendor: ShareGate, evidence: 1st_class}
+      - {vendor: Acquia Optimize, evidence: 1st_class}
+  - id: B2-S3
+    summary: Add accessibility_conformance_records master + WCAG/EN 301 549/EAA regulations, keeping accessibility statute-anchored.
+    question: >-
+      INTGOV-A11Y (Accessibility Governance) is realized only as a scan tool; there is no statute-
+      anchored conformance record (target, standard, level, pass/fail, finding linkage, statement
+      reference). The EAA has been enforceable since June 2025. Add accessibility_conformance_records
+      and add WCAG 2.2 / EN 301 549 / EAA as regulations + domain_regulations links (ADA + Section 508
+      domain_regulations were already loaded this pass)?
+    options:
+      - "a) Add the conformance entity AND the WCAG/EN 301 549/EAA regulation rows"
+      - "b) Add only the regulation rows (keep accessibility as scan-only, no conformance entity)"
+      - "c) Neither (accept scan-tool-only accessibility coverage)"
+    why: Both accessibility specialists (Siteimprove, Acquia Optimize) model conformance first-class; EAA makes it audit-bound.
+    vendor_evidence:
+      - {vendor: Siteimprove, evidence: 1st_class}
+      - {vendor: Acquia Optimize, evidence: 1st_class}
+
+b3:
+  - id: B3-S1
+    candidate: intranet_improvement_items (typed remediation / improvement master)
+    rationale: >-
+      Improvements currently hand off to a generic work_items embed (mastered by WORK-MGMT). The
+      build's own phase0 originally proposed a domain-typed intranet_improvement_items and dropped it.
+      A thin typed remediation/improvement master would back the INTGOV-PLAN capability and link
+      findings -> remediation -> attestation closure. Discretionary: the generic work_item handoff
+      already works; add only if B2-S2 (findings) lands. Fits the existing Governance module; not a split.
+    vendor_evidence:
+      - {vendor: Acquia Optimize, evidence: 1st_class}
+      - {vendor: Siteimprove, evidence: 1st_class}
+      - {vendor: ShareGate, evidence: secondary}
+    proposed_module: INTGOV-GOVERNANCE (336)

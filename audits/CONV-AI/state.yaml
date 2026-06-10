@@ -11,10 +11,50 @@
 schema_version: 2
 domain: CONV-AI
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-06-07"
+next_action_by: agent
+last_audit: "2026-06-08"
+
+# 2026-06-08 PHASE 0 ran (the forcing step the 2026-06-07 pass skipped before surfacing
+# market-shape b2 calls; see skill-changelog 2026-06-08 + SKILL.md Rule #22). Fresh vendor
+# study of 8 flagships -> .tmp_deploy/CONV-AI-phase0-2026-06-08.md. Confirmed market = chatbot/
+# voice-bot build-and-run (live domain_name 'Conversational AI', desc 'Virtual agents, chatbots,
+# and voice bots for customer and employee self-service'); no CLIN-DEV-style pivot. Flagships:
+# Cognigy.AI, Kore.ai XO 11, Google Dialogflow CX, Microsoft Copilot Studio, Ada, Boost.ai
+# (compliance/regulated lens), Yellow.ai, Cresta (CCAAS-boundary case). Dominant signal: every
+# flagship moved from intent-tree chatbots to LLM-driven agentic platforms in 2024-2025
+# (Cognigy AI Agent Studio Jobs+Tools, Dialogflow CX Playbooks+Generators+Tools+DataStores,
+# Copilot Studio Agents+Tools+KnowledgeSources, Ada Reasoning Engine+Actions+Playbooks,
+# Boost.ai Generative Actions+API Hooks, Yellow.ai prompt-first Dynamic AI Agents).
+#
+# Masters-vs-consumes grounded: CONV-AI masters the autonomous agent logic + runtime record
+# (bot_definitions, intent_definitions, entity_definitions, conversation_flows, function_tools,
+# agent_personas, prompt_templates, fallback_handlers, conversation_transcripts, intent_detections,
+# channel_integrations) + governance (consent_records, ai_act_risk_classifications,
+# data_subject_requests, redaction_policies). It CONSUMES ai_agents (DATA-AI-PLAT) +
+# knowledge_base_articles (KMS), and HANDS OFF human-agent routing/queues/desktop to CCAAS
+# (Cresta/Cognigy: CCaaS owns routing+desktop, CONV-AI owns agent logic + escalation decision).
+#
+# REVERSED by named-vendor evidence: B3 function_tools / prompt_templates / agent_personas were
+# filed speculative (b3, pending Phase 0). Phase 0 confirms they are first-class CORE masters in
+# 4-5 of 5 enterprise authoring flagships, so they PROMOTE into the build (Bot Design module),
+# not the optional backlog. The other three b3 (evaluation_runs, redaction_policies,
+# conversation_topics) stay discretionary additive (thinner surface; workflow degrades without
+# them). Also REGROUNDED (not a substance reversal): q1 module-split reasoning moved off the prior
+# build-convenience rationale ("minimal shape that unblocks the build") onto vendor packaging
+# (design-time/runtime is the line every flagship draws; a dedicated LLM-Agents module is NOT
+# warranted because vendors keep tools/prompts/personas inside the bot builder).
+#
+# Recommended module shape = 2 modules: CONV-AI-BOT-DESIGN (authoring + agentic-authoring entities
+# + ai_act_risk_classifications) + CONV-AI-RUNTIME (live transcripts/detections/channels + consent/
+# DSAR/redaction compliance ops). q-CONV-AI.md regenerated with inline vendor evidence. Still
+# feedback_needed: 8 b2 open, awaiting a-CONV-AI.md. Earlier passes: history.md 2026-05-30,
+# 2026-05-31 (x2), 2026-06-07.
 
 b1a:
+  - id: B1A-B9D-VERIFY
+    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
+    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
+    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
     finding: "Live triage 2026-06-07: domain 34 still has 0 domain_modules rows (M1 fail) and 0 capability_domains rows (A2 fail), so it is not deployable today. It must be built before any persona / RACI work applies. The build cannot start until the B2-MOD modularization shape is chosen (user decision)."

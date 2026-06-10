@@ -474,3 +474,53 @@ None. No JWT-audience errors.
 - https://tests.semantius.app/domain_map/data_object_relationships
 - https://tests.semantius.app/domain_map/domain_aliases?domain_id=eq.43
 - https://tests.semantius.app/domain_map/business_function_domains?domain_id=eq.43
+
+---
+
+## 2026-06-08 - Phase 0 + q-file regeneration (Rule #22 remediation)
+
+### Why this pass ran
+
+The 2026-06-07 pass surfaced the BANK-OPS market-shape `b2` calls (module split, banking_cases ownership, transaction lifecycle) without a current Phase 0 vendor-surface report. Their recommendations leaned on generic "mirrors how the major banking-ops platforms present their product" reasoning with no named-vendor specifics. Rule #22 (the forcing step, skill-changelog 2026-06-08) requires every market-shape recommendation to be backed by a CURRENT Phase 0 report produced THIS pass, with named-vendor evidence embedded INLINE in each recommendation. This pass ran Phase 0 first, then regenerated the q-file from its evidence. Research + file-authoring only; no DB writes; the build stays gated on the user's answers.
+
+### Vendor study
+
+Live re-verify 2026-06-08: BANK-OPS (domain_id=43) still has 0 domain_modules (M1 hard fail) and 8 masters via legacy domain_data_objects. Still UNBUILT; the build is surfaced, not scaffolded.
+
+Flagship vendors studied (7 full columns): nCino (Bank Operating System), Backbase (Engagement Banking Platform / Banking OS), Mambu (Cloud Banking Platform), Thought Machine (Vault Core), Temenos (Transact + Financial Crime Mitigation, the one suite vendor per protocol), Oracle Financial Crime & Compliance Mgmt (FCCM), NICE Actimize (compliance specialists #1 and #2). Adjacent cross-checks (not full columns): Fiserv DNA / FIS / Jack Henry (incumbent cores), ICE Encompass (LOS) + Black Knight MSP (servicing), Featurespace / Clari5 / Feedzai (transaction fraud), Modern Treasury / Stripe Treasury / Plaid (payment rails), Fenergo / Alloy / Trulioo (KYC onboarding).
+
+Banking is a regulated market, so per the protocol's compliance table kyc_records, aml_alerts, and suspicious_activity_reports loaded into the surface matrix regardless of vendor presence; both financial-crime specialists (Oracle FCCM, NICE Actimize) are included. Report saved to `.tmp_deploy/BANK-OPS-phase0-2026-06-08.md` (flagship table, entities x 7-vendor surface matrix, compliance entities, modularization hypothesis).
+
+### Surface-matrix highlights
+
+- **Origination vs servicing are SEPARATE marketed markets.** ICE Encompass holds ~50% of loan originations; Black Knight MSP is a distinct servicing platform; ICE had to build an explicit Encompass-to-MSP bridge. This grounds keeping BANK-OPS-ORIGINATION and BANK-OPS-LOAN-SERVICING as separate modules.
+- **KYC-AML is a STANDALONE specialist market.** Oracle FCCM (KYC, AML EE, watchlist, CTR, SAR as discrete apps bought together or separately) and NICE Actimize (SAM, WL-X, CDD/KYC, SAR/STAR, CTR, alert/case mgmt) are independent products that integrate WITH a core, not features of it. Grounds a dedicated KYC-AML module (and makes option d, deferring it out to a sibling domain, defensible).
+- **The transaction ledger is append-only / immutable across the core vendors.** Thought Machine Vault Core "maintains a real-time, immutable, append-only ledger built on proven double-entry bookkeeping"; Mambu and Temenos run the same double-entry sub-ledger. Grounds leaving banking_transactions stateless (B2-3=c).
+- **Financial crime + regulatory reporting are bundled into the core by suite vendors but split out by specialists.** Temenos FCM and the incumbent cores (Fiserv DNA, FIS) bundle watchlist/KYC/AML/fraud and reporting INTO the core; Oracle/Actimize unbundle them. This is exactly the b2 fork (7-module split vs 5-module COMPLIANCE collapse).
+- **Investigation / dispute cases are first-class and distinct from generic CSM cases.** Backbase coordinates "disputes, payments, and lending work" with full auditability; NICE Actimize ships dedicated financial-crime alert-and-case management; card-network disputes/chargebacks carry their own reason-code + Reg E lifecycle. Grounds keeping banking_cases as its own master (B2-2=a).
+- **Compliance entities confirmed first-class in the specialists.** beneficial_ownership_records (FinCEN CDD Rule, UBO 25% + control prong), ofac_screening_records (OFAC watchlist), aml_alerts, sar_filings (FinCEN 30-day), ctr_reports (cash > USD 10k) are all discrete app modules in Oracle FCCM / NICE Actimize, validating the B1B-M1..M4 MISSING items.
+
+### Per-decision verdicts (q-file recommendations, now vendor-grounded inline)
+
+- **q1 / B2-1 (module split): Recommended (a) 7-module.** Grounded in the origination-vs-servicing and KYC-AML-standalone-market facts above; the b/c/d collapses each tied to a named vendor (b=Temenos/Fiserv/FIS bundle; c=nCino/Backbase one-journey onboarding; d=Oracle/Actimize freestanding specialist).
+- **q2 / B2-2 (banking_cases vs CSM): Recommended (a) keep own master + rewrite verb.** Grounded in Backbase / NICE Actimize first-class case management. Destructive (rewrites rows 462/463), surfaced for sign-off, not executed.
+- **q3 / B2-3 (banking_transactions lifecycle): Recommended (c) leave stateless.** Grounded in the immutable double-entry ledger evidence (Thought Machine / Mambu / Temenos).
+- **q4-q7 / B2-5 (verb wording): non-market.** Permission-code naming; grounded in real workflow practice (origination approve/decline; wire dual-control + sanctions hold; KYC multi-outcome disposition; banking-case-specific resolve verb). Left as-is.
+- **q8 / B2-7 (GRC pairwise timing): non-market** process-sequencing call; recommended (a) defer until modules exist. Left as-is.
+- **q9 / B2-8 (H1 approvals): destructive approval gate;** recommended (a) approve all. Left for the user (record_status flip the agent never does).
+- **q10 / B3 (deeper masters): Optional.** Phase 0 ELEVATED several former b3 candidates to Core/Common in the surface matrix (deposit_accounts, loan_servicing_accounts, repayment_schedules, ach_transfers, banking_product_catalog_items = Core; credit_decisions, collateral_records, borrower_profiles, card_authorizations, disputes/chargebacks = Common). Still b3 (additive, after the build) but reframed as genuine workflow substrate. q10 framing updated.
+
+### Reversals
+
+None. Unlike the PRM 2026-06-08 pass (which reversed two recommendations), the fresh BANK-OPS Phase 0 CONFIRMS every prior market/workflow-shape recommendation rather than overturning it. The 7-module shape, banking_cases as own master, and stateless transaction ledger all survive the vendor check and are now grounded in named-vendor evidence instead of generic framing.
+
+### Files written / edited
+
+- `.tmp_deploy/BANK-OPS-phase0-2026-06-08.md` (new: Phase 0 report)
+- `audits/BANK-OPS/q-BANK-OPS.md` (regenerated: inline vendor evidence on every recommendation, `> Grounding:` block, phase0 + reversed footer notes)
+- `audits/BANK-OPS/state.yaml` (added 2026-06-08 Phase 0 note block after the SUPERSEDED header; last_audit -> 2026-06-08; vendor grounding added to B2-1 / B2-2 / B2-3 `why`; status stays feedback_needed / next_action_by user)
+- `audits/BANK-OPS/history.md` (this section)
+
+### Errors
+
+None. No JWT-audience errors. No DB inserts / updates / deletes.

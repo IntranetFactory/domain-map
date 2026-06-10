@@ -73,6 +73,16 @@ a6:
 
 ---
 
+q8: Learning Management forwards skill profile to Skills Management to manage certifications and skills, but Skills Management does not yet have anyone assigned to manage certifications and skills, so this step has no owner. How should it be handled?
+- a) Record it now as work Skills Management owns, and assign a named owner once Skills Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Skills Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a8:
+
+---
+
 ## Optional (will not hold up the build)
 
 q7: Eight further entity candidates surface across the specialist vendors (taxonomy versions, demand signals, supply metrics, extraction sources, gap recommendations, peer-validation requests, inference models, governance policies). Should I research and add the ones that hold up? (yes/no)
@@ -83,4 +93,4 @@ a7:
 
 ---
 
-<!-- agent map, ignore: q1=B2-5.split q2=B2-5.entities q3=B2-2 q4=B2-3 q5=B2-4 q6=B2-6 q7=B3-1,B3-2,B3-3,B3-4,B3-5,B3-6,B3-7,B3-8 | domain_id=169 -->
+<!-- agent map, ignore: q1=B2-5.split q2=B2-5.entities q3=B2-2 q4=B2-3 q5=B2-4 q6=B2-6 q7=B3-1,B3-2,B3-3,B3-4,B3-5,B3-6,B3-7,B3-8 q8=B2-B9D-OWN-1873 | domain_id=169 -->

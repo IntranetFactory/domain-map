@@ -15,6 +15,10 @@ next_action_by: user
 last_audit: "2026-06-07"
 
 b1a:
+  - id: B1A-B9D-VERIFY
+    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
+    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
+    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-APQC-REPLACE
     summary: "4 ONBOARDING cross-domain handoffs carry wrong/coarse APQC tags; REPLACE is destructive (surface only)"
     finding: >
@@ -241,6 +245,16 @@ b2:
       "submitted_interview_scorecard" diverging from the intended verb). The
       audit must NOT invent verbs.
     affected_modules: [35, 36, 37]
+  - id: B2-B9D-OWN-224
+    summary: "Employee Onboarding: name an owner for \"Manage employee onboarding\" (no one is responsible for it today)"
+    question: |
+      Applicant Tracking and Recruiting forwards onboarding journey to Employee Onboarding to manage employee onboarding, but Employee Onboarding does not yet have anyone assigned to manage employee onboarding, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Employee Onboarding owns, and assign a named owner once Employee Onboarding sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Employee Onboarding decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ONBOARDING.md q9.
+    extra_b9d_added: "2026-06-10"
 
 b3:
   - id: B3-PRIOR

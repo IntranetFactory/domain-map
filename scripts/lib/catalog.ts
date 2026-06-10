@@ -62,7 +62,7 @@ export type Domain = {
   domain_code: string;
   domain_name: string;
   description: string;
-  catalog: boolean;
+  catalog_release: string | null;
   catalog_tagline: string;
   catalog_description: string;
   crud_percentage: number;
@@ -84,7 +84,6 @@ export type ModuleRow = {
   description: string;
   catalog_tagline: string;
   catalog_description: string;
-  catalog: boolean;
   module_kind: "full" | "starter";
 };
 
@@ -185,7 +184,7 @@ export async function loadCatalogIndex(): Promise<CatalogIndex> {
   const [domains, dataObjects, industries, modules] = await Promise.all([
     pg(
       "GET",
-      "/domains?select=id,domain_code,domain_name,description,catalog,catalog_tagline,catalog_description,crud_percentage,business_logic,min_org_size,cost_band,certification_required,usa_market_size_usd_m,market_size_source_year&order=domain_code.asc&limit=10000",
+      "/domains?select=id,domain_code,domain_name,description,catalog_release,catalog_tagline,catalog_description,crud_percentage,business_logic,min_org_size,cost_band,certification_required,usa_market_size_usd_m,market_size_source_year&order=domain_code.asc&limit=10000",
     ) as Promise<Domain[]>,
     pg(
       "GET",
@@ -194,7 +193,7 @@ export async function loadCatalogIndex(): Promise<CatalogIndex> {
     pg("GET", "/industries?select=id,industry_name&limit=10000") as Promise<IndustryRow[]>,
     pg(
       "GET",
-      "/domain_modules?select=id,domain_module_code,domain_module_name,domain_id,description,catalog_tagline,catalog_description,catalog,module_kind&order=domain_module_code.asc&limit=10000",
+      "/domain_modules?select=id,domain_module_code,domain_module_name,domain_id,description,catalog_tagline,catalog_description,module_kind&order=domain_module_code.asc&limit=10000",
     ) as Promise<ModuleRow[]>,
   ]);
 
@@ -222,6 +221,8 @@ export type AllRelationships = {
   businessFunctions: any[]; // business_functions
   businessFunctionDomains: any[]; // business_function_domains (market RACI)
   processes: any[]; // processes
+  handoffProcesses: any[]; // handoff_processes (process<->handoff junction, APQC tagging) with handoff endpoints embedded
+  processTools: any[]; // process_tools (process<->tool coverage; consumed only for the "process used somewhere" set)
 
   // Pre-built indices keyed by id, populated by loadAllRelationships.
   dmdoByModuleId: Map<number, any[]>;
@@ -235,6 +236,7 @@ export type AllRelationships = {
   roleModulesByModuleId: Map<number, any[]>;
   roleModulesByRoleId: Map<number, any[]>;
   processRaciByProcessId: Map<number, any[]>;
+  handoffProcessesByProcessId: Map<number, any[]>;
   businessFunctionDomainsByDomainId: Map<number, any[]>;
   domainRolesById: Map<number, any>;
   businessFunctionsById: Map<number, any>;
@@ -255,6 +257,8 @@ type RawRelationships = {
   businessFunctions: any[];
   businessFunctionDomains: any[];
   processes: any[];
+  handoffProcesses: any[];
+  processTools: any[];
 };
 
 // Pure in-memory: build the Map indices from raw arrays. Reused by loadAllRelationships
@@ -297,6 +301,8 @@ function buildRelationshipIndices(raw: RawRelationships): AllRelationships {
     businessFunctions: raw.businessFunctions ?? [],
     businessFunctionDomains: raw.businessFunctionDomains ?? [],
     processes: raw.processes ?? [],
+    handoffProcesses: raw.handoffProcesses ?? [],
+    processTools: raw.processTools ?? [],
     dmdoByModuleId: groupBy(raw.dmdo, (r: any) => r.domain_module_id),
     dmdoByDataObjectId: groupBy(raw.dmdo, (r: any) => r.data_object_id),
     ddoByDomainId: groupBy(raw.ddo, (r: any) => r.domain_id),
@@ -308,6 +314,7 @@ function buildRelationshipIndices(raw: RawRelationships): AllRelationships {
     roleModulesByModuleId: groupBy(raw.roleModules, (r: any) => r.domain_module_id),
     roleModulesByRoleId: groupBy(raw.roleModules, (r: any) => r.role_id),
     processRaciByProcessId: groupBy(raw.processRaci, (r: any) => r.process_id),
+    handoffProcessesByProcessId: groupBy(raw.handoffProcesses, (r: any) => r.process_id),
     businessFunctionDomainsByDomainId: groupBy(raw.businessFunctionDomains, (r: any) => r.domain_id),
     domainRolesById: new Map((raw.domainRoles ?? []).map((r: any) => [r.id as number, r])),
     businessFunctionsById: new Map((raw.businessFunctions ?? []).map((r: any) => [r.id as number, r])),
@@ -316,7 +323,7 @@ function buildRelationshipIndices(raw: RawRelationships): AllRelationships {
 }
 
 export async function loadAllRelationships(): Promise<AllRelationships> {
-  const [dmdo, ddo, aliases, relationships, lifecycle, handoffs, hostDomains, domainRoles, roleModules, processRaci, businessFunctions, businessFunctionDomains, processes] = await Promise.all([
+  const [dmdo, ddo, aliases, relationships, lifecycle, handoffs, hostDomains, domainRoles, roleModules, processRaci, businessFunctions, businessFunctionDomains, processes, handoffProcesses, processTools] = await Promise.all([
     pg("GET", "/domain_module_data_objects?select=domain_module_id,data_object_id,role,necessity,notes&limit=20000"),
     // domain_data_objects (the legacy domain-grain rollup) is RETIRED: masters derive from
     // domain_module_data_objects. The source is kept empty (not a GET) so the entity can be
@@ -336,6 +343,13 @@ export async function loadAllRelationships(): Promise<AllRelationships> {
     pg("GET", "/business_functions?select=id,business_function_name,parent_business_function_id&limit=10000"),
     pg("GET", "/business_function_domains?select=business_function_id,domain_id,responsibility_type&limit=20000"),
     pg("GET", "/processes?select=id,process_name,process_key,process_code,description,external_id,hierarchy_level,source_framework&limit=20000"),
+    // handoff_processes is the dominant process-attribution edge: which APQC/custom process implements
+    // each cross-domain handoff. Embed the handoff's domain + module endpoints so consumers can attribute
+    // the process to a domain/module without a second join. domain endpoints are always set; module
+    // endpoints can be NULL (domain-grain handoff), so domain-grain attribution is the more complete one.
+    pg("GET", "/handoff_processes?select=handoff_id,process_id,role,proposal_source,record_status,handoff:handoffs(source_domain_id,target_domain_id,source_domain_module_id,target_domain_module_id)&limit=20000"),
+    // process_tools contributes only to the "process used somewhere" set (small today); process_id suffices.
+    pg("GET", "/process_tools?select=process_id&limit=20000"),
   ]);
 
   return buildRelationshipIndices({
@@ -352,6 +366,8 @@ export async function loadAllRelationships(): Promise<AllRelationships> {
     businessFunctions: businessFunctions ?? [],
     businessFunctionDomains: businessFunctionDomains ?? [],
     processes: processes ?? [],
+    handoffProcesses: handoffProcesses ?? [],
+    processTools: processTools ?? [],
   });
 }
 
@@ -411,6 +427,8 @@ export function writeCatalogCache(
         businessFunctions: all.businessFunctions.length,
         businessFunctionDomains: all.businessFunctionDomains.length,
         processes: all.processes.length,
+        handoffProcesses: all.handoffProcesses.length,
+        processTools: all.processTools.length,
       },
     },
     index: {
@@ -433,6 +451,8 @@ export function writeCatalogCache(
       businessFunctions: all.businessFunctions,
       businessFunctionDomains: all.businessFunctionDomains,
       processes: all.processes,
+      handoffProcesses: all.handoffProcesses,
+      processTools: all.processTools,
     },
   };
   writeFileSync(cacheFile, JSON.stringify(payload), "utf8");

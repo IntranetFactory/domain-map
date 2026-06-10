@@ -18,11 +18,29 @@ last_audit: "2026-06-06"
 #   a10 (b3 ideas): user said "yes" to researching the 4 b3 candidates. Recorded as
 #     user-approved but GATED on the module-shape decision (q1 / Refactor C). b3 never
 #     auto-executes and never blocks "finished".
-# Still open (user turned each into a question; answers folded into q-LMS.md): q1 Refactor C,
-# q2 Refactor A, q4 skills-mgmt attribution, q7 handoff-1121 routing, q8 missing-entity
-# routing, q9 domain-regulations. Loader: .tmp_deploy/lms_a_processing_2026-06-07.ts.
+# 2026-06-10 a-LMS.md processing (user answered 2 of the round's questions):
+#   q7 (B2-B9D-OWN-1041 = "a"): authored process_raci R=Instructional Designer (23) +
+#     A=Learning Administrator (22) on process 1041 'Monitor and evaluate learning programs'
+#     (ids 145, 146). Decision executed. NOTE: 1041 still surfaces as a B9d ORPHAN because it
+#     has no gated lifecycle state (a monitoring activity, not a permissioned transition); the
+#     RACI is the persona the question asked for, accepted as a non-gated process. -> history.
+#   q8 (B2-B9D-MISTAG-REPOINT = "a"): re-pointed 15 mis-tagged handoff_processes rows to their
+#     verified realized codes (1312->1829; 434/435/1047/1049/1308/1309/1310->1829; 1079/1288->
+#     1039; 1080/1295/1303/1304/1305->1040). All stayed record_status='new'. -> history.
+# Still open (all user-gated; in q-LMS.md): q1 Refactor C (B2-REFACTOR-C), q2 Refactor A
+# (B2-REFACTOR-A), q3 skills-mgmt attribution (B2-SKILLS-MGMT-ATTRIBUTION), q4 handoff-1121
+# routing (B2-1121-ROUTING), q5 missing-entity routing (B2-MISSING-ROUTING), q6 domain-
+# regulations (B2-DOMAIN-REGULATIONS), q7 B9d privacy mis-tags (B2-B9D-MISTAG-PRIVACY, gated on
+# q2); optional q8 = the 4 b3 candidates.
 
 b1a: []
+# 2026-06-10 review: B1A-B9D-VERIFY resolved. B9d ran (scripts/analytics/b9d_resolver.ts LMS,
+#   both directions): 28 boundary tags, 14 (process,owner) findings -> 7 RESOLVED, 3 ORPHAN,
+#   4 MIS-TAG. ORPHANs routed additively (record_status untouched): B2-B9D-OWN-1041 (owner LMS,
+#   below), B2-B9D-OWN-224 (owner ONBOARDING, unbuilt - written to its backlog), B2-B9D-OWN-1873
+#   (owner SKILLS-MGMT, unbuilt - written to its backlog). MIS-TAGs are destructive sender edits
+#   -> surfaced for sign-off as B2-B9D-MISTAG-REPOINT + B2-B9D-MISTAG-PRIVACY (below). No other
+#   agent-doable work open; everything remaining is user-gated. -> moved to history.
 
 b1b:
   - id: B1B-B14-NECESSITY
@@ -185,6 +203,25 @@ b2:
       - "Add GDPR only"
       - "Leave as FERPA only"
     why: "The compliance + privacy modules already bring these statutes into scope. Purely additive metadata, independent of the q2 structural move."
+  - id: B2-B9D-MISTAG-PRIVACY
+    summary: "B9d MIS-TAG (destructive sign-off): 2 privacy handoffs are tagged 11.2.2 'Manage regulatory compliance', which doesn't fit; they should NOT be re-pointed to a training process. Interacts with q2 (privacy ownership)."
+    question: "What to do with the 2 privacy-record process tags (gdpr_consent_records, data_deletion_requests under 11.2.2)?"
+    user_question: ""
+    agent_answer: >-
+      #1313 (gdpr_consent_record.withdrawn, LMS->HCM) and #1314 (data_deletion_request.fulfilled,
+      LMS->HCM) carry privacy/DSAR records, not training completions, so 'Train employees on regulatory
+      requirements' (2.1.3.5.1) is the wrong target for them. Where these should land depends on q2: if
+      privacy moves to a canonical PRIV-MGMT owner, the correct APQC home is a privacy/DSAR process there;
+      if privacy stays in LMS interim, the tag is best deleted until that process is realized.
+    options:
+      - "(a) Hold pending q2 (privacy ownership); leave the 2 tags as-is for now (recommended)"
+      - "(b) Delete the 2 mis-tagged rows now"
+      - "(c) Re-point them anyway to 2.1.3.5.1 with the training set"
+    why: "These are privacy records, not training; their correct process home is gated on the q2 ownership decision. Destructive either way -> sign-off (Rule #21)."
+    blocked_by:
+      - {type: user_decision, ref: B2-REFACTOR-A}
+    affected_handoff_processes:
+      - {process_tag: "11.2.2 (pid 369)", handoffs: [1313, 1314], payloads: "gdpr_consent_records / data_deletion_requests"}
 
 b3:
   # a10 (2026-06-07): user said "yes" to researching all 4 candidates. Approved but GATED on the

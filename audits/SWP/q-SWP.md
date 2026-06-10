@@ -63,13 +63,13 @@ a5:
 
 ---
 
-q6: Three SWP handoff process mappings were auto-tagged by substring matching and point at the wrong process. Should they be corrected to the right strategic-workforce-planning process?
+q6: Three SWP-boundary process mappings were auto-tagged by substring matching and point at the wrong process. A closer look (the payload-realization pass) pinned down the exact fix for each. Should I apply them?
 
-- a) approve correcting all three
+- a) approve all three: re-point the attrition-forecast mapping to "perform strategic workforce planning"; delete the initiative-kickoff mapping (a more precise one already exists on that handoff); and delete the resource-allocation mapping (its record has no owning home anywhere yet, so it must wait for the strategic-portfolio side to take ownership first)
 - b) approve a subset (say which)
 - c) leave them as-is
 
-Recommended: a. The attrition-forecast and resource-allocation rows currently point at customer-attrition and sales-resource processes, which are clearly wrong for workforce-planning payloads, and the initiative-kickoff row is tagged too coarsely. Correcting them overwrites existing rows, so it is a destructive change that needs your sign-off.
+Recommended: a. The attrition-forecast row points at a customer-attrition process and is clearly wrong for a workforce-planning payload. The initiative-kickoff row is a too-coarse duplicate of a precise mapping already on the same handoff, so it should just be removed. The resource-allocation row points at a sales-resource process and its underlying record is not owned by any domain today, so the honest fix is to drop the bad mapping and let the strategic-portfolio domain establish ownership before re-tagging. Each is a delete or overwrite of an existing row, so it needs your sign-off.
 
 a6:
 
@@ -84,6 +84,16 @@ q7: Twelve module records consume entities mastered by other domains (employees,
 Recommended: a. These are true cross-domain reads, so marking them optional reflects reality without duplicating masters. Either fix overwrites an existing role or necessity value, so it is a destructive change that needs your sign-off.
 
 a7:
+
+---
+
+q10: Applicant Tracking and Recruiting sends Strategic Workforce Planning an automatically calculated position demand forecast that feeds perform strategic workforce planning, but Strategic Workforce Planning does not yet have anyone assigned to that work, so this step has no owner. How should it be handled?
+- a) Record it now as work Strategic Workforce Planning owns, and assign a named owner once Strategic Workforce Planning sets up who does this work.
+- b) Treat it as an automatically calculated figure with no one to own, and leave it off the list.
+
+Recommended: a. Recording it now means that the moment Strategic Workforce Planning decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a10:
 
 ---
 
@@ -105,4 +115,4 @@ a9:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S5 q2=B2-S1 q3=B2-S2 q4=B2-S3 q5=B2-S4 q6=B2-S6 q7=B1A-SELF-CONTAIN q8=B3-S1+B3-S2+B3-S3 q9=B3-S4 | domain_id=100 -->
+<!-- agent map, ignore: q1=B2-S5 q2=B2-S1 q3=B2-S2 q4=B2-S3 q5=B2-S4 q6=B2-S6 q7=B1A-SELF-CONTAIN q8=B3-S1+B3-S2+B3-S3 q9=B3-S4 q10=B2-B9D-OWN-980 | domain_id=100 -->

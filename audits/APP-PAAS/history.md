@@ -386,3 +386,113 @@ canonical 20-spine names, both pre-existing.
 
 next_action_by: user (B2-S1 module split is the master gate; B2-S3 / B2-S4 / B2-S5 /
 B2-H1 await decisions). All executed writes are at record_status='new' awaiting review.
+
+## 2026-06-08 - Phase 0 + q-file regeneration (Rule #22 remediation)
+
+### Why this pass ran
+
+The prior passes (2026-05-30 audit, 2026-05-31 continuation, 2026-06-07 state-driven
+execute) surfaced every market-shape `b2` call (the 2-module split B2-S1, the addon
+capability framing, the runtime-instance shape B2-S4, the substrate b3 candidates) but
+the q-file recommendations were grounded in generic "matches how the flagship PaaS
+vendors present their product" reasoning with no named-vendor specifics and no current
+Phase 0 report. SKILL.md Rule #22 (forcing step, skill-changelog 2026-06-08) requires
+every market-shape recommendation to be backed by a Phase 0 vendor-surface report
+produced THIS pass, with the named-vendor evidence embedded inline in each
+recommendation. This pass runs Phase 0 and regenerates q-APP-PAAS.md from its evidence.
+Research + file-authoring only; no DB writes (APP-PAAS stays UNBUILT, gated on the
+user's answers).
+
+### Vendor study
+
+Nine flagship code-first managed-runtime vendors, 2025-2026 product docs:
+Heroku (Dev Center), Render (Docs), Fly.io (Docs), Railway (Docs), AWS Elastic Beanstalk
+(Developer Guide), Google App Engine (Cloud docs), Azure App Service (Learn), Vercel
+(Docs), DigitalOcean App Platform (Docs). Diversity: 3 original backend-monolith PaaS
+shape (Heroku + the three cloud incumbents Beanstalk / App Engine / App Service), 4
+modern pure-plays (Render / Railway / Fly.io / DigitalOcean), 2 frontend-first edge-aware
+(Vercel, and Netlify in the alias set). Report saved to
+`.tmp_deploy/APP-PAAS-phase0-2026-06-08.md` (vendor table + surface matrix + per-decision
+evidence + modularization hypothesis).
+
+### Surface-matrix highlights
+
+- **Build/version vs running-app is a vendor-real split, not a catalog convenience.**
+  AWS Elastic Beanstalk separates an application version ("points to an S3 object
+  containing the deployable code", "each application version is unique") from an
+  environment (the provisioned running infra you deploy a version into). Google App
+  Engine separates a version ("a specific set of source code and configuration files")
+  from instances ("the basic building blocks providing resources to host your
+  application"). Heroku separates the build + release (append-only ledger) from the dyno;
+  Fly.io separates `fly deploy` (creates a release, deposits an image in the registry)
+  from the Machine. Grounds q1 (RUNTIME vs DELIVERY).
+- **Config vars / secrets is the most uniformly Core entity in the matrix**: all 9
+  vendors model it first-class (Heroku config vars, Render env vars + environment groups,
+  Fly.io secrets, Railway variables + shared variables, Beanstalk env properties, App
+  Engine env vars, Azure app settings, Vercel env vars encrypted at rest, DigitalOcean
+  app + component env vars). Grounds q12.
+- **A branded add-on MARKETPLACE is a minority surface.** Heroku Elements (200+
+  partner-maintained add-ons) and DigitalOcean (marketplace launched 2022) run one;
+  Render, Fly.io, Railway, Vercel do NOT, they provision managed databases/caches/queues
+  directly. The universal capability is "attach a managed backing service", not
+  "marketplace". This is the reversal (see below).
+- **Deployment/build immutability is multi-vendor.** Heroku releases are an "append-only
+  ledger ... automatically persisted"; Beanstalk app versions are "unique" (rollback =
+  deploy a prior version); App Engine creates "additional versions" per deploy and rolls
+  back by routing traffic. Build artifacts (Beanstalk S3 WAR, Fly.io registry image,
+  Heroku/DO buildpack output) are content-addressed immutable outputs. Grounds q4/q5.
+- **Runtime-instance lifecycle is autoscaler-reconciled across most vendors** (App Engine
+  instances created/destroyed by scaling config; Azure plan-level scale-out; Heroku dyno
+  process lifecycle), with Fly.io the genuine exception (Machines are "individually
+  runnable and controllable"). Grounds q7's config-shape recommendation while surfacing
+  the Fly.io counter-evidence honestly.
+
+### Per-decision verdicts
+
+| q | decision | verdict | grounding |
+|---|---|---|---|
+| q1 | RUNTIME vs DELIVERY split (B2-S1.split) | CONFIRMED a | Beanstalk app-version-vs-environment, App Engine version-vs-instance, Heroku build/release-vs-dyno, Fly.io deploy-vs-Machine |
+| q2 | link LCAP-MANAGED-RUNTIME (B2-S1.capability) | CONFIRMED a | shared managed-runtime shape at 2 domains (LCAP + APP-PAAS); KUBE-PLAT is cluster/workload runtime, a different abstraction, so below the >=3 neutral-name threshold |
+| q3 | addon capability framing (B2-S1.addonmarketplace) | **REVERSED** | marketplace is Heroku Elements / DigitalOcean minority; universal shape is managed-service attachment; keep as own capability, rename, do NOT fold into env-mgmt |
+| q4 | deployment immutable on success (B2-S3) | CONFIRMED yes | Heroku append-only release ledger, Beanstalk unique versions, App Engine version rollback |
+| q5 | build record immutable (B2-S3) | CONFIRMED yes | content-addressed artifacts (Beanstalk S3 WAR, Fly.io image, Heroku/DO buildpack output) |
+| q6 | addon carries credentials (B2-S3) | CONFIRMED yes | Heroku add-on injects config-var connection string; DigitalOcean env-var DB connection details; Render env groups; Fly.io secrets |
+| q7 | runtime-instance config-shape (B2-S4) | CONFIRMED b (Fly.io caveat surfaced) | App Engine / Azure / Heroku autoscaler-reconciled; Fly.io Machine is the user-controllable minority shape |
+| q8 | consumer DMDO for 3 inbound payloads (B2-S5) | CONFIRMED a | none mastered by a PaaS vendor; PaaS consumes upstream artifacts (low-code app, container workload, software-deployment record) |
+| q9 | APQC tag on handoff 753 (B2-H1) | unchanged (not market-shape) | left existing recommendation c (co-tag) |
+| q10 | vendor-brand alias tuples (B2-ALIASES) | CONFIRMED yes | vendor docs give clean labels: Heroku dyno/config vars/log drains/release, Fly.io Machine, App Engine version/instance, Beanstalk application version, Azure deployment slot/app settings, Vercel project/integration, Render service/environment group |
+| q11 | paas_release_versions (B3) | CONFIRMED yes | Heroku release ledger, App Engine version, Beanstalk application version, Azure slot/release all split version from deploy; modern pure-plays collapse it |
+| q12 | paas_secrets / config_vars (B3) | CONFIRMED yes | Core across all 9 vendors |
+| q13 | paas_log_streams (B3) | CONFIRMED yes | Heroku log drains (canonical PaaS concept), Vercel/Render/Railway/Fly.io/DigitalOcean expose logs through the PaaS API |
+| q14 | paas_custom_domains (B3) | CONFIRMED yes | Core across the set; Render/Vercel/Heroku/Fly.io/Netlify/DigitalOcean + Azure per-slot domains, all with TLS |
+
+### Reversal
+
+**B2-S1.addonmarketplace (q3): marketplace framing -> managed-service-attachment framing.**
+The prior recommendation kept "add-on marketplace" as its own top-level capability on the
+premise it was "a distinct buyer-recognizable capability across the vendor set." Fresh
+Phase 0 evidence contradicts the "across the vendor set" claim: a branded marketplace
+exists only at Heroku (Elements, 200+ add-ons) and DigitalOcean (launched 2022); Render,
+Fly.io, Railway, and Vercel provision managed databases/caches/queues directly with no
+marketplace surface. Per Rule #22 the fresh evidence wins. The reversed recommendation
+keeps the add-on capability as its own top-level line (provisioning a backing service is a
+distinct workflow, so it is NOT folded into environment management) but renames it for the
+universal managed-service / backing-service-attachment shape rather than the marketplace,
+so the capability reads true for the whole vendor set rather than for two vendors. The
+B2-S1 `why` framing in state.yaml was updated accordingly; the q-file q3 was rewritten with
+options for managed-service-attachment naming vs marketplace naming vs fold, recommending
+the first. The 2-module split (q1) and LCAP-MANAGED-RUNTIME link (q2) were CONFIRMED, not
+reversed.
+
+### Files written
+
+- `.tmp_deploy/APP-PAAS-phase0-2026-06-08.md` (new Phase 0 report)
+- `audits/APP-PAAS/q-APP-PAAS.md` (regenerated with inline named-vendor grounding + Grounding block + reversed-note footer)
+- `audits/APP-PAAS/state.yaml` (dated Phase 0 note block after the SUPERSEDED 2026-06-06 header; B2-S1 `why` updated for the reversal; last_audit -> 2026-06-08)
+- `audits/APP-PAAS/history.md` (this section)
+
+### Status
+
+Unchanged: status: feedback_needed, next_action_by: user. APP-PAAS stays UNBUILT and gated
+on B2-S1 (the master gate) plus B2-S3 / B2-S4 / B2-S5 / B2-H1 / B2-ALIASES. No DB writes
+this pass; no record_status stamped. Awaiting a-APP-PAAS.md.

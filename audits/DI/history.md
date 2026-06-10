@@ -395,3 +395,87 @@ Loader: `c:/dev/domain-map/.tmp_deploy/fix_di_state_driven_2026_06_07.ts`
 - https://tests.semantius.app/domain_map/data_objects
 - https://tests.semantius.app/domain_map/domains?id=eq.89
 - https://tests.semantius.app/domain_map/data_object_aliases
+
+## 2026-06-08 - Phase 0 + q-file regeneration (Rule #22 remediation)
+
+### Why this pass ran
+
+The 2026-06-07 q-file surfaced market-shape b2 calls (module split, attribution defects, regulatory
+scope) WITHOUT a current Phase 0 vendor-surface report, leaning on generic "vendor-neutral" /
+"cleanest" reasoning rather than named-vendor evidence. Rule #22 (the forcing step, skill-changelog
+2026-06-08) requires every market-shape recommendation to be backed by a Phase 0 report produced
+THIS pass, with named-vendor evidence inline. This pass ran Phase 0, then regenerated q-DI.md from
+its evidence. Research + file-authoring only; no DB writes (the build stays gated on the user's
+answers). No `record_status` changes.
+
+### Market confirmation (CLIN-DEV lesson)
+
+Before researching, confirmed the actual market from live state, not the candidate-vendor
+hypothesis. The live domain row (id=89) self-describes as ELT/ETL/CDC/replication for analytics,
+"Distinct from iPaaS (transactional app integration)." The 7 live masters are the data-pipeline
+runtime substrate (pipeline_runs, source_connectors, sink_connectors, transformation_jobs,
+schema_registries, change_data_capture_streams, integration_flows); DI is a contributor (not master)
+on DATA-AI-PLAT's lakehouse_tables and data_pipelines. The candidate vendors matched the market;
+Boomi was excluded as primarily iPaaS (the DI/IPAAS boundary the domain row draws).
+
+### Vendor study (7 flagships)
+
+Fivetran, Airbyte, dbt Labs, Confluent (Kafka Connect + Schema Registry), Qlik Replicate / Striim
+(compliance-grade CDC), Informatica IDMC (CDIR + CDI), Matillion Data Productivity Cloud. Report:
+`.tmp_deploy/DI-phase0-2026-06-08.md`.
+
+### Surface-matrix highlights
+
+- **Ingest surface is universal.** Every flagship masters source_connectors + pipeline_runs +
+  connector_tasks + connection_credentials; the streaming/replication vendors (Confluent, Qlik,
+  Striim) add CDC. Classified Core.
+- **Transform/deliver surface is the second pillar.** dbt / Matillion / Informatica CDI lead on
+  transformation_jobs + sink_connectors + integration_flows; dbt model contracts + Confluent
+  immutable schema versions anchor governed schema. Classified Core/Common.
+- **schema_registries is split-spanning, mastered once.** Confluent/Informatica enforce schema at
+  INGEST (drift), dbt enforces at TRANSFORM (model contracts). The single live schema_registries
+  master belongs on the transform/deliver side as the governed schema-of-record; the ingest side
+  detects drift against it. Not a reason to duplicate.
+- **Compliance shape is an audit/lineage substrate, not statute-prefixed masters.** Qlik Replicate
+  (Qlik Catalog lineage) and Striim (transaction-matching audit) compete on the proof-of-movement
+  surface, but DI is the data CARRIER, not the owner. No fcra_/hipaa_/gdpr_ masters belong in DI;
+  its regulatory role is INDIRECT (q7).
+- **Modularization packaging confirms the 2-module split.** Informatica IDMC ships CDIR (ingest/
+  replicate) and CDI (transform/orchestrate) as distinct service modules with separate UIs (recently
+  unified into one homepage, still two products); Matillion splits orchestration pipelines vs
+  transformation pipelines. The ingest-vs-deliver cut is how the suites actually divide the surface,
+  not merely an abstraction.
+
+### Per-decision verdicts (mapped to the q-file)
+
+| q | state id | shape | verdict | grounding |
+|---|---|---|---|---|
+| q1 | B2-S1 | market-shape (module split) | keep (a) 2-module | Informatica CDIR/CDI + Matillion orchestration/transformation packaging |
+| q2 | B2-S2.txjlock | workflow-shape | keep yes | dbt model contracts; Fivetran Oct-2025 unified standardized model |
+| q3 | B2-S2.txjapprover | workflow-shape | keep yes (lower confidence, flagged) | flagships gate review (dbt CI, Matillion env promotion) more than single named approver |
+| q4 | B2-S2.schemalock | workflow-shape | keep yes | Confluent immutable versioned subjects; dbt contracts |
+| q5 | B2-S3 | market-shape (where-mastered) | keep (b) re-anchor on run | Fivetran/Airbyte/Qlik/Striim fire failure on the RUN object, not the table |
+| q6 | B2-S5 | market-shape | keep (b) parallel event | genuine vendor split: connector-run (Fivetran/Airbyte/Qlik) vs table (Snowpipe) |
+| q7 | B2-S4 | non-market (regulations) | keep (a) indirect | Qlik/Striim compete on audit-trail/lineage; DI is indirect carrier |
+| q8 | B1A-EMDASH-BL | non-market hygiene | keep yes | one-char no-em-dash fix; destructive overwrite, surfaced |
+| q9 | b3 (10 candidates) | optional additive | keep yes/after-modules | runtime trio + contract layer strongest; stream_topics/data_incidents likely sibling domains |
+
+### Reversals
+
+None. Fresh Phase 0 CONFIRMED every prior recommendation. The substantive change is grounding: the
+q1 reason moved from "vendor-neutral / absorbs additions" to named packaging evidence (Informatica
+CDIR vs CDI, Matillion orchestration vs transformation). q3 and q6 reasons were re-grounded in
+named-vendor behavior, with q3 honestly downgraded to the lower-confidence flag and q6's parallel-
+event hedge tied to the real connector-run-vs-table vendor split. No b2 `why` framing needed a
+substance change beyond this re-grounding (the underlying decisions stand).
+
+### Files written this pass
+
+- `.tmp_deploy/DI-phase0-2026-06-08.md` (Phase 0 report, new)
+- `audits/DI/q-DI.md` (regenerated with inline named-vendor evidence + Grounding block + phase0
+  pointer in the trailing comment)
+- `audits/DI/state.yaml` (dated Phase 0 note added after the SUPERSEDED header; last_audit ->
+  2026-06-08; status / next_action_by unchanged)
+- `audits/DI/history.md` (this section)
+
+No DB inserts/updates/deletes. No em-dash characters authored. American English throughout.

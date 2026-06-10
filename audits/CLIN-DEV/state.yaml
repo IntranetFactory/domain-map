@@ -11,8 +11,31 @@
 schema_version: 2
 domain: CLIN-DEV
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-06-07"
+next_action_by: agent
+last_audit: "2026-06-08"
+
+# 2026-06-08 PHASE 0 ran (the step the prior passes skipped before surfacing market-shape
+# b2 calls; see skill-changelog 2026-06-08 + SKILL.md Rule #22 forcing step). Fresh vendor
+# study of 6 flagships -> .tmp_deploy/CLIN-DEV-phase0-2026-06-08.md.
+# SCOPE NOTE: CLIN-DEV = Clinical Device Management (hospital clinical engineering / HTM CMMS
+# for medical equipment), NOT clinical-trial development (EDC/CTMS/eTMF). Live masters confirm
+# the hospital-HTM scope. Flagships studied: Nuvolo Connected Workplace for Healthcare, AIMS 3
+# (Phoenix Data Systems), EQ2 HEMS, ServiceNow Clinical Device Management, plus the sterile-
+# processing specialists Censis CensiTrac / STERIS SPM and the IoMT-security specialists
+# Asimily / Cynerio.
+# ONE recommendation REVERSED by named-vendor evidence:
+#   - B2-S2 module split: prior recommended "Inventory + Safety-Vigilance" on a build-convenience
+#     rationale ("minimal shape that unblocks the build"). Fresh evidence overturns it: every
+#     flagship CMMS bundles recall / hazard-alert response INTO the core product (AIMS Hazard
+#     Alerts, EQ2 HEMS Alerts & Recall, Nuvolo, ServiceNow CDM), so Safety-Vigilance is not a
+#     separately-marketed surface. The genuine product boundary is sterile processing (Censis,
+#     STERIS, different buyer = SPD manager). New recommended split = CLIN-DEV-CMMS (devices +
+#     work orders + PM + calibration + recall + incidents + contracts + compliance) +
+#     CLIN-DEV-STERILE-PROC (sterilization cycles + trays + biological indicators + case carts).
+# Promote-to-sibling candidates surfaced as a new b3 (q12): IOMT-SEC (medical-device security,
+# Gartner-recognized distinct market) + MED-DEVICE-QMS (manufacturer QMS, home of the 510(k) /
+# QSR regulations questioned in B2-S5). q-CLIN-DEV.md regenerated with inline vendor evidence.
+# Still feedback_needed: b2 decisions open, awaiting a-CLIN-DEV.md.
 
 # NOTE: CLIN-DEV (domain id 50) is UNBUILT: 0 domain_modules, 0 capability_domains. The build
 # (B1A-BUILD) is gated on the B2-S2 module-split decision. Per the UNBUILT rule the build is
@@ -23,6 +46,10 @@ last_audit: "2026-06-07"
 #   - A4 / Rule #20: domains.catalog_tagline + catalog_description authored on domain 50 (were empty).
 
 b1a:
+  - id: B1A-B9D-VERIFY
+    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
+    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
+    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-S5b
     summary: "B7 partial: master-to-users relationship edges in the symmetric direction. SURFACED (not auto-executed): inverse_verb already models the master-side view."
     finding: "The 8 users-to-master data_object_relationships rows (ids 653 to 660) each already carry an inverse_verb (is_owned_by, is_performed_by, is_operated_by, is_reported_by, is_managed_by, is_assigned_to, is_created_by) and owner_side='source', so the master-side view of the same FK is ALREADY modeled on the existing row. Inserting separate master->users rows would double-count the same FK edge. Whether the catalog wants a second set of unidirectional rows or treats inverse_verb as sufficient is a modeling judgment, not a mechanical additive fix; state never pre-spec'd concrete reverse tuples for a reason. Surface to user."
@@ -117,13 +144,13 @@ b2:
     why: "Original wording predates the em-dash ban; the fix is a destructive overwrite of a non-empty domains core field."
 
   - id: B2-S2
-    summary: "CLIN-DEV module split decision (Phase M precursor). Gates B1A-BUILD and all b1b."
+    summary: "CLIN-DEV module split decision (Phase M precursor). Gates B1A-BUILD and all b1b. RECOMMENDATION REVERSED 2026-06-08 by Phase 0."
     question: "How should the CLIN-DEV market be modularized into domain_modules rows?"
     options:
-      - "Two-module: CLIN-DEV-INVENTORY (medical_devices, device_maintenance_logs, device_calibration_records, sterilization_cycles, clinical_engineering_work_orders) + CLIN-DEV-SAFETY-VIGILANCE (device_recalls, device_incident_reports)"
+      - "Two-module (RECOMMENDED, follows vendor packaging): CLIN-DEV-CMMS (medical_devices, device_models, device_locations, clinical_engineering_work_orders, device_maintenance_logs, preventive_maintenance_schedules, device_calibration_records, device_recalls, device_incident_reports, service_contracts, compliance evidence) + CLIN-DEV-STERILE-PROC (sterilization_cycles, instrument_trays, biological_indicator_results, or_case_carts)"
       - "Single CLIN-DEV-CORE module covering all 7 masters"
-      - "Three-module: CLIN-DEV-INVENTORY + CLIN-DEV-SAFETY-VIGILANCE + CLIN-DEV-STERILE-PROCESSING (pulls sterilization_cycles into a dedicated module)"
-    why: "Right split depends on buyer persona: hospital Clinical Engineering only, or also Sterile Processing Department as a separate budget owner."
+      - "Two-module (prior shape, now overruled by evidence): CLIN-DEV-INVENTORY (devices, maintenance, calibration, sterilization, work orders) + CLIN-DEV-SAFETY-VIGILANCE (device_recalls, device_incident_reports)"
+    why: "REVERSED 2026-06-08 by Phase 0 (.tmp_deploy/CLIN-DEV-phase0-2026-06-08.md). The prior recommended split (Inventory + Safety-Vigilance) rested on build-convenience (the minimal shape that unblocks the build), a Rule #22 violation. Named-vendor evidence overturns it: every flagship CMMS (Nuvolo, AIMS Hazard Alerts, EQ2 HEMS Alerts & Recall, ServiceNow CDM) bundles recall / hazard-alert response INTO the core product, so Safety-Vigilance is not a separately-marketed surface. The genuine product boundary is sterile processing (Censis CensiTrac, STERIS SPM: distinct product, distinct buyer = SPD manager, distinct workflow). Recommended split now follows vendor product packaging: CMMS core + Sterile Processing. IOMT-SEC (medical-device security, Asimily/Cynerio, Gartner-recognized distinct market) and MED-DEVICE-QMS (manufacturer QMS) promote to sibling domains, not modules."
 
   - id: B2-S3
     summary: "Business-function owner for CLIN-DEV (DESTRUCTIVE repoint of existing owner row 257, surfaced)."
@@ -206,4 +233,26 @@ b3:
     vendor_evidence:
       - {vendor: Nuvolo Connected Workplace for Healthcare, evidence: 1st_class}
       - {vendor: AIMS by Phoenix Data Systems, evidence: secondary}
-    proposed_module: CLIN-DEV-SAFETY-VIGILANCE
+    proposed_module: CLIN-DEV-CMMS
+
+  # Promote-to-sibling-domain candidates surfaced by Phase 0 2026-06-08 (q12). Both already queued
+  # in the audit backlog as adjacent markets. Non-blocking ideas (a domain promotion is a candidate,
+  # not a CLIN-DEV split / b2). They integrate WITH CLIN-DEV but are distinct products with distinct buyers.
+  - id: B3-IOMT-SEC
+    candidate: "IOMT-SEC as its own sibling domain"
+    rationale: "Medical-device / IoMT security (device discovery, risk-based vulnerability prioritization tied to FDA recalls and ICS-CERT advisories, network segmentation policy generation). Gartner runs a dedicated 'Medical Device Security Solutions' market for it. Distinct buyer (hospital security / CISO team) from clinical engineering / HTM. Integrates WITH the CMMS (Nuvolo bundles an OT-security module and integrates Asimily-class inventory), but the pure-plays are a separate market and do not master the CMMS work-order / PM / calibration surface."
+    vendor_evidence:
+      - {vendor: Asimily, evidence: 1st_class}
+      - {vendor: Cynerio, evidence: 1st_class}
+      - {vendor: Ordr, evidence: 1st_class}
+      - {vendor: Claroty Medigate, evidence: 1st_class}
+    proposed_module: "IOMT-SEC (new sibling domain)"
+
+  - id: B3-MED-DEVICE-QMS
+    candidate: "MED-DEVICE-QMS as its own sibling domain"
+    rationale: "Medical-device manufacturer QMS (design controls per 21 CFR 820.30, CAPA, complaint handling, eMDR submissions, 510(k) records). This is the manufacturer-side market that the 510(k) and QSR 820 regulations in B2-S5 actually belong to; no hospital-HTM flagship touches it. Distinct buyer (manufacturer quality team) from hospital clinical engineering. Relates to B2-S5 (manufacturer-vs-hospital scope): if promoted, the manufacturer-only regulations relocate here."
+    vendor_evidence:
+      - {vendor: Greenlight Guru, evidence: 1st_class}
+      - {vendor: MasterControl, evidence: 1st_class}
+      - {vendor: Veeva Vault QMS, evidence: 1st_class}
+    proposed_module: "MED-DEVICE-QMS (new sibling domain)"

@@ -11,7 +11,7 @@
 schema_version: 2
 domain: ACCT-PRACT-MGMT
 status: feedback_needed
-next_action_by: user
+next_action_by: agent
 last_audit: "2026-06-05"
 # 2026-06-05 b1a execution: all 3 agent-solvable items resolved.
 # - B1A-B6-INTRA-EDGE: inserted data_object_relationships id=2015 (client_engagements scopes tax_returns).
@@ -26,7 +26,11 @@ last_audit: "2026-06-05"
 # blocked on user_decision / domain_audit / next-Validate-pass. b3 candidate groups remain open.
 # 2026-06-02 modularization: M1 cured. 3 full modules exist (207 ENGAGEMENT-WORKFLOW,
 # 208 TAX-RETURN-PREP, 209 CLIENT-PORTAL-BILLING), 6 capabilities placed, 6 DMDO rows.
-b1a: []
+b1a:
+  - id: B1A-B9D-VERIFY
+    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
+    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
+    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
 b1b:
   - id: B1B-B4-PATTERN-FLAGS
     summary: "tax_returns (id=400) and client_engagements (id=401) pattern flags all false; review candidates has_personal_content, has_submit_lock, has_single_approver."

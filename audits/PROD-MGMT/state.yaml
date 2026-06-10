@@ -1,10 +1,14 @@
 schema_version: 2
 domain: PROD-MGMT
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-06-07"
+next_action_by: agent
+last_audit: "2026-06-08"
 
 b1a:
+  - id: B1A-B9D-VERIFY
+    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
+    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
+    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-APQC-TAGGING-DISCOVER-RESIDUAL
     summary: "5 untagged cross-domain handoffs have no clean L4 PCF match: defer to a Discover/PCF-research pass"
     finding: "2026-06-07 live recheck: of the 16 handoffs the prior snapshot listed as untagged, 10 are already tagged with agent_curated handoff_processes rows (813, 997, 1001, 1003, 1004, 1006, 1008, 1012, 1323, 1324). 1 more (1002) was tagged this pass with a clean L4 match (PCF 1350, Maintain customer/product master files, external_id 10794). The remaining 5 have no clean L4 PCF match on live and cannot be machine-tagged confidently."
@@ -20,18 +24,6 @@ b1a:
     summary: "DESTRUCTIVE (surfaced): 11 agent_curated handoff_processes rows still at record_status='new' need a reviewer approval pass"
     finding: "H1 catalog-quality headline (record_status='approved' count). After this pass, 12 of the cross-domain handoffs carry agent_curated tags; 5 are already 'approved' (1008, 1012, 1323, 1324, plus pre-existing approvals) and the rest sit at 'new'. Flipping record_status to 'approved' is a Rule #1 / destructive action the agent never performs."
     action: "User reviews the agent_curated handoff_processes rows in the catalog UI and approves the correct ones. Agent will not flip record_status."
-
-  - id: B1A-PHASE-P
-    summary: "Personas / RACI layer for the 2-module domain (DEFERRED, not authored this pass)"
-    finding: "Live triage: 2 domain_modules (130, 131), 0 domain_roles reaching this domain via role_modules. Plan 3 (2026-06-02) deleted the old _core personas and re-homed the persona/RACI layer onto domain_roles + process_raci; the zero-persona coverage check fires on this multi-module domain."
-    action: "Author domain_roles (operational personas, function-anchored per references/roles.md), wire role_modules reach across modules 130 / 131, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). DEFERRED per orchestrator: personas are not auto-authored in a state-driven execute pass."
-    candidate_personas: [PRODUCT-MANAGER, HEAD-OF-PRODUCT, PRODUCT-OPS-ANALYST, ENGINEERING-LEAD]
-    extra_phase_p_triage: "2026-06-02"
-
-  - id: B1A-PHASE-E-RBAC-RETIRED
-    summary: "RETIRED (Plan 3, 2026-06-02): the old roles / role_modules-into-_core / baseline + workflow-gate permissions / permission_hierarchy bootstrap is no longer authored"
-    finding: "The former B1A-PHASE-E-BOOTSTRAP item (4 roles + 6 role_modules + 6 baseline permissions + 14 workflow-gate permissions + permission_hierarchy edges) targets the catalog RBAC store that Plan 3 DELETED. The catalog now stores no derived permissions and no permission_hierarchy: the emitter DERIVES baseline roles + permission hierarchy + workflow gates from entity_type, requires_permission lifecycle states, and domain_roles/process_raci; the deployer materializes them. Authoring those rows would re-introduce the deleted _core pollution."
-    action: "Do NOT author roles / role_modules-into-_core / baseline-or-gate permissions / permission_hierarchy. The successor work is B1A-PHASE-P (personas + RACI via domain_roles / process_raci). The 14 requires_permission lifecycle states already carry domain_module_id (130/131), so gate derivation has its inputs."
 
 b1b:
   - id: B1B-NEIGHBOR-NULL-OUTBOUND

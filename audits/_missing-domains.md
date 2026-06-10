@@ -3526,6 +3526,20 @@ the bottom are the resolved history.
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
 
+### ETHICS-INTAKE — Ethics & Whistleblower Intake
+
+- **Mention count:** 1
+- **First surfaced:** 2026-06-09 (HRSD audit 2026-06-09)
+- **Most recent:** 2026-06-09 (HRSD audit 2026-06-09)
+- **Surfaced by:**
+  - 2026-06-09 HRSD audit 2026-06-09
+- **Vendor evidence:** NAVEX EthicsPoint, OneTrust Ethics (Convercent), AllVoices, People Intouch SpeakUp, EQS Integrity Line, Whispli, Vault Platform
+- **Adjacency:** HRSD, GRC, LEGAL, AUDIT
+- **Candidate capabilities:** anonymous report intake, multi-channel hotline, investigation case management, anonymized reporter follow-up, regulatory disclosure tracking
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
 
 ---
 

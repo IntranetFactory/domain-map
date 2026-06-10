@@ -1,5 +1,54 @@
 # ITOM audit history
 
+## 2026-06-08 - Review (Phase 0 vendor-grounding of market-shape b2 set)
+
+### Context
+"review itom domain". Domain was already `feedback_needed` (last audit 2026-06-07) with the
+additive/corrective surface agent-finished. No `a-ITOM.md` (user had not answered). The open
+worklist is all `b2` / `b1b` / `b3`. Gap found: the q-ITOM.md surfaced five MARKET-SHAPE `b2`
+decisions (B2-S5 module split, B2-S1 RMM ownership, B2-S3 OBS boundary, B2-S3a AIOPS suppression,
+B2-S4 correlation-rules) with NO Phase 0 vendor-surface report and recommendations grounded in
+build-convenience ("unblocks the build", "already built", "cleanest"). That violates Rule #22
+(market-shape b2 requires a current Phase 0 report produced in the SAME review pass, before the
+q-file, with named-vendor evidence; never recommend from "what unblocks the build").
+
+### Executed (this pass)
+- **Phase 0 vendor research** (general-purpose subagent, research-only, no DB writes). Report at
+  `.tmp_deploy/ITOM-phase0-2026-06-08.md`: flagship vendor surface (ServiceNow ITOM, BMC Helix,
+  Datadog, Dynatrace, BMC Control-M / Broadcom AutoSys, Moogsoft / BigPanda, NinjaOne / Datto /
+  Kaseya), union surface matrix, and a named-vendor verdict on each of the five decisions.
+- **Regenerated q-ITOM.md** with named-vendor evidence inline on every market-shape question.
+- **Updated state.yaml**: added `phase0_report` + `phase0_note`; added `phase0_verdict` to B2-S5,
+  B2-S1, B2-S3, B2-S3a, B2-S4; revised B2-S5 options to the new split shape. `last_audit` -> 2026-06-08.
+
+### Two recommendations REVERSED on fresh evidence (Rule #22: fresh Phase 0 wins)
+- **B2-S5 (q1):** was "promote both runbook + workload-automation out"; now "promote ONLY
+  workload-automation out (Gartner SOAP standalone market: Control-M, Stonebranch UAC, Redwood,
+  AutoSys, Tidal, each mastering job_definitions), keep runbook in ITOM (natively bundled by
+  ServiceNow + BMC Helix as event-attached remediation; gives module 269 its missing master
+  runbook_definitions)."
+- **B2-S3 (q4):** was "add an OBS-owned alert entity and re-anchor"; now "leave as-is". OBS vendors
+  master their alert-RULE DEFINITIONS (Datadog Monitors, Dynatrace Problems, Grafana/Prometheus
+  alert rules) in the OBS domain, but the breach INSTANCE crossing the handoff is correctly ITOM's
+  monitoring_alerts. Follow-up routes to the OBS audit (ensure OBS masters its rule-definition entity).
+
+### Three recommendations kept, rationale replaced with vendor evidence
+- **B2-S1 (q2):** ITOM canonical + RMM embedded copy. RMM = device-agent config bundle + per-device
+  threshold breach (NinjaOne/ConnectWise/Datto/Kaseya); ITOM = service/CI-impact correlation via CMDB.
+- **B2-S3a (q5):** re-anchor suppression trigger to AIOPS alert_suppression_rules (722). BigPanda
+  maintenance plans, Moogsoft maintenance windows, ServiceNow Predictive AIOps / Dynatrace Davis.
+- **B2-S4 (q6):** distinct entities. ServiceNow ships deterministic Event Management rules AND ML
+  Predictive AIOps grouping as separate objects, proof they are two things, not two names.
+
+### Not changed
+- No DB writes (Phase 0 is research-only; every open item is a b2 decision, b1b blocked, or b3 backlog).
+- q3/q7/q8 (pattern-flag overwrite, PCF ratification, handoff_processes approval) are not market-shape,
+  so they did not need Phase 0; kept verbatim.
+- Domain stays `feedback_needed`, `next_action_by: user`. The q-file is now Rule #22-complete.
+
+### JWT errors
+None.
+
 ## 2026-05-30, Validate b1 (full 4-pass)
 
 ### Summary

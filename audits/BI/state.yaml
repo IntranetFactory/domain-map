@@ -8,13 +8,42 @@
 # cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 # re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
 # === end supersession note ===
+#
+# 2026-06-08 PHASE 0 ran (the step the 2026-06-07 q-file pass skipped before surfacing the
+# market-shape B2-S1 module-cut call; see skill-changelog 2026-06-08 + SKILL.md Rule #22
+# forcing step). Fresh vendor study of 5 BI flagships (Microsoft Power BI/Fabric, Tableau,
+# Google Looker, Qlik Sense, ThoughtSpot) plus the embedded-analytics market (Sisense, Power
+# BI Embedded, Tableau Next) and the headless-semantic-layer market (dbt Semantic Layer, Cube)
+# -> .tmp_deploy/BI-phase0-2026-06-08.md. NO recommendations REVERSED: the fresh evidence
+# CONFIRMS the prior calls. (1) B2-S1 module cut: the 3-module recommendation is now grounded
+# in named-vendor packaging, the Looker LookML model-vs-Look/Dashboard split and the ThoughtSpot
+# Model-vs-Liveboard split map to Semantic-Modeling / Visualization / Distribution, while the
+# Tableau Creator-Explorer-Viewer and Power BI Pro/PPU/Fabric persona split map to the 2-module
+# author-vs-consume cut; a 4th Embedded-Analytics module is a live option (Power BI Embedded /
+# Sisense / Tableau Next are a distinct developer-led buying motion). (2) Masters-vs-consumes
+# boundary CONFIRMED: every flagship BI tool ships its OWN embedded semantic layer (Power BI DAX
+# model, LookML, Qlik master items, ThoughtSpot Model), so BI legitimately MASTERS native
+# semantic_metrics; the standalone headless layer (dbt/Cube = catalog domain METRICS-LAYER, 137)
+# is a SEPARATE market BI CONSUMES (metric_definitions/dimensional_models/metric_access_policies).
+# The existing dual-master shape on semantic_metrics (BI 74 + DATA-AI-PLAT 129) and the
+# consume-from-METRICS-LAYER handoffs are correct; do NOT promote semantic_metrics out of BI.
+# (3) Pattern-flag calls (B2-S3): vendor behavior backs all four yeses (subscriptions are
+# recipient/address-defined = PII; published reports/dashboards are reproducible snapshots =
+# submit-lock; metric certification is single-steward sign-off = single-approver). q-BI.md
+# regenerated with inline named-vendor evidence per Rule #22. Still feedback_needed: B2-S1 +
+# B2-S3 (4 flags) + B2-S4 open; awaiting a-BI.md.
+#
 schema_version: 2
 domain: BI
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-06-07"
+next_action_by: agent
+last_audit: "2026-06-08"
 
 b1a:
+  - id: B1A-B9D-VERIFY
+    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
+    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
+    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities. The build is gated on the B2-S1 module-cut decision; do not scaffold unasked."
     finding: >-
@@ -169,12 +198,17 @@ b2:
       user names the split.
     options: ["2-module", "3-module", "other"]
     why: >-
-      Module shape is editorial; both cuts clear the Rule #14 floor. The
-      3-module cut maps better to a LookML-style semantic/visualization
-      separation; 2-module maps better to a Creator-vs-Viewer persona split.
-      Decision shapes B1B-S1 and unblocks B1A-BUILD.
+      Module shape is editorial; both cuts clear the Rule #14 floor. Phase 0
+      (2026-06-08) grounds both in named-vendor packaging: the 3-module cut
+      (Semantic-Modeling + Visualization + Distribution) maps to the Looker
+      LookML model-vs-Look/Dashboard split and the ThoughtSpot Model-vs-Liveboard
+      split; the 2-module cut maps to the Tableau Creator-Explorer-Viewer and
+      Power BI Pro/PPU/Fabric author-vs-consume license split. Recommended: b
+      (3-module), the layer cut is the better default because the modeling work
+      is governed by a distinct role across Looker and ThoughtSpot. Decision
+      shapes B1B-S1 and unblocks B1A-BUILD.
     extra_blocks: [B1A-BUILD, B1B-S1]
-    extra_cross_bucket_dependency: "B3-5 (embedded analytics) might shift the cut from 3 to 4 modules; revisit if Phase 0 confirms."
+    extra_cross_bucket_dependency: "B3-5 (embedded analytics) shifts the cut from 3 to 4: Phase 0 CONFIRMS embedded analytics is a distinct developer-led buying motion (Power BI Embedded / Sisense / Tableau Next External Embedding SDK), so a 4th Embedded-Analytics module is a vendor-grounded live option (q1 option c)."
 
   - id: B2-S3
     summary: "B4 pattern-flag positive re-evaluation per Rule #12 on 5 masters."
@@ -187,7 +221,7 @@ b2:
       semantic_metrics.has_single_approver=true (metric certification typically
       single-data-steward)?
     options: ["per-flag yes", "per-flag no"]
-    why: "Pattern flags are workflow-shape judgments the user owns. Default-false is valid but Rule #12 requires positive re-evaluation. Note: 3 masters are now typed operational_workflow (2026-06-07), so the flags apply to them per Rule #12."
+    why: "Pattern flags are workflow-shape judgments the user owns. Default-false is valid but Rule #12 requires positive re-evaluation. 3 masters are typed operational_workflow (2026-06-07), so the flags apply per Rule #12. Phase 0 (2026-06-08) backs all four yeses with vendor behavior: subscriptions/scheduled deliveries are recipient-and-address-defined across Power BI/Tableau/Looker/Qlik/ThoughtSpot (PII); published reports and dashboards are reproducible snapshots in all five (submit-lock on the publish gate); metric certification is a single-data-steward sign-off in the governed-metric model (single-approver)."
 
   - id: B2-S4
     summary: "F1 legacy domain-level system skill id 33 (bi-system): now the canonical domain-grain skill under the supersession; resolve the stale em-dash in its description."

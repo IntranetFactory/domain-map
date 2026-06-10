@@ -322,3 +322,50 @@ State-driven Validate (Rule #21) over the open items in CLIN-DEV/state.yaml. CLI
 - **B1A-S3 (Phase A solutions/vendors floor):** part of the build of an unbuilt domain; surfaced with the build, not auto-loaded (SCOPE DISCIPLINE: no new vendors/solutions this pass).
 - **B1B-S10 skill grain:** per-module skill authoring is RETIRED (supersession header / Plan 3); reframed as the single domain-grain system skill deriving its toolset once modules ship; skill_tools migration tracked in audits/_modularization-backlog.md.
 - **b3 (B3-DEVICE-MODELS, B3-DEVICE-LOCATIONS, B3-DEVICE-SERVICE-CONTRACTS, B3-RECALL-EFFECTIVENESS):** discretionary additive backlog; never gates finished.
+
+## 2026-06-08, Phase 0 + q-file regeneration (Rule #22 remediation)
+
+Rule #22 remediation pass. The 2026-06-07 q-file surfaced market-shape b2 calls (the B2-S2 module split, the B2-S3 owner repoint, the B2-S5 manufacturer-vs-hospital scope) grounded in generic "matches how the vendors present their product" reasoning with no named-vendor specifics and no Phase 0 report. Rule #22 (forcing step, skill-changelog 2026-06-08) requires every market-shape recommendation to be backed by a CURRENT Phase 0 vendor-surface report produced this pass, with named-vendor evidence inline. This pass runs Phase 0, regenerates q-CLIN-DEV.md from it, and records one reversal. Research + file-authoring only: NO DB writes; the build stays gated on the user's answers.
+
+### Scope correction (load-bearing)
+
+The remediation brief framed CLIN-DEV as "Clinical Development" (drug/trial development: EDC, CTMS, eTMF, RTSM, with Medidata Rave, Veeva Vault Clinical, Oracle Clinical One, IQVIA, Calyx, Suvoda). The live domain (id 50, "Clinical Device Management") models something else: hospital clinical engineering / healthcare technology management (HTM), the CMMS market for medical equipment. The seven live masters confirm it unambiguously (medical_devices, device_maintenance_logs, device_recalls, clinical_engineering_work_orders, device_calibration_records, device_incident_reports, sterilization_cycles); none of the clinical-trial entities exist here. Phase 0 was therefore run against the actual market. The compliance requirement still applies (FDA Part 11 / electronic-signature integrity governs the recall, calibration, and incident evidence), and the brief's clinical-development market is a distinct unbuilt domain candidate, not this domain.
+
+### Vendor study
+
+Six flagships, 2025-2026 product docs: Nuvolo Connected Workplace for Healthcare (ServiceNow-native healthcare CMMS + OT/IoMT security), AIMS 3 / Phoenix Data Systems (pure-play HTM CMMS), EQ2 HEMS (pure-play hospital equipment management), ServiceNow Clinical Device Management (suite incumbent, ITAM-derived), Censis CensiTrac + STERIS SPM (sterile-processing specialists), and Asimily + Cynerio (IoMT-security / compliance specialists). Report saved at `.tmp_deploy/CLIN-DEV-phase0-2026-06-08.md` (flagship table, surface matrix, compliance entities, workflow substrate, marketed-product-surface table, modularization hypothesis).
+
+### Surface-matrix highlights
+
+- **Recall / hazard-alert response is bundled INTO the CMMS core by every flagship**, not sold as a separate product: AIMS ships "Hazard Alerts" inside the CMMS, EQ2 HEMS ships an "Alerts & Recall" module integrated with ECRI, Nuvolo and ServiceNow CDM both track recalls within device management. Recall is Core (5+ vendors).
+- **Sterile processing is a genuinely separate marketed product surface** with a different buyer (the Sterile Processing Department manager) and a different workflow (decontamination -> tray assembly -> sterilization load -> biological-indicator verification -> release -> OR case-cart picking). Only Censis CensiTrac and STERIS SPM model it; the CMMS vendors treat sterilizers merely as equipment under PM.
+- **device_models, device_locations, and device_service_contracts are Core** (3+ flagships): every CMMS flagship separates the recallable model from the individual unit, tracks the room/department for dispatch and recall isolation, and masters vendor service contracts (the dominant CE budget concern). The current model collapses or omits all three.
+- **IoMT / medical-device security is a distinct Gartner-recognized market** ("Medical Device Security Solutions"): Asimily, Cynerio, Ordr, Claroty Medigate. It integrates with the CMMS (Nuvolo bundles an OT-security module) but does not master the work-order / PM / calibration surface. Promote-to-sibling, not a CLIN-DEV module.
+- **510(k) and QSR 21 CFR 820 are manufacturer-side**, served by a separate QMS market (Greenlight Guru, MasterControl, Veeva Vault QMS) no hospital-HTM flagship touches. They do not belong on a hospital clinical-engineering entry.
+
+### Per-decision verdicts
+
+| q / b2 | Verdict | Grounding |
+|---|---|---|
+| q1 / B2-S2 (module split) | **REVERSED** to CMMS-core + Sterile-Processing | See reversal below. |
+| q2 / B2-S1 (em-dash) | Unchanged (non-market) | Destructive overwrite of a non-empty field; user sign-off. |
+| q3 / B2-S3 (owner function) | Strengthened: IT Operations | Every flagship sells to hospital HTM/biomed; ServiceNow positions CDM as an ITAM subset (CE-under-IT). R&D is a manufacturer carryover. |
+| q4-q7 / B2-S4 (pattern flags) | Unchanged (workflow-shape), now vendor-grounded | Adverse-event reports carry patient identifiers (FDA/EU MDR vigilance); calibration tied to certified testers + Part 11; recall a coordinator-owned managed workflow. |
+| q8 / B2-S5 (mfr-vs-hospital scope) | Strengthened: hospital-side, remove mfr-only regs | Vendor surface settles it: 510(k)/QSR are manufacturer obligations no HTM flagship serves. |
+| q9 / B2-S6 (ITSM payload) | Unchanged: service requests | Flagship CMMS model staff-raised maintenance requests (AIMS EasyNet, Nuvolo), not paged incidents. |
+| q10 / B2-S11b (recall PCF tag) | Unchanged (non-market) | Tag-only; "Initiate recall" (L3) matches a recall-issued event. |
+| q11 / b3 entities | Strengthened: device_models / locations / service_contracts now Core, not speculative | Confirmed by 3+ flagships. |
+| q12 / b3 (NEW) | Promote IOMT-SEC + MED-DEVICE-QMS to siblings | Distinct Gartner market + distinct manufacturer market; both queued in backlog. |
+
+### Reversal
+
+**B2-S2 (module split): "CLIN-DEV-INVENTORY + CLIN-DEV-SAFETY-VIGILANCE" -> "CLIN-DEV-CMMS + CLIN-DEV-STERILE-PROC".** The prior recommendation picked the Inventory + Safety-Vigilance cut on the rationale that it was "the minimal shape that unblocks the build" - a reason about us, not the market, and a Rule #22 violation. Fresh named-vendor evidence overturns it: recall / hazard-alert response is bundled into the core CMMS product by every flagship (AIMS Hazard Alerts, EQ2 HEMS Alerts & Recall, Nuvolo, ServiceNow CDM), so "Safety and Vigilance" is not a separately-marketed surface and splitting it out cuts against how the market is sold. The genuine product boundary in this market is sterile processing (Censis CensiTrac, STERIS SPM: distinct product, distinct buyer, distinct workflow). The recommended split now puts the module line exactly where the vendor market puts it. The q-file's q1 option set was re-stated to offer the evidence-backed CMMS-core + Sterile-Processing shape as (a), single-module as (b), and the prior overruled Inventory + Safety-Vigilance shape as (c). The B2-S2 `why` framing in state.yaml was updated accordingly; the question itself is unchanged. Two new b3 promote-to-sibling candidates (B3-IOMT-SEC, B3-MED-DEVICE-QMS) were added from the same study.
+
+### Files written
+
+- `.tmp_deploy/CLIN-DEV-phase0-2026-06-08.md` (Phase 0 report, new)
+- `audits/CLIN-DEV/q-CLIN-DEV.md` (regenerated)
+- `audits/CLIN-DEV/state.yaml` (Phase 0 note block, last_audit=2026-06-08, B2-S2 `why` reversal, B3-IOMT-SEC + B3-MED-DEVICE-QMS added)
+- `audits/CLIN-DEV/history.md` (this section)
+
+No DB inserts / updates / deletes. No record_status stamped. No JWT-audience errors. Status stays feedback_needed / next_action_by user.

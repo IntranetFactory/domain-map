@@ -786,8 +786,8 @@ const template = await Bun.file(TEMPLATE_PATH).text();
 type Task = { code: string; kind: "domain" | "bundle" };
 
 // "Generate all" domains = every domain with >=1 module (a deployable unit a per-domain skill
-// can cover). The domains.catalog flag is about site publication, not skill eligibility (ATS
-// is catalog=false), so it is NOT a filter here.
+// can cover). The domains.catalog_release date is about site publication, not skill eligibility
+// (ATS has no release date), so it is NOT a filter here.
 async function domainCodesWithModules(): Promise<string[]> {
   const withModules = await get("/domain_modules?select=domain_id&limit=20000");
   const ids = new Set(withModules.map((r) => r.domain_id as number));

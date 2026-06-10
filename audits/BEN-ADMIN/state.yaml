@@ -5,6 +5,10 @@ next_action_by: user
 last_audit: "2026-06-07"
 
 b1a:
+  - id: B1A-B9D-VERIFY
+    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
+    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
+    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-RULE15-598
     summary: "Revert Rule #15 notes pollution on DMDO 598 (hr_cases consumer on BEN-ENROLLMENT)."
     finding: "domain_module_data_objects.id=598 (hr_cases 192, consumer + required on BEN-ENROLLMENT 72) carries an unapproved notes value ('BEN-ENROLLMENT consumes hr_cases when HRSD escalates a benefits question (escalated_to_benefits). Receiving side of handoff 1119.'). DESTRUCTIVE: reverting overwrites a non-empty notes value AND writes the 'notes' column (Rule #15 forbids any write to a column named exactly notes). Surfaced for user approval; not executed. Independent of the row-level B1B-S4 question on dependency strength."
@@ -156,6 +160,16 @@ b2:
       - "(a) Supply user-approved wording for the pointer."
       - "(b) Skip the pointer for now."
     why: "Optional persistence step; wording must come from the user."
+  - id: B2-B9D-OWN-1052
+    summary: "Benefits Administration: name an owner for \"Administer benefit enrollment\" (no one is responsible for it today)"
+    question: |
+      Applicant Tracking and Recruiting forwards benefit enrollment to Benefits Administration to administer benefit enrollment, but Benefits Administration does not yet have anyone assigned to administer benefit enrollment, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Benefits Administration owns, and assign a named owner once Benefits Administration sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Benefits Administration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-BEN-ADMIN.md q16.
+    extra_b9d_added: "2026-06-10"
 
 b3:
   - id: B3-COBRA-EVENTS

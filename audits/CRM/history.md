@@ -539,3 +539,36 @@ User answered every open b2 decision in one pass. Three required DB writes (one 
 - Status stays `feedback_needed` (not `passed`: the E1 persona gap is open, just program-deferred).
 
 Live PostgREST queries succeeded throughout. No JWT-audience errors observed.
+
+## 2026-06-08 - Research (Phase 0 vendor-surface vetting of the b3 backlog)
+
+### Summary
+
+User asked to "research the CRM domain." The structural build is settled (5 modules, all b2 resolved as of 2026-06-07); the only open research was the 13-item b3 backlog carried in `q-CRM.md` / `state.yaml`. Ran Phase 0 (vendor-surface + live-catalog grounding) per Rule #22 to turn those unvetted candidates into vetted verdicts before any market-shape decision goes back to the user. Report: `.tmp_deploy/CRM-phase0-2026-06-08.md`. Zero DB writes (research-only pass).
+
+### Live-catalog grounding (the decisive findings)
+
+- **Forecast cluster already owned.** REV-INTEL (103, module REV-INTEL-FORECAST) masters `revenue_forecasts` (1010), `forecast_submissions` (1011), `forecast_adjustments` (1012), `forecast_accuracy_records` (1013). So `sales_forecasts` as a CRM master is wrong-ownership, and the CRM-FORECAST module split has no records to master.
+- **commission_splits (354)** is mastered by RE-BROKERAGE (143, RE-BROK-BROKERAGE-OPS), real-estate-specific; not a generic sales-comp master.
+- **SALES-PERF (102) and PRM (96) are unbuilt stubs** (0 modules, 0 masters). `sales_quotas`, `commission_records`, `partner_relationships` have no home and are separate domain builds.
+- `sales_territories`, `competitors`, `competitor_intelligence`, `lead_assignment_rules`, `account_hierarchies`, `sales_playbooks`, `sales_quotas`, generic `commission_records`, `partner_relationships` exist nowhere in the catalog (greenfield).
+
+### Verdicts
+
+- **GROUP A (CONFIRMED CRM-native, additive, fits an existing module; q1):** competitors (CRM-PIPELINE-MGT), competitor_intelligence (CRM-PIPELINE-MGT, optional), lead_assignment_rules (CRM-LEAD-MGT, catalog), account_hierarchies (CRM-ACCT-MGT, junction), sales_playbooks (CRM-AI-COPILOT, catalog), sales_territories (CRM-ACCT-MGT, operational assignment).
+- **GROUP B (NOT CRM; consumes at most):** sales_forecasts -> resolved (REV-INTEL); optional CRM consumer link on revenue_forecasts surfaced as B3-CRM-FORECAST-CONSUMER (q3). sales_quotas + commission_records -> SALES-PERF (q4). partner_relationships -> PRM (q4).
+- **GROUP C (module splits, reclassified b3 -> b2 per Rule #21, recommend REJECT):** B2-CRM-FORECAST-SPLIT, B2-CRM-MKTLIST-SPLIT.
+- **Regulations (q5):** baseline TCPA + CAN-SPAM (region-agnostic activity layer); privacy regimes (LGPD, PIPEDA, DPDP, US state laws) region-dependent.
+
+### state.yaml changes
+
+- Reclassified the two split candidates from b3 to b2 (B2-CRM-FORECAST-SPLIT, B2-CRM-MKTLIST-SPLIT), each with Phase 0 basis + evidence + recommendation=reject.
+- Refreshed every b3 item with a Phase 0 verdict; added B3-CRM-FORECAST-CONSUMER (replaces B3-CRM-SALES-FORECASTS); routed quotas/commissions to SALES-PERF and partner_relationships to PRM.
+- `next_action_by` user -> the refreshed `q-CRM.md` is decision-ready (q1-q5). Status stays `feedback_needed`.
+
+### Not done (correctly)
+
+- No loads. GROUP A entities are discretionary b3 ("surface, never auto-execute" per Rule #21); they load on the user's q1 answer.
+- B1A-PHASE-P personas still deferred under phase-P policy.
+
+Live PostgREST queries succeeded throughout. No JWT-audience errors observed.

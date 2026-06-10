@@ -1,10 +1,15 @@
 schema_version: 2
 domain: PRIV-MGMT
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-06-07"
+next_action_by: agent
+last_audit: "2026-06-08"
+phase0_report: ".tmp_deploy/PRIV-MGMT-phase0-2026-06-08.md"  # Rule #22 forcing step run 2026-06-08; 5 flagships (OneTrust, TrustArc, Securiti, DataGrail, Transcend). Verdicts D1-D5 ground every market-shape b2/b3 below.
 
 b1a:
+  - id: B1A-B9D-VERIFY
+    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
+    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
+    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-RECLASS
     summary: "Leadership-tier zero-master exemption rescinded 2026-06-02; classification settled: PRIV-MGMT is master-bearing (overlay test). Needs a BUILD, not an exemption."
     finding: >
@@ -68,8 +73,7 @@ b1b:
     blocked_by:
       - {type: user_decision, ref: B2-1}
       - {type: user_decision, ref: B2-2}
-      - {type: depends_on, ref: B3-1, reason: "Bucket 3 vetting on flagship privacy specialist additions blocks B1-S4 sub-item"}
-      - {type: depends_on, ref: B3-3, reason: "Bucket 3 entity vetting blocks B1-S2 capabilities and B1-S11 lifecycle states for prospective non-re-homed masters"}
+    phase0_note: "B3-1 / B3-3 Phase 0 vetting is COMPLETE as of 2026-06-08 (.tmp_deploy/PRIV-MGMT-phase0-2026-06-08.md); those are no longer blockers. The cluster now blocks only on the two user decisions B2-1 (re-home + consolidate) and B2-2 (module split + scope)."
     affected_modules: []
     affected_masters:
       - {data_object_id: 901, name: data_subject_requests, target_module_id: null, workflow: "DSR pipeline; would re-home from ATS-CANDIDATE-CRM"}
@@ -88,18 +92,25 @@ b1b:
 
 b2:
   - id: B2-1
-    summary: "Re-home four canonical privacy masters (data_subject_requests, gdpr_consent_records, subject_access_requests, data_deletion_requests) from their current ATS / LMS homes into PRIV-MGMT modules?"
+    summary: "Re-home four canonical privacy masters into PRIV-MGMT AND consolidate the three request-type masters into one data_subject_requests master with a request_type discriminator (Phase 0 D1 finding)."
     question: >-
-      data_subject_requests (id 901, currently mastered in ATS-CANDIDATE-CRM module id 1),
-      gdpr_consent_records (id 950, in LMS-CT-GDPR module id 180),
-      subject_access_requests (id 951, in LMS-CT-GDPR module id 180),
-      data_deletion_requests (id 952, in LMS-CT-GDPR module id 180). All five flagship
-      privacy vendors ship these as masters in their flagship privacy product. PRIV-MGMT
-      currently masters none of them.
+      data_subject_requests (id 901, currently master+optional in ATS-CANDIDATE-CRM module id 1),
+      gdpr_consent_records (id 950, master+optional in LMS-CT-GDPR module id 180),
+      subject_access_requests (id 951, master+required in LMS-CT-GDPR module id 180),
+      data_deletion_requests (id 952, master+required in LMS-CT-GDPR module id 180). All five
+      flagship privacy vendors ship these as masters in their privacy product; PRIV-MGMT masters
+      none. NEW Phase 0 D1 finding (2026-06-08): 5/5 flagships (OneTrust Privacy Rights Automation,
+      TrustArc Individual Rights Manager, Securiti single-pane DSR, DataGrail Request Manager,
+      Transcend DSR Automation) model individual-rights handling as ONE request master with a
+      request_type discriminator, NOT separate masters per type. Carrying 951 + 952 as separate
+      master rows (confirmed live) contradicts 5/5 vendors.
     options:
-      - "(a) re-home all four masters into the proposed PRIV-MGMT modules (PRIV-DSR-MGMT for 901 / 951 / 952; PRIV-CONSENT for 950); originating modules add embedded_master or consumer rows per Rule #11 so they remain standalone-deployable"
-      - "(b) keep current ownership and have PRIV-MGMT consume via cross-domain handoffs only (contradicts flagship-vendor practice and the settled master-bearing classification)"
-      - "(c) re-home only the LMS triplet and leave the ATS-CANDIDATE-CRM master for data_subject_requests in place if there is a defensible candidate-specific shape"
+      - "(a) re-home all four AND consolidate: fold 901 + 951 + 952 into one data_subject_requests master carrying request_type (access | deletion | correction | portability | opt-out | objection | restriction) in PRIV-DSR-MGMT; re-home 950 as consent_records in PRIV-CONSENT; originating ATS/LMS modules add embedded_master or consumer rows per Rule #11 so they remain standalone-deployable"
+      - "(b) re-home all four but keep them as separate masters (one general DSR + a separate access master + a separate deletion master + consent); contradicts the Phase 0 D1 vendor model"
+      - "(c) keep current ownership and have PRIV-MGMT consume via cross-domain handoffs only (contradicts flagship-vendor practice and the settled master-bearing classification)"
+      - "(d) re-home only the LMS triplet and leave the ATS-CANDIDATE-CRM master for data_subject_requests in place if there is a defensible candidate-specific shape"
+    phase0_verdict: "D1 = option (a): re-home all four, consolidate 901+951+952 into one request master, re-home 950 as consent_records. Named-vendor evidence inline in .tmp_deploy/PRIV-MGMT-phase0-2026-06-08.md."
+    destructive_followup: "Option (a) requires collapsing the existing 951 + 952 master rows in LMS-CT-GDPR. That DELETE/restructure is a pending destructive approval (Rule #21), surfaced and executed at build time, not now. B2-1 only sets direction."
     why: "B1B-S1-CLUSTER cannot be authored until this is decided. Every sub-item's master set, module set, and permission shape derives from this answer. Gates B1A-BUILD."
 
   - id: B2-2
@@ -115,7 +126,8 @@ b2:
       - "(b) 3 modules: collapse PRIV-ASSESSMENTS into PRIV-DATA-INVENTORY"
       - "(c) 2 modules: PRIV-DSR-MGMT + PRIV-CONSENT (the only modules covered by B2-1 re-homed masters if Bucket 3 is deferred)"
       - "(d) other: name the modules and their data_object scope"
-    why: "Drives B1B-S1-CLUSTER's module-split shape. Coupled with B2-1 and Bucket 3 entity vetting. Gates B1A-BUILD."
+    phase0_verdict: "D2 = option (a) 4 modules. Each is a distinct, separately licensed SKU across the flagships (OneTrust/TrustArc/Securiti/Transcend ship all four; DataGrail three). Phase 0 D3 vetted the FULL entity surface as Core, so option (c) is now only a staging choice, not a coverage-driven one (the prior 'defer Bucket 3 -> drop to 2 modules' coupling is dissolved by the vetting)."
+    why: "Drives B1B-S1-CLUSTER's module-split shape. Coupled with B2-1. Bucket 3 entity vetting is now COMPLETE (Phase 0), so B2-2 no longer waits on it. Gates B1A-BUILD."
 
   - id: B2-4
     summary: "Track Rule #12 config-shape lifecycle-state exemption on processing_activities + personal_data_assets if those become PRIV-MGMT masters."
@@ -145,12 +157,11 @@ b2:
 b3:
   - id: B3-1
     candidate: "Two flagship privacy specialists missing from solutions (per the 2026-05-30 B1-S4 / A3 soft fail)."
+    phase0_status: "VETTED 2026-06-08 (D5). Both confirmed full privacy-management platforms, not CMP-only / DSR-only point tools: DataGrail spans DSR + ROPA + consent; Transcend spans all four product areas + AI governance. Cleared for loading on user approval (q5). Still b3 (additive, non-blocking, never auto-executed per Rule #21)."
     rationale: >-
-      A3 currently passes (3 primary + 1 secondary solutions). Two flagship privacy specialists
-      routinely cited in Gartner / Forrester privacy management coverage are not yet linked.
-      Adding them would harden the vendor-evidence basis for the modularization split in
-      B1B-S1-CLUSTER but requires Phase 0 vetting per Rule #18 boundary (the agent does not
-      load vendor names into solutions outside an audited Phase 0 vendor surface).
+      A3 already passes (3 primary + 1 secondary solutions). The Phase 0 vendor surface now
+      provides the audited basis Rule #18 requires; adding the two as solutions + solution_domains
+      rows is additive and would harden the vendor-evidence basis for the split, but stays optional.
     vendor_evidence:
       - DataGrail
       - Transcend
@@ -158,11 +169,11 @@ b3:
 
   - id: B3-2
     candidate: "Additional privacy regulations beyond GDPR + CPRA (PIPEDA, LGPD, PIPL, POPIA, HIPAA)."
+    phase0_status: "VETTED + RANKED 2026-06-08 (D4). Flagship coverage: LGPD 5/5, PIPEDA 4/5, PIPL 3/5, POPIA 2-3/5 -> add all four. HIPAA 2/5 in the privacy-program sense -> hold as cross-domain healthcare/security, NOT a core privacy regulation. New rows are catalog-wide (regulations table), so they route to a catalog-wide regulation load, not PRIV-MGMT alone. Still b3 (additive, non-blocking)."
     rationale: >-
-      PIPEDA (Canada), LGPD (Brazil), PIPL (China), POPIA (South Africa), HIPAA (US healthcare;
-      not strict-GDPR-shape but routinely in the buyer surface). None have rows in the
-      regulations table yet. Each requires Phase 0 vendor-research vetting to confirm scope
-      against the flagship vendor matrices before authoring catalog-wide regulations rows.
+      PIPEDA (Canada), LGPD (Brazil), PIPL (China), POPIA (South Africa). None have rows in the
+      regulations table yet. Phase 0 confirmed flagship coverage; authoring the rows is a
+      catalog-wide additive load surfaced via q6.
     vendor_evidence:
       - {vendor: Securiti Data Command Center, evidence: 1st_class}
       - {vendor: OneTrust Privacy, evidence: 1st_class}
@@ -176,12 +187,20 @@ b3:
       data_breach_records, consent_purposes.
     rationale: >-
       Flagship privacy vendors ship these as canonical masters in their flagship privacy
-      product. PRIV-MGMT currently masters none. Each needs a vetted Phase 0 vendor-surface
-      to confirm the correct master / contributor / consumer split. personal_data_assets
-      is the only candidate with a known collision risk (DCG already masters data_assets);
-      Phase 0 must resolve the boundary before insert.
+      product. PRIV-MGMT currently masters none.
+    phase0_status: >-
+      VETTED 2026-06-08 (D3). All Core/Common, all assigned to a module:
+      processing_activities Core/INVENTORY (the GDPR Art.30 ROPA master), personal_data_assets
+      Core/INVENTORY, processor_agreements Core(4/5)/INVENTORY, data_transfers Core/INVENTORY,
+      privacy_impact_assessments Core(4/5)/ASSESSMENTS, data_breach_records Common(3/5) but
+      load-as-Compliance/ASSESSMENTS, consent_purposes Core/CONSENT. COLLISION RESOLVED:
+      personal_data_assets stays a DISTINCT privacy master (tracks special-category flags,
+      lawful basis, retention, linkage to processing activities + data subject that the DCG
+      data catalog does not), with an OPTIONAL reference FK to DCG data_assets (id 300) -
+      not a merge, not an embedded_master. Surfaced as the only remaining open sub-decision
+      via q7. The rest fold into the q2 build scope; vetting no longer gates B2-2.
     vendor_evidence:
       - OneTrust Privacy
       - TrustArc
       - Securiti Data Command Center
-    proposed_module: "PRIV-DATA-INVENTORY for processing_activities / personal_data_assets / processor_agreements / data_transfers; PRIV-ASSESSMENTS for privacy_impact_assessments / data_breach_records; PRIV-CONSENT for consent_purposes (all proposed; conditional on B2-1 + B2-2)"
+    proposed_module: "PRIV-DATA-INVENTORY for processing_activities / personal_data_assets / processor_agreements / data_transfers; PRIV-ASSESSMENTS for privacy_impact_assessments / data_breach_records; PRIV-CONSENT for consent_purposes (all conditional on B2-1 + B2-2)"

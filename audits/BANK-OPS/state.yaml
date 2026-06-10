@@ -17,8 +17,40 @@
 schema_version: 2
 domain: BANK-OPS
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-06-07"
+next_action_by: agent
+last_audit: "2026-06-08"
+
+# 2026-06-08 PHASE 0 ran (Rule #22 forcing step: the prior 2026-06-07 pass surfaced the
+# market-shape b2 calls without a current vendor-surface report; this pass runs Phase 0
+# FIRST, then regenerates the q-file from its named-vendor evidence). Flagship vendors
+# studied: nCino (Bank Operating System), Backbase (Engagement Banking Platform), Mambu
+# (Cloud Banking Platform), Thought Machine (Vault Core), Temenos (Transact + Financial
+# Crime Mitigation), Oracle FCCM, NICE Actimize. Adjacent cross-checks: Fiserv DNA / FIS /
+# Jack Henry (cores), ICE Encompass (LOS) + Black Knight MSP (servicing), Modern Treasury /
+# Stripe Treasury / Plaid (payment rails), Fenergo / Alloy (KYC onboarding). Banking is a
+# regulated market, so kyc_records / aml_alerts / suspicious_activity_reports loaded into the
+# surface matrix regardless of vendor presence; >=1 financial-crime specialist (Oracle FCCM,
+# NICE Actimize) included per protocol. Report: .tmp_deploy/BANK-OPS-phase0-2026-06-08.md
+# (flagship table, surface matrix entities x 7 vendors, compliance entities, modularization
+# hypothesis).
+#
+# REVERSALS: none. Fresh Phase 0 CONFIRMS the prior 7-module recommendation (B2-1=a) rather
+# than overturning it: origination vs servicing are separate marketed markets (ICE Encompass
+# ~50% origination share vs Black Knight MSP servicing, explicit bridge between them), and
+# KYC-AML is a standalone specialist market (Oracle FCCM / NICE Actimize sell it freestanding).
+# The 5-module COMPLIANCE collapse (b) matches Temenos / Fiserv / FIS bundling FCM+reporting
+# into the core; the 6-module ONBOARDING collapse (c) matches nCino / Backbase one-journey
+# onboarding; deferring KYC-AML out (d) is supported by the freestanding-specialist evidence
+# but forfeits in-platform integration. B2-2 (banking_cases own master) and B2-3 (banking_
+# transactions stateless ledger) are now vendor-grounded (Backbase / NICE Actimize case mgmt;
+# Thought Machine / Mambu / Temenos immutable append-only double-entry ledger). q-BANK-OPS.md
+# regenerated with inline named-vendor evidence on every market/workflow-shape recommendation.
+# NOTABLE: Phase 0 elevated several former b3 candidates to Core/Common in the surface matrix
+# (deposit_accounts, loan_servicing_accounts, repayment_schedules, ach_transfers,
+# banking_product_catalog_items = Core; credit_decisions, collateral_records, borrower_profiles,
+# card_authorizations, disputes/chargebacks = Common) -- still b3 (additive, after the build),
+# but they are genuine workflow substrate, not nice-to-haves. q10 framing updated accordingly.
+# Still feedback_needed: 6 b2 open, awaiting a-BANK-OPS.md.
 
 # UNBUILT domain. Live 2026-06-07: 0 domain_modules (M1 HARD FAIL), 0 capability_domains (A2 FAIL).
 # Per the build-leave discipline the agent does NOT scaffold modules / capabilities / lifecycle
@@ -31,6 +63,10 @@ last_audit: "2026-06-07"
 # unblocks the build and ~9 b1b items in one decision.
 
 b1a:
+  - id: B1A-B9D-VERIFY
+    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
+    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
+    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capability_domains (A2 fail). The build is surfaced, not auto-scaffolded."
     finding: "Live 2026-06-07: 0 domain_modules rows and 0 capability_domains rows, so BANK-OPS is not deployable today. Per Rule #14 every domain needs >=1 module_kind='full' row. The build cannot be auto-run because its shape is a user decision (B2-1 module split). All build-independent fixes are already executed."
@@ -135,18 +171,19 @@ b2:
     summary: "Module split for BANK-OPS, gates the build and ~9 b1b items."
     question: "Which module shape for BANK-OPS? (a) 7-module: BANK-OPS-ORIGINATION + BANK-OPS-ACCOUNT-MGMT + BANK-OPS-KYC-AML + BANK-OPS-PAYMENTS + BANK-OPS-CASES + BANK-OPS-LOAN-SERVICING + BANK-OPS-REGULATORY; (b) 5-module collapse KYC-AML + REGULATORY into BANK-OPS-COMPLIANCE; (c) 6-module collapse ORIGINATION + ACCOUNT-MGMT into BANK-OPS-ONBOARDING; (d) defer KYC-AML out to queued KYC-AML-PLATFORM domain (rehomes B1B-M1 / B1B-M4 / partly B1B-M2); (e) some other shape."
     options: ["a-7module", "b-5module-compliance", "c-6module-onboarding", "d-defer-kyc-aml-platform", "e-other"]
-    why: "Drives the entire build (B1A-BUILD, B1B-S1, B1B-S2), the M-band, E-band, F2-F5, the lifecycle realizing module FKs (B1B-B6), and re-homes several Bucket 1 / Bucket 3 candidates."
+    why: "Drives the entire build (B1A-BUILD, B1B-S1, B1B-S2), the M-band, E-band, F2-F5, the lifecycle realizing module FKs (B1B-B6), and re-homes several Bucket 1 / Bucket 3 candidates. Phase 0 (2026-06-08) recommends (a) the 7-module shape on named-vendor evidence: origination vs servicing are separate marketed markets (ICE Encompass ~50% origination share vs Black Knight MSP servicing), and KYC-AML is a standalone specialist market (Oracle FCCM / NICE Actimize sell it freestanding). (b) collapse matches Temenos / Fiserv / FIS bundling FCM into the core; (c) collapse matches nCino / Backbase one-journey onboarding; (d) defer is supported by the freestanding-specialist evidence but loses in-platform integration. See .tmp_deploy/BANK-OPS-phase0-2026-06-08.md."
 
   - id: B2-2
     summary: "banking_cases vs CSM customer_cases reconciliation."
     question: "Resolve overlap between BANK-OPS banking_cases (id 606) and CSM customer_cases (id 103). Rows 462/463 already use verb 'opens' which reads chained. (a) keep banking_cases as own master, rewrite verb to triggers/spawns; (b) demote banking_cases to embedded_master of customer_cases (CSM-owned); (c) keep both with disambiguated verbs. NOTE (a) and (b) involve overwriting/restructuring existing rows (destructive) -> needs sign-off."
     options: ["a-rewrite-verb", "b-demote-to-embedded", "c-disambiguate"]
-    why: "Option (b) collapses ~one module worth of work (no BANK-OPS-CASES module needed) and changes B1B-M1-M4 module placement for any banking-case-shaped masters."
+    why: "Option (b) collapses ~one module worth of work (no BANK-OPS-CASES module needed) and changes B1B-M1-M4 module placement for any banking-case-shaped masters. Phase 0 (2026-06-08) backs (a): banking-ops vendors model investigation / dispute cases as a first-class object distinct from generic customer-service cases (Backbase disputes/case-mgmt plane; NICE Actimize financial-crime alert-and-case management), and card-network disputes/chargebacks carry their own time-bounded lifecycle (reason codes, Reg E windows) a CSM case shell cannot represent."
 
   - id: B2-3
     summary: "banking_transactions lifecycle shape."
     question: "banking_transactions (id 609) is now classified operational_record (no lifecycle states required; B12 passes regardless). Do you still want a state machine on it? (a) full workflow with dispute/reverse gates (pending / posted / reconciled / disputed / reversed); (b) slim 3-state pending/posted/reconciled with no permission gates; (c) leave it stateless as a pure ledger record."
     options: ["a-full", "b-slim-no-gates", "c-leave-stateless"]
+    why: "Phase 0 (2026-06-08) backs (c) leave-stateless: the core vendors run an immutable, append-only, double-entry ledger (Thought Machine Vault Core 'real-time, immutable, append-only ledger'; Mambu and Temenos same double-entry sub-ledger), so a posted entry is never mutated, a reversal/dispute is a new correcting entry and the dispute itself lives on banking_cases (B2-2). Adding a workflow machine would overlay state the vendors do not."
 
   - id: B2-5
     summary: "Verb override wording for 4 ambiguous workflow-gate verbs."

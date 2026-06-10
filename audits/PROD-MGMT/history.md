@@ -431,3 +431,31 @@ State-driven Validate execute pass (SKILL.md Rule #21) over PROD-MGMT (domain 10
 ### Decisions
 
 _(none yet; b2 forks + destructive steps awaiting user)_
+
+## 2026-06-08 - Audit (state-driven execute; Phase P personas)
+
+### Summary
+
+Continuation Validate pass over PROD-MGMT (domain 101, modules PM-DISCOVERY 130 + PM-ROADMAP-DELIVERY 131), driven from `state.yaml`. Live re-verification first: 2 full modules confirmed, 0 `domain_roles` reaching either module (Phase P genuinely unstarted), 8 masters confirmed (7 `operational_workflow` + `product_metrics` `computed`), 14 `requires_permission` gates all with `process_id` null. Executed the one remaining agent-doable additive item, Phase P (personas + RACI), which the 2026-06-07 pass deferred "per orchestrator." Under SKILL.md Rule #21 personas + RACI are additive work the agent executes without asking; the deferral was a prior-session orchestrator choice, not a committed rule, and a fresh review request triggers execution. Authored on the Plan-3 shape (`domain_roles` + `role_modules` reach + `process_raci` responsibility + `data_object_lifecycle_states.process_id` wiring), the correct successor to the retired B1A-PHASE-E-RBAC bootstrap (no `_core` permissions written; the bundle is derived by the emitter). Loader: `.tmp_deploy/load_prod_mgmt_personas_2026_06_08.ts` (idempotent; read-before-create on `role_code`, PATCH-on-null for `process_id`).
+
+### Executed (additive, record_status='new' where applicable)
+
+- **B1A-PHASE-P (personas):** 4 `domain_roles`, all `record_status='new'`: `PRODUCT-MANAGER` (#57, fn 25 Product Management), `PRODUCT-HEAD` / "Head of Product" (#58, fn 25), `PRODUCT-OPS-ANALYST` (#59, fn 25), `SW-ENG-LEAD` / "Engineering Lead" (#60, fn 26 Software Engineering, contributor function -> function-scoped, cross-domain reach). Function-scoped naming per references/roles.md; no domain-prefixed codes.
+- **B1A-PHASE-P (reach):** 8 `role_modules` rows. Each persona reaches both modules (2-module floor met). PM + Head primary on both; Ops-Analyst and Eng-Lead primary on PM-ROADMAP-DELIVERY (131), secondary on PM-DISCOVERY (130).
+- **B1A-PHASE-P (gate wiring):** PATCHed `process_id` on 11 of 14 `requires_permission` gates (fill-empty only; all were null). PCF mappings: feature_requests.accepted/rejected -> 534; product_roadmaps.published -> 625; product_features.released + product_lines.active -> 539; product_features.deprecated + product_lines.sunset/retired -> 540; product_releases.shipped -> 1262; product_releases.rolled_back -> 1265; beta_programs.active -> 538. Left null (correctly): product_releases.cancelled, beta_programs.closed, beta_programs.cancelled (admin-terminal closures, trace to baseline `:manage` from reach).
+- **B1A-PHASE-P (RACI):** 26 `process_raci` rows across the 7 wired processes. PRODUCT-MANAGER R on discovery/roadmap/launch + A on release; PRODUCT-HEAD A on strategic gates (-> `:admin`) + I on release; SW-ENG-LEAD R on ship/rollback + C on planning; PRODUCT-OPS-ANALYST I/C across. Every wired process has exactly one R and one A.
+
+### Verification (E-band)
+
+E1 PASS (4 personas reach the multi-module domain; zero-persona finding cleared). E2 PASS (every persona exactly 2 reach rows). E3 PASS (interaction_level set on all). E4 PASS (all 7 wired processes have >=1 R and >=1 A). E6 PASS (reach reconciles; 11 gates trace to a wired process, 3 admin closures to reach baseline; entity_type classified on all 8 masters).
+
+### Left (unchanged from 2026-06-07)
+
+- **B1A-APQC-TAGGING-DISCOVER-RESIDUAL:** 5 untagged handoffs (996, 1005, 1007, 791, 1253) re-checked against the broader product PCF set this pass; confirmed notification/signal handoffs no PCF activity cleanly realizes. Forcing a loose match is forbidden. Remains defer-to-Discover; does not block "finished."
+- **B1A-APQC-APPROVAL-PASS (destructive):** reviewer approval of agent_curated handoff_processes at `new`. Surfaced (q11), not executed.
+- **b2 (7) + b3 (8) + candidate domains/regulations:** unchanged; all still awaiting the user (q1-q12). Phase P is independent of every open b2, so authoring it pre-empted no user decision.
+- **b1b (3):** report-only neighbor-owed B10b NULLs + downstream consumer DMDOs; clear as those domains are audited.
+
+### Decisions
+
+_(none yet; b2 forks + destructive steps awaiting user)_

@@ -335,3 +335,141 @@ run from project root with `bun run`.
 ### JWT-audience errors
 
 None.
+
+---
+
+## 2026-06-08 - Review (state-driven re-verification, no drift)
+
+State-driven Validate (SKILL.md Rule #21). Continued from state.yaml; re-verified every
+recorded fact against live (domain id 20, parent 15 = GRC). No fresh from-scratch audit.
+
+### Verified live (no writes)
+
+- **A1 pass:** crud_percentage 88, min_org_size `20 s <500`, cost_band `$$$`,
+  certification_required false, usa_market_size_usd_m 1200, market_size_source_year 2025.
+- **A4 pass:** catalog_tagline + catalog_description both populated (the 2026-06-07 fix
+  persists). Overwrite-protected per Rule #20; not touched.
+- **A3 pass:** 4 solutions (OneTrust Privacy, TrustArc, Securiti = primary; ServiceNow IRM
+  = secondary).
+- **domain_regulations:** GDPR (1) + CPRA (3), both mandatory (B1-S6 fix persists).
+- **C1 pass:** owner Privacy Office (bf 72), contributors Legal (bf 7) + Security (bf 28).
+- **M1 FAIL (UNBUILT):** 0 domain_modules, 0 domain_module_host_domains.
+- **A2 FAIL:** 0 capability_domains.
+- **B1 (0 owned masters):** 0 in domain_data_objects; no domain_module_data_objects (no
+  modules). Master-bearing per the overlay test, but unbuilt.
+- **F2:** 0 skills.
+- **Inbound handoffs unchanged on PRIV-MGMT's side:** 283 (DLP, payload dlp_incidents 330,
+  target_domain_module_id NULL) and 288 (DSPM, payload data_assets 300, both module FKs
+  NULL). Handoff 288 B9 drift persists: trigger_event 273 carries data_object_id 303
+  (data_classifications) vs handoff payload 300 (data_assets). 0 outbound handoffs.
+- **handoff_processes:** only 283 tagged (process 270, agent_curated, new). 288 untagged.
+- **4 candidate masters still parked outside PRIV-MGMT:** data_subject_requests (901,
+  ATS-CANDIDATE-CRM module 1, master+optional), gdpr_consent_records (950, LMS-CT-GDPR 180,
+  master+optional), subject_access_requests (951, LMS-CT-GDPR 180, master+required),
+  data_deletion_requests (952, LMS-CT-GDPR 180, master+required).
+
+### Observed external change (not a PRIV-MGMT fix)
+
+- DLP has been modularized since the prior audit: handoff 283 now carries
+  source_domain_module_id=232. Does not change PRIV-MGMT's side (target_domain_module_id
+  stays NULL until PRIV-MGMT has a module). Routes to DLP's own audit, not this one.
+
+### Executed (0 writes)
+
+None. The only agent-doable additive fix (A4 catalog UX) was applied 2026-06-07. Every
+remaining open item is gated on a user decision (B2-1 re-home, B2-2 module split, B2-4
+config-shape exemption, B2-5 handoff-288 timing) or on Phase 0 vetting (B3-1/B3-2/B3-3).
+Re-homing masters between domains and the module split are user calls per Rule #21; the
+build cannot be scaffolded without them. Domain remains `feedback_needed`.
+
+### Status
+
+`feedback_needed` (unchanged). q-PRIV-MGMT.md is current; no refresh needed. last_audit
+bumped to 2026-06-08.
+
+### JWT-audience errors
+
+None.
+
+---
+
+## 2026-06-08 - Review (Phase 0 forcing step run; q-file regenerated)
+
+State-driven Validate (Rule #21). The prior passes (2026-05-30 through 2026-06-08) surfaced
+the keystone market-shape decisions (B2-1 re-home, B2-2 module split, B3-3 master candidates)
+on a NARRATIVE vendor basis only - the inline "Pass 2 vendor surface" notes - never the formal
+Phase 0 artifact Rule #22 requires. Under Rule #22's forcing step, an UNBUILT domain whose
+entire build is gated on market-shape `b2` calls must have a CURRENT Phase 0 report produced
+as part of the review, BEFORE the user is asked anything. That report did not exist
+(`.tmp_deploy/` held only loader scripts and a PRM-domain Phase 0). This review ran it.
+
+### Phase 0 executed (the missing forcing step)
+
+- Report: `.tmp_deploy/PRIV-MGMT-phase0-2026-06-08.md`. Five pure-play flagships enumerated
+  (OneTrust Privacy, TrustArc, Securiti Data Command Center, DataGrail, Transcend). Full
+  vendor-by-entity surface matrix + compliance-entity list + 4-module hypothesis + per-decision
+  verdicts D1-D5. CMP-only vendors (Cookiebot, Didomi, Usercentrics, Sourcepoint) held to the
+  sibling CMP market, not PRIV-MGMT.
+
+### Material new finding (changes a recommendation the prior passes carried)
+
+- **DSR consolidation (Phase 0 D1).** 5/5 flagships model individual-rights handling as ONE
+  request master with a `request_type` discriminator (access | deletion | correction |
+  portability | opt-out), NOT separate masters per type: OneTrust Privacy Rights Automation,
+  TrustArc Individual Rights Manager, Securiti single-pane DSR, DataGrail Request Manager,
+  Transcend DSR Automation. The catalog currently carries `subject_access_requests` (951) and
+  `data_deletion_requests` (952) as SEPARATE master rows in LMS-CT-GDPR (confirmed live this
+  pass) - a triple-master split 5/5 vendors reject. B2-1 option (a) is rewritten from
+  "re-home four parallel masters" to "re-home all four AND consolidate 901+951+952 into one
+  `data_subject_requests` master + re-home 950 as `consent_records`". Collapsing 951/952 is a
+  DELETE/restructure = pending destructive approval (Rule #21), surfaced and executed at build
+  time, not now; B2-1 only sets direction.
+
+### Other verdicts folded into state + q-file
+
+- **D2:** 4 modules confirmed (each a distinct, separately licensed SKU across the flagships).
+  Phase 0 D3 vetted the full entity surface as Core, so the prior "defer Bucket 3 -> collapse to
+  2 modules" coupling is dissolved; option (c) is now a staging choice, not a coverage one.
+- **D3:** processing_activities / personal_data_assets / processor_agreements / data_transfers /
+  privacy_impact_assessments / data_breach_records / consent_purposes all Core/Common and
+  module-assigned. `personal_data_assets` vs DCG `data_assets` (id 300) collision RESOLVED:
+  distinct privacy master (special-category flags, lawful basis, retention, subject linkage the
+  DCG catalog lacks) with an OPTIONAL reference FK to DCG, not a merge or embed. Surfaced as q7.
+- **D4:** add PIPEDA (4/5), LGPD (5/5), PIPL (3/5), POPIA (2-3/5); hold HIPAA (2/5) as
+  cross-domain healthcare, not core privacy. Catalog-wide regulation load (q6).
+- **D5:** DataGrail + Transcend confirmed full privacy-management platforms -> qualify as
+  flagship solutions rows (q5).
+
+### Live re-verification (no drift since the earlier 2026-06-08 pass; 0 writes this run)
+
+- Domain 20 (parent 15 = GRC): crud_percentage 88, catalog_tagline + catalog_description
+  populated (2026-06-07 fix persists, overwrite-protected per Rule #20, untouched).
+- 0 domain_modules (M1 fail / UNBUILT), 0 capability_domains (A2), 0 PRIV-MGMT-owned masters.
+- Candidate masters parked as recorded: 901 (ATS-CANDIDATE-CRM module 1, master+optional),
+  950 (LMS-CT-GDPR module 180, master+optional), 951 + 952 (LMS-CT-GDPR module 180,
+  master+required - the two the D1 consolidation targets).
+- Inbound handoffs 283 (DLP, source module 232, target_domain_module_id NULL) + 288 (DSPM,
+  both module FKs NULL, B9 payload drift persists: trigger_event 273 data_object_id 303
+  data_classifications vs handoff payload 300 data_assets). handoff_processes: 283 tagged
+  (process 270, agent_curated, new); 288 untagged (held in B2-5).
+
+### Executed (0 writes)
+
+None. The only agent-doable additive fix (A4 catalog UX) was applied 2026-06-07. Every open
+item is a user decision (B2-1 re-home + consolidate, B2-2 split + scope, B2-4 exemption
+tracking, B2-5 handoff-288 timing) or an additive-but-non-blocking b3 (B3-1 solutions, B3-2
+regulations, B3-3 collision confirmation), none of which the agent auto-executes per Rule #21.
+The re-home + consolidation is also destructive and is a user call regardless. Domain stays
+`feedback_needed`.
+
+### q-file
+
+Regenerated `q-PRIV-MGMT.md` from the Phase 0 evidence (Rule #22): "What this domain is" no
+longer carries build commentary; q1 now states the consolidation finding with the five vendors
+named inline; q2 notes the full surface is vetted and the collision is settled; q7 reframed to
+the personal_data_assets collision confirmation. Footer mapping unchanged
+(q1=B2-1 q2=B2-2 q3=B2-4 q4=B2-5 q5=B3-1 q6=B3-2 q7=B3-3, domain_id=20).
+
+### JWT-audience errors
+
+None.

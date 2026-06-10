@@ -480,3 +480,35 @@ UI spot-check entry points:
 - https://tests.semantius.app/domain_map/domain_data_objects
 - https://tests.semantius.app/domain_map/handoff_processes
 - https://tests.semantius.app/domain_map/data_object_aliases
+
+## 2026-06-10 — Review (B9d payload-realization pass)
+
+### Summary
+
+State-driven review (SKILL.md Rule #21). Verified the 2026-06-07 worklist against live state (no drift: B1B-C1 BFC still 0 rows, C1 owner/contributors intact, B2-S2 flags still false on 26/27/28/30, F2 = exactly one `swp-system` skill, B2-S6 tags 101/130/132 still mis-tagged, trigger_event 388 still empty category). The one outstanding agent-executable item — **B1A-B9D-VERIFY** (B9d had never run on SWP; the band was added 2026-06-09 and SWP was last audited before it) — was executed via `scripts/analytics/b9d_resolver.ts SWP --dry-run` in BOTH directions, then dispositioned. B1A-B9D-VERIFY moved out of `state.yaml`.
+
+### B9d resolver result
+
+26 boundary tags → 18 (process, owner) findings: **3 RESOLVED, 8 ORPHAN, 2 ROLL-UP, 1 RE-TAG, 1 MIS-TAG, 2 UNOWNED, 1 REFERENCE-READ.**
+
+RESOLVED (no action): 97 "Create organizational design" (org_designs, h459); 219 "Manage employee requisitions" (job_requisitions, h14/400 ATS-owned; and position_demand_forecasts h12 SWP-owned).
+
+Disposition of the rest (no blanket `--write`; the resolver has documented false-positives on unbuilt owners, and SWP has zero personas):
+
+- **pid 980 ORPHAN(SWP)** "Perform strategic workforce planning" — already tracked as **q10 / B2-B9D-OWN-980** (added earlier 2026-06-10). Idempotent; no duplicate.
+- **pid 671 ORPHAN(SWP)** "Analyze customer attrition and retention rates" — RESOLVER FALSE-POSITIVE. It is the **B2-S6 handoff-13 mis-tag** (tag 101, `discovery_substring`, process 671 → should be 980). Because SWP is unbuilt the resolver's MIS-TAG rule (which needs a positive realized home) could not fire, so it fell through to ORPHAN — a blind spot the resolver's own REVIEW comments document. NOT written as an owner question (would be "who owns customer-attrition analysis at SWP", incoherent). Folded into B2-S6; the re-point to 980 dissolves it.
+- **pid 1038 / 1322 / 1324 ORPHAN(SWP)** (establish-training-needs on skills_gap_analyses; prepare-periodic-budgets / -forecasts on workforce_plans + workforce_cost_projections) — SWP-owned **cold-start** processes with no persona. Every SWP-owned process reads ownerless today because the persona layer is unbuilt, so these are facets of **B1A-PHASE-P**, not separate questions. Recorded under `B1A-PHASE-P.extra_b9d_owned_processes` so the persona work gives each a named R/A. 1322/1324 carry a SWP↔EPM-boundary caveat (the budget/forecast slice may be reassigned to EPM). No B2-B9D-OWN-1038/1322/1324 authored (q10 duplicates).
+- **pid 980 ORPHAN(PA)** — input-feed mis-attribution. Handoffs 452 + 1112 (PA→SWP feeds, payloads attrition_forecasts + workforce_segments, PA-mastered) are `agent_curated` with tag 980, which is SWP's planning process, not PA's. The carried-entity ownership heuristic mis-fires on input feeds. NOT injected into PA. Open question (are tags 1167/1171 correct as 980, or re-point/drop) recorded under **B1B-B9D-CROSS-OWED.pa_980_misattribution**.
+- **pid 106 ORPHAN(SEM)** "Execute strategic initiatives" (strategic_initiatives, h241) and **pid 923 ORPHAN(WFM)** "Track workforce utilization" (time_entries, h136) — genuine neighbor owner obligations. SEM/WFM are mid-build (`next_action_by: agent`) with rich open backlogs, so per proportionality these were NOT auto-injected into their files during a single-domain "review SWP" pass; recorded under **B1B-B9D-CROSS-OWED.owner_orphans** and offered to write when those domains are next reviewed (or on user request).
+- **Destructive re-points (sign-off):** RE-TAG h241 (coarse tag 130/process 16 → DELETE; the precise 106/1.3.5 already exists on h241 as row 1186) folds into B2-S6. ROLL-UP COMP-MGMT h1138 (216 → 7.1.2.16) and ROLL-UP/MIS-TAG PSA h1027 (887 → 5.2.2) + h1018 (980 → 5.2.2) are owed by COMP-MGMT/PSA (their source) → **B1B-B9D-CROSS-OWED.source_repoints_owed**.
+- **UNOWNED resource_allocations (h242, tags 713 + 905):** the payload has no `master` row anywhere in the catalog. Re-pointing tag 132 to a SWP process would be wrong (SWP doesn't master it either). B2-S6 updated: DELETE row 132 now and let SPM/PSA establish ownership upstream first.
+- **REFERENCE-READ labor_market_benchmarks (h460):** config/reference data of SWP (`entity_type` catalog). Informational; recorded under B1B-B9D-CROSS-OWED.reference_read.
+
+### Net effect on `state.yaml`
+
+- Removed B1A-B9D-VERIFY (executed).
+- Enriched B1A-PHASE-P with the 4 B9d-confirmed SWP-owned processes the persona layer must cover.
+- Refined B2-S6 with B9d-precise mechanics (h13 re-point to 980; h241 DELETE coarse tag; h242 DELETE, payload unowned) + matching q6 rewrite.
+- Added B1B-B9D-CROSS-OWED (SEM/WFM owner obligations, COMP-MGMT/PSA owed re-points, PA-980 mis-attribution, reference-read note).
+
+No catalog rows written, no `record_status` touched (Rule #1). Domain stays `feedback_needed`; q-SWP.md unchanged at q1–q10 (B9d added no new SWP-facing questions — its SWP findings fold into existing q6/q10 + deferred persona work).

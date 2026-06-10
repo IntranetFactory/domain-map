@@ -517,3 +517,36 @@ None encountered this pass.
 ### UI links (tables written)
 
 - https://tests.semantius.app/domain_map/domains?id=eq.96
+
+## 2026-06-08, Phase 0 vendor research + q-file regeneration (the step prior passes skipped)
+
+### Why this pass ran
+
+User requested "review prm" and pushed back hard (third occurrence of the same shape) that the review surfaced the 6 market-shape b2 decisions WITHOUT running fresh vendor research first, so the q-file recommendations were grounded in "architecturally cleanest / unblocks the build" reasoning that Rule #22 forbids. Root cause: Rule #22 required named-vendor grounding but nothing in the review WORKFLOW forced Phase 0 to run before the q-file. Fixed: SKILL.md Rule #22 now carries a hard "Market-shape decisions require Phase 0 FIRST" forcing step; Rule #21 gains a matching clause; logged in skill-changelog 2026-06-08.
+
+### Phase 0 (read-only research, no catalog writes)
+
+Studied 18 flagship vendors across 4 sub-markets from current (2025-2026) product/API/pricing docs. Report: `.tmp_deploy/PRM-phase0-2026-06-08.md`. Framing: Gartner renamed the category to "Partner and Ecosystem Relationship Management (PERM)" Sept 2025; Forrester keeps PRM Platforms (Q4 2025) and Partner Marketing Automation / TCMA (Q2 2025) as separate Waves.
+
+Five verdicts (named-vendor evidence in the report):
+
+- **A. TCMA = distinct domain.** Impartner: TCMA "may be purchased without PRM" (separate SKU); SproutLoud/Structured target the channel-marketing-manager buyer, no deal-reg surface; separate Forrester Wave. Only MDF/co-op funds stays in PRM. => B2-S1 = promote (a).
+- **B. Ecosystem-led/co-sell = distinct domain.** Crossbeam (merged Reveal 2024) is a cross-company data network; PartnerTap "works alongside PRM rather than replacing it"; Salesforce sells co-sell as a separate $50/member PEM tier. PRM keeps a lightweight partner-influenced-opportunity signal. => B2-S2 = promote (a). Re-homes handoff 211.
+- **C. Affiliate = distinct domain.** Foreign entity surface (offers/tracking-links/clicks/conversions/attribution/tax-forms) + DTC buyer; PartnerStack unifies via a shared commission spine, not by making affiliate a PRM feature. => B3-3 = promote.
+- **D. Partner training/cert = PRM masters it (REVERSED, was LMS).** Impartner (native Training & Certification module + SCORM ingest 2025-04), Channeltivity, Allbound, Magentrix all ship native partner LMS; Zift bundles C-LMS. => B2-T1 a->b.
+- **E. Channel commission = PRM masters it (REVERSED, was SALES-PERF).** ZINFI INCENTIVIZE = partner-financial SSoT; Impartner native commissions/rebates/SPIFs; Salesforce splits channel rebates (PRM) from rep comp (Spiff). => B2-T2 b->a.
+
+### Recommended build shape (4 modules, Scenario 1)
+
+partner_management / deal_and_pipeline / funds_and_incentives (MDF + co-op + channel commissions/rebates/SPIFs) / enablement_and_performance (training + certs + scorecards + QBR + JBP). TCMA / ECOSYSTEM-LED-GROWTH / AFFILIATE-MGMT promote to sibling domains under CRM. ~24 Core entities stay in PRM. Fallback 5/6/7-module shapes documented if a carve-out is overruled.
+
+### Files written
+
+- `.tmp_deploy/PRM-phase0-2026-06-08.md` (Phase 0 report, research only).
+- Regenerated `audits/PRM/q-PRM.md` with inline named-vendor evidence on every recommendation; reversed q4 (training) and q5 (commission).
+- Updated `audits/PRM/state.yaml`: header Phase 0 note, `last_audit` 2026-06-08, B1B-M1 + B1B-A3 reshaped to the evidence-grounded 4-module / training-and-commission-in-PRM shape.
+- SKILL.md Rule #21 + Rule #22 (Phase-0-first forcing step); `references/skill-changelog.md` 2026-06-08 Decisions entry.
+
+### Status
+
+Still `feedback_needed` / `next_action_by: user`. No catalog rows written this pass (research + audit-file updates only). Awaiting `a-PRM.md` with the 6 decisions; build executes on receipt per Rule #21.

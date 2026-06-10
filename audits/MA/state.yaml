@@ -1,279 +1,78 @@
-# === SUPERSEDED 2026-06-06: per-domain-skill restoration ===
-# The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
-# Any open item that says "author/split a per-module system skill", "one system skill per
-# domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELED.
-# New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
-# domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
-# DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
-# cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
-# re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
-# === end supersession note ===
 schema_version: 2
 domain: MA
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-06-06"
+next_action_by: agent
+last_audit: "2026-06-08"
 
-# All 2026-06-06 b1a items executed (see history.md "## 2026-06-06 - b1a execution").
-# B1A-B10b-OUTBOUND, B1A-B10b-INBOUND, B1A-H1-APQC-TAGGING, B1A-M-SYSTEM-SKILLS,
-# B1A-M8-MODULE-UX all DONE and removed. One sub-action (handoff 78 APQC replace) was
-# skipped on a stale premise and carried into b2 as B2-H1-78-FOLLOWUP.
-b1a: []
+# 2026-06-08 review (Rule #21): all prior b1b items EXECUTED as additive content at
+# record_status='new' (see history.md "## 2026-06-08 - Review"). B12 lifecycle, B6 intra-rels,
+# B7 user edges, B11 aliases, B4 pattern flags, B13 entity_type all done. E1-E3 personas authored.
+# F-band reconciled to the per-domain-skill model (one ma-system skill id 414; 12 domain_module_tools;
+# F5 score 0.83). Stale B2-SYSTEM-SKILL-SPLIT-REVIEW removed (the 343-346 per-module skills are gone).
+# Domain is structurally + semantically complete; the only blocking item is one destructive tag call.
+b1a:
+  - id: B1A-B9D-VERIFY
+    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
+    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
+    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
 
-b1b:
-  - id: B1B-B12-LIFECYCLE-STATES
-    summary: "Load data_object_lifecycle_states for the 5 MA masters; domain_module_id anchors now available."
-    finding: "B12 fails. Zero data_object_lifecycle_states across the 5 MA masters (marketing_campaigns 116, marketing_emails 117, lead_scores 118, nurture_journeys 119, marketing_forms 120). Rule #12 requires lifecycle states on every master+required data_object with a real workflow; no config-shape exemption is claimed. Per Rule #14 + M5 requires_permission=true states need domain_module_id set to the realizing module; those anchors now exist (116/117 -> 197, 119 -> 198, 118 -> 199, 120 -> 200). Remaining gate is user-owned state-machine wording per Rule #1."
-    action: "Draft state machines per master (initial / workflow gates with requires_permission=true / terminal / permission_verb_override / domain_module_id = realizing module), surface to user, load via focused loader."
-    affected_masters:
-      - {data_object_id: 116, name: marketing_campaigns, target_module_id: 197, workflow: draft_to_active_to_completed}
-      - {data_object_id: 117, name: marketing_emails,    target_module_id: 197, workflow: draft_to_scheduled_to_sent_to_unsubscribed}
-      - {data_object_id: 118, name: lead_scores,         target_module_id: 199, workflow: scored_to_recomputed_signal_loop}
-      - {data_object_id: 119, name: nurture_journeys,    target_module_id: 198, workflow: draft_to_active_to_completed_to_paused}
-      - {data_object_id: 120, name: marketing_forms,     target_module_id: 200, workflow: draft_to_published_to_archived}
-    blocked_by:
-      - {type: user_decision, ref: B2-B12, reason: "State-machine names + verbs need user approval per Rule #1."}
-
-  - id: B1B-B6-INTRA-RELATIONSHIPS
-    summary: "Load 5 intra-domain data_object_relationships rows among the MA masters."
-    finding: "B6 fails. Zero data_object_relationships rows among the 5 MA masters (marketing_campaigns 116, marketing_emails 117, lead_scores 118, nurture_journeys 119, marketing_forms 120). Market-practice edges: marketing_campaigns has_many marketing_emails, nurture_journeys has_many marketing_emails (as steps), marketing_forms feeds lead_scores (form submission contributes scoring), nurture_journeys triggered_by lead_scores (score-threshold enrollment), marketing_campaigns has_many nurture_journeys. Verbs are editorial."
-    action: "Draft 5 relationship rows (verb + inverse_verb + relationship_type + relationship_kind + is_required + owner_side), surface to user per Rule #1, load via cluster-drafts loader."
-    affected_masters:
-      - {data_object_id: 116, name: marketing_campaigns, target_module_id: 197, workflow: campaign_authoring}
-      - {data_object_id: 117, name: marketing_emails,    target_module_id: 197, workflow: email_send}
-      - {data_object_id: 118, name: lead_scores,         target_module_id: 199, workflow: scoring}
-      - {data_object_id: 119, name: nurture_journeys,    target_module_id: 198, workflow: journey_orchestration}
-      - {data_object_id: 120, name: marketing_forms,     target_module_id: 200, workflow: form_capture}
-    blocked_by:
-      - {type: user_decision, ref: B2-B6}
-
-  - id: B1B-B7-USERS-EDGES
-    summary: "Load 5 users-to-master data_object_relationships rows per Rule #10."
-    finding: "B7 fails. Zero users (data_object id 748, kind=platform_builtin) edges to any of the 5 MA masters. Expected actors: marketing_emails author, marketing_campaigns owner, nurture_journeys owner, marketing_forms owner, lead_scores scorer / model_owner. Verb mapping (catalog-conventional): users authors marketing_emails, users owns marketing_campaigns, users owns nurture_journeys, users owns marketing_forms, users configures lead_scores. The verbs are catalog-conventional, but user may want to confirm the actor mapping."
-    action: "Draft 5 user-edge rows (relationship_verb + inverse_verb + cardinality + is_required), surface to user, load."
-    affected_masters:
-      - {data_object_id: 116, name: marketing_campaigns, target_module_id: 197, workflow: campaign_authoring}
-      - {data_object_id: 117, name: marketing_emails,    target_module_id: 197, workflow: email_send}
-      - {data_object_id: 118, name: lead_scores,         target_module_id: 199, workflow: scoring}
-      - {data_object_id: 119, name: nurture_journeys,    target_module_id: 198, workflow: journey_orchestration}
-      - {data_object_id: 120, name: marketing_forms,     target_module_id: 200, workflow: form_capture}
-    blocked_by:
-      - {type: user_decision, ref: B2-B7-VERBS, reason: "Confirmation of actor verb mapping (owns / authors / configures); user may prefer alternative phrasing."}
-
-  - id: B1B-B11-ALIASES
-    summary: "Author per-master data_object_aliases rows for the 5 MA masters; per-row wording per Rule #15."
-    finding: "B11 fails. Zero data_object_aliases on the 5 MA masters. Vendor terminology surface is clear from the 2026-05-30 audit: marketing_campaigns = `Campaign` (HubSpot, Marketo, Pardot) / `Journey` (SFMC, Braze) / `Flow` (Klaviyo, Iterable); nurture_journeys = `Journey` (Marketo, SFMC) / `Workflow` (HubSpot) / `Flow` (Klaviyo, ActiveCampaign, Iterable, Braze) / `Sequence` (Mailchimp); lead_scores = `Lead Score` (Marketo, Pardot, HubSpot) / `Predictive Lead Scoring` (HubSpot AI) / `Engagement Score` (SFMC variants); marketing_forms = `Form` (HubSpot) / `Landing Page Form` (Marketo) / `Form Handler` (Pardot); marketing_emails = `Email Send` (Marketo) / `Email Studio` (SFMC). Rule #15 requires per-row approval of `alias` text."
-    action: "Surface per-master alias candidate list as B2-B11. INSERT data_object_aliases rows only after user approves per-row wording. Aliases on data_object_aliases.alias_name are commerce-allowed under Rule #18."
-    affected_masters:
-      - {data_object_id: 116, name: marketing_campaigns, target_module_id: 197, workflow: campaign_authoring}
-      - {data_object_id: 117, name: marketing_emails,    target_module_id: 197, workflow: email_send}
-      - {data_object_id: 118, name: lead_scores,         target_module_id: 199, workflow: scoring}
-      - {data_object_id: 119, name: nurture_journeys,    target_module_id: 198, workflow: journey_orchestration}
-      - {data_object_id: 120, name: marketing_forms,     target_module_id: 200, workflow: form_capture}
-    vendor_evidence:
-      - HubSpot Marketing Hub
-      - Adobe Marketo Engage
-      - Salesforce Marketing Cloud Account Engagement
-      - Salesforce Marketing Cloud Engagement
-      - Klaviyo
-      - Iterable
-      - Braze
-      - Mailchimp
-      - ActiveCampaign
-    blocked_by:
-      - {type: user_decision, ref: B2-B11}
-
-  - id: B1B-B4-PATTERN-FLAGS
-    summary: "Re-evaluate Rule #12 pattern flags on the 5 MA masters and PATCH the flips on user approval."
-    finding: "B4 partial pass. Pattern flags default to false on all 5 masters with no positive re-evaluation recorded. Vendor-shape re-evaluation: marketing_emails.has_submit_lock=true (once a send job is scheduled it locks per HubSpot / Marketo / SFMC), marketing_campaigns.has_submit_lock=true (similar lock pattern), nurture_journeys.has_submit_lock=true (activation locks the definition), marketing_forms.has_personal_content=true (forms collect PII directly), lead_scores.has_personal_content=false (derived). Per Rule #15 these PATCHes do not auto-populate notes; the audit decision is captured in history.md."
-    action: "PATCH each flag on user approval (per-flag yes/no). Independent of the module split."
-    affected_masters:
-      - {data_object_id: 116, name: marketing_campaigns, target_module_id: 197, workflow: campaign_authoring}
-      - {data_object_id: 117, name: marketing_emails,    target_module_id: 197, workflow: email_send}
-      - {data_object_id: 118, name: lead_scores,         target_module_id: 199, workflow: scoring}
-      - {data_object_id: 119, name: nurture_journeys,    target_module_id: 198, workflow: journey_orchestration}
-      - {data_object_id: 120, name: marketing_forms,     target_module_id: 200, workflow: form_capture}
-    blocked_by:
-      - {type: user_decision, ref: B2-B4}
+b1b: []
 
 b2:
-  - id: B2-A4-REVIEW
-    summary: "Review (in-record) the buyer-voice catalog copy written 2026-06-06 on the 4 MA modules (M8) and domains.MA (A4)."
-    question: "Review the written catalog_tagline / catalog_description on modules 197-200 and domains.MA in the catalog UI; approve, or request specific rewrites per surface."
-    options:
-      - "Approve as written (flip record_status to approved per Rule #1 when satisfied)."
-      - "Rewrite a specific surface (specify exact text + which module/domain row)."
-    note: "Superseded B2-A4. Per revised Rule #20 the copy was written straight into the empty fields (all 10 were empty) and now lives at record_status=new for in-record review; it was NOT gated on pre-write approval. Overwrite of these non-empty values now requires explicit per-row user approval."
-    why: "Marketing voice ages on a different cycle from analyst voice; the written copy carries the review signal in-record (record_status=new), exactly as Rule #1 handles fresh research."
-
   - id: B2-H1-78-FOLLOWUP
     summary: "Decide the APQC tag for inbound handoff 78 (CDP segment.activated -> MA)."
-    question: "Handoff 78 already carries handoff_processes id=81 -> process 132 (Design and manage customer loyalty program, L3, agent_curated). The 2026-06-06 b1a finding asked to replace a process-133/discovery_substring tag with process 23, but that 133/discovery_substring row never existed (stale premise), so no write was made. Keep the existing 132 tag, retarget it to 23 (Develop and manage marketing plans, L2), or add 23 as a second tag?"
+    question: "Handoff 78 carries handoff_processes id=81 -> process 132 (Design and manage customer loyalty program, L3, agent_curated), which looks mismatched for a CDP-segment-activation handoff into MA. Keep the existing 132 tag, retarget it to 23 (Develop and manage marketing plans, L2; DELETE + reinsert, destructive), or add 23 as a second tag alongside 132?"
     options:
       - "Keep existing 78 -> 132 tag as-is (no change)."
-      - "Retarget: replace 78 -> 132 with 78 -> 23 (snapshot the deleted row)."
-      - "Add 78 -> 23 as a second tag alongside 132."
-    why: "78's existing agent_curated tag points at a loyalty-program process, which looks mis-matched for a CDP-segment-activation handoff into MA, but retargeting/deleting an existing agent_curated tag on a falsified premise is a user call (master data; SKILL Rule #1, prompt Rule #12)."
+      - "Retarget: replace 78 -> 132 with 78 -> 23 (destructive; snapshot the deleted row first)."
+      - "Add 78 -> 23 as a second tag alongside 132 (additive)."
+    why: "Retargeting/deleting an existing agent_curated tag is a destructive call on master data the user owns (Rule #1, Rule #21). H1 coverage for 78 is already satisfied, so this is a quality fix, not a gap."
 
-  - id: B2-B12
-    summary: "Approve per-master lifecycle state-machine names + verbs for the 5 MA masters (Rule #12)."
-    question: "Approve the proposed state machines, rewrite states/verbs, or claim a config-shape exemption per master?"
-    options:
-      - "Approve: marketing_campaigns draft->active->completed; marketing_emails draft->scheduled->sent->unsubscribed; nurture_journeys draft->active->paused->completed; marketing_forms draft->published->archived; lead_scores scored->recomputed (signal loop)."
-      - "Rewrite specific state names / verbs / requires_permission gates (specify per master)."
-    why: "State-machine wording + which transitions gate on permission is editorial workflow judgment the user owns. Unblocks B1B-B12-LIFECYCLE-STATES."
-
-  - id: B2-B6
-    summary: "Approve verb wording for the 5 intra-master relationship edges."
-    question: "Approve verb set, rewrite, or drop specific edges?"
-    options:
-      - "Approve as proposed: marketing_campaigns has_many marketing_emails; nurture_journeys has_many marketing_emails (steps); marketing_forms feeds lead_scores; nurture_journeys triggered_by lead_scores; marketing_campaigns has_many nurture_journeys."
-      - "Rewrite specific verbs (specify per edge)."
-      - "Drop specific edges (specify)."
-    why: "Verb wording is editorial; user owns canonical phrasing."
-
-  - id: B2-B7-VERBS
-    summary: "Confirm verb mapping for the 5 users-to-master edges (Rule #10)."
-    question: "Approve verb mapping or alternative phrasing?"
-    options:
-      - "Approve as proposed: users authors marketing_emails; users owns marketing_campaigns; users owns nurture_journeys; users owns marketing_forms; users configures lead_scores."
-      - "Rewrite (specify per edge)."
-    why: "Catalog-conventional verbs, but user may prefer alternative phrasing per role."
-
-  - id: B2-B11
-    summary: "Alias authoring for the 5 MA masters per Rule #15."
-    question: "Supply per-master alias list, or skip?"
-    options:
-      - "Approve per-master aliases from the candidate vendor-terminology surface (HubSpot, Marketo, SFMC, Pardot, Klaviyo, Iterable, Braze, Mailchimp, ActiveCampaign). User to specify per-row alias_name."
-      - "Skip; revisit later."
-    why: "Rule #15 forbids the agent from auto-populating any text field requiring editorial choice; per-row wording must be user-approved."
-
-  - id: B2-B4
-    summary: "Pattern-flag re-evaluation per Rule #12 on the 5 MA masters."
-    question: "Approve flag flips per master?"
-    options:
-      - "marketing_emails.has_submit_lock=true: yes / no."
-      - "marketing_campaigns.has_submit_lock=true: yes / no."
-      - "nurture_journeys.has_submit_lock=true: yes / no."
-      - "marketing_forms.has_personal_content=true: yes / no."
-      - "lead_scores.has_personal_content remains false (proposed): confirm."
-    why: "Workflow-shape judgment the user owns."
-
-  - id: B2-SYSTEM-SKILL-SPLIT-REVIEW
-    summary: "Review (post-hoc) the executed redistribution of the 12 legacy ma-system skill_tools across the 4 new per-module system skills."
-    question: "The 2026-06-06 b1a pass executed the proposed mapping and retired legacy skill 17. Review the live placement (skills 343=197, 344=198, 345=199, 346=200) and the 12 re-pointed skill_tools; approve, or request a specific channel-primitive re-routing."
-    options:
-      - "Approve as executed: query/mutate rows on the module mastering the data_object (campaigns/emails -> 343/197, journeys -> 344/198, lead_scores -> 345/199, forms -> 346/200); send_email + generate_text on 343/197, classify_text on 345/199."
-      - "Re-route a specific tool (specify per tool)."
-    note: "Resolved/executed in the 2026-06-06 b1a pass (B1A-M-SYSTEM-SKILLS). F4 invariant verified on every placement. Kept as a review item because the channel-primitive routing (send_email/generate_text/classify_text) was an agent decision the user may want to adjust."
-    why: "F4 invariant holds per placement; the user may still prefer a specific channel-primitive routing."
+# Standing in-record approval (Rule #1): everything authored this pass + the 06-06 catalog copy sits at
+# record_status='new'. The user reviews in the records / catalog UI; the agent never self-approves.
 
 b3:
   - id: B3-MARKETING-EMAIL-SENDS
     candidate: "marketing_email_sends"
-    rationale: "Per-send instance modeled in every flagship platform (audience + time + variant). Current marketing_emails master conflates template and send. Verification path: HubSpot Email Send docs, Marketo Email Send API, SFMC Send Definition documentation."
-    vendor_evidence:
-      - Adobe Marketo Engage
-      - Salesforce Marketing Cloud Engagement
-      - HubSpot Marketing Hub
-      - Iterable
-      - Klaviyo
+    rationale: "Per-send instance (audience + time + variant) distinct from the email template; the marketing_emails master conflates template and send. Verify via HubSpot Email Send, Marketo Email Send API, SFMC Send Definition."
     proposed_module: "MA-CAMPAIGN-AUTHORING (197)"
-
   - id: B3-AUDIENCE-LISTS
     candidate: "audience_lists"
-    rationale: "First-class authored lists distinct from CDP-mastered audience_segments. The MA-side list is the campaign-targeting list, not the dynamic CDP segment. Verification path: HubSpot Lists docs, Marketo Smart List docs, Mailchimp Audience docs, Klaviyo Lists docs."
-    vendor_evidence:
-      - HubSpot Marketing Hub
-      - Adobe Marketo Engage
-      - Mailchimp
-      - Klaviyo
+    rationale: "MA-side authored target lists distinct from CDP-mastered audience_segments. Verify via HubSpot Lists, Marketo Smart List, Mailchimp Audience, Klaviyo Lists."
     proposed_module: "MA-CAMPAIGN-AUTHORING (197)"
-
   - id: B3-SUBSCRIBER-PREFERENCES
     candidate: "subscriber_preferences"
-    rationale: "Per-subscriber consent and frequency preferences distinct from CDP customers. MA owns the preference-center experience. Verification path: Klaviyo Subscriber Profiles, HubSpot Subscription Preferences, Marketo Communication Limits."
-    vendor_evidence:
-      - Klaviyo
-      - HubSpot Marketing Hub
-      - Adobe Marketo Engage
-      - Salesforce Marketing Cloud Account Engagement
-    proposed_module: "MA-CAMPAIGN-AUTHORING (197)"
-
+    rationale: "Per-subscriber consent + frequency preferences; MA owns the preference-center experience. Verify via Klaviyo Subscriber Profiles, HubSpot Subscription Preferences, Marketo Communication Limits."
+    proposed_module: "MA-CAMPAIGN-AUTHORING (197) or a MA-COMPLIANCE module"
   - id: B3-AB-TEST-VARIANTS
     candidate: "ab_test_variants"
-    rationale: "A/B test variants modeled as first-class records (variant_a, variant_b, winner, metric). Capability MA-AB-OPTIMIZATION (now realized by 197) currently has no underlying entity. Verification path: Marketo A/B Test docs, HubSpot A/B Test docs, Klaviyo A/B Test docs."
-    vendor_evidence:
-      - Adobe Marketo Engage
-      - Oracle Eloqua
-      - HubSpot Marketing Hub
-      - Klaviyo
+    rationale: "A/B test variants as first-class records (variant_a/b, winner, metric); MA-AB-OPTIMIZATION currently has no underlying entity. Verify via Marketo / HubSpot / Klaviyo A/B Test docs."
     proposed_module: "MA-CAMPAIGN-AUTHORING (197)"
-
   - id: B3-EMAIL-SEND-METRICS
     candidate: "email_send_metrics"
-    rationale: "Per-send aggregates (delivered, opened, clicked, bounced, complained, unsubscribed) modeled in every flagship platform. Currently the only proxy is the trigger_events 515 to 518; no master records the rollups. Attribution folded into MA-CAMPAIGN-AUTHORING (197) in the realized split. Verification path: vendor analytics docs."
-    vendor_evidence:
-      - Adobe Marketo Engage
-      - Salesforce Marketing Cloud Engagement
-      - HubSpot Marketing Hub
-      - Klaviyo
-      - Iterable
+    rationale: "Per-send aggregates (delivered/opened/clicked/bounced/unsubscribed); only proxy today is trigger_events 515-518. Verify via vendor analytics docs."
     proposed_module: "MA-CAMPAIGN-AUTHORING (197)"
-
   - id: B3-JOURNEY-STEP-EVENTS
     candidate: "journey_step_events"
-    rationale: "Per-step traversal events distinct from generic customer_events. Per-step latency, abandon, branch-taken. Links to the DXP journey_step.abandoned (handoff 811). Verification path: Braze Canvas Steps, Iterable Journey Steps, Customer.io Workflow Steps, SFMC Journey Builder."
-    vendor_evidence:
-      - Braze
-      - Iterable
-      - Salesforce Marketing Cloud Engagement
+    rationale: "Per-step traversal events distinct from generic customer_events (latency, abandon, branch-taken); links to DXP journey_step.abandoned (handoff 811). Verify via Braze Canvas, Iterable Journey Steps, SFMC Journey Builder."
     proposed_module: "MA-JOURNEY-ORCH (198)"
-
-  - id: B3-SMS-MARKETING-DOMAIN
-    candidate: "SMS-MARKETING (candidate-domain)"
-    rationale: "Standalone SMS-marketing market with TCPA-shaped compliance surface, distinct from MA cross-channel orchestration. Adjacency: MA, CDP, B2C-COMM. Carried over from 2026-05-30."
-    vendor_evidence:
-      - Attentive
-      - Postscript
-      - Klaviyo
-      - Sinch
-      - Community
-    proposed_module: null
-
-  - id: B3-TRANSACT-EMAIL-DOMAIN
-    candidate: "TRANSACT-EMAIL (candidate-domain)"
-    rationale: "Transactional email infrastructure distinct from marketing email orchestration. Different buyer (engineering vs marketing ops), different SLAs, different deliverability model. Adjacency: MA, B2C-COMM, SUB-MGMT, CSM."
-    vendor_evidence:
-      - SendGrid
-      - Postmark
-      - Resend
-      - Mailgun
-      - AWS SES
-      - SparkPost
-    proposed_module: null
-
-  - id: B3-REVERSE-ETL-DOMAIN
-    candidate: "REVERSE-ETL (candidate-domain)"
-    rationale: "Already queued by the CDP audit; bumped by MA. MA is the primary downstream destination for reverse-ETL syncs."
-    vendor_evidence:
-      - Hightouch
-      - Census
-      - RudderStack
-      - Polytomic
-      - Grouparoo
-    proposed_module: null
-
   - id: B3-MA-COMPLIANCE-MODULE
     candidate: "MA-COMPLIANCE (or MA-PRIVACY) module"
-    rationale: "Consent management, preference center, double-opt-in records, unsubscribe lists, suppression. Currently spread across marketing_forms and the 7 regulations. A dedicated 5th module would master subscriber_preferences plus a new consent_records entity. Verification path: HubSpot Subscription Preferences, Klaviyo Consent."
-    vendor_evidence:
-      - HubSpot Marketing Hub
-      - Klaviyo
+    rationale: "Consent management, preference center, double-opt-in, suppression/unsubscribe lists. Currently spread across marketing_forms + the 7 regulations. NOTE: a new module is structurally a b2 (Rule #21), not a plain b3; non-blocking because MA already meets the module floor. If pursued it becomes a b2 and REQUIRES a Phase 0 vendor-surface check first (Rule #22) before deciding scope."
     proposed_module: "MA-COMPLIANCE"
-
+  - id: B3-SMS-MARKETING-DOMAIN
+    candidate: "SMS-MARKETING (candidate-domain)"
+    rationale: "Standalone SMS-marketing market with TCPA-shaped compliance, distinct from MA cross-channel orchestration. Adjacency: MA, CDP, B2C-COMM. Non-blocking new-domain candidate."
+    proposed_module: null
+  - id: B3-TRANSACT-EMAIL-DOMAIN
+    candidate: "TRANSACT-EMAIL (candidate-domain)"
+    rationale: "Transactional email infrastructure (different buyer, SLAs, deliverability) distinct from marketing email orchestration. Adjacency: MA, B2C-COMM, SUB-MGMT, CSM. Non-blocking new-domain candidate."
+    proposed_module: null
+  - id: B3-REVERSE-ETL-DOMAIN
+    candidate: "REVERSE-ETL (candidate-domain)"
+    rationale: "Already queued by the CDP audit; MA is the primary downstream destination for reverse-ETL syncs. Non-blocking new-domain candidate."
+    proposed_module: null
   - id: B3-REGULATION-CASL-LGPD-PIPEDA
     candidate: "CASL / PIPEDA / LGPD / Australia Spam Act / ePrivacy Directive (regulations)"
-    rationale: "Possible additions for future Phase 0 review beyond the current 7 (GDPR, CCPA/CPRA, EU AI Act, EU DSA, COPPA, TCPA, CAN-SPAM)."
-    vendor_evidence: []
+    rationale: "Possible additions beyond the current 7 (GDPR, CCPA/CPRA, EU AI Act, EU DSA, COPPA, TCPA, CAN-SPAM). Future Phase 0 review."
     proposed_module: null

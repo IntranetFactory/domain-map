@@ -393,3 +393,41 @@ State-driven Validate pass (SKILL.md Rule #21) over the open items in `audits/AP
 ### Personas / RACI
 
 Phase P is deferred (B1A-PHASE-P): no personas authored. Candidate personas once the module set lands: API Product Owner (owns specs + breaking-change approval), Platform Engineer (gateway + policy operator), Developer-Portal Manager (consumer onboarding + portal publishing), API Consumer / Subscriber (external developer). Not written this pass.
+
+## 2026-06-08 - Phase 0 + q-file regeneration (Rule #22 remediation)
+
+### Why this pass ran
+
+APIM is UNBUILT (0 `domain_modules`, 0 capabilities) with the whole build gated on market-shape `b2` calls (B2-S1 module split, B2-S2 pattern flags, B2-S3 regulations). The q-file written in earlier passes SKIPPED Phase 0: its recommendations leaned on generic "matches how the major API platforms (Apigee, Kong, Azure API Management) present their product" reasoning with no named-vendor specifics and no Phase 0 report. Rule #22 (forcing step, skill-changelog 2026-06-08) requires every market-shape recommendation to be backed by a CURRENT Phase 0 vendor-surface report produced THIS pass, with the named-vendor evidence embedded INLINE. This pass mirrors the PRM 2026-06-08 remediation. Research + file-authoring only: no DB inserts / updates / deletes; the build stays gated.
+
+### Vendor study
+
+Studied 7 flagship API-management vendors against their 2025-2026 product docs: Apigee (Google), Kong Konnect, MuleSoft Anypoint, Azure API Management, AWS API Gateway, IBM API Connect, Postman API Platform. Report saved to [.tmp_deploy/APIM-phase0-2026-06-08.md](../../.tmp_deploy/APIM-phase0-2026-06-08.md) (flagship-vendor table, surface matrix, compliance entities, per-decision verdicts, modularization hypothesis). Diversity met: pure-play gateway specialist (Kong), design-first specialist (Postman), cloud-native runtime (AWS), three full-lifecycle suites (Apigee, Azure, IBM, MuleSoft). No single compliance specialist anchor (APIM is not a regulation-mandated market like ATS is for FCRA); GDPR + SOX are the load-bearing regimes and apply across vendors.
+
+### Surface-matrix highlights
+
+- **The 7 loaded masters are the headline-noun set.** The consumption substrate (`api_products`, `api_subscriptions`, `api_plans`/rate plans, `oauth_clients`/developer apps, `api_keys`), the publishing substrate (`developer_portals`, `api_documentation`), the separable runtime config (`api_rate_limits`, `api_quotas`), and `backends`/upstream services are ALL Core (>=3 vendors) and currently absent. This is exactly the B3-S1 enumeration, now vendor-confirmed.
+- **`api_products` is Core across all full-platform vendors** (Apigee API Product, Azure Product, IBM Product, Kong Konnect API Product, MuleSoft API Group); it is the developer-facing bundle that anchors consumption and monetization.
+- **The subscription/contract carries an explicit approval workflow** in MuleSoft (API instance owner approves SLA-tier requests) and IBM (subscription request approval), confirming `api_subscriptions` is workflow-bearing, not just a config row.
+- **Published specs are immutable** in AWS (deployments are immutable stage snapshots) and IBM (staged Products become a non-editable specific version); breaking changes are gated onto a new revision across the market. This is the direct evidence for the q2 spec-freeze flag.
+- **Vendor packaging maps cleanly to four marketed surfaces** (design/lifecycle, gateway/runtime, consumer/access, developer portal) across Apigee, Azure, Kong Konnect, and IBM, which is the direct evidence for the 4-module split.
+
+### Per-decision verdicts
+
+- **B2-S1 (module split, the gate):** recommend 4 modules (a). Apigee, Azure APIM, Kong Konnect, and IBM API Connect all separate design/lifecycle from gateway/runtime from consumer/access from a first-class Developer Portal. The 2-module control/data-plane shape (c) is the gateway-only-vendor model (Kong OSS, AWS API Gateway) and under-serves APIM's portal + consumer surfaces. Framing signal: the 2025 Gartner MQ for API Management runs as ONE full-lifecycle market (Leaders: Kong, Google/Apigee, MuleSoft, IBM, Axway, Boomi), so APIM splits INTO modules within one domain, not OUT into siblings.
+- **B2-S2 (pattern flags):** all four proposed positive flips CONFIRMED. `api_specifications.has_submit_lock=true` (AWS immutable deployments, IBM staged-version non-editability, published-spec-is-the-contract pattern); `api_specifications.has_single_approver=true` (single-owner breaking-change governance, MuleSoft instance-owner contract approval); `api_policies.has_single_approver=true` (policies govern live access; single accountable reviewer is the runtime operating norm; lighter evidence, operational discipline not a vendor-modeled field); `api_consumers.has_personal_content=true` (every developer portal stores PII: Apigee Developer, IBM Consumer Organization, Azure portal user; clearest of the four).
+- **B2-S3 (regulations):** recommend GDPR + SOX always, PCI-DSS conditional (q6 option b). GDPR is load-bearing for developer PII; SOX for gateway audit logs + change control at public companies (`api_audit_logs` is Core across all six runtime vendors); PCI-DSS applies ONLY when an API touches card data. This refines the prior flat GDPR+SOX+PCI-DSS recommendation.
+- **B3-S1 (substrate entities):** the surface matrix IS the answer. Additive, non-blocking; load per the matrix once modules exist.
+
+### Reversals
+
+None. The fresh evidence CONFIRMED all four pattern flags and the 4-module shape. The only substantive change is the B2-S3 framing nuance: PCI-DSS is now flagged conditional (recommended set GDPR + SOX always, PCI-DSS for payment estates) rather than a flat broad GDPR+SOX+PCI-DSS, and q6 gained a fourth option (b: GDPR + SOX with PCI-DSS conditional) which is now the recommended pick.
+
+### Files written
+
+- [.tmp_deploy/APIM-phase0-2026-06-08.md](../../.tmp_deploy/APIM-phase0-2026-06-08.md) (new Phase 0 report)
+- [audits/APIM/q-APIM.md](q-APIM.md) (regenerated with inline named-vendor evidence + Grounding block)
+- [audits/APIM/state.yaml](state.yaml) (dated Phase 0 note block at top; B2-S3 options + why updated for the PCI-DSS-conditional nuance; `last_audit` -> 2026-06-08; status stays feedback_needed / next_action_by user)
+- [audits/APIM/history.md](history.md) (this section)
+
+No DB writes. No `record_status` stamping. No JWT errors (read-only verification only).

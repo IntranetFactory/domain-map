@@ -539,3 +539,109 @@ None encountered.
 Status `feedback_needed`, `next_action_by: user`, `last_audit: "2026-06-06"`. Every remaining
 b1a item is destructive-awaiting-approval or gated on a b2 decision; the agent has executed
 all additive/corrective work it can.
+
+---
+
+## 2026-06-09, Audit (state-driven, B9d band)
+
+State-driven Validate continuation per Rule #21. The only agent-actionable open item in
+`state.yaml` was `B1A-B9D-VERIFY` (run the B9d handoff-payload-realization band, which had
+never run on PSA). All other open items are user-gated (b2 forks + destructive approvals,
+already surfaced in `q-PSA.md`). No fresh from-scratch audit.
+
+### B9d ran over PSA's 19 outbound cross-domain handoffs (21 `handoff_processes` tags)
+
+Classified each outbound payload's APQC tag against the realized set (a gated
+`data_object_lifecycle_states.process_id` that also carries `process_raci`). PSA itself
+realizes 179 (5.2.1), 180 (5.2.2), 52 (8.6), 302 (9.2.2); targets HCM/WORK-MGMT realize
+240 (7.6.3) and 411 (13.2.3).
+
+- **RESOLVED (5):** 1016 -> 240 (HCM realizes), 1022 -> 240 (HCM realizes), 1024 -> 411
+  (WORK-MGMT realizes), 1017 -> 180 (PSA realizes), 1019 -> 302 (PSA realizes). 1017 and 1019
+  were RESOLVED-with-RACI-gap until the E4 fix below (180/302 had no Accountable).
+- **ORPHAN, owed by target domain (12, report-only):** the payload names work the receiving
+  domain has not yet realized (no gated state + RACI on its side). 132 -> 808 (S2P
+  "Process/Review requisitions" 4.2.4.1), 1018 -> 980 (SWP "Strategic workforce planning"
+  7.1.2.1), 1021 -> 1325 (EPM "Variance analysis" 9.1.2.5), 1023 -> 905 (ATS
+  "Identify/select/assign resources" 5.4.1.6), 1025 -> 1409 (ERP-FIN "Record project
+  transactions" 9.4.2.2), 1026 -> 1036 (HCM "Define competencies" 7.3.4.2), 1027 -> 887
+  (SWP "Skills taxonomy" 5.2.2.1), 1127 -> 1409 (ERP-FIN), 1128 -> 59 (ERP-FIN "AP/expense"
+  9.6), 1129 -> 148 (CRM "Manage customers/accounts" 3.5.2), 1130 -> 1417 (PA "Analyze
+  employee utilization" 9.5.1.5), 1249 -> 917 (WORK-MGMT "Release resources" 5.4.3.4). NOT
+  PSA's fix: each routes to the owner domain's b1 (realize the gate + RACI). No cross-domain
+  authoring. Note: the literal "ancestor/descendant realized -> ROLL-UP" rule would have
+  re-pointed 131 -> 302 and 1027 -> 180, but both realized relatives are the WRONG child
+  semantically (302 = "Invoice customer" not rev-rec; 180 = "resource plan" not skills
+  taxonomy), so neither is a clean ROLL-UP. Held as ORPHAN, not auto-re-pointed.
+- **Boundary, tied to B2-S3 (1):** 131 -> 55 (9.2 "Perform revenue accounting", L2,
+  discovery_substring) on `revenue_recognition_records` (109, SUB-MGMT-mastered). The
+  rev-rec-specific work is realized by nobody (state 403 `recognized` has no `process_id`
+  wired). Disposition is downstream of B2-S3 (q1): once PSA's relationship to the SUB-MGMT
+  master is decided, the recognize-revenue process gets realized on the owning side and 131
+  re-tagged off the L2 parent. No new question; folded into q1.
+- **MIS-TAG / wrong-tag (1, NEW, surfaced as q12):** 1020 (PSA-FINANCIALS -> CLM on
+  `project_billing_milestone.reached`, updates contract obligations) is tagged 1324
+  ("Prepare periodic financial forecasts" 9.1.2.4) which does not match the work. The right
+  home is CLM contract management, 807 "Manage contracts" (4.2.3.4), which CLM already
+  realizes (modules 127/129) -> re-pointing makes 1020 RESOLVED. Re-pointing overwrites an
+  existing `agent_curated` tag = destructive, so surfaced for sign-off as q12.
+- **Redundant weak tags (2, already surfaced):** 132 -> 569 and 1129 -> 569
+  (`discovery_substring`, "Assign resources to product/service project" 2.3.1.1). Both
+  handoffs already carry a stronger `agent_curated` tag (132 -> 808, 1129 -> 148), so the 569
+  rows are redundant. Already the q7 / B1A-H1-REPLACE-DELETIONS deletion (destructive).
+
+### Executed (additive/corrective, Rule #21)
+
+- **E4 RACI-completeness fix (3 `process_raci` rows, ids 139/140/141):** the 2026-06-06
+  persona pass left three PSA-realized gated processes with a Responsible but no Accountable
+  (E4 fail): 52 "Deploy services/solutions" (module 86), 180 "Create and manage resource
+  plan" (module 87), 302 "Invoice customer" (module 89). Added the Accountable as the
+  module's owning manager persona (52 -> Delivery Manager 27, 180 -> Resource Manager 28,
+  302 -> Finance Controller 30; each reaches its module `primary`). `process_raci` carries no
+  `record_status` column, so nothing to stamp. This also upgrades B9d 1017 and 1019 from
+  RESOLVED-with-gap to cleanly RESOLVED. Surfaced for the user to re-assign the Accountable
+  if a different persona is preferred (PSA personas are flat, so the responsible manager
+  doubling as accountable is the determinate single-owner shape).
+
+### Surfaced (NOT executed; user decides)
+
+- **q12 (NEW): re-tag handoff 1020** `1324 -> 807` (or DELETE the 1324 tag). Destructive
+  overwrite of an `agent_curated` tag. Recommended: re-tag to 807 (CLM "Manage contracts",
+  already realized) -> 1020 becomes RESOLVED.
+
+### Report-only (route to owner domains)
+
+- **B9d ORPHANs (12):** S2P (132), SWP (1018, 1027), EPM (1021), ATS (1023), ERP-FIN (1025,
+  1127, 1128), HCM (1026), CRM (1129), PA (1130), WORK-MGMT (1249). Each owner domain's b1
+  owes the realization (gated lifecycle state `process_id` + `process_raci` R/A) for the
+  named process so the inbound payload resolves. This is the SEMANTIC layer over the existing
+  B1B-S5/S6 module-FK report-only set (B10b attribution), not a duplicate of it.
+
+### Carry-forward (unchanged, still owe the user via q-PSA.md)
+
+q1-q11 unchanged: B2-S3 (rev-rec architecture), B2-S1 (Rule #15 notes sweep), B2-S2 (pattern
+flags), B2-S4 (inbound 787/515), B2-S5 (CRM renewal), B1A-SELF-CONTAIN (M9 7 rows),
+B1A-H1-REPLACE-DELETIONS (q7), B1A-AMENG-OVERWRITE (q8), b3 (12 entities + 2 modularization +
+3 regulations). New q12 added (1020 re-tag).
+
+### JWT errors
+
+None encountered. (One transient `PGRST205` schema-cache miss on the first `/domains` read,
+cleared on immediate retry.)
+
+### Frontmatter
+
+Status `feedback_needed`, `next_action_by: user`, `last_audit: "2026-06-09"`. B1A-B9D-VERIFY
+resolved (B9d ran; E4 RACI fix executed). Every remaining open item is destructive-awaiting-
+approval or a b2 fork, all surfaced in `q-PSA.md` (now q1-q12).
+
+## 2026-06-10 - B9d inverted-record re-home
+
+Removed **B1B-B9D-ORPHANS** (user sign-off 2026-06-10). The bundle recorded 12 outbound PSA tags as
+"owed by the target domain" (the inverted creditor direction), and its specific claims are now stale:
+e.g. process 905 was listed as owed by ATS, but project_resource_allocations is PSA-mastered and is
+already realized under 5.2.2 "Create and manage resource plan", so the committed
+`scripts/analytics/b9d_resolver.ts` classifies it locally (a source-side tag review), not as ATS-owed
+work. The resolver re-derives the current correct per-owner obligations on each owner's review
+(bidirectional, both directions on every boundary), so the bundle is superseded. B1B-S5 (NULL
+target-module FKs) is a separate item and is retained.

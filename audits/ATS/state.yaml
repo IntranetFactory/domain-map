@@ -2,25 +2,38 @@ schema_version: 2
 domain: ATS
 status: feedback_needed
 next_action_by: user
-last_audit: "2026-06-02"
+last_audit: "2026-06-09"
 
 b1a: []
 
 b1b:
-  - id: B1B-REG-CODES-EMPTY
-    summary: "regulations rows 84 (FCRA) and 85 (OFCCP) carry empty regulation_code"
+  - id: B1B-B9D-RETAG-BENADMIN
+    summary: "Re-tag 2 ATS->BEN-ADMIN handoffs (#120, #395) from wrong code 7.3 -> 7.5.2.2 (destructive, needs sign-off)"
     finding: >
-      regulations id=84 (Fair Credit Reporting Act) and id=85 (Federal Contract
-      Compliance Programs Regulations) were inserted 2026-05-28 with regulation_code="".
-      Other regulations carry short codes (GDPR, CCPA, ADA, TITLE-VII, ADEA, EEO-1,
-      EU-PAY-TRANS, EU-AI-ACT). Natural codes: FCRA, OFCCP. regulations is a catalog-wide
-      shared master; a PATCH affects every consuming domain.
-    action: >
-      PATCH /regulations?id=eq.84 {regulation_code:"FCRA"} and
-      /regulations?id=eq.85 {regulation_code:"OFCCP"} once the regulations master /
-      cross-domain governance Validate confirms the code namespace.
+      B9d re-verified 2026-06-09. handoffs #120 (job_offer.accepted -> BEN-ADMIN, payload
+      benefit_enrollments) and #395 (candidate.hired -> BEN-ADMIN, payload candidates) are both
+      tagged 7.3 "Manage employee onboarding, training, and development" -- the wrong APQC branch.
+      The work handed to BEN-ADMIN is benefit enrollment = 7.5.2.2 "Administer benefit enrollment".
+      WARNING: the mechanical resolver now reports these as ROLL-UP -> 7.3.3.2 "Develop employee
+      career plans and career paths" (a descendant of 7.3 realized today by HCM). That match is
+      SPURIOUS (career planning != benefits enrollment); do NOT apply it. The correct fix is the
+      re-tag to 7.5.2.2. This is ATS-owned (ATS authored the tag) and is a destructive process_id
+      overwrite, so it needs explicit user sign-off. It is NOT blocked on BEN-ADMIN.
+    action: "Surfaced as q-file q2. On sign-off: PATCH handoff_processes #731 (#120) + #66 (#395) process_id 41 -> 1052 (7.3 -> 7.5.2.2), record_status stays new."
     blocked_by:
-      - {type: catalog_addition, scope: domains, trigger: "regulations master Validate to confirm code namespace ownership"}
+      - {type: user_decision, ref: "q-ATS.md q2", reason: "destructive overwrite of an existing handoff_processes.process_id"}
+
+  - id: B1B-B9D-MISTAG-402
+    summary: "ATS source mis-tag: handoff #402 (background_checks) tagged 7.4 should re-point to 7.2.5.1 or be deleted (destructive, needs sign-off)"
+    finding: >
+      Re-home of the former B1B-B9D-OWED-HRSD (2026-06-10, b9d_resolver). background_checks is
+      ATS-mastered and is ALREADY realized under 7.2.5.1 "Obtain candidate background information"
+      (process 1020, gated + process_raci). Handoff #402 (background_check.flagged -> HRSD) tags it
+      7.4 "Manage employee relations", which contradicts the carried entity. This is an ATS sender
+      mis-tag, NOT work owed to HRSD. The resolver classifies #402 MIS-TAG on every ATS run.
+    action: "On sign-off: PATCH handoff_processes for #402 process_id 42 -> 1020 (7.4 -> 7.2.5.1), or DELETE the 7.4 tag. Destructive catalog edit; record_status stays new."
+    blocked_by:
+      - {type: user_decision, ref: "ATS B9d mis-tag #402", reason: "destructive re-point/delete of a handoff_processes tag"}
 
   - id: B1B-APQC-PREDICTIVE-MODEL-DEFERRED
     summary: "handoff #453 predictive_model.scored has no cross-industry PCF analog"
@@ -48,16 +61,6 @@ b2:
       - "leave: accept drift; the blueprint emitter reads the module junction directly so renders are unaffected"
     why: "Catalog-wide policy decision, not ATS-scoped. Affects audit integrity for every modularized domain."
 
-  - id: B2-C1-FUNCTION-ROWS
-    summary: "business_function_domains has only 2 rows (Recruiting owner, Legal contributor)"
-    question: >
-      C1 passes (an owner exists) but ATS plausibly has more functional stakeholders.
-      Add rows or leave at Recruiting + Legal?
-    options:
-      - "add Human Resources (contributor) + Finance (consumer)"
-      - "leave at Recruiting + Legal"
-    why: "Sharpens buyer-persona / RACI (Signal 3). Optional, not a gap."
-
 b3:
   - id: B3-RIGHT-TO-WORK
     candidate: right_to_work_verifications
@@ -80,20 +83,3 @@ b3:
       candidate_nurture_campaigns + recruiter_interactions do not cover.
     vendor_evidence: [Ashby, Lever]
     proposed_module: ATS-CANDIDATE-CRM
-  - id: B3-CANDIDATE-EMAILS
-    candidate: candidate_emails
-    rationale: >
-      Persisted candidate communication thread as a first-class object, distinct from
-      free-text notes and engagement summaries.
-    vendor_evidence: [Greenhouse, Lever, Ashby]
-    proposed_module: ATS-CANDIDATE-CRM
-  - id: B3-MARKET-JUDGMENT-LOWER-CONFIDENCE
-    candidate: "onboarding_handoffs, pre_employee_documents, candidate_data_retention_policies, drug_health_screenings, continuous_monitoring_subscriptions, interview_feedback_reminders, offer_approval_chains"
-    rationale: >
-      Vendor-real but lower-impact / specialist / boundary-debatable. onboarding_handoffs
-      overlaps the existing ATS -> ONBOARDING handoffs; candidate_data_retention_policies is
-      a GDPR purge entity; drug_health_screenings + continuous_monitoring_subscriptions are
-      HireRight-specialist; interview_feedback_reminders + offer_approval_chains are config
-      refinements. Decide load vs skip per entity.
-    vendor_evidence: [Workday Recruiting, HireRight, SmartRecruiters, Ashby]
-    proposed_module: various

@@ -379,3 +379,50 @@ None encountered during this pass.
 ### Post-fix status
 
 next_action_by: user (B2-S1 module cut is the keystone decision; B2-S3 and B2-S4 are independent).
+
+## 2026-06-08, Phase 0 + q-file regeneration (Rule #22 remediation)
+
+### Why this pass ran
+
+The 2026-06-07 state-driven execute pass surfaced the market-shape B2-S1 module-cut decision into q-BI.md WITHOUT having run Phase 0 that pass: the recommendation leaned on generic "maps better to a LookML-style separation / Creator-vs-Viewer split" reasoning with no named-vendor specifics and no Phase 0 report. Rule #22 (forcing step, skill-changelog 2026-06-08) requires every market-shape recommendation to be backed by a CURRENT Phase 0 vendor-surface report produced this pass with named-vendor evidence embedded inline. This pass runs that Phase 0, regenerates the q-file from it, and records the result. Research + file-authoring only; no DB writes (the build stays gated on B2-S1).
+
+### Vendor study
+
+Flagship BI vendors studied: Microsoft Power BI / Fabric, Tableau (Salesforce), Google Looker, Qlik Sense / Cloud, ThoughtSpot. Plus the embedded-analytics market (Sisense, Power BI Embedded, Tableau Next) and the standalone headless-semantic-layer market (dbt Semantic Layer / MetricFlow, Cube) to ground the contested overlap. Report saved at `.tmp_deploy/BI-phase0-2026-06-08.md` (flagship vendors table, surface matrix, compliance/governance entities, the BI-native-vs-headless boundary section, workflow substrate, marketed product surfaces, modularization hypothesis).
+
+### Surface-matrix highlights
+
+- **Core entities (first-classed by all five flagships):** data sources/connections, the BI-native semantic model (Power BI DAX/tabular semantic model, Looker LookML, Qlik master items, ThoughtSpot Model), saved queries (Explore/Answer/custom SQL), reports (view/Look/paginated report), dashboards (dashboard/Liveboard), subscriptions (scheduled delivery), alerts, workspaces (workspace/project/folder/space), and content-scoped row-level security (Power BI RLS / Tableau data policies / Looker access_filter / Qlik section access).
+- **Alerts are modeled as distinct from subscriptions by every vendor** (Tableau data-driven alerts vs subscriptions; Looker alerts vs scheduled delivery; Qlik alerting vs subscription reports). This confirms B3-3 `bi_alerts` as a real separate master, not a subscription variant.
+- **The contested overlap (semantic models / governed metrics) splits two ways:** BI-native embedded semantic layers (Power BI DAX, LookML, Qlik master items, ThoughtSpot Model) live inside each BI tool and are the tool's own master; standalone headless layers (dbt Semantic Layer, Cube) are a SEPARATE category that BI tools consume by API (ThoughtSpot ingests dbt MetricFlow and Snowflake Semantic Views into native Models). This matches the catalog: BI (74) and DATA-AI-PLAT (129) both master `semantic_metrics`; METRICS-LAYER (137, "Metrics Layer / Headless BI") masters `metric_definitions`/`dimensional_models`/`metric_access_policies` and BI consumes them.
+- **Embedded analytics is a distinct developer-led buying motion** (Power BI Embedded, Sisense developer SDK/APIs, Tableau Next External Embedding SDK 2025); market view is that neither Tableau nor Power BI is architecturally built for embedding. Grounds B3-5 `bi_embed_artifacts` and the 4-module option.
+- **Marketed product surfaces ground the module split:** Tableau packages by persona (Creator $75 / Explorer $42 / Viewer $15) and Power BI by edition (Pro / PPU / Fabric, viewers free at F64), an author-vs-consume cut; Looker and ThoughtSpot package by layer (modeling surface operated separately from visualization surface).
+
+### Per-decision verdicts
+
+| q | Decision (state id) | Class | Verdict |
+|---|---|---|---|
+| q1 | B2-S1 module cut | market-shape | Recommend b (3-module: Semantic-Modeling + Visualization + Distribution), grounded in the Looker/ThoughtSpot layer packaging; 2-module (a) is the Tableau/Power BI persona packaging; 4-module (c) is live if embedded analytics is carved out. CONFIRMED, not reversed. |
+| (grounding) | semantic_metrics masters-vs-consumes | market-shape | CONFIRMED dual-master: BI masters its OWN native semantic layer; the headless layer (METRICS-LAYER) is a separate market BI consumes. Do NOT promote semantic_metrics out of BI. |
+| q2-q5 | B2-S3 pattern flags | workflow-shape | All four yeses backed by vendor behavior (subscription PII; report/dashboard submit-lock on publish; metric single-approver certification). |
+| q6 | B2-S4 em-dash fix on skill id 33 | non-market (destructive approval) | Unchanged; surfaced as a sign-off-gated overwrite of a non-empty value. |
+| q7 | B3-1..B3-7 substrate entities | discretionary b3 | Five Core in the matrix (data sources, workspaces, alerts, RLS, calculated fields); embedded-analytics artifact is the one with a module implication (could grow the 3-module cut to 4). |
+
+### Reversals
+
+None. Fresh Phase 0 evidence CONFIRMS the existing recommendations rather than contradicting them. The 3-module cut is now grounded in named-vendor packaging (Looker LookML, ThoughtSpot Model), and the dual-master `semantic_metrics` shape is confirmed by the BI-native-vs-headless-semantic-layer boundary.
+
+### Files written
+
+- `.tmp_deploy/BI-phase0-2026-06-08.md` (new Phase 0 report)
+- `audits/BI/q-BI.md` (regenerated with inline named-vendor evidence + `> Grounding:` block + reversed-note in trailing comment)
+- `audits/BI/state.yaml` (dated Phase 0 note block after the supersession header; `last_audit` -> 2026-06-08; B2-S1 and B2-S3 `why` framing updated with Phase 0 grounding; no items deleted or restructured)
+- `audits/BI/history.md` (this section)
+
+### DB writes
+
+None this pass. Status stays feedback_needed / next_action_by: user; build remains gated on B2-S1.
+
+### JWT errors
+
+None encountered during this pass.

@@ -1,8 +1,18 @@
 schema_version: 2
 domain: CSM
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-06-06"
+next_action_by: agent
+last_audit: "2026-06-08"
+
+# PHASE 0 (2026-06-08): vendor-surface report run this pass to ground the market-shape b2s
+#   per Rule #22. Report: .tmp_deploy/CSM-phase0-2026-06-08.md (Zendesk, Salesforce Service
+#   Cloud, ServiceNow CSM, Freshdesk, Intercom). Two recommendations REVERSED by fresh evidence:
+#     B2-CSM-KNOWLEDGE-MASTER : a -> c (4/5 flagships own a customer-facing KB; only ServiceNow
+#                               shares ITSM's). CSM-KNOWLEDGE should master its own KB.
+#     B2-CUSTOMERS-AMBIGUITY  : c -> b (no support desk masters a health-score; that is CS-platform
+#                               territory). customer_health_signals is over-modeling; attribute to
+#                               CSM-CASE-MGMT by convention.
+#   B2-CAPABILITY-SHAPE (a) and B2-CROSS-DOMAIN-INTEGRITY (a per-cluster) re-grounded, not reversed.
 
 # EXECUTED 2026-06-06 (state-driven), dropped from worklist:
 #   B1A-ENTITY-TYPE  : 103 operational_workflow, 104 catalog, 105 + 111 operational_record
@@ -16,6 +26,10 @@ last_audit: "2026-06-06"
 
 # SURFACED-FOR-USER 2026-06-06 (no write; carried as b1a-deferred / destructive-awaiting-approval):
 b1a:
+  - id: B1A-B9D-VERIFY
+    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
+    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
+    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-PHASE-P
     summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
     status: deferred
@@ -104,9 +118,17 @@ b2:
       - "(a) leave NULL, accept no clean source attribution for customer-keyed CSM outbound"
       - "(b) pick CSM-CASE-MGMT as canonical source by convention (case-driven health signals)"
       - "(c) introduce customer_health_signals as a new CSM-CASE-MGMT-mastered data_object and re-key the trigger events; reshapes B3-OMNICHANNEL-SESSIONS and B1B-B1"
+    recommended: "(b)"
+    phase0: >-
+      REVERSED from (c) by Phase 0 (2026-06-08, D2). No flagship support desk (Zendesk,
+      Salesforce Service Cloud, ServiceNow, Freshdesk, Intercom) masters a customer
+      health-score / churn-risk record; that is Customer-Success-platform territory
+      (Gainsight, Totango, ChurnZero). A CSM-mastered customer_health_signals is over-modeling.
+      Attribute the customer-keyed outbound to CSM-CASE-MGMT (case-derived signals); the
+      CSAT response CSM already masters is the real signal it contributes.
     why: >-
       Deterministic B10b derivation breaks on tie; CSM does not master customers (CRM does).
-      Option (c) is the most catalog-coherent fix but carries broader modeling implications.
+      Option (c) was prior pick on catalog-coherence grounds, but vendor reality rules it out.
 
   - id: B2-CROSS-DOMAIN-INTEGRITY
     summary: Decide per-cluster B5 fix for handoffs whose payload CSM declares no DMDO on.
@@ -117,6 +139,16 @@ b2:
       - "(a) author consumer DMDOs on CSM-CASE-MGMT for crm_opportunities, support_sessions, product_features/releases/beta_programs/feedback/metrics, vertical-industry master payloads"
       - "(b) move targets to CRM-internal or ACCT-PLAN where applicable"
       - "(c) drop the handoffs with no real CSM-side workflow effect"
+    recommended: "(a) per cluster"
+    phase0: >-
+      RE-GROUNDED (not reversed) by Phase 0 (2026-06-08, D4). crm_opportunities (Salesforce
+      converts closed-won into onboarding cases) and support_sessions (Salesforce Agentforce
+      Contact Center / Zendesk voice escalate a session into a case with transcript) are
+      genuine consume-subjects -> author consumer DMDOs on CSM-CASE-MGMT. Product-feedback
+      payloads (features/releases/beta_programs/feedback/metrics) are NOT a CSM master in any
+      flagship; they land as a case comment/tag at most -> consume thinly or drop, do not
+      author heavyweight DMDOs. Vertical 'opens case' rows are all genuine case-creation
+      sources -> CSM-CASE-MGMT consumer.
     why: >-
       Each cluster differs. crm_opportunities and support_sessions are common CSM workflow
       subjects; PROD-MGMT payloads are mostly product-feedback signals; vertical rows are
@@ -125,12 +157,22 @@ b2:
   - id: B2-CAPABILITY-SHAPE
     summary: Decide whether to add CSM-specific or new cross-cutting capabilities.
     question: >-
-      CSM has 3 cross-cutting capabilities (AI-TRIAGE, SLA-MGMT, KNOWLEDGE-MGMT) and zero
-      domain-specific. Add domain-prefixed, accept cross-cutting, or add new cross-cutting?
+      CSM has 4 cross-cutting capabilities (AI-TRIAGE, SLA-MGMT, KNOWLEDGE-MGMT, CUSTOMER-360)
+      and zero domain-specific. Add domain-prefixed, accept cross-cutting, or add new cross-cutting?
     options:
       - "(a) add CSM-CASE-MGMT-ROUTING, CSM-OMNICHANNEL-ENGAGEMENT, CSM-AGENT-ASSIST"
       - "(b) accept cross-cutting capabilities as the full surface"
       - "(c) introduce cross-cutting OMNICHANNEL-ENGAGEMENT and CSAT-NPS"
+    recommended: "(a)"
+    phase0: >-
+      RE-GROUNDED by Phase 0 (2026-06-08, D3). All 5 flagships market case routing/assignment,
+      omnichannel engagement, agent assist (Zendesk Copilot, Salesforce Agentforce, ServiceNow
+      Now Assist, Freddy, Fin), CSAT/NPS, and self-service knowledge as headline capabilities
+      (SLA management in 4 of 5). Routing/omnichannel/agent-assist are unrepresented at the
+      capability layer today -> add them. Nuance: OMNICHANNEL-ENGAGEMENT and CSAT-NPS plausibly
+      span CCAAS/CRM/Marketing, so they are good cross-cutting candidates (spirit of c) while
+      case-routing and agent-assist stay CSM-specific. Live drift: CUSTOMER-360 is now a 4th
+      cross-cutting capability on this domain (was 3 at prior audit).
     why: >-
       Choice drives the contributor/consumer business_function_domains set and the M6
       coverage profile across CSM modules; also gates B1A-PHASE-P persona reach.
@@ -158,8 +200,19 @@ b2:
     options:
       - "(a) accept as-is and document the rationale (editorial/audience-filtered view onto ITSM-mastered knowledge_articles)"
       - "(b) demote CSM-KNOWLEDGE to module_kind=starter (lossy: KNOWLEDGE-MGMT capability loses sole realizing module)"
-      - "(c) introduce customer_knowledge_articles as a CSM-specific master"
-    note: "Blocks B1A-PHASE-P persona authoring (demotion reshapes persona reach)."
+      - "(c) give CSM-KNOWLEDGE its own customer-facing knowledge master"
+    recommended: "(c)"
+    phase0: >-
+      REVERSED from (a) by Phase 0 (2026-06-08, D1). 4 of 5 flagships master their own
+      customer-facing KB: Zendesk Guide, Salesforce Knowledge (own KnowledgeArticleVersion
+      object, not a borrowed IT table), Freshdesk Solutions, Intercom Articles; only ServiceNow
+      CSM reuses the platform-wide knowledge table shared with ITSM. 'Editorial view onto the
+      IT KB' is a ServiceNow-only artifact, not the market shape. Implementation nuance: prefer
+      an audience-filtered embedded_master of the existing knowledge_articles (id 51) over a
+      brand-new duplicate entity - it gives 114 a deployable master anchor, honors the catalog
+      audience-filtering rule (Salesforce/ServiceNow validate a single audience-filtered Knowledge
+      object), and resolves the two knowledge_articles M9 rows in B1A-SELF-CONTAIN.
+    note: "Blocks B1A-PHASE-P persona authoring (demotion reshapes persona reach). Resolving (c) also disposes of the knowledge_articles rows in B1A-SELF-CONTAIN (q9)."
 
   - id: B2-PATTERN-FLAGS
     summary: Confirm pattern-flag re-evaluation outcomes on 104, 105, 111 (drives B1B-S2 PATCH).

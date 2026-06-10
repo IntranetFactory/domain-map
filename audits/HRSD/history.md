@@ -541,3 +541,124 @@ UI links written:
 
 - C1 `business_function_domains`: HRSD already has owner (HR Service Delivery, fn 76) + contributor (IT Operations, fn 27). Nothing to add.
 - B11 aliases: `hr_cases` (192) has 3 synonyms, `case_categories` (193) has 2. Nothing to add.
+
+## 2026-06-09 - Review (Phase E executed + drift corrections)
+
+Continuation from the 2026-06-07 `feedback_needed` state. Verified the worklist against live state, executed the one piece of deferred agent-doable additive work (Phase E personas, Rule #21), and corrected three drifts the 2-day-old state file had accumulated.
+
+### Executed (additive, all `record_status='new'`, Rule #1)
+
+- **B1A-PHASE-P resolved** - authored the HRSD persona / RACI layer fresh (loader `.tmp_deploy/load_hrsd_personas_2026_06_09.ts`). The 2026-06-07 pass deferred this; it is additive agent-doable work, so a review executes it (Rule #21). Function-anchored on HR Service Delivery (business_function 76, the domain's owner function).
+  - 3 `domain_roles` personas: `HRSD-CASE-AGENT` (#63), `HRSD-SERVICE-MANAGER` (#64), `HRSD-KNOWLEDGE-MANAGER` (#65), all `business_function_id=76`.
+  - 8 `role_modules` reach rows (every persona >= 2 modules: agent 75/77/76, manager 75/76/77, knowledge-mgr 77/75). E2 satisfied.
+  - 5 `data_object_lifecycle_states.process_id` wirings: `hr_cases` (192) gated states (triaged / assigned / pending_approval / resolved / reopened) -> PCF process 242 "Manage employee inquiry process" (external_id 10523, L3). Process 242 had no prior wiring or RACI anywhere (verified) - no cross-domain grant bleed.
+  - 3 `process_raci` rows on 242: R = HRSD-CASE-AGENT, A = HRSD-SERVICE-MANAGER, I = HRSD-KNOWLEDGE-MANAGER. E4 satisfied (>=1 R + >=1 A on the gated process).
+  - Phase E bands now pass: E1 (>=1 persona on a multi-module domain), E2 (2-module floor), E3 (interaction_level set), E4 (RACI on gated process), E6 (reach reconciles, gates wired).
+
+### Drift corrected against live state
+
+- **B1A-SELF-CONTAIN (M9): 5 -> 6 rows.** The 2026-06-07 pass counted only the 5 cross-domain consumer+required rows. Live shows a 6th: DMDO id 336, `hr_cases` (192) consumed `required` by HRSD-EMPLOYEE-PORTAL (76) - an INTRA-domain self-containment gap (`hr_cases` is mastered by sibling module HRSD-CASE-MGMT 75). Full set: 333 (employees/75->HCM), 338 (employees/76->HCM), 335 (service_requests/76->ITSM), 337 (knowledge_articles/76->ITSM), 339 (knowledge_articles/77->ITSM), 336 (hr_cases/76->HRSD 75, intra). Still destructive; still surfaced to user (q1).
+- **B1B-APQC-REPLACE: handoff 446 already re-tagged, drops to handoff 119 only.** Live: handoff 446's stale `discovery_override` (hp.id=79, PCF 196) is GONE; replaced by `agent_curated` hp.id=1200 at PCF 242 (10523 "Manage employee inquiry process"), `record_status='new'` - changed since the 06-07 snapshot, and landing on 242 rather than the 06-07-prescribed 17056. Nothing destructive left on 446; it folds into the q10 approval batch. Only handoff 119 still carries the wrong customer-service tag (hp.id=78, PCF 196 10388 "Manage customer service problems"). q2 now covers 119 alone.
+- **B2-4 role-naming question was stale (referenced deleted rows).** It pointed at roles 10069 / 10070 / 10071, which do not exist in live `domain_roles` (the `_core` persona layer was deleted by Plan 3). Re-pointed to the 3 personas authored this pass (#63/#64/#65). I chose the `HRSD-` prefix as the function code (HR Service Delivery, fn 76, acronym HRSD) - defensible function-scoping, not the domain-prefix anti-pattern, because the domain and function are the same concept. Renaming is a destructive `role_code` overwrite, so it stays a confirm-or-rename question (q9).
+
+### Verified-already-satisfied (no action)
+
+- F2: one domain-grain system skill `hrsd-system` (#397, `domain_module_id` NULL, `record_status='new'`). Pass.
+- F3: HRSD modules carry 22 `domain_module_tools` rows (mix required/optional across 75/76/77). Pass.
+- A1 / A4: `domains` metadata + catalog UX fields fully populated (crud_percentage 95 so empty `business_logic` is allowed). Pass.
+
+### Still surfaced (unchanged, returned to user via q-HRSD.md)
+
+B1B-APQC-KEEP-OR-UPGRADE (handoffs 369, 1109), B2-1 (notes pollution, 27 rows), B2-2 (hr_cases pattern flags), B2-3 (trigger event 21 semantics), B2-5 (handoff_processes approval batch), B3-1/2/3 (optional ideas). All destructive or user-judgment; none agent-executable.
+
+## 2026-06-09 - a-HRSD.md processed (user answers applied)
+
+User renamed q-HRSD.md to a-HRSD.md (the go signal). Answers applied via [.tmp_deploy/apply_hrsd_answers_2026_06_09.ts](../../../.tmp_deploy/apply_hrsd_answers_2026_06_09.ts). The a-file IS the approval for the destructive steps (Rule #22).
+
+### Resolved (executed)
+
+- **B1B-APQC-REPLACE (a2=yes)** — handoff 119: DELETED discovery_override hp.id=78 (PCF 196 customer-service), INSERTED agent_curated hp.id=1202 at PCF 242 "Manage employee inquiry process". (Handoff 446 was already re-tagged in the prior pass.)
+- **B1B-APQC-KEEP-OR-UPGRADE (a3=b, a4=b)** — handoff 369: DELETED hp.id=36 (PCF 20599), INSERTED agent_curated hp.id=1203 at PCF 242. Handoff 1109: DELETED discovery_substring hp.id=88 (PCF 16944 engagement-survey), INSERTED agent_curated hp.id=1204 at PCF 235 "Manage employee assistance and retention".
+- **B2-1 (a5=c)** — per-row notes clear: REVERTED 25 templated/provenance notes (15 handoffs + 10 module-75 DMDO rows) to ''; KEPT 2 (`case_categories` 193 config-shape exemption; `hr_cases` 192 substantive). Rule #15 incident logged to references/skill-changelog.md. Spawned the note-contradiction follow-up below.
+- **B2-2 (a6=yes, a7=yes)** — `hr_cases` (192) PATCHed `has_submit_lock=true`, `has_single_approver=true`.
+- **B2-3 (a8=b)** — trigger_event 21 renamed `case.access_required` -> `hr_case.access_required` (handoffs 119/446 reference the FK id, unaffected).
+- **B2-4 (a9=a)** — confirmed `HRSD-` is the intended function code for HR Service Delivery; personas 63/64/65 left as-is. No action.
+- **B2-5 (a10=c)** — approved 23 handoff_processes rows on the HRSD cross-domain set (after the tag swaps landed). EXCLUDED 2 customer-service (PCF 196) rows from approval: hp.77 (handoff 29, HRSD->ITSM `case.it_assistance_required`) and hp.261 (handoff 467, redundant with the 242 tag already on 467). Surfaced as a follow-up (the same customer-service mis-frame the user removed in q2-q4).
+
+### Carried forward (open after this pass)
+
+- **B1A-SELF-CONTAIN (a1 = "ok to embed, which optional vs required?")** — a question keeps the item open (Rule #22). Approach approved (embed all 6 as `embedded_master`); answered the necessity question (recommend: `service_requests` on HRSD-EMPLOYEE-PORTAL = optional; the other 5 = required, per Rule #16). Awaiting user confirm of the split, then execute. Still b1a.
+- **NEW B2-A10-CLEANUP** — the 2 excluded customer-service (PCF 196) handoff_processes rows (hp.77 handoff 29, hp.261 handoff 467): delete the redundant 467 row + re-tag handoff 29 to an IT service-request process, or leave.
+- **NEW B2-NOTE-REWORD** — `hr_cases` (192) note still says `No single approver`, now contradicting `has_single_approver=true`. Reword is a notes write (Rule #15) so it needs the user's exact wording / approval.
+- **B3-1 employee_journeys (a11=yes research)** — Phase 0 done ([.tmp_deploy/HRSD-JOURNEY-phase0-2026-06-09.md](../../../.tmp_deploy/HRSD-JOURNEY-phase0-2026-06-09.md)). Verdict CONTRADICTS the original "non-onboarding module" framing: no flagship vendor (Workday Journeys, Enboarder, Applaud, ServiceNow EJM) ships a non-onboarding-only journey product; it is one orchestration engine with different triggers. Reframed to a build-shape b2: a UNIFIED `employee_journeys` master in HRSD that ONBOARDING consumes, vs decline. Optional, structural.
+- **B3-3 ETHICS-INTAKE (a13=yes research)** — Phase 0 done ([.tmp_deploy/HRSD-ETHICS-phase0-2026-06-09.md](../../../.tmp_deploy/HRSD-ETHICS-phase0-2026-06-09.md)). Verdict: a DISTINCT `ETHICS-INTAKE` domain, not a `case_subtype` on `hr_cases` (point-solution-market test passes emphatically, 7+ pure-plays + own Gartner category; SOX-301 confidentiality boundary is the inverse of HRSD). Queued to audits/_missing-domains.md. Optional, new-domain.
+- **B3-2 hr_documents (a12=yes)** — NOT cleanly additive: no `hr_documents`/`documents`/`employee_documents` master exists. Needs a master-ownership decision first (consume ECM `content_documents`, mint an HRSD `hr_documents` master, or decline). Reframed to an open question.
+
+## 2026-06-09 - a-HRSD.md (2nd) processed - blocking resolved, domain PASSED
+
+User renamed the regenerated q-HRSD.md to a-HRSD.md answering the 3 blocking questions (q4/q5/q6 optional left blank, deliberately deferred). Answers applied via [.tmp_deploy/apply_hrsd_blocking_2026_06_09.ts](../../../.tmp_deploy/apply_hrsd_blocking_2026_06_09.ts). The a-file IS the approval (Rule #22).
+
+### Resolved (executed)
+
+- **B1A-SELF-CONTAIN (a1=yes)** — embedded all 6 M9 rows as `embedded_master` with the confirmed necessity split: required on 333 (employees/CASE-MGMT), 338 (employees/PORTAL), 337 (knowledge_articles/PORTAL), 339 (knowledge_articles/KNOWLEDGE), 336 (hr_cases/PORTAL, intra-domain); **optional** on 335 (service_requests/PORTAL). M9 re-check returns zero consumer+required rows; M7 holds (hr_cases master@75 + embedded_master@76 is the expected autonomous-deployable-units shape; no new master rows). Rule #11 satisfied (every embedded target has a canonical master: employees->HCM, knowledge_articles/service_requests->ITSM, hr_cases->HRSD-CASE-MGMT).
+- **B2-A10-CLEANUP (a2=a)** — DELETED redundant customer-service tag hp.261 (handoff 467, which already had the correct PCF 242 tag, approved). Handoff 29 (HRSD->ITSM `case.it_assistance_required`): DELETED hp.77 (PCF 196), INSERTED agent_curated hp.1205 at PCF 1316 "Provide IT resolution capabilities" (external_id 20923) and approved it (completes the a10=c batch now the tag is corrected). Zero PCF-196 rows remain on the HRSD cross-domain set.
+- **B2-NOTE-REWORD (a3=a)** — `hr_cases` (192) note reworded to drop the now-false "No single approver" clause, keeping the sensitivity + reopen context verbatim. Final text: "Contains sensitive employee data (ER complaints, medical leave, comp questions). Cases can reopen after closure." Reconciles with `has_single_approver=true`.
+
+### Final state
+
+All blocking work (b1a + b2 + destructive approvals) is complete. No open b2, no pending destructive step, no b1b. Per the Rule #21 execution contract the domain ends **`status: passed`, `next_action_by: done`**. The q-/a- files are deleted (a q-file exists iff `feedback_needed`).
+
+### Parked (non-blocking b3, never gates "finished")
+
+- **B3-1 employee_journeys** — Phase 0 reframed it to "unified `employee_journeys` master in HRSD vs decline" (structural). Parked in state.yaml b3.
+- **B3-2 hr_documents** — needs a master-ownership decision first (consume ECM `content_documents`, mint an HRSD master, or decline). Parked.
+- **B3-3 ETHICS-INTAKE** — Phase 0 verdict: distinct domain. Queued to [audits/_missing-domains.md](../../_missing-domains.md); parked in state.yaml b3.
+
+These three remain available whenever the user wants to pursue them; they do not hold up the HRSD build.
+
+## 2026-06-09 - B9d semantic payload-realization pass (gap from the same-day review)
+
+A re-review caught that the 2026-06-09 audit (and the same-day verification sweep) ran B9 existence / B9b / B10b / H1 but never ran the **B9d** resolver (handoff payload realization). Ran it now. Realized set = a process whose `process_id` is a gated `data_object_lifecycle_states.process_id` AND that carries `process_raci` (>=1 R + >=1 A). HRSD's only owned realized process is **242** (`7.7.2 Manage employee inquiry process`, wired in Phase E on `hr_cases`).
+
+### Outbound classification (9 payloads; outbound = HRSD-owned, inbound report-only)
+
+| Handoff | -> target | Tag code | Class | Disposition |
+|---|---|---|---|---|
+| 119 | IGA | 242 `7.7.2` | RESOLVED | exact realized |
+| 446 | HCM | 242 `7.7.2` | RESOLVED | exact realized |
+| 448 | HCM | 45 `7.7` | ROLL-UP | re-pointed -> 243 `7.7.3` (realized) |
+| 1121 | LMS | 41 `7.3` | ROLL-UP | re-pointed -> 1039 `7.3.4.5` (realized) |
+| 29 | ITSM | 1316 `8.7.8.2` | ORPHAN | owed by ITSM (cat 8) |
+| 447 | KMS | 1744 `13.6.2.2` + 82 `13.5` | ORPHAN | owed by KMS (cat 13) |
+| 1118 | PAYROLL | 1425 `9.5.2.8` | ORPHAN | owed by PAYROLL (cat 9) |
+| 1119 | BEN-ADMIN | 1051 `7.5.2.1` | ORPHAN | owed by BEN-ADMIN (7.5) |
+| 1120 | KMS | 919 `5.4.3.6` + 82 `13.5` | ORPHAN | owed by KMS |
+
+No MIS-TAG (every code's category matches an endpoint's domain family). Inbound payloads are report-only per the asymmetry rule.
+
+### Executed (user picked "fix A"; the choice IS the approval for the destructive re-point of approved tags, Rule #22)
+
+- **handoff 448**: hp.217 re-pointed `45` (`7.7`) -> `243` (`7.7.3 Manage and maintain employee data`). Now RESOLVED (exact realized; 243 is gated on `employees` + carries RACI).
+- **handoff 1121**: hp.221 re-pointed `41` (`7.3`) -> `1039` (`7.3.4.5 Develop, conduct, and manage employee training programs`). Now RESOLVED.
+- Both dropped to `record_status='new'` (re-pointed content awaits in-record re-approval; they were `approved` under the prior B2-5 batch). Rule #1: never re-stamp `approved`. `proposal_source='agent_curated'` preserved; `notes` untouched (Rule #15).
+
+Surgical CLI (2 PATCHes, <=5 rows). No loader needed.
+
+### B9d result after the fix
+
+4 outbound RESOLVED (119, 446, 448, 1121), 5 outbound ORPHAN (report-only, owed elsewhere), zero open ROLL-UP, zero MIS-TAG. **B9d passes on HRSD's owned side.**
+
+### Report-only follow-ups (owed by partner domains' B9d; never HRSD's fix, do not block HRSD)
+
+| Owner | Handoff | Realize task |
+|---|---|---|
+| ITSM | 29 | gate `service_requests` lifecycle on a category-8 IT-resolution process + RACI (`8.7.8.2`) |
+| KMS | 447, 1120 | realize KM-capability / harvest-knowledge gate (`13.5` / `13.6.2.2` / `5.4.3.6`) |
+| PAYROLL | 1118 | realize payroll-inquiry gate (`9.5.2.8`) |
+| BEN-ADMIN | 1119 | realize benefits-delivery gate (`7.5.2.1`) |
+
+These clear when those domains are audited; HRSD never authors cross-domain realization.
+
+### Status
+
+Remains **`passed` / `done`**. The two re-pointed rows sit at `record_status='new'`, the normal awaiting-review state (same as the Phase-E personas and the `hrsd-system` skill); a `new` record is a Rule #1 standing review concern, not an audit blocker. The 5 ORPHANs are partner-owed report-only.

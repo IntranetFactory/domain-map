@@ -11,10 +11,14 @@
 schema_version: 2
 domain: MFG-OPS
 status: feedback_needed
-next_action_by: user
+next_action_by: agent
 last_audit: "2026-06-07"
 
 b1a:
+  - id: B1A-B9D-VERIFY
+    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
+    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
+    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-S12
     summary: "Author outbound cross-domain data_object_relationships mirroring MFG-OPS outbound handoffs (B8)."
     finding: "Underspecified for write. The 2026-06-07 execute pass authored the intra-domain edges (B1A-S10) and users edges (B1A-S11), but the B8 outbound cross-domain mirrors cannot land additively: for handoffs 950 (ERP-FIN), 951 (GRC), 954 (FOOD-TRACE) the handoff payload IS the MFG-OPS master itself (data_object_id 595 / 600 / 598) and the consuming-side target data_object in the receiving domain is not enumerated. Authoring those edges would require identifying or creating other-domains' consuming masters (cross-domain scope-creep, unseen ids), which Rule #21 SCOPE DISCIPLINE forbids. The one row with a concrete target (handoff 952: shop_floor_cases 601 -> service_incidents 47) is the row gated on B2-SHOP-FLOOR-CASES-ITSM."

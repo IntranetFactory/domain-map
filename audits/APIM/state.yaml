@@ -11,10 +11,31 @@
 schema_version: 2
 domain: APIM
 status: feedback_needed
-next_action_by: user
-last_audit: "2026-06-07"
+next_action_by: agent
+last_audit: "2026-06-08"
+
+# 2026-06-08 PHASE 0 ran (Rule #22 forcing step: the prior passes surfaced the market-shape
+# b2 calls in q-APIM.md WITHOUT a fresh vendor-surface report behind them; the recommendations
+# leaned on generic "matches how the major API platforms present their product" reasoning with
+# no named-vendor specifics). Fresh study of 7 flagships (Apigee, Kong Konnect, MuleSoft Anypoint,
+# Azure API Management, AWS API Gateway, IBM API Connect, Postman API Platform) ->
+# .tmp_deploy/APIM-phase0-2026-06-08.md. q-APIM.md regenerated with inline named-vendor evidence
+# on every recommendation.
+#   REVERSALS: none. The fresh evidence CONFIRMED all four pattern flags (B2-S2) and the 4-module
+#   shape (B2-S1). One nuance ADDED on B2-S3 regulations: PCI-DSS is genuinely conditional (applies
+#   only when an API carries card data), so the recommended set is now GDPR + SOX always, PCI-DSS
+#   only for payment APIs (q6 option b), not the prior flat GDPR+SOX+PCI-DSS (a).
+#   FRAMING SIGNAL: the 2025 Gartner MQ for API Management runs as ONE full-lifecycle market
+#   (Leaders: Kong, Google/Apigee, MuleSoft, IBM, Axway, Boomi), so APIM splits INTO modules within
+#   one domain rather than OUT into siblings; this supports the in-domain 4-module call (B2-S1=a).
+#   APIM stays UNBUILT (0 domain_modules, 0 capabilities); the build remains gated on B2-S1.
+#   Still feedback_needed: 3 b2 open (B2-S1/S2/S3), awaiting a-APIM.md.
 
 b1a:
+  - id: B1A-B9D-VERIFY
+    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
+    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
+    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
     finding: "Live re-verify 2026-06-07: domain 79 still has 0 domain_modules rows (M1 hard fail) and 0 capability_domains rows, so it is not deployable. The 7 masters live in the legacy domain_data_objects rollup but no module owns them. Per the state-driven contract, the build is SURFACED, not scaffolded; its cascade (capabilities, module-grain lifecycle states, module FK backfills, the domain-grain system skill's derived toolset) stays blocked behind the module set landing."
@@ -99,12 +120,13 @@ b2:
     why: "Pattern flags are workflow-shape judgments. Rule #15 forbids recording the consideration in notes; decisions are captured in this audit file."
   - id: B2-S3
     summary: "Pick regulation set for APIM (A2 / domain_regulations gap)."
-    question: "Which regulations should attach to APIM? (a) GDPR + SOX + PCI-DSS (broad); (b) GDPR only (developer-personal-data anchor); (c) leave empty (regulation-light market)."
+    question: "Which regulations should attach to APIM? (a) GDPR + SOX + PCI-DSS (broad); (b) GDPR + SOX, PCI-DSS only if any API carries card data; (c) GDPR only; (d) leave empty."
     options:
       - "(a) GDPR + SOX + PCI-DSS"
-      - "(b) GDPR only"
-      - "(c) leave empty"
-    why: "domain_regulations for APIM is empty. APIM is not regulation-mandated like ATS is for FCRA, but consumer-facing APIs and developer-portal personal data fall under GDPR; policy / audit logs on gateways are SOX / PCI-DSS load-bearing for regulated industries. B2-S3 informs B2-S2 (GDPR confirmation makes api_consumers.has_personal_content=true more clearly correct)."
+      - "(b) GDPR + SOX (PCI-DSS conditional)"
+      - "(c) GDPR only"
+      - "(d) leave empty"
+    why: "domain_regulations for APIM is empty. APIM is not regulation-mandated like ATS is for FCRA. Phase 0 (2026-06-08) settles the framing: GDPR is always load-bearing (every flagship developer portal stores developer/consumer PII: Apigee Developer, IBM Consumer Organization, Azure portal user), and SOX is load-bearing for public companies because gateway api_audit_logs + breaking-change governance are financial-controls evidence (api_audit_logs is Core across Apigee / Kong / MuleSoft / Azure / AWS / IBM). PCI-DSS is genuinely CONDITIONAL: it applies only when an API actually touches cardholder data, so the recommended set is now GDPR + SOX always, PCI-DSS only for payment estates (option b), not the prior flat GDPR+SOX+PCI-DSS (a). B2-S3 informs B2-S2 (GDPR confirmation makes api_consumers.has_personal_content=true more clearly correct)."
 
 b3:
   - id: B3-S1

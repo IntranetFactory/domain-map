@@ -420,6 +420,82 @@ The two changes are paired, not independent: Phase 0 prevents the failure at loa
 
 ---
 
+## 2026-06-08 — Phase 0 is a forcing step of any review with market-shape decisions (Rule #22)
+
+**Context.** On a "review PRM" request the agent opened `state.yaml`, confirmed PRM was unbuilt with the whole build gated on 6 market-shape `b2` calls, and went straight to asking the user those calls (via the q-file recommendations and a follow-up question) WITHOUT running fresh vendor research first. The q-file's recommendations were grounded in "architecturally cleanest / unblocks the build" reasoning, which Rule #22 already forbade. When pushed, the agent then ran Phase 0, and the fresh named-vendor evidence REVERSED two of the recommendations: partner training/certification is mastered natively by Impartner / Channeltivity / Allbound / Magentrix (not LMS-mastered), and channel-incentive accrual/payout is mastered natively by ZINFI INCENTIVIZE / Impartner (Salesforce deliberately splits channel rebates, which stay with PRM, from rep comp). The user pushed back hard, third occurrence of the same shape: a domain review surfaced market-shape decisions to the user without the market research that grounds them, so the q-file was not decision-ready.
+
+**Decision.** Rule #22 gains a hard forcing step: any `b2` deciding market shape (module split/count, scope, what a domain masters vs consumes, whether to promote a sub-market to its own domain, where an entity is mastered) MUST be backed by a CURRENT Phase 0 vendor-surface report produced **as part of the same review pass, before the q-file is written**. Fixed sequence: run Phase 0 → write the q-file from its evidence → surface to the user. The named-vendor evidence is embedded INLINE in each affected q-file recommendation (which vendors package it which way, what each masters vs consumes), not merely referenced. A prior audit's "vendor surface basis" narrative does NOT satisfy this; only a Phase 0 report (named flagship vendors + vendor-by-entity surface matrix + per-decision verdicts) does. When fresh Phase 0 contradicts a recommendation already in a q-file, the fresh evidence wins and the q-file is regenerated. Rule #21 gains a matching clause: ending a review "waiting on the user" on a market-shape decision without the evidence already in hand is the review failing.
+
+**Reasoning.** The defect was a missing forcing step, not a missing rule. Rule #22 already said recommendations "must be grounded in evidence, cite vendors by name, never recommend from cleanest/unblocks-the-build", but nothing in the review WORKFLOW made Phase 0 run before the q-file, so the q-file got written from stale notes and the grounding clause was silently skipped. UNBUILT domains gated entirely on market-shape `b2` calls are the highest-risk case (the build can't start until the user decides, so the temptation to ask first and research later is strongest) and are now explicitly named.
+
+**Scope.** Catalog-wide; Validate-mode q-file contract. Applies to every review that surfaces a market-shape `b2`, build or unbuilt.
+
+**Status.** active.
+
+---
+
+## 2026-06-09 - Self-containment q-file question: embed is the fix, required-vs-optional is a separate per-entity necessity call
+
+**Context.** Reviewing two domains in one session, the user noticed the M9 entity-layer self-containment question recurs as the "(answer this first)" q1 on nearly every domain (e.g. q-HRSD: "Six module rows consume an entity the module does not master while marking it required ... How should each be fixed?") and presented two co-equal options: (a) embed a local shell, (b) mark the consumed entity optional. The user asked whether such rows should "always be embedded and optional" and whether the skill was wrong. The flat a/b framing came from the M9 Part 1 fix text, which listed "convert to `embedded_master`, or set `necessity=optional`" as two co-equal fixes, which read as "embed AND optional is the universal answer".
+
+**Decision.** The recurrence is expected and correct, not a defect: real shared-master coupling exists in nearly every domain, and the fix rewrites existing rows so it is destructive and can never auto-apply under Rule #21, so it surfaces every time. The framing was the only thing wrong. M9 Part 1 now surfaces **embed** (`embedded_master`) as the recommended structural fix, which restores self-containment on its own because the canonical owner becomes required-if-present (plan-4) and is never dragged in, so an `embedded_master + required` row is already self-contained. Relaxing the existing row to `necessity=optional` is the NARROWER alternative, valid only for a pure read the module can lose entirely when the master is absent, not a co-equal of embedding. In the q-file: recommend embed, then make `required` vs `optional` a SEPARATE per-`data_object` necessity call, naming each flagged entity with its own recommendation (required-if-present where the module always models the record, optional where many deployments skip it). Never default the whole set to optional.
+
+**Reasoning.** Presenting optional as a co-equal of embed conflated the two orthogonal axes the install-necessity / edge-requiredness bridge (Rule #16, plan-4) keeps separate: role (embed or not) and necessity (required vs optional). Embedding fixes self-containment regardless of necessity; required-if-present already neutralizes a required FK to an un-installed target. Blanket-optional would also corrupt the coverage math, since `necessity=required` feeds Signal 1 and optional rows are excluded.
+
+**Scope.** SKILL.md M9 Part 1 fix text + q-file surfacing; every Validate-mode review that surfaces a B1A self-containment finding.
+
+**Status.** active.
+
+---
+
+## 2026-06-09 — Handoff review is SEMANTIC, never structure-only: add B9d (handoff payload realization)
+
+**Context.** A release-gating session surfaced that `processes.json` carried many processes with empty `personas[]`. Tracing it: `handoff_processes` payloads (APQC PCF codes) are largely decoupled from the realized/RACI'd process set (389 distinct payloads referenced by handoffs vs ~40 processes that are actually gated via `data_object_lifecycle_states.process_id` and carry `process_raci`; overlap only 28). The per-domain Validate handoff bands (B8, B9, B9b, B10, B10b) are structural (row existence, module FKs, relationship mirror); the only semantic one, B9c, checks `trigger_events.to_state` vs the lifecycle state machine. **Nothing checked that a handoff's APQC payload resolves to realized work.** The user pointed out (and recalled a prior, never-committed agreement) that a handoff review can never be purely structural, because a handoff joins two domains that drift. Empirical proof in-session: setting HCM and HRSD to reviewed and re-running resolved only 1 of 19 personless processes, because the other 18 were roll-ups (a parent PCF code referenced while the realized work sits on a child code, e.g. `screen_select_candidates` 7.2.3 vs realized `interview_candidates` 7.2.3.2), mis-tags (wrong PCF category, e.g. `conduct_customer_tests` 2.3.2.2, a product-dev code, on an ATS edge), or processes owned by a still-unbuilt third domain.
+
+**Decision.** Add **B9d** to the per-domain Validate band, beside B9c. It reconciles each OUTBOUND handoff payload against the realized + RACI'd set, hierarchy-aware (`process_code` dotted-prefix) and category-aware, into four verdicts: RESOLVED (has R+A), ROLL-UP (re-point `handoff_processes.process_id` to the realized child/parent; mechanical, not a gap), ORPHAN (realize here if this domain owns the APQC subtree, else report `owed by <owner>` routed by category), MIS-TAG (wrong PCF category, surface for user arbitration). Inbound payloads are report-only per the B8/B10 asymmetry. The identical classification runs catalog-wide as `validate cross-domain` (mode b2). **Principle codified in B9d's header: a handoff review is never complete on the structural bands alone.**
+
+**Reasoning.** `handoff_processes` is an independent layer from realization, and APQC's hierarchy is the join key we were ignoring: exact-code equality misses parent/child grain and cross-category mis-tags, so the handoff vocabulary and the realized-workflow set drift apart silently. The empty-`personas[]` symptom was an indicator of that decoupling, not the gap itself; "fill in the personas" would have treated the symptom. B9c already established that semantic drift checks belong in the per-domain review (for trigger/state); B9d extends the same discipline to the payload, where it was missing.
+
+**Scope.** SKILL.md new band B9d; every Validate-mode review that touches a domain with handoffs; mirrored by mode b2 catalog-wide. Building the reusable resolver script (per-domain + catalog-wide) is the open follow-up.
+
+**Status.** active.
+
+---
+
+## 2026-06-09 — Reconciliation REDEFINED as semantic + two-phase; structural completeness is only a gate (5th recurrence)
+
+**Context.** The "Pairwise handoff reconciliation" pass (Validate passes 3+4) was, despite its name, purely STRUCTURAL: its four legs and five diff sections checked that a handoff row exists, its module FKs are set, and its relationship mirror is present, and never checked that the handoff's APQC payload resolves to realized work. The user reported this is the FIFTH time they have found "reconciliation" merely validating the pair rather than reconciling it. Empirically, ATS<->HCM passes the old reconciliation fully green while its payloads include a cat-2 mis-tag (`conduct_customer_tests` 2.3.2.2), unrealized orphans (`manage_employee_requisitions` 7.2.1), and a parent-grain reference (`screen_select_candidates` 7.2.3 vs realized child 7.2.3.2). So "reconciled" certified nothing about correctness.
+
+**Decision.** Reconciliation is now two-phase, and ONLY Phase 2 decides pass/fail. Phase 1 (the former four legs + five sections, now the Section 1-5 structural gate) is demoted to a structural PRECONDITION GATE that makes a boundary eligible to be reconciled, not reconciled. Phase 2 is the reconciliation: classify every payload against the realized set (gated `process_id` + `process_raci`), hierarchy- and category-aware, as RESOLVED / ROLL-UP / ORPHAN / MIS-TAG. A boundary is RECONCILED iff every payload is RESOLVED, every ROLL-UP re-point is user-approved and applied, and every ORPHAN/MIS-TAG is closed; otherwise it is RECONCILABLE, not reconciled.
+
+**Reasoning.** The draft was reviewed by an adversarial subagent before commit. It confirmed the verdict forces NOT-reconciled on the ATS<->HCM critical test, but found a back door: the original RESOLVED test ("has R+A") fires on a parent code that carries its own RACI even when the gate sits on a child, laundering the exact parent-grain drift into "reconciled". RESOLVED was tightened to require the exact code to be the gated process, and the ordered first-match-wins cascade makes ROLL-UP catch the parent case. The review also caught a duplicate definition of "reconciled" (collapsed to one, in Phase 2), a reconcilable-vs-reconciled gap against Rule #1 (made explicit), and a light-neighbor carve-out that re-opened structure-only output (closed). B9d's per-domain verdicts were aligned to the same exact-code cascade.
+
+**Scope.** SKILL.md "Pairwise handoff reconciliation" section rewritten into Phase 1 / Phase 2; B9d RESOLVED/ROLL-UP wording tightened. Open follow-up: the reusable resolver script (per-domain B9d + catalog-wide mode b2 + the pairwise Phase 2) is still unbuilt; until then agents run the classification by hand from the band's queries.
+
+**Update (same day, after running the resolver live on ATS).** Two defects that only surfaced on execution, both fixed in B9d AND the pairwise Phase 2 mirror:
+1. **Cascade order.** ORPHAN was listed before MIS-TAG, and ORPHAN's condition ("no realized relative") matches every unrealized code, so it swallowed every MIS-TAG: a wrong-category tag (e.g. `conduct_customer_tests`, a category-2 product code on a recruiting edge) was mis-routed as a coverage gap to realize, instead of a bad tag to delete. Fixed: MIS-TAG (unrealized AND category in neither endpoint's family) is now checked BEFORE ORPHAN; the order is load-bearing. Both adversarial reviews missed this because they only checked "does a bad payload block reconciled" (both verdicts do), not the ORPHAN-vs-MIS-TAG distinction.
+2. **ORPHAN routing.** The fix said "owed by owner, routed by category", which never pins a domain or surfaces a persona. Replaced with **OWNER routing**: the realization and the q go to the domain whose APQC subtree the process falls in (**sender OR receiver**, not a fixed role: receiver for received work, sender for the sender's own subtree). R/A are drawn from that owner's persona pool (mechanically forced: only the realizer's persona reaches the gated module), with the candidate persona suggested by mirroring the owner's nearest already-realized process in the same subtree; the other endpoint's persona is C/I only. The q is **derived** into the owner's q-file, no stored cross-pointer (a process that gains a persona drops off on re-run; if the owner domain isn't built yet the q is latent and surfaces on that domain's first review). This re-grounds the band in "process with no persona" (the original symptom) rather than abstract verdict labels.
+
+**Status.** active.
+
+---
+
+## 2026-06-10 - B9d made BIDIRECTIONAL: the OUTBOUND-only asymmetry WAS the split brain
+
+**Context.** B9d and its pairwise-Phase-2 mirror were OUTBOUND-only: a domain resolved only the payloads on handoffs it published, treated inbound payloads as "report-only", and routed any ORPHAN owned by another domain to a "latent / derived, the owner re-derives it on its own Validate" non-artifact. The user reported (for the 3rd time the same finding surfaced) that this is the core defect: when each side calls the other side's payloads report-only, a process owed across a boundary is realized by NEITHER side, which is exactly why "B9d never seems to do anything". Live proof in-catalog: PSA's 2026-06-09 audit found 12 ORPHANs owed to other domains (including process 905 owed to **ATS**, handoff 1023) and parked all 12 as `report-only` / `blocked_by: domain_audit`, doing nothing; ATS symmetrically parked its BEN-ADMIN / ONBOARDING / HRSD-owed realizations as latent. No owner ever received a durable to-do, so nothing was ever realized.
+
+**Decision.** B9d is BIDIRECTIONAL. When auditing a domain, walk every neighbor on BOTH directions, classify every handoff payload, and route each ROLL-UP / MIS-TAG / ORPHAN by OWNER. For every ORPHAN, write a durable `b1b` item PLUS a plain-language q into the OWNER domain's own `audits/<OWNER>/state.yaml` + `q-<OWNER>.md` in the same pass, on whichever side the owner is, using the exact mechanism entity-routing already uses (§ state.yaml hygiene carve-out (b)). The ONLY thing that stays direction-scoped is the row-level `handoff_processes` TAG edit (re-point / delete), which belongs to the source that authored the row. No "report-only payload", no "latent", no "derived / re-derive later", no cross-pointer hole. Consequence: auditing EITHER domain on a boundary reconciles it on both sides, so a future SWP audit fixes ATS without an ATS re-audit (the property the user asked for in question e).
+
+**Reasoning.** The asymmetry was inherited from the B8/B9/B10 ROW-AUTHORSHIP rule (don't fabricate an inbound handoff ROW for a domain you haven't audited, a provenance rule). B9d authors no rows; it reads existing handoffs and checks realization, which is side-independent. Conflating the two is what regrew the bug across three iterations. Separating them (row authorship stays outbound-only; payload realization goes bidirectional) removes the split brain at the root. Writing the owner's item durably also closes the reliability hole where the owner's pickup depended on a conditionally-run pairwise pass that the (outbound-only) B1A-B9D-VERIFY never triggered.
+
+**Scope.** SKILL.md B9d band + pairwise Phase-2 ORPHAN / output-discipline clauses rewritten. The mass-injected `B1A-B9D-VERIFY` item in 147 `state.yaml` files rewritten from the outbound-only procedure to a thin pointer carrying the both-directions fact ([.tmp_deploy/fix_b9d_verify_bidirectional_2026_06_10.ts](../../../.tmp_deploy/fix_b9d_verify_bidirectional_2026_06_10.ts)). Open follow-ups: (a) already-audited domains carry parked `report-only` / `blocked_by: domain_audit` B9d ORPHAN items (PSA B1B-B9D-ORPHANS, ATS B1B-B9D-OWED-*) that predate this rule and must be re-routed to their owners' audit files on the next pass; (b) the reusable resolver script is still unbuilt (agents hand-run the classification); (c) the stale scratch `c:/tmp/q-gen-spec.md` (a third, drifted copy of the q-file spec) should be deleted in favor of the canonical SKILL.md "What goes in the q- file" contract.
+
+**Operational note (this session).** Workflow / background subagents CANNOT authenticate to semantius in this project (the CLI fails with `jwk not found` in a headless run; the interactively-authenticated context is absent). B9d / reconciliation, and any audit step that reads live catalog state, must run in an authenticated FOREGROUND session, never via a background Workflow or cron agent.
+
+**Status.** active. Supersedes the OUTBOUND-owned / INBOUND-report-only and "ORPHAN latent / derived" language in the 2026-06-09 B9d and reconciliation-redefined entries.
+
+---
+
 # Incidents
 
 Append one entry per occurrence. Used by SKILL.md Rule #15 — the agent MUST log here when notes have been written without user approval, AND revert the writes, AND propose a SKILL.md edit that removes whatever passage rationalized the violation.
@@ -754,3 +830,53 @@ Both are the same entity-follows-the-unit principle plan-4 established for gates
 **Scope.** `references/domain-audit-procedure.md` only. SKILL.md B1a check and Rule #19 already said PASS; M7 already said PASS. This entry closes the one remaining surface (the Bucket 2 definition) that the 2026-05-28 fix did not reach. No catalog writes. `q-CLM.md` was left unchanged per the user's instruction.
 
 **Status.** Active. No further migration pending.
+
+## 2026-06-09 - state.yaml bloated with decided items (invented `disposition:` tombstones)
+
+**Context.** Auditing HCM, the user opened `audits/HCM/state.yaml` and reacted to it still listing ~12 items after a pass that had resolved nearly everything. The file carried: a `B1B-N1-SUPERSEDED` tombstone, 3 `disposition: closed` b3 items (pay-equity + two modularization ideas), 6 b3 items `route_to:` a neighbor domain, and a `B1A-S6` Discover-only deferral. None were genuinely open HCM work; the one real open item was the inbound-handoff backfill.
+
+**Root cause.** The v2 schema (audits/README.md) already said "state.yaml = current open items; resolved items live ONLY in history.md," but it never forbade the agent from KEEPING a decided item in-file under an invented tag. The agent introduced non-schema fields (`disposition: closed|routed|superseded`, `route_to:`, `held_out:`) and used them as a parking lot, so closed / routed / superseded items accumulated as tombstones instead of moving to history.md. Separately, a user `postpone` answer (a6) was mis-handled the opposite way: treated as resolved and DELETED, losing the user's intent to revisit the neighbor-routing later (postpone = deferred, still open).
+
+**Decision / fix.** Added a "state.yaml hygiene" invariant to SKILL.md Rule #22 and audits/README.md ("How an audit run works"):
+1. `state.yaml` holds OPEN items only. There is no `disposition` / `status` / `route_to` / `held_out` / `closed` field on an item; inventing one to keep a decided row in-file is the bug. Allowed fields = schema fields + documented optional fields + `extra_` extras.
+2. On resolve / close / route / supersede: DELETE from state.yaml and write a one-line dated note in history.md, same pass. Dispositioning = moving out, never tagging in place.
+3. Carve-out (a): a user `postpone` / defer keeps the item OPEN (b1b `blocked_by: {type: user_decision}` for a deferred action, or b3 for a parked additive idea) - never deleted.
+4. Carve-out (b): routing an entity to a neighbor domain resolves it HERE (history one-liner) and is added to the NEIGHBOR's backlog so it is not lost.
+5. End-of-audit hygiene re-read: any non-open row belongs in history.md.
+
+**Fix applied to live state.** `audits/HCM/state.yaml` pruned to the one open item (B1A-INBOUND-MODULES) plus the restored postponed neighbor-routing as a parked `b1b` (B1B-NEIGHBOR-ROUTES, `blocked_by` user_decision a6-postpone). All closed/routed/superseded rows were already recorded in the 2026-06-09 history.md sections.
+
+**Scope.** SKILL.md Rule #22, audits/README.md. No catalog writes. Other domains' state.yaml files are not retroactively cleaned by this change; they get pruned on their next audit pass under the new invariant.
+
+**Status.** Active. No further migration pending.
+
+---
+
+## 2026-06-09 (HRSD audit, user approved option c "per-row clear")
+
+- **session:** HRSD review continuation. The 2026-06-07 audit surfaced 27 HRSD rows carrying templated/provenance notes (B2-1) for the user to adjudicate; the user answered the q-file (a-HRSD.md) with option c: "keep substantive, clear the templated backfill notes." This is the revert half of a prior Rule #15 violation, not a new one.
+- **rows reverted (notes -> ''):** 25 of the 27.
+  - `handoffs` — 15 rows (ids 9, 250, 402, 416, 420, 429, 446, 448, 467, 721, 1048, 1109, 1118, 1119, 1137). All were `B10b resolved 2026-05-26: HRSD-CASE-MGMT consumes <X> as the inbound payload` provenance trailers, `Domain-level FYI ... target_domain_module_id intentionally NULL` null-provenance, or `target_domain_module_id left NULL: ...` annotations.
+  - `domain_module_data_objects` (module 75) — 10 rows (data_object_ids 18, 45, 144, 152, 157, 161, 173, 286, 410, 704). All identical: `Consumed by HRSD-CASE-MGMT when an inbound handoff escalates to an HR case. Routed via B10b 2026-05-26 audit fixes.` — restates role + necessity, plus provenance.
+- **rows KEPT (substantive, per option c):** 2.
+  - `data_objects` 193 (`case_categories`) — the config-shape exemption note (`Config-shaped; no workflow ... B12 exempt`), the example option c names as worth keeping.
+  - `data_objects` 192 (`hr_cases`) — substantive sensitivity + reopen context. NOTE: its `No single approver: routing depends on case category` clause now contradicts `has_single_approver=true` (set this same pass per a7); surfaced to the user as a notes-reword question rather than auto-edited (a notes write needs approval).
+- **origin:** the pollution dates to the 2026-05-26 B10b backfill era (same window as the MSP-PSA incident above); the write-time licenses that produced it were already RESCINDED. No new SKILL.md edit needed — Rule #15 is already universal.
+- **revert:** applied via [.tmp_deploy/apply_hrsd_answers_2026_06_09.ts](../../../.tmp_deploy/apply_hrsd_answers_2026_06_09.ts) (a5 block).
+
+---
+
+## 2026-06-09 (HRSD review — `record_status` reached `approved` via an a-file answer the user disowns; Rule #1 hardened + B9d band missed)
+
+**Context.** During an HRSD re-review the user reacted with alarm that HRSD `handoff_processes` rows sat at `record_status='approved'`, stating they never approved anything. Live check: 53 rows catalog-wide are `approved`, confined to exactly two q/a-cycle domains — HRSD (22 rows) and WORK-MGMT (31 rows); every other domain's tags are `new`. The 2026-06-09 history attributes the HRSD flips to the user's `a10=c` answer in the renamed `a-HRSD.md` (Rule #22 then treated the a-file as approval). The user does not consider answering a bundled "approve the batch" option to be a per-record approval, and the agent had no business treating it as one.
+
+**Root cause.** Rule #1 demanded "explicit user confirmation" but left a side-effect loophole: Rule #22 treated the renamed a-file as approval for everything it enumerated, INCLUDING `record_status` flips, and the q-file format listed "every record_status approval gate" as a q-file question. A single-letter q-file answer therefore silently flipped N AI-written rows to human-reviewed — the exact implicit/side-effect approval Rule #1 exists to prevent.
+
+**Decision / fix.**
+1. Rule #1 hardened: `record_status` changes ONLY on an explicit, direct, standalone user request naming the rows + target status. NEVER a side effect of a q-/a- answer, a renamed a-file, finishing / "passing" an audit, re-tagging a row, or a bundled "approve the batch" option; never inferred; applies to reverts too. When in doubt, leave `new`.
+2. Rule #22 amended: `record_status` approval removed from the q-/a- mechanism entirely. The a-file authorizes only the structural (additive/destructive) steps it enumerates; record_status flips are out of band and need their own explicit request. The q-file format no longer carries "record_status approval gate" questions.
+3. Revert performed on the user's explicit instruction (issued after the rule was hardened): all 53 `approved` `handoff_processes` rows (HRSD 22 + WORK-MGMT 31) reset to `new` via one filtered PATCH; catalog now has 0 `approved` handoff_processes (1165 `new`). The agent did NOT self-initiate this — it waited for the explicit request, consistent with the new rule.
+
+**Separate miss, same session (B9d).** B9d (handoff payload realization) was skipped in the same-day HRSD verification because the agent verified against the prior audit's recorded bands instead of running the full live checklist; the user caught it. After running it, B9d found 2 HRSD-owned ROLL-UPs (re-pointed on explicit user "fix A") + 5 report-only ORPHANs. To stop recurrence: a `B1A-B9D-VERIFY` b1a item was added to all 150 non-HRSD `state.yaml` files via [.tmp_deploy/add_b9d_b1a_2026_06_09.ts](../../../.tmp_deploy/add_b9d_b1a_2026_06_09.ts) (B9d had only ever run on HRSD, so every other passed domain is B9d-unverified), plus the rule that a re-review may NOT substitute "verify the prior audit's recorded bands" for running the live checklist.
+
+**Status.** Active. SKILL.md Rule #1 + Rule #22 edited. 150 state.yaml files carry the B9d b1a item (next_action_by recomputed to agent). No catalog `record_status` writes.

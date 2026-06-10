@@ -109,6 +109,17 @@ Each Validate audit run by the domain-map-analyst skill produces TWO outputs in 
 
 The split keeps state queryable while history remains the canonical record.
 
+### state.yaml hygiene (open items only)
+
+`state.yaml` holds **only items that are still open**. There is no closed/resolved row, and **no `disposition` / `status` / `route_to` / `held_out` / `closed` field on an item** — those are the schema's smell that decided items are lingering. The moment an item is **resolved** (executed), **closed** (decided won't-do), **routed** to another domain, or **superseded** (made moot by a rule/plan change), it is **deleted from `state.yaml` and recorded as a one-line dated note in `history.md`, in the same write**. Dispositioning = moving it out, never tagging it in place. Allowed fields: the schema fields, the "Standard optional fields" below, and `extra_`-prefixed extras only.
+
+Two carve-outs that keep an item IN `state.yaml`:
+
+- **User `postpone` / defer ≠ resolved.** A postponed item is deferred-but-open; it STAYS (as `b1b` `blocked_by: {type: user_decision}` for a deferred action, or `b3` for a parked additive idea). Never delete a postponed item — that loses the user's intent to revisit.
+- **Routing to a neighbor domain** resolves it for THIS domain (history one-liner) and is added to the **neighbor's** backlog (their `state.yaml` `b3`), so the finding is not lost. It does not linger here.
+
+End every audit by re-reading `state.yaml`: if a row is not genuinely open, it belongs in `history.md`. A clean `state.yaml` answers exactly "what is still open on this domain?" — nothing else. This invariant exists because decided items (closed/routed/superseded) accumulated as `disposition:`-tagged rows and bloated the file until it misrepresented the domain's real state.
+
 ## Migrated from v1
 
 `audits/<DOMAIN>.md` files were the prior format. Migrated on 2026-05-31 via [scripts/loaders/migrate_audits_to_split_v2.ts](../scripts/loaders/migrate_audits_to_split_v2.ts). The migration:

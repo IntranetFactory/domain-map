@@ -88,30 +88,38 @@ a8:
 
 ---
 
-## Optional (will not hold up the build)
+q9: One cross-domain process tag is on the wrong handoff. The handoff where a reached billing milestone updates the linked contract's obligations in Contract Lifecycle Management is currently tagged to a finance-forecasting process, which does not describe that work. The right fit is the "Manage contracts" process, which CLM already runs. Should I re-tag it? (yes/no)
 
-q9: Twelve extra PSA entities show up across the flagship vendors (engagement quotes, change requests, risks, status reports, deliverables, rate cards, project budgets, staged invoices, staffing requests, capacity plans, utilization records, and project-profitability records). Should I research and add the ones that hold up? (yes/no)
-
-Recommended: yes, but additive and can happen after the open decisions above are settled. Several are common across the vendor set, though each still wants a verification pass first.
+Recommended: yes. The current tag ("prepare periodic financial forecasts") does not match "a milestone is reached and the contract obligation updates"; re-pointing it to "Manage contracts" makes the link resolve correctly. Replacing the existing tag is a destructive edit, so it needs your sign-off.
 
 a9:
 
 ---
 
-q10: Two optional module splits are possible once the new entities exist: a dedicated engagement-quoting module (estimates, rate cards, pursuit tracking) and a profitability-analytics module (project profit plus utilization), pulling those out of project delivery and financials. Should I plan for these splits? (yes/no)
+## Optional (will not hold up the build)
 
-Recommended: yes in principle, but only worth doing once the underlying entities from q9 are loaded; until then the current four modules are fine.
+q10: Twelve extra PSA entities show up across the flagship vendors (engagement quotes, change requests, risks, status reports, deliverables, rate cards, project budgets, staged invoices, staffing requests, capacity plans, utilization records, and project-profitability records). Should I research and add the ones that hold up? (yes/no)
+
+Recommended: yes, but additive and can happen after the open decisions above are settled. Several are common across the vendor set, though each still wants a verification pass first.
 
 a10:
 
 ---
 
-q11: PSA currently carries only the ASC 606 revenue regulation. Should I add the other regulations the vendor surface implies (DCAA for US government contractor billing, SOX significant-engagement attestation, and GDPR for consultant personal data)? (yes/no)
+q11: Two optional module splits are possible once the new entities exist: a dedicated engagement-quoting module (estimates, rate cards, pursuit tracking) and a profitability-analytics module (project profit plus utilization), pulling those out of project delivery and financials. Should I plan for these splits? (yes/no)
 
-Recommended: yes where they apply to you. DCAA applies to US government contract work, SOX to public companies with material services contracts, GDPR to EU consultant data; pick the subset that fits. Low stakes, does not block the build.
+Recommended: yes in principle, but only worth doing once the underlying entities from q10 are loaded; until then the current four modules are fine.
 
 a11:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S3 q2=B2-S1 q3=B2-S2 q4=B2-S4 q5=B2-S5 q6=B1A-SELF-CONTAIN q7=B1A-H1-REPLACE-DELETIONS q8=B1A-AMENG-OVERWRITE q9=B3-engagement_quotes+B3-project_change_requests+B3-project_risks+B3-project_status_reports+B3-project_deliverables+B3-billing_rate_cards+B3-project_budgets+B3-project_invoices+B3-staffing_requests+B3-capacity_plans+B3-utilization_reports+B3-project_profitability_records q10=B3-mod-engagement-quoting+B3-mod-profitability-analytics q11=B3-reg-dcaa+B3-reg-sox+B3-reg-gdpr | domain_id=68 -->
+q12: PSA currently carries only the ASC 606 revenue regulation. Should I add the other regulations the vendor surface implies (DCAA for US government contractor billing, SOX significant-engagement attestation, and GDPR for consultant personal data)? (yes/no)
+
+Recommended: yes where they apply to you. DCAA applies to US government contract work, SOX to public companies with material services contracts, GDPR to EU consultant data; pick the subset that fits. Low stakes, does not block the build.
+
+a12:
+
+---
+
+<!-- agent map, ignore: q1=B2-S3 q2=B2-S1 q3=B2-S2 q4=B2-S4 q5=B2-S5 q6=B1A-SELF-CONTAIN q7=B1A-H1-REPLACE-DELETIONS q8=B1A-AMENG-OVERWRITE q9=B1A-B9D-MISTAG-1020 q10=B3-engagement_quotes+B3-project_change_requests+B3-project_risks+B3-project_status_reports+B3-project_deliverables+B3-billing_rate_cards+B3-project_budgets+B3-project_invoices+B3-staffing_requests+B3-capacity_plans+B3-utilization_reports+B3-project_profitability_records q11=B3-mod-engagement-quoting+B3-mod-profitability-analytics q12=B3-reg-dcaa+B3-reg-sox+B3-reg-gdpr | domain_id=68 -->

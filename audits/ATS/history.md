@@ -539,3 +539,102 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-09 - Re-review
+
+Re-review continuing from the 2026-06-02 `feedback_needed` worklist. Verified every open item against live state; refreshed the F-band for the 2026-06-06 per-domain-skill restoration.
+
+- **F-band now clean post-grain-restoration.** The 2026-06-02 record's "9 system skills" were the retired per-module grain. Live `/skills?domain_id=eq.56` now returns exactly 2: `ats-system` (id 405, domain-grain, `domain_module_id` NULL) satisfies F2, and `hiring_starter_agent` (id 226) is correctly anchored to HIRING-STARTER (`module_kind='starter'`), F1-exempt. F3 confirmed: `domain_module_tools` are authored across ATS modules 1-8,154 (the tool re-authoring landed for ATS). F1/F2/F3 pass.
+- **B1B-REG-CODES-EMPTY resolved (fix applied).** The prior "blocked on regulations-master Validate" was resolvable by inspection: the regulation_code namespace is a flat set of standard statute acronyms (peers E-VERIFY, I-9, EEO-1, TITLE-VII, ADEA all present) with no FCRA/OFCCP collision; ids 84/85 were the only two empty codes. Filled empty -> value (additive, not an overwrite; Rule #21). PATCH /regulations id=84 -> `FCRA`, id=85 -> `OFCCP`. `record_status` stayed `new` (Rule #1). Item removed from `state.yaml`.
+- **Rollup drift confirmed (q1 / B2-ROLLUP-POLICY).** Legacy `domain_data_objects` masters = 15; authoritative `domain_module_data_objects` masters across modules 1-8,154 = 60. Exact match to the recorded drift. Catalog-wide policy call, left for user.
+- **C1 confirmed thin (q2 / B2-C1-FUNCTION-ROWS).** Still 2 rows (Recruiting owner, Legal contributor). C1 passes; optional sharpening pending user in q-file.
+- **A1/A4 pass.** All 7 domain-metadata fields populated; catalog_tagline + catalog_description present (buyer voice).
+- **B1B-APQC-PREDICTIVE-MODEL-DEFERRED** unchanged: handoff #453 `predictive_model.scored` still has no cross-industry PCF analog; routes to Discover Pass 3.
+
+Outcome: one additive fix executed (reg codes). All remaining open items are genuinely waiting on the user (`q-ATS.md` current, unchanged) or blocked on another mode (Discover Pass 3). `status: feedback_needed`; `next_action_by: user`.
+
+UI spot-check: https://tests.semantius.app/domain_map/regulations (FCRA / OFCCP codes)
+
+### 2026-06-09 - B9d (handoff payload realization) - first run on ATS
+
+B9d had never run on ATS (added 2026-06-09; the prior H-band only confirmed tag existence, not realization). User injected B1A-B9D-VERIFY into state.yaml requesting the run. Ran the resolver (read-only script + execution loader in `.tmp_deploy/`).
+
+**Resolver definition used:** realized = a process whose `process_id` is a gated `data_object_lifecycle_states.process_id` AND that carries `process_raci` with >=1 responsible and >=1 accountable. (Note: `process_raci.raci` stores full words `responsible`/`accountable`, not letters - a first-cut script bug that scored the realized set as 0; corrected.) Realized set catalog-wide = 37 processes; `process_id` wires onto `requires_permission=true` gate states by convention (e.g. 220 on job_postings.published, 1019 on job_applications.hired).
+
+**Result: 26 outbound cross-domain payloads. Before: 11 RESOLVED / 6 ROLL-UP / 9 ORPHAN. After fixes: 20 RESOLVED / 2 ROLL-UP / 4 ORPHAN.**
+
+Fixes applied (additive/corrective, `record_status` untouched per Rule #1 + the injected instruction; loader `.tmp_deploy/b9d_ats_fixes_2026_06_09.ts`):
+- **Realized 7.2.1 "Manage employee requisitions" (219)** on `job_requisitions.open` (req_perm gate) + process_raci R=RECRUITING-RECRUITER / A=RECRUITING-MANAGER. Resolves #12, #23, #399, #400, #406 (5 handoffs, one realization).
+- **Realized 7.2.2.5 "Manage employee referral programs" (1011)** on `candidate_referrals.bonus_payable` + same RACI. Resolves #404.
+- **Re-pointed #1033 / #1034 / #1035** `handoff_processes.process_id` 221 -> 1014: screen/select (7.2.3) rolled up to the realized interview gate 7.2.3.2 "Interview candidates" (the screening realization lives on the scorecard gate; candidate_assessments and job_applications carry no screening gate).
+
+Residual 6 (none cleanly ATS-local; recorded as state items):
+- **#401** (background_check.cleared -> PAYROLL, 7.2.5.1): ATS-owned ORPHAN, but background_checks' only gate (completed_consider) is taken by 222 and completed_clear is not a gate. Realizing mints a permission -> B2-B9D-BACKGROUND-REALIZATION (user decision).
+- **#402** (background_check.flagged -> HRSD, 7.4): `record_status='approved'`; left untouched per Rule #1. Debatable tag, kept.
+- **#120, #395, #1075** (benefits -> BEN-ADMIN): ORPHANs owed to BEN-ADMIN (it masters benefit_enrollments; 7.5.2.2 unrealized). #120/#395 also wrong-tagged 7.3 -> recommend re-tag to 7.5.2.2 with sign-off. -> B1B-B9D-OWED-BENADMIN (report-only, does not block ATS).
+- **#2** (onboarding_journeys -> ONBOARDING, 7.3.1): ORPHAN owed to ONBOARDING. -> B1B-B9D-OWED-ONBOARDING (report-only).
+
+Inbound payloads not classified (report-only by the B9d asymmetry rule).
+
+Scripts: `.tmp_deploy/b9d_ats_2026_06_09.ts` (resolver), `.tmp_deploy/b9d_ats_fixes_2026_06_09.ts` (execution).
+UI spot-checks:
+- https://tests.semantius.app/domain_map/data_object_lifecycle_states (219 / 1011 process_id wiring)
+- https://tests.semantius.app/domain_map/process_raci (4 new R/A rows)
+- https://tests.semantius.app/domain_map/handoff_processes (3 re-points)
+
+### 2026-06-09 - q-file answer processed (a2)
+
+User answered q2 (B2-C1-FUNCTION-ROWS) = "a" in q-ATS.md. Executed: inserted business_function_domains rows for ATS (domain 56): Human Resources (id 3, contributor) + Finance (id 4, consumer), both record_status='new'. ATS functional ownership now Recruiting (owner) / Legal (contributor) / Human Resources (contributor) / Finance (consumer). B2-C1-FUNCTION-ROWS resolved, removed from state.yaml.
+
+Other q-file answers this round NOT yet processed: a1/a3/a4/a5 are clarifying questions (kept open, answered in chat); a6/a7 are b3 loads approved "yes" (queued, need Phase-0 verify + draft per Rule #1 before insert); a8 (B9d background realization) unanswered.
+
+### 2026-06-09 - a-file round processed (a2, a6, a7, a8)
+
+User renamed q-ATS.md -> a-ATS.md ("go"). Processed per Rule #22.
+
+- **a2** (B2-C1-FUNCTION-ROWS) = "a" -> executed earlier this day (HR contributor + Finance consumer).
+- **a8** (B2-B9D-BACKGROUND-REALIZATION) = "a" -> realized 7.2.5.1 "Obtain candidate background information": set requires_permission=true + process_id=1020 + permission_verb_override='clear_background_check' + domain_module_id=7 on background_checks.completed_clear, plus process_raci R=RECRUITING-RECRUITER / A=RECRUITING-MANAGER. Resolves B9d ORPHAN #401. (Mints the derived permission ats-background-checks:clear_background_check.) Resolved, removed from state.yaml.
+- **a6** (B3-CANDIDATE-EMAILS) = "ok" -> loaded `candidate_emails` (id 1040): operational_record, has_personal_content=true, master in ATS-CANDIDATE-CRM (required); rel candidates->candidate_emails + candidate_emails->users (sender); 2 aliases. record_status='new'. Resolved, removed from state.yaml.
+- **a7** (B3-MARKET-JUDGMENT-LOWER-CONFIDENCE) = "yes" -> per-object verification done; loaded 1 of 7:
+  - LOADED `drug_health_screenings` (id 1041): operational_workflow (5 lifecycle states; failed gate -> review_failed_screening), has_personal_content=true, master in ATS-BACKGROUND-CHECKS (optional, Rule #16 role/jurisdiction-conditional); rel candidates->drug_health_screenings + drug_health_screenings->users (coordinator); 3 aliases.
+  - SKIPPED with reasons: onboarding_handoffs (redundant with existing ATS->ONBOARDING handoffs); pre_employee_documents (overlaps candidate_documents id 1000 / onboarding_document_collections id 22); candidate_data_retention_policies (records_retention_policies id 433 already exists; ATS consumes); continuous_monitoring_subscriptions (post-hire monitoring scope -> HCM/compliance); interview_feedback_reminders (a notification, not a data_object); offer_approval_chains (config refinement of the existing job_offers approval lifecycle).
+  Resolved, removed from state.yaml.
+
+Still open (user answered with clarifying questions; answered in chat, folded into regenerated q-ATS.md): a1 -> B2-ROLLUP-POLICY; a3 -> B3-RIGHT-TO-WORK; a4 -> B3-AGENCY-SUBMISSIONS; a5 -> B3-OUTREACH-SEQUENCES. Noted during load: `work_eligibility_documents` (id 1035) already exists, relevant to the right-to-work question (the I-9 verification event is distinct from its supporting documents).
+
+a-ATS.md + old q-ATS.md deleted; fresh q-ATS.md generated with the 4 open items. status feedback_needed; next_action_by user.
+
+Loaders: .tmp_deploy/load_ats_b3_2026_06_09.ts (a6+a7), inline CLI (a8). All record_status='new' (Rule #1); no notes populated (Rule #15); no vendor names in forbidden-zone fields (Rule #18).
+UI: https://tests.semantius.app/domain_map/data_objects (1040, 1041)
+
+### 2026-06-09 - B9d re-review (focused; read-only)
+
+Re-ran the B9d resolver (`.tmp_deploy/b9d_resolver_2026_06_09.ts 56`) against live state to verify the earlier same-day run. **26 outbound payload tags: 21 RESOLVED / 2 ROLL-UP / 3 ORPHAN** (realized set grew 37 -> 42 since the morning run, from HCM's same-day B9d work).
+
+**Headline finding: the 2 ROLL-UPs are FALSE POSITIVES; do NOT apply the mechanical re-point.**
+- hp=731 (#120, job_offer.accepted -> BEN-ADMIN, payload `benefit_enrollments`) and hp=66 (#395, candidate.hired -> BEN-ADMIN, payload `candidates`) are both tagged 7.3 "Manage employee onboarding, training, and development".
+- The resolver wants to roll them up to the now-realized descendant **7.3.3.2 "Develop employee career plans and career paths"** (realized today by HCM). That code is semantically unrelated to benefits-enrollment handoffs. It is the spurious-descendant trap the B9d band warns about: 7.3 is a level-2 parent and the realized descendant happens to sit under it.
+- Correct classification (unchanged from the recorded analysis): #120/#395 are benefits work owed to **BEN-ADMIN** (master of `benefit_enrollments`, module BEN-ENROLLMENT/72), mis-coded 7.3. They should be re-tagged 7.3 -> **7.5.2.2 "Administer benefit enrollment"** (a destructive process_id overwrite; needs user sign-off). The realization of 7.5.2.2 is owed to BEN-ADMIN.
+
+**The 3 live ORPHANs (all report-only for ATS; none block ATS green):**
+- #1075 (job_offer.rescinded -> BEN-ADMIN, `benefit_enrollments`, 7.5.2.2, correctly coded): realization owed to BEN-ADMIN.
+- #2 (job_offer.accepted -> ONBOARDING, `onboarding_journeys`, 7.3.1, correctly coded): realization owed to ONBOARDING (master of onboarding_journeys, module ONB-JOURNEY-MGMT).
+- #402 (background_check.flagged -> HRSD, `background_checks`, 7.4 "Manage employee relations"): realization owed to HRSD. **Correction to the morning record:** this row is `record_status='new'`, NOT `approved`. Tag 7.4 is debatable (a flagged pre-hire check is not employee-relations work), but category-7 fits; left as report-only for the user to keep / re-tag / drop.
+
+**Disposition changes to state.yaml:**
+- Split the ATS-owned re-tag of #120/#395 out of B1B-B9D-OWED-BENADMIN into its own destructive-approval item **B1B-B9D-RETAG-BENADMIN** (blocked_by user_decision) and surfaced it as a q-file question (q2). The re-tag is ATS-owned and is NOT actually blocked on BEN-ADMIN; only the realization is.
+- B1B-B9D-OWED-BENADMIN narrowed to the realization-owed half (#120/#395/#1075 -> BEN-ADMIN).
+- Added **B1B-B9D-OWED-HRSD** (#402, report-only) and corrected its record_status note.
+
+No writes this pass (read-only verification + audit-file bookkeeping). The agent-doable additive B9d realizations were completed in the morning run; the only remaining ATS-owned B9d action is the destructive re-tag, which needs sign-off.
+
+Resolver: `.tmp_deploy/b9d_resolver_2026_06_09.ts`.
+
+## 2026-06-10 - B9d split-brain fix (committed resolver) + inverted-record re-home
+
+Committed `scripts/analytics/b9d_resolver.ts` (bidirectional, per-(process,owner) grain, run from cwd against the live catalog). Ran on the ATS boundary; owner obligations written: BEN-ADMIN `B2-B9D-OWN-1052`, ONBOARDING `B2-B9D-OWN-224`, SWP `B2-B9D-OWN-980`; COMP-MGMT salary_bands / compensation_benchmarks recorded as reference-read (no question). Inverted-record re-home (user sign-off 2026-06-10):
+- Removed **B1B-B9D-OWED-BENADMIN**: re-homed to BEN-ADMIN `B2-B9D-OWN-1052`.
+- Removed **B1B-B9D-OWED-ONBOARDING**: re-homed to ONBOARDING `B2-B9D-OWN-224`.
+- Replaced **B1B-B9D-OWED-HRSD** with **B1B-B9D-MISTAG-402**: background_checks is ATS-mastered and already realized under 7.2.5.1, so the 7.4 tag is an ATS sender mis-tag, not work owed to HRSD (pending destructive tag re-point/delete on sign-off).

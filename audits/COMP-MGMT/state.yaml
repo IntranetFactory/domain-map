@@ -11,8 +11,10 @@
 schema_version: 2
 domain: COMP-MGMT
 status: feedback_needed
-next_action_by: user
+next_action_by: agent
 last_audit: "2026-06-07"
+# B9d reference-read (2026-06-10): "Compensation Benchmark" is reference/config data of COMP-MGMT; it becomes ownable work only if COMP-MGMT later runs a workflow on it.
+# B9d reference-read (2026-06-10): "Salary Band" is reference/config data of COMP-MGMT; it becomes ownable work only if COMP-MGMT later runs a workflow on it.
 
 # Resolved 2026-06-07 (state-driven execute, see history.md):
 #   B1A-A4         domain 60 catalog_tagline + catalog_description backfilled (buyer voice).
@@ -25,6 +27,10 @@ last_audit: "2026-06-07"
 #                  H1 now 28/29 cross-domain tagged. Remaining S9 work is non-executable (below).
 
 b1a:
+  - id: B1A-B9D-VERIFY
+    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
+    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
+    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-S9-RESIDUAL
     summary: "1 untagged cross-domain handoff has NO clean APQC PCF match (defer to Discover); plus 4 REPLACE candidates that overwrite existing handoff_processes rows (destructive, surface)."
     finding: "Post-execute H1 = 28/29 cross-domain tagged. handoff 1105 (PA pay_equity.gap_detected -> COMP-BENCHMARKING, payload workforce_segments) has no clean PCF process: APQC PCF cross-industry has no pay-equity or workforce-metric L3/L4 process; the nearest (1046 Administer compensation and rewards) is not a pay-equity process. The 4 REPLACE candidates are destructive overwrites of existing rows."

@@ -544,3 +544,184 @@ State-driven Validate pass (Rule #21). Worked only the open items in state.yaml;
 ### JWT errors
 
 None.
+
+## 2026-06-08 - Audit (state-driven execute; Phase-E persona/RACI restoration)
+
+### Summary
+
+State-driven Validate continuation (Rule #21). Domain still `feedback_needed` with a current q-HCM.md (12 questions) and no answers; this pass executed the agent-doable additive work the 2026-06-06 pass had deferred, and refreshed the worklist. Domain id 54 (HCM), modules 54 HCM-CORE-WORKER / 55 HCM-ORG-POSITIONS / 56 HCM-LIFECYCLE-WORKFLOWS, 6 masters. All writes idempotent and additive; `record_status` omitted (defaults 'new') or the column does not exist; no non-empty value overwritten. Loader: .tmp_deploy/load_hcm_personas_2026_06_08.ts (gitignored).
+
+The trigger: B1A-PHASE-P had been parked as "deferred per Rule #21 persona policy", but the current Rule #21 lists personas + RACI as additive work the agent executes without asking (lands at `record_status='new'`, user reviews in-record), and CLAUDE.md states a review never ends with a b1a to-do list. The deferral reflected an older policy reading; this pass executes it. Restores the 5 HCM-scoped personas Plan 3 (2026-06-02) deleted.
+
+### Executed (additive/corrective, record_status='new')
+
+- **B1A-PHASE-P (Phase E persona/RACI, E1-E6):** authored the HCM persona/RACI layer fresh. Function-anchored on Human Resources (id 3); cross-functional reach accreted onto existing personas (read-before-create on role_code, never recreated).
+  - **4 NEW `domain_roles`** (function_id=3): HR-HRIS-ADMIN (#53), HR-PEOPLE-OPS-SPECIALIST (#54), HR-BUSINESS-PARTNER (#55), HR-ORG-DESIGN-ANALYST (#56).
+  - **16 `role_modules`** reach across modules 54/55/56 for the 4 new personas plus 2 accreted cross-functional ones (PEOPLE-MANAGER #26 -> 56 primary / 54+55 secondary; HIRING-MANAGER #10 -> 55 secondary). Every HCM persona now meets the 2-module floor (E2); all `interaction_level` set (E3).
+  - **10 `data_object_lifecycle_states.process_id` wirings** (the process-to-permission edge, all NULL before -> fill-empty, not overwrite): employees.active/.on_leave/.terminated -> 243 / 1058 / 239; employment_contracts.approved+signed -> 243; employment_events.approved -> 240; hcm_positions.approved + org_units.active -> 97; org_units.reorganized -> 92; job_profiles.approved -> 995. The 7 chosen PCF processes were verified clean (no existing RACI, no cross-domain lifecycle wiring) to avoid cross-domain gate contamination - process 222 was explicitly NOT reused because ATS already owns its RACI.
+  - **26 `process_raci`** rows across the 7 wired processes; each process carries >=1 Responsible and >=1 Accountable (E4). People-Ops Specialist is R on the worker-lifecycle processes, Org-Design Analyst is R on the org/position/job-profile processes, HRBP is the dominant Accountable, People-Manager carries manager-self-service Accountable on leave (1058) and transfers (240), one Consulted is blocking (HRBP on leave-of-absence for FMLA/sensitive). (`process_raci` has no `record_status` column.)
+- **B1B-S2 partial (B10b, 3 PATCH):** backfilled `target_domain_module_id` = 54 on inbound handoffs 1016 (project_assignment.confirmed), 1022 (project_resource_allocation.committed), 1026 (resource_skill_inventory.updated) - mechanically derivable now that module 54 carries the PSA consumer DMDOs (B1A-S7, 2026-06-06). Fresh re-derivation confirmed these are the ONLY mechanically-resolvable rows; the other 27 NULL-target inbound handoffs have payloads HCM does not model in any module, so the 54-vs-56 choice stays judgment gated by B2-S5r.
+
+### Surfaced (not written; still waiting on user - unchanged from 2026-06-06)
+
+- **b2 (q-HCM.md q1-q9):** B2-S5r (module 56 baseline-only; the gate question), B2-S1r (event 391 category), B2-S2r (notes revert ratification), B2-S4r (pattern flags on employment_contracts/employment_events), B2-S8r (~9 H1 REPLACE candidates, incl. wrong-mapped 446/451), B1A-SELF-CONTAIN (M9 7 destructive role/necessity rewrites), B2-S6r (internal-mobility handoff), B2-S7r (absence_requests DMDO mirror). My persona work added reach to module 56 (HR-HRIS-ADMIN/People-Ops/People-Manager primary) but module 56 still has zero own gates - all gates derive from masters in 54/55 - so the B2-S5r framing stands exactly.
+- **b3 (q10-q12):** entity / regulation / modularization candidates, unchanged and non-blocking.
+- **H1 deferred-to-Discover:** handoffs 378 / 382 (HCM -> IGA) still need an IGA access-management PCF mapping minted in a Discover pass.
+
+### Audit band state after this pass
+
+- E1 PASS (6 personas reach the 3 modules; was 0). E2 PASS (2-module floor). E3 PASS. E4 PASS (every wired process has R + A). E6 PASS (every R/A traces to a `process_id`-wired gate; entity_type classified on all 6 masters since 2026-06-06).
+- B10b: 3 of the inbound NULL-target rows cleared; 27 remain, none mechanically derivable (judgment, gated by B2-S5r).
+- Domain remains `feedback_needed` / `next_action_by: user`: the 12 q-HCM.md questions are untouched by this pass (none were persona/RACI or PSA-handoff questions).
+
+### JWT errors
+
+None.
+
+## 2026-06-09 - Audit (process a-HCM.md + Phase-0 research + additive load)
+
+### Summary
+
+The user renamed q-HCM.md to a-HCM.md with answers (Rule #22 go-signal). Processed all 12 answers: executed the decided ones, ran a fresh Phase 0 vendor-surface pass for the answers that were questions/research-asks, loaded the entities/statute whose placement Phase 0 made unambiguous, and routed the rest to neighbor domains. Two prior recommendations were REVERSED by the fresh evidence (Rule #22: fresh Phase 0 wins). Loaders: .tmp_deploy/apply_hcm_answers_2026_06_09.ts + .tmp_deploy/load_hcm_person_entities_2026_06_09.ts. Phase 0 artifacts: .tmp_deploy/HCM-phase0-entities-2026-06-09.md, .tmp_deploy/HCM-phase0-architecture-2026-06-09.md.
+
+### Executed (decided answers)
+
+- **a2 (B2-S1r):** trigger_event 391 org_unit.created event_category '' -> 'state_change' (user picked b; matches sibling org_unit.merged/disbanded). B1B-S1 resolved.
+- **a3 (B2-S2r):** ratified the 2026-05-31 notes revert as the safe Rule #15 default (no write). Resolved.
+- **a4/a5 (B2-S4r):** employment_contracts (35) and employment_events (36) has_personal_content -> true. Resolved.
+- **a6 (B2-S8r):** replace all ~9 weak/wrong APQC handoff_processes tags with agent_curated. 4 repointed (17/393 candidate.hired 220->222 Manage new hire/re-hire; 446 case.access_required 196->242 Manage employee inquiry process; 451 attrition.forecast_updated 671->247 Develop workforce analytics) via delete-old + insert-correct; 4 confirmed-as-is upgraded discovery_substring -> agent_curated (399->219, 135->1058, 437->982, 1125->1049). B1A-S6 REPLACE part resolved; 378/382 IGA stay a Discover deferral.
+
+### Phase 0 (fresh vendor research, 2 parallel subagents, CLI-only/no-Python/no-MCP)
+
+Flagship set: Workday HCM, SAP SuccessFactors, Oracle Cloud HCM, UKG Pro, ADP WFN, Dayforce, BambooHR, HiBob, Rippling, Personio, Paylocity (+ Deel/Remote, Syndio/Trusaic).
+
+- **Entities (a10):** 5 of 9 candidates load on HCM-CORE-WORKER; 3 route to neighbors; 1 skip. 1 of the 5 (employee_dependents) held out on a naming collision (see below).
+- **Statutes (a11):** only US State Pay Transparency -> HCM; FMLA->WFM, I-9/E-Verify->ONBOARDING, HIPAA-BAA->BEN-ADMIN.
+- **Architecture (a1/a8/a9/a12):** self-service is request-OWNING in every flagship (reverses a1/B2-S5r); internal mobility materializes an internal candidate + fires a recruiting event (reverses a8/B2-S6r); absence_requests stay WFM-mastered, HCM consumes (confirms a9/B2-S7r); no vendor ships a standalone compliance module or splits onboarding/offboarding (closes a12 / B3-MOD-*).
+
+### Executed (additive load, record_status defaults 'new')
+
+- **4 new masters on HCM-CORE-WORKER (54), necessity=optional** (Rule #16 person-adjacent/jurisdiction-conditional): emergency_contacts (#1034, operational_record), work_eligibility_documents (#1035, operational_workflow), national_ids (#1036, operational_record), worker_addresses (#1037, operational_record). All has_personal_content=true.
+- **5 data_object_relationships:** employees (31) composes each of the 4 (one_to_many, composition, owner_side=source, is_required); users (748) verifies work_eligibility_documents (reference).
+- **4 lifecycle states** on work_eligibility_documents (pending_verification initial -> verified gate -> expired/rejected terminal, on module 54).
+- **6 aliases** (national_ids: SSN, National Insurance Number, Government ID; work_eligibility_documents: Work Permit, Visa, Right to Work Document) - all alias_type=synonym (industry_term requires an industry_id; these are jurisdiction terms).
+- **1 regulation:** US State Pay Transparency Laws (#98, labor_law, jurisdiction USA) + domain_regulations HCM applicability=conditional.
+
+### Held out / routed (not loaded on HCM)
+
+- **employee_dependents HELD OUT (new B2-DEPENDENTS):** collides with existing benefit_dependents (148, BEN-ADMIN) per Rule #9. Ownership/reconciliation decision surfaced (recommended: HCM masters the person-level dependent; benefit_dependents stays the distinct plan-enrollment record). Not auto-loaded.
+- **Routed to neighbor domains (b3, non-blocking):** worker_bank_accounts -> PAYROLL; medical_certifications -> WFM; i9_records -> ONBOARDING; reg FMLA -> WFM; reg I-9/E-Verify -> ONBOARDING; reg HIPAA-BAA -> BEN-ADMIN.
+- **Closed by Phase 0:** pay_equity_assessments (analytics, not a master); HCM-COMPLIANCE module (no vendor draws it); lifecycle onboarding/offboarding split (no vendor splits it - folded into B2-S5r).
+
+### Surfaced (regenerated q-HCM.md - still waiting on user)
+
+- **B2-S5r (gate, REVERSED):** make module 56 master self-service request objects (change_requests, life_events, onboarding_tasks, offboarding_tasks) + gates? Rec: yes. Drives B1B-S2.
+- **B2-S6r (REVERSED):** author internal-mobility HCM->ATS handoff on employee.applied_internally? Rec: yes.
+- **B2-S7r (CONFIRMED):** HCM stays consumer of WFM-mastered absence_requests? Rec: confirm.
+- **B1A-SELF-CONTAIN (a7 was a question):** per-row M9 fix - pre_employees -> embedded_master, the other 6 -> necessity=optional. Destructive; rec: apply.
+- **B2-DEPENDENTS (new):** dependents ownership vs benefit_dependents.
+
+### Audit band state after this pass
+
+- B1 Phase-0-driven loads done; B11/B12/B13 pass for the 4 new masters (aliases on the non-self-explanatory ones, lifecycle on the workflow one, entity_type classified, has_personal_content set). C/regulation coverage extended.
+- Open questions cut from 12 -> 5 (all now backed by named-vendor Phase 0 evidence); 7 b3 items dispositioned (routed or closed).
+- Domain stays `feedback_needed` / `next_action_by: user`.
+
+### JWT errors
+
+None.
+
+## 2026-06-09 - Audit (process 2nd a-HCM.md: execute all 5 + 1 decisions)
+
+### Summary
+
+The user answered the regenerated q-file (2nd a-HCM.md). All six were decisions (no questions), so all were executed or resolved. Loader: .tmp_deploy/apply_hcm_a2_2026_06_09.ts. After this pass HCM has NO open b2 and no pending destructive approval; the q-/a- files are deleted and the domain moves to next_action_by=agent with one unblocked agent cleanup (B1A-INBOUND-MODULES).
+
+### Executed
+
+- **a4 (B1A-SELF-CONTAIN, yes) - DESTRUCTIVE M9 fix, user-approved:** 7 domain_module_data_objects rows rewritten. pre_employees (749, module 56) consumer+required -> embedded_master+required (carries a local pre-hire shell so HCM onboards standalone when ATS is absent; canonical master is ATS, Rule #11 satisfied). The other 6 relaxed to necessity=optional: candidates (3), candidate_assessments (10), job_offers (11) on 56; job_requisitions (1) on 55; onboarding_document_collections (22) on 54; asset_lifecycle_events (55, contributor) on 56. M9 self-containment now clean for all of this domain's modules.
+- **a5 (B2-DEPENDENTS, a) - additive:** loaded employee_dependents (#1038) as master+optional on HCM-CORE-WORKER (operational_record, has_personal_content), employees-composes-dependents relationship, alias 'Dependents'. benefit_dependents (148, BEN-ADMIN) left UNTOUCHED and distinct (it is the plan-enrollment record; HCM now masters the person-level dependent that benefits reads). No destructive reconciliation.
+- **a1 (B2-S5r, a) - additive, REVERSED the prior baseline-only recommendation:** module 56 (HCM-LIFECYCLE-WORKFLOWS) now masters a self-service request object. The clean HCM-owned, missing one is worker_change_requests (#1039, operational_workflow, master+required): the ESS/MSS request to change worker data, routed through approval. 5-state lifecycle (draft -> submitted [open self-service] -> approved [gate, requires_permission, process_id=243 'Manage and maintain employee data' so the existing People-Ops R / HRBP A RACI grants the approve gate] -> applied/rejected terminal). employees-has and users-requests relationships, 2 aliases. NOTE: the other objects the research named (life_events, onboarding_tasks, change_requests) were NOT re-mastered - life_events is BEN-ADMIN's (handoff 418), onboarding_tasks (18) is ONBOARDING's, change_requests is taken; HCM consumes them. Mastering them would repeat the dependents/life_events duplicate-concept trap. Module 56 is no longer 'masters nothing'.
+- **a2 (B2-S6r, yes) - additive, REVERSED the prior skip:** new trigger_event employee.applied_internally (#1656, on employees, event_category=signal) + handoff HCM-CORE-WORKER (54) -> ATS-CANDIDATE-CRM (module 1, ATS domain 56) on candidates payload (api_call, friction medium - worker/candidate identity reconciliation), + employees-applies_as-candidates relationship (mirrors the existing candidates-becomes-employees edge in the reverse direction).
+- **a3 (B2-S7r, yes):** confirmed HCM stays a consumer of WFM-mastered absence_requests (module-56 consumer DMDO on absence_requests 163 already covers handoff 135). No write.
+- **a6 (B3-NEIGHBOR-ROUTES, postpone):** neighbor-domain audits (PAYROLL/WFM/ONBOARDING/BEN-ADMIN) for the routed bank-accounts / medical-certs / I-9 / FMLA / I-9-E-Verify / HIPAA-BAA items are postponed (parked, non-blocking).
+
+### State after this pass
+
+- All b2 RESOLVED (B2-S1r/S2r/S4r/S5r/S6r/S7r/S8r + B2-DEPENDENTS). No pending destructive approval. q-HCM.md + a-HCM.md deleted.
+- One unblocked agent cleanup remains: B1A-INBOUND-MODULES (formerly B1B-S2) - assign target_domain_module_id on the 27 NULL-target inbound handoffs. a1 resolved its gate (module 56 = lifecycle/events hub); what remains is a per-handoff consume-vs-signal classification (add consumer DMDO + target on the ones HCM genuinely reacts to; leave pure notifications NULL as domain-level signals). Its own focused pass, deliberately not rushed at the tail of this turn.
+- Module-56 self-service master now seeds a worker_change_requests gate; the E-band derivation picks it up via process 243's existing RACI (no new persona/RACI authoring needed).
+
+### JWT errors
+
+None.
+
+## 2026-06-09 - Audit (execute B1A-INBOUND-MODULES: inbound handoff module attribution)
+
+### Summary
+
+State-driven continuation: the only open agent item (B1A-INBOUND-MODULES) was executed. Drove from state.yaml, re-verified against live state first, then ran the per-handoff consume-vs-signal pass on all 27 NULL-target inbound cross-domain handoffs into HCM. None of the 27 payloads were modeled by any HCM module beforehand (DMDO pre-check returned []), so each handoff got a fresh decision: add a consumer+optional DMDO on the owning module and backfill target_domain_module_id (buckets a/b/c), or leave NULL as a domain-level signal HCM does not model (bucket d). Additive + corrective only (no destructive step); consumer DMDOs are necessity=optional (Rule #16 A: degrades gracefully) and carry no notes (Rule #15). Loader: .tmp_deploy/hcm_inbound_modules_2026_06_09.ts.
+
+### Executed - 15 consumer DMDOs + 16 FK backfills
+
+- **(a) module 56 HCM-LIFECYCLE-WORKFLOWS, consumer+optional (12 data_objects, 12 handoffs):** life_events 149 (h418), merit_recommendations 156 (h422), absence_balances 164 (h427), learning_records 170 (h431), succession_plans 176 (h437), performance_goals 175 (h438), workforce_segments 44 (h441), hr_cases 192 (h446), compliance_assignments 173 (h1047), compensation_plans 153 (h1125), course_completions 912 (h1311), legal_holds 635 (h913). People-lifecycle / talent+comp / learning+compliance signals HCM genuinely reacts to. legal_holds included because it gates the offboarding-purge workflow (HCM must not delete a worker record under hold) - a real consume, not just a notification.
+- **(b) module 54 HCM-CORE-WORKER, consumer+optional (2 data_objects, 3 handoffs):** pay_slips 139 (h412 pay_cycle.closed + h1154 pay_slip.published), source_records 320 (h718 source_record.merged_to_golden). Core-worker-identity payloads.
+- **(c) module 55 HCM-ORG-POSITIONS, consumer+optional (1 data_object, 1 handoff):** financial_plans 37 (h601 financial_plan.approved). Org/headcount.
+
+### Left NULL - 11 domain-level signals (bucket d, accepted, no module owner)
+
+HCM does not model these as worker-lifecycle records; each is a cross-domain notification it is informed by, not a record it consumes. Per B10b sub-case 2 these are accepted as domain-level signals (no module owner), not a gap:
+
+- property_spaces 347 (h295, REAL-EST), case_categories 193 (h448, HRSD taxonomy/config), workforce_plans 23 (h451, PA analytics), policy_attestations 286 (h842, GRC governance), workplace_experience_feedback 594 (h869, IWMS), host_assignments 671 (h873, VIS-MGMT), store_audits 649 (h935, RET-STORE), legal_advice_records 638 (h1032, LSD privileged content), attrition_forecasts 42 (h1111, PA analytics), gdpr_consent_records 950 (h1313, LMS privacy), data_deletion_requests 952 (h1314, LMS privacy).
+
+### Borderline calls (transparency - all additive/optional, reversible)
+
+- **legal_holds 635 -> consume (a):** included because it gates HCM's offboarding/retention behavior. Distinct from policy_attestations 286 -> signal (d): the latter does not gate any HCM workflow (GRC tracks the attestation; HCM only routes).
+- **PA analytics (workforce_plans 23, attrition_forecasts 42) -> signal (d):** PA is derive/overlay; HCM is informed of forecasts but does not store the plan/forecast as a record.
+- **LMS privacy (gdpr_consent_records 950, data_deletion_requests 952) -> signal (d):** privacy-domain artifacts; HCM's reaction (cease processing) is behavior, not record consumption.
+
+### Verification
+
+- NULL-target inbound handoffs: 27 -> 11; the remaining 11 match the intended signal set exactly (loader match: OK).
+- 15 consumer DMDOs confirmed present (2 on 54, 1 on 55, 12 on 56), all role=consumer necessity=optional. (Note: domain_module_data_objects has no record_status column, so these carry no per-row review flag; reviewed in the UI/relationship view.)
+- Outbound B10b clean: zero outbound HCM handoffs with NULL source_domain_module_id.
+- M9 unaffected: all new rows are consumer+optional (degrade gracefully, no self-containment violation); M7 unaffected (consumer rows, no master conflict).
+
+### State after this pass
+
+- b1a EMPTY (B1A-INBOUND-MODULES resolved). b2/b3 empty. Only B1B-NEIGHBOR-ROUTES remains (user-postponed, non-blocking).
+- status: in_progress -> passed; next_action_by: agent -> blocked (derives to blocked: only b1b remains, blocked_by user_decision a6-postpone). HCM's own audit is structurally complete; the routed entity/statute placements are neighbor-domain work the user deferred.
+
+### JWT errors
+
+None.
+
+## 2026-06-09 - Audit (execute B1A-B9D-VERIFY: handoff payload realization)
+
+### Summary
+
+Ran the B9d band (handoff payload realization, added to SKILL.md 2026-06-09) on HCM's 64 outbound cross-domain handoff_processes payload tags - the first B9d run on this domain. Classified each against the realized set (a process whose process_id is a gated data_object_lifecycle_states.process_id AND that carries process_raci R+A). Resolver: .tmp_deploy/b9d_resolver_2026_06_09.ts (read-only classifier, domain-parametrized); re-point loader: .tmp_deploy/b9d_repoint_hcm_2026_06_09.ts.
+
+### Verdicts (before -> after)
+
+- **RESOLVED: 26 -> 48.** Pre-existing: 97 (1.2.5 org design) x15, 995 (7.1.2.16 job descriptions) x9, 239 (7.6.2 separation) x1, 242 (7.7.2 inquiry) x1. After re-points: +243 x8, 239 to x10, +240 x5.
+- **Re-pointed: 22** coarse `discovery_override` tags -> HCM realized lifecycle process by event (delete stale + insert agent_curated, record_status='new'; the stale tags were never user-approved, so corrective not destructive):
+  - employee.created (was 41 / 7.3 "Manage employee onboarding, training, and development", L2) -> 243 (7.7.3 Manage and maintain employee data) x8.
+  - employee.terminated (was 41 / 7.3, plus 1059 / 7.6.2.3 Manage offboarding) -> 239 (7.6.2 Manage separation) x9.
+  - employee.promoted (was 41 / 7.3, plus 226 / 7.3.3 career development) -> 240 (7.6.3 Relocate employees and manage assignments) x5.
+- **ORPHAN: 16 (report-only, owed by neighbor domains).** Precise target-realized tags whose owner domain has not authored its gate+RACI yet, so they realize nowhere catalog-wide: 224 (7.3.1 onboarding) -> ONBOARDING; 236 (7.5.4 payroll) -> PAYROLL; 247 (7.7.7 workforce analytics) -> PA; 980 (7.1.2.1 strategic workforce planning) -> SWP; 1036 (7.3.4.2 competencies) -> SKILLS-MGMT/TALENT; 1046 (7.5.1.5 comp admin) -> COMP-MGMT; 1052 (7.5.2.2 benefit enrollment) -> BEN-ADMIN; 298 (9.1.3 cost accounting, on org_unit.created -> ERP-FIN) -> ERP-FIN. Per the B8/B10 asymmetry these are NOT HCM fixes; the owner domain realizes them on its own B9d pass.
+- **MIS-TAG: 0.** The resolver heuristically flagged 298 (category 9 vs catalog-wide realized cats), but 298's target IS ERP-FIN (a finance domain), so category 9 is related to the endpoint -> it is an ORPHAN owed by ERP-FIN, not a cross-category mis-tag. No destructive handoff_processes deletion needed.
+
+### Method note (informs the still-unbuilt reusable resolver)
+
+The mechanical "closest realized ancestor/descendant" ROLL-UP rule MIS-FIRES on over-broad parent tags: the L2 `7.3` discovery_override (19 handoffs) had one realized descendant (1032 "career plans") and the naive rule wanted to re-point all 19 onboarding/separation/promotion fan-outs to "career plans" - semantically wrong. The correct re-point is per-EVENT to HCM's realized worker-lifecycle process (created->243, terminated->239, promoted->240), done by hand. A reusable B9d resolver must use event/payload semantics for broad-parent tags, not just hierarchy proximity, and must classify MIS-TAG against the TARGET endpoint's family, not just catalog-wide realized categories.
+
+### State after this pass
+
+- B9d PASS: every outbound payload is RESOLVED or an ORPHAN owed elsewhere (report-only). B1A-B9D-VERIFY resolved; b1a empty.
+- status=passed, next_action_by=blocked (the only open row is B1B-NEIGHBOR-ROUTES, the user-postponed neighbor routing).
+- 16 ORPHANs are report-only follow-ups owed by ONBOARDING / PAYROLL / PA / SWP / SKILLS-MGMT / COMP-MGMT / BEN-ADMIN / ERP-FIN; they clear on those domains' own B9d passes.
+
+### JWT errors
+
+None.

@@ -12,7 +12,24 @@ schema_version: 2
 domain: SWP
 status: feedback_needed
 next_action_by: user
-last_audit: "2026-06-07"
+last_audit: "2026-06-10"
+
+# 2026-06-10 review pass: ran the B9d resolver (scripts/analytics/b9d_resolver.ts SWP) in BOTH
+# directions for the first time on this domain, clearing B1A-B9D-VERIFY. The 26 boundary tags
+# classified to 18 (process,owner) findings: 3 RESOLVED, 8 ORPHAN, 2 ROLL-UP, 1 RE-TAG, 1 MIS-TAG,
+# 2 UNOWNED, 1 REFERENCE-READ. Dispositions (see history.md 2026-06-10):
+#   - pid 980 ORPHAN(SWP) = already B2-B9D-OWN-980 (q10). idempotent, no new item.
+#   - pid 671 ORPHAN(SWP) = resolver FALSE-POSITIVE: it is the B2-S6 handoff-13 mis-tag (671 ->
+#     should be 980). SWP is unbuilt so the MIS-TAG rule could not fire (documented resolver blind
+#     spot). NOT written as an owner question; folded into B2-S6.
+#   - pid 1038/1322/1324 ORPHAN(SWP) = SWP-owned cold-start processes with no persona; folded into
+#     B1A-PHASE-P (every SWP-owned process reads ownerless until the persona layer is authored).
+#   - pid 980 ORPHAN(PA) = input-feed mis-attribution (handoffs 452/1112 PA->SWP are agent-tagged 980,
+#     which is SWP's process, not PA's). NOT written into PA; flagged in B1B-B9D-CROSS-OWED.
+#   - pid 106 ORPHAN(SEM) + pid 923 ORPHAN(WFM) = genuine neighbor owner obligations; surfaced, not
+#     auto-injected into those mid-build domains' files (see B1B-B9D-CROSS-OWED + summary).
+#   - destructive re-points (RE-TAG h241, ROLL-UP COMP-MGMT/PSA, MIS-TAG PSA, UNOWNED h242) -> B2-S6
+#     (SWP-side) + B1B-B9D-CROSS-OWED (other-domain-side). All need sign-off (Rule #21).
 
 # 2026-06-07 state-driven execute pass cleared the additive/corrective EXECUTE items:
 #   - B1A-ENTITY-TYPE (8 masters classified per Rule #12)
@@ -33,6 +50,16 @@ b1a:
     action: "DEFERRED per parent-task Rule (personas/RACI are not auto-authored). Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 4 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: Workforce Planner, Workforce Planning Lead, FP&A Workforce Partner, Workforce Leadership Sponsor, and (pending B2-S4) Org Design Practitioner."
     status: deferred
     extra_phase_p_triage: "2026-06-02"
+    extra_b9d_owned_processes: |
+      B9d (2026-06-10) confirmed the SWP-owned processes the persona/RACI layer must give a named R/A:
+        - 980 "Perform strategic workforce planning" (headcount_plans, position_demand_forecasts,
+          workforce_scenarios, org_designs) - the headline; surfaced as q10 / B2-B9D-OWN-980.
+        - 1038 "Establish training needs by analysis of required and available skills" (skills_gap_analyses).
+        - 1322 "Prepare periodic budgets and plans" (workforce_plans, workforce_cost_projections) - the
+          workforce-cost slice of the budget; user may reassign to EPM on the SWP<->EPM boundary.
+        - 1324 "Prepare periodic financial forecasts" (workforce_plans) - same SWP<->EPM caveat.
+      These are NOT separate q-file questions: they are the same cold-start gap as q10 and all resolve
+      when the persona layer lands. No B2-B9D-OWN-1038/1322/1324 items authored (would be q10 duplicates).
 
   - id: B1A-SELF-CONTAIN
     summary: "12 contributor/required-consumer rows break module self-containment (M9): embed or relax each. DESTRUCTIVE (rewrites role/necessity on existing DMDO rows) -> needs approval."
@@ -109,6 +136,36 @@ b1b:
       - {handoff_id: 16, direction: out, source_domain: SWP, target_domain: EPM, trigger_event: cost_projection.approved, payload: workforce_cost_projections, null_field: target_domain_module_id}
       - {handoff_id: 458, direction: out, source_domain: SWP, target_domain: EPM, trigger_event: workforce_scenario.approved, payload: workforce_scenarios, null_field: target_domain_module_id}
 
+  - id: B1B-B9D-CROSS-OWED
+    summary: B9d (2026-06-10) cross-domain obligations owed by neighbors; surfaced, not auto-injected into their mid-build files.
+    finding: |
+      The B9d resolver run on SWP surfaced obligations whose OWNER is another domain. SEM, WFM and PA are all mid-build
+      (next_action_by: agent) with rich open backlogs, so per proportionality these were NOT auto-written into their files
+      during a single-domain "review SWP" pass. They are recorded here and in history.md so they are not lost, and are best
+      written into each owner's files when that domain is next reviewed (or now, on user request).
+    blocked_by:
+      - {type: domain_audit, blocking_domain: SEM, milestone: assign_owner_for_execute_strategic_initiatives}
+      - {type: domain_audit, blocking_domain: WFM, milestone: assign_owner_for_track_workforce_utilization}
+      - {type: domain_audit, blocking_domain: PSA, milestone: master_resource_allocations_and_repoint_tags}
+      - {type: domain_audit, blocking_domain: COMP-MGMT, milestone: repoint_compensation_benchmark_tag_to_specific_process}
+    extra_owner_orphans:
+      - {owner: SEM, process_id: 106, process: "Execute strategic initiatives", payload: strategic_initiatives, via_handoff: 241, note: "SEM masters strategic_initiatives; would be B2-B9D-OWN-106 in SEM's files."}
+      - {owner: WFM, process_id: 923, process: "Track workforce utilization", payload: time_entries, via_handoff: 136, note: "WFM masters time_entries; would be B2-B9D-OWN-923 in WFM's files. Same boundary as B1B-OTHER-DOMAIN-NULLS h136."}
+    extra_source_repoints_owed:
+      - {owner: COMP-MGMT, kind: ROLL-UP, handoff: 1138, from_process: 216, to_process: "7.1.2.16", note: "re-point on COMP-MGMT source; realized at same entity family."}
+      - {owner: PSA, kind: ROLL-UP, handoff: 1027, from_process: 887, to_process: "5.2.2", note: "re-point on PSA source."}
+      - {owner: PSA, kind: MIS-TAG, handoff: 1018, from_process: 980, to_process: "5.2.2", note: "PSA mis-tagged project_assignments with SWP's 980; re-point to 5.2.2 'Create and manage resource plan' or delete."}
+    extra_pa_980_misattribution:
+      finding: |
+        B9d attributed process 980 "Perform strategic workforce planning" to PA as a second owner because handoffs 452 and
+        1112 (PA->SWP input feeds, payloads attrition_forecasts + workforce_segments, both PA-mastered) are agent_curated
+        with tag 980. 980 is SWP's planning process, not PA's; these feeds are inputs TO 980, not PA realizing 980. The
+        resolver's carried-entity ownership heuristic mis-fires on input-feed handoffs. No B2-B9D-OWN-980 was written into
+        PA (it would be an incoherent question). Open question for sign-off: are tags 1167 (h452) and 1171 (h1112) correct
+        as 980, or should they be re-pointed to a PA-side producing process / dropped? Destructive either way.
+    extra_reference_read:
+      note: "labor_market_benchmarks (master 29) is reference/config data of SWP (entity_type config-shape); B9d marks it REFERENCE-READ, not ownable workflow. Informational only."
+
 b2:
   - id: B2-S1
     summary: event_category convention for trigger_event 388 labor_market_benchmark.refreshed
@@ -179,23 +236,38 @@ b2:
       C1 / C2 derivation depends on user-confirmed BF assignments. Unblocks B1B-C1-BFC-ANCHORING.
 
   - id: B2-S6
-    summary: REPLACE-CORRECT 3 mis-tagged discovery_substring handoff_processes rows (DESTRUCTIVE)
+    summary: REPLACE-CORRECT / DELETE 3 mis-tagged discovery_substring handoff_processes rows (DESTRUCTIVE). Targets refined by B9d 2026-06-10.
     question: |
-      Three SWP handoff_processes rows are still proposal_source='discovery_substring' with wrong-context PCF links and
-      should be REPLACE-CORRECTED to agent_curated with the right process. This overwrites existing non-empty rows
-      (destructive), so it is gated on approval:
-        - row 101 (handoff 13, PA->SWP attrition.forecast_updated): currently process_id=671. Recommend process_id=980
-          "Perform strategic workforce planning" (the established SWP workforce tag), as the payload is workforce planning, not customer attrition.
-        - row 130 (handoff 241, SPM->SWP initiative.kickoff): currently process_id=16 (L2, over-coarse). Recommend a tighter
-          L3/L4 strategy-or-workforce-planning process resolved at fix time.
-        - row 132 (handoff 242, SPM->SWP resource_allocation.committed): currently process_id=713 (sales-resource context, wrong).
-          Recommend process_id=980 "Perform strategic workforce planning".
+      Three SWP-boundary handoff_processes rows are still proposal_source='discovery_substring' with wrong-context PCF links.
+      B9d (2026-06-10) refined the exact fix per row. Each overwrites/deletes an existing non-empty row (destructive), gated on approval:
+        - row 101 (handoff 13, PA->SWP attrition.forecast_updated): currently process_id=671 "Analyze customer attrition and
+          retention rates". REPLACE-CORRECT to process_id=980 "Perform strategic workforce planning" (payload is workforce
+          planning, not customer attrition). B9d confirms: this wrong tag is exactly why the resolver mis-read it as a SWP
+          ORPHAN ("who owns customer-attrition analysis at SWP"); the correction dissolves that false-positive.
+        - row 130 (handoff 241, SPM->SWP initiative.kickoff): currently process_id=16 "Develop and measure strategic
+          initiatives" (L2, over-coarse). B9d: the specific process 106 (1.3.5 "Execute strategic initiatives") is ALREADY
+          tagged on h241 (row 1186, agent_curated), so the fix is to DELETE the coarse row 130, not re-point it.
+        - row 132 (handoff 242, SPM->SWP resource_allocation.committed): currently process_id=713 "Determine sales resource
+          allocation" (wrong context). B9d: the payload resource_allocations has NO master row anywhere in the catalog
+          (UNOWNED), so re-pointing it to a SWP process would be wrong too. Real fix is upstream: SPM (or PSA) must master
+          resource_allocations first, then this tag re-points to that owner's process. Recommend DELETE row 132 now and
+          track the missing master under SPM's audit (see B1B-B9D-CROSS-OWED).
     options:
-      - approve REPLACE-CORRECT all 3 (PATCH process_id + proposal_source='agent_curated')
-      - approve a subset
+      - approve all 3 (row 101 re-point to 980; row 130 DELETE; row 132 DELETE)
+      - approve a subset (say which)
       - leave as discovery_substring
     why: |
-      REPLACE/overwrite of a non-empty handoff_processes row is destructive; SKILL.md Rule #21 forbids unapproved overwrite.
+      REPLACE/overwrite/DELETE of a non-empty handoff_processes row is destructive; SKILL.md Rule #21 forbids unapproved overwrite.
+  - id: B2-B9D-OWN-980
+    summary: "Strategic Workforce Planning: name an owner for \"Perform strategic workforce planning\" (no one is responsible for it today)"
+    question: |
+      Applicant Tracking and Recruiting sends Strategic Workforce Planning an automatically calculated position demand forecast that feeds perform strategic workforce planning, but Strategic Workforce Planning does not yet have anyone assigned to that work, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Strategic Workforce Planning owns, and assign a named owner once Strategic Workforce Planning sets up who does this work."
+      - "Treat it as an automatically calculated figure with no one to own, and leave it off the list."
+    why: |
+      Recording it now means that the moment Strategic Workforce Planning decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SWP.md q10.
+    extra_b9d_added: "2026-06-10"
 
 b3:
   - id: B3-S1

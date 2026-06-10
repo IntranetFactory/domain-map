@@ -6,89 +6,119 @@
 # domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
 # DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 # cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
-# re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+# re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-domain skills.
 # === end supersession note ===
 schema_version: 2
 domain: CRM
 status: feedback_needed
 next_action_by: agent
-last_audit: "2026-06-07"
+last_audit: "2026-06-08"
 
 b1a:
+  - id: B1A-B9D-VERIFY
+    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
+    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
+    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-PHASE-P
-    summary: "Multi-module (5 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED per phase-P policy; not authored this pass."
-    finding: "Live triage 2026-06-02: 5 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Persona / RACI authoring is held under the phase-P deferral; the 2026-06-07 state-driven pass did NOT author personas."
+    summary: "Multi-module (5 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED per phase-P policy; not authored."
+    finding: "5 domain_modules and 0 domain_roles reach this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Persona / RACI authoring is held under the phase-P deferral."
     action: "When phase-P opens: author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 5 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
     candidate_personas: ["SALES-AE (account executive)", "SALES-SDR (sales development rep)", "SALES-MGR (sales manager)", "SALES-OPS (sales operations / pipeline admin)"]
-    extra_phase_p_triage: "2026-06-02"
 
 b1b:
   - id: B1B-S9-RETIRED
     summary: "RETIRED (superseded 2026-06-06): F7 skill_tools channel-primitive justification on CRM-ACTIVITY / CRM-AI-COPILOT. skill_tools is dropped; per-module skills are retired."
-    finding: "Original item concerned empty notes on skill_tools rows 1465/1466/1483/1482 (send_email + create_calendar_event + generate_text channel-primitive links). Per the supersession header, the per-module `system` skill grain and `skill_tools` are RETIRED. Channel-primitive tool requirements now live on `domain_module_tools`; the F7 justification surface moves with them and is tracked in audits/_modularization-backlog.md, not here. The matching B2-S3 question is mooted alongside this item. No action on CRM's state.yaml."
+    finding: "Per-module `system` skill grain and `skill_tools` are RETIRED. Channel-primitive tool requirements now live on `domain_module_tools`; the F7 justification surface moves with them and is tracked in audits/_modularization-backlog.md. No action on CRM's state.yaml."
 
-b2: []
+# Module-split decisions (reclassified from b3 per Rule #21: a split is always b2).
+# Phase 0 (2026-06-08, .tmp_deploy/CRM-phase0-2026-06-08.md) recommends REJECT on both.
+b2:
+  - id: B2-CRM-FORECAST-SPLIT
+    decision: "Split a dedicated CRM-FORECAST module out of CRM-PIPELINE-MGT?"
+    recommendation: reject
+    phase0_basis: ".tmp_deploy/CRM-phase0-2026-06-08.md"
+    evidence: "REV-INTEL (103, module REV-INTEL-FORECAST) already masters the forecast cluster: revenue_forecasts (1010), forecast_submissions (1011), forecast_adjustments (1012), forecast_accuracy_records (1013). A CRM forecasting module would master no records of its own. CRM's CRM-FORECAST capability (249) is the in-pipeline projection view, correctly realized inside CRM-PIPELINE-MGT (48). No flagship ships a CRM forecasting module distinct from the revenue-intelligence layer."
+    q_ref: q2
+  - id: B2-CRM-MKTLIST-SPLIT
+    decision: "Add a dedicated CRM marketing-list / segment module?"
+    recommendation: reject
+    phase0_basis: ".tmp_deploy/CRM-phase0-2026-06-08.md"
+    evidence: "audience_segments is mastered by CDP (72) and CRM-ACCT-MGT (46) already consumes it. HubSpot / Zoho / Freshsales lists are a contact-management feature, not a separate deployable. A dedicated module would overlap CDP and MA without flagship-distinct surface."
+    q_ref: q2
 
+# b3 refreshed with Phase 0 verdicts (2026-06-08). GROUP A = CRM-native additive (ready to load
+# on user go, q1). GROUP B = belongs to another domain (q3/q4). Discretionary; never blocks finished.
 b3:
-  - id: B3-CRM-SALES-TERRITORIES
-    candidate: sales_territories
-    rationale: "Salesforce Sales Cloud, Microsoft Dynamics 365, Oracle Sales Cloud, SAP Sales Cloud all model territories as first-class records. Boundary question: SALES-PERF may own territories at the planning layer; CRM owns operational membership."
-    vendor_evidence: [Salesforce Sales Cloud, Microsoft Dynamics 365, Oracle Sales Cloud, SAP Sales Cloud]
-    proposed_module: CRM-ACCT-MGT
-  - id: B3-CRM-SALES-QUOTAS
-    candidate: sales_quotas
-    rationale: "Salesforce, Microsoft, Pipedrive, Close all model per-rep quotas distinct from forecasting. Likely owned by SALES-PERF; CRM consumer at most."
-    vendor_evidence: [Salesforce, Microsoft Dynamics 365, Pipedrive, Close]
-    proposed_module: SALES-PERF
-  - id: B3-CRM-SALES-FORECASTS
-    candidate: sales_forecasts
-    rationale: "Distinct entity from pipeline_stages and crm_opportunities aggregates. Salesforce Forecasting and Microsoft Forecasting model forecast records. Forecasting capability (CRM-FORECAST 249) exists but no forecast record entity."
-    vendor_evidence: [Salesforce Forecasting, Microsoft Forecasting]
-    proposed_module: CRM-PIPELINE-MGT
-  - id: B3-CRM-SALES-PLAYBOOKS
-    candidate: sales_playbooks
-    rationale: "Salesforce Sales Cloud Playbooks, HubSpot Playbooks, Outreach Playbooks model playbook records as structured guides for sales reps."
-    vendor_evidence: [Salesforce Sales Cloud, HubSpot Sales Hub, Outreach]
-    proposed_module: CRM-AI-COPILOT
+  # --- GROUP A: confirmed CRM-native, additive, fits an existing module (q1) ---
   - id: B3-CRM-COMPETITORS
     candidate: competitors
-    rationale: "Salesforce Sales Cloud, HubSpot, Pipedrive all support competitor records linked to opportunities."
-    vendor_evidence: [Salesforce Sales Cloud, HubSpot Sales Hub, Pipedrive]
+    verdict: "CONFIRMED CRM-native. CRM-PIPELINE-MGT master, entity_type=catalog, + relationship to crm_opportunities. Core across all flagships."
+    vendor_evidence: [Salesforce Sales Cloud, Microsoft Dynamics 365, HubSpot Sales Hub, Zoho CRM, Oracle Sales]
     proposed_module: CRM-PIPELINE-MGT
+    q_ref: q1
   - id: B3-CRM-COMPETITOR-INTEL
     candidate: competitor_intelligence
-    rationale: "Distinct from competitors (analysis records vs entities). Salesforce CRM Analytics, HubSpot Sales Hub maintain competitor intelligence as structured records."
-    vendor_evidence: [Salesforce CRM Analytics, HubSpot Sales Hub]
+    verdict: "CONFIRMED CRM-native (optional). CRM-PIPELINE-MGT master, entity_type=operational_record, necessity=optional (battlecards / win-loss intel; Pipedrive and several SMB tools omit it)."
+    vendor_evidence: [Salesforce CRM Analytics, HubSpot Sales Hub, Microsoft Dynamics 365]
     proposed_module: CRM-PIPELINE-MGT
+    q_ref: q1
   - id: B3-CRM-LEAD-RULES
     candidate: lead_assignment_rules
-    rationale: "Salesforce, Microsoft, Pipedrive, Zoho all model lead-assignment rules as first-class records (criteria -> owner)."
-    vendor_evidence: [Salesforce, Microsoft Dynamics 365, Pipedrive, Zoho CRM]
+    verdict: "CONFIRMED CRM-native. CRM-LEAD-MGT master, entity_type=catalog (criteria -> owner config). Core across all flagships."
+    vendor_evidence: [Salesforce, Microsoft Dynamics 365, Pipedrive, Zoho CRM, HubSpot]
     proposed_module: CRM-LEAD-MGT
+    q_ref: q1
   - id: B3-CRM-ACCOUNT-HIERARCHIES
     candidate: account_hierarchies
-    rationale: "Salesforce account hierarchies, Microsoft parent-child accounts, SAP customer hierarchies all model parent-subsidiary relationships as first-class records."
-    vendor_evidence: [Salesforce, Microsoft Dynamics 365, SAP Sales Cloud]
+    verdict: "CONFIRMED CRM-native. CRM-ACCT-MGT. Recommend a junction (a customer can sit in more than one rollup) over a self-referential parent_customer_id. Core across all flagships."
+    vendor_evidence: [Salesforce, Microsoft Dynamics 365, SAP Sales Cloud, Oracle Sales]
     proposed_module: CRM-ACCT-MGT
-  - id: B3-CRM-PARTNER-REL
-    candidate: partner_relationships
-    rationale: "Distinct from PRM-mastered partner records; CRM ships contact-to-partner-rep links and opportunity-co-sell records. PRM may already master these; the boundary needs clarification."
-    vendor_evidence: [Salesforce PRM, Microsoft Partner Center]
-    proposed_module: PRM
+    q_ref: q1
+  - id: B3-CRM-SALES-PLAYBOOKS
+    candidate: sales_playbooks
+    verdict: "CONFIRMED CRM-native. CRM-AI-COPILOT master, entity_type=catalog (structured rep guidance the copilot surfaces as next-best-action). Common."
+    vendor_evidence: [Salesforce Sales Enablement, HubSpot Sales Hub, Microsoft Dynamics 365 Sales Accelerator]
+    proposed_module: CRM-AI-COPILOT
+    q_ref: q1
+  - id: B3-CRM-SALES-TERRITORIES
+    candidate: sales_territories
+    verdict: "CONFIRMED CRM-native (operational side). CRM-ACCT-MGT master = the territory definition + account assignment (Salesforce Enterprise Territory Management). The quota allocation + territory-based comp overlay belongs to SALES-PERF."
+    vendor_evidence: [Salesforce Enterprise Territory Management, Microsoft Dynamics 365, Oracle Territory Management, SAP Sales Cloud]
+    proposed_module: CRM-ACCT-MGT
+    q_ref: q1
+  # --- GROUP B: belongs to another domain (q3 / q4) ---
+  - id: B3-CRM-FORECAST-CONSUMER
+    candidate: "consumer/derived DMDO on revenue_forecasts (1010) for CRM-PIPELINE-MGT"
+    verdict: "REPLACES B3-CRM-SALES-FORECASTS. REV-INTEL masters the forecast cluster; the only CRM-side action is an optional read link so reps see forecast roll-ups in the pipeline view. CRM has no DMDO on revenue_forecasts today."
+    vendor_evidence: [Salesforce Collaborative Forecasts, Microsoft Dynamics 365 Forecasting]
+    proposed_module: CRM-PIPELINE-MGT
+    q_ref: q3
+  - id: B3-CRM-SALES-QUOTAS
+    candidate: sales_quotas
+    verdict: "NOT CRM. Belongs to SALES-PERF (102), an unbuilt stub. Incentive-comp / SPM market category. CRM is a consumer at most. Build SALES-PERF separately."
+    vendor_evidence: [Xactly, Varicent, Anaplan, Salesforce Spiff]
+    proposed_module: SALES-PERF
+    q_ref: q4
   - id: B3-CRM-COMMISSION
     candidate: commission_records
-    rationale: "SAP CallidusCloud, Xactly, Varicent, Salesforce Spiff all model commission records as a master. Likely a separate domain (COMM-MGMT or under SALES-PERF)."
-    vendor_evidence: [SAP CallidusCloud, Xactly, Varicent, Salesforce Spiff]
+    verdict: "NOT CRM. Belongs to SALES-PERF / ICM (unbuilt). commission_splits (354) is RE-BROKERAGE-specific and does not serve the generic sales-comp case. Build SALES-PERF separately."
+    vendor_evidence: [SAP CallidusCloud, Xactly, Varicent, CaptivateIQ, Salesforce Spiff]
     proposed_module: SALES-PERF
-  - id: B3-CRM-FORECAST-MODULE
-    candidate: CRM-FORECAST module split
-    rationale: "Currently CRM-FORECAST capability (249) is folded into CRM-PIPELINE-MGT (48). Salesforce Forecasting + Microsoft Forecasting ship as distinct UX surfaces. If sales_forecasts + sales_quotas land, a sixth full module makes more sense than overloading CRM-PIPELINE-MGT."
-    vendor_evidence: [Salesforce Forecasting, Microsoft Forecasting]
-  - id: B3-CRM-MARKETING-LIST-MODULE
-    candidate: CRM-MARKETING-LIST module
-    rationale: "HubSpot, Zoho, Freshsales ship a marketing-list / segment-management surface that overlaps with CDP's audience_segments. Boundary between CRM-ACCT-MGT consumer on audience_segments and a dedicated CRM marketing-list module is fuzzy."
-    vendor_evidence: [HubSpot Sales Hub, Zoho CRM, Freshsales]
+    q_ref: q4
+  - id: B3-CRM-PARTNER-REL
+    candidate: partner_relationships
+    verdict: "NOT CRM (master). Belongs to PRM (96), an unbuilt stub. CRM may carry co-sell opportunity links as consumer rows, but partner records are PRM-mastered. Build PRM separately."
+    vendor_evidence: [Salesforce PRM, Microsoft Partner Center, Impartner, ZINFI]
+    proposed_module: PRM
+    q_ref: q4
+  # --- Regulations (q5) ---
   - id: B3-CRM-REGULATIONS
     candidate: domain_regulations additions
-    rationale: "Currently 2 regulations (GDPR, CPRA). Flagship-vendor surface implies additional applicability: LGPD (Brazil), PIPEDA (Canada), TCPA (US telemarketing on outbound calling for CRM-ACTIVITY), CAN-SPAM (US bulk email for CRM-ACTIVITY + MA boundary), DPDP Act 2023 (India), state-level US laws (Virginia VCDPA, Colorado CPA, Connecticut CTDPA, Utah UCPA)."
+    verdict: "Additive. Baseline TCPA + CAN-SPAM (US activity-layer, region-agnostic for outbound calling + bulk email on CRM-ACTIVITY). Privacy regimes region-dependent: LGPD (Brazil), PIPEDA (Canada), DPDP Act 2023 (India), US state laws VCDPA / CPA / CTDPA / UCPA. Some regulations rows may not exist yet and would be created on load."
     vendor_evidence: []
+    q_ref: q5
+
+# Resolved this pass (2026-06-08), moved out of open lists; see history.md:
+#   B3-CRM-SALES-FORECASTS  -> resolved: REV-INTEL masters the cluster; superseded by B3-CRM-FORECAST-CONSUMER.
+#   B3-CRM-FORECAST-MODULE  -> reclassified to b2 as B2-CRM-FORECAST-SPLIT (recommend reject).
+#   B3-CRM-MARKETING-LIST-MODULE -> reclassified to b2 as B2-CRM-MKTLIST-SPLIT (recommend reject).

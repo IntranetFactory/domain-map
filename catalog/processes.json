@@ -1,0 +1,1365 @@
+{
+  "processes": [
+    {
+      "key": "administer_benefit_enrollment",
+      "code": "7.5.2.2",
+      "name": "Administer benefit enrollment",
+      "external_id": "10505",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "administer_compensation_rewards",
+      "code": "7.5.1.5",
+      "name": "Administer compensation and rewards to employees",
+      "external_id": "10502",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "administer_payroll",
+      "code": "7.5.4",
+      "name": "Administer Payroll",
+      "external_id": "10497",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "align_learning_programs",
+      "code": "7.3.4.3",
+      "name": "Align learning programs with competencies and skills",
+      "external_id": "10491",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "LD-INSTRUCTIONAL-DESIGNER",
+          "name": "Instructional Designer",
+          "raci": "consulted"
+        },
+        {
+          "code": "LD-LEARNING-ADMIN",
+          "name": "Learning Administrator",
+          "raci": "responsible"
+        },
+        {
+          "code": "PEOPLE-MANAGER",
+          "name": "People Manager",
+          "raci": "accountable"
+        }
+      ]
+    },
+    {
+      "key": "analyze_report_paid_unpaid_leave",
+      "code": "9.5.1.3",
+      "name": "Analyze and report paid and unpaid leave",
+      "external_id": "10855",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "conduct_customer_tests",
+      "code": "2.3.2.2",
+      "name": "Conduct customer tests and interviews",
+      "external_id": "10094",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "conduct_employee_engagement",
+      "code": "7.8.2",
+      "name": "Conduct employee engagement surveys",
+      "external_id": "16944",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "conduct_health_safety",
+      "code": "13.9.1.2",
+      "name": "Conduct health and safety and environmental audits",
+      "external_id": "11187",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "conduct_organization",
+      "code": "1.1.5",
+      "name": "Conduct organization restructuring opportunities",
+      "external_id": "16792",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": false,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "HR-BUSINESS-PARTNER",
+          "name": "HR Business Partner",
+          "raci": "accountable"
+        },
+        {
+          "code": "HR-ORG-DESIGN-ANALYST",
+          "name": "Organization Design Analyst",
+          "raci": "responsible"
+        },
+        {
+          "code": "PEOPLE-MANAGER",
+          "name": "People Manager",
+          "raci": "consulted"
+        }
+      ]
+    },
+    {
+      "key": "create_organizational_design",
+      "code": "1.2.5",
+      "name": "Create organizational design",
+      "external_id": "10041",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "HR-BUSINESS-PARTNER",
+          "name": "HR Business Partner",
+          "raci": "accountable"
+        },
+        {
+          "code": "HR-HRIS-ADMIN",
+          "name": "HRIS Administrator",
+          "raci": "informed"
+        },
+        {
+          "code": "HR-ORG-DESIGN-ANALYST",
+          "name": "Organization Design Analyst",
+          "raci": "responsible"
+        },
+        {
+          "code": "PEOPLE-MANAGER",
+          "name": "People Manager",
+          "raci": "consulted"
+        }
+      ]
+    },
+    {
+      "key": "define_content_taxonomies",
+      "code": "13.6.2.2",
+      "name": "Define content taxonomies",
+      "external_id": "21658",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "define_employees_competencies",
+      "code": "7.3.4.2",
+      "name": "Define employees competencies and skills",
+      "external_id": "16940",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "deliver_employee_benefits",
+      "code": "7.5.2.1",
+      "name": "Deliver employee benefits program",
+      "external_id": "10504",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "develop_conduct_manage_employee",
+      "code": "7.3.4.5",
+      "name": "Develop, conduct, and manage employee training programs",
+      "external_id": "10493",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "LD-INSTRUCTIONAL-DESIGNER",
+          "name": "Instructional Designer",
+          "raci": "responsible"
+        },
+        {
+          "code": "LD-INSTRUCTOR",
+          "name": "Instructor",
+          "raci": "consulted"
+        },
+        {
+          "code": "LD-LEARNING-ADMIN",
+          "name": "Learning Administrator",
+          "raci": "accountable"
+        },
+        {
+          "code": "PEOPLE-MANAGER",
+          "name": "People Manager",
+          "raci": "informed"
+        }
+      ]
+    },
+    {
+      "key": "develop_employee_career_plans",
+      "code": "7.3.3.2",
+      "name": "Develop employee career plans and career paths",
+      "external_id": "10488",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": false,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "LD-LEARNING-ADMIN",
+          "name": "Learning Administrator",
+          "raci": "accountable"
+        },
+        {
+          "code": "PEOPLE-MANAGER",
+          "name": "People Manager",
+          "raci": "responsible"
+        }
+      ]
+    },
+    {
+      "key": "develop_maintain_job",
+      "code": "7.1.2.16",
+      "name": "Develop and maintain job descriptions",
+      "external_id": "10447",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "HR-BUSINESS-PARTNER",
+          "name": "HR Business Partner",
+          "raci": "consulted"
+        },
+        {
+          "code": "HR-HRIS-ADMIN",
+          "name": "HRIS Administrator",
+          "raci": "accountable"
+        },
+        {
+          "code": "HR-ORG-DESIGN-ANALYST",
+          "name": "Organization Design Analyst",
+          "raci": "responsible"
+        }
+      ]
+    },
+    {
+      "key": "develop_manage_enterprise_wide",
+      "code": "13.5",
+      "name": "Develop and manage enterprise-wide knowledge management (KM) capability",
+      "external_id": "11073",
+      "hierarchy_level": 2,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "develop_salary_compensation",
+      "code": "7.5.1.1",
+      "name": "Develop salary/compensation structure and plan",
+      "external_id": "10498",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "develop_succession_plan",
+      "code": "7.1.2.3",
+      "name": "Develop succession plan",
+      "external_id": "10426",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "develop_workforce_analytics",
+      "code": "7.7.7",
+      "name": "Develop workforce analytics",
+      "external_id": "21441",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "draw_up_make_offer",
+      "code": "7.2.4.1",
+      "name": "Draw up and make offer",
+      "external_id": "10463",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": false,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "HIRING-MANAGER",
+          "name": "Hiring Manager",
+          "raci": "accountable"
+        },
+        {
+          "code": "RECRUITING-MANAGER",
+          "name": "Recruiting Manager",
+          "raci": "consulted"
+        },
+        {
+          "code": "RECRUITING-RECRUITER",
+          "name": "Recruiter",
+          "raci": "responsible"
+        }
+      ]
+    },
+    {
+      "key": "evaluate_training_effectiveness",
+      "code": "5.2.3.7",
+      "name": "Evaluate training effectiveness",
+      "external_id": "12135",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": false,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "LD-INSTRUCTIONAL-DESIGNER",
+          "name": "Instructional Designer",
+          "raci": "responsible"
+        },
+        {
+          "code": "LD-INSTRUCTOR",
+          "name": "Instructor",
+          "raci": "consulted"
+        },
+        {
+          "code": "LD-LEARNING-ADMIN",
+          "name": "Learning Administrator",
+          "raci": "accountable"
+        }
+      ]
+    },
+    {
+      "key": "harvest_knowledge",
+      "code": "5.4.3.6",
+      "name": "Harvest knowledge",
+      "external_id": "20083",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "hire_candidate",
+      "code": "7.2.4.3",
+      "name": "Hire candidate",
+      "external_id": "10465",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "HIRING-MANAGER",
+          "name": "Hiring Manager",
+          "raci": "accountable"
+        },
+        {
+          "code": "LEGAL-COMPLIANCE-SPECIALIST",
+          "name": "Compliance Specialist",
+          "raci": "informed"
+        },
+        {
+          "code": "RECRUITING-RECRUITER",
+          "name": "Recruiter",
+          "raci": "responsible"
+        }
+      ]
+    },
+    {
+      "key": "identify_select_assign_resources",
+      "code": "5.4.1.6",
+      "name": "Identify, select, and assign resources",
+      "external_id": "20065",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "interview_candidates",
+      "code": "7.2.3.2",
+      "name": "Interview candidates",
+      "external_id": "10457",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "HIRING-MANAGER",
+          "name": "Hiring Manager",
+          "raci": "responsible"
+        },
+        {
+          "code": "RECRUITING-COORDINATOR",
+          "name": "Recruiting Coordinator",
+          "raci": "informed"
+        },
+        {
+          "code": "RECRUITING-MANAGER",
+          "name": "Recruiting Manager",
+          "raci": "accountable"
+        },
+        {
+          "code": "RECRUITING-RECRUITER",
+          "name": "Recruiter",
+          "raci": "consulted"
+        }
+      ]
+    },
+    {
+      "key": "investigate_legal_aspects",
+      "code": "11.3.4",
+      "name": "Investigate legal aspects",
+      "external_id": "11204",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "maintain_master_data",
+      "code": "4.1.5.1",
+      "name": "Maintain master data",
+      "external_id": "10252",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "maintain_service_support_20898",
+      "code": "8.7.5.3",
+      "name": "Maintain service support knowledge repository",
+      "external_id": "20898",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "manage_certifications_skills",
+      "code": "3.5.5.1.2",
+      "name": "Manage certifications and skills",
+      "external_id": "20020",
+      "hierarchy_level": 5,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "manage_employee_assistance",
+      "code": "7.5.3",
+      "name": "Manage employee assistance and retention",
+      "external_id": "21439",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "manage_employee_career",
+      "code": "7.3.3",
+      "name": "Manage employee career development",
+      "external_id": "21700",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "manage_employee_information",
+      "code": "7.7",
+      "name": "Manage employee information and analytics",
+      "external_id": "17056",
+      "hierarchy_level": 2,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "manage_employee_inquiry_process",
+      "code": "7.7.2",
+      "name": "Manage employee inquiry process",
+      "external_id": "10523",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "HRSD-CASE-AGENT",
+          "name": "HR Case Agent",
+          "raci": "responsible"
+        },
+        {
+          "code": "HRSD-KNOWLEDGE-MANAGER",
+          "name": "HR Knowledge Manager",
+          "raci": "informed"
+        },
+        {
+          "code": "HRSD-SERVICE-MANAGER",
+          "name": "HR Service Manager",
+          "raci": "accountable"
+        }
+      ]
+    },
+    {
+      "key": "manage_employee_onboarding_10469",
+      "code": "7.3.1",
+      "name": "Manage employee onboarding",
+      "external_id": "10469",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "manage_employee_onboarding_20599",
+      "code": "7.3",
+      "name": "Manage employee onboarding, training, and development",
+      "external_id": "20599",
+      "hierarchy_level": 2,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "manage_employee_performance",
+      "code": "7.3.2",
+      "name": "Manage employee performance",
+      "external_id": "10470",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "manage_employee_referral",
+      "code": "7.2.2.5",
+      "name": "Manage employee referral programs",
+      "external_id": "17047",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "manage_employee_relations",
+      "code": "7.4",
+      "name": "Manage employee relations",
+      "external_id": "17052",
+      "hierarchy_level": 2,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "manage_employee_requisitions",
+      "code": "7.2.1",
+      "name": "Manage employee requisitions",
+      "external_id": "21698",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "manage_employee_skill_competency",
+      "code": "7.3.3.3",
+      "name": "Manage employee skill and competency development",
+      "external_id": "17051",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "manage_examinations",
+      "code": "7.3.4.6",
+      "name": "Manage examinations and certifications",
+      "external_id": "20125",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": false,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "GRC-COMPLIANCE-TRAINING-MANAGER",
+          "name": "Compliance Training Manager",
+          "raci": "accountable"
+        },
+        {
+          "code": "LD-INSTRUCTOR",
+          "name": "Instructor",
+          "raci": "consulted"
+        },
+        {
+          "code": "LD-LEARNING-ADMIN",
+          "name": "Learning Administrator",
+          "raci": "responsible"
+        }
+      ]
+    },
+    {
+      "key": "manage_leave_absence",
+      "code": "7.6.2.2",
+      "name": "Manage leave of absence",
+      "external_id": "10515",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "HR-BUSINESS-PARTNER",
+          "name": "HR Business Partner",
+          "raci": "consulted"
+        },
+        {
+          "code": "HR-HRIS-ADMIN",
+          "name": "HRIS Administrator",
+          "raci": "informed"
+        },
+        {
+          "code": "HR-PEOPLE-OPS-SPECIALIST",
+          "name": "People Operations Specialist",
+          "raci": "responsible"
+        },
+        {
+          "code": "PEOPLE-MANAGER",
+          "name": "People Manager",
+          "raci": "accountable"
+        }
+      ]
+    },
+    {
+      "key": "manage_maintain_employee_data",
+      "code": "7.7.3",
+      "name": "Manage and maintain employee data",
+      "external_id": "10524",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "HR-BUSINESS-PARTNER",
+          "name": "HR Business Partner",
+          "raci": "accountable"
+        },
+        {
+          "code": "HR-HRIS-ADMIN",
+          "name": "HRIS Administrator",
+          "raci": "consulted"
+        },
+        {
+          "code": "HR-PEOPLE-OPS-SPECIALIST",
+          "name": "People Operations Specialist",
+          "raci": "responsible"
+        },
+        {
+          "code": "PEOPLE-MANAGER",
+          "name": "People Manager",
+          "raci": "informed"
+        }
+      ]
+    },
+    {
+      "key": "manage_new_hire_re_hire",
+      "code": "7.2.4",
+      "name": "Manage new hire/re-hire",
+      "external_id": "10443",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "LEGAL-COMPLIANCE-SPECIALIST",
+          "name": "Compliance Specialist",
+          "raci": "responsible"
+        },
+        {
+          "code": "RECRUITING-COORDINATOR",
+          "name": "Recruiting Coordinator",
+          "raci": "consulted"
+        },
+        {
+          "code": "RECRUITING-MANAGER",
+          "name": "Recruiting Manager",
+          "raci": "accountable"
+        }
+      ]
+    },
+    {
+      "key": "manage_offboarding",
+      "code": "7.6.2.3",
+      "name": "Manage offboarding",
+      "external_id": "21710",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "manage_regulatory_compliance",
+      "code": "11.2.2",
+      "name": "Manage regulatory compliance",
+      "external_id": "16463",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "manage_safety_security_access",
+      "code": "10.2.4.4",
+      "name": "Manage safety, security, and access to sites",
+      "external_id": "19228",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "manage_separation",
+      "code": "7.6.2",
+      "name": "Manage separation",
+      "external_id": "10513",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "HR-BUSINESS-PARTNER",
+          "name": "HR Business Partner",
+          "raci": "accountable"
+        },
+        {
+          "code": "HR-HRIS-ADMIN",
+          "name": "HRIS Administrator",
+          "raci": "informed"
+        },
+        {
+          "code": "HR-PEOPLE-OPS-SPECIALIST",
+          "name": "People Operations Specialist",
+          "raci": "responsible"
+        },
+        {
+          "code": "PEOPLE-MANAGER",
+          "name": "People Manager",
+          "raci": "consulted"
+        }
+      ]
+    },
+    {
+      "key": "manage_training_schedule",
+      "code": "5.2.3.3",
+      "name": "Manage training schedule",
+      "external_id": "12131",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": false,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "LD-INSTRUCTOR",
+          "name": "Instructor",
+          "raci": "responsible"
+        },
+        {
+          "code": "LD-LEARNING-ADMIN",
+          "name": "Learning Administrator",
+          "raci": "accountable"
+        }
+      ]
+    },
+    {
+      "key": "monitor_evaluate_learning",
+      "code": "7.3.4.7",
+      "name": "Monitor and evaluate learning programs",
+      "external_id": "21436",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "obtain_candidate_background",
+      "code": "7.2.5.1",
+      "name": "Obtain candidate background information",
+      "external_id": "10460",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "operate_controls_monitor",
+      "code": "9.8.2",
+      "name": "Operate controls and monitor compliance with internal controls policies and procedures",
+      "external_id": "21574",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "perform_competitive_analysis_10500",
+      "code": "7.5.1.3",
+      "name": "Perform competitive analysis of benefits and rewards",
+      "external_id": "10500",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "perform_cost_accounting_control",
+      "code": "9.1.3",
+      "name": "Perform cost accounting and control",
+      "external_id": "10739",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "perform_strategic_workforce",
+      "code": "7.1.2.1",
+      "name": "Perform strategic workforce planning",
+      "external_id": "21693",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "prepare_periodic_budgets_plans",
+      "code": "9.1.2.2",
+      "name": "Prepare periodic budgets and plans",
+      "external_id": "10772",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "provide_it_resolution",
+      "code": "8.7.8.2",
+      "name": "Provide IT resolution capabilities",
+      "external_id": "20923",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "provide_legal_advice_counseling",
+      "code": "12.4.8",
+      "name": "Provide legal advice/counseling",
+      "external_id": "11051",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "CONTRACT-OPS-MANAGER",
+          "name": "Contract Operations Manager",
+          "raci": "accountable"
+        },
+        {
+          "code": "CONTRACT-OPS-SPECIALIST",
+          "name": "Contract Operations Specialist",
+          "raci": "informed"
+        },
+        {
+          "code": "LEGAL-COUNSEL",
+          "name": "Legal Counsel",
+          "raci": "responsible"
+        }
+      ]
+    },
+    {
+      "key": "provide_workspace_facilities",
+      "code": "10.1.3",
+      "name": "Provide workspace and facilities",
+      "external_id": "10944",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "recruit_source_candidates",
+      "code": "7.2.2",
+      "name": "Recruit/Source candidates",
+      "external_id": "10440",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "HIRING-MANAGER",
+          "name": "Hiring Manager",
+          "raci": "informed"
+        },
+        {
+          "code": "RECRUITING-MANAGER",
+          "name": "Recruiting Manager",
+          "raci": "accountable"
+        },
+        {
+          "code": "RECRUITING-RECRUITER",
+          "name": "Recruiter",
+          "raci": "responsible"
+        },
+        {
+          "code": "RECRUITING-SOURCER",
+          "name": "Sourcer",
+          "raci": "responsible"
+        }
+      ]
+    },
+    {
+      "key": "relocate_employees_manage",
+      "code": "7.6.3",
+      "name": "Relocate employees and manage assignments",
+      "external_id": "17055",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "HR-BUSINESS-PARTNER",
+          "name": "HR Business Partner",
+          "raci": "consulted"
+        },
+        {
+          "code": "HR-HRIS-ADMIN",
+          "name": "HRIS Administrator",
+          "raci": "informed"
+        },
+        {
+          "code": "HR-PEOPLE-OPS-SPECIALIST",
+          "name": "People Operations Specialist",
+          "raci": "responsible"
+        },
+        {
+          "code": "PEOPLE-MANAGER",
+          "name": "People Manager",
+          "raci": "accountable"
+        }
+      ]
+    },
+    {
+      "key": "respond_employee_payroll",
+      "code": "9.5.2.8",
+      "name": "Respond to employee payroll inquiries",
+      "external_id": "10865",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "review_compensation_plan",
+      "code": "7.5.1.8",
+      "name": "Review compensation plan",
+      "external_id": "10511",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "screen_select_candidates",
+      "code": "7.2.3",
+      "name": "Screen and select candidates",
+      "external_id": "20123",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "train_employees_appropriate",
+      "code": "2.1.3.5.1",
+      "name": "Train employees on appropriate regulatory requirements",
+      "external_id": "12772",
+      "hierarchy_level": 5,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "GRC-COMPLIANCE-TRAINING-MANAGER",
+          "name": "Compliance Training Manager",
+          "raci": "accountable"
+        },
+        {
+          "code": "GRC-COMPLIANCE-TRAINING-MANAGER",
+          "name": "Compliance Training Manager",
+          "raci": "responsible"
+        },
+        {
+          "code": "LEGAL-COMPLIANCE-SPECIALIST",
+          "name": "Compliance Specialist",
+          "raci": "informed"
+        },
+        {
+          "code": "PEOPLE-MANAGER",
+          "name": "People Manager",
+          "raci": "consulted"
+        }
+      ]
+    }
+  ]
+}
