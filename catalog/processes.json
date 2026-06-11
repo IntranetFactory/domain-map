@@ -651,21 +651,6 @@
       "personas": []
     },
     {
-      "key": "manage_employee_information",
-      "code": "7.7",
-      "name": "Manage employee information and analytics",
-      "external_id": "17056",
-      "hierarchy_level": 2,
-      "source_framework": "apqc_pcf_cross_industry",
-      "usage": {
-        "gate": false,
-        "raci": false,
-        "handoff": true,
-        "tool": false
-      },
-      "personas": []
-    },
-    {
       "key": "manage_employee_inquiry_process",
       "code": "7.7.2",
       "name": "Manage employee inquiry process",
@@ -749,12 +734,23 @@
       "hierarchy_level": 4,
       "source_framework": "apqc_pcf_cross_industry",
       "usage": {
-        "gate": false,
-        "raci": false,
+        "gate": true,
+        "raci": true,
         "handoff": true,
         "tool": false
       },
-      "personas": []
+      "personas": [
+        {
+          "code": "RECRUITING-MANAGER",
+          "name": "Recruiting Manager",
+          "raci": "accountable"
+        },
+        {
+          "code": "RECRUITING-RECRUITER",
+          "name": "Recruiter",
+          "raci": "responsible"
+        }
+      ]
     },
     {
       "key": "manage_employee_relations",
@@ -779,27 +775,23 @@
       "hierarchy_level": 3,
       "source_framework": "apqc_pcf_cross_industry",
       "usage": {
-        "gate": false,
-        "raci": false,
+        "gate": true,
+        "raci": true,
         "handoff": true,
         "tool": false
       },
-      "personas": []
-    },
-    {
-      "key": "manage_employee_skill_competency",
-      "code": "7.3.3.3",
-      "name": "Manage employee skill and competency development",
-      "external_id": "17051",
-      "hierarchy_level": 4,
-      "source_framework": "apqc_pcf_cross_industry",
-      "usage": {
-        "gate": false,
-        "raci": false,
-        "handoff": true,
-        "tool": false
-      },
-      "personas": []
+      "personas": [
+        {
+          "code": "RECRUITING-MANAGER",
+          "name": "Recruiting Manager",
+          "raci": "accountable"
+        },
+        {
+          "code": "RECRUITING-RECRUITER",
+          "name": "Recruiter",
+          "raci": "responsible"
+        }
+      ]
     },
     {
       "key": "manage_examinations",
@@ -811,7 +803,7 @@
       "usage": {
         "gate": true,
         "raci": true,
-        "handoff": false,
+        "handoff": true,
         "tool": false
       },
       "personas": [
@@ -936,21 +928,6 @@
       ]
     },
     {
-      "key": "manage_offboarding",
-      "code": "7.6.2.3",
-      "name": "Manage offboarding",
-      "external_id": "21710",
-      "hierarchy_level": 4,
-      "source_framework": "apqc_pcf_cross_industry",
-      "usage": {
-        "gate": false,
-        "raci": false,
-        "handoff": true,
-        "tool": false
-      },
-      "personas": []
-    },
-    {
       "key": "manage_regulatory_compliance",
       "code": "11.2.2",
       "name": "Manage regulatory compliance",
@@ -1051,11 +1028,22 @@
       "source_framework": "apqc_pcf_cross_industry",
       "usage": {
         "gate": false,
-        "raci": false,
+        "raci": true,
         "handoff": true,
         "tool": false
       },
-      "personas": []
+      "personas": [
+        {
+          "code": "LD-INSTRUCTIONAL-DESIGNER",
+          "name": "Instructional Designer",
+          "raci": "responsible"
+        },
+        {
+          "code": "LD-LEARNING-ADMIN",
+          "name": "Learning Administrator",
+          "raci": "accountable"
+        }
+      ]
     },
     {
       "key": "obtain_candidate_background",
@@ -1065,27 +1053,23 @@
       "hierarchy_level": 4,
       "source_framework": "apqc_pcf_cross_industry",
       "usage": {
-        "gate": false,
-        "raci": false,
+        "gate": true,
+        "raci": true,
         "handoff": true,
         "tool": false
       },
-      "personas": []
-    },
-    {
-      "key": "operate_controls_monitor",
-      "code": "9.8.2",
-      "name": "Operate controls and monitor compliance with internal controls policies and procedures",
-      "external_id": "21574",
-      "hierarchy_level": 3,
-      "source_framework": "apqc_pcf_cross_industry",
-      "usage": {
-        "gate": false,
-        "raci": false,
-        "handoff": true,
-        "tool": false
-      },
-      "personas": []
+      "personas": [
+        {
+          "code": "RECRUITING-MANAGER",
+          "name": "Recruiting Manager",
+          "raci": "accountable"
+        },
+        {
+          "code": "RECRUITING-RECRUITER",
+          "name": "Recruiter",
+          "raci": "responsible"
+        }
+      ]
     },
     {
       "key": "perform_competitive_analysis_10500",
@@ -1301,21 +1285,6 @@
       "name": "Review compensation plan",
       "external_id": "10511",
       "hierarchy_level": 4,
-      "source_framework": "apqc_pcf_cross_industry",
-      "usage": {
-        "gate": false,
-        "raci": false,
-        "handoff": true,
-        "tool": false
-      },
-      "personas": []
-    },
-    {
-      "key": "screen_select_candidates",
-      "code": "7.2.3",
-      "name": "Screen and select candidates",
-      "external_id": "20123",
-      "hierarchy_level": 3,
       "source_framework": "apqc_pcf_cross_industry",
       "usage": {
         "gate": false,

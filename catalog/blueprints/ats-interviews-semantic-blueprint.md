@@ -10,9 +10,9 @@ system_slug: ats-interviews
 domain_modules:
   - ats-interviews
 domain_code: ATS
-related_modules: [ats-background-checks, ats-candidate-crm, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, hcm-lifecycle-workflows, hiring-starter, onb-journey-mgmt, pa-workforce-metrics, talent-performance-mgmt, talent-succession-career]
+related_modules: [ats-background-checks, ats-candidate-crm, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, hiring-starter, onb-journey-mgmt, pa-workforce-metrics, talent-performance-mgmt, talent-succession-career, vms-worker-sourcing]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-COORDINATOR, RECRUITING-MANAGER, RECRUITING-RECRUITER]
-created_at: 2026-06-05
+created_at: 2026-06-11
 ---
 
 # Interviews
@@ -85,18 +85,18 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | singular | plural | role | mastered in | mastered label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `candidate_assessments` | Assessment | Assessments | master | - | - | required | submit_lock | `:manage` | - |
-| 2 | `candidate_assessment_templates` | Candidate Assessment Template | Candidate Assessment Templates | master | - | - | required | - | `:admin` | - |
-| 3 | `interview_kits` | Interview Kit | Interview Kits | master | - | - | required | - | `:admin` | - |
-| 4 | `interview_panels` | Interview Panel | Interview Panels | master | - | - | required | - | `:manage` | - |
-| 5 | `interview_questions` | Interview Question | Interview Questions | master | - | - | required | - | `:admin` | - |
-| 6 | `interview_scorecards` | Interview Scorecard | Interview Scorecards | master | - | - | required | personal_content, submit_lock | `:manage` | - |
-| 7 | `interviewer_availability_slots` | Interviewer Availability Slot | Interviewer Availability Slots | master | - | - | optional | - | `:manage` | - |
-| 8 | `interviews` | Interview | Interviews | master | - | - | required | - | `:manage` | - |
-| 9 | `job_applications` | Application | Applications | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | personal_content | `:manage` | - |
-| 10 | `candidates` | Candidate | Candidates | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
+| # | data_object | singular | plural | role | entity_type | mastered in | mastered label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `candidate_assessments` | Assessment | Assessments | master | operational_workflow | - | - | required | submit_lock | `:manage` | - |
+| 2 | `candidate_assessment_templates` | Candidate Assessment Template | Candidate Assessment Templates | master | catalog | - | - | required | - | `:admin` | - |
+| 3 | `interview_kits` | Interview Kit | Interview Kits | master | catalog | - | - | required | - | `:admin` | - |
+| 4 | `interview_panels` | Interview Panel | Interview Panels | master | junction | - | - | required | - | `:manage` | - |
+| 5 | `interview_questions` | Interview Question | Interview Questions | master | catalog | - | - | required | - | `:admin` | - |
+| 6 | `interview_scorecards` | Interview Scorecard | Interview Scorecards | master | operational_workflow | - | - | required | personal_content, submit_lock | `:manage` | - |
+| 7 | `interviewer_availability_slots` | Interviewer Availability Slot | Interviewer Availability Slots | master | operational_workflow | - | - | optional | - | `:manage` | - |
+| 8 | `interviews` | Interview | Interviews | master | operational_workflow | - | - | required | - | `:manage` | - |
+| 9 | `job_applications` | Application | Applications | embedded_master | operational_workflow | `ats-recruitment-pipeline` | Recruitment Pipeline | required | personal_content | `:manage` | - |
+| 10 | `candidates` | Candidate | Candidates | embedded_master | operational_workflow | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -173,6 +173,9 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `job_applications` | results in | `job_offers` | one_to_many | required | none (required-if-present) | n/a | - |
 | `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
+| `employees` | applies_as | `candidates` | one_to_many | optional | none | n/a | - |
+| `candidates` | corresponds_via | `candidate_emails` | one_to_many | optional | none | n/a | - |
+| `candidates` | screened_via | `drug_health_screenings` | one_to_many | optional | none | n/a | - |
 
 ## 6. Cross-domain context
 
@@ -180,7 +183,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | data_object | other module / domain | role | necessity | notes |
 | --- | --- | --- | --- | --- |
-| `candidate_assessments` | HCM-LIFECYCLE-WORKFLOWS (Employee Lifecycle Workflows) - HCM | consumer | required | - |
+| `candidate_assessments` | HCM-LIFECYCLE-WORKFLOWS (Employee Lifecycle Workflows) - HCM | consumer | optional | - |
 | `candidate_assessments` | TALENT-PERFORMANCE-MGMT (Performance and Goal Management) - TALENT-MGMT | consumer | optional | - |
 | `interview_scorecards` | HIRING-STARTER (Hiring Starter) - ATS | embedded_master | optional | - |
 | `interviews` | HIRING-STARTER (Hiring Starter) - ATS | embedded_master | required | - |
@@ -189,13 +192,13 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-CANDIDATE-CRM | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
-| ATS-INTERVIEWS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate_assessment.passed` | _(lifecycle)_ | `candidate_assessments` | event_stream | medium | Passing an assessment advances the candidate; on eventual hire, HCM uses the assessment result as the first data point for the new-hire skill profile. |
 | ATS-INTERVIEWS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate_assessment.failed` | _(lifecycle)_ | `candidate_assessments` | event_stream | low | Failed-assessment outcomes close the candidate's loop in ATS and propagate to HCM only if the candidate is an internal-mobility applicant whose profile should reflect the development gap. |
-| ATS-RECRUITMENT-PIPELINE | ATS | ATS-TALENT-POOLS | `job_application.rejected` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
+| ATS-INTERVIEWS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate_assessment.passed` | _(lifecycle)_ | `candidate_assessments` | event_stream | medium | Passing an assessment advances the candidate; on eventual hire, HCM uses the assessment result as the first data point for the new-hire skill profile. |
+| ATS-CANDIDATE-CRM | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
 | ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `interview.completed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
-| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `candidate_assessment.passed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `candidate_assessment.failed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
+| ATS-RECRUITMENT-PIPELINE | ATS | ATS-TALENT-POOLS | `job_application.rejected` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
+| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `candidate_assessment.passed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-INTERVIEWS | TALENT-MGMT | TALENT-SUCCESSION-CAREER | `candidate_assessment.passed` | _(lifecycle)_ | `candidate_assessments` | api_call | medium | Completed assessment scores seed the talent-management skill profile for hired candidates and a structured talent pool for non-hires. |
 | ATS-CANDIDATE-CRM | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
 | ATS-INTERVIEWS | PA | PA-WORKFORCE-METRICS | `interview_scorecard.submitted` | _(lifecycle)_ | `interview_scorecards` | event_stream | low | - |
@@ -205,9 +208,10 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `job_application.advanced` | _(state_change)_ | `interviews` | lifecycle_progression | low | - |
+| ATS-CANDIDATE-CRM | HCM | HCM-CORE-WORKER | `employee.applied_internally` | `active` → `active` _(signal)_ | `candidates` | api_call | medium | When an employee applies internally, HCM hands the worker context to the applicant tracker, which materializes an internal candidate record from the worker profile. Friction: reconciling the worker identity against the candidate identity space. |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_activated` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
-| ATS-INTERVIEWS | ATS | ATS-RECRUITMENT-PIPELINE | `job_application.advanced` | _(state_change)_ | `interviews` | lifecycle_progression | low | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -393,4 +397,6 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | responsibility | business function | default role | default tier |
 | --- | --- | --- | --- |
 | owner | Recruiting | `admin` | `:admin` |
+| contributor | Human Resources | `manage` | `:manage` |
 | contributor | Legal | `manage` | `:manage` |
+| consumer | Finance | `read` | `:read` |

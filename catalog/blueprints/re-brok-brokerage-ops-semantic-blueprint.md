@@ -4,13 +4,15 @@ fact_sheet_version: "2.0"
 license: MIT
 system_name: RE-BROK-BROKERAGE-OPS
 system_description: Brokerage Oversight and Commission Management
+tagline: Give the broker oversight of money and compliance.
+description: Run multi-agent commission splits with franchise overrides and per-agent caps, review transactions and disclosures for compliance before close, and keep trust and escrow accounts reconciled. Add broker-level MLS conformance review so the brokerage scales past informal supervision without losing control of the deal.
 system_slug: re-brok-brokerage-ops
 domain_modules:
   - re-brok-brokerage-ops
 domain_code: RE-BROKERAGE
 related_modules: [re-brok-agent-ops]
 persona: []
-created_at: 2026-06-05
+created_at: 2026-06-11
 ---
 
 # Brokerage Oversight and Commission Management
@@ -51,11 +53,11 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | singular | plural | role | mastered in | mastered label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `commission_splits` | Commission Split | Commission Splits | master | - | - | required | submit_lock, single_approver | `:manage` _(pending)_ | - |
-| 2 | `disclosure_documents` | Disclosure Document | Disclosure Documents | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock, single_approver | `:manage` _(pending)_ | - |
-| 3 | `real_estate_transactions` | Real Estate Transaction | Real Estate Transactions | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock | `:manage` _(pending)_ | - |
+| # | data_object | singular | plural | role | entity_type | mastered in | mastered label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `commission_splits` | Commission Split | Commission Splits | master | operational_workflow | - | - | required | submit_lock, single_approver | `:manage` | - |
+| 2 | `disclosure_documents` | Disclosure Document | Disclosure Documents | embedded_master | operational_workflow | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock, single_approver | `:manage` | - |
+| 3 | `real_estate_transactions` | Real Estate Transaction | Real Estate Transactions | embedded_master | operational_workflow | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -115,8 +117,8 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | RE-BROK-AGENT-OPS | GRC | _(domain-level)_ | `real_estate_transaction.closed` | `pending` → `closed` _(lifecycle)_ | `disclosure_documents` | batch_sync | low | Disclosure-document completeness per closed transaction feeds brokerage-compliance audit and state-real-estate-commission requirements. |
-| RE-BROK-BROKERAGE-OPS | RE-BROKERAGE | RE-BROK-AGENT-OPS | `real_estate_transaction.cleared_to_close` | _(state_change)_ | `real_estate_transactions` | lifecycle_progression | low | Broker compliance review approved; transaction returns to agent-side for closing coordination. |
 | RE-BROK-BROKERAGE-OPS | RE-BROKERAGE | RE-BROK-AGENT-OPS | `commission_split.paid` | _(lifecycle)_ | `commission_splits` | lifecycle_progression | low | Broker disbursed commission; agent-side surfaces the paid status for the recipient agent. |
+| RE-BROK-BROKERAGE-OPS | RE-BROKERAGE | RE-BROK-AGENT-OPS | `real_estate_transaction.cleared_to_close` | _(state_change)_ | `real_estate_transactions` | lifecycle_progression | low | Broker compliance review approved; transaction returns to agent-side for closing coordination. |
 | RE-BROK-AGENT-OPS | RE-PROP-MGMT | _(domain-level)_ | `real_estate_transaction.closed` | `pending` → `closed` _(lifecycle)_ | `real_estate_transactions` | manual_handoff | high | Closed sale of a rental property results in a new landlord-of-record; the new owner's property-management platform must be configured (often manual handoff via email; the buyer's PM and the seller's brokerage are different vendors). |
 | RE-BROK-AGENT-OPS | RE-CRE | _(domain-level)_ | `real_estate_transaction.closed` | `pending` → `closed` _(lifecycle)_ | `real_estate_transactions` | manual_handoff | high | Closed sale of a CRE asset transfers operations to the new owner's CRE platform; rent-roll, leases, and CAM history must be carried over (typically manual). |
 

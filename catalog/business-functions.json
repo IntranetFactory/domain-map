@@ -1,0 +1,223 @@
+{
+  "business_functions": [
+    {
+      "name": "Executive",
+      "description": "CEO office, corporate strategy, business development, mergers and acquisitions, and corporate communications.",
+      "parent": null,
+      "record_status": "new",
+      "domain_count": 1,
+      "persona_count": 0,
+      "domains": [
+        {
+          "code": "HCM",
+          "responsibility": "consumer"
+        }
+      ],
+      "personas": []
+    },
+    {
+      "name": "Finance",
+      "description": "Function responsible for the books, treasury, planning, and procurement of the business.",
+      "parent": null,
+      "record_status": "new",
+      "domain_count": 2,
+      "persona_count": 0,
+      "domains": [
+        {
+          "code": "HCM",
+          "responsibility": "contributor"
+        },
+        {
+          "code": "ATS",
+          "responsibility": "consumer"
+        }
+      ],
+      "personas": []
+    },
+    {
+      "name": "Governance, Risk and Compliance",
+      "description": "Enterprise risk, internal audit, compliance operations, privacy office, and policy management.",
+      "parent": null,
+      "record_status": "new",
+      "domain_count": 2,
+      "persona_count": 1,
+      "domains": [
+        {
+          "code": "LMS",
+          "responsibility": "contributor"
+        },
+        {
+          "code": "HCM",
+          "responsibility": "consumer"
+        }
+      ],
+      "personas": ["GRC-COMPLIANCE-TRAINING-MANAGER"]
+    },
+    {
+      "name": "HR Service Delivery",
+      "description": "HR shared-services delivery: case management, employee self-service, knowledge, tier-1/tier-2 case escalation. The service-desk pattern applied to HR.",
+      "parent": "Human Resources",
+      "record_status": "new",
+      "domain_count": 1,
+      "persona_count": 3,
+      "domains": [
+        {
+          "code": "HRSD",
+          "responsibility": "owner"
+        }
+      ],
+      "personas": ["HRSD-CASE-AGENT", "HRSD-KNOWLEDGE-MANAGER", "HRSD-SERVICE-MANAGER"]
+    },
+    {
+      "name": "Human Resources",
+      "description": "Function responsible for the full worker lifecycle: hiring, paying, developing, supporting, and offboarding the workforce. Owns HRIS-equivalent domains and partners with Finance on workforce cost.",
+      "parent": null,
+      "record_status": "new",
+      "domain_count": 2,
+      "persona_count": 4,
+      "domains": [
+        {
+          "code": "HCM",
+          "responsibility": "owner"
+        },
+        {
+          "code": "ATS",
+          "responsibility": "contributor"
+        }
+      ],
+      "personas": ["HR-BUSINESS-PARTNER", "HR-HRIS-ADMIN", "HR-ORG-DESIGN-ANALYST", "HR-PEOPLE-OPS-SPECIALIST"]
+    },
+    {
+      "name": "IT Operations",
+      "description": "Infrastructure, end-user computing, service desk, and corporate IT delivery for employee-facing technology.",
+      "parent": null,
+      "record_status": "new",
+      "domain_count": 2,
+      "persona_count": 0,
+      "domains": [
+        {
+          "code": "HCM",
+          "responsibility": "contributor"
+        },
+        {
+          "code": "HRSD",
+          "responsibility": "contributor"
+        }
+      ],
+      "personas": []
+    },
+    {
+      "name": "Learning and Development",
+      "description": "Sub-function inside Human Resources that runs corporate learning, compliance training, and skills development.",
+      "parent": "Human Resources",
+      "record_status": "new",
+      "domain_count": 1,
+      "persona_count": 3,
+      "domains": [
+        {
+          "code": "LMS",
+          "responsibility": "owner"
+        }
+      ],
+      "personas": ["LD-INSTRUCTIONAL-DESIGNER", "LD-INSTRUCTOR", "LD-LEARNING-ADMIN"]
+    },
+    {
+      "name": "Legal",
+      "description": "Function responsible for contracts, regulatory compliance, intellectual property, and dispute management.",
+      "parent": null,
+      "record_status": "new",
+      "domain_count": 3,
+      "persona_count": 1,
+      "domains": [
+        {
+          "code": "ATS",
+          "responsibility": "contributor"
+        },
+        {
+          "code": "HCM",
+          "responsibility": "contributor"
+        },
+        {
+          "code": "LMS",
+          "responsibility": "contributor"
+        }
+      ],
+      "personas": ["LEGAL-COMPLIANCE-SPECIALIST"]
+    },
+    {
+      "name": "Manufacturing Operations",
+      "description": "Production scheduling, shop-floor execution, quality, MES integration, OEE management.",
+      "parent": "Supply Chain",
+      "record_status": "new",
+      "domain_count": 1,
+      "persona_count": 0,
+      "domains": [
+        {
+          "code": "LMS",
+          "responsibility": "consumer"
+        }
+      ],
+      "personas": []
+    },
+    {
+      "name": "Payroll",
+      "description": "Payroll calculation, gross-to-net, statutory filing, garnishments, pay distribution, payroll compliance.",
+      "parent": "Human Resources",
+      "record_status": "new",
+      "domain_count": 1,
+      "persona_count": 0,
+      "domains": [
+        {
+          "code": "HCM",
+          "responsibility": "contributor"
+        }
+      ],
+      "personas": []
+    },
+    {
+      "name": "Recruiting",
+      "description": "Talent acquisition, sourcing, candidate screening, interview coordination, offer management.",
+      "parent": "Human Resources",
+      "record_status": "new",
+      "domain_count": 1,
+      "persona_count": 4,
+      "domains": [
+        {
+          "code": "ATS",
+          "responsibility": "owner"
+        }
+      ],
+      "personas": ["RECRUITING-COORDINATOR", "RECRUITING-MANAGER", "RECRUITING-RECRUITER", "RECRUITING-SOURCER"]
+    },
+    {
+      "name": "Sales",
+      "description": "Pipeline ownership, account management, quota-carrying revenue generation, and sales operations support across direct and channel motions.",
+      "parent": null,
+      "record_status": "new",
+      "domain_count": 1,
+      "persona_count": 0,
+      "domains": [
+        {
+          "code": "LMS",
+          "responsibility": "consumer"
+        }
+      ],
+      "personas": []
+    },
+    {
+      "name": "Software Engineering",
+      "description": "Application development, platform engineering, site reliability, and quality engineering for the products and internal systems the company builds.",
+      "parent": null,
+      "record_status": "new",
+      "domain_count": 1,
+      "persona_count": 0,
+      "domains": [
+        {
+          "code": "LMS",
+          "responsibility": "consumer"
+        }
+      ],
+      "personas": []
+    }
+  ]
+}

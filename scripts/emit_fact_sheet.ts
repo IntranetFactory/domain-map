@@ -665,7 +665,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   if (scopeRows.length === 0) {
     out.push(noneSection("no data_objects in scope"));
   } else {
-    const headers = ["#", "data_object", "singular", "plural", "role", "mastered in", "mastered label", "necessity", "pattern flags", "write tier"];
+    const headers = ["#", "data_object", "singular", "plural", "role", "entity_type", "mastered in", "mastered label", "necessity", "pattern flags", "write tier"];
     if (showModulesCol) headers.push("modules");
     headers.push("notes");
     out.push(tableHeader(headers, ["right"]));
@@ -694,6 +694,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
         o.singular_label,
         o.plural_label,
         r.role,
+        o.entity_type || "unclassified",
         owner.code,
         owner.label,
         r.necessity || "-",

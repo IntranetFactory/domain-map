@@ -10,9 +10,9 @@ system_slug: hiring-starter
 domain_modules:
   - hiring-starter
 domain_code: ATS
-related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, comp-statements, hcm-lifecycle-workflows, onb-journey-mgmt, pa-workforce-metrics]
+related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, comp-statements, hcm-core-worker, hcm-lifecycle-workflows, onb-journey-mgmt, pa-workforce-metrics]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-COORDINATOR, RECRUITING-MANAGER, RECRUITING-RECRUITER, RECRUITING-SOURCER]
-created_at: 2026-06-05
+created_at: 2026-06-11
 ---
 
 # Hiring Starter
@@ -72,16 +72,16 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | singular | plural | role | mastered in | mastered label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `job_applications` | Application | Applications | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | personal_content | `:manage` | - |
-| 2 | `candidates` | Candidate | Candidates | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
-| 3 | `interview_scorecards` | Interview Scorecard | Interview Scorecards | embedded_master | `ats-interviews` | Interviews | optional | personal_content, submit_lock | `:manage` | - |
-| 4 | `interviews` | Interview | Interviews | embedded_master | `ats-interviews` | Interviews | required | - | `:manage` | - |
-| 5 | `job_postings` | Job Posting | Job Postings | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | required | - | `:manage` | - |
-| 6 | `job_offers` | Offer | Offers | embedded_master | `ats-offers` | Offers | required | personal_content, single_approver | `:manage` | - |
-| 7 | `recruitment_sources` | Recruitment Source | Recruitment Sources | embedded_master | `ats-candidate-crm` | Candidate CRM | optional | - | `:admin` | - |
-| 8 | `users` | User | Users | consumer | _(platform built-in)_ | _(platform built-in)_ | required | - | `:manage` _(pending)_ | - |
+| # | data_object | singular | plural | role | entity_type | mastered in | mastered label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `job_applications` | Application | Applications | embedded_master | operational_workflow | `ats-recruitment-pipeline` | Recruitment Pipeline | required | personal_content | `:manage` | - |
+| 2 | `candidates` | Candidate | Candidates | embedded_master | operational_workflow | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
+| 3 | `interview_scorecards` | Interview Scorecard | Interview Scorecards | embedded_master | operational_workflow | `ats-interviews` | Interviews | optional | personal_content, submit_lock | `:manage` | - |
+| 4 | `interviews` | Interview | Interviews | embedded_master | operational_workflow | `ats-interviews` | Interviews | required | - | `:manage` | - |
+| 5 | `job_postings` | Job Posting | Job Postings | embedded_master | operational_workflow | `ats-recruitment-pipeline` | Recruitment Pipeline | required | - | `:manage` | - |
+| 6 | `job_offers` | Offer | Offers | embedded_master | operational_workflow | `ats-offers` | Offers | required | personal_content, single_approver | `:manage` | - |
+| 7 | `recruitment_sources` | Recruitment Source | Recruitment Sources | embedded_master | catalog | `ats-candidate-crm` | Candidate CRM | optional | - | `:admin` | - |
+| 8 | `users` | User | Users | consumer | unclassified | _(platform built-in)_ | _(platform built-in)_ | required | - | `:manage` _(pending)_ | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -166,6 +166,9 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
 | `job_offers` | spawns pre-employee record | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
+| `employees` | applies_as | `candidates` | one_to_many | optional | none | n/a | - |
+| `candidates` | corresponds_via | `candidate_emails` | one_to_many | optional | none | n/a | - |
+| `candidates` | screened_via | `drug_health_screenings` | one_to_many | optional | none | n/a | - |
 
 ## 6. Cross-domain context
 
@@ -190,9 +193,10 @@ _(none: no other module embeds this scope's masters; the canonical owners do.)_
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-OFFERS | ATS | ATS-BACKGROUND-CHECKS | `background_check.flagged` | _(lifecycle)_ | `job_offers` | lifecycle_progression | medium | - |
+| ATS-CANDIDATE-CRM | HCM | HCM-CORE-WORKER | `employee.applied_internally` | `active` → `active` _(signal)_ | `candidates` | api_call | medium | When an employee applies internally, HCM hands the worker context to the applicant tracker, which materializes an internal candidate record from the worker profile. Friction: reconciling the worker identity against the candidate identity space. |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_activated` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
+| ATS-OFFERS | ATS | ATS-BACKGROUND-CHECKS | `background_check.flagged` | _(lifecycle)_ | `job_offers` | lifecycle_progression | medium | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -387,4 +391,6 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | responsibility | business function | default role | default tier |
 | --- | --- | --- | --- |
 | owner | Recruiting | `admin` | `:admin` |
+| contributor | Human Resources | `manage` | `:manage` |
 | contributor | Legal | `manage` | `:manage` |
+| consumer | Finance | `read` | `:read` |

@@ -10,9 +10,9 @@ system_slug: ats-pre-employee-record
 domain_modules:
   - ats-pre-employee-record
 domain_code: ATS
-related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, comp-statements, hcm-lifecycle-workflows, onb-journey-mgmt]
+related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, comp-statements, hcm-core-worker, hcm-lifecycle-workflows, onb-journey-mgmt]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-MANAGER, RECRUITING-RECRUITER]
-created_at: 2026-06-05
+created_at: 2026-06-11
 ---
 
 # Pre-Employee Record
@@ -51,11 +51,11 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | singular | plural | role | mastered in | mastered label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `pre_employees` | Pre-Employee | Pre-Employees | master | - | - | required | personal_content | `:manage` | - |
-| 2 | `candidates` | Candidate | Candidates | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
-| 3 | `job_offers` | Offer | Offers | embedded_master | `ats-offers` | Offers | required | personal_content, single_approver | `:manage` | - |
+| # | data_object | singular | plural | role | entity_type | mastered in | mastered label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `pre_employees` | Pre-Employee | Pre-Employees | master | operational_workflow | - | - | required | personal_content | `:manage` | - |
+| 2 | `candidates` | Candidate | Candidates | embedded_master | operational_workflow | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
+| 3 | `job_offers` | Offer | Offers | embedded_master | operational_workflow | `ats-offers` | Offers | required | personal_content, single_approver | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -122,6 +122,9 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `job_offers` | triggers | `benefit_enrollments` | one_to_one | required | none (required-if-present) | n/a | - |
 | `job_offers` | seeds | `compensation_statements` | one_to_one | required | none (required-if-present) | n/a | - |
 | `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
+| `employees` | applies_as | `candidates` | one_to_many | optional | none | n/a | - |
+| `candidates` | corresponds_via | `candidate_emails` | one_to_many | optional | none | n/a | - |
+| `candidates` | screened_via | `drug_health_screenings` | one_to_many | optional | none | n/a | - |
 
 ## 6. Cross-domain context
 
@@ -129,14 +132,14 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | data_object | other module / domain | role | necessity | notes |
 | --- | --- | --- | --- | --- |
-| `pre_employees` | HCM-LIFECYCLE-WORKFLOWS (Employee Lifecycle Workflows) - HCM | consumer | required | - |
+| `pre_employees` | HCM-LIFECYCLE-WORKFLOWS (Employee Lifecycle Workflows) - HCM | embedded_master | required | - |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-PRE-EMPLOYEE-RECORD | HCM | HCM-LIFECYCLE-WORKFLOWS | `pre_employee.activated` | `in_progress` → `activated` _(state_change)_ | `pre_employees` | event_stream | medium | Pre-employee activation hands the canonical reconciliation to HCM-mastered `employees`. ATS owns the pre-employee lifecycle stage (paperwork, background check, pre-boarding); at start-date the pre_employee row is reconciled into the HCM employee record. Identifier mapping (pre_employee_id → employee_id) is the canonical reconciliation gap. Replaces / complements the older candidate.hired and job_offer.accepted handoffs by carrying the proper post-acceptance reconciliation milestone. |
 | ATS-CANDIDATE-CRM | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
+| ATS-PRE-EMPLOYEE-RECORD | HCM | HCM-LIFECYCLE-WORKFLOWS | `pre_employee.activated` | `in_progress` → `activated` _(state_change)_ | `pre_employees` | event_stream | medium | Pre-employee activation hands the canonical reconciliation to HCM-mastered `employees`. ATS owns the pre-employee lifecycle stage (paperwork, background check, pre-boarding); at start-date the pre_employee row is reconciled into the HCM employee record. Identifier mapping (pre_employee_id → employee_id) is the canonical reconciliation gap. Replaces / complements the older candidate.hired and job_offer.accepted handoffs by carrying the proper post-acceptance reconciliation milestone. |
 | ATS-OFFERS | HCM | HCM-LIFECYCLE-WORKFLOWS | `job_offer.accepted` | `accepted` _(state_change)_ | `job_offers` | event_stream | medium | Offer acceptance signals firm hiring intent; HCM creates pending-employee record. |
 | ATS-OFFERS | COMP-MGMT | COMP-STATEMENTS | `job_offer.signed` | `signed` _(lifecycle)_ | `job_offers` | event_stream | low | Signed offer establishes the comp baseline; COMP-MGMT incorporates into cycle history. |
 | ATS-CANDIDATE-CRM | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
@@ -146,12 +149,13 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ATS-OFFERS | ATS | ATS-RECRUITMENT-PIPELINE | `job_application.advanced` | _(state_change)_ | `job_offers` | lifecycle_progression | low | - |
+| ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-OFFERS | `job_offer.accepted` | `accepted` _(state_change)_ | `pre_employees` | lifecycle_progression | low | - |
+| ATS-CANDIDATE-CRM | HCM | HCM-CORE-WORKER | `employee.applied_internally` | `active` → `active` _(signal)_ | `candidates` | api_call | medium | When an employee applies internally, HCM hands the worker context to the applicant tracker, which materializes an internal candidate record from the worker profile. Friction: reconciling the worker identity against the candidate identity space. |
 | ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-OFFERS | `job_offer.rescinded` | _(state_change)_ | `pre_employees` | lifecycle_progression | high | - |
+| ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
 | ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-BACKGROUND-CHECKS | `background_check.cleared` | _(lifecycle)_ | `pre_employees` | lifecycle_progression | low | - |
 | ATS-OFFERS | ATS | ATS-BACKGROUND-CHECKS | `background_check.flagged` | _(lifecycle)_ | `job_offers` | lifecycle_progression | medium | - |
-| ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-OFFERS | `job_offer.accepted` | `accepted` _(state_change)_ | `pre_employees` | lifecycle_progression | low | - |
-| ATS-OFFERS | ATS | ATS-RECRUITMENT-PIPELINE | `job_application.advanced` | _(state_change)_ | `job_offers` | lifecycle_progression | low | - |
-| ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -282,4 +286,6 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | responsibility | business function | default role | default tier |
 | --- | --- | --- | --- |
 | owner | Recruiting | `admin` | `:admin` |
+| contributor | Human Resources | `manage` | `:manage` |
 | contributor | Legal | `manage` | `:manage` |
+| consumer | Finance | `read` | `:read` |

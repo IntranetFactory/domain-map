@@ -4,13 +4,15 @@ fact_sheet_version: "2.0"
 license: MIT
 system_name: RE-BROK-AGENT-OPS
 system_description: Real Estate Agent Operations
+tagline: Work every deal from lead to close in one place.
+description: Capture leads and turn them into listings, syndicate to the MLS, and schedule showings with access windows and follow-ups. Drive each transaction from accepted offer through inspection, financing, and contingencies to a clean close, with buyer and seller disclosures tracked at every step. The deployable unit for solo agents and small firms.
 system_slug: re-brok-agent-ops
 domain_modules:
   - re-brok-agent-ops
 domain_code: RE-BROKERAGE
-related_modules: [crm-acct-mgt, crm-lead-mgt, re-brok-brokerage-ops, real-estate-agent]
+related_modules: [crm-acct-mgt, crm-lead-mgt, re-brok-brokerage-ops, re-invest-portfolio-val, real-estate-agent]
 persona: []
-created_at: 2026-06-05
+created_at: 2026-06-11
 ---
 
 # Real Estate Agent Operations
@@ -73,15 +75,15 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | singular | plural | role | mastered in | mastered label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `disclosure_documents` | Disclosure Document | Disclosure Documents | master | - | - | optional | personal_content, submit_lock, single_approver | `:manage` _(pending)_ | - |
-| 2 | `real_estate_listings` | Real Estate Listing | Real Estate Listings | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
-| 3 | `real_estate_transactions` | Real Estate Transaction | Real Estate Transactions | master | - | - | required | personal_content, submit_lock | `:manage` _(pending)_ | - |
-| 4 | `tour_appointments` | Tour Appointment | Tour Appointments | master | - | - | required | personal_content | `:manage` _(pending)_ | - |
-| 5 | `commission_splits` | Commission Split | Commission Splits | embedded_master | `re-brok-brokerage-ops` | Brokerage Oversight and Commission Management | optional | submit_lock, single_approver | `:manage` _(pending)_ | - |
-| 6 | `crm_contacts` | Contact | Contacts | contributor | `crm-acct-mgt` | Account and Contact Management | required | personal_content | `:manage` _(pending)_ | - |
-| 7 | `crm_leads` | Lead | Leads | contributor | `crm-lead-mgt` | Lead Capture and Qualification | required | personal_content | `:manage` _(pending)_ | - |
+| # | data_object | singular | plural | role | entity_type | mastered in | mastered label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `disclosure_documents` | Disclosure Document | Disclosure Documents | master | operational_workflow | - | - | optional | personal_content, submit_lock, single_approver | `:manage` | - |
+| 2 | `real_estate_listings` | Real Estate Listing | Real Estate Listings | master | operational_workflow | - | - | required | personal_content | `:manage` | - |
+| 3 | `real_estate_transactions` | Real Estate Transaction | Real Estate Transactions | master | operational_workflow | - | - | required | personal_content, submit_lock | `:manage` | - |
+| 4 | `tour_appointments` | Tour Appointment | Tour Appointments | master | operational_workflow | - | - | required | personal_content | `:manage` | - |
+| 5 | `commission_splits` | Commission Split | Commission Splits | embedded_master | operational_workflow | `re-brok-brokerage-ops` | Brokerage Oversight and Commission Management | optional | submit_lock, single_approver | `:manage` | - |
+| 6 | `crm_contacts` | Contact | Contacts | contributor | operational_record | `crm-acct-mgt` | Account and Contact Management | required | personal_content | `:manage` | - |
+| 7 | `crm_leads` | Lead | Leads | contributor | operational_workflow | `crm-lead-mgt` | Lead Capture and Qualification | required | personal_content, submit_lock | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -136,6 +138,7 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `crm_opportunities` | involves_contacts | `crm_contacts` | many_to_many | optional | none | n/a | - |
 | `crm_contacts` | has_activities | `sales_activities` | one_to_many | optional | none | n/a | - |
 | `crm_leads` | has_activities | `sales_activities` | one_to_many | optional | none | n/a | - |
+| `contact_records` | enriches | `crm_contacts` | one_to_many | optional | none | n/a | - |
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
@@ -166,14 +169,14 @@ _(none: no context cross-scope edges on this scope's embedded shells or consumed
 | RE-BROK-AGENT-OPS | RE-PROP-MGMT | _(domain-level)_ | `real_estate_transaction.closed` | `pending` → `closed` _(lifecycle)_ | `real_estate_transactions` | manual_handoff | high | Closed sale of a rental property results in a new landlord-of-record; the new owner's property-management platform must be configured (often manual handoff via email; the buyer's PM and the seller's brokerage are different vendors). |
 | RE-BROK-AGENT-OPS | RE-CRE | _(domain-level)_ | `real_estate_transaction.closed` | `pending` → `closed` _(lifecycle)_ | `real_estate_transactions` | manual_handoff | high | Closed sale of a CRE asset transfers operations to the new owner's CRE platform; rent-roll, leases, and CAM history must be carried over (typically manual). |
 | RE-BROK-AGENT-OPS | RE-CRE | _(domain-level)_ | `listing.sold` | _(lifecycle)_ | `real_estate_listings` | batch_sync | medium | Closed sale triggers commercial lease setup if multi-tenant. |
-| RE-BROK-AGENT-OPS | RE-INVEST | _(domain-level)_ | `listing.sold` | _(lifecycle)_ | `real_estate_listings` | manual_handoff | high | Sale closing triggers fund NAV and LP-reporting recalculation. |
+| RE-BROK-AGENT-OPS | RE-INVEST | RE-INVEST-PORTFOLIO-VAL | `listing.sold` | _(lifecycle)_ | `real_estate_listings` | manual_handoff | high | Sale closing triggers fund NAV and LP-reporting recalculation. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| RE-BROK-AGENT-OPS | RE-BROKERAGE | RE-BROK-BROKERAGE-OPS | `real_estate_transaction.cleared_to_close` | _(state_change)_ | `real_estate_transactions` | lifecycle_progression | low | Broker compliance review approved; transaction returns to agent-side for closing coordination. |
 | RE-BROK-AGENT-OPS | RE-BROKERAGE | RE-BROK-BROKERAGE-OPS | `commission_split.paid` | _(lifecycle)_ | `commission_splits` | lifecycle_progression | low | Broker disbursed commission; agent-side surfaces the paid status for the recipient agent. |
+| RE-BROK-AGENT-OPS | RE-BROKERAGE | RE-BROK-BROKERAGE-OPS | `real_estate_transaction.cleared_to_close` | _(state_change)_ | `real_estate_transactions` | lifecycle_progression | low | Broker compliance review approved; transaction returns to agent-side for closing coordination. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 

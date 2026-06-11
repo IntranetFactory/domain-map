@@ -302,6 +302,11 @@
           "key": "evaluate_training_effectiveness",
           "name": "Evaluate training effectiveness",
           "raci": "responsible"
+        },
+        {
+          "key": "monitor_evaluate_learning",
+          "name": "Monitor and evaluate learning programs",
+          "raci": "responsible"
         }
       ]
     },
@@ -379,6 +384,11 @@
         {
           "key": "manage_training_schedule",
           "name": "Manage training schedule",
+          "raci": "accountable"
+        },
+        {
+          "key": "monitor_evaluate_learning",
+          "name": "Monitor and evaluate learning programs",
           "raci": "accountable"
         }
       ]
@@ -523,8 +533,23 @@
           "raci": "accountable"
         },
         {
+          "key": "manage_employee_referral",
+          "name": "Manage employee referral programs",
+          "raci": "accountable"
+        },
+        {
+          "key": "manage_employee_requisitions",
+          "name": "Manage employee requisitions",
+          "raci": "accountable"
+        },
+        {
           "key": "manage_new_hire_re_hire",
           "name": "Manage new hire/re-hire",
+          "raci": "accountable"
+        },
+        {
+          "key": "obtain_candidate_background",
+          "name": "Obtain candidate background information",
           "raci": "accountable"
         },
         {
@@ -560,6 +585,21 @@
           "key": "interview_candidates",
           "name": "Interview candidates",
           "raci": "consulted"
+        },
+        {
+          "key": "manage_employee_referral",
+          "name": "Manage employee referral programs",
+          "raci": "responsible"
+        },
+        {
+          "key": "manage_employee_requisitions",
+          "name": "Manage employee requisitions",
+          "raci": "responsible"
+        },
+        {
+          "key": "obtain_candidate_background",
+          "name": "Obtain candidate background information",
+          "raci": "responsible"
         },
         {
           "key": "recruit_source_candidates",

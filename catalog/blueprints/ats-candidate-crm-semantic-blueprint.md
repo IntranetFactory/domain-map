@@ -13,9 +13,9 @@ system_slug: ats-candidate-crm
 domain_modules:
   - ats-candidate-crm
 domain_code: ATS
-related_modules: [ats-background-checks, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, hcm-lifecycle-workflows, hiring-starter, onb-journey-mgmt, pa-workforce-metrics, tlnt-intel-marketplace]
+related_modules: [ats-background-checks, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, hiring-starter, lms-compliance-training, lms-ct-gdpr, onb-journey-mgmt, pa-workforce-metrics, tlnt-intel-marketplace, tlnt-intel-mobility, vms-worker-sourcing]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-RECRUITER]
-created_at: 2026-06-05
+created_at: 2026-06-11
 ---
 
 # Candidate CRM
@@ -30,6 +30,7 @@ The candidate-relationship backbone of an ATS, masters candidates (including the
 | --- | --- | --- |
 | Candidate Consents | `candidate_consents` | Per-candidate opt-in record for GDPR / CCPA / data retention. Carries consent type, jurisdiction, granted timestamp, withdrawal timestamp, retention window. |
 | Candidate Documents | `candidate_documents` | File artifact attached to a candidate (resume, cover letter, portfolio, work sample, signed disclosure, reference letter, right-to-work proof). Carries document type, MIME type, storage URI, uploaded-by actor, uploaded-at timestamp, and visibility scope. |
+| Candidate Emails | `candidate_emails` | Persisted email correspondence with a candidate as a first-class threaded record, distinct from free-text application notes and engagement summaries. Captures sent and received messages, the template used, and delivery status across the candidate relationship. |
 | Candidate Engagements | `candidate_engagements` | Single recruiter-to-candidate touchpoint (email, InMail, call, SMS, event invite). Carries channel, direction, timestamp, status, and content reference. |
 | Candidate Notes | `candidate_notes` | Free-form recruiter or hiring-team note on a candidate, internal-only, never sent to the candidate. Carries author, body, visibility scope (private to author, team, or hiring panel), timestamp, and optional at-mentions to other team members. |
 | Candidate Nurture Campaigns | `candidate_nurture_campaigns` | Multi-touch automated outreach sequence targeting talent-pool segments. Carries cadence, step templates, audience filter, and lifecycle state. |
@@ -62,6 +63,7 @@ flowchart TD
   candidate_documents["Candidate Documents"]
   candidate_notes["Candidate Notes"]
   data_subject_requests["Data Subject Requests"]
+  candidate_emails["Candidate Emails"]
   users["Users"]
   candidates -->|"engaged_via"| candidate_engagements
   candidate_nurture_campaigns -->|"generates"| candidate_engagements
@@ -77,6 +79,7 @@ flowchart TD
   recruitment_agencies -->|"sources"| candidates
   recruitment_events -->|"attracts"| candidates
   talent_pools -->|"groups"| candidates
+  candidates -->|"corresponds_via"| candidate_emails
   users -->|"posts"| internal_opportunities
   candidates -->|"has owning recruiter"| users
   talent_pools -->|"has owner"| users
@@ -89,6 +92,7 @@ flowchart TD
   data_subject_requests -->|"has owner"| users
   recruiting_event_attendances -->|"has owner"| users
   recruiter_interactions -->|"has author"| users
+  candidate_emails -->|"has sender"| users
   class candidates master;
   class recruitment_sources master;
   class recruitment_agencies master;
@@ -103,6 +107,7 @@ flowchart TD
   class candidate_documents master;
   class candidate_notes master;
   class data_subject_requests master;
+  class candidate_emails master;
   class users platform_builtin;
   style candidate_consents stroke-dasharray:5 5;
   style talent_pools stroke-dasharray:5 5;
@@ -112,22 +117,23 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | singular | plural | role | mastered in | mastered label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `candidate_consents` | Candidate Consent | Candidate Consents | master | - | - | optional | personal_content | `:manage` | - |
-| 2 | `candidate_documents` | Candidate Document | Candidate Documents | master | - | - | required | personal_content | `:manage` | - |
-| 3 | `candidate_engagements` | Candidate Engagement | Candidate Engagements | master | - | - | required | personal_content | `:manage` | - |
-| 4 | `candidate_notes` | Candidate Note | Candidate Notes | master | - | - | required | personal_content | `:manage` | - |
-| 5 | `candidate_nurture_campaigns` | Candidate Nurture Campaign | Candidate Nurture Campaigns | master | - | - | required | - | `:manage` | - |
-| 6 | `candidates` | Candidate | Candidates | master | - | - | required | personal_content | `:manage` | - |
-| 7 | `data_subject_requests` | Data Subject Request | Data Subject Requests | master | - | - | optional | personal_content | `:manage` | - |
-| 8 | `recruiter_interactions` | Recruiter Interaction | Recruiter Interactions | master | - | - | required | personal_content | `:manage` | - |
-| 9 | `recruiting_event_attendances` | Recruiting Event Attendance | Recruiting Event Attendances | master | - | - | required | personal_content | `:manage` | - |
-| 10 | `recruitment_agencies` | Recruitment Agency | Recruitment Agencies | master | - | - | required | - | `:manage` | - |
-| 11 | `recruitment_events` | Recruitment Event | Recruitment Events | master | - | - | required | - | `:manage` | - |
-| 12 | `recruitment_sources` | Recruitment Source | Recruitment Sources | master | - | - | required | - | `:admin` | - |
-| 13 | `internal_opportunities` | Opportunity | Opportunities | embedded_master | `tlnt-intel-marketplace` | Talent Marketplace | optional | submit_lock, single_approver | `:manage` _(pending)_ | - |
-| 14 | `talent_pools` | Talent Pool | Talent Pools | embedded_master | `ats-talent-pools` | Talent Pools | optional | - | `:manage` | - |
+| # | data_object | singular | plural | role | entity_type | mastered in | mastered label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `candidate_consents` | Candidate Consent | Candidate Consents | master | operational_workflow | - | - | optional | personal_content | `:manage` | - |
+| 2 | `candidate_documents` | Candidate Document | Candidate Documents | master | operational_record | - | - | required | personal_content | `:manage` | - |
+| 3 | `candidate_emails` | Candidate Email | Candidate Emails | master | operational_record | - | - | required | personal_content | `:manage` | - |
+| 4 | `candidate_engagements` | Candidate Engagement | Candidate Engagements | master | operational_record | - | - | required | personal_content | `:manage` | - |
+| 5 | `candidate_notes` | Candidate Note | Candidate Notes | master | operational_record | - | - | required | personal_content | `:manage` | - |
+| 6 | `candidate_nurture_campaigns` | Candidate Nurture Campaign | Candidate Nurture Campaigns | master | operational_workflow | - | - | required | - | `:manage` | - |
+| 7 | `candidates` | Candidate | Candidates | master | operational_workflow | - | - | required | personal_content | `:manage` | - |
+| 8 | `data_subject_requests` | Data Subject Request | Data Subject Requests | master | operational_workflow | - | - | optional | personal_content | `:manage` | - |
+| 9 | `recruiter_interactions` | Recruiter Interaction | Recruiter Interactions | master | operational_record | - | - | required | personal_content | `:manage` | - |
+| 10 | `recruiting_event_attendances` | Recruiting Event Attendance | Recruiting Event Attendances | master | junction | - | - | required | personal_content | `:manage` | - |
+| 11 | `recruitment_agencies` | Recruitment Agency | Recruitment Agencies | master | operational_workflow | - | - | required | - | `:manage` | - |
+| 12 | `recruitment_events` | Recruitment Event | Recruitment Events | master | operational_workflow | - | - | required | - | `:manage` | - |
+| 13 | `recruitment_sources` | Recruitment Source | Recruitment Sources | master | catalog | - | - | required | - | `:admin` | - |
+| 14 | `internal_opportunities` | Opportunity | Opportunities | embedded_master | operational_workflow | `tlnt-intel-marketplace` | Talent Marketplace | optional | submit_lock, single_approver | `:manage` | - |
+| 15 | `talent_pools` | Talent Pool | Talent Pools | embedded_master | operational_workflow | `ats-talent-pools` | Talent Pools | optional | - | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -153,6 +159,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `recruitment_agencies` | sources | `candidates` | one_to_many | reference | required | target | restrict | reference | - |
 | `recruitment_events` | attracts | `candidates` | one_to_many | reference | required | target | restrict | reference | - |
 | `talent_pools` | groups | `candidates` | many_to_many | reference | required | target | restrict | reference | - |
+| `candidates` | corresponds_via | `candidate_emails` | one_to_many | reference | optional | source | clear | reference | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
@@ -170,6 +177,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `data_subject_requests` | has owner | `users` | many_to_many | optional | source | clear | reference | - |
 | `recruiting_event_attendances` | has owner | `users` | many_to_many | optional | source | clear | reference | - |
 | `recruiter_interactions` | has author | `users` | many_to_many | required | source | restrict | reference | - |
+| `candidate_emails` | has sender | `users` | many_to_many | optional | source | clear | reference | - |
 
 ### 5.3 Cross-scope edges
 
@@ -185,11 +193,14 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | optional | none | n/a | - |
 | `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | none | n/a | - |
 | `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | none | n/a | - |
+| `dlp_incidents` | triggers_privacy_review | `data_subject_requests` | one_to_many | optional | none | n/a | - |
 | `skill_profiles` | feeds | `candidates` | one_to_many | optional | none | n/a | - |
 | `candidates` | submits | `job_applications` | one_to_many | required | none (required-if-present) | n/a | - |
 | `candidate_referrals` | introduces | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
 | `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
+| `employees` | applies_as | `candidates` | one_to_many | optional | none | n/a | - |
+| `candidates` | screened_via | `drug_health_screenings` | one_to_many | optional | none | n/a | - |
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
@@ -215,7 +226,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `candidates` | ATS-RECRUITMENT-PIPELINE (Recruitment Pipeline) - ATS | embedded_master | required | - |
 | `candidates` | ATS-REFERRALS (Employee Referrals) - ATS | embedded_master | required | - |
 | `candidates` | ATS-TALENT-POOLS (Talent Pools) - ATS | embedded_master | required | - |
-| `candidates` | HCM-LIFECYCLE-WORKFLOWS (Employee Lifecycle Workflows) - HCM | consumer | required | - |
+| `candidates` | HCM-LIFECYCLE-WORKFLOWS (Employee Lifecycle Workflows) - HCM | consumer | optional | - |
 | `candidates` | HIRING-STARTER (Hiring Starter) - ATS | embedded_master | required | - |
 | `candidates` | ONB-JOURNEY-MGMT (Onboarding Journey Management) - ONBOARDING | consumer | required | - |
 | `recruitment_sources` | HIRING-STARTER (Hiring Starter) - ATS | embedded_master | optional | - |
@@ -230,12 +241,14 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | ATS-CANDIDATE-CRM | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
 | ATS-CANDIDATE-CRM | PA | PA-WORKFORCE-METRICS | `recruitment_source.attributed` | _(lifecycle)_ | `recruitment_sources` | batch_sync | low | Source attribution feeds people-analytics quality-of-hire and cost-per-hire models. |
 | ATS-CANDIDATE-CRM | ONBOARDING | ONB-JOURNEY-MGMT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | medium | Hired candidate drives onboarding-plan kickoff with role/location/manager context from ATS payload. |
+| TLNT-INTEL-MARKETPLACE | TLNT-INTEL | TLNT-INTEL-MOBILITY | `opportunity.opened` | `open` _(state_change)_ | `internal_opportunities` | lifecycle_progression | low | A newly opened opportunity triggers MOBILITY to recompute match inferences and fit scores for eligible employees. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ATS-CANDIDATE-CRM | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_added` | _(lifecycle)_ | `talent_pools` | lifecycle_progression | low | - |
+| ATS-CANDIDATE-CRM | HCM | HCM-CORE-WORKER | `employee.applied_internally` | `active` → `active` _(signal)_ | `candidates` | api_call | medium | When an employee applies internally, HCM hands the worker context to the applicant tracker, which materializes an internal candidate record from the worker profile. Friction: reconciling the worker identity against the candidate identity space. |
 | ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
@@ -379,6 +392,8 @@ _This scope holds `talent_pools` as **embedded_master**; the canonical state mac
 | `ats-candidate-crm:manage_all_candidate_notes` | override (personal_content) | Manage all `candidate_notes` rows beyond row-scope | ✓ |
 | `ats-candidate-crm:view_all_data_subject_requests` | override (personal_content) | View all `data_subject_requests` rows beyond row-scope | ✓ |
 | `ats-candidate-crm:manage_all_data_subject_requests` | override (personal_content) | Manage all `data_subject_requests` rows beyond row-scope | ✓ |
+| `ats-candidate-crm:view_all_candidate_emails` | override (personal_content) | View all `candidate_emails` rows beyond row-scope | ✓ |
+| `ats-candidate-crm:manage_all_candidate_emails` | override (personal_content) | Manage all `candidate_emails` rows beyond row-scope | ✓ |
 
 ### 8.2 Business rules
 
@@ -393,6 +408,7 @@ _This scope holds `talent_pools` as **embedded_master**; the canonical state mac
 | `candidate_document_edit_scope` | `candidate_documents` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_candidate_documents` / `ats-candidate-crm:manage_all_candidate_documents` |
 | `candidate_note_edit_scope` | `candidate_notes` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_candidate_notes` / `ats-candidate-crm:manage_all_candidate_notes` |
 | `data_subject_request_edit_scope` | `data_subject_requests` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_data_subject_requests` / `ats-candidate-crm:manage_all_data_subject_requests` |
+| `candidate_email_edit_scope` | `candidate_emails` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_candidate_emails` / `ats-candidate-crm:manage_all_candidate_emails` |
 
 ## 9. Roles, RACI, and responsibilities (derived)
 
@@ -439,6 +455,8 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `ats-candidate-crm:admin` | `ats-candidate-crm:manage_all_candidate_notes` |
 | `ats-candidate-crm:admin` | `ats-candidate-crm:view_all_data_subject_requests` |
 | `ats-candidate-crm:admin` | `ats-candidate-crm:manage_all_data_subject_requests` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:view_all_candidate_emails` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:manage_all_candidate_emails` |
 
 **Processes wired:**
 
@@ -459,4 +477,6 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | responsibility | business function | default role | default tier |
 | --- | --- | --- | --- |
 | owner | Recruiting | `admin` | `:admin` |
+| contributor | Human Resources | `manage` | `:manage` |
 | contributor | Legal | `manage` | `:manage` |
+| consumer | Finance | `read` | `:read` |

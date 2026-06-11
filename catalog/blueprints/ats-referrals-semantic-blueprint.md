@@ -10,9 +10,9 @@ system_slug: ats-referrals
 domain_modules:
   - ats-referrals
 domain_code: ATS
-related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-talent-pools, ben-enrollment, hcm-lifecycle-workflows, onb-journey-mgmt, payroll-earnings-deductions]
-persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-RECRUITER]
-created_at: 2026-06-05
+related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-talent-pools, ben-enrollment, hcm-core-worker, hcm-lifecycle-workflows, onb-journey-mgmt, payroll-earnings-deductions]
+persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-MANAGER, RECRUITING-RECRUITER]
+created_at: 2026-06-11
 ---
 
 # Employee Referrals
@@ -61,13 +61,13 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | singular | plural | role | mastered in | mastered label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `referral_campaigns` | Referral Campaign | Referral Campaigns | master | - | - | optional | - | `:manage` | - |
-| 2 | `referral_payouts` | Referral Payout | Referral Payouts | master | - | - | required | - | `:manage` | - |
-| 3 | `referral_rewards` | Referral Reward | Referral Rewards | master | - | - | required | - | `:admin` | - |
-| 4 | `candidate_referrals` | Referral | Referrals | master | - | - | required | - | `:manage` | - |
-| 5 | `candidates` | Candidate | Candidates | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
+| # | data_object | singular | plural | role | entity_type | mastered in | mastered label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `referral_campaigns` | Referral Campaign | Referral Campaigns | master | operational_workflow | - | - | optional | - | `:manage` | - |
+| 2 | `referral_payouts` | Referral Payout | Referral Payouts | master | operational_workflow | - | - | required | - | `:manage` | - |
+| 3 | `referral_rewards` | Referral Reward | Referral Rewards | master | catalog | - | - | required | - | `:admin` | - |
+| 4 | `candidate_referrals` | Referral | Referrals | master | operational_workflow | - | - | required | - | `:manage` | - |
+| 5 | `candidates` | Candidate | Candidates | embedded_master | operational_workflow | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -128,6 +128,9 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `talent_pools` | groups | `candidates` | many_to_many | required | none (required-if-present) | n/a | - |
 | `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
+| `employees` | applies_as | `candidates` | one_to_many | optional | none | n/a | - |
+| `candidates` | corresponds_via | `candidate_emails` | one_to_many | optional | none | n/a | - |
+| `candidates` | screened_via | `drug_health_screenings` | one_to_many | optional | none | n/a | - |
 
 ## 6. Cross-domain context
 
@@ -149,7 +152,9 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
-_(none: no inbound handoffs whose payload is in this scope)_
+| target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ATS-CANDIDATE-CRM | HCM | HCM-CORE-WORKER | `employee.applied_internally` | `active` → `active` _(signal)_ | `candidates` | api_call | medium | When an employee applies internally, HCM hands the worker context to the applicant tracker, which materializes an internal candidate record from the worker profile. Friction: reconciling the worker identity against the candidate identity space. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -256,6 +261,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | process_key | process_name | PCF code | PCF ID | level | description |
 | --- | --- | --- | --- | --- | --- |
 | `hire_candidate` | Hire candidate | 7.2.4.3 | 10465 | 4 | Wrapping up the process for hiring candidates. Agree to all hiring terms and conditions. Have the candidate accept and sign the job offer. |
+| `manage_employee_referral` | Manage employee referral programs | 7.2.2.5 | 17047 | 4 | Creating and managing a recruiting strategy where current employees are rewarded for referring qualified candidates for employment. |
 
 **RACI realization:**
 
@@ -264,10 +270,14 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `RECRUITING-RECRUITER` | persona | responsible | `hire_candidate` | grant gates [ats-referrals:hire_candidate] + the gated entities' write tier |
 | `HIRING-MANAGER` | persona | accountable | `hire_candidate` | approval gate |
 | `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | `hire_candidate` | notification side effect (trigger_event / webhook_receiver) |
+| `RECRUITING-RECRUITER` | persona | responsible | `manage_employee_referral` | grant gates [ats-referrals:pay_referral_bonus] + the gated entities' write tier |
+| `RECRUITING-MANAGER` | persona | accountable | `manage_employee_referral` | approval gate |
 
 ### 9.2 Functional ownership and default grants
 
 | responsibility | business function | default role | default tier |
 | --- | --- | --- | --- |
 | owner | Recruiting | `admin` | `:admin` |
+| contributor | Human Resources | `manage` | `:manage` |
 | contributor | Legal | `manage` | `:manage` |
+| consumer | Finance | `read` | `:read` |

@@ -10,9 +10,9 @@ system_slug: smp-discovery
 domain_modules:
   - smp-discovery
 domain_code: SMP
-related_modules: [apm-portfolio-registry, iga-entitlement-catalog, itam-portfolio-reporting, smp-automation, smp-optimization, smp-renewal-vendor]
+related_modules: [apm-portfolio-registry, iga-entitlement-catalog, itam-portfolio-reporting, smp-automation, smp-optimization, smp-renewal-vendor, spend-mgmt-cards]
 persona: []
-created_at: 2026-06-05
+created_at: 2026-06-11
 ---
 
 # SMP Discovery and Catalog
@@ -70,15 +70,15 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | singular | plural | role | mastered in | mastered label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `smp_app_catalog_listings` | App Catalog Listing | App Catalog Listings | master | - | - | required | - | `:admin` | - |
-| 2 | `smp_app_lifecycle_stages` | App Lifecycle Stage | App Lifecycle Stages | master | - | - | required | - | `:manage` | - |
-| 3 | `smp_alerts` | SaaS Alert | SaaS Alerts | master | - | - | required | - | `:manage` | - |
-| 4 | `smp_app_integrations` | SaaS App Integration | SaaS App Integrations | master | - | - | required | - | `:manage` | - |
-| 5 | `smp_app_owners` | SaaS App Owner | SaaS App Owners | master | - | - | required | personal_content | `:manage` | - |
-| 6 | `saas_applications` | SaaS Application | SaaS Applications | master | - | - | required | - | `:manage` | - |
-| 7 | `shadow_it_apps` | Shadow IT App | Shadow IT Apps | master | - | - | required | - | `:manage` | - |
+| # | data_object | singular | plural | role | entity_type | mastered in | mastered label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `smp_app_catalog_listings` | App Catalog Listing | App Catalog Listings | master | catalog | - | - | required | - | `:admin` | - |
+| 2 | `smp_app_lifecycle_stages` | App Lifecycle Stage | App Lifecycle Stages | master | operational_workflow | - | - | required | - | `:manage` | - |
+| 3 | `smp_alerts` | SaaS Alert | SaaS Alerts | master | operational_workflow | - | - | required | - | `:manage` | - |
+| 4 | `smp_app_integrations` | SaaS App Integration | SaaS App Integrations | master | operational_workflow | - | - | required | - | `:manage` | - |
+| 5 | `smp_app_owners` | SaaS App Owner | SaaS App Owners | master | junction | - | - | required | personal_content | `:manage` | - |
+| 6 | `saas_applications` | SaaS Application | SaaS Applications | master | operational_workflow | - | - | required | - | `:manage` | - |
+| 7 | `shadow_it_apps` | Shadow IT App | Shadow IT Apps | master | operational_workflow | - | - | required | - | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -129,6 +129,7 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `saas_applications` | has | `saas_subscriptions` | one_to_many | optional | none | n/a | - |
 | `saas_applications` | measured_by | `saas_usage_metrics` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
 | `saas_applications` | assigned_via | `smp_license_seat_assignments` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `saas_applications` | is registered as | `enterprise_applications` | one_to_one | optional | none | n/a | - |
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
@@ -159,9 +160,9 @@ _(none: no context cross-scope edges on this scope's embedded shells or consumed
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SMP-DISCOVERY | SPEND-MGMT | SPEND-MGMT-CARDS | `card_transaction.posted` | `posted` _(signal)_ | `shadow_it_apps` | api_call | high | SaaS purchases on corporate cards reveal shadow IT to SMP - merchant categorization required to identify SaaS subscriptions vs other spend, then deduplicated against the existing SMP saas_subscription catalog. The card-side discovery path is the primary signal for off-procurement SaaS today. Shadow-data pattern. |
 | SMP-DISCOVERY | EXPENSE | _(domain-level)_ | `card.saas_charge_detected` | _(state_change)_ | `shadow_it_apps` | event_stream | high | Corporate-card SaaS charge detected by the expense system surfaces a candidate shadow-IT app in SMP. High friction: finance sees the charge, IT/SMP sees (or doesn't see) the app - reconciling vendor-name-on-card with app-name-in-portfolio is messy and is one of the highest-value SMP-to-EXPENSE integrations. |
 | SMP-DISCOVERY | DISCOVERY | _(domain-level)_ | `sso_login.unsanctioned_app` | _(state_change)_ | `shadow_it_apps` | event_stream | medium | SSO logs reveal a login to a SaaS app that's not in the sanctioned catalog - flagged as shadow IT. Complements the EXPENSE-side detection: SSO catches apps that use corporate SSO but aren't tracked; expense catches credit-card paid apps that don't. |
-| SMP-DISCOVERY | SPEND-MGMT | _(domain-level)_ | `card_transaction.posted` | `posted` _(signal)_ | `shadow_it_apps` | api_call | high | SaaS purchases on corporate cards reveal shadow IT to SMP - merchant categorization required to identify SaaS subscriptions vs other spend, then deduplicated against the existing SMP saas_subscription catalog. The card-side discovery path is the primary signal for off-procurement SaaS today. Shadow-data pattern. |
 | SMP-DISCOVERY | SMP | SMP-RENEWAL-VENDOR | `smp_vendor_risk_assessment.remediation_required` | _(state_change)_ | `smp_alerts` | lifecycle_progression | low | A vendor risk assessment requiring remediation raises a portfolio alert on the application. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)

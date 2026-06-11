@@ -10,9 +10,9 @@ system_slug: ats-talent-pools
 domain_modules:
   - ats-talent-pools
 domain_code: ATS
-related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ben-enrollment, hcm-lifecycle-workflows, onb-journey-mgmt]
+related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ben-enrollment, hcm-core-worker, hcm-lifecycle-workflows, onb-journey-mgmt]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-RECRUITER]
-created_at: 2026-06-05
+created_at: 2026-06-11
 ---
 
 # Talent Pools
@@ -69,15 +69,15 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | singular | plural | role | mastered in | mastered label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `candidate_tag_assignments` | Candidate Tag Assignment | Candidate Tag Assignments | master | - | - | required | - | `:admin` | - |
-| 2 | `candidate_tags` | Candidate Tag | Candidate Tags | master | - | - | required | - | `:admin` | - |
-| 3 | `recruiter_saved_searches` | Recruiter Saved Search | Recruiter Saved Searches | master | - | - | optional | - | `:admin` | - |
-| 4 | `talent_pool_memberships` | Talent Pool Membership | Talent Pool Memberships | master | - | - | required | personal_content | `:manage` | - |
-| 5 | `talent_pools` | Talent Pool | Talent Pools | master | - | - | required | - | `:manage` | - |
-| 6 | `talent_segments` | Talent Segment | Talent Segments | master | - | - | required | - | `:admin` | - |
-| 7 | `candidates` | Candidate | Candidates | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
+| # | data_object | singular | plural | role | entity_type | mastered in | mastered label | necessity | pattern flags | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `candidate_tag_assignments` | Candidate Tag Assignment | Candidate Tag Assignments | master | junction | - | - | required | - | `:admin` | - |
+| 2 | `candidate_tags` | Candidate Tag | Candidate Tags | master | catalog | - | - | required | - | `:admin` | - |
+| 3 | `recruiter_saved_searches` | Recruiter Saved Search | Recruiter Saved Searches | master | catalog | - | - | optional | - | `:admin` | - |
+| 4 | `talent_pool_memberships` | Talent Pool Membership | Talent Pool Memberships | master | junction | - | - | required | personal_content | `:manage` | - |
+| 5 | `talent_pools` | Talent Pool | Talent Pools | master | operational_workflow | - | - | required | - | `:manage` | - |
+| 6 | `talent_segments` | Talent Segment | Talent Segments | master | catalog | - | - | required | - | `:admin` | - |
+| 7 | `candidates` | Candidate | Candidates | embedded_master | operational_workflow | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -140,6 +140,9 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `recruitment_events` | attracts | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
 | `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
+| `employees` | applies_as | `candidates` | one_to_many | optional | none | n/a | - |
+| `candidates` | corresponds_via | `candidate_emails` | one_to_many | optional | none | n/a | - |
+| `candidates` | screened_via | `drug_health_screenings` | one_to_many | optional | none | n/a | - |
 
 ## 6. Cross-domain context
 
@@ -162,6 +165,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ATS-CANDIDATE-CRM | HCM | HCM-CORE-WORKER | `employee.applied_internally` | `active` → `active` _(signal)_ | `candidates` | api_call | medium | When an employee applies internally, HCM hands the worker context to the applicant tracker, which materializes an internal candidate record from the worker profile. Friction: reconciling the worker identity against the candidate identity space. |
 | ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
@@ -273,4 +277,6 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | responsibility | business function | default role | default tier |
 | --- | --- | --- | --- |
 | owner | Recruiting | `admin` | `:admin` |
+| contributor | Human Resources | `manage` | `:manage` |
 | contributor | Legal | `manage` | `:manage` |
+| consumer | Finance | `read` | `:read` |

@@ -340,7 +340,7 @@ export async function loadAllRelationships(): Promise<AllRelationships> {
     pg("GET", "/domain_roles?select=id,role_code,role_name,description,business_function_id,record_status&limit=20000"),
     pg("GET", "/role_modules?select=id,role_id,domain_module_id,interaction_level,notes&limit=20000"),
     pg("GET", "/process_raci?select=id,process_id,actor_role_id,actor_skill_id,raci,consultation_blocking&limit=20000"),
-    pg("GET", "/business_functions?select=id,business_function_name,parent_business_function_id&limit=10000"),
+    pg("GET", "/business_functions?select=id,business_function_name,description,record_status,parent_business_function_id&limit=10000"),
     pg("GET", "/business_function_domains?select=business_function_id,domain_id,responsibility_type&limit=20000"),
     pg("GET", "/processes?select=id,process_name,process_key,process_code,description,external_id,hierarchy_level,source_framework&limit=20000"),
     // handoff_processes is the dominant process-attribution edge: which APQC/custom process implements
